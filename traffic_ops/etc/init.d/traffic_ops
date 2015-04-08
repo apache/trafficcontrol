@@ -1,0 +1,106 @@
+#!/bin/bash
+#
+# Copyright 2015 Comcast Cable Communications Management, LLC
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+# http://www.apache.org/licenses/LICENSE-2.0
+# 
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+#
+# traffic ops	Start up of the traffic ops application.
+#
+# chkconfig: 2345 55 25
+# description: Traffic Ops is the administrative web UI for IPCDN.
+#
+# processname: hypnotoad
+# pidfile:
+#
+
+### BEGIN INIT INFO
+# Provides: hypnotoad
+# Required-Start: $local_fs $network $syslog
+# Required-Stop: $local_fs $syslog
+# Should-Start: $syslog
+# Should-Stop: $network $syslog
+# Default-Start: 2 3 4 5
+# Default-Stop: 0 1 6
+# Short-Description: Start up the Traffic Ops Application.
+# Description: Traffic Ops is the administrative UI for the CDN.
+#
+### END INIT INFO
+
+TRAFFIC_OPS_DIR="/opt/traffic_ops/app"; export TRAFFIC_OPS_DIR
+PERL5LIB=$TRAFFIC_OPS_DIR/local/lib/perl5:$TRAFFIC_OPS_DIR/lib; export PERL5LIB
+PIDFILE="/var/run/traffic_ops.pid"
+# source function library
+. /etc/rc.d/init.d/functions
+
+stopHypnotoad ()
+{
+	echo -e "Shutting down Traffic Ops\n"
+	if [ -e $PIDFILE ]; then
+	_PID=`/bin/cat $PIDFILE`
+	PID=`/bin/ps -ef|awk '/traffic_ops/ {if ($3 == 1) {print $2}}'`
+		if [ ! -z $PID ] && [ $_PID = $PID ]; then
+		kill -term $PID
+		fi
+	fi
+}
+
+start () 
+{
+	echo -e "Starting Traffic Ops\n"
+	cd $TRAFFIC_OPS_DIR && $TRAFFIC_OPS_DIR/local/bin/hypnotoad script/cdn
+}
+
+stop ()
+{
+	stopHypnotoad
+}
+
+restart () 
+{
+	stop
+	start
+}
+
+status ()
+{
+	_PID=`/bin/cat $PIDFILE`
+	PID=`/bin/ps -ef|awk '/traffic_ops/ {if ($3 == 1) {print $2}}'`
+	if [ -z $PID ] && [ -z $_PID ]; then
+		echo -e "\nTraffic Ops is offline\n"
+	else
+		if [ $_PID = $PID ] ; then
+			echo -e "\nTraffic Ops is running, pid = $PID\n"
+		fi
+	fi
+}
+
+case "$1" in
+	start)
+		start
+		;;
+	stop)
+		stop
+		;;
+	restart)
+		restart
+		;;
+	status)
+		status
+		;;
+	*)
+		echo "Usage: $0 {start | stop | restart | status}"
+		;;
+esac
+
+exit 0

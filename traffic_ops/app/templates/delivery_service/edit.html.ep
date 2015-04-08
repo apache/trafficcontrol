@@ -1,0 +1,384 @@
+<!--
+     Copyright 2015 Comcast Cable Communications Management, LLC
+
+     Licensed under the Apache License, Version 2.0 (the "License");
+     you may not use this file except in compliance with the License.
+     You may obtain a copy of the License at
+
+     http://www.apache.org/licenses/LICENSE-2.0
+
+     Unless required by applicable law or agreed to in writing, software
+     distributed under the License is distributed on an "AS IS" BASIS,
+     WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+     See the License for the specific language governing permissions and
+     limitations under the License.
+ -->
+<head>
+<script type="text/javascript" src="/js/application.js"></script>
+<script type="text/javascript">
+  $(document).ready(function () {
+      show_gen_url_sigs_button('fast');
+	  show_add_ssl_button('fast');
+	  $('#generate-sig-keys-button').click(function (e) {
+		$( "#dialog-confirm" ).dialog({
+		  resizable: false,
+		  height:160,
+		  modal: true,
+		  buttons: {
+			"Generate Keys": function() {
+			  $("#spinner-complete").show();
+			  $("#generate-sig-keys-button").hide();
+			  $( this ).dialog( "close" );
+
+			  var jqxhr = $.post("/api/1.1/deliveryservices/xmlId/<%= $ds->xml_id %>/urlkeys/generate", function(data, status){
+				  $("#generate-sig-keys-button").show();
+     			  $("#spinner-complete").hide();
+				  $( "#generate_message" ).text( "Successfully generated URL Sig keys for: <%=$ds->xml_id %>" );
+				  $("#generate_message").attr("class", "flash-section");
+     			  $("#generate_message").show();
+				  $.fancybox.update();
+			  })
+              jqxhr.fail(function() {
+				  $("#generate-sig-keys-button").show();
+     			  $("#spinner-complete").hide();
+				  var response = jqxhr.responseJSON;
+				  $( "#generate_message" ).text( "Error:  " + response['alerts'][0]['text'] );
+				  $("#generate_message").attr("class", "error-section");
+     			  $("#generate_message").show();
+				  $.fancybox.update();
+              });
+			},
+			Cancel: function() {
+			  $( this ).dialog( "close" );
+			}
+		  }
+		});
+	  });
+    });
+</script>
+
+<script type="text/javascript">
+    function deleteFunction() {
+        var r=confirm("Are you sure?");
+        if (r==true) {
+              window.location = "/ds/<%= $id %>/delete";
+        } 
+        parent.location.reload(true);
+    }
+
+    function show_hide_bypass_rows(speed) {
+        var type_selected = $('#type :selected').text();
+        if (type_selected.match(/^HTTP/)) {
+            $('#dns_bypass_ip_row').hide(speed);
+            $('#dns_bypass_ip6_row').hide(speed);
+            $('#dns_bypass_ttl_row').hide(speed);
+            $('#http_bypass_fqdn_row').show(speed);
+        }
+        else if (type_selected.match(/^DNS/)) {
+            $('#http_bypass_fqdn_row').hide(speed);
+            $('#dns_bypass_ip_row').show(speed);
+            $('#dns_bypass_ip6_row').show(speed);
+            $('#dns_bypass_ttl_row').show(speed);
+            $('#max_dns_answers').show(speed);
+        }
+    }
+
+	function show_hide_bypass_rows_existing(speed) {
+% if ($ds->type->name =~ m/HTTP/) {
+		$('#dns_bypass_ip_row').hide(speed);
+		$('#dns_bypass_ip6_row').hide(speed);
+		$('#dns_bypass_ttl_row').hide(speed);
+		$('#max_dns_answers_row').hide(speed);
+		$('#http_bypass_fqdn_row').show(speed);
+% }
+% elsif ($ds->type->name =~ m/DNS/) {
+		$('#http_bypass_fqdn_row').hide(speed);
+		$('#dns_bypass_ip_row').show(speed);
+		$('#dns_bypass_ip6_row').show(speed);
+		$('#dns_bypass_ttl_row').show(speed);
+		$('#max_dns_answers_row').show(speed);
+% }
+	}
+
+	function removeRegexp(id) {
+		$(id).remove();
+	}
+
+	function openAssignment() {
+		$.fancybox({ type: 'iframe', href: "/dss/<%= $ds->id %>/edit", padding: 0, autosize: true, fitToView: true, width: 600, minHeight: 500, modal:true });
+	}
+
+	function openStaticDns() {
+		$.fancybox({ type: 'iframe', href: "/staticdnsentry/<%= $ds->id %>/edit", padding: 0, autosize: true, fitToView: true, width: 700, minHeight: 500, modal:true});
+	}
+
+	function addSslKeys() {
+		$.fancybox({ type: 'iframe', href: "/ds/<%= $ds->id %>/sslkeys/add", padding: 0, autosize: true, fitToView: true, width: 700, minHeight: 600, modal:true, helpers: {overlay:{locked:false}}});
+	}
+
+	var re_row_num = Object;
+	var row = 0;
+	$(function(){
+		$.get("/datatype/orderby/id", function(data){
+			$.each(data, function(idx, val) {
+				if (data[idx].use_in_table == "deliveryservice") {
+					if (data[idx].id == "<%= $ds->type->id %>") {
+						$("#type").append("<option value=" + data[idx].id + " selected=\"selected\">" + data[idx].name + "</option>");
+					} 
+					// else {
+						// $("#type").append("<option value=" + data[idx].id + ">" + data[idx].name + "</option>");
+					// }
+				}
+			});
+			$('#type select>option:first').prop('selected', true);
+			setup_form('fast');
+		}, "json");
+
+		$.get("/datadomains", function(data){
+			$.each(data, function(idx, val) {
+				if(data[idx].profile_id == "<%= $ds->profile->id %>") {
+					$("#profile").append("<option value=" + data[idx].profile_id + " selected=\"selected\">" + data[idx].profile_name +
+					" (" + data[idx].profile_description + ")</option>");
+				} else {
+					$("#profile").append("<option value=" + data[idx].profile_id + ">" + data[idx].profile_name +
+					" (" + data[idx].profile_description + ")</option>");
+				}
+			});
+		}, "json");
+
+			$('#type').change(function() {
+				show_hide_bypass_rows('slow');
+			});
+
+		$('#select_re').html("<select id=\"regexp_selector\"> " +
+				"<option>Add a regex...</option> " +
+				"<option>Add Host Regexp</option> " +
+			% if ($ds->type->name eq "DNS") {
+				"<option disabled>Add Path Regexp</option> " +
+				"<option disabled>Add Header Regexp</option> " +
+			% } else {
+				"<option>Add Path Regexp</option> " +
+				"<option>Add Header Regexp</option> " +
+			% }
+			"</select>");
+
+		$('#regexp_selector').change(function() {
+			add_regexp_line($('#regexp_selector :selected').text());
+		});
+
+	});
+	
+	function setup_form(speed) {
+		var type_selected = $('#type :selected').text();
+		if (type_selected.match(/^HTTP/)) {
+			$('#ccr_dns_ttl').val(3600);
+			$('#dns_bypass_ip_row').hide(speed);
+			$('#dns_bypass_ip6_row').hide(speed);
+			$('#dns_bypass_ttl_row').hide(speed);
+			$('#max_dns_answers_row').hide(speed);
+			$('#http_bypass_fqdn_row').show(speed);
+		}
+		else if (type_selected.match(/^DNS/)) {
+			$('#ccr_dns_ttl').val(30);
+			$('#http_bypass_fqdn_row').hide(speed);
+			$('#dns_bypass_ip_row').show(speed);
+			$('#dns_bypass_ip6_row').show(speed);
+			$('#dns_bypass_ttl_row').show(speed);
+			$('#max_dns_answers_row').show(speed);
+		}
+		// 
+	}
+
+	function add_regexp_line(re_type_str) {
+		var typestr;
+
+		if (re_type_str == 'Add Host Regexp') {
+			typestr = "HOST_REGEXP";
+		} else if (re_type_str == 'Add Path Regexp') {
+			if ($('#type :selected').text() == "DNS")
+				return;
+			typestr = "PATH_REGEXP";
+		} else if (re_type_str == 'Add Header Regexp') {
+			if ($('#type :selected').text() == "DNS")
+				return;
+			typestr = "HEADER_REGEXP";
+		}	
+		$('#regexp_table_body').append(
+			"<tr>" +
+			"<td>Type:</td><td><input type=\"text\"  style=\"background-color: gray;\" size=18 id=\"re_type_new_" + row + 
+				"\" name=\"re_type_new_" + row + "\" value=\"" + typestr + "\" readonly></input></td>" +
+			"<td>Order:</td><td><select name=\"re_order_new_" + row + "\">" +
+				"<option value=\"invalid\">-- select --</option>" +
+				"<option value=0>0</option>" +
+				"<option value=1>1</option>" +
+				"<option value=2>2</option>" +
+				"<option value=3>3</option>" +
+				"<option value=4>4</option>" +
+				"<option value=5>5</option>" +
+				"<option value=6>6</option>" +
+				"<option value=7>7</option>" +
+				"<option value=8>8</option>" +
+				"<option value=9>9</option>" +
+				"</select>" +
+			"</td>" +
+			"<td>Regular Expression:</td><td><input type=\"text\" size=40 id=\"re_re_new_" + row + "\" name=\"re_re_new_" + 
+				row + "\"></input></td>" + 
+			"</tr>"
+		);
+
+		row++;
+
+		$('#regexp_selector :nth-child(1)').prop('selected', true); // set back to 0 index
+	}
+
+	// hide/show 'Add SSL Keys' button
+	 function show_add_ssl_button(speed) {
+      var ssl_selected = $('#protocol :selected').text();
+      if (ssl_selected.match(/^https/)) {
+        $('#addkeys').show(speed);
+      }
+      else if (ssl_selected.match(/http and https/)) {
+        $('#addkeys').show(speed);
+      }
+      else if (ssl_selected.match(/^http/)) {
+        $('#addkeys').hide(speed);
+      }
+    }
+
+	$(function(){
+      $('#protocol').change(function() {
+        show_add_ssl_button('fast');
+      });
+    });
+
+	// hide/show 'Generate URL Sig Keys'
+	 function show_gen_url_sigs_button(speed) {
+      var signed_selected = $('#ds-signed :selected').text();
+      if (signed_selected.match(/^Yes/)) {
+        $('#generate-sig-keys-button').show();
+      }
+      else if (signed_selected.match(/^No/)) {
+        $('#generate-sig-keys-button').hide();
+      }
+    }
+
+	$(function(){
+      $('#ds-signed').change(function() {
+        show_gen_url_sigs_button('fast');
+      });
+    });
+
+
+</script>
+</head>
+
+   <div id='accordion' class "dialog_border" style='padding-left:10px;'>
+		<h3><a href="#">Delivery Service Detail</a></h3>
+		<br>
+		 %= include 'common/_errors'
+        %= include 'common/_flash'
+		<div id="generate_message" class="flash-section" style="display:none;"></div>
+        <br>
+		<div>
+			<form method="POST" action="/ds/<%= $ds->id %>/update" id="editds_form">
+				%= include 'delivery_service/_form' 
+				<div class="block" style="color:white">
+                	%= label_for 'last_updated' => 'Last Updated', class => 'label'
+                	%= field('ds.last_updated')
+           		</div> <br>
+				<div class="block" style="color:white">
+                	%= label_for 'server_count' => 'Number of edges assigned:', class => 'label'
+                	<div><%= $server_count %></div>
+            	</div><br>
+				<div class="block" style="color:white">
+                	%= label_for 'static_count' => 'Number of static DNS entries:', class => 'label'
+                	<div><%= $static_count %></div>
+            	</div><br>
+            	% foreach my $ex_url (@{ $example_urls }) {
+				<div class="block" style="color:white">
+                	%= label_for 'ex_url' => 'Example delivery URL', class => 'label'
+                	<div><%= $ex_url %></div>
+            	</div><br>
+            	% }
+			<hr>
+			<h2 style="color:white;">Regular expressions for this delivery service:</h2> 
+			 <% if ($priv_level >= 20) { %>
+			<div id ="select_re"></div><br>
+			<% } %>
+			<table id="regexp_table" width=100% cellpadding="10">
+				<tbody id="regexp_table_body">
+				%foreach my $re ( @{ $regexp_set } ) {
+					<tr id="tr_re_row_<%= $re->{id} %>">
+	            		<td width="60">Type:</td>
+	            		<td width="80">
+	            			<input width="60" type="text"  style="background-color:gray;" size=18 name="re_type_<%= $re->{id} %>" value="<%= $re->{type} %>" readonly></input>
+	            		</td>
+	            		<td width="60">Order:</td>
+	            		<td td width="80">
+	            			<% if ($priv_level >= 20) { %>
+	            			<select width="80" name="re_order_<%= $re->{id} %>">
+	            				<option value="<%= $re->{set_number} %>" selected><%= $re->{set_number} %></option>
+	            				<option value="0">0</option>
+	            				<option value="1">1</option>
+	            				<option value="2">2</option>
+	            				<option value="3">3</option>
+	            				<option value="4">4</option>
+	            				<option value="5">5</option>
+	            				<option value="6">6</option>
+	            				<option value="7">7</option>
+	            				<option value="8">8</option>
+	            				<option value="9">9</option>
+	            			</select>
+	            			<% } else { %>
+	            			 <input width = "80" type = "text" value="<%= $re->{set_number} %>" readonly></input>
+	            			<% } %>
+	            		</td>
+	            		<td width="130px">Regular Expression:</td>
+	            		<td>
+	            			<% if ($priv_level >= 20) { %>
+	            			<input type="text" name="re_re_<%= $re->{id} %>" value= "<%= $re->{pattern} %>" size=50/>
+	            			<% } else { %>
+	            			<input type="text" name="re_re_<%= $re->{id} %>" value= "<%= $re->{pattern} %>" size=50 readonly/>
+	            			<% } %>
+	            		</td>
+	            		<% if ($priv_level >= 20) { %>
+	            		<td id="rm_row_<%= $re->{id} %>"><a href="#" onclick="removeRegexp(tr_re_row_<%= $re->{id} %>)">remove</a></td>
+	            		<% } %>
+	       			</tr>
+				% }
+				</tbody>
+			</table>
+			<br><hr>
+			<% if ($priv_level >= 20) { %>
+			   <input class="button" style="margin-left:5px;" type="submit" value="Save"/>
+			<% } %>
+			</form>
+<% if ($priv_level >= 20) { %>
+				<hr>
+				<div id="dialog-confirm" title="Generate Keys?" style="display:none;height: 50px;">
+				  <p><span class="ui-icon ui-icon-alert" style="float:left; margin:0 7px 20px 0;"></span><div>This will generate URL signature keys for delivery service '<%= $ds->xml_id %>'. Are you sure?</p></div></div>
+				</div>
+				<div id="buttons-section" style="margin-top:5px;">
+					<button class="button" id="delete-button" style="float:left;margin-left:5px; " onclick="deleteFunction()">Delete</button>
+					<button class="button" style="float:left;margin-left:5px; " onclick="openAssignment()">Server Assignments</button>
+					<button class="button" style="float:left;margin-left:5px; " onclick="openStaticDns()">Static DNS</button>
+					<% if ($priv_level >= 30) { %>
+						  <button class="button" style="float:left;margin-left:5px; " onclick="addSslKeys()" id="addkeys">Add SSL Keys</button>
+					<% } %>
+
+					<% if ($priv_level >= 30) { %>
+						  <div>
+						     <button class="button" style="float:left;margin-left:5px; " id="generate-sig-keys-button">Generate URL Sig Keys</button>
+						  </div>
+						  <div class="button" id="spinner-complete" style="display:none;float:left;">
+                                <div style="float:left;"><img id="throbber" src="/images/spinner-small.gif" /></div>
+                                <div style="float:left;margin-left: 5px; font-size: 13px;">Generating URL Sig Keys</div>
+                          </div>
+					<% } %>
+<% } %>
+				<button id="close_button" class="button" style="float:left; margin-left: 300px">Close</button>
+			     </div>
+			 </div>
+		</div>
+	</div>
+</html>

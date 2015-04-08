@@ -1,0 +1,173 @@
+<!--
+     Copyright 2015 Comcast Cable Communications Management, LLC
+
+     Licensed under the Apache License, Version 2.0 (the "License");
+     you may not use this file except in compliance with the License.
+     You may obtain a copy of the License at
+
+     http://www.apache.org/licenses/LICENSE-2.0
+
+     Unless required by applicable law or agreed to in writing, software
+     distributed under the License is distributed on an "AS IS" BASIS,
+     WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+     See the License for the specific language governing permissions and
+     limitations under the License.
+ -->
+	% if (defined (flash 'alertmsg')) {
+	<script>
+		var alertmsg = "<%= flash 'alertmsg' %>";
+		alertmsg = alertmsg.replace(/__NEWLINE__/g, "\n");
+		alert(alertmsg);
+	</script>
+% }
+	<script type="text/javascript">
+
+	var re_row_num = Object;
+	var row = 0;
+	$(function(){
+		$.get("/datatype/orderby/id", function(data){
+			$.each(data, function(idx, val) {
+				if (data[idx].use_in_table == "deliveryservice") {
+					if (data[idx].id == "<%= $selected_type %>") {
+						$("#type").append("<option value=" + data[idx].id + " selected=\"selected\">" + data[idx].name + "</option>");
+					} else {
+						$("#type").append("<option value=" + data[idx].id + ">" + data[idx].name + "</option>");
+					}
+				}
+			});
+			$('#type select>option:first').prop('selected', true);
+			setup_form('fast');
+		}, "json");
+
+		$.get("/datadomains", function(data){
+			$.each(data, function(idx, val) {
+				if(data[idx].profile_id == "<%= $selected_profile %>") {
+					$("#profile").append("<option value=" + data[idx].profile_id + " selected=\"selected\">" + data[idx].profile_name +
+					" (" + data[idx].profile_description + ")</option>");
+				} else {
+					$("#profile").append("<option value=" + data[idx].profile_id + ">" + data[idx].profile_name +
+					" (" + data[idx].profile_description + ")</option>");
+				}
+			});
+		}, "json");
+
+		$('#type').change(function() {
+			console.log("1");
+			setup_form('slow');
+			$('#regexp_table_body').empty();
+			re_row_num = new Object();
+			add_regexp_line('Add Host Regexp');
+		});
+
+		$('#regexp_selector').change(function() {
+			add_regexp_line($('#regexp_selector :selected').text());
+		})
+
+		// one HOST_REGEXP is mandatory
+		add_regexp_line('Add Host Regexp');
+	});
+	
+	function setup_form(speed) {
+		var type_selected = $('#type :selected').text();
+		if (type_selected.match(/^HTTP/)) {
+			$("#regexp_selector :nth-child(3)").removeAttr('disabled');
+			$("#regexp_selector :nth-child(4)").removeAttr('disabled');
+			$('#ccr_dns_ttl').val(3600);
+			$('#dns_bypass_ip_row').hide(speed);
+			$('#dns_bypass_ip6_row').hide(speed);
+			$('#dns_bypass_ttl_row').hide(speed);
+			$('#max_dns_answers_row').hide(speed);
+			$('#http_bypass_fqdn_row').show(speed);
+		}
+		else if (type_selected.match(/^DNS/)) {
+			$("#regexp_selector :nth-child(3)").attr('disabled','disabled');
+			$("#regexp_selector :nth-child(4)").attr('disabled','disabled');
+			$('#ccr_dns_ttl').val(30);
+			$('#http_bypass_fqdn_row').hide(speed);
+			$('#dns_bypass_ip_row').show(speed);
+			$('#dns_bypass_ip6_row').show(speed);
+			$('#dns_bypass_ttl_row').show(speed);
+			$('#max_dns_answers_row').show(speed);
+		}
+		// 
+	}
+
+	function add_regexp_line(re_type_str) {
+		var typestr;
+
+		// if (re_type_str == 'Select...') {
+		// 	return;
+		// }
+		if (re_type_str == 'Add Host Regexp') {
+			typestr = "HOST_REGEXP";
+		} else if (re_type_str == 'Add Path Regexp') {
+			if ($('#type :selected').text() == "DNS")
+				return;
+			typestr = "PATH_REGEXP";
+		} else if (re_type_str == 'Add Header Regexp') {
+			if ($('#type :selected').text() == "DNS")
+				return;
+			typestr = "HEADER_REGEXP";
+		}
+		if (re_row_num[typestr] == undefined) {
+			re_row_num[typestr] = 0;
+		}
+		$('#regexp_table_body').append(
+			"<tr>" +
+			"<td>Type:</td>" + 
+			"<td><input type=\"text\"  style=\"background-color: gray;\" size=18 id=\"re_type_" + row + "\" name=\"re_type_" + row + "\" value=\"" + typestr + "\" readonly>" +
+			"</input></td>" +
+			"<td>Order:</td><td><input type=\"text\" style=\"background-color: gray;\" size=5 id=\"re_order_" + row + 
+				"\" name=\"re_order_" + row + "\" value=\"" + re_row_num[typestr] + "\" readonly></input></td>" +
+			"<td>Regular Expression:</td><td><input type=\"text\" size=35 id=\"re_re_" + row + "\" name=\"re_re_" + 
+				row + "\"></input></td>" + 
+			"</tr>"
+		);
+
+		row++;
+		re_row_num[typestr]++;
+
+		$('#regexp_selector :nth-child(1)').prop('selected', true); // set back to 0 index
+	}
+</script>
+<head>
+    <script type="text/javascript" src="/js/application.js"></script>
+</head>
+<body>
+	<div id=accordion>
+		<h3><a href="#">Add Delivery Service</a></h3>
+		%= include 'common/_errors'
+		%= include 'common/_flash' 
+		<br>
+		<form method="POST" action="/ds/create" id="addds" style="margin-left:20px;">
+			<h2>Delivery Service Info:</h2>
+			%= include 'delivery_service/_form'
+	<br>
+	<h2>Regular expressions for this delivery service:</h2>
+	<!--DN: hidden field for validation of regexp table.  
+	Cause I didnt re-factor the table to use FormFields. (yet?)-->
+	<div class="block">
+		%= label_for 'regex' => '', class => 'label'
+		%= field('ds.regex')->hidden(class => 'filed', id => 'ds.regex', name => 'ds.regex', value => '_____');
+		<% unless (field('ds.regex')->valid) { %>
+			<span class="field-with-error"><%= field('ds.regex')->error %></span>
+		<% } %>
+	</div>
+	<table id="regexp_table" width=100%>
+		<tbody id="regexp_table_body"></tbody>
+	</table>
+	<br>
+	<br>
+	<h4 style="color:white">Add a new Regex:</h4>
+	<select id="regexp_selector">
+		<option>Select...</option>
+		<option>Add Host Regexp</option>
+		<option>Add Path Regexp</option>
+		<option>Add Header Regexp</option>
+	</select><br>
+	<br><input class="button" type="submit" value="Save"/>
+	<button id="close_button" class="button" style="float:right; margin-right: 200px">Close</button>
+</form>
+</div>
+</body>
+</html>

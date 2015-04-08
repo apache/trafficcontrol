@@ -1,0 +1,129 @@
+<!--
+     Copyright 2015 Comcast Cable Communications Management, LLC
+
+     Licensed under the Apache License, Version 2.0 (the "License");
+     you may not use this file except in compliance with the License.
+     You may obtain a copy of the License at
+
+     http://www.apache.org/licenses/LICENSE-2.0
+
+     Unless required by applicable law or agreed to in writing, software
+     distributed under the License is distributed on an "AS IS" BASIS,
+     WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+     See the License for the specific language governing permissions and
+     limitations under the License.
+ -->
+% title 'Servers';
+% if (defined (flash 'alertmsg')) {
+<script>
+alert( "<%= flash 'alertmsg' %>" );
+</script>
+
+% }
+<script>
+var activeTable;
+$(function () {
+	$(document).ready(function () {
+		
+%= include 'jmenu'
+
+		var cur_server_name;
+		var serverTable;
+		serverTable = $('#dtserver').dataTable({
+			"bJQueryUI": true,
+			"bProcessing": true,
+			"sScrollY": calcDataTableHeight(),
+			"bScrollCollapse": true,
+			"bPaginate": false,
+			"aaSorting": [[ 1, 'asc' ]], 
+			"aoColumnDefs": [ 
+			{
+				"mRender": function (data, type, full) {
+					// cur_server_name = oObj.aData[1]; // to be used later, writing to aTargets[1] overwrites oObj.aData[1].
+					return "<a class='fancybox fancybox.iframe' href='/server/" + full[0] + "/view'>Edit</a>";
+				},
+				"aTargets": [0]
+			}, 
+			{
+				"sType": "string",
+				"aTargets": [1]
+			},
+			{
+				"mRender": function (data, type, full) {
+					if (full[13] && full[14]) {
+						return "<a href='" + full[13] + "'><img src='/images/" + full[14] + "' width=12></a>";
+					}
+					else {
+						return "";
+					}
+				},
+				'bSortable': false,
+				"aTargets": [3]
+			},
+			{
+				"mRender": function (data, type, full) {
+					return "<a href='ssh://<%= $user %>@" + full[6] + "'>" + full[6] + "</a>";
+				},
+				"bUseRendered": false,
+				"aTargets": [6]
+			}, 
+			{
+				"mRender": function (data, type, full) {
+					if (full[10] != undefined) {
+						return "<a href='https://" + full[10] + "' target=\"_blank\">" + full[10] + "</a>";
+					} else {
+						return "";
+					}
+				},
+				"bUseRendered": false,
+				"aTargets": [10]
+			},
+			{
+				"mRender": function (data, type, full) {
+					if (full[11] != undefined) {
+						return "<a href='ssh://<%= $user %>@" + full[11] + "'>" + full[11] + "</a>";
+					} else {
+						return "";
+					}
+				},
+				"bUseRendered": false,
+				"aTargets": [11]
+			} 
+			],
+			"sAjaxSource": "aadata/Server"
+		});
+		activeTable = serverTable;
+	})
+});
+</script>
+
+<!-- Note: add a page here, mod the site.css as well! -->
+<body id="servers">
+%= include 'navbar'
+
+<table cellpadding="0" cellspacing="0" border="0" width="100%" class="display" id="dtserver">
+	<thead>
+		<tr>
+			<th></th>
+			<th>Host Name</th>
+			<th>Domain Name</th>
+			<th></th>
+			<th>Cache group</th>
+			<th>Location</th>
+			<th>IPAddr</th>
+			<th>IPV6 Addr</th>
+			<th>Status</th>
+			<th>Profile</th>
+			<th>ILO</th>
+			<th>1G</th>
+		</tr>
+	</thead>
+</table>
+% if ($priv_level >= 20) {
+<div class="buttonButtons">
+  <a class='fancybox fancybox.iframe' href='/server/add'><button class='button'>Add Server</button></a>
+</div>
+% }
+
+	</body>
+</html>

@@ -1,0 +1,97 @@
+#!/usr/bin/perl
+#
+# Copyright 2015 Comcast Cable Communications Management, LLC
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+# http://www.apache.org/licenses/LICENSE-2.0
+# 
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+
+# Extensions manager for Traffic Operations.
+#
+use strict;
+use warnings;
+
+$|++;
+
+use Data::Dumper;
+use Getopt::Std;
+use Log::Log4perl qw(:easy);
+use JSON;
+use Extensions::Helper;
+
+my $VERSION = "0.01";
+
+my $hostn = `hostname`;
+chomp($hostn);
+
+my %args = ();
+getopts( "l:c:u:a:f:i:", \%args );
+
+Log::Log4perl->easy_init($ERROR);
+if ( defined( $args{l} ) ) {
+	if    ( $args{l} == 1 ) { Log::Log4perl->easy_init($INFO); }
+	elsif ( $args{l} == 2 ) { Log::Log4perl->easy_init($DEBUG); }
+	elsif ( $args{l} == 3 ) { Log::Log4perl->easy_init($TRACE); }
+	elsif ( $args{l} > 3 )  { Log::Log4perl->easy_init($TRACE); }
+	else                    { Log::Log4perl->easy_init($INFO); }
+}
+
+my $b_url = "https://localhost";
+if ( defined( $args{u} ) ) {
+	$b_url = $args{u};
+}
+
+my $econ = Extensions::Helper->new( { base_url => $b_url, token => '91504CE6-8E4A-46B2-9F9F-FE7C15228498' } );
+
+# add / delete / list
+if ( $args{a} eq 'list' ) {
+	&mainlist($econ);
+}
+elsif ( $args{a} eq 'add' ) {
+	local $/ = undef;
+	open( FILE, $args{f} ) or die "Couldn't open file: $!";
+	my $json_text = <FILE>;
+	close FILE;
+	$econ->post_json( '/api/1.1/to_extensions', $json_text );
+}
+elsif ( $args{a} eq 'delete' ) {
+	my $json_text = encode_json( { id => $args{i} } );
+	$econ->post_json( '/api/1.1/to_extensions/delete', $json_text );
+}
+else {
+	ERROR "Use -a list|add|delete";
+}
+
+my ( $f1_id, $f1_name, $f1_type, $f1_colnames, $f1_version );
+
+sub mainlist {
+	my $econ     = shift;
+	my $ext_list = $econ->get('/api/1.1/to_extensions.json');
+	foreach my $extension ( @{$ext_list} ) {
+
+		$f1_id       = $extension->{id};
+		$f1_name     = $extension->{name};
+		$f1_type     = $extension->{type};
+		$f1_version  = $extension->{version};
+		$f1_colnames = $extension->{servercheck_short_name};
+		write;
+	}
+}
+
+format STDOUT_TOP =
+Id     Name                                 Type                        Checknames                 Version
+.
+
+format =
+@<<<<< @<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< @<<<<<<<<<<<<<<<<<<<<<<<<<< @<<<<<<<<<<<<<<<<<<<<<<<<< @<<<<<<<<
+$f1_id,$f1_name,                            $f1_type,                   $f1_colnames,              $f1_version
+.

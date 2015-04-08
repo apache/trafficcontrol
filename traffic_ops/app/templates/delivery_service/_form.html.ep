@@ -1,0 +1,421 @@
+<!--
+     Copyright 2015 Comcast Cable Communications Management, LLC
+
+     Licensed under the Apache License, Version 2.0 (the "License");
+     you may not use this file except in compliance with the License.
+     You may obtain a copy of the License at
+
+     http://www.apache.org/licenses/LICENSE-2.0
+
+     Unless required by applicable law or agreed to in writing, software
+     distributed under the License is distributed on an "AS IS" BASIS,
+     WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+     See the License for the specific language governing permissions and
+     limitations under the License.
+ -->
+<div class="main">
+	<div class="block">
+		<% unless (field('ds.xml_id')->valid) { %>
+			<span class="field-with-error"><%= field('ds.xml_id')->error %></span>
+		<% } %>
+		%= label_for 'xml_id' => '* XML ID', class => 'label'
+		<% if ($priv_level >= 20) { %>
+		%= field('ds.xml_id')->text(class => 'field', required => 'required', name => 'ds.xml_id', id => 'ds.xml_id')
+		<% } else { %> 
+		%= field('ds.xml_id')->text(class => 'field', readonly => 'readonly')
+		<% } %>
+	</div><br>
+	<div class="block">
+		<% unless (field('ds.type')->valid) { %>
+			<span class="field-with-error"><%= field('ds.type')->error %></span>
+		<% } %>
+		%= label_for 'type' => '* Content Routing Type', class => 'label'
+		<% if ($mode =~ /edit/) { %>
+			%= field('ds.type.name')->text(class => 'field', required => 'required', id => 'type', name => 'ds.type', readonly => 'readonly');
+			%= field('ds.type.id')->hidden(class => 'field', required => 'required', id => 'ds.type.id', name => 'ds.type.id', type => 'hidden');
+		<% } else { %> 
+			%= field('ds.type')->select(class => 'field', required => 'required', id => 'type', name => 'ds.type');
+		<% } %> 
+	</div><br>
+	<div class="block">
+		<% unless (field('ds.protocol')->valid) { %>
+			<span class="field-with-error"><%= field('ds.protocol')->error %></span>
+		<% } %>
+		%= label_for 'protocol' => '* Protocol ', class => 'label'
+		<% if ($priv_level >= 20) { %>
+		%= field('ds.protocol')->select([ ["http" => 0, selected => 'true'], ["https" => 1], ["http and https" => 2]], id => 'protocol');
+		<% } else { %>
+			<% if ($ds->protocol == 0 ) { %>
+			%= field('ds.protocol')->text(class => 'field', readonly => 'readonly', value => 'No');
+			<% } else { %>
+			%= field('ds.protocol')->text(class => 'field', readonly => 'readonly', value => 'Yes');
+			<% } %>
+		<% } %>
+	</div><br>
+	<div class="block">
+		<% unless (field('ds.dscp')->valid) { %>
+			<span class="field-with-error"><%= field('ds.dscp')->error %></span>
+		<% } %>
+		%= label_for 'dscp_tag' => '* DSCP Tag', class => 'label'
+		<% if ($priv_level >= 20) { %>
+		%= field('ds.dscp')->select([["0  - Best Effort" => 0], ["10  - AF11" => 10], ["12  - AF12" => 12], ["14  - AF13" => 14], ["18  - AF21" => 18], ["20  - AF22" => 20], ["22  - AF23" => 22], ["26  - AF31" => 26], ["28  - AF32" => 28], ["30  - AF33" => 30], ["34  - AF41" => 34], ["36  - AF42" => 36], ["37  - " => 37], ["38  - AF43" => 38], ["8  - CS1" => 8], ["16  - CS2" => 16], ["24  - CS3" => 24], ["32  - CS4" => 32], ["40  - CS5" => 40], ["48  - CS6" => 48], ["56  - CS7" => 56], ]);
+		<% } else { %>
+			<% if ($ds->dscp == 0) {%>
+			%= field('ds.dscp')->text(class => 'field', value =>  '0  - Best Effort', readonly => 'readonly');
+			<% } elsif ($ds->dscp == 10) {%>
+			%= field('ds.dscp')->text(class => 'field', value =>  '10 - AF11', readonly => 'readonly');
+			<% } elsif ($ds->dscp == 12) {%>
+			%= field('ds.dscp')->text(class => 'field', value =>  '12 - AF12', readonly => 'readonly');
+			<% } elsif ($ds->dscp == 14) {%>
+			%= field('ds.dscp')->text(class => 'field', value =>  '14  - AF13', readonly => 'readonly');
+			<% } elsif ($ds->dscp == 18) {%>
+			%= field('ds.dscp')->text(class => 'field', value =>  '18  - AF12', readonly => 'readonly');
+			<% } elsif ($ds->dscp == 20) {%>
+			%= field('ds.dscp')->text(class => 'field', value =>  '22  - AF22', readonly => 'readonly');
+			<% } elsif ($ds->dscp == 26) {%>
+			%= field('ds.dscp')->text(class => 'field', value =>  '26  - AF31', readonly => 'readonly');
+			<% } elsif ($ds->dscp == 28) {%>
+			%= field('ds.dscp')->text(class => 'field', value =>  '28  - AF32', readonly => 'readonly');
+			<% } elsif ($ds->dscp == 30) {%>
+			%= field('ds.dscp')->text(class => 'field', value =>  '30  - AF33', readonly => 'readonly');
+			<% } elsif ($ds->dscp == 34) {%>
+			%= field('ds.dscp')->text(class => 'field', value =>  '34  - AF41', readonly => 'readonly');
+			<% } elsif ($ds->dscp == 36) {%>
+			%= field('ds.dscp')->text(class => 'field', value =>  '36  - AF42', readonly => 'readonly');
+			<% } elsif ($ds->dscp == 38) {%>
+			%= field('ds.dscp')->text(class => 'field', value =>  '37  - ', readonly => 'readonly');
+			<% } elsif ($ds->dscp == 37) {%>
+			%= field('ds.dscp')->text(class => 'field', value =>  '38  - AF3', readonly => 'readonly');
+			<% } elsif ($ds->dscp == 8) {%>
+			%= field('ds.dscp')->text(class => 'field', value =>  '8  - CS1', readonly => 'readonly');
+			<% } elsif ($ds->dscp == 16) {%>
+			%= field('ds.dscp')->text(class => 'field', value =>  '16  - CS2', readonly => 'readonly');
+			<% } elsif ($ds->dscp == 24) {%>
+			%= field('ds.dscp')->text(class => 'field', value =>  '24  - CS3', readonly => 'readonly');
+			<% } elsif ($ds->dscp == 32) {%>
+			%= field('ds.dscp')->text(class => 'field', value =>  '32  - CS4', readonly => 'readonly');
+			<% } elsif ($ds->dscp == 40) {%>
+			%= field('ds.dscp')->text(class => 'field', value =>  '40  - CS5', readonly => 'readonly');
+			<% } elsif ($ds->dscp == 48) {%>
+			%= field('ds.dscp')->text(class => 'field', value =>  '48  - CS6', readonly => 'readonly');
+			<% } elsif ($ds->dscp == 45) {%>
+			%= field('ds.dscp')->text(class => 'field', value =>  '56  - CS7', readonly => 'readonly');
+			<% } 
+		<% } %>
+	</div><br>
+	<div class="block">
+		<% unless (field('ds.signed')->valid) { %>
+			<span class="field-with-error"><%= field('ds.signed')->error %></span>
+		<% } %>
+		%= label_for 'signed_urls' => 'Signed URLs', class => 'label'
+		<% if ($priv_level >= 20) { %>
+		%= field('ds.signed')->select([ [No => 0], [Yes => 1]]);
+		<% } else { %>
+			<% if ($ds->signed == 0) { %>
+				%= field('ds.signed')->text(class => 'field', value =>  'No', readonly => 'readonly');
+			<% } else { %>
+				%= field('ds.signed')->text(class => 'field', value =>  'Yes', readonly => 'readonly');
+			<% } %>
+		<% } %>
+	</div><br>
+	<div class="block">
+		<% unless (field('ds.qstring_ignore')->valid) { %>
+			<span class="field-with-error"><%= field('ds.qstring_ignore')->error %></span>
+		<% } %>
+		%= label_for 'qstring_ignore' => 'Query String Handling', class => 'label'
+		<% if ($priv_level >= 20) { %>
+		%= field('ds.qstring_ignore')->select([["0 - use qstring in cache key, and pass up" => 0], ["1 - ignore in cache key, and pass up" => 1], ["2 - drop at edge" => 2]]);
+		<% } else { %>
+			<% if ($ds->qstring_ignore == 0) {%>
+			%= field('ds.qstring_ignore')->text(class => 'field', value =>  '0 - use qstring in cache key, and pass up', readonly => 'readonly');
+			<% } elsif ($ds->qstring_ignore == 1) {%>
+			%= field('ds.qstring_ignore')->text(class => 'field', value =>  '1 - ignore in cache key, and pass up', readonly => 'readonly');
+			<% } else { %>
+			%= field('ds.qstring_ignore')->text(class => 'field', value =>  '2 - drop at edge', readonly => 'readonly');
+			<% } %>
+		<% } %>
+	</div><br>
+	<div class="block">
+		<% unless (field('ds.geo_limit')->valid) { %>
+			<span class="field-with-error"><%= field('ds.geo_limit')->error %></span>
+		<% } %>
+		%= label_for 'geo_limit' => 'Geo Limit?', class => 'label'
+		<% if ($priv_level >= 20) { %>
+		%= field('ds.geo_limit')->select([[None => 0], ["CZF only" => 1], ["CZF + US" => 2]]);
+		<% } else { %>
+			<% if ($ds->geo_limit == 0) { %>
+				%= field('ds.geo_limit')->text(class => 'field', value =>  'None', readonly => 'readonly');
+			<% } elsif($ds->geo_limit == 1) { %>
+				%= field('ds.geo_limit')->text(class => 'field', value =>  'CZF only', readonly => 'readonly');
+			<% } else { %>
+			%= field('ds.geo_limit')->text(class => 'field', value =>  'CZF + US', readonly => 'readonly');
+			<% } %>
+		<% } %>
+	</div><br>
+	<div class="block" id='http_bypass_fqdn_row'>
+		<% unless (field('ds.http_bypass_fqdn')->valid) { %>
+			<span class="field-with-error"><%= field('ds.http_bypass_fqdn')->error %></span>
+		<% } %>
+		%= label_for 'http_bypass_fqdn' => 'Bypass FQDN', class => 'label'
+		<% if ($priv_level >= 20) { %>
+		%= field('ds.http_bypass_fqdn')->text(class => 'field', id => 'http_bypass_fqdn', name => 'ds.http_bypass_fqdn');
+		<% } else { %>
+		%= field('ds.http_bypass_fqdn')->text(class => 'field', readonly => 'readonly');
+		<% } %>
+	</div><br>
+	<div class="block" id='ipv6_routing_enabled'>
+		<% unless (field('ds.ipv6_routing_enabled')->valid) { %>
+			<span class="field-with-error"><%= field('ds.ipv6_routing_enabled')->error %></span>
+		<% } %>
+		%= label_for 'ipv6_routing_enabled' => 'IPv6 Routing Enabled?', class => 'label'
+		<% if ($priv_level >= 20) { %>
+			%= field('ds.ipv6_routing_enabled')->select([ [No => 0], [Yes => 1]]);
+		<% } else { %>
+			<% if ($ds->ipv6_routing_enabled == 0) { %>
+				%= field('ds.ipv6_routing_enabled')->text(class => 'field', value =>  'No', readonly => 'readonly');
+			<% } else { %>
+				%= field('ds.ipv6_routing_enabled')->text(class => 'field', value =>  'Yes', readonly => 'readonly');
+			<% } %>
+		<% } %>
+	</div>
+		<div class="block" id='background_fetch_enabled'>
+		<% unless (field('ds.background_fetch_enabled')->valid) { %>
+			<span class="field-with-error"><%= field('ds.background_fetch_enabled')->error %></span>
+		<% } %>
+		%= label_for 'background_fetch_enabled' => 'Background fetch Enabled? (use sparingly!)', class => 'label'
+		<% if ($priv_level >= 20) { %>
+			%= field('ds.background_fetch_enabled')->select([ [No => 0], [Yes => 1]]);
+		<% } else { %>
+			<% if ($ds->background_fetch_enabled == 0) { %>
+				%= field('ds.background_fetch_enabled')->text(class => 'field', value =>  'No', readonly => 'readonly');
+			<% } else { %>
+				%= field('ds.background_fetch_enabled')->text(class => 'field', value =>  'Yes', readonly => 'readonly');
+			<% } %>
+		<% } %>
+	</div>
+	<div class="block" id='dns_bypass_ip_row'>
+		<% unless (field('ds.dns_bypass_ip')->valid) { %>
+			<span class="field-with-error"><%= field('ds.dns_bypass_ip')->error %></span>
+		<% } %>
+		%= label_for 'dns_bypass_ip' => 'Bypass IP', class => 'label'
+		<% if ($priv_level >= 20) { %>
+		%= field('ds.dns_bypass_ip')->text(class => 'field', id => 'dns_bypass_ip', name => 'ds.dns_bypass_ip');
+		<% } else { %>
+		%= field('ds.dns_bypass_ip')->text(class => 'field', readonly => 'readonly');
+		<% } %>
+	</div><br>
+	<div class="block" id='dns_bypass_ip6_row'>
+		<% unless (field('ds.dns_bypass_ip6')->valid) { %>
+			<span class="field-with-error"><%= field('ds.dns_bypass_ip6')->error %></span>
+		<% } %>
+		%= label_for 'dns_bypass_ip6' => 'Bypass IPv6', class => 'label'
+		<% if ($priv_level >= 20) { %>
+		%= field('ds.dns_bypass_ip6')->text(class => 'field', id => 'dns_bypass_ip6', name => 'ds.dns_bypass_ip6');
+		<% } else { %>
+		%= field('ds.dns_bypass_ip6')->text(class => 'field', readonly => 'readonly');
+		<% } %>
+	</div><br>
+	<div class="block" id='dns_bypass_ttl_row'>
+		<% unless (field('ds.dns_bypass_ttl')->valid) { %>
+			<span class="field-with-error"><%= field('ds.dns_bypass_ttl')->error %></span>
+		<% } %>
+		%= label_for 'dns_bypass_ttl' => 'Bypass TTL', class => 'label'
+		<% if ($priv_level >= 20) { %>
+		%= field('ds.dns_bypass_ttl')->text(class => 'field', id => 'dns_bypass_ttl', name => 'ds.dns_bypass_ttl', value => 30);
+		<% } else { %>
+		%= field('ds.dns_bypass_ttl')->text(class => 'field', readonly => 'readonly');
+		<% } %>
+	</div><br>
+	<div class="block" id='max_dns_answers_row'>
+		<% unless (field('ds.max_dns_answers')->valid) { %>
+			<span class="field-with-error"><%= field('ds.max_dns_answers')->error %></span>
+		<% } %>
+		%= label_for 'max_dns_answers' => 'Maximum IP addresses in DNS answer (0 means all)', class => 'label'
+		<% if ($priv_level >= 20) { %>
+			<% if ($mode =~ /edit/) { %>	
+				%= field('ds.max_dns_answers')->text(class => 'field', id => 'max_dns_answers', name => 'ds.max_dns_answers');
+			<% } else { %>
+				%= field('ds.max_dns_answers')->text(class => 'field', id => 'max_dns_answers', name => 'ds.max_dns_answers', default => 0);
+			<% } %>
+		<% } else { %>
+		%= field('ds.max_dns_answers')->text(class => 'field', readonly => 'readonly');
+		<% } %>
+	</div><br>
+	<div class="block">
+		<% unless (field('ds.ccr_dns_ttl')->valid) { %>
+			<span class="field-with-error"><%= field('ds.ccr_dns_ttl')->error %></span>
+		<% } %>
+		%= label_for 'ccr_dns_ttl' => 'Delivery Service DNS TTL', class => 'label'
+		<% if ($priv_level >= 20) { %>
+		%= field('ds.ccr_dns_ttl')->text(class => 'field', id => 'ccr_dns_ttl', name => 'ds.ccr_dns_ttl', value => 3600);
+		<% } else { %>
+		%= field('ds.ccr_dns_ttl')->text(class => 'field', readonly => 'readonly');
+		<% } %>
+	</div><br>
+	<div class="block">
+		<% unless (field('ds.org_server_fqdn')->valid) { %>
+			<span class="field-with-error"><%= field('ds.org_server_fqdn')->error %></span>
+		<% } %>
+		%= label_for 'org_server_fqdn' => '* Origin Server Base URL', class => 'label'
+		<% if ($priv_level >= 20) { %>
+		%= field('ds.org_server_fqdn')->text(class => 'field', required => 'required', id => 'org_server_fqdn', name => 'ds.org_server_fqdn');
+		<% } else { %>
+		%= field('ds.org_server_fqdn')->text(class => 'field', readonly => 'readonly');
+		<% } %>
+	</div><br>
+	<div class="block">
+		<% unless (field('ds.profile')->valid) { %>
+			<span class="field-with-error"><%= field('ds.profile')->error %></span>
+		<% } %>
+		%= label_for 'profile' => '* CCR profile', class => 'label'
+		<% if ($priv_level >= 20) { %>
+		%= field('ds.profile')->select(class => 'field', required => 'required', id => 'profile', name => 'ds.profile');
+		<% } else { %>
+		%= field('ds.profile.name')->text(class => 'field', readonly => 'readonly');
+		<% }  %>
+	</div><br>
+	<div class="block">
+		<% unless (field('ds.global_max_mbps')->valid) { %>
+			<span class="field-with-error"><%= field('ds.global_max_mbps')->error %></span>
+		<% } %>
+		%= label_for 'global_max_mbps' => 'Maximum Bits per Second allowed globally (4T or 500M are valid entries)', class => 'label'
+		<% if ($priv_level >= 20) { %>
+		%= field('ds.global_max_mbps')->text(class => 'field', id => 'global_max_mbps', name => 'ds.global_max_mbps');
+		<% } else { %>
+		%= field('ds.global_max_mbps')->text(class => 'field', readonly => 'readonly');
+		<% } %>
+	</div><br>
+	<div class="block">
+		<% unless (field('ds.global_max_tps')->valid) { %>
+			<span class="field-with-error"><%= field('ds.global_max_tps')->error %></span>
+		<% } %>
+		%= label_for 'global_max_tps' => 'Maximum Transactions per Second allowed globally', class => 'label'
+		<% if ($priv_level >= 20) { %>
+		%= field('ds.global_max_tps')->text(class => 'field', id => 'global_max_tps', name => 'ds.global_max_tps');
+		<% } else { %>
+		%= field('ds.global_max_tps')->text(class => 'field', readonly => 'readonly');
+		<% }  %>
+	</div><br>
+	<div class="block">
+		<% unless (field('ds.miss_lat')->valid) { %>
+			<span class="field-with-error"><%= field('ds.miss_lat')->error %></span>
+		<% } %>
+		%= label_for 'miss_lat' => 'Geo Miss Default Latitude', class => 'label'
+		<% if ($priv_level >= 20) { %>
+			<% if ($mode =~ /edit/) { %>
+			%= field('ds.miss_lat')->text(class => 'field', id => 'miss_lat', name => 'ds.miss_lat');
+			<% } else { %>
+			%= field('ds.miss_lat')->text(class => 'field', id => 'miss_lat', name => 'ds.miss_lat', value => 41.881944);
+			<% } %>
+		<% } else { %>
+		%= field('ds.miss_lat')->text(class => 'field', readonly => 'readonly');
+		<% }  %>
+	</div><br>
+	<div class="block">
+		<% unless (field('ds.miss_long')->valid) { %>
+			<span class="field-with-error"><%= field('ds.miss_long')->error %></span>
+		<% } %>
+		%= label_for 'miss_long' => 'Geo Miss Default Longitude', class => 'label'
+		<% if ($priv_level >= 20) { %>
+			<% if ($mode =~ /edit/) { %>
+			%= field('ds.miss_long')->text(class => 'field', id => 'miss_long', name => 'ds.miss_long');
+			<% } else { %>
+			%= field('ds.miss_long')->text(class => 'field', id => 'miss_long', name => 'ds.miss_long', value => -87.627778);
+			<% } %>
+		<% } else { %>
+		%= field('ds.miss_long')->text(class => 'field', readonly => 'readonly');
+		<% }  %>
+	</div><br>
+	<div class="block">
+		<% unless (field('ds.header_rewrite')->valid) { %>
+			<span class="field-with-error"><%= field('ds.header_rewrite')->error %></span>
+		<% } %>
+		%= label_for 'header_rewrite' => 'Request Header Rewrite Rules', class => 'label'
+			<% if ($priv_level >= 20) { %>
+				%= field('ds.header_rewrite')->text(class => 'field', id => 'ds.header_rewrite', name => 'ds.header_rewrite');
+			<% } else { %>
+				%= field('ds.header_rewrite')->text(class => 'field', readonly => 'readonly');
+			<% }  %>
+	</div><br>
+	<div class="block">
+		<% unless (field('ds.long_desc')->valid) { %>
+			<span class="field-with-error"><%= field('ds.long_desc')->error %></span>
+		<% } %>
+		%= label_for 'long_desc' => 'Long Description', class => 'label'
+		<% if ($priv_level >= 20) { %>
+		%= field('ds.long_desc')->text(class => 'field', id => 'long_desc', name => 'ds.long_desc');
+		<% } else { %>
+		%= field('ds.long_desc')->text(class => 'field', readonly => 'readonly');
+		<% } %>
+	</div><br>
+	<div class="block">
+		<% unless (field('ds.long_desc_1')->valid) { %>
+			<span class="field-with-error"><%= field('ds.long_desc_1')->error %></span>
+		<% } %>
+		%= label_for 'long_desc_1' => 'Customer', class => 'label'
+		<% if ($priv_level >= 20) { %>
+		%= field('ds.long_desc_1')->text(class => 'field', id => 'long_desc_1', name => 'ds.long_desc_1');
+		<% } else { %>
+		%= field('ds.long_desc_1')->text(class => 'field', readonly => 'readonly');
+		<% }  %>
+	</div><br>
+	<div class="block">
+		<% unless (field('ds.long_desc_2')->valid) { %>
+			<span class="field-with-error"><%= field('ds.long_desc_2')->error %></span>
+		<% } %>
+		%= label_for 'long_desc_2' => 'Service', class => 'label'
+		<% if ($priv_level >= 20) { %>
+		%= field('ds.long_desc_2')->text(class => 'field', id => 'long_desc_2', name => 'ds.long_desc_2');
+		<% } else { %>
+		%= field('ds.long_desc_2')->text(class => 'field', readonly => 'readonly');
+		<% } %>
+	</div><br>
+	<div class="block">
+		<% unless (field('ds.info_url')->valid) { %>
+			<span class="field-with-error"><%= field('ds.info_url')->error %></span>
+		<% } %>
+		%= label_for 'info_url' => 'Info URL', class => 'label'
+		<% if ($priv_level >= 20) { %>
+		%= field('ds.info_url')->text(class => 'field', id => 'info_url', name => 'ds.info_url');
+		<% } else { %>
+		%= field('ds.info_url')->text(class => 'field', readonly => 'readonly');
+		<% } %>
+	</div><br>
+	<div class="block">
+		<% unless (field('ds.check_path')->valid) { %>
+			<span class="field-with-error"><%= field('ds.check_path')->error %></span>
+		<% } %>
+		%= label_for 'check_path' => 'Check Path', class => 'label'
+		<% if ($priv_level >= 20) { %>
+		%= field('ds.check_path')->text(class => 'field', id => 'check_path', name => 'ds.check_path');
+		<% } else { %>
+		%= field('ds.check_path')->text(class => 'field', readonly => 'readonly');
+		<% }  %>
+	</div><br>
+	<div class="block">
+		<% unless (field('ds.origin_shield')->valid) { %>
+			<span class="field-with-error"><%= field('ds.origin_shield')->error %></span>
+		<% } %>
+		%= label_for 'origin_shield' => 'Origin Shield (Pipe Delimited String)', class => 'label'
+		<% if ($priv_level >= 20) { %>
+		%= field('ds.origin_shield')->text(class => 'field', id => 'origin_shield', name => 'ds.origin_shield');
+		<% } else { %>
+		%= field('ds.origin_shield')->text(class => 'field', readonly => 'readonly');
+		<% } %>
+	</div><br>
+		<div class="block">
+		<% unless (field('ds.active')->valid) { %>
+			<span class="field-with-error"><%= field('ds.active')->error %></span>
+		<% } %>
+		%= label_for 'active' => '* Active', class => 'label'
+		<% if ($priv_level >= 20) { %>
+		%= field('ds.active')->select([ [No => 0], [Yes => 1]]);
+		<% } else { %>
+			<%  if ($ds-> active == 0 ) {%>
+				%= field('ds.active')->text(class => 'field', readonly => 'readonly', value => 'No');
+			<% } else { %>
+				%= field('ds.active')->text(class => 'field', readonly => 'readonly', value => 'Yes');
+			<% } %>
+		<% } %>
+	</div><br>
+</div>

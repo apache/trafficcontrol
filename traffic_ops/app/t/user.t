@@ -1,0 +1,123 @@
+package main;
+#
+# Copyright 2015 Comcast Cable Communications Management, LLC
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+use Mojo::Base -strict;
+use Test::More;
+use Test::Mojo;
+use Data::Dumper;
+use strict;
+use warnings;
+use Schema;
+use Test::TestHelper;
+use Fixtures::TmUser;
+
+#no_transactions=>1 ==> keep fixtures after every execution, beware of duplicate data!
+#no_transactions=>0 ==> delete fixtures after every execution
+
+BEGIN { $ENV{MOJO_MODE} = "test" }
+
+my $schema = Schema->connect_to_database;
+my $t      = Test::Mojo->new('TrafficOps');
+Test::TestHelper->unload_core_data($schema);
+
+my $fixtures = Fixtures::TmUser->new( { schema => $schema, no_transactions => 1 } );
+Test::TestHelper->teardown( $schema, 'Log' );
+Test::TestHelper->teardown( $schema, 'Role' );
+Test::TestHelper->teardown( $schema, 'TmUser' );
+
+Test::TestHelper->load_all_fixtures( Fixtures::Role->new( { schema => $schema, no_transactions => 1 } ) );
+
+ok my $admin_fixture = $fixtures->load('admin'), 'Does the admin user load?';
+
+ok $t->post_ok( '/login', => form => { u => Test::TestHelper::ADMIN_USER, p => Test::TestHelper::ADMIN_USER_PASSWORD } )->status_is(302)
+	->or( sub { diag $t->tx->res->content->asset->{content}; } );
+
+ok $t->post_ok(
+	'/user',
+	=> form => {
+		'tm_user.full_name'            => 'fullname',
+		'tm_user.username'             => 'testcase',
+		'tm_user.phone_number'         => 'phone_number',
+		'tm_user.email'                => 'email@email.com',
+		'tm_user.local_passwd'         => 'password',
+		'tm_user.confirm_local_passwd' => 'password',
+		'tm_user.role'                 => 4,
+		'tm_user.company'              => 'ABC Company',
+	}
+	)->status_is(302)->or( sub { diag $t->tx->res->content->asset->{content}; } ),
+	'Can a user be created?';
+
+ok $t->get_ok('/datauser')->status_is(200)->json_is( '/0/username', 'admin' )->json_is( '/0/role', 4 ), 'Does the admin username exist?';
+
+ok $t->get_ok('/datauser/orderby/role')->status_is(200)->json_has('/0/rolename')->json_has('/0/username')->json_has('/0/id')->json_has('/0/role'),
+	'Does the user sort by role?';
+
+=cut
+TODO: drichardson update the tm_user then check that the field got updated.
+ok $t->post_ok(
+	'/user',
+	=> form => {
+		'tm_user.full_name'            => 'fullname',
+		'tm_user.username'             => 'testcase',
+		'tm_user.phone_number'         => 'phone_number',
+		'tm_user.email'                => 'email@email.com',
+		'tm_user.local_passwd'         => 'password',
+		'tm_user.confirm_local_passwd' => 'password',
+		'tm_user.role'                 => 4,
+	}
+	)->status_is(302)->or( sub { diag $t->tx->res->content->asset->{content}; } ),
+	'Can a user be updated?';
+
+sub upd_and_del() {
+	my $q        = 'select id from tm_user where username = \'username\'';
+	my $get_user = $dbh->prepare($q);
+	$get_user->execute();
+	my $p = $get_user->fetchall_arrayref( {} );
+	$get_user->finish();
+	my $i = 0;
+	while ( defined( $p->[$i] ) ) {
+		diag $p->[$i]->{name};
+		my $id = $p->[$i]->{id};
+		$t->post_ok(
+			      '/user/'
+				. $id
+				. '/update' => form => {
+				username             => 'username',
+				full_name            => 'full_name',
+				role                 => '4',
+				uid                  => '3',
+				gid                  => '9',
+				local_passwd         => 'local_passwd',
+				confirm_local_passwd => 'confirm_local_passwd',
+				company              => 'company',
+				email                => 'email',
+				new_user             => 1,
+				address_line1        => 'address_line1',
+				address_line2        => 'address_line2',
+				city                 => 'city',
+				state_or_province    => 'state_or_province',
+				phone_number         => 'phone_number',
+				postal_code          => 'postal_code',
+				country              => 'country',
+				local_user           => 1,
+				}
+		)->status_is(302)->or( sub { diag $t->tx->res->content->asset->{content}; } );
+		$i++;
+	}
+}
+=cut
+ok $t->get_ok('/logout')->status_is(302)->or( sub { diag $t->tx->res->content->asset->{content}; } );
+done_testing();

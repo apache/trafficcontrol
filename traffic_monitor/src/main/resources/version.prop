@@ -1,0 +1,5 @@
+version=${project.version}
+name=${project.name}
+git-revision=${buildNumber}
+buildTimestamp=${timestamp}
+deploy-dir=${deploy.dir}

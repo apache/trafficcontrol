@@ -1,0 +1,58 @@
+<!--
+     Copyright 2015 Comcast Cable Communications Management, LLC
+
+     Licensed under the Apache License, Version 2.0 (the "License");
+     you may not use this file except in compliance with the License.
+     You may obtain a copy of the License at
+
+     http://www.apache.org/licenses/LICENSE-2.0
+
+     Unless required by applicable law or agreed to in writing, software
+     distributed under the License is distributed on an "AS IS" BASIS,
+     WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+     See the License for the specific language governing permissions and
+     limitations under the License.
+ -->
+
+<!DOCTYPE html>
+<html lang="en">
+<head></head>
+
+<style>
+.button_link {
+  display: block;
+  width: 130px;
+  height: 35px;
+  background: #2682AF;
+  padding: 5px;
+  text-align: center;
+  border-radius: 5px;
+  color: white;
+  font-weight: bold;
+  text-decoration:none;
+}
+.button_link:active {
+    border-color: ButtonShadow ButtonHighlight ButtonHighlight ButtonShadow;
+}
+</style>
+
+<body>
+  <section>A new account has been created for you on the <%= $instance_name %> Portal.</section>
+  <p/>
+  <section><%= $instance_name %> offers direct content delivery to millions of consumers in North America and internationally.</section>
+  <p/>
+  <a class="button_link" href="<%= $tm_user->{portal_base_url} %>/#/user/register?token=<%= $tm_user->{token} %>">Click to Finish Your Registration</a> 
+  <p/>
+  <section>You'll find a dashboard that provides access to all of your delivery services or you can explore individual delivery services as well as the overall <%= $instance_name %> analytics.</section>
+  <p/>
+  <section>The welcome guide for the <%= $instance_name %> can be found at:</section>
+  <a href="<%= $tm_user->{portal_base_url} %>/#/collateral"><%= $tm_user->{portal_base_url} %>/#/collateral</a>
+  <p/>
+  If you have any questions, please contact your
+  <%= $instance_name %> Product Owner listed in the welcome guide.</section>
+  <p/>
+
+  Thank you,<br/>
+  The <%= $instance_name %> Team<br/>
+</body>
+</html>

@@ -1,0 +1,405 @@
+/*
+ * Copyright 2015 Comcast Cable Communications Management, LLC
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+package com.comcast.cdn.traffic_control.traffic_router.core.ds;
+
+import java.io.ByteArrayOutputStream;
+import java.io.DataOutputStream;
+import java.net.InetAddress;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.security.GeneralSecurityException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.atomic.AtomicInteger;
+
+import org.apache.log4j.Logger;
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import com.comcast.cdn.traffic_control.traffic_router.core.cache.Cache;
+import com.comcast.cdn.traffic_control.traffic_router.core.cache.CacheLocation;
+import com.comcast.cdn.traffic_control.traffic_router.core.cache.InetRecord;
+import com.comcast.cdn.traffic_control.traffic_router.core.cache.Cache.DeliveryServiceReference;
+import com.comcast.cdn.traffic_control.traffic_router.core.loc.Geolocation;
+import com.comcast.cdn.traffic_control.traffic_router.core.request.DNSRequest;
+import com.comcast.cdn.traffic_control.traffic_router.core.request.HTTPRequest;
+import com.comcast.cdn.traffic_control.traffic_router.core.router.StatTracker.Track;
+import com.comcast.cdn.traffic_control.traffic_router.core.router.StatTracker.Track.ResultType;
+import com.comcast.cdn.traffic_control.traffic_router.core.util.StringProtector;
+
+public class DeliveryService {
+	protected static final Logger LOGGER = Logger.getLogger(DeliveryService.class);
+	private final String id;
+	private final JSONObject ttls;
+	private final boolean coverageZoneOnly;
+	private final JSONArray geoEnabled;
+	private final JSONArray staticDnsEntries;
+	private final JSONArray domains;
+	private final JSONObject bypassDestination;
+	private final JSONObject soa;
+	private final JSONObject props;
+	private boolean isDns;
+	private final boolean shouldAppendQueryString;
+	private final Geolocation missLocation;
+	private final Dispersion dispersion;
+	private final boolean ip6RoutingEnabled;
+
+	public DeliveryService(final String id, final JSONObject dsJo) throws JSONException {
+		this.id = id;
+		this.props = dsJo;
+		this.ttls = dsJo.optJSONObject("ttls");
+		if(this.ttls == null) {
+			LOGGER.warn("ttls is null for:"+id);
+			LOGGER.warn(dsJo.toString(2));
+		}
+		this.coverageZoneOnly = dsJo.getBoolean("coverageZoneOnly");
+		this.geoEnabled = dsJo.optJSONArray("geoEnabled");
+		this.staticDnsEntries = dsJo.optJSONArray("staticDnsEntries");
+		this.bypassDestination = dsJo.optJSONObject("bypassDestination");
+		this.domains = dsJo.optJSONArray("domains");
+		this.soa = dsJo.optJSONObject("soa");
+		if(dsJo.has("appendQueryString")) {
+			this.shouldAppendQueryString = dsJo.optBoolean("appendQueryString");
+		} else {
+			this.shouldAppendQueryString = true;
+		}
+		// missLocation: {lat: , long: }
+		final JSONObject mlJo = dsJo.optJSONObject("missLocation");
+		if(mlJo != null) {
+			missLocation = new Geolocation(mlJo.optDouble("lat"), mlJo.optDouble("long"));
+		} else {
+			missLocation = null;
+		}
+
+		this.dispersion = new Dispersion(dsJo.optJSONObject("dispersion"));
+		this.ip6RoutingEnabled = dsJo.optBoolean("ip6RoutingEnabled", false);
+	}
+
+	public String getId() {
+		return id;
+	}
+
+	public JSONObject getTtls() {
+		return ttls;
+	}
+
+	@Override
+	public String toString() {
+		return "DeliveryService [id=" + id + "]";
+	}
+
+	public Geolocation supportLocation(final Geolocation clientLocation, final String requestType) {
+		if(clientLocation == null) { 
+			if(missLocation == null) {
+				LOGGER.warn(String.format("[%s] no location, no substitute location ds=%s",
+						requestType, this.toString()));
+				return null; 
+			}
+			LOGGER.warn(String.format("[%s] substitute location ds=%s",
+					requestType, this.toString()));
+			return missLocation;
+		}
+		if(isLocationBlocked(clientLocation)) {
+			LOGGER.warn(String.format("[%s] location rejected for ds=%s: %s",
+					requestType, this.toString(), clientLocation));
+			return null;
+		}
+		return clientLocation;
+	}
+	private boolean isLocationBlocked(final Geolocation clientLocation) {
+		if(geoEnabled == null || geoEnabled.length() == 0) { return false; }
+
+		final Map<String, String> locData = clientLocation.getProperties();
+		for(int i = 0; i < geoEnabled.length(); i++) {
+			boolean match = true;
+			try {
+				final JSONObject constraint = geoEnabled.optJSONObject(i);
+				for(String t : JSONObject.getNames(constraint)) {
+					final String v = constraint.getString(t);
+					final String data = locData.get(t);
+					if(!v.equalsIgnoreCase(data)) {
+						match = false;
+						break;
+					}
+				}
+				if(match) { return false; }
+			} catch (JSONException e) {
+				LOGGER.warn(e,e);
+			}
+		}
+		return true;
+	}
+
+	public boolean isCoverageZoneOnly() {
+		return coverageZoneOnly;
+	}
+
+	public URL getFailureHttpResponse(final HTTPRequest request, final Track track) throws MalformedURLException {
+		if(bypassDestination == null) {
+			track.setResult(ResultType.MISS);
+			return null;
+		}
+		track.setResult(ResultType.DS_REDIRECT);
+		final JSONObject httpJo = bypassDestination.optJSONObject("HTTP");
+		if(httpJo == null) {
+			track.setResult(ResultType.MISS);
+			return null;
+		}
+		final String fqdn = httpJo.optString("fqdn");
+		if(fqdn == null) {
+			track.setResult(ResultType.MISS);
+			return null;
+		}
+		int port = 80;
+		if(httpJo.has("port")) {
+			port = httpJo.optInt("port");
+		}
+		return new URL(createURIString(request, fqdn, port, null));
+	}
+	private static final String REGEX_PERIOD = "\\.";
+	private static final String SCHEME = "http://";
+	private static final int STANDARD_HTTP_PORT = 80;
+	public String createURIString(final HTTPRequest request, final Cache cache) {
+		String fqdn = getFQDN(cache);
+		if (fqdn == null) {
+			final String[] cacheName = cache.getFqdn().split(REGEX_PERIOD, 2);
+			fqdn = cacheName[0] + "." + request.getHostname().split(REGEX_PERIOD, 2)[1];
+		}
+		return createURIString(request, fqdn, cache.getPort(), getTransInfoStr(request));
+	}
+	private String createURIString(final HTTPRequest request, final String fqdn, final int port, final String tinfo) {
+		final StringBuilder uri = new StringBuilder(SCHEME);
+
+		uri.append(fqdn);
+
+		if (port != STANDARD_HTTP_PORT) {
+			uri.append(":").append(port);
+		}
+		uri.append(request.getPath());
+		boolean queryAppended = false;
+		if (request.getQueryString() != null && appendQueryString()) {
+			uri.append("?").append(request.getQueryString());
+			queryAppended = true;
+		}
+		if(tinfo != null) {
+			if(queryAppended) {
+				uri.append("&");
+			} else {
+				uri.append("?");
+			}
+			uri.append(tinfo);
+		}
+		return uri.toString();
+	}
+
+	private String getFQDN(final Cache cache) {
+		for (final DeliveryServiceReference dsRef : cache.getDeliveryServices()) {
+			if (dsRef.getDeliveryServiceId().equals(this.getId())) {
+				return dsRef.getFqdn();
+			}
+		}
+		return null;
+	}
+	public List<InetRecord> getFailureDnsResponse(final DNSRequest request, final Track track) {
+		if(bypassDestination == null) {
+			track.setResult(ResultType.MISS);
+			return null;
+		}
+		track.setResult(ResultType.DS_REDIRECT);
+		return getRedirectInetRecords(bypassDestination.optJSONObject("DNS"));
+	}
+	private List<InetRecord> redirectInetRecords;
+	private List<InetRecord> getRedirectInetRecords(final JSONObject dns) {
+		if (dns == null) {
+			return null;
+		}
+
+		try {
+			synchronized (this) {
+				if (redirectInetRecords != null) {
+					return redirectInetRecords;
+				}
+
+				final ArrayList<InetRecord> list = new ArrayList<InetRecord>();
+				final int ttl = dns.getInt("ttl");
+				list.add( new InetRecord(InetAddress.getByName(dns.getString("ip")), ttl) );
+				String ipStr = dns.getString("ip6");
+
+				if (ipStr != null && !ipStr.isEmpty()) {
+					ipStr = ipStr.replaceAll("/.*", "");
+					list.add( new InetRecord(InetAddress.getByName(ipStr), ttl) );
+				}
+
+				final String cnameAlias = dns.getString("cnameAlias");
+
+				if (cnameAlias != null) {
+					list.add( new InetRecord(cnameAlias, ttl) );
+				}
+
+				this.redirectInetRecords = list;
+			}
+		} catch (Exception e) {
+			redirectInetRecords = null;
+			LOGGER.warn(e,e);
+		}
+
+		return redirectInetRecords;
+	}
+
+	public JSONObject getSoa() {
+		return soa;
+	}
+
+	public boolean isDns() {
+		return isDns;
+	}
+	public void setDns(final boolean isDns) {
+		this.isDns = isDns;
+	}
+
+	public boolean appendQueryString() {
+		return shouldAppendQueryString;
+	}
+
+	enum TransInfoType {
+		NONE,
+		IP,
+		IP_TID
+	};
+	public String getTransInfoStr(final HTTPRequest request) {
+		final TransInfoType type = TransInfoType.valueOf(getProp("transInfoType", "NONE"));
+		if(type == TransInfoType.NONE) {
+			return null;
+		}
+		try {
+			final InetAddress ip = InetAddress.getByName(request.getClientIP());
+			byte[] ipBytes = ip.getAddress();
+			if(ipBytes.length > 4) {
+				if(type == TransInfoType.IP) {
+					return null;
+				}
+				ipBytes = new byte[]{0,0,0,0};
+			}
+			final ByteArrayOutputStream baos = new ByteArrayOutputStream();
+			final DataOutputStream dos = new DataOutputStream(baos);
+			dos.write(ipBytes);
+			if(type == TransInfoType.IP_TID) {
+				dos.writeLong(System.currentTimeMillis());
+				dos.writeInt(getTid());
+			}
+			dos.flush();
+			return "t0="+getStringProtector().encryptForUrl(baos.toByteArray());
+		}catch (Exception e) {
+			LOGGER.warn(e,e);
+		}
+		return null;
+	}
+
+	private String getProp(final String key, final String d) {
+		if(props == null || !props.has(key)) {
+			return d;
+		}
+		return props.optString(key);
+	}
+	private int getProp(final String key, final int d) {
+		if(props == null || !props.has(key)) {
+			return d;
+		}
+		return props.optInt(key);
+	}
+
+	static StringProtector stringProtector = null;
+	private static StringProtector getStringProtector() {
+		try {
+			synchronized(LOGGER) {
+				if(stringProtector == null) {
+					stringProtector = new StringProtector("HajUsyac7"); // random passwd
+				}
+			}
+		} catch (GeneralSecurityException e) {
+			LOGGER.warn(e,e);
+		}
+		return stringProtector;
+	}
+
+	static AtomicInteger tid = new AtomicInteger(0);
+	private static int getTid() {
+		return tid.incrementAndGet();
+	}
+
+	private boolean isAvailable = true;
+	private JSONArray disabledLocations;
+	public void setState(final JSONObject state) {
+		if(state == null) {
+			isAvailable = true;
+			return;
+		}
+		if(state.has("isAvailable")) {
+			isAvailable = state.optBoolean("isAvailable");
+		}
+		// disabled locations
+		disabledLocations = state.optJSONArray("disabledLocations");
+	}
+
+	public boolean isAvailable() {
+		return isAvailable;
+	}
+
+	public boolean isLocationAvailable(final CacheLocation cl) {
+		if(cl==null) {
+			return false;
+		}
+		final JSONArray dls = this.disabledLocations;
+		if(dls == null) {
+			return true;
+		}
+		final String locStr = cl.getId();
+		for(int i = 0; i < dls.length(); i++) {
+			if(locStr.equals(dls.optString(i))) {
+				return false;
+			}
+		}
+		return true;
+	}
+
+	public int getLocationLimit() {
+		return getProp("locationFailoverLimit",0);
+	}
+
+	public int getMaxDnsIps() {
+		return getProp("maxDnsIpsForLocation",0);
+	}
+
+	public JSONArray getStaticDnsEntries() {
+		return staticDnsEntries;
+	}
+
+	public JSONArray getDomains() {
+		// TODO Auto-generated method stub
+		return domains;
+	}
+
+	public Dispersion getDispersion() {
+		return dispersion;
+	}
+
+	public boolean isIp6RoutingEnabled() {
+		return ip6RoutingEnabled;
+	}
+}

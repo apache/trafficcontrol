@@ -1,0 +1,31 @@
+<html>
+<body>
+	<wicket:head>
+	</wicket:head>
+	<wicket:panel>
+		<div wicket:id="modal1"></div>
+		<table style="width: 100%;" class="dataview">
+			<tr>
+				<th>Server</th>
+				<th>Status</th>
+				<th>Load Avg</th>
+				<th>Query Time</th>
+				<th>Bandwidth (kbps)</th>
+				<th>Connection Count</th>
+			</tr>
+			<tbody wicket:id="listpanel">
+				<tr wicket:id="servers">
+					<td><a wicket:id="fulldetails" href="#"></a></td>
+					<td><span wicket:id="status"></span></td>
+					<td class="number"><span wicket:id="loadavg"></span></td>
+					<td class="number"><span wicket:id="queryTime"></span></td>
+					<td class="number"><span wicket:id="kbps"></span>/<span
+						wicket:id="maxKbps"></span></td>
+					<td class="number"><span
+						wicket:id="current_client_connections"></span></td>
+				</tr>
+			</tbody>
+		</table>
+	</wicket:panel>
+</body>
+</html>

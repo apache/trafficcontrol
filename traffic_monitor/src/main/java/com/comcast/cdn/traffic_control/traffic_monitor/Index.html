@@ -1,0 +1,120 @@
+<html>
+<head>
+
+<title>Traffic Monitor</title>
+<link href="style.css" rel="stylesheet" />
+<style type="text/css">
+
+</style>
+<script type="text/javascript">
+$(".hider").live("click",function(){
+	var me = $(this);
+	var targetname = me.attr("data-target");
+	var target = $("."+targetname);
+	if(target.is(':visible')) {
+		$(".show",me).show();
+		$(".hide",me).hide();
+		target.slideUp();
+	} else {
+		$(".show",me).hide();
+		$(".hide",me).show();
+		target.slideDown();
+	}
+	return false;
+});
+$(function() {
+	$(".top-bar-hidden").hide();
+});
+$(".tab a").live("click",function(){
+	var me = $(this).parents(".tab");
+	me.addClass("selected");
+	var targetname = me.attr("data-target");
+	var target = $("#"+targetname);
+	target.show();
+	var siblings = me.siblings(".tab");
+	siblings.each(function( index ) {
+  		var s = $(this);
+  		s.removeClass("selected");
+  		var t = s.attr("data-target");
+  		$("#"+t).hide();
+	});
+	return false;
+});
+</script>
+</head>
+<body>
+	<div id="container">
+		<div id="header">
+		<div class="top-bar">
+			<div class="status-bar">
+				<ul>
+				<li><a href="#" class="hider" data-target="top-bar-hidden"><img
+						class="show" width="16" src="tune.png" /><img class="hide hidden"
+						width="16" src="tune-grey.png" /></a></li>
+				<li>Caches: count=<span wicket:id="servers_count"></span>
+					available=<span wicket:id="servers_available"></span> down=<span
+					wicket:id="servers_down"></span>
+				</li>
+				<li>Bandwidth: <span wicket:id="totalBandwidth"></span>/<span wicket:id="totalBandwidthAvailable"></span>
+				</li>
+				<li>Source: <span wicket:id="source"></span>
+				</li>
+				<li style="float: right;"><span wicket:id="version"></span></li>
+				</ul>
+				<br clear="all" />
+			</div>
+			<div class="top-bar-hidden">
+				<div wicket:id="tabs" class="tabpanel ">[tabbed panel will be
+					here]</div>
+			</div>
+		</div>
+		</div>
+
+
+		<div id="contents">
+
+			<div>
+			<h3>Published Docs:</h3>
+			<ul>
+			<li><a href="/publish/EventLog">EventLog</a></li>
+			<li><a href="/publish/CacheStats?hc=1">CacheStats</a></li>
+			<li><a href="/publish/DsStats?hc=1">DsStats</a></li>
+			<li><a href="/publish/CrStates">CrStates</a> (as published to Traffic Routers)</li>
+			<li><a href="/publish/CrConfig?json">CrConfig</a> (json)</li>
+			<li><a href="/publish/PeerStates">PeerStates</a></li>
+			<li><a href="/publish/Stats">Stats</a></li>
+			<li><a href="/publish/StatSummary">StatSummary</a></li>
+			<li><a href="/publish/ConfigDoc">ConfigDoc</a></li>
+			</ul>
+			</div>
+
+			<!-- <div wicket:id="server-tabs"></div> -->
+			<div class="main-tab-panel" style="float: left;">
+			<ul style="float: left;">
+			<li class="selected tab" data-target="tab-page-1"><a href="#" >Cache States</a></li>
+			<li class="tab" data-target="tab-page-2"><a href="#" >DeliveryService States</a></li>
+			<li class="tab" data-target="tab-page-3"><a href="#">Event Log</a></li>
+			</ul>
+			</div>
+			<div id="tab-page-1">
+				<div wicket:id="serverList"></div>
+			</div>
+			<div id="tab-page-2" class="hidden">
+				<div wicket:id="dsList"></div>
+			</div>
+			<div id="tab-page-3" class="hidden">
+				<div wicket:id="eventLog"></div>
+			</div>
+
+			<div >
+				<span style="margin-left: 25px"> Number of updates:</span> <span
+					id="num_updates">0</span> <br /> <span style="margin-left: 25px">
+					Last Val:</span> <span id="last_val">0</span>
+				<div>
+					<a href="/">Refresh Server List</a>
+				</div>
+			</div>
+		</div>
+	</div>
+</body>
+</html>

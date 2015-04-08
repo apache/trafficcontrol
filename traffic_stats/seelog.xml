@@ -1,0 +1,5 @@
+<seelog>
+    <outputs>
+        <file path="/opt/tmredis/var/log/tmredis/rascal_to_redis.log" />
+    </outputs>
+</seelog>

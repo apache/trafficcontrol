@@ -1,0 +1,33 @@
+<html>
+<body>
+	<wicket:head>
+	</wicket:head>
+	<wicket:panel>
+		<div wicket:id="modal2"></div>
+		<table style="width: 100%;" class="dataview">
+			<tr>
+				<th>Server</th>
+				<th>Status</th>
+				<th>Caches<br>Reporting/Available/Configured</th>
+				<th>Bandwidth (kbps)</th>
+				<th>t/sec</th>
+				<th>Disabled Locations</th>
+			</tr>
+			<tbody wicket:id="listpanel">
+				<tr wicket:id="ds">
+					<td><a wicket:id="fulldetails" href="#"></a></td>
+					<td><span wicket:id="status"></span></td>
+					<td class="number">
+						<span wicket:id="caches-reporting"></span> /
+						<span wicket:id="caches-available"></span> /
+						<span wicket:id="caches-configured"></span>
+					</td>
+					<td class="number"><span wicket:id="kbps"></span></td>
+					<td class="number"><span wicket:id="tps"></span></td>
+					<td><span wicket:id="disabled"></span></td>
+				</tr>
+			</tbody>
+		</table>
+	</wicket:panel>
+</body>
+</html>

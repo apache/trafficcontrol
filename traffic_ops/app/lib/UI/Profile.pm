@@ -1,0 +1,470 @@
+package UI::Profile;
+#
+# Copyright 2015 Comcast Cable Communications Management, LLC
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+#
+#
+
+# JvD Note: you always want to put Utils as the first use. Sh*t don't work if it's after the Mojo lines.
+use UI::Utils;
+
+use Mojo::Base 'Mojolicious::Controller';
+use Data::Dumper;
+use JSON;
+
+# Table view
+sub index {
+	my $self = shift;
+
+	&navbarpage($self);
+	$self->stash( profile => {} );
+}
+
+# for the fancybox view
+sub add {
+	my $self     = shift;
+	my %profiles = get_profiles($self);
+	$self->stash( profile => {}, profiles => \%profiles, fbox_layout => 1 );
+}
+
+sub edit {
+	my $self   = shift;
+	my $id     = $self->param('id');
+	my $cursor = $self->db->resultset('Profile')->search( { id => $id } );
+	my $data   = $cursor->single;
+	&stash_role($self);
+	$self->stash( profile => $data, id => $data->id, fbox_layout => 1 );
+	return $self->render('profile/edit');
+}
+
+# for the fancybox view
+sub import {
+	my $self = shift;
+	$self->stash( fbox_layout => 1, msgs => [] );
+}
+
+# for the fancybox view
+sub view {
+	my $self = shift;
+
+	# my $mode = $self->param('mode');
+	my $id = $self->param('id');
+
+	my $rs_param = $self->db->resultset('Profile')->search( { id => $id } );
+
+	# if ( $mode eq "view" ) {
+	my $data = $rs_param->single;
+	$self->stash( profile => $data );
+
+	&stash_role($self);
+
+	$self->stash( fbox_layout => 1 );
+
+	# }
+}
+
+# Read
+sub readprofile {
+	my $self = shift;
+	my @data;
+	my $orderby = "name";
+	$orderby = $self->param('orderby') if ( defined $self->param('orderby') );
+	my $rs_data = $self->db->resultset("Profile")->search( undef, { order_by => $orderby } );
+	while ( my $row = $rs_data->next ) {
+		push(
+			@data, {
+				"id"           => $row->id,
+				"name"         => $row->name,
+				"description"  => $row->description,
+				"last_updated" => $row->last_updated,
+			}
+		);
+	}
+	$self->render( json => \@data );
+}
+
+# Read
+sub readprofiletrimmed {
+	my $self = shift;
+	my @data;
+	my $orderby = "name";
+	$orderby = $self->param('orderby') if ( defined $self->param('orderby') );
+	my $rs_data = $self->db->resultset("Profile")->search( undef, { order_by => $orderby } );
+	while ( my $row = $rs_data->next ) {
+		push(
+			@data, {
+				"name" => $row->name,
+			}
+		);
+	}
+	$self->render( json => \@data );
+}
+
+# Delete
+sub delete {
+	my $self = shift;
+	my $id   = $self->param('id');
+
+	if ( !&is_admin($self) ) {
+		$self->flash( message => "No can do. Get more privs." );
+	}
+	else {
+		my $p_name = $self->db->resultset('Profile')->search( { id => $id } )->get_column('name')->single();
+		my $delete = $self->db->resultset('Profile')->search( { id => $id } );
+		$delete->delete();
+		&log( $self, "Delete profile " . $p_name, "UICHANGE" );
+	}
+	return $self->redirect_to('/close_fancybox.html');
+}
+
+sub check_profile_input {
+	my $self        = shift;
+	my $mode        = shift;
+	my $name        = $self->param('profile.name');
+	my $description = $self->param('profile.description');
+
+	#Check required fields
+	$self->field('profile.name')->is_required;
+	$self->field('profile.description')->is_required;
+	if ( $mode eq 'add' ) {
+
+		#Check for duplicate profile name and description for NEW
+		my $existing_profile = $self->db->resultset('Profile')->search( { name        => $name } )->get_column('name')->single();
+		my $existing_desc    = $self->db->resultset('Profile')->search( { description => $description } )->get_column('description')->single();
+		if ( $existing_profile && $name eq $existing_profile ) {
+			$self->field('profile.name')->is_equal( "", "Profile with name \"$name\" already exists." );
+		}
+
+		if ( $existing_desc && $description eq $existing_desc ) {
+			$self->field('profile.description')->is_equal( "", "Profile with the exact same description already exists" );
+		}
+	}
+	if ( $mode eq 'edit' ) {
+
+		#make sure user didnt enter a name that is already used by another profile.
+		my $id = $self->param('id');
+
+		#get original name
+		my $profile_rs = $self->db->resultset('Profile');
+		my $orig_name = $profile_rs->search( { id => $id } )->get_column('name')->single();
+		if ( $name ne $orig_name ) {
+			my $profiles = $profile_rs->search( { id => { -not_like => $id } } )->get_column('name');
+			while ( my $db_name = $profiles->next ) {
+				if ( $db_name eq $name ) {
+					$self->field('profile.name')->is_equal( "", "Profile with name \"$name\" already exists." );
+				}
+			}
+		}
+
+		#get original desc
+		my $orig_desc = $profile_rs->search( { id => $id } )->get_column('description')->single();
+		if ( $description ne $orig_desc ) {
+
+			#get all other descriptions
+			my $profiles = $profile_rs->search( { id => { -not_like => $id } } )->get_column('description');
+			while ( my $db_desc = $profiles->next ) {
+				if ( $db_desc eq $description ) {
+					$self->field('profile.description')->is_equal( "", "A profile with the exact same description already exists!" );
+				}
+			}
+		}
+	}
+	return $self->valid;
+}
+
+# Update
+sub update {
+	my $self        = shift;
+	my $id          = $self->param('id');
+	my $name        = $self->param('profile.name');
+	my $description = $self->param('profile.description');
+
+	if ( $self->check_profile_input("edit") ) {
+
+		my $update = $self->db->resultset('Profile')->find( { id => $id } );
+		$update->name($name);
+		$update->description($description);
+		$update->update();
+
+		# if the update has failed, we don't even get here, we go to the exception page.
+		&log( $self, "Update profile with name: $name", "UICHANGE" );
+
+		$self->flash( message => "Success!" );
+		return $self->redirect_to("/profile/$id/view");
+	}
+	else {
+		&stash_role($self);
+		$self->stash( profile => {}, fbox_layout => 1 );
+		$self->render('profile/edit');
+	}
+
+}
+
+sub create {
+	my $self   = shift;
+	my $new_id = -1;
+	my $p_name = $self->param('profile.name');
+	my $p_desc = $self->param('profile.description');
+	if ( !&is_admin($self) ) {
+		my $err = "You do not have enough privileges to modify this." . "__NEWLINE__";
+		return $self->flash( message => $err );
+	}
+	if ( $self->check_profile_input("add") ) {
+		my $insert = $self->db->resultset('Profile')->create(
+			{
+				name        => $p_name,
+				description => $p_desc,
+			}
+		);
+		$insert->insert();
+		$new_id = $insert->id;
+
+		# if the insert has failed, we don't even get here, we go to the exception page.
+		&log( $self, "Create profile with name:" . $self->param('profile.name'), "UICHANGE" );
+
+		if ( defined( $self->param('copy_from_id') ) ) {
+			my $cp_id = $self->param('copy_from_id');
+			my $rs_param =
+				$self->db->resultset('ProfileParameter')->search( { profile => $cp_id }, { prefetch => [ { profile => undef }, { parameter => undef } ] } );
+			my $p_name = "";
+			while ( my $row = $rs_param->next ) {
+				my $insert = $self->db->resultset('ProfileParameter')->create(
+					{
+						profile   => $new_id,
+						parameter => $row->parameter->id,
+					}
+				);
+				$insert->insert();
+				$p_name = $row->profile->name;
+			}
+			&log( $self, "Copy parameter assignments from " . $p_name . " to " . $self->param('name'), "UICHANGE" );
+		}
+		$self->flash( message => "Success!" );
+		return $self->redirect_to("/profile/$new_id/view");
+	}
+	else {
+		&stash_role($self);
+		my %profiles = &get_profiles($self);
+		$self->stash( profile => {}, profiles => \%profiles, fbox_layout => 1 );
+		$self->render('profile/add');
+	}
+}
+
+sub doImport {
+	my $self             = shift;
+	my $new_id           = -1;
+	my $in_data          = $self->param('profile_to_import');
+	my $f_name           = $in_data->{filename};
+	my $data             = JSON->new->utf8->decode( $in_data->asset->{content} );
+	my $p_name           = $data->{profile}->{name};
+	my $p_desc           = $data->{profile}->{description};
+	my $existing_profile = $self->db->resultset('Profile')->search( { name => $p_name } )->get_column('name')->single();
+	my $existing_desc    = $self->db->resultset('Profile')->search( { description => $p_desc } )->get_column('description')->single();
+	my @msgs;
+
+	if ($existing_profile) {
+		push( @msgs, "A profile with the name \"$p_name\" already exists!" );
+	}
+	if ($existing_desc) {
+		push( @msgs, "A profile with the exact same description already exists!" );
+	}
+	my $msgs_size = @msgs;
+	if ( $msgs_size > 0 ) {
+		&stash_role($self);
+		$self->stash( fbox_layout => 1, msgs => \@msgs );
+		return $self->render('profile/import');
+	}
+	else {
+		my $insert = $self->db->resultset('Profile')->create(
+			{
+				name        => $p_name,
+				description => $p_desc,
+			}
+		);
+		$insert->insert();
+		$new_id = $insert->id;
+
+		my $new_count      = 0;
+		my $existing_count = 0;
+		my $done;
+		foreach my $param ( @{ $data->{parameters} } ) {
+			my $param_name        = $param->{name};
+			my $param_config_file = $param->{config_file};
+			my $param_value       = $param->{value};
+			my $param_id =
+				$self->db->resultset('Parameter')
+				->search( { -and => [ name => $param_name, value => $param_value, config_file => $param_config_file ] }, { rows => 1 } )->get_column('id')
+				->single();
+			next if defined( $done->{$param_id} );    # sometimes the profiles we import have dupes?
+			if ( !defined($param_id) ) {
+				my $insert = $self->db->resultset('Parameter')->create(
+					{
+						name        => $param_name,
+						config_file => $param_config_file,
+						value       => $param_value,
+					}
+				);
+				$insert->insert();
+				$param_id = $insert->id();
+				$new_count++;
+			}
+			else {
+				$existing_count++;
+			}
+
+			my $link_insert = $self->db->resultset('ProfileParameter')->create(
+				{
+					parameter => $param_id,
+					profile   => $new_id,
+				}
+			);
+			$link_insert->insert();
+			$done->{$param_id} = $new_id;
+		}
+		&log( $self, "Import profile " . $p_name . " with " . $new_count . " new and " . $existing_count . " existing parameters.", "UICHANGE" );
+		$self->flash( message => => "Success!" );
+		return $self->redirect_to("/profile/$new_id/view");
+	}
+}
+
+sub availableprofile {
+	my $self = shift;
+	my @data;
+	my $paramid = $self->param('paramid');
+	my %dsids;
+	my %in_use;
+
+	# Get a list of all profile id's associated with this param id
+	my $rs_in_use = $self->db->resultset("ProfileParameter")->search( { 'parameter' => $paramid } );
+	while ( my $row = $rs_in_use->next ) {
+		$in_use{ $row->profile->id } = undef;
+	}
+
+	# Add remaining profile ids to @data
+	my $rs_links = $self->db->resultset("Profile")->search( undef, { order_by => "description" } );
+	while ( my $row = $rs_links->next ) {
+		if ( !exists( $in_use{ $row->id } ) ) {
+			push( @data, { "id" => $row->id, "description" => $row->description } );
+		}
+	}
+
+	$self->render( json => \@data );
+}
+
+sub export {
+	my $self = shift;
+	my $id   = $self->param('id');
+
+	my $jdata;
+	my $pname;
+	my $rs = $self->db->resultset('ProfileParameter')->search( { profile => $id }, { prefetch => [ { parameter => undef }, { profile => undef } ] } );
+	my $i = 0;
+	while ( my $row = $rs->next ) {
+		if ( !defined( $jdata->{profile} ) ) {
+			$jdata->{profile}->{name}        = $row->profile->name;
+			$jdata->{profile}->{description} = $row->profile->description;
+			$pname                           = $row->profile->name;
+		}
+		$jdata->{parameters}->[$i] = {
+			name        => $row->parameter->name,
+			config_file => $row->parameter->config_file,
+			value       => $row->parameter->value
+		};
+		$i++;
+	}
+	my $text = JSON->new->utf8->encode($jdata);
+
+	$self->res->headers->content_type("application/download");
+	my $fname = $pname . ".traffic_ops";
+	$self->res->headers->content_disposition("attachment; filename=\"$fname\"");
+	$self->render( text => $text, format => 'txt', profile => {} );
+}
+
+sub compareprofile {
+	my $self   = shift;
+	my $pid1   = $self->param('profile1');
+	my $pid2   = $self->param('profile2');
+	my $pname1 = $self->db->resultset('Profile')->search( { id => $pid1 } )->get_column('name')->single();
+	my $pname2 = $self->db->resultset('Profile')->search( { id => $pid2 } )->get_column('name')->single();
+
+	&stash_role($self);
+	$self->stash( pname1 => $pname1, pname2 => $pname2, pid1 => $pid1, pid2 => $pid2 );
+	&navbarpage($self);
+}
+
+sub acompareprofile {
+	my $self = shift;
+	my $pid1 = $self->param('profile1');
+	my $pid2 = $self->param('profile2');
+
+	my %data = ( "aaData" => undef );
+	my $rs = $self->db->resultset('ProfileParameter')->search( { profile => $pid1 }, { prefetch => [ { parameter => undef }, { profile => undef } ] } );
+	my $params1;
+	my $pname1;
+	while ( my $row = $rs->next ) {
+		$params1->{ $row->parameter->name } = { config_file => $row->parameter->config_file, value => $row->parameter->value };
+		$pname1 = $row->profile->name;
+	}
+
+	$rs = $self->db->resultset('ProfileParameter')->search( { profile => $pid2 }, { prefetch => [ { parameter => undef }, { profile => undef } ] } );
+	my $params2;
+	my $pname2;
+	while ( my $row = $rs->next ) {
+		$params2->{ $row->parameter->name } = { config_file => $row->parameter->config_file, value => $row->parameter->value };
+		$pname2 = $row->profile->name;
+	}
+
+	my $checked;
+	my @result_table;
+	my $i = 0;
+	$result_table[$i] = { name => "Parameter Name", file => "Configuration File", value1 => $pname1, value2 => $pname2 };
+	foreach my $name ( keys %{$params1} ) {
+		$checked->{$name} = 1;
+		if ( !defined( $params2->{$name} ) ) {
+			my @line = [ $name, $params1->{$name}->{config_file}, $params1->{$name}->{value}, "undef" ];
+			push( @{ $data{'aaData'} }, @line );
+		}
+		elsif ( $params1->{$name}->{value} ne $params2->{$name}->{value} ) {
+			if ( $params1->{$name}->{config_file} eq $params2->{$name}->{config_file} ) {
+				my @line = [ $name, $params1->{$name}->{config_file}, $params1->{$name}->{value}, $params2->{$name}->{value} ];
+				push( @{ $data{'aaData'} }, @line );
+			}
+			else {
+				my @line = [ $name, $params1->{$name}->{config_file}, $params1->{$name}->{value}, "undef" ];
+				push( @{ $data{'aaData'} }, @line );
+				@line = [ $name, $params2->{$name}->{config_file}, "undef", $params2->{$name}->{value} ];
+				push( @{ $data{'aaData'} }, @line );
+			}
+		}
+	}
+	foreach my $name ( keys %{$params2} ) {
+		if ( !defined( $checked->{$name} ) ) {
+			my @line = [ $name, $params2->{$name}->{config_file}, "undef", $params2->{$name}->{value} ];
+			push( @{ $data{'aaData'} }, @line );
+		}
+	}
+	$self->render( json => \%data );
+}
+
+sub get_profiles {
+	my $self = shift;
+	my %profiles;
+	my $p_rs = $self->db->resultset("Profile")->search( undef, { order_by => "name" } );
+	while ( my $profile = $p_rs->next ) {
+		$profiles{ $profile->name . " - " . $profile->description } = $profile->id;
+	}
+	return %profiles;
+}
+1;

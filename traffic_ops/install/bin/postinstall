@@ -1,0 +1,428 @@
+#!/usr/bin/perl
+
+#
+# Copyright 2015 Comcast Cable Communications Management, LLC
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+# http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+
+use strict;
+use warnings;
+
+use lib qw(/opt/traffic_ops/install/lib /opt/traffic_ops/install/lib/perl5 /opt/traffic_ops/app/local/lib/perl5 /opt/traffic_ops/app/lib);
+
+use DBI;
+use JSON;
+use InstallUtils;
+use Digest::SHA1 qw(sha1_hex);
+
+my %dbconf = ();
+my %ldapconf = ();
+my $database_conf = "/opt/traffic_ops/app/conf/production/database.conf";
+my $ldap_conf = "/opt/traffic_ops/app/conf/ldap.conf";
+my $migrations_dbconf = "/opt/traffic_ops/app/db/dbconf.yml";
+my $parameters_file = "/opt/traffic_ops/install/data/json/parameters.json";
+my $users_file = "/opt/traffic_ops/install/data/json/users.json";
+my %dbdriver = (
+		mysql => "mymysql",
+	);
+my $install = InstallUtils->new();
+
+my $reconfigure = "/opt/traffic_ops/.reconfigure";
+my $dbAdminUser = "";
+my $dbAdminPw = "";
+my $verifyDbAdminPw = "";
+
+my $tmAdminUser = "";
+my $tmAdminPw = "";
+my $verifyTmAdminPw = "";
+my $ans = "";
+my $connected = 0;
+my %user = ();
+
+my $installMsg = << 'EOF';
+
+This script will initialize the Traffic Ops database.
+Please enter the following information in order to completely 
+configure the Traffic Ops mysql database.
+
+EOF
+
+# Init.
+sub init () {
+  do {
+	  $install->execCommand ("/usr/bin/tput", "clear");
+
+	  if ($DBI::errstr) {
+		  print "Error connecting to database using the supplied information: $DBI::errstr\n";
+	  }
+
+	  print "\n$installMsg\n";
+  
+	  my $type = "";
+	  while (length $type == 0) {
+		  $type = $install->promptUser ("Database type","mysql");
+	  }
+	  $dbconf{"type"} = $type;
+
+	  my $dbname = "";
+	  while (length $dbname == 0) {
+		  $dbname = $install->promptUser ("Database name", "traffic_ops_db");
+	  }
+	  $dbconf{"dbname"} = $dbname;
+
+	  my $hostname = "";
+	  while (length $hostname == 0) {
+		  $hostname = $install->promptUser ("Database server hostname IP or FQDN","localhost");
+	  }
+	  $dbconf{"hostname"} = $hostname;
+
+	  my $port = "";
+	  while (length $port == 0) {
+		  $port = $install->promptUser ("Database port number", "3306");
+	  }
+	  $dbconf{"port"} = $port;
+
+	  my $user = "";
+	  while (length $user == 0) {
+		  $user = $install->promptUser ("Traffic Ops database user","traffic_ops");
+	  }
+
+	  $dbconf{"user"} = $user;
+
+	  my $password = "";
+	  my $compare = "";
+	  do {
+		  $password = $install->promptUser ("Password for $user","","noEcho");
+		  $compare = $install->promptUser ("Re-Enter password for $user","","noEcho");
+		  if ($compare ne $password) {
+			print "\nError: passwords do not match, try again.\n\n";
+			$password = "";
+			$compare = "";
+		  }
+	  } while (length $password == 0);
+	  $dbconf{"password"} = $password;
+
+	  print "\n";
+	  $dbAdminUser = "";
+	  while (length $dbAdminUser == 0) {
+		  $dbAdminUser = $install->promptUser ("Database server root (admin) user name","root");
+	  }
+	  $dbAdminPw = "";
+	  $compare = "";
+	  do {
+    	  	$dbAdminPw = $install->promptUser ("Database server $dbAdminUser password", "", "noEcho");
+	  } while (length $dbAdminPw == 0);
+
+	  print "Database Type: $dbconf{'type'}\n";
+	  print "Database Name: $dbconf{'dbname'}\n";
+	  print "Hostname: $dbconf{'hostname'}\n";
+	  print "Port: $dbconf{'port'}\n";
+	  print "Database User: $dbconf{'user'}\n";
+	  $ans = $install->promptUser ("Is the above information correct (y/n)", "n");
+
+	  if ($ans eq "y") {
+		  my $dsn = sprintf("DBI:mysql:%s:%s:%s", "mysql", $dbconf{'hostname'}, $dbconf{'port'});
+		  my $dbh = DBI->connect($dsn, $dbAdminUser, $dbAdminPw);
+
+		  if ($dbh) {
+			  $connected = 1;
+			  $dbh->disconnect();
+		  }
+	  }
+  } while ($ans ne "y" || !$connected);
+
+
+  my $json_text = JSON->new->utf8->encode(\%dbconf);
+
+  open (FH, ">$database_conf") or die ("open(): $!");
+  print FH $json_text, "\n";
+  close (FH);
+  open (FH, ">$migrations_dbconf") or die ("open(): $!");
+  print FH "\nproduction:\n driver: $dbdriver{$dbconf{'type'}}\n open: tcp:$dbconf{'hostname'}:$dbconf{'port'}*$dbconf{'dbname'}/$dbconf{'user'}/$dbconf{'password'}\n";
+  print "\nThe database properties have been saved to $database_conf\n";
+
+
+  my $msg = << 'EOF';
+
+  The database configuration has been saved.  Now we need to set some custom
+  fields that are necessary for the CDN to function correctly.
+
+EOF
+
+  print $msg, "\n";
+  $ans = "";
+  my %parameters = ();
+
+  do {
+	  my $tmurl = "";
+	  while (length $tmurl == 0) {
+		  $tmurl = $install->promptUser ("Traffic Ops url", "https://localhost");
+	  }
+	  $parameters{"tmurl.url"} = $tmurl;
+
+	  my $infourl = "$tmurl/info";
+	  # while (length $infourl == 0) {
+	  # 	$infourl = $install->promptUser ("Traffic Ops info url");
+	  # }
+	  $parameters{"tminfo.url"} = $infourl;
+
+	  my $cdnname = "";
+	  while (length $cdnname == 0) {
+		  $cdnname = $install->promptUser ("Human-readable CDN Name.  (No whitespace, please)", "kabletown_cdn");
+	  }
+	  $parameters{"cdnname"} = $cdnname;
+
+	  my $domainname = "";
+	  while (length $domainname == 0) {
+		  $domainname = $install->promptUser ("DNS sub-domain for which your CDN is authoritative", "cdn1.kabletown.net");
+	  }
+	  $parameters{"domainname"} = $domainname;
+
+
+	  my $geolocationUrl = "$tmurl/routing/GeoIP2-City.mmdb.gz";
+	  $parameters{"geolocation.polling.url"} = $geolocationUrl;
+
+	  my $coverageZoneUrl = "$tmurl/routing/coverage-zone.json";
+	  $parameters{"coveragezone.polling.url"} = $coverageZoneUrl;
+
+	  my $centos65TarballFqn = "";
+      my $untarOrSkip = "";
+      while ($untarOrSkip eq "") {
+          while (length $centos65TarballFqn == 0) {
+    	      $centos65TarballFqn = $install->promptUser ("Fully qualified name of your CentOS 6.5 ISO kickstart tar file, or 'na' to skip and add files later", "/var/cache/centos65.tgz");
+          }
+          if ($centos65TarballFqn eq "na") {
+              $untarOrSkip = "skip";
+          } else {
+            if (-e $centos65TarballFqn) {
+                $untarOrSkip = "untar";
+             } else {
+                print "\nNo file named $centos65TarballFqn found.\n\n";
+                $centos65TarballFqn = "";
+            }
+          }
+      }
+
+ 	  my $kickstartFilesFqn = "";
+      while (length $kickstartFilesFqn == 0) {
+          $kickstartFilesFqn = $install->promptUser ("Fully qualified location to store your ISO kickstart files", "/var/www/files");
+      }
+
+      my $parametersJson = "/opt/traffic_ops/install/data/json/parameter.json";
+      open( OUT, ">>$parametersJson" ) || die "$parametersJson : $!";
+      print OUT "{\"name\":\"kickstart.files.location\",\"config_file\":\"mkisofs\",\"value\":\"$kickstartFilesFqn\"}\n";
+      close(OUT);
+
+      $install->execCommand ("/bin/cp", "/opt/traffic_ops/install/data/perl/osversions.cfg", "$kickstartFilesFqn");
+
+      if ($untarOrSkip eq "untar") {
+          print "\nUntarring CentOS 6.5 ISO kickstart tar file.\n";
+          $install->execCommand ("/bin/tar", "xfz", "$centos65TarballFqn", "-C", "$kickstartFilesFqn");
+      }
+
+	  print "\nTraffic Ops URL: $parameters{'tmurl.url'}\n";
+	  print "Traffic Ops Info URL: $parameters{'tminfo.url'}\n";
+	  print "Domainname: $parameters{'domainname'}\n";
+	  print "CDN Name: $parameters{'cdnname'}\n";
+	  print "GeoLocation Polling URL: $parameters{'geolocation.polling.url'}\n";
+	  print "CoverageZone Polling URL: $parameters{'coveragezone.polling.url'}\n\n";
+	  $ans = $install->promptUser ("Is the above information correct (y/n)", "n");
+
+  } while ($ans ne "y");
+
+  my $parameters_text = JSON->new->utf8->encode(\%parameters);
+
+  open (FH, ">$parameters_file") or die ("open(): $!");
+  print FH $parameters_text, "\n";
+  close (FH);
+
+  print "Parameter information has been saved to $parameters_file\n\n";
+
+  $tmAdminUser = "";
+  print "\nAdding an administration user to the Traffic Ops database.\n\n";
+  while (length $tmAdminUser == 0) {
+	  $tmAdminUser = $install->promptUser ("Administration username for Traffic Ops");
+  }
+  $user{"username"} = $tmAdminUser;
+
+  $tmAdminPw = "1";
+  $verifyTmAdminPw = "2";
+
+  while (!defined $tmAdminPw || $tmAdminPw eq "" || $tmAdminPw ne $verifyTmAdminPw) {
+	  $tmAdminPw = $install->promptUser ("Password for the admin user $tmAdminUser", "", 1);
+	  $verifyTmAdminPw = $install->promptUser ("Verify the password for $tmAdminUser", "", 1);
+  }
+
+  $install->execCommand ("/usr/bin/stty", "echo");
+  $user{"password"} = sha1_hex($tmAdminPw);
+
+  my $users_text = JSON->new->utf8->encode(\%user);
+  open (FH, ">$users_file") or die ("open(): $!");
+  print FH $users_text, "\n";
+  close (FH);
+
+  $ans = $install->promptUser ("Do you wish to create an ldap configuration for access to traffic ops [y/n] ?", "n");
+  if ($ans eq "y") {
+    my $correct = "";
+    my $ldap_host = "";
+    my $ldap_admin_dn = "";
+    my $ldap_admin_pass = "";
+    my $verify_ldap_admin_pass = "";
+    my $ldap_search_base = "";
+
+    do {
+        do {
+          $ldap_host = $install->promptUser ("LDAP server hostname", "ldap.foobar.com");
+        } while ($ldap_host eq "");
+        do {
+          $ldap_admin_dn = $install->promptUser ("LDAP Admin DN", "admin\@foobar.com");
+        } while ($ldap_admin_dn eq "");
+        do {
+          $ldap_admin_pass = $install->promptUser ("LDAP Admin Password", "", 1);
+          $verify_ldap_admin_pass = $install->promptUser ("Verify LDAP Admin Password", "", 1);
+        } while ($ldap_admin_pass eq "" || $ldap_admin_pass ne $verify_ldap_admin_pass);
+        do {
+          $ldap_search_base = $install->promptUser ("LDAP Search Base", "dc=foobar,dc=com");
+        } while ($ldap_search_base eq "");
+
+        $correct = $install->promptUser ("Are the above values correct [y/n]?", "y");
+    } while ($correct ne "y");
+
+    $ldapconf{"host"} = $ldap_host;
+    $ldapconf{"admin_dn"} = $ldap_admin_dn;
+    $ldapconf{"admin_pass"} = $ldap_admin_pass;
+    $ldapconf{"search_base"} = $ldap_search_base;
+
+    my $ldap_json_text = JSON->new->utf8->encode(\%ldapconf);
+    open (FH, ">$ldap_conf") or die ("open(): $!");
+    print FH $ldap_json_text, "\n";
+    close (FH);
+
+    print "The ldap configuration has been saved.\n\n";
+  }
+
+  #
+  # Call mysql initialization script.
+  #
+  print "Creating database\n";
+  my $result = $install->execCommand ("/opt/traffic_ops/install/bin/create_db", $dbAdminUser, $dbAdminPw);
+  if ($result != 0) {
+	  print "failed to create the database.\n";
+	  exit 1;
+  }
+
+  print "Setting up database\n";
+  $ENV{PATH} = "/opt/traffic_ops/install/bin:/usr/bin";
+  $ENV{PERL5LIB} = "/opt/traffic_ops/install/lib:/opt/traffic_ops/app/local/lib/perl5:/opt/traffic_ops/app/lib";
+  chdir ("/opt/traffic_ops/app");
+  $result = $install->execCommand ("/usr/bin/perl","db/admin.pl", "--env=production", "setup");
+
+  if ($result != 0) {
+	  print "Database initialization failed.\n";
+	  exit 2;
+  }
+  else {
+	  print "Database initialization succeeded.\n";
+  }
+
+  $result = $install->execCommand ("/opt/traffic_ops/install/bin/dataload", $dbAdminUser, $dbAdminPw);
+  if ($result != 0) {
+	  print "failed to load seed data.\n";
+	  exit 1;
+  }
+
+  print "Downloading MaxMind data.\n";
+  $result = $install->execCommand ("cd /opt/traffic_ops/app/public/routing; /usr/bin/wget http://geolite.maxmind.com/download/geoip/database/GeoLite2-City.mmdb.gz");
+  if ($result != 0) {
+	  print "failed to download MaxMind data.\n";
+	  # exit 1;
+  }
+
+  print "Copying coverage zone file to public dir.\n";
+  $result = $install->execCommand ("cd /opt/traffic_ops/app/public/routing; /bin/mv /opt/traffic_ops/app/public/coverage-zone.json .");
+  if ($result != 0) {
+	  print "failed to copy coverage zone file.\n";
+	  # exit 1;
+  }
+
+  if (-x "/usr/bin/openssl") {
+	  print "\nInstalling SSL Certificates.\n\n";
+	  $result = $install->execCommand ("/opt/traffic_ops/install/bin/generateCert");
+
+	  if ($result != 0) {
+		  print "\nSSL Certificate Installation failed.\n";
+		  exit 3;
+	  }
+	  else {
+		  print "\nSSL Certificates have been installed.\n";
+	  }
+  }
+  else {
+	  print "Unable to install SSL certificates as openssl is not installed.\n";
+	  print "Install openssl and then run /opt/traffic_ops/install/bin/generateCert to install SSL certificates.\n";
+	  exit 4;
+  }
+} # end of Init
+
+if (-f $reconfigure ) {
+  my $rc = $install->execCommand ("/opt/traffic_ops/install/bin/build_trafficops_perl_library","-i");
+  if ($rc != 0) {
+  		print "ERROR: failed to install perl dependencies, check the console output and rerun postinstall once you've resolved the error.\n";
+  		exit 5;
+  }
+  $rc = $install->execCommand ("cd /opt/traffic_ops/install/bin && ./download_web_deps","-i");
+  if ($rc != 0) {
+  		print "ERROR: failed to install Traffic Ops Web dependencies, check the console output and rerun postinstall once you've resolved the error.\n";
+  		exit 5;
+  }
+  init ();
+  unlink ($reconfigure);
+}
+else {
+  my $rc = $install->execCommand ("/opt/traffic_ops/install/bin/build_trafficops_perl_library");
+  if ($rc != 0) {
+  		print "ERROR: failed to install perl dependencies, check the console output and rerun postinstall once you've resolved the error.\n";
+  		exit 6;
+  }
+  $rc = $install->execCommand ("cd /opt/traffic_ops/install/bin && ./download_web_deps","-i");
+  if ($rc != 0) {
+  		print "ERROR: failed to install Traffic Ops Web dependencies, check the console output and rerun postinstall once you've resolved the error.\n";
+  		exit 5;
+  }
+}
+
+print "\nStarting Traffic Ops.\n\n";
+$install->execCommand ("/sbin/service traffic_ops start");
+
+print "\nWaiting for Traffic Ops to start.\n\n";
+sleep(5);
+
+#print "\nRunning smoke tests.\n\n";
+#$rc = $install->execCommand ("/opt/traffic_ops/install/bin/systemtest", "localhost", $user{"username"}, $tmAdminPw, "0");
+
+$ans = "";
+while (length $ans == 0) {
+  $ans = $install->promptUser ("\nShutdown Traffic Ops [y/n]", "n");
+}
+if ($ans eq "y") {
+  print "\nShutting down Traffic Ops.\n\n";
+  $install->execCommand ("/sbin/service","traffic_ops","stop");
+}
+
+print "\nTo start Traffic Ops:  service traffic_ops start\n";
+print "To stop Traffic Ops:   service traffic_ops stop\n";
+
+print "\n";
+
+exit 0;

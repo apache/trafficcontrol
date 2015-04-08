@@ -1,0 +1,244 @@
+<!--
+     Copyright 2015 Comcast Cable Communications Management, LLC
+
+     Licensed under the Apache License, Version 2.0 (the "License");
+     you may not use this file except in compliance with the License.
+     You may obtain a copy of the License at
+
+     http://www.apache.org/licenses/LICENSE-2.0
+
+     Unless required by applicable law or agreed to in writing, software
+     distributed under the License is distributed on an "AS IS" BASIS,
+     WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+     See the License for the specific language governing permissions and
+     limitations under the License.
+ -->
+% title 'Daily Summary';
+
+<script type="text/javascript" src="/js/flot/jquery.flot.min.js"></script>
+<script type="text/javascript" src="/js/flot/jquery.flot.time.js"></script>   
+<script type="text/javascript" src="/js/flot/jquery.flot.axislabels.js"></script>
+<script type="text/javascript" src="/js/flot/jquery.flot.stack.js"></script>
+<script type="text/javascript" src="/js/flot/jquery.flot.tooltip.js"></script>
+<script type="text/javascript" src="/js/flot/jquery.flot.selection.js"></script>
+<script type="text/javascript" src="/js/percentagebar.js"></script>
+<style type="text/css">
+.main_header { width: 1112px; }
+.flot_yaxis_label {
+  -webkit-transform: rotate(-90deg);
+  -moz-transform: rotate(-90deg);
+  -ms-transform: rotate(-90deg);
+  -o-transform: rotate(-90deg);
+  transform: rotate(-90deg);
+
+  /* also accepts left, right, top, bottom coordinates; not required, but a good idea for styling */
+  -webkit-transform-origin: 50% 50%;
+  -moz-transform-origin: 50% 50%;
+  -ms-transform-origin: 50% 50%;
+  -o-transform-origin: 50% 50%;
+  transform-origin: 50% 50%;
+
+  /* Should be unset in IE9+ I think. */
+  filter: progid:DXImageTransform.Microsoft.BasicImage(rotation=3);
+  position: absolute;
+  top: 130px;
+  width: 35px;
+  font-size: 10pt;
+}
+.flot_xaxis_label { text-align:center; vertical-align:middle; clear:both; padding-top:10px; padding-bottom:5px; font-size:10pt; }
+.live_data_header { text-align:center; color:white; font-size:10pt; width:1112px; background-color: #898989; padding:5px; border:1px solid #c1c1c1; margin-bottom:2px; }
+.about_section { text-align:left; color:white; font-size:10pt; width:1112px; }
+.title_section { color:#ffffff; font-size:12pt; padding:5px; background-color:#252525; margin-bottom:5px; border:1px solid #656565; }
+.flot_chart_section { color:#ffffff; width:1112px; height:310px; padding:5px; background-color:#454545; border:1px solid #ffffff; margin-bottom: 1px; border:1px solid white; }
+.flot_chart_container { position:relative; width:1100px; height:250px; overflow:auto; padding:10px; overflow-y: hidden; overflow-x: hidden;}
+.flot_chart { float:right; width:1050px; height:200px; padding:0px; background-color:#454545; }
+.statistics_section { float:left; width:315px; height:195; color:white; font-size:150%; width:305px; background-color:#898989; margin-right:5px; padding:5px; border:1px solid #121212; }
+.time_select { float:left; color:white; font-size:10pt; padding:5px; }
+}
+</style>
+<script>
+var gbps_dataset = new Array;
+var bserved_dataset = new Array;
+var options = Object;
+var divideForGbps = 1000000;
+var updateInterval = 3600000;                     // TODO JvD
+var timeOut;
+
+function createRedisDataCallBack() {
+
+  return function(jdata) {
+    var maxString = "Highest ever:";
+    var lastVal = new Object;
+    $.each(jdata["response"], function(statName, statSeries) {
+     if (statName != "TotalGBytesServedSinceStart") {
+       // console.log(statName);
+       var plotData = new Array;
+       var maxVal = 0;
+       $.each(statSeries, function(utime, valString) {
+          var tmp = [utime, valString];
+          plotData.push(tmp);
+          maxVal = maxVal < 0+ valString ? 0+ valString : maxVal;
+          prevutime = utime;
+          lastVal[statName] = 0+ valString;
+       });
+       var cdnName = statName.split(":")[0];
+       if (statName.match(/maxgbps/)) {
+         maxString += "  &nbsp;&nbsp;&nbsp;" + cdnName + ": " + maxVal.toFixed(2);
+         $('#max_gbps').html(maxString);
+         gbps_dataset.push({label: statName, data: plotData});
+       } else {
+         bserved_dataset.push({label: statName, data: plotData});
+       }
+     } else {
+      $('#bytes_served_total').text("Total Bytes Served: " + (statSeries / 1024).toFixed(3) + " PByte");
+      var date = new Date();
+      $('#summ_data_header').html("<b><%= $tool_instance %> Daily Summary</b> last updated: " + date);
+     }
+    });
+    updateOptions();
+    drawCharts();
+  }
+}
+
+function createErrorCallBack() {
+  return function errorCallback(jqXHR, textStatus, errorThrown) {
+    console.log('$.ajax error:' + textStatus);
+  }
+}
+
+function getRedisData(cdnName, selectCacheOrGroup) {
+    $.ajax({
+      dataType: "JSON",
+      url: "/api/1.1/cdns/peakusage/daily/deliveryservice/all/cachegroup/all/start_date/0/end_date/now/interval/86400.json",
+      data: { },
+      success: createRedisDataCallBack(),
+      error: createErrorCallBack()
+    });
+}
+
+
+function updateOptions() {
+  var toolTip = true;
+  options = {
+    series: {
+      color: "lightblue",
+      // stack: false,
+      lines: {
+        show: true,
+        lineWidth: 0.9,
+        fill: true
+      }
+    },
+    colors: [ "#47CEFA", "#00FFFF", "#47CEFA" ],
+    xaxis: {
+      color: "white",
+	  tickColor: "#838383",
+      mode: "time",
+      
+      tickFormatter: function (v, axis) {
+        var date = new Date(v  * 1000 );
+        var dayno = date.getUTCDate();
+        var month = date.getUTCMonth()  +1;
+        var year = date.getYear() + 1900;
+        return month + "/" + dayno + "/" + year;
+      },
+      // munTickSize: [2, "hour"],
+    },
+    yaxis: {
+      tickDecimals: 2,
+      color: "white",
+	  tickColor: "#838383",
+      axisLabelUseCanvas: true,
+      axisLabelFontSizePixels: 14,
+      axisLabelFontFamily: 'Verdana, Arial',
+      axisLabelPadding: 6
+    },
+    legend: {       
+      show: false,
+      position: "nw",
+      backgroundOpacity: 0,
+      labelBoxBorderColor: "#000"
+    },
+    grid: {
+      hoverable: toolTip,
+      borderWidth: 2,        
+      backgroundColor: { colors: [ "grey", "black" ] }
+    },
+    selection: {
+      mode: "x",
+      color: "grey" 
+    },
+    tooltip: toolTip,
+    tooltipOpts: {
+      content : "%s<br>Date: %x -> %y",
+    }
+  };
+  $('.flot-x1-axis').css('color','white');
+}
+
+function update() {
+  gbps_dataset = new Array;
+  bserved_dataset = new Array;
+  getRedisData();
+  timeOut = setTimeout(update, updateInterval);
+}
+
+
+$(document).ready(function () {
+  %= include 'jmenu'
+
+  if (navigator.userAgent.indexOf("Firefox") > 0) { // I know - you're supposed to use feature detection, but this page doesn't load on FF
+                                                    // and I don't have time to figure out why.
+    $('#max_gbps').text("This page unfortunately doesn't work in FireFox... Please use Chrome, Safari, or Opera for now.");
+    $('#bytes_served_total').text("This page unfortunately doesn't work in FireFox... Please use Chrome, Safari, or Opera for now.");
+    return;
+  }
+  update();
+}); // end document ready
+
+function drawCharts() {
+   $.plot($("#gbps_flot"), gbps_dataset, options);
+   $.plot($("#bytes_served_flot"), bserved_dataset, options);
+}
+
+</script>
+<body id="edge_health">
+%= include 'navbar'
+  <br />
+  <br />
+  <div class="main_header">
+    <div id='summ_data_header' class="live_data_header">
+    </div>
+  </div>
+  <div class="flot_chart_section">
+    <div class="title_section">
+      <div><table width=100%><tr><td>Max Bandwidth / Day (Gbps)</td><td id="max_gbps">Max:</td></tr></table></div>
+    </div>
+    <div class="flot_chart_container">
+      <div class="flot_yaxis_label">peak bandwidth</div>
+      <div id="gbps_flot" class="flot_chart"></div>
+      <div class="flot_xaxis_label">Date</div>
+    </div>
+  </div>
+  <div class="flot_chart_section">
+    <div class="title_section">
+      <div><table width=100%><tr><td>Bytes Served / Day (TByte)</td><td id="bytes_served_total"></td></tr></table></div>
+    </div>
+    <div class="flot_chart_container">
+      <div class="flot_yaxis_label">bytes served</div>
+      <div id="bytes_served_flot" class="flot_chart"></div>
+      <div class="flot_xaxis_label">Date</div>
+    </div>
+  </div>
+  <div class="about_section">
+  <br />
+  <br />
+      Notes: 
+      <ul>
+      <li> The data in the above charts is <b>not</b> stacked, since the two CDNs don't necessarily peak at the same time, the values can't be added up.
+      <li> Hover over the graphs to see the values in a popup.
+      <li> Large difference in max bandwidth and max bytes served signature are usually due to the spikey nature of the traffic.
+      </ul>
+  </div>
+</body>
+</html>
