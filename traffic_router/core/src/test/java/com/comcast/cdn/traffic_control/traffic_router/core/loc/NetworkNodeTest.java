@@ -34,11 +34,7 @@ public class NetworkNodeTest {
 
 	@Before
 	public void setUp() throws Exception {
-		//		final File file = new File(getClass().getClassLoader().getResource("comcast_ipcdn_czf.xml").toURI());
-		//		final DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
-		//		final DocumentBuilder db = dbf.newDocumentBuilder();
-		//		root = NetworkNode.generateTree(db.parse(new FileInputStream(file)));
-		final File file = new File(getClass().getClassLoader().getResource("czf2.json").toURI());
+		final File file = new File(getClass().getClassLoader().getResource("czmap.json").toURI());
 		root = NetworkNode.generateTree(file);
 	}
 
