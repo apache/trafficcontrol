@@ -22,8 +22,8 @@ Software Requirements
 ---------------------
 To work on Traffic Ops you need a \*nix (MacOS and Linux are most commonly used) environment that has the following installed:
 
-* Carton 1.0.12
-* Go 1.4
+* `Carton 1.0.12 <http://search.cpan.org/~miyagawa/Carton-v1.0.12/lib/Carton.pm>`_
+* `Go 1.4 <http://golang.org/doc/install>`_
 * Perl 5.10.1
 * Git
 * MySQL 5.1.52
