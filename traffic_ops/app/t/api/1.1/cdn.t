@@ -206,8 +206,8 @@ $spdb_util->mock( 'get_data' => sub { return \@spdb_response } );
 
 #api/1.1/metrics/g/kbps/1423343701/1423602901.json
 # Mocked out by Utils::Helper::Datasource
-ok $t->get_ok('/api/1.1/metrics/server_types/mid/metric_types/origin_tps/start_date/1423343701/end_date/1423602901.json')->status_is(200)
-	->or( sub { diag $t->tx->res->content->asset->{content}; } );
+#ok $t->get_ok('/api/1.1/metrics/server_types/mid/metric_types/origin_tps/start_date/1423343701/end_date/1423602901.json')->status_is(200)
+	#->or( sub { diag $t->tx->res->content->asset->{content}; } );
 
 # Used on the /dailysummary page viewed by EVERYONE if this route changes then /templates/visual_status/daily_summary.html.ep has to change accordingly.
 # Mocked out by Utils::Helper::Datasource
@@ -235,8 +235,8 @@ ok $t->get_ok('/api/1.1/cdns/cdn1/configs/routing.json')->status_is(200)->or( su
 };
 
 $spdb_util->mock( 'get_data' => sub { return \@spdb_response } );
-ok $t->get_ok('/api/1.1/cdns/metric_types/origin_tps/start_date/1424205299/end_date/1424206199.json')->status_is(200)
-	->or( sub { diag $t->tx->res->content->asset->{content}; } );
+#ok $t->get_ok('/api/1.1/cdns/metric_types/origin_tps/start_date/1424205299/end_date/1424206199.json')->status_is(200)
+#	->or( sub { diag $t->tx->res->content->asset->{content}; } );
 
 ok $t->get_ok('/logout')->status_is(302)->or( sub { diag $t->tx->res->content->asset->{content}; } );
 
