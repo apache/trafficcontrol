@@ -18,30 +18,55 @@ Traffic Monitor
 ***************
 Introduction
 ============
-Traffic Monitor is a Java Tomcat application that...  
+Traffic Monitor is a Java Tomcat application that monitors caches, provides health state information to Traffic Router, and collects statistics for use in tools such as Traffic Ops and Traffic Stats.  The health state provided by Traffic Monitor is used by Traffic Router to control which caches are available on the CDN.
 
 Software Requirements
 =====================
 To work on Traffic Monitor you need a \*nix (MacOS and Linux are most commonly used) environment that has the following installed:
 
-* ?
-* Maven ?.??
+* Eclipse >= Kepler SR2 (or another Java IDE)
+* Maven >= 3.3.1
+* JDK >= 6.0
 
 Traffic Monitor Project Tree Overview
 =====================================
 
 Java Formatting Conventions 
 ===========================
+None at this time.  The codebase will eventually be formatted per Java standards.
 
 Installing The Developer Environment
 ====================================
 To install the Traffic Ops Developer environment:
 
 1. Clone the traffic_control repository using Git.
+2. Edit the following parameters in src/test/resources/conf/traffic_monitor_config.js:
+
++-----------------+--------------------------------------------------+
+|    Parameter    |                      Value                       |
++=================+==================================================+
+| ``tm.hostname`` | FQDN of the Traffic Ops instance.                |
++-----------------+--------------------------------------------------+
+| ``tm.username`` | Admin username for Traffic Ops                   |
++-----------------+--------------------------------------------------+
+| ``tm.password`` | Password for admin user                          |
++-----------------+--------------------------------------------------+
+| ``cdnName``     | Name of the CDN this Traffic Router will monitor |
++-----------------+--------------------------------------------------+
+
+3. Import the existing git repo into Eclipse:
+
+	a. File -> Import -> Git -> Projects from Git; Next
+	b. Existing local repository; Next
+	c. Add -> browse to find traffic_control; Add
+	d. Select traffic_control; Next
+	e. Ensure "Import existing projects" is selected, expand traffic_control, select traffic_monitor; Next
+	f. Ensure traffic_monitor is checked; Finish
+
 
 Test Cases
 ==========
-The test harness ... 
+Unit tests can be executed using Maven by running ``mvn test`` at the root of the traffic_monitor project.
 
 API
 ===
