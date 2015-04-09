@@ -23,15 +23,15 @@ use Mojo::Base 'Mojolicious::Controller';
 # To add a data source extension:
 #
 ## Start Extensions List .pm Anchor ## DO NOT REMOVE OR CHANGE THIS LINE
-#use Extensions::EXAMPLE;
+use Extensions::DATASOURCE_STUB;
 ## End Extensions List .pm Anchor ## DO NOT REMOVE OR CHANGE THIS LINE
 
 # Note: Should we create a dispatch table here?
 sub hash_ref {
 	my $ext_hash_ref = {
 ## Start Extensions List hash Anchor ## DO NOT REMOVE OR CHANGE THIS LINE
-		#'stats_long_term' => 'Extensions::EXAMPLE::stats_long_term',
-		#'get_config'      => 'Extensions::EXAMPLE::get_config',
+		'stats_long_term' => 'Extensions::DATASOURCE_STUB::stats_long_term',
+		'get_config'      => 'Extensions::DATASOURCE_STUB::get_config',
 ## End Extensions List hash Anchor ## DO NOT REMOVE OR CHANGE THIS LINE
 	};
 
