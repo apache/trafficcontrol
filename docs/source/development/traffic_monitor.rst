@@ -71,7 +71,7 @@ To install the Traffic Monitor Developer environment:
 +-----------------+------------------------------------------------------------+
 | ``tm.password`` | Password for admin user                                    |
 +-----------------+------------------------------------------------------------+
-| ``cdnName``     | Name of the CDN this Traffic Router will monitor           |
+| ``cdnName``     | Name of the CDN this Traffic Monitor will monitor          |
 +-----------------+------------------------------------------------------------+
 
 4. Import the existing git repo into Eclipse:
