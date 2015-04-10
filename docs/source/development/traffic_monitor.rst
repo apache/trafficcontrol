@@ -33,7 +33,7 @@ Traffic Monitor Project Tree Overview
 * ``traffic_control/traffic_monitor/`` - base directory for Traffic Monitor
 
 	* ``etc/`` - Miscellaneous simulator utilities
-	* ``src/main`` - Main directory for the Traffic Monitor
+	* ``src/main`` - Main source directory for the Traffic Monitor
 
 		* ``bin/`` - Configuration tools
 		* ``conf/`` - Configuration files
@@ -43,7 +43,7 @@ Traffic Monitor Project Tree Overview
 		* ``scripts/`` - Scripts used by the RPM build process
 		* ``webapp/`` - Java webapp resources
 
-	* ``src/test`` - Test directory for Traffic Monitor
+	* ``src/test`` - Test source directory for Traffic Monitor
 
 		* ``java/`` - JUnit based unit tests for Traffic Monitor
 		* ``resources/conf`` - Configuration files used by unit tests
@@ -56,23 +56,23 @@ None at this time.  The codebase will eventually be formatted per Java standards
 
 Installing The Developer Environment
 ====================================
-To install the Traffic Ops Developer environment:
+To install the Traffic Monitor Developer environment:
 
 1. Clone the traffic_control repository using Git.
 2. Change directories into ``traffic_control/traffic_monitor``.
 3. Edit the following parameters in src/test/resources/conf/traffic_monitor_config.js:
 
-+-----------------+--------------------------------------------------+
-|    Parameter    |                      Value                       |
-+=================+==================================================+
-| ``tm.hostname`` | FQDN of the Traffic Ops instance.                |
-+-----------------+--------------------------------------------------+
-| ``tm.username`` | Admin username for Traffic Ops                   |
-+-----------------+--------------------------------------------------+
-| ``tm.password`` | Password for admin user                          |
-+-----------------+--------------------------------------------------+
-| ``cdnName``     | Name of the CDN this Traffic Router will monitor |
-+-----------------+--------------------------------------------------+
++-----------------+------------------------------------------------------------+
+|    Parameter    |                           Value                            |
++=================+============================================================+
+| ``tm.hostname`` | FQDN of the Traffic Ops instance (do not include http://). |
++-----------------+------------------------------------------------------------+
+| ``tm.username`` | Admin username for Traffic Ops                             |
++-----------------+------------------------------------------------------------+
+| ``tm.password`` | Password for admin user                                    |
++-----------------+------------------------------------------------------------+
+| ``cdnName``     | Name of the CDN this Traffic Router will monitor           |
++-----------------+------------------------------------------------------------+
 
 4. Import the existing git repo into Eclipse:
 
@@ -84,7 +84,9 @@ To install the Traffic Ops Developer environment:
 	f. Ensure ``traffic_monitor`` is checked; Finish
 	g. Ensure ``traffic_monitor`` has been opened by Eclipse after importing
 
-5. Start the embedded Jetty instance from within Eclipse
+5. Run ``mvn clean verify`` from the ``traffic_monitor`` directory
+
+6. Start the embedded Jetty instance from within Eclipse
 
 	a. In the package explorer, expand ``traffic_monitor``
 	b. Expand ``src/test/java``
@@ -97,7 +99,7 @@ To install the Traffic Ops Developer environment:
 
 Test Cases
 ==========
-Unit tests can be executed using Maven by running ``mvn test`` at the root of the traffic_monitor project.
+Unit tests can be executed using Maven by running ``mvn test`` at the root of the ``traffic_monitor`` project.
 
 API
 ===
