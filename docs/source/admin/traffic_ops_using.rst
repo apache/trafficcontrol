@@ -248,11 +248,11 @@ The fields in the Delivery Service view are:
 +--------------------------------------------------+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
 | Bypass IPv6                                      | (For DNS routed delivery services only) This is the address to respond to AAAA requests with when the the max Bps or Max Tps for this delivery service are exceeded.                                                |
 +--------------------------------------------------+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-| IPv6 Routing Enabled?                            | When set to yes, the CCR will respond to AAAA DNS requests for the ccr. and edge. names of this delivery service. Otherwise, only A records will be served.                                                         |
+| IPv6 Routing Enabled?                            | When set to yes, the Traffic Router will respond to AAAA DNS requests for the tr. and edge. names of this delivery service. Otherwise, only A records will be served.                                               |
 +--------------------------------------------------+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
 | Background fetch Enabled?                        | Experimental. This enables the background_fetch plugin to fetch the whole file on seeing a range request.                                                                                                           |
 +--------------------------------------------------+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-| Delivery Service DNS TTL                         | The Time To Live on the DNS record for the Traffic Router A and AAAA records (``ccr.<deliveryservice>.<cdn-domain>``) for a HTTP delivery service *or* for the A and                                                |
+| Delivery Service DNS TTL                         | The Time To Live on the DNS record for the Traffic Router A and AAAA records (``tr.<deliveryservice>.<cdn-domain>``) for a HTTP delivery service *or* for the A and                                                 |
 |                                                  | AAAAA records of the edge name (``edge.<deliveryservice>.<cdn-domain>``).                                                                                                                                           |
 +--------------------------------------------------+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
 | Origin Server Base URL                           | The Origin Server's base URL. This includes the protocol (http or https). Example: ``http://movies.origin.com``                                                                                                     |
@@ -300,28 +300,28 @@ The fields in the Delivery Service view are:
 Delivery Service Types
 ++++++++++++++++++++++
 
-+-----------------+-----------------------------------------------------------------------------------------------------------------------------------------------------------+
-|       Name      |                                                                        Description                                                                        |
-+=================+===========================================================================================================================================================+
-| HTTP            | HTTP Content Routing  - The CCR DNS auth server returns its own IP address on DNS queries, and the client gets redirected to a specific cache             |
-|                 | in the nearest cache group using HTTP 302.  Use this for long sessions like HLS/HDS/Smooth live streaming, where a longer setup time is not a.            |
-|                 | problem.                                                                                                                                                  |
-+-----------------+-----------------------------------------------------------------------------------------------------------------------------------------------------------+
-| DNS             | DNS Content Routing - The CCR DNS auth server returns an edge cache IP address to the client right away. The client will find the cache quickly           |
-|                 | but the CCR can not route to a cache that already has this content in the cache group. Use this for smaller objects like web page images / objects.       |
-+-----------------+-----------------------------------------------------------------------------------------------------------------------------------------------------------+
-| HTTP_NO_CACHE   | HTTP Content Routing, but the caches will not actually cache the content, they act as just proxies. The MID tier is bypassed.                             |
-+-----------------+-----------------------------------------------------------------------------------------------------------------------------------------------------------+
-| HTTP_LIVE       | HTTP Content routing, but where for "standard" HTTP content routing the objects are stored on disk, for this delivery service type the objects are stored |
-|                 | on the RAM disks. Use this for linear TV. The MID tier is bypassed for this type.                                                                         |
-+-----------------+-----------------------------------------------------------------------------------------------------------------------------------------------------------+
-| HTTP_LIVE_NATNL | HTTP Content routing, same as HTTP_LIVE, but the MID tier is NOT bypassed.                                                                                |
-+-----------------+-----------------------------------------------------------------------------------------------------------------------------------------------------------+
-| DNS_LIVE_NATNL  | DNS Content routing, ut where for "standard" DNS content routing the objects are stored on disk, for this delivery service type the objects are stored    |
-|                 | on the RAM disks. Use this for linear TV. The MID tier is NOT bypassed for this type.                                                                     |
-+-----------------+-----------------------------------------------------------------------------------------------------------------------------------------------------------+
-| DNS_LIVE        | DNS Content routing, same as DNS_LIVE_NATIONAL, but the MID tier is bypassed.                                                                             |
-+-----------------+-----------------------------------------------------------------------------------------------------------------------------------------------------------+
++-----------------+----------------------------------------------------------------------------------------------------------------------------------------------------------------+
+|       Name      |                                                                          Description                                                                           |
++=================+================================================================================================================================================================+
+| HTTP            | HTTP Content Routing  - The Traffic Router DNS auth server returns its own IP address on DNS queries, and the client gets redirected to a specific cache       |
+|                 | in the nearest cache group using HTTP 302.  Use this for long sessions like HLS/HDS/Smooth live streaming, where a longer setup time is not a.                 |
+|                 | problem.                                                                                                                                                       |
++-----------------+----------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| DNS             | DNS Content Routing - The Traffic Router DNS auth server returns an edge cache IP address to the client right away. The client will find the cache quickly     |
+|                 | but the Traffic Router can not route to a cache that already has this content in the cache group. Use this for smaller objects like web page images / objects. |
++-----------------+----------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| HTTP_NO_CACHE   | HTTP Content Routing, but the caches will not actually cache the content, they act as just proxies. The MID tier is bypassed.                                  |
++-----------------+----------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| HTTP_LIVE       | HTTP Content routing, but where for "standard" HTTP content routing the objects are stored on disk, for this delivery service type the objects are stored      |
+|                 | on the RAM disks. Use this for linear TV. The MID tier is bypassed for this type.                                                                              |
++-----------------+----------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| HTTP_LIVE_NATNL | HTTP Content routing, same as HTTP_LIVE, but the MID tier is NOT bypassed.                                                                                     |
++-----------------+----------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| DNS_LIVE_NATNL  | DNS Content routing, ut where for "standard" DNS content routing the objects are stored on disk, for this delivery service type the objects are stored         |
+|                 | on the RAM disks. Use this for linear TV. The MID tier is NOT bypassed for this type.                                                                          |
++-----------------+----------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| DNS_LIVE        | DNS Content routing, same as DNS_LIVE_NATIONAL, but the MID tier is bypassed.                                                                                  |
++-----------------+----------------------------------------------------------------------------------------------------------------------------------------------------------------+
 
 
 .. _rl-queue-updates:

@@ -35,7 +35,7 @@ Response Content Type: application/json
 +========================+========+==============================================================================================================+
 | ``active``             | string | 1 if active, 0 if inactive (inact).                                                                          |
 +------------------------+--------+--------------------------------------------------------------------------------------------------------------+
-| ``ccrDnsTtl``          | string | The TTL of the DNS response for A or AAAA queries requesting the IP address of the ccr. host.                |
+| ``ccrDnsTtl``          | string | The TTL of the DNS response for A or AAAA queries requesting the IP address of the tr. host.                 |
 +------------------------+--------+--------------------------------------------------------------------------------------------------------------+
 | ``checkPath``          | string | The path portion of the URL to check this deliveryservice for health.                                        |
 +------------------------+--------+--------------------------------------------------------------------------------------------------------------+
@@ -148,7 +148,7 @@ Response Content Type: application/json
         "infoUrl": "",
         "ipv6RoutingEnabled": false,
         "longDesc": "long_desc",
-        "longDesc1": "long_desc_1",
+        "longDesc1": "long_desc_1":0,
         "longDesc2": "long_desc_2",
         "matchList": [
           {
@@ -194,7 +194,7 @@ Response Content Type: application/json
 +========================+========+==============================================================================================================+
 | ``active``             | string | 1 if active, 0 if inactive (inact).                                                                          |
 +------------------------+--------+--------------------------------------------------------------------------------------------------------------+
-| ``ccrDnsTtl``          | string | The TTL of the DNS response for A or AAAA queries requesting the IP address of the ccr. host.                |
+| ``ccrDnsTtl``          | string | The TTL of the DNS response for A or AAAA queries requesting the IP address of the tr. host.                 |
 +------------------------+--------+--------------------------------------------------------------------------------------------------------------+
 | ``checkPath``          | string | The path portion of the URL to check this deliveryservice for health.                                        |
 +------------------------+--------+--------------------------------------------------------------------------------------------------------------+
@@ -1114,7 +1114,7 @@ Response Content Type: application/json
     "key": "ds-01",
     "businessUnit": "CDN Engineering",
     "version": "3",
-    "hostname": "ccr.ds-01.ott.kabletown.com",
+    "hostname": "tr.ds-01.ott.kabletown.com",
     "certificate": {
       "key": "some_key",
       "csr": "some_csr",

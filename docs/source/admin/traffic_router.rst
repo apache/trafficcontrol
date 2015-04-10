@@ -22,13 +22,14 @@ Installing Traffic Router
 The following are requirements to ensure an accurate set up:
 
 * Successful install of Traffic Ops
+* Successful install of Traffic Monitor
 * Administrative access to the Traffic Ops
 * Physical address of the site
 * perl-JSON
 * perl-WWW-Curl
 
-1. Install a content router: ``sudo yum install content-router``.
-2. Edit ``/opt/ccr/conf/rascal.properties`` and put in the correct online Traffic Router for your CDN.
+1. Install a traffic router: ``sudo yum install traffic_router``.
+2. Edit ``/opt/traffic_router/conf/traffic_monitor.properties`` and put in the correct online Traffic Monitor(s) for your CDN.
 
  Example: ::
 
@@ -57,7 +58,7 @@ Configuring Traffic Router
 ==========================
 1. From **Misc > Profiles**, verify the following:
  
- * The CCR information.
+ * The Traffic Router information.
  * The profile is set correctly.
  * The Status is set to OFFLINE.
 

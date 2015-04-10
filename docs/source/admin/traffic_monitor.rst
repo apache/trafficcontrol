@@ -29,8 +29,8 @@ The following are requirements to ensure an accurate set up:
 * perl-WWW-Curl
 
 1. Create a FQDN that is resolvable in DNS.
-2. Install Traffic Monitor and perl mods: ``yum -y install rascal perl-JSON perl-WWW-Curl``
-3. Take the config from Traffic Ops: ``/opt/rascal/bin/rascal_config.pl``
+2. Install Traffic Monitor and perl mods: ``yum -y install traffic_monitor perl-JSON perl-WWW-Curl``
+3. Take the config from Traffic Ops: ``/opt/traffic_monitor/bin/traffic_monitor_config.pl``
 4. Start Tomcat: ``service tomcat start`` ::
 
 
@@ -47,8 +47,5 @@ Configuring Traffic Monitor
 
 Configuration Overview
 ----------------------
-Traffic Monitor is configured using its JSON configuration file, ``rascal-config.js``. Specify the URL, username, password, and CDN name for the instance of Traffic Ops for which this Traffic Monitor is a member, and start the software.  Once started with the correct configuration, Traffic Monitor downloads its configuration from Traffic Ops and begins polling caches. Once a configurable number of polling cycles completes, health protocol state is available via RESTful JSON endpoints.
-
-.. Note:: The filename ``rascal-config.js`` will be renamed in the future to reflect the name Traffic Monitor.
-
+Traffic Monitor is configured using its JSON configuration file, ``traffic_monitor_config.js``. Specify the URL, username, password, and CDN name for the instance of Traffic Ops for which this Traffic Monitor is a member, and start the software.  Once started with the correct configuration, Traffic Monitor downloads its configuration from Traffic Ops and begins polling caches. Once a configurable number of polling cycles completes, health protocol state is available via RESTful JSON endpoints.
 
