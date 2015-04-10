@@ -30,7 +30,7 @@ To work on Traffic Monitor you need a \*nix (MacOS and Linux are most commonly u
 
 Traffic Monitor Project Tree Overview
 =====================================
-* ``traffic_control/traffic_monitor/`` - base directory for the Traffic Monitor
+* ``traffic_control/traffic_monitor/`` - base directory for Traffic Monitor
 
 	* ``etc/`` - Miscellaneous simulator utilities
 	* ``src/main`` - Main directory for the Traffic Monitor
@@ -38,7 +38,7 @@ Traffic Monitor Project Tree Overview
 		* ``bin/`` - Configuration tools
 		* ``conf/`` - Configuration files
 		* ``java/`` - Java source code for Traffic Monitor
-		* ``opt/tomcat/conf`` - Contains Tomcat configuration file(s)
+		* ``opt/tomcat/conf`` - Contains Tomcat configuration file(s) pulled in during an RPM build
 		* ``resources/`` - Resources pulled in during an RPM build
 		* ``scripts/`` - Scripts used by the RPM build process
 		* ``webapp/`` - Java webapp resources
