@@ -53,9 +53,7 @@ Traffic routing options are often configured at the Delivery Service level.
 
 |
 
-Traffic Router is inserted into the HTTP retrieval process by making it DNS authoritative for the domain of the CDN delivery service. In the example of the reverse proxy, the client was given the ``http://www-origin-cache.cdn.com/foo/bar/fun.html url``. In a Traffic Control CDN, URLs start with either ``ccr.`` or ``edge.``, for HTTP or DNS content routing respectively. 
-
-..  Note:: ``ccr.`` and ``edge.`` are currently hard-coded in various components of Traffic Control, but are configurable in a future release. Comcast Content Router (CCR) is the predecessor of Traffic Router.
+Traffic Router is inserted into the HTTP retrieval process by making it DNS authoritative for the domain of the CDN delivery service. In the example of the reverse proxy, the client was given the ``http://www-origin-cache.cdn.com/foo/bar/fun.html url``. In a Traffic Control CDN, URLs start with either ``tr.`` or ``edge.``, for HTTP or DNS content routing respectively.  These names are configurable via properties files within the Traffic Router installation.
 
 |
 
@@ -75,10 +73,10 @@ Traffic Router is inserted into the HTTP retrieval process by making it DNS auth
 
 |arrow| HTTP Content Routing
 ----------------------------
-  For an HTTP delivery service the client receives a URL with a hostname beginning with ``ccr.`` (e.g. http://ccr.dsname.cdn.com/foo/bar/fun.html), the LDNS server resolves this ``ccr.dsname.cdn.com`` to an IP address, but in this case Traffic Router returns its own IP address. The client opens a connection to port 80 on the Traffic Router's IP address, and sends: :: 
+  For an HTTP delivery service the client receives a URL with a hostname beginning with ``tr.`` (e.g. http://tr.dsname.cdn.com/foo/bar/fun.html), the LDNS server resolves this ``tr.dsname.cdn.com`` to an IP address, but in this case Traffic Router returns its own IP address. The client opens a connection to port 80 on the Traffic Router's IP address, and sends: :: 
 
     GET /foo/bar/fun.html HTTP/1.1
-    Host: ccr.dsname.cdn.com
+    Host: tr.dsname.cdn.com
 
   Traffic Router uses an HTTP 302 to redirect the client to the best cache. For example: ::
 
