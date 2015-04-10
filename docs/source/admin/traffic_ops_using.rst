@@ -136,6 +136,7 @@ The following tabs are available in the menu at the top of the Traffic Ops user 
 
   The Changelog table displays the changes that are being made to the Traffic Ops database through the Traffic Ops user interface. This tab will show the number of changes since you last visited this tab in (brackets) since the last time you visited this tab. There are currently no sub menus for this tab.
 
+  
 * **Help**
 
   Help for Traffic Ops and Traffic Control. Hover over this tab to get the following options:
@@ -182,8 +183,13 @@ Graph View
 More Blah Blah
 
 
+.. _rl-server-checks:
+
 Server Checks
 +++++++++++++
+
+Server Checks are .. 
+
 
 Daily Summary
 +++++++++++++
@@ -323,7 +329,30 @@ Delivery Service Types
 | DNS_LIVE        | DNS Content routing, same as DNS_LIVE_NATIONAL, but the MID tier is bypassed.                                                                                  |
 +-----------------+----------------------------------------------------------------------------------------------------------------------------------------------------------------+
 
+.. _rl-static-dns:
 
+Static DNS Entries
+++++++++++++++++++
+Static DNS entries allow you to create other names *under* the delivery service domain. You can enter any valid hostname, and create a CNAME, A or AAAA record for it by clicking the **Static DNS** button at the bottom of the delivery service details screen. 
+
+.. _rl-assign-edges:
+
+Server Assignments
+++++++++++++++++++
+Click the **Server Assignments** button at the bottom of the screen to assign servers to this delivery service.  Servers can be selected by drilling down in a tree, starting at the profile, then the cache group, and then the individual servers. Traffic Router will only route traffic for this delivery service to servers that are assigned to it.
+
+.. _rl-working-with-profiles:
+
+Parameters and Profiles
+=======================
+Parameters are shared between profiles if the set of ``{ name, config_file, value }`` is the same. To change a value in one profile but not in others, the parameter has to be removed from the profile you want to change it in, and a new parameter entry has to be created (**Add Parameter** button at the bottom of the Parameters view), and assigned to that profile. It is easy to create new profiles from the **Misc > Profiles** view - just use the **Add/Copy Profile** button at the bottom of the profile view to copy an existing profile to a new one. Profiles can be exported from one system and imported to another using the profile view as well. It makes no sense for a parameter to not be assigned to a single profile - in that case it really has no function. To find parameters like that use the **Parameters > Orphaned Parameters** view. It is easy to create orphaned parameters by removing all profiles, or not assigning a profile directly after creating the parameter. 
+
+.. seealso:: :ref:`rl-param-prof` in the *Configuring Traffic Ops* section.
+
+
+
+Tools
+=====
 .. _rl-queue-updates:
 
 Queue Updates and Snapshot CRConfig
