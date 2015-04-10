@@ -22,7 +22,7 @@ Traffic Router is a Java Tomcat application that routes clients to the closest a
 	
 	* api - Provides a simple JSON interface into certain aspects of core and is deployed as a WAR to a Service (read: connector/listen port) within Tomcat which is separate from core
 	* connector - A JAR that overrides Tomcat's standard Http11Protocol Connector class and allows Traffic Router to delay opening listen sockets until it is in a state suitable for routing traffic
-	* core - Services DNS and HTTP requests and performs localization on routing requests and is deployed as a WAR to a Service (read: connector/listen port) within Tomcat which is separate from api
+	* core - Services DNS and HTTP requests, performs localization on routing requests, and is deployed as a WAR to a Service (read: connector/listen port) within Tomcat which is separate from api
 	* rpm - A simple Maven project which gathers the artifacts from the prior three modules and builds an RPM
 
 Software Requirements
