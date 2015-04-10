@@ -18,8 +18,8 @@
 -- SQL in section 'Up' is executed when this migration is applied
 
 alter table deliveryservice add column `ipv6_routing_enabled` tinyint(4);
- update deliveryservice set ipv6_routing_enabled=0;
-update deliveryservice set ipv6_routing_enabled=1 where type in (select id from type where use_in_table='deliveryservice' and name like'DNS%')
+update deliveryservice set ipv6_routing_enabled=0;
+update deliveryservice set ipv6_routing_enabled=1 where type in (select id from type where use_in_table='deliveryservice' and name like'DNS%');
 
 -- +goose Down
 -- SQL section 'Down' is executed when this migration is rolled back
