@@ -14,6 +14,12 @@
 .. limitations under the License.
 .. 
 
+.. |graph| image:: ../../../traffic_ops/app/public/images/graph.png
+.. |info| image:: ../../../traffic_ops/app/public/images/info.png
+.. |checkmark| image:: ../../../traffic_ops/app/public/images/good.png 
+.. |X| image:: ../../../traffic_ops/app/public/images/bad.png
+.. |clock| image:: ../../../traffic_ops/app/public/images/clock-black.png
+
 Using Traffic Ops
 %%%%%%%%%%%%%%%%%
 
@@ -136,7 +142,7 @@ The following tabs are available in the menu at the top of the Traffic Ops user 
 
   The Changelog table displays the changes that are being made to the Traffic Ops database through the Traffic Ops user interface. This tab will show the number of changes since you last visited this tab in (brackets) since the last time you visited this tab. There are currently no sub menus for this tab.
 
-  
+
 * **Help**
 
   Help for Traffic Ops and Traffic Control. Hover over this tab to get the following options:
@@ -151,6 +157,7 @@ The following tabs are available in the menu at the top of the Traffic Ops user 
   | Logout        | Logout from Traffic Ops                                             |
   +---------------+---------------------------------------------------------------------+
 
+
 Health
 ======
 
@@ -158,13 +165,8 @@ Health
 
 The Health Table
 ++++++++++++++++
-The Health table is the default landing screen for Traffic Ops, it displays the status of the EDGE caches in a table form, sorted by Mbps Out. The columns in this table are:
+The Health table is the default landing screen for Traffic Ops, it displays the status of the EDGE caches in a table form directly from Traffic Monitor (bypassing Traffic Stats), sorted by Mbps Out. The columns in this table are:
 
-.. |checkmark| image:: ../../../traffic_ops/app/public/images/good.png 
-
-.. |X| image:: ../../../traffic_ops/app/public/images/bad.png
-  
-.. |clock| image:: ../../../traffic_ops/app/public/images/clock-black.png
 
 * **Profile**: the Profile of this server or ALL, meaning this row shows data for multiple servers, and the row shows the sum of all values.
 * **Host Name**: the host name of the server or ALL, meaning this row shows data for multiple servers, and the row shows the sum of all values.
@@ -180,14 +182,13 @@ Since the top line has ALL, ALL, ALL, it shows the total connections and bandwid
 
 Graph View
 ++++++++++
-More Blah Blah
+The Graph View shows a live view of the last 24 hours of bits per seconds served and open connections at the edge in a graph. This data is sourced from Traffic Stats. If there are 2 CDNs configured, this view will show the statistis for both, and the graphs are stacked. On the left-hand side, the totals and immediate values as well as the percentage of total possible capacity are displayed. This view is update every 10 seconds.
 
 
 .. _rl-server-checks:
 
 Server Checks
 +++++++++++++
-
 Server Checks are .. 
 
 
@@ -198,19 +199,44 @@ Daily Summary
 
 Server
 ======
+This view shows a table of all the servers in Traffic Ops. The table columns show the most important details of the server. The **IPAddrr column is clickable to launch an ``ssh://`` link to this server. The |graph| icon will link to a Traffic Stats graph of this server for caches, and the |info| will link to the server status pages for other server types. 
+
 
 Server Types
 ++++++++++++
+These are the types of servers that can be managed in Traffic Ops:
+
++---------------+---------------------------------------------+
+|      Name     |                 Description                 |
++===============+=============================================+
+| EDGE          | Edge Cache                                  |
++---------------+---------------------------------------------+
+| MID           | Mid Tier Cache                              |
++---------------+---------------------------------------------+
+| ORG           | Origin                                      |
++---------------+---------------------------------------------+
+| CCR           | Comcast Content Router                      |
++---------------+---------------------------------------------+
+| RASCAL        | Rascal health polling & reporting           |
++---------------+---------------------------------------------+
+| REDIS         | Redis stats gateway (will be obsolete soon) |
++---------------+---------------------------------------------+
+| TOOLS_SERVER  | Ops hosts for managment                     |
++---------------+---------------------------------------------+
+| RIAK          | Riak keystore                               |
++---------------+---------------------------------------------+
+| SPLUNK        | SPLUNK indexer search head etc              |
++---------------+---------------------------------------------+
+| TRAFFIC_STATS | traffic_stats server                        |
++---------------+---------------------------------------------+
+| INFLUXDB      | influxDb server                             |
++---------------+---------------------------------------------+
 
 .. _rl-bulkserver:
 
 Bulk Upload Server
 ++++++++++++++++++
 
-.. _rl-generate-iso:
-
-Generate Server ISO
-+++++++++++++++++++
 
 
 Delivery Service
@@ -341,6 +367,54 @@ Server Assignments
 ++++++++++++++++++
 Click the **Server Assignments** button at the bottom of the screen to assign servers to this delivery service.  Servers can be selected by drilling down in a tree, starting at the profile, then the cache group, and then the individual servers. Traffic Router will only route traffic for this delivery service to servers that are assigned to it.
 
+.. _rl-signed-urls:
+
+Token Based Authentication
+++++++++++++++++++++++++++
+Token based authentication or *signed URLs* is implemented using the Traffic Server ``url_sig`` plugin. To sign a URL at the signing portal take the full URL, without any query string, and add on a query string with the following parameters:
+
+Client IP address
+        The client IP address that this signature is valid for.
+        
+        ``C=<client IP address>``
+
+Expiration
+        The Expiration time (seconds since epoch) of this signature.
+        
+        ``E=<expiration time in secs since unix epoch>``
+
+Algorithm
+        The Algorithm used to create the signature. Only 1 (HMAC_SHA1)
+        and 2 (HMAC_MD5) are supported at this time
+        
+        ``A=<algorithm number>``
+
+Key index
+        Index of the key used. This is the index of the key in the
+        configuration file on the cache. The set of keys is a shared
+        secret between the signing portal and the edge caches. There
+        is one set of keys per reverse proxy domain (fqdn).
+        
+        ``K=<key index used>``
+Parts
+        Parts to use for the signature, always excluding the scheme
+        (http://).  parts0 = fqdn, parts1..x is the directory parts
+        of the path, if there are more parts to the path than letters
+        in the parts param, the last one is repeated for those.
+        Examples:
+                1: use fqdn and all of URl path
+                0110: use part1 and part 2 of path only
+                01: use everything except the fqdn
+        
+        ``P=<parts string (0's and 1's>``
+
+Signature
+        The signature over the parts + the query string up to and
+        including "S=".
+        
+        ``S=<signature>``
+
+
 .. _rl-working-with-profiles:
 
 Parameters and Profiles
@@ -353,6 +427,13 @@ Parameters are shared between profiles if the set of ``{ name, config_file, valu
 
 Tools
 =====
+
+.. _rl-generate-iso:
+
+Generate ISO
+++++++++++++
+
+
 .. _rl-queue-updates:
 
 Queue Updates and Snapshot CRConfig
