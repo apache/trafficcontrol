@@ -96,13 +96,13 @@ To install the Traffic Router Developer environment:
 
 	a. File -> Import -> Git -> Projects from Git; Next
 	b. Existing local repository; Next
-	c. Add -> browse to find ``traffic_control``; Add
+	c. Add -> browse to find ``traffic_control``; Open
 	d. Select ``traffic_control``; Next
 	e. Ensure "Import existing projects" is selected, expand ``traffic_control``, select ``traffic_router``; Next
-	f. Ensure ``traffic_router_api``, ``traffic_router_connector``, and `traffic_router_core`` are checked; Finish
-	g. Ensure ``traffic_router_api``, ``traffic_router_connector``, and `traffic_router_core`` have been opened by Eclipse after importing
+	f. Ensure ``traffic_router_api``, ``traffic_router_connector``, and ``traffic_router_core`` are checked; Finish (this step can take several minutes to complete)
+	g. Ensure ``traffic_router_api``, ``traffic_router_connector``, and ``traffic_router_core`` have been opened by Eclipse after importing
 
-5. Run ``mvn clean verify`` from the ``traffic_router`` directory
+5. From the terminal, run ``mvn clean verify`` from the ``traffic_router`` directory
 
 6. Start the embedded Jetty instance for Core from within Eclipse
 
