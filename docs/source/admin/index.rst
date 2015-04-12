@@ -26,8 +26,8 @@ Traffic Control is distributed in source form for the developer, but also as a b
   traffic_ops_config.rst
   traffic_ops_using.rst
   traffic_ops_extensions.rst
-  traffic_router.rst
   traffic_monitor.rst
+  traffic_router.rst
   traffic_stats.rst
   traffic_server.rst
   traffic_vault.rst

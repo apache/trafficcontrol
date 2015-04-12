@@ -158,6 +158,10 @@ The following tabs are available in the menu at the top of the Traffic Ops user 
   +---------------+---------------------------------------------------------------------+
 
 
+.. index::
+  Edge Health
+  Health
+
 Health
 ======
 
@@ -199,7 +203,7 @@ Daily Summary
 
 Server
 ======
-This view shows a table of all the servers in Traffic Ops. The table columns show the most important details of the server. The **IPAddrr column is clickable to launch an ``ssh://`` link to this server. The |graph| icon will link to a Traffic Stats graph of this server for caches, and the |info| will link to the server status pages for other server types. 
+This view shows a table of all the servers in Traffic Ops. The table columns show the most important details of the server. The **IPAddrr** column is clickable to launch an ``ssh://`` link to this server. The |graph| icon will link to a Traffic Stats graph of this server for caches, and the |info| will link to the server status pages for other server types. 
 
 
 Server Types
@@ -231,6 +235,10 @@ These are the types of servers that can be managed in Traffic Ops:
 +---------------+---------------------------------------------+
 | INFLUXDB      | influxDb server                             |
 +---------------+---------------------------------------------+
+
+
+.. index::
+  Bulk Upload Server
 
 .. _rl-bulkserver:
 
@@ -325,12 +333,19 @@ The fields in the Delivery Service view are:
 +--------------------------------------------------+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
 | Example delivery URL                             | (Read Only) An example of how the delivery URL may start. This could be multiple rows if multiple HOST_REGEXP entries have been entered.                                                                            |
 +--------------------------------------------------+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| Regular expressions for this delivery service    | A subtable of the regular expressions to use when routing traffic for this delivery service. See :ref:`rl-ds-regexp`.                                                                                               |
++--------------------------------------------------+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
 
+
+
+.. index::
+  Delivery Service Type
 
 .. _rl-ds-types:
-
+ 
 Delivery Service Types
 ++++++++++++++++++++++
+One of the most important settings when creating the delivery service is the selection of the delivery service *type*. This type determines the routing method and the primary storage for the delivery service.
 
 +-----------------+----------------------------------------------------------------------------------------------------------------------------------------------------------------+
 |       Name      |                                                                          Description                                                                           |
@@ -355,17 +370,21 @@ Delivery Service Types
 | DNS_LIVE        | DNS Content routing, same as DNS_LIVE_NATIONAL, but the MID tier is bypassed.                                                                                  |
 +-----------------+----------------------------------------------------------------------------------------------------------------------------------------------------------------+
 
-.. _rl-static-dns:
+.. Note:: Once created, the Traffic Ops user interface does not allow you to change the delivery service type; the drop down is greyed out. There are many things that can go wrong when changing the type, and it is safer to delete the delivery service, and recreate it.
 
-Static DNS Entries
-++++++++++++++++++
-Static DNS entries allow you to create other names *under* the delivery service domain. You can enter any valid hostname, and create a CNAME, A or AAAA record for it by clicking the **Static DNS** button at the bottom of the delivery service details screen. 
+.. index::
+  Header Rewrite
 
-.. _rl-assign-edges:
+.. _rl-header-rewrite:
 
-Server Assignments
-++++++++++++++++++
-Click the **Server Assignments** button at the bottom of the screen to assign servers to this delivery service.  Servers can be selected by drilling down in a tree, starting at the profile, then the cache group, and then the individual servers. Traffic Router will only route traffic for this delivery service to servers that are assigned to it.
+Header Rewrite Options and DSCP
++++++++++++++++++++++++++++++++
+To 
+
+
+.. index::
+  Token Based Authentication
+  Signed URLs
 
 .. _rl-signed-urls:
 
@@ -402,6 +421,7 @@ Parts
         of the path, if there are more parts to the path than letters
         in the parts param, the last one is repeated for those.
         Examples:
+
                 1: use fqdn and all of URl path
                 0110: use part1 and part 2 of path only
                 01: use everything except the fqdn
@@ -413,6 +433,133 @@ Signature
         including "S=".
         
         ``S=<signature>``
+
+.. seealso:: The url_sig `README <https://github.com/apache/trafficserver/blob/master/plugins/experimental/url_sig/README>`_.
+
+Generate URL Sig Keys
+^^^^^^^^^^^^^^^^^^^^^
+To generate a set of random signed url keys for this delivery service and store them in Traffic Vault, click the **Generate URL Sig Keys** button at the bottom of the delivery service details screen. 
+
+.. index::
+  CCR Profile
+  Traffic Router Profile
+
+.. _rl-ccr-profile:
+
+CCR Profile or Traffic Router Profile
++++++++++++++++++++++++++++++++++++++
+
+** Mark / JSE: Please review! I have no idea what I'm talking about here!**
+
++---------------------------------------+------------------------+---------------------------------------------------------------------------------------------------------------------+
+|                  Name                 |      Config_file       |                                                     Description                                                     |
++=======================================+========================+=====================================================================================================================+
+| GeolocationURL                        | CRConfig.xml           | The location (URL) to retrieve the geo database file from.                                                          |
++---------------------------------------+------------------------+---------------------------------------------------------------------------------------------------------------------+
+| CacheHealthTimeout                    | CRConfig.xml           | The timeout in ms to get health from the _astats plugin on the caches.                                              |
++---------------------------------------+------------------------+---------------------------------------------------------------------------------------------------------------------+
+| CoverageZoneMapURL                    | CRConfig.xml           | The location (URL) to retrieve the coverage zone map file in XML format from. **??**                                |
++---------------------------------------+------------------------+---------------------------------------------------------------------------------------------------------------------+
+| CoverageZoneMapRefreshPeriodHours     | CRConfig.xml           | How often to refresh the coverage zone map in hours.                                                                |
++---------------------------------------+------------------------+---------------------------------------------------------------------------------------------------------------------+
+| location                              | dns.zone               | Location to store the DNS zone files in the local file system of Traffic Router.                                    |
++---------------------------------------+------------------------+---------------------------------------------------------------------------------------------------------------------+
+| location                              | http-log4j.properties  | Location to find the log4j.properties file for Traffic Router.                                                      |
++---------------------------------------+------------------------+---------------------------------------------------------------------------------------------------------------------+
+| location                              | dns-log4j.properties   | Location to find the dns-log4j.properties file for Traffic Router.                                                  |
++---------------------------------------+------------------------+---------------------------------------------------------------------------------------------------------------------+
+| location                              | geolocation.properties | Location to find the log4j.properties file for Traffic Router.                                                      |
++---------------------------------------+------------------------+---------------------------------------------------------------------------------------------------------------------+
+| domain_name                           | CRConfig.xml           | ** ?? Still needed ?? **                                                                                            |
++---------------------------------------+------------------------+---------------------------------------------------------------------------------------------------------------------+
+| monitor:///opt/tomcat/logs/access.log | inputs.conf            | index=index_odol_test;sourcetype=access_ccr       **??**                                                            |
++---------------------------------------+------------------------+---------------------------------------------------------------------------------------------------------------------+
+| location                              | CRConfig.xml           | XMPP CRConfig node                                                                                                  |
++---------------------------------------+------------------------+---------------------------------------------------------------------------------------------------------------------+
+| CDN_name                              | rascal-config.txt      | The human readable name of the CDN for this profile.                                                                |
++---------------------------------------+------------------------+---------------------------------------------------------------------------------------------------------------------+
+| CoverageZoneJsonURL                   | CRConfig.xml           | The location (URL) to retrieve the coverage zone map file in JSON format from.                                      |
++---------------------------------------+------------------------+---------------------------------------------------------------------------------------------------------------------+
+| geolocation.polling.url               | CRConfig.json          | **??**                                                                                                              |
++---------------------------------------+------------------------+---------------------------------------------------------------------------------------------------------------------+
+| geolocation.polling.interval          | CRConfig.json          | **??**                                                                                                              |
++---------------------------------------+------------------------+---------------------------------------------------------------------------------------------------------------------+
+| coveragezone.polling.interval         | CRConfig.json          | **??**                                                                                                              |
++---------------------------------------+------------------------+---------------------------------------------------------------------------------------------------------------------+
+| coveragezone.polling.url              | CRConfig.json          | **?? - we already have CoverageZoneJsonURL**                                                                        |
++---------------------------------------+------------------------+---------------------------------------------------------------------------------------------------------------------+
+| domain_name                           | CRConfig.json          | The top level domain of this Traffic Router instance.                                                               |
++---------------------------------------+------------------------+---------------------------------------------------------------------------------------------------------------------+
+| tld.ttls.AAAA                         | CRConfig.json          | The Time To Live (TTL) the Traffic Router DNS Server will respond with on AAAA records.                             |
++---------------------------------------+------------------------+---------------------------------------------------------------------------------------------------------------------+
+| tld.ttls.A                            | CRConfig.json          | The TTL the Traffic Router DNS Server will respond with on A records.                                               |
++---------------------------------------+------------------------+---------------------------------------------------------------------------------------------------------------------+
+| tld.soa.expire                        | CRConfig.json          | The value for the expire field the Traffic Router DNS Server will respond with on Start of Authority (SOA) records. |
++---------------------------------------+------------------------+---------------------------------------------------------------------------------------------------------------------+
+| tld.soa.minimum                       | CRConfig.json          | The value for the minimum field the Traffic Router DNS Server will respond with on SOA records.                     |
++---------------------------------------+------------------------+---------------------------------------------------------------------------------------------------------------------+
+| tld.soa.admin                         | CRConfig.json          | The DNS Start of Authority admin.                                                                                   |
++---------------------------------------+------------------------+---------------------------------------------------------------------------------------------------------------------+
+| tld.soa.retry                         | CRConfig.json          | The value for the retry field the Traffic Router DNS Server will respond with on SOA records.                       |
++---------------------------------------+------------------------+---------------------------------------------------------------------------------------------------------------------+
+| tld.soa.refresh                       | CRConfig.json          | The TTL the Traffic Router DNS Server will respond with on A records.                                               |
++---------------------------------------+------------------------+---------------------------------------------------------------------------------------------------------------------+
+| tld.ttls.NS                           | CRConfig.json          | The TTL the Traffic Router DNS Server will respond with on NS records.                                              |
++---------------------------------------+------------------------+---------------------------------------------------------------------------------------------------------------------+
+| tld.ttls.SOA                          | CRConfig.json          | The TTL the Traffic Router DNS Server will respond with on SOA records.                                             |
++---------------------------------------+------------------------+---------------------------------------------------------------------------------------------------------------------+
+| api.port                              | server.xml             | The TCP port Traffic Router listens on for API (REST) access.                                                       |
++---------------------------------------+------------------------+---------------------------------------------------------------------------------------------------------------------+
+| api.cache-control.max-age             | CRConfig.json          | The value of the ``Cache-Control: max-age=`` header in the API responses of Traffic Router.                         |
++---------------------------------------+------------------------+---------------------------------------------------------------------------------------------------------------------+
+
+..   index::
+  HOST_REGEXP
+  PATH_REGEXP
+  HEADER_REGEXP
+  Delivery Service regexp
+
+.. _rl-ds-regexp:
+
+Delivery Service Regexp
++++++++++++++++++++++++
+This table defines how requests are matched to the delivery service. There are 3 type of entries possible here:
+
++---------------+----------------------------------------------------------------------+--------------+-----------+
+|      Name     |                             Description                              |   DS Type    |   Status  |
++===============+======================================================================+==============+===========+
+| HOST_REGEXP   | This is the regular expresion to match the host part of the URL.     | DNS and HTTP | Supported |
++---------------+----------------------------------------------------------------------+--------------+-----------+
+| PATH_REGEXP   | This is the regular expresion to match the path part of the URL.     | HTTP         | Beta      |
++---------------+----------------------------------------------------------------------+--------------+-----------+
+| HEADER_REGEXP | This is the regular expresion to match on any header in the request. | HTTP         | Beta      |
++---------------+----------------------------------------------------------------------+--------------+-----------+
+
+The **Order** entry defines the order in which the regular expressions get evaluated. To support ``CNAMES`` from domains outside of the Traffic Control top level DNS domain, enter multiple ``HOST_REGEXP`` lines.
+
+Example:
+  Example foo.
+
+.. Note:: In most cases is is sufficient to have just one entry in this table that has a ``HOST_REGEXP`` Type, and Order ``0``. For the *movies* delivery service in the Kabletown CDN, the entry is simply single ``HOST_REGEXP`` set to ``.*\.movies\.*``. This will match every url that has a hostname that ends with ``movies.cdn1.kabletown.net``, since ``cdn1.kabletown.net`` is the Kabletown CDN's DNS domain.
+
+.. index::
+  Static DNS Entries
+
+.. _rl-static-dns:
+
+Static DNS Entries
+++++++++++++++++++
+Static DNS entries allow you to create other names *under* the delivery service domain. You can enter any valid hostname, and create a CNAME, A or AAAA record for it by clicking the **Static DNS** button at the bottom of the delivery service details screen. 
+
+.. index::
+  Server Assignments 
+
+.. _rl-assign-edges:
+
+Server Assignments
+++++++++++++++++++
+Click the **Server Assignments** button at the bottom of the screen to assign servers to this delivery service.  Servers can be selected by drilling down in a tree, starting at the profile, then the cache group, and then the individual servers. Traffic Router will only route traffic for this delivery service to servers that are assigned to it.
+
 
 
 .. _rl-working-with-profiles:
@@ -428,6 +575,10 @@ Parameters are shared between profiles if the set of ``{ name, config_file, valu
 Tools
 =====
 
+.. index:: 
+  ISO
+  Generate ISO
+
 .. _rl-generate-iso:
 
 Generate ISO
@@ -439,6 +590,10 @@ Generate ISO
 Queue Updates and Snapshot CRConfig
 +++++++++++++++++++++++++++++++++++
 When changing delivery services special care has to be taken so that Traffic Router will not send traffic to caches for delivery services that the cache doesn't know about yet. In general, when adding delivery services, or adding servers to a delivery service, it is best to update the caches before updating Traffic Router and Traffic Monitor. When deleting delivery services, or deleting server assignments to delivery services, it is best to update Traffic Router and Traffic Monitor first and then the caches. Updating the cache configuration is done through the *Queue Updates* menu, and updating Traffic Monitor and  Traffic Router config is done through the *Snapshot CRConfig* menu.
+
+.. index::
+  Cache Updates
+  Queue Updates
 
 Queue Updates
 ^^^^^^^^^^^^^
@@ -465,6 +620,9 @@ A cache will only get updated when the update flag is set for it. To set the upd
 To schedule updates for just one cache, use the "Server Checks" page, and click the |checkmark| in the *UPD* column. The UPD column of Server Checks page will change show a |clock| when updates are pending for that cache. 
 
 
+.. index::
+  Snapshot CRConfig
+
 Snapshot CRConfig
 ^^^^^^^^^^^^^^^^^
 Every 60 seconds Traffic Monitor will check with Traffic Ops to see if a new CRConfig snapshot was made. If there is a new CRCOnfig, it will apply it to both Traffic Monitor and Traffic Router. See :ref:`rl-crconfig` for more information on the CRConfig file. To create a new snapshot, use the *Tools > Snapshot CRConfig* menu:
@@ -484,6 +642,10 @@ Every 60 seconds Traffic Monitor will check with Traffic Ops to see if a new CRC
   #. When the This will push out a new CRConfig.json. Are you sure? window opens, click **OK**.
   #. The Successfully wrote CRConfig.json! window opens, click **OK**.
 
+
+.. index::
+  Invalidate Content
+  Purge
 
 .. _rl-purge:
 
@@ -506,3 +668,6 @@ To invalidate content:
   3. Click the **Submit** button.
 
 
+Generate DNSSEC Keys
+====================
+TBD
