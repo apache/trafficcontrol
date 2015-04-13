@@ -1,4 +1,12 @@
-{"name":"EDGE1","description":"Edge 1"}
-{"name":"TR1","description":"Traffic Router 1"}
-{"name":"TM1","description":"Traffic Monitor 1"}
-{"name":"MID1","description":"Mid 1"}
+{"name":"CCR_CDN1","description":"Kabletown Content Router for cdn1.kabletown.net"}
+{"name":"CCR_CDN2","description":"Kabletown Content Router for cdn2.kabletown.net"}
+{"name":"RASCAL_CDN1","description":"Rascal for the CDN1 CDN"}
+{"name":"RASCAL_CDN2","description":"Rascal for the CDN2 CDN"}
+{"name":"REDIS_ALL","description":"Redis profile for all CDNs"}
+{"name":"HOSTMON","description":"Hostmon pipe host "}
+{"name":"EDGE1_CDN2_520","description":"Dell R720xd, Edge, CDN2 CDN, ATS v5.2.0"}
+{"name":"EDGE1_CDN1_520","description":"Dell R720xd, Edge, CDN1 CDN, ATS v5.2.0"}
+{"name":"RIAK_ALL","description":"Riak profile for all CDNs"}
+{"name":"GLOBAL","description":"Global Traffic Ops profile, DO NOT DELETE"}
+{"name":"TRAFFIC_STATS","description":"Traffic_Stats profile"}
+{"name":"INFLUXDB","description":"InfluxDb profile"}
