@@ -1,4 +1,4 @@
-{"name":"domain_name","config_file":"CRConfig.xml","value":"cdn1.kabletown.net"}
+{"name":"domain_name","config_file":"CRConfig.xml","value":"cdn.kabletown.net"}
 {"name":"GeolocationURL","config_file":"CRConfig.xml","value":"http://server.kabletown.net:8080/GeoLiteCity.dat.gz"}
 {"name":"CacheHealthTimeout","config_file":"CRConfig.xml","value":"70"}
 {"name":"CoverageZoneMapURL","config_file":"CRConfig.xml","value":"http://tools.cdnl.kabletown.net/logs/production/reports/czf/current/kabletown_cdn_czf.xml"}
@@ -270,7 +270,7 @@
 {"name":"LogObject.RollingOffsetHr","config_file":"logs_xml.config","value":"11"}
 {"name":"LogObject.RollingSizeMb","config_file":"logs_xml.config","value":"1024"}
 {"name":"location","config_file":"logs_xml.config","value":"/opt/trafficserver/etc/trafficserver"}
-{"name":"CDN_name","config_file":"rascal-config.txt","value":"cdn1"}
+{"name":"CDN_name","config_file":"rascal-config.txt","value":"cdn"}
 {"name":"CDN_name","config_file":"rascal-config.txt","value":"cdn2"}
 {"name":"CONFIG proxy.config.log.xml_config_file","config_file":"records.config","value":"STRING logs_xml.config"}
 {"name":"health.polling.interval","config_file":"rascal-config.txt","value":"8000"}
@@ -295,7 +295,7 @@
 {"name":"geolocation.polling.interval","config_file":"CRConfig.json","value":"86400000"}
 {"name":"coveragezone.polling.interval","config_file":"CRConfig.json","value":"86400000"}
 {"name":"coveragezone.polling.url","config_file":"CRConfig.json","value":"http://cdn-tools.cdnl.kabletown.net/cdn/CZF/current/kabletown_cdn_czf-current.json"}
-{"name":"domain_name","config_file":"CRConfig.json","value":"cdn1.kabletown.net"}
+{"name":"domain_name","config_file":"CRConfig.json","value":"cdn.kabletown.net"}
 {"name":"domain_name","config_file":"CRConfig.json","value":"cdn2.kabletown.net"}
 {"name":"location","config_file":"12M_facts","value":"/opt/ort"}
 {"name":"CONFIG proxy.config.http.cache.ignore_accept_encoding_mismatch","config_file":"records.config","value":"INT 1"}
@@ -412,7 +412,7 @@
 {"name":"CONFIG proxy.config.http.transaction_active_timeout_in","config_file":"records.config","value":"INT 0"}
 {"name":"CONFIG proxy.config.body_factory.enable_customizations","config_file":"records.config","value":"INT 1"}
 {"name":"CONFIG proxy.config.http.negative_caching_lifetime","config_file":"records.config","value":"INT 1"}
-{"name":"cron_ort_syncds","config_file":"traffic_ops_ort_syncds.cron","value":"*/15 * * * * root /opt/ort/traffic_ops_ort.pl syncds warn https://tm.kabletown.net admin:12M0nk3y$ \u003e /tmp/ort/syncds.log 2\u003e\u00261"}
+{"name":"cron_ort_syncds","config_file":"traffic_ops_ort_syncds.cron","value":"*/15 * * * * root /opt/ort/traffic_ops_ort.pl syncds warn https://tm.kabletown.net admin:password\u003e /tmp/ort/syncds.log 2\u003e\u00261"}
 {"name":"location","config_file":"traffic_ops_ort_syncds.cron","value":"/etc/cron.d"}
 {"name":"tm.traffic_mon_fwd_proxy","config_file":"global","value":"http://tm.kabletown.net:81"}
 {"name":"CONFIG proxy.config.body_factory.template_sets_dir","config_file":"records.config","value":"STRING etc/trafficserver/body_factory"}
