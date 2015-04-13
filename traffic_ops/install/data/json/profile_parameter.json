@@ -652,8 +652,8 @@
 {"profile":"HOSTMON","parameter":"api.port","config_file":"server.xml","value":"3333"}
 {"profile":"EDGE1_CDN2_520","parameter":"astats_over_http.so","config_file":"plugin.config","value":""}
 {"profile":"EDGE1_CDN1_520","parameter":"astats_over_http.so","config_file":"plugin.config","value":""}
-{"profile":"EDGE1_CDN2_520","parameter":"allow_ip","config_file":"astats.config","value":"127.0.0.1,10.10.10.10"}
-{"profile":"EDGE1_CDN1_520","parameter":"allow_ip","config_file":"astats.config","value":"127.0.0.1,10.10.10.10"}
+{"profile":"EDGE1_CDN2_520","parameter":"allow_ip","config_file":"astats.config","value":"127.0.0.1,10.10.10.10/16"}
+{"profile":"EDGE1_CDN1_520","parameter":"allow_ip","config_file":"astats.config","value":"127.0.0.1,10.10.10.10/16"}
 {"profile":"EDGE1_CDN2_520","parameter":"allow_ip6","config_file":"astats.config","value":"::1,d009:5dd:f0d8:18d::2/64"}
 {"profile":"EDGE1_CDN1_520","parameter":"allow_ip6","config_file":"astats.config","value":"::1,d009:5dd:f0d8:18d::2/64"}
 {"profile":"EDGE1_CDN1_520","parameter":"record_types","config_file":"astats.config","value":"144"}

@@ -139,7 +139,11 @@ func main() {
 	}
 	//read parameter json file
 	fmt.Println("seeding parameter data...")
-	file, _ = os.Open("/opt/traffic_ops/install/data/json/parameter.json")
+	file, err = os.Open("/opt/traffic_ops/install/data/json/parameter.json")
+	if err != nil {
+		fmt.Println("trouble reading parameter.json")
+		panic(err)
+	}
 	lineCount = 0
 	parameter := Parameter{}
 	decoder = json.NewDecoder(file)
@@ -156,13 +160,31 @@ func main() {
 			fmt.Println("Error:", err)
 			return
 		}
-		fmt.Println("name", parameter.Name, "config_file", parameter.Config_File, "value", parameter.Value)
 		//load parameter table
-		_, err = parameterInsert.Exec(parameter.Name, parameter.Config_File, parameter.Value)
+		rows, err := db.Query("select count(name) from "+dbName+".parameter where name = ? and config_file = ? and value = ?", parameter.Name, parameter.Config_File, parameter.Value)
+		if err != nil {
+			fmt.Println("Couldn't prepare parameter select statment")
+			panic(err)
+		}
+		defer rows.Close()
+		var count int
+		for rows.Next() {
+			if err := rows.Scan(&count); err != nil {
+				panic(err)
+			}
+			// fmt.Println("row count ", count)
+		}
+		if count == 0 {
+			fmt.Println("inserting parameter: name = ", parameter.Name, "config_file = ", parameter.Config_File, "value = ", parameter.Value)
+			_, err = parameterInsert.Exec(parameter.Name, parameter.Config_File, parameter.Value)
+		} else {
+			fmt.Println("parameter already exists!  name = ", parameter.Name, "config_file = ", parameter.Config_File, "value = ", parameter.Value)
+		}
 		if err != nil {
 			fmt.Println("The parameter insert failed")
 			panic(err)
 		}
+		count = 0
 		lineCount += 1
 	}
 	//seed profile_parameter data
@@ -171,7 +193,7 @@ func main() {
 	lineCount = 0
 	profileParameter := ProfileParameter{}
 	decoder = json.NewDecoder(file)
-	profileParameterInsert, err := db.Prepare("insert into " + dbName + ".profile_parameter (profile, parameter) values ((select id from profile where name = ?), (select id from parameter where name = ? and config_file = ? and value = ?))")
+	profileParameterInsert, err := db.Prepare("insert ignore into " + dbName + ".profile_parameter (profile, parameter) values ((select id from profile where name = ?), (select id from parameter where name = ? and config_file = ? and value = ?))")
 	if err != nil {
 		fmt.Println("Couldn't prepare profile_parameter insert statment")
 		panic(err)
@@ -184,12 +206,30 @@ func main() {
 			fmt.Println("Error:", err)
 			return
 		}
-		fmt.Println("profile_name =", profileParameter.Profile, "parameter_name =", profileParameter.Parameter, "config_file =", profileParameter.ConfigFile, "value =", profileParameter.Value)
-		//load parameter table
-		_, err = profileParameterInsert.Exec(profileParameter.Profile, profileParameter.Parameter, profileParameter.ConfigFile, profileParameter.Value)
+		rows, err := db.Query("select count(profile) from "+dbName+".profile_parameter where profile = (select id from profile where name = ?) and parameter = (select id from parameter where name = ? and config_file = ? and value = ?)", profileParameter.Profile, profileParameter.Parameter, profileParameter.ConfigFile, profileParameter.Value)
 		if err != nil {
-			fmt.Println("The insert failed")
+			fmt.Println("Couldn't prepare profile_parameter select statment")
 			panic(err)
+		}
+		defer rows.Close()
+		var count int
+		for rows.Next() {
+			if err := rows.Scan(&count); err != nil {
+				panic(err)
+			}
+			// fmt.Println("row count ", count)
+		}
+		if count == 0 {
+			fmt.Println("inserting profile parameter value: profile_name =", profileParameter.Profile, "parameter_name =", profileParameter.Parameter, "config_file =", profileParameter.ConfigFile, "value =", profileParameter.Value)
+			//load parameter table
+			_, err = profileParameterInsert.Exec(profileParameter.Profile, profileParameter.Parameter, profileParameter.ConfigFile, profileParameter.Value)
+			if err != nil {
+				fmt.Println("The insert failed")
+				panic(err)
+			}
+		} else {
+			fmt.Printf("the profile_parameter combination already exists.  Profile Name = %s, Parameter Name = %s, Parameter Config_File = %s, Parameter Value = %s\n", profileParameter.Profile, profileParameter.Parameter, profileParameter.ConfigFile, profileParameter.Value)
+			count = 0
 		}
 		lineCount += 1
 	}
