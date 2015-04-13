@@ -363,7 +363,7 @@
 {"name":"header_rewrite","config_file":"package","value":"4.0.2-1.el6.x86_64"}
 {"name":"api.port","config_file":"server.xml","value":"3333"}
 {"name":"astats_over_http.so","config_file":"plugin.config","value":""}
-{"name":"allow_ip","config_file":"astats.config","value":"127.0.0.1, 10.10.10.10/16"}
+{"name":"allow_ip","config_file":"astats.config","value":"127.0.0.1,10.10.10.10/16"}
 {"name":"allow_ip6","config_file":"astats.config","value":"::1,d009:5dd:f0d8:18d::2/64"}
 {"name":"record_types","config_file":"astats.config","value":"144"}
 {"name":"location","config_file":"astats.config","value":"/opt/trafficserver/etc/trafficserver"}
