@@ -1,6 +1,10 @@
-{"name":"Drive_Prefix","config_file":"storage.config","value":"/tmp/sd"}
-{"name":"Drive_Letters","config_file":"storage.config","value":"0,1,2,3,4,5,6"}
-{"name":"Drive_Letters","config_file":"storage.config","value":"b"}
+{"name":"domain_name","config_file":"CRConfig.xml","value":"cdn1.kabletown.net"}
+{"name":"GeolocationURL","config_file":"CRConfig.xml","value":"http://server.kabletown.net:8080/GeoLiteCity.dat.gz"}
+{"name":"CacheHealthTimeout","config_file":"CRConfig.xml","value":"70"}
+{"name":"CoverageZoneMapURL","config_file":"CRConfig.xml","value":"http://tools.cdnl.kabletown.net/logs/production/reports/czf/current/kabletown_cdn_czf.xml"}
+{"name":"CoverageZoneMapRefreshPeriodHours","config_file":"CRConfig.xml","value":"24"}
+{"name":"Drive_Prefix","config_file":"storage.config","value":"/dev/sd"}
+{"name":"Drive_Letters","config_file":"storage.config","value":"b,c,d,e,f,g,h,i,j,k,l,m,n,o,p,q,r,s,t,u,v,w,x,y"}
 {"name":"CONFIG proxy.config.proxy_name","config_file":"records.config","value":"STRING __HOSTNAME__"}
 {"name":"CONFIG proxy.config.config_dir","config_file":"records.config","value":"STRING etc/trafficserver"}
 {"name":"CONFIG proxy.config.proxy_binary_opts","config_file":"records.config","value":"STRING -M"}
@@ -233,32 +237,32 @@
 {"name":"location","config_file":"storage.config","value":"/opt/trafficserver/etc/trafficserver/"}
 {"name":"location","config_file":"volume.config","value":"/opt/trafficserver/etc/trafficserver/"}
 {"name":"location","config_file":"50-ats.rules","value":"/etc/udev/rules.d/"}
+{"name":"location","config_file":"CRConfig.xml","value":"XMPP CRConfig node"}
 {"name":"location","config_file":"dns.zone","value":"/etc/kabletown/zones/\u003czonename\u003e.info"}
 {"name":"CONFIG proxy.config.http.parent_proxy_routing_enable","config_file":"records.config","value":"INT 0"}
 {"name":"CONFIG proxy.config.url_remap.remap_required","config_file":"records.config","value":"INT 0"}
 {"name":"location","config_file":"http-log4j.properties","value":"/etc/kabletown"}
 {"name":"location","config_file":"dns-log4j.properties","value":"/etc/kabletown"}
 {"name":"location","config_file":"geolocation.properties","value":"/etc/kabletown"}
+{"name":"domain_name","config_file":"CRConfig.xml","value":"cdn2.kabletown.net"}
 {"name":"CONFIG proxy.config.http.parent_proxy.file","config_file":"records.config","value":"STRING parent.config"}
 {"name":"CONFIG proxy.config.url_remap.filename","config_file":"records.config","value":"STRING remap.config"}
 {"name":"location","config_file":"ip_allow.config","value":"/opt/trafficserver/etc/trafficserver"}
 {"name":"CONFIG proxy.config.cluster.cluster_configuration ","config_file":"records.config","value":"STRING cluster.config"}
-{"name":"Drive_Prefix","config_file":"storage.config","value":"/dev/ram"}
 {"name":"ramdisk_size","config_file":"grub.conf","value":"ramdisk_size=16777216"}
-{"name":"cron_syncds","config_file":"crontab_root","value":"*/15 * * * * /opt/ort/ipcdn_install_ort.pl syncds error \u0026amp;gt; /tmp/ort/syncds.log 2\u0026amp;gt;\u0026amp;amp;1"}
+{"name":"cron_syncds","config_file":"crontab_root","value":"*/15 * * * * /opt/ort/cdn_install_ort.pl syncds error \u0026amp;gt; /tmp/ort/syncds.log 2\u0026amp;gt;\u0026amp;amp;1"}
 {"name":"location","config_file":"crontab_root","value":"/var/spool/cron"}
-{"name":"CONFIG proxy.config.http.insert_age_in_response","config_file":"records.config","value":"INT 0"}
-{"name":"monitor:///opt/tomcat/logs/access.log","config_file":"inputs.conf","value":"index=index_odol_test;sourcetype=access_ccr"}
-{"name":"purge_allow_ip","config_file":"ip_allow.config","value":"10.1.12.11"}
-{"name":"astats_over_http.so","config_file":"plugin.config","value":"_astats 172.16.182.153,172.16.182.154"}
+{"name":"monitor:///opt/tomcat/logs/access.log","config_file":"inputs.conf","value":"index=index_test;sourcetype=access_ccr"}
+{"name":"location","config_file":"CRConfig.xml","value":"XMPP CRConfigOTT node"}
+{"name":"purge_allow_ip","config_file":"ip_allow.config","value":"10.10.10.10"}
+{"name":"astats_over_http.so","config_file":"plugin.config","value":"_astats 10.10.10.10"}
 {"name":"health.threshold.loadavg","config_file":"rascal.properties","value":"25.0"}
-{"name":"health.threshold.availableBandwidthInKbps","config_file":"rascal.properties","value":"\u003e1500"}
+{"name":"health.threshold.availableBandwidthInKbps","config_file":"rascal.properties","value":"\u003e1750000"}
 {"name":"history.count","config_file":"rascal.properties","value":"30"}
 {"name":"cacheurl.so","config_file":"plugin.config","value":""}
 {"name":"location","config_file":"cacheurl.config","value":"/opt/trafficserver/etc/trafficserver/"}
 {"name":"CONFIG proxy.config.cache.control.filename","config_file":"records.config","value":"STRING cache.config"}
 {"name":"LogFormat.Name","config_file":"logs_xml.config","value":"custom_ats_2"}
-{"name":"LogFormat.Format","config_file":"logs_xml.config","value":"%\u003cchi\u003e %\u003ccaun\u003e [%\u003ccqtq\u003e] \\\"%\u003ccqtx\u003e\\\" %\u003cpssc\u003e %\u003cpscl\u003e %\u003csssc\u003e %\u003csscl\u003e %\u003ccqbl\u003e %\u003cpqbl\u003e %\u003ccqhl\u003e %\u003cpshl\u003e %\u003cttms\u003e %\u003cpqhl\u003e %\u003csshl\u003e %\u003cphr\u003e %\u003ccfsc\u003e %\u003cpfsc\u003e %\u003ccrc\u003e \\\"%\u003c{User-Agent}cqh\u003e\\\""}
 {"name":"LogObject.Format","config_file":"logs_xml.config","value":"custom_ats_2"}
 {"name":"LogObject.Filename","config_file":"logs_xml.config","value":"custom_ats_2"}
 {"name":"LogObject.RollingEnabled","config_file":"logs_xml.config","value":"3"}
@@ -266,6 +270,8 @@
 {"name":"LogObject.RollingOffsetHr","config_file":"logs_xml.config","value":"11"}
 {"name":"LogObject.RollingSizeMb","config_file":"logs_xml.config","value":"1024"}
 {"name":"location","config_file":"logs_xml.config","value":"/opt/trafficserver/etc/trafficserver"}
+{"name":"CDN_name","config_file":"rascal-config.txt","value":"cdn1"}
+{"name":"CDN_name","config_file":"rascal-config.txt","value":"cdn2"}
 {"name":"CONFIG proxy.config.log.xml_config_file","config_file":"records.config","value":"STRING logs_xml.config"}
 {"name":"health.polling.interval","config_file":"rascal-config.txt","value":"8000"}
 {"name":"tm.crConfig.polling.url","config_file":"rascal-config.txt","value":"https://${tmHostname}/CRConfig-Snapshots/${cdnName}/CRConfig.xml"}
@@ -279,20 +285,25 @@
 {"name":"health.event-count","config_file":"rascal-config.txt","value":"200"}
 {"name":"hack.ttl","config_file":"rascal-config.txt","value":"30"}
 {"name":"RAM_Drive_Prefix","config_file":"storage.config","value":"/dev/ram"}
-{"name":"RAM_Drive_Letters","config_file":"storage.config","value":"0"}
+{"name":"RAM_Drive_Letters","config_file":"storage.config","value":"0,1,2,3,4,5,6,7"}
 {"name":"RAM_Volume","config_file":"storage.config","value":"2"}
 {"name":"Disk_Volume","config_file":"storage.config","value":"1"}
 {"name":"CONFIG proxy.config.cache.hosting_filename","config_file":"records.config","value":"STRING hosting.config"}
+{"name":"CoverageZoneJsonURL","config_file":"CRConfig.xml","value":"http://cdn-tools.cdnl.kabletown.net/cdn/CZF/current/kabletown_cdn_czf-current.json"}
 {"name":"health.connection.timeout","config_file":"rascal.properties","value":"2000"}
+{"name":"geolocation.polling.url","config_file":"CRConfig.json","value":"https://tm.kabletown.net/MaxMind/auto/GeoIP2-City.mmdb.gz"}
 {"name":"geolocation.polling.interval","config_file":"CRConfig.json","value":"86400000"}
 {"name":"coveragezone.polling.interval","config_file":"CRConfig.json","value":"86400000"}
+{"name":"coveragezone.polling.url","config_file":"CRConfig.json","value":"http://cdn-tools.cdnl.kabletown.net/cdn/CZF/current/kabletown_cdn_czf-current.json"}
+{"name":"domain_name","config_file":"CRConfig.json","value":"cdn1.kabletown.net"}
+{"name":"domain_name","config_file":"CRConfig.json","value":"cdn2.kabletown.net"}
 {"name":"location","config_file":"12M_facts","value":"/opt/ort"}
 {"name":"CONFIG proxy.config.http.cache.ignore_accept_encoding_mismatch","config_file":"records.config","value":"INT 1"}
 {"name":"health.timepad","config_file":"rascal-config.txt","value":"30"}
-{"name":"tm.url","config_file":"global","value":"https://trafficops.kabletown.net/"}
-{"name":"tm.typeselector","config_file":"global","value":"ipcdn"}
-{"name":"tm.toolname","config_file":"global","value":"Twelve Monkeys"}
-{"name":"tm.logourl","config_file":"global","value":"/images/default.png"}
+{"name":"tm.url","config_file":"global","value":"https://tm.kabletown.net/"}
+{"name":"tm.toolname","config_file":"global","value":"Traffic Ops"}
+{"name":"tm.infourl","config_file":"global","value":"http://docs.cdnl.kabletown.net/traffic_control/html/"}
+{"name":"tm.logourl","config_file":"global","value":"/images/tc_logo.png"}
 {"name":"tld.ttls.AAAA","config_file":"CRConfig.json","value":"3600"}
 {"name":"tld.ttls.SOA","config_file":"CRConfig.json","value":"86400"}
 {"name":"tld.ttls.A","config_file":"CRConfig.json","value":"3600"}
@@ -302,11 +313,8 @@
 {"name":"tld.soa.admin","config_file":"CRConfig.json","value":"twelve_monkeys"}
 {"name":"tld.soa.retry","config_file":"CRConfig.json","value":"7200"}
 {"name":"tld.soa.refresh","config_file":"CRConfig.json","value":"28800"}
-{"name":"location","config_file":"url_sig_stb-cdl.config","value":"/opt/trafficserver/etc/trafficserver"}
-{"name":"error_url","config_file":"url_sig_stb-cdl.config","value":"403"}
-{"name":"tld.ttls.NS","config_file":"CRConfig.json","value":"60"}
-{"name":"geolocation6.polling.interval","config_file":"CRConfig.json","value":"86400000"}
-{"name":"trafficserver","config_file":"chkconfig","value":"0:off\u00091:off\u00092:on\u00093:on\u00094:on\u00095:on\u00096:off"}
+{"name":"tld.ttls.NS","config_file":"CRConfig.json","value":"3600"}
+{"name":"trafficserver","config_file":"chkconfig","value":"0:off\t1:off\t2:on\t3:on\t4:on\t5:on\t6:off"}
 {"name":"astats_over_http","config_file":"package","value":"1.1-2.el6.x86_64"}
 {"name":"cacheurl","config_file":"package","value":"1.0-1.el6.x86_64"}
 {"name":"dscp_remap","config_file":"package","value":"1.0-1.el6.x86_64"}
@@ -314,29 +322,18 @@
 {"name":"remap_stats","config_file":"package","value":"1.0-1.el6.x86_64"}
 {"name":"url_sign","config_file":"package","value":"1.0-1.el6.x86_64"}
 {"name":"trafficserver","config_file":"package","value":"4.0.2-2.el6.x86_64"}
-{"name":"astats_over_http","config_file":"package","value":"3.2.0-4114.el6.x86_64"}
-{"name":"cacheurl","config_file":"package","value":"3.2.0-5628.el6.x86_64"}
-{"name":"dscp_remap","config_file":"package","value":"3.2.0-4613.el6.x86_64"}
-{"name":"regex_revalidate","config_file":"package","value":"3.2.0-5695.el6.x86_64"}
-{"name":"remap_stats","config_file":"package","value":"3.2.0-2.el6.x86_64"}
-{"name":"url_sign","config_file":"package","value":"3.2.0-4130.el6.x86_64"}
-{"name":"trafficserver","config_file":"package","value":"3.2.0-4812.el6.x86_64"}
 {"name":"CONFIG proxy.config.allocator.debug_filter","config_file":"records.config","value":"INT 0"}
 {"name":"CONFIG proxy.config.allocator.enable_reclaim","config_file":"records.config","value":"INT 0"}
 {"name":"CONFIG proxy.config.allocator.max_overage","config_file":"records.config","value":"INT 3"}
 {"name":"CONFIG proxy.config.diags.show_location","config_file":"records.config","value":"INT 0"}
 {"name":"CONFIG proxy.config.http.cache.allow_empty_doc","config_file":"records.config","value":"INT 0"}
 {"name":"LOCAL proxy.config.cache.interim.storage","config_file":"records.config","value":"STRING NULL"}
-{"name":"tld.ttls.SOA","config_file":"CRConfig.json","value":"60"}
+{"name":"tld.ttls.SOA","config_file":"CRConfig.json","value":"86400"}
 {"name":"regex_revalidate.so","config_file":"plugin.config","value":"--config regex_revalidate.config"}
 {"name":"location","config_file":"regex_revalidate.config","value":"/opt/trafficserver/etc/trafficserver"}
-{"name":"location","config_file":"url_sig_steam-dns.config","value":"/opt/trafficserver/etc/trafficserver"}
-{"name":"error_url","config_file":"url_sig_steam-dns.config","value":"403"}
 {"name":"remap_stats.so","config_file":"plugin.config","value":""}
-{"name":"remap_stats","config_file":"package","value":"3.2.0-3.el6.x86_64"}
 {"name":"CONFIG proxy.config.stack_dump_enabled","config_file":"records.config","value":"INT 1"}
-{"name":"location","config_file":"url_sig_steam-dns-ext.config","value":"/opt/trafficserver/etc/trafficserver"}
-{"name":"error_url","config_file":"url_sig_steam-dns-ext.config","value":"403"}
+{"name":"CONFIG proxy.config.stack_dump_enabled","config_file":"records.config","value":"INT 1"}
 {"name":"location","config_file":"drop_qstring.config","value":"/opt/trafficserver/etc/trafficserver"}
 {"name":"Drive_Letters","config_file":"storage.config","value":"b,c,d,e,f,g,h,i,j,k,l,m,n,o"}
 {"name":"CONFIG proxy.config.hostdb.ttl_mode","config_file":"records.config","value":"INT 0"}
@@ -346,13 +343,16 @@
 {"name":"CONFIG proxy.config.cache.enable_read_while_writer","config_file":"records.config","value":"INT 1"}
 {"name":"CONFIG proxy.config.http.background_fill_active_timeout","config_file":"records.config","value":"INT 0"}
 {"name":"CONFIG proxy.config.http.background_fill_completed_threshold","config_file":"records.config","value":"FLOAT 0.0"}
+{"name":"CONFIG proxy.config.log.extended2_log_enabled","config_file":"records.config","value":"INT 0"}
 {"name":"CONFIG proxy.config.exec_thread.affinity","config_file":"records.config","value":"INT 1"}
 {"name":"CONFIG proxy.config.exec_thread.autoconfig","config_file":"records.config","value":"INT 0"}
 {"name":"CONFIG proxy.config.exec_thread.limit","config_file":"records.config","value":"INT 32"}
 {"name":"CONFIG proxy.config.allocator.thread_freelist_size","config_file":"records.config","value":"INT 1024"}
-{"name":"CONFIG proxy.config.cache.ram_cache.size","config_file":"records.config","value":"INT 16106127360"}
 {"name":"CONFIG proxy.config.mlock_enabled","config_file":"records.config","value":"INT 2"}
 {"name":"LogFormat.Format","config_file":"logs_xml.config","value":"%\u003ccqtq\u003e chi=%\u003cchi\u003e phn=%\u003cphn\u003e shn=%\u003cshn\u003e url=%\u003ccquuc\u003e cqhm=%\u003ccqhm\u003e cqhv=%\u003ccqhv\u003e pssc=%\u003cpssc\u003e ttms=%\u003cttms\u003e b=%\u003cpscl\u003e sssc=%\u003csssc\u003e sscl=%\u003csscl\u003e cfsc=%\u003ccfsc\u003e pfsc=%\u003cpfsc\u003e crc=%\u003ccrc\u003e phr=%\u003cphr\u003e uas=\\\"%\u003c{User-Agent}cqh\u003e\\\""}
+{"name":"LogFormat.Name","config_file":"logs_xml.config","value":"custom_ats_2"}
+{"name":"LogObject.Format","config_file":"logs_xml.config","value":"custom_ats_2"}
+{"name":"LogObject.Filename","config_file":"logs_xml.config","value":"custom_ats_2"}
 {"name":"url_sig","config_file":"package","value":"1.0-3.el6.x86_64"}
 {"name":"astats_over_http","config_file":"package","value":"1.2-3.el6.x86_64"}
 {"name":"cacheurl","config_file":"package","value":"1.0-3.el6.x86_64"}
@@ -361,14 +361,17 @@
 {"name":"regex_revalidate","config_file":"package","value":"1.0-4.el6.x86_64"}
 {"name":"CONFIG proxy.config.cache.ram_cache.size","config_file":"records.config","value":"INT 34359738368"}
 {"name":"header_rewrite","config_file":"package","value":"4.0.2-1.el6.x86_64"}
-{"name":"api.port","config_file":"server.xml","value":"8080"}
+{"name":"api.port","config_file":"server.xml","value":"3333"}
 {"name":"astats_over_http.so","config_file":"plugin.config","value":""}
-{"name":"allow_ip","config_file":"astats.config","value":"127.0.0.1,10.0.0.0/8,172.16.0.0/12"}
-{"name":"allow_ip6","config_file":"astats.config","value":"::1,2001:558:fee8:180::2/64"}
+{"name":"allow_ip","config_file":"astats.config","value":"127.0.0.1, 10.10.10.10/16"}
+{"name":"allow_ip6","config_file":"astats.config","value":"::1,d009:5dd:f0d8:18d::2/64"}
 {"name":"record_types","config_file":"astats.config","value":"144"}
 {"name":"location","config_file":"astats.config","value":"/opt/trafficserver/etc/trafficserver"}
 {"name":"path","config_file":"astats.config","value":"_astats"}
 {"name":"CONFIG proxy.config.cache.http.compatibility.4-2-0-fixup","config_file":"records.config","value":"INT 0"}
+{"name":"location","config_file":"hdr_rw_mlb-live-http.config","value":"/opt/trafficserver/etc/trafficserver"}
+{"name":"location","config_file":"hdr_rw_mlb-live-dns.config","value":"/opt/trafficserver/etc/trafficserver"}
+{"name":"location","config_file":"hdr_rw_xfinity-home.config","value":"/opt/trafficserver/etc/trafficserver"}
 {"name":"algorithm","config_file":"parent.config","value":"consistent_hash"}
 {"name":"DsStats","config_file":"redis.config","value":"kbps"}
 {"name":"DsStats","config_file":"redis.config","value":"tps_2xx"}
@@ -379,6 +382,91 @@
 {"name":"CacheStats","config_file":"redis.config","value":"maxKbps"}
 {"name":"CacheStats","config_file":"redis.config","value":"ats.proxy.process.http.current_client_connections"}
 {"name":"maxRevalDurationDays","config_file":"regex_revalidate.config","value":"90"}
-{"name":"tm.instance_name","config_file":"global","value":"CDN"}
-{"name":"CONFIG proxy.config.cache.ram_cache_cutoff","config_file":"records.config","value":"268435456"}
+{"name":"tm.instance_name","config_file":"global","value":"kabletown cdn"}
+{"name":"CONFIG proxy.config.cache.ram_cache_cutoff","config_file":"records.config","value":"INT 0"}
 {"name":"CONFIG proxy.config.cache.ram_cache_cutoff","config_file":"records.config","value":"INT 268435456"}
+{"name":"health.threshold.availableBandwidthInKbps","config_file":"rascal.properties","value":"\u003e11500000"}
+{"name":"DsStats","config_file":"redis.config","value":"tps_3xx"}
+{"name":"DsStats","config_file":"redis.config","value":"tps_4xx"}
+{"name":"DsStats","config_file":"redis.config","value":"tps_5xx"}
+{"name":"DsStats","config_file":"redis.config","value":"tps_total"}
+{"name":"CONFIG proxy.config.ssl.server.cipher_suite","config_file":"records.config","value":"STRING ECDHE-RSA-AES128-GCM-SHA256:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-RSA-AES128-SHA256:ECDHE-RSA-AES256-SHA384:AES128-GCM-SHA256:AES256-GCM-SHA384:ECDHE-RSA-RC4-SHA:ECDHE-RSA-AES128-SHA:ECDHE-RSA-AES256-SHA:RC4-SHA:RC4-MD5:AES128-SHA:AES256-SHA:DES-CBC3-SHA!SRP:!DSS:!PSK:!aNULL:!eNULL:!SSLv2"}
+{"name":"CONFIG proxy.config.ssl.server.honor_cipher_order","config_file":"records.config","value":"INT 1"}
+{"name":"CONFIG proxy.config.ssl.server.cert.path","config_file":"records.config","value":"STRING etc/trafficserver/ssl"}
+{"name":"CONFIG proxy.config.http.server_ports","config_file":"records.config","value":"STRING 80 80:ipv6 443:ssl 443:ipv6:ssl"}
+{"name":"CONFIG proxy.config.ssl.server.private_key.path","config_file":"records.config","value":"STRING etc/trafficserver/ssl"}
+{"name":"CONFIG proxy.config.ssl.client.CA.cert.path","config_file":"records.config","value":"STRING etc/trafficserver/ssl"}
+{"name":"CONFIG proxy.config.ssl.client.private_key.path","config_file":"records.config","value":"STRING etc/trafficserver/ssl"}
+{"name":"CONFIG proxy.config.ssl.client.cert.path","config_file":"records.config","value":"STRING etc/trafficserver/ssl"}
+{"name":"CONFIG proxy.config.ssl.CA.cert.path","config_file":"records.config","value":"STRING etc/trafficserver/ssl"}
+{"name":"CONFIG proxy.config.ssl.SSLv3","config_file":"records.config","value":"INT 0"}
+{"name":"CONFIG proxy.config.ssl.server.multicert.filename","config_file":"records.config","value":"STRING ssl_multicert.config"}
+{"name":"location","config_file":"hdr_rw_freewheel-dns.config","value":"/opt/trafficserver/etc/trafficserver"}
+{"name":"astats_over_http","config_file":"package","value":"1.2-8.el6.x86_64"}
+{"name":"trafficserver","config_file":"package","value":"5.2.0-5807.d0a1296.el6.x86_64"}
+{"name":"CONFIG proxy.config.allocator.hugepages","config_file":"records.config","value":"INT 0"}
+{"name":"CONFIG proxy.config.http.negative_caching_enabled","config_file":"records.config","value":"INT 1"}
+{"name":"CONFIG proxy.config.http.negative_caching_lifetime","config_file":"records.config","value":"INT 3"}
+{"name":"health.threshold.availableBandwidthInKbps","config_file":"rascal.properties","value":"\u003e3500000"}
+{"name":"record_types","config_file":"astats.config","value":"122"}
+{"name":"CONFIG proxy.config.http.transaction_active_timeout_in","config_file":"records.config","value":"INT 0"}
+{"name":"CONFIG proxy.config.body_factory.enable_customizations","config_file":"records.config","value":"INT 1"}
+{"name":"CONFIG proxy.config.http.negative_caching_lifetime","config_file":"records.config","value":"INT 1"}
+{"name":"cron_ort_syncds","config_file":"traffic_ops_ort_syncds.cron","value":"*/15 * * * * root /opt/ort/traffic_ops_ort.pl syncds warn https://tm.kabletown.net admin:12M0nk3y$ \u003e /tmp/ort/syncds.log 2\u003e\u00261"}
+{"name":"location","config_file":"traffic_ops_ort_syncds.cron","value":"/etc/cron.d"}
+{"name":"tm.traffic_mon_fwd_proxy","config_file":"global","value":"http://tm.kabletown.net:81"}
+{"name":"CONFIG proxy.config.body_factory.template_sets_dir","config_file":"records.config","value":"STRING etc/trafficserver/body_factory"}
+{"name":"api.cache-control.max-age","config_file":"CRConfig.json","value":"10"}
+{"name":"location","config_file":"set_dscp_0.config","value":"/opt/trafficserver/etc/trafficserver/dscp"}
+{"name":"location","config_file":"set_dscp_10.config","value":"/opt/trafficserver/etc/trafficserver/dscp"}
+{"name":"location","config_file":"set_dscp_12.config","value":"/opt/trafficserver/etc/trafficserver/dscp"}
+{"name":"location","config_file":"set_dscp_14.config","value":"/opt/trafficserver/etc/trafficserver/dscp"}
+{"name":"location","config_file":"set_dscp_18.config","value":"/opt/trafficserver/etc/trafficserver/dscp"}
+{"name":"location","config_file":"set_dscp_20.config","value":"/opt/trafficserver/etc/trafficserver/dscp"}
+{"name":"location","config_file":"set_dscp_22.config","value":"/opt/trafficserver/etc/trafficserver/dscp"}
+{"name":"location","config_file":"set_dscp_26.config","value":"/opt/trafficserver/etc/trafficserver/dscp"}
+{"name":"location","config_file":"set_dscp_28.config","value":"/opt/trafficserver/etc/trafficserver/dscp"}
+{"name":"location","config_file":"set_dscp_30.config","value":"/opt/trafficserver/etc/trafficserver/dscp"}
+{"name":"location","config_file":"set_dscp_34.config","value":"/opt/trafficserver/etc/trafficserver/dscp"}
+{"name":"location","config_file":"set_dscp_36.config","value":"/opt/trafficserver/etc/trafficserver/dscp"}
+{"name":"location","config_file":"set_dscp_38.config","value":"/opt/trafficserver/etc/trafficserver/dscp"}
+{"name":"location","config_file":"set_dscp_8.config","value":"/opt/trafficserver/etc/trafficserver/dscp"}
+{"name":"location","config_file":"set_dscp_16.config","value":"/opt/trafficserver/etc/trafficserver/dscp"}
+{"name":"location","config_file":"set_dscp_24.config","value":"/opt/trafficserver/etc/trafficserver/dscp"}
+{"name":"location","config_file":"set_dscp_32.config","value":"/opt/trafficserver/etc/trafficserver/dscp"}
+{"name":"location","config_file":"set_dscp_40.config","value":"/opt/trafficserver/etc/trafficserver/dscp"}
+{"name":"location","config_file":"set_dscp_48.config","value":"/opt/trafficserver/etc/trafficserver/dscp"}
+{"name":"location","config_file":"set_dscp_56.config","value":"/opt/trafficserver/etc/trafficserver/dscp"}
+{"name":"location","config_file":"8080_fwd.config","value":"/opt/trafficserver/etc/trafficserver"}
+{"name":"line1","config_file":"8080_fwd.config","value":"cond %{READ_REQUEST_HDR_HOOK}"}
+{"name":"line2","config_file":"8080_fwd.config","value":"cond %{INCOMING-PORT} =8080"}
+{"name":"line3","config_file":"8080_fwd.config","value":"skip-remap true"}
+{"name":"header_rewrite.so","config_file":"plugin.config","value":"/opt/trafficserver/etc/trafficserver/8080_fwd.config"}
+{"name":"CONFIG proxy.config.cache.ip_allow.filename","config_file":"records.config","value":"STRING ip_allow.config"}
+{"name":"CONFIG proxy.config.http.server_ports","config_file":"records.config","value":"STRING 80 80:ipv6 443:ssl 443:ipv6:ssl 8080 8080:ipv6"}
+{"name":"location","config_file":"hdr_rw_kinx-prog.config","value":"/opt/trafficserver/etc/trafficserver"}
+{"name":"location","config_file":"ssl_multicert.config","value":"/opt/trafficserver/etc/trafficserver"}
+{"name":"location","config_file":"bg_fetch.config","value":"/opt/trafficserver/etc/trafficserver"}
+{"name":"qstring","config_file":"parent.config","value":"ignore"}
+{"name":"geolocation.polling.url","config_file":"CRConfig.json","value":"http://cdn-tools.cdnl.kabletown.net/cdn/MaxMind/GeoLiteCity.dat.gz"}
+{"name":"geolocation6.polling.url","config_file":"CRConfig.json","value":"http://cdn-tools.cdnl.kabletown.net/cdn/MaxMind/GeoLiteCityv6.dat.gz"}
+{"name":"Drive_Letters","config_file":"storage.config","value":"c,d,e,f,g,h,i,j,k,l,m,n,o,p,q,r,s,t,u,v,w,x,y,z,aa,ab,ac,ad,ae,af,ag,ah,ai,aj,ak,al,am,an,ao,ap,aq,ar,as,at,au,av,aw,ax,ay,az,ba,bb,bc,bd,be,bf,bg,bh,bi,bj,bk,bl,bm,bn,bo,bp,bq,br,bs,bt,bu,bv"}
+{"name":"location","config_file":"hdr_rw_xb-dlassets.config","value":"/opt/trafficserver/etc/trafficserver"}
+{"name":"CONFIG proxy.config.http.cache.allow_empty_doc","config_file":"records.config","value":"INT 1"}
+{"name":"CacheStats","config_file":"traffic_stats.config","value":"bandwidth"}
+{"name":"CacheStats","config_file":"traffic_stats.config","value":"maxKbps"}
+{"name":"CacheStats","config_file":"traffic_stats.config","value":"ats.proxy.process.http.current_client_connections"}
+{"name":"DsStats","config_file":"traffic_stats.config","value":"kbps"}
+{"name":"DsStats","config_file":"traffic_stats.config","value":"tps_2xx"}
+{"name":"DsStats","config_file":"traffic_stats.config","value":"status_4xx"}
+{"name":"DsStats","config_file":"traffic_stats.config","value":"status_5xx"}
+{"name":"DsStats","config_file":"traffic_stats.config","value":"tps_3xx"}
+{"name":"DsStats","config_file":"traffic_stats.config","value":"tps_4xx"}
+{"name":"DsStats","config_file":"traffic_stats.config","value":"tps_5xx"}
+{"name":"DsStats","config_file":"traffic_stats.config","value":"tps_total"}
+{"name":"location","config_file":"ssl_multicert.config","value":"/opt/trafficserver/etc/trafficserver"}
+{"name":"location","config_file":"bg_fetch.config","value":"/opt/trafficserver/etc/trafficserver"}
+{"name":"qstring","config_file":"parent.config","value":"ignore"}
+{"name":"location","config_file":"ssl_multicert.config","value":"/opt/trafficserver/etc/trafficserver"}
+{"name":"location","config_file":"bg_fetch.config","value":"/opt/trafficserver/etc/trafficserver"}
+{"name":"qstring","config_file":"parent.config","value":"ignore"}
