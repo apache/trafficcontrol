@@ -623,6 +623,10 @@ sub startup {
 
 	$r->get( '/api/1.1/riak/bucket/#bucket/key/#key/values' => [ format => [qw(json)] ] )->over( authenticated => 1 )->to( 'Riak#get', namespace => 'API' );
 
+	# -- INFLUXDB
+	$r->get( '/api/1.1/influxdb' => [ format => [qw(json)] ] )->over( authenticated => 1 )->to( 'InfluxDB#query', namespace => 'API::v12' );
+	$r->post('/api/1.1/influxdb')->over( authenticated => 1 )->to( 'InfluxDB#write_point', namespace => 'API::v12' );
+
 	# -- DELIVERY SERVICE
 	# USED TO BE - GET /api/1.1/services
 	$r->get( '/api/1.1/deliveryservices' => [ format => [qw(json)] ] )->over( authenticated => 1 )
@@ -714,6 +718,9 @@ sub startup {
 	$r->get(
 		'/api/1.1/usage/deliveryservices/:ds/cachegroups/:name/metric_types/:metric/start_date/:start_date/end_date/:end_date/interval/:interval' =>
 			[ format => [qw(json)] ] )->over( authenticated => 1 )->to( 'Usage#deliveryservice', namespace => 'API' );
+
+	$r->get( '/api/deliveryservices/:ds/usage' => [ format => [qw(v12-json)] ] )->over( authenticated => 1 )
+		->to( 'Usage#deliveryservice', namespace => 'API::v12' );
 
 	# -- PHYS_LOCATION #NEW
 	# Supports ?orderby=key

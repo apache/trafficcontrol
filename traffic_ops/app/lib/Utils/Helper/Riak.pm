@@ -1,4 +1,4 @@
-package Utils::Riak;
+package Utils::Helper::Riak;
 #
 # Copyright 2015 Comcast Cable Communications Management, LLC
 #
@@ -31,8 +31,6 @@ use File::Slurp;
 # This Perl Module was needed to better support SSL for the 'Vault'
 use LWP::UserAgent qw();
 
-##To track the active server we want to use
-my $active_server;
 use constant RIAK_ROOT_URI => "riak";
 
 # The purpose of this class is to provide for an easy method
