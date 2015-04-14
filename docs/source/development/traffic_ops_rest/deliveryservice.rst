@@ -608,6 +608,7 @@ Response Content Type: application/json
 
 ::
 
+  TBD
    
 
 For error messages, see :ref:`reference-label-401`, :ref:`reference-label-403`, and :ref:`reference-label-404`.
@@ -626,6 +627,7 @@ Response Content Type: application/json
 
 ::
 
+  TBD
 
   HTTP Status Code: 200
   Reason: Success
@@ -654,9 +656,9 @@ Response Content Type: application/json
 
 **Response Example**
 
-
 ::
-
+  
+  TBD
 
  
 For error messages, see :ref:`reference-label-401` and :ref:`reference-label-404`.
