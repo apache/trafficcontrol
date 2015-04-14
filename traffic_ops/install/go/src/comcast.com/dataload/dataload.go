@@ -75,6 +75,11 @@ type DataType struct {
 	UseInTable  string `json:"use_in_table"`
 }
 
+type Status struct {
+	Name        string `json:"name"`
+	Description string `json:"description"`
+}
+
 func main() {
 	//read prop file for database credentials
 	file, _ := os.Open("/opt/traffic_ops/app/conf/production/database.conf")
@@ -261,6 +266,35 @@ func main() {
 		}
 		lineCount += 1
 	}
+	//load status data
+	fmt.Println("seeding status data...")
+	file, _ = os.Open("/opt/traffic_ops/install/data/json/status.json")
+	lineCount = 0
+	status := Status{}
+	decoder = json.NewDecoder(file)
+	statusInsert, err := db.Prepare("insert ignore into " + dbName + ".status (name, description) values (?,?)")
+	if err != nil {
+		fmt.Println("Couldn't prepare status insert statment")
+		panic(err)
+	}
+	for {
+		err := decoder.Decode(&status)
+		if err == io.EOF {
+			break
+		} else if err != nil {
+			fmt.Println("Error:", err)
+			return
+		}
+		fmt.Println("name", status.Name, "description", status.Description)
+		//load profile table
+		_, err = statusInsert.Exec(status.Name, status.Description)
+		if err != nil {
+			fmt.Println("The status Insert failed")
+			panic(err)
+		}
+		lineCount += 1
+	}
+
 	//load custom data
 	fmt.Println("creating custom parameters...")
 	//read param file into struct
