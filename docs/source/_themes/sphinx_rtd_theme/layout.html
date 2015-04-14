@@ -14,7 +14,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   {% block htmltitle %}
-  <title>{{ title|striptags|e }}{{ titlesuffix }}</title>
+  <title>{{ title|striptags|e }}{{ titlesuffix }} </title>
   {% endblock %}
 
   {# FAVICON #}
@@ -44,7 +44,6 @@
   {% for cssfile in extra_css_files %}
     <link rel="stylesheet" href="{{ pathto(cssfile, 1) }}" type="text/css" />
   {% endfor %}
-
   {%- block linktags %}
     {%- if hasdoc('about') %}
         <link rel="author" title="{{ _('About these documents') }}"
@@ -90,7 +89,7 @@
         {% if logo and theme_logo_only %}
           <a href="{{ pathto(master_doc) }}">
         {% else %}
-          <a href="{{ pathto(master_doc) }}" class="icon icon-home"> {{ project }}
+          <a href="/" class="icon icon-home"> {{ project }}
         {% endif %}
 
         {% if logo %}
