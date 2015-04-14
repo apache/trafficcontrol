@@ -33,7 +33,7 @@ The following are requirements to ensure an accurate set up:
 3. Install Traffic Monitor and perl mods: ``sudo yum -y install traffic_monitor perl-JSON perl-WWW-Curl``
 4. Take the config from Traffic Ops - run : ``sudo /opt/traffic_monitor/bin/traffic_monitor_config.pl``
  
-	Sample output:
+	Sample output: ::
 
 		traffic_mon # /opt/traffic_monitor/bin/traffic_monitor_config.pl https://traffic-ops.cdn.kabletown.net admin:password prompt
 		DEBUG: traffic_ops selected: https://traffic-ops.cdn.kabletown.net
