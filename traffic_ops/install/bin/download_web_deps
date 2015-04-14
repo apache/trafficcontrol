@@ -35,12 +35,6 @@ $ENV{AUTOMATED_TESTING}=1;
 
 checkCwd();
 
-promptUser ("This script will download files needed for Traffic Ops that 
-have license conflicts. These conflicts are either with 
-the Apache 2.0 license, or they are are not licensed for 
-redistribution, or they are not licensed for commercial use. 
-Hit ENTER to accept this and continue","");
-
 my $deps = getDeps("web_deps.txt");
 
 my %cdn_locs;
@@ -184,37 +178,6 @@ sub getDeps {
 	return $deps;
 }
 
-sub promptUser {
-	my ($promptString, $defaultValue, $noEcho) = @_;
-
-	if ($defaultValue) {
-		print $promptString, " [", $defaultValue, "]:  ";
-	}
-	else {
-		print $promptString, ":  ";
-	}
-
-	if (defined $noEcho && $noEcho)  {
-		my $response = read_password('');
-		if ((!defined $response || $response eq '') && (defined $defaultValue && $defaultValue ne '')) {
-			$response = $defaultValue;
-		}
-		return $response
-	}
-	else {
-		$| = 1;
-		$_ = <STDIN>;
-		chomp;
-
-		if ("$defaultValue") {
-			return $_ ? $_ : $defaultValue;
-		}
-		else {
-			return $_;
-		}
-		return $_;
-	}
-}
 
 sub execCommand {
 	my ($command, @args) = @_;
