@@ -284,7 +284,7 @@ func main() {
 		crConfig               = "CRConfig.json"
 	)
 	// insert cdnname data
-	fmt.Println("inserting data for ", cdnName)
+	fmt.Printf("inserting data for %s = %s \n", cdnName, customParams.CdnName)
 	//update
 	updateParam, err := db.Prepare("UPDATE parameter SET value=? WHERE name = ? and config_file = ?")
 	tx, err := db.Begin()
@@ -296,7 +296,6 @@ func main() {
 		fmt.Println("There was an issue creating paramter for", cdnName, " with a value of ", customParams.CdnName)
 		panic(err)
 	}
-
 	//insert tmInfoUrl data
 	//tminfo.url = tm.infourl, global
 	fmt.Println("inserting data for ", tmInfoUrl)
@@ -352,6 +351,10 @@ func main() {
 	_, err = tx.Stmt(updateParam).Exec(customParams.GeoLocation6PollingUrl, crConfig, geoLocation6PollingUrl)
 	if err != nil {
 		fmt.Println("There was an issue creating paramter for", geoLocation6PollingUrl, " with a value of ", customParams.GeoLocation6PollingUrl)
+		panic(err)
+	}
+	err = tx.Commit()
+	if err != nil {
 		panic(err)
 	}
 
