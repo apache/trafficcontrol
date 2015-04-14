@@ -33,7 +33,7 @@ The following are requirements to ensure an accurate set up:
 3. Install Traffic Monitor and perl mods: ``sudo yum -y install traffic_monitor perl-JSON perl-WWW-Curl``
 4. Take the config from Traffic Ops - run : ``sudo /opt/traffic_monitor/bin/traffic_monitor_config.pl``
  
-	Sample output:
+	Sample output: ::
 
 		traffic_mon # /opt/traffic_monitor/bin/traffic_monitor_config.pl https://traffic-ops.cdn.kabletown.net admin:password prompt
 		DEBUG: traffic_ops selected: https://traffic-ops.cdn.kabletown.net
@@ -125,6 +125,8 @@ The following are requirements to ensure an accurate set up:
     Using CATALINA_PID:/var/run/tomcat/tomcat.pid
     Starting tomcat [ OK ]
 
+6. Verify Traffic Monitor is running by pointing your browser to port 80 on the Traffic Monitor host.
+
 Configuring Traffic Monitor
 ===========================
 
@@ -132,3 +134,7 @@ Configuration Overview
 ----------------------
 Traffic Monitor is configured using its JSON configuration file, ``traffic_monitor_config.js``. Specify the URL, username, password, and CDN name for the instance of Traffic Ops for which this Traffic Monitor is a member, and start the software.  Once started with the correct configuration, Traffic Monitor downloads its configuration from Traffic Ops and begins polling caches. Once a configurable number of polling cycles completes, health protocol state is available via RESTful JSON endpoints.
 
+
+Troubleshooting and log files
+=============================
+Traffic Monitor log files are in ``/opt/traffic_monitor/var/log/``, and tomcat log files are in ``/opt/tomcat/logs/``.
