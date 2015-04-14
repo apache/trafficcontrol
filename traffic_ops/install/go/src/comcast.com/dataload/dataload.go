@@ -333,7 +333,6 @@ func main() {
 	//insert tmInfoUrl data
 	//tminfo.url = tm.infourl, global
 	fmt.Println("inserting data for ", tmInfoUrl)
-	// _, err = parameterInsert.Exec(tmInfoUrl, "global", customParams.TmInfoUrl)
 	_, err = tx.Stmt(updateParam).Exec(customParams.TmInfoUrl, "global", tmInfoUrl)
 	if err != nil {
 		fmt.Println("There was an issue creating paramter for", tmInfoUrl, " with a value of ", customParams.TmInfoUrl)
@@ -342,7 +341,6 @@ func main() {
 	//insert coverageZonePollingUrl data
 	//coveragezone.polling.url, CRConfig.json; CCR1
 	fmt.Println("inserting data for ", coverageZonePollingUrl)
-	// _, err = parameterInsert.Exec(coverageZonePollingUrl, crConfig, customParams.CoverageZonePollingUrl)
 	_, err = tx.Stmt(updateParam).Exec(customParams.CoverageZonePollingUrl, crConfig, coverageZonePollingUrl)
 	if err != nil {
 		fmt.Println("There was an issue creating paramter for", coverageZonePollingUrl, " with a value of ", customParams.CoverageZonePollingUrl)
@@ -352,7 +350,6 @@ func main() {
 	//insert geolocation polling url data
 	//geolocation.polling.url, CRConfig.json; CCR1
 	fmt.Println("inserting data for ", geoLocationPollingUrl)
-	// _, err = parameterInsert.Exec(geoLocationPollingUrl, crConfig, customParams.GeoLocationPollingUrl)
 	_, err = tx.Stmt(updateParam).Exec(customParams.GeoLocationPollingUrl, crConfig, geoLocationPollingUrl)
 	if err != nil {
 		fmt.Println("There was an issue creating paramter for", geoLocationPollingUrl, " with a value of ", customParams.GeoLocationPollingUrl)
@@ -362,7 +359,6 @@ func main() {
 	//insert domain name data
 	//domainname = domain_name, CRConfig.json; EDGE1, CCR1, RASCAL1, MID1
 	fmt.Println("inserting data for ", domainName)
-	// _, err = parameterInsert.Exec(domainName, crConfig, customParams.DomainName)
 	_, err = tx.Stmt(updateParam).Exec(customParams.DomainName, crConfig, domainName)
 	if err != nil {
 		fmt.Println("There was an issue creating paramter for", domainName, " with a value of ", customParams.DomainName)
@@ -372,7 +368,6 @@ func main() {
 	//insert tm url data
 	//tmurl =  tm.url, global
 	fmt.Println("inserting data for ", tmUrl)
-	// _, err = parameterInsert.Exec(tmUrl, "global", customParams.TmUrl)
 	_, err = tx.Stmt(updateParam).Exec(customParams.TmUrl, "global", tmUrl)
 	if err != nil {
 		fmt.Println("There was an issue creating paramter for", tmUrl, " with a value of ", customParams.TmUrl)
@@ -381,7 +376,6 @@ func main() {
 	//insert geoLocation6 data
 	//geolocation6.polling.url = geolocation6.polling.url, CRConfig.json; CCR1
 	fmt.Println("inserting data for ", geoLocation6PollingUrl)
-	// _, err = parameterInsert.Exec(geoLocation6PollingUrl, crConfig, customParams.GeoLocation6PollingUrl)
 	_, err = tx.Stmt(updateParam).Exec(customParams.GeoLocation6PollingUrl, crConfig, geoLocation6PollingUrl)
 	if err != nil {
 		fmt.Println("There was an issue creating paramter for", geoLocation6PollingUrl, " with a value of ", customParams.GeoLocation6PollingUrl)
