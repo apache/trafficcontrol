@@ -280,45 +280,28 @@ func main() {
 		domainName             = "domain_name"
 		tmUrl                  = "tm.url"
 		geoLocation6PollingUrl = "geolocation6.polling.url"
-		rascalConfig           = "traffic-router-config.txt"
-		crConfig               = "TRConfig.json"
-		edge                   = "EDGE1"
-		ccr                    = "TR1"
-		rascal                 = "TM1"
-		mid                    = "MID1"
+		rascalConfig           = "rascal-config.txt"
+		crConfig               = "CRConfig.json"
 	)
 	// insert cdnname data
 	fmt.Println("inserting data for ", cdnName)
-	_, err = parameterInsert.Exec(cdnName, rascalConfig, customParams.CdnName)
+	//update
+	updateParam, err := db.Prepare("UPDATE parameter SET value=? WHERE name = ? and config_file = ?")
+	tx, err := db.Begin()
+	if err != nil {
+		panic(err)
+	}
+	_, err = tx.Stmt(updateParam).Exec(customParams.CdnName, cdnName, rascalConfig)
 	if err != nil {
 		fmt.Println("There was an issue creating paramter for", cdnName, " with a value of ", customParams.CdnName)
-		panic(err)
-	}
-	_, err = profileParameterInsert.Exec(edge, cdnName, rascalConfig, customParams.CdnName)
-	if err != nil {
-		fmt.Println("There was an issue creating profile_parameter data for profile = ", edge, "parameter = ", cdnName, " with a value of ", customParams.CdnName)
-		panic(err)
-	}
-	_, err = profileParameterInsert.Exec(mid, cdnName, rascalConfig, customParams.CdnName)
-	if err != nil {
-		fmt.Println("There was an issue creating profile_parameter data for profile = ", mid, "parameter = ", cdnName, " with a value of ", customParams.CdnName)
-		panic(err)
-	}
-	_, err = profileParameterInsert.Exec(rascal, cdnName, rascalConfig, customParams.CdnName)
-	if err != nil {
-		fmt.Println("There was an issue creating profile_parameter data for profile = ", rascal, "parameter = ", cdnName, " with a value of ", customParams.CdnName)
-		panic(err)
-	}
-	_, err = profileParameterInsert.Exec(ccr, cdnName, rascalConfig, customParams.CdnName)
-	if err != nil {
-		fmt.Println("There was an issue creating profile_parameter data for profile = ", ccr, "parameter = ", cdnName, " with a value of ", customParams.CdnName)
 		panic(err)
 	}
 
 	//insert tmInfoUrl data
 	//tminfo.url = tm.infourl, global
 	fmt.Println("inserting data for ", tmInfoUrl)
-	_, err = parameterInsert.Exec(tmInfoUrl, "global", customParams.TmInfoUrl)
+	// _, err = parameterInsert.Exec(tmInfoUrl, "global", customParams.TmInfoUrl)
+	_, err = tx.Stmt(updateParam).Exec(customParams.TmInfoUrl, "global", tmInfoUrl)
 	if err != nil {
 		fmt.Println("There was an issue creating paramter for", tmInfoUrl, " with a value of ", customParams.TmInfoUrl)
 		panic(err)
@@ -326,61 +309,38 @@ func main() {
 	//insert coverageZonePollingUrl data
 	//coveragezone.polling.url, CRConfig.json; CCR1
 	fmt.Println("inserting data for ", coverageZonePollingUrl)
-	_, err = parameterInsert.Exec(coverageZonePollingUrl, crConfig, customParams.CoverageZonePollingUrl)
+	// _, err = parameterInsert.Exec(coverageZonePollingUrl, crConfig, customParams.CoverageZonePollingUrl)
+	_, err = tx.Stmt(updateParam).Exec(customParams.CoverageZonePollingUrl, crConfig, coverageZonePollingUrl)
 	if err != nil {
 		fmt.Println("There was an issue creating paramter for", coverageZonePollingUrl, " with a value of ", customParams.CoverageZonePollingUrl)
 		panic(err)
 	}
-	_, err = profileParameterInsert.Exec(ccr, coverageZonePollingUrl, crConfig, customParams.CoverageZonePollingUrl)
-	if err != nil {
-		fmt.Println("There was an issue creating profile_parameter data for profile = ", ccr, "parameter = ", coverageZonePollingUrl, " with a value of ", customParams.CoverageZonePollingUrl)
-		panic(err)
-	}
+
 	//insert geolocation polling url data
 	//geolocation.polling.url, CRConfig.json; CCR1
 	fmt.Println("inserting data for ", geoLocationPollingUrl)
-	_, err = parameterInsert.Exec(geoLocationPollingUrl, crConfig, customParams.GeoLocationPollingUrl)
+	// _, err = parameterInsert.Exec(geoLocationPollingUrl, crConfig, customParams.GeoLocationPollingUrl)
+	_, err = tx.Stmt(updateParam).Exec(customParams.GeoLocationPollingUrl, crConfig, geoLocationPollingUrl)
 	if err != nil {
 		fmt.Println("There was an issue creating paramter for", geoLocationPollingUrl, " with a value of ", customParams.GeoLocationPollingUrl)
 		panic(err)
 	}
-	_, err = profileParameterInsert.Exec(ccr, geoLocationPollingUrl, crConfig, customParams.GeoLocationPollingUrl)
-	if err != nil {
-		fmt.Println("There was an issue creating profile_parameter data for profile = ", ccr, "parameter = ", geoLocationPollingUrl, " with a value of ", customParams.GeoLocationPollingUrl)
-		panic(err)
-	}
+
 	//insert domain name data
 	//domainname = domain_name, CRConfig.json; EDGE1, CCR1, RASCAL1, MID1
 	fmt.Println("inserting data for ", domainName)
-	_, err = parameterInsert.Exec(domainName, crConfig, customParams.DomainName)
+	// _, err = parameterInsert.Exec(domainName, crConfig, customParams.DomainName)
+	_, err = tx.Stmt(updateParam).Exec(customParams.DomainName, crConfig, domainName)
 	if err != nil {
 		fmt.Println("There was an issue creating paramter for", domainName, " with a value of ", customParams.DomainName)
 		panic(err)
 	}
-	_, err = profileParameterInsert.Exec(edge, domainName, crConfig, customParams.DomainName)
-	if err != nil {
-		fmt.Println("There was an issue creating profile_parameter data for profile = ", edge, "parameter = ", domainName, " with a value of ", customParams.DomainName)
-		panic(err)
-	}
-	_, err = profileParameterInsert.Exec(mid, domainName, crConfig, customParams.DomainName)
-	if err != nil {
-		fmt.Println("There was an issue creating profile_parameter data for profile = ", mid, "parameter = ", domainName, " with a value of ", customParams.DomainName)
-		panic(err)
-	}
-	_, err = profileParameterInsert.Exec(rascal, domainName, crConfig, customParams.DomainName)
-	if err != nil {
-		fmt.Println("There was an issue creating profile_parameter data for profile = ", rascal, "parameter = ", domainName, " with a value of ", customParams.DomainName)
-		panic(err)
-	}
-	_, err = profileParameterInsert.Exec(ccr, domainName, crConfig, customParams.DomainName)
-	if err != nil {
-		fmt.Println("There was an issue creating profile_parameter data for profile = ", ccr, "parameter = ", domainName, " with a value of ", customParams.DomainName)
-		panic(err)
-	}
+
 	//insert tm url data
 	//tmurl =  tm.url, global
 	fmt.Println("inserting data for ", tmUrl)
-	_, err = parameterInsert.Exec(tmUrl, "global", customParams.TmUrl)
+	// _, err = parameterInsert.Exec(tmUrl, "global", customParams.TmUrl)
+	_, err = tx.Stmt(updateParam).Exec(customParams.TmUrl, "global", tmUrl)
 	if err != nil {
 		fmt.Println("There was an issue creating paramter for", tmUrl, " with a value of ", customParams.TmUrl)
 		panic(err)
@@ -388,28 +348,13 @@ func main() {
 	//insert geoLocation6 data
 	//geolocation6.polling.url = geolocation6.polling.url, CRConfig.json; CCR1
 	fmt.Println("inserting data for ", geoLocation6PollingUrl)
-	_, err = parameterInsert.Exec(geoLocation6PollingUrl, crConfig, customParams.GeoLocation6PollingUrl)
+	// _, err = parameterInsert.Exec(geoLocation6PollingUrl, crConfig, customParams.GeoLocation6PollingUrl)
+	_, err = tx.Stmt(updateParam).Exec(customParams.GeoLocation6PollingUrl, crConfig, geoLocation6PollingUrl)
 	if err != nil {
 		fmt.Println("There was an issue creating paramter for", geoLocation6PollingUrl, " with a value of ", customParams.GeoLocation6PollingUrl)
 		panic(err)
 	}
-	_, err = profileParameterInsert.Exec(ccr, geoLocation6PollingUrl, crConfig, customParams.GeoLocation6PollingUrl)
-	if err != nil {
-		fmt.Println("There was an issue creating profile_parameter data for profile = ", ccr, "parameter = ", geoLocation6PollingUrl, " with a value of ", customParams.GeoLocation6PollingUrl)
-		panic(err)
-	}
-	//add admin role to DB
-	// fmt.Println("Adding admin role to DB...")
-	// roleInsert, err := db.Prepare("insert into role (name, description, priv_level) values ('admin', 'admin', 100)")
-	// if err != nil {
-	// 	fmt.Println("An error occurred preparing the user insert statememnt")
-	// 	panic(err)
-	// }
-	// _, err = roleInsert.Exec()
-	// if err != nil {
-	// 	fmt.Println("An error occurred inserting role")
-	// 	panic(err)
-	// }
+
 	//add default user data
 	fmt.Println("Adding default user data")
 	file, _ = os.Open("/opt/traffic_ops/install/data/json/users.json") //should probably rename this file to be more meaningful
