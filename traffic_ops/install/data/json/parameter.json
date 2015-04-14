@@ -244,7 +244,6 @@
 {"name":"location","config_file":"http-log4j.properties","value":"/etc/kabletown"}
 {"name":"location","config_file":"dns-log4j.properties","value":"/etc/kabletown"}
 {"name":"location","config_file":"geolocation.properties","value":"/etc/kabletown"}
-{"name":"domain_name","config_file":"CRConfig.xml","value":"cdn2.kabletown.net"}
 {"name":"CONFIG proxy.config.http.parent_proxy.file","config_file":"records.config","value":"STRING parent.config"}
 {"name":"CONFIG proxy.config.url_remap.filename","config_file":"records.config","value":"STRING remap.config"}
 {"name":"location","config_file":"ip_allow.config","value":"/opt/trafficserver/etc/trafficserver"}
@@ -271,7 +270,6 @@
 {"name":"LogObject.RollingSizeMb","config_file":"logs_xml.config","value":"1024"}
 {"name":"location","config_file":"logs_xml.config","value":"/opt/trafficserver/etc/trafficserver"}
 {"name":"CDN_name","config_file":"rascal-config.txt","value":"cdn"}
-{"name":"CDN_name","config_file":"rascal-config.txt","value":"cdn2"}
 {"name":"CONFIG proxy.config.log.xml_config_file","config_file":"records.config","value":"STRING logs_xml.config"}
 {"name":"health.polling.interval","config_file":"rascal-config.txt","value":"8000"}
 {"name":"tm.crConfig.polling.url","config_file":"rascal-config.txt","value":"https://${tmHostname}/CRConfig-Snapshots/${cdnName}/CRConfig.xml"}
@@ -296,7 +294,6 @@
 {"name":"coveragezone.polling.interval","config_file":"CRConfig.json","value":"86400000"}
 {"name":"coveragezone.polling.url","config_file":"CRConfig.json","value":"http://cdn-tools.cdnl.kabletown.net/cdn/CZF/current/kabletown_cdn_czf-current.json"}
 {"name":"domain_name","config_file":"CRConfig.json","value":"cdn.kabletown.net"}
-{"name":"domain_name","config_file":"CRConfig.json","value":"cdn2.kabletown.net"}
 {"name":"location","config_file":"12M_facts","value":"/opt/ort"}
 {"name":"CONFIG proxy.config.http.cache.ignore_accept_encoding_mismatch","config_file":"records.config","value":"INT 1"}
 {"name":"health.timepad","config_file":"rascal-config.txt","value":"30"}
