@@ -259,7 +259,7 @@
 "RASCAL_CDN","tm.dataServer.polling.url","rascal-config.txt","https://${tmHostname}/dataserver/orderby/id"
 "RASCAL_CDN","tm.healthParams.polling.url","rascal-config.txt","https://${tmHostname}/health/${cdnName}"
 "RASCAL_CDN","tm.polling.interval","rascal-config.txt","60000"
-"RASCAL_CDN","location","rascal-config.txt","/opt/rascal/conf"
+"RASCAL_CDN","location","rascal-config.txt","/opt/traffic_monitor/conf"
 "EDGE1_CDN_520","health.threshold.queryTime","rascal.properties","1000"
 "EDGE1_CDN_520","health.polling.url","rascal.properties","http://${hostname}/_astats?application=&inf.name=${interface_name}"
 "RASCAL_CDN","health.threadPool","rascal-config.txt","4"
