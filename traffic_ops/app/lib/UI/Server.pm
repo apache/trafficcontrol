@@ -313,18 +313,6 @@ sub check_server_input {
 		$err .= $dname . " is not a valid domain name (rfc1123)" . $sep;
 	}
 
-	# do type and profile match?
-	my $type    = $paramHashRef->{'type'};
-	my $profile = $paramHashRef->{'profile'};
-	if ( $type =~ /^[+-]?\d+$/ && $profile =~ /^[+-]?\d+$/ ) {    # is type and profile integers??
-		my $tname = $self->db->resultset('Type')->search( { id => $type } )->get_column('name')->single();
-		my @p_ids = &profile_ids( $self, $tname . "\%" );
-		my $count = grep /$profile/, @p_ids;
-		if ( !$count ) {
-			$err .= "type [${tname}] must have profile like [${tname}]*" . $sep . '[TYPE=' . $type . '] [PROFILE=' . $profile . ']';
-		}
-	}
-
 	# IP address checks
 	foreach my $ipstr (
 		$paramHashRef->{'ip_address'},      $paramHashRef->{'ip_netmask'},      $paramHashRef->{'ip_gateway'},
