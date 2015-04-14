@@ -458,3 +458,4 @@
 "location","ssl_multicert.config","/opt/trafficserver/etc/trafficserver"
 "location","bg_fetch.config","/opt/trafficserver/etc/trafficserver"
 "qstring","parent.config","ignore"
+"tm.crConfig.polling.url","rascal-config.txt","https://${tmHostname}/CRConfig-Snapshots/${cdnName}/CRConfig.xml"

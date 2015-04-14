@@ -1,3 +1,4 @@
+"RASCAL_CDN","tm.crConfig.polling.url","rascal-config.txt","https://${tmHostname}/CRConfig-Snapshots/${cdnName}/CRConfig.xml"
 "EDGE1_CDN_520","Drive_Prefix","storage.config","/dev/sd"
 "EDGE1_CDN_520","Drive_Letters","storage.config","b,c,d,e,f,g,h,i,j,k,l,m,n,o,p,q,r,s,t,u,v,w,x,y"
 "EDGE1_CDN_520","CONFIG proxy.config.proxy_name","records.config","STRING __HOSTNAME__"

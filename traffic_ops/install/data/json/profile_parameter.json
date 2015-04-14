@@ -1,3 +1,4 @@
+{"profile":"RASCAL_CDN","parameter":"tm.crConfig.polling.url","config_file":"rascal-config.txt","value":"https://${tmHostname}/CRConfig-Snapshots/${cdnName}/CRConfig.xml"}
 {"profile":"EDGE1_CDN_520","parameter":"Drive_Prefix","config_file":"storage.config","value":"/dev/sd"}
 {"profile":"EDGE1_CDN_520","parameter":"Drive_Letters","config_file":"storage.config","value":"b,c,d,e,f,g,h,i,j,k,l,m,n,o,p,q,r,s,t,u,v,w,x,y"}
 {"profile":"EDGE1_CDN_520","parameter":"CONFIG proxy.config.proxy_name","config_file":"records.config","value":"STRING __HOSTNAME__"}
