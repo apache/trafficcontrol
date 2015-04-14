@@ -229,7 +229,6 @@
 {"profile":"HOSTMON","parameter":"location","config_file":"dns-log4j.properties","value":"/etc/kabletown"}
 {"profile":"CCR_CDN","parameter":"location","config_file":"geolocation.properties","value":"/etc/kabletown"}
 {"profile":"HOSTMON","parameter":"location","config_file":"geolocation.properties","value":"/etc/kabletown"}
-{"profile":"HOSTMON","parameter":"domain_name","config_file":"CRConfig.xml","value":"cdn2.kabletown.net"}
 {"profile":"EDGE1_CDN_520","parameter":"CONFIG proxy.config.http.parent_proxy.file","config_file":"records.config","value":"STRING parent.config"}
 {"profile":"EDGE1_CDN_520","parameter":"CONFIG proxy.config.url_remap.filename","config_file":"records.config","value":"STRING remap.config"}
 {"profile":"EDGE1_CDN_520","parameter":"location","config_file":"ip_allow.config","value":"/opt/trafficserver/etc/trafficserver"}
@@ -253,8 +252,6 @@
 {"profile":"CCR_CDN","parameter":"CDN_name","config_file":"rascal-config.txt","value":"cdn"}
 {"profile":"RASCAL_CDN","parameter":"CDN_name","config_file":"rascal-config.txt","value":"cdn"}
 {"profile":"EDGE1_CDN_520","parameter":"CDN_name","config_file":"rascal-config.txt","value":"cdn"}
-{"profile":"REDIS_ALL","parameter":"CDN_name","config_file":"rascal-config.txt","value":"cdn2"}
-{"profile":"HOSTMON","parameter":"CDN_name","config_file":"rascal-config.txt","value":"cdn2"}
 {"profile":"EDGE1_CDN_520","parameter":"CONFIG proxy.config.log.xml_config_file","config_file":"records.config","value":"STRING logs_xml.config"}
 {"profile":"RASCAL_CDN","parameter":"health.polling.interval","config_file":"rascal-config.txt","value":"8000"}
 {"profile":"RASCAL_CDN","parameter":"tm.crConfig.polling.url","config_file":"rascal-config.txt","value":"https://${tmHostname}/CRConfig-Snapshots/${cdnName}/CRConfig.xml"}
@@ -285,7 +282,6 @@
 {"profile":"HOSTMON","parameter":"coveragezone.polling.url","config_file":"CRConfig.json","value":"http://cdn-tools.cdnl.kabletown.net/cdn/CZF/current/kabletown_cdn_czf-current.json"}
 {"profile":"CCR_CDN","parameter":"domain_name","config_file":"CRConfig.json","value":"cdn.kabletown.net"}
 {"profile":"EDGE1_CDN_520","parameter":"domain_name","config_file":"CRConfig.json","value":"cdn.kabletown.net"}
-{"profile":"HOSTMON","parameter":"domain_name","config_file":"CRConfig.json","value":"cdn2.kabletown.net"}
 {"profile":"EDGE1_CDN_520","parameter":"location","config_file":"12M_facts","value":"/opt/ort"}
 {"profile":"RASCAL_CDN","parameter":"health.timepad","config_file":"rascal-config.txt","value":"30"}
 {"profile":"GLOBAL","parameter":"tm.url","config_file":"global","value":"https://tm.kabletown.net/"}
