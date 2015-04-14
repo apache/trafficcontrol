@@ -161,9 +161,10 @@ To install the Traffic Ops Developer environment:
 
    $ cd traffic_ops/app
    $ carton
+
 3. Set up a user in MySQL.
 
- ::
+Example: :: 
 
   master $ mysql
   Welcome to the MySQL monitor.  Commands end with ; or \g.
@@ -189,6 +190,7 @@ To install the Traffic Ops Developer environment:
    * Unit test database: ``$ db/admin.pl --env=test setup``
    * Development database: ``$ db/admin.pl --env=development setup``
    * Integration database: ``$ db use db/admin.pl --env=integration setup``
+   
 4. (Optional) To load temporary data into the tables: ``$ perl bin/db/setup_kabletown.pl``
 5. Set up a the database schema
 

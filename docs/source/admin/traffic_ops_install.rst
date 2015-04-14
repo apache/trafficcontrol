@@ -17,6 +17,8 @@
 .. index::
   Traffic Ops - Installing 
   
+.. _rl-ps:
+
 Installing Traffic Ops
 %%%%%%%%%%%%%%%%%%%%%%
 
@@ -76,7 +78,7 @@ To begin the install:
 
 
 
-.. _rl-ps:
+
 
 2. After installation of Traffic Ops rpm enter the following command: ``sudo /opt/traffic_ops/install/bin/postinstall``
 
