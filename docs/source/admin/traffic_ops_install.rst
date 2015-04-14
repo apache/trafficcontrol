@@ -78,7 +78,7 @@ To begin the install:
 
 .. _rl-ps:
 
-2. After installation of Traffic Ops rpm enter the following command: ``/opt/traffic_ops/install/bin/postinstall``
+2. After installation of Traffic Ops rpm enter the following command: ``sudo /opt/traffic_ops/install/bin/postinstall``
 
   Example output::
 
@@ -249,8 +249,120 @@ To begin the install:
 
   Example output::
 
-     JvD to provide new screen scrape. 
+    Downloading MaxMind data.
+    --2015-04-14 02:14:32--  http://geolite.maxmind.com/download/geoip/database/GeoLite2-City.mmdb.gz
+    Resolving geolite.maxmind.com... 141.101.115.190, 141.101.114.190, 2400:cb00:2048:1::8d65:73be, ...
+    Connecting to geolite.maxmind.com|141.101.115.190|:80... connected.
+    HTTP request sent, awaiting response... 200 OK
+    Length: 17633433 (17M) [application/octet-stream]
+    Saving to: “GeoLite2-City.mmdb.gz”
 
+    100%[==================================================================================================================================================================>] 17,633,433  7.03M/s   in 2.4s
+
+    2015-04-14 02:14:35 (7.03 MB/s) - “GeoLite2-City.mmdb.gz” saved [17633433/17633433]
+
+    Copying coverage zone file to public dir.
+
+    Installing SSL Certificates.
+
+      We're now running a script to generate a self signed X509 SSL certificate.
+      When prompted to enter a pass phrase, just enter 'pass' each time.  The
+      pass phrase will be stripped from the private key before installation.
+
+      When prompted to enter a 'challenge password', just hit the ENTER key.
+
+      The remaining enformation Country, State, Locality, etc... are required to
+      generate a properly formatted SSL certificate.
+
+    Hit Enter when you are ready to continue:
+    Postinstall SSL Certificate Creation.
+
+    Generating an RSA Private Server Key.
+
+    Generating RSA private key, 1024 bit long modulus
+    ..........................++++++
+    .....................++++++
+    e is 65537 (0x10001)
+    Enter pass phrase for server.key:
+    Verifying - Enter pass phrase for server.key:
+
+    The server key has been generated.
+
+    Creating a Certificate Signing Request (CSR)
+
+    Enter pass phrase for server.key:
+    You are about to be asked to enter information that will be incorporated
+    into your certificate request.
+    What you are about to enter is what is called a Distinguished Name or a DN.
+    There are quite a few fields but you can leave some blank
+    For some fields there will be a default value,
+    If you enter '.', the field will be left blank.
+    -----
+    Country Name (2 letter code) [XX]:US
+    State or Province Name (full name) []:CO
+    Locality Name (eg, city) [Default City]:Denver
+    Organization Name (eg, company) [Default Company Ltd]:
+    Organizational Unit Name (eg, section) []:
+    Common Name (eg, your name or your server's hostname) []:
+    Email Address []:
+
+    Please enter the following 'extra' attributes
+    to be sent with your certificate request
+    A challenge password []:pass
+    An optional company name []:
+
+    The Certificate Signing Request has been generated.
+    Removing the pass phrase from the server key.
+    Enter pass phrase for server.key.orig:
+    writing RSA key
+
+    The pass phrase has been removed from the server key.
+
+    Generating a Self-signed certificate.
+    Signature ok
+    subject=/C=US/ST=CO/L=Denver/O=Default Company Ltd
+    Getting Private key
+
+    A server key and self signed certificate has been generated.
+
+    Installing the server key and server certificate.
+
+    The private key has been installed.
+
+    Installing the self signed certificate.
+
+    Saving the self signed csr.
+
+      The self signed certificate has now been installed.
+
+      You may obtain a certificate signed by a Certificate Authority using the
+      server.csr file saved in the current directory.  Once you have obtained
+      a signed certificate, copy it to /etc/pki/tls/certs/localhost.crt and
+      restart Traffic Ops.
+
+
+
+    SSL Certificates have been installed.
+
+    Starting Traffic Ops.
+
+    Starting Traffic Ops
+
+    Subroutine TrafficOps::has redefined at /opt/traffic_ops/app/local/lib/perl5/Mojo/Base.pm line 38.
+    Subroutine TrafficOps::has redefined at /opt/traffic_ops/app/local/lib/perl5/Mojo/Base.pm line 38.
+    Loading config from /opt/traffic_ops/app/conf/cdn.conf
+    Reading log4perl config from /opt/traffic_ops/app/conf/production/log4perl.conf
+    Starting hot deployment for Hypnotoad server 32192.
+
+    Waiting for Traffic Ops to start.
+
+
+    Shutdown Traffic Ops [y/n] [n]:  n
+
+    To start Traffic Ops:  service traffic_ops start
+    To stop Traffic Ops:   service traffic_ops stop
+
+    traffic_ops #
 
 Traffic Ops is now installed!
 
