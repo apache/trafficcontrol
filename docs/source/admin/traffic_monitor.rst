@@ -34,10 +34,14 @@ The following are requirements to ensure an accurate set up:
 4. Take the config from Traffic Ops - run : ``sudo /opt/traffic_monitor/bin/traffic_monitor_config.pl``
  
 <<<<<<< HEAD
+<<<<<<< HEAD
 	Sample output: ::
 =======
 	Sample output:
 >>>>>>> Installation doc updates
+=======
+	Sample output:
+>>>>>>> ea6bf68654d998f43600785e2336c0d6e6465aaa
 
 		traffic_mon # /opt/traffic_monitor/bin/traffic_monitor_config.pl https://traffic-ops.cdn.kabletown.net admin:password prompt
 		DEBUG: traffic_ops selected: https://traffic-ops.cdn.kabletown.net
