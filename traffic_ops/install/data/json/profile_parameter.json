@@ -1,13 +1,4 @@
-{"profile":"CCR_CDN","parameter":"domain_name","config_file":"CRConfig.xml","value":"cdn.kabletown.net"}
-{"profile":"EDGE1_CDN_520","parameter":"domain_name","config_file":"CRConfig.xml","value":"cdn.kabletown.net"}
-{"profile":"CCR_CDN","parameter":"GeolocationURL","config_file":"CRConfig.xml","value":"http://server.kabletown.net:8080/GeoLiteCity.dat.gz"}
-{"profile":"HOSTMON","parameter":"GeolocationURL","config_file":"CRConfig.xml","value":"http://server.kabletown.net:8080/GeoLiteCity.dat.gz"}
-{"profile":"CCR_CDN","parameter":"CacheHealthTimeout","config_file":"CRConfig.xml","value":"70"}
-{"profile":"HOSTMON","parameter":"CacheHealthTimeout","config_file":"CRConfig.xml","value":"70"}
-{"profile":"CCR_CDN","parameter":"CoverageZoneMapURL","config_file":"CRConfig.xml","value":"http://tools.cdnl.kabletown.net/logs/production/reports/czf/current/kabletown_cdn_czf.xml"}
-{"profile":"HOSTMON","parameter":"CoverageZoneMapURL","config_file":"CRConfig.xml","value":"http://tools.cdnl.kabletown.net/logs/production/reports/czf/current/kabletown_cdn_czf.xml"}
-{"profile":"CCR_CDN","parameter":"CoverageZoneMapRefreshPeriodHours","config_file":"CRConfig.xml","value":"24"}
-{"profile":"HOSTMON","parameter":"CoverageZoneMapRefreshPeriodHours","config_file":"CRConfig.xml","value":"24"}
+{"profile":"RASCAL_CDN","parameter":"tm.crConfig.polling.url","config_file":"rascal-config.txt","value":"https://${tmHostname}/CRConfig-Snapshots/${cdnName}/CRConfig.xml"}
 {"profile":"EDGE1_CDN_520","parameter":"Drive_Prefix","config_file":"storage.config","value":"/dev/sd"}
 {"profile":"EDGE1_CDN_520","parameter":"Drive_Letters","config_file":"storage.config","value":"b,c,d,e,f,g,h,i,j,k,l,m,n,o,p,q,r,s,t,u,v,w,x,y"}
 {"profile":"EDGE1_CDN_520","parameter":"CONFIG proxy.config.proxy_name","config_file":"records.config","value":"STRING __HOSTNAME__"}
@@ -220,7 +211,6 @@
 {"profile":"EDGE1_CDN_520","parameter":"location","config_file":"storage.config","value":"/opt/trafficserver/etc/trafficserver/"}
 {"profile":"EDGE1_CDN_520","parameter":"location","config_file":"volume.config","value":"/opt/trafficserver/etc/trafficserver/"}
 {"profile":"EDGE1_CDN_520","parameter":"location","config_file":"50-ats.rules","value":"/etc/udev/rules.d/"}
-{"profile":"CCR_CDN","parameter":"location","config_file":"CRConfig.xml","value":"XMPP CRConfig node"}
 {"profile":"CCR_CDN","parameter":"location","config_file":"dns.zone","value":"/etc/kabletown/zones/\u003czonename\u003e.info"}
 {"profile":"HOSTMON","parameter":"location","config_file":"dns.zone","value":"/etc/kabletown/zones/\u003czonename\u003e.info"}
 {"profile":"CCR_CDN","parameter":"location","config_file":"http-log4j.properties","value":"/etc/kabletown"}
@@ -236,7 +226,6 @@
 {"profile":"EDGE1_CDN_520","parameter":"ramdisk_size","config_file":"grub.conf","value":"ramdisk_size=16777216"}
 {"profile":"CCR_CDN","parameter":"monitor:///opt/tomcat/logs/access.log","config_file":"inputs.conf","value":"index=index_test;sourcetype=access_ccr"}
 {"profile":"HOSTMON","parameter":"monitor:///opt/tomcat/logs/access.log","config_file":"inputs.conf","value":"index=index_test;sourcetype=access_ccr"}
-{"profile":"HOSTMON","parameter":"location","config_file":"CRConfig.xml","value":"XMPP CRConfigOTT node"}
 {"profile":"EDGE1_CDN_520","parameter":"purge_allow_ip","config_file":"ip_allow.config","value":"10.10.10.10"}
 {"profile":"EDGE1_CDN_520","parameter":"health.threshold.loadavg","config_file":"rascal.properties","value":"25.0"}
 {"profile":"EDGE1_CDN_520","parameter":"health.threshold.availableBandwidthInKbps","config_file":"rascal.properties","value":"\u003e1750000"}
@@ -254,7 +243,6 @@
 {"profile":"EDGE1_CDN_520","parameter":"CDN_name","config_file":"rascal-config.txt","value":"cdn"}
 {"profile":"EDGE1_CDN_520","parameter":"CONFIG proxy.config.log.xml_config_file","config_file":"records.config","value":"STRING logs_xml.config"}
 {"profile":"RASCAL_CDN","parameter":"health.polling.interval","config_file":"rascal-config.txt","value":"8000"}
-{"profile":"RASCAL_CDN","parameter":"tm.crConfig.polling.url","config_file":"rascal-config.txt","value":"https://${tmHostname}/CRConfig-Snapshots/${cdnName}/CRConfig.xml"}
 {"profile":"RASCAL_CDN","parameter":"tm.dataServer.polling.url","config_file":"rascal-config.txt","value":"https://${tmHostname}/dataserver/orderby/id"}
 {"profile":"RASCAL_CDN","parameter":"tm.healthParams.polling.url","config_file":"rascal-config.txt","value":"https://${tmHostname}/health/${cdnName}"}
 {"profile":"RASCAL_CDN","parameter":"tm.polling.interval","config_file":"rascal-config.txt","value":"60000"}
@@ -269,8 +257,6 @@
 {"profile":"EDGE1_CDN_520","parameter":"RAM_Volume","config_file":"storage.config","value":"2"}
 {"profile":"EDGE1_CDN_520","parameter":"Disk_Volume","config_file":"storage.config","value":"1"}
 {"profile":"EDGE1_CDN_520","parameter":"CONFIG proxy.config.cache.hosting_filename","config_file":"records.config","value":"STRING hosting.config"}
-{"profile":"CCR_CDN","parameter":"CoverageZoneJsonURL","config_file":"CRConfig.xml","value":"http://cdn-tools.cdnl.kabletown.net/cdn/CZF/current/kabletown_cdn_czf-current.json"}
-{"profile":"HOSTMON","parameter":"CoverageZoneJsonURL","config_file":"CRConfig.xml","value":"http://cdn-tools.cdnl.kabletown.net/cdn/CZF/current/kabletown_cdn_czf-current.json"}
 {"profile":"EDGE1_CDN_520","parameter":"health.connection.timeout","config_file":"rascal.properties","value":"2000"}
 {"profile":"CCR_CDN","parameter":"geolocation.polling.url","config_file":"CRConfig.json","value":"https://tm.kabletown.net/MaxMind/auto/GeoIP2-City.mmdb.gz"}
 {"profile":"HOSTMON","parameter":"geolocation.polling.url","config_file":"CRConfig.json","value":"https://tm.kabletown.net/MaxMind/auto/GeoIP2-City.mmdb.gz"}
