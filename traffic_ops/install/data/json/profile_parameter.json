@@ -258,7 +258,7 @@
 {"profile":"RASCAL_CDN","parameter":"tm.dataServer.polling.url","config_file":"rascal-config.txt","value":"https://${tmHostname}/dataserver/orderby/id"}
 {"profile":"RASCAL_CDN","parameter":"tm.healthParams.polling.url","config_file":"rascal-config.txt","value":"https://${tmHostname}/health/${cdnName}"}
 {"profile":"RASCAL_CDN","parameter":"tm.polling.interval","config_file":"rascal-config.txt","value":"60000"}
-{"profile":"RASCAL_CDN","parameter":"location","config_file":"rascal-config.txt","value":"/opt/rascal/conf"}
+{"profile":"RASCAL_CDN","parameter":"location","config_file":"rascal-config.txt","value":"/opt/traffic_monitor/conf"}
 {"profile":"EDGE1_CDN_520","parameter":"health.threshold.queryTime","config_file":"rascal.properties","value":"1000"}
 {"profile":"EDGE1_CDN_520","parameter":"health.polling.url","config_file":"rascal.properties","value":"http://${hostname}/_astats?application=\u0026inf.name=${interface_name}"}
 {"profile":"RASCAL_CDN","parameter":"health.threadPool","config_file":"rascal-config.txt","value":"4"}
