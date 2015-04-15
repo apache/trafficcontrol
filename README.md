@@ -16,5 +16,5 @@ Traffic Control is an Open Source implementation of a Content Delivery Network.
 
 ##### News
 * 16-April-2015: **Traffic Control is Open Source!**
-	Traffic control 1.1.0 is released to Open Source. Certainly not perfect, but hopefully good enough to get going for an administrator using the rpms, and for brave developers to start looking in to helping the project move forward. Please see the **[Addtional Install Notes for this release](http://traffic-control-cdn.net/docs/latest/faq/administration.html#why-is-my-crconfig-json-rejected)** when installing for the first time.
+	Certainly not perfect, but hopefully good enough to get going for an administrator using the rpms, and for brave developers to start looking in to helping the project move forward. Please see the **[Additional Install Notes for this release](http://traffic-control-cdn.net/docs/latest/faq/administration.html#why-is-my-crconfig-json-rejected)** when installing for the first time.
 
