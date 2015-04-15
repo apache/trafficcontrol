@@ -20,7 +20,10 @@
 	default-init-method="init" default-destroy-method="destroy">
 
     <import resource="classpath:/applicationProperties.xml" />
-	<bean id="statTracker" class="com.comcast.cdn.traffic_control.traffic_router.core.router.StatTracker" />
+	<bean id="statTracker" class="com.comcast.cdn.traffic_control.traffic_router.core.router.StatTracker">
+		<property name="dnsRoutingName" value="$[dns.routing.name]" />
+		<property name="httpRoutingName" value="$[http.routing.name]" />
+	</bean>
 
 	<bean id="HashFunctionFactory"
 		class="com.comcast.cdn.traffic_control.traffic_router.core.hash.MD5HashFunctionPoolableObjectFactory" />
