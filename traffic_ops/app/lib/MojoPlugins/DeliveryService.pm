@@ -99,24 +99,29 @@ sub register {
 			my $interval        = shift;
 
 			my ( $cdn_name, $ds_name ) = $self->get_cdn_name_ds_name($dsid);
-			$self->app->log->debug( "ds_name #-> " . $ds_name );
-			$self->app->log->debug( "cdn_name #-> " . $cdn_name );
 
 			# 'series' section
-			my $db_name            = "mydb";
-			my $q                  = "select * from myseries";
-			my $response_container = $self->influxdb_query( $db_name, $q );
+			my $delim   = ":";
+			my $db_name = "deliveryservice_stats";
+
+			# over-the-top:pixl-tv-linear:us-fl-sarasota:tps_4xx
+			my $series_name = sprintf( "%s$delim%s$delim%s$delim%s", $cdn_name, $ds_name, $cachegroup_name, $metric_type );
+			$self->app->log->debug( "series_name #-> " . $series_name );
+
+			my $series_query = sprintf( '%s "%s" %s', "select value from ", $series_name, "where time > '$start_date' and time < '$end_date'" );
+			my $response_container = $self->influxdb_query( $db_name, $series_query );
 			my $response           = $response_container->{response};
 			my $content            = decode_json( $response->{_content} );
-			$self->app->log->debug( "content #-> " . Dumper($content) );
-			my $series = $content->{results}[0]{series};
+			my $series             = $content->{results}[0]{series};
 
 			my $result = ();
 			$result->{usage}{series} = $series;
 
 			# 'summary' section
-			$q                  = "select mean(value), percentile(value, 95), min(value), max(value), sum(value) from myseries";
-			$response_container = $self->influxdb_query( $db_name, $q );
+			my $summary_query = sprintf( '%s "%s" %s',
+				"select mean(value), percentile(value, 95), min(value), max(value), sum(value), count(value) from ",
+				$series_name, "where time > '$start_date' and time < '$end_date'" );
+			$response_container = $self->influxdb_query( $db_name, $summary_query );
 			$response           = $response_container->{response};
 			$content            = decode_json( $response->{_content} );
 			my $summary = ();
@@ -125,27 +130,21 @@ sub register {
 			$summary->{min}         = $content->{results}[0]{series}[0]{values}[0][3];
 			$summary->{max}         = $content->{results}[0]{series}[0]{values}[0][4];
 			$summary->{total}       = $content->{results}[0]{series}[0]{values}[0][5];
+			$summary->{count}       = $content->{results}[0]{series}[0]{values}[0][6];
 			$self->app->log->debug( "content #-> " . Dumper($content) );
 
-=cut
-			my $dh = new Utils::Helper::DateHelper();
-			( $start, $end ) = $dh->translate_dates( $start, $end );
-			my $match = $self->build_match( $cdn_name, $ds_name, $cachegroup_name, $metric_type );
-			$self->app->log->debug( "match #-> " . $match );
-			my $j = $self->stats_data( $match, $start, $end, $interval );
-=cut
-
 			if ( %{$result} ) {
-				$result->{usage}{cdnName}           = $cdn_name;
-				$result->{usage}{deliveryServiceId} = $dsid;
-				$result->{usage}{cacheGroupName}    = $cachegroup_name;
-				$result->{usage}{startDate}         = $start_date;
-				$result->{usage}{endDate}           = $end_date;
-				$result->{usage}{interval}          = $interval;
-				$result->{usage}{metricType}        = $metric_type;
-				$result->{usage}{influxdbName}      = $db_name;
-				$result->{usage}{influxdbQuery}     = $q;
-				$result->{usage}{summary}           = $summary;
+				$result->{usage}{cdnName}              = $cdn_name;
+				$result->{usage}{deliveryServiceId}    = $dsid;
+				$result->{usage}{cacheGroupName}       = $cachegroup_name;
+				$result->{usage}{startDate}            = $start_date;
+				$result->{usage}{endDate}              = $end_date;
+				$result->{usage}{interval}             = $interval;
+				$result->{usage}{metricType}           = $metric_type;
+				$result->{usage}{influxdbName}         = $db_name;
+				$result->{usage}{influxdbSeriesQuery}  = $series_query;
+				$result->{usage}{influxdbSummaryQuery} = $summary_query;
+				$result->{usage}{summary}              = $summary;
 			}
 			$self->app->log->debug( "result #-> " . Dumper($result) );
 

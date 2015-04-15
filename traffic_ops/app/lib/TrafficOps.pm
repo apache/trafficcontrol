@@ -623,10 +623,6 @@ sub startup {
 
 	$r->get( '/api/1.1/riak/bucket/#bucket/key/#key/values' => [ format => [qw(json)] ] )->over( authenticated => 1 )->to( 'Riak#get', namespace => 'API' );
 
-	# -- INFLUXDB
-	$r->get( '/api/1.1/influxdb' => [ format => [qw(json)] ] )->over( authenticated => 1 )->to( 'InfluxDB#query', namespace => 'API::v12' );
-	$r->post('/api/1.1/influxdb')->over( authenticated => 1 )->to( 'InfluxDB#write_point', namespace => 'API::v12' );
-
 	# -- DELIVERY SERVICE
 	# USED TO BE - GET /api/1.1/services
 	$r->get( '/api/1.1/deliveryservices' => [ format => [qw(json)] ] )->over( authenticated => 1 )
@@ -718,9 +714,6 @@ sub startup {
 	$r->get(
 		'/api/1.1/usage/deliveryservices/:ds/cachegroups/:name/metric_types/:metric/start_date/:start_date/end_date/:end_date/interval/:interval' =>
 			[ format => [qw(json)] ] )->over( authenticated => 1 )->to( 'Usage#deliveryservice', namespace => 'API' );
-
-	$r->get( '/api/deliveryservices/:ds/usage' => [ format => [qw(v12-json)] ] )->over( authenticated => 1 )
-		->to( 'Usage#deliveryservice', namespace => 'API::v12' );
 
 	# -- PHYS_LOCATION #NEW
 	# Supports ?orderby=key
@@ -857,15 +850,29 @@ sub startup {
 	# USED TO BE - POST /api/1.1/user/profile.json
 	$r->post('/api/1.1/user/current/update')->over( authenticated => 1 )->to( 'User#update_current', namespace => 'API' );
 
+	# ------------------------------------------------------------------------
+	# END: Version 1.1
+	# ------------------------------------------------------------------------
+
+	# ------------------------------------------------------------------------
+	# API Routes 1.2
+	# ------------------------------------------------------------------------
+	# -- INFLUXDB
+	my $api_version = "v12";
+	$r->get( '/api/influxdb' => [ format => [ $api_version . ".json" ] ] )->over( authenticated => 1 )->to( 'InfluxDB#query', namespace => 'API::v12' );
+	$r->post( '/api/influxdb/' . $api_version )->over( authenticated => 1 )->to( 'InfluxDB#write_point', namespace => 'API::v12' );
+	$r->get( '/api/deliveryservices/:ds/usage' => [ format => [ $api_version . ".json" ] ] )->over( authenticated => 1 )
+		->to( 'Usage#deliveryservice', namespace => 'API::v12' );
+
+	# ------------------------------------------------------------------------
+	# END: Version 1.2
+	# ------------------------------------------------------------------------
+
 	# -- CATCH ALL
 	$r->get('/api/(*everything)')->to( 'Cdn#catch_all', namespace => 'API' );
 	$r->post('/api/(*everything)')->to( 'Cdn#catch_all', namespace => 'API' );
 	$r->put('/api/(*everything)')->to( 'Cdn#catch_all', namespace => 'API' );
 	$r->delete('/api/(*everything)')->to( 'Cdn#catch_all', namespace => 'API' );
-
-	# ------------------------------------------------------------------------
-	# END: Version 1.1
-	# ------------------------------------------------------------------------
 
 	$r->get(
 		'/(*everything)' => sub {
