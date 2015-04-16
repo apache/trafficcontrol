@@ -108,30 +108,30 @@ sub register {
 			my $series_name = sprintf( "%s$delim%s$delim%s$delim%s", $cdn_name, $ds_name, $cachegroup_name, $metric_type );
 			$self->app->log->debug( "series_name #-> " . $series_name );
 
-			my $series_query = sprintf( '%s "%s" %s', "select value from ", $series_name, "where time > '$start_date' and time < '$end_date'" );
-			my $response_container = $self->influxdb_query( $db_name, $series_query );
-			my $response           = $response_container->{response};
-			my $content            = decode_json( $response->{_content} );
-			my $series             = $content->{results}[0]{series};
-
 			my $result = ();
-			$result->{usage}{series} = $series;
 
 			# 'summary' section
 			my $summary_query = sprintf( '%s "%s" %s',
 				"select mean(value), percentile(value, 95), min(value), max(value), sum(value), count(value) from ",
 				$series_name, "where time > '$start_date' and time < '$end_date'" );
-			$response_container = $self->influxdb_query( $db_name, $summary_query );
-			$response           = $response_container->{response};
-			$content            = decode_json( $response->{_content} );
-			my $summary = ();
-			$summary->{average}     = $content->{results}[0]{series}[0]{values}[0][1];
-			$summary->{ninetyFifth} = $content->{results}[0]{series}[0]{values}[0][2];
-			$summary->{min}         = $content->{results}[0]{series}[0]{values}[0][3];
-			$summary->{max}         = $content->{results}[0]{series}[0]{values}[0][4];
-			$summary->{total}       = $content->{results}[0]{series}[0]{values}[0][5];
-			$summary->{count}       = $content->{results}[0]{series}[0]{values}[0][6];
-			$self->app->log->debug( "content #-> " . Dumper($content) );
+			my $response_container = $self->influxdb_query( $db_name, $summary_query );
+			my $response           = $response_container->{response};
+			my $summary_content    = decode_json( $response->{_content} );
+			my $summary            = ();
+			$summary->{average}     = $summary_content->{results}[0]{series}[0]{values}[0][1];
+			$summary->{ninetyFifth} = $summary_content->{results}[0]{series}[0]{values}[0][2];
+			$summary->{min}         = $summary_content->{results}[0]{series}[0]{values}[0][3];
+			$summary->{max}         = $summary_content->{results}[0]{series}[0]{values}[0][4];
+			$summary->{total}       = $summary_content->{results}[0]{series}[0]{values}[0][5];
+			$self->app->log->debug( "summary_content #-> " . Dumper($summary_content) );
+
+			my $series_query = sprintf( '%s "%s" %s', "select value from ", $series_name, "where time > '$start_date' and time < '$end_date'" );
+			$response_container = $self->influxdb_query( $db_name, $series_query );
+			$response = $response_container->{response};
+			my $series_content = decode_json( $response->{_content} );
+			my $series         = $series_content->{results}[0]{series};
+			$result->{usage}{series}      = $series;
+			$result->{usage}{seriesCount} = $summary_content->{results}[0]{series}[0]{values}[0][6];
 
 			if ( %{$result} ) {
 				$result->{usage}{cdnName}              = $cdn_name;
