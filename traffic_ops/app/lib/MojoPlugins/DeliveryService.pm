@@ -197,7 +197,7 @@ sub register {
 
 			if ( $response->is_success ) {
 				my $content = decode_json( $response->{_content} );
-				return $content->{results};
+				return $content->{results}[0]{series};
 			}
 			else {
 				$self->internal_server("Could not return deliveryservice stats 'series'");
