@@ -41,6 +41,8 @@ use User::pwent;
 use POSIX qw(strftime);
 use Utils::JsonConfig;
 use MojoX::Log::Log4perl;
+use File::Find;
+use File::Basename;
 
 use constant SESSION_TIMEOUT => 14400;
 my $logging_root_dir;
@@ -859,10 +861,14 @@ sub startup {
 	# ------------------------------------------------------------------------
 	# -- INFLUXDB
 	my $api_version = "v12";
+
+	#TODO: drichardson - remove this 2 routes after testing complete.
 	$r->get( '/api/influxdb' => [ format => [ $api_version . ".json" ] ] )->over( authenticated => 1 )->to( 'InfluxDB#query', namespace => 'API::v12' );
 	$r->post( '/api/influxdb/' . $api_version )->over( authenticated => 1 )->to( 'InfluxDB#write_point', namespace => 'API::v12' );
-	$r->get( '/api/deliveryservices/:ds/usage' => [ format => [ $api_version . ".json" ] ] )->over( authenticated => 1 )
-		->to( 'Usage#deliveryservice', namespace => 'API::v12' );
+
+	$r->get( '/api/deliveryservices/:ds/stats' => [ format => [ $api_version . ".json" ] ] )->over( authenticated => 1 )
+		->to( 'DeliveryService#stats', namespace => 'API::v12' );
+	$r->get( '/api/cache/stats' => [ format => [ $api_version . ".json" ] ] )->over( authenticated => 1 )->to( 'Cache#stats', namespace => 'API::v12' );
 
 	# ------------------------------------------------------------------------
 	# END: Version 1.2
@@ -981,23 +987,27 @@ sub setup_mojo_plugins {
 	my $pwd = cwd();
 	my $dir = "$pwd/lib/MojoPlugins";
 
-	opendir( DIR, $dir ) or die $!;
+	my @file_list;
+	find(
+		sub {
+			return unless -f;         #Must be a file
+			return unless /\.pm$/;    #Must end with `.pl` suffix
+			push @file_list, $File::Find::name;
+		},
+		$dir
+	);
 
-	while ( my $file = readdir(DIR) ) {
+	#print join "\n", @file_list;
+	foreach my $file (@file_list) {
+		open my $fn, '<', $file;
+		my $first_line = <$fn>;
+		my ( $package_keyword, $package_name ) = ( $first_line =~ m/(package )(.*);/ );
+		close $fn;
 
-		# Use a regular expression to ignore files beginning with a period
-		next if ( $file =~ m/^\./ );
-
-		( my $file_without_extension = $file ) =~ s/\.[^.]+$//;
-		my $package = "MojoPlugins::" . $file_without_extension;
-
-		#print("Loading:  $package\n");
-		$plugins->load_plugin($package);
-		$self->plugin($package);
-
+		#print("Loading:  $package_name\n");
+		$plugins->load_plugin($package_name);
+		$self->plugin($package_name);
 	}
-
-	closedir(DIR);
 
 	my $to_email_from = $config->{'to'}{'email_from'};
 	if ( defined($to_email_from) ) {
