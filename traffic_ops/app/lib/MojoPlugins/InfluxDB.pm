@@ -41,11 +41,7 @@ sub register {
 			my $write_point  = shift || confess("Supply an InfluxDB 'write_point'");
 			my $content_type = shift || "application/json";
 			my $conf         = load_conf($self);
-
-			$self->app->log->debug( "write_point #-> " . $write_point );
-
-			my $helper = $helper_class->new( $conf->{user}, $conf->{password} );
-
+			my $helper       = $helper_class->new( $conf->{user}, $conf->{password} );
 			return $self->server_send_request( SERVER_TYPE, $helper, sub { $helper_class->write( $write_point, $content_type ) }, SCHEMA_RESULT_FILE );
 		}
 	);
@@ -57,20 +53,7 @@ sub register {
 			my $query   = shift;
 			my $conf    = load_conf($self);
 			my $helper  = $helper_class->new( $conf->{user}, $conf->{password} );
-
 			return $self->server_send_request( SERVER_TYPE, $helper, sub { $helper_class->query( $db_name, $query ) }, SCHEMA_RESULT_FILE );
-		}
-	);
-
-	$app->renderer->add_helper(
-		influxdb_send_query_for_content => sub {
-			my $self    = shift;
-			my $db_name = shift;
-			my $query   = shift;
-
-			my $response_container = $self->influxdb_query( $db_name, $query );
-			my $response = $response_container->{response};
-			return decode_json( $response->{_content} );
 		}
 	);
 
