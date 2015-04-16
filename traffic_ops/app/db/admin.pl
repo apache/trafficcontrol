@@ -45,7 +45,6 @@ my $usage = "\n"
 	. "upgrade  - Execute migrate then seed on the database for the current environment.\n";
 
 my $environment = 'development';
-my $db_string   = 'tcp:127.0.0.1:3306*twelve_monkeys/twelve_monkeys/twelve';
 my $db_protocol;
 
 # This is defaulted to 'to_development' so
