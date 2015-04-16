@@ -63,11 +63,12 @@ sub register {
 
 			#'summary' section
 			my $summary_query = sprintf( '%s "%s" %s',
-				"select mean(value), percentile(value, 95), min(value), max(value), sum(value), count(value) from ",
-				$series_name, "where time > '$start_date' and time < '$end_date' limit 20" );
+				"select mean(value), percentile(value, 5), percentile(value, 95), percentile(value, 98), min(value), max(value), sum(value), count(value) from ",
+				$series_name,
+				"where time > '$start_date' and time < '$end_date'" );
 			my ( $summary_content, $series_count ) = $self->v12_deliveryservice_build_summary( $series_name, $summary_query );
 
-			my $series_query = sprintf( '%s "%s" %s', "select value from ", $series_name, "where time > '$start_date' and time < '$end_date' limit 20" );
+			my $series_query = sprintf( '%s "%s" %s', "select value from ", $series_name, "where time > '$start_date' and time < '$end_date'" );
 
 			#'series' section
 			my $series_content = $self->v12_deliveryservice_build_series( $series_name, $series_query );
@@ -114,12 +115,14 @@ sub register {
 				my $series_count    = 0;
 
 				if ( $values_size > 1 ) {
-					$summary->{average}     = $summary_content->{results}[0]{series}[0]{values}[0][1];
-					$summary->{ninetyFifth} = $summary_content->{results}[0]{series}[0]{values}[0][2];
-					$summary->{min}         = $summary_content->{results}[0]{series}[0]{values}[0][3];
-					$summary->{max}         = $summary_content->{results}[0]{series}[0]{values}[0][4];
-					$summary->{total}       = $summary_content->{results}[0]{series}[0]{values}[0][5];
-					$series_count           = $summary_content->{results}[0]{series}[0]{values}[0][6];
+					$summary->{average}                = $summary_content->{results}[0]{series}[0]{values}[0][1];
+					$summary->{fifthPercentile}        = $summary_content->{results}[0]{series}[0]{values}[0][2];
+					$summary->{ninetyFifthPercentile}  = $summary_content->{results}[0]{series}[0]{values}[0][3];
+					$summary->{ninetyEighthPercentile} = $summary_content->{results}[0]{series}[0]{values}[0][4];
+					$summary->{min}                    = $summary_content->{results}[0]{series}[0]{values}[0][5];
+					$summary->{max}                    = $summary_content->{results}[0]{series}[0]{values}[0][6];
+					$summary->{total}                  = $summary_content->{results}[0]{series}[0]{values}[0][7];
+					$series_count                      = $summary_content->{results}[0]{series}[0]{values}[0][8];
 				}
 				else {
 					$summary->{average}     = 0;
