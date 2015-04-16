@@ -31,7 +31,7 @@ sub register {
 	my ( $self, $app, $conf ) = @_;
 
 	$app->renderer->add_helper(
-		deliveryservice_series_name => sub {
+		v12_cache_series_name => sub {
 			my $self            = shift;
 			my $cdn_name        = shift;
 			my $ds_name         = shift;
@@ -47,7 +47,7 @@ sub register {
 	);
 
 	$app->renderer->add_helper(
-		deliveryservice_stats => sub {
+		cache_stats => sub {
 			my $self            = shift;
 			my $dsid            = shift;
 			my $cachegroup_name = shift;
@@ -59,18 +59,18 @@ sub register {
 
 			my ( $cdn_name, $ds_name ) = $self->lookup_cdn_name_and_ds_name($dsid);
 
-			my $series_name = $self->deliveryservice_series_name( $cdn_name, $ds_name, $cachegroup_name, $metric_type );
+			my $series_name = $self->v12_cache_series_name( $cdn_name, $ds_name, $cachegroup_name, $metric_type );
 
 			#'summary' section
 			my $summary_query = sprintf( '%s "%s" %s',
 				"select mean(value), percentile(value, 95), min(value), max(value), sum(value), count(value) from ",
 				$series_name, "where time > '$start_date' and time < '$end_date' limit 20" );
-			my ( $summary_content, $series_count ) = $self->deliveryservice_build_summary( $series_name, $summary_query );
+			my ( $summary_content, $series_count ) = $self->v12_build_cache_summary( $series_name, $summary_query );
 
 			my $series_query = sprintf( '%s "%s" %s', "select value from ", $series_name, "where time > '$start_date' and time < '$end_date' limit 20" );
 
 			#'series' section
-			my $series_content = $self->deliveryservice_build_series( $series_name, $series_query );
+			my $series_content = $self->v12_build_cache_series( $series_name, $series_query );
 
 			my $parent_node = "stats";
 			my $result      = ();
@@ -96,7 +96,7 @@ sub register {
 	);
 
 	$app->renderer->add_helper(
-		deliveryservice_build_summary => sub {
+		v12_build_cache_summary => sub {
 			my $self        = shift;
 			my $series_name = shift;
 			my $query       = shift;
@@ -139,7 +139,7 @@ sub register {
 	);
 
 	$app->renderer->add_helper(
-		deliveryservice_build_series => sub {
+		v12_build_cache_series => sub {
 			my $self        = shift;
 			my $series_name = shift;
 			my $query       = shift;
@@ -164,36 +164,6 @@ sub register {
 				$self->internal_server("Could not return deliveryservice stats 'series'");
 			}
 
-		}
-	);
-
-	$app->renderer->add_helper(
-		lookup_cdn_name_and_ds_name => sub {
-			my $self = shift;
-			my $dsid = shift;
-
-			my $cdn_name = "all";
-			my $ds_name  = "all";
-			if ( $dsid ne "all" ) {
-				my $ds = $self->db->resultset('Deliveryservice')->search( { id => $dsid }, {} )->single();
-				$ds_name = $ds->xml_id;
-				my $param =
-					$self->db->resultset('ProfileParameter')
-					->search( { -and => [ profile => $ds->profile->id, 'parameter.name' => 'CDN_name' ] }, { prefetch => [ 'parameter', 'profile' ] } )
-					->single();
-				$cdn_name = $param->parameter->value;
-			}
-			return ( $cdn_name, $ds_name );
-		}
-	);
-	$app->renderer->add_helper(
-		build_match => sub {
-			my $self            = shift;
-			my $cdn_name        = shift;
-			my $ds_name         = shift;
-			my $cachegroup_name = shift;
-			my $peak_usage_type = shift;
-			return $cdn_name . ":" . $ds_name . ":" . $cachegroup_name . ":all:" . $peak_usage_type;
 		}
 	);
 

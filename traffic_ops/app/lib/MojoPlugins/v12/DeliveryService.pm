@@ -57,7 +57,7 @@ sub register {
 			my $interval        = shift;    # Valid interval examples 10m (minutes), 10s (seconds), 1h (hour)
 			my $limit           = shift;
 
-			my ( $cdn_name, $ds_name ) = $self->v12_lookup_cdn_name_and_ds_name($dsid);
+			my ( $cdn_name, $ds_name ) = $self->lookup_cdn_name_and_ds_name($dsid);
 
 			my $series_name = $self->v12_deliveryservice_series_name( $cdn_name, $ds_name, $cachegroup_name, $metric_type );
 
@@ -171,7 +171,7 @@ sub register {
 	);
 
 	$app->renderer->add_helper(
-		v12_lookup_cdn_name_and_ds_name => sub {
+		lookup_cdn_name_and_ds_name => sub {
 			my $self = shift;
 			my $dsid = shift;
 

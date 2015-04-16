@@ -37,7 +37,7 @@ sub stats {
 	if ( $helper->is_valid_delivery_service($dsid) ) {
 
 		if ( $helper->is_delivery_service_assigned($dsid) ) {
-			return $self->deliveryservice_stats( $dsid, $cachegroup_name, $metric, $start_date, $end_date, $interval );
+			return $self->v12_cache_stats( $dsid, $cachegroup_name, $metric, $start_date, $end_date, $interval );
 		}
 		else {
 			return $self->forbidden();
