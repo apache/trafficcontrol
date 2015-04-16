@@ -1,4 +1,4 @@
-package API::v12::Usage;
+package API::v12::Cache;
 #
 # Copyright 2015 Comcast Cable Communications Management, LLC
 #
@@ -24,19 +24,20 @@ use Data::Dumper;
 use Utils::Helper;
 use JSON;
 
-sub deliveryservice {
+sub stats {
 	my $self            = shift;
 	my $dsid            = $self->param('ds');
 	my $cachegroup_name = $self->param('cacheGroupName');
 	my $metric          = $self->param('metricType');
 	my $start_date      = $self->param('startDate');
 	my $end_date        = $self->param('endDate');
-	my $interval        = $self->param('interval');
+	my $interval        = $self->param('interval') || "1m";         # Valid interval examples 10m (minutes), 10s (seconds), 1h (hour)
+	my $limit           = $self->param('limit') || 50;              # How many "series" to limit by
 	my $helper          = new Utils::Helper( { mojo => $self } );
 	if ( $helper->is_valid_delivery_service($dsid) ) {
 
 		if ( $helper->is_delivery_service_assigned($dsid) ) {
-			return $self->v12_deliveryservice_usage( $dsid, $cachegroup_name, $metric, $start_date, $end_date, $interval );
+			return $self->deliveryservice_stats( $dsid, $cachegroup_name, $metric, $start_date, $end_date, $interval );
 		}
 		else {
 			return $self->forbidden();
