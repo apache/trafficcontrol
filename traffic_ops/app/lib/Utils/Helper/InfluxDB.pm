@@ -85,11 +85,8 @@ sub write {
 		$write_point_data = to_json($write_point);
 	}
 	else {
-		confess("We should only be sending json content types");
+		confess("Only 'application/json' 'Content-Type' allowed\n");
 	}
-
-	print "fqdn #-> (" . $fqdn . ")\n";
-	print "write_point_data #-> (" . Dumper($write_point_data) . ")\n";
 	return $ua->post( $fqdn, Content => $write_point_data );
 }
 
@@ -98,9 +95,7 @@ sub query {
 
 	# db name should not be included when create influxdb databases
 	my $db_name = shift;
-	print "db_name #-> (" . $db_name . ")\n";
 	my $query = shift || confess("Supply a key");
-	print "query #-> (" . $query . ")\n";
 
 	my @uri;
 	if ( defined($db_name) ) {
@@ -109,9 +104,7 @@ sub query {
 
 	push( @uri, "q=" . uri_escape($query) );
 	my $uri = join( "&", @uri );
-	print "uri #-> (" . $uri . ")\n";
 	my $fqdn = $self->get_url( "/query?" . $uri );
-	print "fqdn #-> (" . $fqdn . ")\n";
 	return $ua->get($fqdn);
 }
 

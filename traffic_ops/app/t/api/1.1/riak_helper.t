@@ -55,8 +55,6 @@ is( $response->{_rc},                        200 );
 is( $response->{_headers}->{'content-type'}, 'application/json' );
 is( $fake_answer,                            $response->{_content} );
 
-#diag "response #-> (" . Dumper($response) . ")\n";
-
 #PUT
 $response = $riak_util->put( BUCKET, KEY, "value1" );
 is( $response->{_rc}, 200 );

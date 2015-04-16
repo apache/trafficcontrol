@@ -130,48 +130,79 @@ sub register {
 			my $series_query = sprintf( '%s "%s" %s', "select value from ", $series_name, "where time > '$start_date' and time < '$end_date'" );
 
 			#'series' section
-			my $series_content = $self->influxdb_send_query( DB_NAME, $series_query );
-			my $series = $series_content->{results}[0]{series};
+			my $series_content = $self->deliveryservice_build_usage_series( $series_name, $series_query );
+			$self->app->log->debug( "series_content #-> " . Dumper($series_content) );
 
-			my $result = ();
-			$result->{usage}{series}      = $series;
-			$result->{usage}{seriesCount} = $series_count;
+			if ( defined($summary_content) && defined($series_content) ) {
+				my $result = ();
+				$result->{usage}{series}      = $series_content;
+				$result->{usage}{seriesCount} = $series_count;
 
-			if ( %{$result} ) {
-				$result->{usage}{cdnName}              = $cdn_name;
-				$result->{usage}{deliveryServiceId}    = $dsid;
-				$result->{usage}{cacheGroupName}       = $cachegroup_name;
-				$result->{usage}{startDate}            = $start_date;
-				$result->{usage}{endDate}              = $end_date;
-				$result->{usage}{interval}             = $interval;
-				$result->{usage}{metricType}           = $metric_type;
-				$result->{usage}{influxdbDatabaseName} = DB_NAME;
-				$result->{usage}{influxdbSeriesQuery}  = $series_query;
-				$result->{usage}{influxdbSummaryQuery} = $summary_query;
-				$result->{usage}{summary}              = $summary_content;
+				if ( %{$result} ) {
+					$result->{usage}{cdnName}              = $cdn_name;
+					$result->{usage}{deliveryServiceId}    = $dsid;
+					$result->{usage}{cacheGroupName}       = $cachegroup_name;
+					$result->{usage}{startDate}            = $start_date;
+					$result->{usage}{endDate}              = $end_date;
+					$result->{usage}{interval}             = $interval;
+					$result->{usage}{metricType}           = $metric_type;
+					$result->{usage}{influxdbDatabaseName} = DB_NAME;
+					$result->{usage}{influxdbSeriesQuery}  = $series_query;
+					$result->{usage}{influxdbSummaryQuery} = $summary_query;
+					$result->{usage}{summary}              = $summary_content;
+				}
+
+				$self->success($result);
 			}
-
-			$self->success($result);
 		}
 	);
 
 	$app->renderer->add_helper(
 		deliveryservice_build_usage_summary => sub {
-			my $self          = shift;
-			my $series_name   = shift;
-			my $summary_query = shift;
+			my $self        = shift;
+			my $series_name = shift;
+			my $query       = shift;
 
-			my $summary_content = $self->influxdb_send_query( DB_NAME, $summary_query );
-			$self->app->log->debug( "summary_content #-> " . Dumper($summary_content) );
-			my $summary = ();
-			$summary->{average}     = $summary_content->{results}[0]{series}[0]{values}[0][1];
-			$summary->{ninetyFifth} = $summary_content->{results}[0]{series}[0]{values}[0][2];
-			$summary->{min}         = $summary_content->{results}[0]{series}[0]{values}[0][3];
-			$summary->{max}         = $summary_content->{results}[0]{series}[0]{values}[0][4];
-			$summary->{total}       = $summary_content->{results}[0]{series}[0]{values}[0][5];
-			my $seriesCount = $summary_content->{results}[0]{series}[0]{values}[0][6];
+			my $response_container = $self->influxdb_query( DB_NAME, $query );
+			my $response = $response_container->{response};
 
-			return ( $summary, $seriesCount );
+			if ( $response->is_success ) {
+				my $summary_content = decode_json( $response->{_content} );
+				$self->app->log->debug( "summary_content #-> " . Dumper($summary_content) );
+				my $summary = ();
+				$summary->{average}     = $summary_content->{results}[0]{series}[0]{values}[0][1];
+				$summary->{ninetyFifth} = $summary_content->{results}[0]{series}[0]{values}[0][2];
+				$summary->{min}         = $summary_content->{results}[0]{series}[0]{values}[0][3];
+				$summary->{max}         = $summary_content->{results}[0]{series}[0]{values}[0][4];
+				$summary->{total}       = $summary_content->{results}[0]{series}[0]{values}[0][5];
+				my $seriesCount = $summary_content->{results}[0]{series}[0]{values}[0][6];
+
+				return ( $summary, $seriesCount );
+			}
+			else {
+				$self->internal_server("Could not return deliveryservice stats 'summary'");
+			}
+
+		}
+	);
+
+	$app->renderer->add_helper(
+		deliveryservice_build_usage_series => sub {
+			my $self        = shift;
+			my $series_name = shift;
+			my $query       = shift;
+
+			my $response_container = $self->influxdb_query( DB_NAME, $query );
+			my $response = $response_container->{response};
+
+			if ( $response->is_success ) {
+				my $content = decode_json( $response->{_content} );
+				return $content->{results};
+			}
+			else {
+				$self->internal_server("Could not return deliveryservice stats 'series'");
+			}
+
 		}
 	);
 

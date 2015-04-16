@@ -63,7 +63,7 @@ sub register {
 	);
 
 	$app->renderer->add_helper(
-		influxdb_send_query => sub {
+		influxdb_send_query_for_content => sub {
 			my $self    = shift;
 			my $db_name = shift;
 			my $query   = shift;
