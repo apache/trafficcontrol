@@ -24,6 +24,9 @@ use Utils::Helper::DateHelper;
 use JSON;
 use HTTP::Date;
 
+#TODO: drichardson - pull this from the 'Parameters';
+use constant DB_NAME => "deliveryservice_stats";
+
 sub register {
 	my ( $self, $app, $conf ) = @_;
 
@@ -89,6 +92,22 @@ sub register {
 	);
 
 	$app->renderer->add_helper(
+		deliveryservice_series_name => sub {
+			my $self            = shift;
+			my $cdn_name        = shift;
+			my $ds_name         = shift;
+			my $cachegroup_name = shift;
+			my $metric_type     = shift;
+
+			# 'series' section
+			my $delim = ":";
+
+			# over-the-top:pixl-tv-linear:us-fl-sarasota:tps_4xx
+			return sprintf( "%s$delim%s$delim%s$delim%s", $cdn_name, $ds_name, $cachegroup_name, $metric_type );
+		}
+	);
+
+	$app->renderer->add_helper(
 		v12_deliveryservice_usage => sub {
 			my $self            = shift;
 			my $dsid            = shift;
@@ -98,40 +117,25 @@ sub register {
 			my $end_date        = shift;
 			my $interval        = shift;
 
-			my ( $cdn_name, $ds_name ) = $self->get_cdn_name_ds_name($dsid);
+			my ( $cdn_name, $ds_name ) = $self->lookup_cdn_name_and_ds_name($dsid);
 
-			# 'series' section
-			my $delim   = ":";
-			my $db_name = "deliveryservice_stats";
+			my $series_name = $self->deliveryservice_series_name( $cdn_name, $ds_name, $cachegroup_name, $metric_type );
 
-			# over-the-top:pixl-tv-linear:us-fl-sarasota:tps_4xx
-			my $series_name = sprintf( "%s$delim%s$delim%s$delim%s", $cdn_name, $ds_name, $cachegroup_name, $metric_type );
-			$self->app->log->debug( "series_name #-> " . $series_name );
-
-			my $result = ();
-
-			# 'summary' section
+			#'summary' section
 			my $summary_query = sprintf( '%s "%s" %s',
 				"select mean(value), percentile(value, 95), min(value), max(value), sum(value), count(value) from ",
 				$series_name, "where time > '$start_date' and time < '$end_date'" );
-			my $response_container = $self->influxdb_query( $db_name, $summary_query );
-			my $response           = $response_container->{response};
-			my $summary_content    = decode_json( $response->{_content} );
-			my $summary            = ();
-			$summary->{average}     = $summary_content->{results}[0]{series}[0]{values}[0][1];
-			$summary->{ninetyFifth} = $summary_content->{results}[0]{series}[0]{values}[0][2];
-			$summary->{min}         = $summary_content->{results}[0]{series}[0]{values}[0][3];
-			$summary->{max}         = $summary_content->{results}[0]{series}[0]{values}[0][4];
-			$summary->{total}       = $summary_content->{results}[0]{series}[0]{values}[0][5];
-			$self->app->log->debug( "summary_content #-> " . Dumper($summary_content) );
+			my ( $summary_content, $series_count ) = $self->deliveryservice_build_usage_summary( $series_name, $summary_query );
 
 			my $series_query = sprintf( '%s "%s" %s', "select value from ", $series_name, "where time > '$start_date' and time < '$end_date'" );
-			$response_container = $self->influxdb_query( $db_name, $series_query );
-			$response = $response_container->{response};
-			my $series_content = decode_json( $response->{_content} );
-			my $series         = $series_content->{results}[0]{series};
+
+			#'series' section
+			my $series_content = $self->influxdb_send_query( DB_NAME, $series_query );
+			my $series = $series_content->{results}[0]{series};
+
+			my $result = ();
 			$result->{usage}{series}      = $series;
-			$result->{usage}{seriesCount} = $summary_content->{results}[0]{series}[0]{values}[0][6];
+			$result->{usage}{seriesCount} = $series_count;
 
 			if ( %{$result} ) {
 				$result->{usage}{cdnName}              = $cdn_name;
@@ -141,19 +145,38 @@ sub register {
 				$result->{usage}{endDate}              = $end_date;
 				$result->{usage}{interval}             = $interval;
 				$result->{usage}{metricType}           = $metric_type;
-				$result->{usage}{influxdbName}         = $db_name;
+				$result->{usage}{influxdbDatabaseName} = DB_NAME;
 				$result->{usage}{influxdbSeriesQuery}  = $series_query;
 				$result->{usage}{influxdbSummaryQuery} = $summary_query;
-				$result->{usage}{summary}              = $summary;
+				$result->{usage}{summary}              = $summary_content;
 			}
-			$self->app->log->debug( "result #-> " . Dumper($result) );
 
 			$self->success($result);
 		}
 	);
 
 	$app->renderer->add_helper(
-		get_cdn_name_ds_name => sub {
+		deliveryservice_build_usage_summary => sub {
+			my $self          = shift;
+			my $series_name   = shift;
+			my $summary_query = shift;
+
+			my $summary_content = $self->influxdb_send_query( DB_NAME, $summary_query );
+			$self->app->log->debug( "summary_content #-> " . Dumper($summary_content) );
+			my $summary = ();
+			$summary->{average}     = $summary_content->{results}[0]{series}[0]{values}[0][1];
+			$summary->{ninetyFifth} = $summary_content->{results}[0]{series}[0]{values}[0][2];
+			$summary->{min}         = $summary_content->{results}[0]{series}[0]{values}[0][3];
+			$summary->{max}         = $summary_content->{results}[0]{series}[0]{values}[0][4];
+			$summary->{total}       = $summary_content->{results}[0]{series}[0]{values}[0][5];
+			my $seriesCount = $summary_content->{results}[0]{series}[0]{values}[0][6];
+
+			return ( $summary, $seriesCount );
+		}
+	);
+
+	$app->renderer->add_helper(
+		lookup_cdn_name_and_ds_name => sub {
 			my $self = shift;
 			my $dsid = shift;
 

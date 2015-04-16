@@ -62,6 +62,18 @@ sub register {
 		}
 	);
 
+	$app->renderer->add_helper(
+		influxdb_send_query => sub {
+			my $self    = shift;
+			my $db_name = shift;
+			my $query   = shift;
+
+			my $response_container = $self->influxdb_query( $db_name, $query );
+			my $response = $response_container->{response};
+			return decode_json( $response->{_content} );
+		}
+	);
+
 }
 
 sub load_conf {
