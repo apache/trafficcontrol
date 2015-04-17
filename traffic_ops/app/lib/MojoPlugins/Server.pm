@@ -80,7 +80,12 @@ sub register {
 					elsif ( $status_code == 500 ) {
 						$active_server = activate_next_online_server( $self, "InfluxDBHostsOnline" );
 						$helper_class->set_server($active_server);
-						$self->app->log->warn( "Found BAD ONLINE server, skipping: " . $active_server );
+						if ( defined($active_server) ) {
+							$self->app->log->warn( "Found BAD ONLINE server, skipping: " . $active_server );
+						}
+						else {
+							$self->app->log->warn("No active server defined");
+						}
 					}
 					else {
 						$self->app->log->error( "Active Server Severe Error: " . $status_code . " - " . $content );
