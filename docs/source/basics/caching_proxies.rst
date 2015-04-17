@@ -33,7 +33,7 @@ types of proxies in use on the Internet today which are described below.
 
 |arrow| Reverse Proxy
 ---------------------
-  A reverse proxy acts on behalf of the origin server. The client is mostly unaware it is communicating to a proxy and not the actual origin. 
+  A reverse proxy acts on behalf of the origin server. The client is mostly unaware it is communicating with a proxy and not the actual origin. 
   All EDGE caches in a Traffic Control CDN are reverse proxies. 
   To the end user a Traffic Control based CDN appears as a reverse proxy since 
   it retrieves content from the origin server, acting on behalf of that origin server. The client requests a URL that has 
