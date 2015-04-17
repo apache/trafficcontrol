@@ -284,7 +284,7 @@ abstract public class AbstractState implements java.io.Serializable {
 			}
 			while(l.get(0).getIndex() < baseIndex) {
 				if(l.size() == 1) {
-					LOGGER.warn(String.format("wtf? %s - %s: index:%d < baseIndex%d", key, this.id, l.get(0).getIndex(), baseIndex));
+					LOGGER.warn(String.format("%s - %s: index %d < baseIndex %d", key, this.id, l.get(0).getIndex(), baseIndex));
 					break;
 				}
 				synchronized(this) {
