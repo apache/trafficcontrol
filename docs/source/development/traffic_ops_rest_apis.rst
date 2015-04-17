@@ -28,20 +28,19 @@ User Requirements
 -----------------
 Verify you have the following:
 
-* An API key.
 * A Portal or Traffic Ops user account.
 
 .. ODOL support email addy?
 
 Using Unauthenticated API Endpoints
 -----------------------------------
-To use unauthenticated API endpoints, point to them and append your API key:
+To use unauthenticated API endpoints, simply point to them:
 
 Example:
 
 ::
 
-  curl -H "Accept: application/json" https://your.domain.com/cdn/customer/api/1.1/usage/overview.json?api_key=your_api_key
+  curl -H "Accept: application/json" https://your.domain.com/api/1.1/usage/overview.json
 
 Using Authenticated API Endpoints
 ---------------------------------
@@ -51,7 +50,7 @@ To use authenticated API endpoints:
 
 ::
 
-  curl -H "Accept: application/json" -v -X POST --data '{ "u":"username", "p":"password" }' https://your.domain.com/cdn/customer/api/1.1/user/login?api_key=your_api_key
+  curl -H "Accept: application/json" -v -X POST --data '{ "u":"username", "p":"password" }' https://your.domain.com/api/1.1/user/login
 
 2. Upon successful user authentication, note the mojolicious cookie value in the response headers. 
 3. Pass the Mojolicious cookie value, along with any subsequent calls to an authenticated API endpoint:
@@ -60,11 +59,11 @@ Examples:
 
 ::
 
-  curl -H "Accept: application/json" -H "Cookie: mojolicious=enter-your-cookie" https://your.domain.com/cdn/customer/api/1.1/user/current.json?api_key=your_api_key
+  curl -H "Accept: application/json" -H "Cookie: mojolicious=enter-your-cookie" https://your.domain.com/api/1.1/user/current.json
 
-  curl -H "Accept: application/json" -H "Cookie: mojolicious=enter-your-cookie" https://your.domain.com/cdn/customer/api/1.1/deliveryservices/[deliveryservice-id].json?api_key=your_api_key
+  curl -H "Accept: application/json" -H "Cookie: mojolicious=enter-your-cookie" https://your.domain.com/api/1.1/deliveryservices/[deliveryservice-id].json
 
-  curl -H "Accept: application/json" -H "Cookie: mojolicious=enter-your-cookie" -v -X POST --data \'{ "user": {"addressLine1":"", "addressLine2":"", "city":"", "company":"", "country":"", "email": "email@email.com", "fullName":"Full Name", "phoneNumber":"", "postalCode":"", "stateOrProvince":"", "username":"myusername" } }' https://your.domain.com/cdn/customer/api/1.1/user/current?api_key=your_api_key
+  curl -H "Accept: application/json" -H "Cookie: mojolicious=enter-your-cookie" -v -X POST --data \'{ "user": {"addressLine1":"", "addressLine2":"", "city":"", "company":"", "country":"", "email": "email@email.com", "fullName":"Full Name", "phoneNumber":"", "postalCode":"", "stateOrProvince":"", "username":"myusername" } }' https://your.domain.com/api/1.1/user/current
 
 
 API Reference 1.1
