@@ -22,9 +22,11 @@ use UI::Utils;
 use Mojo::Base 'Mojolicious::Controller';
 use Data::Dumper;
 use Utils::Helper;
+use Helper::Stats;
 use Helper::DeliveryServiceStats;
 use JSON;
 use constant DB_NAME => "deliveryservice_stats";
+my $stats_helper;
 
 sub index {
 	my $self            = shift;
@@ -42,14 +44,15 @@ sub index {
 		if ( $helper->is_delivery_service_assigned($dsid) ) {
 			my ( $cdn_name, $ds_name ) = $self->deliveryservice_lookup_cdn_name_and_ds_name($dsid);
 
-			my $series_name = Helper::DeliveryServiceStats->series_name( $cdn_name, $ds_name, $cachegroup_name, $metric_type );
+			$stats_helper = new Helper::DeliveryServiceStats();
+			my $series_name = $stats_helper->series_name( $cdn_name, $ds_name, $cachegroup_name, $metric_type );
 
 			# Build the summary section
-			my $summary_query = Helper::DeliveryServiceStats->build_summary_query( $series_name, $start_date, $end_date, $interval, $limit );
+			my $summary_query = $stats_helper->build_summary_query( $series_name, $start_date, $end_date, $interval, $limit );
 			my ( $summary, $series_count ) = $self->get_summary($summary_query);
 
 			# Build the series section
-			my $series_query = Helper::DeliveryServiceStats->build_series_query( $series_name, $start_date, $end_date, $interval, $limit );
+			my $series_query = $stats_helper->build_series_query( $series_name, $start_date, $end_date, $interval, $limit );
 			my $series = $self->get_series($series_query);
 			if ( defined($summary) && defined($series) ) {
 
@@ -96,7 +99,7 @@ sub get_summary {
 	my $series_count;
 	if ( $response->is_success() ) {
 		my $summary_content = decode_json($content);
-		( $summary, $series_count ) = Helper::DeliveryServiceStats->build_summary($summary_content);
+		( $summary, $series_count ) = $stats_helper->build_summary($summary_content);
 		return ( $summary, $series_count );
 	}
 	else {
@@ -115,7 +118,7 @@ sub get_series {
 
 	if ( $response->is_success() ) {
 		my $series_content = decode_json($content);
-		return Helper::DeliveryServiceStats->build_series($series_content);
+		return $stats_helper->build_series($series_content);
 	}
 	else {
 		my $rc = $response->{_rc};
