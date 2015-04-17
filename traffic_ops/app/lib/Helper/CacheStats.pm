@@ -1,4 +1,4 @@
-package Helper::DeliveryServiceStats;
+package Helper::CacheStats;
 #
 # Copyright 2015 Comcast Cable Communications Management, LLC
 #
@@ -32,15 +32,15 @@ sub new {
 sub series_name {
 	my $self            = shift;
 	my $cdn_name        = shift;
-	my $ds_name         = shift;
 	my $cachegroup_name = shift;
+	my $cache_name      = shift;
 	my $metric_type     = shift;
 
 	# 'series' section
 	my $delim = ":";
 
-	# Example: <cdn_name>:<deliveryservice_name>:<cache_group_name>:<metric_type>
-	return sprintf( "%s$delim%s$delim%s$delim%s", $cdn_name, $ds_name, $cachegroup_name, $metric_type );
+	# Example: <cdn_name>:<cachegroup_name>:<cache_name>:<metric_type>
+	return sprintf( "%s$delim%s$delim%s$delim%s", $cdn_name, $cachegroup_name, $cache_name, $metric_type );
 }
 
 sub build_summary_query {
