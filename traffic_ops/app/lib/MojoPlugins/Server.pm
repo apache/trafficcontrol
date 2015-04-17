@@ -30,7 +30,7 @@ use File::Slurp;
 
 use constant MAX_TRIES => 30;
 ##To track the active server we want to use
-state $active_server;
+state $active_server = "NOT FOUND";
 
 sub register {
 	my ( $self, $app, $conf ) = @_;

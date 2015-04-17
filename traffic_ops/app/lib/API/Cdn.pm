@@ -65,9 +65,12 @@ sub usage_overview {
 		my $tps  = $self->get_stats( $cdn_name . ":" . $match_tps,  "now", "now", $interval );
 		my $kbps = $self->get_stats( $cdn_name . ":" . $match_kbps, "now", "now", $interval );
 
-		$stats->{tps}         += $tps->{series}->[0]->{samples}->[0];
+		$stats->{tps} += $tps->{series}->[0]->{samples}->[0];
 		$stats->{currentGbps} += $kbps->{series}->[0]->{samples}->[0] / 1000 / 1000;
-		$stats->{maxGbps}     += $kbps->{capacity} / 1000 / 1000;
+		my $capacity = $kbps->{capacity};
+		if ( defined($capacity) ) {
+			$stats->{maxGbps} += $capacity / 1000 / 1000;
+		}
 	}
 
 	$self->success($stats);
@@ -550,7 +553,10 @@ sub gen_traffic_router_config {
 							$remap = 'edge' . $host_copy . $ccr_domain_name;
 						}
 						else {
-							$remap = $cache_tracker{$server} . $host_copy . $ccr_domain_name;
+							my $cache_tracker_server = $cache_tracker{$server} || "";
+							my $host_copy            = $host_copy              || "";
+							my $ccr_domain_name      = $ccr_domain_name        || "";
+							$remap = $cache_tracker_server . $host_copy . $ccr_domain_name;
 						}
 					}
 					else {
@@ -558,7 +564,8 @@ sub gen_traffic_router_config {
 					}
 					push( @remaps, $remap );
 				}
-				push( @{ $ds_regex_tracker->{ $cache_tracker{$server} }->{ $row->xml_id }->{'remaps'} }, @remaps );
+				my $cache_tracker_server = $cache_tracker{$server} || "";
+				push( @{ $ds_regex_tracker->{$cache_tracker_server}->{ $row->xml_id }->{'remaps'} }, @remaps );
 			}
 		}
 
@@ -653,7 +660,8 @@ sub gen_traffic_router_config {
 		my $server_ref;
 		foreach my $traffic_server ( @{ $data_obj->{'trafficServers'} } ) {
 			$i++;
-			next if ( $traffic_server->{'hostName'} ne $cache_hostname );
+			my $traffic_server_hostname = $traffic_server->{'hostName'} || "";
+			next if ( $traffic_server_hostname ne $cache_hostname );
 			$server_ref = $data_obj->{'trafficServers'}->[ $i - 1 ];
 		}
 

@@ -81,7 +81,7 @@ sub genfiles {
 	$file =~ s/^regex_remap_.*\.config$/regex_remap_\.config/;
 	$file =~ s/^cacheurl_.*\.config$/cacheurl_\.config/;
 	if ( $file =~ /^to_ext_.*\.config$/ ) {
-		$file     =~ s/^to_ext_.*\.config$/to_ext_\.config/;
+		$file =~ s/^to_ext_.*\.config$/to_ext_\.config/;
 		$org_name =~ s/^to_ext_.*\.config$/to_ext_\.config/;
 	}
 
@@ -131,7 +131,7 @@ sub gen_fancybox_data {
 		$file =~ s/^regex_remap_.*\.config$/regex_remap_\.config/;
 		$file =~ s/^cacheurl_.*\.config$/cacheurl_\.config/;
 		if ( $file =~ /^to_ext_.*\.config$/ ) {
-			$file     =~ s/^to_ext_.*\.config$/to_ext_\.config/;
+			$file =~ s/^to_ext_.*\.config$/to_ext_\.config/;
 			$org_name =~ s/^to_ext_(.*)\.config$/$1.config/;
 		}
 
@@ -534,23 +534,29 @@ sub logs_xml_dot_config {
 	my $filename = shift;
 
 	my $server = $self->server_data($id);
-	my $data = $self->param_data( $server, $filename );
+	my $data   = $self->param_data( $server, $filename );
+	my $text   = "<!-- Generated for " . $server->host_name . " by " . &name_version_string($self) . " - Do not edit!! -->\n";
 
-	my $text = "<!-- Generated for " . $server->host_name . " by " . &name_version_string($self) . " - Do not edit!! -->\n";
-
-	my $format = $data->{"LogFormat.Format"};
+	my $log_format_name                 = $data->{"LogFormat.Name"}               || "";
+	my $log_object_filename             = $data->{"LogObject.Filename"}           || "";
+	my $log_object_format               = $data->{"LogObject.Format"}             || "";
+	my $log_object_rolling_enabled      = $data->{"LogObject.RollingEnabled"}     || "";
+	my $log_object_rolling_interval_sec = $data->{"LogObject.RollingIntervalSec"} || "";
+	my $log_object_rolling_offset_hr    = $data->{"LogObject.RollingOffsetHr"}    || "";
+	my $log_object_rolling_size_mb      = $data->{"LogObject.RollingSizeMb"}      || "";
+	my $format                          = $data->{"LogFormat.Format"};
 	$format =~ s/"/\\\"/g;
 	$text .= "<LogFormat>\n";
-	$text .= "  <Name = \"" . $data->{"LogFormat.Name"} . "\"/>\n";
+	$text .= "  <Name = \"" . $log_format_name . "\"/>\n";
 	$text .= "  <Format = \"" . $format . "\"/>\n";
 	$text .= "</LogFormat>\n";
 	$text .= "<LogObject>\n";
-	$text .= "  <Format = \"" . $data->{"LogObject.Format"} . "\"/>\n";
-	$text .= "  <Filename = \"" . $data->{"LogObject.Filename"} . "\"/>\n";
-	$text .= "  <RollingEnabled = " . $data->{"LogObject.RollingEnabled"} . "/>\n";
-	$text .= "  <RollingIntervalSec = " . $data->{"LogObject.RollingIntervalSec"} . "/>\n";
-	$text .= "  <RollingOffsetHr = " . $data->{"LogObject.RollingOffsetHr"} . "/>\n";
-	$text .= "  <RollingSizeMb = " . $data->{"LogObject.RollingSizeMb"} . "/>\n";
+	$text .= "  <Format = \"" . $log_object_format . "\"/>\n";
+	$text .= "  <Filename = \"" . $log_object_filename . "\"/>\n";
+	$text .= "  <RollingEnabled = " . $log_object_rolling_enabled . "/>\n" unless defined();
+	$text .= "  <RollingIntervalSec = " . $log_object_rolling_interval_sec . "/>\n";
+	$text .= "  <RollingOffsetHr = " . $log_object_rolling_offset_hr . "/>\n";
+	$text .= "  <RollingSizeMb = " . $log_object_rolling_size_mb . "/>\n";
 	$text .= "</LogObject>\n";
 
 	return $text;
@@ -849,7 +855,7 @@ sub build_remap_line {
 	my $map_from = shift;
 	my $map_to   = shift;
 
-	if ($remap->{type} eq 'ANY_MAP') {
+	if ( $remap->{type} eq 'ANY_MAP' ) {
 		$text .= $remap->{remap_text} . "\n";
 		return $text;
 	}
@@ -903,7 +909,7 @@ sub build_remap_line {
 	elsif ( $remap->{range_request_handling} == 2 ) {
 		$text .= " \@plugin=cache_range_requests.so ";
 	}
-	if (defined($remap->{remap_text})) {
+	if ( defined( $remap->{remap_text} ) ) {
 		$text .= " " . $remap->{remap_text};
 	}
 	$text .= "\n";
@@ -923,7 +929,6 @@ sub parent_dot_config {
 		$data = $self->ds_data($server);
 	}
 	##Origin Shield
-	$self->app->log->debug("id = $id and server_type = $server_type");
 	if ( $server_type eq 'MID' ) {
 		foreach my $ds ( @{ $data->{dslist} } ) {
 			my $xml_id = $ds->{ds_xml_id};
@@ -945,7 +950,6 @@ sub parent_dot_config {
 			}
 		}
 		$text .= "dest_domain=. go_direct=true\n";
-		$self->app->log->debug($text);
 		return $text;
 	}
 	else {
@@ -997,8 +1001,6 @@ sub parent_dot_config {
 		}
 
 		$text .= "\n";
-
-		# $self->app->log->debug($text);
 		return $text;
 	}
 }
@@ -1092,7 +1094,8 @@ sub regex_revalidate_dot_config {
 		while ( my $dsrow = $rs->next ) {
 			my $ds_cdn_domain = $self->db->resultset('Parameter')->search(
 				{ -and => [ 'me.name' => 'domain_name', 'deliveryservices.id' => $dsrow->id ] },
-				{   join     => { profile_parameters => { profile => { deliveryservices => undef } } },
+				{
+					join     => { profile_parameters => { profile => { deliveryservices => undef } } },
 					distinct => 1
 				}
 			)->get_column('value')->single();
