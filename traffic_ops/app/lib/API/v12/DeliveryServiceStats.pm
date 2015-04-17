@@ -105,9 +105,7 @@ sub get_summary {
 	my $series_count;
 	if ( $response->is_success() ) {
 		my $summary_content = decode_json($content);
-		$self->app->log->debug( "content #-> " . Dumper($content) );
 		( $summary, $series_count ) = Helper::DeliveryServiceStats->build_summary($summary_content);
-		$self->app->log->debug( "summary_content #-> " . Dumper($summary_content) );
 		return ( $summary, $series_count );
 	}
 	else {
