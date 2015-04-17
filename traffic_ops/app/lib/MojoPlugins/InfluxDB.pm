@@ -25,12 +25,12 @@ use Mojo::UserAgent;
 use JSON;
 use IO::Socket::SSL qw();
 use LWP::UserAgent qw();
-use Utils::Helper::InfluxDB;
+use Utils::Helper::InfluxDBHelper;
 use File::Slurp;
 
 use constant SERVER_TYPE        => 'INFLUXDB';
 use constant SCHEMA_RESULT_FILE => 'InfluxDBHostsOnline';
-my $helper_class = eval {'Utils::Helper::InfluxDB'};
+my $helper_class = eval {'Utils::Helper::InfluxDBHelper'};
 
 sub register {
 	my ( $self, $app, $conf ) = @_;

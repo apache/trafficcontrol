@@ -1,4 +1,4 @@
-package Utils::Helper::InfluxDB;
+package Utils::Helper::InfluxDBHelper;
 #
 # Copyright 2015 Comcast Cable Communications Management, LLC
 #
