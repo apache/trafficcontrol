@@ -26,12 +26,12 @@ use Mojo::UserAgent;
 use JSON;
 use IO::Socket::SSL qw();
 use LWP::UserAgent qw();
-use Connection::RiakHelper;
+use Connection::RiakAdapter;
 use File::Slurp;
 
 use constant SERVER_TYPE        => 'RIAK';
 use constant SCHEMA_RESULT_FILE => 'RiakHostsOnline';
-my $helper_class = eval {'Connection::RiakHelper'};
+my $helper_class = eval {'Connection::RiakAdapter'};
 
 sub register {
 	my ( $self, $app, $conf ) = @_;

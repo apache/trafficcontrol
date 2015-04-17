@@ -1,4 +1,4 @@
-package Connection::InfluxDBHelper;
+package Connection::InfluxDBAdapter;
 #
 # Copyright 2015 Comcast Cable Communications Management, LLC
 #

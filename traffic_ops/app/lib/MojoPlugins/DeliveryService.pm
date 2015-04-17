@@ -1,4 +1,4 @@
-package MojoPlugins::v11::DeliveryService;
+package MojoPlugins::DeliveryService;
 #
 # Copyright 2015 Comcast Cable Communications Management, LLC
 #
@@ -99,6 +99,26 @@ sub register {
 			my $cachegroup_name = shift;
 			my $peak_usage_type = shift;
 			return $cdn_name . ":" . $ds_name . ":" . $cachegroup_name . ":all:" . $peak_usage_type;
+		}
+	);
+
+	$app->renderer->add_helper(
+		lookup_cdn_name_and_ds_name => sub {
+			my $self = shift;
+			my $dsid = shift;
+
+			my $cdn_name = "all";
+			my $ds_name  = "all";
+			if ( $dsid ne "all" ) {
+				my $ds = $self->db->resultset('Deliveryservice')->search( { id => $dsid }, {} )->single();
+				$ds_name = $ds->xml_id;
+				my $param =
+					$self->db->resultset('ProfileParameter')
+					->search( { -and => [ profile => $ds->profile->id, 'parameter.name' => 'CDN_name' ] }, { prefetch => [ 'parameter', 'profile' ] } )
+					->single();
+				$cdn_name = $param->parameter->value;
+			}
+			return ( $cdn_name, $ds_name );
 		}
 	);
 

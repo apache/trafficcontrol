@@ -1,4 +1,4 @@
-package Connection::RiakHelper;
+package Connection::RiakAdapter;
 #
 # Copyright 2015 Comcast Cable Communications Management, LLC
 #

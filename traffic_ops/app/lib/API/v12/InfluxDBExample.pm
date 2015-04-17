@@ -1,4 +1,4 @@
-package API::v12::InfluxDB;
+package API::v12::InfluxDBExample;
 #
 # Copyright 2015 Comcast Cable Communications Management, LLC
 #
@@ -20,6 +20,7 @@ package API::v12::InfluxDB;
 use Mojo::Base 'Mojolicious::Controller';
 use JSON;
 use Data::Dumper;
+use Helper::DeliveryStats;
 
 sub query {
 	my $self  = shift;
