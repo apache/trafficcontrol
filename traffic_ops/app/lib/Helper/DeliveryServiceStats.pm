@@ -21,6 +21,7 @@ use utf8;
 use Data::Dumper;
 use JSON;
 use File::Slurp;
+use Math::Round;
 
 sub new {
 	my $class = shift;
@@ -82,7 +83,10 @@ sub build_summary {
 	my $series_count = 0;
 
 	if ( defined($values_size) & ( $values_size > 0 ) ) {
-		$summary->{average}                = $summary_content->{results}[0]{series}[0]{values}[0][1];
+		my $avg = $summary_content->{results}[0]{series}[0]{values}[0][1];
+		my $average = nearest( .001, $avg );
+		$average =~ /([\d\.]+)/;
+		$summary->{average}                = $average;
 		$summary->{fifthPercentile}        = $summary_content->{results}[0]{series}[0]{values}[0][2];
 		$summary->{ninetyFifthPercentile}  = $summary_content->{results}[0]{series}[0]{values}[0][3];
 		$summary->{ninetyEighthPercentile} = $summary_content->{results}[0]{series}[0]{values}[0][4];

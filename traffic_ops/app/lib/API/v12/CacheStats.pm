@@ -1,4 +1,4 @@
-package API::v12::Cache;
+package API::v12::CacheStats;
 #
 # Copyright 2015 Comcast Cable Communications Management, LLC
 #
@@ -24,7 +24,7 @@ use Data::Dumper;
 use Utils::Helper;
 use JSON;
 
-sub stats {
+sub index {
 	my $self            = shift;
 	my $dsid            = $self->param('ds');
 	my $cachegroup_name = $self->param('cacheGroupName');

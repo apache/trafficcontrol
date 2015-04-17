@@ -867,11 +867,12 @@ sub startup {
 		->to( 'InfluxDBExample#query', namespace => 'API::v12' );
 	$r->post( '/api/influxdb/' . $api_version )->over( authenticated => 1 )->to( 'InfluxDBExample#write_point', namespace => 'API::v12' );
 
-	$r->get( '/api/deliveryservices/:ds/stats' => [ format => [ $api_version . ".json" ] ] )->over( authenticated => 1 )
-		->to( 'DeliveryServiceStats#stats2', namespace => 'API::v12' );
-	$r->get( '/api/deliveryservices/stats' => [ format => [ $api_version . ".json" ] ] )->over( authenticated => 1 )
-		->to( 'DeliveryServiceStats#stats', namespace => 'API::v12' );
-	$r->get( '/api/cache/stats' => [ format => [ $api_version . ".json" ] ] )->over( authenticated => 1 )->to( 'Cache#stats', namespace => 'API::v12' );
+	#$r->get( '/api/deliveryservices/:ds/stats' => [ format => [ $api_version . ".json" ] ] )->over( authenticated => 1 )
+	#	->to( 'DeliveryServiceStats#stats2', namespace => 'API::v12' );
+	$r->get( '/api/deliveryservices/:dsid/stats' => [ format => [ $api_version . ".json" ] ] )->over( authenticated => 1 )
+		->to( 'DeliveryServiceStats#index', namespace => 'API::v12' );
+	$r->get( '/api/cache/stats' => [ format => [ $api_version . ".json" ] ] )->over( authenticated => 1 )
+		->to( 'CacheStats#index', namespace => 'API::v12' );
 
 	# ------------------------------------------------------------------------
 	# END: Version 1.2

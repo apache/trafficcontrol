@@ -51,16 +51,17 @@ sub stats2 {
 
 }
 
-sub stats {
+sub index {
 	my $self            = shift;
-	my $cdn_name        = $self->param('cdnName');
-	my $ds_name         = $self->param('dsName');
+	my $dsid            = $self->param('dsid');
 	my $cachegroup_name = $self->param('cacheGroupName');
 	my $metric_type     = $self->param('metricType');
 	my $start_date      = $self->param('startDate');
 	my $end_date        = $self->param('endDate');
 	my $interval        = $self->param('interval');         # Valid interval examples 10m (minutes), 10s (seconds), 1h (hour)
 	my $limit           = $self->param('limit');
+
+	my ( $cdn_name, $ds_name ) = $self->deliveryservice_lookup_cdn_name_and_ds_name($dsid);
 
 	my $series_name = Helper::DeliveryServiceStats->series_name( $cdn_name, $ds_name, $cachegroup_name, $metric_type );
 
@@ -89,6 +90,9 @@ sub stats {
 		$result->{$parent_node}{influxdbSummaryQuery} = $summary_query;
 		$result->{$parent_node}{summary}              = $summary;
 		return $self->success($result);
+	}
+	else {
+		return $self->alert("Could not retrieve the summary or the series");
 	}
 
 }

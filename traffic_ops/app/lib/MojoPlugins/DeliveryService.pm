@@ -103,9 +103,9 @@ sub register {
 	);
 
 	$app->renderer->add_helper(
-		lookup_cdn_name_and_ds_name => sub {
+		deliveryservice_lookup_cdn_name_and_ds_name => sub {
 			my $self = shift;
-			my $dsid = shift;
+			my $dsid = shift || confess("Delivery Service id is required");
 
 			my $cdn_name = "all";
 			my $ds_name  = "all";
