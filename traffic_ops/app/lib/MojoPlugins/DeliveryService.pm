@@ -56,7 +56,7 @@ sub register {
 			my $end             = shift;
 			my $interval        = shift;
 
-			my ( $cdn_name, $ds_name ) = $self->get_cdn_name_ds_name($dsid);
+			my ( $cdn_name, $ds_name ) = $self->deliveryservice_lookup_cdn_name_and_ds_name($dsid);
 
 			my $dh = new Utils::Helper::DateHelper();
 			( $start, $end ) = $dh->translate_dates( $start, $end );
@@ -77,7 +77,7 @@ sub register {
 			my $end             = shift;
 			my $interval        = shift;
 
-			my ( $cdn_name, $ds_name ) = $self->get_cdn_name_ds_name($dsid);
+			my ( $cdn_name, $ds_name ) = $self->deliveryservice_lookup_cdn_name_and_ds_name($dsid);
 
 			my $dh = new Utils::Helper::DateHelper();
 			( $start, $end ) = $dh->translate_dates( $start, $end );
