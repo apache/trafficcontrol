@@ -74,7 +74,6 @@ sub build_summary {
 	my $results = $summary_content->{results}[0];
 	my $values  = $results->{series}[0]{values}[0];
 
-	print "values #-> (" . Dumper($values) . ")\n";
 	my $values_size;
 	if ( defined($values) ) {
 		$values_size = keys $values;
