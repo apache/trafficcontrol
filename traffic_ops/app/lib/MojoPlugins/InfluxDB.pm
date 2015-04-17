@@ -28,8 +28,8 @@ use LWP::UserAgent qw();
 use Connection::InfluxDBAdapter;
 use File::Slurp;
 
-use constant SERVER_TYPE        => 'INFLUXDB';
-use constant SCHEMA_RESULT_FILE => 'InfluxDBHostsOnline';
+use constant SERVER_TYPE => 'INFLUXDB';
+use constant SCHEMA_FILE => 'InfluxDBHostsOnline';
 my $helper_class = eval {'Connection::InfluxDBAdapter'};
 
 sub register {
@@ -42,7 +42,7 @@ sub register {
 			my $content_type = shift || "application/json";
 			my $conf         = load_conf($self);
 			my $helper       = $helper_class->new( $conf->{user}, $conf->{password} );
-			return $self->server_send_request( SERVER_TYPE, $helper, sub { $helper_class->write( $write_point, $content_type ) }, SCHEMA_RESULT_FILE );
+			return $self->server_send_request( SERVER_TYPE, $helper, sub { $helper_class->write( $write_point, $content_type ) }, SCHEMA_FILE );
 		}
 	);
 
@@ -53,7 +53,7 @@ sub register {
 			my $query   = shift;
 			my $conf    = load_conf($self);
 			my $helper  = $helper_class->new( $conf->{user}, $conf->{password} );
-			return $self->server_send_request( SERVER_TYPE, $helper, sub { $helper_class->query( $db_name, $query ) }, SCHEMA_RESULT_FILE );
+			return $self->server_send_request( SERVER_TYPE, $helper, sub { $helper_class->query( $db_name, $query ) }, SCHEMA_FILE );
 		}
 	);
 

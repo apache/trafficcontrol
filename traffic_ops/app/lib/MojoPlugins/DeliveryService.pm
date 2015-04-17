@@ -24,9 +24,6 @@ use Utils::Helper::DateHelper;
 use JSON;
 use HTTP::Date;
 
-#TODO: drichardson - pull this from the 'Parameters';
-use constant DB_NAME => "deliveryservice_stats";
-
 sub register {
 	my ( $self, $app, $conf ) = @_;
 

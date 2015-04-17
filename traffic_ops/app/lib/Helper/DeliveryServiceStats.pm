@@ -23,13 +23,7 @@ use JSON;
 use File::Slurp;
 use Math::Round;
 
-@ISA = (Helper::Stats);
-
-sub new {
-	my $class = shift;
-	my $self = bless { c => $class, }, $class;
-	return $self;
-}
+our @ISA = ("Helper::Stats");
 
 sub series_name {
 	my $self            = shift;

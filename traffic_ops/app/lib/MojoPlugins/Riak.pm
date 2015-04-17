@@ -29,8 +29,8 @@ use LWP::UserAgent qw();
 use Connection::RiakAdapter;
 use File::Slurp;
 
-use constant SERVER_TYPE        => 'RIAK';
-use constant SCHEMA_RESULT_FILE => 'RiakHostsOnline';
+use constant SERVER_TYPE => 'RIAK';
+use constant SCHEMA_FILE => 'RiakHostsOnline';
 my $helper_class = eval {'Connection::RiakAdapter'};
 
 sub register {
@@ -41,7 +41,7 @@ sub register {
 			my $self   = shift;
 			my $conf   = load_conf($self);
 			my $helper = $helper_class->new( $conf->{user}, $conf->{password} );
-			return $self->server_send_request( SERVER_TYPE, $helper, sub { $helper_class->stats() }, SCHEMA_RESULT_FILE );
+			return $self->server_send_request( SERVER_TYPE, $helper, sub { $helper_class->stats() }, SCHEMA_FILE );
 		}
 	);
 
@@ -50,7 +50,7 @@ sub register {
 			my $self   = shift;
 			my $conf   = load_conf($self);
 			my $helper = $helper_class->new( $conf->{user}, $conf->{password} );
-			return $self->server_send_request( SERVER_TYPE, $helper, sub { $helper_class->ping() }, SCHEMA_RESULT_FILE );
+			return $self->server_send_request( SERVER_TYPE, $helper, sub { $helper_class->ping() }, SCHEMA_FILE );
 		}
 	);
 
@@ -63,8 +63,7 @@ sub register {
 			my $content_type = shift || "application/json";
 			my $conf         = load_conf($self);
 			my $helper       = $helper_class->new( $conf->{user}, $conf->{password} );
-			return $self->server_send_request( SERVER_TYPE, $helper, sub { $helper_class->put( $bucket, $key, $value, $content_type ) },
-				SCHEMA_RESULT_FILE );
+			return $self->server_send_request( SERVER_TYPE, $helper, sub { $helper_class->put( $bucket, $key, $value, $content_type ) }, SCHEMA_FILE );
 		}
 	);
 
@@ -75,7 +74,7 @@ sub register {
 			my $key    = shift;
 			my $conf   = load_conf($self);
 			my $helper = $helper_class->new( $conf->{user}, $conf->{password} );
-			return $self->server_send_request( SERVER_TYPE, $helper, sub { $helper_class->get( $bucket, $key ) }, SCHEMA_RESULT_FILE );
+			return $self->server_send_request( SERVER_TYPE, $helper, sub { $helper_class->get( $bucket, $key ) }, SCHEMA_FILE );
 		}
 	);
 
@@ -86,7 +85,7 @@ sub register {
 			my $key    = shift;
 			my $conf   = load_conf($self);
 			my $helper = $helper_class->new( $conf->{user}, $conf->{password} );
-			return $self->server_send_request( SERVER_TYPE, $helper, sub { $helper_class->delete( $bucket, $key ) }, SCHEMA_RESULT_FILE );
+			return $self->server_send_request( SERVER_TYPE, $helper, sub { $helper_class->delete( $bucket, $key ) }, SCHEMA_FILE );
 		}
 	);
 }

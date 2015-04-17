@@ -291,7 +291,9 @@ sub register {
 				$capacity = ( $redis->zrange( $mkbps_match, -1, -1 ) )[0];
 			}
 
-			$capacity = $capacity * 0.85;    # TODO JvD var is not always defined, hardcode
+			if ( defined($capacity) ) {
+				$capacity = $capacity * 0.85;    # TODO JvD var is not always defined, hardcode
+			}
 			my $e1 = tv_interval($startts);
 			my @vals;
 			my @times;
@@ -351,6 +353,9 @@ sub register {
 						$jdata->{series}->[$j]->{timeBase} = int($tstamp);
 						$cc                                = 1;
 						$total                             = 0;
+					}
+					unless ( defined($val) ) {
+						$val = 0;
 					}
 					$total += $val;
 					if ( $cc % ( $interval / $REDIS_METRIC_INTERVAL ) == 0 ) {
