@@ -1,4 +1,4 @@
-package Utils::Helper::InfluxDBHelper;
+package Connection::InfluxDBHelper;
 #
 # Copyright 2015 Comcast Cable Communications Management, LLC
 #
@@ -23,7 +23,6 @@ use UI::Utils;
 use Data::Dumper;
 use Mojo::UserAgent;
 use JSON;
-use Utils::Helper::ResponseHelper;
 use IO::Socket::SSL qw();
 use File::Slurp;
 use URI::Escape;

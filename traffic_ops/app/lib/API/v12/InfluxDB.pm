@@ -25,7 +25,7 @@ sub query {
 	my $self  = shift;
 	my $query = $self->param("q");
 
-	my $response_container = $self->influxdb_query( "cachestats", $query );
+	my $response_container = $self->influxdb_query( "deliveryservice_stats", $query );
 	my $response           = $response_container->{'response'};
 	my $content            = $response->{_content};
 	if ( $response->is_success() ) {

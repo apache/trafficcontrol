@@ -1,4 +1,4 @@
-package Utils::Helper::Riak;
+package Connection::RiakHelper;
 #
 # Copyright 2015 Comcast Cable Communications Management, LLC
 #
@@ -24,7 +24,6 @@ use Net::Riak;
 use Data::Dumper;
 use Mojo::UserAgent;
 use JSON;
-use Utils::Helper::ResponseHelper;
 use IO::Socket::SSL qw();
 use File::Slurp;
 
