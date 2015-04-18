@@ -73,7 +73,9 @@ FAQ
 Indices and Tables
 ==================
 
-* :ref:`genindex`
-* :ref:`search`
+.. toctree::
+   :maxdepth: 3
+
+   glossary.rst
 
 
