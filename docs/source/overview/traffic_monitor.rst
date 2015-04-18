@@ -30,6 +30,8 @@ Traffic Monitors operate independently, but use the state of other Traffic Monit
 Traffic Monitor provides a view into CDN health using several RESTful JSON endpoints, which are consumed by other Traffic Monitors and upstream components such as Traffic Router. Traffic Monitor is also responsible for serving the overall CDN configuration to Traffic Router, which ensures that the configuration of these two critical components remain synchronized as operational and health related changes propagate through the CDN.
 
 
+.. _rl-astats:
+
 |arrow| Cache Monitoring
 -------------------------
 Traffic Monitor currently polls all caches configured with a status of ``REPORTED`` or ``ADMIN_DOWN`` at an interval specified as a configuration parameter in Traffic Ops. If the cache is set to ``ADMIN_DOWN`` it is marked as unavailable but still polled for availability and statistics. If the cache is configured with a status of ``ONLINE`` or ``OFFLINE``, it is not polled by Traffic Monitor and assumes that its current state matches its configured status.
@@ -49,8 +51,7 @@ If astats is unavailable due to a network related issue, or the system or Delive
 
 .. seealso:: For more information on ATS Statistics, see the `ATS documentation <https://docs.trafficserver.apache.org/en/latest/index.html>`_
 
-.. index::
-	Health Protocol
+.. _rl-health-proto:
 
 |arrow| Health Protocol 
 -----------------------

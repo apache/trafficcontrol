@@ -14,10 +14,10 @@
 .. limitations under the License.
 .. 
 
-.. index::
-  Caching Proxy
 
 .. |arrow| image:: fwda.png
+
+.. _rl-caching_proxy:
 
 Caching Proxies
 ===============
@@ -30,6 +30,8 @@ types of proxies in use on the Internet today which are described below.
 
 .. index::
   Reverse Proxy
+
+.. _rl-rev-proxy:
 
 |arrow| Reverse Proxy
 ---------------------
@@ -138,6 +140,8 @@ The client is given the URL ``http://www-origin-cache.cdn.com/foo/bar/fun.html``
 
 .. index::
   Forward Proxy
+
+.. _rl-fwd-proxy:
 
 |arrow| Forward Proxy
 ---------------------

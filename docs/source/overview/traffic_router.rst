@@ -35,8 +35,8 @@ Traffic routing options are often configured at the Delivery Service level.
 
 |
 
-.. index::
-  Delivery Service
+
+.. _rl-ds:
 
 |arrow| Delivery Service
 ------------------------
@@ -58,8 +58,9 @@ Traffic Router is inserted into the HTTP retrieval process by making it DNS auth
 |
 
 .. index::
-  DNS Content Routing
   Content Routing
+
+.. _rl-dns-cr:
 
 |arrow| DNS Content Routing
 ---------------------------
@@ -67,9 +68,7 @@ Traffic Router is inserted into the HTTP retrieval process by making it DNS auth
 
 |
 
-.. index::
-  HTTP Content Routing
-  302 Content Routing
+.. _rl-http-cr:
 
 |arrow| HTTP Content Routing
 ----------------------------

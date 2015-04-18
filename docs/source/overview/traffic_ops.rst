@@ -14,9 +14,6 @@
 .. limitations under the License.
 .. 
 
-.. index::
-	Traffic Ops - Overview
-
 .. |arrow| image:: fwda.png
 
 Traffic Ops
@@ -31,9 +28,8 @@ Traffic Ops also runs a collection of periodic checks to determine the operation
 
 |
 
-.. index::
-	Traffic Ops Extensions - Overview
-	
+.. _rl-trops-ext: 
+
 |arrow| Traffic Ops Extension
 -----------------------------
   Traffic Ops Extensions are a way to enhance the basic functionality of Traffic Ops in a custom manner. There are three types of extensions:
