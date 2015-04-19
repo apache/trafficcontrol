@@ -411,6 +411,21 @@ To use authenticated API endpoints:
 
 API Errors
 ----------
+
+**Response Properties**
+
++----------------------+--------+------------------------------------------------+
+| Parameter            | Type   | Description                                    |
++======================+========+================================================+
+|``alerts``            | array  | A collection of alert messages.                |
++----------------------+--------+------------------------------------------------+
+|> ``level``           | string | Success, info, warning or error.               |
++----------------------+--------+------------------------------------------------+
+|> ``text``            | string | Alert message.                                 |
++----------------------+--------+------------------------------------------------+
+|``version``           | string |                                                |
++----------------------+--------+------------------------------------------------+
+
 The 3 most common errors returned by Traffic Ops are:
 
 401 Unauthorized
@@ -523,7 +538,6 @@ API 1.1 Reference
   traffic_ops_rest/cdn
   traffic_ops_rest/changelog
   traffic_ops_rest/deliveryservice
-  traffic_ops_rest/Errors
   traffic_ops_rest/hwinfo
   traffic_ops_rest/parameter
   traffic_ops_rest/phys_location
