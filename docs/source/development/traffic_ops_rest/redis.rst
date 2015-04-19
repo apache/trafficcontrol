@@ -19,6 +19,9 @@
 Redis
 =====
 
+.. Note:: The redis documentation needs a thorough review!
+
+
 **GET /api/1.1/traffic_monitor/stats.json**
 
 Authentication Required: Yes
@@ -74,8 +77,6 @@ Response Content Type: application/json
    "version": "1.1"
   }
 
-For error messages, see :ref:`reference-label-401`.
-
 |
 
 **GET /api/1.1/redis/stats.json**
@@ -127,7 +128,6 @@ Response Content Type: application/json
    "start": "Thu Jan  1 00:00:00 1970"
   }
 
-For error messages, see :ref:`reference-label-401`.
 
 |
 
@@ -420,7 +420,6 @@ Response Content Type: application/json
    }
   }
 
-For error messages, see :ref:`reference-label-401`.
 
 |
 
@@ -470,5 +469,4 @@ Response Content Type: application/json
 **Response Example**
 
 
-For error messages, see :ref:`reference-label-401`.
 
