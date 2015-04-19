@@ -363,12 +363,11 @@ Using API Endpoints
 -------------------
 To use authenticated API endpoints:
 
-1. Authenticate with your Portal or Traffic Ops user account credentials: ::
-
-  curl -H "Accept: application/json" -v -X POST --data '{ "u":"username", "p":"password" }' https://your.domain.com/api/1.1/user/login
-
+1. Authenticate with your Portal or Traffic Ops user account credentials.
 2. Upon successful user authentication, note the mojolicious cookie value in the response headers. 
-3. Pass the Mojolicious cookie value, along with any subsequent calls to an authenticated API endpoint, example: ::
+3. Pass the Mojolicious cookie value, along with any subsequent calls to an authenticated API endpoint. 
+
+Example: ::
   
     [jvd@laika ~]$ curl -H "Accept: application/json" http://localhost:3000/api/1.1/usage/asns.json
     {"version":"1.1","alerts":[{"level":"error","text":"Unauthorized, please log in."}]}
