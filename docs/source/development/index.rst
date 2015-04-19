@@ -21,9 +21,7 @@ Use this guide to start developing applications that consume the Traffic Control
 .. toctree::
   :maxdepth: 2
 
-  traffic_ops_rest_apis
   traffic_ops
-  traffic_ops_extensions
   traffic_router
   traffic_monitor
   traffic_stats

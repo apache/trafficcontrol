@@ -40,20 +40,21 @@ Glossary
 
 	geo or geo routing
 		Localizing clients to the nearest caches using a geo database like the one from Maxmind. 
-		
+
  	health protocol
  		The protocol to monitor the health of all the caches. See :ref:`rl-health-proto`. 
 
 	mid (tier or cache)
 		The tier above the edge tier. The mid tier does not directly serves the end-user and is used as an additional layer between the edge and the origin. In a Traffic Control CDN the basic function of the mid cache is that of a :ref:`rl-fwd-proxy`. See also :ref:`rl-cachegroup`.
 
-
 	origin
 		The source of content for the CDN. Usually a redundant HTTP/1.1 webserver.
 
+	parent (cache or cachegroup)
+		The (group of) cache(s) in the higher tier.  See :ref:`rl-cachegroup`.
+
 	profile
 		A group of settings (parameters) that will be applied to a server. See :ref:`rl-profile`.
-
 
 	reverse proxy
 		A proxy that acts like it is the origin to the client. See :ref:`rl-rev-proxy`.
