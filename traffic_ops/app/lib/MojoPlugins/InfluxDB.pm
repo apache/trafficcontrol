@@ -28,8 +28,9 @@ use LWP::UserAgent qw();
 use Connection::InfluxDBAdapter;
 use File::Slurp;
 
-use constant SERVER_TYPE => 'INFLUXDB';
-use constant SCHEMA_FILE => 'InfluxDBHostsOnline';
+use constant SERVER_TYPE             => 'INFLUXDB';
+use constant SCHEMA_FILE             => 'InfluxDBHostsOnline';
+use constant INFLUXDB_CONF_FILE_NAME => 'influxdb.conf';
 my $helper_class = eval {'Connection::InfluxDBAdapter'};
 
 sub register {
@@ -40,7 +41,8 @@ sub register {
 			my $self         = shift;
 			my $write_point  = shift || confess("Supply an InfluxDB 'write_point'");
 			my $content_type = shift || "application/json";
-			my $conf         = load_conf($self);
+			my $mode         = $self->app->mode;
+			my $conf         = Utils::JsonConfig->load_conf( $mode, INFLUXDB_CONF_FILE_NAME );
 			my $helper       = $helper_class->new( $conf->{user}, $conf->{password} );
 			return $self->server_send_request( SERVER_TYPE, $helper, sub { $helper_class->write( $write_point, $content_type ) }, SCHEMA_FILE );
 		}
@@ -51,20 +53,12 @@ sub register {
 			my $self    = shift;
 			my $db_name = shift;
 			my $query   = shift;
-			my $conf    = load_conf($self);
+			my $mode    = $self->app->mode;
+			my $conf    = Utils::JsonConfig->load_conf( $mode, INFLUXDB_CONF_FILE_NAME );
 			my $helper  = $helper_class->new( $conf->{user}, $conf->{password} );
 			return $self->server_send_request( SERVER_TYPE, $helper, sub { $helper_class->query( $db_name, $query ) }, SCHEMA_FILE );
 		}
 	);
 
 }
-
-sub load_conf {
-	local $/;    #Enable 'slurp' mode
-	my $self = shift;
-	my $mode = $self->app->mode;
-	my $conf = "conf/$mode/influxdb.conf";
-	return Utils::JsonConfig->new($conf);
-}
-
 1;

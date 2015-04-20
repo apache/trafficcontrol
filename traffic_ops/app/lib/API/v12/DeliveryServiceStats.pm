@@ -25,7 +25,6 @@ use Utils::Helper;
 use Helper::Stats;
 use Helper::DeliveryServiceStats;
 use JSON;
-use constant DB_NAME => "deliveryservice_stats";
 my $stats_helper;
 
 sub index {
@@ -49,11 +48,41 @@ sub index {
 
 			# Build the summary section
 			my $summary_query = $stats_helper->build_summary_query( $series_name, $start_date, $end_date, $interval, $limit );
-			my ( $summary, $series_count ) = $self->get_summary($summary_query);
+			$self->app->log->debug( "summary_query #-> " . $summary_query );
+
+			my $db_name            = $self->get_db_name();
+			my $response_container = $self->influxdb_query( $db_name, $summary_query );
+			my $response           = $response_container->{'response'};
+			my $content            = $response->{_content};
+
+			my $summary;
+			my $series_count;
+			if ( $response->is_success() ) {
+				my $summary_content = decode_json($content);
+				( $summary, $series_count ) = $stats_helper->build_summary($summary_content);
+			}
+			else {
+				my $rc = $response->{_rc};
+				return $self->alert( $content, $rc );
+			}
 
 			# Build the series section
 			my $series_query = $stats_helper->build_series_query( $series_name, $start_date, $end_date, $interval, $limit );
-			my $series = $self->get_series($series_query);
+			$self->app->log->debug( "series_query #-> " . $series_query );
+			$response_container = $self->influxdb_query( $db_name, $series_query );
+			$response           = $response_container->{'response'};
+			$content            = $response->{_content};
+
+			my $series;
+			if ( $response->is_success() ) {
+				my $series_content = decode_json($content);
+				$series = $stats_helper->build_series($series_content);
+			}
+			else {
+				my $rc = $response->{_rc};
+				return $self->alert( $content, $rc );
+			}
+
 			if ( defined($summary) && defined($series) ) {
 
 				my $parent_node = "stats";
@@ -67,7 +96,7 @@ sub index {
 				$result->{$parent_node}{endDate}              = $end_date;
 				$result->{$parent_node}{interval}             = int($interval);
 				$result->{$parent_node}{metricType}           = $metric_type;
-				$result->{$parent_node}{influxdbDatabaseName} = DB_NAME;
+				$result->{$parent_node}{influxdbDatabaseName} = $self->get_db_name();
 				$result->{$parent_node}{influxdbSeriesQuery}  = $series_query;
 				$result->{$parent_node}{influxdbSummaryQuery} = $summary_query;
 				$result->{$parent_node}{summary}              = $summary;
@@ -87,43 +116,12 @@ sub index {
 
 }
 
-sub get_summary {
-	my $self          = shift;
-	my $summary_query = shift;
-
-	my $response_container = $self->influxdb_query( DB_NAME, $summary_query );
-	my $response           = $response_container->{'response'};
-	my $content            = $response->{_content};
-
-	my $summary;
-	my $series_count;
-	if ( $response->is_success() ) {
-		my $summary_content = decode_json($content);
-		( $summary, $series_count ) = $stats_helper->build_summary($summary_content);
-		return ( $summary, $series_count );
-	}
-	else {
-		my $rc = $response->{_rc};
-		return $self->alert( $content, $rc );
-	}
-}
-
-sub get_series {
-	my $self         = shift;
-	my $series_query = shift;
-
-	my $response_container = $self->influxdb_query( DB_NAME, $series_query );
-	my $response           = $response_container->{'response'};
-	my $content            = $response->{_content};
-
-	if ( $response->is_success() ) {
-		my $series_content = decode_json($content);
-		return $stats_helper->build_series($series_content);
-	}
-	else {
-		my $rc = $response->{_rc};
-		return $self->alert( $content, $rc );
-	}
+sub get_db_name {
+	my $self      = shift;
+	my $mode      = $self->app->mode;
+	my $conf_file = MojoPlugins::InfluxDB->INFLUXDB_CONF_FILE_NAME;
+	my $conf      = Utils::JsonConfig->load_conf( $mode, $conf_file );
+	return $conf->{deliveryservice_stats_db_name};
 }
 
 1;

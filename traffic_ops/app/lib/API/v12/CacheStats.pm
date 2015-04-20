@@ -25,7 +25,6 @@ use Utils::Helper;
 use JSON;
 use Helper::Stats;
 use Helper::CacheStats;
-use constant DB_NAME => "cache_stats";
 my $stats_helper;
 
 sub index {
@@ -50,7 +49,6 @@ sub index {
 	my $series_query = $stats_helper->build_series_query( $series_name, $start_date, $end_date, $interval, $limit );
 	my $series = $self->get_series($series_query);
 	if ( defined($summary) && defined($series) ) {
-
 		my $parent_node = "stats";
 		my $result      = ();
 		$result->{$parent_node}{series}               = $series;
@@ -62,7 +60,7 @@ sub index {
 		$result->{$parent_node}{endDate}              = $end_date;
 		$result->{$parent_node}{interval}             = int($interval);
 		$result->{$parent_node}{metricType}           = $metric_type;
-		$result->{$parent_node}{influxdbDatabaseName} = DB_NAME;
+		$result->{$parent_node}{influxdbDatabaseName} = $self->get_db_name();
 		$result->{$parent_node}{influxdbSeriesQuery}  = $series_query;
 		$result->{$parent_node}{influxdbSummaryQuery} = $summary_query;
 		$result->{$parent_node}{summary}              = $summary;
@@ -77,7 +75,7 @@ sub get_summary {
 	my $self          = shift;
 	my $summary_query = shift;
 
-	my $response_container = $self->influxdb_query( DB_NAME, $summary_query );
+	my $response_container = $self->influxdb_query( $self->get_db_name(), $summary_query );
 	my $response           = $response_container->{'response'};
 	my $content            = $response->{_content};
 
@@ -98,7 +96,7 @@ sub get_series {
 	my $self         = shift;
 	my $series_query = shift;
 
-	my $response_container = $self->influxdb_query( DB_NAME, $series_query );
+	my $response_container = $self->influxdb_query( $self->get_db_name(), $series_query );
 	my $response           = $response_container->{'response'};
 	my $content            = $response->{_content};
 
@@ -110,6 +108,13 @@ sub get_series {
 		my $rc = $response->{_rc};
 		return $self->alert( $content, $rc );
 	}
+}
+
+sub get_db_name {
+	my $self = shift;
+	my $mode = $self->app->mode;
+	my $conf = Utils::JsonConfig->load_conf( $mode, MojoPlugins::InfluxDB->INFLUXDB_CONF_FILE_NAME );
+	return $conf->{cache_stats_db_name};
 }
 
 1;
