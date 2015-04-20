@@ -28,7 +28,7 @@ use IO::Socket::SSL qw();
 use LWP::UserAgent qw();
 use File::Slurp;
 
-use constant MAX_TRIES => 30;
+use constant MAX_TRIES => 20;
 ##To track the active server we want to use
 state $active_server = "NOT FOUND";
 
