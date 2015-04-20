@@ -44,6 +44,9 @@ Glossary
  	health protocol
  		The protocol to monitor the health of all the caches. See :ref:`rl-health-proto`. 
 
+ 	localization
+ 		Finding location on the network, or on planet earth. See :ref:`rl-localization`.
+
 	mid (tier or cache)
 		The tier above the edge tier. The mid tier does not directly serves the end-user and is used as an additional layer between the edge and the origin. In a Traffic Control CDN the basic function of the mid cache is that of a :ref:`rl-fwd-proxy`. See also :ref:`rl-cachegroup`.
 
