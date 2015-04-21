@@ -27,36 +27,36 @@ my $ksfiles_configfile_name = "mkisofs";
 sub geniso {
 	my $self = shift;
 
-    &navbarpage($self);
-    my %serverselect;
-    my $rs_server = $self->db->resultset('Server')->search( undef, { columns => [qw/id host_name domain_name/], orderby => "host_name" } );
+	&navbarpage($self);
+	my %serverselect;
+	my $rs_server = $self->db->resultset('Server')->search( undef, { columns => [qw/id host_name domain_name/], orderby => "host_name" } );
 
-    while ( my $row = $rs_server->next ) {
-        my $fqdn = $row->host_name . "." . $row->domain_name;
-        $serverselect{$fqdn} = $row->id;
-    }
+	while ( my $row = $rs_server->next ) {
+		my $fqdn = $row->host_name . "." . $row->domain_name;
+		$serverselect{$fqdn} = $row->id;
+	}
 
-    my $osversionsdir;
-    my $ksdir = $self->db->resultset('Parameter')->search( { -and => [ name => $ksfiles_parm_name, config_file => $ksfiles_configfile_name ] } )->get_column('value')->single();
-    if (defined $ksdir && $ksdir ne "") {
-        $osversionsdir = $ksdir;
-    } else {
-        $osversionsdir = $filebasedir;
-    }
+	my $osversionsdir;
+	my $ksdir = $self->db->resultset('Parameter')->search( { -and => [ name => $ksfiles_parm_name, config_file => $ksfiles_configfile_name ] } )->get_column('value')->single();
+	if (defined $ksdir && $ksdir ne "") {
+		$osversionsdir = $ksdir;
+	} else {
+		$osversionsdir = $filebasedir;
+	}
 
-    my %osversions;
+	my %osversions;
 
-    {
-        open(CFG, "<$osversionsdir/osversions.cfg") || die("$osversionsdir/osversions.cfg:$!");
-        local $/;
-        eval <CFG>;
-        close CFG;
-    }
+	{
+		open(CFG, "<$osversionsdir/osversions.cfg") || die("$osversionsdir/osversions.cfg:$!");
+		local $/;
+		eval <CFG>;
+		close CFG;
+	}
 
-    $self->stash(
-        serverselect => \%serverselect,
-        osversions   => \%osversions,
-    );
+	$self->stash(
+		serverselect => \%serverselect,
+		osversions   => \%osversions,
+	);
 }
 
 sub iso_download {
@@ -81,11 +81,11 @@ sub iso_download {
 
 	my $dir;
 	my $ksdir = $self->db->resultset('Parameter')->search( { -and => [ name => $ksfiles_parm_name, config_file => $ksfiles_configfile_name ] } )->get_column('value')->single();
-    if (defined $ksdir && $ksdir ne "") {
-        $dir = $ksdir . "/" . $osversion;
-    } else {
-        $dir = $filebasedir . "/" . $osversion;
-    }
+	if (defined $ksdir && $ksdir ne "") {
+		$dir = $ksdir . "/" . $osversion;
+	} else {
+		$dir = $filebasedir . "/" . $osversion;
+	}
 
 	my $cmd = "mkisofs -input-charset utf-8 -b isolinux/isolinux.bin -c isolinux/boot.cat -no-emul-boot -boot-load-size 4 -boot-info-table -R -J -v -T $dir";
 
@@ -160,7 +160,7 @@ sub iso_download {
 				$line = $string . "\n" . $setupslavestring . "\n" . $line;
 			}
 		}
-			
+
 		print OUT $line;
 	}
 
@@ -169,5 +169,5 @@ sub iso_download {
 	my $data = `$cmd`;
 	$self->render( data => $data );
 }
-	
+
 1;
