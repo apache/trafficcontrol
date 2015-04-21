@@ -111,28 +111,33 @@ sub iso_download {
 		$dir = $filebasedir . "/" . $osversion;
 	}
 	my $cfg_dir = "$dir/$install_cfg";
+
+	# This just writes the string we're going to use to generate the ISO. You 
+	# won't need it unless you're debugging stuff, but it doesn't really hurt. 
 	open (STUF,">$cfg_dir/state.out") or die "can't open state"; 
 	print STUF "Dir== $dir\n";
 	my $cmd = "mkisofs -joliet-long -input-charset utf-8 -b isolinux/isolinux.bin -c isolinux/boot.cat -no-emul-boot -boot-load-size 4 -boot-info-table -R -J -v -T $dir";
 	print STUF "$cmd\n";
 	close STUF;
+
 	# This constructs the network.cfg file that gets written in the $install_cfg directory
 	# in network.cfg
 	# This is what we need to create:
-	# IP='69.252.248.230'
+	# IP='192.168.0.2'
 	# IPV6='...'
-	# NETMASK='255.255.255.252'
-	# GATEWAY='69.252.248.229'
-	# NAMESERVER='69.252.80.80'
-	# HOSTNAME='ipcdn-cache-30.cdnlab.comcast.net' 
-	# MTU='9000' 
-	# BOND_DEVICE='bond0'
+	# NETMASK='255.255.255.0'
+	# GATEWAY='192.168.0.1'
+	# NAMESERVER='8.8.8.8,8.8.4.4'
+	# HOSTNAME='mid-cache-01.mycdn.mydomain.net' 
+	# MTU='1500' 
+	# BOND_DEVICE='em0'
 	# BONDOPTS='mode=802.3ad,lacp_rate=fast,xmit_hash_policy=layer3+4'
 	my $network_string = "IPADDR=\"$ipaddr\"\nNETMASK=\"$netmask\"\nGATEWAY=\"$gateway\"\nBOND_DEVICE=\"$dev\"\nMTU=\"$mtu\"\nNAMESERVER=\"$nameservers\"\nHOSTNAME=\"$hostname\"\nNETWORKING_IPV6=\"yes\"\nIPV6ADDR=\"$ip6_address\"\nIPV6_DEFAULTGW=\"$ip6_gateway\"\nBONDING_OPTS=\"miimon=100 mode=4 lacp_rate=fast xmit_hash_policy=layer3+4\"\nDHCP=\"$dhcp\"";
 	# Write out the networking config: 
 	open(NF,">$cfg_dir/network.cfg") or die "Could not open network.cfg";
 	print NF $network_string;
 	close NF;
+
 	my $root_pass_string;
 	if ($rootpass eq "") {
 		# The following password SHOULD be "Fred". YMMV, you should change this. 
