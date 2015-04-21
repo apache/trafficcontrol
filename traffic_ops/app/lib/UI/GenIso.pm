@@ -30,15 +30,6 @@ my $install_cfg = "ks_scripts";
 
 sub geniso {
 	my $self = shift;
-	print "here\n";
-	&navbarpage($self);
-	my %serverselect;
-	my $rs_server = $self->db->resultset('Server')->search( { undef, { columns => [qw/id host_name domain_name/], orderby => "host_name" } );
-
-	while ( my $row = $rs_server->next ) {
-		my $fqdn = $row->host_name . "." . $row->domain_name;
-		$serverselect{$fqdn} = $row->id;
-	}
 
 	&navbarpage($self);
 	my %serverselect;
@@ -49,8 +40,11 @@ sub geniso {
 		$serverselect{$fqdn} = $row->id;
 	}
 
+
 	my $osversionsdir;
+	# my $ksdir = $self->db->resultset('Parameter')->search( {  and => [ name => $ksfiles_parm_name, config_file => $ksfiles_configfile_name ] } )->get_column('value')->single();
 	my $ksdir = $self->db->resultset('Parameter')->search( { -and => [ name => $ksfiles_parm_name, config_file => $ksfiles_configfile_name ] } )->get_column('value')->single();
+
 	if (defined $ksdir && $ksdir ne "") {
 		$osversionsdir = $ksdir;
 	} else {
@@ -95,6 +89,20 @@ sub iso_download {
 	# PROTIP: Do not put the $ in.
 	my $digest = "1";
 
+	# Read /etc/resolv.conf and get the nameservers. This is (supposedly) a hack
+	# until we get a reasonable UI set up. 
+
+	my ($nameservers, $line, $nsip);
+	open(RESOLV,'/etc/resolv.conf') || die ("What? No resolv.conf? Is this not Unix?");
+	while ($line = <RESOLV>) {
+		if ($line =~ /^nameserver /) {
+			$nsip = (split(" ", $line))[1];
+		$nameservers="$nsip $nameservers";
+		}
+	}
+	$nameservers =~ s/ /,/g;
+	$nameservers =~ s/,$//;
+
 	my $dir;
 	my $ksdir = $self->db->resultset('Parameter')->search( { -and => [ name => $ksfiles_parm_name, config_file => $ksfiles_configfile_name ] } )->get_column('value')->single();
 	if (defined $ksdir && $ksdir ne "") {
@@ -120,7 +128,7 @@ sub iso_download {
 	# MTU='9000' 
 	# BOND_DEVICE='bond0'
 	# BONDOPTS='mode=802.3ad,lacp_rate=fast,xmit_hash_policy=layer3+4'
-	my $network_string = "IPADDR=\"$ipaddr\"\nNETMASK=\"$netmask\"\nGATEWAY=\"$gateway\"\nBOND_DEVICE=\"$dev\"\nMTU=\"$mtu\"\nNAMESERVER=\"69.252.80.80\"\nHOSTNAME=\"$hostname\"\nNETWORKING_IPV6=\"yes\"\nIPV6ADDR=\"$ip6_address\"\nIPV6_DEFAULTGW=\"$ip6_gateway\"\nBONDING_OPTS=\"miimon=100 mode=4 lacp_rate=fast xmit_hash_policy=layer3+4\"\nDHCP=\"$dhcp\"";
+	my $network_string = "IPADDR=\"$ipaddr\"\nNETMASK=\"$netmask\"\nGATEWAY=\"$gateway\"\nBOND_DEVICE=\"$dev\"\nMTU=\"$mtu\"\nNAMESERVER=\"$nameservers\"\nHOSTNAME=\"$hostname\"\nNETWORKING_IPV6=\"yes\"\nIPV6ADDR=\"$ip6_address\"\nIPV6_DEFAULTGW=\"$ip6_gateway\"\nBONDING_OPTS=\"miimon=100 mode=4 lacp_rate=fast xmit_hash_policy=layer3+4\"\nDHCP=\"$dhcp\"";
 	# Write out the networking config: 
 	open(NF,">$cfg_dir/network.cfg") or die "Could not open network.cfg";
 	print NF $network_string;
@@ -139,7 +147,7 @@ sub iso_download {
 	open(PWF, ">$cfg_dir/password.cfg") or die "Could not open password.cfg";
 	print PWF "$root_pass_string";
 	close PWF;
-	
+
 	# This wasn't necessary.
 	#if ($ondisk != m/^\s*/) {
 	#	$ondisk = '';
