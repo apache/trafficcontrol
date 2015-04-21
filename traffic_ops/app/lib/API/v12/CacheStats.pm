@@ -116,6 +116,7 @@ sub index2 {
 
 }
 
+#TODO: drichardson -- pull this into a MojoPlugin
 sub index {
 	my $self            = shift;
 	my $cdn_name        = $self->param('cdnName');
