@@ -363,10 +363,6 @@ public class DsState extends AbstractState {
 			this.in_bytes = toLong(v);
 			final String k = propBase+".out_bytes";
 			v = cs.getValue(k, index);
-			if(v == null) {
-				LOGGER.warn("wtf: "+ cs.id + " - "+v);
-				v = cs.getValue(k, index);
-			}
 			this.out_bytes = toLong(v);
 			v = cs.getValue(propBase+".status_2xx", index);
 			this.status_2xx = toLong(v);

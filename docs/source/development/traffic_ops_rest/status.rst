@@ -21,53 +21,59 @@ Status
 
 **GET /api/1.1/statuses.json**
 
-Authentication Required: Yes
+  Retrieves a list of the server status codes available. May be useful when the status is retrieved from other APIs as a number and not a string.
 
-Response Content Type: application/json
+  Authentication Required: Yes
 
-**Response Messages**
+  **Response Properties**
 
-::
+  +-----------------+--------+--------------------------------------------------------------------------------+
+  |    Parameter    |  Type  |                                  Description                                   |
+  +=================+========+================================================================================+
+  | ``lastUpdated`` | string | The Time / Date this server entry was last updated                             |
+  +-----------------+--------+--------------------------------------------------------------------------------+
+  | ``name``        | string | The string equivalent of the status                                            |
+  +-----------------+--------+--------------------------------------------------------------------------------+
+  | ``id``          | string | The id with which Traffic Ops stores this status, and references it internally |
+  +-----------------+--------+--------------------------------------------------------------------------------+
+  | ``description`` | string | A short description of the status                                              |
+  +-----------------+--------+--------------------------------------------------------------------------------+
 
+  **Response Example** ::
 
-  HTTP Status Code: 200
-  Reason: Success
-
-**Response Properties**
-
-+----------------------+--------+------------------------------------------------+
-| Parameter            | Type   | Description                                    |
-+======================+========+================================================+
-|``lastUpdated``       | string |                                                |
-+----------------------+--------+------------------------------------------------+
-|``name``              | string |                                                |
-+----------------------+--------+------------------------------------------------+
-|``id``                | string |                                                |
-+----------------------+--------+------------------------------------------------+
-|``description``       | string |                                                |
-+----------------------+--------+------------------------------------------------+
-
-**Response Example**
-
-
-::
-
-  {
-   "response": [
-      {
-         "lastUpdated": "2013-02-13 23:34:29",
-         "name": "ADMIN_DOWN",
-         "id": "4",
-         "description": "Temporary down. Edge: XMPP client will send status OFFLINE to CCR."
-      },
-      {
-         "lastUpdated": "2013-02-13 23:34:29",
-         "name": "CCR_IGNORE",
-         "id": "5",
-         "description": "Edge: 12M will not include caches in this state in CCR config files. Mid: N\/A for now"
+       {
+        "response": [
+          {
+            "description": "Temporary down. Edge: XMPP client will send status OFFLINE to CCR, otherwise similar to REPORTED. Mid: Server will not be included in parent.config files for its edge caches",
+            "id": "4",
+            "name": "ADMIN_DOWN",
+            "lastUpdated": "2013-02-13 16:34:29"
+          },
+          {
+            "lastUpdated": "2013-02-13 16:34:29",
+            "name": "CCR_IGNORE",
+            "id": "5",
+            "description": "Edge: 12M will not include caches in this state in CCR config files. Mid: N\/A for now"
+          },
+          {
+            "description": "Edge: Puts server in CCR config file in this state, but CCR will never route traffic to it. Mid: Server will not be included in parent.config files for its edge caches",
+            "id": "1",
+            "lastUpdated": "2013-02-13 16:34:29",
+            "name": "OFFLINE"
+          },
+          {
+            "id": "2",
+            "description": "Edge: Puts server in CCR config file in this state, and CCR will always route traffic to it. Mid: Server will be included in parent.config files for its edges",
+            "lastUpdated": "2013-02-13 16:34:29",
+            "name": "ONLINE"
+          },
+          {
+            "id": "3",
+            "description": "Edge: Puts server in CCR config file in this state, and CCR will adhere to the health protocol. Mid: N\/A for now",
+            "name": "REPORTED",
+            "lastUpdated": "2013-02-13 16:34:29"
+          }
+        ],
+        "version": "1.1"
       }
-   ],
-   "version": "1.1"
-  }
 
-For error messages, see :ref:`reference-label-401`.

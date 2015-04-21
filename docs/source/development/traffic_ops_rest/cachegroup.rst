@@ -18,302 +18,222 @@
 
 Cache Group
 ===========
+
 **GET /api/1.1/cachegroups.json**
 
-Authentication Required: Yes
+  Authentication Required: Yes
+  
+  **Response Properties**
 
-Response Content Type: application/json
+  +------------------------+--------+--------------------------------------------------------------------------+
+  | Parameter              | Type   | Description                                                              |
+  +========================+========+==========================================================================+
+  | ``longitude``          | string | Longitude for the Cache Group                                            |
+  +------------------------+--------+--------------------------------------------------------------------------+
+  | ``parentCachegroupId`` | string | Identifier that refers to the 'id' field of different Cache Group entry. |
+  +------------------------+--------+--------------------------------------------------------------------------+
+  | ``lastUpdated``        | string | The Time / Date this entry was last updated                              |
+  +------------------------+--------+--------------------------------------------------------------------------+
+  | ``typeName``           | string | The name of the type of Cache Group entry                                |
+  +------------------------+--------+--------------------------------------------------------------------------+
+  | ``name``               | string | The name of the Cache Group entry                                        |
+  +------------------------+--------+--------------------------------------------------------------------------+
+  | ``typeId``             | string | Unique identifier for the 'Type' of Cache Group entry                    |
+  +------------------------+--------+--------------------------------------------------------------------------+
+  | ``latitude``           | string | Latitude for the Cache Group                                             |
+  +------------------------+--------+--------------------------------------------------------------------------+
+  | ``id``                 | string | Local unique identifier for the Cache Group                              |
+  +------------------------+--------+--------------------------------------------------------------------------+
+  | ``shortName``          | string | Abbreviation of the Cache Group Name                                     |
+  +------------------------+--------+--------------------------------------------------------------------------+
 
-**Response Messages**
+  **Response Example** ::
 
-::
-
-
-  HTTP Status Code: 200
-  Reason: Success
-
-**Response Properties**
-
-+------------------------+--------+--------------------------------------------------------------------------+
-| Parameter              | Type   | Description                                                              |
-+========================+========+==========================================================================+
-| ``longitude``          | string | Longitude for the Cache Group                                            |
-+------------------------+--------+--------------------------------------------------------------------------+
-| ``parentCachegroupId`` | string | Identifier that refers to the 'id' field of different Cache Group entry. |
-+------------------------+--------+--------------------------------------------------------------------------+
-| ``lastUpdated``        | string | The Time / Date this entry was last updated                              |
-+------------------------+--------+--------------------------------------------------------------------------+
-| ``typeName``           | string | The name of the type of Cache Group entry                                |
-+------------------------+--------+--------------------------------------------------------------------------+
-| ``name``               | string | The name of the Cache Group entry                                        |
-+------------------------+--------+--------------------------------------------------------------------------+
-| ``typeId``             | string | Unique identifier for the 'Type' of Cache Group entry                    |
-+------------------------+--------+--------------------------------------------------------------------------+
-| ``latitude``           | string | Latitude for the Cache Group                                             |
-+------------------------+--------+--------------------------------------------------------------------------+
-| ``id``                 | string | Local unique identifier for the Cache Group                              |
-+------------------------+--------+--------------------------------------------------------------------------+
-| ``shortName``          | string | Abbreviation of the Cache Group Name                                     |
-+------------------------+--------+--------------------------------------------------------------------------+
-
-**Response Example**
-
-::
-
-  {
-   "response": [
-      {
-         "longitude": "0",
-         "parentCachegroupId": null,
-         "lastUpdated": "2012-09-25 20:27:28",
-         "typeName": "MID_LOC",
-         "name": "dc-chicago",
-         "parentCachegroupName": null,
-         "typeId": "4",
-         "latitude": "0",
-         "id": "21",
-         "shortName": "dcchi"
-      },
-      {
-         "longitude": "0",
-         "parentCachegroupId": null,
-         "lastUpdated": "2012-09-25 20:32:03",
-         "typeName": "MID_LOC",
-         "name": "dc-cmc",
-         "parentCachegroupName": null,
-         "typeId": "4",
-         "latitude": "0",
-         "id": "22",
-         "shortName": "dccmc"
-      }
-   ],
-   "version": "1.1"
-  }
-
-For error responses, see :ref:`reference-label-401`.
+    {
+     "response": [
+        {
+           "longitude": "0",
+           "parentCachegroupId": null,
+           "lastUpdated": "2012-09-25 20:27:28",
+           "typeName": "MID_LOC",
+           "name": "dc-chicago",
+           "parentCachegroupName": null,
+           "typeId": "4",
+           "latitude": "0",
+           "id": "21",
+           "shortName": "dcchi"
+        },
+        {
+           "longitude": "0",
+           "parentCachegroupId": null,
+           "lastUpdated": "2012-09-25 20:32:03",
+           "typeName": "MID_LOC",
+           "name": "dc-cmc",
+           "parentCachegroupName": null,
+           "typeId": "4",
+           "latitude": "0",
+           "id": "22",
+           "shortName": "dccmc"
+        }
+     ],
+     "version": "1.1"
+    }
 
 |
 
 **GET /api/1.1/cachegroups/trimmed.json**
 
-Authentication Required: Yes
+  Authentication Required: Yes
+  
+  **Response Properties**
 
-Response Content Type: application/json
-
-**Response Messages**
-
-::
-
-
-  HTTP Status Code: 200
-  Reason: Success
-
-**Response Properties**
-
-+----------------------+--------+------------------------------------------------+
-| Parameter            | Type   | Description                                    |
-+======================+========+================================================+
-|``name``              | string |                                                |
-+----------------------+--------+------------------------------------------------+
+  +----------------------+--------+------------------------------------------------+
+  | Parameter            | Type   | Description                                    |
+  +======================+========+================================================+
+  |``name``              | string |                                                |
+  +----------------------+--------+------------------------------------------------+
 
 
-**Response Example**
+  **Response Example** ::
 
-
-::
-
-  {
-   "response": [
       {
-         "name": "dc-chicago"
-      },
-      {
-         "name": "dc-cmc"
-      }
-   ],
-   "version": "1.1"
- }
-
-For error responses, see :ref:`reference-label-401`.
+       "response": [
+          {
+             "name": "dc-chicago"
+          },
+          {
+             "name": "dc-cmc"
+          }
+       ],
+       "version": "1.1"
+     }
 
 |
 
 **GET /api/1.1/cachegroup/:parameter_id/parameter.json**
 
+  Authentication Required: Yes
+  
+  **Request Route Parameters**
 
-.. description
+  +------------------+----------+-------------+
+  |       Name       | Required | Description |
+  +==================+==========+=============+
+  | ``parameter_id`` | yes      |             |
+  +------------------+----------+-------------+
 
+  **Response Properties**
 
-Authentication Required: Yes
+  +-----------------+--------+-------------+
+  |    Parameter    |  Type  | Description |
+  +=================+========+=============+
+  | ``cachegroups`` | array  |             |
+  +-----------------+--------+-------------+
+  | ``>name``       | string |             |
+  +-----------------+--------+-------------+
+  | ``>id``         | string |             |
+  +-----------------+--------+-------------+
 
-**Request Route Parameters**
+  **Response Example** ::
 
-+-----------------+----------+---------------------------------------------------+
-| Name            | Required | Description                                       |
-+=================+==========+===================================================+
-|parameter_id     | yes      |                                                   |
-+-----------------+----------+---------------------------------------------------+
+    {
+     "response": {
+        "cachegroups": [
+           {
+              "name": "dc-chicago",
+              "id": "21"
+           },
+           {
+              "name": "dc-cmc",
+              "id": "22"
+           }
+        ]
+     },
+     "version": "1.1"
+    }
 
-Response Content Type: application/json
-
-**Response Messages**
-
-::
-
-
-  HTTP Status Code: 200
-  Reason: Success
-
-**Response Properties**
-
-+----------------------+--------+------------------------------------------------+
-| Parameter            | Type   | Description                                    |
-+======================+========+================================================+
-|``cachegroups``       | array  |                                                |
-+----------------------+--------+------------------------------------------------+
-|> ``name``            | string |                                                |
-+----------------------+--------+------------------------------------------------+
-|> ``id``              | string |                                                |
-+----------------------+--------+------------------------------------------------+
-
-**Response Example**
-
-
-::
-
-  {
-   "response": {
-      "cachegroups": [
-         {
-            "name": "dc-chicago",
-            "id": "21"
-         },
-         {
-            "name": "dc-cmc",
-            "id": "22"
-         }
-      ]
-   },
-   "version": "1.1"
-  }
-
-For error responses, see :ref:`reference-label-401`.
-
-|
 
 **GET /api/1.1/cachegroupparameters.json**
 
-Authentication Required: Yes
+  Authentication Required: Yes
+  
+  **Response Properties**
 
-Response Content Type: application/json
+  +--------------------------+--------+-----------------------------------------+
+  |        Parameter         |  Type  |               Description               |
+  +==========================+========+=========================================+
+  | ``cachegroupParameters`` | array  | A collection of cache group parameters. |
+  +--------------------------+--------+-----------------------------------------+
+  | ``>parameter``           | string |                                         |
+  +--------------------------+--------+-----------------------------------------+
+  | ``>last_updated``        | string |                                         |
+  +--------------------------+--------+-----------------------------------------+
+  | ``>cachegroup``          | string |                                         |
+  +--------------------------+--------+-----------------------------------------+
 
-**Response Messages**
+  **Response Example** ::
 
-::
+    {
+     "response": {
+        "cachegroupParameters": [
+           {
+              "parameter": "379",
+              "last_updated": "2013-08-05 18:49:37",
+              "cachegroup": "us-ca-sanjose"
+           },
+           {
+              "parameter": "380",
+              "last_updated": "2013-08-05 18:49:37",
+              "cachegroup": "us-ca-sanjose"
+           },
+           {
+              "parameter": "379",
+              "last_updated": "2013-08-05 18:49:37",
+              "cachegroup": "us-ma-woburn"
+           }
+        ]
+     },
+     "version": "1.1"
+    }
 
-
-  HTTP Status Code: 200
-  Reason: Success
-
-**Response Properties**
-
-+-------------------------+--------+---------------------------------------------+
-| Parameter               | Type   | Description                                 |
-+=========================+========+=============================================+
-|``cachegroupParameters`` | array  | A collection of cache group parameters.     |
-+-------------------------+--------+---------------------------------------------+
-|> ``parameter``          | string |                                             |
-+-------------------------+--------+---------------------------------------------+
-|> ``last_updated``       | string |                                             |
-+-------------------------+--------+---------------------------------------------+
-|> ``cachegroup``         | string |                                             |
-+-------------------------+--------+---------------------------------------------+
-
-**Response Example**
-
-
-::
-
-  {
-   "response": {
-      "cachegroupParameters": [
-         {
-            "parameter": "379",
-            "last_updated": "2013-08-05 18:49:37",
-            "cachegroup": "us-ca-sanjose"
-         },
-         {
-            "parameter": "380",
-            "last_updated": "2013-08-05 18:49:37",
-            "cachegroup": "us-ca-sanjose"
-         },
-         {
-            "parameter": "379",
-            "last_updated": "2013-08-05 18:49:37",
-            "cachegroup": "us-ma-woburn"
-         }
-      ]
-   },
-   "version": "1.1"
-  }
-
-For error responses, see :ref:`reference-label-401`.
 
 |
 
 **GET /api/1.1/cachegroups/:parameter_id/parameter/available.json**
 
-.. description
+  Authentication Required: Yes
+  
+  **Request Route Parameters**
 
+  +------------------+----------+-------------+
+  |       Name       | Required | Description |
+  +==================+==========+=============+
+  | ``parameter_id`` | yes      |             |
+  +------------------+----------+-------------+
 
-Authentication Required: Yes
+  **Response Properties**
 
-**Request Route Parameters**
+  +----------------------+--------+------------------------------------------------+
+  | Parameter            | Type   | Description                                    |
+  +======================+========+================================================+
+  |``name``              |        |                                                |
+  +----------------------+--------+------------------------------------------------+
+  |``id``                |        |                                                |
+  +----------------------+--------+------------------------------------------------+
 
-+-----------------+----------+---------------------------------------------------+
-| Name            | Required | Description                                       |
-+=================+==========+===================================================+
-|parameter_id     | yes      |                                                   |
-+-----------------+----------+---------------------------------------------------+
+  **Response Example** ::
 
-Response Content Type: application/json
-
-**Response Messages**
-
-::
-
-
-  HTTP Status Code: 200
-  Reason: Success
-
-**Response Properties**
-
-+----------------------+--------+------------------------------------------------+
-| Parameter            | Type   | Description                                    |
-+======================+========+================================================+
-|``name``              |        |                                                |
-+----------------------+--------+------------------------------------------------+
-|``id``                |        |                                                |
-+----------------------+--------+------------------------------------------------+
-
-**Response Example**
-
-
-::
-
-  {
-   "response": [
-      {
-         "name": "dc-chicago",
-         "id": "21"
-      },
-      {
-         "name": "dc-cmc",
-         "id": "22"
-      }
-   ],
-   "version": "1.1"
-  }
-
-For error responses, see :ref:`reference-label-401`.
+    {
+     "response": [
+        {
+           "name": "dc-chicago",
+           "id": "21"
+        },
+        {
+           "name": "dc-cmc",
+           "id": "22"
+        }
+     ],
+     "version": "1.1"
+    }
 
