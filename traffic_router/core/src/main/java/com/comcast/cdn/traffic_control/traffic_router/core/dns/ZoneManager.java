@@ -72,8 +72,6 @@ public class ZoneManager extends Resolver {
 	private final StatTracker statTracker;
 
 	public ZoneManager(final TrafficRouter tr, final StatTracker statTracker, final String drn, final String hrn) throws IOException {
-		statTracker.setDnsRoutingName(drn);
-		statTracker.setHttpRoutingName(hrn);
 		dnsRoutingName = drn;
 		httpRoutingName = hrn;
 

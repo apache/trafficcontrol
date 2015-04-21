@@ -154,21 +154,45 @@ Installing The Developer Environment
 ------------------------------------
 To install the Traffic Ops Developer environment:
 
-1. Clone the traffic_control repository using Git.
+1. Clone the traffic_control repository from `github.com <https://github.com/Comcast/traffic_control>`_.
 2. Install the local dependencies using Carton (cpanfile).
 
   ::
 
-   $ cd trafficops/app
+   $ cd traffic_ops/app
    $ carton
 
-3. Enter ``db/admin.pl --env=test setup`` to set up the traffic_ops database. 
+3. Set up a user in MySQL.
+
+Example: :: 
+
+  master $ mysql
+  Welcome to the MySQL monitor.  Commands end with ; or \g.
+  Your MySQL connection id is 305
+  Server version: 5.6.19 Homebrew
+
+  Copyright (c) 2000, 2014, Oracle and/or its affiliates. All rights reserved.
+
+  Oracle is a registered trademark of Oracle Corporation and/or its
+  affiliates. Other names may be trademarks of their respective
+  owners.
+
+  Type 'help;' or '\h' for help. Type '\c' to clear the current input statement.
+
+  mysql> create user ‘to_user’@’localhost’;
+  mysql> grant all on to_development.* to 'to_user'@'localhost' identified by 'twelve';
+  mysql> grant all on to_test.* to 'to_user'@'localhost' identified by 'twelve';
+  mysql> grant all on to_integration.* to 'to_user'@'localhost' identified by 'twelve';
+
+
+4. Enter ``db/admin.pl --env=<enviroment name> setup`` to set up the traffic_ops database(s). 
 
    * Unit test database: ``$ db/admin.pl --env=test setup``
    * Development database: ``$ db/admin.pl --env=development setup``
    * Integration database: ``$ db use db/admin.pl --env=integration setup``
+   
 4. (Optional) To load temporary data into the tables: ``$ perl bin/db/setup_kabletown.pl``
-5. Set up a user in the database. 
+5. Set up a the database schema
 
  ::
 
@@ -193,28 +217,6 @@ To install the Traffic Ops Developer environment:
   OK    20150210100000_ds_keyinfo.sql
   Seeding database...
   Warning: Using a password on the command line interface can be insecure.
-
-5. Set up a user in MySQL.
-
- ::
-
-  master $ mysql
-  Welcome to the MySQL monitor.  Commands end with ; or \g.
-  Your MySQL connection id is 305
-  Server version: 5.6.19 Homebrew
-
-  Copyright (c) 2000, 2014, Oracle and/or its affiliates. All rights reserved.
-
-  Oracle is a registered trademark of Oracle Corporation and/or its
-  affiliates. Other names may be trademarks of their respective
-  owners.
-
-  Type 'help;' or '\h' for help. Type '\c' to clear the current input statement.
-
-  mysql> create user ‘to_user’@’localhost’;
-  mysql> grant all on to_development.* to 'to_user'@'localhost' identified by 'twelve';
-  mysql> grant all on to_test.* to 'to_user'@'localhost' identified by 'twelve';
-  mysql> grant all on to_integration.* to 'to_user'@'localhost' identified by 'twelve';
 
 
 6. To start Traffic Ops, enter ``$ bin/start.sh``
@@ -248,6 +250,16 @@ Use prove to execute test cases. Execute after a carton install:
 
 The KableTown CDN example
 ^^^^^^^^^^^^^^^^^^^^^^^^^
+The integration tests will load an example CDN with most of the features of Traffic Control being used. This is mostly for testing purposes, but can also be used as an example of how to configure certain features. To load the KableTown CDN example and access it:
+
+1. Run the integration tests 
+2. Start morbo against the integration database: ``export MOJO_MODE=integration; ./bin/start.sh``
+3. Using a browser, navigate to the given address: ``http://127.0.0.1:3000``
+4. For the initial log in:
+  
+  * User name: admin
+  * Password: password
+
 
 Traffic Ops Extensions
 ----------------------

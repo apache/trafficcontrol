@@ -2583,7 +2583,7 @@ my %definition_for = (
 			id          => 387,
 			name        => 'location',
 			config_file => 'rascal-config.txt',
-			value       => '/opt/rascal/conf',
+			value       => '/opt/traffic_monitor/conf',
 		},
 	},
 	'303-health.threshold.queryTime' => {

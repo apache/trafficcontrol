@@ -19,6 +19,9 @@ Configuring Traffic Ops
 
 Follow the steps below to configure the newly installed Traffic Ops Instance.
 
+Installing the SSL Cert
+=======================
+By default, Traffic Ops runs as an SSL web server, and a certificate needs to be installed.  TBD.
 
 Content Delivery Networks
 =========================

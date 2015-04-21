@@ -22,9 +22,8 @@ Traffic Control was first developed at Comcast for internal use and released to 
 
 Traffic Control implements the blue boxes in the architecture diagram below. 
 
-.. image needs updating for redis > riak.
 
-.. image:: traffic_control_overview_1.png
+.. image:: traffic_control_overview_3.png
 	:align: center
 
 In the next sections each of these components will be explained further.
