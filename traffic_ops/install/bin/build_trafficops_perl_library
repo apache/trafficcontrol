@@ -138,7 +138,6 @@ if (defined $opt_i && $opt_i == 1) {
 		exit 0;
 	}
 
-	#$result = execCommand ("/usr/bin/cpan", "-if", "MIYAGAWA/Carton-v1.0.12.tar.gz");
 	$result = execCommand ("/usr/bin/cpan", "-if", "MIYAGAWA/Carton-v1.0.15.tar.gz");
 	if ($result != 0) {
 		print "WARNING: Failed to install Carton, look through the output and correct the problem.\n";
