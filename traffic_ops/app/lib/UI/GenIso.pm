@@ -24,39 +24,46 @@ my $filebasedir = "/var/www/files";
 my $ksfiles_parm_name = "kickstart.files.location";
 my $ksfiles_configfile_name = "mkisofs";
 
+# This is the directory we put the configuration files in for kickstart &
+# scripts to process: 
+my $install_cfg = "ks_scripts"; 
+
 sub geniso {
 	my $self = shift;
 
-    &navbarpage($self);
-    my %serverselect;
-    my $rs_server = $self->db->resultset('Server')->search( undef, { columns => [qw/id host_name domain_name/], orderby => "host_name" } );
+	&navbarpage($self);
+	my %serverselect;
+	my $rs_server = $self->db->resultset('Server')->search( undef, { columns => [qw/id host_name domain_name/], orderby => "host_name" } );
 
-    while ( my $row = $rs_server->next ) {
-        my $fqdn = $row->host_name . "." . $row->domain_name;
-        $serverselect{$fqdn} = $row->id;
-    }
+	while ( my $row = $rs_server->next ) {
+		my $fqdn = $row->host_name . "." . $row->domain_name;
+		$serverselect{$fqdn} = $row->id;
+	}
 
-    my $osversionsdir;
-    my $ksdir = $self->db->resultset('Parameter')->search( { -and => [ name => $ksfiles_parm_name, config_file => $ksfiles_configfile_name ] } )->get_column('value')->single();
-    if (defined $ksdir && $ksdir ne "") {
-        $osversionsdir = $ksdir;
-    } else {
-        $osversionsdir = $filebasedir;
-    }
 
-    my %osversions;
+	my $osversionsdir;
+	# my $ksdir = $self->db->resultset('Parameter')->search( {  and => [ name => $ksfiles_parm_name, config_file => $ksfiles_configfile_name ] } )->get_column('value')->single();
+	my $ksdir = $self->db->resultset('Parameter')->search( { -and => [ name => $ksfiles_parm_name, config_file => $ksfiles_configfile_name ] } )->get_column('value')->single();
 
-    {
-        open(CFG, "<$osversionsdir/osversions.cfg") || die("$osversionsdir/osversions.cfg:$!");
-        local $/;
-        eval <CFG>;
-        close CFG;
-    }
+	if (defined $ksdir && $ksdir ne "") {
+		$osversionsdir = $ksdir;
+	} else {
+		$osversionsdir = $filebasedir;
+	}
 
-    $self->stash(
-        serverselect => \%serverselect,
-        osversions   => \%osversions,
-    );
+	my %osversions;
+
+	{
+		open(CFG, "<$osversionsdir/osversions.cfg") || die("$osversionsdir/osversions.cfg:$!");
+		local $/;
+		eval <CFG>;
+		close CFG;
+	}
+
+	$self->stash(
+		serverselect => \%serverselect,
+		osversions   => \%osversions,
+	);
 }
 
 sub iso_download {
@@ -75,99 +82,87 @@ sub iso_download {
 	my $ondisk = $self->param('ondisk');
 	my $lacp;
 	$lacp = 1 if ($dev =~ m/^bond0$/);
-
 	$self->res->headers->content_type("application/download");
 	$self->res->headers->content_disposition("attachment; filename=\"$hostname-$osversion.iso\"");
 
+	# This sets up the "strength" of the hash. So far $1 works (md5). It will produce a sha256 ($5), but it's untested.
+	# PROTIP: Do not put the $ in.
+	my $digest = "1";
+
+	# Read /etc/resolv.conf and get the nameservers. This is (supposedly) a hack
+	# until we get a reasonable UI set up. 
+
+	my ($nameservers, $line, $nsip);
+	open(RESOLV,'/etc/resolv.conf') || die ("What? No resolv.conf? Is this not Unix?");
+	while ($line = <RESOLV>) {
+		if ($line =~ /^nameserver /) {
+			$nsip = (split(" ", $line))[1];
+		$nameservers="$nsip $nameservers";
+		}
+	}
+	$nameservers =~ s/ /,/g;
+	$nameservers =~ s/,$//;
+
 	my $dir;
 	my $ksdir = $self->db->resultset('Parameter')->search( { -and => [ name => $ksfiles_parm_name, config_file => $ksfiles_configfile_name ] } )->get_column('value')->single();
-    if (defined $ksdir && $ksdir ne "") {
-        $dir = $ksdir . "/" . $osversion;
-    } else {
-        $dir = $filebasedir . "/" . $osversion;
-    }
-
-	my $cmd = "mkisofs -input-charset utf-8 -b isolinux/isolinux.bin -c isolinux/boot.cat -no-emul-boot -boot-load-size 4 -boot-info-table -R -J -v -T $dir";
-
-	open(IN, "<$dir/ks.src") || die("$dir/ks.src:$!");
-	my @ks = <IN>;
-	close IN;
-
-	open (OUT, ">$dir/ks.cfg") || die("$dir/ks.cfg:$!");
-	for my $line(@ks) {
-		# Create Network line
-		if ($line =~ m/^network/) {
-			my $net_line;
-
-			# Use ip6 gateway only if ipv4 gateway is not defined
-			$gateway = $ip6_gateway if ($gateway =~ m/^\s*$/);
-
-			if ($dhcp eq 'yes') {
-				$net_line = "network --bootproto=dhcp --hostname=$hostname";
-			} else {
-				$net_line = "network --bootproto=static --ip=$ipaddr --netmask=$netmask --gateway=$gateway --nameserver=69.252.80.80 --hostname=$hostname --mtu=$mtu";
-			}
-
-			# Fill in a default value for the network device if one isn't specified
-			if ($dev =~ m/^\s*$/) {
-				$net_line .= " --device=link";
-			} else {
-				$net_line .= " --device=$dev";
-			}
-
-			# IPV6 stuff
-			if ($ip6_address =~ m/^\s*$/) {
-				$net_line .= " --noipv6";
-			} else {
-				$net_line .= " --ipv6=$ip6_address";
-				if ($ip6_address =~ m/^\s*$/) {
-					$net_line .= " --ipv6gateway=$ip6_gateway"; 
-				}
-				# There should probably be some sort of error thrown if there is an ipv6 
-				# address without a gateway. 
-			}
-
-			$line = $net_line;
-		}
-
-		# Set the disk to use
-		if ($line =~ m/^ignoredisk/) {
-			if ($ondisk !~ m/^\s?$/) {
-				$line = "ignoredisk --only-use=$ondisk\n";
-			} else {
-				$line = undef;
-			}
-		}
-
-		# Set rootpass
-		if ($rootpass =~ m/^\S+$/) {
-			if ($line =~ m/^rootpw/) {
-				$line = "rootpw $rootpass\n";
-			}
-		}
-
-		# Place additional stuff at the bottom of the file here
-		if ($line =~ m/^eject$/) {
-			if ($lacp) {
-				my $string;
-				if ($ip6_address =~ m/^\s*$/) {
-					$string = "echo -e 'DEVICE=\"$dev\"\\nBOOTPROTO=\"static\"\\nDNS1=\"69.252.80.80\"\\nIPADDR=\"$ipaddr\"\\nNETMASK=\"$netmask\"\\nGATEWAY=\"$gateway\"\\nIPV6INIT=\"no\"\\nMTU=\"$mtu\"\\nONBOOT=\"yes\"\\nBONDING_OPTS=\"miimon=100 mode=4 lacp_rate=fast xmit_hash_policy=layer3+4\"' >> /etc/sysconfig/network-scripts/ifcfg-$dev";
-				}
-				else {
-					$string = "echo -e 'DEVICE=\"$dev\"\\nBOOTPROTO=\"static\"\\nDNS1=\"69.252.80.80\"\\nIPADDR=\"$ipaddr\"\\nNETMASK=\"$netmask\"\\nGATEWAY=\"$gateway\"\\nIPV6ADDR=\"$ip6_address\"\\nIPV6INIT=\"yes\"\\nIPV6_DEFAULTGW=\"$ip6_gateway\"\\nNETWORKING_IPV6=\"yes\"\\nMTU=\"$mtu\"\\nONBOOT=\"yes\"\\nBONDING_OPTS=\"miimon=100 mode=4 lacp_rate=fast xmit_hash_policy=layer3+4\"' >> /etc/sysconfig/network-scripts/ifcfg-$dev";
-				}
-				my $setupslavestring = "perl /var/tmp/scripts/detect10ginterfaces.pl";
-				$line = $string . "\n" . $setupslavestring . "\n" . $line;
-			}
-		}
-			
-		print OUT $line;
+	if (defined $ksdir && $ksdir ne "") {
+		$dir = $ksdir . "/" . $osversion;
+	} else {
+		$dir = $filebasedir . "/" . $osversion;
 	}
+	my $cfg_dir = "$dir/$install_cfg";
 
-	close OUT;
+	# This just writes the string we're going to use to generate the ISO. You 
+	# won't need it unless you're debugging stuff, but it doesn't really hurt. 
+	open (STUF,">$cfg_dir/state.out") or die "can't open state"; 
+	print STUF "Dir== $dir\n";
+	my $cmd = "mkisofs -joliet-long -input-charset utf-8 -b isolinux/isolinux.bin -c isolinux/boot.cat -no-emul-boot -boot-load-size 4 -boot-info-table -R -J -v -T $dir";
+	print STUF "$cmd\n";
+	close STUF;
+
+	# This constructs the network.cfg file that gets written in the $install_cfg directory
+	# in network.cfg
+	# This is what we need to create:
+	# IP='192.168.0.2'
+	# IPV6='...'
+	# NETMASK='255.255.255.0'
+	# GATEWAY='192.168.0.1'
+	# NAMESERVER='8.8.8.8,8.8.4.4'
+	# HOSTNAME='mid-cache-01.mycdn.mydomain.net' 
+	# MTU='1500' 
+	# BOND_DEVICE='em0'
+	# BONDOPTS='mode=802.3ad,lacp_rate=fast,xmit_hash_policy=layer3+4'
+	my $network_string = "IPADDR=\"$ipaddr\"\nNETMASK=\"$netmask\"\nGATEWAY=\"$gateway\"\nBOND_DEVICE=\"$dev\"\nMTU=\"$mtu\"\nNAMESERVER=\"$nameservers\"\nHOSTNAME=\"$hostname\"\nNETWORKING_IPV6=\"yes\"\nIPV6ADDR=\"$ip6_address\"\nIPV6_DEFAULTGW=\"$ip6_gateway\"\nBONDING_OPTS=\"miimon=100 mode=4 lacp_rate=fast xmit_hash_policy=layer3+4\"\nDHCP=\"$dhcp\"";
+	# Write out the networking config: 
+	open(NF,">$cfg_dir/network.cfg") or die "Could not open network.cfg";
+	print NF $network_string;
+	close NF;
+
+	my $root_pass_string;
+	if ($rootpass eq "") {
+		# The following password SHOULD be "Fred". YMMV, you should change this. 
+		$root_pass_string = "#No password was passed in." . "\n" . ' rootpw --iscrypted $1$52LoLYxu$AcrXyEZGxiOOv4xp4E0mn/' . "\n";
+		} else {
+		my @chars = ("A".."Z", "a".."z",0..9) or die 'the @chars thing didn\'t work';
+		my $salt;
+		$salt .= $chars[rand @chars] for 1..8;
+		my $kripted_pw = crypt("$rootpass","\$$digest\$$salt\$") . "\n";
+		$root_pass_string = "rootpw --iscrypted $kripted_pw";
+		}
+	open(PWF, ">$cfg_dir/password.cfg") or die "Could not open password.cfg";
+	print PWF "$root_pass_string";
+	close PWF;
+
+	# This wasn't necessary.
+	#if ($ondisk != m/^\s*/) {
+	#	$ondisk = '';
+	#}
+
+	open (DSK, ">$cfg_dir/disk.cfg") or die "Could not open disk.cfg";
+	print DSK "boot_drives=\"$ondisk\"";
+	close DSK;
 
 	my $data = `$cmd`;
 	$self->render( data => $data );
 }
-	
 1;
