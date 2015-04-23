@@ -18,7 +18,7 @@ TO_UT_PROJ=traffic_ops_unit_tests
 TO_HOME=/vol1/jenkins/jobs/$TO_UT_PROJ
 TRAFFIC_OPS_APP=$TO_HOME/workspace/traffic_ops/app
 export INSTALL_DIR=/opt/traffic_ops
-export LOCAL_DIR=$INSTALL_DIR/lib
+export LOCAL_DIR=$INSTALL_DIR/local/lib
 export PERL5LIB=$TRAFFIC_OPS_APP/lib:$LOCAL_DIR:$LOCAL_DIR/perl5/
 export PATH=$PATH:$INSTALL_DIR/install/bin
 #For Mojo
