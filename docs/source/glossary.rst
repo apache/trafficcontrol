@@ -15,7 +15,7 @@ Glossary
 		A caching proxy server. See :ref:`rl-caching_proxy`.
 
 	cachegroup
-		A group of caches that toghether create a combined larger cache using consistent hashing. See :ref:`rl-cachegroup`.
+		A group of caches that together create a combined larger cache using consistent hashing. See :ref:`rl-cachegroup`.
 
 	consistent hashing
 		See `the Wikipedia article <http://en.wikipedia.org/wiki/Consistent_hashing>`_; Traffic Control uses consistent hashing when using :ref:`rl-http-cr` for the edge tier and when selecting parents in the mid tier.
@@ -24,7 +24,7 @@ Glossary
 		Directing clients (or client systems) to a particular location or device in a location for optimal delivery of content See also :ref:`rl-http-cr` and :ref:`rl-dns-cr`.
 
 	coverage zone map
-		The coverage zone map (czm) or coverage zone file (zcf) is a file that maps netork prefixes to cachegroups. See :ref:`rl-asn-czf`.
+		The coverage zone map (czm) or coverage zone file (zcf) is a file that maps network prefixes to cachegroups. See :ref:`rl-localization`.
 
 	delivery service
 		A grouping of content in the CDN, usually a determined by the URL hostname. See :ref:`rl-ds`.
@@ -38,7 +38,7 @@ Glossary
 	forward proxy
 		A proxy that works that acts like it is the client to the origin. See :ref:`rl-fwd-proxy`.
 
-	geo or geo routing
+	geo localization or geo routing
 		Localizing clients to the nearest caches using a geo database like the one from Maxmind. 
 
  	health protocol
