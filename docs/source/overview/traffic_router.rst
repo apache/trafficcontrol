@@ -57,7 +57,7 @@ Traffic routing options are often configured at the Delivery Service level.
 
 |arrow| Localization
 --------------------
-TBD
+  Traffic Router uses a SJON input file called the *coverage zone map* to determine what *cachegroup* is closest to the client. If the client IP address is not in this coverage zone map, it falls back to *geo*, using the maxmind database to find the client's location, and the geo coordinates from Traffic Ops for the cachegroup.
 
 |
 
