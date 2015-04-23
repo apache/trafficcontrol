@@ -40,6 +40,6 @@ cd $TRAFFIC_OPS_APP
 # Setup for the PERL5LIB
 #cp -r local/lib/perl5/* lib
 
-$INSTALL_DIR/app/bin/prove -vrp --formatter=TAP::Formatter::Jenkins t/
+$INSTALL_DIR/app/local/bin/prove -vrp --formatter=TAP::Formatter::Jenkins t/
 
 #cp -r local/lib/perl5 /tmp/$TO_UT_PROJ/local

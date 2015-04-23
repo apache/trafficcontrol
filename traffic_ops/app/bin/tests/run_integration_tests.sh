@@ -29,4 +29,4 @@ cd $TRAFFIC_OPS_APP
 db/admin.pl --env=$MOJO_MODE setup
 
 cd $TRAFFIC_OPS_APP
-$INSTALL_DIR/app/bin/prove -vrp --formatter=TAP::Formatter::Jenkins t_integration/
+$INSTALL_DIR/app/local/bin/prove -vrp --formatter=TAP::Formatter::Jenkins t_integration/
