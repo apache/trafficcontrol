@@ -5,7 +5,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>com.comcast.cdn.traffic_control</groupId>
 	<packaging>war</packaging>
-	<version>1.1.0</version>
+	<version>1.1.1</version>
 	<name>traffic_monitor</name>
 	<description></description>
 
