@@ -8,4 +8,5 @@ Sorted alphabetically
 * **[John Rushford](https://github.com/jrushf1239k)**
 * **[Justin Laue](https://github.com/fp-x)**
 * **[Mark Torluemke](https://github.com/mtorluemke)**
+* **[Petro, Christopher C.](https://github.com/petrocc)**
 * **[Phil Sorber](https://github.com/PSUdaemon)**

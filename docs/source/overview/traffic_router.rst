@@ -53,6 +53,14 @@ Traffic routing options are often configured at the Delivery Service level.
 
 |
 
+.. _rl-localization:
+
+|arrow| Localization
+--------------------
+  Traffic Router uses a SJON input file called the *coverage zone map* to determine what *cachegroup* is closest to the client. If the client IP address is not in this coverage zone map, it falls back to *geo*, using the maxmind database to find the client's location, and the geo coordinates from Traffic Ops for the cachegroup.
+
+|
+
 Traffic Router is inserted into the HTTP retrieval process by making it DNS authoritative for the domain of the CDN delivery service. In the example of the reverse proxy, the client was given the ``http://www-origin-cache.cdn.com/foo/bar/fun.html url``. In a Traffic Control CDN, URLs start with either ``tr.`` or ``edge.``, for HTTP or DNS content routing respectively.  These names are configurable via properties files within the Traffic Router installation.
 
 |
