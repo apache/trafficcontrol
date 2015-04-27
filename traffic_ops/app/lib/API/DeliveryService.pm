@@ -43,7 +43,7 @@ sub delivery_services {
 
 	my $helper = new Utils::Helper( { mojo => $self } );
 	if ( defined($id) && $helper->is_valid_delivery_service($id) ) {
-		if ( $helper->is_delivery_service_assigned($id) ) {
+		if ( $helper->is_delivery_service_assigned($id) || &is_oper($self) ) {
 			return $self->get_data();
 		}
 		else {
@@ -124,7 +124,7 @@ sub get_data {
 				"checkPath"          => $row->check_path,
 				"matchList"          => \@matchlist,
 				"active"             => \$row->active,
-				"protocol"         => \$row->protocol,
+				"protocol"           => $row->protocol,
 				"ipv6RoutingEnabled" => \$row->ipv6_routing_enabled,
 			}
 		);
