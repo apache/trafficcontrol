@@ -124,7 +124,7 @@ sub get_data {
 				"checkPath"          => $row->check_path,
 				"matchList"          => \@matchlist,
 				"active"             => \$row->active,
-				"protocol"           => \$row->protocol,
+				"protocol"           => $row->protocol,
 				"ipv6RoutingEnabled" => \$row->ipv6_routing_enabled,
 			}
 		);
