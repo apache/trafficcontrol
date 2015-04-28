@@ -872,7 +872,8 @@ sub check_syncds_state {
 }
 
 sub sleep_rand {
-	my $duration = shift;
+	# This should set it to a random number between 1 and whatever is passed in. 
+	my $duration = int(rand(shift)) + 1;
 
 	($log_level >> $WARN) && print "WARN Sleeping for $duration seconds: ";
 
