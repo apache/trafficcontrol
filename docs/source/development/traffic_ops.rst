@@ -343,14 +343,11 @@ NOTE: Data source Extensions are Beta at this time.
 
 API
 ===
-
-Path Structure 
---------------
-TBD.
+The Traffic Ops API provides programmatic access to read and write CDN data providing authorized API consumers with the ability to monitor CDN performance and configure CDN settings and parameters.
 
 Response Structure
 ------------------
-All sucessful responses have the folowing structure: ::
+All successful responses have the following structure: ::
 
     {
       "response": <JSON object with main response>,
@@ -361,11 +358,9 @@ To make the documentation easier to read, only the ``<JSON object with main resp
 
 Using API Endpoints
 -------------------
-To use authenticated API endpoints:
-
-1. Authenticate with your Portal or Traffic Ops user account credentials.
+1. Authenticate with your Traffic Portal or Traffic Ops user account credentials.
 2. Upon successful user authentication, note the mojolicious cookie value in the response headers. 
-3. Pass the Mojolicious cookie value, along with any subsequent calls to an authenticated API endpoint. 
+3. Pass the mojolicious cookie value, along with any subsequent calls to an authenticated API endpoint.
 
 Example: ::
   
