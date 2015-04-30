@@ -245,12 +245,6 @@
       }
     }
 
-	$(function(){
-      $('#protocol').change(function() {
-        show_add_ssl_button('fast');
-      });
-    });
-
 	// hide/show 'Generate URL Sig Keys'
 	 function show_gen_url_sigs_button(speed) {
       var signed_selected = $('#ds-signed :selected').text();
