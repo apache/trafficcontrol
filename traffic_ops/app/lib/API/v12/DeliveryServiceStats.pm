@@ -21,33 +21,39 @@ package API::v12::DeliveryServiceStats;
 use UI::Utils;
 use Mojo::Base 'Mojolicious::Controller';
 use Data::Dumper;
-use Utils::Helper;
-use Helper::Stats;
-use Helper::DeliveryServiceStats;
+use Builder::InfluxdbQuery;
 use JSON;
-my $stats_helper;
+my $iq;
 
 sub index {
 	my $self            = shift;
-	my $dsid            = $self->param('dsid');
+	my $cdn_name        = $self->param('cdnName');
+	my $ds_name         = $self->param('deliveryServiceName');
 	my $cachegroup_name = $self->param('cacheGroupName');
 	my $metric_type     = $self->param('metricType');
 	my $start_date      = $self->param('startDate');
 	my $end_date        = $self->param('endDate');
-	my $interval        = $self->param('interval') || "1m";    # Valid interval examples 10m (minutes), 10s (seconds), 1h (hour)
+	my $interval        = $self->param('interval') || "1m";      # Valid interval examples 10m (minutes), 10s (seconds), 1h (hour)
+	my $exclude         = $self->param('exclude');
 	my $limit           = $self->param('limit');
+	my $offset          = $self->param('offset');
 
-	my $helper = new Utils::Helper( { mojo => $self } );
-	if ( $helper->is_valid_delivery_service($dsid) ) {
-
-		if ( $helper->is_delivery_service_assigned($dsid) ) {
-			my ( $cdn_name, $ds_name ) = $self->deliveryservice_lookup_cdn_name_and_ds_name($dsid);
-
-			$stats_helper = new Helper::DeliveryServiceStats();
-			my $series_name = $stats_helper->series_name( $cdn_name, $ds_name, $cachegroup_name, $metric_type );
+	if ( $self->is_valid_delivery_service_name($ds_name) ) {
+		if ( $self->is_delivery_service_name_assigned($ds_name) ) {
 
 			# Build the summary section
-			my $summary_query = $stats_helper->build_summary_query( $series_name, $start_date, $end_date, $interval, $limit );
+			$iq = new Builder::InfluxdbQuery(
+				{
+					cdn_name        => $cdn_name,
+					series_name     => $metric_type,
+					ds_name         => $ds_name,
+					cachegroup_name => $cachegroup_name,
+					start_date      => $start_date,
+					end_date        => $end_date,
+					interval        => $interval
+				}
+			);
+			my $summary_query = $iq->summary_query();
 			$self->app->log->debug( "summary_query #-> " . $summary_query );
 
 			my $db_name            = $self->get_db_name();
@@ -56,18 +62,19 @@ sub index {
 			my $content            = $response->{_content};
 
 			my $summary;
-			my $series_count;
+			my $series_count = 0;
 			if ( $response->is_success() ) {
 				my $summary_content = decode_json($content);
-				( $summary, $series_count ) = $stats_helper->build_summary($summary_content);
+				( $summary, $series_count ) = $iq->summary_response($summary_content);
 			}
 			else {
-				my $rc = $response->{_rc};
-				return $self->alert( $content, $rc );
+				return $self->alert( { error_message => $content } );
 			}
 
 			# Build the series section
-			my $series_query = $stats_helper->build_series_query( $series_name, $start_date, $end_date, $interval, $limit );
+			#$iq = new Builder::InfluxdbQuery(
+			#	{ series_name => $metric_type, cdn_name => $cdn_name, ds_name => $ds_name, start_date => $start_date, end_date => $end_date } );
+			my $series_query = $iq->series_query();
 			$self->app->log->debug( "series_query #-> " . $series_query );
 			$response_container = $self->influxdb_query( $db_name, $series_query );
 			$response           = $response_container->{'response'};
@@ -76,11 +83,10 @@ sub index {
 			my $series;
 			if ( $response->is_success() ) {
 				my $series_content = decode_json($content);
-				$series = $stats_helper->build_series($series_content);
+				$series = $iq->series_response($series_content);
 			}
 			else {
-				my $rc = $response->{_rc};
-				return $self->alert( $content, $rc );
+				return $self->alert( { error_message => $content } );
 			}
 
 			if ( defined($summary) && defined($series) ) {
@@ -94,7 +100,7 @@ sub index {
 				$result->{$parent_node}{cacheGroupName}       = $cachegroup_name;
 				$result->{$parent_node}{startDate}            = $start_date;
 				$result->{$parent_node}{endDate}              = $end_date;
-				$result->{$parent_node}{interval}             = int($interval);
+				$result->{$parent_node}{interval}             = $interval;
 				$result->{$parent_node}{metricType}           = $metric_type;
 				$result->{$parent_node}{influxdbDatabaseName} = $self->get_db_name();
 				$result->{$parent_node}{influxdbSeriesQuery}  = $series_query;

@@ -80,14 +80,14 @@ sub register {
 		success_message => sub {
 			my $self           = shift || confess("Call on an instance of MojoPlugins::Response");
 			my $alert_messages = shift || confess("Please supply a response message text string.");
-			my $optional_extra = shift;
+			my $info           = shift;
 
 			my $response_body = { $API_VERSION_KEY => $API_VERSION, $ALERTS_KEY => [ { $LEVEL_KEY => $SUCCESS_LEVEL, $TEXT_KEY => $alert_messages } ] };
-			if ( defined($optional_extra) ) {
+			if ( defined($info) ) {
 				$response_body = {
 					$API_VERSION_KEY => $API_VERSION,
 					$ALERTS_KEY      => [ { $LEVEL_KEY => $SUCCESS_LEVEL, $TEXT_KEY => $alert_messages } ],
-					$INFO_KEY        => $optional_extra
+					$INFO_KEY        => $info
 				};
 			}
 			return $self->render( $STATUS_KEY => 200, $JSON_KEY => $response_body );
