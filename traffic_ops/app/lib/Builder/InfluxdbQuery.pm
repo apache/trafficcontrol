@@ -69,16 +69,25 @@ sub summary_query {
 	my $self = shift;
 	if ( valid_keys() ) {
 
-		#'summary' section
 		return sprintf(
 			'%s %s %s',
 			"SELECT mean(value), percentile(value, 5), percentile(value, 95), percentile(value, 98), min(value), max(value), sum(value), count(value) FROM",
 			$args->{series_name}, "WHERE time > '$args->{start_date}' AND 
                                          time < '$args->{end_date}' AND 
                                          cdn = '$args->{cdn_name}' AND
-                                         cachegroup = '$args->{cachegroup_name}' 
-                                         GROUP BY time($args->{interval}), cdn, cachegroup, deliveryservice"
+                                         cachegroup = '$args->{cachegroup_name}'"
 		);
+
+		#'summary' section
+		#		return sprintf(
+		#			'%s %s %s',
+		#			"SELECT mean(value), percentile(value, 5), percentile(value, 95), percentile(value, 98), min(value), max(value), sum(value), count(value) FROM",
+		#			$args->{series_name}, "WHERE time > '$args->{start_date}' AND
+		#                                         time < '$args->{end_date}' AND
+		#                                         cdn = '$args->{cdn_name}' AND
+		#                                         cachegroup = '$args->{cachegroup_name}'
+		#                                         GROUP BY time($args->{interval}), cdn, cachegroup, deliveryservice"
+		#		);
 
 	}
 }
@@ -88,8 +97,11 @@ sub series_query {
 	return sprintf(
 		'%s %s %s',
 		"SELECT value FROM",
-		$args->{series_name}, "WHERE time > '$args->{start_date}' AND time < '$args->{end_date}' AND cdn = '$args->{cdn_name}' AND cachegroup =
-				'$args->{cachegroup_name}'"
+		$args->{series_name}, "WHERE time > '$args->{start_date}' AND 
+                               time < '$args->{end_date}' AND 
+                               cdn = '$args->{cdn_name}' AND 
+                               deliveryservice = '$args->{ds_name}' AND 
+                               cachegroup = '$args->{cachegroup_name}'"
 	);
 }
 
