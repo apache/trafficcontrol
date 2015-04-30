@@ -46,24 +46,30 @@ my $iq = Builder::InfluxdbQuery->new(
 
 undef $\;
 my $summary_q = $iq->summary_query();
-$summary_q =~ s/\s/ /g;
 my $expected_q =
 	"SELECT mean(value), percentile(value, 5), percentile(value, 95), percentile(value, 98), min(value), max(value), sum(value), count(value) FROM kbps WHERE time > '2015-01-01T00:00:00-07:00' AND
                                           time < '2015-01-30T00:00:00-07:00' AND
                                           cdn = 'cdn1' AND
-                                         cachegroup = 'cachegroup1'
-                                          GROUP BY time(), cdn, cachegroup, deliveryservice";
-$expected_q =~ s/\s/ /g;
-is( $summary_q, $expected_q, 'Compare Summary queries' );
-print "summary_q #-> (" . $summary_q . ")\n";
+                                         cachegroup = 'cachegroup1'";
+
+$summary_q =~ s/\\n/ /g;
+$summary_q =~ s/\s+/ /g;
+
+$expected_q =~ s/\\n//g;
+$expected_q =~ s/\s+/ /g;
+
+is( $expected_q, $summary_q, 'Compare Summary queries' );
 
 my $series_q = $iq->series_query();
-$series_q =~ s/\s/ /g;
-print "series_q #-> (" . $series_q . ")\n";
-$expected_q = "SELECT value FROM kbps WHERE time > '2015-01-01T00:00:00-07:00' AND time < '2015-01-30T00:00:00-07:00' AND cdn = 'cdn1' AND cachegroup =
-    'cachegroup1'";
-$expected_q =~ s/\s/ /g;
-is( $series_q, $expected_q, 'Compare Series queries' );
+$series_q =~ s/\\n/ /g;
+$series_q =~ s/\s+/ /g;
+
+$expected_q =
+	"SELECT value FROM kbps WHERE time > '2015-01-01T00:00:00-07:00' AND time < '2015-01-30T00:00:00-07:00' AND cdn = 'cdn1' AND deliveryservice = 'ds_stats' AND cachegroup = 'cachegroup1'";
+$expected_q =~ s/\\n/ /g;
+$expected_q =~ s/\s+/ /g;
+
+is( $expected_q, $series_q, 'Compare Series queries' );
 
 $iq = Builder::InfluxdbQuery->new( { XXX => 'XXX' } );
 throws_ok {
