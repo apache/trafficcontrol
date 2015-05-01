@@ -31,6 +31,106 @@ sub index {
 	my $ds_name         = $self->param('deliveryServiceName');
 	my $cachegroup_name = $self->param('cacheGroupName');
 	my $metric_type     = $self->param('metricType');
+	my $server_type     = $self->param('serverType');
+	my $start_date      = $self->param('startDate');
+	my $end_date        = $self->param('endDate');
+	my $interval        = $self->param('interval') || "1m";      # Valid interval examples 10m (minutes), 10s (seconds), 1h (hour)
+	my $exclude         = $self->param('exclude');
+	my $limit           = $self->param('limit');
+	my $offset          = $self->param('offset');
+
+	if ( $self->is_valid_delivery_service_name($ds_name) ) {
+		if ( $self->is_delivery_service_name_assigned($ds_name) ) {
+
+			# Build the summary section
+			$iq = new Builder::InfluxdbQuery(
+				{
+					cdn_name        => $cdn_name,
+					series_name     => $metric_type,
+					ds_name         => $ds_name,
+					cachegroup_name => $cachegroup_name,
+					start_date      => $start_date,
+					end_date        => $end_date,
+					interval        => $interval
+				}
+			);
+			my $query = $iq->query();
+
+			my $db_name            = $self->get_db_name();
+			my $response_container = $self->influxdb_query( $db_name, $query );
+			my $response           = $response_container->{'response'};
+			my $content            = $response->{_content};
+
+			my $response_content;
+			if ( $response->is_success() ) {
+				$response_content = decode_json($content);
+
+				#$self->app->log->debug( "response_content #-> " . Dumper($response_content) );
+				$response = $iq->response($response_content);
+			}
+			else {
+				return $self->alert( { error_message => $content } );
+			}
+
+			if ( defined($response) ) {
+
+				my $parent_node = "parameters";
+				my $result      = ();
+
+				#$result->{$parent_node}{series}               = $series;
+				$result->{$parent_node}{cdnName}              = $cdn_name;
+				$result->{$parent_node}{deliveryServiceName}  = $ds_name;
+				$result->{$parent_node}{cacheGroupName}       = $cachegroup_name;
+				$result->{$parent_node}{startDate}            = $start_date;
+				$result->{$parent_node}{endDate}              = $end_date;
+				$result->{$parent_node}{interval}             = $interval;
+				$result->{$parent_node}{metricType}           = $metric_type;
+				$result->{$parent_node}{influxdbDatabaseName} = $self->get_db_name();
+				$result->{$parent_node}{influxdbQuery}        = $query;
+
+				$self->app->log->debug( "response_content #-> " . Dumper($response_content) );
+				my $series       = $response_content->{results}[0]{series};
+				my $series_count = @$series;
+				$result->{seriesCount} = $series_count;
+
+				#my $series = $response_content->{results}[0]{series}[0]->{name};
+
+				foreach my $entry (@$series) {
+					print "entry #-> (" . Dumper($entry) . ")\n";
+
+					if ( ref($entry) eq "HASH" ) {
+						$self->app->log->debug( "___ #-> " . Dumper($entry) );
+
+						#delete $_->{name};
+						delete $entry->{tags};
+					}
+				}
+				$result->{series}      = $series;
+				$result->{seriesCount} = $series_count;
+
+				return $self->success($result);
+			}
+			else {
+				return $self->alert("Could not retrieve the summary or the series");
+			}
+		}
+		else {
+			return $self->forbidden();
+		}
+	}
+	else {
+		$self->success( {} );
+	}
+
+}
+
+sub index2 {
+	my $self            = shift;
+	my $cdn_name        = $self->param('cdnName');
+	my $ds_name         = $self->param('deliveryServiceName');
+	my $cachegroup_name = $self->param('cacheGroupName');
+	my $metric_type     = $self->param('metricType');
+	my $server_type     = $self->param('serverType');
 	my $start_date      = $self->param('startDate');
 	my $end_date        = $self->param('endDate');
 	my $interval        = $self->param('interval') || "1m";      # Valid interval examples 10m (minutes), 10s (seconds), 1h (hour)
@@ -62,9 +162,11 @@ sub index {
 			my $content            = $response->{_content};
 
 			my $summary;
+			my $summary_content;
 			my $series_count = 0;
 			if ( $response->is_success() ) {
-				my $summary_content = decode_json($content);
+				$summary_content = decode_json($content);
+				$self->app->log->debug( "summary_content #-> " . Dumper($summary_content) );
 				( $summary, $series_count ) = $iq->summary_response($summary_content);
 			}
 			else {
@@ -93,7 +195,9 @@ sub index {
 
 				my $parent_node = "stats";
 				my $result      = ();
-				$result->{$parent_node}{series}               = $series;
+				$result->{$parent_node} = $summary_content->{results}[0];
+
+				#$result->{$parent_node}{series}               = $series;
 				$result->{$parent_node}{seriesCount}          = $series_count;
 				$result->{$parent_node}{cdnName}              = $cdn_name;
 				$result->{$parent_node}{deliveryServiceName}  = $ds_name;
@@ -105,7 +209,8 @@ sub index {
 				$result->{$parent_node}{influxdbDatabaseName} = $self->get_db_name();
 				$result->{$parent_node}{influxdbSeriesQuery}  = $series_query;
 				$result->{$parent_node}{influxdbSummaryQuery} = $summary_query;
-				$result->{$parent_node}{summary}              = $summary;
+
+				#$result->{$parent_node}{summary}              = $summary;
 				return $self->success($result);
 			}
 			else {

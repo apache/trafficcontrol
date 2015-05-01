@@ -65,29 +65,56 @@ sub valid_keys {
 	return $valid;
 }
 
-sub summary_query {
+sub query {
 	my $self = shift;
 	if ( valid_keys() ) {
 
-		return sprintf(
-			'%s %s %s',
-			"SELECT mean(value), percentile(value, 5), percentile(value, 95), percentile(value, 98), min(value), max(value), sum(value), count(value) FROM",
-			$args->{series_name}, "WHERE time > '$args->{start_date}' AND 
-                                         time < '$args->{end_date}' AND 
-                                         cdn = '$args->{cdn_name}' AND
-                                         cachegroup = '$args->{cachegroup_name}'"
-		);
-
-		#'summary' section
 		#		return sprintf(
 		#			'%s %s %s',
 		#			"SELECT mean(value), percentile(value, 5), percentile(value, 95), percentile(value, 98), min(value), max(value), sum(value), count(value) FROM",
 		#			$args->{series_name}, "WHERE time > '$args->{start_date}' AND
 		#                                         time < '$args->{end_date}' AND
 		#                                         cdn = '$args->{cdn_name}' AND
-		#                                         cachegroup = '$args->{cachegroup_name}'
-		#                                         GROUP BY time($args->{interval}), cdn, cachegroup, deliveryservice"
+		#                                         cachegroup = '$args->{cachegroup_name}'"
 		#		);
+
+		#'summary' section
+		return sprintf(
+			'%s %s %s',
+			"SELECT mean(value), percentile(value, 5), percentile(value, 95), percentile(value, 98), min(value), max(value), sum(value), count(value) FROM",
+			$args->{series_name}, "WHERE time > '$args->{start_date}' AND
+		                                         time < '$args->{end_date}' AND
+		                                         cdn = '$args->{cdn_name}' AND
+		                                         cachegroup = '$args->{cachegroup_name}'
+		                                         GROUP BY time($args->{interval}), cdn, cachegroup, deliveryservice"
+		);
+
+	}
+}
+
+sub summary_query {
+	my $self = shift;
+	if ( valid_keys() ) {
+
+		#		return sprintf(
+		#			'%s %s %s',
+		#			"SELECT mean(value), percentile(value, 5), percentile(value, 95), percentile(value, 98), min(value), max(value), sum(value), count(value) FROM",
+		#			$args->{series_name}, "WHERE time > '$args->{start_date}' AND
+		#                                         time < '$args->{end_date}' AND
+		#                                         cdn = '$args->{cdn_name}' AND
+		#                                         cachegroup = '$args->{cachegroup_name}'"
+		#		);
+
+		#'summary' section
+		return sprintf(
+			'%s %s %s',
+			"SELECT mean(value), percentile(value, 5), percentile(value, 95), percentile(value, 98), min(value), max(value), sum(value), count(value) FROM",
+			$args->{series_name}, "WHERE time > '$args->{start_date}' AND
+		                                         time < '$args->{end_date}' AND
+		                                         cdn = '$args->{cdn_name}' AND
+		                                         cachegroup = '$args->{cachegroup_name}'
+		                                         GROUP BY time($args->{interval}), cdn, cachegroup, deliveryservice"
+		);
 
 	}
 }
@@ -103,6 +130,46 @@ sub series_query {
                                deliveryservice = '$args->{ds_name}' AND 
                                cachegroup = '$args->{cachegroup_name}'"
 	);
+}
+
+sub response {
+	my $self            = shift;
+	my $summary_content = shift;    # in perl hash form
+
+	my $results = $summary_content->{results}[0];
+	my $values  = $results->{series}[0]{values}[0];
+
+	my $values_size;
+	if ( defined($values) ) {
+		$values_size = keys $values;
+	}
+	my $summary      = ();
+	my $series_count = 0;
+
+	if ( defined($values_size) & ( $values_size > 0 ) ) {
+		my $avg = $summary_content->{results}[0]{series}[0]{values}[0][1];
+
+		my $average = nearest( .001, $avg );
+		$average =~ /([\d\.]+)/;
+		$summary->{average}                = $average;
+		$summary->{fifthPercentile}        = $summary_content->{results}[0]{series}[0]{values}[0][2];
+		$summary->{ninetyFifthPercentile}  = $summary_content->{results}[0]{series}[0]{values}[0][3];
+		$summary->{ninetyEighthPercentile} = $summary_content->{results}[0]{series}[0]{values}[0][4];
+		$summary->{min}                    = $summary_content->{results}[0]{series}[0]{values}[0][5];
+		$summary->{max}                    = $summary_content->{results}[0]{series}[0]{values}[0][6];
+		$summary->{total}                  = $summary_content->{results}[0]{series}[0]{values}[0][7];
+		$series_count                      = $summary_content->{results}[0]{series}[0]{values}[0][8];
+	}
+	else {
+		$summary->{average}     = 0;
+		$summary->{ninetyFifth} = 0;
+		$summary->{min}         = 0;
+		$summary->{max}         = 0;
+		$summary->{total}       = 0;
+	}
+
+	return ( $summary, $series_count );
+
 }
 
 sub summary_response {
