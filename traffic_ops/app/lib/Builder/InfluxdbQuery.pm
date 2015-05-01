@@ -81,7 +81,7 @@ sub query {
 		#'summary' section
 		return sprintf(
 			'%s %s %s',
-			"SELECT mean(value), percentile(value, 5), percentile(value, 95), percentile(value, 98), min(value), max(value), sum(value), count(value) FROM",
+			"SELECT value, mean(value), percentile(value, 5), percentile(value, 95), percentile(value, 98), min(value), max(value), sum(value), count(value) FROM",
 			$args->{series_name}, "WHERE time > '$args->{start_date}' AND
 		                                         time < '$args->{end_date}' AND
 		                                         cdn = '$args->{cdn_name}' AND
@@ -121,14 +121,29 @@ sub summary_query {
 
 sub series_query {
 	my $self = shift;
+
+	# Q="SELECT mean(value),
+	#           percentile(value, 5),
+	#           percentile(value, 95),
+	#           percentile(value, 98),
+	#           min(value),
+	#           max(value),
+	#           sum(value),
+	#           count(value)
+	#           FROM tps_2xx
+	#                WHERE time > '2015-04-30T10:10:00.000000000Z' AND
+	#                      time < '2015-04-30T10:10:30.000000000Z' AND
+	#                       cdn = 'over-the-top' AND
+	#                cachegroup = 'us-co-denver'"
+
 	return sprintf(
 		'%s %s %s',
-		"SELECT value FROM",
+		"SELECT mean(value) FROM",
 		$args->{series_name}, "WHERE time > '$args->{start_date}' AND 
                                time < '$args->{end_date}' AND 
                                cdn = '$args->{cdn_name}' AND 
                                deliveryservice = '$args->{ds_name}' AND 
-                               cachegroup = '$args->{cachegroup_name}'"
+                               cachegroup = '$args->{cachegroup_name}' GROUP BY time($args->{interval}) ORDER BY asc"
 	);
 }
 
