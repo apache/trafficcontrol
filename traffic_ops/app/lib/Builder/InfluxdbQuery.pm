@@ -143,7 +143,8 @@ sub series_query {
                                time < '$args->{end_date}' AND 
                                cdn = '$args->{cdn_name}' AND 
                                deliveryservice = '$args->{ds_name}' AND 
-                               cachegroup = '$args->{cachegroup_name}' GROUP BY time($args->{interval}) ORDER BY asc"
+                               cachegroup = '$args->{cachegroup_name}' 
+                               GROUP BY time($args->{interval}) ORDER BY asc"
 	);
 }
 
@@ -194,14 +195,13 @@ sub summary_response {
 	my $results = $summary_content->{results}[0];
 	my $values  = $results->{series}[0]{values}[0];
 
-	my $values_size;
+	my $summary_count;
 	if ( defined($values) ) {
-		$values_size = keys $values;
+		$summary_count = keys $values;
 	}
-	my $summary      = ();
-	my $series_count = 0;
+	my $summary = ();
 
-	if ( defined($values_size) & ( $values_size > 0 ) ) {
+	if ( defined($summary_count) & ( $summary_count > 0 ) ) {
 		my $avg = $summary_content->{results}[0]{series}[0]{values}[0][1];
 
 		my $average = nearest( .001, $avg );
@@ -213,7 +213,7 @@ sub summary_response {
 		$summary->{min}                    = $summary_content->{results}[0]{series}[0]{values}[0][5];
 		$summary->{max}                    = $summary_content->{results}[0]{series}[0]{values}[0][6];
 		$summary->{total}                  = $summary_content->{results}[0]{series}[0]{values}[0][7];
-		$series_count                      = $summary_content->{results}[0]{series}[0]{values}[0][8];
+
 	}
 	else {
 		$summary->{average}     = 0;
@@ -223,7 +223,7 @@ sub summary_response {
 		$summary->{total}       = 0;
 	}
 
-	return ( $summary, $series_count );
+	return $summary;
 
 }
 

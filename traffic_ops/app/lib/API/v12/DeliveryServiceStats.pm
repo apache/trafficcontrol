@@ -67,8 +67,7 @@ sub index {
 			my $series_count = 0;
 			if ( $response->is_success() ) {
 				$summary_content = decode_json($content);
-				$self->app->log->debug( "summary_content #-> " . Dumper($summary_content) );
-				( $summary, $series_count ) = $iq->summary_response($summary_content);
+				$summary         = $iq->summary_response($summary_content);
 			}
 			else {
 				return $self->alert( { error_message => $content } );
@@ -99,8 +98,6 @@ sub index {
 
 				#$result->{$parent_node} = $summary_content->{results}[0];
 
-				#$result->{$parent_node}{series}               = $series;
-				#$result->{$parent_node}{seriesCount}          = $series_count;
 				$result->{$parent_node}{cdnName}              = $cdn_name;
 				$result->{$parent_node}{deliveryServiceName}  = $ds_name;
 				$result->{$parent_node}{cacheGroupName}       = $cachegroup_name;
@@ -112,7 +109,16 @@ sub index {
 				$result->{$parent_node}{influxdbSeriesQuery}  = $series_query;
 				$result->{$parent_node}{influxdbSummaryQuery} = $summary_query;
 				$result->{series}{data}                       = $series;
-				$result->{series}{count}                      = $series_count;
+
+				#$self->app->log->debug( "series #-> " . Dumper( $series->{values} ) );
+				my @series_values = $series->{values};
+				my $series_count  = $#{ $series_values[0] };
+				$self->app->log->debug( "series_count #-> " . $series_count );
+
+				#print "series_values #-> (" . Dumper(@series_values) . ")\n";
+				$result->{series}{count} = $series_count;
+
+				#$self->app->log->debug( "series_values #-> " . Dumper($series_values) );
 
 				#$result->{$parent_node}{summary}              = $summary;
 				return $self->success($result);
