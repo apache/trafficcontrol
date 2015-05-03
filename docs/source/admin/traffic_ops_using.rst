@@ -309,7 +309,9 @@ The fields in the Delivery Service view are:
 +--------------------------------------------------+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
 | Geo Miss Default Longitude                       | Default Longitude for this delivery service. When client localization fails for bot Coverage Zone and Geo Lookup, this the client will be routed as if it was at this long.                                         |
 +--------------------------------------------------+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-| Request Header Rewrite Rules                     | Header Rewrite rules for this delivery service. See :ref:`rl-header-rewrite`.                                                                                                                                       |
+| Edge Header Rewrite Rules                        | Header Rewrite rules to apply for this delivery service at the EDGE tier. See :ref:`rl-header-rewrite`.                                                                                                             |
++--------------------------------------------------+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| Mid Header Rewrite Rules                         | Header Rewrite rules to apply for this delivery service at the MID tier. See :ref:`rl-header-rewrite`.                                                                                                              |
 +--------------------------------------------------+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
 | Long Description                                 | Long description for this delivery service. TO be consumed from the APIs by downstream tools (Portal).                                                                                                              |
 +--------------------------------------------------+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
@@ -379,7 +381,19 @@ One of the most important settings when creating the delivery service is the sel
 
 Header Rewrite Options and DSCP
 +++++++++++++++++++++++++++++++
-To 
+Most header manipulation and per-delivery service configuration overrides are done using the `ATS Header Rewrite Plugin <https://docs.trafficserver.apache.org/en/latest/reference/plugins/header_rewrite.en.html>`_. Traffic Control allows you to enter header rewrite rules to be applied at the edge and at the mid level. The syntax used in Traffic Ops is the same as the one described in the ATS documentation, except for some special strings that will get replaced:
+
++-------------------+--------------------------+
+| Traffic Ops Entry |    Gets Replaced with    |
++===================+==========================+
+| __RETURN__        | A newline                |
++-------------------+--------------------------+
+| __CACHE_IPV4__    | The cache's IPv4 address |
++-------------------+--------------------------+
+
+The deliveryservice screen also allows you to set the DSCP value of traffic sent to the client. This setting also results in a header_rewrite rule to be generated and applied to at the edge.
+
+.. Note:: The DSCP setting in the UI is *only* for setting traffic towards the client, and gets applied *after* the initial TCP handshake is complete, and the HTTP request is received (before that the cache can't determine what deliveryservice this request is for, and what DSCP to apply), so the DSCP feature can not be used for security settings - the TCP SYN-ACK is not going to be DSCP marked.
 
 
 .. index::

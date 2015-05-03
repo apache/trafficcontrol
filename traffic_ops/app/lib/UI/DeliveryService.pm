@@ -211,6 +211,7 @@ sub read {
 				"global_max_mbps"          => $row->global_max_mbps,
 				"global_max_tps"           => $row->global_max_tps,
 				"edge_header_rewrite"      => $row->edge_header_rewrite,
+				"mid_header_rewrite"       => $row->mid_header_rewrite,
 				"long_desc"                => $row->long_desc,
 				"long_desc_1"              => $row->long_desc_1,
 				"long_desc_2"              => $row->long_desc_2,
@@ -421,9 +422,13 @@ sub header_rewrite {
 	my $ds_profile = shift;
 	my $ds_name    = shift;
 	my $hdr_rw     = shift;
+	my $tier       = shift;
 
 	if ( defined($hdr_rw) && $hdr_rw ne "" ) {
 		my $fname = "hdr_rw_" . $ds_name . ".config";
+		if ( $tier eq "mid" ) {
+			$fname = "hdr_rw_mid_" . $ds_name . ".config";
+		}
 		my $ats_cfg_loc =
 			$self->db->resultset('Parameter')->search( { -and => [ name => 'location', config_file => 'remap.config' ] } )->get_column('value')->single();
 		$ats_cfg_loc =~ s/\/$//;
@@ -440,11 +445,31 @@ sub header_rewrite {
 			$insert->insert();
 			$param_id = $insert->id;
 		}
+		my $cdn_name = undef;
 		my @servers = $self->db->resultset('DeliveryserviceServer')->search( { deliveryservice => $ds_profile } )->get_column('server')->all();
+		if ( $tier eq "mid" ) {
+			my $mtype_id = &type_id( $self, 'MID' );
+			my $param =
+				$self->db->resultset('ProfileParameter')
+				->search( { -and => [ 'parameter.name' => 'CDN_name', 'parameter.name' => 'CDN_name', 'me.profile' => $ds_profile ] },
+				{ prefetch => [ 'parameter', 'profile' ] } )->single();
+			$cdn_name = $param->parameter->value;
+			@servers = $self->db->resultset('Server')->search( { type => $mtype_id } )->get_column('id')->all();
+		}
+		print join( ":", @servers ) . "\n";
 		my @profiles = $self->db->resultset('Server')->search( { id => { -in => \@servers } } )->get_column('profile')->all();
 		foreach my $profile_id (@profiles) {
 			my $link = $self->db->resultset('ProfileParameter')->search( { profile => $profile_id, parameter => $param_id } )->single();
 			if ( !defined($link) ) {
+				if ($cdn_name) {
+					my $p_cdn_param =
+						$self->db->resultset('ProfileParameter')
+						->search( { -and => [ 'parameter.name' => 'CDN_name', 'parameter.name' => 'CDN_name', 'me.profile' => $profile_id ] },
+						{ prefetch => [ 'parameter', 'profile' ] } )->single();
+					if ($p_cdn_param->parameter->value ne $cdn_name) {
+						next;
+					}
+				}
 				my $insert = $self->db->resultset('ProfileParameter')->create(
 					{
 						profile   => $profile_id,
@@ -455,15 +480,19 @@ sub header_rewrite {
 		}
 	}
 	else {
-		&delete_header_rewrite( $self, $ds_name );    # don't change it to $self->delete_header_rewrite(), calling from other pm is wonky
+		&delete_header_rewrite( $self, $ds_name, $tier );    # don't change it to $self->delete_header_rewrite(), calling from other pm is wonky
 	}
 }
 
 sub delete_header_rewrite {
 	my $self    = shift;
 	my $ds_name = shift;
+	my $tier    = shift;
 
 	my $fname = "hdr_rw_" . $ds_name . ".config";
+	if ( $tier eq "mid" ) {
+		$fname = "hdr_rw_mid_" . $ds_name . ".config";
+	}
 
 	my $param_id = $self->db->resultset('Parameter')->search( { -and => [ name => 'location', config_file => $fname ] } )->get_column('id')->single();
 	if ( defined($param_id) ) {
@@ -515,6 +544,7 @@ sub update {
 			ipv6_routing_enabled     => $self->param('ds.ipv6_routing_enabled'),
 			background_fetch_enabled => $self->param('ds.background_fetch_enabled'),
 			edge_header_rewrite      => $self->param('ds.edge_header_rewrite') eq "" ? undef : $self->param('ds.edge_header_rewrite'),
+			mid_header_rewrite       => $self->param('ds.mid_header_rewrite') eq "" ? undef : $self->param('ds.mid_header_rewrite'),
 			origin_shield            => $self->param('ds.origin_shield') eq "" ? undef : $self->param('ds.origin_shield')
 		);
 
@@ -603,7 +633,8 @@ sub update {
 			}
 		}
 
-		$self->header_rewrite( $self->param('ds.profile'), $self->param('ds.xml_id'), $self->param('ds.edge_header_rewrite') );
+		$self->header_rewrite( $self->param('ds.profile'), $self->param('ds.xml_id'), $self->param('ds.edge_header_rewrite'), "edge" );
+		$self->header_rewrite( $self->param('ds.profile'), $self->param('ds.xml_id'), $self->param('ds.mid_header_rewrite'),  "mid" );
 
 		$self->flash( message => "Delivery service updated!" );
 		return $self->redirect_to( '/ds/' . $id );
@@ -620,14 +651,13 @@ sub update {
 		my $action;
 
 		$self->stash(
-			ds                  => $data,
-			fbox_layout         => 1,
-			server_count        => $server_count,
-			static_count        => $static_count,
-			regexp_set          => $regexp_set,
-			example_urls        => \@example_urls,
-			edge_header_rewrite => $data->edge_header_rewrite,
-			mode                => "edit",
+			ds           => $data,
+			fbox_layout  => 1,
+			server_count => $server_count,
+			static_count => $static_count,
+			regexp_set   => $regexp_set,
+			example_urls => \@example_urls,
+			mode         => "edit",
 		);
 		$self->render('delivery_service/edit');
 	}
@@ -698,6 +728,7 @@ sub create {
 				ipv6_routing_enabled     => $self->param('ds.ipv6_routing_enabled'),
 				background_fetch_enabled => $self->param('ds.background_fetch_enabled'),
 				edge_header_rewrite      => $self->param('ds.edge_header_rewrite') eq "" ? undef : $self->param('ds.edge_header_rewrite'),
+				mid_header_rewrite       => $self->param('ds.mid_header_rewrite') eq "" ? undef : $self->param('ds.mid_header_rewrite'),
 				origin_shield            => $self->param('ds.origin_shield') eq "" ? undef : $self->param('ds.origin_shield')
 			}
 		);
@@ -849,6 +880,7 @@ sub api_services {
 				"globalMaxTps"             => $row->global_max_tps,
 				"headerRewrite"            => $row->edge_header_rewrite,
 				"edgeHeaderRewrite"        => $row->edge_header_rewrite,
+				"midHeaderRewrite"         => $row->mid_header_rewrite,
 				"longDesc"                 => $row->long_desc,
 				"longDesc1"                => $row->long_desc_1,
 				"longDesc2"                => $row->long_desc_2,

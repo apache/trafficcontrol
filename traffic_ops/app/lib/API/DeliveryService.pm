@@ -114,6 +114,8 @@ sub get_data {
 				"globalMaxMbps"      => $row->global_max_mbps,
 				"globalMaxTps"       => $row->global_max_tps,
 				"headerRewrite"      => $row->edge_header_rewrite,
+				"edgeHeaderRewrite"  => $row->edge_header_rewrite,
+				"midHeaderRewrite"   => $row->mid_header_rewrite,
 				"longDesc"           => $row->long_desc,
 				"longDesc1"          => $row->long_desc_1,
 				"longDesc2"          => $row->long_desc_2,

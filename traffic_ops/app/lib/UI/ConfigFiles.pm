@@ -201,6 +201,7 @@ sub ds_data {
 		my $ds_xml_id                = $row->xml_id;
 		my $ds_domain                = $row->domain_name;
 		my $edge_header_rewrite      = $row->edge_header_rewrite;
+		my $mid_header_rewrite       = $row->mid_header_rewrite;
 		my $protocol                 = $row->protocol;
 		my $background_fetch_enabled = $row->background_fetch_enabled;
 		my $origin_shield            = $row->origin_shield;
@@ -259,6 +260,7 @@ sub ds_data {
 		$dsinfo->{dslist}->[$j]->{"qstring_ignore"}           = $qstring_ignore;
 		$dsinfo->{dslist}->[$j]->{"ds_xml_id"}                = $ds_xml_id;
 		$dsinfo->{dslist}->[$j]->{"edge_header_rewrite"}      = $edge_header_rewrite;
+		$dsinfo->{dslist}->[$j]->{"mid_header_rewrite"}       = $mid_header_rewrite;
 		$dsinfo->{dslist}->[$j]->{"background_fetch_enabled"} = $background_fetch_enabled;
 		$dsinfo->{dslist}->[$j]->{"origin_shield"}            = $origin_shield;
 
@@ -723,6 +725,17 @@ sub remap_dot_config {
 	if ( !defined($data) ) {
 		$data = $self->ds_data($server);
 	}
+
+	if ( $server->type->name eq 'MID' ) {
+		foreach my $remap ( @{ $data->{dslist} } ) {
+			if ( $remap->{mid_header_rewrite} ) {
+				$text .= "map " . $remap->{org} . "    " . $remap->{org} . " \@plugin=header_rewrite.so \@pparam=" . $remap->{mid_hdr_rw_file};
+			}
+		}
+		return $text;
+	}
+
+	# mids don't get here.
 	foreach my $remap ( @{ $data->{dslist} } ) {
 		foreach my $map_from ( keys %{ $remap->{remap_line} } ) {
 			my $map_to = $remap->{remap_line}->{$map_from};
@@ -1029,16 +1042,21 @@ sub header_rewrite_dot_config {
 	my $server    = $self->server_data($id);
 	my $text      = $self->header_comment( $server->host_name );
 	my $ds_xml_id = undef;
-	if ( $file =~ /^hdr_rw_(.*)\.config$/ ) {
+	if ( $file =~ /^hdr_rw_mid_(.*)\.config$/ ) {
 		$ds_xml_id = $1;
+		my $ds = $self->db->resultset('Deliveryservice')->search( { xml_id => $ds_xml_id }, { prefetch => [ 'type', 'profile' ] } )->single();
+		my $actions = $ds->mid_header_rewrite;
+		$text .= $actions . "\n";
 	}
-
-	my $ds = $self->db->resultset('Deliveryservice')->search( { xml_id => $ds_xml_id }, { prefetch => [ 'type', 'profile' ] } )->single();
-	my $actions = $ds->edge_header_rewrite;
-	$text .= $actions . "\n";
-	$text =~ s/\s*__RETURN__\s*/\n/g;
-	my $ipv4 = $server->ip_address;
-	$text =~ s/__CACHE_IPV4__/$ipv4/g;
+	elsif ( $file =~ /^hdr_rw_(.*)\.config$/ ) {
+		$ds_xml_id = $1;
+		my $ds = $self->db->resultset('Deliveryservice')->search( { xml_id => $ds_xml_id }, { prefetch => [ 'type', 'profile' ] } )->single();
+		my $actions = $ds->edge_header_rewrite;
+		$text .= $actions . "\n";
+		$text =~ s/\s*__RETURN__\s*/\n/g;
+		my $ipv4 = $server->ip_address;
+		$text =~ s/__CACHE_IPV4__/$ipv4/g;
+	}
 
 	return $text;
 }

@@ -327,14 +327,25 @@
 		<% }  %>
 	</div><br>
 	<div class="block">
-		<% unless (field('ds.header_rewrite')->valid) { %>
-			<span class="field-with-error"><%= field('ds.header_rewrite')->error %></span>
+		<% unless (field('ds.edge_header_rewrite')->valid) { %>
+			<span class="field-with-error"><%= field('ds.edge_header_rewrite')->error %></span>
 		<% } %>
-		%= label_for 'header_rewrite' => 'Request Header Rewrite Rules', class => 'label'
+		%= label_for 'edge_header_rewrite' => 'Edge Header Rewrite Rules', class => 'label'
 			<% if ($priv_level >= 20) { %>
-				%= field('ds.header_rewrite')->text(class => 'field', id => 'ds.header_rewrite', name => 'ds.header_rewrite');
+				%= field('ds.edge_header_rewrite')->text(class => 'field', id => 'ds.edge_header_rewrite', name => 'ds.edge_header_rewrite');
 			<% } else { %>
-				%= field('ds.header_rewrite')->text(class => 'field', readonly => 'readonly');
+				%= field('ds.edge_header_rewrite')->text(class => 'field', readonly => 'readonly');
+			<% }  %>
+	</div><br>
+	<div class="block">
+		<% unless (field('ds.mid_header_rewrite')->valid) { %>
+			<span class="field-with-error"><%= field('ds.mid_header_rewrite')->error %></span>
+		<% } %>
+		%= label_for 'mid_header_rewrite' => 'Mid Header Rewrite Rules', class => 'label'
+			<% if ($priv_level >= 20) { %>
+				%= field('ds.mid_header_rewrite')->text(class => 'field', id => 'ds.mid_header_rewrite', name => 'ds.mid_header_rewrite');
+			<% } else { %>
+				%= field('ds.mid_header_rewrite')->text(class => 'field', readonly => 'readonly');
 			<% }  %>
 	</div><br>
 	<div class="block">
