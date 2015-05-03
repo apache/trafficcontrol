@@ -113,7 +113,7 @@ sub get_data {
 				"profileDescription" => $row->profile->description,
 				"globalMaxMbps"      => $row->global_max_mbps,
 				"globalMaxTps"       => $row->global_max_tps,
-				"headerRewrite"      => $row->header_rewrite,
+				"headerRewrite"      => $row->edge_header_rewrite,
 				"longDesc"           => $row->long_desc,
 				"longDesc1"          => $row->long_desc_1,
 				"longDesc2"          => $row->long_desc_2,

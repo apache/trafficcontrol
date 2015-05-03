@@ -200,7 +200,7 @@ sub ds_data {
 		my $qstring_ignore           = $row->qstring_ignore;
 		my $ds_xml_id                = $row->xml_id;
 		my $ds_domain                = $row->domain_name;
-		my $header_rewrite           = $row->header_rewrite;
+		my $edge_header_rewrite      = $row->edge_header_rewrite;
 		my $protocol                 = $row->protocol;
 		my $background_fetch_enabled = $row->background_fetch_enabled;
 		my $origin_shield            = $row->origin_shield;
@@ -258,7 +258,7 @@ sub ds_data {
 		$dsinfo->{dslist}->[$j]->{"signed"}                   = $signed;
 		$dsinfo->{dslist}->[$j]->{"qstring_ignore"}           = $qstring_ignore;
 		$dsinfo->{dslist}->[$j]->{"ds_xml_id"}                = $ds_xml_id;
-		$dsinfo->{dslist}->[$j]->{"header_rewrite"}           = $header_rewrite;
+		$dsinfo->{dslist}->[$j]->{"edge_header_rewrite"}      = $edge_header_rewrite;
 		$dsinfo->{dslist}->[$j]->{"background_fetch_enabled"} = $background_fetch_enabled;
 		$dsinfo->{dslist}->[$j]->{"origin_shield"}            = $origin_shield;
 
@@ -757,7 +757,7 @@ sub remap_text {
 	else {
 		$text .= "map	" . $map_from . "     " . $map_to . " \@plugin=header_rewrite.so \@pparam=dscp/set_dscp_" . $dscp . ".config";
 	}
-	if ( defined( $remap->{header_rewrite} ) ) {
+	if ( defined( $remap->{edge_header_rewrite} ) ) {
 		$text .= " \@plugin=header_rewrite.so \@pparam=" . $remap->{hdr_rw_file};
 	}
 	if ( $remap->{signed} == 1 ) {
@@ -1034,7 +1034,7 @@ sub header_rewrite_dot_config {
 	}
 
 	my $ds = $self->db->resultset('Deliveryservice')->search( { xml_id => $ds_xml_id }, { prefetch => [ 'type', 'profile' ] } )->single();
-	my $actions = $ds->header_rewrite;
+	my $actions = $ds->edge_header_rewrite;
 	$text .= $actions . "\n";
 	$text =~ s/\s*__RETURN__\s*/\n/g;
 	my $ipv4 = $server->ip_address;

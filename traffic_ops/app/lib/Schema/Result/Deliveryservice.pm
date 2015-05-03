@@ -1,19 +1,4 @@
 use utf8;
-#
-# Copyright 2015 Comcast Cable Communications Management, LLC
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
-#
 package Schema::Result::Deliveryservice;
 
 # Created by DBIx::Class::Schema::Loader
@@ -188,6 +173,7 @@ __PACKAGE__->table("deliveryservice");
 =head2 protocol
 
   data_type: 'tinyint'
+  default_value: 0
   is_nullable: 1
 
 =head2 ssl_key_version
@@ -207,7 +193,19 @@ __PACKAGE__->table("deliveryservice");
   default_value: 0
   is_nullable: 1
 
-=head2 header_rewrite
+=head2 edge_header_rewrite
+
+  data_type: 'varchar'
+  is_nullable: 1
+  size: 2048
+
+=head2 origin_shield
+
+  data_type: 'varchar'
+  is_nullable: 1
+  size: 1024
+
+=head2 mid_header_rewrite
 
   data_type: 'varchar'
   is_nullable: 1
@@ -274,17 +272,19 @@ __PACKAGE__->add_columns(
     is_nullable => 1,
   },
   "protocol",
-  { data_type => "tinyint", is_nullable => 1 },
+  { data_type => "tinyint", default_value => 0, is_nullable => 1 },
   "ssl_key_version",
   { data_type => "integer", default_value => 0, is_nullable => 1 },
   "ipv6_routing_enabled",
   { data_type => "tinyint", is_nullable => 1 },
   "background_fetch_enabled",
   { data_type => "tinyint", default_value => 0, is_nullable => 1 },
-  "header_rewrite",
+  "edge_header_rewrite",
   { data_type => "varchar", is_nullable => 1, size => 2048 },
   "origin_shield",
   { data_type => "varchar", is_nullable => 1, size => 1024 },
+  "mid_header_rewrite",
+  { data_type => "varchar", is_nullable => 1, size => 2048 },
 );
 
 =head1 PRIMARY KEY
@@ -435,8 +435,8 @@ __PACKAGE__->belongs_to(
 );
 
 
-# Created by DBIx::Class::Schema::Loader v0.07042 @ 2015-03-16 10:09:28
-# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:IBSmOcqGjAGJvhKJqOovug
+# Created by DBIx::Class::Schema::Loader v0.07042 @ 2015-05-03 07:49:51
+# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:khvap1R+AVenEd4e67ielw
 
 # You can replace this text with custom code or comments, and it will be preserved on regeneration
 1;

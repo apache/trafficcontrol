@@ -53,24 +53,24 @@ sub edit {
 }
 
 sub get_example_urls {
-	my $self        = shift;
-	my $id          = shift;
-	my $regexp_set  = shift;
-	my $data        = shift;
-	my $cdn_domain  = shift;
-	my $protocol 	= shift;
+	my $self       = shift;
+	my $id         = shift;
+	my $regexp_set = shift;
+	my $data       = shift;
+	my $cdn_domain = shift;
+	my $protocol   = shift;
 	my $scheme;
 	my $scheme2;
 	my $url;
-	
-	if ($protocol eq '0') {
+
+	if ( $protocol eq '0' ) {
 		$scheme = 'http';
 	}
-	elsif ($protocol eq '1') {
+	elsif ( $protocol eq '1' ) {
 		$scheme = 'https';
 	}
-	elsif ($protocol eq '2') {
-		$scheme = 'http';
+	elsif ( $protocol eq '2' ) {
+		$scheme  = 'http';
 		$scheme2 = 'https';
 	}
 	else {
@@ -137,7 +137,7 @@ sub get_example_urls {
 				}
 			}
 		}
-	}	
+	}
 	return @example_urls;
 }
 
@@ -210,7 +210,7 @@ sub read {
 				"profile_description"      => $row->profile->description,
 				"global_max_mbps"          => $row->global_max_mbps,
 				"global_max_tps"           => $row->global_max_tps,
-				"header_rewrite"           => $row->header_rewrite,
+				"edge_header_rewrite"      => $row->edge_header_rewrite,
 				"long_desc"                => $row->long_desc,
 				"long_desc_1"              => $row->long_desc_1,
 				"long_desc_2"              => $row->long_desc_2,
@@ -391,11 +391,11 @@ sub check_deliveryservice_input {
 	}
 
 	#TODO:  Fix this to work the right way.
-	# if ( defined( $self->param('ds.header_rewrite') ) ) {
-	# 	if ( $self->param('ds.header_rewrite') ne "" && $self->param('ds.header_rewrite') !~ /^(?:add|rm|set)-header .* \[L\]$/ ) {
-	# 		$self->field('ds.header_rewrite')
+	# if ( defined( $self->param('ds.edge_header_rewrite') ) ) {
+	# 	if ( $self->param('ds.edge_header_rewrite') ne "" && $self->param('ds.edge_header_rewrite') !~ /^(?:add|rm|set)-header .* \[L\]$/ ) {
+	# 		$self->field('ds.edge_header_rewrite')
 	# 			->is_equal( "",
-	# 			"header_rewrite is a single line that needs to start with [add|rm|set]-header, and end with [L] - see header_rewrite docs." );
+	# 			"edge_header_rewrite is a single line that needs to start with [add|rm|set]-header, and end with [L] - see header rewrite docs." );
 	# 	}
 	# }
 	# if ( defined( $self->param('ds.ipv6_routing_enabled') ) ) {
@@ -488,6 +488,7 @@ sub update {
 		return $self->redirect_to($referer);
 	}
 	if ( $self->check_deliveryservice_input() ) {
+
 		#print "global_max_mbps = " . $self->param('ds.global_max_mbps') . "\n";
 		# if error check passes
 		my %hash = (
@@ -510,10 +511,10 @@ sub update {
 			info_url                 => $self->param('ds.info_url'),
 			check_path               => $self->param('ds.check_path'),
 			active                   => $self->param('ds.active'),
-			protocol              	 => $self->param('ds.protocol'),
+			protocol                 => $self->param('ds.protocol'),
 			ipv6_routing_enabled     => $self->param('ds.ipv6_routing_enabled'),
 			background_fetch_enabled => $self->param('ds.background_fetch_enabled'),
-			header_rewrite           => $self->param('ds.header_rewrite') eq "" ? undef : $self->param('ds.header_rewrite'),
+			edge_header_rewrite      => $self->param('ds.edge_header_rewrite') eq "" ? undef : $self->param('ds.edge_header_rewrite'),
 			origin_shield            => $self->param('ds.origin_shield') eq "" ? undef : $self->param('ds.origin_shield')
 		);
 
@@ -602,7 +603,7 @@ sub update {
 			}
 		}
 
-		$self->header_rewrite( $self->param('ds.profile'), $self->param('ds.xml_id'), $self->param('ds.header_rewrite') );
+		$self->header_rewrite( $self->param('ds.profile'), $self->param('ds.xml_id'), $self->param('ds.edge_header_rewrite') );
 
 		$self->flash( message => "Delivery service updated!" );
 		return $self->redirect_to( '/ds/' . $id );
@@ -618,18 +619,15 @@ sub update {
 		my @example_urls = &get_example_urls( $self, $id, $regexp_set, $data, $cdn_domain, $data->protocol );
 		my $action;
 
-		if ( $data->header_rewrite ) {
-			$action = $data->header_rewrite->action;
-		}
 		$self->stash(
-			ds           => $data,
-			fbox_layout  => 1,
-			server_count => $server_count,
-			static_count => $static_count,
-			regexp_set   => $regexp_set,
-			example_urls => \@example_urls,
-			header_rewrite => { action => $action },
-			mode           => "edit",
+			ds                  => $data,
+			fbox_layout         => 1,
+			server_count        => $server_count,
+			static_count        => $static_count,
+			regexp_set          => $regexp_set,
+			example_urls        => \@example_urls,
+			edge_header_rewrite => $data->edge_header_rewrite,
+			mode                => "edit",
 		);
 		$self->render('delivery_service/edit');
 	}
@@ -696,10 +694,10 @@ sub create {
 				info_url                 => $self->param('ds.info_url'),
 				check_path               => $self->param('ds.check_path'),
 				active                   => $self->param('ds.active'),
-				protocol              	 => $self->param('ds.protocol'),
+				protocol                 => $self->param('ds.protocol'),
 				ipv6_routing_enabled     => $self->param('ds.ipv6_routing_enabled'),
 				background_fetch_enabled => $self->param('ds.background_fetch_enabled'),
-				header_rewrite           => $self->param('ds.header_rewrite') eq "" ? undef : $self->param('ds.header_rewrite'),
+				edge_header_rewrite      => $self->param('ds.edge_header_rewrite') eq "" ? undef : $self->param('ds.edge_header_rewrite'),
 				origin_shield            => $self->param('ds.origin_shield') eq "" ? undef : $self->param('ds.origin_shield')
 			}
 		);
@@ -830,7 +828,6 @@ sub api_services {
 				}
 			);
 		}
-		my $hrw_val = defined( $row->header_rewrite ) ? { condition => $row->header_rewrite->hr_condition, action => $row->header_rewrite->action } : {};
 		push(
 			@data, {
 				"id"                       => $row->id,
@@ -850,7 +847,8 @@ sub api_services {
 				"profileDescription"       => $row->profile->description,
 				"globalMaxMbps"            => $self->hr_string_to_mbps( $row->global_max_mbps ),
 				"globalMaxTps"             => $row->global_max_tps,
-				"headerRewrite"            => $hrw_val,
+				"headerRewrite"            => $row->edge_header_rewrite,
+				"edgeHeaderRewrite"        => $row->edge_header_rewrite,
 				"longDesc"                 => $row->long_desc,
 				"longDesc1"                => $row->long_desc_1,
 				"longDesc2"                => $row->long_desc_2,
@@ -864,7 +862,6 @@ sub api_services {
 				"protocol"                 => \$row->protocol,
 				"ipv6_routing_enabled"     => \$row->ipv6_routing_enabled,
 				"background_fetch_enabled" => \$row->background_fetch_enabled,
-				"header_rewrite"           => $row->header_rewrite,
 			}
 		);
 	}
