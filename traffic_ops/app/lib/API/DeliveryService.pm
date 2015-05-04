@@ -116,6 +116,7 @@ sub get_data {
 				"headerRewrite"      => $row->edge_header_rewrite,
 				"edgeHeaderRewrite"  => $row->edge_header_rewrite,
 				"midHeaderRewrite"   => $row->mid_header_rewrite,
+				"regexRemap"         => $row->regex_remap,
 				"longDesc"           => $row->long_desc,
 				"longDesc1"          => $row->long_desc_1,
 				"longDesc2"          => $row->long_desc_2,

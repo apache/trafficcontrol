@@ -56,7 +56,7 @@ function addProfileParameter() {
     $("#addProfileDiv").append("<button id='addProfileCancel' onclick='cancelProfileParameter()'>Cancel</button>");
     $.get("/availableprofile/<%= $param_data->id %>", function(data){
         $.each(data, function(idx, val) {
-            $("#addProfSelect").append("<option value=" + data[idx].id + ">" + data[idx].description + "</option>");
+            $("#addProfSelect").append("<option value=" + data[idx].id + ">" + data[idx].name + " (" + data[idx].description + ")</option>");
         });
     }, "json");
 }

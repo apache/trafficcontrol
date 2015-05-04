@@ -212,6 +212,7 @@ sub read {
 				"global_max_tps"           => $row->global_max_tps,
 				"edge_header_rewrite"      => $row->edge_header_rewrite,
 				"mid_header_rewrite"       => $row->mid_header_rewrite,
+				"regex_remap"              => $row->regex_remap,
 				"long_desc"                => $row->long_desc,
 				"long_desc_1"              => $row->long_desc_1,
 				"long_desc_2"              => $row->long_desc_2,
@@ -260,6 +261,9 @@ sub check_deliveryservice_input {
 		$self->field('ds.xml_id')->is_equal( "", "Delivery service xml_id cannot contain whitespace." );
 	}
 
+	if ($self->param('ds.qstring_ignore') == 2 && $self->param('ds.regex_remap') ne "") {
+		$self->field('ds.regex_remap')->is_equal("", "Regex Remap can not be used when qstring_ignore is 2");
+	}
 	my $profile_id = $self->param('ds.profile');
 	my $cdn_domain = $self->db->resultset('Parameter')->search(
 		{
@@ -456,7 +460,6 @@ sub header_rewrite {
 			$cdn_name = $param->parameter->value;
 			@servers = $self->db->resultset('Server')->search( { type => $mtype_id } )->get_column('id')->all();
 		}
-		print join( ":", @servers ) . "\n";
 		my @profiles = $self->db->resultset('Server')->search( { id => { -in => \@servers } } )->get_column('profile')->all();
 		foreach my $profile_id (@profiles) {
 			my $link = $self->db->resultset('ProfileParameter')->search( { profile => $profile_id, parameter => $param_id } )->single();
@@ -466,7 +469,7 @@ sub header_rewrite {
 						$self->db->resultset('ProfileParameter')
 						->search( { -and => [ 'parameter.name' => 'CDN_name', 'parameter.name' => 'CDN_name', 'me.profile' => $profile_id ] },
 						{ prefetch => [ 'parameter', 'profile' ] } )->single();
-					if ($p_cdn_param->parameter->value ne $cdn_name) {
+					if ( $p_cdn_param->parameter->value ne $cdn_name ) {
 						next;
 					}
 				}
@@ -493,6 +496,67 @@ sub delete_header_rewrite {
 	if ( $tier eq "mid" ) {
 		$fname = "hdr_rw_mid_" . $ds_name . ".config";
 	}
+
+	my $param_id = $self->db->resultset('Parameter')->search( { -and => [ name => 'location', config_file => $fname ] } )->get_column('id')->single();
+	if ( defined($param_id) ) {
+		$self->app->log->info( 'deleting location parameter for ' . $fname );
+		my $delete = $self->db->resultset('Parameter')->search( { id => $param_id } );
+		$delete->delete();
+	}
+
+	# ProfileParameter will cascade.
+
+}
+
+
+sub regex_remap {
+	my $self       = shift;
+	my $ds_profile = shift;
+	my $ds_name    = shift;
+	my $regex_remap     = shift;
+
+	if ( defined($regex_remap) && $regex_remap ne "" ) {
+		my $fname = "regex_remap_" . $ds_name . ".config";
+		my $ats_cfg_loc =
+			$self->db->resultset('Parameter')->search( { -and => [ name => 'location', config_file => 'remap.config' ] } )->get_column('value')->single();
+		$ats_cfg_loc =~ s/\/$//;
+
+		my $param_id = $self->db->resultset('Parameter')->search( { -and => [ name => 'location', config_file => $fname ] } )->get_column('id')->single();
+		if ( !defined($param_id) ) {
+			my $insert = $self->db->resultset('Parameter')->create(
+				{
+					config_file => $fname,
+					name        => 'location',
+					value       => $ats_cfg_loc
+				}
+			);
+			$insert->insert();
+			$param_id = $insert->id;
+		}
+		my @servers = $self->db->resultset('DeliveryserviceServer')->search( { deliveryservice => $ds_profile } )->get_column('server')->all();
+		my @profiles = $self->db->resultset('Server')->search( { id => { -in => \@servers } } )->get_column('profile')->all();
+		foreach my $profile_id (@profiles) {
+			my $link = $self->db->resultset('ProfileParameter')->search( { profile => $profile_id, parameter => $param_id } )->single();
+			if ( !defined($link) ) {
+				my $insert = $self->db->resultset('ProfileParameter')->create(
+					{
+						profile   => $profile_id,
+						parameter => $param_id
+					}
+				);
+			}
+		}
+	}
+	else {
+		&delete_regex_remap( $self, $ds_name );    # don't change it to $self->delete_header_rewrite(), calling from other pm is wonky
+	}
+}
+
+sub delete_regex_remap {
+	my $self    = shift;
+	my $ds_name = shift;
+
+	my $fname = "regex_remap_" . $ds_name . ".config";
 
 	my $param_id = $self->db->resultset('Parameter')->search( { -and => [ name => 'location', config_file => $fname ] } )->get_column('id')->single();
 	if ( defined($param_id) ) {
@@ -545,6 +609,7 @@ sub update {
 			background_fetch_enabled => $self->param('ds.background_fetch_enabled'),
 			edge_header_rewrite      => $self->param('ds.edge_header_rewrite') eq "" ? undef : $self->param('ds.edge_header_rewrite'),
 			mid_header_rewrite       => $self->param('ds.mid_header_rewrite') eq "" ? undef : $self->param('ds.mid_header_rewrite'),
+			regex_remap              => $self->param('ds.regex_remap') eq "" ? undef : $self->param('ds.regex_remap'),
 			origin_shield            => $self->param('ds.origin_shield') eq "" ? undef : $self->param('ds.origin_shield')
 		);
 
@@ -635,6 +700,7 @@ sub update {
 
 		$self->header_rewrite( $self->param('ds.profile'), $self->param('ds.xml_id'), $self->param('ds.edge_header_rewrite'), "edge" );
 		$self->header_rewrite( $self->param('ds.profile'), $self->param('ds.xml_id'), $self->param('ds.mid_header_rewrite'),  "mid" );
+		$self->regex_remap( $self->param('ds.profile'), $self->param('ds.xml_id'), $self->param('ds.regex_remap') );
 
 		$self->flash( message => "Delivery service updated!" );
 		return $self->redirect_to( '/ds/' . $id );
@@ -720,7 +786,7 @@ sub create {
 				long_desc                => $self->param('ds.long_desc'),
 				long_desc_1              => $self->param('ds.long_desc_1'),
 				long_desc_2              => $self->param('ds.long_desc_2'),
-				max_dns_answers          => $self->param('ds.max_dns_answers'),
+				max_dns_answers          => $self->param('ds.max_dns_answers') eq "" ? 0 : $self->param('ds.max_dns_answers'),
 				info_url                 => $self->param('ds.info_url'),
 				check_path               => $self->param('ds.check_path'),
 				active                   => $self->param('ds.active'),
@@ -729,6 +795,7 @@ sub create {
 				background_fetch_enabled => $self->param('ds.background_fetch_enabled'),
 				edge_header_rewrite      => $self->param('ds.edge_header_rewrite') eq "" ? undef : $self->param('ds.edge_header_rewrite'),
 				mid_header_rewrite       => $self->param('ds.mid_header_rewrite') eq "" ? undef : $self->param('ds.mid_header_rewrite'),
+				regex_remap              => $self->param('ds.regex_remap') eq "" ? undef : $self->param('ds.regex_remap'),
 				origin_shield            => $self->param('ds.origin_shield') eq "" ? undef : $self->param('ds.origin_shield')
 			}
 		);
@@ -736,7 +803,6 @@ sub create {
 		$new_id = $insert->id;
 		&log( $self, "Create deliveryservice with xml_id:" . $self->param('ds.xml_id'), "UICHANGE" );
 
-		# }
 		if ( $new_id == -1 ) {    # there was an error the flash will already be set,
 			my $referer = $self->req->headers->header('referer');
 			my $qstring = "?";
@@ -769,6 +835,7 @@ sub create {
 			}
 		}
 
+
 		foreach my $re ( @{$regexp_set} ) {
 			if ( !defined( $re->{order} ) ) { next; }    # 0 gets iterated over if the form sends just a _1
 			my $type = $self->db->resultset('Type')->search( { name => $re->{type} } )->get_column('id')->single();
@@ -792,6 +859,11 @@ sub create {
 			);
 			$de_re_insert->insert();
 		}
+
+		$self->header_rewrite( $self->param('ds.profile'), $self->param('ds.xml_id'), $self->param('ds.edge_header_rewrite'), "edge" );
+		$self->header_rewrite( $self->param('ds.profile'), $self->param('ds.xml_id'), $self->param('ds.mid_header_rewrite'),  "mid" );
+		$self->regex_remap( $self->param('ds.profile'), $self->param('ds.xml_id'), $self->param('ds.regex_remap') );
+
 		$self->flash( message => "Success!" );
 		return $self->redirect_to( '/ds/' . $new_id );
 	}
@@ -806,7 +878,7 @@ sub create {
 			selected_profile => $selected_profile,
 			mode             => "add",
 		);
-		print "no bueno\n";
+		# print "no bueno\n";
 		$self->render('delivery_service/add');
 	}
 }
@@ -881,6 +953,7 @@ sub api_services {
 				"headerRewrite"            => $row->edge_header_rewrite,
 				"edgeHeaderRewrite"        => $row->edge_header_rewrite,
 				"midHeaderRewrite"         => $row->mid_header_rewrite,
+				"regex_remap"              => $row->regex_remap,
 				"longDesc"                 => $row->long_desc,
 				"longDesc1"                => $row->long_desc_1,
 				"longDesc2"                => $row->long_desc_2,

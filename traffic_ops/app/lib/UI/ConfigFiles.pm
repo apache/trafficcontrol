@@ -202,6 +202,7 @@ sub ds_data {
 		my $ds_domain                = $row->domain_name;
 		my $edge_header_rewrite      = $row->edge_header_rewrite;
 		my $mid_header_rewrite       = $row->mid_header_rewrite;
+		my $regex_remap              = $row->regex_remap;
 		my $protocol                 = $row->protocol;
 		my $background_fetch_enabled = $row->background_fetch_enabled;
 		my $origin_shield            = $row->origin_shield;
@@ -261,17 +262,31 @@ sub ds_data {
 		$dsinfo->{dslist}->[$j]->{"ds_xml_id"}                = $ds_xml_id;
 		$dsinfo->{dslist}->[$j]->{"edge_header_rewrite"}      = $edge_header_rewrite;
 		$dsinfo->{dslist}->[$j]->{"mid_header_rewrite"}       = $mid_header_rewrite;
+		$dsinfo->{dslist}->[$j]->{"regex_remap"}              = $regex_remap;
 		$dsinfo->{dslist}->[$j]->{"background_fetch_enabled"} = $background_fetch_enabled;
 		$dsinfo->{dslist}->[$j]->{"origin_shield"}            = $origin_shield;
 
-		my $fname = "hdr_rw_" . $ds_xml_id . ".config";
-		my $path =
-			$self->db->resultset('Parameter')->search( { -and => [ name => 'location', config_file => $fname ] } )->get_column('value')->single();
-		if ( defined($path) ) {
-			$dsinfo->{dslist}->[$j]->{"hdr_rw_file"} = $path . "/" . $fname;
+		if ( defined($edge_header_rewrite) ) {
+			my $fname = "hdr_rw_" . $ds_xml_id . ".config";
+			my $path =
+				$self->db->resultset('Parameter')->search( { -and => [ name => 'location', config_file => $fname ] } )->get_column('value')->single();
+			if ( defined($path) ) {
+				$dsinfo->{dslist}->[$j]->{"hdr_rw_file"} = $path . "/" . $fname;
+			}
+			else {
+				$dsinfo->{dslist}->[$j]->{"hdr_rw_file"} = $fname;
+			}
 		}
-		else {
-			$dsinfo->{dslist}->[$j]->{"hdr_rw_file"} = $fname;
+		if ( defined($mid_header_rewrite) ) {
+			my $fname = "hdr_rw_mid_" . $ds_xml_id . ".config";
+			my $path =
+				$self->db->resultset('Parameter')->search( { -and => [ name => 'location', config_file => $fname ] } )->get_column('value')->single();
+			if ( defined($path) ) {
+				$dsinfo->{dslist}->[$j]->{"mid_hdr_rw_file"} = $path . "/" . $fname;
+			}
+			else {
+				$dsinfo->{dslist}->[$j]->{"mid_hdr_rw_file"} = $fname;
+			}
 		}
 
 		$j++;
@@ -783,13 +798,13 @@ sub remap_text {
 			{ prefetch => [ { parameter => undef }, { profile => undef } ] } )->single();
 		my $dqs_file = $dqs_param->parameter->value . "/drop_qstring.config";
 
-		#get regex_remap param value
+		# #get regex_remap param value
 		my $param_rs =
 			$self->db->resultset('ProfileParameter')
 			->search( { -and => [ profile => $server->profile->id, 'parameter.config_file' => 'remap.config', 'parameter.name' => 'regex_remap' ] },
 			{ prefetch => [ 'parameter', 'profile' ] } )->single();
 
-		#use regex_remap if its there, if not hardcode.
+		# #use regex_remap if its there, if not hardcode.
 		if ($param_rs) {
 			my $regex_remap = $param_rs->parameter->value;
 			$text .= " \@plugin=$regex_remap \@pparam=" . $dqs_file;
@@ -797,6 +812,9 @@ sub remap_text {
 		else {
 			$text .= " \@plugin=regex_remap.so \@pparam=" . $dqs_file;
 		}
+	}
+	if (defined($remap->{regex_remap}) && $remap->{regex_remap} ne "") {
+		$text .= " \@plugin=regex_remap.so \@pparam=regex_remap_" . $remap->{ds_xml_id} . ".config";	
 	}
 	if ( $remap->{background_fetch_enabled} == 1 ) {
 		$text .= " \@plugin=background_fetch.so \@pparam=bg_fetch.config";

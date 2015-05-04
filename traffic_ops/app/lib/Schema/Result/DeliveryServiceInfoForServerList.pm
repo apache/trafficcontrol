@@ -52,7 +52,8 @@ SELECT DISTINCT
     dstype.name AS ds_type,
     parameter.value AS domain_name,
     deliveryservice_regex.set_number AS set_number,
-    edge_header_rewrite as edge_header_rewrite,
+    deliveryservice.edge_header_rewrite as edge_header_rewrite,
+    deliveryservice.regex_remap as regex_remap,
     mid_header_rewrite as mid_header_rewrite,
     deliveryservice.protocol as protocol
 FROM
@@ -84,6 +85,7 @@ __PACKAGE__->add_columns(
     "domain_name",              { data_type => "varchar", is_nullable => 0, size => 45 },
     "edge_header_rewrite",      { data_type => "varchar", is_nullable => 0, size => 1024 },
     "mid_header_rewrite",       { data_type => "varchar", is_nullable => 0, size => 1024 },
+    "regex_remap",              { data_type => "varchar", is_nullable => 0, size => 1024 },
     "protocol",                 { data_type => "tinyint", is_nullable => 0, size => 4 },
     "background_fetch_enabled", { data_type => "tinyint", is_nullable => 0, size => 4 },
     "origin_shield",            { data_type => "varchar", is_nullable => 0, size => 1024 },

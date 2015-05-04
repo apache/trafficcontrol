@@ -211,6 +211,12 @@ __PACKAGE__->table("deliveryservice");
   is_nullable: 1
   size: 2048
 
+=head2 regex_remap
+
+  data_type: 'varchar'
+  is_nullable: 1
+  size: 1024
+
 =cut
 
 __PACKAGE__->add_columns(
@@ -285,6 +291,8 @@ __PACKAGE__->add_columns(
   { data_type => "varchar", is_nullable => 1, size => 1024 },
   "mid_header_rewrite",
   { data_type => "varchar", is_nullable => 1, size => 2048 },
+  "regex_remap",
+  { data_type => "varchar", is_nullable => 1, size => 1024 },
 );
 
 =head1 PRIMARY KEY
@@ -435,8 +443,8 @@ __PACKAGE__->belongs_to(
 );
 
 
-# Created by DBIx::Class::Schema::Loader v0.07042 @ 2015-05-03 07:49:51
-# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:khvap1R+AVenEd4e67ielw
+# Created by DBIx::Class::Schema::Loader v0.07042 @ 2015-05-03 13:10:10
+# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:7NXjEPfXash1csM8kmhnpg
 
 # You can replace this text with custom code or comments, and it will be preserved on regeneration
 1;
