@@ -177,22 +177,24 @@
 				%= field('ds.ipv6_routing_enabled')->text(class => 'field', value =>  'Yes', readonly => 'readonly');
 			<% } %>
 		<% } %>
-	</div>
-		<div class="block" id='background_fetch_enabled'>
-		<% unless (field('ds.background_fetch_enabled')->valid) { %>
-			<span class="field-with-error"><%= field('ds.background_fetch_enabled')->error %></span>
+	</div> <br>
+	<div class="block" id='range_request_handling'>
+		<% unless (field('ds.range_request_handling')->valid) { %>
+			<span class="field-with-error"><%= field('ds.range_request_handling')->error %></span>
 		<% } %>
-		%= label_for 'background_fetch_enabled' => 'Background fetch Enabled? (use sparingly!)', class => 'label'
+		%= label_for 'range_request_handling' => 'Range Request Handling', class => 'label'
 		<% if ($priv_level >= 20) { %>
-			%= field('ds.background_fetch_enabled')->select([ [No => 0], [Yes => 1]]);
+			%= field('ds.range_request_handling')->select([[ '0 - Don\'t cache' => 0], [ '1 - Use background_fetch plugin' => 1], ['2 - use cache_range_requests plugin' => 2]]);
 		<% } else { %>
-			<% if ($ds->background_fetch_enabled == 0) { %>
-				%= field('ds.background_fetch_enabled')->text(class => 'field', value =>  'No', readonly => 'readonly');
+			<% if ($ds->range_request_handling == 0) { %>
+				%= field('ds.range_request_handling')->text(class => 'field', value =>  '0 - Don\'t cache', readonly => 'readonly');
+			<% } elsif ($ds->range_request_handling == 1) { %>
+				%= field('ds.range_request_handling')->text(class => 'field', value =>  '1 - Use background_fetch plugin', readonly => 'readonly');
 			<% } else { %>
-				%= field('ds.background_fetch_enabled')->text(class => 'field', value =>  'Yes', readonly => 'readonly');
+				%= field('ds.range_request_handling')->text(class => 'field', value =>  '2 - use cache_range_requests plugin', readonly => 'readonly');
 			<% } %>
 		<% } %>
-	</div>
+	</div> <br>
 	<div class="block" id='dns_bypass_ip_row'>
 		<% unless (field('ds.dns_bypass_ip')->valid) { %>
 			<span class="field-with-error"><%= field('ds.dns_bypass_ip')->error %></span>

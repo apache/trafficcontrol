@@ -45,7 +45,7 @@ SELECT DISTINCT
     deliveryservice.signed AS signed,
     deliveryservice.qstring_ignore AS qstring_ignore,
     deliveryservice.org_server_fqdn as org_server_fqdn,
-    deliveryservice.background_fetch_enabled as background_fetch_enabled,
+    deliveryservice.range_request_handling as range_request_handling,
     deliveryservice.origin_shield as origin_shield,
     regex.pattern AS pattern,
     retype.name AS re_type,
@@ -87,7 +87,7 @@ __PACKAGE__->add_columns(
     "mid_header_rewrite",       { data_type => "varchar", is_nullable => 0, size => 1024 },
     "regex_remap",              { data_type => "varchar", is_nullable => 0, size => 1024 },
     "protocol",                 { data_type => "tinyint", is_nullable => 0, size => 4 },
-    "background_fetch_enabled", { data_type => "tinyint", is_nullable => 0, size => 4 },
+    "range_request_handling", { data_type => "tinyint", is_nullable => 0, size => 4 },
     "origin_shield",            { data_type => "varchar", is_nullable => 0, size => 1024 },
 );
 

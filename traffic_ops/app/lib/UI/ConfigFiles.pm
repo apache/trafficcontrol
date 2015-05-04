@@ -195,20 +195,20 @@ sub ds_data {
 
 	my $j = 0;
 	while ( my $row = $rs->next ) {
-		my $org_server               = $row->org_server_fqdn;
-		my $dscp                     = $row->dscp;
-		my $re_type                  = $row->re_type;
-		my $ds_type                  = $row->ds_type;
-		my $signed                   = $row->signed;
-		my $qstring_ignore           = $row->qstring_ignore;
-		my $ds_xml_id                = $row->xml_id;
-		my $ds_domain                = $row->domain_name;
-		my $edge_header_rewrite      = $row->edge_header_rewrite;
-		my $mid_header_rewrite       = $row->mid_header_rewrite;
-		my $regex_remap              = $row->regex_remap;
-		my $protocol                 = $row->protocol;
-		my $background_fetch_enabled = $row->background_fetch_enabled;
-		my $origin_shield            = $row->origin_shield;
+		my $org_server             = $row->org_server_fqdn;
+		my $dscp                   = $row->dscp;
+		my $re_type                = $row->re_type;
+		my $ds_type                = $row->ds_type;
+		my $signed                 = $row->signed;
+		my $qstring_ignore         = $row->qstring_ignore;
+		my $ds_xml_id              = $row->xml_id;
+		my $ds_domain              = $row->domain_name;
+		my $edge_header_rewrite    = $row->edge_header_rewrite;
+		my $mid_header_rewrite     = $row->mid_header_rewrite;
+		my $regex_remap            = $row->regex_remap;
+		my $protocol               = $row->protocol;
+		my $range_request_handling = $row->range_request_handling;
+		my $origin_shield          = $row->origin_shield;
 
 		if ( $re_type eq 'HOST_REGEXP' ) {
 			my $host_re = $row->pattern;
@@ -256,18 +256,18 @@ sub ds_data {
 				}
 			}
 		}
-		$dsinfo->{dslist}->[$j]->{"dscp"}                     = $dscp;
-		$dsinfo->{dslist}->[$j]->{"org"}                      = $org_server;
-		$dsinfo->{dslist}->[$j]->{"type"}                     = $ds_type;
-		$dsinfo->{dslist}->[$j]->{"domain"}                   = $ds_domain;
-		$dsinfo->{dslist}->[$j]->{"signed"}                   = $signed;
-		$dsinfo->{dslist}->[$j]->{"qstring_ignore"}           = $qstring_ignore;
-		$dsinfo->{dslist}->[$j]->{"ds_xml_id"}                = $ds_xml_id;
-		$dsinfo->{dslist}->[$j]->{"edge_header_rewrite"}      = $edge_header_rewrite;
-		$dsinfo->{dslist}->[$j]->{"mid_header_rewrite"}       = $mid_header_rewrite;
-		$dsinfo->{dslist}->[$j]->{"regex_remap"}              = $regex_remap;
-		$dsinfo->{dslist}->[$j]->{"background_fetch_enabled"} = $background_fetch_enabled;
-		$dsinfo->{dslist}->[$j]->{"origin_shield"}            = $origin_shield;
+		$dsinfo->{dslist}->[$j]->{"dscp"}                   = $dscp;
+		$dsinfo->{dslist}->[$j]->{"org"}                    = $org_server;
+		$dsinfo->{dslist}->[$j]->{"type"}                   = $ds_type;
+		$dsinfo->{dslist}->[$j]->{"domain"}                 = $ds_domain;
+		$dsinfo->{dslist}->[$j]->{"signed"}                 = $signed;
+		$dsinfo->{dslist}->[$j]->{"qstring_ignore"}         = $qstring_ignore;
+		$dsinfo->{dslist}->[$j]->{"ds_xml_id"}              = $ds_xml_id;
+		$dsinfo->{dslist}->[$j]->{"edge_header_rewrite"}    = $edge_header_rewrite;
+		$dsinfo->{dslist}->[$j]->{"mid_header_rewrite"}     = $mid_header_rewrite;
+		$dsinfo->{dslist}->[$j]->{"regex_remap"}            = $regex_remap;
+		$dsinfo->{dslist}->[$j]->{"range_request_handling"} = $range_request_handling;
+		$dsinfo->{dslist}->[$j]->{"origin_shield"}          = $origin_shield;
 
 		if ( defined($edge_header_rewrite) ) {
 			my $fname = "hdr_rw_" . $ds_xml_id . ".config";
@@ -821,8 +821,11 @@ sub remap_text {
 	if ( defined( $remap->{regex_remap} ) && $remap->{regex_remap} ne "" ) {
 		$text .= " \@plugin=regex_remap.so \@pparam=regex_remap_" . $remap->{ds_xml_id} . ".config";
 	}
-	if ( $remap->{background_fetch_enabled} == 1 ) {
+	if ( $remap->{range_request_handling} == 1 ) {
 		$text .= " \@plugin=background_fetch.so \@pparam=bg_fetch.config";
+	}
+	elsif ( $remap->{range_request_handling} == 2 ) {
+		$text .= " \@plugin=cache_range_requests.so ";
 	}
 	$text .= "\n";
 	return $text;

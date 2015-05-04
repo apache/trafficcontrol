@@ -194,38 +194,38 @@ sub read {
 		}
 		push(
 			@data, {
-				"xml_id"                   => $row->xml_id,
-				"dscp"                     => $row->dscp,
-				"signed"                   => \$row->signed,
-				"qstring_ignore"           => $row->qstring_ignore,
-				"geo_limit"                => $row->geo_limit,
-				"http_bypass_fqdn"         => $row->http_bypass_fqdn,
-				"dns_bypass_ip"            => $row->dns_bypass_ip,
-				"dns_bypass_ip6"           => $row->dns_bypass_ip6,
-				"dns_bypass_ttl"           => $row->dns_bypass_ttl,
-				"org_server_fqdn"          => $row->org_server_fqdn,
-				"ccr_dns_ttl"              => $row->ccr_dns_ttl,
-				"type"                     => $row->type->id,
-				"profile_name"             => $row->profile->name,
-				"profile_description"      => $row->profile->description,
-				"global_max_mbps"          => $row->global_max_mbps,
-				"global_max_tps"           => $row->global_max_tps,
-				"edge_header_rewrite"      => $row->edge_header_rewrite,
-				"mid_header_rewrite"       => $row->mid_header_rewrite,
-				"regex_remap"              => $row->regex_remap,
-				"long_desc"                => $row->long_desc,
-				"long_desc_1"              => $row->long_desc_1,
-				"long_desc_2"              => $row->long_desc_2,
-				"max_dns_answers"          => $row->max_dns_answers,
-				"info_url"                 => $row->info_url,
-				"miss_lat"                 => $row->miss_lat,
-				"miss_long"                => $row->miss_long,
-				"check_path"               => $row->check_path,
-				"matchlist"                => \@matchlist,
-				"active"                   => \$row->active,
-				"protocol"                 => \$row->protocol,
-				"ipv6_routing_enabled"     => \$row->ipv6_routing_enabled,
-				"background_fetch_enabled" => \$row->background_fetch_enabled,
+				"xml_id"                 => $row->xml_id,
+				"dscp"                   => $row->dscp,
+				"signed"                 => \$row->signed,
+				"qstring_ignore"         => $row->qstring_ignore,
+				"geo_limit"              => $row->geo_limit,
+				"http_bypass_fqdn"       => $row->http_bypass_fqdn,
+				"dns_bypass_ip"          => $row->dns_bypass_ip,
+				"dns_bypass_ip6"         => $row->dns_bypass_ip6,
+				"dns_bypass_ttl"         => $row->dns_bypass_ttl,
+				"org_server_fqdn"        => $row->org_server_fqdn,
+				"ccr_dns_ttl"            => $row->ccr_dns_ttl,
+				"type"                   => $row->type->id,
+				"profile_name"           => $row->profile->name,
+				"profile_description"    => $row->profile->description,
+				"global_max_mbps"        => $row->global_max_mbps,
+				"global_max_tps"         => $row->global_max_tps,
+				"edge_header_rewrite"    => $row->edge_header_rewrite,
+				"mid_header_rewrite"     => $row->mid_header_rewrite,
+				"regex_remap"            => $row->regex_remap,
+				"long_desc"              => $row->long_desc,
+				"long_desc_1"            => $row->long_desc_1,
+				"long_desc_2"            => $row->long_desc_2,
+				"max_dns_answers"        => $row->max_dns_answers,
+				"info_url"               => $row->info_url,
+				"miss_lat"               => $row->miss_lat,
+				"miss_long"              => $row->miss_long,
+				"check_path"             => $row->check_path,
+				"matchlist"              => \@matchlist,
+				"active"                 => \$row->active,
+				"protocol"               => \$row->protocol,
+				"ipv6_routing_enabled"   => \$row->ipv6_routing_enabled,
+				"range_request_handling" => \$row->range_request_handling,
 			}
 		);
 	}
@@ -261,8 +261,8 @@ sub check_deliveryservice_input {
 		$self->field('ds.xml_id')->is_equal( "", "Delivery service xml_id cannot contain whitespace." );
 	}
 
-	if ($self->param('ds.qstring_ignore') == 2 && $self->param('ds.regex_remap') ne "") {
-		$self->field('ds.regex_remap')->is_equal("", "Regex Remap can not be used when qstring_ignore is 2");
+	if ( $self->param('ds.qstring_ignore') == 2 && $self->param('ds.regex_remap') ne "" ) {
+		$self->field('ds.regex_remap')->is_equal( "", "Regex Remap can not be used when qstring_ignore is 2" );
 	}
 	my $profile_id = $self->param('ds.profile');
 	my $cdn_domain = $self->db->resultset('Parameter')->search(
@@ -508,12 +508,11 @@ sub delete_header_rewrite {
 
 }
 
-
 sub regex_remap {
-	my $self       = shift;
-	my $ds_profile = shift;
-	my $ds_name    = shift;
-	my $regex_remap     = shift;
+	my $self        = shift;
+	my $ds_profile  = shift;
+	my $ds_name     = shift;
+	my $regex_remap = shift;
 
 	if ( defined($regex_remap) && $regex_remap ne "" ) {
 		my $fname = "regex_remap_" . $ds_name . ".config";
@@ -585,32 +584,32 @@ sub update {
 		#print "global_max_mbps = " . $self->param('ds.global_max_mbps') . "\n";
 		# if error check passes
 		my %hash = (
-			xml_id                   => $self->param('ds.xml_id'),
-			dscp                     => $self->param('ds.dscp'),
-			signed                   => $self->param('ds.signed'),
-			qstring_ignore           => $self->param('ds.qstring_ignore'),
-			geo_limit                => $self->param('ds.geo_limit'),
-			org_server_fqdn          => $self->param('ds.org_server_fqdn'),
-			ccr_dns_ttl              => $self->param('ds.ccr_dns_ttl'),
-			type                     => $self->param('ds.type.id'),
-			profile                  => $self->param('ds.profile'),
-			global_max_mbps          => $self->param('ds.global_max_mbps') eq "" ? 0 : $self->hr_string_to_mbps( $self->param('ds.global_max_mbps') ),
-			global_max_tps           => $self->param('ds.global_max_tps') eq "" ? 0 : $self->param('ds.global_max_tps'),
-			miss_lat                 => $self->param('ds.miss_lat'),
-			miss_long                => $self->param('ds.miss_long'),
-			long_desc                => $self->param('ds.long_desc'),
-			long_desc_1              => $self->param('ds.long_desc_1'),
-			long_desc_2              => $self->param('ds.long_desc_2'),
-			info_url                 => $self->param('ds.info_url'),
-			check_path               => $self->param('ds.check_path'),
-			active                   => $self->param('ds.active'),
-			protocol                 => $self->param('ds.protocol'),
-			ipv6_routing_enabled     => $self->param('ds.ipv6_routing_enabled'),
-			background_fetch_enabled => $self->param('ds.background_fetch_enabled'),
-			edge_header_rewrite      => $self->param('ds.edge_header_rewrite') eq "" ? undef : $self->param('ds.edge_header_rewrite'),
-			mid_header_rewrite       => $self->param('ds.mid_header_rewrite') eq "" ? undef : $self->param('ds.mid_header_rewrite'),
-			regex_remap              => $self->param('ds.regex_remap') eq "" ? undef : $self->param('ds.regex_remap'),
-			origin_shield            => $self->param('ds.origin_shield') eq "" ? undef : $self->param('ds.origin_shield')
+			xml_id                 => $self->param('ds.xml_id'),
+			dscp                   => $self->param('ds.dscp'),
+			signed                 => $self->param('ds.signed'),
+			qstring_ignore         => $self->param('ds.qstring_ignore'),
+			geo_limit              => $self->param('ds.geo_limit'),
+			org_server_fqdn        => $self->param('ds.org_server_fqdn'),
+			ccr_dns_ttl            => $self->param('ds.ccr_dns_ttl'),
+			type                   => $self->param('ds.type.id'),
+			profile                => $self->param('ds.profile'),
+			global_max_mbps        => $self->param('ds.global_max_mbps') eq "" ? 0 : $self->hr_string_to_mbps( $self->param('ds.global_max_mbps') ),
+			global_max_tps         => $self->param('ds.global_max_tps') eq "" ? 0 : $self->param('ds.global_max_tps'),
+			miss_lat               => $self->param('ds.miss_lat'),
+			miss_long              => $self->param('ds.miss_long'),
+			long_desc              => $self->param('ds.long_desc'),
+			long_desc_1            => $self->param('ds.long_desc_1'),
+			long_desc_2            => $self->param('ds.long_desc_2'),
+			info_url               => $self->param('ds.info_url'),
+			check_path             => $self->param('ds.check_path'),
+			active                 => $self->param('ds.active'),
+			protocol               => $self->param('ds.protocol'),
+			ipv6_routing_enabled   => $self->param('ds.ipv6_routing_enabled'),
+			range_request_handling => $self->param('ds.range_request_handling'),
+			edge_header_rewrite    => $self->param('ds.edge_header_rewrite') eq "" ? undef : $self->param('ds.edge_header_rewrite'),
+			mid_header_rewrite     => $self->param('ds.mid_header_rewrite') eq "" ? undef : $self->param('ds.mid_header_rewrite'),
+			regex_remap   => $self->param('ds.regex_remap') eq ""   ? undef : $self->param('ds.regex_remap'),
+			origin_shield => $self->param('ds.origin_shield') eq "" ? undef : $self->param('ds.origin_shield')
 		);
 
 		if ( $self->param('ds.type.id') == &type_id( $self, "DNS" ) ) {
@@ -766,37 +765,37 @@ sub create {
 	if ( $self->check_deliveryservice_input() ) {
 		my $insert = $self->db->resultset('Deliveryservice')->create(
 			{
-				xml_id                   => $self->param('ds.xml_id'),
-				dscp                     => $self->param('ds.dscp') eq "" ? 0 : $self->param('ds.dscp'),
-				signed                   => $self->param('ds.signed'),
-				qstring_ignore           => $self->param('ds.qstring_ignore'),
-				geo_limit                => $self->param('ds.geo_limit'),
-				http_bypass_fqdn         => $self->param('ds.http_bypass_fqdn'),
-				dns_bypass_ip            => $self->param('ds.dns_bypass_ip'),
-				dns_bypass_ip6           => $self->param('ds.dns_bypass_ip6'),
-				dns_bypass_ttl           => $self->param('ds.dns_bypass_ttl'),
-				org_server_fqdn          => $self->param('ds.org_server_fqdn'),
-				ccr_dns_ttl              => $self->param('ds.ccr_dns_ttl'),
-				type                     => $self->param('ds.type'),
-				profile                  => $self->param('ds.profile'),
-				global_max_mbps          => $self->param('ds.global_max_mbps') eq "" ? 0 : $self->hr_string_to_mbps( $self->param('ds.global_max_mbps') ),
-				global_max_tps           => $self->param('ds.global_max_tps') eq "" ? 0 : $self->param('ds.global_max_tps'),
-				miss_lat                 => $self->param('ds.miss_lat'),
-				miss_long                => $self->param('ds.miss_long'),
-				long_desc                => $self->param('ds.long_desc'),
-				long_desc_1              => $self->param('ds.long_desc_1'),
-				long_desc_2              => $self->param('ds.long_desc_2'),
-				max_dns_answers          => $self->param('ds.max_dns_answers') eq "" ? 0 : $self->param('ds.max_dns_answers'),
-				info_url                 => $self->param('ds.info_url'),
-				check_path               => $self->param('ds.check_path'),
-				active                   => $self->param('ds.active'),
-				protocol                 => $self->param('ds.protocol'),
-				ipv6_routing_enabled     => $self->param('ds.ipv6_routing_enabled'),
-				background_fetch_enabled => $self->param('ds.background_fetch_enabled'),
-				edge_header_rewrite      => $self->param('ds.edge_header_rewrite') eq "" ? undef : $self->param('ds.edge_header_rewrite'),
-				mid_header_rewrite       => $self->param('ds.mid_header_rewrite') eq "" ? undef : $self->param('ds.mid_header_rewrite'),
-				regex_remap              => $self->param('ds.regex_remap') eq "" ? undef : $self->param('ds.regex_remap'),
-				origin_shield            => $self->param('ds.origin_shield') eq "" ? undef : $self->param('ds.origin_shield')
+				xml_id                 => $self->param('ds.xml_id'),
+				dscp                   => $self->param('ds.dscp') eq "" ? 0 : $self->param('ds.dscp'),
+				signed                 => $self->param('ds.signed'),
+				qstring_ignore         => $self->param('ds.qstring_ignore'),
+				geo_limit              => $self->param('ds.geo_limit'),
+				http_bypass_fqdn       => $self->param('ds.http_bypass_fqdn'),
+				dns_bypass_ip          => $self->param('ds.dns_bypass_ip'),
+				dns_bypass_ip6         => $self->param('ds.dns_bypass_ip6'),
+				dns_bypass_ttl         => $self->param('ds.dns_bypass_ttl'),
+				org_server_fqdn        => $self->param('ds.org_server_fqdn'),
+				ccr_dns_ttl            => $self->param('ds.ccr_dns_ttl'),
+				type                   => $self->param('ds.type'),
+				profile                => $self->param('ds.profile'),
+				global_max_mbps        => $self->param('ds.global_max_mbps') eq "" ? 0 : $self->hr_string_to_mbps( $self->param('ds.global_max_mbps') ),
+				global_max_tps         => $self->param('ds.global_max_tps') eq "" ? 0 : $self->param('ds.global_max_tps'),
+				miss_lat               => $self->param('ds.miss_lat'),
+				miss_long              => $self->param('ds.miss_long'),
+				long_desc              => $self->param('ds.long_desc'),
+				long_desc_1            => $self->param('ds.long_desc_1'),
+				long_desc_2            => $self->param('ds.long_desc_2'),
+				max_dns_answers        => $self->param('ds.max_dns_answers') eq "" ? 0 : $self->param('ds.max_dns_answers'),
+				info_url               => $self->param('ds.info_url'),
+				check_path             => $self->param('ds.check_path'),
+				active                 => $self->param('ds.active'),
+				protocol               => $self->param('ds.protocol'),
+				ipv6_routing_enabled   => $self->param('ds.ipv6_routing_enabled'),
+				range_request_handling => $self->param('ds.range_request_handling'),
+				edge_header_rewrite    => $self->param('ds.edge_header_rewrite') eq "" ? undef : $self->param('ds.edge_header_rewrite'),
+				mid_header_rewrite     => $self->param('ds.mid_header_rewrite') eq "" ? undef : $self->param('ds.mid_header_rewrite'),
+				regex_remap   => $self->param('ds.regex_remap') eq ""   ? undef : $self->param('ds.regex_remap'),
+				origin_shield => $self->param('ds.origin_shield') eq "" ? undef : $self->param('ds.origin_shield')
 			}
 		);
 		$insert->insert();
@@ -834,7 +833,6 @@ sub create {
 				$regexp_set->[$1]->{order} = $self->param($param);
 			}
 		}
-
 
 		foreach my $re ( @{$regexp_set} ) {
 			if ( !defined( $re->{order} ) ) { next; }    # 0 gets iterated over if the form sends just a _1
@@ -878,6 +876,7 @@ sub create {
 			selected_profile => $selected_profile,
 			mode             => "add",
 		);
+
 		# print "no bueno\n";
 		$self->render('delivery_service/add');
 	}
@@ -933,40 +932,40 @@ sub api_services {
 		}
 		push(
 			@data, {
-				"id"                       => $row->id,
-				"xmlId"                    => $row->xml_id,
-				"dscp"                     => $row->dscp,
-				"signed"                   => \$row->signed,
-				"qstringIgnore"            => $row->qstring_ignore,
-				"geoLimit"                 => $row->geo_limit,
-				"httpBypassFqdn"           => $row->http_bypass_fqdn,
-				"dnsBypassIp"              => $row->dns_bypass_ip,
-				"dnsBypassIp6"             => $row->dns_bypass_ip6,
-				"dnsBypassTtl"             => $row->dns_bypass_ttl,
-				"orgServerFqdn"            => $row->org_server_fqdn,
-				"ccrDnsTtl"                => $row->ccr_dns_ttl,
-				"type"                     => $row->type->name,
-				"profileName"              => $row->profile->name,
-				"profileDescription"       => $row->profile->description,
-				"globalMaxMbps"            => $self->hr_string_to_mbps( $row->global_max_mbps ),
-				"globalMaxTps"             => $row->global_max_tps,
-				"headerRewrite"            => $row->edge_header_rewrite,
-				"edgeHeaderRewrite"        => $row->edge_header_rewrite,
-				"midHeaderRewrite"         => $row->mid_header_rewrite,
-				"regex_remap"              => $row->regex_remap,
-				"longDesc"                 => $row->long_desc,
-				"longDesc1"                => $row->long_desc_1,
-				"longDesc2"                => $row->long_desc_2,
-				"maxDnsAnswers"            => $row->max_dns_answers,
-				"infoUrl"                  => $row->info_url,
-				"missLat"                  => $row->miss_lat,
-				"missLong"                 => $row->miss_long,
-				"checkPath"                => $row->check_path,
-				"matchList"                => \@matchlist,
-				"active"                   => \$row->active,
-				"protocol"                 => \$row->protocol,
-				"ipv6_routing_enabled"     => \$row->ipv6_routing_enabled,
-				"background_fetch_enabled" => \$row->background_fetch_enabled,
+				"id"                     => $row->id,
+				"xmlId"                  => $row->xml_id,
+				"dscp"                   => $row->dscp,
+				"signed"                 => \$row->signed,
+				"qstringIgnore"          => $row->qstring_ignore,
+				"geoLimit"               => $row->geo_limit,
+				"httpBypassFqdn"         => $row->http_bypass_fqdn,
+				"dnsBypassIp"            => $row->dns_bypass_ip,
+				"dnsBypassIp6"           => $row->dns_bypass_ip6,
+				"dnsBypassTtl"           => $row->dns_bypass_ttl,
+				"orgServerFqdn"          => $row->org_server_fqdn,
+				"ccrDnsTtl"              => $row->ccr_dns_ttl,
+				"type"                   => $row->type->name,
+				"profileName"            => $row->profile->name,
+				"profileDescription"     => $row->profile->description,
+				"globalMaxMbps"          => $self->hr_string_to_mbps( $row->global_max_mbps ),
+				"globalMaxTps"           => $row->global_max_tps,
+				"headerRewrite"          => $row->edge_header_rewrite,
+				"edgeHeaderRewrite"      => $row->edge_header_rewrite,
+				"midHeaderRewrite"       => $row->mid_header_rewrite,
+				"regex_remap"            => $row->regex_remap,
+				"longDesc"               => $row->long_desc,
+				"longDesc1"              => $row->long_desc_1,
+				"longDesc2"              => $row->long_desc_2,
+				"maxDnsAnswers"          => $row->max_dns_answers,
+				"infoUrl"                => $row->info_url,
+				"missLat"                => $row->miss_lat,
+				"missLong"               => $row->miss_long,
+				"checkPath"              => $row->check_path,
+				"matchList"              => \@matchlist,
+				"active"                 => \$row->active,
+				"protocol"               => \$row->protocol,
+				"ipv6_routing_enabled"   => \$row->ipv6_routing_enabled,
+				"range_request_handling" => \$row->range_request_handling,
 			}
 		);
 	}

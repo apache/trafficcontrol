@@ -187,7 +187,7 @@ __PACKAGE__->table("deliveryservice");
   data_type: 'tinyint'
   is_nullable: 1
 
-=head2 background_fetch_enabled
+=head2 range_request_handling
 
   data_type: 'tinyint'
   default_value: 0
@@ -283,7 +283,7 @@ __PACKAGE__->add_columns(
   { data_type => "integer", default_value => 0, is_nullable => 1 },
   "ipv6_routing_enabled",
   { data_type => "tinyint", is_nullable => 1 },
-  "background_fetch_enabled",
+  "range_request_handling",
   { data_type => "tinyint", default_value => 0, is_nullable => 1 },
   "edge_header_rewrite",
   { data_type => "varchar", is_nullable => 1, size => 2048 },
@@ -443,8 +443,8 @@ __PACKAGE__->belongs_to(
 );
 
 
-# Created by DBIx::Class::Schema::Loader v0.07042 @ 2015-05-03 13:10:10
-# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:7NXjEPfXash1csM8kmhnpg
+# Created by DBIx::Class::Schema::Loader v0.07042 @ 2015-05-04 13:39:15
+# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:e/G500bAQtlpRUHXJAt14A
 
 # You can replace this text with custom code or comments, and it will be preserved on regeneration
 1;
