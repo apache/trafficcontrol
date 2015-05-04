@@ -51,6 +51,7 @@ my $dispatch_table ||= {
 	"hdr_rw_.config"       => sub { header_rewrite_dot_config(@_) },
 	"set_dscp_.config"     => sub { header_rewrite_dscp_dot_config(@_) },
 	"to_ext_.config"       => sub { to_ext_dot_config(@_) },
+	"regex_remap_.config"  => sub { regex_remap_dot_config(@_) },
 	"all"                  => sub { gen_fancybox_data(@_) },
 	"ssl_multicert.config" => sub { ssl_multicert_dot_config(@_) },
 
@@ -75,6 +76,7 @@ sub genfiles {
 	$file =~ s/^url_sig_.*\.config$/url_sig_\.config/;
 	$file =~ s/^hdr_rw_.*\.config$/hdr_rw_\.config/;
 	$file =~ s/^set_dscp_.*\.config$/set_dscp_\.config/;
+	$file =~ s/^regex_remap_.*\.config$/regex_remap_\.config/;
 	if ( $file =~ /^to_ext_.*\.config$/ ) {
 		$file =~ s/^to_ext_.*\.config$/to_ext_\.config/;
 		$org_name =~ s/^to_ext_.*\.config$/to_ext_\.config/;
@@ -117,11 +119,12 @@ sub gen_fancybox_data {
 	while ( my $row = $rs->next ) {
 		my $file = $row->parameter->config_file;
 
-		# print "Genning $file\n";
+		print "Genning $file\n";
 		my $org_name = $file;
 		$file =~ s/^url_sig_.*\.config$/url_sig_\.config/;
 		$file =~ s/^hdr_rw_.*\.config$/hdr_rw_\.config/;
 		$file =~ s/^set_dscp_.*\.config$/set_dscp_\.config/;
+		$file =~ s/^regex_remap_.*\.config$/regex_remap_\.config/;
 		if ( $file =~ /^to_ext_.*\.config$/ ) {
 			$file =~ s/^to_ext_.*\.config$/to_ext_\.config/;
 			$org_name =~ s/^to_ext_(.*)\.config$/$1.config/;
@@ -744,7 +747,7 @@ sub remap_dot_config {
 	if ( $server->type->name eq 'MID' ) {
 		foreach my $remap ( @{ $data->{dslist} } ) {
 			if ( $remap->{mid_header_rewrite} ) {
-				$text .= "map " . $remap->{org} . "    " . $remap->{org} . " \@plugin=header_rewrite.so \@pparam=" . $remap->{mid_hdr_rw_file};
+				$text .= "map " . $remap->{org} . "    " . $remap->{org} . " \@plugin=header_rewrite.so \@pparam=" . $remap->{mid_hdr_rw_file} . "\n";
 			}
 		}
 		return $text;
@@ -813,8 +816,10 @@ sub remap_text {
 			$text .= " \@plugin=regex_remap.so \@pparam=" . $dqs_file;
 		}
 	}
-	if (defined($remap->{regex_remap}) && $remap->{regex_remap} ne "") {
-		$text .= " \@plugin=regex_remap.so \@pparam=regex_remap_" . $remap->{ds_xml_id} . ".config";	
+
+	# Note: should use full path here?
+	if ( defined( $remap->{regex_remap} ) && $remap->{regex_remap} ne "" ) {
+		$text .= " \@plugin=regex_remap.so \@pparam=regex_remap_" . $remap->{ds_xml_id} . ".config";
 	}
 	if ( $remap->{background_fetch_enabled} == 1 ) {
 		$text .= " \@plugin=background_fetch.so \@pparam=bg_fetch.config";
@@ -1074,6 +1079,23 @@ sub header_rewrite_dot_config {
 		$text =~ s/\s*__RETURN__\s*/\n/g;
 		my $ipv4 = $server->ip_address;
 		$text =~ s/__CACHE_IPV4__/$ipv4/g;
+	}
+
+	return $text;
+}
+
+sub regex_remap_dot_config {
+	my $self = shift;
+	my $id   = shift;
+	my $file = shift;
+
+	my $server = $self->server_data($id);
+	my $text   = $self->header_comment( $server->host_name );
+
+	if ( $file =~ /^regex_remap_(.*)\.config$/ ) {
+		my $ds_xml_id = $1;
+		my $ds = $self->db->resultset('Deliveryservice')->search( { xml_id => $ds_xml_id }, { prefetch => [ 'type', 'profile' ] } )->single();
+		$text .= $ds->regex_remap . "\n";
 	}
 
 	return $text;
