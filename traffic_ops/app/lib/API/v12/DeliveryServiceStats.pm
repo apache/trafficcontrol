@@ -73,9 +73,6 @@ sub index {
 				return $self->alert( { error_message => $content } );
 			}
 
-			# Build the series section
-			#$iq = new Builder::InfluxdbQuery(
-			#	{ series_name => $metric_type, cdn_name => $cdn_name, ds_name => $ds_name, start_date => $start_date, end_date => $end_date } );
 			my $series_query = $iq->series_query();
 			$self->app->log->debug( "series_query #-> " . $series_query );
 			$response_container = $self->influxdb_query( $db_name, $series_query );
@@ -93,34 +90,31 @@ sub index {
 
 			if ( defined($summary) && defined($series) ) {
 
-				my $parent_node = "parameters";
-				my $result      = ();
+				my $parameters_node = "parameters";
+				my $result          = ();
 
-				#$result->{$parent_node} = $summary_content->{results}[0];
+				#$result->{$parameters_node} = $summary_content->{results}[0];
 
-				$result->{$parent_node}{cdnName}              = $cdn_name;
-				$result->{$parent_node}{deliveryServiceName}  = $ds_name;
-				$result->{$parent_node}{cacheGroupName}       = $cachegroup_name;
-				$result->{$parent_node}{startDate}            = $start_date;
-				$result->{$parent_node}{endDate}              = $end_date;
-				$result->{$parent_node}{interval}             = $interval;
-				$result->{$parent_node}{metricType}           = $metric_type;
-				$result->{$parent_node}{influxdbDatabaseName} = $self->get_db_name();
-				$result->{$parent_node}{influxdbSeriesQuery}  = $series_query;
-				$result->{$parent_node}{influxdbSummaryQuery} = $summary_query;
-				$result->{series}{data}                       = $series;
+				$result->{$parameters_node}{cdnName}              = $cdn_name;
+				$result->{$parameters_node}{deliveryServiceName}  = $ds_name;
+				$result->{$parameters_node}{cacheGroupName}       = $cachegroup_name;
+				$result->{$parameters_node}{startDate}            = $start_date;
+				$result->{$parameters_node}{endDate}              = $end_date;
+				$result->{$parameters_node}{interval}             = $interval;
+				$result->{$parameters_node}{metricType}           = $metric_type;
+				$result->{$parameters_node}{influxdbDatabaseName} = $self->get_db_name();
+				$result->{$parameters_node}{influxdbSeriesQuery}  = $series_query;
+				$result->{$parameters_node}{influxdbSummaryQuery} = $summary_query;
 
-				#$self->app->log->debug( "series #-> " . Dumper( $series->{values} ) );
+				my $series_node = "series";
+				$result->{$series_node}{data} = $series;
 				my @series_values = $series->{values};
 				my $series_count  = $#{ $series_values[0] };
-				$self->app->log->debug( "series_count #-> " . $series_count );
+				$result->{$series_node}{count} = $series_count;
 
-				#print "series_values #-> (" . Dumper(@series_values) . ")\n";
-				$result->{series}{count} = $series_count;
+				my $summary_node = "summary";
+				$result->{$summary_node} = $summary;
 
-				#$self->app->log->debug( "series_values #-> " . Dumper($series_values) );
-
-				#$result->{$parent_node}{summary}              = $summary;
 				return $self->success($result);
 			}
 			else {
@@ -186,19 +180,19 @@ sub index_query {
 
 			if ( defined($response) ) {
 
-				my $parent_node = "parameters";
-				my $result      = ();
+				my $parameters_node = "parameters";
+				my $result          = ();
 
-				#$result->{$parent_node}{series}               = $series;
-				$result->{$parent_node}{cdnName}              = $cdn_name;
-				$result->{$parent_node}{deliveryServiceName}  = $ds_name;
-				$result->{$parent_node}{cacheGroupName}       = $cachegroup_name;
-				$result->{$parent_node}{startDate}            = $start_date;
-				$result->{$parent_node}{endDate}              = $end_date;
-				$result->{$parent_node}{interval}             = $interval;
-				$result->{$parent_node}{metricType}           = $metric_type;
-				$result->{$parent_node}{influxdbDatabaseName} = $self->get_db_name();
-				$result->{$parent_node}{influxdbQuery}        = $query;
+				#$result->{$parameters_node}{series}               = $series;
+				$result->{$parameters_node}{cdnName}              = $cdn_name;
+				$result->{$parameters_node}{deliveryServiceName}  = $ds_name;
+				$result->{$parameters_node}{cacheGroupName}       = $cachegroup_name;
+				$result->{$parameters_node}{startDate}            = $start_date;
+				$result->{$parameters_node}{endDate}              = $end_date;
+				$result->{$parameters_node}{interval}             = $interval;
+				$result->{$parameters_node}{metricType}           = $metric_type;
+				$result->{$parameters_node}{influxdbDatabaseName} = $self->get_db_name();
+				$result->{$parameters_node}{influxdbQuery}        = $query;
 
 				$self->app->log->debug( "response_content #-> " . Dumper($response_content) );
 				my $series       = $response_content->{results}[0]{series};
@@ -207,16 +201,16 @@ sub index_query {
 
 				#my $series = $response_content->{results}[0]{series}[0]->{name};
 
+=cut
 				foreach my $entry (@$series) {
-					print "entry #-> (" . Dumper($entry) . ")\n";
 
 					if ( ref($entry) eq "HASH" ) {
-						$self->app->log->debug( "___ #-> " . Dumper($entry) );
-
 						#delete $_->{name};
 						delete $entry->{tags};
 					}
 				}
+=cut
+
 				$result->{series}      = $series;
 				$result->{seriesCount} = $series_count;
 
