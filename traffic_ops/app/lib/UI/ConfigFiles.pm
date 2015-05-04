@@ -878,7 +878,7 @@ sub parent_dot_config {
 		}
 
 		$text .= "\n";
-		$self->app->log->debug($text);
+		# $self->app->log->debug($text);
 		return $text;
 	}
 }
