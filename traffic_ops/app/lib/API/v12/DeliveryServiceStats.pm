@@ -102,11 +102,14 @@ sub build_series {
 	else {
 		return $self->alert( { error_message => $content } );
 	}
+	$self->app->log->debug( "series #-> " . Dumper($series) );
 	my $series_node = "series";
 	$result->{$series_node}{data} = $series;
-	my @series_values = $series->{values};
-	my $series_count  = $#{ $series_values[0] };
-	$result->{$series_node}{count} = $series_count;
+	if ( defined($series) && (@$series) ) {
+		my @series_values = $series->{values};
+		my $series_count  = $#{ $series_values[0] };
+		$result->{$series_node}{count} = $series_count;
+	}
 
 }
 
