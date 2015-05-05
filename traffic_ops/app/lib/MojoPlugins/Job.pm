@@ -83,10 +83,16 @@ sub register {
 			my $ds = $self->db->resultset('Deliveryservice')->search( { 'me.id' => $ds_id }, { prefetch => ['profile'] } )->single();
 			my $cdn_pparam =
 				$self->db->resultset('ProfileParameter')
-				->search( { -and => [ profile => $ds->profile->id, 'parameter.name' => 'CDN_name' ] }, { prefetch => [ 'parameter', 'profile' ] } )->single();
+				->search( { -and => [ profile => $ds->profile->id, 'parameter.name' => 'CDN_name' ] }, { prefetch => [ 'parameter', 'profile' ] } )
+				->single();
 			my @cdn_profiles =
 				$self->db->resultset('ProfileParameter')->search( { parameter => $cdn_pparam->parameter->id } )->get_column('profile')->all();
-			my $update_server_bit_rs = $self->db->resultset('Server')->search( { profile => { -in => \@cdn_profiles } } );
+
+			my $offline = $self->db->resultset('Status')->search( 'name' => 'OFFLINE' )->get_column('id')->single();
+			$self->app->log->debug( "offline #-> " . Dumper($offline) );
+			my $update_server_bit_rs =
+				$self->db->resultset('Server')->search( -and => [ { status => { -not_like => $offline } }, { profile => { -in => \@cdn_profiles } } ] );
+
 			my $result = $update_server_bit_rs->update( { upd_pending => 1 } );
 			&log( $self, "Set upd_pending = 1 for all applicable caches", "CODEBIG" );
 		}
