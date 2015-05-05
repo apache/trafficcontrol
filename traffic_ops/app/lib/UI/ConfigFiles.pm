@@ -119,7 +119,7 @@ sub gen_fancybox_data {
 	while ( my $row = $rs->next ) {
 		my $file = $row->parameter->config_file;
 
-		print "Genning $file\n";
+		# print "Genning $file\n";
 		my $org_name = $file;
 		$file =~ s/^url_sig_.*\.config$/url_sig_\.config/;
 		$file =~ s/^hdr_rw_.*\.config$/hdr_rw_\.config/;
@@ -271,25 +271,11 @@ sub ds_data {
 
 		if ( defined($edge_header_rewrite) ) {
 			my $fname = "hdr_rw_" . $ds_xml_id . ".config";
-			my $path =
-				$self->db->resultset('Parameter')->search( { -and => [ name => 'location', config_file => $fname ] } )->get_column('value')->single();
-			if ( defined($path) ) {
-				$dsinfo->{dslist}->[$j]->{"hdr_rw_file"} = $path . "/" . $fname;
-			}
-			else {
-				$dsinfo->{dslist}->[$j]->{"hdr_rw_file"} = $fname;
-			}
+			$dsinfo->{dslist}->[$j]->{"hdr_rw_file"} = $fname;
 		}
 		if ( defined($mid_header_rewrite) ) {
 			my $fname = "hdr_rw_mid_" . $ds_xml_id . ".config";
-			my $path =
-				$self->db->resultset('Parameter')->search( { -and => [ name => 'location', config_file => $fname ] } )->get_column('value')->single();
-			if ( defined($path) ) {
-				$dsinfo->{dslist}->[$j]->{"mid_hdr_rw_file"} = $path . "/" . $fname;
-			}
-			else {
-				$dsinfo->{dslist}->[$j]->{"mid_hdr_rw_file"} = $fname;
-			}
+			$dsinfo->{dslist}->[$j]->{"mid_hdr_rw_file"} = $fname;
 		}
 
 		$j++;
@@ -795,26 +781,8 @@ sub remap_text {
 		$text .= " \@plugin=url_sig.so \@pparam=url_sig_" . $remap->{ds_xml_id} . ".config";
 	}
 	if ( $remap->{qstring_ignore} == 2 ) {
-		my $dqs_param =
-			$self->db->resultset('ProfileParameter')
-			->search( { -and => [ profile => $server->profile->id, 'parameter.config_file' => 'drop_qstring.config', 'parameter.name' => 'location' ] },
-			{ prefetch => [ { parameter => undef }, { profile => undef } ] } )->single();
-		my $dqs_file = $dqs_param->parameter->value . "/drop_qstring.config";
-
-		# #get regex_remap param value
-		my $param_rs =
-			$self->db->resultset('ProfileParameter')
-			->search( { -and => [ profile => $server->profile->id, 'parameter.config_file' => 'remap.config', 'parameter.name' => 'regex_remap' ] },
-			{ prefetch => [ 'parameter', 'profile' ] } )->single();
-
-		# #use regex_remap if its there, if not hardcode.
-		if ($param_rs) {
-			my $regex_remap = $param_rs->parameter->value;
-			$text .= " \@plugin=$regex_remap \@pparam=" . $dqs_file;
-		}
-		else {
-			$text .= " \@plugin=regex_remap.so \@pparam=" . $dqs_file;
-		}
+		my $dqs_file = "drop_qstring.config";
+		$text .= " \@plugin=regex_remap.so \@pparam=" . $dqs_file;
 	}
 
 	# Note: should use full path here?
@@ -1079,11 +1047,11 @@ sub header_rewrite_dot_config {
 		my $ds = $self->db->resultset('Deliveryservice')->search( { xml_id => $ds_xml_id }, { prefetch => [ 'type', 'profile' ] } )->single();
 		my $actions = $ds->edge_header_rewrite;
 		$text .= $actions . "\n";
-		$text =~ s/\s*__RETURN__\s*/\n/g;
-		my $ipv4 = $server->ip_address;
-		$text =~ s/__CACHE_IPV4__/$ipv4/g;
 	}
 
+	$text =~ s/\s*__RETURN__\s*/\n/g;
+	my $ipv4 = $server->ip_address;
+	$text =~ s/__CACHE_IPV4__/$ipv4/g;
 	return $text;
 }
 
