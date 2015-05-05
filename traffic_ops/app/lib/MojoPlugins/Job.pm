@@ -74,6 +74,25 @@ sub register {
 	);
 
 	$app->renderer->add_helper(
+
+		# set the update bit for all the Caches in the CDN of this delivery service.
+		set_update_server_bits => sub {
+			my $self  = shift;
+			my $ds_id = shift;
+
+			my $ds = $self->db->resultset('Deliveryservice')->search( { 'me.id' => $ds_id }, { prefetch => ['profile'] } )->single();
+			my $cdn_pparam =
+				$self->db->resultset('ProfileParameter')
+				->search( { -and => [ profile => $ds->profile->id, 'parameter.name' => 'CDN_name' ] }, { prefetch => [ 'parameter', 'profile' ] } )->single();
+			my @cdn_profiles =
+				$self->db->resultset('ProfileParameter')->search( { parameter => $cdn_pparam->parameter->id } )->get_column('profile')->all();
+			my $update_server_bit_rs = $self->db->resultset('Server')->search( { profile => { -in => \@cdn_profiles } } );
+			my $result = $update_server_bit_rs->update( { upd_pending => 1 } );
+			&log( $self, "Set upd_pending = 1 for all applicable caches", "CODEBIG" );
+		}
+	);
+
+	$app->renderer->add_helper(
 		job_data => sub {
 			my $self = shift;
 			my $dbh  = shift;
@@ -195,8 +214,9 @@ sub register {
 
 			my $new_record = $insert->insert();
 
-			&log( $self, "Created new Purge Job " . $ds_id . "forced new regex_revalidate.config snapshot", "APICHANGE" );
+			&log( $self, "Created new Purge Job " . $ds_id . " forced new regex_revalidate.config snapshot", "APICHANGE" );
 			$self->snapshot_regex_revalidate();
+			$self->set_update_server_bits($ds_id);
 			return $new_record->id;
 		}
 	);
