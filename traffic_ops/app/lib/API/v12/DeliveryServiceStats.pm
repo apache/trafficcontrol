@@ -125,8 +125,8 @@ sub build_series {
 		return $self->alert( { error_message => $content } );
 	}
 	my $series_node = "series";
-	$result->{$series_node}{data} = $series;
-	if ( defined($series) && (@$series) ) {
+	if ( defined($series) && ( keys $series ) ) {
+		$result->{$series_node}{data} = $series;
 		my @series_values = $series->{values};
 		my $series_count  = $#{ $series_values[0] };
 		$result->{$series_node}{count} = $series_count;
