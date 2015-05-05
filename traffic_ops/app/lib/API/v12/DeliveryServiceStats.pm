@@ -126,7 +126,7 @@ sub build_series {
 	}
 	my $series_node = "series";
 	if ( defined($series) && ( keys $series ) ) {
-		$result->{$series_node}{data} = $series;
+		$result->{$series_node} = $series;
 		my @series_values = $series->{values};
 		my $series_count  = $#{ $series_values[0] };
 		$result->{$series_node}{count} = $series_count;
