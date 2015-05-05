@@ -84,16 +84,6 @@ ok $t->post_ok(
 ok $t->post_ok(
 	'/api/1.1/user/current/jobs',
 	json => {
-		regex     => '/foo1/.*',
-		ttl       => 48,
-		startTime => $now,
-	}
-	)->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } ),
-	'Create a non-purge related job?';
-
-ok $t->post_ok(
-	'/api/1.1/user/current/jobs',
-	json => {
 		dsId      => 1,
 		regex     => '/foo1/.*',
 		ttl       => 40,
