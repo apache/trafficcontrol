@@ -34,7 +34,7 @@ sub index {
 	my $server_type     = $self->param('serverType');
 	my $start_date      = $self->param('startDate');
 	my $end_date        = $self->param('endDate');
-	my $interval        = $self->param('interval') || "1m";      # Valid interval examples 10m (minutes), 10s (seconds), 1h (hour)
+	my $interval        = $self->param('interval') || "60s";     # Valid interval examples 10m (minutes), 10s (seconds), 1h (hour)
 	my $exclude         = $self->param('exclude');
 	my $limit           = $self->param('limit');
 	my $offset          = $self->param('offset');
