@@ -731,10 +731,15 @@ sub remap_dot_config {
 	}
 
 	if ( $server->type->name eq 'MID' ) {
+		my %remap_lines;
 		foreach my $remap ( @{ $data->{dslist} } ) {
 			if ( $remap->{mid_header_rewrite} ) {
-				$text .= "map " . $remap->{org} . "    " . $remap->{org} . " \@plugin=header_rewrite.so \@pparam=" . $remap->{mid_hdr_rw_file} . "\n";
+				$remap_lines{ "map " . $remap->{org} . "    " . $remap->{org} . " \@plugin=header_rewrite.so \@pparam=" . $remap->{mid_hdr_rw_file} . "\n" }
+					= defined;
 			}
+		}
+		foreach my $key (%remap_lines) {
+			$text .= $key;
 		}
 		return $text;
 	}
