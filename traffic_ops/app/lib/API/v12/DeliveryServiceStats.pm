@@ -162,7 +162,7 @@ sub build_parameters {
 	$result->{$parent_node}{$parameters_node}{endDate}             = $end_date;
 	$result->{$parent_node}{$parameters_node}{interval}            = $interval;
 	$result->{$parent_node}{$parameters_node}{metricType}          = $metric_type;
-	my $queries_node = "sql";
+	my $queries_node = "language";
 	$result->{$parent_node}{$queries_node}{influxdbDatabaseName} = $self->get_db_name();
 	$result->{$parent_node}{$queries_node}{influxdbSeriesQuery}  = $series_query;
 	$result->{$parent_node}{$queries_node}{influxdbSummaryQuery} = $summary_query;
