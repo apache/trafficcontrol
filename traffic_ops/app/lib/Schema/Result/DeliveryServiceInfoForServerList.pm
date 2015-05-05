@@ -45,14 +45,16 @@ SELECT DISTINCT
     deliveryservice.signed AS signed,
     deliveryservice.qstring_ignore AS qstring_ignore,
     deliveryservice.org_server_fqdn as org_server_fqdn,
-    deliveryservice.background_fetch_enabled as background_fetch_enabled,
+    deliveryservice.range_request_handling as range_request_handling,
     deliveryservice.origin_shield as origin_shield,
     regex.pattern AS pattern,
     retype.name AS re_type,
     dstype.name AS ds_type,
     parameter.value AS domain_name,
     deliveryservice_regex.set_number AS set_number,
-    header_rewrite as header_rewrite,
+    deliveryservice.edge_header_rewrite as edge_header_rewrite,
+    deliveryservice.regex_remap as regex_remap,
+    mid_header_rewrite as mid_header_rewrite,
     deliveryservice.protocol as protocol
 FROM
     deliveryservice
@@ -70,21 +72,23 @@ ORDER BY ds_id, re_type , deliveryservice_regex.set_number
 );
 
 __PACKAGE__->add_columns(
-    "xml_id",                   { data_type => "varchar", is_nullable => 0, size => 45 },
-    "org_server_fqdn",          { data_type => "varchar", is_nullable => 0, size => 45 },
-    "ds_id",                    { data_type => "integer", is_nullable => 0 },
-    "dscp",                     { data_type => "integer", is_nullable => 0 },
-    "signed",                   { data_type => "integer", is_nullable => 0 },
-    "qstring_ignore",           { data_type => "integer", is_nullable => 0 },
-    "pattern",                  { data_type => "varchar", is_nullable => 0, size => 45 },
-    "re_type",                  { data_type => "varchar", is_nullable => 0, size => 45 },
-    "ds_type",                  { data_type => "varchar", is_nullable => 0, size => 45 },
-    "set_number",               { data_type => "integer", is_nullable => 0 },
-    "domain_name",              { data_type => "varchar", is_nullable => 0, size => 45 },
-    "header_rewrite",           { data_type => "varchar", is_nullable => 0, size => 1024 },
-    "protocol",              { data_type => "tinyint", is_nullable => 0, size => 4 },
-    "background_fetch_enabled", { data_type => "tinyint", is_nullable => 0, size => 4 },
-    "origin_shield",            { data_type => "varchar", is_nullable => 0, size => 1024 },
+    "xml_id",                 { data_type => "varchar", is_nullable => 0, size => 45 },
+    "org_server_fqdn",        { data_type => "varchar", is_nullable => 0, size => 45 },
+    "ds_id",                  { data_type => "integer", is_nullable => 0 },
+    "dscp",                   { data_type => "integer", is_nullable => 0 },
+    "signed",                 { data_type => "integer", is_nullable => 0 },
+    "qstring_ignore",         { data_type => "integer", is_nullable => 0 },
+    "pattern",                { data_type => "varchar", is_nullable => 0, size => 45 },
+    "re_type",                { data_type => "varchar", is_nullable => 0, size => 45 },
+    "ds_type",                { data_type => "varchar", is_nullable => 0, size => 45 },
+    "set_number",             { data_type => "integer", is_nullable => 0 },
+    "domain_name",            { data_type => "varchar", is_nullable => 0, size => 45 },
+    "edge_header_rewrite",    { data_type => "varchar", is_nullable => 0, size => 1024 },
+    "mid_header_rewrite",     { data_type => "varchar", is_nullable => 0, size => 1024 },
+    "regex_remap",            { data_type => "varchar", is_nullable => 0, size => 1024 },
+    "protocol",               { data_type => "tinyint", is_nullable => 0, size => 4 },
+    "range_request_handling", { data_type => "tinyint", is_nullable => 0, size => 4 },
+    "origin_shield",          { data_type => "varchar", is_nullable => 0, size => 1024 },
 );
 
 1;

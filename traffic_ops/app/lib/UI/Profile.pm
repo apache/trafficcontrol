@@ -356,7 +356,7 @@ sub availableprofile {
 	my $rs_links = $self->db->resultset("Profile")->search( undef, { order_by => "description" } );
 	while ( my $row = $rs_links->next ) {
 		if ( !exists( $in_use{ $row->id } ) ) {
-			push( @data, { "id" => $row->id, "description" => $row->description } );
+			push( @data, { "id" => $row->id, "name" => $row->name, "description" => $row->description } );
 		}
 	}
 
