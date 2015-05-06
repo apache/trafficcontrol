@@ -65,24 +65,6 @@ sub valid_keys {
 	return $valid;
 }
 
-sub query {
-	my $self = shift;
-	if ( valid_keys() ) {
-
-		#'summary' section
-		return sprintf(
-			'%s %s %s',
-			"SELECT value, mean(value), percentile(value, 5), percentile(value, 95), percentile(value, 98), min(value), max(value), sum(value), count(value) FROM",
-			$args->{series_name}, "WHERE time > '$args->{start_date}' AND
-		                                         time < '$args->{end_date}' AND
-		                                         cdn = '$args->{cdn_name}' AND
-		                                         cachegroup = '$args->{cachegroup_name}'
-		                                         GROUP BY time($args->{interval}), cdn, cachegroup, deliveryservice"
-		);
-
-	}
-}
-
 sub summary_query {
 	my $self = shift;
 	if ( valid_keys() ) {
@@ -144,13 +126,24 @@ sub summary_response {
 
 		my $average = nearest( .001, $avg );
 		$average =~ /([\d\.]+)/;
-		$summary->{average}                = $average;
-		$summary->{fifthPercentile}        = $summary_content->{results}[0]{series}[0]{values}[0][2];
-		$summary->{ninetyFifthPercentile}  = $summary_content->{results}[0]{series}[0]{values}[0][3];
-		$summary->{ninetyEighthPercentile} = $summary_content->{results}[0]{series}[0]{values}[0][4];
-		$summary->{min}                    = $summary_content->{results}[0]{series}[0]{values}[0][5];
-		$summary->{max}                    = $summary_content->{results}[0]{series}[0]{values}[0][6];
-		$summary->{total}                  = $summary_content->{results}[0]{series}[0]{values}[0][7];
+		$summary->{average} = $average;
+		my $fifth_percentile = $summary_content->{results}[0]{series}[0]{values}[0][2];
+		$summary->{fifthPercentile} = ( defined($fifth_percentile) ) ? $fifth_percentile : 0;
+
+		my $ninety_fifth_percentile = $summary_content->{results}[0]{series}[0]{values}[0][3];
+		$summary->{ninetyFifthPercentile} = ( defined($ninety_fifth_percentile) ) ? $ninety_fifth_percentile : 0;
+
+		my $ninety_eighth_percentile = $summary_content->{results}[0]{series}[0]{values}[0][4];
+		$summary->{ninetyEighthPercentile} = ( defined($ninety_eighth_percentile) ) ? $ninety_eighth_percentile : 0;
+
+		my $min = $summary_content->{results}[0]{series}[0]{values}[0][5];
+		$summary->{min} = ( defined($min) ) ? $min : 0;
+
+		my $max = $summary_content->{results}[0]{series}[0]{values}[0][6];
+		$summary->{max} = ( defined($max) ) ? $max : 0;
+
+		my $total = $summary_content->{results}[0]{series}[0]{values}[0][7];
+		$summary->{total} = ( defined($total) ) ? $total : 0;
 
 	}
 	else {

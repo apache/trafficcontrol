@@ -97,8 +97,9 @@ sub build_summary {
 	my $summary_content;
 	my $series_count = 0;
 	if ( $response->is_success() ) {
-		$summary_content   = decode_json($content);
-		$summary           = $iq->summary_response($summary_content);
+		$summary_content = decode_json($content);
+		$summary         = $iq->summary_response($summary_content);
+		$self->app->log->debug( "summary #-> " . Dumper($summary) );
 		$result->{summary} = $summary;
 	}
 	else {
