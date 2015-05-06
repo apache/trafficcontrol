@@ -90,6 +90,8 @@ public class ConfigHandler {
 			if (sts <= getLastSnapshotTimestamp()) {
 				LOGGER.warn("Incoming TrConfig snapshot timestamp (" + sts + ") is older or equal to the loaded timestamp (" + getLastSnapshotTimestamp() + "); unable to process");
 				return false;
+			} else {
+				LOGGER.debug("Incoming TrConfig snapshot timestamp (" + sts + ") is newer than the loaded timestamp (" + getLastSnapshotTimestamp() + "); processing new TrConfig");
 			}
 
 			try {
@@ -99,6 +101,7 @@ public class ConfigHandler {
 				final CacheRegister cacheRegister = new CacheRegister();
 				cacheRegister.setTrafficRouters(jo.getJSONObject("contentRouters"));
 				cacheRegister.setConfig(config);
+				cacheRegister.setStats(jo.getJSONObject("stats"));
 				parseDeliveryServiceConfig(jo.getJSONObject("deliveryServices"), cacheRegister);
 				parseLocationConfig(jo.getJSONObject("edgeLocations"), cacheRegister);
 				parseCacheConfig(jo.getJSONObject("contentServers"), cacheRegister);
