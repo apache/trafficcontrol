@@ -61,12 +61,13 @@ sub index {
 			if ($include_summary) {
 				( $rc, $result, $summary_query ) = $self->build_summary($result);
 			}
-			$self->app->log->debug("=================================================");
-			$self->app->log->debug( "rc #-> " . Dumper($rc) );
-			$self->app->log->debug( "result #-> " . Dumper($result) );
-			$self->app->log->debug( "summary_query #-> " . Dumper($summary_query) );
-			$self->app->log->debug("=================================================");
 
+			#			$self->app->log->debug("=================================================");
+			#			$self->app->log->debug( "rc #-> " . Dumper($rc) );
+			#			$self->app->log->debug( "result #-> " . Dumper($result) );
+			#			$self->app->log->debug( "summary_query #-> " . Dumper($summary_query) );
+			#			$self->app->log->debug("=================================================");
+			#
 			if ( $rc == SUCCESS ) {
 				$self->app->log->debug("GOOD");
 
@@ -74,16 +75,19 @@ sub index {
 				my $series_query;
 				if ($include_series) {
 					( $rc, $result, $series_query ) = $self->build_series($result);
-					$self->app->log->debug( "result #-> " . Dumper($result) );
+
+					#					$self->app->log->debug( "result #-> " . Dumper($result) );
 				}
-				$self->app->log->debug(".................................................");
-				$self->app->log->debug( "result #-> " . Dumper($result) );
-				$self->app->log->debug( "series_query #-> " . Dumper($series_query) );
-				$self->app->log->debug(".................................................");
+
+				#				$self->app->log->debug(".................................................");
+				#				$self->app->log->debug( "result #-> " . Dumper($result) );
+				#				$self->app->log->debug( "series_query #-> " . Dumper($series_query) );
+				#				$self->app->log->debug(".................................................");
 
 				if ( $rc == SUCCESS ) {
 					$result = $self->build_parameters( $result, $summary_query, $series_query );
-					$self->app->log->debug( "result #-> " . Dumper($result) );
+
+					#					$self->app->log->debug( "result #-> " . Dumper($result) );
 					return $self->success($result);
 				}
 				else {
