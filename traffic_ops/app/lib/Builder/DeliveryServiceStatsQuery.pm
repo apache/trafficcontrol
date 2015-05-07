@@ -1,4 +1,4 @@
-package Builder::InfluxdbQuery;
+package Builder::DeliveryServiceStatsQuery;
 #
 # Copyright 2015 Comcast Cable Communications Management, LLC
 #
@@ -147,11 +147,13 @@ sub summary_response {
 
 	}
 	else {
-		$summary->{average}     = 0;
-		$summary->{ninetyFifth} = 0;
-		$summary->{min}         = 0;
-		$summary->{max}         = 0;
-		$summary->{total}       = 0;
+		$summary->{average}                = 0;
+		$summary->{fifthPercentile}        = 0;
+		$summary->{ninetyFifthPercentile}  = 0;
+		$summary->{ninetyEighthPercentile} = 0;
+		$summary->{min}                    = 0;
+		$summary->{max}                    = 0;
+		$summary->{total}                  = 0;
 	}
 
 	return $summary;
