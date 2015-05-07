@@ -31,7 +31,7 @@ sub dbdump {
 	my $db_host = $Schema::hostname;
 	$db_name =~ s/database=//;
 
-	my $cmd	   = "PG_PASSWORD='" . $db_pass . "' pg_dump --username=" . $db_user . " " . $db_name;
+	my $cmd	      = "PG_PASSWORD='" . $db_pass . "' pg_dump --username=" . $db_user . " " . $db_name;
 	my $extension = ".psql";
 	if ( $self->db->storage->isa("DBIx::Class::Storage::DBI::mysql") ) {
 		$cmd	   = "mysqldump -h " . $db_host . " -u " . $db_user . " -p" . $db_pass . " " . $db_name;
