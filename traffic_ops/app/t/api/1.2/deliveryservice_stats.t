@@ -48,17 +48,23 @@ my $fake_header = HTTP::Headers->new;
 $fake_header->header( 'Content-Type' => 'application/json' );    # set
 
 my $fake_answer = {
-	"response" => {
-		"series" => {
-			"count"   => 2,
-			"columns" => [ "time", "mean" ],
-			"values"  => {
-				"2015-05-07T02:00:00Z" => 3309856.31666667,
-				"2015-05-07T02:00:00Z" => 3309856.31666667,
-			},
+	response => {
+		series => {
+			count   => 2,
+			columns => [ "time", "mean" ],
+			values  => [ [ "2015-05-07T02:00:00Z", 3309856.31666667 ], [ "2015-05-07T02:00:00Z", 3309856.31666667 ], ],
 		},
-		"summary" => {
+		summary => {
 			average               => 1140.232,
+			fifthPercentile       => 0,
+			ninetyFifthPercentile => 1561.47,
+			ninetyFifthPercentile => 1561.47,
+			min                   => 619.22,
+			max                   => 1561.47,
+			total                 => 6841.39,
+		},
+		parameters => {
+			interval              => "60s",
 			fifthPercentile       => 0,
 			ninetyFifthPercentile => 1561.47,
 			ninetyFifthPercentile => 1561.47,

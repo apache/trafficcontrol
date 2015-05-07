@@ -28,18 +28,16 @@ use constant SUCCESS => 0;
 use constant ERROR   => 1;
 
 sub index {
-	my $self            = shift;
-	my $cdn_name        = $self->param('cdnName');
-	my $ds_name         = $self->param('deliveryServiceName');
-	my $cachegroup_name = $self->param('cacheGroupName');
-	my $metric_type     = $self->param('metricType');
-	my $server_type     = $self->param('serverType');
-	my $start_date      = $self->param('startDate');
-	my $end_date        = $self->param('endDate');
-	my $interval        = $self->param('interval') || "60s";     # Valid interval examples 10m (minutes), 10s (seconds), 1h (hour)
-	my $exclude         = $self->param('exclude');
-	my $limit           = $self->param('limit');
-	my $offset          = $self->param('offset');
+	my $self        = shift;
+	my $ds_name     = $self->param('deliveryServiceName');
+	my $metric_type = $self->param('metricType');
+	my $server_type = $self->param('serverType');
+	my $start_date  = $self->param('startDate');
+	my $end_date    = $self->param('endDate');
+	my $interval    = $self->param('interval') || "60s";     # Valid interval examples 10m (minutes), 10s (seconds), 1h (hour)
+	my $exclude     = $self->param('exclude');
+	my $limit       = $self->param('limit');
+	my $offset      = $self->param('offset');
 
 	if ( $self->is_valid_delivery_service_name($ds_name) ) {
 		if ( $self->is_delivery_service_name_assigned($ds_name) ) {
@@ -47,13 +45,11 @@ sub index {
 			# Build the summary section
 			$dsq = new Builder::DeliveryServiceStatsQuery(
 				{
-					cdn_name        => $cdn_name,
-					series_name     => $metric_type,
-					ds_name         => $ds_name,
-					cachegroup_name => $cachegroup_name,
-					start_date      => $start_date,
-					end_date        => $end_date,
-					interval        => $interval
+					series_name => $metric_type,
+					ds_name     => $ds_name,
+					start_date  => $start_date,
+					end_date    => $end_date,
+					interval    => $interval
 				}
 			);
 
@@ -170,23 +166,19 @@ sub build_parameters {
 	my $summary_query = shift;
 	my $series_query  = shift;
 
-	my $cdn_name        = $self->param('cdnName');
-	my $ds_name         = $self->param('deliveryServiceName');
-	my $cachegroup_name = $self->param('cacheGroupName');
-	my $metric_type     = $self->param('metricType');
-	my $server_type     = $self->param('serverType');
-	my $start_date      = $self->param('startDate');
-	my $end_date        = $self->param('endDate');
-	my $interval        = $self->param('interval') || "1m";      # Valid interval examples 10m (minutes), 10s (seconds), 1h (hour)
-	my $exclude         = $self->param('exclude');
-	my $limit           = $self->param('limit');
-	my $offset          = $self->param('offset');
+	my $ds_name     = $self->param('deliveryServiceName');
+	my $metric_type = $self->param('metricType');
+	my $server_type = $self->param('serverType');
+	my $start_date  = $self->param('startDate');
+	my $end_date    = $self->param('endDate');
+	my $interval    = $self->param('interval') || "1m";      # Valid interval examples 10m (minutes), 10s (seconds), 1h (hour)
+	my $exclude     = $self->param('exclude');
+	my $limit       = $self->param('limit');
+	my $offset      = $self->param('offset');
 
 	my $parent_node     = "query";
 	my $parameters_node = "parameters";
-	$result->{$parent_node}{$parameters_node}{cdnName}             = $cdn_name;
 	$result->{$parent_node}{$parameters_node}{deliveryServiceName} = $ds_name;
-	$result->{$parent_node}{$parameters_node}{cacheGroupName}      = $cachegroup_name;
 	$result->{$parent_node}{$parameters_node}{startDate}           = $start_date;
 	$result->{$parent_node}{$parameters_node}{endDate}             = $end_date;
 	$result->{$parent_node}{$parameters_node}{interval}            = $interval;

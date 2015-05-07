@@ -47,14 +47,12 @@ sub valid_keys {
 	my $self       = shift;
 	my $valid      = 1;
 	my $valid_keys = {
-		cdn_name        => 1,
-		ds_name         => 1,
-		cachegroup_name => 1,
-		start_date      => 1,
-		end_date        => 1,
-		series_name     => 1,
-		interval        => 1,
-		limit           => 1
+		ds_name     => 1,
+		start_date  => 1,
+		end_date    => 1,
+		series_name => 1,
+		interval    => 1,
+		limit       => 1
 	};
 	foreach my $k ( keys $args ) {
 		unless ( defined( $valid_keys->{$k} ) ) {
@@ -75,9 +73,8 @@ sub summary_query {
 			"SELECT mean(value), percentile(value, 5), percentile(value, 95), percentile(value, 98), min(value), max(value), sum(value), count(value) FROM",
 			$args->{series_name}, "WHERE time > '$args->{start_date}' AND
 		                                         time < '$args->{end_date}' AND
-		                                         cdn = '$args->{cdn_name}' AND
-		                                         cachegroup = '$args->{cachegroup_name}'
-		                                         GROUP BY time($args->{interval}), cdn, cachegroup, deliveryservice"
+		                                         deliveryservice = '$args->{ds_name}'
+		                                         GROUP BY time($args->{interval}), deliveryservice"
 		);
 
 		# cleanup whitespace
@@ -96,9 +93,7 @@ sub series_query {
 		"SELECT mean(value) FROM",
 		$args->{series_name}, "WHERE time > '$args->{start_date}' AND 
                                time < '$args->{end_date}' AND 
-                               cdn = '$args->{cdn_name}' AND 
-                               deliveryservice = '$args->{ds_name}' AND 
-                               cachegroup = '$args->{cachegroup_name}' 
+                               deliveryservice = '$args->{ds_name}'
                                GROUP BY time($args->{interval}) ORDER BY asc"
 	);
 
