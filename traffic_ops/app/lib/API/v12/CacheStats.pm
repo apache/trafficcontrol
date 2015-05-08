@@ -21,15 +21,12 @@ package API::v12::CacheStats;
 use UI::Utils;
 use Mojo::Base 'Mojolicious::Controller';
 use Data::Dumper;
-use Builder::InfluxdbBuilder;
-use Builder::CacheStatsBuilder;
 use JSON;
-my $builder;
-use constant SUCCESS => 0;
-use constant ERROR   => 1;
+use Extensions::Delegate::CacheStatistics;
+use Utils::Helper::Extensions;
+Utils::Helper::Extensions->use;
+use Common::ReturnCodes qw(SUCCESS ERROR);
 
-#TODO: drichardson
-#      - Add required fields validation see lib/API/User.pm based on Validate::Tiny
 sub index {
 	my $self = shift;
 
