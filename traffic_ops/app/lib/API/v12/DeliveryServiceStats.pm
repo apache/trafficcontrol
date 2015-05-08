@@ -20,10 +20,11 @@ package API::v12::DeliveryServiceStats;
 # JvD Note: you always want to put Utils as the first use. Sh*t don't work if it's after the Mojo lines.
 use UI::Utils;
 use Mojo::Base 'Mojolicious::Controller';
+use Builder::InfluxdbBuilder;
 use Data::Dumper;
-use Builder::DeliveryServiceStatsQuery;
+use Builder::DeliveryServiceStatsBuilder;
 use JSON;
-my $dsq;
+my $builder;
 use constant SUCCESS => 0;
 use constant ERROR   => 1;
 
@@ -43,7 +44,7 @@ sub index {
 		if ( $self->is_delivery_service_name_assigned($ds_name) ) {
 
 			# Build the summary section
-			$dsq = new Builder::DeliveryServiceStatsQuery(
+			$builder = new Builder::DeliveryServiceStatsBuilder(
 				{
 					series_name => $metric_type,
 					ds_name     => $ds_name,
@@ -60,34 +61,18 @@ sub index {
 			my $include_summary = ( defined($exclude) && $exclude =~ /summary/ ) ? 0 : 1;
 			if ($include_summary) {
 				( $rc, $result, $summary_query ) = $self->build_summary($result);
+				$self->app->log->debug( "summary_query #-> " . $summary_query );
 			}
 
-			#			$self->app->log->debug("=================================================");
-			#			$self->app->log->debug( "rc #-> " . Dumper($rc) );
-			#			$self->app->log->debug( "result #-> " . Dumper($result) );
-			#			$self->app->log->debug( "summary_query #-> " . Dumper($summary_query) );
-			#			$self->app->log->debug("=================================================");
-			#
 			if ( $rc == SUCCESS ) {
-				$self->app->log->debug("GOOD");
-
 				my $include_series = ( defined($exclude) && $exclude =~ /series/ ) ? 0 : 1;
 				my $series_query;
 				if ($include_series) {
 					( $rc, $result, $series_query ) = $self->build_series($result);
-
-					#					$self->app->log->debug( "result #-> " . Dumper($result) );
+					$self->app->log->debug( "series_query #-> " . $series_query );
 				}
-
-				#				$self->app->log->debug(".................................................");
-				#				$self->app->log->debug( "result #-> " . Dumper($result) );
-				#				$self->app->log->debug( "series_query #-> " . Dumper($series_query) );
-				#				$self->app->log->debug(".................................................");
-
 				if ( $rc == SUCCESS ) {
 					$result = $self->build_parameters( $result, $summary_query, $series_query );
-
-					#					$self->app->log->debug( "result #-> " . Dumper($result) );
 					return $self->success($result);
 				}
 				else {
@@ -95,7 +80,6 @@ sub index {
 				}
 			}
 			else {
-				$self->app->log->debug("BAD");
 				return $self->alert($result);
 			}
 
@@ -114,20 +98,18 @@ sub build_summary {
 	my $self   = shift;
 	my $result = shift;
 
-	my $summary_query = $dsq->summary_query();
+	my $summary_query = $builder->summary_query();
 
 	my $response_container = $self->influxdb_query( $self->get_db_name(), $summary_query );
 	my $response           = $response_container->{'response'};
 	my $content            = $response->{_content};
-	$self->app->log->debug( "content #-> " . Dumper($content) );
 
 	my $summary;
 	my $summary_content;
 	my $series_count = 0;
 	if ( $response->is_success() ) {
-		$summary_content = decode_json($content);
-		$summary         = $dsq->summary_response($summary_content);
-		$self->app->log->debug( "SUCCESS summary #-> " . Dumper($summary) );
+		$summary_content   = decode_json($content);
+		$summary           = $builder->summary_response($summary_content);
 		$result->{summary} = $summary;
 		return ( SUCCESS, $result, $summary_query );
 	}
@@ -140,7 +122,7 @@ sub build_series {
 	my $self   = shift;
 	my $result = shift;
 
-	my $series_query       = $dsq->series_query();
+	my $series_query       = $builder->series_query();
 	my $response_container = $self->influxdb_query( $self->get_db_name(), $series_query );
 	my $response           = $response_container->{'response'};
 	my $content            = $response->{_content};
@@ -148,7 +130,7 @@ sub build_series {
 	my $series;
 	if ( $response->is_success() ) {
 		my $series_content = decode_json($content);
-		$series = $dsq->series_response($series_content);
+		$series = $builder->series_response($series_content);
 		my $series_node = "series";
 		if ( defined($series) && ( keys $series ) ) {
 			$result->{$series_node} = $series;

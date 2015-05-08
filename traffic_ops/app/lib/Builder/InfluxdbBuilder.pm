@@ -1,4 +1,4 @@
-package Builder::DeliveryServiceStatsQuery;
+package Builder::InfluxdbBuilder;
 #
 # Copyright 2015 Comcast Cable Communications Management, LLC
 #
@@ -24,36 +24,18 @@ use File::Slurp;
 use Math::Round;
 use Carp qw(cluck confess);
 
-my $args;
-
 sub new {
-	my $self  = {};
 	my $class = shift;
-	$args = shift;
 
-	return ( bless( $self, $class ) );
+	my $self = bless { c => $class }, $class;
+	return $self;
 }
 
-sub now {
-	my $self      = shift;
-	my $now_param = shift;
-	if ( defined($now_param) ) {
-		return "now()";
-	}
-
-}
-
-sub valid_keys {
+sub validate_keys {
 	my $self       = shift;
+	my $args       = shift;
+	my $valid_keys = shift;
 	my $valid      = 1;
-	my $valid_keys = {
-		ds_name     => 1,
-		start_date  => 1,
-		end_date    => 1,
-		series_name => 1,
-		interval    => 1,
-		limit       => 1
-	};
 	foreach my $k ( keys $args ) {
 		unless ( defined( $valid_keys->{$k} ) ) {
 			confess("'$k' is not a valid key constructor key.");
@@ -61,46 +43,6 @@ sub valid_keys {
 		}
 	}
 	return $valid;
-}
-
-sub summary_query {
-	my $self = shift;
-	if ( valid_keys() ) {
-
-		#'summary' section
-		my $query = sprintf(
-			'%s %s %s',
-			"SELECT mean(value), percentile(value, 5), percentile(value, 95), percentile(value, 98), min(value), max(value), sum(value), count(value) FROM",
-			$args->{series_name}, "WHERE time > '$args->{start_date}' AND
-		                                         time < '$args->{end_date}' AND
-		                                         deliveryservice = '$args->{ds_name}'
-		                                         GROUP BY time($args->{interval}), deliveryservice"
-		);
-
-		# cleanup whitespace
-		$query =~ s/\\n//g;
-		$query =~ s/\s+/ /g;
-		return $query;
-
-	}
-}
-
-sub series_query {
-	my $self = shift;
-
-	my $query = sprintf(
-		'%s %s %s',
-		"SELECT mean(value) FROM",
-		$args->{series_name}, "WHERE time > '$args->{start_date}' AND 
-                               time < '$args->{end_date}' AND 
-                               deliveryservice = '$args->{ds_name}'
-                               GROUP BY time($args->{interval}) ORDER BY asc"
-	);
-
-	# cleanup whitespace
-	$query =~ s/\\n//g;
-	$query =~ s/\s+/ /g;
-	return $query;
 }
 
 sub summary_response {
