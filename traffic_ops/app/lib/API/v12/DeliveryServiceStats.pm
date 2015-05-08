@@ -28,6 +28,9 @@ my $builder;
 use constant SUCCESS => 0;
 use constant ERROR   => 1;
 
+#TODO: drichardson
+#      - Add required fields validation see lib/API/User.pm based on Validate::Tiny
+#      - Verify how much can be refactored after cache_stats value grouping is complete.
 sub index {
 	my $self        = shift;
 	my $ds_name     = $self->param('deliveryServiceName');

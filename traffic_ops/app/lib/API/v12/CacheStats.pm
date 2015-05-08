@@ -27,6 +27,9 @@ use Utils::Helper::Extensions;
 Utils::Helper::Extensions->use;
 use Common::ReturnCodes qw(SUCCESS ERROR);
 
+#TODO: drichardson
+#      - Add required fields validation see lib/API/User.pm based on Validate::Tiny
+#      - Verify how much can be refactored after cache_stats value grouping is complete.
 sub index {
 	my $self = shift;
 
