@@ -30,6 +30,7 @@ use API::DeliveryService::KeysUrlSig qw(URL_SIG_KEYS_BUCKET);
 my $dispatch_table ||= {
 	"logs_xml.config"         => sub { logs_xml_dot_config(@_) },
 	"cacheurl.config"         => sub { cacheurl_dot_config(@_) },
+	"cacheurl_remap.config"   => sub { cacheurl_dot_config(@_) },
 	"records.config"          => sub { generic_config(@_) },
 	"plugin.config"           => sub { generic_config(@_) },
 	"astats.config"           => sub { generic_config(@_) },
@@ -512,14 +513,20 @@ sub cacheurl_dot_config {
 		$data = $self->ds_data($server);
 	}
 
-	# print Dumper($data);
-	foreach my $remap ( @{ $data->{dslist} } ) {
-		if ( $remap->{qstring_ignore} == 1 ) {
-			my $org = $remap->{org};
-			$org =~ /(https?:\/\/)(.*)/;
-			$text .= "$1(" . $2 . "/[^?]+)(?:\\?|\$)  $1\$1\n";
+	if ( $filename !~ /_remap.config/ ) {
+		foreach my $remap ( @{ $data->{dslist} } ) {
+			if ( $remap->{qstring_ignore} == 1 ) {
+				my $org = $remap->{org};
+				$org =~ /(https?:\/\/)(.*)/;
+				$text .= "$1(" . $2 . "/[^?]+)(?:\\?|\$)  $1\$1\n";
+			}
 		}
 	}
+	else {
+		$text .= "http://([^?]+)(?:\\?|\$)  http://\$1\n";
+		$text .= "https://([^?]+)(?:\\?|\$)  https://\$1\n";
+	}
+
 	return $text;
 }
 
@@ -789,6 +796,18 @@ sub remap_text {
 		my $dqs_file = "drop_qstring.config";
 		$text .= " \@plugin=regex_remap.so \@pparam=" . $dqs_file;
 	}
+	elsif ( $remap->{qstring_ignore} == 1 ) {
+		my $global_exists =
+			$self->db->resultset('ProfileParameter')
+			->search( { -and => [ profile => $server->profile->id, 'parameter.config_file' => 'cacheurl.config', 'parameter.name' => 'location' ] },
+			{ prefetch => [ 'parameter', 'profile' ] } )->single();
+		if ($global_exists) {
+			$self->app->log->debug("qstring_ignore == 1, but global cacheurl.config param exists, so skipping remap rename config_file=cacheurl.config parameter if you want to change");
+		}
+		else {
+			$text .= " \@plugin=cacheurl.so \@pparam=cacheurl_remap.config";
+		}
+	}
 
 	# Note: should use full path here?
 	if ( defined( $remap->{regex_remap} ) && $remap->{regex_remap} ne "" ) {
@@ -890,6 +909,7 @@ sub parent_dot_config {
 		}
 
 		$text .= "\n";
+
 		# $self->app->log->debug($text);
 		return $text;
 	}
