@@ -76,7 +76,7 @@ sub series_query {
 
 	my $query = sprintf(
 		'%s %s %s',
-		"SELECT mean(value) FROM",
+		"SELECT sum(value) FROM",
 		$args->{series_name}, "WHERE time > '$args->{start_date}' AND 
                                time < '$args->{end_date}' AND 
                                deliveryservice = '$args->{ds_name}'
