@@ -26,13 +26,13 @@ use Test::TestHelper;
 use Test::MockModule;
 use Connection::InfluxDBAdapter;
 use Data::Dumper;
-use Builder::DeliveryServiceStatsQuery;
+use Builder::DeliveryServiceStatsBuilder;
 
 BEGIN {
 	use_ok('Test::Exception');
 }
 
-my $iq = Builder::DeliveryServiceStatsQuery->new(
+my $iq = Builder::DeliveryServiceStatsBuilder->new(
 	{
 		ds_name     => "ds_stats",
 		series_name => "kbps",
@@ -67,13 +67,13 @@ $series_q =~ s/\\n/ /g;
 $series_q =~ s/\s+/ /g;
 
 $expected_q =
-	"SELECT mean(value) FROM kbps WHERE time > '2015-01-01T00:00:00-07:00' AND time < '2015-01-30T00:00:00-07:00' AND deliveryservice = 'ds_stats' GROUP BY time(60s) ORDER BY asc";
+	"SELECT sum(value) FROM kbps WHERE time > '2015-01-01T00:00:00-07:00' AND time < '2015-01-30T00:00:00-07:00' AND deliveryservice = 'ds_stats' GROUP BY time(60s) ORDER BY asc";
 $expected_q =~ s/\\n/ /g;
 $expected_q =~ s/\s+/ /g;
 
 is( $series_q, $expected_q, 'Compare Series queries' );
 
-$iq = Builder::DeliveryServiceStatsQuery->new( { XXX => 'XXX' } );
+$iq = Builder::DeliveryServiceStatsBuilder->new( { XXX => 'XXX' } );
 throws_ok {
 	$iq->summary_query()
 }
