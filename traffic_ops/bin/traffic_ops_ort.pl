@@ -25,7 +25,7 @@ use Fcntl qw(:flock);
 use Data::Dumper;
 
 $| = 1;	
-my $script_version = "0.47a";
+my $script_version = "0.49a";
 my $date = `/bin/date`; chomp($date);
 print "$date\nVersion of this script: $script_version\n";
 
@@ -873,7 +873,7 @@ sub check_syncds_state {
 
 sub sleep_rand {
 	# This should set it to a random number between 1 and whatever is passed in. 
-	my $duration = int(rand(shift)) + 1;
+	my $duration = int(rand(shift));
 
 	($log_level >> $WARN) && print "WARN Sleeping for $duration seconds: ";
 
@@ -891,7 +891,7 @@ sub process_config_files {
 		my $return = undef;
 		if ($script_mode == $SYNCDS && 
 		($file eq "records.config" || $file eq "remap.config" || $file eq "parent.config" || $file eq "cache.config" || $file eq "hosting.config" || 
-		$file =~ m/url\_sig\_(.*)\.config$/ || $file =~ m/hdr\_rw\_(.*)\.config$/ || $file eq "regex_revalidate.config" || $file eq "ip_allow.config" ) ) {
+		$file =~ m/url\_sig\_(.*)\.config$/ || $file =~ m/hdr\_rw\_(.*)\.config$/ || $file eq "regex_revalidate.config" || $file eq "ip_allow.config" || $file eq "cacheurl_qstring.config" ) ) {
 			if (package_installed("trafficserver")) {
 				($log_level >> $DEBUG) && print "DEBUG In syncds mode, I'm about to process config file: $file\n";
 				$return = &process_cfg_file($file, "trafficserver");
