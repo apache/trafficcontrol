@@ -94,11 +94,15 @@ sub query {
 
 	# db name should not be included when create influxdb databases
 	my $db_name = shift;
-	my $query = shift || confess("Supply a key");
+	my $query   = shift || confess("Supply a key");
+	my $pretty  = shift;
 
 	my @uri;
 	if ( defined($db_name) ) {
 		push( @uri, "db=" . $db_name );
+	}
+	if ( defined($pretty) ) {
+		push( @uri, "pretty=true" );
 	}
 
 	push( @uri, "q=" . uri_escape($query) );

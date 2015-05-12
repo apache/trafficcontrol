@@ -25,8 +25,8 @@ use Data::Dumper;
 use Builder::DeliveryServiceStatsBuilder;
 use JSON;
 my $builder;
-use constant SUCCESS => 0;
-use constant ERROR   => 1;
+use constant SUCCESS => 1;
+use constant ERROR   => 0;
 
 #TODO: drichardson
 #      - Add required fields validation see lib/API/User.pm based on Validate::Tiny
@@ -57,7 +57,7 @@ sub index {
 				}
 			);
 
-			my $rc     = 0;
+			my $rc     = SUCCESS;
 			my $result = ();
 			my $summary_query;
 
@@ -67,14 +67,14 @@ sub index {
 				$self->app->log->debug( "summary_query #-> " . $summary_query );
 			}
 
-			if ( $rc == SUCCESS ) {
+			if ($rc) {
 				my $include_series = ( defined($exclude) && $exclude =~ /series/ ) ? 0 : 1;
 				my $series_query;
 				if ($include_series) {
 					( $rc, $result, $series_query ) = $self->build_series($result);
 					$self->app->log->debug( "series_query #-> " . $series_query );
 				}
-				if ( $rc == SUCCESS ) {
+				if ($rc) {
 					$result = $self->build_parameters( $result, $summary_query, $series_query );
 					return $self->success($result);
 				}
@@ -126,7 +126,7 @@ sub build_series {
 	my $result = shift;
 
 	my $series_query       = $builder->series_query();
-	my $response_container = $self->influxdb_query( $self->get_db_name(), $series_query );
+	my $response_container = $self->influxdb_query( $self->get_db_name(), $series_query, "pretty" );
 	my $response           = $response_container->{'response'};
 	my $content            = $response->{_content};
 
