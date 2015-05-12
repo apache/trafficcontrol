@@ -58,10 +58,9 @@ sub summary_query {
 			'%s %s %s',
 			"SELECT mean(value), percentile(value, 5), percentile(value, 95), percentile(value, 98), min(value), max(value), sum(value), count(value) FROM",
 			$args->{series_name}, "WHERE time >= '$args->{start_date}' AND
-		                                         time <= '$args->{end_date}' AND
-                                                 cachegroup = 'total' AND 
-		                                         deliveryservice = '$args->{ds_name}'
-		                                         GROUP BY time($args->{interval}), deliveryservice"
+		                                 time <= '$args->{end_date}' AND
+                                         cachegroup = 'total' AND 
+		                                 deliveryservice = '$args->{ds_name}'"
 		);
 
 		return $self->clean_whitespace($query);
@@ -75,23 +74,14 @@ sub series_query {
 		'%s %s %s',
 		"SELECT sum(value)/count(value) FROM",
 		$args->{series_name}, "WHERE time >='$args->{start_date}' AND 
-                               time <= '$args->{end_date}' AND 
-                               cachegroup = 'total' AND 
-                               deliveryservice = '$args->{ds_name}'
-                               GROUP BY time($args->{interval}), cachegroup ORDER BY asc"
+                                     time <= '$args->{end_date}' AND 
+                                     cachegroup = 'total' AND 
+                                     deliveryservice = '$args->{ds_name}'
+                                     GROUP BY time($args->{interval}), cachegroup 
+                                     ORDER BY asc"
 	);
 
 	return $self->clean_whitespace($query);
-}
-
-sub clean_whitespace {
-	my $self  = shift;
-	my $query = shift;
-
-	# cleanup whitespace
-	$query =~ s/\\n//g;
-	$query =~ s/\s+/ /g;
-	return $query;
 }
 
 1;

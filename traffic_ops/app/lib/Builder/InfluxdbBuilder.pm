@@ -58,6 +58,7 @@ sub summary_response {
 	}
 	my $summary = ();
 
+	print( "summary_count #-> " . $summary_count );
 	if ( defined($summary_count) & ( $summary_count > 0 ) ) {
 		my $avg = $summary_content->{results}[0]{series}[0]{values}[0][1];
 
@@ -116,6 +117,16 @@ sub series_response {
 	else {
 		return [];
 	}
+}
+
+sub clean_whitespace {
+	my $self  = shift;
+	my $query = shift;
+
+	# cleanup whitespace
+	$query =~ s/\\n//g;
+	$query =~ s/\s+/ /g;
+	return $query;
 }
 
 1;
