@@ -34,7 +34,6 @@ sub index {
 	my $self = shift;
 
 	my $cstats = new Extensions::Delegate::CacheStatistics( $self, $self->get_db_name() );
-
 	my ( $rc, $result ) = $cstats->get_stats();
 	if ( $rc == SUCCESS ) {
 		return $self->success($result);

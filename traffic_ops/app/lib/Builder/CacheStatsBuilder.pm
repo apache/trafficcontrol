@@ -45,7 +45,9 @@ sub validate_keys {
 		end_date    => 1,
 		series_name => 1,
 		interval    => 1,
-		limit       => 1
+		orderby     => 1,
+		limit       => 1,
+		offset      => 1
 	};
 	return $self->SUPER::validate_keys( $args, $valid_keys );
 }
