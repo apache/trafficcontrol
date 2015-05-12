@@ -64,10 +64,9 @@ sub summary_query {
 		                                         GROUP BY time($args->{interval}), cdn"
 		);
 
-		# cleanup whitespace
-		$query =~ s/\\n//g;
-		$query =~ s/\s+/ /g;
-		return $query;
+		$query = Builder::InfluxdbBuilder->append_clauses( $query, $args );
+
+		return Builder::InfluxdbBuilder->clean_whitespace($query);
 
 	}
 }
@@ -86,10 +85,9 @@ sub series_query {
 							   cdn ORDER BY asc"
 	);
 
-	# cleanup whitespace
-	$query =~ s/\\n//g;
-	$query =~ s/\s+/ /g;
-	return $query;
+	$query = Builder::InfluxdbBuilder->append_clauses( $query, $args );
+
+	return Builder::InfluxdbBuilder->clean_whitespace($query);
 }
 
 1;

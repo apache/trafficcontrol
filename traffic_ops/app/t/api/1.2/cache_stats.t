@@ -80,14 +80,12 @@ my $json_response = encode_json($fake_answer);
 my $fake_response = HTTP::Response->new( 200, undef, $fake_header, $json_response );
 $fake_lwp->mock( 'query', sub { return $fake_response } );
 
-# api/1.2/deliveryservice_stats.json?cdnName=over-the-top&deliveryServiceName=steam-dns&metricType=kbps&cacheGroupName=us-co-denver&startDate=2015-05-06T20:00:00-06:00&endDate=2015-05-06T20:00:00-06:00&interval=60s
-
 ok $t->get_ok(
-	'/api/1.2/deliveryservice_stats.json?deliveryServiceName=test-ds1&metricType=kbps&startDate=2015-05-06T20:00:00-06:00&endDate=2015-05-06T20:00:00-06:00&interval=60s'
+	'/api/1.2/cache_stats.json?cdnName=cdn1&=test-ds1&cacheGroupName=us-co-denver&metricType=kbps&startDate=2015-05-06T20:00:00-06:00&endDate=2015-05-06T20:00:00-06:00&interval=60s'
 )->status_is(200)->json_has( '/response', 'has a response' ), 'Query1';
 
 ok $t->get_ok(
-	'/api/1.2/deliveryservice_stats.json?deliveryServiceName=test-ds1&metricType=kbps&startDate=2015-05-06T20:00:00-06:00&endDate=2015-05-06T20:00:00-06:00&interval=60s'
+	'/api/1.2/cache_stats.json?cdnName=cdn1&cacheGroupName=us-co-denver&metricType=kbps&startDate=2015-05-06T20:00:00-06:00&endDate=2015-05-06T20:00:00-06:00&interval=60s'
 )->status_is(200)->json_has( '/response', 'has a response' ), 'Query2';
 
 $dbh->disconnect();

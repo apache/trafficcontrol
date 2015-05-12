@@ -41,6 +41,7 @@ sub index {
 	else {
 		return $self->alert($result);
 	}
+
 }
 
 sub get_db_name {

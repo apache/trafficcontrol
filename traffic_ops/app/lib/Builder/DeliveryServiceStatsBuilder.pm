@@ -68,6 +68,7 @@ sub summary_query {
 		                                 deliveryservice = '$args->{ds_name}'"
 		);
 
+		$query = Builder::InfluxdbBuilder->append_clauses( $query, $args );
 		return Builder::InfluxdbBuilder->clean_whitespace($query);
 	}
 }
