@@ -25,8 +25,6 @@ use Math::Round;
 use Builder::InfluxdbBuilder;
 use Carp qw(cluck confess);
 
-our @ISA = ("Builder::InfluxdbBuilder");
-
 my $args;
 
 sub new {
@@ -49,7 +47,7 @@ sub validate_keys {
 		limit       => 1,
 		offset      => 1
 	};
-	return $self->SUPER::validate_keys( $args, $valid_keys );
+	return Builder::InfluxdbBuilder->validate_keys( $args, $valid_keys );
 }
 
 sub summary_query {
