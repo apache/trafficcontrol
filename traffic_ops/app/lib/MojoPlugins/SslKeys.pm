@@ -46,7 +46,7 @@ sub register {
 
 			#generate key and csr
 			my $result = UI::Utils->exec_command(
-				"openssl req -nodes -newkey rsa:1024 -keyout $TMP_LOCATION/$hostname.key -out $TMP_LOCATION/$hostname.csr -subj /C=\"$country\"/ST=\"$state\"/L=\"$city\"/O=\"$org\"/OU=\"$unit\"/CN=$hostname"
+				"openssl req -nodes -newkey rsa:2048 -keyout $TMP_LOCATION/$hostname.key -out $TMP_LOCATION/$hostname.csr -subj /C=\"$country\"/ST=\"$state\"/L=\"$city\"/O=\"$org\"/OU=\"$unit\"/CN=$hostname"
 			);
 			if ( $result != 0 ) {
 				$response = { _rc => 400, _content => "Error creating key and csr. Result is $result" };
