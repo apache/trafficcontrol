@@ -30,7 +30,7 @@ use API::DeliveryService::KeysUrlSig qw(URL_SIG_KEYS_BUCKET);
 my $dispatch_table ||= {
 	"logs_xml.config"         => sub { logs_xml_dot_config(@_) },
 	"cacheurl.config"         => sub { cacheurl_dot_config(@_) },
-	"cacheurl_remap.config"   => sub { cacheurl_dot_config(@_) },
+	"cacheurl_qstring.config" => sub { cacheurl_dot_config(@_) },
 	"records.config"          => sub { generic_config(@_) },
 	"plugin.config"           => sub { generic_config(@_) },
 	"astats.config"           => sub { generic_config(@_) },
@@ -513,7 +513,7 @@ sub cacheurl_dot_config {
 		$data = $self->ds_data($server);
 	}
 
-	if ( $filename !~ /_remap.config/ ) {
+	if ( $filename !~ /_qstring.config/ ) {
 		foreach my $remap ( @{ $data->{dslist} } ) {
 			if ( $remap->{qstring_ignore} == 1 ) {
 				my $org = $remap->{org};
@@ -744,6 +744,9 @@ sub remap_dot_config {
 				$remap_lines{ "map " . $remap->{org} . "    " . $remap->{org} . " \@plugin=header_rewrite.so \@pparam=" . $remap->{mid_hdr_rw_file} . "\n" }
 					= defined;
 			}
+			elsif ( $remap->{qstring_ignore} == 1 ) {
+				$remap_lines{ "map " . $remap->{org} . "    " . $remap->{org} . " \@plugin=cacheurl.so \@pparam=cacheurl_qstring.config\n" } = defined;
+			}
 		}
 		foreach my $key (%remap_lines) {
 			$text .= $key;
@@ -805,7 +808,7 @@ sub remap_text {
 			$self->app->log->debug("qstring_ignore == 1, but global cacheurl.config param exists, so skipping remap rename config_file=cacheurl.config parameter if you want to change");
 		}
 		else {
-			$text .= " \@plugin=cacheurl.so \@pparam=cacheurl_remap.config";
+			$text .= " \@plugin=cacheurl.so \@pparam=cacheurl_qstring.config";
 		}
 	}
 
