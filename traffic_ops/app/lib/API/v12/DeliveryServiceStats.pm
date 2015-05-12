@@ -153,6 +153,7 @@ sub build_series {
 	}
 }
 
+#TODO: drichardson -refactor the common fields
 sub build_parameters {
 	my $self          = shift;
 	my $result        = shift;
@@ -168,6 +169,7 @@ sub build_parameters {
 	my $exclude     = $self->param('exclude');
 	my $limit       = $self->param('limit');
 	my $offset      = $self->param('offset');
+	my $orderby     = $self->param('orderby');
 
 	my $parent_node     = "query";
 	my $parameters_node = "parameters";
@@ -176,6 +178,9 @@ sub build_parameters {
 	$result->{$parent_node}{$parameters_node}{endDate}             = $end_date;
 	$result->{$parent_node}{$parameters_node}{interval}            = $interval;
 	$result->{$parent_node}{$parameters_node}{metricType}          = $metric_type;
+	$result->{$parent_node}{$parameters_node}{orderby}             = $orderby;
+	$result->{$parent_node}{$parameters_node}{limit}               = $limit;
+	$result->{$parent_node}{$parameters_node}{offset}              = $offset;
 
 	my $queries_node = "language";
 	$result->{$parent_node}{$queries_node}{influxdbDatabaseName} = $self->get_db_name();
