@@ -44,7 +44,7 @@ my $stat_name  = "test_stat";
 my $stat_value    = "3.1415";
 
 my ($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst)=localtime(time);
-my $summary_timestamp = sprintf ( "%04d-%02d-%02d %02d:%02d:%02d",
+my $summary_time = sprintf ( "%04d-%02d-%02d %02d:%02d:%02d",
                                    $year+1900,$mon+1,$mday,$hour,$min,$sec);
 
 #login
@@ -59,7 +59,7 @@ ok $t->post_ok(
 		deliveryServiceName => $deliveryservice,
 		statName => $stat_name, 
 		statValue => $stat_value, 
-		summaryTimestamp => $summary_timestamp,
+		summaryTime => $summary_time,
 	}
 	)->status_is(200)->json_has("Successfully added stats summary record")
 	->or( sub { diag $t->tx->res->content->asset->{content}; } );

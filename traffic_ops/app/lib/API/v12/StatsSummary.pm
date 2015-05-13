@@ -42,7 +42,7 @@ sub index {
 			$self->app->log->debug("statName -> $stat_name");
 			%q = ('stat_name' => $stat_name );
 		}
-		my $response = $self->db->resultset('StatsSummary')->search( \%q )->get_column('summary_timestamp')->max();
+		my $response = $self->db->resultset('StatsSummary')->search( \%q )->get_column('summary_time')->max();
 		return $self->success({"summaryTimestamp" => $response});
 	} 	
 	##add name and delivery_service to search
@@ -65,7 +65,7 @@ sub index {
 				"deliveryserviceName"   => $row->deliveryservice_name,
 				"statName"       		=> $row->stat_name,
 				"statValue" 	 		=> $row->stat_value,
-				"summaryTimestamp" 	 		=> $row->summary_timestamp,
+				"summaryTime" 	 		=> $row->summary_time,
 			}
 		}
 		);
@@ -79,7 +79,7 @@ sub create {
 	my $ds_name     = $self->req->json->{deliveryServiceName} || "all";
 	my $stat_name = $self->req->json->{statName}; 
 	my $stat_value = $self->req->json->{statValue};
-	my $summary_timestamp = $self->req->json->{summaryTimestamp};
+	my $summary_time = $self->req->json->{summaryTime};
 
 	if (!defined($stat_name) || !defined($stat_value)) {
 		$self->alert({ERROR => "Please provide a stat name and value"})
@@ -91,7 +91,7 @@ sub create {
 				deliveryservice_name 	=> $ds_name,
 				stat_name        		=> $stat_name,
 				stat_value	 			=> $stat_value,
-				summary_timestamp		=> $summary_timestamp,
+				summary_time		=> $summary_time,
 			}
 		);
 		$insert->insert();

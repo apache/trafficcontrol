@@ -53,7 +53,7 @@ __PACKAGE__->table("stats_summary");
   data_type: 'float'
   is_nullable: 0
 
-=head2 summary_timestamp
+=head2 summary_time
 
   data_type: 'timestamp'
   datetime_undef_if_invalid: 1
@@ -78,7 +78,7 @@ __PACKAGE__->add_columns(
   { data_type => "varchar", is_nullable => 0, size => 255 },
   "stat_value",
   { data_type => "float", is_nullable => 0 },
-  "summary_timestamp",
+  "summary_time",
   {
     data_type => "timestamp",
     datetime_undef_if_invalid => 1,

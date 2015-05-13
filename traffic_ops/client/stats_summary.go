@@ -27,14 +27,15 @@ type CacheGroupResponse struct {
 }
 
 type StatsSummary struct {
-	CdnName          string     `json:"cdnName"`
-	DeliveryService  string     `json:"dsName"`
-	StatName         string     `json:"statName"`
-	StatValue        float64    `json:"statValue"`
-	SummaryTimestamp *time.Time `json:"summaryTimestamp"`
+	CdnName         string     `json:"cdnName"`
+	DeliveryService string     `json:"dsName"`
+	StatName        string     `json:"statName"`
+	StatValue       float64    `json:"statValue"`
+	SummaryTime     *time.Time `json:"summaryTime"`
 }
 
-func (to *Session) SummaryStats(cdn string, deliveryService string, statName string, startDate *time.Time, endDate *time.Time, limit uint64) ([]CacheGroup, error) {
+func (to *Session) SummaryStats(cdn string, deliveryService string, statName string) ([]CacheGroup, error) {
+
 	body, err := to.getBytes("/api/1.2/summary_stats.json")
 	if err != nil {
 		return nil, err
@@ -43,8 +44,8 @@ func (to *Session) SummaryStats(cdn string, deliveryService string, statName str
 	return cgList.Response, err
 }
 
-func (to *Session) SummaryStatsLastSummary(statName string) ([]CacheGroup, error) {
-	body, err := to.getBytes("/api/1.1/cachegroups.json")
+func (to *Session) SummaryStatsLastUpdated(statName string) ([]CacheGroup, error) {
+	body, err := to.getBytes("/api/1.2/summary_stats.json")
 	if err != nil {
 		return nil, err
 	}
