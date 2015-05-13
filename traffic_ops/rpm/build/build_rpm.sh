@@ -262,13 +262,13 @@ initBuildArea
 if [ "$BRANCH" != "master" ]; then
     echo "Executing RELEASE Flow"
     moveAndPushBranch $BRANCH
-    tagRelease ${BRANCH}-release
+    tagRelease traffic_ops-release-${BRANCH}
     buildRpm 
     installRpm
     copyToReleases
 elif [ "$HOTFIX_BRANCH" != "hotfix" ]; then
     echo "Executing HOTFIX Flow"
-    tagRelease ${HOTFIX_BRANCH}-hotfix
+    tagRelease traffic_ops-hotfix-${HOTFIX_BRANCH}
     buildRpm 
     installRpm
     copyToReleases

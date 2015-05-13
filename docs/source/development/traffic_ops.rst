@@ -167,25 +167,25 @@ To install the Traffic Ops Developer environment:
 
 3. Set up a user in MySQL.
 
-Example: :: 
+  Example: :: 
 
-  master $ mysql
-  Welcome to the MySQL monitor.  Commands end with ; or \g.
-  Your MySQL connection id is 305
-  Server version: 5.6.19 Homebrew
+    master $ mysql
+    Welcome to the MySQL monitor.  Commands end with ; or \g.
+    Your MySQL connection id is 305
+    Server version: 5.6.19 Homebrew
 
-  Copyright (c) 2000, 2014, Oracle and/or its affiliates. All rights reserved.
+    Copyright (c) 2000, 2014, Oracle and/or its affiliates. All rights reserved.
 
-  Oracle is a registered trademark of Oracle Corporation and/or its
-  affiliates. Other names may be trademarks of their respective
-  owners.
+    Oracle is a registered trademark of Oracle Corporation and/or its
+    affiliates. Other names may be trademarks of their respective
+    owners.
 
-  Type 'help;' or '\h' for help. Type '\c' to clear the current input statement.
+    Type 'help;' or '\h' for help. Type '\c' to clear the current input statement.
 
-  mysql> create user ‘to_user’@’localhost’;
-  mysql> grant all on to_development.* to 'to_user'@'localhost' identified by 'twelve';
-  mysql> grant all on to_test.* to 'to_user'@'localhost' identified by 'twelve';
-  mysql> grant all on to_integration.* to 'to_user'@'localhost' identified by 'twelve';
+    mysql> create user ‘to_user’@’localhost’;
+    mysql> grant all on to_development.* to 'to_user'@'localhost' identified by 'twelve';
+    mysql> grant all on to_test.* to 'to_user'@'localhost' identified by 'twelve';
+    mysql> grant all on to_integration.* to 'to_user'@'localhost' identified by 'twelve';
 
 
 4. Enter ``db/admin.pl --env=<enviroment name> setup`` to set up the traffic_ops database(s). 
@@ -343,14 +343,11 @@ NOTE: Data source Extensions are Beta at this time.
 
 API
 ===
-
-Path Structure 
---------------
-TBD.
+The Traffic Ops API provides programmatic access to read and write CDN data providing authorized API consumers with the ability to monitor CDN performance and configure CDN settings and parameters.
 
 Response Structure
 ------------------
-All sucessful responses have the folowing structure: ::
+All successful responses have the following structure: ::
 
     {
       "response": <JSON object with main response>,
@@ -361,11 +358,9 @@ To make the documentation easier to read, only the ``<JSON object with main resp
 
 Using API Endpoints
 -------------------
-To use authenticated API endpoints:
-
-1. Authenticate with your Portal or Traffic Ops user account credentials.
+1. Authenticate with your Traffic Portal or Traffic Ops user account credentials.
 2. Upon successful user authentication, note the mojolicious cookie value in the response headers. 
-3. Pass the Mojolicious cookie value, along with any subsequent calls to an authenticated API endpoint. 
+3. Pass the mojolicious cookie value, along with any subsequent calls to an authenticated API endpoint.
 
 Example: ::
   

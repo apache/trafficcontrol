@@ -184,7 +184,7 @@ sub register {
 		my $name = shift;
 		my $ksk  = shift;
 		my $ttl  = shift;
-		my $bits = 1024;
+		my $bits = 2048;
 		my $flags |= 256;
 		my $algorithm = 5;    # http://www.iana.org/assignments/dns-sec-alg-numbers/dns-sec-alg-numbers.xhtml
 		my $protocol  = 3;

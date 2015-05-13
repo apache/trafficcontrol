@@ -41,6 +41,7 @@
 			$(".error-section").hide();
 			$(".flash-section").hide();
 			$("#generate-message").hide();
+			$("#generate-button").val('Load Keys');
 		  }
 		  // 
 		}
@@ -54,10 +55,10 @@
 			  e.preventDefault();
 			  $( "#dialog-confirm" ).dialog({
 				resizable: false,
-				height:140,
+				height:160,
 				modal: true,
 				buttons: {
-				  "Generate Keys": function() {
+				  "Continue?": function() {
 					$("#throbber").show();
 					$(".field-with-error").hide();
 					$(".flash-section").hide();
@@ -197,7 +198,7 @@
 
 		<div class="buttons-section">
 			  <div id="dialog-confirm" title="Generate Keys?" style="display:none;">
-				<p><span class="ui-icon ui-icon-alert" style="float:left; margin:0 7px 20px 0;"></span>This will generate SSL keys for the CDN selected and all associated Delivery Services. Are you sure?</p>
+				<p><span class="ui-icon ui-icon-alert" style="float:left; margin:0 7px 20px 0;"></span>This will set new SSL keys for the delivery service. Are you sure?</p>
 			  </div>
 			  <div id="generate-section" style="margin-bottom: 20px;">
 				 <div>
