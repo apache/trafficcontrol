@@ -68,7 +68,6 @@ sub index {
 			my $include_summary = ( defined($exclude) && $exclude =~ /summary/ ) ? 0 : 1;
 			if ($include_summary) {
 				( $rc, $result, $summary_query ) = $self->build_summary($result);
-				$self->app->log->debug( "summary_query #-> " . $summary_query );
 			}
 
 			if ($rc) {
@@ -76,7 +75,6 @@ sub index {
 				my $series_query;
 				if ($include_series) {
 					( $rc, $result, $series_query ) = $self->build_series($result);
-					$self->app->log->debug( "series_query #-> " . $series_query );
 				}
 				if ($rc) {
 					$result = $self->build_parameters( $result, $summary_query, $series_query );
@@ -106,6 +104,7 @@ sub build_summary {
 	my $result = shift;
 
 	my $summary_query = $builder->summary_query();
+	$self->app->log->debug( "summary_query #-> " . Dumper($summary_query) );
 
 	my $response_container = $self->influxdb_query( $self->get_db_name(), $summary_query );
 	my $response           = $response_container->{'response'};
@@ -129,7 +128,8 @@ sub build_series {
 	my $self   = shift;
 	my $result = shift;
 
-	my $series_query       = $builder->series_query();
+	my $series_query = $builder->series_query();
+	$self->app->log->debug( "series_query #-> " . Dumper($series_query) );
 	my $response_container = $self->influxdb_query( $self->get_db_name(), $series_query, "pretty" );
 	my $response           = $response_container->{'response'};
 	my $content            = $response->{_content};

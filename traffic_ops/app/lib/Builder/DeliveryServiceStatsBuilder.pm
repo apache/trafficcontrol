@@ -82,10 +82,10 @@ sub series_query {
 	my $query = sprintf(
 		'%s %s %s',
 		"SELECT sum(value)/count(value) FROM",
-		$args->{series_name}, "WHERE time >='$args->{start_date}' AND 
-                                     time <= $end_date AND 
-                                     cachegroup = 'total' AND 
-                                     deliveryservice = '$args->{ds_name}'
+		$args->{series_name}, "WHERE cachegroup = 'total' AND 
+                                     deliveryservice = '$args->{ds_name}' AND
+                                     time >='$args->{start_date}' AND 
+                                     time <= $end_date 
                                      GROUP BY time($args->{interval}), cachegroup"
 	);
 
