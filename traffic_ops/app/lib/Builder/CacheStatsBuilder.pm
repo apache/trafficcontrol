@@ -78,9 +78,10 @@ sub series_query {
 	my $query = sprintf(
 		'%s "%s" %s',
 		"SELECT sum(value)*1000/6 FROM",
-		$args->{series_name}, "WHERE time > '$args->{start_date}' AND 
+		$args->{series_name}, "WHERE 
+							   cdn = '$args->{cdn_name}' AND
+		                       time > '$args->{start_date}' AND 
                                time < '$args->{end_date}' AND 
-							   cdn = '$args->{cdn_name}'
                                GROUP BY time($args->{interval}),
 							   cdn ORDER BY asc"
 	);
