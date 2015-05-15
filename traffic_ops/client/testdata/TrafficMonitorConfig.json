@@ -1,0 +1,2812 @@
+{
+  "trafficServers": [
+    {
+      "profile": "CCR_TOP",
+      "ip": "162.150.56.20",
+      "status": "OFFLINE",
+      "cacheGroup": "dc-chicago",
+      "ip6": "2001:558:fe21:14:162:150:56:17/64",
+      "port": 80,
+      "hostName": "odol-ccr-chi-05",
+      "fqdn": "odol-ccr-chi-05.northlake.il.ndcchgo.comcast.net",
+      "interfaceName": "eth0",
+      "type": "CCR",
+      "hashId": "odol-chi-ccr-05"
+    },
+    {
+      "profile": "CCR_TOP",
+      "ip": "162.150.56.19",
+      "status": "OFFLINE",
+      "cacheGroup": "dc-chicago",
+      "ip6": "2001:558:fe21:14:162:150:56:18/64",
+      "port": 80,
+      "hostName": "odol-ccr-chi-06",
+      "fqdn": "odol-ccr-chi-06.northlake.il.ndcchgo.comcast.net",
+      "interfaceName": "eth0",
+      "type": "CCR",
+      "hashId": "odol-chi-ccr-06"
+    },
+    {
+      "profile": "EDGE1_TOP_VOL",
+      "ip": "3.3.3.3",
+      "status": "OFFLINE",
+      "cacheGroup": "mid-west",
+      "ip6": "2009:334:333::2/64",
+      "port": 80,
+      "hostName": "odol-jvd-test-01",
+      "fqdn": "odol-jvd-test-01.jvd.comcast.net",
+      "interfaceName": "bond0",
+      "type": "EDGE",
+      "hashId": "odol-jvd-test-01"
+    },
+    {
+      "profile": "MID1_TOP_402",
+      "ip": "69.241.98.230",
+      "status": "OFFLINE",
+      "cacheGroup": "mid-southcentral",
+      "ip6": "2001:558:fe13:e::2/64",
+      "port": 80,
+      "hostName": "odol-atsmid-cen-08",
+      "fqdn": "odol-atsmid-cen-08.d1stonemtn.ga.atlanta.comcast.net",
+      "interfaceName": "bond0",
+      "type": "MID",
+      "hashId": "odol-atsmid-cen-08@ocdn.comcast.net"
+    },
+    {
+      "profile": "MID1_TOP_402",
+      "ip": "69.241.28.222",
+      "status": "OFFLINE",
+      "cacheGroup": "mid-northeast",
+      "ip6": "2001:558:fe03:11::2/64",
+      "port": 80,
+      "hostName": "odol-atsmid-est-12",
+      "fqdn": "odol-atsmid-est-12.needham.ma.boston.comcast.net",
+      "interfaceName": "bond0",
+      "type": "MID",
+      "hashId": "odol-atsmid-est-12@ocdn.comcast.net"
+    },
+    {
+      "profile": "MID1_TOP_402",
+      "ip": "69.241.64.114",
+      "status": "OFFLINE",
+      "cacheGroup": "mid-northeast",
+      "ip6": "2001:558:fe2a:29::2/64",
+      "port": 80,
+      "hostName": "odol-atsmid-est-14",
+      "fqdn": "odol-atsmid-est-14.ivyland.pa.panjde.comcast.net",
+      "interfaceName": "bond0",
+      "type": "MID",
+      "hashId": "odol-atsmid-est-14@ocdn.comcast.net"
+    },
+    {
+      "profile": "MID1_TOP_402",
+      "ip": "69.241.64.118",
+      "status": "OFFLINE",
+      "cacheGroup": "mid-northeast",
+      "ip6": "2001:558:fe2a:2a::2/64",
+      "port": 80,
+      "hostName": "odol-atsmid-est-15",
+      "fqdn": "odol-atsmid-est-15.newcastle.de.panjde.comcast.net",
+      "interfaceName": "bond0",
+      "type": "MID",
+      "hashId": "odol-atsmid-est-15@ocdn.comcast.net"
+    },
+    {
+      "profile": "MID1_TOP_402",
+      "ip": "69.241.37.162",
+      "status": "OFFLINE",
+      "cacheGroup": "mid-southcentral",
+      "ip6": "2001:558:fe13:18::2/64",
+      "port": 80,
+      "hostName": "odol-atsmid-cen-11",
+      "fqdn": "odol-atsmid-cen-11.b0atlanta.ga.atlanta.comcast.net",
+      "interfaceName": "bond0",
+      "type": "MID",
+      "hashId": "odol-atsmid-cen-11@ocdn.comcast.net"
+    },
+    {
+      "profile": "MID1_TOP_402",
+      "ip": "69.241.37.174",
+      "status": "OFFLINE",
+      "cacheGroup": "mid-southcentral",
+      "ip6": "2001:558:fe13:1b::2/64",
+      "port": 80,
+      "hostName": "odol-atsmid-cen-12",
+      "fqdn": "odol-atsmid-cen-12.d1stonemtn.ga.atlanta.comcast.net",
+      "interfaceName": "bond0",
+      "type": "MID",
+      "hashId": "odol-atsmid-cen-12@ocdn.comcast.net"
+    },
+    {
+      "profile": "MID1_TOP_402",
+      "ip": "69.241.32.126",
+      "status": "OFFLINE",
+      "cacheGroup": "mid-southcentral",
+      "ip6": "2001:558:fe05:18::2/64",
+      "port": 80,
+      "hostName": "odol-atsmid-cen-13",
+      "fqdn": "odol-atsmid-cen-13.area4.il.chicago.comcast.net",
+      "interfaceName": "bond0",
+      "type": "MID",
+      "hashId": "odol-atsmid-cen-13@ocdn.comcast.net"
+    },
+    {
+      "profile": "MID1_TOP_402",
+      "ip": "69.241.102.138",
+      "status": "OFFLINE",
+      "cacheGroup": "mid-southcentral",
+      "ip6": "2001:558:fe05:1c::2/64",
+      "port": 80,
+      "hostName": "odol-atsmid-cen-14",
+      "fqdn": "odol-atsmid-cen-14.elmhurst.il.chicago.comcast.net",
+      "interfaceName": "bond0",
+      "type": "MID",
+      "hashId": "odol-atsmid-cen-14@ocdn.comcast.net"
+    },
+    {
+      "profile": "MID1_TOP_402",
+      "ip": "69.252.255.34",
+      "status": "OFFLINE",
+      "cacheGroup": "mid-west",
+      "ip6": "2001:558:fe0d:19::2/64",
+      "port": 80,
+      "hostName": "odol-atsmid-wst-11",
+      "fqdn": "odol-atsmid-wst-11.oakland.ca.sfba.comcast.net",
+      "interfaceName": "bond0",
+      "type": "MID",
+      "hashId": "odol-atsmid-wst-11@ocdn.comcast.net"
+    },
+    {
+      "profile": "MID1_TOP_402",
+      "ip": "69.241.74.34",
+      "status": "OFFLINE",
+      "cacheGroup": "mid-west",
+      "ip6": "2001:558:fe0d:1d::2/64",
+      "port": 80,
+      "hostName": "odol-atsmid-wst-12",
+      "fqdn": "odol-atsmid-wst-12.sfsutro.ca.sfba.comcast.net",
+      "interfaceName": "bond0",
+      "type": "MID",
+      "hashId": "odol-atsmid-wst-12"
+    },
+    {
+      "profile": "MID1_TOP_402",
+      "ip": "69.241.29.122",
+      "status": "OFFLINE",
+      "cacheGroup": "mid-northeast",
+      "ip6": "2001:558:fe03:13::2/64",
+      "port": 80,
+      "hostName": "odol-atsmid-est-13",
+      "fqdn": "odol-atsmid-est-13.woburn.ma.boston.comcast.net",
+      "interfaceName": "bond0",
+      "type": "MID",
+      "hashId": "odol-atsmid-est-13"
+    },
+    {
+      "profile": "CCR_TOP",
+      "ip": "69.252.254.15",
+      "status": "ONLINE",
+      "cacheGroup": "dc-chicago",
+      "ip6": "2001:558:fe1f::f/64",
+      "port": 80,
+      "hostName": "odol-ccr-chi-03",
+      "fqdn": "odol-ccr-chi-03.mtprospect.il.ndcnorth.comcast.net",
+      "interfaceName": "eth0",
+      "type": "CCR",
+      "hashId": "odol-ccr-chi-03@ocdn.comcast.net"
+    },
+    {
+      "profile": "CCR_TOP",
+      "ip": "69.252.254.16",
+      "status": "ONLINE",
+      "cacheGroup": "dc-chicago",
+      "ip6": "2001:558:fe1f::10/64",
+      "port": 80,
+      "hostName": "odol-ccr-chi-04",
+      "fqdn": "odol-ccr-chi-04.mtprospect.il.ndcnorth.comcast.net",
+      "interfaceName": "eth0",
+      "type": "CCR",
+      "hashId": "odol-ccr-chi-04@ocdn.comcast.net"
+    },
+    {
+      "profile": "CCR_TOP",
+      "ip": "68.87.82.68",
+      "status": "ONLINE",
+      "cacheGroup": "dc-cmc",
+      "ip6": "2001:558:fe16:12:1::3/64",
+      "port": 80,
+      "hostName": "odol-ccr-cmc-03",
+      "fqdn": "odol-ccr-cmc-03.cmc.co.ndcwest.comcast.net",
+      "interfaceName": "eth0",
+      "type": "CCR",
+      "hashId": "odol-ccr-cmc-03@ocdn.comcast.net"
+    },
+    {
+      "profile": "CCR_TOP",
+      "ip": "68.87.82.69",
+      "status": "ONLINE",
+      "cacheGroup": "dc-cmc",
+      "ip6": "2001:558:fe16:12:1::4/64",
+      "port": 80,
+      "hostName": "odol-ccr-cmc-04",
+      "fqdn": "odol-ccr-cmc-04.cmc.co.ndcwest.comcast.net",
+      "interfaceName": "eth0",
+      "type": "CCR",
+      "hashId": "odol-ccr-cmc-04@ocdn.comcast.net"
+    },
+    {
+      "profile": "MID1_TOP_VOL",
+      "ip": "69.241.37.158",
+      "status": "ONLINE",
+      "cacheGroup": "mid-southcentral",
+      "ip6": "2001:558:fe13:7::2/64",
+      "port": 80,
+      "hostName": "odol-atsmid-cen-10",
+      "fqdn": "odol-atsmid-cen-10.b0atlanta.ga.atlanta.comcast.net",
+      "interfaceName": "bond0",
+      "type": "MID",
+      "hashId": "odol-atsmid-cen-10@ocdn.comcast.net"
+    },
+    {
+      "profile": "MID1_TOP_VOL",
+      "ip": "69.241.98.130",
+      "status": "ONLINE",
+      "cacheGroup": "mid-southcentral",
+      "ip6": "2001:558:fe13:d::2/64",
+      "port": 80,
+      "hostName": "odol-atsmid-cen-07",
+      "fqdn": "odol-atsmid-cen-07.d1stonemtn.ga.atlanta.comcast.net",
+      "interfaceName": "bond0",
+      "type": "MID",
+      "hashId": "odol-atsmid-cen-07@ocdn.comcast.net"
+    },
+    {
+      "profile": "MID1_TOP_VOL",
+      "ip": "69.241.32.182",
+      "status": "ONLINE",
+      "cacheGroup": "mid-southcentral",
+      "ip6": "2001:558:fe05:b::2/64",
+      "port": 80,
+      "hostName": "odol-atsmid-cen-02",
+      "fqdn": "odol-atsmid-cen-02.area4.il.chicago.comcast.net",
+      "interfaceName": "bond0",
+      "type": "MID",
+      "hashId": "odol-atsmid-cen-02@ocdn.comcast.net"
+    },
+    {
+      "profile": "MID1_TOP_VOL",
+      "ip": "69.241.32.250",
+      "status": "ONLINE",
+      "cacheGroup": "mid-southcentral",
+      "ip6": "2001:558:fe05:c::2/64",
+      "port": 80,
+      "hostName": "odol-atsmid-cen-03",
+      "fqdn": "odol-atsmid-cen-03.area4.il.chicago.comcast.net",
+      "interfaceName": "bond0",
+      "type": "MID",
+      "hashId": "odol-atsmid-cen-03@ocdn.comcast.net"
+    },
+    {
+      "profile": "MID1_TOP_VOL",
+      "ip": "69.241.102.14",
+      "status": "ONLINE",
+      "cacheGroup": "mid-southcentral",
+      "ip6": "2001:558:fe05:11::2/64",
+      "port": 80,
+      "hostName": "odol-atsmid-cen-05",
+      "fqdn": "odol-atsmid-cen-05.elmhurst.il.chicago.comcast.net",
+      "interfaceName": "bond0",
+      "type": "MID",
+      "hashId": "odol-atsmid-cen-05@ocdn.comcast.net"
+    },
+    {
+      "profile": "MID1_TOP_VOL",
+      "ip": "69.241.9.110",
+      "status": "ONLINE",
+      "cacheGroup": "mid-northeast",
+      "ip6": "2001:558:fe03:41::2/64",
+      "port": 80,
+      "hostName": "odol-atsmid-est-11",
+      "fqdn": "odol-atsmid-est-11.needham.ma.boston.comcast.net",
+      "interfaceName": "bond0",
+      "type": "MID",
+      "hashId": "odol-atsmid-est-11@ocdn.comcast.net"
+    },
+    {
+      "profile": "MID1_TOP_VOL",
+      "ip": "69.241.9.214",
+      "status": "ONLINE",
+      "cacheGroup": "mid-northeast",
+      "ip6": "2001:558:fe03:47::2/64",
+      "port": 80,
+      "hostName": "odol-atsmid-est-02",
+      "fqdn": "odol-atsmid-est-02.woburn.ma.boston.comcast.net",
+      "interfaceName": "bond0",
+      "type": "MID",
+      "hashId": "odol-atsmid-est-02@ocdn.comcast.net"
+    },
+    {
+      "profile": "MID1_TOP_VOL",
+      "ip": "69.241.26.102",
+      "status": "ONLINE",
+      "cacheGroup": "mid-northeast",
+      "ip6": "2001:558:fe03:48::2/64",
+      "port": 80,
+      "hostName": "odol-atsmid-est-03",
+      "fqdn": "odol-atsmid-est-03.woburn.ma.boston.comcast.net",
+      "interfaceName": "bond0",
+      "type": "MID",
+      "hashId": "odol-atsmid-est-03@ocdn.comcast.net"
+    },
+    {
+      "profile": "MID1_TOP_VOL",
+      "ip": "69.241.66.222",
+      "status": "ONLINE",
+      "cacheGroup": "mid-northeast",
+      "ip6": "2001:558:fe2a:8::2/64",
+      "port": 80,
+      "hostName": "odol-atsmid-est-05",
+      "fqdn": "odol-atsmid-est-05.ivyland.pa.panjde.comcast.net",
+      "interfaceName": "bond0",
+      "type": "MID",
+      "hashId": "odol-atsmid-est-05@ocdn.comcast.net"
+    },
+    {
+      "profile": "MID1_TOP_VOL",
+      "ip": "69.241.66.234",
+      "status": "ONLINE",
+      "cacheGroup": "mid-northeast",
+      "ip6": "2001:558:fe2a:9::2/64",
+      "port": 80,
+      "hostName": "odol-atsmid-est-06",
+      "fqdn": "odol-atsmid-est-06.ivyland.pa.panjde.comcast.net",
+      "interfaceName": "bond0",
+      "type": "MID",
+      "hashId": "odol-atsmid-est-06@ocdn.comcast.net"
+    },
+    {
+      "profile": "MID1_TOP_VOL",
+      "ip": "69.241.67.246",
+      "status": "ONLINE",
+      "cacheGroup": "mid-northeast",
+      "ip6": "2001:558:fe2a:f::2/64",
+      "port": 80,
+      "hostName": "odol-atsmid-est-08",
+      "fqdn": "odol-atsmid-est-08.newcastle.de.panjde.comcast.net",
+      "interfaceName": "bond0",
+      "type": "MID",
+      "hashId": "odol-atsmid-est-08@ocdn.comcast.net"
+    },
+    {
+      "profile": "MID1_TOP_VOL",
+      "ip": "76.96.96.230",
+      "status": "ONLINE",
+      "cacheGroup": "mid-west",
+      "ip6": "2001:558:fe0d:7::2/64",
+      "port": 80,
+      "hostName": "odol-atsmid-wst-02",
+      "fqdn": "odol-atsmid-wst-02.oakland.ca.sfba.comcast.net",
+      "interfaceName": "bond0",
+      "type": "MID",
+      "hashId": "odol-atsmid-wst-02@ocdn.comcast.net"
+    },
+    {
+      "profile": "MID1_TOP_VOL",
+      "ip": "76.96.96.202",
+      "status": "ONLINE",
+      "cacheGroup": "mid-west",
+      "ip6": "2001:558:fe0d:d::2/64",
+      "port": 80,
+      "hostName": "odol-atsmid-wst-04",
+      "fqdn": "odol-atsmid-wst-04.sfsutro.ca.sfba.comcast.net",
+      "interfaceName": "bond0",
+      "type": "MID",
+      "hashId": "odol-atsmid-wst-04@ocdn.comcast.net"
+    },
+    {
+      "profile": "MID1_TOP_VOL",
+      "ip": "76.96.96.206",
+      "status": "ONLINE",
+      "cacheGroup": "mid-west",
+      "ip6": "2001:558:fe0d:e::2/64",
+      "port": 80,
+      "hostName": "odol-atsmid-wst-05",
+      "fqdn": "odol-atsmid-wst-05.sfsutro.ca.sfba.comcast.net",
+      "interfaceName": "bond0",
+      "type": "MID",
+      "hashId": "odol-atsmid-wst-05@ocdn.comcast.net"
+    },
+    {
+      "profile": "MID1_TOP_VOL",
+      "ip": "69.241.50.6",
+      "status": "ONLINE",
+      "cacheGroup": "mid-west",
+      "ip6": "2001:558:fe1c:41::2/64",
+      "port": 80,
+      "hostName": "odol-atsmid-wst-07",
+      "fqdn": "odol-atsmid-wst-07.denver.co.denver.comcast.net",
+      "interfaceName": "bond0",
+      "type": "MID",
+      "hashId": "odol-atsmid-wst-07@ocdn.comcast.net"
+    },
+    {
+      "profile": "MID1_TOP_VOL",
+      "ip": "69.241.50.30",
+      "status": "ONLINE",
+      "cacheGroup": "mid-west",
+      "ip6": "2001:558:fe1c:81::2/64",
+      "port": 80,
+      "hostName": "odol-atsmid-wst-09",
+      "fqdn": "odol-atsmid-wst-09.aurora.co.denver.comcast.net",
+      "interfaceName": "bond0",
+      "type": "MID",
+      "hashId": "odol-atsmid-wst-09@ocdn.comcast.net"
+    },
+    {
+      "profile": "MID1_TOP_VOL",
+      "ip": "69.241.50.34",
+      "status": "ONLINE",
+      "cacheGroup": "mid-west",
+      "ip6": "2001:558:fe1c:82::2/64",
+      "port": 80,
+      "hostName": "odol-atsmid-wst-10",
+      "fqdn": "odol-atsmid-wst-10.aurora.co.denver.comcast.net",
+      "interfaceName": "bond0",
+      "type": "MID",
+      "hashId": "odol-atsmid-wst-10@ocdn.comcast.net"
+    },
+    {
+      "profile": "MID1_TOP_VOL",
+      "ip": "69.241.50.70",
+      "status": "ONLINE",
+      "cacheGroup": "mid-west",
+      "ip6": "2001:558:fe1c:9::2/64",
+      "port": 80,
+      "hostName": "odol-atsmid-wst-14",
+      "fqdn": "odol-atsmid-wst-14.denver.co.denver.comcast.net",
+      "interfaceName": "bond0",
+      "type": "MID",
+      "hashId": "odol-atsmid-wst-14@ocdn.comcast.net"
+    },
+    {
+      "profile": "MID1_TOP_402",
+      "ip": "69.241.50.66",
+      "status": "ONLINE",
+      "cacheGroup": "mid-west",
+      "ip6": "2001:558:FE1C:8::2/64",
+      "port": 80,
+      "hostName": "odol-atsmid-wst-13",
+      "fqdn": "odol-atsmid-wst-13.denver.co.denver.comcast.net",
+      "interfaceName": "bond0",
+      "type": "MID",
+      "hashId": "odol-atsmid-wst-13@ocdn.comcast.net"
+    },
+    {
+      "profile": "EDGE1_TOP_402",
+      "ip": "69.241.30.50",
+      "status": "REPORTED",
+      "cacheGroup": "us-ma-woburn",
+      "ip6": "2001:558:fe03:1e::2/64",
+      "port": 80,
+      "hostName": "odol-atsec-bos-15",
+      "fqdn": "odol-atsec-bos-15.needham.ma.boston.comcast.net",
+      "interfaceName": "bond0",
+      "type": "EDGE",
+      "hashId": "odol-atsec-bos-15@ocdn.comcast.net"
+    },
+    {
+      "profile": "EDGE1_TOP_402",
+      "ip": "69.241.110.206",
+      "status": "REPORTED",
+      "cacheGroup": "us-md-baltimore",
+      "ip6": "2001:558:fe07:18::2/64",
+      "port": 80,
+      "hostName": "odol-atsec-bad-10",
+      "fqdn": "odol-atsec-bad-10.whitemarsh.md.bad.comcast.net",
+      "interfaceName": "bond0",
+      "type": "EDGE",
+      "hashId": "odol-atsec-bad-10@ocdn.comcast.net"
+    },
+    {
+      "profile": "EDGE1_TOP_402",
+      "ip": "69.252.117.130",
+      "status": "REPORTED",
+      "cacheGroup": "us-wa-seattle",
+      "ip6": "2001:558:fe34:15::2/64",
+      "port": 80,
+      "hostName": "odol-atsec-sea-10",
+      "fqdn": "odol-atsec-sea-10.seattle.wa.seattle.comcast.net",
+      "interfaceName": "bond0",
+      "type": "EDGE",
+      "hashId": "odol-atsec-sea-10@ocdn.comcast.net"
+    },
+    {
+      "profile": "EDGE1_TOP_402",
+      "ip": "69.241.37.170",
+      "status": "REPORTED",
+      "cacheGroup": "us-ga-atlanta",
+      "ip6": "2001:558:fe13:16::2/64",
+      "port": 80,
+      "hostName": "odol-atsec-atl-11",
+      "fqdn": "odol-atsec-atl-11.b0atlanta.ga.atlanta.comcast.net",
+      "interfaceName": "bond0",
+      "type": "EDGE",
+      "hashId": "odol-atsec-atl-11@ocdn.comcast.net"
+    },
+    {
+      "profile": "EDGE1_TOP_402",
+      "ip": "69.241.37.182",
+      "status": "REPORTED",
+      "cacheGroup": "us-ga-atlanta",
+      "ip6": "2001:558:fe13:19::2/64",
+      "port": 80,
+      "hostName": "odol-atsec-atl-12",
+      "fqdn": "odol-atsec-atl-12.d1stonemtn.ga.atlanta.comcast.net",
+      "interfaceName": "bond0",
+      "type": "EDGE",
+      "hashId": "odol-atsec-atl-12@ocdn.comcast.net"
+    },
+    {
+      "profile": "EDGE1_TOP_402",
+      "ip": "69.241.102.174",
+      "status": "REPORTED",
+      "cacheGroup": "us-il-chicago",
+      "ip6": "2001:558:fe05:1e::2/64",
+      "port": 80,
+      "hostName": "odol-atsec-chi-12",
+      "fqdn": "odol-atsec-chi-12.elmhurst.il.chicago.comcast.net",
+      "interfaceName": "bond0",
+      "type": "EDGE",
+      "hashId": "odol-atsec-chi-12@ocdn.comcast.net"
+    },
+    {
+      "profile": "EDGE1_TOP_402",
+      "ip": "69.252.41.150",
+      "status": "REPORTED",
+      "cacheGroup": "us-fl-sarasota",
+      "ip6": "2001:558:fe2e:11::2/64",
+      "port": 80,
+      "hostName": "odol-atsec-coa-10",
+      "fqdn": "odol-atsec-coa-10.northdade.fl.pompano.comcast.net",
+      "interfaceName": "bond0",
+      "type": "EDGE",
+      "hashId": "odol-atsec-coa-10"
+    },
+    {
+      "profile": "EDGE1_TOP_402",
+      "ip": "69.241.30.162",
+      "status": "REPORTED",
+      "cacheGroup": "us-ma-woburn",
+      "ip6": "2001:558:fe03:51::2/64",
+      "port": 80,
+      "hostName": "odol-atsec-bos-16",
+      "fqdn": "odol-atsec-bos-16.foxboro.ma.boston.comcast.net",
+      "interfaceName": "bond0",
+      "type": "EDGE",
+      "hashId": "odol-atsec-fxbo-01"
+    },
+    {
+      "profile": "EDGE1_TOP_402",
+      "ip": "69.241.35.98",
+      "status": "REPORTED",
+      "cacheGroup": "us-ma-woburn",
+      "ip6": "2001:558:fe03:57::2/64",
+      "port": 80,
+      "hostName": "odol-atsec-bos-29",
+      "fqdn": "odol-atsec-bos-29.woburn.ma.boston.comcast.net",
+      "interfaceName": "bond0",
+      "type": "EDGE",
+      "hashId": "odol-atsec-wbrn-01"
+    },
+    {
+      "profile": "EDGE2_TOP_402",
+      "ip": "76.96.96.170",
+      "status": "REPORTED",
+      "cacheGroup": "us-ca-sanjose",
+      "ip6": "2001:558:fe0d:16::2/64",
+      "port": 80,
+      "hostName": "odol-atsec-sfb-21",
+      "fqdn": "odol-atsec-sfb-21.sfsutro.ca.sfba.comcast.net",
+      "interfaceName": "bond0",
+      "type": "EDGE",
+      "hashId": "odol-atsec-sfb-21@ocdn.comcast.net"
+    },
+    {
+      "profile": "EDGE2_TOP_402",
+      "ip": "76.96.96.174",
+      "status": "REPORTED",
+      "cacheGroup": "us-ca-sanjose",
+      "ip6": "2001:558:fe0d:17::2/64",
+      "port": 80,
+      "hostName": "odol-atsec-sfb-22",
+      "fqdn": "odol-atsec-sfb-22.sfsutro.ca.sfba.comcast.net",
+      "interfaceName": "bond0",
+      "type": "EDGE",
+      "hashId": "odol-atsec-sfb-22@ocdn.comcast.net"
+    },
+    {
+      "profile": "EDGE2_TOP_402",
+      "ip": "76.96.96.178",
+      "status": "REPORTED",
+      "cacheGroup": "us-ca-sanjose",
+      "ip6": "2001:558:fe0d:18::2/64",
+      "port": 80,
+      "hostName": "odol-atsec-sfb-23",
+      "fqdn": "odol-atsec-sfb-23.sfsutro.ca.sfba.comcast.net",
+      "interfaceName": "bond0",
+      "type": "EDGE",
+      "hashId": "odol-atsec-sfb-23@ocdn.comcast.net"
+    },
+    {
+      "profile": "EDGE2_TOP_402",
+      "ip": "76.96.96.186",
+      "status": "REPORTED",
+      "cacheGroup": "us-ca-sanjose",
+      "ip6": "2001:558:fe0d:13::2/64",
+      "port": 80,
+      "hostName": "odol-atsec-sfb-24",
+      "fqdn": "odol-atsec-sfb-24.oakland.ca.sfba.comcast.net",
+      "interfaceName": "bond0",
+      "type": "EDGE",
+      "hashId": "odol-atsec-sfb-24@ocdn.comcast.net"
+    },
+    {
+      "profile": "EDGE2_TOP_402",
+      "ip": "69.241.9.78",
+      "status": "REPORTED",
+      "cacheGroup": "us-ma-woburn",
+      "ip6": "2001:558:fe03:15::2/64",
+      "port": 80,
+      "hostName": "odol-atsec-bos-24",
+      "fqdn": "odol-atsec-bos-24.needham.ma.boston.comcast.net",
+      "interfaceName": "bond0",
+      "type": "EDGE",
+      "hashId": "odol-atsec-bos-24@ocdn.comcast.net"
+    },
+    {
+      "profile": "EDGE2_TOP_402",
+      "ip": "69.241.26.210",
+      "status": "REPORTED",
+      "cacheGroup": "us-ma-woburn",
+      "ip6": "2001:558:fe03:18::2/64",
+      "port": 80,
+      "hostName": "odol-atsec-bos-21",
+      "fqdn": "odol-atsec-bos-21.woburn.ma.boston.comcast.net",
+      "interfaceName": "bond0",
+      "type": "EDGE",
+      "hashId": "odol-atsec-bos-21@ocdn.comcast.net"
+    },
+    {
+      "profile": "EDGE2_TOP_402",
+      "ip": "69.241.26.174",
+      "status": "REPORTED",
+      "cacheGroup": "us-ma-woburn",
+      "ip6": "2001:558:fe03:19::2/64",
+      "port": 80,
+      "hostName": "odol-atsec-bos-22",
+      "fqdn": "odol-atsec-bos-22.woburn.ma.boston.comcast.net",
+      "interfaceName": "bond0",
+      "type": "EDGE",
+      "hashId": "odol-atsec-bos-22@ocdn.comcast.net"
+    },
+    {
+      "profile": "EDGE2_TOP_402",
+      "ip": "69.241.26.154",
+      "status": "REPORTED",
+      "cacheGroup": "us-ma-woburn",
+      "ip6": "2001:558:fe03:1c::2/64",
+      "port": 80,
+      "hostName": "odol-atsec-bos-23",
+      "fqdn": "odol-atsec-bos-23.woburn.ma.boston.comcast.net",
+      "interfaceName": "bond0",
+      "type": "EDGE",
+      "hashId": "odol-atsec-bos-23@ocdn.comcast.net"
+    },
+    {
+      "profile": "EDGE2_TOP_402",
+      "ip": "76.96.47.226",
+      "status": "REPORTED",
+      "cacheGroup": "us-co-denver",
+      "ip6": "2001:558:fe1c:87::2/64",
+      "port": 80,
+      "hostName": "odol-atsec-den-21",
+      "fqdn": "odol-atsec-den-21.denver.co.denver.comcast.net",
+      "interfaceName": "bond0",
+      "type": "EDGE",
+      "hashId": "odol-atsec-den-21@ocdn.comcast.net"
+    },
+    {
+      "profile": "EDGE2_TOP_402",
+      "ip": "76.96.47.230",
+      "status": "REPORTED",
+      "cacheGroup": "us-co-denver",
+      "ip6": "2001:558:fe1c:c::2/64",
+      "port": 80,
+      "hostName": "odol-atsec-den-22",
+      "fqdn": "odol-atsec-den-22.denver.co.denver.comcast.net",
+      "interfaceName": "bond0",
+      "type": "EDGE",
+      "hashId": "odol-atsec-den-22@ocdn.comcast.net"
+    },
+    {
+      "profile": "EDGE2_TOP_402",
+      "ip": "76.96.47.234",
+      "status": "REPORTED",
+      "cacheGroup": "us-co-denver",
+      "ip6": "2001:558:fe1c:d::2/64",
+      "port": 80,
+      "hostName": "odol-atsec-den-23",
+      "fqdn": "odol-atsec-den-23.denver.co.denver.comcast.net",
+      "interfaceName": "bond0",
+      "type": "EDGE",
+      "hashId": "odol-atsec-den-23@ocdn.comcast.net"
+    },
+    {
+      "profile": "EDGE2_TOP_402",
+      "ip": "76.96.47.238",
+      "status": "REPORTED",
+      "cacheGroup": "us-co-denver",
+      "ip6": "2001:558:fe1c:e::2/64",
+      "port": 80,
+      "hostName": "odol-atsec-den-24",
+      "fqdn": "odol-atsec-den-24.aurora.co.denver.comcast.net",
+      "interfaceName": "bond0",
+      "type": "EDGE",
+      "hashId": "odol-atsec-den-24@ocdn.comcast.net"
+    },
+    {
+      "profile": "EDGE2_TOP_402",
+      "ip": "76.96.96.190",
+      "status": "REPORTED",
+      "cacheGroup": "us-ca-sanjose",
+      "ip6": "2001:558:fe0d:14::2/64",
+      "port": 80,
+      "hostName": "odol-atsec-sfb-25",
+      "fqdn": "odol-atsec-sfb-25.oakland.ca.sfba.comcast.net",
+      "interfaceName": "bond0",
+      "type": "EDGE",
+      "hashId": "odol-atsec-sfb-25@ocdn.comcast.net"
+    },
+    {
+      "profile": "EDGE2_TOP_402",
+      "ip": "76.96.96.194",
+      "status": "REPORTED",
+      "cacheGroup": "us-ca-sanjose",
+      "ip6": "2001:558:fe0d:15::2/64",
+      "port": 80,
+      "hostName": "odol-atsec-sfb-26",
+      "fqdn": "odol-atsec-sfb-26.oakland.ca.sfba.comcast.net",
+      "interfaceName": "bond0",
+      "type": "EDGE",
+      "hashId": "odol-atsec-sfb-26@ocdn.comcast.net"
+    },
+    {
+      "profile": "EDGE2_TOP_402",
+      "ip": "69.241.8.210",
+      "status": "REPORTED",
+      "cacheGroup": "us-ma-woburn",
+      "ip6": "2001:558:fe03:16::2/64",
+      "port": 80,
+      "hostName": "odol-atsec-bos-25",
+      "fqdn": "odol-atsec-bos-25.needham.ma.boston.comcast.net",
+      "interfaceName": "bond0",
+      "type": "EDGE",
+      "hashId": "odol-atsec-bos-25@ocdn.comcast.net"
+    },
+    {
+      "profile": "EDGE2_TOP_402",
+      "ip": "69.241.8.198",
+      "status": "REPORTED",
+      "cacheGroup": "us-ma-woburn",
+      "ip6": "2001:558:fe03:17::2/64",
+      "port": 80,
+      "hostName": "odol-atsec-bos-26",
+      "fqdn": "odol-atsec-bos-26.needham.ma.boston.comcast.net",
+      "interfaceName": "bond0",
+      "type": "EDGE",
+      "hashId": "odol-atsec-bos-26@ocdn.comcast.net"
+    },
+    {
+      "profile": "EDGE2_TOP_402",
+      "ip": "76.96.47.242",
+      "status": "REPORTED",
+      "cacheGroup": "us-co-denver",
+      "ip6": "2001:558:fe1c:f::2/64",
+      "port": 80,
+      "hostName": "odol-atsec-den-25",
+      "fqdn": "odol-atsec-den-25.aurora.co.denver.comcast.net",
+      "interfaceName": "bond0",
+      "type": "EDGE",
+      "hashId": "odol-atsec-den-25@ocdn.comcast.net"
+    },
+    {
+      "profile": "EDGE2_TOP_402",
+      "ip": "76.96.47.246",
+      "status": "REPORTED",
+      "cacheGroup": "us-co-denver",
+      "ip6": "2001:558:fe1c:4c::2/64",
+      "port": 80,
+      "hostName": "odol-atsec-den-26",
+      "fqdn": "odol-atsec-den-26.aurora.co.denver.comcast.net",
+      "interfaceName": "bond0",
+      "type": "EDGE",
+      "hashId": "odol-atsec-den-26@ocdn.comcast.net"
+    },
+    {
+      "profile": "EDGE1_TOP_421",
+      "ip": "69.241.82.126",
+      "status": "REPORTED",
+      "cacheGroup": "us-ga-atlanta",
+      "ip6": "2001:558:fe13:a::2/64",
+      "port": 80,
+      "hostName": "odol-atsec-atl-03",
+      "fqdn": "odol-atsec-atl-03.b0atlanta.ga.atlanta.comcast.net",
+      "interfaceName": "bond0",
+      "type": "EDGE",
+      "hashId": "odol-atsec-atl-03@ocdn.comcast.net"
+    },
+    {
+      "profile": "EDGE1_TOP_421",
+      "ip": "69.241.98.22",
+      "status": "REPORTED",
+      "cacheGroup": "us-ga-atlanta",
+      "ip6": "2001:558:fe13:b::2/64",
+      "port": 80,
+      "hostName": "odol-atsec-atl-04",
+      "fqdn": "odol-atsec-atl-04.b0atlanta.ga.atlanta.comcast.net",
+      "interfaceName": "bond0",
+      "type": "EDGE",
+      "hashId": "odol-atsec-atl-04@ocdn.comcast.net"
+    },
+    {
+      "profile": "EDGE1_TOP_421",
+      "ip": "69.241.37.42",
+      "status": "REPORTED",
+      "cacheGroup": "us-ga-atlanta",
+      "ip6": "2001:558:fe13:11::2/64",
+      "port": 80,
+      "hostName": "odol-atsec-atl-07",
+      "fqdn": "odol-atsec-atl-07.d1stonemtn.ga.atlanta.comcast.net",
+      "interfaceName": "bond0",
+      "type": "EDGE",
+      "hashId": "odol-atsec-atl-07@ocdn.comcast.net"
+    },
+    {
+      "profile": "EDGE1_TOP_421",
+      "ip": "69.241.37.46",
+      "status": "REPORTED",
+      "cacheGroup": "us-ga-atlanta",
+      "ip6": "2001:558:fe13:12::2/64",
+      "port": 80,
+      "hostName": "odol-atsec-atl-08",
+      "fqdn": "odol-atsec-atl-08.d1stonemtn.ga.atlanta.comcast.net",
+      "interfaceName": "bond0",
+      "type": "EDGE",
+      "hashId": "odol-atsec-atl-08@ocdn.comcast.net"
+    },
+    {
+      "profile": "EDGE1_TOP_421",
+      "ip": "69.241.87.150",
+      "status": "REPORTED",
+      "cacheGroup": "us-il-chicago",
+      "ip6": "2001:558:fe05:e::2/64",
+      "port": 80,
+      "hostName": "odol-atsec-chi-02",
+      "fqdn": "odol-atsec-chi-02.area4.il.chicago.comcast.net",
+      "interfaceName": "bond0",
+      "type": "EDGE",
+      "hashId": "odol-atsec-chi-02@ocdn.comcast.net"
+    },
+    {
+      "profile": "EDGE1_TOP_421",
+      "ip": "69.241.88.210",
+      "status": "REPORTED",
+      "cacheGroup": "us-il-chicago",
+      "ip6": "2001:558:fe05:f::2/64",
+      "port": 80,
+      "hostName": "odol-atsec-chi-03",
+      "fqdn": "odol-atsec-chi-03.area4.il.chicago.comcast.net",
+      "interfaceName": "bond0",
+      "type": "EDGE",
+      "hashId": "odol-atsec-chi-03@ocdn.comcast.net"
+    },
+    {
+      "profile": "EDGE1_TOP_421",
+      "ip": "69.241.102.46",
+      "status": "REPORTED",
+      "cacheGroup": "us-il-chicago",
+      "ip6": "2001:558:fe05:14::2/64",
+      "port": 80,
+      "hostName": "odol-atsec-chi-06",
+      "fqdn": "odol-atsec-chi-06.elmhurst.il.chicago.comcast.net",
+      "interfaceName": "bond0",
+      "type": "EDGE",
+      "hashId": "odol-atsec-chi-06@ocdn.comcast.net"
+    },
+    {
+      "profile": "EDGE1_TOP_421",
+      "ip": "69.241.102.74",
+      "status": "REPORTED",
+      "cacheGroup": "us-il-chicago",
+      "ip6": "2001:558:fe05:15::2/64",
+      "port": 80,
+      "hostName": "odol-atsec-chi-07",
+      "fqdn": "odol-atsec-chi-07.elmhurst.il.chicago.comcast.net",
+      "interfaceName": "bond0",
+      "type": "EDGE",
+      "hashId": "odol-atsec-chi-07@ocdn.comcast.net"
+    },
+    {
+      "profile": "EDGE1_TOP_421",
+      "ip": "69.241.7.146",
+      "status": "REPORTED",
+      "cacheGroup": "us-fl-sarasota",
+      "ip6": "2001:558:fe2e:b::2/64",
+      "port": 80,
+      "hostName": "odol-atsec-coa-03",
+      "fqdn": "odol-atsec-coa-03.northdade.fl.pompano.comcast.net",
+      "interfaceName": "bond0",
+      "type": "EDGE",
+      "hashId": "odol-atsec-coa-03@ocdn.comcast.net"
+    },
+    {
+      "profile": "EDGE1_TOP_421",
+      "ip": "69.241.7.150",
+      "status": "REPORTED",
+      "cacheGroup": "us-fl-sarasota",
+      "ip6": "2001:558:fe2e:c::2/64",
+      "port": 80,
+      "hostName": "odol-atsec-coa-04",
+      "fqdn": "odol-atsec-coa-04.northdade.fl.pompano.comcast.net",
+      "interfaceName": "bond0",
+      "type": "EDGE",
+      "hashId": "odol-atsec-coa-04@ocdn.comcast.net"
+    },
+    {
+      "profile": "EDGE1_TOP_421",
+      "ip": "69.241.7.158",
+      "status": "REPORTED",
+      "cacheGroup": "us-fl-sarasota",
+      "ip6": "2001:558:fe2e:e::2/64",
+      "port": 80,
+      "hostName": "odol-atsec-coa-06",
+      "fqdn": "odol-atsec-coa-06.pompanobeach.fl.pompano.comcast.net",
+      "interfaceName": "bond0",
+      "type": "EDGE",
+      "hashId": "odol-atsec-coa-06@ocdn.comcast.net"
+    },
+    {
+      "profile": "EDGE1_TOP_421",
+      "ip": "69.241.7.194",
+      "status": "REPORTED",
+      "cacheGroup": "us-fl-sarasota",
+      "ip6": "2001:558:fe2e:f::2/64",
+      "port": 80,
+      "hostName": "odol-atsec-coa-07",
+      "fqdn": "odol-atsec-coa-07.pompanobeach.fl.pompano.comcast.net",
+      "interfaceName": "bond0",
+      "type": "EDGE",
+      "hashId": "odol-atsec-coa-07@ocdn.comcast.net"
+    },
+    {
+      "profile": "EDGE1_TOP_421",
+      "ip": "69.241.100.46",
+      "status": "REPORTED",
+      "cacheGroup": "us-mi-grand_rapids",
+      "ip6": "2001:558:fe11:8::2/64",
+      "port": 80,
+      "hostName": "odol-atsec-mic-03",
+      "fqdn": "odol-atsec-mic-03.pontiac.mi.michigan.comcast.net",
+      "interfaceName": "bond0",
+      "type": "EDGE",
+      "hashId": "odol-atsec-mic-03@ocdn.comcast.net"
+    },
+    {
+      "profile": "EDGE1_TOP_421",
+      "ip": "69.241.100.58",
+      "status": "REPORTED",
+      "cacheGroup": "us-mi-grand_rapids",
+      "ip6": "2001:558:fe11:9::2/64",
+      "port": 80,
+      "hostName": "odol-atsec-mic-04",
+      "fqdn": "odol-atsec-mic-04.pontiac.mi.michigan.comcast.net",
+      "interfaceName": "bond0",
+      "type": "EDGE",
+      "hashId": "odol-atsec-mic-04@ocdn.comcast.net"
+    },
+    {
+      "profile": "EDGE1_TOP_421",
+      "ip": "69.252.92.6",
+      "status": "REPORTED",
+      "cacheGroup": "us-mi-grand_rapids",
+      "ip6": "2001:558:fe11:b::2/64",
+      "port": 80,
+      "hostName": "odol-atsec-mic-06",
+      "fqdn": "odol-atsec-mic-06.taylor.mi.michigan.comcast.net",
+      "interfaceName": "bond0",
+      "type": "EDGE",
+      "hashId": "odol-atsec-mic-06@ocdn.comcast.net"
+    },
+    {
+      "profile": "EDGE1_TOP_421",
+      "ip": "69.252.92.10",
+      "status": "REPORTED",
+      "cacheGroup": "us-mi-grand_rapids",
+      "ip6": "2001:558:fe11:c::2/64",
+      "port": 80,
+      "hostName": "odol-atsec-mic-07",
+      "fqdn": "odol-atsec-mic-07.taylor.mi.michigan.comcast.net",
+      "interfaceName": "bond0",
+      "type": "EDGE",
+      "hashId": "odol-atsec-mic-07@ocdn.comcast.net"
+    },
+    {
+      "profile": "EDGE1_TOP_421",
+      "ip": "69.241.9.174",
+      "status": "REPORTED",
+      "cacheGroup": "us-ma-woburn",
+      "ip6": "2001:558:fe03:44::2/64",
+      "port": 80,
+      "hostName": "odol-atsec-bos-07",
+      "fqdn": "odol-atsec-bos-07.needham.ma.boston.comcast.net",
+      "interfaceName": "bond0",
+      "type": "EDGE",
+      "hashId": "odol-atsec-bos-07@ocdn.comcast.net"
+    },
+    {
+      "profile": "EDGE1_TOP_421",
+      "ip": "69.241.9.178",
+      "status": "REPORTED",
+      "cacheGroup": "us-ma-woburn",
+      "ip6": "2001:558:fe03:45::2/64",
+      "port": 80,
+      "hostName": "odol-atsec-bos-08",
+      "fqdn": "odol-atsec-bos-08.needham.ma.boston.comcast.net",
+      "interfaceName": "bond0",
+      "type": "EDGE",
+      "hashId": "odol-atsec-bos-08@ocdn.comcast.net"
+    },
+    {
+      "profile": "EDGE1_TOP_421",
+      "ip": "69.241.26.126",
+      "status": "REPORTED",
+      "cacheGroup": "us-ma-woburn",
+      "ip6": "2001:558:fe03:4b::2/64",
+      "port": 80,
+      "hostName": "odol-atsec-bos-03",
+      "fqdn": "odol-atsec-bos-03.woburn.ma.boston.comcast.net",
+      "interfaceName": "bond0",
+      "type": "EDGE",
+      "hashId": "odol-atsec-bos-03@ocdn.comcast.net"
+    },
+    {
+      "profile": "EDGE1_TOP_421",
+      "ip": "69.241.26.138",
+      "status": "REPORTED",
+      "cacheGroup": "us-ma-woburn",
+      "ip6": "2001:558:fe03:4c::2/64",
+      "port": 80,
+      "hostName": "odol-atsec-bos-04",
+      "fqdn": "odol-atsec-bos-04.woburn.ma.boston.comcast.net",
+      "interfaceName": "bond0",
+      "type": "EDGE",
+      "hashId": "odol-atsec-bos-04@ocdn.comcast.net"
+    },
+    {
+      "profile": "EDGE1_TOP_421",
+      "ip": "69.241.66.50",
+      "status": "REPORTED",
+      "cacheGroup": "us-de-newcastle",
+      "ip6": "2001:558:fe2a:25::2/64",
+      "port": 80,
+      "hostName": "odol-atsec-pan-02",
+      "fqdn": "odol-atsec-pan-02.ivyland.pa.panjde.comcast.net",
+      "interfaceName": "bond0",
+      "type": "EDGE",
+      "hashId": "odol-atsec-pan-02@ocdn.comcast.net"
+    },
+    {
+      "profile": "EDGE1_TOP_421",
+      "ip": "69.241.66.166",
+      "status": "REPORTED",
+      "cacheGroup": "us-de-newcastle",
+      "ip6": "2001:558:fe2a:26::2/64",
+      "port": 80,
+      "hostName": "odol-atsec-pan-03",
+      "fqdn": "odol-atsec-pan-03.ivyland.pa.panjde.comcast.net",
+      "interfaceName": "bond0",
+      "type": "EDGE",
+      "hashId": "odol-atsec-pan-03@ocdn.comcast.net"
+    },
+    {
+      "profile": "EDGE1_TOP_421",
+      "ip": "69.241.67.34",
+      "status": "REPORTED",
+      "cacheGroup": "us-de-newcastle",
+      "ip6": "2001:558:fe2a:c::2/64",
+      "port": 80,
+      "hostName": "odol-atsec-pan-06",
+      "fqdn": "odol-atsec-pan-06.newcastle.de.panjde.comcast.net",
+      "interfaceName": "bond0",
+      "type": "EDGE",
+      "hashId": "odol-atsec-pan-06@ocdn.comcast.net"
+    },
+    {
+      "profile": "EDGE1_TOP_421",
+      "ip": "69.241.67.110",
+      "status": "REPORTED",
+      "cacheGroup": "us-de-newcastle",
+      "ip6": "2001:558:fe2a:d::2/64",
+      "port": 80,
+      "hostName": "odol-atsec-pan-07",
+      "fqdn": "odol-atsec-pan-07.newcastle.de.panjde.comcast.net",
+      "interfaceName": "bond0",
+      "type": "EDGE",
+      "hashId": "odol-atsec-pan-07@ocdn.comcast.net"
+    },
+    {
+      "profile": "EDGE1_TOP_421",
+      "ip": "69.241.96.198",
+      "status": "REPORTED",
+      "cacheGroup": "us-pa-pittsburgh",
+      "ip6": "2001:558:fe0f:6::2/64",
+      "port": 80,
+      "hostName": "odol-atsec-pit-03",
+      "fqdn": "odol-atsec-pit-03.pittsburgh.pa.pitt.comcast.net",
+      "interfaceName": "bond0",
+      "type": "EDGE",
+      "hashId": "odol-atsec-pit-03@ocdn.comcast.net"
+    },
+    {
+      "profile": "EDGE1_TOP_421",
+      "ip": "69.241.97.18",
+      "status": "REPORTED",
+      "cacheGroup": "us-pa-pittsburgh",
+      "ip6": "2001:558:fe0f:7::2/64",
+      "port": 80,
+      "hostName": "odol-atsec-pit-04",
+      "fqdn": "odol-atsec-pit-04.pittsburgh.pa.pitt.comcast.net",
+      "interfaceName": "bond0",
+      "type": "EDGE",
+      "hashId": "odol-atsec-pit-04@ocdn.comcast.net"
+    },
+    {
+      "profile": "EDGE1_TOP_421",
+      "ip": "69.241.97.162",
+      "status": "REPORTED",
+      "cacheGroup": "us-pa-pittsburgh",
+      "ip6": "2001:558:fe0f:12::2/64",
+      "port": 80,
+      "hostName": "odol-atsec-pit-06",
+      "fqdn": "odol-atsec-pit-06.mckeesport.pa.pitt.comcast.net",
+      "interfaceName": "bond0",
+      "type": "EDGE",
+      "hashId": "odol-atsec-pit-06@ocdn.comcast.net"
+    },
+    {
+      "profile": "EDGE1_TOP_421",
+      "ip": "76.96.119.118",
+      "status": "REPORTED",
+      "cacheGroup": "us-pa-pittsburgh",
+      "ip6": "2001:558:fe0f:13::2/64",
+      "port": 80,
+      "hostName": "odol-atsec-pit-07",
+      "fqdn": "odol-atsec-pit-07.mckeesport.pa.pitt.comcast.net",
+      "interfaceName": "bond0",
+      "type": "EDGE",
+      "hashId": "odol-atsec-pit-07@ocdn.comcast.net"
+    },
+    {
+      "profile": "EDGE1_TOP_421",
+      "ip": "69.241.12.82",
+      "status": "REPORTED",
+      "cacheGroup": "us-md-baltimore",
+      "ip6": "2001:558:fe07:16::2/64",
+      "port": 80,
+      "hostName": "odol-atsec-bad-03",
+      "fqdn": "odol-atsec-bad-03.whitemarsh.md.bad.comcast.net",
+      "interfaceName": "bond0",
+      "type": "EDGE",
+      "hashId": "odol-atsec-bad-03@ocdn.comcast.net"
+    },
+    {
+      "profile": "EDGE1_TOP_421",
+      "ip": "69.241.12.90",
+      "status": "REPORTED",
+      "cacheGroup": "us-md-baltimore",
+      "ip6": "2001:558:fe07:17::2/64",
+      "port": 80,
+      "hostName": "odol-atsec-bad-04",
+      "fqdn": "odol-atsec-bad-04.whitemarsh.md.bad.comcast.net",
+      "interfaceName": "bond0",
+      "type": "EDGE",
+      "hashId": "odol-atsec-bad-04@ocdn.comcast.net"
+    },
+    {
+      "profile": "EDGE1_TOP_421",
+      "ip": "69.241.12.110",
+      "status": "REPORTED",
+      "cacheGroup": "us-md-baltimore",
+      "ip6": "2001:558:fe07:9::2/64",
+      "port": 80,
+      "hostName": "odol-atsec-bad-06",
+      "fqdn": "odol-atsec-bad-06.capitolhghts.md.bad.comcast.net",
+      "interfaceName": "bond0",
+      "type": "EDGE",
+      "hashId": "odol-atsec-bad-06@ocdn.comcast.net"
+    },
+    {
+      "profile": "EDGE1_TOP_421",
+      "ip": "69.241.12.150",
+      "status": "REPORTED",
+      "cacheGroup": "us-md-baltimore",
+      "ip6": "2001:558:fe07:a::2/64",
+      "port": 80,
+      "hostName": "odol-atsec-bad-07",
+      "fqdn": "odol-atsec-bad-07.capitolhghts.md.bad.comcast.net",
+      "interfaceName": "bond0",
+      "type": "EDGE",
+      "hashId": "odol-atsec-bad-07@ocdn.comcast.net"
+    },
+    {
+      "profile": "EDGE1_TOP_421",
+      "ip": "76.96.96.158",
+      "status": "REPORTED",
+      "cacheGroup": "us-ca-sanjose",
+      "ip6": "2001:558:fe0d:b::2/64",
+      "port": 80,
+      "hostName": "odol-atsec-sfb-03",
+      "fqdn": "odol-atsec-sfb-03.oakland.ca.sfba.comcast.net",
+      "interfaceName": "bond0",
+      "type": "EDGE",
+      "hashId": "odol-atsec-sfb-03@ocdn.comcast.net"
+    },
+    {
+      "profile": "EDGE1_TOP_421",
+      "ip": "76.96.96.150",
+      "status": "REPORTED",
+      "cacheGroup": "us-ca-sanjose",
+      "ip6": "2001:558:fe0d:a::2/64",
+      "port": 80,
+      "hostName": "odol-atsec-sfb-04",
+      "fqdn": "odol-atsec-sfb-04.oakland.ca.sfba.comcast.net",
+      "interfaceName": "bond0",
+      "type": "EDGE",
+      "hashId": "odol-atsec-sfb-04@ocdn.comcast.net"
+    },
+    {
+      "profile": "EDGE1_TOP_421",
+      "ip": "76.96.96.218",
+      "status": "REPORTED",
+      "cacheGroup": "us-ca-sanjose",
+      "ip6": "2001:558:fe0d:11::2/64",
+      "port": 80,
+      "hostName": "odol-atsec-sfb-07",
+      "fqdn": "odol-atsec-sfb-07.sfsutro.ca.sfba.comcast.net",
+      "interfaceName": "bond0",
+      "type": "EDGE",
+      "hashId": "odol-atsec-sfb-07@ocdn.comcast.net"
+    },
+    {
+      "profile": "EDGE1_TOP_421",
+      "ip": "76.96.96.222",
+      "status": "REPORTED",
+      "cacheGroup": "us-ca-sanjose",
+      "ip6": "2001:558:fe0d:12::2/64",
+      "port": 80,
+      "hostName": "odol-atsec-sfb-08",
+      "fqdn": "odol-atsec-sfb-08.sfsutro.ca.sfba.comcast.net",
+      "interfaceName": "bond0",
+      "type": "EDGE",
+      "hashId": "odol-atsec-sfb-08@ocdn.comcast.net"
+    },
+    {
+      "profile": "EDGE1_TOP_421",
+      "ip": "69.241.50.18",
+      "status": "REPORTED",
+      "cacheGroup": "us-co-denver",
+      "ip6": "2001:558:fe1c:44::2/64",
+      "port": 80,
+      "hostName": "odol-atsec-den-03",
+      "fqdn": "odol-atsec-den-03.denver.co.denver.comcast.net",
+      "interfaceName": "bond0",
+      "type": "EDGE",
+      "hashId": "odol-atsec-den-03@ocdn.comcast.net"
+    },
+    {
+      "profile": "EDGE1_TOP_421",
+      "ip": "69.241.50.22",
+      "status": "REPORTED",
+      "cacheGroup": "us-co-denver",
+      "ip6": "2001:558:fe1c:45::2/64",
+      "port": 80,
+      "hostName": "odol-atsec-den-04",
+      "fqdn": "odol-atsec-den-04.denver.co.denver.comcast.net",
+      "interfaceName": "bond0",
+      "type": "EDGE",
+      "hashId": "odol-atsec-den-04@ocdn.comcast.net"
+    },
+    {
+      "profile": "EDGE1_TOP_421",
+      "ip": "69.241.50.42",
+      "status": "REPORTED",
+      "cacheGroup": "us-co-denver",
+      "ip6": "2001:558:fe1c:84::2/64",
+      "port": 80,
+      "hostName": "odol-atsec-den-06",
+      "fqdn": "odol-atsec-den-06.aurora.co.denver.comcast.net",
+      "interfaceName": "bond0",
+      "type": "EDGE",
+      "hashId": "odol-atsec-den-06@ocdn.comcast.net"
+    },
+    {
+      "profile": "EDGE1_TOP_421",
+      "ip": "69.252.117.74",
+      "status": "REPORTED",
+      "cacheGroup": "us-wa-seattle",
+      "ip6": "2001:558:fe34:10::2/64",
+      "port": 80,
+      "hostName": "odol-atsec-sea-03",
+      "fqdn": "odol-atsec-sea-03.seattle.wa.seattle.comcast.net",
+      "interfaceName": "bond0",
+      "type": "EDGE",
+      "hashId": "odol-atsec-sea-03@ocdn.comcast.net"
+    },
+    {
+      "profile": "EDGE1_TOP_421",
+      "ip": "69.252.117.78",
+      "status": "REPORTED",
+      "cacheGroup": "us-wa-seattle",
+      "ip6": "2001:558:fe34:11::2/64",
+      "port": 80,
+      "hostName": "odol-atsec-sea-04",
+      "fqdn": "odol-atsec-sea-04.seattle.wa.seattle.comcast.net",
+      "interfaceName": "bond0",
+      "type": "EDGE",
+      "hashId": "odol-atsec-sea-04@ocdn.comcast.net"
+    },
+    {
+      "profile": "EDGE1_TOP_421",
+      "ip": "69.252.117.86",
+      "status": "REPORTED",
+      "cacheGroup": "us-wa-seattle",
+      "ip6": "2001:558:fe34:13::2/64",
+      "port": 80,
+      "hostName": "odol-atsec-sea-06",
+      "fqdn": "odol-atsec-sea-06.burien.wa.seattle.comcast.net",
+      "interfaceName": "bond0",
+      "type": "EDGE",
+      "hashId": "odol-atsec-sea-06@ocdn.comcast.net"
+    },
+    {
+      "profile": "EDGE1_TOP_421",
+      "ip": "69.252.117.90",
+      "status": "REPORTED",
+      "cacheGroup": "us-wa-seattle",
+      "ip6": "2001:558:fe34:14::2/64",
+      "port": 80,
+      "hostName": "odol-atsec-sea-07",
+      "fqdn": "odol-atsec-sea-07.burien.wa.seattle.comcast.net",
+      "interfaceName": "bond0",
+      "type": "EDGE",
+      "hashId": "odol-atsec-sea-07@ocdn.comcast.net"
+    },
+    {
+      "profile": "EDGE1_TOP_421",
+      "ip": "68.87.79.2",
+      "status": "REPORTED",
+      "cacheGroup": "us-bb-ashburn",
+      "ip6": "2001:558:FEEC::2/126",
+      "port": 80,
+      "hostName": "odol-atsec-bbe-03",
+      "fqdn": "odol-atsec-bbe-03.ashburn.va.ibone.comcast.net",
+      "interfaceName": "bond0",
+      "type": "EDGE",
+      "hashId": "odol-atsec-bbe-03"
+    },
+    {
+      "profile": "EDGE1_TOP_421",
+      "ip": "68.87.79.6",
+      "status": "REPORTED",
+      "cacheGroup": "us-bb-ashburn",
+      "ip6": "2001:558:FEEC::6/126",
+      "port": 80,
+      "hostName": "odol-atsec-bbe-04",
+      "fqdn": "odol-atsec-bbe-04.ashburn.va.ibone.comcast.net",
+      "interfaceName": "bond0",
+      "type": "EDGE",
+      "hashId": "odol-atsec-bbe-04"
+    },
+    {
+      "profile": "EDGE1_TOP_421",
+      "ip": "68.87.79.10",
+      "status": "REPORTED",
+      "cacheGroup": "us-bb-newyork",
+      "ip6": "2001:558:FEEC::a/126",
+      "port": 80,
+      "hostName": "odol-atsec-bbe-01",
+      "fqdn": "odol-atsec-bbe-01.newyork.ny.ibone.comcast.net",
+      "interfaceName": "bond0",
+      "type": "EDGE",
+      "hashId": "odol-atsec-bbe-01"
+    },
+    {
+      "profile": "EDGE1_TOP_421",
+      "ip": "68.87.79.14",
+      "status": "REPORTED",
+      "cacheGroup": "us-bb-newyork",
+      "ip6": "2001:558:FEEC::e/126",
+      "port": 80,
+      "hostName": "odol-atsec-bbe-02",
+      "fqdn": "odol-atsec-bbe-02.newyork.ny.ibone.comcast.net",
+      "interfaceName": "bond0",
+      "type": "EDGE",
+      "hashId": "odol-atsec-bbe-02"
+    },
+    {
+      "profile": "EDGE1_TOP_421",
+      "ip": "68.87.79.18",
+      "status": "REPORTED",
+      "cacheGroup": "us-bb-ecermak",
+      "ip6": "2001:558:FEEC::12/126",
+      "port": 80,
+      "hostName": "odol-atsec-bbc-03",
+      "fqdn": "odol-atsec-bbc-03.350ecermak.il.ibone.comcast.net",
+      "interfaceName": "bond0",
+      "type": "EDGE",
+      "hashId": "odol-atsec-bbc-03"
+    },
+    {
+      "profile": "EDGE1_TOP_421",
+      "ip": "68.87.79.22",
+      "status": "REPORTED",
+      "cacheGroup": "us-bb-ecermak",
+      "ip6": "2001:558:FEEC::16/126",
+      "port": 80,
+      "hostName": "odol-atsec-bbc-04",
+      "fqdn": "odol-atsec-bbc-04.350ecermak.il.ibone.comcast.net",
+      "interfaceName": "bond0",
+      "type": "EDGE",
+      "hashId": "odol-atsec-bbc-04"
+    },
+    {
+      "profile": "EDGE1_TOP_421",
+      "ip": "68.87.79.26",
+      "status": "REPORTED",
+      "cacheGroup": "us-bb-denver",
+      "ip6": "2001:558:FEEC::1a/126",
+      "port": 80,
+      "hostName": "odol-atsec-bbw-03",
+      "fqdn": "odol-atsec-bbw-03.denver.co.ibone.comcast.net",
+      "interfaceName": "bond0",
+      "type": "EDGE",
+      "hashId": "odol-atsec-bbw-03"
+    },
+    {
+      "profile": "EDGE1_TOP_421",
+      "ip": "68.87.79.30",
+      "status": "REPORTED",
+      "cacheGroup": "us-bb-denver",
+      "ip6": "2001:558:FEEC::1e/126",
+      "port": 80,
+      "hostName": "odol-atsec-bbw-04",
+      "fqdn": "odol-atsec-bbw-04.denver.co.ibone.comcast.net",
+      "interfaceName": "bond0",
+      "type": "EDGE",
+      "hashId": "odol-atsec-bbw-04"
+    },
+    {
+      "profile": "EDGE1_TOP_421",
+      "ip": "68.87.79.34",
+      "status": "REPORTED",
+      "cacheGroup": "us-bb-sanjose",
+      "ip6": "2001:558:FEEC::22/126",
+      "port": 80,
+      "hostName": "odol-atsec-bbw-01",
+      "fqdn": "odol-atsec-bbw-01.sanjose.ca.ibone.comcast.net",
+      "interfaceName": "bond0",
+      "type": "EDGE",
+      "hashId": "odol-atsec-bbw-01"
+    },
+    {
+      "profile": "EDGE1_TOP_421",
+      "ip": "68.87.79.38",
+      "status": "REPORTED",
+      "cacheGroup": "us-bb-sanjose",
+      "ip6": "2001:558:FEEC::26/126",
+      "port": 80,
+      "hostName": "odol-atsec-bbw-02",
+      "fqdn": "odol-atsec-bbw-02.sanjose.ca.ibone.comcast.net",
+      "interfaceName": "bond0",
+      "type": "EDGE",
+      "hashId": "odol-atsec-bbw-02"
+    },
+    {
+      "profile": "EDGE1_TOP_421",
+      "ip": "68.87.79.42",
+      "status": "REPORTED",
+      "cacheGroup": "us-bb-marietta",
+      "ip6": "2001:558:FEEC::2a/126",
+      "port": 80,
+      "hostName": "odol-atsec-bbc-01",
+      "fqdn": "odol-atsec-bbc-01.56marietta.ga.ibone.comcast.net",
+      "interfaceName": "bond0",
+      "type": "EDGE",
+      "hashId": "odol-atsec-bbc-01"
+    },
+    {
+      "profile": "EDGE1_TOP_421",
+      "ip": "68.87.79.46",
+      "status": "REPORTED",
+      "cacheGroup": "us-bb-marietta",
+      "ip6": "2001:558:FEEC::2e/126",
+      "port": 80,
+      "hostName": "odol-atsec-bbc-02",
+      "fqdn": "odol-atsec-bbc-02.56marietta.ga.ibone.comcast.net",
+      "interfaceName": "bond0",
+      "type": "EDGE",
+      "hashId": "odol-atsec-bbc-02"
+    },
+    {
+      "profile": "EDGE1_TOP_421",
+      "ip": "69.252.119.194",
+      "status": "REPORTED",
+      "cacheGroup": "us-tx-houston",
+      "ip6": "2001:558:fe1a:a::2/64",
+      "port": 80,
+      "hostName": "odol-atsec-hou-04",
+      "fqdn": "odol-atsec-hou-04.bearcreek.tx.houston.comcast.net",
+      "interfaceName": "bond0",
+      "type": "EDGE",
+      "hashId": "odol-atsec-hou-04@ocdn.comcast.net"
+    },
+    {
+      "profile": "EDGE1_TOP_421",
+      "ip": "76.96.42.234",
+      "status": "REPORTED",
+      "cacheGroup": "us-tx-houston",
+      "ip6": "2001:558:fe1a:b::2/64",
+      "port": 80,
+      "hostName": "odol-atsec-hou-09",
+      "fqdn": "odol-atsec-hou-09.bearcreek.tx.houston.comcast.net",
+      "interfaceName": "bond0",
+      "type": "EDGE",
+      "hashId": "odol-atsec-hou-09@ocdn.comcast.net"
+    },
+    {
+      "profile": "EDGE1_TOP_421",
+      "ip": "68.87.89.14",
+      "status": "REPORTED",
+      "cacheGroup": "us-tx-houston",
+      "ip6": "2001:558:fe1a:e::2/64",
+      "port": 80,
+      "hostName": "odol-atsec-hou-07",
+      "fqdn": "odol-atsec-hou-07.bisbee.tx.houston.comcast.net",
+      "interfaceName": "bond0",
+      "type": "EDGE",
+      "hashId": "odol-atsec-hou-07@ocdn.comcast.net"
+    },
+    {
+      "profile": "EDGE1_TOP_421",
+      "ip": "69.241.80.2",
+      "status": "REPORTED",
+      "cacheGroup": "us-tx-houston",
+      "ip6": "2001:558:fe1a:f::2/64",
+      "port": 80,
+      "hostName": "odol-atsec-hou-08",
+      "fqdn": "odol-atsec-hou-08.bisbee.tx.houston.comcast.net",
+      "interfaceName": "bond0",
+      "type": "EDGE",
+      "hashId": "odol-atsec-hou-08@ocdn.comcast.net"
+    },
+    {
+      "profile": "EDGE1_TOP_421",
+      "ip": "69.241.97.38",
+      "status": "REPORTED",
+      "cacheGroup": "us-pa-pittsburgh",
+      "ip6": "2001:558:fe0f:14::2/64",
+      "port": 80,
+      "hostName": "odol-atsec-pit-08",
+      "fqdn": "odol-atsec-pit-08.mckeesport.pa.pitt.comcast.net",
+      "interfaceName": "bond0",
+      "type": "EDGE",
+      "hashId": "odol-atsec-pit-08@ocdn.comcast.net"
+    },
+    {
+      "profile": "EDGE1_TOP_421",
+      "ip": "69.241.28.54",
+      "status": "REPORTED",
+      "cacheGroup": "us-ma-woburn",
+      "ip6": "2001:558:fe03:4d::2/64",
+      "port": 80,
+      "hostName": "odol-atsec-bos-09",
+      "fqdn": "odol-atsec-bos-09.needham.ma.boston.comcast.net",
+      "interfaceName": "bond0",
+      "type": "EDGE",
+      "hashId": "odol-atsec-bos-09@ocdn.comcast.net"
+    },
+    {
+      "profile": "EDGE1_TOP_421",
+      "ip": "69.241.29.86",
+      "status": "REPORTED",
+      "cacheGroup": "us-ma-woburn",
+      "ip6": "2001:558:fe03:12::2/64",
+      "port": 80,
+      "hostName": "odol-atsec-bos-10",
+      "fqdn": "odol-atsec-bos-10.needham.ma.boston.comcast.net",
+      "interfaceName": "bond0",
+      "type": "EDGE",
+      "hashId": "odol-atsec-bos-10@ocdn.comcast.net"
+    },
+    {
+      "profile": "EDGE1_TOP_421",
+      "ip": "69.241.30.26",
+      "status": "REPORTED",
+      "cacheGroup": "us-ma-woburn",
+      "ip6": "2001:558:fe03:1f::2/64",
+      "port": 80,
+      "hostName": "odol-atsec-bos-14",
+      "fqdn": "odol-atsec-bos-14.needham.ma.boston.comcast.net",
+      "interfaceName": "bond0",
+      "type": "EDGE",
+      "hashId": "odol-atsec-bos-14@ocdn.comcast.net"
+    },
+    {
+      "profile": "EDGE1_TOP_421",
+      "ip": "69.241.64.126",
+      "status": "REPORTED",
+      "cacheGroup": "us-de-newcastle",
+      "ip6": "2001:558:fe2a:11::2/64",
+      "port": 80,
+      "hostName": "odol-atsec-pan-09",
+      "fqdn": "odol-atsec-pan-09.newcastle.de.panjde.comcast.net",
+      "interfaceName": "bond0",
+      "type": "EDGE",
+      "hashId": "odol-atsec-pan-09@ocdn.comcast.net"
+    },
+    {
+      "profile": "EDGE1_TOP_421",
+      "ip": "69.241.50.46",
+      "status": "ADMIN_DOWN",
+      "cacheGroup": "us-co-denver",
+      "ip6": "2001:558:fe1c:85::2/64",
+      "port": 80,
+      "hostName": "odol-atsec-den-07",
+      "fqdn": "odol-atsec-den-07.aurora.co.denver.comcast.net",
+      "interfaceName": "bond0",
+      "type": "EDGE",
+      "hashId": "odol-atsec-den-07@ocdn.comcast.net"
+    },
+    {
+      "profile": "REDIS_ALL",
+      "ip": "162.150.162.245",
+      "status": "OFFLINE",
+      "cacheGroup": "dc-westchester",
+      "ip6": "",
+      "port": 6379,
+      "hostName": "odol-tmredis-oswcdc-01",
+      "fqdn": "odol-tmredis-oswcdc-01.comcast.net",
+      "interfaceName": "eth0",
+      "type": "REDIS",
+      "hashId": "odol-tmredis-oswcdc-01"
+    },
+    {
+      "profile": "REDIS_ALL",
+      "ip": "162.150.163.107",
+      "status": "OFFLINE",
+      "cacheGroup": "dc-westchester",
+      "ip6": "",
+      "port": 6379,
+      "hostName": "odol-tmredis-oswcdc-02",
+      "fqdn": "odol-tmredis-oswcdc-02.comcast.net",
+      "interfaceName": "eth0",
+      "type": "REDIS",
+      "hashId": "odol-tmredis-oswcdc-01"
+    },
+    {
+      "profile": "REDIS_ALL",
+      "ip": "162.150.11.29",
+      "status": "OFFLINE",
+      "cacheGroup": "dc-chicago",
+      "ip6": "",
+      "port": 6379,
+      "hostName": "odol-tmredis-osch2-01",
+      "fqdn": "odol-tmredis-osch2-01.comcast.net",
+      "interfaceName": "eth0",
+      "type": "REDIS",
+      "hashId": "odol-tmredis-oswcdc-01"
+    },
+    {
+      "profile": "REDIS_ALL",
+      "ip": "162.150.2.229",
+      "status": "OFFLINE",
+      "cacheGroup": "dc-chicago",
+      "ip6": "",
+      "port": 6379,
+      "hostName": "odol-tmredis-osch2-02",
+      "fqdn": "odol-tmredis-osch2-02.comcast.net",
+      "interfaceName": "eth0",
+      "type": "REDIS",
+      "hashId": "odol-tmredis-oswcdc-01"
+    },
+    {
+      "profile": "EDGE1_TOP_421",
+      "ip": "69.241.111.86",
+      "status": "REPORTED",
+      "cacheGroup": "us-md-baltimore",
+      "ip6": "2001:558:fe07:e::2/64",
+      "port": 80,
+      "hostName": "odol-atsec-bad-08",
+      "fqdn": "odol-atsec-bad-08.capitolhghts.md.bad.comcast.net",
+      "interfaceName": "bond0",
+      "type": "EDGE",
+      "hashId": "odol-atsec-bad-08@ocdn.comcast.net"
+    },
+    {
+      "profile": "EDGE1_TOP_421",
+      "ip": "69.241.110.234",
+      "status": "REPORTED",
+      "cacheGroup": "us-md-baltimore",
+      "ip6": "2001:558:fe07:f::2/64",
+      "port": 80,
+      "hostName": "odol-atsec-bad-09",
+      "fqdn": "odol-atsec-bad-09.capitolhghts.md.bad.comcast.net",
+      "interfaceName": "bond0",
+      "type": "EDGE",
+      "hashId": "odol-atsec-bad-09@ocdn.comcast.net"
+    },
+    {
+      "profile": "EDGE1_TOP_421",
+      "ip": "69.241.68.110",
+      "status": "REPORTED",
+      "cacheGroup": "us-nj-plainfield",
+      "ip6": "2001:558:fe36:d::2/64",
+      "port": 80,
+      "hostName": "odol-atsec-njs-03",
+      "fqdn": "odol-atsec-njs-03.plainfield.nj.panjde.comcast.net",
+      "interfaceName": "bond0",
+      "type": "EDGE",
+      "hashId": "odol-atsec-njs-03"
+    },
+    {
+      "profile": "EDGE1_TOP_421",
+      "ip": "69.241.68.114",
+      "status": "REPORTED",
+      "cacheGroup": "us-nj-plainfield",
+      "ip6": "2001:558:fe36:e::2/64",
+      "port": 80,
+      "hostName": "odol-atsec-njs-04",
+      "fqdn": "odol-atsec-njs-04.plainfield.nj.panjde.comcast.net",
+      "interfaceName": "bond0",
+      "type": "EDGE",
+      "hashId": "odol-atsec-njs-04"
+    },
+    {
+      "profile": "EDGE1_TOP_421",
+      "ip": "69.241.68.118",
+      "status": "REPORTED",
+      "cacheGroup": "us-nj-plainfield",
+      "ip6": "2001:558:fe36:f::2/64",
+      "port": 80,
+      "hostName": "odol-atsec-njs-09",
+      "fqdn": "odol-atsec-njs-09.plainfield.nj.panjde.comcast.net",
+      "interfaceName": "bond0",
+      "type": "EDGE",
+      "hashId": "odol-atsec-njs-09"
+    },
+    {
+      "profile": "EDGE1_TOP_421",
+      "ip": "69.241.68.98",
+      "status": "REPORTED",
+      "cacheGroup": "us-nj-plainfield",
+      "ip6": "2001:558:fe36:a::2/64",
+      "port": 80,
+      "hostName": "odol-atsec-njs-07",
+      "fqdn": "odol-atsec-njs-07.audubon.nj.panjde.comcast.net",
+      "interfaceName": "bond0",
+      "type": "EDGE",
+      "hashId": "odol-atsec-njs-07"
+    },
+    {
+      "profile": "EDGE1_TOP_421",
+      "ip": "69.241.68.122",
+      "status": "REPORTED",
+      "cacheGroup": "us-nj-plainfield",
+      "ip6": "2001:558:fe36:10::2/64",
+      "port": 80,
+      "hostName": "odol-atsec-njs-08",
+      "fqdn": "odol-atsec-njs-08.audubon.nj.panjde.comcast.net",
+      "interfaceName": "bond0",
+      "type": "EDGE",
+      "hashId": "odol-atsec-njs-08"
+    },
+    {
+      "profile": "EDGE1_TOP_421",
+      "ip": "69.241.15.86",
+      "status": "REPORTED",
+      "cacheGroup": "us-va-richmond",
+      "ip6": "2001:558:FE30:8::2/64",
+      "port": 80,
+      "hostName": "odol-atsec-ric-03",
+      "fqdn": "odol-atsec-ric-03.staplesmllrd.va.richmond.comcast.net",
+      "interfaceName": "bond0",
+      "type": "EDGE",
+      "hashId": "odol-atsec-ric-03"
+    },
+    {
+      "profile": "EDGE1_TOP_421",
+      "ip": "69.241.15.90",
+      "status": "REPORTED",
+      "cacheGroup": "us-va-richmond",
+      "ip6": "2001:558:fe30:9::2/64",
+      "port": 80,
+      "hostName": "odol-atsec-ric-04",
+      "fqdn": "odol-atsec-ric-04.staplesmllrd.va.richmond.comcast.net",
+      "interfaceName": "bond0",
+      "type": "EDGE",
+      "hashId": "odol-atsec-ric-04"
+    },
+    {
+      "profile": "EDGE1_TOP_421",
+      "ip": "69.241.15.70",
+      "status": "REPORTED",
+      "cacheGroup": "us-va-richmond",
+      "ip6": "2001:558:fe30:a::2/64",
+      "port": 80,
+      "hostName": "odol-atsec-ric-06",
+      "fqdn": "odol-atsec-ric-06.charlvilleco.va.richmond.comcast.net",
+      "interfaceName": "bond0",
+      "type": "EDGE",
+      "hashId": "odol-atsec-ric-06"
+    },
+    {
+      "profile": "EDGE1_TOP_421",
+      "ip": "69.241.15.74",
+      "status": "REPORTED",
+      "cacheGroup": "us-va-richmond",
+      "ip6": "2001:558:fe30:c::2/64",
+      "port": 80,
+      "hostName": "odol-atsec-ric-07",
+      "fqdn": "odol-atsec-ric-07.charlvilleco.va.richmond.comcast.net",
+      "interfaceName": "bond0",
+      "type": "EDGE",
+      "hashId": "odol-atsec-ric-07"
+    },
+    {
+      "profile": "EDGE1_TOP_421",
+      "ip": "69.241.50.74",
+      "status": "REPORTED",
+      "cacheGroup": "us-co-denver",
+      "ip6": "2001:558:fe1c:a::2/64",
+      "port": 80,
+      "hostName": "odol-atsec-den-08",
+      "fqdn": "odol-atsec-den-08.denver.co.denver.comcast.net",
+      "interfaceName": "bond0",
+      "type": "EDGE",
+      "hashId": "odol-atsec-den-08@ocdn.comcast.net"
+    },
+    {
+      "profile": "EDGE1_TOP_421",
+      "ip": "69.241.50.78",
+      "status": "REPORTED",
+      "cacheGroup": "us-co-denver",
+      "ip6": "2001:558:fe1c:b::2/64",
+      "port": 80,
+      "hostName": "odol-atsec-den-09",
+      "fqdn": "odol-atsec-den-09.aurora.co.denver.comcast.net",
+      "interfaceName": "bond0",
+      "type": "EDGE",
+      "hashId": "odol-atsec-den-09@ocdn.comcast.net"
+    },
+    {
+      "profile": "EDGE1_TOP_421",
+      "ip": "69.241.50.82",
+      "status": "REPORTED",
+      "cacheGroup": "us-co-denver",
+      "ip6": "2001:558:fe1c:86::2/64",
+      "port": 80,
+      "hostName": "odol-atsec-den-10",
+      "fqdn": "odol-atsec-den-10.aurora.co.denver.comcast.net",
+      "interfaceName": "bond0",
+      "type": "EDGE",
+      "hashId": "odol-atsec-den-10@ocdn.comcast.net"
+    },
+    {
+      "profile": "EDGE1_TOP_421",
+      "ip": "69.252.117.138",
+      "status": "REPORTED",
+      "cacheGroup": "us-wa-seattle",
+      "ip6": "2001:558:fe34:17::2/64",
+      "port": 80,
+      "hostName": "odol-atsec-sea-09",
+      "fqdn": "odol-atsec-sea-09.burien.wa.seattle.comcast.net",
+      "interfaceName": "bond0",
+      "type": "EDGE",
+      "hashId": "odol-atsec-sea-09@ocdn.comcast.net"
+    },
+    {
+      "profile": "EDGE1_TOP_421",
+      "ip": "69.241.77.214",
+      "status": "REPORTED",
+      "cacheGroup": "us-mn-roseville",
+      "ip6": "2001:558:FE24:E::2/64",
+      "port": 80,
+      "hostName": "odol-atsec-min-03",
+      "fqdn": "odol-atsec-min-03.crosstown.mn.minn.comcast.net",
+      "interfaceName": "bond0",
+      "type": "EDGE",
+      "hashId": "odol-atsec-min-03"
+    },
+    {
+      "profile": "EDGE1_TOP_421",
+      "ip": "69.241.114.2",
+      "status": "REPORTED",
+      "cacheGroup": "us-mn-roseville",
+      "ip6": "2001:558:fe24:f::2/64",
+      "port": 80,
+      "hostName": "odol-atsec-min-04",
+      "fqdn": "odol-atsec-min-04.crosstown.mn.minn.comcast.net",
+      "interfaceName": "bond0",
+      "type": "EDGE",
+      "hashId": "odol-atsec-min-04"
+    },
+    {
+      "profile": "EDGE1_TOP_421",
+      "ip": "69.241.114.74",
+      "status": "REPORTED",
+      "cacheGroup": "us-mn-roseville",
+      "ip6": "2001:558:fe24:5::2/64",
+      "port": 80,
+      "hostName": "odol-atsec-min-06",
+      "fqdn": "odol-atsec-min-06.roseville.mn.minn.comcast.net",
+      "interfaceName": "bond0",
+      "type": "EDGE",
+      "hashId": "odol-atsec-min-06"
+    },
+    {
+      "profile": "EDGE1_TOP_421",
+      "ip": "69.241.114.78",
+      "status": "REPORTED",
+      "cacheGroup": "us-mn-roseville",
+      "ip6": "2001:558:fe24:6::2/64",
+      "port": 80,
+      "hostName": "odol-atsec-min-07",
+      "fqdn": "odol-atsec-min-07.roseville.mn.minn.comcast.net",
+      "interfaceName": "bond0",
+      "type": "EDGE",
+      "hashId": "odol-atsec-min-07"
+    },
+    {
+      "profile": "EDGE1_TOP_421",
+      "ip": "69.241.37.166",
+      "status": "REPORTED",
+      "cacheGroup": "us-ga-atlanta",
+      "ip6": "2001:558:fe13:17::2/64",
+      "port": 80,
+      "hostName": "odol-atsec-atl-10",
+      "fqdn": "odol-atsec-atl-10.b0atlanta.ga.atlanta.comcast.net",
+      "interfaceName": "bond0",
+      "type": "EDGE",
+      "hashId": "odol-atsec-atl-10@ocdn.comcast.net"
+    },
+    {
+      "profile": "EDGE1_TOP_421",
+      "ip": "69.241.37.178",
+      "status": "REPORTED",
+      "cacheGroup": "us-ga-atlanta",
+      "ip6": "2001:558:fe13:1a::2/64",
+      "port": 80,
+      "hostName": "odol-atsec-atl-09",
+      "fqdn": "odol-atsec-atl-09.d1stonemtn.ga.atlanta.comcast.net",
+      "interfaceName": "bond0",
+      "type": "EDGE",
+      "hashId": "odol-atsec-atl-09@ocdn.comcast.net"
+    },
+    {
+      "profile": "EDGE1_TOP_421",
+      "ip": "69.241.102.54",
+      "status": "REPORTED",
+      "cacheGroup": "us-il-chicago",
+      "ip6": "2001:558:fe05:19::2/64",
+      "port": 80,
+      "hostName": "odol-atsec-chi-09",
+      "fqdn": "odol-atsec-chi-09.area4.il.chicago.comcast.net",
+      "interfaceName": "bond0",
+      "type": "EDGE",
+      "hashId": "odol-atsec-chi-09@ocdn.comcast.net"
+    },
+    {
+      "profile": "EDGE1_TOP_421",
+      "ip": "69.241.102.162",
+      "status": "REPORTED",
+      "cacheGroup": "us-il-chicago",
+      "ip6": "2001:558:fe05:1d::2/64",
+      "port": 80,
+      "hostName": "odol-atsec-chi-08",
+      "fqdn": "odol-atsec-chi-08.elmhurst.il.chicago.comcast.net",
+      "interfaceName": "bond0",
+      "type": "EDGE",
+      "hashId": "odol-atsec-chi-08@ocdn.comcast.net"
+    },
+    {
+      "profile": "EDGE1_TOP_421",
+      "ip": "69.252.25.230",
+      "status": "REPORTED",
+      "cacheGroup": "us-fl-sarasota",
+      "ip6": "2001:558:fe2e:14::2/64",
+      "port": 80,
+      "hostName": "odol-atsec-coa-08",
+      "fqdn": "odol-atsec-coa-08.pompanobeach.fl.pompano.comcast.net",
+      "interfaceName": "bond0",
+      "type": "EDGE",
+      "hashId": "odol-atsec-coa-08"
+    },
+    {
+      "profile": "EDGE1_TOP_421",
+      "ip": "69.252.25.234",
+      "status": "REPORTED",
+      "cacheGroup": "us-fl-sarasota",
+      "ip6": "2001:558:fe2e:17::2/64",
+      "port": 80,
+      "hostName": "odol-atsec-coa-09",
+      "fqdn": "odol-atsec-coa-09.pompanobeach.fl.pompano.comcast.net",
+      "interfaceName": "bond0",
+      "type": "EDGE",
+      "hashId": "odol-atsec-coa-09"
+    },
+    {
+      "profile": "EDGE1_TOP_421",
+      "ip": "69.241.118.42",
+      "status": "REPORTED",
+      "cacheGroup": "us-co-denver",
+      "ip6": "2001:558:fee8:121::2/64",
+      "port": 80,
+      "hostName": "odol-atsec-bdn-01",
+      "fqdn": "odol-atsec-bdn-01.cmc.co.ndcwest.comcast.net",
+      "interfaceName": "bond0",
+      "type": "EDGE",
+      "hashId": "odol-atsec-bdn-01"
+    },
+    {
+      "profile": "EDGE1_TOP_421",
+      "ip": "69.241.118.46",
+      "status": "REPORTED",
+      "cacheGroup": "us-co-denver",
+      "ip6": "2001:558:fee8:122::2/64",
+      "port": 80,
+      "hostName": "odol-atsec-bdn-02",
+      "fqdn": "odol-atsec-bdn-02.cmc.co.ndcwest.comcast.net",
+      "interfaceName": "bond0",
+      "type": "EDGE",
+      "hashId": "odol-atsec-bdn-02"
+    },
+    {
+      "profile": "EDGE1_TOP_421",
+      "ip": "69.252.255.38",
+      "status": "REPORTED",
+      "cacheGroup": "us-ca-sanjose",
+      "ip6": "2001:558:fe0d:1A::2/64",
+      "port": 80,
+      "hostName": "odol-atsec-sfb-10",
+      "fqdn": "odol-atsec-sfb-10.oakland.ca.sfba.comcast.net",
+      "interfaceName": "bond0",
+      "type": "EDGE",
+      "hashId": "odol-atsec-sfb-10@ocdn.comcast.net"
+    },
+    {
+      "profile": "EDGE1_TOP_421",
+      "ip": "69.252.255.42",
+      "status": "REPORTED",
+      "cacheGroup": "us-ca-sanjose",
+      "ip6": "2001:558:fe0d:1B::2/64",
+      "port": 80,
+      "hostName": "odol-atsec-sfb-11",
+      "fqdn": "odol-atsec-sfb-11.oakland.ca.sfba.comcast.net",
+      "interfaceName": "bond0",
+      "type": "EDGE",
+      "hashId": "odol-atsec-sfb-11@ocdn.comcast.net"
+    },
+    {
+      "profile": "EDGE1_TOP_421",
+      "ip": "69.252.255.46",
+      "status": "REPORTED",
+      "cacheGroup": "us-ca-sanjose",
+      "ip6": "2001:558:fe0d:1C::2/64",
+      "port": 80,
+      "hostName": "odol-atsec-sfb-12",
+      "fqdn": "odol-atsec-sfb-12.oakland.ca.sfba.comcast.net",
+      "interfaceName": "bond0",
+      "type": "EDGE",
+      "hashId": "odol-atsec-sfb-12@ocdn.comcast.net"
+    },
+    {
+      "profile": "EDGE1_TOP_421",
+      "ip": "69.241.74.38",
+      "status": "REPORTED",
+      "cacheGroup": "us-ca-sanjose",
+      "ip6": "2001:558:fe0d:20::2/64",
+      "port": 80,
+      "hostName": "odol-atsec-sfb-09",
+      "fqdn": "odol-atsec-sfb-09.sfsutro.ca.sfba.comcast.net",
+      "interfaceName": "bond0",
+      "type": "EDGE",
+      "hashId": "odol-atsec-sfb-09@ocdn.comcast.net"
+    },
+    {
+      "profile": "EDGE1_TOP_421",
+      "ip": "69.241.74.42",
+      "status": "REPORTED",
+      "cacheGroup": "us-ca-sanjose",
+      "ip6": "2001:558:fe0d:21::2/64",
+      "port": 80,
+      "hostName": "odol-atsec-sfb-13",
+      "fqdn": "odol-atsec-sfb-13.sfsutro.ca.sfba.comcast.net",
+      "interfaceName": "bond0",
+      "type": "EDGE",
+      "hashId": "odol-atsec-sfb-13@ocdn.comcast.net"
+    },
+    {
+      "profile": "EDGE1_TOP_421",
+      "ip": "69.241.29.174",
+      "status": "REPORTED",
+      "cacheGroup": "us-ma-woburn",
+      "ip6": "2001:558:fe03:14::2/64",
+      "port": 80,
+      "hostName": "odol-atsec-bos-11",
+      "fqdn": "odol-atsec-bos-11.woburn.ma.boston.comcast.net",
+      "interfaceName": "bond0",
+      "type": "EDGE",
+      "hashId": "odol-atsec-bos-11"
+    },
+    {
+      "profile": "EDGE1_TOP_421",
+      "ip": "69.241.30.98",
+      "status": "REPORTED",
+      "cacheGroup": "us-ma-woburn",
+      "ip6": "2001:558:fe03:9::2/64",
+      "port": 80,
+      "hostName": "odol-atsec-bos-12",
+      "fqdn": "odol-atsec-bos-12.woburn.ma.boston.comcast.net",
+      "interfaceName": "bond0",
+      "type": "EDGE",
+      "hashId": "odol-atsec-bos-12"
+    },
+    {
+      "profile": "EDGE1_TOP_421",
+      "ip": "69.241.30.110",
+      "status": "REPORTED",
+      "cacheGroup": "us-ma-woburn",
+      "ip6": "2001:558:FE03:8::2/64",
+      "port": 80,
+      "hostName": "odol-atsec-bos-13",
+      "fqdn": "odol-atsec-bos-13.woburn.ma.boston.comcast.net",
+      "interfaceName": "bond0",
+      "type": "EDGE",
+      "hashId": "odol-atsec-bos-13"
+    },
+    {
+      "profile": "EDGE1_TOP_421",
+      "ip": "69.241.102.66",
+      "status": "ADMIN_DOWN",
+      "cacheGroup": "us-il-chicago",
+      "ip6": "2001:558:fe05:1a::2/64",
+      "port": 80,
+      "hostName": "odol-atsec-chi-10",
+      "fqdn": "odol-atsec-chi-10.area4.il.chicago.comcast.net",
+      "interfaceName": "bond0",
+      "type": "EDGE",
+      "hashId": "odol-atsec-chi-10@ocdn.comcast.net"
+    },
+    {
+      "profile": "EDGE1_TOP_421",
+      "ip": "69.241.89.234",
+      "status": "ADMIN_DOWN",
+      "cacheGroup": "us-ut-sandy",
+      "ip6": "2001:558:fe0b:10::2/64",
+      "port": 80,
+      "hostName": "odol-atsec-uta-01",
+      "fqdn": "odol-atsec-uta-01.sandy.ut.utah.comcast.net",
+      "interfaceName": "bond0",
+      "type": "EDGE",
+      "hashId": "odol-atsec-slc-01"
+    },
+    {
+      "profile": "EDGE1_TOP_421",
+      "ip": "69.241.89.246",
+      "status": "ADMIN_DOWN",
+      "cacheGroup": "us-ut-sandy",
+      "ip6": "2001:558:fe0b:f::2/64",
+      "port": 80,
+      "hostName": "odol-atsec-uta-02",
+      "fqdn": "odol-atsec-uta-02.sandy.ut.utah.comcast.net",
+      "interfaceName": "bond0",
+      "type": "EDGE",
+      "hashId": "odol-atsec-slc-02"
+    },
+    {
+      "profile": "EDGE1_TOP_421",
+      "ip": "69.241.89.250",
+      "status": "ADMIN_DOWN",
+      "cacheGroup": "us-ut-sandy",
+      "ip6": "2001:558:fe0b:e::2/64",
+      "port": 80,
+      "hostName": "odol-atsec-uta-03",
+      "fqdn": "odol-atsec-uta-03.sandy.ut.utah.comcast.net",
+      "interfaceName": "bond0",
+      "type": "EDGE",
+      "hashId": "odol-atsec-slc-03"
+    },
+    {
+      "profile": "EDGE1_TOP_421",
+      "ip": "69.241.89.254",
+      "status": "ADMIN_DOWN",
+      "cacheGroup": "us-ut-sandy",
+      "ip6": "2001:558:fe0b:d::2/64",
+      "port": 80,
+      "hostName": "odol-atsec-uta-04",
+      "fqdn": "odol-atsec-uta-04.sandy.ut.utah.comcast.net",
+      "interfaceName": "bond0",
+      "type": "EDGE",
+      "hashId": "odol-atsec-slc-04"
+    }
+  ],
+  "cacheGroups": [
+    {
+      "coordinates": {
+        "longitude": -121.891944,
+        "latitude": 37.335278
+      },
+      "name": "us-ca-sanjose"
+    },
+    {
+      "coordinates": {
+        "longitude": -71.178099,
+        "latitude": 42.457595
+      },
+      "name": "us-ma-woburn"
+    },
+    {
+      "coordinates": {
+        "longitude": -87.627778,
+        "latitude": 41.881944
+      },
+      "name": "us-il-chicago"
+    },
+    {
+      "coordinates": {
+        "longitude": -75.565278,
+        "latitude": 39.664722
+      },
+      "name": "us-de-newcastle"
+    },
+    {
+      "coordinates": {
+        "longitude": -84.39,
+        "latitude": 33.755
+      },
+      "name": "us-ga-atlanta"
+    },
+    {
+      "coordinates": {
+        "longitude": -104.93936,
+        "latitude": 39.578665
+      },
+      "name": "us-co-ccplab"
+    },
+    {
+      "coordinates": {
+        "longitude": -122.333056,
+        "latitude": 47.609722
+      },
+      "name": "us-wa-seattle"
+    },
+    {
+      "coordinates": {
+        "longitude": -76.616667,
+        "latitude": 39.28333
+      },
+      "name": "us-md-baltimore"
+    },
+    {
+      "coordinates": {
+        "longitude": -80,
+        "latitude": 40.441667
+      },
+      "name": "us-pa-pittsburgh"
+    },
+    {
+      "coordinates": {
+        "longitude": -82.535278,
+        "latitude": 27.337222
+      },
+      "name": "us-fl-sarasota"
+    },
+    {
+      "coordinates": {
+        "longitude": -85.655719,
+        "latitude": 42.96125
+      },
+      "name": "us-mi-grand_rapids"
+    },
+    {
+      "coordinates": {
+        "longitude": -104.984722,
+        "latitude": 39.739167
+      },
+      "name": "us-co-denver"
+    },
+    {
+      "coordinates": {
+        "longitude": 5,
+        "latitude": 52
+      },
+      "name": "nl-ut-veenendaal"
+    },
+    {
+      "coordinates": {
+        "longitude": 0,
+        "latitude": 0
+      },
+      "name": "us-bb-east"
+    },
+    {
+      "coordinates": {
+        "longitude": 0,
+        "latitude": 0
+      },
+      "name": "us-bb-west"
+    },
+    {
+      "coordinates": {
+        "longitude": 0,
+        "latitude": 0
+      },
+      "name": "us-bb-central"
+    },
+    {
+      "coordinates": {
+        "longitude": -95.383056,
+        "latitude": 29.762778
+      },
+      "name": "us-tx-houston"
+    },
+    {
+      "coordinates": {
+        "longitude": -77.432889,
+        "latitude": 37.540972
+      },
+      "name": "us-va-richmond"
+    },
+    {
+      "coordinates": {
+        "longitude": -93.156667,
+        "latitude": 45.006111
+      },
+      "name": "us-mn-roseville"
+    },
+    {
+      "coordinates": {
+        "longitude": -74.010232,
+        "latitude": 40.222884
+      },
+      "name": "us-nj-plainfield"
+    },
+    {
+      "coordinates": {
+        "longitude": -74.00597,
+        "latitude": 40.71435
+      },
+      "name": "us-bb-newyork"
+    },
+    {
+      "coordinates": {
+        "longitude": -77.48744,
+        "latitude": 39.04376
+      },
+      "name": "us-bb-ashburn"
+    },
+    {
+      "coordinates": {
+        "longitude": -121.89496,
+        "latitude": 37.33939
+      },
+      "name": "us-bb-sanjose"
+    },
+    {
+      "coordinates": {
+        "longitude": -84.54993,
+        "latitude": 33.9526
+      },
+      "name": "us-bb-marietta"
+    },
+    {
+      "coordinates": {
+        "longitude": -87.84188,
+        "latitude": 41.49955
+      },
+      "name": "us-bb-ecermak"
+    },
+    {
+      "coordinates": {
+        "longitude": -104.98472,
+        "latitude": 39.73757
+      },
+      "name": "us-bb-denver"
+    }
+  ],
+  "config": {
+    "hack.ttl": 30,
+    "tm.healthParams.polling.url": "https://${tmHostname}/health/${cdnName}",
+    "tm.dataServer.polling.url": "https://${tmHostname}/dataserver/orderby/id",
+    "health.timepad": 30,
+    "tm.polling.interval": 60000,
+    "health.threadPool": 4,
+    "health.polling.interval": 8000,
+    "health.event-count": 200,
+    "tm.crConfig.polling.url": "https://${tmHostname}/CRConfig-Snapshots/${cdnName}/CRConfig.xml",
+    "CDN_name": "over-the-top"
+  },
+  "trafficMonitors": [
+    {
+      "profile": "RASCAL_TOP",
+      "location": "dc-chicago",
+      "ip": "162.150.10.117",
+      "status": "OFFLINE",
+      "ip6": "::162:150:10:117/64",
+      "port": 80,
+      "hostName": "odol-rascal-osch2-02",
+      "fqdn": "odol-rascal-osch2-02.comcast.net"
+    },
+    {
+      "profile": "RASCAL_TOP",
+      "location": "dc-westchester",
+      "ip": "162.150.160.74",
+      "status": "OFFLINE",
+      "ip6": "::162:150:160:74/64",
+      "port": 80,
+      "hostName": "odol-rascal-oswcdc-04",
+      "fqdn": "odol-rascal-oswcdc-04.comcast.net"
+    },
+    {
+      "profile": "RASCAL_TOP",
+      "location": "dc-chicago",
+      "ip": "162.150.10.116",
+      "status": "ONLINE",
+      "ip6": "::162:150:10:116/64",
+      "port": 80,
+      "hostName": "odol-rascal-osch2-01",
+      "fqdn": "odol-rascal-osch2-01.comcast.net"
+    },
+    {
+      "profile": "RASCAL_TOP",
+      "location": "dc-westchester",
+      "ip": "162.150.160.73",
+      "status": "ONLINE",
+      "ip6": "::162:150:160:73/64",
+      "port": 80,
+      "hostName": "odol-rascal-oswcdc-03",
+      "fqdn": "odol-rascal-oswcdc-03.comcast.net"
+    }
+  ],
+  "deliveryServices": [
+    {
+      "xmlId": "cim-ms-hls",
+      "totalTpsThreshold": 0,
+      "status": "REPORTED",
+      "totalKbpsThreshold": 0
+    },
+    {
+      "xmlId": "steam",
+      "totalTpsThreshold": 0,
+      "status": "REPORTED",
+      "totalKbpsThreshold": 0
+    },
+    {
+      "xmlId": "dailycandy-hls",
+      "totalTpsThreshold": 0,
+      "status": "REPORTED",
+      "totalKbpsThreshold": 0
+    },
+    {
+      "xmlId": "testtop",
+      "totalTpsThreshold": 0,
+      "status": "REPORTED",
+      "totalKbpsThreshold": 0
+    },
+    {
+      "xmlId": "xfinity-home",
+      "totalTpsThreshold": 0,
+      "status": "REPORTED",
+      "totalKbpsThreshold": 0
+    },
+    {
+      "xmlId": "cim-jitp",
+      "totalTpsThreshold": 0,
+      "status": "REPORTED",
+      "totalKbpsThreshold": 0
+    },
+    {
+      "xmlId": "ecity-sod-prog",
+      "totalTpsThreshold": 0,
+      "status": "REPORTED",
+      "totalKbpsThreshold": 0
+    },
+    {
+      "xmlId": "ccp-img",
+      "totalTpsThreshold": 0,
+      "status": "REPORTED",
+      "totalKbpsThreshold": 0
+    },
+    {
+      "xmlId": "cim-linear-hds",
+      "totalTpsThreshold": 0,
+      "status": "REPORTED",
+      "totalKbpsThreshold": 0
+    },
+    {
+      "xmlId": "cim-prog",
+      "totalTpsThreshold": 0,
+      "status": "REPORTED",
+      "totalKbpsThreshold": 0
+    },
+    {
+      "xmlId": "cim-img",
+      "totalTpsThreshold": 0,
+      "status": "REPORTED",
+      "totalKbpsThreshold": 0
+    },
+    {
+      "xmlId": "dayview-img",
+      "totalTpsThreshold": 0,
+      "status": "REPORTED",
+      "totalKbpsThreshold": 0
+    },
+    {
+      "xmlId": "steam-dns",
+      "totalTpsThreshold": 0,
+      "status": "REPORTED",
+      "totalKbpsThreshold": 100000000
+    },
+    {
+      "xmlId": "internalwebcast-1",
+      "totalTpsThreshold": 0,
+      "status": "REPORTED",
+      "totalKbpsThreshold": 0
+    },
+    {
+      "xmlId": "ccp-top-omg-01",
+      "totalTpsThreshold": 0,
+      "status": "REPORTED",
+      "totalKbpsThreshold": 0
+    },
+    {
+      "xmlId": "ccp-top-omg-02",
+      "totalTpsThreshold": 0,
+      "status": "REPORTED",
+      "totalKbpsThreshold": 0
+    },
+    {
+      "xmlId": "ccp-top-omg-03",
+      "totalTpsThreshold": 0,
+      "status": "REPORTED",
+      "totalKbpsThreshold": 0
+    },
+    {
+      "xmlId": "ccp-top-omg-04",
+      "totalTpsThreshold": 0,
+      "status": "REPORTED",
+      "totalKbpsThreshold": 0
+    },
+    {
+      "xmlId": "ccp-top-omg-05",
+      "totalTpsThreshold": 0,
+      "status": "REPORTED",
+      "totalKbpsThreshold": 0
+    },
+    {
+      "xmlId": "ccp-top-omg-06",
+      "totalTpsThreshold": 0,
+      "status": "REPORTED",
+      "totalKbpsThreshold": 0
+    },
+    {
+      "xmlId": "ccp-top-omg-07",
+      "totalTpsThreshold": 0,
+      "status": "REPORTED",
+      "totalKbpsThreshold": 0
+    },
+    {
+      "xmlId": "ccp-top-omg-08",
+      "totalTpsThreshold": 0,
+      "status": "REPORTED",
+      "totalKbpsThreshold": 0
+    },
+    {
+      "xmlId": "ccp-top-omg-10",
+      "totalTpsThreshold": 0,
+      "status": "REPORTED",
+      "totalKbpsThreshold": 0
+    },
+    {
+      "xmlId": "cim-linear-hls",
+      "totalTpsThreshold": 0,
+      "status": "REPORTED",
+      "totalKbpsThreshold": 0
+    },
+    {
+      "xmlId": "steam-dns-ext",
+      "totalTpsThreshold": 0,
+      "status": "REPORTED",
+      "totalKbpsThreshold": 96000000
+    },
+    {
+      "xmlId": "cedexis-perf",
+      "totalTpsThreshold": 0,
+      "status": "REPORTED",
+      "totalKbpsThreshold": 0
+    },
+    {
+      "xmlId": "xbox-streampix",
+      "totalTpsThreshold": 0,
+      "status": "REPORTED",
+      "totalKbpsThreshold": 0
+    },
+    {
+      "xmlId": "spotlight-ads",
+      "totalTpsThreshold": 0,
+      "status": "REPORTED",
+      "totalKbpsThreshold": 0
+    },
+    {
+      "xmlId": "cim-linear-hds-news",
+      "totalTpsThreshold": 0,
+      "status": "REPORTED",
+      "totalKbpsThreshold": 100000000
+    },
+    {
+      "xmlId": "cim-linear-news-dc2",
+      "totalTpsThreshold": 0,
+      "status": "REPORTED",
+      "totalKbpsThreshold": 150000000
+    },
+    {
+      "xmlId": "cim-linear-news-dc3",
+      "totalTpsThreshold": 0,
+      "status": "REPORTED",
+      "totalKbpsThreshold": 250000000
+    },
+    {
+      "xmlId": "cedexis-perf-ext",
+      "totalTpsThreshold": 0,
+      "status": "REPORTED",
+      "totalKbpsThreshold": 0
+    }
+  ],
+  "profiles": [
+    {
+      "parameters": {
+        "health.connection.timeout": 2000,
+        "health.polling.url": "http://${hostname}/_astats?application=&inf.name=${interface_name}",
+        "health.threshold.queryTime": 1000,
+        "history.count": 30,
+        "health.threshold.availableBandwidthInKbps": ">1500000",
+        "health.threshold.loadavg": "25.0"
+      },
+      "name": "MID1_TOP_421",
+      "type": "MID"
+    },
+    {
+      "parameters": {
+        "health.connection.timeout": 2000,
+        "health.polling.url": "http://${hostname}/_astats?application=&inf.name=${interface_name}",
+        "health.threshold.queryTime": 1000,
+        "history.count": 30,
+        "health.threshold.availableBandwidthInKbps": ">1500000",
+        "health.threshold.loadavg": "25.0"
+      },
+      "name": "EDGE1_TOP_421",
+      "type": "EDGE"
+    },
+    {
+      "parameters": {
+        "health.connection.timeout": 2000,
+        "health.polling.url": "http://${hostname}/_astats?application=&inf.name=${interface_name}",
+        "health.threshold.queryTime": 1000,
+        "history.count": 30,
+        "health.threshold.availableBandwidthInKbps": ">1500000",
+        "health.threshold.loadavg": "25.0"
+      },
+      "name": "EDGE2_TOP_402",
+      "type": "EDGE"
+    },
+    {
+      "parameters": {
+        "health.connection.timeout": 2000,
+        "health.polling.url": "http://${hostname}/_astats?application=&inf.name=${interface_name}",
+        "health.threshold.queryTime": 1000,
+        "history.count": 30,
+        "health.threshold.availableBandwidthInKbps": ">1500000",
+        "health.threshold.loadavg": "25.0"
+      },
+      "name": "EDGE1_TOP_VOL_REMAP_TEST",
+      "type": "EDGE"
+    },
+    {
+      "parameters": {
+        "health.connection.timeout": 2000,
+        "health.polling.url": "http://${hostname}/_astats?application=&inf.name=${interface_name}",
+        "health.threshold.queryTime": 1000,
+        "history.count": 30,
+        "health.threshold.availableBandwidthInKbps": ">1500000",
+        "health.threshold.loadavg": "25.0"
+      },
+      "name": "EDGE1_TOP_420_TEST2",
+      "type": "EDGE"
+    },
+    {
+      "parameters": {
+        "health.connection.timeout": 2000,
+        "health.polling.url": "http://${hostname}/_astats?application=&inf.name=${interface_name}",
+        "health.threshold.queryTime": 1000,
+        "history.count": 30,
+        "health.threshold.availableBandwidthInKbps": ">1500000",
+        "health.threshold.loadavg": "25.0"
+      },
+      "name": "EDGE1_TOP_420_TEST",
+      "type": "EDGE"
+    },
+    {
+      "parameters": {
+        "health.connection.timeout": 2000,
+        "health.polling.url": "http://${hostname}/_astats?application=&inf.name=${interface_name}",
+        "health.threshold.queryTime": 1000,
+        "history.count": 30,
+        "health.threshold.availableBandwidthInKbps": ">1500000",
+        "health.threshold.loadavg": "25.0"
+      },
+      "name": "MID1_TOP_VOL",
+      "type": "MID"
+    },
+    {
+      "parameters": {
+        "health.connection.timeout": 2000,
+        "health.polling.url": "http://${hostname}/_astats?application=&inf.name=${interface_name}",
+        "health.threshold.queryTime": 1000,
+        "history.count": 30,
+        "health.threshold.availableBandwidthInKbps": ">1500000",
+        "health.threshold.loadavg": "25.0"
+      },
+      "name": "MID1_TOP_402",
+      "type": "MID"
+    },
+    {
+      "parameters": {
+        "health.connection.timeout": 2000,
+        "health.polling.url": "http://${hostname}/_astats?application=&inf.name=${interface_name}",
+        "health.threshold.queryTime": 1000,
+        "history.count": 30,
+        "health.threshold.availableBandwidthInKbps": ">1500000",
+        "health.threshold.loadavg": "25.0"
+      },
+      "name": "EDGE1_TOP_402",
+      "type": "EDGE"
+    },
+    {
+      "parameters": {
+        "health.connection.timeout": 2000,
+        "health.polling.url": "http://${hostname}/_astats?application=&inf.name=${interface_name}",
+        "health.threshold.queryTime": 1000,
+        "history.count": 30,
+        "health.threshold.availableBandwidthInKbps": ">1500000",
+        "health.threshold.loadavg": "25.0"
+      },
+      "name": "EDGE1_TOP_VOL",
+      "type": "EDGE"
+    },
+    {
+      "parameters": null,
+      "name": "CCR_TOP",
+      "type": "CCR"
+    }
+  ]
+}

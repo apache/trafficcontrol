@@ -43,7 +43,7 @@ sub index {
 			%q = ('stat_name' => $stat_name );
 		}
 		my $response = $self->db->resultset('StatsSummary')->search( \%q )->get_column('summary_time')->max();
-		return $self->success({"summaryTimestamp" => $response});
+		return $self->success({"summaryTime" => $response});
 	} 	
 	##add name and delivery_service to search
 	if ($cdn_name) {
@@ -60,13 +60,11 @@ sub index {
 	while ( my $row = $rs_data->next ) {
 		push(
 			@data, {
-				"summaryStat" => {
 				"cdnName"        		=> $row->cdn_name,
-				"deliveryserviceName"   => $row->deliveryservice_name,
+				"deliveryServiceName"   => $row->deliveryservice_name,
 				"statName"       		=> $row->stat_name,
 				"statValue" 	 		=> $row->stat_value,
 				"summaryTime" 	 		=> $row->summary_time,
-			}
 		}
 		);
 	}

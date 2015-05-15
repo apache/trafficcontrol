@@ -1,0 +1,89 @@
+{
+  "version": "1.1",
+  "response": [
+    {
+      "typeName": "CCR",
+      "lastUpdated": "2012-09-25 20:27:28",
+      "longitude": "0",
+      "shortName": "dcchi",
+      "parentLocationId": null,
+      "name": "dc-chicago",
+      "typeId": "4",
+      "latitude": "0",
+      "id": "21",
+      "parentCachegroupName": null
+    },
+    {
+      "typeName": "MID_LOC",
+      "lastUpdated": "2012-09-17 21:41:22",
+      "longitude": "0",
+      "shortName": "ne",
+      "parentLocationId": null,
+      "name": "mid-northeast",
+      "typeId": "7",
+      "latitude": "0",
+      "id": "1",
+      "parentCachegroupName": null
+    },
+    {
+      "typeName": "MID_LOC",
+      "lastUpdated": "2012-09-17 21:41:22",
+      "longitude": "0",
+      "shortName": "sc",
+      "parentLocationId": null,
+      "name": "mid-southcentral",
+      "typeId": "7",
+      "latitude": "0",
+      "id": "2",
+      "parentCachegroupName": null
+    },
+    {
+      "typeName": "EDGE_LOC",
+      "lastUpdated": "2012-11-13 21:27:26",
+      "longitude": "5",
+      "shortName": "veen",
+      "parentLocationId": null,
+      "name": "nl-ut-veenendaal",
+      "typeId": "6",
+      "latitude": "52",
+      "id": "23",
+      "parentCachegroupName": null
+    },
+    {
+      "typeName": "EDGE_LOC",
+      "lastUpdated": "2014-03-28 15:23:50",
+      "longitude": "-111.8597",
+      "shortName": "slc",
+      "parentLocationId": "3",
+      "name": "us-ut-sandy",
+      "typeId": "6",
+      "latitude": "40.5725",
+      "id": "37",
+      "parentCachegroupName": "mid-west"
+    },
+    {
+      "typeName": "EDGE_LOC",
+      "lastUpdated": "2013-07-25 13:33:43",
+      "longitude": "-77.432889",
+      "shortName": "ric",
+      "parentLocationId": "1",
+      "name": "us-va-richmond",
+      "typeId": "6",
+      "latitude": "37.540972",
+      "id": "28",
+      "parentCachegroupName": "mid-northeast"
+    },
+    {
+      "typeName": "EDGE_LOC",
+      "lastUpdated": "2012-09-17 21:41:22",
+      "longitude": "-122.333056",
+      "shortName": "sea",
+      "parentLocationId": "3",
+      "name": "us-wa-seattle",
+      "typeId": "6",
+      "latitude": "47.609722",
+      "id": "13",
+      "parentCachegroupName": "mid-west"
+    }
+  ]
+}
