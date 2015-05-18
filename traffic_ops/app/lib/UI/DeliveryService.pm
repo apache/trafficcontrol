@@ -423,6 +423,7 @@ sub associate_regexpes {
 
 sub header_rewrite {
 	my $self       = shift;
+	my $ds_id      = shift;
 	my $ds_profile = shift;
 	my $ds_name    = shift;
 	my $hdr_rw     = shift;
@@ -450,7 +451,7 @@ sub header_rewrite {
 			$param_id = $insert->id;
 		}
 		my $cdn_name = undef;
-		my @servers = $self->db->resultset('DeliveryserviceServer')->search( { deliveryservice => $ds_profile } )->get_column('server')->all();
+		my @servers = $self->db->resultset('DeliveryserviceServer')->search( { deliveryservice => $ds_id } )->get_column('server')->all();
 		if ( $tier eq "mid" ) {
 			my $mtype_id = &type_id( $self, 'MID' );
 			my $param =
@@ -510,6 +511,7 @@ sub delete_header_rewrite {
 
 sub regex_remap {
 	my $self        = shift;
+	my $ds_id       = shift;
 	my $ds_profile  = shift;
 	my $ds_name     = shift;
 	my $regex_remap = shift;
@@ -532,7 +534,7 @@ sub regex_remap {
 			$insert->insert();
 			$param_id = $insert->id;
 		}
-		my @servers = $self->db->resultset('DeliveryserviceServer')->search( { deliveryservice => $ds_profile } )->get_column('server')->all();
+		my @servers = $self->db->resultset('DeliveryserviceServer')->search( { deliveryservice => $ds_id } )->get_column('server')->all();
 		my @profiles = $self->db->resultset('Server')->search( { id => { -in => \@servers } } )->get_column('profile')->all();
 		foreach my $profile_id (@profiles) {
 			my $link = $self->db->resultset('ProfileParameter')->search( { profile => $profile_id, parameter => $param_id } )->single();
@@ -697,9 +699,9 @@ sub update {
 			}
 		}
 
-		$self->header_rewrite( $self->param('ds.profile'), $self->param('ds.xml_id'), $self->param('ds.edge_header_rewrite'), "edge" );
-		$self->header_rewrite( $self->param('ds.profile'), $self->param('ds.xml_id'), $self->param('ds.mid_header_rewrite'),  "mid" );
-		$self->regex_remap( $self->param('ds.profile'), $self->param('ds.xml_id'), $self->param('ds.regex_remap') );
+		$self->header_rewrite( $self->param('id'), $self->param('ds.profile'), $self->param('ds.xml_id'), $self->param('ds.edge_header_rewrite'), "edge" );
+		$self->header_rewrite( $self->param('id'), $self->param('ds.profile'), $self->param('ds.xml_id'), $self->param('ds.mid_header_rewrite'),  "mid" );
+		$self->regex_remap( $self->param('id'), $self->param('ds.profile'), $self->param('ds.xml_id'), $self->param('ds.regex_remap') );
 
 		$self->flash( message => "Delivery service updated!" );
 		return $self->redirect_to( '/ds/' . $id );
