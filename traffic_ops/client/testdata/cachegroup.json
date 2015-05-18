@@ -2,10 +2,10 @@
   "version": "1.1",
   "response": [
     {
-      "typeName": "CCR",
+      "typeName": "TRAFFIC_ROUTER",
       "lastUpdated": "2012-09-25 20:27:28",
       "longitude": "0",
-      "shortName": "dcchi",
+      "shortName": "shortName",
       "parentLocationId": null,
       "name": "dc-chicago",
       "typeId": "4",

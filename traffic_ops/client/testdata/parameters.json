@@ -2,31 +2,31 @@
   "version": "1.1",
   "response": [
     {
-      "value": "http://odol-swlb-01.mtprospect.il.ndcnorth.comcast.net:8080/GeoLiteCity.dat.gz",
+      "value": "http://foo.kabletown.com:8080/GeoLiteCity.dat.gz",
       "name": "GeolocationURL",
-      "configFile": "CRConfig.xml",
+      "configFile": "TRConfig.xml",
       "lastUpdated": "2012-09-17 15:41:22"
     },
     {
       "value": "70",
       "name": "CacheHealthTimeout",
       "lastUpdated": "2012-09-17 15:41:22",
-      "configFile": "CRConfig.xml"
+      "configFile": "TRConfig.xml"
     },
     {
-      "configFile": "CRConfig.xml",
+      "configFile": "TRConfig.xml",
       "lastUpdated": "2012-09-17 15:41:22",
       "name": "CoverageZoneMapURL",
-      "value": "http://cdntools01.cdnlab.comcast.net/logs/production/reports/czf/current/comcast_ipcdn_czf.xml"
+      "value": "http://foo.kabletown.com/kabletown_cdn_czf.xml"
     },
     {
       "value": "24",
       "name": "CoverageZoneMapRefreshPeriodHours",
       "lastUpdated": "2012-09-17 15:41:22",
-      "configFile": "CRConfig.xml"
+      "configFile": "TRConfig.xml"
     },
     {
-      "value": "/etc/comcast/zones/<zonename>.info",
+      "value": "/etc/kabletown/zones/<zonename>.info",
       "configFile": "dns.zone",
       "lastUpdated": "2012-09-17 15:41:22",
       "name": "location"
@@ -35,24 +35,24 @@
       "name": "location",
       "configFile": "http-log4j.properties",
       "lastUpdated": "2012-10-08 13:34:45",
-      "value": "/etc/comcast"
+      "value": "/etc/kabletown"
     },
     {
       "configFile": "dns-log4j.properties",
       "lastUpdated": "2012-10-08 13:34:45",
       "name": "location",
-      "value": "/etc/comcast"
+      "value": "/etc/kabletown"
     },
     {
       "lastUpdated": "2012-10-08 13:34:45",
       "configFile": "geolocation.properties",
       "name": "location",
-      "value": "/etc/comcast"
+      "value": "/etc/kabletown"
     },
     {
-      "value": "top.comcast.net",
+      "value": "cdn1.kabletown.net",
       "name": "domain_name",
-      "configFile": "CRConfig.xml",
+      "configFile": "TRConfig.xml",
       "lastUpdated": "2012-10-08 13:34:45"
     },
     {
@@ -64,18 +64,18 @@
     {
       "value": "XMPP CRConfigOTT node",
       "name": "location",
-      "configFile": "CRConfig.xml",
+      "configFile": "TRConfig.xml",
       "lastUpdated": "2013-01-10 10:07:08"
     },
     {
-      "value": "over-the-top",
+      "value": "cdn1",
       "name": "CDN_name",
       "lastUpdated": "2013-04-03 09:51:22",
-      "configFile": "rascal-config.txt"
+      "configFile": "traffic-router-config.txt"
     },
     {
-      "value": "http://ipcdn-tools-03.cdnlab.comcast.net/ipcdn/CZF/current/comcast_ipcdn_czf-current.json",
-      "configFile": "CRConfig.xml",
+      "value": "http://foo.kabletown.net/cdn/CZF/current/kabletown_ipcdn_czf-current.json",
+      "configFile": "TRConfig.xml",
       "lastUpdated": "2013-04-19 16:19:52",
       "name": "CoverageZoneJsonURL"
     },
@@ -83,7 +83,7 @@
       "lastUpdated": "2015-03-12 10:59:39",
       "configFile": "CRConfig.json",
       "name": "geolocation.polling.url",
-      "value": "https://tm.comcast.net/MaxMind/auto/GeoIP2-City.mmdb.gz"
+      "value": "https://foo.kabletown.net/MaxMind/auto/GeoIP2-City.mmdb.gz"
     },
     {
       "value": "86400000",
@@ -98,13 +98,13 @@
       "lastUpdated": "2013-05-15 16:49:46"
     },
     {
-      "value": "http://ipcdn-tools-03.cdnlab.comcast.net/ipcdn/CZF/current/comcast_ipcdn_czf-current.json",
+      "value": "http://foo.kabletown.net/cdn/CZF/current/kabletown_ipcdn_czf-current.json",
       "lastUpdated": "2013-05-15 16:49:46",
       "configFile": "CRConfig.json",
       "name": "coveragezone.polling.url"
     },
     {
-      "value": "top.comcast.net",
+      "value": "cdn2.kabletown.net",
       "name": "domain_name",
       "lastUpdated": "2013-05-15 16:49:59",
       "configFile": "CRConfig.json"
@@ -137,7 +137,7 @@
       "name": "tld.soa.admin",
       "configFile": "CRConfig.json",
       "lastUpdated": "2013-08-05 12:49:37",
-      "value": "twelve_monkeys"
+      "value": "traffic_ops"
     },
     {
       "value": "7200",

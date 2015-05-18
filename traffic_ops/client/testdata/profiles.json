@@ -1,136 +1,22 @@
 {
   "response": [
     {
-      "description": "Comcast Content Router for top.comcast.net",
-      "name": "CCR_TOP",
+      "description": "kabletown Content Router for foo.kabletown.net",
+      "name": "TR_CDN2",
       "id": "8",
       "lastUpdated": "2012-10-08 13:34:45"
     },
     {
       "lastUpdated": "2012-09-17 15:41:22",
       "id": "5",
-      "name": "CCR_XCR",
-      "description": "Comcast Content Router for xcr.comcast.net"
+      "name": "TR_CDN2",
+      "description": "kabletown Content Router for foo.kabletown.net"
     },
     {
       "description": "CDS-IS Secondary CDN",
       "name": "CDSIS",
       "id": "6",
       "lastUpdated": "2012-09-17 15:41:22"
-    },
-    {
-      "description": "Dell R720xd, Edge, TOP CDN, ATS v4.2.1, Consistent Parent, Migration profile",
-      "name": "EDGE1_TOP_421_PSPP",
-      "id": "33",
-      "lastUpdated": "2014-06-24 15:34:39"
-    },
-    {
-      "description": "Dell R720xd, Edge, TOP CDN, ATS v4.2.1, Consistent Parent, Migration profile, limited b/w to 16.7gb",
-      "id": "49",
-      "name": "EDGE1_TOP_421_PSPP_BackBone",
-      "lastUpdated": "2015-02-12 11:19:11"
-    },
-    {
-      "name": "EDGE1_TOP_421_PSPP_RDC",
-      "id": "42",
-      "lastUpdated": "2014-08-13 11:47:08",
-      "description": "Dell R720xd, Edge, TOP CDN, ATS v4.2.1, Consistent Parent, Migration profile,RDC limited b/w to 8.5gb"
-    },
-    {
-      "name": "EDGE1_TOP_520",
-      "id": "48",
-      "lastUpdated": "2015-01-14 10:40:57",
-      "description": "Dell R720xd, Edge, TOP CDN, ATS v5.2.0"
-    },
-    {
-      "lastUpdated": "2014-01-07 15:06:45",
-      "id": "19",
-      "name": "EDGE1_XCR_402",
-      "description": "Dell R720xd, Edge, XCR CDN, ATS v4.0.2"
-    },
-    {
-      "lastUpdated": "2014-06-24 14:26:07",
-      "name": "EDGE1_XCR_421_PSPP",
-      "id": "32",
-      "description": "Dell R720xd, Edge, XCR CDN, ATS v4.2.1, Consistent Parent, Migration profile"
-    },
-    {
-      "name": "EDGE1_XCR_421_PSPP_RDC",
-      "id": "43",
-      "lastUpdated": "2014-08-13 12:13:47",
-      "description": "Dell R720xd, Edge, XCR CDN, ATS v4.2.1, Consistent Parent, Migration profile,RDC limited b/w to 8.5gb"
-    },
-    {
-      "id": "50",
-      "name": "EDGE1_XCR_520",
-      "lastUpdated": "2015-02-17 15:40:56",
-      "description": "Dell R720xd, Edge, XCR CDN, ATS v5.2.0"
-    },
-    {
-      "description": "Dell r720xd, XCR CDN in Cox footprint, ATS v5.2.0",
-      "name": "EDGE1_XCR_520_COX",
-      "id": "53",
-      "lastUpdated": "2015-03-05 14:36:18"
-    },
-    {
-      "description": "HP DL380, Edge, TOP CDN, ATS v4.2.1, Consistent Parent, Migration profile",
-      "name": "EDGE2_TOP_421_PSPP",
-      "id": "44",
-      "lastUpdated": "2014-09-04 08:24:38"
-    },
-    {
-      "lastUpdated": "2015-03-03 10:23:09",
-      "name": "GLOBAL",
-      "id": "52",
-      "description": "Global Traffic Ops profile, DO NOT DELETE"
-    },
-    {
-      "lastUpdated": "2014-12-09 14:12:38",
-      "id": "47",
-      "name": "HOSTMON",
-      "description": "Hostmon pipe host "
-    },
-    {
-      "description": "Dell R720xd, Mid, TOP CDN, ATS v4.2.1",
-      "lastUpdated": "2014-05-15 12:43:15",
-      "name": "MID1_TOP_421",
-      "id": "30"
-    },
-    {
-      "lastUpdated": "2014-05-15 15:20:51",
-      "name": "MID1_XCR_421",
-      "id": "31",
-      "description": "Dell R720xd, Mid, XCR CDN, ATS v4.2.1"
-    },
-    {
-      "name": "MID2_TOP_421",
-      "id": "56",
-      "lastUpdated": "2015-03-27 13:23:07",
-      "description": "SuperMicro, Mid, TOP CDN, ATS v4.2.1"
-    },
-    {
-      "id": "12",
-      "name": "RASCAL_TOP",
-      "lastUpdated": "2013-04-10 15:02:55",
-      "description": "Rascal for the Over the Top CDN"
-    },
-    {
-      "description": "Rascal for the Title VI CDN",
-      "name": "RASCAL_XCR",
-      "id": "11",
-      "lastUpdated": "2013-04-10 15:02:55"
-    },
-    {
-      "lastUpdated": "2014-07-02 11:07:19",
-      "name": "REDIS_ALL",
-      "id": "34",
-      "description": "Redis profile for all CDNs"
-    },
-    {
-      "lastUpdated": "2015-03-03 10:18:08",
-      "name": "RIAK_ALL",
-      "id": "51",
-      "description": "Riak profile for all CDNs"
     }
   ],
   "version": "1.1"
