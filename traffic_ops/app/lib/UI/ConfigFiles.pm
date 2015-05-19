@@ -468,7 +468,8 @@ sub facts {
 	my $filename = shift;
 
 	my $server = $self->server_data($id);
-	my $text   = "profile:" . $server->profile->name . "\n";
+	my $text     = $self->header_comment( $server->host_name );
+	$text        .= "profile:" . $server->profile->name . "\n";
 
 	return $text;
 }
@@ -1179,8 +1180,11 @@ sub ssl_multicert_dot_config {
 # This is a temporary workaround until we have real partial object caching support in ATS, so hardcoding for now
 sub bg_fetch_dot_config {
 	my $self = shift;
+	my $id   = shift;
 
-	my $text = "include User-Agent *\n";
+	my $server = $self->server_data($id);
+	my $text = $self->header_comment( $server->host_name );
+	$text    .= "include User-Agent *\n";
 
 	return $text;
 }
