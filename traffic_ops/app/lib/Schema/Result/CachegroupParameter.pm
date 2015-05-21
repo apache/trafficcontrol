@@ -1,19 +1,4 @@
 use utf8;
-#
-# Copyright 2015 Comcast Cable Communications Management, LLC
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
-#
 package Schema::Result::CachegroupParameter;
 
 # Created by DBIx::Class::Schema::Loader
@@ -126,8 +111,8 @@ __PACKAGE__->belongs_to(
 );
 
 
-# Created by DBIx::Class::Schema::Loader v0.07042 @ 2015-02-05 16:22:54
-# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:9grJPWn9sJCFxZFqeHCgbw
+# Created by DBIx::Class::Schema::Loader v0.07043 @ 2015-05-21 13:27:11
+# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:BRGhe7It8jc9lvi87bvjHw
 
 
 # You can replace this text with custom code or comments, and it will be preserved on regeneration
