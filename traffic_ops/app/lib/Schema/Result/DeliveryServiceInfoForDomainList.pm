@@ -56,7 +56,7 @@ SELECT DISTINCT
     deliveryservice.edge_header_rewrite as edge_header_rewrite,
     deliveryservice.mid_header_rewrite as mid_header_rewrite,
     deliveryservice.regex_remap as regex_remap,
-    deliveryservice.cachurl as cachurl,
+    deliveryservice.cacheurl as cacheurl,
     deliveryservice.protocol as protocol
 FROM
     deliveryservice
