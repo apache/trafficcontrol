@@ -29,8 +29,9 @@ use JSON;
 use API::DeliveryService::KeysUrlSig qw(URL_SIG_KEYS_BUCKET);
 
 my $dispatch_table ||= {
-	"logs_xml.config"         => sub { logs_xml_dot_config(@_) },
-	"cacheurl.config"         => sub { cacheurl_dot_config(@_) },
+	"logs_xml.config" => sub { logs_xml_dot_config(@_) },
+	"cacheurl.config" => sub { cacheurl_dot_config(@_) },
+
 	#"cacheurl_qstring.config" => sub { cacheurl_dot_config(@_) },
 	"records.config"          => sub { generic_config(@_) },
 	"plugin.config"           => sub { generic_config(@_) },
@@ -124,14 +125,13 @@ sub gen_fancybox_data {
 	while ( my $row = $rs->next ) {
 		my $file = $row->parameter->config_file;
 
-		print "Genning $file\n";
+		# print "Genning $file\n";
 		my $org_name = $file;
 		$file =~ s/^url_sig_.*\.config$/url_sig_\.config/;
 		$file =~ s/^hdr_rw_.*\.config$/hdr_rw_\.config/;
 		$file =~ s/^set_dscp_.*\.config$/set_dscp_\.config/;
 		$file =~ s/^regex_remap_.*\.config$/regex_remap_\.config/;
 		$file =~ s/^cacheurl_.*\.config$/cacheurl_\.config/;
-		print "~~Genning $file\n";
 		if ( $file =~ /^to_ext_.*\.config$/ ) {
 			$file     =~ s/^to_ext_.*\.config$/to_ext_\.config/;
 			$org_name =~ s/^to_ext_(.*)\.config$/$1.config/;
@@ -523,17 +523,19 @@ sub cacheurl_dot_config {
 		$data = $self->ds_data($server);
 	}
 
-	if ( $filename eq "cacheurl_qstring.config" ) { # This is the per remap drop qstring w cacheurl use case, the file is the same for all remaps
+	if ( $filename eq "cacheurl_qstring.config" ) {    # This is the per remap drop qstring w cacheurl use case, the file is the same for all remaps
 		$text .= "http://([^?]+)(?:\\?|\$)  http://\$1\n";
 		$text .= "https://([^?]+)(?:\\?|\$)  https://\$1\n";
-	} elsif ( $filename =~ /cacheurl_(.*).config/) { # Yes, it's possibe to have the same plugin invoked multiple times on the same remap line, this is from the remap entry
+	}
+	elsif ( $filename =~ /cacheurl_(.*).config/ )
+	{    # Yes, it's possibe to have the same plugin invoked multiple times on the same remap line, this is from the remap entry
 		my $ds_xml_id = $1;
 		my $ds = $self->db->resultset('Deliveryservice')->search( { xml_id => $ds_xml_id }, { prefetch => [ 'type', 'profile' ] } )->single();
-		if ( $ds ) {
+		if ($ds) {
 			$text .= $ds->cacheurl;
 		}
 	}
-	elsif ($filename eq "cacheurl.config") { # this is the global drop qstring w cacheurl use case
+	elsif ( $filename eq "cacheurl.config" ) {    # this is the global drop qstring w cacheurl use case
 		foreach my $remap ( @{ $data->{dslist} } ) {
 			if ( $remap->{qstring_ignore} == 1 ) {
 				my $org = $remap->{org};
