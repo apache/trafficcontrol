@@ -286,6 +286,10 @@ sub ds_data {
 			my $fname = "hdr_rw_mid_" . $ds_xml_id . ".config";
 			$dsinfo->{dslist}->[$j]->{"mid_hdr_rw_file"} = $fname;
 		}
+		if ( defined($cacheurl) ) {
+			my $fname = "cacheurl_" . $ds_xml_id . ".config";
+			$dsinfo->{dslist}->[$j]->{"cacheurl_file"} = $fname;
+		}
 
 		$j++;
 	}
@@ -757,22 +761,25 @@ sub remap_dot_config {
 	}
 
 	if ( $server->type->name eq 'MID' ) {
-		my %remap_lines;
+		my %mid_remap;
 		foreach my $remap ( @{ $data->{dslist} } ) {
-			if ( $remap->{mid_header_rewrite} ) {
-				$remap_lines{ "map "
-						. $remap->{org} . "    "
-						. $remap->{org}
-						. " \@plugin=header_rewrite.so \@pparam="
-						. $remap->{mid_hdr_rw_file}
-						. "\n" } = defined;
+
+			if ( defined( $mid_remap{ $remap->{org} } ) ) {
+				next;    # skip remap rules from extra HOST_REGEXP entries
 			}
-			elsif ( $remap->{qstring_ignore} == 1 ) {
-				$remap_lines{ "map " . $remap->{org} . "    " . $remap->{org} . " \@plugin=cacheurl.so \@pparam=cacheurl_qstring.config\n" } = defined;
+
+			if ( defined( $remap->{mid_header_rewrite} ) && $remap->{mid_header_rewrite} ne "" ) {
+				$mid_remap{ $remap->{org} } .= " \@plugin=header_rewrite.so \@pparam=" . $remap->{mid_hdr_rw_file};
+			}
+			if ( $remap->{qstring_ignore} == 1 ) {
+				$mid_remap{ $remap->{org} } .= " \@plugin=cacheurl.so \@pparam=cacheurl_qstring.config";
+			}
+			if ( defined( $remap->{cacheurl} ) && $remap->{cacheurl} ne "" ) {
+				$mid_remap{ $remap->{org} } .= " \@plugin=cacheurl.so \@pparam=" . $remap->{cacheurl_file};
 			}
 		}
-		foreach my $key (%remap_lines) {
-			$text .= $key;
+		foreach my $key ( keys %mid_remap ) {
+			$text .= "map " . $key . " " . $key . $mid_remap{$key} . "\n";
 		}
 		return $text;
 	}
@@ -835,6 +842,9 @@ sub remap_text {
 		else {
 			$text .= " \@plugin=cacheurl.so \@pparam=cacheurl_qstring.config";
 		}
+	}
+	if ( defined( $remap->{cacheurl} ) && $remap->{cacheurl} ne "" ) {
+		$text .= " \@plugin=cacheurl.so \@pparam=" . $remap->{cacheurl_file};
 	}
 
 	# Note: should use full path here?
