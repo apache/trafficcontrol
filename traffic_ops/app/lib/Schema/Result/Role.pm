@@ -1,21 +1,4 @@
 use utf8;
-#
-# Copyright 2015 Comcast Cable Communications Management, LLC
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
-#
-#
-#
 package Schema::Result::Role;
 
 # Created by DBIx::Class::Schema::Loader
@@ -106,9 +89,25 @@ __PACKAGE__->has_many(
 );
 
 
-# Created by DBIx::Class::Schema::Loader v0.07038 @ 2013-12-31 13:58:11
-# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:NE6DAoxqCvuu4lKdCHO0Qg
+# Created by DBIx::Class::Schema::Loader v0.07043 @ 2015-05-21 13:27:11
+# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:s70NY+0J79oQM/Dd9jpvSw
 
 
 # You can replace this text with custom code or comments, and it will be preserved on regeneration
+#
+# Copyright 2015 Comcast Cable Communications Management, LLC
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+#
 1;
