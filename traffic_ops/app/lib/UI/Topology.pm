@@ -105,6 +105,7 @@ sub gen_crconfig_json {
 		$regex_tracker->{ $row->id }->{'pattern'} = $row->pattern;
 	}
 	my %cache_tracker;
+	my %profile_cache;
 	my $rs_caches = $self->db->resultset('Server')->search(
 		{ 'profile' => { -in => \@cdn_profiles } },
 		{
@@ -142,6 +143,26 @@ sub gen_crconfig_json {
 			if ( !exists $cache_tracker{ $row->id } ) {
 				$cache_tracker{ $row->id } = $row->host_name;
 			}
+		    my $pid       = $row->profile->id;
+			my $weight = undef;
+			my $weight_multiplier = undef;
+		    if ( !defined( $profile_cache{$pid} ) ) {
+			    my $param =
+				    $self->db->resultset('ProfileParameter')
+				    ->search( { -and => [ profile => $pid, 'parameter.config_file' => 'CRConfig.json', 'parameter.name' => 'weight' ] },
+				    { prefetch => [ 'parameter', 'profile' ] } )->single();
+			    $weight = defined($param) ? $param->parameter->value : "0.999";
+			    $profile_cache{$pid}->{weight} = $weight;
+			    my $param =
+				    $self->db->resultset('ProfileParameter')
+				    ->search( { -and => [ profile => $pid, 'parameter.config_file' => 'CRConfig.json', 'parameter.name' => 'weightMultiplier' ] },
+				    { prefetch => [ 'parameter', 'profile' ] } )->single();
+			    $weight_multiplier = defined($param) ? $param->parameter->value : 1000;
+			    $profile_cache{$pid}->{weight_multiplier} = $weight_multiplier;
+		    } else {
+		       $weight = $profile_cache{$pid}->{weight};
+		       $weight_multiplier = $profile_cache{$pid}->{weight_multiplier};
+		    }
 			$data_obj->{'contentServers'}->{ $row->host_name }->{'locationId'}    = $row->cachegroup->name;
 			$data_obj->{'contentServers'}->{ $row->host_name }->{'cacheGroup'}    = $row->cachegroup->name;
 			$data_obj->{'contentServers'}->{ $row->host_name }->{'fqdn'}          = $row->host_name . "." . $row->domain_name;
@@ -153,6 +174,7 @@ sub gen_crconfig_json {
 			$data_obj->{'contentServers'}->{ $row->host_name }->{'profile'}       = $row->profile->name;
 			$data_obj->{'contentServers'}->{ $row->host_name }->{'type'}          = $row->type->name;
 			$data_obj->{'contentServers'}->{ $row->host_name }->{'hashId'}        = $row->xmpp_id;
+			$data_obj->{'contentServers'}->{ $row->host_name }->{'hashCount'}     = int($weight * $weight_multiplier); # perl will automatically cast, int for rounding
 		}
 	}
 	my $regexps;
@@ -539,7 +561,9 @@ sub stringify_content_server {
 		. "|type: "
 		. $cs->{'type'}
 		. "|hashId: "
-		. ( $cs->{'hashId'} || "" ) . "|";
+		. ( $cs->{'hashId'} || "" ) 
+		. "|hashCount: "
+		. ( $cs->{'hashCount'} || "" ) . "|";
 	return $string;
 }
 
