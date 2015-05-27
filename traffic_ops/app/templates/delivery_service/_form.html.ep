@@ -362,6 +362,17 @@
 			<% }  %>
 	</div><br>
 	<div class="block">
+		<% unless (field('ds.cacheurl')->valid) { %>
+			<span class="field-with-error"><%= field('ds.cacheurl')->error %></span>
+		<% } %>
+		%= label_for 'regex_remap' => 'Cache URL expression', class => 'label'
+			<% if ($priv_level >= 20) { %>
+				%= field('ds.cacheurl')->text(class => 'field', id => 'ds.cacheurl', name => 'ds.cacheurl');
+			<% } else { %>
+				%= field('ds.cacheurl')->text(class => 'field', readonly => 'cacheurl');
+			<% }  %>
+	</div><br>
+	<div class="block">
 		<% unless (field('ds.long_desc')->valid) { %>
 			<span class="field-with-error"><%= field('ds.long_desc')->error %></span>
 		<% } %>

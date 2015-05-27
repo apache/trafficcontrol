@@ -225,7 +225,8 @@ sub read {
 				"active"                 => \$row->active,
 				"protocol"               => \$row->protocol,
 				"ipv6_routing_enabled"   => \$row->ipv6_routing_enabled,
-				"range_request_handling" => \$row->range_request_handling,
+				"range_request_handling" => $row->range_request_handling,
+				"cacheurl"               => $row->cacheurl,
 			}
 		);
 	}
@@ -484,29 +485,13 @@ sub header_rewrite {
 		}
 	}
 	else {
-		&delete_header_rewrite( $self, $ds_name, $tier );    # don't change it to $self->delete_header_rewrite(), calling from other pm is wonky
+		my $fname = "hdr_rw_" . $ds_name . ".config";
+		if ( $tier eq "mid" ) {
+			$fname = "hdr_rw_mid_" . $ds_name . ".config";
+		}
+
+		&delete_cfg_file( $self, $fname );    # don't change it to $self->delete_header_rewrite(), calling from other pm is wonky
 	}
-}
-
-sub delete_header_rewrite {
-	my $self    = shift;
-	my $ds_name = shift;
-	my $tier    = shift;
-
-	my $fname = "hdr_rw_" . $ds_name . ".config";
-	if ( $tier eq "mid" ) {
-		$fname = "hdr_rw_mid_" . $ds_name . ".config";
-	}
-
-	my $param_id = $self->db->resultset('Parameter')->search( { -and => [ name => 'location', config_file => $fname ] } )->get_column('id')->single();
-	if ( defined($param_id) ) {
-		$self->app->log->info( 'deleting location parameter for ' . $fname );
-		my $delete = $self->db->resultset('Parameter')->search( { id => $param_id } );
-		$delete->delete();
-	}
-
-	# ProfileParameter will cascade.
-
 }
 
 sub regex_remap {
@@ -549,15 +534,59 @@ sub regex_remap {
 		}
 	}
 	else {
-		&delete_regex_remap( $self, $ds_name );    # don't change it to $self->delete_header_rewrite(), calling from other pm is wonky
+		&delete_cfg_file( $self, "regex_remap_" . $ds_name . ".config" )
+			;    # don't change it to $self->delete_header_rewrite(), calling from other pm is wonky
 	}
 }
 
-sub delete_regex_remap {
-	my $self    = shift;
-	my $ds_name = shift;
+# Too much code copied from regex_remap, I know...
+sub cacheurl {
+	my $self       = shift;
+	my $ds_id      = shift;
+	my $ds_profile = shift;
+	my $ds_name    = shift;
+	my $cacheurl   = shift;
 
-	my $fname = "regex_remap_" . $ds_name . ".config";
+	if ( defined($cacheurl) && $cacheurl ne "" ) {
+		my $fname = "cacheurl_" . $ds_name . ".config";
+		my $ats_cfg_loc =
+			$self->db->resultset('Parameter')->search( { -and => [ name => 'location', config_file => 'remap.config' ] } )->get_column('value')->single();
+		$ats_cfg_loc =~ s/\/$//;
+
+		my $param_id = $self->db->resultset('Parameter')->search( { -and => [ name => 'location', config_file => $fname ] } )->get_column('id')->single();
+		if ( !defined($param_id) ) {
+			my $insert = $self->db->resultset('Parameter')->create(
+				{
+					config_file => $fname,
+					name        => 'location',
+					value       => $ats_cfg_loc
+				}
+			);
+			$insert->insert();
+			$param_id = $insert->id;
+		}
+		my @servers = $self->db->resultset('DeliveryserviceServer')->search( { deliveryservice => $ds_id } )->get_column('server')->all();
+		my @profiles = $self->db->resultset('Server')->search( { id => { -in => \@servers } } )->get_column('profile')->all();
+		foreach my $profile_id (@profiles) {
+			my $link = $self->db->resultset('ProfileParameter')->search( { profile => $profile_id, parameter => $param_id } )->single();
+			if ( !defined($link) ) {
+				my $insert = $self->db->resultset('ProfileParameter')->create(
+					{
+						profile   => $profile_id,
+						parameter => $param_id
+					}
+				);
+			}
+		}
+	}
+	else {
+		&delete_cfg_file( $self, "cacheurl_" . $ds_name . ".config" );   # don't change it to $self->delete_header_rewrite(), calling from other pm is wonky
+	}
+}
+
+sub delete_cfg_file {
+	my $self  = shift;
+	my $fname = shift;
 
 	my $param_id = $self->db->resultset('Parameter')->search( { -and => [ name => 'location', config_file => $fname ] } )->get_column('id')->single();
 	if ( defined($param_id) ) {
@@ -565,9 +594,6 @@ sub delete_regex_remap {
 		my $delete = $self->db->resultset('Parameter')->search( { id => $param_id } );
 		$delete->delete();
 	}
-
-	# ProfileParameter will cascade.
-
 }
 
 # Update
@@ -611,7 +637,8 @@ sub update {
 			edge_header_rewrite    => $self->param('ds.edge_header_rewrite') eq "" ? undef : $self->param('ds.edge_header_rewrite'),
 			mid_header_rewrite     => $self->param('ds.mid_header_rewrite') eq "" ? undef : $self->param('ds.mid_header_rewrite'),
 			regex_remap   => $self->param('ds.regex_remap') eq ""   ? undef : $self->param('ds.regex_remap'),
-			origin_shield => $self->param('ds.origin_shield') eq "" ? undef : $self->param('ds.origin_shield')
+			origin_shield => $self->param('ds.origin_shield') eq "" ? undef : $self->param('ds.origin_shield'),
+			cacheurl      => $self->param('ds.cacheurl') eq ""      ? undef : $self->param('ds.cacheurl'),
 		);
 
 		if ( $self->param('ds.type.id') == &type_id( $self, "DNS" ) ) {
@@ -702,6 +729,7 @@ sub update {
 		$self->header_rewrite( $self->param('id'), $self->param('ds.profile'), $self->param('ds.xml_id'), $self->param('ds.edge_header_rewrite'), "edge" );
 		$self->header_rewrite( $self->param('id'), $self->param('ds.profile'), $self->param('ds.xml_id'), $self->param('ds.mid_header_rewrite'),  "mid" );
 		$self->regex_remap( $self->param('id'), $self->param('ds.profile'), $self->param('ds.xml_id'), $self->param('ds.regex_remap') );
+		$self->cacheurl( $self->param('id'), $self->param('ds.profile'), $self->param('ds.xml_id'), $self->param('ds.cacheurl') );
 
 		$self->flash( message => "Delivery service updated!" );
 		return $self->redirect_to( '/ds/' . $id );
@@ -797,7 +825,8 @@ sub create {
 				edge_header_rewrite    => $self->param('ds.edge_header_rewrite') eq "" ? undef : $self->param('ds.edge_header_rewrite'),
 				mid_header_rewrite     => $self->param('ds.mid_header_rewrite') eq "" ? undef : $self->param('ds.mid_header_rewrite'),
 				regex_remap   => $self->param('ds.regex_remap') eq ""   ? undef : $self->param('ds.regex_remap'),
-				origin_shield => $self->param('ds.origin_shield') eq "" ? undef : $self->param('ds.origin_shield')
+				origin_shield => $self->param('ds.origin_shield') eq "" ? undef : $self->param('ds.origin_shield'),
+				cacheurl      => $self->param('ds.cacheurl') eq ""      ? undef : $self->param('ds.cacheurl'),
 			}
 		);
 		$insert->insert();
@@ -863,6 +892,7 @@ sub create {
 		$self->header_rewrite( $self->param('ds.profile'), $self->param('ds.xml_id'), $self->param('ds.edge_header_rewrite'), "edge" );
 		$self->header_rewrite( $self->param('ds.profile'), $self->param('ds.xml_id'), $self->param('ds.mid_header_rewrite'),  "mid" );
 		$self->regex_remap( $self->param('ds.profile'), $self->param('ds.xml_id'), $self->param('ds.regex_remap') );
+		$self->cacheurl( $self->param('ds.profile'), $self->param('ds.xml_id'), $self->param('ds.cacheurl') );
 
 		$self->flash( message => "Success!" );
 		return $self->redirect_to( '/ds/' . $new_id );
@@ -954,7 +984,7 @@ sub api_services {
 				"headerRewrite"          => $row->edge_header_rewrite,
 				"edgeHeaderRewrite"      => $row->edge_header_rewrite,
 				"midHeaderRewrite"       => $row->mid_header_rewrite,
-				"regex_remap"            => $row->regex_remap,
+				"regexRemap"             => $row->regex_remap,
 				"longDesc"               => $row->long_desc,
 				"longDesc1"              => $row->long_desc_1,
 				"longDesc2"              => $row->long_desc_2,
@@ -967,7 +997,8 @@ sub api_services {
 				"active"                 => \$row->active,
 				"protocol"               => \$row->protocol,
 				"ipv6_routing_enabled"   => \$row->ipv6_routing_enabled,
-				"range_request_handling" => \$row->range_request_handling,
+				"range_request_handling" => $row->range_request_handling,
+				"cacheurl"               => $row->cacheurl,
 			}
 		);
 	}

@@ -1,4 +1,5 @@
 package UI::ConfigFiles;
+
 #
 # Copyright 2015 Comcast Cable Communications Management, LLC
 #
@@ -30,7 +31,6 @@ use API::DeliveryService::KeysUrlSig qw(URL_SIG_KEYS_BUCKET);
 my $dispatch_table ||= {
 	"logs_xml.config"         => sub { logs_xml_dot_config(@_) },
 	"cacheurl.config"         => sub { cacheurl_dot_config(@_) },
-	"cacheurl_qstring.config" => sub { cacheurl_dot_config(@_) },
 	"records.config"          => sub { generic_config(@_) },
 	"plugin.config"           => sub { generic_config(@_) },
 	"astats.config"           => sub { generic_config(@_) },
@@ -53,6 +53,7 @@ my $dispatch_table ||= {
 	"set_dscp_.config"     => sub { header_rewrite_dscp_dot_config(@_) },
 	"to_ext_.config"       => sub { to_ext_dot_config(@_) },
 	"regex_remap_.config"  => sub { regex_remap_dot_config(@_) },
+	"cacheurl_.config"     => sub { cacheurl_dot_config(@_) },
 	"all"                  => sub { gen_fancybox_data(@_) },
 	"ssl_multicert.config" => sub { ssl_multicert_dot_config(@_) },
 
@@ -78,8 +79,9 @@ sub genfiles {
 	$file =~ s/^hdr_rw_.*\.config$/hdr_rw_\.config/;
 	$file =~ s/^set_dscp_.*\.config$/set_dscp_\.config/;
 	$file =~ s/^regex_remap_.*\.config$/regex_remap_\.config/;
+	$file =~ s/^cacheurl_.*\.config$/cacheurl_\.config/;
 	if ( $file =~ /^to_ext_.*\.config$/ ) {
-		$file =~ s/^to_ext_.*\.config$/to_ext_\.config/;
+		$file     =~ s/^to_ext_.*\.config$/to_ext_\.config/;
 		$org_name =~ s/^to_ext_.*\.config$/to_ext_\.config/;
 	}
 
@@ -100,6 +102,7 @@ sub genfiles {
 		$self->render( text => $text, format => 'txt' );
 	}
 	else {
+
 		# ignore $text, the good stuff is in the stash
 		$self->stash( fbox_layout => 1 );
 	}
@@ -126,8 +129,9 @@ sub gen_fancybox_data {
 		$file =~ s/^hdr_rw_.*\.config$/hdr_rw_\.config/;
 		$file =~ s/^set_dscp_.*\.config$/set_dscp_\.config/;
 		$file =~ s/^regex_remap_.*\.config$/regex_remap_\.config/;
+		$file =~ s/^cacheurl_.*\.config$/cacheurl_\.config/;
 		if ( $file =~ /^to_ext_.*\.config$/ ) {
-			$file =~ s/^to_ext_.*\.config$/to_ext_\.config/;
+			$file     =~ s/^to_ext_.*\.config$/to_ext_\.config/;
 			$org_name =~ s/^to_ext_(.*)\.config$/$1.config/;
 		}
 
@@ -149,12 +153,17 @@ sub server_data {
 	my $id   = shift;
 
 	my $server;
+#	if ( defined( $self->app->session->{server_data} ) ) {
+#		$server = $self->app->session->{server_data};
+#		return $server;
+#	}
 	if ( $id =~ /^\d+$/ ) {
 		$server = $self->db->resultset('Server')->search( { id => $id } )->single;
 	}
 	else {
 		$server = $self->db->resultset('Server')->search( { host_name => $id } )->single;
 	}
+#	$self->app->session->{server_data} = $server;
 	return $server;
 }
 
@@ -171,6 +180,11 @@ sub ds_data {
 	my $server = shift;
 
 	my $dsinfo;
+
+#	if ( defined( $self->app->session->{dsinfo} ) ) {
+#		$dsinfo = $self->app->session->{dsinfo};
+#		return $dsinfo;
+#	}
 	$dsinfo->{host_name}   = $server->host_name;
 	$dsinfo->{domain_name} = $server->domain_name;
 
@@ -210,6 +224,7 @@ sub ds_data {
 		my $protocol               = $row->protocol;
 		my $range_request_handling = $row->range_request_handling;
 		my $origin_shield          = $row->origin_shield;
+		my $cacheurl               = $row->cacheurl;
 
 		if ( $re_type eq 'HOST_REGEXP' ) {
 			my $host_re = $row->pattern;
@@ -269,6 +284,7 @@ sub ds_data {
 		$dsinfo->{dslist}->[$j]->{"regex_remap"}            = $regex_remap;
 		$dsinfo->{dslist}->[$j]->{"range_request_handling"} = $range_request_handling;
 		$dsinfo->{dslist}->[$j]->{"origin_shield"}          = $origin_shield;
+		$dsinfo->{dslist}->[$j]->{"cacheurl"}               = $cacheurl;
 
 		if ( defined($edge_header_rewrite) ) {
 			my $fname = "hdr_rw_" . $ds_xml_id . ".config";
@@ -278,11 +294,15 @@ sub ds_data {
 			my $fname = "hdr_rw_mid_" . $ds_xml_id . ".config";
 			$dsinfo->{dslist}->[$j]->{"mid_hdr_rw_file"} = $fname;
 		}
+		if ( defined($cacheurl) ) {
+			my $fname = "cacheurl_" . $ds_xml_id . ".config";
+			$dsinfo->{dslist}->[$j]->{"cacheurl_file"} = $fname;
+		}
 
 		$j++;
 	}
 
-	#print Dumper($dsinfo);
+#	$self->app->session->{dsinfo} = $dsinfo;
 	return $dsinfo;
 }
 
@@ -293,7 +313,6 @@ sub param_data {
 
 	my $data;
 
-	# print "param select: " . $filename . "\n";
 	my $rs = $self->db->resultset('ProfileParameter')->search( { -and => [ profile => $server->profile->id, 'parameter.config_file' => $filename ] },
 		{ prefetch => [ { parameter => undef }, { profile => undef } ] } );
 	while ( my $row = $rs->next ) {
@@ -372,7 +391,8 @@ sub ip_allow_data {
 	$ipallow->[$i]->{action} = 'ip_allow';
 	$ipallow->[$i]->{method} = "ALL";
 	$i++;
-	my $rs_parameter = $self->db->resultset('ProfileParameter')
+	my $rs_parameter =
+		$self->db->resultset('ProfileParameter')
 		->search( { profile => $server->profile->id }, { prefetch => [ { parameter => undef }, { profile => undef } ] } );
 
 	while ( my $row = $rs_parameter->next ) {
@@ -468,8 +488,8 @@ sub facts {
 	my $filename = shift;
 
 	my $server = $self->server_data($id);
-	my $text     = $self->header_comment( $server->host_name );
-	$text        .= "profile:" . $server->profile->name . "\n";
+	my $text   = $self->header_comment( $server->host_name );
+	$text .= "profile:" . $server->profile->name . "\n";
 
 	return $text;
 }
@@ -514,7 +534,19 @@ sub cacheurl_dot_config {
 		$data = $self->ds_data($server);
 	}
 
-	if ( $filename !~ /_qstring.config/ ) {
+	if ( $filename eq "cacheurl_qstring.config" ) {    # This is the per remap drop qstring w cacheurl use case, the file is the same for all remaps
+		$text .= "http://([^?]+)(?:\\?|\$)  http://\$1\n";
+		$text .= "https://([^?]+)(?:\\?|\$)  https://\$1\n";
+	}
+	elsif ( $filename =~ /cacheurl_(.*).config/ )
+	{    # Yes, it's possibe to have the same plugin invoked multiple times on the same remap line, this is from the remap entry
+		my $ds_xml_id = $1;
+		my $ds = $self->db->resultset('Deliveryservice')->search( { xml_id => $ds_xml_id }, { prefetch => [ 'type', 'profile' ] } )->single();
+		if ($ds) {
+			$text .= $ds->cacheurl;
+		}
+	}
+	elsif ( $filename eq "cacheurl.config" ) {    # this is the global drop qstring w cacheurl use case
 		foreach my $remap ( @{ $data->{dslist} } ) {
 			if ( $remap->{qstring_ignore} == 1 ) {
 				my $org = $remap->{org};
@@ -522,10 +554,7 @@ sub cacheurl_dot_config {
 				$text .= "$1(" . $2 . "/[^?]+)(?:\\?|\$)  $1\$1\n";
 			}
 		}
-	}
-	else {
-		$text .= "http://([^?]+)(?:\\?|\$)  http://\$1\n";
-		$text .= "https://([^?]+)(?:\\?|\$)  https://\$1\n";
+
 	}
 
 	return $text;
@@ -739,18 +768,25 @@ sub remap_dot_config {
 	}
 
 	if ( $server->type->name eq 'MID' ) {
-		my %remap_lines;
+		my %mid_remap;
 		foreach my $remap ( @{ $data->{dslist} } ) {
-			if ( $remap->{mid_header_rewrite} ) {
-				$remap_lines{ "map " . $remap->{org} . "    " . $remap->{org} . " \@plugin=header_rewrite.so \@pparam=" . $remap->{mid_hdr_rw_file} . "\n" }
-					= defined;
+
+			if ( defined( $mid_remap{ $remap->{org} } ) ) {
+				next;    # skip remap rules from extra HOST_REGEXP entries
 			}
-			elsif ( $remap->{qstring_ignore} == 1 ) {
-				$remap_lines{ "map " . $remap->{org} . "    " . $remap->{org} . " \@plugin=cacheurl.so \@pparam=cacheurl_qstring.config\n" } = defined;
+
+			if ( defined( $remap->{mid_header_rewrite} ) && $remap->{mid_header_rewrite} ne "" ) {
+				$mid_remap{ $remap->{org} } .= " \@plugin=header_rewrite.so \@pparam=" . $remap->{mid_hdr_rw_file};
+			}
+			if ( $remap->{qstring_ignore} == 1 ) {
+				$mid_remap{ $remap->{org} } .= " \@plugin=cacheurl.so \@pparam=cacheurl_qstring.config";
+			}
+			if ( defined( $remap->{cacheurl} ) && $remap->{cacheurl} ne "" ) {
+				$mid_remap{ $remap->{org} } .= " \@plugin=cacheurl.so \@pparam=" . $remap->{cacheurl_file};
 			}
 		}
-		foreach my $key (%remap_lines) {
-			$text .= $key;
+		foreach my $key ( keys %mid_remap ) {
+			$text .= "map " . $key . " " . $key . $mid_remap{$key} . "\n";
 		}
 		return $text;
 	}
@@ -806,11 +842,16 @@ sub remap_text {
 			->search( { -and => [ profile => $server->profile->id, 'parameter.config_file' => 'cacheurl.config', 'parameter.name' => 'location' ] },
 			{ prefetch => [ 'parameter', 'profile' ] } )->single();
 		if ($global_exists) {
-			$self->app->log->debug("qstring_ignore == 1, but global cacheurl.config param exists, so skipping remap rename config_file=cacheurl.config parameter if you want to change");
+			$self->app->log->debug(
+				"qstring_ignore == 1, but global cacheurl.config param exists, so skipping remap rename config_file=cacheurl.config parameter if you want to change"
+			);
 		}
 		else {
 			$text .= " \@plugin=cacheurl.so \@pparam=cacheurl_qstring.config";
 		}
+	}
+	if ( defined( $remap->{cacheurl} ) && $remap->{cacheurl} ne "" ) {
+		$text .= " \@plugin=cacheurl.so \@pparam=" . $remap->{cacheurl_file};
 	}
 
 	# Note: should use full path here?
@@ -866,6 +907,7 @@ sub parent_dot_config {
 		return $text;
 	}
 	else {
+
 		#"True" Parent
 		my $pinfo = $self->parent_data($server);
 
@@ -1001,7 +1043,8 @@ sub regex_revalidate_dot_config {
 		my ( $scheme, $asset_hostname, $path, $query, $fragment ) = $row->asset_url =~ m|(?:([^:/?#]+):)?(?://([^/?#]*))?([^?#]*)(?:\?([^#]*))?(?:#(.*))?|;
 		my $org_server = "$scheme://$asset_hostname";
 
-		my $rs = $self->db->resultset('Deliveryservice')
+		my $rs =
+			$self->db->resultset('Deliveryservice')
 			->search( { org_server_fqdn => $org_server }, { prefetch => [ { 'type' => undef }, { 'profile' => undef } ] } );
 
 		while ( my $dsrow = $rs->next ) {
@@ -1149,12 +1192,8 @@ sub ssl_multicert_dot_config {
 
 	# get a list of delivery services for the server
 	my $protocol_search = '> 0';
-	my @ds_list         = $self->db->resultset('Deliveryservice')->search(
-		{ -and => [ 'server.id' => $server->id, 'me.protocol' => \$protocol_search ] },
-		{
-			join => { deliveryservice_servers => { server => undef } },
-		}
-	);
+	my @ds_list = $self->db->resultset('Deliveryservice')->search( { -and => [ 'server.id' => $server->id, 'me.protocol' => \$protocol_search ] },
+		{ join => { deliveryservice_servers => { server => undef } }, } );
 	foreach my $ds (@ds_list) {
 		my $ds_id        = $ds->id;
 		my $xml_id       = $ds->xml_id;
@@ -1183,8 +1222,8 @@ sub bg_fetch_dot_config {
 	my $id   = shift;
 
 	my $server = $self->server_data($id);
-	my $text = $self->header_comment( $server->host_name );
-	$text    .= "include User-Agent *\n";
+	my $text   = $self->header_comment( $server->host_name );
+	$text .= "include User-Agent *\n";
 
 	return $text;
 }

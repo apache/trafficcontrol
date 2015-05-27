@@ -130,6 +130,7 @@ sub get_data {
 				"protocol"             => $row->protocol,
 				"ipv6RoutingEnabled"   => \$row->ipv6_routing_enabled,
 				"rangeRequestHandling" => $row->range_request_handling,
+				"cacheurl"             => $row->cacheurl,
 			}
 		);
 	}

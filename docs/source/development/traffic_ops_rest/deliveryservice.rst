@@ -34,6 +34,8 @@ Delivery Service
   +==========================+========+======================================================================================================================================+
   | ``active``               | string | 1 if active, 0 if inactive (inact).                                                                                                  |
   +--------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
+  | ``cacheurl``             | string | Cache URL rule to apply to this delivery service.                                                                                    |
+  +--------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
   | ``ccrDnsTtl``            | string | The TTL of the DNS response for A or AAAA queries requesting the IP address of the tr. host.                                         |
   +--------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
   | ``checkPath``            | string | The path portion of the URL to check this deliveryservice for health.                                                                |
@@ -113,13 +115,16 @@ Delivery Service
   |                          |        | - 1: ignore query string in cache-key, but pass it up to parent and or origin.                                                       |
   |                          |        | - 2: drop query string at edge, and do not use it in the cache-key.                                                                  |
   +--------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
+  | ``regexRemap``           | string | Regex Remap rule to apply to this delivery service at the Edge tier.                                                                 |
+  +--------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
   | ``signed``               | string | - 0: token based auth (see :ref:token-based-auth) is not enabled for this deliveryservice.                                           |
   |                          |        | - 1: token based auth is enabled for this deliveryservice.                                                                           |
   +--------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
   | ``sslEnabled``           | string | - 0: serve with http:// at EDGE.                                                                                                     |
   |                          |        | - 1: serve with https:// at EDGE.                                                                                                    |
+  |                          |        | - 2: serve with both http:// and https:// at EDGE.                                                                                   |
   +--------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
-  | ``rangeReqeustHandling`` | string | How to treat range requests:                                                                                                         |
+  | ``rangeRequestHandling`` | string | How to treat range requests:                                                                                                         |
   |                          |        |                                                                                                                                      |
   |                          |        | - 0 Do not cache (ranges requested from files taht are already cached due to a non range request will be a HIT)                      |
   |                          |        | - 1 Use the `background_fetch <https://docs.trafficserver.apache.org/en/latest/reference/plugins/background_fetch.en.html>`_ plugin. |
