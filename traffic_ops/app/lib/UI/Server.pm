@@ -828,14 +828,13 @@ sub readupdate {
 		$rs_servers = $self->db->resultset("Server")->search(undef);
 	}
 	else {
-		my $parent_pending = 0;
 		$rs_servers = $self->db->resultset("Server")->search( { host_name => $host_name } );
 		if ( $rs_servers->single->type->name eq "EDGE" ) {
 			my $parent_cg =
 				$self->db->resultset('Cachegroup')->search( { id => $rs_servers->single->cachegroup->id } )->get_column('parent_cachegroup_id')->single;
 			my $rs_parents = $self->db->resultset('Server')->search( { cachegroup => $parent_cg } );
 			while ( my $prow = $rs_parents->next ) {
-				if ( $prow->upd_pending == 1 ) {
+				if ( $prow->upd_pending == 1 && $prow->status->name ne "OFFLINE" ) {
 					$parent_pending{ $rs_servers->single->host_name } = 1;
 				}
 			}

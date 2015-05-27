@@ -30,7 +30,7 @@ The caches in a Traffic Control CDN are servers running the Apache Traffic Serve
 
   ..  Note:: Often the EDGE to MID relationship is based on network distance, and does not necessarily match the geographic distance. 
 
-  A cache group serves a particular part of the network as defined in the ASN listing. (MAT/JvD to expand and pull in CZF info)
+  A cache group serves a particular part of the network as defined in the coverage zone file. See :ref:`rl-asn-czf`.
 
   Consider the example CDN below:
 

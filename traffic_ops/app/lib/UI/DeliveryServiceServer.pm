@@ -188,7 +188,7 @@ sub clone_server {
 		$numlinks++;
 
 		my $ds = $self->db->resultset('Deliveryservice')->search( { id => $ds } )->single();
-		&UI::DeliveryService::header_rewrite( $self, $ds->profile, $ds->xml_id, $ds->header_rewrite );
+		&UI::DeliveryService::header_rewrite( $self, $ds->profile, $ds->xml_id, $ds->edge_header_rewrite );
 
 	}
 
@@ -233,7 +233,7 @@ sub assign_servers {
 	}
 
 	my $ds = $self->db->resultset('Deliveryservice')->search( { id => $dsid } )->single();
-	&UI::DeliveryService::header_rewrite( $self, $ds->profile, $ds->xml_id, $ds->header_rewrite );
+	&UI::DeliveryService::header_rewrite( $self, $ds->profile, $ds->xml_id, $ds->edge_header_rewrite );
 
 	&log( $self, "Link deliveryservice " . $ds->xml_id . " to " . $numlinks . " servers", "UICHANGE" );
 
@@ -257,7 +257,7 @@ sub create {
 		$new_id = $insert->id;
 
 		my $ds = $self->db->resultset('Deliveryservice')->search( { id => $deliveryservice } )->single();
-		&UI::DeliveryService::header_rewrite( $self, $ds->profile, $ds->xml_id, $ds->header_rewrite ); 
+		&UI::DeliveryService::header_rewrite( $self, $ds->profile, $ds->xml_id, $ds->edge_header_rewrite ); 
 
 		$self->flash( alertmsg => 'Success!' );
 		&log( $self, "Create deliveryservice server link " . $ds->xml_id . " <-> " . $server_name, "UICHANGE" );
