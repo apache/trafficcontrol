@@ -153,17 +153,19 @@ sub server_data {
 	my $id   = shift;
 
 	my $server;
-#	if ( defined( $self->app->session->{server_data} ) ) {
-#		$server = $self->app->session->{server_data};
-#		return $server;
-#	}
+
+	#	if ( defined( $self->app->session->{server_data} ) ) {
+	#		$server = $self->app->session->{server_data};
+	#		return $server;
+	#	}
 	if ( $id =~ /^\d+$/ ) {
 		$server = $self->db->resultset('Server')->search( { id => $id } )->single;
 	}
 	else {
 		$server = $self->db->resultset('Server')->search( { host_name => $id } )->single;
 	}
-#	$self->app->session->{server_data} = $server;
+
+	#	$self->app->session->{server_data} = $server;
 	return $server;
 }
 
@@ -181,10 +183,10 @@ sub ds_data {
 
 	my $dsinfo;
 
-#	if ( defined( $self->app->session->{dsinfo} ) ) {
-#		$dsinfo = $self->app->session->{dsinfo};
-#		return $dsinfo;
-#	}
+	#	if ( defined( $self->app->session->{dsinfo} ) ) {
+	#		$dsinfo = $self->app->session->{dsinfo};
+	#		return $dsinfo;
+	#	}
 	$dsinfo->{host_name}   = $server->host_name;
 	$dsinfo->{domain_name} = $server->domain_name;
 
@@ -302,7 +304,7 @@ sub ds_data {
 		$j++;
 	}
 
-#	$self->app->session->{dsinfo} = $dsinfo;
+	#	$self->app->session->{dsinfo} = $dsinfo;
 	return $dsinfo;
 }
 
@@ -342,7 +344,8 @@ sub parent_data {
 	my $parent_cachegroup_id = $self->db->resultset('Cachegroup')->search( { id => $server->cachegroup->id } )->get_column('parent_cachegroup_id')->single;
 
 	my $mtype = &type_id( $self, "MID" );
-	my $online = &admin_status_id( $self, "ONLINE" );
+	my $online   = &admin_status_id( $self, "ONLINE" );
+	my $reported = &admin_status_id( $self, "REPORTED" );
 
 	# get the server's cdn domain
 	my $param =
@@ -351,8 +354,10 @@ sub parent_data {
 		{ prefetch => [ { parameter => undef }, { profile => undef } ] } )->single();
 	my $server_domain = $param->parameter->value;
 
-	my $rs_parent = $self->db->resultset('Server')->search( { cachegroup => $parent_cachegroup_id, 'me.type' => $mtype, status => $online },
-		{ prefetch => [ { cachegroup => undef }, { status => undef }, { type => undef }, { profile => undef } ] } );
+	my $rs_parent = $self->db->resultset('Server')->search(
+		{ cachegroup => $parent_cachegroup_id, 'me.type' => $mtype, status => { -in => [ $online, $reported ] } },
+		{ prefetch => [ { cachegroup => undef }, { status => undef }, { type => undef }, { profile => undef } ] }
+	);
 
 	my $i = 0;
 	while ( my $row = $rs_parent->next ) {
@@ -417,7 +422,9 @@ sub ip_allow_data {
 		my $rtype = &type_id( $self, "RASCAL" );
 		my $rs_allowed = $self->db->resultset('Server')->search( { -or => [ type => $etype, type => $rtype ] } );
 		while ( my $allow_row = $rs_allowed->next ) {
-			if ( defined( $allow_locs{ $allow_row->cachegroup->id } ) && $allow_locs{ $allow_row->cachegroup->id } == 1 ) {
+			if ( $allow_row->type->id == $rtype
+				|| ( defined( $allow_locs{ $allow_row->cachegroup->id } ) && $allow_locs{ $allow_row->cachegroup->id } == 1 ) )
+			{
 				push( @allowed_netaddrips, NetAddr::IP->new( $allow_row->ip_address, $allow_row->ip_netmask ) );
 				push( @allowed_ipv6_netaddrips, NetAddr::IP->new( $allow_row->ip6_address ) );
 			}
