@@ -153,17 +153,17 @@ sub server_data {
 	my $id   = shift;
 
 	my $server;
-	if ( defined( $self->app->session->{server_data} ) ) {
-		$server = $self->app->session->{server_data};
-		return $server;
-	}
+#	if ( defined( $self->app->session->{server_data} ) ) {
+#		$server = $self->app->session->{server_data};
+#		return $server;
+#	}
 	if ( $id =~ /^\d+$/ ) {
 		$server = $self->db->resultset('Server')->search( { id => $id } )->single;
 	}
 	else {
 		$server = $self->db->resultset('Server')->search( { host_name => $id } )->single;
 	}
-	$self->app->session->{server_data} = $server;
+#	$self->app->session->{server_data} = $server;
 	return $server;
 }
 
@@ -181,10 +181,10 @@ sub ds_data {
 
 	my $dsinfo;
 
-	if ( defined( $self->app->session->{dsinfo} ) ) {
-		$dsinfo = $self->app->session->{dsinfo};
-		return $dsinfo;
-	}
+#	if ( defined( $self->app->session->{dsinfo} ) ) {
+#		$dsinfo = $self->app->session->{dsinfo};
+#		return $dsinfo;
+#	}
 	$dsinfo->{host_name}   = $server->host_name;
 	$dsinfo->{domain_name} = $server->domain_name;
 
@@ -302,7 +302,7 @@ sub ds_data {
 		$j++;
 	}
 
-	$self->app->session->{dsinfo} = $dsinfo;
+#	$self->app->session->{dsinfo} = $dsinfo;
 	return $dsinfo;
 }
 
