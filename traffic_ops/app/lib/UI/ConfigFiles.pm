@@ -359,19 +359,37 @@ sub parent_data {
 		{ prefetch => [ { cachegroup => undef }, { status => undef }, { type => undef }, { profile => undef } ] }
 	);
 
-	my $i = 0;
+	my $i             = 0;
+	my %profile_cache = ();
 	while ( my $row = $rs_parent->next ) {
 
-		# get the delivery service cdn domain
-		my $param =
-			$self->db->resultset('ProfileParameter')
-			->search( { -and => [ profile => $row->profile->id, 'parameter.config_file' => 'CRConfig.json', 'parameter.name' => 'domain_name' ] },
-			{ prefetch => [ { parameter => undef }, { profile => undef } ] } )->single();
-		my $ds_domain = $param->parameter->value;
+		# get the profile info, and cache it in %profile_cache
+		my $ds_domain = undef;
+		my $weight    = undef;
+		my $pid       = $row->profile->id;
+		if ( !defined( $profile_cache{$pid} ) ) {
+			my $param =
+				$self->db->resultset('ProfileParameter')
+				->search( { -and => [ profile => $pid, 'parameter.config_file' => 'CRConfig.json', 'parameter.name' => 'domain_name' ] },
+				{ prefetch => [ 'parameter', 'profile' ] } )->single();
+			$ds_domain = $param->parameter->value;
+			$profile_cache{$pid}->{domain_name} = $ds_domain;
+			$param =
+				$self->db->resultset('ProfileParameter')
+				->search( { -and => [ profile => $pid, 'parameter.config_file' => 'parent.config', 'parameter.name' => 'weight' ] },
+				{ prefetch => [ 'parameter', 'profile' ] } )->single();
+			$weight = defined($param) ? $param->parameter->value : "0.999";
+			$profile_cache{$pid}->{weight} = $weight;
+		}
+		else {
+			$ds_domain = $profile_cache{$pid}->{domain_name};
+			$weight    = $profile_cache{$pid}->{weight};
+		}
 		if ( defined($ds_domain) && defined($server_domain) && $ds_domain eq $server_domain ) {
 			$pinfo->{"plist"}->[$i]->{"host_name"}   = $row->host_name;
 			$pinfo->{"plist"}->[$i]->{"port"}        = $row->tcp_port;
 			$pinfo->{"plist"}->[$i]->{"domain_name"} = $row->domain_name;
+			$pinfo->{"plist"}->[$i]->{"weight"}      = $weight;
 			$i++;
 		}
 	}
@@ -940,7 +958,7 @@ sub parent_dot_config {
 
 			$text .= "dest_domain=. parent=\"";
 			foreach my $parent ( @{ $pinfo->{"plist"} } ) {
-				$text .= $parent->{"host_name"} . "." . $parent->{"domain_name"} . ":" . $parent->{"port"} . "|1.0;";
+				$text .= $parent->{"host_name"} . "." . $parent->{"domain_name"} . ":" . $parent->{"port"} . "|" . $parent->{"weight"} . ";";
 			}
 			$text .= "\" round_robin=consistent_hash go_direct=false";
 		}
