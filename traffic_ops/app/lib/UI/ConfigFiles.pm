@@ -29,10 +29,8 @@ use JSON;
 use API::DeliveryService::KeysUrlSig qw(URL_SIG_KEYS_BUCKET);
 
 my $dispatch_table ||= {
-	"logs_xml.config" => sub { logs_xml_dot_config(@_) },
-	"cacheurl.config" => sub { cacheurl_dot_config(@_) },
-
-	#"cacheurl_qstring.config" => sub { cacheurl_dot_config(@_) },
+	"logs_xml.config"         => sub { logs_xml_dot_config(@_) },
+	"cacheurl.config"         => sub { cacheurl_dot_config(@_) },
 	"records.config"          => sub { generic_config(@_) },
 	"plugin.config"           => sub { generic_config(@_) },
 	"astats.config"           => sub { generic_config(@_) },
@@ -155,12 +153,17 @@ sub server_data {
 	my $id   = shift;
 
 	my $server;
+	if ( defined( $self->app->session->{server_data} ) ) {
+		$server = $self->app->session->{server_data};
+		return $server;
+	}
 	if ( $id =~ /^\d+$/ ) {
 		$server = $self->db->resultset('Server')->search( { id => $id } )->single;
 	}
 	else {
 		$server = $self->db->resultset('Server')->search( { host_name => $id } )->single;
 	}
+	$self->app->session->{server_data} = $server;
 	return $server;
 }
 
@@ -177,6 +180,11 @@ sub ds_data {
 	my $server = shift;
 
 	my $dsinfo;
+
+	if ( defined( $self->app->session->{dsinfo} ) ) {
+		$dsinfo = $self->app->session->{dsinfo};
+		return $dsinfo;
+	}
 	$dsinfo->{host_name}   = $server->host_name;
 	$dsinfo->{domain_name} = $server->domain_name;
 
@@ -294,7 +302,7 @@ sub ds_data {
 		$j++;
 	}
 
-	#print Dumper($dsinfo);
+	$self->app->session->{dsinfo} = $dsinfo;
 	return $dsinfo;
 }
 
@@ -305,7 +313,6 @@ sub param_data {
 
 	my $data;
 
-	# print "param select: " . $filename . "\n";
 	my $rs = $self->db->resultset('ProfileParameter')->search( { -and => [ profile => $server->profile->id, 'parameter.config_file' => $filename ] },
 		{ prefetch => [ { parameter => undef }, { profile => undef } ] } );
 	while ( my $row = $rs->next ) {
