@@ -25,6 +25,9 @@ use Utils::CCR;
 use Time::HiRes qw(gettimeofday tv_interval);
 use Math::Round qw(nearest);
 use Extensions::DatasourceList;
+use Utils::Helper::Datasource;
+use Extensions::CustomDatasourceList;
+Utils::Helper::Datasource->load_extensions;
 
 sub register {
 	my ( $self, $app, $conf ) = @_;
@@ -55,6 +58,7 @@ sub register {
 			# numeric start/end only which should be done upstream but let's be extra cautious
 			if ( $start =~ /^\d+$/ && $end =~ /^\d+$/ && $window_start < ( time() - $retention_period - 60 ) ) {  # -60 for diff between client and our time
 				$data = $self->get_stats_long_term( $match, $start, $end, $interval );
+				$self->app->log->debug( "data #-> " . Dumper($data) );
 			}
 			else {
 				# get_usage uses now/now as start/end, so it will pass through to short_term
@@ -429,7 +433,9 @@ sub register {
 			my $interval = shift;
 
 			# get the subroutine name for the for the long term stats from the Extensions::DatasourceList
-			my $ext_hash_ref = &Extensions::DatasourceList::hash_ref();
+			# make this into a "Statistics->long_term()"
+			my $ext          = new Extensions::CustomDatasourceList();
+			my $ext_hash_ref = $ext->hash_ref();
 			my $subroutine   = $ext_hash_ref->{stats_long_term};
 
 			if ( !defined($subroutine) ) {

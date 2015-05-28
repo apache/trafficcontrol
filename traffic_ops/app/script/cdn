@@ -2,8 +2,15 @@
 use Mojo::Base -strict;
 use File::Basename 'dirname';
 use File::Spec::Functions qw(catdir splitdir);
+use Data::Dumper;
+use Env;
 
 # Source directory has precedence
+my $to_extensions_lib = $ENV{"TO_EXTENSIONS_LIB"};
+if (defined($to_extensions_lib)){
+    unshift(@INC, $to_extensions_lib);
+   print "Prepending to path TO_EXTENSIONS_LIB $to_extensions_lib\n";
+}
 my @base = (splitdir(dirname(__FILE__)), '..');
 my $lib = join('/', @base, 'lib');
 -e catdir(@base, 't') ? unshift(@INC, $lib) : push(@INC, $lib);

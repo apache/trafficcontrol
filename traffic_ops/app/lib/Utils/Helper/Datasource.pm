@@ -269,4 +269,51 @@ sub calculate_stats {
 	return ($data);
 }
 
+sub load_module {
+	my $module = shift;
+	if ( defined( $ENV{"TO_EXTENSIONS_LIB"} ) ) {
+		print "env: " . $ENV{"TO_EXTENSIONS_LIB"} . "\n";
+		my $use = $module;
+		eval $use;
+	}
+}
+
+sub load_extensions {
+	my $module;
+	my $to_ext_lib_env = $ENV{"TO_EXTENSIONS_LIB"};
+	if ( defined($to_ext_lib_env) ) {
+		my $to_ext_lib = join( "/", $to_ext_lib_env, "Extensions" );
+		print "Using extensions library path: " . $to_ext_lib . "\n";
+		opendir( DIR, $to_ext_lib ) or die $!;
+
+		while ( my $file = readdir(DIR) ) {
+			next if ( $file =~ m/^\./ );
+			print "file #-> (" . $file . ")\n";
+			( my $file_without_extension = $file ) =~ s/\.[^.]+$//;
+			my $package = "Extensions::" . $file_without_extension;
+
+			#print "Loading package #-> (" . $package . ")\n";
+			my $loaded = check_is_loaded($package);
+			print "loaded? " . $loaded . "\n";
+			if ( !$loaded ) {
+				print "Loading: $package\n";
+				eval $package;
+			}
+			else {
+				print "Loading: " . $package . ", skipping already loaded.\n";
+			}
+		}
+		closedir(DIR);
+	}
+}
+
+sub check_is_loaded {
+	my ($pkg) = @_;
+	( my $file = $pkg ) =~ s/::/\//g;
+	$file .= '.pm';
+	my @loaded = grep { $_ eq $file } keys %INC;
+	my $is_loaded = ( @loaded ? 1 : 0 );
+	return $is_loaded;
+}
+
 1;

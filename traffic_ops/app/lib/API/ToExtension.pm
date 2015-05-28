@@ -55,7 +55,8 @@ sub index {
 	while ( my $row = $rs->next ) {
 		my $file;
 		( $file = $row->config_file ) =~ s/^to_ext_//;
-		my $ext_hash_ref = &Extensions::ConfigList::hash_ref();
+		my $ext          = new Extensions::ConfigList();
+		my $ext_hash_ref = $ext->hash_ref();
 		my $subroutine   = $ext_hash_ref->{$file};
 		my $isub;
 		( $isub = $subroutine ) =~ s/::[^:]+$/::info/;
@@ -84,8 +85,8 @@ sub index {
 		$source = $row->value;
 		my $ext_hash_ref = &Extensions::DatasourceList::hash_ref();
 		my $subroutine   = $ext_hash_ref->{$source};
-		if (!defined($subroutine) ) {
-			$self->app->log->error("No subroutine found for: " . $source);
+		if ( !defined($subroutine) ) {
+			$self->app->log->error( "No subroutine found for: " . $source );
 		}
 		my $isub;
 		( $isub = $subroutine ) =~ s/::[^:]+$/::info/;

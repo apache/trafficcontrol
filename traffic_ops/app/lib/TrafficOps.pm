@@ -43,6 +43,8 @@ use Utils::JsonConfig;
 use MojoX::Log::Log4perl;
 use File::Find;
 use File::Basename;
+use Utils::Helper::Datasource;
+Utils::Helper::Datasource->load_extensions;
 
 use constant SESSION_TIMEOUT => 14400;
 my $logging_root_dir;
@@ -869,10 +871,8 @@ sub startup {
 
 	##stats_summary
 	$r->get( "/api/$api_version/stats_summary" => [ format => [qw(json)] ] )->over( authenticated => 1 )
-	->to( 'StatsSummary#index', namespace => "API::$api_namespace" );
-	$r->post( "/api/$api_version/stats_summary/create")->over( authenticated => 1 )
-	->to( 'StatsSummary#create', namespace => "API::$api_namespace" );
-
+		->to( 'StatsSummary#index', namespace => "API::$api_namespace" );
+	$r->post("/api/$api_version/stats_summary/create")->over( authenticated => 1 )->to( 'StatsSummary#create', namespace => "API::$api_namespace" );
 
 	# ------------------------------------------------------------------------
 	# END: Version 1.2

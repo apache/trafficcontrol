@@ -41,7 +41,6 @@ use Mojo::Base 'Mojolicious::Controller';
 ## Start Extensions List .pm Anchor ## DO NOT REMOVE OR CHANGE THIS LINE
 ## End Extensions List .pm Anchor ## DO NOT REMOVE OR CHANGE THIS LINE
 
-# Note: Should we create a dispatch table here?
 sub hash_ref {
 	my $ext_hash_ref = {
 ## Start Extensions List hash Anchor ## DO NOT REMOVE OR CHANGE THIS LINE

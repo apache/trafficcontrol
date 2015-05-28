@@ -1,4 +1,4 @@
-package Extensions::DatasourceList;
+package Extensions::CustomDatasourceList;
 #
 # Copyright 2015 Comcast Cable Communications Management, LLC
 #
@@ -23,6 +23,14 @@ package Extensions::DatasourceList;
 ## Start Extensions List .pm Anchor ## DO NOT REMOVE OR CHANGE THIS LINE
 use Extensions::DATASOURCE_STUB;
 ## End Extensions List .pm Anchor ## DO NOT REMOVE OR CHANGE THIS LINE
+
+sub new {
+	my $self  = {};
+	my $class = shift;
+	my $args  = shift;
+
+	return ( bless( $self, $class ) );
+}
 
 # Note: Should we create a dispatch table here?
 sub hash_ref {
