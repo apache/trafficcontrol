@@ -17,7 +17,7 @@
 TO_HOME=/vol1/jenkins/jobs/traffic_ops_integration_tests
 TRAFFIC_OPS_APP=$TO_HOME/workspace/traffic_ops/app
 export INSTALL_DIR=/opt/traffic_ops
-export LOCAL_DIR=$INSTALL_DIR/lib
+export LOCAL_DIR=$INSTALL_DIR/app/local/lib
 export PERL5LIB=$TRAFFIC_OPS_APP/lib:$LOCAL_DIR:$LOCAL_DIR/perl5/
 export PATH=$PATH:$INSTALL_DIR/install/bin
 #For Mojo
@@ -29,4 +29,4 @@ cd $TRAFFIC_OPS_APP
 db/admin.pl --env=$MOJO_MODE setup
 
 cd $TRAFFIC_OPS_APP
-$INSTALL_DIR/app/bin/prove -vrp --formatter=TAP::Formatter::Jenkins t_integration/
+$INSTALL_DIR/app/local/bin/prove -vrp --formatter=TAP::Formatter::Jenkins t_integration/

@@ -1,0 +1,12 @@
+# all example values below are also the defaults if not present
+
+path=_astats
+
+# ips and netmasks are comma or space delimited
+allow_ip=127.0.0.1/32
+allow_ip6=::1/64
+
+# record_types
+# hexidecimal int (without 0x), each bit (1 through 7) representing a record type to return.  0x100 is for the built in system stats.  
+# This can be overriden from the url, e.g.: http://localhost/_astats?record.types=100
+record_types=144

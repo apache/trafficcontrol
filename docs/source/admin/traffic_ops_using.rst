@@ -262,9 +262,9 @@ The fields in the Delivery Service view are:
 +--------------------------------------------------+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
 | Protocol                                         | The protocol to serve this delivery service to the clients with:                                                                                                                                                    |
 |                                                  |                                                                                                                                                                                                                     |
-|                                                  | -  http                                                                                                                                                                                                             |
-|                                                  | -  https                                                                                                                                                                                                            |
-|                                                  | -  both http and https                                                                                                                                                                                              |
+|                                                  | -  0 http                                                                                                                                                                                                           |
+|                                                  | -  1 https                                                                                                                                                                                                          |
+|                                                  | -  2 both http and https                                                                                                                                                                                            |
 +--------------------------------------------------+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
 | DSCP Tag                                         | The DSCP value to mark IP packets to the client with.                                                                                                                                                               |
 +--------------------------------------------------+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
@@ -290,7 +290,11 @@ The fields in the Delivery Service view are:
 +--------------------------------------------------+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
 | IPv6 Routing Enabled?                            | When set to yes, the Traffic Router will respond to AAAA DNS requests for the tr. and edge. names of this delivery service. Otherwise, only A records will be served.                                               |
 +--------------------------------------------------+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-| Background fetch Enabled?                        | Experimental. This enables the background_fetch plugin to fetch the whole file on seeing a range request.                                                                                                           |
+| Range Request Handling                           | (experimental)  How to treat range requests:                                                                                                                                                                        |
+|                                                  |                                                                                                                                                                                                                     |
+|                                                  | - 0 Do not cache (ranges requested from files taht are already cached due to a non range request will be a HIT)                                                                                                     |
+|                                                  | - 1 Use the `background_fetch <https://docs.trafficserver.apache.org/en/latest/reference/plugins/background_fetch.en.html>`_ plugin.                                                                                |
+|                                                  | - 2 Use the cache_range_requests plugin.                                                                                                                                                                            |
 +--------------------------------------------------+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
 | Delivery Service DNS TTL                         | The Time To Live on the DNS record for the Traffic Router A and AAAA records (``tr.<deliveryservice>.<cdn-domain>``) for a HTTP delivery service *or* for the A and                                                 |
 |                                                  | AAAAA records of the edge name (``edge.<deliveryservice>.<cdn-domain>``).                                                                                                                                           |
@@ -309,7 +313,13 @@ The fields in the Delivery Service view are:
 +--------------------------------------------------+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
 | Geo Miss Default Longitude                       | Default Longitude for this delivery service. When client localization fails for bot Coverage Zone and Geo Lookup, this the client will be routed as if it was at this long.                                         |
 +--------------------------------------------------+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-| Request Header Rewrite Rules                     | Header Rewrite rules for this delivery service. See :ref:`rl-header-rewrite`.                                                                                                                                       |
+| Edge Header Rewrite Rules                        | Header Rewrite rules to apply for this delivery service at the EDGE tier. See :ref:`rl-header-rewrite`.                                                                                                             |
++--------------------------------------------------+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| Mid Header Rewrite Rules                         | Header Rewrite rules to apply for this delivery service at the MID tier. See :ref:`rl-header-rewrite`.                                                                                                              |
++--------------------------------------------------+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| Regex Remap Expression                           | Regex Remap rule to apply to this delivery service at the Edge tier. See `ATS documentation on regex_remap <https://docs.trafficserver.apache.org/en/latest/reference/plugins/regex_remap.en.html>`_.               |
++--------------------------------------------------+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| Cache URL expression                             | Cache URL rule to apply to this delivery service. See `ATS documentation on cacheurl <https://docs.trafficserver.apache.org/en/latest/reference/plugins/cacheurl.en.html>`_.                                        |
 +--------------------------------------------------+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
 | Long Description                                 | Long description for this delivery service. TO be consumed from the APIs by downstream tools (Portal).                                                                                                              |
 +--------------------------------------------------+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
@@ -379,7 +389,19 @@ One of the most important settings when creating the delivery service is the sel
 
 Header Rewrite Options and DSCP
 +++++++++++++++++++++++++++++++
-To 
+Most header manipulation and per-delivery service configuration overrides are done using the `ATS Header Rewrite Plugin <https://docs.trafficserver.apache.org/en/latest/reference/plugins/header_rewrite.en.html>`_. Traffic Control allows you to enter header rewrite rules to be applied at the edge and at the mid level. The syntax used in Traffic Ops is the same as the one described in the ATS documentation, except for some special strings that will get replaced:
+
++-------------------+--------------------------+
+| Traffic Ops Entry |    Gets Replaced with    |
++===================+==========================+
+| __RETURN__        | A newline                |
++-------------------+--------------------------+
+| __CACHE_IPV4__    | The cache's IPv4 address |
++-------------------+--------------------------+
+
+The deliveryservice screen also allows you to set the DSCP value of traffic sent to the client. This setting also results in a header_rewrite rule to be generated and applied to at the edge.
+
+.. Note:: The DSCP setting in the UI is *only* for setting traffic towards the client, and gets applied *after* the initial TCP handshake is complete, and the HTTP request is received (before that the cache can't determine what deliveryservice this request is for, and what DSCP to apply), so the DSCP feature can not be used for security settings - the TCP SYN-ACK is not going to be DSCP marked.
 
 
 .. index::
@@ -525,7 +547,7 @@ The **Order** entry defines the order in which the regular expressions get evalu
 Example:
   Example foo.
 
-.. Note:: In most cases is is sufficient to have just one entry in this table that has a ``HOST_REGEXP`` Type, and Order ``0``. For the *movies* delivery service in the Kabletown CDN, the entry is simply single ``HOST_REGEXP`` set to ``.*\.movies\.*``. This will match every url that has a hostname that ends with ``movies.cdn1.kabletown.net``, since ``cdn1.kabletown.net`` is the Kabletown CDN's DNS domain.
+.. Note:: In most cases is is sufficient to have just one entry in this table that has a ``HOST_REGEXP`` Type, and Order ``0``. For the *movies* delivery service in the Kabletown CDN, the entry is simply single ``HOST_REGEXP`` set to ``.*\.movies\..*``. This will match every url that has a hostname that ends with ``movies.cdn1.kabletown.net``, since ``cdn1.kabletown.net`` is the Kabletown CDN's DNS domain.
 
 .. index::
   Static DNS Entries
@@ -546,6 +568,40 @@ Server Assignments
 Click the **Server Assignments** button at the bottom of the screen to assign servers to this delivery service.  Servers can be selected by drilling down in a tree, starting at the profile, then the cache group, and then the individual servers. Traffic Router will only route traffic for this delivery service to servers that are assigned to it.
 
 
+.. _rl-asn-czf:
+
+The Coverage Zone File and ASN Table
+++++++++++++++++++++++++++++++++++++
+The Coverage Zone File (CZF) should contain a cachegroup name to network prefix mapping in the form: :: 
+
+  {
+    "coverageZones": {
+      "cache-group-01": {
+        "network6": [
+          "1234:5678::\/64",
+          "1234:5679::\/64"
+        ],
+        "network": [
+          "192.168.8.0\/24",
+          "192.168.9.0\/24"
+        ]
+      }
+      "cache-group-02": {
+        "network6": [
+          "1234:567a::\/64",
+          "1234:567b::\/64"
+        ],
+        "network": [
+          "192.168.4.0\/24",
+          "192.168.5.0\/24"
+        ]
+      }
+    }
+  }
+
+The CZF is an input to the Traffic Control CDN, and as such does not get generated by Traffic Ops, but rather, it gets consumed by Traffic Router. Some popular IP management systems output a very similar file to the CZF but in stead of a cachegroup an ASN will be listed. Traffic Ops has the "Networks (ASNs)" view to aid with the conversion of files like that to a Traffic Control CZF file; this table is not used anywhere in Traffic Ops, but can be used to script the conversion using the API.
+
+The script that generates the CZF file is not part of Traffic Control, since it is different for each situation.
 
 .. _rl-working-with-profiles:
 

@@ -22,60 +22,44 @@ ASN
 
 **GET /api/1.1/asns.json**
 
-..  description
+  Authentication Required: Yes
+  
+  **Response Properties**
 
-Authentication Required: Yes
+  +------------------+--------+-------------------------------------------------------------------------+
+  |    Parameter     |  Type  |                               Description                               |
+  +==================+========+=========================================================================+
+  | ``asns``         | array  | A collection of asns                                                    |
+  +------------------+--------+-------------------------------------------------------------------------+
+  | ``>lastUpdated`` | string | The Time / Date this server entry was last updated                      |
+  +------------------+--------+-------------------------------------------------------------------------+
+  | ``>id``          | string | Local unique identifier for the ASN                                     |
+  +------------------+--------+-------------------------------------------------------------------------+
+  | ``>asn``         | string | Autonomous System Numbers per APNIC for identifying a service provider. |
+  +------------------+--------+-------------------------------------------------------------------------+
+  | ``>cachegroup``  | string | Related cachegroup name                                                 |
+  +------------------+--------+-------------------------------------------------------------------------+
 
-Response Content Type: application/json
-
-**Response Messages**
-
-::
-
-
-  HTTP Status Code: 200
-  Reason: Success
-
-**Response Properties**
-
-+-------------------+--------+-------------------------------------------------------------------------+
-|     Parameter     |  Type  |                               Description                               |
-+===================+========+=========================================================================+
-| ``asns``          | array  | A collection of asns                                                    |
-+-------------------+--------+-------------------------------------------------------------------------+
-| > ``lastUpdated`` | string | The Time / Date this server entry was last updated                      |
-+-------------------+--------+-------------------------------------------------------------------------+
-| > ``id``          | string | Local unique identifier for the ASN                                     |
-+-------------------+--------+-------------------------------------------------------------------------+
-| > ``asn``         | string | Autonomous System Numbers per APNIC for identifying a service provider. |
-+-------------------+--------+-------------------------------------------------------------------------+
-| > ``cachegroup``  | string | Related cachegroup name                                                 |
-+-------------------+--------+-------------------------------------------------------------------------+
-
-**Response Example**
+  **Response Example** ::
 
 
-::
+    {
+     "response": {
+        "asns": [
+           {
+              "lastUpdated": "2012-09-17 21:41:22",
+              "id": "27",
+              "asn": "7015",
+              "cachegroup": "us-ma-woburn"
+           },
+           {
+              "lastUpdated": "2012-09-17 21:41:22",
+              "id": "28",
+              "asn": "7016",
+              "cachegroup": "us-pa-pittsburgh"
+           }
+        ]
+     },
+     "version": "1.1"
+    }
 
-
-  {
-   "response": {
-      "asns": [
-         {
-            "lastUpdated": "2012-09-17 21:41:22",
-            "id": "27",
-            "asn": "7015",
-            "cachegroup": "us-ma-woburn"
-         },
-         {
-            "lastUpdated": "2012-09-17 21:41:22",
-            "id": "28",
-            "asn": "7016",
-            "cachegroup": "us-pa-pittsburgh"
-         }
-      ]
-   },
-   "version": "1.1"
-  }
-
-For error messages, see :ref:`reference-label-401`.

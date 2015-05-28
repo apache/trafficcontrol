@@ -63,10 +63,12 @@ sub view {
 	my $id = $self->param('id');
 
 	my $rs_param = $self->db->resultset('Profile')->search( { id => $id } );
+	my $param_count = $self->db->resultset('ProfileParameter')->search( { profile => $id } )->count();
 
 	# if ( $mode eq "view" ) {
 	my $data = $rs_param->single;
 	$self->stash( profile => $data );
+	$self->stash( param_count => $param_count );
 
 	&stash_role($self);
 
@@ -356,7 +358,7 @@ sub availableprofile {
 	my $rs_links = $self->db->resultset("Profile")->search( undef, { order_by => "description" } );
 	while ( my $row = $rs_links->next ) {
 		if ( !exists( $in_use{ $row->id } ) ) {
-			push( @data, { "id" => $row->id, "description" => $row->description } );
+			push( @data, { "id" => $row->id, "name" => $row->name, "description" => $row->description } );
 		}
 	}
 
@@ -367,7 +369,7 @@ sub export {
 	my $self = shift;
 	my $id   = $self->param('id');
 
-	my $jdata;
+	my $jdata = {};
 	my $pname;
 	my $rs = $self->db->resultset('ProfileParameter')->search( { profile => $id }, { prefetch => [ { parameter => undef }, { profile => undef } ] } );
 	my $i = 0;
@@ -384,6 +386,7 @@ sub export {
 		};
 		$i++;
 	}
+
 	my $text = JSON->new->utf8->encode($jdata);
 
 	$self->res->headers->content_type("application/download");

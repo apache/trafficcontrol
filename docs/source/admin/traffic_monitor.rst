@@ -21,6 +21,9 @@ Installing Traffic Monitor
 ==========================
 The following are requirements to ensure an accurate set up:
 
+* CentOS 6
+* 4 vCPUs
+* 8GB RAM
 * Successful install of Traffic Ops
 * Tomcat
 * Administrative access to the Traffic Ops

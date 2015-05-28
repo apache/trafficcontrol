@@ -43,7 +43,7 @@ sub delivery_services {
 
 	my $helper = new Utils::Helper( { mojo => $self } );
 	if ( defined($id) && $helper->is_valid_delivery_service($id) ) {
-		if ( $helper->is_delivery_service_assigned($id) ) {
+		if ( $helper->is_delivery_service_assigned($id) || &is_oper($self) ) {
 			return $self->get_data();
 		}
 		else {
@@ -96,36 +96,41 @@ sub get_data {
 		}
 		push(
 			@data, {
-				"id"                 => $row->id,
-				"xmlId"              => $row->xml_id,
-				"dscp"               => $row->dscp,
-				"signed"             => \$row->signed,
-				"qstringIgnore"      => $row->qstring_ignore,
-				"geoLimit"           => $row->geo_limit,
-				"httpBypassFqdn"     => $row->http_bypass_fqdn,
-				"dnsBypassIp"        => $row->dns_bypass_ip,
-				"dnsBypassIp6"       => $row->dns_bypass_ip6,
-				"dnsBypassTtl"       => $row->dns_bypass_ttl,
-				"orgServerFqdn"      => $row->org_server_fqdn,
-				"ccrDnsTtl"          => $row->ccr_dns_ttl,
-				"type"               => $row->type->name,
-				"profileName"        => $row->profile->name,
-				"profileDescription" => $row->profile->description,
-				"globalMaxMbps"      => $row->global_max_mbps,
-				"globalMaxTps"       => $row->global_max_tps,
-				"headerRewrite"      => $row->header_rewrite,
-				"longDesc"           => $row->long_desc,
-				"longDesc1"          => $row->long_desc_1,
-				"longDesc2"          => $row->long_desc_2,
-				"maxDnsAnswers"      => $row->max_dns_answers,
-				"infoUrl"            => $row->info_url,
-				"missLat"            => $row->miss_lat,
-				"missLong"           => $row->miss_long,
-				"checkPath"          => $row->check_path,
-				"matchList"          => \@matchlist,
-				"active"             => \$row->active,
-				"protocol"         => \$row->protocol,
-				"ipv6RoutingEnabled" => \$row->ipv6_routing_enabled,
+				"id"                   => $row->id,
+				"xmlId"                => $row->xml_id,
+				"dscp"                 => $row->dscp,
+				"signed"               => \$row->signed,
+				"qstringIgnore"        => $row->qstring_ignore,
+				"geoLimit"             => $row->geo_limit,
+				"httpBypassFqdn"       => $row->http_bypass_fqdn,
+				"dnsBypassIp"          => $row->dns_bypass_ip,
+				"dnsBypassIp6"         => $row->dns_bypass_ip6,
+				"dnsBypassTtl"         => $row->dns_bypass_ttl,
+				"orgServerFqdn"        => $row->org_server_fqdn,
+				"ccrDnsTtl"            => $row->ccr_dns_ttl,
+				"type"                 => $row->type->name,
+				"profileName"          => $row->profile->name,
+				"profileDescription"   => $row->profile->description,
+				"globalMaxMbps"        => $row->global_max_mbps,
+				"globalMaxTps"         => $row->global_max_tps,
+				"headerRewrite"        => $row->edge_header_rewrite,
+				"edgeHeaderRewrite"    => $row->edge_header_rewrite,
+				"midHeaderRewrite"     => $row->mid_header_rewrite,
+				"regexRemap"           => $row->regex_remap,
+				"longDesc"             => $row->long_desc,
+				"longDesc1"            => $row->long_desc_1,
+				"longDesc2"            => $row->long_desc_2,
+				"maxDnsAnswers"        => $row->max_dns_answers,
+				"infoUrl"              => $row->info_url,
+				"missLat"              => $row->miss_lat,
+				"missLong"             => $row->miss_long,
+				"checkPath"            => $row->check_path,
+				"matchList"            => \@matchlist,
+				"active"               => \$row->active,
+				"protocol"             => $row->protocol,
+				"ipv6RoutingEnabled"   => \$row->ipv6_routing_enabled,
+				"rangeRequestHandling" => $row->range_request_handling,
+				"cacheurl"             => $row->cacheurl,
 			}
 		);
 	}

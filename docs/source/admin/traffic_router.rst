@@ -21,6 +21,9 @@ Installing Traffic Router
 ==========================
 The following are requirements to ensure an accurate set up:
 
+* CentOS 6
+* 4 vCPUs
+* 8GB RAM
 * Successful install of Traffic Ops
 * Successful install of Traffic Monitor
 * Administrative access to the Traffic Ops
@@ -55,9 +58,9 @@ The following are requirements to ensure an accurate set up:
 
 * This instantly associates production traffic on the servers. They need to be online when you change the DNS records.
 
-9. Add the correct DNS entries to the SOA records for the CDN on which you are working.
+7. Add the correct DNS entries to the SOA records for the CDN on which you are working.
 
-10. Add the servers to the NS and SOA records for your domain.
+8. Add the servers to the NS and SOA records for your domain.
 
 Configuring Traffic Router
 ==========================

@@ -22,173 +22,121 @@ Change Logs
 
 **GET /api/1.1/logs.json**
 
-..  description
+  **Response Properties**
 
-Authentication Required: Yes
+  +-----------------+--------+--------------------------------------------------------------------------+
+  | Parameter       | Type   | Description                                                              |
+  +=================+========+==========================================================================+
+  | ``ticketNum``   | string | Optional field to cross reference with any bug tracking systems          |
+  +-----------------+--------+--------------------------------------------------------------------------+
+  | ``level``       | string | Log categories for each entry, examples: 'UICHANGE', 'OPER', 'APICHANGE'.|
+  +-----------------+--------+--------------------------------------------------------------------------+
+  | ``lastUpdated`` | string | Local unique identifier for the Log                                      |
+  +-----------------+--------+--------------------------------------------------------------------------+
+  | ``user``        | string | Current user who made the change that was logged                         |
+  +-----------------+--------+--------------------------------------------------------------------------+
+  | ``id``          | string | Local unique identifier for the Log entry                                |
+  +-----------------+--------+--------------------------------------------------------------------------+
+  | ``message``     | string | Log detail about what occurred                                           |
+  +-----------------+--------+--------------------------------------------------------------------------+
 
-Response Content Type: application/json
+  **Response Example** ::
 
-**Response Messages**
-
-::
-
-
-  HTTP Status Code: 200
-  Reason: Success
-
-**Response Properties**
-
-+-----------------+--------+--------------------------------------------------------------------------+
-| Parameter       | Type   | Description                                                              |
-+=================+========+==========================================================================+
-| ``ticketNum``   | string | Optional field to cross reference with any bug tracking systems          |
-+-----------------+--------+--------------------------------------------------------------------------+
-| ``level``       | string | Log categories for each entry, examples: 'UICHANGE', 'OPER', 'APICHANGE'.|
-+-----------------+--------+--------------------------------------------------------------------------+
-| ``lastUpdated`` | string | Local unique identifier for the Log                                      |
-+-----------------+--------+--------------------------------------------------------------------------+
-| ``user``        | string | Current user who made the change that was logged                         |
-+-----------------+--------+--------------------------------------------------------------------------+
-| ``id``          | string | Local unique identifier for the Log entry                                |
-+-----------------+--------+--------------------------------------------------------------------------+
-| ``message``     | string | Log detail about what occurred                                           |
-+-----------------+--------+--------------------------------------------------------------------------+
-
-**Response Example**
-
-
-::
-
-  {
-   "response": [
-      {
-         "ticketNum": null,
-         "level": "OPER",
-         "lastUpdated": "2015-02-04 22:59:13",
-         "user": "mtorlu9137e",
-         "id": "22661",
-         "message": "Snapshot CRConfig created."
-      },
-      {
-         "ticketNum": null,
-         "level": "APICHANGE",
-         "lastUpdated": "2015-02-03 17:04:20",
-         "user": "admin",
-         "id": "22658",
-         "message": "Update server odol-atsec-nyc-23.kbaletown.net status=REPORTED"
-      },
-   ],
-   "version": "1.1"
-  }
+    {
+     "response": [
+        {
+           "ticketNum": null,
+           "level": "OPER",
+           "lastUpdated": "2015-02-04 22:59:13",
+           "user": "mtorlu9137e",
+           "id": "22661",
+           "message": "Snapshot CRConfig created."
+        },
+        {
+           "ticketNum": null,
+           "level": "APICHANGE",
+           "lastUpdated": "2015-02-03 17:04:20",
+           "user": "admin",
+           "id": "22658",
+           "message": "Update server odol-atsec-nyc-23.kbaletown.net status=REPORTED"
+        },
+     ],
+     "version": "1.1"
+    }
 
 |
 
 **GET /api/1.1/logs/:days/days.json**
 
-.. description
+  **Request Route Parameters**
 
+  +----------+----------+-----------------+
+  |   Name   | Required |   Description   |
+  +==========+==========+=================+
+  | ``days`` | yes      | Number of days. |
+  +----------+----------+-----------------+
 
-Authentication Required: Yes
+  **Response Properties**
 
-**Request Route Parameters**
+  +----------------------+--------+------------------------------------------------+
+  | Parameter            | Type   | Description                                    |
+  +======================+========+================================================+
+  |``ticketNum``         | string |                                                |
+  +----------------------+--------+------------------------------------------------+
+  |``level``             | string |                                                |
+  +----------------------+--------+------------------------------------------------+
+  |``lastUpdated``       | string |                                                |
+  +----------------------+--------+------------------------------------------------+
+  |``user``              | string |                                                |
+  +----------------------+--------+------------------------------------------------+
+  |``id``                | string |                                                |
+  +----------------------+--------+------------------------------------------------+
+  |``message``           | string |                                                |
+  +----------------------+--------+------------------------------------------------+
 
-+-----------------+----------+---------------------------------------------------+
-| Name            | Required | Description                                       |
-+=================+==========+===================================================+
-|days             | yes      | Number of days.                                   |
-+-----------------+----------+---------------------------------------------------+
+  **Response Example** ::
 
-Response Content Type: application/json
-
-**Response Messages**
-
-::
-
-
-  HTTP Status Code: 200
-  Reason: Success
-
-**Response Properties**
-
-+----------------------+--------+------------------------------------------------+
-| Parameter            | Type   | Description                                    |
-+======================+========+================================================+
-|``ticketNum``         | string |                                                |
-+----------------------+--------+------------------------------------------------+
-|``level``             | string |                                                |
-+----------------------+--------+------------------------------------------------+
-|``lastUpdated``       | string |                                                |
-+----------------------+--------+------------------------------------------------+
-|``user``              | string |                                                |
-+----------------------+--------+------------------------------------------------+
-|``id``                | string |                                                |
-+----------------------+--------+------------------------------------------------+
-|``message``           | string |                                                |
-+----------------------+--------+------------------------------------------------+
-
-**Response Example**
-
-
-::
-
-  {
-   "response": [
-      {
-         "ticketNum": null,
-         "level": "OPER",
-         "lastUpdated": "2015-02-04 22:59:13",
-         "user": "mtorlu9137e",
-         "id": "22661",
-         "message": "Snapshot CRConfig created."
-      },
-      {
-         "ticketNum": null,
-         "level": "APICHANGE",
-         "lastUpdated": "2015-02-03 17:04:20",
-         "user": "admin",
-         "id": "22658",
-         "message": "Update server odol-atsec-nyc-23.kabletown.net status=REPORTED"
-      }
-   ],
-   "version": "1.1"
-  }
+    {
+     "response": [
+        {
+           "ticketNum": null,
+           "level": "OPER",
+           "lastUpdated": "2015-02-04 22:59:13",
+           "user": "mtorlu9137e",
+           "id": "22661",
+           "message": "Snapshot CRConfig created."
+        },
+        {
+           "ticketNum": null,
+           "level": "APICHANGE",
+           "lastUpdated": "2015-02-03 17:04:20",
+           "user": "admin",
+           "id": "22658",
+           "message": "Update server odol-atsec-nyc-23.kabletown.net status=REPORTED"
+        }
+     ],
+     "version": "1.1"
+    }
 
 |
 
 **GET /api/1.1/logs/newcount.json**
 
-..  Description
+  **Response Properties**
 
-Authentication Required: Yes
-
-Response Content Type: application/json
-
-**Response Messages**
-
-::
+  +----------------------+--------+------------------------------------------------+
+  | Parameter            | Type   | Description                                    |
+  +======================+========+================================================+
+  |``newLogcount``       | string |                                                |
+  +----------------------+--------+------------------------------------------------+
 
 
-  HTTP Status Code: 200
-  Reason: Success
+  **Response Example** ::
 
-**Response Properties**
-
-+----------------------+--------+------------------------------------------------+
-| Parameter            | Type   | Description                                    |
-+======================+========+================================================+
-|``newLogcount``       | string |                                                |
-+----------------------+--------+------------------------------------------------+
-
-
-**Response Example**
-
-
-::
-
-  {
-   "response": {
-      "newLogcount": 0
-   },
-   "version": "1.1"
-  }
+    {
+     "response": {
+        "newLogcount": 0
+     },
+     "version": "1.1"
+    }
 

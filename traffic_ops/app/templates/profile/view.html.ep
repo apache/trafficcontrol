@@ -68,7 +68,11 @@ function deletefunction() {
 					<div id="parameter_link">
 					<br>
 					<br>
+					% if ($param_count > 0) {
 					<a href='/parameters/profile/<%= $profile->name %>' target='_parent'>Show profile parameters</a>
+					% } else {
+					<b>No parameters have been assigned to this profile.</b>
+					% }
 					<br>
 					<br>
 					</div>
@@ -76,7 +80,11 @@ function deletefunction() {
 				</form>
 				<div id="edit_profile_cancel"></div>
 				% if ($priv_level >= 20) {
+					% if ($param_count > 0) {
 				<button class="button" id="export_button" onclick="location.href='/profile/<%= $profile->id %>/export'">Export</button>
+					% } else {
+				<button class="disabled_button" type="submit" id="export_button" disabled>Export</button>
+					% }
                 <button class="button" onclick="comparefunction()">Compare</button>
                 <button class="button" id="delete_button" onclick="deletefunction()">Delete</button>
                 <button class="button" id="edit_button" style="margin-left:250px;" onclick="location.href='/profile/edit/<%= $profile->id %>'">Edit</button>

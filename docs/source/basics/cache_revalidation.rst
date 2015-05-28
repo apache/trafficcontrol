@@ -28,7 +28,7 @@ The `HTTP/1.1 spec <https://www.ietf.org/rfc/rfc2616.txt>`_ allows for origin se
   Server: Apache/2.2.15 (Red Hat)
   Last-Modified: Sun, 14 Dec 2014 23:18:51 GMT
   ETag: "1aa008f-2d-50a3559482cc0"
-  Cache-Control: max-age=604800
+  Cache-Control: max-age=86400
   Content-Length: 45
   Connection: close
   Content-Type: text/html; charset=UTF-8
