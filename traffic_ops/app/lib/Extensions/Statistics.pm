@@ -22,11 +22,19 @@ sub new {
 	return ( bless( $self, $class ) );
 }
 
-sub long_term {
-	return ( 1, "No Traffic Ops Extension implemented for 'Statistics->long_term()'" );
+sub v11_long_term {
+	return ( 1, "No Traffic Ops Extension implemented for 'Statistics->v11_long_term()'" );
 }
 
-sub short_term {
-	return ( 1, "No Traffic Ops Extension implemented for 'Statistics->short_term()'" );
+sub v11_short_term {
+	return ( 1, "No Traffic Ops Extension implemented for 'Statistics->v11_short_term()'" );
+}
+
+sub v12_long_term {
+	return ( 1, "No Traffic Ops Extension implemented for 'Statistics->v12_long_term()'" );
+}
+
+sub v12_short_term {
+	return ( 1, "No Traffic Ops Extension implemented for 'Statistics->v12_short_term()'" );
 }
 1;
