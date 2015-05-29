@@ -980,12 +980,12 @@ sub setup_mojo_plugins {
 
 	closedir(DIR);
 
-	my $registration_email_from = $config->{'portal'}{'registration_email_from'};
-	if ( defined($registration_email_from) ) {
+	my $to_email_from = $config->{'to'}{'email_from'};
+	if ( defined($to_email_from) ) {
 
 		$self->plugin(
 			mail => {
-				from => $registration_email_from,
+				from => $to_email_from,
 				type => 'text/html',
 			}
 		);
@@ -993,7 +993,7 @@ sub setup_mojo_plugins {
 		if ( $mode ne 'test' ) {
 
 			$self->app->log->info("...");
-			$self->app->log->info( "Registration Email From: " . $registration_email_from );
+			$self->app->log->info( "Traffic Ops Email From: " . $to_email_from );
 		}
 	}
 

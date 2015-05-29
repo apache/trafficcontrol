@@ -70,6 +70,7 @@ sub register {
 			my $token    = shift || confess("Please supply a GUID token");
 
 			my $portal_base_url = $self->config->{'portal'}{'base_url'};
+			my $portal_email_from = $self->config->{'portal'}{'email_from'};
 
 			$self->app->log->info( "MOJO_CONFIG: " . $ENV{MOJO_CONFIG} );
 			$self->app->log->info( "portal_base_url: " . $portal_base_url );
@@ -85,7 +86,11 @@ sub register {
 				->single();
 			$self->stash( tm_user => $tm_user, fbox_layout => 1, mode => 'add' );
 			if ( defined($email_to) ) {
-				$self->mail( subject => "Welcome to the " . $instance_name, to => $email_to, template => 'user/registration', format => 'mail' );
+                if ( defined($portal_email_from) ) {
+                    $self->mail( subject => "Welcome to the " . $instance_name, from => $portal_email_from, to => $email_to, template => 'user/registration', format => 'mail' );
+                } else {
+                    $self->mail( subject => "Welcome to the " . $instance_name, to => $email_to, template => 'user/registration', format => 'mail' );
+                }
 
 				my $email_notice = 'Successfully sent registration email to: ' . $email_to;
 				$self->app->log->info($email_notice);
