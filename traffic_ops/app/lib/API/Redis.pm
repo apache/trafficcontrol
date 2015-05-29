@@ -33,7 +33,7 @@ sub stats {
 	my $end_date   = $self->param('end_date');      # end time in secs since 1970, or "now" to get latest sample
 	my $interval   = $self->param('interval');      # the interval between the samples. 10 is minimum, has to be a multiple of 10
 
-	my $j = $self->get_stats( $match, $start_date, $end_date, $interval );
+	my $j = $self->v11_get_stats( $match, $start_date, $end_date, $interval );
 	$self->render( json => $j );
 }
 

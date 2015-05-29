@@ -23,6 +23,7 @@ use Data::Dumper;
 use Utils::Helper::DateHelper;
 use JSON;
 use HTTP::Date;
+use Common::ReturnCodes qw(SUCCESS ERROR);
 
 sub register {
 	my ( $self, $app, $conf ) = @_;

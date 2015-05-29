@@ -986,10 +986,9 @@ sub setup_mojo_plugins {
 	);
 
 	# Custom TO Plugins
+	my $pwd     = cwd();
+	my $dir     = "$pwd/lib/MojoPlugins";
 	my $plugins = Mojolicious::Plugins->new;
-
-	my $pwd = cwd();
-	my $dir = "$pwd/lib/MojoPlugins";
 
 	my @file_list;
 	find(

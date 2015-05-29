@@ -1,4 +1,4 @@
-package Extensions::CustomDatasourceList;
+package Extensions::Statistics;
 #
 # Copyright 2015 Comcast Cable Communications Management, LLC
 #
@@ -13,16 +13,6 @@ package Extensions::CustomDatasourceList;
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-#
-#
-#
-
-#
-# To add a data source extension:
-#
-## Start Extensions List .pm Anchor ## DO NOT REMOVE OR CHANGE THIS LINE
-use Extensions::DATASOURCE_STUB;
-## End Extensions List .pm Anchor ## DO NOT REMOVE OR CHANGE THIS LINE
 
 sub new {
 	my $self  = {};
@@ -32,15 +22,11 @@ sub new {
 	return ( bless( $self, $class ) );
 }
 
-# Note: Should we create a dispatch table here?
-sub hash_ref {
-	my $ext_hash_ref = {
-## Start Extensions List hash Anchor ## DO NOT REMOVE OR CHANGE THIS LINE
-		'stats_long_term' => 'Extensions::DATASOURCE_STUB::stats_long_term',
-		'get_config'      => 'Extensions::DATASOURCE_STUB::get_config',
-## End Extensions List hash Anchor ## DO NOT REMOVE OR CHANGE THIS LINE
-	};
+sub long_term {
+	return ( 1, "No Traffic Ops Extension implemented for 'Statistics->long_term()'" );
+}
 
-	return $ext_hash_ref;
+sub short_term {
+	return ( 1, "No Traffic Ops Extension implemented for 'Statistics->short_term()'" );
 }
 1;

@@ -62,8 +62,8 @@ sub usage_overview {
 	}
 
 	for my $cdn_name ( keys( %{$cdn_list} ) ) {
-		my $tps  = $self->get_stats( $cdn_name . ":" . $match_tps,  "now", "now", $interval );
-		my $kbps = $self->get_stats( $cdn_name . ":" . $match_kbps, "now", "now", $interval );
+		my $tps  = $self->v11_get_stats( $cdn_name . ":" . $match_tps,  "now", "now", $interval );
+		my $kbps = $self->v11_get_stats( $cdn_name . ":" . $match_kbps, "now", "now", $interval );
 
 		$stats->{tps} += $tps->{series}->[0]->{samples}->[0];
 		$stats->{currentGbps} += $kbps->{series}->[0]->{samples}->[0] / 1000 / 1000;
@@ -721,7 +721,7 @@ sub stats {
 	my $end      = $self->param('end');         # end time in secs since 1970, or "now" to get latest sample
 	my $interval = $self->param('interval');    # the interval between the samples. 10 is minimum, has to be a multiple of 10
 
-	my $j = $self->get_stats( $match, $start, $end, $interval );
+	my $j = $self->v11_get_stats( $match, $start, $end, $interval );
 	$self->render( json => $j );
 }
 

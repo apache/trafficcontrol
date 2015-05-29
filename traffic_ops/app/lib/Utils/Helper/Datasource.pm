@@ -22,6 +22,7 @@ use JSON;
 use Data::Dumper;
 use Utils::Helper;
 use Mojo::UserAgent;
+use File::Find;
 
 our @ISA = ("Utils::Helper");    # inherit our constructor and mojo methods
 
@@ -282,28 +283,28 @@ sub load_extensions {
 	my $module;
 	my $to_ext_lib_env = $ENV{"TO_EXTENSIONS_LIB"};
 	if ( defined($to_ext_lib_env) ) {
-		my $to_ext_lib = join( "/", $to_ext_lib_env, "Extensions" );
-		print "Using extensions library path: " . $to_ext_lib . "\n";
-		opendir( DIR, $to_ext_lib ) or die $!;
+		if ( -e $to_ext_lib_env ) {
+			print "Using Extensions library path: " . $to_ext_lib_env . "\n";
+			my @file_list;
+			find(
+				sub {
+					return unless -f;         #Must be a file
+					return unless /\.pm$/;    #Must end with `.pl` suffix
+					push @file_list, $File::Find::name;
+				},
+				$to_ext_lib_env
+			);
 
-		while ( my $file = readdir(DIR) ) {
-			next if ( $file =~ m/^\./ );
-			print "file #-> (" . $file . ")\n";
-			( my $file_without_extension = $file ) =~ s/\.[^.]+$//;
-			my $package = "Extensions::" . $file_without_extension;
+			#print join "\n", @file_list;
+			foreach my $file (@file_list) {
+				open my $fn, '<', $file;
+				my $first_line = <$fn>;
+				my ( $package_keyword, $package_name ) = ( $first_line =~ m/(package )(.*);/ );
+				close $fn;
 
-			#print "Loading package #-> (" . $package . ")\n";
-			my $loaded = check_is_loaded($package);
-			print "loaded? " . $loaded . "\n";
-			if ( !$loaded ) {
-				print "Loading: $package\n";
-				eval $package;
-			}
-			else {
-				print "Loading: " . $package . ", skipping already loaded.\n";
+				#print "package_name #-> (" . $package_name . ")\n";
 			}
 		}
-		closedir(DIR);
 	}
 }
 
