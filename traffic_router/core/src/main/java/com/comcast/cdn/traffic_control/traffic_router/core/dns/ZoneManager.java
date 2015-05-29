@@ -72,8 +72,8 @@ public class ZoneManager extends Resolver {
 	private final StatTracker statTracker;
 
 	public ZoneManager(final TrafficRouter tr, final StatTracker statTracker, final String drn, final String hrn) throws IOException {
-		dnsRoutingName = drn;
-		httpRoutingName = hrn;
+		dnsRoutingName = drn.toLowerCase();
+		httpRoutingName = hrn.toLowerCase();
 
 		_zones = generateZones(tr.getCacheRegister());
 		try {
@@ -404,7 +404,7 @@ public class ZoneManager extends Resolver {
 			return staticZone; 
 		}
 		final String requestName = name.relativize(Name.root).toString();
-		if(!requestName.matches(dnsRoutingName + "\\..*")) {
+		if(!requestName.toLowerCase().matches(getDnsRoutingName() + "\\..*")) {
 			return staticZone;
 		}
 		final DNSRequest request = new DNSRequest();
@@ -550,8 +550,8 @@ public class ZoneManager extends Resolver {
 				return zone;
 			}
 			final Zone dynamicZone = createDynamicZone(zone, qname, qtype, clientAddress);
-			if (dynamicZone != null) { 
-				return dynamicZone; 
+			if (dynamicZone != null) {
+				return dynamicZone;
 			}
 		}
 		return zone;
