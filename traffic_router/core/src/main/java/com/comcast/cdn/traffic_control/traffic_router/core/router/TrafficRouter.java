@@ -282,10 +282,6 @@ public class TrafficRouter {
 			return ds.getFailureDnsResponse(request, track);
 		}
 
-		if (!ds.isIp6RoutingEnabled() && (request.getQtype() == Type.AAAA || request.getQtype() == Type.A6)) {
-			return null;
-		}
-
 		final List<Cache> caches = selectCache(request, ds, track, false);
 		if(caches == null) {
 			return ds.getFailureDnsResponse(request, track);
@@ -298,7 +294,7 @@ public class TrafficRouter {
 			if(maxDnsIps!=0 && i >= maxDnsIps) { break; }
 			i++;
 			addresses.addAll(
-					cache.getIpAddresses(ds.getTtls(), zoneManager)
+					cache.getIpAddresses(ds.getTtls(), zoneManager, ds.isIp6RoutingEnabled())
 				);
 		}
 		return addresses;

@@ -550,8 +550,8 @@ public class ZoneManager extends Resolver {
 				return zone;
 			}
 			final Zone dynamicZone = createDynamicZone(zone, qname, qtype, clientAddress);
-			if (dynamicZone != null) { 
-				return dynamicZone; 
+			if (dynamicZone != null) {
+				return dynamicZone;
 			}
 		}
 		return zone;
