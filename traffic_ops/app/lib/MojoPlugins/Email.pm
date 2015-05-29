@@ -85,7 +85,7 @@ sub register {
 				$self->db->resultset('Parameter')->search( { -and => [ name => 'tm.instance_name', config_file => 'global' ] } )->get_column('value')
 				->single();
 			$self->stash( tm_user => $tm_user, fbox_layout => 1, mode => 'add' );
-			if ( defined($email_to) ) {
+            if ( defined($email_to) ) {
                 if ( defined($portal_email_from) ) {
                     $self->mail( subject => "Welcome to the " . $instance_name, from => $portal_email_from, to => $email_to, template => 'user/registration', format => 'mail' );
                 } else {
