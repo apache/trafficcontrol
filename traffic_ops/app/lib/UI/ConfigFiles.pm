@@ -355,7 +355,7 @@ sub parent_data {
 	my $server_domain = $param->parameter->value;
 
 	my $rs_parent = $self->db->resultset('Server')->search(
-		{ cachegroup => $parent_cachegroup_id, 'me.type' => $mtype, status => { -in => [ $online, $reported ] } },
+		{ cachegroup => $parent_cachegroup_id, status => { -in => [ $online, $reported ] } },
 		{ prefetch => [ { cachegroup => undef }, { status => undef }, { type => undef }, { profile => undef } ] }
 	);
 
@@ -366,6 +366,7 @@ sub parent_data {
 		# get the profile info, and cache it in %profile_cache
 		my $ds_domain = undef;
 		my $weight    = undef;
+		my $port      = undef;
 		my $pid       = $row->profile->id;
 		if ( !defined( $profile_cache{$pid} ) ) {
 			my $param =
@@ -380,14 +381,21 @@ sub parent_data {
 				{ prefetch => [ 'parameter', 'profile' ] } )->single();
 			$weight = defined($param) ? $param->parameter->value : "0.999";
 			$profile_cache{$pid}->{weight} = $weight;
+			$param =
+				$self->db->resultset('ProfileParameter')
+				->search( { -and => [ profile => $pid, 'parameter.config_file' => 'parent.config', 'parameter.name' => 'port' ] },
+				{ prefetch => [ 'parameter', 'profile' ] } )->single();
+			$port = defined($param) ? $param->parameter->value : undef;
+			$profile_cache{$pid}->{port} = $port;
 		}
 		else {
 			$ds_domain = $profile_cache{$pid}->{domain_name};
 			$weight    = $profile_cache{$pid}->{weight};
+			$port      = $profile_cache{$pid}->{port};
 		}
 		if ( defined($ds_domain) && defined($server_domain) && $ds_domain eq $server_domain ) {
 			$pinfo->{"plist"}->[$i]->{"host_name"}   = $row->host_name;
-			$pinfo->{"plist"}->[$i]->{"port"}        = $row->tcp_port;
+			$pinfo->{"plist"}->[$i]->{"port"}        = defined($port) ? $port : $row->tcp_port;
 			$pinfo->{"plist"}->[$i]->{"domain_name"} = $row->domain_name;
 			$pinfo->{"plist"}->[$i]->{"weight"}      = $weight;
 			$i++;
@@ -1075,8 +1083,7 @@ sub regex_revalidate_dot_config {
 		while ( my $dsrow = $rs->next ) {
 			my $ds_cdn_domain = $self->db->resultset('Parameter')->search(
 				{ -and => [ 'me.name' => 'domain_name', 'deliveryservices.id' => $dsrow->id ] },
-				{
-					join     => { profile_parameters => { profile => { deliveryservices => undef } } },
+				{   join     => { profile_parameters => { profile => { deliveryservices => undef } } },
 					distinct => 1
 				}
 			)->get_column('value')->single();
