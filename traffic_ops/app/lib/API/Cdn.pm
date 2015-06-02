@@ -823,69 +823,10 @@ sub dnssec_keys {
 		$new_keys{$cdn_name} = $keys->{$cdn_name};
 		my $z_update = 0;
 		my $k_update = 0;
-		# my $existing_ksk;
-		# my $existing_zsk;
-
-		#loop through keys to check for expired, then loop through DSs to make sure they all exist.
-		#for each key, check expiry, re-add with new keys, if not expired re-add what is already there.
-		#always re-add all keys
-		##5/26/2015 - Don't auto-update TLD keys. 
-		
-		# foreach my $k ( sort keys %{$keys} ) {
-			# my $ksk = $keys->{$k}->{ksk};
-			# foreach my $krecord (@$ksk) {
-			# 	my $kstatus = $krecord->{status}; 				
-			# 	if ($kstatus eq 'new') {
-			# 		$existing_ksk = $krecord;
-			# 	} 
-			# my $zsk = $keys->{$k}->{zsk};
-			# foreach my $zrecord (@$zsk) {
-			# 	my $zstatus = $zrecord->{status}; 
-			# 	if ($zstatus eq 'new') {
-			# 		$existing_zsk = $zrecord;
-			# 	} 						
-			# my $k_expiration = $existing_ksk->{expirationDate};
-
-			# #check if expired
-			# if ( $k_expiration < time() ) {
-
-			# 	#if expired create new keys
-			# 	$self->app->log->info("The KSK keys for $k are expired!");
-			# 	my $new_dnssec_keys = $self->regen_expired_keys( "ksk", $k, $keys );
-			# 	$new_keys{$k} = [$existing_ksk, $new_dnssec_keys];
-			# 	$k_update = 1;
-			# }
-
-			# #check zsks
-			# my $z_expiration = $keys->{$k}->{zsk}->{expirationDate};
-
-			# #check if expired
-			# if ( $z_expiration < time() ) {
-
-			# 	#if expired create new keys
-			# 	$self->app->log->info("The ZSK keys for $k are expired!");
-			# 	my $new_dnssec_keys = $self->regen_expired_keys( "zsk", $k, $keys );
-			# 	$new_keys{$k} = $new_dnssec_keys;
-			# 	$z_update = 1;
-			# }
-
-			#if not expired write existing key
-			# if ( $z_update == 0 && $k_update == 0 ) {
-				# $new_keys{$k} = $keys->{$k};
-			# }
-
-			#else update the param with current time stamp
-			# else {
-			# 	my $param_update = $self->db->resultset('Parameter')->find( { name => $key . ".dnssec.inception" } );
-			# 	$param_update->value( time() );
-			# 	$param_update->update();
-			# }
-		# }
 
 		#get default expiration days and ttl for DSs from CDN record
 		my $default_k_exp_days = "365";
 		my $default_z_exp_days = "30";
-		my $default_ttl = "60";
 		
 		my $cdn_ksk = $keys->{$cdn_name}->{ksk};
 		foreach my $cdn_krecord (@$cdn_ksk) {
@@ -910,15 +851,37 @@ sub dnssec_keys {
 		my %search     = ( profile => $profile_id );
 		my @ds_rs      = $self->db->resultset('Deliveryservice')->search( \%search );
 		foreach my $ds (@ds_rs) {
-
+			#get DNSKEY ttl for TLD
+			my $dnsskey_gen_multiplier;
+			my $dnsskey_ttl;
+			my $ds_profile = $ds->profile->name;
+			my %condition = ( 'parameter.name' => 'tld.ttls.DNSKEY', 'profile.name' => $ds_profile);
+			my $rs_pp = $self->db->resultset('ProfileParameter')->search( \%condition, { prefetch => [ { 'parameter' => undef }, { 'profile' => undef } ] } )->single;
+			if ($rs_pp) {
+		 		$dnsskey_ttl = $rs_pp->parameter->value;
+		 	}
+		 	else {
+		 		$dnsskey_ttl = '60';	
+		 	}
+		 	$self->app->log->debug("dnsskey_ttl = $dnsskey_ttl");
+		 	my %condition = ( 'parameter.name' => 'DNSKEY.generation.multiplier', 'profile.name' => $ds_profile);
+			$rs_pp = $self->db->resultset('ProfileParameter')->search( \%condition, { prefetch => [ { 'parameter' => undef }, { 'profile' => undef } ] } )->single;
+		 	if ($rs_pp) {
+		 		 $dnsskey_gen_multiplier = $rs_pp->parameter->value;
+		 	}
+		 	else {
+		 		 $dnsskey_gen_multiplier = '10';
+		 	}
+		 	$self->app->log->debug("dnsskey_gen_multiplier = $dnsskey_gen_multiplier");
+		 	my $key_expiration = time() - ($dnsskey_ttl * $dnsskey_gen_multiplier);
+		 	$self->app->log->debug("key_expiration = $key_expiration");
 			#check if keys exist for ds
 			my $xml_id  = $ds->xml_id;
 			my $ds_keys = $keys->{$xml_id};
 			if ( !$ds_keys ) {
-				$self->app->log->info("Keys do not exist for ds $xml_id");
 				#create keys
+				$self->app->log->info("Keys do not exist for ds $xml_id");
 				my $ds_id = $ds->id;
-
 				#create the ds domain name for dnssec keys
 				my $domain_name = UI::DeliveryService::get_cdn_domain( $self, $ds_id );
 				my $ds_regexes = UI::DeliveryService::get_regexp_set( $self, $ds_id );
@@ -926,7 +889,6 @@ sub dnssec_keys {
 					->search( { 'me.xml_id' => $xml_id }, { prefetch => [ { 'type' => undef }, { 'profile' => undef } ] } );
 				my $data = $rs_ds->single;
 				my @example_urls = UI::DeliveryService::get_example_urls( $self, $ds_id, $ds_regexes, $data, $domain_name, $data->protocol );
-
 				#first one is the one we want.  period at end for dnssec, substring off stuff we dont want
 				my $ds_name = $example_urls[0] . ".";
 				my $length = length($ds_name) - index( $ds_name, "." );
@@ -936,8 +898,8 @@ sub dnssec_keys {
 				my $z_expiration = $inception + ( 86400 * $default_z_exp_days );
 				my $k_expiration = $inception + ( 86400 * $default_k_exp_days );
 
-				my $zsk = $self->get_dnssec_keys( "zsk", $ds_name, $default_ttl, $inception, $z_expiration, "new" );
-				my $ksk = $self->get_dnssec_keys( "ksk", $ds_name, $default_ttl, $inception, $k_expiration, "new" );
+				my $zsk = $self->get_dnssec_keys( "zsk", $ds_name, $dnsskey_ttl, $inception, $z_expiration, "new" );
+				my $ksk = $self->get_dnssec_keys( "ksk", $ds_name, $dnsskey_ttl, $inception, $k_expiration, "new" );
 
 				#add to keys hash
 				$new_keys{$xml_id} = { zsk => [$zsk], ksk => [$ksk] };
@@ -954,7 +916,7 @@ sub dnssec_keys {
 					my $kstatus = $krecord->{status}; 				
 					if ($kstatus eq 'new') { #ignore anything other than the 'new' record
 					#check if expired
-						if ( $krecord->{expirationDate} < time() ) {
+						if ( $krecord->{expirationDate} < $key_expiration ) {
 						#if expired create new keys
 							$self->app->log->info("The KSK keys for $xml_id are expired!");
 							my $new_dnssec_keys = $self->regen_expired_keys( "ksk", $xml_id, $keys );
@@ -967,7 +929,7 @@ sub dnssec_keys {
 				foreach my $zrecord (@$zsk) {
 					my $zstatus = $zrecord->{status}; 
 					if ($zstatus eq 'new') {
-						if ( $zrecord->{expirationDate} < time() ) {
+						if ( $zrecord->{expirationDate} < $key_expiration ) {
 						#if expired create new keys
 							$self->app->log->info("The ZSK keys for $xml_id are expired!");
 							my $new_dnssec_keys = $self->regen_expired_keys( "zsk", $xml_id, $keys );
