@@ -343,7 +343,6 @@ sub parent_data {
 	my $pinfo;
 	my $parent_cachegroup_id = $self->db->resultset('Cachegroup')->search( { id => $server->cachegroup->id } )->get_column('parent_cachegroup_id')->single;
 
-	my $mtype = &type_id( $self, "MID" );
 	my $online   = &admin_status_id( $self, "ONLINE" );
 	my $reported = &admin_status_id( $self, "REPORTED" );
 
