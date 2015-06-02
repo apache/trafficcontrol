@@ -864,7 +864,7 @@ sub dnssec_keys {
 		 		$dnsskey_ttl = '60';	
 		 	}
 		 	$self->app->log->debug("dnsskey_ttl = $dnsskey_ttl");
-		 	my %condition = ( 'parameter.name' => 'DNSKEY.generation.multiplier', 'profile.name' => $ds_profile);
+		 	%condition = ( 'parameter.name' => 'DNSKEY.generation.multiplier', 'profile.name' => $ds_profile);
 			$rs_pp = $self->db->resultset('ProfileParameter')->search( \%condition, { prefetch => [ { 'parameter' => undef }, { 'profile' => undef } ] } )->single;
 		 	if ($rs_pp) {
 		 		 $dnsskey_gen_multiplier = $rs_pp->parameter->value;
@@ -1027,8 +1027,12 @@ sub dnssec_keys_generate {
 		my $ttl        = $self->req->json->{ttl};
 		my $k_exp_days = $self->req->json->{kskExpirationDays};
 		my $z_exp_days = $self->req->json->{zskExpirationDays};
-
-		my $res      = $self->generate_store_dnssec_keys( $key, $name, $ttl, $k_exp_days, $z_exp_days );
+		my $effectiveDate = $self->req->json->{effectiveDate};
+		if (!defined($effectiveDate)) {
+			$effectiveDate = time();
+		}
+		$self->app->log->debug("effectiveDate = $effectiveDate");
+		my $res      = $self->generate_store_dnssec_keys( $key, $name, $ttl, $k_exp_days, $z_exp_days, $effectiveDate );
 		my $response = $res->{response};
 		my $rc       = $response->{_rc};
 		if ( $rc eq "204" ) {

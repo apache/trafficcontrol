@@ -50,6 +50,10 @@ sub create {
 	my $ttl      = $self->param('dnssec.ttl');
 	my $z_expiry = $self->param('dnssec.z_expiry');
 	my $k_expiry = $self->param('dnssec.k_expiry');
+	my $effective_date = $self->param('dnssec.effective_date');
+	if (!defined($effective_date)) {
+		$effective_date = time();
+	}
 	&stash_role($self);
 
 	if ( !&is_admin($self) ) {
@@ -91,7 +95,7 @@ sub create {
 		my $response_container = $self->riak_ping();
 		my $ping_response      = $response_container->{response};
 		if ( $ping_response->is_success ) {
-			my $response_container = $self->generate_store_dnssec_keys( $cdn_name, $name, $ttl, $k_expiry, $z_expiry );
+			my $response_container = $self->generate_store_dnssec_keys( $cdn_name, $name, $ttl, $k_expiry, $z_expiry, $effective_date );
 			my $response = $response_container->{response};
 			if ( $response->is_success ) {
 				&log( $self, "Created dnssec keys for CDN $cdn_name", "UICHANGE" );
