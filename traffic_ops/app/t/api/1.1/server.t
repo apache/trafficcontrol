@@ -41,31 +41,31 @@ ok $t->post_ok( '/login', => form => { u => Test::TestHelper::ADMIN_USER, p => T
 
 #/api/1.1/server/hostname/odol-atsec-alb-01/details.json
 $t->get_ok('/api/1.1/servers.json?orderby=id')->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } )
-	->json_is( "/response/1/status", "ONLINE" )->json_is( "/response/1/ipGateway", "127.0.0.2" )->json_is( "/response/1/ip6Gateway", "127.0.0.2" )
+	->json_is( "/response/1/status", "ONLINE" )->json_is( "/response/1/ipGateway", "127.0.0.2" )->json_is( "/response/1/ip6Gateway", "2345:1234:12:9::1" )
 	->json_is( "/response/1/tcpPort", "80" )->json_is( "/response/1/cachegroup", "mid-northeast-group" )
 	->json_is( "/response/1/hostName", "atlanta-mid-01" )->json_is( "/response/1/domainName", "ga.atlanta.kabletown.net" )
 	->json_is( "/response/1/ipAddress", "127.0.0.2" )->json_is( "/response/1/profile", "MID1" )->json_is( "/response/1/type", "MID" )
 	->json_is( "/response/1/physLocation", "Denver" )->json_is( "/response/1/interfaceName", "bond0" )->json_is( "/response/1/interfaceMtu", "9000" )
 
-	->json_is( "/response/2/status", "ONLINE" )->json_is( "/response/2/ipGateway", "127.0.0.3" )->json_is( "/response/2/ip6Gateway", "127.0.0.3" )
+	->json_is( "/response/2/status", "ONLINE" )->json_is( "/response/2/ipGateway", "127.0.0.3" )->json_is( "/response/2/ip6Gateway", "2345:1234:12:a::1" )
 	->json_is( "/response/2/tcpPort", "6379" )->json_is( "/response/2/cachegroup", "mid-northeast-group" )->json_is( "/response/2/hostName", "redis01" )
 	->json_is( "/response/2/domainName", "kabletown.net" )->json_is( "/response/2/ipAddress", "127.0.0.3" )->json_is( "/response/2/profile", "REDIS1" )
 	->json_is( "/response/2/type", "REDIS" )->json_is( "/response/2/physLocation", "Denver" )->json_is( "/response/2/interfaceName", "bond0" )
 	->json_is( "/response/2/interfaceMtu", "9000" )
 
-	->json_is( "/response/3/status", "ONLINE" )->json_is( "/response/3/ipGateway", "127.0.0.4" )->json_is( "/response/3/ip6Gateway", "127.0.0.4" )
+	->json_is( "/response/3/status", "ONLINE" )->json_is( "/response/3/ipGateway", "127.0.0.4" )->json_is( "/response/3/ip6Gateway", "2345:1234:12:b::1" )
 	->json_is( "/response/3/tcpPort", "81" )->json_is( "/response/3/cachegroup", "mid-northeast-group" )->json_is( "/response/3/hostName", "rascal01" )
 	->json_is( "/response/3/domainName", "kabletown.net" )->json_is( "/response/3/ipAddress", "127.0.0.4" )->json_is( "/response/3/profile", "RASCAL1" )
 	->json_is( "/response/3/type", "RASCAL" )->json_is( "/response/3/physLocation", "Denver" )->json_is( "/response/3/interfaceName", "bond0" )
 	->json_is( "/response/3/interfaceMtu", "9000" )
 
-	->json_is( "/response/5/status", "ONLINE" )->json_is( "/response/5/ipGateway", "127.0.0.6" )->json_is( "/response/5/ip6Gateway", "127.0.0.6" )
+	->json_is( "/response/5/status", "ONLINE" )->json_is( "/response/5/ipGateway", "127.0.0.6" )->json_is( "/response/5/ip6Gateway", "2345:1234:12:c::1" )
 	->json_is( "/response/5/tcpPort", "81" )->json_is( "/response/5/cachegroup", "mid-northeast-group" )->json_is( "/response/5/hostName", "rascal02" )
 	->json_is( "/response/5/domainName", "kabletown.net" )->json_is( "/response/5/ipAddress", "127.0.0.6" )->json_is( "/response/5/profile", "RASCAL2" )
 	->json_is( "/response/5/type", "RASCAL" )->json_is( "/response/5/physLocation", "Denver" )->json_is( "/response/5/interfaceName", "bond0" )
 	->json_is( "/response/5/interfaceMtu", "9000" )
 
-	->json_is( "/response/8/status", "ONLINE" )->json_is( "/response/8/ipGateway", "127.0.0.9" )->json_is( "/response/8/ip6Gateway", "127.0.0.9" )
+	->json_is( "/response/8/status", "ONLINE" )->json_is( "/response/8/ipGateway", "127.0.0.9" )->json_is( "/response/8/ip6Gateway", "2345:1234:12:f::1" )
 	->json_is( "/response/8/tcpPort", "8088" )->json_is( "/response/8/cachegroup", "mid-northeast-group" )->json_is( "/response/8/hostName", "riak02" )
 	->json_is( "/response/8/domainName", "kabletown.net" )->json_is( "/response/8/ipAddress", "127.0.0.9" )->json_is( "/response/8/profile", "RIAK1" )
 	->json_is( "/response/8/type", "RIAK" )->json_is( "/response/8/physLocation", "Denver" )->json_is( "/response/8/interfaceName", "eth1" )

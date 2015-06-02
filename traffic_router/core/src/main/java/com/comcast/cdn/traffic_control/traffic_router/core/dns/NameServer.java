@@ -29,7 +29,6 @@ import org.xbill.DNS.OPTRecord;
 import org.xbill.DNS.RRset;
 import org.xbill.DNS.Rcode;
 import org.xbill.DNS.Record;
-import org.xbill.DNS.SOARecord;
 import org.xbill.DNS.Section;
 import org.xbill.DNS.SetResponse;
 import org.xbill.DNS.Zone;
@@ -135,18 +134,32 @@ public class NameServer {
 		if (iteration > MAX_ITERATIONS) {
 			return;
 		}
+
 		final SetResponse sr = zone.findRecords(qname, qtype);
+
 		if (sr.isSuccessful()) {
 			final RRset[] answers = sr.answers();
+
 			for (final RRset answer : answers) {
 				addRRset(qname, response, answer, Section.ANSWER);
 			}
+
 			addAuthority(zone, response);
 		} else if (sr.isNXDOMAIN()) {
 			response.getHeader().setRcode(Rcode.NXDOMAIN);
-			final SOARecord authority = zone.getSOA();
-			response.addRecord(authority, Section.AUTHORITY);
-	///			addAuthority(zone, response);
+			response.addRecord(zone.getSOA(), Section.AUTHORITY);
+		} else if (sr.isNXRRSET()) {
+			/*
+			 * Per RFC 2308 NODATA is inferred by having no records;
+			 * NXRRSET is discussed in RFC 2136, but that RFC is for Dynamic DNS updates.
+			 * We'll ignore the NXRRSET from the API, and allow the client resolver to
+			 * deal with NODATA per RFC 2308:
+			 *   "NODATA" - a pseudo RCODE which indicates that the name is valid, for
+			 *   the given class, but are no records of the given type.
+			 *   A NODATA response has to be inferred from the answer.
+			 */
+
+			response.addRecord(zone.getSOA(), Section.AUTHORITY);
 		} else if (sr.isCNAME()) {
 			final CNAMERecord cname = sr.getCNAME();
 			final RRset cnameSet = new RRset(cname);

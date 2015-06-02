@@ -102,7 +102,6 @@ sub register {
 					$config->{fixup}->($data);
 				}
 
-				$helper->remove_empty_series($data);
 				$helper->pad_and_fill_holes( $data, $start, $end, $config->{interval} );
 				$helper->calculate_stats( $data, $stats_only, $data_only );
 				if (@$data) {
