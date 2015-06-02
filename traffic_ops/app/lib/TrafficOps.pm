@@ -364,7 +364,7 @@ sub startup {
 
 	# -- Profile
 	$r->get('/profile/add')->over( authenticated => 1 )->to( 'Profile#add', namespace => 'UI' );
-	$r->get('/profile/id/edit')->over( authenticated => 1 )->to( 'Profile#edit', namespace => 'UI' );
+	$r->get('/profile/edit/:id')->over( authenticated => 1 )->to( 'Profile#edit', namespace => 'UI' );
 	$r->route('/profile/:id/view')->via('GET')->over( authenticated => 1 )->to( 'Profile#view', namespace => 'UI' );
 	$r->route('/cmpprofile/:profile1/:profile2')->via('GET')->over( authenticated => 1 )->to( 'Profile#compareprofile', namespace => 'UI' );
 	$r->route('/cmpprofile/aadata/:profile1/:profile2')->via('GET')->over( authenticated => 1 )->to( 'Profile#acompareprofile', namespace => 'UI' );
