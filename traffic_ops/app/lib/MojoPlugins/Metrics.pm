@@ -25,6 +25,7 @@ use POSIX qw(strftime);
 use Common::RedisFactory;
 use Redis;
 use Env;
+use Extensions::DatasourceList;
 
 sub register {
 	my ( $self, $app, $conf ) = @_;
@@ -52,7 +53,6 @@ sub register {
 
 			my $redis_connection_string = $self->redis_connection_string();
 
-			#TODO: drichardson - research error handling
 			my $rm = Common::RedisFactory->new( $self, $redis_connection_string );
 			return $rm->connection();
 		}
@@ -61,12 +61,12 @@ sub register {
 	$app->renderer->add_helper(
 		etl_metrics => sub {
 			my $self       = shift;
-			my $metric     = $self->param(" metric ");
-			my $start      = $self->param(" start ");         # start time in secs since 1970
-			my $end        = $self->param(" end ");           # end time in secs since 1970
-			my $stats_only = $self->param(" stats ") || 0;    # stats only
-			my $data_only  = $self->param(" data ") || 0;     # data only
-			my $type       = $self->param(" type ");
+			my $metric     = $self->param("metric");
+			my $start      = $self->param("start");         # start time in secs since 1970
+			my $end        = $self->param("end");           # end time in secs since 1970
+			my $stats_only = $self->param("stats") || 0;    # stats only
+			my $data_only  = $self->param("data") || 0;     # data only
+			my $type       = $self->param("type");
 
 			my $config = $self->get_config($metric);
 			if ( defined($config) ) {
@@ -124,20 +124,20 @@ sub get_zero_values {
 	my $data_only  = shift;
 
 	my $response = ();
-	$response->{" stats "}{" 95 thPercentile "} = 0;
-	$response->{" stats "}{" 98 thPercentile "} = 0;
-	$response->{" stats "}{" 5 thPercentile "}  = 0;
-	$response->{" stats "}{" mean "}            = 0;
-	$response->{" stats "}{" count "}           = 0;
-	$response->{" stats "}{" min "}             = 0;
-	$response->{" stats "}{" max "}             = 0;
-	$response->{" stats "}{" sum "}             = 0;
-	$response->{" data "}                       = [];
+	$response->{"stats"}{"95thPercentile"} = 0;
+	$response->{"stats"}{"98thPercentile"} = 0;
+	$response->{"stats"}{"5thPercentile"}  = 0;
+	$response->{"stats"}{"mean"}           = 0;
+	$response->{"stats"}{"count"}          = 0;
+	$response->{"stats"}{"min"}            = 0;
+	$response->{"stats"}{"max"}            = 0;
+	$response->{"stats"}{"sum"}            = 0;
+	$response->{"data"}                    = [];
 	if ($stats_only) {
-		delete( $response->{" data "} );
+		delete( $response->{"data"} );
 	}
 	elsif ($data_only) {
-		delete( $response->{" stats "} );
+		delete( $response->{"stats"} );
 	}
 	return [$response];
 }

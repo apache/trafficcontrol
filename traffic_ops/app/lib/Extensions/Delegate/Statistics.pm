@@ -1,4 +1,4 @@
-package Extensions::Statistics;
+package Extensions::Delegate::Statistics;
 #
 # Copyright 2015 Comcast Cable Communications Management, LLC
 #
@@ -22,19 +22,15 @@ sub new {
 	return ( bless( $self, $class ) );
 }
 
-sub v11_long_term {
-	return ( 1, "No Traffic Ops Extension implemented for 'Statistics->v11_long_term()'" );
+sub long_term {
+	return ( 1, "No Traffic Ops Extension implemented for 'Statistics->long_term()'" );
 }
 
-sub v11_short_term {
-	return ( 1, "No Traffic Ops Extension implemented for 'Statistics->v11_short_term()'" );
+sub short_term_redis {
+	return ( 1, "No Traffic Ops Extension implemented for 'Statistics->short_term()'" );
 }
 
-sub v12_long_term {
-	return ( 1, "No Traffic Ops Extension implemented for 'Statistics->v12_long_term()'" );
-}
-
-sub v12_short_term {
-	return ( 1, "No Traffic Ops Extension implemented for 'Statistics->v12_short_term()'" );
+sub short_term {
+	return ( 1, "No Traffic Ops Extension implemented for 'Statistics->short_term()'" );
 }
 1;

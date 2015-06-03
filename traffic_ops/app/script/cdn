@@ -19,7 +19,6 @@ if (defined($to_ext_lib)){
 	print "\nWARNING TO_EXTENSIONS_LIB environment variable is defined as $to_ext_lib but does not exist.\n\n";
   }
 }
-#print Dumper(@INC);
 # Start commands for application
 require Mojolicious::Commands;
-Mojolicious::Commands->start_app('TrafficOps');
+Mojolicious::Commands->start_app('TrafficOps', '-w /tmp');

@@ -24,9 +24,13 @@ use Builder::InfluxdbBuilder;
 use Data::Dumper;
 use Builder::DeliveryServiceStatsBuilder;
 use JSON;
-my $builder;
+use HTTP::Date;
+use Extensions::Delegate::Statistics;
+Utils::Helper::Datasource->load_extensions;
+
 use constant SUCCESS => 1;
 use constant ERROR   => 0;
+my $builder;
 
 #TODO: drichardson
 #      - Add required fields validation see lib/API/User.pm based on Validate::Tiny
@@ -44,6 +48,7 @@ sub index {
 	my $limit       = $self->param('limit');
 	my $offset      = $self->param('offset');
 
+	my $stats = new Extensions::Delegate::Statistics();
 	if ( $self->is_valid_delivery_service_name($ds_name) ) {
 		if ( $self->is_delivery_service_name_assigned($ds_name) ) {
 
@@ -61,8 +66,32 @@ sub index {
 				}
 			);
 
-			my $rc     = SUCCESS;
-			my $result = ();
+			my $result      = ();
+			my $start_epoch = str2time($start_date);
+			my $end_epoch   = str2time($start_date);
+			my $rc          = SUCCESS;
+			my $formatted_response;
+
+			#> show retention policies deliveryservice_stats;
+			#name	duration	replicaN	default
+			#default	0		1		false
+			#weekly	120h0m0s	3		true
+			my $retention_period = 2;
+
+			# numeric start/end only which should be done upstream but let's be extra cautious
+			if ( ( $start_epoch =~ /^\d+$/ && $end_epoch =~ /^\d+$/ ) && $start_epoch < ( time() - $retention_period - 60 ) )
+			{    # -60 for diff between client and our time
+				$self->app->log->debug("Retrieving 'long term' stats...");
+				( $rc, $formatted_response ) = $stats->long_term( $self, $start_epoch, $end_epoch, $interval );
+
+				#$self->app->log->debug( "formatted_response #-> " . Dumper($formatted_response) );
+			}
+			else {
+				$self->app->log->debug("Retrieving 'short term' stats...");
+
+				( $rc, $formatted_response ) = $stats->short_term( $self, $start_date, $end_date, $interval );
+			}
+
 			my $summary_query;
 
 			my $include_summary = ( defined($exclude) && $exclude =~ /summary/ ) ? 0 : 1;

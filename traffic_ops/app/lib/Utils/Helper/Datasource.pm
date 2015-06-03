@@ -28,6 +28,7 @@ our @ISA = ("Utils::Helper");    # inherit our constructor and mojo methods
 
 use constant { TIMEOUT => 30, };
 
+#TODO:  drichardson -  move these methods to extensions and fix callers.
 sub kv {
 	my $self  = shift || confess("Call on an instance of Utils::Helper::Datasource");
 	my $key   = shift;
@@ -273,7 +274,6 @@ sub calculate_stats {
 sub load_module {
 	my $module = shift;
 	if ( defined( $ENV{"TO_EXTENSIONS_LIB"} ) ) {
-		print "env: " . $ENV{"TO_EXTENSIONS_LIB"} . "\n";
 		my $use = $module;
 		eval $use;
 	}
@@ -295,26 +295,15 @@ sub load_extensions {
 				$to_ext_lib_env
 			);
 
-			#print join "\n", @file_list;
 			foreach my $file (@file_list) {
 				open my $fn, '<', $file;
 				my $first_line = <$fn>;
 				my ( $package_keyword, $package_name ) = ( $first_line =~ m/(package )(.*);/ );
+				eval "use $package_name;";
 				close $fn;
-
-				#print "package_name #-> (" . $package_name . ")\n";
 			}
 		}
 	}
-}
-
-sub check_is_loaded {
-	my ($pkg) = @_;
-	( my $file = $pkg ) =~ s/::/\//g;
-	$file .= '.pm';
-	my @loaded = grep { $_ eq $file } keys %INC;
-	my $is_loaded = ( @loaded ? 1 : 0 );
-	return $is_loaded;
 }
 
 1;

@@ -16,5 +16,9 @@
 #
 #
 mkdir -p log
-export PERL5LIB=local/lib/perl5; local/bin/morbo --listen "http://*:3000" -v script/cdn
+if [ -z "$TO_EXTENSIONS_LIB" ]; then
+  export PERL5LIB=local/lib/perl5; local/bin/morbo --listen "http://*:3000" -v script/cdn
+else
+  export PERL5LIB=local/lib/perl5; local/bin/morbo --listen "http://*:3000" -v script/cdn -w $TO_EXTENSIONS_LIB  
+fi
 MOJO_LOG_LEVEL=debug

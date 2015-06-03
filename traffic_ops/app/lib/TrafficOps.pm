@@ -55,6 +55,8 @@ my $config;
 local $/;    #Enable 'slurp' mode
 
 has schema => sub { return Schema->connect_to_database };
+my $to_extensions_lib = $ENV{'TO_EXTENSION_LIB'};
+has watch => sub { [qw(lib templates $to_extensions_lib)] };
 
 if ( !defined $ENV{MOJO_CONFIG} ) {
 	$ENV{'MOJO_CONFIG'} = 'conf/cdn.conf';
@@ -82,6 +84,7 @@ if ( -e $ldap_conf_path ) {
 sub startup {
 	my $self = shift;
 	$mode = $self->mode;
+
 	$self->setup_logging($mode);
 	$self->validate_cdn_conf();
 	$self->setup_mojo_plugins();

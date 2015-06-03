@@ -24,6 +24,13 @@ package Extensions::DatasourceList;
 use Extensions::DATASOURCE_STUB;
 ## End Extensions List .pm Anchor ## DO NOT REMOVE OR CHANGE THIS LINE
 
+sub new {
+	my $self  = {};
+	my $class = shift;
+
+	return ( bless( $self, $class ) );
+}
+
 # Note: Should we create a dispatch table here?
 sub hash_ref {
 	my $ext_hash_ref = {
