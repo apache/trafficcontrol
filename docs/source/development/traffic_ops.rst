@@ -193,10 +193,8 @@ To install the Traffic Ops Developer environment:
    * Unit test database: ``$ db/admin.pl --env=test setup``
    * Development database: ``$ db/admin.pl --env=development setup``
    * Integration database: ``$ db use db/admin.pl --env=integration setup``
-   
-4. (Optional) To load temporary data into the tables: ``$ perl bin/db/setup_kabletown.pl``
-5. Set up a the database schema
 
+   The database schema should look like this:
  ::
 
 
@@ -220,6 +218,8 @@ To install the Traffic Ops Developer environment:
   OK    20150210100000_ds_keyinfo.sql
   Seeding database...
   Warning: Using a password on the command line interface can be insecure.
+
+5. (Optional) To load temporary data into the tables: ``$ perl bin/db/setup_kabletown.pl``
 
 
 6. To start Traffic Ops, enter ``$ bin/start.sh``
