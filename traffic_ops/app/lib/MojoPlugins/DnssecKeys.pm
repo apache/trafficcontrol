@@ -39,6 +39,7 @@ sub register {
 			my $ttl        = shift;
 			my $k_exp_days = shift;
 			my $z_exp_days = shift;
+			my $effectiveDate = shift;
 
 			my $inception    = time();
 			my $z_expiration = time() + ( 86400 * $z_exp_days );
@@ -54,11 +55,11 @@ sub register {
 
 			# #create keys for cdn TLD
 			$self->app->log->info("Creating keys for $key.");
-			my $zsk = $self->get_dnssec_keys( "zsk", $name, $ttl, $inception, $z_expiration );
-			my $ksk = $self->get_dnssec_keys( "ksk", $name, $ttl, $inception, $k_expiration );
+			my $zsk = $self->get_dnssec_keys( "zsk", $name, $ttl, $inception, $z_expiration, "new", $effectiveDate );
+			my $ksk = $self->get_dnssec_keys( "ksk", $name, $ttl, $inception, $k_expiration, "new", $effectiveDate );
 
 			#add to keys hash
-			$keys{$key} = { zsk => $zsk, ksk => $ksk };
+			$keys{$key} = {zsk => [$zsk], ksk => [$ksk] };
 
 			#get delivery services
 			#first get profile_id
@@ -85,11 +86,11 @@ sub register {
 				my $length = length($ds_name) - index( $ds_name, "." );
 				$ds_name = substr( $ds_name, index( $ds_name, "." ) + 1, $length );
 				$self->app->log->info("Creating keys for $xml_id.");
-				my $zsk = $self->get_dnssec_keys( "zsk", $ds_name, $ttl, $inception, $z_expiration );
-				my $ksk = $self->get_dnssec_keys( "ksk", $ds_name, $ttl, $inception, $k_expiration );
+				my $zsk = $self->get_dnssec_keys( "zsk", $ds_name, $ttl, $inception, $z_expiration, "new", $effectiveDate );
+				my $ksk = $self->get_dnssec_keys( "ksk", $ds_name, $ttl, $inception, $k_expiration, "new", $effectiveDate );
 
 				#add to keys hash
-				$keys{$xml_id} = { zsk => $zsk, ksk => $ksk };
+				$keys{$xml_id} = { zsk => [$zsk], ksk => [$ksk] };
 			}
 
 			#add a param to the database to track changes
@@ -156,6 +157,8 @@ sub register {
 			my $ttl        = shift;
 			my $inception  = shift;
 			my $expiration = shift;
+			my $status 	= shift;
+			my $effectiveDate = shift;
 			my %keys       = ();
 
 			if ( $type eq "zsk" ) {
@@ -173,7 +176,9 @@ sub register {
 				inceptionDate  => $inception,
 				expirationDate => $expiration,
 				name           => $name,
-				ttl            => $ttl
+				ttl            => $ttl,
+				status			=> $status,
+				effectiveDate	=> $effectiveDate
 			);
 			return \%response;
 		}
