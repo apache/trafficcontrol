@@ -227,6 +227,7 @@ sub ds_data {
 		my $range_request_handling = $row->range_request_handling;
 		my $origin_shield          = $row->origin_shield;
 		my $cacheurl               = $row->cacheurl;
+		my $remap_text             = $row->remap_text;
 
 		if ( $re_type eq 'HOST_REGEXP' ) {
 			my $host_re = $row->pattern;
@@ -287,6 +288,7 @@ sub ds_data {
 		$dsinfo->{dslist}->[$j]->{"range_request_handling"} = $range_request_handling;
 		$dsinfo->{dslist}->[$j]->{"origin_shield"}          = $origin_shield;
 		$dsinfo->{dslist}->[$j]->{"cacheurl"}               = $cacheurl;
+		$dsinfo->{dslist}->[$j]->{"remap_text"}             = $remap_text;
 
 		if ( defined($edge_header_rewrite) ) {
 			my $fname = "hdr_rw_" . $ds_xml_id . ".config";
@@ -827,17 +829,17 @@ sub remap_dot_config {
 	foreach my $remap ( @{ $data->{dslist} } ) {
 		foreach my $map_from ( keys %{ $remap->{remap_line} } ) {
 			my $map_to = $remap->{remap_line}->{$map_from};
-			$text = $self->remap_text( $server, $pdata, $text, $data, $remap, $map_from, $map_to );
+			$text = $self->build_remap_line( $server, $pdata, $text, $data, $remap, $map_from, $map_to );
 		}
 		foreach my $map_from ( keys %{ $remap->{remap_line2} } ) {
 			my $map_to = $remap->{remap_line2}->{$map_from};
-			$text = $self->remap_text( $server, $pdata, $text, $data, $remap, $map_from, $map_to );
+			$text = $self->build_remap_line( $server, $pdata, $text, $data, $remap, $map_from, $map_to );
 		}
 	}
 	return $text;
 }
 
-sub remap_text {
+sub build_remap_line {
 	my $self     = shift;
 	my $server   = shift;
 	my $pdata    = shift;
@@ -846,6 +848,11 @@ sub remap_text {
 	my $remap    = shift;
 	my $map_from = shift;
 	my $map_to   = shift;
+
+	if ($remap->{type} eq 'ANY_MAP') {
+		$text .= $remap->{remap_text} . "\n";
+		return $text;
+	}
 
 	my $host_name = $data->{host_name};
 	my $dscp      = $remap->{dscp};
@@ -895,6 +902,9 @@ sub remap_text {
 	}
 	elsif ( $remap->{range_request_handling} == 2 ) {
 		$text .= " \@plugin=cache_range_requests.so ";
+	}
+	if (defined($remap->{remap_text})) {
+		$text .= " " . $remap->{remap_text};
 	}
 	$text .= "\n";
 	return $text;

@@ -88,6 +88,32 @@
 			$('#dns_bypass_ip6_row').show(speed);
 			$('#dns_bypass_ttl_row').show(speed);
 			$('#max_dns_answers_row').show(speed);
+		} else if (type_selected.match(/^ANY_MAP$/)) { 
+            $('#protocoli_row').hide(speed);
+            $('#dscp_row').hide(speed);
+            $('#signed_row').hide(speed);
+            $('#qstring_ignore_row').hide(speed);
+            $('#geo_limit_row').hide(speed);
+            $('#http_bypass_fqdn_row').hide(speed);
+            $('#ipv6_routing_enabled_row').hide(speed);
+            $('#range_request_handlingi_row').hide(speed);
+            $('#dns_bypass_ip_row').hide(speed);
+            $('#dns_bypass_ip6_row').hide(speed);
+            $('#dns_bypass_ttl_row').hide(speed);
+            $('#max_dns_answers_row').hide(speed);
+            $('#ccr_dns_ttl_row').hide(speed);
+            $('#org_server_fqdn_row').hide(speed);
+            $('#global_max_mbps_row').hide(speed);
+            $('#global_max_tps_row').hide(speed);
+            $('#miss_lat_row').hide(speed);
+            $('#miss_long_row').hide(speed);
+            $('#edge_header_rewrite_row').hide(speed);
+            $('#mid_header_rewrite_row').hide(speed);
+            $('#regex_remap_row').hide(speed);
+            $('#cacheurl_row').hide(speed);
+            $('#origin_shield_row').hide(speed);
+            $('#active_row').hide(speed);
+            $('#ds_regexp_table').hide(speed);
 		}
 		// 
 	}
@@ -142,29 +168,31 @@
 		<form method="POST" action="/ds/create" id="addds" style="margin-left:20px;">
 			<h2>Delivery Service Info:</h2>
 			%= include 'delivery_service/_form'
-	<br>
-	<h2>Regular expressions for this delivery service:</h2>
-	<!--DN: hidden field for validation of regexp table.  
-	Cause I didnt re-factor the table to use FormFields. (yet?)-->
-	<div class="block">
-		%= label_for 'regex' => '', class => 'label'
-		%= field('ds.regex')->hidden(class => 'filed', id => 'ds.regex', name => 'ds.regex', value => '_____');
-		<% unless (field('ds.regex')->valid) { %>
-			<span class="field-with-error"><%= field('ds.regex')->error %></span>
-		<% } %>
+	<div class="block" id="ds_regexp_table">
+	    <br>
+	    <h2>Regular expressions for this delivery service:</h2>
+	    <!--DN: hidden field for validation of regexp table.  
+	    Cause I didnt re-factor the table to use FormFields. (yet?)-->
+	    <div class="block">
+		    %= label_for 'regex' => '', class => 'label'
+		    %= field('ds.regex')->hidden(class => 'filed', id => 'ds.regex', name => 'ds.regex', value => '_____');
+		    <% unless (field('ds.regex')->valid) { %>
+			    <span class="field-with-error"><%= field('ds.regex')->error %></span>
+		    <% } %>
+	    </div>
+	    <table id="regexp_table" width=100%>
+		    <tbody id="regexp_table_body"></tbody>
+	    </table>
+	    <br>
+	    <br>
+	    <h4 style="color:white">Add a new Regex:</h4>
+	    <select id="regexp_selector">
+		    <option>Select...</option>
+		    <option>Add Host Regexp</option>
+		    <option>Add Path Regexp</option>
+		    <option>Add Header Regexp</option>
+	    </select><br>
 	</div>
-	<table id="regexp_table" width=100%>
-		<tbody id="regexp_table_body"></tbody>
-	</table>
-	<br>
-	<br>
-	<h4 style="color:white">Add a new Regex:</h4>
-	<select id="regexp_selector">
-		<option>Select...</option>
-		<option>Add Host Regexp</option>
-		<option>Add Path Regexp</option>
-		<option>Add Header Regexp</option>
-	</select><br>
 	<br><input class="button" type="submit" value="Save"/>
 	<button id="close_button" class="button" style="float:right; margin-right: 200px">Close</button>
 </form>
