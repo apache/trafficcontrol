@@ -102,7 +102,7 @@ sub create {
 				$self->flash( message => "Successfully created dnssec keys for: $cdn_name" );
 			}
 			else {
-				$self->flash( { "SSL keys for $name could not be created.  Response was" . $response->{_content} } );
+				$self->flash( { "DNSSEC keys for $name could not be created.  Response was" . $response->{_content} } );
 			}
 		}
 		else {

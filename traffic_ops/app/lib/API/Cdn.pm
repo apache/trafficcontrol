@@ -852,29 +852,35 @@ sub dnssec_keys {
 		my @ds_rs      = $self->db->resultset('Deliveryservice')->search( \%search );
 		foreach my $ds (@ds_rs) {
 			#get DNSKEY ttl for TLD
-			my $dnsskey_gen_multiplier;
-			my $dnsskey_ttl;
+			my $dnskey_gen_multiplier;
+			my $dnskey_ttl;
+			my $dnskey_effective_multiplier;
 			my $ds_profile = $ds->profile->name;
 			my %condition = ( 'parameter.name' => 'tld.ttls.DNSKEY', 'profile.name' => $ds_profile);
 			my $rs_pp = $self->db->resultset('ProfileParameter')->search( \%condition, { prefetch => [ { 'parameter' => undef }, { 'profile' => undef } ] } )->single;
 			if ($rs_pp) {
-		 		$dnsskey_ttl = $rs_pp->parameter->value;
+		 		$dnskey_ttl = $rs_pp->parameter->value;
 		 	}
 		 	else {
-		 		$dnsskey_ttl = '60';	
+		 		$dnskey_ttl = '60';	
 		 	}
-		 	$self->app->log->debug("dnsskey_ttl = $dnsskey_ttl");
 		 	%condition = ( 'parameter.name' => 'DNSKEY.generation.multiplier', 'profile.name' => $ds_profile);
 			$rs_pp = $self->db->resultset('ProfileParameter')->search( \%condition, { prefetch => [ { 'parameter' => undef }, { 'profile' => undef } ] } )->single;
 		 	if ($rs_pp) {
-		 		 $dnsskey_gen_multiplier = $rs_pp->parameter->value;
+		 		 $dnskey_gen_multiplier = $rs_pp->parameter->value;
 		 	}
 		 	else {
-		 		 $dnsskey_gen_multiplier = '10';
+		 		 $dnskey_gen_multiplier = '10';
 		 	}
-		 	$self->app->log->debug("dnsskey_gen_multiplier = $dnsskey_gen_multiplier");
-		 	my $key_expiration = time() - ($dnsskey_ttl * $dnsskey_gen_multiplier);
-		 	$self->app->log->debug("key_expiration = $key_expiration");
+		 	%condition = ( 'parameter.name' => 'DNSKEY.effective.multiplier', 'profile.name' => $ds_profile);
+			$rs_pp = $self->db->resultset('ProfileParameter')->search( \%condition, { prefetch => [ { 'parameter' => undef }, { 'profile' => undef } ] } )->single;
+		 	if ($rs_pp) {
+		 		 $dnskey_effective_multiplier = $rs_pp->parameter->value;
+		 	}
+		 	else {
+		 		 $dnskey_effective_multiplier = '2';
+		 	}
+		 	my $key_expiration = time() - ($dnskey_ttl * $dnskey_gen_multiplier); 
 			#check if keys exist for ds
 			my $xml_id  = $ds->xml_id;
 			my $ds_keys = $keys->{$xml_id};
@@ -898,8 +904,8 @@ sub dnssec_keys {
 				my $z_expiration = $inception + ( 86400 * $default_z_exp_days );
 				my $k_expiration = $inception + ( 86400 * $default_k_exp_days );
 
-				my $zsk = $self->get_dnssec_keys( "zsk", $ds_name, $dnsskey_ttl, $inception, $z_expiration, "new" );
-				my $ksk = $self->get_dnssec_keys( "ksk", $ds_name, $dnsskey_ttl, $inception, $k_expiration, "new" );
+				my $zsk = $self->get_dnssec_keys( "zsk", $ds_name, $dnskey_ttl, $inception, $z_expiration, "new", $inception );
+				my $ksk = $self->get_dnssec_keys( "ksk", $ds_name, $dnskey_ttl, $inception, $k_expiration, "new", $inception );
 
 				#add to keys hash
 				$new_keys{$xml_id} = { zsk => [$zsk], ksk => [$ksk] };
@@ -919,7 +925,7 @@ sub dnssec_keys {
 						if ( $krecord->{expirationDate} < $key_expiration ) {
 						#if expired create new keys
 							$self->app->log->info("The KSK keys for $xml_id are expired!");
-							my $new_dnssec_keys = $self->regen_expired_keys( "ksk", $xml_id, $keys );
+							my $new_dnssec_keys = $self->regen_expired_keys( "ksk", $xml_id, $keys, $dnskey_effective_multiplier );
 							$new_keys{$xml_id} = $new_dnssec_keys;
 							$k_update = 1;
 						}
@@ -932,8 +938,8 @@ sub dnssec_keys {
 						if ( $zrecord->{expirationDate} < $key_expiration ) {
 						#if expired create new keys
 							$self->app->log->info("The ZSK keys for $xml_id are expired!");
-							my $new_dnssec_keys = $self->regen_expired_keys( "zsk", $xml_id, $keys );
-							$new_keys{$xml_id} = $new_dnssec_keys;
+							my $new_dnssec_keys = $self->regen_expired_keys( "zsk", $xml_id, $keys, $dnskey_effective_multiplier );
+							$new_keys{$xml_id} = $new_dnssec_keys; 
 							$z_update = 1;
 						}
 					}	 						
@@ -963,6 +969,7 @@ sub regen_expired_keys {
 	my $type       = shift;
 	my $key        = shift;
 	my $existing_keys   = shift;
+	my $effective_multipler = shift;
 	my $regen_keys = {};
 	my $old_key;
 
@@ -977,39 +984,28 @@ sub regen_expired_keys {
 	my $expiration      = $old_key->{expirationDate};
 	my $inception       = $old_key->{inceptionDate};
 	my $expiration_days = ( $expiration - $inception ) / 86400;
+	my $effective_date = $expiration - ($ttl * $effective_multipler);
 	
 	#create new expiration and inception time
 	my $new_inception = time();
 	my $new_expiration = $new_inception + ( 86400 * $expiration_days );
 
 	#generate new keys
-	my $new_key = $self->get_dnssec_keys( $type, $name, $ttl, $new_inception, $new_expiration, "new" );
+	my $new_key = $self->get_dnssec_keys( $type, $name, $ttl, $new_inception, $new_expiration, "new", $effective_date );
 
 	if ( $type eq "ksk" ) {
 		#get existing zsk
-		my $zrecord;
-		my $zsk = $existing_keys->{$key}->{zsk};
-		foreach my $r (@$zsk){
-			if ($r->{status} eq 'new') {
-				$zrecord = $r;
-			}
-		}
+		my @zsk = $existing_keys->{$key}->{zsk};
 		#set existing ksk status to "expired"
 		$old_key->{status} = "expired";
-		$regen_keys = { zsk => [$zsk], ksk => [$new_key, $old_key]};
+		$regen_keys = { zsk => @zsk, ksk => [$new_key, $old_key]};
 	}
 	elsif ( $type eq "zsk" ) {
 		#get existing ksk
-		my $krecord;
-		my $zsk = $existing_keys->{$key}->{zsk};
-		foreach my $r (@$zsk){
-			if ($r->{status} eq 'new') {
-				$krecord = $r;
-			}
-		}
+		my @ksk = $existing_keys->{$key}->{ksk};
 		#set existing ksk status to "expired"
 		$old_key->{status} = "expired";
-		$regen_keys = { zsk => [$new_key, $old_key], ksk => [$krecord] };
+		$regen_keys = { zsk => [$new_key, $old_key], ksk => @ksk };
 	}
 	return $regen_keys;
 }
