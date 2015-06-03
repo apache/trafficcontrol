@@ -252,58 +252,93 @@ my $expiration_days = "365";
 
 my $dnssec_keys = {
 	$key => {
-		ksk => {
+		ksk => [{
 			ttl            => $ttl,
 			public         => "public",
 			name           => $name . ".",
 			inceptionDate  => 1426173464,
 			private        => "private key",
-			expirationDate => 1457709464
+			expirationDate => 1457709464,
+			status         => "new",
+			effectiveDate  => 1457709464
 		},
-		zsk => {
+		{
+			ttl            => $ttl,
+			public         => "public",
+			name           => $name . ".",
+			inceptionDate  => 1426173464,
+			private        => "private key",
+			expirationDate => 1457709464,
+			status         => "expired",
+			effectiveDate  => 1457709464
+		}
+		],
+		zsk => [{
 			private        => "private",
 			expirationDate => 1428765464,
 			inceptionDate  => 1426173464,
 			name           => $name . ".",
 			ttl            => $ttl,
-			public         => "public"
-		},
+			public         => "public",
+			status         => "new",
+			effectiveDate  => 1457709464
+		}],
 	},
 	"test-ds2" => {
-		ksk => {
+		ksk => [{
 			ttl            => $ttl,
 			public         => "public",
 			name           => $name . ".",
 			inceptionDate  => 1426173464,
 			private        => "private key",
-			expirationDate => 1457709464
-		},
-		zsk => {
+			expirationDate => 1457709464,
+			status         => "new",
+			effectiveDate  => 1457709464
+		}],
+		zsk => [
+		{
 			private        => "private",
 			expirationDate => 1428765464,
 			inceptionDate  => 1426173464,
 			name           => $name . ".",
 			ttl            => $ttl,
-			public         => "public"
+			public         => "public",
+			status         => "new",
+			effectiveDate  => 1457709464
+		},
+		{
+			private        => "private",
+			expirationDate => 1428765464,
+			inceptionDate  => 1426173464,
+			name           => $name . ".",
+			ttl            => $ttl,
+			public         => "public",
+			status         => "expired",
+			effectiveDate  => 1457709464
 		}
+		],
 	},
 	"test-ds1" => {
-		ksk => {
+		ksk => [{
 			ttl            => $ttl,
 			public         => "public",
 			name           => $name . ".",
 			inceptionDate  => 1426173464,
 			private        => "private key",
-			expirationDate => 1457709464
-		},
-		zsk => {
+			expirationDate => 1457709464,
+			status         => "new",
+			effectiveDate  => 1457709464
+		}],
+		zsk => [{
 			private        => "private",
 			expirationDate => 1428765464,
 			inceptionDate  => 1426173464,
 			name           => $name . ".",
 			ttl            => $ttl,
-			public         => "public"
-		}
+			public         => "public",
+			status         => "new",
+			effectiveDate  => 1457709464
+		}]
 	}
 };
 
@@ -331,8 +366,8 @@ ok $t->post_ok(
 	'Create dnssec key?';
 
 #validate dnssec zone signing key exist
-ok $t->get_ok("/api/1.1/cdns/name/$key/dnsseckeys.json")->json_has("/response")->json_has("/response/$key/ksk/private")
-	->json_has("/response/$key/zsk/public")->json_has("/response/$key/ksk/expirationDate")->json_is( "/response/$key/zsk/name" => $name . "." )
+ok $t->get_ok("/api/1.1/cdns/name/$key/dnsseckeys.json")->json_has("/response")->json_has("/response/$key/ksk/0/private")
+	->json_has("/response/$key/zsk/0/public")->json_has("/response/$key/ksk/0/expirationDate")->json_is( "/response/$key/zsk/0/name" => $name . "." )
 	->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } );
 
 #delete dnssec key

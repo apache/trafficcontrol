@@ -1027,7 +1027,6 @@ sub dnssec_keys_generate {
 		if (!defined($effectiveDate)) {
 			$effectiveDate = time();
 		}
-		$self->app->log->debug("effectiveDate = $effectiveDate");
 		my $res      = $self->generate_store_dnssec_keys( $key, $name, $ttl, $k_exp_days, $z_exp_days, $effectiveDate );
 		my $response = $res->{response};
 		my $rc       = $response->{_rc};
