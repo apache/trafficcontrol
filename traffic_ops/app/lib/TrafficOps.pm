@@ -43,7 +43,9 @@ use Utils::JsonConfig;
 use MojoX::Log::Log4perl;
 use File::Find;
 use File::Basename;
+use Env qw(PERL5LIB);
 use Utils::Helper::Datasource;
+use File::Path qw(make_path);
 Utils::Helper::Datasource->load_extensions;
 
 use constant SESSION_TIMEOUT => 14400;
@@ -916,6 +918,11 @@ sub setup_logging {
 		my $pwd = cwd();
 		$logging_root_dir = "$pwd/log";
 		$app_root_dir     = ".";
+		make_path(
+			$logging_root_dir, {
+				verbose => 1,
+			}
+		);
 	}
 	my $log4perl_conf = $app_root_dir . "/conf/$mode/log4perl.conf";
 	if ( -e $log4perl_conf ) {
@@ -989,8 +996,13 @@ sub setup_mojo_plugins {
 	);
 
 	# Custom TO Plugins
-	my $pwd     = cwd();
-	my $dir     = "$pwd/lib/MojoPlugins";
+	my $mojo_plugins_dir;
+	foreach my $dir (@INC) {
+		$mojo_plugins_dir = sprintf( "%s/MojoPlugins", $dir );
+		if ( -e $mojo_plugins_dir ) {
+			last;
+		}
+	}
 	my $plugins = Mojolicious::Plugins->new;
 
 	my @file_list;
@@ -1000,7 +1012,7 @@ sub setup_mojo_plugins {
 			return unless /\.pm$/;    #Must end with `.pl` suffix
 			push @file_list, $File::Find::name;
 		},
-		$dir
+		$mojo_plugins_dir
 	);
 
 	#print join "\n", @file_list;

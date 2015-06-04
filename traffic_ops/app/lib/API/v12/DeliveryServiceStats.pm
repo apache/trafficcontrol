@@ -76,6 +76,7 @@ sub index {
 			#name	duration	replicaN	default
 			#default	0		1		false
 			#weekly	120h0m0s	3		true
+			#TODO: drichardson - use influx retention period.
 			my $retention_period = 2;
 
 			# numeric start/end only which should be done upstream but let's be extra cautious
