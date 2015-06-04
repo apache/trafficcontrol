@@ -18,6 +18,7 @@
 -- +goose Up
 -- SQL in section 'Up' is executed when this migration is applied
 alter table deliveryservice add column `remap_text` varchar(2048) default NULL;
+alter table type MODIFY `description` varchar(256);
 insert into type (name, description, use_in_table) values ('ANY_MAP', 'No Content Routing - arbitrary remap at the edge, no Traffic Router config', 'deliveryservice');
 
 -- +goose Down
