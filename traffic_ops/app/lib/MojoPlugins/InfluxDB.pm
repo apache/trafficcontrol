@@ -25,13 +25,13 @@ use Mojo::UserAgent;
 use JSON;
 use IO::Socket::SSL qw();
 use LWP::UserAgent qw();
-use Connection::InfluxDBAdapter;
 use File::Slurp;
+Utils::Helper::Datasource->load_extensions;
 
 use constant SERVER_TYPE             => 'INFLUXDB';
 use constant SCHEMA_FILE             => 'InfluxDBHostsOnline';
 use constant INFLUXDB_CONF_FILE_NAME => 'influxdb.conf';
-my $helper_class = eval {'Connection::InfluxDBAdapter'};
+my $helper_class = eval {'Extensions::Connection::InfluxDBAdapter'};
 
 sub register {
 	my ( $self, $app, $conf ) = @_;
