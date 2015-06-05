@@ -54,6 +54,7 @@ sub index {
 			my $stats = new Extensions::Delegate::Statistics(
 				{
 					deliveryServiceName => $ds_name,
+					metricType          => $metric_type,
 					startDate           => $start_date,
 					endDate             => $end_date,
 					interval            => $interval,
@@ -64,6 +65,10 @@ sub index {
 					offset              => $offset
 				}
 			);
+
+			# Extensions Contract:
+			#  "$rc": will be either SUCCESS or ERROR (****the implemented Extension should use the same constants for consistency)
+			#  "$result": should always come back as hash that will be forwarded to the Client as JSON.
 			my ( $rc, $result ) = $stats->get_stats($self);
 			$self->app->log->debug( "top.rc #-> " . Dumper($rc) );
 			$self->app->log->debug( "top.result #-> " . Dumper($result) );
@@ -74,7 +79,6 @@ sub index {
 			else {
 				return $self->alert($result);
 			}
-
 		}
 		else {
 			return $self->forbidden();
