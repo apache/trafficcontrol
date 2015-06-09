@@ -1,18 +1,10 @@
 #!/usr/bin/perl
 #
-# Copyright 2015 Comcast Cable Communications Management, LLC
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
+# Copyright 2011-2015, Comcast Corporation. This software and its contents are
+# Comcast confidential and proprietary. It cannot be used, disclosed, or
+# distributed without Comcast's prior written permission. Modification of this
+# software is only allowed at the direction of Comcast Corporation. All allowed
+# modifications must be provided to Comcast Corporation.
 #
 
 use strict;
@@ -22,10 +14,11 @@ use JSON;
 use File::Basename;
 use File::Path;
 use Fcntl qw(:flock);
+use MIME::Base64;
 use Data::Dumper;
 
 $| = 1;	
-my $script_version = "0.49a";
+my $script_version = "0.50c";
 my $date = `/bin/date`; chomp($date);
 print "$date\nVersion of this script: $script_version\n";
 
@@ -44,11 +37,11 @@ given($ARGV[1]) {
 	when("ERROR") 	{ $log_level = 	  7; }
 	when("FATAL") 	{ $log_level = 	  3; }
 	when("NONE") 	{ $log_level = 	  1; }
-	default 		{ &usage(); }
+	default 	{ &usage(); }
 }
 
-my $traffic_ops_host	= undef;
-my $TM_LOGIN			= undef;
+my $traffic_ops_host			= undef;
+my $TM_LOGIN				= undef;
 
 if (defined($ARGV[2])) {
 	if ($ARGV[2] !~ /^https*:\/\/.*$/) {
@@ -76,19 +69,19 @@ else {
 }
 
 #### Script mode constants ####
-my $INTERACTIVE = 0;
-my $REPORT 	= 1;
-my $BADASS 	= 2;
-my $SYNCDS 	= 3;
+my $INTERACTIVE 			= 0;
+my $REPORT 				= 1;
+my $BADASS 				= 2;
+my $SYNCDS 				= 3;
 #### Logging constants for bit shifting #### 
-my $ALL 	= 7;
-my $TRACE 	= 6;
-my $DEBUG 	= 5;
-my $INFO 	= 4;
-my $WARN 	= 3;
-my $ERROR 	= 2;
-my $FATAL 	= 1;
-my $NONE 	= 0;
+my $ALL 				= 7;
+my $TRACE 				= 6;
+my $DEBUG 				= 5;
+my $INFO 				= 4;
+my $WARN 				= 3;
+my $ERROR 				= 2;
+my $FATAL 				= 1;
+my $NONE 				= 0;
 
 my $script_mode = &check_script_mode();
 &check_run_user();
@@ -96,23 +89,24 @@ my $script_mode = &check_script_mode();
 &check_log_level();
 
 #### Constants to track update status #### 
-my $UPDATE_TROPS_NOTNEEDED 	= 0;
+my $UPDATE_TROPS_NOTNEEDED 		= 0;
 my $UPDATE_TROPS_NEEDED 		= 1;
-my $UPDATE_TROPS_SUCCESSFUL 	= 2;
+my $UPDATE_TROPS_SUCCESSFUL 		= 2;
 my $UPDATE_TROPS_FAILED 		= 3;
 #### Other constants #####
-my $START_FAILED 		= 0;
-my $START_SUCCESSFUL 	= 1;
-my $ALREADY_RUNNING 	= 2;
-my $START_NOT_ATTEMPTED	= 3;
+my $START_FAILED 			= 0;
+my $START_SUCCESSFUL 			= 1;
+my $ALREADY_RUNNING 			= 2;
+my $START_NOT_ATTEMPTED			= 3;
 my $CLEAR 				= 0;
-my $PLUGIN_NO			= 0;
-my $PLUGIN_YES			= 1;
+my $PLUGIN_NO				= 0;
+my $PLUGIN_YES				= 1;
 #### Constants for config file changes #### 
-my $CFG_FILE_UNCHANGED		= 0;
-my $CFG_FILE_NOT_PROCESSED	= 1;
-my $CFG_FILE_CHANGED		= 2;
-my $CFG_FILE_PREREQ_FAILED	= 3;
+my $CFG_FILE_UNCHANGED			= 0;
+my $CFG_FILE_NOT_PROCESSED		= 1;
+my $CFG_FILE_CHANGED			= 2;
+my $CFG_FILE_PREREQ_FAILED		= 3;
+my $CFG_FILE_ALREADY_PROCESSED		= 4;
 
 my $unixtime = time();
 my $hostname_short = `/bin/hostname -s`; chomp($hostname_short);
@@ -143,14 +137,18 @@ my $trafficserver_restart_needed 	= 0;
 
 #### Process runnning tracker
 my $ats_running 			= 0;
+my $teakd_running 			= 0;
 
 #### Process installed tracker
-my $installed_new_keys			= 0;
+my $installed_new_urlsig_keys		= 0;
+my $installed_new_ssl_keys		= 0;
 my $new_header_rewrite			= 0;
 my %install_tracker;
 
-my $config_dirs = undef;
-my $cfg_file_tracker = undef;
+my $config_dirs 			= undef;
+my $cfg_file_tracker 			= undef;
+my $ssl_tracker 			= undef;
+my $ats_uid 				= getpwnam("ats");
 
 ####-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-####
 #### Start main flow
@@ -177,15 +175,28 @@ my $header_comment = &get_header_comment($traffic_ops_host);
 
 &process_packages($hostname_short, $traffic_ops_host);
 &process_chkconfig($hostname_short, $traffic_ops_host);
+
+#### First time
+&process_config_files();
+#### Second time, in case there were new files added to the registry
 &process_config_files();
 
 #### Check to see if we installed new keys.
-if (($installed_new_keys || $new_header_rewrite) && !$cfg_file_tracker->{'remap.config'}->{'change_applied'}) {
+if (($installed_new_urlsig_keys || $new_header_rewrite) && !$cfg_file_tracker->{'remap.config'}->{'change_applied'}) {
 	my $return = &touch_file('remap.config');
 	if ($return) {
-    	if ($syncds_update == $UPDATE_TROPS_NEEDED) {
-        	$syncds_update = $UPDATE_TROPS_SUCCESSFUL;
-    	}
+		if ($syncds_update == $UPDATE_TROPS_NEEDED) {
+			$syncds_update = $UPDATE_TROPS_SUCCESSFUL;
+		}
+		$traffic_line_needed++;
+	}
+}
+elsif (( $installed_new_ssl_keys ) && !$cfg_file_tracker->{'ssl_multicert.config'}->{'change_applied'}) {
+	my $return = &touch_file('ssl_multicert.config');
+	if ($return) {
+		if ($syncds_update == $UPDATE_TROPS_NEEDED) {
+			$syncds_update = $UPDATE_TROPS_SUCCESSFUL;
+		}
 		$traffic_line_needed++;
 	}
 }
@@ -220,275 +231,75 @@ sub usage {
 	print "\n";
 	print "\t<Log_Level> => ALL, TRACE, DEBUG, INFO, WARN, ERROR, FATAL, NONE\n";
 	print "\n";
-	print "\t<Traffic_Ops_URL> = URL to 12 monkeys host. Example: https://trafficops.company.net\n";
+	print "\t<Traffic_Ops_URL> = URL to Traffic Ops host. Example: https://trafficops.company.net\n";
 	print "\n";
 	print "\t<Traffic_Ops_Login> => Example: 'username:password' \n";
 	print "====-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-====\n";
 	exit 1;
 }
 
+
 sub process_cfg_file {
 	my $cfg_file = shift;
-	my $service = shift;
+	my $result = (defined($cfg_file_tracker->{$cfg_file}->{'contents'})) ? $cfg_file_tracker->{$cfg_file}->{'contents'} : undef;
+
 	my $return_code = 0;
 	my $url;
-	my $result;
-	if ($cfg_file eq "") {
-		$cfg_file_tracker->{$cfg_file}->{'audit_failed'}++;
-		return $CFG_FILE_NOT_PROCESSED;
-	}
-	my $config_dir = $cfg_file_tracker->{$cfg_file}->{'location'};
+
+	return $CFG_FILE_ALREADY_PROCESSED if ( defined($cfg_file_tracker->{$cfg_file}->{'audit_complete'}) && $cfg_file_tracker->{$cfg_file}->{'audit_complete'} > 0 );
+
+	return $CFG_FILE_NOT_PROCESSED if (!&validate_filename($cfg_file));
+
 	($log_level >> $INFO) && print "\nINFO: ======== Start processing config file: $cfg_file ========\n";
-	$cfg_file_tracker->{$cfg_file}->{'audit_start'}++;
-	$cfg_file_tracker->{$cfg_file}->{'service'} = $service;
-	$url = ($cfg_file ne "regex_revalidate.config") ? "$traffic_ops_host\/genfiles\/view\/$hostname_short\/$cfg_file" : "$traffic_ops_host\/Trafficserver-Snapshots\/$my_cdn_name\/$cfg_file";
-	if (!-d($config_dir)) {
-		if ($script_mode == $BADASS || $script_mode == $INTERACTIVE || $script_mode == $SYNCDS) {
-			&smart_mkdir($config_dir);
-		}
-		else {
-			($log_level >> $ERROR) && print "ERROR Directory: $config_dir not created. Skipping processing on $cfg_file.\n";
-			return $CFG_FILE_NOT_PROCESSED;
-		}
+
+	my $config_dir = $cfg_file_tracker->{$cfg_file}->{'location'};
+
+	$url = &set_url($cfg_file);
+
+	&smart_mkdir($config_dir);
+	
+	$result = &curl_me($url) if (!defined($result));
+	
+	return $CFG_FILE_NOT_PROCESSED if (!&validate_result(\$url, \$result));
+
+	my @db_file_lines = @{ &scrape_unencode_text($result) };
+	
+	my $file = $config_dir . "/" . $cfg_file;
+
+	return $CFG_FILE_PREREQ_FAILED if (!&prereqs_ok($file, \@db_file_lines));
+
+	my @disk_file_lines;
+	if (-e $file) {	
+		return $CFG_FILE_NOT_PROCESSED if (!&can_read_write_file($cfg_file));
+		@disk_file_lines = @{ &open_file_get_contents($file) };
 	}
-	if (!defined($result)) {
-		$result = &curl_me($url);
-	}
-	if ($result =~ m/^\d{3}$/) {
-		return $CFG_FILE_NOT_PROCESSED;
-	}
-	my $size = length($result);
-	if ($size == 131) {
-		($log_level >> $WARN) && print "WARN URL: $url returned only the header.\n";
-	}
-	elsif ($size == 0) {
-		($log_level >> $ERROR) && print "ERROR URL: $url returned empty!! Skipping future processing on $cfg_file.\n";
-		return $CFG_FILE_NOT_PROCESSED;
+
+	my @return = &diff_file_lines( $cfg_file, \@db_file_lines, \@disk_file_lines );
+	my @db_lines_missing = @{ shift(@return) };
+	my @disk_lines_missing = @{ shift(@return) };
+
+	if ( scalar(@disk_lines_missing) || scalar(@db_lines_missing) ) {
+		$cfg_file_tracker->{$cfg_file}->{'change_needed'}++;
+		($log_level >> $DEBUG) && print "DEBUG $file needs updated.\n";
+		&backup_file($cfg_file, \$result);
 	}
 	else {
-		($log_level >> $DEBUG) && print "DEBUG URL: $url returned $size bytes.\n";
+		($log_level >> $INFO) && print "INFO: All lines match TrOps for config file: $cfg_file.\n";
+		$cfg_file_tracker->{$cfg_file}->{'change_needed'} = 0;
+		($log_level >> $TRACE) && print "TRACE Setting change not needed for $cfg_file.\n";
+		$return_code = $CFG_FILE_UNCHANGED;
 	}
-	(my @file_lines) = split(/\n/, $result);
-	my %db_file_lines;
-	foreach my $line (@file_lines) {
-		$line =~ s/\s+/ /g;
-		$line =~ s/(^\s+|\s+$)//g;
-		$line =~ s/amp\;//g;
-		$line =~ s/\&gt\;/\>/g;
-		$line =~ s/\&lt\;/\</g;
-		chomp($line); 
-		if ( $line =~ m/^$/ ) { next; }
-		($log_level >> $TRACE) && print "TRACE Line from cfg file in TrOps:\t$line.\n";
-		$db_file_lines{$line} = defined;
+
+	if ($cfg_file eq "50-ats.rules") {
+		&adv_processing_udev( \@db_file_lines );
 	}
-	($log_level >> $DEBUG) && print "DEBUG Opening file from disk:\t$config_dir/$cfg_file.\n";
-	open my $fh, '<', "$config_dir/$cfg_file" || (($log_level >> $ERROR) && print "ERROR Can't open $config_dir/$cfg_file\n");
-	my %disk_file_lines;
-	if ($! =~ m/No such file or directory/) {
-		($log_level >> $ERROR) && print "ERROR $! on opening $config_dir/$cfg_file.\n";
-		$cfg_file_tracker->{$cfg_file}->{'no_such_file'}++;
+	elsif ( $cfg_file eq "ssl_multicert.config" ) {
+		&adv_processing_ssl( \@db_file_lines );
 	}
-	if ($! =~ m/Permission denied/) {
-		($log_level >> $ERROR) && print "ERROR $! on opening $config_dir/$cfg_file.\n";
-		$cfg_file_tracker->{$cfg_file}->{'permission_denied'}++;
-	}
-	elsif ($! =~ m/Inappropriate ioctl for device/ || $! =~ m/No such file or directory/) {
-		if ($! =~ m/Inappropriate ioctl for device/) {
-			while (<$fh>) {
-				my $line = $_;
-				$line =~ s/\s+/ /g;
-				$line =~ s/(^\s+|\s+$)//g;
-				chomp($line); 
-				($log_level >> $TRACE) && print "TRACE Line from cfg file on disk:\t$line.\n";
-				if ($line =~ m/^\#/ || $line =~ m/^$/ ) { 
-					if ( ($line !~ m/DO NOT EDIT - Generated for / && $line !~ m/$header_comment/) && $line !~ m/12M NOTE\:/) {
-						next; 
-					}
-				}
-				$disk_file_lines{$line} = defined; 
-			}
-			close $fh;
-		}
-		if ($cfg_file eq "plugin.config" || $cfg_file eq "remap.config") {
-			&check_plugins($cfg_file, \%db_file_lines);
-			if ($cfg_file_tracker->{$cfg_file}->{'prereq_failed'}) {
-				($log_level >> $ERROR) && print "ERROR Prereqs failed for $cfg_file!\n";
-				$return_code = $CFG_FILE_PREREQ_FAILED;
-			}
-		}
-		my %disk_lines_missing = ();
-		my %db_lines_missing = ();
-		foreach my $line ( sort keys %db_file_lines ) {
-			if (!exists $disk_file_lines{$line}) {
-				#### Float compare
-				if ($line =~ m/FLOAT/) {
-					(my $disk_dum, my $disk_name, my $disk_type, my $disk_val) = split(/\s/, $line);
-					foreach my $l ( sort keys %db_file_lines ) {
-						(my $db_dum, my $db_name, my $db_type, my $db_val) = split(/\s/, $l);
-						if ($db_name eq $disk_name && $db_type eq $disk_type) {
-							if ( abs($disk_val - $db_val) > 0.00001 ) {
-								$disk_lines_missing{$line} = defined;
-							}
-						}
-					}
-				}
-                elsif ( ($line =~ m/DO NOT EDIT - Generated for / && $line =~ m/$header_comment/) || $line =~ m/12M NOTE\:/) {
-					my $found_it = 0;
-					foreach my $line_disk ( sort keys %disk_file_lines ) {
-	                    if ( ($line =~ m/DO NOT EDIT - Generated for / && $line =~ m/$header_comment/) || $line =~ m/12M NOTE\:/) {
-							$found_it++;
-						}
-					}
-					if (!$found_it) {
-						$disk_lines_missing{$line} = defined;
-					}
-				}
-				else {
-					$disk_lines_missing{$line} = defined;
-				}
-			}
-		}
-		foreach my $line ( sort keys %disk_file_lines ) {
-			if (!exists $db_file_lines{$line}) {
-				#### Float compare
-				if ($line =~ m/FLOAT/) {
-					(my $db_dum, my $db_name, my $db_type, my $db_val) = split(/\s/, $line);
-					foreach my $l ( sort keys %disk_file_lines ) {
-						(my $disk_dum, my $disk_name, my $disk_type, my $disk_val) = split(/\s/, $l);
-						if ($db_name eq $disk_name && $db_type eq $disk_type) {
-							if ( abs($disk_val - $db_val) > 0.00001 ) {
-								$db_lines_missing{$line} = defined;
-							}
-						}
-					}
-				}
-                elsif ( ($line =~ m/DO NOT EDIT - Generated for / && $line =~ m/$header_comment/) || $line =~ m/12M NOTE\:/) {
-					next;
-				}
-				else {
-					$db_lines_missing{$line} = defined;
-				}
-			}
-		}
-		if ( keys %db_lines_missing ) {
-			my $line_count = scalar(keys %db_lines_missing);
-			($log_level >> $DEBUG) && print "DEBUG $line_count lines in $cfg_file are missing from file that is in Traffic Ops.\n";
-			$cfg_file_tracker->{$cfg_file}->{'db_lines_missing_count'} = $line_count;
-		}
-		elsif ( keys %disk_lines_missing ) {
-			my $line_count = scalar(keys %disk_lines_missing);
-			($log_level >> $DEBUG) && print "DEBUG $line_count lines in $cfg_file are missing from file that is on disk.\n";
-			$cfg_file_tracker->{$cfg_file}->{'disk_lines_missing_count'} = $line_count;
-		}
-		if ( keys %disk_lines_missing || keys %db_lines_missing ) {
-			$cfg_file_tracker->{$cfg_file}->{'change_needed'}++;
-			($log_level >> $ERROR) && print "ERROR Lines in $config_dir/$cfg_file do not match Traffic Ops.\n";
-			foreach my $line ( sort keys %disk_lines_missing ) {
-				($log_level >> $ERROR) && print "ERROR Config file: $cfg_file line only in TrOps:\t$line\n";
-			}
-			foreach my $line ( sort keys %db_lines_missing ) {
-				($log_level >> $ERROR) && print "ERROR Config file: $cfg_file line only on disk:\t$line\n";
-			}
-			if ($script_mode != $REPORT) {
-				my $bkp_dir;
-				my $bkp_file;
-				if (-e "$config_dir/$cfg_file") {
-					($log_level >> $ERROR) && print "ERROR Creating backup of file on disk for $cfg_file.\n";
-					$bkp_dir = $TMP_BASE . "/" . $unixtime . "/" . $cfg_file_tracker->{$cfg_file}->{'service'} . "/config_bkp/";
-					$bkp_file = $bkp_dir . $cfg_file;
-					&smart_mkdir($bkp_dir);
-					($log_level >> $DEBUG) && print "DEBUG Backup file: $bkp_file.\n";
-					$cfg_file_tracker->{$cfg_file}->{'backup_from_disk'} = $bkp_file;
-					system("/bin/cp $config_dir/$cfg_file $bkp_file");
-				}
-				else {
-					($log_level >> $DEBUG) && print "DEBUG Config file: $config_dir/$cfg_file doesn't exist. No need to back up.\n";
-				}
-				($log_level >> $ERROR) && print "ERROR Creating backup of file in TrOps for $cfg_file.\n";
-				$bkp_dir = $TMP_BASE . "/" . $unixtime . "/" . $cfg_file_tracker->{$cfg_file}->{'service'} . "/config_trops/";
-				$bkp_file = $bkp_dir . $cfg_file;
-				&smart_mkdir($bkp_dir);
-				($log_level >> $DEBUG) && print "DEBUG Backup file: $bkp_file.\n";
-				$cfg_file_tracker->{$cfg_file}->{'backup_from_trops'} = $bkp_file;
-				open my $fh, '>', $bkp_file || die "Can't open $bkp_file for writing!\n";
-				print $fh $result;
-				chmod oct(644), $fh;
-				chown 176, 176, $fh;
-				close $fh;
-			}
-		}
-		else {
-			($log_level >> $INFO) && print "INFO: All lines match TrOps for config file: $cfg_file.\n";
-			$cfg_file_tracker->{$cfg_file}->{'change_needed'}=0;
-			($log_level >> $TRACE) && print "TRACE Setting change not needed for $cfg_file.\n";
-			$return_code = $CFG_FILE_UNCHANGED;
-		}
-		if ($cfg_file eq "50-ats.rules") {
-			($log_level >> $TRACE) && print "TRACE Entering advanced processing for 50-ats.rules.\n";
-			foreach my $line50 (@file_lines) {
-				if ($line50 =~ m/KERNEL/ && $line50 =~ m/OWNER/) {
-					(my $dev, my $should_own) = split (/,/, $line50);
-					$dev =~ s/KERNEL\s*\=\=\s*//g; 		$dev =~ s/\"//g;
-					$should_own =~ s/ OWNER\s*:?\=\s*//g;	$should_own =~ s/\"//g;
 
-					my $dev_path = "/dev/$dev";
-					my $dc = undef;
-
-					next if ($should_own eq "root");
-
-					my $ats_uid = `/usr/bin/id $should_own 2>&1`;
-
-					if ($ats_uid =~ m/No such user/) { 
-						($log_level >> $ERROR) && print "ERROR User: $should_own does not exist! Skipping future checks for $dev_path\n";
-						next;
-					}
-
-					chomp($ats_uid);	$ats_uid =~ s/\((.*)$//g;	$ats_uid =~ s/uid\=//g;
-
-					if (-e $dev_path) {
-						($log_level >> $TRACE) && print "TRACE Found device in 50-ats.rules: $dev_path.\n";
-						($dc,$dc,$dc,$dc,my $uid,$dc,$dc,$dc,$dc,$dc,$dc,$dc,$dc) = stat($dev_path);
-						if ($uid != $ats_uid) {
-							($log_level >> $ERROR) && print "ERROR Device $dev_path is owned by $uid, not $should_own ($ats_uid)\n";
-						}
-						(my @df_lines) = split(/\n/, `/bin/df`);
-						foreach my $l (@df_lines) {
-							if ($l =~ m/$dev_path/) {
-								($log_level >> $FATAL) && print "FATAL Device /dev/$dev has an active partition and a file system!!\n";
-							}
-						}
-					} 
-					else {
-						open(DEV, "ls /dev/* |") or ($log_level >> $FATAL) && print "FATAL Couldn't get /dev/ listing: $!\n";
-						while (my $dnode = <DEV>) {
-							next unless ($dnode =~ m!$dev_path!);
-
-							chomp $dnode;
-							next if ($dnode =~ m!/dev/sda[0-9]*!);
-
-							($log_level >> $TRACE) && print "TRACE Found device in 50-ats.rules: $dnode.\n";
-							($dc,$dc,$dc,$dc,my $uid,$dc,$dc,$dc,$dc,$dc,$dc,$dc,$dc) = stat($dnode);
-							if ($uid != $ats_uid) {
-								($log_level >> $ERROR) && print "ERROR Device $dnode is owned by $uid, not $should_own ($ats_uid)\n";
-							}
-							(my @df_lines) = split(/\n/, `/bin/df`);
-							foreach my $l (@df_lines) {
-								if ($l =~ m/$dnode/) {
-									($log_level >> $FATAL) && print "FATAL Device /dev/$dev has an active partition and a file system!!\n";
-								}
-							}
-						}
-						close(DEV);
-					}
-				}
-			} 
-		}
-	}
-	else {
-		($log_level >> $ERROR) && print "ERROR Unhandled error $! when opening $config_dir/$cfg_file.\n";
-	}
-	($log_level >> $INFO) && print "INFO: ======== End processing config file: $cfg_file for service: $service ========\n";
+	($log_level >> $INFO) && print "INFO: ======== End processing config file: $cfg_file for service: " . $cfg_file_tracker->{$cfg_file}->{'service'} . " ========\n";
 	$cfg_file_tracker->{$cfg_file}->{'audit_complete'}++;
+
 	return $return_code;
 }
 
@@ -636,19 +447,28 @@ sub restart_service {
 }
 
 sub smart_mkdir {
-	my $dir = $_[0];
-	($log_level >> $TRACE) && print "TRACE Directory to create if needed: $dir\n";
-	if (!-d $dir) {
-		system("/bin/mkdir -p $dir");
-		if ($dir =~ m/config_trops/) {
-			($log_level >> $DEBUG) && print "DEBUG Temp directory created: $dir. Config files from Traffic Ops will be placed here for future processing.\n";
-		}
-		elsif ($dir =~ m/config_bkp/) {
-			($log_level >> $DEBUG) && print "DEBUG Backup directory created: $dir. Config files will be backed up here.\n";
+	my $dir = shift;
+
+	if ( !-d($dir) ) {
+		if ($script_mode == $BADASS || $script_mode == $INTERACTIVE || $script_mode == $SYNCDS) {
+			($log_level >> $TRACE) && print "TRACE Directory to create if needed: $dir\n";
+			system("/bin/mkdir -p $dir");
+			if ($dir =~ m/config_trops/) {
+				($log_level >> $DEBUG) && print "DEBUG Temp directory created: $dir. Config files from Traffic Ops will be placed here for future processing.\n";
+			}
+			elsif ($dir =~ m/config_bkp/) {
+				($log_level >> $DEBUG) && print "DEBUG Backup directory created: $dir. Config files will be backed up here.\n";
+			}
+			else {
+				($log_level >> $DEBUG) && print "DEBUG Directory created: $dir.\n";
+			}
 		}
 		else {
-			($log_level >> $DEBUG) && print "DEBUG Directory created: $dir.\n";
+			($log_level >> $ERROR) && print "ERROR Directory: $dir doesn't exist, and was not created.\n";
 		}
+	}
+	else {
+		($log_level >> $TRACE) && print "TRACE Directory: $dir exists.\n";
 	}
 }
 
@@ -732,7 +552,7 @@ sub check_syncds_state {
 	($log_level >> $DEBUG) && print "DEBUG Checking syncds state.\n";
 	if ($script_mode == $SYNCDS || $script_mode == $BADASS || $script_mode == $REPORT) {
 		## The herd is about to get /update/<hostname>
-		&sleep_rand(5);
+		#&sleep_rand(5);
 
 		my $url = "$traffic_ops_host\/update/$hostname_short";
 		my $upd_ref = &curl_me($url);
@@ -796,7 +616,7 @@ sub check_syncds_state {
 					else {
 						($log_level >> $DEBUG) && print "DEBUG The update on my parents cleared; continuing.\n";
 						## At least a portion of the herd is about to check in with Traffic Ops, so need to space things out a bit.
-						&sleep_rand(5);
+						#&sleep_rand(5);
 					}
 				}
 			}
@@ -872,8 +692,7 @@ sub check_syncds_state {
 }
 
 sub sleep_rand {
-	# This should set it to a random number between 1 and whatever is passed in. 
-	my $duration = int(rand(shift));
+	my $duration = shift;
 
 	($log_level >> $WARN) && print "WARN Sleeping for $duration seconds: ";
 
@@ -887,47 +706,49 @@ sub sleep_rand {
 sub process_config_files {
 
 	($log_level >> $INFO) && print "\nINFO: ======== Start processing config files ========\n";
-	foreach my $file ( sort keys %{$cfg_file_tracker}) {
+	foreach my $file ( keys %{$cfg_file_tracker}) {
 		my $return = undef;
-		if ($script_mode == $SYNCDS && 
+		if ( $script_mode == $SYNCDS && 
 		($file eq "records.config" || $file eq "remap.config" || $file eq "parent.config" || $file eq "cache.config" || $file eq "hosting.config" || 
-		$file =~ m/url\_sig\_(.*)\.config$/ || $file =~ m/hdr\_rw\_(.*)\.config$/ || $file eq "regex_revalidate.config" || $file eq "ip_allow.config" || $file eq "cacheurl_qstring.config" ) ) {
+		$file =~ m/url\_sig\_(.*)\.config$/ || $file =~ m/hdr\_rw\_(.*)\.config$/ || $file eq "regex_revalidate.config" || $file eq "ip_allow.config" || 
+		$file eq "cacheurl_qstring.config" || $file eq "regex_remap.config" || $file =~ m/\.cer$/ || $file =~ m/\.key$/ || $file eq "ssl_multicert.config" ) ) {
 			if (package_installed("trafficserver")) {
 				($log_level >> $DEBUG) && print "DEBUG In syncds mode, I'm about to process config file: $file\n";
-				$return = &process_cfg_file($file, "trafficserver");
+				$cfg_file_tracker->{$file}->{'service'} = "trafficserver";
+				$return = &process_cfg_file($file);
 			}
 			else {
 				($log_level >> $FATAL) && print "FATAL In syncds mode, but trafficserver isn't installed. Bailing.\n";
 				exit 1;
 			}
 		}
-		elsif ($script_mode == $SYNCDS && $file =~ m/\_facts/) {
+		elsif ( $script_mode == $SYNCDS && $file =~ m/\_facts/ || (defined($cfg_file_tracker->{$file}->{'location'}) && $cfg_file_tracker->{$file}->{'location'} =~ m/\/opt\/ort/) ) {
 			($log_level >> $DEBUG) && print "DEBUG In syncds mode, I'm about to process config file: $file\n";
-			$return = &process_cfg_file($file, "puppet");
+			$cfg_file_tracker->{$file}->{'service'} = "puppet";
+			$return = &process_cfg_file($file);
 		}  
-		elsif ($cfg_file_tracker->{$file}->{'location'} =~ m/cron/) {
+		elsif ( $script_mode == $SYNCDS && defined($cfg_file_tracker->{$file}->{'location'}) && $cfg_file_tracker->{$file}->{'location'} =~ m/cron/) {
 			($log_level >> $DEBUG) && print "DEBUG In syncds mode, I'm about to process config file: $file\n";
-			$return = &process_cfg_file($file, "system");
+			$cfg_file_tracker->{$file}->{'service'} = "system";
+			$return = &process_cfg_file($file);
 		}
-		elsif ($script_mode != $SYNCDS) {
-			if (package_installed("trafficserver") && ($cfg_file_tracker->{$file}->{'location'} =~ m/trafficserver/ || $cfg_file_tracker->{$file}->{'location'} =~ m/udev/ )) {
-				$return = &process_cfg_file($file, "trafficserver");
+		elsif ( $script_mode != $SYNCDS) {
+			if (package_installed("trafficserver") && (defined($cfg_file_tracker->{$file}->{'location'}) && ($cfg_file_tracker->{$file}->{'location'} =~ m/trafficserver/ || $cfg_file_tracker->{$file}->{'location'} =~ m/udev/)) ) {
+				$cfg_file_tracker->{$file}->{'service'} = "trafficserver";
+				$return = &process_cfg_file($file);
 			}
-			elsif ($file eq "50-ats.rules") {
-				$return = &process_cfg_file($file, "system");
-			}
-			elsif ($file eq "sysctl.conf") {
-				$return = &process_cfg_file($file, "system");
+			elsif ($file eq "sysctl.conf" || $file eq "50-ats.rules" || $file =~ m/cron/ ) {
+				$cfg_file_tracker->{$file}->{'service'} = "system";
+				$return = &process_cfg_file($file);
 			}
 			elsif ($file eq "ntp.conf") {
-				$return = &process_cfg_file($file, "ntpd");
-			}
-			elsif ($cfg_file_tracker->{$file}->{'location'} =~ m/\/opt\/ort/) {
-				$return = &process_cfg_file($file, "puppet");
+				$cfg_file_tracker->{$file}->{'service'} = "ntpd";
+				$return = &process_cfg_file($file);
 			}
 			else {
 				($log_level >> $WARN) && print "WARN $file is being processed with an unknown service\n";
-				$return = &process_cfg_file($file, "unknown");
+				$cfg_file_tracker->{$file}->{'service'} = "unknown";
+				$return = &process_cfg_file($file);
 			}
 		}
 		if (defined($return) && $return == $CFG_FILE_PREREQ_FAILED) {
@@ -935,7 +756,7 @@ sub process_config_files {
 		} 
 	}
 
-	foreach my $file (sort keys %{$cfg_file_tracker} ) {
+	foreach my $file ( keys %{$cfg_file_tracker} ) {
 		if ( $cfg_file_tracker->{$file}->{'change_needed'} && $cfg_file_tracker->{$file}->{'audit_complete'} && !$cfg_file_tracker->{$file}->{'prereq_failed'} && !$cfg_file_tracker->{$file}->{'audit_failed'} ) {
 			if  ( $file eq "plugin.config" && $cfg_file_tracker->{'remap.config'}->{'prereq_failed'} ) {
 				($log_level >> $ERROR) && print "ERROR plugin.config changed. However, prereqs failed for remap.config so I am skipping updates for plugin.config.\n";
@@ -1022,12 +843,12 @@ sub run_traffic_line {
 sub check_plugins {
 	my $cfg_file = shift;
 	my $file_lines_ref = shift;
-	my %file_lines = %$file_lines_ref;
+	my @file_lines = @{$file_lines_ref};
 	my $return_code = 0;
 
 	if ($cfg_file eq "plugin.config") {
 		($log_level >> $DEBUG) && print "DEBUG Entering advanced processing for plugin.config.\n";
-		foreach my $linep (sort keys %file_lines) {
+		foreach my $linep ( @file_lines) {
 			if ($linep =~ m/^\#/) { next; }		
 			(my $plugin_name) = split(/\s+/, $linep);
 			$plugin_name =~ s/\s+//g;
@@ -1042,9 +863,9 @@ sub check_plugins {
 			}
 		}
 	}
-	if ($cfg_file eq "remap.config") {
+	elsif ($cfg_file eq "remap.config") {
 		($log_level >> $DEBUG) && print "DEBUG Entering advanced processing for remap.config\n";
-		foreach my $liner (sort keys %file_lines) {
+		foreach my $liner ( @file_lines) {
 			if ($liner =~ m/^\#/) { next; }		
 			(my @parts) = split(/\@/, $liner);
 			foreach my $part (@parts) {
@@ -1167,13 +988,13 @@ sub curl_me {
 
 	while ($result =~ m/^curl\: \(\d+\)/ && $retry_counter > 0) {
 		$result =~ s/(\r|\c|\f|\t|\n)/ /g;
-	    	($log_level >> $WARN) && print "WARN Error receiving $url from Traffic Ops: $result\n";
+	    ($log_level >> $ERROR) && print "ERROR Error receiving $url from Traffic Ops: $result\n";
 		$retry_counter--;
 		sleep 5;
 		$result = `/usr/bin/curl $CURL_OPTS $url 2>&1`;
 	}
 	if ($result =~ m/^curl\: \(\d+\)/ && $retry_counter == 0) {
-    		($log_level >> $FATAL) && print "FATAL $url returned in error from Traffic Ops five times!\n";
+    	($log_level >> $FATAL) && print "FATAL $url returned in error from Traffic Ops five times!\n";
 		exit 1;
 	}
 	else {
@@ -1221,7 +1042,7 @@ sub replace_cfg_file {
 		}
 	}
 	if ( $select == 1 || $script_mode == $BADASS || $script_mode == $SYNCDS ) {
-		($log_level >> $ERROR) && print "ERROR Copying $cfg_file_tracker->{$cfg_file}->{'backup_from_trops'} to $cfg_file_tracker->{$cfg_file}->{'location'}/$cfg_file\n";
+		($log_level >> $ERROR) && print "ERROR Copying " . $cfg_file_tracker->{$cfg_file}->{'backup_from_trops'} . " to " . $cfg_file_tracker->{$cfg_file}->{'location'} . "/$cfg_file\n";
 		system("/bin/cp $cfg_file_tracker->{$cfg_file}->{'backup_from_trops'} $cfg_file_tracker->{$cfg_file}->{'location'}/$cfg_file");
 		$cfg_file_tracker->{$cfg_file}->{'change_applied'}++;
 		($log_level >> $TRACE) && print "TRACE Setting change applied for $cfg_file.\n";
@@ -1241,10 +1062,14 @@ sub replace_cfg_file {
 }
 
 sub process_reload_restarts {
+
 	my $cfg_file = shift;	
+	($log_level >> $DEBUG) && print "DEBUG Applying config for: $cfg_file.\n";
+
 	if ($cfg_file =~ m/url\_sig\_(.*)\.config/) {
-		($log_level >> $DEBUG) && print "DEBUG New keys were installed in: $cfg_file. Later I will attempt to touch remap.config.\n";
-		$installed_new_keys++;
+		($log_level >> $DEBUG) && print "DEBUG New keys were installed in: $cfg_file, touch remap.config, and traffic_line -x needed.\n";
+		$installed_new_urlsig_keys++;
+		$traffic_line_needed++;
 	}
 	elsif ($cfg_file =~ m/hdr\_rw\_(.*)\.config/) {
 		($log_level >> $DEBUG) && print "DEBUG New/changed header rewrite rule, installed in: $cfg_file. Later I will attempt to touch remap.config.\n";
@@ -1254,8 +1079,13 @@ sub process_reload_restarts {
 		($log_level >> $DEBUG) && print "DEBUG $cfg_file changed, trafficserver restart needed.\n";
 		$trafficserver_restart_needed++;
 	}
+	elsif ($cfg_file_tracker->{$cfg_file}->{'location'} =~ m/ssl/ && ($cfg_file =~ m/\.cer$/ || $cfg_file =~ m/\.key$/)) {
+		($log_level >> $DEBUG) && print "DEBUG SSL key/cert $cfg_file changed, touch ssl_multicert.config, and traffic_line -x needed.\n";
+		$installed_new_ssl_keys++;
+		$traffic_line_needed++;
+	}
 	elsif ($cfg_file_tracker->{$cfg_file}->{'location'} =~ m/trafficserver/) {
-		($log_level >> $DEBUG) && print "DEBUG $cfg_file changed, traffic_line needed.\n";
+		($log_level >> $DEBUG) && print "DEBUG $cfg_file changed, traffic_line -x needed.\n";
 		$traffic_line_needed++;
 	}
 	elsif ($cfg_file eq "sysctl.conf") {
@@ -1268,6 +1098,10 @@ sub process_reload_restarts {
 	}
 	elsif ($cfg_file =~ m/\_facts/) {
 		($log_level >> $DEBUG) && print "DEBUG Puppet facts file $cfg_file changed.\n";
+		$UPDATE_TROPS_SUCCESSFUL = 1;
+	}
+	elsif ($cfg_file =~ m/cron/) {
+		($log_level >> $DEBUG) && print "DEBUG Cron file $cfg_file changed.\n";
 		$UPDATE_TROPS_SUCCESSFUL = 1;
 	}
 }
@@ -1389,7 +1223,7 @@ sub get_cfg_file_list {
 	($log_level >> $INFO) && printf ("INFO Found profile from Traffic Ops: $profile_name\n");
 	$cdn_name = $ort_ref->{'other'}->{'CDN_name'};
 	($log_level >> $INFO) && printf ("INFO Found CDN_name from Traffic Ops: $cdn_name\n");
-	foreach my $cfg_file ( sort keys %{$ort_ref->{'config_files'}} ) {
+	foreach my $cfg_file ( keys %{$ort_ref->{'config_files'}} ) {
 		($log_level >> $INFO) && printf ("INFO Found config file: %-30s with location: %-50s\n", $cfg_file, $ort_ref->{'config_files'}->{$cfg_file}->{'location'});
 		$cfg_files->{$cfg_file}->{'location'} = $ort_ref->{'config_files'}->{$cfg_file}->{'location'};
 	}
@@ -1635,8 +1469,8 @@ sub process_packages {
 			}
 		}
 		
-		my @install_packages = keys(%{$package_map{"install"}});
-		my @uninstall_packages = keys(%{$package_map{"uninstall"}});
+		my @install_packages = keys( %{$package_map{"install"}} );
+		my @uninstall_packages = keys( %{$package_map{"uninstall"}} );
 
 		if (scalar(@install_packages) > 0 || scalar(@uninstall_packages) > 0) {
 
@@ -1921,6 +1755,13 @@ sub start_restart_services {
 	}
 	#### End processing ATS
 	
+	#### Start teakd
+	if (package_installed("teakd")) {
+		($log_level >> $DEBUG) && print "DEBUG teakd is installed.\n";
+		$teakd_running = &start_service("teakd");
+		# Do something here in the future.
+	}
+
 }
 
 sub run_sysctl_p {
@@ -1956,6 +1797,409 @@ sub run_sysctl_p {
 	}
 }
 
+sub validate_result {
+
+	my $url = ${$_[0]};
+	my $result = ${$_[1]};
+
+	if ($result =~ m/^\d{3}$/) {
+		($log_level >> $ERROR) && print "ERROR Result from curling $url is HTTP $result!\n";
+		return 0;
+	}
+
+	my $size = length($result);
+	if ($size == 0) {
+		($log_level >> $ERROR) && print "ERROR URL: $url returned empty!\n";
+		return 0;
+	}
+	elsif ($size < 125) {
+		($log_level >> $WARN) && print "WARN URL: $url returned only the header.\n";
+		return 0;
+	}
+	else {
+		($log_level >> $DEBUG) && print "DEBUG URL: $url returned $size bytes.\n";
+		return 1;
+	}
+}
+
+sub set_url {
+	my $filename = shift;
+	my $filepath = $cfg_file_tracker->{$filename}->{'location'};
+	my $file = $filepath . "/" . $filename;
+
+	if ( $filename ne "regex_revalidate.config" ) {
+		return "$traffic_ops_host\/genfiles\/view\/$hostname_short\/$filename";
+	}
+	else {
+		return "$traffic_ops_host\/Trafficserver-Snapshots\/$my_cdn_name\/$filename";
+	}
+}
+
+sub scrape_unencode_text {
+	my $text = shift;
+
+	(my @file_lines) = split(/\n/, $text);
+	my @lines;
+	
+	foreach my $line (@file_lines) {
+		($log_level >> $TRACE) && print "TRACE Line from cfg file in TrOps:\t$line\n";
+		$line =~ s/\s+/ /g;
+		$line =~ s/(^\s+|\s+$)//g;
+		$line =~ s/amp\;//g;
+		$line =~ s/\&gt\;/\>/g;
+		$line =~ s/\&lt\;/\</g;
+		chomp($line); 
+		next if ( $line =~ m/^$/ );
+
+		push(@lines, $line);
+	}
+
+	return \@lines;
+}
+
+sub can_read_write_file {
+
+	my $filename = shift;
+
+	my $filepath = $cfg_file_tracker->{$filename}->{'location'};
+	my $file = $filepath . "/" . $filename;
+
+	my $username = $ENV{LOGNAME} || $ENV{USER} || getpwuid($<);
+	($log_level >> $TRACE) && print "TRACE User to validate $file against: $username\n";
+
+	if ( -z $file ) {
+		($log_level >> $ERROR) && print "ERROR $file has size=0!\n";
+		$cfg_file_tracker->{$filename}->{'audit_failed'}++;
+		return 0;
+	}
+
+	if ( !-R $file ) {
+		($log_level >> $ERROR) && print "ERROR $file is not readable by $username!\n";
+		$cfg_file_tracker->{$filename}->{'audit_failed'}++;
+		return 0;
+	}
+
+	if ( !-W $file && $script_mode != $REPORT ) {
+		($log_level >> $ERROR) && print "ERROR $file is not writable by $username!\n";
+		$cfg_file_tracker->{$filename}->{'audit_failed'}++;
+		return 0;
+	}
+
+	($log_level >> $TRACE) && print "TRACE RW perms okay for $filename!\n";
+	return 1;
+}
+
+sub file_exists {
+
+	my $filename = shift;
+	my $filepath = $cfg_file_tracker->{$filename}->{'location'};
+	my $file = $filepath . "/" . $filename;
+
+	if ( !-e $file ) {
+		($log_level >> $ERROR) && print "ERROR $filename does not exist!\n";
+		$cfg_file_tracker->{$filename}->{'audit_failed'}++;
+		return 0;
+	}
+	
+	($log_level >> $TRACE) && print "TRACE $filename exists on disk.\n";
+	return 1;
+
+}
+
+sub open_file_get_contents {
+
+	my $file = shift;
+	my @disk_file_lines;
+
+	($log_level >> $DEBUG) && print "DEBUG Opening file from disk:\t$file.\n";
+	open my $fh, '<', $file || (($log_level >> $ERROR) && print "ERROR Can't open $file: $!\n");
+	
+	while (<$fh>) {
+		my $line = $_;
+		$line =~ s/\s+/ /g;
+		$line =~ s/(^\s+|\s+$)//g;
+		chomp($line); 
+		($log_level >> $TRACE) && print "TRACE Line from cfg file on disk:\t$line.\n";
+		if ($line =~ m/^\#/ || $line =~ m/^$/ ) { 
+			if ( ($line !~ m/DO NOT EDIT - Generated for / && $line !~ m/$header_comment/) && $line !~ m/12M NOTE\:/) {
+				next; 
+			}
+		}
+		push(@disk_file_lines, $line); 
+	}
+	close $fh;
+
+	return \@disk_file_lines;
+}
+
+sub prereqs_ok {
+
+	my $filename = shift;
+	my $file_lines_ref = shift;
+
+	if ($filename eq "plugin.config" || $filename eq "remap.config") {
+		&check_plugins($filename, $file_lines_ref);
+		if ($cfg_file_tracker->{$filename}->{'prereq_failed'}) {
+			($log_level >> $ERROR) && print "ERROR Prereqs failed for $filename!\n";
+			return 0;
+		}
+	}
+	return 1;
+
+}
+
+sub diff_file_lines {
+
+	my $cfg_file 		= shift;
+	my @db_file_lines 	= @{ $_[0] };
+	my @disk_file_lines = @{ $_[1] };
+
+	my %db_file_lines 		= map { $_ => 1 } @db_file_lines;
+	my %disk_file_lines 	= map { $_ => 1 } @disk_file_lines;
+
+	my @db_lines_missing;
+	my @disk_lines_missing;
+
+    my $filepath = $cfg_file_tracker->{$cfg_file}->{'location'};
+    my $file = $filepath . "/" . $cfg_file;
+
+	foreach my $line ( @db_file_lines ) {
+		($log_level >> $TRACE) && print "TRACE Line from TrOps: $line!\n";
+		if (!exists $disk_file_lines{$line}) {
+			#### Float compare
+			if ($line =~ m/FLOAT/) {
+				(my $disk_dum, my $disk_name, my $disk_type, my $disk_val) = split(/\s/, $line);
+				foreach my $l ( keys %db_file_lines ) {
+					(my $db_dum, my $db_name, my $db_type, my $db_val) = split(/\s/, $l);
+					if ($db_name eq $disk_name && $db_type eq $disk_type) {
+						if ( abs($disk_val - $db_val) > 0.00001 ) {
+							push(@disk_lines_missing, $line);
+						}
+					}
+				}
+			}
+			elsif ( ($line =~ m/DO NOT EDIT - Generated for / && $line =~ m/$header_comment/) || $line =~ m/12M NOTE\:/) {
+				my $found_it = 0;
+				foreach my $line_disk ( @disk_file_lines ) {
+					if ( ($line =~ m/DO NOT EDIT - Generated for / && $line =~ m/$header_comment/) || $line =~ m/12M NOTE\:/) {
+						$found_it++;
+					}
+				}
+				if (!$found_it) {
+					push(@disk_lines_missing, $line);
+				}
+			}
+			else {
+				push(@disk_lines_missing, $line);
+			}
+		}
+	}
+	foreach my $line ( @disk_file_lines ) {
+		($log_level >> $TRACE) && print "TRACE Line from disk : $line!\n";
+		if (!exists $db_file_lines{$line}) {
+			#### Float compare
+			if ($line =~ m/FLOAT/) {
+				(my $db_dum, my $db_name, my $db_type, my $db_val) = split(/\s/, $line);
+				foreach my $l ( @disk_file_lines ) {
+					(my $disk_dum, my $disk_name, my $disk_type, my $disk_val) = split(/\s/, $l);
+					if ($db_name eq $disk_name && $db_type eq $disk_type) {
+						if ( abs($disk_val - $db_val) > 0.00001 ) {
+							push(@db_lines_missing, $line);
+						}
+					}
+				}
+			}
+			elsif ( ($line =~ m/DO NOT EDIT - Generated for / && $line =~ m/$header_comment/) || $line =~ m/12M NOTE\:/) {
+				next;
+			}
+			else {
+				push(@db_lines_missing, $line);
+			}
+		}
+	}
+
+	if ( scalar(@db_lines_missing) || scalar(@disk_lines_missing) ) {
+		($log_level >> $ERROR) && print "ERROR Lines for $file from Traffic Ops do not match file on disk.\n";
+	}	
+	if ( scalar(@db_lines_missing) ) {
+		my $line_count = scalar(@db_lines_missing);
+		($log_level >> $DEBUG) && print "DEBUG $line_count lines are missing from file that is in Traffic Ops.\n";
+		foreach my $line ( @db_lines_missing ) {
+			($log_level >> $ERROR) && print "ERROR Config file $cfg_file line only on disk :\t$line\n";
+		}
+
+	}
+
+	if ( scalar(@disk_lines_missing) ) {
+		my $line_count = scalar(@disk_lines_missing);
+		($log_level >> $DEBUG) && print "DEBUG $line_count lines are missing from file that is on disk.\n";
+		foreach my $line ( @disk_lines_missing ) {
+			($log_level >> $ERROR) && print "ERROR Config file $cfg_file line only in TrOps:\t$line\n";
+		}
+
+	}
+
+	return ( \@db_lines_missing, \@disk_lines_missing );
+
+}
+
+sub validate_filename {
+
+	my $filename = shift;
+
+	if ($filename eq "") {
+		($log_level >> $ERROR) && print "ERROR Config file name is empty!\n";
+		$cfg_file_tracker->{$filename}->{'audit_failed'}++;
+		return 0;
+	}
+	return 1;
+}
+
+sub backup_file {
+
+	my $filename 	= shift;
+	my $result_ref	= shift;
+	
+	my $result 	= ${$result_ref};
+	my $filepath 	= $cfg_file_tracker->{$filename}->{'location'};
+	my $file 	= $filepath . "/" . $filename;
+
+	if ($script_mode != $REPORT) {
+		my $bkp_dir;
+		my $bkp_file;
+		if (-e $file) {
+			($log_level >> $ERROR) && print "ERROR Creating backup of file on disk for $filename.\n";
+			$bkp_dir = $TMP_BASE . "/" . $unixtime . "/" . $cfg_file_tracker->{$filename}->{'service'} . "/config_bkp/";
+			$bkp_file = $bkp_dir . $filename;
+			&smart_mkdir($bkp_dir);
+			($log_level >> $DEBUG) && print "DEBUG Backup file: $bkp_file.\n";
+			$cfg_file_tracker->{$filename}->{'backup_from_disk'} = $bkp_file;
+			system("/bin/cp $file $bkp_file");
+		}
+		else {
+			($log_level >> $DEBUG) && print "DEBUG Config file: $file doesn't exist. No need to back up.\n";
+		}
+		($log_level >> $ERROR) && print "ERROR Creating backup of file in TrOps for $filename.\n";
+		$bkp_dir = $TMP_BASE . "/" . $unixtime . "/" . $cfg_file_tracker->{$filename}->{'service'} . "/config_trops/";
+		$bkp_file = $bkp_dir . $filename;
+		&smart_mkdir($bkp_dir);
+		($log_level >> $DEBUG) && print "DEBUG Backup file: $bkp_file.\n";
+		$cfg_file_tracker->{$filename}->{'backup_from_trops'} = $bkp_file;
+		open my $fh, '>', $bkp_file || die "Can't open $bkp_file for writing!\n";
+		print $fh $result;
+		chmod oct(644), $fh;
+		chown $ats_uid, $ats_uid, $fh;
+		close $fh;
+	}
+	return 0;
+	
+}
+
+sub adv_processing_udev {
+
+	my @db_file_lines = @{ $_[0] };
+	
+	($log_level >> $DEBUG) && print "DEBUG Entering advanced processing for 50-ats.rules.\n";
+	foreach my $line50 ( @db_file_lines) {
+		if ($line50 =~ m/KERNEL/ && $line50 =~ m/OWNER/) {
+			(my $dev, my $should_own) = split (/,/, $line50);
+			$dev =~ s/KERNEL\s*\=\=\s*//g; 		$dev =~ s/\"//g;
+			$should_own =~ s/ OWNER\s*:?\=\s*//g;	$should_own =~ s/\"//g;
+
+			my $dev_path = "/dev/$dev";
+			my $dc = undef;
+
+			next if ($should_own eq "root");
+
+			my $ats_uid = `/usr/bin/id $should_own 2>&1`;
+
+			if ($ats_uid =~ m/No such user/) { 
+				($log_level >> $ERROR) && print "ERROR User: $should_own does not exist! Skipping future checks for $dev_path\n";
+				next;
+			}
+
+			chomp($ats_uid);	$ats_uid =~ s/\((.*)$//g;	$ats_uid =~ s/uid\=//g;
+
+			if (-e $dev_path) {
+				($log_level >> $TRACE) && print "TRACE Found device in 50-ats.rules: $dev_path.\n";
+				($dc,$dc,$dc,$dc,my $uid,$dc,$dc,$dc,$dc,$dc,$dc,$dc,$dc) = stat($dev_path);
+				if ($uid != $ats_uid) {
+					($log_level >> $ERROR) && print "ERROR Device $dev_path is owned by $uid, not $should_own ($ats_uid)\n";
+				}
+				(my @df_lines) = split(/\n/, `/bin/df`);
+				foreach my $l (@df_lines) {
+					if ($l =~ m/$dev_path/) {
+						($log_level >> $FATAL) && print "FATAL Device /dev/$dev has an active partition and a file system!!\n";
+					}
+				}
+			} 
+			else {
+				open(DEV, "ls /dev/* |") or ($log_level >> $FATAL) && print "FATAL Couldn't get /dev/ listing: $!\n";
+				while (my $dnode = <DEV>) {
+					next unless ($dnode =~ m!$dev_path!);
+
+					chomp $dnode;
+					next if ($dnode =~ m!/dev/sda[0-9]*!);
+
+					($log_level >> $TRACE) && print "TRACE Found device in 50-ats.rules: $dnode.\n";
+					($dc,$dc,$dc,$dc,my $uid,$dc,$dc,$dc,$dc,$dc,$dc,$dc,$dc) = stat($dnode);
+					if ($uid != $ats_uid) {
+						($log_level >> $ERROR) && print "ERROR Device $dnode is owned by $uid, not $should_own ($ats_uid)\n";
+					}
+					(my @df_lines) = split(/\n/, `/bin/df`);
+					foreach my $l (@df_lines) {
+						if ($l =~ m/$dnode/) {
+							($log_level >> $FATAL) && print "FATAL Device /dev/$dev has an active partition and a file system!!\n";
+						}
+					}
+				}
+				close(DEV);
+			}
+		}
+	} 
+	return 0;
+}
+
+sub adv_processing_ssl {
+
+	my @db_file_lines = @{ $_[0] };
+
+	($log_level >> $DEBUG) && print "DEBUG Entering advanced processing for ssl_multicert.config.\n";
+	foreach my $line ( @db_file_lines ) {
+		($log_level >> $DEBUG) && print "DEBUG line in ssl_multicert.config from Traffic Ops: $line \n";
+		if ($line =~ m/^\s*dest_ip\=\*\s+ssl_cert_name\=(.*)\s+ssl_key_name\=(.*)\s*$/) {
+			push( @{$ssl_tracker->{'db_config'}}, { cert_name => $1, key_name => $2 } );	
+		}
+	}
+	
+	foreach my $keypair ( @{$ssl_tracker->{'db_config'}} ) {
+		($log_level >> $DEBUG) && print "DEBUG Processing SSL key: " . $keypair->{'key_name'} . "\n";
+		my $remap = $keypair->{'key_name'};
+		$remap =~ s/\.key$//;
+		my $result = &curl_me( $traffic_ops_host . "/api/1.1/deliveryservices/hostname/" . $remap . "/sslkeys.json");
+		my $result_json = decode_json($result);
+		
+		my $ssl_key_base64 = $result_json->{'response'}->{'certificate'}->{'key'};	
+		my $ssl_key = decode_base64($ssl_key_base64);
+		my $ssl_cert_base64 = $result_json->{'response'}->{'certificate'}->{'crt'};	
+		my $ssl_cert = decode_base64($ssl_cert_base64);
+		($log_level >> $DEBUG) && print "DEBUG private key for $remap is:\n$ssl_key\n";
+		($log_level >> $DEBUG) && print "DEBUG certificate for $remap is:\n$ssl_cert\n";
+		
+		$cfg_file_tracker->{ $keypair->{'key_name'} }->{'location'} = "/opt/trafficserver/etc/trafficserver/ssl/";
+		$cfg_file_tracker->{ $keypair->{'key_name'} }->{'service'} = "trafficserver";
+		$cfg_file_tracker->{ $keypair->{'key_name'} }->{'component'} = "SSL";
+		$cfg_file_tracker->{ $keypair->{'key_name'} }->{'contents'} = $ssl_key;
+		
+		$cfg_file_tracker->{ $keypair->{'cert_name'} }->{'location'} = "/opt/trafficserver/etc/trafficserver/ssl/";
+		$cfg_file_tracker->{ $keypair->{'cert_name'} }->{'service'} = "trafficserver";
+		$cfg_file_tracker->{ $keypair->{'cert_name'} }->{'component'} = "SSL";
+		$cfg_file_tracker->{ $keypair->{'cert_name'} }->{'contents'} = $ssl_cert;
+
+	}
+	return 0;		
+}
+
 {
 	my $fh;
 	sub check_only_copy_running {
@@ -1968,3 +2212,5 @@ sub run_sysctl_p {
 		} 
 	}
 }
+
+
