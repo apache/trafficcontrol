@@ -25,6 +25,7 @@ use Crypt::OpenSSL::RSA;
 use Crypt::OpenSSL::Bignum;
 use Crypt::OpenSSL::Random;
 use Net::DNS::SEC::Private;
+use Data::Dumper;
 my $TMP_LOCATION = "/var/tmp";
 
 sub register {
@@ -56,12 +57,13 @@ sub register {
 			# #create keys for cdn TLD
 			$self->app->log->info("Creating keys for $key.");
 			my $zsk = $self->get_dnssec_keys( "zsk", $name, $ttl, $inception, $z_expiration, "new", $effectiveDate );
-			my $ksk = $self->get_dnssec_keys( "ksk", $name, $ttl, $inception, $k_expiration, "new", $effectiveDate );
-
+			my $ksk = $self->get_dnssec_keys( "ksk", $name, $ttl, $inception, $k_expiration, "new", $effectiveDate, "1");
+			$self->app->log->info("KSK");
+			$self->app->log->info(Dumper($ksk));
 			#add to keys hash
 			$keys{$key} = {zsk => [$zsk], ksk => [$ksk] };
 
-			#get delivery services
+			#delivery services
 			#first get profile_id
 			my $profile_id = $self->get_profile_id_by_cdn($key);
 
@@ -159,20 +161,9 @@ sub register {
 			my $expiration = shift;
 			my $status 	= shift;
 			my $effectiveDate = shift;
+			my $tld = shift;
 			my %keys       = ();
-
-			if ( $type eq "zsk" ) {
-				%keys = &gen_keys( $self, $name, 0, $ttl );
-			}
-
-			else {
-				%keys = &gen_keys( $self, $name, 1, $ttl );
-			}
-
-			#store in hash for response
 			my %response = (
-				private        => $keys{private_key},
-				public         => $keys{public_key},
 				inceptionDate  => $inception,
 				expirationDate => $expiration,
 				name           => $name,
@@ -180,6 +171,22 @@ sub register {
 				status			=> $status,
 				effectiveDate	=> $effectiveDate
 			);
+
+			if ( $type eq "zsk" ) {
+				%keys = &gen_keys( $self, $name, 0, $ttl );
+			}
+
+			else {
+				%keys = &gen_keys( $self, $name, 1, $ttl, $tld );
+			}
+			#add keys to response
+			$response{private}  = $keys{private_key};
+			$response{public}   = $keys{public_key};
+			if ($tld) {
+				$response{dsRecord} = $keys{ds_record};
+				# $self->app->log->info("get dnssec keys response");
+				# $self->app->log->info(Dumper(\%response));
+			}
 			return \%response;
 		}
 	);
@@ -189,10 +196,12 @@ sub register {
 		my $name = shift;
 		my $ksk  = shift;
 		my $ttl  = shift;
-		my $bits = 2048;
+		my $tld = shift || 0;
+		my $bits = 1024;
 		my $flags |= 256;
 		my $algorithm = 5;    # http://www.iana.org/assignments/dns-sec-alg-numbers/dns-sec-alg-numbers.xhtml
 		my $protocol  = 3;
+		my %response = ();
 
 		if ($ksk) {
 			$flags |= 1;      # ksk
@@ -201,7 +210,10 @@ sub register {
 
 		my $keypair = Net::DNS::SEC::Private->generate_rsa( $name, $flags, $bits, $algorithm );
 		my $private_key = encode_base64( $keypair->dump_rsa_priv );
-
+		#trim whitespace
+		$private_key =~ s/\s+$//;
+		$response{private_key} = $private_key;
+		
 		my $dnskey_rr = new Net::DNS::RR(
 			name      => $name,
 			type      => "DNSKEY",
@@ -212,15 +224,19 @@ sub register {
 			ttl       => $ttl
 		);
 		my $public_key = encode_base64( $dnskey_rr->plain );
-
 		#trim whitespace
-		$private_key =~ s/\s+$//;
 		$public_key =~ s/\s+$//;
-
-		my %response = (
-			private_key => $private_key,
-			public_key  => $public_key,
-		);
+		$response{public_key} = $public_key;
+		#create ds record
+		if ($ksk && $tld) {
+			my $ds_rr = create Net::DNS::RR::DS($dnskey_rr, digtype => 'SHA-256', ttl => $ttl);
+			my %ds_record = (
+				digest => $ds_rr->digest,
+				digestType => $ds_rr->digtype,
+				algorithm => $ds_rr->algorithm
+				);
+			$response{ds_record} = \%ds_record;
+		}
 		return %response;
 	}
 
