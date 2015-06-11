@@ -1252,7 +1252,7 @@ sub ssl_multicert_dot_config {
 		$new_host =~ tr/./_/;
 		my $cer_name = $new_host . "_cert.cer";
 
-		$text .= "dest_ip=*\t ssl_cert_name=$cer_name\t ssl_key_name=$key_name\n";
+		$text .= "ssl_cert_name=$cer_name\t ssl_key_name=$key_name\n";
 	}
 	return $text;
 }

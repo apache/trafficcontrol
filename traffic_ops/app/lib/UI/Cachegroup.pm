@@ -275,9 +275,9 @@ sub update {
 		}
 
 		# if the update has failed, we don't even get here, we go to the exception page.
-		#&log( $self, "Update cachegroup with name:" . $self->param('name'), "UICHANGE" );
 	}
 
+	&log( $self, "Update cachegroup with name:" . $self->param('cg_data.name'), "UICHANGE" );
 	$self->flash( message => "Successfully updated Cache Group." );
 	return $self->redirect_to( '/cachegroup/edit/' . $id );
 }
@@ -361,6 +361,7 @@ sub create {
 		return $self->redirect_to($referer);
 	}
 	else {
+		&log( $self, "Create cachegroup with name:" . $self->param('cg_data.name'), "UICHANGE" );
 		$self->flash( message => "Successfully updated Cache Group." );
 		return $self->redirect_to( '/cachegroup/edit/' . $new_id );
 	}
