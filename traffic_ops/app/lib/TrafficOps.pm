@@ -242,6 +242,8 @@ sub startup {
 	# -- CDNs
 	$r->get('/cdns/dnsseckeys/add')->to( 'DnssecKeys#add', namespace => 'UI' );
 	$r->post('/cdns/dnsseckeys/create')->over( authenticated => 1 )->to( 'DnssecKeys#create', namespace => 'UI' );
+	$r->get('/cdns/dnsseckeys')->to( 'DnssecKeys#index', namespace => 'UI' );
+	$r->get('/cdns/dnsseckeys/:cdn_name')->over( authenticated => 1 )->to( 'DnssecKeys#manage', namespace => 'UI' );
 
 	# -- Dell - print boxes
 	$r->get('/dells')->over( authenticated => 1 )->to( 'Dell#dells', namespace => 'UI' );
