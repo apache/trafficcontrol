@@ -90,6 +90,7 @@ sub view {
 	# $self->stash( cg_data => $data );
 
 	&stash_role($self);
+	print Dumper($data);
 	$self->stash( fbox_layout => 1, cg_data => $data, selected_type => $selected_type );
 
 	if ( $mode eq "edit" and $self->stash('priv_level') > 20 ) {
@@ -275,9 +276,9 @@ sub update {
 		}
 
 		# if the update has failed, we don't even get here, we go to the exception page.
-		#&log( $self, "Update cachegroup with name:" . $self->param('name'), "UICHANGE" );
 	}
 
+	&log( $self, "Update cachegroup with name:" . $self->param('cg_data.name'), "UICHANGE" );
 	$self->flash( message => "Successfully updated Cache Group." );
 	return $self->redirect_to( '/cachegroup/edit/' . $id );
 }
@@ -361,6 +362,7 @@ sub create {
 		return $self->redirect_to($referer);
 	}
 	else {
+		&log( $self, "Create cachegroup with name:" . $self->param('cg_data.name'), "UICHANGE" );
 		$self->flash( message => "Successfully updated Cache Group." );
 		return $self->redirect_to( '/cachegroup/edit/' . $new_id );
 	}
