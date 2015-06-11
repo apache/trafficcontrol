@@ -90,7 +90,6 @@ sub view {
 	# $self->stash( cg_data => $data );
 
 	&stash_role($self);
-	print Dumper($data);
 	$self->stash( fbox_layout => 1, cg_data => $data, selected_type => $selected_type );
 
 	if ( $mode eq "edit" and $self->stash('priv_level') > 20 ) {
