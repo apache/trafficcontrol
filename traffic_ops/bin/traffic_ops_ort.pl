@@ -25,7 +25,7 @@ use MIME::Base64;
 use Data::Dumper;
 
 $| = 1;	
-my $script_version = "0.50c";
+my $script_version = "0.50d";
 my $date = `/bin/date`; chomp($date);
 print "$date\nVersion of this script: $script_version\n";
 
@@ -718,7 +718,7 @@ sub process_config_files {
 		if ( $script_mode == $SYNCDS && 
 		($file eq "records.config" || $file eq "remap.config" || $file eq "parent.config" || $file eq "cache.config" || $file eq "hosting.config" || 
 		$file =~ m/url\_sig\_(.*)\.config$/ || $file =~ m/hdr\_rw\_(.*)\.config$/ || $file eq "regex_revalidate.config" || $file eq "ip_allow.config" || 
-		$file eq "cacheurl_qstring.config" || $file eq "regex_remap.config" || $file =~ m/\.cer$/ || $file =~ m/\.key$/ || $file eq "ssl_multicert.config" ) ) {
+		$file eq "cacheurl_qstring.config" || $file =~ m/regex\_remap\_(.*)\.config$/ || $file =~ m/\.cer$/ || $file =~ m/\.key$/ || $file eq "ssl_multicert.config" ) ) {
 			if (package_installed("trafficserver")) {
 				($log_level >> $DEBUG) && print "DEBUG In syncds mode, I'm about to process config file: $file\n";
 				$cfg_file_tracker->{$file}->{'service'} = "trafficserver";
