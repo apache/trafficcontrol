@@ -19,12 +19,24 @@ package UI::DnssecKeys;
 
 # JvD Note: you always want to put Utils as the first use. Sh*t don't work if it's after the Mojo lines.
 use UI::Utils;
-
 use Mojo::Base 'Mojolicious::Controller';
 use Data::Dumper;
 use UI::DeliveryService;
 use API::Cdn;
 use Scalar::Util qw(looks_like_number);
+use JSON;
+use POSIX qw(strftime);
+
+sub index {
+	my $self = shift;
+
+	#get a list of cdns from parameters
+	&navbarpage($self);
+	my @cdns = $self->db->resultset('Parameter')->search( { name => 'CDN_Name' } )->get_column('value')->all();
+	$self->stash(
+		cdns => \@cdns,
+	);
+}
 
 sub add {
 	my $self = shift;
@@ -133,6 +145,51 @@ sub create {
 	}
 }
 
+sub manage {
+	my $self = shift;
+	&stash_role($self);
+	my $cdn_name = $self->param('cdn_name');
+	my $ttl;
+	my $k_expiry;
+	my $algorithm;
+	my $digest_type;
+	my $digest;
+	#get keys for cdn:
+	my $keys;
+	my $response_container = $self->riak_get( "dnssec", $cdn_name );
+	my $get_keys = $response_container->{'response'};
+	if ( $get_keys->is_success() ) {
+		$keys = decode_json( $get_keys->content );
+		my $cdn_ksk = $keys->{$cdn_name}->{ksk};
+		foreach my $cdn_krecord (@$cdn_ksk) {
+			my $cdn_kstatus = $cdn_krecord->{status};
+			if ($cdn_kstatus eq 'new') { #ignore anything other than the 'new' record
+				my $exp_date = $cdn_krecord->{expirationDate};
+				$k_expiry = strftime '%Y/%m/%d %H:%M:%S', gmtime $exp_date;
+				$k_expiry .= " GMT";
+				$ttl = $cdn_krecord->{ttl};
+				$algorithm = $cdn_krecord->{dsRecord}->{algorithm};
+				$digest_type = $cdn_krecord->{dsRecord}->{digestType};
+				$digest = $cdn_krecord->{dsRecord}->{digest};
+			}
+		}
+	}
+
+	$self->stash(
+		msgs   => [],
+		dnssec => {
+			cdn_name => $cdn_name,
+			ttl      => $ttl,
+			k_expiry => $k_expiry,
+			ds_algorithm => $algorithm,
+			ds_digest_type => $digest_type,
+			ds_digest => $digest,
+		},
+		fbox_layout => 1
+	);
+
+}
+
 sub build_stash {
 	my $self     = shift;
 	my $cdn_name = $self->param('dnssec.cdn_name');
@@ -140,6 +197,7 @@ sub build_stash {
 	my $z_expiry = $self->param('dnssec.z_expiry');
 	my $k_expiry = $self->param('dnssec.k_expiry');
 	my @cdns     = $self->db->resultset('Parameter')->search( { name => 'CDN_Name' } )->get_column('value')->all();
+	&navbarpage($self);
 	$self->stash(
 		dnssec => {
 			cdn_name => $cdn_name,
