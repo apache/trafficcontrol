@@ -158,7 +158,7 @@ Delivery Service
           "infoUrl": "",
           "ipv6RoutingEnabled": false,
           "longDesc": "long_desc",
-          "longDesc1": "long_desc_1":0,
+          "longDesc1": "long_desc_1",
           "longDesc2": "long_desc_2",
           "matchList": [
             {
@@ -177,7 +177,6 @@ Delivery Service
           "remapText": null,
           "regexRemap": null,
           "signed": true,
-          "sslEnabled": false,
           "type": "HTTP",
           "xmlId": "cdl-c2"
         },
@@ -329,7 +328,7 @@ Delivery Service
           "infoUrl": "",
           "ipv6RoutingEnabled": false,
           "longDesc": "long_desc",
-          "longDesc1": "long_desc_1":0,
+          "longDesc1": "long_desc_1",
           "longDesc2": "long_desc_2",
           "matchList": [
             {
@@ -348,7 +347,6 @@ Delivery Service
           "remapText": null,
           "regexRemap": null,
           "signed": true,
-          "sslEnabled": false,
           "type": "HTTP",
           "xmlId": "cdl-c2"
         }
