@@ -22,135 +22,73 @@
 	<script type="text/javascript" src="/js/application.js"></script>
 </head>	 
  <script>
-
-	 //  $(function () {
-		// $(document).ready(function () {
-		// 	// %= include 'jmenu'
-		// 	$('#generate-button').click(function (e) {
-		// 	  //Prevent the post from happening
-		// 	  e.preventDefault();
-		// 	  var cdn = $( "#dnssec_cdn_name option:selected" ).text();
-		// 	  $("#dnssec_selected").val(cdn);
-
-		// 	  $( "#dialog-confirm" ).dialog({
-		// 		resizable: false,
-		// 		height:150,
-		// 		modal: true,
-		// 		buttons: {
-		// 		  "Generate Keys": function() {
-		// 			// $("#generate_message").show();
-		// 			$("#throbber").show();
-		// 			$(".field-with-error").hide();
-		// 			$(".error-section").hide();
-		// 			$("#generate-button").val('Generating Keys...');
-		// 			$( this ).dialog( "close" );
-		// 			$('#dnssec_keys_form').submit();
-		// 		  },
-		// 		  Cancel: function() {
-		// 			$( this ).dialog( "close" );
-		// 		  }
-		// 		}
-		// 	  });
-		// 	});
-
-		// });
-	 //  });
-
-	 //  </script>
+function generate_keys() {
+	var selected_cdn = document.getElementById('cdn_name').value;
+	// var selected_cdn = e.options[e.selectedIndex].text;	
+	$.fancybox({ type: 'iframe', href: "/cdns/" + selected_cdn + "/dnsseckeys/add", padding: 0, autosize: true, fitToView: true, width: 800, minHeight: 600, modal: true, showActivity: false, helpers: {overlay:{locked:false}}});
+	// parent.location.reload(true);
+} 
+function generate_ksk() {
+	var selected_cdn = document.getElementById('cdn_name').value;
+	// var selected_cdn = e.options[e.selectedIndex].text;	
+	$.fancybox({ type: 'iframe', href: "/cdns/" + selected_cdn + "/dnsseckeys/addksk", padding: 0, autosize: true, fitToView: true, width: 800, minHeight: 600, modal: true, showActivity: false, helpers: {overlay:{locked:false}}});
+	// parent.location.reload(true);
+} 
+</script>
 
 </head>
 
 <body id="dnsseckeys">
-      <div id=accordion>
-	  <div class="dialog_body">
-          <h3><a href="#">Manage DNSSEC Keys</a></h3>
-          <div>
-            <script>
-              %= include 'update_js'
-            </script>
-<% if ($priv_level >= 30) { %>  <!-- admins only!! -->
-         %= include 'common/_errors'
-		 %= include 'common/_error_list'
-         %= include 'common/_flash'
-
-		 <!-- <form method="POST" action="/cdns/dnsseckeys/create" id="dnssec_keys_form"> -->
-        <div class="main">
-		  <!-- <div id="generate_message" class="flash-section" style="margin-left: 0px;display:none;">Generating keys may take several seconds</div> -->
-          <h2>DNSSEC Key information:</h2>
-              <div class="block">
-                %= label_for 'cdn_name' => 'CDN Name', class => 'label', style=>"width:110px;"
-                <% unless (field('dnssec.cdn_name')->valid) { %>
-                  <span class="field-with-error"><%= field('dnssec.cdn_name')->error %></span>
-				  <br/>
-                <% } %>
-                %= field('dnssec.cdn_name')->text(class => 'readonly_field', id => 'ttl', name => 'dnssec.cdn_name', required => 'required', readonly => 'readonly');
-              </div><br>
-              <div class="block">
-                %= label_for 'ttl' => 'TTL ', class => 'label', style=>"width:110px;"
-                <% unless (field('dnssec.ttl')->valid) { %>
-                  <span class="field-with-error"><%= field('dnssec.ttl')->error %></span>
-				  <br/>
-                <% } %>
-                %= field('dnssec.ttl')->text(class => 'readonly_field', id => 'ttl', name => 'dnssec.ttl', required => 'required', readonly => 'readonly');
-              </div><br>
-              <div class="block">
-                %= label_for 'ksk_expiration' => 'KSK Expiration', class => 'label', style=>"width:110px;"
-                <% unless (field('dnssec.k_expiry')->valid) { %>
-                  <span class="field-with-error"><%= field('dnssec.k_expiry')->error %></span>
-				  <br/>
-                <% } %>
-                %= field('dnssec.k_expiry')->text(class => 'readonly_field', id => 'k_expiry', name => 'dnssec.k_expiry', required => 'required', readonly => 'readonly');
-              </div><br>
-              <h2> DS Record Information </h2>
-              <div class="block">
-                %= label_for 'ds_algorithm' => 'Algorithm', class => 'label', style=>"width:110px;"
-                <% unless (field('dnssec.ds_algotrithm')->valid) { %>
-                  <span class="field-with-error"><%= field('dnssec.ds_algotrithm')->error %></span>
-				  <br/>
-                <% } %>
-                %= field('dnssec.ds_algorithm')->text(class => 'readonly_field', id => 'ds_algorithm', name => 'dnssec.ds_algorithm', required => 'required', readonly => 'readonly');
-              </div><br>
-              <div class="block">
-              %= label_for 'ds_digest_type' => 'Digest Type', class => 'label', style=>"width:110px;"
-                <% unless (field('dnssec.ds_digest_type')->valid) { %>
-                  <span class="field-with-error"><%= field('dnssec.ds_digest_type')->error %></span>
-				  <br/>
-                <% } %>
-                %= field('dnssec.ds_digest_type')->text(class => 'readonly_field', id => 'ds_digest_type', name => 'dnssec.ds_digest_type', required => 'required', readonly => 'readonly');
-              </div><br>
-              <div class="block">
-              %= label_for 'ds_digest' => 'Digest', class => 'label', style=>"width:110px;"
-                <% unless (field('dnssec.ds_digest')->valid) { %>
-                  <span class="field-with-error"><%= field('dnssec.ds_digest')->error %></span>
-				  <br/>
-                <% } %>
-                %= field('dnssec.ds_digest')->text(class => 'readonly_field', id => 'ds_digest', name => 'dnssec.ds_digest', required => 'required', readonly => 'readonly', style=>"width:450px;");
-              </div><br>
-        </div>
-		<div class="buttons-section">
-
-			  <div id="dialog-confirm" title="Generate New Keys?" style="display:none;">
-				<p><span class="ui-icon ui-icon-alert" style="float:left; margin:0 7px 20px 0;"></span>This will generate DNSSEC keys for the CDN selected and all associated Delivery Services. Are you sure?</p>
-			  </div>
-			  <div id="generate-section" style="margin-bottom: 20px;">
-				 <!-- <div>
-				   %= submit_button 'Generate Keys', id=>'generate-button', class=> 'button', style=> 'float:left;'
-				 </div> -->
-				 <div id="throbber" style="display:none;">
-				       <img src="/js/fancybox/fancybox_loading.gif" />
-				 </div>
-				 <div style="margin-top: 50px; float:right; margin-right: 110px">
-					<button class="button" id="close_button">Close</button><br><br><br>
-				</div>
-			   </div>
-			  <!-- </form> -->
-         </div>
-<% } else { %>
-  <h2> This operation is for ADMINS only!!!!</h2>
-<% } %>
-            </div>
-    </div>
+      <div id="accordion">
+		  <div class="dialog_body">
+	          <h3><a href="#">Manage DNSSEC Keys</a></h3>
+	          <div>
+				<% if ($priv_level >= 30) { %>  <!-- admins only!! -->
+	         		%= include 'common/_errors'
+			 		%= include 'common/_error_list'
+	         		%= include 'common/_flash'
+	        		<div class="main">
+	          			<h2>DNSSEC Key information:</h2>
+	              		<div class="block">
+	                		%= label_for 'cdn_name' => 'CDN Name', class => 'label', style=>"width:110px;"
+	                		%= field('dnssec.cdn_name')->text(class => 'readonly_field', id => 'cdn_name', name => 'dnssec.cdn_name', readonly => 'readonly');
+	              		</div><br>
+			              <div class="block">
+			                %= label_for 'ttl' => 'TTL ', class => 'label', style=>"width:110px;"
+			                %= field('dnssec.ttl')->text(class => 'readonly_field', id => 'ttl', name => 'dnssec.ttl', readonly => 'readonly');
+			              </div><br>
+			              <div class="block">
+			                %= label_for 'ksk_expiration' => 'KSK Expiration', class => 'label', style=>"width:110px;"
+			                %= field('dnssec.k_expiry')->text(class => 'readonly_field', id => 'k_expiry', name => 'dnssec.k_expiry', readonly => 'readonly');
+			              </div><br>
+			              <h2> DS Record Information: </h2>
+			              <div class="block">
+			                %= label_for 'ds_algorithm' => 'Algorithm', class => 'label', style=>"width:110px;"
+			                %= field('dnssec.ds_algorithm')->text(class => 'readonly_field', id => 'ds_algorithm', name => 'dnssec.ds_algorithm', readonly => 'readonly');
+			              </div><br>
+			              <div class="block">
+			              	%= label_for 'ds_digest_type' => 'Digest Type', class => 'label', style=>"width:110px;"
+			              	%= field('dnssec.ds_digest_type')->text(class => 'readonly_field', id => 'ds_digest_type', name => 'dnssec.ds_digest_type', readonly => 'readonly');
+			              </div><br>
+			              <div class="block">
+			              	%= label_for 'ds_digest' => 'Digest', class => 'label', style=>"width:110px;"
+			               	%= field('dnssec.ds_digest')->text(class => 'readonly_field', id => 'ds_digest', name => 'dnssec.ds_digest', readonly => 'readonly', style=>"width:450px;");
+			              </div><br>
+			        </div>
+					<div class="buttons-section" style="margin-bottom: 20px;">
+						<div style="margin-top: 25px; margin-left: 10px; position: relative; display: inline-block; float: left;">
+				   			<button class="button" onclick="generate_keys()" id="generate_keys">Generate Keys for CDN</button>
+				   			<button class="button" id="generate_ksk" style="margin-left: 10px">Generate KSK for CDN</button>
+				 		</div>
+					 	<div style="margin-top: 25px; float:right; margin-right: 50px">
+							<button class="button" id="close_button">Close</button>
+						</div>
+	        		</div>
+				<% } else { %>
+	  				<h2> This operation is for ADMINS only!!!!</h2>
+				<% } %>
+	         </div>
+	    </div>
 	</div>
-</div>
 </body>
 </html>

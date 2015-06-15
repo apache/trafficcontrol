@@ -31,8 +31,8 @@
 <script>
 function get_link_go_fancybox() {
 	var e = document.getElementById('cdn_dom');
-	var selected_cdn = e.options[e.selectedIndex].text;
-	$.fancybox({ type: 'iframe', href: "/cdns/dnsseckeys/" + selected_cdn, padding: 0, autosize: true, fitToView: true, width: 800, minHeight: 600, modal: true, showActivity: false});
+	var selected_cdn = e.options[e.selectedIndex].text;	
+	$.fancybox({ type: 'iframe', href: "/cdns/" + selected_cdn + "/dnsseckeys/manage", padding: 0, autosize: true, fitToView: true, width: 800, minHeight: 600, modal: true, showActivity: false});
 }
 </script>
 <body>
