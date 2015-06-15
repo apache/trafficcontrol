@@ -58,8 +58,6 @@ sub register {
 			$self->app->log->info("Creating keys for $key.");
 			my $zsk = $self->get_dnssec_keys( "zsk", $name, $ttl, $inception, $z_expiration, "new", $effectiveDate );
 			my $ksk = $self->get_dnssec_keys( "ksk", $name, $ttl, $inception, $k_expiration, "new", $effectiveDate, "1");
-			$self->app->log->info("KSK");
-			$self->app->log->info(Dumper($ksk));
 			#add to keys hash
 			$keys{$key} = {zsk => [$zsk], ksk => [$ksk] };
 
@@ -184,8 +182,6 @@ sub register {
 			$response{public}   = $keys{public_key};
 			if ($tld) {
 				$response{dsRecord} = $keys{ds_record};
-				# $self->app->log->info("get dnssec keys response");
-				# $self->app->log->info(Dumper(\%response));
 			}
 			return \%response;
 		}

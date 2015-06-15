@@ -40,28 +40,51 @@ sub index {
 
 sub add {
 	my $self = shift;
-
-	#get a list of cdns from parameters
-	&navbarpage($self);
-	my @cdns = $self->db->resultset('Parameter')->search( { name => 'CDN_Name' } )->get_column('value')->all();
-
+	my $cdn_name = $self->param('cdn_name');
+	my $k_expiry = "365";
+	my $z_expiry = "30";
+	my $keys;
+	my $response_container = $self->riak_get( "dnssec", $cdn_name );
+	my $get_keys = $response_container->{'response'};
+	if ( $get_keys->is_success() ) {
+		$keys = decode_json( $get_keys->content );
+		my $cdn_ksk = $keys->{$cdn_name}->{ksk};
+		foreach my $cdn_krecord (@$cdn_ksk) {
+			my $cdn_kstatus = $cdn_krecord->{status};
+			if ($cdn_kstatus eq 'new') { #ignore anything other than the 'new' record
+				my $exp_date = $cdn_krecord->{expirationDate};
+				my $incept_date = $cdn_krecord->{inceptionDate};
+				$k_expiry = ( $exp_date - $incept_date ) / 86400;
+			}
+		}
+		my $cdn_zsk = $keys->{$cdn_name}->{zsk};
+		foreach my $cdn_zrecord (@$cdn_zsk) {
+			my $cdn_zstatus = $cdn_zrecord->{status};
+			if ($cdn_zstatus eq 'new') { #ignore anything other than the 'new' record
+				my $exp_date = $cdn_zrecord->{expirationDate};
+				my $incept_date = $cdn_zrecord->{inceptionDate};
+				$z_expiry = ( $exp_date - $incept_date ) / 86400;
+			}
+		}
+		}
+		&stash_role($self);	
 	$self->stash(
 		msgs   => [],
 		dnssec => {
-			ttl      => "60",
-			k_expiry => "365",
-			z_expiry => "30",
+			cdn_name => $cdn_name,
+			k_expiry => $k_expiry,
+			z_expiry => $z_expiry,
 		},
-		cdns => \@cdns,
+		fbox_layout => 1
 	);
 }
 
 sub create {
 	my $self     = shift;
 	my $cdn_name = $self->param('dnssec.cdn_name');
-	my $ttl      = $self->param('dnssec.ttl');
 	my $z_expiry = $self->param('dnssec.z_expiry');
 	my $k_expiry = $self->param('dnssec.k_expiry');
+	my $ttl = "60";
 	my $effective_date = $self->param('dnssec.effective_date');
 	if (!defined($effective_date)) {
 		$effective_date = time();
@@ -77,24 +100,28 @@ sub create {
 
 		#get profile_id for cdn
 		my $profile_id = $self->get_profile_id_by_cdn($cdn_name);
-
+		my %condition = ( 'parameter.name' => 'tld.ttls.DNSKEY', 'profile.name' => $profile_id);
+		my $rs_pp = $self->db->resultset('ProfileParameter')->search( \%condition, { prefetch => [ { 'parameter' => undef }, { 'profile' => undef } ] } )->single;
+		if ($rs_pp) {
+			$ttl = $rs_pp->parameter->value;
+		}
 		#find or create dnssec.enabled param
-		my $param_id = $self->db->resultset('Parameter')->find_or_create(
-			{
-				name        => 'dnssec.enabled',
-				config_file => 'CRConfig.json',
-				value       => 'true',
-			}
-		);
-		$param_id = $param_id->id;
+		# my $param_id = $self->db->resultset('Parameter')->find_or_create(
+		# 	{
+		# 		name        => 'dnssec.enabled',
+		# 		config_file => 'CRConfig.json',
+		# 		value       => 'true',
+		# 	}
+		# );
+		# $param_id = $param_id->id;
 
-		#associate param to cdn profile_id
-		my $pp_insert = $self->db->resultset('ProfileParameter')->find_or_create(
-			{
-				profile   => $profile_id,
-				parameter => $param_id,
-			}
-		);
+		# #associate param to cdn profile_id
+		# my $pp_insert = $self->db->resultset('ProfileParameter')->find_or_create(
+		# 	{
+		# 		profile   => $profile_id,
+		# 		parameter => $param_id,
+		# 	}
+		# );
 
 		#create keys
 		my $name = $self->db->resultset('Parameter')->search(
@@ -119,6 +146,7 @@ sub create {
 		}
 		else {
 			my @cdns = $self->db->resultset('Parameter')->search( { name => 'CDN_Name' } )->get_column('value')->all();
+
 			$self->stash(
 				dnssec => {
 					cdn_name => $cdn_name,
@@ -132,13 +160,12 @@ sub create {
 			my @msgs;
 			push( @msgs, $ping_response->{_content} );
 			$self->stash( msgs => \@msgs );
-			$self->build_stash();
-			return $self->render("dnssec_keys/add");
 		}
-
-		return $self->redirect_to("/cdns/dnsseckeys/add");
+		&stash_role($self);
+		return $self->redirect_to("/cdns/$cdn_name/dnsseckeys/add");
 	}
 	else {
+		&stash_role($self);
 		$self->build_stash();
 		$self->stash( msgs => [] );
 		$self->render("dnssec_keys/add");
@@ -165,7 +192,7 @@ sub manage {
 			my $cdn_kstatus = $cdn_krecord->{status};
 			if ($cdn_kstatus eq 'new') { #ignore anything other than the 'new' record
 				my $exp_date = $cdn_krecord->{expirationDate};
-				$k_expiry = strftime '%Y/%m/%d %H:%M:%S', gmtime $exp_date;
+				$k_expiry = strftime '%m/%d/%Y %H:%M:%S', gmtime $exp_date;
 				$k_expiry .= " GMT";
 				$ttl = $cdn_krecord->{ttl};
 				$algorithm = $cdn_krecord->{dsRecord}->{algorithm};
@@ -174,7 +201,6 @@ sub manage {
 			}
 		}
 	}
-
 	$self->stash(
 		msgs   => [],
 		dnssec => {
@@ -213,22 +239,17 @@ sub build_stash {
 sub is_valid {
 	my $self     = shift;
 	my $cdn_name = $self->param('dnssec.cdn_name');
-	my $ttl      = $self->param('dnssec.ttl');
 	my $z_expiry = $self->param('dnssec.z_expiry');
 	my $k_expiry = $self->param('dnssec.k_expiry');
 
 	if ( $cdn_name eq "default" ) {
 		$self->field('dnssec.cdn_name')->is_equal( "", "Please choose a CDN" );
 	}
-
-	if ( !looks_like_number($ttl) ) {
-		$self->field('dnssec.ttl')->is_equal( "", "$ttl is not a number" );
+	if ( $z_expiry eq "" || !looks_like_number($z_expiry) || $z_expiry < 1 ) {
+		$self->field('dnssec.z_expiry')->is_equal( "", "$z_expiry is not a number greater than 0" );
 	}
-	if ( !looks_like_number($z_expiry) ) {
-		$self->field('dnssec.z_expiry')->is_equal( "", "$z_expiry is not a number" );
-	}
-	if ( !looks_like_number($k_expiry) ) {
-		$self->field('dnssec.k_expiry')->is_equal( "", "$k_expiry is not a number" );
+	if ( $k_expiry eq ""  || !looks_like_number($k_expiry) || $k_expiry < 1 ) {
+		$self->field('dnssec.k_expiry')->is_equal( "", "$k_expiry is not a number greater than 0" );
 	}
 
 	return $self->valid;
