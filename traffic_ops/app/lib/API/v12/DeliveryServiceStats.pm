@@ -34,7 +34,6 @@ my $builder;
 
 #TODO: drichardson
 #      - Add required fields validation see lib/API/User.pm based on Validate::Tiny
-#      - Verify how much can be refactored after cache_stats value grouping is complete.
 sub index {
 	my $self        = shift;
 	my $ds_name     = $self->param('deliveryServiceName');
@@ -70,8 +69,10 @@ sub index {
 			#  "$rc": will be either SUCCESS or ERROR (****the implemented Extension should use the same constants for consistency)
 			#  "$result": should always come back as hash that will be forwarded to the Client as JSON.
 			my ( $rc, $result ) = $stats->get_stats($self);
+
 			$self->app->log->debug( "top.rc #-> " . Dumper($rc) );
-			$self->app->log->debug( "top.result #-> " . Dumper($result) );
+
+			#$self->app->log->debug( "top.result #-> " . Dumper($result) );
 
 			if ( $rc == SUCCESS ) {
 				return $self->success($result);

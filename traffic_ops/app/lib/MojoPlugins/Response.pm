@@ -22,12 +22,10 @@ use Carp qw(cluck confess);
 use Data::Dumper;
 use Hash::Merge qw( merge );
 
-my $API_VERSION     = "1.1";
-my $API_VERSION_KEY = "version";
-my $ERROR_LEVEL     = "error";
-my $INFO_LEVEL      = "info";
-my $WARNING_LEVEL   = "warning";
-my $SUCCESS_LEVEL   = "success";
+my $ERROR_LEVEL   = "error";
+my $INFO_LEVEL    = "info";
+my $WARNING_LEVEL = "warning";
+my $SUCCESS_LEVEL = "success";
 
 my $ALERTS_KEY   = "alerts";
 my $LEVEL_KEY    = "level";
@@ -56,20 +54,19 @@ sub register {
 
 			my $response_body;
 			if ( defined($limit) && defined($page) && defined($orderby) ) {
-				$response_body =
-					{ $API_VERSION_KEY => $API_VERSION, $RESPONSE_KEY => $body, $LIMIT_KEY => $limit, $PAGE_KEY => $page, $ORDERBY_KEY => $orderby };
+				$response_body = { $RESPONSE_KEY => $body, $LIMIT_KEY => $limit, $PAGE_KEY => $page, $ORDERBY_KEY => $orderby };
 			}
 			elsif ( defined($limit) && defined($page) ) {
-				$response_body = { $API_VERSION_KEY => $API_VERSION, $RESPONSE_KEY => $body, $LIMIT_KEY => $limit, $PAGE_KEY => $page };
+				$response_body = { $RESPONSE_KEY => $body, $LIMIT_KEY => $limit, $PAGE_KEY => $page };
 			}
 			elsif ( defined($limit) ) {
-				$response_body = { $API_VERSION_KEY => $API_VERSION, $RESPONSE_KEY => $body, $LIMIT_KEY => $limit };
+				$response_body = { $RESPONSE_KEY => $body, $LIMIT_KEY => $limit };
 			}
 			elsif ( defined($page) ) {
-				$response_body = { $API_VERSION_KEY => $API_VERSION, $RESPONSE_KEY => $body, $PAGE_KEY => $limit };
+				$response_body = { $RESPONSE_KEY => $body, $PAGE_KEY => $limit };
 			}
 			else {
-				$response_body = { $API_VERSION_KEY => $API_VERSION, $RESPONSE_KEY => $body };
+				$response_body = { $RESPONSE_KEY => $body };
 			}
 			return $self->render( $STATUS_KEY => 200, $JSON_KEY => $response_body );
 		}
@@ -82,12 +79,11 @@ sub register {
 			my $alert_messages = shift || confess("Please supply a response message text string.");
 			my $info           = shift;
 
-			my $response_body = { $API_VERSION_KEY => $API_VERSION, $ALERTS_KEY => [ { $LEVEL_KEY => $SUCCESS_LEVEL, $TEXT_KEY => $alert_messages } ] };
+			my $response_body = { $ALERTS_KEY => [ { $LEVEL_KEY => $SUCCESS_LEVEL, $TEXT_KEY => $alert_messages } ] };
 			if ( defined($info) ) {
 				$response_body = {
-					$API_VERSION_KEY => $API_VERSION,
-					$ALERTS_KEY      => [ { $LEVEL_KEY => $SUCCESS_LEVEL, $TEXT_KEY => $alert_messages } ],
-					$INFO_KEY        => $info
+					$ALERTS_KEY => [ { $LEVEL_KEY => $SUCCESS_LEVEL, $TEXT_KEY => $alert_messages } ],
+					$INFO_KEY   => $info
 				};
 			}
 			return $self->render( $STATUS_KEY => 200, $JSON_KEY => $response_body );
@@ -99,7 +95,7 @@ sub register {
 		no_content => sub {
 			my $self = shift || confess("Call on an instance of MojoPlugins::Response");
 
-			my $response_body = { $API_VERSION_KEY => $API_VERSION, $ALERTS_KEY => [ { $LEVEL_KEY => $SUCCESS_LEVEL, $TEXT_KEY => "No Content" } ] };
+			my $response_body = { $ALERTS_KEY => [ { $LEVEL_KEY => $SUCCESS_LEVEL, $TEXT_KEY => "No Content" } ] };
 			return $self->render( $STATUS_KEY => 204, $JSON_KEY => $response_body );
 		}
 	);
@@ -113,7 +109,7 @@ sub register {
 			my $builder ||= MojoPlugins::Response::Builder->new( $self, @_ );
 			my @alerts_response = $builder->build_alerts($alerts);
 
-			return $self->render( $STATUS_KEY => 400, $JSON_KEY => { $API_VERSION_KEY => $API_VERSION, $ALERTS_KEY => \@alerts_response } );
+			return $self->render( $STATUS_KEY => 400, $JSON_KEY => { $ALERTS_KEY => \@alerts_response } );
 		}
 	);
 
@@ -126,7 +122,7 @@ sub register {
 			my $builder ||= MojoPlugins::Response::Builder->new( $self, @_ );
 			my @alerts_response = $builder->build_alerts($alerts);
 
-			return $self->render( $STATUS_KEY => 500, $JSON_KEY => { $API_VERSION_KEY => $API_VERSION, $ALERTS_KEY => \@alerts_response } );
+			return $self->render( $STATUS_KEY => 500, $JSON_KEY => { $ALERTS_KEY => \@alerts_response } );
 		}
 	);
 
@@ -149,7 +145,7 @@ sub register {
 			my $self = shift || confess("Call on an instance of MojoPlugins::Response");
 
 			my $response_body =
-				{ $API_VERSION_KEY => $API_VERSION, $ALERTS_KEY => [ { $LEVEL_KEY => $ERROR_LEVEL, $TEXT_KEY => "Unauthorized, please log in." } ] };
+				{ $ALERTS_KEY => [ { $LEVEL_KEY => $ERROR_LEVEL, $TEXT_KEY => "Unauthorized, please log in." } ] };
 			return $self->render( $STATUS_KEY => 401, $JSON_KEY => $response_body );
 		}
 	);
@@ -160,7 +156,7 @@ sub register {
 			my $self = shift || confess("Call on an instance of MojoPlugins::Response");
 
 			my $response_body =
-				{ $API_VERSION_KEY => $API_VERSION, $ALERTS_KEY => [ { $LEVEL_KEY => $ERROR_LEVEL, $TEXT_KEY => "Invalid username or password." } ] };
+				{ $ALERTS_KEY => [ { $LEVEL_KEY => $ERROR_LEVEL, $TEXT_KEY => "Invalid username or password." } ] };
 			return $self->render( $STATUS_KEY => 401, $JSON_KEY => $response_body );
 		}
 	);
@@ -170,10 +166,7 @@ sub register {
 		invalid_token => sub {
 			my $self = shift || confess("Call on an instance of MojoPlugins::Response");
 
-			my $response_body = {
-				$API_VERSION_KEY => $API_VERSION,
-				$ALERTS_KEY      => [ { $LEVEL_KEY => $ERROR_LEVEL, $TEXT_KEY => "Invalid token. Please contact your administrator." } ]
-			};
+			my $response_body = { $ALERTS_KEY => [ { $LEVEL_KEY => $ERROR_LEVEL, $TEXT_KEY => "Invalid token. Please contact your administrator." } ] };
 			return $self->render( $STATUS_KEY => 401, $JSON_KEY => $response_body );
 		}
 	);
@@ -183,7 +176,7 @@ sub register {
 		forbidden => sub {
 			my $self = shift || confess("Call on an instance of MojoPlugins::Response");
 
-			my $response_body = { $API_VERSION_KEY => $API_VERSION, $ALERTS_KEY => [ { $LEVEL_KEY => $ERROR_LEVEL, $TEXT_KEY => "Forbidden" } ] };
+			my $response_body = { $ALERTS_KEY => [ { $LEVEL_KEY => $ERROR_LEVEL, $TEXT_KEY => "Forbidden" } ] };
 			return $self->render( $STATUS_KEY => 403, $JSON_KEY => $response_body );
 		}
 	);
@@ -193,7 +186,7 @@ sub register {
 		not_found => sub {
 			my $self = shift || confess("Call on an instance of MojoPlugins::Response");
 
-			my $response_body = { $API_VERSION_KEY => $API_VERSION, $ALERTS_KEY => [ { $LEVEL_KEY => $ERROR_LEVEL, $TEXT_KEY => "Resource not found." } ] };
+			my $response_body = { $ALERTS_KEY => [ { $LEVEL_KEY => $ERROR_LEVEL, $TEXT_KEY => "Resource not found." } ] };
 			return $self->render( $STATUS_KEY => 404, $JSON_KEY => $response_body );
 		}
 	);

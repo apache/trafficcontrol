@@ -22,6 +22,7 @@ use UI::Utils;
 use Mojo::Base 'Mojolicious::Controller';
 use Data::Dumper;
 use JSON;
+my $builder;
 use Extensions::Delegate::CacheStatistics;
 use Utils::Helper::Extensions;
 Utils::Helper::Extensions->use;
@@ -29,11 +30,11 @@ use Common::ReturnCodes qw(SUCCESS ERROR);
 
 #TODO: drichardson
 #      - Add required fields validation see lib/API/User.pm based on Validate::Tiny
-#      - Verify how much can be refactored after cache_stats value grouping is complete.
 sub index {
 	my $self = shift;
 
 	my $cstats = new Extensions::Delegate::CacheStatistics( $self, $self->get_db_name() );
+
 	my ( $rc, $result ) = $cstats->get_stats();
 	if ( $rc == SUCCESS ) {
 		return $self->success($result);
@@ -41,7 +42,6 @@ sub index {
 	else {
 		return $self->alert($result);
 	}
-
 }
 
 sub get_db_name {
