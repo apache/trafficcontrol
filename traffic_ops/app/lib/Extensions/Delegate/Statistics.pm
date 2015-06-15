@@ -14,6 +14,9 @@ package Extensions::Delegate::Statistics;
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+# Stub class that provides the "hook" for implementing custom statistics gathering.
+# See TrafficOps.pm for the route that points here.
+# TODO: drichardson - add documentation here and in the public doc (.rst).
 sub new {
 	my $self  = {};
 	my $class = shift;
@@ -22,15 +25,8 @@ sub new {
 	return ( bless( $self, $class ) );
 }
 
-sub long_term {
-	return ( 1, "No Traffic Ops Extension implemented for 'Statistics->long_term()'" );
+sub get_stats {
+	return ( 1, "No Traffic Ops Extension implemented for 'Statistics->get_stats()'" );
 }
 
-sub short_term_redis {
-	return ( 1, "No Traffic Ops Extension implemented for 'Statistics->short_term()'" );
-}
-
-sub short_term {
-	return ( 1, "No Traffic Ops Extension implemented for 'Statistics->short_term()'" );
-}
 1;
