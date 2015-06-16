@@ -14,7 +14,7 @@
      limitations under the License.
  -->
 <!DOCTYPE html>
-% title 'Add DNSSEC keys';
+% title 'Generate CDN KSK';
 <head>
 	<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
 	<title><%= title %></title>
@@ -62,32 +62,24 @@
 <body id="tools">
 	<div id="accordion">
 	  <div class="dialog_body">
-    	<h3><a href="#">Generate DNSSEC Keys</a></h3>
+    	<h3><a href="#">Generate DNSSEC KSK</a></h3>
         <div>
 			<% if ($priv_level >= 30) { %>  <!-- admins only!! -->
          		%= include 'common/_errors'
 		 		%= include 'common/_error_list'
          		%= include 'common/_flash'
-		 	<form method="POST" action="/cdns/dnsseckeys/create" id="dnssec_keys_form">
+		 	<form method="POST" action="/cdns/dnsseckeys/genksk" id="dnssec_keys_form">
         		<div class="main">
 		  			<div id="generate_message" class="flash-section" style="margin-left: 0px;display:none;">Generating keys may take several seconds</div>
-          			<h2>Please enter the following information to generate DNSSEC Keys:</h2>
+          			<h2>Please enter expiration for KSK</h2>
              		<div class="block">
                  		%= label_for 'cdn_name' => '* CDN:', class => 'label'
-                  		%= field('dnssec.cdn_name')->text(class => 'readonly_field', id => 'cdn_name', name => 'dnssec.cdn_name', style=>"width:100px;");
+                  		%= field('dnssec.cdn_name')->text(class => 'readonly_field', id => 'cdn_name', name => 'dnssec.cdn_name', style=>"width:100px;", readonly => 'readonly');
 		                <% unless(field('dnssec.cdn_name')->valid) { %>
 		                  <span class="field-with-error"><%= field('dnssec.cdn_name')->error %></span>
 						  <br/>
 		                <% } %>
               		</div><br>
-              		<div class="block">
-		                %= label_for 'zsk_expiration' => '* ZSK Expiration (Days)', class => 'label'
-		                <% unless (field('dnssec.z_expiry')->valid) { %>
-		                  <span class="field-with-error"><%= field('dnssec.z_expiry')->error %></span>
-						  <br/>
-		                <% } %>
-		                %= field('dnssec.z_expiry')->text(class => 'field', id => 'z_expiry', name => 'dnssec.z_expiry', required => 'required', style=>"width:100px;");
-		            </div><br>
               		<div class="block">
 		                %= label_for 'ksk_expiration' => '* KSK Expiration (Days)', class => 'label'
 		                <% unless (field('dnssec.k_expiry')->valid) { %>
@@ -96,12 +88,13 @@
 		                <% } %>
 		                %= field('dnssec.k_expiry')->text(class => 'field', id => 'k_expiry', name => 'dnssec.k_expiry', required => 'required', style=>"width:100px;");
 		            </div><br>
+		             %= field('dnssec.z_expiry')->hidden(class => 'field', required => 'required', id => 'dnssec.z_expiry', name => 'dnssec.z_expiry', type => 'hidden');
         		</div><br>    
 			<div class="buttons-section">
 				<div id="dialog-confirm" title="Generate Keys?" style="display:none;">
-					<p><span class="ui-icon ui-icon-alert" style="float:left; margin:0 7px 20px 0;"></span>This will generate DNSSEC keys for the CDN selected and all associated Delivery Services. Are you sure?</p>
+					<p><span class="ui-icon ui-icon-alert" style="float:left; margin:0 7px 20px 0;"></span>This will re-generate the KSK for the chosen CDN. Are you sure?</p>
 				</div>
-			<div id="generate-section" style="margin-bottom: 20px;">
+			<div id="generate-section">
 				<div>
 				   %= submit_button 'Generate Keys', id=>'generate-button', class=> 'button', style=> 'float:left;'
 				</div>
@@ -110,9 +103,9 @@
 				</div>
 			</div>
 			</form>
-			  	<div style="float:right; margin-right: 50px">
+		 	<div style="float:right; margin-right: 50px">
 					<button class="button" id="close_button">Close</button>
-				</div>
+			</div>
          	</div>
 			<% } else { %>
   				<h2> This operation is for ADMINS only!!!!</h2>

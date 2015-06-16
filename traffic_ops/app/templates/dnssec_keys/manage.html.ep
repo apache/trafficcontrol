@@ -78,7 +78,7 @@ function generate_ksk() {
 					<div class="buttons-section" style="margin-bottom: 20px;">
 						<div style="margin-top: 25px; margin-left: 10px; position: relative; display: inline-block; float: left;">
 				   			<button class="button" onclick="generate_keys()" id="generate_keys">Generate Keys for CDN</button>
-				   			<button class="button" id="generate_ksk" style="margin-left: 10px">Generate KSK for CDN</button>
+				   			<button class="button" onclick="generate_ksk()" style="margin-left: 10px">Generate KSK for CDN</button>
 				 		</div>
 					 	<div style="margin-top: 25px; float:right; margin-right: 50px">
 							<button class="button" id="close_button">Close</button>
