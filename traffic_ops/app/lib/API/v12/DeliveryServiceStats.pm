@@ -25,7 +25,7 @@ use JSON;
 use HTTP::Date;
 use Extensions::Delegate::Statistics;
 use Utils::Helper::Extensions;
-Utils::Helper::Extensions->load;
+Utils::Helper::Extensions->use;
 use Common::ReturnCodes qw(SUCCESS ERROR);
 
 my $builder;

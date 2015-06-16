@@ -20,10 +20,8 @@ package Utils::Helper::Extensions;
 use Data::Dumper;
 use Mojo::UserAgent;
 use File::Find;
-our @EXPORT    = qw();
-our @EXPORT_OK = qw(load);
 
-sub load {
+sub use {
 	my $module;
 	my $to_ext_lib_env = $ENV{"TO_EXTENSIONS_LIB"};
 	if ( defined($to_ext_lib_env) ) {
