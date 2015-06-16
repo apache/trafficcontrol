@@ -31,7 +31,7 @@ sub use {
 			find(
 				sub {
 					return unless -f;         #Must be a file
-					return unless /\.pm$/;    #Must end with `.pl` suffix
+					return unless /\.pm$/;    #Must end with `.pm` suffix
 					push @file_list, $File::Find::name;
 				},
 				$to_ext_lib_env
