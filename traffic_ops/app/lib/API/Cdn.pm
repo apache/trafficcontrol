@@ -870,7 +870,7 @@ sub dnssec_keys {
 				my $cdn_z_incep        = $cdn_zrecord->{inceptionDate};
 				$default_z_exp_days = ( $cdn_z_exp - $cdn_z_incep ) / 86400;
 				#check if zsk is expired, if so re-generate
-				if ( ($cdn_z_exp - 846000000) < $key_expiration ) {
+				if ( $cdn_z_exp < $key_expiration ) {
 				#if expired create new keys
 					$self->app->log->info("The ZSK keys for $cdn_name are expired!");
 					my $effective_date = $cdn_z_exp - ($dnskey_ttl * $dnskey_effective_multiplier);
