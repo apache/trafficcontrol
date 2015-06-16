@@ -26,7 +26,8 @@ use JSON;
 use IO::Socket::SSL qw();
 use LWP::UserAgent qw();
 use File::Slurp;
-Utils::Helper::Datasource->load_extensions;
+use Utils::Helper::Extensions;
+Utils::Helper::Extensions->load;
 
 use constant SERVER_TYPE             => 'INFLUXDB';
 use constant SCHEMA_FILE             => 'InfluxDBHostsOnline';

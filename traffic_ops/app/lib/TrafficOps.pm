@@ -44,9 +44,8 @@ use MojoX::Log::Log4perl;
 use File::Find;
 use File::Basename;
 use Env qw(PERL5LIB);
-use Utils::Helper::Datasource;
+use Utils::Helper::Extensions;
 use File::Path qw(make_path);
-Utils::Helper::Datasource->load_extensions;
 
 use constant SESSION_TIMEOUT => 14400;
 my $logging_root_dir;

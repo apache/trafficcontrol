@@ -23,12 +23,10 @@ use Mojo::Base 'Mojolicious::Controller';
 use Data::Dumper;
 use JSON;
 use HTTP::Date;
-use Utils::Helper::Datasource;
 use Extensions::Delegate::Statistics;
-Utils::Helper::Datasource->load_extensions;
+use Utils::Helper::Extensions;
+Utils::Helper::Extensions->load;
 use Common::ReturnCodes qw(SUCCESS ERROR);
-
-#Utils::Helper::Datasource->load_extensions;
 
 my $builder;
 

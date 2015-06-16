@@ -271,39 +271,4 @@ sub calculate_stats {
 	return ($data);
 }
 
-sub load_module {
-	my $module = shift;
-	if ( defined( $ENV{"TO_EXTENSIONS_LIB"} ) ) {
-		my $use = $module;
-		eval $use;
-	}
-}
-
-sub load_extensions {
-	my $module;
-	my $to_ext_lib_env = $ENV{"TO_EXTENSIONS_LIB"};
-	if ( defined($to_ext_lib_env) ) {
-		if ( -e $to_ext_lib_env ) {
-			print "Using Extensions library path: " . $to_ext_lib_env . "\n";
-			my @file_list;
-			find(
-				sub {
-					return unless -f;         #Must be a file
-					return unless /\.pm$/;    #Must end with `.pl` suffix
-					push @file_list, $File::Find::name;
-				},
-				$to_ext_lib_env
-			);
-
-			foreach my $file (@file_list) {
-				open my $fn, '<', $file;
-				my $first_line = <$fn>;
-				my ( $package_keyword, $package_name ) = ( $first_line =~ m/(package )(.*);/ );
-				eval "use $package_name;";
-				close $fn;
-			}
-		}
-	}
-}
-
 1;
