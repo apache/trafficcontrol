@@ -19,61 +19,55 @@ package API::Cdn;
 
 use UI::Utils;
 use Mojo::Base 'Mojolicious::Controller';
-use Utils::Rascal;
 use Data::Dumper;
-use Utils::Helper;
-use Time::HiRes qw(gettimeofday tv_interval);
-use Math::Round qw(nearest);
 use Carp qw(cluck confess);
 use JSON;
 use MIME::Base64;
 use UI::DeliveryService;
 use MojoPlugins::Response;
+use Common::ReturnCodes qw(SUCCESS ERROR);
 
-my $valid_server_types = {
-	edge => "EDGE",
-	mid  => "MID",
-};
-
-# this structure maps the above types to the allowed metrics below
-my $valid_metric_types = {
-	origin_tps => "mid",
-	ooff       => "mid",
-};
+################################################################################
+# WARNING: This route is unauthenticated!
+# Note: we only have a summary route thus far.
+################################################################################
+sub metrics {
+	my $self = shift;
+	my $m    = new Extensions::Delegate::Metrics($self);
+	my ( $rc, $result ) = $m->get_etl_metrics();
+	if ( $rc == SUCCESS ) {
+		return ( $self->success($result) );
+	}
+	else {
+		return ( $self->alert($result) );
+	}
+}
 
 sub usage_overview {
-	my $self     = shift;
-	my $interval = 10;      # TODO: should this be passed in? -jse
+	my $self = shift;
 
-	my $match_tps  = "all:all:all:tps_total";
-	my $match_kbps = "all:all:all:kbps";
-	my $cdn_list   = {};
-
-	my $stats = {
-		tps         => 0,
-		currentGbps => 0,
-		maxGbps     => 0,
-	};
-
-	my $rs = $self->db->resultset('Parameter')->search( { name => 'CDN_name' } );
-
-	while ( my $row = $rs->next ) {
-		$cdn_list->{ $row->value } = 1;
+	my $st = new Extensions::Delegate::Statistics($self);
+	my ( $rc, $result ) = $st->get_usage_overview();
+	if ( $rc == SUCCESS ) {
+		$self->success($result);
 	}
-
-	for my $cdn_name ( keys( %{$cdn_list} ) ) {
-		my $tps  = $self->v11_get_stats( $cdn_name . ":" . $match_tps,  "now", "now", $interval );
-		my $kbps = $self->v11_get_stats( $cdn_name . ":" . $match_kbps, "now", "now", $interval );
-
-		$stats->{tps} += $tps->{series}->[0]->{samples}->[0];
-		$stats->{currentGbps} += $kbps->{series}->[0]->{samples}->[0] / 1000 / 1000;
-		my $capacity = $kbps->{capacity};
-		if ( defined($capacity) ) {
-			$stats->{maxGbps} += $capacity / 1000 / 1000;
-		}
+	else {
+		$self->alert($result);
 	}
+}
 
-	$self->success($stats);
+sub peakusage {
+	my $self = shift;
+
+	my $stats = new Extensions::Delegate::Statistics($self);
+	my ( $rc, $result ) = $stats->get_daily_summary();
+
+	if ( $rc == SUCCESS ) {
+		return $self->success($result);
+	}
+	else {
+		return $self->alert($result);
+	}
 }
 
 sub configs_monitoring {
@@ -489,7 +483,8 @@ sub gen_traffic_router_config {
 
 	my $ds_regex_tracker;
 	my $regexps;
-	my $rs_ds = $self->db->resultset('Deliveryservice')
+	my $rs_ds =
+		$self->db->resultset('Deliveryservice')
 		->search( { 'me.profile' => $ccr_profile_id, 'active' => 1 }, { prefetch => [ 'deliveryservice_servers', 'deliveryservice_regexes', 'type' ] } );
 	while ( my $row = $rs_ds->next ) {
 		my $delivery_service;
@@ -511,7 +506,8 @@ sub gen_traffic_router_config {
 				$regex_to_props->{ $subrow->{'_column_data'}->{'regex'} }->{'pattern'} =
 					$regex_tracker->{ $subrow->{'_column_data'}->{'regex'} }->{'pattern'};
 				$regex_to_props->{ $subrow->{'_column_data'}->{'regex'} }->{'setNumber'} = $subrow->set_number;
-				$regex_to_props->{ $subrow->{'_column_data'}->{'regex'} }->{'type'} = $regex_tracker->{ $subrow->{'_column_data'}->{'regex'} }->{'type'};
+				$regex_to_props->{ $subrow->{'_column_data'}->{'regex'} }->{'type'} =
+					$regex_tracker->{ $subrow->{'_column_data'}->{'regex'} }->{'type'};
 				if ( $regex_to_props->{ $subrow->{'_column_data'}->{'regex'} }->{'type'} eq 'HOST_REGEXP' ) {
 					$ds_to_remap{ $row->xml_id }->[ $subrow->set_number ] = $regex_to_props->{ $subrow->{'_column_data'}->{'regex'} }->{'pattern'};
 				}
@@ -702,29 +698,6 @@ sub get_cdn_name {
 	return $cdn_name;
 }
 
-sub peakusage {
-	my $self            = shift;
-	my $dsid            = $self->param('ds');
-	my $cachegroup_name = $self->param('name');
-	my $peak_usage_type = $self->param('peak_usage_type');
-	my $start           = $self->param('start');
-	my $end             = $self->param('end');
-	my $interval        = $self->param('interval');
-
-	return $self->get_daily_usage( $dsid, $cachegroup_name, $peak_usage_type, $start, $end, $interval );
-}
-
-sub stats {
-	my $self     = shift;                       # /redis/#match/#start/#end/#interval
-	my $match    = $self->param('match');
-	my $start    = $self->param('start');       # start time in secs since 1970, or "now" to get latest sample
-	my $end      = $self->param('end');         # end time in secs since 1970, or "now" to get latest sample
-	my $interval = $self->param('interval');    # the interval between the samples. 10 is minimum, has to be a multiple of 10
-
-	my $j = $self->v11_get_stats( $match, $start, $end, $interval );
-	$self->render( json => $j );
-}
-
 # Produces a list of Cdns for traversing child links
 sub get_cdns {
 	my $self = shift;
@@ -792,24 +765,6 @@ sub domains {
 	$self->success( \@data );
 }
 
-################################################################################
-# WARNING: This route is unauthenticated!
-# Note: we only have a summary route thus far.
-################################################################################
-sub metrics {
-	my $self   = shift;
-	my $metric = $self->param("metric");
-
-	my $valid_type = $valid_metric_types->{$metric};
-	if ( exists( $valid_metric_types->{$metric} ) ) {
-		$self->param( type => $valid_metric_types->{$metric} );
-		return ( $self->etl_metrics() );
-	}
-	else {
-		return ( $self->not_found() );
-	}
-}
-
 sub dnssec_keys {
 	my $self = shift;
 	if ( !&is_admin($self) ) {
@@ -826,79 +781,88 @@ sub dnssec_keys {
 		else {
 			return $self->alert( { Error => " - Dnssec keys for $cdn_name do not exist!  Response was: " . $get_keys->content } );
 		}
+		my %new_keys = ();
 
-		#get DNSKEY ttl, generation multiplier, and effective mutiplier for CDN TLD
-		my $profile_id = $self->get_profile_id_by_cdn($cdn_name);
-		my $dnskey_gen_multiplier;
-		my $dnskey_ttl;
-		my $dnskey_effective_multiplier;
-		my %condition = ( 'parameter.name' => 'tld.ttls.DNSKEY', 'profile.name' => $profile_id);
-		my $rs_pp = $self->db->resultset('ProfileParameter')->search( \%condition, { prefetch => [ { 'parameter' => undef }, { 'profile' => undef } ] } )->single;
-		if ($rs_pp) {
-			$dnskey_ttl = $rs_pp->parameter->value;
-		}
-		else {
-			$dnskey_ttl = '60';	
-		}
-		%condition = ( 'parameter.name' => 'DNSKEY.generation.multiplier', 'profile.name' => $profile_id);
-		$rs_pp = $self->db->resultset('ProfileParameter')->search( \%condition, { prefetch => [ { 'parameter' => undef }, { 'profile' => undef } ] } )->single;
-		if ($rs_pp) {
-			 $dnskey_gen_multiplier = $rs_pp->parameter->value;
-		}
-		else {
-	 		 $dnskey_gen_multiplier = '10';
-	 	}
-	 	%condition = ( 'parameter.name' => 'DNSKEY.effective.multiplier', 'profile.name' => $profile_id);
-		$rs_pp = $self->db->resultset('ProfileParameter')->search( \%condition, { prefetch => [ { 'parameter' => undef }, { 'profile' => undef } ] } )->single;
-	 	if ($rs_pp) {
-	 		 $dnskey_effective_multiplier = $rs_pp->parameter->value;
-	 	}
-	 	else {
-	 		 $dnskey_effective_multiplier = '2';
-	 	}
-	 	my $key_expiration = time() - ($dnskey_ttl * $dnskey_gen_multiplier); 
+		# add TLD keys to new_keys hash.  Remove this if we are checking TLD expiration
+		$new_keys{$cdn_name} = $keys->{$cdn_name};
+		my $z_update = 0;
+		my $k_update = 0;
 
 		#get default expiration days and ttl for DSs from CDN record
 		my $default_k_exp_days = "365";
 		my $default_z_exp_days = "30";
+
 		my $cdn_ksk = $keys->{$cdn_name}->{ksk};
 		foreach my $cdn_krecord (@$cdn_ksk) {
 			my $cdn_kstatus = $cdn_krecord->{status};
-			if ($cdn_kstatus eq 'new') { #ignore anything other than the 'new' record
-				my $cdn_k_exp          = $cdn_krecord->{expirationDate};
-				my $cdn_k_incep        = $cdn_krecord->{inceptionDate};
+			if ( $cdn_kstatus eq 'new' ) {    #ignore anything other than the 'new' record
+				my $cdn_k_exp   = $cdn_krecord->{expirationDate};
+				my $cdn_k_incep = $cdn_krecord->{inceptionDate};
 				$default_k_exp_days = ( $cdn_k_exp - $cdn_k_incep ) / 86400;
 			}
 		}
 		my $cdn_zsk = $keys->{$cdn_name}->{zsk};
 		foreach my $cdn_zrecord (@$cdn_zsk) {
 			my $cdn_zstatus = $cdn_zrecord->{status};
-			if ($cdn_zstatus eq 'new') { #ignore anything other than the 'new' record
-				my $cdn_z_exp          = $cdn_zrecord->{expirationDate};
-				my $cdn_z_incep        = $cdn_zrecord->{inceptionDate};
+			if ( $cdn_zstatus eq 'new' ) {    #ignore anything other than the 'new' record
+				my $cdn_z_exp   = $cdn_zrecord->{expirationDate};
+				my $cdn_z_incep = $cdn_zrecord->{inceptionDate};
 				$default_z_exp_days = ( $cdn_z_exp - $cdn_z_incep ) / 86400;
-				#check if zsk is expired, if so re-generate
-				if ( $cdn_z_exp < $key_expiration ) {
-				#if expired create new keys
-					$self->app->log->info("The ZSK keys for $cdn_name are expired!");
-					my $effective_date = $cdn_z_exp - ($dnskey_ttl * $dnskey_effective_multiplier);
-					my $new_dnssec_keys = $self->regen_expired_keys( "zsk", $cdn_name, $keys, $effective_date );
-					$keys->{$cdn_name} = $new_dnssec_keys; 
-				}
 			}
 		}
-				
+
 		#get DeliveryServices for CDN
+		my $profile_id = $self->get_profile_id_by_cdn($cdn_name);
 		my %search     = ( profile => $profile_id );
 		my @ds_rs      = $self->db->resultset('Deliveryservice')->search( \%search );
 		foreach my $ds (@ds_rs) {
+
+			#get DNSKEY ttl for TLD
+			my $dnskey_gen_multiplier;
+			my $dnskey_ttl;
+			my $dnskey_effective_multiplier;
+			my $ds_profile = $ds->profile->name;
+			my %condition = ( 'parameter.name' => 'tld.ttls.DNSKEY', 'profile.name' => $ds_profile );
+			my $rs_pp =
+				$self->db->resultset('ProfileParameter')->search( \%condition, { prefetch => [ { 'parameter' => undef }, { 'profile' => undef } ] } )
+				->single;
+			if ($rs_pp) {
+				$dnskey_ttl = $rs_pp->parameter->value;
+			}
+			else {
+				$dnskey_ttl = '60';
+			}
+			%condition = ( 'parameter.name' => 'DNSKEY.generation.multiplier', 'profile.name' => $ds_profile );
+			$rs_pp =
+				$self->db->resultset('ProfileParameter')->search( \%condition, { prefetch => [ { 'parameter' => undef }, { 'profile' => undef } ] } )
+				->single;
+			if ($rs_pp) {
+				$dnskey_gen_multiplier = $rs_pp->parameter->value;
+			}
+			else {
+				$dnskey_gen_multiplier = '10';
+			}
+			%condition = ( 'parameter.name' => 'DNSKEY.effective.multiplier', 'profile.name' => $ds_profile );
+			$rs_pp =
+				$self->db->resultset('ProfileParameter')->search( \%condition, { prefetch => [ { 'parameter' => undef }, { 'profile' => undef } ] } )
+				->single;
+			if ($rs_pp) {
+				$dnskey_effective_multiplier = $rs_pp->parameter->value;
+			}
+			else {
+				$dnskey_effective_multiplier = '2';
+			}
+			my $key_expiration = time() - ( $dnskey_ttl * $dnskey_gen_multiplier );
+
 			#check if keys exist for ds
 			my $xml_id  = $ds->xml_id;
 			my $ds_keys = $keys->{$xml_id};
 			if ( !$ds_keys ) {
+
 				#create keys
 				$self->app->log->info("Keys do not exist for ds $xml_id");
 				my $ds_id = $ds->id;
+
 				#create the ds domain name for dnssec keys
 				my $domain_name = UI::DeliveryService::get_cdn_domain( $self, $ds_id );
 				my $ds_regexes = UI::DeliveryService::get_regexp_set( $self, $ds_id );
@@ -906,6 +870,7 @@ sub dnssec_keys {
 					->search( { 'me.xml_id' => $xml_id }, { prefetch => [ { 'type' => undef }, { 'profile' => undef } ] } );
 				my $data = $rs_ds->single;
 				my @example_urls = UI::DeliveryService::get_example_urls( $self, $ds_id, $ds_regexes, $data, $domain_name, $data->protocol );
+
 				#first one is the one we want.  period at end for dnssec, substring off stuff we dont want
 				my $ds_name = $example_urls[0] . ".";
 				my $length = length($ds_name) - index( $ds_name, "." );
@@ -919,98 +884,112 @@ sub dnssec_keys {
 				my $ksk = $self->get_dnssec_keys( "ksk", $ds_name, $dnskey_ttl, $inception, $k_expiration, "new", $inception );
 
 				#add to keys hash
-				$keys->{$xml_id} = { zsk => [$zsk], ksk => [$ksk] };
+				$new_keys{$xml_id} = { zsk => [$zsk], ksk => [$ksk] };
 
 				#update param with current time stamp
 				my $param_update = $self->db->resultset('Parameter')->find( { name => $cdn_name . ".dnssec.inception" } );
 				$param_update->value($inception);
 				$param_update->update();
 			}
+
 			#if keys do exist, check expiration
 			else {
 				my $ksk = $ds_keys->{ksk};
 				foreach my $krecord (@$ksk) {
-					my $kstatus = $krecord->{status}; 				
-					if ($kstatus eq 'new') { #ignore anything other than the 'new' record
-					#check if expired
+					my $kstatus = $krecord->{status};
+					if ( $kstatus eq 'new' ) {    #ignore anything other than the 'new' record
+						                          #check if expired
 						if ( $krecord->{expirationDate} < $key_expiration ) {
-						#if expired create new keys
+
+							#if expired create new keys
 							$self->app->log->info("The KSK keys for $xml_id are expired!");
-							my $effective_date = $krecord->{expirationDate} - ($dnskey_ttl * $dnskey_effective_multiplier);
-							my $new_dnssec_keys = $self->regen_expired_keys( "ksk", $xml_id, $keys, $effective_date );
-							$keys->{$xml_id} = $new_dnssec_keys;
+							my $new_dnssec_keys = $self->regen_expired_keys( "ksk", $xml_id, $keys, $dnskey_effective_multiplier );
+							$new_keys{$xml_id} = $new_dnssec_keys;
+							$k_update = 1;
 						}
-					}	 
+					}
 				}
 				my $zsk = $ds_keys->{zsk};
 				foreach my $zrecord (@$zsk) {
-					my $zstatus = $zrecord->{status}; 
-					if ($zstatus eq 'new') {
-						if ($zrecord->{expirationDate} < $key_expiration ) {
-						#if expired create new keys
+					my $zstatus = $zrecord->{status};
+					if ( $zstatus eq 'new' ) {
+						if ( $zrecord->{expirationDate} < $key_expiration ) {
+
+							#if expired create new keys
 							$self->app->log->info("The ZSK keys for $xml_id are expired!");
-							my $effective_date = $zrecord->{expirationDate} - ($dnskey_ttl * $dnskey_effective_multiplier);
-							my $new_dnssec_keys = $self->regen_expired_keys( "zsk", $xml_id, $keys, $effective_date );
-							$keys->{$xml_id} = $new_dnssec_keys; 
+							my $new_dnssec_keys = $self->regen_expired_keys( "zsk", $xml_id, $keys, $dnskey_effective_multiplier );
+							$new_keys{$xml_id} = $new_dnssec_keys;
+							$z_update = 1;
 						}
-					}	 						
+					}
+				}
+
+				#if not expired write existing key
+				if ( $z_update == 0 && $k_update == 0 ) {
+					$new_keys{$xml_id} = $keys->{$xml_id};
 				}
 			}
 		}
-		# #convert hash to json and store in Riak
-		my $json_data = encode_json( $keys );
-		$response_container = $self->riak_put( "dnssec", $cdn_name, $json_data );
 
+		# #convert hash to json and store in Riak
+		my $json_data = encode_json( \%new_keys );
+		$self->riak_put( "dnssec", $cdn_name, $json_data );
+
+		#get updated record
+		$response_container = $self->riak_get( "dnssec", "$cdn_name" );
 		my $response = $response_container->{"response"};
 		$response->is_success()
-			? $self->success( $keys )
+			? $self->success( decode_json( $response->content ) )
 			: $self->alert( { Error => " - A record for dnssec key $cdn_name could not be found.  Response was: " . $response->content } );
 	}
 }
 
 sub regen_expired_keys {
-	my $self       = shift;
-	my $type       = shift;
-	my $key        = shift;
-	my $existing_keys   = shift;
-	my $effective_date = shift;
-	my $tld = shift;
-	my $regen_keys = {};
+	my $self                = shift;
+	my $type                = shift;
+	my $key                 = shift;
+	my $existing_keys       = shift;
+	my $effective_multipler = shift;
+	my $regen_keys          = {};
 	my $old_key;
 
 	my $existing = $existing_keys->{$key}->{$type};
-	foreach my $record (@$existing){
-		if ($record->{status} eq 'new') {
+	foreach my $record (@$existing) {
+		if ( $record->{status} eq 'new' ) {
 			$old_key = $record;
 		}
 	}
-	my $name = $old_key->{name};
-	my $ttl  = $old_key->{ttl};
+	my $name            = $old_key->{name};
+	my $ttl             = $old_key->{ttl};
 	my $expiration      = $old_key->{expirationDate};
 	my $inception       = $old_key->{inceptionDate};
 	my $expiration_days = ( $expiration - $inception ) / 86400;
-	
-	
+	my $effective_date  = $expiration - ( $ttl * $effective_multipler );
+
 	#create new expiration and inception time
 	my $new_inception = time();
 	my $new_expiration = $new_inception + ( 86400 * $expiration_days );
 
 	#generate new keys
-	my $new_key = $self->get_dnssec_keys( $type, $name, $ttl, $new_inception, $new_expiration, "new", $effective_date, $tld );
+	my $new_key = $self->get_dnssec_keys( $type, $name, $ttl, $new_inception, $new_expiration, "new", $effective_date );
 
 	if ( $type eq "ksk" ) {
+
 		#get existing zsk
 		my @zsk = $existing_keys->{$key}->{zsk};
+
 		#set existing ksk status to "expired"
 		$old_key->{status} = "expired";
-		$regen_keys = { zsk => @zsk, ksk => [$new_key, $old_key]};
+		$regen_keys = { zsk => @zsk, ksk => [ $new_key, $old_key ] };
 	}
 	elsif ( $type eq "zsk" ) {
+
 		#get existing ksk
 		my @ksk = $existing_keys->{$key}->{ksk};
+
 		#set existing ksk status to "expired"
 		$old_key->{status} = "expired";
-		$regen_keys = { zsk => [$new_key, $old_key], ksk => @ksk };
+		$regen_keys = { zsk => [ $new_key, $old_key ], ksk => @ksk };
 	}
 	return $regen_keys;
 }
@@ -1022,14 +1001,14 @@ sub dnssec_keys_generate {
 		$self->alert( { Error => " - You must be an ADMIN to perform this operation!" } );
 	}
 	else {
-		my $key_type   = "dnssec";
-		my $key        = $self->req->json->{key};
-		my $name       = $self->req->json->{name};
-		my $ttl        = $self->req->json->{ttl};
-		my $k_exp_days = $self->req->json->{kskExpirationDays};
-		my $z_exp_days = $self->req->json->{zskExpirationDays};
+		my $key_type      = "dnssec";
+		my $key           = $self->req->json->{key};
+		my $name          = $self->req->json->{name};
+		my $ttl           = $self->req->json->{ttl};
+		my $k_exp_days    = $self->req->json->{kskExpirationDays};
+		my $z_exp_days    = $self->req->json->{zskExpirationDays};
 		my $effectiveDate = $self->req->json->{effectiveDate};
-		if (!defined($effectiveDate)) {
+		if ( !defined($effectiveDate) ) {
 			$effectiveDate = time();
 		}
 		my $res      = $self->generate_store_dnssec_keys( $key, $name, $ttl, $k_exp_days, $z_exp_days, $effectiveDate );
