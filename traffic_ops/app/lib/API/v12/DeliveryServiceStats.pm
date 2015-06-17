@@ -49,7 +49,7 @@ sub index {
 		if ( $self->is_delivery_service_name_assigned($ds_name) ) {
 
 			my $stats = new Extensions::Delegate::Statistics(
-				{
+				$self, {
 					deliveryServiceName => $ds_name,
 					metricType          => $metric_type,
 					startDate           => $start_date,
@@ -66,7 +66,7 @@ sub index {
 			# Extensions Contract:
 			#  "$rc": will be either SUCCESS or ERROR (****the implemented Extension should use the same constants for consistency)
 			#  "$result": should always come back as hash that will be forwarded to the Client as JSON.
-			my ( $rc, $result ) = $stats->get_stats($self);
+			my ( $rc, $result ) = $stats->get_stats();
 
 			$self->app->log->debug( "top.rc #-> " . Dumper($rc) );
 

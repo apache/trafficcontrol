@@ -1,4 +1,4 @@
-package Utils::Helper::Datasource;
+package Utils::Redis;
 #
 # Copyright 2015 Comcast Cable Communications Management, LLC
 #
@@ -25,22 +25,24 @@ use File::Find;
 
 use constant { TIMEOUT => 30, };
 
+my $mojo;
+
 sub new {
 	my $self  = {};
 	my $class = shift;
+	$mojo = shift;
 	return ( bless( $self, $class ) );
 }
 
 sub redis_connection_string {
 	my $self = shift;
-
-	my $rs = $self->db->resultset('RedisHostsOnline')->search()->single();
+	my $rs   = $mojo->db->resultset('RedisHostsOnline')->search()->single();
 	if ( defined($rs) ) {
 		my $redis_db_host = $rs->host_name . "." . $rs->domain_name . ":" . $rs->tcp_port . " - " . $rs->status_name;
 		return $rs->host_name . "." . $rs->domain_name . ":" . $rs->tcp_port;
 	}
 	else {
-		$self->app->log->error("Could not find an ONLINE instance of Redis in the 'Servers'");
+		$mojo->app->log->error("Could not find an ONLINE instance of Redis in the 'Servers'");
 		return undef;
 	}
 }
@@ -48,9 +50,9 @@ sub redis_connection_string {
 sub redis_connect {
 	my $self = shift;
 
-	my $redis_connection_string = $self->redis_connection_string();
+	my $redis_connection_string = redis_connection_string();
 
-	my $rm = Common::RedisFactory->new( $self, $redis_connection_string );
+	my $rm = Common::RedisFactory->new( $mojo, $redis_connection_string );
 	return $rm->connection();
 }
 

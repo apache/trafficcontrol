@@ -42,7 +42,7 @@ sub register {
 			my $type       = $self->param("type");
 
 			my $m = new Extensions::Delegate::Metrics(
-				{
+				$self, {
 					metricType => $metric,
 					startDate  => $start,
 					endDate    => $end,
@@ -51,14 +51,7 @@ sub register {
 					type       => $type
 				}
 			);
-			my ( $rc, $result ) = $m->get_etl_metrics($self);
-
-			if ( $rc == SUCCESS ) {
-				return $self->success($result);
-			}
-			else {
-				return $self->alert($result);
-			}
+			return $m->get_etl_metrics();
 		}
 	);
 }
