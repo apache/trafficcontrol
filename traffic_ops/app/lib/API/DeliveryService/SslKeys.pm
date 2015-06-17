@@ -20,7 +20,6 @@ package API::DeliveryService::SslKeys;
 # JvD Note: you always want to put Utils as the first use. Sh*t don't work if it's after the Mojo lines.
 use UI::Utils;
 use Mojo::Base 'Mojolicious::Controller';
-use Utils::Helper::Datasource;
 use MojoPlugins::Response;
 use JSON;
 use MIME::Base64;
@@ -119,37 +118,39 @@ sub view_by_hostname {
 		my $host_regex = $split_url[1];
 		my $domain_name;
 
-		for (my $i=2; $i<$#split_url; $i++) {
+		for ( my $i = 2; $i < $#split_url; $i++ ) {
 			$domain_name .= $split_url[$i] . ".";
 		}
 		$domain_name .= $split_url[$#split_url];
 
-		$host_regex = '.*\.' . $host_regex . '\..*'; 
+		$host_regex = '.*\.' . $host_regex . '\..*';
 
 		if ( !$host_regex || !$domain_name ) {
 			return $self->alert( { Error => " - $key does not contain a valid delivery service." } ) if !$host_regex;
-			return $self->alert( { Error => " - $key does not contain a valid domain name." } ) if !$domain_name;
+			return $self->alert( { Error => " - $key does not contain a valid domain name." } )      if !$domain_name;
 		}
 
-		my @ds_ids_regex = $self->db->resultset('Deliveryservice')->search( { 'regex.pattern' => "$host_regex" }, { join => { deliveryservice_regexes => { regex => undef } } } )->get_column('id')->all();
+		my @ds_ids_regex = $self->db->resultset('Deliveryservice')
+			->search( { 'regex.pattern' => "$host_regex" }, { join => { deliveryservice_regexes => { regex => undef } } } )->get_column('id')->all();
 
-		my @domain_profiles = $self->db->resultset('Profile')->search( 
-								{ 
-									'parameter.value' => "$domain_name", 'parameter.config_file' => 'CRConfig.json', 'parameter.name' => 'domain_name'
-								}, 
-								{ 
-									join => { 'profile_parameters' => { parameter => undef } } 
-								} 
-								)->get_column('id')->all();
+		my @domain_profiles = $self->db->resultset('Profile')->search(
+			{
+				'parameter.value'       => "$domain_name",
+				'parameter.config_file' => 'CRConfig.json',
+				'parameter.name'        => 'domain_name'
+			}, {
+				join => { 'profile_parameters' => { parameter => undef } }
+			}
+		)->get_column('id')->all();
 
-		my $rs_ds = $self->db->resultset('Deliveryservice')->search( { 'profile' => { -in => \@domain_profiles } }, {  } );
+		my $rs_ds = $self->db->resultset('Deliveryservice')->search( { 'profile' => { -in => \@domain_profiles } }, {} );
 
-		my $xml_id;		
+		my $xml_id;
 		my %ds_ids_regex = map { $_ => undef } @ds_ids_regex;
 
 		while ( my $row = $rs_ds->next ) {
-			if ( exists($ds_ids_regex{$row->id}) ) {
-				$xml_id = $row->xml_id
+			if ( exists( $ds_ids_regex{ $row->id } ) ) {
+				$xml_id = $row->xml_id;
 			}
 		}
 
