@@ -21,7 +21,6 @@ use UI::Utils;
 
 use Mojo::Base 'Mojolicious::Controller';
 use Data::Dumper;
-use Extensions::ConfigList;
 use Date::Manip;
 use NetAddr::IP;
 use UI::DeliveryService;
