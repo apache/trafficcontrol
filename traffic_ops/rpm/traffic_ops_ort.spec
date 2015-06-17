@@ -15,7 +15,7 @@
 #
 %define debug_package %{nil}
 Name:		traffic_ops_ort
-Version:	0.50c
+Version:	0.50e
 Release:	1%{?dist}
 Summary:	Installs ORT script for Traffic Control caches
 Packager:	mark_torluemke at Cable dot Comcast dot com
@@ -67,3 +67,4 @@ rm -rf ${RPM_BUILD_ROOT}
 - 0.48a RPM rebuild based on git hash a4f0615 - Mon Mar 09 2015
 - 0.49a RPM rebuild based on git hash 60754d2 - Tue May 12 2015
 - 0.50c RPM rebuild based on git hash d61a85f - Thu Jun 11 2015
+- 0.50e RPM rebuild based on git hash 14f97ff - Wed Jun 17 2015
