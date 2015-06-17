@@ -88,6 +88,14 @@
 		                <% } %>
 		                %= field('dnssec.k_expiry')->text(class => 'field', id => 'k_expiry', name => 'dnssec.k_expiry', required => 'required', style=>"width:100px;");
 		            </div><br>
+              		<div class="block">
+		                %= label_for 'effective_date' => '* Effective Date (GMT)', class => 'label'
+		                <% unless (field('dnssec.effective_date')->valid) { %>
+		                  <span class="field-with-error"><%= field('dnssec.effective_date')->error %></span>
+						  <br/>
+		                <% } %>
+		                %= field('dnssec.effective_date')->text(class => 'field', id => 'effective_date', name => 'dnssec.effective_date', required => 'required', style=>"width:150px;");
+		            </div><br>
 		             %= field('dnssec.z_expiry')->hidden(class => 'field', required => 'required', id => 'dnssec.z_expiry', name => 'dnssec.z_expiry', type => 'hidden');
         		</div><br>    
 			<div class="buttons-section">

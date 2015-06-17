@@ -26,6 +26,7 @@ use API::Cdn;
 use Scalar::Util qw(looks_like_number);
 use JSON;
 use POSIX qw(strftime);
+use Date::Parse;
 
 sub index {
 	my $self = shift;
@@ -96,6 +97,7 @@ sub add {
 	my $cdn_name = $self->param('cdn_name');
 	my $k_expiry = "365";
 	my $z_expiry = "30";
+	my $effective_date = strftime( "%Y-%m-%d %H:%M:%S\n", gmtime(time) );
 	my $keys;
 	my $response_container = $self->riak_get( "dnssec", $cdn_name );
 	my $get_keys = $response_container->{'response'};
@@ -127,6 +129,7 @@ sub add {
 			cdn_name => $cdn_name,
 			k_expiry => $k_expiry,
 			z_expiry => $z_expiry,
+			effective_date => $effective_date
 		},
 		fbox_layout => 1
 	);
@@ -137,6 +140,7 @@ sub addksk {
 	my $cdn_name = $self->param('cdn_name');
 	my $k_expiry = "365";
 	my $keys;
+	my $effective_date = strftime( "%Y-%m-%d %H:%M:%S\n", gmtime(time) );
 	my $response_container = $self->riak_get( "dnssec", $cdn_name );
 	my $get_keys = $response_container->{'response'};
 	if ( $get_keys->is_success() ) {
@@ -158,6 +162,7 @@ sub addksk {
 			cdn_name => $cdn_name,
 			k_expiry => $k_expiry,
 			z_expiry => "1", ##for is_valid purposes only. 
+			effective_date => $effective_date
 		},
 		fbox_layout => 1
 	);
@@ -212,6 +217,9 @@ sub create {
 	my $effective_date = $self->param('dnssec.effective_date');
 	if (!defined($effective_date)) {
 		$effective_date = time();
+	}
+	else {
+		$effective_date = str2time($effective_date) ;
 	}
 	&stash_role($self);
 
@@ -287,6 +295,9 @@ sub genksk {
 	my $effective_date = $self->param('dnssec.effective_date');
 	if (!defined($effective_date)) {
 		$effective_date = time();
+	}
+	else {
+		$effective_date = str2time($effective_date) ;
 	}
 	&stash_role($self);
 
@@ -372,6 +383,7 @@ sub is_valid {
 	my $cdn_name = $self->param('dnssec.cdn_name');
 	my $z_expiry = $self->param('dnssec.z_expiry');
 	my $k_expiry = $self->param('dnssec.k_expiry');
+	my $effective_date = $self->param('dnssec.effective_date');
 
 	if ( $cdn_name eq "default" ) {
 		$self->field('dnssec.cdn_name')->is_equal( "", "Please choose a CDN" );
@@ -381,6 +393,13 @@ sub is_valid {
 	}
 	if ( $k_expiry eq ""  || !looks_like_number($k_expiry) || $k_expiry < 1 ) {
 		$self->field('dnssec.k_expiry')->is_equal( "", "$k_expiry is not a number greater than 0" );
+	}
+
+	if ($effective_date) {
+		$self->field('dnssec.effective_date')->is_like(
+		qr/^((((19|[2-9]\d)\d{2})[\/\.-](0[13578]|1[02])[\/\.-](0[1-9]|[12]\d|3[01])\s(0[0-9]|1[0-9]|2[0-3]):([0-5][0-9]):([0-5][0-9]))|(((19|[2-9]\d)\d{2})[\/\.-](0[13456789]|1[012])[\/\.-](0[1-9]|[12]\d|30)\s(0[0-9]|1[0-9]|2[0-3]):([0-5][0-9]):([0-5][0-9]))|(((19|[2-9]\d)\d{2})[\/\.-](02)[\/\.-](0[1-9]|1\d|2[0-8])\s(0[0-9]|1[0-9]|2[0-3]):([0-5][0-9]):([0-5][0-9]))|(((1[6-9]|[2-9]\d)(0[48]|[2468][048]|[13579][26])|((16|[2468][048]|[3579][26])00))[\/\.-](02)[\/\.-](29)\s(0[0-9]|1[0-9]|2[0-3]):([0-5][0-9]):([0-5][0-9])))$/,
+		"Effective Date is not a valid dateTime!  Should be in the format of YYYY-MM-DD HH:MM:SS"
+	);
 	}
 
 	return $self->valid;
