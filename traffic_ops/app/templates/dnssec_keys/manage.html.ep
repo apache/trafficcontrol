@@ -24,13 +24,11 @@
  <script>
 function generate_keys() {
 	var selected_cdn = document.getElementById('cdn_name').value;
-	// var selected_cdn = e.options[e.selectedIndex].text;	
 	$.fancybox({ type: 'iframe', href: "/cdns/" + selected_cdn + "/dnsseckeys/add", padding: 0, autosize: true, fitToView: true, width: 800, minHeight: 600, modal: true, showActivity: false, helpers: {overlay:{locked:false}}});
 	// parent.location.reload(true);
 } 
 function generate_ksk() {
 	var selected_cdn = document.getElementById('cdn_name').value;
-	// var selected_cdn = e.options[e.selectedIndex].text;	
 	$.fancybox({ type: 'iframe', href: "/cdns/" + selected_cdn + "/dnsseckeys/addksk", padding: 0, autosize: true, fitToView: true, width: 800, minHeight: 600, modal: true, showActivity: false, helpers: {overlay:{locked:false}}});
 	// parent.location.reload(true);
 } 
@@ -49,6 +47,7 @@ function generate_ksk() {
 	         		%= include 'common/_flash'
 	        		<div class="main">
 	          			<h2>DNSSEC Key information:</h2>
+	          			<form method="post" action="/cdns/dnsseckeys/activate" id="dnsseckeys_form">
 	              		<div class="block">
 	                		%= label_for 'cdn_name' => 'CDN Name', class => 'label', style=>"width:110px;"
 	                		%= field('dnssec.cdn_name')->text(class => 'readonly_field', id => 'cdn_name', name => 'dnssec.cdn_name', readonly => 'readonly');
@@ -56,6 +55,10 @@ function generate_ksk() {
 			              <div class="block">
 			                %= label_for 'ttl' => 'TTL ', class => 'label', style=>"width:110px;"
 			                %= field('dnssec.ttl')->text(class => 'readonly_field', id => 'ttl', name => 'dnssec.ttl', readonly => 'readonly');
+			              </div><br>
+			              <div class="block">
+			                %= label_for 'active' => 'DNSSEC Active? ', class => 'label', style=>"width:110px;"
+			                %= field('dnssec.active')->text(class => 'readonly_field', id => 'active', name => 'dnssec.active', readonly => 'readonly');
 			              </div><br>
 			              <div class="block">
 			                %= label_for 'ksk_expiration' => 'KSK Expiration', class => 'label', style=>"width:110px;"
@@ -77,8 +80,16 @@ function generate_ksk() {
 			        </div>
 					<div class="buttons-section" style="margin-bottom: 20px;">
 						<div style="margin-top: 25px; margin-left: 10px; position: relative; display: inline-block; float: left;">
-				   			<button class="button" onclick="generate_keys()" id="generate_keys">Generate Keys for CDN</button>
-				   			<button class="button" onclick="generate_ksk()" style="margin-left: 10px">Re-Generate KSK for CDN</button>
+							<% if ($dnssec->{active} =~ /true/ ) { %>
+								%= field('dnssec.active_flag')->hidden(class => 'field', required => 'required', id => 'dnssec.active', name => 'dnssec.active', type => 'hidden', value => 'false');
+								<button class="button" id="submit_button">De-Activate DNSSEC</button>
+							<% } else { %>
+								%= field('dnssec.active_flag')->hidden(class => 'field', required => 'required', id => 'dnssec.active', name => 'dnssec.active', type => 'hidden', value => 'true');
+								<button class="button" id="submit_button">Activate DNSSEC</button>
+							<% } %>
+						</form>
+				   			<button class="button" onclick="generate_keys()" id="generate_keys" style="margin-left: 10px">Generate Keys</button>
+				   			<button class="button" onclick="generate_ksk()" style="margin-left: 10px">Re-Generate KSK</button>
 				 		</div>
 					 	<div style="margin-top: 25px; float:right; margin-right: 50px">
 							<button class="button" id="close_button">Close</button>

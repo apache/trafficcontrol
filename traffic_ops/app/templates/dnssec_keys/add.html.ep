@@ -110,10 +110,10 @@
 				</div>
 			</div>
 			</form>
-			  	<div style="float:right; margin-right: 50px">
-					<button class="button" id="close_button">Close</button>
-				</div>
          	</div>
+         	<div style="float:right; margin-right: 50px">
+				<button class="button" id="close_button">Close</button>
+			</div>
 			<% } else { %>
   				<h2> This operation is for ADMINS only!!!!</h2>
 			<% } %>

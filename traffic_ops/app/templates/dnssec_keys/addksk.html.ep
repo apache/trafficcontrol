@@ -96,17 +96,17 @@
 				</div>
 			<div id="generate-section">
 				<div>
-				   %= submit_button 'Generate Keys', id=>'generate-button', class=> 'button', style=> 'float:left;'
+				   %= submit_button 'Generate KSK', id=>'generate-button', class=> 'button', style=> 'float:left;'
 				</div>
 				<div id="throbber" style="display:none;">
 					<img src="/js/fancybox/fancybox_loading.gif" />
 				</div>
 			</div>
 			</form>
-		 	<div style="float:right; margin-right: 50px">
-					<button class="button" id="close_button">Close</button>
-			</div>
          	</div>
+         	<div style="float:right; margin-right: 50px">
+				<button class="button" id="close_button">Close</button>
+			</div>
 			<% } else { %>
   				<h2> This operation is for ADMINS only!!!!</h2>
 			<% } %>
