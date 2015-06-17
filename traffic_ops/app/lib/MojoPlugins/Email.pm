@@ -47,6 +47,7 @@ sub register {
 			my $instance_name =
 				$self->db->resultset('Parameter')->search( { -and => [ name => 'tm.instance_name', config_file => 'global' ] } )->get_column('value')
 				->single();
+			$self->stash( instance_name => $instance_name );
 
 			my $rc;
 			$self->stash( tm_user => $tm_user, fbox_layout => 1, mode => 'add' );
