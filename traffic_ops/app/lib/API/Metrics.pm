@@ -43,7 +43,7 @@ sub index {
 	my $metric      = $self->param("metric");
 	if ( exists( $valid_metric_types->{$metric} ) ) {
 		$self->param( type => $valid_server_types->{$server_type} );
-		return ( $self->etl_metrics() );
+		return ( self->success( $self->etl_metrics() ) );
 	}
 	else {
 		my @valid_types;
