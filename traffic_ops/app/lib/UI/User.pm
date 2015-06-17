@@ -88,7 +88,7 @@ sub register {
 }
 
 # Reset the User Profile password
-sub password_reset {
+sub reset_password {
 	my $self     = shift;
 	my $id       = $self->param('id');
 	my $email_to = $self->param('tm_user.email');
@@ -98,6 +98,10 @@ sub password_reset {
 	my $email_notice = "Successfully sent reset password to: '" . $email_to . "'";
 	$self->app->log->info($email_notice);
 	$self->flash( message => $email_notice );
+
+	my $instance_name =
+		$self->db->resultset('Parameter')->search( { -and => [ name => 'tm.instance_name', config_file => 'global' ] } )->get_column('value')->single();
+	$self->stash( instance_name => $instance_name );
 
 	my $token = $self->new_guid();
 	$self->send_password_reset_email( $email_to, $token );
