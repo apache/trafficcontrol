@@ -25,7 +25,7 @@ use MIME::Base64;
 use Data::Dumper;
 
 $| = 1;	
-my $script_version = "0.50d";
+my $script_version = "0.50e";
 my $date = `/bin/date`; chomp($date);
 print "$date\nVersion of this script: $script_version\n";
 
@@ -699,7 +699,7 @@ sub check_syncds_state {
 }
 
 sub sleep_rand {
-	my $duration = shift;
+	my $duration = int(rand(shift));
 
 	($log_level >> $WARN) && print "WARN Sleeping for $duration seconds: ";
 
@@ -714,6 +714,7 @@ sub process_config_files {
 
 	($log_level >> $INFO) && print "\nINFO: ======== Start processing config files ========\n";
 	foreach my $file ( keys %{$cfg_file_tracker}) {
+		($log_level >> $DEBUG) && print "DEBUG Starting processing of config file: $file\n";
 		my $return = undef;
 		if ( $script_mode == $SYNCDS && 
 		($file eq "records.config" || $file eq "remap.config" || $file eq "parent.config" || $file eq "cache.config" || $file eq "hosting.config" || 
@@ -729,7 +730,7 @@ sub process_config_files {
 				exit 1;
 			}
 		}
-		elsif ( $script_mode == $SYNCDS && $file =~ m/\_facts/ || (defined($cfg_file_tracker->{$file}->{'location'}) && $cfg_file_tracker->{$file}->{'location'} =~ m/\/opt\/ort/) ) {
+		elsif ( $script_mode == $SYNCDS && $file =~ m/\_facts/ && (defined($cfg_file_tracker->{$file}->{'location'}) && $cfg_file_tracker->{$file}->{'location'} =~ m/\/opt\/ort/) ) {
 			($log_level >> $DEBUG) && print "DEBUG In syncds mode, I'm about to process config file: $file\n";
 			$cfg_file_tracker->{$file}->{'service'} = "puppet";
 			$return = &process_cfg_file($file);
@@ -746,6 +747,10 @@ sub process_config_files {
 			}
 			elsif ($file eq "sysctl.conf" || $file eq "50-ats.rules" || $file =~ m/cron/ ) {
 				$cfg_file_tracker->{$file}->{'service'} = "system";
+				$return = &process_cfg_file($file);
+			}
+			elsif ($file =~ m/\_facts/ ) {
+				$cfg_file_tracker->{$file}->{'service'} = "puppet";
 				$return = &process_cfg_file($file);
 			}
 			elsif ($file eq "ntp.conf") {
@@ -2174,16 +2179,30 @@ sub adv_processing_ssl {
 	($log_level >> $DEBUG) && print "DEBUG Entering advanced processing for ssl_multicert.config.\n";
 	foreach my $line ( @db_file_lines ) {
 		($log_level >> $DEBUG) && print "DEBUG line in ssl_multicert.config from Traffic Ops: $line \n";
-		if ($line =~ m/^\s*dest_ip\=\*\s+ssl_cert_name\=(.*)\s+ssl_key_name\=(.*)\s*$/) {
+		if ($line =~ m/^\s*ssl_cert_name\=(.*)\s+ssl_key_name\=(.*)\s*$/) {
 			push( @{$ssl_tracker->{'db_config'}}, { cert_name => $1, key_name => $2 } );	
 		}
 	}
 	
 	foreach my $keypair ( @{$ssl_tracker->{'db_config'}} ) {
 		($log_level >> $DEBUG) && print "DEBUG Processing SSL key: " . $keypair->{'key_name'} . "\n";
+
 		my $remap = $keypair->{'key_name'};
 		$remap =~ s/\.key$//;
-		my $result = &curl_me( $traffic_ops_host . "/api/1.1/deliveryservices/hostname/" . $remap . "/sslkeys.json");
+
+		my $url = $traffic_ops_host . "/api/1.1/deliveryservices/hostname/" . $remap . "/sslkeys.json";
+
+		my $result = &curl_me( $url );
+		if ($result =~ m/^\d{3}$/) {
+			if ($script_mode == $REPORT) {
+				($log_level >> $ERROR) && print "ERROR SSL URL: $url returned $result.\n";
+				return 1;
+			}
+			else {
+				($log_level >> $FATAL) && print "FATAL SSL URL: $url returned $result. Exiting.\n";
+				exit 1;
+			}
+		}
 		my $result_json = decode_json($result);
 		
 		my $ssl_key_base64 = $result_json->{'response'}->{'certificate'}->{'key'};	
