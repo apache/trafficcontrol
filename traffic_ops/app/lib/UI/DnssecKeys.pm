@@ -38,6 +38,59 @@ sub index {
 	);
 }
 
+sub manage {
+	my $self = shift;
+	&stash_role($self);
+	my $cdn_name = $self->param('cdn_name');
+	my $ttl;
+	my $k_expiry;
+	my $algorithm;
+	my $digest_type;
+	my $digest;
+	#get keys for cdn:
+	my $keys;
+	my $response_container = $self->riak_get( "dnssec", $cdn_name );
+	my $get_keys = $response_container->{'response'};
+	if ( $get_keys->is_success() ) {
+		$keys = decode_json( $get_keys->content );
+		my $cdn_ksk = $keys->{$cdn_name}->{ksk};
+		foreach my $cdn_krecord (@$cdn_ksk) {
+			my $cdn_kstatus = $cdn_krecord->{status};
+			if ($cdn_kstatus eq 'new') { #ignore anything other than the 'new' record
+				my $exp_date = $cdn_krecord->{expirationDate};
+				$k_expiry = strftime '%m/%d/%Y %H:%M:%S', gmtime $exp_date;
+				$k_expiry .= " GMT";
+				$ttl = $cdn_krecord->{ttl};
+				$algorithm = $cdn_krecord->{dsRecord}->{algorithm};
+				$digest_type = $cdn_krecord->{dsRecord}->{digestType};
+				$digest = $cdn_krecord->{dsRecord}->{digest};
+			}
+		}
+	}
+	#get active flag
+	my $profile_id = $self->get_profile_id_by_cdn($cdn_name);
+	my $active = "false";
+	my %condition = ( 'parameter.name' => 'dnssec.enabled', 'profile.id' => $profile_id);
+	my $rs_pp = $self->db->resultset('ProfileParameter')->search( \%condition, { prefetch => [ { 'parameter' => undef }, { 'profile' => undef } ] } )->single;
+	if ($rs_pp) {
+		$active = $rs_pp->parameter->value;
+	}
+	#stash all the things
+	$self->stash(
+		msgs   => [],
+		dnssec => {
+			cdn_name => $cdn_name,
+			ttl      => $ttl,
+			k_expiry => $k_expiry,
+			ds_algorithm => $algorithm,
+			ds_digest_type => $digest_type,
+			ds_digest => $digest,
+			active => $active
+		},
+		fbox_layout => 1
+	);
+}
+
 sub add {
 	my $self = shift;
 	my $cdn_name = $self->param('cdn_name');
@@ -110,6 +163,45 @@ sub addksk {
 	);
 }
 
+sub activate {
+	my $self     = shift;
+	my $cdn_name = $self->param('dnssec.cdn_name');
+	my $active = $self->param('dnssec.active_flag');
+	my $profile_id = $self->get_profile_id_by_cdn($cdn_name);
+	# find or create dnssec.enabled param
+	my $param_id = $self->db->resultset('Parameter')->find_or_create(
+	{
+			name        => 'dnssec.enabled',
+			config_file => 'CRConfig.json',
+			value       => 'true',
+		}
+	);
+	$param_id = $param_id->id;
+	if ($active eq 'true') {
+		#associate param to cdn profile_id
+		my $pp_insert = $self->db->resultset('ProfileParameter')->find_or_create(
+			{
+				profile   => $profile_id,
+				parameter => $param_id,
+			}
+		);
+	} else {
+		#delete current profile_parameter record, if exists
+		my $pp_rs = $self->db->resultset('ProfileParameter')->search({profile => $profile_id, parameter => $param_id});
+		if ($pp_rs) {
+			$pp_rs->delete();
+		}
+	}
+	&stash_role($self);	
+	$self->stash(
+		msgs   => [],
+		dnssec => {},
+		fbox_layout => 1
+	);
+	$self->flash( message => "Active flag for $cdn_name was set to $active." );
+	return $self->redirect_to("/cdns/$cdn_name/dnsseckeys/manage");
+}
+
 
 sub create {
 	my $self     = shift;
@@ -137,23 +229,6 @@ sub create {
 		if ($rs_pp) {
 			$ttl = $rs_pp->parameter->value;
 		}
-		#find or create dnssec.enabled param
-		# my $param_id = $self->db->resultset('Parameter')->find_or_create(
-		# 	{
-		# 		name        => 'dnssec.enabled',
-		# 		config_file => 'CRConfig.json',
-		# 		value       => 'true',
-		# 	}
-		# );
-		# $param_id = $param_id->id;
-
-		# #associate param to cdn profile_id
-		# my $pp_insert = $self->db->resultset('ProfileParameter')->find_or_create(
-		# 	{
-		# 		profile   => $profile_id,
-		# 		parameter => $param_id,
-		# 	}
-		# );
 
 		#create keys
 		my $name = $self->db->resultset('Parameter')->search(
@@ -252,98 +327,24 @@ sub genksk {
 		my $json_data = encode_json( $keys );
 		$response_container = $self->riak_put( "dnssec", $cdn_name, $json_data );
 		my $response = $response_container->{"response"};
-		# #create keys
-		# my $name = $self->db->resultset('Parameter')->search(
-		# 	{ -and => [ 'me.name' => 'domain_name', 'me.config_file' => 'CRConfig.json', 'profile.id' => $profile_id ] },
-		# 	{
-		# 		join => { profile_parameters => { profile => undef } },
-		# 	}
-		# )->get_column('value')->single();
-
-		# my $response_container = $self->riak_ping();
-		# my $ping_response      = $response_container->{response};
-		# if ( $ping_response->is_success ) {
-		# 	  # my $response_container = $self->generate_store_dnssec_keys( $cdn_name, $name, $ttl, $k_expiry, $z_expiry, $effective_date );
-		# 	my $response = $response_container->{response};
-			if ( $response->is_success ) {
-				&log( $self, "Generate KSK for CDN $cdn_name", "UICHANGE" );
-				$self->flash( message => "Successfully generated KSK for: $cdn_name" );
-			}
-			else {
-				my @msgs;
-				push( @msgs, $response->{_content} );
-				$self->stash( msgs => \@msgs );
-				$self->flash( { "KSK for $cdn_name could not be created.  Response was" . $response->{_content} } );
-			}
-			&stash_role($self);
-			return $self->redirect_to("/cdns/$cdn_name/dnsseckeys/addksk");
+		if ( $response->is_success ) {
+			&log( $self, "Generate KSK for CDN $cdn_name", "UICHANGE" );
+			$self->flash( message => "Successfully generated KSK for: $cdn_name" );
 		}
-		# else {
-		# 	my @cdns = $self->db->resultset('Parameter')->search( { name => 'CDN_Name' } )->get_column('value')->all();
-
-		# 	$self->stash(
-		# 		dnssec => {
-		# 			cdn_name => $cdn_name,
-		# 			ttl      => $ttl,
-		# 			k_expiry => $k_expiry,
-		# 		},
-		# 		cdns        => \@cdns,
-		# 		fbox_layout => 1
-		# 	);
-		# 	my @msgs;
-		# 	push( @msgs, $ping_response->{_content} );
-		# 	$self->stash( msgs => \@msgs );
-		# }
-	else {
+		else {
+			my @msgs;
+			push( @msgs, $response->{_content} );
+			$self->stash( msgs => \@msgs );
+			$self->flash( { "KSK for $cdn_name could not be created.  Response was" . $response->{_content} } );
+		}
+		&stash_role($self);
+		return $self->redirect_to("/cdns/$cdn_name/dnsseckeys/addksk");
+		} else {
 		&stash_role($self);
 		$self->build_stash();
 		$self->stash( msgs => [] );
 		$self->render("dnssec_keys/addksk");
 	}
-}
-
-sub manage {
-	my $self = shift;
-	&stash_role($self);
-	my $cdn_name = $self->param('cdn_name');
-	my $ttl;
-	my $k_expiry;
-	my $algorithm;
-	my $digest_type;
-	my $digest;
-	#get keys for cdn:
-	my $keys;
-	my $response_container = $self->riak_get( "dnssec", $cdn_name );
-	my $get_keys = $response_container->{'response'};
-	if ( $get_keys->is_success() ) {
-		$keys = decode_json( $get_keys->content );
-		my $cdn_ksk = $keys->{$cdn_name}->{ksk};
-		foreach my $cdn_krecord (@$cdn_ksk) {
-			my $cdn_kstatus = $cdn_krecord->{status};
-			if ($cdn_kstatus eq 'new') { #ignore anything other than the 'new' record
-				my $exp_date = $cdn_krecord->{expirationDate};
-				$k_expiry = strftime '%m/%d/%Y %H:%M:%S', gmtime $exp_date;
-				$k_expiry .= " GMT";
-				$ttl = $cdn_krecord->{ttl};
-				$algorithm = $cdn_krecord->{dsRecord}->{algorithm};
-				$digest_type = $cdn_krecord->{dsRecord}->{digestType};
-				$digest = $cdn_krecord->{dsRecord}->{digest};
-			}
-		}
-	}
-	$self->stash(
-		msgs   => [],
-		dnssec => {
-			cdn_name => $cdn_name,
-			ttl      => $ttl,
-			k_expiry => $k_expiry,
-			ds_algorithm => $algorithm,
-			ds_digest_type => $digest_type,
-			ds_digest => $digest,
-		},
-		fbox_layout => 1
-	);
-
 }
 
 sub build_stash {

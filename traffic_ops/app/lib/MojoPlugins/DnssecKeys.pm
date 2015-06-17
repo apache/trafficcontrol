@@ -140,7 +140,7 @@ sub register {
 			my $self       = shift;
 			my $cdn_name   = shift;
 			my $profile_id = $self->db->resultset('Profile')->search(
-				{ -and => [ 'parameter.name' => 'CDN_Name', 'parameter.value' => $cdn_name, 'me.name' => { -like => 'CCR%' } ] },
+				{ -and => [ 'parameter.name' => 'CDN_Name', 'parameter.value' => $cdn_name, { -or => [ 'me.name' => { like => "CCR%"}, 'me.name' => { like => 'TR%' } ] } ] },
 				{
 					join => { profile_parameters => { parameter => undef } },
 				}
