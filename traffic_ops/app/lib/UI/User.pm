@@ -99,6 +99,10 @@ sub reset_password {
 	$self->app->log->info($email_notice);
 	$self->flash( message => $email_notice );
 
+	my $instance_name =
+		$self->db->resultset('Parameter')->search( { -and => [ name => 'tm.instance_name', config_file => 'global' ] } )->get_column('value')->single();
+	$self->stash( instance_name => $instance_name );
+
 	my $token = $self->new_guid();
 	$self->send_password_reset_email( $email_to, $token );
 	my %delivery_services = get_delivery_services( $self, $id );
