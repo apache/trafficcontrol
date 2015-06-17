@@ -21,7 +21,6 @@ package API::Metrics;
 use UI::Utils;
 use Math::Round;
 use Data::Dumper;
-use Utils::Helper::Datasource;
 use POSIX qw(strftime);
 use Carp qw(cluck confess);
 
