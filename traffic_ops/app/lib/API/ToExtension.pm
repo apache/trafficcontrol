@@ -22,7 +22,6 @@ use Data::Dumper;
 use POSIX qw(strftime);
 use Time::Local;
 use Utils::Helper::ResponseHelper;
-use Extensions::DatasourceList;
 
 sub index {
 	my $self = shift;
