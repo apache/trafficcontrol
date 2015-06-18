@@ -54,14 +54,15 @@ sub index {
 	while ( my $row = $rs->next ) {
 		my $file;
 		( $file = $row->config_file ) =~ s/^to_ext_//;
-		my $ext          = new Extensions::ConfigList();
-		my $ext_hash_ref = $ext->hash_ref();
-		my $subroutine   = $ext_hash_ref->{$file};
-		my $isub;
-		( $isub = $subroutine ) =~ s/::[^:]+$/::info/;
-		my $info = &{ \&{$isub} }();
+		my $subroutine =
+			$self->db->resultset('ProfileParameter')
+			->search( { -and => [ 'parameter.config_file' => $file, 'parameter.name' => 'SubRoutine' ] },
+			{ prefetch => [ 'parameter', 'profile' ] } )->get_column('parameter.value')->single();
+		$subroutine =~ s/::[^:]+$/::info/;
+		$self->app->log->error( "ToExtDotInfo == " . $subroutine );
+		my $info = &{ \&{$subroutine} }();
 
-		# print Dumper($info);
+#		# print Dumper($info);
 		push(
 			@data, {
 				id                     => $row->id,
@@ -77,35 +78,35 @@ sub index {
 			}
 		);
 	}
-
-	$rs = $self->db->resultset('Parameter')->search( { name => 'datasource', config_file => 'global' } );
-	while ( my $row = $rs->next ) {
-		my $source;
-		$source = $row->value;
-		my $ext_hash_ref = &Extensions::DatasourceList::hash_ref();
-		my $subroutine   = $ext_hash_ref->{$source};
-		if ( !defined($subroutine) ) {
-			$self->app->log->error( "No subroutine found for: " . $source );
-		}
-		my $isub;
-		( $isub = $subroutine ) =~ s/::[^:]+$/::info/;
-		my $info = &{ \&{$isub} }();
-		print Dumper($info);
-		push(
-			@data, {
-				id                     => $row->id,
-				name                   => $info->{name},
-				version                => $info->{version},
-				info_url               => $info->{info_url},
-				script_file            => $info->{script_file},
-				isactive               => "n/a",
-				additional_config_json => "n/a",
-				description            => $info->{description},
-				servercheck_short_name => "n/a",
-				type                   => "DATASOURCE_EXTENSION",
-			}
-		);
-	}
+#
+#	$rs = $self->db->resultset('Parameter')->search( { name => 'datasource', config_file => 'global' } );
+#	while ( my $row = $rs->next ) {
+#		my $source;
+#		$source = $row->value;
+#		my $ext_hash_ref = &Extensions::DatasourceList::hash_ref();
+#		my $subroutine   = $ext_hash_ref->{$source};
+#		if ( !defined($subroutine) ) {
+#			$self->app->log->error( "No subroutine found for: " . $source );
+#		}
+#		my $isub;
+#		( $isub = $subroutine ) =~ s/::[^:]+$/::info/;
+#		my $info = &{ \&{$isub} }();
+#		print Dumper($info);
+#		push(
+#			@data, {
+#				id                     => $row->id,
+#				name                   => $info->{name},
+#				version                => $info->{version},
+#				info_url               => $info->{info_url},
+#				script_file            => $info->{script_file},
+#				isactive               => "n/a",
+#				additional_config_json => "n/a",
+#				description            => $info->{description},
+#				servercheck_short_name => "n/a",
+#				type                   => "DATASOURCE_EXTENSION",
+#			}
+#		);
+#	}
 	$self->success( \@data );
 }
 

@@ -1216,7 +1216,7 @@ sub to_ext_dot_config {
 	my $server = $self->server_data($id);
 	my $text   = $self->header_comment( $server->host_name );
 
-	# get the subroutine name for the this file from the parameter
+	# get the subroutine name for this file from the parameter
 	my $subroutine =
 		$self->db->resultset('ProfileParameter')
 		->search( { -and => [ profile => $server->profile->id, 'parameter.config_file' => $file, 'parameter.name' => 'SubRoutine' ] },
