@@ -21,4 +21,4 @@ if (defined($to_ext_lib)){
 }
 # Start commands for application
 require Mojolicious::Commands;
-Mojolicious::Commands->start_app('TrafficOps', '-w /tmp');
+Mojolicious::Commands->start_app('TrafficOps');
