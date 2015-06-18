@@ -832,7 +832,7 @@ sub startup {
 
 	# -- USAGE
 	# USED TO BE - GET /api/1.1/daily/usage/:ds/:loc/:stat/:start/:end/:interval
-	$r->get( '/api/1.1/cdns/peakusage/:peak_usage_type/deliveryservice/:ds/cachegroup/:name/start_date/:start/end_date/:end/interval/:interval' =>
+	$r->get( '/api/1.1/cdns/peakusage/:metric/deliveryservice/:ds/cachegroup/:name/start_date/:start/end_date/:end/interval/:interval' =>
 			[ format => [qw(json)] ] )->over( authenticated => 1 )->to( 'Cdn#peakusage', namespace => 'API' );
 
 	# -- USERS

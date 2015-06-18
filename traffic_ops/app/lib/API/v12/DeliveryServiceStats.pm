@@ -33,45 +33,15 @@ my $builder;
 #TODO: drichardson
 #      - Add required fields validation see lib/API/User.pm based on Validate::Tiny
 sub index {
-	my $self        = shift;
-	my $ds_name     = $self->param('deliveryServiceName');
-	my $metric_type = $self->param('metricType');
-	my $server_type = $self->param('serverType');
-	my $start_date  = $self->param('startDate');
-	my $end_date    = $self->param('endDate');
-	my $interval    = $self->param('interval') || "60s";     # Valid interval examples 10m (minutes), 10s (seconds), 1h (hour)
-	my $exclude     = $self->param('exclude');
-	my $orderby     = $self->param('orderby');
-	my $limit       = $self->param('limit');
-	my $offset      = $self->param('offset');
+	my $self    = shift;
+	my $ds_name = $self->param('deliveryServiceName');
 
 	if ( $self->is_valid_delivery_service_name($ds_name) ) {
 		if ( $self->is_delivery_service_name_assigned($ds_name) ) {
 
-			my $stats = new Extensions::Delegate::Statistics(
-				$self, {
-					deliveryServiceName => $ds_name,
-					metricType          => $metric_type,
-					startDate           => $start_date,
-					endDate             => $end_date,
-					interval            => $interval,
-					exclude             => $exclude,
-					orderby             => $orderby,
-					limit               => $limit,
-					dbName              => $self->get_db_name(),
-					offset              => $offset
-				}
-			);
+			my $stats = new Extensions::Delegate::Statistics( $self, dbName => $self->get_db_name() );
 
-			# Extensions Contract:
-			#  "$rc": will be either SUCCESS or ERROR (****the implemented Extension should use the same constants for consistency)
-			#  "$result": should always come back as hash that will be forwarded to the Client as JSON.
 			my ( $rc, $result ) = $stats->get_stats();
-
-			$self->app->log->debug( "top.rc #-> " . Dumper($rc) );
-
-			#$self->app->log->debug( "top.result #-> " . Dumper($result) );
-
 			if ( $rc == SUCCESS ) {
 				return $self->success($result);
 			}

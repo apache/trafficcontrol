@@ -25,16 +25,20 @@ use LWP;
 use Redis;
 use Data::Dumper;
 use Time::HiRes qw(gettimeofday tv_interval);
+use Common::ReturnCodes qw(SUCCESS ERROR);
 
+#TODO: drichardson - remove after 1.2 cleaned up
 sub stats {
-	my $self       = shift;
-	my $match      = $self->param('match');
-	my $start_date = $self->param('start_date');    # start time in secs since 1970, or "now" to get latest sample
-	my $end_date   = $self->param('end_date');      # end time in secs since 1970, or "now" to get latest sample
-	my $interval   = $self->param('interval');      # the interval between the samples. 10 is minimum, has to be a multiple of 10
+	my $self = shift;
 
-	my $j = $self->v11_get_stats( $match, $start_date, $end_date, $interval );
-	$self->render( json => $j );
+	my $st = new Extensions::Delegate::Statistics($self);
+	my ( $rc, $result ) = $st->get_usage_overview();
+	if ( $rc == SUCCESS ) {
+		$self->success($result);
+	}
+	else {
+		$self->alert($result);
+	}
 }
 
 sub info {

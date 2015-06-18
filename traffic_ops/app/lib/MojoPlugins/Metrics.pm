@@ -33,24 +33,8 @@ sub register {
 
 	$app->renderer->add_helper(
 		etl_metrics => sub {
-			my $self       = shift;
-			my $metric     = $self->param("metric");
-			my $start      = $self->param("start");         # start time in secs since 1970
-			my $end        = $self->param("end");           # end time in secs since 1970
-			my $stats_only = $self->param("stats") || 0;    # stats only
-			my $data_only  = $self->param("data") || 0;     # data only
-			my $type       = $self->param("type");
-
-			my $m = new Extensions::Delegate::Metrics(
-				$self, {
-					metricType => $metric,
-					startDate  => $start,
-					endDate    => $end,
-					statsOnly  => $stats_only,
-					dataOnly   => $data_only,
-					type       => $type
-				}
-			);
+			my $self = shift;
+			my $m    = new Extensions::Delegate::Metrics($self);
 			return $m->get_etl_metrics();
 		}
 	);
