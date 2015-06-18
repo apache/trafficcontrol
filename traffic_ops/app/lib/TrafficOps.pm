@@ -240,8 +240,13 @@ sub startup {
 	$r->route('/asns/:id/:mode')->via('GET')->over( authenticated => 1 )->to( 'Asn#view', namespace => 'UI' );
 
 	# -- CDNs
-	$r->get('/cdns/dnsseckeys/add')->to( 'DnssecKeys#add', namespace => 'UI' );
+	$r->get('/cdns/:cdn_name/dnsseckeys/add')->over( authenticated => 1 )->to( 'DnssecKeys#add', namespace => 'UI' );
+	$r->get('/cdns/:cdn_name/dnsseckeys/addksk')->over( authenticated => 1 )->to( 'DnssecKeys#addksk', namespace => 'UI' );
 	$r->post('/cdns/dnsseckeys/create')->over( authenticated => 1 )->to( 'DnssecKeys#create', namespace => 'UI' );
+	$r->post('/cdns/dnsseckeys/genksk')->over( authenticated => 1 )->to( 'DnssecKeys#genksk', namespace => 'UI' );
+	$r->get('/cdns/dnsseckeys')->to( 'DnssecKeys#index', namespace => 'UI' );
+	$r->get('/cdns/:cdn_name/dnsseckeys/manage')->over( authenticated => 1 )->to( 'DnssecKeys#manage', namespace => 'UI' );
+	$r->post('/cdns/dnsseckeys/activate')->over( authenticated => 1 )->to( 'DnssecKeys#activate', namespace => 'UI' );
 
 	# -- Dell - print boxes
 	$r->get('/dells')->over( authenticated => 1 )->to( 'Dell#dells', namespace => 'UI' );

@@ -48,7 +48,7 @@
  			<li><a title="Push new CRConfig.json to CCR 3+" href="/tools/snapshot_crconfig">Snapshot CRConfig</a></li>
  			<li><a title="Invalidate Content" href="/tools/invalidate_content">Invalidate Content</a></li>
  			<% if ($priv_level >= 30) { %>  <!-- admins only!! -->
-				<li><a title="Generate DNSSEC Keys" href="/cdns/dnsseckeys/add">Generate DNSSEC Keys</a></li>
+				<li><a title="Manage DNSSEC Keys" href="/cdns/dnsseckeys">Manage DNSSEC Keys</a></li>
 			<% } %>
 
  		</ul>

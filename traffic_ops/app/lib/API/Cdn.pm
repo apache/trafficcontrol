@@ -818,16 +818,41 @@ sub dnssec_keys {
 		else {
 			return $self->alert( { Error => " - Dnssec keys for $cdn_name do not exist!  Response was: " . $get_keys->content } );
 		}
-		my %new_keys = ();
-		# add TLD keys to new_keys hash.  Remove this if we are checking TLD expiration 
-		$new_keys{$cdn_name} = $keys->{$cdn_name};
-		my $z_update = 0;
-		my $k_update = 0;
+
+		#get DNSKEY ttl, generation multiplier, and effective mutiplier for CDN TLD
+		my $profile_id = $self->get_profile_id_by_cdn($cdn_name);
+		my $dnskey_gen_multiplier;
+		my $dnskey_ttl;
+		my $dnskey_effective_multiplier;
+		my %condition = ( 'parameter.name' => 'tld.ttls.DNSKEY', 'profile.name' => $profile_id);
+		my $rs_pp = $self->db->resultset('ProfileParameter')->search( \%condition, { prefetch => [ { 'parameter' => undef }, { 'profile' => undef } ] } )->single;
+		if ($rs_pp) {
+			$dnskey_ttl = $rs_pp->parameter->value;
+		}
+		else {
+			$dnskey_ttl = '60';	
+		}
+		%condition = ( 'parameter.name' => 'DNSKEY.generation.multiplier', 'profile.name' => $profile_id);
+		$rs_pp = $self->db->resultset('ProfileParameter')->search( \%condition, { prefetch => [ { 'parameter' => undef }, { 'profile' => undef } ] } )->single;
+		if ($rs_pp) {
+			 $dnskey_gen_multiplier = $rs_pp->parameter->value;
+		}
+		else {
+	 		 $dnskey_gen_multiplier = '10';
+	 	}
+	 	%condition = ( 'parameter.name' => 'DNSKEY.effective.multiplier', 'profile.name' => $profile_id);
+		$rs_pp = $self->db->resultset('ProfileParameter')->search( \%condition, { prefetch => [ { 'parameter' => undef }, { 'profile' => undef } ] } )->single;
+	 	if ($rs_pp) {
+	 		 $dnskey_effective_multiplier = $rs_pp->parameter->value;
+	 	}
+	 	else {
+	 		 $dnskey_effective_multiplier = '2';
+	 	}
+	 	my $key_expiration = time() - ($dnskey_ttl * $dnskey_gen_multiplier); 
 
 		#get default expiration days and ttl for DSs from CDN record
 		my $default_k_exp_days = "365";
 		my $default_z_exp_days = "30";
-		
 		my $cdn_ksk = $keys->{$cdn_name}->{ksk};
 		foreach my $cdn_krecord (@$cdn_ksk) {
 			my $cdn_kstatus = $cdn_krecord->{status};
@@ -844,43 +869,21 @@ sub dnssec_keys {
 				my $cdn_z_exp          = $cdn_zrecord->{expirationDate};
 				my $cdn_z_incep        = $cdn_zrecord->{inceptionDate};
 				$default_z_exp_days = ( $cdn_z_exp - $cdn_z_incep ) / 86400;
+				#check if zsk is expired, if so re-generate
+				if ( $cdn_z_exp < $key_expiration ) {
+				#if expired create new keys
+					$self->app->log->info("The ZSK keys for $cdn_name are expired!");
+					my $effective_date = $cdn_z_exp - ($dnskey_ttl * $dnskey_effective_multiplier);
+					my $new_dnssec_keys = $self->regen_expired_keys( "zsk", $cdn_name, $keys, $effective_date );
+					$keys->{$cdn_name} = $new_dnssec_keys; 
+				}
 			}
 		}
+				
 		#get DeliveryServices for CDN
-		my $profile_id = $self->get_profile_id_by_cdn($cdn_name);
 		my %search     = ( profile => $profile_id );
 		my @ds_rs      = $self->db->resultset('Deliveryservice')->search( \%search );
 		foreach my $ds (@ds_rs) {
-			#get DNSKEY ttl for TLD
-			my $dnskey_gen_multiplier;
-			my $dnskey_ttl;
-			my $dnskey_effective_multiplier;
-			my $ds_profile = $ds->profile->name;
-			my %condition = ( 'parameter.name' => 'tld.ttls.DNSKEY', 'profile.name' => $ds_profile);
-			my $rs_pp = $self->db->resultset('ProfileParameter')->search( \%condition, { prefetch => [ { 'parameter' => undef }, { 'profile' => undef } ] } )->single;
-			if ($rs_pp) {
-		 		$dnskey_ttl = $rs_pp->parameter->value;
-		 	}
-		 	else {
-		 		$dnskey_ttl = '60';	
-		 	}
-		 	%condition = ( 'parameter.name' => 'DNSKEY.generation.multiplier', 'profile.name' => $ds_profile);
-			$rs_pp = $self->db->resultset('ProfileParameter')->search( \%condition, { prefetch => [ { 'parameter' => undef }, { 'profile' => undef } ] } )->single;
-		 	if ($rs_pp) {
-		 		 $dnskey_gen_multiplier = $rs_pp->parameter->value;
-		 	}
-		 	else {
-		 		 $dnskey_gen_multiplier = '10';
-		 	}
-		 	%condition = ( 'parameter.name' => 'DNSKEY.effective.multiplier', 'profile.name' => $ds_profile);
-			$rs_pp = $self->db->resultset('ProfileParameter')->search( \%condition, { prefetch => [ { 'parameter' => undef }, { 'profile' => undef } ] } )->single;
-		 	if ($rs_pp) {
-		 		 $dnskey_effective_multiplier = $rs_pp->parameter->value;
-		 	}
-		 	else {
-		 		 $dnskey_effective_multiplier = '2';
-		 	}
-		 	my $key_expiration = time() - ($dnskey_ttl * $dnskey_gen_multiplier); 
 			#check if keys exist for ds
 			my $xml_id  = $ds->xml_id;
 			my $ds_keys = $keys->{$xml_id};
@@ -908,7 +911,7 @@ sub dnssec_keys {
 				my $ksk = $self->get_dnssec_keys( "ksk", $ds_name, $dnskey_ttl, $inception, $k_expiration, "new", $inception );
 
 				#add to keys hash
-				$new_keys{$xml_id} = { zsk => [$zsk], ksk => [$ksk] };
+				$keys->{$xml_id} = { zsk => [$zsk], ksk => [$ksk] };
 
 				#update param with current time stamp
 				my $param_update = $self->db->resultset('Parameter')->find( { name => $cdn_name . ".dnssec.inception" } );
@@ -925,9 +928,9 @@ sub dnssec_keys {
 						if ( $krecord->{expirationDate} < $key_expiration ) {
 						#if expired create new keys
 							$self->app->log->info("The KSK keys for $xml_id are expired!");
-							my $new_dnssec_keys = $self->regen_expired_keys( "ksk", $xml_id, $keys, $dnskey_effective_multiplier );
-							$new_keys{$xml_id} = $new_dnssec_keys;
-							$k_update = 1;
+							my $effective_date = $krecord->{expirationDate} - ($dnskey_ttl * $dnskey_effective_multiplier);
+							my $new_dnssec_keys = $self->regen_expired_keys( "ksk", $xml_id, $keys, $effective_date );
+							$keys->{$xml_id} = $new_dnssec_keys;
 						}
 					}	 
 				}
@@ -935,31 +938,24 @@ sub dnssec_keys {
 				foreach my $zrecord (@$zsk) {
 					my $zstatus = $zrecord->{status}; 
 					if ($zstatus eq 'new') {
-						if ( $zrecord->{expirationDate} < $key_expiration ) {
+						if ($zrecord->{expirationDate} < $key_expiration ) {
 						#if expired create new keys
 							$self->app->log->info("The ZSK keys for $xml_id are expired!");
-							my $new_dnssec_keys = $self->regen_expired_keys( "zsk", $xml_id, $keys, $dnskey_effective_multiplier );
-							$new_keys{$xml_id} = $new_dnssec_keys; 
-							$z_update = 1;
+							my $effective_date = $zrecord->{expirationDate} - ($dnskey_ttl * $dnskey_effective_multiplier);
+							my $new_dnssec_keys = $self->regen_expired_keys( "zsk", $xml_id, $keys, $effective_date );
+							$keys->{$xml_id} = $new_dnssec_keys; 
 						}
 					}	 						
 				}
-				#if not expired write existing key
-				if ( $z_update == 0 && $k_update == 0 ) {
-					$new_keys{$xml_id} = $keys->{$xml_id};
-				}
 			}
 		}
-
 		# #convert hash to json and store in Riak
-		my $json_data = encode_json( \%new_keys );
-		$self->riak_put( "dnssec", $cdn_name, $json_data );
+		my $json_data = encode_json( $keys );
+		$response_container = $self->riak_put( "dnssec", $cdn_name, $json_data );
 
-		#get updated record
-		$response_container = $self->riak_get( "dnssec", "$cdn_name" );
 		my $response = $response_container->{"response"};
 		$response->is_success()
-			? $self->success( decode_json( $response->content ) )
+			? $self->success( $keys )
 			: $self->alert( { Error => " - A record for dnssec key $cdn_name could not be found.  Response was: " . $response->content } );
 	}
 }
@@ -969,7 +965,8 @@ sub regen_expired_keys {
 	my $type       = shift;
 	my $key        = shift;
 	my $existing_keys   = shift;
-	my $effective_multipler = shift;
+	my $effective_date = shift;
+	my $tld = shift;
 	my $regen_keys = {};
 	my $old_key;
 
@@ -984,14 +981,14 @@ sub regen_expired_keys {
 	my $expiration      = $old_key->{expirationDate};
 	my $inception       = $old_key->{inceptionDate};
 	my $expiration_days = ( $expiration - $inception ) / 86400;
-	my $effective_date = $expiration - ($ttl * $effective_multipler);
+	
 	
 	#create new expiration and inception time
 	my $new_inception = time();
 	my $new_expiration = $new_inception + ( 86400 * $expiration_days );
 
 	#generate new keys
-	my $new_key = $self->get_dnssec_keys( $type, $name, $ttl, $new_inception, $new_expiration, "new", $effective_date );
+	my $new_key = $self->get_dnssec_keys( $type, $name, $ttl, $new_inception, $new_expiration, "new", $effective_date, $tld );
 
 	if ( $type eq "ksk" ) {
 		#get existing zsk
