@@ -922,13 +922,16 @@ sub parent_dot_config {
 	if ( !defined($data) ) {
 		$data = $self->ds_data($server);
 	}
-	##Origin Shield
+	# Origin Shield or Multi Site Origin
 	$self->app->log->debug("id = $id and server_type = $server_type");
 	if ( $server_type eq 'MID' ) {
 		foreach my $ds ( @{ $data->{dslist} } ) {
 			my $xml_id = $ds->{ds_xml_id};
 			my $os     = $ds->{origin_shield};
+			my $multi_site_origin = defined($ds->{multi_site_origin}) ? $ds->{mutli_site_origin} : 0;
 
+			my $org_fqdn = $ds->{org};
+			$org_fqdn =~ s/https?:\/\///;
 			if ( defined($os) ) {
 				my $algorithm = "";
 				my $param =
@@ -939,13 +942,13 @@ sub parent_dot_config {
 				if ( defined($pselect_alg) ) {
 					$algorithm = "round_robin=$pselect_alg";
 				}
-				my $org_fqdn = $ds->{org};
-				$org_fqdn =~ s/https?:\/\///;
 				$text .= "dest_domain=$org_fqdn parent=$os $algorithm go_direct=true\n";
+			} elsif ( $multi_site_origin ) {
+
 			}
 		}
-		$text .= "dest_domain=. go_direct=true\n";
-		$self->app->log->debug($text);
+		#$text .= "dest_domain=. go_direct=true\n"; # this is implicit.
+		$self->app->log->debug("MID PARENT.CONFIG:\n" . $text . "\n");
 		return $text;
 	}
 	else {
