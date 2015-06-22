@@ -26,6 +26,8 @@ use Redis;
 use Data::Dumper;
 use Time::HiRes qw(gettimeofday tv_interval);
 use Common::ReturnCodes qw(SUCCESS ERROR);
+use Extensions::Delegate::Statistics;
+Utils::Helper::Extensions->use;
 
 #TODO: drichardson - remove after 1.2 cleaned up
 sub stats {
