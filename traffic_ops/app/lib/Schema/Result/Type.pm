@@ -38,8 +38,8 @@ __PACKAGE__->table("type");
 =head2 description
 
   data_type: 'varchar'
-  is_nullable: 0
-  size: 45
+  is_nullable: 1
+  size: 256
 
 =head2 use_in_table
 
@@ -62,7 +62,7 @@ __PACKAGE__->add_columns(
   "name",
   { data_type => "varchar", is_nullable => 0, size => 45 },
   "description",
-  { data_type => "varchar", is_nullable => 0, size => 45 },
+  { data_type => "varchar", is_nullable => 1, size => 256 },
   "use_in_table",
   { data_type => "varchar", is_nullable => 1, size => 45 },
   "last_updated",
@@ -193,8 +193,8 @@ __PACKAGE__->has_many(
 );
 
 
-# Created by DBIx::Class::Schema::Loader v0.07043 @ 2015-05-21 13:27:11
-# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:oHCavGshenoU6E0boW18yw
+# Created by DBIx::Class::Schema::Loader v0.07043 @ 2015-06-23 14:24:12
+# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:gLRvkh8jz2f1qU6I0DHSZQ
 
 
 # You can replace this text with custom code or comments, and it will be preserved on regeneration
