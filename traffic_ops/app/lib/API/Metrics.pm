@@ -33,6 +33,7 @@ sub index {
 	my $server_type = $self->param("server_type");
 	my $m           = new Extensions::Delegate::Metrics($self);
 	my ( $rc, $result ) = $m->get_etl_metrics();
+	$self->app->log->debug( "result #-> " . Dumper($result) );
 	if ( $rc == SUCCESS ) {
 		return ( $self->success($result) );
 	}

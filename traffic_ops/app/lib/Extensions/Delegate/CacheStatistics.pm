@@ -1,4 +1,4 @@
-package Extensions::Delegate::Statistics;
+package Extensions::Delegate::CacheStatistics;
 #
 # Copyright 2015 Comcast Cable Communications Management, LLC
 #
@@ -16,7 +16,6 @@ package Extensions::Delegate::Statistics;
 
 # Stub class that provides the "hook" for implementing custom statistics gathering.
 # See TrafficOps.pm for the route that points here.
-# TODO: drichardson - add documentation here and in the public doc (.rst).
 sub new {
 	my $self  = {};
 	my $class = shift;
@@ -24,7 +23,7 @@ sub new {
 }
 
 sub get_stats {
-	return ( 1, "No Traffic Ops Extension implemented for 'Statistics->get_stats()'" );
+	return ( 1, "No Traffic Ops Extension implemented for 'CacheStatistics->get_stats()'" );
 }
 
 1;
