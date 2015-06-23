@@ -57,6 +57,7 @@ SELECT DISTINCT
     deliveryservice.mid_header_rewrite as mid_header_rewrite,
     deliveryservice.regex_remap as regex_remap,
     deliveryservice.cacheurl as cacheurl,
+    deliveryservice.remap_text as remap_text,
     deliveryservice.protocol as protocol
 FROM
     deliveryservice
@@ -89,6 +90,7 @@ __PACKAGE__->add_columns(
 	"mid_header_rewrite",     { data_type => "varchar", is_nullable => 0, size => 1024 },
 	"regex_remap",            { data_type => "varchar", is_nullable => 0, size => 1024 },
 	"cacheurl",               { data_type => "varchar", is_nullable => 0, size => 1024 },
+	"remap_text",             { data_type => "varchar", is_nullable => 0, size => 2048 },
 	"protocol",               { data_type => "tinyint", is_nullable => 0, size => 4 },
 	"range_request_handling", { data_type => "tinyint", is_nullable => 0, size => 4 },
 	"origin_shield",          { data_type => "varchar", is_nullable => 0, size => 1024 },

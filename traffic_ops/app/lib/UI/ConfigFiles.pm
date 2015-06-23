@@ -153,17 +153,19 @@ sub server_data {
 	my $id   = shift;
 
 	my $server;
-#	if ( defined( $self->app->session->{server_data} ) ) {
-#		$server = $self->app->session->{server_data};
-#		return $server;
-#	}
+
+	#	if ( defined( $self->app->session->{server_data} ) ) {
+	#		$server = $self->app->session->{server_data};
+	#		return $server;
+	#	}
 	if ( $id =~ /^\d+$/ ) {
 		$server = $self->db->resultset('Server')->search( { id => $id } )->single;
 	}
 	else {
 		$server = $self->db->resultset('Server')->search( { host_name => $id } )->single;
 	}
-#	$self->app->session->{server_data} = $server;
+
+	#	$self->app->session->{server_data} = $server;
 	return $server;
 }
 
@@ -181,10 +183,10 @@ sub ds_data {
 
 	my $dsinfo;
 
-#	if ( defined( $self->app->session->{dsinfo} ) ) {
-#		$dsinfo = $self->app->session->{dsinfo};
-#		return $dsinfo;
-#	}
+	#	if ( defined( $self->app->session->{dsinfo} ) ) {
+	#		$dsinfo = $self->app->session->{dsinfo};
+	#		return $dsinfo;
+	#	}
 	$dsinfo->{host_name}   = $server->host_name;
 	$dsinfo->{domain_name} = $server->domain_name;
 
@@ -225,6 +227,7 @@ sub ds_data {
 		my $range_request_handling = $row->range_request_handling;
 		my $origin_shield          = $row->origin_shield;
 		my $cacheurl               = $row->cacheurl;
+		my $remap_text             = $row->remap_text;
 
 		if ( $re_type eq 'HOST_REGEXP' ) {
 			my $host_re = $row->pattern;
@@ -285,6 +288,7 @@ sub ds_data {
 		$dsinfo->{dslist}->[$j]->{"range_request_handling"} = $range_request_handling;
 		$dsinfo->{dslist}->[$j]->{"origin_shield"}          = $origin_shield;
 		$dsinfo->{dslist}->[$j]->{"cacheurl"}               = $cacheurl;
+		$dsinfo->{dslist}->[$j]->{"remap_text"}             = $remap_text;
 
 		if ( defined($edge_header_rewrite) ) {
 			my $fname = "hdr_rw_" . $ds_xml_id . ".config";
@@ -302,7 +306,7 @@ sub ds_data {
 		$j++;
 	}
 
-#	$self->app->session->{dsinfo} = $dsinfo;
+	#	$self->app->session->{dsinfo} = $dsinfo;
 	return $dsinfo;
 }
 
@@ -341,8 +345,8 @@ sub parent_data {
 	my $pinfo;
 	my $parent_cachegroup_id = $self->db->resultset('Cachegroup')->search( { id => $server->cachegroup->id } )->get_column('parent_cachegroup_id')->single;
 
-	my $mtype = &type_id( $self, "MID" );
-	my $online = &admin_status_id( $self, "ONLINE" );
+	my $online   = &admin_status_id( $self, "ONLINE" );
+	my $reported = &admin_status_id( $self, "REPORTED" );
 
 	# get the server's cdn domain
 	my $param =
@@ -351,22 +355,50 @@ sub parent_data {
 		{ prefetch => [ { parameter => undef }, { profile => undef } ] } )->single();
 	my $server_domain = $param->parameter->value;
 
-	my $rs_parent = $self->db->resultset('Server')->search( { cachegroup => $parent_cachegroup_id, 'me.type' => $mtype, status => $online },
-		{ prefetch => [ { cachegroup => undef }, { status => undef }, { type => undef }, { profile => undef } ] } );
+	my $rs_parent = $self->db->resultset('Server')->search(
+		{ cachegroup => $parent_cachegroup_id, status => { -in => [ $online, $reported ] } },
+		{ prefetch => [ { cachegroup => undef }, { status => undef }, { type => undef }, { profile => undef } ] }
+	);
 
-	my $i = 0;
+	my $i             = 0;
+	my %profile_cache = ();
 	while ( my $row = $rs_parent->next ) {
 
-		# get the delivery service cdn domain
-		my $param =
-			$self->db->resultset('ProfileParameter')
-			->search( { -and => [ profile => $row->profile->id, 'parameter.config_file' => 'CRConfig.json', 'parameter.name' => 'domain_name' ] },
-			{ prefetch => [ { parameter => undef }, { profile => undef } ] } )->single();
-		my $ds_domain = $param->parameter->value;
+		# get the profile info, and cache it in %profile_cache
+		my $ds_domain = undef;
+		my $weight    = undef;
+		my $port      = undef;
+		my $pid       = $row->profile->id;
+		if ( !defined( $profile_cache{$pid} ) ) {
+			my $param =
+				$self->db->resultset('ProfileParameter')
+				->search( { -and => [ profile => $pid, 'parameter.config_file' => 'CRConfig.json', 'parameter.name' => 'domain_name' ] },
+				{ prefetch => [ 'parameter', 'profile' ] } )->single();
+			$ds_domain = $param->parameter->value;
+			$profile_cache{$pid}->{domain_name} = $ds_domain;
+			$param =
+				$self->db->resultset('ProfileParameter')
+				->search( { -and => [ profile => $pid, 'parameter.config_file' => 'parent.config', 'parameter.name' => 'weight' ] },
+				{ prefetch => [ 'parameter', 'profile' ] } )->single();
+			$weight = defined($param) ? $param->parameter->value : "0.999";
+			$profile_cache{$pid}->{weight} = $weight;
+			$param =
+				$self->db->resultset('ProfileParameter')
+				->search( { -and => [ profile => $pid, 'parameter.config_file' => 'parent.config', 'parameter.name' => 'port' ] },
+				{ prefetch => [ 'parameter', 'profile' ] } )->single();
+			$port = defined($param) ? $param->parameter->value : undef;
+			$profile_cache{$pid}->{port} = $port;
+		}
+		else {
+			$ds_domain = $profile_cache{$pid}->{domain_name};
+			$weight    = $profile_cache{$pid}->{weight};
+			$port      = $profile_cache{$pid}->{port};
+		}
 		if ( defined($ds_domain) && defined($server_domain) && $ds_domain eq $server_domain ) {
 			$pinfo->{"plist"}->[$i]->{"host_name"}   = $row->host_name;
-			$pinfo->{"plist"}->[$i]->{"port"}        = $row->tcp_port;
+			$pinfo->{"plist"}->[$i]->{"port"}        = defined($port) ? $port : $row->tcp_port;
 			$pinfo->{"plist"}->[$i]->{"domain_name"} = $row->domain_name;
+			$pinfo->{"plist"}->[$i]->{"weight"}      = $weight;
 			$i++;
 		}
 	}
@@ -417,7 +449,9 @@ sub ip_allow_data {
 		my $rtype = &type_id( $self, "RASCAL" );
 		my $rs_allowed = $self->db->resultset('Server')->search( { -or => [ type => $etype, type => $rtype ] } );
 		while ( my $allow_row = $rs_allowed->next ) {
-			if ( defined( $allow_locs{ $allow_row->cachegroup->id } ) && $allow_locs{ $allow_row->cachegroup->id } == 1 ) {
+			if ( $allow_row->type->id == $rtype
+				|| ( defined( $allow_locs{ $allow_row->cachegroup->id } ) && $allow_locs{ $allow_row->cachegroup->id } == 1 ) )
+			{
 				push( @allowed_netaddrips, NetAddr::IP->new( $allow_row->ip_address, $allow_row->ip_netmask ) );
 				push( @allowed_ipv6_netaddrips, NetAddr::IP->new( $allow_row->ip6_address ) );
 			}
@@ -795,17 +829,17 @@ sub remap_dot_config {
 	foreach my $remap ( @{ $data->{dslist} } ) {
 		foreach my $map_from ( keys %{ $remap->{remap_line} } ) {
 			my $map_to = $remap->{remap_line}->{$map_from};
-			$text = $self->remap_text( $server, $pdata, $text, $data, $remap, $map_from, $map_to );
+			$text = $self->build_remap_line( $server, $pdata, $text, $data, $remap, $map_from, $map_to );
 		}
 		foreach my $map_from ( keys %{ $remap->{remap_line2} } ) {
 			my $map_to = $remap->{remap_line2}->{$map_from};
-			$text = $self->remap_text( $server, $pdata, $text, $data, $remap, $map_from, $map_to );
+			$text = $self->build_remap_line( $server, $pdata, $text, $data, $remap, $map_from, $map_to );
 		}
 	}
 	return $text;
 }
 
-sub remap_text {
+sub build_remap_line {
 	my $self     = shift;
 	my $server   = shift;
 	my $pdata    = shift;
@@ -814,6 +848,11 @@ sub remap_text {
 	my $remap    = shift;
 	my $map_from = shift;
 	my $map_to   = shift;
+
+	if ($remap->{type} eq 'ANY_MAP') {
+		$text .= $remap->{remap_text} . "\n";
+		return $text;
+	}
 
 	my $host_name = $data->{host_name};
 	my $dscp      = $remap->{dscp};
@@ -863,6 +902,9 @@ sub remap_text {
 	}
 	elsif ( $remap->{range_request_handling} == 2 ) {
 		$text .= " \@plugin=cache_range_requests.so ";
+	}
+	if (defined($remap->{remap_text})) {
+		$text .= " " . $remap->{remap_text};
 	}
 	$text .= "\n";
 	return $text;
@@ -933,7 +975,7 @@ sub parent_dot_config {
 
 			$text .= "dest_domain=. parent=\"";
 			foreach my $parent ( @{ $pinfo->{"plist"} } ) {
-				$text .= $parent->{"host_name"} . "." . $parent->{"domain_name"} . ":" . $parent->{"port"} . "|1.0;";
+				$text .= $parent->{"host_name"} . "." . $parent->{"domain_name"} . ":" . $parent->{"port"} . "|" . $parent->{"weight"} . ";";
 			}
 			$text .= "\" round_robin=consistent_hash go_direct=false";
 		}
@@ -1050,8 +1092,7 @@ sub regex_revalidate_dot_config {
 		while ( my $dsrow = $rs->next ) {
 			my $ds_cdn_domain = $self->db->resultset('Parameter')->search(
 				{ -and => [ 'me.name' => 'domain_name', 'deliveryservices.id' => $dsrow->id ] },
-				{
-					join     => { profile_parameters => { profile => { deliveryservices => undef } } },
+				{   join     => { profile_parameters => { profile => { deliveryservices => undef } } },
 					distinct => 1
 				}
 			)->get_column('value')->single();
@@ -1211,7 +1252,7 @@ sub ssl_multicert_dot_config {
 		$new_host =~ tr/./_/;
 		my $cer_name = $new_host . "_cert.cer";
 
-		$text .= "dest_ip=*\t ssl_cert_name=$cer_name\t ssl_key_name=$key_name\n";
+		$text .= "ssl_cert_name=$cer_name\t ssl_key_name=$key_name\n";
 	}
 	return $text;
 }

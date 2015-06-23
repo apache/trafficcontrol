@@ -123,38 +123,6 @@ sub get_data {
 	}
 }
 
-sub remove_empty_series {
-	my $self = shift || confess("Call on an instance of Utils::Helper::Datasource");
-	my $data = shift || confess("Supply an Datasource REST API data structure");
-
-	my @ei;
-
-	for ( my $j = 0; $j < scalar( @{$data} ); $j++ ) {
-		my $shd = 0;
-
-		if ( exists( $data->[$j]->{data} ) ) {
-			for ( my $i = 0; $i < scalar( @{ $data->[$j]->{data} } ); $i++ ) {
-				if ( $data->[$j]->{data}->[$i]->[1] > 0 ) {
-					$shd = 1;
-				}
-			}
-		}
-
-		if ( !$shd ) {
-			push( @ei, $j );
-		}
-
-		# delete any series that has no valid data points
-		my $d = 0;
-
-		for my $di (@ei) {
-			splice( @{$data}, $di - $d++, 1 );
-		}
-	}
-
-	return ($data);
-}
-
 sub pad_and_fill_holes {
 	my $self     = shift || confess("Call on an instance of Utils::Helper::Datasource");
 	my $data     = shift || confess("Supply an Datasource REST API data structure");

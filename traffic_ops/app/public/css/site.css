@@ -299,4 +299,4 @@ a.disabled_button, .disabled_button{ -moz-border-bottom-colors: none; -moz-borde
 .tickLabel {
 	color: white !important;
 }
-
+.ui-dialog .ui-dialog-titlebar-close span { display: block; }

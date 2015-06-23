@@ -117,16 +117,41 @@ sub view_by_hostname {
 		#use hostname to get hostname regex
 		my @split_url = split( /\./, $key );
 		my $host_regex = $split_url[1];
-		if ( !$host_regex ) {
-			return $self->alert( { Error => " - $key is not a valid hostname." } );
+		my $domain_name;
+
+		for (my $i=2; $i<$#split_url; $i++) {
+			$domain_name .= $split_url[$i] . ".";
 		}
-		my $xml_id = $self->db->resultset('Deliveryservice')->search(
-			{ -and => [ 'regex.pattern' => [ { like => "%$host_regex%" } ] ] },
-			{
-				join     => { deliveryservice_regexes => { regex => undef } },
-				distinct => 1
+		$domain_name .= $split_url[$#split_url];
+
+		$host_regex = '.*\.' . $host_regex . '\..*'; 
+
+		if ( !$host_regex || !$domain_name ) {
+			return $self->alert( { Error => " - $key does not contain a valid delivery service." } ) if !$host_regex;
+			return $self->alert( { Error => " - $key does not contain a valid domain name." } ) if !$domain_name;
+		}
+
+		my @ds_ids_regex = $self->db->resultset('Deliveryservice')->search( { 'regex.pattern' => "$host_regex" }, { join => { deliveryservice_regexes => { regex => undef } } } )->get_column('id')->all();
+
+		my @domain_profiles = $self->db->resultset('Profile')->search( 
+								{ 
+									'parameter.value' => "$domain_name", 'parameter.config_file' => 'CRConfig.json', 'parameter.name' => 'domain_name'
+								}, 
+								{ 
+									join => { 'profile_parameters' => { parameter => undef } } 
+								} 
+								)->get_column('id')->all();
+
+		my $rs_ds = $self->db->resultset('Deliveryservice')->search( { 'profile' => { -in => \@domain_profiles } }, {  } );
+
+		my $xml_id;		
+		my %ds_ids_regex = map { $_ => undef } @ds_ids_regex;
+
+		while ( my $row = $rs_ds->next ) {
+			if ( exists($ds_ids_regex{$row->id}) ) {
+				$xml_id = $row->xml_id
 			}
-		)->get_column('xml_id')->single();
+		}
 
 		if ( !$version ) {
 			$version = 'latest';

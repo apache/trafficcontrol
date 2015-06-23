@@ -127,8 +127,11 @@ sub newjob {
 
 		my $start_time_gmt = strftime( "%Y-%m-%d %H:%M:%S", gmtime($start_time) );
 		if ( !%err ) {
-
-			$regex =~ m/(^\/.+)/ ? $org_server_fqdn = $org_server_fqdn . "/$regex" : $org_server_fqdn = $org_server_fqdn . "$regex";
+			if ($regex =~ m/(^\/.+)/) {
+				$org_server_fqdn = $org_server_fqdn . "$regex"
+			} else {
+				$org_server_fqdn = $org_server_fqdn . "/$regex";
+			}
 			my $insert = $self->db->resultset('Job')->create(
 				{
 					agent        => 1,

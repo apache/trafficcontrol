@@ -240,8 +240,13 @@ sub startup {
 	$r->route('/asns/:id/:mode')->via('GET')->over( authenticated => 1 )->to( 'Asn#view', namespace => 'UI' );
 
 	# -- CDNs
-	$r->get('/cdns/dnsseckeys/add')->to( 'DnssecKeys#add', namespace => 'UI' );
+	$r->get('/cdns/:cdn_name/dnsseckeys/add')->over( authenticated => 1 )->to( 'DnssecKeys#add', namespace => 'UI' );
+	$r->get('/cdns/:cdn_name/dnsseckeys/addksk')->over( authenticated => 1 )->to( 'DnssecKeys#addksk', namespace => 'UI' );
 	$r->post('/cdns/dnsseckeys/create')->over( authenticated => 1 )->to( 'DnssecKeys#create', namespace => 'UI' );
+	$r->post('/cdns/dnsseckeys/genksk')->over( authenticated => 1 )->to( 'DnssecKeys#genksk', namespace => 'UI' );
+	$r->get('/cdns/dnsseckeys')->to( 'DnssecKeys#index', namespace => 'UI' );
+	$r->get('/cdns/:cdn_name/dnsseckeys/manage')->over( authenticated => 1 )->to( 'DnssecKeys#manage', namespace => 'UI' );
+	$r->post('/cdns/dnsseckeys/activate')->over( authenticated => 1 )->to( 'DnssecKeys#activate', namespace => 'UI' );
 
 	# -- Dell - print boxes
 	$r->get('/dells')->over( authenticated => 1 )->to( 'Dell#dells', namespace => 'UI' );
@@ -364,7 +369,7 @@ sub startup {
 
 	# -- Profile
 	$r->get('/profile/add')->over( authenticated => 1 )->to( 'Profile#add', namespace => 'UI' );
-	$r->get('/profile/id/edit')->over( authenticated => 1 )->to( 'Profile#edit', namespace => 'UI' );
+	$r->get('/profile/edit/:id')->over( authenticated => 1 )->to( 'Profile#edit', namespace => 'UI' );
 	$r->route('/profile/:id/view')->via('GET')->over( authenticated => 1 )->to( 'Profile#view', namespace => 'UI' );
 	$r->route('/cmpprofile/:profile1/:profile2')->via('GET')->over( authenticated => 1 )->to( 'Profile#compareprofile', namespace => 'UI' );
 	$r->route('/cmpprofile/aadata/:profile1/:profile2')->via('GET')->over( authenticated => 1 )->to( 'Profile#acompareprofile', namespace => 'UI' );
@@ -980,12 +985,12 @@ sub setup_mojo_plugins {
 
 	closedir(DIR);
 
-	my $registration_email_from = $config->{'portal'}{'registration_email_from'};
-	if ( defined($registration_email_from) ) {
+	my $to_email_from = $config->{'to'}{'email_from'};
+	if ( defined($to_email_from) ) {
 
 		$self->plugin(
 			mail => {
-				from => $registration_email_from,
+				from => $to_email_from,
 				type => 'text/html',
 			}
 		);
@@ -993,7 +998,7 @@ sub setup_mojo_plugins {
 		if ( $mode ne 'test' ) {
 
 			$self->app->log->info("...");
-			$self->app->log->info( "Registration Email From: " . $registration_email_from );
+			$self->app->log->info( "Traffic Ops Email From: " . $to_email_from );
 		}
 	}
 
