@@ -343,7 +343,14 @@ sub parent_data {
 	my $server = shift;
 
 	my $pinfo;
-	my $parent_cachegroup_id = $self->db->resultset('Cachegroup')->search( { id => $server->cachegroup->id } )->get_column('parent_cachegroup_id')->single;
+	my @parent_cachegroup_ids; 
+	my $org_loc_type_id = &type_id($self, "ORG_LOC");
+	if ($server->type->name eq 'MID') {
+		# multisite origins take all the org groups in to account
+		@parent_cachegroup_ids = $self->db->resultset('Cachegroup')->search( { type => $org_loc_type_id } )->get_column('parent_cachegroup_id')->all();
+	} else {
+		@parent_cachegroup_ids = $self->db->resultset('Cachegroup')->search( { id => $server->cachegroup->id } )->get_column('parent_cachegroup_id')->all();
+	}
 
 	my $online   = &admin_status_id( $self, "ONLINE" );
 	my $reported = &admin_status_id( $self, "REPORTED" );
@@ -356,8 +363,8 @@ sub parent_data {
 	my $server_domain = $param->parameter->value;
 
 	my $rs_parent = $self->db->resultset('Server')->search(
-		{ cachegroup => $parent_cachegroup_id, status => { -in => [ $online, $reported ] } },
-		{ prefetch => [ { cachegroup => undef }, { status => undef }, { type => undef }, { profile => undef } ] }
+		{ cachegroup => { -in => \@parent_cachegroup_ids }, status => { -in => [ $online, $reported ] } },
+		{ prefetch => [ 'cachegroup', 'status', 'type', 'profile' ] }
 	);
 
 	my $i             = 0;
@@ -370,6 +377,7 @@ sub parent_data {
 		my $port      = undef;
 		my $pid       = $row->profile->id;
 		if ( !defined( $profile_cache{$pid} ) ) {
+			# assign $ds_domain, $weight and $port, and cache the results %profile_cache
 			my $param =
 				$self->db->resultset('ProfileParameter')
 				->search( { -and => [ profile => $pid, 'parameter.config_file' => 'CRConfig.json', 'parameter.name' => 'domain_name' ] },
@@ -399,6 +407,11 @@ sub parent_data {
 			$pinfo->{"plist"}->[$i]->{"port"}        = defined($port) ? $port : $row->tcp_port;
 			$pinfo->{"plist"}->[$i]->{"domain_name"} = $row->domain_name;
 			$pinfo->{"plist"}->[$i]->{"weight"}      = $weight;
+			if ($server->cachegroup->parent_cachegroup_id == $row->cachegroup->id) {
+				$pinfo->{"plist"}->[$i]->{"preferred"}  = 1;
+			} else {
+				$pinfo->{"plist"}->[$i]->{"preferred"}  = 0;
+			}
 			$i++;
 		}
 	}
@@ -945,6 +958,12 @@ sub parent_dot_config {
 				$text .= "dest_domain=$org_fqdn parent=$os $algorithm go_direct=true\n";
 			} elsif ( $multi_site_origin ) {
 
+				$text .= "dest_domain=$org_fqdn parent=\"";
+				my $pinfo = $self->parent_data($server);
+				foreach my $parent ( @{ $pinfo->{"plist"} } ) {
+					$text .= $parent->{"host_name"} . "." . $parent->{"domain_name"} . ":" . $parent->{"port"} . "|" . $parent->{"weight"} . ";";
+				}
+				$text .= "\" round_robin=consistent_hash go_direct=false";
 			}
 		}
 		#$text .= "dest_domain=. go_direct=true\n"; # this is implicit.
