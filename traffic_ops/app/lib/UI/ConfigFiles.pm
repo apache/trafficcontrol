@@ -228,6 +228,7 @@ sub ds_data {
 		my $origin_shield          = $row->origin_shield;
 		my $cacheurl               = $row->cacheurl;
 		my $remap_text             = $row->remap_text;
+		my $multi_site_origin      = $row->multi_site_origin;
 
 		if ( $re_type eq 'HOST_REGEXP' ) {
 			my $host_re = $row->pattern;
@@ -289,6 +290,7 @@ sub ds_data {
 		$dsinfo->{dslist}->[$j]->{"origin_shield"}          = $origin_shield;
 		$dsinfo->{dslist}->[$j]->{"cacheurl"}               = $cacheurl;
 		$dsinfo->{dslist}->[$j]->{"remap_text"}             = $remap_text;
+		$dsinfo->{dslist}->[$j]->{"multi_site_origin"}      = $multi_site_origin;
 
 		if ( defined($edge_header_rewrite) ) {
 			my $fname = "hdr_rw_" . $ds_xml_id . ".config";
@@ -347,7 +349,7 @@ sub parent_data {
 	my $org_loc_type_id = &type_id($self, "ORG_LOC");
 	if ($server->type->name eq 'MID') {
 		# multisite origins take all the org groups in to account
-		@parent_cachegroup_ids = $self->db->resultset('Cachegroup')->search( { type => $org_loc_type_id } )->get_column('parent_cachegroup_id')->all();
+		@parent_cachegroup_ids = $self->db->resultset('Cachegroup')->search( { type => $org_loc_type_id } )->get_column('id')->all();
 	} else {
 		@parent_cachegroup_ids = $self->db->resultset('Cachegroup')->search( { id => $server->cachegroup->id } )->get_column('parent_cachegroup_id')->all();
 	}
@@ -941,7 +943,7 @@ sub parent_dot_config {
 		foreach my $ds ( @{ $data->{dslist} } ) {
 			my $xml_id = $ds->{ds_xml_id};
 			my $os     = $ds->{origin_shield};
-			my $multi_site_origin = defined($ds->{multi_site_origin}) ? $ds->{mutli_site_origin} : 0;
+			my $multi_site_origin = defined($ds->{multi_site_origin}) ? $ds->{multi_site_origin} : 0;
 
 			my $org_fqdn = $ds->{org};
 			$org_fqdn =~ s/https?:\/\///;
@@ -963,7 +965,7 @@ sub parent_dot_config {
 				foreach my $parent ( @{ $pinfo->{"plist"} } ) {
 					$text .= $parent->{"host_name"} . "." . $parent->{"domain_name"} . ":" . $parent->{"port"} . "|" . $parent->{"weight"} . ";";
 				}
-				$text .= "\" round_robin=consistent_hash go_direct=false";
+				$text .= "\" round_robin=consistent_hash go_direct=false parent_is_proxy=false";
 			}
 		}
 		#$text .= "dest_domain=. go_direct=true\n"; # this is implicit.
