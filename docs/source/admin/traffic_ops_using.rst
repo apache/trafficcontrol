@@ -301,6 +301,8 @@ The fields in the Delivery Service view are:
 +--------------------------------------------------+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
 | Origin Server Base URL                           | The Origin Server's base URL. This includes the protocol (http or https). Example: ``http://movies.origin.com``                                                                                                     |
 +--------------------------------------------------+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| Use Multi Site Origin Feature                    | Enable the Multi Site Origin feature for this delivery service. See :ref:`rl-mulit-site-origin`                                                                                                                     |
++--------------------------------------------------+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
 | CCR profile                                      | The Traffic Router  profile for this delivery service. See :ref:`rl-ccr-profile`.                                                                                                                                   |
 +--------------------------------------------------+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
 | Maximum Bits per Second allowed globally         | The maximum bits per second this delivery service can serve across all EDGE caches before traffic will be diverted to the bypass destination. For a DNS delivery service, the Bypass Ipv4 or Ipv6  will be used     |
@@ -470,6 +472,40 @@ To generate a set of random signed url keys for this delivery service and store 
   CCR Profile
   Traffic Router Profile
 
+.. _rl-multi-site-origin:
+
+Multi Site Origin
++++++++++++++++++
+.. Note:: The Multi Site Origin feature is based upon a feature n ATS that has yet to be submitted to Traffic Server upstream, until it is, set this to 0. 
+
+Normally, the mid servers are not aware of any redundancy at the origin layer. With Multi Site Origin enabled this changes - Traffic Server (and Traffic Ops) are now made aware of the fact there are multiple origins, and can be configured to do more advanced failover and loadbalancing actions. 
+
+With This feature enabled, origin servers (or origin server VIP names for a site) are going to be entered as servers in to the Traiffic Ops UI. Server type is With This feature enabled, origin servers (or origin server VIP names for a site) are going to be entered as servers in to the Traiffic Ops UI. Server type is ""
+
+
+Parameters in the Origin profile that influence this feature:
++-------------------------------------------------------------------------+------------+---------------------------------------------------------------------------------------------------+
+| Name                                                                    | Default    | Description                                                                                       |
++=========================================================================+============+===================================================================================================+
+| CONFIG proxy.config.http.parent_proxy_routing_enable                    | INT 1      | enable parent selection.  This is a required setting.                                             |
++-------------------------------------------------------------------------+------------+---------------------------------------------------------------------------------------------------+
+| CONFIG proxy.config.url_remap.remap_required                            | INT 1      | required for parent selection.                                                                    |
++-------------------------------------------------------------------------+------------+---------------------------------------------------------------------------------------------------+
+| CONFIG proxy.config.http.parent_proxy.per_parent_connect_attempts       | INT 5      |  maximum of 5 connection attempts per parent (parent.config list) within a transaction.           |
++-------------------------------------------------------------------------+------------+---------------------------------------------------------------------------------------------------+
+| CONFIG proxy.config.http.parent_proxy.total_connect_attempts            | INT 10     | maximum of 10 total connection attempts within a transaction.                                     |
++-------------------------------------------------------------------------+------------+---------------------------------------------------------------------------------------------------+
+| CONFIG proxy.config.http.parent_origin.simple_retry_enabled             | INT 1      | enables simple retry.                                                                             |
++-------------------------------------------------------------------------+------------+---------------------------------------------------------------------------------------------------+
+| CONFIG proxy.config.http.parent_origin.simple_retry_response_codes      | STRING 404 | the response code that invokes simple retry.  May be a comman separated list of response codes.   |
++-------------------------------------------------------------------------+------------+---------------------------------------------------------------------------------------------------+
+| CONFIG proxy.config.http.parent_origin.dead_server_retry_response_codes | STRING 503 | the response code that invokes dead server retry.  May be a comma separated list of response codes|
++-------------------------------------------------------------------------+------------+---------------------------------------------------------------------------------------------------+
+| CONFIG proxy.config.http.parent_origin.dead_server_retry_enabled        | INT 1      | enables dead server retry.                                                                        |
++-------------------------------------------------------------------------+------------+---------------------------------------------------------------------------------------------------+
+| CONFIG proxy.config.diags.debug.enabled                                 | INT 1      | enable debugging for testing only                                                                 |
++-------------------------------------------------------------------------+------------+---------------------------------------------------------------------------------------------------+        
+
 .. _rl-ccr-profile:
 
 CCR Profile or Traffic Router Profile
@@ -478,7 +514,6 @@ CCR Profile or Traffic Router Profile
 +---------------------------------------+------------------------+---------------------------------------------------------------------------------------------------------------------+
 |                  Name                 |      Config_file       |                                                     Description                                                     |
 +=======================================+========================+=====================================================================================================================+
-+---------------------------------------+------------------------+---------------------------------------------------------------------------------------------------------------------+
 | location                              | dns.zone               | Location to store the DNS zone files in the local file system of Traffic Router.                                    |
 +---------------------------------------+------------------------+---------------------------------------------------------------------------------------------------------------------+
 | location                              | http-log4j.properties  | Location to find the log4j.properties file for Traffic Router.                                                      |

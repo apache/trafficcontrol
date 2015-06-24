@@ -25,7 +25,7 @@ use MIME::Base64;
 use Data::Dumper;
 
 $| = 1;	
-my $script_version = "0.50e";
+my $script_version = "0.50g";
 my $date = `/bin/date`; chomp($date);
 print "$date\nVersion of this script: $script_version\n";
 
@@ -559,7 +559,7 @@ sub check_syncds_state {
 	($log_level >> $DEBUG) && print "DEBUG Checking syncds state.\n";
 	if ($script_mode == $SYNCDS || $script_mode == $BADASS || $script_mode == $REPORT) {
 		## The herd is about to get /update/<hostname>
-		#&sleep_rand(5);
+		&sleep_rand(5);
 
 		my $url = "$traffic_ops_host\/update/$hostname_short";
 		my $upd_ref = &curl_me($url);
@@ -1826,7 +1826,7 @@ sub validate_result {
 	}
 	elsif ($size < 125) {
 		($log_level >> $WARN) && print "WARN URL: $url returned only the header.\n";
-		return 0;
+		return 1;
 	}
 	else {
 		($log_level >> $DEBUG) && print "DEBUG URL: $url returned $size bytes.\n";
