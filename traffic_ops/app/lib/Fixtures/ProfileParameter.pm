@@ -55,6 +55,34 @@ my %definition_for = (
             parameter => 3,
         },
     },
+    domain_name4 => {
+        new   => 'ProfileParameter',
+        using => {
+            profile   => 4,
+            parameter => 3,
+        },
+    },
+    domain_name5 => {
+        new   => 'ProfileParameter',
+        using => {
+            profile   => 5,
+            parameter => 3,
+        },
+    },
+    domain_name6 => {
+        new   => 'ProfileParameter',
+        using => {
+            profile   => 6,
+            parameter => 3,
+        },
+    },
+    domain_name7 => {
+        new   => 'ProfileParameter',
+        using => {
+            profile   => 7,
+            parameter => 3,
+        },
+    },
     rascal_properties1 => {
         new   => 'ProfileParameter',
         using => {
