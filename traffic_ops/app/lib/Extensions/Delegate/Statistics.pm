@@ -27,4 +27,8 @@ sub get_stats {
 	return ( 1, "No Traffic Ops Extension implemented for 'Statistics->get_stats()'" );
 }
 
+sub get_usage_overview {
+	return ( 1, "No Traffic Ops Extension implemented for 'Statistics->get_usage_overview()'" );
+}
+
 1;
