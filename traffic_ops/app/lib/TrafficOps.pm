@@ -866,7 +866,8 @@ sub startup {
 	# API Routes 1.2
 	# ------------------------------------------------------------------------
 	# -- INFLUXDB
-	my $api_version = "v12";
+	my $api_version   = "v12";
+	my $api_namespace = "v12";
 
 	$r->get( '/api/deliveryservices/:dsid/stats' => [ format => [ $api_version . ".json" ] ] )->over( authenticated => 1 )
 		->to( 'DeliveryServiceStats#index', namespace => 'API::v12' );
