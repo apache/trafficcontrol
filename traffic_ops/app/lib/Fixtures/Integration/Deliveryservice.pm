@@ -47,8 +47,10 @@ my %definition_for = (
 			check_path           => '/crossdomain.xml',
 			type                 => 8,
 			profile              => 5,
-			edge_header_rewrite  => 1,
+			edge_header_rewrite  => 'cond %{REMAP_PSEUDO_HOOK} __RETURN__ set-config proxy.config.http.transaction_active_timeout_out 5 [L]',
 			ipv6_routing_enabled => 1,
+			multi_site_origin    => 1,
+			mid_header_rewrite   => 'cond %{REMAP_PSEUDO_HOOK} __RETURN__ set-config proxy.config.http.parent_origin.dead_server_retry_enabled 1__RETURN__ set-config proxy.config.http.parent_origin.simple_retry_enabled 1__RETURN__ set-config proxy.config.http.parent_origin.simple_retry_response_codes "400,404,412"__RETURN__ set-config proxy.config.http.parent_origin.dead_server_retry_response_codes "502,503" __RETURN__ set-config proxy.config.http.connect_attempts_timeout 2 __RETURN__ set-config proxy.config.http.connect_attempts_max_retries 2 __RETURN__ set-config proxy.config.http.connect_attempts_max_retries_dead_server 1__RETURN__ set-config proxy.config.http.transaction_active_timeout_in 5 [L]',
 		},
 	},
 	ds_images_cdn1 => {
@@ -79,7 +81,7 @@ my %definition_for = (
 			check_path          => '/crossdomain.xml',
 			type                => 9,
 			profile             => 5,
-			edge_header_rewrite => 2,
+			edge_header_rewrite => 'rm-header Cache-Control [L]',
 		},
 	},
 	ds_games_cdn1 => {
@@ -110,7 +112,7 @@ my %definition_for = (
 			check_path          => '/crossdomain.xml',
 			type                => 9,
 			profile             => 5,
-			edge_header_rewrite => 3,
+			edge_header_rewrite => 'cond %{SEND_RESPONSE_HDR_HOOK} __RETURN__ add-header X-CDN-Info "KableTown___CACHE_IPV4__" [L]',
 		},
 	},
 	ds_tv_cdn1 => {
@@ -201,7 +203,8 @@ my %definition_for = (
 			check_path          => '/crossdomain.xml',
 			type                => 8,
 			profile             => 8,
-			edge_header_rewrite => 4,
+			mid_header_rewrite  => 'cond %{REMAP_PSEUDO_HOOK} __RETURN__ set-config proxy.config.http.parent_origin.dead_server_retry_enabled 1',
+			edge_header_rewrite => 'add-header X-Powered-By: KBLTN [L]',
 		},
 	},
 	ds_tv_local_cdn2 => {

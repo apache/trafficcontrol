@@ -27,6 +27,7 @@ use Test::Mojo;
 use Moose;
 
 use Fixtures::Integration::Deliveryservice;
+use Fixtures::Integration::OrgCacheGroup;
 use Fixtures::Integration::OtherCacheGroup;
 use Fixtures::Integration::EdgeCacheGroup;
 use Fixtures::Integration::Profile;
@@ -102,6 +103,12 @@ sub link_servers {
 				$i->insert();
 			}
 		}
+		if ( $server->type->name eq 'MID' ) {
+			if ( $server->profile->name =~ /CDN1/ ) {
+				$i = $schema->resultset('DeliveryserviceServer')->create( { server => $server->id, deliveryservice => 1 } );
+				$i->insert();
+			}
+		}
 	}
 }
 
@@ -121,6 +128,7 @@ sub load_core_data {
 	$self->load_all_fixtures( Fixtures::Integration::Parameter->new($schema_values) );
 	$self->load_all_fixtures( Fixtures::Integration::Profile->new($schema_values) );
 	$self->load_all_fixtures( Fixtures::Integration::ProfileParameter->new($schema_values) );
+	$self->load_all_fixtures( Fixtures::Integration::OrgCacheGroup->new($schema_values) );
 	$self->load_all_fixtures( Fixtures::Integration::OtherCacheGroup->new($schema_values) );
 	$self->load_all_fixtures( Fixtures::Integration::EdgeCacheGroup->new($schema_values) );
 	$self->load_all_fixtures( Fixtures::Integration::Asn->new($schema_values) );
@@ -136,9 +144,13 @@ sub load_core_data {
 sub delete_cachegroups {
 	my $self    = shift;
 	my $schema  = shift;
-	my $sql     = 'IS NOT NULL';
-	my $parents = $schema->resultset('Cachegroup')->search( { parent_cachegroup_id => \$sql } );
-	$parents->delete;
+#	my $sql     = 'IS NOT NULL AND type != 7';
+#	my $parents = $schema->resultset('Cachegroup')->search( { parent_cachegroup_id => \$sql } );
+#	$parents->delete;
+	my $orgs = $schema->resultset('Cachegroup')->search( { type => 6 } );
+	$orgs->delete;
+	$orgs = $schema->resultset('Cachegroup')->search( { type => 7 } );
+	$orgs->delete;
 	$schema->resultset('Cachegroup')->delete_all;
 }
 
@@ -150,6 +162,7 @@ sub unload_core_data {
 	$self->teardown( $schema, 'TmUser' );
 	$self->teardown( $schema, 'Role' );
 	$self->teardown( $schema, 'Regex' );
+	$self->teardown( $schema, 'DeliveryserviceServer' );
 	$self->teardown( $schema, 'Deliveryservice' );
 	$self->teardown( $schema, 'Server' );
 	$self->teardown( $schema, 'Asn' );
