@@ -46,6 +46,7 @@ SELECT DISTINCT
     deliveryservice.signed AS signed,
     deliveryservice.qstring_ignore AS qstring_ignore,
     deliveryservice.org_server_fqdn as org_server_fqdn,
+    deliveryservice.multi_site_origin as multi_site_origin,
     deliveryservice.range_request_handling as range_request_handling,
     deliveryservice.origin_shield as origin_shield,
     regex.pattern AS pattern,
@@ -77,6 +78,7 @@ ORDER BY ds_id, re_type , deliveryservice_regex.set_number
 __PACKAGE__->add_columns(
 	"xml_id",                 { data_type => "varchar", is_nullable => 0, size => 45 },
 	"org_server_fqdn",        { data_type => "varchar", is_nullable => 0, size => 45 },
+	"multi_site_origin",      { data_type => "integer", is_nullable => 0 },
 	"ds_id",                  { data_type => "integer", is_nullable => 0 },
 	"dscp",                   { data_type => "integer", is_nullable => 0 },
 	"signed",                 { data_type => "integer", is_nullable => 0 },

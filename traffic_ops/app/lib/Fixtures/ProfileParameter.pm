@@ -55,6 +55,34 @@ my %definition_for = (
             parameter => 3,
         },
     },
+    domain_name4 => {
+        new   => 'ProfileParameter',
+        using => {
+            profile   => 4,
+            parameter => 3,
+        },
+    },
+    domain_name5 => {
+        new   => 'ProfileParameter',
+        using => {
+            profile   => 5,
+            parameter => 3,
+        },
+    },
+    domain_name6 => {
+        new   => 'ProfileParameter',
+        using => {
+            profile   => 6,
+            parameter => 3,
+        },
+    },
+    domain_name7 => {
+        new   => 'ProfileParameter',
+        using => {
+            profile   => 7,
+            parameter => 3,
+        },
+    },
     rascal_properties1 => {
         new   => 'ProfileParameter',
         using => {
@@ -864,6 +892,48 @@ my %definition_for = (
         new   => 'ProfileParameter',
         using => {
             profile   => 2,
+            parameter => 61,
+        },
+    },
+    'org1_name' => {
+        new   => 'ProfileParameter',
+        using => {
+            profile   => 8,
+            parameter => 1,
+        },
+    },
+    'org1_domain' => {
+        new   => 'ProfileParameter',
+        using => {
+            profile   => 8,
+            parameter => 3,
+        },
+    },
+    'org1_weigth' => {
+        new   => 'ProfileParameter',
+        using => {
+            profile   => 8,
+            parameter => 61,
+        },
+    },
+    'org2_name' => {
+        new   => 'ProfileParameter',
+        using => {
+            profile   => 9,
+            parameter => 1,
+        },
+    },
+    'org2_domain' => {
+        new   => 'ProfileParameter',
+        using => {
+            profile   => 9,
+            parameter => 3,
+        },
+    },
+    'org2_weigth' => {
+        new   => 'ProfileParameter',
+        using => {
+            profile   => 9,
             parameter => 61,
         },
     },

@@ -179,6 +179,22 @@ my %definition_for = (
 			description => 'Riak profile for all CDNs',
 		},
 	},
+	ORG1 => {
+		new   => 'Profile',
+		using => {
+			id          => 48,
+			name        => 'ORG1_CDN1',
+			description => 'Multi site origin profile 1',
+		},
+	},
+	ORG2 => {
+		new   => 'Profile',
+		using => {
+			id          => 49,
+			name        => 'ORG2_CDN1',
+			description => 'Multi site origin profile 2',
+		},
+	},
 );
 
 sub name {

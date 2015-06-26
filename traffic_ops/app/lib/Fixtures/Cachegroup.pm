@@ -25,7 +25,7 @@ my %definition_for = (
 			id         => 1,
 			name       => 'mid-northeast-group',
 			short_name => 'ne',
-			type       => 1,
+			type       => 2,
 			latitude   => 120,
 			longitude  => 120,
 		},
@@ -39,6 +39,18 @@ my %definition_for = (
 			type       => 2,
 			latitude   => 100,
 			longitude  => 100,
+		},
+	},
+	edge_atl => {
+		new   => 'Cachegroup',
+		using => {
+			id         => 3,
+			name       => 'edge_atl_group',
+			short_name => 'ne',
+			type       => 1,
+			latitude   => 120,
+			longitude  => 120,
+			parent_cachegroup_id => 1,
 		},
 	},
 );

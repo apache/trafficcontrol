@@ -228,6 +228,7 @@ sub ds_data {
 		my $origin_shield          = $row->origin_shield;
 		my $cacheurl               = $row->cacheurl;
 		my $remap_text             = $row->remap_text;
+		my $multi_site_origin      = $row->multi_site_origin;
 
 		if ( $re_type eq 'HOST_REGEXP' ) {
 			my $host_re = $row->pattern;
@@ -289,6 +290,7 @@ sub ds_data {
 		$dsinfo->{dslist}->[$j]->{"origin_shield"}          = $origin_shield;
 		$dsinfo->{dslist}->[$j]->{"cacheurl"}               = $cacheurl;
 		$dsinfo->{dslist}->[$j]->{"remap_text"}             = $remap_text;
+		$dsinfo->{dslist}->[$j]->{"multi_site_origin"}      = $multi_site_origin;
 
 		if ( defined($edge_header_rewrite) ) {
 			my $fname = "hdr_rw_" . $ds_xml_id . ".config";
@@ -343,7 +345,16 @@ sub parent_data {
 	my $server = shift;
 
 	my $pinfo;
-	my $parent_cachegroup_id = $self->db->resultset('Cachegroup')->search( { id => $server->cachegroup->id } )->get_column('parent_cachegroup_id')->single;
+	my @parent_cachegroup_ids;
+	my $org_loc_type_id = &type_id( $self, "ORG_LOC" );
+	if ( $server->type->name eq 'MID' ) {
+
+		# multisite origins take all the org groups in to account
+		@parent_cachegroup_ids = $self->db->resultset('Cachegroup')->search( { type => $org_loc_type_id } )->get_column('id')->all();
+	}
+	else {
+		@parent_cachegroup_ids = $self->db->resultset('Cachegroup')->search( { id => $server->cachegroup->id } )->get_column('parent_cachegroup_id')->all();
+	}
 
 	my $online   = &admin_status_id( $self, "ONLINE" );
 	my $reported = &admin_status_id( $self, "REPORTED" );
@@ -355,10 +366,9 @@ sub parent_data {
 		{ prefetch => [ { parameter => undef }, { profile => undef } ] } )->single();
 	my $server_domain = $param->parameter->value;
 
-	my $rs_parent = $self->db->resultset('Server')->search(
-		{ cachegroup => $parent_cachegroup_id, status => { -in => [ $online, $reported ] } },
-		{ prefetch => [ { cachegroup => undef }, { status => undef }, { type => undef }, { profile => undef } ] }
-	);
+	my $rs_parent =
+		$self->db->resultset('Server')->search( { cachegroup => { -in => \@parent_cachegroup_ids }, status => { -in => [ $online, $reported ] } },
+		{ prefetch => [ 'cachegroup', 'status', 'type', 'profile' ] } );
 
 	my $i             = 0;
 	my %profile_cache = ();
@@ -370,6 +380,8 @@ sub parent_data {
 		my $port      = undef;
 		my $pid       = $row->profile->id;
 		if ( !defined( $profile_cache{$pid} ) ) {
+
+			# assign $ds_domain, $weight and $port, and cache the results %profile_cache
 			my $param =
 				$self->db->resultset('ProfileParameter')
 				->search( { -and => [ profile => $pid, 'parameter.config_file' => 'CRConfig.json', 'parameter.name' => 'domain_name' ] },
@@ -399,6 +411,12 @@ sub parent_data {
 			$pinfo->{"plist"}->[$i]->{"port"}        = defined($port) ? $port : $row->tcp_port;
 			$pinfo->{"plist"}->[$i]->{"domain_name"} = $row->domain_name;
 			$pinfo->{"plist"}->[$i]->{"weight"}      = $weight;
+			if ( $server->cachegroup->parent_cachegroup_id == $row->cachegroup->id ) {
+				$pinfo->{"plist"}->[$i]->{"preferred"} = 1;
+			}
+			else {
+				$pinfo->{"plist"}->[$i]->{"preferred"} = 0;
+			}
 			$i++;
 		}
 	}
@@ -849,7 +867,7 @@ sub build_remap_line {
 	my $map_from = shift;
 	my $map_to   = shift;
 
-	if ($remap->{type} eq 'ANY_MAP') {
+	if ( $remap->{type} eq 'ANY_MAP' ) {
 		$text .= $remap->{remap_text} . "\n";
 		return $text;
 	}
@@ -903,7 +921,7 @@ sub build_remap_line {
 	elsif ( $remap->{range_request_handling} == 2 ) {
 		$text .= " \@plugin=cache_range_requests.so ";
 	}
-	if (defined($remap->{remap_text})) {
+	if ( defined( $remap->{remap_text} ) ) {
 		$text .= " " . $remap->{remap_text};
 	}
 	$text .= "\n";
@@ -922,13 +940,17 @@ sub parent_dot_config {
 	if ( !defined($data) ) {
 		$data = $self->ds_data($server);
 	}
-	##Origin Shield
+
+	# Origin Shield or Multi Site Origin
 	$self->app->log->debug("id = $id and server_type = $server_type");
 	if ( $server_type eq 'MID' ) {
 		foreach my $ds ( @{ $data->{dslist} } ) {
-			my $xml_id = $ds->{ds_xml_id};
-			my $os     = $ds->{origin_shield};
+			my $xml_id            = $ds->{ds_xml_id};
+			my $os                = $ds->{origin_shield};
+			my $multi_site_origin = defined( $ds->{multi_site_origin} ) ? $ds->{multi_site_origin} : 0;
 
+			my $org_fqdn = $ds->{org};
+			$org_fqdn =~ s/https?:\/\///;
 			if ( defined($os) ) {
 				my $algorithm = "";
 				my $param =
@@ -939,13 +961,21 @@ sub parent_dot_config {
 				if ( defined($pselect_alg) ) {
 					$algorithm = "round_robin=$pselect_alg";
 				}
-				my $org_fqdn = $ds->{org};
-				$org_fqdn =~ s/https?:\/\///;
 				$text .= "dest_domain=$org_fqdn parent=$os $algorithm go_direct=true\n";
 			}
+			elsif ($multi_site_origin) {
+
+				$text .= "dest_domain=$org_fqdn parent=\"";
+				my $pinfo = $self->parent_data($server);
+				foreach my $parent ( @{ $pinfo->{"plist"} } ) {
+					$text .= $parent->{"host_name"} . "." . $parent->{"domain_name"} . ":" . $parent->{"port"} . "|" . $parent->{"weight"} . ";";
+				}
+				$text .= "\" round_robin=consistent_hash go_direct=false parent_is_proxy=false";
+			}
 		}
-		$text .= "dest_domain=. go_direct=true\n";
-		$self->app->log->debug($text);
+
+		#$text .= "dest_domain=. go_direct=true\n"; # this is implicit.
+		$self->app->log->debug( "MID PARENT.CONFIG:\n" . $text . "\n" );
 		return $text;
 	}
 	else {
@@ -1092,7 +1122,8 @@ sub regex_revalidate_dot_config {
 		while ( my $dsrow = $rs->next ) {
 			my $ds_cdn_domain = $self->db->resultset('Parameter')->search(
 				{ -and => [ 'me.name' => 'domain_name', 'deliveryservices.id' => $dsrow->id ] },
-				{   join     => { profile_parameters => { profile => { deliveryservices => undef } } },
+				{
+					join     => { profile_parameters => { profile => { deliveryservices => undef } } },
 					distinct => 1
 				}
 			)->get_column('value')->single();
