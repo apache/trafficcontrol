@@ -70,7 +70,7 @@
     <target name="buildrpm" depends="init">
 	<copy file="traffic_ops.spec" todir="${rpmdir}/SPECS">
 	    <filterset>
-			<filter token="VERSION" value="${tm_version}"/>
+			<filter token="VERSION" value="${to_version}"/>
 			<filter token="BUILD_NO" value="${build.number}"/>
 			<filter token="BUILT" 
 				value="${timestamp} by ${env.USER}"/>

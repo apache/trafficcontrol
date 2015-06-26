@@ -70,14 +70,16 @@ Vagrant.configure(2) do |config|
   # SHELL
   config.vm.provision "shell", inline: <<-SHELL
     sudo yum install -y epel-release
-    sudo yum install -y git golang ant hg cpan
+    sudo yum install -y git golang ant cpan hg
     export GOPATH=/home/vagrant/go
+    echo "export GOPATH=/home/vagrant/go" >> /home/vagrant/.bash_profile
+    echo "export WORKSPACE=/home/vagrant/" >> /home/vagrant/.bash_profile
     go get github.com/go-sql-driver/mysql
     go get code.google.com/p/go.net/html
     go get code.google.com/p/go.net/publicsuffix
-    perl -MCPAN -e 'my $c = "CPAN::HandleConfig"; $c->load(doit => 1, autoconfig => 1); $c->edit(prerequisites_policy => "follow"); $c->edit(build_requires_install_policy => "yes"); $c->commit'
-    sudo cpan -if Bundle::CPAN
-    sudo cpan -if YAML
-    sudo cpan -if MIYAGAWA/Carton-v1.0.15.tar.gz
+    #perl -MCPAN -e 'my $c = "CPAN::HandleConfig"; $c->load(doit => 1, autoconfig => 1); $c->edit(prerequisites_policy => "follow"); $c->edit(build_requires_install_policy => "yes"); $c->commit'
+    #sudo cpan -if Bundle::CPAN
+    #sudo cpan -if YAML
+    #sudo cpan -if MIYAGAWA/Carton-v1.0.15.tar.gz
   SHELL
 end

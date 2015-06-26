@@ -114,6 +114,7 @@ requires 'IPC::Cmd';
 requires 'Import::Into';
 requires 'JSON';
 requires 'JSON::PP';
+requires 'JSON::XS';
 requires 'LWP';
 requires 'LWP::MediaTypes';
 requires 'Lingua::EN::FindNumber';

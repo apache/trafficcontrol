@@ -29,7 +29,7 @@ TRAFFIC_OPS_USER="trafops"
 #----------------------------------------
 function buildRpm () {
     echo "Building the rpm."
-    echo -e "arch=x86_64\ntm_version=$TM_VERSION" > $RPMBUILD/traffic_ops.properties
+    echo -e "arch=x86_64\nto_version=$TO_VERSION" > $RPMBUILD/traffic_ops.properties
     cd $RPMBUILD && /usr/local/ant/bin/ant
 
     if [ $? != 0 ]; then
@@ -82,9 +82,9 @@ function checkEnvironment() {
 	exit 3
     fi
 
-    # set the TM_VERSION environment variable.
-    TM_VERSION=$(/bin/cat $GITREPO/app/lib/UI/Utils.pm | /bin/awk '/my \$version/{split($4,a,"\"");split(a[2],b,"-");printf("%s",b[1])}')
-    RPM="${PACKAGE}-${TM_VERSION}-${BUILD_NUMBER}.x86_64.rpm"
+    # set the TO_VERSION environment variable.
+    TO_VERSION=$(/bin/cat $GITREPO/app/lib/UI/Utils.pm | /bin/awk '/my \$version/{split($4,a,"\"");split(a[2],b,"-");printf("%s",b[1])}')
+    RPM="${PACKAGE}-${TO_VERSION}-${BUILD_NUMBER}.x86_64.rpm"
 
     echo "Build environment has been verified."
 }

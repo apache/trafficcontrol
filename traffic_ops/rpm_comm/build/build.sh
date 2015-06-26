@@ -18,24 +18,34 @@
 
 if [ -z $WORKSPACE ]; then
 	echo "Error: the 'WORKSPACE' environment variable is not set."
-   echo "If running from a Vagrant VM set WORKSPACE environment to /vagrant/rpmbuild."
-   echo "example: export WORKSPACE=/vagrant/rpmbuild"
+   echo "If running from a Vagrant VM set WORKSPACE should have been set to "
+   echo " /home/vagrant/rpmbuild."
+   echo "example: export WORKSPACE=/home/vagrant/"
 	exit 1
 fi
 
-if [ -z $TCSRC ]; then
-	echo "Error: the 'TCSRC' environment variable is not set."
-   echo "If running from a Vagrant VM set TCSRC environment to /vagrant."
-   echo "example: export TCSRC=/vagrant"
-	exit 1
+if [ ! -d $WORKSPACE ]; then
+   echo "$WORKSPACE does not exist."
+   exit 1
 fi
 
-#BRANCH="master"
-WORKSPACE=/home/vagrant/rpmbuild
-TCSRC=/home/vagrant/repos/traffic_control
+#if [ -z $TCSRC ]; then
+#	echo "Error: the 'TCSRC' environment variable is not set."
+#   echo "If running from a Vagrant VM TCSRC environment should be /home/vagrant/traffic_control."
+#   echo "example: export TCSRC=/vagrant"
+#	exit 1
+#fi
+
+sudo perl -MCPAN -e 'my $c = "CPAN::HandleConfig"; $c->load(doit => 1, autoconfig => 1); $c->edit(prerequisites_policy => "follow"); $c->edit(build_requires_install_policy => "yes"); $c->commit'
+sudo cpan -if MIYAGAWA/Carton-v1.0.15.tar.gz
+
+go get github.com/go-sql-driver/mysql
+go get code.google.com/p/go.net/html
+go get code.google.com/p/go.net/publicsuffix
+
 PACKAGE="traffic_ops"
-#GOPATH="/var/lib/jenkins/go"; export GOPATH
 BUILDDIR=$WORKSPACE/build
+TCSRC="$WORKSPACE/traffic_control"
 TOSRC="$TCSRC/$PACKAGE"
 CARTON="$WORKSPACE/carton"
 UTILS_PM="$TCSRC/$PACKAGE/app/lib/UI/Utils.pm"
@@ -79,8 +89,9 @@ else
     #if [ ! -d $WORKSPACE/traffic_ops ]; then
 	 #   /bin/mkdir $WORKSPACE/traffic_ops
     #fi
-   echo "cd to $TCSRC and clone"
-    cd $TCSRC && /usr/bin/git clone https://github.com/hbeatty/traffic_control.git
+   echo "cd to $WORKSPACE and clone"
+    cd $WORKSPACE && /usr/bin/git clone https://github.com/Comcast/traffic_control.git
+    cd traffic_ops
     /usr/bin/git checkout $BRANCH
 fi  
 
@@ -101,8 +112,10 @@ echo
 
 
 if [ ! -d $BUILDDIR ]; then
-   echo "The build dir $BUILDDIR does not exist. Please create it."
-   exit 1
+   #echo "The build dir $BUILDDIR does not exist. Please create it."
+   #exit 1
+   mkdir $BUILDDIR
+   cd $BUILDDIR
 else
    cd $BUILDDIR
 fi
@@ -122,13 +135,15 @@ cd $TOSRC/install/bin
 go build $TOSRC/install/go/src/comcast.com/dataload/dataload.go
 go build $TOSRC/install/go/src/comcast.com/systemtest/systemtest.go
 
-cd $BUILDDIR
+cd $BUILDDIR/rpm
 
-for link in etc app install db doc; do
+for link in etc app install doc; do
     if [ ! -s $link ]; then
 	ln -s $TOSRC/$link $link
     fi
 done
+
+cd ..
 
 if [ -d lib ]; then
     /bin/rm -rf lib
@@ -161,7 +176,7 @@ cd $BUILDDIR
 # Ant builds the rpm, perl modules should have been built
 # by carton already and placed in the lib/perl5 directory.
 echo -e "arch=x86_64\nto_version=$VERSION" > rpm/traffic_ops.properties
-cd rpm && /usr/local/ant/bin/ant
+cd rpm && ant
 
 if [ $? != 0 ]; then
     echo -e "\nRPM BUILD FAILED.\n\n"
