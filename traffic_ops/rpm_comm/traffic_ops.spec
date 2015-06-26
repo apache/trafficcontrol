@@ -17,25 +17,26 @@
 # RPM spec file for Traffic Ops (tm).
 #
 
-%define traffic_ops_version @VERSION@
-%define build_number @BUILD_NO@
+%define build_number 1
 %define TRAFFIC_OPS_USER trafops
 %define TRAFFIC_OPS_GROUP trafops
 %define TRAFFIC_OPS_LOG_DIR /var/log/traffic_ops
 
-Summary: Traffic Ops UI
 Name: traffic_ops
 Version: %{traffic_ops_version}
-Release: %{build_number}
-License: N/A
+Release: %{traffic_ops_build}%{?dist}
+Summary: Traffic Ops UI to control a CDN
 Group: Base System/System Tools
-Prefix: /opt/traffic_ops
-Source: $RPM_SOURCE_DIR/traffic_ops-%{traffic_ops_version}.tgz
-URL: http://www.comcast.com
-Vendor: Comcast
-Packager: John Rushford <John_Rushford@cable.comcast.com>
-BuildRoot: /var/tmp/%{name}-root
-AutoReqProv: no
+License: ASL 2.0
+URL: http://traffic-control-cdn.net
+Source0: http://traffic-control-cdn.net/downloads/traffic_ops-1.1.1-1906.x86_64.rpm
+#Patch0:
+BuildArch: noarch
+
+BuildRoot: %{buildroot}
+
+#BuildRequires:
+
 Requires: expat-devel, mod_ssl, mkisofs, libpcap-devel mysql, mysql-server, openssl, perl-DBI, perl-DBD-MySQL, perl-Digest-SHA1, perl-WWW-Curl
 Requires(pre): /usr/sbin/useradd, /usr/bin/getent
 Requires(postun): /usr/sbin/userdel
@@ -44,8 +45,6 @@ Requires(postun): /usr/sbin/userdel
 
 %description
 Installs Traffic Ops.
-
-Built: @BUILT@
 
 %prep
 

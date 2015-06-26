@@ -70,7 +70,7 @@ Vagrant.configure(2) do |config|
   # SHELL
   config.vm.provision "shell", inline: <<-SHELL
     sudo yum install -y epel-release
-    sudo yum install -y git golang ant cpan hg
+    sudo yum install -y git golang cpan hg rpm-build
     export GOPATH=/home/vagrant/go
     echo "export GOPATH=/home/vagrant/go" >> /home/vagrant/.bash_profile
     echo "export WORKSPACE=/home/vagrant/" >> /home/vagrant/.bash_profile

@@ -1,0 +1,8 @@
+%_topdir %(echo $WORKSPACE)/rpmbuild
+%_specdir %_topdir/SPECS
+%_sourcedir %_topdir/SOURCES
+%_builddir %_topdir/BUILD
+%_buildrootdir %_topdir/BUILDROOT
+%_rpmdir %_topdir/RPMS
+%_srcrpmdir %_topdir/SRPMS
+
