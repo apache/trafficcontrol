@@ -93,7 +93,6 @@ sub gen_crconfig_json {
 	}
 	my $rs_loc = $self->db->resultset('CachegroupParameter')->search( { 'parameter' => $cdnname_param_id }, { prefetch => 'cachegroup' } );
 
-#my $rs_loc = $self->db->resultset('Location')->search( {'servers.profile' => { -in => \@cdn_profiles }, 'type.name' => { -like => 'EDGE%'} }, { join => ['servers', 'type'], group_by => 'short_name' } );
 	while ( my $row = $rs_loc->next ) {
 		$data_obj->{'edgeLocations'}->{ $row->cachegroup->name }->{'latitude'}  = $row->cachegroup->latitude + 0;
 		$data_obj->{'edgeLocations'}->{ $row->cachegroup->name }->{'longitude'} = $row->cachegroup->longitude + 0;
@@ -114,6 +113,9 @@ sub gen_crconfig_json {
 		}
 	);
 	while ( my $row = $rs_caches->next ) {
+		
+		next if ( $row->status->name =~ m/\_IGNORE$/ );
+
 		if ( $row->type->name eq "RASCAL" ) {
 			$data_obj->{'monitors'}->{ $row->host_name }->{'fqdn'}     = $row->host_name . "." . $row->domain_name;
 			$data_obj->{'monitors'}->{ $row->host_name }->{'status'}   = $row->status->name;
@@ -147,17 +149,17 @@ sub gen_crconfig_json {
 			my $weight = undef;
 			my $weight_multiplier = undef;
 		    if ( !defined( $profile_cache{$pid} ) ) {
-			    my $param =
+			    my $param_w =
 				    $self->db->resultset('ProfileParameter')
 				    ->search( { -and => [ profile => $pid, 'parameter.config_file' => 'CRConfig.json', 'parameter.name' => 'weight' ] },
 				    { prefetch => [ 'parameter', 'profile' ] } )->single();
-			    $weight = defined($param) ? $param->parameter->value : "0.999";
+			    $weight = defined($param_w) ? $param_w->parameter->value : "0.999";
 			    $profile_cache{$pid}->{weight} = $weight;
-			    my $param =
+			    my $param_wm =
 				    $self->db->resultset('ProfileParameter')
 				    ->search( { -and => [ profile => $pid, 'parameter.config_file' => 'CRConfig.json', 'parameter.name' => 'weightMultiplier' ] },
 				    { prefetch => [ 'parameter', 'profile' ] } )->single();
-			    $weight_multiplier = defined($param) ? $param->parameter->value : 1000;
+			    $weight_multiplier = defined($param_wm) ? $param_wm->parameter->value : 1000;
 			    $profile_cache{$pid}->{weight_multiplier} = $weight_multiplier;
 		    } else {
 		       $weight = $profile_cache{$pid}->{weight};
@@ -180,6 +182,7 @@ sub gen_crconfig_json {
 	my $regexps;
 	my $rs_ds = $self->db->resultset('Deliveryservice')
 		->search( { 'me.profile' => $ccr_profile_id, 'active' => 1 }, { prefetch => [ 'deliveryservice_servers', 'deliveryservice_regexes', 'type' ] } );
+
 	while ( my $row = $rs_ds->next ) {
 		my $protocol;
 		if ( $row->type->name =~ m/DNS/ ) {
@@ -188,8 +191,10 @@ sub gen_crconfig_json {
 		else {
 			$protocol = 'HTTP';
 		}
+
 		my @server_subrows = $row->deliveryservice_servers->all;
 		my @regex_subrows  = $row->deliveryservice_regexes->all;
+
 		my $regex_to_props;
 		my %ds_to_remap;
 		if ( scalar(@regex_subrows) ) {
@@ -204,6 +209,7 @@ sub gen_crconfig_json {
 				}
 			}
 		}
+
 		foreach my $regex ( sort keys %{$regex_to_props} ) {
 			my $set_number = $regex_to_props->{$regex}->{'set_number'};
 			my $pattern    = $regex_to_props->{$regex}->{'pattern'};
@@ -227,6 +233,7 @@ sub gen_crconfig_json {
 				);
 			}
 		}
+
 		if ( scalar(@server_subrows) ) {
 
 			#my $host_regex = qr/(^(\.)+\*\\\.)(.*)(\\\.(\.)+\*$)/;
@@ -238,6 +245,9 @@ sub gen_crconfig_json {
 				$server_subrow_dedup{ $subrow->{'_column_data'}->{'server'} } = $subrow->{'_column_data'}->{'deliveryservice'};
 			}
 			foreach my $server ( keys %server_subrow_dedup ) {
+				
+				next if ( !defined($cache_tracker{$server}) );
+
 				foreach my $host ( @{ $ds_to_remap{ $row->xml_id } } ) {
 					my $remap;
 					if ( $host =~ m/\.\*$/ ) {
@@ -270,6 +280,7 @@ sub gen_crconfig_json {
 		else {
 			$data_obj->{'deliveryServices'}->{ $row->xml_id }->{'coverageZoneOnly'} = 'false';
 		}
+
 		if ( $protocol =~ m/DNS/ ) {
 
 			#$data_obj->{'deliveryServices'}->{$row->xml_id}->{'matchsets'}->[0]->{'protocol'} = 'DNS';
@@ -304,12 +315,14 @@ sub gen_crconfig_json {
 				$data_obj->{'deliveryServices'}->{ $row->xml_id }->{'bypassDestination'}->{'HTTP'}->{'port'} = $port;
 			}
 		}
+
 		if ( defined( $row->miss_lat ) && $row->miss_lat ne "" ) {
 			$data_obj->{'deliveryServices'}->{ $row->xml_id }->{'missLocation'}->{'lat'} = $row->miss_lat;
 		}
 		if ( defined( $row->miss_long ) && $row->miss_long ne "" ) {
 			$data_obj->{'deliveryServices'}->{ $row->xml_id }->{'missLocation'}->{'long'} = $row->miss_long;
 		}
+
 		$data_obj->{'deliveryServices'}->{ $row->xml_id }->{'ttls'} =
 			{ 'A' => $row->ccr_dns_ttl, 'AAAA' => $row->ccr_dns_ttl, 'NS' => "3600", 'SOA' => "86400" };
 		$data_obj->{'deliveryServices'}->{ $row->xml_id }->{'soa'}->{'minimum'} = "30";
@@ -323,6 +336,7 @@ sub gen_crconfig_json {
 			{ 'deliveryservice.active' => 1, 'deliveryservice.profile' => $ccr_profile_id },
 			{ prefetch => [ 'deliveryservice', 'type' ], columns => [ 'host', 'type', 'ttl', 'address' ] }
 		);
+
 		while ( my $dns_row = $rs_dns->next ) {
 			my $dns_obj;
 			$dns_obj->{'name'}  = $dns_row->host;
