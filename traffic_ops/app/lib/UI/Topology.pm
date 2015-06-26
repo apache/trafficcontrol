@@ -126,7 +126,7 @@ sub gen_crconfig_json {
 			$data_obj->{'monitors'}->{ $row->host_name }->{'profile'}  = $row->profile->name;
 
 		}
-		elsif ( $row->type->name eq "CCR" ) {
+		elsif ( $row->type->name eq "CCR" || $row->type->name eq "TR" ) {
 			my $rs_param = $self->db->resultset('Parameter')
 				->search( { 'profile_parameters.profile' => $row->profile->id, 'name' => 'api.port' }, { join => 'profile_parameters' } );
 			my $r = $rs_param->single;
@@ -141,7 +141,7 @@ sub gen_crconfig_json {
 			$data_obj->{'contentRouters'}->{ $row->host_name }->{'ip6'}      = ( $row->ip6_address || "" );
 			$data_obj->{'contentRouters'}->{ $row->host_name }->{'profile'}  = $row->profile->name;
 		}
-		else {
+		elsif ( $row->type->name eq "EDGE" || $row->type->name eq "MID" ) {
 			if ( !exists $cache_tracker{ $row->id } ) {
 				$cache_tracker{ $row->id } = $row->host_name;
 			}
