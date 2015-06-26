@@ -17,21 +17,28 @@
 # RPM spec file for Traffic Ops (tm).
 #
 
-%define build_number 1
 %define TRAFFIC_OPS_USER trafops
 %define TRAFFIC_OPS_GROUP trafops
 %define TRAFFIC_OPS_LOG_DIR /var/log/traffic_ops
+%define PACKAGE traffic_ops
 
-Name: traffic_ops
+# %define PACKAGEDIR %{prefix}
+
+Name: %{PACKAGE}
 Version: %{traffic_ops_version}
 Release: %{traffic_ops_build}%{?dist}
 Summary: Traffic Ops UI to control a CDN
-Group: Base System/System Tools
+Group: Applications/System
 License: ASL 2.0
 URL: http://traffic-control-cdn.net
-Source0: http://traffic-control-cdn.net/downloads/traffic_ops-1.1.1-1906.x86_64.rpm
+# The source for this package was pulled from uptream's vcs. Use the following
+# commands to generate the tarball:
+# git clone https://github.com/Comcast/traffic_control.git
+# cd %_sourcedir
+# tar -czf %_sourcedir/traffic_ops-%{traffic_ops_version}-%{traffic_ops_version}.%{hosttype}.tar.gz ./*
+Source0: traffic_ops-%{traffic_ops_version}.%{hosttype}.tar.gz
 #Patch0:
-BuildArch: noarch
+BuildArch: %{hosttype}
 
 BuildRoot: %{buildroot}
 
@@ -41,47 +48,48 @@ Requires: expat-devel, mod_ssl, mkisofs, libpcap-devel mysql, mysql-server, open
 Requires(pre): /usr/sbin/useradd, /usr/bin/getent
 Requires(postun): /usr/sbin/userdel
 
-%define PACKAGEDIR %{prefix}
 
 %description
-Installs Traffic Ops.
+Installs %{PACKAGE}.
+
+%build
 
 %prep
 
 %setup
 
 %install
-    if [ -d $RPM_BUILD_ROOT ]; then
-		%__rm -rf $RPM_BUILD_ROOT
-    fi
+   if [ -d $RPM_BUILD_ROOT ]; then
+      %__rm -rf $RPM_BUILD_ROOT
+   fi
 
-    if [ ! -d $RPM_BUILD_ROOT/%{PACKAGEDIR} ]; then
-		%__mkdir -p $RPM_BUILD_ROOT/%{PACKAGEDIR}
-    fi
+   if [ ! -d $RPM_BUILD_ROOT/%{PACKAGE} ]; then
+      %__mkdir -p $RPM_BUILD_ROOT/%{PACKAGE}
+   fi
 
-	%__cp -R $RPM_BUILD_DIR/traffic_ops-%{traffic_ops_version}/* $RPM_BUILD_ROOT/%{PACKAGEDIR}
+   %__cp -R $RPM_BUILD_DIR/%{PACKAGE}-%{traffic_ops_version}/* $RPM_BUILD_ROOT/%{PACKAGE}
 
-	if [ ! -d $RPM_BUILD_ROOT/%{PACKAGEDIR}/app/public/CRConfig-Snapshots ]; then
-        %__mkdir -p $RPM_BUILD_ROOT/%{PACKAGEDIR}/app/public/CRConfig-Snapshots
-    fi
-    if [ ! -d $RPM_BUILD_ROOT/%{PACKAGEDIR}/app/public/routing ]; then
-        %__mkdir -p $RPM_BUILD_ROOT/%{PACKAGEDIR}/app/public/routing
-    fi
+   if [ ! -d $RPM_BUILD_ROOT/%{PACKAGE}/app/public/CRConfig-Snapshots ]; then
+      %__mkdir -p $RPM_BUILD_ROOT/%{PACKAGE}/app/public/CRConfig-Snapshots
+   fi
+   if [ ! -d $RPM_BUILD_ROOT/%{PACKAGE}/app/public/routing ]; then
+      %__mkdir -p $RPM_BUILD_ROOT/%{PACKAGE}/app/public/routing
+   fi
 
 %pre
     /usr/bin/getent group %{TRAFFIC_OPS_GROUP} || /usr/sbin/groupadd -r %{TRAFFIC_OPS_GROUP}
     /usr/bin/getent passwd %{TRAFFIC_OPS_USER} || /usr/sbin/useradd -r -d %{PACKAGEDIR} -s /sbin/nologin %{TRAFFIC_OPS_USER} -g %{TRAFFIC_OPS_GROUP}
     if [ -d %{PACKAGEDIR}/app/conf ]; then
-	  echo -e "\nBacking up config files.\n"
-	  if [ -f /var/tmp/traffic_ops-backup.tar ]; then
-		  %__rm /var/tmp/traffic_ops-backup.tar
-	  fi
-	  cd %{PACKAGEDIR} && tar cf /var/tmp/traffic_ops-backup.tar app/public/*Snapshots app/public/routing  app/conf app/db/dbconf.yml app/local app/cpanfile.snapshot
+      #echo -e "\nBacking up config files.\n"
+     if [ -f /var/tmp/traffic_ops-backup.tar ]; then
+        %__rm /var/tmp/traffic_ops-backup.tar
+     fi
+     cd %{PACKAGEDIR} && tar cf /var/tmp/traffic_ops-backup.tar app/public/*Snapshots app/public/routing  app/conf app/db/dbconf.yml app/local app/cpanfile.snapshot
     fi
 
     # upgrade
     if [ "$1" == "2" ]; then
-	service traffic_ops stop
+   service traffic_ops stop
     fi
 
 %post
@@ -95,26 +103,26 @@ Installs Traffic Ops.
     %__chmod +x /etc/init.d/traffic_ops
     %__chmod +x %{PACKAGEDIR}/install/bin/*
     /sbin/chkconfig --add traffic_ops 
-	
+   
     %__mkdir -p %{TRAFFIC_OPS_LOG_DIR}
 
     if [ -f /var/tmp/traffic_ops-backup.tar ]; then
-    	echo -e "\nRestoring config files.\n"
-		cd %{PACKAGEDIR} && tar xf /var/tmp/traffic_ops-backup.tar
+      echo -e "\nRestoring config files.\n"
+      cd %{PACKAGEDIR} && tar xf /var/tmp/traffic_ops-backup.tar
     fi
 
     # install
     if [ "$1" = "1" ]; then
       # see postinstall, the .reconfigure file triggers init().
       /bin/touch %{PACKAGEDIR}/.reconfigure
-    	echo -e "\nRun /opt/traffic_ops/install/bin/postinstall from the root home directory to complete the install.\n"
+      echo -e "\nRun /opt/traffic_ops/install/bin/postinstall from the root home directory to complete the install.\n"
     fi
 
     # upgrade
     if [ "$1" == "2" ]; then
-		    /opt/traffic_ops/install/bin/migratedb
+          /opt/traffic_ops/install/bin/migratedb
         echo -e "\nUpgrade complete.\n\n"
-    	 echo -e "\nRun /opt/traffic_ops/install/bin/postinstall from the root home directory to complete the update.\n"
+       echo -e "\nRun /opt/traffic_ops/install/bin/postinstall from the root home directory to complete the update.\n"
         echo -e "To start Traffic Ops:  service traffic_ops start\n";
         echo -e "To stop Traffic Ops:   service traffic_ops stop\n\n";
     fi
@@ -124,14 +132,16 @@ Installs Traffic Ops.
 %postun
 
 if [ "$1" = "0" ]; then
-	# this is an uninstall
-	%__rm -rf %{PACKAGEDIR}
-	%__rm /etc/init.d/traffic_ops
+   # this is an uninstall
+   %__rm -rf %{PACKAGEDIR}
+   %__rm /etc/init.d/traffic_ops
     /usr/bin/getent passwd %{TRAFFIC_OPS_USER} || /usr/sbin/userdel %{TRAFFIC_OPS_USER} 
     /usr/bin/getent group %{TRAFFIC_OPS_GROUP} || /usr/sbin/groupdel %{TRAFFIC_OPS_GROUP}
 fi
 service traffic_ops stop
 #/usr/sbin/groupdel %{TRAFFIC_OPS_GROUP}
+
+%clean
 
 %files
 %defattr(644,root,root,755)
