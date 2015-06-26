@@ -895,48 +895,6 @@ my %definition_for = (
             parameter => 61,
         },
     },
-    'org1_name' => {
-        new   => 'ProfileParameter',
-        using => {
-            profile   => 8,
-            parameter => 1,
-        },
-    },
-    'org1_domain' => {
-        new   => 'ProfileParameter',
-        using => {
-            profile   => 8,
-            parameter => 3,
-        },
-    },
-    'org1_weigth' => {
-        new   => 'ProfileParameter',
-        using => {
-            profile   => 8,
-            parameter => 61,
-        },
-    },
-    'org2_name' => {
-        new   => 'ProfileParameter',
-        using => {
-            profile   => 9,
-            parameter => 1,
-        },
-    },
-    'org2_domain' => {
-        new   => 'ProfileParameter',
-        using => {
-            profile   => 9,
-            parameter => 3,
-        },
-    },
-    'org2_weigth' => {
-        new   => 'ProfileParameter',
-        using => {
-            profile   => 9,
-            parameter => 61,
-        },
-    },
 );
 
 sub get_definition {
