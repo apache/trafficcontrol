@@ -59,86 +59,86 @@ Installs %{PACKAGE}.
 %setup
 
 %install
-   if [ -d $RPM_BUILD_ROOT ]; then
-      %__rm -rf $RPM_BUILD_ROOT
-   fi
-
-   if [ ! -d $RPM_BUILD_ROOT/%{PACKAGE} ]; then
-      %__mkdir -p $RPM_BUILD_ROOT/%{PACKAGE}
-   fi
-
-   %__cp -R $RPM_BUILD_DIR/%{PACKAGE}-%{traffic_ops_version}/* $RPM_BUILD_ROOT/%{PACKAGE}
-
-   if [ ! -d $RPM_BUILD_ROOT/%{PACKAGE}/app/public/CRConfig-Snapshots ]; then
-      %__mkdir -p $RPM_BUILD_ROOT/%{PACKAGE}/app/public/CRConfig-Snapshots
-   fi
-   if [ ! -d $RPM_BUILD_ROOT/%{PACKAGE}/app/public/routing ]; then
-      %__mkdir -p $RPM_BUILD_ROOT/%{PACKAGE}/app/public/routing
-   fi
+#   if [ -d $RPM_BUILD_ROOT ]; then
+#      %__rm -rf $RPM_BUILD_ROOT
+#   fi
+#
+#   if [ ! -d $RPM_BUILD_ROOT/%{PACKAGE} ]; then
+#      %__mkdir -p $RPM_BUILD_ROOT/%{PACKAGE}
+#   fi
+#
+#   %__cp -R $RPM_BUILD_DIR/%{PACKAGE}-%{traffic_ops_version}/* $RPM_BUILD_ROOT/%{PACKAGE}
+#
+#   if [ ! -d $RPM_BUILD_ROOT/%{PACKAGE}/app/public/CRConfig-Snapshots ]; then
+#      %__mkdir -p $RPM_BUILD_ROOT/%{PACKAGE}/app/public/CRConfig-Snapshots
+#   fi
+#   if [ ! -d $RPM_BUILD_ROOT/%{PACKAGE}/app/public/routing ]; then
+#      %__mkdir -p $RPM_BUILD_ROOT/%{PACKAGE}/app/public/routing
+#   fi
 
 %pre
-    /usr/bin/getent group %{TRAFFIC_OPS_GROUP} || /usr/sbin/groupadd -r %{TRAFFIC_OPS_GROUP}
-    /usr/bin/getent passwd %{TRAFFIC_OPS_USER} || /usr/sbin/useradd -r -d %{PACKAGEDIR} -s /sbin/nologin %{TRAFFIC_OPS_USER} -g %{TRAFFIC_OPS_GROUP}
-    if [ -d %{PACKAGEDIR}/app/conf ]; then
-      #echo -e "\nBacking up config files.\n"
-     if [ -f /var/tmp/traffic_ops-backup.tar ]; then
-        %__rm /var/tmp/traffic_ops-backup.tar
-     fi
-     cd %{PACKAGEDIR} && tar cf /var/tmp/traffic_ops-backup.tar app/public/*Snapshots app/public/routing  app/conf app/db/dbconf.yml app/local app/cpanfile.snapshot
-    fi
-
-    # upgrade
-    if [ "$1" == "2" ]; then
-   service traffic_ops stop
-    fi
+#    /usr/bin/getent group %{TRAFFIC_OPS_GROUP} || /usr/sbin/groupadd -r %{TRAFFIC_OPS_GROUP}
+#    /usr/bin/getent passwd %{TRAFFIC_OPS_USER} || /usr/sbin/useradd -r -d %{PACKAGEDIR} -s /sbin/nologin %{TRAFFIC_OPS_USER} -g %{TRAFFIC_OPS_GROUP}
+#    if [ -d %{PACKAGEDIR}/app/conf ]; then
+#      #echo -e "\nBacking up config files.\n"
+#     if [ -f /var/tmp/traffic_ops-backup.tar ]; then
+#        %__rm /var/tmp/traffic_ops-backup.tar
+#     fi
+#     cd %{PACKAGEDIR} && tar cf /var/tmp/traffic_ops-backup.tar app/public/*Snapshots app/public/routing  app/conf app/db/dbconf.yml app/local app/cpanfile.snapshot
+#    fi
+#
+#    # upgrade
+#    if [ "$1" == "2" ]; then
+#   service traffic_ops stop
+#    fi
 
 %post
 
-    %__cp %{PACKAGEDIR}/etc/init.d/traffic_ops /etc/init.d/traffic_ops
-     %__cp %{PACKAGEDIR}/etc/logrotate.d/traffic_ops /etc/logrotate.d/traffic_ops
-     %__cp %{PACKAGEDIR}/etc/logrotate.d/traffic_ops_access /etc/logrotate.d/traffic_ops_access
-    %__chown root:root /etc/init.d/traffic_ops
-    %__chown root:root /etc/logrotate.d/traffic_ops
-    %__chown root:root /etc/logrotate.d/traffic_ops_access
-    %__chmod +x /etc/init.d/traffic_ops
-    %__chmod +x %{PACKAGEDIR}/install/bin/*
-    /sbin/chkconfig --add traffic_ops 
-   
-    %__mkdir -p %{TRAFFIC_OPS_LOG_DIR}
-
-    if [ -f /var/tmp/traffic_ops-backup.tar ]; then
-      echo -e "\nRestoring config files.\n"
-      cd %{PACKAGEDIR} && tar xf /var/tmp/traffic_ops-backup.tar
-    fi
-
-    # install
-    if [ "$1" = "1" ]; then
-      # see postinstall, the .reconfigure file triggers init().
-      /bin/touch %{PACKAGEDIR}/.reconfigure
-      echo -e "\nRun /opt/traffic_ops/install/bin/postinstall from the root home directory to complete the install.\n"
-    fi
-
-    # upgrade
-    if [ "$1" == "2" ]; then
-          /opt/traffic_ops/install/bin/migratedb
-        echo -e "\nUpgrade complete.\n\n"
-       echo -e "\nRun /opt/traffic_ops/install/bin/postinstall from the root home directory to complete the update.\n"
-        echo -e "To start Traffic Ops:  service traffic_ops start\n";
-        echo -e "To stop Traffic Ops:   service traffic_ops stop\n\n";
-    fi
-    /bin/chown -R %{TRAFFIC_OPS_USER}:%{TRAFFIC_OPS_GROUP} %{PACKAGEDIR}
-    /bin/chown -R %{TRAFFIC_OPS_USER}:%{TRAFFIC_OPS_GROUP} %{TRAFFIC_OPS_LOG_DIR}
+#    %__cp %{PACKAGEDIR}/etc/init.d/traffic_ops /etc/init.d/traffic_ops
+#     %__cp %{PACKAGEDIR}/etc/logrotate.d/traffic_ops /etc/logrotate.d/traffic_ops
+#     %__cp %{PACKAGEDIR}/etc/logrotate.d/traffic_ops_access /etc/logrotate.d/traffic_ops_access
+#    %__chown root:root /etc/init.d/traffic_ops
+#    %__chown root:root /etc/logrotate.d/traffic_ops
+#    %__chown root:root /etc/logrotate.d/traffic_ops_access
+#    %__chmod +x /etc/init.d/traffic_ops
+#    %__chmod +x %{PACKAGEDIR}/install/bin/*
+#    /sbin/chkconfig --add traffic_ops 
+#   
+#    %__mkdir -p %{TRAFFIC_OPS_LOG_DIR}
+#
+#    if [ -f /var/tmp/traffic_ops-backup.tar ]; then
+#      echo -e "\nRestoring config files.\n"
+#      cd %{PACKAGEDIR} && tar xf /var/tmp/traffic_ops-backup.tar
+#    fi
+#
+#    # install
+#    if [ "$1" = "1" ]; then
+#      # see postinstall, the .reconfigure file triggers init().
+#      /bin/touch %{PACKAGEDIR}/.reconfigure
+#      echo -e "\nRun /opt/traffic_ops/install/bin/postinstall from the root home directory to complete the install.\n"
+#    fi
+#
+#    # upgrade
+#    if [ "$1" == "2" ]; then
+#          /opt/traffic_ops/install/bin/migratedb
+#        echo -e "\nUpgrade complete.\n\n"
+#       echo -e "\nRun /opt/traffic_ops/install/bin/postinstall from the root home directory to complete the update.\n"
+#        echo -e "To start Traffic Ops:  service traffic_ops start\n";
+#        echo -e "To stop Traffic Ops:   service traffic_ops stop\n\n";
+#    fi
+#    /bin/chown -R %{TRAFFIC_OPS_USER}:%{TRAFFIC_OPS_GROUP} %{PACKAGEDIR}
+#    /bin/chown -R %{TRAFFIC_OPS_USER}:%{TRAFFIC_OPS_GROUP} %{TRAFFIC_OPS_LOG_DIR}
 
 %postun
 
-if [ "$1" = "0" ]; then
-   # this is an uninstall
-   %__rm -rf %{PACKAGEDIR}
-   %__rm /etc/init.d/traffic_ops
-    /usr/bin/getent passwd %{TRAFFIC_OPS_USER} || /usr/sbin/userdel %{TRAFFIC_OPS_USER} 
-    /usr/bin/getent group %{TRAFFIC_OPS_GROUP} || /usr/sbin/groupdel %{TRAFFIC_OPS_GROUP}
-fi
-service traffic_ops stop
+#if [ "$1" = "0" ]; then
+#   # this is an uninstall
+#   %__rm -rf %{PACKAGEDIR}
+#   %__rm /etc/init.d/traffic_ops
+#    /usr/bin/getent passwd %{TRAFFIC_OPS_USER} || /usr/sbin/userdel %{TRAFFIC_OPS_USER} 
+#    /usr/bin/getent group %{TRAFFIC_OPS_GROUP} || /usr/sbin/groupdel %{TRAFFIC_OPS_GROUP}
+#fi
+#service traffic_ops stop
 #/usr/sbin/groupdel %{TRAFFIC_OPS_GROUP}
 
 %clean
