@@ -144,10 +144,10 @@ Installs %{PACKAGE}.
 %clean
 
 %files
-%defattr(644,root,root,755)
-%attr(755,root,root) %{PACKAGEDIR}/app/bin/*
-%config(noreplace)/opt/traffic_ops/app/conf/*
-%{PACKAGEDIR}/install/*
-%{PACKAGEDIR}/app/*
-%{PACKAGEDIR}/etc/*
-%{PACKAGEDIR}/doc/*
+#%defattr(644,root,root,755)
+#%attr(755,root,root) %{PACKAGEDIR}/app/bin/*
+#%config(noreplace)/opt/traffic_ops/app/conf/*
+#%{PACKAGEDIR}/install/*
+#%{PACKAGEDIR}/app/*
+#%{PACKAGEDIR}/etc/*
+#%{PACKAGEDIR}/doc/*
