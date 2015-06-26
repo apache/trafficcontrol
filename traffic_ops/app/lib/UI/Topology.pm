@@ -114,6 +114,9 @@ sub gen_crconfig_json {
 		}
 	);
 	while ( my $row = $rs_caches->next ) {
+		
+		next if ( $row->status->name =~ m/\_IGNORE$/ );
+
 		if ( $row->type->name eq "RASCAL" ) {
 			$data_obj->{'monitors'}->{ $row->host_name }->{'fqdn'}     = $row->host_name . "." . $row->domain_name;
 			$data_obj->{'monitors'}->{ $row->host_name }->{'status'}   = $row->status->name;
