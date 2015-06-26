@@ -36,7 +36,7 @@ URL: http://traffic-control-cdn.net
 # git clone https://github.com/Comcast/traffic_control.git
 # cd %_sourcedir
 # tar -czf %_sourcedir/traffic_ops-%{traffic_ops_version}-%{traffic_ops_version}.%{hosttype}.tar.gz ./*
-Source0: traffic_ops-%{traffic_ops_version}.%{hosttype}.tar.gz
+Source0: ${PACKAGE}-%{traffic_ops_version}-%{traffic_ops_build}.%{hosttype}.tar.gz
 #Patch0:
 BuildArch: %{hosttype}
 
