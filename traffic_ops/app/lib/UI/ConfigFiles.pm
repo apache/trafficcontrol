@@ -375,10 +375,11 @@ sub parent_data {
 	while ( my $row = $rs_parent->next ) {
 
 		# get the profile info, and cache it in %profile_cache
-		my $ds_domain = undef;
-		my $weight    = undef;
-		my $port      = undef;
-		my $pid       = $row->profile->id;
+		my $ds_domain      = undef;
+		my $weight         = undef;
+		my $port           = undef;
+		my $use_ip_address = undef;
+		my $pid            = $row->profile->id;
 		if ( !defined( $profile_cache{$pid} ) ) {
 
 			# assign $ds_domain, $weight and $port, and cache the results %profile_cache
@@ -400,17 +401,26 @@ sub parent_data {
 				{ prefetch => [ 'parameter', 'profile' ] } )->single();
 			$port = defined($param) ? $param->parameter->value : undef;
 			$profile_cache{$pid}->{port} = $port;
+			$param =
+				$self->db->resultset('ProfileParameter')
+				->search( { -and => [ profile => $pid, 'parameter.config_file' => 'parent.config', 'parameter.name' => 'use_ip_address' ] },
+				{ prefetch => [ 'parameter', 'profile' ] } )->single();
+			$use_ip_address = defined($param) ? $param->parameter->value : 0;
+			$profile_cache{$pid}->{use_ip_address} = $use_ip_address;
 		}
 		else {
-			$ds_domain = $profile_cache{$pid}->{domain_name};
-			$weight    = $profile_cache{$pid}->{weight};
-			$port      = $profile_cache{$pid}->{port};
+			$ds_domain      = $profile_cache{$pid}->{domain_name};
+			$weight         = $profile_cache{$pid}->{weight};
+			$port           = $profile_cache{$pid}->{port};
+			$use_ip_address = $profile_cache{$pid}->{use_ip_address};
 		}
 		if ( defined($ds_domain) && defined($server_domain) && $ds_domain eq $server_domain ) {
-			$pinfo->{"plist"}->[$i]->{"host_name"}   = $row->host_name;
-			$pinfo->{"plist"}->[$i]->{"port"}        = defined($port) ? $port : $row->tcp_port;
-			$pinfo->{"plist"}->[$i]->{"domain_name"} = $row->domain_name;
-			$pinfo->{"plist"}->[$i]->{"weight"}      = $weight;
+			$pinfo->{"plist"}->[$i]->{"host_name"}      = $row->host_name;
+			$pinfo->{"plist"}->[$i]->{"port"}           = defined($port) ? $port : $row->tcp_port;
+			$pinfo->{"plist"}->[$i]->{"domain_name"}    = $row->domain_name;
+			$pinfo->{"plist"}->[$i]->{"weight"}         = $weight;
+			$pinfo->{"plist"}->[$i]->{"use_ip_address"} = $use_ip_address;
+			$pinfo->{"plist"}->[$i]->{"ip_address"}     = $row->ip_address;
 			if ( $server->cachegroup->parent_cachegroup_id == $row->cachegroup->id ) {
 				$pinfo->{"plist"}->[$i]->{"preferred"} = 1;
 			}
@@ -968,7 +978,12 @@ sub parent_dot_config {
 				$text .= "dest_domain=$org_fqdn parent=\"";
 				my $pinfo = $self->parent_data($server);
 				foreach my $parent ( @{ $pinfo->{"plist"} } ) {
-					$text .= $parent->{"host_name"} . "." . $parent->{"domain_name"} . ":" . $parent->{"port"} . "|" . $parent->{"weight"} . ";";
+					if ( $parent->{use_ip_address} == 1 ) {
+						$text .= $parent->{ip_address} . ":" . $parent->{port} . "|" . $parent->{weight} . ";";
+					}
+					else {
+						$text .= $parent->{"host_name"} . "." . $parent->{"domain_name"} . ":" . $parent->{"port"} . "|" . $parent->{"weight"} . ";";
+					}
 				}
 				$text .= "\" round_robin=consistent_hash go_direct=false parent_is_proxy=false";
 			}
