@@ -333,7 +333,7 @@ sub gen_crconfig_json {
 		$data_obj->{'deliveryServices'}->{ $row->xml_id }->{'ip6RoutingEnabled'} = $row->ipv6_routing_enabled ? 'true' : 'false';
 
 		my $rs_dns = $self->db->resultset('Staticdnsentry')->search(
-			{ 'deliveryservice.active' => 1, 'deliveryservice.profile' => $ccr_profile_id },
+			{ 'deliveryservice.active' => 1, 'deliveryservice.profile' => $ccr_profile_id, 'deliveryservice.xml_id' => $row->xml_id },
 			{ prefetch => [ 'deliveryservice', 'type' ], columns => [ 'host', 'type', 'ttl', 'address' ] }
 		);
 
