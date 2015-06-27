@@ -685,7 +685,7 @@ sub create {
 		$insert->insert();
 		$new_id = $insert->id;
 		if (   $paramHashRef->{'type'} == &type_id( $self, "EDGE" )
-			|| $paramHashRef->{'type'} != &type_id( $self, "MID" ) )
+			|| $paramHashRef->{'type'} == &type_id( $self, "MID" ) )
 		{
 			$insert = $self->db->resultset('Servercheck')->create(
 				{
