@@ -263,8 +263,8 @@ sub check_deliveryservice_input {
 		$self->field('ds.xml_id')->is_equal( "", "Delivery service xml_id cannot contain whitespace." );
 	}
 
-	if ($self->param('ds.type') == &type_id($self, 'ANY_MAP')) {
-	    return $self->valid; # Anything goes for the ANY_MAP
+	if ( defined($self->param('ds.type')) && $self->param('ds.type') == &type_id($self, 'ANY_MAP')) {
+	    return $self->valid; # Anything goes for the ANY_MAP, but ds.type is only set on create
 	}
 
 	if ( $self->param('ds.qstring_ignore') == 2 && $self->param('ds.regex_remap') ne "" ) {
@@ -359,11 +359,14 @@ sub check_deliveryservice_input {
 	if ( $self->param('ds.dscp') !~ /^\d+$/ ) {
 		$self->field('ds.dscp')->is_equal( "", $self->param('ds.dscp') . " is not a valid dscp value." );
 	}
+
 	my $org_host_name = $self->param('ds.org_server_fqdn');
+	$self->field('ds.org_server_fqdn')->is_like( qr/^(https?:\/\/)/, "Origin Server Base URL must start with http(s)://" );
 	$org_host_name =~ s!^https?://?!!i;
-	$self->field('ds.org_server_fqdn')->is_like( qr/^(https?:\/\/)/, "Origin server must start with http(s)://" );
-	if ( !&is_hostname($org_host_name) ) {
-		$self->field('ds.org_server_fqdn')->is_equal( "", $self->param('ds.org_server_fqdn') . " is not a valid org server name (rfc1123)" );
+	$org_host_name =~ s/:(.*)$//;
+	my $port = defined($1) ? $1 : 80;
+	if ( !&is_hostname($org_host_name) || $port !~ /^[1-9][0-9]*$/ ) {
+		$self->field('ds.org_server_fqdn')->is_equal( "", $org_host_name . " is not a valid org server name (rfc1123) or " . $port . " is not a valid port" );
 	}
 	if ( $self->param('ds.http_bypass_fqdn') ne "" && !&is_hostname( $self->param('ds.http_bypass_fqdn') ) ) {
 		$self->field('ds.http_bypass_fqdn')
