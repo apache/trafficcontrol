@@ -68,8 +68,6 @@ insert ignore into to_extension (id, name, servercheck_short_name, servercheck_c
   values (12, 'CHECK_TRAFFIC_ROUTER_STATUS', 'RTR', 'al', '1.0.0', '-', 'ToRTRCheck.pl', 1, '{  "check_name": "RTR", "base_url": "https://localhost", "cron": "10 * * * *" }', 
     (select id from type where name='CHECK_EXTENSION_BOOL') ); 
 insert ignore into to_extension (id, name, servercheck_short_name, servercheck_column_name, version, info_url, script_file, isactive, additional_config_json, type) 
-  values (13, 'OPEN', '', 'aj', '1.0.0', '', '', 0, '', (select id from type where name='CHECK_EXTENSION_OPEN_SLOT'));
-insert ignore into to_extension (id, name, servercheck_short_name, servercheck_column_name, version, info_url, script_file, isactive, additional_config_json, type) 
   values (14, 'CACHE_HIT_RATIO_LAST_15', 'CHR', 'an', '1.0.0', '-', 'ToCHRCheck.pl', 1, '{ check_name: "CHR", "base_url": "https://localhost", cron": "0,15,30,45 * * * *" }', 
     (select id from type where name='CHECK_EXTENSION_NUM') ); 
 insert ignore into to_extension (id, name, servercheck_short_name, servercheck_column_name, version, info_url, script_file, isactive, additional_config_json, type) 
