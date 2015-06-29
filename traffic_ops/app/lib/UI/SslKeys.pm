@@ -23,30 +23,34 @@ use Mojo::Base 'Mojolicious::Controller';
 use Data::Dumper;
 use UI::DeliveryService;
 use Scalar::Util qw(looks_like_number);
+use JSON;
+use MIME::Base64;
 
 sub add {
 	my $self  = shift;
 	my $ds_id = $self->param('id');
-
 	my $rs_ds  = $self->db->resultset('Deliveryservice')->search( { 'me.id' => $ds_id } );
 	my $data   = $rs_ds->single;
 	my $xml_id = $data->xml_id;
 	&stash_role($self);
 
 	#get key data from keystore
-	my $key_data = $self->riak_get( 'ssl', "$xml_id-latest" );
-
-	#make sure it has the data we need
-	if ( $key_data->{country} ) {
-		my $version = $key_data->{version} + 1;
+	my $response_container = $self->riak_get( 'ssl', "$xml_id-latest");
+	my $get_keys = $response_container->{'response'};
+	if ( $get_keys->is_success() ) {
+		my $keys = decode_json( $get_keys->content );
+		my $version = $keys->{version} + 1;
 		$self->stash(
 			ssl => {
-				country  => $key_data->{country},
-				state    => $key_data->{state},
-				city     => $key_data->{city},
-				org      => $key_data->{organization},
-				unit     => $key_data->{businessUnit},
-				hostname => $key_data->{hostname},
+				country  => $keys->{country},
+				state    => $keys->{state},
+				city     => $keys->{city},
+				org      => $keys->{organization},
+				unit     => $keys->{businessUnit},
+				hostname => $keys->{hostname},
+				csr		 => decode_base64($keys->{certificate}->{csr}),
+				crt		 => decode_base64($keys->{certificate}->{crt}),
+				priv_key => decode_base64($keys->{certificate}->{key}),
 				version  => $version
 			},
 			xml_id      => $xml_id,
@@ -67,11 +71,6 @@ sub add {
 		$self->stash(
 			ssl => {
 				version  => $new_version,
-				country  => "US",
-				state    => "Colorado",
-				city     => "Denver",
-				org      => "KableTown Communications",
-				unit     => "CDN Operations",
 				hostname => $2,
 			},
 			xml_id      => $xml_id,
@@ -105,6 +104,7 @@ sub create {
 	}
 
 	if ( $self->is_valid() ) {
+		$self->app->log->debug("valid!");
 		my $response_container;
 		if ( $action eq "add" ) {
 
@@ -163,7 +163,7 @@ sub is_valid {
 		$self->field('ssl.priv_key')->is_required("Private Key cannot be empty.");
 	}
 	else {
-		$self->app->log->debug("validating generate");
+		# $self->app->log->debug("validating generate");
 		my $country  = $self->param('ssl.country');
 		my $state    = $self->param('ssl.state');
 		my $city     = $self->param('ssl.city');
@@ -172,6 +172,12 @@ sub is_valid {
 		my $hostname = $self->param('ssl.hostname');
 		my $xml_id   = $self->param('xml_id');
 		my $version  = $self->param('ssl.version');
+
+		$self->field('ssl.country')->is_required("Country cannot be empty");
+		$self->field('ssl.state')->is_required("State cannot be empty");
+		$self->field('ssl.city')->is_required("City cannot be empty");
+		$self->field('ssl.org')->is_required("Organization cannot be empty");
+		$self->field('ssl.unit')->is_required("Unit cannot be empty");
 
 		if ( length($country) != 2 ) {
 			$self->field('ssl.country')->is_equal( "", "Country code must be 2 characters only!" );

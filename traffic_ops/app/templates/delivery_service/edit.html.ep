@@ -113,7 +113,7 @@
 	}
 
 	function addSslKeys() {
-		$.fancybox({ type: 'iframe', href: "/ds/<%= $ds->id %>/sslkeys/add", padding: 0, autosize: true, fitToView: true, width: 700, minHeight: 600, modal:true, helpers: {overlay:{locked:false}}});
+		$.fancybox({ type: 'iframe', href: "/ds/<%= $ds->id %>/sslkeys/add", padding: 0, autosize: true, fitToView: true, width: 750, minHeight: 800, modal:true, helpers: {overlay:{locked:false}}});
 	}
 
 	var re_row_num = Object;
