@@ -104,7 +104,6 @@ sub create {
 	}
 
 	if ( $self->is_valid() ) {
-		$self->app->log->debug("valid!");
 		my $response_container;
 		if ( $action eq "add" ) {
 
@@ -163,7 +162,6 @@ sub is_valid {
 		$self->field('ssl.priv_key')->is_required("Private Key cannot be empty.");
 	}
 	else {
-		# $self->app->log->debug("validating generate");
 		my $country  = $self->param('ssl.country');
 		my $state    = $self->param('ssl.state');
 		my $city     = $self->param('ssl.city');
