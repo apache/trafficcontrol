@@ -120,7 +120,6 @@ sub unload_core_data {
 	$self->teardown( $schema, 'Regex' );
 	$self->teardown( $schema, 'Type' );
 	$self->teardown( $schema, 'Status' );
-	$self->teardown( $schema, 'StatsSummary' );
 }
 
 sub teardown {
