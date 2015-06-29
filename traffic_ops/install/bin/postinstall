@@ -229,7 +229,7 @@ EOF
       if ($untarOrSkip eq "untar") {
           print "\nUntarring CentOS 6.5 ISO kickstart tar file.\n";
           print "\nFirst creating $kickstartFilesFqn.\n";
-          $install->execCommand ("/bin/mkdir", "-p", "$kickstartFilesFqn")
+          $install->execCommand ("/bin/mkdir", "-p", "$kickstartFilesFqn");
           print "\nAnd then the untar.\n";
           $install->execCommand ("/bin/tar", "-xzf", "$centos65TarballFqn", "-C", "$kickstartFilesFqn");
       }
