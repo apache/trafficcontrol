@@ -1,4 +1,4 @@
-package Fixtures::Cachegroup;
+package Fixtures::EdgeCachegroup;
 #
 # Copyright 2015 Comcast Cable Communications Management, LLC
 #
@@ -19,28 +19,16 @@ extends 'DBIx::Class::EasyFixture';
 use namespace::autoclean;
 
 my %definition_for = (
-	mid_northeast => {
+	edge_atl => {
 		new   => 'Cachegroup',
 		using => {
-			id         => 1,
-			name       => 'mid-northeast-group',
-			short_name => 'ne',
-			type       => 2,
+			id         => 3,
+			name       => 'edge_atl_group',
+			short_name => 'atl',
+			type       => 1,
 			latitude   => 120,
 			longitude  => 120,
-			parent_cachegroup_id => undef,
-		},
-	},
-	mid_northwest => {
-		new   => 'Cachegroup',
-		using => {
-			id         => 2,
-			name       => 'mid-northwest-group',
-			short_name => 'nw',
-			type       => 2,
-			latitude   => 100,
-			longitude  => 100,
-			parent_cachegroup_id => undef,
+			parent_cachegroup_id => 1,
 		},
 	},
 );
