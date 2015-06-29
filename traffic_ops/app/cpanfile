@@ -43,7 +43,8 @@ requires 'Config::Properties';
 requires 'Context::Preserve';
 requires 'Data::GUID';
 requires 'DBD::SQLite';
-requires 'DBD::mysql';
+#requires 'Time::HiRes'; # required by DBD::mysql
+requires 'DBD::mysql', '==4.029';
 requires 'DBI';
 requires 'DBIx::Class';
 requires 'DBIx::Class::Core';
