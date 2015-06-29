@@ -265,6 +265,8 @@ requires 'subs';
 requires 'utf8';
 requires 'version';
 requires 'warnings';
+requires 'ExtUtils::Config';     # for Net::Riak
+requires 'Module::Build::Tiny';  # for Net::Riak
 requires 'Net::Riak';
 requires 'Crypt::OpenSSL::RSA';
 requires 'Crypt::OpenSSL::Bignum';
