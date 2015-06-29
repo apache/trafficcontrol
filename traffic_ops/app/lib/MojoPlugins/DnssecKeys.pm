@@ -18,7 +18,6 @@ package MojoPlugins::DnssecKeys;
 #
 
 use Mojo::Base 'Mojolicious::Plugin';
-use MIME::Base64;
 use Net::DNS;
 use MIME::Base64;
 use Crypt::OpenSSL::RSA;
