@@ -34,14 +34,25 @@
 		  if (action_selected.match(/^Generate/)) {
 			$('#sslkeysgenerate').show();
 			$('#sslkeysadd').hide();
+			$('#generate-section').show();
+			$(".error-section").show();
+			$(".flash-section").show()
 		  }
 		  else if (action_selected.match(/^Paste/)) {
 			$('#sslkeysgenerate').hide();
 			$('#sslkeysadd').show();
-			$(".error-section").hide();
-			$(".flash-section").hide();
+			$(".error-section").show();
+			$(".flash-section").show()
 			$("#generate-message").hide();
 			$("#generate-button").val('Load Keys');
+			$('#generate-section').show();
+		  }
+		  else if (action_selected.match(/^Choose/)) {
+			$('#sslkeysgenerate').hide();
+			$('#sslkeysadd').hide();
+			$('#generate-section').hide();
+			$(".error-section").show();
+			$(".flash-section").show();
 		  }
 		  // 
 		}
@@ -108,7 +119,7 @@
 			  <span class="field-with-error"><%= field('ds.type')->error %></span>
 			<% } %>
 			%= label_for 'action' => 'What do you want to do?', class => 'label'
-			  %= field('ssl.action')->select([["Generate New Keys" => "generate", selected => 'true'], ["Paste Existing Keys" => "add"]], required => 'required', id => 'ssl_action', name => 'ssl.action');
+			  %= field('ssl.action')->select([["Choose Action" => "choose", selected => 'true'], ["Generate New Keys" => "generate"], ["Paste Existing Keys" => "add"]], required => 'required', id => 'ssl_action', name => 'ssl.action');
 		   </div><br>
 
 		   <div class="main" id="sslkeysgenerate" style="display:none;">
@@ -200,7 +211,7 @@
 			  <div id="dialog-confirm" title="Generate Keys?" style="display:none;">
 				<p><span class="ui-icon ui-icon-alert" style="float:left; margin:0 7px 20px 0;"></span>This will set new SSL keys for the delivery service. Are you sure?</p>
 			  </div>
-			  <div id="generate-section" style="margin-bottom: 20px;">
+			  <div id="generate-section" style="margin-bottom: 20px; display:none">
 				 <div>
 				   %= submit_button 'Generate Keys', id=>'generate-button', class=> 'button', style=> 'float:left;'
 				 </div>
