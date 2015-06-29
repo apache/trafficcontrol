@@ -44,7 +44,7 @@ BuildRoot: %{buildroot}
 
 #BuildRequires:
 
-Requires: expat-devel, mod_ssl, mkisofs, libpcap-devel mysql, mysql-server, openssl, perl-DBI, perl-DBD-MySQL, perl-Digest-SHA1, perl-WWW-Curl
+Requires: expat-devel, mod_ssl, mkisofs, libpcap-devel, mysql, mysql-server, openssl, perl-DBI, perl-DBD-MySQL, perl-Digest-SHA1, perl-WWW-Curl
 Requires(pre): /usr/sbin/useradd, /usr/bin/getent
 Requires(postun): /usr/sbin/userdel
 

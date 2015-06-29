@@ -70,10 +70,11 @@ Vagrant.configure(2) do |config|
   # SHELL
   config.vm.provision "shell", inline: <<-SHELL
     sudo yum install -y epel-release
-    sudo yum install -y git golang cpan hg rpm-build
+    sudo yum install -y git golang cpan hg rpm-build openssl-devel mysql-devel
+    sudo yum install -y mysql-server libpcap-devel libcurl-devel
     export GOPATH=/home/vagrant/go
     echo "export GOPATH=/home/vagrant/go" >> /home/vagrant/.bash_profile
-    echo "export WORKSPACE=/home/vagrant/" >> /home/vagrant/.bash_profile
+    echo "export WORKSPACE=/home/vagrant" >> /home/vagrant/.bash_profile
     go get github.com/go-sql-driver/mysql
     go get code.google.com/p/go.net/html
     go get code.google.com/p/go.net/publicsuffix
@@ -81,5 +82,7 @@ Vagrant.configure(2) do |config|
     #sudo cpan -if Bundle::CPAN
     #sudo cpan -if YAML
     #sudo cpan -if MIYAGAWA/Carton-v1.0.15.tar.gz
+    service mysqld start
   SHELL
 end
+

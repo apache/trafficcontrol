@@ -42,8 +42,8 @@ fi
 
 mkdir $WORKSPACE/traffic_ops_combine
 
-#sudo perl -MCPAN -e 'my $c = "CPAN::HandleConfig"; $c->load(doit => 1, autoconfig => 1); $c->edit(prerequisites_policy => "follow"); $c->edit(build_requires_install_policy => "yes"); $c->commit'
-#sudo cpan -if MIYAGAWA/Carton-v1.0.15.tar.gz
+sudo perl -MCPAN -e 'my $c = "CPAN::HandleConfig"; $c->load(doit => 1, autoconfig => 1); $c->edit(prerequisites_policy => "follow"); $c->edit(build_requires_install_policy => "yes"); $c->commit'
+sudo cpan -if MIYAGAWA/Carton-v1.0.15.tar.gz
 
 go get github.com/go-sql-driver/mysql
 go get code.google.com/p/go.net/html
@@ -108,8 +108,6 @@ echo "%traffic_ops_version $VERSION" >> ~/.rpmmacros
 echo "%traffic_ops_build $BUILD_NUMBER" >> ~/.rpmmacros
 echo "%hosttype $HOSTTYPE" >> ~/.rpmmacros
 
-#RPM="${PACKAGE}-${VERSION}-${BUILD_NUMBER}.x86_64.rpm"
-
 echo
 echo "=================================================================="
 echo "Building Traffic Ops rpm traffic_ops-${VERSION}-$BUILD_NUMBER"
@@ -124,15 +122,7 @@ echo "=================================================================="
 echo
 
 
-#cd $COMBINEDIR
-
-# TODO check to see what Comcast was doing with this
-#if [ ! -d dist ]; then
-#    /bin/mkdir dist
-#fi
-
 /bin/cp -R $TOSRC/rpm_comm/$PACKAGE.spec $SPECS
-#echo "build.number=$BUILD_NUMBER" > $BUILDDIR/build.number
 
 cd $TOSRC/install/bin
 go build $TOSRC/install/go/src/comcast.com/dataload/dataload.go
@@ -146,16 +136,10 @@ cd $CARTON
 
 /bin/cp $TOSRC/app/cpanfile .
 
-#carton install
+carton install
 
 mkdir $COMBINEDIR/traffic_ops-$VERSION
 cd $COMBINEDIR/traffic_ops-$VERSION
-
-#for link in etc app install doc; do
-#   if [ ! -s $link ]; then
-#      ln -s $TOSRC/$link $link
-#   fi
-#done
 
 if [ -d lib ]; then
     /bin/rm -rf lib
