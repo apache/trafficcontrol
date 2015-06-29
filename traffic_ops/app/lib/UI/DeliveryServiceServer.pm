@@ -97,8 +97,9 @@ sub edit {
 	my $ds = $self->db->resultset('Deliveryservice')->search( { id => $id } )->single();
 
 	my $etypeid = &type_id( $self, 'EDGE', );
-	my $rs = $self->db->resultset('Server')->search( { 'me.type' => $etypeid },
-		{ prefetch => [ { 'cachegroup' => undef }, { 'type' => undef }, { 'profile' => undef }, { 'status' => undef } ], } );
+	my $otypeid = &type_id( $self, 'ORG', );
+	my $rs = $self->db->resultset('Server')->search( { -or => [ { 'me.type' => $etypeid }, { 'me.type' => $otypeid }  ] },
+		{ prefetch => [ 'cachegroup', 'type', 'profile', 'status' ], } );
 	while ( my $row = $rs->next ) {
 
 		# skip profiles that are not associated with the cdn this ds is in

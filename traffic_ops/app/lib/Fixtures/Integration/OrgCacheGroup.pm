@@ -1,4 +1,4 @@
-package Fixtures::Cachegroup;
+package Fixtures::Integration::OrgCacheGroup;
 #
 # Copyright 2015 Comcast Cable Communications Management, LLC
 #
@@ -19,41 +19,38 @@ extends 'DBIx::Class::EasyFixture';
 use namespace::autoclean;
 
 my %definition_for = (
-	mid_northeast => {
+
+	# The test CDN has  6 edge cache groups (formerly known as "Cachegroups"): the 5 largest cities in the US, and Denver ;-)
+	# The test CDN has 2 mid tier cache groups: east and west
+	# The test CDN has 2 "cloud locations", where the TrafficRouter and TrafficMonitor (and TrafficOps) reside
+	# The test CDN has 2 "origin locations", where the multi site origins are hosted
+	'org-east' => {
 		new   => 'Cachegroup',
 		using => {
-			id         => 1,
-			name       => 'mid-northeast-group',
-			short_name => 'ne',
-			type       => 2,
-			latitude   => 120,
-			longitude  => 120,
+			id         => 101,
+			name       => 'origin-east',
+			short_name => 'org-east',
+			latitude   => '0',
+			longitude  => '0',
+			type       => '36',
 		},
 	},
-	mid_northwest => {
+	'org-west' => {
 		new   => 'Cachegroup',
 		using => {
-			id         => 2,
-			name       => 'mid-northwest-group',
-			short_name => 'nw',
-			type       => 2,
-			latitude   => 100,
-			longitude  => 100,
-		},
-	},
-	edge_atl => {
-		new   => 'Cachegroup',
-		using => {
-			id         => 3,
-			name       => 'edge_atl_group',
-			short_name => 'atl',
-			type       => 1,
-			latitude   => 120,
-			longitude  => 120,
-			parent_cachegroup_id => 1,
+			id         => 102,
+			name       => 'origin-west',
+			short_name => 'org-west',
+			latitude   => '0',
+			longitude  => '0',
+			type       => '36',
 		},
 	},
 );
+
+sub name {
+	return "OrgCacheGroup";
+}
 
 sub get_definition {
 	my ( $self, $name ) = @_;

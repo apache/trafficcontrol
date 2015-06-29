@@ -203,6 +203,7 @@ sub read {
 				"dns_bypass_ip6"         => $row->dns_bypass_ip6,
 				"dns_bypass_ttl"         => $row->dns_bypass_ttl,
 				"org_server_fqdn"        => $row->org_server_fqdn,
+				"multi_site_origin"      => \$row->multi_site_origin,
 				"ccr_dns_ttl"            => $row->ccr_dns_ttl,
 				"type"                   => $row->type->id,
 				"profile_name"           => $row->profile->name,
@@ -262,8 +263,8 @@ sub check_deliveryservice_input {
 		$self->field('ds.xml_id')->is_equal( "", "Delivery service xml_id cannot contain whitespace." );
 	}
 
-	if ($self->param('ds.type') == &type_id($self, 'ANY_MAP')) {
-	    return $self->valid; # Anything goes for the ANY_MAP
+	if ( defined($self->param('ds.type')) && $self->param('ds.type') == &type_id($self, 'ANY_MAP')) {
+	    return $self->valid; # Anything goes for the ANY_MAP, but ds.type is only set on create
 	}
 
 	if ( $self->param('ds.qstring_ignore') == 2 && $self->param('ds.regex_remap') ne "" ) {
@@ -358,11 +359,14 @@ sub check_deliveryservice_input {
 	if ( $self->param('ds.dscp') !~ /^\d+$/ ) {
 		$self->field('ds.dscp')->is_equal( "", $self->param('ds.dscp') . " is not a valid dscp value." );
 	}
+
 	my $org_host_name = $self->param('ds.org_server_fqdn');
+	$self->field('ds.org_server_fqdn')->is_like( qr/^(https?:\/\/)/, "Origin Server Base URL must start with http(s)://" );
 	$org_host_name =~ s!^https?://?!!i;
-	$self->field('ds.org_server_fqdn')->is_like( qr/^(https?:\/\/)/, "Origin server must start with http(s)://" );
-	if ( !&is_hostname($org_host_name) ) {
-		$self->field('ds.org_server_fqdn')->is_equal( "", $self->param('ds.org_server_fqdn') . " is not a valid org server name (rfc1123)" );
+	$org_host_name =~ s/:(.*)$//;
+	my $port = defined($1) ? $1 : 80;
+	if ( !&is_hostname($org_host_name) || $port !~ /^[1-9][0-9]*$/ ) {
+		$self->field('ds.org_server_fqdn')->is_equal( "", $org_host_name . " is not a valid org server name (rfc1123) or " . $port . " is not a valid port" );
 	}
 	if ( $self->param('ds.http_bypass_fqdn') ne "" && !&is_hostname( $self->param('ds.http_bypass_fqdn') ) ) {
 		$self->field('ds.http_bypass_fqdn')
@@ -614,6 +618,7 @@ sub update {
 			qstring_ignore         => $self->param('ds.qstring_ignore'),
 			geo_limit              => $self->param('ds.geo_limit'),
 			org_server_fqdn        => $self->param('ds.org_server_fqdn'),
+			multi_site_origin      => $self->param('ds.multi_site_origin'),
 			ccr_dns_ttl            => $self->param('ds.ccr_dns_ttl'),
 			type                   => $self->param('ds.type.id'),
 			profile                => $self->param('ds.profile'),
@@ -798,6 +803,7 @@ sub create {
 				dns_bypass_ip6         => $self->param('ds.dns_bypass_ip6'),
 				dns_bypass_ttl         => $self->param('ds.dns_bypass_ttl'),
 				org_server_fqdn        => $self->param('ds.org_server_fqdn'),
+				multi_site_origin      => $self->param('ds.multi_site_origin'),
 				ccr_dns_ttl            => $self->param('ds.ccr_dns_ttl'),
 				type                   => $self->param('ds.type'),
 				profile                => $self->param('ds.profile'),
@@ -923,79 +929,5 @@ sub add {
 	}
 }
 
-sub api_services {
-	my $self = shift;
-	my @data;
-	my $rs_data;
-	my $rs;
-
-	my $tm_user_id = $self->db->resultset('TmUser')->search( { username => $self->current_user()->{username} } )->get_column('id')->single();
-	my @ds_ids = ();
-	if ( defined($tm_user_id) ) {
-		@ds_ids = $self->db->resultset('DeliveryserviceTmuser')->search( { tm_user_id => $tm_user_id } )->get_column('deliveryservice')->all();
-	}
-	my %ds_hash = map { $_ => 1 } @ds_ids;
-	if ( defined $self->param('id') ) {
-		$rs = $self->db->resultset("Deliveryservice")->search( { id => $self->param('id') }, { prefetch => ['deliveryservice_regexes'] } );
-	}
-	else {
-		$rs = $self->db->resultset("Deliveryservice")->search( undef, { prefetch => ['deliveryservice_regexes'], order_by => 'xml_id' } );
-	}
-	while ( my $row = $rs->next ) {
-		next if ( defined($tm_user_id) && !defined( $ds_hash{ $row->id } ) );
-		my $re_rs     = $row->deliveryservice_regexes;
-		my @matchlist = ();
-		while ( my $re_row = $re_rs->next ) {
-			push(
-				@matchlist,
-				{   type      => $re_row->regex->type->name,
-					pattern   => $re_row->regex->pattern,
-					setNumber => $re_row->set_number,
-				}
-			);
-		}
-		push(
-			@data,
-			{   "id"                     => $row->id,
-				"xmlId"                  => $row->xml_id,
-				"dscp"                   => $row->dscp,
-				"signed"                 => \$row->signed,
-				"qstringIgnore"          => $row->qstring_ignore,
-				"geoLimit"               => $row->geo_limit,
-				"httpBypassFqdn"         => $row->http_bypass_fqdn,
-				"dnsBypassIp"            => $row->dns_bypass_ip,
-				"dnsBypassIp6"           => $row->dns_bypass_ip6,
-				"dnsBypassTtl"           => $row->dns_bypass_ttl,
-				"orgServerFqdn"          => $row->org_server_fqdn,
-				"ccrDnsTtl"              => $row->ccr_dns_ttl,
-				"type"                   => $row->type->name,
-				"profileName"            => $row->profile->name,
-				"profileDescription"     => $row->profile->description,
-				"globalMaxMbps"          => $self->hr_string_to_mbps( $row->global_max_mbps ),
-				"globalMaxTps"           => $row->global_max_tps,
-				"headerRewrite"          => $row->edge_header_rewrite,
-				"edgeHeaderRewrite"      => $row->edge_header_rewrite,
-				"midHeaderRewrite"       => $row->mid_header_rewrite,
-				"regexRemap"             => $row->regex_remap,
-				"longDesc"               => $row->long_desc,
-				"longDesc1"              => $row->long_desc_1,
-				"longDesc2"              => $row->long_desc_2,
-				"maxDnsAnswers"          => $row->max_dns_answers,
-				"infoUrl"                => $row->info_url,
-				"missLat"                => $row->miss_lat,
-				"missLong"               => $row->miss_long,
-				"checkPath"              => $row->check_path,
-				"matchList"              => \@matchlist,
-				"active"                 => \$row->active,
-				"protocol"               => \$row->protocol,
-				"ipv6_routing_enabled"   => \$row->ipv6_routing_enabled,
-				"range_request_handling" => $row->range_request_handling,
-				"cacheurl"               => $row->cacheurl,
-				"remap_text"             => $row->remap_text,
-			}
-		);
-	}
-	$self->render( json => \@data );
-}
 
 1;
