@@ -865,14 +865,13 @@ sub startup {
 	# ------------------------------------------------------------------------
 	# API Routes 1.2
 	# ------------------------------------------------------------------------
-	# -- INFLUXDB
-	my $api_version   = "v12";
+	my $api_version   = "1.2";
 	my $api_namespace = "v12";
 
-	$r->get( '/api/deliveryservices/:dsid/stats' => [ format => [ $api_version . ".json" ] ] )->over( authenticated => 1 )
-		->to( 'DeliveryServiceStats#index', namespace => 'API::v12' );
-	$r->get( '/api/cache/stats' => [ format => [ $api_version . ".json" ] ] )->over( authenticated => 1 )
-		->to( 'CacheStats#index', namespace => 'API::v12' );
+	$r->get( "/api/$api_version/deliveryservice_stats" => [ format => [qw(json)] ] )->over( authenticated => 1 )
+		->to( 'DeliveryServiceStats#index', namespace => "API::$api_namespace" );
+	$r->get( "/api/$api_version/cache_stats" => [ format => [qw(json)] ] )->over( authenticated => 1 )
+		->to( 'CacheStats#index', namespace => "API::$api_namespace" );
 
 	##stats_summary
 	$r->get( "/api/$api_version/stats_summary" => [ format => [qw(json)] ] )->over( authenticated => 1 )
