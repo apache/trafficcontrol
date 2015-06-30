@@ -200,7 +200,6 @@ sub routing {
 sub metrics {
 	my $self = shift;
 	my $id   = $self->param("id");
-	$self->app->log->debug( "id #-> " . $id );
 
 	if ( $self->is_valid_delivery_service($id) ) {
 		if ( $self->is_delivery_service_assigned($id) ) {
