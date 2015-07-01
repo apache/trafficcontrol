@@ -34,7 +34,7 @@ URL: http://traffic-control-cdn.net
 # commands to generate the tarball:
 # git clone https://github.com/Comcast/traffic_control.git
 # cd %_sourcedir
-# tar -czf %_sourcedir/traffic_ops-%{traffic_ops_version}-%{traffic_ops_version}.%{hosttype}.tar.gz ./*
+# tar -czf %_sourcedir/traffic_ops-%{traffic_ops_version}-%{traffic_ops_build}.%{hosttype}.tar.gz ./*
 Source0: %{PACKAGE}-%{traffic_ops_version}-%{traffic_ops_build}.%{hosttype}.tar.gz
 #Patch0:
 AutoReqProv: no
@@ -53,6 +53,7 @@ Requires(postun): /usr/sbin/userdel
 Traffic Ops is a Web UI for controlling a CDN using Traffic Control packages.
 
 %prep
+tar -zxvf %_sourcedir/traffic_ops-%{traffic_ops_version}-%{traffic_ops_build}.%{hosttype}.tar.gz
 
 %build
 

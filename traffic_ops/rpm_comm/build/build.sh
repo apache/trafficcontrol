@@ -16,97 +16,160 @@
 # limitations under the License.
 #
 
+#-----------------------------------------------------------------------------
+function usage () {
+   echo "./build.sh [-b <branch>] [--build <build_number>] [-g <gitrepo>]"
+   echo ""
+   echo "Don't run this program ever."
+   echo "   -b | --branch     Git branch"
+   echo "                     default: master"
+   echo "        --build      Build number"
+   echo "                     default: commit hash"
+   echo "   -g | --gitrepo    Git repository."
+   echo "                     default: https://github.com/Comcast/traffic_control.git"
+   echo "   -h | --help       Print this message"
+   echo "   -w | --workspace  Working directory"
+   echo "                     default: home directory"
+   echo ""
+}
 
-if [ -z $WORKSPACE ]; then
-	echo "Error: the 'WORKSPACE' environment variable is not set."
-   echo "If running from a Vagrant VM WORKSPACE should have been set to "
-   echo " /home/vagrant."
-   echo "example: export WORKSPACE=/home/vagrant"
-	exit 1
+function createWorkspace () {
+   mkdir -p $workspace/rpmbuild/{BUILD,RPMS,SOURCES,SPECS,SRPMS}
+   #echo '%_topdir %(echo $workspace)/rpmbuild' > ~/.rpmmacros
+   cp $TOSRC/rpm_comm/rpmmacros ~/.rpmmacros
+
+   VERSION=$(/bin/cat $UTILS_PM|/bin/awk '/my \$version/{split($4,a,"\"");split(a[2],b,"-");printf("%s",b[1])}')
+
+   echo "%traffic_ops_version $VERSION" >> ~/.rpmmacros
+   echo "%traffic_ops_build $build" >> ~/.rpmmacros
+   echo "%hosttype $HOSTTYPE" >> ~/.rpmmacros
+
+}
+
+function downloadRepo () {
+
+   if [ ! -d  $workspace/repos ]; then
+      mkdir -p $workspace/repos
+   fi
+
+   cd $workspace/repos
+
+   if [ -d $TOSRC ]; then
+      echo "cd to $TCSRC and then git pull"
+      cd $TCSRC && /usr/bin/git pull
+      echo "git checkout $BRANCH"
+      /usr/bin/git checkout $BRANCH
+      /usr/bin/git pull
+   else
+      echo "cd to $REPODIR and clone"
+      cd $REPODIR && /usr/bin/git clone $gitrepo
+      cd $TCSRC
+      /usr/bin/git checkout $BRANCH
+   fi
+
+}
+
+function runCarton () {
+   sudo perl -MCPAN -e 'my $c = "CPAN::HandleConfig"; $c->load(doit => 1, autoconfig => 1); $c->edit(prerequisites_policy => "follow"); $c->edit(build_requires_install_policy => "yes"); $c->commit'
+   sudo cpan -if MIYAGAWA/Carton-v1.0.15.tar.gz
+}
+
+function combine () {
+   if [ -d $COMBINEDIR ]; then
+      echo "removing $COMBINEDIR"
+      rm -dfr $COMBINEDIR
+   fi
+
+   mkdir $COMBINEDIR
+
+}
+
+#-----------------------------------------------------------------------------
+# MAIN
+#-----------------------------------------------------------------------------
+
+while [ "$1" != "" ]; do
+   case $1 in
+      -b | --branch )         shift
+                              branch=$1
+                              ;;
+      --build )               shift
+                              build=$1
+                              ;;
+      #-f | --file )           shift
+      #                        filename=$1
+      #                        ;;
+      -g | --gitrepo )        shift
+                              gitrepo=$1
+                              ;;
+      # Example of how to do command line without following var.
+      #-i | --interactive )    interactive=1
+      #                        ;;
+      -h | --help )           usage
+                              exit
+                              ;;
+      -w | --workspace )      shift
+                              workspace=$1
+                              ;;
+      * )                     usage
+                              exit 1
+   esac
+   shift
+done
+
+if [ "$branch" = "" ]; then
+   branch="master"
+   echo "Setting branch to $branch"
 fi
 
-if [ ! -d $WORKSPACE ]; then
-   echo "$WORKSPACE does not exist."
-   exit 1
+if [ "$gitrepo" = "" ]; then
+   gitrepo="https://github.com/Comcast/traffic_control.git"
+   echo "Setting gitrepo to $gitrepo"
 fi
 
-mkdir -p $WORKSPACE/rpmbuild/{BUILD,RPMS,SOURCES,SPECS,SRPMS}
-echo '%_topdir %(echo $WORKSPACE)/rpmbuild' > ~/.rpmmacros
-
-mkdir -p $WORKSPACE/repos
-
-if [ -d $WORKSPACE/traffic_ops_combine ]; then
-   echo "removing $WORKSPACE/traffic_ops_combine"
-   rm -dfr $WORKSPACE/traffic_ops_combine
+if [ "$workspace" = "" ]; then
+   workspace=~
+   echo "Setting workspace to $workspace"
 fi
 
-mkdir $WORKSPACE/traffic_ops_combine
+if [ "$build" = "" ]; then
+   echo "build not set. will use commit hash"
+fi
 
-sudo perl -MCPAN -e 'my $c = "CPAN::HandleConfig"; $c->load(doit => 1, autoconfig => 1); $c->edit(prerequisites_policy => "follow"); $c->edit(build_requires_install_policy => "yes"); $c->commit'
-sudo cpan -if MIYAGAWA/Carton-v1.0.15.tar.gz
+# set vars
+PACKAGE="traffic_ops"
+REPODIR="$workspace/repos"
+COMBINEDIR="$workspace/traffic_ops_combine"
+RPMBUILDDIR="$workspace/rpmbuild/BUILD"
+SOURCES="$workspace/rpmbuild/SOURCES"
+SPECS="$workspace/rpmbuild/SPECS"
+TCSRC="$REPODIR/traffic_control"
+TOSRC="$TCSRC/$PACKAGE"
+CARTONDIR="$workspace/carton"
+UTILS_PM="$TOSRC/app/lib/UI/Utils.pm"
+
+# Read in default profile
+if [ -f /etc/profile ]; then
+    . /etc/profile
+fi
+
+exit 0
+
+createWorkspace
+downloadRepo
+runCarton
+combine
+
+exit 0
+
 
 go get github.com/go-sql-driver/mysql
 go get code.google.com/p/go.net/html
 go get code.google.com/p/go.net/publicsuffix
 
-GITREPO="https://github.com/Comcast/traffic_control.git"
-PACKAGE="traffic_ops"
-REPODIR="$WORKSPACE/repos"
-COMBINEDIR="$WORKSPACE/traffic_ops_combine"
-RPMBUILDDIR="$WORKSPACE/rpmbuild/BUILD"
-SOURCES="$WORKSPACE/rpmbuild/SOURCES"
-SPECS="$WORKSPACE/rpmbuild/SPECS"
-TCSRC="$REPODIR/traffic_control"
-TOSRC="$TCSRC/$PACKAGE"
-CARTON="$WORKSPACE/carton"
-UTILS_PM="$TOSRC/app/lib/UI/Utils.pm"
-
-if [ -f /etc/profile ]; then
-    . /etc/profile
-fi
-
-if [ -z $1 ]; then
-    echo "The BRANCH variable is not set."
-    exit 1
-else
-    BRANCH=$1
-fi
-
-if [ -z $2 ]; then
-	echo "The BUILD_NUMBER variable is not set."
-	exit 2
-else
-	BUILD_NUMBER=$2
-fi
-
-if [ ! -z $3 ]; then
-	GITREPO=$3
-fi
-
 echo "package: $PACKAGE"
 echo "tcsrc: $TCSRC"
 echo "tosrc: $TOSRC"
-
-if [ -d $TOSRC ]; then
-   echo "cd to $TCSRC and then git pull"
-   cd $TCSRC && /usr/bin/git pull
-   echo "git checkout $BRANCH"
-   /usr/bin/git checkout $BRANCH
-   /usr/bin/git pull
-else
-   echo "cd to $REPODIR and clone"
-   cd $REPODIR && /usr/bin/git clone $GITREPO
-   cd $TCSRC
-   /usr/bin/git checkout $BRANCH
-fi
-
-cp $TOSRC/rpm_comm/rpmmacros ~/.rpmmacros
-
-VERSION=$(/bin/cat $UTILS_PM|/bin/awk '/my \$version/{split($4,a,"\"");split(a[2],b,"-");printf("%s",b[1])}')
-
-echo "%traffic_ops_version $VERSION" >> ~/.rpmmacros
-echo "%traffic_ops_build $BUILD_NUMBER" >> ~/.rpmmacros
-echo "%hosttype $HOSTTYPE" >> ~/.rpmmacros
 
 echo
 echo "=================================================================="
@@ -128,16 +191,6 @@ cd $TOSRC/install/bin
 go build $TOSRC/install/go/src/comcast.com/dataload/dataload.go
 go build $TOSRC/install/go/src/comcast.com/systemtest/systemtest.go
 
-if [ ! -d $CARTON ]; then
-    /bin/mkdir $CARTON
-fi
-
-cd $CARTON
-
-/bin/cp $TOSRC/app/cpanfile .
-
-carton install
-
 mkdir $COMBINEDIR/traffic_ops-$VERSION
 cd $COMBINEDIR/traffic_ops-$VERSION
 
@@ -153,8 +206,18 @@ fi
 
 /bin/mkdir bin
 
-/bin/cp -R $CARTON/local/bin/* bin
-/bin/cp -R $CARTON/local/lib/perl5/* lib/perl5
+if [ ! -d $CARTON ]; then
+    /bin/mkdir $CARTON
+fi
+
+cd $CARTON
+
+/bin/cp $TOSRC/app/cpanfile .
+
+carton install
+
+/bin/cp -R $CARTON/local/bin/* $COMBINEDIR/traffic_ops-$VERSION/bin
+/bin/cp -R $CARTON/local/lib/perl5/* $COMBINEDIR/traffic_ops-$VERSION/lib/perl5
 for directory in etc app install doc; do
    cp -r $TOSRC/$directory $COMBINEDIR/traffic_ops-$VERSION
 done
