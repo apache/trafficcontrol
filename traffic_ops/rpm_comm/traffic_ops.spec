@@ -34,8 +34,8 @@ URL: http://traffic-control-cdn.net
 # commands to generate the tarball:
 # git clone https://github.com/Comcast/traffic_control.git
 # cd %_sourcedir
-# tar -czf %_sourcedir/traffic_ops-%{traffic_ops_version}-%{traffic_ops_build}.%{hosttype}.tar.gz ./*
-Source0: %{PACKAGE}-%{traffic_ops_version}-%{traffic_ops_build}.%{hosttype}.tar.gz
+# tar -czf %_sourcedir/traffic_ops-%{traffic_ops_version}-%{traffic_ops_release}-%{traffic_ops_sha}.%{hosttype}.tar.gz ./*
+Source0: %{PACKAGE}-%{traffic_ops_version}-%{traffic_ops_release}-%{traffic_ops_sha}.%{hosttype}.tar.gz
 #Patch0:
 AutoReqProv: no
 BuildArch: %{hosttype}
@@ -53,7 +53,7 @@ Requires(postun): /usr/sbin/userdel
 Traffic Ops is a Web UI for controlling a CDN using Traffic Control packages.
 
 %prep
-tar -zxvf %_sourcedir/traffic_ops-%{traffic_ops_version}-%{traffic_ops_build}.%{hosttype}.tar.gz
+tar -zxvf %_sourcedir/traffic_ops-%{traffic_ops_version}-%{traffic_ops_release}-%{traffic_ops_sha}.%{hosttype}.tar.gz
 
 %build
 
@@ -82,7 +82,7 @@ tar -zxvf %_sourcedir/traffic_ops-%{traffic_ops_version}-%{traffic_ops_build}.%{
       %__mkdir -p $RPM_BUILD_ROOT%{PACKAGEDIR}
    fi
 
-   %__cp -R $RPM_BUILD_DIR/%{PACKAGE}-%{traffic_ops_version}/* %{buildroot}/opt/traffic_ops
+   %__cp -R $RPM_BUILD_DIR/%{PACKAGE}-%{traffic_ops_version}-%{traffic_ops_release}-%{traffic_ops_sha}/* %{buildroot}/opt/traffic_ops
 
    if [ ! -d $RPM_BUILD_ROOT%{PACKAGEDIR}/app/public/CRConfig-Snapshots ]; then
       %__mkdir -p $RPM_BUILD_ROOT%{PACKAGEDIR}/app/public/CRConfig-Snapshots
@@ -147,9 +147,4 @@ tar -zxvf %_sourcedir/traffic_ops-%{traffic_ops_version}-%{traffic_ops_build}.%{
 %defattr(644,root,root,755)
 %attr(755,root,root) %{PACKAGEDIR}/app/bin/*
 %config(noreplace)/opt/traffic_ops/app/conf/*
-%{PACKAGEDIR}/bin/*
-%{PACKAGEDIR}/lib/*
-%{PACKAGEDIR}/install/*
-%{PACKAGEDIR}/app/*
-%{PACKAGEDIR}/etc/*
-%{PACKAGEDIR}/doc/*
+%{PACKAGEDIR}/*
