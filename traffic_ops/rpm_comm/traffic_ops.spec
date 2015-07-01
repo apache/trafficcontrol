@@ -25,7 +25,7 @@
 
 Name: %{PACKAGE}
 Version: %{traffic_ops_version}
-Release: %{traffic_ops_build}%{?dist}
+Release: %{traffic_ops_release}%{?dist}
 Summary: Traffic Ops UI to control a CDN
 Group: Applications/System
 License: ASL 2.0
