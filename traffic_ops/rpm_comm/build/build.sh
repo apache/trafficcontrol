@@ -21,16 +21,19 @@ function usage () {
    echo "./build.sh [-b <branch>] [--build <build_number>] [-g <gitrepo>]"
    echo ""
    echo "Don't run this script ever."
-   echo "   -b | --branch     Git branch"
-   echo "                     default: master"
-   echo "   -c | --clean      Make a fresh start"
-   #echo "        --build      Build number"
-   #echo "                     default: commit hash"
-   echo "   -g | --gitrepo    Git repository."
-   echo "                     default: https://github.com/Comcast/traffic_control.git"
-   echo "   -h | --help       Print this message"
-   echo "   -w | --workspace  Working directory"
-   echo "                     default: home directory"
+   echo "   -b | --branch              Git branch"
+   echo "                              default: master"
+   echo "   -c | --clean               Make a fresh start but, leave carton"
+   echo "   -cc | --clean_with_carton  Make a fresh start"
+   #echo "        --build               Build number"
+   #echo "                              default: commit hash"
+   echo "   -g | --gitrepo             Git repository."
+   echo "                              default: 
+                                       https://github.com/Comcast/traffic_control.git"
+   echo "   -h | --help                Print this message"
+   echo "   -w | --workspace           Working directory"
+   echo "                              default: home directory"
+   echo "==============================================================================="
    echo ""
 }
 
@@ -131,7 +134,7 @@ function runCarton () {
       sudo cpan -i MIYAGAWA/Carton-v1.0.15.tar.gz
    fi
 
-   if [ "$clean" = "1" ]; then
+   if [ "$clean_carton" = "1" ]; then
       rm -fr $CARTONDIR
    fi
 
@@ -239,28 +242,30 @@ clean=
 
 while [ "$1" != "" ]; do
    case $1 in
-      -b | --branch )         shift
-                              branch=$1
-                              ;;
-      -c | --clean )          clean=1
-                              ;;
-      #--build )               shift
-      #                        build=$1
-      #                        ;;
-      #-f | --file )           shift
-      #                        filename=$1
-      #                        ;;
-      -g | --gitrepo )        shift
-                              gitrepo=$1
-                              ;;
-      -h | --help )           usage
-                              exit
-                              ;;
-      -w | --workspace )      shift
-                              workspace=$1
-                              ;;
-      * )                     usage
-                              exit 1
+      -b | --branch )                      shift
+                                           branch=$1
+                                           ;;
+      -c | --clean )                       clean=1
+                                           ;;
+      -cc | --clean_with_carton )          clean_carton=1
+                                           ;;
+      #--build )                            shift
+      #                                     build=$1
+      #                                     ;;
+      #-f | --file )                        shift
+      #                                     filename=$1
+      #                                     ;;
+      -g | --gitrepo )                     shift
+                                           gitrepo=$1
+                                           ;;
+      -h | --help )                        usage
+                                           exit
+                                           ;;
+      -w | --workspace )                   shift
+                                           workspace=$1
+                                           ;;
+      * )                                  usage
+                                           exit 1
    esac
    shift
 done
