@@ -23,6 +23,7 @@ function usage () {
    echo "Don't run this script ever."
    echo "   -b | --branch     Git branch"
    echo "                     default: master"
+   echo "   -c | --clean      Make a fresh start"
    #echo "        --build      Build number"
    #echo "                     default: commit hash"
    echo "   -g | --gitrepo    Git repository."
@@ -40,6 +41,10 @@ function createWorkspace () {
    echo "# Creating Workspace"
    echo "##################################################################"
 
+   if [ "$clean" = "1" ]; then
+      rm -fr $workspace/rpmbuild
+   fi
+
    mkdir -p $workspace/rpmbuild/{BUILD,RPMS,SOURCES,SPECS,SRPMS}
    #echo '%_topdir %(echo $workspace)/rpmbuild' > ~/.rpmmacros
 
@@ -52,6 +57,10 @@ function downloadRepo () {
    echo "##################################################################"
    echo "# Downloading Repo"
    echo "##################################################################"
+
+   if [ "$clean" = "1" ]; then
+      rm -fr $workspace/repos
+   fi
 
    if [ ! -d  $workspace/repos ]; then
       mkdir -p $workspace/repos
@@ -96,8 +105,8 @@ function getWebDeps () {
    echo "# Getting web dependencies"
    echo "##################################################################"
 
-   sudo cpan -if WWW::Curl::Easy
-   sudo cpan -if IO::Uncompress::Unzip
+   sudo cpan -i WWW::Curl::Easy
+   sudo cpan -i IO::Uncompress::Unzip
 
    cd $TOSRC/install/bin
    ./download_web_deps
@@ -118,7 +127,12 @@ function runCarton () {
    echo "# Running Carton"
    echo "##################################################################"
 
-   sudo cpan -if MIYAGAWA/Carton-v1.0.15.tar.gz
+   sudo cpan -i MIYAGAWA/Carton-v1.0.15.tar.gz
+
+
+   if [ "$clean" = "1" ]; then
+      rm -fr $CARTONDIR
+   fi
 
    if [ ! -d $CARTONDIR ]; then
        /bin/mkdir $CARTONDIR
@@ -149,31 +163,20 @@ function combine () {
 
    if [ -d $COMBINEDIR ]; then
       echo "removing $COMBINEDIR"
-      rm -dfr $COMBINEDIR
+      rm -fr $COMBINEDIR
    fi
 
-   mkdir $COMBINEDIR
-   mkdir $COMBINEDIR/traffic_ops-$VERSION-$BUILD_NUMBER
-   cd $COMBINEDIR/traffic_ops-$VERSION-$BUILD_NUMBER
-
-   if [ -d lib ]; then
-       /bin/rm -rf lib
-   fi
-
-   /bin/mkdir -p lib/perl5
-
-   if [ -d bin ]; then
-       /bin/rm -rf bin
-   fi
-
-   /bin/mkdir bin
-
-   # copy carton files
-   /bin/cp -R $CARTONDIR/local/bin/* $COMBINEDIR/traffic_ops-$VERSION-$BUILD_NUMBER/bin
-   /bin/cp -R $CARTONDIR/local/lib/perl5/* $COMBINEDIR/traffic_ops-$VERSION-$BUILD_NUMBER/lib/perl5
+   mkdir -p $COMBINEDIR/traffic_ops-$VERSION-$BUILD_NUMBER/app/local
+   mkdir -p $COMBINEDIR/traffic_ops-$VERSION-$BUILD_NUMBER/app/bin
+   mkdir -p $COMBINEDIR/traffic_ops-$VERSION-$BUILD_NUMBER/app/lib
+   echo "# Created by Traffic Ops install as workaround" >> $COMBINEDIR/traffic_ops-$VERSION-$BUILD_NUMBER/app/cpanfile.snapshot
 
    # copy Traffic Ops source
    cp -r $TOSRC/* $COMBINEDIR/traffic_ops-$VERSION-$BUILD_NUMBER/
+
+   # copy carton files
+   /bin/cp -R $CARTONDIR/local/bin/* $COMBINEDIR/traffic_ops-$VERSION-$BUILD_NUMBER/app/bin/
+   /bin/cp -R $CARTONDIR/local/lib/perl5/* $COMBINEDIR/traffic_ops-$VERSION-$BUILD_NUMBER/app/lib/perl5/
 
    cd $COMBINEDIR
 
@@ -223,10 +226,10 @@ function buildRpm () {
       exit $rc
    else
       echo
-      echo "================================================================================"
+      echo "==============================================================================="
       echo "RPM BUILD SUCCEEDED"
-      echo "See $RPMS/$HOSTTYPE/traffic_ops-$VERSION-$BUILD_NUMBER.rpm for the newly built rpm."
-      echo "================================================================================"
+      echo "$RPMS/$HOSTTYPE/traffic_ops-$VERSION-$BUILD_NUMBER.rpm"
+      echo "==============================================================================="
       echo
    fi
 }
@@ -234,11 +237,14 @@ function buildRpm () {
 #-----------------------------------------------------------------------------
 # MAIN
 #-----------------------------------------------------------------------------
+clean=
 
 while [ "$1" != "" ]; do
    case $1 in
       -b | --branch )         shift
                               branch=$1
+                              ;;
+      -c | --clean )          clean=1
                               ;;
       #--build )               shift
       #                        build=$1
@@ -249,9 +255,6 @@ while [ "$1" != "" ]; do
       -g | --gitrepo )        shift
                               gitrepo=$1
                               ;;
-      # Example of how to do command line without following var.
-      #-i | --interactive )    interactive=1
-      #                        ;;
       -h | --help )           usage
                               exit
                               ;;

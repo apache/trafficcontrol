@@ -73,6 +73,8 @@ tar -zxvf %_sourcedir/traffic_ops-%{traffic_ops_version}-%{traffic_ops_release}-
       service traffic_ops stop
    fi
 
+# This section is not run when someone 'installs' the rpm. It is only for 
+# 'making' the binaries.
 %install
    if [ -d $RPM_BUILD_ROOT ]; then
       %__rm -rf $RPM_BUILD_ROOT
