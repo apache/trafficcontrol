@@ -168,7 +168,7 @@ function combine () {
 
    mkdir -p $COMBINEDIR/traffic_ops-$VERSION-$BUILD_NUMBER/app/local
    mkdir -p $COMBINEDIR/traffic_ops-$VERSION-$BUILD_NUMBER/app/bin
-   mkdir -p $COMBINEDIR/traffic_ops-$VERSION-$BUILD_NUMBER/app/lib
+   mkdir -p $COMBINEDIR/traffic_ops-$VERSION-$BUILD_NUMBER/app/lib/perl5/
    echo "# Created by Traffic Ops install as workaround" >> $COMBINEDIR/traffic_ops-$VERSION-$BUILD_NUMBER/app/cpanfile.snapshot
 
    # copy Traffic Ops source
