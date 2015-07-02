@@ -121,6 +121,8 @@ tar -zxvf %_sourcedir/traffic_ops-%{traffic_ops_version}-%{traffic_ops_release}-
 
    # upgrade
    if [ "$1" == "2" ]; then
+      mkdir /opt/traffic_ops/lib
+      ln -s /opt/traffic_ops/app/local/lib/perl5 /opt/traffic_ops/lib/perl5
       /opt/traffic_ops/install/bin/migratedb
       #echo -e "\nUpgrade complete.\n\n"
       #echo -e "\nRun /opt/traffic_ops/install/bin/postinstall from the root home directory to complete the update.\n"
