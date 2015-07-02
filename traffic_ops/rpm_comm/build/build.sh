@@ -166,9 +166,8 @@ function combine () {
       rm -fr $COMBINEDIR
    fi
 
-   mkdir -p $COMBINEDIR/traffic_ops-$VERSION-$BUILD_NUMBER/app/local
+   mkdir -p $COMBINEDIR/traffic_ops-$VERSION-$BUILD_NUMBER/app/local/lib/perl5
    mkdir -p $COMBINEDIR/traffic_ops-$VERSION-$BUILD_NUMBER/app/bin
-   mkdir -p $COMBINEDIR/traffic_ops-$VERSION-$BUILD_NUMBER/app/lib/perl5/
    echo "# Created by Traffic Ops install as workaround" >> $COMBINEDIR/traffic_ops-$VERSION-$BUILD_NUMBER/app/cpanfile.snapshot
 
    # copy Traffic Ops source
@@ -176,13 +175,11 @@ function combine () {
 
    # copy carton files
    /bin/cp -R $CARTONDIR/local/bin/* $COMBINEDIR/traffic_ops-$VERSION-$BUILD_NUMBER/app/bin/
-   /bin/cp -R $CARTONDIR/local/lib/perl5/* $COMBINEDIR/traffic_ops-$VERSION-$BUILD_NUMBER/app/lib/perl5/
+   /bin/cp -R $CARTONDIR/local/lib/perl5/* $COMBINEDIR/traffic_ops-$VERSION-$BUILD_NUMBER/app/local/lib/perl5/
 
    cd $COMBINEDIR
 
    tar -czf $SOURCES/$PACKAGE-$VERSION-$BUILD_NUMBER.$HOSTTYPE.tar.gz ./*
-
-
 }
 
 function buildRpm () {

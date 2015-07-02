@@ -127,6 +127,9 @@ tar -zxvf %_sourcedir/traffic_ops-%{traffic_ops_version}-%{traffic_ops_release}-
       if [ ! -h /opt/traffic_ops/lib/perl5 ]
          ln -s /opt/traffic_ops/app/local/lib/perl5 /opt/traffic_ops/lib/perl5
       fi
+      # TODO: this should be moved to a post upgrade script. I'm thinking the UI
+      # should check the version in a file and compare it to the DB then run 
+      # upgrade script if different.
       /opt/traffic_ops/install/bin/migratedb
       #echo -e "\nUpgrade complete.\n\n"
       #echo -e "\nRun /opt/traffic_ops/install/bin/postinstall from the root home directory to complete the update.\n"
