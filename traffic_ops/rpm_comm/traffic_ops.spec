@@ -121,10 +121,10 @@ tar -zxvf %_sourcedir/traffic_ops-%{traffic_ops_version}-%{traffic_ops_release}-
 
    # upgrade
    if [ "$1" == "2" ]; then
-      if [ ! -d /opt/traffic_ops/lib ]
+      if [ ! -d /opt/traffic_ops/lib ]; then
          mkdir /opt/traffic_ops/lib
       fi
-      if [ ! -h /opt/traffic_ops/lib/perl5 ]
+      if [ ! -h /opt/traffic_ops/lib/perl5 ]; then
          ln -s /opt/traffic_ops/app/local/lib/perl5 /opt/traffic_ops/lib/perl5
       fi
       # TODO: this should be moved to a post upgrade script. I'm thinking the UI
