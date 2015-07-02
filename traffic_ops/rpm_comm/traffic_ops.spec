@@ -121,8 +121,12 @@ tar -zxvf %_sourcedir/traffic_ops-%{traffic_ops_version}-%{traffic_ops_release}-
 
    # upgrade
    if [ "$1" == "2" ]; then
-      mkdir /opt/traffic_ops/lib
-      ln -s /opt/traffic_ops/app/local/lib/perl5 /opt/traffic_ops/lib/perl5
+      if [ ! -d /opt/traffic_ops/lib ]
+         mkdir /opt/traffic_ops/lib
+      fi
+      if [ ! -h /opt/traffic_ops/lib/perl5 ]
+         ln -s /opt/traffic_ops/app/local/lib/perl5 /opt/traffic_ops/lib/perl5
+      fi
       /opt/traffic_ops/install/bin/migratedb
       #echo -e "\nUpgrade complete.\n\n"
       #echo -e "\nRun /opt/traffic_ops/install/bin/postinstall from the root home directory to complete the update.\n"
@@ -136,13 +140,12 @@ tar -zxvf %_sourcedir/traffic_ops-%{traffic_ops_version}-%{traffic_ops_release}-
 
    if [ "$1" = "0" ]; then
       # this is an uninstall
+      service traffic_ops stop
       %__rm -rf %{PACKAGEDIR}
       %__rm /etc/init.d/traffic_ops
       /usr/bin/getent passwd %{TRAFFIC_OPS_USER} || /usr/sbin/userdel %{TRAFFIC_OPS_USER} 
       /usr/bin/getent group %{TRAFFIC_OPS_GROUP} || /usr/sbin/groupdel %{TRAFFIC_OPS_GROUP}
    fi
-   service traffic_ops stop
-   /usr/sbin/groupdel %{TRAFFIC_OPS_GROUP}
 
 %clean
 #rm -rf %{buildroot}
