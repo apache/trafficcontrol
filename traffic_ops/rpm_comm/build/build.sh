@@ -127,8 +127,9 @@ function runCarton () {
    echo "# Running Carton"
    echo "##################################################################"
 
-   sudo cpan -i MIYAGAWA/Carton-v1.0.15.tar.gz
-
+   if [ ! -f /usr/local/bin/carton ]; then
+      sudo cpan -i MIYAGAWA/Carton-v1.0.15.tar.gz
+   fi
 
    if [ "$clean" = "1" ]; then
       rm -fr $CARTONDIR
