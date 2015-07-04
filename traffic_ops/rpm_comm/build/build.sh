@@ -26,8 +26,8 @@ function usage () {
    echo "   -c  | --clean               Make a fresh start but, leave carton"
    echo "   -cc | --clean_with_carton   Make a fresh start"
    echo "   -g  | --gitrepo             Git repository."
-   echo "                               default: 
-                                        https://github.com/Comcast/traffic_control.git"
+   echo "                               default:"
+   echo "                               https://github.com/Comcast/traffic_control.git"
    echo "   -h  | --help                Print this message"
    echo "   -w  | --workspace           Working directory"
    echo "                               default: home directory"
