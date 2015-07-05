@@ -14,22 +14,13 @@
 .. limitations under the License.
 .. 
 
-Administrator's Guide
-*********************
+Quick How To Guides
+*******************
 
-Traffic Control is distributed in source form for the developer, but also as a binary package. This guide details how to install and configure a Traffic Control CDN using the binary packages, as well as how to perform common operations running a CDN.
+Traffic Control is a complicated system, and documenting it is not trivial. Sometimes a picture says more than a thousand words, so here are some screen shot based tutorials on how to use some of the more involved features.
 
 .. toctree::
   :maxdepth: 3
 
-  traffic_ops_install.rst
-  traffic_ops_config.rst
-  traffic_ops_using.rst
-  traffic_ops_extensions.rst
-  traffic_monitor.rst
-  traffic_router.rst
-  traffic_stats.rst
-  traffic_server.rst
-  traffic_vault.rst
-  quick_howto/index.rst
+  multi_site.rst
 

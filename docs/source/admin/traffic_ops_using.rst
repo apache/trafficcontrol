@@ -508,6 +508,8 @@ Parameters in the Origin profile that influence this feature:
 | CONFIG proxy.config.diags.debug.enabled                                 | INT 1      | enable debugging for testing only                                                                 |
 +-------------------------------------------------------------------------+------------+---------------------------------------------------------------------------------------------------+        
 
+see `rl-multi-site-origin-qh` for a *quick how to* on this feature.
+
 .. _rl-ccr-profile:
 
 CCR Profile or Traffic Router Profile
