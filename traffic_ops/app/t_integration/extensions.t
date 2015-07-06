@@ -15,7 +15,7 @@ my $api_version = '1.1';
 
 my $token = '91504CE6-8E4A-46B2-9F9F-FE7C15228498';
 my $path  = '/api/1.1/user/login/token';
-$t->post_ok( $path => json => { t => $token } )->status_is(200)->json_is( '/version' => '1.1' )->json_is( '/alerts/0/text' => "Successfully logged in." )
+$t->post_ok( $path => json => { t => $token } )->status_is(200)->json_is( '/alerts/0/text' => "Successfully logged in." )
 	->json_is( '/alerts/0/level' => "success" );
 
 my $json = JSON->new->allow_nonref;
@@ -40,8 +40,8 @@ foreach my $num ( 1 .. 36 ) {
 				script_file            => "ping",
 				info_url               => "http://foo.com/bar.html"
 			}
-			)->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } )->json_is( '/version' => '1.1' )
-			->json_is( '/alerts/0/text' => "Check Extension Loaded." )->json_is( '/alerts/0/level' => "success" );
+			)->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } )->json_is( '/alerts/0/text' => "Check Extension Loaded." )
+			->json_is( '/alerts/0/level' => "success" );
 	}
 	else {
 		$t->post_ok(
@@ -57,7 +57,7 @@ foreach my $num ( 1 .. 36 ) {
 				script_file => "ping",
 				info_url    => "http://foo.com/bar.html"
 			}
-			)->status_is(400)->or( sub { diag $t->tx->res->content->asset->{content}; } )->json_is( '/version' => '1.1' )
+			)->status_is(400)->or( sub { diag $t->tx->res->content->asset->{content}; } )
 			->json_is( '/alerts/0/text' => "error No open slots left for checks, delete one first." )->json_is( '/alerts/0/level' => "error" );
 	}
 }
@@ -76,8 +76,8 @@ $t->get_ok('/server_check')->status_is(200)->text_is( 'th#col1' => 'Hostname' )-
 my $test_server_id = "23";
 for my $test (qw/ILO 10G FQDN DSCP 10G6 STAT MTU TRTR TRMO X1 X4 X6 X9/) {
 	$t->post_ok( '/api/1.1/servercheck' => json => { id => $test_server_id, servercheck_short_name => $test, value => 1 } )->status_is(200)
-		->or( sub { diag $t->tx->res->content->asset->{content}; } )->json_is( '/version' => '1.1' )
-		->json_is( '/alerts/0/text' => "Server Check was successfully updated." )->json_is( '/alerts/0/level' => "success" );
+		->or( sub { diag $t->tx->res->content->asset->{content}; } )->json_is( '/alerts/0/text' => "Server Check was successfully updated." )
+		->json_is( '/alerts/0/level' => "success" );
 }
 
 # clean up and test "delete"
@@ -85,8 +85,8 @@ $t->get_ok('/api/1.1/to_extensions.json')->status_is(200);
 my $extlist = $json->decode( $t->tx->res->content->asset->{content} );
 foreach my $ext ( @{ $extlist->{response} } ) {
 	if ( $ext->{name} =~ /_TESTiNG$/ ) {
-		$t->post_ok( '/api/1.1/to_extensions/' . $ext->{id} . '/delete' )->status_is(200)->json_is( '/version' => '1.1' )
-			->json_is( '/alerts/0/text' => "Extension deleted." )->json_is( '/alerts/0/level' => "success" );
+		$t->post_ok( '/api/1.1/to_extensions/' . $ext->{id} . '/delete' )->status_is(200)->json_is( '/alerts/0/text' => "Extension deleted." )
+			->json_is( '/alerts/0/level' => "success" );
 	}
 }
 done_testing();
