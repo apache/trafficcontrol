@@ -194,30 +194,30 @@ To install the Traffic Ops Developer environment:
    * Development database: ``$ db/admin.pl --env=development setup``
    * Integration database: ``$ db use db/admin.pl --env=integration setup``
 
-   The database schema should look like this:
- ::
+   |
 
+   Running the the admin.pl script in setup mode should look like this: ::
 
-  master $ db/admin.pl --env=development setup
-  Using database.conf: conf/development/database.conf
-  Using database.conf: conf/development/database.conf
-  Using database.conf: conf/development/database.conf
-  Using database.conf: conf/development/database.conf
-  Using database.conf: conf/development/database.conf
-  Using database.conf: conf/development/database.conf
-  Executing 'drop database to_development'
-  Executing 'create database to_development'
-  Creating database tables...
-  Warning: Using a password on the command line interface can be insecure.
-  Migrating database...
-  goose: migrating db environment 'development', current version: 0, target: 20150210100000
-  OK    20141222103718_extension.sql
-  OK    20150108100000_add_job_deliveryservice.sql
-  OK    20150205100000_cg_location.sql
-  OK    20150209100000_cran_to_asn.sql
-  OK    20150210100000_ds_keyinfo.sql
-  Seeding database...
-  Warning: Using a password on the command line interface can be insecure.
+       master $ db/admin.pl --env=development setup
+       Using database.conf: conf/development/database.conf
+       Using database.conf: conf/development/database.conf
+       Using database.conf: conf/development/database.conf
+       Using database.conf: conf/development/database.conf
+       Using database.conf: conf/development/database.conf
+       Using database.conf: conf/development/database.conf
+       Executing 'drop database to_development'
+       Executing 'create database to_development'
+       Creating database tables...
+       Warning: Using a password on the command line interface can be insecure.
+       Migrating database...
+       goose: migrating db environment 'development', current version: 0, target: 20150210100000
+       OK    20141222103718_extension.sql
+       OK    20150108100000_add_job_deliveryservice.sql
+       OK    20150205100000_cg_location.sql
+       OK    20150209100000_cran_to_asn.sql
+       OK    20150210100000_ds_keyinfo.sql
+       Seeding database...
+       Warning: Using a password on the command line interface can be insecure.
 
 5. (Optional) To load temporary data into the tables: ``$ perl bin/db/setup_kabletown.pl``
 
