@@ -245,6 +245,15 @@ my %definition_for = (
 			use_in_table => 'server',
 		}
 	},
+	INFLUXDB => {
+		new   => 'Type',
+		using => {
+			id           => 32,
+			name         => 'INFLUXDB',
+			description  => 'influxdb type',
+			use_in_table => 'server',
+		}
+	},
 
 );
 

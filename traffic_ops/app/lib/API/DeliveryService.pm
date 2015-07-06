@@ -22,9 +22,10 @@ use UI::Utils;
 use Mojo::Base 'Mojolicious::Controller';
 use Data::Dumper;
 use POSIX qw(strftime);
-use Utils::Helper::Datasource;
 use Time::HiRes qw(gettimeofday tv_interval);
 use Math::Round qw(nearest);
+Utils::Helper::Extensions->use;
+use Common::ReturnCodes qw(SUCCESS ERROR);
 
 my $valid_server_types = {
 	edge => "EDGE",
@@ -41,16 +42,15 @@ sub delivery_services {
 	my $self = shift;
 	my $id   = $self->param('id');
 
-	my $helper = new Utils::Helper( { mojo => $self } );
-	if ( defined($id) && $helper->is_valid_delivery_service($id) ) {
-		if ( $helper->is_delivery_service_assigned($id) || &is_oper($self) ) {
+	if ( defined($id) && $self->is_valid_delivery_service($id) ) {
+		if ( $self->is_delivery_service_assigned($id) ) {
 			return $self->get_data();
 		}
 		else {
 			return $self->forbidden();
 		}
 	}
-	if ( defined($id) && !$helper->is_valid_delivery_service($id) ) {
+	if ( defined($id) && !$self->is_valid_delivery_service($id) ) {
 		return $self->not_found();
 	}
 	else {
@@ -132,7 +132,7 @@ sub get_data {
 				"ipv6RoutingEnabled"   => \$row->ipv6_routing_enabled,
 				"rangeRequestHandling" => $row->range_request_handling,
 				"cacheurl"             => $row->cacheurl,
-				"remapText"           => $row->remap_text,
+				"remapText"            => $row->remap_text,
 			}
 		);
 	}
@@ -142,34 +142,17 @@ sub get_data {
 sub get_summary {
 	my $self = shift;
 
-	my $metric_type  = $self->param("metric");
-	my $start        = $self->param("start");
-	my $end          = $self->param("end");
-	my $interval     = $self->param("interval");
-	my $window_start = $self->param("window_start");
-	my $window_end   = $self->param("window_end");
-	my $location     = "all";                          # NOTE: We can easily turn this into a param in the future if/when necessary
-
 	my $id = $self->param('id');
 
-	my $helper = new Utils::Helper( { mojo => $self } );
-
-	if ( $helper->is_valid_delivery_service($id) ) {
-		if ( $helper->is_delivery_service_assigned($id) ) {
-			my $result = $self->db->resultset("Deliveryservice")->search( { id => $self->param('id') } )->single();
-			my $param =
-				$self->db->resultset('ProfileParameter')
-				->search( { -and => [ 'parameter.name' => 'CDN_name', 'parameter.name' => 'CDN_name', 'me.profile' => $result->profile->id ] },
-				{ prefetch => [ 'parameter', 'profile' ] } )->single();
-			my $cdn_name = $param->parameter->value;
-			my $match    = $cdn_name . ":" . $result->xml_id . ":all:all:" . $metric_type;
-			my $data     = $self->get_stats( $match, $start, $end, $interval, $window_start, $window_end );
-
-			if ( defined($data) && ref($data) eq "HASH" && exists( $data->{summary} ) ) {
-				$self->success( { summary => $data->{summary} } );
+	if ( $self->is_valid_delivery_service($id) ) {
+		if ( $self->is_delivery_service_assigned($id) ) {
+			my $stats = new Extensions::Delegate::Statistics($self);
+			my ( $rc, $result ) = $stats->get_summary();
+			if ( $rc == SUCCESS ) {
+				return $self->success($result);
 			}
 			else {
-				$self->success( get_summary_zero_values() );
+				return $self->alert($result);
 			}
 		}
 		else {
@@ -181,26 +164,14 @@ sub get_summary {
 	}
 }
 
-sub get_summary_zero_values {
-	my $response = ();
-	$response->{"ninetyFifth"} = 0;
-	$response->{"average"}     = 0;
-	$response->{"min"}         = 0;
-	$response->{"max"}         = 0;
-	$response->{"total"}       = 0;
-	return $response;
-}
-
 sub routing {
 	my $self = shift;
 
 	# get and pass { cdn_name => $foo } into get_routing_stats
 	my $id = $self->param('id');
 
-	my $helper = new Utils::Helper( { mojo => $self } );
-
-	if ( $helper->is_valid_delivery_service($id) ) {
-		if ( $helper->is_delivery_service_assigned($id) ) {
+	if ( $self->is_valid_delivery_service($id) ) {
+		if ( $self->is_delivery_service_assigned($id) ) {
 			my $result = $self->db->resultset("Deliveryservice")->search( { id => $self->param('id') } )->single();
 			my $param =
 				$self->db->resultset('ProfileParameter')
@@ -227,57 +198,28 @@ sub routing {
 }
 
 sub metrics {
-	my $self       = shift;
-	my $id         = $self->param("id");
-	my $metric     = $self->param("metric");
-	my $start      = $self->param("start");          # start time in secs since 1970
-	my $end        = $self->param("end");            # end time in secs since 1970
-	my $stats_only = $self->param("stats") || 0;     # stats only
-	my $data_only  = $self->param("data") || 0;      # data only
-	my $type       = $self->param("server_type");    # mid or edge
+	my $self = shift;
+	my $id   = $self->param("id");
 
-	my $config = $self->get_config($metric);
-	my $helper = new Utils::Helper::Datasource( { mojo => $self } );
+	if ( $self->is_valid_delivery_service($id) ) {
+		if ( $self->is_delivery_service_assigned($id) ) {
 
-	if ( $valid_server_types->{$type} && defined($config) && $helper->is_valid_delivery_service($id) ) {
-		if ( $helper->is_delivery_service_assigned($id) ) {
-			$start =~ s/\.\d+$//g;
-			$end =~ s/\.\d+$//g;
-
-			for my $kvp ( @{ $config->{get_kvp}->( $helper->get_delivery_service_name($id), $valid_server_types->{$type}, $start, $end ) } ) {
-				$helper->kv( $kvp->{key}, $kvp->{value} );
+			my $m = new Extensions::Delegate::Metrics($self);
+			my ( $rc, $result ) = $m->get_etl_metrics();
+			if ( $rc == SUCCESS ) {
+				return $self->success($result);
 			}
-			return $self->build_etl_metrics_response( $helper, $config, $start, $end, $stats_only, $data_only );
+			else {
+				return $self->alert($result);
+			}
 		}
 		else {
 			$self->forbidden();
 		}
 	}
 	else {
-		$self->success( get_zero_values( $stats_only, $data_only ) );
+		$self->alert( "Invalid deliveryservice id: " . $id );
 	}
-}
-
-sub get_zero_values {
-	my $stats_only = shift;
-	my $data_only  = shift;
-	my $response   = ();
-	$response->{"stats"}{"95thPercentile"} = 0;
-	$response->{"stats"}{"98thPercentile"} = 0;
-	$response->{"stats"}{"5thPercentile"}  = 0;
-	$response->{"stats"}{"mean"}           = 0;
-	$response->{"stats"}{"count"}          = 0;
-	$response->{"stats"}{"min"}            = 0;
-	$response->{"stats"}{"max"}            = 0;
-	$response->{"stats"}{"sum"}            = 0;
-	$response->{"data"}                    = [];
-	if ($stats_only) {
-		delete( $response->{"data"} );
-	}
-	elsif ($data_only) {
-		delete( $response->{"stats"} );
-	}
-	return [$response];
 }
 
 sub capacity {
@@ -286,10 +228,8 @@ sub capacity {
 	# get and pass { cdn_name => $foo } into get_cache_capacity
 	my $id = $self->param('id');
 
-	my $helper = new Utils::Helper( { mojo => $self } );
-
-	if ( $helper->is_valid_delivery_service($id) ) {
-		if ( $helper->is_delivery_service_assigned($id) ) {
+	if ( $self->is_valid_delivery_service($id) ) {
+		if ( $self->is_delivery_service_assigned($id) ) {
 			my $result = $self->db->resultset("Deliveryservice")->search( { id => $self->param('id') } )->single();
 			my $param =
 				$self->db->resultset('ProfileParameter')
@@ -312,10 +252,8 @@ sub health {
 	my $self = shift;
 	my $id   = $self->param('id');
 
-	my $helper = new Utils::Helper( { mojo => $self } );
-
-	if ( $helper->is_valid_delivery_service($id) ) {
-		if ( $helper->is_delivery_service_assigned($id) ) {
+	if ( $self->is_valid_delivery_service($id) ) {
+		if ( $self->is_delivery_service_assigned($id) ) {
 			my $result = $self->db->resultset("Deliveryservice")->search( { id => $self->param('id') } )->single();
 			my $param =
 				$self->db->resultset('ProfileParameter')
@@ -339,10 +277,8 @@ sub state {
 	my $self = shift;
 	my $id   = $self->param('id');
 
-	my $helper = new Utils::Helper( { mojo => $self } );
-
-	if ( $helper->is_valid_delivery_service($id) ) {
-		if ( $helper->is_delivery_service_assigned($id) || &is_oper($self) ) {
+	if ( $self->is_valid_delivery_service($id) ) {
+		if ( $self->is_delivery_service_assigned($id) || &is_oper($self) ) {
 			my $result = $self->db->resultset("Deliveryservice")->search( { id => $self->param('id') } )->single();
 			my $param =
 				$self->db->resultset('ProfileParameter')
@@ -428,18 +364,19 @@ sub state {
 }
 
 sub peakusage {
-	my $self            = shift;
-	my $dsid            = $self->param('ds');
-	my $cachegroup_name = $self->param('name');
-	my $peak_usage_type = $self->param('peak_usage_type');
-	my $start           = $self->param('start');
-	my $end             = $self->param('end');
-	my $interval        = $self->param('interval');
-	my $helper          = new Utils::Helper( { mojo => $self } );
-	if ( $helper->is_valid_delivery_service($dsid) ) {
+	my $self = shift;
+	my $dsid = $self->param('ds');
+	if ( $self->is_valid_delivery_service($dsid) ) {
 
-		if ( $helper->is_delivery_service_assigned($dsid) ) {
-			return $self->get_ds_usage( $dsid, $cachegroup_name, $peak_usage_type, $start, $end, $interval );
+		if ( $self->is_delivery_service_assigned($dsid) ) {
+			my $stats = new Extensions::Delegate::Statistics($self);
+			my ( $rc, $result ) = $stats->get_daily_usage();
+			if ( $rc == SUCCESS ) {
+				$self->success($result);
+			}
+			else {
+				$self->alert($result);
+			}
 		}
 		else {
 			return $self->forbidden();

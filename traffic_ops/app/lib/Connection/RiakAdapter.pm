@@ -1,4 +1,4 @@
-package Utils::Riak;
+package Connection::RiakAdapter;
 #
 # Copyright 2015 Comcast Cable Communications Management, LLC
 #
@@ -24,15 +24,12 @@ use Net::Riak;
 use Data::Dumper;
 use Mojo::UserAgent;
 use JSON;
-use Utils::Helper::ResponseHelper;
 use IO::Socket::SSL qw();
 use File::Slurp;
 
 # This Perl Module was needed to better support SSL for the 'Vault'
 use LWP::UserAgent qw();
 
-##To track the active server we want to use
-my $active_server;
 use constant RIAK_ROOT_URI => "riak";
 
 # The purpose of this class is to provide for an easy method

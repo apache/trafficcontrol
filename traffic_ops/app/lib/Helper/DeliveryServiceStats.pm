@@ -1,4 +1,4 @@
-#
+package Helper::DeliveryServiceStats;
 #
 # Copyright 2015 Comcast Cable Communications Management, LLC
 #
@@ -15,10 +15,28 @@
 # limitations under the License.
 #
 #
-mkdir -p log
-if [ -z "$TO_EXTENSIONS_LIB" ]; then
-  export PERL5LIB=local/lib/perl5; local/bin/morbo --listen "http://*:3000" -v script/cdn
-else
-  export PERL5LIB=local/lib/perl5; local/bin/morbo --listen "http://*:3000" -v script/cdn -w $TO_EXTENSIONS_LIB -w lib
-fi
-MOJO_LOG_LEVEL=debug
+#
+
+use utf8;
+use Data::Dumper;
+use JSON;
+use File::Slurp;
+use Math::Round;
+
+our @ISA = ("Helper::Stats");
+
+sub series_name {
+	my $self            = shift;
+	my $cdn_name        = shift;
+	my $ds_name         = shift;
+	my $cachegroup_name = shift;
+	my $metric_type     = shift;
+
+	# 'series' section
+	my $delim = ":";
+
+	# Example: <cdn_name>:<deliveryservice_name>:<cache_group_name>:<metric_type>
+	return sprintf( "%s$delim%s$delim%s$delim%s", $cdn_name, $ds_name, $cachegroup_name, $metric_type );
+}
+
+1;

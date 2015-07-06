@@ -1,4 +1,4 @@
-#
+package Extensions::Delegate::Metrics;
 #
 # Copyright 2015 Comcast Cable Communications Management, LLC
 #
@@ -13,12 +13,20 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-#
-#
-mkdir -p log
-if [ -z "$TO_EXTENSIONS_LIB" ]; then
-  export PERL5LIB=local/lib/perl5; local/bin/morbo --listen "http://*:3000" -v script/cdn
-else
-  export PERL5LIB=local/lib/perl5; local/bin/morbo --listen "http://*:3000" -v script/cdn -w $TO_EXTENSIONS_LIB -w lib
-fi
-MOJO_LOG_LEVEL=debug
+
+# Stub class that provides the "hook" for implementing custom statistics gathering.
+# See TrafficOps.pm for the route that points here.
+# TODO: drichardson - add documentation here and in the public doc (.rst).
+sub new {
+	my $self  = {};
+	my $class = shift;
+	my $args  = shift;
+
+	return ( bless( $self, $class ) );
+}
+
+sub get_etl_metrics {
+	return ( 1, "No Traffic Ops Extension implemented for 'Metrics->get_etl_metrics()'" );
+}
+
+1;

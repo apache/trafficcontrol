@@ -1,4 +1,4 @@
-package API::Metrics;
+package API::v12::CacheStats;
 #
 # Copyright 2015 Comcast Cable Communications Management, LLC
 #
@@ -19,27 +19,37 @@ package API::Metrics;
 
 # JvD Note: you always want to put Utils as the first use. Sh*t don't work if it's after the Mojo lines.
 use UI::Utils;
-use Math::Round;
+use Mojo::Base 'Mojolicious::Controller';
 use Data::Dumper;
-use POSIX qw(strftime);
-use Carp qw(cluck confess);
+use JSON;
+my $builder;
+use Extensions::Delegate::CacheStatistics;
+use Utils::Helper::Extensions;
+Utils::Helper::Extensions->use;
 use Common::ReturnCodes qw(SUCCESS ERROR);
 
-use Mojo::Base 'Mojolicious::Controller';
-
+#TODO: drichardson
+#      - Add required fields validation see lib/API/User.pm based on Validate::Tiny
 sub index {
-	my $self        = shift;
-	my $metric      = $self->param("metric");
-	my $server_type = $self->param("server_type");
-	my $m           = new Extensions::Delegate::Metrics($self);
-	my ( $rc, $result ) = $m->get_etl_metrics();
-	$self->app->log->debug( "result #-> " . Dumper($result) );
+	my $self = shift;
+
+	my $cstats = new Extensions::Delegate::CacheStatistics( $self, $self->get_db_name() );
+
+	my ( $rc, $result ) = $cstats->get_stats();
 	if ( $rc == SUCCESS ) {
-		return ( $self->success($result) );
+		return $self->success($result);
 	}
 	else {
-		return ( $self->alert($result) );
+		return $self->alert($result);
 	}
+}
+
+sub get_db_name {
+	my $self      = shift;
+	my $mode      = $self->app->mode;
+	my $conf_file = MojoPlugins::InfluxDB->INFLUXDB_CONF_FILE_NAME;
+	my $conf      = Utils::JsonConfig->load_conf( $mode, $conf_file );
+	return $conf->{cache_stats_db_name};
 }
 
 1;

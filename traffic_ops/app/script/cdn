@@ -2,12 +2,23 @@
 use Mojo::Base -strict;
 use File::Basename 'dirname';
 use File::Spec::Functions qw(catdir splitdir);
+use Data::Dumper;
+use Env;
 
-# Source directory has precedence
 my @base = (splitdir(dirname(__FILE__)), '..');
 my $lib = join('/', @base, 'lib');
 -e catdir(@base, 't') ? unshift(@INC, $lib) : push(@INC, $lib);
 
+# Source directory has precedence
+my $to_ext_lib = $ENV{"TO_EXTENSIONS_LIB"};
+if (defined($to_ext_lib)){
+  if ( -e $to_ext_lib ) {
+	unshift(@INC, $to_ext_lib);
+	print "Found TO_EXTENSIONS_LIB prepending to library path: $to_ext_lib\n";
+  } else {
+	print "\nWARNING TO_EXTENSIONS_LIB environment variable is defined as $to_ext_lib but does not exist.\n\n";
+  }
+}
 # Start commands for application
 require Mojolicious::Commands;
 Mojolicious::Commands->start_app('TrafficOps');

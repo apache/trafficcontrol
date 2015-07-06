@@ -1,4 +1,4 @@
-#
+package Common::ReturnCodes;
 #
 # Copyright 2015 Comcast Cable Communications Management, LLC
 #
@@ -14,11 +14,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-#
-mkdir -p log
-if [ -z "$TO_EXTENSIONS_LIB" ]; then
-  export PERL5LIB=local/lib/perl5; local/bin/morbo --listen "http://*:3000" -v script/cdn
-else
-  export PERL5LIB=local/lib/perl5; local/bin/morbo --listen "http://*:3000" -v script/cdn -w $TO_EXTENSIONS_LIB -w lib
-fi
-MOJO_LOG_LEVEL=debug
+use base 'Exporter';
+our @EXPORT    = qw();
+our @EXPORT_OK = qw(SUCCESS ERROR);
+
+use constant SUCCESS => 0;
+use constant ERROR   => 1;

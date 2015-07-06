@@ -89,7 +89,7 @@ ok $t->post_ok(
 		ttl       => 40,
 		startTime => $now,
 	}
-	)->status_is(400)->json_is( '/version', '1.1' )->json_is( '/alerts', [ { level => "error", text => "ttl should be between 48 and 672" } ] )
+	)->status_is(400)->json_is( '/alerts', [ { level => "error", text => "ttl should be between 48 and 672" } ] )
 	->or( sub { diag $t->tx->res->content->asset->{content}; } ),
 	'Will not create a purge job without the ttl in the proper low range?';
 
@@ -101,7 +101,7 @@ ok $t->post_ok(
 		ttl       => 1000,
 		startTime => $now,
 	}
-	)->status_is(400)->json_is( '/version', '1.1' )->json_is( '/alerts', [ { level => "error", text => "ttl should be between 48 and 672" } ] )
+	)->status_is(400)->json_is( '/alerts', [ { level => "error", text => "ttl should be between 48 and 672" } ] )
 	->or( sub { diag $t->tx->res->content->asset->{content}; } ),
 	'Will not create a purge job without the ttl in the proper high range?';
 
@@ -122,7 +122,7 @@ ok $t->post_ok(
 		ttl       => 49,
 		startTime => $now,
 	}
-	)->status_is(400)->json_is( '/version', '1.1' )->json_is( '/alerts', [ { level => "error", text => "regex is required" } ] )
+	)->status_is(400)->json_is( '/alerts', [ { level => "error", text => "regex is required" } ] )
 	->or( sub { diag $t->tx->res->content->asset->{content}; } ),
 	'Will not create a purge job without the regex field?';
 
@@ -133,7 +133,7 @@ ok $t->post_ok(
 		regex => '/foo2/.*',
 		ttl   => 49,
 	}
-	)->status_is(400)->json_is( '/version', '1.1' )->json_is( '/alerts', [ { level => "error", text => "startTime is required" } ] )
+	)->status_is(400)->json_is( '/alerts', [ { level => "error", text => "startTime is required" } ] )
 	->or( sub { diag $t->tx->res->content->asset->{content}; } ),
 	'Will not create a purge job without the startTime field?';
 
@@ -145,7 +145,7 @@ ok $t->post_ok(
 		ttl       => 49,
 		startTime => '2015-01-09',
 	}
-	)->status_is(400)->json_is( '/version', '1.1' )
+	)->status_is(400)
 	->json_is( '/alerts', [ { level => "error", text => "startTime has an invalidate date format, should be in the form of YYYY-MM-DD HH:MM:SS" } ] )
 	->or( sub { diag $t->tx->res->content->asset->{content}; } ),
 	'Will not create a purge job without a properly formatted startTime field?';
@@ -157,7 +157,7 @@ ok $t->post_ok(
 		regex     => '/foo2/.*',
 		startTime => $now,
 	}
-	)->status_is(400)->json_is( '/version', '1.1' )->json_is( '/alerts', [ { level => "error", text => "ttl is required" } ] )
+	)->status_is(400)->json_is( '/alerts', [ { level => "error", text => "ttl is required" } ] )
 	->or( sub { diag $t->tx->res->content->asset->{content}; } ),
 	'Will not create a purge job without the ttl field?';
 
