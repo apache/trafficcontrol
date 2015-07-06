@@ -25,7 +25,7 @@ use MIME::Base64;
 use Data::Dumper;
 
 $| = 1;
-my $script_version = "0.50g";
+my $script_version = "0.51a";
 my $date           = `/bin/date`;
 chomp($date);
 print "$date\nVersion of this script: $script_version\n";
@@ -735,6 +735,7 @@ sub process_config_files {
 				|| $file =~ m/hdr\_rw\_(.*)\.config$/
 				|| $file eq "regex_revalidate.config"
 				|| $file eq "ip_allow.config"
+				|| $file eq "astats.config"
 				|| $file eq "cacheurl_qstring.config"
 				|| $file =~ m/regex\_remap\_(.*)\.config$/
 				|| $file =~ m/\.cer$/
