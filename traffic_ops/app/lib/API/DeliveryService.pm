@@ -24,6 +24,8 @@ use Data::Dumper;
 use POSIX qw(strftime);
 use Time::HiRes qw(gettimeofday tv_interval);
 use Math::Round qw(nearest);
+use Extensions::Delegate::Metrics;
+use Extensions::Delegate::Statistics;
 Utils::Helper::Extensions->use;
 use Common::ReturnCodes qw(SUCCESS ERROR);
 

@@ -27,6 +27,7 @@ use Time::HiRes qw(gettimeofday tv_interval);
 use Math::Round qw(nearest);
 use Utils::Helper;
 use Carp qw(cluck confess);
+use Extensions::Delegate::Statistics;
 use Common::ReturnCodes qw(SUCCESS ERROR);
 
 #TODO: drichardson - remove after 1.2 cleaned up
