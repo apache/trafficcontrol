@@ -10,7 +10,5 @@ stat_value float NOT NULL,
 summary_time timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
 PRIMARY KEY (id)
 );
-
-update goose_db_version set version_id = 20150504100000 where version_id = 21050504100000;
 -- +goose Down
 -- SQL section 'Down' is executed when this migration is rolled back
