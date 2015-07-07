@@ -1,0 +1,93 @@
+#!/bin/bash
+#
+# Startup script for traffic_stats/ts_daily_summary
+#
+#
+# chkconfig: 345 99 10
+# description: traffic_stats control script
+# processname: traffic_stats
+
+### BEGIN INIT INFO
+# Provides: traffic_stats
+# Required-Start: 
+# Should-Start: 
+# Required-Stop:
+# Default-Start: 3 4 5
+# Default-Stop: 0 1 2 6
+# Short-Description: Traffic Stats
+# Description: Traffic Stats
+### END INIT INFO
+
+STATUS_STOPPED=0
+STATUS_RUNNING=1
+
+start()
+{
+	status
+
+	# check status return code
+	if [[ $? -eq $STATUS_STOPPED || "$1" == "force" ]] ; then
+		echo "Starting ts_daily_summary.."
+		ulimit -n 4096
+		/usr/bin/nohup /opt/traffic_stats/bin/ts_daily_summary --cfg /opt/traffic_stats/conf/traffic_stats.cfg >/opt/traffic_stats/var/log/traffic_stats/ts_daily_summary.out 2>&1 &
+	fi
+	
+	return $?
+}
+
+status()
+{
+	pid=`pidof -s ts_daily_summary`
+
+	if [ -n "$pid" ] ; then
+		echo "ts_daily_summary (pid $pid) is running.."
+		return $STATUS_RUNNING
+	fi
+
+	echo "ts_daily_summary is stopped.."
+	return $STATUS_STOPPED
+}
+
+stop()
+{
+	status
+
+	# check status return code
+	if [[ $? -eq $STATUS_RUNNING || "$1" == "force" ]] ; then
+		echo "Stopping ts_daily_summary client.."
+		kill `pidof -s ts_daily_summary`
+			
+		status
+	
+		if [ $? -eq $STATUS_STOPPED ]; then
+			echo "ts_daily_summary killed"
+			
+		else
+			echo "unable to identify and kill ts_daily_summary"
+		fi
+	fi
+
+	return $?
+}
+
+
+case "$1" in
+	start)
+		start
+		;;
+	stop)
+		stop
+		;;
+	restart)
+		stop "force"
+		start "force"
+		;;
+	status)
+		status
+		;;
+	*)
+		echo "Usage: $0 (start|stop|restart|status)"
+		exit 1
+esac
+
+exit $?

@@ -23,6 +23,7 @@ use Math::Round;
 use Data::Dumper;
 use POSIX qw(strftime);
 use Carp qw(cluck confess);
+use Extensions::Delegate::Metrics;
 use Common::ReturnCodes qw(SUCCESS ERROR);
 
 use Mojo::Base 'Mojolicious::Controller';
@@ -33,7 +34,6 @@ sub index {
 	my $server_type = $self->param("server_type");
 	my $m           = new Extensions::Delegate::Metrics($self);
 	my ( $rc, $result ) = $m->get_etl_metrics();
-	$self->app->log->debug( "result #-> " . Dumper($result) );
 	if ( $rc == SUCCESS ) {
 		return ( $self->success($result) );
 	}

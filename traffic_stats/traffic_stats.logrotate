@@ -1,4 +1,4 @@
-/opt/tmredis/var/log/tmredis/rascal_to_redis.log {
+/opt/traffic_stats/var/log/traffic_stats/traffic_stats.log {
         compress
         maxage 30
         missingok

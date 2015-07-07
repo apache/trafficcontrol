@@ -25,6 +25,17 @@ sub new {
 	return ( bless( $self, $class ) );
 }
 
+sub info {
+	return {
+		name        => "Metrics",
+		version     => "0.01",
+		info_url    => "",
+		description => "Metrics Stub",
+		isactive    => 1,
+		script_file => "Extensions::Delegate::Metrics",
+	};
+}
+
 sub get_etl_metrics {
 	return ( 1, "No Traffic Ops Extension implemented for 'Metrics->get_etl_metrics()'" );
 }

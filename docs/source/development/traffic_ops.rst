@@ -292,7 +292,11 @@ In other words, check extensions are scripts that, after registering with Traffi
 .. |X| image:: ../../../traffic_ops/app/public/images/bad.png
 
 
-It is the responsibility of the check extension script to iterate over the servers it wants to check and post the results.  A check extension can have a column of |checkmark|'s and |X|'s (CHECK_EXTENSION_BOOL) or a column that shows a number (CHECK_EXTENSION_NUM). A simple example of a check extension of type CHECK_EXTENSION_NUM that will show 99.33 for all servers of type EDGE is shown below: :: 
+It is the responsibility of the check extension script to iterate over the servers it wants to check and post the results.
+
+An example script might proceed by logging into the Traffic Ops server using the HTTPS base_url provided on the command line. The script is hardcoded with an auth token that is also provisioned in the Traffic Ops User database. This token allows the script to obtain a cookie used in later communications with the Traffic Ops API. The script then obtains a list of all caches to be polled by accessing Traffic Ops' ``/api/1.1/servers.json`` REST target. This list is walked, running a command to gather the stats from that cache. For some extensions, an HTTP GET request might be made to the ATS astats plugin, while for others the cache might be pinged, or a command run over SSH. The results are then compiled into a numeric or boolean result and the script POSTs tha result back to the Traffic Ops ``/api/1.1/servercheck/`` target.
+
+A check extension can have a column of |checkmark|'s and |X|'s (CHECK_EXTENSION_BOOL) or a column that shows a number (CHECK_EXTENSION_NUM).A simple example of a check extension of type CHECK_EXTENSION_NUM that will show 99.33 for all servers of type EDGE is shown below: :: 
 
 
   Script here.
@@ -329,6 +333,7 @@ Currently, the following Check Extensions are available and installed by default
     Is the Fully Qualified Domain name (the concatenation of ``host_name`` and ``.`` and ``domain_name`` from the server table) pingable?
 
 **Traffic Router Check - RTR**
+  Checks the state of each cache as perceived by all Traffic Monitors (via Traffic Router). This extension asks each Traffic Router for the state of the cache. A check failure is indicated if one or more monitors report an error for a cache. A cache is only marked as good if all reports are positive. (This is a pessimistic approach, opposite of how TM marks a cache as up, "the optimistic approach")
   
 
 Configuration Extensions
