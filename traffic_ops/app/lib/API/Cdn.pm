@@ -26,6 +26,7 @@ use JSON;
 use MIME::Base64;
 use UI::DeliveryService;
 use MojoPlugins::Response;
+use Extensions::Delegate::Statistics;
 use Common::ReturnCodes qw(SUCCESS ERROR);
 
 ################################################################################
