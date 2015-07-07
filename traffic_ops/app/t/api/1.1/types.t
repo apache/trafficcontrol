@@ -39,14 +39,10 @@ Test::TestHelper->load_core_data($schema);
 ok $t->post_ok( '/login', => form => { u => Test::TestHelper::ADMIN_USER, p => Test::TestHelper::ADMIN_USER_PASSWORD } )->status_is(302)
 	->or( sub { diag $t->tx->res->content->asset->{content}; } );
 
-$t->get_ok('/api/1.1/types.json?orderby=name')->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } )
-	->json_is( "/response/0/name", "AAAA_RECORD" )
-	->json_is( "/response/0/description", "Static DNS AAAA entry" )
-	->json_is( "/response/0/useInTable", "staticdnsentry" )
+$t->get_ok('/api/1.1/types.json?orderby=id')->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } )
+	->json_is( "/response/0/name", "EDGE" )->json_is( "/response/0/description", "Edge Cache" )->json_is( "/response/0/useInTable", "server" )
 
-	->json_is( "/response/22/name", "TOOLS_SERVER" )
-	->json_is( "/response/22/description", "Ops hosts for management" )
-	->json_is( "/response/22/useInTable", "server" );
+	->json_is( "/response/22/name", "RIAK" )->json_is( "/response/22/description", "riak type" )->json_is( "/response/22/useInTable", "server" );
 
 ok $t->get_ok('/logout')->status_is(302)->or( sub { diag $t->tx->res->content->asset->{content}; } );
 $dbh->disconnect();

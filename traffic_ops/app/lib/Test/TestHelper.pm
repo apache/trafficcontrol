@@ -60,7 +60,7 @@ sub load_all_fixtures {
 	foreach my $fixture_name (@fixture_names) {
 		$fixture->load($fixture_name);
 
-		ok $fixture->load($fixture_name), 'Does the ' . $fixture_name . ' load?';
+		#ok $fixture->load($fixture_name), 'Does the ' . $fixture_name . ' load?';
 	}
 }
 
@@ -134,8 +134,8 @@ sub teardown {
 # Tearing down the Cachegroup table requires deleting them in a specific order, because
 # of the 'parent_cachegroup_id' and nested references.
 sub teardown_cachegroup {
-	my $self      = shift;
-	my $schema    = shift;
+	my $self        = shift;
+	my $schema      = shift;
 	my $cachegroups = $schema->resultset("Cachegroup")->search( undef, { order_by => { -desc => 'parent_cachegroup_id' } } );
 	while ( my $row = $cachegroups->next ) {
 		$row->delete();

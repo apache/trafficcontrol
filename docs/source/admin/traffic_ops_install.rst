@@ -74,7 +74,7 @@ Navigating the Install
 -----------------------
 To begin the install:
 
-1. Install Traffipc Ops: ``sudo yum install traffic_ops``
+1. Install Traffic Ops: ``sudo yum install traffic_ops``
 
 
 

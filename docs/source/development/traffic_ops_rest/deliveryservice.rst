@@ -103,7 +103,7 @@ Delivery Service
   +--------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
   | ``midHeaderRewrite``     | string | The MID header rewrite actions to perform.                                                                                           |
   +--------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
-  | ``multiSiteOrigin``      | string | | Is the Multi Site Origin feature enabled for this delivery service. See :ref:`rl-mulit-site-origin`                                |
+  | ``multiSiteOrigin``      | string | | Is the Multi Site Origin feature enabled for this delivery service. See :ref:`rl-multi-site-origin`                                |
   +--------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
   | ``orgServerFqdn``        | string | The origin server base URL (FQDN when used in this instance, includes the                                                            |
   |                          |        | protocol (http:// or https://) for use in retrieving content from the origin server.                                                 |
