@@ -23,6 +23,17 @@ sub new {
 	return ( bless( $self, $class ) );
 }
 
+sub info {
+	return {
+		name        => "Statistics",
+		version     => "0.01",
+		info_url    => "",
+		description => "Statistics Stub",
+		isactive    => 1,
+		script_file => "Extensions::Delegate::Statistics",
+	};
+}
+
 sub get_stats {
 	return ( 1, "No Traffic Ops Extension implemented for 'Statistics->get_stats()'" );
 }
