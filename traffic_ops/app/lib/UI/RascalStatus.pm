@@ -24,6 +24,14 @@ use Time::HiRes qw(gettimeofday tv_interval);
 
 sub health {
 	my $self = shift;
+	my $pparam =
+		$self->db->resultset('ProfileParameter')
+		->search( { -and => [ 'parameter.name' => 'cachegroup_graph_url', 'profile.name' => 'GLOBAL' ] }, { prefetch => [ 'parameter', 'profile' ] } )->single();
+	my $cgg_url = defined($pparam) ? $pparam->parameter->value : undef;
+	$self->stash(
+		cachegroup_graph_url => $cgg_url,
+	);
+
 	&navbarpage($self);
 }
 
