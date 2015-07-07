@@ -27,7 +27,14 @@
 <body id="edge_health">
   %= include 'navbar'
   <div id=accordion>
-    <iframe src="<%= $panel_1_url %>" width=100% height="450" frameborder="0"></iframe>
-    <iframe src="<%= $panel_2_url %>" width=100% height="450" frameborder="0"></iframe>
+	% if ( defined($panel_1_url) && defined($panel_2_url) ) {
+        <iframe src="<%= $panel_1_url %>" width=100% height="450" frameborder="0"></iframe>
+        <iframe src="<%= $panel_2_url %>" width=100% height="450" frameborder="0"></iframe>
+    % } else {
+		<h3><a href="#">Configuration Incomplete!</a></h3>
+		<div>
+		    <b>No parameters 'visual_status_panel_1' and 'visual_status_panel_2' found associated with the 'GLOBAL' profile. Please reference the <a href="http://traffic-control-cdn.net/docs/latest/admin/traffic_ops_using.html#graph-view">online documentation</a> to configure this view. </b>
+	   </div>
+	% }
 </body>
 </html>

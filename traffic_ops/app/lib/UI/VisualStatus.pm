@@ -27,11 +27,11 @@ sub graphs {
 	my $pparam =
 		$self->db->resultset('ProfileParameter')
 		->search( { -and => [ 'parameter.name' => 'visual_status_panel_1', 'profile.name' => 'GLOBAL' ] }, { prefetch => [ 'parameter', 'profile' ] } )->single();
-	my $p1_url = $pparam->parameter->value;
+	my $p1_url = defined($pparam) ? $pparam->parameter->value : undef;
 	$pparam =
 		$self->db->resultset('ProfileParameter')
 		->search( { -and => [ 'parameter.name' => 'visual_status_panel_2', 'profile.name' => 'GLOBAL' ] }, { prefetch => [ 'parameter', 'profile' ] } )->single();
-	my $p2_url = $pparam->parameter->value;
+	my $p2_url = defined($pparam) ? $pparam->parameter->value : undef;
 	$self->stash(
 		panel_1_url => $p1_url,
 		panel_2_url => $p2_url
