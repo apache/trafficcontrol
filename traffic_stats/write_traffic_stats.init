@@ -1,21 +1,21 @@
 #!/bin/bash
 #
-# Startup script for tmredis
+# Startup script for traffic_stats/write_traffic_stats
 #
 #
 # chkconfig: 345 99 10
-# description: tmredis control script
-# processname: tmredis
+# description: traffic_stats control script
+# processname: traffic_stats
 
 ### BEGIN INIT INFO
-# Provides: tmredis
+# Provides: traffic_stats
 # Required-Start: 
 # Should-Start: 
 # Required-Stop:
 # Default-Start: 3 4 5
 # Default-Stop: 0 1 2 6
-# Short-Description: TM Redis
-# Description: TM Redis
+# Short-Description: Traffic Stats
+# Description: Traffic Stats
 ### END INIT INFO
 
 STATUS_STOPPED=0
@@ -27,8 +27,9 @@ start()
 
 	# check status return code
 	if [[ $? -eq $STATUS_STOPPED || "$1" == "force" ]] ; then
-		echo "Starting tmredis.."
-		/usr/bin/nohup /opt/tmredis/bin/rascal_2_redis --cfg /opt/tmredis/conf/r2r.cfg >/opt/tmredis/var/log/tmredis/tmredis.out 2>&1 &
+		echo "Starting write_traffic_stats.."
+		ulimit -n 4096
+		/usr/bin/nohup /opt/traffic_stats/bin/write_traffic_stats --cfg /opt/traffic_stats/conf/traffic_stats.cfg >/opt/traffic_stats/var/log/traffic_stats/write_traffic_stats.out 2>&1 &
 	fi
 	
 	return $?
@@ -36,14 +37,14 @@ start()
 
 status()
 {
-	pid=`pidof -s rascal_2_redis`
+	pid=`pidof -s write_traffic_stats`
 
 	if [ -n "$pid" ] ; then
-		echo "rascal_2_redis (pid $pid) is running.."
+		echo "write_traffic_stats (pid $pid) is running.."
 		return $STATUS_RUNNING
 	fi
 
-	echo "rascal_2_redis is stopped.."
+	echo "write_traffic_stats is stopped.."
 	return $STATUS_STOPPED
 }
 
@@ -53,16 +54,16 @@ stop()
 
 	# check status return code
 	if [[ $? -eq $STATUS_RUNNING || "$1" == "force" ]] ; then
-		echo "Stopping rascal_2_redis client.."
-		kill `pidof -s rascal_2_redis`
+		echo "Stopping write_traffic_stats client.."
+		kill `pidof -s write_traffic_stats`
 			
 		status
 	
 		if [ $? -eq $STATUS_STOPPED ]; then
-			echo "rascal_2_redis killed"
+			echo "write_traffic_stats killed"
 			
 		else
-			echo "unable to identify and kill rascal_2_redis"
+			echo "unable to identify and kill write_traffic_stats"
 		fi
 	fi
 

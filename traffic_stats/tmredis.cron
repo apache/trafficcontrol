@@ -1,2 +1,0 @@
-20 0 * * * tmredis /opt/tmredis/bin/bck.sh >/opt/tmredis/var/log/tmredis/bck.out 2>&1
-0 6 * * * tmredis /bin/find /opt/tmredis/backup -type f -name '*.gz' -mtime +14 -exec /bin/rm -f {} \; >/dev/null 2>&1
