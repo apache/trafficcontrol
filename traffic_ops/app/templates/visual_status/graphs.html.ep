@@ -115,13 +115,13 @@ function createRedisDataCallBack(cdnName,  selectString) {
   // Note: The references to the vars above create closures on them.
   return function(jdata) {
     var cdnPrefix = cdnName + ".";
-    if ((zoomStart != 0 || totalTime > 86401) && jdata['series'][0]['samples'].length == 1) 
+    if ((zoomStart != 0 || totalTime > 86401) && jdata['response']['series'][0]['samples'].length == 1) 
       return; // if we're zoomed  or long term data and an update comes in
-    var statName = jdata['statName'];
-    var interval = jdata['interval'];
-    capacity[cdnName] = jdata['capacity'] / 1000000;
+    var statName = jdata['response']['statName'];
+    var interval = jdata['response']['interval'];
+    capacity[cdnName] = jdata['response']['capacity'] / 1000000;
     if (matchString != "all") { 
-      if (jdata['cdnName'] != cdnName) 
+      if (jdata['response']['cdnName'] != cdnName) 
         return;
     }
    
@@ -130,7 +130,7 @@ function createRedisDataCallBack(cdnName,  selectString) {
       var last = statInfo[cdnPrefix + statName].plotData[statInfo[cdnPrefix + statName].plotData.length -1]
       lastTstamp = last[0];
     } 
-	  $.each(jdata.series, function(serieIndex, series) {
+	  $.each(jdata.response.series, function(serieIndex, series) {
 		  var tstamp = 0 + series['timeBase'];
 		  $.each(series, function(seriesIndex, samples) {
         if (seriesIndex != 'samples') return;

@@ -31,4 +31,5 @@ Traffic Control is distributed in source form for the developer, but also as a b
   traffic_stats.rst
   traffic_server.rst
   traffic_vault.rst
+  quick_howto/index.rst
 

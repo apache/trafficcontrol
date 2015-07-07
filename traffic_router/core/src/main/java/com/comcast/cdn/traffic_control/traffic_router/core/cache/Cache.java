@@ -139,13 +139,22 @@ public class Cache implements Comparable<Cache> {
 	}
 
 	public List<InetRecord> getIpAddresses(final JSONObject ttls, final Resolver resolver) {
+		return getIpAddresses(ttls, resolver, true);
+	}
+
+	public List<InetRecord> getIpAddresses(final JSONObject ttls, final Resolver resolver, final boolean ip6RoutingEnabled) {
 		if(ipAddresses == null || ipAddresses.isEmpty()) {
 			ipAddresses = resolver.resolve(this.getFqdn()+".");
 		}
 		if(ipAddresses == null) { return null; }
 		final List<InetRecord> ret = new ArrayList<InetRecord>();
 		for(InetRecord ir : ipAddresses) {
+			if (ir.isInet6() && !ip6RoutingEnabled) {
+				continue;
+			}
+
 			long ttl = 0;
+
 			if(ttls == null) {
 				ttl = -1;
 			} else if(ir.isInet6()) {
@@ -153,6 +162,7 @@ public class Cache implements Comparable<Cache> {
 			} else {
 				ttl = ttls.optLong("A");
 			}
+
 			ret.add(new InetRecord(ir.getAddress(), ttl));
 		}
 		return ret;

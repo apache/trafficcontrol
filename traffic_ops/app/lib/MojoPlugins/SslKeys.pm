@@ -162,7 +162,7 @@ sub register {
 			#store with the version provided
 			my $response = $self->riak_put( $key_type, "$key-$version", $json_data );
 
-			if ( $response->{_rc} == 204 ) {
+			if ( $response->{'response'}->{_rc} == 204 ) {
 
 				#store as latest
 				$response = $self->riak_put( $key_type, "$key-latest", $json_data );

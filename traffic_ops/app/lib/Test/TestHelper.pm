@@ -30,6 +30,7 @@ use Fixtures::Deliveryservice;
 use Fixtures::DeliveryserviceTmuser;
 use Fixtures::Asn;
 use Fixtures::Cachegroup;
+use Fixtures::EdgeCachegroup;
 use Fixtures::Profile;
 use Fixtures::Parameter;
 use Fixtures::ProfileParameter;
@@ -59,7 +60,7 @@ sub load_all_fixtures {
 	foreach my $fixture_name (@fixture_names) {
 		$fixture->load($fixture_name);
 
-		ok $fixture->load($fixture_name), 'Does the ' . $fixture_name . ' load?';
+		#ok $fixture->load($fixture_name), 'Does the ' . $fixture_name . ' load?';
 	}
 }
 
@@ -75,6 +76,7 @@ sub load_core_data {
 	$self->load_all_fixtures( Fixtures::ProfileParameter->new($schema_values) );
 	$self->load_all_fixtures( Fixtures::Type->new($schema_values) );
 	$self->load_all_fixtures( Fixtures::Cachegroup->new($schema_values) );
+	$self->load_all_fixtures( Fixtures::EdgeCachegroup->new($schema_values) );
 	$self->load_all_fixtures( Fixtures::Division->new($schema_values) );
 	$self->load_all_fixtures( Fixtures::Region->new($schema_values) );
 	$self->load_all_fixtures( Fixtures::PhysLocation->new($schema_values) );
@@ -132,8 +134,8 @@ sub teardown {
 # Tearing down the Cachegroup table requires deleting them in a specific order, because
 # of the 'parent_cachegroup_id' and nested references.
 sub teardown_cachegroup {
-	my $self      = shift;
-	my $schema    = shift;
+	my $self        = shift;
+	my $schema      = shift;
 	my $cachegroups = $schema->resultset("Cachegroup")->search( undef, { order_by => { -desc => 'parent_cachegroup_id' } } );
 	while ( my $row = $cachegroups->next ) {
 		$row->delete();

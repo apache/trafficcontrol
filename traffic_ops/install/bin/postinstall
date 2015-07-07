@@ -228,7 +228,10 @@ EOF
 
       if ($untarOrSkip eq "untar") {
           print "\nUntarring CentOS 6.5 ISO kickstart tar file.\n";
-          $install->execCommand ("/bin/tar", "xfz", "$centos65TarballFqn", "-C", "$kickstartFilesFqn");
+          print "\nFirst creating $kickstartFilesFqn.\n";
+          $install->execCommand ("/bin/mkdir", "-p", "$kickstartFilesFqn");
+          print "\nAnd then the untar.\n";
+          $install->execCommand ("/bin/tar", "-xzf", "$centos65TarballFqn", "-C", "$kickstartFilesFqn");
       }
 
 	  print "\nTraffic Ops URL: $parameters{'tmurl.url'}\n";

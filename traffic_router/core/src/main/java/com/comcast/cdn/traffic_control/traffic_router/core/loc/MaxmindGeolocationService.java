@@ -45,7 +45,7 @@ public class MaxmindGeolocationService implements GeolocationService {
 				final InetAddress address = InetAddress.getByName(parts[0]);
 				final CityResponse response = databaseReader.city(address);
 
-				if (response != null && response.getLocation() != null) {
+				if (isResponseValid(response)) {
 					return new Geolocation(response);
 				}
 			}
@@ -59,6 +59,20 @@ public class MaxmindGeolocationService implements GeolocationService {
 		}
 
 		return null;
+	}
+
+	private boolean isResponseValid(CityResponse response) {
+		if (response == null) {
+			return false;
+		} else if (response.getLocation() == null) {
+			return false;
+		} else if (response.getLocation().getLatitude() == null) {
+			return false;
+		} else if (response.getLocation().getLongitude() == null) {
+			return false;
+		}
+
+		return true;
 	}
 
 	protected DatabaseReader createDatabaseReader() throws IOException {

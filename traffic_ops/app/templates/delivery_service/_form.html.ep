@@ -37,7 +37,7 @@
 			%= field('ds.type')->select(class => 'field', required => 'required', id => 'type', name => 'ds.type');
 		<% } %> 
 	</div><br>
-	<div class="block">
+	<div class="block" id="protocoli_row">
 		<% unless (field('ds.protocol')->valid) { %>
 			<span class="field-with-error"><%= field('ds.protocol')->error %></span>
 		<% } %>
@@ -52,7 +52,7 @@
 			<% } %>
 		<% } %>
 	</div><br>
-	<div class="block">
+	<div class="block" id="dscp_row">
 		<% unless (field('ds.dscp')->valid) { %>
 			<span class="field-with-error"><%= field('ds.dscp')->error %></span>
 		<% } %>
@@ -103,7 +103,7 @@
 			<% } 
 		<% } %>
 	</div><br>
-	<div class="block">
+	<div class="block" id="signed_row">
 		<% unless (field('ds.signed')->valid) { %>
 			<span class="field-with-error"><%= field('ds.signed')->error %></span>
 		<% } %>
@@ -118,7 +118,7 @@
 			<% } %>
 		<% } %>
 	</div><br>
-	<div class="block">
+	<div class="block" id="qstring_ignore_row">
 		<% unless (field('ds.qstring_ignore')->valid) { %>
 			<span class="field-with-error"><%= field('ds.qstring_ignore')->error %></span>
 		<% } %>
@@ -135,7 +135,7 @@
 			<% } %>
 		<% } %>
 	</div><br>
-	<div class="block">
+	<div class="block" id="geo_limit_row">
 		<% unless (field('ds.geo_limit')->valid) { %>
 			<span class="field-with-error"><%= field('ds.geo_limit')->error %></span>
 		<% } %>
@@ -163,7 +163,7 @@
 		%= field('ds.http_bypass_fqdn')->text(class => 'field', readonly => 'readonly');
 		<% } %>
 	</div><br>
-	<div class="block" id='ipv6_routing_enabled'>
+	<div class="block" id='ipv6_routing_enabled_row'>
 		<% unless (field('ds.ipv6_routing_enabled')->valid) { %>
 			<span class="field-with-error"><%= field('ds.ipv6_routing_enabled')->error %></span>
 		<% } %>
@@ -178,7 +178,7 @@
 			<% } %>
 		<% } %>
 	</div> <br>
-	<div class="block" id='range_request_handling'>
+	<div class="block" id='range_request_handlingi_row'>
 		<% unless (field('ds.range_request_handling')->valid) { %>
 			<span class="field-with-error"><%= field('ds.range_request_handling')->error %></span>
 		<% } %>
@@ -243,7 +243,7 @@
 		%= field('ds.max_dns_answers')->text(class => 'field', readonly => 'readonly');
 		<% } %>
 	</div><br>
-	<div class="block">
+	<div class="block" id="ccr_dns_ttl_row">
 		<% unless (field('ds.ccr_dns_ttl')->valid) { %>
 			<span class="field-with-error"><%= field('ds.ccr_dns_ttl')->error %></span>
 		<% } %>
@@ -254,29 +254,44 @@
 		%= field('ds.ccr_dns_ttl')->text(class => 'field', readonly => 'readonly');
 		<% } %>
 	</div><br>
-	<div class="block">
+	<div class="block" id="org_server_fqdn_row">
 		<% unless (field('ds.org_server_fqdn')->valid) { %>
 			<span class="field-with-error"><%= field('ds.org_server_fqdn')->error %></span>
 		<% } %>
 		%= label_for 'org_server_fqdn' => '* Origin Server Base URL', class => 'label'
 		<% if ($priv_level >= 20) { %>
-		%= field('ds.org_server_fqdn')->text(class => 'field', required => 'required', id => 'org_server_fqdn', name => 'ds.org_server_fqdn');
+		%= field('ds.org_server_fqdn')->text(class => 'field', id => 'org_server_fqdn', name => 'ds.org_server_fqdn');
 		<% } else { %>
 		%= field('ds.org_server_fqdn')->text(class => 'field', readonly => 'readonly');
 		<% } %>
 	</div><br>
-	<div class="block">
+	<div class="block" id="multi_site_origin_row">
+		<% unless (field('ds.multi_site_origin')->valid) { %>
+			<span class="field-with-error"><%= field('ds.multi_site_origin')->error %></span>
+		<% } %>
+			%= label_for 'muli_site_origin' => '* Use Multi Site Origin Feature', class => 'label'
+		<% if ($priv_level >= 20) { %>
+			%= field('ds.multi_site_origin')->select([ [No => 0], [Yes => 1]]);
+		<% } else { %>
+			<% if ($ds->multi_site_origin == 0) { %>
+				%= field('ds.multi_site_origin')->text(class => 'field', value =>  'No', readonly => 'readonly');
+			<% } else { %>
+				%= field('ds.multi_site_origin')->text(class => 'field', value =>  'Yes', readonly => 'readonly');
+			<% } %>
+		<% } %>
+	</div><br>
+	<div class="block" id="profile_row">
 		<% unless (field('ds.profile')->valid) { %>
 			<span class="field-with-error"><%= field('ds.profile')->error %></span>
 		<% } %>
 		%= label_for 'profile' => '* CCR profile', class => 'label'
 		<% if ($priv_level >= 20) { %>
-		%= field('ds.profile')->select(class => 'field', required => 'required', id => 'profile', name => 'ds.profile');
+		%= field('ds.profile')->select(class => 'field', id => 'profile', name => 'ds.profile');
 		<% } else { %>
 		%= field('ds.profile.name')->text(class => 'field', readonly => 'readonly');
 		<% }  %>
 	</div><br>
-	<div class="block">
+	<div class="block" id="global_max_mbps_row">
 		<% unless (field('ds.global_max_mbps')->valid) { %>
 			<span class="field-with-error"><%= field('ds.global_max_mbps')->error %></span>
 		<% } %>
@@ -287,7 +302,7 @@
 		%= field('ds.global_max_mbps')->text(class => 'field', readonly => 'readonly');
 		<% } %>
 	</div><br>
-	<div class="block">
+	<div class="block" id="global_max_tps_row">
 		<% unless (field('ds.global_max_tps')->valid) { %>
 			<span class="field-with-error"><%= field('ds.global_max_tps')->error %></span>
 		<% } %>
@@ -298,7 +313,7 @@
 		%= field('ds.global_max_tps')->text(class => 'field', readonly => 'readonly');
 		<% }  %>
 	</div><br>
-	<div class="block">
+	<div class="block" id="miss_lat_row">
 		<% unless (field('ds.miss_lat')->valid) { %>
 			<span class="field-with-error"><%= field('ds.miss_lat')->error %></span>
 		<% } %>
@@ -313,7 +328,7 @@
 		%= field('ds.miss_lat')->text(class => 'field', readonly => 'readonly');
 		<% }  %>
 	</div><br>
-	<div class="block">
+	<div class="block" id="miss_long_row">
 		<% unless (field('ds.miss_long')->valid) { %>
 			<span class="field-with-error"><%= field('ds.miss_long')->error %></span>
 		<% } %>
@@ -328,7 +343,7 @@
 		%= field('ds.miss_long')->text(class => 'field', readonly => 'readonly');
 		<% }  %>
 	</div><br>
-	<div class="block">
+	<div class="block" id="edge_header_rewrite_row">
 		<% unless (field('ds.edge_header_rewrite')->valid) { %>
 			<span class="field-with-error"><%= field('ds.edge_header_rewrite')->error %></span>
 		<% } %>
@@ -339,7 +354,7 @@
 				%= field('ds.edge_header_rewrite')->text(class => 'field', readonly => 'readonly');
 			<% }  %>
 	</div><br>
-	<div class="block">
+	<div class="block" id="mid_header_rewrite_row">
 		<% unless (field('ds.mid_header_rewrite')->valid) { %>
 			<span class="field-with-error"><%= field('ds.mid_header_rewrite')->error %></span>
 		<% } %>
@@ -350,7 +365,7 @@
 				%= field('ds.mid_header_rewrite')->text(class => 'field', readonly => 'readonly');
 			<% }  %>
 	</div><br>
-	<div class="block">
+	<div class="block" id="regex_remap_row">
 		<% unless (field('ds.regex_remap')->valid) { %>
 			<span class="field-with-error"><%= field('ds.regex_remap')->error %></span>
 		<% } %>
@@ -359,6 +374,28 @@
 				%= field('ds.regex_remap')->text(class => 'field', id => 'ds.regex_remap', name => 'ds.regex_remap');
 			<% } else { %>
 				%= field('ds.regex_remap')->text(class => 'field', readonly => 'readonly');
+			<% }  %>
+	</div><br>
+	<div class="block" id="cacheurl_row">
+		<% unless (field('ds.cacheurl')->valid) { %>
+			<span class="field-with-error"><%= field('ds.cacheurl')->error %></span>
+		<% } %>
+		%= label_for 'cacheurl' => 'Cache URL expression', class => 'label'
+			<% if ($priv_level >= 20) { %>
+				%= field('ds.cacheurl')->text(class => 'field', id => 'ds.cacheurl', name => 'ds.cacheurl');
+			<% } else { %>
+				%= field('ds.cacheurl')->text(class => 'field', readonly => 'cacheurl');
+			<% }  %>
+	</div><br>
+	<div class="block" id="remap_text_row">
+		<% unless (field('ds.remap_text')->valid) { %>
+			<span class="field-with-error"><%= field('ds.remap_text')->error %></span>
+		<% } %>
+		%= label_for 'remap_text' => 'Raw remap text', class => 'label'
+			<% if ($priv_level >= 20) { %>
+				%= field('ds.remap_text')->text(class => 'field', id => 'ds.remap_text', name => 'ds.remap_text');
+			<% } else { %>
+				%= field('ds.remap_text')->text(class => 'field', readonly => 'remap_text');
 			<% }  %>
 	</div><br>
 	<div class="block">
@@ -416,7 +453,7 @@
 		%= field('ds.check_path')->text(class => 'field', readonly => 'readonly');
 		<% }  %>
 	</div><br>
-	<div class="block">
+	<div class="block" id="origin_shield_row">
 		<% unless (field('ds.origin_shield')->valid) { %>
 			<span class="field-with-error"><%= field('ds.origin_shield')->error %></span>
 		<% } %>
@@ -427,7 +464,7 @@
 		%= field('ds.origin_shield')->text(class => 'field', readonly => 'readonly');
 		<% } %>
 	</div><br>
-		<div class="block">
+		<div class="block" id="active_row">
 		<% unless (field('ds.active')->valid) { %>
 			<span class="field-with-error"><%= field('ds.active')->error %></span>
 		<% } %>

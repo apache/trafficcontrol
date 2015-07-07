@@ -1,4 +1,5 @@
 package Fixtures::Integration::OtherCacheGroup;
+
 #
 # Copyright 2015 Comcast Cable Communications Management, LLC
 #
@@ -26,23 +27,25 @@ my %definition_for = (
 	'mid-east' => {
 		new   => 'Cachegroup',
 		using => {
-			id         => 1,
-			name       => 'mid-east',
-			short_name => 'east',
-			latitude   => '0',
-			longitude  => '0',
-			type       => '7',
+			id                   => 1,
+			name                 => 'mid-east',
+			short_name           => 'east',
+			latitude             => '0',
+			longitude            => '0',
+			type                 => '7',
+			parent_cachegroup_id => '101',
 		},
 	},
 	'mid-west' => {
 		new   => 'Cachegroup',
 		using => {
-			id         => 2,
-			name       => 'mid-west',
-			short_name => 'west',
-			latitude   => '0',
-			longitude  => '0',
-			type       => '7',
+			id                   => 2,
+			name                 => 'mid-west',
+			short_name           => 'west',
+			latitude             => '0',
+			longitude            => '0',
+			type                 => '7',
+			parent_cachegroup_id => '102',
 		},
 	},
 	'dc-cloudwest' => {

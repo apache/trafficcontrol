@@ -37,8 +37,9 @@
 #
 ### END INIT INFO
 
-TRAFFIC_OPS_DIR="/opt/traffic_ops/app"; export TRAFFIC_OPS_DIR
-PERL5LIB=$TRAFFIC_OPS_DIR/local/lib/perl5:$TRAFFIC_OPS_DIR/lib; export PERL5LIB
+TO_EXTENSIONS_LIB="/opt/traffic_ops_extensions/lib"; export TO_EXTENSIONS_LIB
+TO_DIR="/opt/traffic_ops/app"; export TO_DIR
+PERL5LIB=$TO_DIR/local/lib/perl5:$TO_EXTENSIONS_LIB:$TO_DIR/lib; export PERL5LIB
 PIDFILE="/var/run/traffic_ops.pid"
 # source function library
 . /etc/rc.d/init.d/functions
@@ -58,7 +59,7 @@ stopHypnotoad ()
 start () 
 {
 	echo -e "Starting Traffic Ops\n"
-	cd $TRAFFIC_OPS_DIR && $TRAFFIC_OPS_DIR/local/bin/hypnotoad script/cdn
+	cd $TO_DIR && $TO_DIR/local/bin/hypnotoad script/cdn
 }
 
 stop ()

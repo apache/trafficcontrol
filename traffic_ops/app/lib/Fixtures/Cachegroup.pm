@@ -25,9 +25,10 @@ my %definition_for = (
 			id         => 1,
 			name       => 'mid-northeast-group',
 			short_name => 'ne',
-			type       => 1,
+			type       => 2,
 			latitude   => 120,
 			longitude  => 120,
+			parent_cachegroup_id => undef,
 		},
 	},
 	mid_northwest => {
@@ -39,6 +40,7 @@ my %definition_for = (
 			type       => 2,
 			latitude   => 100,
 			longitude  => 100,
+			parent_cachegroup_id => undef,
 		},
 	},
 );

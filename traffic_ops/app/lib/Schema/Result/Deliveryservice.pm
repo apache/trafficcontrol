@@ -217,6 +217,23 @@ __PACKAGE__->table("deliveryservice");
   is_nullable: 1
   size: 1024
 
+=head2 cacheurl
+
+  data_type: 'varchar'
+  is_nullable: 1
+  size: 1024
+
+=head2 remap_text
+
+  data_type: 'varchar'
+  is_nullable: 1
+  size: 2048
+
+=head2 multi_site_origin
+
+  data_type: 'tinyint'
+  is_nullable: 1
+
 =cut
 
 __PACKAGE__->add_columns(
@@ -293,6 +310,12 @@ __PACKAGE__->add_columns(
   { data_type => "varchar", is_nullable => 1, size => 2048 },
   "regex_remap",
   { data_type => "varchar", is_nullable => 1, size => 1024 },
+  "cacheurl",
+  { data_type => "varchar", is_nullable => 1, size => 1024 },
+  "remap_text",
+  { data_type => "varchar", is_nullable => 1, size => 2048 },
+  "multi_site_origin",
+  { data_type => "tinyint", is_nullable => 1 },
 );
 
 =head1 PRIMARY KEY
@@ -443,8 +466,24 @@ __PACKAGE__->belongs_to(
 );
 
 
-# Created by DBIx::Class::Schema::Loader v0.07042 @ 2015-05-04 13:39:15
-# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:e/G500bAQtlpRUHXJAt14A
+# Created by DBIx::Class::Schema::Loader v0.07043 @ 2015-06-23 14:24:12
+# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:OjXgucZ3ChQB1gqs3qTfow
 
 # You can replace this text with custom code or comments, and it will be preserved on regeneration
+#
+# Copyright 2015 Comcast Cable Communications Management, LLC
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+#
 1;

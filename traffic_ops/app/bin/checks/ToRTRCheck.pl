@@ -85,7 +85,7 @@ foreach my $server ( @{$jdataserver} ) {
 	$server_assoc{ $server->{hostName} . "." . $server->{domainName} } = $server->{id};
 	if ( !defined( $cdn_name{ $server->{profile} } ) ) {
 		TRACE "Getting info for profile " . $server->{profile};
-		my $plist = $ext->get( Extensions::Helper::PARAMETER_PATH . '/' . $server->{profile} . '.json' );
+		my $plist = $ext->get( Extensions::Helper::PARAMETER_PATH . '/profile/' . $server->{profile} . '.json' );
 		foreach my $param ( @{$plist} ) {
 			if ( $param->{name} eq 'CDN_name' ) {
 				$cdn_name{ $server->{profile} } = $param->{value};

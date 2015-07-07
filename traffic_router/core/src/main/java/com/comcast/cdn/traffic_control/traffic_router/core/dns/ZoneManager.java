@@ -72,8 +72,8 @@ public class ZoneManager extends Resolver {
 	private final StatTracker statTracker;
 
 	public ZoneManager(final TrafficRouter tr, final StatTracker statTracker, final String drn, final String hrn) throws IOException {
-		dnsRoutingName = drn;
-		httpRoutingName = hrn;
+		dnsRoutingName = drn.toLowerCase();
+		httpRoutingName = hrn.toLowerCase();
 
 		_zones = generateZones(tr.getCacheRegister());
 		try {
@@ -400,16 +400,13 @@ public class ZoneManager extends Resolver {
 	 * @return the new Zone to serve the request or null if the static Zone should be used
 	 */
 	private Zone createDynamicZone(final Zone staticZone, final Name name, final int qtype, final InetAddress clientAddress) {
-		if(clientAddress==null) { 
-			return staticZone; 
-		}
-		final String requestName = name.relativize(Name.root).toString();
-		if(!requestName.matches(dnsRoutingName + "\\..*")) {
+		if (clientAddress == null) {
 			return staticZone;
 		}
+
 		final DNSRequest request = new DNSRequest();
 		request.setClientIP(clientAddress.getHostAddress());
-		request.setHostname(requestName);
+		request.setHostname(name.relativize(Name.root).toString());
 		request.setQtype(qtype);
 		final Track track = StatTracker.getTrack();
 		List<InetRecord> addresses = null;
@@ -541,28 +538,23 @@ public class ZoneManager extends Resolver {
 
 	public Zone getDynamicZone(final Name qname, final int qtype, final InetAddress clientAddress) {
 		final Zone zone = getZone(qname);
-		if(zone == null) {
+		if (zone == null) {
 			return null;
 		}
-		if(isQTypeDynamic(qtype) ) {
-			final SetResponse sr = zone.findRecords(qname, qtype);
-			if (sr.isSuccessful()) {
-				return zone;
-			}
+
+		final SetResponse sr = zone.findRecords(qname, qtype);
+
+		if (sr.isSuccessful()) {
+			return zone;
+		} else if (qname.toString().toLowerCase().matches(getDnsRoutingName() + "\\..*")) {
 			final Zone dynamicZone = createDynamicZone(zone, qname, qtype, clientAddress);
-			if (dynamicZone != null) { 
-				return dynamicZone; 
+
+			if (dynamicZone != null) {
+				return dynamicZone;
 			}
 		}
+
 		return zone;
-	}
-	private boolean isQTypeDynamic(final int qtype) {
-		switch(qtype) {
-		case Type.A: return true;
-		case Type.A6: return true;
-		case Type.AAAA: return true;
-		default: return false;
-		}
 	}
 
 	private static String getDnsRoutingName() {
