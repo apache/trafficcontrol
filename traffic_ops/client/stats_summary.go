@@ -1,12 +1,9 @@
 /*
    Copyright 2015 Comcast Cable Communications Management, LLC
-
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
    You may obtain a copy of the License at
-
    http://www.apache.org/licenses/LICENSE-2.0
-
    Unless required by applicable law or agreed to in writing, software
    distributed under the License is distributed on an "AS IS" BASIS,
    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -19,6 +16,7 @@ package client
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io/ioutil"
 	"strconv"
 )
@@ -34,6 +32,13 @@ type StatsSummary struct {
 	StatName        string `json:"statName"`
 	StatValue       string `json:"statValue"`
 	SummaryTime     string `json:"summaryTime"`
+}
+
+type LastUpdated struct {
+	Version  string `json:"version"`
+	Response struct {
+		SummaryTime string `json:"summaryTime"`
+	} `json:"response"`
 }
 
 func (to *Session) SummaryStats(cdn string, deliveryService string, statName string) ([]StatsSummary, error) {
@@ -67,17 +72,26 @@ func (to *Session) SummaryStats(cdn string, deliveryService string, statName str
 	return ssList.Response, err
 }
 
-func (to *Session) SummaryStatsLastUpdated(statName string) ([]StatsSummary, error) {
+func (to *Session) SummaryStatsLastUpdated(statName string) (string, error) {
 	queryUrl := "/api/1.2/stats_summary.json?lastSummaryDate=true"
 	if len(statName) > 0 {
 		queryUrl += "?statName=" + statName
 	}
 	body, err := to.getBytes(queryUrl)
 	if err != nil {
-		return nil, err
+		return "", err
 	}
-	ssList, err := ssUnmarshall(body)
-	return ssList.Response, err
+	var data LastUpdated
+	err = json.Unmarshal(body, &data)
+	if err != nil {
+		fmt.Printf("err is %v\n", err)
+		return "", err
+	}
+	if len(data.Response.SummaryTime) > 0 {
+		return data.Response.SummaryTime, nil
+	} else {
+		return "1970-01-01 00:00:00", nil
+	}
 }
 
 func (to *Session) AddSummaryStats(statsSummary StatsSummary) (string, error) {
@@ -89,6 +103,7 @@ func (to *Session) AddSummaryStats(statsSummary StatsSummary) (string, error) {
 	if err != nil {
 		return "", err
 	}
+	defer response.Body.Close()
 	body, err = ioutil.ReadAll(response.Body)
 	if err != nil {
 		return "", err
