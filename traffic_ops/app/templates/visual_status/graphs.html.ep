@@ -15,8 +15,14 @@
  -->
 % title 'Visual Status';
 
+
 <script>
-    });
+$(function () {
+	$(document).ready(function () {
+		
+%= include 'jmenu'
+
+	});
 })
 
 </script>
