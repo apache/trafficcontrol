@@ -66,16 +66,15 @@ $(function () {
                 },
                
                 {
-					"fnRender": function (data, type, full) {
+					"mRender": function (data, type, full) {
 						if (full[2] != "ALL") {
 							return "<a href='ssh://<%= $user %>@" + full[8] + "'>" + full[2] + "</a>";
 						} else {
-							return full[2];
+						return full[2];
 					}
 				},
-				"bUseRendered": false,
 				"aTargets": [2]
-			}, 
+ 			   }, 
                 {
                     "mRender": function (data, type, full) {
                         if (full[4] == "true" || full[4] == 1) {
@@ -133,13 +132,13 @@ $(function () {
 		$('#dtstatus_wrapper thead th').each( function() {
 			var text = this.textContent;
 			if (text == 'Edge') {
-				this.setAttribute('title', 'Edge: One of the 11 virtual CDN edge locations');
+				this.setAttribute('title', 'Edge: The CDN edge cachegroup');
 			} else if (text == 'Profile') {
-				this.setAttribute('title', 'Profile: 12 Monkeys profile for this cache');
+				this.setAttribute('title', 'Profile: The assigned profile for this cache');
 			} else if (text == 'Host_Name') {
-				this.setAttribute('title', 'Host_Name: Host Name of this cache');
+				this.setAttribute('title', 'Host_Name: Host name of this cache');
 			} else if (text == 'Healthy') {
-				this.setAttribute('title', 'Healthy: Green if the CCRs think this cache is healthy and ready to serve clients');
+				this.setAttribute('title', 'Healthy: Green if Traffic Router think this cache is healthy and ready to serve clients');
 			} else if (text == 'Admin') {
 				this.setAttribute('title', 'Admin: The administrative status of this edge');
 			} else if (text == 'Connections') {
@@ -148,11 +147,6 @@ $(function () {
 				this.setAttribute('title', 'Mbps Out: The bandwidth in Megabits per second this cache was sending to the network at the time of the health report');
 			}
 		});
-
-		// $('#thead th[title]').tooltip( {
-		// 	"delay": 1,
-		// 	"track": true,
-		// });
 	})
 });
 
