@@ -112,6 +112,30 @@ __PACKAGE__->set_primary_key("id", "type");
 
 =head1 UNIQUE CONSTRAINTS
 
+=head2 C<cg_name_UNIQUE>
+
+=over 4
+
+=item * L</name>
+
+=back
+
+=cut
+
+__PACKAGE__->add_unique_constraint("cg_name_UNIQUE", ["name"]);
+
+=head2 C<cg_short_UNIQUE>
+
+=over 4
+
+=item * L</short_name>
+
+=back
+
+=cut
+
+__PACKAGE__->add_unique_constraint("cg_short_UNIQUE", ["short_name"]);
+
 =head2 C<lo_id_UNIQUE>
 
 =over 4
@@ -237,8 +261,8 @@ __PACKAGE__->belongs_to(
 );
 
 
-# Created by DBIx::Class::Schema::Loader v0.07043 @ 2015-05-21 13:27:11
-# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:WtrjJIh8Tu9x8xP2/QUHIA
+# Created by DBIx::Class::Schema::Loader v0.07043 @ 2015-06-26 20:31:07
+# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:RPL2LsEJ0HVp/rkZU567vg
 
 
 # You can replace this text with custom code or comments, and it will be preserved on regeneration

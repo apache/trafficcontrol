@@ -120,7 +120,7 @@ my $rs = $schema->resultset('Server')->search( { type => 31 } );
 $rs->update_all( { status => 1 } );
 
 ok $t->post_ok('/api/1.1/deliveryservices/xmlId/test-ds1/urlkeys/generate')->status_is(400)
-	->or( sub { diag $t->tx->res->content->asset->{content}; } )->json_like( "/alerts/0/text" => qr/^No Riak servers/ ),
+	->or( sub { diag $t->tx->res->content->asset->{content}; } )->json_like( "/alerts/0/text" => qr/^No RIAK servers/ ),
 	'Can a non-existent DeliveryService url keys for the portal user be regenerated?';
 
 =cut

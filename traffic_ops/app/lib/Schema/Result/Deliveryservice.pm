@@ -223,6 +223,17 @@ __PACKAGE__->table("deliveryservice");
   is_nullable: 1
   size: 1024
 
+=head2 remap_text
+
+  data_type: 'varchar'
+  is_nullable: 1
+  size: 2048
+
+=head2 multi_site_origin
+
+  data_type: 'tinyint'
+  is_nullable: 1
+
 =cut
 
 __PACKAGE__->add_columns(
@@ -301,6 +312,10 @@ __PACKAGE__->add_columns(
   { data_type => "varchar", is_nullable => 1, size => 1024 },
   "cacheurl",
   { data_type => "varchar", is_nullable => 1, size => 1024 },
+  "remap_text",
+  { data_type => "varchar", is_nullable => 1, size => 2048 },
+  "multi_site_origin",
+  { data_type => "tinyint", is_nullable => 1 },
 );
 
 =head1 PRIMARY KEY
@@ -451,8 +466,8 @@ __PACKAGE__->belongs_to(
 );
 
 
-# Created by DBIx::Class::Schema::Loader v0.07043 @ 2015-05-21 13:27:11
-# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:aC8b86PwhNGcg4du7wqpWg
+# Created by DBIx::Class::Schema::Loader v0.07043 @ 2015-06-23 14:24:12
+# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:OjXgucZ3ChQB1gqs3qTfow
 
 # You can replace this text with custom code or comments, and it will be preserved on regeneration
 #

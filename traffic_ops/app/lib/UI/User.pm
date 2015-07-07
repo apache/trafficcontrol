@@ -88,7 +88,7 @@ sub register {
 }
 
 # Reset the User Profile password
-sub password_reset {
+sub reset_password {
 	my $self     = shift;
 	my $id       = $self->param('id');
 	my $email_to = $self->param('tm_user.email');

@@ -21,7 +21,6 @@ import java.util.Map;
 
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
-
 import com.maxmind.geoip2.model.CityResponse;
 
 public class Geolocation {

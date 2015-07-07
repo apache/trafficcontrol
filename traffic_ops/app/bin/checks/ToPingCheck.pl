@@ -76,7 +76,7 @@ foreach my $server ( @{$jdataserver} ) {
 			$ip = $server->{ $select->[0] } . "." . $server->{ $select->[1] };
 		}
 		else {
-			$ip = $server->{ipAddress};
+			$ip = $server->{$select};
 		}
 		my $pingable = &ping_check( $ip, 30 );
 		DEBUG $check_name . " >> " . $server->{hostName} . ": " . $select . " = " . $ip . " ---> " . $pingable . "\n";
@@ -103,7 +103,15 @@ sub ping_check {
 
 	TRACE "Ping checking " . $ping_target;
 
-	my $cmd = '/bin/ping -M do -s ' . $size . ' -c 2 ' . $ping_target . ' 2>&1 > /dev/null';
+	my $cmd;
+	if ( $ping_target =~ /:/ ) {
+		$ping_target =~ s/\/\d+$//;
+		$cmd = '/bin/ping6 -M do -s ' . $size . ' -c 2 ' . $ping_target . ' 2>&1 > /dev/null';
+	}
+	else {
+		$cmd = '/bin/ping -M do -s ' . $size . ' -c 2 ' . $ping_target . ' 2>&1 > /dev/null';
+	}
+
 	#my $cmd = '/sbin/ping -s ' . $size . ' -c 2 ' . $ping_target . ' 2>&1 > /dev/null';
 	system($cmd);
 	if ( $? != 0 ) {

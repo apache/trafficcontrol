@@ -34,7 +34,6 @@ import org.apache.commons.pool.ObjectPool;
 import org.apache.log4j.Logger;
 import org.json.JSONObject;
 import org.xbill.DNS.Name;
-import org.xbill.DNS.Type;
 import org.xbill.DNS.Zone;
 
 import com.comcast.cdn.traffic_control.traffic_router.core.cache.Cache;

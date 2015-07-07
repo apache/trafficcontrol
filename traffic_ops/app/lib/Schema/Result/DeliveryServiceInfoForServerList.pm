@@ -46,6 +46,7 @@ SELECT DISTINCT
     deliveryservice.signed AS signed,
     deliveryservice.qstring_ignore AS qstring_ignore,
     deliveryservice.org_server_fqdn as org_server_fqdn,
+    deliveryservice.multi_site_origin as multi_site_origin,
     deliveryservice.range_request_handling as range_request_handling,
     deliveryservice.origin_shield as origin_shield,
     regex.pattern AS pattern,
@@ -56,6 +57,7 @@ SELECT DISTINCT
     deliveryservice.edge_header_rewrite as edge_header_rewrite,
     deliveryservice.regex_remap as regex_remap,
     deliveryservice.cacheurl as cacheurl,
+    deliveryservice.remap_text as remap_text,
     mid_header_rewrite as mid_header_rewrite,
     deliveryservice.protocol as protocol
 FROM
@@ -76,6 +78,7 @@ ORDER BY ds_id, re_type , deliveryservice_regex.set_number
 __PACKAGE__->add_columns(
 	"xml_id",                 { data_type => "varchar", is_nullable => 0, size => 45 },
 	"org_server_fqdn",        { data_type => "varchar", is_nullable => 0, size => 45 },
+	"multi_site_origin",      { data_type => "integer", is_nullable => 0 },
 	"ds_id",                  { data_type => "integer", is_nullable => 0 },
 	"dscp",                   { data_type => "integer", is_nullable => 0 },
 	"signed",                 { data_type => "integer", is_nullable => 0 },
@@ -89,6 +92,7 @@ __PACKAGE__->add_columns(
 	"mid_header_rewrite",     { data_type => "varchar", is_nullable => 0, size => 1024 },
 	"regex_remap",            { data_type => "varchar", is_nullable => 0, size => 1024 },
 	"cacheurl",               { data_type => "varchar", is_nullable => 0, size => 1024 },
+	"remap_text",             { data_type => "varchar", is_nullable => 0, size => 2048 },
 	"protocol",               { data_type => "tinyint", is_nullable => 0, size => 4 },
 	"range_request_handling", { data_type => "tinyint", is_nullable => 0, size => 4 },
 	"origin_shield",          { data_type => "varchar", is_nullable => 0, size => 1024 },

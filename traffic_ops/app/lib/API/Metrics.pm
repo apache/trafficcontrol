@@ -21,37 +21,24 @@ package API::Metrics;
 use UI::Utils;
 use Math::Round;
 use Data::Dumper;
-use Utils::Helper::Datasource;
 use POSIX qw(strftime);
 use Carp qw(cluck confess);
+use Common::ReturnCodes qw(SUCCESS ERROR);
 
 use Mojo::Base 'Mojolicious::Controller';
 
-my $valid_server_types = {
-	edge => "EDGE",
-	mid  => "MID",
-};
-
-# this structure maps the above types to the allowed metrics below
-my $valid_metric_types = {
-	origin_tps => "mid",
-	ooff       => "mid",
-};
-
 sub index {
 	my $self        = shift;
-	my $server_type = $self->param("server_type");
 	my $metric      = $self->param("metric");
-	if ( exists( $valid_metric_types->{$metric} ) ) {
-		$self->param( type => $valid_server_types->{$server_type} );
-		return ( $self->etl_metrics() );
+	my $server_type = $self->param("server_type");
+	my $m           = new Extensions::Delegate::Metrics($self);
+	my ( $rc, $result ) = $m->get_etl_metrics();
+	$self->app->log->debug( "result #-> " . Dumper($result) );
+	if ( $rc == SUCCESS ) {
+		return ( $self->success($result) );
 	}
 	else {
-		my @valid_types;
-		foreach my $type ( keys %$valid_metric_types ) {
-			push( @valid_types, "'" . $type . "'" );
-		}
-		return $self->alert( { error => "Invalid metric_type passed '" . $metric . "' valid types are " . join( ", ", @valid_types ) } );
+		return ( $self->alert($result) );
 	}
 }
 

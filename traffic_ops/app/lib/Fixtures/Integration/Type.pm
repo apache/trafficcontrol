@@ -291,6 +291,15 @@ cal',
       use_in_table => 'to_extension',
     },
   },
+  ORG_LOC => {
+    new   => 'Type',
+    using => {
+      id           => 36,
+      name         => 'ORG_LOC',
+      description  => 'Multi Site Origin "Cachegroup"',
+      use_in_table => 'cachegroup',
+    },
+  },
 );
 
 sub name {

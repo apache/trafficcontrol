@@ -24,7 +24,7 @@ no warnings 'once';
 use warnings 'all';
 use Test::TestHelper;
 use Test::MockModule;
-use Utils::Riak;
+use Connection::RiakAdapter;
 use Data::Dumper;
 
 use constant BUCKET => "mybucket";
@@ -34,7 +34,7 @@ use constant KEY    => "mybucket";
 #no_transactions=>0 ==> delete fixtures after every execution
 
 #GET
-my $riak_util = Utils::Riak->new( "server1", BUCKET, Test::TestHelper::ADMIN_USER, Test::TestHelper::ADMIN_USER_PASSWORD );
+my $riak_util = Connection::RiakAdapter->new( "server1", BUCKET, Test::TestHelper::ADMIN_USER, Test::TestHelper::ADMIN_USER_PASSWORD );
 
 my $fake_answer = "OK";
 my $fake_lwp    = new Test::MockModule( 'LWP::UserAgent', no_auto => 1 );
@@ -54,8 +54,6 @@ my $response = $riak_util->get( BUCKET, KEY );
 is( $response->{_rc},                        200 );
 is( $response->{_headers}->{'content-type'}, 'application/json' );
 is( $fake_answer,                            $response->{_content} );
-
-#diag "response #-> (" . Dumper($response) . ")\n";
 
 #PUT
 $response = $riak_util->put( BUCKET, KEY, "value1" );

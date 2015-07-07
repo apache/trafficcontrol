@@ -1,4 +1,5 @@
 package Fixtures::Integration::ProfileParameter;
+
 #
 # Copyright 2015 Comcast Cable Communications Management, LLC
 #
@@ -4001,19 +4002,29 @@ my %definition_for = (
 	'4932-34' => { new => 'ProfileParameter', using => { profile => 34, parameter => 736, }, },
 	'4933-34' => { new => 'ProfileParameter', using => { profile => 34, parameter => 737, }, },
 	'4934-34' => { new => 'ProfileParameter', using => { profile => 34, parameter => 738, }, },
-	'g-502' => { new => 'ProfileParameter', using => { profile => 6, parameter => 502, }, },
-	'g-504' => { new => 'ProfileParameter', using => { profile => 6, parameter => 504, }, },
-	'g-505' => { new => 'ProfileParameter', using => { profile => 6, parameter => 505, }, },
-	'g-506' => { new => 'ProfileParameter', using => { profile => 6, parameter => 506, }, },
-	'g-726' => { new => 'ProfileParameter', using => { profile => 6, parameter => 726, }, },
-	'g-817' => { new => 'ProfileParameter', using => { profile => 6, parameter =>817, }, },
-	'g-818' => { new => 'ProfileParameter', using => { profile => 6, parameter => 818, }, },
+	'404-48'  => { new => 'ProfileParameter', using => { profile => 48, parameter => 404, }, },
+	'379-48'  => { new => 'ProfileParameter', using => { profile => 48, parameter => 379, }, },
+	'819-48'  => { new => 'ProfileParameter', using => { profile => 48, parameter => 819, }, },
+	'404-49'  => { new => 'ProfileParameter', using => { profile => 49, parameter => 404, }, },
+	'379-49'  => { new => 'ProfileParameter', using => { profile => 49, parameter => 379, }, },
+	'819-49'  => { new => 'ProfileParameter', using => { profile => 49, parameter => 819, }, },
+	'265-31'  => { new => 'ProfileParameter', using => { profile => 31, parameter => 265, }, },
+	'278-45'  => { new => 'ProfileParameter', using => { profile => 45, parameter => 278, }, },
+	'31-54'   => { new => 'ProfileParameter', using => { profile => 31, parameter => 54,  }, },
+	'31-268'  => { new => 'ProfileParameter', using => { profile => 31, parameter => 268, }, },
+	'31-820'  => { new => 'ProfileParameter', using => { profile => 31, parameter => 820, }, },
+	'g-502'   => { new => 'ProfileParameter', using => { profile => 6,  parameter => 502, }, },
+	'g-504'   => { new => 'ProfileParameter', using => { profile => 6,  parameter => 504, }, },
+	'g-505'   => { new => 'ProfileParameter', using => { profile => 6,  parameter => 505, }, },
+	'g-506'   => { new => 'ProfileParameter', using => { profile => 6,  parameter => 506, }, },
+	'g-726'   => { new => 'ProfileParameter', using => { profile => 6,  parameter => 726, }, },
+	'g-817'   => { new => 'ProfileParameter', using => { profile => 6,  parameter => 817, }, },
+	'g-818'   => { new => 'ProfileParameter', using => { profile => 6,  parameter => 818, }, },
 );
 
 sub name {
 	return "ProfileParameter";
 }
-
 
 sub get_definition {
 	my ( $self, $name ) = @_;

@@ -21,12 +21,13 @@ use UI::Utils;
 
 use Mojo::Base 'Mojolicious::Controller';
 use Data::Dumper;
-use Extensions::ConfigList;
 use Date::Manip;
 use NetAddr::IP;
 use UI::DeliveryService;
 use JSON;
 use API::DeliveryService::KeysUrlSig qw(URL_SIG_KEYS_BUCKET);
+use Utils::Helper::Extensions;
+Utils::Helper::Extensions->use;
 
 my $dispatch_table ||= {
 	"logs_xml.config"         => sub { logs_xml_dot_config(@_) },
@@ -81,7 +82,7 @@ sub genfiles {
 	$file =~ s/^regex_remap_.*\.config$/regex_remap_\.config/;
 	$file =~ s/^cacheurl_.*\.config$/cacheurl_\.config/;
 	if ( $file =~ /^to_ext_.*\.config$/ ) {
-		$file     =~ s/^to_ext_.*\.config$/to_ext_\.config/;
+		$file =~ s/^to_ext_.*\.config$/to_ext_\.config/;
 		$org_name =~ s/^to_ext_.*\.config$/to_ext_\.config/;
 	}
 
@@ -131,7 +132,7 @@ sub gen_fancybox_data {
 		$file =~ s/^regex_remap_.*\.config$/regex_remap_\.config/;
 		$file =~ s/^cacheurl_.*\.config$/cacheurl_\.config/;
 		if ( $file =~ /^to_ext_.*\.config$/ ) {
-			$file     =~ s/^to_ext_.*\.config$/to_ext_\.config/;
+			$file =~ s/^to_ext_.*\.config$/to_ext_\.config/;
 			$org_name =~ s/^to_ext_(.*)\.config$/$1.config/;
 		}
 
@@ -227,6 +228,8 @@ sub ds_data {
 		my $range_request_handling = $row->range_request_handling;
 		my $origin_shield          = $row->origin_shield;
 		my $cacheurl               = $row->cacheurl;
+		my $remap_text             = $row->remap_text;
+		my $multi_site_origin      = $row->multi_site_origin;
 
 		if ( $re_type eq 'HOST_REGEXP' ) {
 			my $host_re = $row->pattern;
@@ -259,18 +262,10 @@ sub ds_data {
 				if ( $protocol == 0 ) {
 					$dsinfo->{dslist}->[$j]->{"remap_line"}->{$map_from} = $map_to;
 				}
-				elsif ( $protocol == 1 ) {
-					$map_from = "https://" . $host_re . "/";
-					$dsinfo->{dslist}->[$j]->{"remap_line"}->{$map_from} = $map_to;
-				}
 				elsif ( $protocol == 2 ) {
 
 					#add with http
 					$dsinfo->{dslist}->[$j]->{"remap_line"}->{$map_from} = $map_to;
-
-					#add with https
-					my $map_from2 = "https://" . $host_re . "/";
-					$dsinfo->{dslist}->[$j]->{"remap_line2"}->{$map_from2} = $map_to;
 				}
 			}
 		}
@@ -287,6 +282,8 @@ sub ds_data {
 		$dsinfo->{dslist}->[$j]->{"range_request_handling"} = $range_request_handling;
 		$dsinfo->{dslist}->[$j]->{"origin_shield"}          = $origin_shield;
 		$dsinfo->{dslist}->[$j]->{"cacheurl"}               = $cacheurl;
+		$dsinfo->{dslist}->[$j]->{"remap_text"}             = $remap_text;
+		$dsinfo->{dslist}->[$j]->{"multi_site_origin"}      = $multi_site_origin;
 
 		if ( defined($edge_header_rewrite) ) {
 			my $fname = "hdr_rw_" . $ds_xml_id . ".config";
@@ -341,9 +338,17 @@ sub parent_data {
 	my $server = shift;
 
 	my $pinfo;
-	my $parent_cachegroup_id = $self->db->resultset('Cachegroup')->search( { id => $server->cachegroup->id } )->get_column('parent_cachegroup_id')->single;
+	my @parent_cachegroup_ids;
+	my $org_loc_type_id = &type_id( $self, "ORG_LOC" );
+	if ( $server->type->name eq 'MID' ) {
 
-	my $mtype = &type_id( $self, "MID" );
+		# multisite origins take all the org groups in to account
+		@parent_cachegroup_ids = $self->db->resultset('Cachegroup')->search( { type => $org_loc_type_id } )->get_column('id')->all();
+	}
+	else {
+		@parent_cachegroup_ids = $self->db->resultset('Cachegroup')->search( { id => $server->cachegroup->id } )->get_column('parent_cachegroup_id')->all();
+	}
+
 	my $online   = &admin_status_id( $self, "ONLINE" );
 	my $reported = &admin_status_id( $self, "REPORTED" );
 
@@ -354,20 +359,23 @@ sub parent_data {
 		{ prefetch => [ { parameter => undef }, { profile => undef } ] } )->single();
 	my $server_domain = $param->parameter->value;
 
-	my $rs_parent = $self->db->resultset('Server')->search(
-		{ cachegroup => $parent_cachegroup_id, 'me.type' => $mtype, status => { -in => [ $online, $reported ] } },
-		{ prefetch => [ { cachegroup => undef }, { status => undef }, { type => undef }, { profile => undef } ] }
-	);
+	my $rs_parent =
+		$self->db->resultset('Server')->search( { cachegroup => { -in => \@parent_cachegroup_ids }, status => { -in => [ $online, $reported ] } },
+		{ prefetch => [ 'cachegroup', 'status', 'type', 'profile' ] } );
 
 	my $i             = 0;
 	my %profile_cache = ();
 	while ( my $row = $rs_parent->next ) {
 
 		# get the profile info, and cache it in %profile_cache
-		my $ds_domain = undef;
-		my $weight    = undef;
-		my $pid       = $row->profile->id;
+		my $ds_domain      = undef;
+		my $weight         = undef;
+		my $port           = undef;
+		my $use_ip_address = undef;
+		my $pid            = $row->profile->id;
 		if ( !defined( $profile_cache{$pid} ) ) {
+
+			# assign $ds_domain, $weight and $port, and cache the results %profile_cache
 			my $param =
 				$self->db->resultset('ProfileParameter')
 				->search( { -and => [ profile => $pid, 'parameter.config_file' => 'CRConfig.json', 'parameter.name' => 'domain_name' ] },
@@ -380,16 +388,38 @@ sub parent_data {
 				{ prefetch => [ 'parameter', 'profile' ] } )->single();
 			$weight = defined($param) ? $param->parameter->value : "0.999";
 			$profile_cache{$pid}->{weight} = $weight;
+			$param =
+				$self->db->resultset('ProfileParameter')
+				->search( { -and => [ profile => $pid, 'parameter.config_file' => 'parent.config', 'parameter.name' => 'port' ] },
+				{ prefetch => [ 'parameter', 'profile' ] } )->single();
+			$port = defined($param) ? $param->parameter->value : undef;
+			$profile_cache{$pid}->{port} = $port;
+			$param =
+				$self->db->resultset('ProfileParameter')
+				->search( { -and => [ profile => $pid, 'parameter.config_file' => 'parent.config', 'parameter.name' => 'use_ip_address' ] },
+				{ prefetch => [ 'parameter', 'profile' ] } )->single();
+			$use_ip_address = defined($param) ? $param->parameter->value : 0;
+			$profile_cache{$pid}->{use_ip_address} = $use_ip_address;
 		}
 		else {
-			$ds_domain = $profile_cache{$pid}->{domain_name};
-			$weight    = $profile_cache{$pid}->{weight};
+			$ds_domain      = $profile_cache{$pid}->{domain_name};
+			$weight         = $profile_cache{$pid}->{weight};
+			$port           = $profile_cache{$pid}->{port};
+			$use_ip_address = $profile_cache{$pid}->{use_ip_address};
 		}
 		if ( defined($ds_domain) && defined($server_domain) && $ds_domain eq $server_domain ) {
-			$pinfo->{"plist"}->[$i]->{"host_name"}   = $row->host_name;
-			$pinfo->{"plist"}->[$i]->{"port"}        = $row->tcp_port;
-			$pinfo->{"plist"}->[$i]->{"domain_name"} = $row->domain_name;
-			$pinfo->{"plist"}->[$i]->{"weight"}      = $weight;
+			$pinfo->{"plist"}->[$i]->{"host_name"}      = $row->host_name;
+			$pinfo->{"plist"}->[$i]->{"port"}           = defined($port) ? $port : $row->tcp_port;
+			$pinfo->{"plist"}->[$i]->{"domain_name"}    = $row->domain_name;
+			$pinfo->{"plist"}->[$i]->{"weight"}         = $weight;
+			$pinfo->{"plist"}->[$i]->{"use_ip_address"} = $use_ip_address;
+			$pinfo->{"plist"}->[$i]->{"ip_address"}     = $row->ip_address;
+			if ( $server->cachegroup->parent_cachegroup_id == $row->cachegroup->id ) {
+				$pinfo->{"plist"}->[$i]->{"preferred"} = 1;
+			}
+			else {
+				$pinfo->{"plist"}->[$i]->{"preferred"} = 0;
+			}
 			$i++;
 		}
 	}
@@ -525,23 +555,29 @@ sub logs_xml_dot_config {
 	my $filename = shift;
 
 	my $server = $self->server_data($id);
-	my $data = $self->param_data( $server, $filename );
+	my $data   = $self->param_data( $server, $filename );
+	my $text   = "<!-- Generated for " . $server->host_name . " by " . &name_version_string($self) . " - Do not edit!! -->\n";
 
-	my $text = "<!-- Generated for " . $server->host_name . " by " . &name_version_string($self) . " - Do not edit!! -->\n";
-
-	my $format = $data->{"LogFormat.Format"};
+	my $log_format_name                 = $data->{"LogFormat.Name"}               || "";
+	my $log_object_filename             = $data->{"LogObject.Filename"}           || "";
+	my $log_object_format               = $data->{"LogObject.Format"}             || "";
+	my $log_object_rolling_enabled      = $data->{"LogObject.RollingEnabled"}     || "";
+	my $log_object_rolling_interval_sec = $data->{"LogObject.RollingIntervalSec"} || "";
+	my $log_object_rolling_offset_hr    = $data->{"LogObject.RollingOffsetHr"}    || "";
+	my $log_object_rolling_size_mb      = $data->{"LogObject.RollingSizeMb"}      || "";
+	my $format                          = $data->{"LogFormat.Format"};
 	$format =~ s/"/\\\"/g;
 	$text .= "<LogFormat>\n";
-	$text .= "  <Name = \"" . $data->{"LogFormat.Name"} . "\"/>\n";
+	$text .= "  <Name = \"" . $log_format_name . "\"/>\n";
 	$text .= "  <Format = \"" . $format . "\"/>\n";
 	$text .= "</LogFormat>\n";
 	$text .= "<LogObject>\n";
-	$text .= "  <Format = \"" . $data->{"LogObject.Format"} . "\"/>\n";
-	$text .= "  <Filename = \"" . $data->{"LogObject.Filename"} . "\"/>\n";
-	$text .= "  <RollingEnabled = " . $data->{"LogObject.RollingEnabled"} . "/>\n";
-	$text .= "  <RollingIntervalSec = " . $data->{"LogObject.RollingIntervalSec"} . "/>\n";
-	$text .= "  <RollingOffsetHr = " . $data->{"LogObject.RollingOffsetHr"} . "/>\n";
-	$text .= "  <RollingSizeMb = " . $data->{"LogObject.RollingSizeMb"} . "/>\n";
+	$text .= "  <Format = \"" . $log_object_format . "\"/>\n";
+	$text .= "  <Filename = \"" . $log_object_filename . "\"/>\n";
+	$text .= "  <RollingEnabled = " . $log_object_rolling_enabled . "/>\n" unless defined();
+	$text .= "  <RollingIntervalSec = " . $log_object_rolling_interval_sec . "/>\n";
+	$text .= "  <RollingOffsetHr = " . $log_object_rolling_offset_hr . "/>\n";
+	$text .= "  <RollingSizeMb = " . $log_object_rolling_size_mb . "/>\n";
 	$text .= "</LogObject>\n";
 
 	return $text;
@@ -820,17 +856,17 @@ sub remap_dot_config {
 	foreach my $remap ( @{ $data->{dslist} } ) {
 		foreach my $map_from ( keys %{ $remap->{remap_line} } ) {
 			my $map_to = $remap->{remap_line}->{$map_from};
-			$text = $self->remap_text( $server, $pdata, $text, $data, $remap, $map_from, $map_to );
+			$text = $self->build_remap_line( $server, $pdata, $text, $data, $remap, $map_from, $map_to );
 		}
 		foreach my $map_from ( keys %{ $remap->{remap_line2} } ) {
 			my $map_to = $remap->{remap_line2}->{$map_from};
-			$text = $self->remap_text( $server, $pdata, $text, $data, $remap, $map_from, $map_to );
+			$text = $self->build_remap_line( $server, $pdata, $text, $data, $remap, $map_from, $map_to );
 		}
 	}
 	return $text;
 }
 
-sub remap_text {
+sub build_remap_line {
 	my $self     = shift;
 	my $server   = shift;
 	my $pdata    = shift;
@@ -839,6 +875,11 @@ sub remap_text {
 	my $remap    = shift;
 	my $map_from = shift;
 	my $map_to   = shift;
+
+	if ( $remap->{type} eq 'ANY_MAP' ) {
+		$text .= $remap->{remap_text} . "\n";
+		return $text;
+	}
 
 	my $host_name = $data->{host_name};
 	my $dscp      = $remap->{dscp};
@@ -889,6 +930,9 @@ sub remap_text {
 	elsif ( $remap->{range_request_handling} == 2 ) {
 		$text .= " \@plugin=cache_range_requests.so ";
 	}
+	if ( defined( $remap->{remap_text} ) ) {
+		$text .= " " . $remap->{remap_text};
+	}
 	$text .= "\n";
 	return $text;
 }
@@ -905,13 +949,17 @@ sub parent_dot_config {
 	if ( !defined($data) ) {
 		$data = $self->ds_data($server);
 	}
-	##Origin Shield
+
+	# Origin Shield or Multi Site Origin
 	$self->app->log->debug("id = $id and server_type = $server_type");
 	if ( $server_type eq 'MID' ) {
 		foreach my $ds ( @{ $data->{dslist} } ) {
-			my $xml_id = $ds->{ds_xml_id};
-			my $os     = $ds->{origin_shield};
+			my $xml_id            = $ds->{ds_xml_id};
+			my $os                = $ds->{origin_shield};
+			my $multi_site_origin = defined( $ds->{multi_site_origin} ) ? $ds->{multi_site_origin} : 0;
 
+			my $org_fqdn = $ds->{org};
+			$org_fqdn =~ s/https?:\/\///;
 			if ( defined($os) ) {
 				my $algorithm = "";
 				my $param =
@@ -922,13 +970,26 @@ sub parent_dot_config {
 				if ( defined($pselect_alg) ) {
 					$algorithm = "round_robin=$pselect_alg";
 				}
-				my $org_fqdn = $ds->{org};
-				$org_fqdn =~ s/https?:\/\///;
 				$text .= "dest_domain=$org_fqdn parent=$os $algorithm go_direct=true\n";
 			}
+			elsif ($multi_site_origin) {
+
+				$text .= "dest_domain=$org_fqdn parent=\"";
+				my $pinfo = $self->parent_data($server);
+				foreach my $parent ( @{ $pinfo->{"plist"} } ) {
+					if ( $parent->{use_ip_address} == 1 ) {
+						$text .= $parent->{ip_address} . ":" . $parent->{port} . "|" . $parent->{weight} . ";";
+					}
+					else {
+						$text .= $parent->{"host_name"} . "." . $parent->{"domain_name"} . ":" . $parent->{"port"} . "|" . $parent->{"weight"} . ";";
+					}
+				}
+				$text .= "\" round_robin=consistent_hash go_direct=false parent_is_proxy=false";
+			}
 		}
-		$text .= "dest_domain=. go_direct=true\n";
-		$self->app->log->debug($text);
+
+		#$text .= "dest_domain=. go_direct=true\n"; # this is implicit.
+		$self->app->log->debug( "MID PARENT.CONFIG:\n" . $text . "\n" );
 		return $text;
 	}
 	else {
@@ -980,8 +1041,6 @@ sub parent_dot_config {
 		}
 
 		$text .= "\n";
-
-		# $self->app->log->debug($text);
 		return $text;
 	}
 }
@@ -1196,9 +1255,12 @@ sub to_ext_dot_config {
 	my $server = $self->server_data($id);
 	my $text   = $self->header_comment( $server->host_name );
 
-	# get the subroutine name for the this file from the Extensions::ConfigList
-	my $ext_hash_ref = &Extensions::ConfigList::hash_ref();
-	my $subroutine   = $ext_hash_ref->{$file};
+	# get the subroutine name for this file from the parameter
+	my $subroutine =
+		$self->db->resultset('ProfileParameter')
+		->search( { -and => [ profile => $server->profile->id, 'parameter.config_file' => $file, 'parameter.name' => 'SubRoutine' ] },
+		{ prefetch => [ 'parameter', 'profile' ] } )->get_column('parameter.value')->single();
+	$self->app->log->error( "ToExtDotConfigFile == " . $subroutine );
 
 	# And call it - the below calls the subroutine in the var $subroutine.
 	$text .= &{ \&{$subroutine} }( $self, $id, $file );
@@ -1236,7 +1298,7 @@ sub ssl_multicert_dot_config {
 		$new_host =~ tr/./_/;
 		my $cer_name = $new_host . "_cert.cer";
 
-		$text .= "dest_ip=*\t ssl_cert_name=$cer_name\t ssl_key_name=$key_name\n";
+		$text .= "ssl_cert_name=$cer_name\t ssl_key_name=$key_name\n";
 	}
 	return $text;
 }
