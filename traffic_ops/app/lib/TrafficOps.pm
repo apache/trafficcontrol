@@ -46,6 +46,7 @@ use File::Basename;
 use Env qw(PERL5LIB);
 use Utils::Helper::Extensions;
 use File::Path qw(make_path);
+use IO::Compress::Gzip 'gzip';
 
 use constant SESSION_TIMEOUT => 14400;
 my $logging_root_dir;
@@ -155,6 +156,21 @@ sub startup {
 			}
 		);
 	}
+
+	$self->hook(
+		after_render => sub {
+			my ($c, $output, $format) = @_;
+
+			# Check if user agent accepts gzip compression
+			return unless ($c->req->headers->accept_encoding // '') =~ /gzip/i;
+			$c->res->headers->append(Vary => 'Accept-Encoding');
+
+			# Compress content with gzip
+			$c->res->headers->content_encoding('gzip');
+			gzip $output, \my $compressed;
+			$$output = $compressed;
+		}
+	);
 
 	# -- For CodeBig Verification
 	$r->delete(
