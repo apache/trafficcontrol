@@ -13,8 +13,8 @@
       "description": "kabletown Content Router for foo.kabletown.net"
     },
     {
-      "description": "CDS-IS Secondary CDN",
-      "name": "CDSIS",
+      "description": "Secondary CDN",
+      "name": "CDN2",
       "id": "6",
       "lastUpdated": "2012-09-17 15:41:22"
     }

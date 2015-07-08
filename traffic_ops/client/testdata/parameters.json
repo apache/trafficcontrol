@@ -59,7 +59,7 @@
       "name": "monitor:///opt/tomcat/logs/access.log",
       "configFile": "inputs.conf",
       "lastUpdated": "2012-11-29 13:59:04",
-      "value": "index=index_odol_test;sourcetype=access_ccr"
+      "value": "index=index_ops_test;sourcetype=access_ccr"
     },
     {
       "value": "XMPP CRConfigOTT node",

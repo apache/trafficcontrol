@@ -1,43 +1,30 @@
 {
   "trafficServers": [
     {
-      "profile": "TR_TOP",
+      "profile": "TR_CDN",
       "ip": "10.10.10.10",
       "status": "OFFLINE",
-      "cacheGroup": "dc-chicago",
-      "ip6": "2001:123:ac12:64:22:::17/64",
+      "cacheGroup": "tr-chicago",
+      "ip6": "2001:123:abc12:64:22:::17/64",
       "port": 80,
-      "hostName": "odol-ccr-chi-05",
-      "fqdn": "odol-ccr-chi-05.northlake.il.ndcchgo.comcast.net",
+      "hostName": "tr-chi-05",
+      "fqdn": "tr-chi-05.kabletown.com",
       "interfaceName": "eth0",
-      "type": "CCR",
-      "hashId": "odol-chi-ccr-05"
+      "type": "TR",
+      "hashId": "chi-tr-05"
     },
     {
-      "profile": "CCR_TOP",
-      "ip": "162.150.56.19",
-      "status": "OFFLINE",
-      "cacheGroup": "dc-chicago",
-      "ip6": "2001:558:fe21:14:162:150:56:18/64",
-      "port": 80,
-      "hostName": "odol-ccr-chi-06",
-      "fqdn": "odol-ccr-chi-06.northlake.il.ndcchgo.comcast.net",
-      "interfaceName": "eth0",
-      "type": "CCR",
-      "hashId": "odol-chi-ccr-06"
-    },
-    {
-      "profile": "EDGE1_TOP_VOL",
+      "profile": "EDGE1_CDN",
       "ip": "3.3.3.3",
       "status": "OFFLINE",
       "cacheGroup": "mid-west",
-      "ip6": "2009:334:333::2/64",
+      "ip6": "2009:123:456::2/64",
       "port": 80,
-      "hostName": "odol-jvd-test-01",
-      "fqdn": "odol-jvd-test-01.jvd.comcast.net",
+      "hostName": "edge-test-01",
+      "fqdn": "edge-test-01.jvd.kabletown.com",
       "interfaceName": "bond0",
       "type": "EDGE",
-      "hashId": "odol-jvd-test-01"
+      "hashId": "edge-test-01"
     }
     ]
 }
