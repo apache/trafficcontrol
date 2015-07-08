@@ -21,7 +21,7 @@
       "ip6": "2009:123:456::2/64",
       "port": 80,
       "hostName": "edge-test-01",
-      "fqdn": "edge-test-01.jvd.kabletown.com",
+      "fqdn": "edge-test-01.kabletown.com",
       "interfaceName": "bond0",
       "type": "EDGE",
       "hashId": "edge-test-01"
