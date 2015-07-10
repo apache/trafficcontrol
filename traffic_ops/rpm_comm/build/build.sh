@@ -18,20 +18,27 @@
 
 #-----------------------------------------------------------------------------
 function usage () {
-   echo "./build.sh [-b <branch>] [--build <build_number>] [-g <gitrepo>]"
+   echo "./build.sh [-b <branch>] [-c | -cc] [-g <gitrepo> | -r <repodir>]"
+   echo "[-w <working directory]"
    echo ""
    echo "Don't run this script ever."
-   echo "   -b  | --branch              Git branch"
-   echo "                               default: master"
-   echo "   -c  | --clean               Make a fresh start but, leave carton"
-   echo "   -cc | --clean_with_carton   Make a fresh start"
-   echo "   -g  | --gitrepo             Git repository."
-   echo "                               default:"
-   echo "                               https://github.com/Comcast/traffic_control.git"
-   echo "   -h  | --help                Print this message"
-   echo "   -w  | --workspace           Working directory"
-   echo "                               default: home directory"
-   echo "==============================================================================="
+   echo "   -b  | --branch         Git branch"
+   echo "                          default: master"
+   echo "   -c  | --clean          Make a fresh start but, leave carton"
+   echo "   -cc | --clean_carton   Make a fresh start"
+   echo "   -g  | --gitrepo        Git repository."
+   echo "                          default:"
+   echo "                             https://github.com/Comcast/traffic_control.git"
+   echo "   -h  | --help           Print this message"
+   echo "   -r  | --repodir        Location of an already downloaded traffic_control"
+   echo "                          repo (e.g. /vagrant/traffic_control). This overrides"
+   echo "                          the -g option. Note that the script expects this to"
+   echo "                          be the root directory of the project and in the"
+   echo "                          correct branch."
+   echo "   -w  | --workspace      Working directory"
+   echo "                          default: home directory"
+   echo "================================================================================"
+   # the above line of equal signs is 80 columns
    echo ""
 }
 
@@ -69,17 +76,26 @@ function downloadRepo () {
 
    cd $workspace/repos
 
-   if [ -d $TOSRC ]; then
-      echo "cd to $TCSRC and then git pull"
-      cd $TCSRC && /usr/bin/git pull
-      echo "git checkout $branch"
-      /usr/bin/git checkout $branch
-      /usr/bin/git pull
-   else
-      echo "cd to $REPODIR and clone"
-      cd $REPODIR && /usr/bin/git clone $gitrepo
+   if [ -n "$repodir" ]; then
+      echo "copying from $repodir"
+      if [ ! -d $workspace/repos/traffic_control ]; then
+         mkdir $workspace/repos/traffic_control
+      fi
       cd $TCSRC
-      /usr/bin/git checkout $branch
+      cp -r $repodir/. ./ 2>/dev/null
+   else
+      if [ -d $TOSRC ]; then
+         echo "cd to $TCSRC and then git pull"
+         cd $TCSRC && /usr/bin/git pull
+         echo "git checkout $branch"
+         /usr/bin/git checkout $branch
+         /usr/bin/git pull
+      else
+         echo "cd to $REPODIR and clone"
+         cd $REPODIR && /usr/bin/git clone $gitrepo
+         cd $TCSRC
+         /usr/bin/git checkout $branch
+      fi
    fi
 
    cp $TOSRC/rpm_comm/rpmmacros ~/.rpmmacros
@@ -92,10 +108,11 @@ function downloadRepo () {
    #COMMITS=$(git rev-list HEAD --count)
    COMMITS=$(git shortlog | grep -E '^[ ]+\w+' | wc -l)
    SHA=$(git rev-parse --short=8 HEAD)
-   BUILD_NUMBER="$COMMITS-$SHA"
+   BUILD_NUMBER="$COMMITS.$SHA"
    echo "%traffic_ops_build $BUILD_NUMBER" >> ~/.rpmmacros
    echo "%traffic_ops_release $COMMITS" >> ~/.rpmmacros
    echo "%traffic_ops_sha $SHA" >> ~/.rpmmacros
+
 }
 
 function getWebDeps () {
@@ -227,7 +244,7 @@ function buildRpm () {
       echo
       echo "==============================================================================="
       echo "RPM BUILD SUCCEEDED"
-      echo "$RPMS/$HOSTTYPE/traffic_ops-$VERSION-$BUILD_NUMBER.rpm"
+      echo "$RPMS/$HOSTTYPE/traffic_ops-$VERSION-$BUILD_NUMBER$DIST.$HOST_TYPE.rpm"
       echo "==============================================================================="
       echo
    fi
@@ -237,40 +254,36 @@ function buildRpm () {
 # MAIN
 #-----------------------------------------------------------------------------
 clean=
+repodir=
 
 while [ "$1" != "" ]; do
    case $1 in
-      -b | --branch )                      shift
-                                           branch=$1
-                                           ;;
-      -c | --clean )                       clean=1
-                                           ;;
-      -cc | --clean_with_carton )          clean_carton=1
-                                           ;;
-      #--build )                            shift
-      #                                     build=$1
-      #                                     ;;
-      #-f | --file )                        shift
-      #                                     filename=$1
-      #                                     ;;
-      -g | --gitrepo )                     shift
-                                           gitrepo=$1
-                                           ;;
-      -h | --help )                        usage
-                                           exit
-                                           ;;
-      -w | --workspace )                   shift
-                                           workspace=$1
-                                           ;;
-      * )                                  usage
-                                           exit 1
+      -b | --branch )                 shift
+                                      branch=$1
+                                      ;;
+      -c | --clean )                  clean=1
+                                      ;;
+      -cc | --clean_carton )          clean_carton=1
+                                      ;;
+      -g | --gitrepo )                shift
+                                      gitrepo=$1
+                                      ;;
+      -h | --help )                   usage
+                                      exit
+                                      ;;
+      -r | --repodir )                shift
+                                      repodir=$1
+                                      ;;
+      -w | --workspace )              shift
+                                      workspace=$1
+                                      ;;
+      * )                             usage
+                                      exit 1
    esac
    shift
 done
 
 if [ "$branch" = "" ]; then
-   echo "branch not set"
-   exit 1
    branch="master"
    echo "Setting branch to $branch"
 fi
@@ -285,10 +298,6 @@ if [ "$workspace" = "" ]; then
    echo "Setting workspace to $workspace"
 fi
 
-#if [ "$build" = "" ]; then
-#   echo "build not set. will use commit hash"
-#fi
-
 # set vars
 PACKAGE="traffic_ops"
 REPODIR="$workspace/repos"
@@ -301,6 +310,7 @@ TCSRC="$REPODIR/traffic_control"
 TOSRC="$TCSRC/$PACKAGE"
 CARTONDIR="$workspace/carton"
 UTILS_PM="$TOSRC/app/lib/UI/Utils.pm"
+DIST=$(rpm --eval %{dist})
 BUILD_NUMBER=""
 VERSION=""
 
