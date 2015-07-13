@@ -1,4 +1,5 @@
 package UI::RascalStatus;
+
 #
 # Copyright 2015 Comcast Cable Communications Management, LLC
 #
@@ -26,14 +27,25 @@ sub health {
 	my $self = shift;
 	my $pparam =
 		$self->db->resultset('ProfileParameter')
-		->search( { -and => [ 'parameter.name' => 'cachegroup_graph_url', 'profile.name' => 'GLOBAL' ] }, { prefetch => [ 'parameter', 'profile' ] } )->single();
+		->search( { -and => [ 'parameter.name' => 'all_graph_url', 'profile.name' => 'GLOBAL' ] }, { prefetch => [ 'parameter', 'profile' ] } )->single();
+	my $ag_url = defined($pparam) ? $pparam->parameter->value : undef;
+	$pparam =
+		$self->db->resultset('ProfileParameter')
+		->search( { -and => [ 'parameter.name' => 'cachegroup_graph_url', 'profile.name' => 'GLOBAL' ] }, { prefetch => [ 'parameter', 'profile' ] } )
+		->single();
 	my $cgg_url = defined($pparam) ? $pparam->parameter->value : undef;
+	$pparam =
+		$self->db->resultset('ProfileParameter')
+		->search( { -and => [ 'parameter.name' => 'server_graph_url', 'profile.name' => 'GLOBAL' ] }, { prefetch => [ 'parameter', 'profile' ] } )
+		->single();
+	my $srvg_url = defined($pparam) ? $pparam->parameter->value : undef;
 	$self->stash(
 		cachegroup_graph_url => $cgg_url,
+		all_graph_url        => $ag_url,
+		server_graph_url     => $srvg_url,
 	);
 
 	&navbarpage($self);
 }
-
 
 1;
