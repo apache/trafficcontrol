@@ -22,6 +22,17 @@ sub new {
 	return ( bless( $self, $class ) );
 }
 
+sub info {
+	return {
+		name        => "CacheStatistics",
+		version     => "0.01",
+		info_url    => "",
+		description => "Cache Statistics Stub",
+		isactive    => 1,
+		script_file => "Extensions::Delegate::CacheStatistics",
+	};
+}
+
 sub get_stats {
 	return ( 1, "No Traffic Ops Extension implemented for 'CacheStatistics->get_stats()'" );
 }

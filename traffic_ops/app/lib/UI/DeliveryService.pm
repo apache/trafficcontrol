@@ -1,4 +1,5 @@
 package UI::DeliveryService;
+
 #
 # Copyright 2015 Comcast Cable Communications Management, LLC
 #
@@ -24,6 +25,14 @@ use Data::Dumper;
 
 sub index {
 	my $self = shift;
+
+	my $pparam =
+		$self->db->resultset('ProfileParameter')
+		->search( { -and => [ 'parameter.name' => 'deliveryservice_graph_url', 'profile.name' => 'GLOBAL' ] }, { prefetch => [ 'parameter', 'profile' ] } )
+		->single();
+	my $p1_url = defined($pparam) ? $pparam->parameter->value : undef;
+	$self->stash( graph_url => $p1_url, );
+
 	&navbarpage($self);
 }
 
@@ -146,7 +155,8 @@ sub get_cdn_domain {
 	my $id         = shift;
 	my $cdn_domain = $self->db->resultset('Parameter')->search(
 		{ -and => [ 'me.name' => 'domain_name', 'deliveryservices.id' => $id ] },
-		{   join     => { profile_parameters => { profile => { deliveryservices => undef } } },
+		{
+			join     => { profile_parameters => { profile => { deliveryservices => undef } } },
 			distinct => 1
 		}
 	)->get_column('value')->single();
@@ -184,16 +194,16 @@ sub read {
 
 		while ( my $re_row = $re_rs->next ) {
 			push(
-				@matchlist,
-				{   type       => $re_row->regex->type->name,
+				@matchlist, {
+					type       => $re_row->regex->type->name,
 					pattern    => $re_row->regex->pattern,
 					set_number => $re_row->set_number,
 				}
 			);
 		}
 		push(
-			@data,
-			{   "xml_id"                 => $row->xml_id,
+			@data, {
+				"xml_id"                 => $row->xml_id,
 				"dscp"                   => $row->dscp,
 				"signed"                 => \$row->signed,
 				"qstring_ignore"         => $row->qstring_ignore,
@@ -263,8 +273,8 @@ sub check_deliveryservice_input {
 		$self->field('ds.xml_id')->is_equal( "", "Delivery service xml_id cannot contain whitespace." );
 	}
 
-	if ( defined($self->param('ds.type')) && $self->param('ds.type') == &type_id($self, 'ANY_MAP')) {
-	    return $self->valid; # Anything goes for the ANY_MAP, but ds.type is only set on create
+	if ( defined( $self->param('ds.type') ) && $self->param('ds.type') == &type_id( $self, 'ANY_MAP' ) ) {
+		return $self->valid;    # Anything goes for the ANY_MAP, but ds.type is only set on create
 	}
 
 	if ( $self->param('ds.qstring_ignore') == 2 && $self->param('ds.regex_remap') ne "" ) {
@@ -272,7 +282,8 @@ sub check_deliveryservice_input {
 	}
 	my $profile_id = $self->param('ds.profile');
 	my $cdn_domain = $self->db->resultset('Parameter')->search(
-		{   'Name'                       => 'domain_name',
+		{
+			'Name'                       => 'domain_name',
 			'Config_file'                => 'CRConfig.json',
 			'profile_parameters.profile' => $profile_id,
 		},
@@ -366,7 +377,8 @@ sub check_deliveryservice_input {
 	$org_host_name =~ s/:(.*)$//;
 	my $port = defined($1) ? $1 : 80;
 	if ( !&is_hostname($org_host_name) || $port !~ /^[1-9][0-9]*$/ ) {
-		$self->field('ds.org_server_fqdn')->is_equal( "", $org_host_name . " is not a valid org server name (rfc1123) or " . $port . " is not a valid port" );
+		$self->field('ds.org_server_fqdn')
+			->is_equal( "", $org_host_name . " is not a valid org server name (rfc1123) or " . $port . " is not a valid port" );
 	}
 	if ( $self->param('ds.http_bypass_fqdn') ne "" && !&is_hostname( $self->param('ds.http_bypass_fqdn') ) ) {
 		$self->field('ds.http_bypass_fqdn')
@@ -448,7 +460,8 @@ sub header_rewrite {
 		my $param_id = $self->db->resultset('Parameter')->search( { -and => [ name => 'location', config_file => $fname ] } )->get_column('id')->single();
 		if ( !defined($param_id) ) {
 			my $insert = $self->db->resultset('Parameter')->create(
-				{   config_file => $fname,
+				{
+					config_file => $fname,
 					name        => 'location',
 					value       => $ats_cfg_loc
 				}
@@ -481,7 +494,8 @@ sub header_rewrite {
 					}
 				}
 				my $insert = $self->db->resultset('ProfileParameter')->create(
-					{   profile   => $profile_id,
+					{
+						profile   => $profile_id,
 						parameter => $param_id
 					}
 				);
@@ -514,7 +528,8 @@ sub regex_remap {
 		my $param_id = $self->db->resultset('Parameter')->search( { -and => [ name => 'location', config_file => $fname ] } )->get_column('id')->single();
 		if ( !defined($param_id) ) {
 			my $insert = $self->db->resultset('Parameter')->create(
-				{   config_file => $fname,
+				{
+					config_file => $fname,
 					name        => 'location',
 					value       => $ats_cfg_loc
 				}
@@ -528,7 +543,8 @@ sub regex_remap {
 			my $link = $self->db->resultset('ProfileParameter')->search( { profile => $profile_id, parameter => $param_id } )->single();
 			if ( !defined($link) ) {
 				my $insert = $self->db->resultset('ProfileParameter')->create(
-					{   profile   => $profile_id,
+					{
+						profile   => $profile_id,
 						parameter => $param_id
 					}
 				);
@@ -558,7 +574,8 @@ sub cacheurl {
 		my $param_id = $self->db->resultset('Parameter')->search( { -and => [ name => 'location', config_file => $fname ] } )->get_column('id')->single();
 		if ( !defined($param_id) ) {
 			my $insert = $self->db->resultset('Parameter')->create(
-				{   config_file => $fname,
+				{
+					config_file => $fname,
 					name        => 'location',
 					value       => $ats_cfg_loc
 				}
@@ -572,7 +589,8 @@ sub cacheurl {
 			my $link = $self->db->resultset('ProfileParameter')->search( { profile => $profile_id, parameter => $param_id } )->single();
 			if ( !defined($link) ) {
 				my $insert = $self->db->resultset('ProfileParameter')->create(
-					{   profile   => $profile_id,
+					{
+						profile   => $profile_id,
 						parameter => $param_id
 					}
 				);
@@ -681,7 +699,8 @@ sub update {
 
 					my $update = $self->db->resultset('Regex')->find( { id => $re_id } );
 					$update->update(
-						{   pattern => $regexp,
+						{
+							pattern => $regexp,
 							type    => &type_id( $self, $self->param($type_str) ),
 						}
 					);
@@ -700,7 +719,8 @@ sub update {
 				my $regexp         = $self->param($re_str);
 
 				my $insert = $self->db->resultset('Regex')->create(
-					{   pattern => $regexp,
+					{
+						pattern => $regexp,
 						type    => &type_id( $self, $self->param($type_str) ),
 					}
 				);
@@ -708,7 +728,8 @@ sub update {
 				my $new_re_id = $insert->id;
 
 				my $de_re_insert = $self->db->resultset('DeliveryserviceRegex')->create(
-					{   regex           => $new_re_id,
+					{
+						regex           => $new_re_id,
 						deliveryservice => $id,
 						set_number      => $self->param($set_number_str),
 					}
@@ -787,13 +808,14 @@ sub create {
 	return $self->redirect_to("/modify_error") if !&is_oper($self);
 	my $new_id = -1;
 
-#	if ( !&is_oper($self) ) {
-#		my $err .= "You do not have enough privileges to modify this.\n";
-#		return $self->flash( message => $err );
-#	}
+	#	if ( !&is_oper($self) ) {
+	#		my $err .= "You do not have enough privileges to modify this.\n";
+	#		return $self->flash( message => $err );
+	#	}
 	if ( $self->check_deliveryservice_input() ) {
 		my $insert = $self->db->resultset('Deliveryservice')->create(
-			{   xml_id                 => $self->param('ds.xml_id'),
+			{
+				xml_id                 => $self->param('ds.xml_id'),
 				dscp                   => $self->param('ds.dscp') eq "" ? 0 : $self->param('ds.dscp'),
 				signed                 => $self->param('ds.signed'),
 				qstring_ignore         => $self->param('ds.qstring_ignore'),
@@ -871,7 +893,8 @@ sub create {
 			my $regexp = $re->{re};
 
 			my $insert = $self->db->resultset('Regex')->create(
-				{   pattern => $regexp,
+				{
+					pattern => $regexp,
 					type    => $type,
 				}
 			);
@@ -879,7 +902,8 @@ sub create {
 			my $new_re_id = $insert->id;
 
 			my $de_re_insert = $self->db->resultset('DeliveryserviceRegex')->create(
-				{   regex           => $new_re_id,
+				{
+					regex           => $new_re_id,
 					deliveryservice => $new_id,
 					set_number      => $re->{order},
 				}
@@ -888,7 +912,7 @@ sub create {
 		}
 
 		$self->header_rewrite( $new_id, $self->param('ds.profile'), $self->param('ds.xml_id'), $self->param('ds.edge_header_rewrite'), "edge" );
-		$self->header_rewrite( $new_id, $self->param('ds.profile'), $self->param('ds.xml_id'), $self->param('ds.mid_header_rewrite'), "mid" );
+		$self->header_rewrite( $new_id, $self->param('ds.profile'), $self->param('ds.xml_id'), $self->param('ds.mid_header_rewrite'),  "mid" );
 		$self->regex_remap( $self->param('ds.profile'), $self->param('ds.xml_id'), $self->param('ds.regex_remap') );
 		$self->cacheurl( $self->param('ds.profile'), $self->param('ds.xml_id'), $self->param('ds.cacheurl') );
 
@@ -928,6 +952,5 @@ sub add {
 		$self->stash( $field => $self->param($field) );
 	}
 }
-
 
 1;

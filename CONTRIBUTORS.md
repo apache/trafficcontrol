@@ -2,6 +2,8 @@ Sorted alphabetically
 
 * **[David Neuman](https://github.com/dneuman64)**
 * **[Dewayne Richardson](https://github.com/dewrich)**
+* **[Eric Friedrich](https://github.com/limited)**
+* **[Hank Beatty](https://github.com/hbeatty)**
 * **[Jan van Doorn](https://github.com/knutsel)**
 * **[Jeff Elsloo](https://github.com/elsloo)**
 * **[John Benton](https://github.com/evergreentech)**

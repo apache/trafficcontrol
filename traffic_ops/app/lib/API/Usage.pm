@@ -24,6 +24,7 @@ use Mojo::Base 'Mojolicious::Controller';
 use Data::Dumper;
 use JSON;
 use Common::ReturnCodes qw(SUCCESS ERROR);
+use Extensions::Delegate::Statistics;
 use Utils::Helper::Extensions;
 Utils::Helper::Extensions->use;
 
