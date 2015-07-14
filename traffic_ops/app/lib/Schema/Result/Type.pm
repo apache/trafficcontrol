@@ -1,19 +1,4 @@
 use utf8;
-#
-# Copyright 2015 Comcast Cable Communications Management, LLC
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
-#
 package Schema::Result::Type;
 
 # Created by DBIx::Class::Schema::Loader
@@ -53,8 +38,8 @@ __PACKAGE__->table("type");
 =head2 description
 
   data_type: 'varchar'
-  is_nullable: 0
-  size: 45
+  is_nullable: 1
+  size: 256
 
 =head2 use_in_table
 
@@ -77,7 +62,7 @@ __PACKAGE__->add_columns(
   "name",
   { data_type => "varchar", is_nullable => 0, size => 45 },
   "description",
-  { data_type => "varchar", is_nullable => 0, size => 45 },
+  { data_type => "varchar", is_nullable => 1, size => 256 },
   "use_in_table",
   { data_type => "varchar", is_nullable => 1, size => 45 },
   "last_updated",
@@ -208,9 +193,25 @@ __PACKAGE__->has_many(
 );
 
 
-# Created by DBIx::Class::Schema::Loader v0.07042 @ 2015-02-05 16:22:54
-# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:Hhv2Dx5qe7jBn4g6Vdk6bQ
+# Created by DBIx::Class::Schema::Loader v0.07043 @ 2015-06-23 14:24:12
+# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:gLRvkh8jz2f1qU6I0DHSZQ
 
 
 # You can replace this text with custom code or comments, and it will be preserved on regeneration
+#
+# Copyright 2015 Comcast Cable Communications Management, LLC
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+#
 1;

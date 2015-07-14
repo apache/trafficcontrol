@@ -20,23 +20,30 @@ package API::Usage;
 # JvD Note: you always want to put Utils as the first use. Sh*t don't work if it's after the Mojo lines.
 use UI::Utils;
 use Mojo::Base 'Mojolicious::Controller';
+
 use Data::Dumper;
-use Utils::Helper;
 use JSON;
+use Common::ReturnCodes qw(SUCCESS ERROR);
+use Extensions::Delegate::Statistics;
+use Utils::Helper::Extensions;
+Utils::Helper::Extensions->use;
 
 sub deliveryservice {
-	my $self            = shift;
-	my $dsid            = $self->param('ds');
-	my $cachegroup_name = $self->param('name');
-	my $metric          = $self->param('metric');
-	my $start           = $self->param('start_date');
-	my $end             = $self->param('end_date');
-	my $interval        = $self->param('interval');
-	my $helper          = new Utils::Helper( { mojo => $self } );
-	if ( $helper->is_valid_delivery_service($dsid) ) {
+	my $self  = shift;
+	my $ds_id = $self->param("ds_id");
 
-		if ( $helper->is_delivery_service_assigned($dsid) ) {
-			return $self->get_ds_usage( $dsid, $cachegroup_name, $metric, $start, $end, $interval );
+	if ( $self->is_valid_delivery_service($ds_id) ) {
+		if ( $self->is_delivery_service_assigned($ds_id) ) {
+
+			my $stats = new Extensions::Delegate::Statistics($self);
+			my ( $rc, $result ) = $stats->get_deliveryservice_usage();
+
+			if ( $rc == SUCCESS ) {
+				return $self->success($result);
+			}
+			else {
+				return $self->alert($result);
+			}
 		}
 		else {
 			return $self->forbidden();
@@ -45,7 +52,6 @@ sub deliveryservice {
 	else {
 		$self->success( {} );
 	}
-
 }
 
 1;

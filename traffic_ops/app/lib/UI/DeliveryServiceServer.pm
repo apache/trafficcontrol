@@ -97,8 +97,9 @@ sub edit {
 	my $ds = $self->db->resultset('Deliveryservice')->search( { id => $id } )->single();
 
 	my $etypeid = &type_id( $self, 'EDGE', );
-	my $rs = $self->db->resultset('Server')->search( { 'me.type' => $etypeid },
-		{ prefetch => [ { 'cachegroup' => undef }, { 'type' => undef }, { 'profile' => undef }, { 'status' => undef } ], } );
+	my $otypeid = &type_id( $self, 'ORG', );
+	my $rs = $self->db->resultset('Server')->search( { -or => [ { 'me.type' => $etypeid }, { 'me.type' => $otypeid }  ] },
+		{ prefetch => [ 'cachegroup', 'type', 'profile', 'status' ], } );
 	while ( my $row = $rs->next ) {
 
 		# skip profiles that are not associated with the cdn this ds is in
@@ -188,7 +189,7 @@ sub clone_server {
 		$numlinks++;
 
 		my $ds = $self->db->resultset('Deliveryservice')->search( { id => $ds } )->single();
-		&UI::DeliveryService::header_rewrite( $self, $ds->profile, $ds->xml_id, $ds->header_rewrite );
+		&UI::DeliveryService::header_rewrite( $self, $ds->id, $ds->profile, $ds->xml_id, $ds->edge_header_rewrite, "edge" );
 
 	}
 
@@ -233,7 +234,7 @@ sub assign_servers {
 	}
 
 	my $ds = $self->db->resultset('Deliveryservice')->search( { id => $dsid } )->single();
-	&UI::DeliveryService::header_rewrite( $self, $ds->profile, $ds->xml_id, $ds->header_rewrite );
+	&UI::DeliveryService::header_rewrite( $self, $ds->id, $ds->profile, $ds->xml_id, $ds->edge_header_rewrite, "edge" );
 
 	&log( $self, "Link deliveryservice " . $ds->xml_id . " to " . $numlinks . " servers", "UICHANGE" );
 
@@ -257,7 +258,7 @@ sub create {
 		$new_id = $insert->id;
 
 		my $ds = $self->db->resultset('Deliveryservice')->search( { id => $deliveryservice } )->single();
-		&UI::DeliveryService::header_rewrite( $self, $ds->profile, $ds->xml_id, $ds->header_rewrite ); 
+		&UI::DeliveryService::header_rewrite( $self, $ds->id, $ds->profile, $ds->xml_id, $ds->edge_header_rewrite, "edge" ); 
 
 		$self->flash( alertmsg => 'Success!' );
 		&log( $self, "Create deliveryservice server link " . $ds->xml_id . " <-> " . $server_name, "UICHANGE" );

@@ -127,8 +127,11 @@ sub newjob {
 
 		my $start_time_gmt = strftime( "%Y-%m-%d %H:%M:%S", gmtime($start_time) );
 		if ( !%err ) {
-
-			$regex =~ m/(^\/.+)/ ? $org_server_fqdn = $org_server_fqdn . "/$regex" : $org_server_fqdn = $org_server_fqdn . "$regex";
+			if ($regex =~ m/(^\/.+)/) {
+				$org_server_fqdn = $org_server_fqdn . "$regex"
+			} else {
+				$org_server_fqdn = $org_server_fqdn . "/$regex";
+			}
 			my $insert = $self->db->resultset('Job')->create(
 				{
 					agent        => 1,
@@ -147,20 +150,10 @@ sub newjob {
 			$insert->insert();
 			$response{"job"} = $insert->id;
 
-			&log( $self, "External job " . $response{job} . " forced new regex_revalidate.config snapshot", "CODEBIG" );
+			&log( $self, "UI entry " . $response{job} . " forced new regex_revalidate.config snapshot", "CODEBIG" );
 			$self->snapshot_regex_revalidate();
-
-			# set the update bit for all the Caches in the CDN of this delivery service.
-			my $ds = $self->db->resultset('Deliveryservice')->search( { xml_id => $ds_xml_id }, { prefetch => ['profile'] } )->single();
-			my $cdn_pparam =
-				$self->db->resultset('ProfileParameter')
-				->search( { -and => [ profile => $ds->profile->id, 'parameter.name' => 'CDN_name' ] }, { prefetch => [ 'parameter', 'profile' ] } )
-				->single();
-			my @cdn_profiles =
-				$self->db->resultset('ProfileParameter')->search( { parameter => $cdn_pparam->parameter->id } )->get_column('profile')->all();
-			my $update_server_bit_rs = $self->db->resultset('Server')->search( { profile => { -in => \@cdn_profiles } } );
-			my $result = $update_server_bit_rs->update( { upd_pending => 1 } );
-			&log( $self, "External job " . $response{job} . " set upd_pending = 1 for all applicable caches", "CODEBIG" );
+			my $ds_id = $self->db->resultset('Deliveryservice')->search( { xml_id => $ds_xml_id }, { prefetch => ['profile'] } )->get_column('id')->single();	
+			$self->set_update_server_bits($ds_id);
 
 			if ( defined $response{"job"} ) {
 				$response{"status"} = "success";

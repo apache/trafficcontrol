@@ -1,4 +1,5 @@
 package UI::Cdn;
+
 #
 # Copyright 2015 Comcast Cable Communications Management, LLC
 #
@@ -84,8 +85,16 @@ sub aparameter {
 
 	my $rs = undef;
 	if ( $col eq 'profile' and $val eq 'ORPHANS' ) {
-		my $lindked_rs = $self->db->resultset('ProfileParameter')->search(undef);
-		$rs = $self->db->resultset('Parameter')->search( { id => { -not_in => $lindked_rs->get_column('parameter')->as_query } } );
+		my $lindked_profile_rs    = $self->db->resultset('ProfileParameter')->search(undef);
+		my $lindked_cachegroup_rs = $self->db->resultset('CachegroupParameter')->search(undef);
+		$rs = $self->db->resultset('Parameter')->search(
+			{
+				-and => [
+					id => { -not_in => $lindked_profile_rs->get_column('parameter')->as_query },
+					id => { -not_in => $lindked_cachegroup_rs->get_column('parameter')->as_query }
+				]
+			}
+		);
 		while ( my $row = $rs->next ) {
 			my @line = [ $row->id, "NONE", $row->name, $row->config_file, $row->value, "profile" ];
 			push( @{ $data{'aaData'} }, @line );
@@ -110,7 +119,8 @@ sub aparameter {
 	$rs = undef;
 	if ( $col eq 'cachegroup' && $val ne 'all' ) {
 		my $l_id = $self->db->resultset('Cachegroup')->search( { short_name => $val } )->get_column('id')->single();
-		$rs = $self->db->resultset('CachegroupParameter')
+		$rs =
+			$self->db->resultset('CachegroupParameter')
 			->search( { $col => $l_id }, { prefetch => [ { 'parameter' => undef }, { 'cachegroup' => undef } ] } );
 	}
 	elsif ( !defined($col) || ( $col eq 'cachegroup' && $val eq 'all' ) ) {
@@ -149,7 +159,8 @@ sub aserver {
 				$img     = "graph.png";
 			}
 			elsif ( $row->type->name eq "CCR" ) {
-				my $rs_param = $self->db->resultset('Parameter')
+				my $rs_param =
+					$self->db->resultset('Parameter')
 					->search( { 'profile_parameters.profile' => $row->profile->id, 'name' => 'api.port' }, { join => 'profile_parameters' } );
 				my $r = $rs_param->single;
 				my $port = ( defined($r) && defined( $r->value ) ) ? $r->value : 80;
@@ -226,13 +237,12 @@ sub adeliveryservice {
 		my $related_rs = $row->profile->profile_parameters->related_resultset('parameter');
 		my $related    = $related_rs->next;
 		my @line       = [
-			$row->id,                    $row->xml_id,                         $row->org_server_fqdn,
-			$related->value,             $row->profile->name,                  $row->ccr_dns_ttl,
-			$yesno{ $row->active },      $row->type->name,                     $row->dscp,
-			$yesno{ $row->signed },      $row->qstring_ignore,                 $geo_limits{ $row->geo_limit },
-			$protocol{ $row->protocol }, $yesno{ $row->ipv6_routing_enabled }, $yesno{ $row->background_fetch_enabled },
-			$row->http_bypass_fqdn,      $row->dns_bypass_ip,                  $row->dns_bypass_ip6,
-			$row->dns_bypass_ttl,        $row->miss_lat,                       $row->miss_long,
+			$row->id,                    $row->xml_id,                         $row->org_server_fqdn,        $related->value,
+			$row->profile->name,         $row->ccr_dns_ttl,                    $yesno{ $row->active },       $row->type->name,
+			$row->dscp,                  $yesno{ $row->signed },               $row->qstring_ignore,         $geo_limits{ $row->geo_limit },
+			$protocol{ $row->protocol }, $yesno{ $row->ipv6_routing_enabled }, $row->range_request_handling, $row->http_bypass_fqdn,
+			$row->dns_bypass_ip,         $row->dns_bypass_ip6,                 $row->dns_bypass_ttl,         $row->miss_lat,
+			$row->miss_long,
 		];
 		push( @{ $data{'aaData'} }, @line );
 	}
@@ -263,7 +273,8 @@ sub ajob {
 	my $self = shift;
 	my %data = ( "aaData" => undef );
 
-	my $rs = $self->db->resultset('Job')
+	my $rs =
+		$self->db->resultset('Job')
 		->search( undef, { prefetch => [ { 'ext_user' => undef }, { agent => undef }, { status => undef } ], order_by => { -desc => 'me.entered_time' } } );
 
 	while ( my $row = $rs->next ) {

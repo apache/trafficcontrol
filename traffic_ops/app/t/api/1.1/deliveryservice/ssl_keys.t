@@ -210,7 +210,7 @@ ok $t->post_ok(
 		businessUnit => $unit,
 	}
 	)->status_is(400)->or( sub { diag $t->tx->res->content->asset->{content}; } )->json_is( "/alerts/0/level" => "error" )
-	->json_like( "/alerts/0/text" => qr/^No Riak servers/ ),
+	->json_like( "/alerts/0/text" => qr/^No RIAK servers/ ),
 
 	'Creating ssl after riak servers are all offline should fail?';
 

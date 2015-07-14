@@ -45,7 +45,7 @@ my %definition_for = (
 			country              => 'United States',
 			local_user           => '1',
 			token                => '',
-			registration_sent    => undef,
+			registration_sent    => '0000-00-00 00:00:00',
 		},
 	},
 	portal => {
@@ -70,7 +70,7 @@ my %definition_for = (
 			country              => 'United States',
 			local_user           => '1',
 			token                => '',
-			registration_sent    => undef,
+			registration_sent    => '0000-00-00 00:00:00',
 		},
 	},
 	codebig => {
@@ -95,7 +95,7 @@ my %definition_for = (
 			country              => 'United States',
 			local_user           => '1',
 			token                => '',
-			registration_sent    => undef,
+			registration_sent    => '0000-00-00 00:00:00',
 		},
 	},
 	migrations => {
@@ -120,7 +120,7 @@ my %definition_for = (
 			country              => 'United States',
 			local_user           => '1',
 			token                => '',
-			registration_sent    => undef,
+			registration_sent    => '0000-00-00 00:00:00',
 		},
 	},
 );

@@ -86,7 +86,7 @@ sub ort_check() {
 	my $host_name = shift;
 	my $host_id   = shift;
 
-	my $cmd = "/usr/bin/sudo /opt/ort/ipcdn_install_ort.pl report WARN";
+	my $cmd = "/usr/bin/sudo /opt/ort/traffic_ops_ort.pl report WARN";
 	$cmd = "ssh -o \"StrictHostKeyChecking no\" -i ~$username/.ssh/id_dsa -l " . $username . " " . $ipaddr . " " . $cmd;
 	TRACE $host_name . " running " . $cmd;
 	my $out = `$cmd`;

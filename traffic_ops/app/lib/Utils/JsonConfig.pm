@@ -21,6 +21,7 @@ package Utils::JsonConfig;
 use strict;
 use warnings;
 use JSON;
+use Data::Dumper;
 
 my $json_ref = ();
 my $file;
@@ -41,9 +42,7 @@ sub new {
 
 	my $json_fh = <$fh>;
 	$json_ref = decode_json($json_fh);
-
 	$json_ref->{"file"} = $file;
-
 	close($fh);
 
 	bless $json_ref, $class;
@@ -64,6 +63,16 @@ sub get {
 	else {
 		return "";
 	}
+}
+
+sub load_conf {
+	my $self           = shift;
+	my $mode           = shift;
+	my $conf_file_name = shift;
+
+	local $/;    #Enable 'slurp' mode
+	my $conf_path = "conf/" . $mode . "/" . $conf_file_name;
+	return Utils::JsonConfig->new($conf_path);
 }
 
 1;

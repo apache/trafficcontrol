@@ -59,21 +59,19 @@ $t->get_ok( '/dataserverdetail/select/' . $test_server )->status_is(200)->json_i
 ok $t->get_ok('/logout')->status_is(302)->or( sub { diag $t->tx->res->content->asset->{content}; } );              # logout as admin first
 my $token = '91504CE6-8E4A-46B2-9F9F-FE7C15228498';
 my $path  = '/api/1.1/user/login/token';
-$t->post_ok( $path => json => { t => $token } )->status_is(200)->json_is( '/version' => '1.1' )->json_is( '/alerts/0/text' => "Successfully logged in." )
+$t->post_ok( $path => json => { t => $token } )->status_is(200)->json_is( '/alerts/0/text' => "Successfully logged in." )
 	->json_is( '/alerts/0/level' => "success" );
 
 # set some 1's
 for my $test (qw/ILO 10G FQDN DSCP 10G6 STAT MTU TRTR TRMO/) {
 	$t->post_ok( '/api/1.1/servercheck' => json => { id => $test_server_id, servercheck_short_name => $test, value => 1 } )->status_is(200)
-		->json_is( '/version' => '1.1' )->json_is( '/alerts/0/text' => "Server Check was successfully updated." )
-		->json_is( '/alerts/0/level' => "success" );
+		->json_is( '/alerts/0/text' => "Server Check was successfully updated." )->json_is( '/alerts/0/level' => "success" );
 }
 
 # and some ints
 for my $test (qw/CHR CDU ORT/) {
 	$t->post_ok( '/api/1.1/servercheck' => json => { id => $test_server_id, servercheck_short_name => $test, value => 99 } )->status_is(200)
-		->json_is( '/version' => '1.1' )->json_is( '/alerts/0/text' => "Server Check was successfully updated." )
-		->json_is( '/alerts/0/level' => "success" );
+		->json_is( '/alerts/0/text' => "Server Check was successfully updated." )->json_is( '/alerts/0/level' => "success" );
 }
 
 $t->get_ok('/api/1.1/servercheck/aadata.json')->status_is(200);
@@ -89,6 +87,7 @@ foreach my $line ( @{ $jdata->{aaData} } ) {
 			# diag Dumper($line);
 			my $check = $line->[ $i++ ];
 			if ( $i == 10 || $i == 11 || $i == 13 || $i == 15 || $i > 21 ) {
+
 				# ok !defined($check) || $check != 0, "Are all the right fields undef? Found not true for index " . $i;
 			}
 			elsif ( $i >= 19 && $i <= 21 ) {
@@ -104,8 +103,7 @@ foreach my $line ( @{ $jdata->{aaData} } ) {
 # set some 0's
 for my $test (qw/ILO 10G FQDN DSCP 10G6 STAT MTU TRTR TRMO CHR CDU ORT/) {
 	$t->post_ok( '/api/1.1/servercheck' => json => { id => $test_server_id, servercheck_short_name => $test, value => 0 } )->status_is(200)
-		->json_is( '/version' => '1.1' )->json_is( '/alerts/0/text' => "Server Check was successfully updated." )
-		->json_is( '/alerts/0/level' => "success" );
+		->json_is( '/alerts/0/text' => "Server Check was successfully updated." )->json_is( '/alerts/0/level' => "success" );
 }
 
 $t->get_ok('/api/1.1/servercheck/aadata.json')->status_is(200);

@@ -18,7 +18,7 @@
 <script type="text/javascript">
   $(document).ready(function () {
       show_gen_url_sigs_button('fast');
-	  show_add_ssl_button('fast');
+	  show_mng_ssl_button('fast');
 	  $('#generate-sig-keys-button').click(function (e) {
 		$( "#dialog-confirm" ).dialog({
 		  resizable: false,
@@ -113,7 +113,7 @@
 	}
 
 	function addSslKeys() {
-		$.fancybox({ type: 'iframe', href: "/ds/<%= $ds->id %>/sslkeys/add", padding: 0, autosize: true, fitToView: true, width: 700, minHeight: 600, modal:true, helpers: {overlay:{locked:false}}});
+		$.fancybox({ type: 'iframe', href: "/ds/<%= $ds->id %>/sslkeys/add", padding: 0, autosize: true, fitToView: true, width: 750, minHeight: 800, modal:true, helpers: {overlay:{locked:false}}});
 	}
 
 	var re_row_num = Object;
@@ -231,8 +231,8 @@
 		$('#regexp_selector :nth-child(1)').prop('selected', true); // set back to 0 index
 	}
 
-	// hide/show 'Add SSL Keys' button
-	 function show_add_ssl_button(speed) {
+	// hide/show 'Manage SSL Keys' button
+	 function show_mng_ssl_button(speed) {
       var ssl_selected = $('#protocol :selected').text();
       if (ssl_selected.match(/^https/)) {
         $('#addkeys').show(speed);
@@ -244,12 +244,6 @@
         $('#addkeys').hide(speed);
       }
     }
-
-	$(function(){
-      $('#protocol').change(function() {
-        show_add_ssl_button('fast');
-      });
-    });
 
 	// hide/show 'Generate URL Sig Keys'
 	 function show_gen_url_sigs_button(speed) {
@@ -363,7 +357,7 @@
 					<button class="button" style="float:left;margin-left:5px; " onclick="openAssignment()">Server Assignments</button>
 					<button class="button" style="float:left;margin-left:5px; " onclick="openStaticDns()">Static DNS</button>
 					<% if ($priv_level >= 30) { %>
-						  <button class="button" style="float:left;margin-left:5px; " onclick="addSslKeys()" id="addkeys">Add SSL Keys</button>
+						  <button class="button" style="float:left;margin-left:5px; " onclick="addSslKeys()" id="addkeys">Manage SSL Keys</button>
 					<% } %>
 
 					<% if ($priv_level >= 30) { %>

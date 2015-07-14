@@ -4047,7 +4047,24 @@ my %definition_for = (
 			value       => 'http://proxy.kabletown.net:81',
 		},
 	},
-
+	'819-weight' => {
+		new   => 'Parameter',
+		using => {
+			id          => 819,
+			name        => 'weight',
+			config_file => 'parent.config',
+			value       => '1.0',
+		},
+	},
+	'820-location' => {
+		new   => 'Parameter',
+		using => {
+			id          => 820,
+			name        => 'location',
+			config_file => 'hdr_rw_mid_movies-c1.config',
+			value       => '/opt/trafficserver/etc/trafficserver',
+		},
+	},
 );
 
 sub name {

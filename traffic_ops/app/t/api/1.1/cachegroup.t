@@ -45,8 +45,8 @@ ok $t->post_ok( '/login', => form => { u => Test::TestHelper::PORTAL_USER, p => 
 
 $t->get_ok("/api/1.1/cachegroups.json?orderby=name")->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } )
 	->json_is( "/response/0/typeName", "EDGE" );
-$t->get_ok("/api/1.1/cachegroups/trimmed.json")->status_is(200)->json_is( "/response/0/name", "mid-northeast-group" )
-	->json_is( "/response/1/name", "mid-northwest-group" )->or( sub { diag $t->tx->res->content->asset->{content}; } );
+$t->get_ok("/api/1.1/cachegroups/trimmed.json")->status_is(200)->json_is( "/response/0/name", "edge_atl_group" )
+	->json_is( "/response/1/name", "mid-northeast-group" )->or( sub { diag $t->tx->res->content->asset->{content}; } );
 
 $t->get_ok("/api/1.1/cachegroups.json?orderby=name")->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } )
 	->json_is( "/response/0/typeId", "1" );

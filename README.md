@@ -15,6 +15,12 @@ Traffic Control is an Open Source implementation of a Content Delivery Network.
 * [Check out the wiki](https://github.com/Comcast/traffic_control/wiki) for less formal documentation, design docs and roadmap discussions 
 
 ##### News
+* 01-July-2015: Traffic Control 1.1.3 is released. 1.1.3 includes 30 bug fixes and 12 enhancements, most notably:
+	* Multisite Origin Support
+	* SSL delivery service configuraton support
+	* DNSSEC configuration support
+
+	See https://github.com/Comcast/traffic_control/issues?utf8=%E2%9C%93&q=milestone%3A1.1.3 for the full change list.
 * 16-April-2015: **Traffic Control is Open Source!**
 	Certainly not perfect, but hopefully good enough to get going for an administrator using the rpms, and for brave developers to start looking in to helping the project move forward. Please see the **[Additional Install Notes for this release](http://traffic-control-cdn.net/docs/latest/faq/administration.html#why-is-my-crconfig-json-rejected)** when installing for the first time.
 

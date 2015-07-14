@@ -57,7 +57,7 @@ Traffic routing options are often configured at the Delivery Service level.
 
 |arrow| Localization
 --------------------
-  Traffic Router uses a SJON input file called the *coverage zone map* to determine what *cachegroup* is closest to the client. If the client IP address is not in this coverage zone map, it falls back to *geo*, using the maxmind database to find the client's location, and the geo coordinates from Traffic Ops for the cachegroup.
+  Traffic Router uses a JSON input file called the *coverage zone map* to determine what *cachegroup* is closest to the client. If the client IP address is not in this coverage zone map, it falls back to *geo*, using the maxmind database to find the client's location, and the geo coordinates from Traffic Ops for the cachegroup.
 
 |
 
@@ -105,5 +105,5 @@ Traffic Router is inserted into the HTTP retrieval process by making it DNS auth
 
 In many cases DNS content routing is the best possible option, especially in cases where the client is receiving small objects from the CDN like images and web pages. 
 
-Traffic Router is redundant and horizontally scalable by adding more instances into the DNS hierarchy 
-..  (MAT/JSE to expand or word better)
+Traffic Router is redundant and horizontally scalable by adding more instances into the DNS hierarchy using NS records.
+

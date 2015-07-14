@@ -34,7 +34,6 @@ import org.apache.commons.pool.ObjectPool;
 import org.apache.log4j.Logger;
 import org.json.JSONObject;
 import org.xbill.DNS.Name;
-import org.xbill.DNS.Type;
 import org.xbill.DNS.Zone;
 
 import com.comcast.cdn.traffic_control.traffic_router.core.cache.Cache;
@@ -282,10 +281,6 @@ public class TrafficRouter {
 			return ds.getFailureDnsResponse(request, track);
 		}
 
-		if (!ds.isIp6RoutingEnabled() && (request.getQtype() == Type.AAAA || request.getQtype() == Type.A6)) {
-			return null;
-		}
-
 		final List<Cache> caches = selectCache(request, ds, track, false);
 		if(caches == null) {
 			return ds.getFailureDnsResponse(request, track);
@@ -298,7 +293,7 @@ public class TrafficRouter {
 			if(maxDnsIps!=0 && i >= maxDnsIps) { break; }
 			i++;
 			addresses.addAll(
-					cache.getIpAddresses(ds.getTtls(), zoneManager)
+					cache.getIpAddresses(ds.getTtls(), zoneManager, ds.isIp6RoutingEnabled())
 				);
 		}
 		return addresses;

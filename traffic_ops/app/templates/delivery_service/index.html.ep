@@ -43,7 +43,7 @@ $(function () {
 			},
 			{
 				"mRender": function (data, type, full) {
-					return "<a href='/visualstatus/" + full[1] + ":all:all'><img src='/images/graph.png' width=12></a>";
+					return "<a href='<%= $graph_url %>" + full[1] + "' target='_blank'><img src='/images/graph.png' width=12></a>";
 					},
 					'bSortable': false,
 					"aTargets": [3]
@@ -104,7 +104,7 @@ $("a.fancybox").fancybox({
 			<th>Geo Limit</th>
 			<th>Protocol</th>
 			<th>IPv6</th> 
-			<th>BGF</th> 
+			<th>RR</th> 
 		</tr>
 	</thead>
 </table>
