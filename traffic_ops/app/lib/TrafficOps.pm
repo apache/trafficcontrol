@@ -159,11 +159,11 @@ sub startup {
 
 	$self->hook(
 		after_render => sub {
-			my ($c, $output, $format) = @_;
+			my ( $c, $output, $format ) = @_;
 
 			# Check if user agent accepts gzip compression
-			return unless ($c->req->headers->accept_encoding // '') =~ /gzip/i;
-			$c->res->headers->append(Vary => 'Accept-Encoding');
+			return unless ( $c->req->headers->accept_encoding // '' ) =~ /gzip/i;
+			$c->res->headers->append( Vary => 'Accept-Encoding' );
 
 			# Compress content with gzip
 			$c->res->headers->content_encoding('gzip');
@@ -884,6 +884,7 @@ sub startup {
 	my $api_version   = "1.2";
 	my $api_namespace = "v12";
 
+	$r->get( "/api/$api_version/cdns/usage/overview" => [ format => [qw(json)] ] )->to( 'CdnStats#get_usage_overview', namespace => "API::$api_namespace" );
 	$r->get( "/api/$api_version/deliveryservice_stats" => [ format => [qw(json)] ] )->over( authenticated => 1 )
 		->to( 'DeliveryServiceStats#index', namespace => "API::$api_namespace" );
 	$r->get( "/api/$api_version/cache_stats" => [ format => [qw(json)] ] )->over( authenticated => 1 )
