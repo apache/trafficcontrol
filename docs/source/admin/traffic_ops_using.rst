@@ -735,6 +735,98 @@ Tools
 Generate ISO
 ++++++++++++
 
+Generate ISO is a tool for building custom ISOs for building caches on remote hosts. Currently it only supports Centos 6, but if you're brave and pure of heart you MIGHT be able to get it to work with other unix-like OS's. 
+
+The interface is *mostly* self explainatory as it's got hints.
+
++-------------------------------+---------------------------------------------------------------------------------------------------------------------------------+
+| Field                         |  Explaination                                                                                                                   |
++===============================+=================================================================================================================================+
+|Choose a server from list:     | This option gets all the server names currently in the Traffic Ops database and will autofill known values.                     |
++-------------------------------+---------------------------------------------------------------------------------------------------------------------------------+
+| OS Version:                   | There needs to be an _osversions.cfg_ file in the ISO directory that maps the name of a directory to a name that shows up here. |
++-------------------------------+---------------------------------------------------------------------------------------------------------------------------------+
+| Hostname:                     | This is the FQDN of the server to be installed. It is required.                                                                 |
++-------------------------------+---------------------------------------------------------------------------------------------------------------------------------+
+| Root password:                | If you don't put anything here it will default to the salted MD5 of "Fred". Whatever put is MD5 hashed and writte to disk.      |
++-------------------------------+---------------------------------------------------------------------------------------------------------------------------------+
+| DHCP:                         | if yes, other IP settings will be ignored                                                                                       |
++-------------------------------+---------------------------------------------------------------------------------------------------------------------------------+
+| IP Address:                   | Required if DHCP=no                                                                                                             |
++-------------------------------+---------------------------------------------------------------------------------------------------------------------------------+
+| Netmask:                      | Required if DHCP=no                                                                                                             |
++-------------------------------+---------------------------------------------------------------------------------------------------------------------------------+
+| Gateway:                      | Required if DHCP=no                                                                                                             |
++-------------------------------+---------------------------------------------------------------------------------------------------------------------------------+
+| IPV6 Address:                 | Optional. /64 is assumed if prefix is omitted                                                                                   |
++-------------------------------+---------------------------------------------------------------------------------------------------------------------------------+
+| IPV6 Gateway:                 | Ignored if an IPV4 gateway is specified                                                                                         |
++-------------------------------+---------------------------------------------------------------------------------------------------------------------------------+
+| Network Device:               | Optional. Typical values are bond0, eth4, etc. Note: if you enter bond0, a LACP bonding config will be written                  |
++-------------------------------+---------------------------------------------------------------------------------------------------------------------------------+
+| MTU:                          | If unsure, set to 1500                                                                                                          |
++-------------------------------+---------------------------------------------------------------------------------------------------------------------------------+
+| Specify disk for OS install:  | Optional. Typical values are "sda".                                                                                             |
++-------------------------------+---------------------------------------------------------------------------------------------------------------------------------+
+
+
+When you click the **Download ISO** button the folling occurs (all paths relative to the top level of the directory specified in _osversions.cfg_):
+
+#. Reads /etc/resolv.conf to get a list of nameservers. This is a rather ugly hack that is in place until we get a way of configuring it in the interface.
+#. Writes a file in the ks_scripts/state.out that contains directory from _osversions.cfg_ and the mkisofs string that we'll call later.
+#. Writes a file in the ks_scripts/network.cfg that is a bunch of key=value pairs that set up networking.
+#. Creates an MD5 hash of the password you specify and writes it to ks_scripts/password.cfg. Note that if you do not specify a password "Fred" is used. Also note that we have experienced some issues with webbrowsers autofilling that field. 
+#. Writes out a disk configuration file to ks_scripts/disk.cfg.
+#. mkisofs is called against the directory configured in _osversions.cfg_ and an ISO is generated in memory and delivered to your webbrowser.
+
+You now have a customized ISO that can be used to install Red Hat and derivative Linux installations with some modifications to your ks.cfg file. 
+
+Kickstart/Anaconda will mount the ISO at /mnt/stage2 during the install process (at least with 6).
+
+You can directly include the password file anywhere in your ks.cfg file (usually in the top) by doing %include /mnt/stage2/ks_scripts/password.cfg
+
+What we currently do is have 2 scripts, one to do hard drive configuration and one to do network configuration. Both are relatively specific to the environment they were created in, and both are *probably* wrong for other organizations, however they are currently living in the "misc" directory as examples of how to do things. 
+
+We trigger those in a %pre section in ks.cfg and they will write config files to /tmp. We will then include those files in the appropriate places using  %pre.
+
+For example this is a section of our ks.cfg file: ::
+
+  %include /mnt/stage2/ks_scripts/packages.txt
+
+  %pre
+    python /mnt/stage2/ks_scripts/create_network_line.py
+    bash /mnt/stage2/ks_scripts/drive_config.sh
+  %end
+
+These two scripts will then run _before_ anaconda sets up it's internal structures, then a bit further up in the ks.cfg file (outside of the %pre %end block) we do an ::
+
+    %include /mnt/stage2/ks_scripts/password.cfg 
+    ...
+    %include /tmp/network_line
+
+    %include /tmp/drive_config
+    ...
+
+This snarfs up the contents and inlines them. 
+
+If you only have one kind of hardware on your CDN it is probably best to just put the drive config right in the ks.cfg. 
+
+If you have simple networking needs (we use bonded interfaces in most, but not all locations and we have several types of hardware meaning different ethernet interface names at the OS level etc.) then something like this: ::
+  
+  #!/bin/bash
+  source /mnt/stage2/ks_scripts/network.cfg
+  echo "network --bootproto=static --activate --ipv6=$IPV6ADDR --ip=$IPADDR --netmask=$NETMASK --gateway=$GATEWAY --ipv6gateway=$GATEWAY --nameserver=$NAMESERVER --mtu=$MTU --hostname=$HOSTNAME" >> /tmp/network.cfg
+  # Note that this is an example and may not work at all. 
+
+
+You could also put this in the %pre section. Lots of ways to solve it.
+
+We have included the two scripts we use in the "misc" directory of the git repo:
+
+* kickstart_create_network_line.py
+* kickstart_drive_config.sh
+
+These scripts were written to support a very narrow set of expectations and environment and are almost certainly not suitable to just drop in, but they might provide a good starting point. 
 
 .. _rl-queue-updates:
 
