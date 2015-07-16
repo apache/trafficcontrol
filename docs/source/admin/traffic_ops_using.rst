@@ -469,15 +469,68 @@ Generate URL Sig Keys
 ^^^^^^^^^^^^^^^^^^^^^
 To generate a set of random signed url keys for this delivery service and store them in Traffic Vault, click the **Generate URL Sig Keys** button at the bottom of the delivery service details screen. 
 
-.. index::
-  CCR Profile
-  Traffic Router Profile
+
+.. rl-parent-selection:
+
+Parent Selection
+++++++++++++++++
+
+Parameters in the Edge (child) profile that influence this feature:
+
++-------------------------------------------------------------------+----------------+----------------------+-------------------------------------------------------+
+|                                Name                               |    Filename    |       Default        |                      Description                      |
++===================================================================+================+======================+=======================================================+
+| CONFIG proxy.config.http.parent_proxy_routing_enable              | records.config | INT 1                | enable parent selection.  This is a required setting. |
++-------------------------------------------------------------------+----------------+----------------------+-------------------------------------------------------+
+| CONFIG proxy.config.url_remap.remap_required                      | records.config | INT 1                | required for parent selection.                        |
++-------------------------------------------------------------------+----------------+----------------------+-------------------------------------------------------+
+| CONFIG proxy.config.http.no_dns_just_forward_to_parent            | records.config | INT 0                | See                                                   |
++-------------------------------------------------------------------+----------------+----------------------+-------------------------------------------------------+
+| CONFIG proxy.config.http.uncacheable_requests_bypass_parent       | records.config | INT 1                |                                                       |
++-------------------------------------------------------------------+----------------+----------------------+-------------------------------------------------------+
+| CONFIG proxy.config.http.parent_proxy_routing_enable              | records.config | INT 1                |                                                       |
++-------------------------------------------------------------------+----------------+----------------------+-------------------------------------------------------+
+| CONFIG proxy.config.http.parent_proxy.retry_time                  | records.config | INT 300              |                                                       |
++-------------------------------------------------------------------+----------------+----------------------+-------------------------------------------------------+
+| CONFIG proxy.config.http.parent_proxy.fail_threshold              | records.config | INT 10               |                                                       |
++-------------------------------------------------------------------+----------------+----------------------+-------------------------------------------------------+
+| CONFIG proxy.config.http.parent_proxy.total_connect_attempts      | records.config | INT 4                |                                                       |
++-------------------------------------------------------------------+----------------+----------------------+-------------------------------------------------------+
+| CONFIG proxy.config.http.parent_proxy.per_parent_connect_attempts | records.config | INT 2                |                                                       |
++-------------------------------------------------------------------+----------------+----------------------+-------------------------------------------------------+
+| CONFIG proxy.config.http.parent_proxy.connect_attempts_timeout    | records.config | INT 30               |                                                       |
++-------------------------------------------------------------------+----------------+----------------------+-------------------------------------------------------+
+| CONFIG proxy.config.http.forward.proxy_auth_to_parent             | records.config | INT 0                |                                                       |
++-------------------------------------------------------------------+----------------+----------------------+-------------------------------------------------------+
+| CONFIG proxy.config.http.parent_proxy_routing_enable              | records.config | INT 0                |                                                       |
++-------------------------------------------------------------------+----------------+----------------------+-------------------------------------------------------+
+| CONFIG proxy.config.http.parent_proxy.file                        | records.config | STRING parent.config |                                                       |
++-------------------------------------------------------------------+----------------+----------------------+-------------------------------------------------------+
+| CONFIG proxy.config.http.parent_proxy.connect_attempts_timeout    | records.config | INT 3                |                                                       |
++-------------------------------------------------------------------+----------------+----------------------+-------------------------------------------------------+
+| algorithm                                                         | parent.config  | urlhash              | The algorithm to use.                                 |
++-------------------------------------------------------------------+----------------+----------------------+-------------------------------------------------------+
+
+
+Parameters in the Mid (parent) profile that influence this feature:
+
++----------------+---------------+---------+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+|      Name      |    Filename   | Default |                                                                                    Description                                                                                    |
++================+===============+=========+===================================================================================================================================================================================+
+| domain_name    | CRConfig.json | -       | Only parents with the same value as the edge are going to be used as parents (to keep separation between CDNs)                                                                    |
++----------------+---------------+---------+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| weight         | parent.config | 1.0     | The weight of this parent, translates to the number of replicas in the consistent hash ring. This parameter only has effect with algorithm at the client set to "consistent_hash" |
++----------------+---------------+---------+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| port           | parent.config | 80      | The port this parent is listening on as a forward proxy.                                                                                                                          |
++----------------+---------------+---------+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| use_ip_address | parent.config | 0       | 1 means use IP(v4) address of this parent in the parent.config, 0 means use the host_name.domain_name concatenation.                                                              |
++----------------+---------------+---------+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
 
 .. _rl-multi-site-origin:
 
 Multi Site Origin
 +++++++++++++++++
-.. Note:: The Multi Site Origin feature is based upon a feature n ATS that has yet to be submitted to Traffic Server upstream, until it is, set this to 0. 
+.. Note:: The Multi Site Origin feature is based upon a feature n ATS that has yet to be submitted to Traffic Server upstream, until it is, set this to 0, or use the ATS rpm supplied on the traffic-control-cdn.net website. 
 
 Normally, the mid servers are not aware of any redundancy at the origin layer. With Multi Site Origin enabled this changes - Traffic Server (and Traffic Ops) are now made aware of the fact there are multiple origins, and can be configured to do more advanced failover and loadbalancing actions. 
 
@@ -486,27 +539,27 @@ With This feature enabled, origin servers (or origin server VIP names for a site
 
 Parameters in the Origin profile that influence this feature:
 
-+-------------------------------------------------------------------------+------------+---------------------------------------------------------------------------------------------------+
-| Name                                                                    | Default    | Description                                                                                       |
-+=========================================================================+============+===================================================================================================+
-| CONFIG proxy.config.http.parent_proxy_routing_enable                    | INT 1      | enable parent selection.  This is a required setting.                                             |
-+-------------------------------------------------------------------------+------------+---------------------------------------------------------------------------------------------------+
-| CONFIG proxy.config.url_remap.remap_required                            | INT 1      | required for parent selection.                                                                    |
-+-------------------------------------------------------------------------+------------+---------------------------------------------------------------------------------------------------+
-| CONFIG proxy.config.http.parent_proxy.per_parent_connect_attempts       | INT 5      |  maximum of 5 connection attempts per parent (parent.config list) within a transaction.           |
-+-------------------------------------------------------------------------+------------+---------------------------------------------------------------------------------------------------+
-| CONFIG proxy.config.http.parent_proxy.total_connect_attempts            | INT 10     | maximum of 10 total connection attempts within a transaction.                                     |
-+-------------------------------------------------------------------------+------------+---------------------------------------------------------------------------------------------------+
-| CONFIG proxy.config.http.parent_origin.simple_retry_enabled             | INT 1      | enables simple retry.                                                                             |
-+-------------------------------------------------------------------------+------------+---------------------------------------------------------------------------------------------------+
-| CONFIG proxy.config.http.parent_origin.simple_retry_response_codes      | STRING 404 | the response code that invokes simple retry.  May be a comman separated list of response codes.   |
-+-------------------------------------------------------------------------+------------+---------------------------------------------------------------------------------------------------+
-| CONFIG proxy.config.http.parent_origin.dead_server_retry_response_codes | STRING 503 | the response code that invokes dead server retry.  May be a comma separated list of response codes|
-+-------------------------------------------------------------------------+------------+---------------------------------------------------------------------------------------------------+
-| CONFIG proxy.config.http.parent_origin.dead_server_retry_enabled        | INT 1      | enables dead server retry.                                                                        |
-+-------------------------------------------------------------------------+------------+---------------------------------------------------------------------------------------------------+
-| CONFIG proxy.config.diags.debug.enabled                                 | INT 1      | enable debugging for testing only                                                                 |
-+-------------------------------------------------------------------------+------------+---------------------------------------------------------------------------------------------------+        
++-------------------------------------------------------------------------+----------------+------------+----------------------------------------------------------------------------------------------------+
+|                                   Name                                  |    Filename    |  Default   |                                            Description                                             |
++=========================================================================+================+============+====================================================================================================+
+| CONFIG proxy.config.http.parent_proxy_routing_enable                    | records.config | INT 1      | enable parent selection.  This is a required setting.                                              |
++-------------------------------------------------------------------------+----------------+------------+----------------------------------------------------------------------------------------------------+
+| CONFIG proxy.config.url_remap.remap_required                            | records.config | INT 1      | required for parent selection.                                                                     |
++-------------------------------------------------------------------------+----------------+------------+----------------------------------------------------------------------------------------------------+
+| CONFIG proxy.config.http.parent_proxy.per_parent_connect_attempts       | records.config | INT 5      | maximum of 5 connection attempts per parent (parent.config list) within a transaction.             |
++-------------------------------------------------------------------------+----------------+------------+----------------------------------------------------------------------------------------------------+
+| CONFIG proxy.config.http.parent_proxy.total_connect_attempts            | records.config | INT 10     | maximum of 10 total connection attempts within a transaction.                                      |
++-------------------------------------------------------------------------+----------------+------------+----------------------------------------------------------------------------------------------------+
+| CONFIG proxy.config.http.parent_origin.simple_retry_enabled             | records.config | INT 1      | enables simple retry.                                                                              |
++-------------------------------------------------------------------------+----------------+------------+----------------------------------------------------------------------------------------------------+
+| CONFIG proxy.config.http.parent_origin.simple_retry_response_codes      | records.config | STRING 404 | the response code that invokes simple retry.  May be a comman separated list of response codes.    |
++-------------------------------------------------------------------------+----------------+------------+----------------------------------------------------------------------------------------------------+
+| CONFIG proxy.config.http.parent_origin.dead_server_retry_response_codes | records.config | STRING 503 | the response code that invokes dead server retry.  May be a comma separated list of response codes |
++-------------------------------------------------------------------------+----------------+------------+----------------------------------------------------------------------------------------------------+
+| CONFIG proxy.config.http.parent_origin.dead_server_retry_enabled        | records.config | INT 1      | enables dead server retry.                                                                         |
++-------------------------------------------------------------------------+----------------+------------+----------------------------------------------------------------------------------------------------+
+| CONFIG proxy.config.diags.debug.enabled                                 | records.config | INT 1      | enable debugging for testing only                                                                  |
++-------------------------------------------------------------------------+----------------+------------+----------------------------------------------------------------------------------------------------+
 
 see `rl-multi-site-origin-qh` for a *quick how to* on this feature.
 
