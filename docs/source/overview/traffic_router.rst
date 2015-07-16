@@ -96,7 +96,7 @@ Traffic Router is inserted into the HTTP retrieval process by making it DNS auth
   The information Traffic Router can consider when selecting a cache in this case is much better:
 
   * The client's IP address (the other side of the socket).
-  * The URL path the client is requesting.
+  * The URL path the client is requesting, excluding query string.
   * All HTTP 1.1 headers.
 
   The client follows the redirect and performs a DNS request for the IP address for ``atsec-nyc-02.dsname.cdn.com``, and normal HTTP steps follow, except the sending of the Host: header when connected to the cache is ``Host: atsec-nyc-02.dsname.cdn``, and the configuration of the cache includes the remap rule (e.g.``http://atsec-nyc-02.dsname.cdn  http://origin.dsname.com``).

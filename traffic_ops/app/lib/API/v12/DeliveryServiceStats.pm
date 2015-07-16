@@ -37,7 +37,7 @@ sub index {
 	my $ds_name = $self->param('deliveryServiceName');
 
 	if ( $self->is_valid_delivery_service_name($ds_name) ) {
-		if ( $self->is_delivery_service_name_assigned($ds_name) ) {
+		if ( $self->is_delivery_service_name_assigned($ds_name) || &is_admin($self) || &is_oper($self) ) {
 
 			my $stats = new Extensions::Delegate::Statistics( $self, $self->get_db_name() );
 
