@@ -81,10 +81,7 @@ sub genfiles {
 	$file =~ s/^set_dscp_.*\.config$/set_dscp_\.config/;
 	$file =~ s/^regex_remap_.*\.config$/regex_remap_\.config/;
 	$file =~ s/^cacheurl_.*\.config$/cacheurl_\.config/;
-	if ( $file =~ /^to_ext_.*\.config$/ ) {
-		$file =~ s/^to_ext_.*\.config$/to_ext_\.config/;
-		$org_name =~ s/^to_ext_.*\.config$/to_ext_\.config/;
-	}
+	$file =~ s/^to_ext_.*\.config$/to_ext_\.config/;
 
 	my $text = undef;
 	if ( $mode eq 'view' ) {
@@ -131,10 +128,7 @@ sub gen_fancybox_data {
 		$file =~ s/^set_dscp_.*\.config$/set_dscp_\.config/;
 		$file =~ s/^regex_remap_.*\.config$/regex_remap_\.config/;
 		$file =~ s/^cacheurl_.*\.config$/cacheurl_\.config/;
-		if ( $file =~ /^to_ext_.*\.config$/ ) {
-			$file =~ s/^to_ext_.*\.config$/to_ext_\.config/;
-			$org_name =~ s/^to_ext_(.*)\.config$/$1.config/;
-		}
+		$file =~ s/^to_ext_.*\.config$/to_ext_\.config/;
 
 		my $text = "boo";
 		if ( defined( $dispatch_table->{$file} ) ) {

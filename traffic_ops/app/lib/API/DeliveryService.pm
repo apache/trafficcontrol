@@ -42,7 +42,7 @@ sub delivery_services {
 	my $id   = $self->param('id');
 
 	if ( defined($id) && $self->is_valid_delivery_service($id) ) {
-		if ( $self->is_delivery_service_assigned($id) ) {
+		if ( $self->is_delivery_service_assigned($id) || &is_admin($self) || &is_oper($self) ) {
 			return $self->get_data();
 		}
 		else {
@@ -144,7 +144,7 @@ sub get_summary {
 	my $id = $self->param('id');
 
 	if ( $self->is_valid_delivery_service($id) ) {
-		if ( $self->is_delivery_service_assigned($id) ) {
+		if ( $self->is_delivery_service_assigned($id) || &is_admin($self) || &is_oper($self) ) {
 			my $stats = new Extensions::Delegate::Statistics($self);
 			my ( $rc, $result ) = $stats->get_summary();
 			if ( $rc == SUCCESS ) {
@@ -170,7 +170,7 @@ sub routing {
 	my $id = $self->param('id');
 
 	if ( $self->is_valid_delivery_service($id) ) {
-		if ( $self->is_delivery_service_assigned($id) ) {
+		if ( $self->is_delivery_service_assigned($id) || &is_admin($self) || &is_oper($self) ) {
 			my $result = $self->db->resultset("Deliveryservice")->search( { id => $self->param('id') } )->single();
 			my $param =
 				$self->db->resultset('ProfileParameter')
@@ -201,7 +201,7 @@ sub metrics {
 	my $id   = $self->param("id");
 
 	if ( $self->is_valid_delivery_service($id) ) {
-		if ( $self->is_delivery_service_assigned($id) ) {
+		if ( $self->is_delivery_service_assigned($id) || &is_admin($self) || &is_oper($self) ) {
 
 			my $m = new Extensions::Delegate::Metrics($self);
 			my ( $rc, $result ) = $m->get_etl_metrics();
@@ -228,7 +228,7 @@ sub capacity {
 	my $id = $self->param('id');
 
 	if ( $self->is_valid_delivery_service($id) ) {
-		if ( $self->is_delivery_service_assigned($id) ) {
+		if ( $self->is_delivery_service_assigned($id) || &is_admin($self) || &is_oper($self) ) {
 			my $result = $self->db->resultset("Deliveryservice")->search( { id => $self->param('id') } )->single();
 			my $param =
 				$self->db->resultset('ProfileParameter')
@@ -252,7 +252,7 @@ sub health {
 	my $id   = $self->param('id');
 
 	if ( $self->is_valid_delivery_service($id) ) {
-		if ( $self->is_delivery_service_assigned($id) ) {
+		if ( $self->is_delivery_service_assigned($id) || &is_admin($self) || &is_oper($self) ) {
 			my $result = $self->db->resultset("Deliveryservice")->search( { id => $self->param('id') } )->single();
 			my $param =
 				$self->db->resultset('ProfileParameter')
@@ -277,7 +277,7 @@ sub state {
 	my $id   = $self->param('id');
 
 	if ( $self->is_valid_delivery_service($id) ) {
-		if ( $self->is_delivery_service_assigned($id) || &is_oper($self) ) {
+		if ( $self->is_delivery_service_assigned($id) || &is_admin($self) || &is_oper($self) ) {
 			my $result = $self->db->resultset("Deliveryservice")->search( { id => $self->param('id') } )->single();
 			my $param =
 				$self->db->resultset('ProfileParameter')
@@ -367,7 +367,7 @@ sub peakusage {
 	my $dsid = $self->param('ds');
 	if ( $self->is_valid_delivery_service($dsid) ) {
 
-		if ( $self->is_delivery_service_assigned($dsid) ) {
+		if ( $self->is_delivery_service_assigned($dsid) || &is_admin($self) || &is_oper($self) ) {
 			my $stats = new Extensions::Delegate::Statistics($self);
 			my ( $rc, $result ) = $stats->get_daily_usage();
 			if ( $rc == SUCCESS ) {

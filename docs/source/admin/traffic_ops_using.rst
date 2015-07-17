@@ -469,15 +469,82 @@ Generate URL Sig Keys
 ^^^^^^^^^^^^^^^^^^^^^
 To generate a set of random signed url keys for this delivery service and store them in Traffic Vault, click the **Generate URL Sig Keys** button at the bottom of the delivery service details screen. 
 
-.. index::
-  CCR Profile
-  Traffic Router Profile
+
+.. rl-parent-selection:
+
+Parent Selection
+++++++++++++++++
+
+Parameters in the Edge (child) profile that influence this feature:
+
++-----------------------------------------------+----------------+---------------+-------------------------------------------------------+
+|                      Name                     |    Filename    |    Default    |                      Description                      |
++===============================================+================+===============+=======================================================+
+| CONFIG proxy.config.                          | records.config | INT 1         | enable parent selection.  This is a required setting. |
+| http.parent_proxy_routing_enable              |                |               |                                                       |
++-----------------------------------------------+----------------+---------------+-------------------------------------------------------+
+| CONFIG proxy.config.                          | records.config | INT 1         | required for parent selection.                        |
+| url_remap.remap_required                      |                |               |                                                       |
++-----------------------------------------------+----------------+---------------+-------------------------------------------------------+
+| CONFIG proxy.config.                          | records.config | INT 0         | See                                                   |
+| http.no_dns_just_forward_to_parent            |                |               |                                                       |
++-----------------------------------------------+----------------+---------------+-------------------------------------------------------+
+| CONFIG proxy.config.                          | records.config | INT 1         |                                                       |
+| http.uncacheable_requests_bypass_parent       |                |               |                                                       |
++-----------------------------------------------+----------------+---------------+-------------------------------------------------------+
+| CONFIG proxy.config.                          | records.config | INT 1         |                                                       |
+| http.parent_proxy_routing_enable              |                |               |                                                       |
++-----------------------------------------------+----------------+---------------+-------------------------------------------------------+
+| CONFIG proxy.config.                          | records.config | INT 300       |                                                       |
+| http.parent_proxy.retry_time                  |                |               |                                                       |
++-----------------------------------------------+----------------+---------------+-------------------------------------------------------+
+| CONFIG proxy.config.                          | records.config | INT 10        |                                                       |
+| http.parent_proxy.fail_threshold              |                |               |                                                       |
++-----------------------------------------------+----------------+---------------+-------------------------------------------------------+
+| CONFIG proxy.config.                          | records.config | INT 4         |                                                       |
+| http.parent_proxy.total_connect_attempts      |                |               |                                                       |
++-----------------------------------------------+----------------+---------------+-------------------------------------------------------+
+| CONFIG proxy.config.                          | records.config | INT 2         |                                                       |
+| http.parent_proxy.per_parent_connect_attempts |                |               |                                                       |
++-----------------------------------------------+----------------+---------------+-------------------------------------------------------+
+| CONFIG proxy.config.                          | records.config | INT 30        |                                                       |
+| http.parent_proxy.connect_attempts_timeout    |                |               |                                                       |
++-----------------------------------------------+----------------+---------------+-------------------------------------------------------+
+| CONFIG proxy.config.                          | records.config | INT 0         |                                                       |
+| http.forward.proxy_auth_to_parent             |                |               |                                                       |
++-----------------------------------------------+----------------+---------------+-------------------------------------------------------+
+| CONFIG proxy.config.                          | records.config | INT 0         |                                                       |
+| http.parent_proxy_routing_enable              |                |               |                                                       |
++-----------------------------------------------+----------------+---------------+-------------------------------------------------------+
+| CONFIG proxy.config.                          | records.config | STRING        |                                                       |
+| http.parent_proxy.file                        |                | parent.config |                                                       |
++-----------------------------------------------+----------------+---------------+-------------------------------------------------------+
+| CONFIG proxy.config.                          | records.config | INT 3         |                                                       |
+| http.parent_proxy.connect_attempts_timeout    |                |               |                                                       |
++-----------------------------------------------+----------------+---------------+-------------------------------------------------------+
+| algorithm                                     | parent.config  | urlhash       | The algorithm to use.                                 |
++-----------------------------------------------+----------------+---------------+-------------------------------------------------------+
+
+
+Parameters in the Mid (parent) profile that influence this feature:
+
++----------------+---------------+---------+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+|      Name      |    Filename   | Default |                                                                                    Description                                                                                    |
++================+===============+=========+===================================================================================================================================================================================+
+| domain_name    | CRConfig.json | -       | Only parents with the same value as the edge are going to be used as parents (to keep separation between CDNs)                                                                    |
++----------------+---------------+---------+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| weight         | parent.config | 1.0     | The weight of this parent, translates to the number of replicas in the consistent hash ring. This parameter only has effect with algorithm at the client set to "consistent_hash" |
++----------------+---------------+---------+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| port           | parent.config | 80      | The port this parent is listening on as a forward proxy.                                                                                                                          |
++----------------+---------------+---------+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| use_ip_address | parent.config | 0       | 1 means use IP(v4) address of this parent in the parent.config, 0 means use the host_name.domain_name concatenation.                                                              |
++----------------+---------------+---------+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
 
 .. _rl-multi-site-origin:
 
 Multi Site Origin
 +++++++++++++++++
-.. Note:: The Multi Site Origin feature is based upon a feature n ATS that has yet to be submitted to Traffic Server upstream, until it is, set this to 0. 
+.. Note:: The Multi Site Origin feature is based upon a feature n ATS that has yet to be submitted to Traffic Server upstream, until it is, set this to 0, or use the ATS rpm supplied on the traffic-control-cdn.net website. 
 
 Normally, the mid servers are not aware of any redundancy at the origin layer. With Multi Site Origin enabled this changes - Traffic Server (and Traffic Ops) are now made aware of the fact there are multiple origins, and can be configured to do more advanced failover and loadbalancing actions. 
 
@@ -486,29 +553,29 @@ With This feature enabled, origin servers (or origin server VIP names for a site
 
 Parameters in the Origin profile that influence this feature:
 
-+-------------------------------------------------------------------------+------------+---------------------------------------------------------------------------------------------------+
-| Name                                                                    | Default    | Description                                                                                       |
-+=========================================================================+============+===================================================================================================+
-| CONFIG proxy.config.http.parent_proxy_routing_enable                    | INT 1      | enable parent selection.  This is a required setting.                                             |
-+-------------------------------------------------------------------------+------------+---------------------------------------------------------------------------------------------------+
-| CONFIG proxy.config.url_remap.remap_required                            | INT 1      | required for parent selection.                                                                    |
-+-------------------------------------------------------------------------+------------+---------------------------------------------------------------------------------------------------+
-| CONFIG proxy.config.http.parent_proxy.per_parent_connect_attempts       | INT 5      |  maximum of 5 connection attempts per parent (parent.config list) within a transaction.           |
-+-------------------------------------------------------------------------+------------+---------------------------------------------------------------------------------------------------+
-| CONFIG proxy.config.http.parent_proxy.total_connect_attempts            | INT 10     | maximum of 10 total connection attempts within a transaction.                                     |
-+-------------------------------------------------------------------------+------------+---------------------------------------------------------------------------------------------------+
-| CONFIG proxy.config.http.parent_origin.simple_retry_enabled             | INT 1      | enables simple retry.                                                                             |
-+-------------------------------------------------------------------------+------------+---------------------------------------------------------------------------------------------------+
-| CONFIG proxy.config.http.parent_origin.simple_retry_response_codes      | STRING 404 | the response code that invokes simple retry.  May be a comman separated list of response codes.   |
-+-------------------------------------------------------------------------+------------+---------------------------------------------------------------------------------------------------+
-| CONFIG proxy.config.http.parent_origin.dead_server_retry_response_codes | STRING 503 | the response code that invokes dead server retry.  May be a comma separated list of response codes|
-+-------------------------------------------------------------------------+------------+---------------------------------------------------------------------------------------------------+
-| CONFIG proxy.config.http.parent_origin.dead_server_retry_enabled        | INT 1      | enables dead server retry.                                                                        |
-+-------------------------------------------------------------------------+------------+---------------------------------------------------------------------------------------------------+
-| CONFIG proxy.config.diags.debug.enabled                                 | INT 1      | enable debugging for testing only                                                                 |
-+-------------------------------------------------------------------------+------------+---------------------------------------------------------------------------------------------------+        
++--------------------------------------------------------------------------+----------------+------------+----------------------------------------------------------------------------------------------------+
+|                                   Name                                   |    Filename    |  Default   |                                            Description                                             |
++==========================================================================+================+============+====================================================================================================+
+| CONFIG proxy.config. http.parent_proxy_routing_enable                    | records.config | INT 1      | enable parent selection.  This is a required setting.                                              |
++--------------------------------------------------------------------------+----------------+------------+----------------------------------------------------------------------------------------------------+
+| CONFIG proxy.config. url_remap.remap_required                            | records.config | INT 1      | required for parent selection.                                                                     |
++--------------------------------------------------------------------------+----------------+------------+----------------------------------------------------------------------------------------------------+
+| CONFIG proxy.config. http.parent_proxy.per_parent_connect_attempts       | records.config | INT 5      | maximum of 5 connection attempts per parent (parent.config list) within a transaction.             |
++--------------------------------------------------------------------------+----------------+------------+----------------------------------------------------------------------------------------------------+
+| CONFIG proxy.config. http.parent_proxy.total_connect_attempts            | records.config | INT 10     | maximum of 10 total connection attempts within a transaction.                                      |
++--------------------------------------------------------------------------+----------------+------------+----------------------------------------------------------------------------------------------------+
+| CONFIG proxy.config. http.parent_origin.simple_retry_enabled             | records.config | INT 1      | enables simple retry.                                                                              |
++--------------------------------------------------------------------------+----------------+------------+----------------------------------------------------------------------------------------------------+
+| CONFIG proxy.config. http.parent_origin.simple_retry_response_codes      | records.config | STRING 404 | the response code that invokes simple retry.  May be a comman separated list of response codes.    |
++--------------------------------------------------------------------------+----------------+------------+----------------------------------------------------------------------------------------------------+
+| CONFIG proxy.config. http.parent_origin.dead_server_retry_response_codes | records.config | STRING 503 | the response code that invokes dead server retry.  May be a comma separated list of response codes |
++--------------------------------------------------------------------------+----------------+------------+----------------------------------------------------------------------------------------------------+
+| CONFIG proxy.config. http.parent_origin.dead_server_retry_enabled        | records.config | INT 1      | enables dead server retry.                                                                         |
++--------------------------------------------------------------------------+----------------+------------+----------------------------------------------------------------------------------------------------+
+| CONFIG proxy.config. diags.debug.enabled                                 | records.config | INT 1      | enable debugging for testing only                                                                  |
++--------------------------------------------------------------------------+----------------+------------+----------------------------------------------------------------------------------------------------+
 
-see `rl-multi-site-origin-qh` for a *quick how to* on this feature.
+see :ref:`rl-multi-site-origin-qht` for a *quick how to* on this feature.
 
 .. _rl-ccr-profile:
 
@@ -668,6 +735,98 @@ Tools
 Generate ISO
 ++++++++++++
 
+Generate ISO is a tool for building custom ISOs for building caches on remote hosts. Currently it only supports Centos 6, but if you're brave and pure of heart you MIGHT be able to get it to work with other unix-like OS's. 
+
+The interface is *mostly* self explainatory as it's got hints.
+
++-------------------------------+---------------------------------------------------------------------------------------------------------------------------------+
+| Field                         |  Explaination                                                                                                                   |
++===============================+=================================================================================================================================+
+|Choose a server from list:     | This option gets all the server names currently in the Traffic Ops database and will autofill known values.                     |
++-------------------------------+---------------------------------------------------------------------------------------------------------------------------------+
+| OS Version:                   | There needs to be an _osversions.cfg_ file in the ISO directory that maps the name of a directory to a name that shows up here. |
++-------------------------------+---------------------------------------------------------------------------------------------------------------------------------+
+| Hostname:                     | This is the FQDN of the server to be installed. It is required.                                                                 |
++-------------------------------+---------------------------------------------------------------------------------------------------------------------------------+
+| Root password:                | If you don't put anything here it will default to the salted MD5 of "Fred". Whatever put is MD5 hashed and writte to disk.      |
++-------------------------------+---------------------------------------------------------------------------------------------------------------------------------+
+| DHCP:                         | if yes, other IP settings will be ignored                                                                                       |
++-------------------------------+---------------------------------------------------------------------------------------------------------------------------------+
+| IP Address:                   | Required if DHCP=no                                                                                                             |
++-------------------------------+---------------------------------------------------------------------------------------------------------------------------------+
+| Netmask:                      | Required if DHCP=no                                                                                                             |
++-------------------------------+---------------------------------------------------------------------------------------------------------------------------------+
+| Gateway:                      | Required if DHCP=no                                                                                                             |
++-------------------------------+---------------------------------------------------------------------------------------------------------------------------------+
+| IPV6 Address:                 | Optional. /64 is assumed if prefix is omitted                                                                                   |
++-------------------------------+---------------------------------------------------------------------------------------------------------------------------------+
+| IPV6 Gateway:                 | Ignored if an IPV4 gateway is specified                                                                                         |
++-------------------------------+---------------------------------------------------------------------------------------------------------------------------------+
+| Network Device:               | Optional. Typical values are bond0, eth4, etc. Note: if you enter bond0, a LACP bonding config will be written                  |
++-------------------------------+---------------------------------------------------------------------------------------------------------------------------------+
+| MTU:                          | If unsure, set to 1500                                                                                                          |
++-------------------------------+---------------------------------------------------------------------------------------------------------------------------------+
+| Specify disk for OS install:  | Optional. Typical values are "sda".                                                                                             |
++-------------------------------+---------------------------------------------------------------------------------------------------------------------------------+
+
+
+When you click the **Download ISO** button the folling occurs (all paths relative to the top level of the directory specified in _osversions.cfg_):
+
+#. Reads /etc/resolv.conf to get a list of nameservers. This is a rather ugly hack that is in place until we get a way of configuring it in the interface.
+#. Writes a file in the ks_scripts/state.out that contains directory from _osversions.cfg_ and the mkisofs string that we'll call later.
+#. Writes a file in the ks_scripts/network.cfg that is a bunch of key=value pairs that set up networking.
+#. Creates an MD5 hash of the password you specify and writes it to ks_scripts/password.cfg. Note that if you do not specify a password "Fred" is used. Also note that we have experienced some issues with webbrowsers autofilling that field. 
+#. Writes out a disk configuration file to ks_scripts/disk.cfg.
+#. mkisofs is called against the directory configured in _osversions.cfg_ and an ISO is generated in memory and delivered to your webbrowser.
+
+You now have a customized ISO that can be used to install Red Hat and derivative Linux installations with some modifications to your ks.cfg file. 
+
+Kickstart/Anaconda will mount the ISO at /mnt/stage2 during the install process (at least with 6).
+
+You can directly include the password file anywhere in your ks.cfg file (usually in the top) by doing %include /mnt/stage2/ks_scripts/password.cfg
+
+What we currently do is have 2 scripts, one to do hard drive configuration and one to do network configuration. Both are relatively specific to the environment they were created in, and both are *probably* wrong for other organizations, however they are currently living in the "misc" directory as examples of how to do things. 
+
+We trigger those in a %pre section in ks.cfg and they will write config files to /tmp. We will then include those files in the appropriate places using  %pre.
+
+For example this is a section of our ks.cfg file: ::
+
+  %include /mnt/stage2/ks_scripts/packages.txt
+
+  %pre
+    python /mnt/stage2/ks_scripts/create_network_line.py
+    bash /mnt/stage2/ks_scripts/drive_config.sh
+  %end
+
+These two scripts will then run _before_ anaconda sets up it's internal structures, then a bit further up in the ks.cfg file (outside of the %pre %end block) we do an ::
+
+    %include /mnt/stage2/ks_scripts/password.cfg 
+    ...
+    %include /tmp/network_line
+
+    %include /tmp/drive_config
+    ...
+
+This snarfs up the contents and inlines them. 
+
+If you only have one kind of hardware on your CDN it is probably best to just put the drive config right in the ks.cfg. 
+
+If you have simple networking needs (we use bonded interfaces in most, but not all locations and we have several types of hardware meaning different ethernet interface names at the OS level etc.) then something like this: ::
+  
+  #!/bin/bash
+  source /mnt/stage2/ks_scripts/network.cfg
+  echo "network --bootproto=static --activate --ipv6=$IPV6ADDR --ip=$IPADDR --netmask=$NETMASK --gateway=$GATEWAY --ipv6gateway=$GATEWAY --nameserver=$NAMESERVER --mtu=$MTU --hostname=$HOSTNAME" >> /tmp/network.cfg
+  # Note that this is an example and may not work at all. 
+
+
+You could also put this in the %pre section. Lots of ways to solve it.
+
+We have included the two scripts we use in the "misc" directory of the git repo:
+
+* kickstart_create_network_line.py
+* kickstart_drive_config.sh
+
+These scripts were written to support a very narrow set of expectations and environment and are almost certainly not suitable to just drop in, but they might provide a good starting point. 
 
 .. _rl-queue-updates:
 
