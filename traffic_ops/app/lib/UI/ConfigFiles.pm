@@ -954,12 +954,13 @@ sub parent_dot_config {
 
 			my $org_fqdn = $ds->{org};
 			$org_fqdn =~ s/https?:\/\///;
-			if ( defined($os) ) {
-				my $algorithm = "";
-				my $param =
-					$self->db->resultset('ProfileParameter')
+
+			my $algorithm = "";
+			my $param = $self->db->resultset('ProfileParameter')
 					->search( { -and => [ profile => $server->profile->id, 'parameter.config_file' => 'parent.config', 'parameter.name' => 'algorithm' ] },
 					{ prefetch => [ 'parameter', 'profile' ] } )->single();
+
+			if ( defined($os) ) {
 				my $pselect_alg = defined($param) ? $param->parameter->value : undef;
 				if ( defined($pselect_alg) ) {
 					$algorithm = "round_robin=$pselect_alg";
@@ -978,7 +979,8 @@ sub parent_dot_config {
 						$text .= $parent->{"host_name"} . "." . $parent->{"domain_name"} . ":" . $parent->{"port"} . "|" . $parent->{"weight"} . ";";
 					}
 				}
-				$text .= "\" round_robin=consistent_hash go_direct=false parent_is_proxy=false";
+				my $pselect_alg = defined($param) ? $param->parameter->value : "consistent_hash";
+				$text .= "\" round_robin=$pselect_alg go_direct=false parent_is_proxy=false";
 			}
 		}
 
