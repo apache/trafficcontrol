@@ -41,6 +41,7 @@ sub use {
 				open my $fn, '<', $file;
 				my $first_line = <$fn>;
 				my ( $package_keyword, $package_name ) = ( $first_line =~ m/(package )(.*);/ );
+				print "Adding module: " . $package_name . "\n";
 				eval "use $package_name;";
 				close $fn;
 			}
