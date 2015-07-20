@@ -15,10 +15,21 @@
 .. 
 
 .. _reference-label-tc-ts:
+.. |arrow| image:: fwda.png
+
 
 Traffic Stats
 =============
-Traffic Stats is a collection of utilities written in Go that are used to acquire and store statistics about CDNs controlled by Traffic Control.  Traffic Stats mines metrics from Traffic Monitor's JSON APIs and stores the data in `InfluxDb <http://influxdb.com>`_.  Data is typically stored in InfluxDb on a short-term basis (30 days or less).  The short-term data is used to drive graphs created by `Grafana <http://grafana.org>`_ which are linked from Traffic Ops.  Traffic Stats also creates a daily summary of stats and stores the daily summaries in the Traffic Ops database.
+Traffic Stats is a collection of utilities written in `Go <http.golang.org>`_ that are used to acquire and store statistics about CDNs controlled by Traffic Control.  Traffic Stats mines metrics from Traffic Monitor's JSON APIs and stores the data in `InfluxDb <http://influxdb.com>`_.  Data is typically stored in InfluxDb on a short-term basis (30 days or less) and is used to drive graphs created by `Grafana <http://grafana.org>`_ which are linked from Traffic Ops.  Traffic Stats contains two seperate services: write traffic stats and ts daily summary.  See below for more information. 
+
+|arrow| Write Traffic Stats
+------------------------
+Write Traffic Stats gathers stat data for Edge Caches and Delivery Services at a configurable interval from the Traffic Monitor API's and stores the data in InfluxDb. 
+
+|arrow| TS Daily Summary
+------------------------
+TS (Traffic Stats) Daily Summary is a process that runs once a day, gathers summary data for the previous day from InfluxDb, and stores it in the Traffic Ops Database.  The stats that are currently summarized are Max Bandwidth and Bytes Served.
+
 
 Any number of Traffic Stats instances may run on a given CDN to collect metrics from Traffic Monitor, however, integration with a long term metrics storage system is implementation dependent. 
 
