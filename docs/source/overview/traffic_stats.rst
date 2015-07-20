@@ -15,9 +15,22 @@
 .. 
 
 .. _reference-label-tc-ts:
+.. |arrow| image:: fwda.png
+
 
 Traffic Stats
 =============
-Traffic Stats is a utility written in Go that mines metrics from Traffic Monitor's JSON APIs and stores the data locally in Redis for a short period of time. This data is inherently transient, rolls frequently, and is volatile due to the default in-memory nature of Redis. The transient nature of the data is acceptable, as this system's purpose is to land data in Redis for other tools to consume.
+Traffic Stats is a collection of utilities written in `Go <http.golang.org>`_ that are used to acquire and store statistics about CDNs controlled by Traffic Control.  Traffic Stats mines metrics from Traffic Monitor's JSON APIs and stores the data in `InfluxDb <http://influxdb.com>`_.  Data is typically stored in InfluxDb on a short-term basis (30 days or less) and is used to drive graphs created by `Grafana <http://grafana.org>`_ which are linked from Traffic Ops.  Traffic Stats contains two seperate services: write traffic stats and ts daily summary.  See below for more information. 
 
-Once in Redis, the data can be extracted and prepared to be sent elsewhere for long term storage. Any number of Traffic Stats instances may run on a given CDN to collect metrics from Traffic Monitor, however, redundancy and integration with a long term metrics storage system is implementation dependent. Traffic Stats does not influence overall CDN operation, but is required in order to display charts in Traffic Operations.
+|arrow| Write Traffic Stats
+------------------------
+Write Traffic Stats gathers stat data for Edge Caches and Delivery Services at a configurable interval from the Traffic Monitor API's and stores the data in InfluxDb. 
+
+|arrow| TS Daily Summary
+------------------------
+TS (Traffic Stats) Daily Summary is a process that runs once a day, gathers summary data for the previous day from InfluxDb, and stores it in the Traffic Ops Database.  The stats that are currently summarized are Max Bandwidth and Bytes Served.
+
+
+Any number of Traffic Stats instances may run on a given CDN to collect metrics from Traffic Monitor, however, integration with a long term metrics storage system is implementation dependent. 
+
+Traffic Stats does not influence overall CDN operation, but is required in order to display charts in Traffic Operations.
