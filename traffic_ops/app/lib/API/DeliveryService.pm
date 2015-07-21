@@ -207,6 +207,8 @@ sub metrics {
 		if ( $self->is_delivery_service_assigned($id) ) {
 
 			my $m = new Extensions::Delegate::Metrics($self);
+			# hardcoded to 300 as spdb interval is every 5 minutes or 300seconds
+			$self->param(interval => 300);
 			my ( $rc, $result ) = $m->get_etl_metrics();
 			if ( $rc == SUCCESS ) {
 				return $self->success($result);
