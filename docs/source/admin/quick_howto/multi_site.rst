@@ -14,11 +14,11 @@
 .. limitations under the License.
 .. 
 
+.. _rl-multi-site-origin-qht:
+
 ***************************
 Configure Multi Site Origin
 ***************************
-
-.. _rl-multi-site-origin-qht:
 
 1) Create “cachegroups” for the origin locations, and assign the appropriate parent-child relationship between the mid cg's and org cgs (click the image to see full size):
 
