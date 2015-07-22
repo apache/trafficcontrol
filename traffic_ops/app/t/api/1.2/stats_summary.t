@@ -46,6 +46,8 @@ my $stat_value    = "3.1415";
 my ($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst)=localtime(time);
 my $summary_time = sprintf ( "%04d-%02d-%02d %02d:%02d:%02d",
                                    $year+1900,$mon+1,$mday,$hour,$min,$sec);
+my $stat_date = sprintf ( "%04d-%02d-%02d",
+                                   $year+1900,$mon+1,$mday-1);
 
 #login
 ok $t->post_ok( '/api/1.1/user/login', json => { u => Test::TestHelper::ADMIN_USER, p => Test::TestHelper::ADMIN_USER_PASSWORD } )->status_is(200),
@@ -60,6 +62,7 @@ ok $t->post_ok(
 		statName => $stat_name, 
 		statValue => $stat_value, 
 		summaryTime => $summary_time,
+		statDate => $stat_date,
 	}
 	)->status_is(200)->json_has("Successfully added stats summary record")
 	->or( sub { diag $t->tx->res->content->asset->{content}; } );

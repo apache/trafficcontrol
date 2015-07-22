@@ -17,7 +17,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"io/ioutil"
 	"strconv"
 )
 
@@ -32,6 +31,7 @@ type StatsSummary struct {
 	StatName        string `json:"statName"`
 	StatValue       string `json:"statValue"`
 	SummaryTime     string `json:"summaryTime"`
+	StatDate        string `json:"statDate"`
 }
 
 type LastUpdated struct {
@@ -94,25 +94,20 @@ func (to *Session) SummaryStatsLastUpdated(statName string) (string, error) {
 	}
 }
 
-func (to *Session) AddSummaryStats(statsSummary StatsSummary) (string, error) {
-	body, err := json.Marshal(statsSummary)
+func (to *Session) AddSummaryStats(statsSummary StatsSummary) error {
+	reqBody, err := json.Marshal(statsSummary)
 	if err != nil {
-		return "", err
+		return err
 	}
-	response, err := to.postJson("/api/1.2/stats_summary/create", body)
+	response, err := to.postJson("/api/1.2/stats_summary/create", reqBody)
 	if err != nil {
-		return "", err
-	}
-	defer response.Body.Close()
-	body, err = ioutil.ReadAll(response.Body)
-	if err != nil {
-		return "", err
+		return err
 	}
 	if response.StatusCode != 200 {
-		err := errors.New("Response code = " + strconv.Itoa(response.StatusCode) + "and response body = " + string(body))
-		return "", err
+		err := errors.New("Response code = " + strconv.Itoa(response.StatusCode) + "and Status = " + response.Status)
+		return err
 	}
-	return string(body), nil
+	return nil
 }
 
 func ssUnmarshall(body []byte) (StatsSummaryResponse, error) {

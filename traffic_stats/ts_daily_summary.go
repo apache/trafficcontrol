@@ -85,13 +85,14 @@ func main() {
 	for now := range tickerChan {
 		//get TrafficOps Data
 		trafOpsData, err := getToData(config, false)
-		if err == nil {
+		if err != nil {
 			errHndlr(err, FATAL)
 		}
 		lastSummaryTime, err := time.Parse("2006-01-02 15:04:05", trafOpsData.LastSummaryTime)
 		if err != nil {
 			errHndlr(err, ERROR)
 		}
+		log.Infof("lastSummaryTime is %v", lastSummaryTime)
 		if lastSummaryTime.Day() != now.Day() {
 			log.Info("Summarizing from ", startTime, " (", startUTime, ") to ", endTime, " (", endUTime, ")")
 			// influx connection
@@ -99,6 +100,7 @@ func main() {
 			if err != nil {
 				log.Error("Could not connect to InfluxDb to get daily summary stats!!")
 				errHndlr(err, ERROR)
+				continue
 			}
 			//create influxdb query
 			log.Infof("SELECT sum(value)/6 FROM bandwidth where time > '%v' and time < '%v' group by time(60s), cdn fill(0)", formatStartTime, formatEndTime)
@@ -143,14 +145,20 @@ func main() {
 				statsSummary.StatName = "daily_maxkbps"
 				statsSummary.StatValue = strconv.FormatFloat(max, 'f', 2, 64)
 				statsSummary.SummaryTime = now.Format("2006-01-02 15:04:05")
+				statsSummary.StatDate = startTime.Format("2006-01-02")
 				err = writeSummaryStats(config, statsSummary)
 				if err != nil {
-					log.Error("Could not store daily summary stats in traffic ops!")
+					log.Error("Could not store daily_maxkbps stats in traffic ops!")
 					errHndlr(err, ERROR)
 				}
 				//write bytes served data to traffic_ops
 				statsSummary.StatName = "daily_byteserved"
 				statsSummary.StatValue = strconv.FormatFloat(bytesServed, 'f', 2, 64)
+				err = writeSummaryStats(config, statsSummary)
+				if err != nil {
+					log.Error("Could not store daily_byteserved stats in traffic ops!")
+					errHndlr(err, ERROR)
+				}
 			}
 		}
 	}
@@ -287,7 +295,7 @@ func writeSummaryStats(config *StartupConfig, statsSummary traffic_ops.StatsSumm
 		log.Error(msg)
 		return err
 	}
-	_, err = tm.AddSummaryStats(statsSummary)
+	err = tm.AddSummaryStats(statsSummary)
 	if err != nil {
 		return err
 	}
