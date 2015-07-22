@@ -33,10 +33,12 @@ import org.apache.log4j.Logger;
 import org.springframework.context.ApplicationContext;
 import org.springframework.web.context.support.WebApplicationContextUtils;
 
+import com.comcast.cdn.traffic_control.traffic_router.core.ds.DeliveryService;
 import com.comcast.cdn.traffic_control.traffic_router.core.loc.GeolocationException;
 import com.comcast.cdn.traffic_control.traffic_router.core.request.HTTPRequest;
 import com.comcast.cdn.traffic_control.traffic_router.core.router.TrafficRouter;
 import com.comcast.cdn.traffic_control.traffic_router.core.router.TrafficRouterManager;
+import com.comcast.cdn.traffic_control.traffic_router.core.router.HTTPRouteResult;
 import com.comcast.cdn.traffic_control.traffic_router.core.router.StatTracker;
 import com.comcast.cdn.traffic_control.traffic_router.core.router.StatTracker.Track;
 
@@ -132,20 +134,30 @@ public class TRServlet extends HttpServlet {
 		access.setRequest(request);
 		try {
 			final TrafficRouter trafficRouter = trafficRouterManager.getTrafficRouter();
-			final URL location = trafficRouter.route(req, track);
+			final HTTPRouteResult routeResult = trafficRouter.route(req, track);
 
-			if(location == null) {
+			if (routeResult == null) {
 				access.setResponseCode(HttpServletResponse.SC_SERVICE_UNAVAILABLE);
 				response.sendError(HttpServletResponse.SC_SERVICE_UNAVAILABLE);
-			} else if("json".equals(format)) {
-				response.setContentType("application/json"); // "text/plain"
-				response.getWriter().println("{\"location\": \""+location.toString()+"\" }");
-				access.setResponseCode(HttpServletResponse.SC_OK);
-				access.setResponseURL(location);
 			} else {
-				access.setResponseCode(HttpServletResponse.SC_MOVED_TEMPORARILY);
+				final DeliveryService ds = routeResult.getDeliveryService();
+				final URL location = routeResult.getUrl();
+				final Map<String, String> responseHeaders = ds.getResponseHeaders();
+
+				for (String key : responseHeaders.keySet()) {
+					response.addHeader(key, responseHeaders.get(key));
+				}
+
 				access.setResponseURL(location);
-				response.sendRedirect(location.toString());
+
+				if("json".equals(format)) {
+					response.setContentType("application/json"); // "text/plain"
+					response.getWriter().println("{\"location\": \""+location.toString()+"\" }");
+					access.setResponseCode(HttpServletResponse.SC_OK);
+				} else {
+					access.setResponseCode(HttpServletResponse.SC_MOVED_TEMPORARILY);
+					response.sendRedirect(location.toString());
+				}
 			}
 		} catch (final IOException e) {
 			access.setResponseCode(-1);
