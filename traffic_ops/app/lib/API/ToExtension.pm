@@ -52,7 +52,7 @@ sub index {
 	$rs = $self->db->resultset('Parameter')->search( { name => 'location', config_file => { -like => 'to_ext_%.config' } } );
 	while ( my $row = $rs->next ) {
 		my $file;
-		( $file = $row->config_file ) =~ s/^to_ext_//;
+		$file = $row->config_file;
 		my $subroutine =
 			$self->db->resultset('ProfileParameter')
 			->search( { -and => [ 'parameter.config_file' => $file, 'parameter.name' => 'SubRoutine' ] },
@@ -61,7 +61,6 @@ sub index {
 		$self->app->log->error( "ToExtDotInfo == " . $subroutine );
 		my $info = &{ \&{$subroutine} }();
 
-#		# print Dumper($info);
 		push(
 			@data, {
 				id                     => $row->id,

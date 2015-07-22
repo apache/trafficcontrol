@@ -234,6 +234,18 @@ __PACKAGE__->table("deliveryservice");
   data_type: 'tinyint'
   is_nullable: 1
 
+=head2 display_name
+
+  data_type: 'varchar'
+  is_nullable: 1
+  size: 1024
+
+=head2 tr_response_headers
+
+  data_type: 'varchar'
+  is_nullable: 1
+  size: 1024
+
 =cut
 
 __PACKAGE__->add_columns(
@@ -316,6 +328,10 @@ __PACKAGE__->add_columns(
   { data_type => "varchar", is_nullable => 1, size => 2048 },
   "multi_site_origin",
   { data_type => "tinyint", is_nullable => 1 },
+  "display_name",
+  { data_type => "varchar", is_nullable => 1, size => 1024 },
+  "tr_response_headers",
+  { data_type => "varchar", is_nullable => 1, size => 1024 },
 );
 
 =head1 PRIMARY KEY
@@ -466,8 +482,8 @@ __PACKAGE__->belongs_to(
 );
 
 
-# Created by DBIx::Class::Schema::Loader v0.07043 @ 2015-06-23 14:24:12
-# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:OjXgucZ3ChQB1gqs3qTfow
+# Created by DBIx::Class::Schema::Loader v0.07043 @ 2015-07-22 16:58:06
+# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:a5zwJUmBCHv6Z/4NknXDcA
 
 # You can replace this text with custom code or comments, and it will be preserved on regeneration
 #
