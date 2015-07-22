@@ -158,7 +158,7 @@ public class PeriodicResourceUpdater {
 		}
 	}
 
-	private void putCurrent() {
+	private synchronized void putCurrent() {
 		final File existingDB = new File(databaseLocation);
 		if(existingDB.exists()) {
 			try {
@@ -169,7 +169,7 @@ public class PeriodicResourceUpdater {
 		}
 	}
 
-	public boolean updateDatabase() {
+	public synchronized boolean updateDatabase() {
 		final File existingDB = new File(databaseLocation);
 		try {
 			if (!hasBeenLoaded || needsUpdating(existingDB)) {
@@ -185,7 +185,7 @@ public class PeriodicResourceUpdater {
 		return false;
 	}
 
-	public boolean updateDatabase(final String newDB) {
+	public synchronized boolean updateDatabase(final String newDB) {
 		final File existingDB = new File(databaseLocation);
 		try {
 			if (newDB != null && !filesEqual(existingDB, newDB)) {
@@ -261,7 +261,7 @@ public class PeriodicResourceUpdater {
 		if(md5a.equals(md5b)) { return true; }
 		return false;
 	}
-	protected void copyDatabase(final File existingDB, final String newDB) throws IOException {
+	protected synchronized void copyDatabase(final File existingDB, final String newDB) throws IOException {
 		final StringReader in = new StringReader(newDB);
 		final FileOutputStream out = new FileOutputStream(existingDB);
 		final FileLock lock = out.getChannel().tryLock();
