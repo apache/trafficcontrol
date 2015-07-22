@@ -314,16 +314,17 @@ public class TrafficRouter {
 		final HTTPRouteResult routeResult = new HTTPRouteResult();
 
 		routeResult.setDeliveryService(ds);
-		routeResult.setUrl(ds.getFailureHttpResponse(request, track)); // default to the error URL, will override if possible below
 
 		if (!ds.isAvailable()) {
 			LOGGER.warn("ds unavailable: " + ds);
+			routeResult.setUrl(ds.getFailureHttpResponse(request, track));
 			return routeResult;
 		}
 
 		final List<Cache> caches = selectCache(request, ds, track, true);
 
 		if (caches == null) {
+			routeResult.setUrl(ds.getFailureHttpResponse(request, track));
 			return routeResult;
 		}
 
