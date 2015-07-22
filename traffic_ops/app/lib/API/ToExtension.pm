@@ -57,12 +57,10 @@ sub index {
 			$self->db->resultset('ProfileParameter')
 			->search( { -and => [ 'parameter.config_file' => $file, 'parameter.name' => 'SubRoutine' ] },
 			{ prefetch => [ 'parameter', 'profile' ] } )->get_column('parameter.value')->single();
-		print $subroutine . " *** \n";
 		$subroutine =~ s/::[^:]+$/::info/;
 		$self->app->log->error( "ToExtDotInfo == " . $subroutine );
 		my $info = &{ \&{$subroutine} }();
 
-#		# print Dumper($info);
 		push(
 			@data, {
 				id                     => $row->id,
