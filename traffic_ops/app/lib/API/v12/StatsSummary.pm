@@ -78,9 +78,10 @@ sub create {
 	my $stat_name = $self->req->json->{statName}; 
 	my $stat_value = $self->req->json->{statValue};
 	my $summary_time = $self->req->json->{summaryTime};
+	my $stat_date = $self->req->json->{statDate};
 
-	if (!defined($stat_name) || !defined($stat_value)) {
-		$self->alert({ERROR => "Please provide a stat name and value"})
+	if (!defined($stat_name) || !defined($stat_value) || !defined($stat_date)) {
+		$self->alert({ERROR => "Please provide a stat name, value, and date"})
 	}
 
 	my $insert = $self->db->resultset('StatsSummary')->create(
@@ -89,7 +90,8 @@ sub create {
 				deliveryservice_name 	=> $ds_name,
 				stat_name        		=> $stat_name,
 				stat_value	 			=> $stat_value,
-				summary_time		=> $summary_time,
+				summary_time			=> $summary_time,
+				stat_date				=> $stat_date,
 			}
 		);
 		$insert->insert();
