@@ -18,7 +18,7 @@
 -- +goose Up
 -- SQL in section 'Up' is executed when this migration is applied
 alter table deliveryservice add column `display_name` varchar(1024) default NULL;
-alter table deliveryservice add column `tr_response_header` varchar(1024) default NULL;
+alter table deliveryservice add column `tr_response_headers` varchar(1024) default NULL;
 update deliveryservice set display_name=xml_id;
 
 -- +goose Down
