@@ -30,8 +30,8 @@ foreach my $dir (@INC) {
 	}
 }
 my $watch_dirs_arg = join( " -w ", @watch_dirs );
-$watch_dirs = join( ":", @watch_dirs );
-print "Morbo will restart with changes to-> $watch_dirs\n";
+$watch_dirs = join( "\n", @watch_dirs );
+print "Morbo will restart with any changes to: \n$watch_dirs\n\n";
 
 my $cmd = "local/bin/morbo --listen 'http://*:3000' -v script/cdn $watch_dirs_arg";
 system($cmd);
