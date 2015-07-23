@@ -31,9 +31,11 @@ sub new {
 sub load {
 	my $self = shift;
 
-	$self->load_routes(".");
-	my $to_extensions_lib = $ENV{"TO_EXTENSIONS_LIB"};
-	$self->load_routes($to_extensions_lib);
+	# Look in the PERL5LIB directories for any TrafficOpsRoutes files.
+	#print "PERL5LIB: " . Dumper(@INC);
+	foreach my $dir (@INC) {
+		$self->load_routes($dir);
+	}
 }
 
 sub load_routes {
@@ -55,13 +57,17 @@ sub load_routes {
 				open my $fn, '<', $file;
 				my $first_line = <$fn>;
 				my ( $package_keyword, $package_name ) = ( $first_line =~ m/(package )(.*);/ );
-				if ( $package_name =~ /TrafficOpsRoutes$/ ) {
-					print "Loading Mojo routes from package: " . $package_name . "\n";
-					eval "use $package_name;";
-					my $routes_class = eval {$package_name};
-					$routes_class->define($r) || die "Route failed to load from package '" . $package_name . "' interface improperly defined.\n";
+				if ( defined($package_name) ) {
+
+					#print "package_name #-> (" . Dumper($package_name) . ")\n";
+					if ( $package_name =~ /.*TrafficOpsRoutes$/ ) {
+						print "Loading Mojo Routes from package: " . $package_name . "\n";
+						eval "use $package_name;";
+						my $routes_class = eval {$package_name};
+						$routes_class->define($r) || die "Route failed to load from package '" . $package_name . "' interface improperly defined.\n";
+					}
+					close $fn;
 				}
-				close $fn;
 			}
 		}
 	}

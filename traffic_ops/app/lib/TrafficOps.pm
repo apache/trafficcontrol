@@ -723,11 +723,6 @@ sub startup {
 	$r->post('/api/1.1/to_extensions')->over( authenticated => 1 )->to( 'ToExtension#update', namespace => 'API' );
 	$r->post('/api/1.1/to_extensions/:id/delete')->over( authenticated => 1 )->to( 'ToExtension#delete', namespace => 'API' );
 
-	# -- METRICS
-	# USED TO BE - GET /api/1.1/metrics/:type/:metric/:start/:end.json
-	$r->get( '/api/1.1/metrics/server_types/:server_type/metric_types/:metric_type/start_date/:start_date/end_date/:end_date' => [ format => [qw(json)] ] )
-		->over( authenticated => 1 )->to( 'Metrics#index', namespace => 'API' );
-
 	# -- PARAMETER #NEW
 	# Supports ?orderby=key
 	$r->get( '/api/1.1/parameters'               => [ format => [qw(json)] ] )->over( authenticated => 1 )->to( 'Parameter#index',   namespace => 'API' );
@@ -878,10 +873,6 @@ sub startup {
 
 	my $rh = new Utils::Helper::TrafficOpsRoutesLoader($r);
 	$rh->load();
-
-	# ------------------------------------------------------------------------
-	# END: Version 1.2
-	# ------------------------------------------------------------------------
 
 	# -- CATCH ALL
 	$r->get('/api/(*everything)')->to( 'Cdn#catch_all', namespace => 'API' );
