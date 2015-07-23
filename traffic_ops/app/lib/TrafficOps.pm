@@ -773,11 +773,8 @@ sub startup {
 	$r->get( '/api/1.1/traffic_monitor/stats' => [ format => [qw(json)] ] )->over( authenticated => 1 )
 		->to( 'TrafficMonitor#get_host_stats', namespace => 'API' );
 
-	# -- REDIS #NEW #DR
 	$r->get( '/api/1.1/redis/stats' => [ format => [qw(json)] ] )->over( authenticated => 1 )->to( 'Redis#get_redis_stats', namespace => 'API' );
 	$r->get('/api/1.1/redis/info/:host_name')->over( authenticated => 1 )->to( 'Redis#info', namespace => 'API' );
-	$r->get('/api/1.1/redis/match/#match/start_date/:start_date/end_date/:end_date/interval/:interval')->over( authenticated => 1 )
-		->to( 'Redis#stats', namespace => 'API' );
 
 	# -- RIAK #NEW
 	$r->get('/api/1.1/riak/stats')->over( authenticated => 1 )->to( 'Riak#stats', namespace => 'API' );
@@ -832,11 +829,6 @@ sub startup {
 	# -- CDN: domains #NEW
 	$r->get( '/api/1.1/cdns/domains' => [ format => [qw(json)] ] )->over( authenticated => 1 )->to( 'Cdn#domains', namespace => 'API' );
 
-	# -- USAGE
-	# USED TO BE - GET /api/1.1/daily/usage/:ds/:loc/:stat/:start/:end/:interval
-	$r->get( '/api/1.1/cdns/peakusage/:metric_type/deliveryservice/:ds_id/cachegroup/:name/start_date/:start_date/end_date/:end_date/interval/:interval' =>
-			[ format => [qw(json)] ] )->over( authenticated => 1 )->to( 'Cdn#peakusage', namespace => 'API' );
-
 	# -- USERS
 	$r->get( '/api/1.1/users' => [ format => [qw(json)] ] )->over( authenticated => 1 )->to( 'User#index', namespace => 'API' );
 	$r->post('/api/1.1/user/login')->to( 'User#login', namespace => 'API' );
@@ -879,6 +871,9 @@ sub startup {
 	# BEGIN Version 1.2
 	# ------------------------------------------------------------------------
 	## stats_summary
+	$api_version   = "1.2";
+	$api_namespace = "v12";
+
 	$r->get( "/api/$api_version/stats_summary" => [ format => [qw(json)] ] )->over( authenticated => 1 )
 		->to( 'StatsSummary#index', namespace => "API::$api_namespace" );
 	$r->post("/api/$api_version/stats_summary/create")->over( authenticated => 1 )->to( 'StatsSummary#create', namespace => "API::$api_namespace" );

@@ -26,22 +26,7 @@ use Redis;
 use Data::Dumper;
 use Time::HiRes qw(gettimeofday tv_interval);
 use Common::ReturnCodes qw(SUCCESS ERROR);
-use Extensions::Delegate::Statistics;
 Utils::Helper::Extensions->use;
-
-#TODO: drichardson - remove after 1.2 cleaned up
-sub stats {
-	my $self = shift;
-
-	my $st = new Extensions::Delegate::Statistics($self);
-	my ( $rc, $result ) = $st->get_usage_overview();
-	if ( $rc == SUCCESS ) {
-		$self->success($result);
-	}
-	else {
-		$self->alert($result);
-	}
-}
 
 sub info {
 	my $self      = shift;

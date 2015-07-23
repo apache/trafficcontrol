@@ -26,53 +26,7 @@ use JSON;
 use MIME::Base64;
 use UI::DeliveryService;
 use MojoPlugins::Response;
-use Extensions::v11::Delegate::Metrics;
-use Extensions::v11::Delegate::Statistics;
 use Common::ReturnCodes qw(SUCCESS ERROR);
-
-################################################################################
-# WARNING: This route is unauthenticated!
-# Note: we only have a summary route thus far.
-################################################################################
-sub metrics {
-	my $self = shift;
-	my $m    = new Extensions::v11::Delegate::Metrics($self);
-	my ( $rc, $result ) = $m->get_etl_metrics();
-	if ( $rc == SUCCESS ) {
-		return ( $self->success($result) );
-	}
-	else {
-		return ( $self->alert($result) );
-	}
-}
-
-sub usage_overview {
-	my $self = shift;
-
-	my $st = new Extensions::v11::Delegate::Statistics($self);
-	my ( $rc, $result ) = $st->get_usage_overview();
-	if ( $rc == SUCCESS ) {
-		$self->success($result);
-	}
-	else {
-		$self->alert($result);
-	}
-}
-
-# Used by the 'Daily Summary' menu item
-sub peakusage {
-	my $self = shift;
-
-	my $stats = new Extensions::v11::Delegate::Statistics($self);
-	my ( $rc, $result ) = $stats->get_daily_summary();
-
-	if ( $rc == SUCCESS ) {
-		return $self->success($result);
-	}
-	else {
-		return $self->alert($result);
-	}
-}
 
 sub configs_monitoring {
 	my $self      = shift;
