@@ -44,6 +44,7 @@ use MojoX::Log::Log4perl;
 use File::Find;
 use File::Basename;
 use Env qw(PERL5LIB);
+use Utils::Helper::TrafficOpsRoutesLoader;
 use Utils::Helper::Extensions;
 use File::Path qw(make_path);
 use IO::Compress::Gzip 'gzip';
@@ -609,7 +610,6 @@ sub startup {
 	# ------------------------------------------------------------------------
 	# START: Version 1.1
 	# ------------------------------------------------------------------------
-
 	# -- API DOCS
 	$r->get( '/api/1.1/docs' => [ format => [qw(json)] ] )->to( 'ApiDocs#index', namespace => 'API' );
 
@@ -733,11 +733,6 @@ sub startup {
 	$r->get( '/api/1.1/parameters'               => [ format => [qw(json)] ] )->over( authenticated => 1 )->to( 'Parameter#index',   namespace => 'API' );
 	$r->get( '/api/1.1/parameters/profile/:name' => [ format => [qw(json)] ] )->over( authenticated => 1 )->to( 'Parameter#profile', namespace => 'API' );
 
-	# USED TO BE - GET /api/1.1/usage/:ds/:loc/:stat/:start/:end/:interval
-	$r->get(
-		'/api/1.1/usage/deliveryservices/:ds_id/cachegroups/:name/metric_types/:metric_type/start_date/:start_date/end_date/:end_date/interval/:interval'
-			=> [ format => [qw(json)] ] )->over( authenticated => 1 )->to( 'Usage#deliveryservice', namespace => 'API' );
-
 	# -- PHYS_LOCATION #NEW
 	# Supports ?orderby=key
 	$r->get('/api/1.1/phys_locations')->over( authenticated => 1 )->to( 'PhysLocation#index', namespace => 'API' );
@@ -811,10 +806,6 @@ sub startup {
 	# USED TO BE - GET /api/1.1/capacity.json
 	$r->get( '/api/1.1/cdns/capacity' => [ format => [qw(json)] ] )->over( authenticated => 1 )->to( 'Cdn#capacity', namespace => 'API' );
 
-	# USED TO BE - GET /api/1.1/configs/monitoring/:cdn_name
-	$r->get( '/api/1.1/cdns/:name/configs/monitoring' => [ format => [qw(json)] ] )->via('GET')->over( authenticated => 1 )
-		->to( 'Cdn#configs_monitoring', namespace => 'API' );
-
 	# USED TO BE - GET /api/1.1/routing.json
 	$r->get( '/api/1.1/cdns/routing' => [ format => [qw(json)] ] )->over( authenticated => 1 )->to( 'Cdn#routing', namespace => 'API' );
 
@@ -878,22 +869,15 @@ sub startup {
 	# END: Version 1.1
 	# ------------------------------------------------------------------------
 
-	# ------------------------------------------------------------------------
-	# API Routes 1.2
-	# ------------------------------------------------------------------------
-	my $api_version   = "1.2";
-	my $api_namespace = "v12";
+	my $api_version   = "1.1";
+	my $api_namespace = "v11";
 
-	$r->get( "/api/$api_version/cdns/usage/overview" => [ format => [qw(json)] ] )->to( 'CdnStats#get_usage_overview', namespace => "API::$api_namespace" );
-	$r->get( "/api/$api_version/deliveryservice_stats" => [ format => [qw(json)] ] )->over( authenticated => 1 )
-		->to( 'DeliveryServiceStats#index', namespace => "API::$api_namespace" );
-	$r->get( "/api/$api_version/cache_stats" => [ format => [qw(json)] ] )->over( authenticated => 1 )
-		->to( 'CacheStats#index', namespace => "API::$api_namespace" );
+	# USED TO BE - GET /api/1.1/configs/monitoring/:cdn_name
+	$r->get( "/api/$api_version/cdns/:name/configs/monitoring" => [ format => [qw(json)] ] )->via('GET')->over( authenticated => 1 )
+		->to( 'Cdn#configs_monitoring', namespace => 'API' );
 
-	##stats_summary
-	$r->get( "/api/$api_version/stats_summary" => [ format => [qw(json)] ] )->over( authenticated => 1 )
-		->to( 'StatsSummary#index', namespace => "API::$api_namespace" );
-	$r->post("/api/$api_version/stats_summary/create")->over( authenticated => 1 )->to( 'StatsSummary#create', namespace => "API::$api_namespace" );
+	my $rh = new Utils::Helper::TrafficOpsRoutesLoader($r);
+	$rh->load();
 
 	# ------------------------------------------------------------------------
 	# END: Version 1.2

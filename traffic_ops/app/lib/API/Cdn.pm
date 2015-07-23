@@ -26,8 +26,8 @@ use JSON;
 use MIME::Base64;
 use UI::DeliveryService;
 use MojoPlugins::Response;
-use Extensions::Delegate::Metrics;
-use Extensions::Delegate::Statistics;
+use Extensions::v11::Delegate::Metrics;
+use Extensions::v11::Delegate::Statistics;
 use Common::ReturnCodes qw(SUCCESS ERROR);
 
 ################################################################################
@@ -36,7 +36,7 @@ use Common::ReturnCodes qw(SUCCESS ERROR);
 ################################################################################
 sub metrics {
 	my $self = shift;
-	my $m    = new Extensions::Delegate::Metrics($self);
+	my $m    = new Extensions::v11::Delegate::Metrics($self);
 	my ( $rc, $result ) = $m->get_etl_metrics();
 	if ( $rc == SUCCESS ) {
 		return ( $self->success($result) );
@@ -49,7 +49,7 @@ sub metrics {
 sub usage_overview {
 	my $self = shift;
 
-	my $st = new Extensions::Delegate::Statistics($self);
+	my $st = new Extensions::v11::Delegate::Statistics($self);
 	my ( $rc, $result ) = $st->get_usage_overview();
 	if ( $rc == SUCCESS ) {
 		$self->success($result);
@@ -59,10 +59,11 @@ sub usage_overview {
 	}
 }
 
+# Used by the 'Daily Summary' menu item
 sub peakusage {
 	my $self = shift;
 
-	my $stats = new Extensions::Delegate::Statistics($self);
+	my $stats = new Extensions::v11::Delegate::Statistics($self);
 	my ( $rc, $result ) = $stats->get_daily_summary();
 
 	if ( $rc == SUCCESS ) {

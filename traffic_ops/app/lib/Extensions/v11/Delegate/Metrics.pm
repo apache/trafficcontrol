@@ -1,4 +1,4 @@
-package Extensions::Delegate::Metrics;
+package Extensions::v11::Delegate::Metrics;
 #
 # Copyright 2015 Comcast Cable Communications Management, LLC
 #
@@ -16,7 +16,6 @@ package Extensions::Delegate::Metrics;
 
 # Stub class that provides the "hook" for implementing custom statistics gathering.
 # See TrafficOps.pm for the route that points here.
-# TODO: drichardson - add documentation here and in the public doc (.rst).
 sub new {
 	my $self  = {};
 	my $class = shift;
