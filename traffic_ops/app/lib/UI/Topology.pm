@@ -316,6 +316,15 @@ sub gen_crconfig_json {
 			}
 		}
 
+		if ( defined( $row->tr_response_headers ) && $row->tr_response_headers ne "" ) {
+			foreach my $header ( split(/__RETURN__/, $row->tr_response_headers) ) {
+				my ($header_name, $header_value) = split(/:\s/, $header);
+				$header_value = &strip_spaces($header_value);
+				$header_value = &strip_quotes($header_value);
+				$data_obj->{'deliveryServices'}->{ $row->xml_id }->{'responseHeaders'}->{$header_name} = $header_value;
+			}
+		}
+
 		if ( defined( $row->miss_lat ) && $row->miss_lat ne "" ) {
 			$data_obj->{'deliveryServices'}->{ $row->xml_id }->{'missLocation'}->{'lat'} = $row->miss_lat;
 		}
@@ -538,6 +547,11 @@ sub stringify_ds {
 	if ( defined( $ds->{'maxDnsIpsForLocation'} ) ) {
 		$string .= "|maxDnsIpsForLocation:" . $ds->{'maxDnsIpsForLocation'};
 	}
+	if ( defined( $ds->{'responseHeaders'} ) ) {
+		foreach my $header ( sort keys %{ $ds->{'responseHeaders'} } ) {
+			$string .= "|responseHeader:$header:" . $ds->{'responseHeaders'}->{$header};
+		}
+	}
 	$string .= "|<br>&emsp;DNS TTLs: A:" . $ds->{'ttls'}->{'A'} . " AAAA:" . $ds->{'ttls'}->{'AAAA'} . "|";
 	foreach my $dns ( @{ $ds->{'staticDnsEntries'} } ) {
 		$string .= "|<br>&emsp;staticDns: |name:" . $dns->{'name'} . "|type:" . $dns->{'type'} . "|ttl:" . $dns->{'ttl'} . "|addr:" . $dns->{'value'} . "|";
@@ -662,5 +676,19 @@ sub compare_lists {
 		push( @compare_text, "    " . $text . " is the same." );
 	}
 	return @compare_text;
+}
+
+sub strip_spaces {
+	my $text = shift;
+	$text =~ s/^\s+//g;
+	$text =~ s/\s+$//g;
+	return $text;
+}
+
+sub strip_quotes {
+	my $text = shift;
+	$text =~ s/^\"//g;
+	$text =~ s/\"$//g;
+	return $text;
 }
 1;
