@@ -1,4 +1,4 @@
-package Extensions::v11::Delegate::Metrics;
+package Extensions::InfluxDB::TrafficOpsRoutes;
 #
 # Copyright 2015 Comcast Cable Communications Management, LLC
 #
@@ -13,30 +13,28 @@ package Extensions::v11::Delegate::Metrics;
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+#
 
-# Stub class that provides the "hook" for implementing custom statistics gathering.
-# See TrafficOps.pm for the route that points here.
+#
+#
+
 sub new {
 	my $self  = {};
 	my $class = shift;
-	my $args  = shift;
-
 	return ( bless( $self, $class ) );
 }
 
-sub info {
-	return {
-		name        => "Metrics",
-		version     => "0.01",
-		info_url    => "",
-		description => "Metrics Stub",
-		isactive    => 1,
-		script_file => "Extensions::Delegate::Metrics",
-	};
-}
+sub define {
+	my $self        = shift;
+	my $r           = shift;
+	my $api_version = "1.2";
 
-sub get_etl_metrics {
-	return ( 1, "No Traffic Ops Extension implemented for 'Metrics->get_etl_metrics()'" );
-}
+	$r->get( "/api/$api_version/cdns/usage/overview" => [ format => [qw(json)] ] )
+		->to( 'CdnStats#get_usage_overview', namespace => "Extensions::InfluxDB::API" );
+	$r->get( "/api/$api_version/deliveryservice_stats" => [ format => [qw(json)] ] )->over( authenticated => 1 )
+		->to( 'DeliveryServiceStats#index', namespace => "Extensions::InfluxDB::API" );
+	$r->get( "/api/$api_version/cache_stats" => [ format => [qw(json)] ] )->over( authenticated => 1 )
+		->to( 'CacheStats#index', namespace => "Extensions::InfluxDB::API" );
 
+}
 1;

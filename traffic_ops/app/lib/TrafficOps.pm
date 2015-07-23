@@ -871,8 +871,21 @@ sub startup {
 	$r->get( "/api/$api_version/cdns/:name/configs/monitoring" => [ format => [qw(json)] ] )->via('GET')->over( authenticated => 1 )
 		->to( 'Cdn#configs_monitoring', namespace => 'API' );
 
+	# Look in the PERL5LIB for any TrafficOpsRoutes.pm files and load them as well
 	my $rh = new Utils::Helper::TrafficOpsRoutesLoader($r);
 	$rh->load();
+
+	# ------------------------------------------------------------------------
+	# BEGIN Version 1.2
+	# ------------------------------------------------------------------------
+	## stats_summary
+	$r->get( "/api/$api_version/stats_summary" => [ format => [qw(json)] ] )->over( authenticated => 1 )
+		->to( 'StatsSummary#index', namespace => "API::$api_namespace" );
+	$r->post("/api/$api_version/stats_summary/create")->over( authenticated => 1 )->to( 'StatsSummary#create', namespace => "API::$api_namespace" );
+
+	# ------------------------------------------------------------------------
+	# END: Version 1.2
+	# ------------------------------------------------------------------------
 
 	# -- CATCH ALL
 	$r->get('/api/(*everything)')->to( 'Cdn#catch_all', namespace => 'API' );
