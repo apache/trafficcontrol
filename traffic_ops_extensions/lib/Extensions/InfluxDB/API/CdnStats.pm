@@ -23,7 +23,7 @@ use Mojo::Base 'Mojolicious::Controller';
 use Data::Dumper;
 use JSON;
 my $builder;
-use Extensions::Delegate::CdnStatistics;
+use Extensions::InfluxDB::Delegate::CdnStatistics;
 use Utils::Helper::Extensions;
 use Common::ReturnCodes qw(SUCCESS ERROR);
 
@@ -32,8 +32,7 @@ use Common::ReturnCodes qw(SUCCESS ERROR);
 sub index {
 	my $self = shift;
 
-	my $cstats = new Extensions::Delegate::CacheStatistics( $self, $self->get_db_name() );
-
+	my $cstats = new Extensions::InfluxDB::Delegate::CacheStatistics( $self, $self->get_db_name() );
 	my ( $rc, $result ) = $cstats->get_stats();
 	if ( $rc == SUCCESS ) {
 		return $self->success($result);
@@ -46,8 +45,11 @@ sub index {
 sub get_usage_overview {
 	my $self = shift;
 
-	my $cstats =
-		new Extensions::Delegate::CdnStatistics( $self, $self->get_db_name("cache_stats_db_name"), $self->get_db_name("deliveryservice_stats_db_name") );
+	my $cstats = new Extensions::InfluxDB::Delegate::CdnStatistics(
+		$self,
+		$self->get_db_name("cache_stats_db_name"),
+		$self->get_db_name("deliveryservice_stats_db_name")
+	);
 
 	my ( $rc, $result ) = $cstats->get_usage_overview();
 	if ( $rc == SUCCESS ) {

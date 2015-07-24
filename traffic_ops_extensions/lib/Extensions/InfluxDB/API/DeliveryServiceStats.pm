@@ -16,7 +16,6 @@ package Extensions::InfluxDB::API::DeliveryServiceStats;
 #
 #
 #
-
 use Mojo::Base 'Mojolicious::Controller';
 use Data::Dumper;
 use Extensions::InfluxDB::Delegate::Statistics;
@@ -24,8 +23,6 @@ use Common::ReturnCodes qw(SUCCESS ERROR);
 
 my $builder;
 
-#TODO: drichardson
-#      - Add required fields validation see lib/API/User.pm based on Validate::Tiny
 sub index {
 	my $self    = shift;
 	my $ds_name = $self->param('deliveryServiceName');
@@ -33,7 +30,7 @@ sub index {
 	if ( $self->is_valid_delivery_service_name($ds_name) ) {
 		if ( $self->is_delivery_service_name_assigned($ds_name) || &is_admin($self) || &is_oper($self) ) {
 
-			my $stats = new Statistics( $self, $self->get_db_name() );
+			my $stats = new Extensions::InfluxDB::Delegate::Statistics( $self, $self->get_db_name() );
 
 			my ( $rc, $result ) = $stats->get_stats();
 			if ( $rc == SUCCESS ) {
