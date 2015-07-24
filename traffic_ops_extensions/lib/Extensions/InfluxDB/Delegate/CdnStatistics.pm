@@ -38,6 +38,7 @@ sub info {
 		name        => "CdnStatistics",
 		version     => "0.01",
 		info_url    => "",
+		source      => "InfluxDB",
 		description => "Cdn Statistics Stub",
 		isactive    => 1,
 		script_file => "Extensions::Delegate::CdnStatistics",
@@ -73,6 +74,7 @@ sub get_usage_overview {
 	( $rc, $response, $stat_value ) = $self->lookup_stat( $cache_stats_db_name, $query );
 
 	if ( $rc == SUCCESS ) {
+		$result->{source}      = $self->info()->{source};
 		$result->{currentGbps} = $stat_value;
 	}
 	else {

@@ -45,6 +45,7 @@ sub info {
 	return {
 		name        => "Statistics",
 		version     => "1.2",
+		source      => "InfluxDB",
 		info_url    => "",
 		description => "Statistics Stub",
 		isactive    => 1,
@@ -117,6 +118,7 @@ sub get_stats {
 	else {
 		return ( ERROR, $result );
 	}
+	$result->{source} = $self->info()->{source};
 	return ( SUCCESS, $result );
 }
 
