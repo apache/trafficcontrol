@@ -94,6 +94,7 @@ sub get_data {
 			@data, {
 				"id"                   => $row->id,
 				"xmlId"                => $row->xml_id,
+				"displayName"          => $row->display_name,
 				"dscp"                 => $row->dscp,
 				"signed"               => \$row->signed,
 				"qstringIgnore"        => $row->qstring_ignore,
@@ -113,6 +114,7 @@ sub get_data {
 				"headerRewrite"        => $row->edge_header_rewrite,
 				"edgeHeaderRewrite"    => $row->edge_header_rewrite,
 				"midHeaderRewrite"     => $row->mid_header_rewrite,
+				"trResponseHeaders"    => $row->tr_response_headers,
 				"regexRemap"           => $row->regex_remap,
 				"longDesc"             => $row->long_desc,
 				"longDesc1"            => $row->long_desc_1,

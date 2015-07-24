@@ -114,6 +114,8 @@
             $('#origin_shield_row').hide(speed);
             $('#active_row').hide(speed);
             $('#ds_regexp_table').hide(speed);
+            $('#tr_response_headers').hide(speed);
+            $('#multi_site_origin_row').hide(speed);
 		}
 		// 
 	}

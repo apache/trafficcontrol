@@ -204,6 +204,7 @@ sub read {
 		push(
 			@data, {
 				"xml_id"                 => $row->xml_id,
+				"display_name"           => $row->display_name,
 				"dscp"                   => $row->dscp,
 				"signed"                 => \$row->signed,
 				"qstring_ignore"         => $row->qstring_ignore,
@@ -222,6 +223,7 @@ sub read {
 				"global_max_tps"         => $row->global_max_tps,
 				"edge_header_rewrite"    => $row->edge_header_rewrite,
 				"mid_header_rewrite"     => $row->mid_header_rewrite,
+				"tr_response_headers"    => $row->tr_response_headers,
 				"regex_remap"            => $row->regex_remap,
 				"long_desc"              => $row->long_desc,
 				"long_desc_1"            => $row->long_desc_1,
@@ -412,6 +414,10 @@ sub check_deliveryservice_input {
 	}
 	if ( $self->param('ds.global_max_tps') ne "" && $self->param('ds.global_max_tps') !~ /^\d+$/ ) {
 		$self->field('ds.global_max_tps')->is_equal( "", "Invalid global_max_tps (NaN)." );
+	}
+
+	if ( $self->param('ds.type.name') =~ /^DNS/ && defined( $self->param('ds.tr_response_headers') ) && $self->param('ds.tr_response_headers') ne "" ) {
+		$self->field('ds.tr_response_headers')->is_equal( "", "TR Response Headers is only valid for HTTP (302) delivery services" );
 	}
 
 	#TODO:  Fix this to work the right way.
@@ -631,6 +637,7 @@ sub update {
 		# if error check passes
 		my %hash = (
 			xml_id                 => $self->param('ds.xml_id'),
+			display_name           => $self->param('ds.display_name'),
 			dscp                   => $self->param('ds.dscp'),
 			signed                 => $self->param('ds.signed'),
 			qstring_ignore         => $self->param('ds.qstring_ignore'),
@@ -655,6 +662,7 @@ sub update {
 			range_request_handling => $self->param('ds.range_request_handling'),
 			edge_header_rewrite    => $self->param('ds.edge_header_rewrite') eq "" ? undef : $self->param('ds.edge_header_rewrite'),
 			mid_header_rewrite     => $self->param('ds.mid_header_rewrite') eq "" ? undef : $self->param('ds.mid_header_rewrite'),
+			tr_response_headers    => $self->param('ds.tr_response_headers') eq "" ? undef : $self->param('ds.tr_response_headers'),
 			regex_remap   => $self->param('ds.regex_remap')   eq "" ? undef : $self->param('ds.regex_remap'),
 			origin_shield => $self->param('ds.origin_shield') eq "" ? undef : $self->param('ds.origin_shield'),
 			cacheurl      => $self->param('ds.cacheurl')      eq "" ? undef : $self->param('ds.cacheurl'),
