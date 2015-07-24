@@ -6,6 +6,7 @@
 package InstallUtils;
 
 use Term::ReadPassword;
+use IPC::Cmd;
 
 my $self = {};
 
@@ -17,21 +18,18 @@ sub new {
 
 sub execCommand {
 	my ($class, $command, @args) = @_;
-	my $pid = fork ();
-	my $result = 0;
+        print "execCommand $command @args\n";
 
-	if ($pid == 0) {
-		exec ($command, @args);
-		exit 0;
-	}
-	else {
-		wait;
-		$result = $?;
-		if ($result != 0) {
-			print "ERROR executing: $commands,  args: " . join (' ', @args) . "\n";
-		}
-	}
-	return $result;
+        print `/usr/bin/env`;
+        my ($ok, $err, $full_buf, $stdout_buff, $stderr_buff) =
+                IPC::Cmd::run( command => $command, verbose => 1 );
+
+        my $result = 0;
+        if (!$ok) {
+                print "ERROR: $command failed: $err\n";
+                $result = 1;
+        }
+        return $result;
 }
 
 sub promptUser {
