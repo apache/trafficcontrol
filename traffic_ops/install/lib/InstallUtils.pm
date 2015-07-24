@@ -18,15 +18,13 @@ sub new {
 
 sub execCommand {
 	my ($class, $command, @args) = @_;
-        print "execCommand $command @args\n";
 
-        print `/usr/bin/env`;
         my ($ok, $err, $full_buf, $stdout_buff, $stderr_buff) =
                 IPC::Cmd::run( command => $command, verbose => 1 );
 
         my $result = 0;
         if (!$ok) {
-                print "ERROR: $command failed: $err\n";
+                print "ERROR: $command failed\n";
                 $result = 1;
         }
         return $result;
