@@ -101,23 +101,18 @@ sub lookup_stat {
 	my $self    = shift;
 	my $db_name = shift;
 	my $query   = shift;
-	$mojo->app->log->debug( "db_name #-> " . $db_name );
-	$mojo->app->log->debug( "query #-> " . $query );
 
 	my $response_container = $mojo->influxdb_query( $db_name, $query );
 	my $response           = $response_container->{'response'};
 	my $json_content       = $response->{_content};
-	$mojo->app->log->debug( "json_content #-> " . Dumper($json_content) );
 
 	my $result;
 	my $summary;
 	my $stat_value;
 
 	if ( $response->is_success() ) {
-		my $content = decode_json($json_content);
-		$mojo->app->log->debug( "content #-> " . Dumper($content) );
+		my $content    = decode_json($json_content);
 		my $stat_value = $content->{results}[0]{series}[0]->{values}[0][1];
-		$mojo->app->log->debug( "stat_value #-> " . $stat_value );
 		return ( SUCCESS, $result, $stat_value );
 	}
 	else {
