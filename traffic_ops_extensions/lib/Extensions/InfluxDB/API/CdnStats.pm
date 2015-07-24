@@ -1,4 +1,4 @@
-package API::v12::CdnStats;
+package Extensions::InfluxDB::API::CdnStats;
 #
 # Copyright 2015 Comcast Cable Communications Management, LLC
 #
