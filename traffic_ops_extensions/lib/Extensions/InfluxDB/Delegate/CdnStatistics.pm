@@ -36,13 +36,21 @@ sub new {
 sub info {
 	return {
 		name        => "CdnStatistics",
-		version     => "0.01",
+		version     => "1.2",
 		info_url    => "",
 		source      => "InfluxDB",
 		description => "Cdn Statistics Stub",
 		isactive    => 1,
 		script_file => "Extensions::Delegate::CdnStatistics",
 	};
+}
+
+sub set_info {
+	my $self   = shift;
+	my $result = shift;
+	$result->{version} = $self->info()->{version};
+	$result->{source}  = $self->info()->{source};
+
 }
 
 sub get_usage_overview {
@@ -74,7 +82,7 @@ sub get_usage_overview {
 	( $rc, $response, $stat_value ) = $self->lookup_stat( $cache_stats_db_name, $query );
 
 	if ( $rc == SUCCESS ) {
-		$result->{source}      = $self->info()->{source};
+		$self->set_info($result);
 		$result->{currentGbps} = $stat_value;
 	}
 	else {

@@ -53,6 +53,14 @@ sub info {
 	};
 }
 
+sub set_info {
+	my $self   = shift;
+	my $result = shift;
+	$result->{version} = $self->info()->{version};
+	$result->{source}  = $self->info()->{source};
+
+}
+
 # InfluxDB
 sub get_stats {
 	my $self = shift;
@@ -118,7 +126,7 @@ sub get_stats {
 	else {
 		return ( ERROR, $result );
 	}
-	$result->{source} = $self->info()->{source};
+	$self->set_info($result);
 	return ( SUCCESS, $result );
 }
 
