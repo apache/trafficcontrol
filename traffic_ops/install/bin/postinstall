@@ -20,6 +20,8 @@ use strict;
 use warnings;
 
 use lib qw(/opt/traffic_ops/install/lib /opt/traffic_ops/install/lib/perl5 /opt/traffic_ops/app/local/lib/perl5 /opt/traffic_ops/app/lib);
+$ENV{PATH} = "/opt/traffic_ops/install/bin:/usr/bin";
+$ENV{PERL5LIB} = "/opt/traffic_ops/install/lib:/opt/traffic_ops/app/local/lib/perl5:/opt/traffic_ops/app/lib";
 
 use DBI;
 use JSON;
@@ -326,8 +328,6 @@ EOF
   }
 
   print "Setting up database\n";
-  $ENV{PATH} = "/opt/traffic_ops/install/bin:/usr/bin";
-  $ENV{PERL5LIB} = "/opt/traffic_ops/install/lib:/opt/traffic_ops/app/local/lib/perl5:/opt/traffic_ops/app/lib";
   chdir ("/opt/traffic_ops/app");
   $result = $install->execCommand ("/usr/bin/perl","db/admin.pl", "--env=production", "setup");
 
