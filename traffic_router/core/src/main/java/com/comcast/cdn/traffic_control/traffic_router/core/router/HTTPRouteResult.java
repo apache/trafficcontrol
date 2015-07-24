@@ -41,7 +41,7 @@ public class HTTPRouteResult implements RouteResult {
 		return deliveryService;
 	}
 
-	public void setDeliveryService(DeliveryService deliveryService) {
+	public void setDeliveryService(final DeliveryService deliveryService) {
 		this.deliveryService = deliveryService;
 	}
 }
