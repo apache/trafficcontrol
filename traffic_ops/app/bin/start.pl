@@ -18,9 +18,10 @@
 #
 #
 use Data::Dumper;
+use Cwd;
 
 mkdir("log");
-my @watch_dirs = "lib";
+my @watch_dirs = getcwd . "/lib";
 
 # Look in the PERL5LIB directories for any TrafficOpsRoutes files.
 #print "PERL5LIB: " . Dumper(@INC);
@@ -33,5 +34,7 @@ my $watch_dirs_arg = join( " -w ", @watch_dirs );
 $watch_dirs = join( "\n", @watch_dirs );
 print "Morbo will restart with any changes to: \n$watch_dirs\n\n";
 
-my $cmd = "local/bin/morbo --listen 'http://*:3000' -v script/cdn $watch_dirs_arg";
+my $cmd = "local/bin/morbo --listen 'http://*:3000' -v script/cdn -w $watch_dirs_arg";
+
+#print "cmd #-> (" . $cmd . ")\n";
 system($cmd);
