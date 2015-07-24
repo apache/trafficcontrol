@@ -708,11 +708,6 @@ sub startup {
 	$r->get( '/api/1.1/deliveryservices/xmlId/:xmlId/urlkeys' => [ format => [qw(json)] ] )->over( authenticated => 1 )
 		->to( 'KeysUrlSig#view_by_xmlid', namespace => 'API::DeliveryService' );
 
-	# Supports ?stats=true&data=true
-	# USED TO BE - GET /api/1.1/deliveryservices/:id/metrics/:type/:metric/:start/:end.json
-	$r->get( '/api/1.1/deliveryservices/:id/server_types/:server_type/metric_types/:metric_type/start_date/:start_date/end_date/:end_date' =>
-			[ format => [qw(json)] ] )->over( authenticated => 1 )->to( 'DeliveryService#metrics', namespace => 'API' );
-
 	#	->over( authenticated => 1 )->to( 'DeliveryService#get_summary', namespace => 'API' );
 	# -- DELIVERY SERVICE SERVER - #NEW
 	# Supports ?orderby=key
