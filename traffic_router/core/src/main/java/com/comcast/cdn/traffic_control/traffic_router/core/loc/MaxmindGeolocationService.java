@@ -61,7 +61,7 @@ public class MaxmindGeolocationService implements GeolocationService {
 		return null;
 	}
 
-	private boolean isResponseValid(CityResponse response) {
+	private boolean isResponseValid(final CityResponse response) {
 		if (response == null) {
 			return false;
 		} else if (response.getLocation() == null) {

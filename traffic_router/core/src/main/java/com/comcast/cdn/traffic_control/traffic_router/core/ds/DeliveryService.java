@@ -227,32 +227,44 @@ public class DeliveryService {
 		track.setResult(ResultType.DS_REDIRECT);
 		return getRedirectInetRecords(bypassDestination.optJSONObject("DNS"));
 	}
-	private List<InetRecord> redirectInetRecords;
+	private List<InetRecord> redirectInetRecords = null;
 	private List<InetRecord> getRedirectInetRecords(final JSONObject dns) {
 		if (dns == null) {
 			return null;
 		}
 
+		if (redirectInetRecords != null) {
+			return redirectInetRecords;
+		}
+
 		try {
 			synchronized (this) {
-				if (redirectInetRecords != null) {
-					return redirectInetRecords;
-				}
+				final List<InetRecord> list = new ArrayList<InetRecord>();
+				final int ttl = dns.getInt("ttl"); // we require a TTL to exist; will throw an exception if not present
 
-				final ArrayList<InetRecord> list = new ArrayList<InetRecord>();
-				final int ttl = dns.getInt("ttl");
-				list.add( new InetRecord(InetAddress.getByName(dns.getString("ip")), ttl) );
-				String ipStr = dns.getString("ip6");
+				if (dns.has("ip") || dns.has("ip6")) {
+					if (dns.has("ip")) {
+						list.add(new InetRecord(InetAddress.getByName(dns.getString("ip")), ttl));
+					}
 
-				if (ipStr != null && !ipStr.isEmpty()) {
-					ipStr = ipStr.replaceAll("/.*", "");
-					list.add( new InetRecord(InetAddress.getByName(ipStr), ttl) );
-				}
+					if (dns.has("ip6")) {
+						String ipStr = dns.getString("ip6");
 
-				final String cnameAlias = dns.getString("cnameAlias");
+						if (ipStr != null && !ipStr.isEmpty()) {
+							ipStr = ipStr.replaceAll("/.*", "");
+							list.add(new InetRecord(InetAddress.getByName(ipStr), ttl));
+						}
+					}
+				} else if (dns.has("cnameAlias")) {
+					/*
+					 * Per section 2.4 of RFC 1912 CNAMEs cannot coexist with other record types.
+					 * As such, only add the CNAME if the above ip/ip6 keys do not exist
+					 */
+					final String cnameAlias = dns.getString("cnameAlias");
 
-				if (cnameAlias != null) {
-					list.add( new InetRecord(cnameAlias, ttl) );
+					if (cnameAlias != null) {
+						list.add(new InetRecord(cnameAlias, ttl));
+					}
 				}
 
 				this.redirectInetRecords = list;
