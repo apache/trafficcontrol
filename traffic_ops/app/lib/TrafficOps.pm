@@ -676,12 +676,6 @@ sub startup {
 	$r->get( '/api/1.1/deliveryservices/:id/state' => [ format => [qw(json)] ] )->over( authenticated => 1 )
 		->to( 'DeliveryService#state', namespace => 'API' );
 
-	# -- DELIVERY SERVICE: Metrics
-	# USED TO BE - GET /api/1.1/services/:id/summary/:stat/:start/:end/:interval/:window_start/:window_end.json
-	$r->get(
-		'/api/1.1/deliveryservices/:id/edge/metric_types/:metric_type/start_date/:start_date/end_date/:end_date/interval/:interval/window_start/:window_start/window_end/:window_end'
-			=> [ format => [qw(json)] ] )->over( authenticated => 1 )->to( 'DeliveryService#get_summary', namespace => 'API' );
-
 	## -- DELIVERY SERVICE: SSL Keys
 	## Support for SSL private keys, certs, and csrs
 	#gets the latest key by default unless a version query param is provided with ?version=x
@@ -778,10 +772,6 @@ sub startup {
 	# Supports ?orderby=key
 	$r->get('/api/1.1/types')->over( authenticated => 1 )->to( 'Types#index', namespace => 'API' );
 	$r->get('/api/1.1/types/trimmed')->over( authenticated => 1 )->to( 'Types#index_trimmed', namespace => 'API' );
-
-	# --
-	# USED TO BE - GET /api/1.1/usage/overview.json
-	$r->get( '/api/1.1/cdns/usage/overview' => [ format => [qw(json)] ] )->to( 'Cdn#usage_overview', namespace => 'API' );
 
 	# -- CDN
 	# USED TO BE - Nothing, this is new
