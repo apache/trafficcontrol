@@ -23,6 +23,7 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.security.GeneralSecurityException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -59,6 +60,7 @@ public class DeliveryService {
 	private final Geolocation missLocation;
 	private final Dispersion dispersion;
 	private final boolean ip6RoutingEnabled;
+	private final Map<String, String> responseHeaders = new HashMap<String, String>();
 
 	public DeliveryService(final String id, final JSONObject dsJo) throws JSONException {
 		this.id = id;
@@ -89,6 +91,7 @@ public class DeliveryService {
 
 		this.dispersion = new Dispersion(dsJo.optJSONObject("dispersion"));
 		this.ip6RoutingEnabled = dsJo.optBoolean("ip6RoutingEnabled", false);
+		setResponseHeaders(dsJo.optJSONObject("responseHeaders"));
 	}
 
 	public String getId() {
@@ -391,7 +394,6 @@ public class DeliveryService {
 	}
 
 	public JSONArray getDomains() {
-		// TODO Auto-generated method stub
 		return domains;
 	}
 
@@ -401,5 +403,17 @@ public class DeliveryService {
 
 	public boolean isIp6RoutingEnabled() {
 		return ip6RoutingEnabled;
+	}
+
+	public Map<String, String> getResponseHeaders() {
+		return responseHeaders;
+	}
+
+	private void setResponseHeaders(final JSONObject jo) throws JSONException {
+		if (jo != null) {
+			for (String key : JSONObject.getNames(jo)) {
+				responseHeaders.put(key, jo.getString(key));
+			}
+		}
 	}
 }

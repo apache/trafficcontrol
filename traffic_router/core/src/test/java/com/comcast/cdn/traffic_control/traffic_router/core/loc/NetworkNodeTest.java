@@ -16,43 +16,71 @@
 
 package com.comcast.cdn.traffic_control.traffic_router.core.loc;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 
 import java.io.File;
+import java.io.FileReader;
+import java.net.InetAddress;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 import org.apache.log4j.Logger;
+import org.json.JSONArray;
+import org.json.JSONObject;
+import org.json.JSONTokener;
 import org.junit.Before;
 import org.junit.Test;
 
-import com.comcast.cdn.traffic_control.traffic_router.core.loc.NetworkNode;
-import com.comcast.cdn.traffic_control.traffic_router.core.loc.NetworkUpdater;
+import com.google.common.net.InetAddresses;
 
 public class NetworkNodeTest {
-	private static final Logger LOGGER = Logger.getLogger(NetworkUpdater.class);
-
-	NetworkNode root;
+	private static final Logger LOGGER = Logger.getLogger(NetworkNodeTest.class);
+	private Map<String, List<String>> netMap = new HashMap<String, List<String>>();
+	private NetworkNode root;
 
 	@Before
 	public void setUp() throws Exception {
 		final File file = new File(getClass().getClassLoader().getResource("czmap.json").toURI());
 		root = NetworkNode.generateTree(file);
+
+		final JSONObject json = new JSONObject(new JSONTokener(new FileReader(file)));
+		final JSONObject coverageZones = json.getJSONObject("coverageZones");
+
+		for (String loc : JSONObject.getNames(coverageZones)) {
+			final JSONObject locData = coverageZones.getJSONObject(loc);
+
+			for (String networkType : JSONObject.getNames(locData)) {
+				final JSONArray networks = locData.getJSONArray(networkType);
+				String network = networks.getString(0).split("/")[0];
+				InetAddress ip = InetAddresses.forString(network);
+				ip = InetAddresses.increment(ip);
+
+				if (!netMap.containsKey(loc)) {
+					netMap.put(loc, new ArrayList<String>());
+				}
+
+				final List<String> addressList = netMap.get(loc);
+				addressList.add(InetAddresses.toAddrString(ip));
+
+				netMap.put(loc, addressList);
+			}
+		}
 	}
 
 	@Test
 	public void testIps() {
 		try {
-			final String testips[][] = {
-					{"192.168.8.5", "cache-group-01"},
-					{"192.168.9.10", "cache-group-01"},
-					{"1234:5678::2", "cache-group-01"},
-					{"1234:5679::3", "cache-group-01"},
-			};
-			for(int i = 0; i < testips.length; i++) {
-				final NetworkNode nn = root.getNetwork(testips[i][0]);
-				assertNotNull(nn);
-				final String loc = nn.getLoc();
-				assertEquals(loc, testips[i][1]);
-				LOGGER.info(String.format("result for ip=%s: %s",testips[i], loc));
+			for (String location : netMap.keySet()) {
+				for (String address : netMap.get(location)) {
+					final NetworkNode nn = root.getNetwork(address);
+					assertNotNull(nn);
+					final String loc = nn.getLoc();
+					assertEquals(loc, location);
+					LOGGER.info(String.format("result for ip=%s: %s", address, loc));
+				}
 			}
 		} catch (Exception e) {
 			e.printStackTrace();

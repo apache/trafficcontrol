@@ -298,29 +298,42 @@ public class TrafficRouter {
 		}
 		return addresses;
 	}
-	public URL route(final HTTPRequest request, final Track track) throws MalformedURLException, GeolocationException {
+
+	public HTTPRouteResult route(final HTTPRequest request, final Track track) throws MalformedURLException, GeolocationException {
 		track.setRouteType(RouteType.HTTP, request.getHostname());
 
 		final DeliveryService ds = selectDeliveryService(request, true);
+
 		if (ds == null) {
 			LOGGER.warn("No DeliveryService found for: "
 					+ request.getRequestedUrl());
 			track.setResult(ResultType.DS_MISS);
 			return null;
 		}
-		if(!ds.isAvailable()) {
+
+		final HTTPRouteResult routeResult = new HTTPRouteResult();
+
+		routeResult.setDeliveryService(ds);
+
+		if (!ds.isAvailable()) {
 			LOGGER.warn("ds unavailable: " + ds);
-			return ds.getFailureHttpResponse(request, track);
+			routeResult.setUrl(ds.getFailureHttpResponse(request, track));
+			return routeResult;
 		}
+
 		final List<Cache> caches = selectCache(request, ds, track, true);
-		if(caches == null) {
-			return ds.getFailureHttpResponse(request, track);
+
+		if (caches == null) {
+			routeResult.setUrl(ds.getFailureHttpResponse(request, track));
+			return routeResult;
 		}
 
 		final Dispersion dispersion = ds.getDispersion();
 		final Cache cache = dispersion.getCache(consistentHash(caches, request.getPath()));
 
-		return new URL(ds.createURIString(request, cache));
+		routeResult.setUrl(new URL(ds.createURIString(request, cache)));
+
+		return routeResult;
 	}
 
 	protected CacheLocation getCoverageZoneCache(final String ip) {
