@@ -48,11 +48,11 @@ sub info {
 		info_url    => "",
 		description => "Statistics Stub",
 		isactive    => 1,
-		script_file => "Extensions::Delegate::Statistics",
+		script_file => "",
 	};
 }
 
-# InfluxDB+SPDB converted to InfluxDB format
+# InfluxDB
 sub get_stats {
 	my $self = shift;
 
@@ -92,68 +92,6 @@ sub get_stats {
 		}
 	);
 
-	my $result      = ();
-	my $start_epoch = str2time($start_date);
-	my $end_epoch   = str2time($end_date);
-	my $rc          = SUCCESS;
-	my $formatted_response;
-
-	my $retention_period;
-	if ( defined($retention_period_in_days) ) {
-		$retention_period = $retention_period_in_days * ONE_DAY;
-		$mojo->app->log->debug("retentionPeriodInDays=$retention_period_in_days -- OVERRIDDEN");
-	}
-	else {
-		my $default_retention_period = THREE_DAYS;
-		$retention_period = $self->lookup_retention_period_from_influx || $default_retention_period;
-		$mojo->app->log->debug(
-			"Using retention_period for '" . $db_name . "':  " . $retention_period . " seconds or " . $retention_period / ONE_DAY . " days" );
-	}
-
-	# -1 minute for diff between client and our time
-	my $retention_start = time() - $retention_period - ONE_MINUTE;
-	$mojo->app->log->debug( "Start Date #-> " . $start_date );
-	$mojo->app->log->debug( "End Date #-> " . $end_date );
-	$mojo->app->log->debug( "Retention Start Date #-> " . gmtime($retention_start) );
-
-	# numeric start/end only which should be done upstream but let's be extra cautious
-	if ( ( $start_epoch =~ /^\d+$/ && $end_epoch =~ /^\d+$/ ) && ( $start_epoch > $retention_start ) ) {
-		$mojo->app->log->debug("Retrieving 'Short Term' stats...");
-
-		( $rc, $formatted_response ) = $self->short_term();
-	}
-	else {
-		$mojo->app->log->debug("Retrieving 'Long Term' stats...");
-		( $rc, $formatted_response ) = $self->long_term_influx_from_spdb();
-	}
-}
-
-sub lookup_retention_period_from_influx {
-	my $self = shift;
-
-	#> show retention policies deliveryservice_stats;
-	#name   duration    replicaN    default
-	#default    0       1       false
-	#weekly 120h0m0s    3       true
-	my $response_container        = $mojo->influxdb_query( $db_name, "SHOW RETENTION POLICIES $db_name" );
-	my $response                  = $response_container->{'response'};
-	my $content                   = $response->{_content};
-	my $content_hash              = decode_json($content);
-	my $retention_period_response = $content_hash->{results}[0]{series}[0]{values}[1][1];
-	my $ir                        = new Extensions::InfluxDB::Helper::InfluxResponse();
-	$retention_period = $ir->parse_retention_period_in_seconds($retention_period_response);
-
-	return $retention_period;
-}
-
-# InfluxDB
-sub short_term {
-	my $self        = shift;
-	my $exclude     = $mojo->param("exclude");
-	my $interval    = $mojo->param("interval");
-	my $start_date  = $mojo->param("startDate");
-	my $end_date    = $mojo->param("endDate");
-	my $metric_type = $mojo->param("metricType");
 	my $summary_query;
 	my $rc = SUCCESS;
 	my $result;
@@ -201,228 +139,141 @@ sub calculate_total_tps {
 	return $duration_in_seconds * $average;
 }
 
-# This method wraps the SPDB call because that call
-# 'pads nulls', and 'normalizes', because it's intertwined
-# it was just easiest to deal with it's response format.
+sub build_summary {
+	my $self        = shift;
+	my $metric_type = shift;
+	my $start_date  = shift;
+	my $end_date    = shift;
+	my $result      = shift;
 
-# For backward compatibility, we have work with the result
-#  as JSON because the long_term function can be called by itself.
-sub long_term_influx_from_spdb {
+	my $summary_query = $builder->summary_query();
+	$mojo->app->log->debug( "summary_query #-> " . Dumper($summary_query) );
+
+	my $response_container = $mojo->influxdb_query( $db_name, $summary_query );
+	my $response           = $response_container->{'response'};
+	my $content            = $response->{_content};
+
+	my $summary;
+	my $summary_content;
+	my $series_count = 0;
+	if ( $response->is_success() ) {
+		$summary_content = decode_json($content);
+
+		my $ib = Extensions::InfluxDB::Builder::InfluxDBBuilder->new($mojo);
+		$summary = $ib->summary_response($summary_content);
+
+		my $average = $summary->{average};
+		my $total_tps = $self->calculate_total_tps( $start_date, $end_date, $average );
+		if ( $metric_type =~ /kbps/ ) {
+
+			#we divide by 8 bytes for totalBytes
+			$summary->{totalBytes} = $total_tps / 8;
+		}
+		else {
+			$summary->{totalTransactions} = $total_tps;
+		}
+
+		$result->{summary} = $summary;
+		return ( SUCCESS, $result, $summary_query );
+	}
+	else {
+		return ( ERROR, $content, undef );
+	}
+}
+
+sub build_series {
+	my $self   = shift;
+	my $result = shift;
+
+	my $series_query = $builder->series_query();
+	$mojo->app->log->debug( "series_query #-> " . Dumper($series_query) );
+	my $response_container = $mojo->influxdb_query( $db_name, $series_query, "pretty" );
+	my $response           = $response_container->{'response'};
+	my $content            = $response->{_content};
+
+	my $series;
+	if ( $response->is_success() ) {
+
+		my $series_content = decode_json($content);
+		my $ib             = Extensions::InfluxDB::Builder::InfluxDBBuilder->new($mojo);
+		$series = $ib->series_response($series_content);
+		my $series_node = "series";
+		if ( defined($series) && ( ref($series) eq "HASH" ) ) {
+			$result->{$series_node} = $series;
+			my @series_values = $series->{values};
+			my $series_count  = $#{ $series_values[0] };
+			$result->{$series_node}{count} = $series_count;
+		}
+		return ( SUCCESS, $result, $series_query );
+	}
+
+	else {
+		return ( ERROR, $content, undef );
+	}
+}
+
+# Append to the incoming result hash the additional sections.
+sub build_parameters {
 	my $self            = shift;
+	my $result          = shift;
+	my $summary_query   = shift;
+	my $series_query    = shift;
 	my $cachegroup_name = $mojo->param("cacheGroupName");
 	my $ds_name         = $mojo->param("deliveryServiceName");
 	my $metric_type     = $mojo->param("metricType");
 	my $start_date      = $mojo->param("startDate");
 	my $end_date        = $mojo->param("endDate");
-	my $host_name       = $mojo->param("hostName");
 	my $interval        = $mojo->param("interval");
+	my $host_name       = $mojo->param("hostName");
+	my $orderby         = $mojo->param("orderby");
+	my $limit           = $mojo->param("limit");
+	my $exclude         = $mojo->param("exclude");
+	my $offset          = $mojo->param("offset");
 
-	my $start_epoch = str2time($start_date);
-	$start_date = $start_epoch;
+	my $parent_node     = "query";
+	my $parameters_node = "parameters";
+	$result->{$parent_node}{$parameters_node}{deliveryServiceName} = $ds_name;
+	$result->{$parent_node}{$parameters_node}{startDate}           = $start_date;
+	$result->{$parent_node}{$parameters_node}{endDate}             = $end_date;
+	$result->{$parent_node}{$parameters_node}{interval}            = $interval;
+	$result->{$parent_node}{$parameters_node}{metricType}          = $metric_type;
+	$result->{$parent_node}{$parameters_node}{orderby}             = $orderby;
+	$result->{$parent_node}{$parameters_node}{limit}               = $limit;
+	$result->{$parent_node}{$parameters_node}{exclude}             = $exclude;
+	$result->{$parent_node}{$parameters_node}{offset}              = $offset;
 
-	my $end_epoch = str2time($end_date);
-	$end_date = $end_epoch;
-
-	my $cdn_name = $self->get_cdn_name_by_dsname($ds_name);
-	if ( defined($cdn_name) ) {
-		$host_name       = $host_name       || "all";
-		$ds_name         = $ds_name         || "all";
-		$cachegroup_name = $cachegroup_name || "all";
-		my $match =
-			sprintf( "%s" . $delim . "%s" . $delim . "%s" . $delim . "%s" . $delim . "%s", $cdn_name, $ds_name, $cachegroup_name, $host_name,
-			$metric_type );
-
-		$mojo->param( match => $match );
-
-		# for backward compatibility
-		$mojo->param( start_date => $start_date );
-		$mojo->param( end_date   => $end_date );
-		my ( $rc, $result ) = $self->long_term();
-		print "result #-> (" . Dumper($result) . ")\n";
-
-		if ( $rc == SUCCESS ) {
-
-			# Flip the SPDB Response to the Influx format now.
-			my $ir = new Extensions::InfluxDB::Helper::InfluxResponse();
-			$result = $ir->convert_spdb_to_influx_format($result);
-			print "result #-> (" . Dumper($result) . ")\n";
-
-			#			my $size = @$result;
-			#			if ( $size > 0 ) {
-			#				my $metric_interval = $r_to_s{$metric_type}->{interval};
-			#
-			#				# We need to convert the interval to seconds to remove the Influx formatted interval ie: 60s to become 60
-			#				my $ic                  = new Extensions::InfluxDB::Utils::IntervalConverter();
-			#				my $interval_in_seconds = $ic->to_seconds($interval);
-			#				my $args                = {
-			#					cdn                      => $cdn_name,
-			#					ds_name                  => $ds_name,
-			#					cache_group_name         => $cachegroup_name,
-			#					host_name                => $host_name,
-			#					interval                 => $interval_in_seconds,
-			#					interval_for_metric_type => $metric_interval
-			#				};
-			#				my $idd = new Extensions::InfluxDB::Utils::InfluxDBDecorator($args);
-			#
-			#				( $rc, $response ) = $idd->to_influx_series_format( $result, $metric_type, \%r_to_s );
-			#				print "response #-> (" . Dumper($response) . ")\n";
-			#
-			#				if ( ( $rc == SUCCESS ) && defined($response) ) {
-			#					if ( ref($response) eq "HASH" && exists( $response->{series} ) ) {
-			#						$self->normalize_intervals( $response, $interval );
-			#						$self->calc_summary($response);
-			#					}
-			#				}
-			#			}
-
-			if ( keys %$result ) {
-
-				my $ir = new Extensions::InfluxDB::Helper::InfluxResponse();
-				$result = $self->build_parameters( $result, undef, undef );
-			}
-			return ( $rc, $result );
-		}
-		else {
-			return ( ERROR, "CDN Name: '" . $cdn_name . "' and/or Delivery Service Name: '" . $ds_name . "' is not defined in the database." );
-		}
+	my $queries_node = "language";
+	if ( defined($series_query) ) {
+		$result->{$parent_node}{$queries_node}{influxdbDatabaseName} = $db_name;
+		$result->{$parent_node}{$queries_node}{influxdbSeriesQuery}  = $series_query;
+		$result->{$parent_node}{$queries_node}{influxdbSummaryQuery} = $summary_query;
 	}
 
-	sub build_summary {
-		my $self        = shift;
-		my $metric_type = shift;
-		my $start_date  = shift;
-		my $end_date    = shift;
-		my $result      = shift;
+	return $result;
+}
 
-		my $summary_query = $builder->summary_query();
-		$mojo->app->log->debug( "summary_query #-> " . Dumper($summary_query) );
+sub get_cdn_name_by_dsname {
+	my $self = shift;
+	my $dsname = shift || confess("Delivery Service name is required");
 
-		my $response_container = $mojo->influxdb_query( $db_name, $summary_query );
-		my $response           = $response_container->{'response'};
-		my $content            = $response->{_content};
+	my $cdn_name = undef;
+	my $ds_id;
+	my $ds_profile_id;
+	my $ds = $mojo->db->resultset('Deliveryservice')->search( { xml_id => $dsname }, {} )->single();
+	if ( defined($ds) ) {
+		$ds_id         = $ds->id;
+		$ds_profile_id = $ds->profile->id;
+		my $param =
+			$mojo->db->resultset('ProfileParameter')
+			->search( { -and => [ profile => $ds_profile_id, 'parameter.name' => 'CDN_name' ] }, { prefetch => [ 'parameter', 'profile' ] } )->single();
 
-		my $summary;
-		my $summary_content;
-		my $series_count = 0;
-		if ( $response->is_success() ) {
-			$summary_content = decode_json($content);
-
-			my $ib = Extensions::InfluxDB::Builder::InfluxDBBuilder->new($mojo);
-			$summary = $ib->summary_response($summary_content);
-
-			my $average = $summary->{average};
-			my $total_tps = $self->calculate_total_tps( $start_date, $end_date, $average );
-			if ( $metric_type =~ /kbps/ ) {
-
-				#we divide by 8 bytes for totalBytes
-				$summary->{totalBytes} = $total_tps / 8;
-			}
-			else {
-				$summary->{totalTransactions} = $total_tps;
-			}
-
-			$result->{summary} = $summary;
-			return ( SUCCESS, $result, $summary_query );
-		}
-		else {
-			return ( ERROR, $content, undef );
+		if ( defined($param) ) {
+			$cdn_name = $param->parameter->value;
+			return $cdn_name;
 		}
 	}
+	return $cdn_name;
 
-	sub build_series {
-		my $self   = shift;
-		my $result = shift;
-
-		my $series_query = $builder->series_query();
-		$mojo->app->log->debug( "series_query #-> " . Dumper($series_query) );
-		my $response_container = $mojo->influxdb_query( $db_name, $series_query, "pretty" );
-		my $response           = $response_container->{'response'};
-		my $content            = $response->{_content};
-
-		my $series;
-		if ( $response->is_success() ) {
-
-			my $series_content = decode_json($content);
-			my $ib             = Extensions::InfluxDB::Builder::InfluxDBBuilder->new($mojo);
-			$series = $ib->series_response($series_content);
-			my $series_node = "series";
-			if ( defined($series) && ( ref($series) eq "HASH" ) ) {
-				$result->{$series_node} = $series;
-				my @series_values = $series->{values};
-				my $series_count  = $#{ $series_values[0] };
-				$result->{$series_node}{count} = $series_count;
-			}
-			return ( SUCCESS, $result, $series_query );
-		}
-
-		else {
-			return ( ERROR, $content, undef );
-		}
-	}
-
-	# Append to the incoming result hash the additional sections.
-	sub build_parameters {
-		my $self            = shift;
-		my $result          = shift;
-		my $summary_query   = shift;
-		my $series_query    = shift;
-		my $cachegroup_name = $mojo->param("cacheGroupName");
-		my $ds_name         = $mojo->param("deliveryServiceName");
-		my $metric_type     = $mojo->param("metricType");
-		my $start_date      = $mojo->param("startDate");
-		my $end_date        = $mojo->param("endDate");
-		my $interval        = $mojo->param("interval");
-		my $host_name       = $mojo->param("hostName");
-		my $orderby         = $mojo->param("orderby");
-		my $limit           = $mojo->param("limit");
-		my $exclude         = $mojo->param("exclude");
-		my $offset          = $mojo->param("offset");
-
-		my $parent_node     = "query";
-		my $parameters_node = "parameters";
-		$result->{$parent_node}{$parameters_node}{deliveryServiceName} = $ds_name;
-		$result->{$parent_node}{$parameters_node}{startDate}           = $start_date;
-		$result->{$parent_node}{$parameters_node}{endDate}             = $end_date;
-		$result->{$parent_node}{$parameters_node}{interval}            = $interval;
-		$result->{$parent_node}{$parameters_node}{metricType}          = $metric_type;
-		$result->{$parent_node}{$parameters_node}{orderby}             = $orderby;
-		$result->{$parent_node}{$parameters_node}{limit}               = $limit;
-		$result->{$parent_node}{$parameters_node}{exclude}             = $exclude;
-		$result->{$parent_node}{$parameters_node}{offset}              = $offset;
-
-		my $queries_node = "language";
-		if ( defined($series_query) ) {
-			$result->{$parent_node}{$queries_node}{influxdbDatabaseName} = $db_name;
-			$result->{$parent_node}{$queries_node}{influxdbSeriesQuery}  = $series_query;
-			$result->{$parent_node}{$queries_node}{influxdbSummaryQuery} = $summary_query;
-		}
-
-		return $result;
-	}
-
-	sub get_cdn_name_by_dsname {
-		my $self = shift;
-		my $dsname = shift || confess("Delivery Service name is required");
-
-		my $cdn_name = undef;
-		my $ds_id;
-		my $ds_profile_id;
-		my $ds = $mojo->db->resultset('Deliveryservice')->search( { xml_id => $dsname }, {} )->single();
-		if ( defined($ds) ) {
-			$ds_id         = $ds->id;
-			$ds_profile_id = $ds->profile->id;
-			my $param =
-				$mojo->db->resultset('ProfileParameter')
-				->search( { -and => [ profile => $ds_profile_id, 'parameter.name' => 'CDN_name' ] }, { prefetch => [ 'parameter', 'profile' ] } )->single();
-
-			if ( defined($param) ) {
-				$cdn_name = $param->parameter->value;
-				return $cdn_name;
-			}
-		}
-		return $cdn_name;
-
-	}
 }
 
 1;
