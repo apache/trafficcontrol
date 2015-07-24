@@ -1,5 +1,6 @@
 Sorted alphabetically
 
+* **[Dan Kirkwood](https://github.com/dangogh)**
 * **[David Neuman](https://github.com/dneuman64)**
 * **[Dewayne Richardson](https://github.com/dewrich)**
 * **[Eric Friedrich](https://github.com/limited)**
@@ -13,3 +14,5 @@ Sorted alphabetically
 * **[Mark Torluemke](https://github.com/mtorluemke)**
 * **[Petro, Christopher C.](https://github.com/petrocc)**
 * **[Phil Sorber](https://github.com/PSUdaemon)**
+* **[Steve Malenfant] (https://github.com/smalenfant)**
+
