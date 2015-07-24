@@ -21,7 +21,7 @@ use Data::Dumper;
 use Cwd;
 
 mkdir("log");
-my @watch_dirs = getcwd . "/lib";
+my @watch_dirs;
 
 # Look in the PERL5LIB directories for any TrafficOpsRoutes files.
 #print "PERL5LIB: " . Dumper(@INC);
@@ -30,9 +30,16 @@ foreach my $dir (@INC) {
 		push( @watch_dirs, $dir );
 	}
 }
+
+# now add on the project dir
+my $to_lib = getcwd() . "/lib";
+push( @watch_dirs, $to_lib );
 my $watch_dirs_arg = join( " -w ", @watch_dirs );
 $watch_dirs = join( "\n", @watch_dirs );
-print "Morbo will restart with changes to any of the following dirs: \n$watch_dirs\n\n";
+
+print "Morbo will restart with changes to any of the following dirs:\n";
+print "(also the order in which perl modules will be searched)";
+print "\n$watch_dirs\n\n";
 
 my $cmd = "local/bin/morbo --listen 'http://*:3000' -v script/cdn -w $watch_dirs_arg";
 
