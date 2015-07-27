@@ -26,7 +26,6 @@ use Redis;
 use Data::Dumper;
 use Time::HiRes qw(gettimeofday tv_interval);
 use Common::ReturnCodes qw(SUCCESS ERROR);
-Utils::Helper::Extensions->use;
 
 sub info {
 	my $self      = shift;

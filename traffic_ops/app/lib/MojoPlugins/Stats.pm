@@ -22,8 +22,6 @@ use Carp qw(cluck confess);
 use Data::Dumper;
 use JSON;
 use Utils::CCR;
-use Utils::Helper::Extensions;
-Utils::Helper::Extensions->use;
 
 sub register {
 	my ( $self, $app, $conf ) = @_;

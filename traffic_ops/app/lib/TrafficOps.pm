@@ -45,7 +45,6 @@ use File::Find;
 use File::Basename;
 use Env qw(PERL5LIB);
 use Utils::Helper::TrafficOpsRoutesLoader;
-use Utils::Helper::Extensions;
 use File::Path qw(make_path);
 use IO::Compress::Gzip 'gzip';
 
