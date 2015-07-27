@@ -76,6 +76,9 @@ sub summary_response {
 	my $max = $summary_content->{results}[0]{series}[0]{values}[0][6];
 	$summary->{max} = ( defined($max) ) ? $max : 0;
 
+	my $count = $summary_content->{results}[0]{series}[0]{values}[0][7];
+	$summary->{count} = ( defined($count) ) ? $count : 0;
+
 	return $summary;
 
 }
