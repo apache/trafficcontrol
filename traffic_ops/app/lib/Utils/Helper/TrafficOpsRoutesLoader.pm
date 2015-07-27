@@ -34,7 +34,9 @@ sub load {
 	# Look in the PERL5LIB directories for any TrafficOpsRoutes files.
 	#print "PERL5LIB: " . Dumper(@INC);
 	foreach my $dir (@INC) {
-		$self->load_routes($dir);
+		if ( $dir =~ /traffic_ops_extensions/ ) {
+			$self->load_routes($dir);
+		}
 	}
 }
 
