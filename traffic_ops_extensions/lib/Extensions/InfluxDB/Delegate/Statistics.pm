@@ -12,7 +12,6 @@ use Math::Round qw(nearest);
 use JSON;
 use POSIX qw(strftime);
 use Extensions::InfluxDB::Builder::DeliveryServiceStatsBuilder;
-use Extensions::InfluxDB::Utils::InfluxDBDecorator;
 use Extensions::InfluxDB::Helper::InfluxResponse;
 use HTTP::Date;
 use Utils::Helper::DateHelper;
@@ -172,10 +171,11 @@ sub build_summary {
 		my $ib = Extensions::InfluxDB::Builder::InfluxDBBuilder->new($mojo);
 		$summary = $ib->summary_response($summary_content);
 
-		my $average = $summary->{average};
-		my $count = $summary->{count};
+		my $average   = $summary->{average};
+		my $count     = $summary->{count};
 		my $total_tps = $count * $average;
-#		my $total_tps = $self->calculate_total_tps( $start_date, $end_date, $average, $count );
+
+		#		my $total_tps = $self->calculate_total_tps( $start_date, $end_date, $average, $count );
 		if ( $metric_type =~ /kbps/ ) {
 
 			#we divide by 8 bytes for totalBytes
