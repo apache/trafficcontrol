@@ -45,11 +45,20 @@ sub info {
 	return {
 		name        => "Statistics",
 		version     => "1.2",
+		source      => "InfluxDB",
 		info_url    => "",
 		description => "Statistics Stub",
 		isactive    => 1,
 		script_file => "",
 	};
+}
+
+sub set_info {
+	my $self   = shift;
+	my $result = shift;
+	$result->{version} = $self->info()->{version};
+	$result->{source}  = $self->info()->{source};
+
 }
 
 # InfluxDB
@@ -117,6 +126,7 @@ sub get_stats {
 	else {
 		return ( ERROR, $result );
 	}
+	$self->set_info($result);
 	return ( SUCCESS, $result );
 }
 

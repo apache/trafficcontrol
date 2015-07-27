@@ -34,8 +34,9 @@ sub new {
 sub info {
 	return {
 		name        => "CacheStatistics",
-		version     => "0.01",
+		version     => "1.2",
 		info_url    => "",
+		source      => "InfluxDB",
 		description => "Cache Statistics Stub",
 		isactive    => 1,
 		script_file => "Extensions::Delegate::CacheStatistics",
@@ -81,7 +82,15 @@ sub get_usage_overview {
 		return ( ERROR, $content, undef );
 	}
 
+	$self->set_info($result);
 	return ( SUCCESS, $result, $query );
+}
+
+sub set_info {
+	my $self   = shift;
+	my $result = shift;
+	$result->{version} = $self->info()->{version};
+	$result->{source}  = $self->info()->{source};
 }
 
 #TODO: drichardson
