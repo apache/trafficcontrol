@@ -129,25 +129,6 @@ sub get_stats {
 	return ( SUCCESS, $result );
 }
 
-# We have to calculate the total_tps because the metrics in
-# influx have already been captured in tps so we have to unravel the
-# TPS to recalculate the total_tps
-sub calculate_total_tps {
-	my $self       = shift;
-	my $start_date = shift;
-	my $end_date   = shift;
-	my $average    = shift;
-
-	my $iso8601_fmt = "%Y-%m-%dT%H:%M:%SZ";
-	my $s           = DateTime::Format::ISO8601->parse_datetime($start_date);
-	my $se          = $s->epoch();
-
-	my $e                   = DateTime::Format::ISO8601->parse_datetime($end_date);
-	my $ee                  = $e->epoch();
-	my $duration_in_seconds = $ee - $se;
-	return $duration_in_seconds * $average;
-}
-
 sub build_summary {
 	my $self        = shift;
 	my $metric_type = shift;
@@ -174,8 +155,6 @@ sub build_summary {
 		my $average   = $summary->{average};
 		my $count     = $summary->{count};
 		my $total_tps = $count * $average;
-
-		#		my $total_tps = $self->calculate_total_tps( $start_date, $end_date, $average, $count );
 		if ( $metric_type =~ /kbps/ ) {
 
 			#we divide by 8 bytes for totalBytes
