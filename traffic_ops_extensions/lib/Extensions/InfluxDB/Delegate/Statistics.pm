@@ -163,7 +163,9 @@ sub build_summary {
 		$summary = $ib->summary_response($summary_content);
 
 		my $average = $summary->{average};
-		my $total_tps = $self->calculate_total_tps( $start_date, $end_date, $average );
+		my $count = $summary->{count};
+		my $total_tps = $count * $average;
+#		my $total_tps = $self->calculate_total_tps( $start_date, $end_date, $average, $count );
 		if ( $metric_type =~ /kbps/ ) {
 
 			#we divide by 8 bytes for totalBytes
