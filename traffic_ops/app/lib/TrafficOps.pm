@@ -760,9 +760,6 @@ sub startup {
 	$r->get( '/api/1.1/traffic_monitor/stats' => [ format => [qw(json)] ] )->over( authenticated => 1 )
 		->to( 'TrafficMonitor#get_host_stats', namespace => 'API' );
 
-	$r->get( '/api/1.1/redis/stats' => [ format => [qw(json)] ] )->over( authenticated => 1 )->to( 'Redis#get_redis_stats', namespace => 'API' );
-	$r->get('/api/1.1/redis/info/:host_name')->over( authenticated => 1 )->to( 'Redis#info', namespace => 'API' );
-
 	# -- RIAK #NEW
 	$r->get('/api/1.1/riak/stats')->over( authenticated => 1 )->to( 'Riak#stats', namespace => 'API' );
 
