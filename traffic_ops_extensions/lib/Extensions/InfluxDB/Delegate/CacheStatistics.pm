@@ -1,4 +1,4 @@
-package Extensions::Delegate::CacheStatistics;
+package Extensions::InfluxDB::Delegate::CacheStatistics;
 #
 # Copyright 2011-2014, Comcast Corporation. This software and its contents are
 # Comcast confidential and proprietary. It cannot be used, disclosed, or
@@ -39,7 +39,7 @@ sub info {
 		source      => "InfluxDB",
 		description => "Cache Statistics Stub",
 		isactive    => 1,
-		script_file => "Extensions::Delegate::CacheStatistics",
+		script_file => "",
 	};
 }
 
@@ -48,7 +48,7 @@ sub get_usage_overview {
 
 	$builder = new Extensions::InfluxDB::Builder::CacheStatsBuilder();
 	my $query = $builder->usage_overview_maxkbps_query();
-	$mojo->app->log->debug( "query #-> " . $query );
+	$self->app->log->debug( "query #-> " . $query );
 
 	my $response_container = $mojo->influxdb_query( $db_name, $query );
 	my $response           = $response_container->{'response'};
@@ -59,9 +59,7 @@ sub get_usage_overview {
 	my $content;
 	if ( $response->is_success() ) {
 		$content = decode_json($json_content);
-		$mojo->app->log->debug( "content #-> " . Dumper($content) );
 		$result->{maxKbps} = $content->{results}[0]{series}[0]->{values}[0][1];
-
 	}
 	else {
 		return ( ERROR, $content, undef );
@@ -75,7 +73,6 @@ sub get_usage_overview {
 	$json_content       = $response->{_content};
 	if ( $response->is_success() ) {
 		$content = decode_json($json_content);
-		$mojo->app->log->debug( "content #-> " . Dumper($content) );
 		$result->{tps} = $content->{results}[0]{series}[0]->{values}[0][1];
 	}
 	else {
@@ -169,7 +166,7 @@ sub build_summary {
 	if ( $response->is_success() ) {
 		$summary_content = decode_json($content);
 		$mojo->app->log->debug( "summary_content #-> " . Dumper($summary_content) );
-		$summary = Extensions::InfluxDB::Builder::InfluxDBBuilder->summary_response($summary_content);
+		$summary = Extensions::InfluxDB::Builder::BaseBuilder->summary_response($summary_content);
 		$result->{summary} = $summary;
 		return ( SUCCESS, $result, $summary_query );
 	}
@@ -191,7 +188,7 @@ sub build_series {
 	my $series;
 	if ( $response->is_success() ) {
 		my $series_content = decode_json($content);
-		$series = Extensions::InfluxDB::Builder::InfluxDBBuilder->series_response($series_content);
+		$series = Extensions::InfluxDB::Builder::BaseBuilder->series_response($series_content);
 		my $series_node = "series";
 		if ( defined($series) && ( keys $series ) ) {
 			$result->{$series_node} = $series;

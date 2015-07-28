@@ -22,7 +22,7 @@ use Data::Dumper;
 use JSON;
 use File::Slurp;
 use Math::Round;
-use Extensions::InfluxDB::Builder::InfluxDBBuilder;
+use Extensions::InfluxDB::Builder::BaseBuilder;
 use Carp qw(cluck confess);
 
 my $args;
@@ -47,7 +47,7 @@ sub validate_keys {
 		limit       => 1,
 		offset      => 1
 	};
-	return Extensions::InfluxDB::Builder::InfluxDBBuilder->validate_keys( $args, $valid_keys );
+	return Extensions::InfluxDB::Builder::BaseBuilder->validate_keys( $args, $valid_keys );
 }
 
 sub usage_overview_max_kbps_query {
@@ -56,7 +56,7 @@ sub usage_overview_max_kbps_query {
 		my $query = "SELECT sum(value)/1000/1000/6 FROM maxKbps WHERE time > now() - 60s";
 
 		#my $query = "SELECT sum(value) FROM maxKbps where time > now() - 1m";
-		return Extensions::InfluxDB::Builder::InfluxDBBuilder->clean_whitespace($query);
+		return Extensions::InfluxDB::Builder::BaseBuilder->clean_whitespace($query);
 	}
 }
 
@@ -66,7 +66,7 @@ sub usage_overview_current_gbps_query {
 		my $query = "SELECT sum(value)/1000/1000/6 FROM bandwidth WHERE time > now() - 60s";
 
 		#my $query = "SELECT sum(value)*1000/6 FROM bandwidth where cachegroup = 'total' and time > now() - 10m";
-		return Extensions::InfluxDB::Builder::InfluxDBBuilder->clean_whitespace($query);
+		return Extensions::InfluxDB::Builder::BaseBuilder->clean_whitespace($query);
 	}
 }
 
@@ -84,9 +84,9 @@ sub summary_query {
 		                                 GROUP BY time($args->{interval}), cdn"
 		);
 
-		$query = Extensions::Builder::InfluxdbBuilder->append_clauses( $query, $args );
+		$query = Extensions::InfluxDB::Builder::BaseBuilder->append_clauses( $query, $args );
 
-		return Extensions::Builder::InfluxdbBuilder->clean_whitespace($query);
+		return Extensions::InfluxDB::Builder::BaseBuilder->clean_whitespace($query);
 
 	}
 }
@@ -106,9 +106,9 @@ sub series_query {
 							   cdn ORDER BY asc"
 	);
 
-	$query = Extensions::Builder::InfluxdbBuilder->append_clauses( $query, $args );
+	$query = Extensions::InfluxDB::Builder::BaseBuilder->append_clauses( $query, $args );
 
-	return Extensions::Builder::InfluxdbBuilder->clean_whitespace($query);
+	return Extensions::InfluxDB::Builder::BaseBuilder->clean_whitespace($query);
 }
 
 1;
