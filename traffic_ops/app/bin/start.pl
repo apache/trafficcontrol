@@ -38,7 +38,7 @@ my $watch_dirs_arg = join( " -w ", @watch_dirs );
 $watch_dirs = join( "\n", @watch_dirs );
 
 print "Morbo will restart with changes to any of the following dirs:\n";
-print "(also the order in which Perl modules will be searched)";
+print "(also the order in which Traffic Ops Extension modules will be searched)";
 print "\n$watch_dirs\n\n";
 
 my $cmd = "local/bin/morbo --listen 'http://*:3000' -v script/cdn -w $watch_dirs_arg";
