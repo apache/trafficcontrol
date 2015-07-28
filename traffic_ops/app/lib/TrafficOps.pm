@@ -57,8 +57,7 @@ my $config;
 local $/;    #Enable 'slurp' mode
 
 has schema => sub { return Schema->connect_to_database };
-my $to_extensions_lib = $ENV{'TO_EXTENSION_LIB'};
-has watch => sub { [qw(lib templates $to_extensions_lib)] };
+has watch  => sub { [qw(lib templates)] };
 
 if ( !defined $ENV{MOJO_CONFIG} ) {
 	$ENV{'MOJO_CONFIG'} = 'conf/cdn.conf';

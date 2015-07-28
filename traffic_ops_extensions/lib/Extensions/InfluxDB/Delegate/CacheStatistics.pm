@@ -164,9 +164,8 @@ sub build_summary {
 	my $summary;
 	my $summary_content;
 	if ( $response->is_success() ) {
-		$summary_content = decode_json($content);
-		$mojo->app->log->debug( "summary_content #-> " . Dumper($summary_content) );
-		$summary = Extensions::InfluxDB::Builder::BaseBuilder->summary_response($summary_content);
+		$summary_content   = decode_json($content);
+		$summary           = Extensions::InfluxDB::Builder::BaseBuilder->summary_response($summary_content);
 		$result->{summary} = $summary;
 		return ( SUCCESS, $result, $summary_query );
 	}
