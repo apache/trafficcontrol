@@ -23,7 +23,8 @@ use Time::Seconds;
 use Time::Piece;
 use DateTime::Format::ISO8601;
 use constant ONE_DAY_IN_SECONDS => 86400;
-use constant THREE_DAYS         => ONE_DAY * 3;
+use constant THREE_DAYS => ONE_DAY * 3;
+use constant SECONDS_IN_CAPTURE_INTERVAL => 10;
 
 # constants do not interpolate
 my $delim = ":";
@@ -152,11 +153,10 @@ sub build_summary {
 		my $ib = Extensions::InfluxDB::Builder::InfluxDBBuilder->new($mojo);
 		$summary = $ib->summary_response($summary_content);
 
-		my $average   = $summary->{average};
-		my $count     = $summary->{count};
-		my $total_tps = $count * $average;
+		my $average = $summary->{average};
+		my $count = $summary->{count};
+		my $total_tps = ($count * SECONDS_IN_CAPTURE_INTERVAL) * $average; # since each value represents 10 seconds, need to multiply by 10 to get the 'ps' (per second)
 		if ( $metric_type =~ /kbps/ ) {
-
 			#we divide by 8 bytes for totalBytes
 			$summary->{totalBytes} = $total_tps / 8;
 		}
