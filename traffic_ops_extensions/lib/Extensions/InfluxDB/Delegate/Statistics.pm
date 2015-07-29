@@ -22,8 +22,8 @@ use Utils::Deliveryservice;
 use Time::Seconds;
 use Time::Piece;
 use DateTime::Format::ISO8601;
-use constant ONE_DAY_IN_SECONDS => 86400;
-use constant THREE_DAYS => ONE_DAY * 3;
+use constant ONE_DAY_IN_SECONDS          => 86400;
+use constant THREE_DAYS                  => ONE_DAY * 3;
 use constant SECONDS_IN_CAPTURE_INTERVAL => 10;
 
 # constants do not interpolate
@@ -150,26 +150,37 @@ sub build_summary {
 	if ( $response->is_success() ) {
 		$summary_content = decode_json($content);
 
-		my $ib = Extensions::InfluxDB::Builder::InfluxDBBuilder->new($mojo);
+		my $ib = Extensions::InfluxDB::Builder::BaseBuilder->new($mojo);
 		$summary = $ib->summary_response($summary_content);
-
-		my $average = $summary->{average};
-		my $count = $summary->{count};
-		my $total_tps = ($count * SECONDS_IN_CAPTURE_INTERVAL) * $average; # since each value represents 10 seconds, need to multiply by 10 to get the 'ps' (per second)
-		if ( $metric_type =~ /kbps/ ) {
-			#we divide by 8 bytes for totalBytes
-			$summary->{totalBytes} = $total_tps / 8;
-		}
-		else {
-			$summary->{totalTransactions} = $total_tps;
-		}
-
 		$result->{summary} = $summary;
+		$self->build_totals( $metric_type, $result );
 		return ( SUCCESS, $result, $summary_query );
 	}
 	else {
 		return ( ERROR, $content, undef );
 	}
+}
+
+sub build_totals {
+	my $self        = shift;
+	my $metric_type = shift;
+	my $summary     = shift;
+	my $average     = $summary->{summary}{average};
+	my $count       = $summary->{summary}{count};
+	my $total_tps =
+		( $count * SECONDS_IN_CAPTURE_INTERVAL ) * $average;   # since each value represents 10 seconds, need to multiply by 10 to get the 'ps' (per second)
+
+	if ( $metric_type =~ /kbps/ ) {
+
+		#we divide by 8 bytes for totalBytes
+		$summary->{summary}{totalBytes}        = $total_tps / 8;
+		$summary->{summary}{totalTransactions} = undef;
+	}
+	else {
+		$summary->{summary}{totalBytes}        = undef;
+		$summary->{summary}{totalTransactions} = $total_tps;
+	}
+
 }
 
 sub build_series {
@@ -186,7 +197,7 @@ sub build_series {
 	if ( $response->is_success() ) {
 
 		my $series_content = decode_json($content);
-		my $ib             = Extensions::InfluxDB::Builder::InfluxDBBuilder->new($mojo);
+		my $ib             = Extensions::InfluxDB::Builder::BaseBuilder->new($mojo);
 		$series = $ib->series_response($series_content);
 		my $series_node = "series";
 		if ( defined($series) && ( ref($series) eq "HASH" ) ) {
