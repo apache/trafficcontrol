@@ -95,12 +95,13 @@ public class TrafficMonitorWatcher  {
 	};
 
 	public void destroy() {
-		if (crUpdater != null)
+		if (crUpdater != null) {
 			crUpdater.destroy();
+		}
 
-		if (stateUpdater != null)
+		if (stateUpdater != null) {
 			stateUpdater.destroy();
-
+		}
 	}
 
 	public void init() {
