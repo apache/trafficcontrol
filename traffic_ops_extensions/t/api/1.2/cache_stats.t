@@ -24,7 +24,7 @@ use warnings;
 use Schema;
 use Test::TestHelper;
 use Test::MockModule;
-use Extensions::Connection::InfluxDBAdapter;
+use Extensions::InfluxDB::Connection::InfluxDBAdapter;
 use JSON;
 
 BEGIN { $ENV{MOJO_MODE} = "test" }
@@ -43,7 +43,7 @@ Test::TestHelper->load_core_data($schema);
 ok $t->post_ok( '/login', => form => { u => Test::TestHelper::ADMIN_USER, p => Test::TestHelper::ADMIN_USER_PASSWORD } )->status_is(302)
 	->or( sub { diag $t->tx->res->content->asset->{content}; } );
 
-my $fake_lwp = new Test::MockModule( 'Extensions::Connection::InfluxDBAdapter', no_auto => 1 );
+my $fake_lwp = new Test::MockModule( 'Extensions::InfluxDB::Connection::InfluxDBAdapter', no_auto => 1 );
 my $fake_header = HTTP::Headers->new;
 $fake_header->header( 'Content-Type' => 'application/json' );    # set
 

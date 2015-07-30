@@ -7,6 +7,7 @@ cpanfile.snapshot
 rpm/build.number
 docs/build/*
 local
+traffic_ops_extensions/log/*
 traffic_ops_extensions/lib/Extensions/InfluxDB/log/*
 traffic_ops/app/log/*.log
 traffic_ops/app/public/CRConfig-Snapshots/*

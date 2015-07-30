@@ -24,7 +24,7 @@ no warnings 'once';
 use warnings 'all';
 use Test::TestHelper;
 use Test::MockModule;
-use Extensions::Connection::InfluxDBAdapter;
+use Extensions::InfluxDB::Connection::InfluxDBAdapter;
 use Data::Dumper;
 
 use constant SERVER                => "radon-influxdb.local:8086";
@@ -36,7 +36,7 @@ use constant RETENTION_POLICY_NAME => "mypolicy";
 #no_transactions=>0 ==> delete fixtures after every execution
 
 #GET
-my $influxdb_util = Extensions::Connection::InfluxDBAdapter->new( Test::TestHelper::ADMIN_USER, Test::TestHelper::ADMIN_USER_PASSWORD );
+my $influxdb_util = new Extensions::InfluxDB::Connection::InfluxDBAdapter( Test::TestHelper::ADMIN_USER, Test::TestHelper::ADMIN_USER_PASSWORD );
 $influxdb_util->set_db_name(DB_NAME);
 $influxdb_util->set_server(SERVER);
 

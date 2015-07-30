@@ -24,7 +24,7 @@ use warnings;
 use Schema;
 use Test::TestHelper;
 use Test::MockModule;
-use Extensions::Connection::InfluxDBAdapter;
+use Extensions::InfluxDB::Connection::InfluxDBAdapter;
 use JSON;
 use Utils::Helper::Extensions;
 Utils::Helper::Extensions->use;
