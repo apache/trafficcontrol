@@ -576,6 +576,12 @@ sub gen_traffic_router_config {
 			$delivery_service->{'coverageZoneOnly'} = \0;
 			$delivery_service->{'geoEnabled'} = [ { 'countryCode' => 'US' } ];
 		}
+		elsif ( $geo_limit == 3 ) {
+
+			# Ref to 0 or 1 makes JSON bool value
+			$delivery_service->{'coverageZoneOnly'} = \0;
+			$delivery_service->{'geoEnabled'} = [ { 'countryCode' => 'CA' } ];
+		}
 		else {
 			# Ref to 0 or 1 makes JSON bool value
 			$delivery_service->{'coverageZoneOnly'} = \0;

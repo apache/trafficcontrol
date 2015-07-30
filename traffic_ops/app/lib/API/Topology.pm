@@ -234,6 +234,10 @@ sub gen_crconfig_json {
 			$data_obj->{'deliveryServices'}->{ $row->xml_id }->{'coverageZoneOnly'} = 'false';
 			$data_obj->{'deliveryServices'}->{ $row->xml_id }->{'geoEnabled'} = [ { 'countryCode' => 'US' } ];
 		}
+		elsif ( $geo_limit == 3 ) {
+			$data_obj->{'deliveryServices'}->{ $row->xml_id }->{'coverageZoneOnly'} = 'false';
+			$data_obj->{'deliveryServices'}->{ $row->xml_id }->{'geoEnabled'} = [ { 'countryCode' => 'CA' } ];
+		}
 		else {
 			$data_obj->{'deliveryServices'}->{ $row->xml_id }->{'coverageZoneOnly'} = 'false';
 		}
