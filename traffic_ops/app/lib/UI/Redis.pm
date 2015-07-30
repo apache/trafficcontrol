@@ -23,26 +23,8 @@ use Mojo::Base 'Mojolicious::Controller';
 use JSON;
 use Redis;
 use Data::Dumper;
-use Time::HiRes qw(gettimeofday tv_interval);
-use Math::Round qw(nearest);
 use Utils::Helper;
 use Carp qw(cluck confess);
-use Extensions::Delegate::Statistics;
-use Common::ReturnCodes qw(SUCCESS ERROR);
-
-#TODO: drichardson - remove after 1.2 cleaned up
-sub stats {
-	my $self = shift;
-
-	my $st = new Extensions::Delegate::Statistics($self);
-	my ( $rc, $result ) = $st->v11_get_stats();
-	if ( $rc == SUCCESS ) {
-		$self->success($result);
-	}
-	else {
-		$self->alert($result);
-	}
-}
 
 sub info {
 	my $self      = shift;

@@ -1,4 +1,4 @@
-package API::v12::CacheStats;
+package Extensions::InfluxDB::API::CdnStats;
 #
 # Copyright 2015 Comcast Cable Communications Management, LLC
 #
@@ -23,9 +23,8 @@ use Mojo::Base 'Mojolicious::Controller';
 use Data::Dumper;
 use JSON;
 my $builder;
-use Extensions::Delegate::CacheStatistics;
+use Extensions::InfluxDB::Delegate::CdnStatistics;
 use Utils::Helper::Extensions;
-Utils::Helper::Extensions->use;
 use Common::ReturnCodes qw(SUCCESS ERROR);
 
 #TODO: drichardson
@@ -33,9 +32,26 @@ use Common::ReturnCodes qw(SUCCESS ERROR);
 sub index {
 	my $self = shift;
 
-	my $cstats = new Extensions::Delegate::CacheStatistics( $self, $self->get_db_name() );
-
+	my $cstats = new Extensions::InfluxDB::Delegate::CacheStatistics( $self, $self->get_db_name() );
 	my ( $rc, $result ) = $cstats->get_stats();
+	if ( $rc == SUCCESS ) {
+		return $self->success($result);
+	}
+	else {
+		return $self->alert($result);
+	}
+}
+
+sub get_usage_overview {
+	my $self = shift;
+
+	my $cstats = new Extensions::InfluxDB::Delegate::CdnStatistics(
+		$self,
+		$self->get_db_name("cache_stats_db_name"),
+		$self->get_db_name("deliveryservice_stats_db_name")
+	);
+
+	my ( $rc, $result ) = $cstats->get_usage_overview();
 	if ( $rc == SUCCESS ) {
 		return $self->success($result);
 	}
@@ -46,10 +62,11 @@ sub index {
 
 sub get_db_name {
 	my $self      = shift;
+	my $key_name  = shift;
 	my $mode      = $self->app->mode;
 	my $conf_file = MojoPlugins::InfluxDB->INFLUXDB_CONF_FILE_NAME;
 	my $conf      = Utils::JsonConfig->load_conf( $mode, $conf_file );
-	return $conf->{cache_stats_db_name};
+	return $conf->{$key_name};
 }
 
 1;

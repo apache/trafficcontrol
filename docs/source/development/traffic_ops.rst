@@ -93,25 +93,25 @@ Perl tidy is for use in code formatting. See the following config file for forma
 
   edit a file called $HOME/.perltidyrc
 
-  l = 156
-  et=4
-  t
-  ci=4
-  st
-  se
-  vt=0
-  cti=0
-  pt=1
-  bt=1
-  sbt=1
-  bbt=1
-  nsfs
-  nolq
-  otr
-  aws
-  wls="= + - / * ."
-  wrs=\"= + - / * .\"
-  wbb =% + - * / x != == >= <= =~ < > | & **= += *= &= <<= &&= -= /= |= + >>= ||= .= %= ^= x= 
+  -l=156
+  -et=4
+  -t
+  -ci=4
+  -st
+  -se
+  -vt=0
+  -cti=0
+  -pt=1
+  -bt=1
+  -sbt=1
+  -bbt=1
+  -nsfs
+  -nolq
+  -otr
+  -aws
+  -wls="= + - / * ."
+  -wrs=\"= + - / * .\"
+  -wbb="% + - * / x != == >= <= =~ < > | & **= += *= &= <<= &&= -= /= |= + >>= ||= .= %= ^= x="
 
 
 Database Management

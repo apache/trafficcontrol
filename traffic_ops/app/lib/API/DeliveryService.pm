@@ -21,12 +21,6 @@ package API::DeliveryService;
 use UI::Utils;
 use Mojo::Base 'Mojolicious::Controller';
 use Data::Dumper;
-use POSIX qw(strftime);
-use Time::HiRes qw(gettimeofday tv_interval);
-use Math::Round qw(nearest);
-use Extensions::Delegate::Metrics;
-use Extensions::Delegate::Statistics;
-Utils::Helper::Extensions->use;
 use Common::ReturnCodes qw(SUCCESS ERROR);
 
 my $valid_server_types = {
@@ -143,31 +137,6 @@ sub get_data {
 	return $self->success( \@data );
 }
 
-sub get_summary {
-	my $self = shift;
-
-	my $id = $self->param('id');
-
-	if ( $self->is_valid_delivery_service($id) ) {
-		if ( $self->is_delivery_service_assigned($id) || &is_admin($self) || &is_oper($self) ) {
-			my $stats = new Extensions::Delegate::Statistics($self);
-			my ( $rc, $result ) = $stats->get_summary();
-			if ( $rc == SUCCESS ) {
-				return $self->success($result);
-			}
-			else {
-				return $self->alert($result);
-			}
-		}
-		else {
-			$self->forbidden();
-		}
-	}
-	else {
-		$self->success( {} );
-	}
-}
-
 sub routing {
 	my $self = shift;
 
@@ -198,31 +167,6 @@ sub routing {
 	}
 	else {
 		$self->not_found();
-	}
-}
-
-sub metrics {
-	my $self = shift;
-	my $id   = $self->param("id");
-
-	if ( $self->is_valid_delivery_service($id) ) {
-		if ( $self->is_delivery_service_assigned($id) || &is_admin($self) || &is_oper($self) ) {
-
-			my $m = new Extensions::Delegate::Metrics($self);
-			my ( $rc, $result ) = $m->get_etl_metrics();
-			if ( $rc == SUCCESS ) {
-				return $self->success($result);
-			}
-			else {
-				return $self->alert($result);
-			}
-		}
-		else {
-			$self->forbidden();
-		}
-	}
-	else {
-		$self->alert( "Invalid deliveryservice id: " . $id );
 	}
 }
 
@@ -365,31 +309,6 @@ sub state {
 	else {
 		$self->not_found();
 	}
-}
-
-sub peakusage {
-	my $self = shift;
-	my $dsid = $self->param('ds');
-	if ( $self->is_valid_delivery_service($dsid) ) {
-
-		if ( $self->is_delivery_service_assigned($dsid) || &is_admin($self) || &is_oper($self) ) {
-			my $stats = new Extensions::Delegate::Statistics($self);
-			my ( $rc, $result ) = $stats->get_daily_usage();
-			if ( $rc == SUCCESS ) {
-				$self->success($result);
-			}
-			else {
-				$self->alert($result);
-			}
-		}
-		else {
-			return $self->forbidden();
-		}
-	}
-	else {
-		$self->success( {} );
-	}
-
 }
 
 1;

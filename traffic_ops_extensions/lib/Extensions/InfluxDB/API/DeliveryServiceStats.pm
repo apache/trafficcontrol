@@ -1,4 +1,4 @@
-package API::Usage;
+package Extensions::InfluxDB::API::DeliveryServiceStats;
 #
 # Copyright 2015 Comcast Cable Communications Management, LLC
 #
@@ -16,28 +16,23 @@ package API::Usage;
 #
 #
 #
-
-# JvD Note: you always want to put Utils as the first use. Sh*t don't work if it's after the Mojo lines.
-use UI::Utils;
 use Mojo::Base 'Mojolicious::Controller';
-
 use Data::Dumper;
-use JSON;
+use Extensions::InfluxDB::Delegate::Statistics;
 use Common::ReturnCodes qw(SUCCESS ERROR);
-use Extensions::Delegate::Statistics;
-use Utils::Helper::Extensions;
-Utils::Helper::Extensions->use;
 
-sub deliveryservice {
-	my $self  = shift;
-	my $ds_id = $self->param("ds_id");
+my $builder;
 
-	if ( $self->is_valid_delivery_service($ds_id) ) {
-		if ( $self->is_delivery_service_assigned($ds_id) || &is_admin($self) || &is_oper($self) ) {
+sub index {
+	my $self    = shift;
+	my $ds_name = $self->param('deliveryServiceName');
 
-			my $stats = new Extensions::Delegate::Statistics($self);
-			my ( $rc, $result ) = $stats->get_deliveryservice_usage();
+	if ( $self->is_valid_delivery_service_name($ds_name) ) {
+		if ( $self->is_delivery_service_name_assigned($ds_name) || &is_admin($self) || &is_oper($self) ) {
 
+			my $stats = new Extensions::InfluxDB::Delegate::Statistics( $self, $self->get_db_name() );
+
+			my ( $rc, $result ) = $stats->get_stats();
 			if ( $rc == SUCCESS ) {
 				return $self->success($result);
 			}
@@ -52,6 +47,15 @@ sub deliveryservice {
 	else {
 		$self->success( {} );
 	}
+
+}
+
+sub get_db_name {
+	my $self      = shift;
+	my $mode      = $self->app->mode;
+	my $conf_file = MojoPlugins::InfluxDB->INFLUXDB_CONF_FILE_NAME;
+	my $conf      = Utils::JsonConfig->load_conf( $mode, $conf_file );
+	return $conf->{deliveryservice_stats_db_name};
 }
 
 1;

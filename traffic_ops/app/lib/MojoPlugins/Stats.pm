@@ -22,10 +22,6 @@ use Carp qw(cluck confess);
 use Data::Dumper;
 use JSON;
 use Utils::CCR;
-use Time::HiRes qw(gettimeofday tv_interval);
-use Math::Round qw(nearest);
-use Utils::Helper::Extensions;
-Utils::Helper::Extensions->use;
 
 sub register {
 	my ( $self, $app, $conf ) = @_;

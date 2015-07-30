@@ -21,8 +21,6 @@ package UI::RascalStatus;
 use UI::Utils;
 use Mojo::Base 'Mojolicious::Controller';
 
-use Time::HiRes qw(gettimeofday tv_interval);
-
 sub health {
 	my $self = shift;
 	my $pparam =
