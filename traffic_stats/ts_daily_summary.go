@@ -79,6 +79,7 @@ func main() {
 	formatEndTime := endTime.Format("2006-01-02T15:04:05-00:00")
 	endUTime := endTime.Unix()
 	startUTime := startTime.Unix()
+	pts := make([]influx.Point, 0)
 
 	<-time.NewTimer(time.Now().Truncate(time.Duration(pollingInterval) * time.Second).Add(time.Duration(pollingInterval) * time.Second).Sub(time.Now())).C
 	tickerChan := time.Tick(time.Duration(pollingInterval) * time.Second)
@@ -151,6 +152,21 @@ func main() {
 					log.Error("Could not store daily_maxkbps stats in traffic ops!")
 					errHndlr(err, ERROR)
 				}
+				//write to influxdb
+				pts = append(pts,
+					influx.Point{
+						Measurement: statsSummary.StatName,
+						Tags: map[string]string{
+							"deliveryservice": statsSummary.DeliveryService,
+							"cdn":             statsSummary.CdnName,
+						},
+						Fields: map[string]interface{}{
+							"value": statsSummary.StatValue,
+						},
+						Time:      startTime,
+						Precision: "s",
+					},
+				)
 				//write bytes served data to traffic_ops
 				statsSummary.StatName = "daily_byteserved"
 				statsSummary.StatValue = strconv.FormatFloat(bytesServed, 'f', 2, 64)
@@ -159,6 +175,30 @@ func main() {
 					log.Error("Could not store daily_byteserved stats in traffic ops!")
 					errHndlr(err, ERROR)
 				}
+				pts = append(pts,
+					influx.Point{
+						Measurement: statsSummary.StatName,
+						Tags: map[string]string{
+							"deliveryservice": statsSummary.DeliveryService,
+							"cdn":             statsSummary.CdnName,
+						},
+						Fields: map[string]interface{}{
+							"value": statsSummary.StatValue,
+						},
+						Time:      startTime,
+						Precision: "s",
+					},
+				)
+			}
+			log.Infof("Writing daily stats to influxDb")
+			bps := influx.BatchPoints{
+				Points:          pts,
+				Database:        "daily_stats",
+				RetentionPolicy: "daily_stats",
+			}
+			_, err = influxClient.Write(bps)
+			if err != nil {
+				errHndlr(err, ERROR)
 			}
 		}
 	}
