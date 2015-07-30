@@ -340,6 +340,8 @@ public class TrafficMonitorWatcher  {
 		synchronized(monitorSync) {
 			LOGGER.debug("Setting online Monitors to: " + onlineMonitors);
 			TrafficMonitorWatcher.onlineMonitors = onlineMonitors;
+			setBootstrapped(true);
+			setHosts(onlineMonitors.toArray(new String[onlineMonitors.size()]));
 		}
 	}
 }
