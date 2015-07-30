@@ -136,7 +136,7 @@ public class TRServlet extends HttpServlet {
 			final TrafficRouter trafficRouter = trafficRouterManager.getTrafficRouter();
 			final HTTPRouteResult routeResult = trafficRouter.route(req, track);
 
-			if (routeResult == null) {
+			if (routeResult == null || routeResult.getUrl() == null) {
 				access.setResponseCode(HttpServletResponse.SC_SERVICE_UNAVAILABLE);
 				response.sendError(HttpServletResponse.SC_SERVICE_UNAVAILABLE);
 			} else {
