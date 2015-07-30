@@ -1,4 +1,4 @@
-package Utils::Helper::Extensions;
+package Utils::Helper::TrafficOpsRoutesLoader;
 #
 # Copyright 2015 Comcast Cable Communications Management, LLC
 #
@@ -19,13 +19,32 @@ package Utils::Helper::Extensions;
 
 use Data::Dumper;
 use File::Find;
+my $r;
 
-sub use {
-	my $module;
-	my $to_ext_lib_env = $ENV{"TO_EXTENSIONS_LIB"};
-	if ( defined($to_ext_lib_env) ) {
-		if ( -e $to_ext_lib_env ) {
-			print "Using Extensions library path: " . $to_ext_lib_env . "\n";
+sub new {
+	my $self  = {};
+	my $class = shift;
+	$r = shift;
+	return ( bless( $self, $class ) );
+}
+
+sub load {
+	my $self = shift;
+
+	# Look in the PERL5LIB directories for any TrafficOpsRoutes files.
+	#print "PERL5LIB: " . Dumper(@INC);
+	foreach my $dir (@INC) {
+		if ( $dir =~ /traffic_ops_extensions/ ) {
+			$self->load_routes($dir);
+		}
+	}
+}
+
+sub load_routes {
+	my $self     = shift;
+	my $root_dir = shift;
+	if ( defined($root_dir) ) {
+		if ( -e $root_dir ) {
 			my @file_list;
 			find(
 				sub {
@@ -33,15 +52,24 @@ sub use {
 					return unless /\.pm$/;    #Must end with `.pm` suffix
 					push @file_list, $File::Find::name;
 				},
-				$to_ext_lib_env
+				$root_dir
 			);
 
 			foreach my $file (@file_list) {
 				open my $fn, '<', $file;
 				my $first_line = <$fn>;
 				my ( $package_keyword, $package_name ) = ( $first_line =~ m/(package )(.*);/ );
-				eval "use $package_name;";
-				close $fn;
+				if ( defined($package_name) ) {
+
+					#print "package_name #-> (" . Dumper($package_name) . ")\n";
+					if ( $package_name =~ /.*TrafficOpsRoutes$/ ) {
+						print "Loading Mojo Routes from package: " . $package_name . "\n";
+						eval "use $package_name;";
+						my $routes_class = eval {$package_name};
+						$routes_class->define($r) || die "Route failed to load from package '" . $package_name . "' interface improperly defined.\n";
+					}
+					close $fn;
+				}
 			}
 		}
 	}

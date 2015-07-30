@@ -44,7 +44,7 @@ use MojoX::Log::Log4perl;
 use File::Find;
 use File::Basename;
 use Env qw(PERL5LIB);
-use Utils::Helper::Extensions;
+use Utils::Helper::TrafficOpsRoutesLoader;
 use File::Path qw(make_path);
 use IO::Compress::Gzip 'gzip';
 
@@ -57,8 +57,7 @@ my $config;
 local $/;    #Enable 'slurp' mode
 
 has schema => sub { return Schema->connect_to_database };
-my $to_extensions_lib = $ENV{'TO_EXTENSION_LIB'};
-has watch => sub { [qw(lib templates $to_extensions_lib)] };
+has watch  => sub { [qw(lib templates)] };
 
 if ( !defined $ENV{MOJO_CONFIG} ) {
 	$ENV{'MOJO_CONFIG'} = 'conf/cdn.conf';
@@ -159,11 +158,11 @@ sub startup {
 
 	$self->hook(
 		after_render => sub {
-			my ($c, $output, $format) = @_;
+			my ( $c, $output, $format ) = @_;
 
 			# Check if user agent accepts gzip compression
-			return unless ($c->req->headers->accept_encoding // '') =~ /gzip/i;
-			$c->res->headers->append(Vary => 'Accept-Encoding');
+			return unless ( $c->req->headers->accept_encoding // '' ) =~ /gzip/i;
+			$c->res->headers->append( Vary => 'Accept-Encoding' );
 
 			# Compress content with gzip
 			$c->res->headers->content_encoding('gzip');
@@ -609,7 +608,6 @@ sub startup {
 	# ------------------------------------------------------------------------
 	# START: Version 1.1
 	# ------------------------------------------------------------------------
-
 	# -- API DOCS
 	$r->get( '/api/1.1/docs' => [ format => [qw(json)] ] )->to( 'ApiDocs#index', namespace => 'API' );
 
@@ -676,12 +674,6 @@ sub startup {
 	$r->get( '/api/1.1/deliveryservices/:id/state' => [ format => [qw(json)] ] )->over( authenticated => 1 )
 		->to( 'DeliveryService#state', namespace => 'API' );
 
-	# -- DELIVERY SERVICE: Metrics
-	# USED TO BE - GET /api/1.1/services/:id/summary/:stat/:start/:end/:interval/:window_start/:window_end.json
-	$r->get(
-		'/api/1.1/deliveryservices/:id/edge/metric_types/:metric_type/start_date/:start_date/end_date/:end_date/interval/:interval/window_start/:window_start/window_end/:window_end'
-			=> [ format => [qw(json)] ] )->over( authenticated => 1 )->to( 'DeliveryService#get_summary', namespace => 'API' );
-
 	## -- DELIVERY SERVICE: SSL Keys
 	## Support for SSL private keys, certs, and csrs
 	#gets the latest key by default unless a version query param is provided with ?version=x
@@ -708,11 +700,6 @@ sub startup {
 	$r->get( '/api/1.1/deliveryservices/xmlId/:xmlId/urlkeys' => [ format => [qw(json)] ] )->over( authenticated => 1 )
 		->to( 'KeysUrlSig#view_by_xmlid', namespace => 'API::DeliveryService' );
 
-	# Supports ?stats=true&data=true
-	# USED TO BE - GET /api/1.1/deliveryservices/:id/metrics/:type/:metric/:start/:end.json
-	$r->get( '/api/1.1/deliveryservices/:id/server_types/:server_type/metric_types/:metric_type/start_date/:start_date/end_date/:end_date' =>
-			[ format => [qw(json)] ] )->over( authenticated => 1 )->to( 'DeliveryService#metrics', namespace => 'API' );
-
 	#	->over( authenticated => 1 )->to( 'DeliveryService#get_summary', namespace => 'API' );
 	# -- DELIVERY SERVICE SERVER - #NEW
 	# Supports ?orderby=key
@@ -723,20 +710,10 @@ sub startup {
 	$r->post('/api/1.1/to_extensions')->over( authenticated => 1 )->to( 'ToExtension#update', namespace => 'API' );
 	$r->post('/api/1.1/to_extensions/:id/delete')->over( authenticated => 1 )->to( 'ToExtension#delete', namespace => 'API' );
 
-	# -- METRICS
-	# USED TO BE - GET /api/1.1/metrics/:type/:metric/:start/:end.json
-	$r->get( '/api/1.1/metrics/server_types/:server_type/metric_types/:metric_type/start_date/:start_date/end_date/:end_date' => [ format => [qw(json)] ] )
-		->over( authenticated => 1 )->to( 'Metrics#index', namespace => 'API' );
-
 	# -- PARAMETER #NEW
 	# Supports ?orderby=key
 	$r->get( '/api/1.1/parameters'               => [ format => [qw(json)] ] )->over( authenticated => 1 )->to( 'Parameter#index',   namespace => 'API' );
 	$r->get( '/api/1.1/parameters/profile/:name' => [ format => [qw(json)] ] )->over( authenticated => 1 )->to( 'Parameter#profile', namespace => 'API' );
-
-	# USED TO BE - GET /api/1.1/usage/:ds/:loc/:stat/:start/:end/:interval
-	$r->get(
-		'/api/1.1/usage/deliveryservices/:ds_id/cachegroups/:name/metric_types/:metric_type/start_date/:start_date/end_date/:end_date/interval/:interval'
-			=> [ format => [qw(json)] ] )->over( authenticated => 1 )->to( 'Usage#deliveryservice', namespace => 'API' );
 
 	# -- PHYS_LOCATION #NEW
 	# Supports ?orderby=key
@@ -783,12 +760,6 @@ sub startup {
 	$r->get( '/api/1.1/traffic_monitor/stats' => [ format => [qw(json)] ] )->over( authenticated => 1 )
 		->to( 'TrafficMonitor#get_host_stats', namespace => 'API' );
 
-	# -- REDIS #NEW #DR
-	$r->get( '/api/1.1/redis/stats' => [ format => [qw(json)] ] )->over( authenticated => 1 )->to( 'Redis#get_redis_stats', namespace => 'API' );
-	$r->get('/api/1.1/redis/info/:host_name')->over( authenticated => 1 )->to( 'Redis#info', namespace => 'API' );
-	$r->get('/api/1.1/redis/match/#match/start_date/:start_date/end_date/:end_date/interval/:interval')->over( authenticated => 1 )
-		->to( 'Redis#stats', namespace => 'API' );
-
 	# -- RIAK #NEW
 	$r->get('/api/1.1/riak/stats')->over( authenticated => 1 )->to( 'Riak#stats', namespace => 'API' );
 
@@ -796,10 +767,6 @@ sub startup {
 	# Supports ?orderby=key
 	$r->get('/api/1.1/types')->over( authenticated => 1 )->to( 'Types#index', namespace => 'API' );
 	$r->get('/api/1.1/types/trimmed')->over( authenticated => 1 )->to( 'Types#index_trimmed', namespace => 'API' );
-
-	# --
-	# USED TO BE - GET /api/1.1/usage/overview.json
-	$r->get( '/api/1.1/cdns/usage/overview' => [ format => [qw(json)] ] )->to( 'Cdn#usage_overview', namespace => 'API' );
 
 	# -- CDN
 	# USED TO BE - Nothing, this is new
@@ -810,10 +777,6 @@ sub startup {
 
 	# USED TO BE - GET /api/1.1/capacity.json
 	$r->get( '/api/1.1/cdns/capacity' => [ format => [qw(json)] ] )->over( authenticated => 1 )->to( 'Cdn#capacity', namespace => 'API' );
-
-	# USED TO BE - GET /api/1.1/configs/monitoring/:cdn_name
-	$r->get( '/api/1.1/cdns/:name/configs/monitoring' => [ format => [qw(json)] ] )->via('GET')->over( authenticated => 1 )
-		->to( 'Cdn#configs_monitoring', namespace => 'API' );
 
 	# USED TO BE - GET /api/1.1/routing.json
 	$r->get( '/api/1.1/cdns/routing' => [ format => [qw(json)] ] )->over( authenticated => 1 )->to( 'Cdn#routing', namespace => 'API' );
@@ -846,11 +809,6 @@ sub startup {
 	# -- CDN: domains #NEW
 	$r->get( '/api/1.1/cdns/domains' => [ format => [qw(json)] ] )->over( authenticated => 1 )->to( 'Cdn#domains', namespace => 'API' );
 
-	# -- USAGE
-	# USED TO BE - GET /api/1.1/daily/usage/:ds/:loc/:stat/:start/:end/:interval
-	$r->get( '/api/1.1/cdns/peakusage/:metric_type/deliveryservice/:ds_id/cachegroup/:name/start_date/:start_date/end_date/:end_date/interval/:interval' =>
-			[ format => [qw(json)] ] )->over( authenticated => 1 )->to( 'Cdn#peakusage', namespace => 'API' );
-
 	# -- USERS
 	$r->get( '/api/1.1/users' => [ format => [qw(json)] ] )->over( authenticated => 1 )->to( 'User#index', namespace => 'API' );
 	$r->post('/api/1.1/user/login')->to( 'User#login', namespace => 'API' );
@@ -878,18 +836,24 @@ sub startup {
 	# END: Version 1.1
 	# ------------------------------------------------------------------------
 
-	# ------------------------------------------------------------------------
-	# API Routes 1.2
-	# ------------------------------------------------------------------------
-	my $api_version   = "1.2";
-	my $api_namespace = "v12";
+	my $api_version   = "1.1";
+	my $api_namespace = "v11";
 
-	$r->get( "/api/$api_version/deliveryservice_stats" => [ format => [qw(json)] ] )->over( authenticated => 1 )
-		->to( 'DeliveryServiceStats#index', namespace => "API::$api_namespace" );
-	$r->get( "/api/$api_version/cache_stats" => [ format => [qw(json)] ] )->over( authenticated => 1 )
-		->to( 'CacheStats#index', namespace => "API::$api_namespace" );
+	# USED TO BE - GET /api/1.1/configs/monitoring/:cdn_name
+	$r->get( "/api/$api_version/cdns/:name/configs/monitoring" => [ format => [qw(json)] ] )->via('GET')->over( authenticated => 1 )
+		->to( 'Cdn#configs_monitoring', namespace => 'API' );
 
-	##stats_summary
+	# Look in the PERL5LIB for any TrafficOpsRoutes.pm files and load them as well
+	my $rh = new Utils::Helper::TrafficOpsRoutesLoader($r);
+	$rh->load();
+
+	# ------------------------------------------------------------------------
+	# BEGIN Version 1.2
+	# ------------------------------------------------------------------------
+	## stats_summary
+	$api_version   = "1.2";
+	$api_namespace = "v12";
+
 	$r->get( "/api/$api_version/stats_summary" => [ format => [qw(json)] ] )->over( authenticated => 1 )
 		->to( 'StatsSummary#index', namespace => "API::$api_namespace" );
 	$r->post("/api/$api_version/stats_summary/create")->over( authenticated => 1 )->to( 'StatsSummary#create', namespace => "API::$api_namespace" );

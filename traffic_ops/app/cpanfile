@@ -58,6 +58,7 @@ requires 'Data::Dumper::Concise';
 requires 'Data::OptList';
 requires 'Data::Page';
 requires 'Date::Manip';
+requires 'DateTime::Format::ISO8601';
 requires 'Devel::GlobalDestruction';
 requires 'Devel::StackTrace';
 requires 'Devel::Symdump';
