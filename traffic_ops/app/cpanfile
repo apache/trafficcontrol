@@ -242,6 +242,7 @@ requires 'Text::Wrap';
 requires 'Time::HiRes';
 requires 'Time::Local';
 requires 'Time::Out';
+requires 'Time::Seconds';
 requires 'Try::Tiny';
 requires 'URI';
 requires 'WWW::Curl::Easy';
