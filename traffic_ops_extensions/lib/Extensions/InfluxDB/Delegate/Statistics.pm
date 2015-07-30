@@ -16,7 +16,6 @@ use Extensions::InfluxDB::Helper::InfluxResponse;
 use HTTP::Date;
 use Utils::Helper::DateHelper;
 use Carp qw(cluck confess);
-use constant SPDB_URL => "http://spdb.g.comcast.net/GetTextBulkDataBySearch";
 use Common::ReturnCodes qw(SUCCESS ERROR);
 use Utils::Deliveryservice;
 use Time::Seconds;
