@@ -65,6 +65,7 @@ sub index {
 				"statName"       		=> $row->stat_name,
 				"statValue" 	 		=> $row->stat_value,
 				"summaryTime" 	 		=> $row->summary_time,
+				"statDate" 	 			=> $row->stat_date,
 		}
 		);
 	}
