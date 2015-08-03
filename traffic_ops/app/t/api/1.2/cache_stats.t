@@ -76,10 +76,11 @@ my $fake_answer = {
 };
 
 my $json_response = encode_json($fake_answer);
+my $api_version   = "1.2";
 
 my $fake_response = HTTP::Response->new( 200, undef, $fake_header, $json_response );
 $fake_lwp->mock( 'query', sub { return $fake_response } );
-ok $t->get_ok( '/api/1.2/cdns/usage/overview.json' )->status_is(200)->json_has( '/response', 'has a response' ), 'Query1';
+ok $t->get_ok("/api/$api_version/cdns/usage/overview.json")->status_is(200)->json_has( '/response', 'has a response' ), 'Query1';
 
 #ok $t->get_ok(
 #'/api/1.2/cache_stats.json?cdnName=cdn1&=test-ds1&cacheGroupName=us-co-denver&metricType=kbps&startDate=2015-05-06T20:00:00-06:00&endDate=2015-05-06T20:00:00-06:00&interval=60s'

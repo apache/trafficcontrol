@@ -1,4 +1,4 @@
-package Extensions::InfluxDB::API::CdnStats;
+package Extensions::TrafficStats::API::CacheStats;
 #
 # Copyright 2015 Comcast Cable Communications Management, LLC
 #
@@ -23,35 +23,16 @@ use Mojo::Base 'Mojolicious::Controller';
 use Data::Dumper;
 use JSON;
 my $builder;
-use Extensions::InfluxDB::Delegate::CdnStatistics;
+use Extensions::TrafficStats::Delegate::CacheStatistics;
 use Utils::Helper::Extensions;
+Utils::Helper::Extensions->use;
 use Common::ReturnCodes qw(SUCCESS ERROR);
 
-#TODO: drichardson
-#      - Add required fields validation see lib/API/User.pm based on Validate::Tiny
 sub index {
 	my $self = shift;
 
-	my $cstats = new Extensions::InfluxDB::Delegate::CacheStatistics( $self, $self->get_db_name() );
+	my $cstats = new Extensions::TrafficStats::Delegate::CacheStatistics( $self, $self->get_db_name() );
 	my ( $rc, $result ) = $cstats->get_stats();
-	if ( $rc == SUCCESS ) {
-		return $self->success($result);
-	}
-	else {
-		return $self->alert($result);
-	}
-}
-
-sub get_usage_overview {
-	my $self = shift;
-
-	my $cstats = new Extensions::InfluxDB::Delegate::CdnStatistics(
-		$self,
-		$self->get_db_name("cache_stats_db_name"),
-		$self->get_db_name("deliveryservice_stats_db_name")
-	);
-
-	my ( $rc, $result ) = $cstats->get_usage_overview();
 	if ( $rc == SUCCESS ) {
 		return $self->success($result);
 	}
@@ -62,11 +43,10 @@ sub get_usage_overview {
 
 sub get_db_name {
 	my $self      = shift;
-	my $key_name  = shift;
 	my $mode      = $self->app->mode;
 	my $conf_file = MojoPlugins::InfluxDB->INFLUXDB_CONF_FILE_NAME;
 	my $conf      = Utils::JsonConfig->load_conf( $mode, $conf_file );
-	return $conf->{$key_name};
+	return $conf->{cache_stats_db_name};
 }
 
 1;

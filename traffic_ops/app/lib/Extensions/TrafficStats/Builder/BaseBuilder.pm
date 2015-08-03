@@ -1,4 +1,4 @@
-package Extensions::InfluxDB::Builder::BaseBuilder;
+package Extensions::TrafficStats::Builder::BaseBuilder;
 #
 # Copyright 2015 Comcast Cable Communications Management, LLC
 #

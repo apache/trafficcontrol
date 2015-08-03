@@ -1,4 +1,4 @@
-package Extensions::InfluxDB::Helper::InfluxResponse;
+package Extensions::TrafficStats::Helper::InfluxResponse;
 #
 # Copyright 2011-2014, Comcast Corporation. This software and its contents are
 # Comcast confidential and proprietary. It cannot be used, disclosed, or

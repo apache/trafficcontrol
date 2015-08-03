@@ -1,4 +1,4 @@
-package Extensions::InfluxDB::Builder::DeliveryServiceStatsBuilder;
+package Extensions::TrafficStats::Builder::DeliveryServiceStatsBuilder;
 #
 # Copyright 2015 Comcast Cable Communications Management, LLC
 #
@@ -22,7 +22,7 @@ use Data::Dumper;
 use JSON;
 use File::Slurp;
 use Math::Round;
-use Extensions::InfluxDB::Builder::BaseBuilder;
+use Extensions::TrafficStats::Builder::BaseBuilder;
 use Carp qw(cluck confess);
 
 my $args;
@@ -49,7 +49,7 @@ sub validate_keys {
 		limit               => 1,
 		offset              => 1
 	};
-	return Extensions::InfluxDB::Builder::BaseBuilder->validate_keys( $args, $valid_keys );
+	return Extensions::TrafficStats::Builder::BaseBuilder->validate_keys( $args, $valid_keys );
 }
 
 sub summary_query {
@@ -58,7 +58,7 @@ sub summary_query {
 
 		#my $end_date = "'" . $args->{endDate} . "'";
 
-		my $end_date = Extensions::InfluxDB::Builder::BaseBuilder->to_influxdb_date( $args->{endDate} );
+		my $end_date = Extensions::TrafficStats::Builder::BaseBuilder->to_influxdb_date( $args->{endDate} );
 
 		#'summary' section
 		my $query = sprintf(
@@ -70,15 +70,15 @@ sub summary_query {
 		                                 deliveryservice = '$args->{deliveryServiceName}'"
 		);
 
-		$query = Extensions::InfluxDB::Builder::BaseBuilder->append_clauses( $query, $args );
-		return Extensions::InfluxDB::Builder::BaseBuilder->clean_whitespace($query);
+		$query = Extensions::TrafficStats::Builder::BaseBuilder->append_clauses( $query, $args );
+		return Extensions::TrafficStats::Builder::BaseBuilder->clean_whitespace($query);
 	}
 }
 
 sub series_query {
 	my $self = shift;
 
-	my $end_date = Extensions::InfluxDB::Builder::BaseBuilder->to_influxdb_date( $args->{endDate} );
+	my $end_date = Extensions::TrafficStats::Builder::BaseBuilder->to_influxdb_date( $args->{endDate} );
 
 	#my $end_date = $args->{endDate};
 	my $query = sprintf(
@@ -91,16 +91,16 @@ sub series_query {
                                      GROUP BY time($args->{interval}), cachegroup"
 	);
 
-	$query = Extensions::InfluxDB::Builder::BaseBuilder->append_clauses( $query, $args );
+	$query = Extensions::TrafficStats::Builder::BaseBuilder->append_clauses( $query, $args );
 
-	return Extensions::InfluxDB::Builder::BaseBuilder->clean_whitespace($query);
+	return Extensions::TrafficStats::Builder::BaseBuilder->clean_whitespace($query);
 }
 
 sub usage_overview_tps_query {
 	my $self = shift;
 	if ( $self->validate_keys() ) {
 		my $query = "SELECT sum(value)/6 FROM tps_total WHERE cachegroup = 'total' and time > now() - 60s";
-		return Extensions::InfluxDB::Builder::BaseBuilder->clean_whitespace($query);
+		return Extensions::TrafficStats::Builder::BaseBuilder->clean_whitespace($query);
 	}
 }
 
