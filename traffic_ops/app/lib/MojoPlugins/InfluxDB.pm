@@ -26,12 +26,13 @@ use JSON;
 use IO::Socket::SSL qw();
 use LWP::UserAgent qw();
 use File::Slurp;
-use Connection::InfluxDBAdapter;
+
+use Extensions::TrafficStats::Connection::InfluxDBAdapter;
 
 use constant SERVER_TYPE             => 'INFLUXDB';
 use constant SCHEMA_FILE             => 'InfluxDBHostsOnline';
 use constant INFLUXDB_CONF_FILE_NAME => 'influxdb.conf';
-my $helper_class = eval {'Connection::InfluxDBAdapter'};
+my $helper_class = eval {'Extensions::TrafficStats::Connection::InfluxDBAdapter'};
 
 sub register {
 	my ( $self, $app, $conf ) = @_;
@@ -43,7 +44,8 @@ sub register {
 			my $content_type = shift || "application/json";
 			my $mode         = $self->app->mode;
 			my $conf         = Utils::JsonConfig->load_conf( $mode, INFLUXDB_CONF_FILE_NAME );
-			my $helper       = $helper_class->new( $conf->{user}, $conf->{password} );
+			$self->app->log->debug( "helper_class #-> " . Dumper($helper_class) );
+			my $helper = $helper_class->new( $conf->{user}, $conf->{password} );
 			return $self->server_send_request( SERVER_TYPE, $helper, sub { $helper_class->write( $write_point, $content_type ) }, SCHEMA_FILE );
 		}
 	);
@@ -56,6 +58,7 @@ sub register {
 			my $mode    = $self->app->mode;
 			my $conf    = Utils::JsonConfig->load_conf( $mode, INFLUXDB_CONF_FILE_NAME );
 			my $helper  = $helper_class->new( $conf->{user}, $conf->{password} );
+			$self->app->log->debug( "helper_class #-> " . Dumper($helper_class) );
 			return $self->server_send_request( SERVER_TYPE, $helper, sub { $helper_class->query( $db_name, $query ) }, SCHEMA_FILE );
 		}
 	);
