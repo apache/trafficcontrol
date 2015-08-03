@@ -141,14 +141,16 @@
 		<% } %>
 		%= label_for 'geo_limit' => 'Geo Limit?', class => 'label'
 		<% if ($priv_level >= 20) { %>
-		%= field('ds.geo_limit')->select([[None => 0], ["CZF only" => 1], ["CZF + US" => 2]]);
+		%= field('ds.geo_limit')->select([[None => 0], ["CZF only" => 1], ["CZF + US" => 2], ["CZF + CA" => 3]]);
 		<% } else { %>
 			<% if ($ds->geo_limit == 0) { %>
 				%= field('ds.geo_limit')->text(class => 'field', value =>  'None', readonly => 'readonly');
 			<% } elsif($ds->geo_limit == 1) { %>
 				%= field('ds.geo_limit')->text(class => 'field', value =>  'CZF only', readonly => 'readonly');
+			<% } elsif($ds->geo_limit == 2) { %>
+                %= field('ds.geo_limit')->text(class => 'field', value =>  'CZF + US', readonly => 'readonly');
 			<% } else { %>
-			%= field('ds.geo_limit')->text(class => 'field', value =>  'CZF + US', readonly => 'readonly');
+                %= field('ds.geo_limit')->text(class => 'field', value =>  'CZF + CA', readonly => 'readonly');
 			<% } %>
 		<% } %>
 	</div><br>
