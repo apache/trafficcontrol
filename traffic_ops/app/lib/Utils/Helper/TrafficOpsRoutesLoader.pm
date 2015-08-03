@@ -20,6 +20,7 @@ package Utils::Helper::TrafficOpsRoutesLoader;
 use Data::Dumper;
 use File::Find;
 my $r;
+my @loaded_route_packages;
 
 sub new {
 	my $self  = {};
@@ -34,15 +35,15 @@ sub load {
 	# Look in the PERL5LIB directories for any TrafficOpsRoutes files.
 	#print "PERL5LIB: " . Dumper(@INC);
 	foreach my $dir (@INC) {
-		if ( $dir =~ /traffic_ops_extensions/ ) {
-			$self->load_routes($dir);
-		}
+		$self->load_routes($dir);
 	}
 }
 
 sub load_routes {
 	my $self     = shift;
 	my $root_dir = shift;
+
+	#print "root_dir #-> (" . $root_dir . ")\n";
 	if ( defined($root_dir) ) {
 		if ( -e $root_dir ) {
 			my @file_list;
@@ -61,12 +62,15 @@ sub load_routes {
 				my ( $package_keyword, $package_name ) = ( $first_line =~ m/(package )(.*);/ );
 				if ( defined($package_name) ) {
 
-					#print "package_name #-> (" . Dumper($package_name) . ")\n";
 					if ( $package_name =~ /.*TrafficOpsRoutes$/ ) {
-						print "Loading Mojo Routes from package: " . $package_name . "\n";
-						eval "use $package_name;";
-						my $routes_class = eval {$package_name};
-						$routes_class->define($r) || die "Route failed to load from package '" . $package_name . "' interface improperly defined.\n";
+						if ( !grep { $_ eq $package_name } @loaded_route_packages ) {
+							print "Loading Mojo Routes from package: " . $package_name . "\n";
+							eval "use $package_name;";
+							my $routes_class = eval {$package_name};
+							$routes_class->define($r) || die "Route failed to load from package '" . $package_name . "' interface improperly defined.\n";
+							push( @loaded_route_packages, $routes_class );
+						}
+
 					}
 					close $fn;
 				}

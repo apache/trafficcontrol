@@ -1,0 +1,69 @@
+[2015-07-28 15:36:41,810] [DEBUG] Reading configuration file "/Users/drichard/cdn.conf".
+[2015-07-28 15:36:42,640] [DEBUG] POST "/login".
+[2015-07-28 15:36:42,860] [DEBUG] Routing to controller "UI::Cdn" and action "login".
+[2015-07-28 15:36:42,873] [DEBUG] 302 Found (0.233038s, 4.291/s).
+[2015-07-28 15:36:42,883] [DEBUG] GET "/api/1.2/cache_stats.json".
+[2015-07-28 15:36:42,896] [DEBUG] Controller "Extensions::Comcast::API::CacheStats" does not exist.
+[2015-07-28 15:36:42,907] [DEBUG] Template "cache_stats/index.json.ep" not found.
+[2015-07-28 15:36:42,907] [DEBUG] Template "not_found.test.json.ep" not found.
+[2015-07-28 15:36:42,908] [DEBUG] Template "not_found.json.ep" not found.
+[2015-07-28 15:36:42,908] [DEBUG] Template "not_found.test.html.ep" not found.
+[2015-07-28 15:36:42,908] [DEBUG] Rendering template "not_found.html.ep".
+[2015-07-28 15:36:42,910] [DEBUG] Rendering template "layouts/jquery.html.ep".
+[2015-07-28 15:36:42,917] [DEBUG] 404 Not Found (0.033942s, 29.462/s).
+[2015-07-28 15:36:42,927] [DEBUG] GET "/api/1.2/cache_stats.json".
+[2015-07-28 15:36:42,931] [DEBUG] Controller "Extensions::Comcast::API::CacheStats" does not exist.
+[2015-07-28 15:36:42,931] [DEBUG] Template "cache_stats/index.json.ep" not found.
+[2015-07-28 15:36:42,931] [DEBUG] Template "not_found.test.json.ep" not found.
+[2015-07-28 15:36:42,932] [DEBUG] Template "not_found.json.ep" not found.
+[2015-07-28 15:36:42,932] [DEBUG] Template "not_found.test.html.ep" not found.
+[2015-07-28 15:36:42,932] [DEBUG] Rendering cached template "not_found.html.ep".
+[2015-07-28 15:36:42,932] [DEBUG] Rendering cached template "layouts/jquery.html.ep".
+[2015-07-28 15:36:42,933] [DEBUG] 404 Not Found (0.006287s, 159.058/s).
+[2015-07-28 15:37:45,672] [DEBUG] Reading configuration file "/Users/drichard/cdn.conf".
+[2015-07-28 15:37:46,437] [DEBUG] POST "/login".
+[2015-07-28 15:37:46,668] [DEBUG] Routing to controller "UI::Cdn" and action "login".
+[2015-07-28 15:37:46,683] [DEBUG] 302 Found (0.246100s, 4.063/s).
+[2015-07-28 15:37:46,692] [DEBUG] GET "/api/1.2/cdns/usage/overview.json".
+[2015-07-28 15:37:46,711] [DEBUG] Routing to controller "Extensions::InfluxDB::API::CdnStats" and action "get_usage_overview".
+[2015-07-28 15:37:46,715] [DEBUG] CURRENT active_server #-> influxdb02.kabletown.net:8086
+[2015-07-28 15:37:46,717] [DEBUG] CURRENT active_server #-> influxdb01.kabletown.net:8086
+[2015-07-28 15:37:46,719] [DEBUG] CURRENT active_server #-> influxdb02.kabletown.net:8086
+[2015-07-28 15:37:46,721] [DEBUG] 200 OK (0.029275s, 34.159/s).
+[2015-07-28 16:03:31,577] [DEBUG] Reading configuration file "/Users/drichard/cdn.conf".
+[2015-07-28 16:03:32,460] [DEBUG] POST "/login".
+[2015-07-28 16:03:32,705] [DEBUG] Routing to controller "UI::Cdn" and action "login".
+[2015-07-28 16:03:32,719] [DEBUG] 302 Found (0.258499s, 3.868/s).
+[2015-07-28 16:03:32,729] [DEBUG] GET "/api/1.2/cdns/usage/overview.json".
+[2015-07-28 16:03:32,748] [DEBUG] Routing to controller "Extensions::InfluxDB::API::CdnStats" and action "get_usage_overview".
+[2015-07-28 16:03:32,753] [DEBUG] CURRENT active_server #-> influxdb02.kabletown.net:8086
+[2015-07-28 16:03:32,755] [DEBUG] CURRENT active_server #-> influxdb01.kabletown.net:8086
+[2015-07-28 16:03:32,757] [DEBUG] CURRENT active_server #-> influxdb02.kabletown.net:8086
+[2015-07-28 16:03:32,759] [DEBUG] 200 OK (0.029983s, 33.352/s).
+[2015-07-30 09:03:06,845] [DEBUG] Reading configuration file "/Users/drichard/cdn.conf".
+[2015-07-30 09:03:07,703] [DEBUG] POST "/login".
+[2015-07-30 09:03:07,950] [DEBUG] Routing to controller "UI::Cdn" and action "login".
+[2015-07-30 09:03:07,963] [DEBUG] 302 Found (0.260525s, 3.838/s).
+[2015-07-30 09:03:07,976] [DEBUG] GET "/api/1.2/cdns/usage/overview.json".
+[2015-07-30 09:03:07,999] [DEBUG] Routing to controller "Extensions::InfluxDB::API::CdnStats" and action "get_usage_overview".
+[2015-07-30 09:03:08,003] [DEBUG] CURRENT active_server #-> influxdb01.kabletown.net:8086
+[2015-07-30 09:03:08,006] [DEBUG] CURRENT active_server #-> influxdb02.kabletown.net:8086
+[2015-07-30 09:03:08,009] [DEBUG] CURRENT active_server #-> influxdb01.kabletown.net:8086
+[2015-07-30 09:03:08,011] [DEBUG] 200 OK (0.034941s, 28.620/s).
+[2015-07-30 10:10:51,722] [DEBUG] Reading configuration file "/Users/drichard/cdn.conf".
+[2015-07-30 10:10:52,558] [DEBUG] POST "/login".
+[2015-07-30 10:10:52,786] [DEBUG] Routing to controller "UI::Cdn" and action "login".
+[2015-07-30 10:10:52,800] [DEBUG] 302 Found (0.241587s, 4.139/s).
+[2015-07-30 10:10:52,810] [DEBUG] GET "/api/1.2/cdns/usage/overview.json".
+[2015-07-30 10:10:52,829] [DEBUG] Routing to controller "Extensions::InfluxDB::API::CdnStats" and action "get_usage_overview".
+[2015-07-30 10:10:52,833] [DEBUG] CURRENT active_server #-> influxdb02.kabletown.net:8086
+[2015-07-30 10:10:52,835] [DEBUG] CURRENT active_server #-> influxdb01.kabletown.net:8086
+[2015-07-30 10:10:52,837] [DEBUG] CURRENT active_server #-> influxdb02.kabletown.net:8086
+[2015-07-30 10:10:52,840] [DEBUG] 200 OK (0.029494s, 33.905/s).
+[2015-08-03 09:16:59,851] [DEBUG] Reading configuration file "/Users/drichard/cdn.conf".
+[2015-08-03 09:17:00,728] [DEBUG] POST "/login".
+[2015-08-03 09:17:01,013] [DEBUG] Routing to controller "UI::Cdn" and action "login".
+[2015-08-03 09:17:01,027] [DEBUG] 302 Found (0.298129s, 3.354/s).
+[2015-08-03 09:17:01,038] [DEBUG] GET "/api/1.2/cdns/usage/overview.json".
+[2015-08-03 09:17:01,058] [DEBUG] Routing to controller "API::Cdn" and action "catch_all".
+[2015-08-03 09:17:01,062] [DEBUG] 404 Not Found (0.023902s, 41.838/s).

@@ -1,4 +1,4 @@
-package TORoutes;
+package TrafficOpsRoutes;
 #
 # Copyright 2015 Comcast Cable Communications Management, LLC
 #
@@ -27,6 +27,23 @@ sub new {
 sub define {
 	my $self = shift;
 	my $r    = shift;
+
+	my $api_version = "1.2";
+	$self->define_influx_routes( $r, $api_version );
+}
+
+sub define_influx_routes {
+	my $self        = shift;
+	my $r           = shift;
+	my $api_version = shift;
+
+	$r->get( "/api/$api_version/cdns/usage/overview" => [ format => [qw(json)] ] )
+		->to( 'CdnStats#get_usage_overview', namespace => "Extensions::InfluxDB::API" );
+	$r->get( "/api/$api_version/deliveryservice_stats" => [ format => [qw(json)] ] )->over( authenticated => 1 )
+		->to( 'DeliveryServiceStats#index', namespace => "Extensions::InfluxDB::API" );
+	$r->get( "/api/$api_version/cache_stats" => [ format => [qw(json)] ] )->over( authenticated => 1 )
+		->to( 'CacheStats#index', namespace => "Extensions::InfluxDB::API" );
+
 }
 
 1;
