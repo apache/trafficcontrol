@@ -24,6 +24,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.StringReader;
 import java.nio.channels.FileLock;
+import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
@@ -45,20 +46,17 @@ import com.ning.http.client.Response;
  */
 public class PeriodicResourceUpdater {
 	private static final Logger LOGGER = Logger.getLogger(PeriodicResourceUpdater.class);
-	private static final AsyncHttpClient asyncHttpClient;
-	static {
-		final AsyncHttpClientConfig cf = new AsyncHttpClientConfig.Builder()
+
+	private static final AsyncHttpClient asyncHttpClient = new AsyncHttpClient(
+			new AsyncHttpClientConfig.Builder()
 				.setConnectionTimeoutInMs(10000)
-		//		.addRequestFilter(new ThrottleRequestFilter(10))
-				.build();
-		asyncHttpClient = new AsyncHttpClient(cf);
-	}
+				.build());
 
 	protected int urlSelectStrategy = 0; // 0 = ordered, 1 = random select
 	protected int lastSuccessfulUrl = 0; 
 	protected String databaseLocation;
 	protected final ResourceUrl urls;
-	static protected ScheduledExecutorService executorService;
+	protected ScheduledExecutorService executorService = Executors.newSingleThreadScheduledExecutor();
 	protected long pollingInterval;
 	protected boolean sourceCompressed = true;
 
@@ -105,13 +103,10 @@ public class PeriodicResourceUpdater {
 		this.pauseTilLoaded = pauseTilLoaded;
 	}
 
-	static {
-		executorService = java.util.concurrent.Executors.newSingleThreadScheduledExecutor();
-	}
-
-	static public void destroy() {
+	public void destroy() {
 		executorService.shutdownNow();
-		while(!asyncHttpClient.isClosed()) {
+
+		while (!asyncHttpClient.isClosed()) {
 			LOGGER.warn("closing");
 			asyncHttpClient.close();
 		}
@@ -138,8 +133,6 @@ public class PeriodicResourceUpdater {
 
 	final private AbstractUpdatable listener;
 	final private boolean pauseTilLoaded;
-
-//	private Object future;
 
 	public void init() {
 		putCurrent();
@@ -173,8 +166,7 @@ public class PeriodicResourceUpdater {
 		final File existingDB = new File(databaseLocation);
 		try {
 			if (!hasBeenLoaded || needsUpdating(existingDB)) {
-//				future = 
-				asyncHttpClient.executeRequest(getRequest(urls.nextUrl()), updateHandler);
+				asyncHttpClient.executeRequest(getRequest(urls.nextUrl()), new UpdateHandler()); // AsyncHandlers are NOT thread safe; one instance per request
 				return true;
 			} else {
 				LOGGER.info("Database " + existingDB.getAbsolutePath() + " does not require updating.");
@@ -190,6 +182,9 @@ public class PeriodicResourceUpdater {
 		try {
 			if (newDB != null && !filesEqual(existingDB, newDB)) {
 				LOGGER.debug("updating " + listener);
+				LOGGER.debug("existing db size: " + existingDB.length());
+				LOGGER.debug("incoming db size: " + newDB.length());
+
 				if (listener.update(newDB)) {
 					copyDatabase(existingDB, newDB);
 					LOGGER.info("updated " + existingDB.getAbsolutePath());
@@ -285,9 +280,7 @@ public class PeriodicResourceUpdater {
 		return ((fileTime + pollingIntervalInMS) < now);
 	}
 
-	final private UpdateHandler updateHandler = new UpdateHandler();;
-	Request request;
-	private class UpdateHandler extends AsyncCompletionHandler<java.lang.Object> {
+	private class UpdateHandler extends AsyncCompletionHandler<Object> {
 
 		public UpdateHandler() {
 		}
@@ -296,16 +289,19 @@ public class PeriodicResourceUpdater {
 		public Integer onCompleted(final Response response) throws JSONException, IOException {
 			// Do something with the Response
 			final int code = response.getStatusCode();
-			if(code != 200) {
+
+			if (code != 200) {
 				return code;
 			}
+
 			updateDatabase(response.getResponseBody());
+
 			return code;
 		}
 
 		@Override
 		public void onThrowable(final Throwable t){
-			if(LOGGER.isDebugEnabled()) {
+			if (LOGGER.isDebugEnabled()) {
 				LOGGER.warn(t,t);
 			} else {
 				LOGGER.warn(t);
