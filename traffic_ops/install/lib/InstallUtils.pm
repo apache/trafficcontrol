@@ -8,16 +8,9 @@ package InstallUtils;
 use Term::ReadPassword;
 use IPC::Cmd;
 
-my $self = {};
-
-sub new {
-	my ($class) = @_;
-
-	return ( bless( $self, $class ) );
-}
-
 sub execCommand {
-	my ( $class, $command, @args ) = @_;
+	my ( $cmd, @args ) = @_;
+	my $command = join( ' ', $cmd, @args );
 
 	my ( $ok, $err, $full_buf, $stdout_buff, $stderr_buff ) = IPC::Cmd::run( command => $command, verbose => 1 );
 
@@ -30,7 +23,7 @@ sub execCommand {
 }
 
 sub promptUser {
-	my ( $class, $promptString, $defaultValue, $noEcho ) = @_;
+	my ( $promptString, $defaultValue, $noEcho ) = @_;
 
 	if ($defaultValue) {
 		print $promptString, " [", $defaultValue, "]:  ";
@@ -69,3 +62,5 @@ sub trim {
 
 	return $str;
 }
+
+1;
