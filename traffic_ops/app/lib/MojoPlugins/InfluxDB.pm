@@ -44,8 +44,7 @@ sub register {
 			my $content_type = shift || "application/json";
 			my $mode         = $self->app->mode;
 			my $conf         = Utils::JsonConfig->load_conf( $mode, INFLUXDB_CONF_FILE_NAME );
-			$self->app->log->debug( "helper_class #-> " . Dumper($helper_class) );
-			my $helper = $helper_class->new( $conf->{user}, $conf->{password} );
+			my $helper       = $helper_class->new( $conf->{user}, $conf->{password} );
 			return $self->server_send_request( SERVER_TYPE, $helper, sub { $helper_class->write( $write_point, $content_type ) }, SCHEMA_FILE );
 		}
 	);
@@ -58,7 +57,6 @@ sub register {
 			my $mode    = $self->app->mode;
 			my $conf    = Utils::JsonConfig->load_conf( $mode, INFLUXDB_CONF_FILE_NAME );
 			my $helper  = $helper_class->new( $conf->{user}, $conf->{password} );
-			$self->app->log->debug( "helper_class #-> " . Dumper($helper_class) );
 			return $self->server_send_request( SERVER_TYPE, $helper, sub { $helper_class->query( $db_name, $query ) }, SCHEMA_FILE );
 		}
 	);
