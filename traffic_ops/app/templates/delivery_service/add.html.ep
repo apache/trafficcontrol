@@ -78,12 +78,14 @@
 			$('#dns_bypass_ttl_row').hide(speed);
 			$('#max_dns_answers_row').hide(speed);
 			$('#http_bypass_fqdn_row').show(speed);
+			$('#initial_dispersion_row').show(speed);
 		}
 		else if (type_selected.match(/^DNS/)) {
 			$("#regexp_selector :nth-child(3)").attr('disabled','disabled');
 			$("#regexp_selector :nth-child(4)").attr('disabled','disabled');
 			$('#ccr_dns_ttl').val(30);
 			$('#http_bypass_fqdn_row').hide(speed);
+			$('#initial_dispersion_row').hide(speed);
 			$('#dns_bypass_ip_row').show(speed);
 			$('#dns_bypass_ip6_row').show(speed);
 			$('#dns_bypass_ttl_row').show(speed);
@@ -116,6 +118,7 @@
             $('#ds_regexp_table').hide(speed);
             $('#tr_response_headers').hide(speed);
             $('#multi_site_origin_row').hide(speed);
+            $('#initial_dispersion_row').hide(speed);
 		}
 		// 
 	}

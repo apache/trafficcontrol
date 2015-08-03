@@ -1,4 +1,5 @@
 package API::Topology;
+
 #
 # Copyright 2015 Comcast Cable Communications Management, LLC
 #
@@ -114,7 +115,8 @@ sub gen_crconfig_json {
 
 		}
 		elsif ( $row->type->name eq "CCR" ) {
-			my $rs_param = $self->db->resultset('Parameter')
+			my $rs_param =
+				$self->db->resultset('Parameter')
 				->search( { 'profile_parameters.profile' => $row->profile->id, 'name' => 'api.port' }, { join => 'profile_parameters' } );
 			my $r = $rs_param->single;
 			my $port = ( defined($r) && defined( $r->value ) ) ? $r->value : 80;
@@ -145,7 +147,8 @@ sub gen_crconfig_json {
 		}
 	}
 	my $regexps;
-	my $rs_ds = $self->db->resultset('Deliveryservice')
+	my $rs_ds =
+		$self->db->resultset('Deliveryservice')
 		->search( { 'me.profile' => $ccr_profile_id, 'active' => 1 }, { prefetch => [ 'deliveryservice_servers', 'deliveryservice_regexes', 'type' ] } );
 	while ( my $row = $rs_ds->next ) {
 		my $protocol;

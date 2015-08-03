@@ -240,6 +240,7 @@ sub read {
 				"range_request_handling" => $row->range_request_handling,
 				"cacheurl"               => $row->cacheurl,
 				"remap_text"             => $row->remap_text,
+				"initial_dispersion"     => $row->initial_dispersion,
 			}
 		);
 	}
@@ -667,6 +668,7 @@ sub update {
 			origin_shield => $self->param('ds.origin_shield') eq "" ? undef : $self->param('ds.origin_shield'),
 			cacheurl      => $self->param('ds.cacheurl')      eq "" ? undef : $self->param('ds.cacheurl'),
 			remap_text    => $self->param('ds.remap_text')    eq "" ? undef : $self->param('ds.remap_text'),
+			initial_dispersion => $self->param('ds.initial_dispersion'),
 		);
 
 		if ( $self->param('ds.type.id') == &type_id( $self, "DNS" ) ) {
@@ -857,6 +859,7 @@ sub create {
 				origin_shield => $self->param('ds.origin_shield') eq "" ? undef : $self->param('ds.origin_shield'),
 				cacheurl      => $self->param('ds.cacheurl')      eq "" ? undef : $self->param('ds.cacheurl'),
 				remap_text    => $self->param('ds.remap_text')    eq "" ? undef : $self->param('ds.remap_text'),
+				initial_dispersion => $self->param('ds.initial_dispersion'),
 			}
 		);
 		$insert->insert();

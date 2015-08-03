@@ -131,6 +131,7 @@ sub get_data {
 				"rangeRequestHandling" => $row->range_request_handling,
 				"cacheurl"             => $row->cacheurl,
 				"remapText"            => $row->remap_text,
+				"initialDispersion"   => $row->initial_dispersion,
 			}
 		);
 	}
