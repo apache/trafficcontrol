@@ -39,9 +39,8 @@
 
 TO_DIR="/opt/traffic_ops/app"; export TO_DIR
 TO_EXT_PRIVATE_LIB="/opt/traffic_ops_extensions/private/lib"; export TO_PRIVATE_LIB
-TO_EXT_PUBLIC_LIB="/opt/traffic_ops_extensions/public/lib"; export TO_PUBLIC_LIB
-TO_EXTENSIONS_DIR="/opt/traffic_ops_extensions"; export TO_DIR
-PERL5LIB=$PERL5LIB:$TO_EXT_PRIVATE_LIB:$TO_EXT_PUBLIC_LIB:$TO_DIR/local/lib/perl5; export PERL5LIB
+PERL5LIB=$TO_EXT_PRIVATE_LIB:$TO_DIR/lib:$TO_DIR/local/lib/perl5:$PERL5LIB; export PERL5LIB
+
 PIDFILE="/var/run/traffic_ops.pid"
 # source function library
 . /etc/rc.d/init.d/functions
