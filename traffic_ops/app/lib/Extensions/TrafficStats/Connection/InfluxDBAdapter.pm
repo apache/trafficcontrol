@@ -1,4 +1,4 @@
-package Extensions::TrafficStats::Connection::TrafficStatsAdapter;
+package Extensions::TrafficStats::Connection::InfluxDBAdapter;
 #
 # Copyright 2015 Comcast Cable Communications Management, LLC
 #
