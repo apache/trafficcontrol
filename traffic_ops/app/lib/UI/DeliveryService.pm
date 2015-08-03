@@ -230,7 +230,6 @@ sub read {
 				"long_desc_2"            => $row->long_desc_2,
 				"max_dns_answers"        => $row->max_dns_answers,
 				"info_url"               => $row->info_url,
-				"initial_dispersion"     => $row->initial_dispersion,
 				"miss_lat"               => $row->miss_lat,
 				"miss_long"              => $row->miss_long,
 				"check_path"             => $row->check_path,

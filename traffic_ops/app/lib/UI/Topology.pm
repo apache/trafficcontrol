@@ -274,7 +274,9 @@ sub gen_crconfig_json {
 		}
 
 		$data_obj->{'deliveryServices'}->{ $row->xml_id }->{'ttl'} = $row->ccr_dns_ttl;
-		$data_obj->{'deliveryServices'}->{ $row->xml_id }->{'dispersion'} = { limit => int( $row->initial_dispersion ), shuffled => 'true' };
+		if ( $protocol ne 'DNS' ) {
+			$data_obj->{'deliveryServices'}->{ $row->xml_id }->{'dispersion'} = { limit => int( $row->initial_dispersion ), shuffled => 'true' };
+		}
 
 		my $geo_limit = $row->geo_limit;
 		if ( $geo_limit == 1 ) {

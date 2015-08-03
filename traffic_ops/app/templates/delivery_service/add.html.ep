@@ -85,11 +85,11 @@
 			$("#regexp_selector :nth-child(4)").attr('disabled','disabled');
 			$('#ccr_dns_ttl').val(30);
 			$('#http_bypass_fqdn_row').hide(speed);
+			$('#initial_dispersion_row').hide(speed);
 			$('#dns_bypass_ip_row').show(speed);
 			$('#dns_bypass_ip6_row').show(speed);
 			$('#dns_bypass_ttl_row').show(speed);
 			$('#max_dns_answers_row').show(speed);
-			$('#initial_dispersion_row').show(speed);
 		} else if (type_selected.match(/^ANY_MAP$/)) { 
             $('#protocoli_row').hide(speed);
             $('#dscp_row').hide(speed);
