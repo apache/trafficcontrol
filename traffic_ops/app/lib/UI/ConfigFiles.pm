@@ -996,7 +996,7 @@ sub parent_dot_config {
 		my %done = ();
 
 		foreach my $remap ( @{ $data->{dslist} } ) {
-			if ( $remap->{type} eq "HTTP_NO_CACHE" || $remap->{type} eq "HTTP_LIVE" ) {
+			if ( $remap->{type} eq "HTTP_NO_CACHE" || $remap->{type} eq "HTTP_LIVE" || $remap->{type} eq "DNS_LIVE" ) {
 				if ( !defined( $done{ $remap->{org} } ) ) {
 					my $org_fqdn = $remap->{org};
 					$org_fqdn =~ s/https?:\/\///;
