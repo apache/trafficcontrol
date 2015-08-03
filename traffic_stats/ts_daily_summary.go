@@ -5,15 +5,16 @@ import (
 	"errors"
 	"flag"
 	"fmt"
-	log "github.com/cihub/seelog"
-	traffic_ops "github.com/comcast/traffic_control/traffic_ops/client"
-	influx "github.com/influxdb/influxdb/client"
 	"math/rand"
 	"net/url"
 	"os"
 	"runtime"
 	"strconv"
 	"time"
+
+	log "github.com/cihub/seelog"
+	traffic_ops "github.com/comcast/traffic_control/traffic_ops/client"
+	influx "github.com/influxdb/influxdb/client"
 )
 
 const (
