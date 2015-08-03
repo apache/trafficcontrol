@@ -1,4 +1,4 @@
-package Extensions::InfluxDB::Delegate::CacheStatistics;
+package Extensions::TrafficStats::Delegate::CacheStatistics;
 #
 # Copyright 2011-2014, Comcast Corporation. This software and its contents are
 # Comcast confidential and proprietary. It cannot be used, disclosed, or
@@ -15,8 +15,8 @@ use JSON;
 use constant SUCCESS => 0;
 use constant ERROR   => 1;
 use Utils::Helper::Extensions;
-use Extensions::InfluxDB::Builder::CacheStatsBuilder;
-use Extensions::InfluxDB::Builder::DeliveryServiceStatsBuilder;
+use Extensions::TrafficStats::Builder::CacheStatsBuilder;
+use Extensions::TrafficStats::Builder::DeliveryServiceStatsBuilder;
 Utils::Helper::Extensions->use;
 
 my $builder;
@@ -36,7 +36,7 @@ sub info {
 		name        => "CacheStatistics",
 		version     => "1.2",
 		info_url    => "",
-		source      => "InfluxDB",
+		source      => "TrafficStats",
 		description => "Cache Statistics Stub",
 		isactive    => 1,
 		script_file => "",
@@ -46,7 +46,7 @@ sub info {
 sub get_usage_overview {
 	my $self = shift;
 
-	$builder = new Extensions::InfluxDB::Builder::CacheStatsBuilder();
+	$builder = new Extensions::TrafficStats::Builder::CacheStatsBuilder();
 	my $query = $builder->usage_overview_maxkbps_query();
 	$self->app->log->debug( "query #-> " . $query );
 
@@ -65,7 +65,7 @@ sub get_usage_overview {
 		return ( ERROR, $content, undef );
 	}
 
-	$builder = new Extensions::InfluxDB::Builder::DeliveryServiceStatsBuilder();
+	$builder = new Extensions::TrafficStats::Builder::DeliveryServiceStatsBuilder();
 	$query   = $builder->usage_overview_tps_query();
 	$mojo->app->log->debug( "query #-> " . $query );
 	$response_container = $mojo->influxdb_query( $db_name, $query );
@@ -107,7 +107,7 @@ sub get_stats {
 	my $offset      = $mojo->param('offset');
 
 	# Build the summary section
-	$builder = new Extensions::InfluxDB::Builder::CacheStatsBuilder(
+	$builder = new Extensions::TrafficStats::Builder::CacheStatsBuilder(
 		{
 			series_name => $metric_type,
 			cdn_name    => $cdn_name,
@@ -165,7 +165,7 @@ sub build_summary {
 	my $summary_content;
 	if ( $response->is_success() ) {
 		$summary_content   = decode_json($content);
-		$summary           = Extensions::InfluxDB::Builder::BaseBuilder->summary_response($summary_content);
+		$summary           = Extensions::TrafficStats::Builder::BaseBuilder->summary_response($summary_content);
 		$result->{summary} = $summary;
 		return ( SUCCESS, $result, $summary_query );
 	}
@@ -187,7 +187,7 @@ sub build_series {
 	my $series;
 	if ( $response->is_success() ) {
 		my $series_content = decode_json($content);
-		$series = Extensions::InfluxDB::Builder::BaseBuilder->series_response($series_content);
+		$series = Extensions::TrafficStats::Builder::BaseBuilder->series_response($series_content);
 		my $series_node = "series";
 		if ( defined($series) && ( keys $series ) ) {
 			$result->{$series_node} = $series;

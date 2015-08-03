@@ -1,4 +1,4 @@
-package Extensions::InfluxDB::Delegate::Statistics;
+package Extensions::TrafficStats::Delegate::Statistics;
 #
 # Copyright 2011-2014, Comcast Corporation. This software and its contents are
 # Comcast confidential and proprietary. It cannot be used, disclosed, or
@@ -11,8 +11,8 @@ use Time::HiRes qw(gettimeofday tv_interval);
 use Math::Round qw(nearest);
 use JSON;
 use POSIX qw(strftime);
-use Extensions::InfluxDB::Builder::DeliveryServiceStatsBuilder;
-use Extensions::InfluxDB::Helper::InfluxResponse;
+use Extensions::TrafficStats::Builder::DeliveryServiceStatsBuilder;
+use Extensions::TrafficStats::Helper::InfluxResponse;
 use HTTP::Date;
 use Utils::Helper::DateHelper;
 use Carp qw(cluck confess);
@@ -44,7 +44,7 @@ sub info {
 	return {
 		name        => "Statistics",
 		version     => "1.2",
-		source      => "InfluxDB",
+		source      => "TrafficStats",
 		info_url    => "",
 		description => "Statistics Stub",
 		isactive    => 1,
@@ -60,7 +60,7 @@ sub set_info {
 
 }
 
-# InfluxDB
+# TrafficStats
 sub get_stats {
 	my $self = shift;
 
@@ -85,7 +85,7 @@ sub get_stats {
 	my $retention_period_in_days = $mojo->param("retentionPeriodInDays");
 
 	# Build the summary section
-	$builder = new Extensions::InfluxDB::Builder::DeliveryServiceStatsBuilder(
+	$builder = new Extensions::TrafficStats::Builder::DeliveryServiceStatsBuilder(
 		{
 			deliveryServiceName => $ds_name,
 			metricType          => $metric_type,
@@ -149,7 +149,7 @@ sub build_summary {
 	if ( $response->is_success() ) {
 		$summary_content = decode_json($content);
 
-		my $ib = Extensions::InfluxDB::Builder::BaseBuilder->new($mojo);
+		my $ib = Extensions::TrafficStats::Builder::BaseBuilder->new($mojo);
 		$summary = $ib->summary_response($summary_content);
 		$result->{summary} = $summary;
 		$self->build_totals( $metric_type, $result );
@@ -196,7 +196,7 @@ sub build_series {
 	if ( $response->is_success() ) {
 
 		my $series_content = decode_json($content);
-		my $ib             = Extensions::InfluxDB::Builder::BaseBuilder->new($mojo);
+		my $ib             = Extensions::TrafficStats::Builder::BaseBuilder->new($mojo);
 		$series = $ib->series_response($series_content);
 		my $series_node = "series";
 		if ( defined($series) && ( ref($series) eq "HASH" ) ) {

@@ -1,4 +1,4 @@
-package Extensions::InfluxDB::Delegate::CdnStatistics;
+package Extensions::TrafficStats::Delegate::CdnStatistics;
 #
 # Copyright 2011-2014, Comcast Corporation. This software and its contents are
 # Comcast confidential and proprietary. It cannot be used, disclosed, or
@@ -15,8 +15,8 @@ use JSON;
 use constant SUCCESS => 0;
 use constant ERROR   => 1;
 use Utils::Helper::Extensions;
-use Extensions::InfluxDB::Builder::CacheStatsBuilder;
-use Extensions::InfluxDB::Builder::DeliveryServiceStatsBuilder;
+use Extensions::TrafficStats::Builder::CacheStatsBuilder;
+use Extensions::TrafficStats::Builder::DeliveryServiceStatsBuilder;
 Utils::Helper::Extensions->use;
 
 my $builder;
@@ -38,7 +38,7 @@ sub info {
 		name        => "CdnStatistics",
 		version     => "1.2",
 		info_url    => "",
-		source      => "InfluxDB",
+		source      => "TrafficStats",
 		description => "Cdn Statistics Stub",
 		isactive    => 1,
 		script_file => "Extensions::Delegate::CdnStatistics",
@@ -56,7 +56,7 @@ sub set_info {
 sub get_usage_overview {
 	my $self = shift;
 
-	$builder = new Extensions::InfluxDB::Builder::CacheStatsBuilder();
+	$builder = new Extensions::TrafficStats::Builder::CacheStatsBuilder();
 
 	# ---------------------
 	# maxGbps
@@ -93,7 +93,7 @@ sub get_usage_overview {
 	# tps
 	# ---------------------
 	$query   = $builder->usage_overview_current_gbps_query();
-	$builder = new Extensions::InfluxDB::Builder::DeliveryServiceStatsBuilder();
+	$builder = new Extensions::TrafficStats::Builder::DeliveryServiceStatsBuilder();
 	$query   = $builder->usage_overview_tps_query();
 	( $rc, $response, $stat_value ) = $self->lookup_stat( $deliveryservice_stats_db_name, $query );
 

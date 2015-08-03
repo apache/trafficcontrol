@@ -1,4 +1,4 @@
-package Extensions::InfluxDB::Connection::InfluxDBAdapter;
+package Extensions::TrafficStats::Connection::TrafficStatsAdapter;
 #
 # Copyright 2015 Comcast Cable Communications Management, LLC
 #
@@ -33,7 +33,7 @@ use LWP::UserAgent qw();
 use constant APPLICATION_JSON => 'application/json';
 
 # The purpose of this class is to provide for a wrapper
-# and 'mock' to InfluxDB
+# and 'mock' to TrafficStats
 my $ua;
 my $influxdb_server;
 my $influxdb_db_name;
