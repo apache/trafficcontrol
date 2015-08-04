@@ -18,7 +18,7 @@
 #
 #
 use Data::Dumper;
-use Cwd;
+use File::Basename;
 
 mkdir("log");
 my @watch_dirs;
@@ -31,9 +31,28 @@ foreach my $dir (@INC) {
 	}
 }
 
-# now add on the project dir
-my $to_lib = getcwd() . "/lib";
+my $to_lib;
+my $local_lib;
+
+BEGIN {
+	$to_lib = "lib";
+	unshift @INC, $to_lib;
+	$local_lib = "local/lib/perl5";
+	unshift @INC, $local_lib;
+}
+
+#BEGIN {
+#$to_lib = "lib";
+#use lib $to_lib;
+#$local_lib = "local/lib/perl5";
+#use lib $local_lib;
+#}
+
+#print "INC: " . Dumper(@INC);
 push( @watch_dirs, $to_lib );
+
+#BEGIN { my $local_lib = "local/lib/perl5" }
+#push( @watch_dirs, $local_lib );
 my $watch_dirs_arg = join( " -w ", @watch_dirs );
 $watch_dirs = join( "\n", @watch_dirs );
 
