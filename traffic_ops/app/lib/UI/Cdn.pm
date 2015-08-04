@@ -242,8 +242,7 @@ sub adeliveryservice {
 			$row->dscp,                  $yesno{ $row->signed },               $row->qstring_ignore,         $geo_limits{ $row->geo_limit },
 			$protocol{ $row->protocol }, $yesno{ $row->ipv6_routing_enabled }, $row->range_request_handling, $row->http_bypass_fqdn,
 			$row->dns_bypass_ip,         $row->dns_bypass_ip6,                 $row->dns_bypass_ttl,         $row->miss_lat,
-			$row->miss_long,
-			$row->initial_dispersion,
+			$row->miss_long,             $row->initial_dispersion,
 		];
 		push( @{ $data{'aaData'} }, @line );
 	}
@@ -561,6 +560,7 @@ sub login {
 
 	my ( $u, $p ) = ( $self->req->param('u'), $self->req->param('p') );
 	my $result = $self->authenticate( $u, $p );
+	$self->app->log->debug( "result #-> " . Dumper($result) );
 
 	if ($result) {
 		my $referer = $self->req->headers->header('referer');
@@ -576,13 +576,6 @@ sub login {
 		$self->flash( login_msg => "Invalid username or password, please try again." );
 		return $self->redirect_to('/loginpage');
 	}
-}
-
-sub tool_logout {
-	my $self = shift;
-
-	$self->logout();
-	$self->success_message("You are logged out.");
 }
 
 sub options {
