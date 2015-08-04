@@ -31,25 +31,7 @@ foreach my $dir (@INC) {
 	}
 }
 
-my $to_lib;
-my $local_lib;
-
-BEGIN {
-	$to_lib = "lib";
-	unshift @INC, $to_lib;
-	$local_lib = "local/lib/perl5";
-	unshift @INC, $local_lib;
-}
-
-#BEGIN {
-#$to_lib = "lib";
-#use lib $to_lib;
-#$local_lib = "local/lib/perl5";
-#use lib $local_lib;
-#}
-
-#print "INC: " . Dumper(@INC);
-push( @watch_dirs, $to_lib );
+push( @watch_dirs, qw(lib) );
 
 #BEGIN { my $local_lib = "local/lib/perl5" }
 #push( @watch_dirs, $local_lib );
@@ -60,7 +42,7 @@ print "Morbo will restart with changes to any of the following dirs:\n";
 print "(also the order in which Traffic Ops Perl Libraries and Extension modules will be searched)";
 print "\n$watch_dirs\n\n";
 
-my $cmd = "local/bin/morbo --listen 'http://*:3000' -v script/cdn -w $watch_dirs_arg";
+my $cmd = "export PERL5LIB=lib:local/lib/perl5;local/bin/morbo --listen 'http://*:3000' -v script/cdn -w $watch_dirs_arg";
 
 #print "cmd #-> (" . $cmd . ")\n";
 system($cmd);
