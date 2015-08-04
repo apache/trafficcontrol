@@ -450,7 +450,7 @@ sub api_routes {
 		->to( 'SslKeys#view_by_hostname', namespace => 'API::DeliveryService' );
 
 	#generate new
-	$r->post("/api/$version/deliveryservices/sslkeys/generate ")->over( authenticated => 1 )->to( 'SslKeys#generate', namespace => 'API::DeliveryService' );
+	$r->post("/api/$version/deliveryservices/sslkeys/generate")->over( authenticated => 1 )->to( 'SslKeys#generate', namespace => 'API::DeliveryService' );
 
 	#add existing
 	$r->post("/api/$version/deliveryservices/sslkeys/add")->over( authenticated => 1 )->to( 'SslKeys#add', namespace => 'API::DeliveryService' );
@@ -460,7 +460,7 @@ sub api_routes {
 		->to( 'SslKeys#delete', namespace => 'API::DeliveryService' );
 
 	# -- KEYS Url Sig
-	$r->post("/api/$version/deliveryservices/xmlId/:xmlId/urlkeys/generate ")->over( authenticated => 1 )
+	$r->post("/api/$version/deliveryservices/xmlId/:xmlId/urlkeys/generate")->over( authenticated => 1 )
 		->to( 'KeysUrlSig#generate', namespace => 'API::DeliveryService' );
 	$r->get( "/api/$version/deliveryservices/xmlId/:xmlId/urlkeys" => [ format => [qw(json)] ] )->over( authenticated => 1 )
 		->to( 'KeysUrlSig#view_by_xmlid', namespace => 'API::DeliveryService' );
@@ -468,30 +468,30 @@ sub api_routes {
 	#	->over( authenticated => 1 )->to( 'DeliveryService#get_summary', namespace => $namespace );
 	# -- DELIVERY SERVICE SERVER - #NEW
 	# Supports ?orderby=key
-	$r->get("/api/$version/deliveryserviceserver ")->over( authenticated => 1 )->to( 'DeliveryServiceServer#index', namespace => $namespace );
+	$r->get("/api/$version/deliveryserviceserver")->over( authenticated => 1 )->to( 'DeliveryServiceServer#index', namespace => $namespace );
 
 	# -- EXTENSIONS
 	$r->get( "/api/$version/to_extensions" => [ format => [qw(json)] ] )->over( authenticated => 1 )->to( 'ToExtension#index', namespace => $namespace );
-	$r->post("/api/$version/to_extensions ")->over( authenticated => 1 )->to( 'ToExtension#update', namespace => $namespace );
+	$r->post("/api/$version/to_extensions")->over( authenticated => 1 )->to( 'ToExtension#update', namespace => $namespace );
 	$r->post("/api/$version/to_extensions/:id/delete")->over( authenticated => 1 )->to( 'ToExtension#delete', namespace => $namespace );
 
 	# -- PARAMETER #NEW
 	# Supports ?orderby=key
-	$r->get( "/api/$version/parameters" => [ format => [qw(json)] ] )->over( authenticated => 1 )->to( ' Parameter    #index', namespace => $namespace );
+	$r->get( "/api/$version/parameters" => [ format => [qw(json)] ] )->over( authenticated => 1 )->to( 'Parameter#index', namespace => $namespace );
 	$r->get( "/api/$version/parameters/profile/:name" => [ format => [qw(json)] ] )->over( authenticated => 1 )
 		->to( 'Parameter#profile', namespace => $namespace );
 
 	# -- PHYS_LOCATION #NEW
 	# Supports ?orderby=key
-	$r->get("/api/$version/phys_locations ")->over( authenticated => 1 )->to( 'PhysLocation#index', namespace => $namespace );
-	$r->get("/api/$version/phys_locations/trimmed ")->over( authenticated => 1 )->to( 'PhysLocation#index_trimmed', namespace => $namespace );
+	$r->get("/api/$version/phys_locations")->over( authenticated => 1 )->to( 'PhysLocation#index', namespace => $namespace );
+	$r->get("/api/$version/phys_locations/trimmed")->over( authenticated => 1 )->to( 'PhysLocation#index_trimmed', namespace => $namespace );
 
 	# -- PROFILES - #NEW
 	# Supports ?orderby=key
-	$r->get( "/api/$version/profiles" => [ format => [qw(json)] ] )->over( authenticated => 1 )->to( ' Profile    #index', namespace => $namespace );
+	$r->get( "/api/$version/profiles" => [ format => [qw(json)] ] )->over( authenticated => 1 )->to( 'Profile#index', namespace => $namespace );
 
-	$r->get( "/api/ $version/profiles/trimmed" => [ format => [qw(json)] ] )->over( authenticated => 1 )
-		->to( ' Profile    #index_trimmed', namespace => $namespace );
+	$r->get( "/api/$version/profiles/trimmed" => [ format => [qw(json)] ] )->over( authenticated => 1 )
+		->to( 'Profile#index_trimmed', namespace => $namespace );
 
 	# -- PROFILE PARAMETERS - #NEW
 	# Supports ?orderby=key
@@ -583,7 +583,7 @@ sub api_routes {
 
 	# -- USERS
 	$r->get( "/api/$version/users" => [ format => [qw(json)] ] )->over( authenticated => 1 )->to( 'User#index', namespace => $namespace );
-	$r->post("/api/$version/user/login ")->to( 'User#login', namespace => $namespace );
+	$r->post("/api/$version/user/login")->to( 'User#login', namespace => $namespace );
 	$r->get("/api/$version/user/:id/deliveryservices/available")->over( authenticated => 1 )
 		->to( 'User#get_available_deliveryservices', namespace => $namespace );
 	$r->post("/api/$version/user/login/token")->to( 'User#token_login', namespace => $namespace );
