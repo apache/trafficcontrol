@@ -75,6 +75,7 @@
 			$('#ccr_dns_ttl').val(3600);
 			$('#dns_bypass_ip_row').hide(speed);
 			$('#dns_bypass_ip6_row').hide(speed);
+			$('#dns_bypass_cname_row').hide(speed);
 			$('#dns_bypass_ttl_row').hide(speed);
 			$('#max_dns_answers_row').hide(speed);
 			$('#http_bypass_fqdn_row').show(speed);
@@ -88,6 +89,7 @@
 			$('#initial_dispersion_row').hide(speed);
 			$('#dns_bypass_ip_row').show(speed);
 			$('#dns_bypass_ip6_row').show(speed);
+			$('#dns_bypass_cname_row').show(speed);
 			$('#dns_bypass_ttl_row').show(speed);
 			$('#max_dns_answers_row').show(speed);
 		} else if (type_selected.match(/^ANY_MAP$/)) { 
@@ -101,6 +103,7 @@
             $('#range_request_handlingi_row').hide(speed);
             $('#dns_bypass_ip_row').hide(speed);
             $('#dns_bypass_ip6_row').hide(speed);
+	    $('#dns_bypass_cname_row').hide(speed);
             $('#dns_bypass_ttl_row').hide(speed);
             $('#max_dns_answers_row').hide(speed);
             $('#ccr_dns_ttl_row').hide(speed);

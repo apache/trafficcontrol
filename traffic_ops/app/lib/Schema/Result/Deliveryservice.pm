@@ -80,6 +80,12 @@ __PACKAGE__->table("deliveryservice");
   is_nullable: 1
   size: 45
 
+=head2 dns_bypass_cname
+
+  data_type: 'varchar'
+  is_nullable: 1
+  size: 45
+
 =head2 dns_bypass_ttl
 
   data_type: 'integer'
@@ -274,6 +280,8 @@ __PACKAGE__->add_columns(
 	"dns_bypass_ip",
 	{ data_type => "varchar", is_nullable => 1, size => 45 },
 	"dns_bypass_ip6",
+	{ data_type => "varchar", is_nullable => 1, size => 45 },
+	"dns_bypass_cname",
 	{ data_type => "varchar", is_nullable => 1, size => 45 },
 	"dns_bypass_ttl",
 	{ data_type => "integer", is_nullable => 1 },

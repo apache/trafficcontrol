@@ -551,6 +551,9 @@ sub gen_traffic_router_config {
 			if ( defined( $row->dns_bypass_ip6 ) && $row->dns_bypass_ip6 ne "" ) {
 				$bypass_destination->{'ip6'} = $row->dns_bypass_ip6;
 			}
+			if ( defined( $row->dns_bypass_cname ) && $row->dns_bypass_cname ne "" ) {
+				$bypass_destination->{'cname'} = $row->dns_bypass_cname;
+			}
 			if ( defined( $row->dns_bypass_ttl ) && $row->dns_bypass_ttl ne "" ) {
 				$bypass_destination->{'ttl'} = int( $row->dns_bypass_ttl );
 			}
