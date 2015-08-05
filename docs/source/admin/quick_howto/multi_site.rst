@@ -44,7 +44,7 @@ Configure Multi Site Origin
 	:scale: 100%
 	:align: center
 
-5) Check the mutli-site check box in the delivery service screen:
+5) Check the multi-site check box in the delivery service screen and make sure that Content Routing Type is set to HTTP_LIVE_NATL:
 
 .. image:: 71DA92BB-8E1E-4921-BC95-574E659812FF.png
 	:scale: 100%
