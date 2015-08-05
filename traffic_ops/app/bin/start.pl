@@ -19,6 +19,7 @@
 #
 use Data::Dumper;
 use File::Basename;
+use Env qw/PERL5LIB/;
 
 mkdir("log");
 my @watch_dirs;
@@ -42,7 +43,8 @@ print "Morbo will restart with changes to any of the following dirs:\n";
 print "(also the order in which Traffic Ops Perl Libraries and Extension modules will be searched)";
 print "\n$watch_dirs\n\n";
 
-my $cmd = "export PERL5LIB=lib:local/lib/perl5;local/bin/morbo --listen 'http://*:3000' -v script/cdn -w $watch_dirs_arg";
+my $perl5lib = $PERL5LIB . ":lib:local/lib/perl5";
+my $cmd      = "export PERL5LIB=$perl5lib;local/bin/morbo --listen 'http://*:3000' -v script/cdn -w $watch_dirs_arg";
 
 #print "cmd #-> (" . $cmd . ")\n";
 system($cmd);

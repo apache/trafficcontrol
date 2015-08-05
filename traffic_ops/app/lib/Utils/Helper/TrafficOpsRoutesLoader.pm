@@ -30,13 +30,16 @@ sub new {
 }
 
 sub load {
-	my $self = shift;
+	my $self   = shift;
+	my $dashes = "-------------------------------------------------------------\n";
+	print $dashes;
 
 	# Look in the PERL5LIB directories for any TrafficOpsRoutes files.
 	#print "PERL5LIB: " . Dumper(@INC);
 	foreach my $dir (@INC) {
 		$self->load_routes($dir);
 	}
+	print $dashes;
 }
 
 sub load_routes {

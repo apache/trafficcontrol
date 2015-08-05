@@ -38,7 +38,6 @@ sub define {
 	# $version Routes
 	my $version = "1.1";
 	$self->api_routes( $r, $version, $namespace );
-	$self->traffic_stats_routes( $r, $version );
 
 	# 1.2 Routes
 	$version = "1.2";
@@ -733,7 +732,6 @@ sub traffic_stats_routes {
 	my $version   = shift;
 	my $namespace = "Extensions::TrafficStats::API";
 
-	print "Defining TrafficStats APIs using API version: $version namespace: $namespace \n";
 	$r->get( "/api/$version/cdns/usage/overview" => [ format => [qw(json)] ] )->to( 'CdnStats#get_usage_overview', namespace => $namespace );
 	$r->get( "/api/$version/deliveryservice_stats" => [ format => [qw(json)] ] )->over( authenticated => 1 )
 		->to( 'DeliveryServiceStats#index', namespace => $namespace );
