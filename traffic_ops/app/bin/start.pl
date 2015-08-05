@@ -18,7 +18,7 @@
 #
 #
 use Data::Dumper;
-use Cwd;
+use File::Basename;
 
 mkdir("log");
 my @watch_dirs;
@@ -31,9 +31,10 @@ foreach my $dir (@INC) {
 	}
 }
 
-# now add on the project dir
-my $to_lib = getcwd() . "/lib";
-push( @watch_dirs, $to_lib );
+push( @watch_dirs, qw(lib) );
+
+#BEGIN { my $local_lib = "local/lib/perl5" }
+#push( @watch_dirs, $local_lib );
 my $watch_dirs_arg = join( " -w ", @watch_dirs );
 $watch_dirs = join( "\n", @watch_dirs );
 
@@ -41,7 +42,7 @@ print "Morbo will restart with changes to any of the following dirs:\n";
 print "(also the order in which Traffic Ops Perl Libraries and Extension modules will be searched)";
 print "\n$watch_dirs\n\n";
 
-my $cmd = "local/bin/morbo --listen 'http://*:3000' -v script/cdn -w $watch_dirs_arg";
+my $cmd = "export PERL5LIB=lib:local/lib/perl5;local/bin/morbo --listen 'http://*:3000' -v script/cdn -w $watch_dirs_arg";
 
 #print "cmd #-> (" . $cmd . ")\n";
 system($cmd);
