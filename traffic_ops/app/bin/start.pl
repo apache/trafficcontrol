@@ -25,17 +25,15 @@ mkdir("log");
 my @watch_dirs;
 
 # Look in the PERL5LIB directories for any TrafficOpsRoutes files.
-#print "PERL5LIB: " . Dumper(@INC);
 foreach my $dir (@INC) {
 	if ( $dir =~ /traffic_ops_extensions/ ) {
 		push( @watch_dirs, $dir );
 	}
 }
 
-push( @watch_dirs, qw(lib) );
+my $to_lib = dirname($0) . "/../lib";
+push( @watch_dirs, $to_lib );
 
-#BEGIN { my $local_lib = "local/lib/perl5" }
-#push( @watch_dirs, $local_lib );
 my $watch_dirs_arg = join( " -w ", @watch_dirs );
 $watch_dirs = join( "\n", @watch_dirs );
 
@@ -43,8 +41,8 @@ print "Morbo will restart with changes to any of the following dirs:\n";
 print "(also the order in which Traffic Ops Perl Libraries and Extension modules will be searched)";
 print "\n$watch_dirs\n\n";
 
-my $perl5lib = $PERL5LIB . ":lib:local/lib/perl5";
-my $cmd      = "export PERL5LIB=$perl5lib;local/bin/morbo --listen 'http://*:3000' -v script/cdn -w $watch_dirs_arg";
+my $local_dir = dirname($0) . "/../local";
+my $export = 'export PERL5LIB=$PERL5LIB:' . $local_dir . '/lib/perl5/:' . $to_lib;
+my $cmd = "$export && " . $local_dir . "/bin/morbo --listen 'http://*:3000' -v $local_dir/../script/cdn -w $watch_dirs_arg";
 
-#print "cmd #-> (" . $cmd . ")\n";
 system($cmd);
