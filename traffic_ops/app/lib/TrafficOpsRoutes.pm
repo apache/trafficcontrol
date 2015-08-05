@@ -38,6 +38,7 @@ sub define {
 	# $version Routes
 	my $version = "1.1";
 	$self->api_routes( $r, $version, $namespace );
+	$self->traffic_stats_routes( $r, $version );
 
 	# 1.2 Routes
 	$version = "1.2";
