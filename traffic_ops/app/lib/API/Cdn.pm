@@ -1004,6 +1004,13 @@ sub delete_dnssec_keys {
 	}
 }
 
+sub tool_logout {
+	my $self = shift;
+
+	$self->logout();
+	$self->success_message("You are logged out.");
+}
+
 sub catch_all {
 	my $self     = shift;
 	my $mimetype = $self->req->headers->content_type;
