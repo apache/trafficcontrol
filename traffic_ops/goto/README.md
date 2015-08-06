@@ -133,4 +133,5 @@ For now, if you want to post a new row to a table, you need to have everything i
 
   There are more details in the comments of each of these packages.
 ###Other
+  * I'm also using AngularJS, jQuery, Bootstrap.
   * `jmoiron/sqlx` has been super useful. Thanks!

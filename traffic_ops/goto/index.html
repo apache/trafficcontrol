@@ -1,13 +1,12 @@
 <!DOCTYPE html>
 <html lang="en-US">
-  <script src="js/angular.js"></script>
-  <script src="js/jquery.js"></script>
-  <script src="js/bootstrap.min.js"></script>
+  <script src= "http://ajax.googleapis.com/ajax/libs/angularjs/1.3.14/angular.min.js"></script>
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
+  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/js/bootstrap.min.js"></script>
   <script src="js/main.js"></script>
 
-  <link href="css/bootstrap-theme.min.css" rel="stylesheet">
-  <link href="css/bootstrap.min.css" rel="stylesheet">
-  <link href="css/font-awesome.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css">
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap-theme.min.css">
 
   <body ng-app="app" ng-controller="InitCtrl">
 	<!-- HEADER -->
@@ -23,7 +22,7 @@
 
 			</form>
 		  </li>
-<!-- ADD VIEW -->
+		  <!-- ADD VIEW -->
 		  <li>
 			<button class="btn btn-default" ng-show="!showAddView" ng-click="showAddView = ! showAddView">Add View</button>
 			<button class="btn btn-default" ng-show="showAddView" ng-click="showAddView = ! showAddView">Cancel Add View</button>
@@ -47,8 +46,8 @@
 	  <form>
 
 
-		<button ng-show="showAddRow" ng-click="showAddRowCols = ! showAddRowCols; showAddRow = ! showAddRow"><i class="fa fa-plus"></i></button>
-		<button ng-show="showAddRowCols" ng-click="showAddRowCols = ! showAddRowCols; showAddRow = ! showAddRow"><i class="fa fa-times"></i></button>
+		<button ng-show="showAddRow" ng-click="showAddRowCols = ! showAddRowCols; showAddRow = ! showAddRow">Add Row</button>
+		<button ng-show="showAddRowCols" ng-click="showAddRowCols = ! showAddRowCols; showAddRow = ! showAddRow">Cancel</i></button>
 		<!-- ADD ROW PART -->
 		  <table class="table-striped table-hover table-bordered table-condensed" ng-show="showAddRowCols" ng-init="newRow={}">
 			<tr><td class="span2"  ng-repeat="column in columns | filter: '!id' | filter: '!last_updated'">{{column}}</td></tr>
@@ -78,11 +77,11 @@
 				<td ng-show="showEdit" ng-repeat="(key, value) in row"><input type="text" ng-model=row[key]></td>
 
 				<!--EDIT/SAVE-->
-				<td><button ng-show="!showEdit" ng-click="showEdit = ! showEdit"><i class="fa fa-pencil-square-o"></i></button></td>
-				<td><button ng-show="showEdit" ng-click="showEdit = ! showEdit; put(table, row)"><i class="fa fa-floppy-o"></i></button></td>
+				<td><button ng-show="!showEdit" ng-click="showEdit = ! showEdit">Edit</button></td>
+				<td><button ng-show="showEdit" ng-click="showEdit = ! showEdit; put(table, row)">Save</button></td>
 
 				<!-- DELETE -->
-				<td><button ng-click="delete(table, row)"><i class="fa fa-trash-o"></i></button></td>
+				<td><button ng-click="delete(table, row)">Delete</button></td>
 			  </tr>
 			</tbody>
 		  </table>
