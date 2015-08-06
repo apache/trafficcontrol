@@ -839,6 +839,9 @@ sub remap_dot_config {
 			if ( defined( $remap->{cacheurl} ) && $remap->{cacheurl} ne "" ) {
 				$mid_remap{ $remap->{org} } .= " \@plugin=cacheurl.so \@pparam=" . $remap->{cacheurl_file};
 			}
+                        if ( $remap->{range_request_handling} == 2 ) {
+                                $mid_remap{ $remap->{org} } .= " \@plugin=cache_range_requests.so";
+                        }
 		}
 		foreach my $key ( keys %mid_remap ) {
 			$text .= "map " . $key . " " . $key . $mid_remap{$key} . "\n";
