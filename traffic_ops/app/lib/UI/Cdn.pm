@@ -20,6 +20,7 @@ package UI::Cdn;
 
 use UI::Utils;
 use Mojo::Base 'Mojolicious::Controller';
+use Data::Dumper;
 use UI::ConfigFiles;
 use Date::Manip;
 use JSON;
