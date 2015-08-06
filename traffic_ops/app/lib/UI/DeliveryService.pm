@@ -212,6 +212,7 @@ sub read {
 				"http_bypass_fqdn"       => $row->http_bypass_fqdn,
 				"dns_bypass_ip"          => $row->dns_bypass_ip,
 				"dns_bypass_ip6"         => $row->dns_bypass_ip6,
+				"dns_bypass_cname"       => $row->dns_bypass_cname,
 				"dns_bypass_ttl"         => $row->dns_bypass_ttl,
 				"org_server_fqdn"        => $row->org_server_fqdn,
 				"multi_site_origin"      => \$row->multi_site_origin,
@@ -388,21 +389,24 @@ sub check_deliveryservice_input {
 			->is_equal( "",
 			"Invalid HTTP bypass FQDN " . $self->param('ds.http_bypass_fqdn') . "  : should by FQDN only, not URL. Example: host.overflowcdn.com" );
 	}
-	my $dns_bypass_ip_good;
-	my $dns_bypass_ip6_good;
+	my $dns_bypass_ttl_required;
 	if ( $self->param('ds.dns_bypass_ip') ne "" ) {
 		if ( !&is_ipaddress( $self->param('ds.dns_bypass_ip') ) ) {
 			$self->field('ds.dns_bypass_ip')->is_equal( "", "DNS bypass IP " . $self->param('ds.dns_bypass_ip') . " is not valid IPv4 address." );
 		}
-		$dns_bypass_ip_good = 1;
+		$dns_bypass_ttl_required = 1;
 	}
 	if ( $self->param('ds.dns_bypass_ip6') ne "" ) {
 		if ( !&is_ip6address( $self->param('ds.dns_bypass_ip6') ) ) {
 			$self->field('ds.dns_bypass_ip6')->is_equal( "", "DNS bypass IPv6 IP =" . $self->param('ds.dns_bypass_ip6') . " is not a valid IPv6 address." );
 		}
-		$dns_bypass_ip6_good = 1;
+		$dns_bypass_ttl_required = 1;
 	}
-	if ( ( $dns_bypass_ip_good || $dns_bypass_ip6_good ) && ( $self->param('ds.dns_bypass_ttl') eq "" ) ) {
+	if ( $self->param('ds.dns_bypass_cname') ne "" && !&is_hostname( $self->param('ds.dns_bypass_cname') ) ) {
+		$self->field('ds.dns_bypass_cname')->is_equal( "", "Invalid DNS bypass CNAME " . $self->param('ds.dns_bypass_cname') . "  : should by FQDN only, not URL. Example: host.bypass.com" );
+		$dns_bypass_ttl_required = 1;
+	}
+	if ( $dns_bypass_ttl_required && ( $self->param('ds.dns_bypass_ttl') eq "" ) ) {
 		$self->field('ds.dns_bypass_ttl')->is_equal( "", "DNS bypass TTL required when specifying DNS bypass IP" );
 	}
 	if ( defined( $self->param('ds.dns_bypass_ttl') ) && $self->param('ds.dns_bypass_ttl') =~ m/[a-zA-Z]/ ) {
@@ -674,6 +678,7 @@ sub update {
 		if ( $self->param('ds.type.id') == &type_id( $self, "DNS" ) ) {
 			$hash{dns_bypass_ip}   = $self->param('ds.dns_bypass_ip');
 			$hash{dns_bypass_ip6}  = $self->param('ds.dns_bypass_ip6');
+			$hash{dns_bypass_cname}  = $self->param('ds.dns_bypass_cname');
 			$hash{max_dns_answers} = $self->param('ds.max_dns_answers');
 			$hash{dns_bypass_ttl}  = $self->param('ds.dns_bypass_ttl') eq "" ? undef : $self->param('ds.dns_bypass_ttl');
 		}
@@ -833,6 +838,7 @@ sub create {
 				http_bypass_fqdn       => $self->param('ds.http_bypass_fqdn'),
 				dns_bypass_ip          => $self->param('ds.dns_bypass_ip'),
 				dns_bypass_ip6         => $self->param('ds.dns_bypass_ip6'),
+				dns_bypass_cname       => $self->param('ds.dns_bypass_cname'),
 				dns_bypass_ttl         => $self->param('ds.dns_bypass_ttl'),
 				org_server_fqdn        => $self->param('ds.org_server_fqdn'),
 				multi_site_origin      => $self->param('ds.multi_site_origin'),
