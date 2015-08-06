@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en-US">
+  <script src= "http://ajax.googleapis.com/ajax/libs/angularjs/1.3.14/angular.min.js"></script>
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
+  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/js/bootstrap.min.js"></script>
+  <script src="js/main.js"></script>
+
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css">
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap-theme.min.css">
+
+  <body ng-app="app" ng-controller="InitCtrl">
+	<!-- HEADER -->
+	<nav class="navbar navbar-default">
+	  <div class="container-fluid">
+		<ul class="nav navbar-nav">
+		  <!--DROPDOWN TABLES -->
+		  <li>
+			<form class="navbar-form pull-left">
+			  <select class="form-control" ng-change="get(table); showAddRow = true" ng-model="table">
+				<option value={{table}} ng-repeat="table in tables">{{table}}</option>
+			  </select>
+
+			</form>
+		  </li>
+		  <!-- ADD VIEW -->
+		  <li>
+			<button class="btn btn-default" ng-show="!showAddView" ng-click="showAddView = ! showAddView">Add View</button>
+			<button class="btn btn-default" ng-show="showAddView" ng-click="showAddView = ! showAddView">Cancel Add View</button>
+		  </li>
+		  <li>
+			<!--ADD VIEW FORM -->
+			<form ng-show="showAddView">
+			  Name:
+			  <input type="text" ng-model="newView.Name" value="Name">Query:
+			  <input type="text" ng-model="newView.Query" value="Query">
+			  <button class="btn btn-default" ng-click="postView(newView)">Submit</button>
+			  {{newView}}
+			</form>
+		  </li>
+		</ul>
+	  </div>
+	</nav>
+
+	<!--table-->
+	<div>
+	  <form>
+
+
+		<button ng-show="showAddRow" ng-click="showAddRowCols = ! showAddRowCols; showAddRow = ! showAddRow">Add Row</button>
+		<button ng-show="showAddRowCols" ng-click="showAddRowCols = ! showAddRowCols; showAddRow = ! showAddRow">Cancel</i></button>
+		<!-- ADD ROW PART -->
+		  <table class="table-striped table-hover table-bordered table-condensed" ng-show="showAddRowCols" ng-init="newRow={}">
+			<tr><td class="span2"  ng-repeat="column in columns | filter: '!id' | filter: '!last_updated'">{{column}}</td></tr>
+			<tr><td ng-repeat="column in columns | filter: '!id' | filter: '!last_updated'"><input type="text" ng-model=newRow[column]></td>
+
+			  <td>
+				<button ng-click="post(table, newRow); showAddRowCols = ! showAddRowCols; showAddRow = ! showAddRow">Submit</button>
+			  </td>
+			</tr>
+		  </table>
+			<br/>
+
+		  <!-- MAIN TABLE DISPLAY -->
+		  <table class="table-striped table-hover table-bordered table-condensed">
+			<!-- HEADERS -->
+			<thead>
+			  <tr>
+				<td ng-repeat="column in columns">{{column}}</td>
+			  </tr>
+			</thead>
+
+			<!-- ROWS -->
+			<tbody>
+			  <tr ng-repeat="row in rows">
+				<!-- ROWS/ FORMS -->
+				<td ng-show="!showEdit" ng-repeat="value in row">{{value}}</td>
+				<td ng-show="showEdit" ng-repeat="(key, value) in row"><input type="text" ng-model=row[key]></td>
+
+				<!--EDIT/SAVE-->
+				<td><button ng-show="!showEdit" ng-click="showEdit = ! showEdit">Edit</button></td>
+				<td><button ng-show="showEdit" ng-click="showEdit = ! showEdit; put(table, row)">Save</button></td>
+
+				<!-- DELETE -->
+				<td><button ng-click="delete(table, row)">Delete</button></td>
+			  </tr>
+			</tbody>
+		  </table>
+	  </form>
+	</div>
+  </body>
+</html>
