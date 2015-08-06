@@ -59,19 +59,16 @@ local $/;    #Enable 'slurp' mode
 has schema => sub { return Schema->connect_to_database };
 has watch  => sub { [qw(lib templates)] };
 
-my $full_path = Cwd::cwd($0);
-my $run_dir = dirname($0);
-
 if ( !defined $ENV{MOJO_CONFIG} ) {
 	
-	$ENV{'MOJO_CONFIG'} = $full_path . '/' . $run_dir . '/../conf/cdn.conf';
-	print("Loading config from " . $ENV{'MOJO_CONFIG'} . "\n");
+	$ENV{MOJO_CONFIG} = find_conf_path('cdn.conf');
+	print("Loading config from " . $ENV{MOJO_CONFIG} . "\n");
 }
 else {
 	print( "MOJO_CONFIG overridden: " . $ENV{MOJO_CONFIG} . "\n" );
 }
 
-my $ldap_conf_path = $full_path . '/' . $run_dir . '/../conf/ldap.conf';
+my $ldap_conf_path = find_conf_path('ldap.conf');
 my $ldap_info      = 0;
 my $host;
 my $admin_dn;
@@ -198,7 +195,7 @@ sub setup_logging {
 			}
 		);
 	}
-	my $log4perl_conf = $full_path . "/" . $run_dir . "/../conf/$mode/log4perl.conf";
+	my $log4perl_conf = find_conf_path("$mode/log4perl.conf");
 	if ( -e $log4perl_conf ) {
 		$self->log( MojoX::Log::Log4perl->new($log4perl_conf) );
 	}
@@ -356,6 +353,13 @@ sub check_ldap_user {
 		return $username;
 	}
 	return undef;
+}
+
+sub find_conf_path {
+	my $req_conf = shift;
+	my $mod_path = $INC{__PACKAGE__ . '.pm'};
+	my $conf_path = join('/', dirname(dirname($mod_path)) , 'conf', $req_conf);
+	return $conf_path;
 }
 
 sub find_username_in_ldap {
