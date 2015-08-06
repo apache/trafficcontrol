@@ -560,7 +560,6 @@ sub login {
 
 	my ( $u, $p ) = ( $self->req->param('u'), $self->req->param('p') );
 	my $result = $self->authenticate( $u, $p );
-	$self->app->log->debug( "result #-> " . Dumper($result) );
 
 	if ($result) {
 		my $referer = $self->req->headers->header('referer');
