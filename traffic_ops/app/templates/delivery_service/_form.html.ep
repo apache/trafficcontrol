@@ -239,6 +239,17 @@
 		%= field('ds.dns_bypass_ip6')->text(class => 'field', readonly => 'readonly');
 		<% } %>
 	</div><br>
+	<div class="block" id='dns_bypass_cname_row'>
+		<% unless (field('ds.dns_bypass_cname')->valid) { %>
+			<span class="field-with-error"><%= field('ds.dns_bypass_cname')->error %></span>
+		<% } %>
+		%= label_for 'dns_bypass_cname' => 'Bypass CNAME', class => 'label'
+		<% if ($priv_level >= 20) { %>
+		%= field('ds.dns_bypass_cname')->text(class => 'field', id => 'dns_bypass_cname', name => 'ds.dns_bypass_cname');
+		<% } else { %>
+		%= field('ds.dns_bypass_cname')->text(class => 'field', readonly => 'readonly');
+		<% } %>
+	</div><br>
 	<div class="block" id='dns_bypass_ttl_row'>
 		<% unless (field('ds.dns_bypass_ttl')->valid) { %>
 			<span class="field-with-error"><%= field('ds.dns_bypass_ttl')->error %></span>

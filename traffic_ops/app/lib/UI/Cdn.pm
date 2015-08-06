@@ -20,7 +20,6 @@ package UI::Cdn;
 
 use UI::Utils;
 use Mojo::Base 'Mojolicious::Controller';
-use Data::Dumper;
 use UI::ConfigFiles;
 use Date::Manip;
 use JSON;
@@ -241,8 +240,8 @@ sub adeliveryservice {
 			$row->profile->name,         $row->ccr_dns_ttl,                    $yesno{ $row->active },       $row->type->name,
 			$row->dscp,                  $yesno{ $row->signed },               $row->qstring_ignore,         $geo_limits{ $row->geo_limit },
 			$protocol{ $row->protocol }, $yesno{ $row->ipv6_routing_enabled }, $row->range_request_handling, $row->http_bypass_fqdn,
-			$row->dns_bypass_ip,         $row->dns_bypass_ip6,                 $row->dns_bypass_ttl,         $row->miss_lat,
-			$row->miss_long,             $row->initial_dispersion,
+			$row->dns_bypass_ip,         $row->dns_bypass_ip6,                 $row->dns_bypass_cname,       $row->dns_bypass_ttl,
+			$row->miss_lat,              $row->miss_long,                      $row->initial_dispersion,
 		];
 		push( @{ $data{'aaData'} }, @line );
 	}
