@@ -269,7 +269,6 @@ EOF
 		$verifyTmAdminPw = InstallUtils::promptUser( "Verify the password for $tmAdminUser",     "", 1 );
 	}
 
-	InstallUtils::execCommand( "/usr/bin/stty", "echo" );
 	$user{"password"} = sha1_hex($tmAdminPw);
 
 	my $users_text = JSON->new->utf8->encode( \%user );
