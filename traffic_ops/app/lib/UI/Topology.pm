@@ -331,8 +331,9 @@ sub gen_crconfig_json {
 		if ( defined( $row->tr_response_headers ) && $row->tr_response_headers ne "" ) {
 			foreach my $header ( split( /__RETURN__/, $row->tr_response_headers ) ) {
 				my ( $header_name, $header_value ) = split( /:\s/, $header );
-				$header_value                                                                          = &strip_spaces($header_value);
-				$header_value                                                                          = &strip_quotes($header_value);
+				$header_name                                                                           = &trim_spaces($header_name);
+				$header_value                                                                          = &trim_spaces($header_value);
+				$header_value                                                                          = &trim_quotes($header_value);
 				$data_obj->{'deliveryServices'}->{ $row->xml_id }->{'responseHeaders'}->{$header_name} = $header_value;
 			}
 		}
@@ -697,14 +698,14 @@ sub compare_lists {
 	return @compare_text;
 }
 
-sub strip_spaces {
+sub trim_spaces {
 	my $text = shift;
 	$text =~ s/^\s+//g;
 	$text =~ s/\s+$//g;
 	return $text;
 }
 
-sub strip_quotes {
+sub trim_quotes {
 	my $text = shift;
 	$text =~ s/^\"//g;
 	$text =~ s/\"$//g;
