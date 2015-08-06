@@ -598,7 +598,7 @@ sub cacheurl_dot_config {
 		my $ds_xml_id = $1;
 		my $ds = $self->db->resultset('Deliveryservice')->search( { xml_id => $ds_xml_id }, { prefetch => [ 'type', 'profile' ] } )->single();
 		if ($ds) {
-			$text .= $ds->cacheurl;
+			$text .= $ds->cacheurl . "\n";
 		}
 	}
 	elsif ( $filename eq "cacheurl.config" ) {    # this is the global drop qstring w cacheurl use case
