@@ -17,7 +17,7 @@
 
 -- +goose Up
 -- SQL in section 'Up' is executed when this migration is applied
-alter table deliveryservice add column `dns_bypass_cname` varchar(45) default NULL;
+alter table deliveryservice add column `dns_bypass_cname` varchar(255) default NULL;
 
 -- +goose Down
 -- SQL section 'Down' is executed when this migration is rolled back
