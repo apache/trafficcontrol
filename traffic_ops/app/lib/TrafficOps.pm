@@ -59,19 +59,19 @@ local $/;    #Enable 'slurp' mode
 has schema => sub { return Schema->connect_to_database };
 has watch  => sub { [qw(lib templates)] };
 
-my $full_path = Cwd::abs_path($0);
-($full_path) = split(/\/cdn/, $full_path, 2);
+my $full_path = Cwd::cwd($0);
+my $run_dir = dirname($0);
 
 if ( !defined $ENV{MOJO_CONFIG} ) {
 	
-	$ENV{'MOJO_CONFIG'} = $full_path . '/../conf/cdn.conf';
+	$ENV{'MOJO_CONFIG'} = $full_path . '/' . $run_dir . '/../conf/cdn.conf';
 	print("Loading config from " . $ENV{'MOJO_CONFIG'} . "\n");
 }
 else {
 	print( "MOJO_CONFIG overridden: " . $ENV{MOJO_CONFIG} . "\n" );
 }
 
-my $ldap_conf_path = $full_path . '/../conf/ldap.conf';
+my $ldap_conf_path = $full_path . '/' . $run_dir . '/../conf/ldap.conf';
 my $ldap_info      = 0;
 my $host;
 my $admin_dn;
@@ -198,7 +198,7 @@ sub setup_logging {
 			}
 		);
 	}
-	my $log4perl_conf = $full_path . "/../conf/$mode/log4perl.conf";
+	my $log4perl_conf = $full_path . "/" . $run_dir . "/../conf/$mode/log4perl.conf";
 	if ( -e $log4perl_conf ) {
 		$self->log( MojoX::Log::Log4perl->new($log4perl_conf) );
 	}
