@@ -12,7 +12,6 @@ angular.module('app', [])
     //GET
     $scope.get = function(table) {
         var tableName = angular.copy(table);
-        console.log(tableName);
 
         $http.get('http://127.0.0.1:8080/request/' + tableName).then(function(resp) {
             console.log(resp.data);
@@ -29,6 +28,33 @@ angular.module('app', [])
             console.error('ERR', err);
             // err.status will contain the status code
         })
+    }
+
+    //GET
+    $scope.update = function(table, parameters) {
+        console.log("HELLO");
+        var tableName = angular.copy(table);
+
+	   
+        if (typeof parameters !== 'undefined') {
+            $http.get('http://127.0.0.1:8080/request/' + tableName + "?" + parameters).then(function(resp) {
+                console.log(resp.data);
+                $scope.columns = resp.data;
+                // For JSON responses, resp.data contains the result
+            }, function(err) {
+                console.error('ERR', err);
+                // err.status will contain the status code
+            })
+
+            $http.get('http://127.0.0.1:8080/api/' + tableName + "?" + parameters).then(function(resp) {
+                $scope.rows = resp.data.response;
+            }, function(err) {
+                console.error('ERR', err);
+                // err.status will contain the status code
+            })
+        } else {
+            $scope.get(table);
+        }
     }
 
     //DELETE
@@ -98,10 +124,10 @@ angular.module('app', [])
         })
     }
 
-	//PUT
+    //PUT
     $scope.put = function(table, row) {
         var rowArray = new Array(row);
-		//post it
+        //post it
         $http.put('http://127.0.0.1:8080/api/' + table + "/" + row.id, rowArray).then(function(resp) {
             $scope.rows = resp.data.response;
         }, function(err) {

@@ -45,10 +45,7 @@ func requestHandler(w http.ResponseWriter, r *http.Request) {
 
 	var resp interface{}
 	if len(path) > 1 && path[1] != "" {
-		fmt.Println("GET FROM " + path[1])
 		resp = sqlParser.GetColumnNames(path[1])
-		fmt.Println("RESPONSE:")
-		fmt.Println(resp)
 	} else {
 		resp = sqlParser.GetTableNames()
 	}
