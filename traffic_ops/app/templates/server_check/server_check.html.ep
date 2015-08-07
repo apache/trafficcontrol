@@ -62,6 +62,7 @@ $(function () {
                         stat = stat.replace("ADMIN_DOWN", "ADWN");
                         stat = stat.replace("ONLINE", "ONL");
                         stat = stat.replace("OFFLINE", "OFFL");
+                        stat = stat.replace("PRE_PROD", "PRE");
                         return stat;
                     },
 					"aTargets": [3] // status (ADMIN_DOWN, etc)
