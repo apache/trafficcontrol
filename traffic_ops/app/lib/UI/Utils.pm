@@ -61,12 +61,22 @@ sub tm_url {
 }
 
 sub trim_whitespace() {
-	my $paramHashRef = shift;
+	my $param = shift;
 
-	foreach my $key (keys %{$paramHashRef}) {
-		${$paramHashRef}{$key} =~ s/^\s+|\s+$//g;
+	if (ref($param) eq 'HASH') {
+		foreach my $key (keys %{$param}) {
+			${$param}{$key} =~ s/^\s+|\s+$//g;
+		}
+	} elsif (ref($param) eq 'ARRAY') {
+		for ($i=0; $i <= $#{$param}; $i++) {
+		   $param->[$i] =~ s/^\s+|\s+$//g;
+		}
+	} else {
+		$param =~ s/^\s+|\s+$//g;
 	}
-	return $paramHashRef;
+
+	return $param;
+
 }
 
 sub name_version_string {
