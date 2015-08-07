@@ -25,7 +25,7 @@ use MIME::Base64;
 use Data::Dumper;
 
 $| = 1;
-my $script_version = "0.51a";
+my $script_version = "0.53a";
 my $date           = `/bin/date`;
 chomp($date);
 print "$date\nVersion of this script: $script_version\n";
@@ -736,10 +736,11 @@ sub process_config_files {
 				|| $file eq "regex_revalidate.config"
 				|| $file eq "ip_allow.config"
 				|| $file eq "astats.config"
-				|| $file eq "cacheurl_qstring.config"
+				|| $file =~ m/cacheurl\_(.*)\.config$/
 				|| $file =~ m/regex\_remap\_(.*)\.config$/
 				|| $file =~ m/\.cer$/
 				|| $file =~ m/\.key$/
+				|| $file eq "logs_xml.config"
 				|| $file eq "ssl_multicert.config" )
 			)
 		{
@@ -1282,6 +1283,7 @@ sub get_cfg_file_list {
 	$cdn_name = $ort_ref->{'other'}->{'CDN_name'};
 	( $log_level >> $INFO ) && printf("INFO Found CDN_name from Traffic Ops: $cdn_name\n");
 	foreach my $cfg_file ( keys %{ $ort_ref->{'config_files'} } ) {
+		$cfg_file =~ s/^to\_ext\_(.*)\.config$/$1\.config/ if ($cfg_file =~ m/^to\_ext\_/);
 		( $log_level >> $INFO )
 			&& printf( "INFO Found config file: %-30s with location: %-50s\n", $cfg_file, $ort_ref->{'config_files'}->{$cfg_file}->{'location'} );
 		$cfg_files->{$cfg_file}->{'location'} = $ort_ref->{'config_files'}->{$cfg_file}->{'location'};
