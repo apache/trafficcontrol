@@ -271,12 +271,8 @@ sub check_server_input_cgi {
 		$paramHashRef->{$optionalParam} = $self->param($optionalParam);
 	}
 
-	## Remove all leading and trailing whitespace.
-	foreach my $key (keys %{$paramHashRef}) {
-		${$paramHashRef}{$key} =~ s/^\s+|\s+$//g;
-	}
-
-
+	$paramHashRef = &trim_whitespace( $paramHashRef );
+	
 	$err = &check_server_input( $self, $paramHashRef );
 	return $err;
 }
@@ -413,10 +409,7 @@ sub update {
 	}
 	my $id = $paramHashRef->{'id'};
 
-	## Remove all leading and trailing whitespace.
-	foreach my $key (keys %{$paramHashRef}) {
-		${$paramHashRef}{$key} =~ s/^\s+|\s+$//g;
-	}
+	$paramHashRef = &trim_whitespace( $paramHashRef );
 
 	my $err = &check_server_input_cgi($self);
 	if ( defined($err) && length($err) > 0 ) {
@@ -621,10 +614,7 @@ sub create {
 		$err = &check_server_input_cgi($self);
 	}
 
-	## Remove all leading and trailing whitespace.
-	foreach my $key (keys %{$paramHashRef}) {
-		${$paramHashRef}{$key} =~ s/^\s+|\s+$//g;
-	}
+	$paramHashRef = &trim_whitespace( $paramHashRef );
 
 	my $xmpp_passwd = "BOOGER";
 	if ( defined($err) && length($err) > 0 ) {
