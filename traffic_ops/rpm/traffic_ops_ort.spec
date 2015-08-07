@@ -15,7 +15,7 @@
 #
 %define debug_package %{nil}
 Name:		traffic_ops_ort
-Version:	0.52a
+Version:	0.53a
 Release:	1%{?dist}
 Summary:	Installs ORT script for Traffic Control caches
 Packager:	mark_torluemke at Cable dot Comcast dot com
