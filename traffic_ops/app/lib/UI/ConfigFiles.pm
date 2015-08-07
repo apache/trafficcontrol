@@ -598,7 +598,7 @@ sub cacheurl_dot_config {
 		my $ds_xml_id = $1;
 		my $ds = $self->db->resultset('Deliveryservice')->search( { xml_id => $ds_xml_id }, { prefetch => [ 'type', 'profile' ] } )->single();
 		if ($ds) {
-			$text .= $ds->cacheurl;
+			$text .= $ds->cacheurl . "\n";
 		}
 	}
 	elsif ( $filename eq "cacheurl.config" ) {    # this is the global drop qstring w cacheurl use case
@@ -839,6 +839,9 @@ sub remap_dot_config {
 			if ( defined( $remap->{cacheurl} ) && $remap->{cacheurl} ne "" ) {
 				$mid_remap{ $remap->{org} } .= " \@plugin=cacheurl.so \@pparam=" . $remap->{cacheurl_file};
 			}
+                        if ( $remap->{range_request_handling} == 2 ) {
+                                $mid_remap{ $remap->{org} } .= " \@plugin=cache_range_requests.so";
+                        }
 		}
 		foreach my $key ( keys %mid_remap ) {
 			$text .= "map " . $key . " " . $key . $mid_remap{$key} . "\n";
@@ -996,7 +999,7 @@ sub parent_dot_config {
 		my %done = ();
 
 		foreach my $remap ( @{ $data->{dslist} } ) {
-			if ( $remap->{type} eq "HTTP_NO_CACHE" || $remap->{type} eq "HTTP_LIVE" ) {
+			if ( $remap->{type} eq "HTTP_NO_CACHE" || $remap->{type} eq "HTTP_LIVE" || $remap->{type} eq "DNS_LIVE" ) {
 				if ( !defined( $done{ $remap->{org} } ) ) {
 					my $org_fqdn = $remap->{org};
 					$org_fqdn =~ s/https?:\/\///;

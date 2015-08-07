@@ -5,9 +5,6 @@ import (
 	"errors"
 	"flag"
 	"fmt"
-	log "github.com/cihub/seelog"
-	traffic_ops "github.com/comcast/traffic_control/traffic_ops/client"
-	influx "github.com/influxdb/influxdb/client"
 	"io/ioutil"
 	"math/rand"
 	"net/http"
@@ -17,33 +14,43 @@ import (
 	"strconv"
 	"strings"
 	"time"
+
+	log "github.com/cihub/seelog"
+	traffic_ops "github.com/comcast/traffic_control/traffic_ops/client"
+	influx "github.com/influxdb/influxdb/client"
 )
 
 const (
-	FATAL = iota // Exit after printing error
-	ERROR = iota // Just keep going, print error
+	// FATAL will exit after printing error
+	FATAL = iota
+	// ERROR will just keep going, print error
+	ERROR = iota
 )
 
 const defaultPollingInterval = 10
 
+// StartupConfig contains all fields necessary to create an InfluxDB session.
 type StartupConfig struct {
 	ToUser          string `json:"toUser"`
 	ToPasswd        string `json:"toPasswd"`
-	ToUrl           string `json:"toUrl"`
+	ToURL           string `json:"toUrl"`
 	InfluxUser      string `json:"influxUser"`
 	InfluxPassword  string `json:"influxPassword"`
 	PollingInterval int    `json:"pollingInterval"`
-	StatusToMon     string `json:statusToMon"`
-	SeelogConfig    string `json:seelogConfig"`
+	StatusToMon     string `json:"statusToMon"`
+	SeelogConfig    string `json:"seelogConfig"`
 }
 
+// RunningConfig contains information about current InfluxDB connections.
 type RunningConfig struct {
 	HealthUrls    map[string]map[string]string // they 1st map key is CDN_name, the second is DsStats or CacheStats
 	CacheGroupMap map[string]string            // map hostName to cacheGroup
-	InfluxDbProps []InfluxDbProps
+	InfluxDBProps []InfluxDBProps
+	ActiveServer  string // The fqdn of the last InfluxDB server used.
 }
 
-type InfluxDbProps struct {
+// InfluxDBProps contains the fqdn and port needed to login to an InfluxDB instance.
+type InfluxDBProps struct {
 	Fqdn string
 	Port int64
 }
@@ -58,8 +65,8 @@ func main() {
 	config := &StartupConfig{}
 	err = decoder.Decode(&config)
 	errHndlr(err, FATAL)
-	defaultPollingInterval := 10
 
+	defaultPollingInterval := 10
 	if config.PollingInterval == 0 {
 		config.PollingInterval = defaultPollingInterval
 	}
@@ -103,29 +110,28 @@ func main() {
 
 func getToData(config *StartupConfig, init bool) (RunningConfig, error) {
 	var runningConfig RunningConfig
-	tm, err := traffic_ops.Login(config.ToUrl, config.ToUser, config.ToPasswd, true)
+	tm, err := traffic_ops.Login(config.ToURL, config.ToUser, config.ToPasswd, true)
 	if err != nil {
-		msg := fmt.Sprintf("Error logging in to %v: %v", config.ToUrl, err)
+		msg := fmt.Sprintf("Error logging in to %v: %v", config.ToURL, err)
 		if init {
 			panic(msg)
-		} else {
-			log.Error(msg)
-			return runningConfig, err
 		}
+		log.Error(msg)
+		return runningConfig, err
 	}
 
 	servers, err := tm.Servers()
 	if err != nil {
-		msg := fmt.Sprintf("Error getting server list from %v: %v ", config.ToUrl, err)
+		msg := fmt.Sprintf("Error getting server list from %v: %v ", config.ToURL, err)
 		if init {
 			panic(msg)
-		} else {
-			log.Error(msg)
-			return runningConfig, err
 		}
+		log.Error(msg)
+		return runningConfig, err
 	}
+
 	runningConfig.CacheGroupMap = make(map[string]string)
-	influxDbProps := make([]InfluxDbProps, 0)
+	var influxDBProps []InfluxDBProps
 	for _, server := range servers {
 		runningConfig.CacheGroupMap[server.HostName] = server.Location
 		if server.Type == "INFLUXDB" && server.Status == "ONLINE" {
@@ -134,23 +140,23 @@ func getToData(config *StartupConfig, init bool) (RunningConfig, error) {
 			if err != nil {
 				port = 8086 //default port
 			}
-			influxDbProps = append(influxDbProps, InfluxDbProps{Fqdn: fqdn, Port: port})
+			influxDBProps = append(influxDBProps, InfluxDBProps{Fqdn: fqdn, Port: port})
 		}
 	}
-	runningConfig.InfluxDbProps = influxDbProps
+	runningConfig.InfluxDBProps = influxDBProps
 
 	cacheStatPath := "/publish/CacheStats?hc=1&stats="
 	dsStatPath := "/publish/DsStats?hc=1&wildcard=1&stats="
 	parameters, err := tm.Parameters("TRAFFIC_STATS")
 	if err != nil {
-		msg := fmt.Sprintf("Error getting parameter list from %v: %v", config.ToUrl, err)
+		msg := fmt.Sprintf("Error getting parameter list from %v: %v", config.ToURL, err)
 		if init {
 			panic(msg)
-		} else {
-			log.Error(msg)
-			return runningConfig, err
 		}
+		log.Error(msg)
+		return runningConfig, err
 	}
+
 	for _, param := range parameters {
 		if param.Name == "DsStats" {
 			statName := param.Value
@@ -194,17 +200,19 @@ func getToData(config *StartupConfig, init bool) (RunningConfig, error) {
 func storeMetrics(cdnName string, url string, cacheGroupMap map[string]string, config *StartupConfig, runningConfig *RunningConfig) {
 	sampleTime := int64(time.Now().Unix())
 	// get the data from rascal
-	rascalData, err := getUrl(url)
+	rascalData, err := getURL(url)
 	if err != nil {
 		log.Error("Unable to connect to rascal @ ", url, " - skipping timeslot")
 		return
 	}
+
 	//influx connection
 	influxClient, err := influxConnect(config, runningConfig)
 	if err != nil {
 		errHndlr(err, ERROR)
 		return
 	}
+
 	if strings.Contains(url, "CacheStats") {
 		err = storeCacheValues(rascalData, cdnName, sampleTime, cacheGroupMap, influxClient)
 	} else if strings.Contains(url, "DsStats") {
@@ -246,7 +254,7 @@ func errHndlr(err error, severity int) {
  }
 */
 func storeDsValues(rascalData []byte, cdnName string, sampleTime int64, influxClient *influx.Client) error {
-	type DsStatsJson struct {
+	type DsStatsJSON struct {
 		Pp              string `json:"pp"`
 		Date            string `json:"date"`
 		DeliveryService map[string]map[string][]struct {
@@ -257,12 +265,12 @@ func storeDsValues(rascalData []byte, cdnName string, sampleTime int64, influxCl
 		} `json:"deliveryService"`
 	}
 
-	var jData DsStatsJson
+	var jData DsStatsJSON
 	err := json.Unmarshal(rascalData, &jData)
 	errHndlr(err, ERROR)
-	statCount := 0
-	pts := make([]influx.Point, 0)
 
+	statCount := 0
+	var pts []influx.Point
 	for dsName, dsData := range jData.DeliveryService {
 		for dsMetric, dsMetricData := range dsData {
 			//create dataKey (influxDb series)
@@ -274,12 +282,14 @@ func storeDsValues(rascalData []byte, cdnName string, sampleTime int64, influxCl
 				s := strings.Split(dsMetric, ".")
 				cachegroup, statName = s[1], s[2]
 			}
+
 			//convert stat time to epoch
 			statTime := strconv.Itoa(dsMetricData[0].Time)
 			msInt, err := strconv.ParseInt(statTime, 10, 64)
 			if err != nil {
 				errHndlr(err, ERROR)
 			}
+
 			newTime := time.Unix(0, msInt*int64(time.Millisecond))
 			//convert stat value to float
 			statValue := dsMetricData[0].Value
@@ -349,7 +359,7 @@ func storeCacheValues(trafmonData []byte, cdnName string, sampleTime int64, cach
 	keys are cdnName:deliveryService:cacheGroup:cacheName:statName
 	*/
 
-	type CacheStatsJson struct {
+	type CacheStatsJSON struct {
 		Pp     string `json:"pp"`
 		Date   string `json:"date"`
 		Caches map[string]map[string][]struct {
@@ -359,22 +369,25 @@ func storeCacheValues(trafmonData []byte, cdnName string, sampleTime int64, cach
 			Span  uint64 `json:"span"`
 		} `json:"caches"`
 	}
-	var jData CacheStatsJson
+	var jData CacheStatsJSON
 	err := json.Unmarshal(trafmonData, &jData)
 	errHndlr(err, ERROR)
+
 	statCount := 0
-	pts := make([]influx.Point, 0)
+	var pts []influx.Point
 	for cacheName, cacheData := range jData.Caches {
 		for statName, statData := range cacheData {
 			dataKey := statName
 			dataKey = strings.Replace(dataKey, ".bandwidth", ".kbps", 1)
 			dataKey = strings.Replace(dataKey, "-", "_", -1)
+
 			//Get the stat time and convert to epoch
 			statTime := strconv.Itoa(statData[0].Time)
 			msInt, err := strconv.ParseInt(statTime, 10, 64)
 			if err != nil {
 				errHndlr(err, ERROR)
 			}
+
 			newTime := time.Unix(0, msInt*int64(time.Millisecond))
 			//Get the stat value and convert to float
 			statValue := statData[0].Value
@@ -417,7 +430,7 @@ func storeCacheValues(trafmonData []byte, cdnName string, sampleTime int64, cach
 	return nil
 }
 
-func getUrl(url string) ([]byte, error) {
+func getURL(url string) ([]byte, error) {
 	resp, err := http.Get(url)
 	if err != nil {
 		return nil, err
@@ -431,15 +444,19 @@ func getUrl(url string) ([]byte, error) {
 }
 
 func influxConnect(config *StartupConfig, runningConfig *RunningConfig) (*influx.Client, error) {
-	//Connect to InfluxDb
-	activeServers := len(runningConfig.InfluxDbProps)
-	rand.Seed(4200)
-	//if there is only 1 active, use it
+	// Connect to InfluxDb
+	activeServers := len(runningConfig.InfluxDBProps)
+	rand.Seed(time.Now().UnixNano())
+
+	// if there is only 1 active, use it
 	if activeServers == 1 {
-		u, err := url.Parse(fmt.Sprintf("http://%s:%d", runningConfig.InfluxDbProps[0].Fqdn, runningConfig.InfluxDbProps[0].Port))
+		runningConfig.ActiveServer = runningConfig.InfluxDBProps[0].Fqdn
+
+		u, err := url.Parse(fmt.Sprintf("http://%s:%d", runningConfig.InfluxDBProps[0].Fqdn, runningConfig.InfluxDBProps[0].Port))
 		if err != nil {
 			return nil, err
 		}
+
 		conf := influx.Config{
 			URL:      *u,
 			Username: config.InfluxUser,
@@ -449,40 +466,50 @@ func influxConnect(config *StartupConfig, runningConfig *RunningConfig) (*influx
 		if err != nil {
 			return nil, err
 		}
+
 		_, _, err = con.Ping()
 		if err != nil {
 			return nil, err
 		}
 		return con, nil
 	} else if activeServers > 1 {
-		//try to connect to a random server until we find one that works.  if we dont find one in 20 tries, bail.
+		// TODO: update influx.config to set the last server used and do not use it the next time.
+		//
+		// try to connect to a random server until we find one that works.  if we dont find one in 20 tries, bail.
 		for i := 0; i < 20; i++ {
 			index := rand.Intn(activeServers)
-			u, err := url.Parse(fmt.Sprintf("http://%s:%d", runningConfig.InfluxDbProps[index].Fqdn, runningConfig.InfluxDbProps[index].Port))
+
+			if runningConfig.ActiveServer == runningConfig.InfluxDBProps[index].Fqdn {
+				continue
+			}
+			runningConfig.ActiveServer = runningConfig.InfluxDBProps[index].Fqdn
+
+			u, err := url.Parse(fmt.Sprintf("http://%s:%d", runningConfig.InfluxDBProps[index].Fqdn, runningConfig.InfluxDBProps[index].Port))
 			if err != nil {
 				errHndlr(err, ERROR)
 				continue
-			} else {
-				conf := influx.Config{
-					URL:      *u,
-					Username: config.InfluxUser,
-					Password: config.InfluxPassword,
-				}
-				con, err := influx.NewClient(conf)
-				if err != nil {
-					errHndlr(err, ERROR)
-					continue
-				} else {
-					_, _, err = con.Ping()
-					if err != nil {
-						errHndlr(err, ERROR)
-						continue
-					} else {
-						return con, nil
-					}
-				}
 			}
+
+			conf := influx.Config{
+				URL:      *u,
+				Username: config.InfluxUser,
+				Password: config.InfluxPassword,
+			}
+			con, err := influx.NewClient(conf)
+			if err != nil {
+				errHndlr(err, ERROR)
+				continue
+			}
+
+			_, _, err = con.Ping()
+			if err != nil {
+				errHndlr(err, ERROR)
+				continue
+			}
+
+			return con, nil
 		}
+
 		err := errors.New("Could not connect to any of the InfluxDb servers that are ONLINE in traffic ops.")
 		return nil, err
 	} else {

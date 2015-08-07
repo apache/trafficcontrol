@@ -59,6 +59,8 @@ $fake_lwp->mock( 'get', sub { return $fake_get_200 } );
 my $fake_put_204 = HTTP::Response->new( 204, undef, HTTP::Headers->new, undef );
 $fake_lwp->mock( 'put', sub { return $fake_put_204 } );
 
+my $version = "1.1";
+
 # Portal User checks
 ok $t->post_ok( '/api/1.1/user/login', json => { u => Test::TestHelper::PORTAL_USER, p => Test::TestHelper::PORTAL_USER_PASSWORD } )->status_is(200),
 	'Log into the portal user?';

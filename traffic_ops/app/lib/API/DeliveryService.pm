@@ -102,6 +102,7 @@ sub get_data {
 				"httpBypassFqdn"       => $row->http_bypass_fqdn,
 				"dnsBypassIp"          => $row->dns_bypass_ip,
 				"dnsBypassIp6"         => $row->dns_bypass_ip6,
+				"dnsBypassCname"       => $row->dns_bypass_cname,
 				"dnsBypassTtl"         => $row->dns_bypass_ttl,
 				"orgServerFqdn"        => $row->org_server_fqdn,
 				"multiSiteOrigin"      => $row->multi_site_origin,
@@ -131,6 +132,7 @@ sub get_data {
 				"rangeRequestHandling" => $row->range_request_handling,
 				"cacheurl"             => $row->cacheurl,
 				"remapText"            => $row->remap_text,
+				"initialDispersion"   => $row->initial_dispersion,
 			}
 		);
 	}

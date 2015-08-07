@@ -551,6 +551,9 @@ sub gen_traffic_router_config {
 			if ( defined( $row->dns_bypass_ip6 ) && $row->dns_bypass_ip6 ne "" ) {
 				$bypass_destination->{'ip6'} = $row->dns_bypass_ip6;
 			}
+			if ( defined( $row->dns_bypass_cname ) && $row->dns_bypass_cname ne "" ) {
+				$bypass_destination->{'cname'} = $row->dns_bypass_cname;
+			}
 			if ( defined( $row->dns_bypass_ttl ) && $row->dns_bypass_ttl ne "" ) {
 				$bypass_destination->{'ttl'} = int( $row->dns_bypass_ttl );
 			}
@@ -1002,6 +1005,13 @@ sub delete_dnssec_keys {
 			$self->alert( { Error => " - SSL keys for key type $key_type and key $key could not be deleted.  Response was" . $response->content } );
 		}
 	}
+}
+
+sub tool_logout {
+	my $self = shift;
+
+	$self->logout();
+	$self->success_message("You are logged out.");
 }
 
 sub catch_all {

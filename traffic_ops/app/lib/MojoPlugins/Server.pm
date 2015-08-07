@@ -1,4 +1,5 @@
 package MojoPlugins::Server;
+
 #
 # Copyright 2015 Comcast Cable Communications Management, LLC
 #
@@ -95,8 +96,7 @@ sub register {
 				}
 			}
 			else {
-				my $message =
-					  "No "
+				my $message = "No "
 					. $server_type
 					. " servers are set to ONLINE in the database.  Please verify "
 					. $server_type
@@ -106,9 +106,6 @@ sub register {
 			}
 		}
 	);
-
-	$app->renderer->add_helper();
-
 }
 
 # This subroutine only handles looking in the database (randomly) for

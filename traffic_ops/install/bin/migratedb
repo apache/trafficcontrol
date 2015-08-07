@@ -23,9 +23,7 @@ use lib qw(/opt/traffic_ops/install/lib /opt/traffic_ops/app/local/lib/perl5);
 
 use InstallUtils;
 
-my $install = InstallUtils->new();
-
-my $result = $install->execCommand ("export PATH=/opt/traffic_ops/install/bin:/usr/bin/; export PERL5LIB=/opt/traffic_ops/install/lib:/opt/traffic_ops/app/local/lib/perl5:/opt/traffic_ops/app/lib; cd /opt/traffic_ops/app; /usr/bin/perl db/admin.pl --env=production upgrade");
+my $result = InstallUtils::execCommand ("export PATH=/opt/traffic_ops/install/bin:/usr/bin/; export PERL5LIB=/opt/traffic_ops/install/lib:/opt/traffic_ops/app/local/lib/perl5:/opt/traffic_ops/app/lib; cd /opt/traffic_ops/app; /usr/bin/perl db/admin.pl --env=production upgrade");
 
 if ($result != 0) {
 	print "Database migration failed.\n";
