@@ -25,7 +25,7 @@ angular.module('app', [])
 
         $http.get('http://127.0.0.1:8080/api/' + tableName).then(function(resp) {
             $scope.rows = resp.data.response;
-                   }, function(err) {
+        }, function(err) {
             console.error('ERR', err);
             // err.status will contain the status code
         })
@@ -53,8 +53,10 @@ angular.module('app', [])
 
     //POST QUERY
     $scope.postView = function(newView) {
+        var viewArray = new Array(newView);
+
         //post it
-        $http.post('http://127.0.0.1:8080/api/', newView).then(function(resp) {
+        $http.post('http://127.0.0.1:8080/api/', viewArray).then(function(resp) {
             $scope.rows = resp.data.response;
         }, function(err) {
             console.error('ERR', err);
@@ -63,7 +65,6 @@ angular.module('app', [])
 
         //get columns
         $http.get('http://127.0.0.1:8080/request/' + newView.Name).then(function(resp) {
-            console.log(newView.Name);
             console.log("COLUMNS: " + resp.data);
             $scope.columns = resp.data;
             // For JSON responses, resp.data contains the result
@@ -74,9 +75,13 @@ angular.module('app', [])
     }
 
     $scope.post = function(table, row) {
+        var rowArray = new Array(row);
+        console.log("New Array");
+        console.log(newArray);
+
         //post it
         console.log(table, row);
-        $http.post('http://127.0.0.1:8080/api/' + table, row).then(function(resp) {
+        $http.post('http://127.0.0.1:8080/api/' + table, rowArray).then(function(resp) {
             $scope.rows = resp.data.response;
         }, function(err) {
             console.error('ERR', err);
@@ -93,9 +98,11 @@ angular.module('app', [])
         })
     }
 
+	//PUT
     $scope.put = function(table, row) {
-        //post it
-        $http.put('http://127.0.0.1:8080/api/' + table + "/" + row.id, row).then(function(resp) {
+        var rowArray = new Array(row);
+		//post it
+        $http.put('http://127.0.0.1:8080/api/' + table + "/" + row.id, rowArray).then(function(resp) {
             $scope.rows = resp.data.response;
         }, function(err) {
             console.error('ERR', err);
@@ -103,9 +110,7 @@ angular.module('app', [])
         })
 
         //get columns
-        $http.get('http://127.0.0.1:8080/request/' + newView.Name).then(function(resp) {
-            console.log(newView.Name);
-            console.log("COLUMNS: " + resp.data);
+        $http.get('http://127.0.0.1:8080/request/' + table).then(function(resp) {
             $scope.columns = resp.data;
             // For JSON responses, resp.data contains the result
         }, function(err) {

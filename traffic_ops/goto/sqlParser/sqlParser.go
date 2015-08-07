@@ -321,15 +321,12 @@ func AddRows(newRows []interface{}, tableName string) {
 //adds JSON from FILENAME to TABLE
 //CURRENTLY ONLY ONE ROW
 func PostRows(tableName string, jsonByte []byte) {
-	fmt.Println("JSON BYTE: " + string(jsonByte))
-	var f interface{}
-	fmt.Println("INTERFACE:")
+	var f []interface{}
 	err2 := json.Unmarshal(jsonByte, &f)
 
-	fmt.Println(f)
 	check(err2)
 
-	AddRow(f, tableName)
+	AddRows(f, tableName)
 }
 
 //view details are marshalled into this View struct
@@ -338,26 +335,19 @@ type View struct {
 	Query string
 }
 
-/*
 //adds JSON from FILENAME to TABLE
-func PostViews(jsonByte []byte) {
+func PostViews(jsonByte []byte) string {
 	var views []View
 	err2 := json.Unmarshal(jsonByte, &views)
 	check(err2)
 
+	var viewName string
 	for _, view := range views {
+		viewName = view.Name
 		MakeView(view.Name, view.Query)
 	}
-}
-*/
-//adds JSON from FILENAME to TABLE
-func PostViews(jsonByte []byte) string {
-	var view View
-	err2 := json.Unmarshal(jsonByte, &view)
-	check(err2)
 
-	MakeView(view.Name, view.Query)
-	return view.Name
+	return viewName
 }
 
 func MakeView(viewName string, view string) {
@@ -371,11 +361,17 @@ func MakeView(viewName string, view string) {
  ********************************************************************************/
 func Put(tableName string, parameters []string, jsonByte []byte) {
 	//unmarshals the json into an interface
-	var f interface{}
+	var f []interface{}
 	err2 := json.Unmarshal(jsonByte, &f)
 	check(err2)
 	//adds the interface row to table in database
-	UpdateRow(f, tableName, parameters)
+	UpdateRows(f, tableName, parameters)
+}
+
+func UpdateRows(newRows []interface{}, tableName string, parameters []string) {
+	for _, row := range newRows {
+		UpdateRow(row, tableName, parameters)
+	}
 }
 
 func UpdateRow(newRow interface{}, tableName string, parameters []string) {

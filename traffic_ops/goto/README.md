@@ -75,30 +75,13 @@ git clone https://github.com/comcast/traffic_control.git
   table?value<100&value2>=100
   ```
 ###POST
-####Posting to a table
-  ```
-  curl -X POST --data "filename=$YOURFILEHERE" http://127.0.0.1:8080/tableName
-  ```
-For now, if you want to post a new row to a table, you need to have everything in a JSON file (`$YOURFILEHERE`)
-  in your GoTO directory.
-
-  Eventually, information added through the front-end will be passed as JSON data. 
-
-  You can see examples of POST files in `testFiles`; specifically, `newAsn` and `newAsns`.
-
-####Custom views
-  ```
-  curl -X POST --data "filename=$YOURFILEHERE" http://127.0.0.1:8080/
-  ```
-
-  Say you only want certain columns from a table, or you want a complex SQL query like a join.
-  For now, you make a JSON file ($YOURFILEHERE) that follows the following format:
-  ```
+####API
+Currently, the API only supports adding one view or one row to a table at a time. If you wish to add multiple, you'll need to pass a JSON array of the many views or many queries to a curl POST. The file needs to be of the following form: 
+ ```
   [{"name":"viewName", "query":"select foo.id, bar.name from foo join bar"}]
   ```
-  You can add multiple views if you'd like. Then, you can interact with the view like a table.
 
-  You can see examples of POST files in `testFiles`; specifically, `newView` and `newViewss`.
+  You can see examples of POST files in `testFiles`; specifically, `newView` and `newViews` for new views, or `newAsn` or `newAsns` for new rows.
 
 ###PUT
   Put follows the same syntax as POST (but with PUT). On the SQL end, "UPDATES." Can be done with views, too.
