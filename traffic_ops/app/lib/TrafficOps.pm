@@ -229,13 +229,16 @@ sub setup_mojo_plugins {
 					$local_user = $user_data->local_user;
 				}
 
+				if ( $role eq 'disallowed') {
+					return undef;
+				}
+
 				return {
 					'username'   => $username,
 					'role'       => $role,
 					'priv'       => $priv,
 					'local_user' => $local_user,
 				};
-				return undef;
 			},
 			validate_user => sub {
 				my ( $app, $username, $pass, $options ) = @_;
