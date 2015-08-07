@@ -255,15 +255,15 @@ public class DeliveryService {
 							list.add(new InetRecord(InetAddress.getByName(ipStr), ttl));
 						}
 					}
-				} else if (dns.has("cnameAlias")) {
+				} else if (dns.has("cname")) {
 					/*
 					 * Per section 2.4 of RFC 1912 CNAMEs cannot coexist with other record types.
 					 * As such, only add the CNAME if the above ip/ip6 keys do not exist
 					 */
-					final String cnameAlias = dns.getString("cnameAlias");
+					final String cname = dns.getString("cname");
 
-					if (cnameAlias != null) {
-						list.add(new InetRecord(cnameAlias, ttl));
+					if (cname != null) {
+						list.add(new InetRecord(cname, ttl));
 					}
 				}
 
