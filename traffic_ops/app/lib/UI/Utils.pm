@@ -41,7 +41,7 @@ use constant ADMIN => 30;
 
 our %EXPORT_TAGS = (
 	'all' => [
-		qw(is_admin is_oper log is_ipaddress is_ip6address is_netmask in_same_net is_hostname admin_status_id type_id
+		qw(trim_whitespace is_admin is_oper log is_ipaddress is_ip6address is_netmask in_same_net is_hostname admin_status_id type_id
 			profile_id profile_ids tm_version tm_url name_version_string is_regexp stash_role navbarpage rascal_hosts_by_cdn)
 	]
 );
@@ -58,6 +58,25 @@ sub tm_url {
 	my $self = shift;
 
 	return $self->db->resultset('Parameter')->search( { -and => [ name => 'tm.url', config_file => 'global' ] } )->get_column('value')->single();
+}
+
+sub trim_whitespace() {
+	my $param = shift;
+
+	if (ref($param) eq 'HASH') {
+		foreach my $key (keys %{$param}) {
+			${$param}{$key} =~ s/^\s+|\s+$//g;
+		}
+	} elsif (ref($param) eq 'ARRAY') {
+		for ($i=0; $i <= $#{$param}; $i++) {
+		   $param->[$i] =~ s/^\s+|\s+$//g;
+		}
+	} else {
+		$param =~ s/^\s+|\s+$//g;
+	}
+
+	return $param;
+
 }
 
 sub name_version_string {

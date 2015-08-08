@@ -270,6 +270,9 @@ sub check_server_input_cgi {
 	{
 		$paramHashRef->{$optionalParam} = $self->param($optionalParam);
 	}
+
+	$paramHashRef = &trim_whitespace( $paramHashRef );
+	
 	$err = &check_server_input( $self, $paramHashRef );
 	return $err;
 }
@@ -405,6 +408,8 @@ sub update {
 		$paramHashRef = &cgi_params_to_param_hash_ref($self);
 	}
 	my $id = $paramHashRef->{'id'};
+
+	$paramHashRef = &trim_whitespace( $paramHashRef );
 
 	my $err = &check_server_input_cgi($self);
 	if ( defined($err) && length($err) > 0 ) {
@@ -608,6 +613,9 @@ sub create {
 	if ( !defined( $paramHashRef->{'csv_line_number'} ) ) {
 		$err = &check_server_input_cgi($self);
 	}
+
+	$paramHashRef = &trim_whitespace( $paramHashRef );
+
 	my $xmpp_passwd = "BOOGER";
 	if ( defined($err) && length($err) > 0 ) {
 		$self->flash( alertmsg => "create():  [" . length($err) . "] " . $err );
