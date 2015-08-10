@@ -1,6 +1,16 @@
 angular.module('app', [])
 
 .controller('InitCtrl', function($scope, $http, $log) {
+    function setColumns(tableName) {
+        $http.get('http://127.0.0.1:8080/request/' + tableName).then(function(resp) {
+            $scope.columns = resp.data;
+            // For JSON responses, resp.data contains the result
+        }, function(err) {
+            console.error('ERR', err);
+            // err.status will contain the status code
+        })
+    }
+
     $http.get('http://127.0.0.1:8080/request/').then(function(resp) {
         $scope.tables = resp.data;
         // For JSON responses, resp.data contains the result
@@ -13,17 +23,10 @@ angular.module('app', [])
     $scope.get = function(table) {
         var tableName = angular.copy(table);
 
-        $http.get('http://127.0.0.1:8080/request/' + tableName).then(function(resp) {
-            $scope.columns = resp.data;
-            // For JSON responses, resp.data contains the result
-        }, function(err) {
-            console.error('ERR', err);
-            // err.status will contain the status code
-        })
+        setColumns(tableName);
 
         $http.get('http://127.0.0.1:8080/api/' + tableName).then(function(resp) {
             $scope.rows = resp.data.response;
-            console.log(resp.data);
             if (resp.data.error != "") {
                 alert(resp.data.error);
             }
@@ -38,14 +41,7 @@ angular.module('app', [])
         var tableName = angular.copy(table);
 
         if (typeof parameters !== 'undefined') {
-            $http.get('http://127.0.0.1:8080/request/' + tableName + "?" + parameters).then(function(resp) {
-                console.log(resp.data);
-                $scope.columns = resp.data;
-                // For JSON responses, resp.data contains the result
-            }, function(err) {
-                console.error('ERR', err);
-                // err.status will contain the status code
-            })
+            setColumns(tableName);
 
             $http.get('http://127.0.0.1:8080/api/' + tableName + "?" + parameters).then(function(resp) {
                 $scope.rows = resp.data.response;
@@ -64,14 +60,7 @@ angular.module('app', [])
 
     //DELETE
     $scope.delete = function(table, row) {
-        $http.get('http://127.0.0.1:8080/request/' + table).then(function(resp) {
-            console.log(resp.data);
-            $scope.columns = resp.data;
-            // For JSON responses, resp.data contains the result
-        }, function(err) {
-            console.error('ERR', err);
-            // err.status will contain the status code
-        })
+        setColumns(table);
 
         $http.delete('http://127.0.0.1:8080/api/' + table + "/" + row.id).then(function(resp) {
             $scope.rows = resp.data.response;
@@ -102,37 +91,19 @@ angular.module('app', [])
             // err.status will contain the status code
         })
 
-        //get columns
-        $http.get('http://127.0.0.1:8080/request/' + newView.Name).then(function(resp) {
-            console.log("COLUMNS: " + resp.data);
-            $scope.columns = resp.data;
-            // For JSON responses, resp.data contains the result
-        }, function(err) {
-            console.error('ERR', err);
-            // err.status will contain the status code
-        })
+        setColumns(newView.Name);
     }
 
     $scope.post = function(table, row) {
         var rowArray = new Array(row);
 
         //post it
-        console.log(table, row);
         $http.post('http://127.0.0.1:8080/api/' + table, rowArray).then(function(resp) {
             $scope.rows = resp.data.response;
             if (resp.data.error != "") {
                 alert(resp.data.error);
             }
 
-        }, function(err) {
-            console.error('ERR', err);
-            // err.status will contain the status code
-        })
-
-        //get columns
-        $http.get('http://127.0.0.1:8080/request/' + table).then(function(resp) {
-            $scope.columns = resp.data;
-            // For JSON responses, resp.data contains the result
         }, function(err) {
             console.error('ERR', err);
             // err.status will contain the status code
@@ -153,16 +124,6 @@ angular.module('app', [])
             console.error('ERR', err);
             // err.status will contain the status code
         })
-
-        //get columns
-        $http.get('http://127.0.0.1:8080/request/' + table).then(function(resp) {
-            $scope.columns = resp.data;
-            // For JSON responses, resp.data contains the result
-        }, function(err) {
-            console.error('ERR', err);
-            // err.status will contain the status code
-        })
     }
 
 })
-
