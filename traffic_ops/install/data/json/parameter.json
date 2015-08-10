@@ -304,13 +304,6 @@
 {"name":"tld.soa.refresh","config_file":"CRConfig.json","value":"28800"}
 {"name":"tld.ttls.NS","config_file":"CRConfig.json","value":"3600"}
 {"name":"trafficserver","config_file":"chkconfig","value":"0:off\t1:off\t2:on\t3:on\t4:on\t5:on\t6:off"}
-{"name":"astats_over_http","config_file":"package","value":"1.1-2.el6.x86_64"}
-{"name":"cacheurl","config_file":"package","value":"1.0-1.el6.x86_64"}
-{"name":"dscp_remap","config_file":"package","value":"1.0-1.el6.x86_64"}
-{"name":"regex_revalidate","config_file":"package","value":"1.0-1.el6.x86_64"}
-{"name":"remap_stats","config_file":"package","value":"1.0-1.el6.x86_64"}
-{"name":"url_sign","config_file":"package","value":"1.0-1.el6.x86_64"}
-{"name":"trafficserver","config_file":"package","value":"4.0.2-2.el6.x86_64"}
 {"name":"CONFIG proxy.config.allocator.debug_filter","config_file":"records.config","value":"INT 0"}
 {"name":"CONFIG proxy.config.allocator.enable_reclaim","config_file":"records.config","value":"INT 0"}
 {"name":"CONFIG proxy.config.allocator.max_overage","config_file":"records.config","value":"INT 3"}
@@ -328,7 +321,6 @@
 {"name":"CONFIG proxy.config.hostdb.ttl_mode","config_file":"records.config","value":"INT 0"}
 {"name":"CONFIG proxy.config.dns.lookup_timeout","config_file":"records.config","value":"INT 2"}
 {"name":"CONFIG proxy.config.hostdb.serve_stale_for","config_file":"records.config","value":"INT 6"}
-{"name":"trafficserver","config_file":"package","value":"4.2.1-6.el6.x86_64"}
 {"name":"CONFIG proxy.config.cache.enable_read_while_writer","config_file":"records.config","value":"INT 1"}
 {"name":"CONFIG proxy.config.http.background_fill_active_timeout","config_file":"records.config","value":"INT 0"}
 {"name":"CONFIG proxy.config.http.background_fill_completed_threshold","config_file":"records.config","value":"FLOAT 0.0"}
@@ -342,14 +334,7 @@
 {"name":"LogFormat.Name","config_file":"logs_xml.config","value":"custom_ats_2"}
 {"name":"LogObject.Format","config_file":"logs_xml.config","value":"custom_ats_2"}
 {"name":"LogObject.Filename","config_file":"logs_xml.config","value":"custom_ats_2"}
-{"name":"url_sig","config_file":"package","value":"1.0-3.el6.x86_64"}
-{"name":"astats_over_http","config_file":"package","value":"1.2-3.el6.x86_64"}
-{"name":"cacheurl","config_file":"package","value":"1.0-3.el6.x86_64"}
-{"name":"dscp_remap","config_file":"package","value":"1.0-3.el6.x86_64"}
-{"name":"remap_stats","config_file":"package","value":"1.0-4.el6.x86_64"}
-{"name":"regex_revalidate","config_file":"package","value":"1.0-4.el6.x86_64"}
 {"name":"CONFIG proxy.config.cache.ram_cache.size","config_file":"records.config","value":"INT 34359738368"}
-{"name":"header_rewrite","config_file":"package","value":"4.0.2-1.el6.x86_64"}
 {"name":"api.port","config_file":"server.xml","value":"3333"}
 {"name":"astats_over_http.so","config_file":"plugin.config","value":""}
 {"name":"allow_ip","config_file":"astats.config","value":"127.0.0.1,10.10.10.10/16"}
@@ -391,8 +376,6 @@
 {"name":"CONFIG proxy.config.ssl.SSLv3","config_file":"records.config","value":"INT 0"}
 {"name":"CONFIG proxy.config.ssl.server.multicert.filename","config_file":"records.config","value":"STRING ssl_multicert.config"}
 {"name":"location","config_file":"hdr_rw_freewheel-dns.config","value":"/opt/trafficserver/etc/trafficserver"}
-{"name":"astats_over_http","config_file":"package","value":"1.2-8.el6.x86_64"}
-{"name":"trafficserver","config_file":"package","value":"5.2.0-5807.d0a1296.el6.x86_64"}
 {"name":"CONFIG proxy.config.allocator.hugepages","config_file":"records.config","value":"INT 0"}
 {"name":"CONFIG proxy.config.http.negative_caching_enabled","config_file":"records.config","value":"INT 1"}
 {"name":"CONFIG proxy.config.http.negative_caching_lifetime","config_file":"records.config","value":"INT 3"}
