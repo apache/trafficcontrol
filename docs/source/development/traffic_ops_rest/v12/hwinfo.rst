@@ -15,7 +15,7 @@
 .. 
 
 
-.. _to-api-hwinfo:
+.. _to-api-v12-hwinfo:
 
 hwinfo
 ======
@@ -58,6 +58,5 @@ hwinfo
            "description": "Physical Disk 0:1:1"
         }
      ],
-     "version": "1.1"
     }
 

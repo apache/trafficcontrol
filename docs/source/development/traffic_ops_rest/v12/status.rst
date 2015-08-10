@@ -14,7 +14,7 @@
 .. limitations under the License.
 .. 
 
-.. _to-api-status:
+.. _to-api-v12-status:
 
 Status
 ======
@@ -74,6 +74,5 @@ Status
             "lastUpdated": "2013-02-13 16:34:29"
           }
         ],
-        "version": "1.1"
       }
 

@@ -17,7 +17,7 @@
 CDN 
 ===
 
-.. _to-api-cdn-health:
+.. _to-api-v11-cdn-health:
 
 Health
 ++++++
@@ -192,7 +192,7 @@ Health
 
 |
 
-.. _to-api-cdn-routing:
+.. _to-api-v11-cdn-routing:
 
 Routing
 +++++++
@@ -237,7 +237,7 @@ Routing
 
 |
 
-.. _to-api-cdn-metrics:
+.. _to-api-v11-cdn-metrics:
 
 Metrics
 +++++++
@@ -327,7 +327,7 @@ Metrics
 
 |
 
-.. _to-api-cdn-domains:
+.. _to-api-v11-cdn-domains:
 
 Domains
 +++++++
@@ -376,7 +376,7 @@ Domains
 
 |
 
-.. _to-api-cdn-topology:
+.. _to-api-v11-cdn-topology:
 
 Topology
 ++++++++
@@ -764,7 +764,7 @@ Topology
   TBD
 
  
-.. _to-api-cdn-dnsseckeys:
+.. _to-api-v11-cdn-dnsseckeys:
 
 DNSSEC Keys
 +++++++++++

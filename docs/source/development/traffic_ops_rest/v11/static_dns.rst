@@ -14,7 +14,7 @@
 .. limitations under the License.
 .. 
 
-.. _to-api-dns:
+.. _to-api-v11-dns:
 
 Static DNS Entries
 ==================

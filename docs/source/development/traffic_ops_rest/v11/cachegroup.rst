@@ -14,7 +14,7 @@
 .. limitations under the License.
 .. 
 
-.. _to-api-cachegroup:
+.. _to-api-v11-cachegroup:
 
 Cache Group
 ===========

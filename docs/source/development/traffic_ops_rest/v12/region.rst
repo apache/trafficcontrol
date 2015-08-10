@@ -14,7 +14,7 @@
 .. limitations under the License.
 .. 
 
-.. _to-api-region:
+.. _to-api-v12-region:
 
 Regions
 =======
@@ -48,6 +48,5 @@ Regions
            "id": "1"
         }
      ],
-     "version": "1.1"
     }
 

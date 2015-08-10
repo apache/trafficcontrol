@@ -15,7 +15,7 @@
 .. 
 
 
-.. _to-api-asn:
+.. _to-api-v12-asn:
 
 ASN
 ===
@@ -60,6 +60,5 @@ ASN
            }
         ]
      },
-     "version": "1.1"
     }
 

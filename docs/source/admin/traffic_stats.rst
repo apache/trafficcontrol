@@ -26,7 +26,8 @@ Traffic Stats consists of three components:  Traffic Stats, InfluxDb, and Grafan
 	- Download the Traffic Stats RPM from the traffic control `downloads <http://traffic-control-cdn.net/downloads/index.html>`_ page.
 	- Copy the Traffic Stats RPM to your server
 	- sudo rpm -ivh <traffic_stats rpm>
-Note:  This installation actually creates two separate services:  write_traffic_stats and ts_daily_summary.  More information on these services can be found in the overview section.     
+
+      Note:  This installation actually creates two separate services:  write_traffic_stats and ts_daily_summary.  More information on these services can be found in the overview section.     
 
 **Installing InfluxDb:**
 
@@ -43,6 +44,7 @@ Configuration
 
 	Traffic Stats’ configuration file can be found in /opt/traffic_stats/conf/traffic_stats.cfg.
 	The following values need to be configured: 
+
 	     - *toUser:* The user used to connect to Traffic Ops
 	     - *toPasswd:*  The password to use when connecting to Traffic Ops
 	     - *toUrl:*  The URL of the Traffic Ops server used by Traffic Stats

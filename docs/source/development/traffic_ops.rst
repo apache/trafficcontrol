@@ -459,7 +459,7 @@ The 3 most common errors returned by Traffic Ops are:
     [jvd@laika ~]$
 
 404 Not Found
-  When the resource (path) is non existant Traffic Ops returns a 404::
+  When the resource (path) is non existent Traffic Ops returns a 404::
 
     [jvd@laika ~]$ curl -v -H'Cookie: mojolicious=eyJleHBpcmVzIjoxNDI5NDAyMjAxLCJhdXRoX2RhdGEiOiJhZG1pbiJ9--f990d03b7180b1ece97c3bb5ca69803cd6a79862;' -H "Accept: application/json" http://localhost:3000/api/1.1/asnsjj.json
     * Hostname was NOT found in DNS cache
@@ -532,25 +532,52 @@ API 1.1 Reference
 .. toctree:: 
   :maxdepth: 1
 
-  traffic_ops_rest/asn
-  traffic_ops_rest/cachegroup
-  traffic_ops_rest/cdn
-  traffic_ops_rest/changelog
-  traffic_ops_rest/deliveryservice
-  traffic_ops_rest/hwinfo
-  traffic_ops_rest/parameter
-  traffic_ops_rest/phys_location
-  traffic_ops_rest/profile
-  traffic_ops_rest/redis
-  traffic_ops_rest/region
-  traffic_ops_rest/role
-  traffic_ops_rest/server
-  traffic_ops_rest/static_dns
-  traffic_ops_rest/status
-  traffic_ops_rest/system
-  traffic_ops_rest/to_extension
-  traffic_ops_rest/type
-  traffic_ops_rest/user
+  traffic_ops_rest/v11/asn
+  traffic_ops_rest/v11/cachegroup
+  traffic_ops_rest/v11/cdn
+  traffic_ops_rest/v11/changelog
+  traffic_ops_rest/v11/deliveryservice
+  traffic_ops_rest/v11/hwinfo
+  traffic_ops_rest/v11/parameter
+  traffic_ops_rest/v11/phys_location
+  traffic_ops_rest/v11/profile
+  traffic_ops_rest/v11/redis
+  traffic_ops_rest/v11/region
+  traffic_ops_rest/v11/role
+  traffic_ops_rest/v11/server
+  traffic_ops_rest/v11/static_dns
+  traffic_ops_rest/v11/status
+  traffic_ops_rest/v11/system
+  traffic_ops_rest/v11/to_extension
+  traffic_ops_rest/v11/type
+  traffic_ops_rest/v11/user
+
+API 1.2 Reference 
+-----------------
+
+.. toctree:: 
+  :maxdepth: 1
+
+  traffic_ops_rest/v12/asn
+  traffic_ops_rest/v12/cachegroup
+  traffic_ops_rest/v12/cdn
+  traffic_ops_rest/v12/changelog
+  traffic_ops_rest/v12/deliveryservice
+  traffic_ops_rest/v12/hwinfo
+  traffic_ops_rest/v12/parameter
+  traffic_ops_rest/v12/phys_location
+  traffic_ops_rest/v12/profile
+  traffic_ops_rest/v12/influxdb
+  traffic_ops_rest/v12/region
+  traffic_ops_rest/v12/role
+  traffic_ops_rest/v12/server
+  traffic_ops_rest/v12/static_dns
+  traffic_ops_rest/v12/status
+  traffic_ops_rest/v12/system
+  traffic_ops_rest/v12/to_extension
+  traffic_ops_rest/v12/type
+  traffic_ops_rest/v12/user
+
 
 
 

@@ -14,10 +14,10 @@
 .. limitations under the License.
 .. 
 
-.. _to-api-redis:
+.. _to-api-v12-influxdb:
 
-Redis
-=====
+InfluxDB
+==========
 
 .. Note:: The redis documentation needs a thorough review!
 
@@ -74,7 +74,6 @@ Response Content Type: application/json
          "69.241.82.126"
       ]
    ],
-   "version": "1.1"
   }
 
 |
