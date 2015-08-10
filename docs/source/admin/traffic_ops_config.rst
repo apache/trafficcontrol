@@ -103,25 +103,19 @@ Below is a list of cache parameters that are likely to need changes from the def
 | availableBandwidthInKbps |                   | For example: "">1500000" means stop sending new traffic to this cache when traffic is at 8.5Gbps on a 10Gbps interface. |
 +--------------------------+-------------------+-------------------------------------------------------------------------------------------------------------------------+
 
-Below is a list of Traffic Server plugins that need to be configured with the correct version in the parameter table:
+Below is a list of Traffic Server plugins that need to be configured in the parameter table:
 
-+------------------+-------------+------------------------------------------------------+--------------------------------------------------------------------------------------------------------------------+
-|       Name       | Config file |                     Description                      |                                                      Details                                                       |
-+==================+=============+======================================================+====================================================================================================================+
-| astats_over_http | package     | The package version for the astats_over_http plugin. | `astats_over_http <http://traffic-control-cdn.net/downloads/index.html>`_                                          |
-+------------------+-------------+------------------------------------------------------+--------------------------------------------------------------------------------------------------------------------+
-| cacheurl         | package     | The package version for the cacheurl plugin.         | `cacheurl <https://docs.trafficserver.apache.org/en/5.3.x/reference/plugins/cacheurl.en.html?highlight=cacheurl>`_ |
-+------------------+-------------+------------------------------------------------------+--------------------------------------------------------------------------------------------------------------------+
-| regex_revalidate | package     | The package version for the regex_revalidate plugin. | `regex_revalidate <https://docs.trafficserver.apache.org/en/5.3.x/reference/plugins/regex_remap.en.html>`_         |
-+------------------+-------------+------------------------------------------------------+--------------------------------------------------------------------------------------------------------------------+
-| remap_stats      | package     | The package version for the remap_stats plugin.      | `remap_stats <https://github.com/apache/trafficserver/tree/master/plugins/experimental/remap_stats>`_              |
-+------------------+-------------+------------------------------------------------------+--------------------------------------------------------------------------------------------------------------------+
-| trafficserver    | package     | The package version for the trafficserver plugin.    | `trafficserver <http://traffic-control-cdn.net/downloads/index.html>`_                                             |
-+------------------+-------------+------------------------------------------------------+--------------------------------------------------------------------------------------------------------------------+
-| header_rewrite   | package     | The package version for the header_rewrite plugin.   | `header_rewrite <https://docs.trafficserver.apache.org/en/5.3.x/reference/plugins/header_rewrite.en.html>`_        |
-+------------------+-------------+------------------------------------------------------+--------------------------------------------------------------------------------------------------------------------+
-| url_sig          | package     | The package version for the url_sig plugin.          | `url_sig <https://github.com/apache/trafficserver/tree/master/plugins/experimental/url_sig>`_                      |
-+------------------+-------------+------------------------------------------------------+--------------------------------------------------------------------------------------------------------------------+
++------------------+-------------+------------------------------------------------------+------------------------------------------------------------------------------------------------------------+
+|       Name       | Config file |                     Description                      |                                                  Details                                                   |
++==================+=============+======================================================+============================================================================================================+
+| astats_over_http | package     | The package version for the astats_over_http plugin. | `astats_over_http <http://traffic-control-cdn.net/downloads/index.html>`_                                  |
++------------------+-------------+------------------------------------------------------+------------------------------------------------------------------------------------------------------------+
+| trafficserver    | package     | The package version for the trafficserver plugin.    | `trafficserver <http://traffic-control-cdn.net/downloads/index.html>`_                                     |
++------------------+-------------+------------------------------------------------------+------------------------------------------------------------------------------------------------------------+
+| regex_revalidate | package     | The config to be used for regex_revalidate.          | `regex_revalidate <https://docs.trafficserver.apache.org/en/5.3.x/reference/plugins/regex_remap.en.html>`_ |
++------------------+-------------+------------------------------------------------------+------------------------------------------------------------------------------------------------------------+
+| remap_stats      | package     | The config to be used for remap_stats.               | `remap_stats <https://github.com/apache/trafficserver/tree/master/plugins/experimental/remap_stats>`_      |
++------------------+-------------+------------------------------------------------------+------------------------------------------------------------------------------------------------------------+
 
 
 Regions, Locations and Cache Groups
