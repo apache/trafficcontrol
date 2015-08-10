@@ -19,7 +19,8 @@
 	  	<li><a id="nav-eh">Health</a>
 	  		<ul>
 	  			<li><a href="/rascalstatus">Table View</a></li>
-	  			<li><a href="/visualstatus/all:all:all">Graph View</a></li>
+	  			<li><a href="/visualstatus/all:all:all">Graph View (new)</a></li>
+	  			<li><a href="/visualstatus_redis/all:all:all">Graph View (old)</a></li>
 			  	<li><a href="/server_check">Server Checks</a></li>
 	  		    <li><a href="/dailysummary">Daily Summary</a></li>
 
