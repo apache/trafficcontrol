@@ -22,15 +22,19 @@
 			  <!-- ADVANCED OPTIONS-->
 			</form>
 		  </li>
-
 		  <!-- ADVANCED QUERIES -->
 		  <li ng-show="showAdvanced">
-			<h6 data-toggle="tooltip" title="Separate specs with '&'.">Advanced:</h6><input type="text" ng-model="parameters"></input>
-			<button ng-click="update(table, parameters)" class="btn btn-default">Update</button>
-		  </li>
 
-		  <!-- ADD VIEW -->
-		  <li class="pull-right">
+			<div class="input-append">
+			  <span data-toggle="tooltip" title="Separate specs with '&'.">Advanced:</span>
+			  <input type="text" ng-model="parameters"></input>
+			  <button ng-click="update(table, parameters)" class="btn btn-default">Update</button>
+			</div>
+		  </li>
+		</ul>
+		<!-- ADD VIEW -->
+		<ul class="nav navbar-nav navbar-right">
+		  <li>
 			<button class="btn btn-default" ng-show="!showAddView" ng-click="showAddView = ! showAddView">Add View</button>
 			<button class="btn btn-default" ng-show="showAddView" ng-click="showAddView = ! showAddView">Cancel Add View</button>
 		  </li>
@@ -50,8 +54,6 @@
 	<!--table-->
 	<div>
 	  <form>
-
-
 		<button ng-show="showAddRow" ng-click="showAddRowCols = ! showAddRowCols; showAddRow = ! showAddRow">Add Row</button>
 		<button ng-show="showAddRowCols" ng-click="showAddRowCols = ! showAddRowCols; showAddRow = ! showAddRow">Cancel</i></button>
 		<!-- ADD ROW PART -->
@@ -67,7 +69,7 @@
 		<br/>
 		<div id="notification"></div>
 		<!-- MAIN TABLE DISPLAY -->
-		<table class="table-striped table-hover table-bordered table-condensed">
+		<table style="table-layout:fixed;" class="table-striped table-hover table-bordered table-condensed">
 		  <!-- HEADERS -->
 
 		  <thead>
@@ -79,15 +81,14 @@
 		  <!-- ROWS -->
 		  <tbody>
 			<tr ng-repeat="row in rows">
-			  <!-- ROWS/ FORMS -->
-			  
+			  <!-- ROWS/ FORMS -->		  
 
-<td ng-show="!showEdit" ng-repeat="value in row">{{value}}</td>
-			  <td ng-show="showEdit" ng-repeat="(key, value) in row"><input type="text" size=20 ng-model=row[key]></td>
+			  <td ng-show="!showEdit" ng-repeat="value in row | filter: '!id' | filter: '!last_updated'" style="width:100px">{{value}}</td>
+			  <td ng-show="showEdit" ng-repeat="(key, value) in row | filter: '!id'"><input type="text" style="width:90px" ng-model=row[key]></td>
 
 			  <!--EDIT/SAVE-->
-			  <td><button ng-show="!showEdit" ng-click="showEdit = ! showEdit">Edit</button></td>
-			  <td><button ng-show="showEdit" ng-click="showEdit = ! showEdit; put(table, row)">Save</button></td>
+			  <td ng-show="!showEdit" ng-click="showEdit = ! showEdit"><button>Edit</button></td>
+			  <td ng-show="showEdit" ng-click="showEdit = ! showEdit; put(table, row)"><button>Save</button></td>
 
 			  <!-- DELETE -->
 			  <td><button ng-click="delete(table, row)">Delete</button></td>

@@ -39,13 +39,6 @@ var (
 	db = sqlParser.InitializeDatabase(username, password, database)
 )
 
-func check(e error, w http.ResponseWriter) {
-	if e != nil {
-		fmt.Println(e)
-		http.Error(w, e.Error(), http.StatusNotFound)
-	}
-}
-
 func requestHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Access-Control-Allow-Origin", "*")
 	path := strings.Split(r.URL.Path[1:], "/")
@@ -64,7 +57,7 @@ func requestHandler(w http.ResponseWriter, r *http.Request) {
 func apiHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Access-Control-Allow-Origin", "*")
 	w.Header().Set("Access-Control-Allow-Methods", "GET, PUT, POST, DELETE")
-	w.Header().Set("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type")
+	w.Header().Set("Access-Control-Allow-Headers", "Origin, Authorization, X-Requested-With, Content-Type")
 
 	//url of type "/table?parameterA=valueA&parameterB=valueB/id
 	path := r.URL.Path[1:]
@@ -78,33 +71,42 @@ func apiHandler(w http.ResponseWriter, r *http.Request) {
 	tableName := request.TableName
 	tableParameters := request.Parameters
 
+	//for error p urposes
 	var err error
+	errString := ""
+
 	if r.Method == "POST" {
 		bodyStr, _ := ioutil.ReadAll(r.Body)
 		tableName, err = sqlParser.Post(tableName, bodyStr)
-		check(err, w)
+		if err != nil {
+			errString = err.Error()
+		}
 	} else if r.Method == "DELETE" {
 		err = sqlParser.Delete(tableName, tableParameters)
-		check(err, w)
+		if err != nil {
+			errString = err.Error()
+		}
 		tableParameters = tableParameters[:0]
 	} else if r.Method == "PUT" {
 		bodyStr, _ := ioutil.ReadAll(r.Body)
 		err = sqlParser.Put(tableName, tableParameters, bodyStr)
-		check(err, w)
+		if err != nil {
+			errString = err.Error()
+		}
 		tableParameters = tableParameters[:0]
 	}
 
 	//GETS the request
 	if tableName != "" {
 		rows, err := sqlParser.Get(tableName, tableParameters)
-		check(err, w)
-
-		if err == nil {
-			resp := outputFormatter.MakeWrapper(rows)
-			//encoder writes the resultant "Response" struct (see outputFormatter) to writer
-			enc := json.NewEncoder(w)
-			enc.Encode(resp)
+		if err != nil {
+			errString = err.Error()
 		}
+
+		resp := outputFormatter.MakeWrapper(rows, errString)
+		//encoder writes the resultant "Response" struct (see outputFormatter) to writer
+		enc := json.NewEncoder(w)
+		enc.Encode(resp)
 	}
 }
 

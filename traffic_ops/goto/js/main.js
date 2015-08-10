@@ -1,4 +1,3 @@
-
 angular.module('app', [])
 
 .controller('InitCtrl', function($scope, $http, $log) {
@@ -15,7 +14,6 @@ angular.module('app', [])
         var tableName = angular.copy(table);
 
         $http.get('http://127.0.0.1:8080/request/' + tableName).then(function(resp) {
-            console.log(resp.data);
             $scope.columns = resp.data;
             // For JSON responses, resp.data contains the result
         }, function(err) {
@@ -24,12 +22,11 @@ angular.module('app', [])
         })
 
         $http.get('http://127.0.0.1:8080/api/' + tableName).then(function(resp) {
-$log.debug(resp.status);
- if (resp.status == 200){
-			$log.debug(resp);
-			//console.log(resp.data.response);
             $scope.rows = resp.data.response;
-}
+            console.log(resp.data);
+            if (resp.data.error != "") {
+                alert(resp.data.error);
+            }
         }, function(err) {
             console.error('ERR', err);
             // err.status will contain the status code
@@ -38,10 +35,8 @@ $log.debug(resp.status);
 
     //GET
     $scope.update = function(table, parameters) {
-        console.log("HELLO");
         var tableName = angular.copy(table);
 
-	   
         if (typeof parameters !== 'undefined') {
             $http.get('http://127.0.0.1:8080/request/' + tableName + "?" + parameters).then(function(resp) {
                 console.log(resp.data);
@@ -54,6 +49,10 @@ $log.debug(resp.status);
 
             $http.get('http://127.0.0.1:8080/api/' + tableName + "?" + parameters).then(function(resp) {
                 $scope.rows = resp.data.response;
+                if (resp.data.error != "") {
+                    alert(resp.data.error);
+                }
+
             }, function(err) {
                 console.error('ERR', err);
                 // err.status will contain the status code
@@ -76,6 +75,10 @@ $log.debug(resp.status);
 
         $http.delete('http://127.0.0.1:8080/api/' + table + "/" + row.id).then(function(resp) {
             $scope.rows = resp.data.response;
+            if (resp.data.error != "") {
+                alert(resp.data.error);
+            }
+
             //make table
         }, function(err) {
             console.error('ERR', err);
@@ -90,6 +93,10 @@ $log.debug(resp.status);
         //post it
         $http.post('http://127.0.0.1:8080/api/', viewArray).then(function(resp) {
             $scope.rows = resp.data.response;
+            if (resp.data.error != "") {
+                alert(resp.data.error);
+            }
+
         }, function(err) {
             console.error('ERR', err);
             // err.status will contain the status code
@@ -108,13 +115,15 @@ $log.debug(resp.status);
 
     $scope.post = function(table, row) {
         var rowArray = new Array(row);
-        console.log("New Array");
-        console.log(newArray);
 
         //post it
         console.log(table, row);
         $http.post('http://127.0.0.1:8080/api/' + table, rowArray).then(function(resp) {
             $scope.rows = resp.data.response;
+            if (resp.data.error != "") {
+                alert(resp.data.error);
+            }
+
         }, function(err) {
             console.error('ERR', err);
             // err.status will contain the status code
@@ -136,6 +145,10 @@ $log.debug(resp.status);
         //post it
         $http.put('http://127.0.0.1:8080/api/' + table + "/" + row.id, rowArray).then(function(resp) {
             $scope.rows = resp.data.response;
+            if (resp.data.error != "") {
+                alert(resp.data.error);
+            }
+
         }, function(err) {
             console.error('ERR', err);
             // err.status will contain the status code
@@ -152,3 +165,4 @@ $log.debug(resp.status);
     }
 
 })
+
