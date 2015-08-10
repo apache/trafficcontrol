@@ -33,7 +33,7 @@ $(function(){
 		$.get("/api/1.1/cachegroups.json", function(data){
 		var response = data['response'];
 		$.each(response, function(idx, val) {
-			if (response[idx].name == "<%= stash 'cachegroup' %>") {
+			if (response[idx].id == "<%= stash 'cachegroup' %>") {
 				$("#cachegroup").append("<option selected=\"selected\" value=" + response[idx].id + ">" + response[idx].name + "</option>");
 			} else {
 				$("#cachegroup").append("<option value=" + response[idx].id + ">" + response[idx].name + "</option>");
