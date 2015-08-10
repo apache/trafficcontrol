@@ -51,7 +51,6 @@ Types
            "description": "Static DNS AAAA entry"
         }
      ],
-     "version": "1.1"
     }
 
 
@@ -89,6 +88,5 @@ Types
            "name": "CCR"
         }
      ],
-     "version": "1.1"
     }
 

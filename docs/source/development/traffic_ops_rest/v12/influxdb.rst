@@ -22,7 +22,7 @@ InfluxDB
 .. Note:: The redis documentation needs a thorough review!
 
 
-**GET /api/1.1/traffic_monitor/stats.json**
+**GET /api/1.2/traffic_monitor/stats.json**
 
 Authentication Required: Yes
 
@@ -78,7 +78,7 @@ Response Content Type: application/json
 
 |
 
-**GET /api/1.1/redis/stats.json**
+**GET /api/1.2/redis/stats.json**
 
 Authentication Required: Yes
 
@@ -130,7 +130,7 @@ Response Content Type: application/json
 
 |
 
-**GET /api/1.1/redis/info/:host_name.json**
+**GET /api/1.2/redis/info/:host_name.json**
 
 Authentication Required: Yes
 
@@ -423,7 +423,7 @@ Response Content Type: application/json
 |
 
 
-**GET /api/1.1/redis/match/#match/start_date/:start_date/end_date/:end_date/interval/:interval.json**
+**GET /api/1.2/redis/match/#match/start_date/:start_date/end_date/:end_date/interval/:interval.json**
 
 Authentication Required: 
 

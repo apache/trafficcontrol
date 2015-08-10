@@ -19,7 +19,7 @@
 Static DNS Entries
 ==================
 
-**GET /api/1.1/staticdnsentries.json**
+**GET /api/1.2/staticdnsentries.json**
 
 Authentication Required: Yes
 

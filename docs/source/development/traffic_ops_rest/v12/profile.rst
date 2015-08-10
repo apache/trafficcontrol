@@ -20,7 +20,7 @@
 Profiles
 ========
 
-**GET /api/1.1/profiles**
+**GET /api/1.2/profiles**
 
 	Authentication Required: Yes
 
@@ -47,7 +47,7 @@ Profiles
 | 
 
 
-**GET /api/1.1/profiles/trimmed.json**
+**GET /api/1.2/profiles/trimmed.json**
 
 	Authentication Required: Yes
 

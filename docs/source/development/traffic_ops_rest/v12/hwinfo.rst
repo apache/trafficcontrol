@@ -20,7 +20,7 @@
 hwinfo
 ======
 
-**GET /api/1.1/hwinfo.json**
+**GET /api/1.2/hwinfo.json**
 
   Authentication Required: Yes
 

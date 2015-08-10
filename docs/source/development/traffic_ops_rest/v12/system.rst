@@ -19,7 +19,7 @@
 System
 ======
 
-**GET /api/1.1/system/info.json**
+**GET /api/1.2/system/info.json**
 
   Authentication Required: Yes
 

@@ -163,7 +163,6 @@ Users
                             “gid”: "0",
                             “postalCode”: ""
            },
-           “version”: "1.1"
     }
 
 |
@@ -262,7 +261,6 @@ Users
                             "text": "UserProfile was successfully updated."
                     }
             ],
-            "version": "1.1"
     }
 
 
@@ -330,7 +328,6 @@ Users
            "startTime": "2015-01-21 10:45:38"
         }
      ],
-     "version": "1.1"
     }
 
 
@@ -395,7 +392,6 @@ Users
                             “text”: "Successfully created purge job for: ."
                       }
                   ],
-          “version”: "1.1"
     }
 
 
@@ -451,7 +447,6 @@ Users
            "text": "Successfully logged in."
         }
      ],
-     "version": "1.1"
     }
 
 |
@@ -492,7 +487,6 @@ Users
            "id": "280"
         }
      ],
-     "version": "1.1"
     }
 
 |
@@ -545,7 +539,6 @@ Users
            "text": "Unauthorized, please log in."
         }
      ],
-     "version": "1.1"
     }
 
 
@@ -583,7 +576,6 @@ Users
            "text": "You are logged out."
         }
      ],
-     "version": "1.1"
     }
 
 
@@ -637,7 +629,6 @@ Users
            "text": "Successfully logged in."
         }
      ],
-     "version": "1.1"
     }
 
   

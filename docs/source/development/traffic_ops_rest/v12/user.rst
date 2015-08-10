@@ -19,7 +19,7 @@
 Users
 =====
 
-**GET /api/1.1/users.json**
+**GET /api/1.2/users.json**
 
   Retrieves all users.
 
@@ -95,7 +95,7 @@ Users
 
 |
 
-**GET /api/1.1/user/current.json**
+**GET /api/1.2/user/current.json**
 
   Retrieves the profile for the authenticated user.
 
@@ -167,7 +167,7 @@ Users
 
 |
   
-**POST /api/1.1/user/current/update**
+**POST /api/1.2/user/current/update**
 
   Updates the date for the authenticated user.
 
@@ -264,7 +264,7 @@ Users
     }
 
 
-**GET /api/1.1/user/current/jobs.json**
+**GET /api/1.2/user/current/jobs.json**
 
   Retrieves user purge jobs.
 
@@ -333,7 +333,7 @@ Users
 
 |
 
-**POST/api/1.1/user/current/jobs**
+**POST/api/1.2/user/current/jobs**
 
   Creates a purge job.
 
@@ -397,7 +397,7 @@ Users
 
 |
 
-**POST /api/1.1/user/login { u: '', p: '' }**
+**POST /api/1.2/user/login { u: '', p: '' }**
 
   Authentication of a user using username and password. Traffic Ops will send back a session cookie.
 
@@ -451,7 +451,7 @@ Users
 
 |
 
-**GET /api/1.1/user/:id/deliveryservices/available.json**
+**GET /api/1.2/user/:id/deliveryservices/available.json**
 
   Authentication Required: Yes
 
@@ -491,7 +491,7 @@ Users
 
 |
 
-**POST /api/1.1/user/login/token**
+**POST /api/1.2/user/login/token**
 
   Authentication of a user using a token.
 
@@ -545,7 +545,7 @@ Users
 |
 
 
-**POST /api/1.1/user/logout**
+**POST /api/1.2/user/logout**
 
   User logout. Invalidates the session cookie.
 
@@ -581,7 +581,7 @@ Users
 
 |
 
-**POST /api/1.1/user/reset_password**
+**POST /api/1.2/user/reset_password**
 
   Reset user password.
 

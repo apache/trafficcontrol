@@ -20,7 +20,7 @@
 Change Logs
 ===========
 
-**GET /api/1.1/logs.json**
+**GET /api/1.2/logs.json**
 
   **Response Properties**
 
@@ -65,7 +65,7 @@ Change Logs
 
 |
 
-**GET /api/1.1/logs/:days/days.json**
+**GET /api/1.2/logs/:days/days.json**
 
   **Request Route Parameters**
 
@@ -118,7 +118,7 @@ Change Logs
 
 |
 
-**GET /api/1.1/logs/newcount.json**
+**GET /api/1.2/logs/newcount.json**
 
   **Response Properties**
 

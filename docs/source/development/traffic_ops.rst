@@ -32,11 +32,11 @@ To work on Traffic Ops you need a \*nix (MacOS and Linux are most commonly used)
 * MySQL 5.1.52
 
 Traffic Ops Project Tree Overview
-=================================
+=======================================
 
 **/opt/traffic_ops/app**
 
-* bin/ - Directory for scripts, cronjobs, etc.
+* bin/ - Directory for scripts, cronjobs, etc
 
 * conf/
 
@@ -222,7 +222,7 @@ To install the Traffic Ops Developer environment:
 5. (Optional) To load temporary data into the tables: ``$ perl bin/db/setup_kabletown.pl``
 
 
-6. To start Traffic Ops, enter ``$ bin/start.sh``
+6. To start Traffic Ops, enter ``$ bin/start.pl``
 
    The local Traffic Ops instance uses an open source framework called morbo, starting following the start command execution.
 
@@ -256,7 +256,7 @@ The KableTown CDN example
 The integration tests will load an example CDN with most of the features of Traffic Control being used. This is mostly for testing purposes, but can also be used as an example of how to configure certain features. To load the KableTown CDN example and access it:
 
 1. Run the integration tests 
-2. Start morbo against the integration database: ``export MOJO_MODE=integration; ./bin/start.sh``
+2. Start morbo against the integration database: ``export MOJO_MODE=integration; ./bin/start.pl``
 3. Using a browser, navigate to the given address: ``http://127.0.0.1:3000``
 4. For the initial log in:
   
@@ -356,7 +356,6 @@ All successful responses have the following structure: ::
 
     {
       "response": <JSON object with main response>,
-      "version": "1.1"
     }
 
 To make the documentation easier to read, only the ``<JSON object with main response>`` is documented, even though the response and version fields are always present. 
@@ -370,7 +369,7 @@ Using API Endpoints
 Example: ::
   
     [jvd@laika ~]$ curl -H "Accept: application/json" http://localhost:3000/api/1.1/usage/asns.json
-    {"version":"1.1","alerts":[{"level":"error","text":"Unauthorized, please log in."}]}
+    {"alerts":[{"level":"error","text":"Unauthorized, please log in."}]}
     [jvd@laika ~]$
     [jvd@laika ~]$ curl -v -H "Accept: application/json" -v -X POST --data '{ "u":"admin", "p":"secret_passwd" }' http://localhost:3000/api/1.1/user/login
     * Hostname was NOT found in DNS cache
@@ -401,11 +400,11 @@ Example: ::
     < Server: Mojolicious (Perl)
     <
     * Connection #0 to host localhost left intact
-    {"alerts":[{"level":"success","text":"Successfully logged in."}],"version":"1.1"}
+    {"alerts":[{"level":"success","text":"Successfully logged in."}]}
     [jvd@laika ~]$
 
     [jvd@laika ~]$ curl -H'Cookie: mojolicious=eyJleHBpcmVzIjoxNDI5NDAyMjAxLCJhdXRoX2RhdGEiOiJhZG1pbiJ9--f990d03b7180b1ece97c3bb5ca69803cd6a79862;' -H "Accept: application/json" http://localhost:3000/api/1.1/asns.json
-    {"response":{"asns":[{"lastUpdated":"2012-09-17 15:41:22", .. asn data deleted ..   ,"version":"1.1"}
+    {"response":{"asns":[{"lastUpdated":"2012-09-17 15:41:22", .. asn data deleted ..   ,}
     [jvd@laika ~]$
 
 API Errors
@@ -455,7 +454,7 @@ The 3 most common errors returned by Traffic Ops are:
     < Access-Control-Allow-Credentials: true
     <
     * Connection #0 to host localhost left intact
-    {"version":"1.1","alerts":[{"level":"error","text":"Unauthorized, please log in."}]}
+    {"alerts":[{"level":"error","text":"Unauthorized, please log in."}]}
     [jvd@laika ~]$
 
 404 Not Found
@@ -488,7 +487,7 @@ The 3 most common errors returned by Traffic Ops are:
     < Access-Control-Allow-Origin: http://localhost:8080
     <
     * Connection #0 to host localhost left intact
-    {"version":"1.1","alerts":[{"text":"Resource not found.","level":"error"}]}
+    {"alerts":[{"text":"Resource not found.","level":"error"}]}
     [jvd@laika ~]$
 
 500 Internal Server Error

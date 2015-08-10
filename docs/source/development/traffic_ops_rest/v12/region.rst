@@ -19,7 +19,7 @@
 Regions
 =======
 
-**GET /api/1.1/regions.json**
+**GET /api/1.2/regions.json**
 
   Authentication Required: 
 

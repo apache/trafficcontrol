@@ -185,7 +185,6 @@ Delivery Service
         { .. },
         { .. }
       ],
-      "version": "1.1"
     }
 
 
@@ -353,7 +352,6 @@ Delivery Service
           "xmlId": "cdl-c2"
         }
       ],
-      "version": "1.1"
     }
 
 .. _to-api-v11-ds-health:
@@ -405,7 +403,6 @@ Health
         "utilizedPercent": 10.9060020300395,
         "maintenancePercent": 0.0000139494071146245
      },
-     "version": "1.1"
     }
 
 
@@ -455,7 +452,6 @@ Health
         "cz": 62.1144608981131,
         "dsr": 0
      },
-     "version": "1.1"
     }
 
 
@@ -528,7 +524,6 @@ interval/:interval/window_start/:window_start/window_end/:window_end.json**
         "max": 205772883.28367,
         "total": 3643217414091.13
      },
-     "version": "1.1"
     }
 
 
@@ -739,7 +734,6 @@ end_date/:end/interval/:interval.json**
            "label": "MID Kbps"
         }
      ],
-     "version": "1.1"
     }
 
 
@@ -792,7 +786,6 @@ Server
            "deliveryService": "1"
         },
      ],
-     "version": "1.1",
      "limit": 2
     }
 
@@ -856,7 +849,6 @@ SSL Keys
   **Response Example** ::
 
     {  
-      "version": "1.1",
       "response": {
         "certificate": {
           "crt": "crt",
@@ -928,7 +920,6 @@ SSL Keys
   **Response Example** ::
 
     {  
-      "version": "1.1",
       "response": {
         "certificate": {
           "crt": "crt",
@@ -980,7 +971,6 @@ SSL Keys
   **Response Example** ::
 
     {  
-      "version": "1.1",
       "response": "Successfully deleted ssl keys for <xml_id>"
     }
 
@@ -1053,7 +1043,6 @@ SSL Keys
   **Response Example** ::
 
     {  
-      "version": "1.1",
       "response": "Successfully created ssl keys for ds-01"
     }
 
@@ -1110,6 +1099,5 @@ SSL Keys
   **Response Example** ::
 
     {  
-      "version": "1.1",
       "response": "Successfully added ssl keys for ds-01"
     }

@@ -18,7 +18,7 @@
 
 TO Extensions
 =============
-**GET /api/1.1/to_extensions.json**
+**GET /api/1.2/to_extensions.json**
 
 Retrieves the list of extensions.
 
@@ -63,7 +63,7 @@ Response Content Type: application/json
                         name: "ILO_PING",
                         description: null,
                         info_url: "http://foo.com/bar.html",
-                        additional_config_json: "{ "path": "/api/1.1/servers.json", "match": { "type": "EDGE"}, "select": "ilo_ip_address", "cron": "9 * * * *" }",
+                        additional_config_json: "{ "path": "/api/1.2/servers.json", "match": { "type": "EDGE"}, "select": "ilo_ip_address", "cron": "9 * * * *" }",
                         isactive: "1",
                         id: "1",
                         type: "CHECK_EXTENSION_BOOL",
@@ -75,7 +75,7 @@ Response Content Type: application/json
                         name: "10G_PING",
                         description: null,
                         info_url: "http://foo.com/bar.html",
-                        additional_config_json: "{ "path": "/api/1.1/servers.json", "match": { "type": "EDGE"}, "select": "ip_address", "cron": "18 * * * *" }",
+                        additional_config_json: "{ "path": "/api/1.2/servers.json", "match": { "type": "EDGE"}, "select": "ip_address", "cron": "18 * * * *" }",
                         isactive: "1",
                         id: "2",
                         type: "CHECK_EXTENSION_BOOL",
@@ -87,7 +87,7 @@ Response Content Type: application/json
 
 |
 
-**POST /api/1.1/to_extensions**
+**POST /api/1.2/to_extensions**
 
   Creates a Traffic Ops extension.
 
@@ -126,7 +126,7 @@ Response Content Type: application/json
           "info_url": "http://foo.com/bar.html",
           "script_file": "ping",
           "isactive": "1",
-          "additional_config_json": "{ "path": "/api/1.1/servers.json", "match": { "type": "EDGE"}",
+          "additional_config_json": "{ "path": "/api/1.2/servers.json", "match": { "type": "EDGE"}",
           "description": null,
           "servercheck_short_name": "ILO"
           "type": "CHECK_EXTENSION_BOOL",
@@ -161,7 +161,7 @@ Response Content Type: application/json
 
 |
 
-**POST /api/1.1/to_extensions/:id/delete**
+**POST /api/1.2/to_extensions/:id/delete**
 
   Deletes a Traffic Ops extension.
 

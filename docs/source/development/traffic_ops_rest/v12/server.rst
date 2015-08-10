@@ -18,7 +18,7 @@
 
 Server
 ======
-**GET /api/1.1/servers.json**
+**GET /api/1.2/servers.json**
 
   Retrieves properties of CDN servers.
 
@@ -135,7 +135,7 @@ Server
 
 |
 
-**GET /api/1.1/servers/summary.json**
+**GET /api/1.2/servers/summary.json**
 
   Retrieves a count of CDN servers by type.
 
@@ -179,7 +179,7 @@ Server
 
 |
 
-**GET /api/1.1/servers/hostname/:name/details.json**
+**GET /api/1.2/servers/hostname/:name/details.json**
 
   Retrieves the details of a server.
 
@@ -358,7 +358,7 @@ Server
 
 |
 
-**POST /api/1.1/servercheck**
+**POST /api/1.2/servercheck**
 
   Post a server check result to the serverchecks table.
 

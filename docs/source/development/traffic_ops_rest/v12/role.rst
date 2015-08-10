@@ -19,7 +19,7 @@
 Roles
 =====
 
-**GET /api/1.1/roles.json**
+**GET /api/1.2/roles.json**
 
   Authentication Required: Yes
 

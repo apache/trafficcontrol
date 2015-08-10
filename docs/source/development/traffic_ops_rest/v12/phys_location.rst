@@ -20,7 +20,7 @@
 Physical Location
 =================
 
-**GET /api/1.1/phys_locations.json**
+**GET /api/1.2/phys_locations.json**
 
   Authentication Required: Yes
 
@@ -92,7 +92,7 @@ Physical Location
 
 |
 
-**GET /api/1.1/phys_locations/trimmed.json**
+**GET /api/1.2/phys_locations/trimmed.json**
 
   Authentication Required: Yes
 

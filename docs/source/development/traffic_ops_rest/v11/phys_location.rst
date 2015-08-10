@@ -87,7 +87,6 @@ Physical Location
            "shortName": "chicago"
         }
      ],
-     "version": "1.1"
     }
 
 
@@ -118,7 +117,6 @@ Physical Location
            "name": "Ashburn"
         }
      ],
-     "version": "1.1"
     }
 
 

@@ -20,7 +20,7 @@
 ASN
 ===
 
-**GET /api/1.1/asns.json**
+**GET /api/1.2/asns.json**
 
   Authentication Required: Yes
   

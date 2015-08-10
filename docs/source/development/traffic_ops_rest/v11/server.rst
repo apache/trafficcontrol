@@ -130,7 +130,6 @@ Server
           ... more server data
           }
         ]
-      "version": "1.1"
     }
 
 
@@ -176,7 +175,6 @@ Server
           "count": 4,
           "type": "RASCAL"
         }
-      "version": "1.1",
     }
 
 |
@@ -355,7 +353,6 @@ Server
         "xmppPasswd": "X"
 
       }
-      "version": "1.1",
 
     }
 
@@ -421,6 +418,5 @@ Server
             "text": "Server Check was successfully updated."
           }
         ],
-      "version": "1.1"
     }
 

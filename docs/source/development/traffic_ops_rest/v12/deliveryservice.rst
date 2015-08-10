@@ -20,7 +20,7 @@
 Delivery Service
 ================
 
-**GET /api/1.1/deliveryservices.json**
+**GET /api/1.2/deliveryservices.json**
 
   Retrieves all delivery services. See also `Using Traffic Ops - Delivery Service <http://traffic-control-cdn.net/docs/latest/admin/traffic_ops_using.html#delivery-service>`_.
 
@@ -190,7 +190,7 @@ Delivery Service
 
 |
 
-**GET /api/1.1/deliveryservices/:id.json**
+**GET /api/1.2/deliveryservices/:id.json**
 
   Retrieves a specific delivery service. See also `Using Traffic Ops - Delivery Service <http://traffic-control-cdn.net/docs/latest/admin/traffic_ops_using.html#delivery-service>`_.
 
@@ -359,10 +359,10 @@ Delivery Service
 
 Health
 ++++++
-.. **GET /api/1.1/deliveryservices/:id/state.json**
-.. **GET /api/1.1/deliveryservices/:id/health.json**
+.. **GET /api/1.2/deliveryservices/:id/state.json**
+.. **GET /api/1.2/deliveryservices/:id/health.json**
 
-**GET /api/1.1/deliveryservices/:id/capacity.json**
+**GET /api/1.2/deliveryservices/:id/capacity.json**
 
   Retrieves the capacity percentages of a delivery service.
 
@@ -408,7 +408,7 @@ Health
 
 |
 
-**GET /api/1.1/deliveryservices/:id/routing.json**
+**GET /api/1.2/deliveryservices/:id/routing.json**
 
   Retrieves the routing method percentages of a delivery service.
 
@@ -459,7 +459,7 @@ Health
 
 Metrics
 +++++++
-**GET /api/1.1/deliveryservices/:id/edge/metric_types/:metric/start_date/:start/end_date/:end/\\
+**GET /api/1.2/deliveryservices/:id/edge/metric_types/:metric/start_date/:start/end_date/:end/\\
 interval/:interval/window_start/:window_start/window_end/:window_end.json**
 
   Retrieves edge summary metrics of all cache groups for a delivery service.
@@ -529,7 +529,7 @@ interval/:interval/window_start/:window_start/window_end/:window_end.json**
 
 |
 
-**GET /api/1.1/usage/deliveryservices/:ds/cachegroups/:name/metric_types/:metric/start_date/:start_date/\\
+**GET /api/1.2/usage/deliveryservices/:ds/cachegroups/:name/metric_types/:metric/start_date/:start_date/\\
 end_date/:end_date/interval/:interval.json**
 
   Retrieves edge metrics of one or all locations (cache groups) for a delivery service.
@@ -607,7 +607,7 @@ end_date/:end_date/interval/:interval.json**
 
 |
 
-**GET /api/1.1/cdns/peakusage/:peak_usage_type/deliveryservice/:ds/cachegroup/:name/start_date/:start/\\
+**GET /api/1.2/cdns/peakusage/:peak_usage_type/deliveryservice/:ds/cachegroup/:name/start_date/:start/\\
 end_date/:end/interval/:interval.json**
 
 
@@ -643,7 +643,7 @@ end_date/:end/interval/:interval.json**
 
 |
 
-**GET /api/1.1/deliveryservices/:id/:server_type/metrics/:metric_type/:start/:end.json**
+**GET /api/1.2/deliveryservices/:id/:server_type/metrics/:metric_type/:start/:end.json**
 
   Retrieves detailed and summary metrics for MIDs or EDGEs for a delivery service.
 
@@ -742,7 +742,7 @@ end_date/:end/interval/:interval.json**
 Server
 ++++++
 
-**GET /api/1.1/deliveryserviceserver.json**
+**GET /api/1.2/deliveryserviceserver.json**
 
   Authentication Required: Yes
 
@@ -796,7 +796,7 @@ Server
 SSL Keys
 +++++++++
 
-**GET /api/1.1/deliveryservices/xmlId/:xmlid/sslkeys.json**
+**GET /api/1.2/deliveryservices/xmlId/:xmlid/sslkeys.json**
 
   Authentication Required: Yes
 
@@ -867,7 +867,7 @@ SSL Keys
 
 |
 
-**GET /api/1.1/deliveryservices/hostname/:hostname/sslkeys.json**
+**GET /api/1.2/deliveryservices/hostname/:hostname/sslkeys.json**
 
   Authentication Required: Yes
 
@@ -938,7 +938,7 @@ SSL Keys
 
 |
 
-**GET /api/1.1/deliveryservices/xmlId/:xmlid/sslkeys/delete.json**
+**GET /api/1.2/deliveryservices/xmlId/:xmlid/sslkeys/delete.json**
 
   Authentication Required: Yes
 
@@ -977,7 +977,7 @@ SSL Keys
 
 |
   
-**POST /api/1.1/deliveryservices/sslkeys/generate**
+**POST /api/1.2/deliveryservices/sslkeys/generate**
 
   Generates SSL crt, csr, and private key for a delivery service
 
@@ -1048,7 +1048,7 @@ SSL Keys
 
 |
   
-**POST /api/1.1/deliveryservices/sslkeys/add**
+**POST /api/1.2/deliveryservices/sslkeys/add**
 
   Allows user to add SSL crt, csr, and private key for a delivery service
 

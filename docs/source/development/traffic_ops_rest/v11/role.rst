@@ -48,6 +48,5 @@ Roles
            "description": "read-only user"
         }
      ],
-     "version": "1.1"
     }
 

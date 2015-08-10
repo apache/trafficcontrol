@@ -74,6 +74,5 @@ Status
             "lastUpdated": "2013-02-13 16:34:29"
           }
         ],
-        "version": "1.1"
       }
 

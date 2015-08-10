@@ -68,7 +68,6 @@ System
           "tm.instance_name": "Kabletown CDN"
         }
       },
-      "version": "1.1"
     }
 
 

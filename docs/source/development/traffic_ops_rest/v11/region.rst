@@ -48,6 +48,5 @@ Regions
            "id": "1"
         }
      ],
-     "version": "1.1"
     }
 

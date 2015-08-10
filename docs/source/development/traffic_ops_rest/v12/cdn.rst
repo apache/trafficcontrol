@@ -22,7 +22,7 @@ CDN
 Health
 ++++++
 
-**GET /api/1.1/cdns/health.json**
+**GET /api/1.2/cdns/health.json**
 
   Authentication Required: Yes
   
@@ -69,7 +69,7 @@ Health
 
 |
 
-**GET /api/1.1/cdns/:name/health.json**
+**GET /api/1.2/cdns/:name/health.json**
 
   Retrieves the health of all locations (cache groups) for a given CDN.
 
@@ -127,7 +127,7 @@ Health
 
 |
 
-**GET /api/1.1/cdns/usage/overview.json**
+**GET /api/1.2/cdns/usage/overview.json**
 
   Retrieves the high-level CDN usage metrics.
 
@@ -157,7 +157,7 @@ Health
     }
 
 
-**GET /api/1.1/cdns/capacity.json**
+**GET /api/1.2/cdns/capacity.json**
 
   Retrieves the aggregate capacity percentages of all locations (cache groups) for a given CDN.
 
@@ -193,7 +193,7 @@ Health
 Routing
 +++++++
 
-**GET /api/1.1/cdns/routing.json**
+**GET /api/1.2/cdns/routing.json**
 
   Authentication Required: Yes
   
@@ -238,7 +238,7 @@ Metrics
 +++++++
 
 
-**GET /api/1.1/cdns/metric_types/:metric/start_date/:start/end_date/:end.json**
+**GET /api/1.2/cdns/metric_types/:metric/start_date/:start/end_date/:end.json**
 
   Authentication Required: Yes
   
@@ -326,7 +326,7 @@ Metrics
 Domains
 +++++++
 
-**GET /api/1.1/cdns/domains.json**
+**GET /api/1.2/cdns/domains.json**
 
   Authentication Required: Yes
   
@@ -373,7 +373,7 @@ Domains
 
 Topology
 ++++++++
-**GET /api/1.1/cdns/:cdn_name/configs.json**
+**GET /api/1.2/cdns/:cdn_name/configs.json**
 
   Retrieves CDN config information.
 
@@ -409,7 +409,7 @@ Topology
 
 |
 
-**GET /api/1.1/cdns/:name/configs/monitoring.json**
+**GET /api/1.2/cdns/:name/configs/monitoring.json**
 
   Retrieves CDN monitoring information.
 
@@ -547,7 +547,7 @@ Topology
 
 |
 
-**GET /api/1.1/cdns/:name/configs/routing.json**
+**GET /api/1.2/cdns/:name/configs/routing.json**
 
   Retrieves CDN routing information.
 
@@ -762,7 +762,7 @@ Topology
 DNSSEC Keys
 +++++++++++
 
-**GET /api/1.1/cdns/name/:name/dnsseckeys.json**
+**GET /api/1.2/cdns/name/:name/dnsseckeys.json**
 
   Gets a list of dnsseckeys for CDN and all associated Delivery Services.
   Before returning response to user, check to make sure keys aren't expired.  If they are expired, generate new ones.
@@ -851,7 +851,7 @@ DNSSEC Keys
 
 |
 
-**GET /api/1.1/cdns/name/:name/dnsseckeys/delete.json**
+**GET /api/1.2/cdns/name/:name/dnsseckeys/delete.json**
 
   Delete dnssec keys for a cdn and all associated delivery services.
 
@@ -889,7 +889,7 @@ DNSSEC Keys
 
 |
   
-**POST /api/1.1/deliveryservices/dnsseckeys/generate**
+**POST /api/1.2/deliveryservices/dnsseckeys/generate**
 
   Generates zsk and ksk keypairs for a cdn and all associated delivery services.
 

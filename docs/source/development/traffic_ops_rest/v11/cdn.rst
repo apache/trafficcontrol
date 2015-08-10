@@ -64,7 +64,6 @@ Health
            }
         ]
      },
-     "version": "1.1"
     }
 
 
@@ -124,7 +123,6 @@ Health
            }
         ]
      },
-     "version": "1.1"
     }
 
 |
@@ -156,7 +154,6 @@ Health
         "tps": 36805,
         "maxGbps": 3961
      },
-     "version": "1.1"
     }
 
 
@@ -187,7 +184,6 @@ Health
         "utilizedPercent": 10.9060020300395,
         "maintenancePercent": 0.0000139494071146245
      },
-     "version": "1.1"
     }
 
 |
@@ -232,7 +228,6 @@ Routing
         "cz": 62.1144608981131,
         "dsr": 0
      },
-     "version": "1.1"
     }
 
 |
@@ -322,7 +317,6 @@ Metrics
            "label": "Origin TPS"
         }
      ],
-     "version": "1.1"
     }
 
 |
@@ -371,7 +365,6 @@ Domains
            "domainName": "bar.domain.net"
         }
      ],
-     "version": "1.1"
     }
 
 |
@@ -853,7 +846,6 @@ DNSSEC Keys
         },
         ... repeated for each ds in the cdn
       },
-      "version": "1.1"
     }
 
 
@@ -891,7 +883,6 @@ DNSSEC Keys
   ::
 
     {  
-      "version": "1.1",
       "response": "Successfully deleted dnssec keys for <cdn>"
     }
 
@@ -948,7 +939,6 @@ DNSSEC Keys
 
 
     {  
-      "version": "1.1",
       "response": "Successfully created dnssec keys for cdn1"
     }
 

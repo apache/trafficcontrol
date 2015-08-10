@@ -76,7 +76,6 @@ Cache Group
            "shortName": "dccmc"
         }
      ],
-     "version": "1.1"
     }
 
 |
@@ -105,7 +104,6 @@ Cache Group
              "name": "dc-cmc"
           }
        ],
-       "version": "1.1"
      }
 
 |
@@ -149,7 +147,6 @@ Cache Group
            }
         ]
      },
-     "version": "1.1"
     }
 
 
@@ -193,7 +190,6 @@ Cache Group
            }
         ]
      },
-     "version": "1.1"
     }
 
 
@@ -234,6 +230,5 @@ Cache Group
            "id": "22"
         }
      ],
-     "version": "1.1"
     }
 

@@ -74,7 +74,6 @@ Response Content Type: application/json
          "69.241.82.126"
       ]
    ],
-   "version": "1.1"
   }
 
 |

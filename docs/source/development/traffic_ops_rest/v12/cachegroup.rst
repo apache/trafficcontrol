@@ -19,7 +19,7 @@
 Cache Group
 ===========
 
-**GET /api/1.1/cachegroups.json**
+**GET /api/1.2/cachegroups.json**
 
   Authentication Required: Yes
   
@@ -80,7 +80,7 @@ Cache Group
 
 |
 
-**GET /api/1.1/cachegroups/trimmed.json**
+**GET /api/1.2/cachegroups/trimmed.json**
 
   Authentication Required: Yes
   
@@ -108,7 +108,7 @@ Cache Group
 
 |
 
-**GET /api/1.1/cachegroup/:parameter_id/parameter.json**
+**GET /api/1.2/cachegroup/:parameter_id/parameter.json**
 
   Authentication Required: Yes
   
@@ -150,7 +150,7 @@ Cache Group
     }
 
 
-**GET /api/1.1/cachegroupparameters.json**
+**GET /api/1.2/cachegroupparameters.json**
 
   Authentication Required: Yes
   
@@ -195,7 +195,7 @@ Cache Group
 
 |
 
-**GET /api/1.1/cachegroups/:parameter_id/parameter/available.json**
+**GET /api/1.2/cachegroups/:parameter_id/parameter/available.json**
 
   Authentication Required: Yes
   

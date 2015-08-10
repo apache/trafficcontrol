@@ -60,7 +60,6 @@ Parameter
            "config_file": "records.config"
         }
      ],
-     "version": "1.1"
     }
 
 |
@@ -116,7 +115,6 @@ Parameter
            "config_file": "records.config"
         }
      ],
-     "version": "1.1"
     }
 
 

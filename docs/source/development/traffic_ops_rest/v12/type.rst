@@ -19,7 +19,7 @@
 Types
 =====
 
-**GET /api/1.1/types.json**
+**GET /api/1.2/types.json**
 
   Authentication Required: Yes
 
@@ -57,7 +57,7 @@ Types
 |
 
 
-**GET /api/1.1/types/trimmed.json**
+**GET /api/1.2/types/trimmed.json**
 
   Authentication Required: Yes
 
