@@ -47,7 +47,6 @@
 		</ul>
 	  </div>
 	</nav>
-
 	<!--table-->
 	<div>
 	  <form>
@@ -66,10 +65,11 @@
 		  </tr>
 		</table>
 		<br/>
-
+		<div id="notification"></div>
 		<!-- MAIN TABLE DISPLAY -->
 		<table class="table-striped table-hover table-bordered table-condensed">
 		  <!-- HEADERS -->
+
 		  <thead>
 			<tr>
 			  <td ng-repeat="column in columns">{{column}}</td>
@@ -80,8 +80,10 @@
 		  <tbody>
 			<tr ng-repeat="row in rows">
 			  <!-- ROWS/ FORMS -->
-			  <td ng-show="!showEdit" ng-repeat="value in row">{{value}}</td>
-			  <td ng-show="showEdit" ng-repeat="(key, value) in row"><input type="text" ng-model=row[key]></td>
+			  
+
+<td ng-show="!showEdit" ng-repeat="value in row">{{value}}</td>
+			  <td ng-show="showEdit" ng-repeat="(key, value) in row"><input type="text" size=20 ng-model=row[key]></td>
 
 			  <!--EDIT/SAVE-->
 			  <td><button ng-show="!showEdit" ng-click="showEdit = ! showEdit">Edit</button></td>

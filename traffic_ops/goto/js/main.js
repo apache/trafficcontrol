@@ -1,6 +1,7 @@
+
 angular.module('app', [])
 
-.controller('InitCtrl', function($scope, $http) {
+.controller('InitCtrl', function($scope, $http, $log) {
     $http.get('http://127.0.0.1:8080/request/').then(function(resp) {
         $scope.tables = resp.data;
         // For JSON responses, resp.data contains the result
@@ -23,7 +24,12 @@ angular.module('app', [])
         })
 
         $http.get('http://127.0.0.1:8080/api/' + tableName).then(function(resp) {
+$log.debug(resp.status);
+ if (resp.status == 200){
+			$log.debug(resp);
+			//console.log(resp.data.response);
             $scope.rows = resp.data.response;
+}
         }, function(err) {
             console.error('ERR', err);
             // err.status will contain the status code
