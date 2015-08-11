@@ -60,12 +60,14 @@ local $/;    #Enable 'slurp' mode
 
 has schema => sub { return Schema->connect_to_database };
 has watch  => sub { [qw(lib templates)] };
-has inactivity_timeout => sub { $ENV{MOJO_INACTIVITY_TIMEOUT} // $config->{inactivity_timeout} // 60; };
+has inactivity_timeout => sub {
+	$ENV{MOJO_INACTIVITY_TIMEOUT} // $config->{inactivity_timeout};    # or undef for default
+};
 
 if ( !defined $ENV{MOJO_CONFIG} ) {
-	
+
 	$ENV{MOJO_CONFIG} = find_conf_path('cdn.conf');
-	print("Loading config from " . $ENV{MOJO_CONFIG} . "\n");
+	print( "Loading config from " . $ENV{MOJO_CONFIG} . "\n" );
 }
 else {
 	print( "MOJO_CONFIG overridden: " . $ENV{MOJO_CONFIG} . "\n" );
@@ -234,7 +236,7 @@ sub setup_mojo_plugins {
 					$local_user = $user_data->local_user;
 				}
 
-				if ( $role eq 'disallowed') {
+				if ( $role eq 'disallowed' ) {
 					return undef;
 				}
 
@@ -364,9 +366,9 @@ sub check_ldap_user {
 }
 
 sub find_conf_path {
-	my $req_conf = shift;
-	my $mod_path = $INC{__PACKAGE__ . '.pm'};
-	my $conf_path = join('/', dirname(dirname($mod_path)) , 'conf', $req_conf);
+	my $req_conf  = shift;
+	my $mod_path  = $INC{ __PACKAGE__ . '.pm' };
+	my $conf_path = join( '/', dirname( dirname($mod_path) ), 'conf', $req_conf );
 	return $conf_path;
 }
 
