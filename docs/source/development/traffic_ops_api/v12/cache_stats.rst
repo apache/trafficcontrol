@@ -76,43 +76,34 @@ Cache Statistics
 
                 {
                     "response": {
-                        "source": "TrafficStats",
-                        "summary": {
-                            "average": 1081172.785,
-                            "count": 28,
-                            "fifthPercentile": 888827.26,
-                            "max": 1326680.31,
-                            "min": 888827.26,
-                            "ninetyEighthPercentile": 1324785.47,
-                            "ninetyFifthPercentile": 1324785.47,
-                            "totalBytes": 37841047.475,
-                            "totalTransactions": 1020202030101
-                        },
-                        "version": "1.2",
                         "query": {
                             "language": {
-                                "influxdbDatabaseName": "deliveryservice_stats",
-                                "influxdbSeriesQuery": "SELECT sum(value)/count(value) FROM kbps WHERE cachegroup = 'total' 
-                                                        AND deliveryservice = 'cim-jitp' 
-                                                        AND time >='2015-08-11T11:30:00Z' 
-                                                        AND time <= '2015-08-11T12:30:00Z' GROUP BY time(60s), cachegroup",
-                                "influxdbSummaryQuery": "SELECT mean(value), percentile(value, 5), percentile(value, 95), 
-                                                                percentile(value, 98), min(value), max(value), 
-                                                        count(value) FROM kbps WHERE time >= '2015-08-11T11:30:00Z' 
-                                                        AND time <= '2015-08-11T12:30:00Z' 
-                                                        AND cachegroup = 'total' 
-                                                        AND deliveryservice = 'cim-jitp'"
+                                "influxdbDatabaseName": "cache_stats",
+                                "influxdbSeriesQuery": "SELECT sum(value)*1000/6 FROM \"bandwidth\" WHERE 
+                                          time > '2015-08-10T16:40:00-06:00' 
+                                          AND time < '2015-08-10T17:10:00-06:00' 
+                                          AND cdn = 'yourcdn' GROUP BY time(60s), cdn ORDER BY asc",
+                                "influxdbSummaryQuery": "SELECT mean(value), 
+                                                                percentile(value, 5), 
+                                                                percentile(value, 95), 
+                                                                percentile(value, 98), 
+                                                                min(value), 
+                                                                max(value), 
+                                                                sum(value), 
+                                                                count(value) FROM \"bandwidth\" 
+                                                                WHERE cdn = 'over-the-top' 
+                                                                AND time > '2015-08-10T16:40:00-06:00' 
+                                                                AND time < '2015-08-10T17:10:00-06:00' GROUP BY time(60s), cdn"
                             },
                             "parameters": {
-                                "deliveryServiceName": "yourdeliveryservicename",
-                                "endDate": "2015-08-11T12:30:00Z",
-                                "exclude": null,
+                                "cdnName": "over-the-top",
+                                "endDate": "2015-08-10T17:10:00-06:00",
                                 "interval": "60s",
                                 "limit": null,
-                                "metricType": "kbps",
+                                "metricType": "bandwidth",
                                 "offset": null,
                                 "orderby": null,
-                                "startDate": "2015-08-11T11:30:00Z"
+                                "startDate": "2015-08-10T16:40:00-06:00"
                             }
                         },
                         "series": {
@@ -120,48 +111,44 @@ Cache Statistics
                                 "time",
                                 ""
                             ],
-                            "count": 60,
-                            "name": "kbps",
+                            "count": 29,
+                            "name": "bandwidth",
                             "tags": {
-                                "cachegroup": "total"
+                                "cdn": "over-the-top"
                             },
                             "values": [
                                 [
-                                    "2015-08-11T11:36:00Z",
-                                    888827.26
+                                    "2015-08-10T22:40:00Z",
+                                    229340299720
                                 ],
                                 [
-                                    "2015-08-11T11:37:00Z",
-                                    980336.563333333
+                                    "2015-08-10T22:41:00Z",
+                                    224309221713.334
                                 ],
                                 [
-                                    "2015-08-11T11:38:00Z",
-                                    952111.975
+                                    "2015-08-10T22:42:00Z",
+                                    229551834168.334
                                 ],
                                 [
-                                    "2015-08-11T11:39:00Z",
-                                    null
+                                    "2015-08-10T22:43:00Z",
+                                    225179658876.667
                                 ],
                                 [
-                                    "2015-08-11T11:43:00Z",
-                                    null
-                                ],
-                                [
-                                    "2015-08-11T11:44:00Z",
-                                    934682.943333333
-                                ],
-                                [
-                                    "2015-08-11T11:45:00Z",
-                                    1251121.28
-                                ],
-                                [
-                                    "2015-08-11T11:46:00Z",
-                                    1111012.99
+                                    "2015-08-10T22:44:00Z",
+                                    230443968275
                                 ]
                             ]
+                        },
+                        "summary": {
+                            "average": 970410.295,
+                            "count": 1376041798,
+                            "fifthPercentile": 202.03,
+                            "max": 3875441.02,
+                            "min": 0,
+                            "ninetyEighthPercentile": 2957940.93,
+                            "ninetyFifthPercentile": 2366728.63
                         }
                     }
                 }
-
 
 |
