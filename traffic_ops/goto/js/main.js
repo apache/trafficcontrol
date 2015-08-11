@@ -1,39 +1,43 @@
-angular.module('app', [])
+angular.module('app', ['ngReactGrid'])
 
-.controller('InitCtrl', function($scope, $http, $log) {
-setTables();
-    function setColumns(tableName) {
-        $http.get('http://127.0.0.1:8080/request/' + tableName).then(function(resp) {
-            $scope.columns = resp.data;
-            // For JSON responses, resp.data contains the result
+.controller('InitCtrl', function($scope, $http, $log, ngReactGridCheckbox) {
+    $scope.grid = {
+        data: [],
+        columnDefs: []
+    }
+    $scope.selections = [];
+    getTableList();
+
+    //get list of tables
+    function getTableList() {
+        $http.get('http://127.0.0.1:8080/request/').then(function(resp) {
+            $scope.tables = resp.data;
         }, function(err) {
             console.error('ERR', err);
-            // err.status will contain the status code
         })
     }
 
-	function setTables(){
- $http.get('http://127.0.0.1:8080/request/').then(function(resp) {
-        $scope.tables = resp.data;
-        // For JSON responses, resp.data contains the result
-    }, function(err) {
-        console.error('ERR', err);
-        // err.status will contain the status code
-    })
-    }
-   
-	//GET
-    $scope.get = function(table) {
-        var tableName = angular.copy(table);
-
-        setColumns(tableName);
-
-        $http.get('http://127.0.0.1:8080/api/' + tableName).then(function(resp) {
-            $scope.rows = resp.data.response;
-			$scope.isTable = resp.data.isTable;
-            if (resp.data.error != "") {
-                alert(resp.data.error);
+    function setTable(data) {
+            if (data.error != "") {
+                alert(data.error);
             }
+            $scope.grid = {
+                data: data.response,
+                columnDefs: data.columns.concat(new ngReactGridCheckbox($scope.selections))
+            }
+            $scope.isTable = data.isTable;
+
+            var columns = [];
+            for (var i = 0; i < data.columns.length; i++) {
+                columns.push(data.columns[i].field);
+            }
+            $scope.columns = columns;
+        }
+
+        //GET
+    $scope.get = function(table) {
+        $http.get('http://127.0.0.1:8080/api/' + table).then(function(resp) {
+            setTable(resp.data);
         }, function(err) {
             console.error('ERR', err);
             // err.status will contain the status code
@@ -45,17 +49,10 @@ setTables();
         var tableName = angular.copy(table);
 
         if (typeof parameters !== 'undefined') {
-            setColumns(tableName);
-
             $http.get('http://127.0.0.1:8080/api/' + tableName + "?" + parameters).then(function(resp) {
-                $scope.rows = resp.data.response;
-                if (resp.data.error != "") {
-                    alert(resp.data.error);
-                }
-
+            	setTable(resp.data); 
             }, function(err) {
                 console.error('ERR', err);
-                // err.status will contain the status code
             })
         } else {
             $scope.get(table);
@@ -64,36 +61,28 @@ setTables();
 
     //DELETE
     $scope.delete = function(table, row) {
-        setColumns(table);
-
         $http.delete('http://127.0.0.1:8080/api/' + table + "/" + row.id).then(function(resp) {
-            $scope.rows = resp.data.response;
-            if (resp.data.error != "") {
-                alert(resp.data.error);
-            }
-
-            //make table
+           setTable(resp.data); 
         }, function(err) {
             console.error('ERR', err);
-            // err.status will contain the status code
         })
     }
 
     //DELETE
     $scope.deleteView = function(table) {
         $http.delete('http://127.0.0.1:8080/api/' + table).then(function(resp) {
-		
-            if (resp.data.error != "") {
-                alert(resp.data.error);
-            }
-			location.reload();
+			if (resp.data.error != "") {
+				alert(resp.data.error);
+			}
+
+            location.reload();
             //make table
         }, function(err) {
             console.error('ERR', err);
             // err.status will contain the status code
         })
 
-		setTables();
+        getTableList();
     }
 
 
@@ -101,13 +90,11 @@ setTables();
     $scope.postView = function(newView) {
         var viewArray = new Array(newView);
 
-        //post it
         $http.post('http://127.0.0.1:8080/api/', viewArray).then(function(resp) {
             if (resp.data.error != "") {
                 alert(resp.data.error);
             }
-				
-			location.reload();
+            location.reload();
         }, function(err) {
             console.error('ERR', err);
             // err.status will contain the status code
@@ -117,33 +104,20 @@ setTables();
     $scope.post = function(table, row) {
         var rowArray = new Array(row);
 
-        //post it
         $http.post('http://127.0.0.1:8080/api/' + table, rowArray).then(function(resp) {
-            $scope.rows = resp.data.response;
-            if (resp.data.error != "") {
-                alert(resp.data.error);
-            }
-
+			setTable(resp.data);
         }, function(err) {
             console.error('ERR', err);
-            // err.status will contain the status code
         })
     }
 
     //PUT
     $scope.put = function(table, row) {
         var rowArray = new Array(row);
-        //post it
         $http.put('http://127.0.0.1:8080/api/' + table + "/" + row.id, rowArray).then(function(resp) {
-            $scope.rows = resp.data.response;
-            if (resp.data.error != "") {
-                alert(resp.data.error);
-            }
-
+			setTable(resp.data);
         }, function(err) {
             console.error('ERR', err);
-            // err.status will contain the status code
         })
     }
-
 })

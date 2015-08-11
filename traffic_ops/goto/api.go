@@ -45,7 +45,7 @@ func requestHandler(w http.ResponseWriter, r *http.Request) {
 
 	var resp interface{}
 	if len(path) > 1 && path[1] != "" {
-		resp = sqlParser.GetColumnNames(path[1])
+		resp = outputFormatter.MakeColumnWrapper(sqlParser.GetColumnNames(path[1]))
 	} else {
 		resp = sqlParser.GetTableNames()
 	}
@@ -89,10 +89,7 @@ func apiHandler(w http.ResponseWriter, r *http.Request) {
 		dropTable, err := sqlParser.Delete(tableName, tableParameters)
 		if err != nil {
 			errString = err.Error()
-		} else {
-			errString = "Delete successful."
-		}
-		//clear if view
+		} //clear if view
 		if dropTable {
 			tableName = ""
 		}
@@ -108,17 +105,20 @@ func apiHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var rows []map[string]interface{}
+	var columns []string
 	//GETS the request
 	if tableName != "" {
 		rows, err = sqlParser.Get(tableName, tableParameters)
+		columns = sqlParser.GetColumnNames(tableName)
 		if err != nil {
 			errString = err.Error()
 		}
 	} else {
 		rows = nil
+		columns = nil
 	}
 
-	resp := outputFormatter.MakeWrapper(rows, errString, isTable)
+	resp := outputFormatter.MakeApiWrapper(rows, columns, errString, isTable)
 	//encoder writes the resultant "Response" struct (see outputFormatter) to writer
 	enc := json.NewEncoder(w)
 	enc.Encode(resp)

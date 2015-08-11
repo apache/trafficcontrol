@@ -22,18 +22,34 @@ outputFormatter contains:
 * MakeWrapper(r interface{}), which wraps r into a struct to encode
 	*****************************************************************/
 
-type Wrapper struct {
-	Resp    interface{} `json:"response"`
-	Error   string      `json:"error"`
-	IsTable bool        `json:"isTable"`
-	Version float64     `json:"version"`
+type ApiWrapper struct {
+	Resp    interface{}     `json:"response"`
+	Cols    []ColumnWrapper `json:"columns"`
+	Error   string          `json:"error"`
+	IsTable bool            `json:"isTable"`
+	Version float64         `json:"version"`
 }
 
 //wraps the given interface r into a returned Wrapper
 //prepped for encoding to stream
-func MakeWrapper(r interface{}, err string, isTable bool) Wrapper {
+func MakeApiWrapper(r interface{}, c []string, err string, isTable bool) ApiWrapper {
 	//version is hard coded to "1.1"
 	//all of this is variable
-	w := Wrapper{r, err, isTable, 1.1}
+	w := ApiWrapper{r, MakeColumnWrapper(c), err, isTable, 1.1}
 	return w
+}
+
+type ColumnWrapper struct {
+	Field       string `json:"field"`
+	DisplayName string `json:"displayName"`
+}
+
+func MakeColumnWrapper(columns []string) []ColumnWrapper {
+	cw := make([]ColumnWrapper, 0)
+	for _, column := range columns {
+		w := ColumnWrapper{column, column}
+		cw = append(cw, w)
+	}
+
+	return cw
 }
