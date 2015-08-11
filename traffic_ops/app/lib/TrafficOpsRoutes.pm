@@ -344,6 +344,8 @@ sub ui_routes {
 
 	# -- Visualstatus
 	$r->get('/visualstatus/:matchstring')->over( authenticated => 1 )->to( 'VisualStatus#graphs', namespace => $namespace );
+	$r->get('/visualstatus_redis/:matchstring')->over( authenticated => 1 )->to( 'VisualStatus#graphs_redis', namespace => $namespace );
+	$r->get('/redis/#match/:start/:end/:interval')->over( authenticated => 1 )->to( 'Redis#stats', namespace => 'UI' );
 	$r->get('/dailysummary')->over( authenticated => 1 )->to( 'VisualStatus#daily_summary', namespace => $namespace );
 
 	# deprecated - see: /api/$version/servers.json and /api/1.1/servers/hostname/:host_name/details.json
