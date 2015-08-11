@@ -31,14 +31,16 @@ const defaultPollingInterval = 10
 
 // StartupConfig contains all fields necessary to create an InfluxDB session.
 type StartupConfig struct {
-	ToUser          string `json:"toUser"`
-	ToPasswd        string `json:"toPasswd"`
-	ToURL           string `json:"toUrl"`
-	InfluxUser      string `json:"influxUser"`
-	InfluxPassword  string `json:"influxPassword"`
-	PollingInterval int    `json:"pollingInterval"`
-	StatusToMon     string `json:"statusToMon"`
-	SeelogConfig    string `json:"seelogConfig"`
+	ToUser               string `json:"toUser"`
+	ToPasswd             string `json:"toPasswd"`
+	ToURL                string `json:"toUrl"`
+	InfluxUser           string `json:"influxUser"`
+	InfluxPassword       string `json:"influxPassword"`
+	PollingInterval      int    `json:"pollingInterval"`
+	StatusToMon          string `json:"statusToMon"`
+	SeelogConfig         string `json:"seelogConfig"`
+	CacheRetentionPolicy string `json:"cacheRetentionPolicy"`
+	DsRetentionPolicy    string `json:"dsRetentionPolicy"`
 }
 
 // RunningConfig contains information about current InfluxDB connections.
@@ -214,9 +216,9 @@ func storeMetrics(cdnName string, url string, cacheGroupMap map[string]string, c
 	}
 
 	if strings.Contains(url, "CacheStats") {
-		err = storeCacheValues(rascalData, cdnName, sampleTime, cacheGroupMap, influxClient)
+		err = storeCacheValues(rascalData, cdnName, sampleTime, cacheGroupMap, influxClient, config)
 	} else if strings.Contains(url, "DsStats") {
-		err = storeDsValues(rascalData, cdnName, sampleTime, influxClient)
+		err = storeDsValues(rascalData, cdnName, sampleTime, influxClient, config)
 	} else {
 		log.Info("Don't know what to do with ", url)
 	}
@@ -253,7 +255,7 @@ func errHndlr(err error, severity int) {
     }
  }
 */
-func storeDsValues(rascalData []byte, cdnName string, sampleTime int64, influxClient *influx.Client) error {
+func storeDsValues(rascalData []byte, cdnName string, sampleTime int64, influxClient *influx.Client, config *StartupConfig) error {
 	type DsStatsJSON struct {
 		Pp              string `json:"pp"`
 		Date            string `json:"date"`
@@ -318,7 +320,7 @@ func storeDsValues(rascalData []byte, cdnName string, sampleTime int64, influxCl
 	bps := influx.BatchPoints{
 		Points:          pts,
 		Database:        "deliveryservice_stats",
-		RetentionPolicy: "weekly",
+		RetentionPolicy: config.DsRetentionPolicy,
 	}
 	_, err = influxClient.Write(bps)
 	if err != nil {
@@ -354,7 +356,7 @@ func storeDsValues(rascalData []byte, cdnName string, sampleTime int64, influxCl
 }
 */
 
-func storeCacheValues(trafmonData []byte, cdnName string, sampleTime int64, cacheGroupMap map[string]string, influxClient *influx.Client) error {
+func storeCacheValues(trafmonData []byte, cdnName string, sampleTime int64, cacheGroupMap map[string]string, influxClient *influx.Client, config *StartupConfig) error {
 	/* note about the data:
 	keys are cdnName:deliveryService:cacheGroup:cacheName:statName
 	*/
@@ -415,11 +417,10 @@ func storeCacheValues(trafmonData []byte, cdnName string, sampleTime int64, cach
 		}
 	}
 	//create influxdb batch of points
-	// TODO: make retention policy configurable
 	bps := influx.BatchPoints{
 		Points:          pts,
 		Database:        "cache_stats",
-		RetentionPolicy: "weekly",
+		RetentionPolicy: config.CacheRetentionPolicy,
 	}
 	//write to influxdb
 	_, err = influxClient.Write(bps)
