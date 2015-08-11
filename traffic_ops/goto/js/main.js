@@ -1,6 +1,7 @@
 angular.module('app', [])
 
 .controller('InitCtrl', function($scope, $http, $log) {
+setTables();
     function setColumns(tableName) {
         $http.get('http://127.0.0.1:8080/request/' + tableName).then(function(resp) {
             $scope.columns = resp.data;
@@ -11,15 +12,17 @@ angular.module('app', [])
         })
     }
 
-    $http.get('http://127.0.0.1:8080/request/').then(function(resp) {
+	function setTables(){
+ $http.get('http://127.0.0.1:8080/request/').then(function(resp) {
         $scope.tables = resp.data;
         // For JSON responses, resp.data contains the result
     }, function(err) {
         console.error('ERR', err);
         // err.status will contain the status code
     })
-
-    //GET
+    }
+   
+	//GET
     $scope.get = function(table) {
         var tableName = angular.copy(table);
 
@@ -27,6 +30,7 @@ angular.module('app', [])
 
         $http.get('http://127.0.0.1:8080/api/' + tableName).then(function(resp) {
             $scope.rows = resp.data.response;
+			$scope.isTable = resp.data.isTable;
             if (resp.data.error != "") {
                 alert(resp.data.error);
             }
@@ -75,23 +79,39 @@ angular.module('app', [])
         })
     }
 
+    //DELETE
+    $scope.deleteView = function(table) {
+        $http.delete('http://127.0.0.1:8080/api/' + table).then(function(resp) {
+		
+            if (resp.data.error != "") {
+                alert(resp.data.error);
+            }
+			location.reload();
+            //make table
+        }, function(err) {
+            console.error('ERR', err);
+            // err.status will contain the status code
+        })
+
+		setTables();
+    }
+
+
     //POST QUERY
     $scope.postView = function(newView) {
         var viewArray = new Array(newView);
 
         //post it
         $http.post('http://127.0.0.1:8080/api/', viewArray).then(function(resp) {
-            $scope.rows = resp.data.response;
             if (resp.data.error != "") {
                 alert(resp.data.error);
             }
-
+				
+			location.reload();
         }, function(err) {
             console.error('ERR', err);
             // err.status will contain the status code
         })
-
-        setColumns(newView.Name);
     }
 
     $scope.post = function(table, row) {

@@ -64,7 +64,6 @@ package sqlParser
 
 import (
 	"encoding/json"
-	"fmt"
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/jmoiron/sqlx"
 	"strings"
@@ -118,7 +117,7 @@ func GetColMap() map[string]string {
  * HELPER FUNCTIONS
  ********************************************************************************/
 //if is table, returns 1. else (for example, is view), returns 0.
-func IsTable(serverTableName string) int {
+func IsTable(serverTableName string) bool {
 	//check if there is view. else, assume is table
 	query := "select exists(select * from information_schema.tables where table_name='" + serverTableName + "' and table_name not in (select table_name from information_schema.views))"
 	rows, err := globalDB.Query(query)
@@ -135,13 +134,13 @@ func IsTable(serverTableName string) int {
 		check(err)
 		//if exists as view, delete from view
 		if string(rawBytes) == "1" {
-			return 1
+			return true
 		} else {
-			return 0
+			return false
 		}
 	}
 
-	return -1
+	return false
 }
 
 //returns array of table name strings from queried database
@@ -168,7 +167,6 @@ func GetTableNames() []string {
 
 //returns array of column names from table in database
 func GetColumnNames(tableName string) []string {
-	fmt.Println(tableName)
 	var colNames []string
 
 	colRawBytes := make([]byte, 1)
@@ -185,18 +183,17 @@ func GetColumnNames(tableName string) []string {
 
 		colNames = append(colNames, string(colRawBytes))
 	}
-	fmt.Println(colNames)
 	return colNames
 }
 
 /*********************************************************************************
  * DELETE FUNCTIONALITY
  ********************************************************************************/
-func Delete(serverTableName string, parameters []string) error {
-	if IsTable(serverTableName) == 0 {
+func Delete(serverTableName string, parameters []string) (bool, error) {
+	if !IsTable(serverTableName) {
 		return DeleteFromView(serverTableName, parameters)
 	} else {
-		return DeleteFromTable(serverTableName, parameters)
+		return false, DeleteFromTable(serverTableName, parameters)
 	}
 }
 
@@ -206,13 +203,13 @@ func DeleteFromTable(tableName string, parameters []string) error {
 }
 
 //deletes from a view
-func DeleteFromView(viewName string, parameters []string) error {
+func DeleteFromView(viewName string, parameters []string) (bool, error) {
 	if len(parameters) == 0 {
 		qStr := "drop view " + viewName
 		_, err := globalDB.Query(qStr)
-		return err
+		return true, err
 	} else {
-		return RunDeleteQuery(viewName, parameters)
+		return false, RunDeleteQuery(viewName, parameters)
 	}
 }
 
@@ -271,7 +268,10 @@ func Get(tableName string, tableParams []string) ([]map[string]interface{}, erro
 		for k, v := range results {
 			//converts the byte array to its correct type
 			if b, ok := v.([]byte); ok {
-				results[k] = StringToType(b, colMap[k])
+				results[k], err = StringToType(b, colMap[k])
+				if err != nil {
+					return nil, err
+				}
 			}
 		}
 
@@ -285,7 +285,7 @@ func Get(tableName string, tableParams []string) ([]map[string]interface{}, erro
  * POST FUNCTIONALITY
  ********************************************************************************/
 func Post(tableName string, jsonByte []byte) (string, error) {
-	if IsTable(tableName) == 1 {
+	if IsTable(tableName) {
 		err := PostRows(tableName, jsonByte)
 		return tableName, err
 	} else {
@@ -303,7 +303,12 @@ func AddRow(newRow interface{}, tableName string) error {
 
 	for k, v := range m {
 		keyStr += k + ","
-		valueStr += "'" + TypeToString(v) + "',"
+		typeStr, err := TypeToString(v)
+		if err != nil {
+			return err
+		}
+
+		valueStr += "'" + typeStr + "',"
 	}
 
 	keyStr = keyStr[:len(keyStr)-1]
@@ -411,7 +416,11 @@ func UpdateRow(newRow interface{}, tableName string, parameters []string) error 
 		query += " set "
 
 		for k, v := range updateParameters {
-			query += k + "='" + TypeToString(v) + "', "
+			typeStr, err := TypeToString(v)
+			if err != nil {
+				return err
+			}
+			query += k + "='" + typeStr + "', "
 		}
 
 		query = query[:len(query)-2]

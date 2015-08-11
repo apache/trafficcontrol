@@ -75,17 +75,28 @@ func apiHandler(w http.ResponseWriter, r *http.Request) {
 	var err error
 	errString := ""
 
+	isTable := sqlParser.IsTable(tableName)
+
 	if r.Method == "POST" {
 		bodyStr, _ := ioutil.ReadAll(r.Body)
 		tableName, err = sqlParser.Post(tableName, bodyStr)
 		if err != nil {
 			errString = err.Error()
+		} else {
+			errString = "Post successful"
 		}
 	} else if r.Method == "DELETE" {
-		err = sqlParser.Delete(tableName, tableParameters)
+		dropTable, err := sqlParser.Delete(tableName, tableParameters)
 		if err != nil {
 			errString = err.Error()
+		} else {
+			errString = "Delete successful."
 		}
+		//clear if view
+		if dropTable {
+			tableName = ""
+		}
+
 		tableParameters = tableParameters[:0]
 	} else if r.Method == "PUT" {
 		bodyStr, _ := ioutil.ReadAll(r.Body)
@@ -96,18 +107,22 @@ func apiHandler(w http.ResponseWriter, r *http.Request) {
 		tableParameters = tableParameters[:0]
 	}
 
+	var rows []map[string]interface{}
 	//GETS the request
 	if tableName != "" {
-		rows, err := sqlParser.Get(tableName, tableParameters)
+		rows, err = sqlParser.Get(tableName, tableParameters)
 		if err != nil {
 			errString = err.Error()
 		}
-
-		resp := outputFormatter.MakeWrapper(rows, errString)
-		//encoder writes the resultant "Response" struct (see outputFormatter) to writer
-		enc := json.NewEncoder(w)
-		enc.Encode(resp)
+	} else {
+		rows = nil
 	}
+
+	resp := outputFormatter.MakeWrapper(rows, errString, isTable)
+	//encoder writes the resultant "Response" struct (see outputFormatter) to writer
+	enc := json.NewEncoder(w)
+	enc.Encode(resp)
+
 }
 
 func main() {

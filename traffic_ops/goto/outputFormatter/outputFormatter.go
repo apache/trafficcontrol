@@ -21,20 +21,19 @@ outputFormatter contains:
     * Version, which is the version of the API
 * MakeWrapper(r interface{}), which wraps r into a struct to encode
 	*****************************************************************/
-import "fmt"
 
 type Wrapper struct {
 	Resp    interface{} `json:"response"`
-	Version float64     `json:"version"`
 	Error   string      `json:"error"`
+	IsTable bool        `json:"isTable"`
+	Version float64     `json:"version"`
 }
 
 //wraps the given interface r into a returned Wrapper
 //prepped for encoding to stream
-func MakeWrapper(r interface{}, err string) Wrapper {
+func MakeWrapper(r interface{}, err string, isTable bool) Wrapper {
 	//version is hard coded to "1.1"
 	//all of this is variable
-	w := Wrapper{r, 1.1, err}
-	fmt.Println(w)
+	w := Wrapper{r, err, isTable, 1.1}
 	return w
 }
