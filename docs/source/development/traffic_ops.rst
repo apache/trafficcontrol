@@ -341,10 +341,38 @@ Configuration Extensions
 NOTE: Config Extensions are Beta at this time.
 
 
-Data source Extensions
+Data Source Extensions
 ----------------------
-NOTE: Data source Extensions are Beta at this time.
+Traffic Ops has the ability to load custom code at runtime that allow any CDN user to build custom APIs for any requirement that Traffic Ops does not fulfill.  There are two classes of Data Source Extensions, private and public.  Private extensions are Traffic Ops extensions that are not publicly available, and should be kept in the /opt/traffic_ops_extensions/private/lib. Public extensions are Traffic Ops extensions that are Open Source in nature and free to enhance or contribute back to the Traffic Ops Open Source project and should be kept in /opt/traffic_ops/app/lib/Extensions.
 
+
+Extensions at Runtime
+---------------------
+The search path for extensions depends on the configuration of the PERL5LIB, which is preconfigured in the Traffic Ops start scripts.  The following directory structure is where Traffic Ops will look for Extensions in this order.
+
+Extension Directories
+---------------------
+PERL5LIB Example Configuration:
+export PERL5LIB=/opt/traffic_ops_extensions/private/lib/Extensions:/opt/traffic_ops/app/lib/Extensions/TrafficStats
+
+Perl Package Naming Convention
+------------------------------
+To prevent Extension namespace collisions within Traffic Ops all Extensions should follow the package naming convention below:
+
+Extensions::<ExtensionName>
+
+Data Source Extension Perl package name example
+Extensions::TrafficStats
+Extensions::YourCustomExtension
+
+TrafficOpsRoutes.pm
+-------------------
+Traffic Ops accesses each extension through the addition of a URL route as a custom hook.  These routes will be defined in a file called TrafficOpsRoutes.pm that should live in the top directory of your Extension.  The routes that are defined should follow the Mojolicious route conventions.
+
+
+Development Configuration
+--------------------------
+To incorporate any custom Extensions during development set your PERL5LIB with any number of directories with the understanding that the PERL5LIB search order will come into play, so keep in mind that top-down is how your code will be located.  Once Perl locates your custom route or Perl package/class it 'pins' on that class or Mojo Route and doesn't look any further, which allows for the developer to *override* Traffic Ops functionality.
 
 API
 ===
@@ -420,8 +448,6 @@ API Errors
 | ``>level``           | string | Success, info, warning or error.               |
 +----------------------+--------+------------------------------------------------+
 | ``>text``            | string | Alert message.                                 |
-+----------------------+--------+------------------------------------------------+
-|``version``           | string |                                                |
 +----------------------+--------+------------------------------------------------+
 
 The 3 most common errors returned by Traffic Ops are:
