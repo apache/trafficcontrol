@@ -531,25 +531,25 @@ API 1.1 Reference
 .. toctree:: 
   :maxdepth: 1
 
-  traffic_ops_rest/v11/asn
-  traffic_ops_rest/v11/cachegroup
-  traffic_ops_rest/v11/cdn
-  traffic_ops_rest/v11/changelog
-  traffic_ops_rest/v11/deliveryservice
-  traffic_ops_rest/v11/hwinfo
-  traffic_ops_rest/v11/parameter
-  traffic_ops_rest/v11/phys_location
-  traffic_ops_rest/v11/profile
-  traffic_ops_rest/v11/redis
-  traffic_ops_rest/v11/region
-  traffic_ops_rest/v11/role
-  traffic_ops_rest/v11/server
-  traffic_ops_rest/v11/static_dns
-  traffic_ops_rest/v11/status
-  traffic_ops_rest/v11/system
-  traffic_ops_rest/v11/to_extension
-  traffic_ops_rest/v11/type
-  traffic_ops_rest/v11/user
+  traffic_ops_api/v11/asn
+  traffic_ops_api/v11/cachegroup
+  traffic_ops_api/v11/cdn
+  traffic_ops_api/v11/changelog
+  traffic_ops_api/v11/deliveryservice
+  traffic_ops_api/v11/hwinfo
+  traffic_ops_api/v11/parameter
+  traffic_ops_api/v11/phys_location
+  traffic_ops_api/v11/profile
+  traffic_ops_api/v11/redis
+  traffic_ops_api/v11/region
+  traffic_ops_api/v11/role
+  traffic_ops_api/v11/server
+  traffic_ops_api/v11/static_dns
+  traffic_ops_api/v11/status
+  traffic_ops_api/v11/system
+  traffic_ops_api/v11/to_extension
+  traffic_ops_api/v11/type
+  traffic_ops_api/v11/user
 
 API 1.2 Reference 
 -----------------
@@ -557,25 +557,25 @@ API 1.2 Reference
 .. toctree:: 
   :maxdepth: 1
 
-  traffic_ops_rest/v12/asn
-  traffic_ops_rest/v12/cachegroup
-  traffic_ops_rest/v12/cdn
-  traffic_ops_rest/v12/changelog
-  traffic_ops_rest/v12/deliveryservice
-  traffic_ops_rest/v12/hwinfo
-  traffic_ops_rest/v12/parameter
-  traffic_ops_rest/v12/phys_location
-  traffic_ops_rest/v12/profile
-  traffic_ops_rest/v12/influxdb
-  traffic_ops_rest/v12/region
-  traffic_ops_rest/v12/role
-  traffic_ops_rest/v12/server
-  traffic_ops_rest/v12/static_dns
-  traffic_ops_rest/v12/status
-  traffic_ops_rest/v12/system
-  traffic_ops_rest/v12/to_extension
-  traffic_ops_rest/v12/type
-  traffic_ops_rest/v12/user
+  traffic_ops_api/v12/asn
+  traffic_ops_api/v12/cachegroup
+  traffic_ops_api/v12/cdn
+  traffic_ops_api/v12/changelog
+  traffic_ops_api/v12/deliveryservice
+  traffic_ops_api/v12/hwinfo
+  traffic_ops_api/v12/parameter
+  traffic_ops_api/v12/phys_location
+  traffic_ops_api/v12/profile
+  traffic_ops_api/v12/influxdb
+  traffic_ops_api/v12/region
+  traffic_ops_api/v12/role
+  traffic_ops_api/v12/server
+  traffic_ops_api/v12/static_dns
+  traffic_ops_api/v12/status
+  traffic_ops_api/v12/system
+  traffic_ops_api/v12/to_extension
+  traffic_ops_api/v12/type
+  traffic_ops_api/v12/user
 
 
 
