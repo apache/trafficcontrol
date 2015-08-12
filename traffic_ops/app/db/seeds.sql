@@ -202,3 +202,27 @@ insert ignore into profile_parameter (profile, parameter) value (
   (select id from profile where name = 'TRAFFIC_STATS'), 
   (select id from parameter where name = 'DsStats' and config_file = 'traffic_stats.config' and value = 'tps_total')
 );
+
+INSERT INTO cdn(name) (
+  SELECT parameter.value
+  FROM parameter
+  WHERE parameter.name = 'CDN_name'
+);
+
+update deliveryservice ds
+set ds.cdn_id = ( 
+  select cdn.id
+  from profile p, profile_parameter pp, parameter param, cdn
+  where ds.profile = p.id and pp.profile = p.id and pp.parameter = param.id
+  and param.name = 'CDN_name'
+  and cdn.name = param.value
+);
+
+update server s
+set s.cdn_id = ( 
+  select cdn.id
+  from profile p, profile_parameter pp, parameter param, cdn
+  where s.profile = p.id and pp.profile = p.id and pp.parameter = param.id
+  and param.name = 'CDN_name'
+  and cdn.name = param.value
+);
