@@ -144,6 +144,12 @@ __PACKAGE__->table("server");
   is_foreign_key: 1
   is_nullable: 0
 
+=head2 cdn_id
+
+  data_type: 'integer'
+  is_foreign_key: 1
+  is_nullable: 1
+
 =head2 mgmt_ip_address
 
   data_type: 'varchar'
@@ -259,6 +265,8 @@ __PACKAGE__->add_columns(
   { data_type => "tinyint", default_value => 0, is_nullable => 0 },
   "profile",
   { data_type => "integer", is_foreign_key => 1, is_nullable => 0 },
+  "cdn_id",
+  { data_type => "integer", is_foreign_key => 1, is_nullable => 1 },
   "mgmt_ip_address",
   { data_type => "varchar", is_nullable => 1, size => 45 },
   "mgmt_ip_netmask",
@@ -375,6 +383,26 @@ __PACKAGE__->belongs_to(
   { is_deferrable => 1, on_delete => "CASCADE", on_update => "RESTRICT" },
 );
 
+=head2 cdn
+
+Type: belongs_to
+
+Related object: L<Schema::Result::Cdn>
+
+=cut
+
+__PACKAGE__->belongs_to(
+  "cdn",
+  "Schema::Result::Cdn",
+  { id => "cdn_id" },
+  {
+    is_deferrable => 1,
+    join_type     => "LEFT",
+    on_delete     => "SET NULL",
+    on_update     => "RESTRICT",
+  },
+);
+
 =head2 deliveryservice_servers
 
 Type: has_many
@@ -481,8 +509,8 @@ __PACKAGE__->belongs_to(
 );
 
 
-# Created by DBIx::Class::Schema::Loader v0.07043 @ 2015-05-21 13:27:11
-# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:mecAHLqlmqBRoRpMOHaiOQ
+# Created by DBIx::Class::Schema::Loader v0.07043 @ 2015-08-12 11:12:17
+# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:789NcPIesaXf0PHVpc5j4A
 
 
 # You can replace this text with custom code or comments, and it will be preserved on regeneration
