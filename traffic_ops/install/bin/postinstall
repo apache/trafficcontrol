@@ -20,8 +20,8 @@ use strict;
 use warnings;
 
 use lib qw(/opt/traffic_ops/install/lib /opt/traffic_ops/install/lib/perl5 /opt/traffic_ops/app/local/lib/perl5 /opt/traffic_ops/app/lib);
-$ENV{PATH}     = "/opt/traffic_ops/install/bin:/usr/bin";
-$ENV{PERL5LIB} = "/opt/traffic_ops/install/lib:/opt/traffic_ops/app/local/lib/perl5:/opt/traffic_ops/app/lib";
+$ENV{PATH}     = "/opt/traffic_ops/install/bin:$ENV{PATH}";
+$ENV{PERL5LIB} = "/opt/traffic_ops/install/lib:/opt/traffic_ops/install/lib/perl5:/opt/traffic_ops/app/local/lib/perl5:/opt/traffic_ops/app/lib";
 
 use DBI;
 use JSON;
@@ -345,8 +345,9 @@ EOF
 	}
 
 	print "Downloading MaxMind data.\n";
+	chdir("/opt/traffic_ops/app/public/routing");
 	$result = InstallUtils::execCommand(
-		"cd /opt/traffic_ops/app/public/routing; /usr/bin/wget http://geolite.maxmind.com/download/geoip/database/GeoLite2-City.mmdb.gz");
+		"/usr/bin/wget http://geolite.maxmind.com/download/geoip/database/GeoLite2-City.mmdb.gz");
 	if ( $result != 0 ) {
 		print "failed to download MaxMind data.\n";
 
@@ -354,7 +355,7 @@ EOF
 	}
 
 	print "Copying coverage zone file to public dir.\n";
-	$result = InstallUtils::execCommand("cd /opt/traffic_ops/app/public/routing; /bin/mv /opt/traffic_ops/app/public/coverage-zone.json .");
+	$result = InstallUtils::execCommand("/bin/mv /opt/traffic_ops/app/public/coverage-zone.json .");
 	if ( $result != 0 ) {
 		print "failed to copy coverage zone file.\n";
 
@@ -380,13 +381,15 @@ EOF
 	}
 }    # end of Init
 
+chdir("/opt/traffic_ops/install/bin");
+
 if ( -f $reconfigure ) {
 	my $rc = InstallUtils::execCommand( "/opt/traffic_ops/install/bin/build_trafficops_perl_library", "-i" );
 	if ( $rc != 0 ) {
 		print "ERROR: failed to install perl dependencies, check the console output and rerun postinstall once you've resolved the error.\n";
 		exit 5;
 	}
-	$rc = InstallUtils::execCommand( "cd /opt/traffic_ops/install/bin && ./download_web_deps", "-i" );
+	$rc = InstallUtils::execCommand( "./download_web_deps", "-i" );
 	if ( $rc != 0 ) {
 		print "ERROR: failed to install Traffic Ops Web dependencies, check the console output and rerun postinstall once you've resolved the error.\n";
 		exit 5;
@@ -400,7 +403,7 @@ else {
 		print "ERROR: failed to install perl dependencies, check the console output and rerun postinstall once you've resolved the error.\n";
 		exit 6;
 	}
-	$rc = InstallUtils::execCommand( "cd /opt/traffic_ops/install/bin && ./download_web_deps", "-i" );
+	$rc = InstallUtils::execCommand( "./download_web_deps", "-i" );
 	if ( $rc != 0 ) {
 		print "ERROR: failed to install Traffic Ops Web dependencies, check the console output and rerun postinstall once you've resolved the error.\n";
 		exit 5;
