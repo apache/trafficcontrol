@@ -114,14 +114,14 @@ sub register {
 			my $rs_type = $self->db->resultset('Type')->search( { -or => [ name => $args->{type} ] } );
 			my $rs_data =
 				$self->db->resultset('Server')
-				->search( { type => { -in => $rs_type->get_column('id')->as_query } }, { prefetch => [ { 'status' => undef } ] } );
+				->search( { type => { -in => $rs_type->get_column('id')->as_query } }, { prefetch => [ 'cdn', { 'status' => undef } ] } );
 
 			while ( my $row = $rs_data->next ) {
-				my $param =
-					$self->db->resultset('ProfileParameter')
-					->search( { -and => [ profile => $row->profile->id, 'parameter.name' => 'CDN_name' ] }, { prefetch => [ 'parameter', 'profile' ] } )
-					->single();
-				my $this_cdn_name = $param->parameter->value;
+				my $this_cdn_name = $row->cdn->name;
+
+				if (!defined($this_cdn_name)) {
+					print "cdn name not defined\n";
+				}
 
 				next if ( exists( $args->{cdn_name} ) && $args->{cdn_name} ne $this_cdn_name );
 				next if ( exists( $args->{status} )   && $args->{status} ne $row->status->name );
