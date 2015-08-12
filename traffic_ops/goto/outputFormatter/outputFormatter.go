@@ -40,14 +40,15 @@ func MakeApiWrapper(r interface{}, c []string, err string, isTable bool) ApiWrap
 }
 
 type ColumnWrapper struct {
-	Field       string `json:"field"`
-	DisplayName string `json:"displayName"`
+	Field        string `json:"field"`
+	DisplayName  string `json:"displayName"`
+	ColumnFilter bool   `json:"columnFilter"`
 }
 
 func MakeColumnWrapper(columns []string) []ColumnWrapper {
 	cw := make([]ColumnWrapper, 0)
 	for _, column := range columns {
-		w := ColumnWrapper{column, column}
+		w := ColumnWrapper{column, column, true}
 		cw = append(cw, w)
 	}
 

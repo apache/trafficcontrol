@@ -65,13 +65,13 @@
 		{{selections}}
 
 		<!-- EDIT -->
-		<button ng-show="selections.length>0" ng-click="editEnabled = true">Edit Row</button>
-		<button ng-show="editEnabled" ng-click="editEnabled = ! editEnabled;">Cancel Edit</button>	
+		<button ng-show="selections.length>0 && !editEnabled" ng-click="editEnabled = true">Edit Row</button>
+		<button ng-show="editEnabled" ng-click="editEnabled = false; clearCheckboxes()">Cancel Edit</button>	
 		<table ng-show="editEnabled" class="table-striped table-hover table-bordered table-condensed">
 		  <tr ng-repeat="row in selections">
 			<td ng-repeat="(key, value) in row" ng-show="key != 'id' && key != 'last_updated'">
 			  {{key}} : <input type="text" ng-model=row[key]></td>
-			<td><button ng-click="put(table, row); selection=[]">Save</button></td> 
+			<td><button ng-click="put(table, row); editEnabled = false">Save</button></td> 
 		  </tr>
 		</table>
 
