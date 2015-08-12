@@ -25,7 +25,7 @@ use MIME::Base64;
 use Data::Dumper;
 
 $| = 1;
-my $script_version = "0.53a";
+my $script_version = "0.53b";
 my $date           = `/bin/date`;
 chomp($date);
 print "$date\nVersion of this script: $script_version\n";
@@ -1283,10 +1283,11 @@ sub get_cfg_file_list {
 	$cdn_name = $ort_ref->{'other'}->{'CDN_name'};
 	( $log_level >> $INFO ) && printf("INFO Found CDN_name from Traffic Ops: $cdn_name\n");
 	foreach my $cfg_file ( keys %{ $ort_ref->{'config_files'} } ) {
-		$cfg_file =~ s/^to\_ext\_(.*)\.config$/$1\.config/ if ($cfg_file =~ m/^to\_ext\_/);
+		my $config_file = $cfg_file;
+		$config_file =~ s/^to\_ext\_(.*)\.config$/$1\.config/ if ($cfg_file =~ m/^to\_ext\_/);
 		( $log_level >> $INFO )
-			&& printf( "INFO Found config file: %-30s with location: %-50s\n", $cfg_file, $ort_ref->{'config_files'}->{$cfg_file}->{'location'} );
-		$cfg_files->{$cfg_file}->{'location'} = $ort_ref->{'config_files'}->{$cfg_file}->{'location'};
+			&& printf( "INFO Found config file: %-30s with location: %-50s\n", $config_file, $ort_ref->{'config_files'}->{$cfg_file}->{'location'} );
+		$cfg_files->{$config_file}->{'location'} = $ort_ref->{'config_files'}->{$cfg_file}->{'location'};
 	}
 	return ( $profile_name, $cfg_files, $cdn_name );
 }
