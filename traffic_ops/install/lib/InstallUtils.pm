@@ -6,19 +6,11 @@
 package InstallUtils;
 
 use Term::ReadPassword;
-use IPC::Cmd;
 
 sub execCommand {
 	my ( $cmd, @args ) = @_;
-	my $command = join( ' ', $cmd, @args );
-
-	my ( $ok, $err, $full_buf, $stdout_buff, $stderr_buff ) = IPC::Cmd::run( command => $command, verbose => 1 );
-
-	my $result = 0;
-	if ( !$ok ) {
-		print "ERROR: $command failed\n";
-		$result = 1;
-	}
+	system( $cmd, @args );
+	my $result = $? >> 8;
 	return $result;
 }
 
