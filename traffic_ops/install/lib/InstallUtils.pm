@@ -9,7 +9,7 @@ use Term::ReadPassword;
 
 sub execCommand {
 	my ( $cmd, @args ) = @_;
-	system($cmd, @args);
+	system( $cmd, @args );
 	my $result = $? >> 8;
 	return $result;
 }

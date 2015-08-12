@@ -60,7 +60,7 @@ EOF
 # Init.
 sub init () {
 	do {
-	  InstallUtils::execCommand( "/usr/bin/tput", "clear" );
+		InstallUtils::execCommand( "/usr/bin/tput", "clear" );
 
 		if ($DBI::errstr) {
 			print "Error connecting to database using the supplied information: $DBI::errstr\n";
@@ -346,8 +346,7 @@ EOF
 
 	print "Downloading MaxMind data.\n";
 	chdir("/opt/traffic_ops/app/public/routing");
-	$result = InstallUtils::execCommand(
-		"/usr/bin/wget http://geolite.maxmind.com/download/geoip/database/GeoLite2-City.mmdb.gz");
+	$result = InstallUtils::execCommand("/usr/bin/wget http://geolite.maxmind.com/download/geoip/database/GeoLite2-City.mmdb.gz");
 	if ( $result != 0 ) {
 		print "failed to download MaxMind data.\n";
 
