@@ -25,7 +25,7 @@ use MIME::Base64;
 use Data::Dumper;
 
 $| = 1;
-my $script_version = "0.53b";
+my $script_version = "0.53c";
 my $date           = `/bin/date`;
 chomp($date);
 print "$date\nVersion of this script: $script_version\n";
@@ -1283,13 +1283,19 @@ sub get_cfg_file_list {
 	$cdn_name = $ort_ref->{'other'}->{'CDN_name'};
 	( $log_level >> $INFO ) && printf("INFO Found CDN_name from Traffic Ops: $cdn_name\n");
 	foreach my $cfg_file ( keys %{ $ort_ref->{'config_files'} } ) {
-		my $config_file = $cfg_file;
-		$config_file =~ s/^to\_ext\_(.*)\.config$/$1\.config/ if ($cfg_file =~ m/^to\_ext\_/);
+		my $fname_on_disk = &get_filename_on_disk($cfg_file);
 		( $log_level >> $INFO )
-			&& printf( "INFO Found config file: %-30s with location: %-50s\n", $config_file, $ort_ref->{'config_files'}->{$cfg_file}->{'location'} );
-		$cfg_files->{$config_file}->{'location'} = $ort_ref->{'config_files'}->{$cfg_file}->{'location'};
+			&& printf( "INFO Found config file (on disk: %-25s): %-25s with location: %-50s\n", $fname_on_disk, $cfg_file, $ort_ref->{'config_files'}->{$cfg_file}->{'location'} );
+		$cfg_files->{$fname_on_disk}->{'location'} = $ort_ref->{'config_files'}->{$cfg_file}->{'location'};
+		$cfg_files->{$fname_on_disk}->{'fname-in-TO'} = $cfg_file;
 	}
 	return ( $profile_name, $cfg_files, $cdn_name );
+}
+
+sub get_filename_on_disk {
+	my $config_file = shift;
+	$config_file =~ s/^to\_ext\_(.*)\.config$/$1\.config/ if ($config_file =~ m/^to\_ext\_/);
+	return $config_file;
 }
 
 sub get_header_comment {
@@ -1936,13 +1942,12 @@ sub validate_result {
 sub set_url {
 	my $filename = shift;
 	my $filepath = $cfg_file_tracker->{$filename}->{'location'};
-	my $file     = $filepath . "/" . $filename;
 
 	if ( $filename ne "regex_revalidate.config" ) {
-		return "$traffic_ops_host\/genfiles\/view\/$hostname_short\/$filename";
+		return "$traffic_ops_host\/genfiles\/view\/$hostname_short\/" . $cfg_file_tracker->{$filename}->{'fname-in-TO'};
 	}
 	else {
-		return "$traffic_ops_host\/Trafficserver-Snapshots\/$my_cdn_name\/$filename";
+		return "$traffic_ops_host\/Trafficserver-Snapshots\/$my_cdn_name\/" . $cfg_file_tracker->{$filename}->{'fname-in-TO'};
 	}
 }
 
