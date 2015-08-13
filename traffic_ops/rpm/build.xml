@@ -44,23 +44,23 @@
 	<mkdir dir="${rpmdir}/SOURCES/${distro}"/>
 
 	<copy todir="${rpmdir}/SOURCES/${distro}/app">
-	    <fileset dir="app"/>
+	    <fileset dir="../app"/>
 	</copy>
 
 	<copy todir="${rpmdir}/SOURCES/${distro}/app/db">
-	    <fileset dir="app/db"/>
+	    <fileset dir="../app/db"/>
 	</copy>
 
 	<copy todir="${rpmdir}/SOURCES/${distro}/install">
-		<fileset dir="install"/>
+		<fileset dir="../install"/>
 	</copy>
 
 	<copy todir="${rpmdir}/SOURCES/${distro}/doc">
-		<fileset dir="doc"/>
+		<fileset dir="../doc"/>
 	</copy>
 
 	<copy todir="${rpmdir}/SOURCES/${distro}/etc">
-	    <fileset dir="etc"/>
+	    <fileset dir="../etc"/>
 	</copy>
 
 	<tar longfile="gnu" destfile="${rpmdir}/SOURCES/${distro}.tgz"
