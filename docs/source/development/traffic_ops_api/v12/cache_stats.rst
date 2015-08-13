@@ -46,7 +46,7 @@ Cache Statistics
 
 **GET /api/1.2/cache_stats.json**
 
-  Example Query: http://localhost:3000/api/1.2/cache_stats.json?cdnName=yourcdn&metricType=bandwidth&startDate=2015-08-11T12:30:00-06:00&endDate=2015-08-11T13:30-06:00:00&interval=60s
+  Example Query: http://localhost:3000/api/1.2/cache_stats.json?cdnName=yourcdn&metricType=bandwidth&startDate=2015-08-11T12:30:00Z&endDate=2015-08-11T13:30:00Z&interval=60s
 
   **Summary Properties**
 
