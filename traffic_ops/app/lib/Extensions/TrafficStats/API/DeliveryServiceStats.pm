@@ -20,34 +20,71 @@ use Mojo::Base 'Mojolicious::Controller';
 use Data::Dumper;
 use Extensions::TrafficStats::Delegate::Statistics;
 use Common::ReturnCodes qw(SUCCESS ERROR);
+use Validate::Tiny ':all';
 
 my $builder;
 
 sub index {
-	my $self    = shift;
-	my $ds_name = $self->param('deliveryServiceName');
+	my $self             = shift;
+	my $ds_name          = $self->param('deliveryServiceName');
+	my $metric_type      = $self->param('metricType');
+	my $start_date       = $self->param('startDate');
+	my $end_date         = $self->param('endDate');
+	my $query_parameters = { deliveryServiceName => $ds_name, metricType => $metric_type, startDate => $start_date, endDate => $end_date };
 
-	if ( $self->is_valid_delivery_service_name($ds_name) ) {
-		if ( $self->is_delivery_service_name_assigned($ds_name) || &is_admin($self) || &is_oper($self) ) {
+	my ( $is_valid, $result ) = $self->is_valid($query_parameters);
+	if ($is_valid) {
+		if ( $self->is_valid_delivery_service_name($ds_name) ) {
+			if ( $self->is_delivery_service_name_assigned($ds_name) || &is_admin($self) || &is_oper($self) ) {
 
-			my $stats = new Extensions::TrafficStats::Delegate::Statistics( $self, $self->get_db_name() );
+				my $stats = new Extensions::TrafficStats::Delegate::Statistics( $self, $self->get_db_name() );
 
-			my ( $rc, $result ) = $stats->get_stats();
-			if ( $rc == SUCCESS ) {
-				return $self->success($result);
+				my ( $rc, $result ) = $stats->get_stats();
+				if ( $rc == SUCCESS ) {
+					return $self->success($result);
+				}
+				else {
+					return $self->alert($result);
+				}
 			}
 			else {
-				return $self->alert($result);
+				return $self->forbidden();
 			}
-		}
-		else {
-			return $self->forbidden();
 		}
 	}
 	else {
-		$self->success( {} );
+		return $self->alert($result);
 	}
+}
 
+sub is_valid {
+	my $self             = shift;
+	my $query_parameters = shift;
+
+	my $rules = {
+		fields => [qw/deliveryServiceName metricType startDate endDate/],
+
+		# Checks to perform on all fields
+		checks => [
+
+			# All of these are required
+			[qw/deliveryServiceName metricType startDate endDate/] => is_required("query parameter is required"),
+
+		]
+	};
+
+	# Validate the input against the rules
+	my $result = validate( $query_parameters, $rules );
+
+	if ( $result->{success} ) {
+
+		#print "success: " . dump( $result->{data} );
+		return ( 1, $result->{data} );
+	}
+	else {
+		print "failed " . Dumper( $result->{error} );
+		return ( 0, $result->{error} );
+	}
 }
 
 sub get_db_name {

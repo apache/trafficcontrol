@@ -189,7 +189,7 @@ sub build_series {
 		my $series_content = decode_json($content);
 		$series = Extensions::TrafficStats::Builder::BaseBuilder->series_response($series_content);
 		my $series_node = "series";
-		if ( defined($series) && ( keys %$series ) ) {
+		if ( ref($series) eq "HASH" && defined($series) && ( keys %$series ) ) {
 			$result->{$series_node} = $series;
 			my @series_values = $series->{values};
 			my $series_count  = $#{ $series_values[0] };
