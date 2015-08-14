@@ -268,7 +268,7 @@ Users
 
 **GET /api/1.1/user/current/jobs.json**
 
-  Retrieves user purge jobs.
+  Retrieves the user's list of content invalidation requests.
 
   Authentication Required: Yes
 
@@ -338,7 +338,9 @@ Users
 
 **POST/api/1.1/user/current/jobs**
 
-  Creates a purge job.
+Invalidating content on the CDN is sometimes necessary when the origin was mis-configured and something is cached in the CDN that needs to be removed. Given the size of a typical Traffic Control CDN and the amount of content that can be cached in it, removing the content from all the caches may take a long time. To speed up content invalidation, Traffic Ops will not try to remove the content from the caches, but it makes the content inaccessible using the *regex_revalidate* ATS plugin. This forces a *revalidation* of the content, rather than a new get.
+
+.. Note:: This method forces a HTTP *revalidation* of the content, and not a new *GET* - the origin needs to support revalidation according to the HTTP/1.1 specification, and send a ``200 OK`` or ``304 Not Modified`` as applicable.
 
   Authentication Required: Yes
 
@@ -348,15 +350,31 @@ Users
   +----------------------+--------+------------------------------------------------+
   | Parameter            | Type   | Description                                    |
   +======================+========+================================================+
-  |``dsId``              | string |                                                |
+  |``dsId``              | string | Unique Delivery Service ID                     |
   +----------------------+--------+------------------------------------------------+
-  |``dsXmlId``           | string |                                                |
+  |``dsXmlId``           | string | Unique Delivery Service Name                   |
   +----------------------+--------+------------------------------------------------+
-  |``regex``             | string |                                                |
+  |``regex``             | string | Path Regex this should be a                    |
+  |                      |        | `PCRE <http://www.pcre.org/>`_ compatible      |
+  |                      |        | regular expression for the path to match for   |
+  |                      |        | forcing the revalidation. Be careful to only   |
+  |                      |        | match on the content you need to remove -      |
+  |                      |        | revalidation is an expensive operation for     |
+  |                      |        | many origins, and a simple ``/.*`` can cause   |
+  |                      |        | an overload condition of the origin.           |
   +----------------------+--------+------------------------------------------------+
-  |``startTime``         | string |                                                |
+  |``startTime``         | string | Start Time is the time when the revalidation   |
+  |                      |        | rule will be made active. It is pre-populated  |
+  |                      |        | with the current time, leave as is to schedule |
+  |                      |        | ASAP.                                          |
   +----------------------+--------+------------------------------------------------+
-  |``ttl``               | int    |                                                |
+  |``ttl``               | int    | Time To Live is how long the revalidation rule |
+  |                      |        | will be active for. It usually makes sense to  |
+  |                      |        | make this the same as the ``Cache-Control``    |
+  |                      |        | header from the origin which sets the object   |
+  |                      |        | time to live in cache (by ``max-age`` or       |
+  |                      |        | ``Expires``). Entering a longer TTL here will  |
+  |                      |        | make the caches do unnecessary work.           |
   +----------------------+--------+------------------------------------------------+
 
   **Request Example** ::
