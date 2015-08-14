@@ -551,6 +551,16 @@ The 3 most common errors returned by Traffic Ops are:
 
   The rest of the API documentation will only document the ``200 OK`` case, where no errors have occured.
 
+API Route Mappings Between Versions
+-----------------------------------
+
+.. toctree:: 
+  :maxdepth: 1
+
+  traffic_ops_api/versions_mapping
+  traffic_ops_api/version_10_to_11
+  traffic_ops_api/version_11_to_12
+
 API 1.1 Reference 
 -----------------
 
