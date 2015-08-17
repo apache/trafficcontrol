@@ -16,7 +16,6 @@
 
 .. _to-api-v11-phys-loc:
 
-
 Physical Location
 =================
 
@@ -26,7 +25,6 @@ Physical Location
 =======================
 
 **GET /api/1.1/phys_locations.json**
-====================================
 
   Authentication Required: Yes
 
