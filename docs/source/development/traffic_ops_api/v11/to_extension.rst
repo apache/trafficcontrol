@@ -14,7 +14,7 @@
 .. limitations under the License.
 .. 
 
-.. _to-api-ext:
+.. _to-api-v11-ext:
 
 TO Extensions
 =============
@@ -82,7 +82,6 @@ Response Content Type: application/json
                         servercheck_short_name: "10G"
                 }
          ],
-         “version”: "1.1"
   }
 
 
@@ -157,7 +156,6 @@ Response Content Type: application/json
            "text": "Check Extension loaded."
         }
      ],
-     "version": "1.1"
     }
 
 
@@ -201,7 +199,6 @@ Response Content Type: application/json
            "text": "Extension deleted."
         }
      ],
-     "version": "1.1"
       }
 
   

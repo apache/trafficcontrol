@@ -14,12 +14,17 @@
 .. limitations under the License.
 .. 
 
-.. _to-api-dns:
+.. _to-api-v12-dns:
 
 Static DNS Entries
 ==================
 
-**GET /api/1.1/staticdnsentries.json**
+.. _to-api-v12-static-dns-route:
+
+/api/1.2/staticdnsentries
+=========================
+
+**GET /api/1.2/staticdnsentries.json**
 
 Authentication Required: Yes
 

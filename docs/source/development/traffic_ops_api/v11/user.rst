@@ -14,10 +14,15 @@
 .. limitations under the License.
 .. 
 
-.. _to-api-users:
+.. _to-api-v11-users:
 
 Users
 =====
+
+.. _to-api-v11-users-route:
+
+/api/1.1/users
+==============
 
 **GET /api/1.1/users.json**
 
@@ -163,7 +168,6 @@ Users
                             “gid”: "0",
                             “postalCode”: ""
            },
-           “version”: "1.1"
     }
 
 |
@@ -262,7 +266,6 @@ Users
                             "text": "UserProfile was successfully updated."
                     }
             ],
-            "version": "1.1"
     }
 
 
@@ -330,7 +333,6 @@ Users
            "startTime": "2015-01-21 10:45:38"
         }
      ],
-     "version": "1.1"
     }
 
 
@@ -413,7 +415,6 @@ Invalidating content on the CDN is sometimes necessary when the origin was mis-c
                             “text”: "Successfully created purge job for: ."
                       }
                   ],
-          “version”: "1.1"
     }
 
 
@@ -469,7 +470,6 @@ Invalidating content on the CDN is sometimes necessary when the origin was mis-c
            "text": "Successfully logged in."
         }
      ],
-     "version": "1.1"
     }
 
 |
@@ -510,7 +510,6 @@ Invalidating content on the CDN is sometimes necessary when the origin was mis-c
            "id": "280"
         }
      ],
-     "version": "1.1"
     }
 
 |
@@ -563,7 +562,6 @@ Invalidating content on the CDN is sometimes necessary when the origin was mis-c
            "text": "Unauthorized, please log in."
         }
      ],
-     "version": "1.1"
     }
 
 
@@ -601,7 +599,6 @@ Invalidating content on the CDN is sometimes necessary when the origin was mis-c
            "text": "You are logged out."
         }
      ],
-     "version": "1.1"
     }
 
 
@@ -655,7 +652,6 @@ Invalidating content on the CDN is sometimes necessary when the origin was mis-c
            "text": "Successfully logged in."
         }
      ],
-     "version": "1.1"
     }
 
   

@@ -14,14 +14,21 @@
 .. limitations under the License.
 .. 
 
-.. _to-api-roles:
+.. _to-api-v11-region:
 
-Roles
-=====
+Regions
+=======
 
-**GET /api/1.1/roles.json**
+.. _to-api-v11-regions-route:
 
-  Authentication Required: Yes
+/api/1.1/regions
+================
+
+**GET /api/1.1/regions.json**
+
+  Authentication Required: 
+
+  Response Content Type: application/json
 
   **Response Properties**
 
@@ -32,22 +39,19 @@ Roles
   +----------------------+--------+------------------------------------------------+
   |``id``                | string |                                                |
   +----------------------+--------+------------------------------------------------+
-  |``privLevel``         | string |                                                |
-  +----------------------+--------+------------------------------------------------+
-  |``description``       | string |                                                |
-  +----------------------+--------+------------------------------------------------+
 
   **Response Example** ::
 
     {
      "response": [
         {
-           "name": "read-only",
-           "id": "2",
-           "privLevel": "10",
-           "description": "read-only user"
+           "name": "Atlanta",
+           "id": "6"
+        },
+        {
+           "name": "Beltway",
+           "id": "1"
         }
      ],
-     "version": "1.1"
     }
 

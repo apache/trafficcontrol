@@ -15,7 +15,12 @@
 .. 
 
 
-.. _to-api-asn:
+.. _to-api-v11-asn:
+
+.. _to-api-v11-asns-route:
+
+/api/1.1/asns
+=============
 
 ASN
 ===
@@ -60,6 +65,5 @@ ASN
            }
         ]
      },
-     "version": "1.1"
     }
 

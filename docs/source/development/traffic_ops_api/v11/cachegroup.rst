@@ -14,7 +14,13 @@
 .. limitations under the License.
 .. 
 
-.. _to-api-cachegroup:
+.. _to-api-v11-cachegroup:
+
+
+.. _to-api-v11-cachegroups-route:
+
+/api/1.1/cachegroups
+====================
 
 Cache Group
 ===========
@@ -76,7 +82,6 @@ Cache Group
            "shortName": "dccmc"
         }
      ],
-     "version": "1.1"
     }
 
 |
@@ -105,7 +110,6 @@ Cache Group
              "name": "dc-cmc"
           }
        ],
-       "version": "1.1"
      }
 
 |
@@ -149,7 +153,6 @@ Cache Group
            }
         ]
      },
-     "version": "1.1"
     }
 
 
@@ -193,7 +196,6 @@ Cache Group
            }
         ]
      },
-     "version": "1.1"
     }
 
 
@@ -234,6 +236,5 @@ Cache Group
            "id": "22"
         }
      ],
-     "version": "1.1"
     }
 

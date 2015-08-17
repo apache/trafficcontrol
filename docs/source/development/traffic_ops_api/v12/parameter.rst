@@ -14,11 +14,15 @@
 .. limitations under the License.
 .. 
 
-.. _to-api-parameter:
+.. _to-api-v12-parameter:
 
 Parameter
 =========
-**GET /api/1.1/parameters.json**
+
+.. _to-api-v12-parameters-route:
+
+/api/1.2/parameters
+===================
 
   Authentication Required: Yes
 
@@ -60,12 +64,11 @@ Parameter
            "config_file": "records.config"
         }
      ],
-     "version": "1.1"
     }
 
 |
 
-**GET /api/1.1/parameters/profile/:profile_name.json**
+**GET /api/1.2/parameters/profile/:profile_name.json**
 
   Authentication Required: Yes
 
@@ -116,7 +119,6 @@ Parameter
            "config_file": "records.config"
         }
      ],
-     "version": "1.1"
     }
 
 
