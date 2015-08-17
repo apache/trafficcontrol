@@ -19,6 +19,11 @@
 Users
 =====
 
+.. _to-api-v12-users-route:
+
+/api/1.2/users
+--------------
+
 **GET /api/1.2/users.json**
 
   Retrieves all users.

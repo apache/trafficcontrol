@@ -19,7 +19,7 @@
 InfluxDB
 ==========
 
-.. Note:: The redis documentation needs a thorough review!
+.. Note:: The documentation needs a thorough review!
 
 
 **GET /api/1.2/traffic_monitor/stats.json**

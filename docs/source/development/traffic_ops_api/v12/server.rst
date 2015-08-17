@@ -18,6 +18,12 @@
 
 Server
 ======
+
+.. _to-api-v12-servers-route:
+
+/api/1.2/servers
+================
+
 **GET /api/1.2/servers.json**
 
   Retrieves properties of CDN servers.

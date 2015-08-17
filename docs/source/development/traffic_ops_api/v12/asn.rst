@@ -20,6 +20,11 @@
 ASN
 ===
 
+.. _to-api-v12-asns-route:
+
+/api/1.2/asns
+=============
+
 **GET /api/1.2/asns.json**
 
   Authentication Required: Yes

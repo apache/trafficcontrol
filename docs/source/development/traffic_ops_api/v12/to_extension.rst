@@ -18,6 +18,12 @@
 
 TO Extensions
 =============
+
+.. _to-api-v12-ext-route:
+
+/api/1.2/to_extensions
+======================
+
 **GET /api/1.2/to_extensions.json**
 
 Retrieves the list of extensions.

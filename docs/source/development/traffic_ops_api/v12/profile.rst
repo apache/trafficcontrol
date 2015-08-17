@@ -20,6 +20,11 @@
 Profiles
 ========
 
+.. _to-api-v12-profiles-route:
+
+/api/1.2/profiles
+=================
+
 **GET /api/1.2/profiles**
 
 	Authentication Required: Yes

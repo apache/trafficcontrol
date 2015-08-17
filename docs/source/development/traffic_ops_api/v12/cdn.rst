@@ -22,6 +22,11 @@ CDN
 Health
 ++++++
 
+.. _to-api-v12-cdn-health-route:
+
+/api/1.2/cdns/health
+====================
+
 **GET /api/1.2/cdns/health.json**
 
   Authentication Required: Yes

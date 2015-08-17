@@ -20,6 +20,11 @@
 Delivery Service
 ================
 
+.. _to-api-v12-ds-route:
+
+/api/1.2/deliveryservices
+=========================
+
 **GET /api/1.2/deliveryservices.json**
 
   Retrieves all delivery services. See also `Using Traffic Ops - Delivery Service <http://traffic-control-cdn.net/docs/latest/admin/traffic_ops_using.html#delivery-service>`_.
