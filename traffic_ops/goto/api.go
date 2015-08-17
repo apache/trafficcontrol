@@ -25,7 +25,6 @@ import (
 	"net"
 	"net/http"
 	"os"
-	"strings"
 )
 
 var (
@@ -41,14 +40,7 @@ var (
 
 func requestHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Access-Control-Allow-Origin", "*")
-	path := strings.Split(r.URL.Path[1:], "/")
-
-	var resp interface{}
-	if len(path) > 1 && path[1] != "" {
-		resp = outputFormatter.MakeColumnWrapper(sqlParser.GetColumnNames(path[1]))
-	} else {
-		resp = sqlParser.GetTableNames()
-	}
+	resp := sqlParser.GetTableNames()
 	enc := json.NewEncoder(w)
 	enc.Encode(resp)
 }
@@ -80,10 +72,9 @@ func apiHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method == "POST" {
 		bodyStr, _ := ioutil.ReadAll(r.Body)
 		tableName, err = sqlParser.Post(tableName, bodyStr)
+		fmt.Println("ERROR :", err)
 		if err != nil {
 			errString = err.Error()
-		} else {
-			errString = "Post successful"
 		}
 	} else if r.Method == "DELETE" {
 		dropTable, err := sqlParser.Delete(tableName, tableParameters)
@@ -97,7 +88,7 @@ func apiHandler(w http.ResponseWriter, r *http.Request) {
 		tableParameters = tableParameters[:0]
 	} else if r.Method == "PUT" {
 		bodyStr, _ := ioutil.ReadAll(r.Body)
-		err = sqlParser.Put(tableName, tableParameters, bodyStr)
+		err = sqlParser.Put(tableName, bodyStr)
 		if err != nil {
 			errString = err.Error()
 		}
@@ -106,19 +97,20 @@ func apiHandler(w http.ResponseWriter, r *http.Request) {
 
 	var rows []map[string]interface{}
 	var columns []string
+	var columnAliases []string
+	var columnMap map[string]map[string]interface{}
 	//GETS the request
 	if tableName != "" {
-		rows, err = sqlParser.Get(tableName, tableParameters)
+		rows, err = sqlParser.Get(tableName)
 		columns = sqlParser.GetColumnNames(tableName)
+		columnAliases, columnMap = sqlParser.GetForeignKeyColumns(tableName)
 		if err != nil {
 			errString = err.Error()
 		}
 	} else {
 		rows = nil
-		columns = nil
 	}
-
-	resp := outputFormatter.MakeApiWrapper(rows, columns, errString, isTable)
+	resp := outputFormatter.MakeApiWrapper(rows, columns, columnAliases, columnMap, errString, isTable)
 	//encoder writes the resultant "Response" struct (see outputFormatter) to writer
 	enc := json.NewEncoder(w)
 	enc.Encode(resp)

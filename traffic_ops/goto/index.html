@@ -1,19 +1,23 @@
 <!DOCTYPE html>
 <html lang="en-US">
- <head>
-  <!--<script src= "http://ajax.googleapis.com/ajax/libs/angularjs/1.3.14/angular.min.js"></script>-->
-  <!--<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>-->
-  <!--<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/js/bootstrap.min.js"></script>-->
-  <script src="js/angular.js"></script>
-  <script src="js/jquery.js"></script>
-  <script src="js/bootstrap.js"></script>
-  <script src="js/react.js"></script>
-  <script src="js/main.js"></script>
-  <script src="js/ngReact.js"></script>
+  <head>
+	<!--<script src= "http://ajax.googleapis.com/ajax/libs/angularjs/1.3.14/angular.min.js"></script>-->
+	<script src="js/angular.js"></script>
+	<!--<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>-->
+	<script src="js/jquery.js"></script>
+	<!--<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/js/bootstrap.min.js"></script>-->
+	<script src="js/bootstrap.js"></script>
+	<!--<script src="https://fb.me/react-0.13.3.js"></script>-->
+	<script src="js/react.js"></script>
+	<!--<script src="https://raw.githubusercontent.com/josebalius/ngReactGrid/master/build/js/ngReactGrid.min.js"></script>-->
+	<script src="js/ngReact.js"></script>
+	<!--<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css">-->
+	<link rel="stylesheet" href="css/bootstrap.css">
+	<!--<link rel="stylesheet"  src="https://raw.githubusercontent.com/josebalius/ngReactGrid/master/build/css/ngReactGrid.css"></script>-->
+	<link rel="stylesheet" href="css/ngReactGrid.css">
 
-  <link rel="stylesheet" href="css/bootstrap.css">
-  <link rel="stylesheet" href="css/ngReactGrid.css">
-</head>
+	<script src="js/main.js"></script>
+  </head>
 
 
   <body ng-app="app" ng-controller="InitCtrl">
@@ -42,8 +46,7 @@
 		</ul>
 		<!-- ADD VIEW -->
 		<ul class="nav navbar-nav navbar-right">
-		  <li>
-			<button class="btn btn-default" ng-show="!showAddView" ng-click="showAddView = ! showAddView">Add View</button>
+		  <button class="btn btn-default" ng-show="!showAddView" ng-click="showAddView = ! showAddView">Add View</button>
 		  </li>
 		  <li>
 			<!--ADD VIEW FORM -->
@@ -59,35 +62,44 @@
 		</ul>
 	  </div>
 	</nav>
-
 	<div>
 	  <form>
-		{{selections}}
+		<div ng-init="rowArray = []">
+		  <!-- EDIT -->
+		  <button ng-show="selections.length>0 && !editEnabled"  ng-click="editEnabled = true">Edit Row(s)</button>
+		  <button ng-show="editEnabled" ng-click="editEnabled = false; clearCheckboxes(); rowArray = [];">Cancel Edit</button>	
+		  <button ng-show="editEnabled" ng-click="put(table, rowArray); editEnabled = false; rowArray = [];">Submit</button>	
 
-		<!-- EDIT -->
-		<button ng-show="selections.length>0 && !editEnabled" ng-click="editEnabled = true">Edit Row</button>
-		<button ng-show="editEnabled" ng-click="editEnabled = false; clearCheckboxes()">Cancel Edit</button>	
-		<table ng-show="editEnabled" class="table-striped table-hover table-bordered table-condensed">
-		  <tr ng-repeat="row in selections">
-			<td ng-repeat="(key, value) in row" ng-show="key != 'id' && key != 'last_updated'">
-			  {{key}} : <input type="text" ng-model=row[key]></td>
-			<td><button ng-click="put(table, row); editEnabled = false">Save</button></td> 
-		  </tr>
-		</table>
+		  <table class="table-striped table-hover table-bordered table-condensed" ng-show="editEnabled">
+			<tr><td ng-repeat="(colName, col) in colFilter(columns) | filter : colFilter">{{col.colAlias}}</td></tr>
+			<tr ng-init="filterRow(row)" ng-repeat="row in selections">
+			  <td ng-repeat="(colName, col) in colFilter(columns) | filter : colFilter">
+				<input ng-show="!col.isForeignKey" type="text"  ng-model=row[colName]>
+				<select ng-show="col.isForeignKey" ng-model=row[colName]>
+				  <option value={{value}} ng-repeat="(key, value) in col.foreignKeyValues">{{key}}</option>
+				</select>
+			  </td>
 
+			  <td><button ng-click="rowArray.push(row)">Save</button></td> 
+			</tr>
+		  </table>
+		</div>
 		<!-- DELETE -->
 		<button ng-show="selections.length>0" ng-click="delete(table, selections);">Delete Row</button>
 
 		<br/><br/>
-
 		<!-- SHOW ADD ROW BUTTONS -->
-		<button ng-show="tableSelected" ng-click="showAddRowCols = ! showAddRowCols; showAddRow = ! showAddRow">Add Row</button>
-		<button ng-show="showAddRowCols" ng-click="showAddRowCols = ! showAddRowCols; showAddRow = ! showAddRow">Cancel</i></button>
-
+		<button ng-show="tableSelected" ng-click="showAddRowCols = ! showAddRowCols; showAddRow = ! showAddRow; newRow={}">Add Row</button>
+		<button ng-show="showAddRowCols" ng-click="showAddRowCols = ! showAddRowCols; showAddRow = ! showAddRow; newRow={}">Cancel</i></button>
 		<!-- ADD ROW PART -->
 		<table class="table-striped table-hover table-bordered table-condensed" ng-show="showAddRowCols" ng-init="newRow={}">
-		  <tr><td class="span2"  ng-repeat="column in columns | filter: '!id' | filter: '!last_updated'">{{column}}</td></tr>
-		  <tr><td ng-repeat="column in columns | filter: '!id' | filter: '!last_updated'"><input type="text" ng-model=newRow[column]></td>
+		  <tr><td class="span2"  ng-repeat="column in colFilter(columns)">{{column.colAlias}}</td></tr>
+		  <tr><td ng-repeat="(colName, col) in colFilter(columns)">
+			  <input ng-show="!col.isForeignKey" type="text" ng-model=newRow[colName]>
+			  <select ng-show="col.isForeignKey" ng-model="newRow[colName]">
+				<option value={{value}} ng-repeat="(key, value) in col.foreignKeyValues">{{key}}</option>
+			  </select>
+			</td>
 
 			<td>
 			  <button ng-click="post(table, newRow); showAddRowCols = ! showAddRowCols; showAddRow = ! showAddRow">Submit</button>
@@ -98,8 +110,8 @@
 		<!-- DELETE VIEW -->
 		<button ng-show="tableSelected && !isTable" ng-click="deleteView(table)">Delete View</button>
 	  </form>
-		<!-- TABLE -->
-		<div ng-show="tableSelected"><ng-react-grid grid="grid"></ng-react-grid></div>
+	  <!-- TABLE -->
+	  <div ng-show="tableSelected"><ng-react-grid grid="grid"></ng-react-grid></div>
 	</div>
   </body>
 </html>
