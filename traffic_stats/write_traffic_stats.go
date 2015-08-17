@@ -15,8 +15,8 @@ import (
 	"strings"
 	"time"
 
-	log "github.com/cihub/seelog"
 	traffic_ops "github.com/Comcast/traffic_control/traffic_ops/client"
+	log "github.com/cihub/seelog"
 	influx "github.com/influxdb/influxdb/client"
 )
 
@@ -31,16 +31,17 @@ const defaultPollingInterval = 10
 
 // StartupConfig contains all fields necessary to create an InfluxDB session.
 type StartupConfig struct {
-	ToUser               string `json:"toUser"`
-	ToPasswd             string `json:"toPasswd"`
-	ToURL                string `json:"toUrl"`
-	InfluxUser           string `json:"influxUser"`
-	InfluxPassword       string `json:"influxPassword"`
-	PollingInterval      int    `json:"pollingInterval"`
-	StatusToMon          string `json:"statusToMon"`
-	SeelogConfig         string `json:"seelogConfig"`
-	CacheRetentionPolicy string `json:"cacheRetentionPolicy"`
-	DsRetentionPolicy    string `json:"dsRetentionPolicy"`
+	ToUser               string                  `json:"toUser"`
+	ToPasswd             string                  `json:"toPasswd"`
+	ToURL                string                  `json:"toUrl"`
+	InfluxUser           string                  `json:"influxUser"`
+	InfluxPassword       string                  `json:"influxPassword"`
+	PollingInterval      int                     `json:"pollingInterval"`
+	StatusToMon          string                  `json:"statusToMon"`
+	SeelogConfig         string                  `json:"seelogConfig"`
+	CacheRetentionPolicy string                  `json:"cacheRetentionPolicy"`
+	DsRetentionPolicy    string                  `json:"dsRetentionPolicy"`
+	BpsChan              chan influx.BatchPoints `json:"-"`
 }
 
 // RunningConfig contains information about current InfluxDB connections.
@@ -58,6 +59,8 @@ type InfluxDBProps struct {
 }
 
 func main() {
+	var Bps map[string]influx.BatchPoints
+
 	configFile := flag.String("cfg", "", "The config file")
 	testSummary := flag.Bool("testSummary", false, "Test summary mode")
 	flag.Parse()
@@ -67,6 +70,8 @@ func main() {
 	config := &StartupConfig{}
 	err = decoder.Decode(&config)
 	errHndlr(err, FATAL)
+	Bps = make(map[string]influx.BatchPoints)
+	config.BpsChan = make(chan influx.BatchPoints)
 
 	defaultPollingInterval := 10
 	if config.PollingInterval == 0 {
@@ -90,21 +95,37 @@ func main() {
 
 	<-time.NewTimer(time.Now().Truncate(time.Duration(config.PollingInterval) * time.Second).Add(time.Duration(config.PollingInterval) * time.Second).Sub(time.Now())).C
 	tickerChan := time.Tick(time.Duration(config.PollingInterval) * time.Second)
-	for now := range tickerChan {
-		if now.Second() == 30 {
-			trc, err := getToData(config, false)
-			if err == nil {
-				runningConfig = trc
-			}
-		}
-		for cdnName, urls := range runningConfig.HealthUrls {
-			for _, url := range urls {
-				log.Info(cdnName, " -> ", url)
-				if *testSummary {
-					fmt.Println("Skipping stat write - testSummary mode is ON!")
-					continue
+	for {
+		select {
+		case now := <-tickerChan:
+			if now.Second() == 30 {
+				for key, val := range Bps {
+					go sendMetrics(config, &runningConfig, val)
+					delete(Bps, key)
 				}
-				go storeMetrics(cdnName, url, runningConfig.CacheGroupMap, config, &runningConfig)
+				// TODO make this async
+				trc, err := getToData(config, false)
+				if err == nil {
+					runningConfig = trc
+				}
+			}
+			for cdnName, urls := range runningConfig.HealthUrls {
+				for _, url := range urls {
+					log.Info(cdnName, " -> ", url)
+					if *testSummary {
+						fmt.Println("Skipping stat write - testSummary mode is ON!")
+						continue
+					}
+					go storeMetrics(cdnName, url, runningConfig.CacheGroupMap, config, &runningConfig)
+				}
+			}
+		case batchPoints := <-config.BpsChan:
+			key := fmt.Sprintf("%s%s", batchPoints.Database, batchPoints.RetentionPolicy)
+			b, ok := Bps[key]
+			if ok {
+				b.Points = append(b.Points, batchPoints.Points...)
+			} else {
+				b = batchPoints
 			}
 		}
 	}
@@ -208,17 +229,10 @@ func storeMetrics(cdnName string, url string, cacheGroupMap map[string]string, c
 		return
 	}
 
-	//influx connection
-	influxClient, err := influxConnect(config, runningConfig)
-	if err != nil {
-		errHndlr(err, ERROR)
-		return
-	}
-
 	if strings.Contains(url, "CacheStats") {
-		err = storeCacheValues(rascalData, cdnName, sampleTime, cacheGroupMap, influxClient, config)
+		err = storeCacheValues(rascalData, cdnName, sampleTime, cacheGroupMap, config)
 	} else if strings.Contains(url, "DsStats") {
-		err = storeDsValues(rascalData, cdnName, sampleTime, influxClient, config)
+		err = storeDsValues(rascalData, cdnName, sampleTime, config)
 	} else {
 		log.Info("Don't know what to do with ", url)
 	}
@@ -255,7 +269,7 @@ func errHndlr(err error, severity int) {
     }
  }
 */
-func storeDsValues(rascalData []byte, cdnName string, sampleTime int64, influxClient *influx.Client, config *StartupConfig) error {
+func storeDsValues(rascalData []byte, cdnName string, sampleTime int64, config *StartupConfig) error {
 	type DsStatsJSON struct {
 		Pp              string `json:"pp"`
 		Date            string `json:"date"`
@@ -322,10 +336,7 @@ func storeDsValues(rascalData []byte, cdnName string, sampleTime int64, influxCl
 		Database:        "deliveryservice_stats",
 		RetentionPolicy: config.DsRetentionPolicy,
 	}
-	_, err = influxClient.Write(bps)
-	if err != nil {
-		errHndlr(err, ERROR)
-	}
+	config.BpsChan <- bps
 	log.Info("Saved ", statCount, " deliveryservice stats values for ", cdnName, " @ ", sampleTime)
 	return nil
 }
@@ -356,7 +367,7 @@ func storeDsValues(rascalData []byte, cdnName string, sampleTime int64, influxCl
 }
 */
 
-func storeCacheValues(trafmonData []byte, cdnName string, sampleTime int64, cacheGroupMap map[string]string, influxClient *influx.Client, config *StartupConfig) error {
+func storeCacheValues(trafmonData []byte, cdnName string, sampleTime int64, cacheGroupMap map[string]string, config *StartupConfig) error {
 	/* note about the data:
 	keys are cdnName:deliveryService:cacheGroup:cacheName:statName
 	*/
@@ -422,11 +433,7 @@ func storeCacheValues(trafmonData []byte, cdnName string, sampleTime int64, cach
 		Database:        "cache_stats",
 		RetentionPolicy: config.CacheRetentionPolicy,
 	}
-	//write to influxdb
-	_, err = influxClient.Write(bps)
-	if err != nil {
-		errHndlr(err, ERROR)
-	}
+	config.BpsChan <- bps
 	log.Info("Saved ", statCount, " cache stats values for ", cdnName, " @ ", sampleTime)
 	return nil
 }
@@ -484,4 +491,20 @@ func influxConnect(config *StartupConfig, runningConfig *RunningConfig) (*influx
 
 	err := errors.New("Could not connect to any of the InfluxDb servers that are ONLINE in traffic ops.")
 	return nil, err
+}
+
+func sendMetrics(config *StartupConfig, runningConfig *RunningConfig, bps influx.BatchPoints) {
+	//influx connection
+	influxClient, err := influxConnect(config, runningConfig)
+	if err != nil {
+		config.BpsChan <- bps
+		errHndlr(err, ERROR)
+		return
+	}
+
+	_, err = influxClient.Write(bps)
+	if err != nil {
+		config.BpsChan <- bps
+		errHndlr(err, ERROR)
+	}
 }
