@@ -378,9 +378,41 @@ Domains
 
 Topology
 ++++++++
+**GET /api/1.1/cdns/configs.json**
+
+  Retrieves a list of the CDNs available.
+
+  Authentication Required: Yes
+  
+  **Request Route Parameters**
+  None
+
+
+  **Response Properties**
+
+  +-----------------------+--------+-----------------------------------------------+
+  | Parameter             | Type   | Description                                   |
+  +=======================+========+===============================================+
+  |``id``                 | string |                                               |
+  +-----------------------+--------+-----------------------------------------------+
+  |``value``              | string |                                               |
+  +-----------------------+--------+-----------------------------------------------+
+  |``name``               | string |                                               |
+  +-----------------------+--------+-----------------------------------------------+
+  |``config_file``        | string |                                               |
+  +-----------------------+--------+-----------------------------------------------+
+
+  **Response Example** ::
+
+    TBD    
+
+
+
+|
+
 **GET /api/1.1/cdns/:cdn_name/configs.json**
 
-  Retrieves CDN config information.
+  Retrieves CDN config information based upon the provided cdn name.
 
   Authentication Required: Yes
   

@@ -26,8 +26,6 @@ use NetAddr::IP;
 use UI::DeliveryService;
 use JSON;
 use API::DeliveryService::KeysUrlSig qw(URL_SIG_KEYS_BUCKET);
-use Utils::Helper::Extensions;
-Utils::Helper::Extensions->use;
 
 my $dispatch_table ||= {
 	"logs_xml.config"         => sub { logs_xml_dot_config(@_) },
@@ -598,7 +596,7 @@ sub cacheurl_dot_config {
 		my $ds_xml_id = $1;
 		my $ds = $self->db->resultset('Deliveryservice')->search( { xml_id => $ds_xml_id }, { prefetch => [ 'type', 'profile' ] } )->single();
 		if ($ds) {
-			$text .= $ds->cacheurl;
+			$text .= $ds->cacheurl . "\n";
 		}
 	}
 	elsif ( $filename eq "cacheurl.config" ) {    # this is the global drop qstring w cacheurl use case
@@ -839,6 +837,9 @@ sub remap_dot_config {
 			if ( defined( $remap->{cacheurl} ) && $remap->{cacheurl} ne "" ) {
 				$mid_remap{ $remap->{org} } .= " \@plugin=cacheurl.so \@pparam=" . $remap->{cacheurl_file};
 			}
+			if ( $remap->{range_request_handling} == 2 ) {
+				$mid_remap{ $remap->{org} } .= " \@plugin=cache_range_requests.so";
+			}
 		}
 		foreach my $key ( keys %mid_remap ) {
 			$text .= "map " . $key . " " . $key . $mid_remap{$key} . "\n";
@@ -956,9 +957,10 @@ sub parent_dot_config {
 			$org_fqdn =~ s/https?:\/\///;
 
 			my $algorithm = "";
-			my $param = $self->db->resultset('ProfileParameter')
-					->search( { -and => [ profile => $server->profile->id, 'parameter.config_file' => 'parent.config', 'parameter.name' => 'algorithm' ] },
-					{ prefetch => [ 'parameter', 'profile' ] } )->single();
+			my $param =
+				$self->db->resultset('ProfileParameter')
+				->search( { -and => [ profile => $server->profile->id, 'parameter.config_file' => 'parent.config', 'parameter.name' => 'algorithm' ] },
+				{ prefetch => [ 'parameter', 'profile' ] } )->single();
 
 			if ( defined($os) ) {
 				my $pselect_alg = defined($param) ? $param->parameter->value : undef;
@@ -1257,6 +1259,10 @@ sub to_ext_dot_config {
 		->search( { -and => [ profile => $server->profile->id, 'parameter.config_file' => $file, 'parameter.name' => 'SubRoutine' ] },
 		{ prefetch => [ 'parameter', 'profile' ] } )->get_column('parameter.value')->single();
 	$self->app->log->error( "ToExtDotConfigFile == " . $subroutine );
+
+	my $package;
+	( $package = $subroutine ) =~ s/(.*)(::)(.*)/$1/;
+	eval "use $package;";
 
 	# And call it - the below calls the subroutine in the var $subroutine.
 	$text .= &{ \&{$subroutine} }( $self, $id, $file );

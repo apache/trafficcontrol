@@ -16,7 +16,7 @@ import (
 	"time"
 
 	log "github.com/cihub/seelog"
-	traffic_ops "github.com/comcast/traffic_control/traffic_ops/client"
+	traffic_ops "github.com/Comcast/traffic_control/traffic_ops/client"
 	influx "github.com/influxdb/influxdb/client"
 )
 
@@ -31,14 +31,16 @@ const defaultPollingInterval = 10
 
 // StartupConfig contains all fields necessary to create an InfluxDB session.
 type StartupConfig struct {
-	ToUser          string `json:"toUser"`
-	ToPasswd        string `json:"toPasswd"`
-	ToURL           string `json:"toUrl"`
-	InfluxUser      string `json:"influxUser"`
-	InfluxPassword  string `json:"influxPassword"`
-	PollingInterval int    `json:"pollingInterval"`
-	StatusToMon     string `json:"statusToMon"`
-	SeelogConfig    string `json:"seelogConfig"`
+	ToUser               string `json:"toUser"`
+	ToPasswd             string `json:"toPasswd"`
+	ToURL                string `json:"toUrl"`
+	InfluxUser           string `json:"influxUser"`
+	InfluxPassword       string `json:"influxPassword"`
+	PollingInterval      int    `json:"pollingInterval"`
+	StatusToMon          string `json:"statusToMon"`
+	SeelogConfig         string `json:"seelogConfig"`
+	CacheRetentionPolicy string `json:"cacheRetentionPolicy"`
+	DsRetentionPolicy    string `json:"dsRetentionPolicy"`
 }
 
 // RunningConfig contains information about current InfluxDB connections.
@@ -214,9 +216,9 @@ func storeMetrics(cdnName string, url string, cacheGroupMap map[string]string, c
 	}
 
 	if strings.Contains(url, "CacheStats") {
-		err = storeCacheValues(rascalData, cdnName, sampleTime, cacheGroupMap, influxClient)
+		err = storeCacheValues(rascalData, cdnName, sampleTime, cacheGroupMap, influxClient, config)
 	} else if strings.Contains(url, "DsStats") {
-		err = storeDsValues(rascalData, cdnName, sampleTime, influxClient)
+		err = storeDsValues(rascalData, cdnName, sampleTime, influxClient, config)
 	} else {
 		log.Info("Don't know what to do with ", url)
 	}
@@ -253,7 +255,7 @@ func errHndlr(err error, severity int) {
     }
  }
 */
-func storeDsValues(rascalData []byte, cdnName string, sampleTime int64, influxClient *influx.Client) error {
+func storeDsValues(rascalData []byte, cdnName string, sampleTime int64, influxClient *influx.Client, config *StartupConfig) error {
 	type DsStatsJSON struct {
 		Pp              string `json:"pp"`
 		Date            string `json:"date"`
@@ -318,7 +320,7 @@ func storeDsValues(rascalData []byte, cdnName string, sampleTime int64, influxCl
 	bps := influx.BatchPoints{
 		Points:          pts,
 		Database:        "deliveryservice_stats",
-		RetentionPolicy: "weekly",
+		RetentionPolicy: config.DsRetentionPolicy,
 	}
 	_, err = influxClient.Write(bps)
 	if err != nil {
@@ -354,7 +356,7 @@ func storeDsValues(rascalData []byte, cdnName string, sampleTime int64, influxCl
 }
 */
 
-func storeCacheValues(trafmonData []byte, cdnName string, sampleTime int64, cacheGroupMap map[string]string, influxClient *influx.Client) error {
+func storeCacheValues(trafmonData []byte, cdnName string, sampleTime int64, cacheGroupMap map[string]string, influxClient *influx.Client, config *StartupConfig) error {
 	/* note about the data:
 	keys are cdnName:deliveryService:cacheGroup:cacheName:statName
 	*/
@@ -415,11 +417,10 @@ func storeCacheValues(trafmonData []byte, cdnName string, sampleTime int64, cach
 		}
 	}
 	//create influxdb batch of points
-	// TODO: make retention policy configurable
 	bps := influx.BatchPoints{
 		Points:          pts,
 		Database:        "cache_stats",
-		RetentionPolicy: "weekly",
+		RetentionPolicy: config.CacheRetentionPolicy,
 	}
 	//write to influxdb
 	_, err = influxClient.Write(bps)
@@ -445,75 +446,42 @@ func getURL(url string) ([]byte, error) {
 
 func influxConnect(config *StartupConfig, runningConfig *RunningConfig) (*influx.Client, error) {
 	// Connect to InfluxDb
-	activeServers := len(runningConfig.InfluxDBProps)
-	rand.Seed(time.Now().UnixNano())
+	var urls []*url.URL
 
-	// if there is only 1 active, use it
-	if activeServers == 1 {
-		runningConfig.ActiveServer = runningConfig.InfluxDBProps[0].Fqdn
-
-		u, err := url.Parse(fmt.Sprintf("http://%s:%d", runningConfig.InfluxDBProps[0].Fqdn, runningConfig.InfluxDBProps[0].Port))
+	for _, InfluxHost := range runningConfig.InfluxDBProps {
+		u, err := url.Parse(fmt.Sprintf("http://%s:%d", InfluxHost.Fqdn, InfluxHost.Port))
 		if err != nil {
-			return nil, err
+			continue
 		}
+		urls = append(urls, u)
+	}
+
+	for len(urls) > 0 {
+		n := rand.Intn(len(urls))
+		url := urls[n]
+		urls = append(urls[:n], urls[n+1:]...)
 
 		conf := influx.Config{
-			URL:      *u,
+			URL:      *url,
 			Username: config.InfluxUser,
 			Password: config.InfluxPassword,
 		}
+
 		con, err := influx.NewClient(conf)
 		if err != nil {
-			return nil, err
+			errHndlr(err, ERROR)
+			continue
 		}
 
 		_, _, err = con.Ping()
 		if err != nil {
-			return nil, err
+			errHndlr(err, ERROR)
+			continue
 		}
+
 		return con, nil
-	} else if activeServers > 1 {
-		// TODO: update influx.config to set the last server used and do not use it the next time.
-		//
-		// try to connect to a random server until we find one that works.  if we dont find one in 20 tries, bail.
-		for i := 0; i < 20; i++ {
-			index := rand.Intn(activeServers)
-
-			if runningConfig.ActiveServer == runningConfig.InfluxDBProps[index].Fqdn {
-				continue
-			}
-			runningConfig.ActiveServer = runningConfig.InfluxDBProps[index].Fqdn
-
-			u, err := url.Parse(fmt.Sprintf("http://%s:%d", runningConfig.InfluxDBProps[index].Fqdn, runningConfig.InfluxDBProps[index].Port))
-			if err != nil {
-				errHndlr(err, ERROR)
-				continue
-			}
-
-			conf := influx.Config{
-				URL:      *u,
-				Username: config.InfluxUser,
-				Password: config.InfluxPassword,
-			}
-			con, err := influx.NewClient(conf)
-			if err != nil {
-				errHndlr(err, ERROR)
-				continue
-			}
-
-			_, _, err = con.Ping()
-			if err != nil {
-				errHndlr(err, ERROR)
-				continue
-			}
-
-			return con, nil
-		}
-
-		err := errors.New("Could not connect to any of the InfluxDb servers that are ONLINE in traffic ops.")
-		return nil, err
-	} else {
-		err := errors.New("No online InfluxDb servers could be found!")
-		return nil, err
 	}
+
+	err := errors.New("Could not connect to any of the InfluxDb servers that are ONLINE in traffic ops.")
+	return nil, err
 }

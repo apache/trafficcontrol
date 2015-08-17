@@ -88,10 +88,14 @@ sub register {
 			my @cdn_profiles =
 				$self->db->resultset('ProfileParameter')->search( { parameter => $cdn_pparam->parameter->id } )->get_column('profile')->all();
 
-			my $offline = $self->db->resultset('Status')->search( 'name' => 'OFFLINE' )->get_column('id')->single();
-			$self->app->log->debug( "offline #-> " . Dumper($offline) );
+			my @offstates;
+			my $offline = $self->db->resultset('Status')->search( { 'name' => 'OFFLINE' } )->get_column('id')->single();
+			push(@offstates, $offline);
+			my $pre_prod = $self->db->resultset('Status')->search( { 'name' => 'PRE_PROD' } )->get_column('id')->single();
+			push(@offstates, $pre_prod);
+			$self->app->log->debug( "offline #-> " . Dumper(@offstates) );
 			my $update_server_bit_rs =
-				$self->db->resultset('Server')->search( -and => [ { status => { -not_like => $offline } }, { profile => { -in => \@cdn_profiles } } ] );
+				$self->db->resultset('Server')->search( { -and => [ { status => { 'not in' => \@offstates } }, { profile => { -in => \@cdn_profiles } } ] } );
 
 			my $result = $update_server_bit_rs->update( { upd_pending => 1 } );
 			&log( $self, "Set upd_pending = 1 for all applicable caches", "CODEBIG" );

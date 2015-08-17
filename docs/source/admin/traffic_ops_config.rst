@@ -28,7 +28,7 @@ Content Delivery Networks
 
 .. _rl-param-prof:
 
-Parameters an profiles
+Profile Parameters
 ======================
 Many of the settings for the different servers in a Traffic Control CDN are controlled by parameters in the parameter view of Traffic Ops. Parameters are grouped in profiles and profiles are assigned to a server. For a typical cache there are hundreds of configuration settings to apply. The Traffic Ops parameter view contains the defined settings. To make life easier, Traffic Ops allows for duplication, comparison, import and export of Profiles. Traffic Ops also has a "Global profile" - the parameters in this profile are going to be applied to all servers in the Traffic Ops instance, or apply to Traffic Ops themselves. These parameters are:
 
@@ -78,7 +78,7 @@ After running the postinstall script, Traffic Ops has the following profiles pre
 | RIAK_ALL | Riak profile for all CDNs to be applied to the Traffic Vault servers                            |
 +----------+-------------------------------------------------------------------------------------------------+
 
-..Note:: The Traffic Server profiles contain some information that is specific to the hardware being used (most notably the disk configuration), so some parameters will have to be changed to reflect your configuration. Future releases of Traffic Control will separate the hardware and software profiles so it is easier to "mix-and-match" different hardware configurations. 
+.. Note:: The Traffic Server profiles contain some information that is specific to the hardware being used (most notably the disk configuration), so some parameters will have to be changed to reflect your configuration. Future releases of Traffic Control will separate the hardware and software profiles so it is easier to "mix-and-match" different hardware configurations.
 
 Below is a list of cache parameters that are likely to need changes from the default profiles shipped with Traffic Ops:
 
@@ -103,12 +103,28 @@ Below is a list of cache parameters that are likely to need changes from the def
 | availableBandwidthInKbps |                   | For example: "">1500000" means stop sending new traffic to this cache when traffic is at 8.5Gbps on a 10Gbps interface. |
 +--------------------------+-------------------+-------------------------------------------------------------------------------------------------------------------------+
 
+Below is a list of Traffic Server plugins that need to be configured in the parameter table:
+
++------------------+---------------+------------------------------------------------------+------------------------------------------------------------------------------------------------------------+
+|       Name       |  Config file  |                     Description                      |                                                  Details                                                   |
++==================+===============+======================================================+============================================================================================================+
+| astats_over_http | package       | The package version for the astats_over_http plugin. | `astats_over_http <http://traffic-control-cdn.net/downloads/index.html>`_                                  |
++------------------+---------------+------------------------------------------------------+------------------------------------------------------------------------------------------------------------+
+| trafficserver    | package       | The package version for the trafficserver plugin.    | `trafficserver <http://traffic-control-cdn.net/downloads/index.html>`_                                     |
++------------------+---------------+------------------------------------------------------+------------------------------------------------------------------------------------------------------------+
+| regex_revalidate | plugin.config | The config to be used for regex_revalidate.          | `regex_revalidate <https://docs.trafficserver.apache.org/en/5.3.x/reference/plugins/regex_remap.en.html>`_ |
+|                  |               | For example: --config regex_revalidate.config        |                                                                                                            |
++------------------+---------------+------------------------------------------------------+------------------------------------------------------------------------------------------------------------+
+| remap_stats      | plugin.config | The config to be used for remap_stats.               | `remap_stats <https://github.com/apache/trafficserver/tree/master/plugins/experimental/remap_stats>`_      |
+|                  |               | Value is left blank.                                 |                                                                                                            |
++------------------+---------------+------------------------------------------------------+------------------------------------------------------------------------------------------------------------+
+
 
 Regions, Locations and Cache Groups
 ===================================
 All servers have to have a `location`, which is their physical location. Each location is part of a `region`, and each region is part of a `division`. For Example, ``Denver`` could be a location in the ``Mile High`` region and that region could be part of the ``West`` division. Enter your divisions first in  `Misc->Divisions`, then enter the regions in `Misc->Regions`, referencing the divisions entered, and finally, enter the physical locations in `Misc->Locations`, referencing the regions entered. 
 
-All servers also have to be part of a `cache group`. A cache group is a logical grouping of caches, that don't have to be in the same physical location (in fact, usually a cache group is spread across minimally 2 physical locations for redundancy purposes), but share geo coordinates for content routing purposes. JvD to add more.
+All servers also have to be part of a `cache group`. A cache group is a logical grouping of caches, that don't have to be in the same physical location (in fact, usually a cache group is spread across minimally 2 physical Locations for redundancy purposes), but share geo coordinates for content routing purposes. JvD to add more.
 
 
 

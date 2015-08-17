@@ -61,12 +61,13 @@ sub index {
 	while ( my $row = $rs_data->next ) {
 		push(
 			@data, {
-				"cdnName"             => $row->cdn_name,
-				"deliveryServiceName" => $row->deliveryservice_name,
-				"statName"            => $row->stat_name,
-				"statValue"           => $row->stat_value,
-				"summaryTime"         => $row->summary_time,
-			}
+				"cdnName"        		=> $row->cdn_name,
+				"deliveryServiceName"   => $row->deliveryservice_name,
+				"statName"       		=> $row->stat_name,
+				"statValue" 	 		=> $row->stat_value,
+				"summaryTime" 	 		=> $row->summary_time,
+				"statDate" 	 			=> $row->stat_date,
+		}
 		);
 	}
 	return $self->success( \@data );

@@ -26,6 +26,17 @@ use Data::Dumper;
 use Utils::Helper;
 use Carp qw(cluck confess);
 
+sub stats { # remove this when redis goes.
+    my $self     = shift;                       # /redis/#match/#start/#end/#interval
+    my $match    = $self->param('match');
+    my $start    = $self->param('start');       # start time in secs since 1970, or "now" to get latest sample
+    my $end      = $self->param('end');         # end time in secs since 1970, or "now" to get latest sample
+    my $interval = $self->param('interval');    # the interval between the samples. 10 is minimum, has to be a multiple of 10
+
+    my $j = $self->get_stats( $match, $start, $end, $interval );
+    $self->render( json => $j );
+}
+
 sub info {
 	my $self      = shift;
 	my $shortname = $self->param('shortname');

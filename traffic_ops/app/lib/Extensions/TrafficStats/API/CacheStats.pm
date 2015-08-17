@@ -26,18 +26,65 @@ my $builder;
 use Extensions::TrafficStats::Delegate::CacheStatistics;
 use Utils::Helper::Extensions;
 Utils::Helper::Extensions->use;
+use Validate::Tiny ':all';
 use Common::ReturnCodes qw(SUCCESS ERROR);
 
 sub index {
-	my $self = shift;
+	my $self        = shift;
+	my $cdn_name    = $self->param('cdnName');
+	my $metric_type = $self->param('metricType');
+	my $start_date  = $self->param('startDate');
+	my $end_date    = $self->param('endDate');
 
-	my $cstats = new Extensions::TrafficStats::Delegate::CacheStatistics( $self, $self->get_db_name() );
-	my ( $rc, $result ) = $cstats->get_stats();
-	if ( $rc == SUCCESS ) {
-		return $self->success($result);
+	my $query_parameters = {
+		cdnName    => $cdn_name,
+		metricType => $metric_type,
+		startDate  => $start_date,
+		endDate    => $end_date
+	};
+
+	my ( $is_valid, $result ) = $self->is_valid($query_parameters);
+
+	if ($is_valid) {
+		my $cstats = new Extensions::TrafficStats::Delegate::CacheStatistics( $self, $self->get_db_name() );
+		my ( $rc, $result ) = $cstats->get_stats();
+
+		if ( $rc == SUCCESS ) {
+			return $self->success($result);
+		}
+		else {
+			return $self->alert($result);
+		}
 	}
 	else {
 		return $self->alert($result);
+	}
+}
+
+sub is_valid {
+	my $self             = shift;
+	my $query_parameters = shift;
+
+	my $rules = {
+		fields => [qw/cdnName metricType startDate endDate/],
+
+		# Checks to perform on all fields
+		checks => [
+
+			# All of these are required
+			[qw/cdnName metricType startDate endDate/] => is_required("query parameter is required"),
+
+		]
+	};
+
+	# Validate the input against the rules
+	my $result = validate( $query_parameters, $rules );
+
+	if ( $result->{success} ) {
+		return ( 1, $result->{data} );
+	}
+	else {
+		return ( 0, $result->{error} );
 	}
 }
 

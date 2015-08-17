@@ -6,6 +6,7 @@ Sorted alphabetically
 * **[Dewayne Richardson](https://github.com/dewrich)**
 * **[Eric Friedrich](https://github.com/limited)**
 * **[Hank Beatty](https://github.com/hbeatty)**
+* **[Jackie Heitzer](https://github.com/jheitz200)**
 * **[Jan van Doorn](https://github.com/knutsel)**
 * **[Jeff Elsloo](https://github.com/elsloo)**
 * **[John Benton](https://github.com/evergreentech)**

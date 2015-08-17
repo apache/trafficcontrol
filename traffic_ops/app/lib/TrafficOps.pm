@@ -48,6 +48,8 @@ use Utils::Helper::TrafficOpsRoutesLoader;
 use File::Path qw(make_path);
 use IO::Compress::Gzip 'gzip';
 
+use Utils::Helper::Version;
+
 use constant SESSION_TIMEOUT => 14400;
 my $logging_root_dir;
 my $app_root_dir;
@@ -91,6 +93,8 @@ sub startup {
 	$self->validate_cdn_conf();
 	$self->setup_mojo_plugins();
 	$self->set_secret();
+
+	$self->log->info( "TrafficOps version: " . Utils::Helper::Version->current() . " is starting." );
 
 	$self->sessions->default_expiration(SESSION_TIMEOUT);
 	my $access_control_allow_origin;
@@ -229,13 +233,16 @@ sub setup_mojo_plugins {
 					$local_user = $user_data->local_user;
 				}
 
+				if ( $role eq 'disallowed') {
+					return undef;
+				}
+
 				return {
 					'username'   => $username,
 					'role'       => $role,
 					'priv'       => $priv,
 					'local_user' => $local_user,
 				};
-				return undef;
 			},
 			validate_user => sub {
 				my ( $app, $username, $pass, $options ) = @_;
