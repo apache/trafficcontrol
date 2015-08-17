@@ -15,12 +15,17 @@
 .. 
 
 
-.. _to-api-hwinfo:
+.. _to-api-v12-hwinfo:
 
 hwinfo
 ======
 
-**GET /api/1.1/hwinfo.json**
+.. _to-api-v12-hwinfo-route:
+
+/api/1.2/hwinfo
+===============
+
+**GET /api/1.2/hwinfo.json**
 
   Authentication Required: Yes
 
@@ -58,6 +63,5 @@ hwinfo
            "description": "Physical Disk 0:1:1"
         }
      ],
-     "version": "1.1"
     }
 

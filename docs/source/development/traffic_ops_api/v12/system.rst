@@ -14,12 +14,15 @@
 .. limitations under the License.
 .. 
 
-.. _to-api-sys:
+.. _to-api-v12-sys:
 
 System
 ======
 
-**GET /api/1.1/system/info.json**
+.. _to-api-v12-sys-route:
+
+/api/1.2/system/info
+====================
 
   Authentication Required: Yes
 
@@ -68,7 +71,6 @@ System
           "tm.instance_name": "Kabletown CDN"
         }
       },
-      "version": "1.1"
     }
 
 

@@ -14,13 +14,19 @@
 .. limitations under the License.
 .. 
 
-.. _to-api-phys-loc:
+.. _to-api-v11-phys-loc:
 
 
 Physical Location
 =================
 
+.. _to-api-v11-phys-loc-route:
+
+/api/1.1/phys_locations
+=======================
+
 **GET /api/1.1/phys_locations.json**
+====================================
 
   Authentication Required: Yes
 
@@ -87,7 +93,6 @@ Physical Location
            "shortName": "chicago"
         }
      ],
-     "version": "1.1"
     }
 
 
@@ -118,7 +123,6 @@ Physical Location
            "name": "Ashburn"
         }
      ],
-     "version": "1.1"
     }
 
 

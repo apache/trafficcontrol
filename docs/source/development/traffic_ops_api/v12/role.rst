@@ -14,12 +14,17 @@
 .. limitations under the License.
 .. 
 
-.. _to-api-type:
+.. _to-api-v12-roles:
 
-Types
+Roles
 =====
 
-**GET /api/1.1/types.json**
+.. _to-api-v12-roles-route:
+
+/api/1.2/roles
+==============
+
+**GET /api/1.2/roles.json**
 
   Authentication Required: Yes
 
@@ -28,13 +33,11 @@ Types
   +----------------------+--------+------------------------------------------------+
   | Parameter            | Type   | Description                                    |
   +======================+========+================================================+
-  |``lastUpdated``       | string |                                                |
-  +----------------------+--------+------------------------------------------------+
-  |``useInTable``        | string |                                                |
-  +----------------------+--------+------------------------------------------------+
   |``name``              | string |                                                |
   +----------------------+--------+------------------------------------------------+
   |``id``                | string |                                                |
+  +----------------------+--------+------------------------------------------------+
+  |``privLevel``         | string |                                                |
   +----------------------+--------+------------------------------------------------+
   |``description``       | string |                                                |
   +----------------------+--------+------------------------------------------------+
@@ -44,51 +47,11 @@ Types
     {
      "response": [
         {
-           "lastUpdated": "2013-10-23 15:28:31",
-           "useInTable": "staticdnsentry",
-           "name": "AAAA_RECORD",
-           "id": "22",
-           "description": "Static DNS AAAA entry"
+           "name": "read-only",
+           "id": "2",
+           "privLevel": "10",
+           "description": "read-only user"
         }
      ],
-     "version": "1.1"
-    }
-
-
-|
-
-
-**GET /api/1.1/types/trimmed.json**
-
-  Authentication Required: Yes
-
-  Response Content Type: application/json
-
-  **Response Properties**
-
-  +----------------------+--------+------------------------------------------------+
-  | Parameter            | Type   | Description                                    |
-  +======================+========+================================================+
-  |``name``              | string |                                                |
-  +----------------------+--------+------------------------------------------------+
-
-  **Response Example** ::
-
-    {
-     "response": [
-        {
-           "name": "AAAA_RECORD"
-        },
-        {
-           "name": "ACTIVE_DIRECTORY"
-        },
-        {
-           "name": "A_RECORD"
-        },
-        {
-           "name": "CCR"
-        }
-     ],
-     "version": "1.1"
     }
 

@@ -17,7 +17,12 @@
 CDN 
 ===
 
-.. _to-api-cdn-health:
+.. _to-api-v11-cdn-health:
+
+.. _to-api-v11-cdn-health-route:
+
+/api/1.1/cdns
+=============
 
 Health
 ++++++
@@ -64,7 +69,6 @@ Health
            }
         ]
      },
-     "version": "1.1"
     }
 
 
@@ -124,7 +128,6 @@ Health
            }
         ]
      },
-     "version": "1.1"
     }
 
 |
@@ -156,7 +159,6 @@ Health
         "tps": 36805,
         "maxGbps": 3961
      },
-     "version": "1.1"
     }
 
 
@@ -187,12 +189,11 @@ Health
         "utilizedPercent": 10.9060020300395,
         "maintenancePercent": 0.0000139494071146245
      },
-     "version": "1.1"
     }
 
 |
 
-.. _to-api-cdn-routing:
+.. _to-api-v11-cdn-routing:
 
 Routing
 +++++++
@@ -232,12 +233,11 @@ Routing
         "cz": 62.1144608981131,
         "dsr": 0
      },
-     "version": "1.1"
     }
 
 |
 
-.. _to-api-cdn-metrics:
+.. _to-api-v11-cdn-metrics:
 
 Metrics
 +++++++
@@ -322,12 +322,11 @@ Metrics
            "label": "Origin TPS"
         }
      ],
-     "version": "1.1"
     }
 
 |
 
-.. _to-api-cdn-domains:
+.. _to-api-v11-cdn-domains:
 
 Domains
 +++++++
@@ -371,12 +370,11 @@ Domains
            "domainName": "bar.domain.net"
         }
      ],
-     "version": "1.1"
     }
 
 |
 
-.. _to-api-cdn-topology:
+.. _to-api-v11-cdn-topology:
 
 Topology
 ++++++++
@@ -796,7 +794,7 @@ Topology
   TBD
 
  
-.. _to-api-cdn-dnsseckeys:
+.. _to-api-v11-cdn-dnsseckeys:
 
 DNSSEC Keys
 +++++++++++
@@ -885,7 +883,6 @@ DNSSEC Keys
         },
         ... repeated for each ds in the cdn
       },
-      "version": "1.1"
     }
 
 
@@ -923,7 +920,6 @@ DNSSEC Keys
   ::
 
     {  
-      "version": "1.1",
       "response": "Successfully deleted dnssec keys for <cdn>"
     }
 
@@ -980,7 +976,6 @@ DNSSEC Keys
 
 
     {  
-      "version": "1.1",
       "response": "Successfully created dnssec keys for cdn1"
     }
 

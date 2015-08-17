@@ -16,7 +16,7 @@ import (
 	"time"
 
 	log "github.com/cihub/seelog"
-	traffic_ops "github.com/comcast/traffic_control/traffic_ops/client"
+	traffic_ops "github.com/Comcast/traffic_control/traffic_ops/client"
 	influx "github.com/influxdb/influxdb/client"
 )
 
@@ -446,75 +446,42 @@ func getURL(url string) ([]byte, error) {
 
 func influxConnect(config *StartupConfig, runningConfig *RunningConfig) (*influx.Client, error) {
 	// Connect to InfluxDb
-	activeServers := len(runningConfig.InfluxDBProps)
-	rand.Seed(time.Now().UnixNano())
+	var urls []*url.URL
 
-	// if there is only 1 active, use it
-	if activeServers == 1 {
-		runningConfig.ActiveServer = runningConfig.InfluxDBProps[0].Fqdn
-
-		u, err := url.Parse(fmt.Sprintf("http://%s:%d", runningConfig.InfluxDBProps[0].Fqdn, runningConfig.InfluxDBProps[0].Port))
+	for _, InfluxHost := range runningConfig.InfluxDBProps {
+		u, err := url.Parse(fmt.Sprintf("http://%s:%d", InfluxHost.Fqdn, InfluxHost.Port))
 		if err != nil {
-			return nil, err
+			continue
 		}
+		urls = append(urls, u)
+	}
+
+	for len(urls) > 0 {
+		n := rand.Intn(len(urls))
+		url := urls[n]
+		urls = append(urls[:n], urls[n+1:]...)
 
 		conf := influx.Config{
-			URL:      *u,
+			URL:      *url,
 			Username: config.InfluxUser,
 			Password: config.InfluxPassword,
 		}
+
 		con, err := influx.NewClient(conf)
 		if err != nil {
-			return nil, err
+			errHndlr(err, ERROR)
+			continue
 		}
 
 		_, _, err = con.Ping()
 		if err != nil {
-			return nil, err
+			errHndlr(err, ERROR)
+			continue
 		}
+
 		return con, nil
-	} else if activeServers > 1 {
-		// TODO: update influx.config to set the last server used and do not use it the next time.
-		//
-		// try to connect to a random server until we find one that works.  if we dont find one in 20 tries, bail.
-		for i := 0; i < 20; i++ {
-			index := rand.Intn(activeServers)
-
-			if runningConfig.ActiveServer == runningConfig.InfluxDBProps[index].Fqdn {
-				continue
-			}
-			runningConfig.ActiveServer = runningConfig.InfluxDBProps[index].Fqdn
-
-			u, err := url.Parse(fmt.Sprintf("http://%s:%d", runningConfig.InfluxDBProps[index].Fqdn, runningConfig.InfluxDBProps[index].Port))
-			if err != nil {
-				errHndlr(err, ERROR)
-				continue
-			}
-
-			conf := influx.Config{
-				URL:      *u,
-				Username: config.InfluxUser,
-				Password: config.InfluxPassword,
-			}
-			con, err := influx.NewClient(conf)
-			if err != nil {
-				errHndlr(err, ERROR)
-				continue
-			}
-
-			_, _, err = con.Ping()
-			if err != nil {
-				errHndlr(err, ERROR)
-				continue
-			}
-
-			return con, nil
-		}
-
-		err := errors.New("Could not connect to any of the InfluxDb servers that are ONLINE in traffic ops.")
-		return nil, err
-	} else {
-		err := errors.New("No online InfluxDb servers could be found!")
-		return nil, err
 	}
+
+	err := errors.New("Could not connect to any of the InfluxDb servers that are ONLINE in traffic ops.")
+	return nil, err
 }

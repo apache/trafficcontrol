@@ -14,12 +14,17 @@
 .. limitations under the License.
 .. 
 
-.. _to-api-status:
+.. _to-api-v12-status:
 
 Status
 ======
 
-**GET /api/1.1/statuses.json**
+.. _to-api-v12-statuses-route:
+
+/api/1.2/statuses
+=================
+
+**GET /api/1.2/statuses.json**
 
   Retrieves a list of the server status codes available. May be useful when the status is retrieved from other APIs as a number and not a string.
 
@@ -74,6 +79,5 @@ Status
             "lastUpdated": "2013-02-13 16:34:29"
           }
         ],
-        "version": "1.1"
       }
 
