@@ -19,6 +19,11 @@
 Static DNS Entries
 ==================
 
+.. _to-api-v11-static-dns-route:
+
+/api/1.1/staticdnsentries
+=========================
+
 **GET /api/1.1/staticdnsentries.json**
 
 Authentication Required: Yes

@@ -352,8 +352,9 @@ The search path for extensions depends on the configuration of the PERL5LIB, whi
 
 Extension Directories
 ---------------------
-PERL5LIB Example Configuration:
-export PERL5LIB=/opt/traffic_ops_extensions/private/lib/Extensions:/opt/traffic_ops/app/lib/Extensions/TrafficStats
+PERL5LIB Example Configuration: ::
+
+   export PERL5LIB=/opt/traffic_ops_extensions/private/lib/Extensions:/opt/traffic_ops/app/lib/Extensions/TrafficStats
 
 Perl Package Naming Convention
 ------------------------------
@@ -558,8 +559,6 @@ API Route Mappings Between Versions
   :maxdepth: 1
 
   traffic_ops_api/versions_mapping
-  traffic_ops_api/version_10_to_11
-  traffic_ops_api/version_11_to_12
 
 API 1.1 Reference 
 -----------------

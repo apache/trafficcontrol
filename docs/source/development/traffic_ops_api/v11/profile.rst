@@ -16,9 +16,13 @@
 
 .. _to-api-v11-profile:
 
-
 Profiles
 ========
+
+.. _to-api-v11-profiles-route:
+
+/api/1.1/profiles
+=================
 
 **GET /api/1.1/profiles**
 
