@@ -22,7 +22,7 @@ CDN
 .. _to-api-v12-cdn-route:
 
 /api/1.2/cdns/health
-++++++++++++++++++++
+====================
 
 Health
 ++++++
