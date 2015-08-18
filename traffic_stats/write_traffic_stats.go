@@ -59,7 +59,7 @@ type InfluxDBProps struct {
 }
 
 func main() {
-	var Bps map[string]influx.BatchPoints
+	var Bps map[string]*influx.BatchPoints
 
 	configFile := flag.String("cfg", "", "The config file")
 	testSummary := flag.Bool("testSummary", false, "Test summary mode")
@@ -70,7 +70,7 @@ func main() {
 	config := &StartupConfig{}
 	err = decoder.Decode(&config)
 	errHndlr(err, FATAL)
-	Bps = make(map[string]influx.BatchPoints)
+	Bps = make(map[string]*influx.BatchPoints)
 	config.BpsChan = make(chan influx.BatchPoints)
 
 	defaultPollingInterval := 10
@@ -100,7 +100,7 @@ func main() {
 		case now := <-tickerChan:
 			if now.Second() == 30 {
 				for key, val := range Bps {
-					go sendMetrics(config, &runningConfig, val)
+					go sendMetrics(config, &runningConfig, *val)
 					delete(Bps, key)
 				}
 				// TODO make this async
@@ -125,7 +125,7 @@ func main() {
 			if ok {
 				b.Points = append(b.Points, batchPoints.Points...)
 			} else {
-				b = batchPoints
+				Bps[key] = &batchPoints
 			}
 		}
 	}
