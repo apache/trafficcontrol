@@ -22,7 +22,7 @@ Types
 .. _to-api-v11-types-route:
 
 /api/1.1/types
-==============
+++++++++++++++
 
 **GET /api/1.1/types.json**
 

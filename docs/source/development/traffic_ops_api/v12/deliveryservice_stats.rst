@@ -23,7 +23,7 @@ Delivery Service Statistics
 .. _to-api-v12-ds-stats-route:
 
 /api/1.2/deliveryservice_stats
-==============================
+++++++++++++++++++++++++++++++
 
 **GET /api/1.2/deliveryservice_stats.json**
 

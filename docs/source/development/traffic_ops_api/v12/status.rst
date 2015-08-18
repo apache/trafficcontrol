@@ -22,7 +22,7 @@ Status
 .. _to-api-v12-statuses-route:
 
 /api/1.2/statuses
-=================
++++++++++++++++++
 
 **GET /api/1.2/statuses.json**
 

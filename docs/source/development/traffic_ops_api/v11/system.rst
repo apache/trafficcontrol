@@ -19,6 +19,13 @@
 System
 ======
 
+.. _to-api-v11-sys-route:
+
+/api/1.1/system/info
+++++++++++++++++++++
+
+**GET /api/1.1/system/info.json**
+
 **GET /api/1.1/system/info.json**
 
   Authentication Required: Yes

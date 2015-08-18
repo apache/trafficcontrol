@@ -14,18 +14,20 @@
 .. limitations under the License.
 .. 
 
+.. _to-api-v12-cdn:
+
 CDN 
 ===
 
-.. _to-api-v12-cdn-health:
+.. _to-api-v12-cdn-route:
+
+/api/1.2/cdns/health
+====================
 
 Health
 ++++++
 
 .. _to-api-v12-cdn-health-route:
-
-/api/1.2/cdns/health
-====================
 
 **GET /api/1.2/cdns/health.json**
 
