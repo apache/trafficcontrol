@@ -21,6 +21,10 @@ Redis
 
 .. Note:: The redis documentation needs a thorough review!
 
+.. _to-api-v11-redis-route:
+
+/api/1.1/traffic_monitor/stats
+++++++++++++++++++++++++++++++
 
 **GET /api/1.1/traffic_monitor/stats.json**
 

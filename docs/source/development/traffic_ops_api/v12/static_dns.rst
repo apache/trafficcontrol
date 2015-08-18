@@ -22,7 +22,7 @@ Static DNS Entries
 .. _to-api-v12-static-dns-route:
 
 /api/1.2/staticdnsentries
-=========================
++++++++++++++++++++++++++
 
 **GET /api/1.2/staticdnsentries.json**
 

@@ -14,15 +14,15 @@
 .. limitations under the License.
 .. 
 
+.. _to-api-v11-cdn-health:
+
 CDN 
 ===
-
-.. _to-api-v11-cdn-health:
 
 .. _to-api-v11-cdn-health-route:
 
 /api/1.1/cdns
-=============
++++++++++++++
 
 Health
 ++++++

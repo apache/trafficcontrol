@@ -23,7 +23,7 @@ Delivery Service
 .. _to-api-v12-ds-route:
 
 /api/1.2/deliveryservices
-=========================
++++++++++++++++++++++++++
 
 **GET /api/1.2/deliveryservices.json**
 

@@ -16,14 +16,13 @@
 
 .. _to-api-v11-cachegroup:
 
+Cache Group
+===========
 
 .. _to-api-v11-cachegroups-route:
 
 /api/1.1/cachegroups
-====================
-
-Cache Group
-===========
+++++++++++++++++++++
 
 **GET /api/1.1/cachegroups.json**
 

@@ -22,7 +22,7 @@ Parameter
 .. _to-api-v12-parameters-route:
 
 /api/1.2/parameters
-===================
++++++++++++++++++++
 
   Authentication Required: Yes
 
