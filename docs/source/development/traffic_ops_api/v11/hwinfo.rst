@@ -17,8 +17,8 @@
 
 .. _to-api-v11-hwinfo:
 
-hwinfo
-======
+Hardware Info
+=============
 
 .. _to-api-v11-hwinfo-route:
 
