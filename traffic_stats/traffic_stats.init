@@ -67,7 +67,7 @@ stop()
 		echo "Stopping write_traffic_stats client.."
 		kill `pidof -s write_traffic_stats`
 			
-	wts
+	wts_status
 	
 		if [ $? -eq $STATUS_STOPPED ]; then
 			echo "write_traffic_stats killed"
