@@ -10,7 +10,6 @@ import (
 	"net/http"
 	"net/url"
 	"os"
-	"runtime"
 	"strconv"
 	"strings"
 	"time"
@@ -27,7 +26,11 @@ const (
 	ERROR = iota
 )
 
-const defaultPollingInterval = 10
+const (
+	defaultPollingInterval    = 10
+	defaultConfigInterval     = 300
+	defaultPublishingInterval = 30
+)
 
 // StartupConfig contains all fields necessary to create an InfluxDB session.
 type StartupConfig struct {
@@ -37,6 +40,8 @@ type StartupConfig struct {
 	InfluxUser           string                  `json:"influxUser"`
 	InfluxPassword       string                  `json:"influxPassword"`
 	PollingInterval      int                     `json:"pollingInterval"`
+	PublishingInterval   int                     `json:"publishingInterval"`
+	ConfigInterval       int                     `json:"configInterval"`
 	StatusToMon          string                  `json:"statusToMon"`
 	SeelogConfig         string                  `json:"seelogConfig"`
 	CacheRetentionPolicy string                  `json:"cacheRetentionPolicy"`
@@ -73,9 +78,14 @@ func main() {
 	Bps = make(map[string]*influx.BatchPoints)
 	config.BpsChan = make(chan influx.BatchPoints)
 
-	defaultPollingInterval := 10
 	if config.PollingInterval == 0 {
 		config.PollingInterval = defaultPollingInterval
+	}
+	if config.PublishingInterval == 0 {
+		config.PublishingInterval = defaultPublishingInterval
+	}
+	if config.ConfigInterval == 0 {
+		config.ConfigInterval = defaultConfigInterval
 	}
 
 	logger, err := log.LoggerFromConfigAsFile(config.SeelogConfig)
@@ -89,26 +99,27 @@ func main() {
 	}
 	log.ReplaceLogger(logger)
 
-	runtime.GOMAXPROCS(runtime.NumCPU())
-
 	runningConfig, nil := getToData(config, true)
 
 	<-time.NewTimer(time.Now().Truncate(time.Duration(config.PollingInterval) * time.Second).Add(time.Duration(config.PollingInterval) * time.Second).Sub(time.Now())).C
 	tickerChan := time.Tick(time.Duration(config.PollingInterval) * time.Second)
+	tickerPublishChan := time.Tick(time.Duration(config.PublishingInterval) * time.Second)
+	tickerConfigChan := time.Tick(time.Duration(config.ConfigInterval) * time.Second)
+
 	for {
 		select {
-		case now := <-tickerChan:
-			if now.Second() == 30 {
-				for key, val := range Bps {
-					go sendMetrics(config, &runningConfig, *val)
-					delete(Bps, key)
-				}
-				// TODO make this async
-				trc, err := getToData(config, false)
-				if err == nil {
-					runningConfig = trc
-				}
+		case <-tickerPublishChan:
+			for key, val := range Bps {
+				go sendMetrics(config, &runningConfig, *val)
+				delete(Bps, key)
 			}
+		case <-tickerConfigChan:
+			// TODO make this async
+			trc, err := getToData(config, false)
+			if err == nil {
+				runningConfig = trc
+			}
+		case <-tickerChan:
 			for cdnName, urls := range runningConfig.HealthUrls {
 				for _, url := range urls {
 					log.Info(cdnName, " -> ", url)
