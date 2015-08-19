@@ -1,12 +1,24 @@
 <!DOCTYPE html>
 <html lang="en-US">
-  <script src= "http://ajax.googleapis.com/ajax/libs/angularjs/1.3.14/angular.min.js"></script>
-  <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
-  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/js/bootstrap.min.js"></script>
-  <script src="js/main.js"></script>
+  <head>
+	<!--<script src= "http://ajax.googleapis.com/ajax/libs/angularjs/1.3.14/angular.min.js"></script>-->
+	<script src="js/angular.js"></script>
+	<!--<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>-->
+	<script src="js/jquery.js"></script>
+	<!--<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/js/bootstrap.min.js"></script>-->
+	<script src="js/bootstrap.js"></script>
+	<!--<script src="https://fb.me/react-0.13.3.js"></script>-->
+	<script src="js/react.js"></script>
+	<!--<script src="https://raw.githubusercontent.com/josebalius/ngReactGrid/master/build/js/ngReactGrid.min.js"></script>-->
+	<script src="js/ngReact.js"></script>
+	<!--<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css">-->
+	<link rel="stylesheet" href="css/bootstrap.css">
+	<!--<link rel="stylesheet"  src="https://raw.githubusercontent.com/josebalius/ngReactGrid/master/build/css/ngReactGrid.css"></script>-->
+	<link rel="stylesheet" href="css/ngReactGrid.css">
 
-  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css">
-  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap-theme.min.css">
+	<script src="js/main.js"></script>
+  </head>
+
 
   <body ng-app="app" ng-controller="InitCtrl">
 	<!-- HEADER -->
@@ -16,16 +28,25 @@
 		  <!--DROPDOWN TABLES -->
 		  <li>
 			<form class="navbar-form pull-left">
-			  <select class="form-control" ng-change="get(table); showAddRow = true" ng-model="table">
-				<option value={{table}} ng-repeat="table in tables">{{table}}</option>
+			  <select class="btn btn-default dropdown-toggle" ng-change="get(table); tableSelected= true"  ng-model="table">
+				<option value={{table}}  ng-repeat="table in tables">{{table}}</option>
 			  </select>
-
+			  <!-- ADVANCED OPTIONS-->
 			</form>
 		  </li>
-		  <!-- ADD VIEW -->
-		  <li>
-			<button class="btn btn-default" ng-show="!showAddView" ng-click="showAddView = ! showAddView">Add View</button>
-			<button class="btn btn-default" ng-show="showAddView" ng-click="showAddView = ! showAddView">Cancel Add View</button>
+		  <!-- ADVANCED QUERIES -->
+		  <li ng-show="tableSelected">
+
+			<div class="input-append">
+			  <span data-toggle="tooltip" title="Separate specs with '&'.">Advanced:</span>
+			  <input type="text" ng-model="parameters"></input>
+			  <button ng-click="update(table, parameters)" class="btn btn-default">Update</button>
+			</div>
+		  </li>
+		</ul>
+		<!-- ADD VIEW -->
+		<ul class="nav navbar-nav navbar-right">
+		  <button class="btn btn-default" ng-show="!showAddView" ng-click="showAddView = ! showAddView">Add View</button>
 		  </li>
 		  <li>
 			<!--ADD VIEW FORM -->
@@ -33,59 +54,64 @@
 			  Name:
 			  <input type="text" ng-model="newView.Name" value="Name">Query:
 			  <input type="text" ng-model="newView.Query" value="Query">
+
+			  <button class="btn btn-default" ng-show="showAddView" ng-click="showAddView = ! showAddView">Cancel</button>
 			  <button class="btn btn-default" ng-click="postView(newView)">Submit</button>
-			  {{newView}}
 			</form>
 		  </li>
 		</ul>
 	  </div>
 	</nav>
-
-	<!--table-->
 	<div>
 	  <form>
+		<div ng-init="rowArray = []">
+		  <!-- EDIT -->
+		  <button ng-show="selections.length>0 && !editEnabled"  ng-click="editEnabled = true">Edit Row(s)</button>
+		  <button ng-show="editEnabled" ng-click="editEnabled = false; clearCheckboxes(); rowArray = [];">Cancel Edit</button>	
+		  <button ng-show="editEnabled" ng-click="put(table, rowArray); editEnabled = false; rowArray = [];">Submit</button>	
 
-
-		<button ng-show="showAddRow" ng-click="showAddRowCols = ! showAddRowCols; showAddRow = ! showAddRow">Add Row</button>
-		<button ng-show="showAddRowCols" ng-click="showAddRowCols = ! showAddRowCols; showAddRow = ! showAddRow">Cancel</i></button>
-		<!-- ADD ROW PART -->
-		  <table class="table-striped table-hover table-bordered table-condensed" ng-show="showAddRowCols" ng-init="newRow={}">
-			<tr><td class="span2"  ng-repeat="column in columns | filter: '!id' | filter: '!last_updated'">{{column}}</td></tr>
-			<tr><td ng-repeat="column in columns | filter: '!id' | filter: '!last_updated'"><input type="text" ng-model=newRow[column]></td>
-
-			  <td>
-				<button ng-click="post(table, newRow); showAddRowCols = ! showAddRowCols; showAddRow = ! showAddRow">Submit</button>
+		  <table class="table-striped table-hover table-bordered table-condensed" ng-show="editEnabled">
+			<tr><td ng-repeat="(colName, col) in colFilter(columns) | filter : colFilter">{{col.colAlias}}</td></tr>
+			<tr ng-init="filterRow(row)" ng-repeat="row in selections">
+			  <td ng-repeat="(colName, col) in colFilter(columns) | filter : colFilter">
+				<input ng-show="!col.isForeignKey" type="text"  ng-model=row[colName]>
+				<select ng-show="col.isForeignKey" ng-model=row[colName]>
+				  <option value={{value}} ng-repeat="(key, value) in col.foreignKeyValues">{{key}}</option>
+				</select>
 			  </td>
+
+			  <td><button ng-click="rowArray.push(row)">Save</button></td> 
 			</tr>
 		  </table>
-			<br/>
+		</div>
+		<!-- DELETE -->
+		<button ng-show="selections.length>0" ng-click="delete(table, selections);">Delete Row</button>
 
-		  <!-- MAIN TABLE DISPLAY -->
-		  <table class="table-striped table-hover table-bordered table-condensed">
-			<!-- HEADERS -->
-			<thead>
-			  <tr>
-				<td ng-repeat="column in columns">{{column}}</td>
-			  </tr>
-			</thead>
+		<br/><br/>
+		<!-- SHOW ADD ROW BUTTONS -->
+		<button ng-show="tableSelected" ng-click="showAddRowCols = ! showAddRowCols; showAddRow = ! showAddRow; newRow={}">Add Row</button>
+		<button ng-show="showAddRowCols" ng-click="showAddRowCols = ! showAddRowCols; showAddRow = ! showAddRow; newRow={}">Cancel</i></button>
+		<!-- ADD ROW PART -->
+		<table class="table-striped table-hover table-bordered table-condensed" ng-show="showAddRowCols" ng-init="newRow={}">
+		  <tr><td class="span2"  ng-repeat="column in colFilter(columns)">{{column.colAlias}}</td></tr>
+		  <tr><td ng-repeat="(colName, col) in colFilter(columns)">
+			  <input ng-show="!col.isForeignKey" type="text" ng-model=newRow[colName]>
+			  <select ng-show="col.isForeignKey" ng-model="newRow[colName]">
+				<option value={{value}} ng-repeat="(key, value) in col.foreignKeyValues">{{key}}</option>
+			  </select>
+			</td>
 
-			<!-- ROWS -->
-			<tbody>
-			  <tr ng-repeat="row in rows">
-				<!-- ROWS/ FORMS -->
-				<td ng-show="!showEdit" ng-repeat="value in row">{{value}}</td>
-				<td ng-show="showEdit" ng-repeat="(key, value) in row"><input type="text" ng-model=row[key]></td>
+			<td>
+			  <button ng-click="post(table, newRow); showAddRowCols = ! showAddRowCols; showAddRow = ! showAddRow">Submit</button>
+			</td>
+		  </tr>
+		</table>
 
-				<!--EDIT/SAVE-->
-				<td><button ng-show="!showEdit" ng-click="showEdit = ! showEdit">Edit</button></td>
-				<td><button ng-show="showEdit" ng-click="showEdit = ! showEdit; put(table, row)">Save</button></td>
-
-				<!-- DELETE -->
-				<td><button ng-click="delete(table, row)">Delete</button></td>
-			  </tr>
-			</tbody>
-		  </table>
+		<!-- DELETE VIEW -->
+		<button ng-show="tableSelected && !isTable" ng-click="deleteView(table)">Delete View</button>
 	  </form>
+	  <!-- TABLE -->
+	  <div ng-show="tableSelected"><ng-react-grid grid="grid"></ng-react-grid></div>
 	</div>
   </body>
 </html>

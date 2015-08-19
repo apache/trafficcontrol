@@ -26,12 +26,6 @@ import (
 	"strings"
 )
 
-func check(e error) {
-	if e != nil {
-		panic(e)
-	}
-}
-
 type Request struct {
 	Type string
 	//can be for a table or a view
