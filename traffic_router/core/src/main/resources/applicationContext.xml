@@ -19,10 +19,45 @@
 	xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-3.0.xsd"
 	default-init-method="init" default-destroy-method="destroy">
 
-    <import resource="classpath:/applicationProperties.xml" />
+	<import resource="classpath:/applicationProperties.xml" />
 	<bean id="statTracker" class="com.comcast.cdn.traffic_control.traffic_router.core.router.StatTracker">
 		<property name="dnsRoutingName" value="$[dns.routing.name]" />
 		<property name="httpRoutingName" value="$[http.routing.name]" />
+	</bean>
+
+	<bean name="staticZoneManagerKeyServerUsernameInitializer" class="org.springframework.beans.factory.config.MethodInvokingFactoryBean">
+		<property name="staticMethod" value="com.comcast.cdn.traffic_control.traffic_router.core.dns.ZoneManager.setKeyServerUsername"/>
+		<property name="arguments">
+			<list><value>$[dns.sec.keyserver.username]</value></list>
+		</property>
+	</bean>
+
+	<bean name="staticZoneManagerKeyServerPasswordInitializer" class="org.springframework.beans.factory.config.MethodInvokingFactoryBean">
+		<property name="staticMethod" value="com.comcast.cdn.traffic_control.traffic_router.core.dns.ZoneManager.setKeyServerPassword"/>
+		<property name="arguments">
+			<list><value>$[dns.sec.keyserver.password]</value></list>
+		</property>
+	</bean>
+
+	<bean name="staticZoneManagerZoneDirectoryInitializer" class="org.springframework.beans.factory.config.MethodInvokingFactoryBean">
+		<property name="staticMethod" value="com.comcast.cdn.traffic_control.traffic_router.core.dns.ZoneManager.setZoneDirectory"/>
+		<property name="arguments">
+			<list><value>$[dns.zones.dir]</value></list>
+		</property>
+	</bean>
+
+	<bean name="staticZoneManagerHttpRoutingNameInitializer" class="org.springframework.beans.factory.config.MethodInvokingFactoryBean">
+		<property name="staticMethod" value="com.comcast.cdn.traffic_control.traffic_router.core.dns.ZoneManager.setHttpRoutingName"/>
+		<property name="arguments">
+			<list><value>$[http.routing.name]</value></list>
+		</property>
+	</bean>
+
+	<bean name="staticZoneManagerDnsRoutingNameInitializer" class="org.springframework.beans.factory.config.MethodInvokingFactoryBean">
+		<property name="staticMethod" value="com.comcast.cdn.traffic_control.traffic_router.core.dns.ZoneManager.setDnsRoutingName"/>
+		<property name="arguments">
+			<list><value>$[dns.routing.name]</value></list>
+		</property>
 	</bean>
 
 	<bean id="HashFunctionFactory"
@@ -45,8 +80,6 @@
 		<property name="hashFunctionPool" ref="HashFunctionObjectPool" />
 		<property name="statTracker" ref="statTracker" />
 		<property name="nameServer" ref="NameServer" />
-		<property name="dnsRoutingName" value="$[dns.routing.name]" />
-		<property name="httpRoutingName" value="$[http.routing.name]" />
 	</bean>
 
 	<bean id="ConfigHandler" class="com.comcast.cdn.traffic_control.traffic_router.core.config.ConfigHandler">
