@@ -16,17 +16,15 @@
 
 .. _to-api-v11-phys-loc:
 
-
 Physical Location
 =================
 
 .. _to-api-v11-phys-loc-route:
 
 /api/1.1/phys_locations
-=======================
++++++++++++++++++++++++
 
 **GET /api/1.1/phys_locations.json**
-====================================
 
   Authentication Required: Yes
 

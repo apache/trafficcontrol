@@ -22,7 +22,7 @@ Regions
 .. _to-api-v12-regions-route:
 
 /api/1.2/regions
-================
+++++++++++++++++
 
 **GET /api/1.2/regions.json**
 

@@ -17,13 +17,13 @@
 
 .. _to-api-v11-hwinfo:
 
-hwinfo
-======
+Hardware Info
+=============
 
 .. _to-api-v11-hwinfo-route:
 
 /api/1.1/hwinfo
-===============
++++++++++++++++
 
 **GET /api/1.1/hwinfo.json**
 

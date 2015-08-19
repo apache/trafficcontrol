@@ -355,9 +355,21 @@ sub parent_data {
 		$self->db->resultset('Server')->search( { cachegroup => { -in => \@parent_cachegroup_ids }, status => { -in => [ $online, $reported ] } },
 		{ prefetch => [ 'cachegroup', 'status', 'type', 'profile' ] } );
 
-	my $i             = 0;
-	my %profile_cache = ();
+	my %profile_cache    = ();
+	my $deliveryservices = undef;
 	while ( my $row = $rs_parent->next ) {
+
+		if ( $row->type->name eq 'ORG' ) {
+			my $rs_ds = $self->db->resultset('DeliveryserviceServer')->search( { server => $row->id }, { prefetch => ['deliveryservice'] } );
+			while ( my $ds_row = $rs_ds->next ) {
+				my $ds_domain = $ds_row->deliveryservice->org_server_fqdn;
+				$ds_domain =~ s/https?:\/\/(.*)/$1/;
+				push( @{ $deliveryservices->{$ds_domain} }, $row );
+			}
+		}
+		else {
+			push( @{ $deliveryservices->{"all_parents"} }, $row );
+		}
 
 		# get the profile info, and cache it in %profile_cache
 		my $ds_domain      = undef;
@@ -393,26 +405,32 @@ sub parent_data {
 			$use_ip_address = defined($param) ? $param->parameter->value : 0;
 			$profile_cache{$pid}->{use_ip_address} = $use_ip_address;
 		}
-		else {
-			$ds_domain      = $profile_cache{$pid}->{domain_name};
-			$weight         = $profile_cache{$pid}->{weight};
-			$port           = $profile_cache{$pid}->{port};
-			$use_ip_address = $profile_cache{$pid}->{use_ip_address};
-		}
-		if ( defined($ds_domain) && defined($server_domain) && $ds_domain eq $server_domain ) {
-			$pinfo->{"plist"}->[$i]->{"host_name"}      = $row->host_name;
-			$pinfo->{"plist"}->[$i]->{"port"}           = defined($port) ? $port : $row->tcp_port;
-			$pinfo->{"plist"}->[$i]->{"domain_name"}    = $row->domain_name;
-			$pinfo->{"plist"}->[$i]->{"weight"}         = $weight;
-			$pinfo->{"plist"}->[$i]->{"use_ip_address"} = $use_ip_address;
-			$pinfo->{"plist"}->[$i]->{"ip_address"}     = $row->ip_address;
-			if ( $server->cachegroup->parent_cachegroup_id == $row->cachegroup->id ) {
-				$pinfo->{"plist"}->[$i]->{"preferred"} = 1;
+	}
+
+	foreach my $prefix ( keys %{$deliveryservices} ) {
+		my $i = 0;
+		$rs_parent->reset;
+		foreach my $row ( @{ $deliveryservices->{$prefix} } ) {
+			my $pid            = $row->profile->id;
+			my $ds_domain      = $profile_cache{$pid}->{domain_name};
+			my $weight         = $profile_cache{$pid}->{weight};
+			my $port           = $profile_cache{$pid}->{port};
+			my $use_ip_address = $profile_cache{$pid}->{use_ip_address};
+			if ( defined($ds_domain) && defined($server_domain) && $ds_domain eq $server_domain ) {
+				$pinfo->{$prefix}->[$i]->{"host_name"}      = $row->host_name;
+				$pinfo->{$prefix}->[$i]->{"port"}           = defined($port) ? $port : $row->tcp_port;
+				$pinfo->{$prefix}->[$i]->{"domain_name"}    = $row->domain_name;
+				$pinfo->{$prefix}->[$i]->{"weight"}         = $weight;
+				$pinfo->{$prefix}->[$i]->{"use_ip_address"} = $use_ip_address;
+				$pinfo->{$prefix}->[$i]->{"ip_address"}     = $row->ip_address;
+				if ( $server->cachegroup->parent_cachegroup_id == $row->cachegroup->id ) {
+					$pinfo->{$prefix}->[$i]->{"preferred"} = 1;
+				}
+				else {
+					$pinfo->{$prefix}->[$i]->{"preferred"} = 0;
+				}
+				$i++;
 			}
-			else {
-				$pinfo->{"plist"}->[$i]->{"preferred"} = 0;
-			}
-			$i++;
 		}
 	}
 	return $pinfo;
@@ -955,14 +973,12 @@ sub parent_dot_config {
 
 			my $org_fqdn = $ds->{org};
 			$org_fqdn =~ s/https?:\/\///;
-
-			my $algorithm = "";
-			my $param =
-				$self->db->resultset('ProfileParameter')
-				->search( { -and => [ profile => $server->profile->id, 'parameter.config_file' => 'parent.config', 'parameter.name' => 'algorithm' ] },
-				{ prefetch => [ 'parameter', 'profile' ] } )->single();
-
 			if ( defined($os) ) {
+				my $algorithm = "";
+				my $param =
+					$self->db->resultset('ProfileParameter')
+					->search( { -and => [ profile => $server->profile->id, 'parameter.config_file' => 'parent.config', 'parameter.name' => 'algorithm' ] },
+					{ prefetch => [ 'parameter', 'profile' ] } )->single();
 				my $pselect_alg = defined($param) ? $param->parameter->value : undef;
 				if ( defined($pselect_alg) ) {
 					$algorithm = "round_robin=$pselect_alg";
@@ -973,7 +989,9 @@ sub parent_dot_config {
 
 				$text .= "dest_domain=$org_fqdn parent=\"";
 				my $pinfo = $self->parent_data($server);
-				foreach my $parent ( @{ $pinfo->{"plist"} } ) {
+
+				#print Dumper($pinfo);
+				foreach my $parent ( @{ $pinfo->{$org_fqdn} } ) {
 					if ( $parent->{use_ip_address} == 1 ) {
 						$text .= $parent->{ip_address} . ":" . $parent->{port} . "|" . $parent->{weight} . ";";
 					}
@@ -981,8 +999,7 @@ sub parent_dot_config {
 						$text .= $parent->{"host_name"} . "." . $parent->{"domain_name"} . ":" . $parent->{"port"} . "|" . $parent->{"weight"} . ";";
 					}
 				}
-				my $pselect_alg = defined($param) ? $param->parameter->value : "consistent_hash";
-				$text .= "\" round_robin=$pselect_alg go_direct=false parent_is_proxy=false";
+				$text .= "\" round_robin=consistent_hash go_direct=false parent_is_proxy=false\n";
 			}
 		}
 
@@ -1016,14 +1033,14 @@ sub parent_dot_config {
 		if ( defined($pselect_alg) && $pselect_alg eq 'consistent_hash' ) {
 
 			$text .= "dest_domain=. parent=\"";
-			foreach my $parent ( @{ $pinfo->{"plist"} } ) {
+			foreach my $parent ( @{ $pinfo->{"all_parents"} } ) {
 				$text .= $parent->{"host_name"} . "." . $parent->{"domain_name"} . ":" . $parent->{"port"} . "|" . $parent->{"weight"} . ";";
 			}
 			$text .= "\" round_robin=consistent_hash go_direct=false";
 		}
 		else {    # default to old situation.
 			$text .= "dest_domain=. parent=\"";
-			foreach my $parent ( @{ $pinfo->{"plist"} } ) {
+			foreach my $parent ( @{ $pinfo->{"all_parents"} } ) {
 				$text .= $parent->{"host_name"} . "." . $parent->{"domain_name"} . ":" . $parent->{"port"} . ";";
 			}
 			$text .= "\" round_robin=urlhash go_direct=false";
@@ -1039,6 +1056,8 @@ sub parent_dot_config {
 		}
 
 		$text .= "\n";
+
+		# $self->app->log->debug($text);
 		return $text;
 	}
 }

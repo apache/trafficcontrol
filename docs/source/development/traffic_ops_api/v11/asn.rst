@@ -17,13 +17,14 @@
 
 .. _to-api-v11-asn:
 
+ASN
+===
+
 .. _to-api-v11-asns-route:
 
 /api/1.1/asns
-=============
++++++++++++++
 
-ASN
-===
 
 **GET /api/1.1/asns.json**
 

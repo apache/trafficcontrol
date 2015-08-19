@@ -22,7 +22,7 @@ Roles
 .. _to-api-v12-roles-route:
 
 /api/1.2/roles
-==============
+++++++++++++++
 
 **GET /api/1.2/roles.json**
 
