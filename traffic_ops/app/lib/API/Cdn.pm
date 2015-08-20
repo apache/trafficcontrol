@@ -46,25 +46,25 @@ sub get_traffic_monitor_config {
 	my $ccr_profile_id;
 	my $data_obj;
 
-	my %condition = ( 'parameter.name' => 'CDN_name', 'parameter.value' => $cdn_name );
-	my $rs_pp = $self->db->resultset('ProfileParameter')->search( \%condition, { prefetch => [ { 'parameter' => undef }, { 'profile' => undef } ] } );
+	my @profile_ids = $self->db->resultset('Server')->search( { 'cdn.name' => $cdn_name }, { prefetch => [ 'cdn' ] } )->get_column('profile')->all();
+	my $rs_pp = $self->db->resultset('Profile')->search( { id => { -in => \@profile_ids } } );
 	while ( my $row = $rs_pp->next ) {
-		if ( $row->profile->name =~ m/^RASCAL/ ) {
-			$rascal_profile = $row->profile->name;
+		if ( $row->name =~ m/^RASCAL/ ) {
+			$rascal_profile = $row->name;
 		}
-		elsif ( $row->profile->name =~ m/^CCR/ ) {
-			push( @ccr_profiles, $row->profile->name );
+		elsif ( $row->name =~ m/^CCR/ ) {
+			push( @ccr_profiles, $row->name );
 
 			# TODO MAT: support multiple CCR profiles
-			$ccr_profile_id = $row->profile->id;
+			$ccr_profile_id = $row->id;
 		}
-		elsif ( $row->profile->name =~ m/^EDGE/ || $row->profile->name =~ m/^MID/ ) {
-			push( @cache_profiles, $row->profile->name );
+		elsif ( $row->name =~ m/^EDGE/ || $row->name =~ m/^MID/ ) {
+			push( @cache_profiles, $row->name );
 		}
 	}
-	%condition = ( 'parameter.config_file' => 'rascal-config.txt', 'profile.name' => $rascal_profile );
-	$rs_pp = $self->db->resultset('ProfileParameter')->search( \%condition, { prefetch => [ { 'parameter' => undef }, { 'profile' => undef } ] } );
 
+	my %condition = ( 'parameter.config_file' => 'rascal-config.txt', 'profile.name' => $rascal_profile );
+	$rs_pp = $self->db->resultset('ProfileParameter')->search( \%condition, { prefetch => [ { 'parameter' => undef }, { 'profile' => undef } ] } );
 	while ( my $row = $rs_pp->next ) {
 		my $parameter;
 		if ( $row->parameter->name =~ m/location/ ) { next; }
@@ -127,23 +127,10 @@ sub get_traffic_monitor_config {
 		$delivery_service->{'totalTpsThreshold'}  = int( $row->global_max_tps || 0 );
 		push( @{ $data_obj->{'deliveryServices'} }, $delivery_service );
 	}
-
-	my @cdn_profiles;
-	my $cdnname_param_id = $self->db->resultset('Parameter')->search( { name => 'CDN_name', value => $cdn_name } )->get_column('id')->single();
-	if ( defined($cdnname_param_id) ) {
-		@cdn_profiles = $self->db->resultset('ProfileParameter')->search( { parameter => $cdnname_param_id } )->get_column('profile')->all();
-		if ( !scalar(@cdn_profiles) ) {
-			my $e = Mojo::Exception->throw( "No profiles found for CDN_name: " . $cdn_name );
-		}
-	}
-	else {
-		my $e = Mojo::Exception->throw( "Parameter ID not found for CDN_name: " . $cdn_name );
-	}
-
 	my $rs_caches = $self->db->resultset('Server')->search(
-		{ 'profile' => { -in => \@cdn_profiles } },
+		{ 'cdn.name' => $cdn_name },
 		{
-			prefetch => [ 'type',      'status',      'cachegroup', 'profile' ],
+			prefetch => [ 'type',      'status',      'cachegroup', 'profile', 'cdn' ],
 			columns  => [ 'host_name', 'domain_name', 'tcp_port',   'interface_name', 'ip_address', 'ip6_address', 'id', 'xmpp_id' ]
 		}
 	);
@@ -179,17 +166,16 @@ sub get_traffic_monitor_config {
 
 	}
 
-	my $rs_loc = $self->db->resultset('CachegroupParameter')->search( { 'parameter' => $cdnname_param_id }, { prefetch => 'cachegroup' } );
+	my $rs_loc = $self->db->resultset('Cachegroup')->search( { 'cdn.name' => $cdn_name }, { prefetch => [ 'cdn' ] } );
 	while ( my $row = $rs_loc->next ) {
 		my $cache_group;
-		my $latitude  = $row->cachegroup->latitude + 0;
-		my $longitude = $row->cachegroup->longitude + 0;
+		my $latitude  = $row->latitude + 0;
+		my $longitude = $row->longitude + 0;
 		$cache_group->{'coordinates'}->{'latitude'}  = $latitude;
 		$cache_group->{'coordinates'}->{'longitude'} = $longitude;
-		$cache_group->{'name'}                       = $row->cachegroup->name;
+		$cache_group->{'name'}                       = $row->name;
 		push( @{ $data_obj->{'cacheGroups'} }, $cache_group );
 	}
-
 	return ($data_obj);
 }
 
@@ -307,7 +293,6 @@ sub gen_traffic_router_config {
 	my $self     = shift;
 	my $cdn_name = shift;
 	my $data_obj;
-	my @cdn_profiles;
 	my $ccr_profile_id;
 	my $ccr_domain_name = "";
 	$SIG{__WARN__} = sub { warn $_[0] unless $_[0] =~ m/Prefetching multiple has_many rels deliveryservice_servers/ };
@@ -319,55 +304,41 @@ sub gen_traffic_router_config {
 	$data_obj->{'stats'}->{'trafficOpsHost'}    = $self->req->headers->host;
 	$data_obj->{'stats'}->{'trafficOpsUser'}    = $self->current_user()->{username};
 
-	my $cdnname_param_id = $self->db->resultset('Parameter')->search( { name => 'CDN_name', value => $cdn_name } )->get_column('id')->single();
-	if ( defined($cdnname_param_id) ) {
-		@cdn_profiles = $self->db->resultset('ProfileParameter')->search( { parameter => $cdnname_param_id } )->get_column('profile')->all();
-		if ( scalar(@cdn_profiles) ) {
-			$ccr_profile_id =
-				$self->db->resultset('Profile')->search( { id => { -in => \@cdn_profiles }, name => { -like => 'CCR%' } } )->get_column('id')->single();
-			if ( !defined($ccr_profile_id) ) {
+	my @cdn_profiles = $self->db->resultset('Server')->search( { 'cdn.name' => $cdn_name }, { prefetch => [ 'cdn' ] } )->get_column('profile')->all();
+	if ( scalar(@cdn_profiles) ) {
+		$ccr_profile_id = $self->db->resultset('Profile')->search( { id => { -in => \@cdn_profiles }, name => { -like => 'CCR%' } } )->get_column('id')->single();
+		if ( !defined($ccr_profile_id) ) {
 				my $e = Mojo::Exception->throw("No CCR profile found in profile IDs: @cdn_profiles ");
 			}
-		}
-		else {
-			my $e = Mojo::Exception->throw( "No profiles found for CDN_name: " . $cdn_name );
-		}
-
-#@cache_rascal_profiles = $self->db->resultset('Profile')->search( { id => { -in => \@cdn_profiles }, name => [{ like => 'EDGE%'}, {like => 'MID%'}, {like => 'RASCAL%'}, {like => 'CDSIS%'} ] } )->get_column('id')->all();;
 	}
 	else {
-		my $e = Mojo::Exception->throw( "Parameter ID not found for CDN_name: " . $cdn_name );
+			my $e = Mojo::Exception->throw( "No profiles found for CDN_name: " . $cdn_name );
 	}
 
 	my %condition = ( 'profile_parameters.profile' => $ccr_profile_id, 'config_file' => 'CRConfig.json' );
 	my $rs_config = $self->db->resultset('Parameter')->search( \%condition, { join => 'profile_parameters' } );
 	while ( my $row = $rs_config->next ) {
-		my $parameter;
 		if ( $row->name eq 'domain_name' ) {
 			$ccr_domain_name = $row->value;
 		}
 
-		$parameter->{'type'} = "parameter";
+		my $parameter->{'type'} = "parameter";
 		if ( $row->value =~ m/^\d+$/ ) {
 			$data_obj->{'config'}->{ $row->name } = int( $row->value );
 		}
 		else {
 			$data_obj->{'config'}->{ $row->name } = $row->value;
 		}
-
-		#push (@{$data_obj->{'config'}}, $parameter);
-
 	}
-	my $rs_loc = $self->db->resultset('CachegroupParameter')->search( { 'parameter' => $cdnname_param_id }, { prefetch => 'cachegroup' } );
 
-#my $rs_loc = $self->db->resultset('Location')->search( {'servers.profile' => { -in => \@cdn_profiles }, 'type.name' => { -like => 'EDGE%'} }, { join => ['servers', 'type'], group_by => 'short_name' } );
+	my $rs_loc = $self->db->resultset('Cachegroup')->search( { 'cdn.name' => $cdn_name }, { prefetch => [ 'cdn' ] } );
 	while ( my $row = $rs_loc->next ) {
 		my $cache_group;
-		my $latitude  = $row->cachegroup->latitude + 0;
-		my $longitude = $row->cachegroup->longitude + 0;
+		my $latitude  = $row->latitude + 0;
+		my $longitude = $row->longitude + 0;
 		$cache_group->{'coordinates'}->{'latitude'}  = $latitude;
 		$cache_group->{'coordinates'}->{'longitude'} = $longitude;
-		$cache_group->{'name'}                       = $row->cachegroup->name;
+		$cache_group->{'name'}                       = $row->name;
 		push( @{ $data_obj->{'cacheGroups'} }, $cache_group );
 	}
 	my $regex_tracker;
@@ -637,34 +608,15 @@ sub gen_traffic_router_config {
 			push( @{ $traffic_server->{'deliveryServices'} }, @empty_array );
 		}
 	}
-
 	return ($data_obj);
-}
-
-sub get_cdn_name {
-	my $self  = shift;
-	my $which = shift;
-
-	my $cdn_name = "all";
-	my $server =
-		$self->db->resultset('Server')->search( { host_name => $which }, { prefetch => [ 'cachegroup', 'type', 'profile', 'status', 'phys_location' ] } )
-		->single();
-	if ( defined($server) ) {
-		my $param =
-			$self->db->resultset('ProfileParameter')
-			->search( { -and => [ profile => $server->profile->id, 'parameter.config_file' => 'rascal-config.txt', 'parameter.name' => 'CDN_name' ] },
-			{ prefetch => [ { parameter => undef }, { profile => undef } ] } )->single();
-		$cdn_name = $param->parameter->value;
-	}
-	return $cdn_name;
 }
 
 # Produces a list of Cdns for traversing child links
 sub get_cdns {
 	my $self = shift;
 
-	my $rs_data = $self->db->resultset("Parameter")->search( { name => 'CDN_name' }, { order_by => "name" } );
-	my $json_response = $self->build_cdns_json( $rs_data, "id,name,config_file,value" );
+	my $rs_data = $self->db->resultset("Cdn")->search( {}, { order_by => "name" } );
+	my $json_response = $self->build_cdns_json( $rs_data, "id,name,config_file" );
 
 	#push( @{$json_response}, { "links" => [ { "rel" => "configs", "href" => "child" } ] } );
 	$self->success($json_response);

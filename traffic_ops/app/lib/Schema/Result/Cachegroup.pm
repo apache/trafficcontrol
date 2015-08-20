@@ -63,6 +63,12 @@ __PACKAGE__->table("cachegroup");
   is_foreign_key: 1
   is_nullable: 0
 
+=head2 cdn_id
+
+  data_type: 'integer'
+  is_foreign_key: 1
+  is_nullable: 1
+
 =head2 last_updated
 
   data_type: 'timestamp'
@@ -87,6 +93,8 @@ __PACKAGE__->add_columns(
   { data_type => "integer", is_foreign_key => 1, is_nullable => 1 },
   "type",
   { data_type => "integer", is_foreign_key => 1, is_nullable => 0 },
+  "cdn_id",
+  { data_type => "integer", is_foreign_key => 1, is_nullable => 1 },
   "last_updated",
   {
     data_type => "timestamp",
@@ -195,6 +203,26 @@ __PACKAGE__->has_many(
   { cascade_copy => 0, cascade_delete => 0 },
 );
 
+=head2 cdn
+
+Type: belongs_to
+
+Related object: L<Schema::Result::Cdn>
+
+=cut
+
+__PACKAGE__->belongs_to(
+  "cdn",
+  "Schema::Result::Cdn",
+  { id => "cdn_id" },
+  {
+    is_deferrable => 1,
+    join_type     => "LEFT",
+    on_delete     => "SET NULL",
+    on_update     => "RESTRICT",
+  },
+);
+
 =head2 parent_cachegroup
 
 Type: belongs_to
@@ -261,8 +289,8 @@ __PACKAGE__->belongs_to(
 );
 
 
-# Created by DBIx::Class::Schema::Loader v0.07043 @ 2015-06-26 20:31:07
-# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:RPL2LsEJ0HVp/rkZU567vg
+# Created by DBIx::Class::Schema::Loader v0.07043 @ 2015-08-18 09:06:16
+# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:3hMZoUmR3eLKQudN5AcaNA
 
 
 # You can replace this text with custom code or comments, and it will be preserved on regeneration

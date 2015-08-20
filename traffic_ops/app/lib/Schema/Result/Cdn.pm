@@ -35,6 +35,12 @@ __PACKAGE__->table("cdn");
   is_nullable: 0
   size: 1024
 
+=head2 config_file
+
+  data_type: 'varchar'
+  is_nullable: 0
+  size: 45
+
 =head2 last_updated
 
   data_type: 'timestamp'
@@ -49,6 +55,8 @@ __PACKAGE__->add_columns(
   { data_type => "integer", is_auto_increment => 1, is_nullable => 0 },
   "name",
   { data_type => "varchar", is_nullable => 0, size => 1024 },
+  "config_file",
+  { data_type => "varchar", is_nullable => 0, size => 45 },
   "last_updated",
   {
     data_type => "timestamp",
@@ -72,6 +80,21 @@ __PACKAGE__->set_primary_key("id");
 
 =head1 RELATIONS
 
+=head2 cachegroups
+
+Type: has_many
+
+Related object: L<Schema::Result::Cachegroup>
+
+=cut
+
+__PACKAGE__->has_many(
+  "cachegroups",
+  "Schema::Result::Cachegroup",
+  { "foreign.cdn_id" => "self.id" },
+  { cascade_copy => 0, cascade_delete => 0 },
+);
+
 =head2 deliveryservices
 
 Type: has_many
@@ -83,6 +106,21 @@ Related object: L<Schema::Result::Deliveryservice>
 __PACKAGE__->has_many(
   "deliveryservices",
   "Schema::Result::Deliveryservice",
+  { "foreign.cdn_id" => "self.id" },
+  { cascade_copy => 0, cascade_delete => 0 },
+);
+
+=head2 profiles
+
+Type: has_many
+
+Related object: L<Schema::Result::Profile>
+
+=cut
+
+__PACKAGE__->has_many(
+  "profiles",
+  "Schema::Result::Profile",
   { "foreign.cdn_id" => "self.id" },
   { cascade_copy => 0, cascade_delete => 0 },
 );
@@ -103,8 +141,8 @@ __PACKAGE__->has_many(
 );
 
 
-# Created by DBIx::Class::Schema::Loader v0.07043 @ 2015-08-12 14:41:45
-# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:7/GqLjKUQfacWOdNIlnA3A
+# Created by DBIx::Class::Schema::Loader v0.07043 @ 2015-08-18 10:20:11
+# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:vk+XTi3ZeysLycnNArtxCw
 
 
 # You can replace this text with custom code or comments, and it will be preserved on regeneration

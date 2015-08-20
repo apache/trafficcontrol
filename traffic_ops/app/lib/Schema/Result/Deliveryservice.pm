@@ -240,24 +240,6 @@ __PACKAGE__->table("deliveryservice");
   data_type: 'tinyint'
   is_nullable: 1
 
-=head2 display_name
-
-  data_type: 'varchar'
-  is_nullable: 1
-  size: 1024
-
-=head2 tr_response_headers
-
-  data_type: 'varchar'
-  is_nullable: 1
-  size: 1024
-
-=head2 initial_dispersion
-
-  data_type: 'integer'
-  default_value: 1
-  is_nullable: 1
-
 =head2 dns_bypass_cname
 
   data_type: 'varchar'
@@ -348,12 +330,6 @@ __PACKAGE__->add_columns(
   { data_type => "varchar", is_nullable => 1, size => 2048 },
   "multi_site_origin",
   { data_type => "tinyint", is_nullable => 1 },
-  "display_name",
-  { data_type => "varchar", is_nullable => 1, size => 1024 },
-  "tr_response_headers",
-  { data_type => "varchar", is_nullable => 1, size => 1024 },
-  "initial_dispersion",
-  { data_type => "integer", default_value => 1, is_nullable => 1 },
   "dns_bypass_cname",
   { data_type => "varchar", is_nullable => 1, size => 255 },
 );
@@ -526,8 +502,8 @@ __PACKAGE__->belongs_to(
 );
 
 
-# Created by DBIx::Class::Schema::Loader v0.07043 @ 2015-08-12 08:48:22
-# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:aP5qbSepTqJy7uZApRZnkA
+# Created by DBIx::Class::Schema::Loader v0.07043 @ 2015-08-18 10:20:11
+# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:Qurt7d060meyL4H5Pxnusw
 
 
 # You can replace this text with custom code or comments, and it will be preserved on regeneration

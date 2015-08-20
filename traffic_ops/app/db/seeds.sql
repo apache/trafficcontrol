@@ -203,8 +203,8 @@ insert ignore into profile_parameter (profile, parameter) value (
   (select id from parameter where name = 'DsStats' and config_file = 'traffic_stats.config' and value = 'tps_total')
 );
 
-INSERT INTO cdn(name) (
-  SELECT parameter.value
+INSERT INTO cdn(name, config_file) (
+  SELECT parameter.value, parameter.config_file
   FROM parameter
   WHERE parameter.name = 'CDN_name'
 );
@@ -223,6 +223,26 @@ set s.cdn_id = (
   select cdn.id
   from profile p, profile_parameter pp, parameter param, cdn
   where s.profile = p.id and pp.profile = p.id and pp.parameter = param.id
+  and param.name = 'CDN_name'
+  and cdn.name = param.value
+);
+
+update cachegroup c
+set c.cdn_id = (
+  select cdn.id
+  from cachegroup_parameter cp, parameter param, cdn
+  where cp.parameter = param.id
+  and cp.cachegroup = c.id
+  and param.name = 'CDN_name'
+  and cdn.name = param.value
+);
+
+update profile p
+set p.cdn_id = (
+  select cdn.id
+  from profile_parameter pp, parameter param, cdn
+  where pp.profile = p.id
+  and pp.parameter = param.id
   and param.name = 'CDN_name'
   and cdn.name = param.value
 );
