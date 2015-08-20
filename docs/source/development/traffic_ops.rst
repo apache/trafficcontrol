@@ -32,11 +32,11 @@ To work on Traffic Ops you need a \*nix (MacOS and Linux are most commonly used)
 * MySQL 5.1.52
 
 Traffic Ops Project Tree Overview
-=================================
+=======================================
 
 **/opt/traffic_ops/app**
 
-* bin/ - Directory for scripts, cronjobs, etc.
+* bin/ - Directory for scripts, cronjobs, etc
 
 * conf/
 
@@ -222,7 +222,7 @@ To install the Traffic Ops Developer environment:
 5. (Optional) To load temporary data into the tables: ``$ perl bin/db/setup_kabletown.pl``
 
 
-6. To start Traffic Ops, enter ``$ bin/start.sh``
+6. To start Traffic Ops, enter ``$ bin/start.pl``
 
    The local Traffic Ops instance uses an open source framework called morbo, starting following the start command execution.
 
@@ -256,7 +256,7 @@ The KableTown CDN example
 The integration tests will load an example CDN with most of the features of Traffic Control being used. This is mostly for testing purposes, but can also be used as an example of how to configure certain features. To load the KableTown CDN example and access it:
 
 1. Run the integration tests 
-2. Start morbo against the integration database: ``export MOJO_MODE=integration; ./bin/start.sh``
+2. Start morbo against the integration database: ``export MOJO_MODE=integration; ./bin/start.pl``
 3. Using a browser, navigate to the given address: ``http://127.0.0.1:3000``
 4. For the initial log in:
   
@@ -341,10 +341,39 @@ Configuration Extensions
 NOTE: Config Extensions are Beta at this time.
 
 
-Data source Extensions
+Data Source Extensions
 ----------------------
-NOTE: Data source Extensions are Beta at this time.
+Traffic Ops has the ability to load custom code at runtime that allow any CDN user to build custom APIs for any requirement that Traffic Ops does not fulfill.  There are two classes of Data Source Extensions, private and public.  Private extensions are Traffic Ops extensions that are not publicly available, and should be kept in the /opt/traffic_ops_extensions/private/lib. Public extensions are Traffic Ops extensions that are Open Source in nature and free to enhance or contribute back to the Traffic Ops Open Source project and should be kept in /opt/traffic_ops/app/lib/Extensions.
 
+
+Extensions at Runtime
+---------------------
+The search path for extensions depends on the configuration of the PERL5LIB, which is preconfigured in the Traffic Ops start scripts.  The following directory structure is where Traffic Ops will look for Extensions in this order.
+
+Extension Directories
+---------------------
+PERL5LIB Example Configuration: ::
+
+   export PERL5LIB=/opt/traffic_ops_extensions/private/lib/Extensions:/opt/traffic_ops/app/lib/Extensions/TrafficStats
+
+Perl Package Naming Convention
+------------------------------
+To prevent Extension namespace collisions within Traffic Ops all Extensions should follow the package naming convention below:
+
+Extensions::<ExtensionName>
+
+Data Source Extension Perl package name example
+Extensions::TrafficStats
+Extensions::YourCustomExtension
+
+TrafficOpsRoutes.pm
+-------------------
+Traffic Ops accesses each extension through the addition of a URL route as a custom hook.  These routes will be defined in a file called TrafficOpsRoutes.pm that should live in the top directory of your Extension.  The routes that are defined should follow the Mojolicious route conventions.
+
+
+Development Configuration
+--------------------------
+To incorporate any custom Extensions during development set your PERL5LIB with any number of directories with the understanding that the PERL5LIB search order will come into play, so keep in mind that top-down is how your code will be located.  Once Perl locates your custom route or Perl package/class it 'pins' on that class or Mojo Route and doesn't look any further, which allows for the developer to *override* Traffic Ops functionality.
 
 API
 ===
@@ -356,7 +385,6 @@ All successful responses have the following structure: ::
 
     {
       "response": <JSON object with main response>,
-      "version": "1.1"
     }
 
 To make the documentation easier to read, only the ``<JSON object with main response>`` is documented, even though the response and version fields are always present. 
@@ -370,7 +398,7 @@ Using API Endpoints
 Example: ::
   
     [jvd@laika ~]$ curl -H "Accept: application/json" http://localhost:3000/api/1.1/usage/asns.json
-    {"version":"1.1","alerts":[{"level":"error","text":"Unauthorized, please log in."}]}
+    {"alerts":[{"level":"error","text":"Unauthorized, please log in."}]}
     [jvd@laika ~]$
     [jvd@laika ~]$ curl -v -H "Accept: application/json" -v -X POST --data '{ "u":"admin", "p":"secret_passwd" }' http://localhost:3000/api/1.1/user/login
     * Hostname was NOT found in DNS cache
@@ -401,11 +429,11 @@ Example: ::
     < Server: Mojolicious (Perl)
     <
     * Connection #0 to host localhost left intact
-    {"alerts":[{"level":"success","text":"Successfully logged in."}],"version":"1.1"}
+    {"alerts":[{"level":"success","text":"Successfully logged in."}]}
     [jvd@laika ~]$
 
     [jvd@laika ~]$ curl -H'Cookie: mojolicious=eyJleHBpcmVzIjoxNDI5NDAyMjAxLCJhdXRoX2RhdGEiOiJhZG1pbiJ9--f990d03b7180b1ece97c3bb5ca69803cd6a79862;' -H "Accept: application/json" http://localhost:3000/api/1.1/asns.json
-    {"response":{"asns":[{"lastUpdated":"2012-09-17 15:41:22", .. asn data deleted ..   ,"version":"1.1"}
+    {"response":{"asns":[{"lastUpdated":"2012-09-17 15:41:22", .. asn data deleted ..   ,}
     [jvd@laika ~]$
 
 API Errors
@@ -421,8 +449,6 @@ API Errors
 | ``>level``           | string | Success, info, warning or error.               |
 +----------------------+--------+------------------------------------------------+
 | ``>text``            | string | Alert message.                                 |
-+----------------------+--------+------------------------------------------------+
-|``version``           | string |                                                |
 +----------------------+--------+------------------------------------------------+
 
 The 3 most common errors returned by Traffic Ops are:
@@ -455,11 +481,11 @@ The 3 most common errors returned by Traffic Ops are:
     < Access-Control-Allow-Credentials: true
     <
     * Connection #0 to host localhost left intact
-    {"version":"1.1","alerts":[{"level":"error","text":"Unauthorized, please log in."}]}
+    {"alerts":[{"level":"error","text":"Unauthorized, please log in."}]}
     [jvd@laika ~]$
 
 404 Not Found
-  When the resource (path) is non existant Traffic Ops returns a 404::
+  When the resource (path) is non existent Traffic Ops returns a 404::
 
     [jvd@laika ~]$ curl -v -H'Cookie: mojolicious=eyJleHBpcmVzIjoxNDI5NDAyMjAxLCJhdXRoX2RhdGEiOiJhZG1pbiJ9--f990d03b7180b1ece97c3bb5ca69803cd6a79862;' -H "Accept: application/json" http://localhost:3000/api/1.1/asnsjj.json
     * Hostname was NOT found in DNS cache
@@ -488,7 +514,7 @@ The 3 most common errors returned by Traffic Ops are:
     < Access-Control-Allow-Origin: http://localhost:8080
     <
     * Connection #0 to host localhost left intact
-    {"version":"1.1","alerts":[{"text":"Resource not found.","level":"error"}]}
+    {"alerts":[{"text":"Resource not found.","level":"error"}]}
     [jvd@laika ~]$
 
 500 Internal Server Error
@@ -526,31 +552,68 @@ The 3 most common errors returned by Traffic Ops are:
 
   The rest of the API documentation will only document the ``200 OK`` case, where no errors have occured.
 
+Traffic Ops API Routes
+----------------------
+
+.. toctree:: 
+  :maxdepth: 1
+
+  traffic_ops_api/routes
+
 API 1.1 Reference 
 -----------------
 
 .. toctree:: 
   :maxdepth: 1
 
-  traffic_ops_rest/asn
-  traffic_ops_rest/cachegroup
-  traffic_ops_rest/cdn
-  traffic_ops_rest/changelog
-  traffic_ops_rest/deliveryservice
-  traffic_ops_rest/hwinfo
-  traffic_ops_rest/parameter
-  traffic_ops_rest/phys_location
-  traffic_ops_rest/profile
-  traffic_ops_rest/redis
-  traffic_ops_rest/region
-  traffic_ops_rest/role
-  traffic_ops_rest/server
-  traffic_ops_rest/static_dns
-  traffic_ops_rest/status
-  traffic_ops_rest/system
-  traffic_ops_rest/to_extension
-  traffic_ops_rest/type
-  traffic_ops_rest/user
+  traffic_ops_api/v11/asn
+  traffic_ops_api/v11/cachegroup
+  traffic_ops_api/v11/cdn
+  traffic_ops_api/v11/changelog
+  traffic_ops_api/v11/deliveryservice
+  traffic_ops_api/v11/hwinfo
+  traffic_ops_api/v11/parameter
+  traffic_ops_api/v11/phys_location
+  traffic_ops_api/v11/profile
+  traffic_ops_api/v11/redis
+  traffic_ops_api/v11/region
+  traffic_ops_api/v11/role
+  traffic_ops_api/v11/server
+  traffic_ops_api/v11/static_dns
+  traffic_ops_api/v11/status
+  traffic_ops_api/v11/system
+  traffic_ops_api/v11/to_extension
+  traffic_ops_api/v11/type
+  traffic_ops_api/v11/user
+
+API 1.2 Reference 
+-----------------
+
+.. toctree:: 
+  :maxdepth: 1
+
+  traffic_ops_api/v12/asn
+  traffic_ops_api/v12/cachegroup
+  traffic_ops_api/v12/cache_stats
+  traffic_ops_api/v12/cdn
+  traffic_ops_api/v12/changelog
+  traffic_ops_api/v12/deliveryservice
+  traffic_ops_api/v12/deliveryservice_stats
+  traffic_ops_api/v12/hwinfo
+  traffic_ops_api/v12/parameter
+  traffic_ops_api/v12/phys_location
+  traffic_ops_api/v12/profile
+  traffic_ops_api/v12/influxdb
+  traffic_ops_api/v12/region
+  traffic_ops_api/v12/role
+  traffic_ops_api/v12/server
+  traffic_ops_api/v12/static_dns
+  traffic_ops_api/v12/status
+  traffic_ops_api/v12/system
+  traffic_ops_api/v12/to_extension
+  traffic_ops_api/v12/type
+  traffic_ops_api/v12/user
+
 
 
 

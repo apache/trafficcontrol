@@ -25,7 +25,6 @@ import (
 	"net"
 	"net/http"
 	"os"
-	"strings"
 )
 
 var (
@@ -41,27 +40,17 @@ var (
 
 func requestHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Access-Control-Allow-Origin", "*")
-	path := strings.Split(r.URL.Path[1:], "/")
-
-	var resp interface{}
-	if len(path) > 1 && path[1] != "" {
-		fmt.Println("GET FROM " + path[1])
-		resp = sqlParser.GetColumnNames(path[1])
-		fmt.Println("RESPONSE:")
-		fmt.Println(resp)
-	} else {
-		resp = sqlParser.GetTableNames()
-	}
+	resp := sqlParser.GetTableNames()
 	enc := json.NewEncoder(w)
 	enc.Encode(resp)
 }
 
 //handles all calls to the API
 func apiHandler(w http.ResponseWriter, r *http.Request) {
-
 	w.Header().Set("Access-Control-Allow-Origin", "*")
-	w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE")
-	w.Header().Set("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type")
+	w.Header().Set("Access-Control-Allow-Methods", "GET, PUT, POST, DELETE")
+	w.Header().Set("Access-Control-Allow-Headers", "Origin, Authorization, X-Requested-With, Content-Type")
+
 	//url of type "/table?parameterA=valueA&parameterB=valueB/id
 	path := r.URL.Path[1:]
 	if r.URL.RawQuery != "" {
@@ -74,27 +63,58 @@ func apiHandler(w http.ResponseWriter, r *http.Request) {
 	tableName := request.TableName
 	tableParameters := request.Parameters
 
+	//for error p urposes
+	var err error
+	errString := ""
+
+	isTable := sqlParser.IsTable(tableName)
+
 	if r.Method == "POST" {
 		bodyStr, _ := ioutil.ReadAll(r.Body)
-		tableName = sqlParser.Post(tableName, bodyStr)
+		tableName, err = sqlParser.Post(tableName, bodyStr)
+		fmt.Println("ERROR :", err)
+		if err != nil {
+			errString = err.Error()
+		}
 	} else if r.Method == "DELETE" {
-		sqlParser.Delete(tableName, tableParameters)
+		dropTable, err := sqlParser.Delete(tableName, tableParameters)
+		if err != nil {
+			errString = err.Error()
+		} //clear if view
+		if dropTable {
+			tableName = ""
+		}
+
 		tableParameters = tableParameters[:0]
 	} else if r.Method == "PUT" {
 		bodyStr, _ := ioutil.ReadAll(r.Body)
-		sqlParser.Put(tableName, tableParameters, bodyStr)
+		err = sqlParser.Put(tableName, bodyStr)
+		if err != nil {
+			errString = err.Error()
+		}
 		tableParameters = tableParameters[:0]
 	}
 
+	var rows []map[string]interface{}
+	var columns []string
+	var columnAliases []string
+	var columnMap map[string]map[string]interface{}
 	//GETS the request
 	if tableName != "" {
-		rows := sqlParser.Get(tableName, tableParameters)
-		resp := outputFormatter.MakeWrapper(rows)
-
-		//encoder writes the resultant "Response" struct (see outputFormatter) to writer
-		enc := json.NewEncoder(w)
-		enc.Encode(resp)
+		rows, err = sqlParser.Get(tableName)
+		columns = sqlParser.GetColumnNames(tableName)
+		columnAliases, columnMap = sqlParser.GetForeignKeyColumns(tableName)
+		if err != nil {
+			errString = err.Error()
+		}
+	} else {
+		rows = nil
 	}
+	resp := outputFormatter.MakeApiWrapper(rows, columns, columnAliases, columnMap, errString, isTable)
+	//encoder writes the resultant "Response" struct (see outputFormatter) to writer
+	enc := json.NewEncoder(w)
+	enc.Encode(resp)
+
 }
 
 func main() {

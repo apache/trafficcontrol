@@ -39,6 +39,7 @@ public class CacheRegister implements CacheLocationManager {
 	private List<DeliveryServiceMatcher> httpServiceMatchers;
 	private Map<String, DeliveryService> dsMap;
 	private JSONObject config;
+	private JSONObject stats;
 
 	public CacheRegister() {
 		configuredLocations = new HashMap<String, CacheLocation>();
@@ -183,6 +184,14 @@ public class CacheRegister implements CacheLocationManager {
 
 	public Map<String, DeliveryService> getDeliveryServices() {
 		return this.dsMap;
+	}
+
+	public JSONObject getStats() {
+		return stats;
+	}
+
+	public void setStats(final JSONObject stats) {
+		this.stats = stats;
 	}
 
 }
