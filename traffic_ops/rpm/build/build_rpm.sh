@@ -34,6 +34,7 @@ function buildRpm () {
 
     if [ $? != 0 ]; then
         echo -e "\nRPM BUILD FAILED.\n\n"
+        exit $?
     else
 	echo
 	echo "========================================================================================"
