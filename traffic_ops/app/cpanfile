@@ -209,6 +209,7 @@ requires 'Sub::Identify';
 requires 'Sub::Install';
 requires 'Sub::Name';
 requires 'Sub::Uplevel';
+requires 'Sys::Syslog';
 requires 'TAP::Formatter::Jenkins';
 requires 'Task::Weaken';
 requires 'Term::ReadPassword';
