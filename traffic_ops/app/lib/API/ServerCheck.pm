@@ -1,4 +1,5 @@
 package API::ServerCheck;
+
 #
 # Copyright 2015 Comcast Cable Communications Management, LLC
 #
@@ -35,11 +36,14 @@ sub aadata {
 
 	# # and create the 'inside out' aadata table
 	my $rs_type = $self->db->resultset('Type')->search( { -or => [ name => 'EDGE', name => 'MID' ] } );
-	my $rs = $self->db->resultset('Server')
+	my $rs =
+		$self->db->resultset('Server')
 		->search( { type => { -in => $rs_type->get_column('id')->as_query } }, { prefetch => [ 'servercheck', 'status', 'profile' ] } );
 	while ( my $server = $rs->next ) {
-		my @line;
-		@line = [
+		if ( !defined $server || !defined $server->servercheck ) {
+			next;
+		}
+		my @line = (
 			$server->id,              $server->host_name,       $server->profile->name,   $server->status->name,    $server->upd_pending,
 			$server->servercheck->aa, $server->servercheck->ab, $server->servercheck->ac, $server->servercheck->ad, $server->servercheck->ae,
 			$server->servercheck->af, $server->servercheck->ag, $server->servercheck->ah, $server->servercheck->ai, $server->servercheck->aj,
@@ -48,8 +52,8 @@ sub aadata {
 			$server->servercheck->au, $server->servercheck->av, $server->servercheck->aw, $server->servercheck->ax, $server->servercheck->ay,
 			$server->servercheck->az, $server->servercheck->ba, $server->servercheck->bb, $server->servercheck->bc, $server->servercheck->bd,
 			$server->servercheck->bd, $server->servercheck->be,
-		];
-		push( @{ $data{'aaData'} }, @line );
+		);
+		push( @{ $data{'aaData'} }, \@line );
 	}
 	return $self->render( json => \%data );
 }
@@ -112,11 +116,7 @@ sub update {
 	}
 
 	my $update = $self->db->resultset('Servercheck')->search( { server => $server_id } );
-	$update->update_or_create(
-		{
-			$column_name => $value,
-		}
-	);
+	$update->update_or_create( { $column_name => $value, } );
 
 	return $self->success_message("Server Check was successfully updated.");
 }
