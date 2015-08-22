@@ -76,7 +76,7 @@ public final class SignatureManager {
 			if (config.optBoolean("dnssec.enabled")) {
 				setDnssecEnabled(true);
 				final ScheduledExecutorService me = Executors.newScheduledThreadPool(1);
-				final int maintenanceInterval = config.optInt("keystore.maintenance.interval", 60); // default 60 seconds, do we calculate based on the complimentary settings for key generation in TO?
+				final int maintenanceInterval = config.optInt("keystore.maintenance.interval", 300); // default 300 seconds, do we calculate based on the complimentary settings for key generation in TO?
 				me.scheduleWithFixedDelay(getKeyMaintenanceRunnable(cacheRegister), 0, maintenanceInterval, TimeUnit.SECONDS);
 
 				if (keyMaintenanceExecutor != null) {
