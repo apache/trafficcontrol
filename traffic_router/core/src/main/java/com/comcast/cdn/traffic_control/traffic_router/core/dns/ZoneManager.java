@@ -93,11 +93,14 @@ public class ZoneManager extends Resolver {
 	private static String zoneDirectory;
 	private static SignatureManager signatureManager;
 
+	private static Name topLevelDomain;
+
 	protected static enum ZoneCacheType {
 		DYNAMIC, STATIC
 	}
 
 	public ZoneManager(final TrafficRouter tr, final StatTracker statTracker) throws IOException {
+		initTopLevelDomain(tr.getCacheRegister());
 		initZoneDirectory();
 		initSignatureManager(tr.getCacheRegister());
 		initZoneCache(tr.getCacheRegister());
@@ -273,7 +276,7 @@ public class ZoneManager extends Resolver {
 	private static void generateZones(final CacheRegister data, final LoadingCache<ZoneKey, Zone> zc) throws IOException {
 		final Map<String, List<Record>> zoneMap = new HashMap<String, List<Record>>();
 		final Map<String, DeliveryService> dsMap = new HashMap<String, DeliveryService>();
-		final String tld = data.getConfig().optString("domain_name");
+		final String tld = getTopLevelDomain().toString(true); // Name.toString(true) - omit the trailing dot
 
 		for (DeliveryService ds : data.getDeliveryServices().values()) {
 			final JSONArray domains = ds.getDomains();
@@ -845,5 +848,13 @@ public class ZoneManager extends Resolver {
 
 	public static void setHttpRoutingName(final String httpRoutingName) {
 		ZoneManager.httpRoutingName = httpRoutingName.toLowerCase();
+	}
+
+	protected static Name getTopLevelDomain() {
+		return topLevelDomain;
+	}
+
+	private static void setTopLevelDomain(final Name topLevelDomain) {
+		ZoneManager.topLevelDomain = topLevelDomain;
 	}
 }

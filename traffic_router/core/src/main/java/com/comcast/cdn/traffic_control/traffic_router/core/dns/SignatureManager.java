@@ -354,7 +354,7 @@ public final class SignatureManager {
 	public List<Record> generateDSRecords(final Name name) throws NoSuchAlgorithmException, IOException {
 		final List<Record> records = new ArrayList<Record>();
 
-		if (isDnssecEnabled()) {
+		if (isDnssecEnabled() && name.subdomain(ZoneManager.getTopLevelDomain())) {
 			final JSONObject config = getCacheRegister().getConfig();
 			final List<DnsKeyPair> kskPairs = getKSKPairs(name);
 			final List<DnsKeyPair> zskPairs = getZSKPairs(name);
@@ -377,7 +377,7 @@ public final class SignatureManager {
 	public List<Record> generateDNSKEYRecords(final Name name) throws NoSuchAlgorithmException, IOException {
 		final List<Record> list = new ArrayList<Record>();
 
-		if (isDnssecEnabled()) {
+		if (isDnssecEnabled() && name.subdomain(ZoneManager.getTopLevelDomain())) {
 			final List<DnsKeyPair> kskPairs = getKSKPairs(name);
 			final List<DnsKeyPair> zskPairs = getZSKPairs(name);
 
@@ -399,7 +399,7 @@ public final class SignatureManager {
 	}
 
 	public ZoneKey generateZoneKey(final Name name, final List<Record> list) {
-		if (isDnssecEnabled()) {
+		if (isDnssecEnabled() && name.subdomain(ZoneManager.getTopLevelDomain())) {
 			return new SignedZoneKey(name, list);
 		} else {
 			return new ZoneKey(name, list);
