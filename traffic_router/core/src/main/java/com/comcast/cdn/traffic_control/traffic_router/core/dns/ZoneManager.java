@@ -23,6 +23,7 @@ import java.net.Inet6Address;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.security.GeneralSecurityException;
+import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -93,15 +94,17 @@ public class ZoneManager extends Resolver {
 	private static String zoneDirectory;
 	private static SignatureManager signatureManager;
 
+	private static Name topLevelDomain;
+
 	protected static enum ZoneCacheType {
 		DYNAMIC, STATIC
 	}
 
 	public ZoneManager(final TrafficRouter tr, final StatTracker statTracker) throws IOException {
+		initTopLevelDomain(tr.getCacheRegister());
 		initZoneDirectory();
 		initSignatureManager(tr.getCacheRegister());
 		initZoneCache(tr.getCacheRegister());
-		generateZones(tr.getCacheRegister());
 
 		this.trafficRouter = tr;
 		this.statTracker = statTracker;
@@ -114,20 +117,62 @@ public class ZoneManager extends Resolver {
 		signatureManager.destroy();
 	}
 
-	public static void initSignatureManager(final CacheRegister cacheRegister) {
-		ZoneManager.signatureManager = new SignatureManager(cacheRegister, new KeyServer(keyServerUrl, keyServerUsername, keyServerPassword));
+	private static void initTopLevelDomain(final CacheRegister data) throws TextParseException {
+		String tld = data.getConfig().optString("domain_name");
+
+		if (!tld.endsWith(".")) {
+			tld = tld + ".";
+		}
+
+		setTopLevelDomain(new Name(tld));
 	}
 
-	private static void initZoneCache(final CacheRegister cacheRegister) {
+	public static void initSignatureManager(final CacheRegister cacheRegister) {
+		final KeyServer ks = new KeyServer(keyServerUrl, keyServerUsername, keyServerPassword);
+		final SignatureManager sm = new SignatureManager(cacheRegister, ks);
+		ZoneManager.signatureManager = sm;
+	}
+
+	private static void initZoneCache(final CacheRegister cacheRegister) throws IOException {
 		synchronized(ZoneManager.class) {
 			final JSONObject config = cacheRegister.getConfig();
-			final ExecutorService ze = Executors.newFixedThreadPool(config.optInt("zonemanager.executor.threads", 10));
+
+			int poolSize = 1;
+			final double scale = config.optDouble("zonemanager.threadpool.scale", 0.75);
+			final int cores = Runtime.getRuntime().availableProcessors();
+
+			if (cores > 2) {
+				final Double s = Math.floor((double) cores * scale);
+
+				if (s.intValue() > 1) {
+					poolSize = s.intValue();
+				}
+			}
+
+			LOGGER.debug("Number of cores on this system: " + cores);
+			LOGGER.debug("Scale for thread pools: " + scale);
+			LOGGER.debug("Threads in thread pools: " + poolSize);
+
+			final ExecutorService initExecutor = Executors.newFixedThreadPool(poolSize);
+
+			final ExecutorService ze = Executors.newFixedThreadPool(poolSize);
 			final ScheduledExecutorService me = Executors.newScheduledThreadPool(2); // 2 threads, one for static, one for dynamic, threads to refresh zones
 			final int maintenanceInterval = config.optInt("zonemanager.cache.maintenance.interval", 10); // default 10 seconds
 			final String dspec = "expireAfterAccess=" + config.optString("zonemanager.dynamic.response.expiration", "300s"); // default to 5 minutes
 
 			final LoadingCache<ZoneKey, Zone> dzc = createZoneCache(ZoneCacheType.DYNAMIC, CacheBuilderSpec.parse(dspec));
 			final LoadingCache<ZoneKey, Zone> zc = createZoneCache(ZoneCacheType.STATIC);
+
+			LOGGER.info("Generating zone data");
+			generateZones(cacheRegister, zc, initExecutor);
+
+			try {
+				initExecutor.shutdown();
+				initExecutor.awaitTermination(5, TimeUnit.MINUTES);
+				LOGGER.info("Zone generation complete");
+			} catch (final InterruptedException ex) {
+				LOGGER.warn("Initialization of zone data exceeded time limit of 5 minutes; continuing", ex);
+			}
 
 			me.scheduleWithFixedDelay(getMaintenanceRunnable(dzc, ZoneCacheType.DYNAMIC, maintenanceInterval), 0, maintenanceInterval, TimeUnit.SECONDS);
 			me.scheduleWithFixedDelay(getMaintenanceRunnable(zc, ZoneCacheType.STATIC, maintenanceInterval), 0, maintenanceInterval, TimeUnit.SECONDS);
@@ -269,10 +314,10 @@ public class ZoneManager extends Resolver {
 		return zone;
 	}
 
-	private static void generateZones(final CacheRegister data) throws IOException {
+	private static void generateZones(final CacheRegister data, final LoadingCache<ZoneKey, Zone> zc, final ExecutorService initExecutor) throws IOException {
 		final Map<String, List<Record>> zoneMap = new HashMap<String, List<Record>>();
 		final Map<String, DeliveryService> dsMap = new HashMap<String, DeliveryService>();
-		final String tld = data.getConfig().optString("domain_name");
+		final String tld = getTopLevelDomain().toString(true); // Name.toString(true) - omit the trailing dot
 
 		for (DeliveryService ds : data.getDeliveryServices().values()) {
 			final JSONArray domains = ds.getDomains();
@@ -293,22 +338,22 @@ public class ZoneManager extends Resolver {
 		}
 
 		final Map<String, List<Record>> superDomains = populateZoneMap(zoneMap, dsMap, data);
-		final List<Record> superRecords = fillZones(zoneMap, dsMap, data);
-		final List<Record> upstreamRecords = fillZones(superDomains, dsMap, data, superRecords);
+		final List<Record> superRecords = fillZones(zoneMap, dsMap, data, zc, initExecutor);
+		final List<Record> upstreamRecords = fillZones(superDomains, dsMap, data, superRecords, zc, initExecutor);
 
 		for (Record record : upstreamRecords) {
 			if (record.getType() == Type.DS) {
-				LOGGER.warn("Publish this DS record parent zone: " + record);
+				LOGGER.warn("Publish this DS record in the parent zone: " + record);
 			}
 		}
 	}
 
-	private static List<Record> fillZones(final Map<String, List<Record>> zoneMap, final Map<String, DeliveryService> dsMap, final CacheRegister data)
+	private static List<Record> fillZones(final Map<String, List<Record>> zoneMap, final Map<String, DeliveryService> dsMap, final CacheRegister data, final LoadingCache<ZoneKey, Zone> zc, final ExecutorService initExecutor)
 			throws IOException {
-		return fillZones(zoneMap, dsMap, data, null);
+		return fillZones(zoneMap, dsMap, data, null, zc, initExecutor);
 	}
 
-	private static List<Record> fillZones(final Map<String, List<Record>> zoneMap, final Map<String, DeliveryService> dsMap, final CacheRegister data, final List<Record> superRecords)
+	private static List<Record> fillZones(final Map<String, List<Record>> zoneMap, final Map<String, DeliveryService> dsMap, final CacheRegister data, final List<Record> superRecords, final LoadingCache<ZoneKey, Zone> zc, final ExecutorService initExecutor)
 			throws IOException {
 		final String hostname = InetAddress.getLocalHost().getHostName().replaceAll("\\..*", "");
 
@@ -319,14 +364,14 @@ public class ZoneManager extends Resolver {
 				zoneMap.get(domain).addAll(superRecords);
 			}
 
-			records.addAll(createZone(domain, zoneMap, dsMap, hostname, data));
+			records.addAll(createZone(domain, zoneMap, dsMap, hostname, data, zc, initExecutor));
 		}
 
 		return records;
 	}
 
 	private static List<Record> createZone(final String domain, final Map<String, List<Record>> zoneMap, final Map<String, DeliveryService> dsMap, 
-			final String hostname, final CacheRegister data) throws IOException {
+			final String hostname, final CacheRegister data, final LoadingCache<ZoneKey, Zone> zc, final ExecutorService initExecutor) throws IOException {
 		final DeliveryService ds = dsMap.get(domain);
 		final JSONObject trafficRouters = data.getTrafficRouters();
 		final JSONObject config = data.getConfig();
@@ -363,8 +408,17 @@ public class ZoneManager extends Resolver {
 		try {
 			records.addAll(signatureManager.generateDSRecords(name));
 			list.addAll(signatureManager.generateDNSKEYRecords(name));
-			zoneCache.get(signatureManager.generateZoneKey(name, list)); // cause the zone to be loaded into the cache
-		} catch (Exception ex) {
+			initExecutor.execute(new Runnable() {
+				@Override
+				public void run() {
+					try {
+						zc.get(signatureManager.generateZoneKey(name, list)); // cause the zone to be loaded into the new cache
+					} catch (ExecutionException ex) {
+						LOGGER.fatal("Unable to load zone into cache: " + ex.getMessage(), ex);
+					}
+				}
+			});
+		} catch (NoSuchAlgorithmException ex) {
 			LOGGER.fatal("Unable to create zone: " + ex.getMessage(), ex);
 		}
 
@@ -608,7 +662,7 @@ public class ZoneManager extends Resolver {
 
 			if (result != null) {
 				// for now, ignore whether they asked for DNSSEC, as we'll need to generate signatures anyway if the config asks us to
-				return fillDynamicZone(staticZone, name, result.getAddresses(), signatureManager.isDnssecEnabled());
+				return fillDynamicZone(staticZone, name, result.getAddresses());
 			} else {
 				return null;
 			}
@@ -622,7 +676,7 @@ public class ZoneManager extends Resolver {
 		return null;
 	}
 
-	private static Zone fillDynamicZone(final Zone staticZone, final Name name, final List<InetRecord> addresses, final boolean signZone) {
+	private static Zone fillDynamicZone(final Zone staticZone, final Name name, final List<InetRecord> addresses) {
 		if (addresses == null) {
 			return null;
 		}
@@ -641,15 +695,8 @@ public class ZoneManager extends Resolver {
 			}
 
 			if (recordsAdded > 0) {
-				ZoneKey zoneKey;
-
-				if (signZone) {
-					zoneKey = new SignedZoneKey(staticZone.getOrigin(), records);
-				} else {
-					zoneKey = new ZoneKey(staticZone.getOrigin(), records);
-				}
-
 				try {
+					final ZoneKey zoneKey = signatureManager.generateZoneKey(staticZone.getOrigin(), records);
 					final Zone zone = dynamicZoneCache.get(zoneKey);
 					return zone;
 				} catch (ExecutionException e) {
@@ -844,5 +891,13 @@ public class ZoneManager extends Resolver {
 
 	public static void setHttpRoutingName(final String httpRoutingName) {
 		ZoneManager.httpRoutingName = httpRoutingName.toLowerCase();
+	}
+
+	protected static Name getTopLevelDomain() {
+		return topLevelDomain;
+	}
+
+	private static void setTopLevelDomain(final Name topLevelDomain) {
+		ZoneManager.topLevelDomain = topLevelDomain;
 	}
 }
