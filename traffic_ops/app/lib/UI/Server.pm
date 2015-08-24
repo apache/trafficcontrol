@@ -525,16 +525,16 @@ sub update {
 			my %need_servercheck = map { &type_id( $self, $_ ) => 1 } qw{ EDGE MID };
 			my $newtype_id       = $update->type->id;
 			my $servercheck      = $self->db->resultset('Servercheck')->search( { server => $id } );
-			if ( defined $servercheck && !$need_servercheck{$newtype_id} ) {
+			if ( $servercheck != 0 && !$need_servercheck{$newtype_id} ) {
 
 				# servercheck entry found but not needed -- delete it
 				$servercheck->delete();
 			}
-			elsif ( !defined $servercheck && $need_servercheck{$newtype_id} ) {
+			elsif ( $servercheck == 0 && $need_servercheck{$newtype_id} ) {
 
 				# servercheck entry not found but needed -- insert it
 				$servercheck = $self->db->resultset('Servercheck')->create( { server => $id } );
-				$insert->insert();
+				$servercheck->insert();
 			}
 		}
 
