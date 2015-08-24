@@ -359,6 +359,7 @@ sub parent_data {
 	my $deliveryservices = undef;
 	while ( my $row = $rs_parent->next ) {
 
+		next unless ( $row->type->name eq 'ORG' || $row->type->name eq 'EDGE' ||$row->type->name eq 'MID' );
 		if ( $row->type->name eq 'ORG' ) {
 			my $rs_ds = $self->db->resultset('DeliveryserviceServer')->search( { server => $row->id }, { prefetch => ['deliveryservice'] } );
 			while ( my $ds_row = $rs_ds->next ) {
