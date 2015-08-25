@@ -460,9 +460,10 @@ public class ZoneManager extends Resolver {
 	private static void addTrafficRouters(final List<Record> list, final JSONObject trafficRouters, final Name name, 
 			final JSONObject ttl, final String domain, final DeliveryService ds) 
 					throws TextParseException, UnknownHostException {
-		final boolean addTrafficRouters = (ds != null && ds.isDns()) ? false : true;
-		final boolean useTrafficRouterStr = (ds != null) ? true : false;
+		final boolean addTrafficRouters = (ds == null || (ds != null && ds.isDns())) ? false : true;
 		final boolean ip6RoutingEnabled = (ds == null || (ds != null && ds.isIp6RoutingEnabled())) ? true : false;
+
+		final Name superDomain = new Name(name, 1);
 
 		for(String key : JSONObject.getNames(trafficRouters)) {
 			final JSONObject trJo = trafficRouters.optJSONObject(key);
@@ -470,10 +471,11 @@ public class ZoneManager extends Resolver {
 				// if "status": "OFFLINE"
 				continue;
 			}
-			final Name trName = newName(key,domain);
+			final Name trName = newName(key, domain.toString());
+			final Name glueName = newName(key, superDomain.toString());
 			String ip6 = trJo.optString("ip6");
 
-			list.add(new NSRecord(name, DClass.IN, ZoneUtils.getLong(ttl, "NS", 60), trName));
+			list.add(new NSRecord(name, DClass.IN, ZoneUtils.getLong(ttl, "NS", 60), glueName));
 			list.add(new ARecord(trName,
 					DClass.IN, ZoneUtils.getLong(ttl, "A", 60), 
 					InetAddress.getByName(trJo.optString("ip"))));
@@ -486,18 +488,16 @@ public class ZoneManager extends Resolver {
 						Inet6Address.getByName(ip6)));
 			}
 
-			if (!addTrafficRouters) {
-				continue;
+			if (addTrafficRouters) {
+				addTrafficRouterIps(list, domain, key, trJo, ttl, ip6RoutingEnabled);
 			}
-
-			addTrafficRouterIps(list, domain, key, trJo, ttl, ip6RoutingEnabled, useTrafficRouterStr);
 		}
 	}
 
 	private static void addTrafficRouterIps(final List<Record> list, final String domain, final String key,
-			final JSONObject trJo, final JSONObject ttl, final boolean addTrafficRoutersAAAA, final boolean useTrafficRouterStr) 
+			final JSONObject trJo, final JSONObject ttl, final boolean addTrafficRoutersAAAA) 
 					throws TextParseException, UnknownHostException {
-		final Name trName = (useTrafficRouterStr) ? newName(getHttpRoutingName(), domain) : newName(key,domain);
+		final Name trName = newName(getHttpRoutingName(), domain);
 		list.add(new ARecord(trName,
 				DClass.IN,
 				ZoneUtils.getLong(ttl, "A", 60),
@@ -513,7 +513,11 @@ public class ZoneManager extends Resolver {
 	}
 
 	private static Name newName(final String hostname, final String domain) throws TextParseException {
-		return new Name(hostname+"."+domain+".");
+		if (domain.endsWith(".")) {
+			return new Name(hostname + "." + domain);
+		} else {
+			return new Name(hostname + "." + domain + ".");
+		}
 	}
 
 	private static final Map<String, List<Record>> populateZoneMap(final Map<String, List<Record>> zoneMap,
