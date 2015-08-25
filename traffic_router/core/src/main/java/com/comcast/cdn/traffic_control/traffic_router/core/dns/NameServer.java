@@ -129,6 +129,7 @@ public class NameServer {
 	}
 
 	private static void addSOA(final Zone zone, final Message response, final int section, final int flags) {
+		// we locate the SOA this way so that we can ensure we get the RRSIGs rather than just the one SOA Record
 		final SetResponse fsoa = zone.findRecords(zone.getOrigin(), Type.SOA);
 
 		for (final RRset answer : fsoa.answers()) {
@@ -215,8 +216,6 @@ public class NameServer {
 					if (rrset.getType() != Type.NSEC) {
 						continue;
 					}
-
-					LOGGER.debug(rrset);
 
 					final Iterator<Record> it = rrset.rrs();
 
