@@ -192,7 +192,7 @@ To install the Traffic Ops Developer environment:
 
    * Unit test database: ``$ db/admin.pl --env=test setup``
    * Development database: ``$ db/admin.pl --env=development setup``
-   * Integration database: ``$ db use db/admin.pl --env=integration setup``
+   * Integration database: ``$ db/admin.pl --env=integration setup``
 
    |
 
