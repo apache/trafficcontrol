@@ -417,6 +417,8 @@ sub update {
 		$self->flash( alertmsg => "update():  " . $err );
 	}
 	else {
+
+		# get resultset for original and one to be updated.  Use to examine diffs to propagate the effects of the change.
 		my $org_server = $self->db->resultset('Server')->find( { id => $id } );
 		my $update     = $self->db->resultset('Server')->find( { id => $id } );
 		if ( defined( $paramHashRef->{'ip6_address'} )
@@ -529,12 +531,14 @@ sub update {
 
 				# servercheck entry found but not needed -- delete it
 				$servercheck->delete();
+				&log( $self, $self->param('host_name') . " cache type change - deleting servercheck", "UICHANGE" );
 			}
 			elsif ( $servercheck == 0 && $need_servercheck{$newtype_id} ) {
 
 				# servercheck entry not found but needed -- insert it
 				$servercheck = $self->db->resultset('Servercheck')->create( { server => $id } );
 				$servercheck->insert();
+				&log( $self, $self->param('host_name') . " cache type changed - adding servercheck", "UICHANGE" );
 			}
 		}
 
@@ -542,7 +546,7 @@ sub update {
 		my $lstring = "Update server " . $self->param('host_name') . " ";
 		foreach my $col ( keys %{ $org_server->{_column_data} } ) {
 			if ( defined( $self->param($col) )
-				&& $self->param($col) ne $org_server->{_column_data}->{$col} )
+				&& $self->param($col) ne ( $org_server->{_column_data}->{$col} // "" ) )
 			{
 				if ( $col eq 'ilo_password' || $col eq 'xmpp_passwd' ) {
 					$lstring .= $col . "-> ***********";
