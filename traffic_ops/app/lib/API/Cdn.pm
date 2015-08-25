@@ -728,6 +728,7 @@ sub domains {
 
 sub dnssec_keys {
 	my $self = shift;
+	my $is_updated = 0;
 	if ( !&is_admin($self) ) {
 		$self->alert( { Error => " - You must be an ADMIN to perform this operation!" } );
 	}
@@ -794,7 +795,7 @@ sub dnssec_keys {
 				my $cdn_z_incep        = $cdn_zrecord->{inceptionDate};
 				$default_z_exp_days = ( $cdn_z_exp - $cdn_z_incep ) / 86400;
 				#check if zsk is expired, if so re-generate
-				if ( ($cdn_z_exp - 846000000) < $key_expiration ) {
+				if ( ($cdn_z_exp) < $key_expiration ) {
 				#if expired create new keys
 					$self->app->log->info("The ZSK keys for $cdn_name are expired!");
 					my $effective_date = $cdn_z_exp - ($dnskey_ttl * $dnskey_effective_multiplier);
@@ -837,10 +838,8 @@ sub dnssec_keys {
 				#add to keys hash
 				$keys->{$xml_id} = { zsk => [$zsk], ksk => [$ksk] };
 
-				#update param with current time stamp
-				my $param_update = $self->db->resultset('Parameter')->find( { name => $cdn_name . ".dnssec.inception" } );
-				$param_update->value($inception);
-				$param_update->update();
+				#update is_updated param
+				$is_updated = 1;
 			}
 			#if keys do exist, check expiration
 			else {
@@ -855,6 +854,8 @@ sub dnssec_keys {
 							my $effective_date = $krecord->{expirationDate} - ($dnskey_ttl * $dnskey_effective_multiplier);
 							my $new_dnssec_keys = $self->regen_expired_keys( "ksk", $xml_id, $keys, $effective_date );
 							$keys->{$xml_id} = $new_dnssec_keys;
+							#update is_updated param
+							$is_updated = 1;
 						}
 					}	 
 				}
@@ -868,15 +869,19 @@ sub dnssec_keys {
 							my $effective_date = $zrecord->{expirationDate} - ($dnskey_ttl * $dnskey_effective_multiplier);
 							my $new_dnssec_keys = $self->regen_expired_keys( "zsk", $xml_id, $keys, $effective_date );
 							$keys->{$xml_id} = $new_dnssec_keys; 
+							#update is_updated param
+							$is_updated = 1;
 						}
 					}	 						
 				}
 			}
 		}
-		# #convert hash to json and store in Riak
-		my $json_data = encode_json( $keys );
-		$response_container = $self->riak_put( "dnssec", $cdn_name, $json_data );
-
+		if ($is_updated == 1) {
+			# #convert hash to json and store in Riak
+			my $json_data = encode_json( $keys );
+			$response_container = $self->riak_put( "dnssec", $cdn_name, $json_data );
+		}
+		
 		my $response = $response_container->{"response"};
 		$response->is_success()
 			? $self->success( $keys )
