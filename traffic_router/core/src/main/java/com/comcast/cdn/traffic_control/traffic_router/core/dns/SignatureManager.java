@@ -398,8 +398,19 @@ public final class SignatureManager {
 		return list;
 	}
 
+	// this method is called during static zone generation
 	public ZoneKey generateZoneKey(final Name name, final List<Record> list) {
-		if (isDnssecEnabled() && name.subdomain(ZoneManager.getTopLevelDomain())) {
+		return generateZoneKey(name, list, false, false);
+	}
+
+	public ZoneKey generateDynamicZoneKey(final Name name, final List<Record> list, final boolean dnssecRequest) {
+		return generateZoneKey(name, list, true, dnssecRequest);
+	}
+
+	private ZoneKey generateZoneKey(final Name name, final List<Record> list, final boolean dynamicRequest, final boolean dnssecRequest) {
+		if (dynamicRequest && !dnssecRequest) {
+			return new ZoneKey(name, list);
+		} else if ((isDnssecEnabled() && name.subdomain(ZoneManager.getTopLevelDomain()))) {
 			return new SignedZoneKey(name, list);
 		} else {
 			return new ZoneKey(name, list);

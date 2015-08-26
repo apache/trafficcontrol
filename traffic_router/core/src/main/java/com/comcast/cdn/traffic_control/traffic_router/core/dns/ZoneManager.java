@@ -665,8 +665,7 @@ public class ZoneManager extends Resolver {
 			final DNSRouteResult result = trafficRouter.route(request, track);
 
 			if (result != null) {
-				// for now, ignore whether they asked for DNSSEC, as we'll need to generate signatures anyway if the config asks us to
-				return fillDynamicZone(staticZone, name, result.getAddresses());
+				return fillDynamicZone(staticZone, name, result.getAddresses(), dnssecRequest);
 			} else {
 				return null;
 			}
@@ -680,7 +679,7 @@ public class ZoneManager extends Resolver {
 		return null;
 	}
 
-	private static Zone fillDynamicZone(final Zone staticZone, final Name name, final List<InetRecord> addresses) {
+	private static Zone fillDynamicZone(final Zone staticZone, final Name name, final List<InetRecord> addresses, final boolean dnssecRequest) {
 		if (addresses == null) {
 			return null;
 		}
@@ -700,7 +699,7 @@ public class ZoneManager extends Resolver {
 
 			if (recordsAdded > 0) {
 				try {
-					final ZoneKey zoneKey = signatureManager.generateZoneKey(staticZone.getOrigin(), records);
+					final ZoneKey zoneKey = signatureManager.generateDynamicZoneKey(staticZone.getOrigin(), records, dnssecRequest);
 					final Zone zone = dynamicZoneCache.get(zoneKey);
 					return zone;
 				} catch (ExecutionException e) {
