@@ -244,8 +244,8 @@ __PACKAGE__->table("deliveryservice");
 =head2 display_name
 
   data_type: 'varchar'
-  is_nullable: 1
-  size: 1024
+  is_nullable: 0
+  size: 48
 
 =head2 tr_response_headers
 
@@ -342,7 +342,7 @@ __PACKAGE__->add_columns(
 	"multi_site_origin",
 	{ data_type => "tinyint", is_nullable => 1 },
 	"display_name",
-	{ data_type => "varchar", is_nullable => 1, size => 1024 },
+	{ data_type => "varchar", is_nullable => 0, size => 48 },
 	"tr_response_headers",
 	{ data_type => "varchar", is_nullable => 1, size => 1024 },
 	"initial_dispersion",
