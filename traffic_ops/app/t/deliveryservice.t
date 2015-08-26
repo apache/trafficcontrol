@@ -95,6 +95,7 @@ ok $t->post_ok(
 		'ds.origin_shield'          => '',
 		'ds.range_request_handling' => '0',
 		'ds.ipv6_routing_enabled'   => '1',
+		'ds.display_name'           => 'display name',
 	}
 )->status_is(302), "create HTTP delivery service";
 my $t1_id = &get_ds_id('tst_xml_id_1');
@@ -139,6 +140,7 @@ ok $t->post_ok(
 		're_re_0'                   => '.*\.jvdtest-1\..*',
 		're_type_0'                 => 'HOST_REGEXP',
 		'ds.ipv6_routing_enabled'   => '0',
+		'ds.display_name'           => 'display name 2',
 	}
 )->status_is(302), "create DNS DeliveryService";
 my $t2_id = &get_ds_id('tst_xml_id_2');
@@ -186,6 +188,7 @@ ok $t->post_ok(
 		're_re_1'                   => '/path/to/goodies/.*',
 		're_type_1'                 => 'PATH_REGEXP',
 		'ds.ipv6_routing_enabled'   => '1',
+		'ds.display_name'           => 'display name 3',
 	}
 )->status_is(302), "create HTTP_NO_CACHE deliveryservice";
 $t3_id = &get_ds_id('tst_xml_id_3');
