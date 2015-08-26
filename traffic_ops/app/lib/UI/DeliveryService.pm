@@ -277,6 +277,8 @@ sub check_deliveryservice_input {
 		$self->field('ds.xml_id')->is_equal( "", "Delivery service xml_id cannot contain whitespace." );
 	}
 
+	# TODO:  what restrictions on display_name?
+
 	if ( defined( $self->param('ds.type') ) && $self->param('ds.type') == &type_id( $self, 'ANY_MAP' ) ) {
 		return $self->valid;    # Anything goes for the ANY_MAP, but ds.type is only set on create
 	}
@@ -403,7 +405,9 @@ sub check_deliveryservice_input {
 		$dns_bypass_ttl_required = 1;
 	}
 	if ( $self->param('ds.dns_bypass_cname') ne "" && !&is_hostname( $self->param('ds.dns_bypass_cname') ) ) {
-		$self->field('ds.dns_bypass_cname')->is_equal( "", "Invalid DNS bypass CNAME " . $self->param('ds.dns_bypass_cname') . "  : should by FQDN only, not URL. Example: host.bypass.com" );
+		$self->field('ds.dns_bypass_cname')
+			->is_equal( "",
+			"Invalid DNS bypass CNAME " . $self->param('ds.dns_bypass_cname') . "  : should by FQDN only, not URL. Example: host.bypass.com" );
 		$dns_bypass_ttl_required = 1;
 	}
 	if ( $dns_bypass_ttl_required && ( $self->param('ds.dns_bypass_ttl') eq "" ) ) {
@@ -676,11 +680,11 @@ sub update {
 		);
 
 		if ( $self->param('ds.type.id') == &type_id( $self, "DNS" ) ) {
-			$hash{dns_bypass_ip}   = $self->param('ds.dns_bypass_ip');
-			$hash{dns_bypass_ip6}  = $self->param('ds.dns_bypass_ip6');
-			$hash{dns_bypass_cname}  = $self->param('ds.dns_bypass_cname');
-			$hash{max_dns_answers} = $self->param('ds.max_dns_answers');
-			$hash{dns_bypass_ttl}  = $self->param('ds.dns_bypass_ttl') eq "" ? undef : $self->param('ds.dns_bypass_ttl');
+			$hash{dns_bypass_ip}    = $self->param('ds.dns_bypass_ip');
+			$hash{dns_bypass_ip6}   = $self->param('ds.dns_bypass_ip6');
+			$hash{dns_bypass_cname} = $self->param('ds.dns_bypass_cname');
+			$hash{max_dns_answers}  = $self->param('ds.max_dns_answers');
+			$hash{dns_bypass_ttl}   = $self->param('ds.dns_bypass_ttl') eq "" ? undef : $self->param('ds.dns_bypass_ttl');
 		}
 		else {
 			$hash{http_bypass_fqdn} = $self->param('ds.http_bypass_fqdn');
@@ -831,6 +835,7 @@ sub create {
 		my $insert = $self->db->resultset('Deliveryservice')->create(
 			{
 				xml_id                 => $self->param('ds.xml_id'),
+				display_name           => $self->param('ds.display_name'),
 				dscp                   => $self->param('ds.dscp') eq "" ? 0 : $self->param('ds.dscp'),
 				signed                 => $self->param('ds.signed'),
 				qstring_ignore         => $self->param('ds.qstring_ignore'),
