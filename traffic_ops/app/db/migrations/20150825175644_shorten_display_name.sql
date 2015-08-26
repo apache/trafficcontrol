@@ -19,5 +19,8 @@
 -- SQL in section 'Up' is executed when this migration is applied
 insert into status (name, description) values ('PRE_PROD', 'Pre Production. Not active in any configuration.');
 alter table deliveryservice modify `display_name` varchar(48) NOT NULL;
+alter table deliveryservice modify `long_desc` varchar(1024) DEFAULT NULL;
+alter table deliveryservice modify `long_desc_1` varchar(1024) DEFAULT NULL;
+alter table deliveryservice modify `long_desc_2` varchar(1024) DEFAULT NULL;
 -- +goose Down
 -- SQL section 'Down' is executed when this migration is rolled back
