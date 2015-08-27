@@ -157,7 +157,7 @@ public class ZoneManager extends Resolver {
 
 			final ExecutorService ze = Executors.newFixedThreadPool(poolSize);
 			final ScheduledExecutorService me = Executors.newScheduledThreadPool(2); // 2 threads, one for static, one for dynamic, threads to refresh zones
-			final int maintenanceInterval = config.optInt("zonemanager.cache.maintenance.interval", 10); // default 10 seconds
+			final int maintenanceInterval = config.optInt("zonemanager.cache.maintenance.interval", 300); // default 5 minutes
 			final String dspec = "expireAfterAccess=" + config.optString("zonemanager.dynamic.response.expiration", "300s"); // default to 5 minutes
 
 			final LoadingCache<ZoneKey, Zone> dzc = createZoneCache(ZoneCacheType.DYNAMIC, CacheBuilderSpec.parse(dspec));
@@ -460,19 +460,26 @@ public class ZoneManager extends Resolver {
 	private static void addTrafficRouters(final List<Record> list, final JSONObject trafficRouters, final Name name, 
 			final JSONObject ttl, final String domain, final DeliveryService ds) 
 					throws TextParseException, UnknownHostException {
-		final boolean addTrafficRouters = (ds == null || (ds != null && ds.isDns())) ? false : true;
 		final boolean ip6RoutingEnabled = (ds == null || (ds != null && ds.isIp6RoutingEnabled())) ? true : false;
 
-		final Name superDomain = new Name(name, 1);
-
-		for(String key : JSONObject.getNames(trafficRouters)) {
+		for (String key : JSONObject.getNames(trafficRouters)) {
 			final JSONObject trJo = trafficRouters.optJSONObject(key);
+
 			if(trJo.has("status") && "OFFLINE".equals(trJo.optString("status"))) {
 				// if "status": "OFFLINE"
 				continue;
 			}
+
 			final Name trName = newName(key, domain.toString());
-			final Name glueName = newName(key, superDomain.toString());
+			Name glueName;
+
+			if (ds == null && trJo.has("fqdn") && trJo.optString("fqdn") != null) {
+				glueName = newName(trJo.optString("fqdn"));
+			} else {
+				final Name superDomain = new Name(name, 1);
+				glueName = newName(key, superDomain.toString());
+			}
+
 			String ip6 = trJo.optString("ip6");
 
 			list.add(new NSRecord(name, DClass.IN, ZoneUtils.getLong(ttl, "NS", 60), glueName));
@@ -488,13 +495,13 @@ public class ZoneManager extends Resolver {
 						Inet6Address.getByName(ip6)));
 			}
 
-			if (addTrafficRouters) {
-				addTrafficRouterIps(list, domain, key, trJo, ttl, ip6RoutingEnabled);
+			if (ds != null && !ds.isDns()) {
+				addHttpRoutingRecords(list, domain, key, trJo, ttl, ip6RoutingEnabled);
 			}
 		}
 	}
 
-	private static void addTrafficRouterIps(final List<Record> list, final String domain, final String key,
+	private static void addHttpRoutingRecords(final List<Record> list, final String domain, final String key,
 			final JSONObject trJo, final JSONObject ttl, final boolean addTrafficRoutersAAAA) 
 					throws TextParseException, UnknownHostException {
 		final Name trName = newName(getHttpRoutingName(), domain);
@@ -513,10 +520,14 @@ public class ZoneManager extends Resolver {
 	}
 
 	private static Name newName(final String hostname, final String domain) throws TextParseException {
-		if (domain.endsWith(".")) {
-			return new Name(hostname + "." + domain);
+		return newName(hostname + "." + domain);
+	}
+
+	private static Name newName(final String fqdn) throws TextParseException {
+		if (fqdn.endsWith(".")) {
+			return new Name(fqdn);
 		} else {
-			return new Name(hostname + "." + domain + ".");
+			return new Name(fqdn + ".");
 		}
 	}
 
