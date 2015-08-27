@@ -355,8 +355,6 @@
 {"profile":"EDGE1_CDN_520","parameter":"CONFIG proxy.config.ssl.CA.cert.path","config_file":"records.config","value":"STRING etc/trafficserver/ssl"}
 {"profile":"EDGE1_CDN_520","parameter":"CONFIG proxy.config.ssl.SSLv3","config_file":"records.config","value":"INT 0"}
 {"profile":"EDGE1_CDN_520","parameter":"CONFIG proxy.config.ssl.server.multicert.filename","config_file":"records.config","value":"STRING ssl_multicert.config"}
-{"profile":"EDGE1_CDN_520","parameter":"astats_over_http","config_file":"package","value":"1.2-8.el6.x86_64"}
-{"profile":"EDGE1_CDN_520","parameter":"trafficserver","config_file":"package","value":"5.2.0-5807.d0a1296.el6.x86_64"}
 {"profile":"EDGE1_CDN_520","parameter":"CONFIG proxy.config.allocator.hugepages","config_file":"records.config","value":"INT 0"}
 {"profile":"EDGE1_CDN_520","parameter":"CONFIG proxy.config.http.negative_caching_enabled","config_file":"records.config","value":"INT 1"}
 {"profile":"EDGE1_CDN_520","parameter":"record_types","config_file":"astats.config","value":"122"}
