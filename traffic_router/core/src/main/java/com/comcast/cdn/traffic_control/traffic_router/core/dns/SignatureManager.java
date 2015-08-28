@@ -49,7 +49,7 @@ import com.verisignlabs.dnssec.security.SignUtils;
 
 public final class SignatureManager {
 	private static final Logger LOGGER = Logger.getLogger(SignatureManager.class);
-	private final static int DEFAULT_EXPIRATION_MULTIPLIER = 4; // signature validity is maxTTL * this
+	private int expirationMultiplier;
 	private CacheRegister cacheRegister;
 	private static ScheduledExecutorService keyMaintenanceExecutor;
 	private KeyServer keyServer;
@@ -75,6 +75,7 @@ public final class SignatureManager {
 
 			if (config.optBoolean("dnssec.enabled")) {
 				setDnssecEnabled(true);
+				setExpirationMultiplier(config.optInt("signaturemanager.expiration.multiplier", 5)); // signature validity is maxTTL * this
 				final ScheduledExecutorService me = Executors.newScheduledThreadPool(1);
 				final int maintenanceInterval = config.optInt("keystore.maintenance.interval", 300); // default 300 seconds, do we calculate based on the complimentary settings for key generation in TO?
 				me.scheduleWithFixedDelay(getKeyMaintenanceRunnable(cacheRegister), 0, maintenanceInterval, TimeUnit.SECONDS);
@@ -298,7 +299,7 @@ public final class SignatureManager {
 	private Calendar calculateExpiration(final long baseTimeInMillis, final List<Record> records) {
 		final Calendar expiration = Calendar.getInstance();
 		final long maxTTL = ZoneUtils.getMaximumTTL(records) * 1000; // convert TTL to millis
-		final long expirationTime = baseTimeInMillis + (maxTTL * DEFAULT_EXPIRATION_MULTIPLIER); // TODO: make the multiplier configurable
+		final long expirationTime = baseTimeInMillis + (maxTTL * getExpirationMultiplier());
 
 		expiration.setTimeInMillis(expirationTime);
 
@@ -415,7 +416,6 @@ public final class SignatureManager {
 		} else {
 			return new ZoneKey(name, list);
 		}
-
 	}
 
 	protected boolean isDnssecEnabled() {
@@ -440,5 +440,13 @@ public final class SignatureManager {
 
 	private void setKeyServer(final KeyServer keyServer) {
 		this.keyServer = keyServer;
+	}
+
+	public int getExpirationMultiplier() {
+		return expirationMultiplier;
+	}
+
+	public void setExpirationMultiplier(final int expirationMultiplier) {
+		this.expirationMultiplier = expirationMultiplier;
 	}
 }

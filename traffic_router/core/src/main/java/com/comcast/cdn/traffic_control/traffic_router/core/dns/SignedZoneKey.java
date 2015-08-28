@@ -45,6 +45,6 @@ public class SignedZoneKey extends ZoneKey {
 	}
 
 	public long getRefreshHorizon() {
-		return getTimestamp() + Math.round((double) getSignatureDuration() / 2.0); // force a refresh when we're halfway through expiration
+		return getTimestamp() + Math.round((double) getSignatureDuration() / 2.0); // force a refresh when we're halfway through our validity period
 	}
 }
