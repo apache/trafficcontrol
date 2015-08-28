@@ -102,7 +102,6 @@ public class ZoneManager extends Resolver {
 
 	public ZoneManager(final TrafficRouter tr, final StatTracker statTracker) throws IOException {
 		initTopLevelDomain(tr.getCacheRegister());
-		initZoneDirectory();
 		initSignatureManager(tr.getCacheRegister());
 		initZoneCache(tr.getCacheRegister());
 
@@ -117,6 +116,10 @@ public class ZoneManager extends Resolver {
 		signatureManager.destroy();
 	}
 
+	protected void rebuildZoneCache(final CacheRegister cacheRegister) {
+		initZoneCache(cacheRegister);
+	}
+
 	private static void initTopLevelDomain(final CacheRegister data) throws TextParseException {
 		String tld = data.getConfig().optString("domain_name");
 
@@ -127,13 +130,13 @@ public class ZoneManager extends Resolver {
 		setTopLevelDomain(new Name(tld));
 	}
 
-	public static void initSignatureManager(final CacheRegister cacheRegister) {
+	private void initSignatureManager(final CacheRegister cacheRegister) {
 		final KeyServer ks = new KeyServer(keyServerUrl, keyServerUsername, keyServerPassword);
-		final SignatureManager sm = new SignatureManager(cacheRegister, ks);
+		final SignatureManager sm = new SignatureManager(this, cacheRegister, ks);
 		ZoneManager.signatureManager = sm;
 	}
 
-	private static void initZoneCache(final CacheRegister cacheRegister) throws IOException {
+	protected static void initZoneCache(final CacheRegister cacheRegister) {
 		synchronized(ZoneManager.class) {
 			final JSONObject config = cacheRegister.getConfig();
 
@@ -163,15 +166,18 @@ public class ZoneManager extends Resolver {
 			final LoadingCache<ZoneKey, Zone> dzc = createZoneCache(ZoneCacheType.DYNAMIC, CacheBuilderSpec.parse(dspec));
 			final LoadingCache<ZoneKey, Zone> zc = createZoneCache(ZoneCacheType.STATIC);
 
-			LOGGER.info("Generating zone data");
-			generateZones(cacheRegister, zc, initExecutor);
+			initZoneDirectory();
 
 			try {
+				LOGGER.info("Generating zone data");
+				generateZones(cacheRegister, zc, initExecutor);
 				initExecutor.shutdown();
 				initExecutor.awaitTermination(5, TimeUnit.MINUTES);
 				LOGGER.info("Zone generation complete");
 			} catch (final InterruptedException ex) {
 				LOGGER.warn("Initialization of zone data exceeded time limit of 5 minutes; continuing", ex);
+			} catch (IOException ex) {
+				LOGGER.fatal("Caught fatal exception while generating zone data!", ex);
 			}
 
 			me.scheduleWithFixedDelay(getMaintenanceRunnable(dzc, ZoneCacheType.DYNAMIC, maintenanceInterval), 0, maintenanceInterval, TimeUnit.SECONDS);
@@ -496,13 +502,12 @@ public class ZoneManager extends Resolver {
 			}
 
 			if (ds != null && !ds.isDns()) {
-				addHttpRoutingRecords(list, domain, key, trJo, ttl, ip6RoutingEnabled);
+				addHttpRoutingRecords(list, domain, trJo, ttl, ip6RoutingEnabled);
 			}
 		}
 	}
 
-	private static void addHttpRoutingRecords(final List<Record> list, final String domain, final String key,
-			final JSONObject trJo, final JSONObject ttl, final boolean addTrafficRoutersAAAA) 
+	private static void addHttpRoutingRecords(final List<Record> list, final String domain, final JSONObject trJo, final JSONObject ttl, final boolean addTrafficRoutersAAAA) 
 					throws TextParseException, UnknownHostException {
 		final Name trName = newName(getHttpRoutingName(), domain);
 		list.add(new ARecord(trName,
