@@ -79,7 +79,7 @@ sub register {
 						return { response => $response, server => $active_server };
 					}
 					elsif ( $status_code == 500 ) {
-						$active_server = activate_next_online_server( $self, "InfluxDBHostsOnline" );
+						$active_server = activate_next_online_server( $self, $schema_result_file );
 						$helper_class->set_server($active_server);
 						if ( defined($active_server) ) {
 							$self->app->log->warn( "Found BAD ONLINE server, skipping: " . $active_server );

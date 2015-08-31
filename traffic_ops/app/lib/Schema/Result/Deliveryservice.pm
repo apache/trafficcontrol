@@ -240,7 +240,13 @@ __PACKAGE__->table("deliveryservice");
   data_type: 'tinyint'
   is_nullable: 1
 
-=head2 dns_bypass_cname
+=head2 display_name
+
+  data_type: 'varchar'
+  is_nullable: 0
+  size: 48
+
+=head2 tr_response_headers
 
   data_type: 'varchar'
   is_nullable: 1

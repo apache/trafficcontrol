@@ -34,10 +34,9 @@ import org.xbill.DNS.Type;
 
 import com.verisignlabs.dnssec.security.DnsKeyPair;
 
-public class DNSKeyPairWrapper {
+public class DNSKeyPairWrapper extends DnsKeyPair {
 	private static final Logger LOGGER = Logger.getLogger(DNSKeyPairWrapper.class);
 
-	private DnsKeyPair dnsKeyPair;
 	private long ttl;
 	private Date inception;
 	private Date effective;
@@ -58,33 +57,22 @@ public class DNSKeyPairWrapper {
 
 		final Master master = new Master(in, new Name(name), ttl);
 		Record record = null;
-		final DnsKeyPair dkp = new DnsKeyPair();
-		dkp.setPrivateKeyString(new String(privateKey));
+		setPrivateKeyString(new String(privateKey));
 
 		while ((record = master.nextRecord()) != null) {
 			if (record.getType() == Type.DNSKEY) {
-				dkp.setDNSKEYRecord((DNSKEYRecord) record);
+				setDNSKEYRecord((DNSKEYRecord) record);
 				LOGGER.debug("record name is " + record.getName() + "; domain is " + name);
 				break;
 			}
 		}
-
-		this.dnsKeyPair = dkp;
 	}
 
-	public DnsKeyPair getDnsKeyPair() {
-		return dnsKeyPair;
-	}
-
-	public void setDnsKeyPair(final DnsKeyPair dnsKeyPair) {
-		this.dnsKeyPair = dnsKeyPair;
-	}
-
-	public long getTtl() {
+	public long getTTL() {
 		return ttl;
 	}
 
-	public void setTtl(final long ttl) {
+	public void setTTL(final long ttl) {
 		this.ttl = ttl;
 	}
 
@@ -118,5 +106,30 @@ public class DNSKeyPairWrapper {
 
 	public void setExpiration(final Date expiration) {
 		this.expiration = expiration;
+	}
+
+	@Override
+	public boolean equals(final Object obj) {
+		final DNSKeyPairWrapper okp = (DNSKeyPairWrapper) obj;
+
+		if (!this.getDNSKEYRecord().equals(okp.getDNSKEYRecord())) {
+			return false;
+		} else if (!this.getPrivate().equals(okp.getPrivate())) {
+			return false;
+		} else if (!this.getPublic().equals(okp.getPublic())) {
+			return false;
+		} else if (!getEffective().equals(okp.getEffective())) {
+			return false;
+		} else if (!getExpiration().equals(okp.getExpiration())) {
+			return false;
+		} else if (!getInception().equals(okp.getInception())) {
+			return false;
+		} else if (!getName().equals(okp.getName())) {
+			return false;
+		} else if (getTTL() != okp.getTTL()) {
+			return false;
+		}
+
+		return true;
 	}
 }

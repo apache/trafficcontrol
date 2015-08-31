@@ -49,17 +49,19 @@ import com.verisignlabs.dnssec.security.SignUtils;
 
 public final class SignatureManager {
 	private static final Logger LOGGER = Logger.getLogger(SignatureManager.class);
-	private final static int DEFAULT_EXPIRATION_MULTIPLIER = 4; // signature validity is maxTTL * this
+	private int expirationMultiplier;
 	private CacheRegister cacheRegister;
 	private static ScheduledExecutorService keyMaintenanceExecutor;
 	private KeyServer keyServer;
 	private boolean dnssecEnabled = false;
 	private Map<String, List<DNSKeyPairWrapper>> keyMap;
 	private static ProtectedFetcher fetcher = null;
+	private ZoneManager zoneManager;
 
-	public SignatureManager(final CacheRegister cacheRegister, final KeyServer keyServer) {
+	public SignatureManager(final ZoneManager zoneManager, final CacheRegister cacheRegister, final KeyServer keyServer) {
 		this.setCacheRegister(cacheRegister);
 		this.setKeyServer(keyServer);
+		this.setZoneManager(zoneManager);
 		initKeyMap();
 	}
 
@@ -75,8 +77,9 @@ public final class SignatureManager {
 
 			if (config.optBoolean("dnssec.enabled")) {
 				setDnssecEnabled(true);
+				setExpirationMultiplier(config.optInt("signaturemanager.expiration.multiplier", 5)); // signature validity is maxTTL * this
 				final ScheduledExecutorService me = Executors.newScheduledThreadPool(1);
-				final int maintenanceInterval = config.optInt("keystore.maintenance.interval", 60); // default 60 seconds, do we calculate based on the complimentary settings for key generation in TO?
+				final int maintenanceInterval = config.optInt("keystore.maintenance.interval", 300); // default 300 seconds, do we calculate based on the complimentary settings for key generation in TO?
 				me.scheduleWithFixedDelay(getKeyMaintenanceRunnable(cacheRegister), 0, maintenanceInterval, TimeUnit.SECONDS);
 
 				if (keyMaintenanceExecutor != null) {
@@ -141,7 +144,15 @@ public final class SignatureManager {
 							}
 						}
 
-						keyMap = newKeyMap;
+						if (keyMap == null) {
+							// initial startup
+							keyMap = newKeyMap;
+						} else if (hasNewKeys(keyMap, newKeyMap)) {
+							// incoming key map has new keys
+							LOGGER.debug("Found new keys, rebuilding zone caches");
+							keyMap = newKeyMap;
+							getZoneManager().rebuildZoneCache(cacheRegister);
+						} // no need to overwrite the keymap if they're the same, so no else leg
 					} else {
 						LOGGER.fatal("Unable to read keyPairData: " + keyPairData);
 					}
@@ -150,6 +161,31 @@ public final class SignatureManager {
 				}
 			}
 		};
+	}
+
+	private boolean hasNewKeys(final Map<String, List<DNSKeyPairWrapper>> keyMap, final Map<String, List<DNSKeyPairWrapper>> newKeyMap) {
+		for (final String key : newKeyMap.keySet()) {
+			if (!keyMap.containsKey(key)) {
+				return true;
+			}
+
+			for (final DNSKeyPairWrapper newKeyPair : newKeyMap.get(key)) {
+				boolean matched = false;
+
+				for (final DNSKeyPairWrapper keyPair : keyMap.get(key)) {
+					if (newKeyPair.equals(keyPair)) {
+						matched = true;
+						break;
+					}
+				}
+
+				if (!matched) {
+					return true; // has a new key because we didn't find a match
+				}
+			}
+		}
+
+		return false;
 	}
 
 	private JSONObject fetchKeyPairData(final CacheRegister cacheRegister) {
@@ -216,15 +252,15 @@ public final class SignatureManager {
 		return keyPairs;
 	}
 
-	private List<DnsKeyPair> getZoneSigningKSKPair(final Name name) throws IOException, NoSuchAlgorithmException {
+	private List<DNSKeyPairWrapper> getZoneSigningKSKPair(final Name name) throws IOException, NoSuchAlgorithmException {
 		return getZoneSigningKeyPair(name, true);
 	}
 
-	private List<DnsKeyPair> getZoneSigningZSKPair(final Name name) throws IOException, NoSuchAlgorithmException {
+	private List<DNSKeyPairWrapper> getZoneSigningZSKPair(final Name name) throws IOException, NoSuchAlgorithmException {
 		return getZoneSigningKeyPair(name, false);
 	}
 
-	private List<DnsKeyPair> getZoneSigningKeyPair(final Name name, final boolean wantKsk) throws IOException, NoSuchAlgorithmException {
+	private List<DNSKeyPairWrapper> getZoneSigningKeyPair(final Name name, final boolean wantKsk) throws IOException, NoSuchAlgorithmException {
 		/*
 		 * This method returns a list, but we will identify the correct key with which to sign the zone.
 		 * We select one key (we call this method twice, for zsk and ksks respectively)
@@ -235,24 +271,24 @@ public final class SignatureManager {
 		return getKeyPairs(name, wantKsk, true);
 	}
 
-	private List<DnsKeyPair> getKSKPairs(final Name name) throws IOException, NoSuchAlgorithmException {
+	private List<DNSKeyPairWrapper> getKSKPairs(final Name name) throws IOException, NoSuchAlgorithmException {
 		return getKeyPairs(name, true, false);
 	}
 
-	private List<DnsKeyPair> getZSKPairs(final Name name) throws IOException, NoSuchAlgorithmException {
+	private List<DNSKeyPairWrapper> getZSKPairs(final Name name) throws IOException, NoSuchAlgorithmException {
 		return getKeyPairs(name, false, false);
 	}
 
-	private List<DnsKeyPair> getKeyPairs(final Name name, final boolean wantKsk, final boolean wantSigningKey) throws IOException, NoSuchAlgorithmException {
+	private List<DNSKeyPairWrapper> getKeyPairs(final Name name, final boolean wantKsk, final boolean wantSigningKey) throws IOException, NoSuchAlgorithmException {
 		final List<DNSKeyPairWrapper> keyPairs = keyMap.get(name.toString());
 		final Date now = new Date();
 		DNSKeyPairWrapper signingKey = null;
 
 		if (keyPairs != null) {
-			final List<DnsKeyPair> keys = new ArrayList<DnsKeyPair>();
+			final List<DNSKeyPairWrapper> keys = new ArrayList<DNSKeyPairWrapper>();
 
 			for (DNSKeyPairWrapper kpw : keyPairs) {
-				final DnsKeyPair kp = kpw.getDnsKeyPair();
+				final DnsKeyPair kp = (DnsKeyPair) kpw;
 				final Name kn = kp.getDNSKEYRecord().getName();
 				boolean isKsk = false;
 
@@ -265,7 +301,7 @@ public final class SignatureManager {
 						LOGGER.debug("Skipping key for " + name + "; wantKsk = " + wantKsk + " and isKsk = " + isKsk);
 						continue;
 					} else if (!wantSigningKey) {
-						keys.add(kp);
+						keys.add(kpw);
 					} else if (wantSigningKey) {
 						if (kpw.getEffective().after(now) || kpw.getInception().after(now) || kpw.getExpiration().before(now)) {
 							// this key is either expired or should not be used yet
@@ -286,7 +322,7 @@ public final class SignatureManager {
 
 			if (wantSigningKey) {
 				keys.clear(); // in case we have something in here for some reason (shouldn't happen)
-				keys.add(signingKey.getDnsKeyPair());
+				keys.add(signingKey);
 			}
 
 			return keys;
@@ -295,12 +331,28 @@ public final class SignatureManager {
 		}
 	}
 
-	private Calendar calculateExpiration(final long baseTimeInMillis, final List<Record> records) {
+	private Calendar calculateKeyExpiration(final List<DNSKeyPairWrapper> keyPairs) {
+		final Calendar expiration = Calendar.getInstance();
+		Date earliest = null;
+
+		for (final DNSKeyPairWrapper keyPair : (List<DNSKeyPairWrapper>) keyPairs) {
+			if (earliest == null) {
+				earliest = keyPair.getExpiration();
+			} else if (keyPair.getExpiration().before(earliest)) {
+				earliest = keyPair.getExpiration();
+			}
+		}
+
+		expiration.setTime(earliest);
+
+		return expiration;
+	}
+
+	private Calendar calculateSignatureExpiration(final long baseTimeInMillis, final List<Record> records, final List<? extends DnsKeyPair> kskPairs, final List<? extends DnsKeyPair> zskPairs) {
 		final Calendar expiration = Calendar.getInstance();
 		final long maxTTL = ZoneUtils.getMaximumTTL(records) * 1000; // convert TTL to millis
-		final long expirationTime = baseTimeInMillis + (maxTTL * DEFAULT_EXPIRATION_MULTIPLIER); // TODO: make the multiplier configurable
-
-		expiration.setTimeInMillis(expirationTime);
+		final long signatureExpiration = baseTimeInMillis + (maxTTL * getExpirationMultiplier());
+		expiration.setTimeInMillis(signatureExpiration);
 
 		return expiration;
 	}
@@ -308,13 +360,23 @@ public final class SignatureManager {
 	public boolean needsRefresh(final ZoneCacheType type, final ZoneKey zoneKey, final int refreshInterval) {
 		if (zoneKey instanceof SignedZoneKey) {
 			final SignedZoneKey szk = (SignedZoneKey) zoneKey;
-			final long nextRefresh = System.currentTimeMillis() + refreshInterval;
+			final long now = System.currentTimeMillis();
+			final long nextRefresh = now + refreshInterval;
 
 			if (nextRefresh >= szk.getRefreshHorizon()) {
-				LOGGER.info(type + ": " + "timestamp for " + zoneKey.getName() + " is " + zoneKey.getTimestampDate() + "; expires " + szk.getExpiration().getTime() + "; refresh needed");
+				LOGGER.info(getRefreshMessage(type, szk, true, "refresh horizon approaching"));
+				return true;
+			} else if (now >= szk.getEarliestSigningKeyExpiration()) {
+				/*
+				 * The earliest signing key has expired, so force a resigning 
+				 * which will be done with new keys. This is because the keys themselves
+				 * don't have expiry that's tied to DNSSEC; it's administrative, so
+				 * we can be a little late on the swap.
+				 */
+				LOGGER.info(getRefreshMessage(type, szk, true, "signing key expiration"));
 				return true;
 			} else {
-				LOGGER.debug(type + ": " + "timestamp for " + zoneKey.getName() + " is " + zoneKey.getTimestampDate() + "; expires " + szk.getExpiration().getTime() + "; no refresh needed");
+				LOGGER.debug(getRefreshMessage(type, szk));
 				return false;
 			}
 		} else {
@@ -323,10 +385,41 @@ public final class SignatureManager {
 		}
 	}
 
+	private String getRefreshMessage(final ZoneCacheType type, final SignedZoneKey zoneKey) {
+		return getRefreshMessage(type, zoneKey, false, null);
+	}
+
+	private String getRefreshMessage(final ZoneCacheType type, final SignedZoneKey zoneKey, final boolean needsRefresh, final String message) {
+		final StringBuilder sb = new StringBuilder();
+		sb.append(type);
+		sb.append(": timestamp for ");
+		sb.append(zoneKey.getName());
+		sb.append(" is ");
+		sb.append(zoneKey.getTimestampDate());
+		sb.append("; expires ");
+		sb.append(zoneKey.getSignatureExpiration().getTime());
+
+		if (needsRefresh) {
+			sb.append("; refresh needed");
+		} else {
+			sb.append("; no refresh needed");
+		}
+
+		if (message != null) {
+			sb.append("; ");
+			sb.append(message);
+		}
+
+		return sb.toString();
+	}
+
+	@SuppressWarnings("unchecked")
 	protected List<Record> signZone(final Name name, final List<Record> records, final SignedZoneKey zoneKey) throws IOException, GeneralSecurityException {
-		final Calendar expiration = calculateExpiration(zoneKey.getTimestamp(), records);
-		final List<DnsKeyPair> kskPairs = getZoneSigningKSKPair(name);
-		final List<DnsKeyPair> zskPairs = getZoneSigningZSKPair(name);
+		final List<? extends DnsKeyPair> kskPairs = getZoneSigningKSKPair(name);
+		final List<? extends DnsKeyPair> zskPairs = getZoneSigningZSKPair(name);
+		final Calendar signatureExpiration = calculateSignatureExpiration(zoneKey.getTimestamp(), records, kskPairs, zskPairs);
+		final Calendar kskExpiration = calculateKeyExpiration((List<DNSKeyPairWrapper>) kskPairs);
+		final Calendar zskExpiration = calculateKeyExpiration((List<DNSKeyPairWrapper>) zskPairs);
 		final JCEDnsSecSigner signer = new JCEDnsSecSigner(false);
 		final long now = System.currentTimeMillis();
 		final Calendar start = Calendar.getInstance();
@@ -337,9 +430,12 @@ public final class SignatureManager {
 		// TODO: do we really need to fully sign the apex keyset? should the digest be config driven?
 		if (kskPairs != null && zskPairs != null) {
 			if (!kskPairs.isEmpty() && !zskPairs.isEmpty()) {
-				LOGGER.info("Signing zone " + name + " with start " + start.getTime() + " and expiration " + expiration.getTime());
-				final List<Record> signedRecords = signer.signZone(name, records, kskPairs, zskPairs, start.getTime(), expiration.getTime(), true, DSRecord.SHA256_DIGEST_ID);
-				zoneKey.setExpiration(expiration);
+				LOGGER.info("Signing zone " + name + " with start " + start.getTime() + " and expiration " + signatureExpiration.getTime());
+				final List<Record> signedRecords = signer.signZone(name, records, (List<DnsKeyPair>) kskPairs, (List<DnsKeyPair>) zskPairs, start.getTime(), signatureExpiration.getTime(), true, DSRecord.SHA256_DIGEST_ID);
+				zoneKey.setSignatureExpiration(signatureExpiration);
+				zoneKey.setKSKExpiration(kskExpiration);
+				zoneKey.setZSKExpiration(zskExpiration);
+
 				return signedRecords;
 			} else {
 				LOGGER.warn("Unable to sign zone " + name + "; have " + kskPairs.size() + " KSKs and " + zskPairs.size() + " ZSKs");
@@ -354,10 +450,10 @@ public final class SignatureManager {
 	public List<Record> generateDSRecords(final Name name) throws NoSuchAlgorithmException, IOException {
 		final List<Record> records = new ArrayList<Record>();
 
-		if (isDnssecEnabled()) {
+		if (isDnssecEnabled() && name.subdomain(ZoneManager.getTopLevelDomain())) {
 			final JSONObject config = getCacheRegister().getConfig();
-			final List<DnsKeyPair> kskPairs = getKSKPairs(name);
-			final List<DnsKeyPair> zskPairs = getZSKPairs(name);
+			final List<DNSKeyPairWrapper> kskPairs = getKSKPairs(name);
+			final List<DNSKeyPairWrapper> zskPairs = getZSKPairs(name);
 
 			if (kskPairs != null && zskPairs != null && !kskPairs.isEmpty() && !zskPairs.isEmpty()) {
 				// these records go into the CDN TLD, so don't use the DS' TTLs; use the CDN's.
@@ -377,9 +473,9 @@ public final class SignatureManager {
 	public List<Record> generateDNSKEYRecords(final Name name) throws NoSuchAlgorithmException, IOException {
 		final List<Record> list = new ArrayList<Record>();
 
-		if (isDnssecEnabled()) {
-			final List<DnsKeyPair> kskPairs = getKSKPairs(name);
-			final List<DnsKeyPair> zskPairs = getZSKPairs(name);
+		if (isDnssecEnabled() && name.subdomain(ZoneManager.getTopLevelDomain())) {
+			final List<DNSKeyPairWrapper> kskPairs = getKSKPairs(name);
+			final List<DNSKeyPairWrapper> zskPairs = getZSKPairs(name);
 
 			if (kskPairs != null && zskPairs != null && !kskPairs.isEmpty() && !zskPairs.isEmpty()) {
 				for (DnsKeyPair kp : kskPairs) {
@@ -398,13 +494,23 @@ public final class SignatureManager {
 		return list;
 	}
 
+	// this method is called during static zone generation
 	public ZoneKey generateZoneKey(final Name name, final List<Record> list) {
-		if (isDnssecEnabled()) {
+		return generateZoneKey(name, list, false, false);
+	}
+
+	public ZoneKey generateDynamicZoneKey(final Name name, final List<Record> list, final boolean dnssecRequest) {
+		return generateZoneKey(name, list, true, dnssecRequest);
+	}
+
+	private ZoneKey generateZoneKey(final Name name, final List<Record> list, final boolean dynamicRequest, final boolean dnssecRequest) {
+		if (dynamicRequest && !dnssecRequest) {
+			return new ZoneKey(name, list);
+		} else if ((isDnssecEnabled() && name.subdomain(ZoneManager.getTopLevelDomain()))) {
 			return new SignedZoneKey(name, list);
 		} else {
 			return new ZoneKey(name, list);
 		}
-
 	}
 
 	protected boolean isDnssecEnabled() {
@@ -429,5 +535,21 @@ public final class SignatureManager {
 
 	private void setKeyServer(final KeyServer keyServer) {
 		this.keyServer = keyServer;
+	}
+
+	public int getExpirationMultiplier() {
+		return expirationMultiplier;
+	}
+
+	public void setExpirationMultiplier(final int expirationMultiplier) {
+		this.expirationMultiplier = expirationMultiplier;
+	}
+
+	private ZoneManager getZoneManager() {
+		return zoneManager;
+	}
+
+	private void setZoneManager(final ZoneManager zoneManager) {
+		this.zoneManager = zoneManager;
 	}
 }

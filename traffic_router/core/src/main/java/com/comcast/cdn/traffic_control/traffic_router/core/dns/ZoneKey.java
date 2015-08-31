@@ -94,7 +94,7 @@ public class ZoneKey implements Comparable<ZoneKey> {
 	@Override
 	public boolean equals(final Object obj) {
 		final ZoneKey ozk = (ZoneKey) obj;
-		return getName().equals(ozk.getName()) && getInitialHashCode() == ozk.getInitialHashCode();
+		return getName().equals(ozk.getName()) && getInitialHashCode() == ozk.getInitialHashCode() && obj.getClass().equals(this.getClass());
 	}
 
 	// this correctly sorts the names such that the superDomains are last

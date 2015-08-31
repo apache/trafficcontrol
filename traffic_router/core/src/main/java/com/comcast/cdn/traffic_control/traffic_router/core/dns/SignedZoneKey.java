@@ -25,26 +25,52 @@ import org.xbill.DNS.Record;
 
 public class SignedZoneKey extends ZoneKey {
 	private static final Logger LOGGER = Logger.getLogger(SignedZoneKey.class);
-	private Calendar expiration;
+	private Calendar signatureExpiration;
+	private Calendar kskExpiration;
+	private Calendar zskExpiration;
 
 	public SignedZoneKey(final Name name, final List<Record> records) {
 		// sorting of records takes place in the ZoneKey constructor
 		super(name, records);
 	}
 
-	public Calendar getExpiration() {
-		return expiration;
+	public Calendar getSignatureExpiration() {
+		return signatureExpiration;
 	}
 
-	public void setExpiration(final Calendar expiration) {
-		this.expiration = expiration;
+	public void setSignatureExpiration(final Calendar signatureExpiration) {
+		this.signatureExpiration = signatureExpiration;
 	}
 
 	public long getSignatureDuration() {
-		return this.expiration.getTimeInMillis() - getTimestamp();
+		return this.signatureExpiration.getTimeInMillis() - getTimestamp();
 	}
 
 	public long getRefreshHorizon() {
-		return getTimestamp() + Math.round((double) getSignatureDuration() / 2.0); // force a refresh when we're halfway through expiration
+		return getTimestamp() + Math.round((double) getSignatureDuration() / 2.0); // force a refresh when we're halfway through our validity period
+	}
+
+	public long getEarliestSigningKeyExpiration() {
+		if (getKSKExpiration().before(getZSKExpiration())) {
+			return getKSKExpiration().getTimeInMillis();
+		} else {
+			return getZSKExpiration().getTimeInMillis();
+		}
+	}
+
+	public Calendar getKSKExpiration() {
+		return kskExpiration;
+	}
+
+	public void setKSKExpiration(final Calendar kskExpiration) {
+		this.kskExpiration = kskExpiration;
+	}
+
+	public Calendar getZSKExpiration() {
+		return zskExpiration;
+	}
+
+	public void setZSKExpiration(final Calendar zskExpiration) {
+		this.zskExpiration = zskExpiration;
 	}
 }

@@ -30,7 +30,7 @@ use Data::Dumper;
 # A release gets cut with just a $major.$minor
 # The presence of a $micro means this version (branch) has been patched and released with that patch.
 # Lowest $micro number, when present is 1.
-my $version = "1.1.4";
+my $version = "1.1.5-dev";
 
 require Exporter;
 our @ISA = qw(Exporter);
