@@ -253,28 +253,4 @@ sub build_parameters {
 	return $result;
 }
 
-sub get_cdn_name_by_dsname {
-	my $self = shift;
-	my $dsname = shift || confess("Delivery Service name is required");
-
-	my $cdn_name = undef;
-	my $ds_id;
-	my $ds_profile_id;
-	my $ds = $mojo->db->resultset('Deliveryservice')->search( { xml_id => $dsname }, {} )->single();
-	if ( defined($ds) ) {
-		$ds_id         = $ds->id;
-		$ds_profile_id = $ds->profile->id;
-		my $param =
-			$mojo->db->resultset('ProfileParameter')
-			->search( { -and => [ profile => $ds_profile_id, 'parameter.name' => 'CDN_name' ] }, { prefetch => [ 'parameter', 'profile' ] } )->single();
-
-		if ( defined($param) ) {
-			$cdn_name = $param->parameter->value;
-			return $cdn_name;
-		}
-	}
-	return $cdn_name;
-
-}
-
 1;
