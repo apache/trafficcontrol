@@ -60,6 +60,9 @@ local $/;    #Enable 'slurp' mode
 
 has schema => sub { return Schema->connect_to_database };
 has watch  => sub { [qw(lib templates)] };
+has inactivity_timeout => sub {
+	$ENV{MOJO_INACTIVITY_TIMEOUT} // $config->{60};    # or undef for default
+};
 
 if ( !defined $ENV{MOJO_CONFIG} ) {
 
