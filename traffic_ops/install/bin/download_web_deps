@@ -218,6 +218,7 @@ sub curlMe {
 		$curl->setopt(CURLOPT_SSL_VERIFYHOST, 0);
 		$curl->setopt(CURLOPT_SSL_VERIFYPEER, 0);
 	}
+	$curl->setopt(CURLOPT_IPRESOLVE, 1);
 	$curl->setopt(CURLOPT_FOLLOWLOCATION, 1);
 	$curl->setopt(CURLOPT_CONNECTTIMEOUT, 5);
 	$curl->setopt(CURLOPT_TIMEOUT, 15);
