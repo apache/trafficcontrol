@@ -167,7 +167,7 @@ EOF
 		while ( length $tmurl == 0 ) {
 			$tmurl = InstallUtils::promptUser( "Traffic Ops url", "https://localhost" );
 		}
-		$parameters{"tmurl.url"} = $tmurl;
+		$parameters{"tm.url"} = $tmurl;
 
 		my $infourl = "$tmurl/info";
 
@@ -236,8 +236,8 @@ EOF
 			InstallUtils::execCommand( "/bin/tar", "-xzf", "$centos65TarballFqn", "-C", "$kickstartFilesFqn" );
 		}
 
-		print "\nTraffic Ops URL: $parameters{'tmurl.url'}\n";
-		print "Traffic Ops Info URL: $parameters{'tminfo.url'}\n";
+		print "\nTraffic Ops URL: $parameters{'tm.url'}\n";
+		print "Traffic Ops Info URL: $parameters{'tm.infourl'}\n";
 		print "Domainname: $parameters{'domainname'}\n";
 		print "CDN Name: $parameters{'cdnname'}\n";
 		print "GeoLocation Polling URL: $parameters{'geolocation.polling.url'}\n";
