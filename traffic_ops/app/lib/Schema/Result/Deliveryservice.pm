@@ -127,19 +127,19 @@ __PACKAGE__->table("deliveryservice");
 
   data_type: 'varchar'
   is_nullable: 1
-  size: 255
+  size: 1024
 
 =head2 long_desc_1
 
   data_type: 'varchar'
   is_nullable: 1
-  size: 255
+  size: 1024
 
 =head2 long_desc_2
 
   data_type: 'varchar'
   is_nullable: 1
-  size: 255
+  size: 1024
 
 =head2 max_dns_answers
 
@@ -240,17 +240,17 @@ __PACKAGE__->table("deliveryservice");
   data_type: 'tinyint'
   is_nullable: 1
 
+=head2 dns_bypass_cname
+
+  data_type: 'varchar'
+  is_nullable: 1
+  size: 255
+
 =head2 display_name
 
   data_type: 'varchar'
   is_nullable: 0
   size: 48
-
-=head2 tr_response_headers
-
-  data_type: 'varchar'
-  is_nullable: 1
-  size: 255
 
 =cut
 
@@ -292,11 +292,11 @@ __PACKAGE__->add_columns(
   "global_max_tps",
   { data_type => "integer", is_nullable => 1 },
   "long_desc",
-  { data_type => "varchar", is_nullable => 1, size => 255 },
+  { data_type => "varchar", is_nullable => 1, size => 1024 },
   "long_desc_1",
-  { data_type => "varchar", is_nullable => 1, size => 255 },
+  { data_type => "varchar", is_nullable => 1, size => 1024 },
   "long_desc_2",
-  { data_type => "varchar", is_nullable => 1, size => 255 },
+  { data_type => "varchar", is_nullable => 1, size => 1024 },
   "max_dns_answers",
   { data_type => "integer", default_value => 0, is_nullable => 1 },
   "info_url",
@@ -338,6 +338,8 @@ __PACKAGE__->add_columns(
   { data_type => "tinyint", is_nullable => 1 },
   "dns_bypass_cname",
   { data_type => "varchar", is_nullable => 1, size => 255 },
+  "display_name",
+  { data_type => "varchar", is_nullable => 0, size => 48 },
 );
 
 =head1 PRIMARY KEY
@@ -508,8 +510,8 @@ __PACKAGE__->belongs_to(
 );
 
 
-# Created by DBIx::Class::Schema::Loader v0.07043 @ 2015-08-18 10:20:11
-# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:Qurt7d060meyL4H5Pxnusw
+# Created by DBIx::Class::Schema::Loader v0.07043 @ 2015-08-31 14:12:31
+# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:4wm07FApzssvgKenOpEXTg
 
 
 # You can replace this text with custom code or comments, and it will be preserved on regeneration
