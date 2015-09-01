@@ -69,16 +69,21 @@ Vagrant.configure(2) do |config|
   #   sudo apt-get install -y apache2
   # SHELL
   config.vm.provision "shell", inline: <<-SHELL
-    sudo yum install -y epel-release \
-		git hg golang  cpan \
-		rpm-build openssl-devel \
-		mysql-devel mysql-server libpcap-devel libcurl-devel \
-		jenkins ant ant-nodeps 
-    export GOPATH=/home/vagrant/go
+	sudo yum install -y epel-release 
+	sudo curl -o /etc/yum.repos.d/jenkins.repo http://pkg.jenkins-ci.org/redhat/jenkins.repo
+	sudo rpm --import https://jenkins-ci.org/redhat/jenkins-ci.org.key
+	sudo yum install -y rpm-build openssl-devel
+	sudo yum install -y git hg golang cpan
+	sudo yum install -y mysql-devel mysql-server libpcap-devel libcurl-devel
+	sudo yum install -y jenkins ant ant-nodeps 
+	
+	export GOPATH=/home/vagrant/go
 	mkdir -p $GOPATH
-    echo "export GOPATH=/home/vagrant/go" >> /home/vagrant/.bash_profile
-    echo "export WORKSPACE=/home/vagrant/workspace" >> /home/vagrant/.bash_profile
-    service mysqld start
+	echo "export GOPATH=$GOPATH" >> /home/vagrant/.bash_profile
+	echo "export WORKSPACE=$HOME/workspace" >> /home/vagrant/.bash_profile
+	# just to make sure anything we created in /home/vagrant still owned by vagrant user
+	chown -R vagrant.vagrant /home/vagrant
+	service mysqld start
   SHELL
 end
 
