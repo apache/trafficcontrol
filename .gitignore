@@ -25,3 +25,4 @@ traffic_ops/app/public/js/jMenu.jquery.min.js
 traffic_ops/app/public/js/jquery-1.11.2.min.js
 traffic_ops/app/public/js/jquery-ui.min.js
 traffic_ops/app/public/js/jquery.dataTables.min.js
+traffic_stats/write_traffic_stats
