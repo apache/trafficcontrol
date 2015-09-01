@@ -275,25 +275,11 @@ sub ajob {
 
 	my $rs =
 		$self->db->resultset('Job')
-		->search( undef, { prefetch => [ { 'ext_user' => undef }, { agent => undef }, { status => undef } ], order_by => { -desc => 'me.entered_time' } } );
+		->search( undef, { prefetch => [ { 'job_user' => undef }, { agent => undef }, { status => undef } ], order_by => { -desc => 'me.entered_time' } } );
 
 	while ( my $row = $rs->next ) {
 
-		my @line = [ $row->id, $row->ext_user->name, $row->asset_url, $row->asset_type, $row->entered_time, $row->status->name, $row->last_updated ];
-		push( @{ $data{'aaData'} }, @line );
-	}
-	$self->render( json => \%data );
-}
-
-sub aextuser {
-	my $self = shift;
-	my %data = ( "aaData" => undef );
-
-	my $rs = $self->db->resultset('ExtUser');
-
-	while ( my $row = $rs->next ) {
-
-		my @line = [ $row->id, $row->username, $row->company, $row->name, $row->email, $row->phone, $row->last_updated ];
+		my @line = [ $row->id, $row->job_user->username, $row->asset_url, $row->asset_type, $row->entered_time, $row->status->name, $row->last_updated ];
 		push( @{ $data{'aaData'} }, @line );
 	}
 	$self->render( json => \%data );

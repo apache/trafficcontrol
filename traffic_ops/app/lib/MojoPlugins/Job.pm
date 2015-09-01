@@ -44,12 +44,10 @@ sub register {
 
 			while ( my $row = $rs->next ) {
 				next unless $row->status->name eq 'REPORTED';
-				my $param =
-					$self->db->resultset('ProfileParameter')
-					->search( { -and => [ profile => $row->profile->id, 'parameter.config_file' => 'rascal-config.txt', 'parameter.name' => 'CDN_name' ] },
-					{ prefetch => [ { parameter => undef }, { profile => undef } ] } )->single();
+				my $param = $self->db->resultset('Profile')->search( { 'me.id' => $row->profile->id, 'cdn.config_file' => 'rascal-config.txt' }, { prefetch => 'cdn'} )->single();
+
 				next unless defined($param);
-				my $cdn_name = $param->parameter->value;
+				my $cdn_name = $param->cdn->name;
 				if ( defined( $cdn_domain{$cdn_name} ) ) {
 					next;
 				}
