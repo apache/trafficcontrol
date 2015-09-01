@@ -240,17 +240,29 @@ __PACKAGE__->table("deliveryservice");
   data_type: 'tinyint'
   is_nullable: 1
 
-=head2 dns_bypass_cname
-
-  data_type: 'varchar'
-  is_nullable: 1
-  size: 255
-
 =head2 display_name
 
   data_type: 'varchar'
   is_nullable: 0
   size: 48
+
+=head2 tr_response_headers
+
+  data_type: 'varchar'
+  is_nullable: 1
+  size: 1024
+
+=head2 initial_dispersion
+
+  data_type: 'integer'
+  default_value: 1
+  is_nullable: 1
+
+=head2 dns_bypass_cname
+
+  data_type: 'varchar'
+  is_nullable: 1
+  size: 255
 
 =cut
 
@@ -336,10 +348,14 @@ __PACKAGE__->add_columns(
   { data_type => "varchar", is_nullable => 1, size => 2048 },
   "multi_site_origin",
   { data_type => "tinyint", is_nullable => 1 },
-  "dns_bypass_cname",
-  { data_type => "varchar", is_nullable => 1, size => 255 },
   "display_name",
   { data_type => "varchar", is_nullable => 0, size => 48 },
+  "tr_response_headers",
+  { data_type => "varchar", is_nullable => 1, size => 1024 },
+  "initial_dispersion",
+  { data_type => "integer", default_value => 1, is_nullable => 1 },
+  "dns_bypass_cname",
+  { data_type => "varchar", is_nullable => 1, size => 255 },
 );
 
 =head1 PRIMARY KEY
@@ -510,8 +526,8 @@ __PACKAGE__->belongs_to(
 );
 
 
-# Created by DBIx::Class::Schema::Loader v0.07043 @ 2015-08-31 14:12:31
-# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:4wm07FApzssvgKenOpEXTg
+# Created by DBIx::Class::Schema::Loader v0.07043 @ 2015-09-01 08:18:13
+# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:68S1xLLzon2TgMUMiL++4A
 
 
 # You can replace this text with custom code or comments, and it will be preserved on regeneration
