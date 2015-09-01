@@ -56,25 +56,18 @@ sub gen_crconfig_json {
 	$data_obj->{'stats'}->{'tm_host'}    = $self->req->headers->host;
 	$data_obj->{'stats'}->{'tm_user'}    = $self->current_user()->{username};
 
-	my $cdnname_param_id = $self->db->resultset('Parameter')->search( { name => 'CDN_name', value => $cdn_name } )->get_column('id')->single();
-	if ( defined($cdnname_param_id) ) {
-		@cdn_profiles = $self->db->resultset('ProfileParameter')->search( { parameter => $cdnname_param_id } )->get_column('profile')->all();
-		if ( scalar(@cdn_profiles) ) {
-			$ccr_profile_id =
-				$self->db->resultset('Profile')->search( { id => { -in => \@cdn_profiles }, name => { -like => 'CCR%' } } )->get_column('id')->single();
-			if ( !defined($ccr_profile_id) ) {
-				my $e = Mojo::Exception->throw("No CCR profile found in profile IDs: @cdn_profiles ");
-			}
+	@cdn_profiles = $self->db->resultset('Server')->search( { 'cdn.name' => $cdn_name }, { prefetch => 'cdn' } )->get_column('profile')->all();
+	if ( scalar(@cdn_profiles) ) {
+		$ccr_profile_id =
+			$self->db->resultset('Profile')->search( { id => { -in => \@cdn_profiles }, name => { -like => 'CCR%' } } )->get_column('id')->single();
+		if ( !defined($ccr_profile_id) ) {
+			my $e = Mojo::Exception->throw("No CCR profile found in profile IDs: @cdn_profiles ");
 		}
-		else {
-			my $e = Mojo::Exception->throw( "No profiles found for CDN_name: " . $cdn_name );
-		}
-
-#@cache_rascal_profiles = $self->db->resultset('Profile')->search( { id => { -in => \@cdn_profiles }, name => [{ like => 'EDGE%'}, {like => 'MID%'}, {like => 'RASCAL%'}, {like => 'CDSIS%'} ] } )->get_column('id')->all();
 	}
 	else {
-		my $e = Mojo::Exception->throw( "Parameter ID not found for CDN_name: " . $cdn_name );
+		my $e = Mojo::Exception->throw( "No profiles found for CDN_name: " . $cdn_name );
 	}
+
 	my %condition = ( 'profile_parameters.profile' => $ccr_profile_id, 'config_file' => 'CRConfig.json' );
 	my $rs_config = $self->db->resultset('Parameter')->search( \%condition, { join => 'profile_parameters' } );
 	while ( my $row = $rs_config->next ) {
@@ -92,11 +85,11 @@ sub gen_crconfig_json {
 			$data_obj->{'config'}->{ $row->name } = $row->value;
 		}
 	}
-	my $rs_loc = $self->db->resultset('CachegroupParameter')->search( { 'parameter' => $cdnname_param_id }, { prefetch => 'cachegroup' } );
 
+	my $rs_loc = $self->db->resultset('Cachegroup')->search( { 'cdn.name' => $cdn_name }, { prefetch => 'cdn' } );
 	while ( my $row = $rs_loc->next ) {
-		$data_obj->{'edgeLocations'}->{ $row->cachegroup->name }->{'latitude'}  = $row->cachegroup->latitude + 0;
-		$data_obj->{'edgeLocations'}->{ $row->cachegroup->name }->{'longitude'} = $row->cachegroup->longitude + 0;
+		$data_obj->{'edgeLocations'}->{ $row->name }->{'latitude'}  = $row->latitude + 0;
+		$data_obj->{'edgeLocations'}->{ $row->name }->{'longitude'} = $row->longitude + 0;
 	}
 	my $regex_tracker;
 	my $rs_regexes = $self->db->resultset('Regex')->search( {}, { 'prefetch' => 'type' } );
