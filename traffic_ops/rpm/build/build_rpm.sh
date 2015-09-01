@@ -18,7 +18,6 @@
 
 # Environment Constants
 GITREPO=$WORKSPACE/traffic_ops   # WORKSPACE is the local GIT repository.
-GOPATH="/var/lib/jenkins/go"; export GOPATH  # required for compiling go scripts.
 JOB_DIRECTORY=$WORKSPACE
 DIST="$JOB_DIRECTORY/dist"
 PACKAGE="traffic_ops"
@@ -30,7 +29,7 @@ TRAFFIC_OPS_USER="trafops"
 function buildRpm () {
     echo "Building the rpm."
     echo -e "arch=x86_64\ntm_version=$TM_VERSION" > $RPMBUILD/traffic_ops.properties
-    cd $RPMBUILD && /usr/local/ant/bin/ant
+    cd $RPMBUILD && ant
 
     if [ $? != 0 ]; then
         echo -e "\nRPM BUILD FAILED.\n\n"
@@ -103,12 +102,11 @@ function initBuildArea() {
     /bin/cp -R $GITREPO/install $RPMBUILD
     /bin/cp -R $GITREPO/doc $RPMBUILD
     # build the go scripts for database initialization and tm testing.
-    cd $RPMBUILD/install/bin
+    export GOBIN=$RPMBUILD/install/bin
     echo "Compiling go"
-    /usr/local/go/bin/go build $GITREPO/install/go/src/comcast.com/create_db/create_db.go
-    /usr/local/go/bin/go build $GITREPO/install/go/src/comcast.com/dataload/dataload.go
-    /usr/local/go/bin/go build $GITREPO/install/go/src/comcast.com/systemtest/systemtest.go
-    /usr/local/go/bin/go build $GITREPO/install/go/src/comcast.com/create_db/create_db.go
+    for d in $RPMBUILD/install/go/src/comcast.com/*; do
+	(cd $d; go get; go install)
+    done
     
     cd $RPMBUILD
     # write the build.number file required by ant
