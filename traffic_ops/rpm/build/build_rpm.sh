@@ -63,15 +63,9 @@ function checkEnvironment() {
     echo "Verifying the build configuration environment."
     # 
     # Verify the build project configuration.
-    # The Jenkins configuration for this project should have the GIT_URL
-    # in the SCM settings and the BRANCH and HOTFIX_BRANCH variables 
-    # should be configured in the build parameters section.
+    # The Jenkins configuration for this project should have the 
+    # BRANCH and HOTFIX_BRANCH variables in the build parameters section.
     #
-    if [ -z $GIT_URL ]; then
-	echo "ERROR: GIT_URL is null. Check the project config and insure that git SCM is configured."
-	exit 1;
-    fi
-
     if [ -z "$BRANCH" ]; then
 	echo "Error: The 'BRANCH' variable is not defined, Check the project config for the BRANCH parameter."
 	exit 2
