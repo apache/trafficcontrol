@@ -269,7 +269,7 @@ Users
     }
 
 
-**GET /api/1.1/user/current/jobs.json**
+**GET /api/1.1/user/current/jobs.json?keyword=PURGE**
 
   Retrieves the user's list of content invalidation requests.
 
@@ -323,8 +323,8 @@ Users
            "assetUrl": "",
            "assetType": "file",
            "status": "PENDING",
-           "dsId": "73",
-           "dsXmlId": "cim-jitp",
+           "dsId": "9999",
+           "dsXmlId": "ds-xml-id",
            "username": "peewee",
            "parameters": "TTL:56h",
            "enteredTime": "2015-01-21 18:00:16",
@@ -354,8 +354,6 @@ Invalidating content on the CDN is sometimes necessary when the origin was mis-c
   +======================+========+================================================+
   |``dsId``              | string | Unique Delivery Service ID                     |
   +----------------------+--------+------------------------------------------------+
-  |``dsXmlId``           | string | Unique Delivery Service Name                   |
-  +----------------------+--------+------------------------------------------------+
   |``regex``             | string | Path Regex this should be a                    |
   |                      |        | `PCRE <http://www.pcre.org/>`_ compatible      |
   |                      |        | regular expression for the path to match for   |
@@ -382,8 +380,7 @@ Invalidating content on the CDN is sometimes necessary when the origin was mis-c
   **Request Example** ::
 
     {
-           "dsId": "73",
-           "dsXmlId": "cim-jitp",
+           "dsId": "9999",
            "regex": "/path/to/content.jpg",
            "startTime": "2015-01-27 11:08:37",
            "ttl": 54
