@@ -16,15 +16,6 @@
 # limitations under the License.
 #
 
-# Environment Constants
-GITREPO=$WORKSPACE/traffic_ops   # WORKSPACE is the local GIT repository.
-JOB_DIRECTORY=$WORKSPACE
-DIST="$JOB_DIRECTORY/dist"
-PACKAGE="traffic_ops"
-RELEASES="/var/www/releases"
-RPMBUILD="$JOB_DIRECTORY/rpmbuild"
-TRAFFIC_OPS_USER="trafops"
-
 #----------------------------------------
 function buildRpm () {
     echo "Building the rpm."
@@ -69,10 +60,6 @@ function checkEnvironment() {
 	BRANCH=${BRANCH:-master}
 	HOTFIX_BRANCH=${HOTFIX_BRANCH:-hotfix}
 	BUILD_NUMBER=${BUILD_NUMBER:-0}
-    if [ -z "$HOTFIX_BRANCH" ]; then
-	echo "Error: The 'HOTFIX_BRANCH' variable is not defined, Check the project config for the HOTFIX_BRANCH  parameter."
-	exit 3
-    fi
 
     # set the TM_VERSION environment variable.
     TM_VERSION=$(/bin/cat $GITREPO/app/lib/UI/Utils.pm | /bin/awk '/my \$version/{split($4,a,"\"");split(a[2],b,"-");printf("%s",b[1])}')
@@ -243,6 +230,16 @@ if [ -f /etc/profile ]; then
 fi
 
 checkEnvironment
+
+# Environment Constants
+GITREPO=$WORKSPACE/traffic_ops   # WORKSPACE is the local GIT repository.
+JOB_DIRECTORY=$WORKSPACE
+DIST="$JOB_DIRECTORY/dist"
+PACKAGE="traffic_ops"
+RELEASES="/var/www/releases"
+RPMBUILD="$JOB_DIRECTORY/rpmbuild"
+TRAFFIC_OPS_USER="trafops"
+
 
 echo "=================================================="
 echo "BRANCH: $BRANCH"
