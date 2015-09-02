@@ -911,6 +911,16 @@ To invalidate content:
   3. Click the **Submit** button.
 
 
-Generate DNSSEC Keys
+Manage DNSSEC Keys
 ====================
-TBD
+Traffic Ops provides the ability to manage DNSSEC keys for a CDN.  Through traffic ops a user can perform the following DNSSEC related actions: 
+  1. Enable/Disable DNSSEC for a CDN
+  2. Generate Keys for a CDN
+  3. Generate KSK for TLD (Top Level Domain) of CDN
+
+In addtion to actions that can be performed by a user, traffic ops also does some management of DNSSEC keys systematically such as: 
+  1. Generation of keys for new Delivery Services
+  2. Re-generation of expiring keys
+  3. The is no #3
+
+
