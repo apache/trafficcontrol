@@ -78,13 +78,8 @@ sub register {
 			my $self  = shift;
 			my $ds_id = shift;
 
-			my $ds = $self->db->resultset('Deliveryservice')->search( { 'me.id' => $ds_id }, { prefetch => ['profile'] } )->single();
-			my $cdn_pparam =
-				$self->db->resultset('ProfileParameter')
-				->search( { -and => [ profile => $ds->profile->id, 'parameter.name' => 'CDN_name' ] }, { prefetch => [ 'parameter', 'profile' ] } )
-				->single();
-			my @cdn_profiles =
-				$self->db->resultset('ProfileParameter')->search( { parameter => $cdn_pparam->parameter->id } )->get_column('profile')->all();
+			my $cdn_id = $self->db->resultset('Deliveryservice')->search( { 'me.id' => $ds_id } )->get_column('cdn_id')->single();
+			my @cdn_profiles = $self->db->resultset('Profile')->search( { 'cdn_id' => $cdn_id } )->get_column('id')->all();
 
 			my @offstates;
 			my $offline = $self->db->resultset('Status')->search( { 'name' => 'OFFLINE' } )->get_column('id')->single();
