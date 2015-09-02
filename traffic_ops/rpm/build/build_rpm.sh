@@ -66,11 +66,9 @@ function checkEnvironment() {
     # The Jenkins configuration for this project should have the 
     # BRANCH and HOTFIX_BRANCH variables in the build parameters section.
     #
-    if [ -z "$BRANCH" ]; then
-	echo "Error: The 'BRANCH' variable is not defined, Check the project config for the BRANCH parameter."
-	exit 2
-    fi
-
+	BRANCH=${BRANCH:-master}
+	HOTFIX_BRANCH=${HOTFIX_BRANCH:-hotfix}
+	BUILD_NUMBER=${BUILD_NUMBER:-0}
     if [ -z "$HOTFIX_BRANCH" ]; then
 	echo "Error: The 'HOTFIX_BRANCH' variable is not defined, Check the project config for the HOTFIX_BRANCH  parameter."
 	exit 3
@@ -145,8 +143,14 @@ function getBranch() {
 
 # ---------------------------------------
 function getBuildNumber() {
-    # Keep the existing branch name from the prior release
-    BUILD_NUMBER=$(grep build.number= $BUILD_NUMBER_FILE|cut -d "=" -f 2)
+    # Keep the existing branch name from the prior build
+	# TODO: base the build number on something from the repo
+	if [ -f "$BUILD_NUMBER_FILE" ]; then
+	    BUILD_NUMBER=$(grep build.number= $BUILD_NUMBER_FILE|cut -d "=" -f 2)
+	else
+	    BUILD_NUMBER=0
+	fi
+	
     echo "BUILD_NUMBER: $BUILD_NUMBER"
 }
 
