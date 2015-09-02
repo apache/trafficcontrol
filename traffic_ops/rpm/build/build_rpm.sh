@@ -57,6 +57,7 @@ function checkEnvironment() {
     # The Jenkins configuration for this project should have the 
     # BRANCH and HOTFIX_BRANCH variables in the build parameters section.
     #
+	WORKSPACE=${WORKSPACE:-$HOME/workspace}
 	BRANCH=${BRANCH:-master}
 	HOTFIX_BRANCH=${HOTFIX_BRANCH:-hotfix}
 	BUILD_NUMBER=${BUILD_NUMBER:-0}
