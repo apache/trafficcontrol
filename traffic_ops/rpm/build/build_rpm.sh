@@ -127,7 +127,7 @@ function initLocalGitRepo() {
 
 # ---------------------------------------
 function installRpm() {
-    sudo /bin/rpm -Uvh $DIST/$RPM
+    sudo /usr/bin/yum install -y $DIST/$RPM
     runCarton
     echo "Restarting traffic_ops."
     /usr/bin/sudo service traffic_ops start
