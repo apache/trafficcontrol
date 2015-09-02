@@ -80,7 +80,6 @@ Vagrant.configure(2) do |config|
 	export GOPATH=/home/vagrant/go
 	mkdir -p $GOPATH
 	echo "export GOPATH=$GOPATH" >> /home/vagrant/.bash_profile
-	echo "export WORKSPACE=$HOME/workspace" >> /home/vagrant/.bash_profile
 	# just to make sure anything we created in /home/vagrant still owned by vagrant user
 	chown -R vagrant.vagrant /home/vagrant
 	service mysqld start
