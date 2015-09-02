@@ -100,7 +100,9 @@ func main() {
 	}
 	log.ReplaceLogger(logger)
 
-	runningConfig, nil := getToData(config, true)
+	configChan := make(chan RunningConfig)
+	go getToData(config, true, configChan)
+	runningConfig := <-configChan
 
 	<-time.NewTimer(time.Now().Truncate(time.Duration(config.PollingInterval) * time.Second).Add(time.Duration(config.PollingInterval) * time.Second).Sub(time.Now())).C
 	tickerChan := time.Tick(time.Duration(config.PollingInterval) * time.Second)
@@ -114,12 +116,9 @@ func main() {
 				go sendMetrics(config, &runningConfig, *val)
 				delete(Bps, key)
 			}
+		case runningConfig = <-configChan:
 		case <-tickerConfigChan:
-			// TODO make this async
-			trc, err := getToData(config, false)
-			if err == nil {
-				runningConfig = trc
-			}
+			go getToData(config, false, configChan)
 		case <-tickerChan:
 			for cdnName, urls := range runningConfig.HealthUrls {
 				for _, url := range urls {
@@ -146,7 +145,7 @@ func main() {
 	}
 }
 
-func getToData(config *StartupConfig, init bool) (RunningConfig, error) {
+func getToData(config *StartupConfig, init bool, configChan chan RunningConfig) {
 	var runningConfig RunningConfig
 	tm, err := traffic_ops.Login(config.ToURL, config.ToUser, config.ToPasswd, true)
 	if err != nil {
@@ -155,7 +154,7 @@ func getToData(config *StartupConfig, init bool) (RunningConfig, error) {
 			panic(msg)
 		}
 		log.Error(msg)
-		return runningConfig, err
+		return
 	}
 
 	servers, err := tm.Servers()
@@ -165,7 +164,7 @@ func getToData(config *StartupConfig, init bool) (RunningConfig, error) {
 			panic(msg)
 		}
 		log.Error(msg)
-		return runningConfig, err
+		return
 	}
 
 	runningConfig.CacheGroupMap = make(map[string]string)
@@ -192,7 +191,7 @@ func getToData(config *StartupConfig, init bool) (RunningConfig, error) {
 			panic(msg)
 		}
 		log.Error(msg)
-		return runningConfig, err
+		return
 	}
 
 	for _, param := range parameters {
@@ -232,7 +231,7 @@ func getToData(config *StartupConfig, init bool) (RunningConfig, error) {
 			runningConfig.HealthUrls[cdnName]["DsStats"] = url
 		}
 	}
-	return runningConfig, nil
+	configChan <- runningConfig
 }
 
 func calcMetrics(cdnName string, url string, cacheGroupMap map[string]string, config *StartupConfig, runningConfig *RunningConfig) {
