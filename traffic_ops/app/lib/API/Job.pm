@@ -87,18 +87,17 @@ sub create {
 	my $start_time = $self->req->json->{startTime};
 	my $asset_type = $self->req->json->{assetType};
 
-	use Data::Dumper;
-	$self->app->log->info( "agent is " . $agent );
-
 	if ( !&is_admin($self) && !&is_oper($self) ) {
 
-		# not admin or operations -- only assigned user can purge
-		# select deliveryservice from deliveryservice_tmuser where deliveryservice=$ds_id
-		my $user_id = $self->db->resultset('DeliveryserviceTmuser')->search( { deliveryservice => $ds_id } )->get_column('tm_user_id')->single;
+		# not admin or operations -- only an assigned user can purge
+		my $tm_user = $self->db->resultset('TmUser')->search( { username => $self->current_user()->{username} } )->single();
+		my $tm_user_id = $tm_user->id;
 
-		$self->app->log->info("Deliveryservice $ds_id assigned to $user_id");
-		my $u = $self->db->resultset('TmUser')->search( { username => $self->current_user()->{username} } )->get_column('id')->single();
-		if ( $user_id != $u ) {
+		# select deliveryservice from deliveryservice_tmuser where deliveryservice=$ds_id
+		my $dbh = $self->db->resultset('DeliveryserviceTmuser')->search( { deliveryservice => $ds_id, tm_user_id => $tm_user_id }, { id => 1 } );
+		my $count = $dbh->count();
+
+		if ( $count == 0 ) {
 			$self->alert( { Error => " - You are not authorized to perform this operation!" } );
 			return;
 		}
