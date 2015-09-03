@@ -17,9 +17,11 @@
 ****************************
 Traffic Stats Administration
 ****************************
+
+In order for full integration of Traffic Stats three components need to be installed and configured:  Traffic Stats, InfluxDb, and Grafana.  Below are instructions on installing and configuring each component.
+
 Installation
 ========================
-Traffic Stats consists of three components:  Traffic Stats, InfluxDb, and Grafana.  Below are instructions on installing each component.
 
 **Installing Traffic Stats:**
 
@@ -54,18 +56,39 @@ Configuration
 	     - *statusToMon:*  The status of Traffic Monitor to poll (poll ONLINE or OFFLINE traffic monitors)
 	     - *seelogConfig:*  The absolute path of the seelong config file
 	     - *dailySummaryPollingInterval:* The interval, in seconds, at which Traffic Stats checks to see if daily stats need to be computed and stored.
+	     - *cacheRetentionPolicy:* The default retention policy for cache stats
+	     - *dsRetentionPolicy:* The default retention policy for deliveryservice stats
 
 **Configuring InfluxDb:**
 
-	At a minimum, InfluxDb will need to be configured for clutstering.  Documentation on clustering configuration can be found on the clustering page of the `InfluxDb Website <https://influxdb.com/docs/v0.9/concepts/clustering.html>`_.
+	It is HIGHLY recommended that InfluxDb be configured for clutstering.  Documentation on clustering configuration can be found on the clustering page of the `InfluxDb Website <https://influxdb.com/docs/v0.9/concepts/clustering.html>`_.
+	
+	Once InfluxDb is installed and clustering is configured, Databases and Retention Policies need to be created.  Traffic Stats writes to three different databases: cache_stats, deliveryservice_stats, and daily_stats.  More information about the databases and what data is stored in each can be found on the `overview <../overview/traffic_stats.html>`_ page.
+
+	By default the cache_stats and deliveryservice_stats databases are set to store raw data for 26 hours with a retention policy called "daily" and the daily_stats datatbase is set to store data infintely with a retention policy called "daily_stats".
+
+	*Creating Databases:*
+		``create database cache_stats``
+
+		``create database deliveryservice_stats``
+
+		``create database daily_stats``
+
+	*Creating Retention Policies:*
+		``create retention policy daily on cache_stats duration 26h replication 3 DEFAULT``
+
+		``create retention policy daily on deliveryservice_stats duration 26h replication 3 DEFAULT``
+
+		``create retention policy daily_stats on daily_stats duration INF replication 3 DEFAULT``
+
+
+
 
 **Configuring Grafana:**
 
-	In order for grafana to integrate with Traffic Ops, it will need to be configured to allow anonymous authorization.  More information can be found on the configuration page of the `Grafana Website  <http://docs.grafana.org/installation/configuration/#authanonymous>`_. 
+	In order for Traffic Ops users to see Grafana graphs, Grafan will need to allow anonymous access.  Information on how to configure anonymous access can be found on the configuration page of the `Grafana Website  <http://docs.grafana.org/installation/configuration/#authanonymous>`_. 
 
-	Traffic Ops uses Grafana to display stats data to users.  In order for the graphs to display correctly, you will need to install the ``traffic_ops_scripted.js`` file from ``/traffic_control/traffic_stats/grafana`` to the ``/usr/share/grafana/public/dashboards/`` on the grafana server.  
-
-	More information can be found in the `scripted dashboards <http://docs.grafana.org/reference/scripting/>`_ section of the Grafana documentation.
+	In order for the custom graphs to display correctly (such as graphs for a chosen delivery service), you will need to install the ``traffic_ops_scripted.js`` file from ``/traffic_control/traffic_stats/grafana`` to the ``/usr/share/grafana/public/dashboards/`` on the grafana server.  More information on custom scipted graphs can be found in the `scripted dashboards <http://docs.grafana.org/reference/scripting/>`_ section of the Grafana documentation.
 
 **Configuring Traffic Ops for Traffic Stats:**
 
