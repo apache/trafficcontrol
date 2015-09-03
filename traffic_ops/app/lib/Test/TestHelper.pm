@@ -26,6 +26,7 @@ use Test::More;
 use Test::Mojo;
 use Moose;
 use Schema;
+use Fixtures::Cdn;
 use Fixtures::Deliveryservice;
 use Fixtures::DeliveryserviceTmuser;
 use Fixtures::Asn;

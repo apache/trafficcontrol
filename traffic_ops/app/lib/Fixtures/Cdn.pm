@@ -1,4 +1,4 @@
-package Utils::DeliveryService;
+package Fixtures::Cdn;
 #
 # Copyright 2015 Comcast Cable Communications Management, LLC
 #
@@ -14,28 +14,39 @@ package Utils::DeliveryService;
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-#
-#
+use Moose;
+extends 'DBIx::Class::EasyFixture';
+use namespace::autoclean;
+use Digest::SHA1 qw(sha1_hex);
 
-use Mojo::UserAgent;
-use utf8;
-use Carp qw(cluck confess);
-use Data::Dumper;
+my %definition_for = (
+	cdn1_cdn_name => {
+		new   => 'Cdn',
+		using => {
+			id          => 1,
+			name        => 'cdn1',
+			config_file => 'rascal-config.txt',
+		},
+	},
+	cdn2_cdn_name => {
+		new   => 'Cdn',
+		using => {
+			id          => 2,
+			name        => 'cdn2',
+			config_file => 'rascal-config.txt',
+		},
+	},
+);
 
-sub new {
-	my $self  = {};
-	my $class = shift;
-	my $args  = shift;
-
-	return ( bless( $self, $class ) );
+sub get_definition {
+	my ( $self, $name ) = @_;
+	return $definition_for{$name};
 }
 
-sub build_match {
-	my $self            = shift;
-	my $cdn_name        = shift;
-	my $ds_name         = shift;
-	my $cachegroup_name = shift;
-	my $peak_usage_type = shift;
-	return $cdn_name . ":" . $ds_name . ":" . $cachegroup_name . ":all:" . $peak_usage_type;
+sub all_fixture_names {
+	return keys %definition_for;
 }
+
+__PACKAGE__->meta->make_immutable;
+
 1;
