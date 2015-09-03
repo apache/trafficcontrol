@@ -1,4 +1,5 @@
 package main;
+
 #
 # Copyright 2015 Comcast Cable Communications Management, LLC
 #
@@ -114,6 +115,16 @@ ok $t->post_ok(
 		startTime => $now,
 	}
 )->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } ), 'Create a second purge job?';
+
+ok $t->post_ok(
+	'/api/1.1/user/current/jobs',
+	json => {
+		dsId      => 2,
+		regex     => '/foo2/.*',
+		ttl       => 49,
+		startTime => $now,
+	}
+)->status_is(400)->or( sub { diag $t->tx->res->content->asset->{content}; } ), 'purge job for this service not authorized for this user';
 
 ok $t->post_ok(
 	'/api/1.1/user/current/jobs',
