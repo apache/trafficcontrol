@@ -98,7 +98,7 @@ sub create {
 		my $count = $dbh->count();
 
 		if ( $count == 0 ) {
-			$self->alert( { Error => " - You are not authorized to perform this operation!" } );
+			$self->forbidden();
 			return;
 		}
 	}
