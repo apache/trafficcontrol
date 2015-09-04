@@ -281,6 +281,7 @@ else
     echo "Executing CI Flow"
     buildRpm 
     installRpm
-	downloadWebDeps
+    downloadWebDeps
+    echo "New rpm created here: $DIST/$RPM"
 fi
 
