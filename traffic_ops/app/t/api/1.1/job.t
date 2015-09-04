@@ -124,7 +124,7 @@ ok $t->post_ok(
 		ttl       => 49,
 		startTime => $now,
 	}
-)->status_is(400)->or( sub { diag $t->tx->res->content->asset->{content}; } ), 'purge job for this service not authorized for this user';
+)->status_is(403)->or( sub { diag $t->tx->res->content->asset->{content}; } ), 'purge job for this service not authorized for this user';
 
 ok $t->post_ok(
 	'/api/1.1/user/current/jobs',
