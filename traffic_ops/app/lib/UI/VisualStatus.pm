@@ -78,9 +78,9 @@ sub daily_summary {
 	my $self = shift;
 
 	my @cdn_names;
-	my $rs = $self->db->resultset('Parameter')->search( { name => 'CDN_name' } );
+	my $rs = $self->db->resultset('Cdn');
 	while ( my $row = $rs->next ) {
-		push( @cdn_names, $row->value );
+		push( @cdn_names, $row->name );
 	}
 
 	my $tool_instance =
