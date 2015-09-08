@@ -217,6 +217,31 @@ sub aphys_location {
 	$self->render( json => \%data );
 }
 
+sub adeliveryservice {
+	my $self       = shift;
+	my %data       = ( "aaData" => undef );
+	my %geo_limits = ( 0 => "none", 1 => "CZF", 2 => "CZF + US" );
+	my %protocol   = ( 0 => "http", 1 => "https", 2 => "http/https" );
+
+	my $rs = $self->db->resultset('Deliveryservice')->search( {}, { 
+		prefetch => [ 'type', 'cdn', { profile => { profile_parameters => 'parameter' } } ],
+	 	join => { profile => { profile_parameters => 'parameter' } },
+	 	distinct => 1 } );
+
+	while ( my $row = $rs->next ) {
+		my @line       = [
+			$row->id,                    $row->xml_id,                         $row->org_server_fqdn,        $row->cdn->name,
+			$row->profile->name,         $row->ccr_dns_ttl,                    $yesno{ $row->active },       $row->type->name,
+			$row->dscp,                  $yesno{ $row->signed },               $row->qstring_ignore,         $geo_limits{ $row->geo_limit },
+			$protocol{ $row->protocol }, $yesno{ $row->ipv6_routing_enabled }, $row->range_request_handling, $row->http_bypass_fqdn,
+			$row->dns_bypass_ip,         $row->dns_bypass_ip6,                 $row->dns_bypass_ttl,         $row->miss_lat,
+			$row->miss_long,
+		];
+		push( @{ $data{'aaData'} }, @line );
+	}
+	$self->render( json => \%data );
+}
+
 sub ahwinfo {
 	my $self = shift;
 	my %data = ( "aaData" => undef );
@@ -448,6 +473,7 @@ sub snapshot_crconfig {
 			$self->render( text => "Directory $crconfig_path still doesn't exist! " );
 		}
 	}
+
 	my $cdnname_param_id = $self->db->resultset('Parameter')->search( { name => 'CDN_name', value => $cdn_name } )->get_column('id')->single();
 	if ( defined($cdnname_param_id) ) {
 		my @profiles = $self->db->resultset('ProfileParameter')->search( { parameter => $cdnname_param_id } )->get_column('profile')->all();
