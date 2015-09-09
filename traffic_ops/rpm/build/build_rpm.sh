@@ -74,6 +74,10 @@ function checkEnvironment() {
     TM_VERSION=$(/bin/cat $GITREPO/app/lib/UI/Utils.pm | /bin/awk '/my \$version/{split($4,a,"\"");split(a[2],b,"-");printf("%s",b[1])}')
     RPM="${PACKAGE}-${TM_VERSION}-${BUILD_NUMBER}.x86_64.rpm"
 
+    # verify required tools available in path
+    for pgm in go ant; do
+    	type $pgm 2>/dev/null || { echo "$pgm not found in PATH"; exit 1; }
+    done
     echo "Build environment has been verified."
 }
 
@@ -90,10 +94,12 @@ function initBuildArea() {
     /bin/cp -R $GITREPO/install $RPMBUILD
     /bin/cp -R $GITREPO/doc $RPMBUILD
     # build the go scripts for database initialization and tm testing.
-    export GOBIN=$RPMBUILD/install/bin
+
+    export GOPATH=${GOPATH:-$RPMBUILD/install/go}
+    export GOBIN=${GOBIN:-$RPMBUILD/install/bin}
     echo "Compiling go"
     for d in $RPMBUILD/install/go/src/comcast.com/*; do
-	(cd $d; go get; go install)
+		(cd $d && go get && go install || exit $?)
     done
     
     cd $RPMBUILD
