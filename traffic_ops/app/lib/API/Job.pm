@@ -1,4 +1,5 @@
 package API::Job;
+
 #
 # Copyright 2015 Comcast Cable Communications Management, LLC
 #
@@ -59,7 +60,8 @@ sub index {
 		}
 	}
 	else {
-		$dbh = $self->db->resultset('Job')
+		$dbh =
+			$self->db->resultset('Job')
 			->search( { keyword => $keyword, 'job_user.username' => $username }, { prefetch => [ { 'job_user' => undef } ], join => 'job_user' } );
 		my $row_count = $dbh->count();
 		if ( defined($dbh) && ( $row_count > 0 ) ) {
@@ -84,6 +86,22 @@ sub create {
 	my $ttl        = $self->req->json->{ttl};
 	my $start_time = $self->req->json->{startTime};
 	my $asset_type = $self->req->json->{assetType};
+
+	if ( !&is_admin($self) && !&is_oper($self) ) {
+
+		# not admin or operations -- only an assigned user can purge
+		my $tm_user = $self->db->resultset('TmUser')->search( { username => $self->current_user()->{username} } )->single();
+		my $tm_user_id = $tm_user->id;
+
+		# select deliveryservice from deliveryservice_tmuser where deliveryservice=$ds_id
+		my $dbh = $self->db->resultset('DeliveryserviceTmuser')->search( { deliveryservice => $ds_id, tm_user_id => $tm_user_id }, { id => 1 } );
+		my $count = $dbh->count();
+
+		if ( $count == 0 ) {
+			$self->forbidden();
+			return;
+		}
+	}
 
 	# Just pass "true" in the urgent key to make it urgent.
 	my $urgent = $self->req->json->{urgent};
@@ -154,6 +172,7 @@ sub is_valid {
 		return ( 1, $result->{data} );
 	}
 	else {
+
 		#print "failed " . Dumper( $result->{error} );
 		return ( 0, $result->{error} );
 	}
