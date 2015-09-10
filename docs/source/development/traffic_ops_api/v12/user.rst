@@ -344,7 +344,7 @@ Invalidating content on the CDN is sometimes necessary when the origin was mis-c
 
 .. Note:: This method forces a HTTP *revalidation* of the content, and not a new *GET* - the origin needs to support revalidation according to the HTTP/1.1 specification, and send a ``200 OK`` or ``304 Not Modified`` as applicable.
 
-  Authentication Required: Yes
+Authentication Required: Yes
 
 
   **Request Properties**
