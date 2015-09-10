@@ -368,12 +368,13 @@ Authentication Required: Yes
   |                      |        | with the current time to schedule ASAP.        |
   +----------------------+--------+------------------------------------------------+
   |``ttl``               | int    | Time To Live is how long the revalidation rule |
-  |                      |        | will be active for. It usually makes sense to  |
-  |                      |        | make this the same as the ``Cache-Control``    |
-  |                      |        | header from the origin which sets the object   |
-  |                      |        | time to live in cache (by ``max-age`` or       |
-  |                      |        | ``Expires``). Entering a longer TTL here will  |
-  |                      |        | make the caches do unnecessary work.           |
+  |                      |        | will be active for in hours. It usually makes  |
+  |                      |        | sense to make this the same as the             |
+  |                      |        | ``Cache-Control`` header from the origin which |
+  |                      |        | sets the object time to live in cache          |
+  |                      |        | (by ``max-age`` or ``Expires``). Entering a    |
+  |                      |        | longer TTL here will make the caches do        |
+  |                      |        | unnecessary work.                              |
   +----------------------+--------+------------------------------------------------+
 
   **Request Example** ::
