@@ -65,7 +65,7 @@ Configuration
 	
 	Once InfluxDb is installed and clustering is configured, Databases and Retention Policies need to be created.  Traffic Stats writes to three different databases: cache_stats, deliveryservice_stats, and daily_stats.  More information about the databases and what data is stored in each can be found on the `overview <../overview/traffic_stats.html>`_ page.
 
-	By default the cache_stats and deliveryservice_stats databases are set to store raw data for 26 hours with a retention policy called "daily" and the daily_stats datatbase is set to store data infintely with a retention policy called "daily_stats".
+	By default the cache_stats and deliveryservice_stats databases are set to store raw data for 26 hours with a retention policy called "daily"; the daily_stats datatbase is set to store data infintely with a retention policy called "daily_stats".The following commands can be completed via the influxdb `client <https://influxdb.com/download/index.html>`_ or via the admin user interface (http://influxdb_url:8083).  
 
 	*Creating Databases:*
 		``create database cache_stats``
@@ -81,17 +81,94 @@ Configuration
 
 		``create retention policy daily_stats on daily_stats duration INF replication 3 DEFAULT``
 
-
-
-
+	
 **Configuring Grafana:**
 
-	In order for Traffic Ops users to see Grafana graphs, Grafan will need to allow anonymous access.  Information on how to configure anonymous access can be found on the configuration page of the `Grafana Website  <http://docs.grafana.org/installation/configuration/#authanonymous>`_. 
+	In Traffic Ops the Health -> Graph View tab can be configured to display grafana graphs using influxDb data.  In order for this to work correctly, you will need two things 1) a parameter added to traffic ops with the graph URL (we will discuss later) and 2) the graphs created in grafana.  See below for how to create some simple graphs in grafana.  These instructions assume that InfluxDB has been installed and conifugred and that data has been written to it.  If this is not true, you will not see any graphs.
 
-	In order for the custom graphs to display correctly (such as graphs for a chosen delivery service), you will need to install the ``traffic_ops_scripted.js`` file from ``/traffic_control/traffic_stats/grafana`` to the ``/usr/share/grafana/public/dashboards/`` on the grafana server.  More information on custom scipted graphs can be found in the `scripted dashboards <http://docs.grafana.org/reference/scripting/>`_ section of the Grafana documentation.
+		- Login to grafana as an admin user http://grafana_url:3000/login
+		- Choose Data Sources and then Add New
+		- Name your data source (we name our data sources to match the database name, cache_stats and delivery_service stats)
+		- Change the type to InfluxDb 0.9.x
+		- For URL use https://grafana_url (see below on setting up the httpd proxy)
+		- For Access choose 'direct'
+		- Under the InfluxDB Details section enter the name of your database and enter a username and password for InfluxDB if you created one. If you did not create a username and password for influxdb just enter anything.
+		- Click the 'Add' button to save the Data Source
+		- Click on the 'Home' dropdown at the top of the screen and choose New at the bottom
+		- Click on the green menu bar (with 3 lines) at the top and choose Add Panel -> Graph
+		- Where it says 'No Title (click here)' click and choose edit
+		- Choose your data source at the bottom 
+		- You can have grafana help you create a query, or you can create your own.  Here is a sample query:
+
+			``SELECT sum(value)*1000/6 FROM "bandwidth" WHERE $timeFilter and time < now() - 60s GROUP BY time(60s), cdn``
+		- Once you have the graph the way you want it, click the 'Save Dashboard' button at the top
+		- You should now have a new saved graph 
+
+	In order for Traffic Ops users to see Grafana graphs, Grafana will need to allow anonymous access.  Information on how to configure anonymous access can be found on the configuration page of the `Grafana Website  <http://docs.grafana.org/installation/configuration/#authanonymous>`_. 
+
+	Traffic Ops uses custom dashboards to display information about individual delivery services or cachegroups.  In order for the custom graphs to display correctly, you will need to install the `traffic_ops_scripted.js <https://github.com/Comcast/traffic_control/blob/master/traffic_stats/grafana/traffic_ops_scripted.js>`_ file to the ``/usr/share/grafana/public/dashboards/`` directory on the grafana server.  More information on custom scipted graphs can be found in the `scripted dashboards <http://docs.grafana.org/reference/scripting/>`_ section of the Grafana documentation.
+
+**Configuring httpd proxying for SSL**
+	Currently InfluxDb does not support HTTPS for queries (This should be implemented very soon).  Since Traffic Ops is HTTPS, we need to be able to make HTTPS requests to grafana and influxdb.  We can accomplish the need to use HTTPS by installing httpd with the mod_ssl plugin and then configuring proxying of grafana and influxdb https calls to http. Below are the steps for setting up the https to http proxy.  This should be performed on the same server that is running grafana.
+
+	1. Download and install httpd  `download here <http://httpd.apache.org/download.cgi>`_
+	2. Create SSL certs
+	3. Install and configure mod_ssl per `this link <http://dev.antoinesolutions.com/apache-server/mod_ssl>`_ 
+	4. Create a file called grafana_proxy.conf in the /etc/httpd/conf.d directory
+	5. Add the following information to grafana_proxy.conf:
+			
+	::
+		
+				ProxyPass /dashboard http://ipcdn-dev-grafana-01.cdnlab.comcast.net:3000/dashboard
+				ProxyPass /css http://ipcdn-dev-grafana-01.cdnlab.comcast.net:3000/css
+				ProxyPass /app http://ipcdn-dev-grafana-01.cdnlab.comcast.net:3000/app
+				ProxyPass /api http://ipcdn-dev-grafana-01.cdnlab.comcast.net:3000/api
+				ProxyPass /img http://ipcdn-dev-grafana-01.cdnlab.comcast.net:3000/img
+				ProxyPass /fonts http://ipcdn-dev-grafana-01.cdnlab.comcast.net:3000/fonts
+				ProxyPass /public http://ipcdn-dev-grafana-01.cdnlab.comcast.net:3000/public
+				ProxyPass /login http://ipcdn-dev-grafana-01.cdnlab.comcast.net:3000/login
+				ProxyPass /logout http://ipcdn-dev-grafana-01.cdnlab.comcast.net:3000/logout
+				ProxyPassReverse / http://ipcdn-dev-grafana-01.cdnlab.comcast.net:3000/
+				   
+				<Proxy balancer://influxDb>
+				BalancerMember http://<influxDb1>:8086
+				BalancerMember http://<influxDb2>:8086
+				BalancerMember http://<influxDb3>:8086
+				</Proxy>
+				ProxyPass /query balancer://influxDb/query
+	
+		
+	6. Restart httpd ``service httpd restart``
+	7. Test grafana works by connect to grafana via https ``https://grafanaUrl``
+
 
 **Configuring Traffic Ops for Traffic Stats:**
-
 	- The influxDb servers need to be added to Traffic Ops with profile = InfluxDb.  Make sure to use port 8086 in the configuration.
 	- The traffic stats server should be added to Traffic Ops with profile = Traffic Stats.
 	- Parameters for which stats will be collected are added with the release, but any changes can be made via parameters that are assigned to the Traffic Stats profile.
+
+**Configuring Traffic Ops to use Grafana Dashboards**
+	To configure Traffic Ops to use Grafana Dashboards, you need to enter the following parameters and assign them to the GLOBAL profile.  This assumes you followed the above instructions to install and configure InfluxDB and Grafana.  You will need to place 'cdn-stats' and 'deliveryservice-stats' with the name of your dashboards.
+
+	+---------------------------+------------------------------------------------------------------------------------------------+
+	|       parameter name      |                                        parameter value                                         |
+	+===========================+================================================================================================+
+	| all_graph_url             | https://<grafana_url>/dashboard/db/deliveryservice-stats                                       |
+	+---------------------------+------------------------------------------------------------------------------------------------+
+	| cachegroup_graph_url      | https://<grafanaHost>/dashboard/script/traffic_ops_scripted.js?type=cachegroup&which=          |
+	+---------------------------+------------------------------------------------------------------------------------------------+
+	| deliveryservice_graph_url | https://<grafanaHost>/dashboard/script/traffic_ops_scripted.js?type=deliveryservice&which=     |
+	+---------------------------+------------------------------------------------------------------------------------------------+
+	| server_graph_url          | https://<grafanaHost>/dashboard/script/traffic_ops_scripted.js?type=server&which=              |
+	+---------------------------+------------------------------------------------------------------------------------------------+
+	| visual_status_panel_1     | https://<grafanaHost>/dashboard/solo/db/cdn-stats?panelId=2&fullscreen&from=now-24h&to=now-60s |
+	+---------------------------+------------------------------------------------------------------------------------------------+
+	| visual_status_panel_2     | https://<grafanaHost>/dashboard/solo/db/cdn-stats?panelId=1&fullscreen&from=now-24h&to=now-60s |
+	+---------------------------+------------------------------------------------------------------------------------------------+
+
+
+         
+       
+         		
+           
+        	
