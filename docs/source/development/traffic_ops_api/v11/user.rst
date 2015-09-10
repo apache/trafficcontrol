@@ -364,9 +364,8 @@ Authentication Required: Yes
   |                      |        | an overload condition of the origin.           |
   +----------------------+--------+------------------------------------------------+
   |``startTime``         | string | Start Time is the time when the revalidation   |
-  |                      |        | rule will be made active. It is pre-populated  |
-  |                      |        | with the current time, leave as is to schedule |
-  |                      |        | ASAP.                                          |
+  |                      |        | rule will be made active. Populate             |
+  |                      |        | with the current time to schedule ASAP.        |
   +----------------------+--------+------------------------------------------------+
   |``ttl``               | int    | Time To Live is how long the revalidation rule |
   |                      |        | will be active for. It usually makes sense to  |
