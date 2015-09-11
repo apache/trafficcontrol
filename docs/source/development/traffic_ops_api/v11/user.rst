@@ -269,7 +269,7 @@ Users
     }
 
 
-**GET /api/1.1/user/current/jobs.json**
+**GET /api/1.1/user/current/jobs.json?keyword=PURGE**
 
   Retrieves the user's list of content invalidation requests.
 
@@ -323,8 +323,8 @@ Users
            "assetUrl": "",
            "assetType": "file",
            "status": "PENDING",
-           "dsId": "73",
-           "dsXmlId": "cim-jitp",
+           "dsId": "9999",
+           "dsXmlId": "ds-xml-id",
            "username": "peewee",
            "parameters": "TTL:56h",
            "enteredTime": "2015-01-21 18:00:16",
@@ -344,7 +344,7 @@ Invalidating content on the CDN is sometimes necessary when the origin was mis-c
 
 .. Note:: This method forces a HTTP *revalidation* of the content, and not a new *GET* - the origin needs to support revalidation according to the HTTP/1.1 specification, and send a ``200 OK`` or ``304 Not Modified`` as applicable.
 
-  Authentication Required: Yes
+Authentication Required: Yes
 
 
   **Request Properties**
@@ -353,8 +353,6 @@ Invalidating content on the CDN is sometimes necessary when the origin was mis-c
   | Parameter            | Type   | Description                                    |
   +======================+========+================================================+
   |``dsId``              | string | Unique Delivery Service ID                     |
-  +----------------------+--------+------------------------------------------------+
-  |``dsXmlId``           | string | Unique Delivery Service Name                   |
   +----------------------+--------+------------------------------------------------+
   |``regex``             | string | Path Regex this should be a                    |
   |                      |        | `PCRE <http://www.pcre.org/>`_ compatible      |
@@ -366,24 +364,23 @@ Invalidating content on the CDN is sometimes necessary when the origin was mis-c
   |                      |        | an overload condition of the origin.           |
   +----------------------+--------+------------------------------------------------+
   |``startTime``         | string | Start Time is the time when the revalidation   |
-  |                      |        | rule will be made active. It is pre-populated  |
-  |                      |        | with the current time, leave as is to schedule |
-  |                      |        | ASAP.                                          |
+  |                      |        | rule will be made active. Populate             |
+  |                      |        | with the current time to schedule ASAP.        |
   +----------------------+--------+------------------------------------------------+
   |``ttl``               | int    | Time To Live is how long the revalidation rule |
-  |                      |        | will be active for. It usually makes sense to  |
-  |                      |        | make this the same as the ``Cache-Control``    |
-  |                      |        | header from the origin which sets the object   |
-  |                      |        | time to live in cache (by ``max-age`` or       |
-  |                      |        | ``Expires``). Entering a longer TTL here will  |
-  |                      |        | make the caches do unnecessary work.           |
+  |                      |        | will be active for in hours. It usually makes  |
+  |                      |        | sense to make this the same as the             |
+  |                      |        | ``Cache-Control`` header from the origin which |
+  |                      |        | sets the object time to live in cache          |
+  |                      |        | (by ``max-age`` or ``Expires``). Entering a    |
+  |                      |        | longer TTL here will make the caches do        |
+  |                      |        | unnecessary work.                              |
   +----------------------+--------+------------------------------------------------+
 
   **Request Example** ::
 
     {
-           "dsId": "73",
-           "dsXmlId": "cim-jitp",
+           "dsId": "9999",
            "regex": "/path/to/content.jpg",
            "startTime": "2015-01-27 11:08:37",
            "ttl": 54

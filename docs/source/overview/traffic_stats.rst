@@ -24,12 +24,18 @@ Traffic Stats is a collection of utilities written in `Go <http.golang.org>`_ th
 
 |arrow| Write Traffic Stats
 ---------------------------
-Write Traffic Stats gathers stat data for Edge Caches and Delivery Services at a configurable interval from the Traffic Monitor API's and stores the data in InfluxDb. 
+Write Traffic Stats gathers stat data for Edge Caches and Delivery Services at a configurable interval from the Traffic Monitor API's and stores the data in InfluxDb.  Write Traffic Stats stores data in two seperate databases: cache_stats and deliveryservice_stats. 
+
+	- cache_stats:  The cache_stats database is used to store data gathered from edge caches.  The `measurements <https://influxdb.com/docs/v0.9/concepts/glossary.html#measurement>`_ stored by cache are: bandwidth, maxKbps, and client_connections (ats.proxy.process.http.current_client_connections).  Cache Data is stored with `tags <https://influxdb.com/docs/v0.9/concepts/glossary.html#tag>`_ for hostname, cachegroup, and CDN.  Data can be queried using tags.
+
+
+	- deliveryservice_stats:  The deliveryservice_stats database is used to store data for delivery services.  The measurements stored by delivery service are:  kbps, status_4xx, status_5xx, tps_2xx, tps_3xx, tps_4xx, tps_5xx, and tps_total.  Delivery Service stats are stored with tags for cachegroup, CDN, and Deliveryservice xml_id.  
 
 |arrow| TS Daily Summary
 --------------------------
-TS (Traffic Stats) Daily Summary is a process that runs once a day, gathers summary data for the previous day from InfluxDb, and stores it in the Traffic Ops Database.  The stats that are currently summarized are Max Bandwidth and Bytes Served.
+TS (Traffic Stats) Daily Summary is a process that runs once a day, gathers summary data for the previous day from InfluxDb, and stores it in the Traffic Ops Database as well as the daily_stats table in influxDb.  The stats that are currently summarized are Max Bandwidth and Bytes Served and they are stored by CDN.
 
+------------
 
 Any number of Traffic Stats instances may run on a given CDN to collect metrics from Traffic Monitor, however, integration with a long term metrics storage system is implementation dependent. 
 

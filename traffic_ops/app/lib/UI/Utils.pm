@@ -30,7 +30,7 @@ use Data::Dumper;
 # A release gets cut with just a $major.$minor
 # The presence of a $micro means this version (branch) has been patched and released with that patch.
 # Lowest $micro number, when present is 1.
-my $version = "1.1.5-dev";
+my $version = "1.1.5";
 
 require Exporter;
 our @ISA = qw(Exporter);
@@ -63,15 +63,17 @@ sub tm_url {
 sub trim_whitespace() {
 	my $param = shift;
 
-	if (ref($param) eq 'HASH') {
-		foreach my $key (keys %{$param}) {
+	if ( ref($param) eq 'HASH' ) {
+		foreach my $key ( keys %{$param} ) {
 			${$param}{$key} =~ s/^\s+|\s+$//g;
 		}
-	} elsif (ref($param) eq 'ARRAY') {
-		for ($i=0; $i <= $#{$param}; $i++) {
-		   $param->[$i] =~ s/^\s+|\s+$//g;
+	}
+	elsif ( ref($param) eq 'ARRAY' ) {
+		for ( $i = 0; $i <= $#{$param}; $i++ ) {
+			$param->[$i] =~ s/^\s+|\s+$//g;
 		}
-	} else {
+	}
+	else {
 		$param =~ s/^\s+|\s+$//g;
 	}
 
