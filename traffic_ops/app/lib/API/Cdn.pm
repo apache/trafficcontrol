@@ -28,6 +28,22 @@ use UI::DeliveryService;
 use MojoPlugins::Response;
 use Common::ReturnCodes qw(SUCCESS ERROR);
 
+sub index {
+	my $self = shift;
+	my @data;
+	my $orderby = $self->param('orderby') || "name";
+	my $rs_data = $self->db->resultset("Cdn")->search( undef, { order_by => $orderby } );
+	while ( my $row = $rs_data->next ) {
+		push(
+			@data, {
+				"id"          => $row->id,
+				"name"        => $row->name,
+			}
+		);
+	}
+	$self->success( \@data );
+}
+
 sub configs_monitoring {
 	my $self      = shift;
 	my $cdn_name  = $self->param('name');

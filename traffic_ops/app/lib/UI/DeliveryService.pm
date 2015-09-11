@@ -488,11 +488,9 @@ sub header_rewrite {
 		my @servers = $self->db->resultset('DeliveryserviceServer')->search( { deliveryservice => $ds_id } )->get_column('server')->all();
 		if ( $tier eq "mid" ) {
 			my $mtype_id = &type_id( $self, 'MID' );
-			my $param =
-				$self->db->resultset('ProfileParameter')
-				->search( { -and => [ 'parameter.name' => 'CDN_name', 'parameter.name' => 'CDN_name', 'me.profile' => $ds_profile ] },
-				{ prefetch => [ 'parameter', 'profile' ] } )->single();
-			$cdn_name = $param->parameter->value;
+
+			my $param = $self->db->resultset('Profile')->search( { 'me.id' => $ds_profile }, { prefetch => 'cdn' } )->single();
+			$cdn_name = $param->cdn->name;
 			@servers = $self->db->resultset('Server')->search( { type => $mtype_id } )->get_column('id')->all();
 		}
 		my @profiles = $self->db->resultset('Server')->search( { id => { -in => \@servers } } )->get_column('profile')->all();
@@ -500,11 +498,8 @@ sub header_rewrite {
 			my $link = $self->db->resultset('ProfileParameter')->search( { profile => $profile_id, parameter => $param_id } )->single();
 			if ( !defined($link) ) {
 				if ($cdn_name) {
-					my $p_cdn_param =
-						$self->db->resultset('ProfileParameter')
-						->search( { -and => [ 'parameter.name' => 'CDN_name', 'parameter.name' => 'CDN_name', 'me.profile' => $profile_id ] },
-						{ prefetch => [ 'parameter', 'profile' ] } )->single();
-					if ( $p_cdn_param->parameter->value ne $cdn_name ) {
+					my $p_cdn_param = $self->db->resultset('Profile')->search( { 'me.id' => $profile_id }, { prefetch => 'cdn'} )->single();
+					if ( $p_cdn_param->cdn->name ne $cdn_name ) {
 						next;
 					}
 				}
