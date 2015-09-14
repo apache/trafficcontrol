@@ -19,16 +19,19 @@
 #----------------------------------------
 function buildRpm () {
     echo "Building the rpm."
-    echo -e "arch=x86_64\ntm_version=$TM_VERSION" > $RPMBUILD/traffic_ops.properties
-    cd $RPMBUILD && ant
+
+    cd $RPMBUILD && \
+	    rpmbuild --define "_topdir $(pwd)" \
+		     --define "traffic_ops_version $TM_VERSION" \
+		     --define "build_number $BUILD_NUMBER" -ba SPECS/traffic_ops.spec
 
     if [ $? != 0 ]; then
         echo -e "\nRPM BUILD FAILED.\n\n"
-        exit $?
+        exit 1
     else
 	echo
 	echo "========================================================================================"
-	echo "RPM BUILD SUCCEEDED, See $BUILDDIR/dist/$RPM for the newly built rpm."
+	echo "RPM BUILD SUCCEEDED, See $DIST/$RPM for the newly built rpm."
 	echo "========================================================================================"
 	echo
 	if [ $BRANCH != "master" ]; then
@@ -39,7 +42,7 @@ function buildRpm () {
 	    mkdir $DIST
 	fi
 
-	/bin/cp $RPMBUILD/dist/*.rpm $DIST
+	/bin/cp $RPMBUILD/RPMS/*/*.rpm $DIST/.
     fi
 }
 
@@ -57,25 +60,28 @@ function checkEnvironment() {
     # The Jenkins configuration for this project should have the 
     # BRANCH and HOTFIX_BRANCH variables in the build parameters section.
     #
-	WORKSPACE=${WORKSPACE:-$HOME/workspace}
-	BRANCH=${BRANCH:-master}
-	HOTFIX_BRANCH=${HOTFIX_BRANCH:-hotfix}
-	BUILD_NUMBER=${BUILD_NUMBER:-0}
+    # get traffic_control src path -- relative to build_rpm.sh script
+    local srcroot=$(readlink -f $(dirname $0)/../../..)
 
-	GITREPO=$WORKSPACE/traffic_ops   # WORKSPACE is the local GIT repository.
-	JOB_DIRECTORY=$WORKSPACE
-	DIST="$JOB_DIRECTORY/dist"
-	PACKAGE="traffic_ops"
-	RELEASES="/var/www/releases"
-	RPMBUILD="$JOB_DIRECTORY/rpmbuild"
-	TRAFFIC_OPS_USER="trafops"
+    # set reasonable defaults for things not explicitly set in environment
+    WORKSPACE=${WORKSPACE:-$srcroot}
+    BRANCH=${BRANCH:-master}
+    HOTFIX_BRANCH=${HOTFIX_BRANCH:-hotfix}
+    BUILD_NUMBER=${BUILD_NUMBER:-0}
+
+    GITREPO=$WORKSPACE/traffic_ops   # WORKSPACE is the local GIT repository.
+    DIST="$WORKSPACE/dist"
+    PACKAGE="traffic_ops"
+    RELEASES="/var/www/releases"
+    RPMBUILD="$WORKSPACE/rpmbuild"
+    TRAFFIC_OPS_USER="trafops"
 
     # set the TM_VERSION environment variable.
     TM_VERSION=$(/bin/cat $GITREPO/app/lib/UI/Utils.pm | /bin/awk '/my \$version/{split($4,a,"\"");split(a[2],b,"-");printf("%s",b[1])}')
     RPM="${PACKAGE}-${TM_VERSION}-${BUILD_NUMBER}.x86_64.rpm"
 
     # verify required tools available in path
-    for pgm in go ant; do
+    for pgm in go ; do
     	type $pgm 2>/dev/null || { echo "$pgm not found in PATH"; exit 1; }
     done
     echo "Build environment has been verified."
@@ -84,33 +90,40 @@ function checkEnvironment() {
 # ---------------------------------------
 function initBuildArea() {
     echo "Initializing the build area."
-    cd $JOB_DIRECTORY 
+    cd $WORKSPACE 
     #/bin/mv $RPMBUILD/carton /vol1/tmp
     /bin/rm -rf $RPMBUILD && mkdir $RPMBUILD
-    #/bin/mv /vol1/tmp/carton $RPMBUILD
 
-
-    /bin/cp -R $GITREPO/rpm/* $RPMBUILD
-    /bin/cp -R $GITREPO/install $RPMBUILD
-    /bin/cp -R $GITREPO/doc $RPMBUILD
+    /bin/mkdir $RPMBUILD/{SPECS,SOURCES,RPMS,SRPMS,BUILD,BUILDROOT}
+    /bin/cp -r $GITREPO/rpm/* $RPMBUILD/.
     # build the go scripts for database initialization and tm testing.
 
     export GOPATH=${GOPATH:-$RPMBUILD/install/go}
     export GOBIN=${GOBIN:-$RPMBUILD/install/bin}
     echo "Compiling go"
-    for d in $RPMBUILD/install/go/src/comcast.com/*; do
-		(cd $d && go get && go install || exit $?)
+    for d in $GITREPO/install/go/src/comcast.com/*; do
+	    if [ ! -d "$d" ]; then
+		    echo "Could not find $d"
+		    exit 1
+	    fi
+	    (cd $d && go get && go install || { echo "Could not compile $d"; exit 1; } )
     done
     
     cd $RPMBUILD
-    # write the build.number file required by ant
-    echo "build.number=$BUILD_NUMBER" > build.number
 
-    # setup the links to the source files in the GITREPO
-    for d in etc app; do
-	mkdir $d
-	/bin/cp -R $GITREPO/$d/* $d
+    /bin/cp traffic_ops.spec SPECS/. || { echo "Could not copy $RPMBUILD/traffic_ops.spec to $(pwd)/SPECS"; exit 1; }
+
+
+    # tar/gzip the source
+    local target=traffic_ops-$TM_VERSION
+    local srcpath=$(pwd)/SOURCES/$target
+    /bin/mkdir $srcpath || { echo "Could not create $srcpath"; exit 1; }
+
+    for d in etc app install doc; do
+	    /bin/cp -r $GITREPO/$d  $srcpath/. || { echo "Could not copy $GITREPO/$d to $srcpath"; exit 1; }
     done
+    cd SOURCES
+    tar czvf $target.tgz $target || { echo "Could not create tar archive $target.tgz from $(pwd)/$target"; exit 1; }
 
     echo "The build area has been initialized."
 }
@@ -187,7 +200,7 @@ function runCarton() {
 # ---------------------------------------
 function runGooseUp() {
     echo "Executing Goose Up."
-    cd $JOB_DIRECTORY
+    cd $WORKSPACE
 	./install/bin/goose up
 }
 
