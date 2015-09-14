@@ -50,8 +50,8 @@ $(function () {
 			},
 			{
 				"mRender": function (data, type, full) {
-					if (full[13] && full[14]) {
-						return "<a href='" + full[13] + "'><img src='/images/" + full[14] + "' width=12></a>";
+					if (full[14] && full[15]) {
+						return "<a href='" + full[14] + "'><img src='/images/" + full[15] + "' width=12></a>";
 					}
 					else {
 						return "";
@@ -69,25 +69,25 @@ $(function () {
 			}, 
 			{
 				"mRender": function (data, type, full) {
-					if (full[10] != undefined) {
-						return "<a href='https://" + full[10] + "' target=\"_blank\">" + full[10] + "</a>";
-					} else {
-						return "";
-					}
-				},
-				"bUseRendered": false,
-				"aTargets": [10]
-			},
-			{
-				"mRender": function (data, type, full) {
 					if (full[11] != undefined) {
-						return "<a href='ssh://<%= $user %>@" + full[11] + "'>" + full[11] + "</a>";
+						return "<a href='https://" + full[11] + "' target=\"_blank\">" + full[11] + "</a>";
 					} else {
 						return "";
 					}
 				},
 				"bUseRendered": false,
 				"aTargets": [11]
+			},
+			{
+				"mRender": function (data, type, full) {
+					if (full[12] != undefined) {
+						return "<a href='ssh://<%= $user %>@" + full[12] + "'>" + full[12] + "</a>";
+					} else {
+						return "";
+					}
+				},
+				"bUseRendered": false,
+				"aTargets": [12]
 			} 
 			],
 			"sAjaxSource": "aadata/Server"
@@ -108,6 +108,7 @@ $(function () {
 			<th>Host Name</th>
 			<th>Domain Name</th>
 			<th></th>
+			<th>CDN</th>
 			<th>Cache group</th>
 			<th>Location</th>
 			<th>IPAddr</th>

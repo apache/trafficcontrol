@@ -391,7 +391,7 @@ sub api_routes {
 		->to( 'Cachegroup#available_for_parameter', namespace => $namespace );
 
 	# -- CDN -- #NEW
-	$r->get( "/api/$version/cdn" => [ format => [qw(json)] ] )->over( authenticated => 1 )->to( 'Cdn#index', namespace => $namespace );
+	$r->get( "/api/$version/cdns" => [ format => [qw(json)] ] )->over( authenticated => 1 )->to( 'Cdn#index', namespace => $namespace );
 
 	# -- CHANGE LOG - #NEW
 	$r->get( "/api/$version/logs"            => [ format => [qw(json)] ] )->over( authenticated => 1 )->to( 'ChangeLog#index', namespace => $namespace );

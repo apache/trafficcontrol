@@ -143,7 +143,7 @@ sub aserver {
 	my $server_select = shift;
 	my %data          = ( "aaData" => undef );
 
-	my $rs = $self->db->resultset('Server')->search( undef, { prefetch => [ 'cachegroup', 'type', 'profile', 'status', 'phys_location' ] } );
+	my $rs = $self->db->resultset('Server')->search( undef, { prefetch => [ 'cdn', 'cachegroup', 'type', 'profile', 'status', 'phys_location' ] } );
 	while ( my $row = $rs->next ) {
 
 		my @line;
@@ -177,9 +177,8 @@ sub aserver {
 			}
 
 			@line = [
-				$row->id,                  $row->host_name,       $row->domain_name, "dummy",            $row->cachegroup->name,
-				$row->phys_location->name, $row->ip_address,      $row->ip6_address, $row->status->name, $row->profile->name,
-				$row->ilo_ip_address,      $row->mgmt_ip_address, $row->type->name,  $aux_url,           $img
+				$row->id, $row->host_name, $row->domain_name, "dummy", $row->cdn->name, $row->cachegroup->name, $row->phys_location->name, $row->ip_address, 
+				$row->ip6_address, $row->status->name, $row->profile->name, $row->ilo_ip_address, $row->mgmt_ip_address, $row->type->name, $aux_url, $img
 			];
 		}
 		push( @{ $data{'aaData'} }, @line );
