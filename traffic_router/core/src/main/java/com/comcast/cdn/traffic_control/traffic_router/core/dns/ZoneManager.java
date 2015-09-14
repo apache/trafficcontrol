@@ -361,7 +361,8 @@ public class ZoneManager extends Resolver {
 
 	private static List<Record> fillZones(final Map<String, List<Record>> zoneMap, final Map<String, DeliveryService> dsMap, final CacheRegister data, final List<Record> superRecords, final LoadingCache<ZoneKey, Zone> zc, final ExecutorService initExecutor)
 			throws IOException {
-
+		final String hostname = InetAddress.getLocalHost().getHostName().replaceAll("\\..*", "");
+		
 		final List<Record> records = new ArrayList<Record>();
 
 		for (String domain : zoneMap.keySet()) {
@@ -369,14 +370,14 @@ public class ZoneManager extends Resolver {
 				zoneMap.get(domain).addAll(superRecords);
 			}
 
-			records.addAll(createZone(domain, zoneMap, dsMap, data, zc, initExecutor));
+			records.addAll(createZone(domain, zoneMap, dsMap, data, zc, initExecutor, hostname));
 		}
 
 		return records;
 	}
 
 	private static List<Record> createZone(final String domain, final Map<String, List<Record>> zoneMap, final Map<String, DeliveryService> dsMap, 
-			final CacheRegister data, final LoadingCache<ZoneKey, Zone> zc, final ExecutorService initExecutor) throws IOException {
+			final CacheRegister data, final LoadingCache<ZoneKey, Zone> zc, final ExecutorService initExecutor, final String hostname) throws IOException {
 		final DeliveryService ds = dsMap.get(domain);
 		final JSONObject trafficRouters = data.getTrafficRouters();
 		final JSONObject config = data.getConfig();
@@ -395,7 +396,6 @@ public class ZoneManager extends Resolver {
 		final Name name = newName(domain);
 		LOGGER.debug("Generating zone data for " + name);
 		final List<Record> list = zoneMap.get(domain);
-		final String hostname = InetAddress.getLocalHost().getHostName().replaceAll("\\..*", "");
 		final Name admin = newName(ZoneUtils.getString(soa, "admin", "traffic_control"), domain);
 		list.add(new SOARecord(name, DClass.IN, 
 				ZoneUtils.getLong(ttl, "SOA", 86400), getGlueName(ds, trafficRouters.optJSONObject(hostname), name, hostname), admin,
