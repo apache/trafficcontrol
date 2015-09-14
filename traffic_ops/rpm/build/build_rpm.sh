@@ -67,7 +67,7 @@ function checkEnvironment() {
     WORKSPACE=${WORKSPACE:-$srcroot}
     BRANCH=${BRANCH:-master}
     HOTFIX_BRANCH=${HOTFIX_BRANCH:-hotfix}
-    BUILD_NUMBER=${BUILD_NUMBER:-0}
+    BUILD_NUMBER=${BUILD_NUMBER:-$(getBuildNumber)}
 
     GITREPO=$WORKSPACE/traffic_ops   # WORKSPACE is the local GIT repository.
     DIST="$WORKSPACE/dist"
@@ -158,15 +158,9 @@ function getBranch() {
 
 # ---------------------------------------
 function getBuildNumber() {
-    # Keep the existing branch name from the prior build
-	# TODO: base the build number on something from the repo
-	if [ -f "$BUILD_NUMBER_FILE" ]; then
-	    BUILD_NUMBER=$(grep build.number= $BUILD_NUMBER_FILE|cut -d "=" -f 2)
-	else
-	    BUILD_NUMBER=0
-	fi
-	
-    echo "BUILD_NUMBER: $BUILD_NUMBER"
+	local commits=$(git rev-list HEAD | wc -l)
+	local sha=$(git rev-parse --short=8 HEAD)
+	echo "$commits.$sha"
 }
 
 # ---------------------------------------
