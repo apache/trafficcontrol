@@ -459,67 +459,6 @@ sub aadata {
 	}
 }
 
-sub snapshot_crconfig {
-	my $self          = shift;
-	my $cdn_name      = $self->param('cdnname');
-	my $crconfig_path = "../public/CRConfig-Snapshots/$cdn_name";
-	my $prev_crconfig = "$crconfig_path/CRConfig.xml";
-	my $tm_text;
-
-	if ( !( -d $crconfig_path ) ) {
-		`mkdir -p $crconfig_path`;
-		if ( !( -d $crconfig_path ) ) {
-			$self->render( text => "Directory $crconfig_path still doesn't exist! " );
-		}
-	}
-
-	my $cdnname_param_id = $self->db->resultset('Parameter')->search( { name => 'CDN_name', value => $cdn_name } )->get_column('id')->single();
-	if ( defined($cdnname_param_id) ) {
-		my @profiles = $self->db->resultset('ProfileParameter')->search( { parameter => $cdnname_param_id } )->get_column('profile')->all();
-		if ( scalar(@profiles) ) {
-			my $ccr_profile_id =
-				$self->db->resultset('Profile')->search( { id => { -in => \@profiles }, name => { -like => 'CCR%' } } )->get_column('id')->single();
-			if ( defined($ccr_profile_id) ) {
-				$tm_text = Configfiles::gen_ccr_xml_file( $self, $ccr_profile_id );
-				if ( !( -e $prev_crconfig ) ) {
-					open my $fh, '>', "$crconfig_path/CRConfig.xml" || $self->render( text => "Could not open file: $crconfig_path/CRConfig.xml" );
-					print $fh $tm_text;
-					close $fh;
-				}
-			}
-			else {
-				$self->render( text => "No CCR profile found in profile IDs: @profiles " );
-			}
-		}
-		else {
-			$self->render( text => "No profiles found for CDN_name: " . $cdn_name );
-		}
-	}
-	else {
-		$self->render( text => "Parameter ID not found for CDN_name: " . $cdn_name );
-	}
-
-	my $prev_crconfig_text = "";
-	my $ccr_profile_id;
-	open my $prev_fh, '<', $prev_crconfig || die $self->render( text => "Previous CRConfig $prev_crconfig doesn't exist! " );
-	$prev_crconfig_text = do { local $/; <$prev_fh> };
-	close($prev_fh);
-
-	my $diff .= Configfiles::diff_ccr_files( $self, $tm_text, $prev_crconfig_text );
-	( my @diff_lines ) = split( /\n/, $diff );
-	my @clean_lines;
-	foreach my $line (@diff_lines) {
-		$line =~ s/<b>//g;
-		$line =~ s/<\/b>//g;
-		push( @clean_lines, $line );
-	}
-	$self->stash(
-		diff     => \@clean_lines,
-		cdn_name => $cdn_name,
-		tm_text  => $tm_text,
-	);
-}
-
 #### JvD Start new UI stuff
 sub loginpage {
 	my $self = shift;
