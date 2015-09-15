@@ -186,7 +186,7 @@ requires 'Params::Util';
 requires 'Parse::CPAN::Meta';
 requires 'Path::Class';
 requires 'Perl::OSType';
-requires 'Perl::Tidy';
+requires 'Perl::Tidy','==20150815';
 requires 'PerlIO::utf8_strict';
 requires 'PerlIO::via::Timeout';
 requires 'Pod::Coverage::CountParents';
