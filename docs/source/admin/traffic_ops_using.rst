@@ -914,7 +914,7 @@ To invalidate content:
 Manage DNSSEC Keys
 ====================
 
-In order to support `DNSSEC <https://en.wikipedia.org/wiki/Domain_Name_System_Security_Extensions>`_ in Traffic Router, Traffic Ops provides some actions for managing DNSSEC keys for a CDN and associated Delivery Services.  DNSSEC Keys consist of a Key Signing Keys (KSK) which are used to sign other DNSKEY records as well as Zone Signing Keys (ZSK) which are used to sign other records.  DNSSEC Keys are stored in `Traffic Vault <../overview/traffic_vault.html>`_ and should only be accessible to Traffic Ops.  Other applications needing access to this data, such as Traffic Router, must use the Traffic Ops `DNSSEC APIs <../development/traffic_ops_api/v11/cdn.html#dnssec-keys>`_ to retrieve this information.
+In order to support `DNSSEC <https://en.wikipedia.org/wiki/Domain_Name_System_Security_Extensions>`_ in Traffic Router, Traffic Ops provides some actions for managing DNSSEC keys for a CDN and associated Delivery Services.  DNSSEC Keys consist of a Key Signing Keys (KSK) which are used to sign other DNSKEY records as well as Zone Signing Keys (ZSK) which are used to sign other records.  DNSSEC Keys are stored in `Traffic Vault <../overview/traffic_vault.html>`_ and should only be accessible to Traffic Ops.  Other applications needing access to this data, such as Traffic Router, must use the Traffic Ops `DNSSEC APIs <../development/traffic_ops_api/v12/cdn.html#dnssec-keys>`_ to retrieve this information.
 
 To Manage DNSSEC Keys: 
   1. Click **Tools -> Manage DNSSEC Keys**
@@ -954,13 +954,13 @@ Additionally, Traffic Ops also performs some systematic management of DNSSEC key
 
   **Generation of keys for new Delivery Services**
   
-  Each time the DNSSEC Keys `API <../development/traffic_ops_api/v11/cdn.html#dnssec-keys>`_ is accessed by a client to get keys for a CDN, Traffic Ops checks all Delivery Services for the CDN and makes sure that DNSSEC Keys exist and are not expired for that Delivery Service.  If keys do not yet exist for that Delivery Service then Traffic Ops will create the keys, store them in `Traffic Vault <../overview/traffic_vault.html>`_, and return them along with all other keys for the CDN. 
+  Each time the DNSSEC Keys `API <../development/traffic_ops_api/v12/cdn.html#dnssec-keys>`_ is accessed by a client to get keys for a CDN, Traffic Ops checks all Delivery Services for the CDN and makes sure that DNSSEC Keys exist and are not expired for that Delivery Service.  If keys do not yet exist for that Delivery Service then Traffic Ops will create the keys, store them in `Traffic Vault <../overview/traffic_vault.html>`_, and return them along with all other keys for the CDN. 
 
   Furthermore, if a new Delivery Service is created and added to a CDN that has DNSSEC enabled, Traffic Ops will create DNSSEC keys for the Delivery Service and store them in Traffic Vault.
 
   **Regeneration of expiring keys for a Delivery Service**  
 
-  Each time the DNSSEC Keys `API <../development/traffic_ops_api/v11/cdn.html#dnssec-keys>`_ is accessed by a client to get keys for a CDN, Traffic Ops checks to make sure the keys are not expired before returning them.  If keys are expired for a Delivery Service traffic ops will regenerate new keys and store them in Traffic Vault before returning them.  This process is the same for the CDN TLD ZSK, however Traffic Ops will not re-generate the CDN TLD KSK systematically.  The reason is that when a KSK is regenerated for the CDN TLD then a new DS Record will also be created.  The new DS Record needs to be added to the parent zone before Traffic Router attempts to sign with the new KSK in order for DNSSEC to work correctly.  Therefore, management of the KSK needs to be a manual process. 
+  Each time the DNSSEC Keys `API <../development/traffic_ops_api/v12/cdn.html#dnssec-keys>`_ is accessed by a client to get keys for a CDN, Traffic Ops checks to make sure the keys are not expired before returning them.  If keys are expired for a Delivery Service traffic ops will regenerate new keys and store them in Traffic Vault before returning them.  This process is the same for the CDN TLD ZSK, however Traffic Ops will not re-generate the CDN TLD KSK systematically.  The reason is that when a KSK is regenerated for the CDN TLD then a new DS Record will also be created.  The new DS Record needs to be added to the parent zone before Traffic Router attempts to sign with the new KSK in order for DNSSEC to work correctly.  Therefore, management of the KSK needs to be a manual process. 
 
 
   
