@@ -62,6 +62,14 @@ my %definition_for = (
 			description => 'Edge: 12M will not include caches in this state in CCR config files. Mid: N/A for now',
 		},
 	},
+	status_pre_prod => {
+		new   => 'Status',
+		using => {
+			id          => 6,
+			name        => 'PRE_PROD',
+			description => 'Pre Production. Not active in any configuration.',
+		},
+	},
 );
 
 sub name {

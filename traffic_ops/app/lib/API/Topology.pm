@@ -1,4 +1,5 @@
 package API::Topology;
+
 #
 # Copyright 2015 Comcast Cable Communications Management, LLC
 #
@@ -114,7 +115,8 @@ sub gen_crconfig_json {
 
 		}
 		elsif ( $row->type->name eq "CCR" ) {
-			my $rs_param = $self->db->resultset('Parameter')
+			my $rs_param =
+				$self->db->resultset('Parameter')
 				->search( { 'profile_parameters.profile' => $row->profile->id, 'name' => 'api.port' }, { join => 'profile_parameters' } );
 			my $r = $rs_param->single;
 			my $port = ( defined($r) && defined( $r->value ) ) ? $r->value : 80;
@@ -145,7 +147,8 @@ sub gen_crconfig_json {
 		}
 	}
 	my $regexps;
-	my $rs_ds = $self->db->resultset('Deliveryservice')
+	my $rs_ds =
+		$self->db->resultset('Deliveryservice')
 		->search( { 'me.profile' => $ccr_profile_id, 'active' => 1 }, { prefetch => [ 'deliveryservice_servers', 'deliveryservice_regexes', 'type' ] } );
 	while ( my $row = $rs_ds->next ) {
 		my $protocol;
@@ -234,6 +237,10 @@ sub gen_crconfig_json {
 			$data_obj->{'deliveryServices'}->{ $row->xml_id }->{'coverageZoneOnly'} = 'false';
 			$data_obj->{'deliveryServices'}->{ $row->xml_id }->{'geoEnabled'} = [ { 'countryCode' => 'US' } ];
 		}
+		elsif ( $geo_limit == 3 ) {
+			$data_obj->{'deliveryServices'}->{ $row->xml_id }->{'coverageZoneOnly'} = 'false';
+			$data_obj->{'deliveryServices'}->{ $row->xml_id }->{'geoEnabled'} = [ { 'countryCode' => 'CA' } ];
+		}
 		else {
 			$data_obj->{'deliveryServices'}->{ $row->xml_id }->{'coverageZoneOnly'} = 'false';
 		}
@@ -245,6 +252,9 @@ sub gen_crconfig_json {
 			}
 			if ( defined( $row->dns_bypass_ip6 ) && $row->dns_bypass_ip6 ne "" ) {
 				$data_obj->{'deliveryServices'}->{ $row->xml_id }->{'bypassDestination'}->{'DNS'}->{'ip6'} = $row->dns_bypass_ip6;
+			}
+			if ( defined( $row->dns_bypass_cname ) && $row->dns_bypass_cname ne "" ) {
+				$data_obj->{'deliveryServices'}->{ $row->xml_id }->{'bypassDestination'}->{'DNS'}->{'cname'} = $row->dns_bypass_cname;
 			}
 			if ( defined( $row->dns_bypass_ttl ) && $row->dns_bypass_ttl ne "" ) {
 				$data_obj->{'deliveryServices'}->{ $row->xml_id }->{'bypassDestination'}->{'DNS'}->{'ttl'} = $row->dns_bypass_ttl;

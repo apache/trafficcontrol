@@ -75,22 +75,25 @@ public class ConfigHandler {
 	}
 
 	public boolean processConfig(final String jsonStr) throws JSONException, IOException  {
-		if(jsonStr == null) {
+		if (jsonStr == null) {
 			trafficRouterManager.setCacheRegister(null);
-			return false;
-		}
-		final JSONObject jo = new JSONObject(jsonStr);
-		LOGGER.info("Enter: processConfig");
-		final JSONObject config = jo.getJSONObject("config");
-
-		final long sts = getSnapshotTimestamp(jo.getJSONObject("stats"));
-
-		if (sts <= getLastSnapshotTimestamp()) {
-			LOGGER.warn("Incoming TrConfig snapshot timestamp (" + sts + ") is older or equal to the loaded timestamp (" + getLastSnapshotTimestamp() + "); unable to process");
 			return false;
 		}
 
 		synchronized(configSync) {
+			final JSONObject jo = new JSONObject(jsonStr);
+			LOGGER.info("Enter: processConfig");
+			final JSONObject config = jo.getJSONObject("config");
+
+			final long sts = getSnapshotTimestamp(jo.getJSONObject("stats"));
+
+			if (sts <= getLastSnapshotTimestamp()) {
+				LOGGER.warn("Incoming TrConfig snapshot timestamp (" + sts + ") is older or equal to the loaded timestamp (" + getLastSnapshotTimestamp() + "); unable to process");
+				return false;
+			} else {
+				LOGGER.debug("Incoming TrConfig snapshot timestamp (" + sts + ") is newer than the loaded timestamp (" + getLastSnapshotTimestamp() + "); processing new TrConfig");
+			}
+
 			try {
 				parseGeolocationConfig(config);
 				parseCoverageZoneNetworkConfig(config);
@@ -98,6 +101,7 @@ public class ConfigHandler {
 				final CacheRegister cacheRegister = new CacheRegister();
 				cacheRegister.setTrafficRouters(jo.getJSONObject("contentRouters"));
 				cacheRegister.setConfig(config);
+				cacheRegister.setStats(jo.getJSONObject("stats"));
 				parseDeliveryServiceConfig(jo.getJSONObject("deliveryServices"), cacheRegister);
 				parseLocationConfig(jo.getJSONObject("edgeLocations"), cacheRegister);
 				parseCacheConfig(jo.getJSONObject("contentServers"), cacheRegister);

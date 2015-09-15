@@ -1,4 +1,5 @@
 package main;
+
 #
 # Copyright 2015 Comcast Cable Communications Management, LLC
 #
@@ -63,6 +64,7 @@ ok $t->post_ok(
 		'ds.check_path'             => '/clientaccesspolicy.xml',
 		'ds.dns_bypass_ip'          => '',
 		'ds.dns_bypass_ip6'         => '',
+		'ds.dns_bypass_cname'       => '',
 		'ds.dns_bypass_ttl'         => '30',
 		'ds.dscp'                   => '40',
 		'ds.geo_limit'              => '0',
@@ -93,6 +95,7 @@ ok $t->post_ok(
 		'ds.origin_shield'          => '',
 		'ds.range_request_handling' => '0',
 		'ds.ipv6_routing_enabled'   => '1',
+		'ds.display_name'           => 'display name',
 	}
 )->status_is(302), "create HTTP delivery service";
 my $t1_id = &get_ds_id('tst_xml_id_1');
@@ -106,6 +109,7 @@ ok $t->post_ok(
 		'ds.check_path'             => '/clientaccesspolicy.xml',
 		'ds.dns_bypass_ip'          => '',
 		'ds.dns_bypass_ip6'         => '',
+		'ds.dns_bypass_cname'       => '',
 		'ds.dns_bypass_ttl'         => '30',
 		'ds.dscp'                   => '42',
 		'ds.geo_limit'              => '0',
@@ -136,6 +140,7 @@ ok $t->post_ok(
 		're_re_0'                   => '.*\.jvdtest-1\..*',
 		're_type_0'                 => 'HOST_REGEXP',
 		'ds.ipv6_routing_enabled'   => '0',
+		'ds.display_name'           => 'display name 2',
 	}
 )->status_is(302), "create DNS DeliveryService";
 my $t2_id = &get_ds_id('tst_xml_id_2');
@@ -149,6 +154,7 @@ ok $t->post_ok(
 		'ds.check_path'             => '/clientaccesspolicy.xml',
 		'ds.dns_bypass_ip'          => '10.10.10.10',
 		'ds.dns_bypass_ip6'         => '2001:558:fee8:180::2/64',
+		'ds.dns_bypass_cname'       => 'bypass.knutsel.com',
 		'ds.dns_bypass_ttl'         => '30',
 		'ds.dscp'                   => '40',
 		'ds.geo_limit'              => '1',
@@ -182,6 +188,7 @@ ok $t->post_ok(
 		're_re_1'                   => '/path/to/goodies/.*',
 		're_type_1'                 => 'PATH_REGEXP',
 		'ds.ipv6_routing_enabled'   => '1',
+		'ds.display_name'           => 'display name 3',
 	}
 )->status_is(302), "create HTTP_NO_CACHE deliveryservice";
 $t3_id = &get_ds_id('tst_xml_id_3');
@@ -196,6 +203,7 @@ ok $t->post_ok(
 		'ds.check_path'             => '/clientaccesspolicy.xml_update',
 		'ds.dns_bypass_ip'          => '10.10.10.11',
 		'ds.dns_bypass_ip6'         => '2001:558:fee8:180::1/64',
+		'ds.dns_bypass_cname'       => 'updateby.knutsel.com',
 		'ds.dns_bypass_ttl'         => '31',
 		'ds.dscp'                   => '41',
 		'ds.geo_limit'              => '0',
@@ -226,6 +234,8 @@ ok $t->post_ok(
 		're_re_0'                   => '.*\.jvdtest-3_update\..*',
 		're_type_0'                 => 'HOST_REGEXP',
 		'ds.ipv6_routing_enabled'   => '1',
+		'ds.display_name'           => 'Testing Delivery Service',
+		'ds.tr_response_headers'    => '',
 		}
 
 )->status_is(302), "update deliveryservice";
@@ -241,8 +251,8 @@ ok $t->get_ok('/datadeliveryservice')->status_is(200)->json_is( '/4/dscp' => '41
 	->json_is( '/4/dns_bypass_ip' => '10.10.10.11' )->json_is( '/4/dns_bypass_ip6' => '2001:558:fee8:180::1/64' )->json_is( '/4/dns_bypass_ttl' => '31' )
 	->json_is( '/4/ccr_dns_ttl' => 3601 )->json_is( '/4/global_max_mbps' => 4000000 )->json_is( '/4/global_max_tps' => 10001 )
 	->json_is( '/4/miss_lat' => '0' )->json_is( '/4/miss_long' => '0' )->json_is( '/4/long_desc' => 'long_update' )
-	->json_is( '/4/long_desc_1' => 'cust_update' )->json_is( '/4/long_desc_2' => 'service_update' )
-	->json_is( '/4/info_url' => 'http://knutsel-update.com' )->json_is( '/4/protocol' => '1' )->json_is( '/4/profile_name' => 'MID1' ),
+	->json_is( '/4/long_desc_1' => 'cust_update' )->json_is( '/4/long_desc_2' => 'service_update' )->json_is( '/4/info_url' => 'http://knutsel-update.com' )
+	->json_is( '/4/protocol' => '1' )->json_is( '/4/profile_name' => 'MID1' )->json_is( '/4/display_name' => 'Testing Delivery Service' ),
 	"validate delivery service was updated";
 
 #delete delivery service

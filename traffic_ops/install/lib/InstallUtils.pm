@@ -7,63 +7,43 @@ package InstallUtils;
 
 use Term::ReadPassword;
 
-my $self = {};
-
-sub new {
-	my ($class) = @_;
-
-	return (bless ($self, $class));
-}
-
 sub execCommand {
-	my ($class, $command, @args) = @_;
-	my $pid = fork ();
-	my $result = 0;
-
-	if ($pid == 0) {
-		exec ($command, @args);
-		exit 0;
-	}
-	else {
-		wait;
-		$result = $?;
-		if ($result != 0) {
-			print "ERROR executing: $commands,  args: " . join (' ', @args) . "\n";
-		}
-	}
+	my ( $cmd, @args ) = @_;
+	system( $cmd, @args );
+	my $result = $? >> 8;
 	return $result;
 }
 
 sub promptUser {
-    my ($class, $promptString, $defaultValue, $noEcho) = @_;
+	my ( $promptString, $defaultValue, $noEcho ) = @_;
 
-    if ($defaultValue) {
-        print $promptString, " [", $defaultValue, "]:  ";
-    }
-    else {
-        print $promptString, ":  ";
-    }
+	if ($defaultValue) {
+		print $promptString, " [", $defaultValue, "]:  ";
+	}
+	else {
+		print $promptString, ":  ";
+	}
 
-    if (defined $noEcho && $noEcho)  {
-        my $response = read_password('');
-        if ((!defined $response || $response eq '') && (defined $defaultValue && $defaultValue ne '')) {
-            $response = $defaultValue;
-        }
-        return $response
-    }
-    else {
-        $| = 1;
-        $_ = <STDIN>;
-        chomp;
+	if ( defined $noEcho && $noEcho ) {
+		my $response = read_password('');
+		if ( ( !defined $response || $response eq '' ) && ( defined $defaultValue && $defaultValue ne '' ) ) {
+			$response = $defaultValue;
+		}
+		return $response;
+	}
+	else {
+		$| = 1;
+		$_ = <STDIN>;
+		chomp;
 
-        if ("$defaultValue") {
-            return $_ ? $_ : $defaultValue;
-        }
-        else {
-            return $_;
-        }
-        return $_;
-    }
+		if ("$defaultValue") {
+			return $_ ? $_ : $defaultValue;
+		}
+		else {
+			return $_;
+		}
+		return $_;
+	}
 }
 
 sub trim {
@@ -74,3 +54,5 @@ sub trim {
 
 	return $str;
 }
+
+1;

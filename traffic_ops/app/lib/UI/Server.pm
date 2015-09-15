@@ -1,4 +1,5 @@
 package UI::Server;
+
 #
 # Copyright 2015 Comcast Cable Communications Management, LLC
 #
@@ -192,8 +193,7 @@ sub serverdetail {
 			"router_port_name" => $row->router_port_name,
 		};
 		my $id = $row->id;
-		my $rs_hwinfo_data =
-			$self->db->resultset('Hwinfo')->search( { 'serverid' => $id } );
+		my $rs_hwinfo_data = $self->db->resultset('Hwinfo')->search( { 'serverid' => $id } );
 		while ( my $hwinfo_row = $rs_hwinfo_data->next ) {
 			$serv->{ $hwinfo_row->description } = $hwinfo_row->val;
 		}
@@ -218,7 +218,8 @@ sub edge_ds_status {
 
 	}
 
-	my $rs_servers_ds = $self->db->resultset('DeliveryserviceServer')
+	my $rs_servers_ds =
+		$self->db->resultset('DeliveryserviceServer')
 		->search( { deliveryservice => $ds_id }, { prefetch => [ { deliveryservice => undef }, { server => undef } ] } );
 	while ( my $row = $rs_servers_ds->next ) {
 		$servers_in_ds{ $row->server->host_name } = $row->id;
@@ -270,6 +271,9 @@ sub check_server_input_cgi {
 	{
 		$paramHashRef->{$optionalParam} = $self->param($optionalParam);
 	}
+
+	$paramHashRef = &trim_whitespace($paramHashRef);
+
 	$err = &check_server_input( $self, $paramHashRef );
 	return $err;
 }
@@ -406,14 +410,17 @@ sub update {
 	}
 	my $id = $paramHashRef->{'id'};
 
+	$paramHashRef = &trim_whitespace($paramHashRef);
+
 	my $err = &check_server_input_cgi($self);
 	if ( defined($err) && length($err) > 0 ) {
 		$self->flash( alertmsg => "update():  " . $err );
 	}
 	else {
-		my $org_server =
-			$self->db->resultset('Server')->find( { id => $id } );
-		my $update = $self->db->resultset('Server')->find( { id => $id } );
+
+		# get resultset for original and one to be updated.  Use to examine diffs to propagate the effects of the change.
+		my $org_server = $self->db->resultset('Server')->find( { id => $id } );
+		my $update     = $self->db->resultset('Server')->find( { id => $id } );
 		if ( defined( $paramHashRef->{'ip6_address'} )
 			&& $paramHashRef->{'ip6_address'} ne "" )
 		{
@@ -514,11 +521,32 @@ sub update {
 			}
 		}
 
+		if ( $org_server->type->id != $update->type->id ) {
+
+			# server type changed:  servercheck entry required for EDGE and MID, but not others. Add or remove servercheck entry accordingly
+			my %need_servercheck = map { &type_id( $self, $_ ) => 1 } qw{ EDGE MID };
+			my $newtype_id       = $update->type->id;
+			my $servercheck      = $self->db->resultset('Servercheck')->search( { server => $id } );
+			if ( $servercheck != 0 && !$need_servercheck{$newtype_id} ) {
+
+				# servercheck entry found but not needed -- delete it
+				$servercheck->delete();
+				&log( $self, $self->param('host_name') . " cache type change - deleting servercheck", "UICHANGE" );
+			}
+			elsif ( $servercheck == 0 && $need_servercheck{$newtype_id} ) {
+
+				# servercheck entry not found but needed -- insert it
+				$servercheck = $self->db->resultset('Servercheck')->create( { server => $id } );
+				$servercheck->insert();
+				&log( $self, $self->param('host_name') . " cache type changed - adding servercheck", "UICHANGE" );
+			}
+		}
+
 		# this just creates the log string for the log table / tab.
 		my $lstring = "Update server " . $self->param('host_name') . " ";
 		foreach my $col ( keys %{ $org_server->{_column_data} } ) {
 			if ( defined( $self->param($col) )
-				&& $self->param($col) ne $org_server->{_column_data}->{$col} )
+				&& $self->param($col) ne ( $org_server->{_column_data}->{$col} // "" ) )
 			{
 				if ( $col eq 'ilo_password' || $col eq 'xmpp_passwd' ) {
 					$lstring .= $col . "-> ***********";
@@ -608,6 +636,9 @@ sub create {
 	if ( !defined( $paramHashRef->{'csv_line_number'} ) ) {
 		$err = &check_server_input_cgi($self);
 	}
+
+	$paramHashRef = &trim_whitespace($paramHashRef);
+
 	my $xmpp_passwd = "BOOGER";
 	if ( defined($err) && length($err) > 0 ) {
 		$self->flash( alertmsg => "create():  [" . length($err) . "] " . $err );
@@ -687,11 +718,7 @@ sub create {
 		if (   $paramHashRef->{'type'} == &type_id( $self, "EDGE" )
 			|| $paramHashRef->{'type'} == &type_id( $self, "MID" ) )
 		{
-			$insert = $self->db->resultset('Servercheck')->create(
-				{
-					server => $new_id,
-				}
-			);
+			$insert = $self->db->resultset('Servercheck')->create( { server => $new_id, } );
 			$insert->insert();
 		}
 

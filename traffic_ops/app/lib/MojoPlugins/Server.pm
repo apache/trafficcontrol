@@ -1,4 +1,5 @@
 package MojoPlugins::Server;
+
 #
 # Copyright 2015 Comcast Cable Communications Management, LLC
 #
@@ -78,7 +79,7 @@ sub register {
 						return { response => $response, server => $active_server };
 					}
 					elsif ( $status_code == 500 ) {
-						$active_server = activate_next_online_server( $self, "InfluxDBHostsOnline" );
+						$active_server = activate_next_online_server( $self, $schema_result_file );
 						$helper_class->set_server($active_server);
 						if ( defined($active_server) ) {
 							$self->app->log->warn( "Found BAD ONLINE server, skipping: " . $active_server );
@@ -95,8 +96,7 @@ sub register {
 				}
 			}
 			else {
-				my $message =
-					  "No "
+				my $message = "No "
 					. $server_type
 					. " servers are set to ONLINE in the database.  Please verify "
 					. $server_type
@@ -106,9 +106,6 @@ sub register {
 			}
 		}
 	);
-
-	$app->renderer->add_helper();
-
 }
 
 # This subroutine only handles looking in the database (randomly) for

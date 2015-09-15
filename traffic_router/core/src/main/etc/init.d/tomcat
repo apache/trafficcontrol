@@ -35,7 +35,7 @@
 export NAME=tomcat
 export TOMCAT_HOME=/opt/$NAME
 export CATALINA_PID=/var/run/tomcat/$NAME.pid
-export CATALINA_OPTS="-Xms512m -Xmx2048m -Dlog4j.configuration=file:///opt/traffic_router/conf/log4j.properties"
+export CATALINA_OPTS="-Xms512m -Xmx8192m -Dlog4j.configuration=file:///opt/traffic_router/conf/log4j.properties"
 export TOMCAT_LOCK=/var/lock/subsys/$NAME
 
 start() {

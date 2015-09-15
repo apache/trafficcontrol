@@ -1,4 +1,5 @@
 package MojoPlugins::Job;
+
 #
 # Copyright 2015 Comcast Cable Communications Management, LLC
 #
@@ -33,7 +34,8 @@ sub register {
 		snapshot_regex_revalidate => sub {
 			my $self = shift;
 
-			my $rs = $self->db->resultset('Server')
+			my $rs =
+				$self->db->resultset('Server')
 				->search( undef, { prefetch => [ { 'cachegroup' => undef }, { 'type' => undef }, { 'profile' => undef }, { 'status' => undef } ], } );
 
 			my $m_scheme         = $self->req->url->base->scheme;
@@ -88,10 +90,19 @@ sub register {
 			my @cdn_profiles =
 				$self->db->resultset('ProfileParameter')->search( { parameter => $cdn_pparam->parameter->id } )->get_column('profile')->all();
 
-			my $offline = $self->db->resultset('Status')->search( 'name' => 'OFFLINE' )->get_column('id')->single();
-			$self->app->log->debug( "offline #-> " . Dumper($offline) );
+			my @offstates;
+			my $offline = $self->db->resultset('Status')->search( { 'name' => 'OFFLINE' } )->get_column('id')->single();
+			if ($offline) {
+				push( @offstates, $offline );
+			}
+			my $pre_prod = $self->db->resultset('Status')->search( { 'name' => 'PRE_PROD' } )->get_column('id')->single();
+			if ($pre_prod) {
+				push( @offstates, $pre_prod );
+			}
+			$self->app->log->debug( "offline #-> " . Dumper(@offstates) );
 			my $update_server_bit_rs =
-				$self->db->resultset('Server')->search( -and => [ { status => { -not_like => $offline } }, { profile => { -in => \@cdn_profiles } } ] );
+				$self->db->resultset('Server')
+				->search( { -and => [ { status => { 'not in' => \@offstates } }, { profile => { -in => \@cdn_profiles } } ] } );
 
 			my $result = $update_server_bit_rs->update( { upd_pending => 1 } );
 			&log( $self, "Set upd_pending = 1 for all applicable caches", "CODEBIG" );

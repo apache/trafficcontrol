@@ -25,7 +25,7 @@ use MIME::Base64;
 use Data::Dumper;
 
 $| = 1;
-my $script_version = "0.51a";
+my $script_version = "0.54a";
 my $date           = `/bin/date`;
 chomp($date);
 print "$date\nVersion of this script: $script_version\n";
@@ -149,9 +149,7 @@ my $ats_running   = 0;
 my $teakd_running = 0;
 
 #### Process installed tracker
-my $installed_new_urlsig_keys = 0;
 my $installed_new_ssl_keys    = 0;
-my $new_header_rewrite        = 0;
 my %install_tracker;
 
 my $config_dirs      = undef;
@@ -190,17 +188,17 @@ my $header_comment = &get_header_comment($traffic_ops_host);
 #### Second time, in case there were new files added to the registry
 &process_config_files();
 
-#### Check to see if we installed new keys.
-if ( ( $installed_new_urlsig_keys || $new_header_rewrite ) && !$cfg_file_tracker->{'remap.config'}->{'change_applied'} ) {
-	my $return = &touch_file('remap.config');
-	if ($return) {
-		if ( $syncds_update == $UPDATE_TROPS_NEEDED ) {
-			$syncds_update = $UPDATE_TROPS_SUCCESSFUL;
+foreach my $file ( keys ( %{$cfg_file_tracker} ) ) {
+	if ( exists($cfg_file_tracker->{$file}->{'remap_plugin_config_file'}) && $cfg_file_tracker->{$file}->{'remap_plugin_config_file'} ) {
+		if ( exists($cfg_file_tracker->{$file}->{'change_applied'}) && $cfg_file_tracker->{$file}->{'change_applied'} ) {
+			( $log_level >> $DEBUG ) && print "\nDEBUG $file is a remap plugin config file, and was changed. remap.config needs touched.  ========\n";
+			&touch_file('remap.config');
+			last;
 		}
-		$traffic_line_needed++;
 	}
-}
-elsif ( ($installed_new_ssl_keys) && !$cfg_file_tracker->{'ssl_multicert.config'}->{'change_applied'} ) {
+} 
+
+if ( ($installed_new_ssl_keys) && !$cfg_file_tracker->{'ssl_multicert.config'}->{'change_applied'} ) {
 	my $return = &touch_file('ssl_multicert.config');
 	if ($return) {
 		if ( $syncds_update == $UPDATE_TROPS_NEEDED ) {
@@ -261,7 +259,7 @@ sub process_cfg_file {
 	( $log_level >> $INFO ) && print "\nINFO: ======== Start processing config file: $cfg_file ========\n";
 
 	my $config_dir = $cfg_file_tracker->{$cfg_file}->{'location'};
-
+	
 	$url = &set_url($cfg_file);
 
 	&smart_mkdir($config_dir);
@@ -274,7 +272,7 @@ sub process_cfg_file {
 
 	my $file = $config_dir . "/" . $cfg_file;
 
-	return $CFG_FILE_PREREQ_FAILED if ( !&prereqs_ok( $file, \@db_file_lines ) );
+	return $CFG_FILE_PREREQ_FAILED if ( !&prereqs_ok( $cfg_file, \@db_file_lines ) );
 
 	my @disk_file_lines;
 	if ( -e $file ) {
@@ -736,10 +734,11 @@ sub process_config_files {
 				|| $file eq "regex_revalidate.config"
 				|| $file eq "ip_allow.config"
 				|| $file eq "astats.config"
-				|| $file eq "cacheurl_qstring.config"
+				|| $file =~ m/cacheurl\_(.*)\.config$/
 				|| $file =~ m/regex\_remap\_(.*)\.config$/
 				|| $file =~ m/\.cer$/
 				|| $file =~ m/\.key$/
+				|| $file eq "logs_xml.config"
 				|| $file eq "ssl_multicert.config" )
 			)
 		{
@@ -798,9 +797,9 @@ sub process_config_files {
 			$syncds_update = $UPDATE_TROPS_FAILED;
 		}
 	}
-
 	foreach my $file ( keys %{$cfg_file_tracker} ) {
 		if (   $cfg_file_tracker->{$file}->{'change_needed'}
+			&& !$cfg_file_tracker->{$file}->{'change_applied'}
 			&& $cfg_file_tracker->{$file}->{'audit_complete'}
 			&& !$cfg_file_tracker->{$file}->{'prereq_failed'}
 			&& !$cfg_file_tracker->{$file}->{'audit_failed'} )
@@ -895,6 +894,8 @@ sub check_plugins {
 	my @file_lines     = @{$file_lines_ref};
 	my $return_code    = 0;
 
+	( $log_level >> $DEBUG ) && print "DEBUG Checking plugins for $cfg_file\n";
+
 	if ( $cfg_file eq "plugin.config" ) {
 		( $log_level >> $DEBUG ) && print "DEBUG Entering advanced processing for plugin.config.\n";
 		foreach my $linep (@file_lines) {
@@ -916,25 +917,32 @@ sub check_plugins {
 		( $log_level >> $DEBUG ) && print "DEBUG Entering advanced processing for remap.config\n";
 		foreach my $liner (@file_lines) {
 			if ( $liner =~ m/^\#/ ) { next; }
-			( my @parts ) = split( /\@/, $liner );
-			foreach my $part (@parts) {
-				if ( $part =~ m/plugin/ ) {
-					( my $dum, my $plugin_name ) = split( /\=/, $part );
-					$plugin_name =~ s/\s+//g;
-					( $log_level >> $DEBUG ) && print "DEBUG Found plugin $plugin_name in $cfg_file.\n";
-					$return_code = &check_this_plugin($plugin_name);
-					if ( $return_code == $PLUGIN_YES ) {
-						( $log_level >> $DEBUG ) && print "DEBUG Package for plugin: $plugin_name is installed.\n";
+			( my @parts ) = split( /\@plugin\=/, $liner );
+			foreach my $i ( 1..$#parts ) {
+				( my $plugin_name, my $plugin_config_file ) = split( /\@pparam\=/, $parts[$i] );
+				if (defined( $plugin_config_file ) ) {
+					( my @parts ) = split( /\//, $plugin_config_file );
+					$plugin_config_file = $parts[$#parts];
+					$plugin_config_file =~ s/\s+//g;
+					if ( !exists($cfg_file_tracker->{$plugin_config_file}->{'remap_plugin_config_file'}) ) {
+						$cfg_file_tracker->{$plugin_config_file}->{'remap_plugin_config_file'} = 1; 
 					}
-					elsif ( $return_code == $PLUGIN_NO ) {
-						( $log_level >> $ERROR ) && print "ERROR Package for plugin: $plugin_name is not installed\n";
-						$cfg_file_tracker->{$cfg_file}->{'prereq_failed'}++;
-					}
+				}
+				$plugin_name =~ s/\s//g;
+				( $log_level >> $DEBUG ) && print "DEBUG Found plugin $plugin_name in $cfg_file.\n";
+				$return_code = &check_this_plugin($plugin_name);
+				if ( $return_code == $PLUGIN_YES ) {
+					( $log_level >> $DEBUG ) && print "DEBUG Package for plugin: $plugin_name is installed.\n";
+				}
+				elsif ( $return_code == $PLUGIN_NO ) {
+					( $log_level >> $ERROR ) && print "ERROR Package for plugin: $plugin_name is not installed\n";
+					$cfg_file_tracker->{$cfg_file}->{'prereq_failed'}++;
 				}
 			}
 		}
 	}
 	( $log_level >> $TRACE ) && print "TRACE Returning $return_code for checking plugins for $cfg_file.\n";
+	return $return_code;
 }
 
 sub check_ntp {
@@ -1124,12 +1132,11 @@ sub process_reload_restarts {
 
 	if ( $cfg_file =~ m/url\_sig\_(.*)\.config/ ) {
 		( $log_level >> $DEBUG ) && print "DEBUG New keys were installed in: $cfg_file, touch remap.config, and traffic_line -x needed.\n";
-		$installed_new_urlsig_keys++;
 		$traffic_line_needed++;
 	}
 	elsif ( $cfg_file =~ m/hdr\_rw\_(.*)\.config/ ) {
 		( $log_level >> $DEBUG ) && print "DEBUG New/changed header rewrite rule, installed in: $cfg_file. Later I will attempt to touch remap.config.\n";
-		$new_header_rewrite++;
+		$traffic_line_needed++;
 	}
 	elsif ( $cfg_file eq "plugin.config" || $cfg_file eq "50-ats.rules" ) {
 		( $log_level >> $DEBUG ) && print "DEBUG $cfg_file changed, trafficserver restart needed.\n";
@@ -1282,11 +1289,19 @@ sub get_cfg_file_list {
 	$cdn_name = $ort_ref->{'other'}->{'CDN_name'};
 	( $log_level >> $INFO ) && printf("INFO Found CDN_name from Traffic Ops: $cdn_name\n");
 	foreach my $cfg_file ( keys %{ $ort_ref->{'config_files'} } ) {
+		my $fname_on_disk = &get_filename_on_disk($cfg_file);
 		( $log_level >> $INFO )
-			&& printf( "INFO Found config file: %-30s with location: %-50s\n", $cfg_file, $ort_ref->{'config_files'}->{$cfg_file}->{'location'} );
-		$cfg_files->{$cfg_file}->{'location'} = $ort_ref->{'config_files'}->{$cfg_file}->{'location'};
+			&& printf( "INFO Found config file (on disk: %-41s): %-41s with location: %-50s\n", $fname_on_disk, $cfg_file, $ort_ref->{'config_files'}->{$cfg_file}->{'location'} );
+		$cfg_files->{$fname_on_disk}->{'location'} = $ort_ref->{'config_files'}->{$cfg_file}->{'location'};
+		$cfg_files->{$fname_on_disk}->{'fname-in-TO'} = $cfg_file;
 	}
 	return ( $profile_name, $cfg_files, $cdn_name );
+}
+
+sub get_filename_on_disk {
+	my $config_file = shift;
+	$config_file =~ s/^to\_ext\_(.*)\.config$/$1\.config/ if ($config_file =~ m/^to\_ext\_/);
+	return $config_file;
 }
 
 sub get_header_comment {
@@ -1933,13 +1948,12 @@ sub validate_result {
 sub set_url {
 	my $filename = shift;
 	my $filepath = $cfg_file_tracker->{$filename}->{'location'};
-	my $file     = $filepath . "/" . $filename;
 
 	if ( $filename ne "regex_revalidate.config" ) {
-		return "$traffic_ops_host\/genfiles\/view\/$hostname_short\/$filename";
+		return "$traffic_ops_host\/genfiles\/view\/$hostname_short\/" . $cfg_file_tracker->{$filename}->{'fname-in-TO'};
 	}
 	else {
-		return "$traffic_ops_host\/Trafficserver-Snapshots\/$my_cdn_name\/$filename";
+		return "$traffic_ops_host\/Trafficserver-Snapshots\/$my_cdn_name\/" . $cfg_file_tracker->{$filename}->{'fname-in-TO'};
 	}
 }
 
@@ -2044,6 +2058,8 @@ sub prereqs_ok {
 
 	my $filename       = shift;
 	my $file_lines_ref = shift;
+
+	( $log_level >> $DEBUG ) && print "DEBUG Starting to check prereqs for:\t$filename.\n";
 
 	if ( $filename eq "plugin.config" || $filename eq "remap.config" ) {
 		&check_plugins( $filename, $file_lines_ref );
@@ -2316,11 +2332,13 @@ sub adv_processing_ssl {
 		$cfg_file_tracker->{ $keypair->{'key_name'} }->{'service'}   = "trafficserver";
 		$cfg_file_tracker->{ $keypair->{'key_name'} }->{'component'} = "SSL";
 		$cfg_file_tracker->{ $keypair->{'key_name'} }->{'contents'}  = $ssl_key;
+		$cfg_file_tracker->{ $keypair->{'key_name'} }->{'fname-in-TO'}  = $keypair->{'key_name'};
 
 		$cfg_file_tracker->{ $keypair->{'cert_name'} }->{'location'}  = "/opt/trafficserver/etc/trafficserver/ssl/";
 		$cfg_file_tracker->{ $keypair->{'cert_name'} }->{'service'}   = "trafficserver";
 		$cfg_file_tracker->{ $keypair->{'cert_name'} }->{'component'} = "SSL";
 		$cfg_file_tracker->{ $keypair->{'cert_name'} }->{'contents'}  = $ssl_cert;
+		$cfg_file_tracker->{ $keypair->{'cert_name'} }->{'fname-in-TO'}  = $keypair->{'cert_name'};
 
 	}
 	return 0;

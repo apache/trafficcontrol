@@ -36,7 +36,17 @@ $(function () {
 			<div id=accordion>
 				<div>
 					<h3><a href="#">Generate a boot ISO</a></h3>
+
 					<div>
+								% if (my $msg = stash 'iso_file_name') {
+								<div style="border: none; text-align:left; height: 20px; width: 100%;margin-bottom: 20px; margin-left: -10px;">
+									<div id="flash" class="flash-section">
+								   To Download Right-Click the link then 'Save As...': <a href="/iso/<%=stash 'iso_file_name' %>"> <%= stash 'iso_file_name' %> </a>
+									</div>
+								</div>
+							       % }
+
+
 						<script type="text/javascript">
 							$(function(){
 								$(document).ready(function(){
@@ -65,7 +75,8 @@ $(function () {
 								});
 							});
 						</script>
-						<form method="GET" action="/iso_download">
+
+						<form method="GET" action="/geniso">
 							<table>
 								<tr>
 									<td>Choose a server from list:</td>
@@ -152,7 +163,7 @@ $(function () {
 									<td>Optional. Typical values are "sda".</td>
 								</tr>
 							</table>
-							<input class="button" type="submit" value="Download ISO"/>
+							<input class="button" type="submit" value="Generate ISO"/>
 						</form>
 					</div>
 				</div>

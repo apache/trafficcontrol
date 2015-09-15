@@ -1,4 +1,5 @@
 package UI::Topology;
+
 #
 # Copyright 2015 Comcast Cable Communications Management, LLC
 #
@@ -26,7 +27,6 @@ use Mojo::Base 'Mojolicious::Controller';
 use Time::HiRes qw(gettimeofday);
 use File::Basename;
 use File::Path;
-
 
 sub ccr_config {
 	my $self     = shift;
@@ -69,13 +69,14 @@ sub gen_crconfig_json {
 		else {
 			my $e = Mojo::Exception->throw( "No profiles found for CDN_name: " . $cdn_name );
 		}
+
 #@cache_rascal_profiles = $self->db->resultset('Profile')->search( { id => { -in => \@cdn_profiles }, name => [{ like => 'EDGE%'}, {like => 'MID%'}, {like => 'RASCAL%'}, {like => 'CDSIS%'} ] } )->get_column('id')->all();
 	}
 	else {
 		my $e = Mojo::Exception->throw( "Parameter ID not found for CDN_name: " . $cdn_name );
 	}
 	my %condition = ( 'profile_parameters.profile' => $ccr_profile_id, 'config_file' => 'CRConfig.json' );
-	my $rs_config = $self->db->resultset('Parameter')->search( \%condition, { join => 'profile_parameters'} );
+	my $rs_config = $self->db->resultset('Parameter')->search( \%condition, { join => 'profile_parameters' } );
 	while ( my $row = $rs_config->next ) {
 		if ( $row->name eq 'domain_name' ) {
 			$ccr_domain_name = $row->value;
@@ -89,7 +90,7 @@ sub gen_crconfig_json {
 		}
 		else {
 			$data_obj->{'config'}->{ $row->name } = $row->value;
-			}
+		}
 	}
 	my $rs_loc = $self->db->resultset('CachegroupParameter')->search( { 'parameter' => $cdnname_param_id }, { prefetch => 'cachegroup' } );
 
@@ -109,11 +110,11 @@ sub gen_crconfig_json {
 		{ 'profile' => { -in => \@cdn_profiles } },
 		{
 			prefetch => [ 'type',      'status',      'cachegroup', 'profile' ],
-			columns  => [ 'host_name', 'domain_name', 'tcp_port', 'interface_name', 'ip_address', 'ip6_address', 'id', 'xmpp_id' ]
+			columns  => [ 'host_name', 'domain_name', 'tcp_port',   'interface_name', 'ip_address', 'ip6_address', 'id', 'xmpp_id' ]
 		}
 	);
 	while ( my $row = $rs_caches->next ) {
-		
+
 		next if ( $row->status->name =~ m/\_IGNORE$/ );
 
 		if ( $row->type->name eq "RASCAL" ) {
@@ -127,7 +128,8 @@ sub gen_crconfig_json {
 
 		}
 		elsif ( $row->type->name eq "CCR" || $row->type->name eq "TR" ) {
-			my $rs_param = $self->db->resultset('Parameter')
+			my $rs_param =
+				$self->db->resultset('Parameter')
 				->search( { 'profile_parameters.profile' => $row->profile->id, 'name' => 'api.port' }, { join => 'profile_parameters' } );
 			my $r = $rs_param->single;
 			my $port = ( defined($r) && defined( $r->value ) ) ? $r->value : 80;
@@ -145,26 +147,27 @@ sub gen_crconfig_json {
 			if ( !exists $cache_tracker{ $row->id } ) {
 				$cache_tracker{ $row->id } = $row->host_name;
 			}
-		    my $pid       = $row->profile->id;
-			my $weight = undef;
+			my $pid               = $row->profile->id;
+			my $weight            = undef;
 			my $weight_multiplier = undef;
-		    if ( !defined( $profile_cache{$pid} ) ) {
-			    my $param_w =
-				    $self->db->resultset('ProfileParameter')
-				    ->search( { -and => [ profile => $pid, 'parameter.config_file' => 'CRConfig.json', 'parameter.name' => 'weight' ] },
-				    { prefetch => [ 'parameter', 'profile' ] } )->single();
-			    $weight = defined($param_w) ? $param_w->parameter->value : "0.999";
-			    $profile_cache{$pid}->{weight} = $weight;
-			    my $param_wm =
-				    $self->db->resultset('ProfileParameter')
-				    ->search( { -and => [ profile => $pid, 'parameter.config_file' => 'CRConfig.json', 'parameter.name' => 'weightMultiplier' ] },
-				    { prefetch => [ 'parameter', 'profile' ] } )->single();
-			    $weight_multiplier = defined($param_wm) ? $param_wm->parameter->value : 1000;
-			    $profile_cache{$pid}->{weight_multiplier} = $weight_multiplier;
-		    } else {
-		       $weight = $profile_cache{$pid}->{weight};
-		       $weight_multiplier = $profile_cache{$pid}->{weight_multiplier};
-		    }
+			if ( !defined( $profile_cache{$pid} ) ) {
+				my $param_w =
+					$self->db->resultset('ProfileParameter')
+					->search( { -and => [ profile => $pid, 'parameter.config_file' => 'CRConfig.json', 'parameter.name' => 'weight' ] },
+					{ prefetch => [ 'parameter', 'profile' ] } )->single();
+				$weight = defined($param_w) ? $param_w->parameter->value : "0.999";
+				$profile_cache{$pid}->{weight} = $weight;
+				my $param_wm =
+					$self->db->resultset('ProfileParameter')
+					->search( { -and => [ profile => $pid, 'parameter.config_file' => 'CRConfig.json', 'parameter.name' => 'weightMultiplier' ] },
+					{ prefetch => [ 'parameter', 'profile' ] } )->single();
+				$weight_multiplier = defined($param_wm) ? $param_wm->parameter->value : 1000;
+				$profile_cache{$pid}->{weight_multiplier} = $weight_multiplier;
+			}
+			else {
+				$weight            = $profile_cache{$pid}->{weight};
+				$weight_multiplier = $profile_cache{$pid}->{weight_multiplier};
+			}
 			$data_obj->{'contentServers'}->{ $row->host_name }->{'locationId'}    = $row->cachegroup->name;
 			$data_obj->{'contentServers'}->{ $row->host_name }->{'cacheGroup'}    = $row->cachegroup->name;
 			$data_obj->{'contentServers'}->{ $row->host_name }->{'fqdn'}          = $row->host_name . "." . $row->domain_name;
@@ -176,11 +179,13 @@ sub gen_crconfig_json {
 			$data_obj->{'contentServers'}->{ $row->host_name }->{'profile'}       = $row->profile->name;
 			$data_obj->{'contentServers'}->{ $row->host_name }->{'type'}          = $row->type->name;
 			$data_obj->{'contentServers'}->{ $row->host_name }->{'hashId'}        = $row->xmpp_id;
-			$data_obj->{'contentServers'}->{ $row->host_name }->{'hashCount'}     = int($weight * $weight_multiplier); # perl will automatically cast, int for rounding
+			$data_obj->{'contentServers'}->{ $row->host_name }->{'hashCount'} =
+				int( $weight * $weight_multiplier );    # perl will automatically cast, int for rounding
 		}
 	}
 	my $regexps;
-	my $rs_ds = $self->db->resultset('Deliveryservice')
+	my $rs_ds =
+		$self->db->resultset('Deliveryservice')
 		->search( { 'me.profile' => $ccr_profile_id, 'active' => 1 }, { prefetch => [ 'deliveryservice_servers', 'deliveryservice_regexes', 'type' ] } );
 
 	while ( my $row = $rs_ds->next ) {
@@ -245,8 +250,8 @@ sub gen_crconfig_json {
 				$server_subrow_dedup{ $subrow->{'_column_data'}->{'server'} } = $subrow->{'_column_data'}->{'deliveryservice'};
 			}
 			foreach my $server ( keys %server_subrow_dedup ) {
-				
-				next if ( !defined($cache_tracker{$server}) );
+
+				next if ( !defined( $cache_tracker{$server} ) );
 
 				foreach my $host ( @{ $ds_to_remap{ $row->xml_id } } ) {
 					my $remap;
@@ -269,6 +274,10 @@ sub gen_crconfig_json {
 		}
 
 		$data_obj->{'deliveryServices'}->{ $row->xml_id }->{'ttl'} = $row->ccr_dns_ttl;
+		if ( $protocol ne 'DNS' ) {
+			$data_obj->{'deliveryServices'}->{ $row->xml_id }->{'dispersion'} = { limit => int( $row->initial_dispersion ), shuffled => 'true' };
+		}
+
 		my $geo_limit = $row->geo_limit;
 		if ( $geo_limit == 1 ) {
 			$data_obj->{'deliveryServices'}->{ $row->xml_id }->{'coverageZoneOnly'} = 'true';
@@ -276,6 +285,10 @@ sub gen_crconfig_json {
 		elsif ( $geo_limit == 2 ) {
 			$data_obj->{'deliveryServices'}->{ $row->xml_id }->{'coverageZoneOnly'} = 'false';
 			$data_obj->{'deliveryServices'}->{ $row->xml_id }->{'geoEnabled'} = [ { 'countryCode' => 'US' } ];
+		}
+		elsif ( $geo_limit == 3 ) {
+			$data_obj->{'deliveryServices'}->{ $row->xml_id }->{'coverageZoneOnly'} = 'false';
+			$data_obj->{'deliveryServices'}->{ $row->xml_id }->{'geoEnabled'} = [ { 'countryCode' => 'CA' } ];
 		}
 		else {
 			$data_obj->{'deliveryServices'}->{ $row->xml_id }->{'coverageZoneOnly'} = 'false';
@@ -289,6 +302,9 @@ sub gen_crconfig_json {
 			}
 			if ( defined( $row->dns_bypass_ip6 ) && $row->dns_bypass_ip6 ne "" ) {
 				$data_obj->{'deliveryServices'}->{ $row->xml_id }->{'bypassDestination'}->{'DNS'}->{'ip6'} = $row->dns_bypass_ip6;
+			}
+			if ( defined( $row->dns_bypass_cname ) && $row->dns_bypass_cname ne "" ) {
+				$data_obj->{'deliveryServices'}->{ $row->xml_id }->{'bypassDestination'}->{'DNS'}->{'cname'} = $row->dns_bypass_cname;
 			}
 			if ( defined( $row->dns_bypass_ttl ) && $row->dns_bypass_ttl ne "" ) {
 				$data_obj->{'deliveryServices'}->{ $row->xml_id }->{'bypassDestination'}->{'DNS'}->{'ttl'} = $row->dns_bypass_ttl;
@@ -316,6 +332,16 @@ sub gen_crconfig_json {
 			}
 		}
 
+		if ( defined( $row->tr_response_headers ) && $row->tr_response_headers ne "" ) {
+			foreach my $header ( split( /__RETURN__/, $row->tr_response_headers ) ) {
+				my ( $header_name, $header_value ) = split( /:\s/, $header );
+				$header_name                                                                           = &trim_spaces($header_name);
+				$header_value                                                                          = &trim_spaces($header_value);
+				$header_value                                                                          = &trim_quotes($header_value);
+				$data_obj->{'deliveryServices'}->{ $row->xml_id }->{'responseHeaders'}->{$header_name} = $header_value;
+			}
+		}
+
 		if ( defined( $row->miss_lat ) && $row->miss_lat ne "" ) {
 			$data_obj->{'deliveryServices'}->{ $row->xml_id }->{'missLocation'}->{'lat'} = $row->miss_lat;
 		}
@@ -332,10 +358,10 @@ sub gen_crconfig_json {
 		$data_obj->{'deliveryServices'}->{ $row->xml_id }->{'soa'}->{'admin'}   = "twelve_monkeys";
 		$data_obj->{'deliveryServices'}->{ $row->xml_id }->{'ip6RoutingEnabled'} = $row->ipv6_routing_enabled ? 'true' : 'false';
 
-		my $rs_dns = $self->db->resultset('Staticdnsentry')->search(
-			{ 'deliveryservice.active' => 1, 'deliveryservice.profile' => $ccr_profile_id, 'deliveryservice.xml_id' => $row->xml_id },
-			{ prefetch => [ 'deliveryservice', 'type' ], columns => [ 'host', 'type', 'ttl', 'address' ] }
-		);
+		my $rs_dns =
+			$self->db->resultset('Staticdnsentry')
+			->search( { 'deliveryservice.active' => 1, 'deliveryservice.profile' => $ccr_profile_id, 'deliveryservice.xml_id' => $row->xml_id },
+			{ prefetch => [ 'deliveryservice', 'type' ], columns => [ 'host', 'type', 'ttl', 'address' ] } );
 
 		while ( my $dns_row = $rs_dns->next ) {
 			my $dns_obj;
@@ -407,6 +433,7 @@ sub diff_crconfig_json {
 		my @dummy = ();
 		return ( \@err, \@dummy, \@caution, \@dummy, \@dummy, \@proceed, \@dummy );
 	}
+
 	# my $db_config = &gen_crconfig_json( $self, $cdn_name );
 	my $disk_config = &read_crconfig_json($cdn_name);
 
@@ -525,6 +552,9 @@ sub stringify_ds {
 		if ( defined( $ds->{'bypassDestination'}->{'DNS'}->{'ip6'} ) ) {
 			$string .= " -ip6:" . $ds->{'bypassDestination'}->{'DNS'}->{'ip6'};
 		}
+		if ( defined( $ds->{'bypassDestination'}->{'DNS'}->{'cname'} ) ) {
+			$string .= " -cname:" . $ds->{'bypassDestination'}->{'DNS'}->{'cname'};
+		}
 		if ( defined( $ds->{'bypassDestination'}->{'DNS'}->{'ttl'} ) ) {
 			$string .= " -ttl:" . $ds->{'bypassDestination'}->{'DNS'}->{'ttl'};
 		}
@@ -537,6 +567,14 @@ sub stringify_ds {
 	}
 	if ( defined( $ds->{'maxDnsIpsForLocation'} ) ) {
 		$string .= "|maxDnsIpsForLocation:" . $ds->{'maxDnsIpsForLocation'};
+	}
+	if ( defined( $ds->{'responseHeaders'} ) ) {
+		foreach my $header ( sort keys %{ $ds->{'responseHeaders'} } ) {
+			$string .= "|responseHeader:$header:" . $ds->{'responseHeaders'}->{$header};
+		}
+	}
+	if ( defined( $ds->{'initial_dispersion'} ) ) {
+		$string .= "|initial_dispersion: " . $ds->{'initial_dispersion'};
 	}
 	$string .= "|<br>&emsp;DNS TTLs: A:" . $ds->{'ttls'}->{'A'} . " AAAA:" . $ds->{'ttls'}->{'AAAA'} . "|";
 	foreach my $dns ( @{ $ds->{'staticDnsEntries'} } ) {
@@ -575,7 +613,7 @@ sub stringify_content_server {
 		. "|type: "
 		. $cs->{'type'}
 		. "|hashId: "
-		. ( $cs->{'hashId'} || "" ) 
+		. ( $cs->{'hashId'} || "" )
 		. "|hashCount: "
 		. ( $cs->{'hashCount'} || "" ) . "|";
 	return $string;
@@ -662,5 +700,19 @@ sub compare_lists {
 		push( @compare_text, "    " . $text . " is the same." );
 	}
 	return @compare_text;
+}
+
+sub trim_spaces {
+	my $text = shift;
+	$text =~ s/^\s+//g;
+	$text =~ s/\s+$//g;
+	return $text;
+}
+
+sub trim_quotes {
+	my $text = shift;
+	$text =~ s/^\"//g;
+	$text =~ s/\"$//g;
+	return $text;
 }
 1;

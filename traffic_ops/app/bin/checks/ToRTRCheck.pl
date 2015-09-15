@@ -14,13 +14,15 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-# TRTR check extension. Checks the status of the caches as seen by the Traffic Router
+# RTR check extension. Checks the status of the caches as seen by the Traffic Router
 #
+# example cron entry
+# 20 * * * * root /opt/traffic_ops/app/bin/checks/ToRTRCheck.pl -c "{\"base_url\": \"https://localhost\", \"check_name\": \"RTR\", \"name\": \"Content Router\"}"
+# example cron entry with syslog
+# 20 * * * * root /opt/traffic_ops/app/bin/checks/ToRTRCheck.pl -c "{\"base_url\": \"https://localhost\", \"check_name\": \"RTR\", \"name\": \"Content Router\", \"syslog_facility\": \"local0\"}"
 
 use strict;
 use warnings;
-
-$|++;
 
 use LWP::UserAgent;
 use Data::Dumper;
@@ -28,10 +30,12 @@ use Getopt::Std;
 use Log::Log4perl qw(:easy);
 use JSON;
 use Extensions::Helper;
+use Sys::Syslog qw(:standard :macros);
+use IO::Handle;
 
-my $VERSION = "0.01";
-my $hostn   = `hostname`;
-chomp($hostn);
+my $VERSION = "0.02";
+
+STDOUT->autoflush(1);
 
 my %args = ();
 getopts( "l:c:", \%args );
@@ -53,6 +57,7 @@ if ( !defined( $args{c} ) ) {
 	exit(1);
 }
 
+# check the command line args
 my $jconf = undef;
 eval { $jconf = decode_json( $args{c} ) };
 if ($@) {
@@ -60,15 +65,24 @@ if ($@) {
 	exit(1);
 }
 
-# TRACE Dumper($jconf);
+# Setup Syslogging if requested
+my $sslg = undef;
+if (defined($jconf->{syslog_facility})) {
+   TRACE "syslog is defined";
+   setlogmask(LOG_UPTO(LOG_INFO));
+   openlog ('ToChecks', '', $jconf->{syslog_facility});
+   $sslg = 1;
+}
+
+TRACE Dumper($jconf);
 my $b_url = $jconf->{base_url};
 Extensions::Helper->import();
 my $ext = Extensions::Helper->new( { base_url => $b_url, token => '91504CE6-8E4A-46B2-9F9F-FE7C15228498' } );
 
 my $jdataserver = $ext->get(Extensions::Helper::SERVERLIST_PATH);
-my $match       = $jconf->{match};
-
 my $check_name = $jconf->{check_name};
+my $chck_lng_nm = $jconf->{name};
+
 if ( $check_name ne "RTR" ) {
 	ERROR "This Check Extension is exclusively for the RTR (Router) check.";
 	exit(4);
@@ -120,82 +134,165 @@ my %ccr_healthy_caches;
 my %ccr_unhealthy_caches;
 
 my $total_ccrs;
+my $bad_ccrs;
 foreach my $content_router ( keys %ccr_assoc ) {
-	my $ccr_status = &get_crs_stat( $ccr_assoc{$content_router}->{ipAddress}, $ccr_assoc{$content_router}->{apiPort} );
-	foreach my $loc ( keys %{$ccr_status} ) {
-		foreach my $cache ( @{ $ccr_status->{$loc}->{caches} } ) {
-			if ( $cache->{cacheOnline} ) {
-				$ccr_healthy_caches{$content_router}++;
-				$healthy{ $cache->{fqdn} }++;
-			}
-			else {
-				$ccr_unhealthy_caches{$content_router}++;
-				$unhealthy{ $cache->{fqdn} }++;
-			}
-		}
-	}
+   TRACE "content_router: ".$content_router;
+	my $ccr_status = &get_crs_stat( $ccr_assoc{$content_router}->{ipAddress},
+                                   $ccr_assoc{$content_router}->{apiPort},
+                                   $ccr_assoc{$content_router}->{name}
+                                 );
+
+   if (ref($ccr_status) eq 'HASH') {
+	   foreach my $loc ( keys %{$ccr_status} ) {
+	   	foreach my $cache ( @{ $ccr_status->{$loc}->{caches} } ) {
+	   		if ( $cache->{cacheOnline} ) {
+	   			$ccr_healthy_caches{$content_router}++;
+               TRACE "healthy_cache: ".$cache->{fqdn};
+	   			$healthy{ $cache->{fqdn} }++;
+	   		}
+	   		else {
+	   			$ccr_unhealthy_caches{$content_router}++;
+               TRACE "unhealthy_cache: ".$cache->{fqdn};
+	   			$unhealthy{ $cache->{fqdn} }++;
+	   		}
+	   	}
+	   }
+   } else {
+      TRACE "bad_ccr++";
+		$bad_ccrs->{ $ccr_assoc{$content_router}->{cdnName} }++;
+   }
 	$total_ccrs->{ $ccr_assoc{$content_router}->{cdnName} }++;
 }
 
-my $bad_ccrs;
-my $good_ccr = "";
+my $tmp = JSON->new->pretty(1)->encode($total_ccrs);
+TRACE "total_ccrs: ".$tmp;
+
+$tmp = JSON->new->pretty(1)->encode(\%ccr_healthy_caches);
+TRACE "ccr_healthy_caches: ".$tmp;
+
+# Check the Content Routers to see if they are aware of ONLINE Cache servers
+#my $good_ccr = "";
 foreach my $content_router ( keys %ccr_unhealthy_caches, keys %ccr_healthy_caches ) {
 
-	# if ( !defined( $bad_ccrs->{ $ccr_assoc{$content_router}->{cdn_name} } ) ) {
-	# 	$bad_ccrs->{ $ccr_assoc{content_router}->{cdn_name} } = 0;
-	# }
+	#if ( !defined( $bad_ccrs->{ $ccr_assoc{$content_router}->{cdn_name} } ) ) {
+	#	$bad_ccrs->{ $ccr_assoc{content_router}->{cdn_name} } = 0;
+	#}
+   TRACE "ccr_assoc{content_router}->{cdnName}: ".$ccr_assoc{$content_router}->{cdnName};
+   TRACE "content_router: ".$content_router;
 	if ( !defined( $ccr_healthy_caches{$content_router} ) ) {
-		ERROR $content_router . " has NO caches marked ONLINE - disconnected from XMPP!?!?!?";
+      my $msg = $content_router . " has NO caches marked ONLINE";
+		ERROR $msg;
 		$ccr_assoc{$content_router}->{status} = "DOWN";
 		$bad_ccrs->{ $ccr_assoc{$content_router}->{cdnName} }++;
+      if ($sslg) {
+         my @tmp = ($content_router, "RTR", "RTR", 'FAIL',$msg);
+         syslog(LOG_ERR, "hostname=%s check=%s name=\"%s\" result=%s msg=\"%s\"", @tmp);
+      }
 	}
-	else {
-		$good_ccr = $content_router;
-	}
+	#else {
+	#	$good_ccr = $content_router;
+   #   TRACE "good_ccr: ".$good_ccr;
+	#}
 }
 
+$tmp = JSON->new->pretty(1)->encode(\%ccr_assoc);
+TRACE "ccr_assoc: ".$tmp;
+
+$tmp = JSON->new->pretty(1)->encode(\%healthy);
+TRACE "healthy: ".$tmp;
+
+# Check to see if the cache is being reported healthy by all the content routers
 foreach my $cache ( sort keys %healthy ) {
 
-	# print $total_ccrs->{ $cdn_name{$cache} } . " - " . $bad_ccrs->{ $cdn_name{$cache} } . "\n";
+   DEBUG "total_ccrs: ".$total_ccrs->{ $cdn_name{$cache} } . " bad_ccrs: " .(defined( $bad_ccrs->{ $cdn_name{$cache} } ) ? $bad_ccrs->{ $cdn_name{$cache} } : 0 ). "\n";
+   DEBUG "healthy{cache}: ".$healthy{$cache};
+   DEBUG "cache: ".$cache;
 	if ( $healthy{$cache} < ( $total_ccrs->{ $cdn_name{$cache} } - ( defined( $bad_ccrs->{ $cdn_name{$cache} } ) ? $bad_ccrs->{ $cdn_name{$cache} } : 0 ) ) ) {
-		ERROR "MINORITY REPORT for  " . $cache . " => " . $healthy{$cache} . " out of " . ( $total_ccrs - $bad_ccrs ) . " healthy CCRs think it is OK.";
+      my $msg = $cache . " => " . $healthy{$cache} . " out of " . ( $total_ccrs - $bad_ccrs ) . " healthy CCRs think it is OK.";
+		ERROR $msg;
+      if ($sslg) {
+         my @tmp = ($cache, "RTR", "RTR", 'FAIL',$msg);
+         syslog(LOG_ERR, "hostname=%s check=%s name=\"%s\" result=%s msg=\"%s\"", @tmp);
+      }
 		$ext->post_result( $server_assoc{$cache}, $check_name, 0 );
 	}
 }
+
+# Report on caches that are OFFLINE
 foreach my $cache ( sort keys %unhealthy ) {
 	if ( $unhealthy{$cache} == $total_ccrs->{ $cdn_name{$cache} } ) {
-		ERROR $cache . " is marked OFFLINE by all CCRs.";
+      my $msg = $cache . " is marked OFFLINE by all CCRs.";
+		ERROR $msg;
+      if ($sslg) {
+         my @tmp = ($cache, "RTR", "RTR", 'FAIL',$msg);
+         syslog(LOG_ERR, "hostname=%s check=%s name=\"%s\" result=%s msg=\"%s\"", @tmp);
+      }
 		$ext->post_result( $server_assoc{$cache}, $check_name, 0 );
 	}
 }
+# Report on healthy caches
 foreach my $cache ( sort keys %healthy ) {
 	if ( $healthy{$cache} == $total_ccrs->{ $cdn_name{$cache} } ) {
+      my $msg = $cache . " is marked ONLINE by all CCRs.";
+		INFO $msg;
+      if ($sslg) {
+         my @tmp = ($cache, "RTR", "RTR", 'OK');
+         syslog(LOG_ERR, "hostname=%s check=%s name=\"%s\" result=%s", @tmp);
+      }
 		$ext->post_result( $server_assoc{$cache}, $check_name, 1 );
 	}
 }
+# Report on healthy content routers.
+foreach my $ccr (keys %ccr_assoc) {
+   # By this time we should have already logged any 'FAIL' messages
+   if ($ccr_assoc{$ccr}->{status} eq "OPERATIONAL") {
+      my $msg = $ccr . " is OK.";
+		INFO $msg;
+      if ($sslg) {
+         my @tmp = ($ccr, "RTR", "RTR", 'OK');
+         syslog(LOG_ERR, "hostname=%s check=%s name=\"%s\" result=%s", @tmp);
+      }
+   }
+}
+
+closelog();
 
 sub get_crs_stat() {
 	my $ccr  = shift;
 	my $port = shift || 80;
-	my $url  = 'http://' . $ccr . ":" . $port . '/crs';
+   my $ccr_name = shift;
+	my $url  = 'http://' . $ccr . ":" . $port . '/crs/locations';
 
 	my $ua = LWP::UserAgent->new;
-	TRACE "getting " . $url;
-	my $response = $ua->get( $url . '/locations' );
+	TRACE "getting locations: " . $url;
+	my $response = $ua->get( $url );
 
 	if ( !$response->is_success ) {
 		ERROR $ccr . " Not responding! - " . $response->status_line . ".";
-		$ccr_assoc{$ccr}->{status} = "DOWN";
+		$ccr_assoc{$ccr_name}->{status} = "DOWN";
+      # log a FAIL message for this content router.
+      if ($sslg) {
+         my @tmp = ($ccr_name, "RTR", "RTR", 'FAIL',
+                    "Unable to connect to content router API. response: ".$response->status_line);
+         syslog(LOG_ERR, "hostname=%s check=%s name=\"%s\" result=%s msg=\"%s\"", @tmp);
+      }
 		return;
 	}
 	my $loc_var = JSON->new->utf8->decode( $response->content );
 
+   # get the status of each location from the content router
 	my $status;
 	foreach my $location ( sort @{ $loc_var->{locations} } ) {
-		TRACE "getting " . $url . "/locations/" . $location . "/caches";
-		my $response = $ua->get( $url . "/locations/" . $location . "/caches" );
+		TRACE "getting " . $url ."/".$location . "/caches";
+		my $response = $ua->get( $url."/".$location."/caches" );
 		if ( !$response->is_success ) {
 			ERROR $ccr . " Not responding! - " . $response->status_line . ".";
+         if ($sslg) {
+            # Log a FAIL message for this content router
+            my @tmp = ($ccr_name, "RTR", "RTR", 'FAIL',
+                       "Unable to get cache info for $location. response: ".$response->status_line);
+            syslog(LOG_ERR, "hostname=%s check=%s name=\"%s\" result=%s msg=\"%s\"", @tmp);
+         }
 			next;
 		}
 		my $loc_stat = JSON->new->utf8->decode( $response->content );
@@ -204,3 +301,7 @@ sub get_crs_stat() {
 	return $status;
 }
 
+# TODO
+sub help {
+   print "-c is a required option\n";
+}

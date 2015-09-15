@@ -5,15 +5,16 @@ import (
 	"errors"
 	"flag"
 	"fmt"
-	log "github.com/cihub/seelog"
-	traffic_ops "github.com/comcast/traffic_control/traffic_ops/client"
-	influx "github.com/influxdb/influxdb/client"
 	"math/rand"
 	"net/url"
 	"os"
 	"runtime"
 	"strconv"
 	"time"
+
+	log "github.com/cihub/seelog"
+	traffic_ops "github.com/comcast/traffic_control/traffic_ops/client"
+	influx "github.com/influxdb/influxdb/client"
 )
 
 const (
@@ -79,19 +80,21 @@ func main() {
 	formatEndTime := endTime.Format("2006-01-02T15:04:05-00:00")
 	endUTime := endTime.Unix()
 	startUTime := startTime.Unix()
+	pts := make([]influx.Point, 0)
 
 	<-time.NewTimer(time.Now().Truncate(time.Duration(pollingInterval) * time.Second).Add(time.Duration(pollingInterval) * time.Second).Sub(time.Now())).C
 	tickerChan := time.Tick(time.Duration(pollingInterval) * time.Second)
 	for now := range tickerChan {
 		//get TrafficOps Data
 		trafOpsData, err := getToData(config, false)
-		if err == nil {
+		if err != nil {
 			errHndlr(err, FATAL)
 		}
 		lastSummaryTime, err := time.Parse("2006-01-02 15:04:05", trafOpsData.LastSummaryTime)
 		if err != nil {
 			errHndlr(err, ERROR)
 		}
+		log.Infof("lastSummaryTime is %v", lastSummaryTime)
 		if lastSummaryTime.Day() != now.Day() {
 			log.Info("Summarizing from ", startTime, " (", startUTime, ") to ", endTime, " (", endUTime, ")")
 			// influx connection
@@ -99,6 +102,7 @@ func main() {
 			if err != nil {
 				log.Error("Could not connect to InfluxDb to get daily summary stats!!")
 				errHndlr(err, ERROR)
+				continue
 			}
 			//create influxdb query
 			log.Infof("SELECT sum(value)/6 FROM bandwidth where time > '%v' and time < '%v' group by time(60s), cdn fill(0)", formatStartTime, formatEndTime)
@@ -107,13 +111,14 @@ func main() {
 			if err != nil {
 				fmt.Printf("err = %v\n", err)
 				errHndlr(err, ERROR)
+				continue
 			}
 			//loop throgh series
 			for _, row := range res[0].Series {
 				prevUtime := startUTime
 				var cdn string
-				max := 0.00
-				bytesServed := 0.00
+				max := float64(0)
+				bytesServed := float64(0)
 				cdn = row.Tags["cdn"]
 				for _, record := range row.Values {
 					kbps, err := record[1].(json.Number).Float64()
@@ -134,23 +139,70 @@ func main() {
 					bytesServed += float64(duration) * kbps / 8
 					prevUtime = sampleUTime
 				}
-				log.Infof("max kbps for cdn %v = %v", cdn, max)
-				log.Infof("bytes served for cdn %v = %v", cdn, bytesServed)
-				//write daily_maxkbps in traffic_ops
+				maxGbps := max / 1000000
+				bytesServedTb := bytesServed / 1000000000
+				log.Infof("max gbps for cdn %v = %v", cdn, maxGbps)
+				log.Infof("Tbytes served for cdn %v = %v", cdn, bytesServedTb)
+				//write daily_maxgbps in traffic_ops
 				var statsSummary traffic_ops.StatsSummary
 				statsSummary.CdnName = cdn
 				statsSummary.DeliveryService = "all"
-				statsSummary.StatName = "daily_maxkbps"
-				statsSummary.StatValue = strconv.FormatFloat(max, 'f', 2, 64)
+				statsSummary.StatName = "daily_maxgbps"
+				statsSummary.StatValue = strconv.FormatFloat(maxGbps, 'f', 2, 64)
 				statsSummary.SummaryTime = now.Format("2006-01-02 15:04:05")
+				statsSummary.StatDate = startTime.Format("2006-01-02")
 				err = writeSummaryStats(config, statsSummary)
 				if err != nil {
-					log.Error("Could not store daily summary stats in traffic ops!")
+					log.Error("Could not store daily_maxgbps stats in traffic ops!")
 					errHndlr(err, ERROR)
 				}
+				//write to influxdb
+				pts = append(pts,
+					influx.Point{
+						Measurement: statsSummary.StatName,
+						Tags: map[string]string{
+							"deliveryservice": statsSummary.DeliveryService,
+							"cdn":             statsSummary.CdnName,
+						},
+						Fields: map[string]interface{}{
+							"value": maxGbps,
+						},
+						Time:      startTime,
+						Precision: "s",
+					},
+				)
 				//write bytes served data to traffic_ops
-				statsSummary.StatName = "daily_byteserved"
-				statsSummary.StatValue = strconv.FormatFloat(bytesServed, 'f', 2, 64)
+				statsSummary.StatName = "daily_bytesserved"
+				statsSummary.StatValue = strconv.FormatFloat(bytesServedTb, 'f', 2, 64)
+				err = writeSummaryStats(config, statsSummary)
+				if err != nil {
+					log.Error("Could not store daily_bytesserved stats in traffic ops!")
+					errHndlr(err, ERROR)
+				}
+				pts = append(pts,
+					influx.Point{
+						Measurement: statsSummary.StatName,
+						Tags: map[string]string{
+							"deliveryservice": statsSummary.DeliveryService,
+							"cdn":             statsSummary.CdnName,
+						},
+						Fields: map[string]interface{}{
+							"value": bytesServedTb,
+						},
+						Time:      startTime,
+						Precision: "s",
+					},
+				)
+			}
+			log.Infof("Writing daily stats to influxDb")
+			bps := influx.BatchPoints{
+				Points:          pts,
+				Database:        "daily_stats",
+				RetentionPolicy: "daily_stats",
+			}
+			_, err = influxClient.Write(bps)
+			if err != nil {
+				errHndlr(err, ERROR)
 			}
 		}
 	}
@@ -221,10 +273,12 @@ func influxConnect(config *StartupConfig, trafOps TrafOpsData) (*influx.Client, 
 				con, err := influx.NewClient(conf)
 				if err != nil {
 					errHndlr(err, ERROR)
+					continue
 				} else {
 					_, _, err = con.Ping()
 					if err != nil {
 						errHndlr(err, ERROR)
+						continue
 					} else {
 						return con, nil
 					}
@@ -272,7 +326,7 @@ func getToData(config *StartupConfig, init bool) (TrafOpsData, error) {
 			trafOpsData.InfluxDbProps = append(trafOpsData.InfluxDbProps, InfluxDbProps{Fqdn: fqdn, Port: port})
 		}
 	}
-	lastSummaryTime, err := tm.SummaryStatsLastUpdated("daily_maxkbps")
+	lastSummaryTime, err := tm.SummaryStatsLastUpdated("daily_maxgbps")
 	if err != nil {
 		errHndlr(err, ERROR)
 	}
@@ -287,7 +341,7 @@ func writeSummaryStats(config *StartupConfig, statsSummary traffic_ops.StatsSumm
 		log.Error(msg)
 		return err
 	}
-	_, err = tm.AddSummaryStats(statsSummary)
+	err = tm.AddSummaryStats(statsSummary)
 	if err != nil {
 		return err
 	}

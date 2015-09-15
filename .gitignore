@@ -7,6 +7,8 @@ cpanfile.snapshot
 rpm/build.number
 docs/build/*
 local
+traffic_ops_extensions/log/*
+traffic_ops_extensions/lib/Extensions/InfluxDB/log/*
 traffic_ops/app/log/*.log
 traffic_ops/app/public/CRConfig-Snapshots/*
 traffic_ops/app/public/Trafficserver-Snapshots/*
@@ -23,3 +25,4 @@ traffic_ops/app/public/js/jMenu.jquery.min.js
 traffic_ops/app/public/js/jquery-1.11.2.min.js
 traffic_ops/app/public/js/jquery-ui.min.js
 traffic_ops/app/public/js/jquery.dataTables.min.js
+traffic_stats/write_traffic_stats

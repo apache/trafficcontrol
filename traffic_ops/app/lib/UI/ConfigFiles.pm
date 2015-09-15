@@ -26,8 +26,6 @@ use NetAddr::IP;
 use UI::DeliveryService;
 use JSON;
 use API::DeliveryService::KeysUrlSig qw(URL_SIG_KEYS_BUCKET);
-use Utils::Helper::Extensions;
-Utils::Helper::Extensions->use;
 
 my $dispatch_table ||= {
 	"logs_xml.config"         => sub { logs_xml_dot_config(@_) },
@@ -81,10 +79,7 @@ sub genfiles {
 	$file =~ s/^set_dscp_.*\.config$/set_dscp_\.config/;
 	$file =~ s/^regex_remap_.*\.config$/regex_remap_\.config/;
 	$file =~ s/^cacheurl_.*\.config$/cacheurl_\.config/;
-	if ( $file =~ /^to_ext_.*\.config$/ ) {
-		$file =~ s/^to_ext_.*\.config$/to_ext_\.config/;
-		$org_name =~ s/^to_ext_.*\.config$/to_ext_\.config/;
-	}
+	$file =~ s/^to_ext_.*\.config$/to_ext_\.config/;
 
 	my $text = undef;
 	if ( $mode eq 'view' ) {
@@ -131,10 +126,7 @@ sub gen_fancybox_data {
 		$file =~ s/^set_dscp_.*\.config$/set_dscp_\.config/;
 		$file =~ s/^regex_remap_.*\.config$/regex_remap_\.config/;
 		$file =~ s/^cacheurl_.*\.config$/cacheurl_\.config/;
-		if ( $file =~ /^to_ext_.*\.config$/ ) {
-			$file =~ s/^to_ext_.*\.config$/to_ext_\.config/;
-			$org_name =~ s/^to_ext_(.*)\.config$/$1.config/;
-		}
+		$file =~ s/^to_ext_.*\.config$/to_ext_\.config/;
 
 		my $text = "boo";
 		if ( defined( $dispatch_table->{$file} ) ) {
@@ -363,9 +355,22 @@ sub parent_data {
 		$self->db->resultset('Server')->search( { cachegroup => { -in => \@parent_cachegroup_ids }, status => { -in => [ $online, $reported ] } },
 		{ prefetch => [ 'cachegroup', 'status', 'type', 'profile' ] } );
 
-	my $i             = 0;
-	my %profile_cache = ();
+	my %profile_cache    = ();
+	my $deliveryservices = undef;
 	while ( my $row = $rs_parent->next ) {
+
+		next unless ( $row->type->name eq 'ORG' || $row->type->name eq 'EDGE' ||$row->type->name eq 'MID' );
+		if ( $row->type->name eq 'ORG' ) {
+			my $rs_ds = $self->db->resultset('DeliveryserviceServer')->search( { server => $row->id }, { prefetch => ['deliveryservice'] } );
+			while ( my $ds_row = $rs_ds->next ) {
+				my $ds_domain = $ds_row->deliveryservice->org_server_fqdn;
+				$ds_domain =~ s/https?:\/\/(.*)/$1/;
+				push( @{ $deliveryservices->{$ds_domain} }, $row );
+			}
+		}
+		else {
+			push( @{ $deliveryservices->{"all_parents"} }, $row );
+		}
 
 		# get the profile info, and cache it in %profile_cache
 		my $ds_domain      = undef;
@@ -401,26 +406,32 @@ sub parent_data {
 			$use_ip_address = defined($param) ? $param->parameter->value : 0;
 			$profile_cache{$pid}->{use_ip_address} = $use_ip_address;
 		}
-		else {
-			$ds_domain      = $profile_cache{$pid}->{domain_name};
-			$weight         = $profile_cache{$pid}->{weight};
-			$port           = $profile_cache{$pid}->{port};
-			$use_ip_address = $profile_cache{$pid}->{use_ip_address};
-		}
-		if ( defined($ds_domain) && defined($server_domain) && $ds_domain eq $server_domain ) {
-			$pinfo->{"plist"}->[$i]->{"host_name"}      = $row->host_name;
-			$pinfo->{"plist"}->[$i]->{"port"}           = defined($port) ? $port : $row->tcp_port;
-			$pinfo->{"plist"}->[$i]->{"domain_name"}    = $row->domain_name;
-			$pinfo->{"plist"}->[$i]->{"weight"}         = $weight;
-			$pinfo->{"plist"}->[$i]->{"use_ip_address"} = $use_ip_address;
-			$pinfo->{"plist"}->[$i]->{"ip_address"}     = $row->ip_address;
-			if ( $server->cachegroup->parent_cachegroup_id == $row->cachegroup->id ) {
-				$pinfo->{"plist"}->[$i]->{"preferred"} = 1;
+	}
+
+	foreach my $prefix ( keys %{$deliveryservices} ) {
+		my $i = 0;
+		$rs_parent->reset;
+		foreach my $row ( @{ $deliveryservices->{$prefix} } ) {
+			my $pid            = $row->profile->id;
+			my $ds_domain      = $profile_cache{$pid}->{domain_name};
+			my $weight         = $profile_cache{$pid}->{weight};
+			my $port           = $profile_cache{$pid}->{port};
+			my $use_ip_address = $profile_cache{$pid}->{use_ip_address};
+			if ( defined($ds_domain) && defined($server_domain) && $ds_domain eq $server_domain ) {
+				$pinfo->{$prefix}->[$i]->{"host_name"}      = $row->host_name;
+				$pinfo->{$prefix}->[$i]->{"port"}           = defined($port) ? $port : $row->tcp_port;
+				$pinfo->{$prefix}->[$i]->{"domain_name"}    = $row->domain_name;
+				$pinfo->{$prefix}->[$i]->{"weight"}         = $weight;
+				$pinfo->{$prefix}->[$i]->{"use_ip_address"} = $use_ip_address;
+				$pinfo->{$prefix}->[$i]->{"ip_address"}     = $row->ip_address;
+				if ( $server->cachegroup->parent_cachegroup_id == $row->cachegroup->id ) {
+					$pinfo->{$prefix}->[$i]->{"preferred"} = 1;
+				}
+				else {
+					$pinfo->{$prefix}->[$i]->{"preferred"} = 0;
+				}
+				$i++;
 			}
-			else {
-				$pinfo->{"plist"}->[$i]->{"preferred"} = 0;
-			}
-			$i++;
 		}
 	}
 	return $pinfo;
@@ -604,7 +615,7 @@ sub cacheurl_dot_config {
 		my $ds_xml_id = $1;
 		my $ds = $self->db->resultset('Deliveryservice')->search( { xml_id => $ds_xml_id }, { prefetch => [ 'type', 'profile' ] } )->single();
 		if ($ds) {
-			$text .= $ds->cacheurl;
+			$text .= $ds->cacheurl . "\n";
 		}
 	}
 	elsif ( $filename eq "cacheurl.config" ) {    # this is the global drop qstring w cacheurl use case
@@ -845,6 +856,9 @@ sub remap_dot_config {
 			if ( defined( $remap->{cacheurl} ) && $remap->{cacheurl} ne "" ) {
 				$mid_remap{ $remap->{org} } .= " \@plugin=cacheurl.so \@pparam=" . $remap->{cacheurl_file};
 			}
+			if ( $remap->{range_request_handling} == 2 ) {
+				$mid_remap{ $remap->{org} } .= " \@plugin=cache_range_requests.so";
+			}
 		}
 		foreach my $key ( keys %mid_remap ) {
 			$text .= "map " . $key . " " . $key . $mid_remap{$key} . "\n";
@@ -976,7 +990,9 @@ sub parent_dot_config {
 
 				$text .= "dest_domain=$org_fqdn parent=\"";
 				my $pinfo = $self->parent_data($server);
-				foreach my $parent ( @{ $pinfo->{"plist"} } ) {
+
+				#print Dumper($pinfo);
+				foreach my $parent ( @{ $pinfo->{$org_fqdn} } ) {
 					if ( $parent->{use_ip_address} == 1 ) {
 						$text .= $parent->{ip_address} . ":" . $parent->{port} . "|" . $parent->{weight} . ";";
 					}
@@ -984,7 +1000,7 @@ sub parent_dot_config {
 						$text .= $parent->{"host_name"} . "." . $parent->{"domain_name"} . ":" . $parent->{"port"} . "|" . $parent->{"weight"} . ";";
 					}
 				}
-				$text .= "\" round_robin=consistent_hash go_direct=false parent_is_proxy=false";
+				$text .= "\" round_robin=consistent_hash go_direct=false parent_is_proxy=false\n";
 			}
 		}
 
@@ -1000,7 +1016,7 @@ sub parent_dot_config {
 		my %done = ();
 
 		foreach my $remap ( @{ $data->{dslist} } ) {
-			if ( $remap->{type} eq "HTTP_NO_CACHE" || $remap->{type} eq "HTTP_LIVE" ) {
+			if ( $remap->{type} eq "HTTP_NO_CACHE" || $remap->{type} eq "HTTP_LIVE" || $remap->{type} eq "DNS_LIVE" ) {
 				if ( !defined( $done{ $remap->{org} } ) ) {
 					my $org_fqdn = $remap->{org};
 					$org_fqdn =~ s/https?:\/\///;
@@ -1018,14 +1034,14 @@ sub parent_dot_config {
 		if ( defined($pselect_alg) && $pselect_alg eq 'consistent_hash' ) {
 
 			$text .= "dest_domain=. parent=\"";
-			foreach my $parent ( @{ $pinfo->{"plist"} } ) {
+			foreach my $parent ( @{ $pinfo->{"all_parents"} } ) {
 				$text .= $parent->{"host_name"} . "." . $parent->{"domain_name"} . ":" . $parent->{"port"} . "|" . $parent->{"weight"} . ";";
 			}
 			$text .= "\" round_robin=consistent_hash go_direct=false";
 		}
 		else {    # default to old situation.
 			$text .= "dest_domain=. parent=\"";
-			foreach my $parent ( @{ $pinfo->{"plist"} } ) {
+			foreach my $parent ( @{ $pinfo->{"all_parents"} } ) {
 				$text .= $parent->{"host_name"} . "." . $parent->{"domain_name"} . ":" . $parent->{"port"} . ";";
 			}
 			$text .= "\" round_robin=urlhash go_direct=false";
@@ -1041,6 +1057,8 @@ sub parent_dot_config {
 		}
 
 		$text .= "\n";
+
+		# $self->app->log->debug($text);
 		return $text;
 	}
 }
@@ -1261,6 +1279,10 @@ sub to_ext_dot_config {
 		->search( { -and => [ profile => $server->profile->id, 'parameter.config_file' => $file, 'parameter.name' => 'SubRoutine' ] },
 		{ prefetch => [ 'parameter', 'profile' ] } )->get_column('parameter.value')->single();
 	$self->app->log->error( "ToExtDotConfigFile == " . $subroutine );
+
+	my $package;
+	( $package = $subroutine ) =~ s/(.*)(::)(.*)/$1/;
+	eval "use $package;";
 
 	# And call it - the below calls the subroutine in the var $subroutine.
 	$text .= &{ \&{$subroutine} }( $self, $id, $file );

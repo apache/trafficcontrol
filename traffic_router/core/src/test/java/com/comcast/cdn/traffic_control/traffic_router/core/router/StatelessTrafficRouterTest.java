@@ -97,12 +97,13 @@ public class StatelessTrafficRouterTest {
 		req.setRequestedUrl("http://somehost.cdn.net/QualityLevels(96000)/Fragments(audio_eng=20720000000)");
 		Track track = StatTracker.getTrack();
 		try {
-			URL url = trafficRouterManager.getTrafficRouter().route(req, track);
-			if(url == null) {
+			HTTPRouteResult routeResult = trafficRouterManager.getTrafficRouter().route(req, track);
+			if (routeResult == null) {
 //				fail("HTTP route returned null");
 				System.out.println("HTTP route returned null");
+			} else {
+				System.out.println(routeResult.getUrl());
 			}
-			System.out.println(url);
 		} catch (Exception e2) {
 			e2.printStackTrace();
 //			fail(e2.toString());

@@ -38,16 +38,13 @@ public class TrafficRouterManager {
 	private GeolocationService geolocationService6;
 	private ObjectPool hashFunctionPool;
 	private StatTracker statTracker;
-	private String dnsRoutingName;
-	private String httpRoutingName;
-	
 	private static final Map<String, Long> timeTracker = new HashMap<String, Long>();
-	
 	private NameServer nameServer;
+
 	public NameServer getNameServer() {
 		return nameServer;
 	}
-	
+
 	public static Map<String, Long> getTimeTracker() {
 		return timeTracker;
 	}
@@ -55,7 +52,7 @@ public class TrafficRouterManager {
 	public void setNameServer(final NameServer nameServer) {
 		this.nameServer = nameServer;
 	}
-	
+
 	public boolean setState(final JSONObject jsonObject) throws UnknownHostException {
 		timeTracker.put("lastCacheStateCheck", System.currentTimeMillis()); // new Date();
 		if(jsonObject == null) {
@@ -86,9 +83,7 @@ public class TrafficRouterManager {
 				geolocationService, 
 				geolocationService6, 
 				hashFunctionPool, 
-				statTracker,
-				getDnsRoutingName(),
-				getHttpRoutingName());
+				statTracker);
 		synchronized(this) {
 			if(state != null) {
 				try {
@@ -113,21 +108,4 @@ public class TrafficRouterManager {
 	public void setStatTracker(final StatTracker statTracker) {
 		this.statTracker = statTracker;
 	}
-
-	private String getDnsRoutingName() {
-		return dnsRoutingName;
-	}
-
-	public void setDnsRoutingName(final String dnsRoutingName) {
-		this.dnsRoutingName = dnsRoutingName;
-	}
-
-	private String getHttpRoutingName() {
-		return httpRoutingName;
-	}
-
-	public void setHttpRoutingName(final String httpRoutingName) {
-		this.httpRoutingName = httpRoutingName;
-	}
-
 }

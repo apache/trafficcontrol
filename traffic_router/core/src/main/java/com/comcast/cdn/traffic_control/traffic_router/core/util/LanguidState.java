@@ -34,32 +34,34 @@ public class LanguidState {
 	private int apiPort = 0;
 
 	public void init() {
-		// TODO: more complete validation of various TR related components
-		if (trafficRouterManager != null) {
-			final TrafficRouter cr = trafficRouterManager.getTrafficRouter();
-			final CacheRegister r = cr.getCacheRegister();
-			final JSONObject routers = r.getTrafficRouters();
+		if (trafficRouterManager != null && trafficRouterManager.getTrafficRouter() != null) {
+			final TrafficRouter tr = trafficRouterManager.getTrafficRouter();
 
-			try {
-				final String hostname = InetAddress.getLocalHost().getHostName().replaceAll("\\..*", "");
+			if (tr.getCacheRegister() != null) {
+				final CacheRegister r = tr.getCacheRegister();
+				final JSONObject routers = r.getTrafficRouters();
 
-				for (String key : JSONObject.getNames(routers)) {
-					final JSONObject rj = routers.optJSONObject(key);
+				try {
+					final String hostname = InetAddress.getLocalHost().getHostName().replaceAll("\\..*", "");
 
-					if (hostname.equalsIgnoreCase(key)) { // this is us
-						if (rj.has("port")) {
-							this.setPort(rj.optInt("port"));
+					for (String key : JSONObject.getNames(routers)) {
+						final JSONObject rj = routers.optJSONObject(key);
+
+						if (hostname.equalsIgnoreCase(key)) { // this is us
+							if (rj.has("port")) {
+								this.setPort(rj.optInt("port"));
+							}
+
+							if (rj.has("api.port")) {
+								this.setApiPort(rj.optInt("api.port"));
+							}
+
+							break;
 						}
-
-						if (rj.has("api.port")) {
-							this.setApiPort(rj.optInt("api.port"));
-						}
-
-						break;
 					}
+				} catch (UnknownHostException e) {
+					LOGGER.error(e, e);
 				}
-			} catch (UnknownHostException e) {
-				LOGGER.error(e, e);
 			}
 		}
 

@@ -1,4 +1,5 @@
 use utf8;
+
 package Schema::Result::Deliveryservice;
 
 # Created by DBIx::Class::Schema::Loader
@@ -74,6 +75,12 @@ __PACKAGE__->table("deliveryservice");
   size: 45
 
 =head2 dns_bypass_ip6
+
+  data_type: 'varchar'
+  is_nullable: 1
+  size: 45
+
+=head2 dns_bypass_cname
 
   data_type: 'varchar'
   is_nullable: 1
@@ -234,88 +241,112 @@ __PACKAGE__->table("deliveryservice");
   data_type: 'tinyint'
   is_nullable: 1
 
+=head2 display_name
+
+  data_type: 'varchar'
+  is_nullable: 0
+  size: 48
+
+=head2 tr_response_headers
+
+  data_type: 'varchar'
+  is_nullable: 1
+  size: 1024
+
+=head2 initial_dispersion
+
+  data_type: 'integer'
+  default_value: 1
+
 =cut
 
 __PACKAGE__->add_columns(
-  "id",
-  { data_type => "integer", is_auto_increment => 1, is_nullable => 0 },
-  "xml_id",
-  { data_type => "varchar", is_nullable => 0, size => 48 },
-  "active",
-  { data_type => "tinyint", is_nullable => 0 },
-  "dscp",
-  { data_type => "integer", is_nullable => 0 },
-  "signed",
-  { data_type => "tinyint", is_nullable => 1 },
-  "qstring_ignore",
-  { data_type => "tinyint", is_nullable => 1 },
-  "geo_limit",
-  { data_type => "tinyint", default_value => 0, is_nullable => 1 },
-  "http_bypass_fqdn",
-  { data_type => "varchar", is_nullable => 1, size => 255 },
-  "dns_bypass_ip",
-  { data_type => "varchar", is_nullable => 1, size => 45 },
-  "dns_bypass_ip6",
-  { data_type => "varchar", is_nullable => 1, size => 45 },
-  "dns_bypass_ttl",
-  { data_type => "integer", is_nullable => 1 },
-  "org_server_fqdn",
-  { data_type => "varchar", is_nullable => 1, size => 255 },
-  "type",
-  { data_type => "integer", is_foreign_key => 1, is_nullable => 0 },
-  "profile",
-  { data_type => "integer", is_foreign_key => 1, is_nullable => 0 },
-  "ccr_dns_ttl",
-  { data_type => "integer", is_nullable => 1 },
-  "global_max_mbps",
-  { data_type => "integer", is_nullable => 1 },
-  "global_max_tps",
-  { data_type => "integer", is_nullable => 1 },
-  "long_desc",
-  { data_type => "varchar", is_nullable => 1, size => 255 },
-  "long_desc_1",
-  { data_type => "varchar", is_nullable => 1, size => 255 },
-  "long_desc_2",
-  { data_type => "varchar", is_nullable => 1, size => 255 },
-  "max_dns_answers",
-  { data_type => "integer", default_value => 0, is_nullable => 1 },
-  "info_url",
-  { data_type => "varchar", is_nullable => 1, size => 255 },
-  "miss_lat",
-  { data_type => "double precision", is_nullable => 1 },
-  "miss_long",
-  { data_type => "double precision", is_nullable => 1 },
-  "check_path",
-  { data_type => "varchar", is_nullable => 1, size => 255 },
-  "last_updated",
-  {
-    data_type => "timestamp",
-    datetime_undef_if_invalid => 1,
-    default_value => \"current_timestamp",
-    is_nullable => 1,
-  },
-  "protocol",
-  { data_type => "tinyint", default_value => 0, is_nullable => 1 },
-  "ssl_key_version",
-  { data_type => "integer", default_value => 0, is_nullable => 1 },
-  "ipv6_routing_enabled",
-  { data_type => "tinyint", is_nullable => 1 },
-  "range_request_handling",
-  { data_type => "tinyint", default_value => 0, is_nullable => 1 },
-  "edge_header_rewrite",
-  { data_type => "varchar", is_nullable => 1, size => 2048 },
-  "origin_shield",
-  { data_type => "varchar", is_nullable => 1, size => 1024 },
-  "mid_header_rewrite",
-  { data_type => "varchar", is_nullable => 1, size => 2048 },
-  "regex_remap",
-  { data_type => "varchar", is_nullable => 1, size => 1024 },
-  "cacheurl",
-  { data_type => "varchar", is_nullable => 1, size => 1024 },
-  "remap_text",
-  { data_type => "varchar", is_nullable => 1, size => 2048 },
-  "multi_site_origin",
-  { data_type => "tinyint", is_nullable => 1 },
+	"id",
+	{ data_type => "integer", is_auto_increment => 1, is_nullable => 0 },
+	"xml_id",
+	{ data_type => "varchar", is_nullable => 0, size => 48 },
+	"active",
+	{ data_type => "tinyint", is_nullable => 0 },
+	"dscp",
+	{ data_type => "integer", is_nullable => 0 },
+	"signed",
+	{ data_type => "tinyint", is_nullable => 1 },
+	"qstring_ignore",
+	{ data_type => "tinyint", is_nullable => 1 },
+	"geo_limit",
+	{ data_type => "tinyint", default_value => 0, is_nullable => 1 },
+	"http_bypass_fqdn",
+	{ data_type => "varchar", is_nullable => 1, size => 255 },
+	"dns_bypass_ip",
+	{ data_type => "varchar", is_nullable => 1, size => 45 },
+	"dns_bypass_ip6",
+	{ data_type => "varchar", is_nullable => 1, size => 45 },
+	"dns_bypass_cname",
+	{ data_type => "varchar", is_nullable => 1, size => 45 },
+	"dns_bypass_ttl",
+	{ data_type => "integer", is_nullable => 1 },
+	"org_server_fqdn",
+	{ data_type => "varchar", is_nullable => 1, size => 255 },
+	"type",
+	{ data_type => "integer", is_foreign_key => 1, is_nullable => 0 },
+	"profile",
+	{ data_type => "integer", is_foreign_key => 1, is_nullable => 0 },
+	"ccr_dns_ttl",
+	{ data_type => "integer", is_nullable => 1 },
+	"global_max_mbps",
+	{ data_type => "integer", is_nullable => 1 },
+	"global_max_tps",
+	{ data_type => "integer", is_nullable => 1 },
+	"long_desc",
+	{ data_type => "varchar", is_nullable => 1, size => 255 },
+	"long_desc_1",
+	{ data_type => "varchar", is_nullable => 1, size => 255 },
+	"long_desc_2",
+	{ data_type => "varchar", is_nullable => 1, size => 255 },
+	"max_dns_answers",
+	{ data_type => "integer", default_value => 0, is_nullable => 1 },
+	"info_url",
+	{ data_type => "varchar", is_nullable => 1, size => 255 },
+	"miss_lat",
+	{ data_type => "double precision", is_nullable => 1 },
+	"miss_long",
+	{ data_type => "double precision", is_nullable => 1 },
+	"check_path",
+	{ data_type => "varchar", is_nullable => 1, size => 255 },
+	"last_updated", {
+		data_type                 => "timestamp",
+		datetime_undef_if_invalid => 1,
+		default_value             => \"current_timestamp",
+		is_nullable               => 1,
+	},
+	"protocol",
+	{ data_type => "tinyint", default_value => 0, is_nullable => 1 },
+	"ssl_key_version",
+	{ data_type => "integer", default_value => 0, is_nullable => 1 },
+	"ipv6_routing_enabled",
+	{ data_type => "tinyint", is_nullable => 1 },
+	"range_request_handling",
+	{ data_type => "tinyint", default_value => 0, is_nullable => 1 },
+	"edge_header_rewrite",
+	{ data_type => "varchar", is_nullable => 1, size => 2048 },
+	"origin_shield",
+	{ data_type => "varchar", is_nullable => 1, size => 1024 },
+	"mid_header_rewrite",
+	{ data_type => "varchar", is_nullable => 1, size => 2048 },
+	"regex_remap",
+	{ data_type => "varchar", is_nullable => 1, size => 1024 },
+	"cacheurl",
+	{ data_type => "varchar", is_nullable => 1, size => 1024 },
+	"remap_text",
+	{ data_type => "varchar", is_nullable => 1, size => 2048 },
+	"multi_site_origin",
+	{ data_type => "tinyint", is_nullable => 1 },
+	"display_name",
+	{ data_type => "varchar", is_nullable => 0, size => 48 },
+	"tr_response_headers",
+	{ data_type => "varchar", is_nullable => 1, size => 1024 },
+	"initial_dispersion",
+	{ data_type => "integer", default_value => 1 },
 );
 
 =head1 PRIMARY KEY
@@ -330,7 +361,7 @@ __PACKAGE__->add_columns(
 
 =cut
 
-__PACKAGE__->set_primary_key("id", "type");
+__PACKAGE__->set_primary_key( "id", "type" );
 
 =head1 UNIQUE CONSTRAINTS
 
@@ -344,7 +375,7 @@ __PACKAGE__->set_primary_key("id", "type");
 
 =cut
 
-__PACKAGE__->add_unique_constraint("ds_id_UNIQUE", ["id"]);
+__PACKAGE__->add_unique_constraint( "ds_id_UNIQUE", ["id"] );
 
 =head2 C<ds_name_UNIQUE>
 
@@ -356,7 +387,7 @@ __PACKAGE__->add_unique_constraint("ds_id_UNIQUE", ["id"]);
 
 =cut
 
-__PACKAGE__->add_unique_constraint("ds_name_UNIQUE", ["xml_id"]);
+__PACKAGE__->add_unique_constraint( "ds_name_UNIQUE", ["xml_id"] );
 
 =head1 RELATIONS
 
@@ -369,10 +400,8 @@ Related object: L<Schema::Result::DeliveryserviceRegex>
 =cut
 
 __PACKAGE__->has_many(
-  "deliveryservice_regexes",
-  "Schema::Result::DeliveryserviceRegex",
-  { "foreign.deliveryservice" => "self.id" },
-  { cascade_copy => 0, cascade_delete => 0 },
+	"deliveryservice_regexes", "Schema::Result::DeliveryserviceRegex",
+	{ "foreign.deliveryservice" => "self.id" }, { cascade_copy => 0, cascade_delete => 0 },
 );
 
 =head2 deliveryservice_servers
@@ -384,10 +413,8 @@ Related object: L<Schema::Result::DeliveryserviceServer>
 =cut
 
 __PACKAGE__->has_many(
-  "deliveryservice_servers",
-  "Schema::Result::DeliveryserviceServer",
-  { "foreign.deliveryservice" => "self.id" },
-  { cascade_copy => 0, cascade_delete => 0 },
+	"deliveryservice_servers", "Schema::Result::DeliveryserviceServer",
+	{ "foreign.deliveryservice" => "self.id" }, { cascade_copy => 0, cascade_delete => 0 },
 );
 
 =head2 deliveryservice_tmusers
@@ -399,10 +426,8 @@ Related object: L<Schema::Result::DeliveryserviceTmuser>
 =cut
 
 __PACKAGE__->has_many(
-  "deliveryservice_tmusers",
-  "Schema::Result::DeliveryserviceTmuser",
-  { "foreign.deliveryservice" => "self.id" },
-  { cascade_copy => 0, cascade_delete => 0 },
+	"deliveryservice_tmusers", "Schema::Result::DeliveryserviceTmuser",
+	{ "foreign.deliveryservice" => "self.id" }, { cascade_copy => 0, cascade_delete => 0 },
 );
 
 =head2 jobs
@@ -413,12 +438,7 @@ Related object: L<Schema::Result::Job>
 
 =cut
 
-__PACKAGE__->has_many(
-  "jobs",
-  "Schema::Result::Job",
-  { "foreign.job_deliveryservice" => "self.id" },
-  { cascade_copy => 0, cascade_delete => 0 },
-);
+__PACKAGE__->has_many( "jobs", "Schema::Result::Job", { "foreign.job_deliveryservice" => "self.id" }, { cascade_copy => 0, cascade_delete => 0 }, );
 
 =head2 profile
 
@@ -429,10 +449,9 @@ Related object: L<Schema::Result::Profile>
 =cut
 
 __PACKAGE__->belongs_to(
-  "profile",
-  "Schema::Result::Profile",
-  { id => "profile" },
-  { is_deferrable => 1, on_delete => "NO ACTION", on_update => "NO ACTION" },
+	"profile", "Schema::Result::Profile",
+	{ id            => "profile" },
+	{ is_deferrable => 1, on_delete => "NO ACTION", on_update => "NO ACTION" },
 );
 
 =head2 staticdnsentries
@@ -444,10 +463,10 @@ Related object: L<Schema::Result::Staticdnsentry>
 =cut
 
 __PACKAGE__->has_many(
-  "staticdnsentries",
-  "Schema::Result::Staticdnsentry",
-  { "foreign.deliveryservice" => "self.id" },
-  { cascade_copy => 0, cascade_delete => 0 },
+	"staticdnsentries",
+	"Schema::Result::Staticdnsentry",
+	{ "foreign.deliveryservice" => "self.id" },
+	{ cascade_copy              => 0, cascade_delete => 0 },
 );
 
 =head2 type
@@ -458,16 +477,10 @@ Related object: L<Schema::Result::Type>
 
 =cut
 
-__PACKAGE__->belongs_to(
-  "type",
-  "Schema::Result::Type",
-  { id => "type" },
-  { is_deferrable => 1, on_delete => "NO ACTION", on_update => "NO ACTION" },
-);
+__PACKAGE__->belongs_to( "type", "Schema::Result::Type", { id => "type" }, { is_deferrable => 1, on_delete => "NO ACTION", on_update => "NO ACTION" }, );
 
-
-# Created by DBIx::Class::Schema::Loader v0.07043 @ 2015-06-23 14:24:12
-# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:OjXgucZ3ChQB1gqs3qTfow
+# Created by DBIx::Class::Schema::Loader v0.07043 @ 2015-07-22 16:58:06
+# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:a5zwJUmBCHv6Z/4NknXDcA
 
 # You can replace this text with custom code or comments, and it will be preserved on regeneration
 #

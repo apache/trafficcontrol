@@ -204,6 +204,7 @@ sub read {
 		push(
 			@data, {
 				"xml_id"                 => $row->xml_id,
+				"display_name"           => $row->display_name,
 				"dscp"                   => $row->dscp,
 				"signed"                 => \$row->signed,
 				"qstring_ignore"         => $row->qstring_ignore,
@@ -211,6 +212,7 @@ sub read {
 				"http_bypass_fqdn"       => $row->http_bypass_fqdn,
 				"dns_bypass_ip"          => $row->dns_bypass_ip,
 				"dns_bypass_ip6"         => $row->dns_bypass_ip6,
+				"dns_bypass_cname"       => $row->dns_bypass_cname,
 				"dns_bypass_ttl"         => $row->dns_bypass_ttl,
 				"org_server_fqdn"        => $row->org_server_fqdn,
 				"multi_site_origin"      => \$row->multi_site_origin,
@@ -222,6 +224,7 @@ sub read {
 				"global_max_tps"         => $row->global_max_tps,
 				"edge_header_rewrite"    => $row->edge_header_rewrite,
 				"mid_header_rewrite"     => $row->mid_header_rewrite,
+				"tr_response_headers"    => $row->tr_response_headers,
 				"regex_remap"            => $row->regex_remap,
 				"long_desc"              => $row->long_desc,
 				"long_desc_1"            => $row->long_desc_1,
@@ -238,6 +241,7 @@ sub read {
 				"range_request_handling" => $row->range_request_handling,
 				"cacheurl"               => $row->cacheurl,
 				"remap_text"             => $row->remap_text,
+				"initial_dispersion"     => $row->initial_dispersion,
 			}
 		);
 	}
@@ -272,6 +276,8 @@ sub check_deliveryservice_input {
 	if ( $self->param('ds.xml_id') =~ /\s/ ) {
 		$self->field('ds.xml_id')->is_equal( "", "Delivery service xml_id cannot contain whitespace." );
 	}
+
+	# TODO:  what restrictions on display_name?
 
 	if ( defined( $self->param('ds.type') ) && $self->param('ds.type') == &type_id( $self, 'ANY_MAP' ) ) {
 		return $self->valid;    # Anything goes for the ANY_MAP, but ds.type is only set on create
@@ -385,21 +391,26 @@ sub check_deliveryservice_input {
 			->is_equal( "",
 			"Invalid HTTP bypass FQDN " . $self->param('ds.http_bypass_fqdn') . "  : should by FQDN only, not URL. Example: host.overflowcdn.com" );
 	}
-	my $dns_bypass_ip_good;
-	my $dns_bypass_ip6_good;
+	my $dns_bypass_ttl_required;
 	if ( $self->param('ds.dns_bypass_ip') ne "" ) {
 		if ( !&is_ipaddress( $self->param('ds.dns_bypass_ip') ) ) {
 			$self->field('ds.dns_bypass_ip')->is_equal( "", "DNS bypass IP " . $self->param('ds.dns_bypass_ip') . " is not valid IPv4 address." );
 		}
-		$dns_bypass_ip_good = 1;
+		$dns_bypass_ttl_required = 1;
 	}
 	if ( $self->param('ds.dns_bypass_ip6') ne "" ) {
 		if ( !&is_ip6address( $self->param('ds.dns_bypass_ip6') ) ) {
 			$self->field('ds.dns_bypass_ip6')->is_equal( "", "DNS bypass IPv6 IP =" . $self->param('ds.dns_bypass_ip6') . " is not a valid IPv6 address." );
 		}
-		$dns_bypass_ip6_good = 1;
+		$dns_bypass_ttl_required = 1;
 	}
-	if ( ( $dns_bypass_ip_good || $dns_bypass_ip6_good ) && ( $self->param('ds.dns_bypass_ttl') eq "" ) ) {
+	if ( $self->param('ds.dns_bypass_cname') ne "" && !&is_hostname( $self->param('ds.dns_bypass_cname') ) ) {
+		$self->field('ds.dns_bypass_cname')
+			->is_equal( "",
+			"Invalid DNS bypass CNAME " . $self->param('ds.dns_bypass_cname') . "  : should by FQDN only, not URL. Example: host.bypass.com" );
+		$dns_bypass_ttl_required = 1;
+	}
+	if ( $dns_bypass_ttl_required && ( $self->param('ds.dns_bypass_ttl') eq "" ) ) {
 		$self->field('ds.dns_bypass_ttl')->is_equal( "", "DNS bypass TTL required when specifying DNS bypass IP" );
 	}
 	if ( defined( $self->param('ds.dns_bypass_ttl') ) && $self->param('ds.dns_bypass_ttl') =~ m/[a-zA-Z]/ ) {
@@ -412,6 +423,10 @@ sub check_deliveryservice_input {
 	}
 	if ( $self->param('ds.global_max_tps') ne "" && $self->param('ds.global_max_tps') !~ /^\d+$/ ) {
 		$self->field('ds.global_max_tps')->is_equal( "", "Invalid global_max_tps (NaN)." );
+	}
+
+	if ( $self->param('ds.type.name') =~ /^DNS/ && defined( $self->param('ds.tr_response_headers') ) && $self->param('ds.tr_response_headers') ne "" ) {
+		$self->field('ds.tr_response_headers')->is_equal( "", "TR Response Headers is only valid for HTTP (302) delivery services" );
 	}
 
 	#TODO:  Fix this to work the right way.
@@ -631,6 +646,7 @@ sub update {
 		# if error check passes
 		my %hash = (
 			xml_id                 => $self->param('ds.xml_id'),
+			display_name           => $self->param('ds.display_name'),
 			dscp                   => $self->param('ds.dscp'),
 			signed                 => $self->param('ds.signed'),
 			qstring_ignore         => $self->param('ds.qstring_ignore'),
@@ -655,17 +671,20 @@ sub update {
 			range_request_handling => $self->param('ds.range_request_handling'),
 			edge_header_rewrite    => $self->param('ds.edge_header_rewrite') eq "" ? undef : $self->param('ds.edge_header_rewrite'),
 			mid_header_rewrite     => $self->param('ds.mid_header_rewrite') eq "" ? undef : $self->param('ds.mid_header_rewrite'),
+			tr_response_headers    => $self->param('ds.tr_response_headers') eq "" ? undef : $self->param('ds.tr_response_headers'),
 			regex_remap   => $self->param('ds.regex_remap')   eq "" ? undef : $self->param('ds.regex_remap'),
 			origin_shield => $self->param('ds.origin_shield') eq "" ? undef : $self->param('ds.origin_shield'),
 			cacheurl      => $self->param('ds.cacheurl')      eq "" ? undef : $self->param('ds.cacheurl'),
 			remap_text    => $self->param('ds.remap_text')    eq "" ? undef : $self->param('ds.remap_text'),
+			initial_dispersion => $self->param('ds.initial_dispersion'),
 		);
 
 		if ( $self->param('ds.type.id') == &type_id( $self, "DNS" ) ) {
-			$hash{dns_bypass_ip}   = $self->param('ds.dns_bypass_ip');
-			$hash{dns_bypass_ip6}  = $self->param('ds.dns_bypass_ip6');
-			$hash{max_dns_answers} = $self->param('ds.max_dns_answers');
-			$hash{dns_bypass_ttl}  = $self->param('ds.dns_bypass_ttl') eq "" ? undef : $self->param('ds.dns_bypass_ttl');
+			$hash{dns_bypass_ip}    = $self->param('ds.dns_bypass_ip');
+			$hash{dns_bypass_ip6}   = $self->param('ds.dns_bypass_ip6');
+			$hash{dns_bypass_cname} = $self->param('ds.dns_bypass_cname');
+			$hash{max_dns_answers}  = $self->param('ds.max_dns_answers');
+			$hash{dns_bypass_ttl}   = $self->param('ds.dns_bypass_ttl') eq "" ? undef : $self->param('ds.dns_bypass_ttl');
 		}
 		else {
 			$hash{http_bypass_fqdn} = $self->param('ds.http_bypass_fqdn');
@@ -816,6 +835,7 @@ sub create {
 		my $insert = $self->db->resultset('Deliveryservice')->create(
 			{
 				xml_id                 => $self->param('ds.xml_id'),
+				display_name           => $self->param('ds.display_name'),
 				dscp                   => $self->param('ds.dscp') eq "" ? 0 : $self->param('ds.dscp'),
 				signed                 => $self->param('ds.signed'),
 				qstring_ignore         => $self->param('ds.qstring_ignore'),
@@ -823,6 +843,7 @@ sub create {
 				http_bypass_fqdn       => $self->param('ds.http_bypass_fqdn'),
 				dns_bypass_ip          => $self->param('ds.dns_bypass_ip'),
 				dns_bypass_ip6         => $self->param('ds.dns_bypass_ip6'),
+				dns_bypass_cname       => $self->param('ds.dns_bypass_cname'),
 				dns_bypass_ttl         => $self->param('ds.dns_bypass_ttl'),
 				org_server_fqdn        => $self->param('ds.org_server_fqdn'),
 				multi_site_origin      => $self->param('ds.multi_site_origin'),
@@ -849,6 +870,7 @@ sub create {
 				origin_shield => $self->param('ds.origin_shield') eq "" ? undef : $self->param('ds.origin_shield'),
 				cacheurl      => $self->param('ds.cacheurl')      eq "" ? undef : $self->param('ds.cacheurl'),
 				remap_text    => $self->param('ds.remap_text')    eq "" ? undef : $self->param('ds.remap_text'),
+				initial_dispersion => $self->param('ds.initial_dispersion'),
 			}
 		);
 		$insert->insert();

@@ -19,6 +19,13 @@ package UI::GenIso;
 
 use UI::Utils;
 use Mojo::Base 'Mojolicious::Controller';
+use Mojolicious::Plugins;
+use File::Find;
+use File::Basename;
+use File::Path qw(make_path);
+use Data::Dumper;
+use Common::ReturnCodes qw(SUCCESS ERROR);
+use Mojolicious::Plugin::Config;
 
 my $filebasedir = "/var/www/files";
 my $ksfiles_parm_name = "kickstart.files.location";
@@ -64,6 +71,15 @@ sub geniso {
 		serverselect => \%serverselect,
 		osversions   => \%osversions,
 	);
+
+	my $hostname = $self->param('hostname');
+	if (defined($hostname)){
+		my $iso_file_name = $self->iso_download();
+		$self->stash( iso_file_name => $iso_file_name);
+		#return $self->redirect_to('/geniso');
+                #return $self->redirect_to("/$iso_dir/" . $iso_file_name);
+		return $self->render('gen_iso/geniso');
+	}
 }
 
 sub iso_download {
@@ -82,8 +98,10 @@ sub iso_download {
 	my $ondisk = $self->param('ondisk');
 	my $lacp;
 	$lacp = 1 if ($dev =~ m/^bond0$/);
-	$self->res->headers->content_type("application/download");
-	$self->res->headers->content_disposition("attachment; filename=\"$hostname-$osversion.iso\"");
+	#$self->res->headers->content_type("application/download");
+
+
+	#$self->res->headers->content_disposition("attachment; filename=\"$iso_file_name\"");
 
 	# This sets up the "strength" of the hash. So far $1 works (md5). It will produce a sha256 ($5), but it's untested.
 	# PROTIP: Do not put the $ in.
@@ -111,6 +129,7 @@ sub iso_download {
 		$dir = $filebasedir . "/" . $osversion;
 	}
 	my $cfg_dir = "$dir/$install_cfg";
+        $self->app->log->info("cfg_dir: " . $cfg_dir);
 
 	# This just writes the string we're going to use to generate the ISO. You 
 	# won't need it unless you're debugging stuff, but it doesn't really hurt. 
@@ -162,7 +181,59 @@ sub iso_download {
 	print DSK "boot_drives=\"$ondisk\"";
 	close DSK;
 
+	my $config_file = $ENV{'MOJO_CONFIG'};
+	my $fh;
+	open( $fh, "<", $config_file ) or die "$config_file: $!";
+
 	my $data = `$cmd`;
-	$self->render( data => $data );
+	my $iso_dir = "iso";
+	my $config = $self->app->config;
+	my $iso_root_path = $config->{'geniso'}{'iso_root_path'}; 
+
+	my $iso_dir_path = join("/", $iso_root_path, $iso_dir);
+	make_path($iso_dir_path);
+
+	my $iso_file_name = "$hostname-$osversion.iso";
+	my $iso_file_path = join("/", $iso_dir_path, $iso_file_name);
+        my $rc = $self->write_iso($iso_file_path, $data);
+
+	# serverselect
+	$self->flash( message => "Download Iso here" );
+	#return $self->render('gen_iso/geniso');
+	return $iso_file_name;
+}
+
+sub write_iso{
+    my $self = shift;
+    my $iso_file_path = shift;
+    my $data = shift;
+
+    $self->app->log->info("Writing ISO: " . $iso_file_path);
+    open DATAOUT,">$iso_file_path"
+	or die return (ERROR, "Error opening file $iso_file_path: $!");
+
+    # set the stream to binary mode
+    #binmode DATAOUT;
+    #print DATAOUT pack('C*',$data);
+    print DATAOUT $data;
+    close DATAOUT or die "Error closing file $iso_file_path: $!\n";
+
+    return SUCCESS;
+
+}
+
+sub find_conf_path {
+    my $self = shift;
+    my $req_conf  = shift;
+    $self->app->log->info("req_conf: " . $req_conf);
+    $self->app->log->info("package: " . __PACKAGE__ );
+    #$self->app->log->info("INC: " . Dumper(\%INC) );
+    my $p =  __PACKAGE__;
+    $p =~ s/::/\//g;
+    my $mod_path  = $INC{ $p . '.pm' };
+    $self->app->log->info("mod_path: " . $mod_path);
+    my $conf_path = join( '/', dirname( dirname( dirname($mod_path) )), 'conf', $req_conf );
+    $self->app->log->info("conf_path: " . $conf_path);
+    return $conf_path;
 }
 1;

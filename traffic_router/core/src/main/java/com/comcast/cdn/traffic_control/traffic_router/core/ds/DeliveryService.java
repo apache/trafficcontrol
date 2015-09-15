@@ -23,6 +23,7 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.security.GeneralSecurityException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -59,6 +60,7 @@ public class DeliveryService {
 	private final Geolocation missLocation;
 	private final Dispersion dispersion;
 	private final boolean ip6RoutingEnabled;
+	private final Map<String, String> responseHeaders = new HashMap<String, String>();
 
 	public DeliveryService(final String id, final JSONObject dsJo) throws JSONException {
 		this.id = id;
@@ -89,6 +91,7 @@ public class DeliveryService {
 
 		this.dispersion = new Dispersion(dsJo.optJSONObject("dispersion"));
 		this.ip6RoutingEnabled = dsJo.optBoolean("ip6RoutingEnabled", false);
+		setResponseHeaders(dsJo.optJSONObject("responseHeaders"));
 	}
 
 	public String getId() {
@@ -224,32 +227,44 @@ public class DeliveryService {
 		track.setResult(ResultType.DS_REDIRECT);
 		return getRedirectInetRecords(bypassDestination.optJSONObject("DNS"));
 	}
-	private List<InetRecord> redirectInetRecords;
+	private List<InetRecord> redirectInetRecords = null;
 	private List<InetRecord> getRedirectInetRecords(final JSONObject dns) {
 		if (dns == null) {
 			return null;
 		}
 
+		if (redirectInetRecords != null) {
+			return redirectInetRecords;
+		}
+
 		try {
 			synchronized (this) {
-				if (redirectInetRecords != null) {
-					return redirectInetRecords;
-				}
+				final List<InetRecord> list = new ArrayList<InetRecord>();
+				final int ttl = dns.getInt("ttl"); // we require a TTL to exist; will throw an exception if not present
 
-				final ArrayList<InetRecord> list = new ArrayList<InetRecord>();
-				final int ttl = dns.getInt("ttl");
-				list.add( new InetRecord(InetAddress.getByName(dns.getString("ip")), ttl) );
-				String ipStr = dns.getString("ip6");
+				if (dns.has("ip") || dns.has("ip6")) {
+					if (dns.has("ip")) {
+						list.add(new InetRecord(InetAddress.getByName(dns.getString("ip")), ttl));
+					}
 
-				if (ipStr != null && !ipStr.isEmpty()) {
-					ipStr = ipStr.replaceAll("/.*", "");
-					list.add( new InetRecord(InetAddress.getByName(ipStr), ttl) );
-				}
+					if (dns.has("ip6")) {
+						String ipStr = dns.getString("ip6");
 
-				final String cnameAlias = dns.getString("cnameAlias");
+						if (ipStr != null && !ipStr.isEmpty()) {
+							ipStr = ipStr.replaceAll("/.*", "");
+							list.add(new InetRecord(InetAddress.getByName(ipStr), ttl));
+						}
+					}
+				} else if (dns.has("cname")) {
+					/*
+					 * Per section 2.4 of RFC 1912 CNAMEs cannot coexist with other record types.
+					 * As such, only add the CNAME if the above ip/ip6 keys do not exist
+					 */
+					final String cname = dns.getString("cname");
 
-				if (cnameAlias != null) {
-					list.add( new InetRecord(cnameAlias, ttl) );
+					if (cname != null) {
+						list.add(new InetRecord(cname, ttl));
+					}
 				}
 
 				this.redirectInetRecords = list;
@@ -391,7 +406,6 @@ public class DeliveryService {
 	}
 
 	public JSONArray getDomains() {
-		// TODO Auto-generated method stub
 		return domains;
 	}
 
@@ -401,5 +415,17 @@ public class DeliveryService {
 
 	public boolean isIp6RoutingEnabled() {
 		return ip6RoutingEnabled;
+	}
+
+	public Map<String, String> getResponseHeaders() {
+		return responseHeaders;
+	}
+
+	private void setResponseHeaders(final JSONObject jo) throws JSONException {
+		if (jo != null) {
+			for (String key : JSONObject.getNames(jo)) {
+				responseHeaders.put(key, jo.getString(key));
+			}
+		}
 	}
 }

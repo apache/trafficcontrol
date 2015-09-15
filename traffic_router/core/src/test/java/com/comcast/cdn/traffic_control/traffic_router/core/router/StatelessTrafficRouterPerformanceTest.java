@@ -50,7 +50,7 @@ public class StatelessTrafficRouterPerformanceTest  extends TrafficRouter {
     public StatelessTrafficRouterPerformanceTest(CacheRegister cr,
 			GeolocationService geolocationService, ObjectPool hashFunctionPool)
 			throws IOException {
-		super(cr, geolocationService, null, hashFunctionPool, null, "edge", "ccr");
+		super(cr, geolocationService, null, hashFunctionPool, null);
 	}
 
 	@Before
@@ -65,8 +65,13 @@ public class StatelessTrafficRouterPerformanceTest  extends TrafficRouter {
 		req.setRequestedUrl("http://somehost.cdn.net/QualityLevels(96000)/Fragments(audio_eng=20720000000)");
 		Track track = StatTracker.getTrack();
 		try {
-			URL url = trafficRouter.route(req, track);
-			LOGGER.warn("url: "+url);
+			HTTPRouteResult routeResult = trafficRouter.route(req, track);
+			if (routeResult != null) {
+				URL url = routeResult.getUrl();
+				LOGGER.warn("url: "+url);
+			} else {
+				LOGGER.warn("Route result was null!");
+			}
 		} catch (Exception e2) {
 			e2.printStackTrace();
 		}

@@ -18,7 +18,6 @@ package Utils::Helper::Extensions;
 #
 
 use Data::Dumper;
-use Mojo::UserAgent;
 use File::Find;
 
 sub use {

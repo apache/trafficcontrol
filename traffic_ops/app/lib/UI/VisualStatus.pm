@@ -40,6 +40,50 @@ sub graphs {
 	&navbarpage($self);
 }
 
+
+sub graphs_redis {
+	my $self = shift;
+
+	my $match_string = $self->param('matchstring');
+
+	my @cdn_names;
+	my $ds_capacity = 0;
+	my ( $ds_name, $loc_name, $host_name ) = split( /:/, $match_string );
+	if ( $host_name ne 'all' ) {    # we want a specific host, it has to be in only one CDN
+		my $server = $self->db->resultset('Server')->search( { host_name => $host_name } )->single();
+		my $param =
+			$self->db->resultset('ProfileParameter')
+			->search( { -and => [ 'parameter.name' => 'CDN_name', 'parameter.name' => 'CDN_name', 'me.profile' => $server->profile->id ] },
+			{ prefetch => [ 'parameter', 'profile' ] } )->single();
+		my $cdn_name = $param->parameter->value;
+		push( @cdn_names, $cdn_name );
+	}
+	elsif ( $ds_name ne 'all' ) {    # we want a specific DS, it has to be in only one CDN
+		my $ds = $self->db->resultset('Deliveryservice')->search( { xml_id => $ds_name } )->single();
+		my $param =
+			$self->db->resultset('ProfileParameter')
+			->search( { -and => [ 'parameter.name' => 'CDN_name', 'parameter.name' => 'CDN_name', 'me.profile' => $ds->profile->id ] },
+			{ prefetch => [ 'parameter', 'profile' ] } )->single();
+		my $cdn_name = $param->parameter->value;
+		push( @cdn_names, $cdn_name );
+		$ds_capacity = $ds->global_max_mbps / 1000;    # everything is in kbps in the stats
+	}
+	else {                                             # we want all the CDNs
+		my $rs = $self->db->resultset('Parameter')->search( { name => 'CDN_name' } );
+		while ( my $row = $rs->next ) {
+			push( @cdn_names, $row->value );
+		}
+	}
+	$self->stash(
+		cdn_names   => \@cdn_names,
+		graph_page  => 1,
+		matchstring => $match_string,
+		ds_capacity => $ds_capacity,
+	);
+
+	&navbarpage($self);
+}
+
 sub daily_summary {
 	my $self = shift;
 

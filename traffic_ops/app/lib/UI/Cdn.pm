@@ -220,7 +220,7 @@ sub aphys_location {
 sub adeliveryservice {
 	my $self       = shift;
 	my %data       = ( "aaData" => undef );
-	my %geo_limits = ( 0 => "none", 1 => "CZF", 2 => "CZF + US" );
+	my %geo_limits = ( 0 => "none", 1 => "CZF", 2 => "CZF + US", 3 => "CZF + CA" );
 	my %protocol   = ( 0 => "http", 1 => "https", 2 => "http/https" );
 
 	my $rs = $self->db->resultset('Deliveryservice')->search(
@@ -241,8 +241,8 @@ sub adeliveryservice {
 			$row->profile->name,         $row->ccr_dns_ttl,                    $yesno{ $row->active },       $row->type->name,
 			$row->dscp,                  $yesno{ $row->signed },               $row->qstring_ignore,         $geo_limits{ $row->geo_limit },
 			$protocol{ $row->protocol }, $yesno{ $row->ipv6_routing_enabled }, $row->range_request_handling, $row->http_bypass_fqdn,
-			$row->dns_bypass_ip,         $row->dns_bypass_ip6,                 $row->dns_bypass_ttl,         $row->miss_lat,
-			$row->miss_long,
+			$row->dns_bypass_ip,         $row->dns_bypass_ip6,                 $row->dns_bypass_cname,       $row->dns_bypass_ttl,
+			$row->miss_lat,              $row->miss_long,                      $row->initial_dispersion,
 		];
 		push( @{ $data{'aaData'} }, @line );
 	}
@@ -575,13 +575,6 @@ sub login {
 		$self->flash( login_msg => "Invalid username or password, please try again." );
 		return $self->redirect_to('/loginpage');
 	}
-}
-
-sub tool_logout {
-	my $self = shift;
-
-	$self->logout();
-	$self->success_message("You are logged out.");
 }
 
 sub options {

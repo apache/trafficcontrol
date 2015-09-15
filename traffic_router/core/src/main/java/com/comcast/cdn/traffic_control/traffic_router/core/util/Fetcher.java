@@ -16,57 +16,52 @@
 
 package com.comcast.cdn.traffic_control.traffic_router.core.util;
 
-import java.io.File;
-import java.io.FileOutputStream;
+import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
-import java.io.Reader;
-import java.net.Authenticator;
-import java.net.InetSocketAddress;
-import java.net.PasswordAuthentication;
-import java.net.Proxy;
-import java.net.URLConnection;
-import java.util.HashMap;
-import java.util.Map;
-
+import java.net.HttpURLConnection;
 import java.net.URL;
+import java.net.URLConnection;
 import java.security.SecureRandom;
 import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
+import java.util.HashMap;
+import java.util.Map;
+
 import javax.net.ssl.HostnameVerifier;
 import javax.net.ssl.HttpsURLConnection;
-import javax.net.ssl.KeyManager;
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLSession;
 import javax.net.ssl.TrustManager;
 import javax.net.ssl.X509TrustManager;
+
 import org.apache.commons.io.IOUtils;
 import org.apache.log4j.Logger;
 
 
 public class Fetcher {
 	private static final Logger LOGGER = Logger.getLogger(Fetcher.class);
+	protected static final String GET_STR = "GET";
+	protected static final String POST_STR = "POST";
+	protected static final String UTF8_STR = "UTF-8";
+	protected static final int DEFAULT_TIMEOUT = 10;
+	protected int timeout = DEFAULT_TIMEOUT; // override if you want something different
+	protected final Map<String, String> requestProps = new HashMap<String, String>();
 
-	private static final Map<String,PasswordAuthentication> passwds = new HashMap<String,PasswordAuthentication>();
 	static {
-		Authenticator.setDefault(new MyAuthenticator());
-
 		try {
-			final SSLContext ctx = SSLContext.getInstance("TLS");
-			ctx.init(new KeyManager[0], new TrustManager[] {new DefaultTrustManager()}, new SecureRandom());
+			// TODO: make disabling self signed certificates configurable
+			final SSLContext ctx = SSLContext.getInstance("SSL");
+			ctx.init(null, new TrustManager[] {new DefaultTrustManager()}, new SecureRandom());
 			SSLContext.setDefault(ctx);
+			HttpsURLConnection.setDefaultSSLSocketFactory(ctx.getSocketFactory());
 		} catch (Exception e) {
 			LOGGER.warn(e,e);
 		}
 	}
-	static public void setUserPw(final String host, final String user, final String passwd) {
-		passwds.put(host, new PasswordAuthentication(user, passwd.toCharArray()));
-	}
 
 	private static class DefaultTrustManager implements X509TrustManager {
-
 		@Override
 		public void checkClientTrusted(final X509Certificate[] arg0, final String arg1) throws CertificateException {}
 		@Override
@@ -75,98 +70,84 @@ public class Fetcher {
 		public X509Certificate[] getAcceptedIssuers() { return null; }
 	}
 
+	protected HttpURLConnection getConnection(final String url, final String data, final String requestMethod) throws IOException {
+		String method = GET_STR;
 
-	public static String fetchContent(final String link) throws IOException {
-		return fetchContent(new URL(link).openConnection());
-	}
-
-	public static class MyAuthenticator extends Authenticator {
-		protected PasswordAuthentication getPasswordAuthentication() {
-			return passwds.get(getRequestingHost());
+		if (requestMethod != null) {
+			method = requestMethod;
 		}
-	}
 
-	public static String fetchContent(final String stateUrl, final String ipStr) throws IOException {
-		final URL url = new URL(stateUrl);
-		final Proxy proxy = new Proxy(Proxy.Type.HTTP, new InetSocketAddress(
-				ipStr, 80));
+		LOGGER.info(method + "ing: " + url + "; timeout is " + timeout);
 
-		final URLConnection conn = url.openConnection(proxy);
+		final URLConnection connection = new URL(url).openConnection();
 
-		final char[] buffer = new char[0x10000];
-		final StringBuilder out = new StringBuilder();
-		final Reader in = new InputStreamReader(conn.getInputStream(), "UTF-8");
-		try {
-			int read;
-			do {
-				read = in.read(buffer, 0, buffer.length);
-				if (read>0) {
-					out.append(buffer, 0, read);
-				}
-			} while (read>=0);
-		} finally {
-			in.close();
+		if (timeout != 0) {
+			connection.setConnectTimeout(timeout);
+			connection.setReadTimeout(timeout);
 		}
-		return out.toString();
-	}
 
-	public static String fetchContent(final URLConnection conn) throws IOException {
-		conn.setAllowUserInteraction(true);
-		final char[] buffer = new char[0x10000];
-		final StringBuilder out = new StringBuilder();
-		final Reader in = new InputStreamReader(conn.getInputStream(), "UTF-8");
-		try {
-			int read;
-			do {
-				read = in.read(buffer, 0, buffer.length);
-				if (read>0) {
-					out.append(buffer, 0, read);
-				}
-			} while (read>=0);
-		} finally {
-			in.close();
-		}
-		return out.toString();
-	}
+		final HttpURLConnection http = (HttpURLConnection) connection;
 
-	public static String fetchDataFromServer(final String url) throws IOException {
-		LOGGER.warn("__ENTERING fetchDataFromServer()");
-
-		final URL u = new URL(url);
-		final HttpsURLConnection http = (HttpsURLConnection)u.openConnection();
-		http.setRequestMethod("GET");
-		return  fetchContent(http);    
-	}
-
-	protected static String tmpPrefix = "loc";
-	protected static String tmpSuffix = ".dat";
-	public static File downloadFile(final String url) throws IOException {
-		LOGGER.debug("Downloading file from: " + url);
-		final URL u = new URL(url);
-		final URLConnection urlc = u.openConnection();
-		if(urlc instanceof HttpsURLConnection) {
-			final HttpsURLConnection http = (HttpsURLConnection)urlc;
-			http.setHostnameVerifier(new HostnameVerifier() {
+		if (connection instanceof HttpsURLConnection) {
+			final HttpsURLConnection https = (HttpsURLConnection) connection;
+			https.setHostnameVerifier(new HostnameVerifier() {
 				@Override
 				public boolean verify(final String arg0, final SSLSession arg1) {
 					return true;
 				}
 			});
-			http.setRequestMethod("GET");
-			http.setAllowUserInteraction(true);
 		}
-		final InputStream in = urlc.getInputStream();//new GZIPInputStream(dbURL.openStream());
-		//		if(sourceCompressed) { in = new GZIPInputStream(in); }
 
-		final File outputFile = File.createTempFile(tmpPrefix, tmpSuffix);
-		final OutputStream out = new FileOutputStream(outputFile);
+		http.setInstanceFollowRedirects(false);
+		http.setRequestMethod(method);
+		http.setAllowUserInteraction(true);
 
-		IOUtils.copy(in, out);
-		IOUtils.closeQuietly(in);
-		IOUtils.closeQuietly(out);
-		LOGGER.debug("Successfully downloaded file.");
+		for (String key : requestProps.keySet()) {
+			http.addRequestProperty(key, requestProps.get(key));
+		}
 
-		return outputFile;
+		if (method.equals(POST_STR) && data != null) {
+			http.setDoOutput(true); // Triggers POST.
+
+			OutputStream output = null;
+
+			try {
+				output = http.getOutputStream();
+				output.write(data.getBytes(UTF8_STR));
+			} finally {
+				if (output != null) {
+					output.close(); // will throw IOException if there's an issue
+				}
+			}
+		}
+
+		connection.connect();
+
+		return http;
 	}
 
+	public String fetch(final String url) throws IOException {
+		return fetch(url, null, null);
+	}
+
+	public String fetch(final String url, final String data, final String method) throws IOException {
+		final OutputStream out = null;
+		try {
+			final URLConnection connection = getConnection(url, data, method);
+			final StringBuilder sb = new StringBuilder();
+			final BufferedReader in = new BufferedReader(new InputStreamReader(connection.getInputStream()));
+
+			String input;
+
+			while ((input = in.readLine()) != null) {
+				sb.append(input);
+			}
+
+			in.close();
+
+			return sb.toString();
+		} finally {
+			IOUtils.closeQuietly(out);
+		}
+	}
 }

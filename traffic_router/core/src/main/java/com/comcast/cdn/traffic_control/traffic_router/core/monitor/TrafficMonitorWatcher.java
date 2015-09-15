@@ -66,6 +66,9 @@ public class TrafficMonitorWatcher  {
 	private static Object hostSync = new Object();
 	private static Object monitorSync = new Object();
 
+	private PeriodicResourceUpdater crUpdater;
+	private PeriodicResourceUpdater stateUpdater;
+
 	public AbstractUpdatable stateHandler = new AbstractUpdatable() {
 		public String toString() {return "status listener";}
 		@Override
@@ -92,7 +95,13 @@ public class TrafficMonitorWatcher  {
 	};
 
 	public void destroy() {
-		PeriodicResourceUpdater.destroy();
+		if (crUpdater != null) {
+			crUpdater.destroy();
+		}
+
+		if (stateUpdater != null) {
+			stateUpdater.destroy();
+		}
 	}
 
 	public void init() {
@@ -105,8 +114,8 @@ public class TrafficMonitorWatcher  {
 					try {
 						return configHandler.processConfig(configStr);
 					} catch (JSONException e) {
-						LOGGER.warn("error on configHandler.processConfig", e);
-						LOGGER.warn("\n"+configStr);
+						LOGGER.warn(e, e);
+						LOGGER.warn("JSON document length: " + configStr.length());
 					}
 				} catch (IOException e) {
 					LOGGER.warn("error on config update", e);
@@ -132,8 +141,12 @@ public class TrafficMonitorWatcher  {
 				}
 			}
 		};
-		new PeriodicResourceUpdater(crHandler, new MyResourceUrl(configUrl), configFile, configRefreshPeriod, true).init();
-		new PeriodicResourceUpdater(stateHandler, new MyResourceUrl(stateUrl), statusFile, statusRefreshPeriod, true).init();
+
+		crUpdater = new PeriodicResourceUpdater(crHandler, new MyResourceUrl(configUrl), configFile, configRefreshPeriod, true);
+		crUpdater.init();
+
+		stateUpdater = new PeriodicResourceUpdater(stateHandler, new MyResourceUrl(stateUrl), statusFile, statusRefreshPeriod, true);
+		stateUpdater.init();
 	}
 	class MyResourceUrl implements ResourceUrl{
 		private final String urlTemplate;
@@ -328,6 +341,8 @@ public class TrafficMonitorWatcher  {
 		synchronized(monitorSync) {
 			LOGGER.debug("Setting online Monitors to: " + onlineMonitors);
 			TrafficMonitorWatcher.onlineMonitors = onlineMonitors;
+			setBootstrapped(true);
+			setHosts(onlineMonitors.toArray(new String[onlineMonitors.size()]));
 		}
 	}
 }

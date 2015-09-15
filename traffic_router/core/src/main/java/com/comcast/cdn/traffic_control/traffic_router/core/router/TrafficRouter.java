@@ -72,14 +72,12 @@ public class TrafficRouter {
 			final GeolocationService geolocationService, 
 			final GeolocationService geolocationService6, 
 			final ObjectPool hashFunctionPool,
-			final StatTracker statTracker,
-			final String dnsRoutingName,
-			final String httpRoutingName) throws IOException {
+			final StatTracker statTracker) throws IOException {
 		this.cacheRegister = cr;
 		this.geolocationService = geolocationService;
 		this.geolocationService6 = geolocationService6;
 		this.hashFunctionPool = hashFunctionPool;
-		this.zoneManager = new ZoneManager(this, statTracker, dnsRoutingName, httpRoutingName);
+		this.zoneManager = new ZoneManager(this, statTracker);
 	}
 
 	public ZoneManager getZoneManager() {
@@ -266,61 +264,99 @@ public class TrafficRouter {
 		return null;
 	}
 
-	public List<InetRecord> route(final DNSRequest request, final Track track) throws GeolocationException {
+	public DNSRouteResult route(final DNSRequest request, final Track track) throws GeolocationException {
 		track.setRouteType(RouteType.DNS, request.getHostname());
 
 		final DeliveryService ds = selectDeliveryService(request, false);
+
 		if (ds == null) {
 			LOGGER.warn("[dns] No DeliveryService found for: "
 					+ request.getHostname());
 			track.setResult(ResultType.STATIC_ROUTE);
 			return null;
 		}
-		if(!ds.isAvailable()) {
+
+		final DNSRouteResult result = new DNSRouteResult();
+
+		if (!ds.isAvailable()) {
 			LOGGER.warn("ds not available: "+ds);
-			return ds.getFailureDnsResponse(request, track);
+			result.setAddresses(ds.getFailureDnsResponse(request, track));
+			return result;
 		}
 
 		final List<Cache> caches = selectCache(request, ds, track, false);
-		if(caches == null) {
-			return ds.getFailureDnsResponse(request, track);
+
+		if (caches == null) {
+			result.setAddresses(ds.getFailureDnsResponse(request, track));
+			return result;
 		}
+
 		final List<InetRecord> addresses = new ArrayList<InetRecord>();
-		Collections.shuffle(caches, random );
 		final int maxDnsIps = ds.getMaxDnsIps();
-		int i = 0;
-		for(Cache cache : caches) {
-			if(maxDnsIps!=0 && i >= maxDnsIps) { break; }
-			i++;
-			addresses.addAll(
-					cache.getIpAddresses(ds.getTtls(), zoneManager, ds.isIp6RoutingEnabled())
-				);
+
+		/* 
+		 * We also shuffle in NameServer when adding Records to the Message prior
+		 * to sending it out, as the Records are sorted later when we fill the
+		 * dynamic zone if DNSSEC is enabled. We shuffle here prior to pruning
+		 * for maxDnsIps so that we ensure we are spreading load across all caches
+		 * assigned to this delivery service.
+		 */
+		if (maxDnsIps > 0) {
+			Collections.shuffle(caches, random);
 		}
-		return addresses;
+
+		int i = 0;
+
+		for (Cache cache : caches) {
+			if (maxDnsIps!=0 && i >= maxDnsIps) {
+				break;
+			}
+
+			i++;
+
+			addresses.addAll(cache.getIpAddresses(ds.getTtls(), zoneManager, ds.isIp6RoutingEnabled()));
+		}
+
+		result.setAddresses(addresses);
+
+		return result;
 	}
-	public URL route(final HTTPRequest request, final Track track) throws MalformedURLException, GeolocationException {
+
+	public HTTPRouteResult route(final HTTPRequest request, final Track track) throws MalformedURLException, GeolocationException {
 		track.setRouteType(RouteType.HTTP, request.getHostname());
 
 		final DeliveryService ds = selectDeliveryService(request, true);
+
 		if (ds == null) {
 			LOGGER.warn("No DeliveryService found for: "
 					+ request.getRequestedUrl());
 			track.setResult(ResultType.DS_MISS);
 			return null;
 		}
-		if(!ds.isAvailable()) {
+
+		final HTTPRouteResult routeResult = new HTTPRouteResult();
+
+		routeResult.setDeliveryService(ds);
+
+		if (!ds.isAvailable()) {
 			LOGGER.warn("ds unavailable: " + ds);
-			return ds.getFailureHttpResponse(request, track);
+			routeResult.setUrl(ds.getFailureHttpResponse(request, track));
+			return routeResult;
 		}
+
 		final List<Cache> caches = selectCache(request, ds, track, true);
-		if(caches == null) {
-			return ds.getFailureHttpResponse(request, track);
+
+		if (caches == null) {
+			routeResult.setUrl(ds.getFailureHttpResponse(request, track));
+			return routeResult;
 		}
 
 		final Dispersion dispersion = ds.getDispersion();
 		final Cache cache = dispersion.getCache(consistentHash(caches, request.getPath()));
 
-		return new URL(ds.createURIString(request, cache));
+		routeResult.setUrl(new URL(ds.createURIString(request, cache)));
+
+		return routeResult;
 	}
 
 	protected CacheLocation getCoverageZoneCache(final String ip) {
@@ -530,8 +566,8 @@ public class TrafficRouter {
 		return caches;//consistentHash(caches, request);List<Cache>
 	}
 
-	public Zone getDynamicZone(final Name qname, final int qtype, final InetAddress clientAddress) {
-		return zoneManager.getDynamicZone(qname, qtype, clientAddress);
+	public Zone getDynamicZone(final Name qname, final int qtype, final InetAddress clientAddress, final boolean isDnssecRequest) {
+		return zoneManager.getDynamicZone(qname, qtype, clientAddress, isDnssecRequest);
 	}
 
 }
