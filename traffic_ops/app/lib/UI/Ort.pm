@@ -27,21 +27,18 @@ sub ort1 {
     my $host_name = $self->param('hostname');
 
 	my %condition = ( 'servers.host_name' => $host_name );
-	my $rs_profile = $self->db->resultset('Profile')->search( \%condition, { join => 'servers', columns => [qw/name id/] } );
+	my $rs_profile = $self->db->resultset('Profile')->search( \%condition, { prefetch => 'cdn', join => 'servers', columns => [qw/name id/]} );
   	my $row = $rs_profile->next;
     $data_obj->{'profile'}->{'name'} = $row->name;
     $data_obj->{'profile'}->{'id'} = $row->id;
+    $data_obj->{'other'}->{'CDN_name'} = $row->cdn->name;
 
-#  $rs_route_type = $self->db->resultset('Type')->search( { -or => [ name => 'HTTP', name => 'HTTP_NO_CACHE', name => 'HTTP_LIVE' ] } );
-    %condition = ( 'profile_parameters.profile' => $data_obj->{'profile'}->{'id'}, -or => ['name' => 'location', 'name' => 'CDN_name'] );
+    %condition = ( 'profile_parameters.profile' => $data_obj->{'profile'}->{'id'}, -or => [ 'name' => 'location' ] );
     my $rs_config = $self->db->resultset('Parameter')->search( \%condition, { join => 'profile_parameters' } );
     while ( my $row = $rs_config->next ) {
 		if ( $row->name eq 'location' ) {
         	$data_obj->{'config_files'}->{$row->config_file}->{'location'} = $row->value;
     	}
-		else {
-        	$data_obj->{'other'}->{$row->name}= $row->value;
-		}
 	}
 	$self->render( json => $data_obj );	
 }

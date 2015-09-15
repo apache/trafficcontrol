@@ -944,10 +944,7 @@ sub postupdatequeue {
 	elsif ( defined($cdn) && defined($cachegroup) ) {
 		my @profiles;
 		if ( $cdn ne "all" ) {
-			@profiles =
-				$self->db->resultset('ProfileParameter')
-				->search( { -and => [ 'parameter.name' => "CDN_name", "parameter.value" => $cdn ] }, { prefetch => [ 'parameter', 'profile' ] } )
-				->get_column('profile')->all;
+			my @profiles = $self->db->resultset('Profile')->search( { 'cdn.name' => $cdn }, { prefetch => 'cdn' } )->get_column('id')->all();
 		}
 		else {
 			@profiles = $self->db->resultset('Profile')->search(undef)->get_column('id')->all;

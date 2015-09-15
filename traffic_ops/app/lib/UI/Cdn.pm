@@ -28,6 +28,201 @@ use JSON;
 # Yes or no
 my %yesno = ( 0 => "no", 1 => "yes", 2 => "no" );
 
+sub index {
+	my $self = shift;
+
+	&navbarpage($self);
+}
+
+sub add {
+	my $self = shift;
+	$self->stash( fbox_layout => 1, cdn_data => {} );
+	&stash_role($self);
+	if ( $self->stash('priv_level') < 30 ) {
+		$self->stash( alertmsg => "Insufficient privileges!" );
+		$self->redirect_to('/cdns');
+	}
+}
+
+sub view {
+	my $self = shift;
+	my $mode = $self->param('mode');
+	my $id   = $self->param('id');
+	$self->stash( cdn_data => {} );
+
+	my $rs_param = $self->db->resultset('Cdn')->search( { id => $id } );
+	my $data = $rs_param->single;
+
+	&stash_role($self);
+	$self->stash( fbox_layout => 1, cdn_data => $data );
+
+	if ( $mode eq "edit" and $self->stash('priv_level') > 20 ) {
+		$self->render( template => 'cdn/edit' );
+	}
+	else {
+		$self->render( template => 'cdn/view' );
+	}
+}
+
+sub update {
+	my $self                 = shift;
+	my $id                   = $self->param('id');
+	my $priv_level           = $self->stash('priv_level');
+
+	$self->stash(
+		id              => $id,
+		fbox_layout     => 1,
+		priv_level      => $priv_level,
+		cdn_data         => {
+			id                   => $id,
+			name                 => $self->param('cdn_data.name'),
+			config_file          => $self->param('cdn_data.config_file'),
+		}
+	);
+
+	if ( !$self->isValidCdn() ) {
+		return $self->render( template => 'cdn/edit' );
+	}
+
+	my $err = &check_cdn_input($self);
+	if ( defined($err) ) {
+		$self->flash( alertmsg => $err );
+	}
+	else {
+		my $update = $self->db->resultset('Cdn')->find( { id => $self->param('id') } );
+		$update->name( $self->param('cdn_data.name') );
+		$update->config_file( $self->param('cdn_data.config_file') );
+		$update->update();
+
+		# if the update has failed, we don't even get here, we go to the exception page.
+	}
+
+	&log( $self, "Update Cdn with name:" . $self->param('cdn_data.name'), "UICHANGE" );
+	$self->flash( message => "Successfully updated CDN." );
+	return $self->redirect_to( '/cdn/edit/' . $id );
+}
+
+# Create
+sub create {
+	my $self        = shift;
+	my $name        = $self->param('cdn_data.name');
+	my $config_file  = $self->param('cdn_data.config_file');
+	my $data        = $self->get_cdns();
+	my $cdns = $data->{'cdn'};
+
+	if ( !$self->isValidCdn() ) {
+		$self->stash(
+			fbox_layout => 1,
+			cdn_data     => {
+				name        => $name,
+				config_file => $config_file,
+			}
+		);
+		return $self->render('cdn/add');
+	}
+	if ( exists $cdns->{$name} ) {
+		$self->field('cdn_data.name')->is_like( qr/^\/(?!$name\/)/i, "The name exists." );
+		$self->stash(
+			fbox_layout => 1,
+			cdn_data     => {
+				name        => $name,
+				config_file => $config_file,
+			}
+		);
+		return $self->render('cdn/add');
+	}
+	if ( exists $cdns->{$config_file} ) {
+		$self->field('cdn_data.config_file')->is_like( qr/^\/(?!$config_file\/)/i, "The config_file exists." );
+		$self->stash(
+			fbox_layout => 1,
+			cdn_data     => {
+				name        => $name,
+				config_file => $config_file,
+			}
+		);
+		return $self->render('cdn/add');
+	}
+
+	my $new_id = -1;
+	my $err    = &check_cdn_input($self);
+	if ( defined($err) ) {
+		return $self->redirect_to( '/cdn/edit/' . $new_id );
+	}
+	else {
+		my $insert = $self->db->resultset('Cdn')->create(
+			{
+				name                 => $name,
+				config_file          => $config_file,
+			}
+		);
+		$insert->insert();
+		$new_id = $insert->id;
+	}
+	if ( $new_id == -1 ) {
+		my $referer = $self->req->headers->header('referer');
+		return $self->redirect_to($referer);
+	}
+	else {
+		&log( $self, "Create cdn with name:" . $self->param('cdn_data.name'), "UICHANGE" );
+		$self->flash( message => "Successfully updated CDN." );
+		return $self->redirect_to( '/cdn/edit/' . $new_id );
+	}
+}
+
+# Delete
+sub delete {
+	my $self = shift;
+	my $id   = $self->param('id');
+
+	if ( !&is_admin($self) ) {
+		$self->flash( alertmsg => "No can do. Get more privs." );
+	}
+	else {
+		my $p_name = $self->db->resultset('Cdn')->search( { id => $id } )->get_column('name')->single();
+		my $delete = $self->db->resultset('Cdn')->search( { id => $id } );
+		$delete->delete();
+		&log( $self, "Delete cdn " . $p_name, "UICHANGE" );
+	}
+	return $self->redirect_to('/close_fancybox.html');
+}
+
+sub get_cdns {
+	my $self = shift;
+
+	my %data;
+	my %cdns;
+	my $rs = $self->db->resultset('Cdn');
+	while ( my $cdn = $rs->next ) {
+		$cdns{ $cdn->name } = $cdn->id;
+	}
+	%data = ( cdns => \%cdns );
+
+	return \%data;
+}
+
+sub check_cdn_input {
+	my $self = shift;
+
+	my $sep = "__NEWLINE__";    # the line separator sub that with \n in the .ep javascript
+	my $err = undef;
+
+	# First, check permissions
+	if ( !&is_oper($self) ) {
+		$err .= "You do not have enough privileges to modify this." . $sep;
+		return $err;
+	}
+
+	return $err;
+}
+
+sub isValidCdn {
+	my $self = shift;
+	$self->field('cdn_data.name')->is_required->is_like( qr/^[0-9a-zA-Z_\.\-]+$/, "Use alphanumeric . or _ ." );
+	$self->field('cdn_data.config_file')->is_required->is_like( qr/^[0-9a-zA-Z_\.\-]+$/, "Use alphanumeric . or _" );
+
+	return $self->valid;
+}
+
 sub aprofileparameter {
 	my $self = shift;
 	my %data = ( "aaData" => undef );
@@ -301,6 +496,26 @@ sub alog {
 	$self->render( json => \%data );
 }
 
+sub acdn {
+	my $self = shift;
+	my %data = ( "aaData" => undef );
+
+	my %id_to_name = ();
+	my $rs = $self->db->resultset('Cdn')->search( undef );
+	while ( my $row = $rs->next ) {
+		$id_to_name{ $row->id } = $row->name;
+	}
+
+	$rs = $self->db->resultset('Cdn')->search( undef );
+	while ( my $row = $rs->next ) {
+		my @line = [
+			$row->id, $row->name, $row->config_file, $row->last_updated
+		];
+		push( @{ $data{'aaData'} }, @line );
+	}
+	$self->render( json => \%data );
+}
+
 sub acachegroup {
 	my $self = shift;
 	my %data = ( "aaData" => undef );
@@ -428,6 +643,9 @@ sub aadata {
 	}
 	elsif ( $table eq 'Job' ) {
 		&ajob($self);
+	}
+	elsif ( $table eq 'Cdn' ) {
+		&acdn($self);
 	}
 	elsif ( $table eq 'Cachegroup' ) {
 		&acachegroup($self);
