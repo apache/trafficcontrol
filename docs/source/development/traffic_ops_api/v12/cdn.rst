@@ -771,9 +771,9 @@ DNSSEC Keys
 
 **GET /api/1.2/cdns/name/:name/dnsseckeys.json**
 
-  Gets a list of dnsseckeys for CDN and all associated Delivery Services.
+  Gets a list of dnsseckeys for a CDN and all associated Delivery Services.
   Before returning response to user, check to make sure keys aren't expired.  If they are expired, generate new ones.
-  Before returning response to user, make sure dnssec keys for all delivery services exist.  If they don't exist, create them.
+  Before returning response to user, make sure DNSSEC keys for all delivery services exist.  If they don't exist, create them.
 
   Authentication Required: Yes
 
@@ -789,27 +789,34 @@ DNSSEC Keys
 
   **Response Properties**
 
-  +------------------------+--------+---------------------------------------------------------+
-  |       Parameter        |  Type  |                       Description                       |
-  +========================+========+=========================================================+
-  | ``cdn name/ds xml_id`` | string | identifier for ds or cdn                                |
-  +------------------------+--------+---------------------------------------------------------+
-  | ``>zsk/ksk``           | array  | collection of zsk/ksk data                              |
-  +------------------------+--------+---------------------------------------------------------+
-  | ``>>ttl``              | string | time-to-live for dnssec requests                        |
-  +------------------------+--------+---------------------------------------------------------+
-  | ``>>inceptionDate``    | string | epoch timestamp for when the keys were created          |
-  +------------------------+--------+---------------------------------------------------------+
-  | ``>>expirationDate``   | string | epoch timestamp representing the expiration of the keys |
-  +------------------------+--------+---------------------------------------------------------+
-  | ``>>private``          | string | encoded private key                                     |
-  +------------------------+--------+---------------------------------------------------------+
-  | ``>>public``           | string | encoded public key                                      |
-  +------------------------+--------+---------------------------------------------------------+
-  | ``>>name``             | string | domain name                                             |
-  +------------------------+--------+---------------------------------------------------------+
-  | ``version``            | string | API version                                             |
-  +------------------------+--------+---------------------------------------------------------+
+  +-------------------------------+--------+---------------------------------------------------------------+
+  |           Parameter           |  Type  |                          Description                          |
+  +===============================+========+===============================================================+
+  | ``cdn name/ds xml_id``        | string | identifier for ds or cdn                                      |
+  +-------------------------------+--------+---------------------------------------------------------------+
+  | ``>zsk/ksk``                  | array  | collection of zsk/ksk data                                    |
+  +-------------------------------+--------+---------------------------------------------------------------+
+  | ``>>ttl``                     | string | time-to-live for dnssec requests                              |
+  +-------------------------------+--------+---------------------------------------------------------------+
+  | ``>>inceptionDate``           | string | epoch timestamp for when the keys were created                |
+  +-------------------------------+--------+---------------------------------------------------------------+
+  | ``>>expirationDate``          | string | epoch timestamp representing the expiration of the keys       |
+  +-------------------------------+--------+---------------------------------------------------------------+
+  | ``>>private``                 | string | encoded private key                                           |
+  +-------------------------------+--------+---------------------------------------------------------------+
+  | ``>>public``                  | string | encoded public key                                            |
+  +-------------------------------+--------+---------------------------------------------------------------+
+  | ``>>name``                    | string | domain name                                                   |
+  +-------------------------------+--------+---------------------------------------------------------------+
+  | ``version``                   | string | API version                                                   |
+  +-------------------------------+--------+---------------------------------------------------------------+
+  | ``ksk>>dsRecord>>algorithm``  | string | The algorithm of the referenced DNSKEY-recor.                 |
+  +-------------------------------+--------+---------------------------------------------------------------+
+  | ``ksk>>dsRecord>>digestType`` | string | Cryptographic hash algorithm used to create the Digest value. |
+  +-------------------------------+--------+---------------------------------------------------------------+
+  | ``ksk>>dsRecord>>digest       | string | A cryptographic hash value of the referenced DNSKEY-record.   |
+  +-------------------------------+--------+---------------------------------------------------------------+
+  
 
 
   **Response Example** ::
@@ -831,7 +838,12 @@ DNSSEC Keys
             "public": "ksk public key",
             "private": "ksk private key",
             "inceptionDate": "1426196750",
-            "ttl": "60"
+            "ttl": "60",
+            dsRecord: {
+              "algorithm": "5",
+              "digestType": "2",
+              "digest": "abc123def456"
+            }
           }
         },
         "ds-01": {
@@ -898,7 +910,7 @@ DNSSEC Keys
   
 **POST /api/1.2/deliveryservices/dnsseckeys/generate**
 
-  Generates zsk and ksk keypairs for a cdn and all associated delivery services.
+  Generates ZSK and KSK keypairs for a CDN and all associated Delivery Services.
 
   Authentication Required: Yes
 
