@@ -80,12 +80,14 @@ function generate_ksk() {
 			        </div>
 					<div class="buttons-section" style="margin-bottom: 20px;">
 						<div style="margin-top: 25px; margin-left: 10px; position: relative; display: inline-block; float: left;">
-							<% if ($dnssec->{active} =~ /true/ ) { %>
-								%= field('dnssec.active_flag')->hidden(class => 'field', required => 'required', id => 'dnssec.active', name => 'dnssec.active', type => 'hidden', value => 'false');
-								<button class="button" id="submit_button">Deactivate DNSSEC</button>
-							<% } else { %>
-								%= field('dnssec.active_flag')->hidden(class => 'field', required => 'required', id => 'dnssec.active', name => 'dnssec.active', type => 'hidden', value => 'true');
-								<button class="button" id="submit_button">Activate DNSSEC</button>
+							<% if defined($dnssec->{ttl}) { %>
+								<% if ($dnssec->{active} =~ /true/ ) { %>
+									%= field('dnssec.active_flag')->hidden(class => 'field', required => 'required', id => 'dnssec.active', name => 'dnssec.active', type => 'hidden', value => 'false');
+									<button class="button" id="submit_button">Deactivate DNSSEC</button>
+								<% } else { %>
+									%= field('dnssec.active_flag')->hidden(class => 'field', required => 'required', id => 'dnssec.active', name => 'dnssec.active', type => 'hidden', value => 'true');
+									<button class="button" id="submit_button">Activate DNSSEC</button>
+								<% } %>
 							<% } %>
 						</form>
 				   			<button class="button" onclick="generate_keys()" id="generate_keys" style="margin-left: 10px">Generate Keys</button>
