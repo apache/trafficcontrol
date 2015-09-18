@@ -34,7 +34,7 @@
 
 			  $( "#dialog-confirm" ).dialog({
 				resizable: false,
-				height:150,
+				maxHeight:500,
 				modal: true,
 				buttons: {
 				  "Generate Keys": function() {
@@ -100,7 +100,7 @@
         		</div><br>    
 			<div class="buttons-section">
 				<div id="dialog-confirm" title="Generate Keys?" style="display:none;">
-					<p><span class="ui-icon ui-icon-alert" style="float:left; margin:0 7px 20px 0;"></span>This will re-generate the KSK for the chosen CDN. Are you sure?</p>
+						<p><span class="ui-icon ui-icon-alert" style="float:left; margin:0 7px 50px 0;"></span>This will regenerate the KSK for the CDN Chosen. A new DS Record will be created and needs to be added to the parent zone in order for DNSSEC to work properly.  Are you sure?</p>
 				</div>
 			<div id="generate-section">
 				<div>

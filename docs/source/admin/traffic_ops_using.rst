@@ -958,7 +958,7 @@ The Manage DNSSEC Keys screen also allows a user to perform the following action
 
 **Activate/Deactivate DNSSEC for a CDN**
 
-Fairly straight forward, this button set the **dnssec.enabled** param to either **true** or **false** on the Traffic Router profile for the CDN.
+Fairly straight forward, this button set the **dnssec.enabled** param to either **true** or **false** on the Traffic Router profile for the CDN.  The Activate/Deactivate option is only available if DNSSEC keys exist for CDN.  In order to active DNSSEC for a CDN a user must first generate keys and then click the **Active DNSSEC** button.
 
 **Generate Keys**
 
@@ -973,7 +973,7 @@ Once these fields have been correctly entered, a user can click Generate Keys.  
 
 **Regenerate KSK**
 
-Regenerate will create a new Key Signing Key for the CDN TLD. A new DS Record will also be generated and need to be put into the parent zone in order for DNSSEC to work correctly.  When a user clicks on the **Regenerate KSK** button, they are presented with a screen with the following options:
+Regenerate KSK will create a new Key Signing Key for the CDN TLD. A new DS Record will also be generated and need to be put into the parent zone in order for DNSSEC to work correctly. The **Regenerate KSK** button is only available if keys have already been generated for a CDN.  The intent of the button is to provide a mechanism for generating a new KSK when a previous one expires or if necessary for other reasons such as a security breach.  When a user goes to generate a new KSK they are presented with a screen with the following options:
 
   - **CDN:** This is not editable and displays the CDN for which keys will be generated  
   - **KSK Expiration (Days):**  Sets how long (in days) the Key Signing Key will be valid for the CDN and associated Delivery Services. The default is 365 days.
