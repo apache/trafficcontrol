@@ -44,7 +44,7 @@ Configuration
 
 **Configuring Traffic Stats:**
 
-	Traffic Stats’ configuration file can be found in /opt/traffic_stats/conf/traffic_stats.cfg.
+	Traffic Stats' configuration file can be found in /opt/traffic_stats/conf/traffic_stats.cfg.
 	The following values need to be configured: 
 
 	     - *toUser:* The user used to connect to Traffic Ops

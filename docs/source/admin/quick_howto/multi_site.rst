@@ -20,7 +20,7 @@
 Configure Multi Site Origin
 ***************************
 
-1) Create “cachegroups” for the origin locations, and assign the appropriate parent-child relationship between the mid cg's and org cgs (click the image to see full size):
+1) Create "cachegroups" for the origin locations, and assign the appropriate parent-child relationship between the mid cg's and org cgs (click the image to see full size):
 
 .. image:: C5C4CD22-949A-48FD-8976-C673083E2177.png
 	:scale: 100%
