@@ -976,28 +976,12 @@ sub create_dnssec_keys {
 	$keys = decode_json( $get_keys->content );
 	
 	#get default expiration days and ttl for DSs from CDN record to use when generating new keys
-	my $default_k_exp_days = "365";
-	my $default_z_exp_days = "30";
-	my $cdn_ksk            = $keys->{$cdn_name}->{ksk};
-	foreach my $cdn_krecord (@$cdn_ksk) {
-		my $cdn_kstatus = $cdn_krecord->{status};
-		if ( $cdn_kstatus eq 'new' )
-		{    #ignore anything other than the 'new' record
-			my $cdn_k_exp   = $cdn_krecord->{expirationDate};
-			my $cdn_k_incep = $cdn_krecord->{inceptionDate};
-			$default_k_exp_days = ( $cdn_k_exp - $cdn_k_incep ) / 86400;
-		}
-	}
+	my $cdn_ksk = $keys->{$cdn_name}->{ksk};
+	my $k_exp_days = $self->get_key_expiration_days($cdn_ksk, "365");
+
 	my $cdn_zsk = $keys->{$cdn_name}->{zsk};
-	foreach my $cdn_zrecord (@$cdn_zsk) {
-		my $cdn_zstatus = $cdn_zrecord->{status};
-		if ( $cdn_zstatus eq 'new' )
-		{    #ignore anything other than the 'new' record
-			my $cdn_z_exp   = $cdn_zrecord->{expirationDate};
-			my $cdn_z_incep = $cdn_zrecord->{inceptionDate};
-			$default_z_exp_days = ( $cdn_z_exp - $cdn_z_incep ) / 86400;
-		}
-	}
+	my $z_exp_days = $self->get_key_expiration_days($cdn_zsk, "30");
+
 	#create the ds domain name for dnssec keys
 	my $domain_name = $self->get_cdn_domain( $ds_id );
 	my $deliveryservice_regexes	= $self->get_regexp_set( $ds_id );
@@ -1016,9 +1000,9 @@ sub create_dnssec_keys {
 
 	my $inception = time();
 	my $z_expiration
-				= $inception + ( 86400 * $default_z_exp_days );
+				= $inception + ( 86400 * $z_exp_days );
 			my $k_expiration
-				= $inception + ( 86400 * $default_k_exp_days );
+				= $inception + ( 86400 * $k_exp_days );
 
 			my $zsk
 				= $self->get_dnssec_keys( "zsk", $ds_name, $dnskey_ttl,
@@ -1033,6 +1017,22 @@ sub create_dnssec_keys {
 	#put keys back in Riak
 	my $json_data = encode_json($keys);
 	$response_container	= $self->riak_put( "dnssec", $cdn_name, $json_data );
+}
+
+sub get_key_expiration_days {
+	my $self = shift;
+	my $keys = shift;
+	my $default_exp = shift;
+	foreach my $key (@$keys) {
+	my $status = $key->{status};
+		if ( $status eq 'new' )
+		{    #ignore anything other than the 'new' record
+			my $exp   = $key->{expirationDate};
+			my $incep = $key->{inceptionDate};
+			return ( $exp - $incep ) / 86400;
+		}
+	}
+	return $default_exp;
 }
 
 
