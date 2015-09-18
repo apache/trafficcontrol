@@ -16,21 +16,21 @@
 
 package com.comcast.cdn.traffic_control.traffic_router.core.dns.protocol;
 
-import java.net.InetAddress;
-import java.util.Date;
-import java.util.concurrent.ExecutorService;
-
+import com.comcast.cdn.traffic_control.traffic_router.core.dns.DNSAccessEventBuilder;
+import com.comcast.cdn.traffic_control.traffic_router.core.dns.NameServer;
+import org.apache.log4j.Logger;
 import org.xbill.DNS.Message;
 import org.xbill.DNS.Rcode;
 import org.xbill.DNS.Section;
 import org.xbill.DNS.WireParseException;
 
-import com.comcast.cdn.traffic_control.traffic_router.core.dns.DNSAccessRecord;
-import com.comcast.cdn.traffic_control.traffic_router.core.dns.NameServer;
+import java.net.InetAddress;
+import java.util.concurrent.ExecutorService;
 
 public abstract class AbstractProtocol implements Protocol {
-    private static final int NUM_SECTIONS = 4;
+    private static final Logger ACCESS = Logger.getLogger("com.comcast.cdn.traffic_control.traffic_router.core.access");
 
+    private static final int NUM_SECTIONS = 4;
     protected boolean shutdownRequested;
     private ExecutorService executorService;
     private NameServer nameServer;
@@ -82,8 +82,8 @@ public abstract class AbstractProtocol implements Protocol {
     /**
      * Returns the maximum length of the response.
      * 
-     * @param the
-     *            request message
+     * @param request
+     *
      * @return the maximum length in bytes
      */
     protected abstract int getMaxResponseLength(Message request);
@@ -107,23 +107,21 @@ public abstract class AbstractProtocol implements Protocol {
      * @return the DNS response in wire format
      */
     protected byte[] query(final InetAddress client, final byte[] request) {
-        final DNSAccessRecord record = new DNSAccessRecord();
-        record.setRequestDate(new Date());
-        record.setClient(client);
         Message query = null;
         Message response = null;
+        final long queryTimeMillis = System.currentTimeMillis();
         try {
             query = new Message(request);
-            record.setRequest(query);
             response = getNameServer().query(query, client);
-            record.setResponse(response);
+            ACCESS.info(DNSAccessEventBuilder.create(queryTimeMillis, client, response));
         } catch (final WireParseException e) {
+            ACCESS.info(DNSAccessEventBuilder.create(queryTimeMillis, client, e));
             throw new IllegalArgumentException(e);
         } catch (final Exception e) {
+            ACCESS.info(DNSAccessEventBuilder.create(queryTimeMillis, client, query, e));
             response = createServerFail(query);
-        } finally {
-            record.log();
         }
+
 
         return response.toWire(getMaxResponseLength(query));
     }

@@ -16,127 +16,67 @@
 
 package com.comcast.cdn.traffic_control.traffic_router.core.dns;
 
-import java.net.InetAddress;
-import java.util.Date;
-import java.util.TimeZone;
-
-import org.apache.commons.lang3.time.FastDateFormat;
-import org.apache.log4j.Logger;
 import org.xbill.DNS.Message;
-import org.xbill.DNS.Rcode;
-import org.xbill.DNS.Record;
-import org.xbill.DNS.Section;
-import org.xbill.DNS.Type;
 
+import java.net.InetAddress;
+
+// Using Josh Bloch Builder pattern so suppress these warnings.
+@SuppressWarnings({"PMD.MissingStaticMethodInNonInstantiatableClass",
+        "PMD.AccessorClassGeneration",
+        "PMD.CyclomaticComplexity"})
 public final class DNSAccessRecord {
-    private static final Logger ACCESS = Logger.getLogger("com.comcast.cdn.traffic_control.traffic_router.core.access");
-    private static final String ACCESS_FORMAT = "DNS [%s] %s %s %s %s \"%s\"";
-    private static final FastDateFormat FORMATTER = FastDateFormat.getInstance("dd/MMM/yyyy:HH:mm:ss.SSS Z",
-            TimeZone.getTimeZone("GMT"));
+    private final long queryInstant;
+    private final InetAddress client;
+    private final Message query;
+    private final Message response;
 
-    private Date requestDate;
-    private InetAddress client;
-    private Message request;
-    private Message response;
-
-    private String date;
-    private String ip;
-    private String type;
-    private String req;
-    private String rcode;
-    private String resp;
-
-    public DNSAccessRecord() {
-        date = "-";
-        ip = "-";
-        type = "-";
-        req = "-";
-        rcode = "-";
-        resp = "-";
+    public long getQueryInstant() {
+        return queryInstant;
     }
 
-    public void log() {
-        parseRequestDate();
-        parseClient();
-        parseRequest();
-        parseResponse();
-        ACCESS.info(String.format(ACCESS_FORMAT, date, ip, type, req, rcode, resp));
+    public InetAddress getClient() {
+        return client;
     }
 
-    /**
-     * Sets client.
-     * 
-     * @param client
-     *            the client to set
-     */
-    public void setClient(final InetAddress client) {
-        this.client = client;
+    public Message getQuery() {
+        return query;
     }
 
-    /**
-     * Sets request.
-     * 
-     * @param request
-     *            the request to set
-     */
-    public void setRequest(final Message request) {
-        this.request = request;
+    public Message getResponse() {
+        return response;
     }
 
-    /**
-     * Sets requestDate.
-     * 
-     * @param requestDate
-     *            the requestDate to set
-     */
-    public void setRequestDate(final Date requestDate) {
-        this.requestDate = new Date(requestDate.getTime());
-    }
+    public static class Builder {
+        private final long queryInstant;
+        private final InetAddress client;
+        private Message query;
+        private Message response;
 
-    /**
-     * Sets response.
-     * 
-     * @param response
-     *            the response to set
-     */
-    public void setResponse(final Message response) {
-        this.response = response;
-    }
+        public Builder(final long queryInstant, final InetAddress client) {
+            this.queryInstant = queryInstant;
+            this.client = client;
+        }
 
-    private void parseClient() {
-        if ((client != null) && (client.getHostAddress() != null)) {
-            ip = client.getHostAddress();
+        public Builder query(final Message query) {
+            this.query = query;
+            return this;
+        }
+
+        public Builder response(final Message response) {
+            this.response = response;
+            return this;
+        }
+
+        public DNSAccessRecord build() {
+            return new DNSAccessRecord(this);
         }
     }
 
-    private void parseRequest() {
-        if ((request != null) && (request.getQuestion() != null)) {
-            final Record question = request.getQuestion();
-            type = Type.string(question.getType());
-            if (question.getName() != null) {
-                req = question.getName().toString();
-            }
-        }
+    private DNSAccessRecord(final Builder builder) {
+        queryInstant = builder.queryInstant;
+        client = builder.client;
+        query = builder.query;
+        response = builder.response;
     }
 
-    private void parseRequestDate() {
-        date = FORMATTER.format(requestDate);
-    }
-
-    private void parseResponse() {
-        if (response != null) {
-            if (response.getHeader() != null) {
-                rcode = Rcode.string(response.getHeader().getRcode());
-            }
-            final StringBuilder tmpResp = new StringBuilder();
-            final Record[] answers = response.getSectionArray(Section.ANSWER);
-            if ((answers != null) && (answers.length > 0)) {
-                for (final Record answer : answers) {
-                    tmpResp.append(answer.rdataToString());
-                    tmpResp.append(" ");
-                }
-                resp = tmpResp.toString().trim();
-            }
-        }
-    }
 }
