@@ -1,28 +1,28 @@
 /*
-     Copyright 2015 Comcast Cable Communications Management, LLC
+   Copyright 2015 Comcast Cable Communications Management, LLC
 
-     Licensed under the Apache License, Version 2.0 (the "License");
-     you may not use this file except in compliance with the License.
-     You may obtain a copy of the License at
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
 
-     http://www.apache.org/licenses/LICENSE-2.0
+   http://www.apache.org/licenses/LICENSE-2.0
 
-     Unless required by applicable law or agreed to in writing, software
-     distributed under the License is distributed on an "AS IS" BASIS,
-     WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-     See the License for the specific language governing permissions and
-     limitations under the License.
- */
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+*/
 
 package main
 
 import (
 	"bytes"
-	"code.google.com/p/go.net/html"
-	"code.google.com/p/go.net/publicsuffix"
 	"crypto/tls"
 	"errors"
 	"fmt"
+	"golang.org/x/net/html"
+	"golang.org/x/net/publicsuffix"
 	"io"
 	"net/http"
 	"net/http/cookiejar"
@@ -32,8 +32,8 @@ import (
 )
 
 const (
-	LANDING_PAGE_TITLE = "Edge Health"
-	PROFILES_PAGE_TITLE = "Profiles"
+	LANDING_PAGE_TITLE    = "Edge Health"
+	PROFILES_PAGE_TITLE   = "Profiles"
 	PARAMETERS_PAGE_TITLE = "Parameters"
 )
 
@@ -50,7 +50,7 @@ func main() {
 	var password string
 	if len(os.Args) != 5 {
 		fmt.Println("Usage ./systemtest host username password verbose-flag")
-		os.Exit(1);
+		os.Exit(1)
 	}
 
 	host = os.Args[1]
@@ -60,7 +60,7 @@ func main() {
 	verbose, err = strconv.ParseBool(os.Args[4])
 	if err != nil {
 		fmt.Println("Usage ./systemtest host username password verbose-flag")
-		os.Exit(1);
+		os.Exit(1)
 	}
 
 	if verbose {
@@ -73,11 +73,11 @@ func main() {
 	jar, err := cookiejar.New(&options)
 	if err != nil {
 		fmt.Println("Error creating cookie jar:", err)
-		os.Exit(1);
+		os.Exit(1)
 	}
 
 	tr := &http.Transport{
-		TLSClientConfig: &tls.Config{InsecureSkipVerify : true},
+		TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
 	}
 
 	client := &http.Client{Transport: tr, Jar: jar}
@@ -111,11 +111,11 @@ func main() {
 	}
 
 	if !testOkay {
-		os.Exit(1);
+		os.Exit(1)
 	}
 }
 
-func Login(client *http.Client, site string, username string, password string) (error) {
+func Login(client *http.Client, site string, username string, password string) error {
 	data := url.Values{}
 	data.Set("u", username)
 	data.Add("p", password)
@@ -155,7 +155,7 @@ func Login(client *http.Client, site string, username string, password string) (
 	return nil
 }
 
-func GetProfiles(client *http.Client, site string) (error) {
+func GetProfiles(client *http.Client, site string) error {
 	url, err := url.ParseRequestURI(site)
 	if err != nil {
 		return err
@@ -189,7 +189,7 @@ func GetProfiles(client *http.Client, site string) (error) {
 	return nil
 }
 
-func GetParameters(client *http.Client, site string) (error) {
+func GetParameters(client *http.Client, site string) error {
 	url, err := url.ParseRequestURI(site)
 	if err != nil {
 		return err
@@ -251,7 +251,7 @@ func DoRequest(client *http.Client, url *url.URL, method string, header http.Hea
 }
 
 //TODO Make this better before JvD sees it
-func CheckHtml(doc *html.Node, pageTitle string) (error) {
+func CheckHtml(doc *html.Node, pageTitle string) error {
 	gotTitle := false
 	gotBody := false
 

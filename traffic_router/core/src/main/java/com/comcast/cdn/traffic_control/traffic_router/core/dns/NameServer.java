@@ -106,7 +106,7 @@ public class NameServer {
 			flags |= FLAG_SIGONLY;
 		}
 
-		final Zone zone = trafficRouterManager.getTrafficRouter().getDynamicZone(qname, qtype, clientAddress, dnssecRequest);
+		final Zone zone = trafficRouterManager.getTrafficRouter().getZone(qname, qtype, clientAddress, dnssecRequest);
 
 		if (zone == null) {
 			response.getHeader().setRcode(Rcode.REFUSED);
