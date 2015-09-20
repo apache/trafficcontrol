@@ -99,6 +99,9 @@ public class StatTracker {
 		public void setResult(final ResultType result) {
 			this.result = result;
 		}
+		public ResultType getResult() {
+			return result;
+		}
 		public final void start() {
 			time = System.currentTimeMillis();
 		}

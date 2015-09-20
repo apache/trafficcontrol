@@ -99,9 +99,11 @@ sub add {
 	my $z_expiry = "30";
 	my $effective_date = strftime( "%Y-%m-%d %H:%M:%S\n", gmtime(time) );
 	my $keys;
+	my $existing = 0;
 	my $response_container = $self->riak_get( "dnssec", $cdn_name );
 	my $get_keys = $response_container->{'response'};
 	if ( $get_keys->is_success() ) {
+		$existing = 1; ##change the generate keys dialog based on whether or not keys exist.
 		$keys = decode_json( $get_keys->content );
 		my $cdn_ksk = $keys->{$cdn_name}->{ksk};
 		foreach my $cdn_krecord (@$cdn_ksk) {
@@ -129,7 +131,8 @@ sub add {
 			cdn_name => $cdn_name,
 			k_expiry => $k_expiry,
 			z_expiry => $z_expiry,
-			effective_date => $effective_date
+			effective_date => $effective_date,
+			existing => $existing
 		},
 		fbox_layout => 1
 	);
@@ -162,7 +165,7 @@ sub addksk {
 			cdn_name => $cdn_name,
 			k_expiry => $k_expiry,
 			z_expiry => "1", ##for is_valid purposes only. 
-			effective_date => $effective_date
+			effective_date => $effective_date,
 		},
 		fbox_layout => 1
 	);

@@ -566,8 +566,8 @@ public class TrafficRouter {
 		return caches;//consistentHash(caches, request);List<Cache>
 	}
 
-	public Zone getDynamicZone(final Name qname, final int qtype, final InetAddress clientAddress, final boolean isDnssecRequest) {
-		return zoneManager.getDynamicZone(qname, qtype, clientAddress, isDnssecRequest);
+	public Zone getZone(final Name qname, final int qtype, final InetAddress clientAddress, final boolean isDnssecRequest) {
+		return zoneManager.getZone(qname, qtype, clientAddress, isDnssecRequest);
 	}
 
 }

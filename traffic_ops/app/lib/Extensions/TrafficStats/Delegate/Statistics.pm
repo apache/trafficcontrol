@@ -166,8 +166,12 @@ sub build_totals {
 	my $summary     = shift;
 	my $average     = $summary->{summary}{average};
 	my $count       = $summary->{summary}{count};
-	my $total_tps =
-		( $count * SECONDS_IN_CAPTURE_INTERVAL ) * $average;   # since each value represents 10 seconds, need to multiply by 10 to get the 'ps' (per second)
+
+	# Use intervalInSeconds to calculate total for the time period.
+	#  Default is 10s, but can be overridden by an extension.
+	my $interval_in_sec = $summary->{summary}{intervalInSeconds} // SECONDS_IN_CAPTURE_INTERVAL;
+
+	my $total_tps = ( $count * $interval_in_sec ) * $average;
 
 	if ( $metric_type =~ /kbps/ ) {
 

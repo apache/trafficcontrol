@@ -21,7 +21,10 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Date;
 
+import com.comcast.cdn.traffic_control.traffic_router.core.router.StatTracker;
+import com.comcast.cdn.traffic_control.traffic_router.core.router.TrafficRouter;
 import org.apache.log4j.Logger;
 import org.xbill.DNS.CNAMERecord;
 import org.xbill.DNS.DClass;
@@ -106,7 +109,7 @@ public class NameServer {
 			flags |= FLAG_SIGONLY;
 		}
 
-		final Zone zone = trafficRouterManager.getTrafficRouter().getDynamicZone(qname, qtype, clientAddress, dnssecRequest);
+		final Zone zone = trafficRouterManager.getTrafficRouter().getZone(qname, qtype, clientAddress, dnssecRequest);
 
 		if (zone == null) {
 			response.getHeader().setRcode(Rcode.REFUSED);

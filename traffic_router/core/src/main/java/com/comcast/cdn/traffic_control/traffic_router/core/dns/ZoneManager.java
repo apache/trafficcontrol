@@ -370,14 +370,14 @@ public class ZoneManager extends Resolver {
 				zoneMap.get(domain).addAll(superRecords);
 			}
 
-			records.addAll(createZone(domain, zoneMap, dsMap, hostname, data, zc, initExecutor));
+			records.addAll(createZone(domain, zoneMap, dsMap, data, zc, initExecutor, hostname));
 		}
 
 		return records;
 	}
 
 	private static List<Record> createZone(final String domain, final Map<String, List<Record>> zoneMap, final Map<String, DeliveryService> dsMap, 
-			final String hostname, final CacheRegister data, final LoadingCache<ZoneKey, Zone> zc, final ExecutorService initExecutor) throws IOException {
+			final CacheRegister data, final LoadingCache<ZoneKey, Zone> zc, final ExecutorService initExecutor, final String hostname) throws IOException {
 		final DeliveryService ds = dsMap.get(domain);
 		final JSONObject trafficRouters = data.getTrafficRouters();
 		final JSONObject config = data.getConfig();
@@ -393,19 +393,17 @@ public class ZoneManager extends Resolver {
 			soa = config.optJSONObject("soa");
 		}
 
-		final Name name = new Name(domain+".");
+		final Name name = newName(domain);
 		LOGGER.debug("Generating zone data for " + name);
 		final List<Record> list = zoneMap.get(domain);
-		final Name meTr = newName(hostname, domain);
 		final Name admin = newName(ZoneUtils.getString(soa, "admin", "traffic_control"), domain);
 		list.add(new SOARecord(name, DClass.IN, 
-				ZoneUtils.getLong(ttl, "SOA", 86400), meTr, admin, 
+				ZoneUtils.getLong(ttl, "SOA", 86400), getGlueName(ds, trafficRouters.optJSONObject(hostname), name, hostname), admin,
 				ZoneUtils.getLong(soa, "serial", ZoneUtils.getSerial(data.getStats())), 
 				ZoneUtils.getLong(soa, "refresh", 28800), 
 				ZoneUtils.getLong(soa, "retry", 7200), 
 				ZoneUtils.getLong(soa, "expire", 604800), 
 				ZoneUtils.getLong(soa, "minimum", 60)));
-
 		addTrafficRouters(list, trafficRouters, name, ttl, domain, ds);
 		addStaticDnsEntries(list, ds, domain);
 
@@ -477,18 +475,9 @@ public class ZoneManager extends Resolver {
 			}
 
 			final Name trName = newName(key, domain.toString());
-			Name glueName;
-
-			if (ds == null && trJo.has("fqdn") && trJo.optString("fqdn") != null) {
-				glueName = newName(trJo.optString("fqdn"));
-			} else {
-				final Name superDomain = new Name(name, 1);
-				glueName = newName(key, superDomain.toString());
-			}
 
 			String ip6 = trJo.optString("ip6");
-
-			list.add(new NSRecord(name, DClass.IN, ZoneUtils.getLong(ttl, "NS", 60), glueName));
+			list.add(new NSRecord(name, DClass.IN, ZoneUtils.getLong(ttl, "NS", 60), getGlueName(ds, trJo, name, key)));
 			list.add(new ARecord(trName,
 					DClass.IN, ZoneUtils.getLong(ttl, "A", 60), 
 					InetAddress.getByName(trJo.optString("ip"))));
@@ -533,6 +522,15 @@ public class ZoneManager extends Resolver {
 			return new Name(fqdn);
 		} else {
 			return new Name(fqdn + ".");
+		}
+	}
+	
+	private static Name getGlueName(final DeliveryService ds, final JSONObject trJo, final Name name, final String trName) throws TextParseException {
+		if (ds == null && trJo != null && trJo.has("fqdn") && trJo.optString("fqdn") != null) {
+			return newName(trJo.optString("fqdn"));
+		} else {
+			final Name superDomain = new Name(new Name(name.toString(true)), 1);
+			return newName(trName, superDomain.toString());
 		}
 	}
 
@@ -841,7 +839,7 @@ public class ZoneManager extends Resolver {
 		return null;
 	}
 
-	public Zone getDynamicZone(final Name qname, final int qtype, final InetAddress clientAddress, final boolean isDnssecRequest) {
+	public Zone getZone(final Name qname, final int qtype, final InetAddress clientAddress, final boolean isDnssecRequest) {
 		final Zone zone = getZone(qname, qtype);
 
 		if (zone == null) {

@@ -22,6 +22,7 @@ package UI::DeliveryService;
 use UI::Utils;
 use Mojo::Base 'Mojolicious::Controller';
 use Data::Dumper;
+use JSON;
 
 sub index {
 	my $self = shift;
@@ -827,10 +828,6 @@ sub create {
 	return $self->redirect_to("/modify_error") if !&is_oper($self);
 	my $new_id = -1;
 
-	#	if ( !&is_oper($self) ) {
-	#		my $err .= "You do not have enough privileges to modify this.\n";
-	#		return $self->flash( message => $err );
-	#	}
 	if ( $self->check_deliveryservice_input() ) {
 		my $insert = $self->db->resultset('Deliveryservice')->create(
 			{
@@ -938,6 +935,12 @@ sub create {
 		$self->regex_remap( $self->param('ds.profile'), $self->param('ds.xml_id'), $self->param('ds.regex_remap') );
 		$self->cacheurl( $self->param('ds.profile'), $self->param('ds.xml_id'), $self->param('ds.cacheurl') );
 
+		##create dnssec keys for the new DS if DNSSEC is enabled for the CDN 
+		my $dnssec_enabled_rs = $self->db->resultset('ProfileParameter')->search( { -and => [ 'parameter.name' => 'dnssec.enabled', 'profile.id' => $self->param('ds.profile') ] }, { prefetch => [ 'parameter', 'profile' ] } )->single();
+		if ($dnssec_enabled_rs) {
+			my $dnssec_enabled = $dnssec_enabled_rs->parameter->value;
+			$self->create_dnssec_keys($self->param('ds.profile'), $self->param('ds.xml_id'), $new_id);
+		}
 		$self->flash( message => "Success!" );
 		return $self->redirect_to( '/ds/' . $new_id );
 	}
@@ -952,11 +955,86 @@ sub create {
 			selected_profile => $selected_profile,
 			mode             => "add",
 		);
-
-		# print "no bueno\n";
 		$self->render('delivery_service/add');
 	}
 }
+
+sub create_dnssec_keys {
+	my $self = shift;
+	my $profile_id = shift;
+	my $xml_id = shift;
+	my $ds_id = shift;
+	
+	#get CDN name
+	my $dnskey_ttl;
+	my $cdn_rs = $self->db->resultset('ProfileParameter')->search( { -and => [ 'parameter.name' => 'CDN_name', 'profile.id' => $profile_id ] }, { prefetch => [ 'parameter', 'profile' ] } )->single();
+	my $cdn_name = $cdn_rs->parameter->value;
+	#get keys for cdn
+	my $keys;
+	my $response_container = $self->riak_get( "dnssec", $cdn_name);
+	my $get_keys = $response_container->{'response'};
+	$keys = decode_json( $get_keys->content );
+	
+	#get default expiration days and ttl for DSs from CDN record to use when generating new keys
+	my $cdn_ksk = $keys->{$cdn_name}->{ksk};
+	my $k_exp_days = $self->get_key_expiration_days($cdn_ksk, "365");
+
+	my $cdn_zsk = $keys->{$cdn_name}->{zsk};
+	my $z_exp_days = $self->get_key_expiration_days($cdn_zsk, "30");
+
+	#create the ds domain name for dnssec keys
+	my $domain_name = $self->get_cdn_domain( $ds_id );
+	my $deliveryservice_regexes	= $self->get_regexp_set( $ds_id );
+	my $rs_ds = $self->db->resultset('Deliveryservice')->search(
+		{ 'me.xml_id' => $xml_id },
+		{   prefetch =>
+			[ { 'type' => undef }, { 'profile' => undef } ]
+		}
+	);
+	my $data = $rs_ds->single;
+	my @example_urls = UI::DeliveryService::get_example_urls( $self, $ds_id, $deliveryservice_regexes, $data, $domain_name, $data->protocol );
+	#first one is the one we want.  period at end for dnssec, substring off stuff we dont want
+	my $ds_name = $example_urls[0] . ".";
+	my $length = length($ds_name) - index( $ds_name, "." );
+	$ds_name = substr( $ds_name, index( $ds_name, "." ) + 1, $length );
+
+	my $inception = time();
+	my $z_expiration
+				= $inception + ( 86400 * $z_exp_days );
+			my $k_expiration
+				= $inception + ( 86400 * $k_exp_days );
+
+			my $zsk
+				= $self->get_dnssec_keys( "zsk", $ds_name, $dnskey_ttl,
+				$inception, $z_expiration, "new", $inception );
+			my $ksk
+				= $self->get_dnssec_keys( "ksk", $ds_name, $dnskey_ttl,
+				$inception, $k_expiration, "new", $inception );
+
+			#add to keys hash
+			$keys->{$xml_id} = { zsk => [$zsk], ksk => [$ksk] };
+
+	#put keys back in Riak
+	my $json_data = encode_json($keys);
+	$response_container	= $self->riak_put( "dnssec", $cdn_name, $json_data );
+}
+
+sub get_key_expiration_days {
+	my $self = shift;
+	my $keys = shift;
+	my $default_exp = shift;
+	foreach my $key (@$keys) {
+	my $status = $key->{status};
+		if ( $status eq 'new' )
+		{    #ignore anything other than the 'new' record
+			my $exp   = $key->{expirationDate};
+			my $incep = $key->{inceptionDate};
+			return ( $exp - $incep ) / 86400;
+		}
+	}
+	return $default_exp;
+}
+
 
 # for the add delivery service view
 sub add {
