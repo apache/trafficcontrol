@@ -24,8 +24,7 @@ my %definition_for = (
 		using => {
 			id       => 1,
 			asn      => '9939',
-			cachegroup
- => '91',
+			cachegroup => '91',
 		},
 	},
 	'9839' => {

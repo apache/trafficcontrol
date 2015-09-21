@@ -47,6 +47,7 @@ my %definition_for = (
 			check_path           => '/crossdomain.xml',
 			type                 => 1,
 			profile              => 3,
+			cdn_id               => 1,
 			ipv6_routing_enabled => 1,
 			protocol          => 1,
 		},
@@ -79,6 +80,7 @@ my %definition_for = (
 			check_path       => '/crossdomain.xml',
 			type             => 1,
 			profile          => 3,
+			cdn_id           => 1,
 		},
 	},
 );

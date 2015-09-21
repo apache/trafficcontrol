@@ -26,6 +26,7 @@ use Test::More;
 use Test::Mojo;
 use Moose;
 
+use Fixtures::Integration::Cdn;
 use Fixtures::Integration::Deliveryservice;
 use Fixtures::Integration::OrgCacheGroup;
 use Fixtures::Integration::OtherCacheGroup;
@@ -52,7 +53,7 @@ sub load_all_fixtures {
 	my $self    = shift;
 	my $fixture = shift;
 
-	diag "  " . $fixture->name() . "...\n";
+	diag "  " . $fixture->name . "...\n";
 	if ( $fixture->can("gen_data") ) {
 		$fixture->gen_data();
 	}
@@ -117,6 +118,7 @@ sub load_core_data {
 	my $schema        = shift;
 	my $schema_values = { schema => $schema, no_transactions => 1 };
 	diag "Initializing DB:";
+	$self->load_all_fixtures( Fixtures::Integration::Cdn->new($schema_values) );
 	$self->load_all_fixtures( Fixtures::Integration::Type->new($schema_values) );
 	$self->load_all_fixtures( Fixtures::Integration::Role->new($schema_values) );
 	$self->load_all_fixtures( Fixtures::Integration::TmUser->new($schema_values) );
@@ -176,6 +178,7 @@ sub unload_core_data {
 	$self->teardown( $schema, 'PhysLocation' );
 	$self->teardown( $schema, 'Region' );
 	$self->teardown( $schema, 'Division' );
+	$self->teardown( $schema, 'Cdn' );
 }
 
 1;

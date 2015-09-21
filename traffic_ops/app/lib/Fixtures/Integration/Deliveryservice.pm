@@ -47,6 +47,7 @@ my %definition_for = (
 			check_path           => '/crossdomain.xml',
 			type                 => 8,
 			profile              => 5,
+			cdn_id               => 1,
 			edge_header_rewrite  => 'cond %{REMAP_PSEUDO_HOOK} __RETURN__ set-config proxy.config.http.transaction_active_timeout_out 5 [L]',
 			ipv6_routing_enabled => 1,
 			multi_site_origin    => 1,
@@ -81,6 +82,7 @@ my %definition_for = (
 			check_path          => '/crossdomain.xml',
 			type                => 9,
 			profile             => 5,
+			cdn_id              => 1,
 			edge_header_rewrite => 'rm-header Cache-Control [L]',
 		},
 	},
@@ -112,6 +114,7 @@ my %definition_for = (
 			check_path          => '/crossdomain.xml',
 			type                => 9,
 			profile             => 5,
+			cdn_id              => 1,
 			edge_header_rewrite => 'cond %{SEND_RESPONSE_HDR_HOOK} __RETURN__ add-header X-CDN-Info "KableTown___CACHE_IPV4__" [L]',
 		},
 	},
@@ -143,6 +146,7 @@ my %definition_for = (
 			check_path       => '/crossdomain.xml',
 			type             => 13,
 			profile          => 5,
+			cdn_id           => 1,
 		},
 	},
 	ds_tv_nat_cdn2 => {
@@ -173,6 +177,7 @@ my %definition_for = (
 			check_path       => '/crossdomain.xml',
 			type             => 24,
 			profile          => 8,
+			cdn_id           => 2,
 		},
 	},
 	ds_cdl_cdn2 => {
@@ -203,6 +208,7 @@ my %definition_for = (
 			check_path          => '/crossdomain.xml',
 			type                => 8,
 			profile             => 8,
+			cdn_id              => 2,
 			mid_header_rewrite  => 'cond %{REMAP_PSEUDO_HOOK} __RETURN__ set-config proxy.config.http.parent_origin.dead_server_retry_enabled 1',
 			edge_header_rewrite => 'add-header X-Powered-By: KBLTN [L]',
 		},
@@ -235,6 +241,7 @@ my %definition_for = (
 			check_path       => '/crossdomain.xml',
 			type             => 13,
 			profile          => 8,
+			cdn_id           => 2,
 		},
 	},
 	ds_nocache_c2 => {
@@ -265,6 +272,7 @@ my %definition_for = (
 			check_path       => '/crossdomain.xml',
 			type             => 11,
 			profile          => 8,
+			cdn_id           => 2,
 		},
 	},
 );

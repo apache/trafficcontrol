@@ -23,28 +23,14 @@ my %definition_for = (
 		new   => 'CachegroupParameter',
 		using => {
 			cachegroup => 1,
-			parameter  => 1,
+			parameter  => 62,
 		},
 	},
 	cachegroupparameter2 => {
 		new   => 'CachegroupParameter',
 		using => {
-			cachegroup => 1,
-			parameter  => 2,
-		},
-	},
-	cachegroupparameter3 => {
-		new   => 'CachegroupParameter',
-		using => {
 			cachegroup => 2,
-			parameter  => 1,
-		},
-	},
-	cachegroupparameter4 => {
-		new   => 'CachegroupParameter',
-		using => {
-			cachegroup => 2,
-			parameter  => 2,
+			parameter  => 62,
 		},
 	},
 );

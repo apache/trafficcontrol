@@ -1,4 +1,4 @@
-package Fixtures::Cachegroup;
+package Fixtures::Integration::Cdn;
 #
 # Copyright 2015 Comcast Cable Communications Management, LLC
 #
@@ -17,35 +17,30 @@ package Fixtures::Cachegroup;
 use Moose;
 extends 'DBIx::Class::EasyFixture';
 use namespace::autoclean;
+use Digest::SHA1 qw(sha1_hex);
 
 my %definition_for = (
-	mid_northeast => {
-		new   => 'Cachegroup',
+	cdn_number_1 => {
+		new   => 'Cdn',
 		using => {
-			id         => 1,
-			name       => 'mid-northeast-group',
-			short_name => 'ne',
-			type       => 2,
-			cdn_id     => 1,
-			latitude   => 120,
-			longitude  => 120,
-			parent_cachegroup_id => undef,
+			id          => 1,
+			name        => 'cdn_number_1',
+			config_file => 'rascal-config.txt',
 		},
 	},
-	mid_northwest => {
-		new   => 'Cachegroup',
+	cdn_number_2 => {
+		new   => 'Cdn',
 		using => {
-			id         => 2,
-			name       => 'mid-northwest-group',
-			short_name => 'nw',
-			type       => 2,
-			cdn_id     => 2,
-			latitude   => 100,
-			longitude  => 100,
-			parent_cachegroup_id => undef,
+			id          => 2,
+			name        => 'cdn_number_2',
+			config_file => 'rascal-config.txt',
 		},
 	},
 );
+
+sub name {
+	return "Cdn";
+}
 
 sub get_definition {
 	my ( $self, $name ) = @_;
