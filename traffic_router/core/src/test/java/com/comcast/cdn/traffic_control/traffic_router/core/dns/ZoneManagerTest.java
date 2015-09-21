@@ -118,7 +118,7 @@ public class ZoneManagerTest {
 			for (CacheLocation location : edgeLocations.get(name)) {
 				final InetAddress source = netMap.get(location.getId());
 				// need to iterate through the CZF and submit a bunch of these into a job queue to run repeatedly/fast
-				final Zone zone = trafficRouter.getDynamicZone(new Name(name), Type.A, source, true);
+				final Zone zone = trafficRouter.getZone(new Name(name), Type.A, source, true);
 				assertNotNull(zone);
 				//LOGGER.info(zone);
 			}

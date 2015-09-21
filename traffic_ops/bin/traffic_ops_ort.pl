@@ -128,7 +128,8 @@ if ($cookie) {
 	$CURL_OPTS = "-H 'Cookie:" . $cookie . "' " . $CURL_OPTS;
 }
 ( $log_level >> $DEBUG ) && print "DEBUG CURL_OPTS: $CURL_OPTS.\n";
-my $YUM_OPTS = "--disablerepo=*atlas*";
+# add any special yum options for your environment here; this variable is used with all yum commands
+my $YUM_OPTS = "";
 ( $log_level >> $DEBUG ) && print "DEBUG YUM_OPTS: $YUM_OPTS.\n";
 my $TS_HOME      = "/opt/trafficserver";
 my $TRAFFIC_LINE = $TS_HOME . "/bin/traffic_line";

@@ -839,7 +839,7 @@ public class ZoneManager extends Resolver {
 		return null;
 	}
 
-	public Zone getDynamicZone(final Name qname, final int qtype, final InetAddress clientAddress, final boolean isDnssecRequest) {
+	public Zone getZone(final Name qname, final int qtype, final InetAddress clientAddress, final boolean isDnssecRequest) {
 		final Zone zone = getZone(qname, qtype);
 
 		if (zone == null) {

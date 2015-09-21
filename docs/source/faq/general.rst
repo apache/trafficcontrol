@@ -35,4 +35,8 @@ What is the CCR?
 
 What is Twelve Monkeys?
 =======================
-	Twelve Monkeys was the the original name for Traffic Ops. You will sometimes still see this name in the source, or in older documents. It's also a good movie.
+	Twelve Monkeys was the the original internal name for Traffic Ops. You will sometimes still see this name in the source, or in older documents. It's also a good movie.
+
+What license is Traffic Control released under?
+===============================================
+	See the `LICENSE file<https://github.com/Comcast/traffic_control/blob/master/LICENSE>`_

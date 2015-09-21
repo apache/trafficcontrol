@@ -16,142 +16,125 @@
 
 package com.comcast.cdn.traffic_control.traffic_router.core.http;
 
-import java.net.URL;
-import java.util.Date;
-import java.util.TimeZone;
+import com.comcast.cdn.traffic_control.traffic_router.core.router.StatTracker;
 
 import javax.servlet.http.HttpServletRequest;
+import java.net.URL;
+import java.util.Date;
 
-import org.apache.commons.lang3.time.FastDateFormat;
-import org.apache.log4j.Logger;
-
+// Using Josh Bloch Builder pattern so suppress these warnings.
+@SuppressWarnings({"PMD.MissingStaticMethodInNonInstantiatableClass",
+        "PMD.AccessorClassGeneration",
+        "PMD.NPathComplexity",
+        "PMD.IfStmtsMustUseBraces",
+        "PMD.CyclomaticComplexity"})
 public class HTTPAccessRecord {
-    private static final Logger ACCESS = Logger.getLogger("com.comcast.cdn.traffic_control.traffic_router.core.access");
-    private static final String ACCESS_FORMAT = "HTTP [%s] %s %s %s %s";
-    private static final FastDateFormat FORMATTER = FastDateFormat.getInstance("dd/MMM/yyyy:HH:mm:ss.SSS Z",
-            TimeZone.getTimeZone("GMT"));
-    private static final String EMPTY_FIELD = "-";
+    private final Date requestDate;
+    private final HttpServletRequest request;
+    private final URL responseURL;
+    private final int responseCode;
+    private final StatTracker.Track.ResultType resultType;
 
-    private Date requestDate;
-    private HttpServletRequest request;
-    private int responseCode;
-    private URL responseURL;
-
-    /**
-     * Logs the access record.
-     */
-    public void log() {
-        ACCESS.info(String.format(ACCESS_FORMAT, formatAccessDate(), formatRequestIP(), formatRequestURL(),
-                formatResponseCode(), formatResponseURL()));
+    public Date getRequestDate() {
+        return requestDate;
     }
 
-    /**
-     * Sets request.
-     * 
-     * @param request
-     *            the request to set
-     */
-    public void setRequest(final HttpServletRequest request) {
-        this.request = request;
+    public HttpServletRequest getRequest() {
+        return request;
     }
 
-    /**
-     * Sets requestDate.
-     * 
-     * @param requestDate
-     *            the requestDate to set
-     */
-    public void setRequestDate(final Date requestDate) {
-        this.requestDate = new Date(requestDate.getTime());
+    public int getResponseCode() {
+        return responseCode;
     }
 
-    /**
-     * Sets responseCode.
-     * 
-     * @param responseCode
-     *            the responseCode to set
-     */
-    public void setResponseCode(final int responseCode) {
-        this.responseCode = responseCode;
+    public URL getResponseURL() {
+        return responseURL;
     }
 
-    /**
-     * Sets responseURL.
-     * 
-     * @param responseURL
-     *            the responseURL to set
-     */
-    public void setResponseURL(final URL responseURL) {
-        this.responseURL = responseURL;
+    public StatTracker.Track.ResultType getResultType() {
+        return resultType;
     }
 
-    /**
-     * Formats the access date using the request date.
-     * 
-     * @return the formatted date
-     */
-    private String formatAccessDate() {
-        String accessDate = EMPTY_FIELD;
-        if (requestDate != null) {
-            accessDate = FORMATTER.format(requestDate);
+    public static class Builder {
+        private final Date requestDate;
+        private final HttpServletRequest request;
+        private int responseCode = -1;
+        private URL responseURL;
+        private StatTracker.Track.ResultType resultType;
+
+        public Builder(final Date requestDate, final HttpServletRequest request) {
+            this.requestDate = requestDate;
+            this.request = request;
         }
-        return accessDate;
+
+        public Builder(final HTTPAccessRecord httpAccessRecord) {
+            this.requestDate = httpAccessRecord.requestDate;
+            this.request = httpAccessRecord.request;
+            this.responseURL = httpAccessRecord.responseURL;
+            this.responseCode = httpAccessRecord.responseCode;
+        }
+
+        public Builder responseCode(final int responseCode) {
+            this.responseCode = responseCode;
+            return this;
+        }
+
+        public Builder responseURL(final URL responseURL) {
+            this.responseURL = responseURL;
+            return this;
+        }
+
+        public Builder resultType(final StatTracker.Track.ResultType resultType) {
+            this.resultType = resultType;
+            return this;
+        }
+
+        public HTTPAccessRecord build() {
+            return new HTTPAccessRecord(this);
+        }
     }
 
-    /**
-     * Formats the requestor's IP.
-     * 
-     * @return the formatted IP
-     */
-    private String formatRequestIP() {
-        String ip = EMPTY_FIELD;
-        if ((request != null) && (request.getRemoteAddr() != null)) {
-            ip = request.getRemoteAddr();
-        }
-        return ip;
+    private HTTPAccessRecord(final Builder builder) {
+        requestDate = builder.requestDate;
+        request = builder.request;
+        responseCode = builder.responseCode;
+        responseURL = builder.responseURL;
+        resultType = builder.resultType;
     }
 
-    /**
-     * Formats the request URL.
-     * 
-     * @return the formatted request URL
-     */
-    private String formatRequestURL() {
-        String url = EMPTY_FIELD;
-        if (request != null) {
-            final StringBuffer buf = request.getRequestURL();
-            if (request.getQueryString() != null) {
-                buf.append('?');
-                buf.append(request.getQueryString());
-            }
-            url = buf.toString();
-        }
-        return url;
+    @Override
+    public boolean equals(final Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        final HTTPAccessRecord that = (HTTPAccessRecord) o;
+
+        if (responseCode != that.responseCode) return false;
+        if (requestDate != null ? !requestDate.equals(that.requestDate) : that.requestDate != null) return false;
+        if (request != null ? !request.equals(that.request) : that.request != null) return false;
+        if (responseURL != null ? !responseURL.equals(that.responseURL) : that.responseURL != null) return false;
+        return resultType == that.resultType;
+
     }
 
-    /**
-     * Formats the response code.
-     * 
-     * @return the formatted response code
-     */
-    private String formatResponseCode() {
-        String code = EMPTY_FIELD;
-        if (responseCode > 0) {
-            code = String.valueOf(responseCode);
-        }
-        return code;
+    @Override
+    public int hashCode() {
+        int result = requestDate != null ? requestDate.hashCode() : 0;
+        result = 31 * result + (request != null ? request.hashCode() : 0);
+        result = 31 * result + (responseURL != null ? responseURL.hashCode() : 0);
+        result = 31 * result + responseCode;
+        result = 31 * result + (resultType != null ? resultType.hashCode() : 0);
+        return result;
     }
 
-    /**
-     * Formats the response URL.
-     * 
-     * @return the formatted response URL
-     */
-    private String formatResponseURL() {
-        String url = EMPTY_FIELD;
-        if (responseURL != null) {
-            url = responseURL.toString();
-        }
-        return url;
+    @Override
+    public String toString() {
+        return "HTTPAccessRecord{" +
+                "requestDate=" + requestDate +
+                ", request=" + request +
+                ", responseURL=" + responseURL +
+                ", responseCode=" + responseCode +
+                ", resultType=" + resultType +
+                '}';
     }
 }
