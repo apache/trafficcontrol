@@ -25,6 +25,7 @@ use Crypt::OpenSSL::Bignum;
 use Crypt::OpenSSL::Random;
 use Net::DNS::SEC::Private;
 use Data::Dumper;
+use JSON;
 my $TMP_LOCATION = "/var/tmp";
 
 sub register {
@@ -32,7 +33,6 @@ sub register {
 
 	$app->renderer->add_helper(
 		generate_store_dnssec_keys => sub {
-			my $key_type   = "dnssec";
 			my $self       = shift;
 			my $key        = shift;
 			my $name       = shift;
@@ -40,25 +40,47 @@ sub register {
 			my $k_exp_days = shift;
 			my $z_exp_days = shift;
 			my $effectiveDate = shift;
+			my $keys = {};
 
 			my $inception    = time();
 			my $z_expiration = time() + ( 86400 * $z_exp_days );
 			my $k_expiration = time() + ( 86400 * $k_exp_days );
 
-			my $json = JSON->new;
-			my %keys = ();
-
 			#add "." to the end of name if not already there
 			if ( ( substr( $name, -1 ) ) ne "." ) {
 				$name = $name . ".";
 			}
-
-			# #create keys for cdn TLD
+			#get old keys if they exist
+			my $old_keys = {};
+			my $response_container = $self->riak_get( "dnssec", $key );
+			my $get_keys = $response_container->{'response'};
+			if ( $get_keys->is_success() ) {
+				$old_keys = decode_json( $get_keys->content );
+			}
+			
+			# #create new keys for cdn TLD
 			$self->app->log->info("Creating keys for $key.");
-			my $zsk = $self->get_dnssec_keys( "zsk", $name, $ttl, $inception, $z_expiration, "new", $effectiveDate );
-			my $ksk = $self->get_dnssec_keys( "ksk", $name, $ttl, $inception, $k_expiration, "new", $effectiveDate, "1");
+			my @zsk = $self->get_dnssec_keys( "zsk", $name, $ttl, $inception, $z_expiration, "new", $effectiveDate );
+			my @ksk = $self->get_dnssec_keys( "ksk", $name, $ttl, $inception, $k_expiration, "new", $effectiveDate, "1");
+
+			#get old ksk 
+			my $krecord = &get_existing_record($self, $old_keys, $key, "ksk");
+			if (defined($krecord)) {
+				$krecord->{status} = "existing";
+				$krecord->{expirationDate} = $effectiveDate;
+				push @ksk, $krecord;
+			}
+
+			#get old zsk
+			my $zrecord = &get_existing_record($self, $old_keys, $key, "zsk");
+			if (defined($zrecord)) {
+				$zrecord->{status} = "existing";
+				$zrecord->{expirationDate} = $effectiveDate;
+				push @zsk, $zrecord;
+			}
+
 			#add to keys hash
-			$keys{$key} = {zsk => [$zsk], ksk => [$ksk] };
+			$keys->{$key} = {zsk => [@zsk], ksk => [@ksk] };
 
 			#delivery services
 			#first get profile_id
@@ -85,11 +107,27 @@ sub register {
 				my $length = length($ds_name) - index( $ds_name, "." );
 				$ds_name = substr( $ds_name, index( $ds_name, "." ) + 1, $length );
 				$self->app->log->info("Creating keys for $xml_id.");
-				my $zsk = $self->get_dnssec_keys( "zsk", $ds_name, $ttl, $inception, $z_expiration, "new", $effectiveDate );
-				my $ksk = $self->get_dnssec_keys( "ksk", $ds_name, $ttl, $inception, $k_expiration, "new", $effectiveDate );
+				my @zsk = $self->get_dnssec_keys( "zsk", $ds_name, $ttl, $inception, $z_expiration, "new", $effectiveDate );
+				my @ksk = $self->get_dnssec_keys( "ksk", $ds_name, $ttl, $inception, $k_expiration, "new", $effectiveDate );
+
+				#get old ksk 
+				my $krecord = &get_existing_record($self, $old_keys, $xml_id, "ksk");
+				if (defined($krecord)) {
+					$krecord->{status} = "existing";
+					$krecord->{expirationDate} = $effectiveDate;
+					push @ksk, $krecord;
+				}
+
+				#get old zsk
+				my $zrecord = &get_existing_record($self, $old_keys, $xml_id, "zsk");
+				if (defined($zrecord)) {
+					$zrecord->{status} = "existing";
+					$zrecord->{expirationDate} = $effectiveDate;
+					push @zsk, $zrecord;
+				}
 
 				#add to keys hash
-				$keys{$xml_id} = { zsk => [$zsk], ksk => [$ksk] };
+				$keys->{$xml_id} = {zsk => [@zsk], ksk => [@ksk] };
 			}
 
 			#add a param to the database to track changes
@@ -128,8 +166,8 @@ sub register {
 
 			}
 
-			my $json_data = $json->encode( \%keys );
-			my $response = $self->riak_put( $key_type, $key, $json_data );
+			my $json_data = encode_json( $keys );
+			my $response = $self->riak_put( "dnssec", $key, $json_data );
 
 			return $response;
 		}
@@ -233,6 +271,21 @@ sub register {
 			$response{ds_record} = \%ds_record;
 		}
 		return %response;
+	}
+
+	sub get_existing_record {
+		my $self = shift;
+		my $keys = shift;
+		my $key = shift;
+		my $type = shift;
+		
+		my $existing = $keys->{$key}->{$type};
+			foreach my $record (@$existing) {
+				if ( $record->{status} eq 'new' ) {
+					return $record;
+				}
+			}
+		return undef;
 	}
 
 }
