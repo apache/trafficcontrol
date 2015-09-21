@@ -45,10 +45,13 @@ import com.comcast.cdn.traffic_control.traffic_router.core.router.StatTracker.Tr
 /**
  * Servlet to handle content routing requests.
  */
+@SuppressWarnings("PMD.MoreThanOneLogger")
 public class TRServlet extends HttpServlet {
 	private static final long serialVersionUID = 1L;
 
 	private static final Logger LOGGER = Logger.getLogger(TRServlet.class);
+	private static final Logger ACCESS = Logger.getLogger("com.comcast.cdn.traffic_control.traffic_router.core.access");
+
 
 	private TrafficRouterManager trafficRouterManager;
 	private StatTracker statTracker;
@@ -72,8 +75,8 @@ public class TRServlet extends HttpServlet {
 	/**
 	 * Sets trafficRouter.
 	 * 
-	 * @param trafficRouter
-	 *            the trafficRouter to set
+	 * @param trafficRouterManager
+	 *            the trafficRouterManager to set
 	 */
 	public void setTrafficRouterManager(final TrafficRouterManager trafficRouterManager) {
 		this.trafficRouterManager = trafficRouterManager;
@@ -88,6 +91,8 @@ public class TRServlet extends HttpServlet {
 	@Override
 	protected void doGet(final HttpServletRequest request, final HttpServletResponse response) 
 			throws ServletException, IOException {
+		Date requestDate = new Date();
+
 		final HTTPRequest req = new HTTPRequest();
 		req.setClientIP(request.getRemoteAddr());
 		req.setPath(request.getPathInfo());
@@ -123,21 +128,20 @@ public class TRServlet extends HttpServlet {
 			LOGGER.debug("Request Query String: " + req.getQueryString());
 		}
 
-		writeHttpResponse(response, request, req, track);
+		final HTTPAccessRecord httpAccessRecord = new HTTPAccessRecord.Builder(requestDate, request).build();
+		writeHttpResponse(response, request, req, track, httpAccessRecord);
 	}
 
 	private void writeHttpResponse(final HttpServletResponse response, final HttpServletRequest request, 
-			final HTTPRequest req, final Track track) throws IOException {
+			final HTTPRequest req, final Track track, final HTTPAccessRecord httpAccessRecord) throws IOException {
 		final String format = request.getParameter("format");
-		final HTTPAccessRecord access = new HTTPAccessRecord();
-		access.setRequestDate(new Date());
-		access.setRequest(request);
+		final HTTPAccessRecord.Builder httpAccessRecordBuilder = new HTTPAccessRecord.Builder(httpAccessRecord);
 		try {
 			final TrafficRouter trafficRouter = trafficRouterManager.getTrafficRouter();
 			final HTTPRouteResult routeResult = trafficRouter.route(req, track);
 
 			if (routeResult == null || routeResult.getUrl() == null) {
-				access.setResponseCode(HttpServletResponse.SC_SERVICE_UNAVAILABLE);
+				httpAccessRecordBuilder.responseCode(HttpServletResponse.SC_SERVICE_UNAVAILABLE);
 				response.sendError(HttpServletResponse.SC_SERVICE_UNAVAILABLE);
 			} else {
 				final DeliveryService ds = routeResult.getDeliveryService();
@@ -148,26 +152,27 @@ public class TRServlet extends HttpServlet {
 					response.addHeader(key, responseHeaders.get(key));
 				}
 
-				access.setResponseURL(location);
+				httpAccessRecordBuilder.responseURL(location);
 
 				if("json".equals(format)) {
 					response.setContentType("application/json"); // "text/plain"
 					response.getWriter().println("{\"location\": \""+location.toString()+"\" }");
-					access.setResponseCode(HttpServletResponse.SC_OK);
+					httpAccessRecordBuilder.responseCode(HttpServletResponse.SC_OK);
 				} else {
-					access.setResponseCode(HttpServletResponse.SC_MOVED_TEMPORARILY);
+					httpAccessRecordBuilder.responseCode(HttpServletResponse.SC_MOVED_TEMPORARILY);
 					response.sendRedirect(location.toString());
 				}
 			}
 		} catch (final IOException e) {
-			access.setResponseCode(-1);
-			access.setResponseURL(null);
+			httpAccessRecordBuilder.responseCode(-1);
+			httpAccessRecordBuilder.responseURL(null);
 			throw e;
 		} catch (GeolocationException e) {
-			access.setResponseCode(-1);
-			access.setResponseURL(null);
+			httpAccessRecordBuilder.responseCode(-1);
+			httpAccessRecordBuilder.responseURL(null);
 		} finally {
-			access.log();
+			HTTPAccessRecord access = httpAccessRecordBuilder.resultType(track.getResult()).build();
+			ACCESS.info(HTTPAccessEventBuilder.create(access));
 			statTracker.saveTrack(track);
 		}
 	}
