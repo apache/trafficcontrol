@@ -1000,7 +1000,7 @@ sub dnssec_keys {
 		$rs_pp
 			? $dnskey_effective_multiplier
 			= $rs_pp->parameter->value
-			: $dnskey_effective_multiplier = '2';
+			: $dnskey_effective_multiplier = '10';
 
 		my $key_expiration
 			= time() - ( $dnskey_ttl * $dnskey_gen_multiplier );
