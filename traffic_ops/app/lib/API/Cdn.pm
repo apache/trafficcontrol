@@ -976,7 +976,7 @@ sub dnssec_keys {
 				#create the ds domain name for dnssec keys
 				my $domain_name
 					= UI::DeliveryService::get_cdn_domain( $self, $ds_id );
-				my $ds_regexes
+				my $deliveryservice_regexes
 					= UI::DeliveryService::get_regexp_set( $self, $ds_id );
 				my $rs_ds = $self->db->resultset('Deliveryservice')->search(
 					{ 'me.xml_id' => $xml_id },
@@ -987,7 +987,7 @@ sub dnssec_keys {
 				my $data = $rs_ds->single;
 				my @example_urls
 					= UI::DeliveryService::get_example_urls( $self, $ds_id,
-					$ds_regexes, $data, $domain_name, $data->protocol );
+					$deliveryservice_regexes, $data, $domain_name, $data->protocol );
 
 				#first one is the one we want.  period at end for dnssec, substring off stuff we dont want
 				my $ds_name = $example_urls[0] . ".";
@@ -1094,6 +1094,7 @@ sub regen_expired_keys {
 	my $existing_keys  = shift;
 	my $effective_date = shift;
 	my $tld            = shift;
+	my $reset_exp	   = shift;
 	my $regen_keys     = {};
 	my $old_key;
 
@@ -1124,6 +1125,9 @@ sub regen_expired_keys {
 
 		#set existing ksk status to "expired"
 		$old_key->{status} = "expired";
+		if ($reset_exp) {
+			$old_key->{expirationDate} = $effective_date;
+		}
 		$regen_keys = { zsk => @zsk, ksk => [ $new_key, $old_key ] };
 	}
 	elsif ( $type eq "zsk" ) {
@@ -1133,6 +1137,9 @@ sub regen_expired_keys {
 
 		#set existing ksk status to "expired"
 		$old_key->{status} = "expired";
+		if ($reset_exp) {
+			$old_key->{expirationDate} = $effective_date;
+		}
 		$regen_keys = { zsk => [ $new_key, $old_key ], ksk => @ksk };
 	}
 	return $regen_keys;

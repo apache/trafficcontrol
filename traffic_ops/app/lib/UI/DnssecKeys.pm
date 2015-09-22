@@ -336,7 +336,7 @@ sub genksk {
 		if ( $get_keys->is_success() ) {
 			$keys = decode_json( $get_keys->content );
 		}
-		my $new_key = API::Cdn::regen_expired_keys( $self, "ksk", $cdn_name, $keys, $effective_date, 1);
+		my $new_key = API::Cdn::regen_expired_keys( $self, "ksk", $cdn_name, $keys, $effective_date, 1, 1);
 		$keys->{$cdn_name} = $new_key;
 		my $json_data = encode_json( $keys );
 		$response_container = $self->riak_put( "dnssec", $cdn_name, $json_data );
