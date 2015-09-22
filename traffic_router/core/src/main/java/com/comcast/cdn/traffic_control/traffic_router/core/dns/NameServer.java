@@ -21,10 +21,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Date;
 
-import com.comcast.cdn.traffic_control.traffic_router.core.router.StatTracker;
-import com.comcast.cdn.traffic_control.traffic_router.core.router.TrafficRouter;
 import org.apache.log4j.Logger;
 import org.xbill.DNS.CNAMERecord;
 import org.xbill.DNS.DClass;
@@ -65,11 +62,11 @@ public class NameServer {
 	 *            the IP address of the client
 	 * @return a response message
 	 */
-	public Message query(final Message request, final InetAddress clientAddress) {
+	public Message query(final Message request, final InetAddress clientAddress, final DNSAccessRecord.Builder builder) {
 		final Message response = new Message();
 		try {
 			addQuestion(request, response);
-			addAnswers(request, response, clientAddress);
+			addAnswers(request, response, clientAddress, builder);
 		} catch (final RuntimeException e) {
 			LOGGER.error(e.getMessage(), e);
 			response.getHeader().setRcode(Rcode.SERVFAIL);
@@ -78,7 +75,7 @@ public class NameServer {
 		return response;
 	}
 
-	private void addAnswers(final Message request, final Message response, final InetAddress clientAddress) {
+	private void addAnswers(final Message request, final Message response, final InetAddress clientAddress, final DNSAccessRecord.Builder builder) {
 		final Record question = request.getQuestion();
 		final int qclass = question.getDClass();
 		final Name qname = question.getName();
@@ -109,7 +106,7 @@ public class NameServer {
 			flags |= FLAG_SIGONLY;
 		}
 
-		final Zone zone = trafficRouterManager.getTrafficRouter().getZone(qname, qtype, clientAddress, dnssecRequest);
+		final Zone zone = trafficRouterManager.getTrafficRouter().getZone(qname, qtype, clientAddress, dnssecRequest, builder);
 
 		if (zone == null) {
 			response.getHeader().setRcode(Rcode.REFUSED);
@@ -173,7 +170,7 @@ public class NameServer {
 		// We prefer to shuffle the list over "cycling" as we could with rrset.rrs(true) above.
 		Collections.shuffle(recordList);
 
-		for (Record r : recordList) {
+		for (final Record r : recordList) {
 			response.addRecord(r, section);
 		}
 

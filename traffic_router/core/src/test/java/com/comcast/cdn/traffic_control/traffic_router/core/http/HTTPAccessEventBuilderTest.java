@@ -49,7 +49,7 @@ public class HTTPAccessEventBuilderTest {
 
         String httpAccessEvent = HTTPAccessEventBuilder.create(httpAccessRecord);
 
-        assertThat(httpAccessEvent, equalTo("144140678.000 qtype=HTTP chi=192.168.7.6 url=\"http://example.com/index.html?foo=bar\" cqhm=GET cqhv=HTTP/1.1 rtype=-"));
+        assertThat(httpAccessEvent, equalTo("144140678.000 qtype=HTTP chi=192.168.7.6 url=\"http://example.com/index.html?foo=bar\" cqhm=GET cqhv=HTTP/1.1 rtype=- rerr=\"-\""));
     }
 
     @Test
@@ -64,7 +64,7 @@ public class HTTPAccessEventBuilderTest {
         HTTPAccessRecord httpAccessRecord = builder.build();
         String httpAccessEvent = HTTPAccessEventBuilder.create(httpAccessRecord);
 
-        assertThat(httpAccessEvent, equalTo("144140678.000 qtype=HTTP chi=192.168.7.6 url=\"http://example.com/index.html?foo=bar\" cqhm=GET cqhv=HTTP/1.1 rtype=ERROR pssc=304 ttms=125 rurl=\"http://example.com/hereitis/index.html?foo=bar\""));
+        assertThat(httpAccessEvent, equalTo("144140678.000 qtype=HTTP chi=192.168.7.6 url=\"http://example.com/index.html?foo=bar\" cqhm=GET cqhv=HTTP/1.1 rtype=ERROR rerr=\"-\" pssc=304 ttms=125 rurl=\"http://example.com/hereitis/index.html?foo=bar\""));
     }
 
     @Test
@@ -82,6 +82,26 @@ public class HTTPAccessEventBuilderTest {
         HTTPAccessRecord httpAccessRecord = builder.build();
         String httpAccessEvent = HTTPAccessEventBuilder.create(httpAccessRecord);
 
-        assertThat(httpAccessEvent, equalTo("144140678.000 qtype=HTTP chi=192.168.7.6 url=\"http://example.com/index.html?foo=bar\" cqhm=GET cqhv=HTTP/1.1 rtype=ERROR pssc=304 ttms=0 rurl=\"http://example.com/hereitis/index.html?foo=bar\""));
+        assertThat(httpAccessEvent, equalTo("144140678.000 qtype=HTTP chi=192.168.7.6 url=\"http://example.com/index.html?foo=bar\" cqhm=GET cqhv=HTTP/1.1 rtype=ERROR rerr=\"-\" pssc=304 ttms=0 rurl=\"http://example.com/hereitis/index.html?foo=bar\""));
+    }
+
+
+    @Test
+    public void itRecordsTrafficRouterErrors() throws Exception {
+        Date fastFinishDate = mock(Date.class);
+        when(fastFinishDate.getTime()).thenReturn(144140678000L);
+        whenNew(Date.class).withNoArguments().thenReturn(fastFinishDate);
+
+        StatTracker.Track track = new StatTracker.Track();
+        HTTPAccessRecord.Builder builder = new HTTPAccessRecord.Builder(new Date(144140633999L), request)
+                .resultType(track.getResult())
+                .responseCode(304)
+                .rerr("RuntimeException: you're doing it wrong")
+                .responseURL(new URL("http://example.com/hereitis/index.html?foo=bar"));
+
+        HTTPAccessRecord httpAccessRecord = builder.build();
+        String httpAccessEvent = HTTPAccessEventBuilder.create(httpAccessRecord);
+
+        assertThat(httpAccessEvent, equalTo("144140678.000 qtype=HTTP chi=192.168.7.6 url=\"http://example.com/index.html?foo=bar\" cqhm=GET cqhv=HTTP/1.1 rtype=ERROR rerr=\"RuntimeException: you're doing it wrong\" pssc=304 ttms=0 rurl=\"http://example.com/hereitis/index.html?foo=bar\""));
     }
 }

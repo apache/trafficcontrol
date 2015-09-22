@@ -17,6 +17,7 @@
 package com.comcast.cdn.traffic_control.traffic_router.core.dns.protocol;
 
 import com.comcast.cdn.traffic_control.traffic_router.core.dns.DNSAccessEventBuilder;
+import com.comcast.cdn.traffic_control.traffic_router.core.dns.DNSAccessRecord;
 import com.comcast.cdn.traffic_control.traffic_router.core.dns.NameServer;
 import org.apache.log4j.Logger;
 import org.xbill.DNS.Message;
@@ -110,15 +111,21 @@ public abstract class AbstractProtocol implements Protocol {
         Message query = null;
         Message response = null;
         final long queryTimeMillis = System.currentTimeMillis();
+        final DNSAccessRecord.Builder builder = new DNSAccessRecord.Builder(queryTimeMillis, client);
+        DNSAccessRecord dnsAccessRecord = builder.build();
+
         try {
             query = new Message(request);
-            response = getNameServer().query(query, client);
-            ACCESS.info(DNSAccessEventBuilder.create(queryTimeMillis, client, response));
+            dnsAccessRecord = builder.dnsMessage(query).build();
+            response = getNameServer().query(query, client, builder);
+            dnsAccessRecord = builder.dnsMessage(response).build();
+
+            ACCESS.info(DNSAccessEventBuilder.create(dnsAccessRecord));
         } catch (final WireParseException e) {
-            ACCESS.info(DNSAccessEventBuilder.create(queryTimeMillis, client, e));
+            ACCESS.info(DNSAccessEventBuilder.create(dnsAccessRecord, e));
             throw new IllegalArgumentException(e);
         } catch (final Exception e) {
-            ACCESS.info(DNSAccessEventBuilder.create(queryTimeMillis, client, query, e));
+            ACCESS.info(DNSAccessEventBuilder.create(dnsAccessRecord, e));
             response = createServerFail(query);
         }
 
