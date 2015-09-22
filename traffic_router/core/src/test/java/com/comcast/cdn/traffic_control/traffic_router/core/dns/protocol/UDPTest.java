@@ -46,8 +46,8 @@ import org.xbill.DNS.Section;
 import org.xbill.DNS.Type;
 
 import com.comcast.cdn.traffic_control.traffic_router.core.dns.NameServer;
-import com.comcast.cdn.traffic_control.traffic_router.core.dns.protocol.UDP;
 import com.comcast.cdn.traffic_control.traffic_router.core.dns.protocol.UDP.UDPPacketHandler;
+import com.comcast.cdn.traffic_control.traffic_router.core.dns.DNSAccessRecord;
 
 @RunWith(JMock.class)
 public class UDPTest {
@@ -73,7 +73,6 @@ public class UDPTest {
         udp.setDatagramSocket(datagramSocket);
         udp.setExecutorService(executorService);
         udp.setNameServer(nameServer);
-
     }
 
     @Test
@@ -131,7 +130,7 @@ public class UDPTest {
 
         context.checking(new Expectations() {
             {
-                one(nameServer).query(with(any(Message.class)), with(same(client)));
+                one(nameServer).query(with(any(Message.class)), with(same(client)), with(any(DNSAccessRecord.Builder.class)));
                 will(returnValue(response));
 
                 one(datagramSocket).send(with(aDatagramPacketWithThePayload(wireResponse)));
@@ -177,7 +176,7 @@ public class UDPTest {
 
         context.checking(new Expectations() {
             {
-                one(nameServer).query(with(any(Message.class)), with(same(client)));
+                one(nameServer).query(with(any(Message.class)), with(same(client)), with(any(DNSAccessRecord.Builder.class)));
                 will(throwException(new Exception()));
 
                 one(datagramSocket).send(with(aDatagramPacketWithThePayload(wireResponse)));

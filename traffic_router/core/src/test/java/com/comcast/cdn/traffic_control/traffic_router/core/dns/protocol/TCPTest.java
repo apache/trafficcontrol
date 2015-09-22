@@ -45,8 +45,8 @@ import org.xbill.DNS.Section;
 import org.xbill.DNS.Type;
 
 import com.comcast.cdn.traffic_control.traffic_router.core.dns.NameServer;
-import com.comcast.cdn.traffic_control.traffic_router.core.dns.protocol.TCP;
 import com.comcast.cdn.traffic_control.traffic_router.core.dns.protocol.TCP.TCPSocketHandler;
+import com.comcast.cdn.traffic_control.traffic_router.core.dns.DNSAccessRecord;
 
 @RunWith(JMock.class)
 public class TCPTest {
@@ -56,7 +56,6 @@ public class TCPTest {
         }
     };
 
-    private ServerSocket serverSocket;
     private Socket socket;
     private ExecutorService executorService;
     private NameServer nameServer;
@@ -65,7 +64,7 @@ public class TCPTest {
 
     @Before
     public void setUp() throws Exception {
-        serverSocket = context.mock(ServerSocket.class);
+        ServerSocket serverSocket = context.mock(ServerSocket.class);
         socket = context.mock(Socket.class);
         executorService = context.mock(ExecutorService.class);
         nameServer = context.mock(NameServer.class);
@@ -119,7 +118,7 @@ public class TCPTest {
                 will(returnValue(out));
                 one(socket).close();
 
-                one(nameServer).query(with(any(Message.class)), with(same(client)));
+                one(nameServer).query(with(any(Message.class)), with(same(client)), with(any(DNSAccessRecord.Builder.class)));
                 will(returnValue(request));
             }
         });
@@ -204,7 +203,7 @@ public class TCPTest {
                 one(socket).close();
                 will(throwException(new IOException()));
 
-                one(nameServer).query(with(any(Message.class)), with(same(client)));
+                one(nameServer).query(with(any(Message.class)), with(same(client)), with(any(DNSAccessRecord.Builder.class)));
                 will(throwException(new Exception()));
             }
         });

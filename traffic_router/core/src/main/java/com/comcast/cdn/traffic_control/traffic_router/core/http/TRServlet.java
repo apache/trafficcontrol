@@ -166,10 +166,12 @@ public class TRServlet extends HttpServlet {
 		} catch (final IOException e) {
 			httpAccessRecordBuilder.responseCode(-1);
 			httpAccessRecordBuilder.responseURL(null);
+			httpAccessRecordBuilder.rerr(e.getMessage());
 			throw e;
 		} catch (GeolocationException e) {
 			httpAccessRecordBuilder.responseCode(-1);
 			httpAccessRecordBuilder.responseURL(null);
+			httpAccessRecordBuilder.rerr(e.getMessage());
 		} finally {
 			HTTPAccessRecord access = httpAccessRecordBuilder.resultType(track.getResult()).build();
 			ACCESS.info(HTTPAccessEventBuilder.create(access));
