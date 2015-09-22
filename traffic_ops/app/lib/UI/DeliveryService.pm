@@ -41,7 +41,7 @@ sub edit {
 	my $self = shift;
 	my $id   = $self->param('id');
 
-	my $rs_ds = $self->db->resultset('Deliveryservice')->search( { 'me.id' => $id }, { prefetch => [ { 'type' => undef }, { 'profile' => undef } ] } );
+	my $rs_ds = $self->db->resultset('Deliveryservice')->search( { 'me.id' => $id }, { prefetch => [ 'cdn', { 'type' => undef }, { 'profile' => undef } ] } );
 	my $data = $rs_ds->single;
 	my $action;
 	my $regexp_set = &get_regexp_set( $self, $id );
@@ -188,7 +188,7 @@ sub read {
 	my @data;
 	my $orderby = "xml_id";
 	$orderby = $self->param('orderby') if ( defined $self->param('orderby') );
-	my $rs_data = $self->db->resultset("Deliveryservice")->search( undef, { prefetch => ['deliveryservice_regexes'], order_by => $orderby } );
+	my $rs_data = $self->db->resultset("Deliveryservice")->search( undef, { prefetch => ['cdn', 'deliveryservice_regexes'], order_by => 'me.' . $orderby } );
 	while ( my $row = $rs_data->next ) {
 		my $re_rs     = $row->deliveryservice_regexes;
 		my @matchlist = ();
@@ -219,6 +219,7 @@ sub read {
 				"multi_site_origin"      => \$row->multi_site_origin,
 				"ccr_dns_ttl"            => $row->ccr_dns_ttl,
 				"type"                   => $row->type->id,
+				"cdn_name"               => $row->cdn->name,
 				"profile_name"           => $row->profile->name,
 				"profile_description"    => $row->profile->description,
 				"global_max_mbps"        => $row->global_max_mbps,
@@ -651,6 +652,7 @@ sub update {
 			multi_site_origin      => $self->param('ds.multi_site_origin'),
 			ccr_dns_ttl            => $self->param('ds.ccr_dns_ttl'),
 			type                   => $self->param('ds.type.id'),
+			cdn_id                 => $self->param('ds.cdn_id'),
 			profile                => $self->param('ds.profile'),
 			global_max_mbps        => $self->param('ds.global_max_mbps') eq "" ? 0 : $self->hr_string_to_mbps( $self->param('ds.global_max_mbps') ),
 			global_max_tps         => $self->param('ds.global_max_tps') eq "" ? 0 : $self->param('ds.global_max_tps'),
@@ -841,6 +843,7 @@ sub create {
 				multi_site_origin      => $self->param('ds.multi_site_origin'),
 				ccr_dns_ttl            => $self->param('ds.ccr_dns_ttl'),
 				type                   => $self->param('ds.type'),
+				cdn_id                 => $self->param('ds.cdn_id'),
 				profile                => $self->param('ds.profile'),
 				global_max_mbps        => $self->param('ds.global_max_mbps') eq "" ? 0 : $self->hr_string_to_mbps( $self->param('ds.global_max_mbps') ),
 				global_max_tps         => $self->param('ds.global_max_tps') eq "" ? 0 : $self->param('ds.global_max_tps'),
@@ -942,12 +945,14 @@ sub create {
 	else {
 		my $selected_type    = $self->param('ds.type');
 		my $selected_profile = $self->param('ds.profile');
+		my $selected_cdn     = $self->param('ds.cdn');
 		&stash_role($self);
 		$self->stash(
 			ds               => {},
 			fbox_layout      => 1,
 			selected_type    => $selected_type,
 			selected_profile => $selected_profile,
+			selected_cdn     => $selected_cdn,
 			mode             => "add",
 		);
 		$self->render('delivery_service/add');
@@ -1040,6 +1045,7 @@ sub add {
 		ds               => {},
 		selected_type    => "",
 		selected_profile => "",
+		selected_cdn     => "",
 		mode             => 'add'    #for form generation
 	);
 	my @params = $self->param;

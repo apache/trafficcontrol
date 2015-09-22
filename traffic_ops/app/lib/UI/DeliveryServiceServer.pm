@@ -86,7 +86,7 @@ sub edit {
 		$valid_profiles->{ $row->id } = 1;
 	}
 
-	my $ds = $self->db->resultset('Deliveryservice')->search( { id => $id } )->single();
+	$ds = $self->db->resultset('Deliveryservice')->search( { id => $id } )->single();
 
 	my $etypeid = &type_id( $self, 'EDGE', );
 	my $otypeid = &type_id( $self, 'ORG', );
