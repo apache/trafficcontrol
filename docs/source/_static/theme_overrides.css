@@ -17,3 +17,9 @@
 .section {
   margin-top: 20px;
 }
+.wy-nav-content {
+  padding:1.618em 3.236em;
+  height:100%;
+  max-width:1100px;
+  margin:auto;
+}
