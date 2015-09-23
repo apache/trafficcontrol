@@ -86,10 +86,19 @@ sub gen_crconfig_json {
 		}
 	}
 
-	my $rs_loc = $self->db->resultset('Cachegroup')->search( { 'cdn.name' => $cdn_name }, { prefetch => 'cdn' } );
+	my $rs_loc = $self->db->resultset('Server')->search(
+		{ 'cdn.name' => $cdn_name },
+		{	join   => [ 'cdn', 'cachegroup' ],
+			select => [
+				'cachegroup.name', 'cachegroup.latitude',
+				'cachegroup.longitude'
+			],
+			distinct => 1
+		}
+	);
 	while ( my $row = $rs_loc->next ) {
-		$data_obj->{'edgeLocations'}->{ $row->name }->{'latitude'}  = $row->latitude + 0;
-		$data_obj->{'edgeLocations'}->{ $row->name }->{'longitude'} = $row->longitude + 0;
+		$data_obj->{'edgeLocations'}->{ $row->cachegroup->name }->{'latitude'}  = $row->cachegroup->latitude + 0;
+		$data_obj->{'edgeLocations'}->{ $row->cachegroup->name }->{'longitude'} = $row->cachegroup->longitude + 0;
 	}
 	my $regex_tracker;
 	my $rs_regexes = $self->db->resultset('Regex')->search( {}, { 'prefetch' => 'type' } );

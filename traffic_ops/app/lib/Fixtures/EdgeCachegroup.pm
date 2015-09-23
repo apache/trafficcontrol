@@ -26,7 +26,6 @@ my %definition_for = (
 			name       => 'edge_atl_group',
 			short_name => 'atl',
 			type       => 1,
-			cdn_id     => 1,
 			latitude   => 120,
 			longitude  => 120,
 			parent_cachegroup_id => 1,

@@ -197,14 +197,23 @@ sub get_traffic_monitor_config {
 
 	}
 
-	my $rs_loc = $self->db->resultset('Cachegroup')->search( { 'cdn.name' => $cdn_name }, { prefetch => [ 'cdn' ] } );
+	my $rs_loc = $self->db->resultset('Server')->search(
+		{ 'cdn.name' => $cdn_name },
+		{	join   => [ 'cdn', 'cachegroup' ],
+			select => [
+				'cachegroup.name', 'cachegroup.latitude',
+				'cachegroup.longitude'
+			],
+			distinct => 1
+		}
+	);
 	while ( my $row = $rs_loc->next ) {
 		my $cache_group;
-		my $latitude  = $row->latitude + 0;
-		my $longitude = $row->longitude + 0;
+		my $latitude  = $row->cachegroup->latitude + 0;
+		my $longitude = $row->cachegroup->longitude + 0;
 		$cache_group->{'coordinates'}->{'latitude'}  = $latitude;
 		$cache_group->{'coordinates'}->{'longitude'} = $longitude;
-		$cache_group->{'name'}                       = $row->name;
+		$cache_group->{'name'}                       = $row->cachegroup->name;
 		push( @{ $data_obj->{'cacheGroups'} }, $cache_group );
 	}
 	return ($data_obj);
@@ -408,16 +417,26 @@ sub gen_traffic_router_config {
 		}
 	}
 
-	my $rs_loc = $self->db->resultset('Cachegroup')->search( { 'cdn.name' => $cdn_name }, { prefetch => [ 'cdn' ] } );
+	my $rs_loc = $self->db->resultset('Server')->search(
+		{ 'cdn.name' => $cdn_name },
+		{ join   => [ 'cdn', 'cachegroup' ],
+			select => [
+				'cachegroup.name', 'cachegroup.latitude',
+				'cachegroup.longitude'
+			],
+			distinct => 1
+		}
+	);
 	while ( my $row = $rs_loc->next ) {
 		my $cache_group;
-		my $latitude  = $row->latitude + 0;
-		my $longitude = $row->longitude + 0;
+		my $latitude  = $row->cachegroup->latitude + 0;
+		my $longitude = $row->cachegroup->longitude + 0;
 		$cache_group->{'coordinates'}->{'latitude'}  = $latitude;
 		$cache_group->{'coordinates'}->{'longitude'} = $longitude;
-		$cache_group->{'name'}                       = $row->name;
+		$cache_group->{'name'}                       = $row->cachegroup->name;
 		push( @{ $data_obj->{'cacheGroups'} }, $cache_group );
 	}
+
 	my $regex_tracker;
 	my $rs_regexes = $self->db->resultset('Regex')
 		->search( {}, { 'prefetch' => 'type' } );
