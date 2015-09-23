@@ -16,6 +16,7 @@
 
 package com.comcast.cdn.traffic_control.traffic_router.core.http;
 
+import com.comcast.cdn.traffic_control.traffic_router.core.router.StatTracker.Track.ResultDetails;
 import com.comcast.cdn.traffic_control.traffic_router.core.router.StatTracker.Track.ResultType;
 
 import javax.servlet.http.HttpServletRequest;
@@ -35,6 +36,7 @@ public class HTTPAccessRecord {
     private final int responseCode;
     private final ResultType resultType;
     private final String rerr;
+    private final ResultDetails resultDetails;
 
     public Date getRequestDate() {
         return requestDate;
@@ -60,6 +62,10 @@ public class HTTPAccessRecord {
         return rerr;
     }
 
+    public ResultDetails getResultDetails() {
+        return resultDetails;
+    }
+
     public static class Builder {
         private final Date requestDate;
         private final HttpServletRequest request;
@@ -67,6 +73,7 @@ public class HTTPAccessRecord {
         private URL responseURL;
         private ResultType resultType;
         private String rerr;
+        private ResultDetails resultDetails;
 
         public Builder(final Date requestDate, final HttpServletRequest request) {
             this.requestDate = requestDate;
@@ -100,6 +107,11 @@ public class HTTPAccessRecord {
             return this;
         }
 
+        public Builder resultDetails(final ResultDetails resultDetails) {
+            this.resultDetails = resultDetails;
+            return this;
+        }
+
         public HTTPAccessRecord build() {
             return new HTTPAccessRecord(this);
         }
@@ -112,6 +124,7 @@ public class HTTPAccessRecord {
         responseURL = builder.responseURL;
         resultType = builder.resultType;
         rerr = builder.rerr;
+        resultDetails = builder.resultDetails;
     }
 
     @Override
@@ -126,7 +139,8 @@ public class HTTPAccessRecord {
         if (request != null ? !request.equals(that.request) : that.request != null) return false;
         if (responseURL != null ? !responseURL.equals(that.responseURL) : that.responseURL != null) return false;
         if (resultType != that.resultType) return false;
-        return !(rerr != null ? !rerr.equals(that.rerr) : that.rerr != null);
+        if (rerr != null ? !rerr.equals(that.rerr) : that.rerr != null) return false;
+        return resultDetails == that.resultDetails;
 
     }
 
@@ -138,6 +152,7 @@ public class HTTPAccessRecord {
         result = 31 * result + responseCode;
         result = 31 * result + (resultType != null ? resultType.hashCode() : 0);
         result = 31 * result + (rerr != null ? rerr.hashCode() : 0);
+        result = 31 * result + (resultDetails != null ? resultDetails.hashCode() : 0);
         return result;
     }
 
@@ -150,6 +165,7 @@ public class HTTPAccessRecord {
                 ", responseCode=" + responseCode +
                 ", resultType=" + resultType +
                 ", rerr='" + rerr + '\'' +
+                ", resultDetails=" + resultDetails +
                 '}';
     }
 }

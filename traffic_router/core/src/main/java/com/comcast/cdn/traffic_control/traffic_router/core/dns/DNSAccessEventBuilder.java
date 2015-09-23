@@ -4,10 +4,21 @@ import org.xbill.DNS.*;
 
 public class DNSAccessEventBuilder {
 
+    @SuppressWarnings("PMD.UseStringBufferForStringAppends")
     public static String create(final DNSAccessRecord dnsAccessRecord) {
         final String event = createEvent(dnsAccessRecord);
-        final String rType = (dnsAccessRecord.getResultType() != null) ? dnsAccessRecord.getResultType().toString() : "-";
-        final String routingInfo = "rtype=" + rType + " rerr=\"-\"";
+        String rType = "-";
+        String rDetails = "-";
+
+        if (dnsAccessRecord.getResultType() != null) {
+            rType = dnsAccessRecord.getResultType().toString();
+            if (dnsAccessRecord.getResultDetails() != null) {
+                rDetails = dnsAccessRecord.getResultDetails().toString();
+            }
+        }
+
+
+        final String routingInfo = "rtype=" + rType + " rdetails=" + rDetails + " rerr=\"-\"";
         String answer = "ans=\"-\"";
 
         if (dnsAccessRecord.getDnsMessage() != null) {
@@ -61,6 +72,7 @@ public class DNSAccessEventBuilder {
         final String rerr = "Bad Request:" + wireParseException.getClass().getSimpleName() + ":" + wireParseException.getMessage();
         return new StringBuilder(event)
                 .append(" rtype=-")
+                .append(" rdetails=-")
                 .append(" rerr=\"")
                 .append(rerr)
                 .append("\"")
@@ -77,6 +89,7 @@ public class DNSAccessEventBuilder {
 
         return new StringBuilder(event)
                 .append(" rtype=-")
+                .append(" rdetails=-")
                 .append(" rerr=\"")
                 .append(rerr)
                 .append("\"")
