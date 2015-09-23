@@ -82,10 +82,15 @@ public class StatTracker {
 		public static enum ResultType {
 			ERROR, CZ, GEO, MISS, STATIC_ROUTE, DS_REDIRECT, DS_MISS, INIT
 		}
+		public enum ResultDetails {
+			NO_DETAILS, DS_NOT_FOUND, DS_NO_BYPASS, DS_BYPASS, DS_CZ_ONLY, DS_CLIENT_GEO_UNSUPPORTED, GEO_NO_CACHE_FOUND
+		}
 		long time;
 		RouteType routeType;
 		String fqdn;
 		ResultType result = ResultType.ERROR;
+		ResultDetails resultDetails = ResultDetails.NO_DETAILS;
+
 		public Track() {
 			start();
 		}
@@ -101,6 +106,12 @@ public class StatTracker {
 		}
 		public ResultType getResult() {
 			return result;
+		}
+		public void setResultDetails(final ResultDetails resultDetails) {
+			this.resultDetails = resultDetails;
+		}
+		public ResultDetails getResultDetails() {
+			return resultDetails;
 		}
 		public final void start() {
 			time = System.currentTimeMillis();
