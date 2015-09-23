@@ -1199,7 +1199,6 @@ sub drop_qstring_dot_config {
 	my $server = $self->server_data($id);
 	my $text   = $self->header_comment( $server->host_name );
 
-	my $server = &server_data( $self, $id );
 	my $drop_qstring =
 		$self->db->resultset('ProfileParameter')
 		->search( { -and => [ profile => $server->profile->id, 'parameter.name' => 'content', 'parameter.config_file' => 'drop_qstring.config' ] },
