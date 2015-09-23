@@ -320,7 +320,7 @@ public final class SignatureManager {
 				}
 			}
 
-			if (wantSigningKey) {
+			if (wantSigningKey && signingKey != null) {
 				keys.clear(); // in case we have something in here for some reason (shouldn't happen)
 				keys.add(signingKey);
 			}
@@ -335,7 +335,7 @@ public final class SignatureManager {
 		final Calendar expiration = Calendar.getInstance();
 		Date earliest = null;
 
-		for (final DNSKeyPairWrapper keyPair : (List<DNSKeyPairWrapper>) keyPairs) {
+		for (final DNSKeyPairWrapper keyPair : keyPairs) {
 			if (earliest == null) {
 				earliest = keyPair.getExpiration();
 			} else if (keyPair.getExpiration().before(earliest)) {
@@ -417,19 +417,20 @@ public final class SignatureManager {
 	protected List<Record> signZone(final Name name, final List<Record> records, final SignedZoneKey zoneKey) throws IOException, GeneralSecurityException {
 		final List<? extends DnsKeyPair> kskPairs = getZoneSigningKSKPair(name);
 		final List<? extends DnsKeyPair> zskPairs = getZoneSigningZSKPair(name);
-		final Calendar signatureExpiration = calculateSignatureExpiration(zoneKey.getTimestamp(), records, kskPairs, zskPairs);
-		final Calendar kskExpiration = calculateKeyExpiration((List<DNSKeyPairWrapper>) kskPairs);
-		final Calendar zskExpiration = calculateKeyExpiration((List<DNSKeyPairWrapper>) zskPairs);
-		final JCEDnsSecSigner signer = new JCEDnsSecSigner(false);
-		final long now = System.currentTimeMillis();
-		final Calendar start = Calendar.getInstance();
-
-		start.setTimeInMillis(now);
-		start.add(Calendar.HOUR, -1);
 
 		// TODO: do we really need to fully sign the apex keyset? should the digest be config driven?
 		if (kskPairs != null && zskPairs != null) {
 			if (!kskPairs.isEmpty() && !zskPairs.isEmpty()) {
+				final Calendar signatureExpiration = calculateSignatureExpiration(zoneKey.getTimestamp(), records, kskPairs, zskPairs);
+				final Calendar kskExpiration = calculateKeyExpiration((List<DNSKeyPairWrapper>) kskPairs);
+				final Calendar zskExpiration = calculateKeyExpiration((List<DNSKeyPairWrapper>) zskPairs);
+				final JCEDnsSecSigner signer = new JCEDnsSecSigner(false);
+				final long now = System.currentTimeMillis();
+				final Calendar start = Calendar.getInstance();
+
+				start.setTimeInMillis(now);
+				start.add(Calendar.HOUR, -1);
+
 				LOGGER.info("Signing zone " + name + " with start " + start.getTime() + " and expiration " + signatureExpiration.getTime());
 				final List<Record> signedRecords = signer.signZone(name, records, (List<DnsKeyPair>) kskPairs, (List<DnsKeyPair>) zskPairs, start.getTime(), signatureExpiration.getTime(), true, DSRecord.SHA256_DIGEST_ID);
 				zoneKey.setSignatureExpiration(signatureExpiration);

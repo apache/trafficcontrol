@@ -37,6 +37,7 @@ public class HTTPAccessEventBuilder {
         final String cqhv = formatObject(httpServletRequest.getProtocol());
 
         final String resultType = formatObject(httpAccessRecord.getResultType());
+        final String rerr = formatObject(httpAccessRecord.getRerr());
 
         final StringBuilder stringBuilder = new StringBuilder(timeString)
             .append(" qtype=HTTP")
@@ -44,7 +45,8 @@ public class HTTPAccessEventBuilder {
             .append(" url=\"" + url + "\"")
             .append(" cqhm=" + cqhm)
             .append(" cqhv=" + cqhv)
-            .append(" rtype=" + resultType);
+            .append(" rtype=" + resultType)
+            .append(" rerr=\"" + rerr + "\"");
 
         if (httpAccessRecord.getResponseCode() != -1) {
             final String pssc = formatObject(httpAccessRecord.getResponseCode());
