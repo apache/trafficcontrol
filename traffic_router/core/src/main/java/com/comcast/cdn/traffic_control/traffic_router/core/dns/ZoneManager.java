@@ -411,8 +411,9 @@ public class ZoneManager extends Resolver {
 		final List<Record> records = new ArrayList<Record>();
 
 		try {
-			records.addAll(signatureManager.generateDSRecords(name));
-			list.addAll(signatureManager.generateDNSKEYRecords(name));
+			final long maxTTL = ZoneUtils.getMaximumTTL(list);
+			records.addAll(signatureManager.generateDSRecords(name, maxTTL));
+			list.addAll(signatureManager.generateDNSKEYRecords(name, maxTTL));
 			initExecutor.execute(new Runnable() {
 				@Override
 				public void run() {
