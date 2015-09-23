@@ -20,12 +20,10 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 
-import org.apache.log4j.Logger;
 import org.xbill.DNS.Name;
 import org.xbill.DNS.Record;
 
 public class ZoneKey implements Comparable<ZoneKey> {
-	private static final Logger LOGGER = Logger.getLogger(ZoneKey.class);
 	private Name name;
 	protected List<Record> records;
 	private int initialHashCode;
