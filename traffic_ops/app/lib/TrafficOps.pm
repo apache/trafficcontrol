@@ -1,4 +1,5 @@
 package TrafficOps;
+
 #
 # Copyright 2015 Comcast Cable Communications Management, LLC
 #
@@ -199,11 +200,7 @@ sub setup_logging {
 		my $pwd = cwd();
 		$logging_root_dir = "$pwd/log";
 		$app_root_dir     = ".";
-		make_path(
-			$logging_root_dir, {
-				verbose => 1,
-			}
-		);
+		make_path( $logging_root_dir, { verbose => 1, } );
 	}
 	my $log4perl_conf = find_conf_path("$mode/log4perl.conf");
 	if ( -e $log4perl_conf ) {
@@ -265,6 +262,7 @@ sub setup_mojo_plugins {
 
 				# Check the User/Password flow
 				else {
+
 					# Check Local User (in the database)
 					( $logged_in_user, $is_authenticated ) = $self->check_local_user( $username, $pass );
 
@@ -447,19 +445,27 @@ sub login_to_ldap {
 	}
 }
 
+sub load_conf {
+	my $conf_file = shift;
+
+	open( my $in, '<', $conf_file ) || die("$conf_file $!\n");
+	local $/;
+	my $conf_info = eval <$in>;
+	undef $in;
+	return $conf_info;
+}
+
 # Validates the conf/cdn.conf for certain criteria to
 # avoid admin mistakes.
 sub validate_cdn_conf {
 	my $self = shift;
 
-	my $cdn_conf = $ENV{'MOJO_CONFIG'};
-
-	open( IN, "< $cdn_conf" ) || die("$cdn_conf $!\n");
-	local $/;
-	my $cdn_info = eval <IN>;
-	close(IN);
-
+	my $cdn_info = load_conf( $ENV{MOJO_CONFIG} );
 	my $user;
+	if ( !exists( $cdn_info->{shared_secret} ) ) {
+		print("WARNING: no shared_secret found in in $ENV{MOJO_CONFIG}.\n");
+	}
+
 	if ( exists( $cdn_info->{hypnotoad}{user} ) ) {
 		for my $u ( $cdn_info->{hypnotoad}{user} ) {
 			$u =~ s/.*?\?(.*)$/$1/;
