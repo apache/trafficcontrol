@@ -19,12 +19,10 @@ package com.comcast.cdn.traffic_control.traffic_router.core.dns;
 import java.util.Calendar;
 import java.util.List;
 
-import org.apache.log4j.Logger;
 import org.xbill.DNS.Name;
 import org.xbill.DNS.Record;
 
 public class SignedZoneKey extends ZoneKey {
-	private static final Logger LOGGER = Logger.getLogger(SignedZoneKey.class);
 	private Calendar signatureExpiration;
 	private Calendar kskExpiration;
 	private Calendar zskExpiration;
