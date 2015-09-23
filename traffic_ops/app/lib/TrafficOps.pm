@@ -98,7 +98,7 @@ sub startup {
 	$self->setup_logging($mode);
 	$self->validate_cdn_conf();
 	$self->setup_mojo_plugins();
-	$self->set_secret();
+	$self->set_secrets();
 
 	$self->log->info("-------------------------------------------------------------");
 	$self->log->info( "TrafficOps version: " . Utils::Helper::Version->current() . " is starting." );
@@ -446,7 +446,7 @@ sub login_to_ldap {
 }
 
 sub load_conf {
-	my $self = shift;
+	my $self      = shift;
 	my $conf_file = shift;
 
 	open( my $in, '<', $conf_file ) || die("$conf_file $!\n");
@@ -514,19 +514,23 @@ sub validate_cdn_conf {
 	}
 }
 
-sub set_secret {
+sub set_secrets {
 	my $self = shift;
 
 	# Set secret / disable annoying log message
 	# The following commit details the change from secret to secrets in 4.63
 	# https://github.com/kraih/mojo/commit/57e5129436bf3d717a13e092dd972217938e29b5
 	my $cdn_info = $self->load_conf( $ENV{MOJO_CONFIG} );
-
+	# for backward compatability -- keep old secret if not found in cdn.conf
+	my $secrets  = $cdn_info->{secrets} // [ 'mONKEYDOmONKEYSEE.' ];
+	if ( ref $secrets ne 'ARRAY' ) {
+		my $e = Mojo::Exception->throw("Invalid 'secrets' entry in cdn.conf");
+	}
 	if ( $Mojolicious::VERSION >= 4.63 ) {
-		$self->secrets( [ $cdn_info->{shared_secret}, 'mONKEYDOmONKEYSEE.' ] );    # for Mojolicious 4.67, Top Hat
+		$self->secrets($secrets);    # for Mojolicious 4.67, Top Hat
 	}
 	else {
-		$self->secret( $cdn_info->{shared_secret} );                               # for Mojolicious 3.x
+		$self->secret( $secrets->[0] );    # for Mojolicious 3.x
 	}
 }
 
