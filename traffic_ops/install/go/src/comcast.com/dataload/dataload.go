@@ -36,6 +36,11 @@ type Configuration struct {
 	DbType      string `json:"type"`
 }
 
+type Cdn struct {
+	Name       string `json:"name"`
+	ConfigFile string `json:"config_file"`
+}
+
 type Profile struct {
 	Name        string `json:"name"`
 	Description string `json:"description"`
@@ -55,7 +60,6 @@ type ProfileParameter struct {
 }
 
 type CustomParams struct {
-	CdnName                string `json:"cdnname"`
 	TmInfoUrl              string `json:"tminfo.url"`
 	CoverageZonePollingUrl string `json:"coveragezone.polling.url"`
 	GeoLocationPollingUrl  string `json:"geolocation.polling.url"`
@@ -80,12 +84,42 @@ type Status struct {
 	Description string `json:"description"`
 }
 
+func loadCdn(db *sql.DB, dbName string) (sql.Result, error) {
+	fmt.Println("seeding cdn data...")
+
+	cdnInsert, err := db.Prepare("insert ignore into " + dbName + ".cdn (name, config_file) values (?,?)")
+	if err != nil {
+		return nil, err
+	}
+
+	file, err := os.Open("/opt/traffic_ops/install/data/json/cdn.json")
+	if err != nil {
+		return nil, err
+	}
+
+	var c Cdn
+	if err := json.NewDecoder(file).Decode(&c); err != nil && err != io.EOF {
+		return nil, err
+	}
+
+	fmt.Println("name", c.Name, "config_file", c.ConfigFile)
+	cdn, err := cdnInsert.Exec(c.Name, c.ConfigFile)
+	if err != nil {
+		return nil, err
+	}
+	return cdn, nil
+}
+
 func main() {
 	//read prop file for database credentials
-	file, _ := os.Open("/opt/traffic_ops/app/conf/production/database.conf")
+	file, err := os.Open("/opt/traffic_ops/app/conf/development/database.conf")
+	if err != nil {
+		fmt.Println("error: ", err)
+	}
+
 	decoder := json.NewDecoder(file)
 	configuration := Configuration{}
-	err := decoder.Decode(&configuration)
+	err = decoder.Decode(&configuration)
 	if err != nil {
 		fmt.Println("error:", err)
 	}
@@ -114,13 +148,28 @@ func main() {
 		panic(err)
 	}
 
+	// read cdn json file
+	cdn, err := loadCdn(db, dbName)
+	if err != nil {
+		fmt.Println(err)
+		panic(err)
+	}
+
+	cdn_id, err := cdn.LastInsertId()
+	if err != nil {
+		fmt.Println("error: ", err)
+	}
+
 	//read profile json file
 	fmt.Println("seeding profile data...")
-	file, _ = os.Open("/opt/traffic_ops/install/data/json/profile.json")
+	file, err = os.Open("/opt/traffic_ops/install/data/json/profile.json")
+	if err != nil {
+		fmt.Println("error: ", err)
+	}
 	lineCount := 0
-	profile := Profile{}
+	var profile Profile
 	decoder = json.NewDecoder(file)
-	profileInsert, err := db.Prepare("insert ignore into " + dbName + ".profile (name, description) values (?,?)")
+	profileInsert, err := db.Prepare("insert ignore into " + dbName + ".profile (name, description, cdn_id) values (?,?,?)")
 	if err != nil {
 		fmt.Println("Couldn't prepare profile insert statment")
 		panic(err)
@@ -133,9 +182,9 @@ func main() {
 			fmt.Println("Error:", err)
 			return
 		}
-		fmt.Println("name", profile.Name, "description", profile.Description)
+		fmt.Println("name", profile.Name, "description", profile.Description, "cdn_id", cdn_id)
 		//load profile table
-		_, err = profileInsert.Exec(profile.Name, profile.Description)
+		_, err = profileInsert.Exec(profile.Name, profile.Description, cdn_id)
 		if err != nil {
 			fmt.Println("The profile Insert failed")
 			panic(err)
@@ -307,27 +356,18 @@ func main() {
 	}
 	//setup constants
 	var (
-		cdnName                = "CDN_name"
 		tmInfoUrl              = "tm.infourl"
 		coverageZonePollingUrl = "coveragezone.polling.url"
 		geoLocationPollingUrl  = "geolocation.polling.url"
 		domainName             = "domain_name"
 		tmUrl                  = "tm.url"
 		geoLocation6PollingUrl = "geolocation6.polling.url"
-		rascalConfig           = "rascal-config.txt"
 		crConfig               = "CRConfig.json"
 	)
-	// insert cdnname data
-	fmt.Printf("inserting data for %s = %s \n", cdnName, customParams.CdnName)
 	//update
 	updateParam, err := db.Prepare("UPDATE parameter SET value=? WHERE name = ? and config_file = ?")
 	tx, err := db.Begin()
 	if err != nil {
-		panic(err)
-	}
-	_, err = tx.Stmt(updateParam).Exec(customParams.CdnName, cdnName, rascalConfig)
-	if err != nil {
-		fmt.Println("There was an issue creating paramter for", cdnName, " with a value of ", customParams.CdnName)
 		panic(err)
 	}
 	//insert tmInfoUrl data

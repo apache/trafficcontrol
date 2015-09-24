@@ -238,9 +238,6 @@
 {"profile":"EDGE1_CDN_520","parameter":"LogObject.RollingOffsetHr","config_file":"logs_xml.config","value":"11"}
 {"profile":"EDGE1_CDN_520","parameter":"LogObject.RollingSizeMb","config_file":"logs_xml.config","value":"1024"}
 {"profile":"EDGE1_CDN_520","parameter":"location","config_file":"logs_xml.config","value":"/opt/trafficserver/etc/trafficserver"}
-{"profile":"CCR_CDN","parameter":"CDN_name","config_file":"rascal-config.txt","value":"cdn"}
-{"profile":"RASCAL_CDN","parameter":"CDN_name","config_file":"rascal-config.txt","value":"cdn"}
-{"profile":"EDGE1_CDN_520","parameter":"CDN_name","config_file":"rascal-config.txt","value":"cdn"}
 {"profile":"EDGE1_CDN_520","parameter":"CONFIG proxy.config.log.xml_config_file","config_file":"records.config","value":"STRING logs_xml.config"}
 {"profile":"RASCAL_CDN","parameter":"health.polling.interval","config_file":"rascal-config.txt","value":"8000"}
 {"profile":"RASCAL_CDN","parameter":"tm.dataServer.polling.url","config_file":"rascal-config.txt","value":"https://${tmHostname}/dataserver/orderby/id"}

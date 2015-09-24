@@ -1277,15 +1277,12 @@ sub create_dnssec_keys {
 
 	#get CDN name
 	my $dnskey_ttl;
-	my $cdn_rs = $self->db->resultset('ProfileParameter')->search(
-		{   -and => [
-				'parameter.name' => 'CDN_name',
-				'profile.id'     => $profile_id
-			]
-		},
-		{ prefetch => [ 'parameter', 'profile' ] }
-	)->single();
-	my $cdn_name = $cdn_rs->parameter->value;
+
+	my $cdn_rs
+		= $self->db->resultset('Profile')
+		->search( { 'me.id' => $profile_id }, { prefetch => 'cdn' } )
+		->single();
+	my $cdn_name = $cdn_rs->cdn->name;
 
 	#get keys for cdn
 	my $keys;

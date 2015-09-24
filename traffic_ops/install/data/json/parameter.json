@@ -263,7 +263,6 @@
 {"name":"LogObject.RollingOffsetHr","config_file":"logs_xml.config","value":"11"}
 {"name":"LogObject.RollingSizeMb","config_file":"logs_xml.config","value":"1024"}
 {"name":"location","config_file":"logs_xml.config","value":"/opt/trafficserver/etc/trafficserver"}
-{"name":"CDN_name","config_file":"rascal-config.txt","value":"cdn"}
 {"name":"CONFIG proxy.config.log.xml_config_file","config_file":"records.config","value":"STRING logs_xml.config"}
 {"name":"health.polling.interval","config_file":"rascal-config.txt","value":"8000"}
 {"name":"tm.dataServer.polling.url","config_file":"rascal-config.txt","value":"https://${tmHostname}/dataserver/orderby/id"}
