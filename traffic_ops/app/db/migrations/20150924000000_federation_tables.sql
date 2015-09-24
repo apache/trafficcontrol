@@ -29,11 +29,11 @@ CREATE TABLE `federation_resolver` (
 
 CREATE TABLE IF NOT EXISTS `federation_mapping` (
   `id` INT(11) NOT NULL AUTO_INCREMENT,
-  `name` VARCHAR(45) NOT NULL,
-  `description` VARCHAR(4096) NULL,
+  `federation_resolver_id` INT(11) NOT NULL,
+  `name` VARCHAR(1024) NOT NULL,
+  `description` VARCHAR(1024) NULL,
   `cname` VARCHAR(1024) NOT NULL,
   `ttl` INT(8) NOT NULL,
-  `federation_resolver_id` INT(11) NOT NULL,
   `type` INT(11) NOT NULL,
   `last_updated` TIMESTAMP NOT NULL DEFAULT now(),
   PRIMARY KEY (`id`,`type`),
@@ -43,7 +43,7 @@ CREATE TABLE IF NOT EXISTS `federation_mapping` (
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 
 -- federation_deliveryservice
-CREATE TABLE `federation_deliveryservice` (
+CREATE TABLE `federation_mapping_deliveryservice` (
   `federation_mapping` int(11) NOT NULL,
   `deliveryservice` int(11) NOT NULL,
   `last_updated` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,

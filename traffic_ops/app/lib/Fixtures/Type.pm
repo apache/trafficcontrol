@@ -254,6 +254,24 @@ my %definition_for = (
 			use_in_table => 'server',
 		}
 	},
+	RESOLVE4 => {
+		new   => 'Type',
+		using => {
+			id           => 33,
+			name         => 'RESOLVE4',
+			description  => 'federation mapping type resolve4',
+			use_in_table => 'federation_mapping',
+		}
+	},
+	RESOLVE6 => {
+		new   => 'Type',
+		using => {
+			id           => 34,
+			name         => 'RESOLVE6',
+			description  => 'federation mapping type resolve6',
+			use_in_table => 'federation_mapping',
+		}
+	},
 
 );
 

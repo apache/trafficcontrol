@@ -120,6 +120,9 @@ sub unload_core_data {
 	$self->teardown( $schema, 'Regex' );
 	$self->teardown( $schema, 'Type' );
 	$self->teardown( $schema, 'Status' );
+	$self->teardown( $schema, 'FederationMapping' );
+	$self->teardown( $schema, 'FederationResolver' );
+	$self->teardown( $schema, 'FederationMappingDeliveryservice' );
 }
 
 sub teardown {
