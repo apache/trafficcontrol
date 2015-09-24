@@ -26,6 +26,7 @@ import (
 	_ "github.com/go-sql-driver/mysql"
 )
 
+// Configuration contains parameters needed to connect to the Traffic Ops Database.
 type Configuration struct {
 	Description string `json:"description"`
 	DbName      string `json:"dbname"`
@@ -36,103 +37,405 @@ type Configuration struct {
 	DbType      string `json:"type"`
 }
 
-type Cdn struct {
-	Name       string `json:"name"`
-	ConfigFile string `json:"config_file"`
-}
-
-type Profile struct {
-	Name        string `json:"name"`
-	Description string `json:"description"`
-}
-
-type Parameter struct {
-	Name        string `json:"name"`
-	Config_File string `json:"config_file"`
-	Value       string `json:"value"`
-}
-
-type ProfileParameter struct {
-	Profile    string `json:"profile"`
-	Parameter  string `json:"parameter"`
-	ConfigFile string `json:"config_file"`
-	Value      string `json:"value"`
-}
-
-type CustomParams struct {
-	TmInfoUrl              string `json:"tminfo.url"`
-	CoverageZonePollingUrl string `json:"coveragezone.polling.url"`
-	GeoLocationPollingUrl  string `json:"geolocation.polling.url"`
-	DomainName             string `json:"domainname"`
-	TmUrl                  string `json:"tmurl.url"`
-	GeoLocation6PollingUrl string `json:"geolocation6.polling.url"`
-}
-
-type DefaultUsers struct {
-	Username string `json:"username"`
-	Password string `json:"password"`
-}
-
-type DataType struct {
-	Name        string `json:"name"`
-	Description string `json:"description"`
-	UseInTable  string `json:"use_in_table"`
-}
-
-type Status struct {
-	Name        string `json:"name"`
-	Description string `json:"description"`
-}
-
 func loadCdn(db *sql.DB, dbName string) (sql.Result, error) {
-	fmt.Println("seeding cdn data...")
-
-	cdnInsert, err := db.Prepare("insert ignore into " + dbName + ".cdn (name, config_file) values (?,?)")
-	if err != nil {
-		return nil, err
-	}
+	fmt.Println("Seeding cdn data...")
 
 	file, err := os.Open("/opt/traffic_ops/install/data/json/cdn.json")
 	if err != nil {
 		return nil, err
 	}
 
-	var c Cdn
+	type cdnData struct {
+		Name       string `json:"name"`
+		ConfigFile string `json:"config_file"`
+	}
+	var c cdnData
 	if err := json.NewDecoder(file).Decode(&c); err != nil && err != io.EOF {
 		return nil, err
 	}
 
-	fmt.Println("name", c.Name, "config_file", c.ConfigFile)
-	cdn, err := cdnInsert.Exec(c.Name, c.ConfigFile)
+	fmt.Printf("\t Inserting cdn: %+v \n", c)
+	cdn, err := db.Exec("insert ignore into "+dbName+".cdn (name, config_file) values (?,?)", c.Name, c.ConfigFile)
 	if err != nil {
+		fmt.Println("\t An error occured inserting cdn with name ", c.Name)
 		return nil, err
 	}
 	return cdn, nil
+}
+
+func loadProfile(db *sql.DB, dbName string, cdnID int64) error {
+	fmt.Println("Seeding profile data...")
+
+	stmt, err := db.Prepare("insert ignore into " + dbName + ".profile (name, description, cdn_id) values (?,?,?)")
+	if err != nil {
+		fmt.Println("Couldn't prepare profile insert statment")
+		return err
+	}
+
+	file, err := os.Open("/opt/traffic_ops/install/data/json/profile.json")
+	if err != nil {
+		return err
+	}
+	decoder := json.NewDecoder(file)
+
+	type profileData struct {
+		Name        string `json:"name"`
+		Description string `json:"description"`
+	}
+
+	for {
+		var p profileData
+		if err = decoder.Decode(&p); err == io.EOF {
+			break
+		} else if err != nil {
+			return err
+		}
+
+		fmt.Printf("\t Inserting profile: %+v \n", p)
+		_, err = stmt.Exec(p.Name, p.Description, cdnID)
+		if err != nil {
+			fmt.Println("\t An error occured inserting profile with name ", p.Name)
+			return err
+		}
+	}
+	return nil
+}
+
+func loadParameter(db *sql.DB, dbName string) error {
+	fmt.Println("Seeding parameter data...")
+
+	stmt, err := db.Prepare("insert ignore into " + dbName + ".parameter (name, config_file, value) values (?,?,?)")
+	if err != nil {
+		fmt.Println("Couldn't prepare parameter insert statment")
+		return err
+	}
+
+	file, err := os.Open("/opt/traffic_ops/install/data/json/parameter.json")
+	if err != nil {
+		return err
+	}
+	decoder := json.NewDecoder(file)
+
+	type parameterData struct {
+		Name       string `json:"name"`
+		ConfigFile string `json:"config_file"`
+		Value      string `json:"value"`
+	}
+
+	for {
+		var p parameterData
+		if err = decoder.Decode(&p); err == io.EOF {
+			break
+		} else if err != nil {
+			return err
+		}
+
+		query := "select count(name) from " + dbName + ".parameter where name = ? and config_file = ? and value = ?"
+		rows, err := db.Query(query, p.Name, p.ConfigFile, p.Value)
+		if err != nil {
+			return err
+		}
+		defer rows.Close()
+
+		var count int
+		for rows.Next() {
+			if err := rows.Scan(&count); err != nil {
+				return err
+			}
+		}
+
+		if count != 0 {
+			fmt.Printf("\t Parameter already exists: %+v \n", p)
+			count = 0
+		} else {
+			fmt.Printf("\t Inserting parameter: %+v \n", p)
+			_, err = stmt.Exec(p.Name, p.ConfigFile, p.Value)
+			if err != nil {
+				fmt.Println("\t An error occured inserting parameter with name ", p.Name)
+				return err
+			}
+		}
+	}
+	return nil
+}
+
+func loadProfileParameter(db *sql.DB, dbName string) error {
+	fmt.Println("Seeding profile_parameter data...")
+
+	stmt, err := db.Prepare("insert ignore into " + dbName + ".profile_parameter (profile, parameter) values ((select id from profile where name = ?), (select id from parameter where name = ? and config_file = ? and value = ?))")
+	if err != nil {
+		fmt.Println("Couldn't prepare profile_parameter insert statment")
+		return err
+	}
+
+	file, err := os.Open("/opt/traffic_ops/install/data/json/profile_parameter.json")
+	if err != nil {
+		return err
+	}
+	decoder := json.NewDecoder(file)
+
+	type profileParameterData struct {
+		Profile    string `json:"profile"`
+		Parameter  string `json:"parameter"`
+		ConfigFile string `json:"config_file"`
+		Value      string `json:"value"`
+	}
+
+	for {
+		var p profileParameterData
+		if err = decoder.Decode(&p); err == io.EOF {
+			break
+		} else if err != nil {
+			return err
+		}
+
+		query := "select count(profile) from " + dbName + ".profile_parameter where profile = (select id from profile where name = ?) and parameter = (select id from parameter where name = ? and config_file = ? and value = ?)"
+		rows, err := db.Query(query, p.Profile, p.Parameter, p.ConfigFile, p.Value)
+		if err != nil {
+			return err
+		}
+		defer rows.Close()
+
+		var count int
+		for rows.Next() {
+			if err := rows.Scan(&count); err != nil {
+				return err
+			}
+		}
+
+		if count != 0 {
+			fmt.Printf("\t Profile Parameter combination already exists:  %+v \n", p)
+			count = 0
+		} else {
+			fmt.Printf("\t Inserting profile parameter: %+v \n", p)
+			_, err = stmt.Exec(p.Profile, p.Parameter, p.ConfigFile, p.Value)
+			if err != nil {
+				fmt.Println("\t An error occured inserting profile parameter with profile", p.Profile, "parameter", p.Parameter)
+				return err
+			}
+		}
+	}
+	return nil
+}
+
+func loadType(db *sql.DB, dbName string) error {
+	fmt.Println("Seeding type data...")
+
+	stmt, err := db.Prepare("insert ignore into " + dbName + ".type (name, description, use_in_table) values (?,?,?)")
+	if err != nil {
+		fmt.Println("Couldn't prepare type insert statment")
+		return err
+	}
+
+	file, err := os.Open("/opt/traffic_ops/install/data/json/type.json")
+	if err != nil {
+		return err
+	}
+	decoder := json.NewDecoder(file)
+
+	type typeData struct {
+		Name        string `json:"name"`
+		Description string `json:"description"`
+		UseInTable  string `json:"use_in_table"`
+	}
+
+	for {
+		var t typeData
+		if err = decoder.Decode(&t); err == io.EOF {
+			break
+		} else if err != nil {
+			return err
+		}
+
+		fmt.Printf("\t Inserting type: %+v \n", t)
+		_, err = stmt.Exec(t.Name, t.Description, t.UseInTable)
+		if err != nil {
+			fmt.Println("\t An error occured inserting type with name ", t.Name)
+			return err
+		}
+	}
+	return nil
+}
+
+func loadStatus(db *sql.DB, dbName string) error {
+	fmt.Println("Seeding status data...")
+
+	stmt, err := db.Prepare("insert ignore into " + dbName + ".status (name, description) values (?,?)")
+	if err != nil {
+		fmt.Println("Couldn't prepare status insert statment")
+		panic(err)
+	}
+
+	file, err := os.Open("/opt/traffic_ops/install/data/json/status.json")
+	if err != nil {
+		return err
+	}
+	decoder := json.NewDecoder(file)
+
+	type statusData struct {
+		Name        string `json:"name"`
+		Description string `json:"description"`
+	}
+
+	for {
+		var s statusData
+		if err = decoder.Decode(&s); err == io.EOF {
+			break
+		} else if err != nil {
+			return err
+		}
+
+		fmt.Printf("\t Inserting status: %+v \n", s)
+		_, err = stmt.Exec(s.Name, s.Description)
+		if err != nil {
+			fmt.Println("\t An error occured inserting status with name ", s.Name)
+			return err
+		}
+	}
+	return nil
+}
+
+func loadCustomParams(db *sql.DB, dbName string) error {
+	fmt.Println("creating custom parameters...")
+
+	//setup constants
+	var (
+		tmInfoURL              = "tm.infourl"
+		coverageZonePollingURL = "coveragezone.polling.url"
+		geoLocationPollingURL  = "geolocation.polling.url"
+		domainName             = "domain_name"
+		tmURL                  = "tm.url"
+		geoLocation6PollingURL = "geolocation6.polling.url"
+		crConfig               = "CRConfig.json"
+	)
+
+	updateParam, err := db.Prepare("UPDATE parameter SET value=? WHERE name = ? and config_file = ?")
+	if err != nil {
+		return err
+	}
+
+	file, err := os.Open("/opt/traffic_ops/install/data/json/parameters.json") //should probably rename this file to be more meaningful
+	if err != nil {
+		return err
+	}
+	decoder := json.NewDecoder(file)
+
+	type customParams struct {
+		TmInfoURL              string `json:"tminfo.url"`
+		CoverageZonePollingURL string `json:"coveragezone.polling.url"`
+		GeoLocationPollingURL  string `json:"geolocation.polling.url"`
+		DomainName             string `json:"domainname"`
+		TmURL                  string `json:"tmurl.url"`
+		GeoLocation6PollingURL string `json:"geolocation6.polling.url"`
+	}
+
+	for {
+		var c customParams
+		if err = decoder.Decode(&c); err != nil {
+			return err
+		}
+
+		tx, err := db.Begin()
+		if err != nil {
+			return err
+		}
+
+		fmt.Printf("\t Inserting custom param: value=%s, name=global, config_file=%s \n", c.TmInfoURL, tmInfoURL)
+		_, err = tx.Stmt(updateParam).Exec(c.TmInfoURL, "global", tmInfoURL)
+		if err != nil {
+			fmt.Println("\t An error occured inserting parameter for", tmInfoURL, " with a value of ", c.TmInfoURL)
+			return err
+		}
+
+		fmt.Printf("\t Inserting custom param: value=%s, name=%s, config_file=%s \n", c.CoverageZonePollingURL, crConfig, coverageZonePollingURL)
+		_, err = tx.Stmt(updateParam).Exec(c.CoverageZonePollingURL, crConfig, coverageZonePollingURL)
+		if err != nil {
+			fmt.Println("\t An error occured inserting parameter for", coverageZonePollingURL, " with a value of ", c.CoverageZonePollingURL)
+			return err
+		}
+
+		fmt.Printf("\t Inserting custom param: value=%s, name=%s, config_file=%s \n", c.GeoLocationPollingURL, crConfig, geoLocationPollingURL)
+		_, err = tx.Stmt(updateParam).Exec(c.GeoLocationPollingURL, crConfig, geoLocationPollingURL)
+		if err != nil {
+			fmt.Println("\t An error occured inserting paramter for", geoLocationPollingURL, " with a value of ", c.GeoLocationPollingURL)
+			return err
+		}
+
+		fmt.Printf("\t Inserting custom param: value=%s, name=%s, config_file=%s \n", c.DomainName, crConfig, domainName)
+		_, err = tx.Stmt(updateParam).Exec(c.DomainName, crConfig, domainName)
+		if err != nil {
+			fmt.Println("\t An error occured inserting paramter for", domainName, " with a value of ", c.DomainName)
+			return err
+		}
+
+		fmt.Printf("\t Inserting custom param: value=%s, name=global, config_file=%s \n", c.TmURL, tmURL)
+		_, err = tx.Stmt(updateParam).Exec(c.TmURL, "global", tmURL)
+		if err != nil {
+			fmt.Println("\t An error occured inserting paramter for", tmURL, " with a value of ", c.TmURL)
+			return err
+		}
+
+		fmt.Printf("\t Inserting custom param: value=%s, name=%s, config_file=%s \n", c.GeoLocation6PollingURL, crConfig, geoLocation6PollingURL)
+		_, err = tx.Stmt(updateParam).Exec(c.GeoLocation6PollingURL, crConfig, geoLocation6PollingURL)
+		if err != nil {
+			fmt.Println("\t An error occured inserting paramter for", geoLocation6PollingURL, " with a value of ", c.GeoLocation6PollingURL)
+			return err
+		}
+
+		if err = tx.Commit(); err != nil {
+			return err
+		}
+	}
+}
+
+func loadUsers(db *sql.DB, dbName string) error {
+	fmt.Println("Adding default user data")
+	file, err := os.Open("/opt/traffic_ops/install/data/json/users.json") //should probably rename this file to be more meaningful
+	if err != nil {
+		return err
+	}
+
+	type users struct {
+		Username string `json:"username"`
+		Password string `json:"password"`
+	}
+	decoder := json.NewDecoder(file)
+
+	for {
+		var u users
+		if err = decoder.Decode(&u); err == io.EOF {
+			break
+		} else if err != nil {
+			return err
+		}
+
+		query := "insert ignore into " + dbName + ".tm_user (username, role, local_passwd, new_user, local_user) values (?,(select id from role where name = ?), ?, 1, 0)"
+		_, err = db.Exec(query, u.Username, "admin", u.Password)
+		if err != nil {
+			fmt.Println("\t An error occured inserting user with name ", u.Username)
+			return err
+		}
+	}
+	return nil
 }
 
 func main() {
 	//read prop file for database credentials
 	file, err := os.Open("/opt/traffic_ops/app/conf/development/database.conf")
 	if err != nil {
-		fmt.Println("error: ", err)
+		panic(err)
 	}
-
 	decoder := json.NewDecoder(file)
-	configuration := Configuration{}
-	err = decoder.Decode(&configuration)
-	if err != nil {
-		fmt.Println("error:", err)
+
+	var c Configuration
+	if err = decoder.Decode(&c); err != nil {
+		panic(err)
 	}
-	dbHostname := configuration.DbHostname
-	dbUsername := configuration.DbUser
-	dbPassword := configuration.DbPassword
-	dbPort := configuration.DbPort
-	dbName := configuration.DbName
 
 	debug := false
 
 	//connect to database
-	connectString := dbUsername + ":" + dbPassword + "@" + "tcp(" + dbHostname + ":" + dbPort + ")" + "/" + dbName
+	connectString := c.DbUser + ":" + c.DbPassword + "@" + "tcp(" + c.DbHostname + ":" + c.DbPort + ")" + "/" + c.DbName
 	if debug {
 		fmt.Println("new connect string:" + connectString)
 	}
@@ -142,308 +445,55 @@ func main() {
 		fmt.Println("Couldnt create db handle")
 		panic(err)
 	}
-	err = db.Ping()
-	if err != nil {
+
+	if err = db.Ping(); err != nil {
 		fmt.Println("Can't ping the new database")
 		panic(err)
 	}
 
 	// read cdn json file
-	cdn, err := loadCdn(db, dbName)
+	cdn, err := loadCdn(db, c.DbName)
 	if err != nil {
 		fmt.Println(err)
-		panic(err)
 	}
 
-	cdn_id, err := cdn.LastInsertId()
+	cdnID, err := cdn.LastInsertId()
 	if err != nil {
 		fmt.Println("error: ", err)
 	}
 
-	//read profile json file
-	fmt.Println("seeding profile data...")
-	file, err = os.Open("/opt/traffic_ops/install/data/json/profile.json")
-	if err != nil {
-		fmt.Println("error: ", err)
-	}
-	lineCount := 0
-	var profile Profile
-	decoder = json.NewDecoder(file)
-	profileInsert, err := db.Prepare("insert ignore into " + dbName + ".profile (name, description, cdn_id) values (?,?,?)")
-	if err != nil {
-		fmt.Println("Couldn't prepare profile insert statment")
-		panic(err)
-	}
-	for {
-		err := decoder.Decode(&profile)
-		if err == io.EOF {
-			break
-		} else if err != nil {
-			fmt.Println("Error:", err)
-			return
-		}
-		fmt.Println("name", profile.Name, "description", profile.Description, "cdn_id", cdn_id)
-		//load profile table
-		_, err = profileInsert.Exec(profile.Name, profile.Description, cdn_id)
-		if err != nil {
-			fmt.Println("The profile Insert failed")
-			panic(err)
-		}
-		lineCount += 1
-	}
-	//read parameter json file
-	fmt.Println("seeding parameter data...")
-	file, err = os.Open("/opt/traffic_ops/install/data/json/parameter.json")
-	if err != nil {
-		fmt.Println("trouble reading parameter.json")
-		panic(err)
-	}
-	lineCount = 0
-	parameter := Parameter{}
-	decoder = json.NewDecoder(file)
-	parameterInsert, err := db.Prepare("insert ignore into " + dbName + ".parameter (name, config_file, value) values (?,?,?)")
-	if err != nil {
-		fmt.Println("Couldn't prepare parameter insert statment")
-		panic(err)
-	}
-	for {
-		err := decoder.Decode(&parameter)
-		if err == io.EOF {
-			break
-		} else if err != nil {
-			fmt.Println("Error:", err)
-			return
-		}
-		//load parameter table
-		rows, err := db.Query("select count(name) from "+dbName+".parameter where name = ? and config_file = ? and value = ?", parameter.Name, parameter.Config_File, parameter.Value)
-		if err != nil {
-			fmt.Println("Couldn't prepare parameter select statment")
-			panic(err)
-		}
-		defer rows.Close()
-		var count int
-		for rows.Next() {
-			if err := rows.Scan(&count); err != nil {
-				panic(err)
-			}
-			// fmt.Println("row count ", count)
-		}
-		if count == 0 {
-			fmt.Println("inserting parameter: name = ", parameter.Name, "config_file = ", parameter.Config_File, "value = ", parameter.Value)
-			_, err = parameterInsert.Exec(parameter.Name, parameter.Config_File, parameter.Value)
-		} else {
-			fmt.Println("parameter already exists!  name = ", parameter.Name, "config_file = ", parameter.Config_File, "value = ", parameter.Value)
-		}
-		if err != nil {
-			fmt.Println("The parameter insert failed")
-			panic(err)
-		}
-		count = 0
-		lineCount += 1
-	}
-	//seed profile_parameter data
-	fmt.Println("seeding profile_parameter data...")
-	file, _ = os.Open("/opt/traffic_ops/install/data/json/profile_parameter.json")
-	lineCount = 0
-	profileParameter := ProfileParameter{}
-	decoder = json.NewDecoder(file)
-	profileParameterInsert, err := db.Prepare("insert ignore into " + dbName + ".profile_parameter (profile, parameter) values ((select id from profile where name = ?), (select id from parameter where name = ? and config_file = ? and value = ?))")
-	if err != nil {
-		fmt.Println("Couldn't prepare profile_parameter insert statment")
-		panic(err)
-	}
-	for {
-		err := decoder.Decode(&profileParameter)
-		if err == io.EOF {
-			break
-		} else if err != nil {
-			fmt.Println("Error:", err)
-			return
-		}
-		rows, err := db.Query("select count(profile) from "+dbName+".profile_parameter where profile = (select id from profile where name = ?) and parameter = (select id from parameter where name = ? and config_file = ? and value = ?)", profileParameter.Profile, profileParameter.Parameter, profileParameter.ConfigFile, profileParameter.Value)
-		if err != nil {
-			fmt.Println("Couldn't prepare profile_parameter select statment")
-			panic(err)
-		}
-		defer rows.Close()
-		var count int
-		for rows.Next() {
-			if err := rows.Scan(&count); err != nil {
-				panic(err)
-			}
-			// fmt.Println("row count ", count)
-		}
-		if count == 0 {
-			fmt.Println("inserting profile parameter value: profile_name =", profileParameter.Profile, "parameter_name =", profileParameter.Parameter, "config_file =", profileParameter.ConfigFile, "value =", profileParameter.Value)
-			//load parameter table
-			_, err = profileParameterInsert.Exec(profileParameter.Profile, profileParameter.Parameter, profileParameter.ConfigFile, profileParameter.Value)
-			if err != nil {
-				fmt.Println("The insert failed")
-				panic(err)
-			}
-		} else {
-			fmt.Printf("the profile_parameter combination already exists.  Profile Name = %s, Parameter Name = %s, Parameter Config_File = %s, Parameter Value = %s\n", profileParameter.Profile, profileParameter.Parameter, profileParameter.ConfigFile, profileParameter.Value)
-			count = 0
-		}
-		lineCount += 1
-	}
-	//read type json file
-	fmt.Println("seeding type data...")
-	file, _ = os.Open("/opt/traffic_ops/install/data/json/type.json")
-	lineCount = 0
-	dataType := DataType{}
-	decoder = json.NewDecoder(file)
-	dataTypeInsert, err := db.Prepare("insert ignore into " + dbName + ".type (name, description, use_in_table) values (?,?,?)")
-	if err != nil {
-		fmt.Println("Couldn't prepare data type insert statment")
-		panic(err)
-	}
-	for {
-		err := decoder.Decode(&dataType)
-		if err == io.EOF {
-			break
-		} else if err != nil {
-			fmt.Println("Error:", err)
-			return
-		}
-		fmt.Println("name", dataType.Name, "description", dataType.Description, "use_in_table", dataType.UseInTable)
-		//load profile table
-		_, err = dataTypeInsert.Exec(dataType.Name, dataType.Description, dataType.UseInTable)
-		if err != nil {
-			fmt.Println("The data type Insert failed")
-			panic(err)
-		}
-		lineCount += 1
-	}
-	//load status data
-	fmt.Println("seeding status data...")
-	file, _ = os.Open("/opt/traffic_ops/install/data/json/status.json")
-	lineCount = 0
-	status := Status{}
-	decoder = json.NewDecoder(file)
-	statusInsert, err := db.Prepare("insert ignore into " + dbName + ".status (name, description) values (?,?)")
-	if err != nil {
-		fmt.Println("Couldn't prepare status insert statment")
-		panic(err)
-	}
-	for {
-		err := decoder.Decode(&status)
-		if err == io.EOF {
-			break
-		} else if err != nil {
-			fmt.Println("Error:", err)
-			return
-		}
-		fmt.Println("name", status.Name, "description", status.Description)
-		//load profile table
-		_, err = statusInsert.Exec(status.Name, status.Description)
-		if err != nil {
-			fmt.Println("The status Insert failed")
-			panic(err)
-		}
-		lineCount += 1
+	// read profile json file
+	if err = loadProfile(db, c.DbName, cdnID); err != nil {
+		fmt.Println(err)
 	}
 
-	//load custom data
-	fmt.Println("creating custom parameters...")
-	//read param file into struct
-	file, _ = os.Open("/opt/traffic_ops/install/data/json/parameters.json") //should probably rename this file to be more meaningful
-	decoder = json.NewDecoder(file)
-	customParams := CustomParams{}
-	err = decoder.Decode(&customParams)
-	if err != nil {
-		fmt.Println("error:", err)
-	}
-	//setup constants
-	var (
-		tmInfoUrl              = "tm.infourl"
-		coverageZonePollingUrl = "coveragezone.polling.url"
-		geoLocationPollingUrl  = "geolocation.polling.url"
-		domainName             = "domain_name"
-		tmUrl                  = "tm.url"
-		geoLocation6PollingUrl = "geolocation6.polling.url"
-		crConfig               = "CRConfig.json"
-	)
-	//update
-	updateParam, err := db.Prepare("UPDATE parameter SET value=? WHERE name = ? and config_file = ?")
-	tx, err := db.Begin()
-	if err != nil {
-		panic(err)
-	}
-	//insert tmInfoUrl data
-	//tminfo.url = tm.infourl, global
-	fmt.Println("inserting data for ", tmInfoUrl)
-	_, err = tx.Stmt(updateParam).Exec(customParams.TmInfoUrl, "global", tmInfoUrl)
-	if err != nil {
-		fmt.Println("There was an issue creating paramter for", tmInfoUrl, " with a value of ", customParams.TmInfoUrl)
-		panic(err)
-	}
-	//insert coverageZonePollingUrl data
-	//coveragezone.polling.url, CRConfig.json; CCR1
-	fmt.Println("inserting data for ", coverageZonePollingUrl)
-	_, err = tx.Stmt(updateParam).Exec(customParams.CoverageZonePollingUrl, crConfig, coverageZonePollingUrl)
-	if err != nil {
-		fmt.Println("There was an issue creating paramter for", coverageZonePollingUrl, " with a value of ", customParams.CoverageZonePollingUrl)
-		panic(err)
+	// read parameter json file
+	if err = loadParameter(db, c.DbName); err != nil {
+		fmt.Println(err)
 	}
 
-	//insert geolocation polling url data
-	//geolocation.polling.url, CRConfig.json; CCR1
-	fmt.Println("inserting data for ", geoLocationPollingUrl)
-	_, err = tx.Stmt(updateParam).Exec(customParams.GeoLocationPollingUrl, crConfig, geoLocationPollingUrl)
-	if err != nil {
-		fmt.Println("There was an issue creating paramter for", geoLocationPollingUrl, " with a value of ", customParams.GeoLocationPollingUrl)
-		panic(err)
+	// read profile parameter json file
+	if err = loadProfileParameter(db, c.DbName); err != nil {
+		fmt.Println(err)
 	}
 
-	//insert domain name data
-	//domainname = domain_name, CRConfig.json; EDGE1, CCR1, RASCAL1, MID1
-	fmt.Println("inserting data for ", domainName)
-	_, err = tx.Stmt(updateParam).Exec(customParams.DomainName, crConfig, domainName)
-	if err != nil {
-		fmt.Println("There was an issue creating paramter for", domainName, " with a value of ", customParams.DomainName)
-		panic(err)
+	// read type json file
+	if err = loadType(db, c.DbName); err != nil {
+		fmt.Println(err)
 	}
 
-	//insert tm url data
-	//tmurl =  tm.url, global
-	fmt.Println("inserting data for ", tmUrl)
-	_, err = tx.Stmt(updateParam).Exec(customParams.TmUrl, "global", tmUrl)
-	if err != nil {
-		fmt.Println("There was an issue creating paramter for", tmUrl, " with a value of ", customParams.TmUrl)
-		panic(err)
-	}
-	//insert geoLocation6 data
-	//geolocation6.polling.url = geolocation6.polling.url, CRConfig.json; CCR1
-	fmt.Println("inserting data for ", geoLocation6PollingUrl)
-	_, err = tx.Stmt(updateParam).Exec(customParams.GeoLocation6PollingUrl, crConfig, geoLocation6PollingUrl)
-	if err != nil {
-		fmt.Println("There was an issue creating paramter for", geoLocation6PollingUrl, " with a value of ", customParams.GeoLocation6PollingUrl)
-		panic(err)
-	}
-	err = tx.Commit()
-	if err != nil {
-		panic(err)
+	// read status json file
+	if err = loadStatus(db, c.DbName); err != nil {
+		fmt.Println(err)
 	}
 
-	//add default user data
-	fmt.Println("Adding default user data")
-	file, _ = os.Open("/opt/traffic_ops/install/data/json/users.json") //should probably rename this file to be more meaningful
-	decoder = json.NewDecoder(file)
-	defaultUsers := DefaultUsers{}
-	err = decoder.Decode(&defaultUsers)
-	if err != nil {
-		fmt.Println("Error reading users data")
-		panic(err)
+	// read params json file
+	if err = loadCustomParams(db, c.DbName); err != nil {
+		fmt.Println(err)
 	}
-	userInsert, err := db.Prepare("insert ignore into " + dbName + ".tm_user (username, role, local_passwd, new_user, local_user) values (?,(select id from role where name = ?), ?, 1, 0)")
-	if err != nil {
-		fmt.Println("An error occurred preparing the statmement")
-		panic(err)
-	}
-	_, err = userInsert.Exec(defaultUsers.Username, "admin", defaultUsers.Password)
-	if err != nil {
-		fmt.Println("An error occured inserting user with name ", defaultUsers.Username)
-		panic(err)
+
+	// read params json file
+	if err = loadUsers(db, c.DbName); err != nil {
+		fmt.Println(err)
 	}
 }

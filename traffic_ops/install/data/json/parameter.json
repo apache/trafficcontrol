@@ -255,9 +255,7 @@
 {"name":"cacheurl.so","config_file":"plugin.config","value":""}
 {"name":"location","config_file":"cacheurl.config","value":"/opt/trafficserver/etc/trafficserver/"}
 {"name":"CONFIG proxy.config.cache.control.filename","config_file":"records.config","value":"STRING cache.config"}
-{"name":"LogFormat.Name","config_file":"logs_xml.config","value":"custom_ats_2"}
 {"name":"LogObject.Format","config_file":"logs_xml.config","value":"custom_ats_2"}
-{"name":"LogObject.Filename","config_file":"logs_xml.config","value":"custom_ats_2"}
 {"name":"LogObject.RollingEnabled","config_file":"logs_xml.config","value":"3"}
 {"name":"LogObject.RollingIntervalSec","config_file":"logs_xml.config","value":"86400"}
 {"name":"LogObject.RollingOffsetHr","config_file":"logs_xml.config","value":"11"}
@@ -293,9 +291,7 @@
 {"name":"tm.infourl","config_file":"global","value":"http://docs.cdnl.kabletown.net/traffic_control/html/"}
 {"name":"tm.logourl","config_file":"global","value":"/images/tc_logo.png"}
 {"name":"tld.ttls.AAAA","config_file":"CRConfig.json","value":"3600"}
-{"name":"tld.ttls.SOA","config_file":"CRConfig.json","value":"86400"}
 {"name":"tld.ttls.A","config_file":"CRConfig.json","value":"3600"}
-{"name":"tld.ttls.NS","config_file":"CRConfig.json","value":"3600"}
 {"name":"tld.soa.expire","config_file":"CRConfig.json","value":"604800"}
 {"name":"tld.soa.minimum","config_file":"CRConfig.json","value":"86400"}
 {"name":"tld.soa.admin","config_file":"CRConfig.json","value":"twelve_monkeys"}
@@ -314,7 +310,6 @@
 {"name":"location","config_file":"regex_revalidate.config","value":"/opt/trafficserver/etc/trafficserver"}
 {"name":"remap_stats.so","config_file":"plugin.config","value":""}
 {"name":"CONFIG proxy.config.stack_dump_enabled","config_file":"records.config","value":"INT 1"}
-{"name":"CONFIG proxy.config.stack_dump_enabled","config_file":"records.config","value":"INT 1"}
 {"name":"location","config_file":"drop_qstring.config","value":"/opt/trafficserver/etc/trafficserver"}
 {"name":"Drive_Letters","config_file":"storage.config","value":"b,c,d,e,f,g,h,i,j,k,l,m,n,o"}
 {"name":"CONFIG proxy.config.hostdb.ttl_mode","config_file":"records.config","value":"INT 0"}
@@ -323,15 +318,13 @@
 {"name":"CONFIG proxy.config.cache.enable_read_while_writer","config_file":"records.config","value":"INT 1"}
 {"name":"CONFIG proxy.config.http.background_fill_active_timeout","config_file":"records.config","value":"INT 0"}
 {"name":"CONFIG proxy.config.http.background_fill_completed_threshold","config_file":"records.config","value":"FLOAT 0.0"}
-{"name":"CONFIG proxy.config.log.extended2_log_enabled","config_file":"records.config","value":"INT 0"}
 {"name":"CONFIG proxy.config.exec_thread.affinity","config_file":"records.config","value":"INT 1"}
 {"name":"CONFIG proxy.config.exec_thread.autoconfig","config_file":"records.config","value":"INT 0"}
 {"name":"CONFIG proxy.config.exec_thread.limit","config_file":"records.config","value":"INT 32"}
 {"name":"CONFIG proxy.config.allocator.thread_freelist_size","config_file":"records.config","value":"INT 1024"}
 {"name":"CONFIG proxy.config.mlock_enabled","config_file":"records.config","value":"INT 2"}
-{"name":"LogFormat.Format","config_file":"logs_xml.config","value":"%\u003ccqtq\u003e chi=%\u003cchi\u003e phn=%\u003cphn\u003e shn=%\u003cshn\u003e url=%\u003ccquuc\u003e cqhm=%\u003ccqhm\u003e cqhv=%\u003ccqhv\u003e pssc=%\u003cpssc\u003e ttms=%\u003cttms\u003e b=%\u003cpscl\u003e sssc=%\u003csssc\u003e sscl=%\u003csscl\u003e cfsc=%\u003ccfsc\u003e pfsc=%\u003cpfsc\u003e crc=%\u003ccrc\u003e phr=%\u003cphr\u003e uas=\\\"%\u003c{User-Agent}cqh\u003e\\\""}
+{"name":"LogFormat.Format","config_file":"logs_xml.config","value":"%\u003ccqtq\u003e chi=%\u003cchi\u003e phn=%\u003cphn\u003e shn=%\u003cshn\u003e url=%\u003ccquuc\u003e cqhm=%\u003ccqhm\u003e cqhv=%\u003ccqhv\u003e pssc=%\u003cpssc\u003e ttms=%\u003cttms\u003e b=%\u003cpscl\u003e sssc=%\u003csssc\u003e sscl=%\u003csscl\u003e cfsc=%\u003ccfsc\u003e pfsc=%\u003cpfsc\u003e crc=%\u003ccrc\u003e phr=%\u003cphr\u003e uas=\"%<{User-Agent}cqh>\""}
 {"name":"LogFormat.Name","config_file":"logs_xml.config","value":"custom_ats_2"}
-{"name":"LogObject.Format","config_file":"logs_xml.config","value":"custom_ats_2"}
 {"name":"LogObject.Filename","config_file":"logs_xml.config","value":"custom_ats_2"}
 {"name":"CONFIG proxy.config.cache.ram_cache.size","config_file":"records.config","value":"INT 34359738368"}
 {"name":"api.port","config_file":"server.xml","value":"3333"}
@@ -416,9 +409,6 @@
 {"name":"CONFIG proxy.config.cache.ip_allow.filename","config_file":"records.config","value":"STRING ip_allow.config"}
 {"name":"CONFIG proxy.config.http.server_ports","config_file":"records.config","value":"STRING 80 80:ipv6 443:ssl 443:ipv6:ssl 8080 8080:ipv6"}
 {"name":"location","config_file":"hdr_rw_kinx-prog.config","value":"/opt/trafficserver/etc/trafficserver"}
-{"name":"location","config_file":"ssl_multicert.config","value":"/opt/trafficserver/etc/trafficserver"}
-{"name":"location","config_file":"bg_fetch.config","value":"/opt/trafficserver/etc/trafficserver"}
-{"name":"qstring","config_file":"parent.config","value":"ignore"}
 {"name":"geolocation.polling.url","config_file":"CRConfig.json","value":"http://cdn-tools.cdnl.kabletown.net/cdn/MaxMind/GeoLiteCity.dat.gz"}
 {"name":"geolocation6.polling.url","config_file":"CRConfig.json","value":"http://cdn-tools.cdnl.kabletown.net/cdn/MaxMind/GeoLiteCityv6.dat.gz"}
 {"name":"Drive_Letters","config_file":"storage.config","value":"c,d,e,f,g,h,i,j,k,l,m,n,o,p,q,r,s,t,u,v,w,x,y,z,aa,ab,ac,ad,ae,af,ag,ah,ai,aj,ak,al,am,an,ao,ap,aq,ar,as,at,au,av,aw,ax,ay,az,ba,bb,bc,bd,be,bf,bg,bh,bi,bj,bk,bl,bm,bn,bo,bp,bq,br,bs,bt,bu,bv"}
@@ -435,9 +425,6 @@
 {"name":"DsStats","config_file":"traffic_stats.config","value":"tps_4xx"}
 {"name":"DsStats","config_file":"traffic_stats.config","value":"tps_5xx"}
 {"name":"DsStats","config_file":"traffic_stats.config","value":"tps_total"}
-{"name":"location","config_file":"ssl_multicert.config","value":"/opt/trafficserver/etc/trafficserver"}
-{"name":"location","config_file":"bg_fetch.config","value":"/opt/trafficserver/etc/trafficserver"}
-{"name":"qstring","config_file":"parent.config","value":"ignore"}
 {"name":"location","config_file":"ssl_multicert.config","value":"/opt/trafficserver/etc/trafficserver"}
 {"name":"location","config_file":"bg_fetch.config","value":"/opt/trafficserver/etc/trafficserver"}
 {"name":"qstring","config_file":"parent.config","value":"ignore"}
