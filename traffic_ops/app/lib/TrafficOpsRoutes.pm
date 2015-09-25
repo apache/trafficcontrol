@@ -167,6 +167,9 @@ sub ui_routes {
 	$r->post('/dstmuser')->over( authenticated => 1 )->to( 'DeliveryServiceTmUser#create', namespace => $namespace );
 	$r->get('/dstmuser/:ds/:tm_user_id/delete')->over( authenticated => 1 )->to( 'DeliveryServiceTmUser#delete', namespace => $namespace );
 
+	# -- Federation Mapping
+	$r->get('/federation')->over( authenticated => 1 )->to( 'Federation#index', namespace => $namespace );
+
 	# -- Gendbdump - Get DB dump
 	$r->get('/dbdump')->over( authenticated => 1 )->to( 'GenDbDump#dbdump', namespace => $namespace );
 
@@ -199,7 +202,6 @@ sub ui_routes {
 	$r->get('/job/new')->over( authenticated => 1 )->to( 'Job#addjob', namespace => $namespace );
 	$r->get('/jobs')->over( authenticated => 1 )->to( 'Job#jobs', namespace => $namespace );
 
-	$r->get('/hardware/:filter/:byvalue')->over( authenticated => 1 )->to( 'Hardware#hardware', namespace => $namespace );
 	$r->get('/custom_charts')->over( authenticated => 1 )->to( 'CustomCharts#custom', namespace => $namespace );
 	$r->get('/custom_charts_single')->over( authenticated => 1 )->to( 'CustomCharts#custom_single_chart', namespace => $namespace );
 	$r->get('/custom_charts_single/cache/#cdn/#cdn_location/:cache/:stat')->over( authenticated => 1 )

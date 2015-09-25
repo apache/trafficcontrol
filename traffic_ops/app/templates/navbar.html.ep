@@ -59,6 +59,7 @@
 			<li><a href="/cachegroups">Cache Groups</a></li>
 	  		<li><a href="/users">Users</a></li>
 	  		<li><a href="/profiles">Profiles</a></li>
+	  		<li><a href="/federation">Federation</a></li>
 	  		<li><a href="/asns">Networks (ASNs)</a></li>
 	  		<li><a href="/hardware">Hardware</a></li>
 	  		<li><a href="/types">Data Types</a></li>
