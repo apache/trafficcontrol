@@ -32,12 +32,13 @@ sub index {
 	my $self = shift;
 	my @data;
 	my $orderby = $self->param('orderby') || "name";
-	my $rs_data = $self->db->resultset("Cdn")->search( undef, { order_by => $orderby } );
+	my $rs_data = $self->db->resultset("Cdn")
+		->search( undef, { order_by => $orderby } );
 	while ( my $row = $rs_data->next ) {
 		push(
-			@data, {
-				"id"          => $row->id,
-				"name"        => $row->name,
+			@data,
+			{   "id"   => $row->id,
+				"name" => $row->name,
 			}
 		);
 	}
@@ -62,8 +63,12 @@ sub get_traffic_monitor_config {
 	my $ccr_profile_id;
 	my $data_obj;
 
-	my @profile_ids = $self->db->resultset('Server')->search( { 'cdn.name' => $cdn_name }, { prefetch => [ 'cdn' ] } )->get_column('profile')->all();
-	my $rs_pp = $self->db->resultset('Profile')->search( { id => { -in => \@profile_ids } } );
+	my @profile_ids
+		= $self->db->resultset('Server')
+		->search( { 'cdn.name' => $cdn_name }, { prefetch => ['cdn'] } )
+		->get_column('profile')->all();
+	my $rs_pp = $self->db->resultset('Profile')
+		->search( { id => { -in => \@profile_ids } } );
 	while ( my $row = $rs_pp->next ) {
 		if ( $row->name =~ m/^RASCAL/ ) {
 			$rascal_profile = $row->name;
@@ -79,8 +84,13 @@ sub get_traffic_monitor_config {
 		}
 	}
 
-	my %condition = ( 'parameter.config_file' => 'rascal-config.txt', 'profile.name' => $rascal_profile );
-	$rs_pp = $self->db->resultset('ProfileParameter')->search( \%condition, { prefetch => [ { 'parameter' => undef }, { 'profile' => undef } ] } );
+	my %condition = (
+		'parameter.config_file' => 'rascal-config.txt',
+		'profile.name'          => $rascal_profile
+	);
+	$rs_pp = $self->db->resultset('ProfileParameter')->search( \%condition,
+		{ prefetch => [ { 'parameter' => undef }, { 'profile' => undef } ] }
+	);
 	while ( my $row = $rs_pp->next ) {
 		my $parameter;
 		if ( $row->parameter->name =~ m/location/ ) { next; }
@@ -158,9 +168,13 @@ sub get_traffic_monitor_config {
 	}
 	my $rs_caches = $self->db->resultset('Server')->search(
 		{ 'cdn.name' => $cdn_name },
-		{
-			prefetch => [ 'type',      'status',      'cachegroup', 'profile', 'cdn' ],
-			columns  => [ 'host_name', 'domain_name', 'tcp_port',   'interface_name', 'ip_address', 'ip6_address', 'id', 'xmpp_id' ]
+		{   prefetch => [ 'type', 'status', 'cachegroup', 'profile', 'cdn' ],
+			columns  => [
+				'host_name',  'domain_name',
+				'tcp_port',   'interface_name',
+				'ip_address', 'ip6_address',
+				'id',         'xmpp_id'
+			]
 		}
 	);
 	while ( my $row = $rs_caches->next ) {
@@ -199,7 +213,7 @@ sub get_traffic_monitor_config {
 
 	my $rs_loc = $self->db->resultset('Server')->search(
 		{ 'cdn.name' => $cdn_name },
-		{	join   => [ 'cdn', 'cachegroup' ],
+		{   join   => [ 'cdn', 'cachegroup' ],
 			select => [
 				'cachegroup.name', 'cachegroup.latitude',
 				'cachegroup.longitude'
@@ -382,19 +396,30 @@ sub gen_traffic_router_config {
 	$data_obj->{'stats'}->{'cdnName'}           = $cdn_name;
 	$data_obj->{'stats'}->{'date'}              = time();
 	$data_obj->{'stats'}->{'trafficOpsVersion'} = &tm_version();
-	$data_obj->{'stats'}->{'trafficOpsPath'}    = $self->req->url->path->{'path'};
-	$data_obj->{'stats'}->{'trafficOpsHost'}    = $self->req->headers->host;
-	$data_obj->{'stats'}->{'trafficOpsUser'}    = $self->current_user()->{username};
+	$data_obj->{'stats'}->{'trafficOpsPath'}
+		= $self->req->url->path->{'path'};
+	$data_obj->{'stats'}->{'trafficOpsHost'} = $self->req->headers->host;
+	$data_obj->{'stats'}->{'trafficOpsUser'}
+		= $self->current_user()->{username};
 
-	my @cdn_profiles = $self->db->resultset('Server')->search( { 'cdn.name' => $cdn_name }, { prefetch => [ 'cdn' ] } )->get_column('profile')->all();
+	my @cdn_profiles
+		= $self->db->resultset('Server')
+		->search( { 'cdn.name' => $cdn_name }, { prefetch => ['cdn'] } )
+		->get_column('profile')->all();
 	if ( scalar(@cdn_profiles) ) {
-		$ccr_profile_id = $self->db->resultset('Profile')->search( { id => { -in => \@cdn_profiles }, name => { -like => 'CCR%' } } )->get_column('id')->single();
+		$ccr_profile_id
+			= $self->db->resultset('Profile')
+			->search(
+			{ id => { -in => \@cdn_profiles }, name => { -like => 'CCR%' } } )
+			->get_column('id')->single();
 		if ( !defined($ccr_profile_id) ) {
-				my $e = Mojo::Exception->throw("No CCR profile found in profile IDs: @cdn_profiles ");
-			}
+			my $e = Mojo::Exception->throw(
+				"No CCR profile found in profile IDs: @cdn_profiles ");
+		}
 	}
 	else {
-			my $e = Mojo::Exception->throw( "No profiles found for CDN_name: " . $cdn_name );
+		my $e = Mojo::Exception->throw(
+			"No profiles found for CDN_name: " . $cdn_name );
 	}
 
 	my %condition = (
@@ -419,7 +444,7 @@ sub gen_traffic_router_config {
 
 	my $rs_loc = $self->db->resultset('Server')->search(
 		{ 'cdn.name' => $cdn_name },
-		{ join   => [ 'cdn', 'cachegroup' ],
+		{   join   => [ 'cdn', 'cachegroup' ],
 			select => [
 				'cachegroup.name', 'cachegroup.latitude',
 				'cachegroup.longitude'
@@ -797,7 +822,8 @@ sub gen_traffic_router_config {
 sub get_cdns {
 	my $self = shift;
 
-	my $rs_data = $self->db->resultset("Cdn")->search( {}, { order_by => "name" } );
+	my $rs_data
+		= $self->db->resultset("Cdn")->search( {}, { order_by => "name" } );
 	my $json_response = $self->build_cdns_json( $rs_data, "id,name" );
 
 #push( @{$json_response}, { "links" => [ { "rel" => "configs", "href" => "child" } ] } );
@@ -1006,9 +1032,10 @@ sub dnssec_keys {
 				my $data = $rs_ds->single;
 				my @example_urls
 					= UI::DeliveryService::get_example_urls( $self, $ds_id,
-					$deliveryservice_regexes, $data, $domain_name, $data->protocol );
+					$deliveryservice_regexes, $data, $domain_name,
+					$data->protocol );
 
-				#first one is the one we want.  period at end for dnssec, substring off stuff we dont want
+#first one is the one we want.  period at end for dnssec, substring off stuff we dont want
 				my $ds_name = $example_urls[0] . ".";
 				my $length = length($ds_name) - index( $ds_name, "." );
 				$ds_name
@@ -1113,7 +1140,7 @@ sub regen_expired_keys {
 	my $existing_keys  = shift;
 	my $effective_date = shift;
 	my $tld            = shift;
-	my $reset_exp	   = shift;
+	my $reset_exp      = shift;
 	my $regen_keys     = {};
 	my $old_key;
 
