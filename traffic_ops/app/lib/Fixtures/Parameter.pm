@@ -551,6 +551,7 @@ my %definition_for = (
 			config_file => 'records.config',
 			value       => 'INT 33554432',
 		},
+	},
 );
 
 sub get_definition {

@@ -19,29 +19,43 @@ extends 'DBIx::Class::EasyFixture';
 use namespace::autoclean;
 
 my %definition_for = (
-	cachegroupparameter1 => {
-		new   => 'CachegroupParameter',
-		using => {
-			cachegroup => 1,
-			parameter  => 62,
-		},
-	},
-	cachegroupparameter2 => {
-		new   => 'CachegroupParameter',
-		using => {
-			cachegroup => 2,
-			parameter  => 62,
-		},
-	},
+  cachegroupparameter1 => {
+    new   => 'CachegroupParameter',
+    using => {
+      cachegroup => 1,
+      parameter  => 60,
+    },
+  },
+  cachegroupparameter2 => {
+    new   => 'CachegroupParameter',
+    using => {
+      cachegroup => 1,
+      parameter  => 61,
+    },
+  },
+  cachegroupparameter3 => {
+    new   => 'CachegroupParameter',
+    using => {
+      cachegroup => 2,
+      parameter  => 60,
+    },
+  },
+  cachegroupparameter4 => {
+    new   => 'CachegroupParameter',
+    using => {
+      cachegroup => 2,
+      parameter  => 61,
+    },
+  },
 );
 
 sub get_definition {
-	my ( $self, $name ) = @_;
-	return $definition_for{$name};
+  my ( $self, $name ) = @_;
+  return $definition_for{$name};
 }
 
 sub all_fixture_names {
-	return keys %definition_for;
+  return keys %definition_for;
 }
 
 __PACKAGE__->meta->make_immutable;

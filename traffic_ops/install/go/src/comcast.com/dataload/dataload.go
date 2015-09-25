@@ -420,7 +420,7 @@ func loadUsers(db *sql.DB, dbName string) error {
 
 func main() {
 	//read prop file for database credentials
-	file, err := os.Open("/opt/traffic_ops/app/conf/development/database.conf")
+	file, err := os.Open("/opt/traffic_ops/app/conf/production/database.conf")
 	if err != nil {
 		panic(err)
 	}
