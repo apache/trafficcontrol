@@ -20,7 +20,6 @@
 CREATE TABLE cdn (
 	id 				int(11) 		NOT NULL AUTO_INCREMENT,
 	name			varchar(1024) 	NOT NULL,
-	config_file 	varchar(45) 	NOT NULL,
 	last_updated 	timestamp 		NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
 	PRIMARY KEY (id)
 );
@@ -37,8 +36,8 @@ ALTER TABLE `profile` ADD `cdn_id` int(11) DEFAULT NULL AFTER `description`;
 CREATE INDEX `fk_cdn4` ON `profile`(`cdn_id`);
 ALTER TABLE `profile` ADD CONSTRAINT `fk_cdn4` FOREIGN KEY (`cdn_id`) REFERENCES `cdn` (`id`) ON DELETE SET NULL;
 
-INSERT INTO cdn(name, config_file) (
-  SELECT parameter.value, parameter.config_file
+INSERT INTO cdn(name) (
+  SELECT parameter.value
   FROM parameter
   WHERE parameter.name = 'CDN_name'
 );

@@ -88,10 +88,6 @@ function deleteProfileAssignment(profile) {
 					    <td class="editable" id="name"><%= $param_data->name %></td>
 				    </tr>
 				    <tr>
-					    <td>Config file</td>
-					    <td class="editable" id="config_file"><%= $param_data->config_file %></td>
-				    </tr>
-				    <tr>
 					    <td>Value</td>
 					    <td class="editable" id="value"><%= $param_data->value %></td>
 				    </tr>

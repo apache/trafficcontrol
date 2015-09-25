@@ -25,7 +25,6 @@ my %definition_for = (
 		using => {
 			id          => 1,
 			name        => 'cdn_number_1',
-			config_file => 'rascal-config.txt',
 		},
 	},
 	cdn_number_2 => {
@@ -33,7 +32,6 @@ my %definition_for = (
 		using => {
 			id          => 2,
 			name        => 'cdn_number_2',
-			config_file => 'rascal-config.txt',
 		},
 	},
 );

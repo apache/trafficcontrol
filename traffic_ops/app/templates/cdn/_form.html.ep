@@ -22,11 +22,4 @@
 		%= field('cdn_data.name')->text(class => 'field', required => 'required', size => 10, name => 'cdn_data.name', id => 'cdn_data.name')
 	</div>
 	<br>
-	<div class="block">
-		<% unless (field('cdn_data.config_file')->valid) { %>
-			<span class="field-with-error"><%= field('cdn_data.short_name')->error %></span>
-		<% } %>
-		%= label_for 'name' => '* Config File', class => 'label'
-		%= field('cdn_data.config_file')->text(class => 'field', required => 'required', size => 10, name => 'cdn_data.config_file', id => 'cdn_data.config_file')
-	</div>
 </div>

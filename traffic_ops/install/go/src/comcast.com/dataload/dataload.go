@@ -46,8 +46,7 @@ func loadCdn(db *sql.DB, dbName string) (sql.Result, error) {
 	}
 
 	type cdnData struct {
-		Name       string `json:"name"`
-		ConfigFile string `json:"config_file"`
+		Name string `json:"name"`
 	}
 	var c cdnData
 	if err := json.NewDecoder(file).Decode(&c); err != nil && err != io.EOF {
@@ -55,7 +54,7 @@ func loadCdn(db *sql.DB, dbName string) (sql.Result, error) {
 	}
 
 	fmt.Printf("\t Inserting cdn: %+v \n", c)
-	cdn, err := db.Exec("insert ignore into "+dbName+".cdn (name, config_file) values (?,?)", c.Name, c.ConfigFile)
+	cdn, err := db.Exec("insert ignore into "+dbName+".cdn (name) values (?)", c.Name)
 	if err != nil {
 		fmt.Println("\t An error occured inserting cdn with name ", c.Name)
 		return nil, err

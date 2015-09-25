@@ -35,12 +35,6 @@ __PACKAGE__->table("cdn");
   is_nullable: 0
   size: 1024
 
-=head2 config_file
-
-  data_type: 'varchar'
-  is_nullable: 0
-  size: 45
-
 =head2 last_updated
 
   data_type: 'timestamp'
@@ -55,8 +49,6 @@ __PACKAGE__->add_columns(
   { data_type => "integer", is_auto_increment => 1, is_nullable => 0 },
   "name",
   { data_type => "varchar", is_nullable => 0, size => 1024 },
-  "config_file",
-  { data_type => "varchar", is_nullable => 0, size => 45 },
   "last_updated",
   {
     data_type => "timestamp",
@@ -126,8 +118,8 @@ __PACKAGE__->has_many(
 );
 
 
-# Created by DBIx::Class::Schema::Loader v0.07043 @ 2015-09-23 09:00:52
-# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:DhYw6AF7WTh87GlbMFnkRw
+# Created by DBIx::Class::Schema::Loader v0.07043 @ 2015-09-25 10:08:25
+# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:SS/GRjmssf2s5XhUu2rEvw
 
 
 # You can replace this text with custom code or comments, and it will be preserved on regeneration

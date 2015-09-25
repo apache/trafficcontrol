@@ -76,7 +76,6 @@ sub update {
 		cdn_data    => {
 			id          => $id,
 			name        => $self->param('cdn_data.name'),
-			config_file => $self->param('cdn_data.config_file'),
 		}
 	);
 
@@ -92,7 +91,6 @@ sub update {
 		my $update = $self->db->resultset('Cdn')
 			->find( { id => $self->param('id') } );
 		$update->name( $self->param('cdn_data.name') );
-		$update->config_file( $self->param('cdn_data.config_file') );
 		$update->update();
 
 # if the update has failed, we don't even get here, we go to the exception page.
@@ -108,7 +106,6 @@ sub update {
 sub create {
 	my $self        = shift;
 	my $name        = $self->param('cdn_data.name');
-	my $config_file = $self->param('cdn_data.config_file');
 	my $data        = $self->get_cdns();
 	my $cdns        = $data->{'cdn'};
 
@@ -117,7 +114,6 @@ sub create {
 			fbox_layout => 1,
 			cdn_data    => {
 				name        => $name,
-				config_file => $config_file,
 			}
 		);
 		return $self->render('cdn/add');
@@ -129,20 +125,6 @@ sub create {
 			fbox_layout => 1,
 			cdn_data    => {
 				name        => $name,
-				config_file => $config_file,
-			}
-		);
-		return $self->render('cdn/add');
-	}
-	if ( exists $cdns->{$config_file} ) {
-		$self->field('cdn_data.config_file')
-			->is_like( qr/^\/(?!$config_file\/)/i,
-			"The config_file exists." );
-		$self->stash(
-			fbox_layout => 1,
-			cdn_data    => {
-				name        => $name,
-				config_file => $config_file,
 			}
 		);
 		return $self->render('cdn/add');
@@ -155,9 +137,7 @@ sub create {
 	}
 	else {
 		my $insert = $self->db->resultset('Cdn')->create(
-			{   name        => $name,
-				config_file => $config_file,
-			}
+			{ name => $name }
 		);
 		$insert->insert();
 		$new_id = $insert->id;
@@ -227,9 +207,6 @@ sub isValidCdn {
 	$self->field('cdn_data.name')
 		->is_required->is_like( qr/^[0-9a-zA-Z_\.\-]+$/,
 		"Use alphanumeric . or _ ." );
-	$self->field('cdn_data.config_file')
-		->is_required->is_like( qr/^[0-9a-zA-Z_\.\-]+$/,
-		"Use alphanumeric . or _" );
 
 	return $self->valid;
 }
@@ -670,7 +647,7 @@ sub acdn {
 	$rs = $self->db->resultset('Cdn')->search(undef);
 	while ( my $row = $rs->next ) {
 		my @line
-			= [ $row->id, $row->name, $row->config_file, $row->last_updated ];
+			= [ $row->id, $row->name, $row->last_updated ];
 		push( @{ $data{'aaData'} }, @line );
 	}
 	$self->render( json => \%data );

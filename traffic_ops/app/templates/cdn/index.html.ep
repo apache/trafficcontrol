@@ -83,7 +83,6 @@ $(function () {
 					<tr>
 						<td></td>
 						<td>Name</td>
-						<td>Config File</td>
 						<td>Last Updated</td>
 					</tr>
 				</thead>

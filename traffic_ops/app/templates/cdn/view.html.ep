@@ -34,10 +34,6 @@ $(function () {
 								<td>Name</td>
 								<td class="editable" id="name"><%= $cdn_data->name %></td>
 							</tr>
-							<tr>
-								<td>Config File</td>
-								<td class="editable" id="config_file"><%= $cdn_data->config_file %></td>
-							</tr>
 						</table>
 						<br>
 					</div>

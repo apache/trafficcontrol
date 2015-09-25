@@ -798,7 +798,7 @@ sub get_cdns {
 	my $self = shift;
 
 	my $rs_data = $self->db->resultset("Cdn")->search( {}, { order_by => "name" } );
-	my $json_response = $self->build_cdns_json( $rs_data, "id,name,config_file" );
+	my $json_response = $self->build_cdns_json( $rs_data, "id,name" );
 
 #push( @{$json_response}, { "links" => [ { "rel" => "configs", "href" => "child" } ] } );
 	$self->success($json_response);
