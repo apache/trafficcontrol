@@ -19,6 +19,14 @@
 var alertmsg = "<%= flash 'alertmsg' %>"; 
 alertmsg = alertmsg.replace(/__NEWLINE__/g, "\n");
 alert(alertmsg);
+
+function deletefunction() {
+	var r=confirm("are you sure?");
+	if (r==true) {
+		window.location = "/federation_mapping/<%= $id %>/delete";
+		parent.location.reload (true);
+	}
+}
 </script>
 % }
 
@@ -29,29 +37,11 @@ alert(alertmsg);
 		<link type="text/css" href="/css/site.css" rel="stylesheet" />
 		<script type="text/javascript" src="/js/application.js"></script>
 		<script type="text/javascript" src="/js/select2.js"></script>
-		<script type="text/javascript">
-
-		%= include 'user/_listroles.js'
-		%= include 'user/_delivery_services.js'
-
-			$(document).ready(function() { 
-                $("#addDsSelect").select2(
-				  { placeholder: "Click here to assign a 'Delivery Service'" }) 
-			});
-
-			$(function(){
-				// Accordion
-				$("#accordion").accordion({
-						header: "h3",
-						autoHeight: false
-				});
-
-			});
-		</script>
 	</head>
 	<body>
 
-    <div id="accordion">
+	<div id="accordion">
+		<div class="dialog_body" style="margin-left:10px; height: 500px">
 	   <h3><a href="#">Edit Federation Mapping</a></h3>
        <div class="dialog_body" style="width:550px;">
 
@@ -64,19 +54,11 @@ alert(alertmsg);
 
 				   <div class="deliveryServicesForm">
 				        %= include 'federation_mapping/_form'
-				   <div class="deliveryServicesWidget">
-					   <h2>Assigned Delivery Services:</h2>
-                       <select class='delivery-services' multiple name='deliveryservices' id='addDsSelect'>
-						  % for my $id (sort {$a <=> $b} (keys %{$delivery_services})) {
-							<option value="<%=$id%>"% selected><%= $$delivery_services{$id} %></option>
-						  % }
-                       </select>
-
-				   </div>
 				   </div>
 				</form>
+				<button class="button" onclick="deletefunction()" id="delete_button">Delete</button>
+				<button class="button" id="close_button">Close</button>
 
-    </div>
   </div>
 </body>
 </html>

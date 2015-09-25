@@ -69,7 +69,7 @@ $(function () {
           'transitionOut'   : 'elastic',
           'type'            : 'iframe',
           'iframe'          : {'scrolling'       : 'yes'},
-		  'height'          : '500px',
+		  'height'          : '700px',
 		  'width'           : '670px'
       });
 
