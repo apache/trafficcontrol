@@ -14,6 +14,12 @@ sub execCommand {
 	return $result;
 }
 
+sub randomWord {
+	my $length = shift || 12;
+	my $cmd = "tr -dc '[:alnum:]' </dev/urandom | head -c$length; echo";
+	return execCommand($cmd);
+}
+
 sub promptUser {
 	my ( $promptString, $defaultValue, $noEcho ) = @_;
 
