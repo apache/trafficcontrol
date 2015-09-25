@@ -53,26 +53,16 @@ sub __get_json_parameter_list_by_host {
 	my $key_name = shift || "name";
 	my $key_value = shift || "value";
 	my $data_obj = [];
+
+	my $profile_id = $self->db->resultset('Server')->search( { host_name => $host } )->get_column('profile')->single();
 	
-	my %condition = ( 'servers.host_name' => $host );
-	my $rs_profile = $self->db->resultset('Profile')->search( \%condition, { prefetch => 'cdn', join => 'servers', columns => [qw/name id/] } );
-	my $row = $rs_profile->next;
-	if (defined($row)) {
-		if (defined($row->cdn->name)) {
-			push(@{$data_obj}, { $key_name => "CDN_Name", $key_value => $row->cdn->name });
-		}
+	my %condition = ( 'profile_parameters.profile' => $profile_id, config_file => $value );
+	my $rs_config = $self->db->resultset('Parameter')->search( \%condition, { join => 'profile_parameters' } );
 
-		if (defined($row->id)) {
-			my $id = $row->id;
-
-			%condition = ( 'profile_parameters.profile' => $id, 'config_file' => $value );
-			my $rs_config = $self->db->resultset('Parameter')->search( \%condition, { join => 'profile_parameters' } );
-			while ( my $row = $rs_config->next ) {
-				# name = package name, value = package version
-				push(@{$data_obj}, { $key_name => $row->name, $key_value => $row->value });
-			}
-		}
+	while ( my $row = $rs_config->next ) {
+		push(@{$data_obj}, { $key_name => $row->name, $key_value => $row->value });
 	}
+
 	return($data_obj);
 }
 
