@@ -22,7 +22,7 @@ CREATE TABLE cdn (
 	name			varchar(1024) 	NOT NULL,
 	last_updated 	timestamp 		NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
 	PRIMARY KEY (id)
-);
+) ENGINE = InnoDB DEFAULT CHARACTER SET = latin1;
 
 ALTER TABLE `deliveryservice` ADD `cdn_id` int(11) DEFAULT NULL AFTER `profile`;
 CREATE INDEX `fk_cdn1` ON `deliveryservice`(`cdn_id`);
