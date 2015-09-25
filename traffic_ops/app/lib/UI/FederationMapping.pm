@@ -49,7 +49,7 @@ sub read {
 	my $self = shift;
 
 	my @data;
-	my $orderby = "username";
+	my $orderby = "name";
 	$orderby = $self->param('orderby') if ( defined $self->param('orderby') );
 	my $dbh = $self->db->resultset("FederationMapping")->search( undef, { prefetch => [ { 'role' => undef } ], order_by => 'me.' . $orderby } );
 	while ( my $row = $dbh->next ) {
@@ -82,7 +82,7 @@ sub edit {
 		fbox_layout        => 1,
 		delivery_services  => \%delivery_services
 	);
-	return $self->render('user/edit');
+	return $self->render('federation_mapping/edit');
 }
 
 sub get_delivery_services {
@@ -140,7 +140,7 @@ sub update {
 		$dbh->update();
 		$self->flash( message => "User was updated successfully." );
 		$self->stash( mode => 'edit' );
-		return $self->redirect_to( '/user/' . $tm_user_id . '/edit' );
+		return $self->redirect_to( '/federation_mapping/' . $tm_user_id . '/edit' );
 	}
 	else {
 		$self->edit();
@@ -174,16 +174,16 @@ sub associated_delivery_services {
 sub create {
 	my $self = shift;
 	&stash_role($self);
-	$self->stash( fbox_layout => 1, mode => 'add', tm_user => {} );
+	$self->stash( fbox_layout => 1, mode => 'add', federation_mapping => {} );
 	if ( $self->is_valid("add") ) {
-		my $new_id = $self->create_user();
+		my $new_id = $self->create_federation_mapping();
 		if ( $new_id != -1 ) {
-			$self->flash( message => 'User created successfully.' );
+			$self->flash( message => 'Federation Mapping created successfully.' );
 			return $self->redirect_to('/close_fancybox.html');
 		}
 	}
 	else {
-		return $self->render('user/add');
+		return $self->render('federation_mapping/add');
 	}
 }
 
@@ -191,64 +191,33 @@ sub is_valid {
 	my $self = shift;
 	my $mode = shift;
 
-	$self->field('tm_user.full_name')->is_required;
-	$self->field('tm_user.username')->is_required;
-	$self->field('tm_user.email')->is_required;
-
-	if ( $mode =~ /add/ ) {
-		$self->field('tm_user.local_passwd')->is_required;
-		$self->field('tm_user.confirm_local_passwd')->is_required;
-
-		$self->is_username_taken( $self->param('tm_user.username') );
-	}
-
-	$self->field('tm_user.local_passwd')->is_equal( 'tm_user.confirm_local_passwd', "The 'Password' and 'Confirm Password' must match." );
-	$self->field('tm_user.local_passwd')->is_like( qr/^.{8,100}$/, "Password must be greater than 7 chars." );
+	$self->field('federation_mapping.name')->is_required;
+	$self->field('federation_mapping.cname')->is_required;
+	$self->field('federation_mapping.ttl')->is_required;
 
 	return $self->valid;
 }
 
-sub is_send_register_valid {
-	my $self = shift;
-	$self->field('tm_user.email')->is_required;
-	return $self->valid;
-}
-
-sub create_user {
+sub create_federation_mapping {
 	my $self   = shift;
 	my $new_id = -1;
-	my $dbh    = $self->db->resultset('TmUser')->create(
+	my $dbh    = $self->db->resultset('FederationMapping')->create(
 		{
-			full_name            => $self->param('tm_user.full_name'),
-			username             => $self->param('tm_user.username'),
-			phone_number         => $self->param('tm_user.phone_number'),
-			email                => $self->param('tm_user.email'),
-			local_passwd         => sha1_hex( $self->param('tm_user.local_passwd') ),
-			confirm_local_passwd => sha1_hex( $self->param('tm_user.confirm_local_passwd') ),
-			role                 => $self->param('tm_user.role'),
-			new_user             => 0,
-			local_user           => 1,
-			uid                  => 0,
-			gid                  => 0,
-			company              => $self->param('tm_user.company'),
-			address_line1        => $self->param('tm_user.address_line1'),
-			address_line2        => $self->param('tm_user.address_line2'),
-			city                 => $self->param('tm_user.city'),
-			state_or_province    => $self->param('tm_user.state_or_province'),
-			postal_code          => $self->param('tm_user.postal_code'),
-			country              => $self->param('tm_user.country'),
+			name        => $self->param('federation_mapping.name'),
+			description => $self->param('federation_mapping.description'),
+			cname       => $self->param('federation_mapping.cname'),
+			ttl         => $self->param('federation_mapping.ttl'),
+			type        => $self->param('federation_mapping.type'),
 		}
 	);
 	$new_id = $dbh->insert();
 
 	# if the insert has failed, we don't even get here, we go to the exception page.
-	&log( $self, "Create tm_user with name " . $self->param('tm_user.username'), "UICHANGE" );
+	&log( $self,
+		"Create federation_mapping with name: " . $self->param('federation_mapping.name') . " and cname: " . $self->param('federation_mapping.name'),
+		"UICHANGE" );
 	return $new_id;
 
-}
-
-sub new_guid {
-	return Data::GUID->new;
 }
 
 1;
