@@ -420,7 +420,6 @@ sub aregion {
 sub aadata {
 	my $self  = shift;
 	my $table = $self->param('table');
-	$self->app->log->debug( "table #-> " . $table );
 
 	if ( $table eq 'Serverstatus' ) {
 		&aserverstatus($self);
