@@ -16,6 +16,8 @@
 
 package com.comcast.cdn.traffic_control.traffic_router.core.dns;
 
+import com.comcast.cdn.traffic_control.traffic_router.core.router.StatTracker.Track.ResultDetails;
+import com.comcast.cdn.traffic_control.traffic_router.core.router.StatTracker.Track.ResultType;
 import org.xbill.DNS.Message;
 
 import java.net.InetAddress;
@@ -27,8 +29,9 @@ import java.net.InetAddress;
 public final class DNSAccessRecord {
     private final long queryInstant;
     private final InetAddress client;
-    private final Message query;
-    private final Message response;
+    private final Message dnsMessage;
+    private final ResultType resultType;
+    private final ResultDetails resultDetails;
 
     public long getQueryInstant() {
         return queryInstant;
@@ -38,32 +41,42 @@ public final class DNSAccessRecord {
         return client;
     }
 
-    public Message getQuery() {
-        return query;
+    public Message getDnsMessage() {
+        return dnsMessage;
     }
 
-    public Message getResponse() {
-        return response;
+    public ResultType getResultType() {
+        return resultType;
+    }
+
+    public ResultDetails getResultDetails() {
+        return resultDetails;
     }
 
     public static class Builder {
         private final long queryInstant;
         private final InetAddress client;
-        private Message query;
-        private Message response;
+        private Message dnsMessage;
+        private ResultType resultType;
+        private ResultDetails resultDetails;
 
         public Builder(final long queryInstant, final InetAddress client) {
             this.queryInstant = queryInstant;
             this.client = client;
         }
 
-        public Builder query(final Message query) {
-            this.query = query;
+        public Builder dnsMessage(final Message query) {
+            this.dnsMessage = query;
             return this;
         }
 
-        public Builder response(final Message response) {
-            this.response = response;
+        public Builder resultType(final ResultType resultType) {
+            this.resultType = resultType;
+            return this;
+        }
+
+        public Builder resultDetails(final ResultDetails resultDetails) {
+            this.resultDetails = resultDetails;
             return this;
         }
 
@@ -75,8 +88,9 @@ public final class DNSAccessRecord {
     private DNSAccessRecord(final Builder builder) {
         queryInstant = builder.queryInstant;
         client = builder.client;
-        query = builder.query;
-        response = builder.response;
+        dnsMessage = builder.dnsMessage;
+        resultType = builder.resultType;
+        resultDetails = builder.resultDetails;
     }
 
 }

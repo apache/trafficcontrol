@@ -16,7 +16,8 @@
 
 package com.comcast.cdn.traffic_control.traffic_router.core.http;
 
-import com.comcast.cdn.traffic_control.traffic_router.core.router.StatTracker;
+import com.comcast.cdn.traffic_control.traffic_router.core.router.StatTracker.Track.ResultDetails;
+import com.comcast.cdn.traffic_control.traffic_router.core.router.StatTracker.Track.ResultType;
 
 import javax.servlet.http.HttpServletRequest;
 import java.net.URL;
@@ -33,7 +34,9 @@ public class HTTPAccessRecord {
     private final HttpServletRequest request;
     private final URL responseURL;
     private final int responseCode;
-    private final StatTracker.Track.ResultType resultType;
+    private final ResultType resultType;
+    private final String rerr;
+    private final ResultDetails resultDetails;
 
     public Date getRequestDate() {
         return requestDate;
@@ -51,8 +54,16 @@ public class HTTPAccessRecord {
         return responseURL;
     }
 
-    public StatTracker.Track.ResultType getResultType() {
+    public ResultType getResultType() {
         return resultType;
+    }
+
+    public String getRerr() {
+        return rerr;
+    }
+
+    public ResultDetails getResultDetails() {
+        return resultDetails;
     }
 
     public static class Builder {
@@ -60,7 +71,9 @@ public class HTTPAccessRecord {
         private final HttpServletRequest request;
         private int responseCode = -1;
         private URL responseURL;
-        private StatTracker.Track.ResultType resultType;
+        private ResultType resultType;
+        private String rerr;
+        private ResultDetails resultDetails;
 
         public Builder(final Date requestDate, final HttpServletRequest request) {
             this.requestDate = requestDate;
@@ -84,8 +97,18 @@ public class HTTPAccessRecord {
             return this;
         }
 
-        public Builder resultType(final StatTracker.Track.ResultType resultType) {
+        public Builder resultType(final ResultType resultType) {
             this.resultType = resultType;
+            return this;
+        }
+
+        public Builder rerr(final String rerr) {
+            this.rerr = rerr;
+            return this;
+        }
+
+        public Builder resultDetails(final ResultDetails resultDetails) {
+            this.resultDetails = resultDetails;
             return this;
         }
 
@@ -100,6 +123,8 @@ public class HTTPAccessRecord {
         responseCode = builder.responseCode;
         responseURL = builder.responseURL;
         resultType = builder.resultType;
+        rerr = builder.rerr;
+        resultDetails = builder.resultDetails;
     }
 
     @Override
@@ -113,7 +138,9 @@ public class HTTPAccessRecord {
         if (requestDate != null ? !requestDate.equals(that.requestDate) : that.requestDate != null) return false;
         if (request != null ? !request.equals(that.request) : that.request != null) return false;
         if (responseURL != null ? !responseURL.equals(that.responseURL) : that.responseURL != null) return false;
-        return resultType == that.resultType;
+        if (resultType != that.resultType) return false;
+        if (rerr != null ? !rerr.equals(that.rerr) : that.rerr != null) return false;
+        return resultDetails == that.resultDetails;
 
     }
 
@@ -124,6 +151,8 @@ public class HTTPAccessRecord {
         result = 31 * result + (responseURL != null ? responseURL.hashCode() : 0);
         result = 31 * result + responseCode;
         result = 31 * result + (resultType != null ? resultType.hashCode() : 0);
+        result = 31 * result + (rerr != null ? rerr.hashCode() : 0);
+        result = 31 * result + (resultDetails != null ? resultDetails.hashCode() : 0);
         return result;
     }
 
@@ -135,6 +164,8 @@ public class HTTPAccessRecord {
                 ", responseURL=" + responseURL +
                 ", responseCode=" + responseCode +
                 ", resultType=" + resultType +
+                ", rerr='" + rerr + '\'' +
+                ", resultDetails=" + resultDetails +
                 '}';
     }
 }

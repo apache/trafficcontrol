@@ -1,6 +1,7 @@
 package com.comcast.cdn.traffic_control.traffic_router.core.dns;
 
-import com.comcast.cdn.traffic_control.traffic_router.core.router.StatTracker;
+import com.comcast.cdn.traffic_control.traffic_router.core.router.StatTracker.Track.ResultType;
+import com.comcast.cdn.traffic_control.traffic_router.core.router.StatTracker.Track.ResultDetails;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -24,7 +25,7 @@ import static org.powermock.api.mockito.PowerMockito.whenNew;
 @PrepareForTest({Random.class, Header.class, DNSAccessEventBuilder.class})
 public class DNSAccessEventBuilderTest {
 
-    private DNSAccessRecord.Builder builder;
+    private InetAddress client;
 
     @Before
     public void before() throws Exception {
@@ -34,23 +35,76 @@ public class DNSAccessEventBuilderTest {
         when(random.nextInt(0xffff)).thenReturn(65535);
         whenNew(Random.class).withNoArguments().thenReturn(random);
 
-        InetAddress client = mock(InetAddress.class);
+        client = mock(InetAddress.class);
         when(client.getHostAddress()).thenReturn("192.168.10.11");
-        builder = new DNSAccessRecord.Builder(144140678000L, client);
     }
 
     @Test
     public void itCreatesRequestErrorData() throws Exception {
         when(System.currentTimeMillis()).thenReturn(144140678789L);
-        DNSAccessRecord dnsAccessRecord = builder.build();
 
-        String dnsAccessEvent = DNSAccessEventBuilder.create(dnsAccessRecord.getQueryInstant(), dnsAccessRecord.getClient(), new WireParseException("invalid record length"));
+        DNSAccessRecord dnsAccessRecord = new DNSAccessRecord.Builder(144140678000L, client).build();
+
+        String dnsAccessEvent = DNSAccessEventBuilder.create(dnsAccessRecord, new WireParseException("invalid record length"));
         assertThat(dnsAccessEvent, equalTo("144140678.000 qtype=DNS chi=192.168.10.11 ttms=789 xn=- fqdn=- type=- class=- ttl=- rcode=-" +
-                " ans=\"Bad Request:WireParseException:invalid record length\""));
+                " rtype=- rdetails=- rerr=\"Bad Request:WireParseException:invalid record length\" ans=\"-\""));
     }
 
     @Test
     public void itAddsResponseData() throws Exception {
+        final Name name = Name.fromString("www.example.com.");
+
+        when(System.currentTimeMillis()).thenReturn(144140678789L).thenReturn(144140678000L);
+
+        final Record question = Record.newRecord(name, Type.A, DClass.IN, 12345L);
+
+        final Message response = spy(Message.newQuery(question));
+        response.getHeader().setRcode(Rcode.NOERROR);
+
+        final Record record1 = mock(Record.class);
+        when(record1.rdataToString()).thenReturn("foo");
+        final Record record2 = mock(Record.class);
+        when(record2.rdataToString()).thenReturn("bar");
+        final Record record3 = mock(Record.class);
+        when(record3.rdataToString()).thenReturn("baz");
+
+        Record[] records = new Record[] {record1, record2, record3};
+        when(response.getSectionArray(Section.ANSWER)).thenReturn(records);
+
+        InetAddress answerAddress = Inet4Address.getByName("192.168.1.23");
+
+        ARecord addressRecord = new ARecord(name, DClass.IN, 54321L, answerAddress);
+        response.addRecord(addressRecord, Section.ANSWER);
+
+        DNSAccessRecord dnsAccessRecord = new DNSAccessRecord.Builder(144140678000L, client).dnsMessage(response).build();
+        String dnsAccessEvent = DNSAccessEventBuilder.create(dnsAccessRecord);
+
+        assertThat(dnsAccessEvent, equalTo("144140678.000 qtype=DNS chi=192.168.10.11 ttms=789" +
+                " xn=65535 fqdn=www.example.com. type=A class=IN ttl=12345" +
+                " rcode=NOERROR rtype=- rdetails=- rerr=\"-\" ans=\"foo bar baz\""));
+
+
+        dnsAccessEvent = DNSAccessEventBuilder.create(dnsAccessRecord);
+
+        assertThat(dnsAccessEvent, equalTo("144140678.000 qtype=DNS chi=192.168.10.11 ttms=0" +
+                " xn=65535 fqdn=www.example.com. type=A class=IN ttl=12345" +
+                " rcode=NOERROR rtype=- rdetails=- rerr=\"-\" ans=\"foo bar baz\""));
+    }
+
+    @Test
+    public void itCreatesServerErrorData() throws Exception {
+        Message query = Message.newQuery(Record.newRecord(Name.fromString("www.example.com."), Type.A, DClass.IN, 12345L));
+        when(System.currentTimeMillis()).thenReturn(144140678789L);
+
+        DNSAccessRecord dnsAccessRecord = new DNSAccessRecord.Builder(144140678000L, client).dnsMessage(query).build();
+        String dnsAccessEvent = DNSAccessEventBuilder.create(dnsAccessRecord, new RuntimeException("boom it failed"));
+        assertThat(dnsAccessEvent, equalTo("144140678.000 qtype=DNS chi=192.168.10.11 ttms=789" +
+                " xn=65535 fqdn=www.example.com. type=A class=IN ttl=12345" +
+                " rcode=SERVFAIL rtype=- rdetails=- rerr=\"Server Error:RuntimeException:boom it failed\" ans=\"-\""));
+    }
+
+    @Test
+    public void itAddsResultTypeData() throws Exception {
         final Name name = Name.fromString("www.example.com.");
 
         when(System.currentTimeMillis()).thenReturn(144140678789L).thenReturn(144140678000L);
@@ -69,37 +123,32 @@ public class DNSAccessEventBuilderTest {
         Record[] records = new Record[] {record1, record2, record3};
         when(response.getSectionArray(Section.ANSWER)).thenReturn(records);
 
-        InetAddress answerAddress = Inet4Address.getByAddress(new byte[]{(byte) 192, (byte) 168, 1, 23});
+        InetAddress answerAddress = Inet4Address.getByName("192.168.1.23");
 
         ARecord addressRecord = new ARecord(name, DClass.IN, 54321L, answerAddress);
         response.addRecord(addressRecord, Section.ANSWER);
 
-        builder.query(response);
+        ResultType resultType = ResultType.CZ;
+        final DNSAccessRecord.Builder builder = new DNSAccessRecord.Builder(144140678000L, client).dnsMessage(response).resultType(resultType);
         DNSAccessRecord dnsAccessRecord = builder.build();
-        String dnsAccessEvent = DNSAccessEventBuilder.create(dnsAccessRecord.getQueryInstant(), dnsAccessRecord.getClient(), response);
+        String dnsAccessEvent = DNSAccessEventBuilder.create(dnsAccessRecord);
 
         assertThat(dnsAccessEvent, equalTo("144140678.000 qtype=DNS chi=192.168.10.11 ttms=789" +
                 " xn=65535 fqdn=www.example.com. type=A class=IN ttl=12345" +
-                " rcode=NOERROR ans=\"foo bar baz\""));
+                " rcode=NOERROR rtype=CZ rdetails=- rerr=\"-\" ans=\"foo bar baz\""));
 
-        builder.query(response);
-        dnsAccessRecord = builder.build();
-        dnsAccessEvent = DNSAccessEventBuilder.create(dnsAccessRecord.getQueryInstant(), dnsAccessRecord.getClient(), response);
+        dnsAccessRecord = builder.resultType(ResultType.GEO).build();
+        dnsAccessEvent = DNSAccessEventBuilder.create(dnsAccessRecord);
 
         assertThat(dnsAccessEvent, equalTo("144140678.000 qtype=DNS chi=192.168.10.11 ttms=0" +
                 " xn=65535 fqdn=www.example.com. type=A class=IN ttl=12345" +
-                " rcode=NOERROR ans=\"foo bar baz\""));
-    }
+                " rcode=NOERROR rtype=GEO rdetails=- rerr=\"-\" ans=\"foo bar baz\""));
 
-    @Test
-    public void itCreatesServerErrorData() throws Exception {
-        Message query = Message.newQuery(Record.newRecord(Name.fromString("www.example.com."), Type.A, DClass.IN, 12345L));
-        when(System.currentTimeMillis()).thenReturn(144140678789L);
-        DNSAccessRecord dnsAccessRecord = builder.build();
+        dnsAccessRecord = builder.resultType(ResultType.MISS).resultDetails(ResultDetails.DS_NOT_FOUND).build();
+        dnsAccessEvent = DNSAccessEventBuilder.create(dnsAccessRecord);
 
-        String dnsAccessEvent = DNSAccessEventBuilder.create(dnsAccessRecord.getQueryInstant(), dnsAccessRecord.getClient(), query, new RuntimeException("boom it failed"));
-        assertThat(dnsAccessEvent, equalTo("144140678.000 qtype=DNS chi=192.168.10.11 ttms=789" +
+        assertThat(dnsAccessEvent, equalTo("144140678.000 qtype=DNS chi=192.168.10.11 ttms=0" +
                 " xn=65535 fqdn=www.example.com. type=A class=IN ttl=12345" +
-                " rcode=SERVFAIL ans=\"Server Error:RuntimeException:boom it failed\""));
+                " rcode=NOERROR rtype=MISS rdetails=DS_NOT_FOUND rerr=\"-\" ans=\"foo bar baz\""));
     }
 }

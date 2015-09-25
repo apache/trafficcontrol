@@ -359,7 +359,7 @@ sub parent_data {
 	my $deliveryservices = undef;
 	while ( my $row = $rs_parent->next ) {
 
-		next unless ( $row->type->name eq 'ORG' || $row->type->name eq 'EDGE' ||$row->type->name eq 'MID' );
+		next unless ( $row->type->name eq 'ORG' || $row->type->name eq 'EDGE' || $row->type->name eq 'MID' );
 		if ( $row->type->name eq 'ORG' ) {
 			my $rs_ds = $self->db->resultset('DeliveryserviceServer')->search( { server => $row->id }, { prefetch => ['deliveryservice'] } );
 			while ( my $ds_row = $rs_ds->next ) {
@@ -629,6 +629,7 @@ sub cacheurl_dot_config {
 
 	}
 
+	$text =~ s/\s*__RETURN__\s*/\n/g;
 	return $text;
 }
 
@@ -1198,16 +1199,16 @@ sub drop_qstring_dot_config {
 	my $server = $self->server_data($id);
 	my $text   = $self->header_comment( $server->host_name );
 
-        my $server = &server_data( $self, $id );
-        my $drop_qstring =
-          $self->db->resultset('ProfileParameter')
-          ->search( { -and => [ profile => $server->profile->id, 'parameter.name' => 'content', 'parameter.config_file' => 'drop_qstring.config' ] },
-          { prefetch => [ 'parameter', 'profile' ] } )->get_column('parameter.value')->single();
-        if ( $drop_qstring ) {
-          $text .= $drop_qstring . "\n";
-        } else {
-	  $text .= "/([^?]+) \$s://\$t/\$1\n";
-        }
+	my $drop_qstring =
+		$self->db->resultset('ProfileParameter')
+		->search( { -and => [ profile => $server->profile->id, 'parameter.name' => 'content', 'parameter.config_file' => 'drop_qstring.config' ] },
+		{ prefetch => [ 'parameter', 'profile' ] } )->get_column('parameter.value')->single();
+	if ($drop_qstring) {
+		$text .= $drop_qstring . "\n";
+	}
+	else {
+		$text .= "/([^?]+) \$s://\$t/\$1\n";
+	}
 	return $text;
 }
 
@@ -1252,6 +1253,7 @@ sub regex_remap_dot_config {
 		$text .= $ds->regex_remap . "\n";
 	}
 
+	$text =~ s/\s*__RETURN__\s*/\n/g;
 	return $text;
 }
 

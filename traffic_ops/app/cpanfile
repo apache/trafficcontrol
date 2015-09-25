@@ -169,6 +169,7 @@ requires 'Mojolicious::Plugin::Mail', '==1.3';
 requires 'MojoX::Log::Log4perl', '==0.10';
 requires 'Moo';
 requires 'Moose';
+requires 'NetPacket::IPv6';
 requires 'Net::FTP';
 requires 'Net::HTTP';
 requires 'Net::LDAP';

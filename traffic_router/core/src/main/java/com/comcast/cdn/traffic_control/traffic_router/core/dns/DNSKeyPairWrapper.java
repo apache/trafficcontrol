@@ -23,7 +23,6 @@ import java.util.Date;
 
 import javax.xml.bind.DatatypeConverter;
 
-import org.apache.log4j.Logger;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.xbill.DNS.DNSKEYRecord;
@@ -35,8 +34,6 @@ import org.xbill.DNS.Type;
 import com.verisignlabs.dnssec.security.DnsKeyPair;
 
 public class DNSKeyPairWrapper extends DnsKeyPair {
-	private static final Logger LOGGER = Logger.getLogger(DNSKeyPairWrapper.class);
-
 	private long ttl;
 	private Date inception;
 	private Date effective;
@@ -44,9 +41,9 @@ public class DNSKeyPairWrapper extends DnsKeyPair {
 	private String name;
 
 	public DNSKeyPairWrapper(final JSONObject keyPair) throws JSONException, IOException {
-		this.inception = new Date (1000L * keyPair.getLong("inceptionDate"));
-		this.effective = new Date (1000L * keyPair.getLong("effectiveDate"));
-		this.expiration = new Date (1000L * keyPair.getLong("expirationDate"));
+		this.inception = new Date(1000L * keyPair.getLong("inceptionDate"));
+		this.effective = new Date(1000L * keyPair.getLong("effectiveDate"));
+		this.expiration = new Date(1000L * keyPair.getLong("expirationDate"));
 		this.ttl = keyPair.getLong("ttl");
 		this.name = keyPair.getString("name");
 		//this.status = keyPair.getString("status"); // this field is used by Traffic Ops; we detect expiration by using the above dates
@@ -62,7 +59,6 @@ public class DNSKeyPairWrapper extends DnsKeyPair {
 		while ((record = master.nextRecord()) != null) {
 			if (record.getType() == Type.DNSKEY) {
 				setDNSKEYRecord((DNSKEYRecord) record);
-				LOGGER.debug("record name is " + record.getName() + "; domain is " + name);
 				break;
 			}
 		}
@@ -108,6 +104,10 @@ public class DNSKeyPairWrapper extends DnsKeyPair {
 		this.expiration = expiration;
 	}
 
+	public boolean isKeySigningKey() {
+		return ((getDNSKEYRecord().getFlags() & DNSKEYRecord.Flags.SEP_KEY) != 0);
+	}
+
 	@Override
 	public boolean equals(final Object obj) {
 		final DNSKeyPairWrapper okp = (DNSKeyPairWrapper) obj;
@@ -131,5 +131,18 @@ public class DNSKeyPairWrapper extends DnsKeyPair {
 		}
 
 		return true;
+	}
+
+	@Override
+	public String toString() {
+		final StringBuilder sb = new StringBuilder();
+		sb.append("name=" + name);
+		sb.append(" ttl=" + getTTL());
+		sb.append(" ksk=" + isKeySigningKey());
+		sb.append(" inception=\"" + getInception() + "\"");
+		sb.append(" effective=\"" + getEffective() + "\"");
+		sb.append(" expiration=\"" + getExpiration() + "\"");
+
+		return sb.toString();
 	}
 }
