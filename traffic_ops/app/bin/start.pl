@@ -32,6 +32,7 @@ foreach my $dir (@INC) {
 }
 
 my $to_lib = dirname($0) . "/../lib";
+push( @watch_dirs, "templates" );
 push( @watch_dirs, $to_lib );
 
 my $watch_dirs_arg = join( " -w ", @watch_dirs );
@@ -42,7 +43,7 @@ print "(also the order in which Traffic Ops Perl Libraries and Extension modules
 print "\n$watch_dirs\n\n";
 
 my $local_dir = dirname($0) . "/../local";
-my $export = 'export PERL5LIB=$PERL5LIB:' . $local_dir . '/lib/perl5/:' . $to_lib;
-my $cmd = "$export && " . $local_dir . "/bin/morbo --listen 'http://*:3000' -v $local_dir/../script/cdn -w $watch_dirs_arg";
+my $export    = 'export PERL5LIB=$PERL5LIB:' . $local_dir . '/lib/perl5/:' . $to_lib;
+my $cmd       = "$export && " . $local_dir . "/bin/morbo --listen 'http://*:3000' -v $local_dir/../script/cdn -w $watch_dirs_arg";
 
 system($cmd);
