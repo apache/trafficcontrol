@@ -551,16 +551,6 @@ my %definition_for = (
 			config_file => 'records.config',
 			value       => 'INT 33554432',
 		},
-	},
-	'Config-Teak' => {
-		new   => 'Parameter',
-		using => {
-			id          => 62,
-			name        => 'cgq.cgwServer',
-			config_file => 'to_ext_teak.config',
-			value       => '1.1.1.1',
-		},
-	},
 );
 
 sub get_definition {
