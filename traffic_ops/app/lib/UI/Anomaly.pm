@@ -48,24 +48,18 @@ sub start {
 sub rascal {
 	my $self = shift;
 	my $host_name = shift;
-	my $rs_server = $self->db->resultset('Server')->search( { 'host_name' => $host_name }, { prefetch => 'profile' } );
-	my $domain_name;
-	my $profile_id;
 	my $json;
-	my $cdn_name;
 	my $tm_crconfig_url;
 
-	while ( my $row = $rs_server->next ) {
-		$domain_name = $row->domain_name;
-		$profile_id = $row->profile->id;
-	}
-	my $rs_param = $self->db->resultset('Parameter')->search( { -or => [ name => 'tm.crConfig.polling.url', name => 'CDN_name'], 'profile_parameters.profile' => $profile_id }, { prefetch => 'profile_parameters' } );
-	my $url;
+	my $rs_server = $self->db->resultset('Server')->search( { 'host_name' => $host_name }, { prefetch => 'profile' } )->single();
+	my $domain_name = $rs_server->domain_name;
+	my $profile_id = $rs_server->profile->id;
+	my $cdn_name = $rs_server->cdn->name;
+
+	my %condition = ( 'me.name' => 'tm.crConfig.polling.url', 'profile_parameters.profile' => $profile_id );
+	my $rs_param = $self->db->resultset('Parameter')->search( \%condition, { prefetch => 'profile_parameters' } );
 	while (my $row = $rs_param->next) {
-		if ($row->name eq 'CDN_name') {
-			$cdn_name = $row->value;
-		}
-		elsif ($row->name eq 'tm.crConfig.polling.url') {
+		if ($row->name eq 'tm.crConfig.polling.url') {
 			$tm_crconfig_url = $row->value;
 		}
 	}

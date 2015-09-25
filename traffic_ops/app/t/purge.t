@@ -41,8 +41,7 @@ my $fixture_name;
 
 #$fixture_name = 'server_edge1';
 #ok $ds->load($fixture_name), 'Does the ' . $fixture_name . ' load?';
-
-ok $schema->resultset('Parameter')->find( { name => 'CDN_name', value => 'cdn1' } ), 'cdn1 parameter exists?';
+ok $schema->resultset('Cdn')->find( { name => 'cdn1' } ), 'cdn1 parameter exists?';
 ok $schema->resultset('Profile')->find( { name => 'edge1' } ), 'Profile edge1 exists?';
 
 ok $schema->resultset('Deliveryservice')->find( { xml_id => 'test-ds1' } ), 'Deliveryservice test-ds1 exists?';
@@ -53,12 +52,12 @@ my $q = 'SELECT deliveryservice.id,
            org_server_fqdn, 
            type, 
            profile.id AS profile_id, 
-           parameter.value AS cdn_name 
+           cdn.name AS cdn_name 
      FROM deliveryservice 
      JOIN profile ON profile.id = deliveryservice.profile 
-     JOIN profile_parameter ON profile_parameter.profile = profile.id 
-     JOIN parameter ON parameter.id = profile_parameter.parameter 
-     WHERE deliveryservice.active = 1 AND parameter.name = \'CDN_name\' ORDER BY RAND() LIMIT 1';
+     JOIN cdn ON cdn.id = deliveryservice.cdn_id
+     WHERE deliveryservice.active = 1 ORDER BY RAND() LIMIT 1';
+
 my $get_ds = $dbh->prepare($q);
 $get_ds->execute();
 my $p = $get_ds->fetchall_arrayref( {} );
@@ -72,12 +71,11 @@ my $ds_name  = $ds->{xml_id};
 
 diag "Testing " . $ds_name . " (" . $host . ") in " . $cdn_name;
 $q = 'SELECT DISTINCT host_name, 
-                      parameter.value as cdn_name 
+                      cdn.name as cdn_name 
 					  FROM server 
 	  JOIN profile ON profile.id = server.profile
-	  JOIN profile_parameter ON profile_parameter.profile = profile.id
-	  JOIN parameter ON parameter.id = profile_parameter.parameter
-      WHERE parameter.value!=\'' . $cdn_name . '\' and parameter.name=\'CDN_name\' 
+	  JOIN cdn ON cdn.id = server.cdn_id
+      WHERE cdn.name!=\'' . $cdn_name . '\' 
             and type in (select id from type where name =\'EDGE\' or name =\'MID\')
             and status in (select id from status where name =\'REPORTED\' or name =\'ONLINE\')';
 
@@ -98,9 +96,8 @@ diag "Other servers " . $j;
 # get all edges assicated with this cdn name
 $q = 'SELECT DISTINCT host_name FROM server 
 JOIN profile ON profile.id = server.profile
-JOIN profile_parameter ON profile_parameter.profile = profile.id
-JOIN parameter ON parameter.id = profile_parameter.parameter
-WHERE parameter.value=\'' . $cdn_name . '\' and type in (select id from type where name =\'EDGE\' or name =\'MID\')
+JOIN cdn ON cdn.id = server.cdn_id
+WHERE cdn.name=\'' . $cdn_name . '\' and type in (select id from type where name =\'EDGE\' or name =\'MID\')
 and status in (select id from status where name =\'REPORTED\' or name =\'ONLINE\')';
 
 # diag $q ;

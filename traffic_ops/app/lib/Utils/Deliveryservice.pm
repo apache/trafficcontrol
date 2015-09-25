@@ -30,23 +30,6 @@ sub new {
 	return ( bless( $self, $class ) );
 }
 
-sub deliveryservice_lookup_cdn_name_and_ds_name {
-	my $self = shift;
-	my $dsid = shift || confess("Delivery Service id is required");
-
-	my $cdn_name = "all";
-	my $ds_name  = "all";
-	if ( $dsid ne "all" ) {
-		my $ds = $self->db->resultset('Deliveryservice')->search( { id => $dsid }, {} )->single();
-		$ds_name = $ds->xml_id;
-		my $param =
-			$self->db->resultset('ProfileParameter')
-			->search( { -and => [ profile => $ds->profile->id, 'parameter.name' => 'CDN_name' ] }, { prefetch => [ 'parameter', 'profile' ] } )->single();
-		$cdn_name = $param->parameter->value;
-	}
-	return ( $cdn_name, $ds_name );
-}
-
 sub build_match {
 	my $self            = shift;
 	my $cdn_name        = shift;

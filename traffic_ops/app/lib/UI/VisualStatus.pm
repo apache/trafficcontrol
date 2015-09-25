@@ -50,28 +50,18 @@ sub graphs_redis {
 	my $ds_capacity = 0;
 	my ( $ds_name, $loc_name, $host_name ) = split( /:/, $match_string );
 	if ( $host_name ne 'all' ) {    # we want a specific host, it has to be in only one CDN
-		my $server = $self->db->resultset('Server')->search( { host_name => $host_name } )->single();
-		my $param =
-			$self->db->resultset('ProfileParameter')
-			->search( { -and => [ 'parameter.name' => 'CDN_name', 'parameter.name' => 'CDN_name', 'me.profile' => $server->profile->id ] },
-			{ prefetch => [ 'parameter', 'profile' ] } )->single();
-		my $cdn_name = $param->parameter->value;
-		push( @cdn_names, $cdn_name );
+		my $server = $self->db->resultset('Server')->search( { host_name => $host_name }, { prefetch => 'cdn' } )->single();
+		push( @cdn_names, $server->cdn->name );
 	}
 	elsif ( $ds_name ne 'all' ) {    # we want a specific DS, it has to be in only one CDN
-		my $ds = $self->db->resultset('Deliveryservice')->search( { xml_id => $ds_name } )->single();
-		my $param =
-			$self->db->resultset('ProfileParameter')
-			->search( { -and => [ 'parameter.name' => 'CDN_name', 'parameter.name' => 'CDN_name', 'me.profile' => $ds->profile->id ] },
-			{ prefetch => [ 'parameter', 'profile' ] } )->single();
-		my $cdn_name = $param->parameter->value;
-		push( @cdn_names, $cdn_name );
+		my $ds = $self->db->resultset('Deliveryservice')->search( { xml_id => $ds_name }, { prefetch => 'cdn' } )->single();
+		push( @cdn_names, $ds->cdn->name );
 		$ds_capacity = $ds->global_max_mbps / 1000;    # everything is in kbps in the stats
 	}
 	else {                                             # we want all the CDNs
-		my $rs = $self->db->resultset('Parameter')->search( { name => 'CDN_name' } );
+		my $rs = $self->db->resultset('Cdn');
 		while ( my $row = $rs->next ) {
-			push( @cdn_names, $row->value );
+			push( @cdn_names, $row->name );
 		}
 	}
 	$self->stash(
@@ -88,9 +78,9 @@ sub daily_summary {
 	my $self = shift;
 
 	my @cdn_names;
-	my $rs = $self->db->resultset('Parameter')->search( { name => 'CDN_name' } );
+	my $rs = $self->db->resultset('Cdn');
 	while ( my $row = $rs->next ) {
-		push( @cdn_names, $row->value );
+		push( @cdn_names, $row->name );
 	}
 
 	my $tool_instance =

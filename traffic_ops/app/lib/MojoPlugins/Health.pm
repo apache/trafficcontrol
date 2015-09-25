@@ -40,24 +40,22 @@ sub register {
 			my $ccr_profile_id;
 			my $data_obj;
 
-			my %condition = ( 'parameter.name' => 'CDN_name', 'parameter.value' => $cdn_name );
-			my $rs_pp =
-				$self->db->resultset('ProfileParameter')->search( \%condition, { prefetch => [ { 'parameter' => undef }, { 'profile' => undef } ] } );
+			my $rs_pp = $self->db->resultset('Profile')->search( { 'cdn.name' => $cdn_name }, { prefetch => 'cdn' } );
 			while ( my $row = $rs_pp->next ) {
-				if ( $row->profile->name =~ m/^RASCAL/ ) {
-					$rascal_profile = $row->profile->name;
+				if ( $row->name =~ m/^RASCAL/ ) {
+					$rascal_profile = $row->name;
 				}
-				elsif ( $row->profile->name =~ m/^CCR/ ) {
-					push( @ccr_profiles, $row->profile->name );
+				elsif ( $row->name =~ m/^CCR/ ) {
+					push( @ccr_profiles, $row->name );
 
 					# TODO MAT: support multiple CCR profiles
-					$ccr_profile_id = $row->profile->id;
+					$ccr_profile_id = $row->id;
 				}
-				elsif ( $row->profile->name =~ m/^EDGE/ || $row->profile->name =~ m/^MID/ ) {
-					push( @cache_profiles, $row->profile->name );
+				elsif ( $row->name =~ m/^EDGE/ || $row->name =~ m/^MID/ ) {
+					push( @cache_profiles, $row->name );
 				}
 			}
-			%condition = ( 'parameter.config_file' => 'rascal-config.txt', 'profile.name' => $rascal_profile );
+			my %condition = ( 'parameter.config_file' => 'rascal-config.txt', 'profile.name' => $rascal_profile );
 			$rs_pp = $self->db->resultset('ProfileParameter')->search( \%condition, { prefetch => [ { 'parameter' => undef }, { 'profile' => undef } ] } );
 			while ( my $row = $rs_pp->next ) {
 				if ( $row->parameter->name =~ m/location/ ) { next; }
@@ -114,14 +112,14 @@ sub register {
 			my $rs_type = $self->db->resultset('Type')->search( { -or => [ name => $args->{type} ] } );
 			my $rs_data =
 				$self->db->resultset('Server')
-				->search( { type => { -in => $rs_type->get_column('id')->as_query } }, { prefetch => [ { 'status' => undef } ] } );
+				->search( { type => { -in => $rs_type->get_column('id')->as_query } }, { prefetch => [ 'cdn', { 'status' => undef } ] } );
 
 			while ( my $row = $rs_data->next ) {
-				my $param =
-					$self->db->resultset('ProfileParameter')
-					->search( { -and => [ profile => $row->profile->id, 'parameter.name' => 'CDN_name' ] }, { prefetch => [ 'parameter', 'profile' ] } )
-					->single();
-				my $this_cdn_name = $param->parameter->value;
+				my $this_cdn_name = $row->cdn->name;
+
+				if (!defined($this_cdn_name)) {
+					print "cdn name not defined\n";
+				}
 
 				next if ( exists( $args->{cdn_name} ) && $args->{cdn_name} ne $this_cdn_name );
 				next if ( exists( $args->{status} )   && $args->{status} ne $row->status->name );

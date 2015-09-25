@@ -51,6 +51,17 @@
 			});
 		}, "json");
 
+		$.get("/api/1.2/cdns.json", function(data){
+			var response = data['response'];
+			$.each(response, function(idx, val) {
+				if (response[idx].name == "<%= $selected_cdn %>") {
+					$("#cdn").append("<option selected=\"selected\" value=" + response[idx].id + ">" + response[idx].name + "</option>");
+				} else {
+					$("#cdn").append("<option value=" + response[idx].id + ">" + response[idx].name + "</option>");
+				}
+			});
+		}, "json");
+
 		$('#type').change(function() {
 			console.log("1");
 			setup_form('slow');

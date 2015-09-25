@@ -14,19 +14,11 @@
     limitations under the License.
 */
 
-
 -- +goose Up
 -- SQL in section 'Up' is executed when this migration is applied
-alter table deliveryservice modify `display_name` varchar(48) NOT NULL;
-update deliveryservice set display_name=xml_id where display_name IS NULL;
-alter table deliveryservice modify `long_desc` varchar(1024) DEFAULT NULL;
-alter table deliveryservice modify `long_desc_1` varchar(1024) DEFAULT NULL;
-alter table deliveryservice modify `long_desc_2` varchar(1024) DEFAULT NULL;
+
+DELETE FROM parameter
+WHERE parameter.name = "CDN_name";
 
 -- +goose Down
 -- SQL section 'Down' is executed when this migration is rolled back
-
-alter table deliveryservice drop `display_name`;
-alter table deliveryservice modify `long_desc` varchar(255) DEFAULT NULL;
-alter table deliveryservice modify `long_desc_1` varchar(255) DEFAULT NULL;
-alter table deliveryservice modify `long_desc_2` varchar(255) DEFAULT NULL;

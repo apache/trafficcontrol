@@ -33,7 +33,7 @@ sub index {
 
 	#get a list of cdns from parameters
 	&navbarpage($self);
-	my @cdns = $self->db->resultset('Parameter')->search( { name => 'CDN_Name' } )->get_column('value')->all();
+	my @cdns = $self->db->resultset('Cdn')->search( {} )->get_column('name')->all();
 	$self->stash(
 		cdns => \@cdns,
 	);
@@ -263,7 +263,7 @@ sub create {
 			}
 		}
 		else {
-			my @cdns = $self->db->resultset('Parameter')->search( { name => 'CDN_Name' } )->get_column('value')->all();
+			my @cdns = $self->db->resultset('Cdn')->search( {} )->get_column('name')->all();
 
 			$self->stash(
 				dnssec => {
@@ -367,7 +367,7 @@ sub build_stash {
 	my $ttl      = $self->param('dnssec.ttl');
 	my $z_expiry = $self->param('dnssec.z_expiry');
 	my $k_expiry = $self->param('dnssec.k_expiry');
-	my @cdns     = $self->db->resultset('Parameter')->search( { name => 'CDN_Name' } )->get_column('value')->all();
+	my @cdns     = $self->db->resultset('Cdn')->search( {} )->get_column('name')->all();
 	&navbarpage($self);
 	$self->stash(
 		dnssec => {

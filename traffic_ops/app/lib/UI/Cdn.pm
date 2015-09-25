@@ -28,6 +28,189 @@ use JSON;
 # Yes or no
 my %yesno = ( 0 => "no", 1 => "yes", 2 => "no" );
 
+sub index {
+	my $self = shift;
+
+	&navbarpage($self);
+}
+
+sub add {
+	my $self = shift;
+	$self->stash( fbox_layout => 1, cdn_data => {} );
+	&stash_role($self);
+	if ( $self->stash('priv_level') < 30 ) {
+		$self->stash( alertmsg => "Insufficient privileges!" );
+		$self->redirect_to('/cdns');
+	}
+}
+
+sub view {
+	my $self = shift;
+	my $mode = $self->param('mode');
+	my $id   = $self->param('id');
+	$self->stash( cdn_data => {} );
+
+	my $rs_param = $self->db->resultset('Cdn')->search( { id => $id } );
+	my $data = $rs_param->single;
+
+	&stash_role($self);
+	$self->stash( fbox_layout => 1, cdn_data => $data );
+
+	if ( $mode eq "edit" and $self->stash('priv_level') > 20 ) {
+		$self->render( template => 'cdn/edit' );
+	}
+	else {
+		$self->render( template => 'cdn/view' );
+	}
+}
+
+sub update {
+	my $self       = shift;
+	my $id         = $self->param('id');
+	my $priv_level = $self->stash('priv_level');
+
+	$self->stash(
+		id          => $id,
+		fbox_layout => 1,
+		priv_level  => $priv_level,
+		cdn_data    => {
+			id          => $id,
+			name        => $self->param('cdn_data.name'),
+		}
+	);
+
+	if ( !$self->isValidCdn() ) {
+		return $self->render( template => 'cdn/edit' );
+	}
+
+	my $err = &check_cdn_input($self);
+	if ( defined($err) ) {
+		$self->flash( alertmsg => $err );
+	}
+	else {
+		my $update = $self->db->resultset('Cdn')
+			->find( { id => $self->param('id') } );
+		$update->name( $self->param('cdn_data.name') );
+		$update->update();
+
+# if the update has failed, we don't even get here, we go to the exception page.
+	}
+
+	&log( $self, "Update Cdn with name:" . $self->param('cdn_data.name'),
+		"UICHANGE" );
+	$self->flash( message => "Successfully updated CDN." );
+	return $self->redirect_to( '/cdn/edit/' . $id );
+}
+
+# Create
+sub create {
+	my $self        = shift;
+	my $name        = $self->param('cdn_data.name');
+	my $data        = $self->get_cdns();
+	my $cdns        = $data->{'cdn'};
+
+	if ( !$self->isValidCdn() ) {
+		$self->stash(
+			fbox_layout => 1,
+			cdn_data    => {
+				name        => $name,
+			}
+		);
+		return $self->render('cdn/add');
+	}
+	if ( exists $cdns->{$name} ) {
+		$self->field('cdn_data.name')
+			->is_like( qr/^\/(?!$name\/)/i, "The name exists." );
+		$self->stash(
+			fbox_layout => 1,
+			cdn_data    => {
+				name        => $name,
+			}
+		);
+		return $self->render('cdn/add');
+	}
+
+	my $new_id = -1;
+	my $err    = &check_cdn_input($self);
+	if ( defined($err) ) {
+		return $self->redirect_to( '/cdn/edit/' . $new_id );
+	}
+	else {
+		my $insert = $self->db->resultset('Cdn')->create(
+			{ name => $name }
+		);
+		$insert->insert();
+		$new_id = $insert->id;
+	}
+	if ( $new_id == -1 ) {
+		my $referer = $self->req->headers->header('referer');
+		return $self->redirect_to($referer);
+	}
+	else {
+		&log( $self, "Create cdn with name:" . $self->param('cdn_data.name'),
+			"UICHANGE" );
+		$self->flash( message => "Successfully updated CDN." );
+		return $self->redirect_to( '/cdn/edit/' . $new_id );
+	}
+}
+
+# Delete
+sub delete {
+	my $self = shift;
+	my $id   = $self->param('id');
+
+	if ( !&is_admin($self) ) {
+		$self->flash( alertmsg => "No can do. Get more privs." );
+	}
+	else {
+		my $p_name = $self->db->resultset('Cdn')->search( { id => $id } )
+			->get_column('name')->single();
+		my $delete = $self->db->resultset('Cdn')->search( { id => $id } );
+		$delete->delete();
+		&log( $self, "Delete cdn " . $p_name, "UICHANGE" );
+	}
+	return $self->redirect_to('/close_fancybox.html');
+}
+
+sub get_cdns {
+	my $self = shift;
+
+	my %data;
+	my %cdns;
+	my $rs = $self->db->resultset('Cdn');
+	while ( my $cdn = $rs->next ) {
+		$cdns{ $cdn->name } = $cdn->id;
+	}
+	%data = ( cdns => \%cdns );
+
+	return \%data;
+}
+
+sub check_cdn_input {
+	my $self = shift;
+
+	my $sep = "__NEWLINE__"
+		;    # the line separator sub that with \n in the .ep javascript
+	my $err = undef;
+
+	# First, check permissions
+	if ( !&is_oper($self) ) {
+		$err .= "You do not have enough privileges to modify this." . $sep;
+		return $err;
+	}
+
+	return $err;
+}
+
+sub isValidCdn {
+	my $self = shift;
+	$self->field('cdn_data.name')
+		->is_required->is_like( qr/^[0-9a-zA-Z_\.\-]+$/,
+		"Use alphanumeric . or _ ." );
+
+	return $self->valid;
+}
+
 sub aprofileparameter {
 	my $self = shift;
 	my %data = ( "aaData" => undef );
@@ -41,8 +224,10 @@ sub aprofileparameter {
 		my $p_id = &profile_id( $self, $val );
 		$rs = $self->db->resultset('Parameter')->search(
 			{ $col => $p_id },
-			{
-				join        => [ { 'profile_parameters' => 'parameter' }, { 'profile_parameters' => 'profile' }, ],
+			{   join => [
+					{ 'profile_parameters' => 'parameter' },
+					{ 'profile_parameters' => 'profile' },
+				],
 				'+select'   => ['profile.name'],
 				'+as'       => ['profile_name'],
 				'+order_by' => ['profile.name'],
@@ -52,8 +237,11 @@ sub aprofileparameter {
 	}
 	else {
 		$rs = $self->db->resultset('Parameter')->search(
-			undef, {
-				join        => [ { 'profile_parameters' => 'parameter' }, { 'profile_parameters' => 'profile' }, ],
+			undef,
+			{   join => [
+					{ 'profile_parameters' => 'parameter' },
+					{ 'profile_parameters' => 'profile' },
+				],
 				'+select'   => ['profile.name'],
 				'+as'       => ['profile_name'],
 				'+order_by' => ['profile.name'],
@@ -65,7 +253,11 @@ sub aprofileparameter {
 
 	while ( my $row = $rs->next ) {
 		my @line;
-		@line = [ $row->id, $row->{_column_data}->{profile_name}, $row->name, $row->config_file, $row->value ];
+		@line = [
+			$row->id,   $row->{_column_data}->{profile_name},
+			$row->name, $row->config_file,
+			$row->value
+		];
 		push( @{ $data{'aaData'} }, @line );
 	}
 	$self->render( json => \%data );
@@ -85,52 +277,91 @@ sub aparameter {
 
 	my $rs = undef;
 	if ( $col eq 'profile' and $val eq 'ORPHANS' ) {
-		my $lindked_profile_rs    = $self->db->resultset('ProfileParameter')->search(undef);
-		my $lindked_cachegroup_rs = $self->db->resultset('CachegroupParameter')->search(undef);
+		my $lindked_profile_rs
+			= $self->db->resultset('ProfileParameter')->search(undef);
+		my $lindked_cachegroup_rs
+			= $self->db->resultset('CachegroupParameter')->search(undef);
 		$rs = $self->db->resultset('Parameter')->search(
-			{
-				-and => [
-					id => { -not_in => $lindked_profile_rs->get_column('parameter')->as_query },
-					id => { -not_in => $lindked_cachegroup_rs->get_column('parameter')->as_query }
+			{   -and => [
+					id => {
+						-not_in =>
+							$lindked_profile_rs->get_column('parameter')
+							->as_query
+					},
+					id => {
+						-not_in =>
+							$lindked_cachegroup_rs->get_column('parameter')
+							->as_query
+					}
 				]
 			}
 		);
 		while ( my $row = $rs->next ) {
-			my @line = [ $row->id, "NONE", $row->name, $row->config_file, $row->value, "profile" ];
+			my @line = [
+				$row->id,    "NONE",
+				$row->name,  $row->config_file,
+				$row->value, "profile"
+			];
 			push( @{ $data{'aaData'} }, @line );
 		}
 		$rs = undef;
 	}
 	elsif ( $col eq 'profile' && $val ne 'all' ) {
 		my $p_id = &profile_id( $self, $val );
-		$rs = $self->db->resultset('ProfileParameter')->search( { $col => $p_id }, { prefetch => [ { 'parameter' => undef }, { 'profile' => undef } ] } );
+		$rs = $self->db->resultset('ProfileParameter')->search(
+			{ $col => $p_id },
+			{   prefetch =>
+					[ { 'parameter' => undef }, { 'profile' => undef } ]
+			}
+		);
 	}
 	elsif ( !defined($col) || ( $col eq 'profile' && $val eq 'all' ) ) {
-		$rs = $self->db->resultset('ProfileParameter')->search( undef, { prefetch => [ { 'parameter' => undef }, { 'profile' => undef } ] } );
+		$rs = $self->db->resultset('ProfileParameter')->search(
+			undef,
+			{   prefetch =>
+					[ { 'parameter' => undef }, { 'profile' => undef } ]
+			}
+		);
 	}
 
 	if ( defined($rs) ) {
 		while ( my $row = $rs->next ) {
-			my @line = [ $row->parameter->id, $row->profile->name, $row->parameter->name, $row->parameter->config_file, $row->parameter->value, "profile" ];
+			my @line = [
+				$row->parameter->id,    $row->profile->name,
+				$row->parameter->name,  $row->parameter->config_file,
+				$row->parameter->value, "profile"
+			];
 			push( @{ $data{'aaData'} }, @line );
 		}
 	}
 
 	$rs = undef;
 	if ( $col eq 'cachegroup' && $val ne 'all' ) {
-		my $l_id = $self->db->resultset('Cachegroup')->search( { short_name => $val } )->get_column('id')->single();
-		$rs =
-			$self->db->resultset('CachegroupParameter')
-			->search( { $col => $l_id }, { prefetch => [ { 'parameter' => undef }, { 'cachegroup' => undef } ] } );
+		my $l_id = $self->db->resultset('Cachegroup')
+			->search( { short_name => $val } )->get_column('id')->single();
+		$rs = $self->db->resultset('CachegroupParameter')->search(
+			{ $col => $l_id },
+			{   prefetch =>
+					[ { 'parameter' => undef }, { 'cachegroup' => undef } ]
+			}
+		);
 	}
 	elsif ( !defined($col) || ( $col eq 'cachegroup' && $val eq 'all' ) ) {
-		$rs = $self->db->resultset('CachegroupParameter')->search( undef, { prefetch => [ { 'parameter' => undef }, { 'cachegroup' => undef } ] } );
+		$rs = $self->db->resultset('CachegroupParameter')->search(
+			undef,
+			{   prefetch =>
+					[ { 'parameter' => undef }, { 'cachegroup' => undef } ]
+			}
+		);
 	}
 
 	if ( defined($rs) ) {
 		while ( my $row = $rs->next ) {
-			my @line =
-				[ $row->parameter->id, $row->cachegroup->name, $row->parameter->name, $row->parameter->config_file, $row->parameter->value, "cachegroup" ];
+			my @line = [
+				$row->parameter->id,    $row->cachegroup->name,
+				$row->parameter->name,  $row->parameter->config_file,
+				$row->parameter->value, "cachegroup"
+			];
 			push( @{ $data{'aaData'} }, @line );
 		}
 	}
@@ -143,33 +374,60 @@ sub aserver {
 	my $server_select = shift;
 	my %data          = ( "aaData" => undef );
 
-	my $rs = $self->db->resultset('Server')->search( undef, { prefetch => [ 'cachegroup', 'type', 'profile', 'status', 'phys_location' ] } );
+	my $rs = $self->db->resultset('Server')->search(
+		undef,
+		{   prefetch => [
+				'cdn',    'cachegroup', 'type', 'profile',
+				'status', 'phys_location'
+			]
+		}
+	);
 	while ( my $row = $rs->next ) {
 
 		my @line;
 		if ($server_select) {
-			@line = [ $row->id, $row->host_name, $row->domain_name, $row->ip_address, $row->type->name, $row->profile->name ];
+			@line = [
+				$row->id,         $row->host_name,  $row->domain_name,
+				$row->ip_address, $row->type->name, $row->profile->name
+			];
 		}
 		else {
 			my $aux_url = "";
 			my $img     = "";
 
 			if ( $row->type->name eq "MID" || $row->type->name eq "EDGE" ) {
-				$aux_url = "/visualstatus/all:" . $row->cachegroup->name . ":" . $row->host_name;
-				$img     = "graph.png";
+				$aux_url
+					= "/visualstatus/all:"
+					. $row->cachegroup->name . ":"
+					. $row->host_name;
+				$img = "graph.png";
 			}
 			elsif ( $row->type->name eq "CCR" ) {
-				my $rs_param =
-					$self->db->resultset('Parameter')
-					->search( { 'profile_parameters.profile' => $row->profile->id, 'name' => 'api.port' }, { join => 'profile_parameters' } );
+				my $rs_param = $self->db->resultset('Parameter')->search(
+					{   'profile_parameters.profile' => $row->profile->id,
+						'name'                       => 'api.port'
+					},
+					{ join => 'profile_parameters' }
+				);
 				my $r = $rs_param->single;
-				my $port = ( defined($r) && defined( $r->value ) ) ? $r->value : 80;
-				$aux_url = "http://" . $row->host_name . "." . $row->domain_name . ":" . $port . "/crs/stats";
-				$img     = "info.png";
+				my $port
+					= ( defined($r) && defined( $r->value ) )
+					? $r->value
+					: 80;
+				$aux_url
+					= "http://"
+					. $row->host_name . "."
+					. $row->domain_name . ":"
+					. $port
+					. "/crs/stats";
+				$img = "info.png";
 			}
 			elsif ( $row->type->name eq "RASCAL" ) {
-				$aux_url = "http://" . $row->host_name . "." . $row->domain_name . "/";
-				$img     = "info.png";
+				$aux_url
+					= "http://"
+					. $row->host_name . "."
+					. $row->domain_name . "/";
+				$img = "info.png";
 			}
 			elsif ( $row->type->name eq "REDIS" ) {
 				$aux_url = "/redis/info/" . $row->host_name;
@@ -177,9 +435,14 @@ sub aserver {
 			}
 
 			@line = [
-				$row->id,                  $row->host_name,       $row->domain_name, "dummy",            $row->cachegroup->name,
-				$row->phys_location->name, $row->ip_address,      $row->ip6_address, $row->status->name, $row->profile->name,
-				$row->ilo_ip_address,      $row->mgmt_ip_address, $row->type->name,  $aux_url,           $img
+				$row->id,                  $row->host_name,
+				$row->domain_name,         "dummy",
+				$row->cdn->name,           $row->cachegroup->name,
+				$row->phys_location->name, $row->ip_address,
+				$row->ip6_address,         $row->status->name,
+				$row->profile->name,       $row->ilo_ip_address,
+				$row->mgmt_ip_address,     $row->type->name,
+				$aux_url,                  $img
 			];
 		}
 		push( @{ $data{'aaData'} }, @line );
@@ -191,11 +454,17 @@ sub aasn {
 	my $self = shift;
 	my %data = ( "aaData" => undef );
 
-	my $rs = $self->db->resultset('Asn')->search( undef, { prefetch => [ { 'cachegroup' => 'cachegroups' }, ] } );
+	my $rs
+		= $self->db->resultset('Asn')
+		->search( undef,
+		{ prefetch => [ { 'cachegroup' => 'cachegroups' }, ] } );
 
 	while ( my $row = $rs->next ) {
 
-		my @line = [ $row->id, $row->cachegroup->name, $row->asn, $row->last_updated ];
+		my @line = [
+			$row->id,  $row->cachegroup->name,
+			$row->asn, $row->last_updated
+		];
 		push( @{ $data{'aaData'} }, @line );
 	}
 	$self->render( json => \%data );
@@ -205,44 +474,65 @@ sub aphys_location {
 	my $self = shift;
 	my %data = ( "aaData" => undef );
 
-	my $rs = $self->db->resultset('PhysLocation')->search( undef, { prefetch => ['region'] } );
+	my $rs = $self->db->resultset('PhysLocation')
+		->search( undef, { prefetch => ['region'] } );
 
 	while ( my $row = $rs->next ) {
 
 		next if $row->short_name eq 'UNDEF';
 
-		my @line = [ $row->id, $row->name, $row->short_name, $row->address, $row->city, $row->state, $row->region->name, $row->last_updated ];
+		my @line = [
+			$row->id,           $row->name, $row->short_name,
+			$row->address,      $row->city, $row->state,
+			$row->region->name, $row->last_updated
+		];
 		push( @{ $data{'aaData'} }, @line );
 	}
 	$self->render( json => \%data );
 }
 
 sub adeliveryservice {
-	my $self       = shift;
-	my %data       = ( "aaData" => undef );
-	my %geo_limits = ( 0 => "none", 1 => "CZF", 2 => "CZF + US", 3 => "CZF + CA" );
-	my %protocol   = ( 0 => "http", 1 => "https", 2 => "http/https" );
+	my $self = shift;
+	my %data = ( "aaData" => undef );
+	my %geo_limits
+		= ( 0 => "none", 1 => "CZF", 2 => "CZF + US", 3 => "CZF + CA" );
+	my %protocol = ( 0 => "http", 1 => "https", 2 => "http/https" );
 
 	my $rs = $self->db->resultset('Deliveryservice')->search(
-		{ 'parameter.name' => 'CDN_name' },
-		{
-			prefetch => [ 'type', { profile               => { profile_parameters => 'parameter' } } ],
+		{},
+		{   prefetch => [
+				'type', 'cdn',
+				{ profile => { profile_parameters => 'parameter' } }
+			],
 			join     => { profile => { profile_parameters => 'parameter' } },
 			distinct => 1
 		}
 	);
 
 	while ( my $row = $rs->next ) {
-
-		my $related_rs = $row->profile->profile_parameters->related_resultset('parameter');
-		my $related    = $related_rs->next;
-		my @line       = [
-			$row->id,                    $row->xml_id,                         $row->org_server_fqdn,        $related->value,
-			$row->profile->name,         $row->ccr_dns_ttl,                    $yesno{ $row->active },       $row->type->name,
-			$row->dscp,                  $yesno{ $row->signed },               $row->qstring_ignore,         $geo_limits{ $row->geo_limit },
-			$protocol{ $row->protocol }, $yesno{ $row->ipv6_routing_enabled }, $row->range_request_handling, $row->http_bypass_fqdn,
-			$row->dns_bypass_ip,         $row->dns_bypass_ip6,                 $row->dns_bypass_cname,       $row->dns_bypass_ttl,
-			$row->miss_lat,              $row->miss_long,                      $row->initial_dispersion,
+		my @line = [
+			$row->id,
+			$row->xml_id,
+			$row->org_server_fqdn,
+			"dummy",
+			$row->cdn->name,
+			$row->profile->name,
+			$row->ccr_dns_ttl,
+			$yesno{ $row->active },
+			$row->type->name,
+			$row->dscp,
+			$yesno{ $row->signed },
+			$row->qstring_ignore,
+			$geo_limits{ $row->geo_limit },
+			$protocol{ $row->protocol },
+			$yesno{ $row->ipv6_routing_enabled },
+			$row->range_request_handling,
+			$row->http_bypass_fqdn,
+			$row->dns_bypass_ip,
+			$row->dns_bypass_ip6,
+			$row->dns_bypass_ttl,
+			$row->miss_lat,
+			$row->miss_long,
 		];
 		push( @{ $data{'aaData'} }, @line );
 	}
@@ -254,16 +544,27 @@ sub ahwinfo {
 	my %data = ( "aaData" => undef );
 
 	my $rs;
-	if ( defined( $self->param('filter') ) && defined( $self->param('value') ) && $self->param('value') ne "all" ) {
+	if (   defined( $self->param('filter') )
+		&& defined( $self->param('value') )
+		&& $self->param('value') ne "all" )
+	{
 		my $col = $self->param('filter');
 		my $val = $self->param('value');
-		$rs = $self->db->resultset('Hwinfo')->search( { $col => $val }, { prefetch => ['serverid'] } );
+		$rs = $self->db->resultset('Hwinfo')
+			->search( { $col => $val }, { prefetch => ['serverid'] } );
 	}
 	else {
-		$rs = $self->db->resultset('Hwinfo')->search( undef, { prefetch => ['serverid'] } );
+		$rs = $self->db->resultset('Hwinfo')
+			->search( undef, { prefetch => ['serverid'] } );
 	}
 	while ( my $row = $rs->next ) {
-		my @line = [ $row->serverid->id, $row->serverid->host_name . "." . $row->serverid->domain_name, $row->description, $row->val, $row->last_updated ];
+		my @line = [
+			$row->serverid->id,
+			$row->serverid->host_name . "." . $row->serverid->domain_name,
+			$row->description,
+			$row->val,
+			$row->last_updated
+		];
 		push( @{ $data{'aaData'} }, @line );
 	}
 	$self->render( json => \%data );
@@ -273,27 +574,25 @@ sub ajob {
 	my $self = shift;
 	my %data = ( "aaData" => undef );
 
-	my $rs =
-		$self->db->resultset('Job')
-		->search( undef, { prefetch => [ { 'ext_user' => undef }, { agent => undef }, { status => undef } ], order_by => { -desc => 'me.entered_time' } } );
+	my $rs = $self->db->resultset('Job')->search(
+		undef,
+		{   prefetch => [
+				{ 'job_user' => undef },
+				{ agent      => undef },
+				{ status     => undef }
+			],
+			order_by => { -desc => 'me.entered_time' }
+		}
+	);
 
 	while ( my $row = $rs->next ) {
 
-		my @line = [ $row->id, $row->ext_user->name, $row->asset_url, $row->asset_type, $row->entered_time, $row->status->name, $row->last_updated ];
-		push( @{ $data{'aaData'} }, @line );
-	}
-	$self->render( json => \%data );
-}
-
-sub aextuser {
-	my $self = shift;
-	my %data = ( "aaData" => undef );
-
-	my $rs = $self->db->resultset('ExtUser');
-
-	while ( my $row = $rs->next ) {
-
-		my @line = [ $row->id, $row->username, $row->company, $row->name, $row->email, $row->phone, $row->last_updated ];
+		my @line = [
+			$row->id,           $row->job_user->username,
+			$row->asset_url,    $row->asset_type,
+			$row->entered_time, $row->status->name,
+			$row->last_updated
+		];
 		push( @{ $data{'aaData'} }, @line );
 	}
 	$self->render( json => \%data );
@@ -307,19 +606,50 @@ sub alog {
 	if ( $self->db->storage->isa("DBIx::Class::Storage::DBI::mysql") ) {
 		$interval = "> now() - interval 30 day";
 	}
-	my $rs = $self->db->resultset('Log')->search( { 'me.last_updated' => \$interval },
-		{ prefetch => [ { 'tm_user' => undef } ], order_by => { -desc => 'me.last_updated' }, rows => 1000 } );
+	my $rs = $self->db->resultset('Log')->search(
+		{ 'me.last_updated' => \$interval },
+		{   prefetch => [       { 'tm_user' => undef } ],
+			order_by => { -desc => 'me.last_updated' },
+			rows     => 1000
+		}
+	);
 
 	while ( my $row = $rs->next ) {
 
-		my @line = [ $row->last_updated, $row->level, $row->message, $row->tm_user->username, $row->ticketnum ];
+		my @line = [
+			$row->last_updated, $row->level,
+			$row->message,      $row->tm_user->username,
+			$row->ticketnum
+		];
 		push( @{ $data{'aaData'} }, @line );
 	}
 
 	# setting cookie here, because the HTML page is often cached.
 	my $date_string = `date "+%Y-%m-%d% %H:%M:%S"`;
 	chomp($date_string);
-	$self->cookie( last_seen_log => $date_string, { path => "/", max_age => 604800 } );    # expires in a week.
+	$self->cookie(
+		last_seen_log => $date_string,
+		{ path => "/", max_age => 604800 }
+	);    # expires in a week.
+	$self->render( json => \%data );
+}
+
+sub acdn {
+	my $self = shift;
+	my %data = ( "aaData" => undef );
+
+	my %id_to_name = ();
+	my $rs         = $self->db->resultset('Cdn')->search(undef);
+	while ( my $row = $rs->next ) {
+		$id_to_name{ $row->id } = $row->name;
+	}
+
+	$rs = $self->db->resultset('Cdn')->search(undef);
+	while ( my $row = $rs->next ) {
+		my @line
+			= [ $row->id, $row->name, $row->last_updated ];
+		push( @{ $data{'aaData'} }, @line );
+	}
 	$self->render( json => \%data );
 }
 
@@ -328,17 +658,26 @@ sub acachegroup {
 	my %data = ( "aaData" => undef );
 
 	my %id_to_name = ();
-	my $rs = $self->db->resultset('Cachegroup')->search( undef, { prefetch => [ { 'type' => undef } ] } );
+	my $rs         = $self->db->resultset('Cachegroup')
+		->search( undef, { prefetch => [ { 'type' => undef } ] } );
 	while ( my $row = $rs->next ) {
 		$id_to_name{ $row->id } = $row->name;
 	}
 
-	$rs = $self->db->resultset('Cachegroup')->search( undef, { prefetch => [ { 'type' => undef } ] } );
+	$rs = $self->db->resultset('Cachegroup')
+		->search( undef, { prefetch => [ { 'type' => undef } ] } );
 
 	while ( my $row = $rs->next ) {
 		my @line = [
-			$row->id, $row->name, $row->short_name, $row->type->name, $row->latitude, $row->longitude,
-			defined( $row->parent_cachegroup_id ) ? $id_to_name{ $row->parent_cachegroup_id } : undef,
+			$row->id,
+			$row->name,
+			$row->short_name,
+			$row->type->name,
+			$row->latitude,
+			$row->longitude,
+			defined( $row->parent_cachegroup_id )
+			? $id_to_name{ $row->parent_cachegroup_id }
+			: undef,
 			$row->last_updated
 		];
 		push( @{ $data{'aaData'} }, @line );
@@ -350,13 +689,16 @@ sub auser {
 	my $self = shift;
 	my %data = ( "aaData" => undef );
 
-	my $rs = $self->db->resultset('TmUser')->search( undef, { prefetch => [ { 'role' => undef } ] } );
+	my $rs = $self->db->resultset('TmUser')
+		->search( undef, { prefetch => [ { 'role' => undef } ] } );
 
 	while ( my $row = $rs->next ) {
 
 		my @line = [
-			$row->id,           $row->username, $row->role->name, $row->full_name,  $row->company,  $row->email,
-			$row->phone_number, $row->uid,      $row->gid,        $row->local_user, $row->new_user, $row->last_updated
+			$row->id,           $row->username, $row->role->name,
+			$row->full_name,    $row->company,  $row->email,
+			$row->phone_number, $row->uid,      $row->gid,
+			$row->local_user,   $row->new_user, $row->last_updated
 		];
 		push( @{ $data{'aaData'} }, @line );
 	}
@@ -371,7 +713,10 @@ sub aprofile {
 
 	while ( my $row = $rs->next ) {
 
-		my @line = [ $row->id, $row->name, $row->name, $row->description, $row->last_updated ];
+		my @line = [
+			$row->id,          $row->name, $row->name,
+			$row->description, $row->last_updated
+		];
 		push( @{ $data{'aaData'} }, @line );
 	}
 	$self->render( json => \%data );
@@ -384,7 +729,10 @@ sub atype {
 	my $rs = $self->db->resultset('Type')->search(undef);
 
 	while ( my $row = $rs->next ) {
-		my @line = [ $row->id, $row->name, $row->description, $row->use_in_table, $row->last_updated ];
+		my @line = [
+			$row->id,           $row->name, $row->description,
+			$row->use_in_table, $row->last_updated
+		];
 		push( @{ $data{'aaData'} }, @line );
 	}
 	$self->render( json => \%data );
@@ -407,10 +755,12 @@ sub aregion {
 	my $self = shift;
 	my %data = ( "aaData" => undef );
 
-	my $rs = $self->db->resultset('Region')->search( undef, { prefetch => [ { 'division' => undef } ] } );
+	my $rs = $self->db->resultset('Region')
+		->search( undef, { prefetch => [ { 'division' => undef } ] } );
 
 	while ( my $row = $rs->next ) {
-		my @line = [ $row->id, $row->name, $row->division->name, $row->last_updated ];
+		my @line = [ $row->id, $row->name, $row->division->name,
+			$row->last_updated ];
 		push( @{ $data{'aaData'} }, @line );
 	}
 	$self->render( json => \%data );
@@ -451,6 +801,9 @@ sub aadata {
 	elsif ( $table eq 'Job' ) {
 		&ajob($self);
 	}
+	elsif ( $table eq 'Cdn' ) {
+		&acdn($self);
+	}
 	elsif ( $table eq 'Cachegroup' ) {
 		&acachegroup($self);
 	}
@@ -477,68 +830,9 @@ sub aadata {
 	}
 
 	else {
-		$self->render( text => "Traffic Ops error, something is not configured properly." );
+		$self->render( text =>
+				"Traffic Ops error, something is not configured properly." );
 	}
-}
-
-sub snapshot_crconfig {
-	my $self          = shift;
-	my $cdn_name      = $self->param('cdnname');
-	my $crconfig_path = "../public/CRConfig-Snapshots/$cdn_name";
-	my $prev_crconfig = "$crconfig_path/CRConfig.xml";
-	my $tm_text;
-
-	if ( !( -d $crconfig_path ) ) {
-		`mkdir -p $crconfig_path`;
-		if ( !( -d $crconfig_path ) ) {
-			$self->render( text => "Directory $crconfig_path still doesn't exist! " );
-		}
-	}
-	my $cdnname_param_id = $self->db->resultset('Parameter')->search( { name => 'CDN_name', value => $cdn_name } )->get_column('id')->single();
-	if ( defined($cdnname_param_id) ) {
-		my @profiles = $self->db->resultset('ProfileParameter')->search( { parameter => $cdnname_param_id } )->get_column('profile')->all();
-		if ( scalar(@profiles) ) {
-			my $ccr_profile_id =
-				$self->db->resultset('Profile')->search( { id => { -in => \@profiles }, name => { -like => 'CCR%' } } )->get_column('id')->single();
-			if ( defined($ccr_profile_id) ) {
-				$tm_text = Configfiles::gen_ccr_xml_file( $self, $ccr_profile_id );
-				if ( !( -e $prev_crconfig ) ) {
-					open my $fh, '>', "$crconfig_path/CRConfig.xml" || $self->render( text => "Could not open file: $crconfig_path/CRConfig.xml" );
-					print $fh $tm_text;
-					close $fh;
-				}
-			}
-			else {
-				$self->render( text => "No CCR profile found in profile IDs: @profiles " );
-			}
-		}
-		else {
-			$self->render( text => "No profiles found for CDN_name: " . $cdn_name );
-		}
-	}
-	else {
-		$self->render( text => "Parameter ID not found for CDN_name: " . $cdn_name );
-	}
-
-	my $prev_crconfig_text = "";
-	my $ccr_profile_id;
-	open my $prev_fh, '<', $prev_crconfig || die $self->render( text => "Previous CRConfig $prev_crconfig doesn't exist! " );
-	$prev_crconfig_text = do { local $/; <$prev_fh> };
-	close($prev_fh);
-
-	my $diff .= Configfiles::diff_ccr_files( $self, $tm_text, $prev_crconfig_text );
-	( my @diff_lines ) = split( /\n/, $diff );
-	my @clean_lines;
-	foreach my $line (@diff_lines) {
-		$line =~ s/<b>//g;
-		$line =~ s/<\/b>//g;
-		push( @clean_lines, $line );
-	}
-	$self->stash(
-		diff     => \@clean_lines,
-		cdn_name => $cdn_name,
-		tm_text  => $tm_text,
-	);
 }
 
 #### JvD Start new UI stuff
@@ -572,7 +866,8 @@ sub login {
 		return $self->redirect_to($referer);
 	}
 	else {
-		$self->flash( login_msg => "Invalid username or password, please try again." );
+		$self->flash(
+			login_msg => "Invalid username or password, please try again." );
 		return $self->redirect_to('/loginpage');
 	}
 }
@@ -580,9 +875,14 @@ sub login {
 sub options {
 	my $self = shift;
 
-	# this essentially serves a blank page; options are in the HTTP header in Cdn.pm
+# this essentially serves a blank page; options are in the HTTP header in Cdn.pm
 	$self->res->headers->content_type("text/plain");
-	$self->render( template => undef, layout => undef, text => "", status => 200 );
+	$self->render(
+		template => undef,
+		layout   => undef,
+		text     => "",
+		status   => 200
+	);
 }
 
 1;

@@ -21,7 +21,7 @@ use DBI;
 use strict;
 use warnings;
 use Test::TestHelper;
-use Fixtures::CachegroupParameter;
+# use Fixtures::CachegroupParameter;
 
 #no_transactions=>1 ==> keep fixtures after every execution, beware of duplicate data!
 #no_transactions=>0 ==> delete fixtures after every execution
@@ -34,11 +34,11 @@ my $schema = Schema->connect_to_database;
 
 #unload data for a clean test
 Test::TestHelper->unload_core_data($schema);
-Test::TestHelper->teardown( $schema, 'CachegroupParameter' );
+# Test::TestHelper->teardown( $schema, 'CachegroupParameter' );
 
 #load core test data
 Test::TestHelper->load_core_data($schema);
-Test::TestHelper->load_all_fixtures( Fixtures::CachegroupParameter->new( { schema => $schema, no_transactions => 1 } ) );
+# Test::TestHelper->load_all_fixtures( Fixtures::CachegroupParameter->new( { schema => $schema, no_transactions => 1 } ) );
 
 ok $t->post_ok( '/login', => form => { u => Test::TestHelper::PORTAL_USER, p => Test::TestHelper::PORTAL_USER_PASSWORD } )->status_is(302)
 	->or( sub { diag $t->tx->res->content->asset->{content}; } );

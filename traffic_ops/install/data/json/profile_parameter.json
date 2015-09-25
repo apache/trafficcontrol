@@ -238,9 +238,6 @@
 {"profile":"EDGE1_CDN_520","parameter":"LogObject.RollingOffsetHr","config_file":"logs_xml.config","value":"11"}
 {"profile":"EDGE1_CDN_520","parameter":"LogObject.RollingSizeMb","config_file":"logs_xml.config","value":"1024"}
 {"profile":"EDGE1_CDN_520","parameter":"location","config_file":"logs_xml.config","value":"/opt/trafficserver/etc/trafficserver"}
-{"profile":"CCR_CDN","parameter":"CDN_name","config_file":"rascal-config.txt","value":"cdn"}
-{"profile":"RASCAL_CDN","parameter":"CDN_name","config_file":"rascal-config.txt","value":"cdn"}
-{"profile":"EDGE1_CDN_520","parameter":"CDN_name","config_file":"rascal-config.txt","value":"cdn"}
 {"profile":"EDGE1_CDN_520","parameter":"CONFIG proxy.config.log.xml_config_file","config_file":"records.config","value":"STRING logs_xml.config"}
 {"profile":"RASCAL_CDN","parameter":"health.polling.interval","config_file":"rascal-config.txt","value":"8000"}
 {"profile":"RASCAL_CDN","parameter":"tm.dataServer.polling.url","config_file":"rascal-config.txt","value":"https://${tmHostname}/dataserver/orderby/id"}
@@ -360,7 +357,7 @@
 {"profile":"EDGE1_CDN_520","parameter":"record_types","config_file":"astats.config","value":"122"}
 {"profile":"EDGE1_CDN_520","parameter":"CONFIG proxy.config.body_factory.enable_customizations","config_file":"records.config","value":"INT 1"}
 {"profile":"EDGE1_CDN_520","parameter":"CONFIG proxy.config.http.negative_caching_lifetime","config_file":"records.config","value":"INT 1"}
-{"profile":"EDGE1_CDN_520","parameter":"cron_ort_syncds","config_file":"traffic_ops_ort_syncds.cron","value":"*/15 * * * * root /opt/ort/traffic_ops_ort.pl syncds warn https://tm.kabletown.net admin:password > /tmp/ort/syncds.log 2>&1"}
+{"profile":"EDGE1_CDN_520","parameter":"cron_ort_syncds","config_file":"traffic_ops_ort_syncds.cron","value":"*/15 * * * * root /opt/ort/traffic_ops_ort.pl syncds warn https://tm.kabletown.net admin:password> /tmp/ort/syncds.log 2>&1"}
 {"profile":"EDGE1_CDN_520","parameter":"location","config_file":"traffic_ops_ort_syncds.cron","value":"/etc/cron.d"}
 {"profile":"GLOBAL","parameter":"tm.traffic_mon_fwd_proxy","config_file":"global","value":"http://tm.kabletown.net:81"}
 {"profile":"EDGE1_CDN_520","parameter":"CONFIG proxy.config.body_factory.template_sets_dir","config_file":"records.config","value":"STRING etc/trafficserver/body_factory"}

@@ -118,6 +118,14 @@ sub ui_routes {
 	$r->route('/asns/:id/:mode')->via('GET')->over( authenticated => 1 )->to( 'Asn#view', namespace => $namespace );
 
 	# -- CDNs
+	$r->get('/cdns')->over( authenticated => 1 )->to( 'Cdn#index', namespace => $namespace );
+	$r->get('/cdn/add')->over( authenticated => 1 )->to( 'Cdn#add', namespace => $namespace );
+	$r->post('/cdn/create')->over( authenticated => 1 )->to( 'Cdn#create', namespace => $namespace );
+	$r->get('/cdn/:id/delete')->over( authenticated => 1 )->to( 'Cdn#delete', namespace => $namespace );
+	# mode is either 'edit' or 'view'.
+	$r->route('/cdn/:mode/:id')->via('GET')->over( authenticated => 1 )->to( 'Cdn#view', namespace => $namespace );
+	$r->post('/cdn/:id/update')->over( authenticated => 1 )->to( 'Cdn#update', namespace => $namespace );
+
 	$r->get('/cdns/:cdn_name/dnsseckeys/add')->over( authenticated => 1 )->to( 'DnssecKeys#add', namespace => $namespace );
 	$r->get('/cdns/:cdn_name/dnsseckeys/addksk')->over( authenticated => 1 )->to( 'DnssecKeys#addksk', namespace => $namespace );
 	$r->post('/cdns/dnsseckeys/create')->over( authenticated => 1 )->to( 'DnssecKeys#create', namespace => $namespace );
@@ -389,6 +397,9 @@ sub api_routes {
 		->to( 'CachegroupParameter#index', namespace => $namespace );
 	$r->get( "/api/$version/cachegroups/:parameter_id/parameter/available" => [ format => [qw(json)] ] )->over( authenticated => 1 )
 		->to( 'Cachegroup#available_for_parameter', namespace => $namespace );
+
+	# -- CDN -- #NEW
+	$r->get( "/api/$version/cdns" => [ format => [qw(json)] ] )->over( authenticated => 1 )->to( 'Cdn#index', namespace => $namespace );
 
 	# -- CHANGE LOG - #NEW
 	$r->get( "/api/$version/logs"            => [ format => [qw(json)] ] )->over( authenticated => 1 )->to( 'ChangeLog#index', namespace => $namespace );

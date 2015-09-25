@@ -24,6 +24,7 @@ my %definition_for = (
 		using => {
 			id                   => 1,
 			xml_id               => 'movies-c1',
+			display_name         => 'movies-c1',
 			active               => 1,
 			dscp                 => 40,
 			signed               => 0,
@@ -47,6 +48,7 @@ my %definition_for = (
 			check_path           => '/crossdomain.xml',
 			type                 => 8,
 			profile              => 5,
+			cdn_id               => 1,
 			edge_header_rewrite  => 'cond %{REMAP_PSEUDO_HOOK} __RETURN__ set-config proxy.config.http.transaction_active_timeout_out 5 [L]',
 			ipv6_routing_enabled => 1,
 			multi_site_origin    => 1,
@@ -58,6 +60,7 @@ my %definition_for = (
 		using => {
 			id                  => 2,
 			xml_id              => 'images-c1',
+			display_name        => 'images-c1',
 			active              => 1,
 			dscp                => 40,
 			signed              => 0,
@@ -81,6 +84,7 @@ my %definition_for = (
 			check_path          => '/crossdomain.xml',
 			type                => 9,
 			profile             => 5,
+			cdn_id              => 1,
 			edge_header_rewrite => 'rm-header Cache-Control [L]',
 		},
 	},
@@ -89,6 +93,7 @@ my %definition_for = (
 		using => {
 			id                  => 3,
 			xml_id              => 'games-c1',
+			display_name        => 'games-c1',
 			active              => 1,
 			dscp                => 40,
 			signed              => 0,
@@ -112,6 +117,7 @@ my %definition_for = (
 			check_path          => '/crossdomain.xml',
 			type                => 9,
 			profile             => 5,
+			cdn_id              => 1,
 			edge_header_rewrite => 'cond %{SEND_RESPONSE_HDR_HOOK} __RETURN__ add-header X-CDN-Info "KableTown___CACHE_IPV4__" [L]',
 		},
 	},
@@ -120,6 +126,7 @@ my %definition_for = (
 		using => {
 			id               => 4,
 			xml_id           => 'tv-c1',
+			display_name     => 'tv-c1',
 			active           => 1,
 			dscp             => 40,
 			signed           => 0,
@@ -143,6 +150,7 @@ my %definition_for = (
 			check_path       => '/crossdomain.xml',
 			type             => 13,
 			profile          => 5,
+			cdn_id           => 1,
 		},
 	},
 	ds_tv_nat_cdn2 => {
@@ -150,6 +158,7 @@ my %definition_for = (
 		using => {
 			id               => 11,
 			xml_id           => 'tv-nat-c2',
+			display_name     => 'tv-nat-c2',
 			active           => 0,
 			dscp             => 40,
 			signed           => 0,
@@ -173,6 +182,7 @@ my %definition_for = (
 			check_path       => '/crossdomain.xml',
 			type             => 24,
 			profile          => 8,
+			cdn_id           => 2,
 		},
 	},
 	ds_cdl_cdn2 => {
@@ -180,6 +190,7 @@ my %definition_for = (
 		using => {
 			id                  => 12,
 			xml_id              => 'cdl-c2',
+			display_name        => 'cdl-c2',
 			active              => 1,
 			dscp                => 40,
 			signed              => 1,
@@ -203,6 +214,7 @@ my %definition_for = (
 			check_path          => '/crossdomain.xml',
 			type                => 8,
 			profile             => 8,
+			cdn_id              => 2,
 			mid_header_rewrite  => 'cond %{REMAP_PSEUDO_HOOK} __RETURN__ set-config proxy.config.http.parent_origin.dead_server_retry_enabled 1',
 			edge_header_rewrite => 'add-header X-Powered-By: KBLTN [L]',
 		},
@@ -212,6 +224,7 @@ my %definition_for = (
 		using => {
 			id               => 13,
 			xml_id           => 'tv-local-c2',
+			display_name     => 'tv-local-c2',
 			active           => 1,
 			dscp             => 40,
 			signed           => 0,
@@ -235,6 +248,7 @@ my %definition_for = (
 			check_path       => '/crossdomain.xml',
 			type             => 13,
 			profile          => 8,
+			cdn_id           => 2,
 		},
 	},
 	ds_nocache_c2 => {
@@ -242,6 +256,7 @@ my %definition_for = (
 		using => {
 			id               => 14,
 			xml_id           => 'tv-nocache-c2',
+			display_name     => 'tv-nocache-c2',
 			active           => 1,
 			dscp             => 40,
 			signed           => 0,
@@ -265,6 +280,7 @@ my %definition_for = (
 			check_path       => '/crossdomain.xml',
 			type             => 11,
 			profile          => 8,
+			cdn_id           => 2,
 		},
 	},
 );
