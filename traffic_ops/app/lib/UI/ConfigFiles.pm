@@ -1258,6 +1258,7 @@ sub regex_remap_dot_config {
 		$text .= $ds->regex_remap . "\n";
 	}
 
+	$text =~ s/\s*__RETURN__\s*/\n/g;
 	return $text;
 }
 

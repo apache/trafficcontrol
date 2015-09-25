@@ -17,8 +17,6 @@
 # RPM spec file for Traffic Ops (tm).
 #
 
-%define traffic_ops_version @VERSION@
-%define build_number @BUILD_NO@
 %define TRAFFIC_OPS_USER trafops
 %define TRAFFIC_OPS_GROUP trafops
 %define TRAFFIC_OPS_LOG_DIR /var/log/traffic_ops
@@ -30,7 +28,7 @@ Release: %{build_number}
 License: N/A
 Group: Base System/System Tools
 Prefix: /opt/traffic_ops
-Source: $RPM_SOURCE_DIR/traffic_ops-%{traffic_ops_version}.tgz
+Source: %{_sourcedir}/traffic_ops-%{traffic_ops_version}.tgz
 URL: http://www.comcast.com
 Vendor: Comcast
 Packager: John Rushford <John_Rushford@cable.comcast.com>
@@ -45,10 +43,9 @@ Requires(postun): /usr/sbin/userdel
 %description
 Installs Traffic Ops.
 
-Built: @BUILT@
+Built: %(date) by %{getenv: USER}
 
 %prep
-
 %setup
 
 %install

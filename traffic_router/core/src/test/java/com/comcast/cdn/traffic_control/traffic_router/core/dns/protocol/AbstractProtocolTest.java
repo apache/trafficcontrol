@@ -84,7 +84,7 @@ public class AbstractProtocolTest {
 
         abstractProtocol.run();
 
-        verify(accessLogger).info("144140678.000 qtype=DNS chi=192.168.23.45 ttms=345 xn=65535 fqdn=www.example.com. type=A class=IN ttl=12345 rcode=NOERROR rtype=- rerr=\"-\" ans=\"192.168.8.9\"");
+        verify(accessLogger).info("144140678.000 qtype=DNS chi=192.168.23.45 ttms=345 xn=65535 fqdn=www.example.com. type=A class=IN ttl=12345 rcode=NOERROR rtype=- rdetails=- rerr=\"-\" ans=\"192.168.8.9\"");
     }
 
     @Test
@@ -107,7 +107,7 @@ public class AbstractProtocolTest {
         abstractProtocol.setNameServer(nameServer);
         abstractProtocol.run();
 
-        verify(accessLogger).info("144140678.000 qtype=DNS chi=192.168.23.45 ttms=345 xn=65535 fqdn=John\\032Wayne. type=TYPE65530 class=CLASS43210 ttl=0 rcode=REFUSED rtype=- rerr=\"-\" ans=\"-\"");
+        verify(accessLogger).info("144140678.000 qtype=DNS chi=192.168.23.45 ttms=345 xn=65535 fqdn=John\\032Wayne. type=TYPE65530 class=CLASS43210 ttl=0 rcode=REFUSED rtype=- rdetails=- rerr=\"-\" ans=\"-\"");
     }
 
     @Test
@@ -118,7 +118,7 @@ public class AbstractProtocolTest {
             abstractProtocol.run();
             fail("Should have caught illegal arguement exception");
         } catch (IllegalArgumentException e) {
-            verify(accessLogger).info("144140678.000 qtype=DNS chi=192.168.23.45 ttms=345 xn=- fqdn=- type=- class=- ttl=- rcode=- rtype=- rerr=\"Bad Request:WireParseException:end of input\" ans=\"-\"");
+            verify(accessLogger).info("144140678.000 qtype=DNS chi=192.168.23.45 ttms=345 xn=- fqdn=- type=- class=- ttl=- rcode=- rtype=- rdetails=- rerr=\"Bad Request:WireParseException:end of input\" ans=\"-\"");
         }
     }
 
@@ -142,7 +142,7 @@ public class AbstractProtocolTest {
         abstractProtocol.setNameServer(nameServer);
         abstractProtocol.run();
 
-        verify(accessLogger).info("144140678.000 qtype=DNS chi=192.168.23.45 ttms=345 xn=65535 fqdn=John\\032Wayne. type=TYPE65530 class=CLASS43210 ttl=0 rcode=SERVFAIL rtype=- rerr=\"Server Error:RuntimeException:Aw snap!\" ans=\"-\"");
+        verify(accessLogger).info("144140678.000 qtype=DNS chi=192.168.23.45 ttms=345 xn=65535 fqdn=John\\032Wayne. type=TYPE65530 class=CLASS43210 ttl=0 rcode=SERVFAIL rtype=- rdetails=- rerr=\"Server Error:RuntimeException:Aw snap!\" ans=\"-\"");
 
     }
 
