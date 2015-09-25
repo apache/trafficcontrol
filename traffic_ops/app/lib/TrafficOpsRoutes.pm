@@ -168,7 +168,12 @@ sub ui_routes {
 	$r->get('/dstmuser/:ds/:tm_user_id/delete')->over( authenticated => 1 )->to( 'DeliveryServiceTmUser#delete', namespace => $namespace );
 
 	# -- Federation Mapping
-	$r->get('/federation')->over( authenticated => 1 )->to( 'Federation#index', namespace => $namespace );
+	$r->get('/federation_mapping')->over( authenticated => 1 )->to( 'FederationMapping#index', namespace => $namespace );
+	$r->get('/federation_mapping/:id/edit')->name("federation_mapping_edit")->over( authenticated => 1 )
+		->to( 'FederationMapping#edit', namespace => $namespace );
+	$r->get('/federation_mapping/add')->name('federation_mapping_add')->over( authenticated => 1 )->to( 'FederationMapping#add', namespace => $namespace );
+	$r->post('/federation_mapping')->name('federation_mapping_create')->to( 'FederationMapping#create', namespace => $namespace );
+	$r->post('/federation_mapping/:id')->name('federation_mapping_update')->to( 'FederationMapping#update', namespace => $namespace );
 
 	# -- Gendbdump - Get DB dump
 	$r->get('/dbdump')->over( authenticated => 1 )->to( 'GenDbDump#dbdump', namespace => $namespace );

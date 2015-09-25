@@ -26,41 +26,25 @@ alert(alertmsg);
 		<title><%= title %></title>
 		<link type="text/css" href="/css/site.css" rel="stylesheet" />
 		<script type="text/javascript" src="/js/application.js"></script>
-    <script>
-    %= include 'user/_listroles.js'
-    $(function () {
-      $(document).ready(function () {
-        listroles("NONE");
-        // Accordion
-        $("#accordion").accordion({
-            header: "h3",
-            autoHeight: false
-        });
-      });
-
-    });
-    </script>
   </head>
 
 <body>
-  <div id="accordion"  class="add_user_popup">
-     <div class="dialog_body" style="margin-left:10px;">
-      <h3><a href="#">Add User</a></h3>
+	<div id="accordion"  class="add_cachegroup_popup">
+<div class="dialog_body" style="margin-left:10px; height: 400px">
+      <h3><a href="#">Add Federation Mapping</a></h3>
 
-	  <div style="border: none; text-align:left; height: 80px; width: 100%;">
+	  <div style="border: none; text-align:left; height: 80px; width: 600px;">
 		%= include 'common/_errors'
 		%= include 'common/_flash'
 	  </div>
 
 	  <div style="margin-left:10px;">
-		%= form_for user_create => (id => 'user_create')  => begin 
-			%= include 'user/_form'
-			<div class="bottomButtons">
+		%= form_for federation_mapping_create => (id => 'federation_mapping_create')  => begin 
+			%= include 'federation_mapping/_form'
+			<div class="bottomButtons" style="margin-left: 285px;">
 			  <div style="float:left;">
-				 %= submit_button 'Add User', class=> 'button'
-			 </div>
-			  <div style="float:left;margin-left: 327px;">
-				 <button id="close_button" class="button">Close</button>
+				 %= submit_button 'Add Federation Mapping', class=> 'button'
+							<button id="close_button" class="button">Close</button>
 			 </div>
 			</div>
 		% end

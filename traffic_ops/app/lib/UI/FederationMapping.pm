@@ -1,4 +1,4 @@
-package UI::Federation;
+package UI::FederationMapping;
 #
 # Copyright 2015 Comcast Cable Communications Management, LLC
 #
@@ -41,7 +41,7 @@ sub add {
 	my $self = shift;
 
 	&stash_role($self);
-	$self->stash( tm_user => {}, fbox_layout => 1, mode => 'add' );
+	$self->stash( federation_mapping => {}, fbox_layout => 1, mode => 'add' );
 }
 
 # Read

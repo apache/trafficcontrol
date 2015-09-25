@@ -52,7 +52,7 @@ alert(alertmsg);
 	<body>
 
     <div id="accordion">
-	   <h3><a href="#">Edit User</a></h3>
+	   <h3><a href="#">Edit Federation Mapping</a></h3>
        <div class="dialog_body" style="width:550px;">
 
 				 %= include 'common/_errors'
@@ -60,10 +60,10 @@ alert(alertmsg);
 
 				 <div id="notice"></div>
 
-				<form id="edit_user_form" method="POST" action="/user/<%= $tm_user->id %>">
+				<form id="edit_federation_mapping_form" method="POST" action="/federation_mapping/<%= $federation_mapping->id %>">
 
 				   <div class="deliveryServicesForm">
-				        %= include 'user/_form'
+				        %= include 'federation_mapping/_form'
 				   <div class="deliveryServicesWidget">
 					   <h2>Assigned Delivery Services:</h2>
                        <select class='delivery-services' multiple name='deliveryservices' id='addDsSelect'>
@@ -73,35 +73,9 @@ alert(alertmsg);
                        </select>
 
 				   </div>
-				   <div style="margin-top:10px;padding:10px;">
-					 <a href="#" id="reset_button" class="button">Reset Password</a>
-					 %= submit_button 'Save', id => 'save_button', class=> 'button', style=> 'margin-left:250px;'
-					 <button id="close_button" class="button">Close</button>
-				   </div>
 				   </div>
 				</form>
 
-              <script type="text/javascript">
-
-					// wait for the DOM to be loaded 
-					$(document).ready(function () {
-						listroles("<%= $tm_user->role->id %>");
-						populateDeliveryservices();
-					 });
-
-					$("#reset_button").on("click",function(){
-						 var email_to = $('#tm_user-email').val();
-						 $.post("/user/<%= $tm_user->id %>/reset_password", $( "#edit_user_form" ).serialize(), function (data, status){
-						       	if (status == "success") {
-							   		$("#notice").text("Successfully sent password reset to: " + email_to);
-							   		$("#notice").attr("class", "flash-section");
-						 		} else {
-							   		$("#notice").text("Failed sending password reset to: " + email_to + " - Error: " + data);
-							   		$("#notice").attr("class", "flash-section");
-								};
-						 });
-					});
-              </script>
     </div>
   </div>
 </body>
