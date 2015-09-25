@@ -135,7 +135,6 @@ sub send_registration {
 
 sub edit {
 	my $self = shift;
-	my $sep  = "__NEWLINE__";                                             # the line separator sub that with \n in the .ep javascript
 	my $id   = $self->param('id');
 	my $dbh  = $self->db->resultset('TmUser')->search( { id => $id } );
 	my $data = $dbh->single;

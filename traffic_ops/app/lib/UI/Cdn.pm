@@ -285,20 +285,6 @@ sub ajob {
 	$self->render( json => \%data );
 }
 
-sub aextuser {
-	my $self = shift;
-	my %data = ( "aaData" => undef );
-
-	my $rs = $self->db->resultset('ExtUser');
-
-	while ( my $row = $rs->next ) {
-
-		my @line = [ $row->id, $row->username, $row->company, $row->name, $row->email, $row->phone, $row->last_updated ];
-		push( @{ $data{'aaData'} }, @line );
-	}
-	$self->render( json => \%data );
-}
-
 sub alog {
 	my $self = shift;
 	my %data = ( "aaData" => undef );
@@ -363,6 +349,20 @@ sub auser {
 	$self->render( json => \%data );
 }
 
+sub afederation_mapping {
+	my $self = shift;
+	my %data = ( "aaData" => undef );
+
+	my $rs = $self->db->resultset('FederationMapping')->search(undef);
+
+	while ( my $row = $rs->next ) {
+
+		my @line = [ $row->id, $row->name, $row->description, $row->cname, $row->ttl, $row->type->name, $row->last_updated ];
+		push( @{ $data{'aaData'} }, @line );
+	}
+	$self->render( json => \%data );
+}
+
 sub aprofile {
 	my $self = shift;
 	my %data = ( "aaData" => undef );
@@ -420,6 +420,7 @@ sub aregion {
 sub aadata {
 	my $self  = shift;
 	my $table = $self->param('table');
+	$self->app->log->debug( "table #-> " . $table );
 
 	if ( $table eq 'Serverstatus' ) {
 		&aserverstatus($self);
@@ -439,14 +440,14 @@ sub aadata {
 	elsif ( $table eq 'Hwinfo' ) {
 		&ahwinfo($self);
 	}
+	elsif ( $table eq 'FederationMapping' ) {
+		&afederation_mapping($self);
+	}
 	elsif ( $table eq 'ServerSelect' ) {
 		&aserver( $self, 1 );
 	}
 	elsif ( $table eq 'Log' ) {
 		&alog($self);
-	}
-	elsif ( $table eq 'Extuser' ) {
-		&aextuser($self);
 	}
 	elsif ( $table eq 'Job' ) {
 		&ajob($self);

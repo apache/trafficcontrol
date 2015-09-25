@@ -13,7 +13,7 @@
      See the License for the specific language governing permissions and
      limitations under the License.
  -->
-% title 'Users';
+% title 'Federation Mapping';
 % if (defined (flash 'alertmsg')) {
 <script>
 alert( "<%= flash 'alertmsg' %>" );
@@ -38,14 +38,14 @@ $(function () {
             {  "sTitle":"", "aTargets":[ 0 ], "bSortable":false, "mRender":function (data, type, full) {return renderEditColumn(full[0]);} }
       ],
       "bProcessing":true,
-			"sAjaxSource": "aadata/User"
+			"sAjaxSource": "aadata/FederationMapping"
 			});
 		activeTable = sTable;
 	  })
 
     function renderEditColumn(id) {
         % if ($priv_level >= 30) {
-          return "<a class='fancybox fancybox.iframe' href='/user/" + id + "/edit'>Edit</a>";
+          return "<a class='fancybox fancybox.iframe' href='/federation_mapping/" + id + "/edit'>Edit</a>";
         % } else {
           return "";
         % }
@@ -110,16 +110,11 @@ $(function () {
 					<thead>
 						<tr>
 							<td>id</td>
-							<td>Username</td>
-							<td>Role</td>
-							<td>Full Name</td>
-							<td>Company</td>
-							<td>Email</td>
-							<td>Phone No</td>
-							<td>UID</td>
-							<td>GID</td>
-							<td>Local User</td>
-							<td>New User</td>
+							<td>Name</td>
+							<td>Description</td>
+							<td>Cname</td>
+							<td>Ttl</td>
+							<td>Type</td>
 							<td>Last Updated</td>
 						</tr>
 					</thead>
