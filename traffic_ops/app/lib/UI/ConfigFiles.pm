@@ -485,7 +485,9 @@ sub ip_allow_data {
 				|| ( defined( $allow_locs{ $allow_row->cachegroup->id } ) && $allow_locs{ $allow_row->cachegroup->id } == 1 ) )
 			{
 				push( @allowed_netaddrips, NetAddr::IP->new( $allow_row->ip_address, $allow_row->ip_netmask ) );
-				push( @allowed_ipv6_netaddrips, NetAddr::IP->new( $allow_row->ip6_address ) );
+				if ( defined $allow_row->ip6_address ) {
+					push( @allowed_ipv6_netaddrips, NetAddr::IP->new( $allow_row->ip6_address ) );
+				}
 			}
 		}
 
