@@ -1,0 +1,445 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Traffic Router Administration &mdash; Traffic Control 1.1.6 documentation </title>
+  
+
+  
+  
+    <link rel="shortcut icon" href="../_static/favicon.ico"/>
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  
+
+  
+    <link rel="stylesheet" href="../_static/theme_overrides.css" type="text/css" />
+  
+
+  
+    <link rel="top" title="Traffic Control 1.1.6 documentation" href="../index.html"/>
+        <link rel="up" title="Administrator’s Guide" href="index.html"/>
+        <link rel="next" title="Traffic Stats Administration" href="traffic_stats.html"/>
+        <link rel="prev" title="Traffic Monitor Administration" href="traffic_monitor.html"/> 
+
+  
+  <script src="_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-nav-search">
+        
+
+        
+          <a href="/" class="icon icon-home"> Traffic Control
+        
+
+        
+          
+          <img src="../_static/tc_logo.png" class="logo" />
+        
+        </a>
+
+        
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+        
+      </div>
+
+      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+        
+          
+          
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../basics/index.html">CDN Basics</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../basics/content_delivery_networks.html">Content Delivery Networks</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../basics/http_11.html">HTTP 1.1</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../basics/caching_proxies.html">Caching Proxies</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../basics/cache_revalidation.html">Cache Control Headers and Revalidation</a></li>
+</ul>
+</li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../overview/index.html">Traffic Control Overview</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../overview/introduction.html">Introduction</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../overview/traffic_ops.html">Traffic Ops</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../overview/traffic_router.html">Traffic Router</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../overview/traffic_monitor.html">Traffic Monitor</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../overview/traffic_stats.html">Traffic Stats</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../overview/traffic_portal.html">Traffic Portal</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../overview/traffic_server.html">Traffic Server</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../overview/traffic_vault.html">Traffic Vault</a></li>
+</ul>
+</li>
+</ul>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="index.html">Administrator&#8217;s Guide</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="traffic_ops_install.html">Installing Traffic Ops</a></li>
+<li class="toctree-l2"><a class="reference internal" href="traffic_ops_config.html">Configuring Traffic Ops</a></li>
+<li class="toctree-l2"><a class="reference internal" href="traffic_ops_using.html">Using Traffic Ops</a></li>
+<li class="toctree-l2"><a class="reference internal" href="traffic_ops_extensions.html">Managing Traffic Ops Extensions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="traffic_monitor.html">Traffic Monitor Administration</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="">Traffic Router Administration</a></li>
+<li class="toctree-l2"><a class="reference internal" href="traffic_stats.html">Traffic Stats Administration</a></li>
+<li class="toctree-l2"><a class="reference internal" href="traffic_server.html">Traffic Server Administration</a></li>
+<li class="toctree-l2"><a class="reference internal" href="traffic_vault.html">Traffic Vault Administration</a></li>
+<li class="toctree-l2"><a class="reference internal" href="quick_howto/index.html">Quick How To Guides</a></li>
+</ul>
+</li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../development/index.html">Developer&#8217;s Guide</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../development/traffic_ops.html">Traffic Ops</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../development/traffic_router.html">Traffic Router</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../development/traffic_monitor.html">Traffic Monitor</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../development/traffic_stats.html">Traffic Stats</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../development/traffic_server.html">Traffic Server</a></li>
+</ul>
+</li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../faq/index.html">FAQ</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../faq/general.html">General</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../faq/development.html">Development</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../faq/administration.html">Running a Traffic Control CDN</a></li>
+</ul>
+</li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../glossary.html">Glossary</a></li>
+</ul>
+
+          
+        
+      </div>
+      &nbsp;
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="../index.html">Traffic Control</a>
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="../index.html">Traffic Control 1.1.6</a> &raquo;</li>
+      
+          <li><a href="index.html">Administrator&#8217;s Guide</a> &raquo;</li>
+      
+    <li>Traffic Router Administration</li>
+      <li class="wy-breadcrumbs-aside">
+        
+          <a href="../_sources/admin/traffic_router.txt" rel="nofollow"> View page source</a>
+        
+      </li>
+  </ul>
+  <hr/>
+</div>
+ 		  
+    		  <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      		  
+        		  <a href="traffic_stats.html" class="btn btn-neutral float-right" title="Traffic Stats Administration">Next <span class="fa fa-arrow-circle-right"></span></a>
+      		  
+      		  
+        		  <a href="traffic_monitor.html" class="btn btn-neutral" title="Traffic Monitor Administration"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      		  
+    		  </div>
+  		  
+          <div role="main" class="document">
+            
+  <div class="section" id="traffic-router-administration">
+<h1>Traffic Router Administration<a class="headerlink" href="#traffic-router-administration" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="installing-traffic-router">
+<h2>Installing Traffic Router<a class="headerlink" href="#installing-traffic-router" title="Permalink to this headline">¶</a></h2>
+<p>The following are requirements to ensure an accurate set up:</p>
+<ul class="simple">
+<li>CentOS 6</li>
+<li>4 vCPUs</li>
+<li>8GB RAM</li>
+<li>Successful install of Traffic Ops</li>
+<li>Successful install of Traffic Monitor</li>
+<li>Administrative access to Traffic Ops</li>
+</ul>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">Hardware requirements are generally doubled if DNSSEC is enabled</p>
+</div>
+<ol class="arabic simple">
+<li>If no suitable profile exists, create a new profile for Traffic Router.</li>
+</ol>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">The <code class="docutils literal"><span class="pre">CDN_name</span></code> parameter with a config file name of <code class="docutils literal"><span class="pre">rascal-config.txt</span></code> must exist in the profile and the value should be the name of the CDN for which this Traffic Router will be authoritative. This same parameter will be mapped to all profiles that participate in this CDN (edges, mids, Traffic Monitors, etc). See <a class="reference internal" href="traffic_ops_config.html#rl-param-prof"><em>Profile Parameters</em></a> for more information.</p>
+</div>
+<ol class="arabic" start="2">
+<li><p class="first">Enter the Traffic Router server into Traffic Ops, assign it to a Traffic Router profile, and ensure that its status is set to <code class="docutils literal"><span class="pre">ONLINE</span></code>.</p>
+</li>
+<li><p class="first">Ensure the FQDN of the Traffic Monitor is resolvable in DNS. This FQDN must be resolvable by the clients expected to use this CDN.</p>
+</li>
+<li><p class="first">Install a traffic router: <code class="docutils literal"><span class="pre">sudo</span> <span class="pre">yum</span> <span class="pre">install</span> <span class="pre">traffic_router</span></code>.</p>
+</li>
+<li><dl class="first docutils">
+<dt>Edit <code class="docutils literal"><span class="pre">/opt/traffic_router/conf/traffic_monitor.properties</span></code> and specify the correct online Traffic Monitor(s) for your CDN. See <a class="reference internal" href="#rl-tr-config-files"><em>Configuration files</em></a></dt>
+<dd><p class="first"># traffic_monitor.properties: url that should normally point to this file
+traffic_monitor.properties=file:/opt/traffic_router/conf/traffic_monitor.properties</p>
+<p class="last"># Frequency for reloading this file
+# traffic_monitor.properties.reload.period=60000</p>
+</dd>
+</dl>
+</li>
+<li><p class="first">Start Tomcat: <code class="docutils literal"><span class="pre">sudo</span> <span class="pre">service</span> <span class="pre">tomcat</span> <span class="pre">start</span></code>, and test lookups with dig and curl against that server.</p>
+</li>
+<li><p class="first">Snapshot CRConfig; See <a class="reference internal" href="traffic_ops_using.html#rl-snapshot-crconfig"><em>Snapshot CRConfig</em></a></p>
+</li>
+</ol>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">Once the CRConfig is snapshotted, live traffic will be sent to the new Traffic Routers provided that their status is set to <code class="docutils literal"><span class="pre">ONLINE</span></code>.</p>
+</div>
+<ol class="arabic simple" start="8">
+<li>Ensure that the parent domain (e.g.: kabletown.net) for the CDN&#8217;s top level domain (e.g.: cdn.kabletown.net) contains a delegation (NS records) for the new Traffic Router, and that the value specified matches the FQDN used in step 3.</li>
+</ol>
+</div>
+<div class="section" id="configuring-traffic-router">
+<h2>Configuring Traffic Router<a class="headerlink" href="#configuring-traffic-router" title="Permalink to this headline">¶</a></h2>
+<p>By default, Traffic Router installs all configuration files under <code class="docutils literal"><span class="pre">/opt/traffic_router/conf</span></code>. For the most part, the configuration files and parameters that follow are used to get Traffic Router online and communicating with various Traffic Control components. Once Traffic Router is successfully communicating with Traffic Control, configuration is mostly performed in Traffic Ops, and is distributed throughout Traffic Control via the CRConfig snapshot process. See <a class="reference internal" href="traffic_ops_using.html#rl-snapshot-crconfig"><em>Snapshot CRConfig</em></a> for more information. Please see the parameter documentation for Traffic Router in the Using Traffic Ops guide documented under <a class="reference internal" href="traffic_ops_using.html#rl-ccr-profile"><em>CCR Profile or Traffic Router Profile</em></a> for parameters that influence the behavior of Traffic Router via the CRConfig.</p>
+<div class="section" id="configuration-files">
+<span id="rl-tr-config-files"></span><h3>Configuration files<a class="headerlink" href="#configuration-files" title="Permalink to this headline">¶</a></h3>
+<table border="1" class="docutils">
+<colgroup>
+<col width="13%" />
+<col width="19%" />
+<col width="45%" />
+<col width="23%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">File name</th>
+<th class="head">Parameter</th>
+<th class="head">Description</th>
+<th class="head">Default Value</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td rowspan="4">traffic_monitor.properties</td>
+<td>traffic_monitor.bootstrap.hosts</td>
+<td>Traffic Monitor FQDNs and port if necessary, separated by a semicolon (;)</td>
+<td>N/A</td>
+</tr>
+<tr class="row-odd"><td>traffic_monitor.bootstrap.local</td>
+<td>Use only the Traffic Monitors specified in config file</td>
+<td>false</td>
+</tr>
+<tr class="row-even"><td>traffic_monitor.properties</td>
+<td>Path to the traffic_monitor.properties file; used internally to monitor the file for changes</td>
+<td>/opt/traffic_router/traffic_monitor.properties</td>
+</tr>
+<tr class="row-odd"><td>traffic_monitor.properties.reload.period</td>
+<td>The interval in milliseconds which Traffic Router will reload this configuration file</td>
+<td>60000</td>
+</tr>
+<tr class="row-even"><td rowspan="8">dns.properties</td>
+<td>dns.tcp.port</td>
+<td>TCP port that Traffic Router will use for incoming DNS requests</td>
+<td>53</td>
+</tr>
+<tr class="row-odd"><td>dns.tcp.backlog</td>
+<td>Maximum length of the queue for incoming TCP connection requests</td>
+<td>0</td>
+</tr>
+<tr class="row-even"><td>dns.udp.port</td>
+<td>UDP port that Traffic Router will use for incoming DNS requests</td>
+<td>53</td>
+</tr>
+<tr class="row-odd"><td>dns.max-threads</td>
+<td>Maximum number of threads used to process incoming DNS requests</td>
+<td>1000</td>
+</tr>
+<tr class="row-even"><td>dns.zones.dir</td>
+<td>Path to auto generated zone files for reference</td>
+<td>/opt/traffic_router/var/auto-zones</td>
+</tr>
+<tr class="row-odd"><td>dns.routing.name</td>
+<td>The label (A/AAAA) Traffic Router will use for the entry point for a DNS delivery service</td>
+<td>edge (e.g.: edge.mydeliveryservice.kabletown.net)</td>
+</tr>
+<tr class="row-even"><td>dns.sec.keyserver.username</td>
+<td>Username to access the keyserver API in Traffic Ops (must be in the admin role)</td>
+<td>admin</td>
+</tr>
+<tr class="row-odd"><td>dns.sec.keyserver.password</td>
+<td>Password for the user specified in dns.sec.keyserver.username</td>
+<td>N/A</td>
+</tr>
+<tr class="row-even"><td>http.properties</td>
+<td>http.routing.name</td>
+<td>The label (A/AAAA) Traffic Router will use for the entry point for an HTTP delivery service</td>
+<td>tr (e.g.: tr.mydeliveryservice.kabletown.net)</td>
+</tr>
+<tr class="row-odd"><td rowspan="8">cache.properties</td>
+<td>cache.geolocation.database</td>
+<td>Full path to the local copy of the MaxMind geolocation binary database file</td>
+<td>/opt/traffic_router/db/GeoIP2-City.mmdb</td>
+</tr>
+<tr class="row-even"><td>cache.geolocation.database.refresh.period</td>
+<td>The interval in milliseconds which Traffic Router will poll for a new geolocation database</td>
+<td>604800000</td>
+</tr>
+<tr class="row-odd"><td>cache.czmap.database</td>
+<td>Full path to the local copy of the coverage zone file</td>
+<td>/opt/traffic_router/db/czmap.json</td>
+</tr>
+<tr class="row-even"><td>cache.czmap.database.refresh.period</td>
+<td>The interval in milliseconds which Traffic Router will poll for a new coverage zone file</td>
+<td>10800000</td>
+</tr>
+<tr class="row-odd"><td>cache.health.json</td>
+<td>Full path to the local copy of the health state</td>
+<td>/opt/traffic_router/db/health.json</td>
+</tr>
+<tr class="row-even"><td>cache.health.json.refresh.period</td>
+<td>The interval in milliseconds which Traffic Router will poll for a new health state file</td>
+<td>1000</td>
+</tr>
+<tr class="row-odd"><td>cache.config.json</td>
+<td>Full path to the local copy of the CRConfig</td>
+<td>/opt/traffic_router/db/cr-config.json</td>
+</tr>
+<tr class="row-even"><td>cache.config.json.refresh.period</td>
+<td>The interval in milliseconds which Traffic Router will poll for a new CRConfig</td>
+<td>60000</td>
+</tr>
+<tr class="row-odd"><td>log4j.properties</td>
+<td>various parameters</td>
+<td>Configuration of log4j is documented on their site; adjust as necessary based on needs</td>
+<td>N/A</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<div class="section" id="dnssec">
+<span id="rl-tr-dnssec"></span><h2>DNSSEC<a class="headerlink" href="#dnssec" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="overview">
+<h3>Overview<a class="headerlink" href="#overview" title="Permalink to this headline">¶</a></h3>
+<p>Domain Name System Security Extensions (DNSSEC) is a set of extensions to DNS that provides a cryptographic mechanism for resolvers to verify the authenticity of responses served by an authoritative DNS server.</p>
+<p>Several RFCs (4033, 4044, 4045) describe the low level details and define the extensions, RFC 7129 provides clarification around authenticated denial of existence of records, and finally RFC 6781 describes operational best practices for administering an authoritative DNSSEC enabled DNS server. The authenticated denial of existence RFC describes how an authoritative DNS server responds in NXDOMAIN and NODATA scenarios when DNSSEC is enabled.</p>
+<p>Traffic Router currently supports DNSSEC with NSEC, however, NSEC3 and more configurable options will be provided in the future.</p>
+</div>
+<div class="section" id="operation">
+<h3>Operation<a class="headerlink" href="#operation" title="Permalink to this headline">¶</a></h3>
+<p>Upon startup or a configuration change, Traffic Router obtains keys from the keystore API in Traffic Ops which returns key signing keys (KSK) and zone signing keys (ZSK) for each delivery service that is a subdomain off the CDN&#8217;s top level domain (TLD), in addition to the keys for the CDN TLD itself. Each key has timing information that allows Traffic Router to determine key validity (expiration, inception, and effective dates) in addition to the appropriate TTL to use for the DNSKEY record(s).  All TTLs are configurable parameters; see the <a class="reference internal" href="traffic_ops_using.html#rl-ccr-profile"><em>CCR Profile or Traffic Router Profile</em></a> documentation for more information.</p>
+<p>Once Traffic Router obtains the key data from the API, it converts each public key into the appropriate record types (DNSKEY, DS) to place in zones and uses the private key to sign zones. DNSKEY records are added to each delivery service&#8217;s zone (e.g.: mydeliveryservice.cdn.kabletown.net) for every valid key that exists, in addition to the CDN TLD&#8217;s zone. A DS record is generated from each zone&#8217;s KSK and is placed in the CDN TLD&#8217;s zone (e.g.: cdn.kabletown.net); the DS record for the CDN TLD must be placed in its parent zone, which is not managed by Traffic Control.</p>
+<p>The DNSKEY to DS record relationship allows resolvers to validate signatures across zone delegation points; with Traffic Control, we control all delegation points below the CDN&#8217;s TLD, <strong>however, the DS record for the CDN TLD must be placed in the parent zone (e.g.: kabletown.net), which is not managed by Traffic Control</strong>. As such, the DS record (available in the Traffic Ops DNSSEC administration UI) must be placed in the parent zone prior to enabling DNSSEC, and prior to generating a new CDN KSK. Based on your deployment&#8217;s DNS configuration, this might be a manual process or it might be automated; either way, extreme care and diligence must be taken and knowledge of the management of the upstream zone is imperative for a successful DNSSEC deployment.</p>
+</div>
+<div class="section" id="rolling-zone-signing-keys">
+<h3>Rolling Zone Signing Keys<a class="headerlink" href="#rolling-zone-signing-keys" title="Permalink to this headline">¶</a></h3>
+<p>Traffic Router currently follows the zone signing key pre-publishing operational best practice described in <a class="reference external" href="https://tools.ietf.org/html/rfc6781#section-4.1.1.1">section 4.1.1.1 of RFC 6781</a>. Once DNSSEC is enabled for a CDN in Traffic Ops, key rolls are triggered via Traffic Ops via the automated key generation process, and Traffic Router selects the active zone signing keys based on the expiration information returned from the keystore API in Traffic Ops.</p>
+</div>
+</div>
+<div class="section" id="troubleshooting-and-log-files">
+<h2>Troubleshooting and log files<a class="headerlink" href="#troubleshooting-and-log-files" title="Permalink to this headline">¶</a></h2>
+<p>Traffic Router log files are in <code class="docutils literal"><span class="pre">/opt/traffic_router/var/log</span></code>, and Tomcat log files are in <code class="docutils literal"><span class="pre">/opt/tomcat/logs</span></code>. Application related logging is in <code class="docutils literal"><span class="pre">/opt/traffic_router/var/log/traffic_router.log</span></code>, while access logs are written to <code class="docutils literal"><span class="pre">/opt/traffic_router/var/log/access.log</span></code>.</p>
+</div>
+</div>
+
+
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="traffic_stats.html" class="btn btn-neutral float-right" title="Traffic Stats Administration">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="traffic_monitor.html" class="btn btn-neutral" title="Traffic Monitor Administration"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../',
+            VERSION:'1.1.6',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true
+        };
+    </script>
+      <script type="text/javascript" src="../_static/jquery.js"></script>
+      <script type="text/javascript" src="../_static/underscore.js"></script>
+      <script type="text/javascript" src="../_static/doctools.js"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

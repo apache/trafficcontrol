@@ -1,0 +1,294 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Managing Traffic Ops Extensions &mdash; Traffic Control 1.1.6 documentation </title>
+  
+
+  
+  
+    <link rel="shortcut icon" href="../_static/favicon.ico"/>
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  
+
+  
+    <link rel="stylesheet" href="../_static/theme_overrides.css" type="text/css" />
+  
+
+  
+    <link rel="top" title="Traffic Control 1.1.6 documentation" href="../index.html"/>
+        <link rel="up" title="Administrator’s Guide" href="index.html"/>
+        <link rel="next" title="Traffic Monitor Administration" href="traffic_monitor.html"/>
+        <link rel="prev" title="Using Traffic Ops" href="traffic_ops_using.html"/> 
+
+  
+  <script src="_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-nav-search">
+        
+
+        
+          <a href="/" class="icon icon-home"> Traffic Control
+        
+
+        
+          
+          <img src="../_static/tc_logo.png" class="logo" />
+        
+        </a>
+
+        
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+        
+      </div>
+
+      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+        
+          
+          
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../basics/index.html">CDN Basics</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../basics/content_delivery_networks.html">Content Delivery Networks</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../basics/http_11.html">HTTP 1.1</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../basics/caching_proxies.html">Caching Proxies</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../basics/cache_revalidation.html">Cache Control Headers and Revalidation</a></li>
+</ul>
+</li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../overview/index.html">Traffic Control Overview</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../overview/introduction.html">Introduction</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../overview/traffic_ops.html">Traffic Ops</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../overview/traffic_router.html">Traffic Router</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../overview/traffic_monitor.html">Traffic Monitor</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../overview/traffic_stats.html">Traffic Stats</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../overview/traffic_portal.html">Traffic Portal</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../overview/traffic_server.html">Traffic Server</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../overview/traffic_vault.html">Traffic Vault</a></li>
+</ul>
+</li>
+</ul>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="index.html">Administrator&#8217;s Guide</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="traffic_ops_install.html">Installing Traffic Ops</a></li>
+<li class="toctree-l2"><a class="reference internal" href="traffic_ops_config.html">Configuring Traffic Ops</a></li>
+<li class="toctree-l2"><a class="reference internal" href="traffic_ops_using.html">Using Traffic Ops</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="">Managing Traffic Ops Extensions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="traffic_monitor.html">Traffic Monitor Administration</a></li>
+<li class="toctree-l2"><a class="reference internal" href="traffic_router.html">Traffic Router Administration</a></li>
+<li class="toctree-l2"><a class="reference internal" href="traffic_stats.html">Traffic Stats Administration</a></li>
+<li class="toctree-l2"><a class="reference internal" href="traffic_server.html">Traffic Server Administration</a></li>
+<li class="toctree-l2"><a class="reference internal" href="traffic_vault.html">Traffic Vault Administration</a></li>
+<li class="toctree-l2"><a class="reference internal" href="quick_howto/index.html">Quick How To Guides</a></li>
+</ul>
+</li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../development/index.html">Developer&#8217;s Guide</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../development/traffic_ops.html">Traffic Ops</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../development/traffic_router.html">Traffic Router</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../development/traffic_monitor.html">Traffic Monitor</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../development/traffic_stats.html">Traffic Stats</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../development/traffic_server.html">Traffic Server</a></li>
+</ul>
+</li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../faq/index.html">FAQ</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../faq/general.html">General</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../faq/development.html">Development</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../faq/administration.html">Running a Traffic Control CDN</a></li>
+</ul>
+</li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../glossary.html">Glossary</a></li>
+</ul>
+
+          
+        
+      </div>
+      &nbsp;
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="../index.html">Traffic Control</a>
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="../index.html">Traffic Control 1.1.6</a> &raquo;</li>
+      
+          <li><a href="index.html">Administrator&#8217;s Guide</a> &raquo;</li>
+      
+    <li>Managing Traffic Ops Extensions</li>
+      <li class="wy-breadcrumbs-aside">
+        
+          <a href="../_sources/admin/traffic_ops_extensions.txt" rel="nofollow"> View page source</a>
+        
+      </li>
+  </ul>
+  <hr/>
+</div>
+ 		  
+    		  <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      		  
+        		  <a href="traffic_monitor.html" class="btn btn-neutral float-right" title="Traffic Monitor Administration">Next <span class="fa fa-arrow-circle-right"></span></a>
+      		  
+      		  
+        		  <a href="traffic_ops_using.html" class="btn btn-neutral" title="Using Traffic Ops"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      		  
+    		  </div>
+  		  
+          <div role="main" class="document">
+            
+  <div class="section" id="managing-traffic-ops-extensions">
+<span id="admin-to-ext-script"></span><h1>Managing Traffic Ops Extensions<a class="headerlink" href="#managing-traffic-ops-extensions" title="Permalink to this headline">¶</a></h1>
+<p>Each script is a separate bash script located in <code class="docutils literal"><span class="pre">$TO_HOME/bin/checks/</span></code>.</p>
+<p>The extensions must be registered with Traffic Ops in order to display a column on the Server Check page. The list of currently registered extensions can be listed by running <code class="docutils literal"><span class="pre">/opt/traffic_ops/app/bin/extensions</span> <span class="pre">-a</span></code>.</p>
+<p>The below extensions are automatically registered with the Traffic Ops database (<code class="docutils literal"><span class="pre">to_extension</span></code> table) at install time (see <code class="docutils literal"><span class="pre">traffic_ops/app/db/seeds.sql</span></code>). However, cron must still be configured to run these checks periodically.</p>
+<p>The scripts are called as follows:</p>
+<div class="highlight-python"><div class="highlight"><pre>$TO_HOME/bin/checks/To&lt;name&gt;Check.pl  -c &quot;{\&quot;base_url\&quot;: \&quot;,https://\&quot;&lt;traffic_ops_ip&gt;\&quot;, \&quot;check_name\&quot;: \&quot;&lt;check_name&gt;\&quot;}&quot; -l &lt;log level&gt;
+where:
+
+&lt;name&gt; is the type of check script
+&lt;traffic_ops_ip&gt; is the IP address of the Traffic Ops Server
+&lt;check_name&gt; is the name of the check. For example: CDU, CHR, DSCP, MTU, etc...
+&lt;log_level&gt; is between 1 and 4, with 4 being the most verbose. This field is optional
+</pre></div>
+</div>
+<div class="section" id="example-cron-file">
+<h2>Example Cron File<a class="headerlink" href="#example-cron-file" title="Permalink to this headline">¶</a></h2>
+<p>Edit with <code class="docutils literal"><span class="pre">crontab</span> <span class="pre">-e</span></code>. You may need to adjust the path to your $TO_HOME to match your system.</p>
+<div class="highlight-python"><div class="highlight"><pre>PERL5LIB=/opt/traffic_ops/app/local/lib/perl5:/opt/traffic_ops/app/lib
+
+0 * * * * /opt/traffic_ops/app/bin/checks/ToPingCheck.pl -c &quot;{\&quot;base_url\&quot;: \&quot;https://localhost\&quot;, \&quot;check_name\&quot;: \&quot;10G6\&quot;}&quot; &gt;&gt; /var/log/traffic_ops/extensionCheck.log 2&gt;&amp;1
+
+9 * * * * /opt/traffic_ops/app/bin/checks/ToPingCheck.pl -c &quot;{\&quot;base_url\&quot;: \&quot;https://localhost\&quot;, \&quot;check_name\&quot;: \&quot;ILO\&quot;}&quot; &gt;&gt; /var/log/traffic_ops/extensionCheck.log 2&gt;&amp;1
+
+18 * * * * /opt/traffic_ops/app/bin/checks/ToPingCheck.pl -c &quot;{\&quot;base_url\&quot;: \&quot;https://localhost\&quot;, \&quot;check_name\&quot;: \&quot;10G\&quot;}&quot; &gt;&gt; /var/log/traffic_ops/extensionCheck.log 2&gt;&amp;1
+
+27 * * * * /opt/traffic_ops/app/bin/checks/ToPingCheck.pl -c &quot;{\&quot;base_url\&quot;: \&quot;https://localhost\&quot;, \&quot;check_name\&quot;: \&quot;FQDN\&quot;, \&quot;select\&quot;: [\&quot;hostName\&quot;, \&quot;domainName\&quot;]}&quot;  &gt;&gt; /var/log/traffic_ops/extensionCheck.log 2&gt;&amp;1
+
+36 * * * * /opt/traffic_ops/app/bin/checks/ToDSCPCheck.pl -c &quot;{\&quot;base_url\&quot;: \&quot;https://localhost\&quot;, \&quot;check_name\&quot;: \&quot;DSCP\&quot;}&quot;  &gt;&gt; /var/log/traffic_ops/extensionCheck.log 2&gt;&amp;1g
+
+45 * * * * /opt/traffic_ops/app/bin/checks/ToMTUCheck.pl -c &quot;{\&quot;base_url\&quot;: \&quot;https://localhost\&quot;, \&quot;check_name\&quot;: \&quot;MTU\&quot;}&quot;  &gt;&gt; /var/log/traffic_ops/extensionCheck.log 2&gt;&amp;1
+
+10 * * * * /opt/traffic_ops/app/bin/checks/ToRTRCheck.pl -c &quot;{\&quot;base_url\&quot;: \&quot;https://localhost\&quot;, \&quot;check_name\&quot;: \&quot;RTR\&quot;}&quot;  &gt;&gt; /var/log/traffic_ops/extensionCheck.log 2&gt;&amp;1
+
+0,15,30,45 * * * * /opt/traffic_ops/app/bin/checks/ToCHRCheck.pl -c &quot;{\&quot;base_url\&quot;: \&quot;https://localhost\&quot;, \&quot;check_name\&quot;: \&quot;CHR\&quot;}&quot;  &gt;&gt; /var/log/traffic_ops/extensionCheck.log 2&gt;&amp;1
+
+20 * * * * /opt/traffic_ops/app/bin/checks/ToCDUCheck.pl -c &quot;{\&quot;base_url\&quot;: \&quot;https://localhost\&quot;, \&quot;check_name\&quot;: \&quot;CDU\&quot;}&quot;  &gt;&gt; /var/log/traffic_ops/extensionCheck.log 2&gt;&amp;1
+
+40 * * * * /opt/traffic_ops/app/bin/checks/ToORTCheck.pl -c &quot;{\&quot;base_url\&quot;: \&quot;https://localhost\&quot;, \&quot;check_name\&quot;: \&quot;ORT\&quot;}&quot;  &gt;&gt; /var/log/traffic_ops/extensionCheck.log 2&gt;&amp;1
+</pre></div>
+</div>
+</div>
+</div>
+
+
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="traffic_monitor.html" class="btn btn-neutral float-right" title="Traffic Monitor Administration">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="traffic_ops_using.html" class="btn btn-neutral" title="Using Traffic Ops"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../',
+            VERSION:'1.1.6',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true
+        };
+    </script>
+      <script type="text/javascript" src="../_static/jquery.js"></script>
+      <script type="text/javascript" src="../_static/underscore.js"></script>
+      <script type="text/javascript" src="../_static/doctools.js"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

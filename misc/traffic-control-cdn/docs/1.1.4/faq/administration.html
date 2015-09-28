@@ -1,0 +1,348 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Running a Traffic Control CDN &mdash; Traffic Control 1.1.4 documentation </title>
+  
+
+  
+  
+    <link rel="shortcut icon" href="../_static/favicon.ico"/>
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  
+
+  
+    <link rel="stylesheet" href="../_static/theme_overrides.css" type="text/css" />
+  
+
+  
+    <link rel="top" title="Traffic Control 1.1.4 documentation" href="../index.html"/>
+        <link rel="up" title="FAQ" href="index.html"/>
+        <link rel="next" title="Glossary" href="../glossary.html"/>
+        <link rel="prev" title="Development" href="development.html"/> 
+
+  
+  <script src="_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-nav-search">
+        
+
+        
+          <a href="/" class="icon icon-home"> Traffic Control
+        
+
+        
+          
+          <img src="../_static/tc_logo.png" class="logo" />
+        
+        </a>
+
+        
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+        
+      </div>
+
+      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+        
+          
+          
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../basics/index.html">CDN Basics</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../basics/content_delivery_networks.html">Content Delivery Networks</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../basics/http_11.html">HTTP 1.1</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../basics/caching_proxies.html">Caching Proxies</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../basics/cache_revalidation.html">Cache Control Headers and Revalidation</a></li>
+</ul>
+</li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../overview/index.html">Traffic Control Overview</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../overview/introduction.html">Introduction</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../overview/traffic_ops.html">Traffic Ops</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../overview/traffic_router.html">Traffic Router</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../overview/traffic_monitor.html">Traffic Monitor</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../overview/traffic_stats.html">Traffic Stats</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../overview/traffic_portal.html">Traffic Portal</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../overview/traffic_server.html">Traffic Server</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../overview/traffic_vault.html">Traffic Vault</a></li>
+</ul>
+</li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../admin/index.html">Administrator&#8217;s Guide</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../admin/traffic_ops_install.html">Installing Traffic Ops</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../admin/traffic_ops_config.html">Configuring Traffic Ops</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../admin/traffic_ops_using.html">Using Traffic Ops</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../admin/traffic_ops_extensions.html">Managing Traffic Ops Extensions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../admin/traffic_monitor.html">Traffic Monitor Administration</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../admin/traffic_router.html">Traffic Router Administration</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../admin/traffic_stats.html">Traffic Stats Administration</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../admin/traffic_server.html">Traffic Server Administration</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../admin/traffic_vault.html">Traffic Vault Administration</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../admin/quick_howto/index.html">Quick How To Guides</a></li>
+</ul>
+</li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../development/index.html">Developer&#8217;s Guide</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../development/traffic_ops.html">Traffic Ops</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../development/traffic_router.html">Traffic Router</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../development/traffic_monitor.html">Traffic Monitor</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../development/traffic_stats.html">Traffic Stats</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../development/traffic_server.html">Traffic Server</a></li>
+</ul>
+</li>
+</ul>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="index.html">FAQ</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="general.html">General</a></li>
+<li class="toctree-l2"><a class="reference internal" href="development.html">Development</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="">Running a Traffic Control CDN</a></li>
+</ul>
+</li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../glossary.html">Glossary</a></li>
+</ul>
+
+          
+        
+      </div>
+      &nbsp;
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="../index.html">Traffic Control</a>
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="../index.html">Traffic Control 1.1.4</a> &raquo;</li>
+      
+          <li><a href="index.html">FAQ</a> &raquo;</li>
+      
+    <li>Running a Traffic Control CDN</li>
+      <li class="wy-breadcrumbs-aside">
+        
+          <a href="../_sources/faq/administration.txt" rel="nofollow"> View page source</a>
+        
+      </li>
+  </ul>
+  <hr/>
+</div>
+ 		  
+    		  <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      		  
+        		  <a href="../glossary.html" class="btn btn-neutral float-right" title="Glossary">Next <span class="fa fa-arrow-circle-right"></span></a>
+      		  
+      		  
+        		  <a href="development.html" class="btn btn-neutral" title="Development"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      		  
+    		  </div>
+  		  
+          <div role="main" class="document">
+            
+  <div class="section" id="running-a-traffic-control-cdn">
+<h1>Running a Traffic Control CDN<a class="headerlink" href="#running-a-traffic-control-cdn" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="why-is-my-crconfig-json-rejected">
+<h2>Why is my CRConfig.json rejected?<a class="headerlink" href="#why-is-my-crconfig-json-rejected" title="Permalink to this headline">¶</a></h2>
+<blockquote>
+<div><p>Especially in version 1.1.0, there&#8217;s a number of manual steps that need to be done after the initial install. Make sure that after the initial install, you perform these steps in order:</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">Even though Traffic Ops allows you to enter the servers with no IPv6 address information, the CRConfig will not be accepted by Traffic Router without IPv6 address information for at least Traffic Router and Traffic Monitor. Traffic Control assumes in a lot of places that all servers have at least an IPv4 and an IPv6 address. If you are not using IPv6, it is best to enter dummy addresses for all server types, and turn IPv6 off in all delivery services. (<a class="reference external" href="https://github.com/Comcast/traffic_control/issues/44">https://github.com/Comcast/traffic_control/issues/44</a>).</p>
+</div>
+<ul>
+<li><dl class="first docutils">
+<dt>Add users</dt>
+<dd><p class="first last">Not necessarily needed for getting your CRConfig accepted, but always a good idea.</p>
+</dd>
+</dl>
+</li>
+<li><dl class="first docutils">
+<dt>Add Divisions</dt>
+<dd><p class="first last">You will need at least one.</p>
+</dd>
+</dl>
+</li>
+<li><dl class="first docutils">
+<dt>Add Regions</dt>
+<dd><p class="first last">You will need at least one.</p>
+</dd>
+</dl>
+</li>
+<li><dl class="first docutils">
+<dt>Add Physical Locations</dt>
+<dd><p class="first last">You will need at least one.</p>
+</dd>
+</dl>
+</li>
+<li><dl class="first docutils">
+<dt>Add Mid tier Cache Groups</dt>
+<dd><p class="first last">You will need at least one.</p>
+</dd>
+</dl>
+</li>
+<li><dl class="first docutils">
+<dt>Add Edge tier Cache Groups</dt>
+<dd><blockquote class="first">
+<div><p>You will need at least one. After creating the edge cache group, go to <strong>Parameters &gt; All Profiles</strong>, type CDN_Name in the search box, and click &#8220;Edit&#8221; for any row of this parameter. Then in the Parameter detail view, click the <strong>Add Cachegroup</strong> button, select your newly created cachegroup, and click <strong>Save</strong>.</p>
+</div></blockquote>
+<p class="last">add CDN_Name parameter</p>
+</dd>
+</dl>
+</li>
+<li><dl class="first docutils">
+<dt>Add Traffic Monitors</dt>
+<dd><p class="first last">You will need to enter at least one Traffic Monitor - make sure to change the server status to <em>ONLINE</em>.</p>
+</dd>
+</dl>
+</li>
+<li><dl class="first docutils">
+<dt>Add Traffic Routers</dt>
+<dd><p class="first last">You will need to enter at least one Traffic Router - make sure to change the server status to <em>ONLINE</em>.</p>
+</dd>
+</dl>
+</li>
+<li><dl class="first docutils">
+<dt>Add Edges</dt>
+<dd><p class="first last">You will need at least one edge cache to make Traffic Router accept the CRConfig.</p>
+</dd>
+</dl>
+</li>
+<li><dl class="first docutils">
+<dt>Add Mid</dt>
+<dd><p class="first last">Technically you don&#8217;t need a mid tier, but if you have one, best to enter the info before continuing.</p>
+</dd>
+</dl>
+</li>
+<li><dl class="first docutils">
+<dt>Change the <code class="docutils literal"><span class="pre">polling.url</span></code> parameters to reflect your CDN</dt>
+<dd><p class="first last">Set where to get the coverage zone map, and the geo IP database.</p>
+</dd>
+</dl>
+</li>
+<li><dl class="first docutils">
+<dt>Create at least one delivery service, and assign at least one edge cache in REPORTED state to it.</dt>
+<dd><p class="first last">Even if it is a dummy DS, without a single DS, the CRConfig will not be accepted by Traffic Router.</p>
+</dd>
+</dl>
+</li>
+<li><dl class="first docutils">
+<dt>Snapshot CRConfig</dt>
+<dd><p class="first last"><strong>Tools &gt; Snapshot CRConfig</strong> diff, and write.</p>
+</dd>
+</dl>
+</li>
+</ul>
+<p>Now you are ready to install the sw on Traffic Monitor and then Traffic Router.</p>
+</div></blockquote>
+</div>
+</div>
+
+
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="../glossary.html" class="btn btn-neutral float-right" title="Glossary">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="development.html" class="btn btn-neutral" title="Development"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../',
+            VERSION:'1.1.4',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true
+        };
+    </script>
+      <script type="text/javascript" src="../_static/jquery.js"></script>
+      <script type="text/javascript" src="../_static/underscore.js"></script>
+      <script type="text/javascript" src="../_static/doctools.js"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

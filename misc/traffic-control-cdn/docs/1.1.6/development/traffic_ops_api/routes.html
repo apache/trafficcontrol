@@ -1,0 +1,423 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>API Routes &mdash; Traffic Control 1.1.6 documentation </title>
+  
+
+  
+  
+    <link rel="shortcut icon" href="../../_static/favicon.ico"/>
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  
+
+  
+    <link rel="stylesheet" href="../../_static/theme_overrides.css" type="text/css" />
+  
+
+  
+    <link rel="top" title="Traffic Control 1.1.6 documentation" href="../../index.html"/>
+        <link rel="up" title="Traffic Ops" href="../traffic_ops.html"/>
+        <link rel="next" title="ASN" href="v11/asn.html"/>
+        <link rel="prev" title="Traffic Ops" href="../traffic_ops.html"/> 
+
+  
+  <script src="_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-nav-search">
+        
+
+        
+          <a href="/" class="icon icon-home"> Traffic Control
+        
+
+        
+          
+          <img src="../../_static/tc_logo.png" class="logo" />
+        
+        </a>
+
+        
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+        
+      </div>
+
+      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+        
+          
+          
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../basics/index.html">CDN Basics</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../basics/content_delivery_networks.html">Content Delivery Networks</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../basics/http_11.html">HTTP 1.1</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../basics/caching_proxies.html">Caching Proxies</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../basics/cache_revalidation.html">Cache Control Headers and Revalidation</a></li>
+</ul>
+</li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../overview/index.html">Traffic Control Overview</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../overview/introduction.html">Introduction</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../overview/traffic_ops.html">Traffic Ops</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../overview/traffic_router.html">Traffic Router</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../overview/traffic_monitor.html">Traffic Monitor</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../overview/traffic_stats.html">Traffic Stats</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../overview/traffic_portal.html">Traffic Portal</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../overview/traffic_server.html">Traffic Server</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../overview/traffic_vault.html">Traffic Vault</a></li>
+</ul>
+</li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../admin/index.html">Administrator&#8217;s Guide</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../admin/traffic_ops_install.html">Installing Traffic Ops</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../admin/traffic_ops_config.html">Configuring Traffic Ops</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../admin/traffic_ops_using.html">Using Traffic Ops</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../admin/traffic_ops_extensions.html">Managing Traffic Ops Extensions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../admin/traffic_monitor.html">Traffic Monitor Administration</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../admin/traffic_router.html">Traffic Router Administration</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../admin/traffic_stats.html">Traffic Stats Administration</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../admin/traffic_server.html">Traffic Server Administration</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../admin/traffic_vault.html">Traffic Vault Administration</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../admin/quick_howto/index.html">Quick How To Guides</a></li>
+</ul>
+</li>
+</ul>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="../index.html">Developer&#8217;s Guide</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="../traffic_ops.html">Traffic Ops</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../traffic_router.html">Traffic Router</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../traffic_monitor.html">Traffic Monitor</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../traffic_stats.html">Traffic Stats</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../traffic_server.html">Traffic Server</a></li>
+</ul>
+</li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../faq/index.html">FAQ</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../faq/general.html">General</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../faq/development.html">Development</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../faq/administration.html">Running a Traffic Control CDN</a></li>
+</ul>
+</li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../glossary.html">Glossary</a></li>
+</ul>
+
+          
+        
+      </div>
+      &nbsp;
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="../../index.html">Traffic Control</a>
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="../../index.html">Traffic Control 1.1.6</a> &raquo;</li>
+      
+          <li><a href="../index.html">Developer&#8217;s Guide</a> &raquo;</li>
+      
+          <li><a href="../traffic_ops.html">Traffic Ops</a> &raquo;</li>
+      
+    <li>API Routes</li>
+      <li class="wy-breadcrumbs-aside">
+        
+          <a href="../../_sources/development/traffic_ops_api/routes.txt" rel="nofollow"> View page source</a>
+        
+      </li>
+  </ul>
+  <hr/>
+</div>
+ 		  
+    		  <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      		  
+        		  <a href="v11/asn.html" class="btn btn-neutral float-right" title="ASN">Next <span class="fa fa-arrow-circle-right"></span></a>
+      		  
+      		  
+        		  <a href="../traffic_ops.html" class="btn btn-neutral" title="Traffic Ops"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      		  
+    		  </div>
+  		  
+          <div role="main" class="document">
+            
+  <style>
+table {
+    table-layout: fixed;
+    width: 100%;
+}
+
+td {
+    word-wrap:break-word;
+}
+table.docutils col:nth-child(1) {
+    width: 30%;
+}
+table.docutils col:nth-child(2) {
+    width: 30%;
+}
+table.docutils col:nth-child(3) {
+    width: 30%;
+}
+.wy-nav-content {
+    max-width: 1200px;
+    width: 90%;
+}
+</style><div class="section" id="api-routes">
+<span id="to-api-routes"></span><h1>API Routes<a class="headerlink" href="#api-routes" title="Permalink to this headline">¶</a></h1>
+<table border="1" class="docutils">
+<colgroup>
+<col width="26%" />
+<col width="37%" />
+<col width="37%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">1.0</th>
+<th class="head">1.1</th>
+<th class="head">1.2</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td>/asns</td>
+<td><a class="reference internal" href="v11/asn.html#to-api-v11-asns-route"><em>/api/1.1/asns</em></a></td>
+<td><a class="reference internal" href="v12/asn.html#to-api-v12-asns-route"><em>/api/1.2/asns</em></a></td>
+</tr>
+<tr class="row-odd"><td>/availableds</td>
+<td><a class="reference internal" href="v11/deliveryservice.html#to-api-v11-ds-route"><em>/api/1.1/deliveryservices</em></a></td>
+<td><a class="reference internal" href="v12/deliveryservice.html#to-api-v12-ds-route"><em>/api/1.2/deliveryservices</em></a></td>
+</tr>
+<tr class="row-even"><td><em>Not Implemented</em></td>
+<td><em>Not Implemented</em></td>
+<td><a class="reference internal" href="v12/cache_stats.html#to-api-v12-cache-stats-route"><em>/api/1.2/cache_stats</em></a></td>
+</tr>
+<tr class="row-odd"><td>/datacrans</td>
+<td>/api/1.1/crans.json</td>
+<td>/api/1.2/crans.json</td>
+</tr>
+<tr class="row-even"><td>/datacrans/orderby/:field</td>
+<td>/api/1.1/crans.json</td>
+<td>/api/1.2/crans.json</td>
+</tr>
+<tr class="row-odd"><td>/datadeliveryservice</td>
+<td><a class="reference internal" href="v11/deliveryservice.html#to-api-v11-ds-route"><em>/api/1.1/deliveryservices</em></a></td>
+<td><a class="reference internal" href="v12/deliveryservice.html#to-api-v12-ds-route"><em>/api/1.2/deliveryservices</em></a></td>
+</tr>
+<tr class="row-even"><td>/datadeliveryserviceserver</td>
+<td>/api/1.1/deliveryserviceserver.json</td>
+<td>/api/1.2/deliveryserviceserver.json</td>
+</tr>
+<tr class="row-odd"><td>/datadomains</td>
+<td>/api/1.1/cdns/domains.json</td>
+<td>/api/1.2/cdns/domains.json</td>
+</tr>
+<tr class="row-even"><td><em>Not Implemented</em></td>
+<td><em>Not Implemented</em></td>
+<td><a class="reference internal" href="v12/deliveryservice_stats.html#to-api-v12-ds-stats-route"><em>/api/1.2/deliveryservice_stats</em></a></td>
+</tr>
+<tr class="row-odd"><td>/datahwinfo</td>
+<td><a class="reference internal" href="v11/hwinfo.html#to-api-v11-hwinfo-route"><em>/api/1.1/hwinfo</em></a></td>
+<td><a class="reference internal" href="v12/hwinfo.html#to-api-v12-hwinfo-route"><em>/api/1.2/hwinfo</em></a></td>
+</tr>
+<tr class="row-even"><td>/datalinks</td>
+<td>/api/1.1/deliveryserviceserver.json</td>
+<td>/api/1.2/deliveryserviceserver.json</td>
+</tr>
+<tr class="row-odd"><td>/datalinks/orderby/:field</td>
+<td>/api/1.1/deliveryserviceserver.json</td>
+<td>/api/1.2/deliveryserviceserver.json</td>
+</tr>
+<tr class="row-even"><td>/datalogs</td>
+<td><a class="reference internal" href="v11/changelog.html#to-api-v11-change-logs-route"><em>/api/1.1/logs</em></a></td>
+<td><a class="reference internal" href="v12/changelog.html#to-api-v12-change-logs-route"><em>/api/1.2/logs</em></a></td>
+</tr>
+<tr class="row-odd"><td>/datalocation/orderby/id</td>
+<td><a class="reference internal" href="v11/cachegroup.html#to-api-v11-cachegroups-route"><em>/api/1.1/cachegroups</em></a></td>
+<td><a class="reference internal" href="v12/cachegroup.html#to-api-v12-cachegroups-route"><em>/api/1.2/cachegroups</em></a></td>
+</tr>
+<tr class="row-even"><td>/datalocationparameters</td>
+<td><a class="reference internal" href="v11/cachegroup.html#to-api-v11-cachegroups-route"><em>/api/1.1/cachegroups</em></a></td>
+<td><a class="reference internal" href="v12/cachegroup.html#to-api-v12-cachegroups-route"><em>/api/1.2/cachegroups</em></a></td>
+</tr>
+<tr class="row-odd"><td>/dataparameter</td>
+<td><a class="reference internal" href="v11/parameter.html#to-api-v11-parameters-route"><em>/api/1.1/parameters</em></a></td>
+<td><a class="reference internal" href="v12/parameter.html#to-api-v12-parameters-route"><em>/api/1.2/parameters</em></a></td>
+</tr>
+<tr class="row-even"><td>/dataparameter/:parameter</td>
+<td>/api/1.1/parameters/profile/:parameter.json</td>
+<td>/api/1.2/parameters/profile/:parameter.json</td>
+</tr>
+<tr class="row-odd"><td>/dataphys_location</td>
+<td><a class="reference internal" href="v11/phys_location.html#to-api-v11-phys-loc-route"><em>/api/1.1/phys_locations</em></a></td>
+<td><a class="reference internal" href="v12/phys_location.html#to-api-v12-phys-loc-route"><em>/api/1.2/phys_locations</em></a></td>
+</tr>
+<tr class="row-even"><td><p class="first">/dataprofile</p>
+<p class="last">/dataprofile/orderby/name</p>
+</td>
+<td><a class="reference internal" href="v11/profile.html#to-api-v11-profiles-route"><em>/api/1.1/profiles</em></a></td>
+<td><a class="reference internal" href="v12/profile.html#to-api-v12-profiles-route"><em>/api/1.2/profiles</em></a></td>
+</tr>
+<tr class="row-odd"><td>/dataregion</td>
+<td><a class="reference internal" href="v11/region.html#to-api-v11-regions-route"><em>/api/1.1/regions</em></a></td>
+<td><a class="reference internal" href="v12/region.html#to-api-v12-regions-route"><em>/api/1.2/regions</em></a></td>
+</tr>
+<tr class="row-even"><td>/datarole</td>
+<td><a class="reference internal" href="v11/role.html#to-api-v11-roles-route"><em>/api/1.1/roles</em></a></td>
+<td><a class="reference internal" href="v12/role.html#to-api-v12-roles-route"><em>/api/1.2/roles</em></a></td>
+</tr>
+<tr class="row-odd"><td>/datarole/orderby/:field</td>
+<td><a class="reference internal" href="v11/role.html#to-api-v11-roles-route"><em>/api/1.1/roles</em></a></td>
+<td><a class="reference internal" href="v12/role.html#to-api-v12-roles-route"><em>/api/1.2/roles</em></a></td>
+</tr>
+<tr class="row-even"><td>/dataserver</td>
+<td><a class="reference internal" href="v11/server.html#to-api-v11-servers-route"><em>/api/1.1/servers</em></a></td>
+<td><a class="reference internal" href="v12/server.html#to-api-v12-servers-route"><em>/api/1.2/servers</em></a></td>
+</tr>
+<tr class="row-odd"><td>/dataserver/orderby/:field</td>
+<td><a class="reference internal" href="v11/server.html#to-api-v11-servers-route"><em>/api/1.1/servers</em></a></td>
+<td><a class="reference internal" href="v12/server.html#to-api-v12-servers-route"><em>/api/1.2/servers</em></a></td>
+</tr>
+<tr class="row-even"><td>/dataserverdetail/select/:hostname</td>
+<td>/api/1.1/servers/hostname/:hostname/details.json</td>
+<td>/api/1.2/servers/hostname/:hostname/details.json</td>
+</tr>
+<tr class="row-odd"><td>/datastaticdnsentry</td>
+<td><a class="reference internal" href="v11/static_dns.html#to-api-v11-static-dns-route"><em>/api/1.1/staticdnsentries</em></a></td>
+<td><a class="reference internal" href="v12/static_dns.html#to-api-v12-static-dns-route"><em>/api/1.2/staticdnsentries</em></a></td>
+</tr>
+<tr class="row-even"><td>/datastatus</td>
+<td><a class="reference internal" href="v11/status.html#to-api-v11-statuses-route"><em>/api/1.1/statuses</em></a></td>
+<td><a class="reference internal" href="v12/status.html#to-api-v12-statuses-route"><em>/api/1.2/statuses</em></a></td>
+</tr>
+<tr class="row-odd"><td>/datastatus/orderby/name</td>
+<td><a class="reference internal" href="v11/status.html#to-api-v11-statuses-route"><em>/api/1.1/statuses</em></a></td>
+<td><a class="reference internal" href="v12/status.html#to-api-v12-statuses-route"><em>/api/1.2/statuses</em></a></td>
+</tr>
+<tr class="row-even"><td>/datatype</td>
+<td><a class="reference internal" href="v11/type.html#to-api-v11-types-route"><em>/api/1.1/types</em></a></td>
+<td><a class="reference internal" href="v12/type.html#to-api-v12-types-route"><em>/api/1.2/types</em></a></td>
+</tr>
+<tr class="row-odd"><td>/datatype/orderby/:field</td>
+<td><a class="reference internal" href="v11/type.html#to-api-v11-types-route"><em>/api/1.1/types</em></a></td>
+<td><a class="reference internal" href="v12/type.html#to-api-v12-types-route"><em>/api/1.2/types</em></a></td>
+</tr>
+<tr class="row-even"><td>/datauser</td>
+<td><a class="reference internal" href="v11/user.html#to-api-v11-users-route"><em>/api/1.1/users</em></a></td>
+<td><a class="reference internal" href="v12/user.html#to-api-v12-users-route"><em>/api/1.2/users</em></a></td>
+</tr>
+<tr class="row-odd"><td>/datauser/orderby/:field</td>
+<td><a class="reference internal" href="v11/user.html#to-api-v11-users-route"><em>/api/1.1/users</em></a></td>
+<td><a class="reference internal" href="v12/user.html#to-api-v12-users-route"><em>/api/1.2/users</em></a></td>
+</tr>
+</tbody>
+</table>
+</div>
+
+
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="v11/asn.html" class="btn btn-neutral float-right" title="ASN">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="../traffic_ops.html" class="btn btn-neutral" title="Traffic Ops"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../../',
+            VERSION:'1.1.6',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true
+        };
+    </script>
+      <script type="text/javascript" src="../../_static/jquery.js"></script>
+      <script type="text/javascript" src="../../_static/underscore.js"></script>
+      <script type="text/javascript" src="../../_static/doctools.js"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="../../_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

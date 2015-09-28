@@ -1,0 +1,276 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Traffic Server &mdash; Traffic Control 1.1.4 documentation </title>
+  
+
+  
+  
+    <link rel="shortcut icon" href="../_static/favicon.ico"/>
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  
+
+  
+    <link rel="stylesheet" href="../_static/theme_overrides.css" type="text/css" />
+  
+
+  
+    <link rel="top" title="Traffic Control 1.1.4 documentation" href="../index.html"/>
+        <link rel="up" title="Traffic Control Overview" href="index.html"/>
+        <link rel="next" title="Traffic Vault" href="traffic_vault.html"/>
+        <link rel="prev" title="Traffic Portal" href="traffic_portal.html"/> 
+
+  
+  <script src="_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-nav-search">
+        
+
+        
+          <a href="/" class="icon icon-home"> Traffic Control
+        
+
+        
+          
+          <img src="../_static/tc_logo.png" class="logo" />
+        
+        </a>
+
+        
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+        
+      </div>
+
+      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+        
+          
+          
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../basics/index.html">CDN Basics</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../basics/content_delivery_networks.html">Content Delivery Networks</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../basics/http_11.html">HTTP 1.1</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../basics/caching_proxies.html">Caching Proxies</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../basics/cache_revalidation.html">Cache Control Headers and Revalidation</a></li>
+</ul>
+</li>
+</ul>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="index.html">Traffic Control Overview</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="introduction.html">Introduction</a></li>
+<li class="toctree-l2"><a class="reference internal" href="traffic_ops.html">Traffic Ops</a></li>
+<li class="toctree-l2"><a class="reference internal" href="traffic_router.html">Traffic Router</a></li>
+<li class="toctree-l2"><a class="reference internal" href="traffic_monitor.html">Traffic Monitor</a></li>
+<li class="toctree-l2"><a class="reference internal" href="traffic_stats.html">Traffic Stats</a></li>
+<li class="toctree-l2"><a class="reference internal" href="traffic_portal.html">Traffic Portal</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="">Traffic Server</a></li>
+<li class="toctree-l2"><a class="reference internal" href="traffic_vault.html">Traffic Vault</a></li>
+</ul>
+</li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../admin/index.html">Administrator&#8217;s Guide</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../admin/traffic_ops_install.html">Installing Traffic Ops</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../admin/traffic_ops_config.html">Configuring Traffic Ops</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../admin/traffic_ops_using.html">Using Traffic Ops</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../admin/traffic_ops_extensions.html">Managing Traffic Ops Extensions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../admin/traffic_monitor.html">Traffic Monitor Administration</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../admin/traffic_router.html">Traffic Router Administration</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../admin/traffic_stats.html">Traffic Stats Administration</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../admin/traffic_server.html">Traffic Server Administration</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../admin/traffic_vault.html">Traffic Vault Administration</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../admin/quick_howto/index.html">Quick How To Guides</a></li>
+</ul>
+</li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../development/index.html">Developer&#8217;s Guide</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../development/traffic_ops.html">Traffic Ops</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../development/traffic_router.html">Traffic Router</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../development/traffic_monitor.html">Traffic Monitor</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../development/traffic_stats.html">Traffic Stats</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../development/traffic_server.html">Traffic Server</a></li>
+</ul>
+</li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../faq/index.html">FAQ</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../faq/general.html">General</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../faq/development.html">Development</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../faq/administration.html">Running a Traffic Control CDN</a></li>
+</ul>
+</li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../glossary.html">Glossary</a></li>
+</ul>
+
+          
+        
+      </div>
+      &nbsp;
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="../index.html">Traffic Control</a>
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="../index.html">Traffic Control 1.1.4</a> &raquo;</li>
+      
+          <li><a href="index.html">Traffic Control Overview</a> &raquo;</li>
+      
+    <li>Traffic Server</li>
+      <li class="wy-breadcrumbs-aside">
+        
+          <a href="../_sources/overview/traffic_server.txt" rel="nofollow"> View page source</a>
+        
+      </li>
+  </ul>
+  <hr/>
+</div>
+ 		  
+    		  <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      		  
+        		  <a href="traffic_vault.html" class="btn btn-neutral float-right" title="Traffic Vault">Next <span class="fa fa-arrow-circle-right"></span></a>
+      		  
+      		  
+        		  <a href="traffic_portal.html" class="btn btn-neutral" title="Traffic Portal"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      		  
+    		  </div>
+  		  
+          <div role="main" class="document">
+            
+  <div class="section" id="traffic-server">
+<h1>Traffic Server<a class="headerlink" href="#traffic-server" title="Permalink to this headline">¶</a></h1>
+<p>The caches in a Traffic Control CDN are servers running the Apache Traffic Server software. See <a class="reference external" href="http://trafficserver.readthedocs.org/en/latest/">ATS documentation</a> for more information. Caches in a Traffic Control CDN are deployed in cache groups.</p>
+<div class="section" id="arrow-cache-group">
+<span id="rl-cachegroup"></span><h2><img alt="arrow" src="../_images/fwda1.png" /> Cache Group<a class="headerlink" href="#arrow-cache-group" title="Permalink to this headline">¶</a></h2>
+<blockquote>
+<div><p>A cache group is a logical group of caches that Traffic Router tries to use as a combined cache. Traffic Router treats all servers in a cache group as though they are in the same physical location, though they are in fact only in the same region (network). A cache group has one single set of geographical coordinates even if the caches that make up the cache group are in different physical locations. The caches in a cache group are not aware of the other caches in the group - there is no clustering software or communications between caches in a cache group.</p>
+<p>There are two types of cache groups: EDGE and MID. Traffic Control is a two tier system, where the clients get directed to the EDGE cache group. On cache miss, the cache in the EDGE cache group obtains content from a MID cache group, rather than the origin, which is shared with multiple EDGEs. EDGE cache groups are configured to have one single parent cache group.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">Often the EDGE to MID relationship is based on network distance, and does not necessarily match the geographic distance.</p>
+</div>
+<p>A cache group serves a particular part of the network as defined in the coverage zone file. See <a class="reference internal" href="../admin/traffic_ops_using.html#rl-asn-czf"><span>The Coverage Zone File and ASN Table</span></a>.</p>
+<p>Consider the example CDN below:</p>
+<img alt="../_images/cache_groups_1.png" class="align-center" src="../_images/cache_groups_1.png" />
+<p>There are two MID tier cache groups, each assigned with three EDGEs. The lax, den and chi EDGE locations are configured with the West MID as their parent, and the nyc, phl, and hou EDGEs, are configured with the East MID as their parent. On a cache miss, the EDGEs use their assigned parent.</p>
+</div></blockquote>
+<p>All caches (and other servers) are assigned a Profile in Traffic Ops.</p>
+</div>
+<div class="section" id="arrow-profile">
+<span id="rl-profile"></span><h2><img alt="arrow" src="../_images/fwda1.png" /> Profile<a class="headerlink" href="#arrow-profile" title="Permalink to this headline">¶</a></h2>
+<blockquote>
+<div>A Profile is a set of configuration settings and parameters, applied to a server. For a typical cache there are hundreds of configuration settings to apply. The Traffic Ops parameter view contains the defined settings, and bundled into groups using Profiles. Traffic Ops allows for duplication, comparison, import and export of Profiles.</div></blockquote>
+</div>
+</div>
+
+
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="traffic_vault.html" class="btn btn-neutral float-right" title="Traffic Vault">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="traffic_portal.html" class="btn btn-neutral" title="Traffic Portal"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../',
+            VERSION:'1.1.4',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true
+        };
+    </script>
+      <script type="text/javascript" src="../_static/jquery.js"></script>
+      <script type="text/javascript" src="../_static/underscore.js"></script>
+      <script type="text/javascript" src="../_static/doctools.js"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>
