@@ -54,7 +54,7 @@ Traffic Ops Project Tree Overview
   * /API - Mojo Controllers for the /API area of the application.
   * /Common - Common Code between both the API and UI areas.
   * /Extensions      
-  * Fixtures/ - Test Case fixture data for the ‘to_test’ database.
+  * Fixtures/ - Test Case fixture data for the 'to_test' database.
     * /Integration - Integration Tests.
   * /MojoPlugins - Mojolicious Plugins for Common Controller Code.
   * Schema/ - Database Schema area.
@@ -182,7 +182,7 @@ To install the Traffic Ops Developer environment:
 
     Type 'help;' or '\h' for help. Type '\c' to clear the current input statement.
 
-    mysql> create user ‘to_user’@’localhost’;
+    mysql> create user 'to_user'@'localhost';
     mysql> grant all on to_development.* to 'to_user'@'localhost' identified by 'twelve';
     mysql> grant all on to_test.* to 'to_user'@'localhost' identified by 'twelve';
     mysql> grant all on to_integration.* to 'to_user'@'localhost' identified by 'twelve';

@@ -62,7 +62,7 @@ Response Content Type: application/json
 
 
   {
-         “response”: [
+         "response": [
                 {
                         script_file: "ping",
                         version: "1.0.0",
