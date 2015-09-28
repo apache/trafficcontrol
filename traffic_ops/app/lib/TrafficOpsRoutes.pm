@@ -390,6 +390,10 @@ sub api_routes {
 	$r->get( "/api/$version/cachegroups/:parameter_id/parameter/available" => [ format => [qw(json)] ] )->over( authenticated => 1 )
 		->to( 'Cachegroup#available_for_parameter', namespace => $namespace );
 
+	# -- Federation
+	$r->get("/internal/api/$version/federations" => [ format => [qw(json)] ] )->over( authenticated => 1 )
+		->to( 'Federation#index', namespace => $namespace );
+
 	# -- CHANGE LOG - #NEW
 	$r->get( "/api/$version/logs"            => [ format => [qw(json)] ] )->over( authenticated => 1 )->to( 'ChangeLog#index', namespace => $namespace );
 	$r->get( "/api/$version/logs/:days/days" => [ format => [qw(json)] ] )->over( authenticated => 1 )->to( 'ChangeLog#index', namespace => $namespace );
