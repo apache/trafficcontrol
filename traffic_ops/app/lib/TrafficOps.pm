@@ -1,4 +1,5 @@
 package TrafficOps;
+
 #
 # Copyright 2015 Comcast Cable Communications Management, LLC
 #
@@ -97,7 +98,7 @@ sub startup {
 	$self->setup_logging($mode);
 	$self->validate_cdn_conf();
 	$self->setup_mojo_plugins();
-	$self->set_secret();
+	$self->set_secrets();
 
 	$self->log->info("-------------------------------------------------------------");
 	$self->log->info( "TrafficOps version: " . Utils::Helper::Version->current() . " is starting." );
@@ -199,11 +200,7 @@ sub setup_logging {
 		my $pwd = cwd();
 		$logging_root_dir = "$pwd/log";
 		$app_root_dir     = ".";
-		make_path(
-			$logging_root_dir, {
-				verbose => 1,
-			}
-		);
+		make_path( $logging_root_dir, { verbose => 1, } );
 	}
 	my $log4perl_conf = find_conf_path("$mode/log4perl.conf");
 	if ( -e $log4perl_conf ) {
@@ -265,6 +262,7 @@ sub setup_mojo_plugins {
 
 				# Check the User/Password flow
 				else {
+
 					# Check Local User (in the database)
 					( $logged_in_user, $is_authenticated ) = $self->check_local_user( $username, $pass );
 
@@ -447,19 +445,28 @@ sub login_to_ldap {
 	}
 }
 
+sub load_conf {
+	my $self      = shift;
+	my $conf_file = shift;
+
+	open( my $in, '<', $conf_file ) || die("$conf_file $!\n");
+	local $/;
+	my $conf_info = eval <$in>;
+	undef $in;
+	return $conf_info;
+}
+
 # Validates the conf/cdn.conf for certain criteria to
 # avoid admin mistakes.
 sub validate_cdn_conf {
 	my $self = shift;
 
-	my $cdn_conf = $ENV{'MOJO_CONFIG'};
-
-	open( IN, "< $cdn_conf" ) || die("$cdn_conf $!\n");
-	local $/;
-	my $cdn_info = eval <IN>;
-	close(IN);
-
+	my $cdn_info = $self->load_conf( $ENV{MOJO_CONFIG} );
 	my $user;
+	if ( !exists( $cdn_info->{shared_secret} ) ) {
+		print("WARNING: no shared_secret found in in $ENV{MOJO_CONFIG}.\n");
+	}
+
 	if ( exists( $cdn_info->{hypnotoad}{user} ) ) {
 		for my $u ( $cdn_info->{hypnotoad}{user} ) {
 			$u =~ s/.*?\?(.*)$/$1/;
@@ -507,19 +514,24 @@ sub validate_cdn_conf {
 	}
 }
 
-sub set_secret {
+sub set_secrets {
 	my $self = shift;
 
 	# Set secret / disable annoying log message
 	# The following commit details the change from secret to secrets in 4.63
 	# https://github.com/kraih/mojo/commit/57e5129436bf3d717a13e092dd972217938e29b5
+	my $cdn_info = $self->load_conf( $ENV{MOJO_CONFIG} );
+	# for backward compatability -- keep old secret if not found in cdn.conf
+	my $secrets  = $cdn_info->{secrets} // [ 'mONKEYDOmONKEYSEE.' ];
+	if ( ref $secrets ne 'ARRAY' ) {
+		my $e = Mojo::Exception->throw("Invalid 'secrets' entry in cdn.conf");
+	}
 	if ( $Mojolicious::VERSION >= 4.63 ) {
-		$self->secrets( ['mONKEYDOmONKEYSEE.'] );    # for Mojolicious 4.67, Top Hat
+		$self->secrets($secrets);    # for Mojolicious 4.67, Top Hat
 	}
 	else {
-		$self->secret('MonkeydoMonkeysee.');         # for Mojolicious 3.x
+		$self->secret( $secrets->[0] );    # for Mojolicious 3.x
 	}
-
 }
 
 1;
