@@ -1,0 +1,1838 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>CDN &mdash; Traffic Control 1.1.5-dev documentation </title>
+  
+
+  
+  
+    <link rel="shortcut icon" href="../../../_static/favicon.ico"/>
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  
+
+  
+    <link rel="stylesheet" href="../../../_static/theme_overrides.css" type="text/css" />
+  
+
+  
+    <link rel="top" title="Traffic Control 1.1.5-dev documentation" href="../../../index.html"/>
+        <link rel="up" title="Traffic Ops" href="../../traffic_ops.html"/>
+        <link rel="next" title="Change Logs" href="changelog.html"/>
+        <link rel="prev" title="Cache Group" href="cachegroup.html"/> 
+
+  
+  <script src="_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-nav-search">
+        
+
+        
+          <a href="/" class="icon icon-home"> Traffic Control
+        
+
+        
+          
+          <img src="../../../_static/tc_logo.png" class="logo" />
+        
+        </a>
+
+        
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+        
+      </div>
+
+      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+        
+          
+          
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../basics/index.html">CDN Basics</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../basics/content_delivery_networks.html">Content Delivery Networks</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../basics/http_11.html">HTTP 1.1</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../basics/caching_proxies.html">Caching Proxies</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../basics/cache_revalidation.html">Cache Control Headers and Revalidation</a></li>
+</ul>
+</li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../overview/index.html">Traffic Control Overview</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../overview/introduction.html">Introduction</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../overview/traffic_ops.html">Traffic Ops</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../overview/traffic_router.html">Traffic Router</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../overview/traffic_monitor.html">Traffic Monitor</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../overview/traffic_stats.html">Traffic Stats</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../overview/traffic_portal.html">Traffic Portal</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../overview/traffic_server.html">Traffic Server</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../overview/traffic_vault.html">Traffic Vault</a></li>
+</ul>
+</li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../admin/index.html">Administrator&#8217;s Guide</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../admin/traffic_ops_install.html">Installing Traffic Ops</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../admin/traffic_ops_config.html">Configuring Traffic Ops</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../admin/traffic_ops_using.html">Using Traffic Ops</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../admin/traffic_ops_extensions.html">Managing Traffic Ops Extensions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../admin/traffic_monitor.html">Traffic Monitor Administration</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../admin/traffic_router.html">Traffic Router Administration</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../admin/traffic_stats.html">Traffic Stats Administration</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../admin/traffic_server.html">Traffic Server Administration</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../admin/traffic_vault.html">Traffic Vault Administration</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../admin/quick_howto/index.html">Quick How To Guides</a></li>
+</ul>
+</li>
+</ul>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="../../index.html">Developer&#8217;s Guide</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="../../traffic_ops.html">Traffic Ops</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../traffic_router.html">Traffic Router</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../traffic_monitor.html">Traffic Monitor</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../traffic_stats.html">Traffic Stats</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../traffic_server.html">Traffic Server</a></li>
+</ul>
+</li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../faq/index.html">FAQ</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../faq/general.html">General</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../faq/development.html">Development</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../faq/administration.html">Running a Traffic Control CDN</a></li>
+</ul>
+</li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../glossary.html">Glossary</a></li>
+</ul>
+
+          
+        
+      </div>
+      &nbsp;
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="../../../index.html">Traffic Control</a>
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="../../../index.html">Traffic Control 1.1.5-dev</a> &raquo;</li>
+      
+          <li><a href="../../index.html">Developer&#8217;s Guide</a> &raquo;</li>
+      
+          <li><a href="../../traffic_ops.html">Traffic Ops</a> &raquo;</li>
+      
+    <li>CDN</li>
+      <li class="wy-breadcrumbs-aside">
+        
+          <a href="../../../_sources/development/traffic_ops_api/v11/cdn.txt" rel="nofollow"> View page source</a>
+        
+      </li>
+  </ul>
+  <hr/>
+</div>
+ 		  
+    		  <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      		  
+        		  <a href="changelog.html" class="btn btn-neutral float-right" title="Change Logs">Next <span class="fa fa-arrow-circle-right"></span></a>
+      		  
+      		  
+        		  <a href="cachegroup.html" class="btn btn-neutral" title="Cache Group"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      		  
+    		  </div>
+  		  
+          <div role="main" class="document">
+            
+  <div class="section" id="cdn">
+<span id="to-api-v11-cdn-health"></span><h1>CDN<a class="headerlink" href="#cdn" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="api-1-1-cdns">
+<span id="to-api-v11-cdn-health-route"></span><h2>/api/1.1/cdns<a class="headerlink" href="#api-1-1-cdns" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="health">
+<h2>Health<a class="headerlink" href="#health" title="Permalink to this headline">¶</a></h2>
+<p><strong>GET /api/1.1/cdns/health.json</strong></p>
+<blockquote>
+<div><p>Authentication Required: Yes</p>
+<p><strong>Response Properties</strong></p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="24%" />
+<col width="11%" />
+<col width="65%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">Parameter</th>
+<th class="head">Type</th>
+<th class="head">Description</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td><code class="docutils literal"><span class="pre">totalOnline</span></code></td>
+<td>int</td>
+<td>Total number of online caches across all CDNs.</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal"><span class="pre">totalOffline</span></code></td>
+<td>int</td>
+<td>Total number of offline caches across all CDNs.</td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal"><span class="pre">cachegroups</span></code></td>
+<td>array</td>
+<td>A collection of cache groups.</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal"><span class="pre">&gt;online</span></code></td>
+<td>int</td>
+<td>The number of online caches for the cache group</td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal"><span class="pre">&gt;offline</span></code></td>
+<td>int</td>
+<td>The number of offline caches for the cache
+group.</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal"><span class="pre">&gt;name</span></code></td>
+<td>string</td>
+<td>Cache group name.</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Response Example</strong></p>
+<div class="highlight-python"><div class="highlight"><pre><span class="p">{</span>
+ <span class="s">&quot;response&quot;</span><span class="p">:</span> <span class="p">{</span>
+    <span class="s">&quot;totalOnline&quot;</span><span class="p">:</span> <span class="mi">148</span><span class="p">,</span>
+    <span class="s">&quot;totalOffline&quot;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
+    <span class="s">&quot;cachegroups&quot;</span><span class="p">:</span> <span class="p">[</span>
+       <span class="p">{</span>
+          <span class="s">&quot;online&quot;</span><span class="p">:</span> <span class="mi">8</span><span class="p">,</span>
+          <span class="s">&quot;offline&quot;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
+          <span class="s">&quot;name&quot;</span><span class="p">:</span> <span class="s">&quot;us-co-denver&quot;</span>
+       <span class="p">},</span>
+       <span class="p">{</span>
+          <span class="s">&quot;online&quot;</span><span class="p">:</span> <span class="mi">7</span><span class="p">,</span>
+          <span class="s">&quot;offline&quot;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
+          <span class="s">&quot;name&quot;</span><span class="p">:</span> <span class="s">&quot;us-de-newcastle&quot;</span>
+       <span class="p">}</span>
+    <span class="p">]</span>
+ <span class="p">},</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</div></blockquote>
+<div class="line-block">
+<div class="line"><br /></div>
+</div>
+<p><strong>GET /api/1.1/cdns/:name/health.json</strong></p>
+<blockquote>
+<div><p>Retrieves the health of all locations (cache groups) for a given CDN.</p>
+<p>Authentication Required: Yes</p>
+<p><strong>Request Route Parameters</strong></p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="22%" />
+<col width="13%" />
+<col width="65%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">Name</th>
+<th class="head">Required</th>
+<th class="head">Description</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td><code class="docutils literal"><span class="pre">name</span></code></td>
+<td>yes</td>
+<td>&nbsp;</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Response Properties</strong></p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="24%" />
+<col width="11%" />
+<col width="65%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">Parameter</th>
+<th class="head">Type</th>
+<th class="head">Description</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td><code class="docutils literal"><span class="pre">totalOnline</span></code></td>
+<td>int</td>
+<td>Total number of online caches across the
+specified CDN.</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal"><span class="pre">totalOffline</span></code></td>
+<td>int</td>
+<td>Total number of offline caches across the
+specified CDN.</td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal"><span class="pre">cachegroups</span></code></td>
+<td>array</td>
+<td>A collection of cache groups.</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal"><span class="pre">&gt;online</span></code></td>
+<td>int</td>
+<td>The number of online caches for the cache group</td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal"><span class="pre">&gt;offline</span></code></td>
+<td>int</td>
+<td>The number of offline caches for the cache
+group.</td>
+</tr>
+<tr class="row-odd"><td><ul class="first last simple">
+<li><code class="docutils literal"><span class="pre">name</span></code></li>
+</ul>
+</td>
+<td>string</td>
+<td>Cache group name.</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Response Example</strong></p>
+<div class="highlight-python"><div class="highlight"><pre><span class="p">{</span>
+ <span class="s">&quot;response&quot;</span><span class="p">:</span> <span class="p">{</span>
+    <span class="s">&quot;totalOnline&quot;</span><span class="p">:</span> <span class="mi">148</span><span class="p">,</span>
+    <span class="s">&quot;totalOffline&quot;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
+    <span class="s">&quot;cachegroups&quot;</span><span class="p">:</span> <span class="p">[</span>
+       <span class="p">{</span>
+          <span class="s">&quot;online&quot;</span><span class="p">:</span> <span class="mi">8</span><span class="p">,</span>
+          <span class="s">&quot;offline&quot;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
+          <span class="s">&quot;name&quot;</span><span class="p">:</span> <span class="s">&quot;us-co-denver&quot;</span>
+       <span class="p">},</span>
+       <span class="p">{</span>
+          <span class="s">&quot;online&quot;</span><span class="p">:</span> <span class="mi">7</span><span class="p">,</span>
+          <span class="s">&quot;offline&quot;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
+          <span class="s">&quot;name&quot;</span><span class="p">:</span> <span class="s">&quot;us-de-newcastle&quot;</span>
+       <span class="p">}</span>
+    <span class="p">]</span>
+ <span class="p">},</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</div></blockquote>
+<div class="line-block">
+<div class="line"><br /></div>
+</div>
+<p><strong>GET /api/1.1/cdns/usage/overview.json</strong></p>
+<blockquote>
+<div><p>Retrieves the high-level CDN usage metrics.</p>
+<p>Authentication Required: Yes</p>
+<p><strong>Response Properties</strong></p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="28%" />
+<col width="10%" />
+<col width="62%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">Parameter</th>
+<th class="head">Type</th>
+<th class="head">Description</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td><code class="docutils literal"><span class="pre">currentGbps</span></code></td>
+<td>number</td>
+<td>&nbsp;</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal"><span class="pre">tps</span></code></td>
+<td>int</td>
+<td>&nbsp;</td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal"><span class="pre">maxGbps</span></code></td>
+<td>int</td>
+<td>&nbsp;</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Response Example</strong></p>
+<div class="highlight-python"><div class="highlight"><pre><span class="p">{</span>
+ <span class="s">&quot;response&quot;</span><span class="p">:</span> <span class="p">{</span>
+    <span class="s">&quot;currentGbps&quot;</span><span class="p">:</span> <span class="mf">149.368167</span><span class="p">,</span>
+    <span class="s">&quot;tps&quot;</span><span class="p">:</span> <span class="mi">36805</span><span class="p">,</span>
+    <span class="s">&quot;maxGbps&quot;</span><span class="p">:</span> <span class="mi">3961</span>
+ <span class="p">},</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</div></blockquote>
+<p><strong>GET /api/1.1/cdns/capacity.json</strong></p>
+<blockquote>
+<div><p>Retrieves the aggregate capacity percentages of all locations (cache groups) for a given CDN.</p>
+<p><strong>Response Properties</strong></p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="28%" />
+<col width="10%" />
+<col width="62%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">Parameter</th>
+<th class="head">Type</th>
+<th class="head">Description</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td><code class="docutils literal"><span class="pre">availablePercent</span></code></td>
+<td>number</td>
+<td>&nbsp;</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal"><span class="pre">unavailablePercent</span></code></td>
+<td>number</td>
+<td>&nbsp;</td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal"><span class="pre">utilizedPercent</span></code></td>
+<td>number</td>
+<td>&nbsp;</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal"><span class="pre">maintenancePercent</span></code></td>
+<td>number</td>
+<td>&nbsp;</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Response Example</strong></p>
+<div class="highlight-python"><div class="highlight"><pre><span class="p">{</span>
+ <span class="s">&quot;response&quot;</span><span class="p">:</span> <span class="p">{</span>
+    <span class="s">&quot;availablePercent&quot;</span><span class="p">:</span> <span class="mf">89.0939840205533</span><span class="p">,</span>
+    <span class="s">&quot;unavailablePercent&quot;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
+    <span class="s">&quot;utilizedPercent&quot;</span><span class="p">:</span> <span class="mf">10.9060020300395</span><span class="p">,</span>
+    <span class="s">&quot;maintenancePercent&quot;</span><span class="p">:</span> <span class="mf">0.0000139494071146245</span>
+ <span class="p">},</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</div></blockquote>
+<div class="line-block">
+<div class="line"><br /></div>
+</div>
+</div>
+<div class="section" id="routing">
+<span id="to-api-v11-cdn-routing"></span><h2>Routing<a class="headerlink" href="#routing" title="Permalink to this headline">¶</a></h2>
+<p><strong>GET /api/1.1/cdns/routing.json</strong></p>
+<blockquote>
+<div><p>Authentication Required: Yes</p>
+<p>Retrieves the aggregate routing percentages of all locations (cache groups) for a given CDN.</p>
+<p><strong>Response Properties</strong></p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="26%" />
+<col width="12%" />
+<col width="62%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">Parameter</th>
+<th class="head">Type</th>
+<th class="head">Description</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td><code class="docutils literal"><span class="pre">staticRoute</span></code></td>
+<td>number</td>
+<td>Used pre-configured DNS entries.</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal"><span class="pre">miss</span></code></td>
+<td>number</td>
+<td>No location available for client IP.</td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal"><span class="pre">geo</span></code></td>
+<td>number</td>
+<td>Used 3rd party geo-IP mapping.</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal"><span class="pre">err</span></code></td>
+<td>number</td>
+<td>Error localizing client IP.</td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal"><span class="pre">cz</span></code></td>
+<td>number</td>
+<td>Used Coverage Zone   geo-IP mapping.</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal"><span class="pre">dsr</span></code></td>
+<td>number</td>
+<td>Overflow traffic sent to secondary CDN.</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Response Example</strong></p>
+<div class="highlight-python"><div class="highlight"><pre><span class="p">{</span>
+  <span class="s">&quot;response&quot;</span><span class="p">:</span> <span class="p">{</span>
+     <span class="s">&quot;staticRoute&quot;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
+     <span class="s">&quot;miss&quot;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
+     <span class="s">&quot;geo&quot;</span><span class="p">:</span> <span class="mf">37.8855391018869</span><span class="p">,</span>
+     <span class="s">&quot;err&quot;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
+     <span class="s">&quot;cz&quot;</span><span class="p">:</span> <span class="mf">62.1144608981131</span><span class="p">,</span>
+     <span class="s">&quot;dsr&quot;</span><span class="p">:</span> <span class="mi">0</span>
+  <span class="p">},</span>
+ <span class="p">}</span>
+</pre></div>
+</div>
+</div></blockquote>
+<div class="line-block">
+<div class="line"><br /></div>
+</div>
+</div>
+<div class="section" id="metrics">
+<span id="to-api-v11-cdn-metrics"></span><h2>Metrics<a class="headerlink" href="#metrics" title="Permalink to this headline">¶</a></h2>
+<p><strong>GET /api/1.1/cdns/metric_types/:metric/start_date/:start/end_date/:end.json</strong></p>
+<blockquote>
+<div><p>Authentication Required: Yes</p>
+<p>Retrieves edge metrics of one or all locations (cache groups).</p>
+<p><strong>Request Route Parameters</strong></p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="31%" />
+<col width="19%" />
+<col width="50%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">Name</th>
+<th class="head">Required</th>
+<th class="head">Description</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td><code class="docutils literal"><span class="pre">metric_type</span></code></td>
+<td>yes</td>
+<td>ooff, origin_tps</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal"><span class="pre">start</span></code></td>
+<td>yes</td>
+<td>UNIX time, yesterday, now</td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal"><span class="pre">end</span></code></td>
+<td>yes</td>
+<td>UNIX time, yesterday, now</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Response Properties</strong></p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="50%" />
+<col width="19%" />
+<col width="31%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">Parameter</th>
+<th class="head">Type</th>
+<th class="head">Description</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td><code class="docutils literal"><span class="pre">stats</span></code></td>
+<td>hash</td>
+<td>&nbsp;</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal"><span class="pre">&gt;count</span></code></td>
+<td>string</td>
+<td>&nbsp;</td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal"><span class="pre">&gt;98thPercentile</span></code></td>
+<td>string</td>
+<td>&nbsp;</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal"><span class="pre">&gt;min</span></code></td>
+<td>string</td>
+<td>&nbsp;</td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal"><span class="pre">&gt;max</span></code></td>
+<td>string</td>
+<td>&nbsp;</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal"><span class="pre">&gt;5thPercentile</span></code></td>
+<td>string</td>
+<td>&nbsp;</td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal"><span class="pre">&gt;95thPercentile</span></code></td>
+<td>string</td>
+<td>&nbsp;</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal"><span class="pre">&gt;mean</span></code></td>
+<td>string</td>
+<td>&nbsp;</td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal"><span class="pre">&gt;sum</span></code></td>
+<td>string</td>
+<td>&nbsp;</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal"><span class="pre">data</span></code></td>
+<td>array</td>
+<td>&nbsp;</td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal"><span class="pre">&gt;time</span></code></td>
+<td>int</td>
+<td>&nbsp;</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal"><span class="pre">&gt;value</span></code></td>
+<td>number</td>
+<td>&nbsp;</td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal"><span class="pre">label</span></code></td>
+<td>string</td>
+<td>&nbsp;</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Response Example</strong></p>
+<div class="highlight-python"><div class="highlight"><pre><span class="p">{</span>
+ <span class="s">&quot;response&quot;</span><span class="p">:</span> <span class="p">[</span>
+    <span class="p">{</span>
+       <span class="s">&quot;stats&quot;</span><span class="p">:</span> <span class="p">{</span>
+          <span class="s">&quot;count&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span>
+          <span class="s">&quot;98thPercentile&quot;</span><span class="p">:</span> <span class="mf">1668.03</span><span class="p">,</span>
+          <span class="s">&quot;min&quot;</span><span class="p">:</span> <span class="mf">1668.03</span><span class="p">,</span>
+          <span class="s">&quot;max&quot;</span><span class="p">:</span> <span class="mf">1668.03</span><span class="p">,</span>
+          <span class="s">&quot;5thPercentile&quot;</span><span class="p">:</span> <span class="mf">1668.03</span><span class="p">,</span>
+          <span class="s">&quot;95thPercentile&quot;</span><span class="p">:</span> <span class="mf">1668.03</span><span class="p">,</span>
+          <span class="s">&quot;mean&quot;</span><span class="p">:</span> <span class="mf">1668.03</span><span class="p">,</span>
+          <span class="s">&quot;sum&quot;</span><span class="p">:</span> <span class="mf">1668.03</span>
+       <span class="p">},</span>
+       <span class="s">&quot;data&quot;</span><span class="p">:</span> <span class="p">[</span>
+          <span class="p">[</span>
+             <span class="mi">1425135900000</span><span class="p">,</span>
+             <span class="mf">1668.03</span>
+          <span class="p">],</span>
+          <span class="p">[</span>
+             <span class="mi">1425136200000</span><span class="p">,</span>
+             <span class="n">null</span>
+          <span class="p">]</span>
+       <span class="p">],</span>
+       <span class="s">&quot;label&quot;</span><span class="p">:</span> <span class="s">&quot;Origin TPS&quot;</span>
+    <span class="p">}</span>
+ <span class="p">],</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</div></blockquote>
+<div class="line-block">
+<div class="line"><br /></div>
+</div>
+</div>
+<div class="section" id="domains">
+<span id="to-api-v11-cdn-domains"></span><h2>Domains<a class="headerlink" href="#domains" title="Permalink to this headline">¶</a></h2>
+<p><strong>GET /api/1.1/cdns/domains.json</strong></p>
+<blockquote>
+<div><p>Authentication Required: Yes</p>
+<p><strong>Response Properties</strong></p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="28%" />
+<col width="10%" />
+<col width="62%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">Parameter</th>
+<th class="head">Type</th>
+<th class="head">Description</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td><code class="docutils literal"><span class="pre">profileId</span></code></td>
+<td>string</td>
+<td>&nbsp;</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal"><span class="pre">parameterId</span></code></td>
+<td>string</td>
+<td>&nbsp;</td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal"><span class="pre">profileName</span></code></td>
+<td>string</td>
+<td>&nbsp;</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal"><span class="pre">profileDescription</span></code></td>
+<td>string</td>
+<td>&nbsp;</td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal"><span class="pre">domainName</span></code></td>
+<td>string</td>
+<td>&nbsp;</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Response Example</strong></p>
+<div class="highlight-python"><div class="highlight"><pre><span class="p">{</span>
+ <span class="s">&quot;response&quot;</span><span class="p">:</span> <span class="p">[</span>
+    <span class="p">{</span>
+       <span class="s">&quot;profileId&quot;</span><span class="p">:</span> <span class="s">&quot;5&quot;</span><span class="p">,</span>
+       <span class="s">&quot;parameterId&quot;</span><span class="p">:</span> <span class="s">&quot;404&quot;</span><span class="p">,</span>
+       <span class="s">&quot;profileName&quot;</span><span class="p">:</span> <span class="s">&quot;CR_FOO&quot;</span><span class="p">,</span>
+       <span class="s">&quot;profileDescription&quot;</span><span class="p">:</span> <span class="s">&quot;Comcast Content Router for foo.domain.net&quot;</span><span class="p">,</span>
+       <span class="s">&quot;domainName&quot;</span><span class="p">:</span> <span class="s">&quot;foo.domain.net&quot;</span>
+    <span class="p">},</span>
+    <span class="p">{</span>
+       <span class="s">&quot;profileId&quot;</span><span class="p">:</span> <span class="s">&quot;8&quot;</span><span class="p">,</span>
+       <span class="s">&quot;parameterId&quot;</span><span class="p">:</span> <span class="s">&quot;405&quot;</span><span class="p">,</span>
+       <span class="s">&quot;profileName&quot;</span><span class="p">:</span> <span class="s">&quot;CR_BAR&quot;</span><span class="p">,</span>
+       <span class="s">&quot;profileDescription&quot;</span><span class="p">:</span> <span class="s">&quot;Comcast Content Router for bar.domain.net&quot;</span><span class="p">,</span>
+       <span class="s">&quot;domainName&quot;</span><span class="p">:</span> <span class="s">&quot;bar.domain.net&quot;</span>
+    <span class="p">}</span>
+ <span class="p">],</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</div></blockquote>
+<div class="line-block">
+<div class="line"><br /></div>
+</div>
+</div>
+<div class="section" id="topology">
+<span id="to-api-v11-cdn-topology"></span><h2>Topology<a class="headerlink" href="#topology" title="Permalink to this headline">¶</a></h2>
+<p><strong>GET /api/1.1/cdns/configs.json</strong></p>
+<blockquote>
+<div><p>Retrieves a list of the CDNs available.</p>
+<p>Authentication Required: Yes</p>
+<p><strong>Request Route Parameters</strong>
+None</p>
+<p><strong>Response Properties</strong></p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="29%" />
+<col width="10%" />
+<col width="60%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">Parameter</th>
+<th class="head">Type</th>
+<th class="head">Description</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td><code class="docutils literal"><span class="pre">id</span></code></td>
+<td>string</td>
+<td>&nbsp;</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal"><span class="pre">value</span></code></td>
+<td>string</td>
+<td>&nbsp;</td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal"><span class="pre">name</span></code></td>
+<td>string</td>
+<td>&nbsp;</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal"><span class="pre">config_file</span></code></td>
+<td>string</td>
+<td>&nbsp;</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Response Example</strong></p>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">TBD</span>
+</pre></div>
+</div>
+</div></blockquote>
+<div class="line-block">
+<div class="line"><br /></div>
+</div>
+<p><strong>GET /api/1.1/cdns/:cdn_name/configs.json</strong></p>
+<blockquote>
+<div><p>Retrieves CDN config information based upon the provided cdn name.</p>
+<p>Authentication Required: Yes</p>
+<p><strong>Request Route Parameters</strong></p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="30%" />
+<col width="21%" />
+<col width="49%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">Name</th>
+<th class="head">Required</th>
+<th class="head">Description</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td><code class="docutils literal"><span class="pre">cdn_name</span></code></td>
+<td>yes</td>
+<td>Your cdn name or, all</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Response Properties</strong></p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="29%" />
+<col width="10%" />
+<col width="60%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">Parameter</th>
+<th class="head">Type</th>
+<th class="head">Description</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td><code class="docutils literal"><span class="pre">id</span></code></td>
+<td>string</td>
+<td>&nbsp;</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal"><span class="pre">value</span></code></td>
+<td>string</td>
+<td>&nbsp;</td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal"><span class="pre">name</span></code></td>
+<td>string</td>
+<td>&nbsp;</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal"><span class="pre">config_file</span></code></td>
+<td>string</td>
+<td>&nbsp;</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Response Example</strong></p>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">TBD</span>
+</pre></div>
+</div>
+</div></blockquote>
+<div class="line-block">
+<div class="line"><br /></div>
+</div>
+<p><strong>GET /api/1.1/cdns/:name/configs/monitoring.json</strong></p>
+<blockquote>
+<div><p>Retrieves CDN monitoring information.</p>
+<p>Authentication Required: Yes</p>
+<p><strong>Request Route Parameters</strong></p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="30%" />
+<col width="30%" />
+<col width="39%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">Name</th>
+<th class="head">Required</th>
+<th class="head">Description</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td><code class="docutils literal"><span class="pre">name</span></code></td>
+<td>yes</td>
+<td>&nbsp;</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Response Properties</strong></p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="64%" />
+<col width="10%" />
+<col width="26%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">Parameter</th>
+<th class="head">Type</th>
+<th class="head">Description</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td><code class="docutils literal"><span class="pre">trafficServers</span></code></td>
+<td>array</td>
+<td>A collection of
+Traffic Servers.</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal"><span class="pre">&gt;profile</span></code></td>
+<td>string</td>
+<td>&nbsp;</td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal"><span class="pre">&gt;ip</span></code></td>
+<td>string</td>
+<td>&nbsp;</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal"><span class="pre">&gt;status</span></code></td>
+<td>string</td>
+<td>&nbsp;</td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal"><span class="pre">&gt;cacheGroup</span></code></td>
+<td>string</td>
+<td>&nbsp;</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal"><span class="pre">&gt;ip6</span></code></td>
+<td>string</td>
+<td>&nbsp;</td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal"><span class="pre">&gt;port</span></code></td>
+<td>int</td>
+<td>&nbsp;</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal"><span class="pre">&gt;hostName</span></code></td>
+<td>string</td>
+<td>&nbsp;</td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal"><span class="pre">&gt;fqdn</span></code></td>
+<td>string</td>
+<td>&nbsp;</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal"><span class="pre">&gt;interfaceName</span></code></td>
+<td>string</td>
+<td>&nbsp;</td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal"><span class="pre">&gt;type</span></code></td>
+<td>string</td>
+<td>&nbsp;</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal"><span class="pre">&gt;hashId</span></code></td>
+<td>string</td>
+<td>&nbsp;</td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal"><span class="pre">cacheGroups</span></code></td>
+<td>array</td>
+<td>A collection of
+cache groups.</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal"><span class="pre">&gt;coordinates</span></code></td>
+<td>hash</td>
+<td>&nbsp;</td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal"><span class="pre">&gt;&gt;longitude</span></code></td>
+<td>number</td>
+<td>&nbsp;</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal"><span class="pre">&gt;&gt;latitude</span></code></td>
+<td>number</td>
+<td>&nbsp;</td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal"><span class="pre">&gt;name</span></code></td>
+<td>string</td>
+<td>&nbsp;</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal"><span class="pre">config</span></code></td>
+<td>hash</td>
+<td>&nbsp;</td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal"><span class="pre">&gt;hack.ttl</span></code></td>
+<td>int</td>
+<td>&nbsp;</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal"><span class="pre">&gt;tm.healthParams.polling.url</span></code></td>
+<td>string</td>
+<td>&nbsp;</td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal"><span class="pre">&gt;tm.dataServer.polling.url</span></code></td>
+<td>string</td>
+<td>&nbsp;</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal"><span class="pre">&gt;health.timepad</span></code></td>
+<td>int</td>
+<td>&nbsp;</td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal"><span class="pre">&gt;tm.polling.interval</span></code></td>
+<td>int</td>
+<td>&nbsp;</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal"><span class="pre">&gt;health.threadPool</span></code></td>
+<td>int</td>
+<td>&nbsp;</td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal"><span class="pre">&gt;health.polling.interval</span></code></td>
+<td>int</td>
+<td>&nbsp;</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal"><span class="pre">&gt;health.event-count</span></code></td>
+<td>int</td>
+<td>&nbsp;</td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal"><span class="pre">&gt;tm.crConfig.polling.url</span></code></td>
+<td>number</td>
+<td>&nbsp;</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal"><span class="pre">&gt;CDN_name</span></code></td>
+<td>number</td>
+<td>&nbsp;</td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal"><span class="pre">trafficMonitors</span></code></td>
+<td>array</td>
+<td>A collection of
+Traffic Monitors.</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal"><span class="pre">&gt;profile</span></code></td>
+<td>string</td>
+<td>&nbsp;</td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal"><span class="pre">&gt;location</span></code></td>
+<td>string</td>
+<td>&nbsp;</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal"><span class="pre">&gt;ip</span></code></td>
+<td>string</td>
+<td>&nbsp;</td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal"><span class="pre">&gt;status</span></code></td>
+<td>string</td>
+<td>&nbsp;</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal"><span class="pre">&gt;ip6</span></code></td>
+<td>string</td>
+<td>&nbsp;</td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal"><span class="pre">&gt;port</span></code></td>
+<td>int</td>
+<td>&nbsp;</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal"><span class="pre">&gt;hostName</span></code></td>
+<td>string</td>
+<td>&nbsp;</td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal"><span class="pre">&gt;fqdn</span></code></td>
+<td>string</td>
+<td>&nbsp;</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal"><span class="pre">deliveryServices</span></code></td>
+<td>array</td>
+<td>A collection of
+delivery services.</td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal"><span class="pre">&gt;xmlId</span></code></td>
+<td>string</td>
+<td>&nbsp;</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal"><span class="pre">&gt;totalTpsThreshold</span></code></td>
+<td>int</td>
+<td>&nbsp;</td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal"><span class="pre">&gt;status</span></code></td>
+<td>string</td>
+<td>&nbsp;</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal"><span class="pre">&gt;totalKbpsThreshold</span></code></td>
+<td>int</td>
+<td>&nbsp;</td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal"><span class="pre">profiles</span></code></td>
+<td>array</td>
+<td>A collection of
+profiles.</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal"><span class="pre">&gt;parameters</span></code></td>
+<td>hash</td>
+<td>&nbsp;</td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal"><span class="pre">&gt;&gt;health.connection.timeout</span></code></td>
+<td>int</td>
+<td>&nbsp;</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal"><span class="pre">&gt;&gt;health.polling.url</span></code></td>
+<td>string</td>
+<td>&nbsp;</td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal"><span class="pre">&gt;&gt;health.threshold.queryTime</span></code></td>
+<td>int</td>
+<td>&nbsp;</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal"><span class="pre">&gt;&gt;history.count</span></code></td>
+<td>int</td>
+<td>&nbsp;</td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal"><span class="pre">&gt;&gt;health.threshold.availableBandwidthInKbps</span></code></td>
+<td>string</td>
+<td>&nbsp;</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal"><span class="pre">&gt;&gt;health.threshold.loadavg</span></code></td>
+<td>string</td>
+<td>&nbsp;</td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal"><span class="pre">&gt;name</span></code></td>
+<td>string</td>
+<td>&nbsp;</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal"><span class="pre">&gt;type</span></code></td>
+<td>string</td>
+<td>&nbsp;</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Response Example</strong></p>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">TBD</span>
+</pre></div>
+</div>
+</div></blockquote>
+<div class="line-block">
+<div class="line"><br /></div>
+</div>
+<p><strong>GET /api/1.1/cdns/:name/configs/routing.json</strong></p>
+<blockquote>
+<div><p>Retrieves CDN routing information.</p>
+<p>Authentication Required: Yes</p>
+<p><strong>Request Route Parameters</strong></p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="30%" />
+<col width="30%" />
+<col width="39%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">Name</th>
+<th class="head">Required</th>
+<th class="head">Description</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td><code class="docutils literal"><span class="pre">name</span></code></td>
+<td>yes</td>
+<td>&nbsp;</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Response Properties</strong></p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="46%" />
+<col width="11%" />
+<col width="43%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">Parameter</th>
+<th class="head">Type</th>
+<th class="head">Description</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td><code class="docutils literal"><span class="pre">trafficServers</span></code></td>
+<td>array</td>
+<td>A collection of Traffic Servers.</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal"><span class="pre">&gt;profile</span></code></td>
+<td>string</td>
+<td>&nbsp;</td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal"><span class="pre">&gt;ip</span></code></td>
+<td>string</td>
+<td>&nbsp;</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal"><span class="pre">&gt;status</span></code></td>
+<td>string</td>
+<td>&nbsp;</td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal"><span class="pre">&gt;cacheGroup</span></code></td>
+<td>string</td>
+<td>&nbsp;</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal"><span class="pre">&gt;ip6</span></code></td>
+<td>string</td>
+<td>&nbsp;</td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal"><span class="pre">&gt;port</span></code></td>
+<td>int</td>
+<td>&nbsp;</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal"><span class="pre">&gt;deliveryServices</span></code></td>
+<td>array</td>
+<td>&nbsp;</td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal"><span class="pre">&gt;&gt;xmlId</span></code></td>
+<td>string</td>
+<td>&nbsp;</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal"><span class="pre">&gt;&gt;remaps</span></code></td>
+<td>array</td>
+<td>&nbsp;</td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal"><span class="pre">&gt;&gt;hostName</span></code></td>
+<td>string</td>
+<td>&nbsp;</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal"><span class="pre">&gt;fqdn</span></code></td>
+<td>string</td>
+<td>&nbsp;</td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal"><span class="pre">&gt;interfaceName</span></code></td>
+<td>string</td>
+<td>&nbsp;</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal"><span class="pre">&gt;type</span></code></td>
+<td>string</td>
+<td>&nbsp;</td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal"><span class="pre">&gt;hashId</span></code></td>
+<td>string</td>
+<td>&nbsp;</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal"><span class="pre">stats</span></code></td>
+<td>hash</td>
+<td>&nbsp;</td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal"><span class="pre">&gt;trafficOpsPath</span></code></td>
+<td>string</td>
+<td>&nbsp;</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal"><span class="pre">&gt;cdnName</span></code></td>
+<td>string</td>
+<td>&nbsp;</td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal"><span class="pre">&gt;trafficOpsVersion</span></code></td>
+<td>string</td>
+<td>&nbsp;</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal"><span class="pre">&gt;trafficOpsUser</span></code></td>
+<td>string</td>
+<td>&nbsp;</td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal"><span class="pre">&gt;date</span></code></td>
+<td>int</td>
+<td>&nbsp;</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal"><span class="pre">&gt;trafficOpsHost</span></code></td>
+<td>string</td>
+<td>&nbsp;</td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal"><span class="pre">cacheGroups</span></code></td>
+<td>array</td>
+<td>A collection of cache groups.</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal"><span class="pre">&gt;coordinates</span></code></td>
+<td>hash</td>
+<td>&nbsp;</td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal"><span class="pre">&gt;&gt;longitude</span></code></td>
+<td>number</td>
+<td>&nbsp;</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal"><span class="pre">&gt;&gt;latitude</span></code></td>
+<td>number</td>
+<td>&nbsp;</td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal"><span class="pre">&gt;name</span></code></td>
+<td>string</td>
+<td>&nbsp;</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal"><span class="pre">config</span></code></td>
+<td>hash</td>
+<td>&nbsp;</td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal"><span class="pre">&gt;tld.soa.admin</span></code></td>
+<td>string</td>
+<td>&nbsp;</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal"><span class="pre">&gt;tcoveragezone.polling.interval</span></code></td>
+<td>int</td>
+<td>&nbsp;</td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal"><span class="pre">&gt;geolocation.polling.interval</span></code></td>
+<td>int</td>
+<td>&nbsp;</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal"><span class="pre">&gt;tld.soa.expire</span></code></td>
+<td>int</td>
+<td>&nbsp;</td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal"><span class="pre">&gt;coveragezone.polling.url</span></code></td>
+<td>string</td>
+<td>&nbsp;</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal"><span class="pre">&gt;tld.soa.minimum</span></code></td>
+<td>int</td>
+<td>&nbsp;</td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal"><span class="pre">&gt;geolocation.polling.url</span></code></td>
+<td>string</td>
+<td>&nbsp;</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal"><span class="pre">&gt;domain_name</span></code></td>
+<td>string</td>
+<td>&nbsp;</td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal"><span class="pre">&gt;tld.ttls.AAAA</span></code></td>
+<td>int</td>
+<td>&nbsp;</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal"><span class="pre">&gt;tld.soa.refresh</span></code></td>
+<td>int</td>
+<td>&nbsp;</td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal"><span class="pre">&gt;tld.ttls.NS</span></code></td>
+<td>int</td>
+<td>&nbsp;</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal"><span class="pre">&gt;tld.ttls.SOA</span></code></td>
+<td>int</td>
+<td>&nbsp;</td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal"><span class="pre">&gt;geolocation6.polling.interval</span></code></td>
+<td>int</td>
+<td>&nbsp;</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal"><span class="pre">&gt;tld.ttls.A</span></code></td>
+<td>int</td>
+<td>&nbsp;</td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal"><span class="pre">&gt;tld.soa.retry</span></code></td>
+<td>int</td>
+<td>&nbsp;</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal"><span class="pre">&gt;geolocation6.polling.url</span></code></td>
+<td>string</td>
+<td>&nbsp;</td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal"><span class="pre">trafficMonitors</span></code></td>
+<td>array</td>
+<td>A collection of Traffic Monitors.</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal"><span class="pre">&gt;profile</span></code></td>
+<td>string</td>
+<td>&nbsp;</td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal"><span class="pre">&gt;location</span></code></td>
+<td>string</td>
+<td>&nbsp;</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal"><span class="pre">&gt;ip</span></code></td>
+<td>string</td>
+<td>&nbsp;</td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal"><span class="pre">&gt;status</span></code></td>
+<td>string</td>
+<td>&nbsp;</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal"><span class="pre">&gt;ip6</span></code></td>
+<td>string</td>
+<td>&nbsp;</td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal"><span class="pre">&gt;port</span></code></td>
+<td>int</td>
+<td>&nbsp;</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal"><span class="pre">&gt;hostName</span></code></td>
+<td>string</td>
+<td>&nbsp;</td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal"><span class="pre">&gt;fqdn</span></code></td>
+<td>string</td>
+<td>&nbsp;</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal"><span class="pre">deliveryServices</span></code></td>
+<td>array</td>
+<td>A collection of delivery
+services.</td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal"><span class="pre">&gt;xmlId</span></code></td>
+<td>string</td>
+<td>&nbsp;</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal"><span class="pre">&gt;ttl</span></code></td>
+<td>int</td>
+<td>&nbsp;</td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal"><span class="pre">&gt;geoEnabled</span></code></td>
+<td>string</td>
+<td>&nbsp;</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal"><span class="pre">&gt;coverageZoneOnly</span></code></td>
+<td>boolean</td>
+<td>&nbsp;</td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal"><span class="pre">&gt;matchSets</span></code></td>
+<td>array</td>
+<td>&nbsp;</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal"><span class="pre">&gt;&gt;protocol</span></code></td>
+<td>string</td>
+<td>&nbsp;</td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal"><span class="pre">&gt;&gt;matchList</span></code></td>
+<td>array</td>
+<td>&nbsp;</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal"><span class="pre">&gt;&gt;&gt;regex</span></code></td>
+<td>string</td>
+<td>&nbsp;</td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal"><span class="pre">&gt;&gt;&gt;matchType</span></code></td>
+<td>string</td>
+<td>&nbsp;</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal"><span class="pre">&gt;bypassDestination</span></code></td>
+<td>hash</td>
+<td>&nbsp;</td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal"><span class="pre">&gt;&gt;maxDnsIpsForLocation</span></code></td>
+<td>int</td>
+<td>&nbsp;</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal"><span class="pre">&gt;&gt;ttl</span></code></td>
+<td>int</td>
+<td>&nbsp;</td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal"><span class="pre">&gt;&gt;type</span></code></td>
+<td>string</td>
+<td>&nbsp;</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal"><span class="pre">&gt;ttls</span></code></td>
+<td>hash</td>
+<td>&nbsp;</td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal"><span class="pre">&gt;&gt;A</span></code></td>
+<td>int</td>
+<td>&nbsp;</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal"><span class="pre">&gt;&gt;SOA</span></code></td>
+<td>int</td>
+<td>&nbsp;</td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal"><span class="pre">&gt;&gt;NS</span></code></td>
+<td>int</td>
+<td>&nbsp;</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal"><span class="pre">&gt;&gt;AAAA</span></code></td>
+<td>int</td>
+<td>&nbsp;</td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal"><span class="pre">&gt;missCoordinates</span></code></td>
+<td>hash</td>
+<td>&nbsp;</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal"><span class="pre">&gt;&gt;longitude</span></code></td>
+<td>number</td>
+<td>&nbsp;</td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal"><span class="pre">&gt;&gt;latitude</span></code></td>
+<td>number</td>
+<td>&nbsp;</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal"><span class="pre">&gt;soa</span></code></td>
+<td>hash</td>
+<td>&nbsp;</td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal"><span class="pre">&gt;&gt;admin</span></code></td>
+<td>string</td>
+<td>&nbsp;</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal"><span class="pre">&gt;&gt;retry</span></code></td>
+<td>int</td>
+<td>&nbsp;</td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal"><span class="pre">&gt;&gt;minimum</span></code></td>
+<td>int</td>
+<td>&nbsp;</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal"><span class="pre">&gt;&gt;refresh</span></code></td>
+<td>int</td>
+<td>&nbsp;</td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal"><span class="pre">&gt;&gt;expire</span></code></td>
+<td>int</td>
+<td>&nbsp;</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal"><span class="pre">trafficRouters</span></code></td>
+<td>hash</td>
+<td>&nbsp;</td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal"><span class="pre">&gt;profile</span></code></td>
+<td>int</td>
+<td>&nbsp;</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal"><span class="pre">&gt;location</span></code></td>
+<td>string</td>
+<td>&nbsp;</td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal"><span class="pre">&gt;ip</span></code></td>
+<td>string</td>
+<td>&nbsp;</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal"><span class="pre">&gt;status</span></code></td>
+<td>string</td>
+<td>&nbsp;</td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal"><span class="pre">&gt;ip6</span></code></td>
+<td>string</td>
+<td>&nbsp;</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal"><span class="pre">&gt;port</span></code></td>
+<td>int</td>
+<td>&nbsp;</td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal"><span class="pre">&gt;hostName</span></code></td>
+<td>string</td>
+<td>&nbsp;</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal"><span class="pre">&gt;fqdn</span></code></td>
+<td>string</td>
+<td>&nbsp;</td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal"><span class="pre">&gt;apiPort</span></code></td>
+<td>int</td>
+<td>&nbsp;</td>
+</tr>
+</tbody>
+</table>
+</div></blockquote>
+<p><strong>Response Example</strong></p>
+<dl class="docutils">
+<dt>::</dt>
+<dd>TBD</dd>
+</dl>
+</div>
+<div class="section" id="dnssec-keys">
+<span id="to-api-v11-cdn-dnsseckeys"></span><h2>DNSSEC Keys<a class="headerlink" href="#dnssec-keys" title="Permalink to this headline">¶</a></h2>
+<p><strong>GET /api/1.1/cdns/name/:name/dnsseckeys.json</strong></p>
+<blockquote>
+<div><p>Gets a list of dnsseckeys for CDN and all associated Delivery Services.
+Before returning response to user, check to make sure keys aren&#8217;t expired.  If they are expired, generate new ones.
+Before returning response to user, make sure dnssec keys for all delivery services exist.  If they don&#8217;t exist, create them.</p>
+<p>Authentication Required: Yes</p>
+<p>Role Required: Admin</p>
+<p><strong>Request Route Parameters</strong></p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="30%" />
+<col width="30%" />
+<col width="39%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">Name</th>
+<th class="head">Required</th>
+<th class="head">Description</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td><code class="docutils literal"><span class="pre">name</span></code></td>
+<td>yes</td>
+<td>&nbsp;</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Response Properties</strong></p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="27%" />
+<col width="9%" />
+<col width="64%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">Parameter</th>
+<th class="head">Type</th>
+<th class="head">Description</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td><code class="docutils literal"><span class="pre">cdn</span> <span class="pre">name/ds</span> <span class="pre">xml_id</span></code></td>
+<td>string</td>
+<td>identifier for ds or cdn</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal"><span class="pre">&gt;zsk/ksk</span></code></td>
+<td>array</td>
+<td>collection of zsk/ksk data</td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal"><span class="pre">&gt;&gt;ttl</span></code></td>
+<td>string</td>
+<td>time-to-live for dnssec requests</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal"><span class="pre">&gt;&gt;inceptionDate</span></code></td>
+<td>string</td>
+<td>epoch timestamp for when the keys were created</td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal"><span class="pre">&gt;&gt;expirationDate</span></code></td>
+<td>string</td>
+<td>epoch timestamp representing the expiration of the keys</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal"><span class="pre">&gt;&gt;private</span></code></td>
+<td>string</td>
+<td>encoded private key</td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal"><span class="pre">&gt;&gt;public</span></code></td>
+<td>string</td>
+<td>encoded public key</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal"><span class="pre">&gt;&gt;name</span></code></td>
+<td>string</td>
+<td>domain name</td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal"><span class="pre">version</span></code></td>
+<td>string</td>
+<td>API version</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Response Example</strong></p>
+<div class="highlight-python"><div class="highlight"><pre>{
+  &quot;response&quot;: {
+    &quot;cdn1&quot;: {
+      &quot;zsk&quot;: {
+        &quot;ttl&quot;: &quot;60&quot;,
+        &quot;inceptionDate&quot;: &quot;1426196750&quot;,
+        &quot;private&quot;: &quot;zsk private key&quot;,
+        &quot;public&quot;: &quot;zsk public key&quot;,
+        &quot;expirationDate&quot;: &quot;1428788750&quot;,
+        &quot;name&quot;: &quot;foo.kabletown.com.&quot;
+      },
+      &quot;ksk&quot;: {
+        &quot;name&quot;: &quot;foo.kabletown.com.&quot;,
+        &quot;expirationDate&quot;: &quot;1457732750&quot;,
+        &quot;public&quot;: &quot;ksk public key&quot;,
+        &quot;private&quot;: &quot;ksk private key&quot;,
+        &quot;inceptionDate&quot;: &quot;1426196750&quot;,
+        &quot;ttl&quot;: &quot;60&quot;
+      }
+    },
+    &quot;ds-01&quot;: {
+      &quot;zsk&quot;: {
+        &quot;ttl&quot;: &quot;60&quot;,
+        &quot;inceptionDate&quot;: &quot;1426196750&quot;,
+        &quot;private&quot;: &quot;zsk private key&quot;,
+        &quot;public&quot;: &quot;zsk public key&quot;,
+        &quot;expirationDate&quot;: &quot;1428788750&quot;,
+        &quot;name&quot;: &quot;ds-01.foo.kabletown.com.&quot;
+      },
+      &quot;ksk&quot;: {
+        &quot;name&quot;: &quot;ds-01.foo.kabletown.com.&quot;,
+        &quot;expirationDate&quot;: &quot;1457732750&quot;,
+        &quot;public&quot;: &quot;ksk public key&quot;,
+        &quot;private&quot;: &quot;ksk private key&quot;,
+        &quot;inceptionDate&quot;: &quot;1426196750&quot;
+      }
+    },
+    ... repeated for each ds in the cdn
+  },
+}
+</pre></div>
+</div>
+</div></blockquote>
+<div class="line-block">
+<div class="line"><br /></div>
+</div>
+<p><strong>GET /api/1.1/cdns/name/:name/dnsseckeys/delete.json</strong></p>
+<blockquote>
+<div><p>Delete dnssec keys for a cdn and all associated delivery services.</p>
+<p>Authentication Required: Yes</p>
+<p>Role Required: Admin</p>
+<p><strong>Request Route Parameters</strong></p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="13%" />
+<col width="13%" />
+<col width="74%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">Name</th>
+<th class="head">Required</th>
+<th class="head">Description</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td><code class="docutils literal"><span class="pre">name</span></code></td>
+<td>yes</td>
+<td>name of the CDN for which you want to delete dnssec keys</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Response Properties</strong></p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="35%" />
+<col width="20%" />
+<col width="45%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">Parameter</th>
+<th class="head">Type</th>
+<th class="head">Description</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td><code class="docutils literal"><span class="pre">response</span></code></td>
+<td>string</td>
+<td>success response</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Response Example</strong></p>
+<div class="highlight-python"><div class="highlight"><pre><span class="p">{</span>
+  <span class="s">&quot;response&quot;</span><span class="p">:</span> <span class="s">&quot;Successfully deleted dnssec keys for &lt;cdn&gt;&quot;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</div></blockquote>
+<div class="line-block">
+<div class="line"><br /></div>
+</div>
+<p><strong>POST /api/1.1/deliveryservices/dnsseckeys/generate</strong></p>
+<blockquote>
+<div><p>Generates zsk and ksk keypairs for a cdn and all associated delivery services.</p>
+<p>Authentication Required: Yes</p>
+<p>Role Required:  Admin</p>
+<p><strong>Request Properties</strong></p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="29%" />
+<col width="11%" />
+<col width="60%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">Parameter</th>
+<th class="head">Type</th>
+<th class="head">Description</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td><code class="docutils literal"><span class="pre">key</span></code></td>
+<td>string</td>
+<td>name of the cdn</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal"><span class="pre">name</span></code></td>
+<td>string</td>
+<td>domain name of the cdn</td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal"><span class="pre">ttl</span></code></td>
+<td>string</td>
+<td>time to live</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal"><span class="pre">kskExpirationDays</span></code></td>
+<td>string</td>
+<td>Expiration (in days) for the key signing keys</td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal"><span class="pre">zskExpirationDays</span></code></td>
+<td>string</td>
+<td>Expiration (in days) for the zone signing keys</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Request Example</strong></p>
+<div class="highlight-python"><div class="highlight"><pre>{
+  &quot;key&quot;: &quot;cdn1&quot;,
+  &quot;name&quot; &quot;ott.kabletown.com&quot;,
+  &quot;ttl&quot;: &quot;60&quot;,
+  &quot;kskExpirationDays&quot;: &quot;365&quot;,
+  &quot;zskExpirationDays&quot;: &quot;90&quot;
+}
+</pre></div>
+</div>
+<p><strong>Response Properties</strong></p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="36%" />
+<col width="21%" />
+<col width="44%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">Parameter</th>
+<th class="head">Type</th>
+<th class="head">Description</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td><code class="docutils literal"><span class="pre">response</span></code></td>
+<td>string</td>
+<td>response string</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal"><span class="pre">version</span></code></td>
+<td>string</td>
+<td>API version</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Response Example</strong></p>
+<div class="highlight-python"><div class="highlight"><pre><span class="p">{</span>
+  <span class="s">&quot;response&quot;</span><span class="p">:</span> <span class="s">&quot;Successfully created dnssec keys for cdn1&quot;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</div></blockquote>
+</div>
+</div>
+
+
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="changelog.html" class="btn btn-neutral float-right" title="Change Logs">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="cachegroup.html" class="btn btn-neutral" title="Cache Group"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../../../',
+            VERSION:'1.1.5-dev',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true
+        };
+    </script>
+      <script type="text/javascript" src="../../../_static/jquery.js"></script>
+      <script type="text/javascript" src="../../../_static/underscore.js"></script>
+      <script type="text/javascript" src="../../../_static/doctools.js"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="../../../_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

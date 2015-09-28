@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Traffic Control</title>
+
+    <!-- Bootstrap -->
+    <link href="css/bootstrap.min.css" rel="stylesheet">
+    <link href="css/home.css" rel="stylesheet">
+
+  </head>
+  <body>
+    <div class="bkgdWrapper">
+      
+    </div>
+    <div class="appWrapper">
+      <div class="appHeader">
+            <div class="applogo"></div>
+              <div class="navWrapper">
+                <ul>
+                  <li class="navMain"><a href="downloads/index.html">DOWNLOADS</a></li>
+                  <li class="navMain"><a href="docs/latest/faq/index.html">FAQ</a></li>
+                  <li class="navMain"><a href="https://groups.google.com/forum/#!forum/traffic_control">ASK A QUESTION</a></li>
+                  <li class="navMain"><a href="https://github.com/Comcast/traffic_control">GIT</a></li>
+                  <li class="navMain"><a href="docs/latest/index.html">DOCUMENTATION</a></li>
+                  <li class="selected"><b>HOME</b></a></li>
+                </ul>
+              </div>
+        </div>
+
+    <p class="sectionContainer">
+    Traffic Control allows you to build a large scale content delivery network using open source. Built around <a href="http://trafficserver.apache.org">Apache Traffic Server</a> as the caching software, Traffic Control implements all the core functions of a modern CDN:
+    </p>
+
+    <table class="tableMain" cellpadding="10">
+    <tr>
+    <td class="tableMainCell"><a href="traffic_router/index.html"><img src="images/traffic_router_logo.png"></a></td>
+    <td class="tableMainCell">Traffic Router is a Java Tomcat application that routes clients to the closest available cache on the CDN using both HTTP and DNS. By using consistent hashing it sends requests for the same content to the same cache in a group of caches working together in a location. It takes care of routing clients around hot spots and problems in the CDN by using the information from Traffic Monitor with regards to state of all the caches. 
+    </td>
+    </tr><tr>
+    <td class="tableMainCell"><a href="traffic_monitor/index.html"><img src="images/traffic_monitor_logo.png"></a></td>
+    <td class="tableMainCell">Traffic Monitor is a Java Tomcat application that implements the CDN health protocol. Every cache in the CDN is checked using HTTP for vital stats, and based on these stats, caches are declared healthy or unhealthy. This information is then used by Traffic Router to make it's routing decisions.
+    </td>
+    </tr><tr>
+    <td class="tableMainCell"><a href="traffic_ops/index.html"><img src="images/traffic_operations_logo.png"></a></td>
+    <td class="tableMainCell">Traffic Ops is a Mojolicious perl and jQuery UI application for management and monitoring of all servers in the CDN. All server and content routing information for the CDN is managed through Traffic Ops. It also exposes RESTful API enpoints for consumption by tools and other applications.
+    </td>
+    </tr> 
+
+    </table>
+
+
+  </body>
+</html>

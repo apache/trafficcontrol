@@ -1,0 +1,586 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Cache Group &mdash; Traffic Control 1.1.4 documentation </title>
+  
+
+  
+  
+    <link rel="shortcut icon" href="../../_static/favicon.ico"/>
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  
+
+  
+    <link rel="stylesheet" href="../../_static/theme_overrides.css" type="text/css" />
+  
+
+  
+    <link rel="top" title="Traffic Control 1.1.4 documentation" href="../../index.html"/>
+        <link rel="up" title="Traffic Ops" href="../traffic_ops.html"/>
+        <link rel="next" title="CDN" href="cdn.html"/>
+        <link rel="prev" title="ASN" href="asn.html"/> 
+
+  
+  <script src="_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-nav-search">
+        
+
+        
+          <a href="/" class="icon icon-home"> Traffic Control
+        
+
+        
+          
+          <img src="../../_static/tc_logo.png" class="logo" />
+        
+        </a>
+
+        
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+        
+      </div>
+
+      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+        
+          
+          
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../basics/index.html">CDN Basics</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../basics/content_delivery_networks.html">Content Delivery Networks</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../basics/http_11.html">HTTP 1.1</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../basics/caching_proxies.html">Caching Proxies</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../basics/cache_revalidation.html">Cache Control Headers and Revalidation</a></li>
+</ul>
+</li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../overview/index.html">Traffic Control Overview</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../overview/introduction.html">Introduction</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../overview/traffic_ops.html">Traffic Ops</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../overview/traffic_router.html">Traffic Router</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../overview/traffic_monitor.html">Traffic Monitor</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../overview/traffic_stats.html">Traffic Stats</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../overview/traffic_portal.html">Traffic Portal</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../overview/traffic_server.html">Traffic Server</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../overview/traffic_vault.html">Traffic Vault</a></li>
+</ul>
+</li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../admin/index.html">Administrator&#8217;s Guide</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../admin/traffic_ops_install.html">Installing Traffic Ops</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../admin/traffic_ops_config.html">Configuring Traffic Ops</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../admin/traffic_ops_using.html">Using Traffic Ops</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../admin/traffic_ops_extensions.html">Managing Traffic Ops Extensions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../admin/traffic_monitor.html">Traffic Monitor Administration</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../admin/traffic_router.html">Traffic Router Administration</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../admin/traffic_stats.html">Traffic Stats Administration</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../admin/traffic_server.html">Traffic Server Administration</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../admin/traffic_vault.html">Traffic Vault Administration</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../admin/quick_howto/index.html">Quick How To Guides</a></li>
+</ul>
+</li>
+</ul>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="../index.html">Developer&#8217;s Guide</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="../traffic_ops.html">Traffic Ops</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../traffic_router.html">Traffic Router</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../traffic_monitor.html">Traffic Monitor</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../traffic_stats.html">Traffic Stats</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../traffic_server.html">Traffic Server</a></li>
+</ul>
+</li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../faq/index.html">FAQ</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../faq/general.html">General</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../faq/development.html">Development</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../faq/administration.html">Running a Traffic Control CDN</a></li>
+</ul>
+</li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../glossary.html">Glossary</a></li>
+</ul>
+
+          
+        
+      </div>
+      &nbsp;
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="../../index.html">Traffic Control</a>
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="../../index.html">Traffic Control 1.1.4</a> &raquo;</li>
+      
+          <li><a href="../index.html">Developer&#8217;s Guide</a> &raquo;</li>
+      
+          <li><a href="../traffic_ops.html">Traffic Ops</a> &raquo;</li>
+      
+    <li>Cache Group</li>
+      <li class="wy-breadcrumbs-aside">
+        
+          <a href="../../_sources/development/traffic_ops_rest/cachegroup.txt" rel="nofollow"> View page source</a>
+        
+      </li>
+  </ul>
+  <hr/>
+</div>
+ 		  
+    		  <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      		  
+        		  <a href="cdn.html" class="btn btn-neutral float-right" title="CDN">Next <span class="fa fa-arrow-circle-right"></span></a>
+      		  
+      		  
+        		  <a href="asn.html" class="btn btn-neutral" title="ASN"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      		  
+    		  </div>
+  		  
+          <div role="main" class="document">
+            
+  <div class="section" id="cache-group">
+<span id="to-api-cachegroup"></span><h1>Cache Group<a class="headerlink" href="#cache-group" title="Permalink to this headline">¶</a></h1>
+<p><strong>GET /api/1.1/cachegroups.json</strong></p>
+<blockquote>
+<div><p>Authentication Required: Yes</p>
+<p><strong>Response Properties</strong></p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="23%" />
+<col width="8%" />
+<col width="70%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">Parameter</th>
+<th class="head">Type</th>
+<th class="head">Description</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td><code class="docutils literal"><span class="pre">longitude</span></code></td>
+<td>string</td>
+<td>Longitude for the Cache Group</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal"><span class="pre">parentCachegroupId</span></code></td>
+<td>string</td>
+<td>Identifier that refers to the &#8216;id&#8217; field of different Cache Group entry.</td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal"><span class="pre">lastUpdated</span></code></td>
+<td>string</td>
+<td>The Time / Date this entry was last updated</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal"><span class="pre">typeName</span></code></td>
+<td>string</td>
+<td>The name of the type of Cache Group entry</td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal"><span class="pre">name</span></code></td>
+<td>string</td>
+<td>The name of the Cache Group entry</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal"><span class="pre">typeId</span></code></td>
+<td>string</td>
+<td>Unique identifier for the &#8216;Type&#8217; of Cache Group entry</td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal"><span class="pre">latitude</span></code></td>
+<td>string</td>
+<td>Latitude for the Cache Group</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal"><span class="pre">id</span></code></td>
+<td>string</td>
+<td>Local unique identifier for the Cache Group</td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal"><span class="pre">shortName</span></code></td>
+<td>string</td>
+<td>Abbreviation of the Cache Group Name</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Response Example</strong></p>
+<div class="highlight-python"><div class="highlight"><pre><span class="p">{</span>
+ <span class="s">&quot;response&quot;</span><span class="p">:</span> <span class="p">[</span>
+    <span class="p">{</span>
+       <span class="s">&quot;longitude&quot;</span><span class="p">:</span> <span class="s">&quot;0&quot;</span><span class="p">,</span>
+       <span class="s">&quot;parentCachegroupId&quot;</span><span class="p">:</span> <span class="n">null</span><span class="p">,</span>
+       <span class="s">&quot;lastUpdated&quot;</span><span class="p">:</span> <span class="s">&quot;2012-09-25 20:27:28&quot;</span><span class="p">,</span>
+       <span class="s">&quot;typeName&quot;</span><span class="p">:</span> <span class="s">&quot;MID_LOC&quot;</span><span class="p">,</span>
+       <span class="s">&quot;name&quot;</span><span class="p">:</span> <span class="s">&quot;dc-chicago&quot;</span><span class="p">,</span>
+       <span class="s">&quot;parentCachegroupName&quot;</span><span class="p">:</span> <span class="n">null</span><span class="p">,</span>
+       <span class="s">&quot;typeId&quot;</span><span class="p">:</span> <span class="s">&quot;4&quot;</span><span class="p">,</span>
+       <span class="s">&quot;latitude&quot;</span><span class="p">:</span> <span class="s">&quot;0&quot;</span><span class="p">,</span>
+       <span class="s">&quot;id&quot;</span><span class="p">:</span> <span class="s">&quot;21&quot;</span><span class="p">,</span>
+       <span class="s">&quot;shortName&quot;</span><span class="p">:</span> <span class="s">&quot;dcchi&quot;</span>
+    <span class="p">},</span>
+    <span class="p">{</span>
+       <span class="s">&quot;longitude&quot;</span><span class="p">:</span> <span class="s">&quot;0&quot;</span><span class="p">,</span>
+       <span class="s">&quot;parentCachegroupId&quot;</span><span class="p">:</span> <span class="n">null</span><span class="p">,</span>
+       <span class="s">&quot;lastUpdated&quot;</span><span class="p">:</span> <span class="s">&quot;2012-09-25 20:32:03&quot;</span><span class="p">,</span>
+       <span class="s">&quot;typeName&quot;</span><span class="p">:</span> <span class="s">&quot;MID_LOC&quot;</span><span class="p">,</span>
+       <span class="s">&quot;name&quot;</span><span class="p">:</span> <span class="s">&quot;dc-cmc&quot;</span><span class="p">,</span>
+       <span class="s">&quot;parentCachegroupName&quot;</span><span class="p">:</span> <span class="n">null</span><span class="p">,</span>
+       <span class="s">&quot;typeId&quot;</span><span class="p">:</span> <span class="s">&quot;4&quot;</span><span class="p">,</span>
+       <span class="s">&quot;latitude&quot;</span><span class="p">:</span> <span class="s">&quot;0&quot;</span><span class="p">,</span>
+       <span class="s">&quot;id&quot;</span><span class="p">:</span> <span class="s">&quot;22&quot;</span><span class="p">,</span>
+       <span class="s">&quot;shortName&quot;</span><span class="p">:</span> <span class="s">&quot;dccmc&quot;</span>
+    <span class="p">}</span>
+ <span class="p">],</span>
+ <span class="s">&quot;version&quot;</span><span class="p">:</span> <span class="s">&quot;1.1&quot;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</div></blockquote>
+<div class="line-block">
+<div class="line"><br /></div>
+</div>
+<p><strong>GET /api/1.1/cachegroups/trimmed.json</strong></p>
+<blockquote>
+<div><p>Authentication Required: Yes</p>
+<p><strong>Response Properties</strong></p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="28%" />
+<col width="10%" />
+<col width="62%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">Parameter</th>
+<th class="head">Type</th>
+<th class="head">Description</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td><code class="docutils literal"><span class="pre">name</span></code></td>
+<td>string</td>
+<td>&nbsp;</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Response Example</strong></p>
+<div class="highlight-python"><div class="highlight"><pre> {
+  &quot;response&quot;: [
+     {
+        &quot;name&quot;: &quot;dc-chicago&quot;
+     },
+     {
+        &quot;name&quot;: &quot;dc-cmc&quot;
+     }
+  ],
+  &quot;version&quot;: &quot;1.1&quot;
+}
+</pre></div>
+</div>
+</div></blockquote>
+<div class="line-block">
+<div class="line"><br /></div>
+</div>
+<p><strong>GET /api/1.1/cachegroup/:parameter_id/parameter.json</strong></p>
+<blockquote>
+<div><p>Authentication Required: Yes</p>
+<p><strong>Request Route Parameters</strong></p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="44%" />
+<col width="24%" />
+<col width="32%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">Name</th>
+<th class="head">Required</th>
+<th class="head">Description</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td><code class="docutils literal"><span class="pre">parameter_id</span></code></td>
+<td>yes</td>
+<td>&nbsp;</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Response Properties</strong></p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="45%" />
+<col width="21%" />
+<col width="34%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">Parameter</th>
+<th class="head">Type</th>
+<th class="head">Description</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td><code class="docutils literal"><span class="pre">cachegroups</span></code></td>
+<td>array</td>
+<td>&nbsp;</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal"><span class="pre">&gt;name</span></code></td>
+<td>string</td>
+<td>&nbsp;</td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal"><span class="pre">&gt;id</span></code></td>
+<td>string</td>
+<td>&nbsp;</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Response Example</strong></p>
+<div class="highlight-python"><div class="highlight"><pre><span class="p">{</span>
+ <span class="s">&quot;response&quot;</span><span class="p">:</span> <span class="p">{</span>
+    <span class="s">&quot;cachegroups&quot;</span><span class="p">:</span> <span class="p">[</span>
+       <span class="p">{</span>
+          <span class="s">&quot;name&quot;</span><span class="p">:</span> <span class="s">&quot;dc-chicago&quot;</span><span class="p">,</span>
+          <span class="s">&quot;id&quot;</span><span class="p">:</span> <span class="s">&quot;21&quot;</span>
+       <span class="p">},</span>
+       <span class="p">{</span>
+          <span class="s">&quot;name&quot;</span><span class="p">:</span> <span class="s">&quot;dc-cmc&quot;</span><span class="p">,</span>
+          <span class="s">&quot;id&quot;</span><span class="p">:</span> <span class="s">&quot;22&quot;</span>
+       <span class="p">}</span>
+    <span class="p">]</span>
+ <span class="p">},</span>
+ <span class="s">&quot;version&quot;</span><span class="p">:</span> <span class="s">&quot;1.1&quot;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</div></blockquote>
+<p><strong>GET /api/1.1/cachegroupparameters.json</strong></p>
+<blockquote>
+<div><p>Authentication Required: Yes</p>
+<p><strong>Response Properties</strong></p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="35%" />
+<col width="11%" />
+<col width="55%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">Parameter</th>
+<th class="head">Type</th>
+<th class="head">Description</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td><code class="docutils literal"><span class="pre">cachegroupParameters</span></code></td>
+<td>array</td>
+<td>A collection of cache group parameters.</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal"><span class="pre">&gt;parameter</span></code></td>
+<td>string</td>
+<td>&nbsp;</td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal"><span class="pre">&gt;last_updated</span></code></td>
+<td>string</td>
+<td>&nbsp;</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal"><span class="pre">&gt;cachegroup</span></code></td>
+<td>string</td>
+<td>&nbsp;</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Response Example</strong></p>
+<div class="highlight-python"><div class="highlight"><pre><span class="p">{</span>
+ <span class="s">&quot;response&quot;</span><span class="p">:</span> <span class="p">{</span>
+    <span class="s">&quot;cachegroupParameters&quot;</span><span class="p">:</span> <span class="p">[</span>
+       <span class="p">{</span>
+          <span class="s">&quot;parameter&quot;</span><span class="p">:</span> <span class="s">&quot;379&quot;</span><span class="p">,</span>
+          <span class="s">&quot;last_updated&quot;</span><span class="p">:</span> <span class="s">&quot;2013-08-05 18:49:37&quot;</span><span class="p">,</span>
+          <span class="s">&quot;cachegroup&quot;</span><span class="p">:</span> <span class="s">&quot;us-ca-sanjose&quot;</span>
+       <span class="p">},</span>
+       <span class="p">{</span>
+          <span class="s">&quot;parameter&quot;</span><span class="p">:</span> <span class="s">&quot;380&quot;</span><span class="p">,</span>
+          <span class="s">&quot;last_updated&quot;</span><span class="p">:</span> <span class="s">&quot;2013-08-05 18:49:37&quot;</span><span class="p">,</span>
+          <span class="s">&quot;cachegroup&quot;</span><span class="p">:</span> <span class="s">&quot;us-ca-sanjose&quot;</span>
+       <span class="p">},</span>
+       <span class="p">{</span>
+          <span class="s">&quot;parameter&quot;</span><span class="p">:</span> <span class="s">&quot;379&quot;</span><span class="p">,</span>
+          <span class="s">&quot;last_updated&quot;</span><span class="p">:</span> <span class="s">&quot;2013-08-05 18:49:37&quot;</span><span class="p">,</span>
+          <span class="s">&quot;cachegroup&quot;</span><span class="p">:</span> <span class="s">&quot;us-ma-woburn&quot;</span>
+       <span class="p">}</span>
+    <span class="p">]</span>
+ <span class="p">},</span>
+ <span class="s">&quot;version&quot;</span><span class="p">:</span> <span class="s">&quot;1.1&quot;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</div></blockquote>
+<div class="line-block">
+<div class="line"><br /></div>
+</div>
+<p><strong>GET /api/1.1/cachegroups/:parameter_id/parameter/available.json</strong></p>
+<blockquote>
+<div><p>Authentication Required: Yes</p>
+<p><strong>Request Route Parameters</strong></p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="44%" />
+<col width="24%" />
+<col width="32%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">Name</th>
+<th class="head">Required</th>
+<th class="head">Description</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td><code class="docutils literal"><span class="pre">parameter_id</span></code></td>
+<td>yes</td>
+<td>&nbsp;</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Response Properties</strong></p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="28%" />
+<col width="10%" />
+<col width="62%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">Parameter</th>
+<th class="head">Type</th>
+<th class="head">Description</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td><code class="docutils literal"><span class="pre">name</span></code></td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal"><span class="pre">id</span></code></td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Response Example</strong></p>
+<div class="highlight-python"><div class="highlight"><pre><span class="p">{</span>
+ <span class="s">&quot;response&quot;</span><span class="p">:</span> <span class="p">[</span>
+    <span class="p">{</span>
+       <span class="s">&quot;name&quot;</span><span class="p">:</span> <span class="s">&quot;dc-chicago&quot;</span><span class="p">,</span>
+       <span class="s">&quot;id&quot;</span><span class="p">:</span> <span class="s">&quot;21&quot;</span>
+    <span class="p">},</span>
+    <span class="p">{</span>
+       <span class="s">&quot;name&quot;</span><span class="p">:</span> <span class="s">&quot;dc-cmc&quot;</span><span class="p">,</span>
+       <span class="s">&quot;id&quot;</span><span class="p">:</span> <span class="s">&quot;22&quot;</span>
+    <span class="p">}</span>
+ <span class="p">],</span>
+ <span class="s">&quot;version&quot;</span><span class="p">:</span> <span class="s">&quot;1.1&quot;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</div></blockquote>
+</div>
+
+
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="cdn.html" class="btn btn-neutral float-right" title="CDN">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="asn.html" class="btn btn-neutral" title="ASN"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../../',
+            VERSION:'1.1.4',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true
+        };
+    </script>
+      <script type="text/javascript" src="../../_static/jquery.js"></script>
+      <script type="text/javascript" src="../../_static/underscore.js"></script>
+      <script type="text/javascript" src="../../_static/doctools.js"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="../../_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>
