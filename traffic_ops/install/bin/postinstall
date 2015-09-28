@@ -27,6 +27,7 @@ use DBI;
 use JSON;
 use InstallUtils;
 use Digest::SHA1 qw(sha1_hex);
+use Data::Dumper;
 
 my %dbconf            = ();
 my %ldapconf          = ();
