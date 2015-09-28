@@ -176,12 +176,8 @@ sub register {
 		get_profile_id_by_cdn => sub {
 			my $self       = shift;
 			my $cdn_name   = shift;
-			my $profile_id = $self->db->resultset('Profile')->search(
-				{ -and => [ 'parameter.name' => 'CDN_Name', 'parameter.value' => $cdn_name, { -or => [ 'me.name' => { like => "CCR%"}, 'me.name' => { like => 'TR%' } ] } ] },
-				{
-					join => { profile_parameters => { parameter => undef } },
-				}
-			)->get_column('id')->single();
+			my %condition = ( -and => [ 'cdn.name' => $cdn_name, { -or => [ 'me.name' => { like => "CCR%" }, 'me.name' => { like => 'TR%' } ] } ] );
+			my $profile_id = $self->db->resultset('Profile')->search( \%condition, { prefetch => 'cdn' } )->get_column('id')->single();
 			return $profile_id;
 		}
 	);

@@ -25,6 +25,7 @@ my %definition_for = (
 			id          => 2,
 			name        => 'EDGE2_CDN1',
 			description => 'HP DL380 Edge',
+			cdn_id      => 1,
 		},
 	},
 	'MID2_CDN1' => {
@@ -33,6 +34,7 @@ my %definition_for = (
 			id          => 4,
 			name        => 'MID2_CDN1',
 			description => 'HP DL380 Mid',
+			cdn_id      => 1,
 		},
 	},
 	'CCR_CDN1' => {
@@ -41,6 +43,7 @@ my %definition_for = (
 			id          => 5,
 			name        => 'CCR_CDN1',
 			description => 'Comcast Content Router for cdn1.cdn.net',
+			cdn_id      => 1,
 		},
 	},
 	'GLOBAL' => {
@@ -49,6 +52,7 @@ my %definition_for = (
 			id          => 6,
 			name        => 'GLOBAL',
 			description => 'GLOBAL Traffic Ops Profile -- DO NOT DELETE',
+			cdn_id      => 1,
 		},
 	},
 	'CCR_CDN2' => {
@@ -57,6 +61,7 @@ my %definition_for = (
 			id          => 8,
 			name        => 'CCR_CDN2',
 			description => 'Comcast Content Router for cdn2.comcast.net',
+			cdn_id      => 2,
 		},
 	},
 	'TRMON_CDN1' => {
@@ -65,6 +70,7 @@ my %definition_for = (
 			id          => 11,
 			name        => 'RASCAL_CDN1',
 			description => 'TrafficMonitor for CDN1',
+			cdn_id      => 1,
 		},
 	},
 	'TRMON_CDN2' => {
@@ -73,6 +79,7 @@ my %definition_for = (
 			id          => 12,
 			name        => 'RASCAL_CDN2',
 			description => 'TrafficMonitor for CDN2 ',
+			cdn_id      => 2,
 		},
 	},
 	'EDGE1_CDN2_402' => {
@@ -81,6 +88,7 @@ my %definition_for = (
 			id          => 16,
 			name        => 'EDGE1_CDN2_402',
 			description => 'Dell R720xd, Edge, CDN2 CDN, ATS v4.0.2',
+			cdn_id      => 2,
 		},
 	},
 	'EDGE1_CDN1_402' => {
@@ -89,6 +97,7 @@ my %definition_for = (
 			id          => 19,
 			name        => 'EDGE1_CDN1_402',
 			description => 'Dell R720xd, Edge, CDN1 CDN, ATS v4.0.2',
+			cdn_id      => 1,
 		},
 	},
 	'MID1_CDN2_402' => {
@@ -97,6 +106,7 @@ my %definition_for = (
 			id          => 20,
 			name        => 'MID1_CDN2_402',
 			description => 'Dell R720xd, Mid, CDN2 CDN, new vol config, ATS v4.0.x',
+			cdn_id      => 2,
 		},
 	},
 	'EDGE2_CDN1_402' => {
@@ -105,6 +115,7 @@ my %definition_for = (
 			id          => 21,
 			name        => 'EDGE2_CDN1_402',
 			description => 'HP DL380, Edge, CDN1 CDN, ATS v4.0.x',
+			cdn_id      => 1,
 		},
 	},
 	'EDGE2_CDN2_402' => {
@@ -113,6 +124,7 @@ my %definition_for = (
 			id          => 23,
 			name        => 'EDGE2_CDN2_402',
 			description => 'HP DL380, Edge, CDN2 CDN, ATS v4.0.x',
+			cdn_id      => 2,
 		},
 	},
 	'EDGE1_CDN2_421' => {
@@ -121,6 +133,7 @@ my %definition_for = (
 			id          => 26,
 			name        => 'EDGE1_CDN2_421',
 			description => 'Dell R720xd, Edge, CDN2 CDN, ATS v4.2.1, Consistent Parent',
+			cdn_id      => 2,
 		},
 	},
 	'EDGE1_CDN1_421' => {
@@ -129,6 +142,7 @@ my %definition_for = (
 			id          => 27,
 			name        => 'EDGE1_CDN1_421',
 			description => 'Dell R720xd, Edge, CDN1 CDN, ATS v4.2.1, Consistent Parent',
+			cdn_id      => 1,
 		},
 	},
 	'MID1_CDN2_421' => {
@@ -137,6 +151,7 @@ my %definition_for = (
 			id          => 30,
 			name        => 'MID1_CDN2_421',
 			description => 'Dell R720xd, Mid, CDN2 CDN, ATS v4.2.1',
+			cdn_id      => 2,
 		},
 	},
 	'MID1_CDN1_421' => {
@@ -145,6 +160,7 @@ my %definition_for = (
 			id          => 31,
 			name        => 'MID1_CDN1_421',
 			description => 'Dell R720xd, Mid, CDN1 CDN, ATS v4.2.1',
+			cdn_id      => 2,
 		},
 	},
 	'TRSTATS_ALL' => {
@@ -153,6 +169,7 @@ my %definition_for = (
 			id          => 34,
 			name        => 'TRSTATS_ALL',
 			description => 'TRSTATS (Redis) profile for all CDNs',
+			cdn_id      => 2,
 		},
 	},
 	'EDGE2_CDN2_421' => {
@@ -161,6 +178,7 @@ my %definition_for = (
 			id          => 37,
 			name        => 'EDGE2_CDN2_421',
 			description => 'HP DL380, Edge, CDN2 CDN, ATS v4.2.1, Consistent Parent',
+			cdn_id      => 2,
 		},
 	},
 	'EDGE1_CDN1_421_SSL' => {
@@ -169,6 +187,7 @@ my %definition_for = (
 			id          => 45,
 			name        => 'EDGE1_CDN1_421_SSL',
 			description => 'Dell r720xd, Edge, CDN1 CDN, ATS v4.2.1, SSL enabled',
+			cdn_id      => 1,
 		},
 	},
 	'RIAK_ALL' => {
@@ -177,6 +196,7 @@ my %definition_for = (
 			id          => 47,
 			name        => 'RIAK_ALL',
 			description => 'Riak profile for all CDNs',
+			cdn_id      => 2,
 		},
 	},
 	ORG1 => {
@@ -185,6 +205,7 @@ my %definition_for = (
 			id          => 48,
 			name        => 'ORG1_CDN1',
 			description => 'Multi site origin profile 1',
+			cdn_id      => 1,
 		},
 	},
 	ORG2 => {
@@ -193,6 +214,7 @@ my %definition_for = (
 			id          => 49,
 			name        => 'ORG2_CDN1',
 			description => 'Multi site origin profile 2',
+			cdn_id      => 1,
 		},
 	},
 );

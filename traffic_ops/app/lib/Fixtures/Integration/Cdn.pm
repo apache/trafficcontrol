@@ -1,4 +1,4 @@
-package Fixtures::CachegroupParameter;
+package Fixtures::Integration::Cdn;
 #
 # Copyright 2015 Comcast Cable Communications Management, LLC
 #
@@ -17,45 +17,36 @@ package Fixtures::CachegroupParameter;
 use Moose;
 extends 'DBIx::Class::EasyFixture';
 use namespace::autoclean;
+use Digest::SHA1 qw(sha1_hex);
 
 my %definition_for = (
-  cachegroupparameter1 => {
-    new   => 'CachegroupParameter',
-    using => {
-      cachegroup => 1,
-      parameter  => 60,
-    },
-  },
-  cachegroupparameter2 => {
-    new   => 'CachegroupParameter',
-    using => {
-      cachegroup => 1,
-      parameter  => 61,
-    },
-  },
-  cachegroupparameter3 => {
-    new   => 'CachegroupParameter',
-    using => {
-      cachegroup => 2,
-      parameter  => 60,
-    },
-  },
-  cachegroupparameter4 => {
-    new   => 'CachegroupParameter',
-    using => {
-      cachegroup => 2,
-      parameter  => 61,
-    },
-  },
+	cdn_number_1 => {
+		new   => 'Cdn',
+		using => {
+			id          => 1,
+			name        => 'cdn_number_1',
+		},
+	},
+	cdn_number_2 => {
+		new   => 'Cdn',
+		using => {
+			id          => 2,
+			name        => 'cdn_number_2',
+		},
+	},
 );
 
+sub name {
+	return "Cdn";
+}
+
 sub get_definition {
-  my ( $self, $name ) = @_;
-  return $definition_for{$name};
+	my ( $self, $name ) = @_;
+	return $definition_for{$name};
 }
 
 sub all_fixture_names {
-  return keys %definition_for;
+	return keys %definition_for;
 }
 
 __PACKAGE__->meta->make_immutable;

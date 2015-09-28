@@ -27,22 +27,22 @@ sub ort1 {
     my $host_name = $self->param('hostname');
 
 	my %condition = ( 'servers.host_name' => $host_name );
-	my $rs_profile = $self->db->resultset('Profile')->search( \%condition, { join => 'servers', columns => [qw/name id/] } );
-  	my $row = $rs_profile->next;
-    $data_obj->{'profile'}->{'name'} = $row->name;
-    $data_obj->{'profile'}->{'id'} = $row->id;
+	my $rs_profile = $self->db->resultset('Profile')->search( \%condition, { prefetch => 'cdn', join => 'servers', columns => [qw/name id/] } );
+	my $row = $rs_profile->next;
+	if ($row) {
+	    $data_obj->{'profile'}->{'name'} = $row->name;
+	    $data_obj->{'profile'}->{'id'} = $row->id;
+	    $data_obj->{'other'}->{'CDN_name'} = $row->cdn->name;
 
-#  $rs_route_type = $self->db->resultset('Type')->search( { -or => [ name => 'HTTP', name => 'HTTP_NO_CACHE', name => 'HTTP_LIVE' ] } );
-    %condition = ( 'profile_parameters.profile' => $data_obj->{'profile'}->{'id'}, -or => ['name' => 'location', 'name' => 'CDN_name'] );
-    my $rs_config = $self->db->resultset('Parameter')->search( \%condition, { join => 'profile_parameters' } );
-    while ( my $row = $rs_config->next ) {
-		if ( $row->name eq 'location' ) {
-        	$data_obj->{'config_files'}->{$row->config_file}->{'location'} = $row->value;
-    	}
-		else {
-        	$data_obj->{'other'}->{$row->name}= $row->value;
+	    %condition = ( 'profile_parameters.profile' => $data_obj->{'profile'}->{'id'}, -or => [ 'name' => 'location' ] );
+	    my $rs_config = $self->db->resultset('Parameter')->search( \%condition, { join => 'profile_parameters' } );
+	    while ( my $row = $rs_config->next ) {
+			if ( $row->name eq 'location' ) {
+				$data_obj->{'config_files'}->{$row->config_file}->{'location'} = $row->value;
+			}
 		}
 	}
+
 	$self->render( json => $data_obj );	
 }
 
@@ -53,22 +53,16 @@ sub __get_json_parameter_list_by_host {
 	my $key_name = shift || "name";
 	my $key_value = shift || "value";
 	my $data_obj = [];
+
+	my $profile_id = $self->db->resultset('Server')->search( { host_name => $host } )->get_column('profile')->single();
 	
-	my %condition = ( 'servers.host_name' => $host );
-	my $rs_profile = $self->db->resultset('Profile')->search( \%condition, { join => 'servers', columns => [qw/name id/] } );
-	my $row = $rs_profile->next;
-	
-	if (defined($row) && defined($row->id)) {
-		my $id = $row->id;
-		    
-		%condition = ( 'profile_parameters.profile' => $id, 'config_file' => $value );
-		my $rs_config = $self->db->resultset('Parameter')->search( \%condition, { join => 'profile_parameters' } );
-		while ( my $row = $rs_config->next ) {
-			# name = package name, value = package version
-			push(@{$data_obj}, { $key_name => $row->name, $key_value => $row->value });
-		}	
+	my %condition = ( 'profile_parameters.profile' => $profile_id, config_file => $value );
+	my $rs_config = $self->db->resultset('Parameter')->search( \%condition, { join => 'profile_parameters' } );
+
+	while ( my $row = $rs_config->next ) {
+		push(@{$data_obj}, { $key_name => $row->name, $key_value => $row->value });
 	}
-	
+
 	return($data_obj);
 }
 
@@ -82,20 +76,19 @@ sub __get_json_parameter_by_host {
 	my $data_obj;
 	
 	my %condition = ( 'servers.host_name' => $host );
-	my $rs_profile = $self->db->resultset('Profile')->search( \%condition, { join => 'servers', columns => [qw/name id/] } );
+	my $rs_profile = $self->db->resultset('Profile')->search( \%condition, { prefetch => 'cdn', join => 'servers', columns => [qw/name id/] } );
 	my $row = $rs_profile->next;
 	my $id = $row->id;
+	if (defined($row) && defined($row->cdn->name)) {
+		push(@{$data_obj}, { $key_name => "CDN_Name", $key_value => $row->cdn->name });
+	}
 	
 	%condition = ( 'profile_parameters.profile' => $id, 'config_file' => $value, name => $parameter );
 	my $rs_config = $self->db->resultset('Parameter')->search( \%condition, { join => 'profile_parameters' } );
 	$row = $rs_config->next;
 	
 	if (defined($row) && defined($row->name) && defined($row->value)) {
-		$data_obj->{$key_name} = $row->name;
-		$data_obj->{$key_value} = $row->value;
-	} else {
-		# this is to ensure that we send an empty json response
-		$data_obj->{""};
+		push(@{$data_obj}, { $key_name => $row->name, $key_value => $row->value });
 	}
 	
 	return($data_obj);

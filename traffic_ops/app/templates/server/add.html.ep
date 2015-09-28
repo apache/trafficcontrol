@@ -30,7 +30,17 @@
 //	}, "json");
 //});
 $(function(){
-		$.get("/api/1.1/cachegroups.json", function(data){
+	$.get("/api/1.2/cdns.json", function(data){
+		var response = data['response'];
+		$.each(response, function(idx, val) {
+			if (response[idx].id == "<%= stash 'cdn' %>") {
+				$("#cdn").append("<option selected=\"selected\" value=" + response[idx].id + ">" + response[idx].name + "</option>");
+			} else {
+				$("#cdn").append("<option value=" + response[idx].id + ">" + response[idx].name + "</option>");
+			}
+		});
+	}, "json");
+	$.get("/api/1.1/cachegroups.json", function(data){
 		var response = data['response'];
 		$.each(response, function(idx, val) {
 			if (response[idx].id == "<%= stash 'cachegroup' %>") {
@@ -111,6 +121,13 @@ $(function(){
 						<select id="interface_mtu" name="interface_mtu">
 							<option default>9000</option>
 							<option>1500</option>
+						</select>
+					</td>
+				</tr>
+				<tr>
+					<td>CDN</td>
+					<td>
+						<select id="cdn" name="cdn">
 						</select>
 					</td>
 				</tr>

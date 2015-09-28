@@ -41,13 +41,13 @@ Test::TestHelper->load_core_data($schema);
 Test::TestHelper->load_all_fixtures( Fixtures::CachegroupParameter->new( { schema => $schema, no_transactions => 1 } ) );
 
 ok $t->post_ok( '/login', => form => { u => 'portal', p => Test::TestHelper::ADMIN_USER_PASSWORD } )->status_is(302)
-	->or( sub { diag $t->tx->res->content->asset->{content}; } );
+  ->or( sub { diag $t->tx->res->content->asset->{content}; } );
 
 $t->get_ok("/api/1.1/cachegroupparameters.json")->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } )
-	->json_is( '/response/cachegroupParameters/0/cachegroup', 'mid-northeast-group' )->json_is( '/response/cachegroupParameters/0/parameter', "1" )
-	->json_is( '/response/cachegroupParameters/1/cachegroup', 'mid-northeast-group' )->json_is( '/response/cachegroupParameters/0/parameter', "1" )
-	->json_is( '/response/cachegroupParameters/1/cachegroup', 'mid-northeast-group' )->json_is( '/response/cachegroupParameters/1/parameter', "2" )
-	->json_is( '/response/cachegroupParameters/2/cachegroup', 'mid-northwest-group' )->json_is( '/response/cachegroupParameters/2/parameter', "1" );
+  ->json_is( '/response/cachegroupParameters/0/cachegroup', 'mid-northeast-group' )->json_is( '/response/cachegroupParameters/0/parameter', "60" )
+  ->json_is( '/response/cachegroupParameters/1/cachegroup', 'mid-northeast-group' )->json_is( '/response/cachegroupParameters/0/parameter', "60" )
+  ->json_is( '/response/cachegroupParameters/1/cachegroup', 'mid-northeast-group' )->json_is( '/response/cachegroupParameters/1/parameter', "61" )
+  ->json_is( '/response/cachegroupParameters/2/cachegroup', 'mid-northwest-group' )->json_is( '/response/cachegroupParameters/2/parameter', "60" );
 
 ok $t->get_ok('/logout')->status_is(302)->or( sub { diag $t->tx->res->content->asset->{content}; } );
 $dbh->disconnect();

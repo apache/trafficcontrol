@@ -31,6 +31,27 @@ use Mojo::Upload;
 use Mojo::Log;
 use Text::ParseWords;
 
+sub getCdnCheckData {
+	my $self = shift;
+	my @data;
+	my $cdns       = '';
+	my $cdnHashRef = {};
+	my $orderby        = "name";
+	$orderby = $self->param('orderby') if ( defined $self->param('orderby') );
+	my $rs_data = $self->db->resultset("Cdn")->search( undef, { order_by => $orderby } );
+	while ( my $row = $rs_data->next ) {
+		$cdns .= $row->name . ',';
+		$cdnHashRef->{ $row->name } = $row->id;
+		push(
+			@data, {
+				"id"           => $row->id,
+				"name"         => $row->name,
+			}
+		);
+	}
+	return $cdnHashRef;
+}
+
 sub getCachegroupCheckData {    # renamed to 'CacheGroup'
 	my $self = shift;
 	my @data;
@@ -175,22 +196,23 @@ sub getParamHashRef {
 	$paramHashRef->{'ip6_address'}      = $p->[6];
 	$paramHashRef->{'ip6_gateway'}      = $p->[7];
 	$paramHashRef->{'interface_mtu'}    = $p->[8];
-	$paramHashRef->{'cachegroup'}       = $p->[9];
-	$paramHashRef->{'phys_location'}    = $p->[10];
-	$paramHashRef->{'rack'}             = $p->[11];
-	$paramHashRef->{'type'}             = $p->[12];
-	$paramHashRef->{'profile'}          = $p->[13];
-	$paramHashRef->{'tcp_port'}         = $p->[14];
-	$paramHashRef->{'mgmt_ip_address'}  = $p->[15];
-	$paramHashRef->{'mgmt_ip_netmask'}  = $p->[16];
-	$paramHashRef->{'mgmt_ip_gateway'}  = $p->[17];
-	$paramHashRef->{'ilo_ip_address'}   = $p->[18];
-	$paramHashRef->{'ilo_ip_netmask'}   = $p->[19];
-	$paramHashRef->{'ilo_ip_gateway'}   = $p->[20];
-	$paramHashRef->{'ilo_username'}     = $p->[21];
-	$paramHashRef->{'ilo_password'}     = $p->[22];
-	$paramHashRef->{'router_host_name'} = $p->[23];
-	$paramHashRef->{'router_port_name'} = $p->[24];
+	$paramHashRef->{'cdn'}              = $p->[9];
+	$paramHashRef->{'cachegroup'}       = $p->[10];
+	$paramHashRef->{'phys_location'}    = $p->[11];
+	$paramHashRef->{'rack'}             = $p->[12];
+	$paramHashRef->{'type'}             = $p->[13];
+	$paramHashRef->{'profile'}          = $p->[14];
+	$paramHashRef->{'tcp_port'}         = $p->[15];
+	$paramHashRef->{'mgmt_ip_address'}  = $p->[16];
+	$paramHashRef->{'mgmt_ip_netmask'}  = $p->[17];
+	$paramHashRef->{'mgmt_ip_gateway'}  = $p->[18];
+	$paramHashRef->{'ilo_ip_address'}   = $p->[19];
+	$paramHashRef->{'ilo_ip_netmask'}   = $p->[20];
+	$paramHashRef->{'ilo_ip_gateway'}   = $p->[21];
+	$paramHashRef->{'ilo_username'}     = $p->[22];
+	$paramHashRef->{'ilo_password'}     = $p->[23];
+	$paramHashRef->{'router_host_name'} = $p->[24];
+	$paramHashRef->{'router_port_name'} = $p->[25];
 	$paramHashRef->{'status'}           = '';
 	$paramHashRef->{'csv_line_number'}  = $lineNumber;
 	return $paramHashRef;
@@ -199,6 +221,8 @@ sub getParamHashRef {
 sub checkNamedValues {
 	my $lineNumber          = shift;
 	my $errorLineDelim      = shift;
+	my $enteredCdn          = shift;
+	my $cdnHashRef          = shift;
 	my $enteredCachegroup   = shift;
 	my $cachegroupHashRef   = shift;
 	my $enteredType         = shift;
@@ -210,6 +234,16 @@ sub checkNamedValues {
 	my $processCSVErrors    = '';
 
 	# allow integers for backward compatability but if non-integer then validate as well
+	if ( !exists $cdnHashRef->{$enteredCdn} ) {
+		$processCSVErrors
+			.= $errorLineDelim
+			. "[LINE #:"
+			. $lineNumber
+			. "]<span style='color:blue;'>CDN NOT VALID["
+			. $enteredCdn
+			. "] CASE SENSITIVE.</span>";
+	}
+
 	if ( !exists $cachegroupHashRef->{$enteredCachegroup} ) {
 		$processCSVErrors
 			.= $errorLineDelim
@@ -247,6 +281,7 @@ sub checkNamedValues {
 sub processCSV {
 	my $self                = shift;
 	my $fileNameAndPath     = shift;
+	my $cdnHashRef          = shift;
 	my $cachegroupHashRef   = shift;
 	my $typeHashRef         = shift;
 	my $profileHashRef      = shift;
@@ -273,7 +308,7 @@ sub processCSV {
 
 					#print Dumper(@p);
 					my $itemCount    = scalar @p;
-					my $correctCount = 25;
+					my $correctCount = 26;
 					if ( $itemCount > $correctCount || $itemCount < $correctCount ) {
 						$processCSVErrors
 							.= $errorLineDelim
@@ -282,10 +317,10 @@ sub processCSV {
 							. "] [ITEM COUNT = "
 							. $itemCount . "/"
 							. $correctCount
-							. "] PLEASE FIX EACH LINE AND ENSURE AN ITEM COUNT = 25.";
+							. "] PLEASE FIX EACH LINE AND ENSURE AN ITEM COUNT = " . $correctCount . ".";
 						$processCSVErrors
 							.= "</li><ul><li style='color:blue;'>"
-							. "[host,domain,int,ip4,subnet,gw,ip6,gw6,mtu,cg,phys_loc,rack,type,prof,port,1g_ip,1g_subnet,1g_gw,ilo_ip,ilo_subnet,ilo_gw,ilo_user,ilo_pwd,r_host,r_port]"
+							. "[host,domain,int,ip4,subnet,gw,ip6,gw6,mtu,cdn,cachegroup,phys_loc,rack,type,prof,port,1g_ip,1g_subnet,1g_gw,ilo_ip,ilo_subnet,ilo_gw,ilo_user,ilo_pwd,r_host,r_port]"
 							. "</li></ul>";
 					}
 					else {
@@ -293,13 +328,14 @@ sub processCSV {
 
 						# print Dumper($paramHashRef);
 						$processCSVErrors .= &UI::Server::check_server_input( $self, $paramHashRef );
-						my $enteredCachegroup   = $p[9];
-						my $enteredPhysLocation = $p[10];
-						my $enteredType         = $p[12];
-						my $enteredProfile      = $p[13];
+						my $enteredCdn          = $p[9];
+						my $enteredCachegroup   = $p[10];
+						my $enteredPhysLocation = $p[11];
+						my $enteredType         = $p[13];
+						my $enteredProfile      = $p[14];
 						$processCSVErrors .= &checkNamedValues(
-							$lineNumber,  $errorLineDelim, $enteredCachegroup, $cachegroupHashRef,   $enteredType,
-							$typeHashRef, $enteredProfile, $profileHashRef,    $enteredPhysLocation, $physLocationHashRef
+							$lineNumber, $errorLineDelim, $enteredCdn, $cdnHashRef, $enteredCachegroup, $cachegroupHashRef, $enteredType,
+							$typeHashRef, $enteredProfile, $profileHashRef, $enteredPhysLocation, $physLocationHashRef
 						);
 					}
 				}
@@ -312,7 +348,7 @@ sub processCSV {
 				my $keep         = 0;
 				my @p            = parse_line( $delim, $keep, $line );
 				my $itemCount    = scalar @p;
-				my $correctCount = 25;
+				my $correctCount = 26;
 				if ( $itemCount > $correctCount || $itemCount < $correctCount ) {
 					$processCSVErrors
 						.= $errorLineDelim
@@ -321,22 +357,23 @@ sub processCSV {
 						. "] [ITEM COUNT = "
 						. $itemCount . "/"
 						. $correctCount
-						. "] PLEASE FIX EACH LINE AND ENSURE AN ITEM COUNT = 25.";
+						. "] PLEASE FIX EACH LINE AND ENSURE AN ITEM COUNT = " . $correctCount . ".";
 					$processCSVErrors
 						.= "</li><ul><li style='color:blue;'>"
-						. "[host,domain,int,ip4,subnet,gw,ip6,gw6,mtu,cachegroup,phys_loc,rack,type,prof,port,1g_ip,1g_subnet,1g_gw,ilo_ip,ilo_subnet,ilo_gw,ilo_user,ilo_pwd,r_host,r_port]"
+						. "[host,domain,int,ip4,subnet,gw,ip6,gw6,mtu,cdn,cachegroup,phys_loc,rack,type,prof,port,1g_ip,1g_subnet,1g_gw,ilo_ip,ilo_subnet,ilo_gw,ilo_user,ilo_pwd,r_host,r_port]"
 						. "</li></ul>";
 				}
 				else {
 					my $paramHashRef = &getParamHashRef( \@p, $lineNumber );
 					$processCSVErrors .= &UI::Server::check_server_input( $self, $paramHashRef );
-					my $enteredCachegroup   = $p[9];
-					my $enteredPhysLocation = $p[10];
-					my $enteredType         = $p[12];
-					my $enteredProfile      = $p[13];
+					my $enteredCdn          = $p[9];
+					my $enteredCachegroup   = $p[10];
+					my $enteredPhysLocation = $p[11];
+					my $enteredType         = $p[13];
+					my $enteredProfile      = $p[14];
 					$processCSVErrors .= &checkNamedValues(
-						$lineNumber,  $errorLineDelim, $enteredCachegroup, $cachegroupHashRef,   $enteredType,
-						$typeHashRef, $enteredProfile, $profileHashRef,    $enteredPhysLocation, $physLocationHashRef
+						$lineNumber, $errorLineDelim, $enteredCdn, $cdnHashRef, $enteredCachegroup, $cachegroupHashRef, $enteredType,
+						$typeHashRef, $enteredProfile, $profileHashRef, $enteredPhysLocation, $physLocationHashRef
 					);
 				}
 			}
@@ -350,10 +387,13 @@ sub processCSV {
 
 sub replaceNamedLookupValues {
 	my $paramHashRef        = shift;
+	my $cdnHashRef          = shift;
 	my $cachegroupHashRef   = shift;
 	my $typeHashRef         = shift;
 	my $profileHashRef      = shift;
 	my $physLocationHashRef = shift;
+
+	$paramHashRef->{'cdn'} = $cdnHashRef->{ $paramHashRef->{'cdn'} };
 
 	#  if ($paramHashRef->{'cachegroup'} !~ /^[+-]?\d+$/) {  # if not an integer
 	$paramHashRef->{'cachegroup'} = $cachegroupHashRef->{ $paramHashRef->{'cachegroup'} };
@@ -377,6 +417,7 @@ sub replaceNamedLookupValues {
 sub processSynchronizeCSV {
 	my $self                = shift;
 	my $fileNameAndPath     = shift;
+	my $cdnHashRef          = shift;
 	my $cachegroupHashRef   = shift;
 	my $typeHashRef         = shift;
 	my $profileHashRef      = shift;
@@ -399,7 +440,7 @@ sub processSynchronizeCSV {
 					my $keep         = 0;
 					my @p            = parse_line( $delim, $keep, $pLine );
 					my $itemCount    = scalar @p;
-					my $correctCount = 25;
+					my $correctCount = 26;
 					if ( $itemCount > $correctCount || $itemCount < $correctCount ) {
 						$processCSVErrors
 							.= $errorLineDelim
@@ -408,15 +449,15 @@ sub processSynchronizeCSV {
 							. "] [ITEM COUNT = "
 							. $itemCount . "/"
 							. $correctCount
-							. "] PLEASE FIX EACH LINE AND ENSURE AN ITEM COUNT = 25.";
+							. "] PLEASE FIX EACH LINE AND ENSURE AN ITEM COUNT = " . $correctCount . ".";
 						$processCSVErrors
 							.= "</li><ul><li style='color:blue;'>"
-							. "[host,domain,int,ip4,subnet,gw,ip6,gw6,mtu,cachegroup,phys_loc,rack,type,prof,port,1g_ip,1g_subnet,1g_gw,ilo_ip,ilo_subnet,ilo_gw,ilo_user,ilo_pwd,r_host,r_port]"
+							. "[host,domain,int,ip4,subnet,gw,ip6,gw6,mtu,cdn,cachegroup,phys_loc,rack,type,prof,port,1g_ip,1g_subnet,1g_gw,ilo_ip,ilo_subnet,ilo_gw,ilo_user,ilo_pwd,r_host,r_port]"
 							. "</li></ul>";
 					}
 					else {
 						my $paramHashRef = &getParamHashRef( \@p, $lineNumber );
-						$paramHashRef = &replaceNamedLookupValues( $paramHashRef, $cachegroupHashRef, $typeHashRef, $profileHashRef, $physLocationHashRef );
+						$paramHashRef = &replaceNamedLookupValues( $paramHashRef, $cdnHashRef, $cachegroupHashRef, $typeHashRef, $profileHashRef, $physLocationHashRef );
 
 						# insert/create new record
 						eval { &UI::Server::create( $self, $paramHashRef ) };
@@ -453,7 +494,7 @@ sub processSynchronizeCSV {
 				my $keep         = 0;
 				my @p            = parse_line( $delim, $keep, $line );
 				my $itemCount    = scalar @p;
-				my $correctCount = 25;
+				my $correctCount = 26;
 				if ( $itemCount > $correctCount || $itemCount < $correctCount ) {
 					$processCSVErrors
 						.= $errorLineDelim
@@ -462,15 +503,15 @@ sub processSynchronizeCSV {
 						. "] [ITEM COUNT = "
 						. $itemCount . "/"
 						. $correctCount
-						. "] PLEASE FIX EACH LINE AND ENSURE AN ITEM COUNT = 25.";
+						. "] PLEASE FIX EACH LINE AND ENSURE AN ITEM COUNT = " . $correctCount . ".";
 					$processCSVErrors
 						.= "</li><ul><li style='color:blue;'>"
-						. "[host,domain,int,ip4,subnet,gw,ip6,gw6,mtu,cachegroup,phys_loc,rack,type,prof,port,1g_ip,1g_subnet,1g_gw,ilo_ip,ilo_subnet,ilo_gw,ilo_user,ilo_pwd,r_host,r_port]"
+						. "[host,domain,int,ip4,subnet,gw,ip6,gw6,mtu,cdn,cachegroup,phys_loc,rack,type,prof,port,1g_ip,1g_subnet,1g_gw,ilo_ip,ilo_subnet,ilo_gw,ilo_user,ilo_pwd,r_host,r_port]"
 						. "</li></ul>";
 				}
 				else {
 					my $paramHashRef = &getParamHashRef( \@p, $lineNumber );
-					$paramHashRef = &replaceNamedLookupValues( $paramHashRef, $cachegroupHashRef, $typeHashRef, $profileHashRef, $physLocationHashRef );
+					$paramHashRef = &replaceNamedLookupValues( $paramHashRef, $cdnHashRef, $cachegroupHashRef, $typeHashRef, $profileHashRef, $physLocationHashRef );
 
 					# insert/create new record
 					eval { &UI::Server::createserver( $self, $paramHashRef ) };
@@ -521,14 +562,15 @@ sub upload {
 	my $fileNameAndPath = $serverPath . $upload->filename;
 	$upload->move_to($fileNameAndPath);
 
+	my $cdnHashRef          = &getCdnCheckData($self);
 	my $cachegroupHashRef   = &getCachegroupCheckData($self);
 	my $typeHashRef         = &getTypeCheckData($self);
 	my $profileHashRef      = &getProfileCheckData($self);
 	my $physLocationHashRef = &getPhysLocationCheckData($self);
-	my $processCSVErrors    = &processCSV( $self, $fileNameAndPath, $cachegroupHashRef, $typeHashRef, $profileHashRef, $physLocationHashRef );
+	my $processCSVErrors    = &processCSV( $self, $fileNameAndPath, $cdnHashRef, $cachegroupHashRef, $typeHashRef, $profileHashRef, $physLocationHashRef );
 
 	if ( length($processCSVErrors) <= 0 ) {
-		$processCSVErrors = &processSynchronizeCSV( $self, $fileNameAndPath, $cachegroupHashRef, $typeHashRef, $profileHashRef, $physLocationHashRef );
+		$processCSVErrors = &processSynchronizeCSV( $self, $fileNameAndPath, $cdnHashRef, $cachegroupHashRef, $typeHashRef, $profileHashRef, $physLocationHashRef );
 	}
 	return $self->render( json => "{\"success\":true,\"serverpath\":\""
 			. $serverPath
