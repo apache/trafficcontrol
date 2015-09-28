@@ -1,12 +1,12 @@
 use utf8;
-package Schema::Result::FederationMappingDeliveryservice;
+package Schema::Result::FederationDeliveryservice;
 
 # Created by DBIx::Class::Schema::Loader
 # DO NOT MODIFY THE FIRST PART OF THIS FILE
 
 =head1 NAME
 
-Schema::Result::FederationMappingDeliveryservice
+Schema::Result::FederationDeliveryservice
 
 =cut
 
@@ -15,15 +15,15 @@ use warnings;
 
 use base 'DBIx::Class::Core';
 
-=head1 TABLE: C<federation_mapping_deliveryservice>
+=head1 TABLE: C<federation_deliveryservice>
 
 =cut
 
-__PACKAGE__->table("federation_mapping_deliveryservice");
+__PACKAGE__->table("federation_deliveryservice");
 
 =head1 ACCESSORS
 
-=head2 federation_mapping
+=head2 federation
 
   data_type: 'integer'
   is_foreign_key: 1
@@ -45,7 +45,7 @@ __PACKAGE__->table("federation_mapping_deliveryservice");
 =cut
 
 __PACKAGE__->add_columns(
-  "federation_mapping",
+  "federation",
   { data_type => "integer", is_foreign_key => 1, is_nullable => 0 },
   "deliveryservice",
   { data_type => "integer", is_foreign_key => 1, is_nullable => 0 },
@@ -62,7 +62,7 @@ __PACKAGE__->add_columns(
 
 =over 4
 
-=item * L</federation_mapping>
+=item * L</federation>
 
 =item * L</deliveryservice>
 
@@ -70,7 +70,7 @@ __PACKAGE__->add_columns(
 
 =cut
 
-__PACKAGE__->set_primary_key("federation_mapping", "deliveryservice");
+__PACKAGE__->set_primary_key("federation", "deliveryservice");
 
 =head1 RELATIONS
 
@@ -89,24 +89,24 @@ __PACKAGE__->belongs_to(
   { is_deferrable => 1, on_delete => "CASCADE", on_update => "CASCADE" },
 );
 
-=head2 federation_mapping
+=head2 federation
 
 Type: belongs_to
 
-Related object: L<Schema::Result::FederationMapping>
+Related object: L<Schema::Result::Federation>
 
 =cut
 
 __PACKAGE__->belongs_to(
-  "federation_mapping",
-  "Schema::Result::FederationMapping",
-  { id => "federation_mapping" },
+  "federation",
+  "Schema::Result::Federation",
+  { id => "federation" },
   { is_deferrable => 1, on_delete => "CASCADE", on_update => "CASCADE" },
 );
 
 
-# Created by DBIx::Class::Schema::Loader v0.07042 @ 2015-09-24 14:40:29
-# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:ZJnYiFJUW0BPhVPu51fYnA
+# Created by DBIx::Class::Schema::Loader v0.07042 @ 2015-09-28 13:05:02
+# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:WFPKsZLhl68a4TZwfNUURA
 
 
 # You can replace this text with custom code or comments, and it will be preserved on regeneration

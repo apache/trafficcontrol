@@ -26,9 +26,10 @@ use warnings;
 use Schema;
 use Fixtures::TmUser;
 use Test::TestHelper;
-use Fixtures::FederationMapping;
-use Fixtures::FederationMappingDeliveryservice;
+use Fixtures::Federation;
+use Fixtures::FederationDeliveryservice;
 use Fixtures::FederationResolver;
+use Fixtures::FederationFederationResolver;
 
 BEGIN { $ENV{MOJO_MODE} = "test" }
 
@@ -52,13 +53,16 @@ Test::TestHelper->load_all_fixtures($federation_resolver);
 #
 # FederationMapping
 #
-my $federation_mapping = Fixtures::FederationMapping->new($schema_values);
-Test::TestHelper->load_all_fixtures($federation_mapping);
+my $federation = Fixtures::Federation->new($schema_values);
+Test::TestHelper->load_all_fixtures($federation);
 
-# FederationMappingDeliveryservice
+# FederationDeliveryservice
 #
-my $federation_mapping_deliveryservice = Fixtures::FederationMappingDeliveryservice->new($schema_values);
-Test::TestHelper->load_all_fixtures($federation_mapping_deliveryservice);
+my $fmd = Fixtures::FederationDeliveryservice->new($schema_values);
+Test::TestHelper->load_all_fixtures($fmd);
+
+my $federation_federation_resolver = Fixtures::FederationFederationResolver->new($schema_values);
+Test::TestHelper->load_all_fixtures($federation_federation_resolver);
 
 #login
 ok $t->post_ok( '/login', => form => { u => Test::TestHelper::ADMIN_USER, p => Test::TestHelper::ADMIN_USER_PASSWORD } )->status_is(302)

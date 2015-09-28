@@ -1,4 +1,4 @@
-package UI::FederationMapping;
+package UI::Federation;
 #
 # Copyright 2015 Comcast Cable Communications Management, LLC
 #
@@ -41,7 +41,7 @@ sub add {
 	my $self = shift;
 
 	&stash_role($self);
-	$self->stash( federation_mapping => {}, fbox_layout => 1, mode => 'add' );
+	$self->stash( federation => {}, fbox_layout => 1, mode => 'add' );
 }
 
 # Read
@@ -51,7 +51,7 @@ sub read {
 	my @data;
 	my $orderby = "name";
 	$orderby = $self->param('orderby') if ( defined $self->param('orderby') );
-	my $dbh = $self->db->resultset("FederationMapping")->search( undef, { prefetch => [ { 'role' => undef } ], order_by => 'me.' . $orderby } );
+	my $dbh = $self->db->resultset("Federation")->search( undef, { prefetch => [ { 'role' => undef } ], order_by => 'me.' . $orderby } );
 	while ( my $row = $dbh->next ) {
 		push(
 			@data, {
@@ -71,18 +71,18 @@ sub read {
 sub edit {
 	my $self = shift;
 	my $id   = $self->param('id');
-	my $dbh  = $self->db->resultset('FederationMapping')->search( { id => $id } );
+	my $dbh  = $self->db->resultset('Federation')->search( { id => $id } );
 	my $data = $dbh->single;
 	&stash_role($self);
 
 	my %delivery_services = get_delivery_services( $self, $id );
 	$self->stash(
-		federation_mapping => $data,
-		mode               => 'edit',
-		fbox_layout        => 1,
-		delivery_services  => \%delivery_services
+		federation        => $data,
+		mode              => 'edit',
+		fbox_layout       => 1,
+		delivery_services => \%delivery_services
 	);
-	return $self->render('federation_mapping/edit');
+	return $self->render('federation/edit');
 }
 
 sub get_delivery_services {
@@ -140,7 +140,7 @@ sub update {
 		$dbh->update();
 		$self->flash( message => "User was updated successfully." );
 		$self->stash( mode => 'edit' );
-		return $self->redirect_to( '/federation_mapping/' . $tm_user_id . '/edit' );
+		return $self->redirect_to( '/federation/' . $tm_user_id . '/edit' );
 	}
 	else {
 		$self->edit();
@@ -174,16 +174,16 @@ sub associated_delivery_services {
 sub create {
 	my $self = shift;
 	&stash_role($self);
-	$self->stash( fbox_layout => 1, mode => 'add', federation_mapping => {} );
+	$self->stash( fbox_layout => 1, mode => 'add', federation => {} );
 	if ( $self->is_valid("add") ) {
 		my $new_id = $self->create_federation_mapping();
 		if ( $new_id != -1 ) {
-			$self->flash( message => 'Federation Mapping created successfully.' );
+			$self->flash( message => 'Federation created successfully.' );
 			return $self->redirect_to('/close_fancybox.html');
 		}
 	}
 	else {
-		return $self->render('federation_mapping/add');
+		return $self->render('federation/add');
 	}
 }
 
@@ -191,9 +191,9 @@ sub is_valid {
 	my $self = shift;
 	my $mode = shift;
 
-	$self->field('federation_mapping.name')->is_required;
-	$self->field('federation_mapping.cname')->is_required;
-	$self->field('federation_mapping.ttl')->is_required;
+	$self->field('federation.name')->is_required;
+	$self->field('federation.cname')->is_required;
+	$self->field('federation.ttl')->is_required;
 
 	return $self->valid;
 }
@@ -201,21 +201,19 @@ sub is_valid {
 sub create_federation_mapping {
 	my $self   = shift;
 	my $new_id = -1;
-	my $dbh    = $self->db->resultset('FederationMapping')->create(
+	my $dbh    = $self->db->resultset('Federation')->create(
 		{
-			name        => $self->param('federation_mapping.name'),
-			description => $self->param('federation_mapping.description'),
-			cname       => $self->param('federation_mapping.cname'),
-			ttl         => $self->param('federation_mapping.ttl'),
-			type        => $self->param('federation_mapping.type'),
+			name        => $self->param('federation.name'),
+			description => $self->param('federation.description'),
+			cname       => $self->param('federation.cname'),
+			ttl         => $self->param('federation.ttl'),
+			type        => $self->param('federation.type'),
 		}
 	);
 	$new_id = $dbh->insert();
 
 	# if the insert has failed, we don't even get here, we go to the exception page.
-	&log( $self,
-		"Create federation_mapping with name: " . $self->param('federation_mapping.name') . " and cname: " . $self->param('federation_mapping.name'),
-		"UICHANGE" );
+	&log( $self, "Create federation with name: " . $self->param('federation.name') . " and cname: " . $self->param('federation.name'), "UICHANGE" );
 	return $new_id;
 
 }

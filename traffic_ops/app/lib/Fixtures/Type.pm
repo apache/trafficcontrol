@@ -259,8 +259,8 @@ my %definition_for = (
 		using => {
 			id           => 33,
 			name         => 'RESOLVE4',
-			description  => 'federation mapping type resolve4',
-			use_in_table => 'federation_mapping',
+			description  => 'federation type resolve4',
+			use_in_table => 'federation',
 		}
 	},
 	RESOLVE6 => {
@@ -268,8 +268,8 @@ my %definition_for = (
 		using => {
 			id           => 34,
 			name         => 'RESOLVE6',
-			description  => 'federation mapping type resolve6',
-			use_in_table => 'federation_mapping',
+			description  => 'federation type resolve6',
+			use_in_table => 'federation',
 		}
 	},
 

@@ -437,17 +437,17 @@ __PACKAGE__->has_many(
   { cascade_copy => 0, cascade_delete => 0 },
 );
 
-=head2 federation_mapping_deliveryservices
+=head2 federation_deliveryservices
 
 Type: has_many
 
-Related object: L<Schema::Result::FederationMappingDeliveryservice>
+Related object: L<Schema::Result::FederationDeliveryservice>
 
 =cut
 
 __PACKAGE__->has_many(
-  "federation_mapping_deliveryservices",
-  "Schema::Result::FederationMappingDeliveryservice",
+  "federation_deliveryservices",
+  "Schema::Result::FederationDeliveryservice",
   { "foreign.deliveryservice" => "self.id" },
   { cascade_copy => 0, cascade_delete => 0 },
 );
@@ -513,8 +513,8 @@ __PACKAGE__->belongs_to(
 );
 
 
-# Created by DBIx::Class::Schema::Loader v0.07042 @ 2015-09-24 14:40:29
-# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:cLGACiPzCneQPPV4jlFUZg
+# Created by DBIx::Class::Schema::Loader v0.07042 @ 2015-09-28 13:05:02
+# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:A2c+k+eDGkkiLD/5JchH3w
 
 # You can replace this text with custom code or comments, and it will be preserved on regeneration
 #
