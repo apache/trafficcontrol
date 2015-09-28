@@ -23,7 +23,7 @@ alert(alertmsg);
 function deletefunction() {
 	var r=confirm("are you sure?");
 	if (r==true) {
-		window.location = "/federation_mapping/<%= $id %>/delete";
+		window.location = "/federation/<%= $id %>/delete";
 		parent.location.reload (true);
 	}
 }
@@ -50,10 +50,10 @@ function deletefunction() {
 
 				 <div id="notice"></div>
 
-				<form id="edit_federation_mapping_form" method="POST" action="/federation_mapping/<%= $federation_mapping->id %>">
+				<form id="edit_federation_form" method="POST" action="/federation/<%= $federation->id %>">
 
 				   <div class="deliveryServicesForm">
-				        %= include 'federation_mapping/_form'
+				        %= include 'federation/_form'
 				   </div>
 				</form>
 				<button class="button" onclick="deletefunction()" id="delete_button">Delete</button>

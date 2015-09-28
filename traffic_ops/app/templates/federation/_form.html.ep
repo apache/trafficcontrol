@@ -15,34 +15,34 @@
  -->
 <div class="main">
    <div class="block">
-        <% unless(field('federation_mapping.name')->valid) { %>
-          <span class="field-with-error"><%= field('federation_mapping.name')->error %></span>
+        <% unless(field('federation.name')->valid) { %>
+          <span class="field-with-error"><%= field('federation.name')->error %></span>
             <% } %>
         %= label_for 'name' => '* Name', class => 'label'
-        %= field('federation_mapping.name')->text(class => 'field', required=> 'required')
+        %= field('federation.name')->text(class => 'field', required=> 'required')
    </div>
    <div class="block">
-        <% unless(field('federation_mapping.description')->valid) { %>
-          <span class="field-with-error"><%= field('federation_mapping.description')->error %></span>
+        <% unless(field('federation.description')->valid) { %>
+          <span class="field-with-error"><%= field('federation.description')->error %></span>
             <% } %>
         %= label_for 'description' => 'Description', class => 'label'
-        %= field('federation_mapping.description')->text(class => 'field')
+        %= field('federation.description')->text(class => 'field')
    </div>
 
    <div class="block">
-        <% unless(field('federation_mapping.cname')->valid) { %>
-          <span class="field-with-error"><%= field('federation_mapping.cname')->error %></span>
+        <% unless(field('federation.cname')->valid) { %>
+          <span class="field-with-error"><%= field('federation.cname')->error %></span>
         <% } %>
         %= label_for 'cname' => '* CNAME', class => 'label'
-        %= field('federation_mapping.cname')->text(class => 'field', required=> 'required')
+        %= field('federation.cname')->text(class => 'field', required=> 'required')
    </div>
 
    <div class="block">
-        <% unless(field('federation_mapping.ttl')->valid) { %>
-          <span class="field-with-error"><%= field('federation_mapping.ttl')->error %></span>
+        <% unless(field('federation.ttl')->valid) { %>
+          <span class="field-with-error"><%= field('federation.ttl')->error %></span>
         <% } %>
         %= label_for 'ttl' => '* TTL', class => 'label'
-        %= field('federation_mapping.ttl')->text(class => 'field', required=> 'required')
+        %= field('federation.ttl')->text(class => 'field', required=> 'required')
    </div>
 
 </div>

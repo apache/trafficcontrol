@@ -39,8 +39,8 @@ alert(alertmsg);
 	  </div>
 
 	  <div style="margin-left:10px;">
-		%= form_for federation_mapping_create => (id => 'federation_mapping_create')  => begin 
-			%= include 'federation_mapping/_form'
+		%= form_for federation_create => (id => 'federation_create')  => begin 
+			%= include 'federation/_form'
 			<div class="bottomButtons" style="margin-left: 285px;">
 			  <div style="float:left;">
 				 %= submit_button 'Add Federation Mapping', class=> 'button'
