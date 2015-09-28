@@ -16,7 +16,7 @@ Traffic Control is an Open Source implementation of a Content Delivery Network.
 
 ##### News
 * 28-September 2015: Traffic Control 1.1.6 is released.  Mostly bug fixes, better support for DNSSEC.
-* 	See https://github.com/Comcast/traffic_control/releases for the full change list.
+	See https://github.com/Comcast/traffic_control/releases for the full change list.
 * 10-September-2015: Traffic Control 1.1.5 is released. Many bug fixes, Traffic Router includes DNSSEC.
 	See https://github.com/Comcast/traffic_control/releases for the full change list.
 * 08-August-2015: Traffic Control 1.1.4 is released. Many bugfixes, and InfluxDb/grafana are now included / linked to.
