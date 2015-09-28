@@ -1,4 +1,4 @@
-package Fixtures::FederationMappingDeliveryservice;
+package Fixtures::Federation;
 #
 # Copyright 2015 Comcast Cable Communications Management, LLC
 #
@@ -22,32 +22,48 @@ use namespace::autoclean;
 use Digest::SHA1 qw(sha1_hex);
 
 my %definition_for = (
-	federation_deliveryservice1 => {
-		new   => 'FederationMappingDeliveryservice',
+	name1 => {
+		new   => 'Federation',
 		using => {
-			federation_mapping => 1,
-			deliveryservice    => 1,
+			id          => 1,
+			name        => 'name1',
+			description => 'resolver4 type',
+			cname       => 'cname1',
+			ttl         => 86400,
+			type        => 33,
 		},
 	},
-	federation_deliveryservice2 => {
-		new   => 'FederationMappingDeliveryservice',
+	name2 => {
+		new   => 'Federation',
 		using => {
-			federation_mapping => 2,
-			deliveryservice    => 1,
+			id          => 2,
+			name        => 'name2',
+			description => 'resolver4 type',
+			cname       => 'cname2',
+			ttl         => 86400,
+			type        => 33,
 		},
 	},
-	federation_deliveryservice3 => {
-		new   => 'FederationMappingDeliveryservice',
+	name3 => {
+		new   => 'Federation',
 		using => {
-			federation_mapping => 3,
-			deliveryservice    => 2,
+			id          => 3,
+			name        => 'name3',
+			description => 'resolver6 type',
+			cname       => 'cname3',
+			ttl         => 86400,
+			type        => 34,
 		},
 	},
-	federation_deliveryservice3 => {
-		new   => 'FederationMappingDeliveryservice',
+	name3 => {
+		new   => 'Federation',
 		using => {
-			federation_mapping => 4,
-			deliveryservice    => 2,
+			id          => 4,
+			name        => 'name4',
+			description => 'resolver6 type',
+			cname       => 'cname4',
+			ttl         => 86400,
+			type        => 34,
 		},
 	},
 );

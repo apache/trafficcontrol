@@ -1,4 +1,4 @@
-package UI::User;
+package UI::Federation;
 #
 # Copyright 2015 Comcast Cable Communications Management, LLC
 #
@@ -28,7 +28,7 @@ use Email::Valid;
 use Data::GUID;
 use Data::Dumper;
 
-# List of Users
+# List of Federation Mappings
 sub index {
 	my $self = shift;
 	&navbarpage($self);
@@ -41,7 +41,7 @@ sub add {
 	my $self = shift;
 
 	&stash_role($self);
-	$self->stash( tm_user => {}, fbox_layout => 1, mode => 'add' );
+	$self->stash( federation => {}, fbox_layout => 1, mode => 'add' );
 }
 
 # Read
@@ -49,106 +49,40 @@ sub read {
 	my $self = shift;
 
 	my @data;
-	my $orderby = "username";
+	my $orderby = "name";
 	$orderby = $self->param('orderby') if ( defined $self->param('orderby') );
-	my $dbh = $self->db->resultset("TmUser")->search( undef, { prefetch => [ { 'role' => undef } ], order_by => 'me.' . $orderby } );
+	my $dbh = $self->db->resultset("Federation")->search( undef, { prefetch => [ { 'role' => undef } ], order_by => 'me.' . $orderby } );
 	while ( my $row = $dbh->next ) {
 		push(
 			@data, {
-				"id"           => $row->id,
-				"username"     => $row->username,
-				"full_name"    => $row->full_name,
-				"company"      => $row->company,
-				"role"         => $row->role->id,
-				"uid"          => 0,
-				"gid"          => 0,
-				"email"        => $row->email,
-				"new_user"     => $row->new_user,
-				"rolename"     => $row->role->name,
-				"phone_number" => $row->phone_number,
+				"id"          => $row->id,
+				"name"        => $row->name,
+				"description" => $row->description,
+				"cname"       => $row->cname,
+				"ttl"         => $row->ttl,
+				"role"        => $row->role->id,
+				"type"        => $row->type,
 			}
 		);
 	}
 	$self->render( json => \@data );
 }
 
-# Renders the "Send Registration" screen
-sub register {
-	my $self = shift;
-	my $sent = $self->req->param('sent');
-	if ( defined($sent) ) {
-		$sent = 'true';
-	}
-	else {
-		$sent = 'false';
-	}
-
-	&stash_role($self);
-	$self->stash( tm_user => {}, sent => $sent, fbox_layout => 1, mode => 'add' );
-}
-
-# Reset the User Profile password
-sub reset_password {
-	my $self     = shift;
-	my $id       = $self->param('id');
-	my $email_to = $self->param('tm_user.email');
-	my $data     = $self->db->resultset('TmUser')->search( { id => $id } )->single;
-	&stash_role($self);
-
-	my $email_notice = "Successfully sent reset password to: '" . $email_to . "'";
-	$self->app->log->info($email_notice);
-	$self->flash( message => $email_notice );
-
-	my $token = $self->new_guid();
-	$self->send_password_reset_email( $email_to, $token );
-	my %delivery_services = get_delivery_services( $self, $id );
-	$self->stash(
-		mode              => 'edit',
-		tm_user           => $data,
-		fbox_layout       => 1,
-		delivery_services => \%delivery_services
-	);
-	return $self->render('user/edit');
-}
-
-# Sends the email from the registration screen
-sub send_registration {
-
-	my $self = shift;
-
-	my $instance_name =
-		$self->db->resultset('Parameter')->search( { -and => [ name => 'tm.instance_name', config_file => 'global' ] } )->get_column('value')->single();
-	$self->stash( instance_name => $instance_name );
-	if ( $self->is_send_register_valid() ) {
-		my $token    = $self->new_guid();
-		my $email_to = $self->param('tm_user.email');
-		$self->send_registration_email( $email_to, $token );
-		$self->create_registration_user( $email_to, $token );
-
-		return $self->redirect_to('/user/register?sent=true');
-	}
-	else {
-		$self->stash( tm_user => {}, fbox_layout => 1 );
-		return $self->render('user/register');
-	}
-}
-
 sub edit {
 	my $self = shift;
 	my $id   = $self->param('id');
-	my $dbh  = $self->db->resultset('TmUser')->search( { id => $id } );
+	my $dbh  = $self->db->resultset('Federation')->search( { id => $id } );
 	my $data = $dbh->single;
 	&stash_role($self);
 
-	# TODO: drichardson - mode helps to enable/disable features in the _form.html.erb (is there a better way? ) $self->stash(
 	my %delivery_services = get_delivery_services( $self, $id );
 	$self->stash(
-		tm_user           => $data,
+		federation        => $data,
 		mode              => 'edit',
 		fbox_layout       => 1,
 		delivery_services => \%delivery_services
 	);
-	return $self->render('user/edit');
+	return $self->render('federation/edit');
 }
 
 sub get_delivery_services {
@@ -206,7 +140,7 @@ sub update {
 		$dbh->update();
 		$self->flash( message => "User was updated successfully." );
 		$self->stash( mode => 'edit' );
-		return $self->redirect_to( '/user/' . $tm_user_id . '/edit' );
+		return $self->redirect_to( '/federation/' . $tm_user_id . '/edit' );
 	}
 	else {
 		$self->edit();
@@ -240,16 +174,16 @@ sub associated_delivery_services {
 sub create {
 	my $self = shift;
 	&stash_role($self);
-	$self->stash( fbox_layout => 1, mode => 'add', tm_user => {} );
+	$self->stash( fbox_layout => 1, mode => 'add', federation => {} );
 	if ( $self->is_valid("add") ) {
-		my $new_id = $self->create_user();
+		my $new_id = $self->create_federation_mapping();
 		if ( $new_id != -1 ) {
-			$self->flash( message => 'User created successfully.' );
+			$self->flash( message => 'Federation created successfully.' );
 			return $self->redirect_to('/close_fancybox.html');
 		}
 	}
 	else {
-		return $self->render('user/add');
+		return $self->render('federation/add');
 	}
 }
 
@@ -257,64 +191,31 @@ sub is_valid {
 	my $self = shift;
 	my $mode = shift;
 
-	$self->field('tm_user.full_name')->is_required;
-	$self->field('tm_user.username')->is_required;
-	$self->field('tm_user.email')->is_required;
-
-	if ( $mode =~ /add/ ) {
-		$self->field('tm_user.local_passwd')->is_required;
-		$self->field('tm_user.confirm_local_passwd')->is_required;
-
-		$self->is_username_taken( $self->param('tm_user.username') );
-	}
-
-	$self->field('tm_user.local_passwd')->is_equal( 'tm_user.confirm_local_passwd', "The 'Password' and 'Confirm Password' must match." );
-	$self->field('tm_user.local_passwd')->is_like( qr/^.{8,100}$/, "Password must be greater than 7 chars." );
+	$self->field('federation.name')->is_required;
+	$self->field('federation.cname')->is_required;
+	$self->field('federation.ttl')->is_required;
 
 	return $self->valid;
 }
 
-sub is_send_register_valid {
-	my $self = shift;
-	$self->field('tm_user.email')->is_required;
-	return $self->valid;
-}
-
-sub create_user {
+sub create_federation_mapping {
 	my $self   = shift;
 	my $new_id = -1;
-	my $dbh    = $self->db->resultset('TmUser')->create(
+	my $dbh    = $self->db->resultset('Federation')->create(
 		{
-			full_name            => $self->param('tm_user.full_name'),
-			username             => $self->param('tm_user.username'),
-			phone_number         => $self->param('tm_user.phone_number'),
-			email                => $self->param('tm_user.email'),
-			local_passwd         => sha1_hex( $self->param('tm_user.local_passwd') ),
-			confirm_local_passwd => sha1_hex( $self->param('tm_user.confirm_local_passwd') ),
-			role                 => $self->param('tm_user.role'),
-			new_user             => 0,
-			local_user           => 1,
-			uid                  => 0,
-			gid                  => 0,
-			company              => $self->param('tm_user.company'),
-			address_line1        => $self->param('tm_user.address_line1'),
-			address_line2        => $self->param('tm_user.address_line2'),
-			city                 => $self->param('tm_user.city'),
-			state_or_province    => $self->param('tm_user.state_or_province'),
-			postal_code          => $self->param('tm_user.postal_code'),
-			country              => $self->param('tm_user.country'),
+			name        => $self->param('federation.name'),
+			description => $self->param('federation.description'),
+			cname       => $self->param('federation.cname'),
+			ttl         => $self->param('federation.ttl'),
+			type        => $self->param('federation.type'),
 		}
 	);
 	$new_id = $dbh->insert();
 
 	# if the insert has failed, we don't even get here, we go to the exception page.
-	&log( $self, "Create tm_user with name " . $self->param('tm_user.username'), "UICHANGE" );
+	&log( $self, "Create federation with name: " . $self->param('federation.name') . " and cname: " . $self->param('federation.name'), "UICHANGE" );
 	return $new_id;
 
-}
-
-sub new_guid {
-	return Data::GUID->new;
 }
 
 1;
