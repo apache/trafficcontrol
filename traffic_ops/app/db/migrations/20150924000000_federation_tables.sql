@@ -21,8 +21,10 @@
 CREATE TABLE `federation_resolver` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `ip_address` VARCHAR(50) NOT NULL,
+  `type` INT(11) NOT NULL,
   `last_updated` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`),
+  CONSTRAINT `fk_federation_mapping_type` FOREIGN KEY (`type`) REFERENCES `type` (`id`) ON DELETE NO ACTION ON UPDATE NO ACTION,
   UNIQUE KEY `federation_resolver_ip_address` (`ip_address`)
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 
@@ -32,10 +34,8 @@ CREATE TABLE IF NOT EXISTS `federation` (
   `description` VARCHAR(1024) NULL,
   `cname` VARCHAR(1024) NOT NULL,
   `ttl` INT(8) NOT NULL,
-  `type` INT(11) NOT NULL,
   `last_updated` TIMESTAMP NOT NULL DEFAULT now(),
-  PRIMARY KEY (`id`,`type`),
-  CONSTRAINT `fk_federation_mapping_type` FOREIGN KEY (`type`) REFERENCES `type` (`id`) ON DELETE NO ACTION ON UPDATE NO ACTION
+  PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 
 -- federation_deliveryservice

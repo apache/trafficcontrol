@@ -35,6 +35,12 @@ __PACKAGE__->table("federation_resolver");
   is_nullable: 0
   size: 50
 
+=head2 type
+
+  data_type: 'integer'
+  is_foreign_key: 1
+  is_nullable: 0
+
 =head2 last_updated
 
   data_type: 'timestamp'
@@ -49,6 +55,8 @@ __PACKAGE__->add_columns(
   { data_type => "integer", is_auto_increment => 1, is_nullable => 0 },
   "ip_address",
   { data_type => "varchar", is_nullable => 0, size => 50 },
+  "type",
+  { data_type => "integer", is_foreign_key => 1, is_nullable => 0 },
   "last_updated",
   {
     data_type => "timestamp",
@@ -101,24 +109,24 @@ __PACKAGE__->has_many(
   { cascade_copy => 0, cascade_delete => 0 },
 );
 
-=head2 federations
+=head2 type
 
-Type: has_many
+Type: belongs_to
 
-Related object: L<Schema::Result::Federation>
+Related object: L<Schema::Result::Type>
 
 =cut
 
-__PACKAGE__->has_many(
-  "federations",
-  "Schema::Result::Federation",
-  { "foreign.federation_resolver_id" => "self.id" },
-  { cascade_copy => 0, cascade_delete => 0 },
+__PACKAGE__->belongs_to(
+  "type",
+  "Schema::Result::Type",
+  { id => "type" },
+  { is_deferrable => 1, on_delete => "NO ACTION", on_update => "NO ACTION" },
 );
 
 
-# Created by DBIx::Class::Schema::Loader v0.07042 @ 2015-09-28 13:05:02
-# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:lb7TFPtHAh3bbLcwvRa5uw
+# Created by DBIx::Class::Schema::Loader v0.07042 @ 2015-09-28 14:50:43
+# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:SfzR0aaAdKGKQuxHEm1cvA
 
 
 # You can replace this text with custom code or comments, and it will be preserved on regeneration

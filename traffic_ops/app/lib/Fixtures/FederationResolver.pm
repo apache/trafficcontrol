@@ -27,6 +27,7 @@ my %definition_for = (
 		using => {
 			id         => 1,
 			ip_address => "127.0.0.1",
+			type       => 33,
 		},
 	},
 	ipv4_resolver2 => {
@@ -34,6 +35,7 @@ my %definition_for = (
 		using => {
 			id         => 2,
 			ip_address => "127.0.0.2",
+			type       => 33,
 		},
 	},
 	ipv6_resolver1 => {
@@ -41,6 +43,7 @@ my %definition_for = (
 		using => {
 			id         => 3,
 			ip_address => "FE80::0202:B3FF:FE1E:8329",
+			type       => 34,
 		},
 	},
 	ipv6_resolver2 => {
@@ -48,6 +51,7 @@ my %definition_for = (
 		using => {
 			id         => 4,
 			ip_address => "FE80::0202:B3FF:FE1E:8330",
+			type       => 34,
 		},
 	},
 );

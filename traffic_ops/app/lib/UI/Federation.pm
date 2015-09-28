@@ -61,7 +61,6 @@ sub read {
 				"cname"       => $row->cname,
 				"ttl"         => $row->ttl,
 				"role"        => $row->role->id,
-				"type"        => $row->type,
 			}
 		);
 	}

@@ -30,7 +30,6 @@ my %definition_for = (
 			description => 'resolver4 type',
 			cname       => 'cname1',
 			ttl         => 86400,
-			type        => 33,
 		},
 	},
 	name2 => {
@@ -41,7 +40,6 @@ my %definition_for = (
 			description => 'resolver4 type',
 			cname       => 'cname2',
 			ttl         => 86400,
-			type        => 33,
 		},
 	},
 	name3 => {
@@ -52,7 +50,6 @@ my %definition_for = (
 			description => 'resolver6 type',
 			cname       => 'cname3',
 			ttl         => 86400,
-			type        => 34,
 		},
 	},
 	name3 => {
@@ -63,7 +60,6 @@ my %definition_for = (
 			description => 'resolver6 type',
 			cname       => 'cname4',
 			ttl         => 86400,
-			type        => 34,
 		},
 	},
 );

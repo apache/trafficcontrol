@@ -132,17 +132,17 @@ __PACKAGE__->has_many(
   { cascade_copy => 0, cascade_delete => 0 },
 );
 
-=head2 federations
+=head2 federation_resolvers
 
 Type: has_many
 
-Related object: L<Schema::Result::Federation>
+Related object: L<Schema::Result::FederationResolver>
 
 =cut
 
 __PACKAGE__->has_many(
-  "federations",
-  "Schema::Result::Federation",
+  "federation_resolvers",
+  "Schema::Result::FederationResolver",
   { "foreign.type" => "self.id" },
   { cascade_copy => 0, cascade_delete => 0 },
 );
@@ -208,8 +208,8 @@ __PACKAGE__->has_many(
 );
 
 
-# Created by DBIx::Class::Schema::Loader v0.07042 @ 2015-09-28 13:05:02
-# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:pKVF+gPtvoSbsXZ0a0PEVw
+# Created by DBIx::Class::Schema::Loader v0.07042 @ 2015-09-28 14:50:43
+# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:h5Bl3BAfcoDtSF94ETyFbw
 
 
 # You can replace this text with custom code or comments, and it will be preserved on regeneration

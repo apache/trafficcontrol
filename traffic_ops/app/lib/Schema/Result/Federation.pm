@@ -29,12 +29,6 @@ __PACKAGE__->table("federation");
   is_auto_increment: 1
   is_nullable: 0
 
-=head2 federation_resolver_id
-
-  data_type: 'integer'
-  is_foreign_key: 1
-  is_nullable: 0
-
 =head2 name
 
   data_type: 'varchar'
@@ -58,12 +52,6 @@ __PACKAGE__->table("federation");
   data_type: 'integer'
   is_nullable: 0
 
-=head2 type
-
-  data_type: 'integer'
-  is_foreign_key: 1
-  is_nullable: 0
-
 =head2 last_updated
 
   data_type: 'timestamp'
@@ -76,8 +64,6 @@ __PACKAGE__->table("federation");
 __PACKAGE__->add_columns(
   "id",
   { data_type => "integer", is_auto_increment => 1, is_nullable => 0 },
-  "federation_resolver_id",
-  { data_type => "integer", is_foreign_key => 1, is_nullable => 0 },
   "name",
   { data_type => "varchar", is_nullable => 0, size => 1024 },
   "description",
@@ -86,8 +72,6 @@ __PACKAGE__->add_columns(
   { data_type => "varchar", is_nullable => 0, size => 1024 },
   "ttl",
   { data_type => "integer", is_nullable => 0 },
-  "type",
-  { data_type => "integer", is_foreign_key => 1, is_nullable => 0 },
   "last_updated",
   {
     data_type => "timestamp",
@@ -103,13 +87,11 @@ __PACKAGE__->add_columns(
 
 =item * L</id>
 
-=item * L</type>
-
 =back
 
 =cut
 
-__PACKAGE__->set_primary_key("id", "type");
+__PACKAGE__->set_primary_key("id");
 
 =head1 RELATIONS
 
@@ -143,39 +125,9 @@ __PACKAGE__->has_many(
   { cascade_copy => 0, cascade_delete => 0 },
 );
 
-=head2 federation_resolver
 
-Type: belongs_to
-
-Related object: L<Schema::Result::FederationResolver>
-
-=cut
-
-__PACKAGE__->belongs_to(
-  "federation_resolver",
-  "Schema::Result::FederationResolver",
-  { id => "federation_resolver_id" },
-  { is_deferrable => 1, on_delete => "CASCADE", on_update => "CASCADE" },
-);
-
-=head2 type
-
-Type: belongs_to
-
-Related object: L<Schema::Result::Type>
-
-=cut
-
-__PACKAGE__->belongs_to(
-  "type",
-  "Schema::Result::Type",
-  { id => "type" },
-  { is_deferrable => 1, on_delete => "NO ACTION", on_update => "NO ACTION" },
-);
-
-
-# Created by DBIx::Class::Schema::Loader v0.07042 @ 2015-09-28 13:05:02
-# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:NilKXY+sxtZI83Bfg/RdXw
+# Created by DBIx::Class::Schema::Loader v0.07042 @ 2015-09-28 14:50:43
+# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:E2pwz3FtQx3MTR9kaAcHcw
 
 
 # You can replace this text with custom code or comments, and it will be preserved on regeneration
