@@ -28,42 +28,40 @@ use Data::Validate::IP qw(is_ipv4 is_ipv6);
 sub index {
   my $self = shift;
   my @data;
-  my $foo;
-  my $bar;
-  my $orderby = $self->param('orderby') || "name";
-  my $rs_data = $self->db->resultset("FederationMapping")->search(
-    undef,
-    {   prefetch => ['federation_resolver'],
-      order_by => $orderby
-    }
-  );
 
-  my $resolverKey;
+  my $rs_data = $self->db->resultset('FederationDeliveryservice')
+    ->search( {}, { prefetch => [ 'federation', 'deliveryservice' ] } );
 
   while ( my $row = $rs_data->next ) {
-    if ( is_ipv4( $row->federation_resolver->ip_address ) ) {
-      $resolverKey = "resolvers4";
+    my $map;
+
+    $map->{'cname'} = $row->federation->cname;
+    $map->{'ttl'}   = $row->federation->ttl;
+
+    my $id        = $row->federation->id;
+    my @resolvers = $self->db->resultset('FederationResolver')->search(
+      { 'federation_federation_resolvers.federation' => $id },
+      { prefetch => 'federation_federation_resolvers' }
+    )->all();
+
+    for my $r (@resolvers) {
+      my $type = lc $r->type->name;
+      if ( defined $map->{$type} ) {
+        push( $map->{$type}, $r->ip_address );
+      }
+      else {
+        @{ $map->{$type} } = ();
+        push( $map->{$type}, $r->ip_address );
+      }
     }
-    else {
-      $resolverKey = "resolvers6";
-    }
-
-    # push(
-    #   @data,
-    #   {   "cname"      => $row->cname,
-    #     "ttl"        => $row->ttl,
-    #     $resolverKey => $row->federation_resolver->ip_address,
-    #   }
-    # );
-
-    $bar->{"cname"}      = $row->cname;
-    $bar->{"ttl"}        = $row->ttl;
-    $bar->{$resolverKey} = $row->federation_resolver->ip_address;
-
-    $foo->{"id"}      = $row->id;
-    $foo->{"mapping"} = $bar;
+    push(
+      @data,
+      {   "deliveryService" => $row->deliveryservice->xml_id,
+        "mappings"        => $map
+      }
+    );
   }
 
-  $self->success( $foo );
+  $self->success( \@data );
 }
 1;

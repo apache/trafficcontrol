@@ -13,85 +13,95 @@
      See the License for the specific language governing permissions and
      limitations under the License.
  -->
-% title 'Federations';
+% title 'Federation';
 % if (defined (flash 'alertmsg')) {
 <script>
 alert( "<%= flash 'alertmsg' %>" );
 </script>
 
 % }
+
 <script>
 var activeTable;
 $(function () {
-  $(document).ready(function () {
-    
+	$(document).ready(function () {
 %= include 'jmenu'
 
-    sTable = $('#dtlocations').dataTable({
-      "bJQueryUI": true,
-      "bProcessing": true,
-      "sScrollY": calcDataTableHeight(),
-      "bScrollCollapse": true,
-      "bPaginate": false,
-      "aaSorting": [[ 1, 'asc' ]], 
-      "aoColumnDefs": [
-      {
-        "mRender": function (data, type, full) {
-          % if ($priv_level >= 30) {
-            return "<a class='fancybox fancybox.iframe' href='/federation/edit/" + full[0] + "'>Edit</a>";
-          % }
-          % else {
-            return "<a class='fancybox fancybox.iframe' href='/federation/view/" + full[0] + "'>Details</a>";
-          % }
-          },
-          "aTargets": [0]
-        }],
-        "sAjaxSource": "aadata/Federation"
-      });
-    activeTable = sTable;
-  })
+		sTable = $('#dtlocations').dataTable({
+			"bJQueryUI": true,
+			"bProcessing": true,
+			"sScrollY": calcDataTableHeight(),
+			"bScrollCollapse": true,
+			"bPaginate": false,
+			"aaSorting": [[ 1, 'asc' ]], 
+      "aoColumnDefs":[
+            {  "sTitle":"", "aTargets":[ 0 ], "bSortable":false, "mRender":function (data, type, full) {return renderEditColumn(full[0]);} }
+      ],
+      "bProcessing":true,
+			"sAjaxSource": "aadata/Federation"
+			});
+		activeTable = sTable;
+	  })
 
-  $("a.fancybox").fancybox({
-    'easingIn'        : 'swing',
-    'enableEscapeButton' : false,
-    'centerOnScroll'  : true,
-    'overlayOpacity'  : "0.3",
-    'hideOnOverlayClick'  : false,
-    'hideOnContentClick'  : false,
-    'modal'           : 'true',
-    'scrolling'       : 'none',
-    'showActivity'    : false,
-    'showTitle'       : false,
-    'showCloseButton' : true,
-    'showNavArrows'   : false,
-    'speedIn'         : 400,
-    'transitionIn'    : 'elastic',
-    'transitionOut'   : 'elastic',
-    'type'            : 'iframe',
-    'iframe'          : {'scrolling'       : 'yes'},
-    'height'          : '500px',
-    'width'           : '670px'
-    })
+    function renderEditColumn(id) {
+        % if ($priv_level >= 30) {
+          return "<a class='fancybox fancybox.iframe' href='/federation/" + id + "/edit'>Edit</a>";
+        % } else {
+          return "";
+        % }
+    };
+
+     $("a.fancybox").fancybox({
+          'easingIn'        : 'swing',
+          'enableEscapeButton' : false,
+          'centerOnScroll'  : true,
+          'overlayOpacity'  : "0.3",
+          'hideOnOverlayClick'  : false,
+          'hideOnContentClick'  : false,
+          'modal'           : 'true',
+          'scrolling'       : 'none',
+          'showActivity'    : false,
+          'showTitle'       : false,
+          'showCloseButton' : true,
+          'showNavArrows'   : false,
+          'speedIn'         : 400,
+          'transitionIn'    : 'elastic',
+          'transitionOut'   : 'elastic',
+          'type'            : 'iframe',
+          'iframe'          : {'scrolling'       : 'yes'},
+		  'height'          : '700px',
+		  'width'           : '670px'
+      });
+
 });
 </script>
+
 <body id="misc">
 %= include 'navbar'
-  <div class="ui-tab-float-right-on-table">Federations</div>
-    <div id="Misc">
-      <table cellpadding="0" cellspacing="0" border="0" width="100%" class="display" id="dtlocations">
-        <thead>
-          <tr>
-            <td></td>
-            <td>Name</td>
-          </tr>
-        </thead>
-      </table>
+<div class="ui-tab-float-right-on-table">Federation</div>
 
-      <div id="bottomButtons" class="bottomButtons">
-            % if ($priv_level >= 30) {
-            <a class='fancybox fancybox.iframe' href='/federation/add'><button class='button'>Add Federation</button></a>
-      % }
-         </div>
-    </div>
-  </body>
+		<div id="Misc">
+			
+
+				<table cellpadding="0" cellspacing="0" border="0" width="100%" class="display" id="dtlocations">
+					<thead>
+						<tr>
+							<td>id</td>
+							<td>Name</td>
+							<td>Description</td>
+							<td>CNAME</td>
+							<td>TTL</td>
+							<td>Type</td>
+							<td>Last Updated</td>
+						</tr>
+					</thead>
+				</table>
+
+				<div class="bottomButtons">
+					  % if ($priv_level >= 30) {
+						  <a id="addButton" class='fancybox fancybox.iframe' href='/federation/add'><button class='button'>Add Federation Mapping</button></a>
+
+					  % }
+				</div>
+	</body>
 </html>
