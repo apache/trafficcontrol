@@ -350,27 +350,25 @@ sub auser {
 }
 
 sub afederation {
-	my $self = shift;
-	my %data = ( "aaData" => undef );
+	my $self    = shift;
+	my %data    = ( "aaData" => undef );
+	my $rs_data = $self->db->resultset('FederationDeliveryservice')->search( {}, { prefetch => [ 'federation', 'deliveryservice' ] } );
 
-	#$rs = $self->db->resultset('ProfileParameter')->search( { $col => $p_id }, { prefetch => [ { 'parameter' => undef }, { 'profile' => undef } ] } );
-## close
-	#my @feds         = $self->db->resultset('Federation')->all();
-	#for my $f (@feds) {
-	#my @line = [ $f->id, $f->name, $f->cname, $f->ttl ];
-	#push( @{ $data{'aaData'} }, @line );
-	#}
-	#my $dbh =
-	#$self->db->resultset('Job')
-	#->search( { keyword => $keyword, 'job_user.username' => $username }, { prefetch => [ { 'job_user' => undef } ], join => 'job_user' } );
+	while ( my $row = $rs_data->next ) {
+		my $id        = $row->federation->id;
+		my @resolvers = $self->db->resultset('FederationResolver')
+			->search( { 'federation_federation_resolvers.federation' => $id }, { prefetch => 'federation_federation_resolvers' } )->all();
 
-	my $dbh = $self->db->resultset('Federation')->search( undef, { join => [ 'federation_deliveryservices', 'federation_federation_resolvers' ] } );
-
-	while ( my $row = $dbh->next ) {
-		my @line = [ $row->id, $row->name, $row->cname, $row->ttl, $row->federation_federation_resolvers->ip_address ];
-		push( @{ $data{'aaData'} }, @line );
+		for my $r (@resolvers) {
+			my $type = lc $r->type->name;
+			my @line = [
+				$row->deliveryservice->id,           $row->deliveryservice->xml_id, $row->federation->name, $row->federation->description,
+				$row->federation->cname,             $row->federation->ttl,         $r->ip_address,         $type,
+				$row->deliveryservice->display_name, $r->last_updated
+			];
+			push( @{ $data{'aaData'} }, @line );
+		}
 	}
-
 	$self->render( json => \%data );
 }
 
