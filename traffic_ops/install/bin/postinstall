@@ -102,8 +102,6 @@ sub init () {
 
 		$dbconf{"user"} = $user;
 
-		writeSecret($cdn_conf);
-
 		my $password = "";
 		my $compare  = "";
 		do {
@@ -145,6 +143,9 @@ sub init () {
 			}
 		}
 	} while ( $ans ne "y" || !$connected );
+
+	# Prompt for new secret
+	writeSecret($cdn_conf);
 
 	my $json_text = JSON->new->utf8->encode( \%dbconf );
 
@@ -386,6 +387,7 @@ EOF
 }    # end of Init
 
 sub writeSecret {
+    InstallUtils::execCommand( "/usr/bin/tput", "clear" );
 	print "\nTraffic Ops requires a secret key to generate authentication cookies.\n\n";
 
 	# read conf file -- see if secrets already there
@@ -429,7 +431,7 @@ sub writeSecret {
 	}
 
 	# open temp file to gather modified conf file
-	my $out = File::Temp->new();
+	my $tmpfile = File::Temp->new();
 
 	# format secrets on a single line without $VAR1 =...
 	local $Data::Dumper::Terse  = 1;
@@ -444,7 +446,7 @@ sub writeSecret {
 		s/secrets.*/secrets => $secrets_str,/;
 	}
 	continue {
-		print $out $_;
+		print $tmpfile $_;
 	}
 
 	# rename current config file to something unique so it's not lost
@@ -455,11 +457,11 @@ sub writeSecret {
 		$backup_name = "$cdn_conf.backup$backup_num";
 	} while ( -e $backup_name );
 	rename( $cdn_conf, $backup_name ) or die("rename(): $!");
+
+	# rename temp file to cdn.conf and set ownership/permissions same as backup
 	my @stats = stat($backup_name);
 	my ($uid, $gid, $perm) = @stats[4,5,2];
-
-	# rename temp file to cdn.conf and set ownership/permissions
-	rename( "$out", $cdn_conf ) or die("rename(): $!");
+	rename( "$tmpfile", $cdn_conf ) or die("rename(): $!");
 
 	chown $uid, $gid, $cdn_conf;
 	chmod $perm, $cdn_conf;
