@@ -33,11 +33,9 @@ sub index {
     ->search( {}, { prefetch => [ 'federation', 'deliveryservice' ] } );
 
   while ( my $row = $rs_data->next ) {
-    my $xml_id = $row->deliveryservice->xml_id;
-    my $m;
-
-    $m->{'cname'} = $row->federation->cname;
-    $m->{'ttl'}   = $row->federation->ttl;
+    my $mapping;
+    $mapping->{'cname'} = $row->federation->cname;
+    $mapping->{'ttl'}   = $row->federation->ttl;
 
     my $id        = $row->federation->id;
     my @resolvers = $self->db->resultset('FederationResolver')->search(
@@ -45,49 +43,48 @@ sub index {
       { prefetch => 'federation_federation_resolvers' }
     )->all();
 
-    for my $r (@resolvers) {
-      my $type = lc $r->type->name;
-      if ( defined $m->{$type} ) {
-        push( $m->{$type}, $r->ip_address );
+    for my $resolver (@resolvers) {
+      my $type = lc $resolver->type->name;
+      if ( defined $mapping->{$type} ) {
+        push( $mapping->{$type}, $resolver->ip_address );
       }
       else {
-        @{ $m->{$type} } = ();
-        push( $m->{$type}, $r->ip_address );
+        @{ $mapping->{$type} } = ();
+        push( $mapping->{$type}, $resolver->ip_address );
       }
     }
 
+    my $xml_id = $row->deliveryservice->xml_id;
     if ( defined $data ) {
-      my $x = $self->find_delivery_service( $xml_id, $data );
-      if ( !defined $x ) {
-        $data = $self->add_delivery_service( $xml_id, $m, $data );
+      my $ds = $self->find_delivery_service( $xml_id, $data );
+      if ( !defined $ds ) {
+        $data
+          = $self->add_delivery_service( $xml_id, $mapping, $data );
       }
       else {
-        my @map = $x->{'mappings'};
-        push( @map, $m );
-        $x->{'mappings'} = \@map;
+        $self->update_delivery_service( $ds, $mapping );
       }
-
     }
     else {
-      $data = $self->add_delivery_service( $xml_id, $m, $data );
+      $data = $self->add_delivery_service( $xml_id, $mapping, $data );
     }
 
   }
-  $self->success( $data );
+  $self->success($data);
 }
 
 sub find_delivery_service {
   my $self   = shift;
   my $xml_id = shift;
   my $data   = shift;
-  my $hash;
+  my $ds;
 
-  foreach my $key (@{$data}) {
-    if ( $key->{'deliveryService'} eq $xml_id ) {
-      $hash = $key;
+  foreach my $service ( @{$data} ) {
+    if ( $service->{'deliveryService'} eq $xml_id ) {
+      $ds = $service;
     }
   }
-  return ($hash);
+  return ($ds);
 }
 
 sub add_delivery_service {
@@ -107,5 +104,14 @@ sub add_delivery_service {
   return $data;
 }
 
+sub update_delivery_service {
+  my $self = shift;
+  my $ds   = shift;
+  my $m    = shift;
+
+  my @map = $ds->{'mappings'};
+  push( @map, $m );
+  $ds->{'mappings'} = \@map;
+}
 
 1;
