@@ -119,10 +119,10 @@ function initBuildArea() {
     local srcpath=$(pwd)/SOURCES/$target
     /bin/mkdir $srcpath || { echo "Could not create $srcpath"; exit 1; }
 
-    for d in etc app install doc; do
-	    /bin/cp -r $GITREPO/$d  $srcpath/. || { echo "Could not copy $GITREPO/$d to $srcpath"; exit 1; }
-    done
-    cd SOURCES
+	cd $GITREPO
+	git ls-files etc app install doc | xargs /bin/cp --target=$srcpath/. --parents || \
+		{ echo "Could not copy source files to $srcpath: $!"; exit 1; }
+    cd $RPMBUILD/SOURCES
     tar czvf $target.tgz $target || { echo "Could not create tar archive $target.tgz from $(pwd)/$target"; exit 1; }
 
     echo "The build area has been initialized."
@@ -130,6 +130,11 @@ function initBuildArea() {
 
 # ---------------------------------------
 function initLocalGitRepo() {
+	# Allow skipping init
+	if [ -n "$SKIP_INITGITREPO" ]; then
+		echo "Skipping init of the local git repository."
+		return
+	fi
     echo "Initializing the local git repository."
     cd $GITREPO 
     /usr/bin/git checkout master && /usr/bin/git pull
