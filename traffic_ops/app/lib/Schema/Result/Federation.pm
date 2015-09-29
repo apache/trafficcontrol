@@ -125,24 +125,9 @@ __PACKAGE__->has_many(
   { cascade_copy => 0, cascade_delete => 0 },
 );
 
-=head2 type
 
-Type: belongs_to
-
-Related object: L<Schema::Result::Type>
-
-=cut
-
-__PACKAGE__->belongs_to(
-  "type",
-  "Schema::Result::Type",
-  { id => "type" },
-  { is_deferrable => 1, on_delete => "NO ACTION", on_update => "NO ACTION" },
-);
-
-
-# Created by DBIx::Class::Schema::Loader v0.07043 @ 2015-09-28 13:28:05
-# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:BNKufeVlX7tN0Ndtp96yag
+# Created by DBIx::Class::Schema::Loader v0.07042 @ 2015-09-28 14:50:43
+# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:E2pwz3FtQx3MTR9kaAcHcw
 
 
 # You can replace this text with custom code or comments, and it will be preserved on regeneration

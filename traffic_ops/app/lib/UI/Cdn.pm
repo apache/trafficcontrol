@@ -349,17 +349,28 @@ sub auser {
 	$self->render( json => \%data );
 }
 
-sub afederation_mapping {
+sub afederation {
 	my $self = shift;
 	my %data = ( "aaData" => undef );
 
-	my $rs = $self->db->resultset('FederationMapping')->search(undef);
+	#$rs = $self->db->resultset('ProfileParameter')->search( { $col => $p_id }, { prefetch => [ { 'parameter' => undef }, { 'profile' => undef } ] } );
+## close
+	#my @feds         = $self->db->resultset('Federation')->all();
+	#for my $f (@feds) {
+	#my @line = [ $f->id, $f->name, $f->cname, $f->ttl ];
+	#push( @{ $data{'aaData'} }, @line );
+	#}
+	#my $dbh =
+	#$self->db->resultset('Job')
+	#->search( { keyword => $keyword, 'job_user.username' => $username }, { prefetch => [ { 'job_user' => undef } ], join => 'job_user' } );
 
-	while ( my $row = $rs->next ) {
+	my $dbh = $self->db->resultset('Federation')->search( undef, { join => [ 'federation_deliveryservices', 'federation_federation_resolvers' ] } );
 
-		my @line = [ $row->id, $row->name, $row->description, $row->cname, $row->ttl, $row->type->name, $row->last_updated ];
+	while ( my $row = $dbh->next ) {
+		my @line = [ $row->id, $row->name, $row->cname, $row->ttl, $row->federation_federation_resolvers->ip_address ];
 		push( @{ $data{'aaData'} }, @line );
 	}
+
 	$self->render( json => \%data );
 }
 
@@ -439,8 +450,8 @@ sub aadata {
 	elsif ( $table eq 'Hwinfo' ) {
 		&ahwinfo($self);
 	}
-	elsif ( $table eq 'FederationMapping' ) {
-		&afederation_mapping($self);
+	elsif ( $table eq 'Federation' ) {
+		&afederation($self);
 	}
 	elsif ( $table eq 'ServerSelect' ) {
 		&aserver( $self, 1 );
