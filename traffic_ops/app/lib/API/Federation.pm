@@ -27,10 +27,15 @@ use Data::Validate::IP qw(is_ipv4 is_ipv6);
 
 sub index {
   my $self = shift;
+  my $orderby = $self->param('orderby') || "xml_id";
   my $data;
 
-  my $rs_data = $self->db->resultset('FederationDeliveryservice')
-    ->search( {}, { prefetch => [ 'federation', 'deliveryservice' ] } );
+  my $rs_data = $self->db->resultset('FederationDeliveryservice')->search(
+    {},
+    {   prefetch => [ 'federation', 'deliveryservice' ],
+      order_by => "deliveryservice." . $orderby
+    }
+  );
 
   while ( my $row = $rs_data->next ) {
     my $mapping;
