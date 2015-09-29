@@ -98,31 +98,33 @@ function initBuildArea() {
     /bin/cp -r $GITREPO/rpm/* $RPMBUILD/.
     # build the go scripts for database initialization and tm testing.
 
-    export GOPATH=${GOPATH:-$RPMBUILD/install/go}
-    export GOBIN=${GOBIN:-$RPMBUILD/install/bin}
-    echo "Compiling go"
-    for d in $GITREPO/install/go/src/comcast.com/*; do
-	    if [ ! -d "$d" ]; then
-		    echo "Could not find $d"
-		    exit 1
-	    fi
-	    (cd $d && go get && go install || { echo "Could not compile $d"; exit 1; } )
-    done
-    
     cd $RPMBUILD
 
     /bin/cp traffic_ops.spec SPECS/. || { echo "Could not copy $RPMBUILD/traffic_ops.spec to $(pwd)/SPECS"; exit 1; }
 
-
     # tar/gzip the source
     local target=traffic_ops-$TM_VERSION
-    local srcpath=$(pwd)/SOURCES/$target
-    /bin/mkdir $srcpath || { echo "Could not create $srcpath"; exit 1; }
+    local srcpath=$(pwd)/SOURCES
+	local targetpath=$srcpath/$target
+    /bin/mkdir -p $targetpath || { echo "Could not create $targetpath"; exit 1; }
 
 	cd $GITREPO
-	git ls-files etc app install doc | xargs /bin/cp --target=$srcpath/. --parents || \
-		{ echo "Could not copy source files to $srcpath: $!"; exit 1; }
-    cd $RPMBUILD/SOURCES
+	git ls-files etc app install doc | xargs /bin/cp --target=$targetpath/. --parents || \
+		{ echo "Could not copy source files to $targetpath: $!"; exit 1; }
+
+	# compile go executables used during postinstall
+    cd $targetpath/install/go
+	export GOPATH=$(pwd)
+    echo "Compiling go executables"
+    for d in src/comcast.com/*; do
+	    if [ ! -d "$d" ]; then
+		    echo "Could not find $d"
+		    exit 1
+	    fi
+		(cd $d && go get || { echo "Could not compile $d"; exit 1; } )
+    done
+
+   	cd $srcpath
     tar czvf $target.tgz $target || { echo "Could not create tar archive $target.tgz from $(pwd)/$target"; exit 1; }
 
     echo "The build area has been initialized."
