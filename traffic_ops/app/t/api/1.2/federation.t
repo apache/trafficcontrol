@@ -47,8 +47,6 @@ $t->get_ok("/internal/api/1.2/federations.json")->status_is(200)->or( sub { diag
   ->json_is( "/response/0/deliveryService", "ccp-omg-01" )->json_is( "/response/0/deliveryService", "1" )->json_is( "/limit", "20" )->json_is( "/page", "1" )
   ->json_is( "/orderby", "deliveryservice" );
 
-diag "HERE";
-
 ok $t->get_ok('/logout')->status_is(302)->or( sub { diag $t->tx->res->content->asset->{content}; } );
 $dbh->disconnect();
 done_testing();
