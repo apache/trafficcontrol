@@ -144,9 +144,6 @@ sub init () {
 		}
 	} while ( $ans ne "y" || !$connected );
 
-	# Prompt for new secret
-	writeSecret($cdn_conf);
-
 	my $json_text = JSON->new->utf8->encode( \%dbconf );
 
 	open( FH, ">$database_conf" ) or die("open(): $!");
@@ -322,6 +319,9 @@ EOF
 		print "The ldap configuration has been saved.\n\n";
 	}
 
+	# Prompt for new secret
+	writeSecret($cdn_conf);
+
 	#
 	# Call mysql initialization script.
 	#
@@ -387,8 +387,7 @@ EOF
 }    # end of Init
 
 sub writeSecret {
-    InstallUtils::execCommand( "/usr/bin/tput", "clear" );
-	print "\nTraffic Ops requires a secret key to generate authentication cookies.\n\n";
+	print "\n\nTraffic Ops requires a secret key to generate authentication cookies.\n\n";
 
 	# read conf file -- see if secrets already there
 	my $conf_data;
@@ -460,7 +459,7 @@ sub writeSecret {
 
 	# rename temp file to cdn.conf and set ownership/permissions same as backup
 	my @stats = stat($backup_name);
-	my ($uid, $gid, $perm) = @stats[4,5,2];
+	my ( $uid, $gid, $perm ) = @stats[ 4, 5, 2 ];
 	rename( "$tmpfile", $cdn_conf ) or die("rename(): $!");
 
 	chown $uid, $gid, $cdn_conf;
