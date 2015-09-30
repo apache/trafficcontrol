@@ -18,6 +18,7 @@ package com.comcast.cdn.traffic_control.traffic_router.core.util;
 
 import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.net.HttpURLConnection;
@@ -70,7 +71,7 @@ public class Fetcher {
 		public X509Certificate[] getAcceptedIssuers() { return null; }
 	}
 
-	protected HttpURLConnection getConnection(final String url, final String data, final String requestMethod) throws IOException {
+	protected HttpURLConnection getConnection(final String url, final String data, final String requestMethod, final long lastFetchTime) throws IOException {
 		String method = GET_STR;
 
 		if (requestMethod != null) {
@@ -80,6 +81,8 @@ public class Fetcher {
 		LOGGER.info(method + "ing: " + url + "; timeout is " + timeout);
 
 		final URLConnection connection = new URL(url).openConnection();
+
+		connection.setIfModifiedSince(lastFetchTime);
 
 		if (timeout != 0) {
 			connection.setConnectTimeout(timeout);
@@ -126,14 +129,24 @@ public class Fetcher {
 		return http;
 	}
 
+	public String fetchIfModifiedSince(final String url, final long lastFetchTime) throws IOException {
+		return fetchIfModifiedSince(url, null, null, lastFetchTime);
+	}
+
 	public String fetch(final String url) throws IOException {
 		return fetch(url, null, null);
 	}
 
-	public String fetch(final String url, final String data, final String method) throws IOException {
+	private String fetchIfModifiedSince(final String url, final String data, final String method, final long lastFetchTime) throws IOException {
 		final OutputStream out = null;
 		try {
-			final URLConnection connection = getConnection(url, data, method);
+			final HttpURLConnection connection = getConnection(url, data, method, lastFetchTime);
+			connection.getInputStream();
+
+			if (connection.getResponseCode() == HttpURLConnection.HTTP_NOT_MODIFIED) {
+				return null;
+			}
+
 			final StringBuilder sb = new StringBuilder();
 			final BufferedReader in = new BufferedReader(new InputStreamReader(connection.getInputStream()));
 
@@ -149,5 +162,29 @@ public class Fetcher {
 		} finally {
 			IOUtils.closeQuietly(out);
 		}
+	}
+
+	public String fetch(final String url, final String data, final String method) throws IOException {
+		return fetchIfModifiedSince(url, data, method, 0L);
+	}
+
+	@Override
+	@SuppressWarnings("PMD.IfStmtsMustUseBraces")
+	public boolean equals(final Object o) {
+		if (this == o) return true;
+		if (o == null || getClass() != o.getClass()) return false;
+
+		Fetcher fetcher = (Fetcher) o;
+
+		if (timeout != fetcher.timeout) return false;
+		return !(requestProps != null ? !requestProps.equals(fetcher.requestProps) : fetcher.requestProps != null);
+
+	}
+
+	@Override
+	public int hashCode() {
+		int result = timeout;
+		result = 31 * result + (requestProps != null ? requestProps.hashCode() : 0);
+		return result;
 	}
 }

@@ -82,12 +82,17 @@
 		<property name="nameServer" ref="NameServer" />
 	</bean>
 
+	<bean id="federationsWatcher" class="com.comcast.cdn.traffic_control.traffic_router.core.loc.FederationsWatcher">
+		<property name="executorService" ref="ScheduledExecutorService" />
+	</bean>
+
 	<bean id="ConfigHandler" class="com.comcast.cdn.traffic_control.traffic_router.core.config.ConfigHandler">
 		<property name="trafficRouterManager" ref="trafficRouterManager" />
 		<property name="geolocationDatabaseUpdater" ref="geolocationDatabaseUpdater" />
 		<property name="networkUpdater" ref="networkUpdater" />
 		<property name="statTracker" ref="statTracker" />
 		<property name="configDir" value="/opt/traffic_router/conf" />
+		<property name="federationsWatcher" ref="federationsWatcher" />
 	</bean>
 
 	<!-- Geolocation Configuration -->
