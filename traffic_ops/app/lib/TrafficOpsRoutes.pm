@@ -169,10 +169,10 @@ sub ui_routes {
 
 	# -- Federation
 	$r->get('/federation')->over( authenticated => 1 )->to( 'Federation#index', namespace => $namespace );
-	$r->get('/federation/:id/edit')->name("federation_edit")->over( authenticated => 1 )->to( 'Federation#edit', namespace => $namespace );
+	$r->get('/federation/:federation_id/edit')->name("federation_edit")->over( authenticated => 1 )->to( 'Federation#edit', namespace => $namespace );
 	$r->get('/federation/add')->name('federation_add')->over( authenticated => 1 )->to( 'Federation#add', namespace => $namespace );
 	$r->post('/federation')->name('federation_create')->to( 'Federation#create', namespace => $namespace );
-	$r->post('/federation/:id')->name('federation_update')->to( 'Federation#update', namespace => $namespace );
+	$r->post('/federation/:federation_id')->name('federation_update')->to( 'Federation#update', namespace => $namespace );
 
 	# -- Gendbdump - Get DB dump
 	$r->get('/dbdump')->over( authenticated => 1 )->to( 'GenDbDump#dbdump', namespace => $namespace );
@@ -397,7 +397,7 @@ sub api_routes {
 		->to( 'Cachegroup#available_for_parameter', namespace => $namespace );
 
 	# -- Federation
-	$r->get("/internal/api/$version/federations" => [ format => [qw(json)] ] )->over( authenticated => 1 )
+	$r->get( "/internal/api/$version/federations" => [ format => [qw(json)] ] )->over( authenticated => 1 )
 		->to( 'Federation#index', namespace => $namespace );
 
 	# -- CHANGE LOG - #NEW

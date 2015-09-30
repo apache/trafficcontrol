@@ -69,23 +69,67 @@ sub read {
 }
 
 sub edit {
-	my $self = shift;
-	my $id   = $self->param('id');
-	my $dbh  = $self->db->resultset('Federation')->search( { id => $id } );
-	my $data = $dbh->single;
+	my $self          = shift;
+	my $federation_id = $self->param('federation_id');
+	$self->app->log->debug( "federation_id #-> " . $federation_id );
+
+	my $federation;
+	my $feds = $self->db->resultset('Federation')->search( { 'id' => $federation_id } );
+	while ( my $f = $feds->next ) {
+		$federation = $f;
+		my $fed_id = $f->id;
+		$self->app->log->debug( "!!!!!fed_id #-> " . $fed_id );
+		my $federation_deliveryservices =
+			$self->db->resultset('FederationDeliveryservice')->search( { federation => $fed_id }, { prefetch => [ 'federation', 'deliveryservice' ] } );
+		while ( my $fd = $federation_deliveryservices->next ) {
+			my $fed_ds_id = $fd->deliveryservice->id;
+			$self->app->log->debug( "fed_ds_id #-> " . $fed_ds_id );
+		}
+	}
+
+	my $resolvers = $self->db->resultset('FederationResolver')
+		->search( { 'federation_federation_resolvers.federation_resolver' => $federation_id }, { prefetch => 'federation_federation_resolvers' } );
+	while ( my $row = $resolvers->next ) {
+		my $line = [ $row->id ];
+		$self->app->log->debug( "line #-> " . Dumper($line) );
+	}
+
+	#my $resolve_length = $resolvers;
+	#$self->app->log->debug( "resolve_length #-> " . $resolve_length );
+	#my $r    = $resolvers->next;
+	#my $ffrs = $r->federation_federation_resolvers;
+	#while ( my $row = $ffrs->next ) {
+	#my $fed_id = $row->federation->id;
+	#$self->app->log->debug( "fed_id #-> " . $fed_id );
+	#}
+	#my $ip_address = $r->ip_address;
+	#$self->app->log->debug( "ip_address #-> " . $ip_address );
+	#my $type = lc $r->type->name;
+	#$self->app->log->debug( "type #-> " . Dumper($type) );
+
+	#my @deliveryservices =
+	#$self->db->resultset('FederationDeliveryservice')->search( { 'federation' => $federation_id }, { prefetch => 'federation_deliveryservices' } )
+	#->all();
+
+	#my $federation_resolver = $self->db->resultset('FederationResolver')->search( { id => $id } )->single;
+	#$self->app->log->debug( "federation_resolver id#-> " . $federation_resolver->id );
+	#my $dbh = $self->db->resultset('Federation')->search( { id => $id } );
+	#my $federation = $dbh->single;
 
 	my $current_username = $self->current_user()->{username};
-	$dbh = $self->db->resultset('TmUser')->search( { username => $current_username } );
-	my $tm_user = $dbh->single;
+	my $dbh              = $self->db->resultset('TmUser')->search( { username => $current_username } );
+	my $tm_user          = $dbh->single;
 	&stash_role($self);
 
-	my %delivery_services = get_delivery_services( $self, $id );
+	my $delivery_services = get_delivery_services( $self, 1 );
+	$self->app->log->debug( "delivery_services #-> " . Dumper($delivery_services) );
 	$self->stash(
 		tm_user           => $tm_user,
-		federation        => $data,
+		selected_ds_id    => $federation_id,
+		federation        => $federation,
 		mode              => 'edit',
 		fbox_layout       => 1,
-		delivery_services => \%delivery_services
+		delivery_services => $delivery_services
 	);
 	return $self->render('federation/edit');
 }
@@ -93,7 +137,7 @@ sub edit {
 sub get_delivery_services {
 	my $self   = shift;
 	my $id     = shift;
-	my @ds_ids = $self->db->resultset('Deliveryservice')->search( undef, { orderby => "id" } )->get_column('id')->all;
+	my @ds_ids = $self->db->resultset('Deliveryservice')->search( undef, { orderby => "xml_id" } )->get_column('id')->all;
 	$self->app->log->debug( "ds_ids: #-> " . Dumper(@ds_ids) );
 
 	my $delivery_services;

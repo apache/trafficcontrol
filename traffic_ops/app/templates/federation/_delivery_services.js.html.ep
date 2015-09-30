@@ -21,3 +21,16 @@ function populateDeliveryservices() {
     });
   }, "json");
 }
+
+function listDeliveryServices(selected_ds_id) {
+	$("#role").html("<select id=\"deliveryservice_select\" name=\"selected_ds_id\"></select>");	
+	$.get("/datarole/orderby/id", function(data){
+		$.each(data, function(idx, val) {
+			if (data[idx].id == selected_ds_id) {
+				$("#roleselect").append("<option selected=\"selected\" value=" + data[idx].id + ">" + data[idx].name + "</option>");
+			} else {
+				$("#roleselect").append("<option value=" + data[idx].id + ">" + data[idx].name + "</option>");
+			}
+		});
+	}, "json");
+}

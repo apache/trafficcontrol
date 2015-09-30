@@ -13,6 +13,12 @@
      See the License for the specific language governing permissions and
      limitations under the License.
  -->
+<style>
+#roleselect {
+    margin-left: 5px;
+}
+</style>
+
 <!DOCTYPE html>
 % if (defined (flash 'alertmsg')) {
 <script> 
@@ -23,7 +29,7 @@ alert(alertmsg);
 function deletefunction() {
 	var r=confirm("are you sure?");
 	if (r==true) {
-		window.location = "/federation/<%= $id %>/delete";
+		window.location = "/federation/<%= $federation_id %>/delete";
 		parent.location.reload (true);
 	}
 }
@@ -39,7 +45,8 @@ function deletefunction() {
 	  // wait for the DOM to be loaded 
 	  $(document).ready(function () {
 		  listroles("<%= $tm_user->role->id %>");
-		  populateDeliveryservices();
+		  //populateDeliveryservices();
+		  listDeliveryServices("<%= $selected_ds_id %>");
 	   });
 
 </script>
@@ -71,11 +78,10 @@ function deletefunction() {
 				   </div>
 				   <div style="margin-top:10px;padding:10px;">
 					  <button class="button" onclick="deletefunction()" id="delete_button">Delete</button>
-
-					   %= submit_button 'Save', id => 'save_button', class=> 'button', style=> 'margin-left:250px;'
+					   %= submit_button 'Save', id => 'save_button', class=> 'button', style=> 'margin-left:300px;'
+					   %= submit_button 'Close', id => 'close_button', class=> 'button'
 				   </div>
 				</form>
-					  <button class="button" id="close_button">Close</button>
 
   </div>
 </body>

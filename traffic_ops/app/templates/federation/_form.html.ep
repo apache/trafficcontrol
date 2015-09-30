@@ -45,24 +45,28 @@
         %= field('federation.ttl')->text(class => 'field', required=> 'required')
    </div>
 
-   <div class="block">
-       <% unless(field('federation.deliveryservice')->valid) { %>
-         <span class="field-with-error"><%= field('federation.deliveryservice')->error %></span>
+   <div class="block" style="padding: 5px;">
+       <% unless(field('deliveryservice')->valid) { %>
+         <span class="field-with-error"><%= field('deliveryservice')->error %></span>
            <% } %>
-       %= label_for 'deliveryservice' => 'Delivery Services', class => 'label'
-	   <select class='delivery-services' id='addDsSelect'>
-		  % for my $id (keys %{$delivery_services}) {
-			<option value="<%=$id%>"% selected><%= $$delivery_services{$id} %></option>
-		  % }
-	   </select>
+       %= label_for 'deliveryservice' => 'Delivery Service', class => 'label', style=>"margin-left: -5px;"
+       <div>
+		   <select class='field' id='addDsSelect' style="margin-top: 5px;margin-left: 4px;">
+			  % for my $id (keys %{$delivery_services}) {
+				<option value="<%=$id%>"% selected><%= $$delivery_services{$id} %></option>
+			  % }
+		   </select>
+       </div>
    </div>
 
-   <div class="block">
+   <div class="block" style="padding: 5px;">
        <% unless(field('tm_user.role')->valid) { %>
          <span class="field-with-error"><%= field('tm_user.role')->error %></span>
            <% } %>
-       %= label_for 'role' => 'Role', class => 'label'
-       %= label_for 'tm_user.role' => 'tm_user.role', id=> 'role', class => 'field'
+       %= label_for 'role' => 'Role', class => 'label', style=>"margin-left: -5px;"
+       <div>
+	       <div id="role"></div>
+       </div>
    </div>
 
 </div>
