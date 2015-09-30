@@ -74,13 +74,13 @@ my %definition_for = (
 			priv_level  => 2,
 		},
 	},
-	migrations => {
+	federation => {
 		new   => 'Role',
 		using => {
 			id          => 7,
-			name        => 'migrations',
-			description => 'migrations User',
-			priv_level  => 20,
+			name        => 'federation',
+			description => 'Federation User for Secondary CZF',
+			priv_level  => 15,
 		},
 	},
 );

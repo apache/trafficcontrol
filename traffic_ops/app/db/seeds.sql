@@ -19,6 +19,7 @@ insert ignore into role (id, name, description, priv_level) values (2, 'read-onl
 insert ignore into role (id, name, description, priv_level) values (3, 'operations','Block all access', 20);
 insert ignore into role (id, name, description, priv_level) values (4, 'admin','super-user', 30);
 insert ignore into role (id, name, description, priv_level) values (5, 'portal','Portal User', 2);
+insert ignore into role (id, name, description, priv_level) values (6, 'federation','Federation User for Secondary CZF', 15);
 insert ignore into tm_user (username, role,full_name) values ('portal',(select id from role where name='portal'),'Portal User');
 insert ignore into tm_user (username, role, full_name, token) values ('extension', 3, 'Extension User, DO NOT DELETE', '91504CE6-8E4A-46B2-9F9F-FE7C15228498');
 insert ignore into type (name, description, use_in_table) values ('CHECK_EXTENSION_BOOL', 'Extension for checkmark in Server Check', 'to_extension');
