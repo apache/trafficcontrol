@@ -27,16 +27,20 @@ use Data::Validate::IP qw(is_ipv4 is_ipv6);
 
 sub index {
   my $self = shift;
-  my @data;
+  my $orderby = $self->param('orderby') || "xml_id";
+  my $data;
 
-  my $rs_data = $self->db->resultset('FederationDeliveryservice')
-    ->search( {}, { prefetch => [ 'federation', 'deliveryservice' ] } );
+  my $rs_data = $self->db->resultset('FederationDeliveryservice')->search(
+    {},
+    {   prefetch => [ 'federation', 'deliveryservice' ],
+      order_by => "deliveryservice." . $orderby
+    }
+  );
 
   while ( my $row = $rs_data->next ) {
-    my $map;
-
-    $map->{'cname'} = $row->federation->cname;
-    $map->{'ttl'}   = $row->federation->ttl;
+    my $mapping;
+    $mapping->{'cname'} = $row->federation->cname;
+    $mapping->{'ttl'}   = $row->federation->ttl;
 
     my $id        = $row->federation->id;
     my @resolvers = $self->db->resultset('FederationResolver')->search(
@@ -44,24 +48,75 @@ sub index {
       { prefetch => 'federation_federation_resolvers' }
     )->all();
 
-    for my $r (@resolvers) {
-      my $type = lc $r->type->name;
-      if ( defined $map->{$type} ) {
-        push( $map->{$type}, $r->ip_address );
+    for my $resolver (@resolvers) {
+      my $type = lc $resolver->type->name;
+      if ( defined $mapping->{$type} ) {
+        push( $mapping->{$type}, $resolver->ip_address );
       }
       else {
-        @{ $map->{$type} } = ();
-        push( $map->{$type}, $r->ip_address );
+        @{ $mapping->{$type} } = ();
+        push( $mapping->{$type}, $resolver->ip_address );
       }
     }
-    push(
-      @data,
-      {   "deliveryService" => $row->deliveryservice->xml_id,
-        "mappings"        => $map
-      }
-    );
-  }
 
-  $self->success( \@data );
+    my $xml_id = $row->deliveryservice->xml_id;
+    if ( defined $data ) {
+      my $ds = $self->find_delivery_service( $xml_id, $data );
+      if ( !defined $ds ) {
+        $data
+          = $self->add_delivery_service( $xml_id, $mapping, $data );
+      }
+      else {
+        $self->update_delivery_service( $ds, $mapping );
+      }
+    }
+    else {
+      $data = $self->add_delivery_service( $xml_id, $mapping, $data );
+    }
+
+  }
+  $self->success($data);
 }
+
+sub find_delivery_service {
+  my $self   = shift;
+  my $xml_id = shift;
+  my $data   = shift;
+  my $ds;
+
+  foreach my $service ( @{$data} ) {
+    if ( $service->{'deliveryService'} eq $xml_id ) {
+      $ds = $service;
+    }
+  }
+  return ($ds);
+}
+
+sub add_delivery_service {
+  my $self   = shift;
+  my $xml_id = shift;
+  my $m      = shift;
+  my $data   = shift;
+
+  my $map;
+  push( @{$map}, $m );
+  push(
+    @${data},
+    {   "deliveryService" => $xml_id,
+      "mappings"        => $map
+    }
+  );
+  return $data;
+}
+
+sub update_delivery_service {
+  my $self = shift;
+  my $ds   = shift;
+  my $m    = shift;
+
+  my $map = $ds->{'mappings'};
+  push( @{$map}, $m );
+  $ds->{'mappings'} = $map;
+}
+
 1;
