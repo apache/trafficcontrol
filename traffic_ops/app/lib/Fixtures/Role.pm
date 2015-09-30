@@ -79,7 +79,7 @@ my %definition_for = (
 		using => {
 			id          => 7,
 			name        => 'federation',
-			description => 'Federation User for Secondary CZF',
+			description => 'Role for Secondary CZF',
 			priv_level  => 15,
 		},
 	},
