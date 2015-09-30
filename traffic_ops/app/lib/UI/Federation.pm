@@ -74,6 +74,7 @@ sub edit {
 	$self->app->log->debug( "federation_id #-> " . $federation_id );
 
 	my $federation;
+	my $selected_ds_id;
 	my $feds = $self->db->resultset('Federation')->search( { 'id' => $federation_id } );
 	while ( my $f = $feds->next ) {
 		$federation = $f;
@@ -82,8 +83,8 @@ sub edit {
 		my $federation_deliveryservices =
 			$self->db->resultset('FederationDeliveryservice')->search( { federation => $fed_id }, { prefetch => [ 'federation', 'deliveryservice' ] } );
 		while ( my $fd = $federation_deliveryservices->next ) {
-			my $fed_ds_id = $fd->deliveryservice->id;
-			$self->app->log->debug( "fed_ds_id #-> " . $fed_ds_id );
+			$selected_ds_id = $fd->deliveryservice->id;
+			$self->app->log->debug( "selected_ds_id #-> " . $selected_ds_id );
 		}
 	}
 
@@ -125,7 +126,7 @@ sub edit {
 	$self->app->log->debug( "delivery_services #-> " . Dumper($delivery_services) );
 	$self->stash(
 		tm_user           => $tm_user,
-		selected_ds_id    => $federation_id,
+		selected_ds_id    => $selected_ds_id,
 		federation        => $federation,
 		mode              => 'edit',
 		fbox_layout       => 1,

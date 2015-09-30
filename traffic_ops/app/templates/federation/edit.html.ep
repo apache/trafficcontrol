@@ -40,13 +40,10 @@ function deletefunction() {
 <script type="text/javascript">
 
       %= include 'user/_listroles.js'
-      %= include 'federation/_delivery_services.js'
 
 	  // wait for the DOM to be loaded 
 	  $(document).ready(function () {
 		  listroles("<%= $tm_user->role->id %>");
-		  //populateDeliveryservices();
-		  listDeliveryServices("<%= $selected_ds_id %>");
 	   });
 
 </script>

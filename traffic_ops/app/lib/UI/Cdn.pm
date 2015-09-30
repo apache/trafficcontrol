@@ -349,66 +349,15 @@ sub auser {
 	$self->render( json => \%data );
 }
 
-sub afederation_good {
-	my $self    = shift;
-	my %data    = ( "aaData" => undef );
-	my $rs_data = $self->db->resultset('FederationDeliveryservice')->search( {}, { prefetch => [ 'federation', 'deliveryservice' ] } );
-
-	while ( my $row = $rs_data->next ) {
-		my $id        = $row->federation->id;
-		my @resolvers = $self->db->resultset('FederationResolver')
-			->search( { 'federation_federation_resolvers.federation' => $id }, { prefetch => 'federation_federation_resolvers' } )->all();
-
-		for my $r (@resolvers) {
-			my $type = lc $r->type->name;
-
-			#my @line = [
-			#$r->id,                              $row->deliveryservice->xml_id, $row->federation->name, $row->federation->description,
-			#$row->federation->cname,             $row->federation->ttl,         $r->ip_address,         $type,
-			#$row->deliveryservice->display_name, $r->last_updated
-			#];
-			my @line = [ $row->federation->id, $row->federation->name, $row->federation->description, $row->federation->cname, $row->federation->ttl ];
-			push( @{ $data{'aaData'} }, @line );
-		}
-	}
-	$self->render( json => \%data );
-}
-
 sub afederation {
 	my $self = shift;
 	my %data = ( "aaData" => undef );
 	my $feds = $self->db->resultset('Federation')->search(undef);
 	while ( my $f = $feds->next ) {
-		my $fed_id = $f->id;
-		my $federation_deliveryservices =
-			$self->db->resultset('FederationDeliveryservice')->search( { federation => $fed_id }, { prefetch => [ 'federation', 'deliveryservice' ] } );
-		while ( my $fd = $federation_deliveryservices->next ) {
-			my $fed_ds_id = $fd->deliveryservice->id;
-			$self->app->log->debug( "fed_ds_id #-> " . $fed_ds_id );
-		}
 		my @line = [ $f->id, $f->name, $f->description, $f->cname, $f->ttl ];
 		push( @{ $data{'aaData'} }, @line );
 	}
 
-	#my $rs_data = $self->db->resultset('FederationDeliveryservice')->search( {}, { prefetch => [ 'federation', 'deliveryservice' ] } );
-
-	#while ( my $row = $rs_data->next ) {
-	#my $id        = $row->federation->id;
-	#my @resolvers = $self->db->resultset('FederationResolver')
-	#->search( { 'federation_federation_resolvers.federation' => $id }, { prefetch => 'federation_federation_resolvers' } )->all();
-
-	#for my $r (@resolvers) {
-	#my $type = lc $r->type->name;
-
-	#my @line_old = [
-	#$r->id,                              $row->deliveryservice->xml_id, $row->federation->name, $row->federation->description,
-	#$row->federation->cname,             $row->federation->ttl,         $r->ip_address,         $type,
-	#$row->deliveryservice->display_name, $r->last_updated
-	#];
-	#my @line = [ $row->federation->id, $row->federation->name, $row->federation->description, $row->federation->cname, $row->federation->ttl ];
-	#push( @{ $data{'aaData'} }, @line );
-	#}
-	#}
 	$self->render( json => \%data );
 }
 
