@@ -35,9 +35,10 @@ my $version = "1.1.6";
 require Exporter;
 our @ISA = qw(Exporter);
 
-use constant READ  => 10;
-use constant OPER  => 20;
-use constant ADMIN => 30;
+use constant READ       => 10;
+use constant FEDERATION => 15;
+use constant OPER       => 20;
+use constant ADMIN      => 30;
 
 our %EXPORT_TAGS = (
 	'all' => [
@@ -227,6 +228,13 @@ sub is_oper() {
 	my $self = shift;
 
 	return &has_priv( $self, OPER );
+}
+
+# returns true if the user in $self has operations privs
+sub is_federation() {
+	my $self = shift;
+
+	return &has_priv( $self, FEDERATION );
 }
 
 # returns true if the user in $self has admin privs
