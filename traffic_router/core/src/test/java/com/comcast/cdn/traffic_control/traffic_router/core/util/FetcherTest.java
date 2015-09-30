@@ -17,8 +17,7 @@ import static org.powermock.api.mockito.PowerMockito.mock;
 import static org.powermock.api.mockito.PowerMockito.whenNew;
 
 @RunWith(PowerMockRunner.class)
-@PrepareForTest({URL.class, InputStreamReader.class})
-@SuppressStaticInitializationFor("com.comcast.cdn.traffic_control.traffic_router.core.util.Fetcher")
+@PrepareForTest({Fetcher.class, URL.class, InputStreamReader.class})
 public class FetcherTest {
 
     @Test
