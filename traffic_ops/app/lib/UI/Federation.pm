@@ -19,6 +19,7 @@ package UI::Federation;
 
 # JvD Note: you always want to put Utils as the first use. Sh*t don't work if it's after the Mojo lines.
 use UI::Utils;
+use List::MoreUtils qw(uniq);
 
 use Mojo::Base 'Mojolicious::Controller';
 use Digest::SHA1 qw(sha1_hex);
@@ -92,14 +93,17 @@ sub edit {
 sub get_delivery_services {
 	my $self   = shift;
 	my $id     = shift;
-	my @ds_ids = $self->db->resultset('DeliveryserviceTmuser')->search( { tm_user_id => $id } )->get_column('deliveryservice')->all;
+	my @ds_ids = $self->db->resultset('Deliveryservice')->search( undef, { orderby => "id" } )->get_column('id')->all;
+	$self->app->log->debug( "ds_ids: #-> " . Dumper(@ds_ids) );
 
-	my %delivery_services;
-	for my $ds_id (@ds_ids) {
+	my $delivery_services;
+	for my $ds_id ( uniq(@ds_ids) ) {
+		$self->app->log->debug( "looking for ds_id #-> " . Dumper($ds_id) );
 		my $desc = $self->db->resultset('Deliveryservice')->search( { id => $ds_id } )->get_column('xml_id')->single;
-		$delivery_services{$ds_id} = $desc;
+		$delivery_services->{$ds_id} = $desc;
 	}
-	return %delivery_services;
+	$self->app->log->debug( "delivery_services #-> " . Dumper($delivery_services) );
+	return $delivery_services;
 }
 
 # Update

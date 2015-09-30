@@ -46,6 +46,18 @@
    </div>
 
    <div class="block">
+       <% unless(field('federation.deliveryservice')->valid) { %>
+         <span class="field-with-error"><%= field('federation.deliveryservice')->error %></span>
+           <% } %>
+       %= label_for 'deliveryservice' => 'Delivery Services', class => 'label'
+	   <select class='delivery-services' id='addDsSelect'>
+		  % for my $id (keys %{$delivery_services}) {
+			<option value="<%=$id%>"% selected><%= $$delivery_services{$id} %></option>
+		  % }
+	   </select>
+   </div>
+
+   <div class="block">
        <% unless(field('tm_user.role')->valid) { %>
          <span class="field-with-error"><%= field('tm_user.role')->error %></span>
            <% } %>

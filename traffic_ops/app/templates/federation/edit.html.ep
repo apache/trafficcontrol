@@ -33,7 +33,7 @@ function deletefunction() {
 
 <script type="text/javascript">
 
-      %= include 'federation/_listroles.js'
+      %= include 'user/_listroles.js'
       %= include 'federation/_delivery_services.js'
 
 	  // wait for the DOM to be loaded 
