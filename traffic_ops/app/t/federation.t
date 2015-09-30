@@ -58,8 +58,8 @@ Test::TestHelper->load_all_fixtures($federation);
 
 # FederationDeliveryservice
 #
-my $fmd = Fixtures::FederationDeliveryservice->new($schema_values);
-Test::TestHelper->load_all_fixtures($fmd);
+my $fd = Fixtures::FederationDeliveryservice->new($schema_values);
+Test::TestHelper->load_all_fixtures($fd);
 
 my $federation_federation_resolver = Fixtures::FederationFederationResolver->new($schema_values);
 Test::TestHelper->load_all_fixtures($federation_federation_resolver);
