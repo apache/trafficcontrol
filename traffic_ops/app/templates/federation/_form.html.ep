@@ -45,4 +45,12 @@
         %= field('federation.ttl')->text(class => 'field', required=> 'required')
    </div>
 
+   <div class="block">
+       <% unless(field('tm_user.role')->valid) { %>
+         <span class="field-with-error"><%= field('tm_user.role')->error %></span>
+           <% } %>
+       %= label_for 'role' => 'Role', class => 'label'
+       %= label_for 'tm_user.role' => 'tm_user.role', id=> 'role', class => 'field'
+   </div>
+
 </div>

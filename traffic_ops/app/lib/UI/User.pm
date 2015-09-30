@@ -140,7 +140,6 @@ sub edit {
 	my $data = $dbh->single;
 	&stash_role($self);
 
-	# TODO: drichardson - mode helps to enable/disable features in the _form.html.erb (is there a better way? ) $self->stash(
 	my %delivery_services = get_delivery_services( $self, $id );
 	$self->stash(
 		tm_user           => $data,

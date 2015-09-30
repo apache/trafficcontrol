@@ -72,10 +72,15 @@ sub edit {
 	my $id   = $self->param('id');
 	my $dbh  = $self->db->resultset('Federation')->search( { id => $id } );
 	my $data = $dbh->single;
+
+	my $current_username = $self->current_user()->{username};
+	$dbh = $self->db->resultset('TmUser')->search( { username => $current_username } );
+	my $tm_user = $dbh->single;
 	&stash_role($self);
 
 	my %delivery_services = get_delivery_services( $self, $id );
 	$self->stash(
+		tm_user           => $tm_user,
 		federation        => $data,
 		mode              => 'edit',
 		fbox_layout       => 1,
