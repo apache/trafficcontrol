@@ -98,12 +98,12 @@ sub add_delivery_service {
   my $m      = shift;
   my $data   = shift;
 
-  push( my @map, $m );
-
+  my $map;
+  push( @{$map}, $m );
   push(
     @${data},
     {   "deliveryService" => $xml_id,
-      "mappings"        => \@map
+      "mappings"        => $map
     }
   );
   return $data;
@@ -114,9 +114,9 @@ sub update_delivery_service {
   my $ds   = shift;
   my $m    = shift;
 
-  my @map = $ds->{'mappings'};
-  push( @map, $m );
-  $ds->{'mappings'} = \@map;
+  my $map = $ds->{'mappings'};
+  push( @{$map}, $m );
+  $ds->{'mappings'} = $map;
 }
 
 1;
