@@ -436,7 +436,7 @@ sub acompareprofile {
 	}
 
 	foreach my $id ( keys %{$params2} ) {
-		my @line = [ $params2->{$id}->{name}, $params2->{$name}->{config_file}, "undef", $params2->{$name}->{value} ];
+		my @line = [ $params2->{$id}->{name}, $params2->{$id}->{config_file}, "undef", $params2->{$id}->{value} ];
 		push( @{ $data{'aaData'} }, @line );
 	}
 
