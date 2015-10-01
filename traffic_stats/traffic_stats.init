@@ -23,20 +23,12 @@ STATUS_RUNNING=1
 
 start()
 {
-	daily_summary_status
+	status
 	# check status return code 
 	if [[ $? -eq $STATUS_STOPPED || "$1" == "force" ]] ; then
-		echo "Starting ts_daily_summary."
+		echo "Starting traffic_stats."
 		ulimit -n 4096
-		/usr/bin/nohup /opt/traffic_stats/bin/ts_daily_summary --cfg /opt/traffic_stats/conf/traffic_stats.cfg >/opt/traffic_stats/var/log/traffic_stats/ts_daily_summary.out 2>&1 &
-	fi
-
-	wts_status
-	# check status return code 
-	if [[ $? -eq $STATUS_STOPPED || "$1" == "force" ]] ; then
-		echo "Starting write_traffic_stats."
-		ulimit -n 4096
-		/usr/bin/nohup /opt/traffic_stats/bin/write_traffic_stats --cfg /opt/traffic_stats/conf/traffic_stats.cfg >/opt/traffic_stats/var/log/traffic_stats/write_traffic_stats.out 2>&1 &
+		/usr/bin/nohup /opt/traffic_stats/bin/traffic_stats --cfg /opt/traffic_stats/conf/traffic_stats.cfg >/opt/traffic_stats/var/log/traffic_stats/traffic_stats.out 2>&1 &
 	fi
 
 	return $?
@@ -44,78 +36,38 @@ start()
 
 stop()
 {
-	daily_summary_status
-	# check status return code
-	if [[ $? -eq $STATUS_RUNNING || "$1" == "force" ]] ; then
-		echo "Stopping ts_daily_summary client.."
-		kill `pidof -s ts_daily_summary`
-			
-	daily_summary_status
-	
-		if [ $? -eq $STATUS_STOPPED ]; then
-			echo "ts_daily_summary killed"
-			
-		else
-			echo "unable to identify and kill ts_daily_summary"
-		fi
-	fi
-
-	wts_status
+	status
 
 	# check status return code
 	if [[ $? -eq $STATUS_RUNNING || "$1" == "force" ]] ; then
-		echo "Stopping write_traffic_stats client.."
-		kill `pidof -s write_traffic_stats`
+		echo "Stopping traffic_stats client.."
+		kill `pidof -s traffic_stats`
 			
-	wts_status
+	status
 	
 		if [ $? -eq $STATUS_STOPPED ]; then
-			echo "write_traffic_stats killed"
+			echo "traffic_stats killed"
 			
 		else
-			echo "unable to identify and kill write_traffic_stats"
+			echo "unable to identify and kill traffic_stats"
 		fi
 	fi
 
 	return $?
 }
 
-
-daily_summary_status()
-{
-	pid=`pidof -s ts_daily_summary`
-
-	if [ -n "$pid" ] ; then
-		echo "ts_daily_summary (pid $pid) is running.."
-		return $STATUS_RUNNING
-	fi
-
-	echo "ts_daily_summary is stopped.."
-	return $STATUS_STOPPED
-}
-
-wts_status()
-{
-	pid=`pidof -s write_traffic_stats`
-
-	if [ -n "$pid" ] ; then
-		echo "write_traffic_stats (pid $pid) is running.."
-		return $STATUS_RUNNING
-	fi
-
-	echo "write_traffic_stats is stopped.."
-	return $STATUS_STOPPED
-}
-
 status()
 {
-	daily_summary_status
-	wts_status
-	
-	# return $STATUS_RUNNING
-	
-}
+	pid=`pidof -s traffic_stats`
 
+	if [ -n "$pid" ] ; then
+		echo "traffic_stats (pid $pid) is running.."
+		return $STATUS_RUNNING
+	fi
+
+	echo "traffic_stats is stopped.."
+	return $STATUS_STOPPED
+}
 
 case "$1" in
 	start)
