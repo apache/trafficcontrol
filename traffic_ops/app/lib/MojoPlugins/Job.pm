@@ -99,7 +99,6 @@ sub register {
 			if ($pre_prod) {
 				push( @offstates, $pre_prod );
 			}
-			$self->app->log->debug( "offline #-> " . Dumper(@offstates) );
 			my $update_server_bit_rs =
 				$self->db->resultset('Server')
 				->search( { -and => [ { status => { 'not in' => \@offstates } }, { profile => { -in => \@cdn_profiles } } ] } );
