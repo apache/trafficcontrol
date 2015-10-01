@@ -400,6 +400,7 @@ sub api_routes {
 
 	# -- CDN -- #NEW
 	$r->get( "/api/$version/cdns" => [ format => [qw(json)] ] )->over( authenticated => 1 )->to( 'Cdn#index', namespace => $namespace );
+	$r->get( "/api/$version/cdns/name/:name" => [ format => [qw(json)] ] )->over( authenticated => 1 )->to( 'Cdn#name', namespace => $namespace );
 
 	# -- CHANGE LOG - #NEW
 	$r->get( "/api/$version/logs"            => [ format => [qw(json)] ] )->over( authenticated => 1 )->to( 'ChangeLog#index', namespace => $namespace );

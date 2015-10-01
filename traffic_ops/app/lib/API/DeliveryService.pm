@@ -72,10 +72,10 @@ sub get_data {
 	my %ds_hash = map { $_ => 1 } @ds_ids;
 	my $rs;
 	if ( defined($id) ) {
-		$rs = $self->db->resultset("Deliveryservice")->search( { id => $id }, { prefetch => ['deliveryservice_regexes'] } );
+		$rs = $self->db->resultset("Deliveryservice")->search( { id => $id }, { prefetch => ['cdn', 'deliveryservice_regexes'] } );
 	}
 	else {
-		$rs = $self->db->resultset("Deliveryservice")->search( undef, { prefetch => ['deliveryservice_regexes'], order_by => 'xml_id' } );
+		$rs = $self->db->resultset("Deliveryservice")->search( undef, { prefetch => ['cdn', 'deliveryservice_regexes'], order_by => 'xml_id' } );
 	}
 	while ( my $row = $rs->next ) {
 		next if ( defined($tm_user_id) && !defined( $ds_hash{ $row->id } ) );
@@ -110,6 +110,7 @@ sub get_data {
 				"type"                 => $row->type->name,
 				"profileName"          => $row->profile->name,
 				"profileDescription"   => $row->profile->description,
+				"cdnName"              => $row->cdn->name,
 				"globalMaxMbps"        => $row->global_max_mbps,
 				"globalMaxTps"         => $row->global_max_tps,
 				"headerRewrite"        => $row->edge_header_rewrite,

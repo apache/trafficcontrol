@@ -45,6 +45,23 @@ sub index {
 	$self->success( \@data );
 }
 
+sub name {
+	my $self   = shift;
+	my $cdn = $self->param('name');
+
+	my $rs_data = $self->db->resultset("Cdn")->search( { name => $cdn } );
+	my @data = ();
+	while ( my $row = $rs_data->next ) {
+		push(
+			@data,
+			{   "name"        => $row->name,
+				"lastUpdated" => $row->last_updated,
+			}
+		);
+	}
+	$self->success( \@data );
+}
+
 sub configs_monitoring {
 	my $self      = shift;
 	my $cdn_name  = $self->param('name');

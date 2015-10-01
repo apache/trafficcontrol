@@ -26,3 +26,8 @@ traffic_ops/app/public/js/jquery-1.11.2.min.js
 traffic_ops/app/public/js/jquery-ui.min.js
 traffic_ops/app/public/js/jquery.dataTables.min.js
 traffic_stats/traffic_stats
+misc/traffic-control-cdn/downloads/*.rpm
+traffic_router/*/*.log
+traffic_router/*.log
+traffic_router/*/*.iml
+traffic_router/*.iml
