@@ -71,16 +71,19 @@ type InfluxDBProps struct {
 
 func main() {
 	var Bps map[string]*influx.BatchPoints
+	var config StartupConfig
+	var err error
 
 	configFile := flag.String("cfg", "", "The config file")
 	testSummary := flag.Bool("testSummary", false, "Test summary mode")
 	flag.Parse()
-	file, err := os.Open(*configFile)
-	errHndlr(err, FATAL)
-	decoder := json.NewDecoder(file)
-	config := &StartupConfig{}
-	err = decoder.Decode(&config)
-	errHndlr(err, FATAL)
+
+	config, err = loadStartupConfig(configFile, config)
+
+	if err != nil {
+		errHndlr(err, FATAL)
+	}
+
 	Bps = make(map[string]*influx.BatchPoints)
 	config.BpsChan = make(chan influx.BatchPoints)
 
@@ -121,16 +124,27 @@ func main() {
 	termChan := make(chan os.Signal, 1)
 	signal.Notify(termChan, syscall.SIGKILL, syscall.SIGINT, syscall.SIGTERM, syscall.SIGQUIT)
 
+	hupChan := make(chan os.Signal, 1)
+	signal.Notify(hupChan, syscall.SIGHUP)
+
 	for {
 		select {
+		case <-hupChan:
+			newConfig, err := loadStartupConfig(configFile, config)
+
+			if err != nil {
+				errHndlr(err, ERROR)
+			} else {
+				config = newConfig
+			}
 		case <-termChan:
 			for _, val := range Bps {
-				sendMetrics(config, &runningConfig, *val)
+				sendMetrics(config, runningConfig, *val)
 			}
 			os.Exit(0)
 		case <-tickerPublishChan:
 			for key, val := range Bps {
-				go sendMetrics(config, &runningConfig, *val)
+				go sendMetrics(config, runningConfig, *val)
 				delete(Bps, key)
 			}
 		case runningConfig = <-configChan:
@@ -144,11 +158,11 @@ func main() {
 						fmt.Println("Skipping stat write - testSummary mode is ON!")
 						continue
 					}
-					go calcMetrics(cdnName, url, runningConfig.CacheGroupMap, config, &runningConfig)
+					go calcMetrics(cdnName, url, runningConfig.CacheGroupMap, config, runningConfig)
 				}
 			}
 		case now := <-tickerDailySummaryChan:
-			go calcDailySummary(now, config, &runningConfig)
+			go calcDailySummary(now, config, runningConfig)
 		case batchPoints := <-config.BpsChan:
 			log.Info("Received ", len(batchPoints.Points), " stats")
 			key := fmt.Sprintf("%s%s", batchPoints.Database, batchPoints.RetentionPolicy)
@@ -164,7 +178,29 @@ func main() {
 	}
 }
 
-func calcDailySummary(now time.Time, config *StartupConfig, runningConfig *RunningConfig) {
+func loadStartupConfig(configFile *string, oldConfig StartupConfig) (StartupConfig, error) {
+	var config StartupConfig
+
+	file, err := os.Open(*configFile)
+
+	if err != nil {
+		return config, err
+	}
+
+	decoder := json.NewDecoder(file)
+
+	err = decoder.Decode(&config)
+
+	if err != nil {
+		return config, err
+	}
+
+	config.BpsChan = oldConfig.BpsChan
+
+	return config, nil
+}
+
+func calcDailySummary(now time.Time, config StartupConfig, runningConfig RunningConfig) {
 	log.Infof("lastSummaryTime is %v", runningConfig.LastSummaryTime)
 	if runningConfig.LastSummaryTime.Day() != now.Day() {
 		startTime := now.Truncate(24 * time.Hour).Add(-24 * time.Hour)
@@ -282,7 +318,7 @@ func queryDB(con *influx.Client, cmd string, database string) (res []influx.Resu
 	return
 }
 
-func writeSummaryStats(config *StartupConfig, statsSummary traffic_ops.StatsSummary) {
+func writeSummaryStats(config StartupConfig, statsSummary traffic_ops.StatsSummary) {
 	to, err := traffic_ops.Login(config.ToURL, config.ToUser, config.ToPasswd, true)
 	if err != nil {
 		new_err := fmt.Errorf("Could not store summary stats! Error logging in to %v: %v", config.ToURL, err)
@@ -295,7 +331,7 @@ func writeSummaryStats(config *StartupConfig, statsSummary traffic_ops.StatsSumm
 	}
 }
 
-func getToData(config *StartupConfig, init bool, configChan chan RunningConfig) {
+func getToData(config StartupConfig, init bool, configChan chan RunningConfig) {
 	var runningConfig RunningConfig
 	to, err := traffic_ops.Login(config.ToURL, config.ToUser, config.ToPasswd, true)
 	if err != nil {
@@ -389,7 +425,7 @@ func getToData(config *StartupConfig, init bool, configChan chan RunningConfig) 
 	configChan <- runningConfig
 }
 
-func calcMetrics(cdnName string, url string, cacheGroupMap map[string]string, config *StartupConfig, runningConfig *RunningConfig) {
+func calcMetrics(cdnName string, url string, cacheGroupMap map[string]string, config StartupConfig, runningConfig RunningConfig) {
 	sampleTime := int64(time.Now().Unix())
 	// get the data from rascal
 	rascalData, err := getURL(url)
@@ -438,7 +474,7 @@ func errHndlr(err error, severity int) {
     }
  }
 */
-func calcDsValues(rascalData []byte, cdnName string, sampleTime int64, config *StartupConfig) error {
+func calcDsValues(rascalData []byte, cdnName string, sampleTime int64, config StartupConfig) error {
 	type DsStatsJSON struct {
 		Pp              string `json:"pp"`
 		Date            string `json:"date"`
@@ -536,7 +572,7 @@ func calcDsValues(rascalData []byte, cdnName string, sampleTime int64, config *S
 }
 */
 
-func calcCacheValues(trafmonData []byte, cdnName string, sampleTime int64, cacheGroupMap map[string]string, config *StartupConfig) error {
+func calcCacheValues(trafmonData []byte, cdnName string, sampleTime int64, cacheGroupMap map[string]string, config StartupConfig) error {
 	/* note about the data:
 	keys are cdnName:deliveryService:cacheGroup:cacheName:statName
 	*/
@@ -620,7 +656,7 @@ func getURL(url string) ([]byte, error) {
 	return body, nil
 }
 
-func influxConnect(config *StartupConfig, runningConfig *RunningConfig) (*influx.Client, error) {
+func influxConnect(config StartupConfig, runningConfig RunningConfig) (*influx.Client, error) {
 	// Connect to InfluxDb
 	var urls []*url.URL
 
@@ -662,7 +698,7 @@ func influxConnect(config *StartupConfig, runningConfig *RunningConfig) (*influx
 	return nil, err
 }
 
-func sendMetrics(config *StartupConfig, runningConfig *RunningConfig, bps influx.BatchPoints) {
+func sendMetrics(config StartupConfig, runningConfig RunningConfig, bps influx.BatchPoints) {
 	//influx connection
 	influxClient, err := influxConnect(config, runningConfig)
 	if err != nil {
