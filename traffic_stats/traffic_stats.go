@@ -103,13 +103,14 @@ func main() {
 	logger, err := log.LoggerFromConfigAsFile(config.SeelogConfig)
 	defer log.Flush()
 	if err != nil {
-		panic("error reading Seelog config " + config.SeelogConfig)
+		errHndlr(fmt.Errorf("error reading Seelog config %s", config.SeelogConfig), FATAL)
 	}
-	fmt.Println("Replacing logger, see log file according to " + config.SeelogConfig)
+	log.Info("Replacing logger, see log file according to", config.SeelogConfig)
+	log.ReplaceLogger(logger)
+
 	if *testSummary {
 		fmt.Println("WARNING: testSummary is on!")
 	}
-	log.ReplaceLogger(logger)
 
 	configChan := make(chan RunningConfig)
 	go getToData(config, true, configChan)
@@ -196,6 +197,30 @@ func loadStartupConfig(configFile string, oldConfig StartupConfig) (StartupConfi
 	}
 
 	config.BpsChan = oldConfig.BpsChan
+
+	if config.PollingInterval == 0 {
+		config.PollingInterval = oldConfig.PollingInterval
+	}
+	if config.DailySummaryPollingInterval == 0 {
+		config.DailySummaryPollingInterval = oldConfig.DailySummaryPollingInterval
+	}
+	if config.PublishingInterval == 0 {
+		config.PublishingInterval = oldConfig.PublishingInterval
+	}
+	if config.ConfigInterval == 0 {
+		config.ConfigInterval = oldConfig.ConfigInterval
+	}
+
+	if config.SeelogConfig != oldConfig.SeelogConfig {
+		logger, err := log.LoggerFromConfigAsFile(config.SeelogConfig)
+		if err != nil {
+			errHndlr(fmt.Errorf("error reading Seelog config %s", config.SeelogConfig), ERROR)
+		} else {
+			log.Info("Replacing logger, see log file according to", config.SeelogConfig)
+			log.Flush()
+			log.ReplaceLogger(logger)
+		}
+	}
 
 	return config, nil
 }
