@@ -16,34 +16,46 @@
 
 package client
 
-import "encoding/json"
+import (
+	"encoding/json"
+	"fmt"
+)
 
-type ProfileResponse struct {
-	Version  string    `json:"version"`
-	Response []Profile `json:"response"`
+type CDNResponse struct {
+	Version  string `json:"version"`
+	Response []CDN  `json:"response"`
 }
 
-type Profile struct {
+type CDN struct {
 	Name        string `json:"name"`
-	Description string `json:"description"`
-	CdnName     string `json:"cdnName"`
 	LastUpdated string `json:"lastUpdated"`
 }
 
-// Profiles
-// Get an array of Profiles
-func (to *Session) Profiles() ([]Profile, error) {
-	body, err := to.getBytes("/api/1.1/profiles.json")
+// CDNs
+// Get an array of CDNs
+func (to *Session) Cdns() ([]CDN, error) {
+	body, err := to.getBytes("/api/1.2/cdns.json")
 	if err != nil {
 		return nil, err
 	}
-	profileList, err := profileUnmarshall(body)
-	return profileList.Response, err
+
+	var cdn CDNResponse
+	if err := json.Unmarshal(body, &cdn); err != nil {
+		return nil, err
+	}
+	return cdn.Response, err
 }
 
-func profileUnmarshall(body []byte) (ProfileResponse, error) {
+// Get an array of CDNs
+func (to *Session) CdnName(name string) ([]CDN, error) {
+	body, err := to.getBytes(fmt.Sprintf("/api/1.2/cdns/name/%s.json", name))
+	if err != nil {
+		return nil, err
+	}
 
-	var data ProfileResponse
-	err := json.Unmarshal(body, &data)
-	return data, err
+	var cdn CDNResponse
+	if err := json.Unmarshal(body, &cdn); err != nil {
+		return nil, err
+	}
+	return cdn.Response, err
 }
