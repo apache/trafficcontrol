@@ -118,6 +118,7 @@ sub unload_core_data {
 	$self->teardown( $schema, 'Parameter' );
 	$self->teardown( $schema, 'ProfileParameter' );
 	$self->teardown( $schema, 'Regex' );
+
 	$self->teardown( $schema, 'Type' );
 	$self->teardown( $schema, 'Status' );
 }

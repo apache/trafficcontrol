@@ -1,4 +1,4 @@
-package Fixtures::Federation;
+package Fixtures::FederationTmuser;
 #
 # Copyright 2015 Comcast Cable Communications Management, LLC
 #
@@ -22,44 +22,32 @@ use namespace::autoclean;
 use Digest::SHA1 qw(sha1_hex);
 
 my %definition_for = (
-	name1 => {
-		new   => 'Federation',
+	federation_tm_user1 => {
+		new   => 'FederationTmuser',
 		using => {
-			id          => 1,
-			cname       => 'cname1',
-			description => 'resolver4 type',
-			ttl         => 86400,
-			role        => 7,
+			federation => 1,
+			tm_user    => 5,
 		},
 	},
-	name2 => {
-		new   => 'Federation',
+	federation_tm_user2 => {
+		new   => 'FederationTmuser',
 		using => {
-			id          => 2,
-			cname       => 'cname2',
-			description => 'resolver4 type',
-			ttl         => 86400,
-			role        => 7,
+			federation => 2,
+			tm_user    => 5,
 		},
 	},
-	name3 => {
-		new   => 'Federation',
+	federation_tm_user3 => {
+		new   => 'FederationTmuser',
 		using => {
-			id          => 3,
-			cname       => 'cname3',
-			description => 'resolver6 type',
-			ttl         => 86400,
-			role        => 7,
+			federation => 3,
+			tm_user    => 5,
 		},
 	},
-	name4 => {
-		new   => 'Federation',
+	federation_tm_user4 => {
+		new   => 'FederationTmuser',
 		using => {
-			id          => 4,
-			cname       => 'cname4',
-			description => 'resolver6 type',
-			ttl         => 86400,
-			role        => 7,
+			federation => 4,
+			tm_user    => 5,
 		},
 	},
 );

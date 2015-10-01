@@ -352,22 +352,9 @@ sub auser {
 sub afederation {
 	my $self = shift;
 	my %data = ( "aaData" => undef );
-
-	#$rs = $self->db->resultset('ProfileParameter')->search( { $col => $p_id }, { prefetch => [ { 'parameter' => undef }, { 'profile' => undef } ] } );
-## close
-	#my @feds         = $self->db->resultset('Federation')->all();
-	#for my $f (@feds) {
-	#my @line = [ $f->id, $f->name, $f->cname, $f->ttl ];
-	#push( @{ $data{'aaData'} }, @line );
-	#}
-	#my $dbh =
-	#$self->db->resultset('Job')
-	#->search( { keyword => $keyword, 'job_user.username' => $username }, { prefetch => [ { 'job_user' => undef } ], join => 'job_user' } );
-
-	my $dbh = $self->db->resultset('Federation')->search( undef, { join => [ 'federation_deliveryservices', 'federation_federation_resolvers' ] } );
-
-	while ( my $row = $dbh->next ) {
-		my @line = [ $row->id, $row->name, $row->cname, $row->ttl, $row->federation_federation_resolvers->ip_address ];
+	my $feds = $self->db->resultset('Federation')->search(undef);
+	while ( my $f = $feds->next ) {
+		my @line = [ $f->id, $f->cname, $f->description, $f->ttl ];
 		push( @{ $data{'aaData'} }, @line );
 	}
 

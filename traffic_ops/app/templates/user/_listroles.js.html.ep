@@ -16,12 +16,13 @@
 
 function listroles(selected_role_id) {
 	$("#role").html("<select id=\"roleselect\" name=\"tm_user.role\"></select>");	
-	$.get("/datarole/orderby/id", function(data){
-		$.each(data, function(idx, val) {
-			if (data[idx].id == selected_role_id) {
-				$("#roleselect").append("<option selected=\"selected\" value=" + data[idx].id + ">" + data[idx].name + "</option>");
+	$.get("/api/1.2/roles.json?orderby=id", function(data){
+		var response = data['response'];
+		$.each(response, function(idx, val) {
+			if (response[idx].id == selected_role_id) {
+				$("#roleselect").append("<option selected=\"selected\" value=" + response[idx].id + ">" + response[idx].name + "</option>");
 			} else {
-				$("#roleselect").append("<option value=" + data[idx].id + ">" + data[idx].name + "</option>");
+				$("#roleselect").append("<option value=" + response[idx].id + ">" + response[idx].name + "</option>");
 			}
 		});
 	}, "json");

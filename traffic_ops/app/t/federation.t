@@ -30,6 +30,7 @@ use Fixtures::Federation;
 use Fixtures::FederationDeliveryservice;
 use Fixtures::FederationResolver;
 use Fixtures::FederationFederationResolver;
+use Fixtures::FederationTmuser;
 
 BEGIN { $ENV{MOJO_MODE} = "test" }
 
@@ -40,29 +41,35 @@ my $t3_id;
 
 #unload data for a clean test
 Test::TestHelper->unload_core_data($schema);
+Test::TestHelper->teardown( $schema, 'FederationResolver' );
+Test::TestHelper->teardown( $schema, 'Federation' );
 
 #load core test data
 Test::TestHelper->load_core_data($schema);
 
 my $schema_values = { schema => $schema, no_transactions => 1 };
+
 #
 # FederationResolver
 #
-my $federation_resolver = Fixtures::FederationResolver->new($schema_values);
-Test::TestHelper->load_all_fixtures($federation_resolver);
+my $fr = Fixtures::FederationResolver->new($schema_values);
+Test::TestHelper->load_all_fixtures($fr);
 #
-# FederationMapping
+# Federation
 #
-my $federation = Fixtures::Federation->new($schema_values);
-Test::TestHelper->load_all_fixtures($federation);
+my $fed = Fixtures::Federation->new($schema_values);
+Test::TestHelper->load_all_fixtures($fed);
 
 # FederationDeliveryservice
 #
-my $fmd = Fixtures::FederationDeliveryservice->new($schema_values);
-Test::TestHelper->load_all_fixtures($fmd);
+my $fds = Fixtures::FederationDeliveryservice->new($schema_values);
+Test::TestHelper->load_all_fixtures($fds);
 
-my $federation_federation_resolver = Fixtures::FederationFederationResolver->new($schema_values);
-Test::TestHelper->load_all_fixtures($federation_federation_resolver);
+my $ffr = Fixtures::FederationFederationResolver->new($schema_values);
+Test::TestHelper->load_all_fixtures($ffr);
+
+my $ft = Fixtures::FederationTmuser->new($schema_values);
+Test::TestHelper->load_all_fixtures($ft);
 
 #login
 ok $t->post_ok( '/login', => form => { u => Test::TestHelper::ADMIN_USER, p => Test::TestHelper::ADMIN_USER_PASSWORD } )->status_is(302)

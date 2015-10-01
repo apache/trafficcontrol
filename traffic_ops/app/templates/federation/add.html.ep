@@ -43,7 +43,7 @@ alert(alertmsg);
 			%= include 'federation/_form'
 			<div class="bottomButtons" style="margin-left: 285px;">
 			  <div style="float:left;">
-				 %= submit_button 'Add Federation Mapping', class=> 'button'
+				 %= submit_button 'Save', class=> 'button'
 							<button id="close_button" class="button">Close</button>
 			 </div>
 			</div>
