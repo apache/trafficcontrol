@@ -38,6 +38,15 @@ my %definition_for = (
 			priv_level  => 10,
 		},
 	},
+	federation => {
+		new   => 'Role',
+		using => {
+			id          => 7,
+			name        => 'federation',
+			description => 'Role for Secondary CZF',
+			priv_level  => 11,
+		},
+	},
 	operations => {
 		new   => 'Role',
 		using => {
@@ -72,15 +81,6 @@ my %definition_for = (
 			name        => 'portal',
 			description => 'Portal User',
 			priv_level  => 2,
-		},
-	},
-	federation => {
-		new   => 'Role',
-		using => {
-			id          => 7,
-			name        => 'federation',
-			description => 'Role for Secondary CZF',
-			priv_level  => 15,
 		},
 	},
 );

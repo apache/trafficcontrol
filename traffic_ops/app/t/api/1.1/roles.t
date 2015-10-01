@@ -41,13 +41,8 @@ ok $t->post_ok( '/login', => form => { u => Test::TestHelper::ADMIN_USER, p => T
 
 $t->get_ok('/api/1.1/roles.json?orderby=name')->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } )
 	->json_is( "/response/0/id", "4" )->json_is( "/response/0/description", "super-user" )->json_is( "/response/0/name", "admin" )
-	->json_is( "/response/0/privLevel", "30" )->json_is( "/response/1/id", "1" )->json_is( "/response/1/description", "block all access" )
-	->json_is( "/response/1/name", "disallowed" )->json_is( "/response/1/privLevel", "0" )->json_is( "/response/2/id", "7" )
-	->json_is( "/response/2/description", "migrations User" )->json_is( "/response/2/name", "migrations" )->json_is( "/response/2/privLevel", "20" )
-	->json_is( "/response/3/id", "3" )->json_is( "/response/3/description", "block all access" )->json_is( "/response/3/name", "operations" )
-	->json_is( "/response/3/privLevel", "20" )->json_is( "/response/4/id", "6" )->json_is( "/response/4/description", "Portal User" )
-	->json_is( "/response/4/name", "portal" )->json_is( "/response/4/privLevel", "2" )->json_is( "/response/5/id", "2" )
-	->json_is( "/response/5/description", "block all access" )->json_is( "/response/5/name", "read-only user" )->json_is( "/response/5/privLevel", "10" );
+	->json_is( "/response/0/privLevel", "30" )->json_is( "/response/6/description", "block all access" )->json_is( "/response/6/name", "read-only user" )
+	->json_is( "/response/6/privLevel", "10" );
 
 ok $t->get_ok('/logout')->status_is(302)->or( sub { diag $t->tx->res->content->asset->{content}; } );
 $dbh->disconnect();

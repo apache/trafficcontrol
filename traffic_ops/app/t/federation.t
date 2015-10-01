@@ -41,11 +41,14 @@ my $t3_id;
 
 #unload data for a clean test
 Test::TestHelper->unload_core_data($schema);
+Test::TestHelper->teardown( $schema, 'FederationResolver' );
+Test::TestHelper->teardown( $schema, 'Federation' );
 
 #load core test data
 Test::TestHelper->load_core_data($schema);
 
 my $schema_values = { schema => $schema, no_transactions => 1 };
+
 #
 # FederationResolver
 #
