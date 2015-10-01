@@ -82,8 +82,12 @@
 		<property name="nameServer" ref="NameServer" />
 	</bean>
 
-	<bean id="federationsWatcher" class="com.comcast.cdn.traffic_control.traffic_router.core.loc.FederationsWatcher">
+	<bean id="federationsWatcher" class="com.comcast.cdn.traffic_control.traffic_router.core.loc.FederationsWatcher" init-method="init">
 		<property name="executorService" ref="ScheduledExecutorService" />
+		<property name="databaseLocation" value="$[cache.federations.database]" />
+		<property name="pollingInterval" value="$[cache.federations.database.refresh.period]" />
+		<property name="username" value="$[dns.sec.keyserver.username]" />
+		<property name="password" value="$[dns.sec.keyserver.password]" />
 	</bean>
 
 	<bean id="ConfigHandler" class="com.comcast.cdn.traffic_control.traffic_router.core.config.ConfigHandler">

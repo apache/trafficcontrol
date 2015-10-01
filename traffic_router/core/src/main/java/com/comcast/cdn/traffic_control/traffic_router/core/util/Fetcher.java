@@ -45,7 +45,7 @@ public class Fetcher {
 	protected static final String GET_STR = "GET";
 	protected static final String POST_STR = "POST";
 	protected static final String UTF8_STR = "UTF-8";
-	protected static final int DEFAULT_TIMEOUT = 10;
+	protected static final int DEFAULT_TIMEOUT = 10000;
 	protected int timeout = DEFAULT_TIMEOUT; // override if you want something different
 	protected final Map<String, String> requestProps = new HashMap<String, String>();
 
