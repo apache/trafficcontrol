@@ -46,12 +46,6 @@ __PACKAGE__->table("federation");
   data_type: 'integer'
   is_nullable: 0
 
-=head2 role
-
-  data_type: 'integer'
-  is_foreign_key: 1
-  is_nullable: 0
-
 =head2 last_updated
 
   data_type: 'timestamp'
@@ -70,8 +64,6 @@ __PACKAGE__->add_columns(
   { data_type => "varchar", is_nullable => 1, size => 1024 },
   "ttl",
   { data_type => "integer", is_nullable => 0 },
-  "role",
-  { data_type => "integer", is_foreign_key => 1, is_nullable => 0 },
   "last_updated",
   {
     data_type => "timestamp",
@@ -140,24 +132,9 @@ __PACKAGE__->has_many(
   { cascade_copy => 0, cascade_delete => 0 },
 );
 
-=head2 role
 
-Type: belongs_to
-
-Related object: L<Schema::Result::Role>
-
-=cut
-
-__PACKAGE__->belongs_to(
-  "role",
-  "Schema::Result::Role",
-  { id => "role" },
-  { is_deferrable => 1, on_delete => "NO ACTION", on_update => "NO ACTION" },
-);
-
-
-# Created by DBIx::Class::Schema::Loader v0.07042 @ 2015-10-01 13:37:14
-# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:NeN+3mzLzD0MuaoCmkoLww
+# Created by DBIx::Class::Schema::Loader v0.07042 @ 2015-10-01 14:21:23
+# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:z0P4j54QodUN1uxCvy3iRQ
 
 
 # You can replace this text with custom code or comments, and it will be preserved on regeneration

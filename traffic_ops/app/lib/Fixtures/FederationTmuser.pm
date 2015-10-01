@@ -27,6 +27,7 @@ my %definition_for = (
 		using => {
 			federation => 1,
 			tm_user    => 5,
+			role       => 7,
 		},
 	},
 	federation_tm_user2 => {
@@ -34,6 +35,7 @@ my %definition_for = (
 		using => {
 			federation => 2,
 			tm_user    => 5,
+			role       => 7,
 		},
 	},
 	federation_tm_user3 => {
@@ -41,6 +43,7 @@ my %definition_for = (
 		using => {
 			federation => 3,
 			tm_user    => 5,
+			role       => 7,
 		},
 	},
 	federation_tm_user4 => {
@@ -48,6 +51,7 @@ my %definition_for = (
 		using => {
 			federation => 4,
 			tm_user    => 5,
+			role       => 7,
 		},
 	},
 );

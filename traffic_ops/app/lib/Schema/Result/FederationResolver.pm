@@ -121,12 +121,12 @@ __PACKAGE__->belongs_to(
   "type",
   "Schema::Result::Type",
   { id => "type" },
-  { is_deferrable => 1, on_delete => "NO ACTION", on_update => "NO ACTION" },
+  { is_deferrable => 1, on_delete => "CASCADE", on_update => "CASCADE" },
 );
 
 
-# Created by DBIx::Class::Schema::Loader v0.07042 @ 2015-09-28 14:50:43
-# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:SfzR0aaAdKGKQuxHEm1cvA
+# Created by DBIx::Class::Schema::Loader v0.07042 @ 2015-10-01 14:21:23
+# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:aX5lihadg5MoMeZ+kt5amQ
 
 
 # You can replace this text with custom code or comments, and it will be preserved on regeneration
