@@ -354,7 +354,7 @@ sub afederation {
 	my %data = ( "aaData" => undef );
 	my $feds = $self->db->resultset('Federation')->search(undef);
 	while ( my $f = $feds->next ) {
-		my @line = [ $f->id, $f->name, $f->description, $f->cname, $f->ttl ];
+		my @line = [ $f->id, $f->cname, $f->description, $f->ttl ];
 		push( @{ $data{'aaData'} }, @line );
 	}
 

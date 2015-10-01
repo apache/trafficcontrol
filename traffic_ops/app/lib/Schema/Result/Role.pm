@@ -73,6 +73,21 @@ __PACKAGE__->set_primary_key("id");
 
 =head1 RELATIONS
 
+=head2 federations
+
+Type: has_many
+
+Related object: L<Schema::Result::Federation>
+
+=cut
+
+__PACKAGE__->has_many(
+  "federations",
+  "Schema::Result::Federation",
+  { "foreign.role" => "self.id" },
+  { cascade_copy => 0, cascade_delete => 0 },
+);
+
 =head2 tm_users
 
 Type: has_many
@@ -89,8 +104,8 @@ __PACKAGE__->has_many(
 );
 
 
-# Created by DBIx::Class::Schema::Loader v0.07043 @ 2015-05-21 13:27:11
-# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:s70NY+0J79oQM/Dd9jpvSw
+# Created by DBIx::Class::Schema::Loader v0.07042 @ 2015-10-01 12:56:47
+# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:OpHTUndEKa0pGTqCEa/12g
 
 
 # You can replace this text with custom code or comments, and it will be preserved on regeneration

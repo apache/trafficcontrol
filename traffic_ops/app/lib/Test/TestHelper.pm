@@ -46,11 +46,6 @@ use Fixtures::Regex;
 use Fixtures::DeliveryserviceRegex;
 use Fixtures::DeliveryserviceServer;
 
-use Fixtures::Federation;
-use Fixtures::FederationDeliveryservice;
-use Fixtures::FederationResolver;
-use Fixtures::FederationFederationResolver;
-
 use constant ADMIN_USER          => 'admin';
 use constant ADMIN_USER_PASSWORD => 'password';
 
@@ -93,11 +88,6 @@ sub load_core_data {
 	$self->load_all_fixtures( Fixtures::DeliveryserviceTmuser->new($schema_values) );
 	$self->load_all_fixtures( Fixtures::DeliveryserviceServer->new($schema_values) );
 
-	$self->load_all_fixtures( Fixtures::Federation->new($schema_values) );
-	$self->load_all_fixtures( Fixtures::FederationDeliveryservice->new($schema_values) );
-	$self->load_all_fixtures( Fixtures::FederationResolver->new($schema_values) );
-	$self->load_all_fixtures( Fixtures::FederationFederationResolver->new($schema_values) );
-
 }
 
 sub unload_core_data {
@@ -128,11 +118,6 @@ sub unload_core_data {
 	$self->teardown( $schema, 'Parameter' );
 	$self->teardown( $schema, 'ProfileParameter' );
 	$self->teardown( $schema, 'Regex' );
-
-	$self->teardown( $schema, 'Federation' );
-	$self->teardown( $schema, 'FederationDeliveryservice' );
-	$self->teardown( $schema, 'FederationFederationResolver' );
-	$self->teardown( $schema, 'FederationResolver' );
 
 	$self->teardown( $schema, 'Type' );
 	$self->teardown( $schema, 'Status' );

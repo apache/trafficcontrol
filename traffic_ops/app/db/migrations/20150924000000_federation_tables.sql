@@ -30,11 +30,12 @@ CREATE TABLE `federation_resolver` (
 
 CREATE TABLE IF NOT EXISTS `federation` (
   `id` INT(11) NOT NULL AUTO_INCREMENT,
-  `name` VARCHAR(1024) NOT NULL,
-  `description` VARCHAR(1024) NULL,
   `cname` VARCHAR(1024) NOT NULL,
+  `description` VARCHAR(1024) NULL,
   `ttl` INT(8) NOT NULL,
-  `last_updated` TIMESTAMP NOT NULL DEFAULT now(),
+  `role` INT(11) NOT NULL,
+  `last_updated` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  CONSTRAINT `fk_federation_role` FOREIGN KEY (`role`) REFERENCES `role` (`id`) ON DELETE NO ACTION ON UPDATE NO ACTION,
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 
@@ -58,6 +59,17 @@ CREATE TABLE `federation_federation_resolver` (
   KEY `fk_federation_federation_resolver` (`federation`),
   CONSTRAINT `fk_federation_federation_resolver1` FOREIGN KEY (`federation`) REFERENCES `federation` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
   CONSTRAINT `fk_federation_resolver_to_fed1` FOREIGN KEY (`federation_resolver`) REFERENCES `federation_resolver` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+
+-- federation_tm_user
+CREATE TABLE `federation_tmuser` (
+  `federation` int(11) NOT NULL,
+  `tm_user` int(11) NOT NULL,
+  `last_updated` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`federation`,`tm_user`),
+  KEY `fk_federation_federation_resolver` (`federation`),
+  CONSTRAINT `fk_federation_tmuser_tmuser` FOREIGN KEY (`tm_user`) REFERENCES `tm_user` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `fk_federation_tmuser_federation` FOREIGN KEY (`federation`) REFERENCES `federation` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 
 
