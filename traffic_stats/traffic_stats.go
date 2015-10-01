@@ -273,8 +273,8 @@ func calcDailySummary(now time.Time, config StartupConfig, runningConfig Running
 			}
 			maxGbps := max / 1000000
 			bytesServedTb := bytesServed / 1000000000
-			log.Debugf("max gbps for cdn %v = %v", cdn, maxGbps)
-			log.Debugf("Tbytes served for cdn %v = %v", cdn, bytesServedTb)
+			log.Infof("max gbps for cdn %v = %v", cdn, maxGbps)
+			log.Infof("Tbytes served for cdn %v = %v", cdn, bytesServedTb)
 
 			//write daily_maxgbps in traffic_ops
 			var statsSummary traffic_ops.StatsSummary
@@ -464,7 +464,7 @@ func calcMetrics(cdnName string, url string, cacheGroupMap map[string]string, co
 	} else if strings.Contains(url, "DsStats") {
 		err = calcDsValues(rascalData, cdnName, sampleTime, config)
 	} else {
-		log.Debug("Don't know what to do with ", url)
+		log.Warn("Don't know what to do with ", url)
 	}
 }
 
