@@ -29,14 +29,11 @@ mkdir -p ${RPM_BUILD_ROOT}/opt/traffic_stats/var/log/traffic_stats
 mkdir -p ${RPM_BUILD_ROOT}/etc/init.d
 mkdir -p ${RPM_BUILD_ROOT}/etc/logrotate.d
 
-
 cp $GOPATH/src/github.com/comcast/traffic_control/traffic_stats/traffic_stats ${RPM_BUILD_ROOT}/opt/traffic_stats/bin/traffic_stats
 cp $GOPATH/src/github.com/comcast/traffic_control/traffic_stats/traffic_stats.cfg ${RPM_BUILD_ROOT}/opt/traffic_stats/conf/traffic_stats.cfg
 cp $GOPATH/src/github.com/comcast/traffic_control/traffic_stats/traffic_stats_seelog.xml ${RPM_BUILD_ROOT}/opt/traffic_stats/conf/traffic_stats_seelog.xml
 cp $GOPATH/src/github.com/comcast/traffic_control/traffic_stats/traffic_stats.init ${RPM_BUILD_ROOT}/etc/init.d/traffic_stats
 cp $GOPATH/src/github.com/comcast/traffic_control/traffic_stats/traffic_stats.logrotate ${RPM_BUILD_ROOT}/etc/logrotate.d/traffic_stats
-
-
 
 %pre
 /usr/bin/getent group traffic_stats >/dev/null
@@ -57,8 +54,15 @@ fi
 /usr/bin/passwd -l traffic_stats >/dev/null
 /usr/bin/chage -E -1 -I -1 -m 0 -M 99999 -W 7 traffic_stats
 
-if [ -e /etc/init.d/traffic_stats ]; then
+if [ -e /etc/init.d/write_traffic_stats ]; then
+	/sbin/service write_traffic_stats stop
+fi
 
+if [ -e /etc/init.d/ts_daily_summary ]; then
+	/sbin/service ts_daily_summary stop
+fi
+
+if [ -e /etc/init.d/traffic_stats ]; then
 	/sbin/service traffic_stats stop
 fi
 
@@ -66,7 +70,6 @@ fi
 
 /sbin/chkconfig --add traffic_stats
 /sbin/chkconfig traffic_stats on
-
 
 %files
 %defattr(644, traffic_stats, traffic_stats, 755)
@@ -91,6 +94,19 @@ fi
 # args for hooks: http://www.ibm.com/developerworks/library/l-rpm2/
 # if $1 = 0, this is an uninstallation, if $1 = 1, this is an upgrade (don't do anything)
 if [ "$1" = "0" ]; then
-	/sbin/chkconfig --del traffic_stats
+	/sbin/chkconfig traffic_stats off
 	/etc/init.d/traffic_stats stop
+	/sbin/chkconfig --del traffic_stats
+fi
+
+if [ -e /etc/init.d/write_traffic_stats ]; then
+	/sbin/chkconfig write_traffic_stats off
+	/etc/init.d/write_traffic_stats stop
+	/sbin/chkconfig --del write_traffic_stats
+fi
+
+if [ -e /etc/init.d/ts_daily_summary ]; then
+	/sbin/chkconfig ts_daily_summary off
+	/etc/init.d/ts_daily_summary stop
+	/sbin/chkconfig --del ts_daily_summary
 fi
