@@ -35,6 +35,12 @@ __PACKAGE__->table("federation_tmuser");
   is_foreign_key: 1
   is_nullable: 0
 
+=head2 role
+
+  data_type: 'integer'
+  is_foreign_key: 1
+  is_nullable: 0
+
 =head2 last_updated
 
   data_type: 'timestamp'
@@ -48,6 +54,8 @@ __PACKAGE__->add_columns(
   "federation",
   { data_type => "integer", is_foreign_key => 1, is_nullable => 0 },
   "tm_user",
+  { data_type => "integer", is_foreign_key => 1, is_nullable => 0 },
+  "role",
   { data_type => "integer", is_foreign_key => 1, is_nullable => 0 },
   "last_updated",
   {
@@ -89,6 +97,21 @@ __PACKAGE__->belongs_to(
   { is_deferrable => 1, on_delete => "CASCADE", on_update => "CASCADE" },
 );
 
+=head2 role
+
+Type: belongs_to
+
+Related object: L<Schema::Result::Role>
+
+=cut
+
+__PACKAGE__->belongs_to(
+  "role",
+  "Schema::Result::Role",
+  { id => "role" },
+  { is_deferrable => 1, on_delete => "CASCADE", on_update => "CASCADE" },
+);
+
 =head2 tm_user
 
 Type: belongs_to
@@ -105,8 +128,8 @@ __PACKAGE__->belongs_to(
 );
 
 
-# Created by DBIx::Class::Schema::Loader v0.07042 @ 2015-10-01 12:56:47
-# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:YvFScsD33RD+e+vSorA8mA
+# Created by DBIx::Class::Schema::Loader v0.07042 @ 2015-10-01 14:21:23
+# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:GtS0uKLYINOgVL6K5muNag
 
 
 # You can replace this text with custom code or comments, and it will be preserved on regeneration
