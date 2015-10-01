@@ -25,6 +25,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import com.comcast.cdn.traffic_control.traffic_router.core.loc.*;
 import org.apache.log4j.Logger;
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -37,10 +38,6 @@ import com.comcast.cdn.traffic_control.traffic_router.core.cache.Cache.DeliveryS
 import com.comcast.cdn.traffic_control.traffic_router.core.ds.DeliveryService;
 import com.comcast.cdn.traffic_control.traffic_router.core.ds.DeliveryServiceMatcher;
 import com.comcast.cdn.traffic_control.traffic_router.core.ds.DeliveryServiceMatcher.Type;
-import com.comcast.cdn.traffic_control.traffic_router.core.loc.Geolocation;
-import com.comcast.cdn.traffic_control.traffic_router.core.loc.GeolocationDatabaseUpdater;
-import com.comcast.cdn.traffic_control.traffic_router.core.loc.NetworkNode;
-import com.comcast.cdn.traffic_control.traffic_router.core.loc.NetworkUpdater;
 import com.comcast.cdn.traffic_control.traffic_router.core.monitor.TrafficMonitorWatcher;
 import com.comcast.cdn.traffic_control.traffic_router.core.router.TrafficRouterManager;
 import com.comcast.cdn.traffic_control.traffic_router.core.router.StatTracker;
@@ -58,6 +55,7 @@ public class ConfigHandler {
 	private String trafficRouterId;
 
 	private NetworkUpdater networkUpdater;
+	private FederationsWatcher federationsWatcher;
 
 	public String getConfigDir() {
 		return configDir;
@@ -107,6 +105,8 @@ public class ConfigHandler {
 				parseCacheConfig(jo.getJSONObject("contentServers"), cacheRegister);
 				parseMonitorConfig(jo.getJSONObject("monitors"));
 				NetworkNode.getInstance().clearCacheCache();
+				federationsWatcher.configure(config);
+
 				trafficRouterManager.setCacheRegister(cacheRegister);
 				setLastSnapshotTimestamp(sts);
 			} catch (ParseException e) {
@@ -394,4 +394,7 @@ public class ConfigHandler {
 		ConfigHandler.lastSnapshotTimestamp = lastSnapshotTimestamp;
 	}
 
+	public void setFederationsWatcher(final FederationsWatcher federationsWatcher) {
+		this.federationsWatcher = federationsWatcher;
+	}
 }
