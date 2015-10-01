@@ -87,9 +87,8 @@ $(function () {
 					<thead>
 						<tr>
 							<td>Federation Id</td>
-							<td>Name</td>
-							<td>Description</td>
 							<td>CNAME</td>
+							<td>Description</td>
 							<td>TTL</td>
 						</tr>
 					</thead>
