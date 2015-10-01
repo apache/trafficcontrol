@@ -78,7 +78,7 @@ func main() {
 	testSummary := flag.Bool("testSummary", false, "Test summary mode")
 	flag.Parse()
 
-	config, err = loadStartupConfig(configFile, config)
+	config, err = loadStartupConfig(*configFile, config)
 
 	if err != nil {
 		errHndlr(err, FATAL)
@@ -130,7 +130,7 @@ func main() {
 	for {
 		select {
 		case <-hupChan:
-			newConfig, err := loadStartupConfig(configFile, config)
+			newConfig, err := loadStartupConfig(*configFile, config)
 
 			if err != nil {
 				errHndlr(err, ERROR)
@@ -178,10 +178,10 @@ func main() {
 	}
 }
 
-func loadStartupConfig(configFile *string, oldConfig StartupConfig) (StartupConfig, error) {
+func loadStartupConfig(configFile string, oldConfig StartupConfig) (StartupConfig, error) {
 	var config StartupConfig
 
-	file, err := os.Open(*configFile)
+	file, err := os.Open(configFile)
 
 	if err != nil {
 		return config, err
