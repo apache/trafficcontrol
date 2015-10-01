@@ -10,8 +10,10 @@ import (
 	"net/http"
 	"net/url"
 	"os"
+	"os/signal"
 	"strconv"
 	"strings"
+	"syscall"
 	"time"
 
 	traffic_ops "github.com/Comcast/traffic_control/traffic_ops/client"
@@ -116,8 +118,16 @@ func main() {
 	tickerPublishChan := time.Tick(time.Duration(config.PublishingInterval) * time.Second)
 	tickerConfigChan := time.Tick(time.Duration(config.ConfigInterval) * time.Second)
 
+	termChan := make(chan os.Signal, 1)
+	signal.Notify(termChan, syscall.SIGKILL, syscall.SIGINT, syscall.SIGTERM, syscall.SIGQUIT)
+
 	for {
 		select {
+		case <-termChan:
+			for _, val := range Bps {
+				sendMetrics(config, &runningConfig, *val)
+			}
+			os.Exit(0)
 		case <-tickerPublishChan:
 			for key, val := range Bps {
 				go sendMetrics(config, &runningConfig, *val)
