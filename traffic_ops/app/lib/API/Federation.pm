@@ -127,9 +127,16 @@ sub update_delivery_service {
 }
 
 sub add {
-  my $self        = shift;
-  my $federations = $self->req->json->{'federations'};
+  my $self = shift;
 
+  my $current_username = $self->current_user()->{username};
+  my $user             = $self->find_tmuser($current_username);
+  if ( !defined $user ) {
+    return $self->alert(
+      "You must be an Federation user to perform this operation!");
+  }
+
+  my $federations = $self->req->json->{'federations'};
   foreach my $ds ( @{$federations} ) {
     my $xml_id   = $ds->{'deliveryService'};
     my $mappings = $ds->{'mappings'};
@@ -142,7 +149,8 @@ sub add {
 
       my $resolve4 = $map->{'resolve4'};
       if ( defined $resolve4 ) {
-        $resolve4 = $self->add_resolver( $resolve4, $federation_id, "resolve4" );
+        $resolve4 = $self->add_resolver( $resolve4, $federation_id,
+          "resolve4" );
       }
 
       my $resolve6 = $map->{'resolve6'};
@@ -155,6 +163,19 @@ sub add {
   }
 
   $self->success( {} );
+}
+
+sub find_tmuser {
+  my $self             = shift;
+  my $current_username = shift;
+
+  my $tm_user
+    = $self->db->resultset('TmUser')
+    ->search(
+    { username => $current_username, 'role.name' => 'federation' },
+    { prefetch => 'role' } )->single();
+
+  return $tm_user;
 }
 
 sub add_federation {
