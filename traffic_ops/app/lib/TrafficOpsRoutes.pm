@@ -399,6 +399,7 @@ sub api_routes {
 	# -- Federation
 	$r->get("/internal/api/$version/federations" => [ format => [qw(json)] ] )->over( authenticated => 1 )
 		->to( 'Federation#index', namespace => $namespace );
+	$r->post("/api/$version/federations")->over( authenticated => 1 )->to( 'Federation#add', namespace => $namespace );
 
 	# -- CHANGE LOG - #NEW
 	$r->get( "/api/$version/logs"            => [ format => [qw(json)] ] )->over( authenticated => 1 )->to( 'ChangeLog#index', namespace => $namespace );

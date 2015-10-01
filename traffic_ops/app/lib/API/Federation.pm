@@ -22,6 +22,7 @@ use UI::Utils;
 
 use Mojo::Base 'Mojolicious::Controller';
 use Data::Dumper;
+use JSON;
 
 use Data::Validate::IP qw(is_ipv4 is_ipv6);
 
@@ -36,6 +37,11 @@ sub index {
       order_by => "deliveryservice." . $orderby
     }
   );
+
+  my $row_count = $rs_data->count();
+  if ( $row_count == 0 ) {
+    return $self->success( {} );
+  }
 
   while ( my $row = $rs_data->next ) {
     my $mapping;
@@ -89,7 +95,7 @@ sub find_delivery_service {
       $ds = $service;
     }
   }
-  return ($ds);
+  return $ds;
 }
 
 sub add_delivery_service {
@@ -117,6 +123,121 @@ sub update_delivery_service {
   my $map = $ds->{'mappings'};
   push( @{$map}, $m );
   $ds->{'mappings'} = $map;
+}
+
+sub add {
+  my $self        = shift;
+  my $federations = $self->req->json->{'federations'};
+
+  foreach my $ds ( @{$federations} ) {
+    my $xml_id   = $ds->{'deliveryService'};
+    my $mappings = $ds->{'mappings'};
+    my $federation_id;
+
+    foreach my $map ( @{$mappings} ) {
+      my $cname      = $map->{'cname'};
+      my $ttl        = $map->{'ttl'};
+      my $federation = $self->add_federation( $cname, $ttl );
+      $federation_id = $federation->id;
+
+      my $resolve4_key = $map->{'resolve4'};
+      next if ( !defined $resolve4_key );
+      my $resolve4 = $self->add_resolve4($resolve4_key);
+      $self->add_federation_federation_resolver( $federation_id,
+        $resolve4->id );
+
+      my $resolve6_key = $map->{'resolve6'};
+      next if ( !defined $resolve6_key );
+      my $resolve6 = $self->add_resolve6($resolve6_key);
+      $self->add_federation_federation_resolver( $federation_id,
+        $resolve6->id );
+    }
+
+    $self->add_federation_deliveryservice( $federation_id, $xml_id );
+  }
+
+  $self->success( {} );
+}
+
+sub add_federation {
+  my $self  = shift;
+  my $cname = shift;
+  my $ttl   = shift;
+
+  my $federation = $self->db->resultset('Federation')->find_or_create(
+    {   cname => $cname,
+      ttl   => $ttl
+    }
+  );
+  return $federation;
+}
+
+sub add_federation_deliveryservice {
+  my $self          = shift;
+  my $federation_id = shift;
+  my $xml_id        = shift;
+
+  my $fd
+    = $self->db->resultset('FederationDeliveryservice')->find_or_create(
+    {   federation      => $federation_id,
+      deliveryservice => $self->db->resultset('Deliveryservice')
+        ->search( { xml_id => $xml_id } )->get_column('id')->single()
+    }
+    );
+  return $fd;
+}
+
+sub add_resolve4 {
+  my $self      = shift;
+  my $resolvers = shift;
+  my $resolve4;
+
+  foreach my $resolver ( @{$resolvers} ) {
+    for my $ip ($resolver) {
+      $resolve4
+        = $self->db->resultset('FederationResolver')->find_or_create(
+        {   ip_address => $ip,
+          type       => $self->db->resultset('Type')
+            ->search( { name => 'resolve4' } )->get_column('id')
+            ->single()
+        }
+        );
+    }
+  }
+  return $resolve4;
+}
+
+sub add_resolve6 {
+  my $self      = shift;
+  my $resolvers = shift;
+  my $resolve6;
+
+  foreach my $resolver ( @{$resolvers} ) {
+    for my $ip ($resolver) {
+      $resolve6
+        = $self->db->resultset('FederationResolver')->find_or_create(
+        {   ip_address => $ip,
+          type       => $self->db->resultset('Type')
+            ->search( { name => 'resolve6' } )->get_column('id')
+            ->single()
+        }
+        );
+    }
+    return $resolve6;
+  }
+
+  sub add_federation_federation_resolver {
+    my $self          = shift;
+    my $federation_id = shift;
+    my $resolver_id   = shift;
+
+    $self->db->resultset('FederationFederationResolver')->find_or_create(
+      {   federation          => $federation_id,
+        federation_resolver => $resolver_id
+      }
+    );
+  }
+
 }
 
 1;
