@@ -27,35 +27,38 @@ const (
 )
 
 const (
-	defaultPollingInterval    = 10
-	defaultConfigInterval     = 300
-	defaultPublishingInterval = 30
-	maxPublishSize            = 10000
+	defaultPollingInterval             = 10
+	defaultDailySummaryPollingInterval = 60
+	defaultConfigInterval              = 300
+	defaultPublishingInterval          = 30
+	maxPublishSize                     = 10000
 )
 
 // StartupConfig contains all fields necessary to create an InfluxDB session.
 type StartupConfig struct {
-	ToUser               string                  `json:"toUser"`
-	ToPasswd             string                  `json:"toPasswd"`
-	ToURL                string                  `json:"toUrl"`
-	InfluxUser           string                  `json:"influxUser"`
-	InfluxPassword       string                  `json:"influxPassword"`
-	PollingInterval      int                     `json:"pollingInterval"`
-	PublishingInterval   int                     `json:"publishingInterval"`
-	ConfigInterval       int                     `json:"configInterval"`
-	StatusToMon          string                  `json:"statusToMon"`
-	SeelogConfig         string                  `json:"seelogConfig"`
-	CacheRetentionPolicy string                  `json:"cacheRetentionPolicy"`
-	DsRetentionPolicy    string                  `json:"dsRetentionPolicy"`
-	BpsChan              chan influx.BatchPoints `json:"-"`
+	ToUser                      string                  `json:"toUser"`
+	ToPasswd                    string                  `json:"toPasswd"`
+	ToURL                       string                  `json:"toUrl"`
+	InfluxUser                  string                  `json:"influxUser"`
+	InfluxPassword              string                  `json:"influxPassword"`
+	PollingInterval             int                     `json:"pollingInterval"`
+	DailySummaryPollingInterval int                     `json:"dailySummaryPollingInterval"`
+	PublishingInterval          int                     `json:"publishingInterval"`
+	ConfigInterval              int                     `json:"configInterval"`
+	StatusToMon                 string                  `json:"statusToMon"`
+	SeelogConfig                string                  `json:"seelogConfig"`
+	CacheRetentionPolicy        string                  `json:"cacheRetentionPolicy"`
+	DsRetentionPolicy           string                  `json:"dsRetentionPolicy"`
+	DailySummaryRetentionPolicy string                  `json:"dailySummaryRetentionPolicy"`
+	BpsChan                     chan influx.BatchPoints `json:"-"`
 }
 
 // RunningConfig contains information about current InfluxDB connections.
 type RunningConfig struct {
-	HealthUrls    map[string]map[string]string // they 1st map key is CDN_name, the second is DsStats or CacheStats
-	CacheGroupMap map[string]string            // map hostName to cacheGroup
-	InfluxDBProps []InfluxDBProps
-	ActiveServer  string // The fqdn of the last InfluxDB server used.
+	HealthUrls      map[string]map[string]string // they 1st map key is CDN_name, the second is DsStats or CacheStats
+	CacheGroupMap   map[string]string            // map hostName to cacheGroup
+	InfluxDBProps   []InfluxDBProps
+	LastSummaryTime time.Time
 }
 
 // InfluxDBProps contains the fqdn and port needed to login to an InfluxDB instance.
@@ -82,6 +85,9 @@ func main() {
 	if config.PollingInterval == 0 {
 		config.PollingInterval = defaultPollingInterval
 	}
+	if config.DailySummaryPollingInterval == 0 {
+		config.DailySummaryPollingInterval = defaultDailySummaryPollingInterval
+	}
 	if config.PublishingInterval == 0 {
 		config.PublishingInterval = defaultPublishingInterval
 	}
@@ -104,8 +110,9 @@ func main() {
 	go getToData(config, true, configChan)
 	runningConfig := <-configChan
 
-	<-time.NewTimer(time.Now().Truncate(time.Duration(config.PollingInterval) * time.Second).Add(time.Duration(config.PollingInterval) * time.Second).Sub(time.Now())).C
+	<-time.NewTimer(time.Now().Truncate(time.Duration(IntMax(config.PollingInterval, config.DailySummaryPollingInterval)) * time.Second).Add(time.Duration(IntMax(config.PollingInterval, config.DailySummaryPollingInterval)) * time.Second).Sub(time.Now())).C
 	tickerChan := time.Tick(time.Duration(config.PollingInterval) * time.Second)
+	tickerDailySummaryChan := time.Tick(time.Duration(config.DailySummaryPollingInterval) * time.Second)
 	tickerPublishChan := time.Tick(time.Duration(config.PublishingInterval) * time.Second)
 	tickerConfigChan := time.Tick(time.Duration(config.ConfigInterval) * time.Second)
 
@@ -130,6 +137,8 @@ func main() {
 					go calcMetrics(cdnName, url, runningConfig.CacheGroupMap, config, &runningConfig)
 				}
 			}
+		case now := <-tickerDailySummaryChan:
+			go calcDailySummary(now, config, &runningConfig)
 		case batchPoints := <-config.BpsChan:
 			log.Info("Received ", len(batchPoints.Points), " stats")
 			key := fmt.Sprintf("%s%s", batchPoints.Database, batchPoints.RetentionPolicy)
@@ -145,9 +154,140 @@ func main() {
 	}
 }
 
+func calcDailySummary(now time.Time, config *StartupConfig, runningConfig *RunningConfig) {
+	log.Infof("lastSummaryTime is %v", runningConfig.LastSummaryTime)
+	if runningConfig.LastSummaryTime.Day() != now.Day() {
+		startTime := now.Truncate(24 * time.Hour).Add(-24 * time.Hour)
+		endTime := startTime.Add(24 * time.Hour)
+		log.Info("Summarizing from ", startTime, " (", startTime.Unix(), ") to ", endTime, " (", endTime.Unix(), ")")
+
+		// influx connection
+		influxClient, err := influxConnect(config, runningConfig)
+		if err != nil {
+			log.Error("Could not connect to InfluxDb to get daily summary stats!!")
+			errHndlr(err, ERROR)
+			return
+		}
+
+		//create influxdb query
+		q := fmt.Sprintf("SELECT sum(value)/6 FROM bandwidth where time > '%s' and time < '%s' group by time(60s), cdn fill(0)", startTime.Format(time.RFC3339), endTime.Format(time.RFC3339))
+		log.Infof(q)
+		res, err := queryDB(influxClient, q, "cache_stats")
+		if err != nil {
+			errHndlr(err, ERROR)
+			return
+		}
+
+		pts := make([]influx.Point, 0, len(res[0].Series)*2)
+		for _, row := range res[0].Series {
+			prevtime := startTime
+			max := float64(0)
+			bytesServed := float64(0)
+			cdn := row.Tags["cdn"]
+			for _, record := range row.Values {
+				kbps, err := record[1].(json.Number).Float64()
+				if err != nil {
+					errHndlr(err, ERROR)
+					continue
+				}
+				sampleTime, err := time.Parse(time.RFC3339, record[0].(string))
+				if err != nil {
+					errHndlr(err, ERROR)
+					continue
+				}
+				max = FloatMax(max, kbps)
+				duration := sampleTime.Unix() - prevtime.Unix()
+				bytesServed += float64(duration) * kbps / 8
+				prevtime = sampleTime
+			}
+			maxGbps := max / 1000000
+			bytesServedTb := bytesServed / 1000000000
+			log.Infof("max gbps for cdn %v = %v", cdn, maxGbps)
+			log.Infof("Tbytes served for cdn %v = %v", cdn, bytesServedTb)
+
+			//write daily_maxgbps in traffic_ops
+			var statsSummary traffic_ops.StatsSummary
+			statsSummary.CdnName = cdn
+			statsSummary.DeliveryService = "all"
+			statsSummary.StatName = "daily_maxgbps"
+			statsSummary.StatValue = strconv.FormatFloat(maxGbps, 'f', 2, 64)
+			statsSummary.SummaryTime = now.Format(time.RFC3339)
+			statsSummary.StatDate = startTime.Format("2006-01-02")
+			go writeSummaryStats(config, statsSummary)
+
+			// Add Points
+			pts = append(pts,
+				influx.Point{
+					Measurement: statsSummary.StatName,
+					Tags: map[string]string{
+						"deliveryservice": statsSummary.DeliveryService,
+						"cdn":             statsSummary.CdnName,
+					},
+					Fields: map[string]interface{}{
+						"value": maxGbps,
+					},
+					Time:      startTime,
+					Precision: "s",
+				})
+
+			// write bytes served data to traffic_ops
+			statsSummary.StatName = "daily_bytesserved"
+			statsSummary.StatValue = strconv.FormatFloat(bytesServedTb, 'f', 2, 64)
+			go writeSummaryStats(config, statsSummary)
+
+			pts = append(pts,
+				influx.Point{
+					Measurement: statsSummary.StatName,
+					Tags: map[string]string{
+						"deliveryservice": statsSummary.DeliveryService,
+						"cdn":             statsSummary.CdnName,
+					},
+					Fields: map[string]interface{}{
+						"value": bytesServedTb,
+					},
+					Time:      startTime,
+					Precision: "s",
+				})
+		}
+		bps := influx.BatchPoints{
+			Points:          pts,
+			Database:        "daily_stats",
+			RetentionPolicy: "daily_stats",
+		}
+		config.BpsChan <- bps
+	}
+}
+
+func queryDB(con *influx.Client, cmd string, database string) (res []influx.Result, err error) {
+	q := influx.Query{
+		Command:  cmd,
+		Database: database,
+	}
+	if response, err := con.Query(q); err == nil {
+		if response.Error() != nil {
+			return res, response.Error()
+		}
+		res = response.Results
+	}
+	return
+}
+
+func writeSummaryStats(config *StartupConfig, statsSummary traffic_ops.StatsSummary) {
+	to, err := traffic_ops.Login(config.ToURL, config.ToUser, config.ToPasswd, true)
+	if err != nil {
+		new_err := fmt.Errorf("Could not store summary stats! Error logging in to %v: %v", config.ToURL, err)
+		log.Error(new_err)
+		return
+	}
+	err = to.AddSummaryStats(statsSummary)
+	if err != nil {
+		log.Error(err)
+	}
+}
+
 func getToData(config *StartupConfig, init bool, configChan chan RunningConfig) {
 	var runningConfig RunningConfig
-	tm, err := traffic_ops.Login(config.ToURL, config.ToUser, config.ToPasswd, true)
+	to, err := traffic_ops.Login(config.ToURL, config.ToUser, config.ToPasswd, true)
 	if err != nil {
 		msg := fmt.Sprintf("Error logging in to %v: %v", config.ToURL, err)
 		if init {
@@ -157,7 +297,7 @@ func getToData(config *StartupConfig, init bool, configChan chan RunningConfig) 
 		return
 	}
 
-	servers, err := tm.Servers()
+	servers, err := to.Servers()
 	if err != nil {
 		msg := fmt.Sprintf("Error getting server list from %v: %v ", config.ToURL, err)
 		if init {
@@ -184,7 +324,7 @@ func getToData(config *StartupConfig, init bool, configChan chan RunningConfig) 
 
 	cacheStatPath := "/publish/CacheStats?hc=1&stats="
 	dsStatPath := "/publish/DsStats?hc=1&wildcard=1&stats="
-	parameters, err := tm.Parameters("TRAFFIC_STATS")
+	parameters, err := to.Parameters("TRAFFIC_STATS")
 	if err != nil {
 		msg := fmt.Sprintf("Error getting parameter list from %v: %v", config.ToURL, err)
 		if init {
@@ -208,15 +348,7 @@ func getToData(config *StartupConfig, init bool, configChan chan RunningConfig) 
 	runningConfig.HealthUrls = make(map[string]map[string]string)
 	for _, server := range servers {
 		if server.Type == "RASCAL" && server.Status == config.StatusToMon {
-			cdnName := ""
-			parameters, _ := tm.Parameters(server.Profile)
-			for _, param := range parameters {
-				if param.Name == "CDN_name" && param.ConfigFile == "rascal-config.txt" {
-					cdnName = param.Value
-					break
-				}
-			}
-
+			cdnName := server.CdnName
 			if cdnName == "" {
 				log.Error("Unable to find CDN name for " + server.HostName + ".. skipping")
 				continue
@@ -231,6 +363,19 @@ func getToData(config *StartupConfig, init bool, configChan chan RunningConfig) 
 			runningConfig.HealthUrls[cdnName]["DsStats"] = url
 		}
 	}
+
+	lastSummaryTimeStr, err := to.SummaryStatsLastUpdated("daily_maxgbps")
+	if err != nil {
+		errHndlr(err, ERROR)
+	} else {
+		lastSummaryTime, err := time.Parse("2006-01-02 15:04:05", lastSummaryTimeStr)
+		if err != nil {
+			errHndlr(err, ERROR)
+		} else {
+			runningConfig.LastSummaryTime = lastSummaryTime
+		}
+	}
+
 	configChan <- runningConfig
 }
 
@@ -538,6 +683,20 @@ func sendMetrics(config *StartupConfig, runningConfig *RunningConfig, bps influx
 
 func IntMin(a, b int) int {
 	if a < b {
+		return a
+	}
+	return b
+}
+
+func IntMax(a, b int) int {
+	if a > b {
+		return a
+	}
+	return b
+}
+
+func FloatMax(a, b float64) float64 {
+	if a > b {
 		return a
 	}
 	return b
