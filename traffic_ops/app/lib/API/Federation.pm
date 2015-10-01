@@ -22,6 +22,7 @@ use UI::Utils;
 
 use Mojo::Base 'Mojolicious::Controller';
 use Data::Dumper;
+use Net::CIDR;
 use JSON;
 
 use Data::Validate::IP qw(is_ipv4 is_ipv6);
@@ -135,22 +136,19 @@ sub add {
     my $federation_id;
 
     foreach my $map ( @{$mappings} ) {
-      my $cname      = $map->{'cname'};
-      my $ttl        = $map->{'ttl'};
-      my $federation = $self->add_federation( $cname, $ttl );
-      $federation_id = $federation->id;
+      my $cname = $map->{'cname'};
+      my $ttl   = $map->{'ttl'};
+      $federation_id = $self->add_federation( $cname, $ttl );
 
-      my $resolve4_key = $map->{'resolve4'};
-      next if ( !defined $resolve4_key );
-      my $resolve4 = $self->add_resolve4($resolve4_key);
-      $self->add_federation_federation_resolver( $federation_id,
-        $resolve4->id );
+      my $resolve4 = $map->{'resolve4'};
+      if ( defined $resolve4 ) {
+        $resolve4 = $self->add_resolver( $resolve4, $federation_id, "resolve4" );
+      }
 
-      my $resolve6_key = $map->{'resolve6'};
-      next if ( !defined $resolve6_key );
-      my $resolve6 = $self->add_resolve6($resolve6_key);
-      $self->add_federation_federation_resolver( $federation_id,
-        $resolve6->id );
+      my $resolve6 = $map->{'resolve6'};
+      if ( defined $resolve6 ) {
+        $self->add_resolver( $resolve6, $federation_id, "resolve6" );
+      }
     }
 
     $self->add_federation_deliveryservice( $federation_id, $xml_id );
@@ -163,13 +161,17 @@ sub add_federation {
   my $self  = shift;
   my $cname = shift;
   my $ttl   = shift;
+  my $federation_id;
 
   my $federation = $self->db->resultset('Federation')->find_or_create(
     {   cname => $cname,
       ttl   => $ttl
     }
   );
-  return $federation;
+  if ( defined $federation ) {
+    $federation_id = $federation->id;
+  }
+  return $federation_id;
 }
 
 sub add_federation_deliveryservice {
@@ -187,43 +189,34 @@ sub add_federation_deliveryservice {
   return $fd;
 }
 
-sub add_resolve4 {
-  my $self      = shift;
-  my $resolvers = shift;
-  my $resolve4;
+sub add_resolver {
+  my $self          = shift;
+  my $resolvers     = shift;
+  my $federation_id = shift;
+  my $type_name     = shift;
+  my $resolver;
 
-  foreach my $resolver ( @{$resolvers} ) {
-    for my $ip ($resolver) {
-      $resolve4
+  foreach my $r ( @{$resolvers} ) {
+    for my $ip ($r) {
+      my $valid_ip = Net::CIDR::cidrvalidate($ip);
+      if ( !defined $valid_ip ) {
+        next;
+      }
+
+      $resolver
         = $self->db->resultset('FederationResolver')->find_or_create(
         {   ip_address => $ip,
           type       => $self->db->resultset('Type')
-            ->search( { name => 'resolve4' } )->get_column('id')
+            ->search( { name => $type_name } )->get_column('id')
             ->single()
         }
         );
-    }
-  }
-  return $resolve4;
-}
 
-sub add_resolve6 {
-  my $self      = shift;
-  my $resolvers = shift;
-  my $resolve6;
-
-  foreach my $resolver ( @{$resolvers} ) {
-    for my $ip ($resolver) {
-      $resolve6
-        = $self->db->resultset('FederationResolver')->find_or_create(
-        {   ip_address => $ip,
-          type       => $self->db->resultset('Type')
-            ->search( { name => 'resolve6' } )->get_column('id')
-            ->single()
-        }
-        );
+      if ( defined $resolver ) {
+        $self->add_federation_federation_resolver( $federation_id,
+          $resolver->id );
+      }
     }
-    return $resolve6;
   }
 
   sub add_federation_federation_resolver {

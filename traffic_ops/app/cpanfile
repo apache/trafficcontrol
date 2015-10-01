@@ -14,6 +14,8 @@
 # limitations under the License.
 #
 
+requires  'Net::CIDR';
+
 requires 'perl', '5.10.1';
 requires 'Algorithm::C3';
 requires 'B::Hooks::EndOfScope';
