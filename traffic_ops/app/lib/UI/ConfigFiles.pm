@@ -350,9 +350,9 @@ sub parent_data {
 		{ prefetch => [ { parameter => undef }, { profile => undef } ] } )->single();
 	my $server_domain = $param->parameter->value;
 
-	my $condition->{"status"} = ( -in => [ $online, $reported ] );
+	my $condition->{"status"} = { -in => [ $online, $reported ] };
 	if (@parent_cachegroup_ids) {
-		$condition->{"cachegroup"} = ( -in => \@parent_cachegroup_ids );
+		$condition->{"cachegroup"} = { -in => \@parent_cachegroup_ids };
 	}
 
 	my $rs_parent =

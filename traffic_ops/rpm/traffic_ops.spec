@@ -119,6 +119,13 @@ Built: %(date) by %{getenv: USER}
     /bin/chown -R %{TRAFFIC_OPS_USER}:%{TRAFFIC_OPS_GROUP} %{PACKAGEDIR}
     /bin/chown -R %{TRAFFIC_OPS_USER}:%{TRAFFIC_OPS_GROUP} %{TRAFFIC_OPS_LOG_DIR}
 
+%preun
+
+if [ "$1" = "0" ]; then
+    # stop service before starting the uninstall
+    service traffic_ops stop
+fi
+
 %postun
 
 if [ "$1" = "0" ]; then
@@ -128,8 +135,6 @@ if [ "$1" = "0" ]; then
     /usr/bin/getent passwd %{TRAFFIC_OPS_USER} || /usr/sbin/userdel %{TRAFFIC_OPS_USER} 
     /usr/bin/getent group %{TRAFFIC_OPS_GROUP} || /usr/sbin/groupdel %{TRAFFIC_OPS_GROUP}
 fi
-service traffic_ops stop
-#/usr/sbin/groupdel %{TRAFFIC_OPS_GROUP}
 
 %files
 %defattr(644,root,root,755)
