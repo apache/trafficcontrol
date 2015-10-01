@@ -110,7 +110,7 @@ func main() {
 	go getToData(config, true, configChan)
 	runningConfig := <-configChan
 
-	<-time.NewTimer(time.Now().Truncate(time.Duration(IntMax(config.PollingInterval, config.DailySummaryPollingInterval)) * time.Second).Add(time.Duration(IntMax(config.PollingInterval, config.DailySummaryPollingInterval)) * time.Second).Sub(time.Now())).C
+	<-time.NewTimer(time.Now().Truncate(time.Duration(config.PollingInterval) * time.Second).Add(time.Duration(config.PollingInterval) * time.Second).Sub(time.Now())).C
 	tickerChan := time.Tick(time.Duration(config.PollingInterval) * time.Second)
 	tickerDailySummaryChan := time.Tick(time.Duration(config.DailySummaryPollingInterval) * time.Second)
 	tickerPublishChan := time.Tick(time.Duration(config.PublishingInterval) * time.Second)
@@ -683,13 +683,6 @@ func sendMetrics(config *StartupConfig, runningConfig *RunningConfig, bps influx
 
 func IntMin(a, b int) int {
 	if a < b {
-		return a
-	}
-	return b
-}
-
-func IntMax(a, b int) int {
-	if a > b {
 		return a
 	}
 	return b
