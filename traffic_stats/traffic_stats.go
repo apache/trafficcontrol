@@ -154,7 +154,7 @@ func main() {
 		case <-tickerChan:
 			for cdnName, urls := range runningConfig.HealthUrls {
 				for _, url := range urls {
-					log.Info(cdnName, " -> ", url)
+					log.Debug(cdnName, " -> ", url)
 					if *testSummary {
 						fmt.Println("Skipping stat write - testSummary mode is ON!")
 						continue
@@ -165,15 +165,15 @@ func main() {
 		case now := <-tickerDailySummaryChan:
 			go calcDailySummary(now, config, runningConfig)
 		case batchPoints := <-config.BpsChan:
-			log.Info("Received ", len(batchPoints.Points), " stats")
+			log.Debug("Received ", len(batchPoints.Points), " stats")
 			key := fmt.Sprintf("%s%s", batchPoints.Database, batchPoints.RetentionPolicy)
 			b, ok := Bps[key]
 			if ok {
 				b.Points = append(b.Points, batchPoints.Points...)
-				log.Info("Aggregating ", len(b.Points), " stats to ", key)
+				log.Debug("Aggregating ", len(b.Points), " stats to ", key)
 			} else {
 				Bps[key] = &batchPoints
-				log.Info("Created ", key)
+				log.Debug("Created ", key)
 			}
 		}
 	}
@@ -226,11 +226,11 @@ func loadStartupConfig(configFile string, oldConfig StartupConfig) (StartupConfi
 }
 
 func calcDailySummary(now time.Time, config StartupConfig, runningConfig RunningConfig) {
-	log.Infof("lastSummaryTime is %v", runningConfig.LastSummaryTime)
+	log.Debugf("lastSummaryTime is %v", runningConfig.LastSummaryTime)
 	if runningConfig.LastSummaryTime.Day() != now.Day() {
 		startTime := now.Truncate(24 * time.Hour).Add(-24 * time.Hour)
 		endTime := startTime.Add(24 * time.Hour)
-		log.Info("Summarizing from ", startTime, " (", startTime.Unix(), ") to ", endTime, " (", endTime.Unix(), ")")
+		log.Debug("Summarizing from ", startTime, " (", startTime.Unix(), ") to ", endTime, " (", endTime.Unix(), ")")
 
 		// influx connection
 		influxClient, err := influxConnect(config, runningConfig)
@@ -242,7 +242,7 @@ func calcDailySummary(now time.Time, config StartupConfig, runningConfig Running
 
 		//create influxdb query
 		q := fmt.Sprintf("SELECT sum(value)/6 FROM bandwidth where time > '%s' and time < '%s' group by time(60s), cdn fill(0)", startTime.Format(time.RFC3339), endTime.Format(time.RFC3339))
-		log.Infof(q)
+		log.Debugf(q)
 		res, err := queryDB(influxClient, q, "cache_stats")
 		if err != nil {
 			errHndlr(err, ERROR)
@@ -273,8 +273,8 @@ func calcDailySummary(now time.Time, config StartupConfig, runningConfig Running
 			}
 			maxGbps := max / 1000000
 			bytesServedTb := bytesServed / 1000000000
-			log.Infof("max gbps for cdn %v = %v", cdn, maxGbps)
-			log.Infof("Tbytes served for cdn %v = %v", cdn, bytesServedTb)
+			log.Debugf("max gbps for cdn %v = %v", cdn, maxGbps)
+			log.Debugf("Tbytes served for cdn %v = %v", cdn, bytesServedTb)
 
 			//write daily_maxgbps in traffic_ops
 			var statsSummary traffic_ops.StatsSummary
@@ -464,7 +464,7 @@ func calcMetrics(cdnName string, url string, cacheGroupMap map[string]string, co
 	} else if strings.Contains(url, "DsStats") {
 		err = calcDsValues(rascalData, cdnName, sampleTime, config)
 	} else {
-		log.Info("Don't know what to do with ", url)
+		log.Debug("Don't know what to do with ", url)
 	}
 }
 
@@ -747,7 +747,7 @@ func sendMetrics(config StartupConfig, runningConfig RunningConfig, bps influx.B
 			config.BpsChan <- chunk_bps
 			errHndlr(err, ERROR)
 		} else {
-			log.Info("Sent ", len(chunk_bps.Points), " stats")
+			log.Debug("Sent ", len(chunk_bps.Points), " stats")
 		}
 	}
 }
