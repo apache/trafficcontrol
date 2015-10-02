@@ -57,22 +57,27 @@ type StartupConfig struct {
 
 // RunningConfig contains information about current InfluxDB connections.
 type RunningConfig struct {
-	HealthUrls      map[string]map[string]string // they 1st map key is CDN_name, the second is DsStats or CacheStats
-	CacheGroupMap   map[string]string            // map hostName to cacheGroup
-	InfluxDBProps   []InfluxDBProps
+	HealthUrls    map[string]map[string]string // they 1st map key is CDN_name, the second is DsStats or CacheStats
+	CacheGroupMap map[string]string            // map hostName to cacheGroup
+	InfluxDBProps []struct {
+		Fqdn string
+		Port int64
+	}
 	LastSummaryTime time.Time
 }
 
-// InfluxDBProps contains the fqdn and port needed to login to an InfluxDB instance.
-type InfluxDBProps struct {
-	Fqdn string
-	Port int64
+type Timers struct {
+	Poll         <-chan time.Time
+	DailySummary <-chan time.Time
+	Publish      <-chan time.Time
+	Config       <-chan time.Time
 }
 
 func main() {
 	var Bps map[string]*influx.BatchPoints
 	var config StartupConfig
 	var err error
+	var tickers Timers
 
 	configFile := flag.String("cfg", "", "The config file")
 	testSummary := flag.Bool("testSummary", false, "Test summary mode")
@@ -116,11 +121,7 @@ func main() {
 	go getToData(config, true, configChan)
 	runningConfig := <-configChan
 
-	<-time.NewTimer(time.Now().Truncate(time.Duration(config.PollingInterval) * time.Second).Add(time.Duration(config.PollingInterval) * time.Second).Sub(time.Now())).C
-	tickerChan := time.Tick(time.Duration(config.PollingInterval) * time.Second)
-	tickerDailySummaryChan := time.Tick(time.Duration(config.DailySummaryPollingInterval) * time.Second)
-	tickerPublishChan := time.Tick(time.Duration(config.PublishingInterval) * time.Second)
-	tickerConfigChan := time.Tick(time.Duration(config.ConfigInterval) * time.Second)
+	tickers = setTimers(config)
 
 	termChan := make(chan os.Signal, 1)
 	signal.Notify(termChan, syscall.SIGKILL, syscall.SIGINT, syscall.SIGTERM, syscall.SIGQUIT)
@@ -131,27 +132,30 @@ func main() {
 	for {
 		select {
 		case <-hupChan:
+			log.Info("HUP Received - reloading config")
 			newConfig, err := loadStartupConfig(*configFile, config)
 
 			if err != nil {
 				errHndlr(err, ERROR)
 			} else {
 				config = newConfig
+				tickers = setTimers(config)
 			}
 		case <-termChan:
+			log.Info("Shutdown Request Received - Sending stored metrics then quitting")
 			for _, val := range Bps {
-				sendMetrics(config, runningConfig, *val)
+				sendMetrics(config, runningConfig, *val, false)
 			}
 			os.Exit(0)
-		case <-tickerPublishChan:
+		case <-tickers.Publish:
 			for key, val := range Bps {
-				go sendMetrics(config, runningConfig, *val)
+				go sendMetrics(config, runningConfig, *val, true)
 				delete(Bps, key)
 			}
 		case runningConfig = <-configChan:
-		case <-tickerConfigChan:
+		case <-tickers.Config:
 			go getToData(config, false, configChan)
-		case <-tickerChan:
+		case <-tickers.Poll:
 			for cdnName, urls := range runningConfig.HealthUrls {
 				for _, url := range urls {
 					log.Debug(cdnName, " -> ", url)
@@ -162,7 +166,7 @@ func main() {
 					go calcMetrics(cdnName, url, runningConfig.CacheGroupMap, config, runningConfig)
 				}
 			}
-		case now := <-tickerDailySummaryChan:
+		case now := <-tickers.DailySummary:
 			go calcDailySummary(now, config, runningConfig)
 		case batchPoints := <-config.BpsChan:
 			log.Debug("Received ", len(batchPoints.Points), " stats")
@@ -177,6 +181,18 @@ func main() {
 			}
 		}
 	}
+}
+
+func setTimers(config StartupConfig) Timers {
+	var timers Timers
+
+	<-time.NewTimer(time.Now().Truncate(time.Duration(config.PollingInterval) * time.Second).Add(time.Duration(config.PollingInterval) * time.Second).Sub(time.Now())).C
+	timers.Poll = time.Tick(time.Duration(config.PollingInterval) * time.Second)
+	timers.DailySummary = time.Tick(time.Duration(config.DailySummaryPollingInterval) * time.Second)
+	timers.Publish = time.Tick(time.Duration(config.PublishingInterval) * time.Second)
+	timers.Config = time.Tick(time.Duration(config.ConfigInterval) * time.Second)
+
+	return timers
 }
 
 func loadStartupConfig(configFile string, oldConfig StartupConfig) (StartupConfig, error) {
@@ -379,7 +395,6 @@ func getToData(config StartupConfig, init bool, configChan chan RunningConfig) {
 	}
 
 	runningConfig.CacheGroupMap = make(map[string]string)
-	var influxDBProps []InfluxDBProps
 	for _, server := range servers {
 		runningConfig.CacheGroupMap[server.HostName] = server.Location
 		if server.Type == "INFLUXDB" && server.Status == "ONLINE" {
@@ -388,10 +403,12 @@ func getToData(config StartupConfig, init bool, configChan chan RunningConfig) {
 			if err != nil {
 				port = 8086 //default port
 			}
-			influxDBProps = append(influxDBProps, InfluxDBProps{Fqdn: fqdn, Port: port})
+			runningConfig.InfluxDBProps = append(runningConfig.InfluxDBProps, struct {
+				Fqdn string
+				Port int64
+			}{fqdn, port})
 		}
 	}
-	runningConfig.InfluxDBProps = influxDBProps
 
 	cacheStatPath := "/publish/CacheStats?hc=1&stats="
 	dsStatPath := "/publish/DsStats?hc=1&wildcard=1&stats="
@@ -723,11 +740,13 @@ func influxConnect(config StartupConfig, runningConfig RunningConfig) (*influx.C
 	return nil, err
 }
 
-func sendMetrics(config StartupConfig, runningConfig RunningConfig, bps influx.BatchPoints) {
+func sendMetrics(config StartupConfig, runningConfig RunningConfig, bps influx.BatchPoints, retry bool) {
 	//influx connection
 	influxClient, err := influxConnect(config, runningConfig)
 	if err != nil {
-		config.BpsChan <- bps
+		if retry {
+			config.BpsChan <- bps
+		}
 		errHndlr(err, ERROR)
 		return
 	}
@@ -744,7 +763,9 @@ func sendMetrics(config StartupConfig, runningConfig RunningConfig, bps influx.B
 
 		_, err = influxClient.Write(chunk_bps)
 		if err != nil {
-			config.BpsChan <- chunk_bps
+			if retry {
+				config.BpsChan <- chunk_bps
+			}
 			errHndlr(err, ERROR)
 		} else {
 			log.Debug("Sent ", len(chunk_bps.Points), " stats")

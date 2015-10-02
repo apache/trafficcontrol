@@ -25,6 +25,7 @@ mkdir -p ${RPM_BUILD_ROOT}/opt/traffic_stats
 mkdir -p ${RPM_BUILD_ROOT}/opt/traffic_stats/bin
 mkdir -p ${RPM_BUILD_ROOT}/opt/traffic_stats/conf
 mkdir -p ${RPM_BUILD_ROOT}/opt/traffic_stats/backup
+mkdir -p ${RPM_BUILD_ROOT}/opt/traffic_stats/var/run
 mkdir -p ${RPM_BUILD_ROOT}/opt/traffic_stats/var/log/traffic_stats
 mkdir -p ${RPM_BUILD_ROOT}/etc/init.d
 mkdir -p ${RPM_BUILD_ROOT}/etc/logrotate.d
