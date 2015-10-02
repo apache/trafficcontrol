@@ -80,6 +80,7 @@ public abstract class AbstractServiceUpdater {
 		scheduledService = executorService.scheduleWithFixedDelay(updater, pi, pi, TimeUnit.MILLISECONDS);
 	}
 
+	@SuppressWarnings("PMD.CyclomaticComplexity")
 	public boolean updateDatabase() {
 		final File existingDB = new File(databaseLocation);
 		File newDB = null;

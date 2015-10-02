@@ -163,6 +163,8 @@ public class NetworkNode implements Comparable<NetworkNode> {
 			return c.getNetwork(ipnn);
 		}
 	}
+
+	@SuppressWarnings("PMD.CyclomaticComplexity")
 	private static NetworkNode generateTree(final JSONObject json) {
 		try {
 			final JSONObject coverageZones = json.getJSONObject("coverageZones");
