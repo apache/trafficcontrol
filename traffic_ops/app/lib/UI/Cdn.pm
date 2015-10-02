@@ -353,9 +353,12 @@ sub afederation {
 	my $self = shift;
 	my %data = ( "aaData" => undef );
 	my $feds = $self->db->resultset('Federation')->search(undef);
-	while ( my $f = $feds->next ) {
-		my @line = [ $f->id, $f->cname, $f->description, $f->ttl ];
-		push( @{ $data{'aaData'} }, @line );
+	my @line;
+	if ( $feds->count > 0 ) {
+		while ( my $f = $feds->next ) {
+			@line = [ $f->id, $f->cname, $f->description, $f->ttl ];
+			push( @{ $data{'aaData'} }, @line );
+		}
 	}
 
 	$self->render( json => \%data );

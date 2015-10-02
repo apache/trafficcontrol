@@ -22,17 +22,10 @@
 <!DOCTYPE html>
 % if (defined (flash 'alertmsg')) {
 <script> 
-var alertmsg = "<%= flash 'alertmsg' %>"; 
-alertmsg = alertmsg.replace(/__NEWLINE__/g, "\n");
-alert(alertmsg);
+  var alertmsg = "<%= flash 'alertmsg' %>"; 
+  alertmsg = alertmsg.replace(/__NEWLINE__/g, "\n");
+  alert(alertmsg);
 
-function deletefunction() {
-	var r=confirm("are you sure?");
-	if (r==true) {
-		window.location = "/federation/<%= $federation_id %>/delete";
-		parent.location.reload (true);
-	}
-}
 </script>
 % }
 
@@ -44,6 +37,14 @@ function deletefunction() {
 	  // wait for the DOM to be loaded 
 	  $(document).ready(function () {
 		  listroles("<%= $tm_user->role->id %>");
+
+		   $("#delete_button").click(function() {
+				var r=confirm("Are you sure?");
+				if (r==true) {
+					window.location = "/federation/<%= $federation_id %>/delete";
+					parent.location.reload (true);
+				}
+			});
 	   });
 
 </script>
@@ -74,7 +75,7 @@ function deletefunction() {
 				        %= include 'federation/_form'
 				   </div>
 				   <div style="margin-top:10px;padding:10px;">
-					  <button class="button" onclick="deletefunction()" id="delete_button">Delete</button>
+					  <a href="#" class="button" id="delete_button">Delete</a>
 					   %= submit_button 'Save', id => 'save_button', class=> 'button', style=> 'margin-left:300px;'
 					   %= submit_button 'Close', id => 'close_button', class=> 'button'
 				   </div>
