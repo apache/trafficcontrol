@@ -34,6 +34,7 @@ import org.apache.log4j.Logger;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import com.comcast.cdn.traffic_control.traffic_router.core.TrafficRouterException;
 import com.comcast.cdn.traffic_control.traffic_router.core.config.ConfigHandler;
 import com.comcast.cdn.traffic_control.traffic_router.core.router.TrafficRouterManager;
 import com.comcast.cdn.traffic_control.traffic_router.core.util.AbstractUpdatable;
@@ -118,6 +119,8 @@ public class TrafficMonitorWatcher  {
 					} catch (JSONException e) {
 						LOGGER.warn(e, e);
 						LOGGER.warn("JSON document length: " + configStr.length());
+					} catch (TrafficRouterException e) {
+						LOGGER.fatal(e, e);
 					}
 				} catch (IOException e) {
 					LOGGER.warn("error on config update", e);
