@@ -40,6 +40,14 @@ case "$1" in
     start-stop-daemon --stop --quiet --oknodo --pidfile $PIDFILE
     echo "."
     ;;
+  status)
+    start-stop-daemon --status --quiet --pidfile $PIDFILE
+    if [[ $? -eq 0 ]] ; then
+      echo "$NAME is running ($PIDFILE)"
+    else
+      echo "$NAME is not running"
+    fi
+    ;;
   restart)
     echo -n "Restarting daemon: "$NAME
     start-stop-daemon --stop --quiet --oknodo --retry 30 --pidfile $PIDFILE
@@ -52,7 +60,7 @@ case "$1" in
     echo "."
     ;;
   *)
-    echo "Usage: "$1" {start|stop|restart|reload}"
+    echo "Usage: "$1" {start|stop|status|restart|reload}"
     exit 1
 esac
 
