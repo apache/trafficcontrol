@@ -41,40 +41,31 @@ sub index {
 sub add {
 	my $self = shift;
 
+	my $current_username = $self->current_user()->{username};
+	my $dbh              = $self->db->resultset('TmUser')->search( { username => $current_username } );
+	my $tm_user          = $dbh->single;
 	&stash_role($self);
-	$self->stash( federation => {}, fbox_layout => 1, mode => 'add' );
-}
 
-# Read
-sub read {
-	my $self = shift;
+	#TODO: drichardson - remove hard coded DS
+	my $delivery_services = get_delivery_services( $self, 1 );
 
-	my @data;
-	my $orderby = "name";
-	$orderby = $self->param('orderby') if ( defined $self->param('orderby') );
-	my $dbh = $self->db->resultset("Federation")->search( undef, { prefetch => [ { 'role' => undef } ], order_by => 'me.' . $orderby } );
-	while ( my $row = $dbh->next ) {
-		push(
-			@data, {
-				"id"          => $row->id,
-				"name"        => $row->name,
-				"description" => $row->description,
-				"cname"       => $row->cname,
-				"ttl"         => $row->ttl,
-				"role"        => $row->role->id,
-			}
-		);
-	}
-	$self->render( json => \@data );
+	$self->stash(
+		tm_user           => $tm_user,
+		federation        => {},
+		delivery_services => $delivery_services,
+		fbox_layout       => 1,
+		selected_role_id  => 7,
+		mode              => 'add'
+	);
 }
 
 sub edit {
-	my $self          = shift;
-	my $federation_id = $self->param('federation_id');
+	my $self   = shift;
+	my $fed_id = $self->param('federation_id');
 
 	my $federation;
 	my $selected_ds_id;
-	my $feds = $self->db->resultset('Federation')->search( { 'id' => $federation_id } );
+	my $feds = $self->db->resultset('Federation')->search( { 'id' => $fed_id } );
 	while ( my $f = $feds->next ) {
 		$federation = $f;
 		my $fed_id = $f->id;
@@ -85,8 +76,16 @@ sub edit {
 		}
 	}
 
+	my $selected_role_id;
+	my $ftusers =
+		$self->db->resultset('FederationTmuser')->search( { federation => $fed_id }, { prefetch => [ 'federation', 'tm_user' ] } );
+	while ( my $ft = $ftusers->next ) {
+		$selected_role_id = $ft->role->id;
+	}
+	$self->app->log->debug( "selected_role_id #-> " . $selected_role_id );
+
 	my $resolvers = $self->db->resultset('FederationResolver')
-		->search( { 'federation_federation_resolvers.federation_resolver' => $federation_id }, { prefetch => 'federation_federation_resolvers' } );
+		->search( { 'federation_federation_resolvers.federation_resolver' => $fed_id }, { prefetch => 'federation_federation_resolvers' } );
 	while ( my $row = $resolvers->next ) {
 		my $line = [ $row->id ];
 	}
@@ -96,11 +95,13 @@ sub edit {
 	my $tm_user          = $dbh->single;
 	&stash_role($self);
 
+	#TODO: drichardson - remove harded DS
 	my $delivery_services = get_delivery_services( $self, 1 );
 	$self->app->log->debug( "delivery_services #-> " . Dumper($delivery_services) );
 	$self->stash(
 		tm_user           => $tm_user,
 		selected_ds_id    => $selected_ds_id,
+		selected_role_id  => $selected_role_id,
 		federation        => $federation,
 		mode              => 'edit',
 		fbox_layout       => 1,
@@ -113,7 +114,6 @@ sub get_delivery_services {
 	my $self   = shift;
 	my $id     = shift;
 	my @ds_ids = $self->db->resultset('Deliveryservice')->search( undef, { orderby => "xml_id" } )->get_column('id')->all;
-	$self->app->log->debug( "ds_ids: #-> " . Dumper(@ds_ids) );
 
 	my $delivery_services;
 	for my $ds_id ( uniq(@ds_ids) ) {
@@ -127,23 +127,34 @@ sub get_delivery_services {
 
 # Update
 sub update {
-	my $self          = shift;
-	my $federation_id = $self->param('federation_id');
-	my $cname         = $self->param('federation.cname');
-	my $description   = $self->param('federation.description');
-	my $ttl           = $self->param('federation.ttl');
+	my $self        = shift;
+	my $fed_id      = $self->param('federation_id');
+	my $cname       = $self->param('federation.cname');
+	my $role_id     = $self->param('tm_user.role');
+	my $description = $self->param('federation.description');
+	my $ttl         = $self->param('federation.ttl');
 
 	my $is_valid = $self->is_valid("edit");
-	$self->app->log->debug( "is_valid #-> " . $is_valid );
 	if ( $self->is_valid("edit") ) {
-		my $dbh = $self->db->resultset('Federation')->find( { id => $federation_id } );
+		my $dbh = $self->db->resultset('Federation')->find( { id => $fed_id } );
 		$dbh->cname($cname);
 		$dbh->description($description);
 		$dbh->ttl($ttl);
 		$dbh->update();
-		$self->flash( message => "User was updated successfully." );
+
+		my $ftusers =
+			$self->db->resultset('FederationTmuser')->search( { federation => $fed_id }, { prefetch => [ 'federation', 'tm_user' ] } );
+		while ( my $ft = $ftusers->next ) {
+			my $fid    = $ft->federation->id;
+			my $fcname = $ft->federation->cname;
+			$self->app->log->debug( "fid #-> " . $fid );
+			$ft->role($role_id);
+			$ft->update();
+		}
+
+		$self->flash( message => "Federation was updated successfully." );
 		$self->stash( mode => 'edit' );
-		return $self->redirect_to( '/federation/' . $federation_id . '/edit' );
+		return $self->redirect_to( '/federation/' . $fed_id . '/edit' );
 	}
 	else {
 		$self->edit();
@@ -182,7 +193,7 @@ sub create {
 		my $new_id = $self->create_federation_mapping();
 		if ( $new_id != -1 ) {
 			$self->flash( message => 'Federation created successfully.' );
-			return $self->redirect_to('/close_fancybox.html');
+			return $self->redirect_to('/federation/add');
 		}
 	}
 	else {
@@ -205,10 +216,9 @@ sub create_federation_mapping {
 	my $new_id = -1;
 	my $dbh    = $self->db->resultset('Federation')->create(
 		{
-			description => $self->param('federation.description'),
 			cname       => $self->param('federation.cname'),
+			description => $self->param('federation.description'),
 			ttl         => $self->param('federation.ttl'),
-			type        => $self->param('federation.type'),
 		}
 	);
 	$new_id = $dbh->insert();
@@ -221,17 +231,28 @@ sub create_federation_mapping {
 
 # Delete
 sub delete {
-	my $self          = shift;
-	my $federation_id = $self->param('federation_id');
-	my $cname         = $self->param('cname');
+	my $self   = shift;
+	my $fed_id = $self->param('federation_id');
+	my $cname  = $self->param('federation.cname');
 
 	if ( !&is_oper($self) ) {
 		$self->flash( alertmsg => "No can do. Get more privs." );
 	}
 	else {
-		my $delete = $self->db->resultset('Federation')->search( { id => $federation_id } );
+		my $delete = $self->db->resultset('Federation')->search( { id => $fed_id } );
+		my $resolvers =
+			$self->db->resultset('FederationFederationResolver')
+			->search( { federation => $fed_id }, { prefetch => [ 'federation', 'federation_resolver' ] } );
+		my $ip_address;
+		my $cname;
+		while ( my $row = $resolvers->next ) {
+			my $id = $row->id;
+			$self->app->log->debug( "id #-> " . $id );
+
+			#$ip_address = $row->ip_address;
+		}
 		$delete->delete();
-		&log( $self, "Deleted federation mapping: " . $federation_id . " cname " . $cname, "UICHANGE" );
+		&log( $self, "Deleted federation: " . $fed_id . " cname: " . $cname . " ip_address: " . $ip_address, "UICHANGE" );
 	}
 	return $self->redirect_to('/close_fancybox.html');
 }
