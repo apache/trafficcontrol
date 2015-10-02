@@ -1,4 +1,4 @@
-<seelog>
+<seelog minlevel="info">
     <outputs formatid="std:debug-short"> 
         <file path="/opt/traffic_stats/var/log/traffic_stats/traffic_stats.log" />
     </outputs>
