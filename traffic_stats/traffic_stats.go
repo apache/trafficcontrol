@@ -92,13 +92,7 @@ func main() {
 	Bps = make(map[string]*influx.BatchPoints)
 	config.BpsChan = make(chan influx.BatchPoints)
 
-	logger, err := log.LoggerFromConfigAsFile(config.SeelogConfig)
 	defer log.Flush()
-	if err != nil {
-		errHndlr(fmt.Errorf("error reading Seelog config %s", config.SeelogConfig), FATAL)
-	}
-	log.Info("Replacing logger, see log file according to", config.SeelogConfig)
-	log.ReplaceLogger(logger)
 
 	if *testSummary {
 		fmt.Println("WARNING: testSummary is on!")
