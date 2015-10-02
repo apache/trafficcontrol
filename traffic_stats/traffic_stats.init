@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 #
 # Startup script for traffic_stats
 #
@@ -9,59 +9,85 @@
 
 ### BEGIN INIT INFO
 # Provides: traffic_stats
-# Required-Start:
-# Should-Start:
-# Required-Stop:
+# Required-Start: $network $local_fs $syslog
+# Required-Stop: $network $local_fs $syslog
 # Default-Start: 3 4 5
 # Default-Stop: 0 1 2 6
-# Short-Description: Traffic Stats
+# Short-Description: start and stop Traffic Stats
 # Description: Controls all traffic stats processes at once.
 ### END INIT INFO
 
-set -e
+# Source function library.
+. /etc/init.d/functions
 
-# Must be a valid filename
-NAME=traffic_stats
-PIDFILE=/opt/traffic_stats/var/run/$NAME.pid
-#This is the command to be run, give the full pathname
-DAEMON=/opt/traffic_stats/bin/traffic_stats
-DAEMON_OPTS="--cfg /opt/traffic_stats/conf/traffic_stats.cfg"
+# Source networking configuration.
+. /etc/sysconfig/network
 
-export PATH="${PATH:+$PATH:}/usr/sbin:/sbin"
+basepath=/opt/traffic_stats
+binpath=bin
+runpath=var/run
+name=traffic_stats
+prog=$basepath/$binpath/$name
+lockfile=$basepath/$runpath/$name
+options="--cfg /opt/traffic_stats/conf/traffic_stats.cfg"
+
+start() {
+        [ "$NETWORKING" = "no" ] && exit 1
+        [ -x $prog ] || exit 5
+
+        # Start daemons.
+        echo -n $"Starting $name: "
+        daemon $prog $options
+        RETVAL=$?
+        echo
+        [ $RETVAL -eq 0 ] && touch $lockfile
+        return $RETVAL
+}
+
+stop() {
+        echo -n $"Shutting down $name: "
+        killproc $prog
+        RETVAL=$?
+        echo
+        [ $RETVAL -eq 0 ] && rm -f $lockfile
+        return $RETVAL
+}
+
+reload() {
+        echo -n $"Reloading $name: "
+        if [ -n "`pidofproc $prog`" ]; then
+                killproc $prog -HUP
+        else
+                failure $"Reloading $name"
+        fi
+        RETVAL=$?
+        echo
+}
 
 case "$1" in
   start)
-    echo -n "Starting daemon: "$NAME
-    start-stop-daemon --start --quiet -m --pidfile $PIDFILE --exec $DAEMON -- $DAEMON_OPTS
-    echo "."
-    ;;
+        start
+        ;;
   stop)
-    echo -n "Stopping daemon: "$NAME
-    start-stop-daemon --stop --quiet --oknodo --pidfile $PIDFILE
-    echo "."
-    ;;
+        stop
+        ;;
   status)
-    start-stop-daemon --status --quiet --pidfile $PIDFILE
-    if [[ $? -eq 0 ]] ; then
-      echo "$NAME is running ($PIDFILE)"
-    else
-      echo "$NAME is not running"
-    fi
-    ;;
-  restart)
-    echo -n "Restarting daemon: "$NAME
-    start-stop-daemon --stop --quiet --oknodo --retry 30 --pidfile $PIDFILE
-    start-stop-daemon --start --quiet -m --pidfile $PIDFILE --exec $DAEMON -- $DAEMON_OPTS
-    echo "."
-    ;;
+        status $prog
+        ;;
+  restart|force-reload)
+        stop
+        start
+        ;;
+  try-restart|condrestart)
+        if status $prog > /dev/null; then
+            stop
+            start
+        fi
+        ;;
   reload)
-    echo -n "Reloading configuration: "$NAME
-    start-stop-daemon --stop --signal HUP --quiet --pidfile $PIDFILE
-    echo "."
-    ;;
+        reload
+        ;;
   *)
-    echo "Usage: "$1" {start|stop|status|restart|reload}"
-    exit 1
+        echo $"Usage: $0 {start|stop|status|restart|try-restart|reload|force-reload}"
+        exit 2
 esac
-
-exit 0
