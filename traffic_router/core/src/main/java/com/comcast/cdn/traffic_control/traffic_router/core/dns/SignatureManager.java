@@ -101,6 +101,7 @@ public final class SignatureManager {
 		}
 	}
 
+	@SuppressWarnings("PMD.CyclomaticComplexity")
 	private Runnable getKeyMaintenanceRunnable(final CacheRegister cacheRegister) {
 		return new Runnable() {
 			public void run() {
@@ -189,6 +190,7 @@ public final class SignatureManager {
 		return false;
 	}
 
+	@SuppressWarnings("PMD.CyclomaticComplexity")
 	private JSONObject fetchKeyPairData(final CacheRegister cacheRegister) {
 		if (!isDnssecEnabled()) {
 			return null;
@@ -280,6 +282,7 @@ public final class SignatureManager {
 		return getKeyPairs(name, false, false, maxTTL);
 	}
 
+	@SuppressWarnings("PMD.CyclomaticComplexity")
 	private List<DNSKeyPairWrapper> getKeyPairs(final Name name, final boolean wantKsk, final boolean wantSigningKey, final long maxTTL) throws IOException, NoSuchAlgorithmException {
 		final List<DNSKeyPairWrapper> keyPairs = keyMap.get(name.toString());
 		final Date now = new Date();

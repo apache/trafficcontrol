@@ -147,6 +147,7 @@ public class ConfigHandler {
 	 *            the {@link TrafficRouterConfiguration}
 	 * @throws JSONException 
 	 */
+	@SuppressWarnings({"PMD.CyclomaticComplexity", "PMD.AvoidDeeplyNestedIfStmts"})
 	private void parseCacheConfig(final JSONObject contentServers, final CacheRegister cacheRegister) throws JSONException {
 		final Map<String,Cache> map = new HashMap<String,Cache>();
 		final Map<String, List<String>> statMap = new HashMap<String, List<String>>();

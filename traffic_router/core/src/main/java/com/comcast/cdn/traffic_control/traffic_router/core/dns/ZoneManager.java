@@ -121,6 +121,7 @@ public class ZoneManager extends Resolver {
 		initZoneCache(cacheRegister);
 	}
 
+	@SuppressWarnings("PMD.UseStringBufferForStringAppends")
 	private static void initTopLevelDomain(final CacheRegister data) throws TextParseException {
 		String tld = data.getConfig().optString("domain_name");
 
@@ -463,6 +464,7 @@ public class ZoneManager extends Resolver {
 		}
 	}
 
+	@SuppressWarnings("PMD.CyclomaticComplexity")
 	private static void addTrafficRouters(final List<Record> list, final JSONObject trafficRouters, final Name name, 
 			final JSONObject ttl, final String domain, final DeliveryService ds) 
 					throws TextParseException, UnknownHostException {
@@ -536,6 +538,7 @@ public class ZoneManager extends Resolver {
 		}
 	}
 
+	@SuppressWarnings("PMD.CyclomaticComplexity")
 	private static final Map<String, List<Record>> populateZoneMap(final Map<String, List<Record>> zoneMap,
 			final Map<String, DeliveryService> dsMap, final CacheRegister data) throws IOException {
 		final Map<String, List<Record>> superDomains = new HashMap<String, List<Record>>();

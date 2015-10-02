@@ -36,6 +36,7 @@ public class MaxmindGeolocationService implements GeolocationService {
 	private boolean initialized = false;
 
 	@Override
+	@SuppressWarnings("PMD.EmptyCatchBlock")
 	public Geolocation location(final String ip) throws GeolocationException {
 		lock.readLock().lock();
 
