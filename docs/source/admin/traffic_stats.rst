@@ -29,15 +29,15 @@ Installation
 	- Copy the Traffic Stats RPM to your server
 	- sudo rpm -ivh <traffic_stats rpm>
 
-      Note:  This installation actually creates two separate services:  write_traffic_stats and ts_daily_summary.  More information on these services can be found in the `overview <../overview/traffic_stats.html>`_  section.     
-
 **Installing InfluxDB:**
 
 	In order to store traffic stats data you will need to install InfluxDB.  It is recommended InfluxDB be installed in a 3 server cluster; VMs are acceptable. The documentation for installing InfluxDB can be found on the InfluxDB `website <https://influxdb.com/docs/v0.9/introduction/installation.html>`_.
 
 **Installing Grafana:**
 
-	Grafana is used to display Traffic Stats/InfluxDB data in Traffic Ops.  Grafana is typically run on the same server as Traffic Stats but this is not a requirement.  Grafana can be installed on any server that can access InfluxDB and be accessed by Traffic Ops.  Documentation on installing Grafana can be found `here <http://docs.grafana.org/installation/>`_.
+	Grafana is used to display Traffic Stats/InfluxDB data in Traffic Ops.  Grafana is typically run on the same server as Traffic Stats but this is not a requirement.  Grafana can be installed on any server that can access InfluxDB and be accessed by Traffic Ops.  Documentation on installing Grafana can be found `here <http://docs.grafana.org/installation/>`_. 
+
+	**Traffic Stats currently only supports the 2.0.2 version of Grafana!!!**
 
 Configuration
 =========================
@@ -58,6 +58,7 @@ Configuration
 	     - *dailySummaryPollingInterval:* The interval, in seconds, at which Traffic Stats checks to see if daily stats need to be computed and stored.
 	     - *cacheRetentionPolicy:* The default retention policy for cache stats
 	     - *dsRetentionPolicy:* The default retention policy for deliveryservice stats
+	     - *dailySummaryRetentionPolicy:* The retention policy to be used for the daily stats
 
 **Configuring InfluxDB:**
 
@@ -83,6 +84,8 @@ Configuration
 
 	
 **Configuring Grafana:**
+
+	**NOTE: Traffic Control currently only supports Grafana version 2.0.2**
 
 	In Traffic Ops the Health -> Graph View tab can be configured to display grafana graphs using influxDb data.  In order for this to work correctly, you will need two things 1) a parameter added to traffic ops with the graph URL (we will discuss later) and 2) the graphs created in grafana.  See below for how to create some simple graphs in grafana.  These instructions assume that InfluxDB has been installed and conifugred and that data has been written to it.  If this is not true, you will not see any graphs.
 
