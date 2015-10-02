@@ -49,8 +49,7 @@ To install the Traffic Ops Developer environment:
 	- From the traffic_ops/client directory run ``go test`` to test the client code.  This will run all unit tests for the client and return the results.  If there are missing dependencies you will need to run ``go get <dependency name>`` to get the dependency
 	- Once the tests pass, run ``go install`` to build and install the Traffic Ops client package.  This makes it accessible to Traffic Stats.
 	- Navigate to your cloned repo under Traffic Stats
-	- Run ``go build write_traffic_stats`` to build traffic_stats.  You will need to run ``go get`` for any missing dependencies.
-	- Run ``go build ts_daily_summary`` to build ts_daily_summary.  You will need to run ``go get`` for any missing dependencies.
+	- Run ``go build traffic_stats`` to build traffic_stats.  You will need to run ``go get`` for any missing dependencies.
 
 
 Test Cases
