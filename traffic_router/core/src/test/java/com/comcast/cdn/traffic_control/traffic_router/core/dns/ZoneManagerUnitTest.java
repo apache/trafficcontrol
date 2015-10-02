@@ -3,6 +3,7 @@ package com.comcast.cdn.traffic_control.traffic_router.core.dns;
 import com.comcast.cdn.traffic_control.traffic_router.core.cache.CacheRegister;
 import com.comcast.cdn.traffic_control.traffic_router.core.router.StatTracker;
 import com.comcast.cdn.traffic_control.traffic_router.core.router.StatTracker.Track.ResultType;
+import com.comcast.cdn.traffic_control.traffic_router.core.util.TrafficOpsUtils;
 import com.comcast.cdn.traffic_control.traffic_router.core.router.TrafficRouter;
 import org.junit.Before;
 import org.junit.Test;
@@ -39,9 +40,9 @@ public class ZoneManagerUnitTest {
         PowerMockito.doNothing().when(ZoneManager.class, "initZoneCache", cacheRegister);
 
         SignatureManager signatureManager = PowerMockito.mock(SignatureManager.class);
-        whenNew(SignatureManager.class).withArguments(any(ZoneManager.class), any(CacheRegister.class), any(KeyServer.class)).thenReturn(signatureManager);
+        whenNew(SignatureManager.class).withArguments(any(ZoneManager.class), any(CacheRegister.class), any(TrafficOpsUtils.class)).thenReturn(signatureManager);
 
-        zoneManager = spy(new ZoneManager(trafficRouter, new StatTracker()));
+        zoneManager = spy(new ZoneManager(trafficRouter, new StatTracker(), null));
     }
 
     @Test

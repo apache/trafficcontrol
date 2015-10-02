@@ -2,6 +2,7 @@ package com.comcast.cdn.traffic_control.traffic_router.core.util;
 
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.powermock.core.classloader.annotations.PowerMockIgnore;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.core.classloader.annotations.SuppressStaticInitializationFor;
 import org.powermock.modules.junit4.PowerMockRunner;
@@ -18,6 +19,7 @@ import static org.powermock.api.mockito.PowerMockito.whenNew;
 
 @RunWith(PowerMockRunner.class)
 @PrepareForTest({Fetcher.class, URL.class, InputStreamReader.class})
+@PowerMockIgnore("javax.net.ssl.*")
 public class FetcherTest {
 
     @Test

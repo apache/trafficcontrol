@@ -34,6 +34,8 @@ import org.apache.commons.io.IOUtils;
 import org.apache.log4j.Logger;
 import org.apache.wicket.ajax.json.JSONException;
 
+import com.comcast.cdn.traffic_control.traffic_router.core.router.TrafficRouterManager;
+
 public abstract class AbstractServiceUpdater {
 	private static final Logger LOGGER = Logger.getLogger(AbstractServiceUpdater.class);
 
@@ -43,6 +45,7 @@ public abstract class AbstractServiceUpdater {
 	private long pollingInterval;
 	protected boolean loaded = false;
 	protected ScheduledFuture<?> scheduledService;
+	private TrafficRouterManager trafficRouterManager;
 
 	public void destroy() {
 		executorService.shutdownNow();
@@ -90,6 +93,7 @@ public abstract class AbstractServiceUpdater {
 
 				try {
 					newDB = downloadDatabase(getDataBaseURL(), existingDB);
+					trafficRouterManager.trackEvent("last" + getClass().getSimpleName() + "Check");
 
 					// if the remote db's timestamp is less than or equal to ours, the above returns existingDB
 					if (newDB == existingDB) {
@@ -112,6 +116,7 @@ public abstract class AbstractServiceUpdater {
 					if (!isLoaded() || isDifferent) {
 						loadDatabase();
 						setLoaded(true);
+						trafficRouterManager.trackEvent("last" + getClass().getSimpleName() + "Update");
 					} else if (isLoaded() && !isDifferent) {
 						LOGGER.info("Removing downloaded temp file " + newDB);
 						newDB.delete();
@@ -262,5 +267,9 @@ public abstract class AbstractServiceUpdater {
 
 	public boolean isLoaded() {
 		return loaded;
+	}
+
+	public void setTrafficRouterManager(final TrafficRouterManager trafficRouterManager) {
+		this.trafficRouterManager = trafficRouterManager;
 	}
 }
