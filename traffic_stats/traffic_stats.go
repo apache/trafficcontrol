@@ -131,6 +131,7 @@ func main() {
 	for {
 		select {
 		case <-hupChan:
+			log.Info("HUP Received - reloading config")
 			newConfig, err := loadStartupConfig(*configFile, config)
 
 			if err != nil {
@@ -139,13 +140,14 @@ func main() {
 				config = newConfig
 			}
 		case <-termChan:
+			log.Info("Shutdown Request Received - Sending stored metrics then quitting")
 			for _, val := range Bps {
-				sendMetrics(config, runningConfig, *val)
+				sendMetrics(config, runningConfig, *val, false)
 			}
 			os.Exit(0)
 		case <-tickerPublishChan:
 			for key, val := range Bps {
-				go sendMetrics(config, runningConfig, *val)
+				go sendMetrics(config, runningConfig, *val, true)
 				delete(Bps, key)
 			}
 		case runningConfig = <-configChan:
@@ -723,11 +725,13 @@ func influxConnect(config StartupConfig, runningConfig RunningConfig) (*influx.C
 	return nil, err
 }
 
-func sendMetrics(config StartupConfig, runningConfig RunningConfig, bps influx.BatchPoints) {
+func sendMetrics(config StartupConfig, runningConfig RunningConfig, bps influx.BatchPoints, retry bool) {
 	//influx connection
 	influxClient, err := influxConnect(config, runningConfig)
 	if err != nil {
-		config.BpsChan <- bps
+		if retry {
+			config.BpsChan <- bps
+		}
 		errHndlr(err, ERROR)
 		return
 	}
@@ -744,7 +748,9 @@ func sendMetrics(config StartupConfig, runningConfig RunningConfig, bps influx.B
 
 		_, err = influxClient.Write(chunk_bps)
 		if err != nil {
-			config.BpsChan <- chunk_bps
+			if retry {
+				config.BpsChan <- chunk_bps
+			}
 			errHndlr(err, ERROR)
 		} else {
 			log.Debug("Sent ", len(chunk_bps.Points), " stats")
