@@ -72,7 +72,7 @@ sub get_data {
 	my %ds_hash = map { $_ => 1 } @ds_ids;
 	my $rs;
 	if ( defined($id) ) {
-		$rs = $self->db->resultset("Deliveryservice")->search( { id => $id }, { prefetch => ['cdn', 'deliveryservice_regexes'] } );
+		$rs = $self->db->resultset("Deliveryservice")->search( { 'me.id' => $id }, { prefetch => ['cdn', 'deliveryservice_regexes'] } );
 	}
 	else {
 		$rs = $self->db->resultset("Deliveryservice")->search( undef, { prefetch => ['cdn', 'deliveryservice_regexes'], order_by => 'xml_id' } );
