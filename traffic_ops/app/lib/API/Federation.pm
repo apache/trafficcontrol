@@ -24,12 +24,12 @@ use Mojo::Base 'Mojolicious::Controller';
 use Data::Dumper;
 use Net::CIDR;
 use JSON;
-
-use Data::Validate::IP qw(is_ipv4 is_ipv6);
+use Validate::Tiny ':all';
 
 sub index {
-  my $self = shift;
-  my $orderby = $self->param('orderby') || "xml_id";
+  my $self             = shift;
+  my $orderby          = $self->param('orderby') || "xml_id";
+  my $current_username = $self->current_user()->{username};
   my $data;
 
   my $rs_data = $self->db->resultset('FederationDeliveryservice')->search(
@@ -39,19 +39,27 @@ sub index {
     }
   );
 
-  my $row_count = $rs_data->count();
-  if ( $row_count == 0 ) {
+  if ( $rs_data->count() == 0 ) {
     return $self->success( {} );
   }
 
   while ( my $row = $rs_data->next ) {
+    my $federation_id = $row->federation->id;
+    my $user
+      = $self->find_federation_tmuser( $current_username,
+      $federation_id );
+    if ( !defined $user ) {
+      return $self->alert(
+        "You must be a Federation user to perform this operation!");
+    }
+
     my $mapping;
     $mapping->{'cname'} = $row->federation->cname;
     $mapping->{'ttl'}   = $row->federation->ttl;
 
-    my $id        = $row->federation->id;
     my @resolvers = $self->db->resultset('FederationResolver')->search(
-      { 'federation_federation_resolvers.federation' => $id },
+      {   'federation_federation_resolvers.federation' => $federation_id
+      },
       { prefetch => 'federation_federation_resolvers' }
     )->all();
 
@@ -80,9 +88,28 @@ sub index {
     else {
       $data = $self->add_delivery_service( $xml_id, $mapping, $data );
     }
-
   }
   $self->success($data);
+}
+
+sub find_federation_tmuser {
+  my $self             = shift;
+  my $current_username = shift;
+  my $federation_id    = shift;
+  my $user;
+
+  my $tm_user = $self->find_tmuser($current_username);
+  if ( defined $tm_user ) {
+    $user = $self->db->resultset('FederationTmuser')->search(
+      {   tm_user    => $tm_user->id,
+        federation => $federation_id,
+        role       => $tm_user->role->id
+      },
+      { prefetch => 'role' }
+    )->single();
+  }
+
+  return $user;
 }
 
 sub find_delivery_service {
@@ -143,9 +170,23 @@ sub add {
     my $federation_id;
 
     foreach my $map ( @{$mappings} ) {
-      my $cname = $map->{'cname'};
-      my $ttl   = $map->{'ttl'};
-      $federation_id = $self->add_federation( $cname, $ttl );
+      my $cname       = $map->{'cname'};
+      my $ttl         = $map->{'ttl'};
+      my $description = $map->{'description'};
+
+      my ( $is_valid, $result ) = $self->is_valid(
+        {   xml_id => $xml_id,
+          cname  => $cname,
+          ttl    => $ttl
+        }
+      );
+      if ( !defined $is_valid ) {
+        return $self->alert($result);
+      }
+
+      $federation_id
+        = $self->add_federation( $cname, $ttl, $description );
+      $self->add_federation_tmuser( $user, $federation_id );
 
       my $resolve4 = $map->{'resolve4'};
       if ( defined $resolve4 ) {
@@ -162,7 +203,7 @@ sub add {
     $self->add_federation_deliveryservice( $federation_id, $xml_id );
   }
 
-  $self->success( {} );
+  $self->success("Successfully created federations");
 }
 
 sub find_tmuser {
@@ -178,15 +219,49 @@ sub find_tmuser {
   return $tm_user;
 }
 
+sub add_federation_tmuser {
+  my $self          = shift;
+  my $tm_user       = shift;
+  my $federation_id = shift;
+
+  $self->db->resultset('FederationTmuser')->find_or_create(
+    {   federation => $federation_id,
+      tm_user    => $tm_user->id,
+      role       => $tm_user->role,
+    }
+  );
+}
+
+sub is_valid {
+  my $self       = shift;
+  my $federation = shift;
+
+  my $rules = {
+    fields => [qw/xml_id cname ttl/],
+
+    checks => [ [qw/xml_id cname ttl/] => is_required("is required"), ]
+  };
+
+  my $result = validate( $federation, $rules );
+  if ( $result->{success} ) {
+    return ( 1, $result->{data} );
+  }
+  else {
+    return ( 0, $result->{error} );
+  }
+}
+
 sub add_federation {
-  my $self  = shift;
-  my $cname = shift;
-  my $ttl   = shift;
+  my $self        = shift;
+  my $cname       = shift;
+  my $ttl         = shift;
+  my $description = shift;
   my $federation_id;
 
   my $federation = $self->db->resultset('Federation')->find_or_create(
-    {   cname => $cname,
-      ttl   => $ttl
+    {   cname       => $cname,
+      ttl         => $ttl,
+      description => $description
     }
   );
   if ( defined $federation ) {

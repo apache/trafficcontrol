@@ -14,8 +14,6 @@
 # limitations under the License.
 #
 
-requires  'Net::CIDR';
-
 requires 'perl', '5.10.1';
 requires 'Algorithm::C3';
 requires 'B::Hooks::EndOfScope';
@@ -276,3 +274,4 @@ requires 'Crypt::OpenSSL::Bignum';
 requires 'Crypt::OpenSSL::Random';
 requires 'Net::DNS::SEC::Private';
 requires 'LWP::Protocol::https';
+requires 'Net::CIDR';
