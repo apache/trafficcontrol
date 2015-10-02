@@ -173,7 +173,7 @@ public class Fetcher {
 		if (this == o) return true;
 		if (o == null || getClass() != o.getClass()) return false;
 
-		Fetcher fetcher = (Fetcher) o;
+		final Fetcher fetcher = (Fetcher) o;
 
 		if (timeout != fetcher.timeout) return false;
 		return !(requestProps != null ? !requestProps.equals(fetcher.requestProps) : fetcher.requestProps != null);

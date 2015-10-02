@@ -23,7 +23,7 @@ use Time::Piece;
 use DateTime::Format::ISO8601;
 use constant ONE_DAY_IN_SECONDS          => 86400;
 use constant THREE_DAYS                  => ONE_DAY * 3;
-use constant SECONDS_IN_CAPTURE_INTERVAL => 10;
+use constant SECONDS_IN_CAPTURE_INTERVAL => 60;
 
 # constants do not interpolate
 my $delim = ":";

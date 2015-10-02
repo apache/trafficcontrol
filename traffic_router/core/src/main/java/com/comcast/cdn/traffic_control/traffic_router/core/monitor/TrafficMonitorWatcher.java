@@ -41,6 +41,7 @@ import com.comcast.cdn.traffic_control.traffic_router.core.util.AbstractUpdatabl
 import com.comcast.cdn.traffic_control.traffic_router.core.util.PeriodicResourceUpdater;
 import com.comcast.cdn.traffic_control.traffic_router.core.util.ResourceUrl;
 
+@SuppressWarnings("PMD.TooManyFields")
 public class TrafficMonitorWatcher  {
 	private static final Logger LOGGER = Logger.getLogger(TrafficMonitorWatcher.class);
 
@@ -105,6 +106,7 @@ public class TrafficMonitorWatcher  {
 		}
 	}
 
+	@SuppressWarnings("PMD.CyclomaticComplexity")
 	public void init() {
 		LOGGER.info("Start");
 
@@ -254,6 +256,7 @@ public class TrafficMonitorWatcher  {
 		return hosts;
 	}
 
+	@SuppressWarnings("PMD.CyclomaticComplexity")
 	public void processConfig() {
 		final long now = System.currentTimeMillis();
 

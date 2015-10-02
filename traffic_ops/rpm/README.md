@@ -14,16 +14,13 @@ $ vagrant up
 ```
 $ vagrant ssh
 ```
-4. set environment variables to control build: BRANCH, HOTFIX\_BRANCH,
-   WORKSPACE are automatically set to reasonable defaults.  BUILD\_NUMBER is
-   created from the build.number file in the rpm directory and is incremented
-   automatically.
-```
-export BRANCH=master
-export HOTFIX_BRANCH=hotfix
-export WORKSPACE=$HOME/workspace
-export BUILD_NUMBER=100
-```
+4. **OPTIONAL** Set environment variables to control build.  All are
+   automatically set to reasonable defaults (in parentheses) and it is
+   recommended to leave them unset.   They can be overridden if necessary:
+   - *BRANCH* (master)
+   - *HOTFIX\_BRANCH* (none)
+   - *WORKSPACE* (top level of local repo tree -- workspace must be a clone of the repository)
+   - *BUILD\_NUMBER* (# of commits in branch + last commit identifier)
 5. Build the RPM
 ```
 $ cd /vagrant/traffic_control/rpm/build

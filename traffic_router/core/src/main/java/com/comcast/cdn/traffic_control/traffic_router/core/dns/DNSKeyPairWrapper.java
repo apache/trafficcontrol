@@ -109,6 +109,7 @@ public class DNSKeyPairWrapper extends DnsKeyPair {
 	}
 
 	@Override
+	@SuppressWarnings("PMD.OverrideBothEqualsAndHashcode")
 	public boolean equals(final Object obj) {
 		final DNSKeyPairWrapper okp = (DNSKeyPairWrapper) obj;
 
