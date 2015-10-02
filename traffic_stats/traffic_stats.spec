@@ -85,6 +85,7 @@ fi
 %dir /opt/traffic_stats/backup
 %dir /opt/traffic_stats/var
 %dir /opt/traffic_stats/var/log
+%dir /opt/traffic_stats/var/run
 %dir /opt/traffic_stats/var/log/traffic_stats
 
 %attr(600, traffic_stats, traffic_stats) /opt/traffic_stats/conf/*

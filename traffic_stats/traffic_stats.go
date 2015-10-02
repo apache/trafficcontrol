@@ -92,26 +92,7 @@ func main() {
 	Bps = make(map[string]*influx.BatchPoints)
 	config.BpsChan = make(chan influx.BatchPoints)
 
-	if config.PollingInterval == 0 {
-		config.PollingInterval = defaultPollingInterval
-	}
-	if config.DailySummaryPollingInterval == 0 {
-		config.DailySummaryPollingInterval = defaultDailySummaryPollingInterval
-	}
-	if config.PublishingInterval == 0 {
-		config.PublishingInterval = defaultPublishingInterval
-	}
-	if config.ConfigInterval == 0 {
-		config.ConfigInterval = defaultConfigInterval
-	}
-
-	logger, err := log.LoggerFromConfigAsFile(config.SeelogConfig)
 	defer log.Flush()
-	if err != nil {
-		errHndlr(fmt.Errorf("error reading Seelog config %s", config.SeelogConfig), FATAL)
-	}
-	log.Info("Replacing logger, see log file according to", config.SeelogConfig)
-	log.ReplaceLogger(logger)
 
 	if *testSummary {
 		fmt.Println("WARNING: testSummary is on!")
@@ -215,27 +196,24 @@ func loadStartupConfig(configFile string, oldConfig StartupConfig) (StartupConfi
 	config.BpsChan = oldConfig.BpsChan
 
 	if config.PollingInterval == 0 {
-		config.PollingInterval = oldConfig.PollingInterval
+		config.PollingInterval = defaultPollingInterval
 	}
 	if config.DailySummaryPollingInterval == 0 {
-		config.DailySummaryPollingInterval = oldConfig.DailySummaryPollingInterval
+		config.DailySummaryPollingInterval = defaultDailySummaryPollingInterval
 	}
 	if config.PublishingInterval == 0 {
-		config.PublishingInterval = oldConfig.PublishingInterval
+		config.PublishingInterval = defaultPublishingInterval
 	}
 	if config.ConfigInterval == 0 {
-		config.ConfigInterval = oldConfig.ConfigInterval
+		config.ConfigInterval = defaultConfigInterval
 	}
 
-	if config.SeelogConfig != oldConfig.SeelogConfig {
-		logger, err := log.LoggerFromConfigAsFile(config.SeelogConfig)
-		if err != nil {
-			errHndlr(fmt.Errorf("error reading Seelog config %s", config.SeelogConfig), ERROR)
-		} else {
-			log.Info("Replacing logger, see log file according to", config.SeelogConfig)
-			log.Flush()
-			log.ReplaceLogger(logger)
-		}
+	logger, err := log.LoggerFromConfigAsFile(config.SeelogConfig)
+	if err != nil {
+		errHndlr(fmt.Errorf("error reading Seelog config %s", config.SeelogConfig), ERROR)
+	} else {
+		log.Info("Replacing logger, see log file according to", config.SeelogConfig)
+		log.ReplaceLogger(logger)
 	}
 
 	return config, nil
