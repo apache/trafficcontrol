@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/sh
 #
 # Startup script for traffic_stats
 #
@@ -18,91 +18,42 @@
 # Description: Controls all traffic stats processes at once.
 ### END INIT INFO
 
-STATUS_STOPPED=0
-STATUS_RUNNING=1
+set -e
 
-start()
-{
-	status
-	# check status return code
-	if [[ $? -eq $STATUS_STOPPED || "$1" == "force" ]] ; then
-		echo "Starting traffic_stats."
-		ulimit -n 4096
-		/usr/bin/nohup /opt/traffic_stats/bin/traffic_stats --cfg /opt/traffic_stats/conf/traffic_stats.cfg >/opt/traffic_stats/var/log/traffic_stats/traffic_stats.out 2>&1 &
-	fi
+# Must be a valid filename
+NAME=traffic_stats
+PIDFILE=/opt/traffic_stats/var/run/$NAME.pid
+#This is the command to be run, give the full pathname
+DAEMON=/opt/traffic_stats/bin/traffic_stats
+DAEMON_OPTS="--cfg /opt/traffic_stats/conf/traffic_stats.cfg"
 
-	return $?
-}
-
-stop()
-{
-	status
-
-	# check status return code
-	if [[ $? -eq $STATUS_RUNNING || "$1" == "force" ]] ; then
-		echo "Stopping traffic_stats client..."
-		kill `pidof -s traffic_stats`
-
-		status
-
-		if [ $? -eq $STATUS_STOPPED ]; then
-			echo "traffic_stats killed"
-		else
-			echo "unable to identify and kill traffic_stats"
-		fi
-	fi
-
-	return $?
-}
-
-reload()
-{
-	status
-
-	# check status return code
-	if [[ $? -eq $STATUS_RUNNING ]] ; then
-		echo "Reloading traffic_stats client..."
-		kill -HUP `pidof -s traffic_stats`
-	else
-		echo "traffic_stats not running."
-	fi
-
-	return $?
-}
-
-status()
-{
-	pid=`pidof -s traffic_stats`
-
-	if [ -n "$pid" ] ; then
-		echo "traffic_stats (pid $pid) is running..."
-		return $STATUS_RUNNING
-	fi
-
-	echo "traffic_stats is stopped..."
-	return $STATUS_STOPPED
-}
+export PATH="${PATH:+$PATH:}/usr/sbin:/sbin"
 
 case "$1" in
-	start)
-		start
-		;;
-	stop)
-		stop
-		;;
-	reload)
-		reload
-		;;
-	restart)
-		stop "force"
-		start "force"
-		;;
-	status)
-		status
-		;;
-	*)
-		echo "Usage: $0 (start|stop|reload|restart|status)"
-		exit 1
+  start)
+    echo -n "Starting daemon: "$NAME
+    start-stop-daemon --start --quiet -m --pidfile $PIDFILE --exec $DAEMON -- $DAEMON_OPTS
+    echo "."
+    ;;
+  stop)
+    echo -n "Stopping daemon: "$NAME
+    start-stop-daemon --stop --quiet --oknodo --pidfile $PIDFILE
+    echo "."
+    ;;
+  restart)
+    echo -n "Restarting daemon: "$NAME
+    start-stop-daemon --stop --quiet --oknodo --retry 30 --pidfile $PIDFILE
+    start-stop-daemon --start --quiet -m --pidfile $PIDFILE --exec $DAEMON -- $DAEMON_OPTS
+    echo "."
+    ;;
+  reload)
+    echo -n "Reloading configuration: "$NAME
+    start-stop-daemon --stop --signal HUP --quiet --pidfile $PIDFILE
+    echo "."
+    ;;
+  *)
+    echo "Usage: "$1" {start|stop|restart|reload}"
+    exit 1
 esac
 
-exit $?
+exit 0
