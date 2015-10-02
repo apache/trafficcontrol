@@ -417,26 +417,28 @@ sub acompareprofile {
 	my $rs = $self->db->resultset('ProfileParameter')->search( { profile => $pid1 }, { prefetch => [ { parameter => undef }, { profile => undef } ] } );
 	my $params1;
 	while ( my $row = $rs->next ) {
-		$params1->{ $row->parameter->id } = { name => $row->parameter->name, config_file => $row->parameter->config_file, value => $row->parameter->value };
+		$params1->{ $row->parameter->name . ':' . $row->parameter->config_file } = { name => $row->parameter->name, config_file => $row->parameter->config_file, value => $row->parameter->value };
 	}
 
 	$rs = $self->db->resultset('ProfileParameter')->search( { profile => $pid2 }, { prefetch => [ { parameter => undef }, { profile => undef } ] } );
 	my $params2;
 	while ( my $row = $rs->next ) {
-		$params2->{ $row->parameter->id } = { name => $row->parameter->name, config_file => $row->parameter->config_file, value => $row->parameter->value };
+		$params2->{ $row->parameter->name . ':' . $row->parameter->config_file } = { name => $row->parameter->name, config_file => $row->parameter->config_file, value => $row->parameter->value };
 	}
 
-	foreach my $id ( keys %{$params1} ) {
-		if ( !defined( $params2->{$id} ) ) {
-			my @line = [ $params1->{$id}->{name}, $params1->{$id}->{config_file}, $params1->{$id}->{value}, "undef" ];
+	foreach my $key ( keys %{$params1} ) {
+		if ( !defined( $params2->{$key} ) ) {
+			my @line = [ $params1->{$key}->{name}, $params1->{$key}->{config_file}, $params1->{$key}->{value}, "undef" ];
 			push( @{ $data{'aaData'} }, @line );
-		} else {
-			delete $params2->{$id};
+		} elsif ($params1->{$key}->{value} ne $params2->{$key}->{value}) {
+			my @line = [ $params1->{$key}->{name}, $params1->{$key}->{config_file}, $params1->{$key}->{value}, $params2->{$key}->{value} ];
+			push( @{ $data{'aaData'} }, @line );
 		}
+		delete $params2->{$key};
 	}
 
-	foreach my $id ( keys %{$params2} ) {
-		my @line = [ $params2->{$id}->{name}, $params2->{$id}->{config_file}, "undef", $params2->{$id}->{value} ];
+	foreach my $key ( keys %{$params2} ) {
+		my @line = [ $params2->{$key}->{name}, $params2->{$key}->{config_file}, "undef", $params2->{$key}->{value} ];
 		push( @{ $data{'aaData'} }, @line );
 	}
 
