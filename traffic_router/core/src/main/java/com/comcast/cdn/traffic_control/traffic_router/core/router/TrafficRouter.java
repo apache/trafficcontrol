@@ -33,10 +33,12 @@ import java.util.TreeMap;
 import com.comcast.cdn.traffic_control.traffic_router.core.dns.DNSAccessRecord;
 import org.apache.commons.pool.ObjectPool;
 import org.apache.log4j.Logger;
+import org.json.JSONException;
 import org.json.JSONObject;
 import org.xbill.DNS.Name;
 import org.xbill.DNS.Zone;
 
+import com.comcast.cdn.traffic_control.traffic_router.core.TrafficRouterException;
 import com.comcast.cdn.traffic_control.traffic_router.core.cache.Cache;
 import com.comcast.cdn.traffic_control.traffic_router.core.cache.CacheLocation;
 import com.comcast.cdn.traffic_control.traffic_router.core.cache.CacheRegister;
@@ -57,6 +59,7 @@ import com.comcast.cdn.traffic_control.traffic_router.core.request.Request;
 import com.comcast.cdn.traffic_control.traffic_router.core.router.StatTracker.Track;
 import com.comcast.cdn.traffic_control.traffic_router.core.router.StatTracker.Track.ResultType;
 import com.comcast.cdn.traffic_control.traffic_router.core.router.StatTracker.Track.RouteType;
+import com.comcast.cdn.traffic_control.traffic_router.core.util.TrafficOpsUtils;
 import com.comcast.cdn.traffic_control.traffic_router.core.router.StatTracker.Track.ResultDetails;
 
 public class TrafficRouter {
@@ -74,12 +77,13 @@ public class TrafficRouter {
 			final GeolocationService geolocationService, 
 			final GeolocationService geolocationService6, 
 			final ObjectPool hashFunctionPool,
-			final StatTracker statTracker) throws IOException {
+			final StatTracker statTracker,
+			final TrafficOpsUtils trafficOpsUtils) throws IOException, JSONException, TrafficRouterException {
 		this.cacheRegister = cr;
 		this.geolocationService = geolocationService;
 		this.geolocationService6 = geolocationService6;
 		this.hashFunctionPool = hashFunctionPool;
-		this.zoneManager = new ZoneManager(this, statTracker);
+		this.zoneManager = new ZoneManager(this, statTracker, trafficOpsUtils);
 	}
 
 	public ZoneManager getZoneManager() {

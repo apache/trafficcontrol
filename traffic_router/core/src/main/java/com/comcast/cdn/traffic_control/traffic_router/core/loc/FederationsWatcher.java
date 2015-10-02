@@ -1,6 +1,8 @@
 package com.comcast.cdn.traffic_control.traffic_router.core.loc;
 
 import com.comcast.cdn.traffic_control.traffic_router.core.util.ProtectedFetcher;
+import com.comcast.cdn.traffic_control.traffic_router.core.util.TrafficOpsUtils;
+
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.apache.log4j.Logger;
@@ -16,10 +18,8 @@ public class FederationsWatcher extends AbstractServiceUpdater {
     private String postData;
     private long pollingInterval;
     private ProtectedFetcher fetcher;
-    private String username;
-    private String password;
-
     private List<Federation> federations;
+    private TrafficOpsUtils trafficOpsUtils;
 
     public void configure(final URL authorizationURL, final String postData, final URL federationsURL, final long pollingInterval) {
         if (authorizationURL.equals(this.authorizationURL) && postData.equals(this.postData) &&
@@ -27,8 +27,7 @@ public class FederationsWatcher extends AbstractServiceUpdater {
             return;
         }
 
-        dataBaseURL = federationsURL.toString();
-        this.pollingInterval = pollingInterval;
+        setDataBaseURL(federationsURL.toString(), pollingInterval);
 
         // avoid recreating the fetcher if possible
         if (!authorizationURL.equals(this.authorizationURL) || !postData.equals(this.postData)) {
@@ -45,8 +44,8 @@ public class FederationsWatcher extends AbstractServiceUpdater {
         long interval = -1L;
 
         try {
-            authUrl = new URL(config.getString("keystore.auth.url"));
-            jsonData = "{\"u\":\"" + username + "\",\"p\":\"" + password + "\"}";
+            authUrl = new URL(trafficOpsUtils.getAuthUrl());
+            jsonData = trafficOpsUtils.getAuthJSON().toString();
         } catch (Exception e) {
             LOGGER.warn("Failed Getting Configuration for ProtectedFetcher for FederationsWatcher: " + e.getMessage());
             // All or nothing, don't allow the watcher to be halfway misconfigured
@@ -54,7 +53,7 @@ public class FederationsWatcher extends AbstractServiceUpdater {
             jsonData = this.postData;
         }
         try{
-            fedsUrl = new URL(config.getString("federationmapping.polling.url"));
+            fedsUrl = new URL(trafficOpsUtils.getUrl("federationmapping.polling.url"));
         } catch (Exception e) {
             LOGGER.warn("Invalid Federation Polling URL: " + e.getMessage());
         }
@@ -100,6 +99,11 @@ public class FederationsWatcher extends AbstractServiceUpdater {
 
     @Override
     protected File downloadDatabase(final String url, final File existingDb) {
+        if (fetcher == null) {
+            LOGGER.warn("Fetcher has not been initialized; unable download federations until configuration is processed.");
+            return null;
+        }
+
         String jsonData = null;
         try {
             jsonData = fetcher.fetchIfModifiedSince(url, existingDb.lastModified());
@@ -128,11 +132,7 @@ public class FederationsWatcher extends AbstractServiceUpdater {
         return databaseFile;
     }
 
-    public void setPassword(String password) {
-        this.password = password;
-    }
-
-    public void setUsername(String username) {
-        this.username = username;
+    public void setTrafficOpsUtils(final TrafficOpsUtils trafficOpsUtils) {
+        this.trafficOpsUtils = trafficOpsUtils;
     }
 }
