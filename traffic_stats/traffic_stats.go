@@ -212,8 +212,8 @@ func loadStartupConfig(configFile string, oldConfig StartupConfig) (StartupConfi
 	if err != nil {
 		errHndlr(fmt.Errorf("error reading Seelog config %s", config.SeelogConfig), ERROR)
 	} else {
-		log.Info("Replacing logger, see log file according to", config.SeelogConfig)
 		log.ReplaceLogger(logger)
+		log.Info("Replaced logger, see log file according to", config.SeelogConfig)
 	}
 
 	return config, nil
@@ -434,7 +434,7 @@ func getToData(config StartupConfig, init bool, configChan chan RunningConfig) {
 	if err != nil {
 		errHndlr(err, ERROR)
 	} else {
-		lastSummaryTime, err := time.Parse("2006-01-02 15:04:05", lastSummaryTimeStr)
+		lastSummaryTime, err := time.Parse(time.RFC3339, lastSummaryTimeStr)
 		if err != nil {
 			errHndlr(err, ERROR)
 		} else {
