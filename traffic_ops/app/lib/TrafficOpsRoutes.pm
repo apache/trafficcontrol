@@ -174,6 +174,7 @@ sub ui_routes {
 	$r->get('/federation/add')->name('federation_add')->over( authenticated => 1 )->to( 'Federation#add', namespace => $namespace );
 	$r->post('/federation')->name('federation_create')->to( 'Federation#create', namespace => $namespace );
 	$r->post('/federation/:federation_id')->name('federation_update')->to( 'Federation#update', namespace => $namespace );
+	$r->get( "/federation/resolvers" => [ format => [qw(json)] ] )->to( 'Federation#resolvers', namespace => $namespace );
 
 	# -- Gendbdump - Get DB dump
 	$r->get('/dbdump')->over( authenticated => 1 )->to( 'GenDbDump#dbdump', namespace => $namespace );

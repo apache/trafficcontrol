@@ -63,6 +63,11 @@
        </div>
    </div>
 
-   <div id='tree'>      
+   <div class="block" style="width: 90%;padding: 28px;">
+    <fieldset>
+	  <legend>Resolvers</legend>
+	  <div id="resolver_tree" data-url="/federation/resolvers.json?federation_id=<%= $federation_id %>"></div>
+	 </div>
+    </fieldset>
 
 </div>

@@ -84,12 +84,6 @@ sub edit {
 	}
 	$self->app->log->debug( "selected_role_id #-> " . $selected_role_id );
 
-	my $resolvers = $self->db->resultset('FederationResolver')
-		->search( { 'federation_federation_resolvers.federation_resolver' => $fed_id }, { prefetch => 'federation_federation_resolvers' } );
-	while ( my $row = $resolvers->next ) {
-		my $line = [ $row->id ];
-	}
-
 	my $current_username = $self->current_user()->{username};
 	my $dbh              = $self->db->resultset('TmUser')->search( { username => $current_username } );
 	my $tm_user          = $dbh->single;
@@ -108,6 +102,58 @@ sub edit {
 		delivery_services => $delivery_services
 	);
 	return $self->render('federation/edit');
+}
+
+# .json format for the jqTree widge
+sub resolvers {
+	my $self   = shift;
+	my $fed_id = $self->param('federation_id');
+	$self->app->log->debug( "fed_id #-> " . $fed_id );
+
+	my $data;
+	my $fed_fed_resolvers =
+		$self->db->resultset('FederationFederationResolver')->search( { federation => $fed_id }, { prefetch => ['federation_resolver'] } );
+	my $nodes;
+	my $resolvers = $self->group_resolvers($fed_id);
+
+	for my $r ( sort( keys(%$resolvers) ) ) {
+		my $children;
+		my $ip_addresses = $resolvers->{$r};
+		foreach my $ip_addr (@$ip_addresses) {
+			my $resolver_node = { label => $ip_addr };
+			push( @$children, $resolver_node );
+		}
+
+		$nodes = { label => $r, children => $children };
+		push( @$data, $nodes );
+	}
+	return $self->render( json => $data );
+}
+
+#  Groups the cname ip addresses together by resolver type.
+sub group_resolvers {
+	my $self   = shift;
+	my $fed_id = shift;
+
+	my $data;
+	my $fed_fed_resolvers =
+		$self->db->resultset('FederationFederationResolver')->search( { federation => $fed_id }, { prefetch => ['federation_resolver'] } );
+	my $resolvers;
+	while ( my $row = $fed_fed_resolvers->next ) {
+		my $fed_resolver    = $row->federation_resolver;
+		my $fed_resolver_id = $row->federation_resolver->id;
+		my $ip_address      = $row->federation_resolver->ip_address;
+		my $type_name       = lc $row->federation_resolver->type->name;
+
+		if ( defined $resolvers->{$type_name} ) {
+			push( $resolvers->{$type_name}, $ip_address );
+		}
+		else {
+			@{ $resolvers->{$type_name} } = ();
+			push( $resolvers->{$type_name}, $ip_address );
+		}
+	}
+	return $resolvers;
 }
 
 sub get_delivery_services {
