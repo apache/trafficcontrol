@@ -254,6 +254,15 @@ my %definition_for = (
 			use_in_table => 'server',
 		}
 	},
+	ANY_MAP => {
+		new   => 'Type',
+		using => {
+			id           => 33,
+			name         => 'ANY_MAP',
+			description  => 'any_map type',
+			use_in_table => 'deliveryservice',
+		}
+	},
 
 );
 
