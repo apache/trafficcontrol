@@ -31,18 +31,12 @@ sub index {
 	my $rs_data
 		= $self->db->resultset("Profile")
 		->search( undef,
-		{ prefetch => [ { 'cdn' => undef } ], order_by => $orderby } );
+		{ order_by => $orderby } );
 	while ( my $row = $rs_data->next ) {
-		my $cdn_name;
-		if ( defined $row->cdn ) {
-			$cdn_name = $row->cdn->name;
-		}
-
 		push(
 			@data,
 			{   "id"          => $row->id,
 				"name"        => $row->name,
-				"cdnName"     => $cdn_name,
 				"description" => $row->description,
 				"lastUpdated" => $row->last_updated,
 			}

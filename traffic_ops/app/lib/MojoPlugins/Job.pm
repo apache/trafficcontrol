@@ -36,7 +36,7 @@ sub register {
 
 			my $rs =
 				$self->db->resultset('Server')
-				->search( undef, { prefetch => [ { 'cachegroup' => undef }, { 'type' => undef }, { 'profile' => undef }, { 'status' => undef } ], } );
+				->search( undef, { prefetch => [ { 'cdn' => undef}, { 'cachegroup' => undef }, { 'type' => undef }, { 'profile' => undef }, { 'status' => undef } ], } );
 
 			my $m_scheme         = $self->req->url->base->scheme;
 			my $m_host           = $self->req->url->base->host;
@@ -46,10 +46,8 @@ sub register {
 
 			while ( my $row = $rs->next ) {
 				next unless $row->status->name eq 'REPORTED';
-				my $param = $self->db->resultset('Profile')->search( { 'me.id' => $row->profile->id }, { prefetch => 'cdn'} )->single();
 
-				next unless defined($param);
-				my $cdn_name = $param->cdn->name;
+				my $cdn_name = $row->cdn->name;
 				if ( defined( $cdn_domain{$cdn_name} ) ) {
 					next;
 				}
@@ -57,7 +55,7 @@ sub register {
 				my $text = UI::ConfigFiles::regex_revalidate_dot_config( $self, $row->id, "regex_revalidate.config" );
 
 				my $snapshot_rs =
-					$self->db->resultset('Parameter')->search( { name => "snapshot_dir" }, { config_file => "regex_revalidate.config" } )->single;
+					$self->db->resultset('Parameter')->search( { name => "snapshot_dir" }, { config_file => "regex_revalidate.config" } )->single();
 				my $dir = $snapshot_rs->value . $cdn_name;
 				if ( !-d $dir ) {
 					`mkdir -p $dir`;
@@ -75,30 +73,43 @@ sub register {
 
 	$app->renderer->add_helper(
 
-		# set the update bit for all the Caches in the CDN of this delivery service.
+  # set the update bit for all the Caches in the CDN of this delivery service.
 		set_update_server_bits => sub {
 			my $self  = shift;
 			my $ds_id = shift;
 
-			my $cdn_id = $self->db->resultset('Deliveryservice')->search( { 'me.id' => $ds_id } )->get_column('cdn_id')->single();
-			my @cdn_profiles = $self->db->resultset('Profile')->search( { 'cdn_id' => $cdn_id } )->get_column('id')->all();
+			my $cdn_id
+				= $self->db->resultset('Deliveryservice')
+				->search( { 'me.id' => $ds_id } )->get_column('cdn_id')
+				->single();
 
 			my @offstates;
-			my $offline = $self->db->resultset('Status')->search( { 'name' => 'OFFLINE' } )->get_column('id')->single();
+			my $offline
+				= $self->db->resultset('Status')
+				->search( { 'name' => 'OFFLINE' } )->get_column('id')
+				->single();
 			if ($offline) {
 				push( @offstates, $offline );
 			}
-			my $pre_prod = $self->db->resultset('Status')->search( { 'name' => 'PRE_PROD' } )->get_column('id')->single();
+			my $pre_prod
+				= $self->db->resultset('Status')
+				->search( { 'name' => 'PRE_PROD' } )->get_column('id')
+				->single();
 			if ($pre_prod) {
 				push( @offstates, $pre_prod );
 			}
 			$self->app->log->debug( "offline #-> " . Dumper(@offstates) );
-			my $update_server_bit_rs =
-				$self->db->resultset('Server')
-				->search( { -and => [ { status => { 'not in' => \@offstates } }, { profile => { -in => \@cdn_profiles } } ] } );
 
-			my $result = $update_server_bit_rs->update( { upd_pending => 1 } );
-			&log( $self, "Set upd_pending = 1 for all applicable caches", "CODEBIG" );
+			my $update_server_bit_rs = $self->db->resultset('Server')->search(
+				{   'me.cdn_id' => $cdn_id,
+					-and        => { status => { 'not in' => \@offstates } }
+				},
+				{ prefetch => [ 'cdn', 'profile' ] }
+			);
+			my $result
+				= $update_server_bit_rs->update( { upd_pending => 1 } );
+			&log( $self, "Set upd_pending = 1 for all applicable caches",
+				"CODEBIG" );
 		}
 	);
 

@@ -31,14 +31,17 @@ sub cpdss_iframe {
 	if ( $mode eq "view" ) {
 		my $server
 			= $self->db->resultset('Server')
-			->search( { 'me.id' => $srvr_id }, { prefetch => 'cdn' } )
-			->single();
+			->search( { 'me.id' => $srvr_id } )->single();
 
 		my $valid_profiles;
-		my $psas = $self->db->resultset('Profile')
-			->search( { "me.cdn_id" => $server->cdn->id } );
+		my $psas = $self->db->resultset('Server')->search(
+			{ cdn_id => $server->cdn_id },
+			{   select   => 'profile',
+				distinct => 1
+			}
+		)->get_column('profile');
 		while ( my $row = $psas->next ) {
-			$valid_profiles->{ $row->id } = 1;
+			$valid_profiles->{$row} = 1;
 		}
 
 		my $etypeid = &type_id( $self, 'EDGE' );
@@ -88,10 +91,14 @@ sub edit {
 	my $ds = $self->db->resultset('Deliveryservice')
 		->search( { 'me.id' => $id }, { prefetch => 'cdn' } )->single();
 	my $valid_profiles;
-	my $psas = $self->db->resultset('Profile')
-		->search( { cdn_id => $ds->cdn_id } );
+	my $psas = $self->db->resultset('Server')->search(
+		{ cdn_id => $ds->cdn_id },
+		{   select   => 'profile',
+			distinct => 1
+		}
+	)->get_column('profile');
 	while ( my $row = $psas->next ) {
-		$valid_profiles->{ $row->id } = 1;
+		$valid_profiles->{$row} = 1;
 	}
 
 	$ds = $self->db->resultset('Deliveryservice')->search( { id => $id } )
