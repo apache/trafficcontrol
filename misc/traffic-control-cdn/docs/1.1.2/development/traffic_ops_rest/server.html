@@ -1,0 +1,861 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Server &mdash; Traffic Control 1.1.2 documentation </title>
+  
+
+  
+  
+    <link rel="shortcut icon" href="../../_static/favicon.ico"/>
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  
+
+  
+    <link rel="stylesheet" href="../../_static/theme_overrides.css" type="text/css" />
+  
+
+  
+    <link rel="top" title="Traffic Control 1.1.2 documentation" href="../../index.html"/>
+        <link rel="up" title="Traffic Ops" href="../traffic_ops.html"/>
+        <link rel="next" title="Static DNS Entries" href="static_dns.html"/>
+        <link rel="prev" title="Roles" href="role.html"/> 
+
+  
+  <script src="_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-nav-search">
+        
+
+        
+          <a href="/" class="icon icon-home"> Traffic Control
+        
+
+        
+          
+          <img src="../../_static/tc_logo.png" class="logo" />
+        
+        </a>
+
+        
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+        
+      </div>
+
+      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+        
+          
+          
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../basics/index.html">CDN Basics</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../basics/content_delivery_networks.html">Content Delivery Networks</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../basics/http_11.html">HTTP 1.1</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../basics/caching_proxies.html">Caching Proxies</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../basics/cache_revalidation.html">Cache Control Headers and Revalidation</a></li>
+</ul>
+</li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../overview/index.html">Traffic Control Overview</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../overview/introduction.html">Introduction</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../overview/traffic_ops.html">Traffic Ops</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../overview/traffic_router.html">Traffic Router</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../overview/traffic_monitor.html">Traffic Monitor</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../overview/traffic_stats.html">Traffic Stats</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../overview/traffic_portal.html">Traffic Portal</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../overview/traffic_server.html">Traffic Server</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../overview/traffic_vault.html">Traffic Vault</a></li>
+</ul>
+</li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../admin/index.html">Administrator&#8217;s Guide</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../admin/traffic_ops_install.html">Installing Traffic Ops</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../admin/traffic_ops_config.html">Configuring Traffic Ops</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../admin/traffic_ops_using.html">Using Traffic Ops</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../admin/traffic_ops_extensions.html">Managing Traffic Ops Extensions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../admin/traffic_monitor.html">Traffic Monitor Administration</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../admin/traffic_router.html">Traffic Router Administration</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../admin/traffic_stats.html">Traffic Stats Administration</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../admin/traffic_server.html">Traffic Server Administration</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../admin/traffic_vault.html">Traffic Vault Administration</a></li>
+</ul>
+</li>
+</ul>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="../index.html">Developer&#8217;s Guide</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="../traffic_ops.html">Traffic Ops</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../traffic_router.html">Traffic Router</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../traffic_monitor.html">Traffic Monitor</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../traffic_stats.html">Traffic Stats</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../traffic_server.html">Traffic Server</a></li>
+</ul>
+</li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../faq/index.html">FAQ</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../faq/general.html">General</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../faq/development.html">Development</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../faq/administration.html">Running a Traffic Control CDN</a></li>
+</ul>
+</li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../glossary.html">Glossary</a></li>
+</ul>
+
+          
+        
+      </div>
+      &nbsp;
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="../../index.html">Traffic Control</a>
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="../../index.html">Traffic Control 1.1.2</a> &raquo;</li>
+      
+          <li><a href="../index.html">Developer&#8217;s Guide</a> &raquo;</li>
+      
+          <li><a href="../traffic_ops.html">Traffic Ops</a> &raquo;</li>
+      
+    <li>Server</li>
+      <li class="wy-breadcrumbs-aside">
+        
+          <a href="../../_sources/development/traffic_ops_rest/server.txt" rel="nofollow"> View page source</a>
+        
+      </li>
+  </ul>
+  <hr/>
+</div>
+ 		  
+    		  <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      		  
+        		  <a href="static_dns.html" class="btn btn-neutral float-right" title="Static DNS Entries">Next <span class="fa fa-arrow-circle-right"></span></a>
+      		  
+      		  
+        		  <a href="role.html" class="btn btn-neutral" title="Roles"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      		  
+    		  </div>
+  		  
+          <div role="main" class="document">
+            
+  <div class="section" id="server">
+<span id="to-api-server"></span><h1>Server<a class="headerlink" href="#server" title="Permalink to this headline">¶</a></h1>
+<p><strong>GET /api/1.1/servers.json</strong></p>
+<blockquote>
+<div><p>Retrieves properties of CDN servers.</p>
+<p>Authentication Required: Yes</p>
+<p><strong>Response Properties</strong></p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="15%" />
+<col width="6%" />
+<col width="79%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">Parameter</th>
+<th class="head">Type</th>
+<th class="head">Description</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td><code class="docutils literal"><span class="pre">cachegroup</span></code></td>
+<td>string</td>
+<td>The cache group name (see <a class="reference internal" href="cachegroup.html#to-api-cachegroup"><span>Cache Group</span></a>).</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal"><span class="pre">domainName</span></code></td>
+<td>string</td>
+<td>The domain name part of the FQDN of the cache.</td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal"><span class="pre">hostName</span></code></td>
+<td>string</td>
+<td>The host name part of the cache.</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal"><span class="pre">id</span></code></td>
+<td>string</td>
+<td>The server id (database row number).</td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal"><span class="pre">iloIpAddress</span></code></td>
+<td>string</td>
+<td>The IPv4 address of the lights-out-management port.</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal"><span class="pre">iloIpGateway</span></code></td>
+<td>string</td>
+<td>The IPv4 gateway address of the lights-out-management port.</td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal"><span class="pre">iloIpNetmask</span></code></td>
+<td>string</td>
+<td>The IPv4 netmask of the lights-out-management port.</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal"><span class="pre">iloPassword</span></code></td>
+<td>string</td>
+<td>The password of the of the lights-out-management user (displays as <strong>**</strong> unless you are an &#8216;admin&#8217; user).</td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal"><span class="pre">iloUsername</span></code></td>
+<td>string</td>
+<td>The user name for lights-out-management.</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal"><span class="pre">interfaceMtu</span></code></td>
+<td>string</td>
+<td>The Maximum Transmission Unit (MTU) to configure for <code class="docutils literal"><span class="pre">interfaceName</span></code>.</td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal"><span class="pre">interfaceName</span></code></td>
+<td>string</td>
+<td>The network interface name used for serving traffic.</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal"><span class="pre">ip6Address</span></code></td>
+<td>string</td>
+<td>The IPv6 address/netmask for <code class="docutils literal"><span class="pre">interfaceName</span></code>.</td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal"><span class="pre">ip6Gateway</span></code></td>
+<td>string</td>
+<td>The IPv6 gateway for <code class="docutils literal"><span class="pre">interfaceName</span></code>.</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal"><span class="pre">ipAddress</span></code></td>
+<td>string</td>
+<td>The IPv4 address for <code class="docutils literal"><span class="pre">interfaceName</span></code>.</td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal"><span class="pre">ipGateway</span></code></td>
+<td>string</td>
+<td>The IPv4 gateway for <code class="docutils literal"><span class="pre">interfaceName</span></code>.</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal"><span class="pre">ipNetmask</span></code></td>
+<td>string</td>
+<td>The IPv4 netmask for <code class="docutils literal"><span class="pre">interfaceName</span></code>.</td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal"><span class="pre">lastUpdated</span></code></td>
+<td>string</td>
+<td>The Time and Date for the last update for this server.</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal"><span class="pre">mgmtIpAddress</span></code></td>
+<td>string</td>
+<td>The IPv4 address of the management port (optional).</td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal"><span class="pre">mgmtIpGateway</span></code></td>
+<td>string</td>
+<td>The IPv4 gateway of the management port (optional).</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal"><span class="pre">mgmtIpNetmask</span></code></td>
+<td>string</td>
+<td>The IPv4 netmask of the management port (optional).</td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal"><span class="pre">physLocation</span></code></td>
+<td>string</td>
+<td>The physical location name (see <a class="reference internal" href="phys_location.html#to-api-phys-loc"><span>Physical Location</span></a>).</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal"><span class="pre">profile</span></code></td>
+<td>string</td>
+<td>The assigned profile name (see <a class="reference internal" href="profile.html#to-api-profile"><span>Profiles</span></a>).</td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal"><span class="pre">rack</span></code></td>
+<td>string</td>
+<td>A string indicating rack location.</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal"><span class="pre">routerHostName</span></code></td>
+<td>string</td>
+<td>The human readable name of the router.</td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal"><span class="pre">routerPortName</span></code></td>
+<td>string</td>
+<td>The human readable name of the router port.</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal"><span class="pre">status</span></code></td>
+<td>string</td>
+<td>The Status string (See <a class="reference internal" href="status.html#to-api-status"><span>Status</span></a>).</td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal"><span class="pre">tcpPort</span></code></td>
+<td>string</td>
+<td>The default TCP port on which the main application listens (80 for a cache in most cases).</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal"><span class="pre">type</span></code></td>
+<td>string</td>
+<td>The name of the type of this server (see <a class="reference internal" href="type.html#to-api-type"><span>Types</span></a>).</td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal"><span class="pre">xmppId</span></code></td>
+<td>string</td>
+<td>Deprecated.</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal"><span class="pre">xmppPasswd</span></code></td>
+<td>string</td>
+<td>Deprecated.</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Response Example</strong></p>
+<div class="highlight-python"><div class="highlight"><pre>{
+   &quot;response&quot;: [
+       {
+           &quot;cachegroup&quot;: &quot;us-il-chicago&quot;,
+           &quot;domainName&quot;: &quot;chi.kabletown.net&quot;,
+           &quot;hostName&quot;: &quot;atsec-chi-00&quot;,
+           &quot;id&quot;: &quot;19&quot;,
+           &quot;iloIpAddress&quot;: &quot;172.16.2.6&quot;,
+           &quot;iloIpGateway&quot;: &quot;172.16.2.1&quot;,
+           &quot;iloIpNetmask&quot;: &quot;255.255.255.0&quot;,
+           &quot;iloPassword&quot;: &quot;********&quot;,
+           &quot;iloUsername&quot;: &quot;&quot;,
+           &quot;interfaceMtu&quot;: &quot;9000&quot;,
+           &quot;interfaceName&quot;: &quot;bond0&quot;,
+           &quot;ip6Address&quot;: &quot;2033:D0D0:3300::2:2/64&quot;,
+           &quot;ip6Gateway&quot;: &quot;2033:D0D0:3300::2:1&quot;,
+           &quot;ipAddress&quot;: &quot;10.10.2.2&quot;,
+           &quot;ipGateway&quot;: &quot;10.10.2.1&quot;,
+           &quot;ipNetmask&quot;: &quot;255.255.255.0&quot;,
+           &quot;lastUpdated&quot;: &quot;2015-03-08 15:57:32&quot;,
+           &quot;mgmtIpAddress&quot;: &quot;&quot;,
+           &quot;mgmtIpGateway&quot;: &quot;&quot;,
+           &quot;mgmtIpNetmask&quot;: &quot;&quot;,
+           &quot;physLocation&quot;: &quot;plocation-chi-1&quot;,
+           &quot;profile&quot;: &quot;EDGE1_CDN1_421_SSL&quot;,
+           &quot;rack&quot;: &quot;RR 119.02&quot;,
+           &quot;routerHostName&quot;: &quot;rtr-chi.kabletown.net&quot;,
+           &quot;routerPortName&quot;: &quot;2&quot;,
+           &quot;status&quot;: &quot;ONLINE&quot;,
+           &quot;tcpPort&quot;: &quot;80&quot;,
+           &quot;type&quot;: &quot;EDGE&quot;,
+           &quot;xmppId&quot;: &quot;atsec-chi-00-dummyxmpp&quot;,
+           &quot;xmppPasswd&quot;: &quot;**********&quot;
+       },
+       {
+       ... more server data
+       }
+     ]
+   &quot;version&quot;: &quot;1.1&quot;
+ }
+</pre></div>
+</div>
+</div></blockquote>
+<div class="line-block">
+<div class="line"><br /></div>
+</div>
+<p><strong>GET /api/1.1/servers/summary.json</strong></p>
+<blockquote>
+<div><p>Retrieves a count of CDN servers by type.</p>
+<p>Authentication Required: Yes</p>
+<p><strong>Response Properties</strong></p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="13%" />
+<col width="9%" />
+<col width="78%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">Parameter</th>
+<th class="head">Type</th>
+<th class="head">Description</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td><code class="docutils literal"><span class="pre">count</span></code></td>
+<td>int</td>
+<td>The number of servers of this type in this instance of Traffic Ops.</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal"><span class="pre">type</span></code></td>
+<td>string</td>
+<td>The name of the type of the server count (see <a class="reference internal" href="type.html#to-api-type"><span>Types</span></a>).</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Response Example</strong></p>
+<div class="highlight-python"><div class="highlight"><pre>{
+  &quot;response&quot;: [
+    {
+      &quot;count&quot;: 4,
+      &quot;type&quot;: &quot;CCR&quot;
+    },
+    {
+      &quot;count&quot;: 55,
+      &quot;type&quot;: &quot;EDGE&quot;
+    },
+    {
+      &quot;type&quot;: &quot;MID&quot;,
+      &quot;count&quot;: 18
+    },
+    {
+      &quot;count&quot;: 0,
+      &quot;type&quot;: &quot;REDIS&quot;
+    },
+    {
+      &quot;count&quot;: 4,
+      &quot;type&quot;: &quot;RASCAL&quot;
+    }
+  &quot;version&quot;: &quot;1.1&quot;,
+}
+</pre></div>
+</div>
+</div></blockquote>
+<div class="line-block">
+<div class="line"><br /></div>
+</div>
+<p><strong>GET /api/1.1/servers/hostname/:name/details.json</strong></p>
+<blockquote>
+<div><p>Retrieves the details of a server.</p>
+<p>Authentication Required: Yes</p>
+<p><strong>Request Route Parameters</strong></p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="19%" />
+<col width="19%" />
+<col width="63%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">Name</th>
+<th class="head">Required</th>
+<th class="head">Description</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td><code class="docutils literal"><span class="pre">name</span></code></td>
+<td>yes</td>
+<td>The host name part of the cache.</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Response Properties</strong></p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="16%" />
+<col width="6%" />
+<col width="78%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">Parameter</th>
+<th class="head">Type</th>
+<th class="head">Description</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td><code class="docutils literal"><span class="pre">cachegroup</span></code></td>
+<td>string</td>
+<td>The cache group name (see <a class="reference internal" href="cachegroup.html#to-api-cachegroup"><span>Cache Group</span></a>).</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal"><span class="pre">deliveryservices</span></code></td>
+<td>array</td>
+<td>Array of strings with the delivery service ids assigned (see <a class="reference internal" href="deliveryservice.html#to-api-ds"><span>Delivery Service</span></a>).</td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal"><span class="pre">domainName</span></code></td>
+<td>string</td>
+<td>The domain name part of the FQDN of the cache.</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal"><span class="pre">hardwareInfo</span></code></td>
+<td>hash</td>
+<td>Hwinfo struct (see <a class="reference internal" href="hwinfo.html#to-api-hwinfo"><span>hwinfo</span></a>).</td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal"><span class="pre">hostName</span></code></td>
+<td>string</td>
+<td>The host name part of the cache.</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal"><span class="pre">id</span></code></td>
+<td>string</td>
+<td>The server id (database row number).</td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal"><span class="pre">iloIpAddress</span></code></td>
+<td>string</td>
+<td>The IPv4 address of the lights-out-management port.</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal"><span class="pre">iloIpGateway</span></code></td>
+<td>string</td>
+<td>The IPv4 gateway address of the lights-out-management port.</td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal"><span class="pre">iloIpNetmask</span></code></td>
+<td>string</td>
+<td>The IPv4 netmask of the lights-out-management port.</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal"><span class="pre">iloPassword</span></code></td>
+<td>string</td>
+<td>The password of the of the lights-out-management user  (displays as <strong>**</strong> unless you are an &#8216;admin&#8217; user).</td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal"><span class="pre">iloUsername</span></code></td>
+<td>string</td>
+<td>The user name for lights-out-management.</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal"><span class="pre">interfaceMtu</span></code></td>
+<td>string</td>
+<td>The Maximum Transmission Unit (MTU) to configure for <code class="docutils literal"><span class="pre">interfaceName</span></code>.</td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal"><span class="pre">interfaceName</span></code></td>
+<td>string</td>
+<td>The network interface name used for serving traffic.</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal"><span class="pre">ip6Address</span></code></td>
+<td>string</td>
+<td>The IPv6 address/netmask for <code class="docutils literal"><span class="pre">interfaceName</span></code>.</td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal"><span class="pre">ip6Gateway</span></code></td>
+<td>string</td>
+<td>The IPv6 gateway for <code class="docutils literal"><span class="pre">interfaceName</span></code>.</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal"><span class="pre">ipAddress</span></code></td>
+<td>string</td>
+<td>The IPv4 address for <code class="docutils literal"><span class="pre">interfaceName</span></code>.</td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal"><span class="pre">ipGateway</span></code></td>
+<td>string</td>
+<td>The IPv4 gateway for <code class="docutils literal"><span class="pre">interfaceName</span></code>.</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal"><span class="pre">ipNetmask</span></code></td>
+<td>string</td>
+<td>The IPv4 netmask for <code class="docutils literal"><span class="pre">interfaceName</span></code>.</td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal"><span class="pre">lastUpdated</span></code></td>
+<td>string</td>
+<td>The Time/Date of the last update for this server.</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal"><span class="pre">mgmtIpAddress</span></code></td>
+<td>string</td>
+<td>The IPv4 address of the management port (optional).</td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal"><span class="pre">mgmtIpGateway</span></code></td>
+<td>string</td>
+<td>The IPv4 gateway of the management port (optional).</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal"><span class="pre">mgmtIpNetmask</span></code></td>
+<td>string</td>
+<td>The IPv4 netmask of the management port (optional).</td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal"><span class="pre">physLocation</span></code></td>
+<td>string</td>
+<td>The physical location name (see <a class="reference internal" href="phys_location.html#to-api-phys-loc"><span>Physical Location</span></a>).</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal"><span class="pre">profile</span></code></td>
+<td>string</td>
+<td>The assigned profile name (see <a class="reference internal" href="profile.html#to-api-profile"><span>Profiles</span></a>).</td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal"><span class="pre">rack</span></code></td>
+<td>string</td>
+<td>A string indicating rack location.</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal"><span class="pre">routerHostName</span></code></td>
+<td>string</td>
+<td>The human readable name of the router.</td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal"><span class="pre">routerPortName</span></code></td>
+<td>string</td>
+<td>The human readable name of the router port.</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal"><span class="pre">status</span></code></td>
+<td>string</td>
+<td>The Status string (See <a class="reference internal" href="status.html#to-api-status"><span>Status</span></a>).</td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal"><span class="pre">tcpPort</span></code></td>
+<td>string</td>
+<td>The default TCP port on which the main application listens (80 for a cache in most cases).</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal"><span class="pre">type</span></code></td>
+<td>string</td>
+<td>The name of the type of this server (see <a class="reference internal" href="type.html#to-api-type"><span>Types</span></a>).</td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal"><span class="pre">xmppId</span></code></td>
+<td>string</td>
+<td>Deprecated.</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal"><span class="pre">xmppPasswd</span></code></td>
+<td>string</td>
+<td>Deprecated.</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Response Example</strong></p>
+<div class="highlight-python"><div class="highlight"><pre>{
+  &quot;response&quot;: {
+    &quot;cachegroup&quot;: &quot;us-il-chicago&quot;,
+    &quot;deliveryservices&quot;: [
+      &quot;1&quot;,
+      &quot;2&quot;,
+      &quot;3&quot;,
+      &quot;4&quot;
+    ],
+    &quot;domainName&quot;: &quot;chi.kabletown.net&quot;,
+    &quot;hardwareInfo&quot;: {
+      &quot;Physical Disk 0:1:3&quot;: &quot;D1S2&quot;,
+      &quot;Physical Disk 0:1:2&quot;: &quot;D1S2&quot;,
+      &quot;Physical Disk 0:1:15&quot;: &quot;D1S2&quot;,
+      &quot;Power Supply.Slot.2&quot;: &quot;04.07.15&quot;,
+      &quot;Physical Disk 0:1:24&quot;: &quot;YS08&quot;,
+      &quot;Physical Disk 0:1:1&quot;: &quot;D1S2&quot;,
+      &quot;Model&quot;: &quot;PowerEdge R720xd&quot;,
+      &quot;Physical Disk 0:1:22&quot;: &quot;D1S2&quot;,
+      &quot;Physical Disk 0:1:18&quot;: &quot;D1S2&quot;,
+      &quot;Enterprise UEFI Diagnostics&quot;: &quot;4217A5&quot;,
+      &quot;Lifecycle Controller&quot;: &quot;1.0.8.42&quot;,
+      &quot;Physical Disk 0:1:8&quot;: &quot;D1S2&quot;,
+      &quot;Manufacturer&quot;: &quot;Dell Inc.&quot;,
+      &quot;Physical Disk 0:1:6&quot;: &quot;D1S2&quot;,
+      &quot;SysMemTotalSize&quot;: &quot;196608&quot;,
+      &quot;PopulatedDIMMSlots&quot;: &quot;24&quot;,
+      &quot;Physical Disk 0:1:20&quot;: &quot;D1S2&quot;,
+      &quot;Intel(R) Ethernet 10G 2P X520 Adapter&quot;: &quot;13.5.7&quot;,
+      &quot;Physical Disk 0:1:14&quot;: &quot;D1S2&quot;,
+      &quot;BACKPLANE FIRMWARE&quot;: &quot;1.00&quot;,
+      &quot;Dell OS Drivers Pack, 7.0.0.29, A00&quot;: &quot;7.0.0.29&quot;,
+      &quot;Integrated Dell Remote Access Controller&quot;: &quot;1.57.57&quot;,
+      &quot;Physical Disk 0:1:5&quot;: &quot;D1S2&quot;,
+      &quot;ServiceTag&quot;: &quot;D6XPDV1&quot;,
+      &quot;PowerState&quot;: &quot;2&quot;,
+      &quot;Physical Disk 0:1:23&quot;: &quot;D1S2&quot;,
+      &quot;Physical Disk 0:1:25&quot;: &quot;D903&quot;,
+      &quot;BIOS&quot;: &quot;1.3.6&quot;,
+      &quot;Physical Disk 0:1:12&quot;: &quot;D1S2&quot;,
+      &quot;System CPLD&quot;: &quot;1.0.3&quot;,
+      &quot;Physical Disk 0:1:4&quot;: &quot;D1S2&quot;,
+      &quot;Physical Disk 0:1:0&quot;: &quot;D1S2&quot;,
+      &quot;Power Supply.Slot.1&quot;: &quot;04.07.15&quot;,
+      &quot;PERC H710P Mini&quot;: &quot;21.0.2-0001&quot;,
+      &quot;PowerCap&quot;: &quot;689&quot;,
+      &quot;Physical Disk 0:1:16&quot;: &quot;D1S2&quot;,
+      &quot;Physical Disk 0:1:10&quot;: &quot;D1S2&quot;,
+      &quot;Physical Disk 0:1:11&quot;: &quot;D1S2&quot;,
+      &quot;Lifecycle Controller 2&quot;: &quot;1.0.8.42&quot;,
+      &quot;BP12G+EXP 0:1&quot;: &quot;1.07&quot;,
+      &quot;Physical Disk 0:1:9&quot;: &quot;D1S2&quot;,
+      &quot;Physical Disk 0:1:17&quot;: &quot;D1S2&quot;,
+      &quot;Broadcom Gigabit Ethernet BCM5720&quot;: &quot;7.2.20&quot;,
+      &quot;Physical Disk 0:1:21&quot;: &quot;D1S2&quot;,
+      &quot;Physical Disk 0:1:13&quot;: &quot;D1S2&quot;,
+      &quot;Physical Disk 0:1:7&quot;: &quot;D1S2&quot;,
+      &quot;Physical Disk 0:1:19&quot;: &quot;D1S2&quot;
+    },
+    &quot;hostName&quot;: &quot;atsec-chi-00&quot;,
+    &quot;id&quot;: &quot;19&quot;,
+    &quot;iloIpAddress&quot;: &quot;172.16.2.6&quot;,
+    &quot;iloIpGateway&quot;: &quot;172.16.2.1&quot;,
+    &quot;iloIpNetmask&quot;: &quot;255.255.255.0&quot;,
+    &quot;iloPassword&quot;: &quot;********&quot;,
+    &quot;iloUsername&quot;: &quot;&quot;,
+    &quot;interfaceMtu&quot;: &quot;9000&quot;,
+    &quot;interfaceName&quot;: &quot;bond0&quot;,
+    &quot;ip6Address&quot;: &quot;2033:D0D0:3300::2:2/64&quot;,
+    &quot;ip6Gateway&quot;: &quot;2033:D0D0:3300::2:1&quot;,
+    &quot;ipAddress&quot;: &quot;10.10.2.2&quot;,
+    &quot;ipGateway&quot;: &quot;10.10.2.1&quot;,
+    &quot;ipNetmask&quot;: &quot;255.255.255.0&quot;,
+    &quot;mgmtIpAddress&quot;: &quot;&quot;,
+    &quot;mgmtIpGateway&quot;: &quot;&quot;,
+    &quot;mgmtIpNetmask&quot;: &quot;&quot;,
+    &quot;physLocation&quot;: &quot;plocation-chi-1&quot;,
+    &quot;profile&quot;: &quot;EDGE1_CDN1_421_SSL&quot;,
+    &quot;rack&quot;: &quot;RR 119.02&quot;,
+    &quot;routerHostName&quot;: &quot;rtr-chi.kabletown.net&quot;,
+    &quot;routerPortName&quot;: &quot;2&quot;,
+    &quot;status&quot;: &quot;ONLINE&quot;,
+    &quot;tcpPort&quot;: &quot;80&quot;,
+    &quot;type&quot;: &quot;EDGE&quot;,
+    &quot;xmppId&quot;: &quot;atsec-chi-00-dummyxmpp&quot;,
+    &quot;xmppPasswd&quot;: &quot;X&quot;
+
+  }
+  &quot;version&quot;: &quot;1.1&quot;,
+
+}
+</pre></div>
+</div>
+</div></blockquote>
+<div class="line-block">
+<div class="line"><br /></div>
+</div>
+<p><strong>POST /api/1.1/servercheck</strong></p>
+<blockquote>
+<div><p>Post a server check result to the serverchecks table.</p>
+<p>Authentication Required: Yes</p>
+<p><strong>Request Route Parameters</strong></p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="55%" />
+<col width="20%" />
+<col width="25%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">Name</th>
+<th class="head">Required</th>
+<th class="head">Description</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td><code class="docutils literal"><span class="pre">id</span></code></td>
+<td>yes</td>
+<td>&nbsp;</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal"><span class="pre">host_name</span></code></td>
+<td>yes</td>
+<td>&nbsp;</td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal"><span class="pre">servercheck_short_name</span></code></td>
+<td>yes</td>
+<td>&nbsp;</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal"><span class="pre">value</span></code></td>
+<td>yes</td>
+<td>&nbsp;</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Request Example</strong></p>
+<div class="highlight-python"><div class="highlight"><pre><span class="p">{</span>
+ <span class="s">&quot;id&quot;</span><span class="p">:</span> <span class="s">&quot;&quot;</span><span class="p">,</span>
+ <span class="s">&quot;host_name&quot;</span><span class="p">:</span> <span class="s">&quot;&quot;</span><span class="p">,</span>
+ <span class="s">&quot;servercheck_short_name&quot;</span><span class="p">:</span> <span class="s">&quot;&quot;</span><span class="p">,</span>
+ <span class="s">&quot;value&quot;</span><span class="p">:</span> <span class="s">&quot;&quot;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>Response Content Type: application/json</p>
+<p><strong>Response Properties</strong></p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="24%" />
+<col width="15%" />
+<col width="62%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">Parameter</th>
+<th class="head">Type</th>
+<th class="head">Description</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td><code class="docutils literal"><span class="pre">alerts</span></code></td>
+<td>array</td>
+<td>A collection of alert messages.</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal"><span class="pre">&gt;level</span></code></td>
+<td>string</td>
+<td>Success, info, warning or error.</td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal"><span class="pre">&gt;text</span></code></td>
+<td>string</td>
+<td>Alert message.</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal"><span class="pre">version</span></code></td>
+<td>string</td>
+<td>&nbsp;</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Response Example</strong></p>
+<div class="highlight-python"><div class="highlight"><pre>Response Example:
+
+{
+  &quot;alerts&quot;:
+    [
+      {
+        &quot;level&quot;: &quot;success&quot;,
+        &quot;text&quot;: &quot;Server Check was successfully updated.&quot;
+      }
+    ],
+  &quot;version&quot;: &quot;1.1&quot;
+}
+</pre></div>
+</div>
+</div></blockquote>
+</div>
+
+
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="static_dns.html" class="btn btn-neutral float-right" title="Static DNS Entries">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="role.html" class="btn btn-neutral" title="Roles"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../../',
+            VERSION:'1.1.2',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true
+        };
+    </script>
+      <script type="text/javascript" src="../../_static/jquery.js"></script>
+      <script type="text/javascript" src="../../_static/underscore.js"></script>
+      <script type="text/javascript" src="../../_static/doctools.js"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="../../_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

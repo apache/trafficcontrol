@@ -1,0 +1,323 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Traffic Router Administration &mdash; Traffic Control 1.1.2 documentation </title>
+  
+
+  
+  
+    <link rel="shortcut icon" href="../_static/favicon.ico"/>
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  
+
+  
+    <link rel="stylesheet" href="../_static/theme_overrides.css" type="text/css" />
+  
+
+  
+    <link rel="top" title="Traffic Control 1.1.2 documentation" href="../index.html"/>
+        <link rel="up" title="Administrator’s Guide" href="index.html"/>
+        <link rel="next" title="Traffic Stats Administration" href="traffic_stats.html"/>
+        <link rel="prev" title="Traffic Monitor Administration" href="traffic_monitor.html"/> 
+
+  
+  <script src="_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-nav-search">
+        
+
+        
+          <a href="/" class="icon icon-home"> Traffic Control
+        
+
+        
+          
+          <img src="../_static/tc_logo.png" class="logo" />
+        
+        </a>
+
+        
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+        
+      </div>
+
+      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+        
+          
+          
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../basics/index.html">CDN Basics</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../basics/content_delivery_networks.html">Content Delivery Networks</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../basics/http_11.html">HTTP 1.1</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../basics/caching_proxies.html">Caching Proxies</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../basics/cache_revalidation.html">Cache Control Headers and Revalidation</a></li>
+</ul>
+</li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../overview/index.html">Traffic Control Overview</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../overview/introduction.html">Introduction</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../overview/traffic_ops.html">Traffic Ops</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../overview/traffic_router.html">Traffic Router</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../overview/traffic_monitor.html">Traffic Monitor</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../overview/traffic_stats.html">Traffic Stats</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../overview/traffic_portal.html">Traffic Portal</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../overview/traffic_server.html">Traffic Server</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../overview/traffic_vault.html">Traffic Vault</a></li>
+</ul>
+</li>
+</ul>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="index.html">Administrator&#8217;s Guide</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="traffic_ops_install.html">Installing Traffic Ops</a></li>
+<li class="toctree-l2"><a class="reference internal" href="traffic_ops_config.html">Configuring Traffic Ops</a></li>
+<li class="toctree-l2"><a class="reference internal" href="traffic_ops_using.html">Using Traffic Ops</a></li>
+<li class="toctree-l2"><a class="reference internal" href="traffic_ops_extensions.html">Managing Traffic Ops Extensions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="traffic_monitor.html">Traffic Monitor Administration</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="">Traffic Router Administration</a></li>
+<li class="toctree-l2"><a class="reference internal" href="traffic_stats.html">Traffic Stats Administration</a></li>
+<li class="toctree-l2"><a class="reference internal" href="traffic_server.html">Traffic Server Administration</a></li>
+<li class="toctree-l2"><a class="reference internal" href="traffic_vault.html">Traffic Vault Administration</a></li>
+</ul>
+</li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../development/index.html">Developer&#8217;s Guide</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../development/traffic_ops.html">Traffic Ops</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../development/traffic_router.html">Traffic Router</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../development/traffic_monitor.html">Traffic Monitor</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../development/traffic_stats.html">Traffic Stats</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../development/traffic_server.html">Traffic Server</a></li>
+</ul>
+</li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../faq/index.html">FAQ</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../faq/general.html">General</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../faq/development.html">Development</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../faq/administration.html">Running a Traffic Control CDN</a></li>
+</ul>
+</li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../glossary.html">Glossary</a></li>
+</ul>
+
+          
+        
+      </div>
+      &nbsp;
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="../index.html">Traffic Control</a>
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="../index.html">Traffic Control 1.1.2</a> &raquo;</li>
+      
+          <li><a href="index.html">Administrator&#8217;s Guide</a> &raquo;</li>
+      
+    <li>Traffic Router Administration</li>
+      <li class="wy-breadcrumbs-aside">
+        
+          <a href="../_sources/admin/traffic_router.txt" rel="nofollow"> View page source</a>
+        
+      </li>
+  </ul>
+  <hr/>
+</div>
+ 		  
+    		  <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      		  
+        		  <a href="traffic_stats.html" class="btn btn-neutral float-right" title="Traffic Stats Administration">Next <span class="fa fa-arrow-circle-right"></span></a>
+      		  
+      		  
+        		  <a href="traffic_monitor.html" class="btn btn-neutral" title="Traffic Monitor Administration"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      		  
+    		  </div>
+  		  
+          <div role="main" class="document">
+            
+  <div class="section" id="traffic-router-administration">
+<h1>Traffic Router Administration<a class="headerlink" href="#traffic-router-administration" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="installing-traffic-router">
+<h2>Installing Traffic Router<a class="headerlink" href="#installing-traffic-router" title="Permalink to this headline">¶</a></h2>
+<p>The following are requirements to ensure an accurate set up:</p>
+<ul class="simple">
+<li>Successful install of Traffic Ops</li>
+<li>Successful install of Traffic Monitor</li>
+<li>Administrative access to the Traffic Ops</li>
+<li>Physical address of the site</li>
+<li>perl-JSON</li>
+<li>perl-WWW-Curl</li>
+</ul>
+<ol class="arabic simple">
+<li>Enter the Traffic Router server into Traffic Ops.</li>
+<li>Make sure the FQDN of the Traffic Monitor is resolvable in DNS.</li>
+<li>Install a traffic router: <code class="docutils literal"><span class="pre">sudo</span> <span class="pre">yum</span> <span class="pre">install</span> <span class="pre">traffic_router</span></code>.</li>
+<li>Edit <code class="docutils literal"><span class="pre">/opt/traffic_router/conf/traffic_monitor.properties</span></code> and put in the correct online Traffic Monitor(s) for your CDN.</li>
+</ol>
+<blockquote>
+<div><p>Example:</p>
+<div class="highlight-python"><div class="highlight"><pre># list of ips or hostnames delimited by semicolon (;)
+traffic_monitor.bootstrap.hosts=traffic-mon-01.cdn.kabletown.net:80;
+
+# Instead of using the traffic_monitor.bootstrap.hosts property as a bootstrap
+# source before switching to ONLINE Monitors in the TrConfig, always
+# use the hosts listed for TrConfig and TrStates. Defaults to false.
+traffic_monitor.bootstrap.local = false
+
+# traffic_monitor.properties: url that should normally point to this file
+traffic_monitor.properties=file:/opt/traffic_router/conf/traffic_monitor.properties
+
+# Frequency for reloading this file
+# traffic_monitor.properties.reload.period=60000
+</pre></div>
+</div>
+</div></blockquote>
+<ol class="arabic simple" start="5">
+<li>Start Tomcat: <code class="docutils literal"><span class="pre">sudo</span> <span class="pre">service</span> <span class="pre">tomcat</span> <span class="pre">start</span></code>, and test lookups with dig and curl against that server.</li>
+<li>Snapshot CRConfig</li>
+</ol>
+<ul class="simple">
+<li>This instantly associates production traffic on the servers. They need to be online when you change the DNS records.</li>
+</ul>
+<ol class="arabic simple" start="9">
+<li>Add the correct DNS entries to the SOA records for the CDN on which you are working.</li>
+<li>Add the servers to the NS and SOA records for your domain.</li>
+</ol>
+</div>
+<div class="section" id="configuring-traffic-router">
+<h2>Configuring Traffic Router<a class="headerlink" href="#configuring-traffic-router" title="Permalink to this headline">¶</a></h2>
+<ol class="arabic simple">
+<li>From <strong>Misc &gt; Profiles</strong>, verify the following:</li>
+</ol>
+<blockquote>
+<div><ul class="simple">
+<li>The Traffic Router information.</li>
+<li>The profile is set correctly.</li>
+<li>The Status is set to OFFLINE.</li>
+</ul>
+</div></blockquote>
+<ol class="arabic simple" start="2">
+<li>Verify the functionality of the DNS entry for the Traffic Router.</li>
+<li>Click <strong>Tools &gt; Generate ISO</strong>.</li>
+<li>Complete the necessary fields.</li>
+<li>Click <strong>Download ISO</strong>.</li>
+</ol>
+</div>
+<div class="section" id="troubleshooting-and-log-files">
+<h2>Troubleshooting and log files<a class="headerlink" href="#troubleshooting-and-log-files" title="Permalink to this headline">¶</a></h2>
+<p>Traffic Router log files are in <code class="docutils literal"><span class="pre">/opt/traffic_router/var/log/</span></code>, and tomcat log files are in <code class="docutils literal"><span class="pre">/opt/tomcat/logs/</span></code>.</p>
+</div>
+</div>
+
+
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="traffic_stats.html" class="btn btn-neutral float-right" title="Traffic Stats Administration">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="traffic_monitor.html" class="btn btn-neutral" title="Traffic Monitor Administration"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../',
+            VERSION:'1.1.2',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true
+        };
+    </script>
+      <script type="text/javascript" src="../_static/jquery.js"></script>
+      <script type="text/javascript" src="../_static/underscore.js"></script>
+      <script type="text/javascript" src="../_static/doctools.js"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

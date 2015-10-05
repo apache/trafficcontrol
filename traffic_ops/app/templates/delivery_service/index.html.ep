@@ -94,6 +94,7 @@ $("a.fancybox").fancybox({
 			<th>XML ID</th>
 			<th>Origin Server</th>
 			<th></th>
+			<th>CDN</th>
 			<th>Profile</th>
 			<th>CCR TTL</th>
 			<th>Active</th>

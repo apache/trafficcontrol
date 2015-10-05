@@ -29,20 +29,21 @@ sub cpdss_iframe {
 	my $srvr_id = $self->param('id');
 
 	if ( $mode eq "view" ) {
+		my $server
+			= $self->db->resultset('Server')
+			->search( { 'me.id' => $srvr_id }, { prefetch => 'cdn' } )
+			->single();
 
-		my $server = $self->db->resultset('Server')->search( { 'me.id' => $srvr_id }, { prefetch => 'profile' } )->single();
-		my $cdn = $self->db->resultset('Parameter')->search(
-			{ -and => [ 'me.name' => 'CDN_name', 'servers.id' => $srvr_id ] },
-			{ join => { profile_parameters => { profile => { servers => undef } } } }
-		)->single();
 		my $valid_profiles;
-		my $psas = $self->db->resultset('ProfileParameter')->search( { parameter => $cdn->id } );
+		my $psas = $self->db->resultset('Profile')
+			->search( { "me.cdn_id" => $server->cdn->id } );
 		while ( my $row = $psas->next ) {
-			$valid_profiles->{ $row->profile->id } = 1;
+			$valid_profiles->{ $row->id } = 1;
 		}
 
 		my $etypeid = &type_id( $self, 'EDGE' );
-		my $rs = $self->db->resultset('Server')->search( { type => $etypeid }, { prefetch => 'profile', order_by => 'host_name' } );
+		my $rs = $self->db->resultset('Server')->search( { type => $etypeid },
+			{ prefetch => 'profile', order_by => 'host_name' } );
 		my @from_server_list;
 		while ( my $row = $rs->next ) {
 			if ( $row->id == $srvr_id ) {
@@ -78,62 +79,77 @@ sub edit {
 
 	# Get list of server ids associated with ds
 	my $assigned_servers;
-	my $rsas = $self->db->resultset('DeliveryserviceServer')->search( { deliveryservice => $id } );
+	my $rsas = $self->db->resultset('DeliveryserviceServer')
+		->search( { deliveryservice => $id } );
 	while ( my $row = $rsas->next ) {
 		$assigned_servers->{ $row->server->id } = 1;
 	}
 
-	my $cdn = $self->db->resultset('Parameter')->search(
-		{ -and => [ 'me.name' => 'CDN_name', 'deliveryservices.id' => $id ] },
-		{ join => { profile_parameters => { profile => { deliveryservices => undef } } } }
-	)->single();
-
+	my $ds = $self->db->resultset('Deliveryservice')
+		->search( { 'me.id' => $id }, { prefetch => 'cdn' } )->single();
 	my $valid_profiles;
-	my $psas = $self->db->resultset('ProfileParameter')->search( { parameter => $cdn->id } );
+	my $psas = $self->db->resultset('Profile')
+		->search( { cdn_id => $ds->cdn_id } );
 	while ( my $row = $psas->next ) {
-		$valid_profiles->{ $row->profile->id } = 1;
+		$valid_profiles->{ $row->id } = 1;
 	}
 
-	my $ds = $self->db->resultset('Deliveryservice')->search( { id => $id } )->single();
+	$ds = $self->db->resultset('Deliveryservice')->search( { id => $id } )
+		->single();
 
 	my $etypeid = &type_id( $self, 'EDGE', );
 	my $otypeid = &type_id( $self, 'ORG', );
-	my $rs = $self->db->resultset('Server')->search( { -or => [ { 'me.type' => $etypeid }, { 'me.type' => $otypeid }  ] },
-		{ prefetch => [ 'cachegroup', 'type', 'profile', 'status' ], } );
+	my $rs      = $self->db->resultset('Server')->search(
+		{ -or => [ { 'me.type' => $etypeid }, { 'me.type' => $otypeid } ] },
+		{ prefetch => [ 'cachegroup', 'type', 'profile', 'status' ], }
+	);
 	while ( my $row = $rs->next ) {
 
 		# skip profiles that are not associated with the cdn this ds is in
 		if ( !defined( $valid_profiles->{ $row->profile->id } ) ) {
 			next;
 		}
-		if ( !defined( $totals->{ $row->profile->name }->{ $row->cachegroup->name }->{assigned} ) ) {
-			$totals->{ $row->profile->name }->{ $row->cachegroup->name }->{assigned}     = 0;
-			$totals->{ $row->profile->name }->{ $row->cachegroup->name }->{not_assigned} = 0;
+		if (!defined(
+				$totals->{ $row->profile->name }->{ $row->cachegroup->name }
+					->{assigned}
+			)
+			)
+		{
+			$totals->{ $row->profile->name }->{ $row->cachegroup->name }
+				->{assigned} = 0;
+			$totals->{ $row->profile->name }->{ $row->cachegroup->name }
+				->{not_assigned} = 0;
 		}
 		if ( !defined( $totals->{ $row->profile->name }->{assigned} ) ) {
 			$totals->{ $row->profile->name }->{assigned}     = 0;
 			$totals->{ $row->profile->name }->{not_assigned} = 0;
 		}
-		$dss_data->{ $row->profile->name }->{ $row->cachegroup->name }->{ $row->host_name }->{id} = $row->id;
+		$dss_data->{ $row->profile->name }->{ $row->cachegroup->name }
+			->{ $row->host_name }->{id} = $row->id;
 		if ( defined( $assigned_servers->{ $row->id } ) ) {
-			$dss_data->{ $row->profile->name }->{ $row->cachegroup->name }->{ $row->host_name }->{assigned} = 1;
-			$totals->{ $row->profile->name }->{ $row->cachegroup->name }->{assigned}++;
+			$dss_data->{ $row->profile->name }->{ $row->cachegroup->name }
+				->{ $row->host_name }->{assigned} = 1;
+			$totals->{ $row->profile->name }->{ $row->cachegroup->name }
+				->{assigned}++;
 			$totals->{ $row->profile->name }->{assigned}++;
 		}
 		else {
-			$dss_data->{ $row->profile->name }->{ $row->cachegroup->name }->{ $row->host_name }->{assigned} = 0;
-			$totals->{ $row->profile->name }->{ $row->cachegroup->name }->{not_assigned}++;
+			$dss_data->{ $row->profile->name }->{ $row->cachegroup->name }
+				->{ $row->host_name }->{assigned} = 0;
+			$totals->{ $row->profile->name }->{ $row->cachegroup->name }
+				->{not_assigned}++;
 			$totals->{ $row->profile->name }->{not_assigned}++;
 		}
 	}
 
 	$self->stash( ds_id            => $id );
 	$self->stash( assigned_servers => $dss_data );
-	$self->stash( ds_name          => $ds->xml_id . ' (' . $ds->org_server_fqdn . ')' );
-	$self->stash( fbox_layout      => 1 );
-	$self->stash( dss_data         => $dss_data );
-	$self->stash( totals           => $totals );
-	$self->stash( cdn_name         => $cdn->name );
+	$self->stash(
+		ds_name => $ds->xml_id . ' (' . $ds->org_server_fqdn . ')' );
+	$self->stash( fbox_layout => 1 );
+	$self->stash( dss_data    => $dss_data );
+	$self->stash( totals      => $totals );
+	$self->stash( cdn_name    => $ds->cdn->name );
 }
 
 # Read
@@ -144,11 +160,12 @@ sub read {
 	my $limit   = 10;
 	$orderby = $self->param('orderby') if ( defined $self->param('orderby') );
 	$limit   = $self->param('limit')   if ( defined $self->param('limit') );
-	my $rs_data = $self->db->resultset("DeliveryserviceServer")->search( undef, { order_by => $orderby, rows => $limit } );
+	my $rs_data = $self->db->resultset("DeliveryserviceServer")
+		->search( undef, { order_by => $orderby, rows => $limit } );
 	while ( my $row = $rs_data->next ) {
 		push(
-			@data, {
-				"deliveryservice" => $row->deliveryservice->xml_id,
+			@data,
+			{   "deliveryservice" => $row->deliveryservice->xml_id,
 				"server"          => $row->server->id,
 				"last_updated"    => $row->last_updated,
 			}
@@ -169,10 +186,14 @@ sub clone_server {
 	# 	print $param . " -> " . $self->param($param) . "\n";
 	# }
 
-	my @dslist = $self->db->resultset('DeliveryserviceServer')->search( { server => $from_server } )->get_column('deliveryservice')->all();
+	my @dslist
+		= $self->db->resultset('DeliveryserviceServer')
+		->search( { server => $from_server } )->get_column('deliveryservice')
+		->all();
 
 	# clean up
-	my $delete = $self->db->resultset('DeliveryserviceServer')->search( { server => $to_server } );
+	my $delete = $self->db->resultset('DeliveryserviceServer')
+		->search( { server => $to_server } );
 	$delete->delete();
 
 	my $numlinks = 0;
@@ -180,22 +201,35 @@ sub clone_server {
 
 		# print ">>> " . $ds . "\n";
 		my $insert = $self->db->resultset('DeliveryserviceServer')->create(
-			{
-				deliveryservice => $ds,
+			{   deliveryservice => $ds,
 				server          => $to_server,
 			}
 		);
 		$insert->insert();
 		$numlinks++;
 
-		my $ds = $self->db->resultset('Deliveryservice')->search( { id => $ds } )->single();
-		&UI::DeliveryService::header_rewrite( $self, $ds->id, $ds->profile, $ds->xml_id, $ds->edge_header_rewrite, "edge" );
+		my $ds = $self->db->resultset('Deliveryservice')
+			->search( { id => $ds } )->single();
+		&UI::DeliveryService::header_rewrite( $self, $ds->id, $ds->profile,
+			$ds->xml_id, $ds->edge_header_rewrite, "edge" );
 
 	}
 
-	my $from_name = $self->db->resultset('Server')->search( { id => $from_server } )->get_column('host_name')->single();
-	my $to_name   = $self->db->resultset('Server')->search( { id => $to_server } )->get_column('host_name')->single();
-	&log( $self, "Clone deliveryservice links from " . $from_name . " to " . $to_name . " (" . $numlinks . " links cloned)", "UICHANGE" );
+	my $from_name
+		= $self->db->resultset('Server')->search( { id => $from_server } )
+		->get_column('host_name')->single();
+	my $to_name
+		= $self->db->resultset('Server')->search( { id => $to_server } )
+		->get_column('host_name')->single();
+	&log(
+		$self,
+		"Clone deliveryservice links from "
+			. $from_name . " to "
+			. $to_name . " ("
+			. $numlinks
+			. " links cloned)",
+		"UICHANGE"
+	);
 
 	$self->flash( alertmsg => "Success!" );
 	return $self->redirect_to('/close_fancybox.html');
@@ -211,21 +245,23 @@ sub assign_servers {
 
 	my @server_ids;
 	foreach my $param ( $self->param ) {
-		next if ( $param eq 'id' || $self->param($param) ne 'on' );    # we only get the 'on', but still.
+		next
+			if ( $param eq 'id' || $self->param($param) ne 'on' )
+			;    # we only get the 'on', but still.
 		my ( $rubbish, $srvr_id ) = split( /_/, $param );
 		push( @server_ids, $srvr_id );
 	}
 
 	# clean up
-	my $delete = $self->db->resultset('DeliveryserviceServer')->search( { deliveryservice => $dsid } );
+	my $delete = $self->db->resultset('DeliveryserviceServer')
+		->search( { deliveryservice => $dsid } );
 	$delete->delete();
 
 	# and associate what was checked
 	my $numlinks = 0;
 	foreach my $s_id (@server_ids) {
 		my $insert = $self->db->resultset('DeliveryserviceServer')->create(
-			{
-				deliveryservice => $dsid,
+			{   deliveryservice => $dsid,
 				server          => $s_id,
 			}
 		);
@@ -233,10 +269,20 @@ sub assign_servers {
 		$numlinks++;
 	}
 
-	my $ds = $self->db->resultset('Deliveryservice')->search( { id => $dsid } )->single();
-	&UI::DeliveryService::header_rewrite( $self, $ds->id, $ds->profile, $ds->xml_id, $ds->edge_header_rewrite, "edge" );
+	my $ds
+		= $self->db->resultset('Deliveryservice')->search( { id => $dsid } )
+		->single();
+	&UI::DeliveryService::header_rewrite( $self, $ds->id, $ds->profile,
+		$ds->xml_id, $ds->edge_header_rewrite, "edge" );
 
-	&log( $self, "Link deliveryservice " . $ds->xml_id . " to " . $numlinks . " servers", "UICHANGE" );
+	&log(
+		$self,
+		"Link deliveryservice "
+			. $ds->xml_id . " to "
+			. $numlinks
+			. " servers",
+		"UICHANGE"
+	);
 
 	$self->flash( alertmsg => "Success!" );
 	my $referer = $self->req->headers->header('referer');
@@ -253,15 +299,29 @@ sub create {
 		$self->flash( alertmsg => "No can do. Get more privs." );
 	}
 	else {
-		my $server_name = $self->db->resultset('Server')->search( { id => $server } )->get_column('host_name')->single();
-		my $insert = $self->db->resultset('DeliveryserviceServer')->create( { server => $server, deliveryservice => $deliveryservice } )->insert();
+		my $server_name
+			= $self->db->resultset('Server')->search( { id => $server } )
+			->get_column('host_name')->single();
+		my $insert
+			= $self->db->resultset('DeliveryserviceServer')
+			->create(
+			{ server => $server, deliveryservice => $deliveryservice } )
+			->insert();
 		$new_id = $insert->id;
 
-		my $ds = $self->db->resultset('Deliveryservice')->search( { id => $deliveryservice } )->single();
-		&UI::DeliveryService::header_rewrite( $self, $ds->id, $ds->profile, $ds->xml_id, $ds->edge_header_rewrite, "edge" ); 
+		my $ds = $self->db->resultset('Deliveryservice')
+			->search( { id => $deliveryservice } )->single();
+		&UI::DeliveryService::header_rewrite( $self, $ds->id, $ds->profile,
+			$ds->xml_id, $ds->edge_header_rewrite, "edge" );
 
 		$self->flash( alertmsg => 'Success!' );
-		&log( $self, "Create deliveryservice server link " . $ds->xml_id . " <-> " . $server_name, "UICHANGE" );
+		&log(
+			$self,
+			"Create deliveryservice server link "
+				. $ds->xml_id . " <-> "
+				. $server_name,
+			"UICHANGE"
+		);
 	}
 	if ( $new_id == -1 ) {
 		my $referer = $self->req->headers->header('referer');
@@ -269,7 +329,8 @@ sub create {
 			return $self->redirect_to($referer);
 		}
 		else {
-			return $self->render( text => "ERR = ", layout => undef );    # for testing - $referer is not defined there.
+			return $self->render( text => "ERR = ", layout => undef )
+				;    # for testing - $referer is not defined there.
 		}
 	}
 	return $self->redirect_to('/deliveryservices');

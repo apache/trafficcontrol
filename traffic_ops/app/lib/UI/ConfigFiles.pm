@@ -301,7 +301,6 @@ sub param_data {
 	my $self     = shift;
 	my $server   = shift;
 	my $filename = shift;
-
 	my $data;
 
 	my $rs = $self->db->resultset('ProfileParameter')->search( { -and => [ profile => $server->profile->id, 'parameter.config_file' => $filename ] },
@@ -351,15 +350,20 @@ sub parent_data {
 		{ prefetch => [ { parameter => undef }, { profile => undef } ] } )->single();
 	my $server_domain = $param->parameter->value;
 
+	my $condition->{"status"} = { -in => [ $online, $reported ] };
+	if (@parent_cachegroup_ids) {
+		$condition->{"cachegroup"} = { -in => \@parent_cachegroup_ids };
+	}
+
 	my $rs_parent =
-		$self->db->resultset('Server')->search( { cachegroup => { -in => \@parent_cachegroup_ids }, status => { -in => [ $online, $reported ] } },
+		$self->db->resultset('Server')->search( { %$condition },
 		{ prefetch => [ 'cachegroup', 'status', 'type', 'profile' ] } );
 
 	my %profile_cache    = ();
 	my $deliveryservices = undef;
 	while ( my $row = $rs_parent->next ) {
 
-		next unless ( $row->type->name eq 'ORG' || $row->type->name eq 'EDGE' ||$row->type->name eq 'MID' );
+		next unless ( $row->type->name eq 'ORG' || $row->type->name eq 'EDGE' || $row->type->name eq 'MID' );
 		if ( $row->type->name eq 'ORG' ) {
 			my $rs_ds = $self->db->resultset('DeliveryserviceServer')->search( { server => $row->id }, { prefetch => ['deliveryservice'] } );
 			while ( my $ds_row = $rs_ds->next ) {
@@ -485,7 +489,9 @@ sub ip_allow_data {
 				|| ( defined( $allow_locs{ $allow_row->cachegroup->id } ) && $allow_locs{ $allow_row->cachegroup->id } == 1 ) )
 			{
 				push( @allowed_netaddrips, NetAddr::IP->new( $allow_row->ip_address, $allow_row->ip_netmask ) );
-				push( @allowed_ipv6_netaddrips, NetAddr::IP->new( $allow_row->ip6_address ) );
+				if ( defined $allow_row->ip6_address ) {
+					push( @allowed_ipv6_netaddrips, NetAddr::IP->new( $allow_row->ip6_address ) );
+				}
 			}
 		}
 
@@ -629,6 +635,7 @@ sub cacheurl_dot_config {
 
 	}
 
+	$text =~ s/\s*__RETURN__\s*/\n/g;
 	return $text;
 }
 
@@ -1197,8 +1204,18 @@ sub drop_qstring_dot_config {
 
 	my $server = $self->server_data($id);
 	my $text   = $self->header_comment( $server->host_name );
-	$text .= "/([^?]+) \$s://\$t/\$1\n";
 
+	$server = &server_data( $self, $id );
+	my $drop_qstring =
+		$self->db->resultset('ProfileParameter')
+		->search( { -and => [ profile => $server->profile->id, 'parameter.name' => 'content', 'parameter.config_file' => 'drop_qstring.config' ] },
+		{ prefetch => [ 'parameter', 'profile' ] } )->get_column('parameter.value')->single();
+	if ($drop_qstring) {
+		$text .= $drop_qstring . "\n";
+	}
+	else {
+		$text .= "/([^?]+) \$s://\$t/\$1\n";
+	}
 	return $text;
 }
 
@@ -1243,6 +1260,7 @@ sub regex_remap_dot_config {
 		$text .= $ds->regex_remap . "\n";
 	}
 
+	$text =~ s/\s*__RETURN__\s*/\n/g;
 	return $text;
 }
 

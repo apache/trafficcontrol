@@ -14,6 +14,18 @@ sub execCommand {
 	return $result;
 }
 
+sub randomWord {
+	my $length = shift || 12;
+	my $secret = '';
+	while ( length($secret) < $length ) {
+		my $c = chr( rand(0x7F) );
+		if ( $c =~ /\w/ ) {
+			$secret .= $c;
+		}
+	}
+	return $secret;
+}
+
 sub promptUser {
 	my ( $promptString, $defaultValue, $noEcho ) = @_;
 

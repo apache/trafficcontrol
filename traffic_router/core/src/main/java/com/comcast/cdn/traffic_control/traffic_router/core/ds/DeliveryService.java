@@ -42,8 +42,10 @@ import com.comcast.cdn.traffic_control.traffic_router.core.request.DNSRequest;
 import com.comcast.cdn.traffic_control.traffic_router.core.request.HTTPRequest;
 import com.comcast.cdn.traffic_control.traffic_router.core.router.StatTracker.Track;
 import com.comcast.cdn.traffic_control.traffic_router.core.router.StatTracker.Track.ResultType;
+import com.comcast.cdn.traffic_control.traffic_router.core.router.StatTracker.Track.ResultDetails;
 import com.comcast.cdn.traffic_control.traffic_router.core.util.StringProtector;
 
+@SuppressWarnings("PMD.TooManyFields")
 public class DeliveryService {
 	protected static final Logger LOGGER = Logger.getLogger(DeliveryService.class);
 	private final String id;
@@ -156,17 +158,20 @@ public class DeliveryService {
 	public URL getFailureHttpResponse(final HTTPRequest request, final Track track) throws MalformedURLException {
 		if(bypassDestination == null) {
 			track.setResult(ResultType.MISS);
+			track.setResultDetails(ResultDetails.DS_NO_BYPASS);
 			return null;
 		}
 		track.setResult(ResultType.DS_REDIRECT);
 		final JSONObject httpJo = bypassDestination.optJSONObject("HTTP");
 		if(httpJo == null) {
 			track.setResult(ResultType.MISS);
+			track.setResultDetails(ResultDetails.DS_NO_BYPASS);
 			return null;
 		}
 		final String fqdn = httpJo.optString("fqdn");
 		if(fqdn == null) {
 			track.setResult(ResultType.MISS);
+			track.setResultDetails(ResultDetails.DS_NO_BYPASS);
 			return null;
 		}
 		int port = 80;
@@ -222,12 +227,17 @@ public class DeliveryService {
 	public List<InetRecord> getFailureDnsResponse(final DNSRequest request, final Track track) {
 		if(bypassDestination == null) {
 			track.setResult(ResultType.MISS);
+			track.setResultDetails(ResultDetails.DS_NO_BYPASS);
 			return null;
 		}
 		track.setResult(ResultType.DS_REDIRECT);
+		track.setResultDetails(ResultDetails.DS_BYPASS);
 		return getRedirectInetRecords(bypassDestination.optJSONObject("DNS"));
 	}
+
 	private List<InetRecord> redirectInetRecords = null;
+
+	@SuppressWarnings("PMD.CyclomaticComplexity")
 	private List<InetRecord> getRedirectInetRecords(final JSONObject dns) {
 		if (dns == null) {
 			return null;

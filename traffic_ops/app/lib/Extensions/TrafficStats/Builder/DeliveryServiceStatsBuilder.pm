@@ -56,18 +56,14 @@ sub summary_query {
 	my $self = shift;
 	if ( $self->validate_keys() ) {
 
-		#my $end_date = "'" . $args->{endDate} . "'";
-
 		my $end_date = Extensions::TrafficStats::Builder::BaseBuilder->to_influxdb_date( $args->{endDate} );
 
 		#'summary' section
 		my $query = sprintf(
 			'%s %s %s',
-			"SELECT mean(value), percentile(value, 5), percentile(value, 95), percentile(value, 98), min(value), max(value), count(value) FROM",
-			$args->{metricType}, "WHERE  time >= '$args->{startDate}' AND
-		                                 time <= $end_date AND
-                                         cachegroup = 'total' AND 
-		                                 deliveryservice = '$args->{deliveryServiceName}'"
+			qq[SELECT mean(value), percentile(value, 5), percentile(value, 95), percentile(value, 98), min(value), max(value), count(value)
+                FROM "$args->{dbName}"."monthly"."$args->{metricType}.ds.1min"
+                WHERE time >= '$args->{startDate}' AND time <= $end_date AND cachegroup = 'total' AND deliveryservice = '$args->{deliveryServiceName}']
 		);
 
 		$query = Extensions::TrafficStats::Builder::BaseBuilder->append_clauses( $query, $args );
@@ -80,15 +76,11 @@ sub series_query {
 
 	my $end_date = Extensions::TrafficStats::Builder::BaseBuilder->to_influxdb_date( $args->{endDate} );
 
-	#my $end_date = $args->{endDate};
 	my $query = sprintf(
 		'%s %s %s',
-		"SELECT sum(value)/count(value) FROM",
-		$args->{metricType}, "WHERE cachegroup = 'total' AND
-                                     deliveryservice = '$args->{deliveryServiceName}' AND
-                                     time >='$args->{startDate}' AND 
-                                     time <= $end_date 
-                                     GROUP BY time($args->{interval}), cachegroup"
+		qq[SELECT sum(value)/count(value)
+		    FROM "$args->{dbName}"."monthly"."$args->{metricType}.ds.1min"
+		    WHERE cachegroup = 'total' AND deliveryservice = '$args->{deliveryServiceName}' AND time >='$args->{startDate}' AND time <= $end_date GROUP BY time($args->{interval}), cachegroup]
 	);
 
 	$query = Extensions::TrafficStats::Builder::BaseBuilder->append_clauses( $query, $args );
@@ -98,8 +90,13 @@ sub series_query {
 
 sub usage_overview_tps_query {
 	my $self = shift;
+
 	if ( $self->validate_keys() ) {
-		my $query = "SELECT sum(value)/6 FROM tps_total WHERE cachegroup = 'total' and time > now() - 60s";
+		my $query = qq[
+		    SELECT sum(value)/6
+		    FROM "$args->{dbName}"."monthly"."tps.ds.1min"
+		    WHERE cachegroup = 'total' and time > now() - 60s
+		];
 		return Extensions::TrafficStats::Builder::BaseBuilder->clean_whitespace($query);
 	}
 }

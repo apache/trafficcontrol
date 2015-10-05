@@ -22,14 +22,19 @@ package UI::DeliveryService;
 use UI::Utils;
 use Mojo::Base 'Mojolicious::Controller';
 use Data::Dumper;
+use JSON;
 
 sub index {
 	my $self = shift;
 
-	my $pparam =
-		$self->db->resultset('ProfileParameter')
-		->search( { -and => [ 'parameter.name' => 'deliveryservice_graph_url', 'profile.name' => 'GLOBAL' ] }, { prefetch => [ 'parameter', 'profile' ] } )
-		->single();
+	my $pparam = $self->db->resultset('ProfileParameter')->search(
+		{   -and => [
+				'parameter.name' => 'deliveryservice_graph_url',
+				'profile.name'   => 'GLOBAL'
+			]
+		},
+		{ prefetch => [ 'parameter', 'profile' ] }
+	)->single();
 	my $p1_url = defined($pparam) ? $pparam->parameter->value : undef;
 	$self->stash( graph_url => $p1_url, );
 
@@ -40,15 +45,23 @@ sub edit {
 	my $self = shift;
 	my $id   = $self->param('id');
 
-	my $rs_ds = $self->db->resultset('Deliveryservice')->search( { 'me.id' => $id }, { prefetch => [ { 'type' => undef }, { 'profile' => undef } ] } );
+	my $rs_ds = $self->db->resultset('Deliveryservice')->search(
+		{ 'me.id' => $id },
+		{   prefetch => [ 'cdn', { 'type' => undef }, { 'profile' => undef } ]
+		}
+	);
 	my $data = $rs_ds->single;
 	my $action;
 	my $regexp_set = &get_regexp_set( $self, $id );
 	my $cdn_domain = &get_cdn_domain( $self, $id );
-	my @example_urls = &get_example_urls( $self, $id, $regexp_set, $data, $cdn_domain, $data->protocol );
+	my @example_urls
+		= &get_example_urls( $self, $id, $regexp_set, $data, $cdn_domain,
+		$data->protocol );
 
-	my $server_count = $self->db->resultset('DeliveryserviceServer')->search( { deliveryservice => $id } )->count();
-	my $static_count = $self->db->resultset('Staticdnsentry')->search( { deliveryservice => $id } )->count();
+	my $server_count = $self->db->resultset('DeliveryserviceServer')
+		->search( { deliveryservice => $id } )->count();
+	my $static_count = $self->db->resultset('Staticdnsentry')
+		->search( { deliveryservice => $id } )->count();
 	&stash_role($self);
 	$self->stash(
 		ds           => $data,
@@ -98,7 +111,11 @@ sub get_example_urls {
 					$url = $scheme . '://edge.' . $host . "." . $cdn_domain;
 					push( @example_urls, $url );
 					if ($scheme2) {
-						$url = $scheme2 . '://edge.' . $host . "." . $cdn_domain;
+						$url
+							= $scheme2
+							. '://edge.'
+							. $host . "."
+							. $cdn_domain;
 						push( @example_urls, $url );
 					}
 				}
@@ -121,16 +138,30 @@ sub get_example_urls {
 				$host =~ s/\\//g;
 				$host =~ s/\.\*//g;
 				$host =~ s/\.//g;
-				my $p = defined( $example_urls[ $re->{set_number} ] ) ? $example_urls[ $re->{set_number} ] : "";
+				my $p
+					= defined( $example_urls[ $re->{set_number} ] )
+					? $example_urls[ $re->{set_number} ]
+					: "";
 				if ( $re->{set_number} == 0 ) {
-					$example_urls[ $re->{set_number} ] = $scheme . '://ccr.' . $host . "." . $cdn_domain . $p;
+					$example_urls[ $re->{set_number} ]
+						= $scheme
+						. '://ccr.'
+						. $host . "."
+						. $cdn_domain
+						. $p;
 					if ($scheme2) {
-						$url = $scheme2 . '://ccr.' . $host . "." . $cdn_domain . $p;
+						$url
+							= $scheme2
+							. '://ccr.'
+							. $host . "."
+							. $cdn_domain
+							. $p;
 						push( @example_urls, $url );
 					}
 				}
 				else {
-					$example_urls[ $re->{set_number} ] = $scheme . '://' . $re->{pattern} . $p;
+					$example_urls[ $re->{set_number} ]
+						= $scheme . '://' . $re->{pattern} . $p;
 					if ($scheme2) {
 						$url = $scheme2 . '://' . $re->{pattern} . $p;
 						push( @example_urls, $url );
@@ -154,9 +185,13 @@ sub get_cdn_domain {
 	my $self       = shift;
 	my $id         = shift;
 	my $cdn_domain = $self->db->resultset('Parameter')->search(
-		{ -and => [ 'me.name' => 'domain_name', 'deliveryservices.id' => $id ] },
-		{
-			join     => { profile_parameters => { profile => { deliveryservices => undef } } },
+		{   -and =>
+				[ 'me.name' => 'domain_name', 'deliveryservices.id' => $id ]
+		},
+		{   join => {
+				profile_parameters =>
+					{ profile => { deliveryservices => undef } }
+			},
 			distinct => 1
 		}
 	)->get_column('value')->single();
@@ -167,8 +202,9 @@ sub get_regexp_set {
 	my $self = shift;
 	my $id   = shift;
 	my $regexp_set;
-	my $i = 0;
-	my $rs = $self->db->resultset('RegexesForDeliveryService')->search( {}, { bind => [$id] } );
+	my $i  = 0;
+	my $rs = $self->db->resultset('RegexesForDeliveryService')
+		->search( {}, { bind => [$id] } );
 	while ( my $row = $rs->next ) {
 
 		# my $p = $row->pattern;
@@ -187,23 +223,28 @@ sub read {
 	my @data;
 	my $orderby = "xml_id";
 	$orderby = $self->param('orderby') if ( defined $self->param('orderby') );
-	my $rs_data = $self->db->resultset("Deliveryservice")->search( undef, { prefetch => ['deliveryservice_regexes'], order_by => $orderby } );
+	my $rs_data = $self->db->resultset("Deliveryservice")->search(
+		undef,
+		{   prefetch => [ 'cdn', 'deliveryservice_regexes' ],
+			order_by => 'me.' . $orderby
+		}
+	);
 	while ( my $row = $rs_data->next ) {
 		my $re_rs     = $row->deliveryservice_regexes;
 		my @matchlist = ();
 
 		while ( my $re_row = $re_rs->next ) {
 			push(
-				@matchlist, {
-					type       => $re_row->regex->type->name,
+				@matchlist,
+				{   type       => $re_row->regex->type->name,
 					pattern    => $re_row->regex->pattern,
 					set_number => $re_row->set_number,
 				}
 			);
 		}
 		push(
-			@data, {
-				"xml_id"                 => $row->xml_id,
+			@data,
+			{   "xml_id"                 => $row->xml_id,
 				"display_name"           => $row->display_name,
 				"dscp"                   => $row->dscp,
 				"signed"                 => \$row->signed,
@@ -218,6 +259,7 @@ sub read {
 				"multi_site_origin"      => \$row->multi_site_origin,
 				"ccr_dns_ttl"            => $row->ccr_dns_ttl,
 				"type"                   => $row->type->id,
+				"cdn_name"               => $row->cdn->name,
 				"profile_name"           => $row->profile->name,
 				"profile_description"    => $row->profile->description,
 				"global_max_mbps"        => $row->global_max_mbps,
@@ -257,15 +299,25 @@ sub delete {
 		$self->flash( alertmsg => "No can do. Get more privs." );
 	}
 	else {
-		my @regexp_id_list = $self->db->resultset('DeliveryserviceRegex')->search( { deliveryservice => $id } )->get_column('regex')->all();
+		my @regexp_id_list
+			= $self->db->resultset('DeliveryserviceRegex')
+			->search( { deliveryservice => $id } )->get_column('regex')
+			->all();
 
-		my $dsname = $self->db->resultset('Deliveryservice')->search( { id => $id } )->get_column('xml_id')->single();
-		my $delete = $self->db->resultset('Deliveryservice')->search( { id => $id } );
+		my $dsname = $self->db->resultset('Deliveryservice')
+			->search( { id => $id } )->get_column('xml_id')->single();
+		my $delete = $self->db->resultset('Deliveryservice')
+			->search( { id => $id } );
 		$delete->delete();
 
-		my $delete_re = $self->db->resultset('Regex')->search( { id => { -in => \@regexp_id_list } } );
+		my $delete_re = $self->db->resultset('Regex')
+			->search( { id => { -in => \@regexp_id_list } } );
 		$delete_re->delete();
-		&log( $self, "Delete deliveryservice with id:" . $id . " and name " . $dsname, "UICHANGE" );
+		&log(
+			$self,
+			"Delete deliveryservice with id:" . $id . " and name " . $dsname,
+			"UICHANGE"
+		);
 	}
 	return $self->redirect_to('/close_fancybox.html');
 }
@@ -274,22 +326,31 @@ sub check_deliveryservice_input {
 	my $self = shift;
 
 	if ( $self->param('ds.xml_id') =~ /\s/ ) {
-		$self->field('ds.xml_id')->is_equal( "", "Delivery service xml_id cannot contain whitespace." );
+		$self->field('ds.xml_id')
+			->is_equal( "",
+			"Delivery service xml_id cannot contain whitespace." );
 	}
 
 	# TODO:  what restrictions on display_name?
 
-	if ( defined( $self->param('ds.type') ) && $self->param('ds.type') == &type_id( $self, 'ANY_MAP' ) ) {
-		return $self->valid;    # Anything goes for the ANY_MAP, but ds.type is only set on create
+	if ( defined( $self->param('ds.type') )
+		&& $self->param('ds.type') == &type_id( $self, 'ANY_MAP' ) )
+	{
+		return
+			$self->valid
+			; # Anything goes for the ANY_MAP, but ds.type is only set on create
 	}
 
-	if ( $self->param('ds.qstring_ignore') == 2 && $self->param('ds.regex_remap') ne "" ) {
-		$self->field('ds.regex_remap')->is_equal( "", "Regex Remap can not be used when qstring_ignore is 2" );
+	if (   $self->param('ds.qstring_ignore') == 2
+		&& $self->param('ds.regex_remap') ne "" )
+	{
+		$self->field('ds.regex_remap')
+			->is_equal( "",
+			"Regex Remap can not be used when qstring_ignore is 2" );
 	}
 	my $profile_id = $self->param('ds.profile');
 	my $cdn_domain = $self->db->resultset('Parameter')->search(
-		{
-			'Name'                       => 'domain_name',
+		{   'Name'                       => 'domain_name',
 			'Config_file'                => 'CRConfig.json',
 			'profile_parameters.profile' => $profile_id,
 		},
@@ -300,20 +361,31 @@ sub check_deliveryservice_input {
 	my %dbl_check = ();
 	foreach my $param ( $self->param ) {
 		if ( $param =~ /^re_type_(.*)/ ) {
-			my $check_string = $self->param($param) . "|" . $self->param( 're_order_' . $1 );
+			my $check_string = $self->param($param) . "|"
+				. $self->param( 're_order_' . $1 );
 			if ( defined( $dbl_check{$check_string} ) ) {
-				$self->field('ds.regex')->is_equal( "", "Duplicate type/order combination is not allowed." );
+				$self->field('ds.regex')
+					->is_equal( "",
+					"Duplicate type/order combination is not allowed." );
 			}
 			else {
 				$dbl_check{$check_string} = 1;
 			}
-			if ( !( $self->param($param) eq 'HOST_REGEXP' || $self->param($param) eq 'PATH_REGEXP' || $self->param($param) eq 'HEADER_REGEXP' ) ) {
-				$self->field('ds.regex')->is_equal( "", $self->param($param) . " is not a valid regexp type" );
+			if (!(     $self->param($param) eq 'HOST_REGEXP'
+					|| $self->param($param) eq 'PATH_REGEXP'
+					|| $self->param($param) eq 'HEADER_REGEXP'
+				)
+				)
+			{
+				$self->field('ds.regex')
+					->is_equal( "",
+					$self->param($param) . " is not a valid regexp type" );
 			}
 		}
 		elsif ( $param =~ /^re_re_/ ) {
 			if ( $self->param($param) eq "" ) {
-				$self->field('ds.regex')->is_equal( "", "Regular expression cannot be empty." );
+				$self->field('ds.regex')
+					->is_equal( "", "Regular expression cannot be empty." );
 			}
 			else {
 				my $err .= $self->check_regexp( $self->param($param) );
@@ -325,27 +397,49 @@ sub check_deliveryservice_input {
 			if ( $param =~ /^re_re_(\d+)/ || $param =~ /^re_re_new_(\d+)/ ) {
 				my $order_no = $1;
 				my $type_id = &type_id( $self, 'HOST_REGEXP' );
-				if (   ( defined( $self->param( 're_type_' . $order_no ) ) && $self->param( 're_type_' . $order_no ) eq 'HOST_REGEXP' )
-					|| ( defined( $self->param( 're_type_new_' . $order_no ) ) && $self->param( 're_type_new_' . $order_no ) eq 'HOST_REGEXP' ) )
+				if ((   defined( $self->param( 're_type_' . $order_no ) )
+						&& $self->param( 're_type_' . $order_no ) eq
+						'HOST_REGEXP'
+					)
+					|| ( defined( $self->param( 're_type_new_' . $order_no ) )
+						&& $self->param( 're_type_new_' . $order_no ) eq
+						'HOST_REGEXP' )
+					)
 				{
-					my $new_re =
-						  $self->param( 're_re_' . $order_no )
+					my $new_re
+						= $self->param( 're_re_' . $order_no )
 						? $self->param( 're_re_' . $order_no ) . $cdn_domain
-						: $self->param( 're_re_new_' . $order_no ) . $cdn_domain;
-					my $new_order =
-						defined( $self->param( 're_order_' . $order_no ) )
+						: $self->param( 're_re_new_' . $order_no )
+						. $cdn_domain;
+					my $new_order
+						= defined( $self->param( 're_order_' . $order_no ) )
 						? $self->param( 're_order_' . $order_no )
 						: $self->param( 're_order_new_' . $order_no );
-					my $rs =
-						$self->db->resultset('DeliveryserviceRegex')->search( undef, { prefetch => [ { regex => undef }, { deliveryservice => undef } ] } );
+					my $rs
+						= $self->db->resultset('DeliveryserviceRegex')
+						->search(
+						undef,
+						{   prefetch => [
+								{ regex           => undef },
+								{ deliveryservice => undef }
+							]
+						}
+						);
 					while ( my $row = $rs->next ) {
 						my $existing_re = $row->regex->pattern . $cdn_domain;
-						if ( defined( $self->param('id') ) && $self->param('id') == $row->deliveryservice->id ) {
+						if ( defined( $self->param('id') )
+							&& $self->param('id')
+							== $row->deliveryservice->id )
+						{
 							next;
 						}
 						if ( $existing_re eq $new_re ) {
-							$self->field('ds.regex')
-								->is_equal( "", "There already is a HOST_REGEXP (" . $existing_re . ") that maches " . $new_re . "; No can do." );
+							$self->field('ds.regex')->is_equal( "",
+								      "There already is a HOST_REGEXP ("
+									. $existing_re
+									. ") that maches "
+									. $new_re
+									. "; No can do." );
 							last;
 						}
 					}
@@ -354,94 +448,146 @@ sub check_deliveryservice_input {
 		}
 		elsif ( $param =~ /^re_order_.*(\d+)/ ) {
 			if ( $self->param($param) !~ /^\d+$/ ) {
-				$self->field('ds.regex')->is_equal( "", $self->param($param) . " is not a valid order number." );
+				$self->field('ds.regex')
+					->is_equal( "",
+					$self->param($param) . " is not a valid order number." );
 			}
 		}
 		if ( $self->param($param) eq 'HOST_REGEXP' ) {
 			if ( $param =~ /re_type_(\d+)/ ) {
-				if ( defined( $self->param( 're_order_' . $1 ) ) && $self->param( 're_order_' . $1 ) == 0 ) {
+				if ( defined( $self->param( 're_order_' . $1 ) )
+					&& $self->param( 're_order_' . $1 ) == 0 )
+				{
 					$match_one = 1;
 				}
 			}
 			if ( $param =~ /re_type_new_(\d+)/ ) {
-				if ( defined( $self->param( 're_order_new_' . $1 ) ) && $self->param( 're_order_new_' . $1 ) == 0 ) {
+				if ( defined( $self->param( 're_order_new_' . $1 ) )
+					&& $self->param( 're_order_new_' . $1 ) == 0 )
+				{
 					$match_one = 1;
 				}
 			}
 		}
 	}
 	if ( !$match_one ) {
-		$self->field('ds.regex')->is_equal( "", "A minimum of one host regexp with order 0 is needed per delivery service." );
+		$self->field('ds.regex')->is_equal( "",
+			"A minimum of one host regexp with order 0 is needed per delivery service."
+		);
 	}
 	if ( $self->param('ds.dscp') !~ /^\d+$/ ) {
-		$self->field('ds.dscp')->is_equal( "", $self->param('ds.dscp') . " is not a valid dscp value." );
+		$self->field('ds.dscp')
+			->is_equal( "",
+			$self->param('ds.dscp') . " is not a valid dscp value." );
 	}
 
 	my $org_host_name = $self->param('ds.org_server_fqdn');
-	$self->field('ds.org_server_fqdn')->is_like( qr/^(https?:\/\/)/, "Origin Server Base URL must start with http(s)://" );
+	$self->field('ds.org_server_fqdn')
+		->is_like( qr/^(https?:\/\/)/,
+		"Origin Server Base URL must start with http(s)://" );
 	$org_host_name =~ s!^https?://?!!i;
 	$org_host_name =~ s/:(.*)$//;
 	my $port = defined($1) ? $1 : 80;
 	if ( !&is_hostname($org_host_name) || $port !~ /^[1-9][0-9]*$/ ) {
-		$self->field('ds.org_server_fqdn')
-			->is_equal( "", $org_host_name . " is not a valid org server name (rfc1123) or " . $port . " is not a valid port" );
+		$self->field('ds.org_server_fqdn')->is_equal( "",
+			      $org_host_name
+				. " is not a valid org server name (rfc1123) or "
+				. $port
+				. " is not a valid port" );
 	}
-	if ( $self->param('ds.http_bypass_fqdn') ne "" && !&is_hostname( $self->param('ds.http_bypass_fqdn') ) ) {
-		$self->field('ds.http_bypass_fqdn')
-			->is_equal( "",
-			"Invalid HTTP bypass FQDN " . $self->param('ds.http_bypass_fqdn') . "  : should by FQDN only, not URL. Example: host.overflowcdn.com" );
+	if ( $self->param('ds.http_bypass_fqdn') ne ""
+		&& !&is_hostname( $self->param('ds.http_bypass_fqdn') ) )
+	{
+		$self->field('ds.http_bypass_fqdn')->is_equal( "",
+			      "Invalid HTTP bypass FQDN "
+				. $self->param('ds.http_bypass_fqdn')
+				. "  : should by FQDN only, not URL. Example: host.overflowcdn.com"
+		);
 	}
 	my $dns_bypass_ttl_required;
 	if ( $self->param('ds.dns_bypass_ip') ne "" ) {
 		if ( !&is_ipaddress( $self->param('ds.dns_bypass_ip') ) ) {
-			$self->field('ds.dns_bypass_ip')->is_equal( "", "DNS bypass IP " . $self->param('ds.dns_bypass_ip') . " is not valid IPv4 address." );
+			$self->field('ds.dns_bypass_ip')->is_equal( "",
+				      "DNS bypass IP "
+					. $self->param('ds.dns_bypass_ip')
+					. " is not valid IPv4 address." );
 		}
 		$dns_bypass_ttl_required = 1;
 	}
 	if ( $self->param('ds.dns_bypass_ip6') ne "" ) {
 		if ( !&is_ip6address( $self->param('ds.dns_bypass_ip6') ) ) {
-			$self->field('ds.dns_bypass_ip6')->is_equal( "", "DNS bypass IPv6 IP =" . $self->param('ds.dns_bypass_ip6') . " is not a valid IPv6 address." );
+			$self->field('ds.dns_bypass_ip6')->is_equal( "",
+				      "DNS bypass IPv6 IP ="
+					. $self->param('ds.dns_bypass_ip6')
+					. " is not a valid IPv6 address." );
 		}
 		$dns_bypass_ttl_required = 1;
 	}
-	if ( $self->param('ds.dns_bypass_cname') ne "" && !&is_hostname( $self->param('ds.dns_bypass_cname') ) ) {
-		$self->field('ds.dns_bypass_cname')
+	if ( $self->param('ds.dns_bypass_cname') ne ""
+		&& !&is_hostname( $self->param('ds.dns_bypass_cname') ) )
+	{
+		$self->field('ds.dns_bypass_cname')->is_equal( "",
+			      "Invalid DNS bypass CNAME "
+				. $self->param('ds.dns_bypass_cname')
+				. "  : should by FQDN only, not URL. Example: host.bypass.com"
+		);
+		$dns_bypass_ttl_required = 1;
+	}
+	if ( $dns_bypass_ttl_required
+		&& ( $self->param('ds.dns_bypass_ttl') eq "" ) )
+	{
+		$self->field('ds.dns_bypass_ttl')
 			->is_equal( "",
-			"Invalid DNS bypass CNAME " . $self->param('ds.dns_bypass_cname') . "  : should by FQDN only, not URL. Example: host.bypass.com" );
-		$dns_bypass_ttl_required = 1;
+			"DNS bypass TTL required when specifying DNS bypass IP" );
 	}
-	if ( $dns_bypass_ttl_required && ( $self->param('ds.dns_bypass_ttl') eq "" ) ) {
-		$self->field('ds.dns_bypass_ttl')->is_equal( "", "DNS bypass TTL required when specifying DNS bypass IP" );
+	if ( defined( $self->param('ds.dns_bypass_ttl') )
+		&& $self->param('ds.dns_bypass_ttl') =~ m/[a-zA-Z]/ )
+	{
+		$self->field('ds.dns_bypass_ttl')->is_equal( "",
+			      "DNS bypass TTL "
+				. $self->param('ds.dns_bypass_ttl')
+				. " should be integers only." );
 	}
-	if ( defined( $self->param('ds.dns_bypass_ttl') ) && $self->param('ds.dns_bypass_ttl') =~ m/[a-zA-Z]/ ) {
-		$self->field('ds.dns_bypass_ttl')->is_equal( "", "DNS bypass TTL " . $self->param('ds.dns_bypass_ttl') . " should be integers only." );
-	}
-	if ( defined( $self->param('ds.global_max_mbps') ) && $self->param('ds.global_max_mbps') ne "" && $self->param('ds.global_max_mbps') !~ /^\d+$/ ) {
-		if ( $self->hr_string_to_mbps( $self->param('ds.global_max_mbps') ) < 0 ) {
-			$self->field('ds.global_max_mbps')->is_equal( "", "Invalid global_max_mbps (NaN)." );
+	if (   defined( $self->param('ds.global_max_mbps') )
+		&& $self->param('ds.global_max_mbps') ne ""
+		&& $self->param('ds.global_max_mbps') !~ /^\d+$/ )
+	{
+		if ( $self->hr_string_to_mbps( $self->param('ds.global_max_mbps') )
+			< 0 )
+		{
+			$self->field('ds.global_max_mbps')
+				->is_equal( "", "Invalid global_max_mbps (NaN)." );
 		}
 	}
-	if ( $self->param('ds.global_max_tps') ne "" && $self->param('ds.global_max_tps') !~ /^\d+$/ ) {
-		$self->field('ds.global_max_tps')->is_equal( "", "Invalid global_max_tps (NaN)." );
+	if (   $self->param('ds.global_max_tps') ne ""
+		&& $self->param('ds.global_max_tps') !~ /^\d+$/ )
+	{
+		$self->field('ds.global_max_tps')
+			->is_equal( "", "Invalid global_max_tps (NaN)." );
 	}
 
-	if ( $self->param('ds.type.name') =~ /^DNS/ && defined( $self->param('ds.tr_response_headers') ) && $self->param('ds.tr_response_headers') ne "" ) {
-		$self->field('ds.tr_response_headers')->is_equal( "", "TR Response Headers is only valid for HTTP (302) delivery services" );
+	if (   $self->param('ds.type.name') =~ /^DNS/
+		&& defined( $self->param('ds.tr_response_headers') )
+		&& $self->param('ds.tr_response_headers') ne "" )
+	{
+		$self->field('ds.tr_response_headers')->is_equal( "",
+			"TR Response Headers is only valid for HTTP (302) delivery services"
+		);
 	}
 
-	#TODO:  Fix this to work the right way.
-	# if ( defined( $self->param('ds.edge_header_rewrite') ) ) {
-	# 	if ( $self->param('ds.edge_header_rewrite') ne "" && $self->param('ds.edge_header_rewrite') !~ /^(?:add|rm|set)-header .* \[L\]$/ ) {
-	# 		$self->field('ds.edge_header_rewrite')
-	# 			->is_equal( "",
-	# 			"edge_header_rewrite is a single line that needs to start with [add|rm|set]-header, and end with [L] - see header rewrite docs." );
-	# 	}
-	# }
-	# if ( defined( $self->param('ds.ipv6_routing_enabled') ) ) {
-	# 	if ( $self->param('ds.type.name') =~ /^DNS/ && $self->param('ds.ipv6_routing_enabled') == 0 ) {
-	# 		$self->field('ds.ipv6_routing_enabled')->is_equal( "", "IPv6 Routing cannot be disabled for DNS deliveryservices." );
-	# 	}
-	# }
+#TODO:  Fix this to work the right way.
+# if ( defined( $self->param('ds.edge_header_rewrite') ) ) {
+# 	if ( $self->param('ds.edge_header_rewrite') ne "" && $self->param('ds.edge_header_rewrite') !~ /^(?:add|rm|set)-header .* \[L\]$/ ) {
+# 		$self->field('ds.edge_header_rewrite')
+# 			->is_equal( "",
+# 			"edge_header_rewrite is a single line that needs to start with [add|rm|set]-header, and end with [L] - see header rewrite docs." );
+# 	}
+# }
+# if ( defined( $self->param('ds.ipv6_routing_enabled') ) ) {
+# 	if ( $self->param('ds.type.name') =~ /^DNS/ && $self->param('ds.ipv6_routing_enabled') == 0 ) {
+# 		$self->field('ds.ipv6_routing_enabled')->is_equal( "", "IPv6 Routing cannot be disabled for DNS deliveryservices." );
+# 	}
+# }
 	return $self->valid;
 }
 
@@ -468,15 +614,21 @@ sub header_rewrite {
 		if ( $tier eq "mid" ) {
 			$fname = "hdr_rw_mid_" . $ds_name . ".config";
 		}
-		my $ats_cfg_loc =
-			$self->db->resultset('Parameter')->search( { -and => [ name => 'location', config_file => 'remap.config' ] } )->get_column('value')->single();
+		my $ats_cfg_loc
+			= $self->db->resultset('Parameter')
+			->search(
+			{ -and => [ name => 'location', config_file => 'remap.config' ] }
+			)->get_column('value')->single();
 		$ats_cfg_loc =~ s/\/$//;
 
-		my $param_id = $self->db->resultset('Parameter')->search( { -and => [ name => 'location', config_file => $fname ] } )->get_column('id')->single();
+		my $param_id
+			= $self->db->resultset('Parameter')
+			->search(
+			{ -and => [ name => 'location', config_file => $fname ] } )
+			->get_column('id')->single();
 		if ( !defined($param_id) ) {
 			my $insert = $self->db->resultset('Parameter')->create(
-				{
-					config_file => $fname,
+				{   config_file => $fname,
 					name        => 'location',
 					value       => $ats_cfg_loc
 				}
@@ -485,35 +637,46 @@ sub header_rewrite {
 			$param_id = $insert->id;
 		}
 		my $cdn_name = undef;
-		my @servers = $self->db->resultset('DeliveryserviceServer')->search( { deliveryservice => $ds_id } )->get_column('server')->all();
+		my @servers
+			= $self->db->resultset('DeliveryserviceServer')
+			->search( { deliveryservice => $ds_id } )->get_column('server')
+			->all();
 		if ( $tier eq "mid" ) {
 			my $mtype_id = &type_id( $self, 'MID' );
-			my $param =
-				$self->db->resultset('ProfileParameter')
-				->search( { -and => [ 'parameter.name' => 'CDN_name', 'parameter.name' => 'CDN_name', 'me.profile' => $ds_profile ] },
-				{ prefetch => [ 'parameter', 'profile' ] } )->single();
-			$cdn_name = $param->parameter->value;
-			@servers = $self->db->resultset('Server')->search( { type => $mtype_id } )->get_column('id')->all();
+
+			my $param
+				= $self->db->resultset('Profile')
+				->search( { 'me.id' => $ds_profile }, { prefetch => 'cdn' } )
+				->single();
+			$cdn_name = $param->cdn->name;
+			@servers  = $self->db->resultset('Server')
+				->search( { type => $mtype_id } )->get_column('id')->all();
 		}
-		my @profiles = $self->db->resultset('Server')->search( { id => { -in => \@servers } } )->get_column('profile')->all();
+		my @profiles
+			= $self->db->resultset('Server')
+			->search( { id => { -in => \@servers } } )->get_column('profile')
+			->all();
 		foreach my $profile_id (@profiles) {
-			my $link = $self->db->resultset('ProfileParameter')->search( { profile => $profile_id, parameter => $param_id } )->single();
+			my $link
+				= $self->db->resultset('ProfileParameter')
+				->search( { profile => $profile_id, parameter => $param_id } )
+				->single();
 			if ( !defined($link) ) {
 				if ($cdn_name) {
-					my $p_cdn_param =
-						$self->db->resultset('ProfileParameter')
-						->search( { -and => [ 'parameter.name' => 'CDN_name', 'parameter.name' => 'CDN_name', 'me.profile' => $profile_id ] },
-						{ prefetch => [ 'parameter', 'profile' ] } )->single();
-					if ( $p_cdn_param->parameter->value ne $cdn_name ) {
+					my $p_cdn_param
+						= $self->db->resultset('Profile')
+						->search( { 'me.id' => $profile_id },
+						{ prefetch => 'cdn' } )->single();
+					if ( $p_cdn_param->cdn->name ne $cdn_name ) {
 						next;
 					}
 				}
-				my $insert = $self->db->resultset('ProfileParameter')->create(
-					{
-						profile   => $profile_id,
+				my $insert
+					= $self->db->resultset('ProfileParameter')->create(
+					{   profile   => $profile_id,
 						parameter => $param_id
 					}
-				);
+					);
 			}
 		}
 	}
@@ -523,7 +686,8 @@ sub header_rewrite {
 			$fname = "hdr_rw_mid_" . $ds_name . ".config";
 		}
 
-		&delete_cfg_file( $self, $fname );    # don't change it to $self->delete_header_rewrite(), calling from other pm is wonky
+		&delete_cfg_file( $self, $fname )
+			; # don't change it to $self->delete_header_rewrite(), calling from other pm is wonky
 	}
 }
 
@@ -536,15 +700,21 @@ sub regex_remap {
 
 	if ( defined($regex_remap) && $regex_remap ne "" ) {
 		my $fname = "regex_remap_" . $ds_name . ".config";
-		my $ats_cfg_loc =
-			$self->db->resultset('Parameter')->search( { -and => [ name => 'location', config_file => 'remap.config' ] } )->get_column('value')->single();
+		my $ats_cfg_loc
+			= $self->db->resultset('Parameter')
+			->search(
+			{ -and => [ name => 'location', config_file => 'remap.config' ] }
+			)->get_column('value')->single();
 		$ats_cfg_loc =~ s/\/$//;
 
-		my $param_id = $self->db->resultset('Parameter')->search( { -and => [ name => 'location', config_file => $fname ] } )->get_column('id')->single();
+		my $param_id
+			= $self->db->resultset('Parameter')
+			->search(
+			{ -and => [ name => 'location', config_file => $fname ] } )
+			->get_column('id')->single();
 		if ( !defined($param_id) ) {
 			my $insert = $self->db->resultset('Parameter')->create(
-				{
-					config_file => $fname,
+				{   config_file => $fname,
 					name        => 'location',
 					value       => $ats_cfg_loc
 				}
@@ -552,23 +722,32 @@ sub regex_remap {
 			$insert->insert();
 			$param_id = $insert->id;
 		}
-		my @servers = $self->db->resultset('DeliveryserviceServer')->search( { deliveryservice => $ds_id } )->get_column('server')->all();
-		my @profiles = $self->db->resultset('Server')->search( { id => { -in => \@servers } } )->get_column('profile')->all();
+		my @servers
+			= $self->db->resultset('DeliveryserviceServer')
+			->search( { deliveryservice => $ds_id } )->get_column('server')
+			->all();
+		my @profiles
+			= $self->db->resultset('Server')
+			->search( { id => { -in => \@servers } } )->get_column('profile')
+			->all();
 		foreach my $profile_id (@profiles) {
-			my $link = $self->db->resultset('ProfileParameter')->search( { profile => $profile_id, parameter => $param_id } )->single();
+			my $link
+				= $self->db->resultset('ProfileParameter')
+				->search( { profile => $profile_id, parameter => $param_id } )
+				->single();
 			if ( !defined($link) ) {
-				my $insert = $self->db->resultset('ProfileParameter')->create(
-					{
-						profile   => $profile_id,
+				my $insert
+					= $self->db->resultset('ProfileParameter')->create(
+					{   profile   => $profile_id,
 						parameter => $param_id
 					}
-				);
+					);
 			}
 		}
 	}
 	else {
 		&delete_cfg_file( $self, "regex_remap_" . $ds_name . ".config" )
-			;    # don't change it to $self->delete_header_rewrite(), calling from other pm is wonky
+			; # don't change it to $self->delete_header_rewrite(), calling from other pm is wonky
 	}
 }
 
@@ -582,15 +761,21 @@ sub cacheurl {
 
 	if ( defined($cacheurl) && $cacheurl ne "" ) {
 		my $fname = "cacheurl_" . $ds_name . ".config";
-		my $ats_cfg_loc =
-			$self->db->resultset('Parameter')->search( { -and => [ name => 'location', config_file => 'remap.config' ] } )->get_column('value')->single();
+		my $ats_cfg_loc
+			= $self->db->resultset('Parameter')
+			->search(
+			{ -and => [ name => 'location', config_file => 'remap.config' ] }
+			)->get_column('value')->single();
 		$ats_cfg_loc =~ s/\/$//;
 
-		my $param_id = $self->db->resultset('Parameter')->search( { -and => [ name => 'location', config_file => $fname ] } )->get_column('id')->single();
+		my $param_id
+			= $self->db->resultset('Parameter')
+			->search(
+			{ -and => [ name => 'location', config_file => $fname ] } )
+			->get_column('id')->single();
 		if ( !defined($param_id) ) {
 			my $insert = $self->db->resultset('Parameter')->create(
-				{
-					config_file => $fname,
+				{   config_file => $fname,
 					name        => 'location',
 					value       => $ats_cfg_loc
 				}
@@ -598,22 +783,32 @@ sub cacheurl {
 			$insert->insert();
 			$param_id = $insert->id;
 		}
-		my @servers = $self->db->resultset('DeliveryserviceServer')->search( { deliveryservice => $ds_id } )->get_column('server')->all();
-		my @profiles = $self->db->resultset('Server')->search( { id => { -in => \@servers } } )->get_column('profile')->all();
+		my @servers
+			= $self->db->resultset('DeliveryserviceServer')
+			->search( { deliveryservice => $ds_id } )->get_column('server')
+			->all();
+		my @profiles
+			= $self->db->resultset('Server')
+			->search( { id => { -in => \@servers } } )->get_column('profile')
+			->all();
 		foreach my $profile_id (@profiles) {
-			my $link = $self->db->resultset('ProfileParameter')->search( { profile => $profile_id, parameter => $param_id } )->single();
+			my $link
+				= $self->db->resultset('ProfileParameter')
+				->search( { profile => $profile_id, parameter => $param_id } )
+				->single();
 			if ( !defined($link) ) {
-				my $insert = $self->db->resultset('ProfileParameter')->create(
-					{
-						profile   => $profile_id,
+				my $insert
+					= $self->db->resultset('ProfileParameter')->create(
+					{   profile   => $profile_id,
 						parameter => $param_id
 					}
-				);
+					);
 			}
 		}
 	}
 	else {
-		&delete_cfg_file( $self, "cacheurl_" . $ds_name . ".config" );   # don't change it to $self->delete_header_rewrite(), calling from other pm is wonky
+		&delete_cfg_file( $self, "cacheurl_" . $ds_name . ".config" )
+			; # don't change it to $self->delete_header_rewrite(), calling from other pm is wonky
 	}
 }
 
@@ -621,10 +816,14 @@ sub delete_cfg_file {
 	my $self  = shift;
 	my $fname = shift;
 
-	my $param_id = $self->db->resultset('Parameter')->search( { -and => [ name => 'location', config_file => $fname ] } )->get_column('id')->single();
+	my $param_id
+		= $self->db->resultset('Parameter')
+		->search( { -and => [ name => 'location', config_file => $fname ] } )
+		->get_column('id')->single();
 	if ( defined($param_id) ) {
 		$self->app->log->info( 'deleting location parameter for ' . $fname );
-		my $delete = $self->db->resultset('Parameter')->search( { id => $param_id } );
+		my $delete = $self->db->resultset('Parameter')
+			->search( { id => $param_id } );
 		$delete->delete();
 	}
 }
@@ -642,40 +841,54 @@ sub update {
 	}
 	if ( $self->check_deliveryservice_input() ) {
 
-		#print "global_max_mbps = " . $self->param('ds.global_max_mbps') . "\n";
-		# if error check passes
+	  #print "global_max_mbps = " . $self->param('ds.global_max_mbps') . "\n";
+	  # if error check passes
 		my %hash = (
-			xml_id                 => $self->param('ds.xml_id'),
-			display_name           => $self->param('ds.display_name'),
-			dscp                   => $self->param('ds.dscp'),
-			signed                 => $self->param('ds.signed'),
-			qstring_ignore         => $self->param('ds.qstring_ignore'),
-			geo_limit              => $self->param('ds.geo_limit'),
-			org_server_fqdn        => $self->param('ds.org_server_fqdn'),
-			multi_site_origin      => $self->param('ds.multi_site_origin'),
-			ccr_dns_ttl            => $self->param('ds.ccr_dns_ttl'),
-			type                   => $self->param('ds.type.id'),
-			profile                => $self->param('ds.profile'),
-			global_max_mbps        => $self->param('ds.global_max_mbps') eq "" ? 0 : $self->hr_string_to_mbps( $self->param('ds.global_max_mbps') ),
-			global_max_tps         => $self->param('ds.global_max_tps') eq "" ? 0 : $self->param('ds.global_max_tps'),
-			miss_lat               => $self->param('ds.miss_lat'),
-			miss_long              => $self->param('ds.miss_long'),
-			long_desc              => $self->param('ds.long_desc'),
-			long_desc_1            => $self->param('ds.long_desc_1'),
-			long_desc_2            => $self->param('ds.long_desc_2'),
-			info_url               => $self->param('ds.info_url'),
-			check_path             => $self->param('ds.check_path'),
-			active                 => $self->param('ds.active'),
-			protocol               => $self->param('ds.protocol'),
-			ipv6_routing_enabled   => $self->param('ds.ipv6_routing_enabled'),
-			range_request_handling => $self->param('ds.range_request_handling'),
-			edge_header_rewrite    => $self->param('ds.edge_header_rewrite') eq "" ? undef : $self->param('ds.edge_header_rewrite'),
-			mid_header_rewrite     => $self->param('ds.mid_header_rewrite') eq "" ? undef : $self->param('ds.mid_header_rewrite'),
-			tr_response_headers    => $self->param('ds.tr_response_headers') eq "" ? undef : $self->param('ds.tr_response_headers'),
-			regex_remap   => $self->param('ds.regex_remap')   eq "" ? undef : $self->param('ds.regex_remap'),
-			origin_shield => $self->param('ds.origin_shield') eq "" ? undef : $self->param('ds.origin_shield'),
-			cacheurl      => $self->param('ds.cacheurl')      eq "" ? undef : $self->param('ds.cacheurl'),
-			remap_text    => $self->param('ds.remap_text')    eq "" ? undef : $self->param('ds.remap_text'),
+			xml_id            => $self->param('ds.xml_id'),
+			display_name      => $self->param('ds.display_name'),
+			dscp              => $self->param('ds.dscp'),
+			signed            => $self->param('ds.signed'),
+			qstring_ignore    => $self->param('ds.qstring_ignore'),
+			geo_limit         => $self->param('ds.geo_limit'),
+			org_server_fqdn   => $self->param('ds.org_server_fqdn'),
+			multi_site_origin => $self->param('ds.multi_site_origin'),
+			ccr_dns_ttl       => $self->param('ds.ccr_dns_ttl'),
+			type              => $self->param('ds.type.id'),
+			cdn_id            => $self->param('ds.cdn_id'),
+			profile           => $self->param('ds.profile'),
+			global_max_mbps   => $self->param('ds.global_max_mbps') eq "" ? 0
+			: $self->hr_string_to_mbps(
+				$self->param('ds.global_max_mbps')
+			),
+			global_max_tps => $self->param('ds.global_max_tps') eq "" ? 0
+			: $self->param('ds.global_max_tps'),
+			miss_lat             => $self->param('ds.miss_lat'),
+			miss_long            => $self->param('ds.miss_long'),
+			long_desc            => $self->param('ds.long_desc'),
+			long_desc_1          => $self->param('ds.long_desc_1'),
+			long_desc_2          => $self->param('ds.long_desc_2'),
+			info_url             => $self->param('ds.info_url'),
+			check_path           => $self->param('ds.check_path'),
+			active               => $self->param('ds.active'),
+			protocol             => $self->param('ds.protocol'),
+			ipv6_routing_enabled => $self->param('ds.ipv6_routing_enabled'),
+			range_request_handling =>
+				$self->param('ds.range_request_handling'),
+			edge_header_rewrite => $self->param('ds.edge_header_rewrite') eq
+				"" ? undef : $self->param('ds.edge_header_rewrite'),
+			mid_header_rewrite => $self->param('ds.mid_header_rewrite') eq ""
+			? undef
+			: $self->param('ds.mid_header_rewrite'),
+			tr_response_headers => $self->param('ds.tr_response_headers') eq
+				"" ? undef : $self->param('ds.tr_response_headers'),
+			regex_remap => $self->param('ds.regex_remap') eq "" ? undef
+			: $self->param('ds.regex_remap'),
+			origin_shield => $self->param('ds.origin_shield') eq "" ? undef
+			: $self->param('ds.origin_shield'),
+			cacheurl => $self->param('ds.cacheurl') eq "" ? undef
+			: $self->param('ds.cacheurl'),
+			remap_text => $self->param('ds.remap_text') eq "" ? undef
+			: $self->param('ds.remap_text'),
 			initial_dispersion => $self->param('ds.initial_dispersion'),
 		);
 
@@ -684,22 +897,31 @@ sub update {
 			$hash{dns_bypass_ip6}   = $self->param('ds.dns_bypass_ip6');
 			$hash{dns_bypass_cname} = $self->param('ds.dns_bypass_cname');
 			$hash{max_dns_answers}  = $self->param('ds.max_dns_answers');
-			$hash{dns_bypass_ttl}   = $self->param('ds.dns_bypass_ttl') eq "" ? undef : $self->param('ds.dns_bypass_ttl');
+			$hash{dns_bypass_ttl}
+				= $self->param('ds.dns_bypass_ttl') eq ""
+				? undef
+				: $self->param('ds.dns_bypass_ttl');
 		}
 		else {
 			$hash{http_bypass_fqdn} = $self->param('ds.http_bypass_fqdn');
 		}
 
 		# print Dumper( \%hash );
-		my $update = $self->db->resultset('Deliveryservice')->find( { id => $id } );
+		my $update
+			= $self->db->resultset('Deliveryservice')->find( { id => $id } );
 		$update->update( \%hash );
 		$update->update();
-		&log( $self, "Update deliveryservice with xml_id:" . $self->param('ds.xml_id'), "UICHANGE" );
+		&log(
+			$self,
+			"Update deliveryservice with xml_id:" . $self->param('ds.xml_id'),
+			"UICHANGE"
+		);
 
 		# get the existing regexp set in a hash
 		my $regexp_set;
-		my $i = 0;
-		my $rs = $self->db->resultset('RegexesForDeliveryService')->search( {}, { bind => [$id] } );
+		my $i  = 0;
+		my $rs = $self->db->resultset('RegexesForDeliveryService')
+			->search( {}, { bind => [$id] } );
 		while ( my $row = $rs->next ) {
 			$regexp_set->{ $row->id }->{pattern}    = $row->pattern;
 			$regexp_set->{ $row->id }->{type}       = $row->type;
@@ -716,15 +938,18 @@ sub update {
 				if ( defined( $regexp_set->{$re_id} ) ) {
 					my $regexp = $self->param($re_str);
 
-					my $update = $self->db->resultset('Regex')->find( { id => $re_id } );
+					my $update = $self->db->resultset('Regex')
+						->find( { id => $re_id } );
 					$update->update(
-						{
-							pattern => $regexp,
-							type    => &type_id( $self, $self->param($type_str) ),
+						{   pattern => $regexp,
+							type =>
+								&type_id( $self, $self->param($type_str) ),
 						}
 					);
-					$update = $self->db->resultset('DeliveryserviceRegex')->find( { deliveryservice => $id, regex => $re_id } );
-					$update->update( { set_number => $self->param($set_number_str) } );
+					$update = $self->db->resultset('DeliveryserviceRegex')
+						->find( { deliveryservice => $id, regex => $re_id } );
+					$update->update(
+						{ set_number => $self->param($set_number_str) } );
 					$regexp_set->{$re_id}->{updated} = 1;
 				}
 			}
@@ -734,25 +959,27 @@ sub update {
 				my $type_str       = 're_type_new_' . $1;
 				my $re_str         = 're_re_new_' . $1;
 				my $set_number_str = 're_order_new_' . $1;
-				my $type           = $self->db->resultset('Type')->search( { name => $self->param($type_str) } )->get_column('id')->single();
-				my $regexp         = $self->param($re_str);
+				my $type
+					= $self->db->resultset('Type')
+					->search( { name => $self->param($type_str) } )
+					->get_column('id')->single();
+				my $regexp = $self->param($re_str);
 
 				my $insert = $self->db->resultset('Regex')->create(
-					{
-						pattern => $regexp,
+					{   pattern => $regexp,
 						type    => &type_id( $self, $self->param($type_str) ),
 					}
 				);
 				$insert->insert();
 				my $new_re_id = $insert->id;
 
-				my $de_re_insert = $self->db->resultset('DeliveryserviceRegex')->create(
-					{
-						regex           => $new_re_id,
+				my $de_re_insert
+					= $self->db->resultset('DeliveryserviceRegex')->create(
+					{   regex           => $new_re_id,
 						deliveryservice => $id,
 						set_number      => $self->param($set_number_str),
 					}
-				);
+					);
 				$de_re_insert->insert();
 			}
 		}
@@ -760,28 +987,52 @@ sub update {
 		foreach my $re_id ( keys %{$regexp_set} ) {
 			if ( !defined( $regexp_set->{$re_id}->{updated} ) ) {
 
-				my $delete_re = $self->db->resultset('Regex')->search( { id => $re_id } );
+				my $delete_re = $self->db->resultset('Regex')
+					->search( { id => $re_id } );
 				$delete_re->delete();
 			}
 		}
 
-		$self->header_rewrite( $self->param('id'), $self->param('ds.profile'), $self->param('ds.xml_id'), $self->param('ds.edge_header_rewrite'), "edge" );
-		$self->header_rewrite( $self->param('id'), $self->param('ds.profile'), $self->param('ds.xml_id'), $self->param('ds.mid_header_rewrite'),  "mid" );
-		$self->regex_remap( $self->param('id'), $self->param('ds.profile'), $self->param('ds.xml_id'), $self->param('ds.regex_remap') );
-		$self->cacheurl( $self->param('id'), $self->param('ds.profile'), $self->param('ds.xml_id'), $self->param('ds.cacheurl') );
+		$self->header_rewrite(
+			$self->param('id'),
+			$self->param('ds.profile'),
+			$self->param('ds.xml_id'),
+			$self->param('ds.edge_header_rewrite'), "edge"
+		);
+		$self->header_rewrite(
+			$self->param('id'),
+			$self->param('ds.profile'),
+			$self->param('ds.xml_id'),
+			$self->param('ds.mid_header_rewrite'), "mid"
+		);
+		$self->regex_remap(
+			$self->param('id'),        $self->param('ds.profile'),
+			$self->param('ds.xml_id'), $self->param('ds.regex_remap')
+		);
+		$self->cacheurl(
+			$self->param('id'),        $self->param('ds.profile'),
+			$self->param('ds.xml_id'), $self->param('ds.cacheurl')
+		);
 
 		$self->flash( message => "Delivery service updated!" );
 		return $self->redirect_to( '/ds/' . $id );
 	}
 	else {
 		&stash_role($self);
-		my $rs_ds = $self->db->resultset('Deliveryservice')->search( { 'me.id' => $id }, { prefetch => [ { 'type' => undef }, { 'profile' => undef } ] } );
-		my $data = $rs_ds->single;
+		my $rs_ds
+			= $self->db->resultset('Deliveryservice')
+			->search( { 'me.id' => $id },
+			{ prefetch => [ { 'type' => undef }, { 'profile' => undef } ] } );
+		my $data         = $rs_ds->single;
 		my $cdn_domain   = &get_cdn_domain( $self, $id );
-		my $server_count = $self->db->resultset('DeliveryserviceServer')->search( { deliveryservice => $id } )->count();
-		my $static_count = $self->db->resultset('Staticdnsentry')->search( { deliveryservice => $id } )->count();
-		my $regexp_set   = &get_regexp_set( $self, $id );
-		my @example_urls = &get_example_urls( $self, $id, $regexp_set, $data, $cdn_domain, $data->protocol );
+		my $server_count = $self->db->resultset('DeliveryserviceServer')
+			->search( { deliveryservice => $id } )->count();
+		my $static_count = $self->db->resultset('Staticdnsentry')
+			->search( { deliveryservice => $id } )->count();
+		my $regexp_set = &get_regexp_set( $self, $id );
+		my @example_urls
+			= &get_example_urls( $self, $id, $regexp_set, $data, $cdn_domain,
+			$data->protocol );
 		my $action;
 
 		$self->stash(
@@ -804,11 +1055,13 @@ sub check_regexp {
 	my $sep = "__NEWLINE__";
 	my $err = "";
 	if ( $re =~ /^\s/ || $re =~ /\s$/ ) {
-		$err .= "Regular expression can not start or end with whitespace... (did you cut-and-paste?)";
+		$err
+			.= "Regular expression can not start or end with whitespace... (did you cut-and-paste?)";
 	}
 
 	if ( $re eq ".*" ) {
-		$err = ".* is not a valid regexp, at least not for any of the CDN entries.";
+		$err
+			= ".* is not a valid regexp, at least not for any of the CDN entries.";
 	}
 
 	my $regexp_err = &is_regexp($re);
@@ -827,57 +1080,75 @@ sub create {
 	return $self->redirect_to("/modify_error") if !&is_oper($self);
 	my $new_id = -1;
 
-	#	if ( !&is_oper($self) ) {
-	#		my $err .= "You do not have enough privileges to modify this.\n";
-	#		return $self->flash( message => $err );
-	#	}
 	if ( $self->check_deliveryservice_input() ) {
 		my $insert = $self->db->resultset('Deliveryservice')->create(
-			{
-				xml_id                 => $self->param('ds.xml_id'),
-				display_name           => $self->param('ds.display_name'),
-				dscp                   => $self->param('ds.dscp') eq "" ? 0 : $self->param('ds.dscp'),
-				signed                 => $self->param('ds.signed'),
-				qstring_ignore         => $self->param('ds.qstring_ignore'),
-				geo_limit              => $self->param('ds.geo_limit'),
-				http_bypass_fqdn       => $self->param('ds.http_bypass_fqdn'),
-				dns_bypass_ip          => $self->param('ds.dns_bypass_ip'),
-				dns_bypass_ip6         => $self->param('ds.dns_bypass_ip6'),
-				dns_bypass_cname       => $self->param('ds.dns_bypass_cname'),
-				dns_bypass_ttl         => $self->param('ds.dns_bypass_ttl'),
-				org_server_fqdn        => $self->param('ds.org_server_fqdn'),
-				multi_site_origin      => $self->param('ds.multi_site_origin'),
-				ccr_dns_ttl            => $self->param('ds.ccr_dns_ttl'),
-				type                   => $self->param('ds.type'),
-				profile                => $self->param('ds.profile'),
-				global_max_mbps        => $self->param('ds.global_max_mbps') eq "" ? 0 : $self->hr_string_to_mbps( $self->param('ds.global_max_mbps') ),
-				global_max_tps         => $self->param('ds.global_max_tps') eq "" ? 0 : $self->param('ds.global_max_tps'),
-				miss_lat               => $self->param('ds.miss_lat'),
-				miss_long              => $self->param('ds.miss_long'),
-				long_desc              => $self->param('ds.long_desc'),
-				long_desc_1            => $self->param('ds.long_desc_1'),
-				long_desc_2            => $self->param('ds.long_desc_2'),
-				max_dns_answers        => $self->param('ds.max_dns_answers') eq "" ? 0 : $self->param('ds.max_dns_answers'),
-				info_url               => $self->param('ds.info_url'),
-				check_path             => $self->param('ds.check_path'),
-				active                 => $self->param('ds.active'),
-				protocol               => $self->param('ds.protocol'),
-				ipv6_routing_enabled   => $self->param('ds.ipv6_routing_enabled'),
-				range_request_handling => $self->param('ds.range_request_handling'),
-				edge_header_rewrite    => $self->param('ds.edge_header_rewrite') eq "" ? undef : $self->param('ds.edge_header_rewrite'),
-				mid_header_rewrite     => $self->param('ds.mid_header_rewrite') eq "" ? undef : $self->param('ds.mid_header_rewrite'),
-				regex_remap   => $self->param('ds.regex_remap')   eq "" ? undef : $self->param('ds.regex_remap'),
-				origin_shield => $self->param('ds.origin_shield') eq "" ? undef : $self->param('ds.origin_shield'),
-				cacheurl      => $self->param('ds.cacheurl')      eq "" ? undef : $self->param('ds.cacheurl'),
-				remap_text    => $self->param('ds.remap_text')    eq "" ? undef : $self->param('ds.remap_text'),
+			{   xml_id       => $self->param('ds.xml_id'),
+				display_name => $self->param('ds.display_name'),
+				dscp         => $self->param('ds.dscp') eq "" ? 0
+				: $self->param('ds.dscp'),
+				signed            => $self->param('ds.signed'),
+				qstring_ignore    => $self->param('ds.qstring_ignore'),
+				geo_limit         => $self->param('ds.geo_limit'),
+				http_bypass_fqdn  => $self->param('ds.http_bypass_fqdn'),
+				dns_bypass_ip     => $self->param('ds.dns_bypass_ip'),
+				dns_bypass_ip6    => $self->param('ds.dns_bypass_ip6'),
+				dns_bypass_cname  => $self->param('ds.dns_bypass_cname'),
+				dns_bypass_ttl    => $self->param('ds.dns_bypass_ttl'),
+				org_server_fqdn   => $self->param('ds.org_server_fqdn'),
+				multi_site_origin => $self->param('ds.multi_site_origin'),
+				ccr_dns_ttl       => $self->param('ds.ccr_dns_ttl'),
+				type              => $self->param('ds.type'),
+				cdn_id            => $self->param('ds.cdn_id'),
+				profile           => $self->param('ds.profile'),
+				global_max_mbps   => $self->param('ds.global_max_mbps') eq ""
+				? 0
+				: $self->hr_string_to_mbps(
+					$self->param('ds.global_max_mbps')
+				),
+				global_max_tps => $self->param('ds.global_max_tps') eq "" ? 0
+				: $self->param('ds.global_max_tps'),
+				miss_lat        => $self->param('ds.miss_lat'),
+				miss_long       => $self->param('ds.miss_long'),
+				long_desc       => $self->param('ds.long_desc'),
+				long_desc_1     => $self->param('ds.long_desc_1'),
+				long_desc_2     => $self->param('ds.long_desc_2'),
+				max_dns_answers => $self->param('ds.max_dns_answers') eq ""
+				? 0
+				: $self->param('ds.max_dns_answers'),
+				info_url   => $self->param('ds.info_url'),
+				check_path => $self->param('ds.check_path'),
+				active     => $self->param('ds.active'),
+				protocol   => $self->param('ds.protocol'),
+				ipv6_routing_enabled =>
+					$self->param('ds.ipv6_routing_enabled'),
+				range_request_handling =>
+					$self->param('ds.range_request_handling'),
+				edge_header_rewrite => $self->param('ds.edge_header_rewrite')
+					eq "" ? undef : $self->param('ds.edge_header_rewrite'),
+				mid_header_rewrite => $self->param('ds.mid_header_rewrite')
+					eq "" ? undef : $self->param('ds.mid_header_rewrite'),
+				regex_remap => $self->param('ds.regex_remap') eq "" ? undef
+				: $self->param('ds.regex_remap'),
+				origin_shield => $self->param('ds.origin_shield') eq ""
+				? undef
+				: $self->param('ds.origin_shield'),
+				cacheurl => $self->param('ds.cacheurl') eq "" ? undef
+				: $self->param('ds.cacheurl'),
+				remap_text => $self->param('ds.remap_text') eq "" ? undef
+				: $self->param('ds.remap_text'),
 				initial_dispersion => $self->param('ds.initial_dispersion'),
 			}
 		);
 		$insert->insert();
 		$new_id = $insert->id;
-		&log( $self, "Create deliveryservice with xml_id:" . $self->param('ds.xml_id'), "UICHANGE" );
+		&log(
+			$self,
+			"Create deliveryservice with xml_id:" . $self->param('ds.xml_id'),
+			"UICHANGE"
+		);
 
-		if ( $new_id == -1 ) {    # there was an error the flash will already be set,
+		if ( $new_id == -1 )
+		{    # there was an error the flash will already be set,
 			my $referer = $self->req->headers->header('referer');
 			my $qstring = "?";
 			my @params  = $self->param;
@@ -892,7 +1163,10 @@ sub create {
 				return $self->redirect_to( $stripped . $qstring );
 			}
 			else {
-				return $self->render( text => "ERR = Referer is not defined.", layout => undef );    # for testing - $referer is not defined there.
+				return $self->render(
+					text   => "ERR = Referer is not defined.",
+					layout => undef
+				);    # for testing - $referer is not defined there.
 			}
 		}
 
@@ -910,52 +1184,167 @@ sub create {
 		}
 
 		foreach my $re ( @{$regexp_set} ) {
-			if ( !defined( $re->{order} ) ) { next; }    # 0 gets iterated over if the form sends just a _1
-			my $type = $self->db->resultset('Type')->search( { name => $re->{type} } )->get_column('id')->single();
+			if ( !defined( $re->{order} ) ) {
+				next;
+			}    # 0 gets iterated over if the form sends just a _1
+			my $type
+				= $self->db->resultset('Type')
+				->search( { name => $re->{type} } )->get_column('id')
+				->single();
 			my $regexp = $re->{re};
 
 			my $insert = $self->db->resultset('Regex')->create(
-				{
-					pattern => $regexp,
+				{   pattern => $regexp,
 					type    => $type,
 				}
 			);
 			$insert->insert();
 			my $new_re_id = $insert->id;
 
-			my $de_re_insert = $self->db->resultset('DeliveryserviceRegex')->create(
-				{
-					regex           => $new_re_id,
+			my $de_re_insert
+				= $self->db->resultset('DeliveryserviceRegex')->create(
+				{   regex           => $new_re_id,
 					deliveryservice => $new_id,
 					set_number      => $re->{order},
 				}
-			);
+				);
 			$de_re_insert->insert();
 		}
 
-		$self->header_rewrite( $new_id, $self->param('ds.profile'), $self->param('ds.xml_id'), $self->param('ds.edge_header_rewrite'), "edge" );
-		$self->header_rewrite( $new_id, $self->param('ds.profile'), $self->param('ds.xml_id'), $self->param('ds.mid_header_rewrite'),  "mid" );
-		$self->regex_remap( $self->param('ds.profile'), $self->param('ds.xml_id'), $self->param('ds.regex_remap') );
-		$self->cacheurl( $self->param('ds.profile'), $self->param('ds.xml_id'), $self->param('ds.cacheurl') );
+		$self->header_rewrite(
+			$new_id,
+			$self->param('ds.profile'),
+			$self->param('ds.xml_id'),
+			$self->param('ds.edge_header_rewrite'), "edge"
+		);
+		$self->header_rewrite(
+			$new_id,
+			$self->param('ds.profile'),
+			$self->param('ds.xml_id'),
+			$self->param('ds.mid_header_rewrite'), "mid"
+		);
+		$self->regex_remap(
+			$self->param('ds.profile'),
+			$self->param('ds.xml_id'),
+			$self->param('ds.regex_remap')
+		);
+		$self->cacheurl(
+			$self->param('ds.profile'),
+			$self->param('ds.xml_id'),
+			$self->param('ds.cacheurl')
+		);
 
+		##create dnssec keys for the new DS if DNSSEC is enabled for the CDN
+		my $dnssec_enabled_rs
+			= $self->db->resultset('ProfileParameter')->search(
+			{   -and => [
+					'parameter.name' => 'dnssec.enabled',
+					'profile.id'     => $self->param('ds.profile')
+				]
+			},
+			{ prefetch => [ 'parameter', 'profile' ] }
+			)->single();
+		if ($dnssec_enabled_rs) {
+			my $dnssec_enabled = $dnssec_enabled_rs->parameter->value;
+			$self->create_dnssec_keys( $self->param('ds.profile'),
+				$self->param('ds.xml_id'), $new_id );
+		}
 		$self->flash( message => "Success!" );
 		return $self->redirect_to( '/ds/' . $new_id );
 	}
 	else {
 		my $selected_type    = $self->param('ds.type');
 		my $selected_profile = $self->param('ds.profile');
+		my $selected_cdn     = $self->param('ds.cdn');
 		&stash_role($self);
 		$self->stash(
 			ds               => {},
 			fbox_layout      => 1,
 			selected_type    => $selected_type,
 			selected_profile => $selected_profile,
+			selected_cdn     => $selected_cdn,
 			mode             => "add",
 		);
-
-		# print "no bueno\n";
 		$self->render('delivery_service/add');
 	}
+}
+
+sub create_dnssec_keys {
+	my $self       = shift;
+	my $profile_id = shift;
+	my $xml_id     = shift;
+	my $ds_id      = shift;
+
+	#get CDN name
+	my $dnskey_ttl;
+
+	my $cdn_rs
+		= $self->db->resultset('Profile')
+		->search( { 'me.id' => $profile_id }, { prefetch => 'cdn' } )
+		->single();
+	my $cdn_name = $cdn_rs->cdn->name;
+
+	#get keys for cdn
+	my $keys;
+	my $response_container = $self->riak_get( "dnssec", $cdn_name );
+	my $get_keys = $response_container->{'response'};
+	$keys = decode_json( $get_keys->content );
+
+#get default expiration days and ttl for DSs from CDN record to use when generating new keys
+	my $cdn_ksk = $keys->{$cdn_name}->{ksk};
+	my $k_exp_days = $self->get_key_expiration_days( $cdn_ksk, "365" );
+
+	my $cdn_zsk = $keys->{$cdn_name}->{zsk};
+	my $z_exp_days = $self->get_key_expiration_days( $cdn_zsk, "30" );
+
+	#create the ds domain name for dnssec keys
+	my $domain_name             = $self->get_cdn_domain($ds_id);
+	my $deliveryservice_regexes = $self->get_regexp_set($ds_id);
+	my $rs_ds
+		= $self->db->resultset('Deliveryservice')
+		->search( { 'me.xml_id' => $xml_id },
+		{ prefetch => [ { 'type' => undef }, { 'profile' => undef } ] } );
+	my $data         = $rs_ds->single;
+	my @example_urls = UI::DeliveryService::get_example_urls( $self, $ds_id,
+		$deliveryservice_regexes, $data, $domain_name, $data->protocol );
+
+#first one is the one we want.  period at end for dnssec, substring off stuff we dont want
+	my $ds_name = $example_urls[0] . ".";
+	my $length = length($ds_name) - CORE::index($ds_name, ".");
+	$ds_name = substr($ds_name, CORE::index($ds_name, ".") + 1, $length);
+
+	my $inception    = time();
+	my $z_expiration = $inception + ( 86400 * $z_exp_days );
+	my $k_expiration = $inception + ( 86400 * $k_exp_days );
+
+	my $zsk
+		= $self->get_dnssec_keys( "zsk", $ds_name, $dnskey_ttl,
+		$inception, $z_expiration, "new", $inception );
+	my $ksk
+		= $self->get_dnssec_keys( "ksk", $ds_name, $dnskey_ttl,
+		$inception, $k_expiration, "new", $inception );
+
+	#add to keys hash
+	$keys->{$xml_id} = { zsk => [$zsk], ksk => [$ksk] };
+
+	#put keys back in Riak
+	my $json_data = encode_json($keys);
+	$response_container = $self->riak_put( "dnssec", $cdn_name, $json_data );
+}
+
+sub get_key_expiration_days {
+	my $self        = shift;
+	my $keys        = shift;
+	my $default_exp = shift;
+	foreach my $key (@$keys) {
+		my $status = $key->{status};
+		if ( $status eq 'new' ) { #ignore anything other than the 'new' record
+			my $exp   = $key->{expirationDate};
+			my $incep = $key->{inceptionDate};
+			return ( $exp - $incep ) / 86400;
+		}
+	}
+	return $default_exp;
 }
 
 # for the add delivery service view
@@ -967,6 +1356,7 @@ sub add {
 		ds               => {},
 		selected_type    => "",
 		selected_profile => "",
+		selected_cdn     => "",
 		mode             => 'add'    #for form generation
 	);
 	my @params = $self->param;

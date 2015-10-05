@@ -17,6 +17,7 @@ package Fixtures::Integration::Server;
 use Moose;
 extends 'DBIx::Class::EasyFixture';
 use namespace::autoclean;
+use Data::Dumper;
 
 my %definition_for = ();
 
@@ -24,6 +25,11 @@ sub gen_data {
 	my @cache_groups = ( 'nyc', 'lax', 'chi', 'hou', 'phl', 'den' );
 	my @profiles = ( 45, 45, 45, 45, 26, 26, 26, 26, 26 );
 	my $cgr_no = 0;
+
+
+
+	my $cdn_profiles->{"45"} = 1;
+	$cdn_profiles->{"26"} = 2;
 
 	# EDGES - 8 per cache group
 	my $site = 0;
@@ -37,6 +43,9 @@ sub gen_data {
 			if ( $i == 4 ) {    # half of each cg is in a site
 				$site++;
 			}
+			my $profile_id = $profiles[$i];
+			my $cdn_id = $cdn_profiles->{$profile_id};
+
 			my $hostname = 'atsec-' . $cache_groups[$cgr_no] . '-0' . $i;
 			$definition_for{$hostname} = {
 				new   => 'Server',
@@ -67,7 +76,8 @@ sub gen_data {
 					router_port_name => $cgr_no,
 					type             => 1,
 					status           => 3,
-					profile          => $profiles[$i],
+					profile          => $profile_id,
+					cdn_id           => $cdn_id,
 					cachegroup       => ( 91 + $cgr_no ),
 					phys_location    => ( $site + 1 ),
 				}
@@ -80,6 +90,9 @@ sub gen_data {
 	# MIDS  - 8 per cache group
 	@cache_groups = ( 'east', 'west' );
 	@profiles     = ( 31,     30 );
+	$cdn_profiles->{"31"} = 1;
+	$cdn_profiles->{"30"} = 2;
+
 	$cgr_no       = 0;
 	$site         = 0;
 	foreach my $cg (@cache_groups) {
@@ -92,6 +105,10 @@ sub gen_data {
 				$site++;
 			}
 			my $hostname = 'atsmid-' . $cache_groups[$cgr_no] . '-0' . $i;
+
+			my $profile_id = $profiles[ ( $i % 2 == 0 ? 1 : 0 ) ];
+			my $cdn_id = $cdn_profiles->{$profile_id};
+
 			$definition_for{$hostname} = {
 				new   => 'Server',
 				using => {
@@ -121,7 +138,8 @@ sub gen_data {
 					router_port_name => $cgr_no,
 					type             => 2,
 					status           => 2,
-					profile          => $profiles[ ( $i % 2 == 0 ? 1 : 0 ) ],
+					profile          => $profile_id,
+					cdn_id           => $cdn_id,
 					cachegroup       => ( $cgr_no + 1 ),
 					phys_location    => ( $site + 1 ),
 				}
@@ -153,6 +171,7 @@ sub gen_data {
 			type           => 4,
 			status         => 2,
 			profile        => 5,
+			cdn_id         => 1,
 			cachegroup     => 3,
 			phys_location  => 100,
 		}
@@ -178,6 +197,7 @@ sub gen_data {
 			type           => 4,
 			status         => 2,
 			profile        => 8,
+			cdn_id         => 2,
 			cachegroup     => 3,
 			phys_location  => 101,
 		}
@@ -203,6 +223,7 @@ sub gen_data {
 			type           => 4,
 			status         => 2,
 			profile        => 5,
+			cdn_id         => 1,
 			cachegroup     => 5,
 			phys_location  => 100,
 		}
@@ -228,6 +249,7 @@ sub gen_data {
 			type           => 4,
 			status         => 2,
 			profile        => 8,
+			cdn_id         => 2,
 			cachegroup     => 5,
 			phys_location  => 101,
 		}
@@ -255,6 +277,7 @@ sub gen_data {
 			type           => 15,
 			status         => 2,
 			profile        => 11,
+			cdn_id         => 1,
 			cachegroup     => 3,
 			phys_location  => 100,
 		}
@@ -280,6 +303,7 @@ sub gen_data {
 			type           => 15,
 			status         => 2,
 			profile        => 12,
+			cdn_id         => 2,
 			cachegroup     => 3,
 			phys_location  => 101,
 		}
@@ -305,6 +329,7 @@ sub gen_data {
 			type           => 15,
 			status         => 2,
 			profile        => 11,
+			cdn_id         => 1,
 			cachegroup     => 5,
 			phys_location  => 100,
 		}
@@ -330,6 +355,7 @@ sub gen_data {
 			type           => 15,
 			status         => 2,
 			profile        => 12,
+			cdn_id         => 2,
 			cachegroup     => 5,
 			phys_location  => 101,
 		}
@@ -363,6 +389,7 @@ sub gen_data {
 			type             => 10,
 			status           => 2,
 			profile          => 47,
+			cdn_id           => 2,
 			cachegroup       => 1,
 			phys_location    => 1,
 		},
@@ -398,6 +425,7 @@ sub gen_data {
 			type             => 36,
 			status           => 2,
 			profile          => 48,
+			cdn_id           => 1,
 			cachegroup       => 101,
 			phys_location    => 1,
 		},
@@ -431,6 +459,7 @@ sub gen_data {
 			type             => 36,
 			status           => 2,
 			profile          => 49,
+			cdn_id           => 1,
 			cachegroup       => 102,
 			phys_location    => 1,
 		},

@@ -1,0 +1,1037 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Using Traffic Ops &mdash; Traffic Control 1.1.2 documentation </title>
+  
+
+  
+  
+    <link rel="shortcut icon" href="../_static/favicon.ico"/>
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  
+
+  
+    <link rel="stylesheet" href="../_static/theme_overrides.css" type="text/css" />
+  
+
+  
+    <link rel="top" title="Traffic Control 1.1.2 documentation" href="../index.html"/>
+        <link rel="up" title="Administrator’s Guide" href="index.html"/>
+        <link rel="next" title="Managing Traffic Ops Extensions" href="traffic_ops_extensions.html"/>
+        <link rel="prev" title="Configuring Traffic Ops" href="traffic_ops_config.html"/> 
+
+  
+  <script src="_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-nav-search">
+        
+
+        
+          <a href="/" class="icon icon-home"> Traffic Control
+        
+
+        
+          
+          <img src="../_static/tc_logo.png" class="logo" />
+        
+        </a>
+
+        
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+        
+      </div>
+
+      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+        
+          
+          
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../basics/index.html">CDN Basics</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../basics/content_delivery_networks.html">Content Delivery Networks</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../basics/http_11.html">HTTP 1.1</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../basics/caching_proxies.html">Caching Proxies</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../basics/cache_revalidation.html">Cache Control Headers and Revalidation</a></li>
+</ul>
+</li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../overview/index.html">Traffic Control Overview</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../overview/introduction.html">Introduction</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../overview/traffic_ops.html">Traffic Ops</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../overview/traffic_router.html">Traffic Router</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../overview/traffic_monitor.html">Traffic Monitor</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../overview/traffic_stats.html">Traffic Stats</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../overview/traffic_portal.html">Traffic Portal</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../overview/traffic_server.html">Traffic Server</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../overview/traffic_vault.html">Traffic Vault</a></li>
+</ul>
+</li>
+</ul>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="index.html">Administrator&#8217;s Guide</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="traffic_ops_install.html">Installing Traffic Ops</a></li>
+<li class="toctree-l2"><a class="reference internal" href="traffic_ops_config.html">Configuring Traffic Ops</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="">Using Traffic Ops</a></li>
+<li class="toctree-l2"><a class="reference internal" href="traffic_ops_extensions.html">Managing Traffic Ops Extensions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="traffic_monitor.html">Traffic Monitor Administration</a></li>
+<li class="toctree-l2"><a class="reference internal" href="traffic_router.html">Traffic Router Administration</a></li>
+<li class="toctree-l2"><a class="reference internal" href="traffic_stats.html">Traffic Stats Administration</a></li>
+<li class="toctree-l2"><a class="reference internal" href="traffic_server.html">Traffic Server Administration</a></li>
+<li class="toctree-l2"><a class="reference internal" href="traffic_vault.html">Traffic Vault Administration</a></li>
+</ul>
+</li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../development/index.html">Developer&#8217;s Guide</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../development/traffic_ops.html">Traffic Ops</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../development/traffic_router.html">Traffic Router</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../development/traffic_monitor.html">Traffic Monitor</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../development/traffic_stats.html">Traffic Stats</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../development/traffic_server.html">Traffic Server</a></li>
+</ul>
+</li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../faq/index.html">FAQ</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../faq/general.html">General</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../faq/development.html">Development</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../faq/administration.html">Running a Traffic Control CDN</a></li>
+</ul>
+</li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../glossary.html">Glossary</a></li>
+</ul>
+
+          
+        
+      </div>
+      &nbsp;
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="../index.html">Traffic Control</a>
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="../index.html">Traffic Control 1.1.2</a> &raquo;</li>
+      
+          <li><a href="index.html">Administrator&#8217;s Guide</a> &raquo;</li>
+      
+    <li>Using Traffic Ops</li>
+      <li class="wy-breadcrumbs-aside">
+        
+          <a href="../_sources/admin/traffic_ops_using.txt" rel="nofollow"> View page source</a>
+        
+      </li>
+  </ul>
+  <hr/>
+</div>
+ 		  
+    		  <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      		  
+        		  <a href="traffic_ops_extensions.html" class="btn btn-neutral float-right" title="Managing Traffic Ops Extensions">Next <span class="fa fa-arrow-circle-right"></span></a>
+      		  
+      		  
+        		  <a href="traffic_ops_config.html" class="btn btn-neutral" title="Configuring Traffic Ops"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      		  
+    		  </div>
+  		  
+          <div role="main" class="document">
+            
+  <div class="section" id="using-traffic-ops">
+<h1>Using Traffic Ops<a class="headerlink" href="#using-traffic-ops" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="the-traffic-ops-menu">
+<h2>The Traffic Ops Menu<a class="headerlink" href="#the-traffic-ops-menu" title="Permalink to this headline">¶</a></h2>
+<img alt="../_images/12m.png" src="../_images/12m.png" />
+<p>The following tabs are available in the menu at the top of the Traffic Ops user interface.</p>
+<ul id="index-0">
+<li><p class="first"><strong>Health</strong></p>
+<p>Information on the health of the system. Hover over this tab to get to the following options:</p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="10%" />
+<col width="90%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">Option</th>
+<th class="head">Description</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td>Table View</td>
+<td>A real time view into the main performance indicators of the CDNs managed by Traffic Control.
+This view is sourced directly by the Traffic Monitor data and is updated every 10 seconds.
+This is the default screen of Traffic Ops.
+See <a class="reference internal" href="#rl-health-table"><span>The Health Table</span></a> for details.</td>
+</tr>
+<tr class="row-odd"><td>Graph View</td>
+<td>A real graphical time view into the main performance indicators of the CDNs managed by Traffic Control.
+This view is sourced by the Traffic Monitor data and is updated every 10 seconds.
+On loading, this screen will show a history of 24 hours of data from Traffic Stats
+See <a class="reference internal" href="#rl-health-graph"><span>Graph View</span></a> for details.</td>
+</tr>
+<tr class="row-even"><td>Server Checks</td>
+<td>A table showing the results of the periodic check extension scripts that are run. See <a class="reference internal" href="#rl-server-checks"><span>Server Checks</span></a></td>
+</tr>
+<tr class="row-odd"><td>Daily Summary</td>
+<td>A graph displaying the daily peaks of bandwidth, overall bytes served per day, and overall bytes served since initial installation
+per CDN.</td>
+</tr>
+</tbody>
+</table>
+</li>
+<li><p class="first"><strong>Delivery Services</strong></p>
+<p>The main Delivery Service table. This is where you Create/Read/Update/Delete Delivery Services of all types. There are currently no sub menus for this tab.</p>
+</li>
+<li><p class="first"><strong>Servers</strong></p>
+<p>The main Servers table. This is where you Create/Read/Update/Delete servers of all types.  Click the main tab to get to the main table, and hover over to get these sub options:</p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="17%" />
+<col width="83%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">Option</th>
+<th class="head">Description</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td>Upload Server CSV</td>
+<td>Bulk add of servers from a csv file. See <a class="reference internal" href="#rl-bulkserver"><span>Bulk Upload Server</span></a></td>
+</tr>
+</tbody>
+</table>
+</li>
+<li><p class="first"><strong>Parameters</strong></p>
+<p>Parameters and Profiles can be edited here. Hover over the tab to get the following options:</p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="11%" />
+<col width="89%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">Option</th>
+<th class="head">Description</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td>Global Profile</td>
+<td>The table of global parameters. See <a class="reference internal" href="traffic_ops_config.html#rl-param-prof"><span>Parameters an profiles</span></a>. This is where you Create/Read/Update/Delete parameters in the Global profile</td>
+</tr>
+<tr class="row-odd"><td>All Cache Groups</td>
+<td>TBD JvD</td>
+</tr>
+<tr class="row-even"><td>All Profiles</td>
+<td>The table of all parameters - this may be slow to pull up, as there can be thousands of parameters.</td>
+</tr>
+<tr class="row-odd"><td>Select Profile</td>
+<td>Select the parameter by Profile first, then get a table of just the parameters for that profile.</td>
+</tr>
+<tr class="row-even"><td>Orphaned Parameters</td>
+<td>A table of parameters that are not associated to any profile of cache group. These parameters either should be deleted or associated with a profile of cache group.</td>
+</tr>
+</tbody>
+</table>
+</li>
+<li><p class="first"><strong>Tools</strong></p>
+<p>Tools for working with Traffic Ops and it&#8217;s servers. Hover over this tab to get the following options:</p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="14%" />
+<col width="86%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">Option</th>
+<th class="head">Description</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td>Generate ISO</td>
+<td>Generate a bootable image for any of the servers in the Servers table (or any server for that matter). See <a class="reference internal" href="#rl-generate-iso"><span>Generate ISO</span></a></td>
+</tr>
+<tr class="row-odd"><td>Queue Updates</td>
+<td>Send Updates to the caches. See <a class="reference internal" href="#rl-queue-updates"><span>Queue Updates and Snapshot CRConfig</span></a></td>
+</tr>
+<tr class="row-even"><td>DB Dump</td>
+<td>Backup the Database to a .sql file.</td>
+</tr>
+<tr class="row-odd"><td>Snapshot CRConfig</td>
+<td>Send updates to the Traffic Monitor / Traffic Router servers.  See <a class="reference internal" href="#rl-queue-updates"><span>Queue Updates and Snapshot CRConfig</span></a></td>
+</tr>
+<tr class="row-even"><td>Invalidate Content</td>
+<td>Invalidate or purge content from the CDN. See <a class="reference internal" href="#rl-purge"><span>Invalidate Content</span></a></td>
+</tr>
+<tr class="row-odd"><td>Generate DNSSEC keys</td>
+<td>Neuman?</td>
+</tr>
+</tbody>
+</table>
+</li>
+<li><p class="first"><strong>Misc</strong></p>
+<p>Miscellaneous editing options. Hover over this tab to get the following options:</p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="18%" />
+<col width="82%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">Option</th>
+<th class="head">Description</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td>Cache Groups</td>
+<td>Create/Read/Update/Delete cache groups</td>
+</tr>
+<tr class="row-odd"><td>Users</td>
+<td>Create/Read/Update/Delete users</td>
+</tr>
+<tr class="row-even"><td>Profiles</td>
+<td>Create/Read/Update/Delete profiles. See <a class="reference internal" href="#rl-working-with-profiles"><span>Parameters and Profiles</span></a></td>
+</tr>
+<tr class="row-odd"><td>Networks(ASNs)</td>
+<td>Create/Read/Update/Delete Autonomous System Numbers See <span class="xref std std-ref">rl-asn-czf</span></td>
+</tr>
+<tr class="row-even"><td>Hardware</td>
+<td>Get detailed hardware information (note: this should be moved to a Traffic Ops Extension)</td>
+</tr>
+<tr class="row-odd"><td>Data Types</td>
+<td>Create/Read/Update/Delete data types</td>
+</tr>
+<tr class="row-even"><td>Divisions</td>
+<td>Create/Read/Update/Delete divisions</td>
+</tr>
+<tr class="row-odd"><td>Regions</td>
+<td>Create/Read/Update/Delete regions</td>
+</tr>
+<tr class="row-even"><td>Physical Locations</td>
+<td>Create/Read/Update/Delete locations</td>
+</tr>
+</tbody>
+</table>
+</li>
+</ul>
+<ul id="index-1">
+<li><p class="first"><strong>ChangeLog</strong></p>
+<p>The Changelog table displays the changes that are being made to the Traffic Ops database through the Traffic Ops user interface. This tab will show the number of changes since you last visited this tab in (brackets) since the last time you visited this tab. There are currently no sub menus for this tab.</p>
+</li>
+<li><p class="first"><strong>Help</strong></p>
+<p>Help for Traffic Ops and Traffic Control. Hover over this tab to get the following options:</p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="18%" />
+<col width="82%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">Option</th>
+<th class="head">Description</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td>About</td>
+<td>Traffic Ops information, such as version, database information, etc</td>
+</tr>
+<tr class="row-odd"><td>Release Notes</td>
+<td>Release notes for the most recent releases of Traffic Ops</td>
+</tr>
+<tr class="row-even"><td>Logout</td>
+<td>Logout from Traffic Ops</td>
+</tr>
+</tbody>
+</table>
+</li>
+</ul>
+</div>
+<div class="section" id="health">
+<span id="index-2"></span><h2>Health<a class="headerlink" href="#health" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="the-health-table">
+<span id="rl-health-table"></span><h3>The Health Table<a class="headerlink" href="#the-health-table" title="Permalink to this headline">¶</a></h3>
+<p>The Health table is the default landing screen for Traffic Ops, it displays the status of the EDGE caches in a table form directly from Traffic Monitor (bypassing Traffic Stats), sorted by Mbps Out. The columns in this table are:</p>
+<ul class="simple">
+<li><strong>Profile</strong>: the Profile of this server or ALL, meaning this row shows data for multiple servers, and the row shows the sum of all values.</li>
+<li><strong>Host Name</strong>: the host name of the server or ALL, meaning this row shows data for multiple servers, and the row shows the sum of all values.</li>
+<li><strong>Edge Cache Group</strong>: the edge cache group short name or ALL, meaning this row shows data for multiple servers, and the row shows the sum of all values.</li>
+<li><strong>Healthy</strong>: indicates if this cache is healthy according to the Health Protocol. A row with ALL in any of the columns will always show a <img alt="checkmark" src="../_images/good.png" />, this column is valid only for individual EDGE caches.</li>
+<li><strong>Admin</strong>: shows the administrative status of the server.</li>
+<li><strong>Connections</strong>: the number of connections this cache (or group of caches) has open (<code class="docutils literal"><span class="pre">ats.proxy.process.http.current_client_connections</span></code> from ATS).</li>
+<li><strong>Mbps Out</strong>: the bandwidth being served out if this cache (or group of caches)</li>
+</ul>
+<p>Since the top line has ALL, ALL, ALL, it shows the total connections and bandwidth for all caches managed by this instance of Traffic Ops.</p>
+</div>
+<div class="section" id="graph-view">
+<span id="rl-health-graph"></span><h3>Graph View<a class="headerlink" href="#graph-view" title="Permalink to this headline">¶</a></h3>
+<p>The Graph View shows a live view of the last 24 hours of bits per seconds served and open connections at the edge in a graph. This data is sourced from Traffic Stats. If there are 2 CDNs configured, this view will show the statistis for both, and the graphs are stacked. On the left-hand side, the totals and immediate values as well as the percentage of total possible capacity are displayed. This view is update every 10 seconds.</p>
+</div>
+<div class="section" id="server-checks">
+<span id="rl-server-checks"></span><h3>Server Checks<a class="headerlink" href="#server-checks" title="Permalink to this headline">¶</a></h3>
+<p>Server Checks are ..</p>
+</div>
+<div class="section" id="daily-summary">
+<h3>Daily Summary<a class="headerlink" href="#daily-summary" title="Permalink to this headline">¶</a></h3>
+</div>
+</div>
+<div class="section" id="server">
+<span id="rl-server"></span><h2>Server<a class="headerlink" href="#server" title="Permalink to this headline">¶</a></h2>
+<p>This view shows a table of all the servers in Traffic Ops. The table columns show the most important details of the server. The <strong>IPAddrr</strong> column is clickable to launch an <code class="docutils literal"><span class="pre">ssh://</span></code> link to this server. The <img alt="graph" src="../_images/graph.png" /> icon will link to a Traffic Stats graph of this server for caches, and the <img alt="info" src="../_images/info.png" /> will link to the server status pages for other server types.</p>
+<div class="section" id="server-types">
+<h3>Server Types<a class="headerlink" href="#server-types" title="Permalink to this headline">¶</a></h3>
+<p>These are the types of servers that can be managed in Traffic Ops:</p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="25%" />
+<col width="75%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">Name</th>
+<th class="head">Description</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td>EDGE</td>
+<td>Edge Cache</td>
+</tr>
+<tr class="row-odd"><td>MID</td>
+<td>Mid Tier Cache</td>
+</tr>
+<tr class="row-even"><td>ORG</td>
+<td>Origin</td>
+</tr>
+<tr class="row-odd"><td>CCR</td>
+<td>Comcast Content Router</td>
+</tr>
+<tr class="row-even"><td>RASCAL</td>
+<td>Rascal health polling &amp; reporting</td>
+</tr>
+<tr class="row-odd"><td>REDIS</td>
+<td>Redis stats gateway (will be obsolete soon)</td>
+</tr>
+<tr class="row-even"><td>TOOLS_SERVER</td>
+<td>Ops hosts for managment</td>
+</tr>
+<tr class="row-odd"><td>RIAK</td>
+<td>Riak keystore</td>
+</tr>
+<tr class="row-even"><td>SPLUNK</td>
+<td>SPLUNK indexer search head etc</td>
+</tr>
+<tr class="row-odd"><td>TRAFFIC_STATS</td>
+<td>traffic_stats server</td>
+</tr>
+<tr class="row-even"><td>INFLUXDB</td>
+<td>influxDb server</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="section" id="bulk-upload-server">
+<span id="rl-bulkserver"></span><span id="index-3"></span><h3>Bulk Upload Server<a class="headerlink" href="#bulk-upload-server" title="Permalink to this headline">¶</a></h3>
+</div>
+</div>
+<div class="section" id="delivery-service">
+<h2>Delivery Service<a class="headerlink" href="#delivery-service" title="Permalink to this headline">¶</a></h2>
+<p>The fields in the Delivery Service view are:</p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="19%" />
+<col width="81%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">Name</th>
+<th class="head">Description</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td>XML ID</td>
+<td>A unique string that identifies this delivery service.</td>
+</tr>
+<tr class="row-odd"><td>Content Routing Type</td>
+<td>The type of content routing this delivery service will use. See <a class="reference internal" href="#rl-ds-types"><span>Delivery Service Types</span></a>.</td>
+</tr>
+<tr class="row-even"><td>Protocol</td>
+<td><p class="first">The protocol to serve this delivery service to the clients with:</p>
+<ul class="last simple">
+<li>http</li>
+<li>https</li>
+<li>both http and https</li>
+</ul>
+</td>
+</tr>
+<tr class="row-odd"><td>DSCP Tag</td>
+<td>The DSCP value to mark IP packets to the client with.</td>
+</tr>
+<tr class="row-even"><td>Signed URLs</td>
+<td>Use Signed URLs? See <a class="reference internal" href="#rl-signed-urls"><span>Token Based Authentication</span></a>.</td>
+</tr>
+<tr class="row-odd"><td>Query String Handling</td>
+<td><p class="first">How to treat query strings:</p>
+<ul class="last simple">
+<li>0 use in cache key and hand up to origin -this means each unique query string Is treated as a unique URL.</li>
+<li>1 Do not use in cache key, but pass up to origin - this means a 2 URLs that are the same except for the query string will match, and cache HIT, while the origin still sees original query string in the request.</li>
+<li>2 Drop at edge - this means a 2 URLs that are the same except for  the query string will match, and cache HIT, while the origin will not see original query string in the request.</li>
+</ul>
+</td>
+</tr>
+<tr class="row-even"><td>Geo Limit?</td>
+<td><p class="first">Some services are intended to be limited by geography. The possible settings are are:</p>
+<ul class="last simple">
+<li>None - Do not limit by geography.</li>
+<li>CZF only - If the requesting IP is not in the Coverage Zone File, do not serve the request.</li>
+<li>CZF + US - If the requesting IP is not in the Coverage Zone File or not in the United States, do not serve the request.</li>
+</ul>
+</td>
+</tr>
+<tr class="row-odd"><td>Bypass FQDN</td>
+<td>(for HTTP routed delivery services only) This is the FQDN Traffic Router will redirect to (with the same path) when the max Bps or Max Tps for this deliveryservice are exceeded.</td>
+</tr>
+<tr class="row-even"><td>Bypass Ipv4</td>
+<td>(For DNS routed delivery services only) This is the address to respond to A requests with when the the max Bps or Max Tps for this delivery service are exceeded.</td>
+</tr>
+<tr class="row-odd"><td>Bypass IPv6</td>
+<td>(For DNS routed delivery services only) This is the address to respond to AAAA requests with when the the max Bps or Max Tps for this delivery service are exceeded.</td>
+</tr>
+<tr class="row-even"><td>IPv6 Routing Enabled?</td>
+<td>When set to yes, the Traffic Router will respond to AAAA DNS requests for the tr. and edge. names of this delivery service. Otherwise, only A records will be served.</td>
+</tr>
+<tr class="row-odd"><td>Background fetch Enabled?</td>
+<td>Experimental. This enables the background_fetch plugin to fetch the whole file on seeing a range request.</td>
+</tr>
+<tr class="row-even"><td>Delivery Service DNS TTL</td>
+<td>The Time To Live on the DNS record for the Traffic Router A and AAAA records (<code class="docutils literal"><span class="pre">tr.&lt;deliveryservice&gt;.&lt;cdn-domain&gt;</span></code>) for a HTTP delivery service <em>or</em> for the A and
+AAAAA records of the edge name (<code class="docutils literal"><span class="pre">edge.&lt;deliveryservice&gt;.&lt;cdn-domain&gt;</span></code>).</td>
+</tr>
+<tr class="row-odd"><td>Origin Server Base URL</td>
+<td>The Origin Server&#8217;s base URL. This includes the protocol (http or https). Example: <code class="docutils literal"><span class="pre">http://movies.origin.com</span></code></td>
+</tr>
+<tr class="row-even"><td>CCR profile</td>
+<td>The Traffic Router  profile for this delivery service. See <a class="reference internal" href="#rl-ccr-profile"><span>CCR Profile or Traffic Router Profile</span></a>.</td>
+</tr>
+<tr class="row-odd"><td>Maximum Bits per Second allowed globally</td>
+<td>The maximum bits per second this delivery service can serve across all EDGE caches before traffic will be diverted to the bypass destination. For a DNS delivery service, the Bypass Ipv4 or Ipv6  will be used
+(depending on whether this was a A or AAAA request), and for HTTP delivery services the Bypass FQDN will be used.</td>
+</tr>
+<tr class="row-even"><td>Maximum Transactions per Second allowed globally</td>
+<td>The maximum transactions per se this delivery service can serve across all EDGE caches before traffic will be diverted to the bypass destination. For a DNS delivery service, the Bypass Ipv4 or Ipv6  will be used
+(depending on whether this was a A or AAAA request), and for HTTP delivery services the Bypass FQDN will be used.</td>
+</tr>
+<tr class="row-odd"><td>Geo Miss Default Latitude</td>
+<td>Default Latitude for this delivery service. When client localization fails for bot Coverage Zone and Geo Lookup, this the client will be routed as if it was at this lat.</td>
+</tr>
+<tr class="row-even"><td>Geo Miss Default Longitude</td>
+<td>Default Longitude for this delivery service. When client localization fails for bot Coverage Zone and Geo Lookup, this the client will be routed as if it was at this long.</td>
+</tr>
+<tr class="row-odd"><td>Request Header Rewrite Rules</td>
+<td>Header Rewrite rules for this delivery service. See <a class="reference internal" href="#rl-header-rewrite"><span>Header Rewrite Options and DSCP</span></a>.</td>
+</tr>
+<tr class="row-even"><td>Long Description</td>
+<td>Long description for this delivery service. TO be consumed from the APIs by downstream tools (Portal).</td>
+</tr>
+<tr class="row-odd"><td>Customer</td>
+<td>Customer description for this delivery service. TO be consumed from the APIs by downstream tools (Portal).</td>
+</tr>
+<tr class="row-even"><td>Service</td>
+<td>Service description for this delivery service. TO be consumed from the APIs by downstream tools (Portal).</td>
+</tr>
+<tr class="row-odd"><td>Info URL</td>
+<td>Info URL  for this delivery service. TO be consumed from the APIs by downstream tools (Portal).</td>
+</tr>
+<tr class="row-even"><td>Check Path</td>
+<td>A path (ex: /crossdomain.xml) to verify the connection to the origin server with. This can be used by Check Extension scripts to do periodic health checks against the delivery service.</td>
+</tr>
+<tr class="row-odd"><td>Origin Shield (Pipe Delimited String)</td>
+<td>Experimental. Origin Shield string. See <span class="xref std std-ref">rl-org-shield</span></td>
+</tr>
+<tr class="row-even"><td>Active</td>
+<td>When this is set to no Traffic Router will not serve DNS or HTTP responses for this delivery service.</td>
+</tr>
+<tr class="row-odd"><td>Last Updated</td>
+<td>(Read Only) The last time this delivery service was updated.</td>
+</tr>
+<tr class="row-even"><td>Number of edges assigned</td>
+<td>(Read Only - change by clicking the <strong>Server Assignments</strong> button at the bottom) The number of EDGE caches assigned to this delivery service. See <a class="reference internal" href="#rl-assign-edges"><span>Server Assignments</span></a>.</td>
+</tr>
+<tr class="row-odd"><td>Number of static DNS entries</td>
+<td>(Read Only - change by clicking the <strong>Static DNS</strong> button at the bottom) The number of static DNS entries for this delivery service. See <a class="reference internal" href="#rl-static-dns"><span>Static DNS Entries</span></a>.</td>
+</tr>
+<tr class="row-even"><td>Example delivery URL</td>
+<td>(Read Only) An example of how the delivery URL may start. This could be multiple rows if multiple HOST_REGEXP entries have been entered.</td>
+</tr>
+<tr class="row-odd"><td>Regular expressions for this delivery service</td>
+<td>A subtable of the regular expressions to use when routing traffic for this delivery service. See <a class="reference internal" href="#rl-ds-regexp"><span>Delivery Service Regexp</span></a>.</td>
+</tr>
+</tbody>
+</table>
+<div class="section" id="delivery-service-types">
+<span id="rl-ds-types"></span><span id="index-4"></span><h3>Delivery Service Types<a class="headerlink" href="#delivery-service-types" title="Permalink to this headline">¶</a></h3>
+<p>One of the most important settings when creating the delivery service is the selection of the delivery service <em>type</em>. This type determines the routing method and the primary storage for the delivery service.</p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="10%" />
+<col width="90%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">Name</th>
+<th class="head">Description</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td>HTTP</td>
+<td>HTTP Content Routing  - The Traffic Router DNS auth server returns its own IP address on DNS queries, and the client gets redirected to a specific cache
+in the nearest cache group using HTTP 302.  Use this for long sessions like HLS/HDS/Smooth live streaming, where a longer setup time is not a.
+problem.</td>
+</tr>
+<tr class="row-odd"><td>DNS</td>
+<td>DNS Content Routing - The Traffic Router DNS auth server returns an edge cache IP address to the client right away. The client will find the cache quickly
+but the Traffic Router can not route to a cache that already has this content in the cache group. Use this for smaller objects like web page images / objects.</td>
+</tr>
+<tr class="row-even"><td>HTTP_NO_CACHE</td>
+<td>HTTP Content Routing, but the caches will not actually cache the content, they act as just proxies. The MID tier is bypassed.</td>
+</tr>
+<tr class="row-odd"><td>HTTP_LIVE</td>
+<td>HTTP Content routing, but where for &#8220;standard&#8221; HTTP content routing the objects are stored on disk, for this delivery service type the objects are stored
+on the RAM disks. Use this for linear TV. The MID tier is bypassed for this type.</td>
+</tr>
+<tr class="row-even"><td>HTTP_LIVE_NATNL</td>
+<td>HTTP Content routing, same as HTTP_LIVE, but the MID tier is NOT bypassed.</td>
+</tr>
+<tr class="row-odd"><td>DNS_LIVE_NATNL</td>
+<td>DNS Content routing, ut where for &#8220;standard&#8221; DNS content routing the objects are stored on disk, for this delivery service type the objects are stored
+on the RAM disks. Use this for linear TV. The MID tier is NOT bypassed for this type.</td>
+</tr>
+<tr class="row-even"><td>DNS_LIVE</td>
+<td>DNS Content routing, same as DNS_LIVE_NATIONAL, but the MID tier is bypassed.</td>
+</tr>
+</tbody>
+</table>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">Once created, the Traffic Ops user interface does not allow you to change the delivery service type; the drop down is greyed out. There are many things that can go wrong when changing the type, and it is safer to delete the delivery service, and recreate it.</p>
+</div>
+</div>
+<div class="section" id="header-rewrite-options-and-dscp">
+<span id="rl-header-rewrite"></span><span id="index-5"></span><h3>Header Rewrite Options and DSCP<a class="headerlink" href="#header-rewrite-options-and-dscp" title="Permalink to this headline">¶</a></h3>
+<p>To</p>
+</div>
+<div class="section" id="token-based-authentication">
+<span id="rl-signed-urls"></span><span id="index-6"></span><h3>Token Based Authentication<a class="headerlink" href="#token-based-authentication" title="Permalink to this headline">¶</a></h3>
+<p>Token based authentication or <em>signed URLs</em> is implemented using the Traffic Server <code class="docutils literal"><span class="pre">url_sig</span></code> plugin. To sign a URL at the signing portal take the full URL, without any query string, and add on a query string with the following parameters:</p>
+<dl class="docutils">
+<dt>Client IP address</dt>
+<dd><p class="first">The client IP address that this signature is valid for.</p>
+<p class="last"><code class="docutils literal"><span class="pre">C=&lt;client</span> <span class="pre">IP</span> <span class="pre">address&gt;</span></code></p>
+</dd>
+<dt>Expiration</dt>
+<dd><p class="first">The Expiration time (seconds since epoch) of this signature.</p>
+<p class="last"><code class="docutils literal"><span class="pre">E=&lt;expiration</span> <span class="pre">time</span> <span class="pre">in</span> <span class="pre">secs</span> <span class="pre">since</span> <span class="pre">unix</span> <span class="pre">epoch&gt;</span></code></p>
+</dd>
+<dt>Algorithm</dt>
+<dd><p class="first">The Algorithm used to create the signature. Only 1 (HMAC_SHA1)
+and 2 (HMAC_MD5) are supported at this time</p>
+<p class="last"><code class="docutils literal"><span class="pre">A=&lt;algorithm</span> <span class="pre">number&gt;</span></code></p>
+</dd>
+<dt>Key index</dt>
+<dd><p class="first">Index of the key used. This is the index of the key in the
+configuration file on the cache. The set of keys is a shared
+secret between the signing portal and the edge caches. There
+is one set of keys per reverse proxy domain (fqdn).</p>
+<p class="last"><code class="docutils literal"><span class="pre">K=&lt;key</span> <span class="pre">index</span> <span class="pre">used&gt;</span></code></p>
+</dd>
+<dt>Parts</dt>
+<dd><p class="first">Parts to use for the signature, always excluding the scheme
+(<a class="reference external" href="http://">http://</a>).  parts0 = fqdn, parts1..x is the directory parts
+of the path, if there are more parts to the path than letters
+in the parts param, the last one is repeated for those.
+Examples:</p>
+<blockquote>
+<div>1: use fqdn and all of URl path
+0110: use part1 and part 2 of path only
+01: use everything except the fqdn</div></blockquote>
+<p class="last"><code class="docutils literal"><span class="pre">P=&lt;parts</span> <span class="pre">string</span> <span class="pre">(0's</span> <span class="pre">and</span> <span class="pre">1's&gt;</span></code></p>
+</dd>
+<dt>Signature</dt>
+<dd><p class="first">The signature over the parts + the query string up to and
+including &#8220;S=&#8221;.</p>
+<p class="last"><code class="docutils literal"><span class="pre">S=&lt;signature&gt;</span></code></p>
+</dd>
+</dl>
+<div class="admonition seealso">
+<p class="first admonition-title">See also</p>
+<p class="last">The url_sig <a class="reference external" href="https://github.com/apache/trafficserver/blob/master/plugins/experimental/url_sig/README">README</a>.</p>
+</div>
+<div class="section" id="generate-url-sig-keys">
+<h4>Generate URL Sig Keys<a class="headerlink" href="#generate-url-sig-keys" title="Permalink to this headline">¶</a></h4>
+<p>To generate a set of random signed url keys for this delivery service and store them in Traffic Vault, click the <strong>Generate URL Sig Keys</strong> button at the bottom of the delivery service details screen.</p>
+</div>
+</div>
+<div class="section" id="ccr-profile-or-traffic-router-profile">
+<span id="rl-ccr-profile"></span><span id="index-7"></span><h3>CCR Profile or Traffic Router Profile<a class="headerlink" href="#ccr-profile-or-traffic-router-profile" title="Permalink to this headline">¶</a></h3>
+<table border="1" class="docutils">
+<colgroup>
+<col width="22%" />
+<col width="13%" />
+<col width="65%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">Name</th>
+<th class="head">Config_file</th>
+<th class="head">Description</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+</tr>
+<tr class="row-odd"><td>location</td>
+<td>dns.zone</td>
+<td>Location to store the DNS zone files in the local file system of Traffic Router.</td>
+</tr>
+<tr class="row-even"><td>location</td>
+<td>http-log4j.properties</td>
+<td>Location to find the log4j.properties file for Traffic Router.</td>
+</tr>
+<tr class="row-odd"><td>location</td>
+<td>dns-log4j.properties</td>
+<td>Location to find the dns-log4j.properties file for Traffic Router.</td>
+</tr>
+<tr class="row-even"><td>location</td>
+<td>geolocation.properties</td>
+<td>Location to find the log4j.properties file for Traffic Router.</td>
+</tr>
+<tr class="row-odd"><td>CDN_name</td>
+<td>rascal-config.txt</td>
+<td>The human readable name of the CDN for this profile.</td>
+</tr>
+<tr class="row-even"><td>CoverageZoneJsonURL</td>
+<td>CRConfig.xml</td>
+<td>The location (URL) to retrieve the coverage zone map file in JSON format from.</td>
+</tr>
+<tr class="row-odd"><td>geolocation.polling.url</td>
+<td>CRConfig.json</td>
+<td>The location (URL) to retrieve the geo database file from.</td>
+</tr>
+<tr class="row-even"><td>geolocation.polling.interval</td>
+<td>CRConfig.json</td>
+<td>How often to refresh the coverage geo location database  in ms</td>
+</tr>
+<tr class="row-odd"><td>coveragezone.polling.interval</td>
+<td>CRConfig.json</td>
+<td>How often to refresh the coverage zone map in ms</td>
+</tr>
+<tr class="row-even"><td>coveragezone.polling.url</td>
+<td>CRConfig.json</td>
+<td>The location (URL) to retrieve the coverage zone map file in XML format from.</td>
+</tr>
+<tr class="row-odd"><td>domain_name</td>
+<td>CRConfig.json</td>
+<td>The top level domain of this Traffic Router instance.</td>
+</tr>
+<tr class="row-even"><td>tld.ttls.AAAA</td>
+<td>CRConfig.json</td>
+<td>The Time To Live (TTL) the Traffic Router DNS Server will respond with on AAAA records.</td>
+</tr>
+<tr class="row-odd"><td>tld.ttls.A</td>
+<td>CRConfig.json</td>
+<td>The TTL the Traffic Router DNS Server will respond with on A records.</td>
+</tr>
+<tr class="row-even"><td>tld.soa.expire</td>
+<td>CRConfig.json</td>
+<td>The value for the expire field the Traffic Router DNS Server will respond with on Start of Authority (SOA) records.</td>
+</tr>
+<tr class="row-odd"><td>tld.soa.minimum</td>
+<td>CRConfig.json</td>
+<td>The value for the minimum field the Traffic Router DNS Server will respond with on SOA records.</td>
+</tr>
+<tr class="row-even"><td>tld.soa.admin</td>
+<td>CRConfig.json</td>
+<td>The DNS Start of Authority admin.</td>
+</tr>
+<tr class="row-odd"><td>tld.soa.retry</td>
+<td>CRConfig.json</td>
+<td>The value for the retry field the Traffic Router DNS Server will respond with on SOA records.</td>
+</tr>
+<tr class="row-even"><td>tld.soa.refresh</td>
+<td>CRConfig.json</td>
+<td>The TTL the Traffic Router DNS Server will respond with on A records.</td>
+</tr>
+<tr class="row-odd"><td>tld.ttls.NS</td>
+<td>CRConfig.json</td>
+<td>The TTL the Traffic Router DNS Server will respond with on NS records.</td>
+</tr>
+<tr class="row-even"><td>tld.ttls.SOA</td>
+<td>CRConfig.json</td>
+<td>The TTL the Traffic Router DNS Server will respond with on SOA records.</td>
+</tr>
+<tr class="row-odd"><td>api.port</td>
+<td>server.xml</td>
+<td>The TCP port Traffic Router listens on for API (REST) access.</td>
+</tr>
+<tr class="row-even"><td>api.cache-control.max-age</td>
+<td>CRConfig.json</td>
+<td>The value of the <code class="docutils literal"><span class="pre">Cache-Control:</span> <span class="pre">max-age=</span></code> header in the API responses of Traffic Router.</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="section" id="delivery-service-regexp">
+<span id="rl-ds-regexp"></span><span id="index-8"></span><h3>Delivery Service Regexp<a class="headerlink" href="#delivery-service-regexp" title="Permalink to this headline">¶</a></h3>
+<p>This table defines how requests are matched to the delivery service. There are 3 type of entries possible here:</p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="14%" />
+<col width="64%" />
+<col width="13%" />
+<col width="10%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">Name</th>
+<th class="head">Description</th>
+<th class="head">DS Type</th>
+<th class="head">Status</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td>HOST_REGEXP</td>
+<td>This is the regular expresion to match the host part of the URL.</td>
+<td>DNS and HTTP</td>
+<td>Supported</td>
+</tr>
+<tr class="row-odd"><td>PATH_REGEXP</td>
+<td>This is the regular expresion to match the path part of the URL.</td>
+<td>HTTP</td>
+<td>Beta</td>
+</tr>
+<tr class="row-even"><td>HEADER_REGEXP</td>
+<td>This is the regular expresion to match on any header in the request.</td>
+<td>HTTP</td>
+<td>Beta</td>
+</tr>
+</tbody>
+</table>
+<p>The <strong>Order</strong> entry defines the order in which the regular expressions get evaluated. To support <code class="docutils literal"><span class="pre">CNAMES</span></code> from domains outside of the Traffic Control top level DNS domain, enter multiple <code class="docutils literal"><span class="pre">HOST_REGEXP</span></code> lines.</p>
+<dl class="docutils">
+<dt>Example:</dt>
+<dd>Example foo.</dd>
+</dl>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">In most cases is is sufficient to have just one entry in this table that has a <code class="docutils literal"><span class="pre">HOST_REGEXP</span></code> Type, and Order <code class="docutils literal"><span class="pre">0</span></code>. For the <em>movies</em> delivery service in the Kabletown CDN, the entry is simply single <code class="docutils literal"><span class="pre">HOST_REGEXP</span></code> set to <code class="docutils literal"><span class="pre">.*\.movies\..*</span></code>. This will match every url that has a hostname that ends with <code class="docutils literal"><span class="pre">movies.cdn1.kabletown.net</span></code>, since <code class="docutils literal"><span class="pre">cdn1.kabletown.net</span></code> is the Kabletown CDN&#8217;s DNS domain.</p>
+</div>
+</div>
+<div class="section" id="static-dns-entries">
+<span id="rl-static-dns"></span><span id="index-9"></span><h3>Static DNS Entries<a class="headerlink" href="#static-dns-entries" title="Permalink to this headline">¶</a></h3>
+<p>Static DNS entries allow you to create other names <em>under</em> the delivery service domain. You can enter any valid hostname, and create a CNAME, A or AAAA record for it by clicking the <strong>Static DNS</strong> button at the bottom of the delivery service details screen.</p>
+</div>
+<div class="section" id="server-assignments">
+<span id="rl-assign-edges"></span><span id="index-10"></span><h3>Server Assignments<a class="headerlink" href="#server-assignments" title="Permalink to this headline">¶</a></h3>
+<p>Click the <strong>Server Assignments</strong> button at the bottom of the screen to assign servers to this delivery service.  Servers can be selected by drilling down in a tree, starting at the profile, then the cache group, and then the individual servers. Traffic Router will only route traffic for this delivery service to servers that are assigned to it.</p>
+</div>
+</div>
+<div class="section" id="parameters-and-profiles">
+<span id="rl-working-with-profiles"></span><h2>Parameters and Profiles<a class="headerlink" href="#parameters-and-profiles" title="Permalink to this headline">¶</a></h2>
+<p>Parameters are shared between profiles if the set of <code class="docutils literal"><span class="pre">{</span> <span class="pre">name,</span> <span class="pre">config_file,</span> <span class="pre">value</span> <span class="pre">}</span></code> is the same. To change a value in one profile but not in others, the parameter has to be removed from the profile you want to change it in, and a new parameter entry has to be created (<strong>Add Parameter</strong> button at the bottom of the Parameters view), and assigned to that profile. It is easy to create new profiles from the <strong>Misc &gt; Profiles</strong> view - just use the <strong>Add/Copy Profile</strong> button at the bottom of the profile view to copy an existing profile to a new one. Profiles can be exported from one system and imported to another using the profile view as well. It makes no sense for a parameter to not be assigned to a single profile - in that case it really has no function. To find parameters like that use the <strong>Parameters &gt; Orphaned Parameters</strong> view. It is easy to create orphaned parameters by removing all profiles, or not assigning a profile directly after creating the parameter.</p>
+<div class="admonition seealso">
+<p class="first admonition-title">See also</p>
+<p class="last"><a class="reference internal" href="traffic_ops_config.html#rl-param-prof"><span>Parameters an profiles</span></a> in the <em>Configuring Traffic Ops</em> section.</p>
+</div>
+</div>
+<div class="section" id="tools">
+<h2>Tools<a class="headerlink" href="#tools" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="generate-iso">
+<span id="rl-generate-iso"></span><span id="index-11"></span><h3>Generate ISO<a class="headerlink" href="#generate-iso" title="Permalink to this headline">¶</a></h3>
+</div>
+<div class="section" id="queue-updates-and-snapshot-crconfig">
+<span id="rl-queue-updates"></span><h3>Queue Updates and Snapshot CRConfig<a class="headerlink" href="#queue-updates-and-snapshot-crconfig" title="Permalink to this headline">¶</a></h3>
+<p>When changing delivery services special care has to be taken so that Traffic Router will not send traffic to caches for delivery services that the cache doesn&#8217;t know about yet. In general, when adding delivery services, or adding servers to a delivery service, it is best to update the caches before updating Traffic Router and Traffic Monitor. When deleting delivery services, or deleting server assignments to delivery services, it is best to update Traffic Router and Traffic Monitor first and then the caches. Updating the cache configuration is done through the <em>Queue Updates</em> menu, and updating Traffic Monitor and  Traffic Router config is done through the <em>Snapshot CRConfig</em> menu.</p>
+<div class="section" id="queue-updates">
+<span id="index-12"></span><h4>Queue Updates<a class="headerlink" href="#queue-updates" title="Permalink to this headline">¶</a></h4>
+<p>Every 15 minutes the caches will run a <em>syncds</em> to get all changes needed from Traffic Ops. The files that will be updated by the syncds job are:</p>
+<ul class="simple">
+<li>records.config</li>
+<li>remap.config</li>
+<li>parent.config</li>
+<li>cache.config</li>
+<li>hosting.config</li>
+<li>url_sig_(.*).config</li>
+<li>hdr_rw_(.*).config</li>
+<li>regex_revalidate.config</li>
+<li>ip_allow.config</li>
+</ul>
+<p>A cache will only get updated when the update flag is set for it. To set the update flag, use the <em>Queue Updates</em> menu - here you can schedule updates for a whole CDN or a cache group:</p>
+<blockquote>
+<div><ol class="arabic simple">
+<li>Click <strong>Tools &gt; Queue Updates</strong>.</li>
+<li>Select the CDN to queueu uodates for, or All.</li>
+<li>Select the cache group to queue updates for, or All</li>
+<li>Click the <strong>Queue Updates</strong> button.</li>
+<li>When the Queue Updates for this Server? (all) window opens, click <strong>OK</strong>.</li>
+</ol>
+</div></blockquote>
+<p>To schedule updates for just one cache, use the &#8220;Server Checks&#8221; page, and click the <img alt="checkmark" src="../_images/good.png" /> in the <em>UPD</em> column. The UPD column of Server Checks page will change show a <img alt="clock" src="../_images/clock-black.png" /> when updates are pending for that cache.</p>
+</div>
+<div class="section" id="snapshot-crconfig">
+<span id="index-13"></span><h4>Snapshot CRConfig<a class="headerlink" href="#snapshot-crconfig" title="Permalink to this headline">¶</a></h4>
+<p>Every 60 seconds Traffic Monitor will check with Traffic Ops to see if a new CRConfig snapshot was made. If there is a new CRCOnfig, it will apply it to both Traffic Monitor and Traffic Router. See <span class="xref std std-ref">rl-crconfig</span> for more information on the CRConfig file. To create a new snapshot, use the <em>Tools &gt; Snapshot CRConfig</em> menu:</p>
+<blockquote>
+<div><ol class="arabic">
+<li><p class="first">Click <strong>Tools &gt; Snapshot CRConfig</strong>.</p>
+</li>
+<li><p class="first">Verify the selection of the correct CDN from the Choose CDN drop down and click <strong>Diff CRConfig</strong>.
+On initial selection of this, the CRConfig Diff window says the following:</p>
+<p>There is no existing CRConfig for [cdn] to diff against... Is this the first snapshot???
+If you are not sure why you are getting this message, please do not proceed!
+To proceed writing the snapshot anyway click the &#8216;Write CRConfig&#8217; button below.</p>
+<p>If there is an older version of the CRConfig, a window will pop up showing the differences
+between the active CRConfig and the CRConfig about to be written.</p>
+</li>
+<li><p class="first">Click <strong>Write CRConfig</strong>.</p>
+</li>
+<li><p class="first">When the This will push out a new CRConfig.json. Are you sure? window opens, click <strong>OK</strong>.</p>
+</li>
+<li><p class="first">The Successfully wrote CRConfig.json! window opens, click <strong>OK</strong>.</p>
+</li>
+</ol>
+</div></blockquote>
+</div>
+</div>
+</div>
+<div class="section" id="invalidate-content">
+<span id="rl-purge"></span><span id="index-14"></span><h2>Invalidate Content<a class="headerlink" href="#invalidate-content" title="Permalink to this headline">¶</a></h2>
+<p>Invalidating content on the CDN is sometimes necessary when the origin was mis configured and something is cached in the CDN caches that needs to be removed. Given the size of a typical Traffic Control CDN and the amount of content that can be cached in it, removing the content from all the caches may take a long time. To speed up content invalidation, Traffic Ops will not try to remove the content from the caches, but it makes the content in accessible using the <em>regex_revalidate</em> ATS plugin. This forces a <em>revalidation</em> of the content, rather than a new get.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">This method forces a HTTP <em>revalidation</em> of the content, and not a new <em>GET</em> - the origin needs to support revalidation according to the HTTP/1.1 specification, and send a <code class="docutils literal"><span class="pre">200</span> <span class="pre">OK</span></code> or <code class="docutils literal"><span class="pre">304</span> <span class="pre">Not</span> <span class="pre">Modified</span></code> as applicable.</p>
+</div>
+<p>To invalidate content:</p>
+<blockquote>
+<div><ol class="arabic simple">
+<li>Click <strong>Tools &gt; Invalidate Content</strong></li>
+<li>Fill out the form fields:</li>
+</ol>
+<blockquote>
+<div><ul class="simple">
+<li>Select the <strong>Delivery Service</strong></li>
+<li>Enter the <strong>Path Regex</strong> - this should be a <a class="reference external" href="http://www.pcre.org/">PCRE</a> compatible regular expression for the path to match for forcing the revalidation. Be careful to only match on the content you need to remove - revalidation is an expensive operation for many origins, and a simple <code class="docutils literal"><span class="pre">/.*</span></code> can cause an overload condition of the origin.</li>
+<li>Enter the <strong>Time To Live</strong> - this is how long the revalidation force will be active for. It usually makes sense to make this the same as the <code class="docutils literal"><span class="pre">Cache-Control</span></code> header from the origin sets the object time to live in cache (by <code class="docutils literal"><span class="pre">max-age</span></code> or <code class="docutils literal"><span class="pre">Expires</span></code>). Entering a longer TTL here will make the caches do unnecessary work.</li>
+<li>Enter the <strong>Start Time</strong> - this is the start time when the force revalidation will be made active. Is pre populated with the current time, leave as is to schedule ASAP.</li>
+</ul>
+</div></blockquote>
+<ol class="arabic simple" start="3">
+<li>Click the <strong>Submit</strong> button.</li>
+</ol>
+</div></blockquote>
+</div>
+<div class="section" id="generate-dnssec-keys">
+<h2>Generate DNSSEC Keys<a class="headerlink" href="#generate-dnssec-keys" title="Permalink to this headline">¶</a></h2>
+<p>TBD</p>
+</div>
+</div>
+
+
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="traffic_ops_extensions.html" class="btn btn-neutral float-right" title="Managing Traffic Ops Extensions">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="traffic_ops_config.html" class="btn btn-neutral" title="Configuring Traffic Ops"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../',
+            VERSION:'1.1.2',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true
+        };
+    </script>
+      <script type="text/javascript" src="../_static/jquery.js"></script>
+      <script type="text/javascript" src="../_static/underscore.js"></script>
+      <script type="text/javascript" src="../_static/doctools.js"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

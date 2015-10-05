@@ -257,11 +257,11 @@ To begin the install:
     Connecting to geolite.maxmind.com|141.101.115.190|:80... connected.
     HTTP request sent, awaiting response... 200 OK
     Length: 17633433 (17M) [application/octet-stream]
-    Saving to: “GeoLite2-City.mmdb.gz”
+    Saving to: "GeoLite2-City.mmdb.gz"
 
     100%[==================================================================================================================================================================>] 17,633,433  7.03M/s   in 2.4s
 
-    2015-04-14 02:14:35 (7.03 MB/s) - “GeoLite2-City.mmdb.gz” saved [17633433/17633433]
+    2015-04-14 02:14:35 (7.03 MB/s) - "GeoLite2-City.mmdb.gz" saved [17633433/17633433]
 
     Copying coverage zone file to public dir.
 

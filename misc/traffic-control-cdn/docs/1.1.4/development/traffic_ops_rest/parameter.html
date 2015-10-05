@@ -1,0 +1,403 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Parameter &mdash; Traffic Control 1.1.4 documentation </title>
+  
+
+  
+  
+    <link rel="shortcut icon" href="../../_static/favicon.ico"/>
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  
+
+  
+    <link rel="stylesheet" href="../../_static/theme_overrides.css" type="text/css" />
+  
+
+  
+    <link rel="top" title="Traffic Control 1.1.4 documentation" href="../../index.html"/>
+        <link rel="up" title="Traffic Ops" href="../traffic_ops.html"/>
+        <link rel="next" title="Physical Location" href="phys_location.html"/>
+        <link rel="prev" title="hwinfo" href="hwinfo.html"/> 
+
+  
+  <script src="_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-nav-search">
+        
+
+        
+          <a href="/" class="icon icon-home"> Traffic Control
+        
+
+        
+          
+          <img src="../../_static/tc_logo.png" class="logo" />
+        
+        </a>
+
+        
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+        
+      </div>
+
+      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+        
+          
+          
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../basics/index.html">CDN Basics</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../basics/content_delivery_networks.html">Content Delivery Networks</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../basics/http_11.html">HTTP 1.1</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../basics/caching_proxies.html">Caching Proxies</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../basics/cache_revalidation.html">Cache Control Headers and Revalidation</a></li>
+</ul>
+</li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../overview/index.html">Traffic Control Overview</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../overview/introduction.html">Introduction</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../overview/traffic_ops.html">Traffic Ops</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../overview/traffic_router.html">Traffic Router</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../overview/traffic_monitor.html">Traffic Monitor</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../overview/traffic_stats.html">Traffic Stats</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../overview/traffic_portal.html">Traffic Portal</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../overview/traffic_server.html">Traffic Server</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../overview/traffic_vault.html">Traffic Vault</a></li>
+</ul>
+</li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../admin/index.html">Administrator&#8217;s Guide</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../admin/traffic_ops_install.html">Installing Traffic Ops</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../admin/traffic_ops_config.html">Configuring Traffic Ops</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../admin/traffic_ops_using.html">Using Traffic Ops</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../admin/traffic_ops_extensions.html">Managing Traffic Ops Extensions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../admin/traffic_monitor.html">Traffic Monitor Administration</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../admin/traffic_router.html">Traffic Router Administration</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../admin/traffic_stats.html">Traffic Stats Administration</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../admin/traffic_server.html">Traffic Server Administration</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../admin/traffic_vault.html">Traffic Vault Administration</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../admin/quick_howto/index.html">Quick How To Guides</a></li>
+</ul>
+</li>
+</ul>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="../index.html">Developer&#8217;s Guide</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="../traffic_ops.html">Traffic Ops</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../traffic_router.html">Traffic Router</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../traffic_monitor.html">Traffic Monitor</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../traffic_stats.html">Traffic Stats</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../traffic_server.html">Traffic Server</a></li>
+</ul>
+</li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../faq/index.html">FAQ</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../faq/general.html">General</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../faq/development.html">Development</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../faq/administration.html">Running a Traffic Control CDN</a></li>
+</ul>
+</li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../glossary.html">Glossary</a></li>
+</ul>
+
+          
+        
+      </div>
+      &nbsp;
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="../../index.html">Traffic Control</a>
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="../../index.html">Traffic Control 1.1.4</a> &raquo;</li>
+      
+          <li><a href="../index.html">Developer&#8217;s Guide</a> &raquo;</li>
+      
+          <li><a href="../traffic_ops.html">Traffic Ops</a> &raquo;</li>
+      
+    <li>Parameter</li>
+      <li class="wy-breadcrumbs-aside">
+        
+          <a href="../../_sources/development/traffic_ops_rest/parameter.txt" rel="nofollow"> View page source</a>
+        
+      </li>
+  </ul>
+  <hr/>
+</div>
+ 		  
+    		  <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      		  
+        		  <a href="phys_location.html" class="btn btn-neutral float-right" title="Physical Location">Next <span class="fa fa-arrow-circle-right"></span></a>
+      		  
+      		  
+        		  <a href="hwinfo.html" class="btn btn-neutral" title="hwinfo"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      		  
+    		  </div>
+  		  
+          <div role="main" class="document">
+            
+  <div class="section" id="parameter">
+<span id="to-api-parameter"></span><h1>Parameter<a class="headerlink" href="#parameter" title="Permalink to this headline">¶</a></h1>
+<p><strong>GET /api/1.1/parameters.json</strong></p>
+<blockquote>
+<div><p>Authentication Required: Yes</p>
+<p><strong>Return Values</strong></p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="23%" />
+<col width="10%" />
+<col width="67%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">Parameter</th>
+<th class="head">Type</th>
+<th class="head">Description</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td><code class="docutils literal"><span class="pre">last_updated</span></code></td>
+<td>string</td>
+<td>The Time / Date this server entry was last updated</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal"><span class="pre">value</span></code></td>
+<td>string</td>
+<td>The parameter value</td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal"><span class="pre">name</span></code></td>
+<td>string</td>
+<td>The parameter name</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal"><span class="pre">config_file</span></code></td>
+<td>string</td>
+<td>The parameter config_file</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Response Example</strong></p>
+<div class="highlight-python"><div class="highlight"><pre><span class="p">{</span>
+ <span class="s">&quot;response&quot;</span><span class="p">:</span> <span class="p">[</span>
+    <span class="p">{</span>
+       <span class="s">&quot;last_updated&quot;</span><span class="p">:</span> <span class="s">&quot;2012-09-17 21:41:22&quot;</span><span class="p">,</span>
+       <span class="s">&quot;value&quot;</span><span class="p">:</span> <span class="s">&quot;foo.bar.net&quot;</span><span class="p">,</span>
+       <span class="s">&quot;name&quot;</span><span class="p">:</span> <span class="s">&quot;domain_name&quot;</span><span class="p">,</span>
+       <span class="s">&quot;config_file&quot;</span><span class="p">:</span> <span class="s">&quot;FooConfig.xml&quot;</span>
+    <span class="p">},</span>
+    <span class="p">{</span>
+       <span class="s">&quot;last_updated&quot;</span><span class="p">:</span> <span class="s">&quot;2012-09-17 21:41:22&quot;</span><span class="p">,</span>
+       <span class="s">&quot;value&quot;</span><span class="p">:</span> <span class="s">&quot;0,1,2,3,4,5,6&quot;</span><span class="p">,</span>
+       <span class="s">&quot;name&quot;</span><span class="p">:</span> <span class="s">&quot;Drive_Letters&quot;</span><span class="p">,</span>
+       <span class="s">&quot;config_file&quot;</span><span class="p">:</span> <span class="s">&quot;storage.config&quot;</span>
+    <span class="p">},</span>
+    <span class="p">{</span>
+       <span class="s">&quot;last_updated&quot;</span><span class="p">:</span> <span class="s">&quot;2012-09-17 21:41:22&quot;</span><span class="p">,</span>
+       <span class="s">&quot;value&quot;</span><span class="p">:</span> <span class="s">&quot;STRING __HOSTNAME__&quot;</span><span class="p">,</span>
+       <span class="s">&quot;name&quot;</span><span class="p">:</span> <span class="s">&quot;CONFIG proxy.config.proxy_name&quot;</span><span class="p">,</span>
+       <span class="s">&quot;config_file&quot;</span><span class="p">:</span> <span class="s">&quot;records.config&quot;</span>
+    <span class="p">}</span>
+ <span class="p">],</span>
+ <span class="s">&quot;version&quot;</span><span class="p">:</span> <span class="s">&quot;1.1&quot;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</div></blockquote>
+<div class="line-block">
+<div class="line"><br /></div>
+</div>
+<p><strong>GET /api/1.1/parameters/profile/:profile_name.json</strong></p>
+<blockquote>
+<div><p>Authentication Required: Yes</p>
+<p><strong>Request Route Parameters</strong></p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="44%" />
+<col width="24%" />
+<col width="32%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">Name</th>
+<th class="head">Required</th>
+<th class="head">Description</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td><code class="docutils literal"><span class="pre">profile_name</span></code></td>
+<td>yes</td>
+<td>&nbsp;</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Return Values</strong></p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="23%" />
+<col width="10%" />
+<col width="67%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">Parameter</th>
+<th class="head">Type</th>
+<th class="head">Description</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td><code class="docutils literal"><span class="pre">last_updated</span></code></td>
+<td>string</td>
+<td>The Time / Date this server entry was last updated</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal"><span class="pre">value</span></code></td>
+<td>string</td>
+<td>The parameter value</td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal"><span class="pre">name</span></code></td>
+<td>string</td>
+<td>The parameter name</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal"><span class="pre">config_file</span></code></td>
+<td>string</td>
+<td>The parameter config_file</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Response Example</strong></p>
+<div class="highlight-python"><div class="highlight"><pre><span class="p">{</span>
+ <span class="s">&quot;response&quot;</span><span class="p">:</span> <span class="p">[</span>
+    <span class="p">{</span>
+       <span class="s">&quot;last_updated&quot;</span><span class="p">:</span> <span class="s">&quot;2012-09-17 21:41:22&quot;</span><span class="p">,</span>
+       <span class="s">&quot;value&quot;</span><span class="p">:</span> <span class="s">&quot;foo.bar.net&quot;</span><span class="p">,</span>
+       <span class="s">&quot;name&quot;</span><span class="p">:</span> <span class="s">&quot;domain_name&quot;</span><span class="p">,</span>
+       <span class="s">&quot;config_file&quot;</span><span class="p">:</span> <span class="s">&quot;FooConfig.xml&quot;</span>
+    <span class="p">},</span>
+    <span class="p">{</span>
+       <span class="s">&quot;last_updated&quot;</span><span class="p">:</span> <span class="s">&quot;2012-09-17 21:41:22&quot;</span><span class="p">,</span>
+       <span class="s">&quot;value&quot;</span><span class="p">:</span> <span class="s">&quot;0,1,2,3,4,5,6&quot;</span><span class="p">,</span>
+       <span class="s">&quot;name&quot;</span><span class="p">:</span> <span class="s">&quot;Drive_Letters&quot;</span><span class="p">,</span>
+       <span class="s">&quot;config_file&quot;</span><span class="p">:</span> <span class="s">&quot;storage.config&quot;</span>
+    <span class="p">},</span>
+    <span class="p">{</span>
+       <span class="s">&quot;last_updated&quot;</span><span class="p">:</span> <span class="s">&quot;2012-09-17 21:41:22&quot;</span><span class="p">,</span>
+       <span class="s">&quot;value&quot;</span><span class="p">:</span> <span class="s">&quot;STRING __HOSTNAME__&quot;</span><span class="p">,</span>
+       <span class="s">&quot;name&quot;</span><span class="p">:</span> <span class="s">&quot;CONFIG proxy.config.proxy_name&quot;</span><span class="p">,</span>
+       <span class="s">&quot;config_file&quot;</span><span class="p">:</span> <span class="s">&quot;records.config&quot;</span>
+    <span class="p">}</span>
+ <span class="p">],</span>
+ <span class="s">&quot;version&quot;</span><span class="p">:</span> <span class="s">&quot;1.1&quot;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</div></blockquote>
+</div>
+
+
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="phys_location.html" class="btn btn-neutral float-right" title="Physical Location">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="hwinfo.html" class="btn btn-neutral" title="hwinfo"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../../',
+            VERSION:'1.1.4',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true
+        };
+    </script>
+      <script type="text/javascript" src="../../_static/jquery.js"></script>
+      <script type="text/javascript" src="../../_static/underscore.js"></script>
+      <script type="text/javascript" src="../../_static/doctools.js"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="../../_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

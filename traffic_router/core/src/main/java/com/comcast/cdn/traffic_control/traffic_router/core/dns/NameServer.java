@@ -62,11 +62,11 @@ public class NameServer {
 	 *            the IP address of the client
 	 * @return a response message
 	 */
-	public Message query(final Message request, final InetAddress clientAddress) {
+	public Message query(final Message request, final InetAddress clientAddress, final DNSAccessRecord.Builder builder) {
 		final Message response = new Message();
 		try {
 			addQuestion(request, response);
-			addAnswers(request, response, clientAddress);
+			addAnswers(request, response, clientAddress, builder);
 		} catch (final RuntimeException e) {
 			LOGGER.error(e.getMessage(), e);
 			response.getHeader().setRcode(Rcode.SERVFAIL);
@@ -75,7 +75,8 @@ public class NameServer {
 		return response;
 	}
 
-	private void addAnswers(final Message request, final Message response, final InetAddress clientAddress) {
+	@SuppressWarnings({"PMD.CyclomaticComplexity", "PMD.NPathComplexity"})
+	private void addAnswers(final Message request, final Message response, final InetAddress clientAddress, final DNSAccessRecord.Builder builder) {
 		final Record question = request.getQuestion();
 		final int qclass = question.getDClass();
 		final Name qname = question.getName();
@@ -106,7 +107,7 @@ public class NameServer {
 			flags |= FLAG_SIGONLY;
 		}
 
-		final Zone zone = trafficRouterManager.getTrafficRouter().getZone(qname, qtype, clientAddress, dnssecRequest);
+		final Zone zone = trafficRouterManager.getTrafficRouter().getZone(qname, qtype, clientAddress, dnssecRequest, builder);
 
 		if (zone == null) {
 			response.getHeader().setRcode(Rcode.REFUSED);
@@ -146,7 +147,7 @@ public class NameServer {
 		response.addRecord(request.getQuestion(), Section.QUESTION);
 	}
 
-	@SuppressWarnings("unchecked")
+	@SuppressWarnings({"unchecked", "PMD.CyclomaticComplexity"})
 	private static void addRRset(final Name name, final Message response, final RRset rrset, final int section, final int flags) {
 		for (int s = 1; s < NUM_SECTIONS; s++) {
 			if (response.findRRset(name, rrset.getType(), s)) {
@@ -170,7 +171,7 @@ public class NameServer {
 		// We prefer to shuffle the list over "cycling" as we could with rrset.rrs(true) above.
 		Collections.shuffle(recordList);
 
-		for (Record r : recordList) {
+		for (final Record r : recordList) {
 			response.addRecord(r, section);
 		}
 
@@ -186,7 +187,7 @@ public class NameServer {
 		}
 	}
 
-	@SuppressWarnings("unchecked")
+	@SuppressWarnings({"unchecked", "PMD.CyclomaticComplexity", "PMD.NPathComplexity"})
 	private static void lookup(final Name qname, final int qtype, final Zone zone, final Message response, final int iteration, final int flags) {
 		if (iteration > MAX_ITERATIONS) {
 			return;

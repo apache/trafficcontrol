@@ -33,7 +33,7 @@ sub index {
 
 	#get a list of cdns from parameters
 	&navbarpage($self);
-	my @cdns = $self->db->resultset('Parameter')->search( { name => 'CDN_Name' } )->get_column('value')->all();
+	my @cdns = $self->db->resultset('Cdn')->search( {} )->get_column('name')->all();
 	$self->stash(
 		cdns => \@cdns,
 	);
@@ -99,9 +99,11 @@ sub add {
 	my $z_expiry = "30";
 	my $effective_date = strftime( "%Y-%m-%d %H:%M:%S\n", gmtime(time) );
 	my $keys;
+	my $existing = 0;
 	my $response_container = $self->riak_get( "dnssec", $cdn_name );
 	my $get_keys = $response_container->{'response'};
 	if ( $get_keys->is_success() ) {
+		$existing = 1; ##change the generate keys dialog based on whether or not keys exist.
 		$keys = decode_json( $get_keys->content );
 		my $cdn_ksk = $keys->{$cdn_name}->{ksk};
 		foreach my $cdn_krecord (@$cdn_ksk) {
@@ -129,7 +131,8 @@ sub add {
 			cdn_name => $cdn_name,
 			k_expiry => $k_expiry,
 			z_expiry => $z_expiry,
-			effective_date => $effective_date
+			effective_date => $effective_date,
+			existing => $existing
 		},
 		fbox_layout => 1
 	);
@@ -162,7 +165,7 @@ sub addksk {
 			cdn_name => $cdn_name,
 			k_expiry => $k_expiry,
 			z_expiry => "1", ##for is_valid purposes only. 
-			effective_date => $effective_date
+			effective_date => $effective_date,
 		},
 		fbox_layout => 1
 	);
@@ -260,7 +263,7 @@ sub create {
 			}
 		}
 		else {
-			my @cdns = $self->db->resultset('Parameter')->search( { name => 'CDN_Name' } )->get_column('value')->all();
+			my @cdns = $self->db->resultset('Cdn')->search( {} )->get_column('name')->all();
 
 			$self->stash(
 				dnssec => {
@@ -333,7 +336,7 @@ sub genksk {
 		if ( $get_keys->is_success() ) {
 			$keys = decode_json( $get_keys->content );
 		}
-		my $new_key = API::Cdn::regen_expired_keys( $self, "ksk", $cdn_name, $keys, $effective_date, 1);
+		my $new_key = API::Cdn::regen_expired_keys( $self, "ksk", $cdn_name, $keys, $effective_date, 1, 1);
 		$keys->{$cdn_name} = $new_key;
 		my $json_data = encode_json( $keys );
 		$response_container = $self->riak_put( "dnssec", $cdn_name, $json_data );
@@ -364,7 +367,7 @@ sub build_stash {
 	my $ttl      = $self->param('dnssec.ttl');
 	my $z_expiry = $self->param('dnssec.z_expiry');
 	my $k_expiry = $self->param('dnssec.k_expiry');
-	my @cdns     = $self->db->resultset('Parameter')->search( { name => 'CDN_Name' } )->get_column('value')->all();
+	my @cdns     = $self->db->resultset('Cdn')->search( {} )->get_column('name')->all();
 	&navbarpage($self);
 	$self->stash(
 		dnssec => {

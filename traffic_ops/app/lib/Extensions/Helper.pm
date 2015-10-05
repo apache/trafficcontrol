@@ -28,11 +28,11 @@ use strict;
 use warnings;
 
 use constant {
-	API_VERSION     => "1.1",
+	API_VERSION     => "1.2",
 	DEFAULT_TOKEN   => '91504CE6-8E4A-46B2-9F9F-FE7C15228498',
-	SERVERLIST_PATH => '/api/1.1/servers.json',
-	DSLIST_PATH     => '/api/1.1/deliveryservices.json',
-	PARAMETER_PATH  => '/api/1.1/parameters'
+	SERVERLIST_PATH => '/api/1.2/servers.json',
+	DSLIST_PATH     => '/api/1.2/deliveryservices.json',
+	PARAMETER_PATH  => '/api/1.2/parameters'
 };
 
 require Exporter;

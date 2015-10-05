@@ -1,0 +1,473 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Configuring Traffic Ops &mdash; Traffic Control 1.1.4 documentation </title>
+  
+
+  
+  
+    <link rel="shortcut icon" href="../_static/favicon.ico"/>
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  
+
+  
+    <link rel="stylesheet" href="../_static/theme_overrides.css" type="text/css" />
+  
+
+  
+    <link rel="top" title="Traffic Control 1.1.4 documentation" href="../index.html"/>
+        <link rel="up" title="Administrator’s Guide" href="index.html"/>
+        <link rel="next" title="Using Traffic Ops" href="traffic_ops_using.html"/>
+        <link rel="prev" title="Installing Traffic Ops" href="traffic_ops_install.html"/> 
+
+  
+  <script src="_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-nav-search">
+        
+
+        
+          <a href="/" class="icon icon-home"> Traffic Control
+        
+
+        
+          
+          <img src="../_static/tc_logo.png" class="logo" />
+        
+        </a>
+
+        
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+        
+      </div>
+
+      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+        
+          
+          
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../basics/index.html">CDN Basics</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../basics/content_delivery_networks.html">Content Delivery Networks</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../basics/http_11.html">HTTP 1.1</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../basics/caching_proxies.html">Caching Proxies</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../basics/cache_revalidation.html">Cache Control Headers and Revalidation</a></li>
+</ul>
+</li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../overview/index.html">Traffic Control Overview</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../overview/introduction.html">Introduction</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../overview/traffic_ops.html">Traffic Ops</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../overview/traffic_router.html">Traffic Router</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../overview/traffic_monitor.html">Traffic Monitor</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../overview/traffic_stats.html">Traffic Stats</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../overview/traffic_portal.html">Traffic Portal</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../overview/traffic_server.html">Traffic Server</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../overview/traffic_vault.html">Traffic Vault</a></li>
+</ul>
+</li>
+</ul>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="index.html">Administrator&#8217;s Guide</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="traffic_ops_install.html">Installing Traffic Ops</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="">Configuring Traffic Ops</a></li>
+<li class="toctree-l2"><a class="reference internal" href="traffic_ops_using.html">Using Traffic Ops</a></li>
+<li class="toctree-l2"><a class="reference internal" href="traffic_ops_extensions.html">Managing Traffic Ops Extensions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="traffic_monitor.html">Traffic Monitor Administration</a></li>
+<li class="toctree-l2"><a class="reference internal" href="traffic_router.html">Traffic Router Administration</a></li>
+<li class="toctree-l2"><a class="reference internal" href="traffic_stats.html">Traffic Stats Administration</a></li>
+<li class="toctree-l2"><a class="reference internal" href="traffic_server.html">Traffic Server Administration</a></li>
+<li class="toctree-l2"><a class="reference internal" href="traffic_vault.html">Traffic Vault Administration</a></li>
+<li class="toctree-l2"><a class="reference internal" href="quick_howto/index.html">Quick How To Guides</a></li>
+</ul>
+</li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../development/index.html">Developer&#8217;s Guide</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../development/traffic_ops.html">Traffic Ops</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../development/traffic_router.html">Traffic Router</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../development/traffic_monitor.html">Traffic Monitor</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../development/traffic_stats.html">Traffic Stats</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../development/traffic_server.html">Traffic Server</a></li>
+</ul>
+</li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../faq/index.html">FAQ</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../faq/general.html">General</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../faq/development.html">Development</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../faq/administration.html">Running a Traffic Control CDN</a></li>
+</ul>
+</li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../glossary.html">Glossary</a></li>
+</ul>
+
+          
+        
+      </div>
+      &nbsp;
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="../index.html">Traffic Control</a>
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="../index.html">Traffic Control 1.1.4</a> &raquo;</li>
+      
+          <li><a href="index.html">Administrator&#8217;s Guide</a> &raquo;</li>
+      
+    <li>Configuring Traffic Ops</li>
+      <li class="wy-breadcrumbs-aside">
+        
+          <a href="../_sources/admin/traffic_ops_config.txt" rel="nofollow"> View page source</a>
+        
+      </li>
+  </ul>
+  <hr/>
+</div>
+ 		  
+    		  <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      		  
+        		  <a href="traffic_ops_using.html" class="btn btn-neutral float-right" title="Using Traffic Ops">Next <span class="fa fa-arrow-circle-right"></span></a>
+      		  
+      		  
+        		  <a href="traffic_ops_install.html" class="btn btn-neutral" title="Installing Traffic Ops"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      		  
+    		  </div>
+  		  
+          <div role="main" class="document">
+            
+  <div class="section" id="configuring-traffic-ops">
+<h1>Configuring Traffic Ops<a class="headerlink" href="#configuring-traffic-ops" title="Permalink to this headline">¶</a></h1>
+<p>Follow the steps below to configure the newly installed Traffic Ops Instance.</p>
+<div class="section" id="installing-the-ssl-cert">
+<h2>Installing the SSL Cert<a class="headerlink" href="#installing-the-ssl-cert" title="Permalink to this headline">¶</a></h2>
+<p>By default, Traffic Ops runs as an SSL web server, and a certificate needs to be installed.  TBD.</p>
+</div>
+<div class="section" id="content-delivery-networks">
+<h2>Content Delivery Networks<a class="headerlink" href="#content-delivery-networks" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="profile-parameters">
+<span id="rl-param-prof"></span><h2>Profile Parameters<a class="headerlink" href="#profile-parameters" title="Permalink to this headline">¶</a></h2>
+<p>Many of the settings for the different servers in a Traffic Control CDN are controlled by parameters in the parameter view of Traffic Ops. Parameters are grouped in profiles and profiles are assigned to a server. For a typical cache there are hundreds of configuration settings to apply. The Traffic Ops parameter view contains the defined settings. To make life easier, Traffic Ops allows for duplication, comparison, import and export of Profiles. Traffic Ops also has a &#8220;Global profile&#8221; - the parameters in this profile are going to be applied to all servers in the Traffic Ops instance, or apply to Traffic Ops themselves. These parameters are:</p>
+<table border="1" class="docutils" id="index-0">
+<colgroup>
+<col width="15%" />
+<col width="9%" />
+<col width="77%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">Name</th>
+<th class="head">Config file</th>
+<th class="head">Value</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td>tm.url</td>
+<td>global</td>
+<td>The URL where this Traffic Ops instance is being served from.</td>
+</tr>
+<tr class="row-odd"><td>tm.toolname</td>
+<td>global</td>
+<td>The name of the Traffic Ops tool. Usually &#8220;Traffic Ops&#8221;. Used in the About screen and in the comments headers of the files generated.</td>
+</tr>
+<tr class="row-even"><td>tm.infourl</td>
+<td>global</td>
+<td>This is the &#8220;for more information go here&#8221; URL, which is visible in the About page.</td>
+</tr>
+<tr class="row-odd"><td>tm.logourl</td>
+<td>global</td>
+<td>This is the URL of the logo for Traffic Ops and can be relative if the logo is under traffic_ops/app/public.</td>
+</tr>
+<tr class="row-even"><td>tm.instance_name</td>
+<td>global</td>
+<td>The name of the Traffic Ops instance. Can be used when multiple instances are active. Visible in the About page.</td>
+</tr>
+<tr class="row-odd"><td>tm.traffic_mon_fwd_proxy</td>
+<td>global</td>
+<td>When collecting stats from Traffic Monitor, Traffic Ops uses this forward proxy to pull the stats through.
+This can be any of the MID tier caches, or a forward cache specifically deployed for this purpose. Setting
+this variable can significantly lighten the load on the Traffic Monitor system and it is recommended to
+set this parameter on a production system.</td>
+</tr>
+<tr class="row-even"><td>geolocation.polling.url</td>
+<td>CRConfig.json</td>
+<td>The location to get the GeoLiteCity database from.</td>
+</tr>
+<tr class="row-odd"><td>geolocation6.polling.url</td>
+<td>CRConfig.json</td>
+<td>The location to get the IPv6 GeoLiteCity database from.</td>
+</tr>
+</tbody>
+</table>
+<p>These parameters should be set to reflect the local environment.</p>
+<p>After running the postinstall script, Traffic Ops has the following profiles pre-loaded:</p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="9%" />
+<col width="91%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">Name</th>
+<th class="head">Description</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td>EDGE1</td>
+<td>The profile to be applied to the latest supported version of ATS, when running as an EDGE cache</td>
+</tr>
+<tr class="row-odd"><td>TR1</td>
+<td>The profile to be applied to the latest version of Traffic Router</td>
+</tr>
+<tr class="row-even"><td>TM1</td>
+<td>The profile to be applied to the latest version of Traffic Monitor</td>
+</tr>
+<tr class="row-odd"><td>MID1</td>
+<td>The profile to be applied to the latest supported version of ATS, when running as an MID cache</td>
+</tr>
+<tr class="row-even"><td>RIAK_ALL</td>
+<td>Riak profile for all CDNs to be applied to the Traffic Vault servers</td>
+</tr>
+</tbody>
+</table>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">The Traffic Server profiles contain some information that is specific to the hardware being used (most notably the disk configuration), so some parameters will have to be changed to reflect your configuration. Future releases of Traffic Control will separate the hardware and software profiles so it is easier to &#8220;mix-and-match&#8221; different hardware configurations.</p>
+</div>
+<p>Below is a list of cache parameters that are likely to need changes from the default profiles shipped with Traffic Ops:</p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="16%" />
+<col width="11%" />
+<col width="73%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">Name</th>
+<th class="head">Config file</th>
+<th class="head">Description</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td>allow_ip</td>
+<td>astats.config</td>
+<td>This is a comma separated  list of IPv4 CIDR blocks that will have access to the astats statistics on the caches.
+The Traffic Monitor IP addresses have to be included in this, if they are using IPv4 to monitor the caches.</td>
+</tr>
+<tr class="row-odd"><td>allow_ip6</td>
+<td>astats.config</td>
+<td>This is a comma separated  list of IPv6 CIDR blocks that will have access to the astats statistics on the caches.
+The Traffic Monitor IP addresses have to be included in this, if they are using IPv6 to monitor the caches.</td>
+</tr>
+<tr class="row-even"><td>Drive_Prefix</td>
+<td>storage.config</td>
+<td>JvD/Jeff to supply blurb</td>
+</tr>
+<tr class="row-odd"><td>Drive_Letters</td>
+<td>storage.config</td>
+<td>JvD/Jeff to supply blurb</td>
+</tr>
+<tr class="row-even"><td>purge_allow_ip</td>
+<td>ip_allow.config</td>
+<td>The IP address that is allowed to &#8220;purge&#8221; content on the CDN through regex_revalidate</td>
+</tr>
+<tr class="row-odd"><td>health.threshold.loadavg</td>
+<td>rascal.properties</td>
+<td>The Unix load average at which Traffic Router will stop sending traffic to this cache</td>
+</tr>
+<tr class="row-even"><td>health.threshold.\
+availableBandwidthInKbps</td>
+<td>rascal.properties</td>
+<td>The amount of bandwidth that Traffic Router will try to keep available on the cache.
+For example: &#8220;&#8221;&gt;1500000&#8221; means stop sending new traffic to this cache when traffic is at 8.5Gbps on a 10Gbps interface.</td>
+</tr>
+</tbody>
+</table>
+<p>Below is a list of Traffic Server plugins that need to be configured in the parameter table:</p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="9%" />
+<col width="8%" />
+<col width="28%" />
+<col width="55%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">Name</th>
+<th class="head">Config file</th>
+<th class="head">Description</th>
+<th class="head">Details</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td>astats_over_http</td>
+<td>package</td>
+<td>The package version for the astats_over_http plugin.</td>
+<td><a class="reference external" href="http://traffic-control-cdn.net/downloads/index.html">astats_over_http</a></td>
+</tr>
+<tr class="row-odd"><td>trafficserver</td>
+<td>package</td>
+<td>The package version for the trafficserver plugin.</td>
+<td><a class="reference external" href="http://traffic-control-cdn.net/downloads/index.html">trafficserver</a></td>
+</tr>
+<tr class="row-even"><td>regex_revalidate</td>
+<td>plugin.config</td>
+<td>The config to be used for regex_revalidate.
+For example: &#8211;config regex_revalidate.config</td>
+<td><a class="reference external" href="https://docs.trafficserver.apache.org/en/5.3.x/reference/plugins/regex_remap.en.html">regex_revalidate</a></td>
+</tr>
+<tr class="row-odd"><td>remap_stats</td>
+<td>plugin.config</td>
+<td>The config to be used for remap_stats.
+Value is left blank.</td>
+<td><a class="reference external" href="https://github.com/apache/trafficserver/tree/master/plugins/experimental/remap_stats">remap_stats</a></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="section" id="regions-locations-and-cache-groups">
+<h2>Regions, Locations and Cache Groups<a class="headerlink" href="#regions-locations-and-cache-groups" title="Permalink to this headline">¶</a></h2>
+<p>All servers have to have a <cite>location</cite>, which is their physical location. Each location is part of a <cite>region</cite>, and each region is part of a <cite>division</cite>. For Example, <code class="docutils literal"><span class="pre">Denver</span></code> could be a location in the <code class="docutils literal"><span class="pre">Mile</span> <span class="pre">High</span></code> region and that region could be part of the <code class="docutils literal"><span class="pre">West</span></code> division. Enter your divisions first in  <cite>Misc-&gt;Divisions</cite>, then enter the regions in <cite>Misc-&gt;Regions</cite>, referencing the divisions entered, and finally, enter the physical locations in <cite>Misc-&gt;Locations</cite>, referencing the regions entered.</p>
+<p>All servers also have to be part of a <cite>cache group</cite>. A cache group is a logical grouping of caches, that don&#8217;t have to be in the same physical location (in fact, usually a cache group is spread across minimally 2 physical Locations for redundancy purposes), but share geo coordinates for content routing purposes. JvD to add more.</p>
+<div class="section" id="creating-the-centos-kickstart-file">
+<span id="creating-centos-kickstart"></span><h3>Creating the CentOS Kickstart File<a class="headerlink" href="#creating-the-centos-kickstart-file" title="Permalink to this headline">¶</a></h3>
+<p>The kickstart file is a text file, containing a list of items, each identified by a keyword. You can create it by using the Kickstart Configurator application, or writing it from scratch. The Red Hat Enterprise Linux installation program also creates a sample kickstart file based on the options that you selected during installation. It is written to the file <code class="docutils literal"><span class="pre">/root/anaconda-ks.cfg</span></code>. This file is editable using most text editors that can save files as ASCII text.</p>
+<p>To generate ISO, the CentOS Kickstart is necessary:</p>
+<ol class="arabic simple">
+<li>Create a kickstart file.</li>
+<li>Create a boot media with the kickstart file or make the kickstart file available on the network.</li>
+<li>Make the installation tree available.</li>
+<li>Start the kickstart installation.</li>
+</ol>
+<p>Create a ks.src file in the root of the selection location. See the example below:</p>
+<div class="highlight-python"><div class="highlight"><pre>mkdir newdir
+cd newdir/
+cp -r ../centos65/* .
+vim ks.src
+vim isolinux/isolinux.cfg
+cd vim osversions.cfg
+vim osversions.cfg
+</pre></div>
+</div>
+<p>This is a standard kickstart formatted file that the generate ISO process uses to create the kickstart (ks.cfg) file for the install. The generate ISO process uses the ks.src, overwriting any information set in the Generate ISO tab in Traffic Ops, creating ks.cfg.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">Streamline your install folder for under 1GB, which assists in creating a CD.</p>
+</div>
+<div class="admonition seealso">
+<p class="first admonition-title">See also</p>
+<p class="last">For in-depth instructions, please see <a class="reference external" href="https://access.redhat.com/documentation/en-US/Red_Hat_Enterprise_Linux/6/html/Installation_Guide/s1-kickstart2-howuse.html">Kickstart Installation</a></p>
+</div>
+</div>
+</div>
+</div>
+
+
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="traffic_ops_using.html" class="btn btn-neutral float-right" title="Using Traffic Ops">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="traffic_ops_install.html" class="btn btn-neutral" title="Installing Traffic Ops"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../',
+            VERSION:'1.1.4',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true
+        };
+    </script>
+      <script type="text/javascript" src="../_static/jquery.js"></script>
+      <script type="text/javascript" src="../_static/underscore.js"></script>
+      <script type="text/javascript" src="../_static/doctools.js"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

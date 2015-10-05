@@ -57,6 +57,7 @@ public class ZoneManagerTest {
 	private TrafficRouterManager trafficRouterManager;
 	private String defaultDnsRoutingName;
 	private Map<String, InetAddress> netMap = new HashMap<String, InetAddress>();
+	private DNSAccessRecord.Builder builder;
 
 	@BeforeClass
 	public static void setUpBeforeClass() throws Exception {
@@ -84,6 +85,8 @@ public class ZoneManagerTest {
 
 			netMap.put(loc, ip);
 		}
+
+		builder = new DNSAccessRecord.Builder(1, InetAddress.getByName("192.168.12.34"));
 	}
 
 
@@ -118,7 +121,7 @@ public class ZoneManagerTest {
 			for (CacheLocation location : edgeLocations.get(name)) {
 				final InetAddress source = netMap.get(location.getId());
 				// need to iterate through the CZF and submit a bunch of these into a job queue to run repeatedly/fast
-				final Zone zone = trafficRouter.getDynamicZone(new Name(name), Type.A, source, true);
+				final Zone zone = trafficRouter.getZone(new Name(name), Type.A, source, true, builder);
 				assertNotNull(zone);
 				//LOGGER.info(zone);
 			}

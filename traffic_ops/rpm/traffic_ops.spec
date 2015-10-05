@@ -17,8 +17,6 @@
 # RPM spec file for Traffic Ops (tm).
 #
 
-%define traffic_ops_version @VERSION@
-%define build_number @BUILD_NO@
 %define TRAFFIC_OPS_USER trafops
 %define TRAFFIC_OPS_GROUP trafops
 %define TRAFFIC_OPS_LOG_DIR /var/log/traffic_ops
@@ -30,7 +28,7 @@ Release: %{build_number}
 License: N/A
 Group: Base System/System Tools
 Prefix: /opt/traffic_ops
-Source: $RPM_SOURCE_DIR/traffic_ops-%{traffic_ops_version}.tgz
+Source: %{_sourcedir}/traffic_ops-%{traffic_ops_version}.tgz
 URL: http://www.comcast.com
 Vendor: Comcast
 Packager: John Rushford <John_Rushford@cable.comcast.com>
@@ -45,10 +43,9 @@ Requires(postun): /usr/sbin/userdel
 %description
 Installs Traffic Ops.
 
-Built: @BUILT@
+Built: %(date) by %{getenv: USER}
 
 %prep
-
 %setup
 
 %install
@@ -122,6 +119,13 @@ Built: @BUILT@
     /bin/chown -R %{TRAFFIC_OPS_USER}:%{TRAFFIC_OPS_GROUP} %{PACKAGEDIR}
     /bin/chown -R %{TRAFFIC_OPS_USER}:%{TRAFFIC_OPS_GROUP} %{TRAFFIC_OPS_LOG_DIR}
 
+%preun
+
+if [ "$1" = "0" ]; then
+    # stop service before starting the uninstall
+    service traffic_ops stop
+fi
+
 %postun
 
 if [ "$1" = "0" ]; then
@@ -131,8 +135,6 @@ if [ "$1" = "0" ]; then
     /usr/bin/getent passwd %{TRAFFIC_OPS_USER} || /usr/sbin/userdel %{TRAFFIC_OPS_USER} 
     /usr/bin/getent group %{TRAFFIC_OPS_GROUP} || /usr/sbin/groupdel %{TRAFFIC_OPS_GROUP}
 fi
-service traffic_ops stop
-#/usr/sbin/groupdel %{TRAFFIC_OPS_GROUP}
 
 %files
 %defattr(644,root,root,755)

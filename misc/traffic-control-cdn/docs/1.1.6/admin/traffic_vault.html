@@ -1,0 +1,425 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Traffic Vault Administration &mdash; Traffic Control 1.1.6 documentation </title>
+  
+
+  
+  
+    <link rel="shortcut icon" href="../_static/favicon.ico"/>
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  
+
+  
+    <link rel="stylesheet" href="../_static/theme_overrides.css" type="text/css" />
+  
+
+  
+    <link rel="top" title="Traffic Control 1.1.6 documentation" href="../index.html"/>
+        <link rel="up" title="Administrator’s Guide" href="index.html"/>
+        <link rel="next" title="Quick How To Guides" href="quick_howto/index.html"/>
+        <link rel="prev" title="Traffic Server Administration" href="traffic_server.html"/> 
+
+  
+  <script src="_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-nav-search">
+        
+
+        
+          <a href="/" class="icon icon-home"> Traffic Control
+        
+
+        
+          
+          <img src="../_static/tc_logo.png" class="logo" />
+        
+        </a>
+
+        
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+        
+      </div>
+
+      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+        
+          
+          
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../basics/index.html">CDN Basics</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../basics/content_delivery_networks.html">Content Delivery Networks</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../basics/http_11.html">HTTP 1.1</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../basics/caching_proxies.html">Caching Proxies</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../basics/cache_revalidation.html">Cache Control Headers and Revalidation</a></li>
+</ul>
+</li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../overview/index.html">Traffic Control Overview</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../overview/introduction.html">Introduction</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../overview/traffic_ops.html">Traffic Ops</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../overview/traffic_router.html">Traffic Router</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../overview/traffic_monitor.html">Traffic Monitor</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../overview/traffic_stats.html">Traffic Stats</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../overview/traffic_portal.html">Traffic Portal</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../overview/traffic_server.html">Traffic Server</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../overview/traffic_vault.html">Traffic Vault</a></li>
+</ul>
+</li>
+</ul>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="index.html">Administrator&#8217;s Guide</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="traffic_ops_install.html">Installing Traffic Ops</a></li>
+<li class="toctree-l2"><a class="reference internal" href="traffic_ops_config.html">Configuring Traffic Ops</a></li>
+<li class="toctree-l2"><a class="reference internal" href="traffic_ops_using.html">Using Traffic Ops</a></li>
+<li class="toctree-l2"><a class="reference internal" href="traffic_ops_extensions.html">Managing Traffic Ops Extensions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="traffic_monitor.html">Traffic Monitor Administration</a></li>
+<li class="toctree-l2"><a class="reference internal" href="traffic_router.html">Traffic Router Administration</a></li>
+<li class="toctree-l2"><a class="reference internal" href="traffic_stats.html">Traffic Stats Administration</a></li>
+<li class="toctree-l2"><a class="reference internal" href="traffic_server.html">Traffic Server Administration</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="">Traffic Vault Administration</a></li>
+<li class="toctree-l2"><a class="reference internal" href="quick_howto/index.html">Quick How To Guides</a></li>
+</ul>
+</li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../development/index.html">Developer&#8217;s Guide</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../development/traffic_ops.html">Traffic Ops</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../development/traffic_router.html">Traffic Router</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../development/traffic_monitor.html">Traffic Monitor</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../development/traffic_stats.html">Traffic Stats</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../development/traffic_server.html">Traffic Server</a></li>
+</ul>
+</li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../faq/index.html">FAQ</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../faq/general.html">General</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../faq/development.html">Development</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../faq/administration.html">Running a Traffic Control CDN</a></li>
+</ul>
+</li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../glossary.html">Glossary</a></li>
+</ul>
+
+          
+        
+      </div>
+      &nbsp;
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="../index.html">Traffic Control</a>
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="../index.html">Traffic Control 1.1.6</a> &raquo;</li>
+      
+          <li><a href="index.html">Administrator&#8217;s Guide</a> &raquo;</li>
+      
+    <li>Traffic Vault Administration</li>
+      <li class="wy-breadcrumbs-aside">
+        
+          <a href="../_sources/admin/traffic_vault.txt" rel="nofollow"> View page source</a>
+        
+      </li>
+  </ul>
+  <hr/>
+</div>
+ 		  
+    		  <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      		  
+        		  <a href="quick_howto/index.html" class="btn btn-neutral float-right" title="Quick How To Guides">Next <span class="fa fa-arrow-circle-right"></span></a>
+      		  
+      		  
+        		  <a href="traffic_server.html" class="btn btn-neutral" title="Traffic Server Administration"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      		  
+    		  </div>
+  		  
+          <div role="main" class="document">
+            
+  <div class="section" id="traffic-vault-administration">
+<h1>Traffic Vault Administration<a class="headerlink" href="#traffic-vault-administration" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="installing-traffic-vault">
+<h2>Installing Traffic Vault<a class="headerlink" href="#installing-traffic-vault" title="Permalink to this headline">¶</a></h2>
+<p>In order to successfully store private keys you will need to install Riak.
+The latest version of Riak can be downloaded on the Riak <a class="reference external" href="http://docs.basho.com/riak/latest/downloads/">website</a>.
+The installation instructions for Riak can be found <a class="reference external" href="http://docs.basho.com/riak/latest/ops/building/installing/">here</a>.</p>
+<p>Production is currently running version 2.0.5 of Riak, but the latest version should suffice.</p>
+</div>
+<div class="section" id="configuring-traffic-vault">
+<h2>Configuring Traffic Vault<a class="headerlink" href="#configuring-traffic-vault" title="Permalink to this headline">¶</a></h2>
+<p>The following steps were taken to configure Riak in our environments.</p>
+<div class="section" id="riak-configuration-file-configuration">
+<h3>Riak configuration file configuration<a class="headerlink" href="#riak-configuration-file-configuration" title="Permalink to this headline">¶</a></h3>
+<p>The following steps need to be performed on each Riak server in the cluster:</p>
+<ul>
+<li><p class="first">Log into riak server as root</p>
+</li>
+<li><p class="first">cd to /etc/riak/</p>
+</li>
+<li><dl class="first docutils">
+<dt>Update the following in riak.conf to reflect your IP:</dt>
+<dd><ul class="first last simple">
+<li>nodename = <a class="reference external" href="mailto:riak&#37;&#52;&#48;a-host&#46;sys&#46;kabletown&#46;net">riak<span>&#64;</span>a-host<span>&#46;</span>sys<span>&#46;</span>kabletown<span>&#46;</span>net</a></li>
+<li>listener.http.internal = a-host.sys.kabletown.net:8098 (can be 80 - This endpoint will not work with sec enabled)</li>
+<li>listener.protobuf.internal = a-host.sys.kabletown.net:8087 (can be different port if you want)</li>
+<li>listener.https.internal = a-host.sys.kabletown.net:8088 (can be 443)</li>
+</ul>
+</dd>
+</dl>
+</li>
+<li><dl class="first docutils">
+<dt>Updated the following conf file to point to your cert files</dt>
+<dd><ul class="first last simple">
+<li>ssl.certfile = /etc/riak/certs/server.crt</li>
+<li>ssl.keyfile = /etc/riak/certs/server.key</li>
+<li>ssl.cacertfile = /etc/pki/tls/certs/ca-bundle.crt</li>
+</ul>
+</dd>
+</dl>
+</li>
+<li><dl class="first docutils">
+<dt>Add a line at the bottom of the config for tlsv1</dt>
+<dd><ul class="first last simple">
+<li>tls_protocols.tlsv1 = on</li>
+</ul>
+</dd>
+</dl>
+</li>
+<li><dl class="first docutils">
+<dt>Once the config file has been updated restart riak</dt>
+<dd><ul class="first last simple">
+<li><code class="docutils literal"><span class="pre">/etc/init.d/riak</span> <span class="pre">restart</span></code></li>
+</ul>
+</dd>
+</dl>
+</li>
+<li><dl class="first docutils">
+<dt>Validate server is running by going to the following URL:</dt>
+<dd><ul class="first last simple">
+<li><a class="reference external" href="https:/">https:/</a>/&lt;serverHostname&gt;:8088/ping</li>
+</ul>
+</dd>
+</dl>
+</li>
+</ul>
+</div>
+<div class="section" id="riak-admin-configuration">
+<h3>Riak-admin configuration<a class="headerlink" href="#riak-admin-configuration" title="Permalink to this headline">¶</a></h3>
+<p>Riak-admin is a command line utility that needs to be run as root on a server in the riak cluster.</p>
+<dl class="docutils">
+<dt>Assumptions:</dt>
+<dd><ul class="first last simple">
+<li>Riak 2.0.2 or greater is installed</li>
+<li>SSL Certificates have been generated (signed or self-signed)</li>
+<li>Root access to riak servers</li>
+</ul>
+</dd>
+<dt>Add admin user and riakuser to riak</dt>
+<dd><ul class="first last simple">
+<li>Admin user will be a super user</li>
+<li>Riakuser will be the application user</li>
+</ul>
+</dd>
+</dl>
+<p>Login to one of the riak servers in the cluster as root (any will do)</p>
+<blockquote>
+<div><ol class="arabic">
+<li><p class="first">Enable security</p>
+<blockquote>
+<div><p><code class="docutils literal"><span class="pre">riak-admin</span> <span class="pre">security</span> <span class="pre">enable</span></code></p>
+</div></blockquote>
+</li>
+<li><p class="first">Add groups</p>
+<blockquote>
+<div><p><code class="docutils literal"><span class="pre">riak-admin</span> <span class="pre">security</span> <span class="pre">add-group</span> <span class="pre">admins</span></code></p>
+<p><code class="docutils literal"><span class="pre">riak-admin</span> <span class="pre">security</span> <span class="pre">add-group</span> <span class="pre">keysusers</span></code></p>
+</div></blockquote>
+</li>
+<li><p class="first">Add users</p>
+</li>
+</ol>
+<blockquote>
+<div><div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">username and password should be stored in /opt/traffic_ops/app/conf/&lt;environment&gt;/riak.conf</p>
+</div>
+<blockquote>
+<div><p><code class="docutils literal"><span class="pre">riak-admin</span> <span class="pre">security</span> <span class="pre">add-user</span> <span class="pre">admin</span> <span class="pre">password=&lt;AdminPassword&gt;</span> <span class="pre">groups=admins</span></code></p>
+<p><code class="docutils literal"><span class="pre">riak-admin</span> <span class="pre">security</span> <span class="pre">add-user</span> <span class="pre">riakuser</span> <span class="pre">password=&lt;RiakUserPassword&gt;</span> <span class="pre">groups=keysusers</span></code></p>
+</div></blockquote>
+</div></blockquote>
+<ol class="arabic" start="4">
+<li><p class="first">Grant access for admin and riakuser</p>
+<blockquote>
+<div><p><code class="docutils literal"><span class="pre">riak-admin</span> <span class="pre">security</span> <span class="pre">add-source</span> <span class="pre">riakuser</span> <span class="pre">0.0.0.0/0</span> <span class="pre">password</span></code></p>
+<p><code class="docutils literal"><span class="pre">riak-admin</span> <span class="pre">security</span> <span class="pre">add-source</span> <span class="pre">admin</span> <span class="pre">0.0.0.0/0</span> <span class="pre">password</span></code></p>
+</div></blockquote>
+</li>
+<li><p class="first">Grant privs to admins for everything</p>
+<blockquote>
+<div><p><code class="docutils literal"><span class="pre">riak-admin</span> <span class="pre">security</span> <span class="pre">grant</span> <span class="pre">riak_kv.list_buckets,riak_kv.list_keys,riak_kv.get,riak_kv.put,riak_kv.delete</span> <span class="pre">on</span> <span class="pre">any</span> <span class="pre">to</span> <span class="pre">admins</span></code></p>
+</div></blockquote>
+</li>
+<li><p class="first">Grant privs to keysuser for ssl, dnssec, and url_sig_keys buckets only</p>
+<blockquote>
+<div><p><code class="docutils literal"><span class="pre">riak-admin</span> <span class="pre">security</span> <span class="pre">grant</span> <span class="pre">riak_kv.get,riak_kv.put,riak_kv.delete</span> <span class="pre">on</span> <span class="pre">default</span> <span class="pre">ssl</span> <span class="pre">to</span> <span class="pre">keysusers</span></code></p>
+<p><code class="docutils literal"><span class="pre">riak-admin</span> <span class="pre">security</span> <span class="pre">grant</span> <span class="pre">riak_kv.get,riak_kv.put,riak_kv.delete</span> <span class="pre">on</span> <span class="pre">default</span> <span class="pre">dnssec</span> <span class="pre">to</span> <span class="pre">keysusers</span></code></p>
+<p><code class="docutils literal"><span class="pre">riak-admin</span> <span class="pre">security</span> <span class="pre">grant</span> <span class="pre">riak_kv.get,riak_kv.put,riak_kv.delete</span> <span class="pre">on</span> <span class="pre">default</span> <span class="pre">url_sig_keys</span> <span class="pre">to</span> <span class="pre">keysusers</span></code></p>
+</div></blockquote>
+</li>
+</ol>
+</div></blockquote>
+<div class="admonition seealso">
+<p class="first admonition-title">See also</p>
+<p class="last">For more information on security in Riak, see the <a class="reference external" href="http://docs.basho.com/riak/2.0.4/ops/advanced/security/">Riak Security documentation</a>.</p>
+</div>
+<div class="admonition seealso">
+<p class="first admonition-title">See also</p>
+<p class="last">For more information on authentication and authorization in Riak, see the <a class="reference external" href="http://docs.basho.com/riak/2.0.4/ops/running/authz/">Riak Authentication and Authorization documentation</a>.</p>
+</div>
+</div>
+<div class="section" id="traffic-ops-configuration">
+<h3>Traffic Ops Configuration<a class="headerlink" href="#traffic-ops-configuration" title="Permalink to this headline">¶</a></h3>
+<p>There are a couple conifgurations that are necessary in Traffic Ops.</p>
+<ol class="arabic">
+<li><dl class="first docutils">
+<dt>Database Updates</dt>
+<dd><ul class="first simple">
+<li>A new profile for Riak needs to be added to the profile table</li>
+<li>A new type of Riak needs to be added to the type table</li>
+<li>The servers in the Riak cluster need to be added to the server table</li>
+</ul>
+<blockquote class="last">
+<div><div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">profile and type data should be pre-loaded by seeds sql script.</p>
+</div>
+</div></blockquote>
+</dd>
+</dl>
+</li>
+<li><dl class="first docutils">
+<dt>Configuration updates</dt>
+<dd><ul class="first last simple">
+<li>/opt/traffic_ops/app/conf/&lt;environment&gt;/riak.conf needs to be updated to reflect the correct username and password for accessing riak.</li>
+</ul>
+</dd>
+</dl>
+</li>
+</ol>
+</div>
+</div>
+</div>
+
+
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="quick_howto/index.html" class="btn btn-neutral float-right" title="Quick How To Guides">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="traffic_server.html" class="btn btn-neutral" title="Traffic Server Administration"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../',
+            VERSION:'1.1.6',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true
+        };
+    </script>
+      <script type="text/javascript" src="../_static/jquery.js"></script>
+      <script type="text/javascript" src="../_static/underscore.js"></script>
+      <script type="text/javascript" src="../_static/doctools.js"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

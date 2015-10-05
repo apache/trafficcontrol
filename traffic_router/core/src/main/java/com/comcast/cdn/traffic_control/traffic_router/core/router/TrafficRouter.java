@@ -30,12 +30,15 @@ import java.util.Random;
 import java.util.SortedMap;
 import java.util.TreeMap;
 
+import com.comcast.cdn.traffic_control.traffic_router.core.dns.DNSAccessRecord;
 import org.apache.commons.pool.ObjectPool;
 import org.apache.log4j.Logger;
+import org.json.JSONException;
 import org.json.JSONObject;
 import org.xbill.DNS.Name;
 import org.xbill.DNS.Zone;
 
+import com.comcast.cdn.traffic_control.traffic_router.core.TrafficRouterException;
 import com.comcast.cdn.traffic_control.traffic_router.core.cache.Cache;
 import com.comcast.cdn.traffic_control.traffic_router.core.cache.CacheLocation;
 import com.comcast.cdn.traffic_control.traffic_router.core.cache.CacheRegister;
@@ -56,6 +59,8 @@ import com.comcast.cdn.traffic_control.traffic_router.core.request.Request;
 import com.comcast.cdn.traffic_control.traffic_router.core.router.StatTracker.Track;
 import com.comcast.cdn.traffic_control.traffic_router.core.router.StatTracker.Track.ResultType;
 import com.comcast.cdn.traffic_control.traffic_router.core.router.StatTracker.Track.RouteType;
+import com.comcast.cdn.traffic_control.traffic_router.core.util.TrafficOpsUtils;
+import com.comcast.cdn.traffic_control.traffic_router.core.router.StatTracker.Track.ResultDetails;
 
 public class TrafficRouter {
 	public static final Logger LOGGER = Logger.getLogger(TrafficRouter.class);
@@ -72,12 +77,13 @@ public class TrafficRouter {
 			final GeolocationService geolocationService, 
 			final GeolocationService geolocationService6, 
 			final ObjectPool hashFunctionPool,
-			final StatTracker statTracker) throws IOException {
+			final StatTracker statTracker,
+			final TrafficOpsUtils trafficOpsUtils) throws IOException, JSONException, TrafficRouterException {
 		this.cacheRegister = cr;
 		this.geolocationService = geolocationService;
 		this.geolocationService6 = geolocationService6;
 		this.hashFunctionPool = hashFunctionPool;
-		this.zoneManager = new ZoneManager(this, statTracker);
+		this.zoneManager = new ZoneManager(this, statTracker, trafficOpsUtils);
 	}
 
 	public ZoneManager getZoneManager() {
@@ -232,6 +238,7 @@ public class TrafficRouter {
 					.format("No Cache found in CZM (%s, ip=%s, path=%s), geo not supported",
 							requestType, ip, requestStr));
 			track.setResult(ResultType.MISS);
+			track.setResultDetails(ResultDetails.DS_CZ_ONLY);
 			return null;
 		}
 
@@ -248,6 +255,7 @@ public class TrafficRouter {
 			if (clientLocation == null) {
 				// particular error was logged in ds.supportLocation
 				track.setResult(ResultType.MISS);
+				track.setResultDetails(ResultDetails.DS_CLIENT_GEO_UNSUPPORTED);
 				return null;
 			}
 		}
@@ -261,6 +269,7 @@ public class TrafficRouter {
 				"No Cache found by Geo (%s, ip=%s, path=%s)", requestType, ip,
 				requestStr));
 		track.setResult(ResultType.MISS);
+		track.setResultDetails(ResultDetails.GEO_NO_CACHE_FOUND);
 		return null;
 	}
 
@@ -273,6 +282,7 @@ public class TrafficRouter {
 			LOGGER.warn("[dns] No DeliveryService found for: "
 					+ request.getHostname());
 			track.setResult(ResultType.STATIC_ROUTE);
+			track.setResultDetails(ResultDetails.DS_NOT_FOUND);
 			return null;
 		}
 
@@ -307,7 +317,7 @@ public class TrafficRouter {
 
 		int i = 0;
 
-		for (Cache cache : caches) {
+		for (final Cache cache : caches) {
 			if (maxDnsIps!=0 && i >= maxDnsIps) {
 				break;
 			}
@@ -331,6 +341,7 @@ public class TrafficRouter {
 			LOGGER.warn("No DeliveryService found for: "
 					+ request.getRequestedUrl());
 			track.setResult(ResultType.DS_MISS);
+			track.setResultDetails(ResultDetails.DS_NOT_FOUND);
 			return null;
 		}
 
@@ -382,7 +393,7 @@ public class TrafficRouter {
 			// find CacheLocation
 		final Collection<CacheLocation> caches = getCacheRegister()
 				.getCacheLocations();
-		for (CacheLocation cl2 : caches) {
+		for (final CacheLocation cl2 : caches) {
 			if (cl2.getId().equals(locId)) {
 				nn.setCacheLocation(cl2);
 				return cl2;
@@ -525,7 +536,7 @@ public class TrafficRouter {
 			final DeliveryService ds,
 			final Geolocation clientLocation) {
 		final List<CacheLocation> locations = new ArrayList<CacheLocation>();
-		for(CacheLocation cl : cacheLocations) {
+		for(final CacheLocation cl : cacheLocations) {
 			if(ds.isLocationAvailable(cl)) {
 				locations.add(cl);
 			}
@@ -566,8 +577,8 @@ public class TrafficRouter {
 		return caches;//consistentHash(caches, request);List<Cache>
 	}
 
-	public Zone getZone(final Name qname, final int qtype, final InetAddress clientAddress, final boolean isDnssecRequest) {
-		return zoneManager.getZone(qname, qtype, clientAddress, isDnssecRequest);
+	public Zone getZone(final Name qname, final int qtype, final InetAddress clientAddress, final boolean isDnssecRequest, final DNSAccessRecord.Builder builder) {
+		return zoneManager.getZone(qname, qtype, clientAddress, isDnssecRequest, builder);
 	}
 
 }

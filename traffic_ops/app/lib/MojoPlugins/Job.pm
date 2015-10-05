@@ -46,12 +46,10 @@ sub register {
 
 			while ( my $row = $rs->next ) {
 				next unless $row->status->name eq 'REPORTED';
-				my $param =
-					$self->db->resultset('ProfileParameter')
-					->search( { -and => [ profile => $row->profile->id, 'parameter.config_file' => 'rascal-config.txt', 'parameter.name' => 'CDN_name' ] },
-					{ prefetch => [ { parameter => undef }, { profile => undef } ] } )->single();
+				my $param = $self->db->resultset('Profile')->search( { 'me.id' => $row->profile->id }, { prefetch => 'cdn'} )->single();
+
 				next unless defined($param);
-				my $cdn_name = $param->parameter->value;
+				my $cdn_name = $param->cdn->name;
 				if ( defined( $cdn_domain{$cdn_name} ) ) {
 					next;
 				}
@@ -82,13 +80,8 @@ sub register {
 			my $self  = shift;
 			my $ds_id = shift;
 
-			my $ds = $self->db->resultset('Deliveryservice')->search( { 'me.id' => $ds_id }, { prefetch => ['profile'] } )->single();
-			my $cdn_pparam =
-				$self->db->resultset('ProfileParameter')
-				->search( { -and => [ profile => $ds->profile->id, 'parameter.name' => 'CDN_name' ] }, { prefetch => [ 'parameter', 'profile' ] } )
-				->single();
-			my @cdn_profiles =
-				$self->db->resultset('ProfileParameter')->search( { parameter => $cdn_pparam->parameter->id } )->get_column('profile')->all();
+			my $cdn_id = $self->db->resultset('Deliveryservice')->search( { 'me.id' => $ds_id } )->get_column('cdn_id')->single();
+			my @cdn_profiles = $self->db->resultset('Profile')->search( { 'cdn_id' => $cdn_id } )->get_column('id')->all();
 
 			my @offstates;
 			my $offline = $self->db->resultset('Status')->search( { 'name' => 'OFFLINE' } )->get_column('id')->single();
