@@ -212,8 +212,8 @@ func loadStartupConfig(configFile string, oldConfig StartupConfig) (StartupConfi
 	if err != nil {
 		errHndlr(fmt.Errorf("error reading Seelog config %s", config.SeelogConfig), ERROR)
 	} else {
-		log.Info("Replacing logger, see log file according to", config.SeelogConfig)
 		log.ReplaceLogger(logger)
+		log.Info("Replaced logger, see log file according to", config.SeelogConfig)
 	}
 
 	return config, nil
