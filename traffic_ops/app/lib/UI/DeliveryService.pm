@@ -1279,11 +1279,14 @@ sub create_dnssec_keys {
 	#get CDN name
 	my $dnskey_ttl;
 
-	my $cdn_rs
-		= $self->db->resultset('Profile')
-		->search( { 'me.id' => $profile_id }, { prefetch => 'cdn' } )
-		->single();
-	my $cdn_name = $cdn_rs->cdn->name;
+	my $cdn_rs = $self->db->resultset('Server')->search(
+		{ 'me.id' => $profile_id },
+		{   prefetch => 'cdn',
+			select   => 'me.cdn_id',
+			distinct => 1
+		}
+	);
+	my $cdn_name = $cdn_rs->next->cdn->name;
 
 	#get keys for cdn
 	my $keys;
@@ -1311,8 +1314,8 @@ sub create_dnssec_keys {
 
 #first one is the one we want.  period at end for dnssec, substring off stuff we dont want
 	my $ds_name = $example_urls[0] . ".";
-	my $length = length($ds_name) - CORE::index($ds_name, ".");
-	$ds_name = substr($ds_name, CORE::index($ds_name, ".") + 1, $length);
+	my $length = length($ds_name) - CORE::index( $ds_name, "." );
+	$ds_name = substr( $ds_name, CORE::index( $ds_name, "." ) + 1, $length );
 
 	my $inception    = time();
 	my $z_expiration = $inception + ( 86400 * $z_exp_days );
