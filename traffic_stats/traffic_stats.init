@@ -29,7 +29,7 @@ runpath=var/run
 name=traffic_stats
 prog=$basepath/$binpath/$name
 lockfile=$basepath/$runpath/$name
-options="--cfg /opt/traffic_stats/conf/traffic_stats.cfg &"
+options="--cfg /opt/traffic_stats/conf/traffic_stats.cfg"
 
 start() {
         [ "$NETWORKING" = "no" ] && exit 1
@@ -37,7 +37,7 @@ start() {
 
         # Start daemons.
         echo -n $"Starting $name: "
-        daemon $prog $options
+        daemon nohup $prog $options < /dev/null > /dev/null &
         RETVAL=$?
         echo
         [ $RETVAL -eq 0 ] && touch $lockfile
