@@ -37,7 +37,7 @@ start() {
 
         # Start daemons.
         echo -n $"Starting $name: "
-        daemon nohup $prog $options
+        daemon nohup $prog $options < /dev/null > /dev/null &
         RETVAL=$?
         echo
         [ $RETVAL -eq 0 ] && touch $lockfile
