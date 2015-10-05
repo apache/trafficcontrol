@@ -274,3 +274,4 @@ requires 'Crypt::OpenSSL::Bignum';
 requires 'Crypt::OpenSSL::Random';
 requires 'Net::DNS::SEC::Private';
 requires 'LWP::Protocol::https';
+requires 'Net::CIDR';

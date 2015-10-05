@@ -1,4 +1,5 @@
 package main;
+
 #
 # Copyright 2015 Comcast Cable Communications Management, LLC
 #
@@ -18,14 +19,15 @@ use Mojo::Base -strict;
 use Test::More;
 use Test::Mojo;
 use DBI;
+use Schema;
 use strict;
 use warnings;
 use Test::TestHelper;
-
+use Fixtures::TmUser;
 use Fixtures::Federation;
-
-#no_transactions=>1 ==> keep fixtures after every execution, beware of duplicate data!
-#no_transactions=>0 ==> delete fixtures after every execution
+use Fixtures::FederationDeliveryservice;
+use Fixtures::FederationResolver;
+use Fixtures::FederationFederationResolver;
 
 BEGIN { $ENV{MOJO_MODE} = "test" }
 
@@ -35,19 +37,43 @@ my $schema = Schema->connect_to_database;
 
 #unload data for a clean test
 Test::TestHelper->unload_core_data($schema);
+Test::TestHelper->teardown( $schema, 'Federation' );
+Test::TestHelper->teardown( $schema, 'FederationDeliveryservice' );
+Test::TestHelper->teardown( $schema, 'FederationFederationResolver' );
+Test::TestHelper->teardown( $schema, 'FederationResolver' );
 
 #load core test data
 Test::TestHelper->load_core_data($schema);
+
+my $schema_values = { schema => $schema, no_transactions => 1 };
+#
+# FederationResolver
+#
+my $federation_resolver = Fixtures::FederationResolver->new($schema_values);
+Test::TestHelper->load_all_fixtures($federation_resolver);
+#
+# FederationMapping
+#
+my $federation = Fixtures::Federation->new($schema_values);
+Test::TestHelper->load_all_fixtures($federation);
+
+# FederationDeliveryservice
+#
+my $fmd = Fixtures::FederationDeliveryservice->new($schema_values);
+Test::TestHelper->load_all_fixtures($fmd);
+
+my $federation_federation_resolver = Fixtures::FederationFederationResolver->new($schema_values);
+Test::TestHelper->load_all_fixtures($federation_federation_resolver);
 
 ok $t->post_ok( '/login', => form => { u => 'portal', p => Test::TestHelper::ADMIN_USER_PASSWORD } )->status_is(302)
   ->or( sub { diag $t->tx->res->content->asset->{content}; } );
 
 $t->get_ok("/internal/api/1.2/federations.json")->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } )
   ->json_is( "/response/0/deliveryService", "test-ds1" )
-  ->json_is( "/response/0/mappings/0/0/cname", "cname1" )
-  ->json_is( "/response/0/mappings/0/0/ttl", "86400" )
-  ->json_is( "/response/0/mappings/0/0/resolve6/0", "FE80::0202:B3FF:FE1E:8329/128" )
-  ->json_is( "/response/0/mappings/0/0/resolve4/0", "127.0.0.1/32" )
+  ->json_is( "/response/0/mappings/0/cname", "cname1" )
+  ->json_is( "/response/0/mappings/0/ttl", "86400" )
+  ->json_is( "/response/0/mappings/0/resolve6/0", "FE80::0202:B3FF:FE1E:8329/128" )
+  ->json_is( "/response/0/mappings/0/resolve4/0", "127.0.0.1/32" )
 
   ->json_is( "/response/0/deliveryService", "test-ds1" )
   ->json_is( "/response/0/mappings/1/cname", "cname2" )
@@ -58,5 +84,11 @@ $t->get_ok("/internal/api/1.2/federations.json")->status_is(200)->or( sub { diag
   ->json_is( "/response/1/mappings/0/ttl", "86400" );
 
 ok $t->get_ok('/logout')->status_is(302)->or( sub { diag $t->tx->res->content->asset->{content}; } );
+
+Test::TestHelper->teardown( $schema, 'Federation' );
+Test::TestHelper->teardown( $schema, 'FederationDeliveryservice' );
+Test::TestHelper->teardown( $schema, 'FederationFederationResolver' );
+Test::TestHelper->teardown( $schema, 'FederationResolver' );
+
 $dbh->disconnect();
 done_testing();
