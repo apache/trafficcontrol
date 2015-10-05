@@ -388,7 +388,8 @@ sub aserver {
 		if ($server_select) {
 			@line = [
 				$row->id,         $row->host_name,  $row->domain_name,
-				$row->ip_address, $row->type->name, $row->profile->name
+				$row->ip_address, $row->type->name, $row->profile->name,
+				$row->cdn->name
 			];
 		}
 		else {

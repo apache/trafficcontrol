@@ -40,19 +40,25 @@ sub register {
 			my $ccr_profile_id;
 			my $data_obj;
 
-			my $rs_pp = $self->db->resultset('Profile')->search( { 'cdn.name' => $cdn_name }, { prefetch => 'cdn' } );
-			while ( my $row = $rs_pp->next ) {
-				if ( $row->name =~ m/^RASCAL/ ) {
-					$rascal_profile = $row->name;
+			my $rs_pp = $self->db->resultset('Server')->search(
+				{ 'cdn.name' => $cdn_name },
+				{   prefetch => ['cdn', 'profile'],
+					select   => 'me.profile',
+					distinct => 1
 				}
-				elsif ( $row->name =~ m/^CCR/ ) {
-					push( @ccr_profiles, $row->name );
+			);
+			while ( my $row = $rs_pp->next ) {
+				if ( $row->profile->name =~ m/^RASCAL/ ) {
+					$rascal_profile = $row->profile->name;
+				}
+				elsif ( $row->profile->name =~ m/^CCR/ ) {
+					push( @ccr_profiles, $row->profile->name );
 
 					# TODO MAT: support multiple CCR profiles
-					$ccr_profile_id = $row->id;
+					$ccr_profile_id = $row->profile->id;
 				}
-				elsif ( $row->name =~ m/^EDGE/ || $row->name =~ m/^MID/ ) {
-					push( @cache_profiles, $row->name );
+				elsif ( $row->profile->name =~ m/^EDGE/ || $row->profile->name =~ m/^MID/ ) {
+					push( @cache_profiles, $row->profile->name );
 				}
 			}
 			my %condition = ( 'parameter.config_file' => 'rascal-config.txt', 'profile.name' => $rascal_profile );

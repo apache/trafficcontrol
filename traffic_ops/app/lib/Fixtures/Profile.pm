@@ -25,7 +25,6 @@ my %definition_for = (
 			id          => 1,
 			name        => 'EDGE1',
 			description => 'edge description',
-			cdn_id      => 1,
 		},
 	},
 	MID1 => {
@@ -34,7 +33,6 @@ my %definition_for = (
 			id          => 2,
 			name        => 'MID1',
 			description => 'mid description',
-			cdn_id      => 2,
 		},
 	},
 	CCR1 => {
@@ -43,7 +41,6 @@ my %definition_for = (
 			id          => 3,
 			name        => 'CCR1',
 			description => 'ccr description',
-			cdn_id      => 1,
 		},
 	},
 	REDIS1 => {
@@ -52,7 +49,6 @@ my %definition_for = (
 			id          => 4,
 			name        => 'REDIS1',
 			description => 'redis description',
-			cdn_id      => 1,
 		},
 	},
 	RIAK1 => {
@@ -61,7 +57,6 @@ my %definition_for = (
 			id          => 5,
 			name        => 'RIAK1',
 			description => 'riak description',
-			cdn_id      => 1,
 		},
 	},
 	RASCAL1 => {
@@ -70,7 +65,6 @@ my %definition_for = (
 			id          => 6,
 			name        => 'RASCAL1',
 			description => 'rascal description',
-			cdn_id      => 1,
 		},
 	},
 	RASCAL2 => {
@@ -79,7 +73,6 @@ my %definition_for = (
 			id          => 7,
 			name        => 'RASCAL2',
 			description => 'rascal2 description',
-			cdn_id      => 2,
 		},
 	},
 );

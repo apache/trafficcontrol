@@ -936,29 +936,54 @@ sub postupdatequeue {
 			$update = $self->db->resultset('Server')->search(undef);
 		}
 		else {
-			$update = $self->db->resultset('Server')->search( { id => $host, } );
+			$update
+				= $self->db->resultset('Server')->search( { id => $host, } );
 		}
 		$update->update( { upd_pending => $setqueue } );
-		&log( $self, "Flip Update bit (Queue Updates) for server(s):" . $host, "OPER" );
+		&log( $self, "Flip Update bit (Queue Updates) for server(s):" . $host,
+			"OPER" );
 	}
 	elsif ( defined($cdn) && defined($cachegroup) ) {
 		my @profiles;
 		if ( $cdn ne "all" ) {
-			my @profiles = $self->db->resultset('Profile')->search( { 'cdn.name' => $cdn }, { prefetch => 'cdn' } )->get_column('id')->all();
+
+			my @profiles = $self->db->resultset('Server')->search(
+				{ 'cdn.name' => $cdn },
+				{   prefetch => 'cdn',
+					select   => 'me.profile',
+					distinct => 1
+				}
+			)->get_column('profile')->all();
 		}
 		else {
-			@profiles = $self->db->resultset('Profile')->search(undef)->get_column('id')->all;
+			@profiles = $self->db->resultset('Profile')->search(undef)
+				->get_column('id')->all;
 		}
 		my @cachegroups;
 		if ( $cachegroup ne "all" ) {
-			@cachegroups = $self->db->resultset('Cachegroup')->search( { name => $cachegroup } )->get_column('id')->all;
+			@cachegroups = $self->db->resultset('Cachegroup')
+				->search( { name => $cachegroup } )->get_column('id')->all;
 		}
 		else {
-			@cachegroups = $self->db->resultset('Cachegroup')->search(undef)->get_column('id')->all;
+			@cachegroups = $self->db->resultset('Cachegroup')->search(undef)
+				->get_column('id')->all;
 		}
-		my $update = $self->db->resultset('Server')->search( { -and => [ cachegroup => { -in => \@cachegroups }, profile => { -in => \@profiles } ] } );
+		my $update = $self->db->resultset('Server')->search(
+			{   -and => [
+					cachegroup => { -in => \@cachegroups },
+					profile    => { -in => \@profiles }
+				]
+			}
+		);
 		$update->update( { upd_pending => $setqueue } );
-		&log( $self, "Flip Update bit (Queue Updates) for servers in CDN:" . $cdn . " cachegroup:" . $cachegroup, "OPER" );
+		&log(
+			$self,
+			"Flip Update bit (Queue Updates) for servers in CDN:"
+				. $cdn
+				. " cachegroup:"
+				. $cachegroup,
+			"OPER"
+		);
 	}
 
 	#shouldn't we return something here?
