@@ -11,8 +11,9 @@ URL:		https://github.com/comcast/traffic_control/
 Source:		~/rpmbuild/SOURCES/traffic_stats-@VERSION@.tar.gz
 
 %description
-Installs traffic_stats which is comprised of two seperate rpms:
-	- traffic_stats: gets data from traffic monitor and stores in InfluxDB and also calculates daily summary of the data from InfluxDB and stores in traffic_ops
+Installs traffic_stats which performs the follwing functions:
+	1. Gets data from Traffic Monitor via a RESTful API and stores the data in InfluxDb
+	2. Calculates Daily Summary stats from the raw data and stores it in Traffic Ops as well as InfluxDb
 
 %prep
 
@@ -29,12 +30,14 @@ mkdir -p ${RPM_BUILD_ROOT}/opt/traffic_stats/var/run
 mkdir -p ${RPM_BUILD_ROOT}/opt/traffic_stats/var/log/traffic_stats
 mkdir -p ${RPM_BUILD_ROOT}/etc/init.d
 mkdir -p ${RPM_BUILD_ROOT}/etc/logrotate.d
+mkdir -p ${RPM_BUILD_ROOT}/usr/share/grafana/public/dashboards/
 
 cp $GOPATH/src/github.com/comcast/traffic_control/traffic_stats/traffic_stats ${RPM_BUILD_ROOT}/opt/traffic_stats/bin/traffic_stats
 cp $GOPATH/src/github.com/comcast/traffic_control/traffic_stats/traffic_stats.cfg ${RPM_BUILD_ROOT}/opt/traffic_stats/conf/traffic_stats.cfg
 cp $GOPATH/src/github.com/comcast/traffic_control/traffic_stats/traffic_stats_seelog.xml ${RPM_BUILD_ROOT}/opt/traffic_stats/conf/traffic_stats_seelog.xml
 cp $GOPATH/src/github.com/comcast/traffic_control/traffic_stats/traffic_stats.init ${RPM_BUILD_ROOT}/etc/init.d/traffic_stats
 cp $GOPATH/src/github.com/comcast/traffic_control/traffic_stats/traffic_stats.logrotate ${RPM_BUILD_ROOT}/etc/logrotate.d/traffic_stats
+cp $GOPATH/src/github.com/comcast/traffic_control/traffic_stats/grafana/*.js ${RPM_BUILD_ROOT}/usr/share/grafana/public/dashboards/
 
 %pre
 /usr/bin/getent group traffic_stats >/dev/null
