@@ -359,16 +359,8 @@ sub afederation {
 	if ( $feds->count > 0 ) {
 		while ( my $f = $feds->next ) {
 			my $fed_id = $f->id;
-
-			my $fed_fed_resolvers =
-				$self->db->resultset('FederationFederationResolver')->search( { federation => $fed_id }, { prefetch => ['federation_resolver'] } );
-			while ( my $ffr = $fed_fed_resolvers->next ) {
-				my $fed_resolver_id = $ffr->federation_resolver->id;
-				my $ip_address      = $ffr->federation_resolver->ip_address;
-				my $type_name       = lc $ffr->federation_resolver->type->name;
-				@line = [ $f->id, $f->cname, $type_name, $f->description, $f->ttl ];
-				push( @{ $data{'aaData'} }, @line );
-			}
+			@line = [ $f->id, $f->cname, $f->description, $f->ttl ];
+			push( @{ $data{'aaData'} }, @line );
 		}
 	}
 

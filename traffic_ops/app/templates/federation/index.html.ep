@@ -94,7 +94,6 @@ $(function () {
 						<tr>
 							<td>Federation Id</td>
 							<td>CNAME</td>
-							<td>Type</td>
 							<td>Description</td>
 							<td>TTL</td>
 						</tr>
