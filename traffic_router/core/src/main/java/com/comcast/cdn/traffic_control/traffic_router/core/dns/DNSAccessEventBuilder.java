@@ -1,7 +1,13 @@
 package com.comcast.cdn.traffic_control.traffic_router.core.dns;
 
 import com.comcast.cdn.traffic_control.traffic_router.core.loc.Geolocation;
-import org.xbill.DNS.*;
+import org.xbill.DNS.DClass;
+import org.xbill.DNS.Message;
+import org.xbill.DNS.Rcode;
+import org.xbill.DNS.Record;
+import org.xbill.DNS.Section;
+import org.xbill.DNS.Type;
+import org.xbill.DNS.WireParseException;
 
 import java.math.RoundingMode;
 import java.text.DecimalFormat;
