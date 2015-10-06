@@ -54,3 +54,4 @@ jquery-ui-dark-hive , 1.7.3 	, http://jquery-ui.googlecode.com/svn/tags/1.7.3/th
 jquery-ui-dark-hive , 1.7.3 	, http://jquery-ui.googlecode.com/svn/tags/1.7.3/themes/dark-hive/images/ui-icons_cccccc_256x240.png 				, none 	, ui-icons_cccccc_256x240.png 				, . 											, ../../app/public/css/images/
 jquery-ui-dark-hive , 1.7.3 	, http://jquery-ui.googlecode.com/svn/tags/1.7.3/themes/dark-hive/images/ui-icons_ffffff_256x240.png 				, none 	, ui-icons_ffffff_256x240.png 				, . 											, ../../app/public/css/images/
 twitter-boostrap 	, 3.3.4 	, https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/js/bootstrap.min.js 												, none 	, bootstrap.min.js 							, . 											, ../../app/public/js/
+jqtree 			    , 1.2.1 	, https://github.com/mbraak/jqTree/archive/1.2.1.zip        													    , zip 	, tree.jquery.js 				, jqTree-1.2.1/ 								, ../../app/public/js/jqtree/

@@ -98,8 +98,8 @@ sub edit {
 
 	my $etypeid = &type_id( $self, 'EDGE', );
 	my $otypeid = &type_id( $self, 'ORG', );
-	my $rs = $self->db->resultset('Server')->search( { -or => [ { 'me.type' => $etypeid }, { 'me.type' => $otypeid }  ] },
-		{ prefetch => [ 'cachegroup', 'type', 'profile', 'status' ], } );
+	my $rs      = $self->db->resultset('Server')
+		->search( { -or => [ { 'me.type' => $etypeid }, { 'me.type' => $otypeid } ] }, { prefetch => [ 'cachegroup', 'type', 'profile', 'status' ], } );
 	while ( my $row = $rs->next ) {
 
 		# skip profiles that are not associated with the cdn this ds is in
@@ -236,7 +236,7 @@ sub assign_servers {
 	my $ds = $self->db->resultset('Deliveryservice')->search( { id => $dsid } )->single();
 	&UI::DeliveryService::header_rewrite( $self, $ds->id, $ds->profile, $ds->xml_id, $ds->edge_header_rewrite, "edge" );
 
-	&log( $self, "Link deliveryservice " . $ds->xml_id . " to " . $numlinks . " servers", "UICHANGE" );
+	#&log( $self, "Link deliveryservice " . $ds->xml_id . " to " . $numlinks . " servers", "UICHANGE" );
 
 	$self->flash( alertmsg => "Success!" );
 	my $referer = $self->req->headers->header('referer');
@@ -258,7 +258,7 @@ sub create {
 		$new_id = $insert->id;
 
 		my $ds = $self->db->resultset('Deliveryservice')->search( { id => $deliveryservice } )->single();
-		&UI::DeliveryService::header_rewrite( $self, $ds->id, $ds->profile, $ds->xml_id, $ds->edge_header_rewrite, "edge" ); 
+		&UI::DeliveryService::header_rewrite( $self, $ds->id, $ds->profile, $ds->xml_id, $ds->edge_header_rewrite, "edge" );
 
 		$self->flash( alertmsg => 'Success!' );
 		&log( $self, "Create deliveryservice server link " . $ds->xml_id . " <-> " . $server_name, "UICHANGE" );

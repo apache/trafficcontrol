@@ -14,13 +14,33 @@
      limitations under the License.
  -->
 <!DOCTYPE html>
+<style>
+#roleselect {
+    margin-left: 5px;
+}
+</style>
+
 % if (defined (flash 'alertmsg')) {
 <script> 
 var alertmsg = "<%= flash 'alertmsg' %>"; 
 alertmsg = alertmsg.replace(/__NEWLINE__/g, "\n");
 alert(alertmsg);
+
+ %= include 'user/_listroles.js'
+
 </script>
 % }
+
+<script type="text/javascript">
+
+      %= include 'user/_listroles.js'
+
+	  // wait for the DOM to be loaded 
+	  $(document).ready(function () {
+		  listroles("<%= $selected_role_id %>");
+	   });
+
+</script>
 	<head>
 		<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
 		<title><%= title %></title>
@@ -41,10 +61,10 @@ alert(alertmsg);
 	  <div style="margin-left:10px;">
 		%= form_for federation_create => (id => 'federation_create')  => begin 
 			%= include 'federation/_form'
-			<div class="bottomButtons" style="margin-left: 285px;">
+			<div class="bottomButtons" style="margin-left: 500px;">
 			  <div style="float:left;">
-				 %= submit_button 'Save', class=> 'button'
-							<button id="close_button" class="button">Close</button>
+				 %= submit_button 'Add', class=> 'button'
+				<button id="close_button" class="button">Close</button>
 			 </div>
 			</div>
 		% end

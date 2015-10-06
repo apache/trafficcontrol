@@ -27,7 +27,10 @@ $(function () {
 	$(document).ready(function () {
 %= include 'jmenu'
 
-		sTable = $('#dtlocations').dataTable({
+		sTable = $('#datatable').dataTable({
+		    fnDrawCallback: function (settings) {
+				  $("#datatable").parent().toggle(settings.fnRecordsDisplay() > 0);
+		    },
 			"bJQueryUI": true,
 			"bProcessing": true,
 			"sScrollY": calcDataTableHeight(),
@@ -44,11 +47,17 @@ $(function () {
 	  })
 
     function renderEditColumn(federation_resolver_id) {
-        % if ($priv_level >= 30) {
-          return "<a class='fancybox fancybox.iframe' href='/federation/" + federation_resolver_id + "/edit'>Edit</a>";
-        % } else {
-          return "";
-        % }
+
+     if (federation_resolver_id != null){
+			  % if ($priv_level >= 30) {
+				return "<a class='fancybox fancybox.iframe' href='/federation/" + federation_resolver_id + "/edit'>Edit</a>";
+			  % } else {
+				return "";
+			  % }
+     } else {
+	   return "";
+     }
+
     };
 
      $("a.fancybox").fancybox({
@@ -69,26 +78,24 @@ $(function () {
           'transitionOut'   : 'elastic',
           'type'            : 'iframe',
           'iframe'          : {'scrolling'       : 'yes'},
-		  'height'          : '700px',
-		  'width'           : '670px'
+		  'width'           : '550px'
       });
 
 });
 </script>
 
-<body id="misc">
-%= include 'navbar'
-<div class="ui-tab-float-right-on-table">Federation</div>
+	<body id="misc">
+	%= include 'navbar'
+	<div class="ui-tab-float-right-on-table">Federation</div>
 
-		<div id="Misc">
-			
+		<div id="Federation">
 
-				<table cellpadding="0" cellspacing="0" border="0" width="100%" class="display" id="dtlocations">
+				<table cellpadding="0" cellspacing="0" border="0" width="100%" class="display" id="datatable">
 					<thead>
 						<tr>
 							<td>Federation Id</td>
-							<td>CNAME</td>
 							<td>Description</td>
+							<td>CNAME</td>
 							<td>TTL</td>
 						</tr>
 					</thead>

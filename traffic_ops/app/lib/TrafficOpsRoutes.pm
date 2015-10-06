@@ -169,10 +169,12 @@ sub ui_routes {
 
 	# -- Federation
 	$r->get('/federation')->over( authenticated => 1 )->to( 'Federation#index', namespace => $namespace );
+	$r->get('/federation/:federation_id/delete')->name("federation_delete")->over( authenticated => 1 )->to( 'Federation#delete', namespace => $namespace );
 	$r->get('/federation/:federation_id/edit')->name("federation_edit")->over( authenticated => 1 )->to( 'Federation#edit', namespace => $namespace );
 	$r->get('/federation/add')->name('federation_add')->over( authenticated => 1 )->to( 'Federation#add', namespace => $namespace );
 	$r->post('/federation')->name('federation_create')->to( 'Federation#create', namespace => $namespace );
 	$r->post('/federation/:federation_id')->name('federation_update')->to( 'Federation#update', namespace => $namespace );
+	$r->get( "/federation/resolvers" => [ format => [qw(json)] ] )->to( 'Federation#resolvers', namespace => $namespace );
 
 	# -- Gendbdump - Get DB dump
 	$r->get('/dbdump')->over( authenticated => 1 )->to( 'GenDbDump#dbdump', namespace => $namespace );
