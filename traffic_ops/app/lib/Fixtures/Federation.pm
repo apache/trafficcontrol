@@ -26,7 +26,7 @@ my %definition_for = (
 		new   => 'Federation',
 		using => {
 			id          => 1,
-			cname       => 'cname1',
+			cname       => 'cname1.',
 			description => 'resolver4 type',
 			ttl         => 86400,
 		},
@@ -35,7 +35,7 @@ my %definition_for = (
 		new   => 'Federation',
 		using => {
 			id          => 2,
-			cname       => 'cname2',
+			cname       => 'cname2.',
 			description => 'resolver4 type',
 			ttl         => 86400,
 		},
@@ -44,7 +44,7 @@ my %definition_for = (
 		new   => 'Federation',
 		using => {
 			id          => 3,
-			cname       => 'cname3',
+			cname       => 'cname3.',
 			description => 'resolver6 type',
 			ttl         => 86400,
 		},
@@ -53,7 +53,7 @@ my %definition_for = (
 		new   => 'Federation',
 		using => {
 			id          => 4,
-			cname       => 'cname4',
+			cname       => 'cname4.',
 			description => 'resolver6 type',
 			ttl         => 86400,
 		},

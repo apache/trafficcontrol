@@ -25,6 +25,7 @@ use Data::Dumper;
 use Net::CIDR;
 use JSON;
 use Validate::Tiny ':all';
+ use Data::Validate::IP qw(is_ipv4 is_ipv6);
 
 sub index {
   my $self             = shift;
@@ -180,7 +181,7 @@ sub add {
           ttl    => $ttl
         }
       );
-      if ( !defined $is_valid ) {
+      if ( !$is_valid ) {
         return $self->alert($result);
       }
 
@@ -239,7 +240,21 @@ sub is_valid {
   my $rules = {
     fields => [qw/xml_id cname ttl/],
 
-    checks => [ [qw/xml_id cname ttl/] => is_required("is required"), ]
+    checks => [
+      [qw/xml_id cname ttl/] => is_required("is required"),
+
+      cname => sub {
+        my $value  = shift;
+
+        if (is_ipv4($value) || is_ipv6($value)) {
+          return "records must always be pointed to another domain name, never to an IP-address. e.g. 'foo.example.com.'";
+        }
+
+        if ($value !~ /\.$/) {
+          return "records must have a trailing period. e.g. 'foo.example.com.'";
+        }
+      },
+    ]
   };
 
   my $result = validate( $federation, $rules );
