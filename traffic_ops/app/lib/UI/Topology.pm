@@ -44,8 +44,7 @@ sub gen_crconfig_json {
 	my $cdn_id;
 	my %type_to_name;
 	my $ccr_domain_name = "";
-	my $tr_profile_id;
-	my @cache_profiles;
+	my $profile_cache;
 
 	$SIG{__WARN__} = sub { warn $_[0] unless $_[0] =~ m/Prefetching multiple has_many rels deliveryservice_servers/ };
 
@@ -57,40 +56,26 @@ sub gen_crconfig_json {
 	$data_obj->{'stats'}->{'tm_user'}    = $self->current_user()->{'username'};
 
 	my $rs_cdn_profiles = $self->db->resultset('Server')->search( { 'cdn.name' => $cdn_name }, { join => 'cdn', prefetch => ['profile','type'], distinct => 1 } );
-	my %cdn_profiles_to_type;
+
 	while ( my $row = $rs_cdn_profiles->next ) {
-		$cdn_profiles_to_type{$row->profile->id} = $row->type->name;
+		$profile_cache->{$row->type->name}->{$row->profile->id} = defined;
 		$cdn_id = defined($cdn_id) ? next : $row->cdn->id;
 	}
 
-	my @cdn_profiles = keys %cdn_profiles_to_type;
-
-	if ( !scalar( @cdn_profiles) ) {
+	if ( scalar(keys(%{$profile_cache->{'CCR'}})) == 0 ) {
+		my $e = Mojo::Exception->throw("No Traffic Router profile found for CDN: $cdn_name" );
+	}
+	elsif ( scalar(keys(%{$profile_cache->{'EDGE'}})) == 0 && scalar(keys(%{$profile_cache->{'MID'}})) == 0 ) {
 		my $e = Mojo::Exception->throw( "No profiles found for CDN_name: " . $cdn_name );
 	}
 
-	foreach my $profile ( @cdn_profiles ) {
-		if ( $cdn_profiles_to_type{$profile} eq 'CCR' || $cdn_profiles_to_type{$profile} eq 'TR' ) {
-			$tr_profile_id = $profile;
-		}
-		elsif ( $cdn_profiles_to_type{$profile} eq 'EDGE' || $cdn_profiles_to_type{$profile} eq 'MID' ) {
-			push ( @cache_profiles, $profile );
-		}
-	}
-	
-	if ( !defined($tr_profile_id) ) {
-		my $e = Mojo::Exception->throw("No Traffic Router profile found in profile IDs: " . keys %cdn_profiles_to_type);
-	}
-
-	my %profile_cache;
-	my %condition = ( -and => [ 'profile' => { -in => \@cdn_profiles }, 'parameter.config_file' => 'CRConfig.json' ] );
+	my %param_cache;
+	my %condition = ( -and => [ profile => { -in => [ keys(%{$profile_cache->{'CCR'}}), keys(%{$profile_cache->{'EDGE'}}), keys(%{$profile_cache->{'MID'}}) ] }, 'parameter.config_file' => 'CRConfig.json' ] );
 	my $rs_pp = $self->db->resultset('ProfileParameter')->search( \%condition, { prefetch => [ { 'parameter' => undef }, { 'profile' => undef } ] } );
 
 	while ( my $row = $rs_pp->next ) {
-		
-		$profile_cache{$row->profile->id}->{$row->parameter->name} = $row->parameter->value;
 
-		next unless $row->profile->id eq $tr_profile_id;
+		$param_cache{$row->profile->id}->{$row->parameter->name} = $row->parameter->value;
 
 		if ( $row->parameter->name eq 'domain_name' ) {
 			$ccr_domain_name = $row->parameter->value;
@@ -117,7 +102,7 @@ sub gen_crconfig_json {
 
 	my %cache_tracker;
 	my $rs_caches = $self->db->resultset('Server')->search(
-		{ 'profile' => { -in => \@cache_profiles } },
+		{ 'profile' => { -in => [ keys(%{$profile_cache->{'EDGE'}}), keys(%{$profile_cache->{'MID'}}) ] } },
 		{
 			prefetch => [ 'type', 'status', 'cachegroup', 'profile' ],
 			columns  => [ 'host_name', 'domain_name', 'tcp_port',   'interface_name', 'ip_address', 'ip6_address', 'id', 'xmpp_id' ]
@@ -126,7 +111,7 @@ sub gen_crconfig_json {
 
 	while ( my $row = $rs_caches->next ) {
 
-		next if ( $row->status->name =~ m/\_IGNORE$/ );
+		next unless ( $row->status->name eq 'ONLINE' || $row->status->name eq 'REPORTED' || $row->status->name eq 'ADMIN_DOWN' );
 
 		if ( $row->type->name eq "RASCAL" ) {
 			$data_obj->{'monitors'}->{ $row->host_name }->{'fqdn'}     = $row->host_name . "." . $row->domain_name;
@@ -166,8 +151,8 @@ sub gen_crconfig_json {
 			}
 
 			my $pid               = $row->profile->id;
-			my $weight            = defined($profile_cache{$pid}->{'weight'}) ? $profile_cache{$pid}->{'weight'} : 0.999;
-			my $weight_multiplier = defined($profile_cache{$pid}->{'weightMultiplier'}) ? $profile_cache{$pid}->{'weightMultiplier'} : 1000;
+			my $weight            = defined($param_cache{$pid}->{'weight'}) ? $param_cache{$pid}->{'weight'} : 0.999;
+			my $weight_multiplier = defined($param_cache{$pid}->{'weightMultiplier'}) ? $param_cache{$pid}->{'weightMultiplier'} : 1000;
 			
 			$data_obj->{'contentServers'}->{ $row->host_name }->{'locationId'}    = $row->cachegroup->name;
 			$data_obj->{'contentServers'}->{ $row->host_name }->{'cacheGroup'}    = $row->cachegroup->name;
@@ -186,7 +171,7 @@ sub gen_crconfig_json {
 	my $regexps;
 	my $rs_ds =
 		$self->db->resultset('Deliveryservice')
-		->search( { 'me.profile' => $tr_profile_id, 'active' => 1 }, { prefetch => [ 'deliveryservice_servers', 'deliveryservice_regexes', 'type' ] } );
+		->search( { 'me.profile' => { -in => keys(%{$profile_cache->{'CCR'}}) }, 'active' => 1 }, { prefetch => [ 'deliveryservice_servers', 'deliveryservice_regexes', 'type' ] } );
 
 	while ( my $row = $rs_ds->next ) {
 		my $protocol;
