@@ -78,16 +78,15 @@ $(function () {
           'transitionOut'   : 'elastic',
           'type'            : 'iframe',
           'iframe'          : {'scrolling'       : 'yes'},
-		  'height'          : '950px',
-		  'width'           : '770px'
+		  'width'           : '550px'
       });
 
 });
 </script>
 
-<body id="misc">
-%= include 'navbar'
-<div class="ui-tab-float-right-on-table">Federation</div>
+	<body id="misc">
+	%= include 'navbar'
+	<div class="ui-tab-float-right-on-table">Federation</div>
 
 		<div id="Federation">
 

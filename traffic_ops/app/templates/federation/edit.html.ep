@@ -70,7 +70,7 @@
 				margin-left: 5px;
 			}
 			#edit_form {
-				height: 500px;
+				height: 400px;
 			}
 		</style>
 
@@ -78,7 +78,7 @@
 	<body>
 
 	<div id="accordion">
-		<div class="dialog_body" style="margin-left:10px; width: 600px;">
+		<div class="dialog_body" style="margin-left:10px; width: 500px;">
 	         <h3><a href="#">Federation Mapping</a></h3>
 
 				 %= include 'common/_errors'
@@ -88,10 +88,18 @@
 
 				   <div class="deliveryServicesForm">
 				        %= include 'federation/_form'
+					   <div class="block">
+						<fieldset>
+						  <legend>Resolvers</legend>
+						  <div id="resolver_tree" data-url="/federation/resolvers.json?federation_id=<%= $federation_id %>"></div>
+						 </div>
+						</fieldset>
+						</div>
+
 				   </div>
-				   <div style="margin-top:10px;padding:10px;">
+				   <div style="padding:10px;padding-bottom:20px;">
 					  <a href="#" class="button" id="delete_button">Delete</a>
-					   %= submit_button 'Save', id => 'save_button', class=> 'button', style=> 'margin-left:300px;'
+					   %= submit_button 'Save', id => 'save_button', class=> 'button', style=> 'margin-left:270px;'
 					   %= submit_button 'Close', id => 'close_button', class=> 'button'
 				   </div>
 				</form>
