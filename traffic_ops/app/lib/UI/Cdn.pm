@@ -436,15 +436,6 @@ sub aserver {
 				$aux_url = "/redis/info/" . $row->host_name;
 				$img     = "info.png";
 			}
-			elsif ( $row->type->name eq "TRAFFIC_STATS" ) {
-				$aux_url = "https://" . $row->host_name . "." . $row->domain_name . "/";
-				$img     = "info.png";
-			}
-			elsif ( $row->type->name eq "INFLUXDB" ) {
-				# Assuming lots of information here... http and port 8083
-				$aux_url = "http://" . $row->host_name . "." . $row->domain_name . ":" . "8083" . "/";
-				$img     = "info.png";
-			}
 
 			@line = [
 				$row->id,                  $row->host_name,
