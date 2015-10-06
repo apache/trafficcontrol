@@ -220,11 +220,11 @@ func loadStartupConfig(configFile string, oldConfig StartupConfig) (StartupConfi
 }
 
 func calcDailySummary(now time.Time, config StartupConfig, runningConfig RunningConfig) {
-	log.Debugf("lastSummaryTime is %v", runningConfig.LastSummaryTime)
+	log.Infof("lastSummaryTime is %v", runningConfig.LastSummaryTime)
 	if runningConfig.LastSummaryTime.Day() != now.Day() {
 		startTime := now.Truncate(24 * time.Hour).Add(-24 * time.Hour)
 		endTime := startTime.Add(24 * time.Hour)
-		log.Debug("Summarizing from ", startTime, " (", startTime.Unix(), ") to ", endTime, " (", endTime.Unix(), ")")
+		log.Info("Summarizing from ", startTime, " (", startTime.Unix(), ") to ", endTime, " (", endTime.Unix(), ")")
 
 		// influx connection
 		influxClient, err := influxConnect(config, runningConfig)
@@ -236,7 +236,7 @@ func calcDailySummary(now time.Time, config StartupConfig, runningConfig Running
 
 		//create influxdb query
 		q := fmt.Sprintf("SELECT sum(value)/6 FROM bandwidth where time > '%s' and time < '%s' group by time(60s), cdn fill(0)", startTime.Format(time.RFC3339), endTime.Format(time.RFC3339))
-		log.Debugf(q)
+		log.Infof(q)
 		res, err := queryDB(influxClient, q, "cache_stats")
 		if err != nil {
 			errHndlr(err, ERROR)
@@ -320,6 +320,7 @@ func calcDailySummary(now time.Time, config StartupConfig, runningConfig Running
 			RetentionPolicy: config.DailySummaryRetentionPolicy,
 		}
 		config.BpsChan <- bps
+		log.Info("Saved daily stats @ ", startTime)
 	}
 }
 
