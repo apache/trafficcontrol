@@ -105,7 +105,9 @@ Configuration
 
 	In order for Traffic Ops users to see Grafana graphs, Grafana will need to allow anonymous access.  Information on how to configure anonymous access can be found on the configuration page of the `Grafana Website  <http://docs.grafana.org/installation/configuration/#authanonymous>`_.
 
-	Traffic Ops uses custom dashboards to display information about individual delivery services or cache-groups.  In order for the custom graphs to display correctly, you will need to install the `traffic_ops_*.js <https://github.com/Comcast/traffic_control/blob/master/traffic_stats/grafana/>`_ file to the ``/usr/share/grafana/public/dashboards/`` directory on the grafana server.  More information on custom scripted graphs can be found in the `scripted dashboards <http://docs.grafana.org/reference/scripting/>`_ section of the Grafana documentation.
+	Traffic Ops uses custom dashboards to display information about individual delivery services or cache groups.  In order for the custom graphs to display correctly, the `traffic_ops_*.js <https://github.com/Comcast/traffic_control/blob/master/traffic_stats/grafana/>`_ files need to be in the ``/usr/share/grafana/public/dashboards/`` directory on the grafana server.  If your Grafana server is the same as your Traffic Stats server the RPM install process will take care of putting the files in place.  If your grafana server is different from your Traffic Stats server, you will need to manually copy the files to the correct directory.  
+
+	More information on custom scripted graphs can be found in the `scripted dashboards <http://docs.grafana.org/reference/scripting/>`_ section of the Grafana documentation.
 
 **Configuring httpd proxying for SSL**
 
@@ -128,6 +130,7 @@ Configuration
 				ProxyPass /public http://localhost:3000/public
 				ProxyPass /login http://localhost:3000/login
 				ProxyPass /logout http://localhost:3000/logout
+				
 				# The following ProxyPassReverse doesn't work for some.
 				ProxyPassReverse / http://localhost:3000/
 
@@ -137,8 +140,8 @@ Configuration
 				BalancerMember http://<influxDb3>:8086
 				</Proxy>
 				ProxyPass /query balancer://influxDb/query
-
-	      # This works better for some
+				
+				# This works better for some
 				ProxyPass / http://localhost:3000/
 
 	6. Restart httpd ``service httpd restart``
