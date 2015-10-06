@@ -320,7 +320,7 @@ func calcDailySummary(now time.Time, config StartupConfig, runningConfig Running
 			RetentionPolicy: config.DailySummaryRetentionPolicy,
 		}
 		config.BpsChan <- bps
-		log.Info("Saved daily stats @ ", startTime)
+		log.Info("Saved daily stats @ ", now)
 	}
 }
 
