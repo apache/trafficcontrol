@@ -74,7 +74,7 @@ sub writeYamlToFH {
 	my $prefix = shift || '';
 
 	my $type   = ref($data);
-	my $indent = '  ' x $level;
+	my $indent = ' ' x $level;
 	if ( $type eq '' ) {
 
 		# scalar
@@ -84,7 +84,7 @@ sub writeYamlToFH {
 		foreach my $key ( keys %$data ) {
 			my $value = $data->{$key};
 			if ( ref($value) eq '' ) {
-				print $fh "$indent$key: '$value'\n";
+				print $fh "$indent$key: $value\n";
 			}
 			else {
 				print $fh "$indent$key:\n";
@@ -108,7 +108,8 @@ sub writeYaml {
 
 # Init.
 sub init () {
-	my %dbconf = readJson($database_conf);
+	my $c      = readJson($database_conf);
+	my %dbconf = %$c;
 	my $dbAdminUser;
 	my $dbAdminPw;
 
@@ -128,7 +129,7 @@ sub init () {
 		$dbconf{port}     = promptUser( "Database port number",                $dbconf{port}     || "3306" );
 		$dbconf{user}     = promptUser( "Traffic Ops database user",           $dbconf{user}     || "traffic_ops" );
 		$dbconf{password} = promptPasswordVerify("Password for $dbconf{user}");
-
+		$dbconf{description} = "$dbconf{type} database on $dbconf{hostname}:$dbconf{port}";
 		print "\n";
 		$dbAdminUser = promptUser( "Database server root (admin) user name", "root" );
 		$dbAdminPw = promptPassword("Database server $dbAdminUser password");
@@ -173,7 +174,7 @@ EOF
 
 		my $tmurl = promptUser( "Traffic Ops url", $parameters->{"tm.url"} || "https://localhost" );
 		$parameters->{"tm.url"}     = $tmurl;
-		$parameters->{"tminfo.url"} = "$tmurl/info";
+		$parameters->{"tm.infourl"} = "$tmurl/info";
 
 		$parameters->{cdnname}    = promptUser( "Human-readable CDN Name.  (No whitespace, please)",  $parameters->{cdnname}    || "kabletown_cdn" );
 		$parameters->{domainname} = promptUser( "DNS sub-domain for which your CDN is authoritative", $parameters->{domainname} || "cdn1.kabletown.net" );
