@@ -102,7 +102,7 @@ sub gen_crconfig_json {
 
 	my %cache_tracker;
 	my $rs_caches = $self->db->resultset('Server')->search(
-		{ 'profile' => { -in => [ @{$profile_cache->{'EDGE'}}, @{$profile_cache->{'MID'}} ] } },
+		{ 'profile' => { -in => [ @{$profile_cache->{'EDGE'}}, @{$profile_cache->{'MID'}}, @{$profile_cache->{'CCR'}}, @{$profile_cache->{'RASCAL'}} ] } },
 		{
 			prefetch => [ 'type', 'status', 'cachegroup', 'profile' ],
 			columns  => [ 'host_name', 'domain_name', 'tcp_port',   'interface_name', 'ip_address', 'ip6_address', 'id', 'xmpp_id' ]
@@ -123,7 +123,7 @@ sub gen_crconfig_json {
 			$data_obj->{'monitors'}->{ $row->host_name }->{'profile'}  = $row->profile->name;
 
 		}
-		elsif ( $row->type->name eq "CCR" || $row->type->name eq "TR" ) {
+		elsif ( $row->type->name eq "CCR" ) {
 			my $rs_param =
 				$self->db->resultset('Parameter')
 				->search( { 'profile_parameters.profile' => $row->profile->id, 'name' => 'api.port' }, { join => 'profile_parameters' } );
