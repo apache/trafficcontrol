@@ -26,7 +26,6 @@ type ProfileResponse struct {
 type Profile struct {
 	Name        string `json:"name"`
 	Description string `json:"description"`
-	CdnName     string `json:"cdnName"`
 	LastUpdated string `json:"lastUpdated"`
 }
 
