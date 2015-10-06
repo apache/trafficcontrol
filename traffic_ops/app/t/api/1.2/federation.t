@@ -28,6 +28,8 @@ use Fixtures::Federation;
 use Fixtures::FederationDeliveryservice;
 use Fixtures::FederationResolver;
 use Fixtures::FederationFederationResolver;
+use Fixtures::FederationTmuser;
+use Data::Dumper;
 
 BEGIN { $ENV{MOJO_MODE} = "test" }
 
@@ -65,22 +67,25 @@ Test::TestHelper->load_all_fixtures($fmd);
 my $federation_federation_resolver = Fixtures::FederationFederationResolver->new($schema_values);
 Test::TestHelper->load_all_fixtures($federation_federation_resolver);
 
-ok $t->post_ok( '/login', => form => { u => 'portal', p => Test::TestHelper::ADMIN_USER_PASSWORD } )->status_is(302)
+my $ft = Fixtures::FederationTmuser->new($schema_values);
+Test::TestHelper->load_all_fixtures($ft);
+
+ok $t->post_ok( '/login', => form => { u => 'federation', p => Test::TestHelper::FEDERATION_USER_PASSWORD } )->status_is(302)
   ->or( sub { diag $t->tx->res->content->asset->{content}; } );
 
 $t->get_ok("/internal/api/1.2/federations.json")->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } )
   ->json_is( "/response/0/deliveryService", "test-ds1" )
-  ->json_is( "/response/0/mappings/0/cname", "cname1" )
+  ->json_is( "/response/0/mappings/0/cname", "cname1." )
   ->json_is( "/response/0/mappings/0/ttl", "86400" )
   ->json_is( "/response/0/mappings/0/resolve6/0", "FE80::0202:B3FF:FE1E:8329/128" )
   ->json_is( "/response/0/mappings/0/resolve4/0", "127.0.0.1/32" )
 
   ->json_is( "/response/0/deliveryService", "test-ds1" )
-  ->json_is( "/response/0/mappings/1/cname", "cname2" )
+  ->json_is( "/response/0/mappings/1/cname", "cname2." )
   ->json_is( "/response/0/mappings/1/ttl", "86400" )
 
   ->json_is( "/response/1/deliveryService", "test-ds2" )
-  ->json_is( "/response/1/mappings/0/cname", "cname4" )
+  ->json_is( "/response/1/mappings/0/cname", "cname4." )
   ->json_is( "/response/1/mappings/0/ttl", "86400" );
 
 ok $t->get_ok('/logout')->status_is(302)->or( sub { diag $t->tx->res->content->asset->{content}; } );
