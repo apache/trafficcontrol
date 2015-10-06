@@ -95,7 +95,7 @@ fi
 %attr(600, traffic_stats, traffic_stats) /opt/traffic_stats/conf/*
 %attr(755, traffic_stats, traffic_stats) /opt/traffic_stats/bin/*
 %attr(755, traffic_stats, traffic_stats) /etc/init.d/traffic_stats
-%attr(755, traffic_stats, traffic_stats) /usr/share/grafana/public/dashboards
+%attr(644, traffic_stats, traffic_stats) /usr/share/grafana/public/dashboards/*
 
 %preun
 # args for hooks: http://www.ibm.com/developerworks/library/l-rpm2/
