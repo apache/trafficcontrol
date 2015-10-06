@@ -35,36 +35,13 @@ sub index {
 	&navbarpage($self);
 }
 
-# NOTE: Do NOT attempt to call this method 'new' or 'init'
-#      because Mojo will death spiral.
-# Setup a New user for "Add User".
-sub add {
-	my $self = shift;
-
-	my $current_username = $self->current_user()->{username};
-	my $dbh              = $self->db->resultset('TmUser')->search( { username => $current_username } );
-	my $tm_user          = $dbh->single;
-	&stash_role($self);
-
-	#TODO: drichardson - remove hard coded DS
-	my $delivery_services = get_delivery_services( $self, 1 );
-
-	$self->stash(
-		tm_user           => $tm_user,
-		federation        => {},
-		delivery_services => $delivery_services,
-		fbox_layout       => 1,
-		selected_role_id  => 7,                    # the federation role
-		mode              => 'add'
-	);
-}
-
-sub edit {
+sub view {
 	my $self   = shift;
 	my $fed_id = $self->param('federation_id');
 
 	my $federation;
 	my $selected_ds_id;
+	my $deliveryservice_name;
 	my $feds = $self->db->resultset('Federation')->search( { 'id' => $fed_id } );
 	while ( my $f = $feds->next ) {
 		$federation = $f;
@@ -72,15 +49,18 @@ sub edit {
 		my $federation_deliveryservices =
 			$self->db->resultset('FederationDeliveryservice')->search( { federation => $fed_id }, { prefetch => [ 'federation', 'deliveryservice' ] } );
 		while ( my $fd = $federation_deliveryservices->next ) {
-			$selected_ds_id = $fd->deliveryservice->id;
+			$selected_ds_id       = $fd->deliveryservice->id;
+			$deliveryservice_name = $fd->deliveryservice->xml_id;
 		}
 	}
 
 	my $selected_role_id;
+	my $role_name;
 	my $ftusers =
 		$self->db->resultset('FederationTmuser')->search( { federation => $fed_id }, { prefetch => [ 'federation', 'tm_user' ] } );
 	while ( my $ft = $ftusers->next ) {
 		$selected_role_id = $ft->role->id;
+		$role_name        = $ft->role->name;
 	}
 
 	my $current_username = $self->current_user()->{username};
@@ -90,15 +70,17 @@ sub edit {
 
 	my $delivery_services = get_delivery_services( $self, $selected_ds_id );
 	$self->stash(
-		tm_user           => $tm_user,
-		selected_ds_id    => $selected_ds_id,
-		selected_role_id  => $selected_role_id,
-		federation        => $federation,
-		mode              => 'edit',
-		fbox_layout       => 1,
-		delivery_services => $delivery_services
+		tm_user              => $tm_user,
+		selected_ds_id       => $selected_ds_id,
+		deliveryservice_name => $deliveryservice_name,
+		selected_role_id     => $selected_role_id,
+		role_name            => $role_name,
+		federation           => $federation,
+		mode                 => 'view',
+		fbox_layout          => 1,
+		delivery_services    => $delivery_services
 	);
-	return $self->render('federation/edit');
+	return $self->render('federation/view');
 }
 
 # .json format for the jqTree widge
@@ -177,8 +159,8 @@ sub update {
 	my $description = $self->param('federation.description');
 	my $ttl         = $self->param('federation.ttl');
 
-	my $is_valid = $self->is_valid("edit");
-	if ( $self->is_valid("edit") ) {
+	my $is_valid = $self->is_valid("view");
+	if ( $self->is_valid("view") ) {
 		my $dbh = $self->db->resultset('Federation')->find( { id => $fed_id } );
 		$dbh->cname($cname);
 		$dbh->description($description);
@@ -196,11 +178,11 @@ sub update {
 		}
 
 		$self->flash( message => "Federation was updated successfully." );
-		$self->stash( mode => 'edit' );
-		return $self->redirect_to( '/federation/' . $fed_id . '/edit' );
+		$self->stash( mode => 'view' );
+		return $self->redirect_to( '/federation/' . $fed_id . '/view' );
 	}
 	else {
-		$self->edit();
+		$self->view();
 	}
 }
 

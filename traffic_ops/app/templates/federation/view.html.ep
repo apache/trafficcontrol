@@ -69,7 +69,7 @@
 			#roleselect {
 				margin-left: 5px;
 			}
-			#edit_form {
+			#view_form {
 				height: 400px;
 			}
 		</style>
@@ -84,7 +84,7 @@
 				 %= include 'common/_errors'
 				 %= include 'common/_flash'
 
-				<form id="edit_form" method="POST" action="/federation/<%= $federation->id %>">
+				<div id="view_form">
 
 				   <div class="deliveryServicesForm">
 				        %= include 'federation/_form'
@@ -99,7 +99,6 @@
 				   </div>
 				   <div style="padding:10px;padding-bottom:20px;">
 					  <a href="#" class="button" id="delete_button">Delete</a>
-					   %= submit_button 'Save', id => 'save_button', class=> 'button', style=> 'margin-left:270px;'
 					   %= submit_button 'Close', id => 'close_button', class=> 'button'
 				   </div>
 				</form>
