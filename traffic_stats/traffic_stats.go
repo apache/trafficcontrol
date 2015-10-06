@@ -317,7 +317,7 @@ func calcDailySummary(now time.Time, config StartupConfig, runningConfig Running
 		bps := influx.BatchPoints{
 			Points:          pts,
 			Database:        "daily_stats",
-			RetentionPolicy: "daily_stats",
+			RetentionPolicy: config.DailySummaryRetentionPolicy,
 		}
 		config.BpsChan <- bps
 	}
