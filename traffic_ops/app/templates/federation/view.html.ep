@@ -60,7 +60,7 @@
 			   list-style-type:none;
 			}
 			ul.jqtree-folder {
-				margin-left: 60px;
+               margin-left: 60px;
 			   list-style-type:none;
 			}
 			li.jqtree-element {

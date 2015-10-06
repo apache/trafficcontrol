@@ -77,7 +77,6 @@ $(function () {
           'transitionIn'    : 'elastic',
           'transitionOut'   : 'elastic',
           'type'            : 'iframe',
-          'iframe'          : {'scrolling'       : 'yes'},
 		  'width'           : '550px'
       });
 
