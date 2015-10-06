@@ -16,6 +16,7 @@
 
 package com.comcast.cdn.traffic_control.traffic_router.core.dns;
 
+import com.comcast.cdn.traffic_control.traffic_router.core.loc.Geolocation;
 import com.comcast.cdn.traffic_control.traffic_router.core.router.StatTracker.Track.ResultDetails;
 import com.comcast.cdn.traffic_control.traffic_router.core.router.StatTracker.Track.ResultType;
 import org.xbill.DNS.Message;
@@ -32,6 +33,7 @@ public final class DNSAccessRecord {
     private final Message dnsMessage;
     private final ResultType resultType;
     private final ResultDetails resultDetails;
+    private final Geolocation resultLocation;
 
     public long getQueryInstant() {
         return queryInstant;
@@ -53,12 +55,17 @@ public final class DNSAccessRecord {
         return resultDetails;
     }
 
+    public Geolocation getResultLocation() {
+        return resultLocation;
+    }
+
     public static class Builder {
         private final long queryInstant;
         private final InetAddress client;
         private Message dnsMessage;
         private ResultType resultType;
         private ResultDetails resultDetails;
+        private Geolocation resultLocation;
 
         public Builder(final long queryInstant, final InetAddress client) {
             this.queryInstant = queryInstant;
@@ -80,6 +87,11 @@ public final class DNSAccessRecord {
             return this;
         }
 
+        public Builder resultLocation(final Geolocation resultLocation) {
+            this.resultLocation = resultLocation;
+            return this;
+        }
+
         public DNSAccessRecord build() {
             return new DNSAccessRecord(this);
         }
@@ -91,6 +103,7 @@ public final class DNSAccessRecord {
         dnsMessage = builder.dnsMessage;
         resultType = builder.resultType;
         resultDetails = builder.resultDetails;
+        resultLocation = builder.resultLocation;
     }
 
 }

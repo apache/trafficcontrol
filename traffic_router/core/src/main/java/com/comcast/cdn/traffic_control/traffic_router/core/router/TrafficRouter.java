@@ -24,7 +24,7 @@ import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.List;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Random;
 import java.util.SortedMap;
@@ -191,7 +191,7 @@ public class TrafficRouter {
 		return hashFunctionPool;
 	}
 
-	private List<Cache> getCachesByGeo(final Request request, final DeliveryService ds, final Geolocation clientLocation) throws GeolocationException {
+	private List<Cache> getCachesByGeo(final Request request, final DeliveryService ds, final Geolocation clientLocation, final Map<String, Double> resultLocation) throws GeolocationException {
 		final String zoneId = null; 
 		// the specific use of the popularity zone
 		// manager was not understood and not used
@@ -204,6 +204,8 @@ public class TrafficRouter {
 		for (final CacheLocation location : cacheLocations) {
 			final List<Cache> caches = selectCache(location, ds);
 			if (caches != null) {
+				resultLocation.put("latitude", location.getGeolocation().getLatitude());
+				resultLocation.put("longitude", location.getGeolocation().getLongitude());
 				return caches;
 			}
 			locationsTested++;
@@ -229,6 +231,7 @@ public class TrafficRouter {
 			final List<Cache> caches = selectCache(cacheLocation, ds);// consistentHash(caches, request);List<Cache>
 			if (caches != null) {
 				track.setResult(ResultType.CZ);
+				track.setResultLocation(cacheLocation.getGeolocation());
 				return caches;
 			}
 		}
@@ -260,9 +263,12 @@ public class TrafficRouter {
 			}
 		}
 
-		final List<Cache> caches = getCachesByGeo(request, ds, clientLocation);
+		final Map<String, Double> resultLocation = new HashMap<String, Double>();
+
+		final List<Cache> caches = getCachesByGeo(request, ds, clientLocation, resultLocation);
 		if(caches != null) {
 			track.setResult(ResultType.GEO);
+			track.setResultLocation(new Geolocation(resultLocation.get("latitude"), resultLocation.get("longitude")));
 			return caches;
 		}
 		LOGGER.warn(String.format(
