@@ -54,7 +54,7 @@ sub add {
 		federation        => {},
 		delivery_services => $delivery_services,
 		fbox_layout       => 1,
-		selected_role_id  => 7,
+		selected_role_id  => 7,                    # the federation role
 		mode              => 'add'
 	);
 }
@@ -82,16 +82,13 @@ sub edit {
 	while ( my $ft = $ftusers->next ) {
 		$selected_role_id = $ft->role->id;
 	}
-	$self->app->log->debug( "selected_role_id #-> " . $selected_role_id );
 
 	my $current_username = $self->current_user()->{username};
 	my $dbh              = $self->db->resultset('TmUser')->search( { username => $current_username } );
 	my $tm_user          = $dbh->single;
 	&stash_role($self);
 
-	#TODO: drichardson - remove harded DS
-	my $delivery_services = get_delivery_services( $self, 1 );
-	$self->app->log->debug( "delivery_services #-> " . Dumper($delivery_services) );
+	my $delivery_services = get_delivery_services( $self, $selected_ds_id );
 	$self->stash(
 		tm_user           => $tm_user,
 		selected_ds_id    => $selected_ds_id,
