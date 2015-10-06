@@ -87,7 +87,6 @@ sub view {
 sub resolvers {
 	my $self   = shift;
 	my $fed_id = $self->param('federation_id');
-	$self->app->log->debug( "fed_id #-> " . $fed_id );
 
 	my $data;
 	my $fed_fed_resolvers =
@@ -142,11 +141,9 @@ sub get_delivery_services {
 
 	my $delivery_services;
 	for my $ds_id ( uniq(@ds_ids) ) {
-		$self->app->log->debug( "looking for ds_id #-> " . Dumper($ds_id) );
 		my $desc = $self->db->resultset('Deliveryservice')->search( { id => $ds_id } )->get_column('xml_id')->single;
 		$delivery_services->{$ds_id} = $desc;
 	}
-	$self->app->log->debug( "delivery_services #-> " . Dumper($delivery_services) );
 	return $delivery_services;
 }
 
@@ -172,7 +169,6 @@ sub update {
 		while ( my $ft = $ftusers->next ) {
 			my $fid    = $ft->federation->id;
 			my $fcname = $ft->federation->cname;
-			$self->app->log->debug( "fid #-> " . $fid );
 			$ft->role($role_id);
 			$ft->update();
 		}
@@ -272,9 +268,6 @@ sub delete {
 		my $cname;
 		while ( my $row = $resolvers->next ) {
 			my $id = $row->id;
-			$self->app->log->debug( "id #-> " . $id );
-
-			#$ip_address = $row->ip_address;
 		}
 		$delete->delete();
 		&log( $self, "Deleted federation: " . $fed_id . " cname: " . $cname . " ip_address: " . $ip_address, "UICHANGE" );
