@@ -73,7 +73,11 @@ Test::TestHelper->load_all_fixtures($ft);
 
 #login
 ok $t->post_ok( '/login', => form => { u => Test::TestHelper::ADMIN_USER, p => Test::TestHelper::ADMIN_USER_PASSWORD } )->status_is(302)
-	->or( sub                                     { diag $t->tx->res->content->asset->{content}; } );
+	->or( sub { diag $t->tx->res->content->asset->{content}; } );
+
+$t->get_ok('/federation')->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } );
+
 ok $t->get_ok('/logout')->status_is(302)->or( sub { diag $t->tx->res->content->asset->{content}; } );
+
 $dbh->disconnect();
 done_testing();
