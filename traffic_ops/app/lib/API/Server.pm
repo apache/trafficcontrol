@@ -46,6 +46,8 @@ sub getserverdata {
 		}
 	);
 	while ( my $row = $rs_data->next ) {
+		my $cdn_name = defined( $row->cdn_id ) ? $row->cdn->name : "";
+
 		push(
 			@data, {
 				"id"             => $row->id,
@@ -67,7 +69,7 @@ sub getserverdata {
 				"type"           => $row->type->name,
 				"status"         => $row->status->name,
 				"profile"        => $row->profile->name,
-				"cdnName"        => $row->cdn->name,
+				"cdnName"        => $cdn_name,
 				"mgmtIpAddress"  => $row->mgmt_ip_address,
 				"mgmtIpNetmask"  => $row->mgmt_ip_netmask,
 				"mgmtIpGateway"  => $row->mgmt_ip_gateway,
