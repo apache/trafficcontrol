@@ -32,9 +32,11 @@ sub ort1 {
 
 	my $row = $rs_profile->next;
 	if ($row) {
+		my $cdn_name = defined( $row->cdn_id ) ? $row->cdn->name : "";
+
 		$data_obj->{'profile'}->{'name'}   = $row->profile->name;
 		$data_obj->{'profile'}->{'id'}     = $row->profile->id;
-		$data_obj->{'other'}->{'CDN_name'} = $row->cdn->name;
+		$data_obj->{'other'}->{'CDN_name'} = $cdn_name;
 
 		%condition = (
 			'profile_parameters.profile' => $data_obj->{'profile'}->{'id'},

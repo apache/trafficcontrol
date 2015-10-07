@@ -230,6 +230,7 @@ sub read {
 		}
 	);
 	while ( my $row = $rs_data->next ) {
+		my $cdn_name = defined( $row->cdn_id ) ? $row->cdn->name : "";
 		my $re_rs     = $row->deliveryservice_regexes;
 		my @matchlist = ();
 
@@ -259,7 +260,7 @@ sub read {
 				"multi_site_origin"      => \$row->multi_site_origin,
 				"ccr_dns_ttl"            => $row->ccr_dns_ttl,
 				"type"                   => $row->type->id,
-				"cdn_name"               => $row->cdn->name,
+				"cdn_name"               => $cdn_name,
 				"profile_name"           => $row->profile->name,
 				"profile_description"    => $row->profile->description,
 				"global_max_mbps"        => $row->global_max_mbps,

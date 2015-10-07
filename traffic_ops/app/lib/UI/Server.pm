@@ -111,6 +111,8 @@ sub getserverdata {
 		}
 	);
 	while ( my $row = $rs_data->next ) {
+		my $cdn_name = defined( $row->cdn_id ) ? $row->cdn->name : "";
+
 		push(
 			@data, {
 				"id"               => $row->id,
@@ -126,7 +128,7 @@ sub getserverdata {
 				"ip6_address"      => $row->ip6_address,
 				"ip6_gateway"      => $row->ip6_gateway,
 				"interface_mtu"    => $row->interface_mtu,
-				"cdn"              => $row->cdn->name,
+				"cdn"              => $cdn_name,
 				"cachegroup"       => $row->cachegroup->name,
 				"phys_location"    => $row->phys_location->name,
 				"rack"             => $row->rack,
@@ -160,6 +162,7 @@ sub serverdetail {
 	$select = $self->param('select') if ( defined $self->param('select') );
 	my $rs_data = $self->db->resultset('Server')->search( undef, { prefetch => [ 'cdn', 'cachegroup', 'type', 'profile', 'status', 'phys_location' ], } );
 	while ( my $row = $rs_data->next ) {
+		my $cdn_name = defined( $row->cdn_id ) ? $row->cdn->name : "";
 		my $fqdn = $row->host_name . "." . $row->domain_name;
 		if ( defined($select) && $fqdn !~ /$select/ ) { next; }
 		my $serv = {
@@ -176,7 +179,7 @@ sub serverdetail {
 			"ip6_address"      => $row->ip6_address,
 			"ip6_gateway"      => $row->ip6_gateway,
 			"interface_mtu"    => $row->interface_mtu,
-			"cdn"              => $row->cdn->name,
+			"cdn"              => $cdn_name,
 			"cachegroup"       => $row->cachegroup->name,
 			"phys_location"    => $row->phys_location->name,
 			"rack"             => $row->rack,
