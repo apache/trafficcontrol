@@ -20,24 +20,6 @@ use namespace::autoclean;
 use Digest::SHA1 qw(sha1_hex);
 
 my %definition_for = (
-	cdn1_cdn_name => {
-		new   => 'Parameter',
-		using => {
-			id          => 1,
-			name        => 'CDN_name',
-			value       => 'cdn1',
-			config_file => 'rascal-config.txt',
-		},
-	},
-	cdn2_cdn_name => {
-		new   => 'Parameter',
-		using => {
-			id          => 2,
-			name        => 'CDN_name',
-			value       => 'cdn2',
-			config_file => 'rascal-config.txt',
-		},
-	},
 	domain_name => {
 		new   => 'Parameter',
 		using => {
@@ -570,7 +552,6 @@ my %definition_for = (
 			value       => 'INT 33554432',
 		},
 	},
-
 );
 
 sub get_definition {

@@ -1,0 +1,708 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Installing Traffic Ops &mdash; Traffic Control 1.1.2 documentation </title>
+  
+
+  
+  
+    <link rel="shortcut icon" href="../_static/favicon.ico"/>
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  
+
+  
+    <link rel="stylesheet" href="../_static/theme_overrides.css" type="text/css" />
+  
+
+  
+    <link rel="top" title="Traffic Control 1.1.2 documentation" href="../index.html"/>
+        <link rel="up" title="Administrator’s Guide" href="index.html"/>
+        <link rel="next" title="Configuring Traffic Ops" href="traffic_ops_config.html"/>
+        <link rel="prev" title="Administrator’s Guide" href="index.html"/> 
+
+  
+  <script src="_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-nav-search">
+        
+
+        
+          <a href="/" class="icon icon-home"> Traffic Control
+        
+
+        
+          
+          <img src="../_static/tc_logo.png" class="logo" />
+        
+        </a>
+
+        
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+        
+      </div>
+
+      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+        
+          
+          
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../basics/index.html">CDN Basics</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../basics/content_delivery_networks.html">Content Delivery Networks</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../basics/http_11.html">HTTP 1.1</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../basics/caching_proxies.html">Caching Proxies</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../basics/cache_revalidation.html">Cache Control Headers and Revalidation</a></li>
+</ul>
+</li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../overview/index.html">Traffic Control Overview</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../overview/introduction.html">Introduction</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../overview/traffic_ops.html">Traffic Ops</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../overview/traffic_router.html">Traffic Router</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../overview/traffic_monitor.html">Traffic Monitor</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../overview/traffic_stats.html">Traffic Stats</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../overview/traffic_portal.html">Traffic Portal</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../overview/traffic_server.html">Traffic Server</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../overview/traffic_vault.html">Traffic Vault</a></li>
+</ul>
+</li>
+</ul>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="index.html">Administrator&#8217;s Guide</a><ul class="current">
+<li class="toctree-l2 current"><a class="current reference internal" href="">Installing Traffic Ops</a></li>
+<li class="toctree-l2"><a class="reference internal" href="traffic_ops_config.html">Configuring Traffic Ops</a></li>
+<li class="toctree-l2"><a class="reference internal" href="traffic_ops_using.html">Using Traffic Ops</a></li>
+<li class="toctree-l2"><a class="reference internal" href="traffic_ops_extensions.html">Managing Traffic Ops Extensions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="traffic_monitor.html">Traffic Monitor Administration</a></li>
+<li class="toctree-l2"><a class="reference internal" href="traffic_router.html">Traffic Router Administration</a></li>
+<li class="toctree-l2"><a class="reference internal" href="traffic_stats.html">Traffic Stats Administration</a></li>
+<li class="toctree-l2"><a class="reference internal" href="traffic_server.html">Traffic Server Administration</a></li>
+<li class="toctree-l2"><a class="reference internal" href="traffic_vault.html">Traffic Vault Administration</a></li>
+</ul>
+</li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../development/index.html">Developer&#8217;s Guide</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../development/traffic_ops.html">Traffic Ops</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../development/traffic_router.html">Traffic Router</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../development/traffic_monitor.html">Traffic Monitor</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../development/traffic_stats.html">Traffic Stats</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../development/traffic_server.html">Traffic Server</a></li>
+</ul>
+</li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../faq/index.html">FAQ</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../faq/general.html">General</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../faq/development.html">Development</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../faq/administration.html">Running a Traffic Control CDN</a></li>
+</ul>
+</li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../glossary.html">Glossary</a></li>
+</ul>
+
+          
+        
+      </div>
+      &nbsp;
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="../index.html">Traffic Control</a>
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="../index.html">Traffic Control 1.1.2</a> &raquo;</li>
+      
+          <li><a href="index.html">Administrator&#8217;s Guide</a> &raquo;</li>
+      
+    <li>Installing Traffic Ops</li>
+      <li class="wy-breadcrumbs-aside">
+        
+          <a href="../_sources/admin/traffic_ops_install.txt" rel="nofollow"> View page source</a>
+        
+      </li>
+  </ul>
+  <hr/>
+</div>
+ 		  
+    		  <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      		  
+        		  <a href="traffic_ops_config.html" class="btn btn-neutral float-right" title="Configuring Traffic Ops">Next <span class="fa fa-arrow-circle-right"></span></a>
+      		  
+      		  
+        		  <a href="index.html" class="btn btn-neutral" title="Administrator’s Guide"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      		  
+    		  </div>
+  		  
+          <div role="main" class="document">
+            
+  <div class="section" id="installing-traffic-ops">
+<span id="rl-ps"></span><span id="index-0"></span><h1>Installing Traffic Ops<a class="headerlink" href="#installing-traffic-ops" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="system-requirements">
+<h2>System Requirements<a class="headerlink" href="#system-requirements" title="Permalink to this headline">¶</a></h2>
+<p>The user must have the following for a successful install:</p>
+<ul class="simple">
+<li>CentOS 6</li>
+<li>4 vCPUs</li>
+<li>32GB RAM</li>
+<li>20 GB disk space</li>
+<li>YUM repository with minimally the following dependecies avaliable<ul>
+<li>apr 1.3.9-5</li>
+<li>apr-util 1.3.9-3</li>
+<li>apr-util-ldap 1.3.9-3</li>
+<li>expat-devel 2.0.1-11</li>
+<li>genisoimage 1.1.9-12</li>
+<li>httpd 2.2.15</li>
+<li>httpd-tools 2.2.15</li>
+<li>libpcap-devel 14:1.4</li>
+<li>mod_ssl  1:2.2.15-29</li>
+<li>mysql 5.1.71</li>
+<li>autoconf 2.63-5.1.</li>
+<li>automake 1.11.1-4</li>
+<li>gcc 4.4.7-4</li>
+<li>gettext 0.17-16</li>
+<li>libcurl-devel 7.19.7-37</li>
+<li>libtool 2.2.6-15.5</li>
+<li>mysql-devel 5.1.73-3</li>
+<li>perl-CPAN 1.9402-136</li>
+<li>libcurl 7.19.7-37</li>
+<li>openssl 1.0.1e-30</li>
+<li>cloog-ppl 0.15.7-1.2</li>
+<li>cpp 4.4.7-4</li>
+<li>cvs 1.11.23-16</li>
+<li>libgomp 4.4.7-4</li>
+<li>libidn-devel 1.18-2</li>
+<li>m4 1.4.13-5</li>
+<li>mpfr 2.4.1-6</li>
+<li>perl-Digest-SHA 1:5.47-136</li>
+<li>ppl 0.10.2-11</li>
+<li>curl 7.19.7-37</li>
+<li>openssl-devel 1.0.1e-30</li>
+</ul>
+</li>
+<li>Access to <a class="reference external" href="http://www.cpan.org/">The Comprehensive Perl Archive Network (CPAN)</a></li>
+</ul>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">The above versions are known to work on CentOS 6.5. Higher versions may work.</p>
+</div>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">Although Traffic Ops supports both MySQL and Postgres as a database, support for MySQL is more mature and better tested. It is best to use MySQL when first getting started, and the rest of this quide assumes MySQL as the database.</p>
+</div>
+</div>
+<div class="section" id="navigating-the-install">
+<h2>Navigating the Install<a class="headerlink" href="#navigating-the-install" title="Permalink to this headline">¶</a></h2>
+<p>To begin the install:</p>
+<ol class="arabic simple">
+<li>Install Traffipc Ops: <code class="docutils literal"><span class="pre">sudo</span> <span class="pre">yum</span> <span class="pre">install</span> <span class="pre">traffic_ops</span></code></li>
+<li>After installation of Traffic Ops rpm enter the following command: <code class="docutils literal"><span class="pre">sudo</span> <span class="pre">/opt/traffic_ops/install/bin/postinstall</span></code></li>
+</ol>
+<blockquote>
+<div><p>Example output:</p>
+<div class="highlight-python"><div class="highlight"><pre>trafficops-vm # /opt/traffic_ops/install/bin/postinstall
+
+This script will build and package the required Traffic Ops perl modules.
+In order to complete this operation, Development tools such as the gcc
+compiler must be installed on this machine.
+
+Hit ENTER to continue:
+</pre></div>
+</div>
+<p>The first thing the post install will do is install additional packages needed from the yum repo.</p>
+<p>Ater that, it will automatically proceed to installing the required Perl packages from CPAN.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">Especially when installing Traffic Ops for the first time on a system this can take a long time, since many dependencies for the Mojolicous application need to be downloaded. Expect 30 minutes.</p>
+</div>
+<p>If there are any prompts in this phase, please just answer with the defaults (some CPAN installs can prompt for install questions).</p>
+<p>When this phase is complete, you will see:</p>
+<div class="highlight-python"><div class="highlight"><pre>...
+Successfully installed Test-Differences-0.63
+Successfully installed DBIx-Class-Schema-Loader-0.07042
+Successfully installed Time-HiRes-1.9726 (upgraded from 1.9719)
+Successfully installed Mojolicious-Plugin-Authentication-1.26
+113 distributions installed
+Complete! Modules were installed into /opt/traffic_ops/app/local
+Linking perl libraries...
+Installing perl scripts
+
+
+This script will initialize the Traffic Ops database.
+Please enter the following information in order to completely
+configure the Traffic Ops mysql database.
+
+
+Database type [mysql]:
+</pre></div>
+</div>
+<p>The next phase of the install will ask you about the local environment for your CDN.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">before proceeding to this step, the database has to have at least a root password, and needs to be started. When using mysql, please type <code class="docutils literal"><span class="pre">service</span> <span class="pre">mysqld</span> <span class="pre">start</span></code> as root in another terminal and follow the instructions on the screen to set the root passwd.</p>
+</div>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">CentOS files note.</p>
+</div>
+<p>Example output:</p>
+<div class="highlight-python"><div class="highlight"><pre>Database type [mysql]:
+Database name [traffic_ops_db]:
+Database server hostname IP or FQDN [localhost]:
+Database port number [3306]:
+Traffic Ops database user [traffic_ops]:
+Password for traffic_ops:
+Re-Enter password for traffic_ops:
+
+Error: passwords do not match, try again.
+
+Password for traffic_ops:
+Re-Enter password for traffic_ops:
+
+Database server root (admin) user name [root]:
+Database server root password:
+Database Type: mysql
+Database Name: traffic_ops_db
+Hostname: localhost
+Port: 3306
+Database User: traffic_ops
+Is the above information correct (y/n) [n]:  y
+
+The database properties have been saved to /opt/traffic_ops/app/conf/production/database.conf
+
+  The database configuration has been saved.  Now we need to set some custom
+  fields that are necessary for the CDN to function correctly.
+
+
+Traffic Ops url [https://localhost]:  https://traffic-ops.kabletown.net
+Human-readable CDN Name.  (No whitespace, please) [kabletown_cdn]:
+DNS sub-domain for which your CDN is authoritative [cdn1.kabletown.net]:
+Fully qualified name of your CentOS 6.5 ISO kickstart tar file, or &#39;na&#39; to skip and add files later [/var/cache/centos65.tgz]:  na
+Fully qualified location to store your ISO kickstart files [/var/www/files]:
+
+Traffic Ops URL: https://traffic-ops.kabletown.net
+Traffic Ops Info URL: https://traffic-ops.kabletown.net/info
+Domainname: cdn1.kabletown.net
+CDN Name: kabletown_cdn
+GeoLocation Polling URL: https://traffic-ops.kabletown.net/routing/GeoIP2-City.mmdb.gz
+CoverageZone Polling URL: https://traffic-ops.kabletown.net/routing/coverage-zone.json
+
+Is the above information correct (y/n) [n]:  y
+Parameter information has been saved to /opt/traffic_ops/install/data/json/parameters.json
+
+
+Adding an administration user to the Traffic Ops database.
+
+Administration username for Traffic Ops:  admin
+Password for the admin user admin:
+Verify the password for admin:
+Do you wish to create an ldap configuration for access to traffic ops [y/n] ? [n]:  n
+creating database
+Creating database...
+Creating user...
+Flushing privileges...
+setting up database
+Executing &#39;drop database traffic_ops_db&#39;
+Executing &#39;create database traffic_ops_db&#39;
+Creating database tables...
+Migrating database...
+goose: migrating db environment &#39;production&#39;, current version: 0, target: 20150316100000
+OK    20141222103718_extension.sql
+OK    20150108100000_add_job_deliveryservice.sql
+OK    20150205100000_cg_location.sql
+OK    20150209100000_cran_to_asn.sql
+OK    20150210100000_ds_keyinfo.sql
+OK    20150304100000_add_ip6_ds_routing.sql
+OK    20150310100000_add_bg_fetch.sql
+OK    20150316100000_move_hdr_rw.sql
+Seeding database...
+Database initialization succeeded.
+seeding profile data...
+name EDGE1 description Edge 1
+name TR1 description Traffic Router 1
+name TM1 description Traffic Monitor 1
+name MID1 description Mid 1
+seeding parameter data...
+</pre></div>
+</div>
+<p>Explanation of the information that needs to be provided:</p>
+<blockquote>
+<div><table border="1" class="docutils">
+<colgroup>
+<col width="35%" />
+<col width="65%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">Field</th>
+<th class="head">Description</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td>Database type</td>
+<td>mysql or postgres</td>
+</tr>
+<tr class="row-odd"><td>Database name</td>
+<td>The name of the database Traffic Ops uses to store the configuration information</td>
+</tr>
+<tr class="row-even"><td>Database server hostname IP or FQDN</td>
+<td>The hostname of the database server</td>
+</tr>
+<tr class="row-odd"><td>Database port number</td>
+<td>The database port number</td>
+</tr>
+<tr class="row-even"><td>Traffic Ops database user</td>
+<td>The username Traffic Ops will use to read/write from the database</td>
+</tr>
+<tr class="row-odd"><td>password for traffic ops</td>
+<td>The passwdord for the above database user</td>
+</tr>
+<tr class="row-even"><td>Database server root (admin) user name</td>
+<td>Priviledged database user that has permission to create the database and user for Traffic Ops</td>
+</tr>
+<tr class="row-odd"><td>Database server root (admin) user password</td>
+<td>The password for the above priviledged database user</td>
+</tr>
+<tr class="row-even"><td>Traffic Ops url</td>
+<td>The URL to connect to this instance of Traffic Ops, usually <a class="reference external" href="https:/">https:/</a>/&lt;traffic ops host FQDN&gt;/</td>
+</tr>
+<tr class="row-odd"><td>Human-readable CDN Name</td>
+<td>The name of the first CDN traffic Ops will be managing</td>
+</tr>
+<tr class="row-even"><td>DNS sub-domain for which your CDN is authoritative</td>
+<td>The DNS domain that will be delegated to this Traffic Control CDN</td>
+</tr>
+<tr class="row-odd"><td>name of your CentOS 6.5 ISO kickstart tar file</td>
+<td>See <a class="reference internal" href="traffic_ops_config.html#creating-centos-kickstart"><span>Creating the CentOS Kickstart File</span></a></td>
+</tr>
+<tr class="row-even"><td>Administration username for Traffic Ops</td>
+<td>The Administration (highest privilege) Traffic Ops user to create;
+use this user to login for the first time and create other users</td>
+</tr>
+<tr class="row-odd"><td>Password for the admin user</td>
+<td>The passwd for the above user</td>
+</tr>
+</tbody>
+</table>
+</div></blockquote>
+<p>The postinstall script will now seed the database with some inital configuration settings for the CDN and the servers in the CDN.</p>
+<p>The next phase is the download of the geo location database and configuration of information needed for SSL certificates.</p>
+<p>Example output:</p>
+<div class="highlight-python"><div class="highlight"><pre>Downloading MaxMind data.
+--2015-04-14 02:14:32--  http://geolite.maxmind.com/download/geoip/database/GeoLite2-City.mmdb.gz
+Resolving geolite.maxmind.com... 141.101.115.190, 141.101.114.190, 2400:cb00:2048:1::8d65:73be, ...
+Connecting to geolite.maxmind.com|141.101.115.190|:80... connected.
+HTTP request sent, awaiting response... 200 OK
+Length: 17633433 (17M) [application/octet-stream]
+Saving to: “GeoLite2-City.mmdb.gz”
+
+100%[==================================================================================================================================================================&gt;] 17,633,433  7.03M/s   in 2.4s
+
+2015-04-14 02:14:35 (7.03 MB/s) - “GeoLite2-City.mmdb.gz” saved [17633433/17633433]
+
+Copying coverage zone file to public dir.
+
+Installing SSL Certificates.
+
+  We&#39;re now running a script to generate a self signed X509 SSL certificate.
+  When prompted to enter a pass phrase, just enter &#39;pass&#39; each time.  The
+  pass phrase will be stripped from the private key before installation.
+
+  When prompted to enter a &#39;challenge password&#39;, just hit the ENTER key.
+
+  The remaining enformation Country, State, Locality, etc... are required to
+  generate a properly formatted SSL certificate.
+
+Hit Enter when you are ready to continue:
+Postinstall SSL Certificate Creation.
+
+Generating an RSA Private Server Key.
+
+Generating RSA private key, 1024 bit long modulus
+..........................++++++
+.....................++++++
+e is 65537 (0x10001)
+Enter pass phrase for server.key:
+Verifying - Enter pass phrase for server.key:
+
+The server key has been generated.
+
+Creating a Certificate Signing Request (CSR)
+
+Enter pass phrase for server.key:
+You are about to be asked to enter information that will be incorporated
+into your certificate request.
+What you are about to enter is what is called a Distinguished Name or a DN.
+There are quite a few fields but you can leave some blank
+For some fields there will be a default value,
+If you enter &#39;.&#39;, the field will be left blank.
+-----
+Country Name (2 letter code) [XX]:US
+State or Province Name (full name) []:CO
+Locality Name (eg, city) [Default City]:Denver
+Organization Name (eg, company) [Default Company Ltd]:
+Organizational Unit Name (eg, section) []:
+Common Name (eg, your name or your server&#39;s hostname) []:
+Email Address []:
+
+Please enter the following &#39;extra&#39; attributes
+to be sent with your certificate request
+A challenge password []:pass
+An optional company name []:
+
+The Certificate Signing Request has been generated.
+Removing the pass phrase from the server key.
+Enter pass phrase for server.key.orig:
+writing RSA key
+
+The pass phrase has been removed from the server key.
+
+Generating a Self-signed certificate.
+Signature ok
+subject=/C=US/ST=CO/L=Denver/O=Default Company Ltd
+Getting Private key
+
+A server key and self signed certificate has been generated.
+
+Installing the server key and server certificate.
+
+The private key has been installed.
+
+Installing the self signed certificate.
+
+Saving the self signed csr.
+
+  The self signed certificate has now been installed.
+
+  You may obtain a certificate signed by a Certificate Authority using the
+  server.csr file saved in the current directory.  Once you have obtained
+  a signed certificate, copy it to /etc/pki/tls/certs/localhost.crt and
+  restart Traffic Ops.
+
+
+
+SSL Certificates have been installed.
+
+Starting Traffic Ops.
+
+Starting Traffic Ops
+
+Subroutine TrafficOps::has redefined at /opt/traffic_ops/app/local/lib/perl5/Mojo/Base.pm line 38.
+Subroutine TrafficOps::has redefined at /opt/traffic_ops/app/local/lib/perl5/Mojo/Base.pm line 38.
+Loading config from /opt/traffic_ops/app/conf/cdn.conf
+Reading log4perl config from /opt/traffic_ops/app/conf/production/log4perl.conf
+Starting hot deployment for Hypnotoad server 32192.
+
+Waiting for Traffic Ops to start.
+
+
+Shutdown Traffic Ops [y/n] [n]:  n
+
+To start Traffic Ops:  service traffic_ops start
+To stop Traffic Ops:   service traffic_ops stop
+
+traffic_ops #
+</pre></div>
+</div>
+</div></blockquote>
+<p>Traffic Ops is now installed!</p>
+<ol class="arabic" start="3">
+<li><p class="first">Download the web dependencies (this will be added to the installer in the future):</p>
+<div class="highlight-python"><div class="highlight"><pre>traffic_ops # pwd
+/opt/traffic_ops/install/bin
+traffic_ops # ./download_web_deps
+Finished curling https://cdn.datatables.net/1.10.4/js/jquery.dataTables.min.js | size is: 78746
+Finished curling https://github.com/fancyapps/fancyBox/zipball/v2.1.5 | size is: 541026
+Finished curling http://www.flotcharts.org/downloads/flot-0.8.3.zip | size is: 649913
+Finished curling https://github.com/krzysu/flot.tooltip/releases/download/0.8.4/jquery.flot.tooltip-0.8.4.zip | size is: 7669
+Finished curling https://gflot.googlecode.com/svn-history/r154/trunk/flot/jquery.flot.axislabels.js | size is: 17321
+Finished curling https://github.com/alpixel/jMenu/archive/master.zip | size is: 41836
+Finished curling https://code.jquery.com/jquery-1.11.2.min.js | size is: 95931
+Finished curling https://code.jquery.com/ui/1.11.4/jquery-ui.min.js | size is: 240427
+Finished curling https://code.jquery.com/ui/1.7.3/themes/dark-hive/jquery-ui.css | size is: 27499
+Finished curling http://jquery-ui.googlecode.com/svn/tags/1.7.3/themes/dark-hive/images/ui-bg_flat_30_cccccc_40x100.png | size is: 180
+Finished curling http://jquery-ui.googlecode.com/svn/tags/1.7.3/themes/dark-hive/images/ui-bg_flat_50_5c5c5c_40x100.png | size is: 180
+Finished curling http://jquery-ui.googlecode.com/svn/tags/1.7.3/themes/dark-hive/images/ui-bg_glass_40_ffc73d_1x400.png | size is: 131
+Finished curling http://jquery-ui.googlecode.com/svn/tags/1.7.3/themes/dark-hive/images/ui-bg_highlight-hard_20_0972a5_1x100.png | size is: 114
+Finished curling http://jquery-ui.googlecode.com/svn/tags/1.7.3/themes/dark-hive/images/ui-bg_highlight-soft_33_003147_1x100.png | size is: 127
+Finished curling http://jquery-ui.googlecode.com/svn/tags/1.7.3/themes/dark-hive/images/ui-bg_highlight-soft_35_222222_1x100.png | size is: 113
+Finished curling http://jquery-ui.googlecode.com/svn/tags/1.7.3/themes/dark-hive/images/ui-bg_highlight-soft_44_444444_1x100.png | size is: 117
+Finished curling http://jquery-ui.googlecode.com/svn/tags/1.7.3/themes/dark-hive/images/ui-bg_highlight-soft_80_eeeeee_1x100.png | size is: 95
+Finished curling http://jquery-ui.googlecode.com/svn/tags/1.7.3/themes/dark-hive/images/ui-bg_loop_25_000000_21x21.png | size is: 235
+Finished curling http://jquery-ui.googlecode.com/svn/tags/1.7.3/themes/dark-hive/images/ui-icons_222222_256x240.png | size is: 4369
+Finished curling http://jquery-ui.googlecode.com/svn/tags/1.7.3/themes/dark-hive/images/ui-icons_4b8e0b_256x240.png | size is: 4369
+Finished curling http://jquery-ui.googlecode.com/svn/tags/1.7.3/themes/dark-hive/images/ui-icons_a83300_256x240.png | size is: 4369
+Finished curling http://jquery-ui.googlecode.com/svn/tags/1.7.3/themes/dark-hive/images/ui-icons_cccccc_256x240.png | size is: 4369
+Finished curling http://jquery-ui.googlecode.com/svn/tags/1.7.3/themes/dark-hive/images/ui-icons_ffffff_256x240.png | size is: 4369
+Finished curling https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/js/bootstrap.min.js | size is: 35951
+Output file: ../../app/public/js/jquery.dataTables.min.js does not exist, putting into place.
+Making dir: ../../app/public/js/fancybox/
+Output file: ../../app/public/js/fancybox//jquery.fancybox-buttons.js does not exist. Putting file from zip into place.
+Output file: ../../app/public/js/fancybox//fancybox_loading@2x.gif does not exist. Putting file from zip into place.
+Output file: ../../app/public/js/fancybox//fancybox_loading.gif does not exist. Putting file from zip into place.
+Output file: ../../app/public/js/fancybox//fancybox_buttons.png does not exist. Putting file from zip into place.
+Output file: ../../app/public/js/fancybox//jquery.fancybox-thumbs.js does not exist. Putting file from zip into place.
+Output file: ../../app/public/js/fancybox//jquery.fancybox-buttons.css does not exist. Putting file from zip into place.
+Output file: ../../app/public/js/fancybox//jquery.fancybox-thumbs.css does not exist. Putting file from zip into place.
+Output file: ../../app/public/js/fancybox//fancybox_sprite@2x.png does not exist. Putting file from zip into place.
+Output file: ../../app/public/js/fancybox//jquery.fancybox.css does not exist. Putting file from zip into place.
+Output file: ../../app/public/js/fancybox//jquery.fancybox-media.js does not exist. Putting file from zip into place.
+Output file: ../../app/public/js/fancybox//fancybox_overlay.png does not exist. Putting file from zip into place.
+Output file: ../../app/public/js/fancybox//fancybox_sprite.png does not exist. Putting file from zip into place.
+Output file: ../../app/public/js/fancybox//jquery.fancybox.js does not exist. Putting file from zip into place.
+Making dir: ../../app/public/js/flot/
+Output file: ../../app/public/js/flot//jquery.flot.min.js does not exist. Putting file from zip into place.
+Output file: ../../app/public/js/flot//jquery.flot.selection.js does not exist. Putting file from zip into place.
+Output file: ../../app/public/js/flot//jquery.flot.stack.js does not exist. Putting file from zip into place.
+Output file: ../../app/public/js/flot//jquery.flot.time.js does not exist. Putting file from zip into place.
+Output file: ../../app/public/js/flot//jquery.flot.tooltip.js does not exist. Putting file from zip into place.
+Output file: ../../app/public/js/flot/jquery.flot.axislabels.js does not exist, putting into place.
+Output file: ../../app/public/js//jMenu.jquery.min.js does not exist. Putting file from zip into place.
+Output file: ../../app/public/css//jmenu.css does not exist. Putting file from zip into place.
+Output file: ../../app/public/js/jquery-1.11.2.min.js does not exist, putting into place.
+Output file: ../../app/public/js/jquery-ui.min.js does not exist, putting into place.
+Output file: ../../app/public/css/jquery-ui.css does not exist, putting into place.
+Making dir: ../../app/public/css/images/
+Output file: ../../app/public/css/images/ui-bg_flat_30_cccccc_40x100.png does not exist, putting into place.
+Output file: ../../app/public/css/images/ui-bg_flat_50_5c5c5c_40x100.png does not exist, putting into place.
+Output file: ../../app/public/css/images/ui-bg_glass_40_ffc73d_1x400.png does not exist, putting into place.
+Output file: ../../app/public/css/images/ui-bg_highlight-hard_20_0972a5_1x100.png does not exist, putting into place.
+Output file: ../../app/public/css/images/ui-bg_highlight-soft_33_003147_1x100.png does not exist, putting into place.
+Output file: ../../app/public/css/images/ui-bg_highlight-soft_35_222222_1x100.png does not exist, putting into place.
+Output file: ../../app/public/css/images/ui-bg_highlight-soft_44_444444_1x100.png does not exist, putting into place.
+Output file: ../../app/public/css/images/ui-bg_highlight-soft_80_eeeeee_1x100.png does not exist, putting into place.
+Output file: ../../app/public/css/images/ui-bg_loop_25_000000_21x21.png does not exist, putting into place.
+Output file: ../../app/public/css/images/ui-icons_222222_256x240.png does not exist, putting into place.
+Output file: ../../app/public/css/images/ui-icons_4b8e0b_256x240.png does not exist, putting into place.
+Output file: ../../app/public/css/images/ui-icons_a83300_256x240.png does not exist, putting into place.
+Output file: ../../app/public/css/images/ui-icons_cccccc_256x240.png does not exist, putting into place.
+Output file: ../../app/public/css/images/ui-icons_ffffff_256x240.png does not exist, putting into place.
+Output file: ../../app/public/js/bootstrap.min.js does not exist, putting into place.
+traffic_ops #
+</pre></div>
+</div>
+</li>
+</ol>
+<div class="section" id="upgrading-traffic-ops">
+<h3>Upgrading Traffic Ops<a class="headerlink" href="#upgrading-traffic-ops" title="Permalink to this headline">¶</a></h3>
+<p>To upgrade:</p>
+<ol class="arabic simple">
+<li>Enter the following command:<code class="docutils literal"><span class="pre">service</span> <span class="pre">traffic_ops</span> <span class="pre">stop</span></code></li>
+<li>Enter the following command:<code class="docutils literal"><span class="pre">yum</span> <span class="pre">upgrade</span> <span class="pre">traffic_ops</span></code></li>
+<li>See <a class="reference internal" href="#rl-ps"><span>Installing Traffic Ops</span></a> to run the post install.</li>
+<li>Enter the following command:<code class="docutils literal"><span class="pre">service</span> <span class="pre">traffic_ops</span> <span class="pre">start</span></code></li>
+</ol>
+</div>
+</div>
+</div>
+
+
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="traffic_ops_config.html" class="btn btn-neutral float-right" title="Configuring Traffic Ops">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="index.html" class="btn btn-neutral" title="Administrator’s Guide"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../',
+            VERSION:'1.1.2',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true
+        };
+    </script>
+      <script type="text/javascript" src="../_static/jquery.js"></script>
+      <script type="text/javascript" src="../_static/underscore.js"></script>
+      <script type="text/javascript" src="../_static/doctools.js"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

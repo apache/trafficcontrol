@@ -1,8 +1,10 @@
 package com.comcast.cdn.traffic_control.traffic_router.core.dns;
 
 import com.comcast.cdn.traffic_control.traffic_router.core.cache.CacheRegister;
+import com.comcast.cdn.traffic_control.traffic_router.core.loc.Geolocation;
 import com.comcast.cdn.traffic_control.traffic_router.core.router.StatTracker;
 import com.comcast.cdn.traffic_control.traffic_router.core.router.StatTracker.Track.ResultType;
+import com.comcast.cdn.traffic_control.traffic_router.core.util.TrafficOpsUtils;
 import com.comcast.cdn.traffic_control.traffic_router.core.router.TrafficRouter;
 import org.junit.Before;
 import org.junit.Test;
@@ -20,6 +22,7 @@ import java.net.InetAddress;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyInt;
 import static org.mockito.Mockito.*;
+import static org.powermock.api.mockito.PowerMockito.doCallRealMethod;
 import static org.powermock.api.mockito.PowerMockito.whenNew;
 
 @RunWith(PowerMockRunner.class)
@@ -39,13 +42,13 @@ public class ZoneManagerUnitTest {
         PowerMockito.doNothing().when(ZoneManager.class, "initZoneCache", cacheRegister);
 
         SignatureManager signatureManager = PowerMockito.mock(SignatureManager.class);
-        whenNew(SignatureManager.class).withArguments(any(ZoneManager.class), any(CacheRegister.class), any(KeyServer.class)).thenReturn(signatureManager);
+        whenNew(SignatureManager.class).withArguments(any(ZoneManager.class), any(CacheRegister.class), any(TrafficOpsUtils.class)).thenReturn(signatureManager);
 
-        zoneManager = spy(new ZoneManager(trafficRouter, new StatTracker()));
+        zoneManager = spy(new ZoneManager(trafficRouter, new StatTracker(), null));
     }
 
     @Test
-    public void itMarksResultTypeInDNSAccessRecord() throws Exception {
+    public void itMarksResultTypeAndLocationInDNSAccessRecord() throws Exception {
         final Name qname = Name.fromString("edge.www.google.com.");
         final InetAddress client = InetAddress.getByName("192.168.56.78");
 
@@ -59,9 +62,10 @@ public class ZoneManagerUnitTest {
         builder = spy(builder);
 
         doReturn(zone).when(zoneManager).getZone(qname, Type.A);
-        when(zoneManager.getZone(qname, Type.A, client, false, builder)).thenCallRealMethod();
+        doCallRealMethod().when(zoneManager).getZone(qname, Type.A, client, false, builder);
 
         zoneManager.getZone(qname, Type.A, client, false, builder);
         verify(builder).resultType(any(ResultType.class));
+        verify(builder).resultLocation(null);
     }
 }

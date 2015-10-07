@@ -106,7 +106,7 @@ sub getserverdata {
 	$orderby = $self->param('orderby') if ( defined $self->param('orderby') );
 	my $rs_data = $self->db->resultset('Server')->search(
 		undef, {
-			prefetch => [ 'cachegroup', 'type', 'profile', 'status', 'phys_location' ],
+			prefetch => [ 'cdn', 'cachegroup', 'type', 'profile', 'status', 'phys_location' ],
 			order_by => 'me.' . $orderby,
 		}
 	);
@@ -126,6 +126,7 @@ sub getserverdata {
 				"ip6_address"      => $row->ip6_address,
 				"ip6_gateway"      => $row->ip6_gateway,
 				"interface_mtu"    => $row->interface_mtu,
+				"cdn"              => $row->cdn->name,
 				"cachegroup"       => $row->cachegroup->name,
 				"phys_location"    => $row->phys_location->name,
 				"rack"             => $row->rack,
@@ -157,7 +158,7 @@ sub serverdetail {
 	my @data;
 	my $select = undef;
 	$select = $self->param('select') if ( defined $self->param('select') );
-	my $rs_data = $self->db->resultset('Server')->search( undef, { prefetch => [ 'cachegroup', 'type', 'profile', 'status', 'phys_location' ], } );
+	my $rs_data = $self->db->resultset('Server')->search( undef, { prefetch => [ 'cdn', 'cachegroup', 'type', 'profile', 'status', 'phys_location' ], } );
 	while ( my $row = $rs_data->next ) {
 		my $fqdn = $row->host_name . "." . $row->domain_name;
 		if ( defined($select) && $fqdn !~ /$select/ ) { next; }
@@ -175,6 +176,7 @@ sub serverdetail {
 			"ip6_address"      => $row->ip6_address,
 			"ip6_gateway"      => $row->ip6_gateway,
 			"interface_mtu"    => $row->interface_mtu,
+			"cdn"              => $row->cdn->name,
 			"cachegroup"       => $row->cachegroup->name,
 			"phys_location"    => $row->phys_location->name,
 			"rack"             => $row->rack,
@@ -263,7 +265,7 @@ sub check_server_input_cgi {
 	my $self         = shift;
 	my $paramHashRef = {};
 	my $err          = undef;
-	foreach my $requiredParam (qw/host_name domain_name ip_address ip_netmask ip_gateway interface_mtu interface_name cachegroup type profile/) {
+	foreach my $requiredParam (qw/host_name domain_name ip_address ip_netmask ip_gateway interface_mtu interface_name cdn cachegroup type profile/) {
 		$paramHashRef->{$requiredParam} = $self->param($requiredParam);
 	}
 	foreach my $optionalParam (
@@ -296,7 +298,7 @@ sub check_server_input {
 
 	# then, check the mandatory parameters for 'existence'. The error may be a bit cryptic to the user, but
 	# I don't want to write too much code around it.
-	foreach my $param (qw/host_name domain_name ip_address ip_netmask ip_gateway interface_mtu interface_name cachegroup type profile/) {
+	foreach my $param (qw/host_name domain_name ip_address ip_netmask ip_gateway interface_mtu interface_name cdn cachegroup type profile/) {
 
 		#print "$param -> " . $paramHashRef->{$param} . "\n";
 		if ( !defined( $paramHashRef->{$param} ) || $paramHashRef->{$param} eq "" ) {
@@ -419,8 +421,9 @@ sub update {
 	else {
 
 		# get resultset for original and one to be updated.  Use to examine diffs to propagate the effects of the change.
-		my $org_server = $self->db->resultset('Server')->find( { id => $id } );
-		my $update     = $self->db->resultset('Server')->find( { id => $id } );
+		my $org_server = $self->db->resultset('Server')->search( { 'me.id' => $id }, { prefetch => 'cdn' } )->single();
+		my $update     = $self->db->resultset('Server')->search( { 'me.id' => $id }, { prefetch => 'cdn' } )->single();
+
 		if ( defined( $paramHashRef->{'ip6_address'} )
 			&& $paramHashRef->{'ip6_address'} ne "" )
 		{
@@ -436,6 +439,7 @@ sub update {
 					ip6_address      => $paramHashRef->{'ip6_address'},
 					ip6_gateway      => $paramHashRef->{'ip6_gateway'},
 					interface_mtu    => $paramHashRef->{'interface_mtu'},
+					cdn_id           => $paramHashRef->{'cdn'},
 					cachegroup       => $paramHashRef->{'cachegroup'},
 					phys_location    => $paramHashRef->{'phys_location'},
 					rack             => $paramHashRef->{'rack'},
@@ -466,6 +470,7 @@ sub update {
 					ip_netmask       => $paramHashRef->{'ip_netmask'},
 					ip_gateway       => $paramHashRef->{'ip_gateway'},
 					interface_mtu    => $paramHashRef->{'interface_mtu'},
+					cdn_id           => $paramHashRef->{'cdn'},
 					cachegroup       => $paramHashRef->{'cachegroup'},
 					phys_location    => $paramHashRef->{'phys_location'},
 					rack             => $paramHashRef->{'rack'},
@@ -488,24 +493,8 @@ sub update {
 		$update->update();
 
 		if ( $org_server->profile->id != $update->profile->id ) {
-			my $param =
-				$self->db->resultset('ProfileParameter')
-				->search(
-				{ -and => [ profile => $org_server->profile->id, 'parameter.config_file' => 'rascal-config.txt', 'parameter.name' => 'CDN_name' ] },
-				{ prefetch => [ { parameter => undef }, { profile => undef } ] } )->single();
-			my $org_cdn_name = "";
-			if ( defined($param) ) {
-				$org_cdn_name = $param->parameter->value;
-			}
-
-			$param =
-				$self->db->resultset('ProfileParameter')
-				->search( { -and => [ profile => $update->profile->id, 'parameter.config_file' => 'rascal-config.txt', 'parameter.name' => 'CDN_name' ] },
-				{ prefetch => [ { parameter => undef }, { profile => undef } ] } )->single();
-			my $upd_cdn_name = "";
-			if ( defined($param) ) {
-				$upd_cdn_name = $param->parameter->value;
-			}
+			my $org_cdn_name = $org_server->cdn->name;
+			my $upd_cdn_name = $update->cdn->name;
 
 			if ( $upd_cdn_name ne $org_cdn_name ) {
 				my $delete = $self->db->resultset('DeliveryserviceServer')->search( { server => $id } );
@@ -608,7 +597,7 @@ sub cgi_params_to_param_hash_ref {
 	my $self         = shift;
 	my $paramHashRef = {};
 	foreach
-		my $requiredParam (qw/host_name domain_name ip_address ip_netmask ip_gateway interface_mtu interface_name cachegroup type profile phys_location/)
+		my $requiredParam (qw/host_name domain_name ip_address ip_netmask ip_gateway interface_mtu interface_name cdn cachegroup type profile phys_location/)
 	{
 		$paramHashRef->{$requiredParam} = $self->param($requiredParam);
 	}
@@ -662,6 +651,7 @@ sub create {
 					ip6_address      => $paramHashRef->{'ip6_address'},
 					ip6_gateway      => $paramHashRef->{'ip6_gateway'},
 					interface_mtu    => $paramHashRef->{'interface_mtu'},
+					cdn_id           => $paramHashRef->{'cdn'},
 					cachegroup       => $paramHashRef->{'cachegroup'},
 					phys_location    => $paramHashRef->{'phys_location'},
 					rack             => $paramHashRef->{'rack'},
@@ -694,6 +684,7 @@ sub create {
 					ip_netmask       => $paramHashRef->{'ip_netmask'},
 					ip_gateway       => $paramHashRef->{'ip_gateway'},
 					interface_mtu    => $paramHashRef->{'interface_mtu'},
+					cdn_id           => $paramHashRef->{'cdn'},
 					cachegroup       => $paramHashRef->{'cachegroup'},
 					phys_location    => $paramHashRef->{'phys_location'},
 					rack             => $paramHashRef->{'rack'},
@@ -945,32 +936,54 @@ sub postupdatequeue {
 			$update = $self->db->resultset('Server')->search(undef);
 		}
 		else {
-			$update = $self->db->resultset('Server')->search( { id => $host, } );
+			$update
+				= $self->db->resultset('Server')->search( { id => $host, } );
 		}
 		$update->update( { upd_pending => $setqueue } );
-		&log( $self, "Flip Update bit (Queue Updates) for server(s):" . $host, "OPER" );
+		&log( $self, "Flip Update bit (Queue Updates) for server(s):" . $host,
+			"OPER" );
 	}
 	elsif ( defined($cdn) && defined($cachegroup) ) {
 		my @profiles;
 		if ( $cdn ne "all" ) {
-			@profiles =
-				$self->db->resultset('ProfileParameter')
-				->search( { -and => [ 'parameter.name' => "CDN_name", "parameter.value" => $cdn ] }, { prefetch => [ 'parameter', 'profile' ] } )
-				->get_column('profile')->all;
+
+			my @profiles = $self->db->resultset('Server')->search(
+				{ 'cdn.name' => $cdn },
+				{   prefetch => 'cdn',
+					select   => 'me.profile',
+					distinct => 1
+				}
+			)->get_column('profile')->all();
 		}
 		else {
-			@profiles = $self->db->resultset('Profile')->search(undef)->get_column('id')->all;
+			@profiles = $self->db->resultset('Profile')->search(undef)
+				->get_column('id')->all;
 		}
 		my @cachegroups;
 		if ( $cachegroup ne "all" ) {
-			@cachegroups = $self->db->resultset('Cachegroup')->search( { name => $cachegroup } )->get_column('id')->all;
+			@cachegroups = $self->db->resultset('Cachegroup')
+				->search( { name => $cachegroup } )->get_column('id')->all;
 		}
 		else {
-			@cachegroups = $self->db->resultset('Cachegroup')->search(undef)->get_column('id')->all;
+			@cachegroups = $self->db->resultset('Cachegroup')->search(undef)
+				->get_column('id')->all;
 		}
-		my $update = $self->db->resultset('Server')->search( { -and => [ cachegroup => { -in => \@cachegroups }, profile => { -in => \@profiles } ] } );
+		my $update = $self->db->resultset('Server')->search(
+			{   -and => [
+					cachegroup => { -in => \@cachegroups },
+					profile    => { -in => \@profiles }
+				]
+			}
+		);
 		$update->update( { upd_pending => $setqueue } );
-		&log( $self, "Flip Update bit (Queue Updates) for servers in CDN:" . $cdn . " cachegroup:" . $cachegroup, "OPER" );
+		&log(
+			$self,
+			"Flip Update bit (Queue Updates) for servers in CDN:"
+				. $cdn
+				. " cachegroup:"
+				. $cachegroup,
+			"OPER"
+		);
 	}
 
 	#shouldn't we return something here?

@@ -83,11 +83,14 @@ sub readprofile {
 	my @data;
 	my $orderby = "name";
 	$orderby = $self->param('orderby') if ( defined $self->param('orderby') );
-	my $rs_data = $self->db->resultset("Profile")->search( undef, { order_by => $orderby } );
+	my $rs_data
+		= $self->db->resultset("Profile")
+		->search( undef,
+		{ order_by => 'me.' . $orderby } );
 	while ( my $row = $rs_data->next ) {
 		push(
-			@data, {
-				"id"           => $row->id,
+			@data,
+			{   "id"           => $row->id,
 				"name"         => $row->name,
 				"description"  => $row->description,
 				"last_updated" => $row->last_updated,
@@ -411,53 +414,36 @@ sub acompareprofile {
 	my $self = shift;
 	my $pid1 = $self->param('profile1');
 	my $pid2 = $self->param('profile2');
-
 	my %data = ( "aaData" => undef );
+
 	my $rs = $self->db->resultset('ProfileParameter')->search( { profile => $pid1 }, { prefetch => [ { parameter => undef }, { profile => undef } ] } );
 	my $params1;
-	my $pname1;
 	while ( my $row = $rs->next ) {
-		$params1->{ $row->parameter->name } = { config_file => $row->parameter->config_file, value => $row->parameter->value };
-		$pname1 = $row->profile->name;
+		$params1->{ $row->parameter->name . ':' . $row->parameter->config_file } = { name => $row->parameter->name, config_file => $row->parameter->config_file, value => $row->parameter->value };
 	}
 
 	$rs = $self->db->resultset('ProfileParameter')->search( { profile => $pid2 }, { prefetch => [ { parameter => undef }, { profile => undef } ] } );
 	my $params2;
-	my $pname2;
 	while ( my $row = $rs->next ) {
-		$params2->{ $row->parameter->name } = { config_file => $row->parameter->config_file, value => $row->parameter->value };
-		$pname2 = $row->profile->name;
+		$params2->{ $row->parameter->name . ':' . $row->parameter->config_file } = { name => $row->parameter->name, config_file => $row->parameter->config_file, value => $row->parameter->value };
 	}
 
-	my $checked;
-	my @result_table;
-	my $i = 0;
-	$result_table[$i] = { name => "Parameter Name", file => "Configuration File", value1 => $pname1, value2 => $pname2 };
-	foreach my $name ( keys %{$params1} ) {
-		$checked->{$name} = 1;
-		if ( !defined( $params2->{$name} ) ) {
-			my @line = [ $name, $params1->{$name}->{config_file}, $params1->{$name}->{value}, "undef" ];
+	foreach my $key ( keys %{$params1} ) {
+		if ( !defined( $params2->{$key} ) ) {
+			my @line = [ $params1->{$key}->{name}, $params1->{$key}->{config_file}, $params1->{$key}->{value}, "undef" ];
+			push( @{ $data{'aaData'} }, @line );
+		} elsif ($params1->{$key}->{value} ne $params2->{$key}->{value}) {
+			my @line = [ $params1->{$key}->{name}, $params1->{$key}->{config_file}, $params1->{$key}->{value}, $params2->{$key}->{value} ];
 			push( @{ $data{'aaData'} }, @line );
 		}
-		elsif ( $params1->{$name}->{value} ne $params2->{$name}->{value} ) {
-			if ( $params1->{$name}->{config_file} eq $params2->{$name}->{config_file} ) {
-				my @line = [ $name, $params1->{$name}->{config_file}, $params1->{$name}->{value}, $params2->{$name}->{value} ];
-				push( @{ $data{'aaData'} }, @line );
-			}
-			else {
-				my @line = [ $name, $params1->{$name}->{config_file}, $params1->{$name}->{value}, "undef" ];
-				push( @{ $data{'aaData'} }, @line );
-				@line = [ $name, $params2->{$name}->{config_file}, "undef", $params2->{$name}->{value} ];
-				push( @{ $data{'aaData'} }, @line );
-			}
-		}
+		delete $params2->{$key};
 	}
-	foreach my $name ( keys %{$params2} ) {
-		if ( !defined( $checked->{$name} ) ) {
-			my @line = [ $name, $params2->{$name}->{config_file}, "undef", $params2->{$name}->{value} ];
-			push( @{ $data{'aaData'} }, @line );
-		}
+
+	foreach my $key ( keys %{$params2} ) {
+		my @line = [ $params2->{$key}->{name}, $params2->{$key}->{config_file}, "undef", $params2->{$key}->{value} ];
+		push( @{ $data{'aaData'} }, @line );
 	}
+
 	$self->render( json => \%data );
 }
 

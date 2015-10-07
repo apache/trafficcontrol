@@ -60,6 +60,7 @@
  	</li>
 	  <li><a id="nav-mi">Misc</a>
 		<ul>
+			<li><a href="/cdns">CDNs</a></li>
 			<li><a href="/cachegroups">Cache Groups</a></li>
 	  		<li><a href="/users">Users</a></li>
 	  		<li><a href="/profiles">Profiles</a></li>

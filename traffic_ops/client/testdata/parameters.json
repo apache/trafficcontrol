@@ -68,12 +68,6 @@
       "lastUpdated": "2013-01-10 10:07:08"
     },
     {
-      "value": "cdn1",
-      "name": "CDN_name",
-      "lastUpdated": "2013-04-03 09:51:22",
-      "configFile": "traffic-router-config.txt"
-    },
-    {
       "value": "http://foo.kabletown.net/cdn/CZF/current/kabletown_ipcdn_czf-current.json",
       "configFile": "TRConfig.xml",
       "lastUpdated": "2013-04-19 16:19:52",

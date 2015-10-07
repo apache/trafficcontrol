@@ -36,6 +36,17 @@
 		%= field('ds.display_name')->text(class => 'field', readonly => 'readonly')
 		<% } %>
 	</div><br>
+	<div class="block" id="cdn_row">
+		<% unless (field('ds.cdn_id')->valid) { %>
+			<span class="field-with-error"><%= field('ds.cdn_id')->error %></span>
+		<% } %>
+		%= label_for 'cdn' => '* CDN', class => 'label'
+		<% if ($priv_level >= 20) { %>
+		%= field('ds.cdn_id')->select(class => 'field', id => 'cdn', name => 'ds.cdn_id');
+		<% } else { %>
+		%= field('ds.cdn_name')->text(class => 'field', readonly => 'readonly');
+		<% }  %>
+	</div><br>
 	<div class="block">
 		<% unless (field('ds.type')->valid) { %>
 			<span class="field-with-error"><%= field('ds.type')->error %></span>

@@ -270,6 +270,15 @@ my %definition_for = (
 			name         => 'RESOLVE6',
 			description  => 'federation type resolve6',
 			use_in_table => 'federation',
+		},
+	},
+	ANY_MAP => {
+		new   => 'Type',
+		using => {
+			id           => 35,
+			name         => 'ANY_MAP',
+			description  => 'any_map type',
+			use_in_table => 'deliveryservice',
 		}
 	},
 

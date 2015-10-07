@@ -174,17 +174,30 @@ sub register {
 	);
 	$app->renderer->add_helper(
 		get_profile_id_by_cdn => sub {
-			my $self       = shift;
-			my $cdn_name   = shift;
-			my $profile_id = $self->db->resultset('Profile')->search(
-				{ -and => [ 'parameter.name' => 'CDN_Name', 'parameter.value' => $cdn_name, { -or => [ 'me.name' => { like => "CCR%"}, 'me.name' => { like => 'TR%' } ] } ] },
-				{
-					join => { profile_parameters => { parameter => undef } },
+			my $self      = shift;
+			my $cdn_name  = shift;
+
+			my %condition = (
+				-and => [
+					'cdn.name' => $cdn_name,
+					{   -or => [
+							'profile.name' => { like => "CCR%" },
+							'profile.name' => { like => 'TR%' }
+						]
+					}
+				]
+			);
+			my $profile_id = $self->db->resultset('Server')->search(
+				\%condition,
+				{   prefetch => [ 'cdn', 'profile' ],
+					select   => 'me.profile',
+					distinct => 1
 				}
-			)->get_column('id')->single();
+			)->get_column('profile')->single();
 			return $profile_id;
 		}
 	);
+
 
 	$app->renderer->add_helper(
 		get_dnssec_keys => sub {

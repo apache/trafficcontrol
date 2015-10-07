@@ -41,7 +41,7 @@ sub get_host_stats {
 	my $master_i = 1;
 
 	my %rascal_host = ();
-	my @cdns = $self->db->resultset('Parameter')->search( { name => 'CDN_Name' } )->get_column('value')->all();
+	my @cdns = $self->db->resultset('Cdn')->search({})->get_column('name')->all();
 	foreach my $cdn_name (@cdns) {
 		$rascal_host{$cdn_name} = $self->get_traffic_monitor_connection( { cdn => $cdn_name } );
 	}

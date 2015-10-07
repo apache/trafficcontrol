@@ -66,6 +66,7 @@ import com.comcast.cdn.traffic_control.traffic_router.core.request.DNSRequest;
 import com.comcast.cdn.traffic_control.traffic_router.core.router.DNSRouteResult;
 import com.comcast.cdn.traffic_control.traffic_router.core.router.StatTracker;
 import com.comcast.cdn.traffic_control.traffic_router.core.router.StatTracker.Track;
+import com.comcast.cdn.traffic_control.traffic_router.core.util.TrafficOpsUtils;
 import com.comcast.cdn.traffic_control.traffic_router.core.router.TrafficRouter;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheBuilderSpec;
@@ -88,9 +89,6 @@ public class ZoneManager extends Resolver {
 	private static ExecutorService zoneExecutor = null;
 	private final StatTracker statTracker;
 
-	private static String keyServerUrl;
-	private static String keyServerUsername;
-	private static String keyServerPassword;
 	private static String zoneDirectory;
 	private static SignatureManager signatureManager;
 
@@ -101,11 +99,10 @@ public class ZoneManager extends Resolver {
 		DYNAMIC, STATIC
 	}
 
-	public ZoneManager(final TrafficRouter tr, final StatTracker statTracker) throws IOException {
+	public ZoneManager(final TrafficRouter tr, final StatTracker statTracker, final TrafficOpsUtils trafficOpsUtils) throws IOException {
 		initTopLevelDomain(tr.getCacheRegister());
-		initSignatureManager(tr.getCacheRegister());
+		initSignatureManager(tr.getCacheRegister(), trafficOpsUtils);
 		initZoneCache(tr.getCacheRegister());
-
 		this.trafficRouter = tr;
 		this.statTracker = statTracker;
 	}
@@ -121,6 +118,7 @@ public class ZoneManager extends Resolver {
 		initZoneCache(cacheRegister);
 	}
 
+	@SuppressWarnings("PMD.UseStringBufferForStringAppends")
 	private static void initTopLevelDomain(final CacheRegister data) throws TextParseException {
 		String tld = data.getConfig().optString("domain_name");
 
@@ -131,9 +129,8 @@ public class ZoneManager extends Resolver {
 		setTopLevelDomain(new Name(tld));
 	}
 
-	private void initSignatureManager(final CacheRegister cacheRegister) {
-		final KeyServer ks = new KeyServer(keyServerUrl, keyServerUsername, keyServerPassword);
-		final SignatureManager sm = new SignatureManager(this, cacheRegister, ks);
+	private void initSignatureManager(final CacheRegister cacheRegister, final TrafficOpsUtils trafficOpsUtils) {
+		final SignatureManager sm = new SignatureManager(this, cacheRegister, trafficOpsUtils);
 		ZoneManager.signatureManager = sm;
 	}
 
@@ -463,6 +460,7 @@ public class ZoneManager extends Resolver {
 		}
 	}
 
+	@SuppressWarnings("PMD.CyclomaticComplexity")
 	private static void addTrafficRouters(final List<Record> list, final JSONObject trafficRouters, final Name name, 
 			final JSONObject ttl, final String domain, final DeliveryService ds) 
 					throws TextParseException, UnknownHostException {
@@ -536,6 +534,7 @@ public class ZoneManager extends Resolver {
 		}
 	}
 
+	@SuppressWarnings("PMD.CyclomaticComplexity")
 	private static final Map<String, List<Record>> populateZoneMap(final Map<String, List<Record>> zoneMap,
 			final Map<String, DeliveryService> dsMap, final CacheRegister data) throws IOException {
 		final Map<String, List<Record>> superDomains = new HashMap<String, List<Record>>();
@@ -690,6 +689,7 @@ public class ZoneManager extends Resolver {
 			LOGGER.error(e.getMessage(), e);
 		} finally {
 			builder.resultType(track.getResult());
+			builder.resultLocation(track.getResultLocation());
 			statTracker.saveTrack(track);
 		}
 
@@ -863,30 +863,6 @@ public class ZoneManager extends Resolver {
 		}
 
 		return zone;
-	}
-
-	public static String getKeyServerUrl() {
-		return keyServerUrl;
-	}
-
-	public static void setKeyServerUrl(final String keyServerUrl) {
-		ZoneManager.keyServerUrl = keyServerUrl;
-	}
-
-	public static String getKeyServerUsername() {
-		return keyServerUsername;
-	}
-
-	public static void setKeyServerUsername(final String keyServerUsername) {
-		ZoneManager.keyServerUsername = keyServerUsername;
-	}
-
-	public static String getKeyServerPassword() {
-		return keyServerPassword;
-	}
-
-	public static void setKeyServerPassword(final String keyServerPassword) {
-		ZoneManager.keyServerPassword = keyServerPassword;
 	}
 
 	public static String getZoneDirectory() {

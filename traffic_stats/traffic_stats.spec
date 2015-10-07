@@ -11,9 +11,9 @@ URL:		https://github.com/comcast/traffic_control/
 Source:		~/rpmbuild/SOURCES/traffic_stats-@VERSION@.tar.gz
 
 %description
-Installs traffic_stats which is comprised of two seperate rpms:
-	- write_traffic_stats: gets data from traffic monitor and stores in influxDb
-	- ts_ts_daily_summary:  calculates daily summary of the data from influxDb and stores in traffic_ops
+Installs traffic_stats which performs the follwing functions:
+	1. Gets data from Traffic Monitor via a RESTful API and stores the data in InfluxDb
+	2. Calculates Daily Summary stats from the raw data and stores it in Traffic Ops as well as InfluxDb
 
 %prep
 
@@ -26,21 +26,18 @@ mkdir -p ${RPM_BUILD_ROOT}/opt/traffic_stats
 mkdir -p ${RPM_BUILD_ROOT}/opt/traffic_stats/bin
 mkdir -p ${RPM_BUILD_ROOT}/opt/traffic_stats/conf
 mkdir -p ${RPM_BUILD_ROOT}/opt/traffic_stats/backup
+mkdir -p ${RPM_BUILD_ROOT}/opt/traffic_stats/var/run
 mkdir -p ${RPM_BUILD_ROOT}/opt/traffic_stats/var/log/traffic_stats
 mkdir -p ${RPM_BUILD_ROOT}/etc/init.d
 mkdir -p ${RPM_BUILD_ROOT}/etc/logrotate.d
+mkdir -p ${RPM_BUILD_ROOT}/usr/share/grafana/public/dashboards/
 
-
-cp $GOPATH/src/github.com/comcast/traffic_control/traffic_stats/write_traffic_stats ${RPM_BUILD_ROOT}/opt/traffic_stats/bin/write_traffic_stats
-cp $GOPATH/src/github.com/comcast/traffic_control/traffic_stats/ts_daily_summary ${RPM_BUILD_ROOT}/opt/traffic_stats/bin/ts_daily_summary
+cp $GOPATH/src/github.com/comcast/traffic_control/traffic_stats/traffic_stats ${RPM_BUILD_ROOT}/opt/traffic_stats/bin/traffic_stats
 cp $GOPATH/src/github.com/comcast/traffic_control/traffic_stats/traffic_stats.cfg ${RPM_BUILD_ROOT}/opt/traffic_stats/conf/traffic_stats.cfg
 cp $GOPATH/src/github.com/comcast/traffic_control/traffic_stats/traffic_stats_seelog.xml ${RPM_BUILD_ROOT}/opt/traffic_stats/conf/traffic_stats_seelog.xml
 cp $GOPATH/src/github.com/comcast/traffic_control/traffic_stats/traffic_stats.init ${RPM_BUILD_ROOT}/etc/init.d/traffic_stats
-cp $GOPATH/src/github.com/comcast/traffic_control/traffic_stats/write_traffic_stats.init ${RPM_BUILD_ROOT}/etc/init.d/write_traffic_stats
-cp $GOPATH/src/github.com/comcast/traffic_control/traffic_stats/ts_daily_summary.init ${RPM_BUILD_ROOT}/etc/init.d/ts_daily_summary
 cp $GOPATH/src/github.com/comcast/traffic_control/traffic_stats/traffic_stats.logrotate ${RPM_BUILD_ROOT}/etc/logrotate.d/traffic_stats
-
-
+cp $GOPATH/src/github.com/comcast/traffic_control/traffic_stats/grafana/*.js ${RPM_BUILD_ROOT}/usr/share/grafana/public/dashboards/
 
 %pre
 /usr/bin/getent group traffic_stats >/dev/null
@@ -62,22 +59,21 @@ fi
 /usr/bin/chage -E -1 -I -1 -m 0 -M 99999 -W 7 traffic_stats
 
 if [ -e /etc/init.d/write_traffic_stats ]; then
-
 	/sbin/service write_traffic_stats stop
 fi
 
 if [ -e /etc/init.d/ts_daily_summary ]; then
-
 	/sbin/service ts_daily_summary stop
+fi
+
+if [ -e /etc/init.d/traffic_stats ]; then
+	/sbin/service traffic_stats stop
 fi
 
 %post
 
-/sbin/chkconfig --add write_traffic_stats
-/sbin/chkconfig write_traffic_stats on
-/sbin/chkconfig --add ts_daily_summary
-/sbin/chkconfig ts_daily_summary on
-
+/sbin/chkconfig --add traffic_stats
+/sbin/chkconfig traffic_stats on
 
 %files
 %defattr(644, traffic_stats, traffic_stats, 755)
@@ -92,20 +88,33 @@ fi
 %dir /opt/traffic_stats/backup
 %dir /opt/traffic_stats/var
 %dir /opt/traffic_stats/var/log
+%dir /opt/traffic_stats/var/run
 %dir /opt/traffic_stats/var/log/traffic_stats
+%dir /usr/share/grafana/public/dashboards
 
 %attr(600, traffic_stats, traffic_stats) /opt/traffic_stats/conf/*
 %attr(755, traffic_stats, traffic_stats) /opt/traffic_stats/bin/*
-%attr(755, traffic_stats, traffic_stats) /etc/init.d/write_traffic_stats
-%attr(755, traffic_stats, traffic_stats) /etc/init.d/ts_daily_summary
 %attr(755, traffic_stats, traffic_stats) /etc/init.d/traffic_stats
+%attr(644, traffic_stats, traffic_stats) /usr/share/grafana/public/dashboards/*
 
 %preun
 # args for hooks: http://www.ibm.com/developerworks/library/l-rpm2/
 # if $1 = 0, this is an uninstallation, if $1 = 1, this is an upgrade (don't do anything)
 if [ "$1" = "0" ]; then
-	/sbin/chkconfig --del write_traffic_stats
-	/etc/init.d/write_traffic_stats stop
-	/sbin/chkconfig --del ts_daily_summary
-	/etc/init.d/ts_daily_summary stop
+	/sbin/chkconfig traffic_stats off
+	/etc/init.d/traffic_stats stop
+	/sbin/chkconfig --del traffic_stats
 fi
+
+if [ -e /etc/init.d/write_traffic_stats ]; then
+	/sbin/chkconfig write_traffic_stats off
+	/etc/init.d/write_traffic_stats stop
+	/sbin/chkconfig --del write_traffic_stats
+fi
+
+if [ -e /etc/init.d/ts_daily_summary ]; then
+	/sbin/chkconfig ts_daily_summary off
+	/etc/init.d/ts_daily_summary stop
+	/sbin/chkconfig --del ts_daily_summary
+fi
+	

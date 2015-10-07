@@ -102,6 +102,12 @@ __PACKAGE__->table("deliveryservice");
   is_foreign_key: 1
   is_nullable: 0
 
+=head2 cdn_id
+
+  data_type: 'integer'
+  is_foreign_key: 1
+  is_nullable: 1
+
 =head2 ccr_dns_ttl
 
   data_type: 'integer'
@@ -289,6 +295,8 @@ __PACKAGE__->add_columns(
   { data_type => "integer", is_foreign_key => 1, is_nullable => 0 },
   "profile",
   { data_type => "integer", is_foreign_key => 1, is_nullable => 0 },
+  "cdn_id",
+  { data_type => "integer", is_foreign_key => 1, is_nullable => 1 },
   "ccr_dns_ttl",
   { data_type => "integer", is_nullable => 1 },
   "global_max_mbps",
@@ -391,6 +399,26 @@ __PACKAGE__->add_unique_constraint("ds_id_UNIQUE", ["id"]);
 __PACKAGE__->add_unique_constraint("ds_name_UNIQUE", ["xml_id"]);
 
 =head1 RELATIONS
+
+=head2 cdn
+
+Type: belongs_to
+
+Related object: L<Schema::Result::Cdn>
+
+=cut
+
+__PACKAGE__->belongs_to(
+  "cdn",
+  "Schema::Result::Cdn",
+  { id => "cdn_id" },
+  {
+    is_deferrable => 1,
+    join_type     => "LEFT",
+    on_delete     => "SET NULL",
+    on_update     => "RESTRICT",
+  },
+);
 
 =head2 deliveryservice_regexes
 
@@ -513,24 +541,11 @@ __PACKAGE__->belongs_to(
 );
 
 
-# Created by DBIx::Class::Schema::Loader v0.07042 @ 2015-09-28 13:05:02
-# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:A2c+k+eDGkkiLD/5JchH3w
+# Created by DBIx::Class::Schema::Loader v0.07042 @ 2015-10-07 13:43:30
+# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:G/zQ8LHEg0T1IUmTromIuQ
+
+# Created by DBIx::Class::Schema::Loader v0.07043 @ 2015-10-05 11:50:01
+# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:AUTdFMjQ60ItRfFMfKsB1A
 
 # You can replace this text with custom code or comments, and it will be preserved on regeneration
-#
-# Copyright 2015 Comcast Cable Communications Management, LLC
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
-#
-#
 1;

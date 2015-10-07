@@ -31,14 +31,12 @@ __PACKAGE__->table("RascalHostsByCdn");
 __PACKAGE__->result_source_instance->is_virtual(1);
 
 __PACKAGE__->result_source_instance->view_definition(
-	"SELECT s.host_name,s.domain_name,s.tcp_port,p.value as cdn_name
+	"SELECT s.host_name,s.domain_name,s.tcp_port,c.name as cdn_name
   FROM server s 
-  JOIN profile_parameter pp ON pp.profile = s.profile 
-  JOIN parameter p ON p.id = pp.parameter 
-  WHERE p.name ='CDN_name' 
-  AND  s.type = (SELECT type.id FROM type WHERE name='RASCAL') 
+  JOIN cdn c ON c.id = s.cdn_id
+  WHERE s.type = (SELECT type.id FROM type WHERE name='RASCAL') 
   AND s.status = (SELECT status.id FROM status WHERE name ='ONLINE') 
-  GROUP BY p.value, s.host_name, s.domain_name, s.tcp_port"
+  GROUP BY c.name, s.host_name, s.domain_name, s.tcp_port"
 );
 
 __PACKAGE__->add_columns(

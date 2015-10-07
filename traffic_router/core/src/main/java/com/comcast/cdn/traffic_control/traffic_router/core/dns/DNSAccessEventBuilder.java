@@ -1,6 +1,16 @@
 package com.comcast.cdn.traffic_control.traffic_router.core.dns;
 
-import org.xbill.DNS.*;
+import com.comcast.cdn.traffic_control.traffic_router.core.loc.Geolocation;
+import org.xbill.DNS.DClass;
+import org.xbill.DNS.Message;
+import org.xbill.DNS.Rcode;
+import org.xbill.DNS.Record;
+import org.xbill.DNS.Section;
+import org.xbill.DNS.Type;
+import org.xbill.DNS.WireParseException;
+
+import java.math.RoundingMode;
+import java.text.DecimalFormat;
 
 public class DNSAccessEventBuilder {
 
@@ -8,17 +18,26 @@ public class DNSAccessEventBuilder {
     public static String create(final DNSAccessRecord dnsAccessRecord) {
         final String event = createEvent(dnsAccessRecord);
         String rType = "-";
-        String rDetails = "-";
+        String rdtl = "-";
+        String rloc = "-";
 
         if (dnsAccessRecord.getResultType() != null) {
             rType = dnsAccessRecord.getResultType().toString();
             if (dnsAccessRecord.getResultDetails() != null) {
-                rDetails = dnsAccessRecord.getResultDetails().toString();
+                rdtl = dnsAccessRecord.getResultDetails().toString();
             }
         }
 
+        if (dnsAccessRecord.getResultLocation() != null) {
+            final Geolocation resultLocation = dnsAccessRecord.getResultLocation();
 
-        final String routingInfo = "rtype=" + rType + " rdetails=" + rDetails + " rerr=\"-\"";
+            final DecimalFormat decimalFormat = new DecimalFormat(".##");
+            decimalFormat.setRoundingMode(RoundingMode.DOWN);
+            rloc = decimalFormat.format(resultLocation.getLatitude()) + "," + decimalFormat.format(resultLocation.getLongitude());
+        }
+
+
+        final String routingInfo = "rtype=" + rType + " rloc=\"" + rloc +  "\" rdtl=" + rdtl + " rerr=\"-\"";
         String answer = "ans=\"-\"";
 
         if (dnsAccessRecord.getDnsMessage() != null) {
@@ -72,7 +91,8 @@ public class DNSAccessEventBuilder {
         final String rerr = "Bad Request:" + wireParseException.getClass().getSimpleName() + ":" + wireParseException.getMessage();
         return new StringBuilder(event)
                 .append(" rtype=-")
-                .append(" rdetails=-")
+                .append(" rloc=\"-\"")
+                .append(" rdtl=-")
                 .append(" rerr=\"")
                 .append(rerr)
                 .append("\"")
@@ -89,7 +109,8 @@ public class DNSAccessEventBuilder {
 
         return new StringBuilder(event)
                 .append(" rtype=-")
-                .append(" rdetails=-")
+                .append(" rloc=\"-\"")
+                .append(" rdtl=-")
                 .append(" rerr=\"")
                 .append(rerr)
                 .append("\"")

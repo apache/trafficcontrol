@@ -149,24 +149,24 @@ Users
   **Response Example** ::
 
     {
-           “response”: {
-                            “email”: "email@email.com",
-                            “city”: "",
-                            “id”: "50",
-                            “phoneNumber”: "",
-                            “company”: "",
-                            “country”: "",
-                            “fullName”: "Tom Callahan",
-                            “localUser”: true,
-                            “uid”: "0",
-                            “stateOrProvince”: "",
-                            “username”: "tommyboy",
-                            “newUser”: false,
-                            “addressLine2”: "",
-                            “role”: "6",
-                            “addressLine1”: "",
-                            “gid”: "0",
-                            “postalCode”: ""
+           "response": {
+                            "email": "email@email.com",
+                            "city": "",
+                            "id": "50",
+                            "phoneNumber": "",
+                            "company": "",
+                            "country": "",
+                            "fullName": "Tom Callahan",
+                            "localUser": true,
+                            "uid": "0",
+                            "stateOrProvince": "",
+                            "username": "tommyboy",
+                            "newUser": false,
+                            "addressLine2": "",
+                            "role": "6",
+                            "addressLine1": "",
+                            "gid": "0",
+                            "postalCode": ""
            },
     }
 
@@ -405,11 +405,11 @@ Authentication Required: Yes
   **Response Example** ::
 
     {
-          “alerts”:
+          "alerts":
                   [
                       { 
-                            “level”: "success",
-                            “text”: "Successfully created purge job for: ."
+                            "level": "success",
+                            "text": "Successfully created purge job for: ."
                       }
                   ],
     }

@@ -29,16 +29,18 @@ sub cpdss_iframe {
 	my $srvr_id = $self->param('id');
 
 	if ( $mode eq "view" ) {
+		my $server = $self->db->resultset('Server')->search( { 'me.id' => $srvr_id } )->single();
 
-		my $server = $self->db->resultset('Server')->search( { 'me.id' => $srvr_id }, { prefetch => 'profile' } )->single();
-		my $cdn = $self->db->resultset('Parameter')->search(
-			{ -and => [ 'me.name' => 'CDN_name', 'servers.id' => $srvr_id ] },
-			{ join => { profile_parameters => { profile => { servers => undef } } } }
-		)->single();
 		my $valid_profiles;
-		my $psas = $self->db->resultset('ProfileParameter')->search( { parameter => $cdn->id } );
+		my $psas = $self->db->resultset('Server')->search(
+			{ cdn_id => $server->cdn_id },
+			{
+				select   => 'profile',
+				distinct => 1
+			}
+		)->get_column('profile');
 		while ( my $row = $psas->next ) {
-			$valid_profiles->{ $row->profile->id } = 1;
+			$valid_profiles->{$row} = 1;
 		}
 
 		my $etypeid = &type_id( $self, 'EDGE' );
@@ -83,18 +85,20 @@ sub edit {
 		$assigned_servers->{ $row->server->id } = 1;
 	}
 
-	my $cdn = $self->db->resultset('Parameter')->search(
-		{ -and => [ 'me.name' => 'CDN_name', 'deliveryservices.id' => $id ] },
-		{ join => { profile_parameters => { profile => { deliveryservices => undef } } } }
-	)->single();
-
+	my $ds = $self->db->resultset('Deliveryservice')->search( { 'me.id' => $id }, { prefetch => 'cdn' } )->single();
 	my $valid_profiles;
-	my $psas = $self->db->resultset('ProfileParameter')->search( { parameter => $cdn->id } );
+	my $psas = $self->db->resultset('Server')->search(
+		{ cdn_id => $ds->cdn_id },
+		{
+			select   => 'profile',
+			distinct => 1
+		}
+	)->get_column('profile');
 	while ( my $row = $psas->next ) {
-		$valid_profiles->{ $row->profile->id } = 1;
+		$valid_profiles->{$row} = 1;
 	}
 
-	my $ds = $self->db->resultset('Deliveryservice')->search( { id => $id } )->single();
+	$ds = $self->db->resultset('Deliveryservice')->search( { id => $id } )->single();
 
 	my $etypeid = &type_id( $self, 'EDGE', );
 	my $otypeid = &type_id( $self, 'ORG', );
@@ -133,7 +137,7 @@ sub edit {
 	$self->stash( fbox_layout      => 1 );
 	$self->stash( dss_data         => $dss_data );
 	$self->stash( totals           => $totals );
-	$self->stash( cdn_name         => $cdn->name );
+	$self->stash( cdn_name         => $ds->cdn->name );
 }
 
 # Read
@@ -211,7 +215,8 @@ sub assign_servers {
 
 	my @server_ids;
 	foreach my $param ( $self->param ) {
-		next if ( $param eq 'id' || $self->param($param) ne 'on' );    # we only get the 'on', but still.
+		next
+			if ( $param eq 'id' || $self->param($param) ne 'on' );    # we only get the 'on', but still.
 		my ( $rubbish, $srvr_id ) = split( /_/, $param );
 		push( @server_ids, $srvr_id );
 	}
@@ -236,7 +241,7 @@ sub assign_servers {
 	my $ds = $self->db->resultset('Deliveryservice')->search( { id => $dsid } )->single();
 	&UI::DeliveryService::header_rewrite( $self, $ds->id, $ds->profile, $ds->xml_id, $ds->edge_header_rewrite, "edge" );
 
-	#&log( $self, "Link deliveryservice " . $ds->xml_id . " to " . $numlinks . " servers", "UICHANGE" );
+	&log( $self, "Link deliveryservice " . $ds->xml_id . " to " . $numlinks . " servers", "UICHANGE" );
 
 	$self->flash( alertmsg => "Success!" );
 	my $referer = $self->req->headers->header('referer');
