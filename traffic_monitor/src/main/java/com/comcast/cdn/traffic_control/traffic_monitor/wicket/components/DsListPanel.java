@@ -122,6 +122,18 @@ public class DsListPanel extends Panel {
 				label = new Label("tps", new DsStateModel(dsName, "total.tps_total"));
 				label.add(updater);
 				item.add(label);
+				label = new Label("tps_2xx", new DsStateModel(dsName, "total.tps_2xx"));
+				label.add(updater);
+				item.add(label);
+				label = new Label("tps_3xx", new DsStateModel(dsName, "total.tps_3xx"));
+				label.add(updater);
+				item.add(label);
+				label = new Label("tps_4xx", new DsStateModel(dsName, "total.tps_4xx"));
+				label.add(updater);
+				item.add(label);
+				label = new Label("tps_5xx", new DsStateModel(dsName, "total.tps_5xx"));
+				label.add(updater);
+				item.add(label);
 				label = new Label("disabled", new DsStateModel(dsName, "disabledLocations"));
 				label.add(updater);
 				item.add(label);
