@@ -321,10 +321,10 @@ sub aserver {
 
 	my $rs = $self->db->resultset('Server')->search( undef, { prefetch => [ 'cdn', 'cachegroup', 'type', 'profile', 'status', 'phys_location' ] } );
 	while ( my $row = $rs->next ) {
-
+		my $cdn_name = defined( $row->cdn_id ) ? $row->cdn->name : "";
 		my @line;
 		if ($server_select) {
-			@line = [ $row->id, $row->host_name, $row->domain_name, $row->ip_address, $row->type->name, $row->profile->name, $row->cdn->name ];
+			@line = [ $row->id, $row->host_name, $row->domain_name, $row->ip_address, $row->type->name, $row->profile->name, $cdn_name ];
 		}
 		else {
 			my $aux_url = "";
@@ -359,9 +359,10 @@ sub aserver {
 				$img     = "info.png";
 			}
 
+			my $cdn_name = defined( $row->cdn_id ) ? $row->cdn->name : "";
 			@line = [
 				$row->id,              $row->host_name,        $row->domain_name,         "dummy",
-				$row->cdn->name,       $row->cachegroup->name, $row->phys_location->name, $row->ip_address,
+				$cdn_name,             $row->cachegroup->name, $row->phys_location->name, $row->ip_address,
 				$row->ip6_address,     $row->status->name,     $row->profile->name,       $row->ilo_ip_address,
 				$row->mgmt_ip_address, $row->type->name,       $aux_url,                  $img
 			];
@@ -417,9 +418,11 @@ sub adeliveryservice {
 	);
 
 	while ( my $row = $rs->next ) {
+		my $cdn_name = defined( $row->cdn_id ) ? $row->cdn->name : "";
+
 		my @line = [
 			$row->id,                       $row->xml_id,                $row->org_server_fqdn,                "dummy",
-			$row->cdn->name,                $row->profile->name,         $row->ccr_dns_ttl,                    $yesno{ $row->active },
+			$cdn_name,                      $row->profile->name,         $row->ccr_dns_ttl,                    $yesno{ $row->active },
 			$row->type->name,               $row->dscp,                  $yesno{ $row->signed },               $row->qstring_ignore,
 			$geo_limits{ $row->geo_limit }, $protocol{ $row->protocol }, $yesno{ $row->ipv6_routing_enabled }, $row->range_request_handling,
 			$row->http_bypass_fqdn,         $row->dns_bypass_ip,         $row->dns_bypass_ip6,                 $row->dns_bypass_ttl,
