@@ -53,9 +53,14 @@ public class InetRecord {
 	public InetAddress getAddress() {
 		return ad;
 	}
-	
+
+	@Override
 	public String toString() {
-		return String.format("%s / ttl: %d", ad.getHostAddress(), ttl);
+		return "InetRecord{" +
+			"ad=" + ad +
+			", ttl=" + ttl +
+			", alias='" + alias + '\'' +
+			'}';
 	}
 
 	public boolean isAlias() {
@@ -64,5 +69,27 @@ public class InetRecord {
 
 	public String getAlias() {
 		return alias;
+	}
+
+	@Override
+	@SuppressWarnings("PMD.IfStmtsMustUseBraces")
+	public boolean equals(final Object o) {
+		if (this == o) return true;
+		if (o == null || getClass() != o.getClass()) return false;
+
+		final InetRecord that = (InetRecord) o;
+
+		if (ttl != that.ttl) return false;
+		if (ad != null ? !ad.equals(that.ad) : that.ad != null) return false;
+		return !(alias != null ? !alias.equals(that.alias) : that.alias != null);
+
+	}
+
+	@Override
+	public int hashCode() {
+		int result = ad != null ? ad.hashCode() : 0;
+		result = 31 * result + (int) (ttl ^ (ttl >>> 32));
+		result = 31 * result + (alias != null ? alias.hashCode() : 0);
+		return result;
 	}
 }
