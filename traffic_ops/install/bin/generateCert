@@ -22,6 +22,8 @@ use lib qw(/opt/traffic_ops/install/lib /opt/traffic_ops/lib/perl5 /opt/traffic_
 
 use JSON;
 use InstallUtils;
+use File::Temp;
+use Data::Dumper;
 
 my $ca = "/etc/pki/tls/certs/localhost.ca";
 my $csr = "/etc/pki/tls/certs/localhost.csr";
@@ -41,15 +43,54 @@ my $msg = << 'EOF';
 
 EOF
 
-sub writeCdn_conf () {
-  open (CDN, ">$cdn_conf") or die ("open(): $!");
-  print CDN "{\n\thypnotoad => {\n";
-  print CDN "\t\tlisten => ['https://*:443?cert=${cert}&key=${key}&ca=${ca}&verify=0x00&ciphers=AES128-GCM-SHA256:RC4:HIGH:!MD5:!aNULL:!EDH:!ED'],\n";
-  print CDN "\t\tuser => 'trafops',\n";
-  print CDN "\t\tgroup => 'trafops',\n";
-  print CDN "\t\tpid_file => '/var/run/traffic_ops.pid',\n";
-  print CDN "\t\tworkers => 48\n";
-  print CDN "\t}\n}\n";
+sub writeCdn_conf {
+	my $cdn_conf = shift;
+
+	# listen param to be inserted
+	my $listen_str = "https://*:443?cert=${cert}&key=${key}&ca=${ca}&verify=0x00&ciphers=AES128-GCM-SHA256:RC4:HIGH:!MD5:!aNULL:!EDH:!ED";
+
+	# load as perl hash to find string to be replaced
+	my $cdnh = do $cdn_conf;
+	if ( exists $cdnh->{hypnotoad} ) {
+		$cdnh->{hypnotoad}{listen} = [$listen_str];
+	}
+	else {
+
+		# add the whole hypnotoad config without affecting anything else in the config
+		$cdnh->{hypnotoad} = {
+			listen   => [$listen_str],
+			user     => 'trafops',
+			group    => 'trafops',
+			pid_file => '/var/run/traffic_ops.pid',
+			workers  => 48,
+		};
+	}
+
+	# dump conf data in compact but readable form
+	my $dumper = Data::Dumper->new( [$cdnh] );
+	$dumper->Indent(1)->Terse(1)->Quotekeys(0);
+
+	# write whole config to temp file
+	my $tmpfile = File::Temp->new();
+	print $tmpfile $dumper->Dump();
+	close $tmpfile;
+
+	# make backup of current file
+	my $backup_num = 0;
+	my $backup_name;
+	do {
+		$backup_num++;
+		$backup_name = "$cdn_conf.backup$backup_num";
+	} while ( -e $backup_name );
+	rename( $cdn_conf, $backup_name ) or die("rename(): $!");
+
+	# rename temp file to cdn.conf and set ownership/permissions same as backup
+	my @stats = stat($backup_name);
+	my ( $uid, $gid, $perm ) = @stats[ 4, 5, 2 ];
+	rename( "$tmpfile", $cdn_conf ) or die("rename(): $!");
+
+	chown $uid, $gid, $cdn_conf;
+	chmod $perm, $cdn_conf;
 }
 
 InstallUtils::execCommand ("/usr/bin/tput","clear");
@@ -138,7 +179,7 @@ if ($result != 0) {
 $result = InstallUtils::execCommand ("/bin/chmod","664","$csr");
 $result = InstallUtils::execCommand ("/bin/chown","trafops:trafops","$csr");
 
-writeCdn_conf;
+writeCdn_conf( $cdn_conf);
 
 my $msg = << 'EOF';
 

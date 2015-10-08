@@ -325,9 +325,9 @@ sub writeSecret {
 	print "\n\nTraffic Ops requires a secret key to generate authentication cookies.\n\n";
 
 	# read conf file -- see if secrets already there
-	my $conf_data;
-	unless ( $conf_data = do $cdn_conf ) {
-		my $err = $@ // $!;
+	my $cdnh = do $cdn_conf;
+	unless ( ref($cdnh) eq 'HASH' ) {
+		my $err = $@ || $! || ' -- not a HASH';
 		if ($err) {
 			print "Could not load $cdn_conf $err";
 			exit 4;
@@ -335,7 +335,7 @@ sub writeSecret {
 	}
 
 	# newSecret
-	my $secrets = $conf_data->{secrets};
+	my $secrets = $cdnh->{secrets};
 	if ( ( ref $secrets eq 'ARRAY' ) && scalar @$secrets > 0 ) {
 		print "One or more secrets found in $cdn_conf.\n";
 		my $ans = promptUser( " Do want to add a new one (only 2 will be kept) [y/n] ?", "y" );
@@ -365,24 +365,14 @@ sub writeSecret {
 		$#{$secrets} = 1;
 	}
 
-	# open temp file to gather modified conf file
+	# dump conf data in compact but readable form
+	my $dumper = Data::Dumper->new( [$cdnh] );
+	$dumper->Indent(1)->Terse(1)->Quotekeys(0);
+
+	# write whole config to temp file
 	my $tmpfile = File::Temp->new();
-
-	# format secrets on a single line without $VAR1 =...
-	local $Data::Dumper::Terse  = 1;
-	local $Data::Dumper::Indent = 0;
-	my $secrets_str = Dumper($secrets);
-
-	# read in current $cdn_conf, find "secrets" entry and replace it
-	# NOTE that this requires secrets to be maintained on a single line which is replaced entirely...
-	open( my $infh, '<', $cdn_conf ) or die("open(): $!");
-	while (<$infh>) {
-		next unless /^\s*secrets\b/;
-		s/secrets.*/secrets => $secrets_str,/;
-	}
-	continue {
-		print $tmpfile $_;
-	}
+	print $tmpfile $dumper->Dump();
+	close $tmpfile;
 
 	# rename current config file to something unique so it's not lost
 	my $backup_num = 0;
