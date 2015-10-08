@@ -6,7 +6,7 @@ Summary:	Tool to pull data from traffic monitor and store in Influxdb
 Packager:	david_neuman2 at Cable dot Comcast dot com
 Vendor:		Comcast Cable
 Group:		Applications/Communications
-License:	N/A
+License:	Apache License, Version 2.0
 URL:		https://github.com/comcast/traffic_control/
 Source:		~/rpmbuild/SOURCES/traffic_stats-@VERSION@.tar.gz
 
