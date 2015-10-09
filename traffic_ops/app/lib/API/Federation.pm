@@ -25,35 +25,26 @@ use Data::Dumper;
 use Net::CIDR;
 use JSON;
 use Validate::Tiny ':all';
- use Data::Validate::IP qw(is_ipv4 is_ipv6);
+use Data::Validate::IP qw(is_ipv4 is_ipv6);
 
 sub index {
-  my $self             = shift;
-  my $orderby          = $self->param('orderby') || "xml_id";
-  my $current_username = $self->current_user()->{username};
+  my $self = shift;
   my $data;
+
+  if ( !&is_admin($self) ) {
+    return $self->alert(
+      "You must be an ADMIN to perform this operation!");
+  }
 
   my $rs_data = $self->db->resultset('FederationDeliveryservice')->search(
     {},
     {   prefetch => [ 'federation', 'deliveryservice' ],
-      order_by => "deliveryservice." . $orderby
+      order_by => "deliveryservice.xml_id"
     }
   );
 
-  if ( $rs_data->count() == 0 ) {
-    return $self->success( {} );
-  }
-
   while ( my $row = $rs_data->next ) {
     my $federation_id = $row->federation->id;
-    my $user
-      = $self->find_federation_tmuser( $current_username,
-      $federation_id );
-    if ( !defined $user ) {
-      return $self->alert(
-        "You must be a Federation user to perform this operation!");
-    }
-
     my $mapping;
     $mapping->{'cname'} = $row->federation->cname;
     $mapping->{'ttl'}   = $row->federation->ttl;
@@ -93,24 +84,84 @@ sub index {
   $self->success($data);
 }
 
-sub find_federation_tmuser {
+sub external_index {
   my $self             = shift;
-  my $current_username = shift;
-  my $federation_id    = shift;
-  my $user;
+  my $current_username = $self->current_user()->{username};
+  my $data;
 
+  my @federation_ids;
   my $tm_user = $self->find_tmuser($current_username);
   if ( defined $tm_user ) {
-    $user = $self->db->resultset('FederationTmuser')->search(
-      {   tm_user    => $tm_user->id,
-        federation => $federation_id,
-        role       => $tm_user->role->id
-      },
-      { prefetch => 'role' }
-    )->single();
+    @federation_ids = $self->find_federation_tmuser($tm_user);
+    if ( !defined @federation_ids ) {
+      return $self->alert("No federations assigned to user.");
+    }
+  }
+  else {
+    return $self->alert(
+      "You must be a Federation user to perform this operation!");
   }
 
-  return $user;
+  my $rs_data = $self->db->resultset('FederationDeliveryservice')->search(
+    { federation => { -in => \@federation_ids } },
+    {   prefetch => [ 'federation', 'deliveryservice' ],
+      order_by => "deliveryservice.xml_id"
+    }
+  );
+
+  while ( my $row = $rs_data->next ) {
+    my $mapping;
+    $mapping->{'cname'} = $row->federation->cname;
+    $mapping->{'ttl'}   = $row->federation->ttl;
+
+    my $federation_id = $row->federation->id;
+    my @resolvers = $self->db->resultset('FederationResolver')->search(
+      {   'federation_federation_resolvers.federation' => $federation_id
+      },
+      { prefetch => 'federation_federation_resolvers' }
+    )->all();
+
+    for my $resolver (@resolvers) {
+      my $type = lc $resolver->type->name;
+      if ( defined $mapping->{$type} ) {
+        push( $mapping->{$type}, $resolver->ip_address );
+      }
+      else {
+        @{ $mapping->{$type} } = ();
+        push( $mapping->{$type}, $resolver->ip_address );
+      }
+    }
+
+    my $xml_id = $row->deliveryservice->xml_id;
+    if ( defined $data ) {
+      my $ds = $self->find_delivery_service( $xml_id, $data );
+      if ( !defined $ds ) {
+        $data
+          = $self->add_delivery_service( $xml_id, $mapping, $data );
+      }
+      else {
+        $self->update_delivery_service( $ds, $mapping );
+      }
+    }
+    else {
+      $data = $self->add_delivery_service( $xml_id, $mapping, $data );
+    }
+  }
+  $self->success( \@{$data} );
+}
+
+sub find_federation_tmuser {
+  my $self    = shift;
+  my $tm_user = shift;
+  my @federation_ids;
+
+  @federation_ids = $self->db->resultset('FederationTmuser')->search(
+    {   tm_user => $tm_user->id,
+      role    => $tm_user->role->id
+    },
+  )->get_column('federation')->all();
+
+  return @federation_ids;
 }
 
 sub find_delivery_service {
@@ -136,7 +187,7 @@ sub add_delivery_service {
   my $map;
   push( @{$map}, $m );
   push(
-    @${data},
+    @{$data},
     {   "deliveryService" => $xml_id,
       "mappings"        => $map
     }
@@ -191,17 +242,27 @@ sub add {
 
       my $resolve4 = $map->{'resolve4'};
       if ( defined $resolve4 ) {
-        $resolve4 = $self->add_resolver( $resolve4, $federation_id,
+        my $invlaid_ip
+          = $self->add_resolver( $resolve4, $federation_id,
           "resolve4" );
+        if ( defined($invlaid_ip) ) {
+          return $self->alert(
+            "$invlaid_ip is not a valid ipv4 address.");
+        }
       }
 
       my $resolve6 = $map->{'resolve6'};
       if ( defined $resolve6 ) {
-        $self->add_resolver( $resolve6, $federation_id, "resolve6" );
+        my $invlaid_ip
+          = $self->add_resolver( $resolve6, $federation_id,
+          "resolve6" );
+        if ( defined($invlaid_ip) ) {
+          return $self->alert(
+            "$invlaid_ip is not a valid ipv4 address.");
+        }
       }
+      $self->add_federation_deliveryservice( $federation_id, $xml_id );
     }
-
-    $self->add_federation_deliveryservice( $federation_id, $xml_id );
   }
 
   $self->success("Successfully created federations");
@@ -244,14 +305,16 @@ sub is_valid {
       [qw/xml_id cname ttl/] => is_required("is required"),
 
       cname => sub {
-        my $value  = shift;
+        my $value = shift;
 
-        if (is_ipv4($value) || is_ipv6($value)) {
-          return "records must always be pointed to another domain name, never to an IP-address. e.g. 'foo.example.com.'";
+        if ( is_ipv4($value) || is_ipv6($value) ) {
+          return
+            "record ($value) must always be pointed to another domain name, never to an IP-address. e.g. 'foo.example.com.'";
         }
 
-        if ($value !~ /\.$/) {
-          return "records must have a trailing period. e.g. 'foo.example.com.'";
+        if ( $value !~ /\.$/ ) {
+          return
+            "record ($value) must have a trailing period. e.g. 'foo.example.com.'";
         }
       },
     ]
@@ -309,9 +372,10 @@ sub add_resolver {
 
   foreach my $r ( @{$resolvers} ) {
     for my $ip ($r) {
-      my $valid_ip = Net::CIDR::cidrvalidate($ip);
-      if ( !defined $valid_ip ) {
-        next;
+      my $tmp_ip = $ip;
+      $ip = Net::CIDR::cidrvalidate($ip);
+      if ( !defined $ip ) {
+        return $tmp_ip;
       }
 
       $resolver
@@ -329,19 +393,19 @@ sub add_resolver {
       }
     }
   }
+  return undef;
+}
 
-  sub add_federation_federation_resolver {
-    my $self          = shift;
-    my $federation_id = shift;
-    my $resolver_id   = shift;
+sub add_federation_federation_resolver {
+  my $self          = shift;
+  my $federation_id = shift;
+  my $resolver_id   = shift;
 
-    $self->db->resultset('FederationFederationResolver')->find_or_create(
-      {   federation          => $federation_id,
-        federation_resolver => $resolver_id
-      }
-    );
-  }
-
+  $self->db->resultset('FederationFederationResolver')->find_or_create(
+    {   federation          => $federation_id,
+      federation_resolver => $resolver_id
+    }
+  );
 }
 
 1;
