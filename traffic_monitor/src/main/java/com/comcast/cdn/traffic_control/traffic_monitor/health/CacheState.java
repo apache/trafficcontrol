@@ -49,6 +49,7 @@ public class CacheState extends AbstractState {
 	transient private Request request;
 	transient private String usedIp;
 	transient private int usedPort;
+	transient private String usedUrl;
 	transient private long requestTimeout;
 	transient private UpdateHandler handler;
 	transient private Cache cache;
@@ -203,7 +204,7 @@ public class CacheState extends AbstractState {
 	};
 
 	private Request getRequest(final AsyncHttpClient asyncClient, final String url) {
-		if (request == null || !this.getCache().getQueryIp().equals(usedIp) || this.getCache().getQueryPort() != usedPort) {
+		if (request == null || !this.getCache().getQueryIp().equals(usedIp) || this.getCache().getQueryPort() != usedPort || !url.equals(usedUrl)) {
 			if (request != null && !this.getCache().getQueryIp().equals(usedIp)) {
 				LOGGER.info("Health polling IP change detected for " + url + " (new != old): " + this.getCache().getQueryIp() + " != " + usedIp);
 			}
@@ -212,9 +213,14 @@ public class CacheState extends AbstractState {
 				LOGGER.info("Health polling port change detected for " + url + " (new != old): " + this.getCache().getQueryPort() + " != " + usedPort);
 			}
 
+			if (request != null && !url.equals(usedUrl)) {
+				LOGGER.info("Health polling URL change detected for " + url + " (new != old): " + url + " != " + usedUrl);
+			}
+
 			final BoundRequestBuilder builder = asyncClient.prepareGet(url);
 			usedIp = this.getCache().getQueryIp();
 			usedPort = this.getCache().getQueryPort();
+			usedUrl = url;
 			if(usedPort == 0) { usedPort = 80;}
 			final ProxyServer proxyServer = new ProxyServer(usedIp, usedPort);
 			builder.setProxyServer(proxyServer);

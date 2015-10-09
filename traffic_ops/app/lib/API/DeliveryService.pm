@@ -79,6 +79,8 @@ sub get_data {
 	}
 	while ( my $row = $rs->next ) {
 		next if ( defined($tm_user_id) && !defined( $ds_hash{ $row->id } ) );
+
+		my $cdn_name = defined( $row->cdn_id ) ? $row->cdn->name : "";
 		my $re_rs     = $row->deliveryservice_regexes;
 		my @matchlist = ();
 		while ( my $re_row = $re_rs->next ) {
@@ -110,7 +112,7 @@ sub get_data {
 				"type"                 => $row->type->name,
 				"profileName"          => $row->profile->name,
 				"profileDescription"   => $row->profile->description,
-				"cdnName"              => $row->cdn->name,
+				"cdnName"              => $cdn_name,
 				"globalMaxMbps"        => $row->global_max_mbps,
 				"globalMaxTps"         => $row->global_max_tps,
 				"headerRewrite"        => $row->edge_header_rewrite,

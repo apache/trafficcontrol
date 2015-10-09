@@ -52,7 +52,7 @@ public class StatelessTrafficRouterPerformanceTest  extends TrafficRouter {
     public StatelessTrafficRouterPerformanceTest(CacheRegister cr,
 			GeolocationService geolocationService, ObjectPool hashFunctionPool)
 			throws IOException, JSONException, TrafficRouterException {
-		super(cr, geolocationService, null, hashFunctionPool, null, new TrafficOpsUtils());
+		super(cr, geolocationService, null, hashFunctionPool, null, new TrafficOpsUtils(), null);
 	}
 
 	@Before

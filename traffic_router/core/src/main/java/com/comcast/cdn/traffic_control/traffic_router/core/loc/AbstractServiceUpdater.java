@@ -224,7 +224,7 @@ public abstract class AbstractServiceUpdater {
 	protected String tmpPrefix = "loc";
 	protected String tmpSuffix = ".dat";
 	protected File downloadDatabase(final String url, final File existingDb) throws IOException {
-		LOGGER.info("Downloading database: " + url);
+		LOGGER.info("[" + getClass().getSimpleName() + "] Downloading database: " + url);
 		final URL dbURL = new URL(url);
 		final HttpURLConnection conn = (HttpURLConnection) dbURL.openConnection();
 

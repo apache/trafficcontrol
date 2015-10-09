@@ -11,6 +11,10 @@
 				<th>Caches<br>Reporting/Available/Configured</th>
 				<th>Bandwidth (kbps)</th>
 				<th>t/sec</th>
+				<th>2xx/sec</th>
+				<th>3xx/sec</th>
+				<th>4xx/sec</th>
+				<th>5xx/sec</th>
 				<th>Disabled Locations</th>
 			</tr>
 			<tbody wicket:id="listpanel">
@@ -24,6 +28,10 @@
 					</td>
 					<td class="number"><span wicket:id="kbps"></span></td>
 					<td class="number"><span wicket:id="tps"></span></td>
+					<td class="number"><span wicket:id="tps_2xx"></span></td>
+					<td class="number"><span wicket:id="tps_3xx"></span></td>
+					<td class="number"><span wicket:id="tps_4xx"></span></td>
+					<td class="number"><span wicket:id="tps_5xx"></span></td>
 					<td><span wicket:id="disabled"></span></td>
 				</tr>
 			</tbody>
