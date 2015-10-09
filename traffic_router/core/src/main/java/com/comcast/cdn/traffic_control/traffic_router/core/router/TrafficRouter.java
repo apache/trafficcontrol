@@ -206,7 +206,7 @@ public class TrafficRouter {
 		final int locationLimit = ds.getLocationLimit();
 		int locationsTested = 0;
 		final List<CacheLocation> cacheLocations = orderCacheLocations(request,
-			getCacheRegister().getCacheLocations(zoneId), ds, clientLocation);
+				getCacheRegister().getCacheLocations(zoneId), ds, clientLocation);
 		for (final CacheLocation location : cacheLocations) {
 			final List<Cache> caches = selectCache(location, ds);
 			if (caches != null) {
@@ -228,15 +228,6 @@ public class TrafficRouter {
 		if (caches != null) {
 			return caches;
 		}
-		final CacheLocation cacheLocation = getCoverageZoneCache(ip);
-		if(ds.isLocationAvailable(cacheLocation)) {
-			final List<Cache> caches = selectCache(cacheLocation, ds);// consistentHash(caches, request);List<Cache>
-			if (caches != null) {
-				track.setResult(ResultType.CZ);
-				track.setResultLocation(cacheLocation.getGeolocation());
-				return caches;
-			}
-		}
 
 		if (ds.isCoverageZoneOnly()) {
 			LOGGER.warn(String.format("No Cache found in CZM (%s, ip=%s, path=%s), geo not supported", request.getType(), request.getClientIP(), request.getHostname()));
@@ -251,7 +242,7 @@ public class TrafficRouter {
 		return caches;
 	}
 
-	public List<Cache> selectCachesByGeo(final Request request, final DeliveryService deliveryService, final CacheLocation cacheLocation, final Track track) {
+	public List<Cache> selectCachesByGeo(final Request request, final DeliveryService deliveryService, final CacheLocation cacheLocation, final Track track) throws GeolocationException {
 
 		Geolocation clientLocation = null;
 
@@ -389,6 +380,7 @@ public class TrafficRouter {
 
 		if (caches != null) {
 			track.setResult(ResultType.CZ);
+			track.setResultLocation(cacheLocation.getGeolocation());
 		}
 
 		return caches;
