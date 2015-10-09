@@ -79,11 +79,11 @@ public class ZoneUtils {
 	protected static String getAdminString(final JSONObject jo, final String key, final String d, final String domain) {
 
 		if (jo == null) {
-			return d + "." + domain;
+			return new StringBuffer(d).append(".").append(domain).toString();
 		}
 
 		if (!jo.has(key)) {
-			return d + "." + domain;
+			return new StringBuffer(d).append(".").append(domain).toString();
 		}
 
 		// check for @ sign in string
