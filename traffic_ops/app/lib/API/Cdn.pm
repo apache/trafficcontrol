@@ -46,8 +46,8 @@ sub index {
 }
 
 sub name {
-	my $self   = shift;
-	my $cdn = $self->param('name');
+	my $self = shift;
+	my $cdn  = $self->param('name');
 
 	my $rs_data = $self->db->resultset("Cdn")->search( { name => $cdn } );
 	my @data = ();
@@ -409,7 +409,7 @@ sub gen_traffic_router_config {
 	my $cdn_soa_retry   = 7200;
 	my $cdn_soa_refresh = 28800;
 	my $cdn_soa_admin   = "traffic_ops";
-	my $tld_ttls_soa		= 86400;
+	my $tld_ttls_soa    = 86400;
 	my $tld_ttls_ns     = 3600;
 
 	$SIG{__WARN__} = sub {
@@ -454,29 +454,29 @@ sub gen_traffic_router_config {
 	my $rs_config = $self->db->resultset('Parameter')
 		->search( \%condition, { join => 'profile_parameters' } );
 	while ( my $row = $rs_config->next ) {
-		$self->app->log->info("name = " . $row->name);
+		$self->app->log->info( "name = " . $row->name );
 		if ( $row->name eq 'domain_name' ) {
 			$ccr_domain_name = $row->value;
 		}
-		if ($row->name eq 'tld.soa.admin') {
+		if ( $row->name eq 'tld.soa.admin' ) {
 			$cdn_soa_admin = $row->value;
 		}
-		if ($row->name eq 'tld.soa.expire') {
+		if ( $row->name eq 'tld.soa.expire' ) {
 			$cdn_soa_expire = $row->value;
 		}
-		if ($row->name eq 'tld.soa.minimum') {
+		if ( $row->name eq 'tld.soa.minimum' ) {
 			$cdn_soa_minimum = $row->value;
 		}
-		if ($row->name eq 'tld.soa.refresh') {
+		if ( $row->name eq 'tld.soa.refresh' ) {
 			$cdn_soa_refresh = $row->value;
 		}
-		if ($row->name eq 'tld.soa.retry') {
+		if ( $row->name eq 'tld.soa.retry' ) {
 			$cdn_soa_retry = $row->value;
 		}
-		if ($row->name eq 'tld.ttls.SOA') {
+		if ( $row->name eq 'tld.ttls.SOA' ) {
 			$tld_ttls_soa = $row->value;
 		}
-		if ($row->name eq 'tld.ttls.NS') {
+		if ( $row->name eq 'tld.ttls.NS' ) {
 			$tld_ttls_ns = $row->value;
 		}
 
