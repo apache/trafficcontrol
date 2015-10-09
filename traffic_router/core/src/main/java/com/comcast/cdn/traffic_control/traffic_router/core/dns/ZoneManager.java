@@ -394,7 +394,6 @@ public class ZoneManager extends Resolver {
 		final Name name = newName(domain);
 		LOGGER.debug("Generating zone data for " + name);
 		final List<Record> list = zoneMap.get(domain);
-//		final Name admin = newName(ZoneUtils.getString(soa, "admin", "traffic_control"), domain);
 		final Name admin = newName(ZoneUtils.getAdminString(soa, "admin", "traffic_ops", domain));
 		list.add(new SOARecord(name, DClass.IN, 
 				ZoneUtils.getLong(ttl, "SOA", 86400), getGlueName(ds, trafficRouters.optJSONObject(hostname), name, hostname), admin,

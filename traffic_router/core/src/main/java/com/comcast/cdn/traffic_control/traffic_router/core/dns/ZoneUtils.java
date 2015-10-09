@@ -64,18 +64,6 @@ public class ZoneUtils {
 		}
 	}
 
-//	protected static String getString(final JSONObject jo, final String key, final String d) {
-//		if (jo == null) {
-//			return d;
-//		}
-//
-//		if (!jo.has(key)) {
-//			return d;
-//		}
-//
-//		return jo.optString(key);
-//	}
-
 	protected static long getLong(final JSONObject jo, final String key, final long d) {
 		if (jo == null) {
 			return d;
