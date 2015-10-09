@@ -407,7 +407,7 @@ sub gen_traffic_router_config {
 	my $cdn_soa_minimum = 30;
 	my $cdn_soa_expire  = 604800;
 	my $cdn_soa_retry   = 7200;
-    my $cdn_soa_refresh = 28800;
+	my $cdn_soa_refresh = 28800;
 	my $cdn_soa_admin   = "traffic_ops";
 	my $tld_ttls_soa 	= 86400;
 	my $tld_ttls_ns 	= 3600;
