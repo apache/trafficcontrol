@@ -197,7 +197,7 @@ public class TrafficRouter {
 		return hashFunctionPool;
 	}
 
-	private List<Cache> getCachesByGeo(final Request request, final DeliveryService ds, final Geolocation clientLocation, final Map<String, Double> resultLocation) throws GeolocationException {
+	public List<Cache> getCachesByGeo(final Request request, final DeliveryService ds, final Geolocation clientLocation, final Map<String, Double> resultLocation) throws GeolocationException {
 		final String zoneId = null; 
 		// the specific use of the popularity zone
 		// manager was not understood and not used
@@ -221,7 +221,7 @@ public class TrafficRouter {
 		}
 		return null;
 	}
-	protected List<Cache> selectCache(final Request request, final DeliveryService ds, final Track track, final boolean isHttp) throws GeolocationException {
+	protected List<Cache> selectCache(final Request request, final DeliveryService ds, final Track track) throws GeolocationException {
 		final CacheLocation cacheLocation = getCoverageZoneCache(request.getClientIP());
 		List<Cache> caches = selectCachesByCZ(ds, cacheLocation, track);
 
@@ -261,11 +261,12 @@ public class TrafficRouter {
 
 		final List<Cache> caches = getCachesByGeo(request, deliveryService, clientLocation, resultLocation);
 		
-		if (caches == null) {
+		if (caches == null || caches.isEmpty()) {
 			LOGGER.warn(String.format("No Cache found by Geo (%s, ip=%s, path=%s)", request.getType(), request.getClientIP(), request.getHostname()));
 			track.setResultDetails(ResultDetails.GEO_NO_CACHE_FOUND);
 		}
 
+		track.setResult(ResultType.GEO);
 		return caches;
 	}
 
@@ -360,7 +361,7 @@ public class TrafficRouter {
 		return addresses;
 	}
 
-	private Geolocation getClientLocation(final Request request, final DeliveryService ds, final CacheLocation cacheLocation) throws GeolocationException {
+	public Geolocation getClientLocation(final Request request, final DeliveryService ds, final CacheLocation cacheLocation) throws GeolocationException {
 		Geolocation clientLocation;
 		if (cacheLocation != null) {
 			clientLocation = cacheLocation.getGeolocation();
@@ -408,7 +409,7 @@ public class TrafficRouter {
 			return routeResult;
 		}
 
-		final List<Cache> caches = selectCache(request, ds, track, true);
+		final List<Cache> caches = selectCache(request, ds, track);
 
 		if (caches == null) {
 			routeResult.setUrl(ds.getFailureHttpResponse(request, track));

@@ -1,10 +1,12 @@
 package com.comcast.cdn.traffic_control.traffic_router.core.router;
 
 import com.comcast.cdn.traffic_control.traffic_router.core.cache.Cache;
+import com.comcast.cdn.traffic_control.traffic_router.core.cache.CacheLocation;
 import com.comcast.cdn.traffic_control.traffic_router.core.cache.InetRecord;
 import com.comcast.cdn.traffic_control.traffic_router.core.ds.DeliveryService;
 import com.comcast.cdn.traffic_control.traffic_router.core.ds.Dispersion;
 import com.comcast.cdn.traffic_control.traffic_router.core.loc.FederationRegistry;
+import com.comcast.cdn.traffic_control.traffic_router.core.loc.Geolocation;
 import com.comcast.cdn.traffic_control.traffic_router.core.request.DNSRequest;
 import com.comcast.cdn.traffic_control.traffic_router.core.request.HTTPRequest;
 import com.comcast.cdn.traffic_control.traffic_router.core.request.Request;
@@ -16,6 +18,7 @@ import org.powermock.reflect.Whitebox;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsInAnyOrder;
@@ -81,5 +84,31 @@ public class TrafficRouterTest {
         HTTPRouteResult httpRouteResult = trafficRouter.route(httpRequest, track);
 
         assertThat(httpRouteResult.getUrl().toString(), equalTo("http://atscache.kabletown.net/index.html"));
+    }
+
+    @Test
+    public void itSetsResultToGeo() throws Exception {
+
+        when(trafficRouter.selectCache(any(Request.class), any(DeliveryService.class), any(Track.class))).thenCallRealMethod();
+        when(trafficRouter.selectCachesByGeo(any(Request.class), any(DeliveryService.class), any(CacheLocation.class), any(Track.class))).thenCallRealMethod();
+
+        Geolocation clientLocation = new Geolocation(40, -100);
+        when(trafficRouter.getClientLocation(any(Request.class), any(DeliveryService.class), any(CacheLocation.class))).thenReturn(clientLocation);
+
+        List<Cache> caches = new ArrayList<Cache>();
+        Cache cache = mock(Cache.class);
+        caches.add(cache);
+
+        when(trafficRouter.getCachesByGeo(any(Request.class), any(DeliveryService.class), any(Geolocation.class), any(Map.class))).thenReturn(caches);
+
+        HTTPRequest httpRequest = new HTTPRequest();
+        httpRequest.setClientIP("192.168.10.11");
+        httpRequest.setHostname("ccr.example.com");
+
+        Track track = spy(StatTracker.getTrack());
+
+        trafficRouter.route(httpRequest, track);
+
+        assertThat(track.getResult(), equalTo(Track.ResultType.GEO));
     }
 }
