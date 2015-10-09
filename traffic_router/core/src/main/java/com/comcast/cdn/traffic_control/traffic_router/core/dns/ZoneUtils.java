@@ -64,17 +64,17 @@ public class ZoneUtils {
 		}
 	}
 
-	protected static String getString(final JSONObject jo, final String key, final String d) {
-		if (jo == null) {
-			return d;
-		}
-
-		if (!jo.has(key)) {
-			return d;
-		}
-
-		return jo.optString(key);
-	}
+//	protected static String getString(final JSONObject jo, final String key, final String d) {
+//		if (jo == null) {
+//			return d;
+//		}
+//
+//		if (!jo.has(key)) {
+//			return d;
+//		}
+//
+//		return jo.optString(key);
+//	}
 
 	protected static long getLong(final JSONObject jo, final String key, final long d) {
 		if (jo == null) {
@@ -87,4 +87,27 @@ public class ZoneUtils {
 
 		return jo.optLong(key);
 	}
+
+	protected static String getAdminString(final JSONObject jo, final String key, final String d, final String domain) {
+
+		if (jo == null) {
+			return d + "." + domain;
+		}
+
+		if (!jo.has(key)) {
+			return d + "." + domain;
+		}
+
+		// check for @ sign in string
+		String admin = jo.optString(key);
+		if (admin.contains("@")) {
+			admin = admin.replace("@",".");
+		} else {
+			admin = new StringBuffer(admin).append(".").append(domain).toString();
+		}
+
+		return admin;
+
+	}
+
 }
