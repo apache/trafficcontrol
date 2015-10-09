@@ -28,8 +28,8 @@ public class FederationMappingBuilderTest {
         assertThat(federationMapping.getTtl(), equalTo(86400));
 
         assertThat(federationMapping.getResolve4(),
-                containsInAnyOrder(new CidrAddress("192.168.45.67/24"), new CidrAddress("192.168.56.78/24")));
+                containsInAnyOrder(CidrAddress.fromString("192.168.45.67/24"), CidrAddress.fromString("192.168.56.78/24")));
         assertThat(federationMapping.getResolve6(),
-                containsInAnyOrder(new CidrAddress("fd12:3456:789a:1::/64"), new CidrAddress("fdfe:dcba:9876:5::/64")));
+                containsInAnyOrder(CidrAddress.fromString("fd12:3456:789a:1::/64"), CidrAddress.fromString("fdfe:dcba:9876:5::/64")));
     }
 }

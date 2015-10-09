@@ -100,4 +100,8 @@ public class HTTPRequest extends Request {
         this.requestedUrl = requestedUrl;
     }
 
+    @Override
+    public String getType() {
+        return "http";
+    }
 }

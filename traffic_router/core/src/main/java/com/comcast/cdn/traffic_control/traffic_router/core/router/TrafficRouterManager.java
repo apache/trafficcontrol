@@ -21,6 +21,7 @@ import java.net.UnknownHostException;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
+import com.comcast.cdn.traffic_control.traffic_router.core.loc.FederationRegistry;
 import org.apache.commons.pool.ObjectPool;
 import org.apache.log4j.Logger;
 import org.json.JSONException;
@@ -44,6 +45,7 @@ public class TrafficRouterManager {
 	private static final Map<String, Long> timeTracker = new ConcurrentHashMap<String, Long>();
 	private NameServer nameServer;
 	private TrafficOpsUtils trafficOpsUtils;
+	private FederationRegistry federationRegistry;
 
 	public NameServer getNameServer() {
 		return nameServer;
@@ -92,7 +94,8 @@ public class TrafficRouterManager {
 				geolocationService6, 
 				hashFunctionPool, 
 				statTracker,
-				trafficOpsUtils);
+				trafficOpsUtils,
+				federationRegistry);
 		synchronized(this) {
 			if(state != null) {
 				try {
@@ -120,5 +123,9 @@ public class TrafficRouterManager {
 
 	public void setTrafficOpsUtils(final TrafficOpsUtils trafficOpsUtils) {
 		this.trafficOpsUtils = trafficOpsUtils;
+	}
+
+	public void setFederationRegistry(final FederationRegistry federationRegistry) {
+		this.federationRegistry = federationRegistry;
 	}
 }
