@@ -689,6 +689,7 @@ public class ZoneManager extends Resolver {
 			LOGGER.error(e.getMessage(), e);
 		} finally {
 			builder.resultType(track.getResult());
+			builder.resultLocation(track.getResultLocation());
 			statTracker.saveTrack(track);
 		}
 

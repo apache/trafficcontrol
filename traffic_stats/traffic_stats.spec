@@ -6,13 +6,14 @@ Summary:	Tool to pull data from traffic monitor and store in Influxdb
 Packager:	david_neuman2 at Cable dot Comcast dot com
 Vendor:		Comcast Cable
 Group:		Applications/Communications
-License:	N/A
+License:	Apache License, Version 2.0
 URL:		https://github.com/comcast/traffic_control/
 Source:		~/rpmbuild/SOURCES/traffic_stats-@VERSION@.tar.gz
 
 %description
-Installs traffic_stats which is comprised of two seperate rpms:
-	- traffic_stats: gets data from traffic monitor and stores in InfluxDB and also calculates daily summary of the data from InfluxDB and stores in traffic_ops
+Installs traffic_stats which performs the follwing functions:
+	1. Gets data from Traffic Monitor via a RESTful API and stores the data in InfluxDb
+	2. Calculates Daily Summary stats from the raw data and stores it in Traffic Ops as well as InfluxDb
 
 %prep
 
@@ -29,12 +30,14 @@ mkdir -p ${RPM_BUILD_ROOT}/opt/traffic_stats/var/run
 mkdir -p ${RPM_BUILD_ROOT}/opt/traffic_stats/var/log/traffic_stats
 mkdir -p ${RPM_BUILD_ROOT}/etc/init.d
 mkdir -p ${RPM_BUILD_ROOT}/etc/logrotate.d
+mkdir -p ${RPM_BUILD_ROOT}/usr/share/grafana/public/dashboards/
 
 cp $GOPATH/src/github.com/comcast/traffic_control/traffic_stats/traffic_stats ${RPM_BUILD_ROOT}/opt/traffic_stats/bin/traffic_stats
 cp $GOPATH/src/github.com/comcast/traffic_control/traffic_stats/traffic_stats.cfg ${RPM_BUILD_ROOT}/opt/traffic_stats/conf/traffic_stats.cfg
 cp $GOPATH/src/github.com/comcast/traffic_control/traffic_stats/traffic_stats_seelog.xml ${RPM_BUILD_ROOT}/opt/traffic_stats/conf/traffic_stats_seelog.xml
 cp $GOPATH/src/github.com/comcast/traffic_control/traffic_stats/traffic_stats.init ${RPM_BUILD_ROOT}/etc/init.d/traffic_stats
 cp $GOPATH/src/github.com/comcast/traffic_control/traffic_stats/traffic_stats.logrotate ${RPM_BUILD_ROOT}/etc/logrotate.d/traffic_stats
+cp $GOPATH/src/github.com/comcast/traffic_control/traffic_stats/grafana/*.js ${RPM_BUILD_ROOT}/usr/share/grafana/public/dashboards/
 
 %pre
 /usr/bin/getent group traffic_stats >/dev/null
@@ -87,10 +90,12 @@ fi
 %dir /opt/traffic_stats/var/log
 %dir /opt/traffic_stats/var/run
 %dir /opt/traffic_stats/var/log/traffic_stats
+%dir /usr/share/grafana/public/dashboards
 
 %attr(600, traffic_stats, traffic_stats) /opt/traffic_stats/conf/*
 %attr(755, traffic_stats, traffic_stats) /opt/traffic_stats/bin/*
 %attr(755, traffic_stats, traffic_stats) /etc/init.d/traffic_stats
+%attr(644, traffic_stats, traffic_stats) /usr/share/grafana/public/dashboards/*
 
 %preun
 # args for hooks: http://www.ibm.com/developerworks/library/l-rpm2/
@@ -112,3 +117,4 @@ if [ -e /etc/init.d/ts_daily_summary ]; then
 	/etc/init.d/ts_daily_summary stop
 	/sbin/chkconfig --del ts_daily_summary
 fi
+	

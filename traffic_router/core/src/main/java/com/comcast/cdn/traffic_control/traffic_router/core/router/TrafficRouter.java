@@ -24,6 +24,7 @@ import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
@@ -196,7 +197,7 @@ public class TrafficRouter {
 		return hashFunctionPool;
 	}
 
-	private List<Cache> getCachesByGeo(final Request request, final DeliveryService ds, final Geolocation clientLocation) {
+	private List<Cache> getCachesByGeo(final Request request, final DeliveryService ds, final Geolocation clientLocation, final Map<String, Double> resultLocation) throws GeolocationException {
 		final String zoneId = null; 
 		// the specific use of the popularity zone
 		// manager was not understood and not used
@@ -205,10 +206,12 @@ public class TrafficRouter {
 		final int locationLimit = ds.getLocationLimit();
 		int locationsTested = 0;
 		final List<CacheLocation> cacheLocations = orderCacheLocations(request,
-				getCacheRegister().getCacheLocations(zoneId), ds, clientLocation);
+			getCacheRegister().getCacheLocations(zoneId), ds, clientLocation);
 		for (final CacheLocation location : cacheLocations) {
 			final List<Cache> caches = selectCache(location, ds);
 			if (caches != null) {
+				resultLocation.put("latitude", location.getGeolocation().getLatitude());
+				resultLocation.put("longitude", location.getGeolocation().getLongitude());
 				return caches;
 			}
 			locationsTested++;
@@ -224,6 +227,15 @@ public class TrafficRouter {
 
 		if (caches != null) {
 			return caches;
+		}
+		final CacheLocation cacheLocation = getCoverageZoneCache(ip);
+		if(ds.isLocationAvailable(cacheLocation)) {
+			final List<Cache> caches = selectCache(cacheLocation, ds);// consistentHash(caches, request);List<Cache>
+			if (caches != null) {
+				track.setResult(ResultType.CZ);
+				track.setResultLocation(cacheLocation.getGeolocation());
+				return caches;
+			}
 		}
 
 		if (ds.isCoverageZoneOnly()) {
@@ -253,9 +265,11 @@ public class TrafficRouter {
 			track.setResultDetails(ResultDetails.DS_CLIENT_GEO_UNSUPPORTED);
 			return null;
 		}
+		
+		final Map<String, Double> resultLocation = new HashMap<String, Double>();
 
-		final List<Cache> caches = getCachesByGeo(request, deliveryService, clientLocation);
-
+		final List<Cache> caches = getCachesByGeo(request, deliveryService, clientLocation, resultLocation);
+		
 		if (caches == null) {
 			LOGGER.warn(String.format("No Cache found by Geo (%s, ip=%s, path=%s)", request.getType(), request.getClientIP(), request.getHostname()));
 			track.setResultDetails(ResultDetails.GEO_NO_CACHE_FOUND);

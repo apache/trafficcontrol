@@ -173,7 +173,7 @@ public class TRServlet extends HttpServlet {
 			httpAccessRecordBuilder.responseURL(null);
 			httpAccessRecordBuilder.rerr(e.getMessage());
 		} finally {
-			final HTTPAccessRecord access = httpAccessRecordBuilder.resultType(track.getResult()).build();
+			final HTTPAccessRecord access = httpAccessRecordBuilder.resultType(track.getResult()).resultLocation(track.getResultLocation()).build();
 			ACCESS.info(HTTPAccessEventBuilder.create(access));
 			statTracker.saveTrack(track);
 		}

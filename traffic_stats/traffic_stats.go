@@ -1,3 +1,22 @@
+/*
+Licensed to the Apache Software Foundation (ASF) under one
+or more contributor license agreements.  See the NOTICE file
+distributed with this work for additional information
+regarding copyright ownership.  The ASF licenses this file
+to you under the Apache License, Version 2.0 (the
+"License"); you may not use this file except in compliance
+with the License.  You may obtain a copy of the License at
+
+  http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing,
+software distributed under the License is distributed on an
+"AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+KIND, either express or implied.  See the License for the
+specific language governing permissions and limitations
+under the License.
+*/
+
 package main
 
 import (
@@ -220,11 +239,11 @@ func loadStartupConfig(configFile string, oldConfig StartupConfig) (StartupConfi
 }
 
 func calcDailySummary(now time.Time, config StartupConfig, runningConfig RunningConfig) {
-	log.Debugf("lastSummaryTime is %v", runningConfig.LastSummaryTime)
+	log.Infof("lastSummaryTime is %v", runningConfig.LastSummaryTime)
 	if runningConfig.LastSummaryTime.Day() != now.Day() {
 		startTime := now.Truncate(24 * time.Hour).Add(-24 * time.Hour)
 		endTime := startTime.Add(24 * time.Hour)
-		log.Debug("Summarizing from ", startTime, " (", startTime.Unix(), ") to ", endTime, " (", endTime.Unix(), ")")
+		log.Info("Summarizing from ", startTime, " (", startTime.Unix(), ") to ", endTime, " (", endTime.Unix(), ")")
 
 		// influx connection
 		influxClient, err := influxConnect(config, runningConfig)
@@ -236,7 +255,7 @@ func calcDailySummary(now time.Time, config StartupConfig, runningConfig Running
 
 		//create influxdb query
 		q := fmt.Sprintf("SELECT sum(value)/6 FROM bandwidth where time > '%s' and time < '%s' group by time(60s), cdn fill(0)", startTime.Format(time.RFC3339), endTime.Format(time.RFC3339))
-		log.Debugf(q)
+		log.Infof(q)
 		res, err := queryDB(influxClient, q, "cache_stats")
 		if err != nil {
 			errHndlr(err, ERROR)
@@ -317,9 +336,10 @@ func calcDailySummary(now time.Time, config StartupConfig, runningConfig Running
 		bps := influx.BatchPoints{
 			Points:          pts,
 			Database:        "daily_stats",
-			RetentionPolicy: "daily_stats",
+			RetentionPolicy: config.DailySummaryRetentionPolicy,
 		}
 		config.BpsChan <- bps
+		log.Info("Saved daily stats @ ", now)
 	}
 }
 

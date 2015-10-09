@@ -111,6 +111,8 @@ sub getserverdata {
 		}
 	);
 	while ( my $row = $rs_data->next ) {
+		my $cdn_name = defined( $row->cdn_id ) ? $row->cdn->name : "";
+
 		push(
 			@data, {
 				"id"               => $row->id,
@@ -126,7 +128,7 @@ sub getserverdata {
 				"ip6_address"      => $row->ip6_address,
 				"ip6_gateway"      => $row->ip6_gateway,
 				"interface_mtu"    => $row->interface_mtu,
-				"cdn"              => $row->cdn->name,
+				"cdn"              => $cdn_name,
 				"cachegroup"       => $row->cachegroup->name,
 				"phys_location"    => $row->phys_location->name,
 				"rack"             => $row->rack,
@@ -160,6 +162,7 @@ sub serverdetail {
 	$select = $self->param('select') if ( defined $self->param('select') );
 	my $rs_data = $self->db->resultset('Server')->search( undef, { prefetch => [ 'cdn', 'cachegroup', 'type', 'profile', 'status', 'phys_location' ], } );
 	while ( my $row = $rs_data->next ) {
+		my $cdn_name = defined( $row->cdn_id ) ? $row->cdn->name : "";
 		my $fqdn = $row->host_name . "." . $row->domain_name;
 		if ( defined($select) && $fqdn !~ /$select/ ) { next; }
 		my $serv = {
@@ -176,7 +179,7 @@ sub serverdetail {
 			"ip6_address"      => $row->ip6_address,
 			"ip6_gateway"      => $row->ip6_gateway,
 			"interface_mtu"    => $row->interface_mtu,
-			"cdn"              => $row->cdn->name,
+			"cdn"              => $cdn_name,
 			"cachegroup"       => $row->cachegroup->name,
 			"phys_location"    => $row->phys_location->name,
 			"rack"             => $row->rack,
@@ -936,29 +939,54 @@ sub postupdatequeue {
 			$update = $self->db->resultset('Server')->search(undef);
 		}
 		else {
-			$update = $self->db->resultset('Server')->search( { id => $host, } );
+			$update
+				= $self->db->resultset('Server')->search( { id => $host, } );
 		}
 		$update->update( { upd_pending => $setqueue } );
-		&log( $self, "Flip Update bit (Queue Updates) for server(s):" . $host, "OPER" );
+		&log( $self, "Flip Update bit (Queue Updates) for server(s):" . $host,
+			"OPER" );
 	}
 	elsif ( defined($cdn) && defined($cachegroup) ) {
 		my @profiles;
 		if ( $cdn ne "all" ) {
-			my @profiles = $self->db->resultset('Profile')->search( { 'cdn.name' => $cdn }, { prefetch => 'cdn' } )->get_column('id')->all();
+
+			my @profiles = $self->db->resultset('Server')->search(
+				{ 'cdn.name' => $cdn },
+				{   prefetch => 'cdn',
+					select   => 'me.profile',
+					distinct => 1
+				}
+			)->get_column('profile')->all();
 		}
 		else {
-			@profiles = $self->db->resultset('Profile')->search(undef)->get_column('id')->all;
+			@profiles = $self->db->resultset('Profile')->search(undef)
+				->get_column('id')->all;
 		}
 		my @cachegroups;
 		if ( $cachegroup ne "all" ) {
-			@cachegroups = $self->db->resultset('Cachegroup')->search( { name => $cachegroup } )->get_column('id')->all;
+			@cachegroups = $self->db->resultset('Cachegroup')
+				->search( { name => $cachegroup } )->get_column('id')->all;
 		}
 		else {
-			@cachegroups = $self->db->resultset('Cachegroup')->search(undef)->get_column('id')->all;
+			@cachegroups = $self->db->resultset('Cachegroup')->search(undef)
+				->get_column('id')->all;
 		}
-		my $update = $self->db->resultset('Server')->search( { -and => [ cachegroup => { -in => \@cachegroups }, profile => { -in => \@profiles } ] } );
+		my $update = $self->db->resultset('Server')->search(
+			{   -and => [
+					cachegroup => { -in => \@cachegroups },
+					profile    => { -in => \@profiles }
+				]
+			}
+		);
 		$update->update( { upd_pending => $setqueue } );
-		&log( $self, "Flip Update bit (Queue Updates) for servers in CDN:" . $cdn . " cachegroup:" . $cachegroup, "OPER" );
+		&log(
+			$self,
+			"Flip Update bit (Queue Updates) for servers in CDN:"
+				. $cdn
+				. " cachegroup:"
+				. $cachegroup,
+			"OPER"
+		);
 	}
 
 	#shouldn't we return something here?

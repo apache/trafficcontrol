@@ -383,12 +383,13 @@ sub aserver {
 		}
 	);
 	while ( my $row = $rs->next ) {
-
+		my $cdn_name = defined( $row->cdn_id ) ? $row->cdn->name : "";
 		my @line;
 		if ($server_select) {
 			@line = [
 				$row->id,         $row->host_name,  $row->domain_name,
-				$row->ip_address, $row->type->name, $row->profile->name
+				$row->ip_address, $row->type->name, $row->profile->name,
+				$cdn_name
 			];
 		}
 		else {
@@ -434,10 +435,11 @@ sub aserver {
 				$img     = "info.png";
 			}
 
+			my $cdn_name = defined( $row->cdn_id ) ? $row->cdn->name : "";
 			@line = [
 				$row->id,                  $row->host_name,
 				$row->domain_name,         "dummy",
-				$row->cdn->name,           $row->cachegroup->name,
+				$cdn_name,                 $row->cachegroup->name,
 				$row->phys_location->name, $row->ip_address,
 				$row->ip6_address,         $row->status->name,
 				$row->profile->name,       $row->ilo_ip_address,
@@ -510,12 +512,14 @@ sub adeliveryservice {
 	);
 
 	while ( my $row = $rs->next ) {
+		my $cdn_name = defined( $row->cdn_id ) ? $row->cdn->name : "";
+
 		my @line = [
 			$row->id,
 			$row->xml_id,
 			$row->org_server_fqdn,
 			"dummy",
-			$row->cdn->name,
+			$cdn_name,
 			$row->profile->name,
 			$row->ccr_dns_ttl,
 			$yesno{ $row->active },

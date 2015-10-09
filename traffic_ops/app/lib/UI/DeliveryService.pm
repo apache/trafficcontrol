@@ -230,6 +230,7 @@ sub read {
 		}
 	);
 	while ( my $row = $rs_data->next ) {
+		my $cdn_name = defined( $row->cdn_id ) ? $row->cdn->name : "";
 		my $re_rs     = $row->deliveryservice_regexes;
 		my @matchlist = ();
 
@@ -259,7 +260,7 @@ sub read {
 				"multi_site_origin"      => \$row->multi_site_origin,
 				"ccr_dns_ttl"            => $row->ccr_dns_ttl,
 				"type"                   => $row->type->id,
-				"cdn_name"               => $row->cdn->name,
+				"cdn_name"               => $cdn_name,
 				"profile_name"           => $row->profile->name,
 				"profile_description"    => $row->profile->description,
 				"global_max_mbps"        => $row->global_max_mbps,
@@ -643,13 +644,13 @@ sub header_rewrite {
 			->all();
 		if ( $tier eq "mid" ) {
 			my $mtype_id = &type_id( $self, 'MID' );
-
 			my $param
-				= $self->db->resultset('Profile')
-				->search( { 'me.id' => $ds_profile }, { prefetch => 'cdn' } )
-				->single();
-			$cdn_name = $param->cdn->name;
-			@servers  = $self->db->resultset('Server')
+				= $self->db->resultset('Deliveryservice')
+				->search( { 'me.profile' => $ds_profile },
+				{ prefetch => 'cdn' } );
+			$cdn_name = $param->next->cdn->name;
+
+			@servers = $self->db->resultset('Server')
 				->search( { type => $mtype_id } )->get_column('id')->all();
 		}
 		my @profiles
@@ -664,10 +665,10 @@ sub header_rewrite {
 			if ( !defined($link) ) {
 				if ($cdn_name) {
 					my $p_cdn_param
-						= $self->db->resultset('Profile')
-						->search( { 'me.id' => $profile_id },
-						{ prefetch => 'cdn' } )->single();
-					if ( $p_cdn_param->cdn->name ne $cdn_name ) {
+						= $self->db->resultset('Server')
+						->search( { 'me.profile' => $profile_id },
+						{ prefetch => 'cdn' } );
+					if ( $p_cdn_param->next->cdn->name ne $cdn_name ) {
 						next;
 					}
 				}
@@ -677,6 +678,7 @@ sub header_rewrite {
 						parameter => $param_id
 					}
 					);
+
 			}
 		}
 	}
@@ -1278,11 +1280,14 @@ sub create_dnssec_keys {
 	#get CDN name
 	my $dnskey_ttl;
 
-	my $cdn_rs
-		= $self->db->resultset('Profile')
-		->search( { 'me.id' => $profile_id }, { prefetch => 'cdn' } )
-		->single();
-	my $cdn_name = $cdn_rs->cdn->name;
+	my $cdn_rs = $self->db->resultset('Server')->search(
+		{ 'me.id' => $profile_id },
+		{   prefetch => 'cdn',
+			select   => 'me.cdn_id',
+			distinct => 1
+		}
+	);
+	my $cdn_name = $cdn_rs->next->cdn->name;
 
 	#get keys for cdn
 	my $keys;
@@ -1310,8 +1315,8 @@ sub create_dnssec_keys {
 
 #first one is the one we want.  period at end for dnssec, substring off stuff we dont want
 	my $ds_name = $example_urls[0] . ".";
-	my $length = length($ds_name) - CORE::index($ds_name, ".");
-	$ds_name = substr($ds_name, CORE::index($ds_name, ".") + 1, $length);
+	my $length = length($ds_name) - CORE::index( $ds_name, "." );
+	$ds_name = substr( $ds_name, CORE::index( $ds_name, "." ) + 1, $length );
 
 	my $inception    = time();
 	my $z_expiration = $inception + ( 86400 * $z_exp_days );
