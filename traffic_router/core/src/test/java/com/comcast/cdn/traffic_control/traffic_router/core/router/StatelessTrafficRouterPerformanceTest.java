@@ -139,7 +139,7 @@ public class StatelessTrafficRouterPerformanceTest  extends TrafficRouter {
 			return null;
 		}
 		final StatTracker.Track track = StatTracker.getTrack();
-		List<Cache> caches = selectCache(request, ds, track, true);
+		List<Cache> caches = selectCache(request, ds, track);
 		Dispersion dispersion = ds.getDispersion();
 		Cache cache = dispersion.getCache(consistentHash(caches, request.getPath()));
 		try {
