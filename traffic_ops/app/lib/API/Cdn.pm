@@ -404,6 +404,14 @@ sub gen_traffic_router_config {
 	my $data_obj;
 	my $ccr_profile_id;
 	my $ccr_domain_name = "";
+	my $cdn_soa_minimum = 30;
+	my $cdn_soa_expire  = 604800;
+	my $cdn_soa_retry   = 7200;
+    my $cdn_soa_refresh = 28800;
+	my $cdn_soa_admin   = "traffic_ops";
+	my $tld_ttls_soa 	= 86400;
+	my $tld_ttls_ns 	= 3600;
+
 	$SIG{__WARN__} = sub {
 		warn $_[0]
 			unless $_[0]
@@ -446,8 +454,30 @@ sub gen_traffic_router_config {
 	my $rs_config = $self->db->resultset('Parameter')
 		->search( \%condition, { join => 'profile_parameters' } );
 	while ( my $row = $rs_config->next ) {
+		$self->app->log->info("name = " . $row->name);
 		if ( $row->name eq 'domain_name' ) {
 			$ccr_domain_name = $row->value;
+		}
+		if ($row->name eq 'tld.soa.admin') {
+			$cdn_soa_admin = $row->value;
+		}
+		if ($row->name eq 'tld.soa.expire') {
+			$cdn_soa_expire = $row->value;
+		}
+		if ($row->name eq 'tld.soa.minimum') {
+			$cdn_soa_minimum = $row->value;
+		}
+		if ($row->name eq 'tld.soa.refresh') {
+			$cdn_soa_refresh = $row->value;
+		}
+		if ($row->name eq 'tld.soa.retry') {
+			$cdn_soa_retry = $row->value;
+		}
+		if ($row->name eq 'tld.ttls.SOA') {
+			$tld_ttls_soa = $row->value;
+		}
+		if ($row->name eq 'tld.ttls.NS') {
+			$tld_ttls_ns = $row->value;
 		}
 
 		my $parameter->{'type'} = "parameter";
@@ -771,14 +801,14 @@ sub gen_traffic_router_config {
 		$delivery_service->{'ttls'} = {
 			'A'    => int( $row->ccr_dns_ttl ),
 			'AAAA' => int( $row->ccr_dns_ttl ),
-			'NS'   => 3600,
-			'SOA'  => 86400
+			'NS'   => int($tld_ttls_ns),
+			'SOA'  => int($tld_ttls_soa)
 		};
-		$delivery_service->{'soa'}->{'minimum'} = 30;
-		$delivery_service->{'soa'}->{'expire'}  = 604800;
-		$delivery_service->{'soa'}->{'retry'}   = 7200;
-		$delivery_service->{'soa'}->{'refresh'} = 28800;
-		$delivery_service->{'soa'}->{'admin'}   = "twelve_monkeys";
+		$delivery_service->{'soa'}->{'minimum'} = int($cdn_soa_minimum);
+		$delivery_service->{'soa'}->{'expire'}  = int($cdn_soa_expire);
+		$delivery_service->{'soa'}->{'retry'}   = int($cdn_soa_retry);
+		$delivery_service->{'soa'}->{'refresh'} = int($cdn_soa_retry);
+		$delivery_service->{'soa'}->{'admin'}   = $cdn_soa_admin;
 
 		my $rs_dns = $self->db->resultset('Staticdnsentry')->search(
 			{   'deliveryservice.active'  => 1,

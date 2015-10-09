@@ -45,6 +45,13 @@ sub gen_crconfig_json {
 	my %type_to_name;
 	my $ccr_domain_name = "";
 	my $profile_cache;
+	my $cdn_soa_minimum = 30;
+	my $cdn_soa_expire  = 604800;
+	my $cdn_soa_retry   = 7200;
+    my $cdn_soa_refresh = 28800;
+	my $cdn_soa_admin   = "traffic_ops";
+	my $tld_ttls_soa 	= 86400;
+	my $tld_ttls_ns 	= 3600;
 
 	$SIG{__WARN__} = sub { warn $_[0] unless $_[0] =~ m/Prefetching multiple has_many rels deliveryservice_servers/ };
 
@@ -76,6 +83,28 @@ sub gen_crconfig_json {
 	while ( my $row = $rs_pp->next ) {
 
 		$param_cache{$row->profile->id}->{$row->parameter->name} = $row->parameter->value;
+
+		if ($row->parameter->name eq 'tld.soa.admin') {
+			$cdn_soa_admin = $row->parameter->value;
+		}
+		if ($row->parameter->name eq 'tld.soa.expire') {
+			$cdn_soa_expire = $row->parameter->value;
+		}
+		if ($row->parameter->name eq 'tld.soa.minimum') {
+			$cdn_soa_minimum = $row->parameter->value;
+		}
+		if ($row->parameter->name eq 'tld.soa.refresh') {
+			$cdn_soa_refresh = $row->parameter->value;
+		}
+		if ($row->parameter->name eq 'tld.soa.retry') {
+			$cdn_soa_retry = $row->parameter->value;
+		}
+		if ($row->parameter->name eq 'tld.ttls.SOA') {
+			$tld_ttls_soa = $row->parameter->value;
+		}
+		if ($row->parameter->name eq 'tld.ttls.NS') {
+			$tld_ttls_ns = $row->parameter->value;
+		}
 
 		if ( $row->parameter->name eq 'domain_name' ) {
 			$ccr_domain_name = $row->parameter->value;
@@ -335,12 +364,17 @@ sub gen_crconfig_json {
 		}
 
 		$data_obj->{'deliveryServices'}->{ $row->xml_id }->{'ttls'} =
-			{ 'A' => $row->ccr_dns_ttl, 'AAAA' => $row->ccr_dns_ttl, 'NS' => "3600", 'SOA' => "86400" };
-		$data_obj->{'deliveryServices'}->{ $row->xml_id }->{'soa'}->{'minimum'} = "30";
-		$data_obj->{'deliveryServices'}->{ $row->xml_id }->{'soa'}->{'expire'}  = "604800";
-		$data_obj->{'deliveryServices'}->{ $row->xml_id }->{'soa'}->{'retry'}   = "7200";
-		$data_obj->{'deliveryServices'}->{ $row->xml_id }->{'soa'}->{'refresh'} = "28800";
-		$data_obj->{'deliveryServices'}->{ $row->xml_id }->{'soa'}->{'admin'}   = "twelve_monkeys";
+			{ 
+				'A' => $row->ccr_dns_ttl, 
+				'AAAA' => $row->ccr_dns_ttl, 
+				'NS' => $tld_ttls_ns, 
+				'SOA' => $tld_ttls_soa 
+			};
+		$data_obj->{'deliveryServices'}->{ $row->xml_id }->{'soa'}->{'minimum'} = $cdn_soa_minimum;
+		$data_obj->{'deliveryServices'}->{ $row->xml_id }->{'soa'}->{'expire'}  = $cdn_soa_expire;
+		$data_obj->{'deliveryServices'}->{ $row->xml_id }->{'soa'}->{'retry'}   = $cdn_soa_retry;
+		$data_obj->{'deliveryServices'}->{ $row->xml_id }->{'soa'}->{'refresh'} = $cdn_soa_refresh;
+		$data_obj->{'deliveryServices'}->{ $row->xml_id }->{'soa'}->{'admin'}   = $cdn_soa_admin;
 		$data_obj->{'deliveryServices'}->{ $row->xml_id }->{'ip6RoutingEnabled'} = $row->ipv6_routing_enabled ? 'true' : 'false';
 	
 	}
