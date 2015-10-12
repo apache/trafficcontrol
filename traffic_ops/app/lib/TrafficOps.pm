@@ -465,7 +465,7 @@ sub validate_cdn_conf {
 	my $cdn_info = $self->load_conf( $ENV{MOJO_CONFIG} );
 	my $user;
 	if ( !exists( $cdn_info->{secrets} ) ) {
-		print("WARNING: no secrets found in in $ENV{MOJO_CONFIG}.\n");
+		print("WARNING: no secrets found in $ENV{MOJO_CONFIG}.\n");
 	}
 
 	if ( exists( $cdn_info->{hypnotoad}{user} ) ) {
