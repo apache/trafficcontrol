@@ -20,7 +20,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import com.comcast.cdn.traffic_control.traffic_router.core.loc.Geolocation;
 import org.apache.log4j.Logger;
 
 import com.comcast.cdn.traffic_control.traffic_router.core.cache.CacheRegister;
@@ -91,7 +90,6 @@ public class StatTracker {
 		String fqdn;
 		ResultType result = ResultType.ERROR;
 		ResultDetails resultDetails = ResultDetails.NO_DETAILS;
-		Geolocation resultLocation;
 
 		public Track() {
 			start();
@@ -115,15 +113,6 @@ public class StatTracker {
 		public ResultDetails getResultDetails() {
 			return resultDetails;
 		}
-
-		public void setResultLocation(final Geolocation resultLocation) {
-			this.resultLocation = resultLocation;
-		}
-
-		public Geolocation getResultLocation() {
-			return resultLocation;
-		}
-
 		public final void start() {
 			time = System.currentTimeMillis();
 		}

@@ -45,7 +45,7 @@ public class Fetcher {
 	protected static final String GET_STR = "GET";
 	protected static final String POST_STR = "POST";
 	protected static final String UTF8_STR = "UTF-8";
-	protected static final int DEFAULT_TIMEOUT = 10000;
+	protected static final int DEFAULT_TIMEOUT = 10;
 	protected int timeout = DEFAULT_TIMEOUT; // override if you want something different
 	protected final Map<String, String> requestProps = new HashMap<String, String>();
 
@@ -70,7 +70,7 @@ public class Fetcher {
 		public X509Certificate[] getAcceptedIssuers() { return null; }
 	}
 
-	protected HttpURLConnection getConnection(final String url, final String data, final String requestMethod, final long lastFetchTime) throws IOException {
+	protected HttpURLConnection getConnection(final String url, final String data, final String requestMethod) throws IOException {
 		String method = GET_STR;
 
 		if (requestMethod != null) {
@@ -80,8 +80,6 @@ public class Fetcher {
 		LOGGER.info(method + "ing: " + url + "; timeout is " + timeout);
 
 		final URLConnection connection = new URL(url).openConnection();
-
-		connection.setIfModifiedSince(lastFetchTime);
 
 		if (timeout != 0) {
 			connection.setConnectTimeout(timeout);
@@ -128,24 +126,14 @@ public class Fetcher {
 		return http;
 	}
 
-	public String fetchIfModifiedSince(final String url, final long lastFetchTime) throws IOException {
-		return fetchIfModifiedSince(url, null, null, lastFetchTime);
-	}
-
 	public String fetch(final String url) throws IOException {
 		return fetch(url, null, null);
 	}
 
-	private String fetchIfModifiedSince(final String url, final String data, final String method, final long lastFetchTime) throws IOException {
+	public String fetch(final String url, final String data, final String method) throws IOException {
 		final OutputStream out = null;
 		try {
-			final HttpURLConnection connection = getConnection(url, data, method, lastFetchTime);
-			connection.getInputStream();
-
-			if (connection.getResponseCode() == HttpURLConnection.HTTP_NOT_MODIFIED) {
-				return null;
-			}
-
+			final URLConnection connection = getConnection(url, data, method);
 			final StringBuilder sb = new StringBuilder();
 			final BufferedReader in = new BufferedReader(new InputStreamReader(connection.getInputStream()));
 
@@ -161,29 +149,5 @@ public class Fetcher {
 		} finally {
 			IOUtils.closeQuietly(out);
 		}
-	}
-
-	public String fetch(final String url, final String data, final String method) throws IOException {
-		return fetchIfModifiedSince(url, data, method, 0L);
-	}
-
-	@Override
-	@SuppressWarnings("PMD.IfStmtsMustUseBraces")
-	public boolean equals(final Object o) {
-		if (this == o) return true;
-		if (o == null || getClass() != o.getClass()) return false;
-
-		final Fetcher fetcher = (Fetcher) o;
-
-		if (timeout != fetcher.timeout) return false;
-		return !(requestProps != null ? !requestProps.equals(fetcher.requestProps) : fetcher.requestProps != null);
-
-	}
-
-	@Override
-	public int hashCode() {
-		int result = timeout;
-		result = 31 * result + (requestProps != null ? requestProps.hashCode() : 0);
-		return result;
 	}
 }

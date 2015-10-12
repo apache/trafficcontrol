@@ -45,7 +45,6 @@ import com.comcast.cdn.traffic_control.traffic_router.core.router.StatTracker.Tr
 import com.comcast.cdn.traffic_control.traffic_router.core.router.StatTracker.Track.ResultDetails;
 import com.comcast.cdn.traffic_control.traffic_router.core.util.StringProtector;
 
-@SuppressWarnings("PMD.TooManyFields")
 public class DeliveryService {
 	protected static final Logger LOGGER = Logger.getLogger(DeliveryService.class);
 	private final String id;
@@ -234,10 +233,7 @@ public class DeliveryService {
 		track.setResultDetails(ResultDetails.DS_BYPASS);
 		return getRedirectInetRecords(bypassDestination.optJSONObject("DNS"));
 	}
-
 	private List<InetRecord> redirectInetRecords = null;
-
-	@SuppressWarnings("PMD.CyclomaticComplexity")
 	private List<InetRecord> getRedirectInetRecords(final JSONObject dns) {
 		if (dns == null) {
 			return null;

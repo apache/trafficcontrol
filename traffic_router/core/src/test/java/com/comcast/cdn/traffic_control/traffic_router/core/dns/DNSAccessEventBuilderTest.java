@@ -1,6 +1,5 @@
 package com.comcast.cdn.traffic_control.traffic_router.core.dns;
 
-import com.comcast.cdn.traffic_control.traffic_router.core.loc.Geolocation;
 import com.comcast.cdn.traffic_control.traffic_router.core.router.StatTracker.Track.ResultType;
 import com.comcast.cdn.traffic_control.traffic_router.core.router.StatTracker.Track.ResultDetails;
 import org.junit.Before;
@@ -48,7 +47,7 @@ public class DNSAccessEventBuilderTest {
 
         String dnsAccessEvent = DNSAccessEventBuilder.create(dnsAccessRecord, new WireParseException("invalid record length"));
         assertThat(dnsAccessEvent, equalTo("144140678.000 qtype=DNS chi=192.168.10.11 ttms=789 xn=- fqdn=- type=- class=- ttl=- rcode=-" +
-                " rtype=- rloc=\"-\" rdtl=- rerr=\"Bad Request:WireParseException:invalid record length\" ans=\"-\""));
+                " rtype=- rdetails=- rerr=\"Bad Request:WireParseException:invalid record length\" ans=\"-\""));
     }
 
     @Test
@@ -82,14 +81,14 @@ public class DNSAccessEventBuilderTest {
 
         assertThat(dnsAccessEvent, equalTo("144140678.000 qtype=DNS chi=192.168.10.11 ttms=789" +
                 " xn=65535 fqdn=www.example.com. type=A class=IN ttl=12345" +
-                " rcode=NOERROR rtype=- rloc=\"-\" rdtl=- rerr=\"-\" ans=\"foo bar baz\""));
+                " rcode=NOERROR rtype=- rdetails=- rerr=\"-\" ans=\"foo bar baz\""));
 
 
         dnsAccessEvent = DNSAccessEventBuilder.create(dnsAccessRecord);
 
         assertThat(dnsAccessEvent, equalTo("144140678.000 qtype=DNS chi=192.168.10.11 ttms=0" +
                 " xn=65535 fqdn=www.example.com. type=A class=IN ttl=12345" +
-                " rcode=NOERROR rtype=- rloc=\"-\" rdtl=- rerr=\"-\" ans=\"foo bar baz\""));
+                " rcode=NOERROR rtype=- rdetails=- rerr=\"-\" ans=\"foo bar baz\""));
     }
 
     @Test
@@ -101,7 +100,7 @@ public class DNSAccessEventBuilderTest {
         String dnsAccessEvent = DNSAccessEventBuilder.create(dnsAccessRecord, new RuntimeException("boom it failed"));
         assertThat(dnsAccessEvent, equalTo("144140678.000 qtype=DNS chi=192.168.10.11 ttms=789" +
                 " xn=65535 fqdn=www.example.com. type=A class=IN ttl=12345" +
-                " rcode=SERVFAIL rtype=- rloc=\"-\" rdtl=- rerr=\"Server Error:RuntimeException:boom it failed\" ans=\"-\""));
+                " rcode=SERVFAIL rtype=- rdetails=- rerr=\"Server Error:RuntimeException:boom it failed\" ans=\"-\""));
     }
 
     @Test
@@ -129,30 +128,27 @@ public class DNSAccessEventBuilderTest {
         ARecord addressRecord = new ARecord(name, DClass.IN, 54321L, answerAddress);
         response.addRecord(addressRecord, Section.ANSWER);
 
-        Geolocation resultLocation = new Geolocation(39.7528,-104.9997);
         ResultType resultType = ResultType.CZ;
-        final DNSAccessRecord.Builder builder = new DNSAccessRecord.Builder(144140678000L, client)
-            .dnsMessage(response).resultType(resultType).resultLocation(resultLocation);
-
+        final DNSAccessRecord.Builder builder = new DNSAccessRecord.Builder(144140678000L, client).dnsMessage(response).resultType(resultType);
         DNSAccessRecord dnsAccessRecord = builder.build();
         String dnsAccessEvent = DNSAccessEventBuilder.create(dnsAccessRecord);
 
         assertThat(dnsAccessEvent, equalTo("144140678.000 qtype=DNS chi=192.168.10.11 ttms=789" +
                 " xn=65535 fqdn=www.example.com. type=A class=IN ttl=12345" +
-                " rcode=NOERROR rtype=CZ rloc=\"39.75,-104.99\" rdtl=- rerr=\"-\" ans=\"foo bar baz\""));
+                " rcode=NOERROR rtype=CZ rdetails=- rerr=\"-\" ans=\"foo bar baz\""));
 
         dnsAccessRecord = builder.resultType(ResultType.GEO).build();
         dnsAccessEvent = DNSAccessEventBuilder.create(dnsAccessRecord);
 
         assertThat(dnsAccessEvent, equalTo("144140678.000 qtype=DNS chi=192.168.10.11 ttms=0" +
                 " xn=65535 fqdn=www.example.com. type=A class=IN ttl=12345" +
-                " rcode=NOERROR rtype=GEO rloc=\"39.75,-104.99\" rdtl=- rerr=\"-\" ans=\"foo bar baz\""));
+                " rcode=NOERROR rtype=GEO rdetails=- rerr=\"-\" ans=\"foo bar baz\""));
 
         dnsAccessRecord = builder.resultType(ResultType.MISS).resultDetails(ResultDetails.DS_NOT_FOUND).build();
         dnsAccessEvent = DNSAccessEventBuilder.create(dnsAccessRecord);
 
         assertThat(dnsAccessEvent, equalTo("144140678.000 qtype=DNS chi=192.168.10.11 ttms=0" +
                 " xn=65535 fqdn=www.example.com. type=A class=IN ttl=12345" +
-                " rcode=NOERROR rtype=MISS rloc=\"39.75,-104.99\" rdtl=DS_NOT_FOUND rerr=\"-\" ans=\"foo bar baz\""));
+                " rcode=NOERROR rtype=MISS rdetails=DS_NOT_FOUND rerr=\"-\" ans=\"foo bar baz\""));
     }
 }

@@ -27,7 +27,6 @@
 			<list>
 				<value>file:/opt/traffic_router/conf/cache.properties</value>
 				<value>file:/opt/traffic_router/conf/traffic_monitor.properties</value>
-				<value>file:/opt/traffic_router/conf/traffic_ops.properties</value>
 				<value>file:/opt/traffic_router/conf/dns.properties</value>
 				<value>file:/opt/traffic_router/conf/http.properties</value>
 			</list>
