@@ -91,7 +91,7 @@ public class TRServlet extends HttpServlet {
 	@Override
 	protected void doGet(final HttpServletRequest request, final HttpServletResponse response) 
 			throws ServletException, IOException {
-		final Date requestDate = new Date();
+		Date requestDate = new Date();
 
 		final HTTPRequest req = new HTTPRequest();
 		req.setClientIP(request.getRemoteAddr());
@@ -173,7 +173,7 @@ public class TRServlet extends HttpServlet {
 			httpAccessRecordBuilder.responseURL(null);
 			httpAccessRecordBuilder.rerr(e.getMessage());
 		} finally {
-			final HTTPAccessRecord access = httpAccessRecordBuilder.resultType(track.getResult()).resultLocation(track.getResultLocation()).build();
+			HTTPAccessRecord access = httpAccessRecordBuilder.resultType(track.getResult()).build();
 			ACCESS.info(HTTPAccessEventBuilder.create(access));
 			statTracker.saveTrack(track);
 		}

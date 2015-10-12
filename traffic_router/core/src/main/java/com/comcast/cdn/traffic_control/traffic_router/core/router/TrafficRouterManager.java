@@ -18,19 +18,16 @@ package com.comcast.cdn.traffic_control.traffic_router.core.router;
 
 import java.io.IOException;
 import java.net.UnknownHostException;
+import java.util.HashMap;
 import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 
 import org.apache.commons.pool.ObjectPool;
 import org.apache.log4j.Logger;
-import org.json.JSONException;
 import org.json.JSONObject;
 
-import com.comcast.cdn.traffic_control.traffic_router.core.TrafficRouterException;
 import com.comcast.cdn.traffic_control.traffic_router.core.cache.CacheRegister;
 import com.comcast.cdn.traffic_control.traffic_router.core.dns.NameServer;
 import com.comcast.cdn.traffic_control.traffic_router.core.loc.GeolocationService;
-import com.comcast.cdn.traffic_control.traffic_router.core.util.TrafficOpsUtils;
 
 public class TrafficRouterManager {
 	private static final Logger LOGGER = Logger.getLogger(TrafficRouterManager.class);
@@ -41,9 +38,8 @@ public class TrafficRouterManager {
 	private GeolocationService geolocationService6;
 	private ObjectPool hashFunctionPool;
 	private StatTracker statTracker;
-	private static final Map<String, Long> timeTracker = new ConcurrentHashMap<String, Long>();
+	private static final Map<String, Long> timeTracker = new HashMap<String, Long>();
 	private NameServer nameServer;
-	private TrafficOpsUtils trafficOpsUtils;
 
 	public NameServer getNameServer() {
 		return nameServer;
@@ -53,20 +49,16 @@ public class TrafficRouterManager {
 		return timeTracker;
 	}
 
-	public void trackEvent(final String event) {
-		timeTracker.put(event, System.currentTimeMillis());
-	}
-
 	public void setNameServer(final NameServer nameServer) {
 		this.nameServer = nameServer;
 	}
 
 	public boolean setState(final JSONObject jsonObject) throws UnknownHostException {
-		trackEvent("lastCacheStateCheck");
+		timeTracker.put("lastCacheStateCheck", System.currentTimeMillis()); // new Date();
 		if(jsonObject == null) {
 			return false;
 		}
-		trackEvent("lastCacheStateChange");
+		timeTracker.put("lastCacheStateChange", System.currentTimeMillis()); // new Date();
 		synchronized(this) {
 			this.state = jsonObject;
 			if(trafficRouter != null) {
@@ -81,8 +73,8 @@ public class TrafficRouterManager {
 		return trafficRouter;
 	}
 
-	public void setCacheRegister(final CacheRegister cacheRegister) throws IOException, JSONException, TrafficRouterException {
-		trackEvent("lastConfigCheck");
+	public void setCacheRegister(final CacheRegister cacheRegister) throws IOException {
+		timeTracker.put("lastConfigCheck", System.currentTimeMillis()); // new Date();
 		if(cacheRegister == null) {
 			return;
 		}
@@ -91,8 +83,7 @@ public class TrafficRouterManager {
 				geolocationService, 
 				geolocationService6, 
 				hashFunctionPool, 
-				statTracker,
-				trafficOpsUtils);
+				statTracker);
 		synchronized(this) {
 			if(state != null) {
 				try {
@@ -103,7 +94,7 @@ public class TrafficRouterManager {
 			}
 			this.trafficRouter = tr;
 		}
-		trackEvent("lastConfigChange");
+		timeTracker.put("lastConfigChange", System.currentTimeMillis()); // new Date();
 	}
 	public void setGeolocationService(final GeolocationService geolocationService) {
 		this.geolocationService = geolocationService;
@@ -116,9 +107,5 @@ public class TrafficRouterManager {
 	}
 	public void setStatTracker(final StatTracker statTracker) {
 		this.statTracker = statTracker;
-	}
-
-	public void setTrafficOpsUtils(final TrafficOpsUtils trafficOpsUtils) {
-		this.trafficOpsUtils = trafficOpsUtils;
 	}
 }

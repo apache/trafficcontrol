@@ -33,7 +33,6 @@ public class LanguidState {
 	private int port = 0;
 	private int apiPort = 0;
 
-	@SuppressWarnings("PMD.AvoidDeeplyNestedIfStmts")
 	public void init() {
 		if (trafficRouterManager != null && trafficRouterManager.getTrafficRouter() != null) {
 			final TrafficRouter tr = trafficRouterManager.getTrafficRouter();

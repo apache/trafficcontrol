@@ -16,7 +16,6 @@
 
 package com.comcast.cdn.traffic_control.traffic_router.core.http;
 
-import com.comcast.cdn.traffic_control.traffic_router.core.loc.Geolocation;
 import com.comcast.cdn.traffic_control.traffic_router.core.router.StatTracker.Track.ResultDetails;
 import com.comcast.cdn.traffic_control.traffic_router.core.router.StatTracker.Track.ResultType;
 
@@ -38,7 +37,6 @@ public class HTTPAccessRecord {
     private final ResultType resultType;
     private final String rerr;
     private final ResultDetails resultDetails;
-    private final Geolocation resultLocation;
 
     public Date getRequestDate() {
         return requestDate;
@@ -68,10 +66,6 @@ public class HTTPAccessRecord {
         return resultDetails;
     }
 
-    public Geolocation getResultLocation() {
-        return resultLocation;
-    }
-
     public static class Builder {
         private final Date requestDate;
         private final HttpServletRequest request;
@@ -80,7 +74,6 @@ public class HTTPAccessRecord {
         private ResultType resultType;
         private String rerr;
         private ResultDetails resultDetails;
-        private Geolocation resultLocation;
 
         public Builder(final Date requestDate, final HttpServletRequest request) {
             this.requestDate = requestDate;
@@ -119,11 +112,6 @@ public class HTTPAccessRecord {
             return this;
         }
 
-        public Builder resultLocation(final Geolocation resultLocation) {
-            this.resultLocation = resultLocation;
-            return this;
-        }
-
         public HTTPAccessRecord build() {
             return new HTTPAccessRecord(this);
         }
@@ -137,7 +125,6 @@ public class HTTPAccessRecord {
         resultType = builder.resultType;
         rerr = builder.rerr;
         resultDetails = builder.resultDetails;
-        resultLocation = builder.resultLocation;
     }
 
     @Override

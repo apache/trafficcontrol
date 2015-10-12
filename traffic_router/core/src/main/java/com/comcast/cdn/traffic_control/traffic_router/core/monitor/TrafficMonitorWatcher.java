@@ -34,14 +34,12 @@ import org.apache.log4j.Logger;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import com.comcast.cdn.traffic_control.traffic_router.core.TrafficRouterException;
 import com.comcast.cdn.traffic_control.traffic_router.core.config.ConfigHandler;
 import com.comcast.cdn.traffic_control.traffic_router.core.router.TrafficRouterManager;
 import com.comcast.cdn.traffic_control.traffic_router.core.util.AbstractUpdatable;
 import com.comcast.cdn.traffic_control.traffic_router.core.util.PeriodicResourceUpdater;
 import com.comcast.cdn.traffic_control.traffic_router.core.util.ResourceUrl;
 
-@SuppressWarnings("PMD.TooManyFields")
 public class TrafficMonitorWatcher  {
 	private static final Logger LOGGER = Logger.getLogger(TrafficMonitorWatcher.class);
 
@@ -106,7 +104,6 @@ public class TrafficMonitorWatcher  {
 		}
 	}
 
-	@SuppressWarnings("PMD.CyclomaticComplexity")
 	public void init() {
 		LOGGER.info("Start");
 
@@ -119,8 +116,6 @@ public class TrafficMonitorWatcher  {
 					} catch (JSONException e) {
 						LOGGER.warn(e, e);
 						LOGGER.warn("JSON document length: " + configStr.length());
-					} catch (TrafficRouterException e) {
-						LOGGER.fatal(e, e);
 					}
 				} catch (IOException e) {
 					LOGGER.warn("error on config update", e);
@@ -256,7 +251,6 @@ public class TrafficMonitorWatcher  {
 		return hosts;
 	}
 
-	@SuppressWarnings("PMD.CyclomaticComplexity")
 	public void processConfig() {
 		final long now = System.currentTimeMillis();
 

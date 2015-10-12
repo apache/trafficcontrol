@@ -25,13 +25,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import com.comcast.cdn.traffic_control.traffic_router.core.loc.*;
 import org.apache.log4j.Logger;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import com.comcast.cdn.traffic_control.traffic_router.core.TrafficRouterException;
 import com.comcast.cdn.traffic_control.traffic_router.core.cache.Cache;
 import com.comcast.cdn.traffic_control.traffic_router.core.cache.CacheLocation;
 import com.comcast.cdn.traffic_control.traffic_router.core.cache.CacheRegister;
@@ -39,9 +37,12 @@ import com.comcast.cdn.traffic_control.traffic_router.core.cache.Cache.DeliveryS
 import com.comcast.cdn.traffic_control.traffic_router.core.ds.DeliveryService;
 import com.comcast.cdn.traffic_control.traffic_router.core.ds.DeliveryServiceMatcher;
 import com.comcast.cdn.traffic_control.traffic_router.core.ds.DeliveryServiceMatcher.Type;
+import com.comcast.cdn.traffic_control.traffic_router.core.loc.Geolocation;
+import com.comcast.cdn.traffic_control.traffic_router.core.loc.GeolocationDatabaseUpdater;
+import com.comcast.cdn.traffic_control.traffic_router.core.loc.NetworkNode;
+import com.comcast.cdn.traffic_control.traffic_router.core.loc.NetworkUpdater;
 import com.comcast.cdn.traffic_control.traffic_router.core.monitor.TrafficMonitorWatcher;
 import com.comcast.cdn.traffic_control.traffic_router.core.router.TrafficRouterManager;
-import com.comcast.cdn.traffic_control.traffic_router.core.util.TrafficOpsUtils;
 import com.comcast.cdn.traffic_control.traffic_router.core.router.StatTracker;
 
 public class ConfigHandler {
@@ -55,10 +56,8 @@ public class ConfigHandler {
 	private StatTracker statTracker;
 	private String configDir;
 	private String trafficRouterId;
-	private TrafficOpsUtils trafficOpsUtils;
 
 	private NetworkUpdater networkUpdater;
-	private FederationsWatcher federationsWatcher;
 
 	public String getConfigDir() {
 		return configDir;
@@ -75,7 +74,7 @@ public class ConfigHandler {
 		return networkUpdater;
 	}
 
-	public boolean processConfig(final String jsonStr) throws JSONException, IOException, TrafficRouterException  {
+	public boolean processConfig(final String jsonStr) throws JSONException, IOException  {
 		if (jsonStr == null) {
 			trafficRouterManager.setCacheRegister(null);
 			return false;
@@ -85,9 +84,8 @@ public class ConfigHandler {
 			final JSONObject jo = new JSONObject(jsonStr);
 			LOGGER.info("Enter: processConfig");
 			final JSONObject config = jo.getJSONObject("config");
-			final JSONObject stats = jo.getJSONObject("stats");
 
-			final long sts = getSnapshotTimestamp(stats);
+			final long sts = getSnapshotTimestamp(jo.getJSONObject("stats"));
 
 			if (sts <= getLastSnapshotTimestamp()) {
 				LOGGER.warn("Incoming TrConfig snapshot timestamp (" + sts + ") is older or equal to the loaded timestamp (" + getLastSnapshotTimestamp() + "); unable to process");
@@ -103,15 +101,12 @@ public class ConfigHandler {
 				final CacheRegister cacheRegister = new CacheRegister();
 				cacheRegister.setTrafficRouters(jo.getJSONObject("contentRouters"));
 				cacheRegister.setConfig(config);
-				cacheRegister.setStats(stats);
-				parseTrafficOpsConfig(config, stats);
+				cacheRegister.setStats(jo.getJSONObject("stats"));
 				parseDeliveryServiceConfig(jo.getJSONObject("deliveryServices"), cacheRegister);
 				parseLocationConfig(jo.getJSONObject("edgeLocations"), cacheRegister);
 				parseCacheConfig(jo.getJSONObject("contentServers"), cacheRegister);
 				parseMonitorConfig(jo.getJSONObject("monitors"));
 				NetworkNode.getInstance().clearCacheCache();
-				federationsWatcher.configure(config);
-
 				trafficRouterManager.setCacheRegister(cacheRegister);
 				setLastSnapshotTimestamp(sts);
 			} catch (ParseException e) {
@@ -144,27 +139,6 @@ public class ConfigHandler {
 		this.networkUpdater = nu;
 	}
 
-	/**
-	 * Parses the Traffic Ops config
-	 * @param config
-	 *            the {@link TrafficRouterConfiguration} config section
-	 * @param stats
-	 *            the {@link TrafficRouterConfiguration} stats section
-	 *
-	 * @throws JSONException 
-	 */
-	private void parseTrafficOpsConfig(final JSONObject config, final JSONObject stats) throws JSONException {
-		if (stats.has("tm_host")) {
-			trafficOpsUtils.setHostname(stats.getString("tm_host"));
-		} else if (stats.has("to_host")) {
-			trafficOpsUtils.setHostname(stats.getString("to_host"));
-		} else {
-			throw new JSONException("Unable to find to_host or tm_host in stats section of TrConfig; unable to build TrafficOps URLs");
-		}
-
-		trafficOpsUtils.setCdnName(stats.getString("CDN_name"));
-		trafficOpsUtils.setConfig(config);
-	}
 
 	/**
 	 * Parses the cache information from the configuration and updates the {@link CacheRegister}.
@@ -173,7 +147,6 @@ public class ConfigHandler {
 	 *            the {@link TrafficRouterConfiguration}
 	 * @throws JSONException 
 	 */
-	@SuppressWarnings({"PMD.CyclomaticComplexity", "PMD.AvoidDeeplyNestedIfStmts"})
 	private void parseCacheConfig(final JSONObject contentServers, final CacheRegister cacheRegister) throws JSONException {
 		final Map<String,Cache> map = new HashMap<String,Cache>();
 		final Map<String, List<String>> statMap = new HashMap<String, List<String>>();
@@ -421,11 +394,4 @@ public class ConfigHandler {
 		ConfigHandler.lastSnapshotTimestamp = lastSnapshotTimestamp;
 	}
 
-	public void setFederationsWatcher(final FederationsWatcher federationsWatcher) {
-		this.federationsWatcher = federationsWatcher;
-	}
-
-	public void setTrafficOpsUtils(final TrafficOpsUtils trafficOpsUtils) {
-		this.trafficOpsUtils = trafficOpsUtils;
-	}
 }

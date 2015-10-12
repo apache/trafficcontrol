@@ -19,12 +19,13 @@ package com.comcast.cdn.traffic_control.traffic_router.core.loc;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
+import java.net.Inet4Address;
+import java.net.Inet6Address;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.Map;
 import java.util.TreeMap;
 
-import com.comcast.cdn.traffic_control.traffic_router.core.util.CidrAddress;
 import org.apache.log4j.Logger;
 import org.apache.wicket.ajax.json.JSONArray;
 import org.apache.wicket.ajax.json.JSONException;
@@ -41,8 +42,11 @@ public class NetworkNode implements Comparable<NetworkNode> {
 
 	private static final String DEFAULT_SUB_STR = "0.0.0.0/0";
 
-
-	private CidrAddress cidrAddress;
+	//	int nip;
+	//	int mask;
+	byte[] nip;
+	byte[] mask;
+	int length;
 	private String loc;
 	String source = "";
 	protected Map<NetworkNode,NetworkNode> children;
@@ -50,24 +54,48 @@ public class NetworkNode implements Comparable<NetworkNode> {
 	public NetworkNode(final String str) throws NetworkNodeException {
 		this(str, null);
 	}
-
 	public NetworkNode(final String str, final String loc) throws NetworkNodeException {
 		this.source = str;
 		this.loc = loc;
+		final String[] parts = str.split("/");
+		final InetAddress address;
 
-		cidrAddress = new CidrAddress(str);
+		try {
+			address = InetAddress.getByName(parts[0]);
+		} catch (UnknownHostException ex) {
+			throw new NetworkNodeException(ex);
+		}
+
+		final byte[] bytes = address.getAddress();
+
+		if (parts.length == 1) {
+			length = bytes.length * 8;
+		} else {
+			length = Integer.parseInt(parts[1]);
+		}
+
+		if (address instanceof Inet4Address && (length > 32 || length < 0)) {
+			throw new NetworkNodeException("Rejecting IPv4 subnet with invalid netmask: " + str);
+		} else if (address instanceof Inet6Address && (length > 128 || length < 0)) {
+			throw new NetworkNodeException("Rejecting IPv6 subnet with invalid netmask: " + str);
+		}
+
+		nip=bytes;
+		mask = new byte[bytes.length];
+
+		for (int i = 0; i < length; i++) {
+			mask[i/8] |= 1<<(7-(i%8));
+		}
 	}
-
 	public String toString() {
 		String str = "";
 		try {
-			str = InetAddress.getByAddress(cidrAddress.getHostBytes()).toString().replace("/", "");
+			str = InetAddress.getByAddress(nip).toString().replace("/", "");
 		} catch (UnknownHostException e) {
 			LOGGER.warn(e,e);
 		}
-		return "["+str+"/"+ cidrAddress.getNetmaskLength()+"] - location:" + this.getLoc();
+		return "["+str+"/"+length+"] - location:" + this.getLoc();
 	}
-
 	public NetworkNode getNetwork(final String ip) throws NetworkNodeException {
 		return getNetwork(new NetworkNode(ip));
 	}
@@ -82,9 +110,29 @@ public class NetworkNode implements Comparable<NetworkNode> {
 
 	@Override
 	public int compareTo(final NetworkNode o) {
-		return cidrAddress.compareTo(o.cidrAddress);
+		return compareToNN(o);
 	}
+	//	public int compareTo(final int _ip) {
+	//		final int ip = _ip & mask;
+	//		return ip-nip;
+	//	}
+	public int compareToNN(final NetworkNode node) {
+		byte[] mask = this.mask;
+		int len = length;
+		if(length > node.length) { 
+			mask = node.mask; 
+			len = node.length; 
+		}
 
+		final int l = (int) Math.ceil((double) len / 8);
+
+		for(int i = 0; i < l; i++) {
+			final int diff = (this.nip[i] & mask[i]) - (node.nip[i] & mask[i]);
+			if(diff != 0) { return diff; }
+		}
+
+		return 0;
+	}
 	public Boolean add(final NetworkNode nn) {
 		synchronized(this) {
 			if(children == null) {
@@ -94,7 +142,7 @@ public class NetworkNode implements Comparable<NetworkNode> {
 		}
 	}
 	protected Boolean add(final Map<NetworkNode,NetworkNode> children, final NetworkNode nn) {
-		final int c = compareTo(nn);
+		final int c = compareToNN(nn);
 		// should be 0
 		if(c!=0) {
 			LOGGER.info("ERROR: "+nn);
@@ -106,7 +154,7 @@ public class NetworkNode implements Comparable<NetworkNode> {
 			return true;
 		}
 
-		if (child.cidrAddress.getNetmaskLength() == nn.cidrAddress.getNetmaskLength()) {
+		if(child.length == nn.length) {
 			// identical
 			LOGGER.debug("collision: "+nn);
 			if(this.loc != null && !this.loc.equals(child.loc)) {
@@ -117,7 +165,7 @@ public class NetworkNode implements Comparable<NetworkNode> {
 
 		// one is a subnet of another...
 
-		if (child.cidrAddress.getNetmaskLength() < nn.cidrAddress.getNetmaskLength()) {
+		if(child.length < nn.length) {
 			child.add(nn);
 			return true;
 		}
@@ -150,7 +198,7 @@ public class NetworkNode implements Comparable<NetworkNode> {
 		}
 		public NetworkNode getNetwork(final String ip) throws NetworkNodeException {
 			final NetworkNode nn = new NetworkNode(ip);
-			if (nn.cidrAddress.getHostBytes().length > 4) {
+			if(nn.nip.length > 4) {
 				return getNetwork6(nn);
 			}
 			return getNetwork(nn);
@@ -163,8 +211,6 @@ public class NetworkNode implements Comparable<NetworkNode> {
 			return c.getNetwork(ipnn);
 		}
 	}
-
-	@SuppressWarnings("PMD.CyclomaticComplexity")
 	private static NetworkNode generateTree(final JSONObject json) {
 		try {
 			final JSONObject coverageZones = json.getJSONObject("coverageZones");

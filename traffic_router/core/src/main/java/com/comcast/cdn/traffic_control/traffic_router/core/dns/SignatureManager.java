@@ -40,7 +40,6 @@ import org.xbill.DNS.Record;
 import org.xbill.DNS.TextParseException;
 import com.comcast.cdn.traffic_control.traffic_router.core.cache.CacheRegister;
 import com.comcast.cdn.traffic_control.traffic_router.core.dns.ZoneManager.ZoneCacheType;
-import com.comcast.cdn.traffic_control.traffic_router.core.util.TrafficOpsUtils;
 import com.comcast.cdn.traffic_control.traffic_router.core.util.ProtectedFetcher;
 import com.verisignlabs.dnssec.security.DnsKeyPair;
 import com.verisignlabs.dnssec.security.JCEDnsSecSigner;
@@ -52,15 +51,15 @@ public final class SignatureManager {
 	private int expirationMultiplier;
 	private CacheRegister cacheRegister;
 	private static ScheduledExecutorService keyMaintenanceExecutor;
-	private TrafficOpsUtils trafficOpsUtils;
+	private KeyServer keyServer;
 	private boolean dnssecEnabled = false;
 	private Map<String, List<DNSKeyPairWrapper>> keyMap;
 	private static ProtectedFetcher fetcher = null;
 	private ZoneManager zoneManager;
 
-	public SignatureManager(final ZoneManager zoneManager, final CacheRegister cacheRegister, final TrafficOpsUtils trafficOpsUtils) {
+	public SignatureManager(final ZoneManager zoneManager, final CacheRegister cacheRegister, final KeyServer keyServer) {
 		this.setCacheRegister(cacheRegister);
-		this.setTrafficOpsUtils(trafficOpsUtils);
+		this.setKeyServer(keyServer);
 		this.setZoneManager(zoneManager);
 		initKeyMap();
 	}
@@ -102,7 +101,6 @@ public final class SignatureManager {
 		}
 	}
 
-	@SuppressWarnings("PMD.CyclomaticComplexity")
 	private Runnable getKeyMaintenanceRunnable(final CacheRegister cacheRegister) {
 		return new Runnable() {
 			public void run() {
@@ -191,23 +189,40 @@ public final class SignatureManager {
 		return false;
 	}
 
-	@SuppressWarnings("PMD.CyclomaticComplexity")
 	private JSONObject fetchKeyPairData(final CacheRegister cacheRegister) {
 		if (!isDnssecEnabled()) {
 			return null;
 		}
 
+		final JSONObject config = cacheRegister.getConfig();
+		final JSONObject stats = cacheRegister.getStats();
 		JSONObject keyPairs = null;
 
 		try {
-			final String keyUrl = trafficOpsUtils.getUrl("keystore.api.url", "https://${toHostname}/api/1.1/cdns/name/${cdnName}/dnsseckeys.json");
-			final JSONObject config = cacheRegister.getConfig();
+			final String cdnName = stats.getString("CDN_name");
+			String keyServerHost = null;
+
+			if (stats.has("tm_host")) {
+				keyServerHost = stats.getString("tm_host");
+			} else if (stats.has("to_host")) {
+				keyServerHost = stats.getString("to_host");
+			} else {
+				LOGGER.fatal("Unable to find to_host or tm_host in stats section of our config; unable to build keyServer URL");
+				return null;
+			}
+
+			final JSONObject data = new JSONObject();
+			final String authUrl = config.optString("keystore.auth.url", "https://${tmHostname}/api/1.1/user/login").replace("${tmHostname}", keyServerHost);
+			final String keyUrl = config.optString("keystore.api.url", "https://${tmHostname}/api/1.1/cdns/name/${cdnName}/dnsseckeys.json").replace("${tmHostname}", keyServerHost).replace("${cdnName}", cdnName);
 			final int timeout = config.optInt("keystore.fetch.timeout", 30 * 1000); // socket timeouts are in ms
 			final int retries = config.optInt("keystore.fetch.retries", 5);
 			final int wait = config.optInt("keystore.fetch.wait", 5 * 1000); // 5 seconds
 
+			data.put("u", keyServer.getUsername());
+			data.put("p", keyServer.getPassword());
+
 			if (fetcher == null) {
-				fetcher = new ProtectedFetcher(trafficOpsUtils.getAuthUrl(), trafficOpsUtils.getAuthJSON().toString(), timeout);
+				fetcher = new ProtectedFetcher(authUrl, data.toString(), timeout);
 			}
 
 			for (int i = 1; i <= retries; i++) {
@@ -265,7 +280,6 @@ public final class SignatureManager {
 		return getKeyPairs(name, false, false, maxTTL);
 	}
 
-	@SuppressWarnings("PMD.CyclomaticComplexity")
 	private List<DNSKeyPairWrapper> getKeyPairs(final Name name, final boolean wantKsk, final boolean wantSigningKey, final long maxTTL) throws IOException, NoSuchAlgorithmException {
 		final List<DNSKeyPairWrapper> keyPairs = keyMap.get(name.toString());
 		final Date now = new Date();
@@ -521,6 +535,14 @@ public final class SignatureManager {
 		this.cacheRegister = cacheRegister;
 	}
 
+	protected KeyServer getKeyServer() {
+		return keyServer;
+	}
+
+	private void setKeyServer(final KeyServer keyServer) {
+		this.keyServer = keyServer;
+	}
+
 	public int getExpirationMultiplier() {
 		return expirationMultiplier;
 	}
@@ -535,9 +557,5 @@ public final class SignatureManager {
 
 	private void setZoneManager(final ZoneManager zoneManager) {
 		this.zoneManager = zoneManager;
-	}
-
-	private void setTrafficOpsUtils(final TrafficOpsUtils trafficOpsUtils) {
-		this.trafficOpsUtils = trafficOpsUtils;
 	}
 }

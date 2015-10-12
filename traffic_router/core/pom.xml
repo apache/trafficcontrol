@@ -93,7 +93,7 @@
 						<configuration>
 							<targetJdk>1.6</targetJdk>
 							<verbose>true</verbose>
-							<failurePriority>5</failurePriority>
+							<failurePriority>2</failurePriority>
 							<rulesets>
 								<ruleset>build/pmd/ruleset.xml</ruleset>
 							</rulesets>
@@ -103,7 +103,7 @@
 				<configuration>
 					<targetJdk>1.6</targetJdk>
 					<verbose>true</verbose>
-					<failurePriority>5</failurePriority>
+					<failurePriority>2</failurePriority>
 					<rulesets>
 						<ruleset>build/pmd/ruleset.xml</ruleset>
 					</rulesets>

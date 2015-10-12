@@ -1,10 +1,6 @@
 package com.comcast.cdn.traffic_control.traffic_router.core.http;
 
-import com.comcast.cdn.traffic_control.traffic_router.core.loc.Geolocation;
-
 import javax.servlet.http.HttpServletRequest;
-import java.math.RoundingMode;
-import java.text.DecimalFormat;
 import java.util.Date;
 
 public class HTTPAccessEventBuilder {
@@ -49,15 +45,6 @@ public class HTTPAccessEventBuilder {
             resultDetails = formatObject(httpAccessRecord.getResultDetails());
         }
 
-        String rloc = "-";
-        final Geolocation resultLocation = httpAccessRecord.getResultLocation();
-
-        if (resultLocation != null) {
-            final DecimalFormat decimalFormat = new DecimalFormat(".##");
-            decimalFormat.setRoundingMode(RoundingMode.DOWN);
-            rloc = decimalFormat.format(resultLocation.getLatitude()) + "," + decimalFormat.format(resultLocation.getLongitude());
-        }
-
         final StringBuilder stringBuilder = new StringBuilder(timeString)
             .append(" qtype=HTTP")
             .append(" chi=" + chi)
@@ -65,8 +52,7 @@ public class HTTPAccessEventBuilder {
             .append(" cqhm=" + cqhm)
             .append(" cqhv=" + cqhv)
             .append(" rtype=" + resultType)
-            .append(" rloc=\"" + rloc + "\"")
-            .append(" rdtl=" + resultDetails)
+            .append(" rdetails=" + resultDetails)
             .append(" rerr=\"" + rerr + "\"");
 
         if (httpAccessRecord.getResponseCode() != -1) {
