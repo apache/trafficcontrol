@@ -61,10 +61,10 @@ public class DnsRoutePerformanceTest {
     public void before() throws Exception {
         CacheRegister cacheRegister = new CacheRegister();
 
-        JSONTokener healthTokener = new JSONTokener(new FileReader("/Users/tacker001c/projects/traffic_control/traffic_router/core/src/test/db/health.json"));
+        JSONTokener healthTokener = new JSONTokener(new FileReader("src/test/db/health.json"));
         JSONObject healthObject = new JSONObject(healthTokener);
 
-        JSONTokener jsonTokener = new JSONTokener(new FileReader("/Users/tacker001c/projects/traffic_control/traffic_router/core/src/test/db/cr-config.json"));
+        JSONTokener jsonTokener = new JSONTokener(new FileReader("src/test/db/cr-config.json"));
         JSONObject configJson = new JSONObject(jsonTokener);
         JSONObject locationsJo = configJson.getJSONObject("edgeLocations");
         final Set<CacheLocation> locations = new HashSet<CacheLocation>(locationsJo.length());
@@ -79,7 +79,7 @@ public class DnsRoutePerformanceTest {
         cacheRegister.setConfiguredLocations(locations);
         CacheRegisterBuilder.parseCacheConfig(configJson.getJSONObject("contentServers"), cacheRegister);
 
-        NetworkNode.generateTree(new File("/Users/tacker001c/projects/traffic_control/traffic_router/core/src/test/db/czmap.json"));
+        NetworkNode.generateTree(new File("src/test/db/czmap.json"));
 
 
         ZoneManager zoneManager = mock(ZoneManager.class);
@@ -106,7 +106,7 @@ public class DnsRoutePerformanceTest {
 
         trafficRouter.setState(healthObject);
 
-        JSONObject coverageZoneMap = new JSONObject(new JSONTokener(new FileReader("/Users/tacker001c/projects/traffic_control/traffic_router/core/src/test/db/czmap.json")));
+        JSONObject coverageZoneMap = new JSONObject(new JSONTokener(new FileReader("src/test/db/czmap.json")));
         JSONObject coverageZones = coverageZoneMap.getJSONObject("coverageZones");
 
         Iterator iterator = coverageZones.keys();
