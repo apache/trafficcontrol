@@ -55,7 +55,7 @@ public class NetworkNode implements Comparable<NetworkNode> {
 		this.source = str;
 		this.loc = loc;
 
-		cidrAddress = new CidrAddress(str);
+		cidrAddress = CidrAddress.fromString(str);
 	}
 
 	public String toString() {
@@ -94,9 +94,7 @@ public class NetworkNode implements Comparable<NetworkNode> {
 		}
 	}
 	protected Boolean add(final Map<NetworkNode,NetworkNode> children, final NetworkNode nn) {
-		final int c = compareTo(nn);
-		// should be 0
-		if(c!=0) {
+		if(compareTo(nn)!=0) {
 			LOGGER.info("ERROR: "+nn);
 			return false;
 		}
@@ -150,7 +148,7 @@ public class NetworkNode implements Comparable<NetworkNode> {
 		}
 		public NetworkNode getNetwork(final String ip) throws NetworkNodeException {
 			final NetworkNode nn = new NetworkNode(ip);
-			if (nn.cidrAddress.getHostBytes().length > 4) {
+			if (nn.cidrAddress.isIpV6()) {
 				return getNetwork6(nn);
 			}
 			return getNetwork(nn);

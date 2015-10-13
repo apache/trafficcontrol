@@ -26,4 +26,9 @@ public class DNSRequest extends Request {
 	public void setQtype(final int qtype) {
 		this.qtype = qtype;
 	}
+
+	@Override
+	public String getType() {
+		return "dns";
+	}
 }

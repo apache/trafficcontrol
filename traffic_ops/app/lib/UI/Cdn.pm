@@ -397,11 +397,13 @@ sub aserver {
 			my $img     = "";
 
 			if ( $row->type->name eq "MID" || $row->type->name eq "EDGE" ) {
-				$aux_url
-					= "/visualstatus/all:"
-					. $row->cachegroup->name . ":"
-					. $row->host_name;
-				$img = "graph.png";
+				my $pparam =
+					$self->db->resultset('ProfileParameter')
+					->search( { -and => [ 'parameter.name' => 'server_graph_url', 'profile.name' => 'GLOBAL' ] }, { prefetch => [ 'parameter', 'profile' ] } )
+					->single();
+				my $srvg_url = defined($pparam) ? $pparam->parameter->value : undef;
+				$aux_url = $srvg_url . $row->host_name;
+				$img     = "graph.png";
 			}
 			elsif ( $row->type->name eq "CCR" ) {
 				my $rs_param = $self->db->resultset('Parameter')->search(

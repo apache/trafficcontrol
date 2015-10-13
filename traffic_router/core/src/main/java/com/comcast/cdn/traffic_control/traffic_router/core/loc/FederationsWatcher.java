@@ -2,28 +2,28 @@ package com.comcast.cdn.traffic_control.traffic_router.core.loc;
 
 import com.comcast.cdn.traffic_control.traffic_router.core.util.ProtectedFetcher;
 import com.comcast.cdn.traffic_control.traffic_router.core.util.TrafficOpsUtils;
-
+import org.apache.log4j.Logger;
 import org.json.JSONException;
 import org.json.JSONObject;
-import org.apache.log4j.Logger;
 
-import java.io.*;
+import java.io.File;
+import java.io.FileReader;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.net.URL;
-import java.util.List;
 
 public class FederationsWatcher extends AbstractServiceUpdater {
     private static final Logger LOGGER = Logger.getLogger(FederationsWatcher.class);
 
     private URL authorizationURL;
     private String postData;
-    private long pollingInterval;
     private ProtectedFetcher fetcher;
-    private List<Federation> federations;
     private TrafficOpsUtils trafficOpsUtils;
+    private FederationRegistry federationRegistry;
 
     public void configure(final URL authorizationURL, final String postData, final URL federationsURL, final long pollingInterval) {
         if (authorizationURL.equals(this.authorizationURL) && postData.equals(this.postData) &&
-            federationsURL.equals(federationsURL) && pollingInterval == this.pollingInterval) {
+            federationsURL.equals(federationsURL) && pollingInterval == getPollingInterval()) {
             return;
         }
 
@@ -62,16 +62,12 @@ public class FederationsWatcher extends AbstractServiceUpdater {
             interval = config.getLong("federationmapping.polling.interval");
         } catch (JSONException e) {
             LOGGER.warn("Failed getting configuration for FederationsWatcher Polling Interval " + e.getMessage());
-            interval = this.pollingInterval;
+            interval = getPollingInterval();
         }
 
         if (authUrl != null && jsonData != null && fedsUrl != null && interval != -1L) {
             configure(authUrl, jsonData, fedsUrl, interval);
         }
-    }
-
-    public List<Federation> getFederations() {
-        return federations;
     }
 
     @Override
@@ -91,7 +87,7 @@ public class FederationsWatcher extends AbstractServiceUpdater {
         new FileReader(existingDB).read(jsonData);
         final String json = new String(jsonData);
 
-        federations = new FederationsBuilder().fromJSON(json);
+        federationRegistry.setFederations(new FederationsBuilder().fromJSON(json));
 
         setLoaded(true);
         return true;
@@ -130,6 +126,10 @@ public class FederationsWatcher extends AbstractServiceUpdater {
         }
 
         return databaseFile;
+    }
+
+    public void setFederationRegistry(final FederationRegistry federationRegistry) {
+        this.federationRegistry = federationRegistry;
     }
 
     public void setTrafficOpsUtils(final TrafficOpsUtils trafficOpsUtils) {

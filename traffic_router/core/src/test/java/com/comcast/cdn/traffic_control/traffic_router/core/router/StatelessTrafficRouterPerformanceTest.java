@@ -52,7 +52,7 @@ public class StatelessTrafficRouterPerformanceTest  extends TrafficRouter {
     public StatelessTrafficRouterPerformanceTest(CacheRegister cr,
 			GeolocationService geolocationService, ObjectPool hashFunctionPool)
 			throws IOException, JSONException, TrafficRouterException {
-		super(cr, geolocationService, null, hashFunctionPool, null, new TrafficOpsUtils());
+		super(cr, geolocationService, null, hashFunctionPool, null, new TrafficOpsUtils(), null);
 	}
 
 	@Before
@@ -139,7 +139,7 @@ public class StatelessTrafficRouterPerformanceTest  extends TrafficRouter {
 			return null;
 		}
 		final StatTracker.Track track = StatTracker.getTrack();
-		List<Cache> caches = selectCache(request, ds, track, true);
+		List<Cache> caches = selectCache(request, ds, track);
 		Dispersion dispersion = ds.getDispersion();
 		Cache cache = dispersion.getCache(consistentHash(caches, request.getPath()));
 		try {
