@@ -293,41 +293,43 @@ public class TrafficRouter {
 		final CacheLocation cacheLocation = getCoverageZoneCache(request.getClientIP());
 		List<Cache> caches = selectCachesByCZ(ds, cacheLocation, track);
 
-		if (caches == null) {
-			if (ds.isCoverageZoneOnly()) {
-				LOGGER.warn(String.format("No Cache found in CZM (%s, ip=%s, path=%s), geo not supported", request.getType(), request.getClientIP(), request.getHostname()));
-				track.setResult(ResultType.MISS);
-				track.setResultDetails(ResultDetails.DS_CZ_ONLY);
-				result.setAddresses(ds.getFailureDnsResponse(request, track));
-				return result;
-			}
-
-			try {
-				final List<InetRecord> inetRecords = federationRegistry.findInetRecords(ds.getId(), CidrAddress.fromString(request.getClientIP()));
-
-				if (inetRecords != null) {
-					result.setAddresses(inetRecords);
-					return result;
-				}
-			}
-			catch (NetworkNodeException e) {
-				LOGGER.error("Is this even possible....? I don't think that things will get far. Bad client address: '" + request.getClientIP() + "'");
-			}
+		if (caches != null) {
+			track.setResult(ResultType.CZ);
+			result.setAddresses(inetRecordsFromCaches(ds, caches));
+			return result;
 		}
 
-		LOGGER.warn(String.format("No Cache found by CZM (%s, ip=%s, path=%s)", request.getType(), request.getClientIP(), request.getHostname()));
-
-		caches = selectCachesByGeo(request, ds, cacheLocation, track);
-
-		if (caches == null) {
+		if (ds.isCoverageZoneOnly()) {
+			LOGGER.info(String.format("No Cache found in CZM (%s, ip=%s, path=%s), geo not supported", request.getType(), request.getClientIP(), request.getHostname()));
 			track.setResult(ResultType.MISS);
+			track.setResultDetails(ResultDetails.DS_CZ_ONLY);
 			result.setAddresses(ds.getFailureDnsResponse(request, track));
 			return result;
 		}
 
-		track.setResult(ResultType.GEO);
-		final List<InetRecord> addresses = inetRecordsFromCaches(ds, caches);
-		result.setAddresses(addresses);
+		try {
+			final List<InetRecord> inetRecords = federationRegistry.findInetRecords(ds.getId(), CidrAddress.fromString(request.getClientIP()));
+
+			if (inetRecords != null && !inetRecords.isEmpty()) {
+				result.setAddresses(inetRecords);
+				track.setResult(ResultType.FED);
+				return result;
+			}
+		} catch (NetworkNodeException e) {
+			LOGGER.error("Bad client address: '" + request.getClientIP() + "'");
+		}
+
+		LOGGER.info(String.format("No Cache found by CZM (%s, ip=%s, path=%s)", request.getType(), request.getClientIP(), request.getHostname()));
+		caches = selectCachesByGeo(request, ds, cacheLocation, track);
+
+		if (caches != null) {
+			track.setResult(ResultType.GEO);
+			result.setAddresses(inetRecordsFromCaches(ds, caches));
+		}
+		else {
+			track.setResult(ResultType.MISS);
+			result.setAddresses(ds.getFailureDnsResponse(request, track));
+		}
 
 		return result;
 	}
@@ -373,7 +375,7 @@ public class TrafficRouter {
 	}
 
 	private List<Cache> selectCachesByCZ(final DeliveryService ds, final CacheLocation cacheLocation, final Track track) {
-		if (!ds.isLocationAvailable(cacheLocation)) {
+		if (cacheLocation == null || !ds.isLocationAvailable(cacheLocation)) {
 			return null;
 		}
 
@@ -453,6 +455,7 @@ public class TrafficRouter {
 				return cl2;
 			}
 		}
+
 		return null;
 	}
 
