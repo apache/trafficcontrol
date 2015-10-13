@@ -270,7 +270,6 @@ public class TrafficRouter {
 		return caches;
 	}
 
-	@SuppressWarnings({"PMD.CyclomaticComplexity", "PMD.NPathComplexity"})
 	public DNSRouteResult route(final DNSRequest request, final Track track) throws GeolocationException {
 		track.setRouteType(RouteType.DNS, request.getHostname());
 
@@ -294,7 +293,13 @@ public class TrafficRouter {
 		final CacheLocation cacheLocation = getCoverageZoneCache(request.getClientIP());
 		List<Cache> caches = selectCachesByCZ(ds, cacheLocation, track);
 
-		if (caches == null && ds.isCoverageZoneOnly()) {
+		if (caches != null) {
+			track.setResult(ResultType.CZ);
+			result.setAddresses(inetRecordsFromCaches(ds, caches));
+			return result;
+		}
+
+		if (ds.isCoverageZoneOnly()) {
 			LOGGER.info(String.format("No Cache found in CZM (%s, ip=%s, path=%s), geo not supported", request.getType(), request.getClientIP(), request.getHostname()));
 			track.setResult(ResultType.MISS);
 			track.setResultDetails(ResultDetails.DS_CZ_ONLY);
@@ -302,40 +307,29 @@ public class TrafficRouter {
 			return result;
 		}
 
-		if (caches == null) {
-			try {
-				final List<InetRecord> inetRecords = federationRegistry.findInetRecords(ds.getId(), CidrAddress.fromString(request.getClientIP()));
+		try {
+			final List<InetRecord> inetRecords = federationRegistry.findInetRecords(ds.getId(), CidrAddress.fromString(request.getClientIP()));
 
-				if (inetRecords != null && !inetRecords.isEmpty()) {
-					result.setAddresses(inetRecords);
-					track.setResult(ResultType.FED);
-					return result;
-				}
+			if (inetRecords != null && !inetRecords.isEmpty()) {
+				result.setAddresses(inetRecords);
+				track.setResult(ResultType.FED);
+				return result;
 			}
-			catch (NetworkNodeException e) {
-				LOGGER.error("Bad client address: '" + request.getClientIP() + "'");
-			}
+		} catch (NetworkNodeException e) {
+			LOGGER.error("Bad client address: '" + request.getClientIP() + "'");
 		}
+
+		LOGGER.info(String.format("No Cache found by CZM (%s, ip=%s, path=%s)", request.getType(), request.getClientIP(), request.getHostname()));
+		caches = selectCachesByGeo(request, ds, cacheLocation, track);
 
 		if (caches != null) {
-			track.setResult(ResultType.CZ);
+			track.setResult(ResultType.GEO);
+			result.setAddresses(inetRecordsFromCaches(ds, caches));
 		}
 		else {
-			LOGGER.info(String.format("No Cache found by CZM (%s, ip=%s, path=%s)", request.getType(), request.getClientIP(), request.getHostname()));
-			caches = selectCachesByGeo(request, ds, cacheLocation, track);
-			if (caches != null) {
-				track.setResult(ResultType.GEO);
-			}
-		}
-
-		if (caches == null) {
 			track.setResult(ResultType.MISS);
 			result.setAddresses(ds.getFailureDnsResponse(request, track));
-			return result;
 		}
-
-		final List<InetRecord> addresses = inetRecordsFromCaches(ds, caches);
-		result.setAddresses(addresses);
 
 		return result;
 	}
