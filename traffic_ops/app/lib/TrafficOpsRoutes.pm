@@ -413,6 +413,8 @@ sub api_routes {
 	$r->get( "/api/$version/federations" => [ format => [qw(json)] ] )->over( authenticated => 1 )
 		->to( 'Federation#external_index', namespace => $namespace );
 	$r->post("/api/$version/federations")->over( authenticated => 1 )->to( 'Federation#add', namespace => $namespace );
+	$r->delete("/api/$version/federations")->over( authenticated => 1 )->to( 'Federation#delete', namespace => $namespace );
+	$r->put("/api/$version/federations")->over( authenticated => 1 )->to( 'Federation#update', namespace => $namespace );
 
 	# -- CDN -- #NEW
 	$r->get( "/api/$version/cdns"            => [ format => [qw(json)] ] )->over( authenticated => 1 )->to( 'Cdn#index', namespace => $namespace );

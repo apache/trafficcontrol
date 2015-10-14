@@ -33,16 +33,16 @@ use Data::Dumper;
 
 BEGIN { $ENV{MOJO_MODE} = "test" }
 
-my $t      = Test::Mojo->new('TrafficOps');
+my $t      = Test::Mojo->new("TrafficOps");
 my $dbh    = Schema->database_handle;
 my $schema = Schema->connect_to_database;
 
 #unload data for a clean test
 Test::TestHelper->unload_core_data($schema);
-Test::TestHelper->teardown( $schema, 'Federation' );
-Test::TestHelper->teardown( $schema, 'FederationDeliveryservice' );
-Test::TestHelper->teardown( $schema, 'FederationFederationResolver' );
-Test::TestHelper->teardown( $schema, 'FederationResolver' );
+Test::TestHelper->teardown( $schema, "Federation" );
+Test::TestHelper->teardown( $schema, "FederationDeliveryservice" );
+Test::TestHelper->teardown( $schema, "FederationFederationResolver" );
+Test::TestHelper->teardown( $schema, "FederationResolver" );
 
 #load core test data
 Test::TestHelper->load_core_data($schema);
@@ -64,36 +64,105 @@ Test::TestHelper->load_all_fixtures($federation);
 my $fmd = Fixtures::FederationDeliveryservice->new($schema_values);
 Test::TestHelper->load_all_fixtures($fmd);
 
-my $federation_federation_resolver = Fixtures::FederationFederationResolver->new($schema_values);
+my $federation_federation_resolver
+  = Fixtures::FederationFederationResolver->new($schema_values);
 Test::TestHelper->load_all_fixtures($federation_federation_resolver);
 
 my $ft = Fixtures::FederationTmuser->new($schema_values);
 Test::TestHelper->load_all_fixtures($ft);
 
-ok $t->post_ok( '/login', => form => { u => 'federation', p => Test::TestHelper::FEDERATION_USER_PASSWORD } )->status_is(302)
+### Admin User ###
+ok $t->post_ok( "/login", => form =>{ u => "admin", p => Test::TestHelper::ADMIN_USER_PASSWORD } )->status_is(302)
   ->or( sub { diag $t->tx->res->content->asset->{content}; } );
 
-$t->get_ok("/internal/api/1.2/federations.json")->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } )
-  ->json_is( "/response/0/deliveryService", "test-ds1" )
-  ->json_is( "/response/0/mappings/0/cname", "cname1." )
-  ->json_is( "/response/0/mappings/0/ttl", "86400" )
+## Get Internal API
+$t->get_ok( "/internal/api/1.2/federations.json" )->status_is(200)
+  ->or( sub { diag $t->tx->res->content->asset->{content}; } )
+  ->json_is( "/response/0/deliveryService",       "test-ds1" )
+  ->json_is( "/response/0/mappings/0/cname",      "cname1." )
+  ->json_is( "/response/0/mappings/0/ttl",        "86400" )
   ->json_is( "/response/0/mappings/0/resolve6/0", "FE80::0202:B3FF:FE1E:8329/128" )
   ->json_is( "/response/0/mappings/0/resolve4/0", "127.0.0.1/32" )
 
-  ->json_is( "/response/0/deliveryService", "test-ds1" )
+  ->json_is( "/response/0/deliveryService",  "test-ds1" )
   ->json_is( "/response/0/mappings/1/cname", "cname2." )
-  ->json_is( "/response/0/mappings/1/ttl", "86400" )
+  ->json_is( "/response/0/mappings/1/ttl",   "86400" )
 
-  ->json_is( "/response/1/deliveryService", "test-ds2" )
+  ->json_is( "/response/1/deliveryService",  "test-ds2" )
   ->json_is( "/response/1/mappings/0/cname", "cname4." )
-  ->json_is( "/response/1/mappings/0/ttl", "86400" );
+  ->json_is( "/response/1/mappings/0/ttl",   "86400" );
 
-ok $t->get_ok('/logout')->status_is(302)->or( sub { diag $t->tx->res->content->asset->{content}; } );
+$t->get_ok( "/api/1.2/federations.json" )->status_is(200)
+  ->or( sub { diag $t->tx->res->content->asset->{content}; } )
+  ->json_is( "/response/0/deliveryService",       "test-ds1" )
+  ->json_is( "/response/0/mappings/0/cname",      "cname1." )
+  ->json_is( "/response/0/mappings/0/ttl",        "86400" )
+  ->json_is( "/response/0/mappings/0/resolve6/0", "FE80::0202:B3FF:FE1E:8329/128" )
+  ->json_is( "/response/0/mappings/0/resolve4/0", "127.0.0.1/32" )
 
-Test::TestHelper->teardown( $schema, 'Federation' );
-Test::TestHelper->teardown( $schema, 'FederationDeliveryservice' );
-Test::TestHelper->teardown( $schema, 'FederationFederationResolver' );
-Test::TestHelper->teardown( $schema, 'FederationResolver' );
+  ->json_is( "/response/0/deliveryService",  "test-ds1" )
+  ->json_is( "/response/0/mappings/1/cname", "cname2." )
+  ->json_is( "/response/0/mappings/1/ttl",   "86400" )
+
+  ->json_is( "/response/1/deliveryService",  "test-ds2" )
+  ->json_is( "/response/1/mappings/0/cname", "cname4." )
+  ->json_is( "/response/1/mappings/0/ttl",   "86400" );
+
+ok $t->get_ok( "/logout" )->status_is(302)
+  ->or( sub { diag $t->tx->res->content->asset->{content}; } );
+
+### Federation User ###
+ok $t->post_ok( "/login", => form => { u => "federation", p => Test::TestHelper::FEDERATION_USER_PASSWORD } )->status_is(302)
+  ->or( sub { diag $t->tx->res->content->asset->{content}; } );
+
+## Delete API
+$t->delete_ok( "/api/1.2/federations" )->status_is(200)
+  ->json_has( "Successfully deleted all federations for user federation" )
+  ->or( sub { diag $t->tx->res->content->asset->{content}; } );
+
+## Add API
+$t->post_ok( "/api/1.2/federations",
+  json => {
+    federations => [
+      {   deliveryService => "test-ds1",
+        mappings        => [
+          { resolve4 => [ "127.0.0.1/32" ] },
+        ]
+      },
+    ]
+  }
+  )->status_is(200)->json_has( "Successfully created federations" )
+  ->or( sub { diag $t->tx->res->content->asset->{content}; } );
+
+## Get External API
+$t->get_ok( "/api/1.2/federations.json" )->status_is(200)
+  ->or( sub { diag $t->tx->res->content->asset->{content}; } )
+  ->json_is( "/response/0/deliveryService",       "test-ds1" )
+  ->json_is( "/response/0/mappings/0/cname",      "cname1." )
+  ->json_is( "/response/0/mappings/0/ttl",        "86400" )
+  ->json_is( "/response/0/mappings/0/resolve4/0", "127.0.0.1/32" );
+
+## Update API
+$t->put_ok( "/api/1.2/federations",
+  json => {
+    federations => [
+      {   deliveryService => "test-ds1",
+        mappings        => [
+          { resolve4 => [ "127.0.0.1/32" ] },
+        ]
+      },
+    ]
+  }
+  )->status_is(200)->json_has( "Successfully created federations" )
+  ->or( sub { diag $t->tx->res->content->asset->{content}; } );
+
+ok $t->get_ok( "/logout" )->status_is(302)
+  ->or( sub { diag $t->tx->res->content->asset->{content}; } );
+
+Test::TestHelper->teardown( $schema, "Federation" );
+Test::TestHelper->teardown( $schema, "FederationDeliveryservice" );
+Test::TestHelper->teardown( $schema, "FederationFederationResolver" );
+Test::TestHelper->teardown( $schema, "FederationResolver" );
 
 $dbh->disconnect();
 done_testing();
