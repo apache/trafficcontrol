@@ -334,7 +334,7 @@ sub gen_crconfig_json {
 				}
 			}
 		}
-
+		my $domains;
 		foreach my $regex ( sort keys %{$regex_to_props} ) {
 			my $set_number = $regex_to_props->{$regex}->{'set_number'};
 			my $pattern    = $regex_to_props->{$regex}->{'pattern'};
@@ -346,6 +346,12 @@ sub gen_crconfig_json {
 					},
 					{ 'match-type' => 'HOST', 'regex' => $pattern }
 				);
+				my $host = $pattern;
+				$host =~ s/\\//g;
+				$host =~ s/\.\*//g;
+				$host =~ s/\.//g;\
+				push @$domains, "$host.$ccr_domain_name";
+
 			}
 			elsif ( $type eq 'PATH_REGEXP' ) {
 				push(
@@ -364,6 +370,7 @@ sub gen_crconfig_json {
 				);
 			}
 		}
+		$data_obj->{'deliveryServices'}->{ $row->xml_id }->{'domains'} = $domains;
 
 		if ( scalar(@server_subrows) ) {
 
