@@ -20,6 +20,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import com.comcast.cdn.traffic_control.traffic_router.core.loc.Geolocation;
 import org.apache.log4j.Logger;
 
 import com.comcast.cdn.traffic_control.traffic_router.core.cache.CacheRegister;
@@ -80,7 +81,7 @@ public class StatTracker {
 			DNS,HTTP
 		}
 		public static enum ResultType {
-			ERROR, CZ, GEO, MISS, STATIC_ROUTE, DS_REDIRECT, DS_MISS, INIT
+			ERROR, CZ, GEO, MISS, STATIC_ROUTE, DS_REDIRECT, DS_MISS, INIT, FED
 		}
 		public enum ResultDetails {
 			NO_DETAILS, DS_NOT_FOUND, DS_NO_BYPASS, DS_BYPASS, DS_CZ_ONLY, DS_CLIENT_GEO_UNSUPPORTED, GEO_NO_CACHE_FOUND
@@ -90,6 +91,7 @@ public class StatTracker {
 		String fqdn;
 		ResultType result = ResultType.ERROR;
 		ResultDetails resultDetails = ResultDetails.NO_DETAILS;
+		Geolocation resultLocation;
 
 		public Track() {
 			start();
@@ -113,6 +115,15 @@ public class StatTracker {
 		public ResultDetails getResultDetails() {
 			return resultDetails;
 		}
+
+		public void setResultLocation(final Geolocation resultLocation) {
+			this.resultLocation = resultLocation;
+		}
+
+		public Geolocation getResultLocation() {
+			return resultLocation;
+		}
+
 		public final void start() {
 			time = System.currentTimeMillis();
 		}

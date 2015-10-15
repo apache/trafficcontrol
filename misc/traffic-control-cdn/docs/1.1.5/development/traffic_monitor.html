@@ -1,0 +1,390 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Traffic Monitor &mdash; Traffic Control 1.1.5-dev documentation </title>
+  
+
+  
+  
+    <link rel="shortcut icon" href="../_static/favicon.ico"/>
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  
+
+  
+    <link rel="stylesheet" href="../_static/theme_overrides.css" type="text/css" />
+  
+
+  
+    <link rel="top" title="Traffic Control 1.1.5-dev documentation" href="../index.html"/>
+        <link rel="up" title="Developer’s Guide" href="index.html"/>
+        <link rel="next" title="Traffic Monitor APIs" href="traffic_monitor/traffic_monitor_api.html"/>
+        <link rel="prev" title="Traffic Router API" href="traffic_router/traffic_router_api.html"/> 
+
+  
+  <script src="_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-nav-search">
+        
+
+        
+          <a href="/" class="icon icon-home"> Traffic Control
+        
+
+        
+          
+          <img src="../_static/tc_logo.png" class="logo" />
+        
+        </a>
+
+        
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+        
+      </div>
+
+      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+        
+          
+          
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../basics/index.html">CDN Basics</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../basics/content_delivery_networks.html">Content Delivery Networks</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../basics/http_11.html">HTTP 1.1</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../basics/caching_proxies.html">Caching Proxies</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../basics/cache_revalidation.html">Cache Control Headers and Revalidation</a></li>
+</ul>
+</li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../overview/index.html">Traffic Control Overview</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../overview/introduction.html">Introduction</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../overview/traffic_ops.html">Traffic Ops</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../overview/traffic_router.html">Traffic Router</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../overview/traffic_monitor.html">Traffic Monitor</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../overview/traffic_stats.html">Traffic Stats</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../overview/traffic_portal.html">Traffic Portal</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../overview/traffic_server.html">Traffic Server</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../overview/traffic_vault.html">Traffic Vault</a></li>
+</ul>
+</li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../admin/index.html">Administrator&#8217;s Guide</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../admin/traffic_ops_install.html">Installing Traffic Ops</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../admin/traffic_ops_config.html">Configuring Traffic Ops</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../admin/traffic_ops_using.html">Using Traffic Ops</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../admin/traffic_ops_extensions.html">Managing Traffic Ops Extensions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../admin/traffic_monitor.html">Traffic Monitor Administration</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../admin/traffic_router.html">Traffic Router Administration</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../admin/traffic_stats.html">Traffic Stats Administration</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../admin/traffic_server.html">Traffic Server Administration</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../admin/traffic_vault.html">Traffic Vault Administration</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../admin/quick_howto/index.html">Quick How To Guides</a></li>
+</ul>
+</li>
+</ul>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="index.html">Developer&#8217;s Guide</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="traffic_ops.html">Traffic Ops</a></li>
+<li class="toctree-l2"><a class="reference internal" href="traffic_router.html">Traffic Router</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="">Traffic Monitor</a></li>
+<li class="toctree-l2"><a class="reference internal" href="traffic_stats.html">Traffic Stats</a></li>
+<li class="toctree-l2"><a class="reference internal" href="traffic_server.html">Traffic Server</a></li>
+</ul>
+</li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../faq/index.html">FAQ</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../faq/general.html">General</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../faq/development.html">Development</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../faq/administration.html">Running a Traffic Control CDN</a></li>
+</ul>
+</li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../glossary.html">Glossary</a></li>
+</ul>
+
+          
+        
+      </div>
+      &nbsp;
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="../index.html">Traffic Control</a>
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="../index.html">Traffic Control 1.1.5-dev</a> &raquo;</li>
+      
+          <li><a href="index.html">Developer&#8217;s Guide</a> &raquo;</li>
+      
+    <li>Traffic Monitor</li>
+      <li class="wy-breadcrumbs-aside">
+        
+          <a href="../_sources/development/traffic_monitor.txt" rel="nofollow"> View page source</a>
+        
+      </li>
+  </ul>
+  <hr/>
+</div>
+ 		  
+    		  <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      		  
+        		  <a href="traffic_monitor/traffic_monitor_api.html" class="btn btn-neutral float-right" title="Traffic Monitor APIs">Next <span class="fa fa-arrow-circle-right"></span></a>
+      		  
+      		  
+        		  <a href="traffic_router/traffic_router_api.html" class="btn btn-neutral" title="Traffic Router API"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      		  
+    		  </div>
+  		  
+          <div role="main" class="document">
+            
+  <div class="section" id="traffic-monitor">
+<h1>Traffic Monitor<a class="headerlink" href="#traffic-monitor" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="introduction">
+<h2>Introduction<a class="headerlink" href="#introduction" title="Permalink to this headline">¶</a></h2>
+<p>Traffic Monitor is a Java Tomcat application that monitors caches, provides health state information to Traffic Router, and collects statistics for use in tools such as Traffic Ops and Traffic Stats.  The health state provided by Traffic Monitor is used by Traffic Router to control which caches are available on the CDN.</p>
+</div>
+<div class="section" id="software-requirements">
+<h2>Software Requirements<a class="headerlink" href="#software-requirements" title="Permalink to this headline">¶</a></h2>
+<p>To work on Traffic Monitor you need a *nix (MacOS and Linux are most commonly used) environment that has the following installed:</p>
+<ul class="simple">
+<li>Eclipse &gt;= Kepler SR2 (or another Java IDE)</li>
+<li>Maven &gt;= 3.3.1</li>
+<li>JDK &gt;= 6.0</li>
+</ul>
+</div>
+<div class="section" id="traffic-monitor-project-tree-overview">
+<h2>Traffic Monitor Project Tree Overview<a class="headerlink" href="#traffic-monitor-project-tree-overview" title="Permalink to this headline">¶</a></h2>
+<ul>
+<li><p class="first"><code class="docutils literal"><span class="pre">traffic_control/traffic_monitor/</span></code> - base directory for Traffic Monitor</p>
+<blockquote>
+<div><ul>
+<li><p class="first"><code class="docutils literal"><span class="pre">etc/</span></code> - Miscellaneous simulator utilities</p>
+</li>
+<li><p class="first"><code class="docutils literal"><span class="pre">src/main</span></code> - Main source directory for the Traffic Monitor</p>
+<blockquote>
+<div><ul class="simple">
+<li><code class="docutils literal"><span class="pre">bin/</span></code> - Configuration tools</li>
+<li><code class="docutils literal"><span class="pre">conf/</span></code> - Configuration files</li>
+<li><code class="docutils literal"><span class="pre">java/</span></code> - Java source code for Traffic Monitor</li>
+<li><code class="docutils literal"><span class="pre">opt/tomcat/conf</span></code> - Contains Tomcat configuration file(s) pulled in during an RPM build</li>
+<li><code class="docutils literal"><span class="pre">resources/</span></code> - Resources pulled in during an RPM build</li>
+<li><code class="docutils literal"><span class="pre">scripts/</span></code> - Scripts used by the RPM build process</li>
+<li><code class="docutils literal"><span class="pre">webapp/</span></code> - Java webapp resources</li>
+</ul>
+</div></blockquote>
+</li>
+<li><p class="first"><code class="docutils literal"><span class="pre">src/test</span></code> - Test source directory for Traffic Monitor</p>
+<blockquote>
+<div><ul class="simple">
+<li><code class="docutils literal"><span class="pre">java/</span></code> - JUnit based unit tests for Traffic Monitor</li>
+<li><code class="docutils literal"><span class="pre">resources/conf</span></code> - Configuration files used by unit tests</li>
+<li><code class="docutils literal"><span class="pre">resources/db</span></code> - Files downloaded by unit tests</li>
+<li><code class="docutils literal"><span class="pre">resources/var</span></code> - Files generated by unit tests</li>
+</ul>
+</div></blockquote>
+</li>
+</ul>
+</div></blockquote>
+</li>
+</ul>
+</div>
+<div class="section" id="java-formatting-conventions">
+<h2>Java Formatting Conventions<a class="headerlink" href="#java-formatting-conventions" title="Permalink to this headline">¶</a></h2>
+<p>None at this time.  The codebase will eventually be formatted per Java standards.</p>
+</div>
+<div class="section" id="installing-the-developer-environment">
+<h2>Installing The Developer Environment<a class="headerlink" href="#installing-the-developer-environment" title="Permalink to this headline">¶</a></h2>
+<p>To install the Traffic Monitor Developer environment:</p>
+<ol class="arabic simple">
+<li>Clone the traffic_control repository using Git.</li>
+<li>Change directories into <code class="docutils literal"><span class="pre">traffic_control/traffic_monitor</span></code>.</li>
+<li>Edit the following parameters in src/test/resources/conf/traffic_monitor_config.js:</li>
+</ol>
+<table border="1" class="docutils">
+<colgroup>
+<col width="22%" />
+<col width="78%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">Parameter</th>
+<th class="head">Value</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td><code class="docutils literal"><span class="pre">tm.hostname</span></code></td>
+<td>FQDN of the Traffic Ops instance (do not include <a class="reference external" href="http://">http://</a>).</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal"><span class="pre">tm.username</span></code></td>
+<td>Admin username for Traffic Ops</td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal"><span class="pre">tm.password</span></code></td>
+<td>Password for admin user</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal"><span class="pre">cdnName</span></code></td>
+<td>Name of the CDN this Traffic Monitor will monitor</td>
+</tr>
+</tbody>
+</table>
+<ol class="arabic" start="4">
+<li><p class="first">Import the existing git repo into Eclipse:</p>
+<blockquote>
+<div><ol class="loweralpha simple">
+<li>File -&gt; Import -&gt; Git -&gt; Projects from Git; Next</li>
+<li>Existing local repository; Next</li>
+<li>Add -&gt; browse to find <code class="docutils literal"><span class="pre">traffic_control</span></code>; Add</li>
+<li>Select <code class="docutils literal"><span class="pre">traffic_control</span></code>; Next</li>
+<li>Ensure &#8220;Import existing projects&#8221; is selected, expand <code class="docutils literal"><span class="pre">traffic_control</span></code>, select <code class="docutils literal"><span class="pre">traffic_monitor</span></code>; Next</li>
+<li>Ensure <code class="docutils literal"><span class="pre">traffic_monitor</span></code> is checked; Finish</li>
+<li>Ensure <code class="docutils literal"><span class="pre">traffic_monitor</span></code> has been opened by Eclipse after importing</li>
+</ol>
+</div></blockquote>
+</li>
+<li><p class="first">Run <code class="docutils literal"><span class="pre">mvn</span> <span class="pre">clean</span> <span class="pre">verify</span></code> from the <code class="docutils literal"><span class="pre">traffic_monitor</span></code> directory</p>
+</li>
+<li><p class="first">Start the embedded Jetty instance from within Eclipse</p>
+<blockquote>
+<div><ol class="loweralpha">
+<li><p class="first">In the package explorer, expand <code class="docutils literal"><span class="pre">traffic_monitor</span></code></p>
+</li>
+<li><p class="first">Expand <code class="docutils literal"><span class="pre">src/test/java</span></code></p>
+</li>
+<li><p class="first">Expand the package <code class="docutils literal"><span class="pre">com.comcast.cdn.traffic_control.traffic_monitor</span></code></p>
+</li>
+<li><p class="first">Open and run <code class="docutils literal"><span class="pre">Start.java</span></code></p>
+<blockquote>
+<div><div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">If an error is displayed in the Console, run <code class="docutils literal"><span class="pre">mvn</span> <span class="pre">clean</span> <span class="pre">verify</span></code> from the <code class="docutils literal"><span class="pre">traffic_monitor</span></code> directory</p>
+</div>
+</div></blockquote>
+</li>
+<li><p class="first">With a web browser, navigate to <a class="reference external" href="http://localhost:8080">http://localhost:8080</a></p>
+</li>
+</ol>
+</div></blockquote>
+</li>
+</ol>
+</div>
+<div class="section" id="test-cases">
+<h2>Test Cases<a class="headerlink" href="#test-cases" title="Permalink to this headline">¶</a></h2>
+<p>Unit tests can be executed using Maven by running <code class="docutils literal"><span class="pre">mvn</span> <span class="pre">test</span></code> at the root of the <code class="docutils literal"><span class="pre">traffic_monitor</span></code> project.</p>
+</div>
+<div class="section" id="api">
+<h2>API<a class="headerlink" href="#api" title="Permalink to this headline">¶</a></h2>
+<p><a class="reference internal" href="traffic_monitor/traffic_monitor_api.html#reference-tm-api"><span>Traffic Monitor APIs</span></a></p>
+<div class="toctree-wrapper compound">
+</div>
+</div>
+</div>
+
+
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="traffic_monitor/traffic_monitor_api.html" class="btn btn-neutral float-right" title="Traffic Monitor APIs">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="traffic_router/traffic_router_api.html" class="btn btn-neutral" title="Traffic Router API"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../',
+            VERSION:'1.1.5-dev',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true
+        };
+    </script>
+      <script type="text/javascript" src="../_static/jquery.js"></script>
+      <script type="text/javascript" src="../_static/underscore.js"></script>
+      <script type="text/javascript" src="../_static/doctools.js"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

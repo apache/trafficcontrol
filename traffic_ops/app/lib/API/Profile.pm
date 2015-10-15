@@ -27,12 +27,15 @@ use JSON;
 sub index {
 	my $self = shift;
 	my @data;
-	my $orderby = $self->param('orderby') || "name";
-	my $rs_data = $self->db->resultset("Profile")->search( undef, { order_by => $orderby } );
+	my $orderby = $self->param('orderby') || "me.name";
+	my $rs_data
+		= $self->db->resultset("Profile")
+		->search( undef,
+		{ order_by => $orderby } );
 	while ( my $row = $rs_data->next ) {
 		push(
-			@data, {
-				"id"          => $row->id,
+			@data,
+			{   "id"          => $row->id,
 				"name"        => $row->name,
 				"description" => $row->description,
 				"lastUpdated" => $row->last_updated,
@@ -41,7 +44,6 @@ sub index {
 	}
 	$self->success( \@data );
 }
-
 sub index_trimmed {
 	my $self = shift;
 	my @data;

@@ -301,7 +301,6 @@ sub param_data {
 	my $self     = shift;
 	my $server   = shift;
 	my $filename = shift;
-
 	my $data;
 
 	my $rs = $self->db->resultset('ProfileParameter')->search( { -and => [ profile => $server->profile->id, 'parameter.config_file' => $filename ] },
@@ -351,8 +350,13 @@ sub parent_data {
 		{ prefetch => [ { parameter => undef }, { profile => undef } ] } )->single();
 	my $server_domain = $param->parameter->value;
 
+	my $condition->{"status"} = { -in => [ $online, $reported ] };
+	if (@parent_cachegroup_ids) {
+		$condition->{"cachegroup"} = { -in => \@parent_cachegroup_ids };
+	}
+
 	my $rs_parent =
-		$self->db->resultset('Server')->search( { cachegroup => { -in => \@parent_cachegroup_ids }, status => { -in => [ $online, $reported ] } },
+		$self->db->resultset('Server')->search( { %$condition },
 		{ prefetch => [ 'cachegroup', 'status', 'type', 'profile' ] } );
 
 	my %profile_cache    = ();
@@ -485,7 +489,9 @@ sub ip_allow_data {
 				|| ( defined( $allow_locs{ $allow_row->cachegroup->id } ) && $allow_locs{ $allow_row->cachegroup->id } == 1 ) )
 			{
 				push( @allowed_netaddrips, NetAddr::IP->new( $allow_row->ip_address, $allow_row->ip_netmask ) );
-				push( @allowed_ipv6_netaddrips, NetAddr::IP->new( $allow_row->ip6_address ) );
+				if ( defined $allow_row->ip6_address ) {
+					push( @allowed_ipv6_netaddrips, NetAddr::IP->new( $allow_row->ip6_address ) );
+				}
 			}
 		}
 
@@ -1199,6 +1205,7 @@ sub drop_qstring_dot_config {
 	my $server = $self->server_data($id);
 	my $text   = $self->header_comment( $server->host_name );
 
+	$server = &server_data( $self, $id );
 	my $drop_qstring =
 		$self->db->resultset('ProfileParameter')
 		->search( { -and => [ profile => $server->profile->id, 'parameter.name' => 'content', 'parameter.config_file' => 'drop_qstring.config' ] },

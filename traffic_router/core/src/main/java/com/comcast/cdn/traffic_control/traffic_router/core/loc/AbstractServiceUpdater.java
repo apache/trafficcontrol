@@ -34,6 +34,8 @@ import org.apache.commons.io.IOUtils;
 import org.apache.log4j.Logger;
 import org.apache.wicket.ajax.json.JSONException;
 
+import com.comcast.cdn.traffic_control.traffic_router.core.router.TrafficRouterManager;
+
 public abstract class AbstractServiceUpdater {
 	private static final Logger LOGGER = Logger.getLogger(AbstractServiceUpdater.class);
 
@@ -43,6 +45,7 @@ public abstract class AbstractServiceUpdater {
 	private long pollingInterval;
 	protected boolean loaded = false;
 	protected ScheduledFuture<?> scheduledService;
+	private TrafficRouterManager trafficRouterManager;
 
 	public void destroy() {
 		executorService.shutdownNow();
@@ -76,10 +79,11 @@ public abstract class AbstractServiceUpdater {
 
 	public void init() {
 		final long pi = getPollingInterval();
-		LOGGER.info("Starting schedule with interval: "+pi + " : "+TimeUnit.MILLISECONDS);
+		LOGGER.warn(getClass().getSimpleName() + " Starting schedule with interval: " + pi + " : " + TimeUnit.MILLISECONDS);
 		scheduledService = executorService.scheduleWithFixedDelay(updater, pi, pi, TimeUnit.MILLISECONDS);
 	}
 
+	@SuppressWarnings("PMD.CyclomaticComplexity")
 	public boolean updateDatabase() {
 		final File existingDB = new File(databaseLocation);
 		File newDB = null;
@@ -89,6 +93,7 @@ public abstract class AbstractServiceUpdater {
 
 				try {
 					newDB = downloadDatabase(getDataBaseURL(), existingDB);
+					trafficRouterManager.trackEvent("last" + getClass().getSimpleName() + "Check");
 
 					// if the remote db's timestamp is less than or equal to ours, the above returns existingDB
 					if (newDB == existingDB) {
@@ -111,6 +116,7 @@ public abstract class AbstractServiceUpdater {
 					if (!isLoaded() || isDifferent) {
 						loadDatabase();
 						setLoaded(true);
+						trafficRouterManager.trackEvent("last" + getClass().getSimpleName() + "Update");
 					} else if (isLoaded() && !isDifferent) {
 						LOGGER.info("Removing downloaded temp file " + newDB);
 						newDB.delete();
@@ -218,7 +224,7 @@ public abstract class AbstractServiceUpdater {
 	protected String tmpPrefix = "loc";
 	protected String tmpSuffix = ".dat";
 	protected File downloadDatabase(final String url, final File existingDb) throws IOException {
-		LOGGER.info("Downloading database: " + url);
+		LOGGER.info("[" + getClass().getSimpleName() + "] Downloading database: " + url);
 		final URL dbURL = new URL(url);
 		final HttpURLConnection conn = (HttpURLConnection) dbURL.openConnection();
 
@@ -261,5 +267,9 @@ public abstract class AbstractServiceUpdater {
 
 	public boolean isLoaded() {
 		return loaded;
+	}
+
+	public void setTrafficRouterManager(final TrafficRouterManager trafficRouterManager) {
+		this.trafficRouterManager = trafficRouterManager;
 	}
 }

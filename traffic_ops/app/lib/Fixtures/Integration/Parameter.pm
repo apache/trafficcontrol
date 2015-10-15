@@ -2505,24 +2505,6 @@ my %definition_for = (
 			value       => '/opt/trafficserver/etc/trafficserver',
 		},
 	},
-	'294-CDN_name' => {
-		new   => 'Parameter',
-		using => {
-			id          => 379,
-			name        => 'CDN_name',
-			config_file => 'rascal-config.txt',
-			value       => 'cdn_number_1',
-		},
-	},
-	'295-CDN_name' => {
-		new   => 'Parameter',
-		using => {
-			id          => 380,
-			name        => 'CDN_name',
-			config_file => 'rascal-config.txt',
-			value       => 'cdn_number_2',
-		},
-	},
 	'296-CONFIG-proxy.config.log.xml_config_file' => {
 		new   => 'Parameter',
 		using => {

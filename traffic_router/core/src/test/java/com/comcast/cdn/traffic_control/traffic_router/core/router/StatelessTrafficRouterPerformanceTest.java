@@ -26,6 +26,7 @@ import java.util.Random;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.commons.pool.ObjectPool;
+import org.json.JSONException;
 import org.junit.Before;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.support.ClassPathXmlApplicationContext;
@@ -41,6 +42,7 @@ import com.comcast.cdn.traffic_control.traffic_router.core.loc.GeolocationExcept
 import com.comcast.cdn.traffic_control.traffic_router.core.loc.GeolocationService;
 import com.comcast.cdn.traffic_control.traffic_router.core.request.HTTPRequest;
 import com.comcast.cdn.traffic_control.traffic_router.core.router.TrafficRouter;
+import com.comcast.cdn.traffic_control.traffic_router.core.util.TrafficOpsUtils;
 import com.comcast.cdn.traffic_control.traffic_router.core.router.StatTracker;
 import com.comcast.cdn.traffic_control.traffic_router.core.router.StatTracker.Track;
 
@@ -49,8 +51,8 @@ public class StatelessTrafficRouterPerformanceTest  extends TrafficRouter {
 
     public StatelessTrafficRouterPerformanceTest(CacheRegister cr,
 			GeolocationService geolocationService, ObjectPool hashFunctionPool)
-			throws IOException {
-		super(cr, geolocationService, null, hashFunctionPool, null);
+			throws IOException, JSONException, TrafficRouterException {
+		super(cr, geolocationService, null, hashFunctionPool, null, new TrafficOpsUtils(), null);
 	}
 
 	@Before
@@ -137,7 +139,7 @@ public class StatelessTrafficRouterPerformanceTest  extends TrafficRouter {
 			return null;
 		}
 		final StatTracker.Track track = StatTracker.getTrack();
-		List<Cache> caches = selectCache(request, ds, track, true);
+		List<Cache> caches = selectCache(request, ds, track);
 		Dispersion dispersion = ds.getDispersion();
 		Cache cache = dispersion.getCache(consistentHash(caches, request.getPath()));
 		try {

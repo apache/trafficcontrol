@@ -3,17 +3,21 @@ package com.comcast.cdn.traffic_control.traffic_router.core.router;
 import com.comcast.cdn.traffic_control.traffic_router.core.cache.CacheLocation;
 import com.comcast.cdn.traffic_control.traffic_router.core.cache.CacheRegister;
 import com.comcast.cdn.traffic_control.traffic_router.core.ds.DeliveryService;
+import com.comcast.cdn.traffic_control.traffic_router.core.loc.FederationRegistry;
 import com.comcast.cdn.traffic_control.traffic_router.core.request.DNSRequest;
+import com.comcast.cdn.traffic_control.traffic_router.core.request.Request;
 import com.comcast.cdn.traffic_control.traffic_router.core.router.StatTracker.Track;
 import com.comcast.cdn.traffic_control.traffic_router.core.router.StatTracker.Track.ResultType;
 import com.comcast.cdn.traffic_control.traffic_router.core.router.StatTracker.Track.ResultDetails;
 
+import com.comcast.cdn.traffic_control.traffic_router.core.util.CidrAddress;
 import org.json.JSONObject;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
+import org.powermock.reflect.Whitebox;
 import org.xbill.DNS.Name;
 import org.xbill.DNS.Type;
 
@@ -23,7 +27,7 @@ import static org.powermock.api.mockito.PowerMockito.spy;
 import static org.powermock.reflect.Whitebox.setInternalState;
 
 @RunWith(PowerMockRunner.class)
-@PrepareForTest(DeliveryService.class)
+@PrepareForTest({DeliveryService.class, TrafficRouter.class})
 public class DNSRoutingMissesTest {
 
     private DNSRequest request;
@@ -38,7 +42,13 @@ public class DNSRoutingMissesTest {
         request.setHostname(Name.fromString("edge.foo-img.kabletown.com").relativize(Name.root).toString());
         request.setQtype(Type.A);
 
+        FederationRegistry federationRegistry = mock(FederationRegistry.class);
+        when(federationRegistry.findInetRecords(anyString(), any(CidrAddress.class))).thenReturn(null);
+
         trafficRouter = mock(TrafficRouter.class);
+        when(trafficRouter.getCacheRegister()).thenReturn(mock(CacheRegister.class));
+        Whitebox.setInternalState(trafficRouter, "federationRegistry", federationRegistry);
+        when(trafficRouter.selectCachesByGeo(any(Request.class), any(DeliveryService.class), any(CacheLocation.class), any(Track.class))).thenCallRealMethod();
 
         track = spy(StatTracker.getTrack());
         doCallRealMethod().when(trafficRouter).route(request, track);
@@ -94,11 +104,9 @@ public class DNSRoutingMissesTest {
         DeliveryService deliveryService = mock(DeliveryService.class);
         doReturn(true).when(deliveryService).isAvailable();
 
-        doCallRealMethod().when(trafficRouter).selectCache(request, deliveryService, track, false);
-
         when(deliveryService.isCoverageZoneOnly()).thenReturn(true);
 
-        doReturn(deliveryService).when(trafficRouter).selectDeliveryService(request, false);
+        doReturn(deliveryService).when(trafficRouter).selectDeliveryService(any(Request.class), anyBoolean());
         trafficRouter.route(request, track);
 
         verify(track).setResult(ResultType.MISS);
@@ -113,8 +121,6 @@ public class DNSRoutingMissesTest {
         DeliveryService deliveryService = mock(DeliveryService.class);
         doReturn(true).when(deliveryService).isAvailable();
 
-        doCallRealMethod().when(trafficRouter).selectCache(request, deliveryService, track, false);
-
         when(deliveryService.isCoverageZoneOnly()).thenReturn(false);
 
         doReturn(deliveryService).when(trafficRouter).selectDeliveryService(request, false);
@@ -128,6 +134,7 @@ public class DNSRoutingMissesTest {
 
     @Test
     public void itSetsDetailsWhenCacheNotFoundByGeolocation() throws Exception {
+        doCallRealMethod().when(trafficRouter).selectCachesByGeo(any(Request.class), any(DeliveryService.class), any(CacheLocation.class), any(Track.class));
         CacheLocation cacheLocation = mock(CacheLocation.class);
         CacheRegister cacheRegister = mock(CacheRegister.class);
 
@@ -137,13 +144,12 @@ public class DNSRoutingMissesTest {
         when(deliveryService.isCoverageZoneOnly()).thenReturn(false);
 
         doReturn(deliveryService).when(trafficRouter).selectDeliveryService(request, false);
-        doCallRealMethod().when(trafficRouter).selectCache(request, deliveryService, track, false);
         doReturn(cacheLocation).when(trafficRouter).getCoverageZoneCache("192.168.34.56");
         doReturn(cacheRegister).when(trafficRouter).getCacheRegister();
 
         trafficRouter.route(request, track);
 
         verify(track).setResult(ResultType.MISS);
-        verify(track).setResultDetails(ResultDetails.GEO_NO_CACHE_FOUND);
+        verify(track).setResultDetails(ResultDetails.DS_CLIENT_GEO_UNSUPPORTED);
     }
 }

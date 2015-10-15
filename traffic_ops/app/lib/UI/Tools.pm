@@ -45,10 +45,10 @@ sub tools {
 		"CentOS 6.2 Full"    => "full-centos62",
 	);
 
-	my $rs_param = $self->db->resultset('Parameter')->search( { name => 'CDN_name' }, { columns => 'value' } );
+	my $rs_param = $self->db->resultset('Cdn')->search( undef, { columns => 'name' } );
 	my @cdn_names;
 	while ( my $row = $rs_param->next ) {
-		push( @cdn_names, $row->value );
+		push( @cdn_names, $row->name );
 	}
 
 	$self->stash(
@@ -62,13 +62,12 @@ sub tools {
 sub snapshot_crconfig {
 	my $self = shift;
 	&navbarpage($self);
-	my $rs_param = $self->db->resultset('Parameter')->search( { name => 'CDN_name' }, { columns => 'value' } );
+	my $rs_param = $self->db->resultset('Cdn')->search( undef, { columns => 'name' } );
 	my @cdn_names;
 	while ( my $row = $rs_param->next ) {
-		push( @cdn_names, $row->value );
+		push( @cdn_names, $row->name );
 	}
 	$self->stash( cdn_names => \@cdn_names );
-
 }
 
 sub diff_crconfig_iframe {
@@ -113,7 +112,7 @@ sub write_crconfig {
 sub queue_updates {
 	my $self = shift;
 	&stash_role($self);
-	my @cdns = $self->db->resultset('Parameter')->search( { 'name' => 'CDN_name' }, { order_by => "value" })->get_column('value')->all;
+	my @cdns = $self->db->resultset('Cdn')->search( undef, { order_by => "name" })->get_column('name')->all;
 	$self->stash( cdns => \@cdns );
 	my @cachegroups = $self->db->resultset('Cachegroup')->search(undef, { order_by => "name" })->get_column('name')->all;
 	$self->stash( cachegroups => \@cachegroups );

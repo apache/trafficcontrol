@@ -5,7 +5,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>com.comcast.cdn.traffic_control</groupId>
 	<packaging>war</packaging>
-	<version>1.1.1</version>
+	<version>1.2.1</version>
 	<name>traffic_monitor</name>
 	<description></description>
 
@@ -435,9 +435,6 @@
 							<preremoveScriptlet>
 								<scriptFile>src/main/scripts/preremove.sh</scriptFile>
 							</preremoveScriptlet>
-							<postremoveScriptlet>
-								<script>echo "Removing ${deploy.dir}";rm -rf ${deploy.dir}</script>
-							</postremoveScriptlet>
 						</configuration>
 					</plugin>
 				</plugins>

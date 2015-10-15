@@ -1,0 +1,311 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Traffic Stats Administration &mdash; Traffic Control 1.1.4 documentation </title>
+  
+
+  
+  
+    <link rel="shortcut icon" href="../_static/favicon.ico"/>
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  
+
+  
+    <link rel="stylesheet" href="../_static/theme_overrides.css" type="text/css" />
+  
+
+  
+    <link rel="top" title="Traffic Control 1.1.4 documentation" href="../index.html"/>
+        <link rel="up" title="Administrator’s Guide" href="index.html"/>
+        <link rel="next" title="Traffic Server Administration" href="traffic_server.html"/>
+        <link rel="prev" title="Traffic Router Administration" href="traffic_router.html"/> 
+
+  
+  <script src="_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-nav-search">
+        
+
+        
+          <a href="/" class="icon icon-home"> Traffic Control
+        
+
+        
+          
+          <img src="../_static/tc_logo.png" class="logo" />
+        
+        </a>
+
+        
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+        
+      </div>
+
+      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+        
+          
+          
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../basics/index.html">CDN Basics</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../basics/content_delivery_networks.html">Content Delivery Networks</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../basics/http_11.html">HTTP 1.1</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../basics/caching_proxies.html">Caching Proxies</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../basics/cache_revalidation.html">Cache Control Headers and Revalidation</a></li>
+</ul>
+</li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../overview/index.html">Traffic Control Overview</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../overview/introduction.html">Introduction</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../overview/traffic_ops.html">Traffic Ops</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../overview/traffic_router.html">Traffic Router</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../overview/traffic_monitor.html">Traffic Monitor</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../overview/traffic_stats.html">Traffic Stats</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../overview/traffic_portal.html">Traffic Portal</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../overview/traffic_server.html">Traffic Server</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../overview/traffic_vault.html">Traffic Vault</a></li>
+</ul>
+</li>
+</ul>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="index.html">Administrator&#8217;s Guide</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="traffic_ops_install.html">Installing Traffic Ops</a></li>
+<li class="toctree-l2"><a class="reference internal" href="traffic_ops_config.html">Configuring Traffic Ops</a></li>
+<li class="toctree-l2"><a class="reference internal" href="traffic_ops_using.html">Using Traffic Ops</a></li>
+<li class="toctree-l2"><a class="reference internal" href="traffic_ops_extensions.html">Managing Traffic Ops Extensions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="traffic_monitor.html">Traffic Monitor Administration</a></li>
+<li class="toctree-l2"><a class="reference internal" href="traffic_router.html">Traffic Router Administration</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="">Traffic Stats Administration</a></li>
+<li class="toctree-l2"><a class="reference internal" href="traffic_server.html">Traffic Server Administration</a></li>
+<li class="toctree-l2"><a class="reference internal" href="traffic_vault.html">Traffic Vault Administration</a></li>
+<li class="toctree-l2"><a class="reference internal" href="quick_howto/index.html">Quick How To Guides</a></li>
+</ul>
+</li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../development/index.html">Developer&#8217;s Guide</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../development/traffic_ops.html">Traffic Ops</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../development/traffic_router.html">Traffic Router</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../development/traffic_monitor.html">Traffic Monitor</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../development/traffic_stats.html">Traffic Stats</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../development/traffic_server.html">Traffic Server</a></li>
+</ul>
+</li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../faq/index.html">FAQ</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../faq/general.html">General</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../faq/development.html">Development</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../faq/administration.html">Running a Traffic Control CDN</a></li>
+</ul>
+</li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../glossary.html">Glossary</a></li>
+</ul>
+
+          
+        
+      </div>
+      &nbsp;
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="../index.html">Traffic Control</a>
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="../index.html">Traffic Control 1.1.4</a> &raquo;</li>
+      
+          <li><a href="index.html">Administrator&#8217;s Guide</a> &raquo;</li>
+      
+    <li>Traffic Stats Administration</li>
+      <li class="wy-breadcrumbs-aside">
+        
+          <a href="../_sources/admin/traffic_stats.txt" rel="nofollow"> View page source</a>
+        
+      </li>
+  </ul>
+  <hr/>
+</div>
+ 		  
+    		  <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      		  
+        		  <a href="traffic_server.html" class="btn btn-neutral float-right" title="Traffic Server Administration">Next <span class="fa fa-arrow-circle-right"></span></a>
+      		  
+      		  
+        		  <a href="traffic_router.html" class="btn btn-neutral" title="Traffic Router Administration"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      		  
+    		  </div>
+  		  
+          <div role="main" class="document">
+            
+  <div class="section" id="traffic-stats-administration">
+<h1>Traffic Stats Administration<a class="headerlink" href="#traffic-stats-administration" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="installation">
+<h2>Installation<a class="headerlink" href="#installation" title="Permalink to this headline">¶</a></h2>
+<p>Traffic Stats consists of three components:  Traffic Stats, InfluxDb, and Grafana.  Below are instructions on installing each component.</p>
+<p><strong>Installing Traffic Stats:</strong></p>
+<blockquote>
+<div><ul class="simple">
+<li>Download the Traffic Stats RPM from the traffic control <a class="reference external" href="http://traffic-control-cdn.net/downloads/index.html">downloads</a> page.</li>
+<li>Copy the Traffic Stats RPM to your server</li>
+<li>sudo rpm -ivh &lt;traffic_stats rpm&gt;</li>
+</ul>
+</div></blockquote>
+<p>Note:  This installation actually creates two separate services:  write_traffic_stats and ts_daily_summary.  More information on these services can be found in the overview section.</p>
+<p><strong>Installing InfluxDb:</strong></p>
+<blockquote>
+<div>In order to store traffic stats data you will need to install InfluxDb.  It is recommended InfluxDb be installed in a 3 server cluster; VMs are acceptable. The documentation for installing InfluxDb can be found on the InfluxDb <a class="reference external" href="https://influxdb.com/docs/v0.9/introduction/installation.html">website</a>.</div></blockquote>
+<p><strong>Installing Grafana:</strong></p>
+<blockquote>
+<div>Grafana is used to display Traffic Stats/InfluxDb data in Traffic Ops.  Grafana is typically run on the same server as Traffic Stats but this is not a requirement.  Grafana can be installed on any server that can access InfluxDb and be accessed by Traffic Ops.  Documentation on installing Grafana can be found <a class="reference external" href="http://docs.grafana.org/installation/">here</a>.</div></blockquote>
+</div>
+<div class="section" id="configuration">
+<h2>Configuration<a class="headerlink" href="#configuration" title="Permalink to this headline">¶</a></h2>
+<p><strong>Configuring Traffic Stats:</strong></p>
+<blockquote>
+<div><p>Traffic Stats’ configuration file can be found in /opt/traffic_stats/conf/traffic_stats.cfg.
+The following values need to be configured:</p>
+<blockquote>
+<div><ul class="simple">
+<li><em>toUser:</em> The user used to connect to Traffic Ops</li>
+<li><em>toPasswd:</em>  The password to use when connecting to Traffic Ops</li>
+<li><em>toUrl:</em>  The URL of the Traffic Ops server used by Traffic Stats</li>
+<li><em>influxUser:</em>  The user to use when connecting to InfluxDb (if configured on InfluxDb, else leave default)</li>
+<li><em>influxPassword:</em>  That password to use when connecting to InfluxDb (if configured, else leave blank)</li>
+<li><em>polling interval:</em>  The interval at which Traffic Monitor is polled and stats are stored in InfluxDb</li>
+<li><em>statusToMon:</em>  The status of Traffic Monitor to poll (poll ONLINE or OFFLINE traffic monitors)</li>
+<li><em>seelogConfig:</em>  The absolute path of the seelong config file</li>
+<li><em>dailySummaryPollingInterval:</em> The interval, in seconds, at which Traffic Stats checks to see if daily stats need to be computed and stored.</li>
+</ul>
+</div></blockquote>
+</div></blockquote>
+<p><strong>Configuring InfluxDb:</strong></p>
+<blockquote>
+<div>At a minimum, InfluxDb will need to be configured for clutstering.  Documentation on clustering configuration can be found on the clustering page of the <a class="reference external" href="https://influxdb.com/docs/v0.9/concepts/clustering.html">InfluxDb Website</a>.</div></blockquote>
+<p><strong>Configuring Grafana:</strong></p>
+<blockquote>
+<div><p>In order for grafana to integrate with Traffic Ops, it will need to be configured to allow anonymous authorization.  More information can be found on the configuration page of the <a class="reference external" href="http://docs.grafana.org/installation/configuration/#authanonymous">Grafana Website</a>.</p>
+<p>Traffic Ops uses Grafana to display stats data to users.  In order for the graphs to display correctly, you will need to install the <code class="docutils literal"><span class="pre">traffic_ops_scripted.js</span></code> file from <code class="docutils literal"><span class="pre">/traffic_control/traffic_stats/grafana</span></code> to the <code class="docutils literal"><span class="pre">/usr/share/grafana/public/dashboards/</span></code> on the grafana server.</p>
+<p>More information can be found in the <a class="reference external" href="http://docs.grafana.org/reference/scripting/">scripted dashboards</a> section of the Grafana documentation.</p>
+</div></blockquote>
+<p><strong>Configuring Traffic Ops for Traffic Stats:</strong></p>
+<blockquote>
+<div><ul class="simple">
+<li>The influxDb servers need to be added to Traffic Ops with profile = InfluxDb.  Make sure to use port 8086 in the configuration.</li>
+<li>The traffic stats server should be added to Traffic Ops with profile = Traffic Stats.</li>
+<li>Parameters for which stats will be collected are added with the release, but any changes can be made via parameters that are assigned to the Traffic Stats profile.</li>
+</ul>
+</div></blockquote>
+</div>
+</div>
+
+
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="traffic_server.html" class="btn btn-neutral float-right" title="Traffic Server Administration">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="traffic_router.html" class="btn btn-neutral" title="Traffic Router Administration"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../',
+            VERSION:'1.1.4',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true
+        };
+    </script>
+      <script type="text/javascript" src="../_static/jquery.js"></script>
+      <script type="text/javascript" src="../_static/underscore.js"></script>
+      <script type="text/javascript" src="../_static/doctools.js"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

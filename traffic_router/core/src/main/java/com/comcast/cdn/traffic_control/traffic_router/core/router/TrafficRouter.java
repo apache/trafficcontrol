@@ -24,28 +24,32 @@ import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
 import java.util.SortedMap;
 import java.util.TreeMap;
 
-import com.comcast.cdn.traffic_control.traffic_router.core.dns.DNSAccessRecord;
 import org.apache.commons.pool.ObjectPool;
 import org.apache.log4j.Logger;
+import org.json.JSONException;
 import org.json.JSONObject;
 import org.xbill.DNS.Name;
 import org.xbill.DNS.Zone;
 
+import com.comcast.cdn.traffic_control.traffic_router.core.TrafficRouterException;
 import com.comcast.cdn.traffic_control.traffic_router.core.cache.Cache;
 import com.comcast.cdn.traffic_control.traffic_router.core.cache.CacheLocation;
 import com.comcast.cdn.traffic_control.traffic_router.core.cache.CacheRegister;
 import com.comcast.cdn.traffic_control.traffic_router.core.cache.InetRecord;
 import com.comcast.cdn.traffic_control.traffic_router.core.cache.Cache.DeliveryServiceReference;
 import com.comcast.cdn.traffic_control.traffic_router.core.dns.ZoneManager;
+import com.comcast.cdn.traffic_control.traffic_router.core.dns.DNSAccessRecord;
 import com.comcast.cdn.traffic_control.traffic_router.core.ds.DeliveryService;
 import com.comcast.cdn.traffic_control.traffic_router.core.ds.Dispersion;
 import com.comcast.cdn.traffic_control.traffic_router.core.hash.HashFunction;
+import com.comcast.cdn.traffic_control.traffic_router.core.loc.FederationRegistry;
 import com.comcast.cdn.traffic_control.traffic_router.core.loc.Geolocation;
 import com.comcast.cdn.traffic_control.traffic_router.core.loc.GeolocationException;
 import com.comcast.cdn.traffic_control.traffic_router.core.loc.GeolocationService;
@@ -57,6 +61,8 @@ import com.comcast.cdn.traffic_control.traffic_router.core.request.Request;
 import com.comcast.cdn.traffic_control.traffic_router.core.router.StatTracker.Track;
 import com.comcast.cdn.traffic_control.traffic_router.core.router.StatTracker.Track.ResultType;
 import com.comcast.cdn.traffic_control.traffic_router.core.router.StatTracker.Track.RouteType;
+import com.comcast.cdn.traffic_control.traffic_router.core.util.TrafficOpsUtils;
+import com.comcast.cdn.traffic_control.traffic_router.core.util.CidrAddress;
 import com.comcast.cdn.traffic_control.traffic_router.core.router.StatTracker.Track.ResultDetails;
 
 public class TrafficRouter {
@@ -67,6 +73,7 @@ public class TrafficRouter {
 	private final GeolocationService geolocationService;
 	private final GeolocationService geolocationService6;
 	private final ObjectPool hashFunctionPool;
+	private final FederationRegistry federationRegistry;
 
 	private final Random random = new Random(System.nanoTime());
 
@@ -74,12 +81,15 @@ public class TrafficRouter {
 			final GeolocationService geolocationService, 
 			final GeolocationService geolocationService6, 
 			final ObjectPool hashFunctionPool,
-			final StatTracker statTracker) throws IOException {
+			final StatTracker statTracker,
+			final TrafficOpsUtils trafficOpsUtils,
+			final FederationRegistry federationRegistry) throws IOException, JSONException, TrafficRouterException {
 		this.cacheRegister = cr;
 		this.geolocationService = geolocationService;
 		this.geolocationService6 = geolocationService6;
 		this.hashFunctionPool = hashFunctionPool;
-		this.zoneManager = new ZoneManager(this, statTracker);
+		this.federationRegistry = federationRegistry;
+		this.zoneManager = new ZoneManager(this, statTracker, trafficOpsUtils);
 	}
 
 	public ZoneManager getZoneManager() {
@@ -187,7 +197,7 @@ public class TrafficRouter {
 		return hashFunctionPool;
 	}
 
-	private List<Cache> getCachesByGeo(final Request request, final DeliveryService ds, final Geolocation clientLocation) throws GeolocationException {
+	public List<Cache> getCachesByGeo(final Request request, final DeliveryService ds, final Geolocation clientLocation, final Map<String, Double> resultLocation) throws GeolocationException {
 		final String zoneId = null; 
 		// the specific use of the popularity zone
 		// manager was not understood and not used
@@ -200,6 +210,8 @@ public class TrafficRouter {
 		for (final CacheLocation location : cacheLocations) {
 			final List<Cache> caches = selectCache(location, ds);
 			if (caches != null) {
+				resultLocation.put("latitude", location.getGeolocation().getLatitude());
+				resultLocation.put("longitude", location.getGeolocation().getLongitude());
 				return caches;
 			}
 			locationsTested++;
@@ -209,64 +221,53 @@ public class TrafficRouter {
 		}
 		return null;
 	}
-	protected List<Cache> selectCache(final Request request, final DeliveryService ds, final Track track, final boolean isHttp) throws GeolocationException {
-		final String ip = request.getClientIP();
-		String requestType = null;
-		String requestStr = null;
-		if(isHttp) {
-			requestStr = ((HTTPRequest)request).getPath();
-			requestType = "http";
-		} else {
-			requestStr = request.getHostname();
-			requestType = "dns";
-		}
-		final CacheLocation cacheLocation = getCoverageZoneCache(ip);
-		if(ds.isLocationAvailable(cacheLocation)) {
-			final List<Cache> caches = selectCache(cacheLocation, ds);// consistentHash(caches, request);List<Cache>
-			if (caches != null) {
-				track.setResult(ResultType.CZ);
-				return caches;
-			}
-		}
+	protected List<Cache> selectCache(final Request request, final DeliveryService ds, final Track track) throws GeolocationException {
+		final CacheLocation cacheLocation = getCoverageZoneCache(request.getClientIP());
+		List<Cache> caches = selectCachesByCZ(ds, cacheLocation, track);
 
-		if (ds.isCoverageZoneOnly() && cacheLocation == null) {
-			LOGGER.warn(String
-					.format("No Cache found in CZM (%s, ip=%s, path=%s), geo not supported",
-							requestType, ip, requestStr));
-			track.setResult(ResultType.MISS);
-			track.setResultDetails(ResultDetails.DS_CZ_ONLY);
-			return null;
-		}
-
-		LOGGER.warn(String.format(
-				"No Cache found by CZM (%s, ip=%s, path=%s)", requestType, ip,
-				requestStr));
-
-		Geolocation clientLocation = null;
-		if(cacheLocation != null) {
-			clientLocation = cacheLocation.getGeolocation();
-		} else {
-			clientLocation = getLocation(request.getClientIP());
-			clientLocation = ds.supportLocation(clientLocation, requestType);
-			if (clientLocation == null) {
-				// particular error was logged in ds.supportLocation
-				track.setResult(ResultType.MISS);
-				track.setResultDetails(ResultDetails.DS_CLIENT_GEO_UNSUPPORTED);
-				return null;
-			}
-		}
-
-		final List<Cache> caches = getCachesByGeo(request, ds, clientLocation);
-		if(caches != null) {
-			track.setResult(ResultType.GEO);
+		if (caches != null) {
 			return caches;
 		}
-		LOGGER.warn(String.format(
-				"No Cache found by Geo (%s, ip=%s, path=%s)", requestType, ip,
-				requestStr));
-		track.setResult(ResultType.MISS);
-		track.setResultDetails(ResultDetails.GEO_NO_CACHE_FOUND);
-		return null;
+
+		if (ds.isCoverageZoneOnly()) {
+			LOGGER.warn(String.format("No Cache found in CZM (%s, ip=%s, path=%s), geo not supported", request.getType(), request.getClientIP(), request.getHostname()));
+			track.setResult(ResultType.MISS);
+			track.setResultDetails(ResultDetails.DS_CZ_ONLY);
+		}
+		else {
+			LOGGER.warn(String.format("No Cache found by CZM (%s, ip=%s, path=%s)", request.getType(), request.getClientIP(), request.getHostname()));
+			caches = selectCachesByGeo(request, ds, cacheLocation, track);
+		}
+
+		return caches;
+	}
+
+	public List<Cache> selectCachesByGeo(final Request request, final DeliveryService deliveryService, final CacheLocation cacheLocation, final Track track) throws GeolocationException {
+
+		Geolocation clientLocation = null;
+
+		try {
+			clientLocation = getClientLocation(request, deliveryService, cacheLocation);
+		} catch (GeolocationException e) {
+			LOGGER.warn("Failed looking up Client GeoLocation: " + e.getMessage());
+		}
+
+		if (clientLocation == null) {
+			track.setResultDetails(ResultDetails.DS_CLIENT_GEO_UNSUPPORTED);
+			return null;
+		}
+		
+		final Map<String, Double> resultLocation = new HashMap<String, Double>();
+
+		final List<Cache> caches = getCachesByGeo(request, deliveryService, clientLocation, resultLocation);
+		
+		if (caches == null || caches.isEmpty()) {
+			LOGGER.warn(String.format("No Cache found by Geo (%s, ip=%s, path=%s)", request.getType(), request.getClientIP(), request.getHostname()));
+			track.setResultDetails(ResultDetails.GEO_NO_CACHE_FOUND);
+		}
+
+		track.setResult(ResultType.GEO);
+		return caches;
 	}
 
 	public DNSRouteResult route(final DNSRequest request, final Track track) throws GeolocationException {
@@ -275,8 +276,7 @@ public class TrafficRouter {
 		final DeliveryService ds = selectDeliveryService(request, false);
 
 		if (ds == null) {
-			LOGGER.warn("[dns] No DeliveryService found for: "
-					+ request.getHostname());
+			LOGGER.warn("[dns] No DeliveryService found for: " + request.getHostname());
 			track.setResult(ResultType.STATIC_ROUTE);
 			track.setResultDetails(ResultDetails.DS_NOT_FOUND);
 			return null;
@@ -285,22 +285,60 @@ public class TrafficRouter {
 		final DNSRouteResult result = new DNSRouteResult();
 
 		if (!ds.isAvailable()) {
-			LOGGER.warn("ds not available: "+ds);
+			LOGGER.warn("deliveryService not available: " + ds);
 			result.setAddresses(ds.getFailureDnsResponse(request, track));
 			return result;
 		}
 
-		final List<Cache> caches = selectCache(request, ds, track, false);
+		final CacheLocation cacheLocation = getCoverageZoneCache(request.getClientIP());
+		List<Cache> caches = selectCachesByCZ(ds, cacheLocation, track);
 
-		if (caches == null) {
+		if (caches != null) {
+			track.setResult(ResultType.CZ);
+			result.setAddresses(inetRecordsFromCaches(ds, caches));
+			return result;
+		}
+
+		if (ds.isCoverageZoneOnly()) {
+			LOGGER.info(String.format("No Cache found in CZM (%s, ip=%s, path=%s), geo not supported", request.getType(), request.getClientIP(), request.getHostname()));
+			track.setResult(ResultType.MISS);
+			track.setResultDetails(ResultDetails.DS_CZ_ONLY);
 			result.setAddresses(ds.getFailureDnsResponse(request, track));
 			return result;
 		}
 
+		try {
+			final List<InetRecord> inetRecords = federationRegistry.findInetRecords(ds.getId(), CidrAddress.fromString(request.getClientIP()));
+
+			if (inetRecords != null && !inetRecords.isEmpty()) {
+				result.setAddresses(inetRecords);
+				track.setResult(ResultType.FED);
+				return result;
+			}
+		} catch (NetworkNodeException e) {
+			LOGGER.error("Bad client address: '" + request.getClientIP() + "'");
+		}
+
+		LOGGER.info(String.format("No Cache found by CZM (%s, ip=%s, path=%s)", request.getType(), request.getClientIP(), request.getHostname()));
+		caches = selectCachesByGeo(request, ds, cacheLocation, track);
+
+		if (caches != null) {
+			track.setResult(ResultType.GEO);
+			result.setAddresses(inetRecordsFromCaches(ds, caches));
+		}
+		else {
+			track.setResult(ResultType.MISS);
+			result.setAddresses(ds.getFailureDnsResponse(request, track));
+		}
+
+		return result;
+	}
+
+	private List<InetRecord> inetRecordsFromCaches(final DeliveryService ds, final List<Cache> caches) {
 		final List<InetRecord> addresses = new ArrayList<InetRecord>();
 		final int maxDnsIps = ds.getMaxDnsIps();
 
-		/* 
+		/*
 		 * We also shuffle in NameServer when adding Records to the Message prior
 		 * to sending it out, as the Records are sorted later when we fill the
 		 * dynamic zone if DNSSEC is enabled. We shuffle here prior to pruning
@@ -322,10 +360,33 @@ public class TrafficRouter {
 
 			addresses.addAll(cache.getIpAddresses(ds.getTtls(), zoneManager, ds.isIp6RoutingEnabled()));
 		}
+		return addresses;
+	}
 
-		result.setAddresses(addresses);
+	public Geolocation getClientLocation(final Request request, final DeliveryService ds, final CacheLocation cacheLocation) throws GeolocationException {
+		Geolocation clientLocation;
+		if (cacheLocation != null) {
+			clientLocation = cacheLocation.getGeolocation();
+		} else {
+			clientLocation = getLocation(request.getClientIP());
+			clientLocation = ds.supportLocation(clientLocation, request.getType());
+		}
+		return clientLocation;
+	}
 
-		return result;
+	private List<Cache> selectCachesByCZ(final DeliveryService ds, final CacheLocation cacheLocation, final Track track) {
+		if (cacheLocation == null || !ds.isLocationAvailable(cacheLocation)) {
+			return null;
+		}
+
+		final List<Cache> caches = selectCache(cacheLocation, ds);
+
+		if (caches != null) {
+			track.setResult(ResultType.CZ);
+			track.setResultLocation(cacheLocation.getGeolocation());
+		}
+
+		return caches;
 	}
 
 	public HTTPRouteResult route(final HTTPRequest request, final Track track) throws MalformedURLException, GeolocationException {
@@ -334,8 +395,7 @@ public class TrafficRouter {
 		final DeliveryService ds = selectDeliveryService(request, true);
 
 		if (ds == null) {
-			LOGGER.warn("No DeliveryService found for: "
-					+ request.getRequestedUrl());
+			LOGGER.warn("No DeliveryService found for: " + request.getRequestedUrl());
 			track.setResult(ResultType.DS_MISS);
 			track.setResultDetails(ResultDetails.DS_NOT_FOUND);
 			return null;
@@ -346,12 +406,12 @@ public class TrafficRouter {
 		routeResult.setDeliveryService(ds);
 
 		if (!ds.isAvailable()) {
-			LOGGER.warn("ds unavailable: " + ds);
+			LOGGER.warn("deliveryService unavailable: " + ds);
 			routeResult.setUrl(ds.getFailureHttpResponse(request, track));
 			return routeResult;
 		}
 
-		final List<Cache> caches = selectCache(request, ds, track, true);
+		final List<Cache> caches = selectCache(request, ds, track);
 
 		if (caches == null) {
 			routeResult.setUrl(ds.getFailureHttpResponse(request, track));
@@ -395,13 +455,14 @@ public class TrafficRouter {
 				return cl2;
 			}
 		}
+
 		return null;
 	}
 
 	/**
 	 * Utilizes the hashValues stored with each cache to select the cache that
 	 * the specified hash should map to.
-	 * 
+	 *
 	 * @param caches
 	 *            the list of caches to choose from
 	 * @param hash
@@ -576,5 +637,4 @@ public class TrafficRouter {
 	public Zone getZone(final Name qname, final int qtype, final InetAddress clientAddress, final boolean isDnssecRequest, final DNSAccessRecord.Builder builder) {
 		return zoneManager.getZone(qname, qtype, clientAddress, isDnssecRequest, builder);
 	}
-
 }

@@ -553,40 +553,40 @@ sub register {
 
 					# TODO: what happens when the request to CCR times out? -jse
 					my $c = $self->get_traffic_router_connection( { hostname => $ccr_host } );
+					if ( !defined($c) ) {
+						return "Cannot connect to Traffic Router";
+					}
+
 					my $s = $c->get_crs_stats();
 					if ( !defined($s) ) {
-						return $self->internal_server_error( { "Internal Server" => "Error" } );
+						return ( "No CRS Stats found" );
 					}
-					else {
 
-						if ( exists( $s->{stats} ) ) {
-							for my $type ( "httpMap", "dnsMap" ) {
-								next if ( exists( $args->{stat_key} ) && $args->{stat_key} ne $type );
+					if ( exists( $s->{stats} ) ) {
+						for my $type ( "httpMap", "dnsMap" ) {
+							next if ( exists( $args->{stat_key} ) && $args->{stat_key} ne $type );
 
-								if ( exists( $s->{stats}->{$type} ) ) {
-									for my $fqdn ( keys( %{ $s->{stats}->{$type} } ) ) {
-										my $count = 1;
+							if ( exists( $s->{stats}->{$type} ) ) {
+								for my $fqdn ( keys( %{ $s->{stats}->{$type} } ) ) {
+									my $count = 1;
+									if ( exists( $args->{patterns} ) && ref( $args->{patterns} ) eq "ARRAY" ) {
+										$count = 0;
 
-										if ( exists( $args->{patterns} ) && ref( $args->{patterns} ) eq "ARRAY" ) {
-											$count = 0;
-
-											for my $pattern ( @{ $args->{patterns} } ) {
-												if ( $fqdn =~ /$pattern/ ) {
-													$count = 1;
-													last;
-												}
+										for my $pattern ( @{ $args->{patterns} } ) {
+											if ( $fqdn =~ /$pattern/ ) {
+												$count = 1;
+												last;
 											}
 										}
-
-										if ($count) {
-											for my $counter ( keys( %{ $s->{stats}->{$type}->{$fqdn} } ) ) {
-												if ( !exists( $stats->{raw}->{$counter} ) ) {
-													$stats->{raw}->{$counter} = 0;
-												}
-
-												$stats->{raw}->{$counter} += $s->{stats}->{$type}->{$fqdn}->{$counter};
-												$stats->{totalCount} += $s->{stats}->{$type}->{$fqdn}->{$counter};
+									}
+									if ($count) {
+										for my $counter ( keys( %{ $s->{stats}->{$type}->{$fqdn} } ) ) {
+											if ( !exists( $stats->{raw}->{$counter} ) ) {
+												$stats->{raw}->{$counter} = 0;
 											}
+
+											$stats->{raw}->{$counter} += $s->{stats}->{$type}->{$fqdn}->{$counter};
+											$stats->{totalCount} += $s->{stats}->{$type}->{$fqdn}->{$counter};
 										}
 									}
 								}
@@ -609,6 +609,7 @@ sub register {
 			}
 
 			$self->success($data);
+			return (undef);
 		}
 	);
 }

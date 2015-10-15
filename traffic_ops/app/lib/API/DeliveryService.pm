@@ -72,13 +72,15 @@ sub get_data {
 	my %ds_hash = map { $_ => 1 } @ds_ids;
 	my $rs;
 	if ( defined($id) ) {
-		$rs = $self->db->resultset("Deliveryservice")->search( { id => $id }, { prefetch => ['deliveryservice_regexes'] } );
+		$rs = $self->db->resultset("Deliveryservice")->search( { 'me.id' => $id }, { prefetch => [ 'cdn', 'deliveryservice_regexes' ] } );
 	}
 	else {
-		$rs = $self->db->resultset("Deliveryservice")->search( undef, { prefetch => ['deliveryservice_regexes'], order_by => 'xml_id' } );
+		$rs = $self->db->resultset("Deliveryservice")->search( undef, { prefetch => [ 'cdn', 'deliveryservice_regexes' ], order_by => 'xml_id' } );
 	}
 	while ( my $row = $rs->next ) {
 		next if ( defined($tm_user_id) && !defined( $ds_hash{ $row->id } ) );
+
+		my $cdn_name = defined( $row->cdn_id ) ? $row->cdn->name : "";
 		my $re_rs     = $row->deliveryservice_regexes;
 		my @matchlist = ();
 		while ( my $re_row = $re_rs->next ) {
@@ -110,6 +112,7 @@ sub get_data {
 				"type"                 => $row->type->name,
 				"profileName"          => $row->profile->name,
 				"profileDescription"   => $row->profile->description,
+				"cdnName"              => $cdn_name,
 				"globalMaxMbps"        => $row->global_max_mbps,
 				"globalMaxTps"         => $row->global_max_tps,
 				"headerRewrite"        => $row->edge_header_rewrite,
@@ -132,7 +135,7 @@ sub get_data {
 				"rangeRequestHandling" => $row->range_request_handling,
 				"cacheurl"             => $row->cacheurl,
 				"remapText"            => $row->remap_text,
-				"initialDispersion"   => $row->initial_dispersion,
+				"initialDispersion"    => $row->initial_dispersion,
 			}
 		);
 	}
@@ -147,21 +150,23 @@ sub routing {
 
 	if ( $self->is_valid_delivery_service($id) ) {
 		if ( $self->is_delivery_service_assigned($id) || &is_admin($self) || &is_oper($self) ) {
-			my $result = $self->db->resultset("Deliveryservice")->search( { id => $self->param('id') } )->single();
-			my $param =
-				$self->db->resultset('ProfileParameter')
-				->search( { -and => [ 'parameter.name' => 'CDN_name', 'parameter.name' => 'CDN_name', 'me.profile' => $result->profile->id ] },
-				{ prefetch => [ 'parameter', 'profile' ] } )->single();
-			my $cdn_name = $param->parameter->value;
-			my $stat_key = lc( $result->type->name ) . "Map";    # dnsMap/httpMap in /crs/stats
-			my $re_rs    = $result->deliveryservice_regexes;
-			my @patterns;
+			my $result = $self->db->resultset("Deliveryservice")->search( { 'me.id' => $id }, { prefetch => ['cdn'] } )->single();
+			my $cdn_name = $result->cdn->name;
 
+			# we expect type to be a dns or http type, but strip off any trailing bit
+			my $stat_key = lc( $result->type->name );
+			$stat_key =~ s/^(dns|http).*/$1/;
+			$stat_key .= "Map";
+			my $re_rs = $result->deliveryservice_regexes;
+			my @patterns;
 			while ( my $re_row = $re_rs->next ) {
 				push( @patterns, $re_row->regex->pattern );
 			}
 
-			$self->get_routing_stats( { stat_key => $stat_key, patterns => \@patterns, cdn_name => $cdn_name } );
+			my $e = $self->get_routing_stats( { stat_key => $stat_key, patterns => \@patterns, cdn_name => $cdn_name } );
+			if ( defined($e) ) {
+				$self->alert($e);
+			}
 		}
 		else {
 			$self->forbidden();
@@ -180,12 +185,8 @@ sub capacity {
 
 	if ( $self->is_valid_delivery_service($id) ) {
 		if ( $self->is_delivery_service_assigned($id) || &is_admin($self) || &is_oper($self) ) {
-			my $result = $self->db->resultset("Deliveryservice")->search( { id => $self->param('id') } )->single();
-			my $param =
-				$self->db->resultset('ProfileParameter')
-				->search( { -and => [ 'parameter.name' => 'CDN_name', 'parameter.name' => 'CDN_name', 'me.profile' => $result->profile->id ] },
-				{ prefetch => [ 'parameter', 'profile' ] } )->single();
-			my $cdn_name = $param->parameter->value;
+			my $result = $self->db->resultset("Deliveryservice")->search( { 'me.id' => $id }, { prefetch => ['cdn'] } )->single();
+			my $cdn_name = $result->cdn->name;
 
 			$self->get_cache_capacity( { delivery_service => $result->xml_id, cdn_name => $cdn_name } );
 		}
@@ -204,12 +205,8 @@ sub health {
 
 	if ( $self->is_valid_delivery_service($id) ) {
 		if ( $self->is_delivery_service_assigned($id) || &is_admin($self) || &is_oper($self) ) {
-			my $result = $self->db->resultset("Deliveryservice")->search( { id => $self->param('id') } )->single();
-			my $param =
-				$self->db->resultset('ProfileParameter')
-				->search( { -and => [ 'parameter.name' => 'CDN_name', 'parameter.name' => 'CDN_name', 'me.profile' => $result->profile->id ] },
-				{ prefetch => [ 'parameter', 'profile' ] } )->single();
-			my $cdn_name = $param->parameter->value;
+			my $result = $self->db->resultset("Deliveryservice")->search( { 'me.id' => $id }, { prefetch => ['cdn'] } )->single();
+			my $cdn_name = $result->cdn->name;
 
 			return ( $self->get_cache_health( { server_type => "caches", delivery_service => $result->xml_id, cdn_name => $cdn_name } ) );
 		}
@@ -229,14 +226,9 @@ sub state {
 
 	if ( $self->is_valid_delivery_service($id) ) {
 		if ( $self->is_delivery_service_assigned($id) || &is_admin($self) || &is_oper($self) ) {
-			my $result = $self->db->resultset("Deliveryservice")->search( { id => $self->param('id') } )->single();
-			my $param =
-				$self->db->resultset('ProfileParameter')
-				->search( { -and => [ 'parameter.name' => 'CDN_name', 'parameter.name' => 'CDN_name', 'me.profile' => $result->profile->id ] },
-				{ prefetch => [ 'parameter', 'profile' ] } )->single();
-			my $cdn_name = $param->parameter->value;
-			my $ds_name  = $result->xml_id;
-
+			my $result      = $self->db->resultset("Deliveryservice")->search( { 'me.id' => $id }, { prefetch => ['cdn'] } )->single();
+			my $cdn_name    = $result->cdn->name;
+			my $ds_name     = $result->xml_id;
 			my $rascal_data = $self->get_rascal_state_data( { type => "RASCAL", state_type => "deliveryServices", cdn_name => $cdn_name } );
 
 			# scalar refs get converted into json booleans

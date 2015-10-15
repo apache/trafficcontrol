@@ -26,6 +26,7 @@ use Test::More;
 use Test::Mojo;
 use Moose;
 use Schema;
+use Fixtures::Cdn;
 use Fixtures::Deliveryservice;
 use Fixtures::DeliveryserviceTmuser;
 use Fixtures::Asn;
@@ -68,6 +69,7 @@ sub load_core_data {
 	my $self          = shift;
 	my $schema        = shift;
 	my $schema_values = { schema => $schema, no_transactions => 1 };
+	$self->load_all_fixtures( Fixtures::Cdn->new($schema_values) );
 	$self->load_all_fixtures( Fixtures::Role->new($schema_values) );
 	$self->load_all_fixtures( Fixtures::TmUser->new($schema_values) );
 	$self->load_all_fixtures( Fixtures::Status->new($schema_values) );
@@ -120,6 +122,7 @@ sub unload_core_data {
 	$self->teardown( $schema, 'Regex' );
 	$self->teardown( $schema, 'Type' );
 	$self->teardown( $schema, 'Status' );
+	$self->teardown( $schema, 'Cdn' );
 }
 
 sub teardown {

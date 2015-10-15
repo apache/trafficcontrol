@@ -23,7 +23,7 @@
 	<parent>
 		<groupId>com.comcast.cdn.traffic_control.traffic_router</groupId>
 		<artifactId>traffic_router</artifactId>
-		<version>1.1.6</version>
+		<version>1.2.1</version>
 	</parent>
 
 	<scm>
@@ -93,7 +93,7 @@
 						<configuration>
 							<targetJdk>1.6</targetJdk>
 							<verbose>true</verbose>
-							<failurePriority>2</failurePriority>
+							<failurePriority>5</failurePriority>
 							<rulesets>
 								<ruleset>build/pmd/ruleset.xml</ruleset>
 							</rulesets>
@@ -103,7 +103,7 @@
 				<configuration>
 					<targetJdk>1.6</targetJdk>
 					<verbose>true</verbose>
-					<failurePriority>2</failurePriority>
+					<failurePriority>5</failurePriority>
 					<rulesets>
 						<ruleset>build/pmd/ruleset.xml</ruleset>
 					</rulesets>
@@ -200,7 +200,13 @@
 					</archive>
 				</configuration>
 			</plugin>
-
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-surefire-plugin</artifactId>
+				<configuration>
+					<argLine>-DminimumTPS=80</argLine>
+				</configuration>
+			</plugin>
 		</plugins>
 	</build>
 

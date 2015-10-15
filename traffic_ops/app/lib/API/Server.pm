@@ -41,11 +41,13 @@ sub getserverdata {
 	my $orderby = $self->param('orderby') || "host_name";
 	my $rs_data = $self->db->resultset('Server')->search(
 		undef, {
-			prefetch => [ 'cachegroup', 'type', 'profile', 'status', 'phys_location' ],
+			prefetch => [ 'cdn', 'cachegroup', 'type', 'profile', 'status', 'phys_location' ],
 			order_by => 'me.' . $orderby,
 		}
 	);
 	while ( my $row = $rs_data->next ) {
+		my $cdn_name = defined( $row->cdn_id ) ? $row->cdn->name : "";
+
 		push(
 			@data, {
 				"id"             => $row->id,
@@ -67,6 +69,7 @@ sub getserverdata {
 				"type"           => $row->type->name,
 				"status"         => $row->status->name,
 				"profile"        => $row->profile->name,
+				"cdnName"        => $cdn_name,
 				"mgmtIpAddress"  => $row->mgmt_ip_address,
 				"mgmtIpNetmask"  => $row->mgmt_ip_netmask,
 				"mgmtIpGateway"  => $row->mgmt_ip_gateway,

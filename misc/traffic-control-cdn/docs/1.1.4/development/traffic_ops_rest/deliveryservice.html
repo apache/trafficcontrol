@@ -1,0 +1,2041 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Delivery Service &mdash; Traffic Control 1.1.4 documentation </title>
+  
+
+  
+  
+    <link rel="shortcut icon" href="../../_static/favicon.ico"/>
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  
+
+  
+    <link rel="stylesheet" href="../../_static/theme_overrides.css" type="text/css" />
+  
+
+  
+    <link rel="top" title="Traffic Control 1.1.4 documentation" href="../../index.html"/>
+        <link rel="up" title="Traffic Ops" href="../traffic_ops.html"/>
+        <link rel="next" title="hwinfo" href="hwinfo.html"/>
+        <link rel="prev" title="Change Logs" href="changelog.html"/> 
+
+  
+  <script src="_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-nav-search">
+        
+
+        
+          <a href="/" class="icon icon-home"> Traffic Control
+        
+
+        
+          
+          <img src="../../_static/tc_logo.png" class="logo" />
+        
+        </a>
+
+        
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+        
+      </div>
+
+      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+        
+          
+          
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../basics/index.html">CDN Basics</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../basics/content_delivery_networks.html">Content Delivery Networks</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../basics/http_11.html">HTTP 1.1</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../basics/caching_proxies.html">Caching Proxies</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../basics/cache_revalidation.html">Cache Control Headers and Revalidation</a></li>
+</ul>
+</li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../overview/index.html">Traffic Control Overview</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../overview/introduction.html">Introduction</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../overview/traffic_ops.html">Traffic Ops</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../overview/traffic_router.html">Traffic Router</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../overview/traffic_monitor.html">Traffic Monitor</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../overview/traffic_stats.html">Traffic Stats</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../overview/traffic_portal.html">Traffic Portal</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../overview/traffic_server.html">Traffic Server</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../overview/traffic_vault.html">Traffic Vault</a></li>
+</ul>
+</li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../admin/index.html">Administrator&#8217;s Guide</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../admin/traffic_ops_install.html">Installing Traffic Ops</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../admin/traffic_ops_config.html">Configuring Traffic Ops</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../admin/traffic_ops_using.html">Using Traffic Ops</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../admin/traffic_ops_extensions.html">Managing Traffic Ops Extensions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../admin/traffic_monitor.html">Traffic Monitor Administration</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../admin/traffic_router.html">Traffic Router Administration</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../admin/traffic_stats.html">Traffic Stats Administration</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../admin/traffic_server.html">Traffic Server Administration</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../admin/traffic_vault.html">Traffic Vault Administration</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../admin/quick_howto/index.html">Quick How To Guides</a></li>
+</ul>
+</li>
+</ul>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="../index.html">Developer&#8217;s Guide</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="../traffic_ops.html">Traffic Ops</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../traffic_router.html">Traffic Router</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../traffic_monitor.html">Traffic Monitor</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../traffic_stats.html">Traffic Stats</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../traffic_server.html">Traffic Server</a></li>
+</ul>
+</li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../faq/index.html">FAQ</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../faq/general.html">General</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../faq/development.html">Development</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../faq/administration.html">Running a Traffic Control CDN</a></li>
+</ul>
+</li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../glossary.html">Glossary</a></li>
+</ul>
+
+          
+        
+      </div>
+      &nbsp;
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="../../index.html">Traffic Control</a>
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="../../index.html">Traffic Control 1.1.4</a> &raquo;</li>
+      
+          <li><a href="../index.html">Developer&#8217;s Guide</a> &raquo;</li>
+      
+          <li><a href="../traffic_ops.html">Traffic Ops</a> &raquo;</li>
+      
+    <li>Delivery Service</li>
+      <li class="wy-breadcrumbs-aside">
+        
+          <a href="../../_sources/development/traffic_ops_rest/deliveryservice.txt" rel="nofollow"> View page source</a>
+        
+      </li>
+  </ul>
+  <hr/>
+</div>
+ 		  
+    		  <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      		  
+        		  <a href="hwinfo.html" class="btn btn-neutral float-right" title="hwinfo">Next <span class="fa fa-arrow-circle-right"></span></a>
+      		  
+      		  
+        		  <a href="changelog.html" class="btn btn-neutral" title="Change Logs"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      		  
+    		  </div>
+  		  
+          <div role="main" class="document">
+            
+  <div class="section" id="delivery-service">
+<span id="to-api-ds"></span><h1>Delivery Service<a class="headerlink" href="#delivery-service" title="Permalink to this headline">¶</a></h1>
+<p><strong>GET /api/1.1/deliveryservices.json</strong></p>
+<blockquote>
+<div><p>Retrieves all delivery services. See also <a class="reference external" href="http://traffic-control-cdn.net/docs/latest/admin/traffic_ops_using.html#delivery-service">Using Traffic Ops - Delivery Service</a>.</p>
+<p>Authentication Required: Yes</p>
+<p><strong>Response Properties</strong></p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="15%" />
+<col width="5%" />
+<col width="80%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">Parameter</th>
+<th class="head">Type</th>
+<th class="head">Description</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td><code class="docutils literal"><span class="pre">active</span></code></td>
+<td>bool</td>
+<td>true if active, false if inactive (inact).</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal"><span class="pre">cacheurl</span></code></td>
+<td>string</td>
+<td>Cache URL rule to apply to this delivery service.</td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal"><span class="pre">protocol</span></code></td>
+<td>string</td>
+<td><ul class="first last simple">
+<li>0: serve with <a class="reference external" href="http://">http://</a> at EDGE</li>
+<li>1: serve with <a class="reference external" href="https://">https://</a> at EDGE</li>
+<li>2: serve with both <a class="reference external" href="http://">http://</a> and <a class="reference external" href="https://">https://</a> at EDGE</li>
+</ul>
+</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal"><span class="pre">ccrDnsTtl</span></code></td>
+<td>string</td>
+<td>The TTL of the DNS response for A or AAAA queries requesting the IP address of the tr. host.</td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal"><span class="pre">checkPath</span></code></td>
+<td>string</td>
+<td>The path portion of the URL to check this deliveryservice for health.</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal"><span class="pre">dnsBypassIp</span></code></td>
+<td>string</td>
+<td>The IPv4 IP to use for bypass on a DNS deliveryservice  - bypass starts when serving more than the
+globalMaxMbps traffic on this deliveryservice.</td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal"><span class="pre">dnsBypassIp6</span></code></td>
+<td>string</td>
+<td>The IPv6 IP to use for bypass on a DNS deliveryservice - bypass starts when serving more than the
+globalMaxMbps traffic on this deliveryservice.</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal"><span class="pre">dnsBypassTtl</span></code></td>
+<td>string</td>
+<td>The TTL of the DNS bypass response.</td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal"><span class="pre">dscp</span></code></td>
+<td>string</td>
+<td>The Differentiated Services Code Point (DSCP) with which to mark downstream (EDGE -&gt;  customer) traffic.</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal"><span class="pre">edgeHeaderRewrite</span></code></td>
+<td>string</td>
+<td>The EDGE header rewrite actions to perform.</td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal"><span class="pre">geoLimit</span></code></td>
+<td>string</td>
+<td><ul class="first simple">
+<li>0: None - no limitations</li>
+<li>1: Only route on CZF file hit</li>
+<li>2: Only route on CZF hit or when from USA</li>
+</ul>
+<p class="last">Note that this does not prevent access to content or makes content secure; it just prevents
+routing to the content by Traffic Router.</p>
+</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal"><span class="pre">globalMaxMbps</span></code></td>
+<td>string</td>
+<td>The maximum global bandwidth allowed on this deliveryservice. If exceeded, the traffic routes to the
+dnsByPassIp* for DNS deliveryservices and to the httpBypassFqdn for HTTP deliveryservices.</td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal"><span class="pre">globalMaxTps</span></code></td>
+<td>string</td>
+<td>The maximum global transactions per second allowed on this deliveryservice. When this is exceeded
+traffic will be sent to the dnsByPassIp* for DNS deliveryservices and to the httpBypassFqdn for
+HTTP deliveryservices</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal"><span class="pre">headerRewrite</span></code></td>
+<td>string</td>
+<td>The EDGE header rewrite actions to perform.</td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal"><span class="pre">httpBypassFqdn</span></code></td>
+<td>string</td>
+<td>The HTTP destination to use for bypass on an HTTP deliveryservice - bypass starts when serving more than the
+globalMaxMbps traffic on this deliveryservice.</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal"><span class="pre">id</span></code></td>
+<td>string</td>
+<td>The deliveryservice id (database row number).</td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal"><span class="pre">infoUrl</span></code></td>
+<td>string</td>
+<td>Use this to add a URL that points to more information about that deliveryservice.</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal"><span class="pre">ipv6RoutingEnabled</span></code></td>
+<td>bool</td>
+<td>false: send IPv4 address of Traffic Router to client on HTTP type del.</td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal"><span class="pre">longDesc</span></code></td>
+<td>string</td>
+<td>Description field 1.</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal"><span class="pre">longDesc1</span></code></td>
+<td>string</td>
+<td>Description field 2.</td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal"><span class="pre">longDesc2</span></code></td>
+<td>string</td>
+<td>Description field 2.</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal"><span class="pre">matchList</span></code></td>
+<td>array</td>
+<td>Array of matchList hashes.</td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal"><span class="pre">&gt;&gt;type</span></code></td>
+<td>string</td>
+<td>The type of MatchList (one of :ref:to-api-types use_in_table=&#8217;regex&#8217;).</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal"><span class="pre">&gt;&gt;setNumber</span></code></td>
+<td>string</td>
+<td>The set Number of the matchList.</td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal"><span class="pre">&gt;&gt;pattern</span></code></td>
+<td>string</td>
+<td>The regexp for the matchList.</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal"><span class="pre">maxDnsAnswers</span></code></td>
+<td>string</td>
+<td>The maximum number of IPs to put in a A/AAAA response for a DNS deliveryservice (0 means all
+available).</td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal"><span class="pre">missLat</span></code></td>
+<td>string</td>
+<td>The latitude to use when the client cannot be found in the CZF or the Geo lookup.</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal"><span class="pre">missLong</span></code></td>
+<td>string</td>
+<td>The longitude to use when the client cannot be found in the CZF or the Geo lookup.</td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal"><span class="pre">midHeaderRewrite</span></code></td>
+<td>string</td>
+<td>The MID header rewrite actions to perform.</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal"><span class="pre">multiSiteOrigin</span></code></td>
+<td>string</td>
+<td><div class="first last line-block">
+<div class="line">Is the Multi Site Origin feature enabled for this delivery service. See <a class="reference internal" href="../../admin/traffic_ops_using.html#rl-multi-site-origin"><span>Multi Site Origin</span></a></div>
+</div>
+</td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal"><span class="pre">orgServerFqdn</span></code></td>
+<td>string</td>
+<td>The origin server base URL (FQDN when used in this instance, includes the
+protocol (<a class="reference external" href="http://">http://</a> or <a class="reference external" href="https://">https://</a>) for use in retrieving content from the origin server.</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal"><span class="pre">profileDescription</span></code></td>
+<td>string</td>
+<td>The description of the Traffic Router Profile with which this deliveryservice is associated.</td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal"><span class="pre">profileName</span></code></td>
+<td>string</td>
+<td>The name of the Traffic Router Profile with which this deliveryservice is associated.</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal"><span class="pre">qstringIgnore</span></code></td>
+<td>string</td>
+<td><ul class="first last simple">
+<li>0: no special query string handling; it is for use in the cache-key and pass up to origin.</li>
+<li>1: ignore query string in cache-key, but pass it up to parent and or origin.</li>
+<li>2: drop query string at edge, and do not use it in the cache-key.</li>
+</ul>
+</td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal"><span class="pre">regexRemap</span></code></td>
+<td>string</td>
+<td>Regex Remap rule to apply to this delivery service at the Edge tier.</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal"><span class="pre">remapText</span></code></td>
+<td>string</td>
+<td>Additional raw remap line text.</td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal"><span class="pre">signed</span></code></td>
+<td>bool</td>
+<td><ul class="first last simple">
+<li>false: token based auth (see :ref:token-based-auth) is not enabled for this deliveryservice.</li>
+<li>true: token based auth is enabled for this deliveryservice.</li>
+</ul>
+</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal"><span class="pre">rangeRequestHandling</span></code></td>
+<td>string</td>
+<td><p class="first">How to treat range requests:</p>
+<ul class="last simple">
+<li>0 Do not cache (ranges requested from files taht are already cached due to a non range request will be a HIT)</li>
+<li>1 Use the <a class="reference external" href="https://docs.trafficserver.apache.org/en/latest/reference/plugins/background_fetch.en.html">background_fetch</a> plugin.</li>
+<li>2 Use the cache_range_requests plugin.</li>
+</ul>
+</td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal"><span class="pre">type</span></code></td>
+<td>string</td>
+<td>The type of this deliveryservice (one of :ref:to-api-types use_in_table=&#8217;deliveryservice&#8217;).</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal"><span class="pre">xmlId</span></code></td>
+<td>string</td>
+<td>Unique string that describes this deliveryservice.</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Response Example</strong></p>
+<div class="highlight-python"><div class="highlight"><pre>{
+  &quot;response&quot;: [
+    {
+      &quot;active&quot;: true,
+      &quot;cacheurl&quot;: null,
+      &quot;protocol&quot;: &quot;0&quot;,
+      &quot;ccrDnsTtl&quot;: &quot;3600&quot;,
+      &quot;checkPath&quot;: &quot;/crossdomain.xml&quot;,
+      &quot;dnsBypassIp&quot;: &quot;&quot;,
+      &quot;dnsBypassIp6&quot;: null,
+      &quot;dnsBypassTtl&quot;: null,
+      &quot;dscp&quot;: &quot;40&quot;,
+      &quot;geoLimit&quot;: &quot;0&quot;,
+      &quot;globalMaxMbps&quot;: &quot;0&quot;,
+      &quot;globalMaxTps&quot;: &quot;0&quot;,
+      &quot;headerRewrite&quot;: &quot;add-header X-Powered-By: KABLETOWN [L]&quot;,
+      &quot;edgeHeaderRewrite&quot;: &quot;add-header X-Powered-By: KABLETOWN [L]&quot;,
+      &quot;midHeaderRewrite&quot;: null,
+      &quot;httpBypassFqdn&quot;: &quot;&quot;,
+      &quot;rangeRequestHandling&quot;: &quot;0&quot;,
+      &quot;id&quot;: &quot;12&quot;,
+      &quot;infoUrl&quot;: &quot;&quot;,
+      &quot;ipv6RoutingEnabled&quot;: false,
+      &quot;longDesc&quot;: &quot;long_desc&quot;,
+      &quot;longDesc1&quot;: &quot;long_desc_1&quot;,
+      &quot;longDesc2&quot;: &quot;long_desc_2&quot;,
+      &quot;matchList&quot;: [
+        {
+          &quot;type&quot;: &quot;HOST_REGEXP&quot;,
+          &quot;setNumber&quot;: &quot;0&quot;,
+          &quot;pattern&quot;: &quot;.*\\.images\\..*&quot;
+        }
+      ],
+      &quot;maxDnsAnswers&quot;: &quot;0&quot;,
+      &quot;missLat&quot;: &quot;41.881944&quot;,
+      &quot;missLong&quot;: &quot;-87.627778&quot;,
+      &quot;orgServerFqdn&quot;: &quot;http://cdl.origin.kabletown.net&quot;,
+      &quot;profileDescription&quot;: &quot;Comcast Content Router for cdn2.comcast.net&quot;,
+      &quot;profileName&quot;: &quot;EDGE_CDN2&quot;,
+      &quot;qstringIgnore&quot;: &quot;0&quot;,
+      &quot;remapText&quot;: null,
+      &quot;regexRemap&quot;: null,
+      &quot;signed&quot;: true,
+      &quot;type&quot;: &quot;HTTP&quot;,
+      &quot;xmlId&quot;: &quot;cdl-c2&quot;
+    },
+    { .. },
+    { .. }
+  ],
+  &quot;version&quot;: &quot;1.1&quot;
+}
+</pre></div>
+</div>
+</div></blockquote>
+<div class="line-block">
+<div class="line"><br /></div>
+</div>
+<p><strong>GET /api/1.1/deliveryservices/:id.json</strong></p>
+<blockquote>
+<div><p>Retrieves a specific delivery service. See also <a class="reference external" href="http://traffic-control-cdn.net/docs/latest/admin/traffic_ops_using.html#delivery-service">Using Traffic Ops - Delivery Service</a>.</p>
+<p>Authentication Required: Yes</p>
+<p><strong>Response Properties</strong></p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="15%" />
+<col width="5%" />
+<col width="80%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">Parameter</th>
+<th class="head">Type</th>
+<th class="head">Description</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td><code class="docutils literal"><span class="pre">active</span></code></td>
+<td>bool</td>
+<td>true if active, false if inactive (inact).</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal"><span class="pre">cacheurl</span></code></td>
+<td>string</td>
+<td>Cache URL rule to apply to this delivery service.</td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal"><span class="pre">protocol</span></code></td>
+<td>string</td>
+<td><ul class="first last simple">
+<li>0: serve with <a class="reference external" href="http://">http://</a> at EDGE</li>
+<li>1: serve with <a class="reference external" href="https://">https://</a> at EDGE</li>
+<li>2: serve with both <a class="reference external" href="http://">http://</a> and <a class="reference external" href="https://">https://</a> at EDGE</li>
+</ul>
+</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal"><span class="pre">ccrDnsTtl</span></code></td>
+<td>string</td>
+<td>The TTL of the DNS response for A or AAAA queries requesting the IP address of the tr. host.</td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal"><span class="pre">checkPath</span></code></td>
+<td>string</td>
+<td>The path portion of the URL to check this deliveryservice for health.</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal"><span class="pre">dnsBypassIp</span></code></td>
+<td>string</td>
+<td>The IPv4 IP to use for bypass on a DNS deliveryservice  - bypass starts when serving more than the
+globalMaxMbps traffic on this deliveryservice.</td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal"><span class="pre">dnsBypassIp6</span></code></td>
+<td>string</td>
+<td>The IPv6 IP to use for bypass on a DNS deliveryservice - bypass starts when serving more than the
+globalMaxMbps traffic on this deliveryservice.</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal"><span class="pre">dnsBypassTtl</span></code></td>
+<td>string</td>
+<td>The TTL of the DNS bypass response.</td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal"><span class="pre">dscp</span></code></td>
+<td>string</td>
+<td>The Differentiated Services Code Point (DSCP) with which to mark downstream (EDGE -&gt;  customer) traffic.</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal"><span class="pre">edgeHeaderRewrite</span></code></td>
+<td>string</td>
+<td>The EDGE header rewrite actions to perform.</td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal"><span class="pre">geoLimit</span></code></td>
+<td>string</td>
+<td><ul class="first simple">
+<li>0: None - no limitations</li>
+<li>1: Only route on CZF file hit</li>
+<li>2: Only route on CZF hit or when from USA</li>
+</ul>
+<p class="last">Note that this does not prevent access to content or makes content secure; it just prevents
+routing to the content by Traffic Router.</p>
+</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal"><span class="pre">globalMaxMbps</span></code></td>
+<td>string</td>
+<td>The maximum global bandwidth allowed on this deliveryservice. If exceeded, the traffic routes to the
+dnsByPassIp* for DNS deliveryservices and to the httpBypassFqdn for HTTP deliveryservices.</td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal"><span class="pre">globalMaxTps</span></code></td>
+<td>string</td>
+<td>The maximum global transactions per second allowed on this deliveryservice. When this is exceeded
+traffic will be sent to the dnsByPassIp* for DNS deliveryservices and to the httpBypassFqdn for
+HTTP deliveryservices</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal"><span class="pre">headerRewrite</span></code></td>
+<td>string</td>
+<td>The EDGE header rewrite actions to perform.</td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal"><span class="pre">httpBypassFqdn</span></code></td>
+<td>string</td>
+<td>The HTTP destination to use for bypass on an HTTP deliveryservice - bypass starts when serving more than the
+globalMaxMbps traffic on this deliveryservice.</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal"><span class="pre">id</span></code></td>
+<td>string</td>
+<td>The deliveryservice id (database row number).</td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal"><span class="pre">infoUrl</span></code></td>
+<td>string</td>
+<td>Use this to add a URL that points to more information about that deliveryservice.</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal"><span class="pre">ipv6RoutingEnabled</span></code></td>
+<td>bool</td>
+<td>false: send IPv4 address of Traffic Router to client on HTTP type del.</td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal"><span class="pre">longDesc</span></code></td>
+<td>string</td>
+<td>Description field 1.</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal"><span class="pre">longDesc1</span></code></td>
+<td>string</td>
+<td>Description field 2.</td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal"><span class="pre">longDesc2</span></code></td>
+<td>string</td>
+<td>Description field 2.</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal"><span class="pre">matchList</span></code></td>
+<td>array</td>
+<td>Array of matchList hashes.</td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal"><span class="pre">&gt;&gt;type</span></code></td>
+<td>string</td>
+<td>The type of MatchList (one of :ref:to-api-types use_in_table=&#8217;regex&#8217;).</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal"><span class="pre">&gt;&gt;setNumber</span></code></td>
+<td>string</td>
+<td>The set Number of the matchList.</td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal"><span class="pre">&gt;&gt;pattern</span></code></td>
+<td>string</td>
+<td>The regexp for the matchList.</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal"><span class="pre">maxDnsAnswers</span></code></td>
+<td>string</td>
+<td>The maximum number of IPs to put in a A/AAAA response for a DNS deliveryservice (0 means all
+available).</td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal"><span class="pre">missLat</span></code></td>
+<td>string</td>
+<td>The latitude to use when the client cannot be found in the CZF or the Geo lookup.</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal"><span class="pre">missLong</span></code></td>
+<td>string</td>
+<td>The longitude to use when the client cannot be found in the CZF or the Geo lookup.</td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal"><span class="pre">midHeaderRewrite</span></code></td>
+<td>string</td>
+<td>The MID header rewrite actions to perform.</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal"><span class="pre">orgServerFqdn</span></code></td>
+<td>string</td>
+<td>The origin server base URL (FQDN when used in this instance, includes the
+protocol (<a class="reference external" href="http://">http://</a> or <a class="reference external" href="https://">https://</a>) for use in retrieving content from the origin server.</td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal"><span class="pre">profileDescription</span></code></td>
+<td>string</td>
+<td>The description of the Traffic Router Profile with which this deliveryservice is associated.</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal"><span class="pre">profileName</span></code></td>
+<td>string</td>
+<td>The name of the Traffic Router Profile with which this deliveryservice is associated.</td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal"><span class="pre">qstringIgnore</span></code></td>
+<td>string</td>
+<td><ul class="first last simple">
+<li>0: no special query string handling; it is for use in the cache-key and pass up to origin.</li>
+<li>1: ignore query string in cache-key, but pass it up to parent and or origin.</li>
+<li>2: drop query string at edge, and do not use it in the cache-key.</li>
+</ul>
+</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal"><span class="pre">regexRemap</span></code></td>
+<td>string</td>
+<td>Regex Remap rule to apply to this delivery service at the Edge tier.</td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal"><span class="pre">remapText</span></code></td>
+<td>string</td>
+<td>Additional raw remap line text.</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal"><span class="pre">signed</span></code></td>
+<td>bool</td>
+<td><ul class="first last simple">
+<li>false: token based auth (see :ref:token-based-auth) is not enabled for this deliveryservice.</li>
+<li>true: token based auth is enabled for this deliveryservice.</li>
+</ul>
+</td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal"><span class="pre">rangeRequestHandling</span></code></td>
+<td>string</td>
+<td><p class="first">How to treat range requests:</p>
+<ul class="last simple">
+<li>0 Do not cache (ranges requested from files taht are already cached due to a non range request will be a HIT)</li>
+<li>1 Use the <a class="reference external" href="https://docs.trafficserver.apache.org/en/latest/reference/plugins/background_fetch.en.html">background_fetch</a> plugin.</li>
+<li>2 Use the cache_range_requests plugin.</li>
+</ul>
+</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal"><span class="pre">type</span></code></td>
+<td>string</td>
+<td>The type of this deliveryservice (one of :ref:to-api-types use_in_table=&#8217;deliveryservice&#8217;).</td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal"><span class="pre">xmlId</span></code></td>
+<td>string</td>
+<td>Unique string that describes this deliveryservice.</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Response Example</strong></p>
+<div class="highlight-python"><div class="highlight"><pre><span class="p">{</span>
+  <span class="s">&quot;response&quot;</span><span class="p">:</span> <span class="p">[</span>
+    <span class="p">{</span>
+      <span class="s">&quot;active&quot;</span><span class="p">:</span> <span class="n">true</span><span class="p">,</span>
+      <span class="s">&quot;cacheurl&quot;</span><span class="p">:</span> <span class="n">null</span><span class="p">,</span>
+      <span class="s">&quot;protocol&quot;</span><span class="p">:</span> <span class="s">&quot;0&quot;</span><span class="p">,</span>
+      <span class="s">&quot;ccrDnsTtl&quot;</span><span class="p">:</span> <span class="s">&quot;3600&quot;</span><span class="p">,</span>
+      <span class="s">&quot;checkPath&quot;</span><span class="p">:</span> <span class="s">&quot;/crossdomain.xml&quot;</span><span class="p">,</span>
+      <span class="s">&quot;dnsBypassIp&quot;</span><span class="p">:</span> <span class="s">&quot;&quot;</span><span class="p">,</span>
+      <span class="s">&quot;dnsBypassIp6&quot;</span><span class="p">:</span> <span class="n">null</span><span class="p">,</span>
+      <span class="s">&quot;dnsBypassTtl&quot;</span><span class="p">:</span> <span class="n">null</span><span class="p">,</span>
+      <span class="s">&quot;dscp&quot;</span><span class="p">:</span> <span class="s">&quot;40&quot;</span><span class="p">,</span>
+      <span class="s">&quot;geoLimit&quot;</span><span class="p">:</span> <span class="s">&quot;0&quot;</span><span class="p">,</span>
+      <span class="s">&quot;globalMaxMbps&quot;</span><span class="p">:</span> <span class="s">&quot;0&quot;</span><span class="p">,</span>
+      <span class="s">&quot;globalMaxTps&quot;</span><span class="p">:</span> <span class="s">&quot;0&quot;</span><span class="p">,</span>
+      <span class="s">&quot;headerRewrite&quot;</span><span class="p">:</span> <span class="s">&quot;add-header X-Powered-By: KABLETOWN [L]&quot;</span><span class="p">,</span>
+      <span class="s">&quot;edgeHeaderRewrite&quot;</span><span class="p">:</span> <span class="s">&quot;add-header X-Powered-By: KABLETOWN [L]&quot;</span><span class="p">,</span>
+      <span class="s">&quot;midHeaderRewrite&quot;</span><span class="p">:</span> <span class="n">null</span><span class="p">,</span>
+      <span class="s">&quot;httpBypassFqdn&quot;</span><span class="p">:</span> <span class="s">&quot;&quot;</span><span class="p">,</span>
+      <span class="s">&quot;rangeRequestHandling&quot;</span><span class="p">:</span> <span class="s">&quot;0&quot;</span><span class="p">,</span>
+      <span class="s">&quot;id&quot;</span><span class="p">:</span> <span class="s">&quot;12&quot;</span><span class="p">,</span>
+      <span class="s">&quot;infoUrl&quot;</span><span class="p">:</span> <span class="s">&quot;&quot;</span><span class="p">,</span>
+      <span class="s">&quot;ipv6RoutingEnabled&quot;</span><span class="p">:</span> <span class="n">false</span><span class="p">,</span>
+      <span class="s">&quot;longDesc&quot;</span><span class="p">:</span> <span class="s">&quot;long_desc&quot;</span><span class="p">,</span>
+      <span class="s">&quot;longDesc1&quot;</span><span class="p">:</span> <span class="s">&quot;long_desc_1&quot;</span><span class="p">,</span>
+      <span class="s">&quot;longDesc2&quot;</span><span class="p">:</span> <span class="s">&quot;long_desc_2&quot;</span><span class="p">,</span>
+      <span class="s">&quot;matchList&quot;</span><span class="p">:</span> <span class="p">[</span>
+        <span class="p">{</span>
+          <span class="s">&quot;type&quot;</span><span class="p">:</span> <span class="s">&quot;HOST_REGEXP&quot;</span><span class="p">,</span>
+          <span class="s">&quot;setNumber&quot;</span><span class="p">:</span> <span class="s">&quot;0&quot;</span><span class="p">,</span>
+          <span class="s">&quot;pattern&quot;</span><span class="p">:</span> <span class="s">&quot;.*</span><span class="se">\\</span><span class="s">.images</span><span class="se">\\</span><span class="s">..*&quot;</span>
+        <span class="p">}</span>
+      <span class="p">],</span>
+      <span class="s">&quot;maxDnsAnswers&quot;</span><span class="p">:</span> <span class="s">&quot;0&quot;</span><span class="p">,</span>
+      <span class="s">&quot;missLat&quot;</span><span class="p">:</span> <span class="s">&quot;41.881944&quot;</span><span class="p">,</span>
+      <span class="s">&quot;missLong&quot;</span><span class="p">:</span> <span class="s">&quot;-87.627778&quot;</span><span class="p">,</span>
+      <span class="s">&quot;orgServerFqdn&quot;</span><span class="p">:</span> <span class="s">&quot;http://cdl.origin.kabletown.net&quot;</span><span class="p">,</span>
+      <span class="s">&quot;profileDescription&quot;</span><span class="p">:</span> <span class="s">&quot;Comcast Content Router for cdn2.comcast.net&quot;</span><span class="p">,</span>
+      <span class="s">&quot;profileName&quot;</span><span class="p">:</span> <span class="s">&quot;EDGE_CDN2&quot;</span><span class="p">,</span>
+      <span class="s">&quot;qstringIgnore&quot;</span><span class="p">:</span> <span class="s">&quot;0&quot;</span><span class="p">,</span>
+      <span class="s">&quot;remapText&quot;</span><span class="p">:</span> <span class="n">null</span><span class="p">,</span>
+      <span class="s">&quot;regexRemap&quot;</span><span class="p">:</span> <span class="n">null</span><span class="p">,</span>
+      <span class="s">&quot;signed&quot;</span><span class="p">:</span> <span class="n">true</span><span class="p">,</span>
+      <span class="s">&quot;type&quot;</span><span class="p">:</span> <span class="s">&quot;HTTP&quot;</span><span class="p">,</span>
+      <span class="s">&quot;xmlId&quot;</span><span class="p">:</span> <span class="s">&quot;cdl-c2&quot;</span>
+    <span class="p">}</span>
+  <span class="p">],</span>
+  <span class="s">&quot;version&quot;</span><span class="p">:</span> <span class="s">&quot;1.1&quot;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</div></blockquote>
+<div class="section" id="health">
+<span id="to-api-ds-health"></span><h2>Health<a class="headerlink" href="#health" title="Permalink to this headline">¶</a></h2>
+<p><strong>GET /api/1.1/deliveryservices/:id/capacity.json</strong></p>
+<blockquote>
+<div><p>Retrieves the capacity percentages of a delivery service.</p>
+<p>Authentication Required: Yes</p>
+<p><strong>Request Route Parameters</strong></p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="22%" />
+<col width="13%" />
+<col width="65%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">Name</th>
+<th class="head">Required</th>
+<th class="head">Description</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td>id</td>
+<td>yes</td>
+<td>delivery service id.</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Response Properties</strong></p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="29%" />
+<col width="10%" />
+<col width="61%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">Parameter</th>
+<th class="head">Type</th>
+<th class="head">Description</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td><code class="docutils literal"><span class="pre">availablePercent</span></code></td>
+<td>number</td>
+<td>The percentage of server capacity assigned to
+the delivery service that is available.</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal"><span class="pre">unavailablePercent</span></code></td>
+<td>number</td>
+<td>The percentage of server capacity assigned to the
+delivery service that is unavailable.</td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal"><span class="pre">utilizedPercent</span></code></td>
+<td>number</td>
+<td>The percentage of server capacity assigned to the
+delivery service being used.</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal"><span class="pre">maintenancePercent</span></code></td>
+<td>number</td>
+<td>The percentage of server capacity assigned to the
+delivery service that is down for maintenance.</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Response Example</strong></p>
+<div class="highlight-python"><div class="highlight"><pre><span class="p">{</span>
+ <span class="s">&quot;response&quot;</span><span class="p">:</span> <span class="p">{</span>
+    <span class="s">&quot;availablePercent&quot;</span><span class="p">:</span> <span class="mf">89.0939840205533</span><span class="p">,</span>
+    <span class="s">&quot;unavailablePercent&quot;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
+    <span class="s">&quot;utilizedPercent&quot;</span><span class="p">:</span> <span class="mf">10.9060020300395</span><span class="p">,</span>
+    <span class="s">&quot;maintenancePercent&quot;</span><span class="p">:</span> <span class="mf">0.0000139494071146245</span>
+ <span class="p">},</span>
+ <span class="s">&quot;version&quot;</span><span class="p">:</span> <span class="s">&quot;1.1&quot;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</div></blockquote>
+<div class="line-block">
+<div class="line"><br /></div>
+</div>
+<p><strong>GET /api/1.1/deliveryservices/:id/routing.json</strong></p>
+<blockquote>
+<div><p>Retrieves the routing method percentages of a delivery service.</p>
+<p>Authentication Required: Yes</p>
+<p><strong>Request Route Parameters</strong></p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="22%" />
+<col width="13%" />
+<col width="65%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">Name</th>
+<th class="head">Required</th>
+<th class="head">Description</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td>id</td>
+<td>yes</td>
+<td>delivery service id.</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Response Properties</strong></p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="11%" />
+<col width="5%" />
+<col width="83%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">Parameter</th>
+<th class="head">Type</th>
+<th class="head">Description</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td><code class="docutils literal"><span class="pre">staticRoute</span></code></td>
+<td>number</td>
+<td>The percentage of Traffic Router responses for this deliveryservice satisfied with pre-configured DNS entries.</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal"><span class="pre">miss</span></code></td>
+<td>number</td>
+<td>The percentage of Traffic Router responses for this deliveryservice that were a miss (no location available for client IP).</td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal"><span class="pre">geo</span></code></td>
+<td>number</td>
+<td>The percentage of Traffic Router responses for this deliveryservice satisfied using 3rd party geo-IP mapping.</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal"><span class="pre">err</span></code></td>
+<td>number</td>
+<td>The percentage of Traffic Router requests for this deliveryservice resulting in an error.</td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal"><span class="pre">cz</span></code></td>
+<td>number</td>
+<td>The percentage of Traffic Router requests for this deliveryservice satisfied by a CZF hit.</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal"><span class="pre">dsr</span></code></td>
+<td>number</td>
+<td>The percentage of Traffic Router requests for this deliveryservice satisfied by sending the
+client to the overflow CDN.</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Response Example</strong></p>
+<div class="highlight-python"><div class="highlight"><pre><span class="p">{</span>
+ <span class="s">&quot;response&quot;</span><span class="p">:</span> <span class="p">{</span>
+    <span class="s">&quot;staticRoute&quot;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
+    <span class="s">&quot;miss&quot;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
+    <span class="s">&quot;geo&quot;</span><span class="p">:</span> <span class="mf">37.8855391018869</span><span class="p">,</span>
+    <span class="s">&quot;err&quot;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
+    <span class="s">&quot;cz&quot;</span><span class="p">:</span> <span class="mf">62.1144608981131</span><span class="p">,</span>
+    <span class="s">&quot;dsr&quot;</span><span class="p">:</span> <span class="mi">0</span>
+ <span class="p">},</span>
+ <span class="s">&quot;version&quot;</span><span class="p">:</span> <span class="s">&quot;1.1&quot;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</div></blockquote>
+</div>
+<div class="section" id="metrics">
+<span id="to-api-ds-metrics"></span><h2>Metrics<a class="headerlink" href="#metrics" title="Permalink to this headline">¶</a></h2>
+<p><strong>GET /api/1.1/deliveryservices/:id/edge/metric_types/:metric/start_date/:start/end_date/:end/\
+interval/:interval/window_start/:window_start/window_end/:window_end.json</strong></p>
+<blockquote>
+<div><p>Retrieves edge summary metrics of all cache groups for a delivery service.</p>
+<p>Authentication Required: Yes</p>
+<p><strong>Request Route Parameters</strong></p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="17%" />
+<col width="10%" />
+<col width="73%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">Name</th>
+<th class="head">Required</th>
+<th class="head">Description</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td><code class="docutils literal"><span class="pre">id</span></code></td>
+<td>yes</td>
+<td>The delivery service id.</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal"><span class="pre">metric</span></code></td>
+<td>yes</td>
+<td>One of the following: &#8220;kbps&#8221;, &#8220;tps_total&#8221;, &#8220;tps_2xx&#8221;, &#8220;tps_3xx&#8221;, &#8220;tps_4xx&#8221;,
+&#8220;tps_5xx&#8221;.</td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal"><span class="pre">start</span></code></td>
+<td>yes</td>
+<td>UNIX time, yesterday, now.</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal"><span class="pre">end</span></code></td>
+<td>yes</td>
+<td>UNIX time, yesterday, now.</td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal"><span class="pre">interval</span></code></td>
+<td>yes</td>
+<td>&gt; 10</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal"><span class="pre">window_start</span></code></td>
+<td>yes</td>
+<td>UNIX time, yesterday, now.</td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal"><span class="pre">window_end</span></code></td>
+<td>yes</td>
+<td>UNIX time, yesterday, now.</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Request Query Parameters</strong></p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="20%" />
+<col width="15%" />
+<col width="65%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">Name</th>
+<th class="head">Required</th>
+<th class="head">Description</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td><code class="docutils literal"><span class="pre">summary</span></code></td>
+<td>no</td>
+<td>Flag used to return summary metrics only.</td>
+</tr>
+</tbody>
+</table>
+<p>Response Content Type: application/json</p>
+<p><strong>Response Properties</strong></p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="45%" />
+<col width="21%" />
+<col width="34%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">Parameter</th>
+<th class="head">Type</th>
+<th class="head">Description</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td><code class="docutils literal"><span class="pre">ninetyFifth</span></code></td>
+<td>number</td>
+<td>&nbsp;</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal"><span class="pre">average</span></code></td>
+<td>int</td>
+<td>&nbsp;</td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal"><span class="pre">min</span></code></td>
+<td>number</td>
+<td>&nbsp;</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal"><span class="pre">max</span></code></td>
+<td>number</td>
+<td>&nbsp;</td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal"><span class="pre">total</span></code></td>
+<td>number</td>
+<td>&nbsp;</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Response Example</strong></p>
+<div class="highlight-python"><div class="highlight"><pre><span class="p">{</span>
+ <span class="s">&quot;response&quot;</span><span class="p">:</span> <span class="p">{</span>
+    <span class="s">&quot;ninetyFifth&quot;</span><span class="p">:</span> <span class="mf">183982091.479</span><span class="p">,</span>
+    <span class="s">&quot;average&quot;</span><span class="p">:</span> <span class="mi">97444798</span><span class="p">,</span>
+    <span class="s">&quot;min&quot;</span><span class="p">:</span> <span class="mf">31193860.46233</span><span class="p">,</span>
+    <span class="s">&quot;max&quot;</span><span class="p">:</span> <span class="mf">205772883.28367</span><span class="p">,</span>
+    <span class="s">&quot;total&quot;</span><span class="p">:</span> <span class="mf">3643217414091.13</span>
+ <span class="p">},</span>
+ <span class="s">&quot;version&quot;</span><span class="p">:</span> <span class="s">&quot;1.1&quot;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</div></blockquote>
+<div class="line-block">
+<div class="line"><br /></div>
+</div>
+<p><strong>GET /api/1.1/usage/deliveryservices/:ds/cachegroups/:name/metric_types/:metric/start_date/:start_date/\
+end_date/:end_date/interval/:interval.json</strong></p>
+<blockquote>
+<div><p>Retrieves edge metrics of one or all locations (cache groups) for a delivery service.</p>
+<p>Authentication Required: Yes</p>
+<p><strong>Request Route Parameters</strong></p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="20%" />
+<col width="9%" />
+<col width="71%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">Name</th>
+<th class="head">Required</th>
+<th class="head">Description</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td><code class="docutils literal"><span class="pre">id</span></code></td>
+<td>yes</td>
+<td>The delivery service id.</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal"><span class="pre">cache_group_name</span></code></td>
+<td>yes</td>
+<td>name, all.</td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal"><span class="pre">usage_type</span></code></td>
+<td>yes</td>
+<td>One of the following: &#8220;kbps&#8221;, &#8220;tps_total&#8221;, &#8220;tps_2xx&#8221;, &#8220;tps_3xx&#8221;, &#8220;tps_4xx&#8221;,
+&#8220;tps_5xx&#8221;.</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal"><span class="pre">start</span></code></td>
+<td>yes</td>
+<td>UNIX time, yesterday, now.</td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal"><span class="pre">end</span></code></td>
+<td>yes</td>
+<td>UNIX time, yesterday, now.</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal"><span class="pre">interval</span></code></td>
+<td>yes</td>
+<td>&gt; 10</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Response Properties</strong></p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="54%" />
+<col width="17%" />
+<col width="28%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">Parameter</th>
+<th class="head">Type</th>
+<th class="head">Description</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td><code class="docutils literal"><span class="pre">deliveryServiceName</span></code></td>
+<td>string</td>
+<td>&nbsp;</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal"><span class="pre">statName</span></code></td>
+<td>string</td>
+<td>&nbsp;</td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal"><span class="pre">deliveryServiceId</span></code></td>
+<td>string</td>
+<td>&nbsp;</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal"><span class="pre">interval</span></code></td>
+<td>int</td>
+<td>&nbsp;</td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal"><span class="pre">series</span></code></td>
+<td>array</td>
+<td>&nbsp;</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal"><span class="pre">&gt;&gt;timeBase</span></code></td>
+<td>int</td>
+<td>&nbsp;</td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal"><span class="pre">&gt;&gt;samples</span></code></td>
+<td>array</td>
+<td>&nbsp;</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal"><span class="pre">end</span></code></td>
+<td>string</td>
+<td>&nbsp;</td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal"><span class="pre">elapsed</span></code></td>
+<td>number</td>
+<td>&nbsp;</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal"><span class="pre">cdnName</span></code></td>
+<td>string</td>
+<td>&nbsp;</td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal"><span class="pre">hostName</span></code></td>
+<td>string</td>
+<td>&nbsp;</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal"><span class="pre">summary</span></code></td>
+<td>hash</td>
+<td>&nbsp;</td>
+</tr>
+<tr class="row-even"><td>&gt;``ninetyFifth``</td>
+<td>number</td>
+<td>&nbsp;</td>
+</tr>
+<tr class="row-odd"><td>&gt;``average``</td>
+<td>int</td>
+<td>&nbsp;</td>
+</tr>
+<tr class="row-even"><td>&gt;``min``</td>
+<td>number</td>
+<td>&nbsp;</td>
+</tr>
+<tr class="row-odd"><td>&gt;``max``</td>
+<td>number</td>
+<td>&nbsp;</td>
+</tr>
+<tr class="row-even"><td>&gt;``total``</td>
+<td>number</td>
+<td>&nbsp;</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal"><span class="pre">cacheGroupName</span></code></td>
+<td>string</td>
+<td>&nbsp;</td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal"><span class="pre">start</span></code></td>
+<td>string</td>
+<td>&nbsp;</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Response Example</strong></p>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">TBD</span>
+</pre></div>
+</div>
+</div></blockquote>
+<div class="line-block">
+<div class="line"><br /></div>
+</div>
+<p><strong>GET /api/1.1/cdns/peakusage/:peak_usage_type/deliveryservice/:ds/cachegroup/:name/start_date/:start/\
+end_date/:end/interval/:interval.json</strong></p>
+<blockquote>
+<div><p>Authentication Required: Yes</p>
+<p><strong>Response Properties</strong></p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="61%" />
+<col width="15%" />
+<col width="24%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">Parameter</th>
+<th class="head">Type</th>
+<th class="head">Description</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td><code class="docutils literal"><span class="pre">TotalGBytesServedSinceStart</span></code></td>
+<td>number</td>
+<td>&nbsp;</td>
+</tr>
+<tr class="row-odd"><td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal"><span class="pre">&gt;&gt;item</span></code></td>
+<td>number</td>
+<td>&nbsp;</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal"><span class="pre">&gt;&gt;item</span></code></td>
+<td>number</td>
+<td>&nbsp;</td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal"><span class="pre">&gt;&gt;item</span></code></td>
+<td>number</td>
+<td>&nbsp;</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal"><span class="pre">&gt;&gt;item</span></code></td>
+<td>number</td>
+<td>&nbsp;</td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal"><span class="pre">&gt;&gt;item</span></code></td>
+<td>number</td>
+<td>&nbsp;</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal"><span class="pre">&gt;&gt;item</span></code></td>
+<td>number</td>
+<td>&nbsp;</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Response Example</strong></p>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">TBD</span>
+</pre></div>
+</div>
+</div></blockquote>
+<div class="line-block">
+<div class="line"><br /></div>
+</div>
+<p><strong>GET /api/1.1/deliveryservices/:id/:server_type/metrics/:metric_type/:start/:end.json</strong></p>
+<blockquote>
+<div><p>Retrieves detailed and summary metrics for MIDs or EDGEs for a delivery service.</p>
+<p>Authentication Required: No</p>
+<p><strong>Request Route Parameters</strong></p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="16%" />
+<col width="10%" />
+<col width="74%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">Name</th>
+<th class="head">Required</th>
+<th class="head">Description</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td><code class="docutils literal"><span class="pre">id</span></code></td>
+<td>yes</td>
+<td>The delivery service id.</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal"><span class="pre">server_type</span></code></td>
+<td>yes</td>
+<td>EDGE or MID.</td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal"><span class="pre">metric_type</span></code></td>
+<td>yes</td>
+<td>One of the following: &#8220;kbps&#8221;, &#8220;tps_total&#8221;, &#8220;tps_2xx&#8221;, &#8220;tps_3xx&#8221;, &#8220;tps_4xx&#8221;,
+&#8220;tps_5xx&#8221;.</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal"><span class="pre">start</span></code></td>
+<td>yes</td>
+<td>UNIX time, yesterday, now.</td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal"><span class="pre">end</span></code></td>
+<td>yes</td>
+<td>UNIX time, yesterday, now.</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Response Properties</strong></p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="51%" />
+<col width="19%" />
+<col width="30%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">Parameter</th>
+<th class="head">Type</th>
+<th class="head">Description</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td><code class="docutils literal"><span class="pre">stats</span></code></td>
+<td>hash</td>
+<td>&nbsp;</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal"><span class="pre">&gt;&gt;count</span></code></td>
+<td>int</td>
+<td>&nbsp;</td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal"><span class="pre">&gt;&gt;98thPercentile</span></code></td>
+<td>number</td>
+<td>&nbsp;</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal"><span class="pre">&gt;&gt;min</span></code></td>
+<td>number</td>
+<td>&nbsp;</td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal"><span class="pre">&gt;&gt;max</span></code></td>
+<td>number</td>
+<td>&nbsp;</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal"><span class="pre">&gt;&gt;5thPercentile</span></code></td>
+<td>number</td>
+<td>&nbsp;</td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal"><span class="pre">&gt;&gt;95thPercentile</span></code></td>
+<td>number</td>
+<td>&nbsp;</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal"><span class="pre">&gt;&gt;median</span></code></td>
+<td>number</td>
+<td>&nbsp;</td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal"><span class="pre">&gt;&gt;mean</span></code></td>
+<td>number</td>
+<td>&nbsp;</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal"><span class="pre">&gt;&gt;stddev</span></code></td>
+<td>number</td>
+<td>&nbsp;</td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal"><span class="pre">&gt;&gt;sum</span></code></td>
+<td>number</td>
+<td>&nbsp;</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal"><span class="pre">data</span></code></td>
+<td>array</td>
+<td>&nbsp;</td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal"><span class="pre">&gt;&gt;item</span></code></td>
+<td>array</td>
+<td>&nbsp;</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal"><span class="pre">&gt;&gt;time</span></code></td>
+<td>number</td>
+<td>&nbsp;</td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal"><span class="pre">&gt;&gt;value</span></code></td>
+<td>number</td>
+<td>&nbsp;</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal"><span class="pre">label</span></code></td>
+<td>string</td>
+<td>&nbsp;</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Response Example</strong></p>
+<div class="highlight-python"><div class="highlight"><pre><span class="p">{</span>
+ <span class="s">&quot;response&quot;</span><span class="p">:</span> <span class="p">[</span>
+    <span class="p">{</span>
+       <span class="s">&quot;stats&quot;</span><span class="p">:</span> <span class="p">{</span>
+          <span class="s">&quot;count&quot;</span><span class="p">:</span> <span class="mi">988</span><span class="p">,</span>
+          <span class="s">&quot;98thPercentile&quot;</span><span class="p">:</span> <span class="mf">16589105.55958</span><span class="p">,</span>
+          <span class="s">&quot;min&quot;</span><span class="p">:</span> <span class="mf">3185442.975</span><span class="p">,</span>
+          <span class="s">&quot;max&quot;</span><span class="p">:</span> <span class="mf">17124754.257</span><span class="p">,</span>
+          <span class="s">&quot;5thPercentile&quot;</span><span class="p">:</span> <span class="mf">3901253.95445</span><span class="p">,</span>
+          <span class="s">&quot;95thPercentile&quot;</span><span class="p">:</span> <span class="mf">16013210.034</span><span class="p">,</span>
+          <span class="s">&quot;median&quot;</span><span class="p">:</span> <span class="mf">8816895.576</span><span class="p">,</span>
+          <span class="s">&quot;mean&quot;</span><span class="p">:</span> <span class="mf">8995846.31741194</span><span class="p">,</span>
+          <span class="s">&quot;stddev&quot;</span><span class="p">:</span> <span class="mf">3941169.83683573</span><span class="p">,</span>
+          <span class="s">&quot;sum&quot;</span><span class="p">:</span> <span class="mf">333296106.060112</span>
+       <span class="p">},</span>
+       <span class="s">&quot;data&quot;</span><span class="p">:</span> <span class="p">[</span>
+          <span class="p">[</span>
+             <span class="mi">1414303200000</span><span class="p">,</span>
+             <span class="mf">12923518.466</span>
+          <span class="p">],</span>
+          <span class="p">[</span>
+             <span class="mi">1414303500000</span><span class="p">,</span>
+             <span class="mf">12625139.65</span>
+          <span class="p">]</span>
+       <span class="p">],</span>
+       <span class="s">&quot;label&quot;</span><span class="p">:</span> <span class="s">&quot;MID Kbps&quot;</span>
+    <span class="p">}</span>
+ <span class="p">],</span>
+ <span class="s">&quot;version&quot;</span><span class="p">:</span> <span class="s">&quot;1.1&quot;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</div></blockquote>
+</div>
+<div class="section" id="server">
+<span id="to-api-ds-server"></span><h2>Server<a class="headerlink" href="#server" title="Permalink to this headline">¶</a></h2>
+<p><strong>GET /api/1.1/deliveryserviceserver.json</strong></p>
+<blockquote>
+<div><p>Authentication Required: Yes</p>
+<p><strong>Request Query Parameters</strong></p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="18%" />
+<col width="16%" />
+<col width="66%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">Name</th>
+<th class="head">Required</th>
+<th class="head">Description</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td><code class="docutils literal"><span class="pre">page</span></code></td>
+<td>no</td>
+<td>The page number for use in pagination.</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal"><span class="pre">limit</span></code></td>
+<td>no</td>
+<td>For use in limiting the result set.</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Response Properties</strong></p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="28%" />
+<col width="10%" />
+<col width="62%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">Parameter</th>
+<th class="head">Type</th>
+<th class="head">Description</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td><code class="docutils literal"><span class="pre">lastUpdated</span></code></td>
+<td>array</td>
+<td>&nbsp;</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal"><span class="pre">server</span></code></td>
+<td>string</td>
+<td>&nbsp;</td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal"><span class="pre">deliveryService</span></code></td>
+<td>string</td>
+<td>&nbsp;</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Response Example</strong></p>
+<div class="highlight-python"><div class="highlight"><pre><span class="p">{</span>
+ <span class="s">&quot;page&quot;</span><span class="p">:</span> <span class="mi">2</span><span class="p">,</span>
+ <span class="s">&quot;orderby&quot;</span><span class="p">:</span> <span class="s">&quot;deliveryservice&quot;</span><span class="p">,</span>
+ <span class="s">&quot;response&quot;</span><span class="p">:</span> <span class="p">[</span>
+    <span class="p">{</span>
+       <span class="s">&quot;lastUpdated&quot;</span><span class="p">:</span> <span class="s">&quot;2014-09-26 17:53:43&quot;</span><span class="p">,</span>
+       <span class="s">&quot;server&quot;</span><span class="p">:</span> <span class="s">&quot;20&quot;</span><span class="p">,</span>
+       <span class="s">&quot;deliveryService&quot;</span><span class="p">:</span> <span class="s">&quot;1&quot;</span>
+    <span class="p">},</span>
+    <span class="p">{</span>
+       <span class="s">&quot;lastUpdated&quot;</span><span class="p">:</span> <span class="s">&quot;2014-09-26 17:53:44&quot;</span><span class="p">,</span>
+       <span class="s">&quot;server&quot;</span><span class="p">:</span> <span class="s">&quot;21&quot;</span><span class="p">,</span>
+       <span class="s">&quot;deliveryService&quot;</span><span class="p">:</span> <span class="s">&quot;1&quot;</span>
+    <span class="p">},</span>
+ <span class="p">],</span>
+ <span class="s">&quot;version&quot;</span><span class="p">:</span> <span class="s">&quot;1.1&quot;</span><span class="p">,</span>
+ <span class="s">&quot;limit&quot;</span><span class="p">:</span> <span class="mi">2</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</div></blockquote>
+</div>
+<div class="section" id="ssl-keys">
+<span id="to-api-ds-sslkeys"></span><h2>SSL Keys<a class="headerlink" href="#ssl-keys" title="Permalink to this headline">¶</a></h2>
+<p><strong>GET /api/1.1/deliveryservices/xmlId/:xmlid/sslkeys.json</strong></p>
+<blockquote>
+<div><p>Authentication Required: Yes</p>
+<p>Role Required: Admin</p>
+<p><strong>Request Route Parameters</strong></p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="18%" />
+<col width="16%" />
+<col width="66%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">Name</th>
+<th class="head">Required</th>
+<th class="head">Description</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td><code class="docutils literal"><span class="pre">xmlId</span></code></td>
+<td>yes</td>
+<td>xml_id of the desired delivery service</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Request Query Parameters</strong></p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="24%" />
+<col width="18%" />
+<col width="58%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">Name</th>
+<th class="head">Required</th>
+<th class="head">Description</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td><code class="docutils literal"><span class="pre">version</span></code></td>
+<td>no</td>
+<td>The version number to retrieve</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Response Properties</strong></p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="11%" />
+<col width="5%" />
+<col width="84%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">Parameter</th>
+<th class="head">Type</th>
+<th class="head">Description</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td><code class="docutils literal"><span class="pre">crt</span></code></td>
+<td>string</td>
+<td>base64 encoded crt file for delivery service</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal"><span class="pre">csr</span></code></td>
+<td>string</td>
+<td>base64 encoded csr file for delivery service</td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal"><span class="pre">key</span></code></td>
+<td>string</td>
+<td>base64 encoded private key file for delivery service</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal"><span class="pre">businessUnit</span></code></td>
+<td>string</td>
+<td>The business unit entered by the user when generating certs.  Field is optional and if not provided by the user will not be in response</td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal"><span class="pre">city</span></code></td>
+<td>string</td>
+<td>The city entered by the user when generating certs.  Field is optional and if not provided by the user will not be in response</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal"><span class="pre">organization</span></code></td>
+<td>string</td>
+<td>The organization entered by the user when generating certs.  Field is optional and if not provided by the user will not be in response</td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal"><span class="pre">hostname</span></code></td>
+<td>string</td>
+<td>The hostname entered by the user when generating certs.  Field is optional and if not provided by the user will not be in response</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal"><span class="pre">country</span></code></td>
+<td>string</td>
+<td>The country entered by the user when generating certs.  Field is optional and if not provided by the user will not be in response</td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal"><span class="pre">state</span></code></td>
+<td>string</td>
+<td>The state entered by the user when generating certs.  Field is optional and if not provided by the user will not be in response</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal"><span class="pre">version</span></code></td>
+<td>string</td>
+<td>The version of the certificate record in Riak</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Response Example</strong></p>
+<div class="highlight-python"><div class="highlight"><pre><span class="p">{</span>
+  <span class="s">&quot;version&quot;</span><span class="p">:</span> <span class="s">&quot;1.1&quot;</span><span class="p">,</span>
+  <span class="s">&quot;response&quot;</span><span class="p">:</span> <span class="p">{</span>
+    <span class="s">&quot;certificate&quot;</span><span class="p">:</span> <span class="p">{</span>
+      <span class="s">&quot;crt&quot;</span><span class="p">:</span> <span class="s">&quot;crt&quot;</span><span class="p">,</span>
+      <span class="s">&quot;key&quot;</span><span class="p">:</span> <span class="s">&quot;key&quot;</span><span class="p">,</span>
+      <span class="s">&quot;csr&quot;</span><span class="p">:</span> <span class="s">&quot;csr&quot;</span>
+    <span class="p">},</span>
+    <span class="s">&quot;businessUnit&quot;</span><span class="p">:</span> <span class="s">&quot;CDN_Eng&quot;</span><span class="p">,</span>
+    <span class="s">&quot;city&quot;</span><span class="p">:</span> <span class="s">&quot;Denver&quot;</span><span class="p">,</span>
+    <span class="s">&quot;organization&quot;</span><span class="p">:</span> <span class="s">&quot;KableTown&quot;</span><span class="p">,</span>
+    <span class="s">&quot;hostname&quot;</span><span class="p">:</span> <span class="s">&quot;foober.com&quot;</span><span class="p">,</span>
+    <span class="s">&quot;country&quot;</span><span class="p">:</span> <span class="s">&quot;US&quot;</span><span class="p">,</span>
+    <span class="s">&quot;state&quot;</span><span class="p">:</span> <span class="s">&quot;Colorado&quot;</span><span class="p">,</span>
+    <span class="s">&quot;version&quot;</span><span class="p">:</span> <span class="s">&quot;1&quot;</span>
+  <span class="p">}</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</div></blockquote>
+<div class="line-block">
+<div class="line"><br /></div>
+</div>
+<p><strong>GET /api/1.1/deliveryservices/hostname/:hostname/sslkeys.json</strong></p>
+<blockquote>
+<div><p>Authentication Required: Yes</p>
+<p>Role Required: Admin</p>
+<p><strong>Request Route Parameters</strong></p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="19%" />
+<col width="13%" />
+<col width="68%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">Name</th>
+<th class="head">Required</th>
+<th class="head">Description</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td><code class="docutils literal"><span class="pre">hostname</span></code></td>
+<td>yes</td>
+<td>pristine hostname of the desired delivery service</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Request Query Parameters</strong></p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="24%" />
+<col width="18%" />
+<col width="58%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">Name</th>
+<th class="head">Required</th>
+<th class="head">Description</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td><code class="docutils literal"><span class="pre">version</span></code></td>
+<td>no</td>
+<td>The version number to retrieve</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Response Properties</strong></p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="11%" />
+<col width="5%" />
+<col width="84%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">Parameter</th>
+<th class="head">Type</th>
+<th class="head">Description</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td><code class="docutils literal"><span class="pre">crt</span></code></td>
+<td>string</td>
+<td>base64 encoded crt file for delivery service</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal"><span class="pre">csr</span></code></td>
+<td>string</td>
+<td>base64 encoded csr file for delivery service</td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal"><span class="pre">key</span></code></td>
+<td>string</td>
+<td>base64 encoded private key file for delivery service</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal"><span class="pre">businessUnit</span></code></td>
+<td>string</td>
+<td>The business unit entered by the user when generating certs.  Field is optional and if not provided by the user will not be in response</td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal"><span class="pre">city</span></code></td>
+<td>string</td>
+<td>The city entered by the user when generating certs.  Field is optional and if not provided by the user will not be in response</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal"><span class="pre">organization</span></code></td>
+<td>string</td>
+<td>The organization entered by the user when generating certs.  Field is optional and if not provided by the user will not be in response</td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal"><span class="pre">hostname</span></code></td>
+<td>string</td>
+<td>The hostname entered by the user when generating certs.  Field is optional and if not provided by the user will not be in response</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal"><span class="pre">country</span></code></td>
+<td>string</td>
+<td>The country entered by the user when generating certs.  Field is optional and if not provided by the user will not be in response</td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal"><span class="pre">state</span></code></td>
+<td>string</td>
+<td>The state entered by the user when generating certs.  Field is optional and if not provided by the user will not be in response</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal"><span class="pre">version</span></code></td>
+<td>string</td>
+<td>The version of the certificate record in Riak</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Response Example</strong></p>
+<div class="highlight-python"><div class="highlight"><pre><span class="p">{</span>
+  <span class="s">&quot;version&quot;</span><span class="p">:</span> <span class="s">&quot;1.1&quot;</span><span class="p">,</span>
+  <span class="s">&quot;response&quot;</span><span class="p">:</span> <span class="p">{</span>
+    <span class="s">&quot;certificate&quot;</span><span class="p">:</span> <span class="p">{</span>
+      <span class="s">&quot;crt&quot;</span><span class="p">:</span> <span class="s">&quot;crt&quot;</span><span class="p">,</span>
+      <span class="s">&quot;key&quot;</span><span class="p">:</span> <span class="s">&quot;key&quot;</span><span class="p">,</span>
+      <span class="s">&quot;csr&quot;</span><span class="p">:</span> <span class="s">&quot;csr&quot;</span>
+    <span class="p">},</span>
+    <span class="s">&quot;businessUnit&quot;</span><span class="p">:</span> <span class="s">&quot;CDN_Eng&quot;</span><span class="p">,</span>
+    <span class="s">&quot;city&quot;</span><span class="p">:</span> <span class="s">&quot;Denver&quot;</span><span class="p">,</span>
+    <span class="s">&quot;organization&quot;</span><span class="p">:</span> <span class="s">&quot;KableTown&quot;</span><span class="p">,</span>
+    <span class="s">&quot;hostname&quot;</span><span class="p">:</span> <span class="s">&quot;foober.com&quot;</span><span class="p">,</span>
+    <span class="s">&quot;country&quot;</span><span class="p">:</span> <span class="s">&quot;US&quot;</span><span class="p">,</span>
+    <span class="s">&quot;state&quot;</span><span class="p">:</span> <span class="s">&quot;Colorado&quot;</span><span class="p">,</span>
+    <span class="s">&quot;version&quot;</span><span class="p">:</span> <span class="s">&quot;1&quot;</span>
+  <span class="p">}</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</div></blockquote>
+<div class="line-block">
+<div class="line"><br /></div>
+</div>
+<p><strong>GET /api/1.1/deliveryservices/xmlId/:xmlid/sslkeys/delete.json</strong></p>
+<blockquote>
+<div><p>Authentication Required: Yes</p>
+<p>Role Required: Admin</p>
+<p><strong>Request Route Parameters</strong></p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="18%" />
+<col width="16%" />
+<col width="66%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">Name</th>
+<th class="head">Required</th>
+<th class="head">Description</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td><code class="docutils literal"><span class="pre">xmlId</span></code></td>
+<td>yes</td>
+<td>xml_id of the desired delivery service</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Request Query Parameters</strong></p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="24%" />
+<col width="18%" />
+<col width="58%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">Name</th>
+<th class="head">Required</th>
+<th class="head">Description</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td><code class="docutils literal"><span class="pre">version</span></code></td>
+<td>no</td>
+<td>The version number to retrieve</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Response Properties</strong></p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="35%" />
+<col width="20%" />
+<col width="45%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">Parameter</th>
+<th class="head">Type</th>
+<th class="head">Description</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td><code class="docutils literal"><span class="pre">response</span></code></td>
+<td>string</td>
+<td>success response</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Response Example</strong></p>
+<div class="highlight-python"><div class="highlight"><pre><span class="p">{</span>
+  <span class="s">&quot;version&quot;</span><span class="p">:</span> <span class="s">&quot;1.1&quot;</span><span class="p">,</span>
+  <span class="s">&quot;response&quot;</span><span class="p">:</span> <span class="s">&quot;Successfully deleted ssl keys for &lt;xml_id&gt;&quot;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</div></blockquote>
+<div class="line-block">
+<div class="line"><br /></div>
+</div>
+<p><strong>POST /api/1.1/deliveryservices/sslkeys/generate</strong></p>
+<blockquote>
+<div><p>Generates SSL crt, csr, and private key for a delivery service</p>
+<p>Authentication Required: Yes
+Role Required:  Admin</p>
+<p>Response Content Type: application/json</p>
+<p><strong>Request Properties</strong></p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="19%" />
+<col width="13%" />
+<col width="68%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">Parameter</th>
+<th class="head">Type</th>
+<th class="head">Description</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td><code class="docutils literal"><span class="pre">key</span></code></td>
+<td>string</td>
+<td>xml_id of the delivery service</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal"><span class="pre">version</span></code></td>
+<td>string</td>
+<td>version of the keys being generated</td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal"><span class="pre">hostname</span></code></td>
+<td>string</td>
+<td>the <em>pristine hostname</em> of the delivery service</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal"><span class="pre">country</span></code></td>
+<td>string</td>
+<td>&nbsp;</td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal"><span class="pre">state</span></code></td>
+<td>string</td>
+<td>&nbsp;</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal"><span class="pre">city</span></code></td>
+<td>string</td>
+<td>&nbsp;</td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal"><span class="pre">org</span></code></td>
+<td>string</td>
+<td>&nbsp;</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal"><span class="pre">unit</span></code></td>
+<td>boolean</td>
+<td>&nbsp;</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Request Example</strong></p>
+<div class="highlight-python"><div class="highlight"><pre><span class="p">{</span>
+  <span class="s">&quot;key&quot;</span><span class="p">:</span> <span class="s">&quot;ds-01&quot;</span><span class="p">,</span>
+  <span class="s">&quot;businessUnit&quot;</span><span class="p">:</span> <span class="s">&quot;CDN Engineering&quot;</span><span class="p">,</span>
+  <span class="s">&quot;version&quot;</span><span class="p">:</span> <span class="s">&quot;3&quot;</span><span class="p">,</span>
+  <span class="s">&quot;hostname&quot;</span><span class="p">:</span> <span class="s">&quot;tr.ds-01.ott.kabletown.com&quot;</span><span class="p">,</span>
+  <span class="s">&quot;certificate&quot;</span><span class="p">:</span> <span class="p">{</span>
+    <span class="s">&quot;key&quot;</span><span class="p">:</span> <span class="s">&quot;some_key&quot;</span><span class="p">,</span>
+    <span class="s">&quot;csr&quot;</span><span class="p">:</span> <span class="s">&quot;some_csr&quot;</span><span class="p">,</span>
+    <span class="s">&quot;crt&quot;</span><span class="p">:</span> <span class="s">&quot;some_crt&quot;</span>
+  <span class="p">},</span>
+  <span class="s">&quot;country&quot;</span><span class="p">:</span> <span class="s">&quot;US&quot;</span><span class="p">,</span>
+  <span class="s">&quot;organization&quot;</span><span class="p">:</span> <span class="s">&quot;Kabletown&quot;</span><span class="p">,</span>
+  <span class="s">&quot;city&quot;</span><span class="p">:</span> <span class="s">&quot;Denver&quot;</span><span class="p">,</span>
+  <span class="s">&quot;state&quot;</span><span class="p">:</span> <span class="s">&quot;Colorado&quot;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p><strong>Response Properties</strong></p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="36%" />
+<col width="21%" />
+<col width="44%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">Parameter</th>
+<th class="head">Type</th>
+<th class="head">Description</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td><code class="docutils literal"><span class="pre">response</span></code></td>
+<td>string</td>
+<td>response string</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal"><span class="pre">version</span></code></td>
+<td>string</td>
+<td>API version</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Response Example</strong></p>
+<div class="highlight-python"><div class="highlight"><pre><span class="p">{</span>
+  <span class="s">&quot;version&quot;</span><span class="p">:</span> <span class="s">&quot;1.1&quot;</span><span class="p">,</span>
+  <span class="s">&quot;response&quot;</span><span class="p">:</span> <span class="s">&quot;Successfully created ssl keys for ds-01&quot;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</div></blockquote>
+<div class="line-block">
+<div class="line"><br /></div>
+</div>
+<p><strong>POST /api/1.1/deliveryservices/sslkeys/add</strong></p>
+<blockquote>
+<div><p>Allows user to add SSL crt, csr, and private key for a delivery service</p>
+<p>Authentication Required: Yes
+Role Required:  Admin</p>
+<p><strong>Request Properties</strong></p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="22%" />
+<col width="14%" />
+<col width="64%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">Parameter</th>
+<th class="head">Type</th>
+<th class="head">Description</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td><code class="docutils literal"><span class="pre">key</span></code></td>
+<td>string</td>
+<td>xml_id of the delivery service</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal"><span class="pre">version</span></code></td>
+<td>string</td>
+<td>version of the keys being generated</td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal"><span class="pre">csr</span></code></td>
+<td>string</td>
+<td>&nbsp;</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal"><span class="pre">crt</span></code></td>
+<td>string</td>
+<td>&nbsp;</td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal"><span class="pre">key</span></code></td>
+<td>string</td>
+<td>&nbsp;</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Request Example</strong></p>
+<div class="highlight-python"><div class="highlight"><pre><span class="p">{</span>
+  <span class="s">&quot;key&quot;</span><span class="p">:</span> <span class="s">&quot;ds-01&quot;</span><span class="p">,</span>
+  <span class="s">&quot;version&quot;</span><span class="p">:</span> <span class="s">&quot;1&quot;</span><span class="p">,</span>
+  <span class="s">&quot;certificate&quot;</span><span class="p">:</span> <span class="p">{</span>
+    <span class="s">&quot;key&quot;</span><span class="p">:</span> <span class="s">&quot;some_key&quot;</span><span class="p">,</span>
+    <span class="s">&quot;csr&quot;</span><span class="p">:</span> <span class="s">&quot;some_csr&quot;</span><span class="p">,</span>
+    <span class="s">&quot;crt&quot;</span><span class="p">:</span> <span class="s">&quot;some_crt&quot;</span>
+  <span class="p">}</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p><strong>Response Properties</strong></p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="36%" />
+<col width="21%" />
+<col width="44%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">Parameter</th>
+<th class="head">Type</th>
+<th class="head">Description</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td><code class="docutils literal"><span class="pre">response</span></code></td>
+<td>string</td>
+<td>response string</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal"><span class="pre">version</span></code></td>
+<td>string</td>
+<td>API version</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Response Example</strong></p>
+<div class="highlight-python"><div class="highlight"><pre><span class="p">{</span>
+  <span class="s">&quot;version&quot;</span><span class="p">:</span> <span class="s">&quot;1.1&quot;</span><span class="p">,</span>
+  <span class="s">&quot;response&quot;</span><span class="p">:</span> <span class="s">&quot;Successfully added ssl keys for ds-01&quot;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</div></blockquote>
+</div>
+</div>
+
+
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="hwinfo.html" class="btn btn-neutral float-right" title="hwinfo">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="changelog.html" class="btn btn-neutral" title="Change Logs"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../../',
+            VERSION:'1.1.4',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true
+        };
+    </script>
+      <script type="text/javascript" src="../../_static/jquery.js"></script>
+      <script type="text/javascript" src="../../_static/underscore.js"></script>
+      <script type="text/javascript" src="../../_static/doctools.js"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="../../_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

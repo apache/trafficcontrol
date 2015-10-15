@@ -27,11 +27,14 @@ use DBI;
 use JSON;
 use InstallUtils;
 use Digest::SHA1 qw(sha1_hex);
+use Data::Dumper;
+use File::Temp;
 
 my %dbconf            = ();
 my %ldapconf          = ();
 my $database_conf     = "/opt/traffic_ops/app/conf/production/database.conf";
 my $ldap_conf         = "/opt/traffic_ops/app/conf/ldap.conf";
+my $cdn_conf          = "/opt/traffic_ops/app/conf/cdn.conf";
 my $migrations_dbconf = "/opt/traffic_ops/app/db/dbconf.yml";
 my $parameters_file   = "/opt/traffic_ops/install/data/json/parameters.json";
 my $users_file        = "/opt/traffic_ops/install/data/json/users.json";
@@ -316,6 +319,9 @@ EOF
 		print "The ldap configuration has been saved.\n\n";
 	}
 
+	# Prompt for new secret
+	writeSecret($cdn_conf);
+
 	#
 	# Call mysql initialization script.
 	#
@@ -379,6 +385,86 @@ EOF
 		exit 4;
 	}
 }    # end of Init
+
+sub writeSecret {
+	print "\n\nTraffic Ops requires a secret key to generate authentication cookies.\n\n";
+
+	# read conf file -- see if secrets already there
+	my $conf_data;
+	unless ( $conf_data = do $cdn_conf ) {
+		my $err = $@ // $!;
+		if ($err) {
+			print "Could not load $cdn_conf $err";
+			exit 4;
+		}
+	}
+
+	# newSecret
+	my $secrets = $conf_data->{secrets};
+	if ( ( ref $secrets eq 'ARRAY' ) && scalar @$secrets > 0 ) {
+		print "One or more secrets found in $cdn_conf.\n";
+		$ans = InstallUtils::promptUser( " Do want to add a new one (only 2 will be kept) [y/n] ?", "y" );
+		if ( $ans eq "n" ) {
+
+			# nothing further to do...
+			return;
+		}
+	}
+	my $new_secret = "";
+	while ( length $new_secret == 0 ) {
+		print "Adding a new secret.\n";
+		my $ans = InstallUtils::promptUser( " Do you want one generated for you [y/n] ?", "y" );
+		if ( $ans eq "n" ) {
+			$new_secret = InstallUtils::promptUser( "Secret key:", "" );
+		}
+		else {
+			# create random word 12 chars long
+			$new_secret = InstallUtils::randomWord(12);
+		}
+	}
+
+	# keep 2 at most..
+	unshift( @$secrets, $new_secret );
+	if ( scalar @$secrets > 2 ) {
+		$#{$secrets} = 1;
+	}
+
+	# open temp file to gather modified conf file
+	my $tmpfile = File::Temp->new();
+
+	# format secrets on a single line without $VAR1 =...
+	local $Data::Dumper::Terse  = 1;
+	local $Data::Dumper::Indent = 0;
+	my $secrets_str = Dumper($secrets);
+
+	# read in current $cdn_conf, find "secrets" entry and replace it
+	# NOTE that this requires secrets to be maintained on a single line which is replaced entirely...
+	open( my $infh, '<', $cdn_conf ) or die("open(): $!");
+	while (<$infh>) {
+		next unless /^\s*secrets\b/;
+		s/secrets.*/secrets => $secrets_str,/;
+	}
+	continue {
+		print $tmpfile $_;
+	}
+
+	# rename current config file to something unique so it's not lost
+	my $backup_num = 0;
+	my $backup_name;
+	do {
+		$backup_num++;
+		$backup_name = "$cdn_conf.backup$backup_num";
+	} while ( -e $backup_name );
+	rename( $cdn_conf, $backup_name ) or die("rename(): $!");
+
+	# rename temp file to cdn.conf and set ownership/permissions same as backup
+	my @stats = stat($backup_name);
+	my ( $uid, $gid, $perm ) = @stats[ 4, 5, 2 ];
+	rename( "$tmpfile", $cdn_conf ) or die("rename(): $!");
+
+	chown $uid, $gid, $cdn_conf;
+	chmod $perm, $cdn_conf;
+}
 
 chdir("/opt/traffic_ops/install/bin");
 

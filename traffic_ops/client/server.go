@@ -50,6 +50,7 @@ type Server struct {
 	MgmtIpNetoask  string `json:"mgmtIpNetmask"`
 	PhysLocation   string `json:"physLocation"`
 	Profile        string `json:"profile"`
+	CdnName        string `json:"cdnName"`
 	Rack           string `json:"rack"`
 	RouterHostName string `json:"routerHostName"`
 	RouterPortName string `json:"routerPortName"`

@@ -20,20 +20,6 @@ use namespace::autoclean;
 use Digest::SHA1 qw(sha1_hex);
 
 my %definition_for = (
-    cdn1 => {
-        new   => 'ProfileParameter',
-        using => {
-            profile   => 1,
-            parameter => 1,
-        },
-    },
-    cdn2 => {
-        new   => 'ProfileParameter',
-        using => {
-            profile   => 1,
-            parameter => 2,
-        },
-    },
     domain_name => {
         new   => 'ProfileParameter',
         using => {
@@ -102,27 +88,6 @@ my %definition_for = (
         using => {
             profile   => 2,
             parameter => 6,
-        },
-    },
-    ccr1 => {
-        new   => 'ProfileParameter',
-        using => {
-            profile   => 3,
-            parameter => 1,
-        },
-    },
-    rascal1 => {
-        new   => 'ProfileParameter',
-        using => {
-            profile   => 6,
-            parameter => 1,
-        },
-    },
-    rascal2 => {
-        new   => 'ProfileParameter',
-        using => {
-            profile   => 7,
-            parameter => 2,
         },
     },
     edge1_key0 => {
