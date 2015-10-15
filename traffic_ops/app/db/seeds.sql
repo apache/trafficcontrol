@@ -14,6 +14,7 @@
 	limitations under the License.
 */
 
+insert ignore into cdn (name) values ('ALL');
 insert ignore into role (id, name, description, priv_level) values (1, 'disallowed','Block all access',0);
 insert ignore into role (id, name, description, priv_level) values (2, 'read-only user','Block all access', 10);
 insert ignore into role (id, name, description, priv_level) values (3, 'operations','Block all access', 20);
