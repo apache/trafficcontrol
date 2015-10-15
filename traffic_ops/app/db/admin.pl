@@ -168,7 +168,7 @@ sub parse_dbconf_yml_mysql_driver {
 sub migrate {
 	my ($command) = @_;
 	print "Migrating database...\n";
-	system( '../install/bin/goose --env=' . $environment . ' ' . $command );
+	system( 'goose --env=' . $environment . ' ' . $command );
 }
 
 sub seed {
