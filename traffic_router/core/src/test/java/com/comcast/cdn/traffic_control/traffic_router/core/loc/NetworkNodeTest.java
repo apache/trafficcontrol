@@ -19,6 +19,9 @@ package com.comcast.cdn.traffic_control.traffic_router.core.loc;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
+import static org.hamcrest.Matchers.greaterThanOrEqualTo;
+import static org.hamcrest.MatcherAssert.assertThat;
+
 import java.io.File;
 import java.io.FileReader;
 import java.net.InetAddress;
@@ -85,5 +88,29 @@ public class NetworkNodeTest {
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
+	}
+
+	@Test
+	public void testNetworkNodePerformance() {
+		final int iterations = 100000;
+		final long startTime = System.currentTimeMillis();
+		final long nnTPS = Long.parseLong(System.getProperty("nnTPS"));
+
+		for (int i = 0; i < iterations; i++) {
+			for (final String location : netMap.keySet()) {
+				try {
+					for (final String address : netMap.get(location)) {
+						final NetworkNode nn = root.getNetwork(address);
+					}
+				} catch (final NetworkNodeException e) {
+					e.printStackTrace();
+				}
+			}
+		}
+
+		final long runTime = (System.currentTimeMillis() - startTime) / 1000;
+		final long tps = iterations / runTime;
+
+		assertThat(tps, greaterThanOrEqualTo(nnTPS));
 	}
 }
