@@ -1,0 +1,73 @@
+{
+    "id": "/",
+    "properties": {
+        "federations": {
+            "id": "federations",
+            "items": {
+                "id": "0",
+                "properties": {
+                    "deliveryService": {
+                        "id": "deliveryService",
+                        "type": "string"
+                    },
+                    "mappings": {
+                        "id": "mappings",
+                        "items": {
+                            "additionalProperties": 0,
+                            "id": "0",
+                            "properties": {
+                                "cname": {
+                                    "description": "CNAME for the resolver",
+                                    "id": "cname",
+                                    "minimum": 2,
+                                    "pattern": "\\.$",
+                                    "type": "string"
+                                },
+                                "resolve4": {
+                                    "id": "resolve4",
+                                    "items": {
+                                        "allOf": [
+                                            {
+                                                "type": "string"
+                                            }
+                                        ]
+                                    },
+                                    "type": "array"
+                                },
+                                "resolve6": {
+                                    "id": "resolve6",
+                                    "items": {
+                                        "allOf": [
+                                            {
+                                                "type": "string"
+                                            }
+                                        ]
+                                    },
+                                    "type": "array"
+                                },
+                            "required": [
+                                "cname",
+                                "ttl"
+                            ],
+                            "type": "object"
+                        },
+                        "type": "array"
+                    }
+                },
+                "required": [
+                    "deliveryService",
+                    "mappings"
+                ],
+                "type": "object"
+            },
+            "required": [
+                "0"
+            ],
+            "type": "array"
+        }
+    },
+    "required": [
+        "federations"
+    ],
+    "type": "object"
+}

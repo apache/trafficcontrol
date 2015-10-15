@@ -24,8 +24,12 @@ use Mojo::Base 'Mojolicious::Controller';
 use Data::Dumper;
 use Net::CIDR;
 use JSON;
+use JSON::Validator;
 use Validate::Tiny ':all';
+use Utils::Helper::SchemaHelper;
+use Utils::Helper::ValidationHelper;
 use Data::Validate::IP qw(is_ipv4 is_ipv6);
+use Try::Tiny;
 
 sub find_tmuser {
   my $self             = shift;
@@ -240,6 +244,28 @@ sub external_index {
   $self->success( \@{$data} );
 }
 
+sub validate_schema {
+  my $self = shift;
+
+  my $json_request = $self->req->json;
+  my $json;
+  my @errors;
+  try {
+    $json = decode_json($json_request);
+    my $v                = JSON::Validator->new;
+    my $sh               = new Utils::Helper::SchemaHelper();
+    my $schema_file_path = $sh->find_schema( 'v12', 'Federation.json' );
+    $v->schema($schema_file_path);
+
+    @errors = $v->validate($json);
+  }
+  catch {
+    push( @errors, { message => $_->message } );
+  };
+  return @errors;
+
+}
+
 sub find_federation_deliveryservice {
   my $self   = shift;
   my $user   = shift;
@@ -336,6 +362,15 @@ sub add {
     return $self->alert(
       "You must be an Federation user to perform this operation!");
   }
+
+  # my @errors      = $self->validate_schema();
+  # my $error_count = scalar @errors;
+  # if ( $error_count > 0 ) {
+  #   my $vh = new Utils::Helper::ValidationHelper();
+
+  #   my $alerts = $vh->validation_errors_to_alerts( \@errors );
+  #   return $self->alert($alerts);
+  # }
 
   my $federations = $self->req->json->{'federations'};
   foreach my $ds ( @{$federations} ) {
