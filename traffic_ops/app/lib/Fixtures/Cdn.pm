@@ -34,13 +34,6 @@ my %definition_for = (
 			name        => 'cdn2',
 		},
 	},
-	cdn_number_3 => {
-		new   => 'Cdn',
-		using => {
-			id          => 3,
-			name        => 'ALL',
-		},
-	},
 );
 
 sub get_definition {
