@@ -41,10 +41,14 @@ sub get_host_stats {
 	my $master_i = 1;
 
 	my %rascal_host = ();
-	my @cdns = $self->db->resultset('Cdn')->search({})->get_column('name')->all();
-	foreach my $cdn_name (@cdns) {
-		$rascal_host{$cdn_name} = $self->get_traffic_monitor_connection( { cdn => $cdn_name } );
+	my $cdn_name    = "ALL";
+	$rascal_host{$cdn_name} = $self->get_traffic_monitor_connection();
+	if ( !defined( $rascal_host{$cdn_name} ) ) {
+		cluck("No TrafficMonitor servers found for cdn: $cdn_name");
+		return;
 	}
+	my $rascal = $rascal_host{$cdn_name};
+	$self->app->log->debug("Found TrafficMonitor server: " . $rascal->get_host() . ":" . $rascal->get_port());
 
 	###################### Main flow #####################
 	# Adapted from getstat-rascal.pl - jse
