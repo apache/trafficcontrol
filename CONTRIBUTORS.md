@@ -17,5 +17,6 @@ Sorted alphabetically
 * **[Mark Torluemke](https://github.com/mtorluemke)**
 * **[Petro, Christopher C.](https://github.com/petrocc)**
 * **[Phil Sorber](https://github.com/PSUdaemon)**
+* **[Stayman Hou](https://github.com/Vuuo)**
 * **[Steve Malenfant] (https://github.com/smalenfant)**
 
