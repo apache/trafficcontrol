@@ -41,7 +41,8 @@ sub get_host_stats {
 	my $master_i = 1;
 
 	my %rascal_host = ();
-	my @cdns = $self->db->resultset('Cdn')->search({})->get_column('name')->all();
+	my @cdns = $self->db->resultset('Server')->search({ 'type.name' => 'EDGE' }, { prefetch => [ 'cdn', 'type' ], group_by => 'cdn.name' } )->get_column('cdn.name')->all();
+
 	foreach my $cdn_name (@cdns) {
 		$rascal_host{$cdn_name} = $self->get_traffic_monitor_connection( { cdn => $cdn_name } );
 	}
@@ -66,7 +67,7 @@ sub get_crstates {
 	my $big_obj = shift;
 
 	if ( !defined($rascal) ) {
-		$self->app->log->error('No running Rascal server found!');
+		$self->app->log->error('No running Traffic Monitor found!');
 		return;
 	}
 	my $cs_hashref = $rascal->get_cr_states();

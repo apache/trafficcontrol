@@ -62,7 +62,7 @@ $(function () {
 		 		<button class="button" type="button" onclick="queue_update_function($('#cdn').val(), $('#cachegroup').val())">Queue Updates</button>
 		 		</td></tr>
 		 		<tr><td span=3>or</td></tr>
-		 		<tr><td>CDN: <b>All<b></td><td>Cachegroup: <b>All<b></td><td><button class="button" type="button" onclick="dequeue_update_function('all')">De-Queue Updates</button></td><tr>
+		 		<tr><td>CDN: <b>all<b></td><td>Cachegroup: <b>all<b></td><td><button class="button" type="button" onclick="dequeue_update_function('all')">De-Queue Updates</button></td><tr>
 	 		</table>
 	 		<br>
 	 		<br>

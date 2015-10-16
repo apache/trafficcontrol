@@ -62,10 +62,10 @@ $(function () {
 			},
 			{
 				"mRender": function (data, type, full) {
-					return "<a href='ssh://<%= $user %>@" + full[6] + "'>" + full[6] + "</a>";
+					return "<a href='ssh://<%= $user %>@" + full[7] + "'>" + full[7] + "</a>";
 				},
 				"bUseRendered": false,
-				"aTargets": [6]
+				"aTargets": [7]
 			}, 
 			{
 				"mRender": function (data, type, full) {
