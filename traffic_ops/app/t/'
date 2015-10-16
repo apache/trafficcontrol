@@ -23,14 +23,13 @@
 </script>
 % }
 
-
 <script type="text/javascript">
 
       %= include 'user/_listroles.js'
 
 	  // wait for the DOM to be loaded 
 	  $(document).ready(function () {
-		  listroles("<%= $selected_role_id %>");
+		  listroles("<%= $role_id %>");
 
 		   $("#delete_button").click(function() {
 				var r=confirm("Are you sure?");
@@ -56,9 +55,16 @@
 		<script type="text/javascript" src="/js/application.js"></script>
 		<script type="text/javascript" src="/js/jqtree/tree.jquery.js"></script>
 		<style>
+                        legend {
+                           color:white;
+                        }
 			ul {
 			   list-style-type:none;
+                           color:white;
 			}
+                        .jqtree_common .jqtree-toggler .jtree-title .jtree-title-folder {
+                            color: white;
+                        }
 			ul.jqtree-folder {
                margin-left: 60px;
 			   list-style-type:none;
@@ -69,10 +75,14 @@
 			#roleselect {
 				margin-left: 5px;
 			}
-			#view_form {
+			#edit_form {
 				height: 400px;
 			}
+			#flash-section {
+				width: "100%";
+			}
 		</style>
+
 
 	</head>
 	<body>
@@ -81,10 +91,13 @@
 		<div class="dialog_body" style="margin-left:10px; width: 500px;">
 	         <h3><a href="#">Federation Mapping</a></h3>
 
-				 %= include 'common/_errors'
-				 %= include 'common/_flash'
+                                <form id="edit_form" method="POST" action="/federation/<%= $federation->id %>">
 
-				<div id="view_form">
+                                   <div>
+                                     %= include 'common/_errors'
+                                     %= include 'common/_flash'
+                                   </div>
+
 
 				   <div class="deliveryServicesForm">
 				        %= include 'federation/_form'
@@ -99,6 +112,8 @@
 				   </div>
 				   <div style="padding:10px;padding-bottom:20px;">
 					  <a href="#" class="button" id="delete_button">Delete</a>
+                                           %= submit_button 'Save', id => 'save_button', class=> 'button', style=> 'margin-left:270px;'
+
 					   %= submit_button 'Close', id => 'close_button', class=> 'button'
 				   </div>
 				</form>

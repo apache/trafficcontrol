@@ -28,6 +28,7 @@ use Mojolicious::Validator::Validation;
 use Email::Valid;
 use Data::GUID;
 use Data::Dumper;
+use constant FEDERATION_ROLE_ID => 7;
 
 # List of Federation Mappings
 sub index {
@@ -35,7 +36,30 @@ sub index {
 	&navbarpage($self);
 }
 
-sub view {
+sub add {
+	my $self = shift;
+
+	my $current_username = $self->current_user()->{username};
+	my $dbh              = $self->db->resultset('TmUser')->search( { username => $current_username } );
+	my $tm_user          = $dbh->single;
+	&stash_role($self);
+
+	#TODO: drichardson - remove hard coded DS
+	my $delivery_services = get_delivery_services( $self, 1 );
+
+	$self->stash(
+		tm_user              => $tm_user,
+		role_name            => undef,
+		deliveryservice_name => undef,
+		federation           => {},
+		delivery_services    => $delivery_services,
+		fbox_layout          => 1,
+		role_id              => FEDERATION_ROLE_ID,    # the federation role
+		mode                 => 'add'
+	);
+}
+
+sub edit {
 	my $self   = shift;
 	my $fed_id = $self->param('federation_id');
 
@@ -54,13 +78,11 @@ sub view {
 		}
 	}
 
-	my $selected_role_id;
 	my $role_name;
 	my $ftusers =
 		$self->db->resultset('FederationTmuser')->search( { federation => $fed_id }, { prefetch => [ 'federation', 'tm_user' ] } );
 	while ( my $ft = $ftusers->next ) {
-		$selected_role_id = $ft->role->id;
-		$role_name        = $ft->role->name;
+		$role_name = $ft->role->name;
 	}
 
 	my $current_username = $self->current_user()->{username};
@@ -73,14 +95,14 @@ sub view {
 		tm_user              => $tm_user,
 		selected_ds_id       => $selected_ds_id,
 		deliveryservice_name => $deliveryservice_name,
-		selected_role_id     => $selected_role_id,
+		role_id              => FEDERATION_ROLE_ID,      # the federation role
 		role_name            => $role_name,
 		federation           => $federation,
-		mode                 => 'view',
+		mode                 => 'edit',
 		fbox_layout          => 1,
 		delivery_services    => $delivery_services
 	);
-	return $self->render('federation/view');
+	return $self->render('federation/edit');
 }
 
 # .json format for the jqTree widge
@@ -152,12 +174,11 @@ sub update {
 	my $self        = shift;
 	my $fed_id      = $self->param('federation_id');
 	my $cname       = $self->param('federation.cname');
-	my $role_id     = $self->param('tm_user.role');
 	my $description = $self->param('federation.description');
 	my $ttl         = $self->param('federation.ttl');
 
-	my $is_valid = $self->is_valid("view");
-	if ( $self->is_valid("view") ) {
+	my $is_valid = $self->is_valid("edit");
+	if ( $self->is_valid("edit") ) {
 		my $dbh = $self->db->resultset('Federation')->find( { id => $fed_id } );
 		$dbh->cname($cname);
 		$dbh->description($description);
@@ -169,16 +190,16 @@ sub update {
 		while ( my $ft = $ftusers->next ) {
 			my $fid    = $ft->federation->id;
 			my $fcname = $ft->federation->cname;
-			$ft->role($role_id);
+			$ft->role(FEDERATION_ROLE_ID);
 			$ft->update();
 		}
 
 		$self->flash( message => "Federation was updated successfully." );
-		$self->stash( mode => 'view' );
-		return $self->redirect_to( '/federation/' . $fed_id . '/view' );
+		$self->stash( mode => 'edit' );
+		return $self->redirect_to( '/federation/' . $fed_id . '/edit' );
 	}
 	else {
-		$self->view();
+		$self->edit();
 	}
 }
 
@@ -209,12 +230,19 @@ sub associated_delivery_services {
 sub create {
 	my $self = shift;
 	&stash_role($self);
-	$self->stash( fbox_layout => 1, mode => 'add', federation => {} );
+	$self->stash(
+		role_name            => undef,
+		deliveryservice_name => undef,
+		federation           => {},
+		fbox_layout          => 1,
+		role_id              => FEDERATION_ROLE_ID,    # the federation role
+		mode                 => 'add'
+	);
 	if ( $self->is_valid("add") ) {
 		my $new_id = $self->create_federation_mapping();
 		if ( $new_id != -1 ) {
 			$self->flash( message => 'Federation created successfully.' );
-			return $self->redirect_to('/federation/add');
+			return $self->redirect_to('/close_fancybox.html');
 		}
 	}
 	else {
@@ -227,6 +255,7 @@ sub is_valid {
 	my $mode = shift;
 
 	$self->field('federation.cname')->is_required;
+	$self->field('federation.cname')->is_like( qr/\.$/, "CNAME must end with a period." );
 	$self->field('federation.ttl')->is_required;
 
 	return $self->valid;
