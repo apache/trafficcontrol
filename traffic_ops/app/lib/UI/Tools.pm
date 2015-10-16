@@ -62,11 +62,9 @@ sub tools {
 sub snapshot_crconfig {
 	my $self = shift;
 	&navbarpage($self);
-	my $rs_param = $self->db->resultset('Cdn')->search( undef, { columns => 'name' } );
-	my @cdn_names;
-	while ( my $row = $rs_param->next ) {
-		push( @cdn_names, $row->name );
-	}
+
+	my @cdn_names = $self->db->resultset('Server')->search({ 'type.name' => 'EDGE' }, { prefetch => [ 'cdn', 'type' ], group_by => 'cdn.name' } )->get_column('cdn.name')->all();
+	
 	$self->stash( cdn_names => \@cdn_names );
 }
 
