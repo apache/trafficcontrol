@@ -44,7 +44,7 @@
 		<% if ($priv_level >= 20) { %>
 		%= field('ds.cdn_id')->select(class => 'field', id => 'cdn', name => 'ds.cdn_id');
 		<% } else { %>
-		%= field('ds.cdn_name')->text(class => 'field', readonly => 'readonly');
+		%= field('ds.cdn.name')->text(class => 'field', readonly => 'readonly');
 		<% }  %>
 	</div><br>
 	<div class="block">
