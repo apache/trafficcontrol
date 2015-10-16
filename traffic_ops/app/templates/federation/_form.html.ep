@@ -39,12 +39,6 @@
         %= field('federation.ttl')->text(class => 'field', class=> 'field')
    </div>
 
-	<% if(defined($deliveryservice_name)) { %>
-	   <div class="block">
-			%= label_for 'deliveryservice_name' => '* Deliveryservice', class => 'label'
-			%= field('deliveryservice_name')->text(class => 'field', class=> 'required')
-	   </div>
-	 <% } %>
 
 	<% if(defined($role_name)) { %>
 	   <div class="block">
@@ -53,4 +47,8 @@
 	   </div>
 	 <% } %>
 
-</div>
+	   <div class="block">
+			%= label_for 'delivery_service' => '* Delivery Services', class => 'label'
+			%= label_for 'deliveryservice' => 'ds_id', id=> 'delivery_service', class => 'field'
+	   </div>
+   </div>
