@@ -16,28 +16,41 @@
 <div class="main">
 
    <div class="block">
+        <% unless(field('federation.cname')->valid) { %>
+          <span class="field-with-error"><%= field('federation.cname')->error %></span>
+            <% } %>
         %= label_for 'cname' => '* CNAME', class => 'label'
-        %= field('federation.cname')->text(required=> 'required', class => 'readonly_field',  readonly => 'readonly')
+        %= field('federation.cname')->text(class=> 'field')
    </div>
 
-   <div class="block"   <div class="block">
+   <div class="block">
+        <% unless(field('federation.description')->valid) { %>
+          <span class="field-with-error"><%= field('federation.description')->error %></span>
+            <% } %>
         %= label_for 'description' => 'Description', class => 'label'
-        %= field('federation.description')->text(class => 'field', class => 'readonly_field',  readonly => 'readonly')
+        %= field('federation.description')->text(class => 'field')
    </div>
 
    <div class="block">
+        <% unless(field('federation.ttl')->valid) { %>
+          <span class="field-with-error"><%= field('federation.ttl')->error %></span>
+            <% } %>
         %= label_for 'ttl' => '* TTL', class => 'label'
-        %= field('federation.ttl')->text(class => 'field', required=> 'required', class => 'readonly_field',  readonly => 'readonly')
+        %= field('federation.ttl')->text(class => 'field', class=> 'field')
    </div>
 
-   <div class="block">
-        %= label_for 'deliveryservice_name' => '* Deliveryservice', class => 'label'
-        %= field('deliveryservice_name')->text(class => 'field', required=> 'required', class => 'readonly_field',  readonly => 'readonly')
-   </div>
+	<% if(defined($deliveryservice_name)) { %>
+	   <div class="block">
+			%= label_for 'deliveryservice_name' => '* Deliveryservice', class => 'label'
+			%= field('deliveryservice_name')->text(class => 'field', class=> 'required')
+	   </div>
+	 <% } %>
 
-   <div class="block">
-        %= label_for 'role_name' => '* Role', class => 'label'
-        %= field('role_name')->text(class => 'field', required=> 'required', class => 'readonly_field',  readonly => 'readonly')
-   </div>
+	<% if(defined($role_name)) { %>
+	   <div class="block">
+			%= label_for 'role_name' => '* Role', class => 'label'
+			%= field('role_name')->text(class => 'field', required=> 'required', class => 'readonly_field',  readonly => 'readonly')
+	   </div>
+	 <% } %>
 
 </div>
