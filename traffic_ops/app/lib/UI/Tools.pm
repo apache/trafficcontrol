@@ -112,10 +112,13 @@ sub write_crconfig {
 sub queue_updates {
 	my $self = shift;
 	&stash_role($self);
-	my @cdns = $self->db->resultset('Cdn')->search( undef, { order_by => "name" })->get_column('name')->all;
+
+	my @cdns = $self->db->resultset('Server')->search({ 'type.name' => ['EDGE', 'MID'] }, { prefetch => [ 'cdn', 'type' ], group_by => 'cdn.name' } )->get_column('cdn.name')->all();
 	$self->stash( cdns => \@cdns );
+
 	my @cachegroups = $self->db->resultset('Cachegroup')->search(undef, { order_by => "name" })->get_column('name')->all;
 	$self->stash( cachegroups => \@cachegroups );
+
 	&navbarpage($self);
 }
 
