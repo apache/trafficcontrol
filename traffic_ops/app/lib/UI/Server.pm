@@ -950,7 +950,7 @@ sub postupdatequeue {
 		my @profiles;
 		if ( $cdn ne "all" ) {
 
-			my @profiles = $self->db->resultset('Server')->search(
+			@profiles = $self->db->resultset('Server')->search(
 				{ 'cdn.name' => $cdn },
 				{   prefetch => 'cdn',
 					select   => 'me.profile',
@@ -978,15 +978,26 @@ sub postupdatequeue {
 				]
 			}
 		);
-		$update->update( { upd_pending => $setqueue } );
-		&log(
-			$self,
-			"Flip Update bit (Queue Updates) for servers in CDN:"
-				. $cdn
-				. " cachegroup:"
-				. $cachegroup,
-			"OPER"
-		);
+
+		if ( $update->count() > 0 ) {
+			$update->update( { upd_pending => $setqueue } );
+			$self->app->log->debug(
+				"Flip Update bit (Queue Updates) for servers in CDN: $cdn, Cachegroup: $cachegroup"
+			);
+			&log(
+				$self,
+				"Flip Update bit (Queue Updates) for servers in CDN:"
+					. $cdn
+					. " cachegroup:"
+					. $cachegroup,
+				"OPER"
+			);
+		}
+		else {
+			$self->app->log->debug(
+				"No Queue Updates for servers in CDN: $cdn, Cachegroup: $cachegroup"
+			);
+		}
 	}
 
 	#shouldn't we return something here?
