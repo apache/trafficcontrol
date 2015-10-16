@@ -38,7 +38,7 @@ $(function () {
 			"bPaginate": false,
 			"aaSorting": [[ 1, 'asc' ]], 
       "aoColumnDefs":[
-            {  "sTitle":"", "aTargets":[ 0 ], "bSortable":false, "mRender":function (data, type, full) {return renderViewColumn(full[0]);} }
+            {  "sTitle":"", "aTargets":[ 0 ], "bSortable":false, "mRender":function (data, type, full) {return renderEditColumn(full[0]);} }
       ],
       "bProcessing":true,
 			"sAjaxSource": "aadata/Federation"
@@ -46,11 +46,11 @@ $(function () {
 		activeTable = sTable;
 	  })
 
-    function renderViewColumn(federation_resolver_id) {
+    function renderEditColumn(federation_resolver_id) {
 
      if (federation_resolver_id != null){
 			  % if ($priv_level >= 30) {
-				return "<a class='fancybox fancybox.iframe' href='/federation/" + federation_resolver_id + "/view'>View</a>";
+				return "<a class='fancybox fancybox.iframe' href='/federation/" + federation_resolver_id + "/edit'>Edit</a>";
 			  % } else {
 				return "";
 			  % }
@@ -77,7 +77,7 @@ $(function () {
           'transitionIn'    : 'elastic',
           'transitionOut'   : 'elastic',
           'type'            : 'iframe',
-		  'width'           : '550px'
+		  'width'           : '600px'
       });
 
 });
@@ -99,6 +99,14 @@ $(function () {
 						</tr>
 					</thead>
 				</table>
+
+
+                                <div class="bottomButtons">
+                                          % if ($priv_level >= 30) {
+                                                  <a id="addButton" class='fancybox fancybox.iframe' href='/federation/add'><button class='button'>Add Federation Mapping</button></a>
+
+                                          % }
+                                </div>
 
 	</body>
 </html>
