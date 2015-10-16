@@ -24,38 +24,38 @@ alert( "<%= flash 'alertmsg' %>" );
 <script>
 var activeTable;
 $(function () {
-	$(document).ready(function () {
+$(document).ready(function () {
 %= include 'jmenu'
 
-		sTable = $('#datatable').dataTable({
-		    fnDrawCallback: function (settings) {
-				  $("#datatable").parent().toggle(settings.fnRecordsDisplay() > 0);
-		    },
-			"bJQueryUI": true,
-			"bProcessing": true,
-			"sScrollY": calcDataTableHeight(),
-			"bScrollCollapse": true,
-			"bPaginate": false,
-			"aaSorting": [[ 1, 'asc' ]], 
+        sTable = $('#datatable').dataTable({
+            fnDrawCallback: function (settings) {
+                  $("#datatable").parent().toggle(settings.fnRecordsDisplay() > 0);
+            },
+            "bJQueryUI": true,
+            "bProcessing": true,
+            "sScrollY": calcDataTableHeight(),
+            "bScrollCollapse": true,
+            "bPaginate": false,
+            "aaSorting": [[ 1, 'asc' ]], 
       "aoColumnDefs":[
             {  "sTitle":"", "aTargets":[ 0 ], "bSortable":false, "mRender":function (data, type, full) {return renderEditColumn(full[0]);} }
       ],
       "bProcessing":true,
-			"sAjaxSource": "aadata/Federation"
-			});
-		activeTable = sTable;
-	  })
+            "sAjaxSource": "aadata/Federation"
+            });
+        activeTable = sTable;
+      })
 
     function renderEditColumn(federation_resolver_id) {
 
      if (federation_resolver_id != null){
-			  % if ($priv_level >= 30) {
-				return "<a class='fancybox fancybox.iframe' href='/federation/" + federation_resolver_id + "/edit'>Edit</a>";
-			  % } else {
-				return "";
-			  % }
+              % if ($priv_level >= 30) {
+                return "<a class='fancybox fancybox.iframe' href='/federation/" + federation_resolver_id + "/edit'>Edit</a>";
+              % } else {
+                return "";
+              % }
      } else {
-	   return "";
+       return "";
      }
 
     };
@@ -77,28 +77,28 @@ $(function () {
           'transitionIn'    : 'elastic',
           'transitionOut'   : 'elastic',
           'type'            : 'iframe',
-		  'width'           : '600px'
+          'width'           : '600px'
       });
 
 });
 </script>
 
-	<body id="misc">
-	%= include 'navbar'
-	<div class="ui-tab-float-right-on-table">Federation</div>
+    <body id="misc">
+    %= include 'navbar'
+    <div class="ui-tab-float-right-on-table">Federation</div>
 
-		<div id="Federation">
+        <div id="Federation">
 
-				<table cellpadding="0" cellspacing="0" border="0" width="100%" class="display" id="datatable">
-					<thead>
-						<tr>
-							<td>Federation Id</td>
-							<td>CNAME</td>
-							<td>Description</td>
-							<td>TTL</td>
-						</tr>
-					</thead>
-				</table>
+                <table cellpadding="0" cellspacing="0" border="0" width="100%" class="display" id="datatable">
+                    <thead>
+                        <tr>
+                            <td>Federation Id</td>
+                            <td>CNAME</td>
+                            <td>Description</td>
+                            <td>TTL</td>
+                        </tr>
+                    </thead>
+                </table>
 
 
                                 <div class="bottomButtons">
@@ -108,5 +108,5 @@ $(function () {
                                           % }
                                 </div>
 
-	</body>
+    </body>
 </html>

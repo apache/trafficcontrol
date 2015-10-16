@@ -49,7 +49,8 @@ sub add {
 
 	$self->stash(
 		tm_user              => $tm_user,
-		deliveryservice_name => "",
+		role_name            => undef,
+		deliveryservice_name => undef,
 		federation           => {},
 		delivery_services    => $delivery_services,
 		fbox_layout          => 1,
@@ -81,8 +82,7 @@ sub edit {
 	my $ftusers =
 		$self->db->resultset('FederationTmuser')->search( { federation => $fed_id }, { prefetch => [ 'federation', 'tm_user' ] } );
 	while ( my $ft = $ftusers->next ) {
-		role_id => FEDERATION_ROLE_ID,    # the federation role
-			$role_name = $ft->role->name;
+		$role_name = $ft->role->name;
 	}
 
 	my $current_username = $self->current_user()->{username};
@@ -230,12 +230,19 @@ sub associated_delivery_services {
 sub create {
 	my $self = shift;
 	&stash_role($self);
-	$self->stash( fbox_layout => 1, mode => 'add', federation => {} );
+	$self->stash(
+		role_name            => undef,
+		deliveryservice_name => undef,
+		federation           => {},
+		fbox_layout          => 1,
+		role_id              => FEDERATION_ROLE_ID,    # the federation role
+		mode                 => 'add'
+	);
 	if ( $self->is_valid("add") ) {
 		my $new_id = $self->create_federation_mapping();
 		if ( $new_id != -1 ) {
 			$self->flash( message => 'Federation created successfully.' );
-			return $self->redirect_to('/federation/add');
+			return $self->redirect_to('/close_fancybox.html');
 		}
 	}
 	else {

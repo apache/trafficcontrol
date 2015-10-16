@@ -35,40 +35,56 @@ alert(alertmsg);
 
       %= include 'user/_listroles.js'
 
-	  // wait for the DOM to be loaded 
-	  $(document).ready(function () {
-		  listroles("<%= $role_id %>");
-	   });
+      // wait for the DOM to be loaded 
+      $(document).ready(function () {
+          listroles("<%= $role_id %>");
+       });
 
 </script>
-	<head>
-		<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
-		<title><%= title %></title>
-		<link type="text/css" href="/css/site.css" rel="stylesheet" />
-		<script type="text/javascript" src="/js/application.js"></script>
+    <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
+        <title><%= title %></title>
+        <link type="text/css" href="/css/site.css" rel="stylesheet" />
+        <script type="text/javascript" src="/js/application.js"></script>
+        <style>
+            #add_form {
+                height: 520px;
+            }
+            .flash-section {
+                width: 400px;
+            }
+            .block {
+                padding: 5px;
+                width: 100%;
+            }
+            .field {
+                width: 50%;
+            }
+        </style>
+
   </head>
 
 <body>
-	<div id="accordion"  class="add_cachegroup_popup">
-<div class="dialog_body" style="margin-left:10px; height: 400px">
+    <div id="accordion">
+<div class="dialog_body" style="margin-left:10px; width: 500px;height: 400px">
       <h3><a href="#">Add Federation Mapping</a></h3>
 
-	  <div style="border: none; text-align:left; height: 80px; width: 600px;">
-		%= include 'common/_errors'
-		%= include 'common/_flash'
-	  </div>
+      <div style="border: none; text-align:left; height: 80px;">
+        %= include 'common/_errors'
+        %= include 'common/_flash'
+      </div>
 
-	  <div style="margin-left:10px;">
-		%= form_for federation_create => (id => 'federation_create')  => begin 
-			%= include 'federation/_form'
-			<div class="bottomButtons" style="margin-left: 500px;">
-			  <div style="float:left;">
-				 %= submit_button 'Add', class=> 'button'
-				<button id="close_button" class="button">Close</button>
-			 </div>
-			</div>
-		% end
-	  </div>
+      <div style="margin-left:10px;">
+        %= form_for federation_create => (id => 'add_form')  => begin 
+            %= include 'federation/_form'
+            <div class="bottomButtons" style="margin-left: 300px;">
+              <div style="float:left;">
+                 %= submit_button 'Add', class=> 'button'
+                <button id="close_button" class="button">Close</button>
+             </div>
+            </div>
+        % end
+      </div>
 
      </div>
   </div>
