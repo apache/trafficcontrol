@@ -80,12 +80,12 @@ sub gen_crconfig_json {
 		$cdn_id = defined($cdn_id) ? next : $row->cdn->id;
 	}
 
-	if ( scalar( @{ $profile_cache->{'CCR'} } ) == 0 ) {
+	if ( !defined( $profile_cache->{'CCR'} ) || scalar( @{ $profile_cache->{'CCR'} } ) == 0 ) {
 		my $e = Mojo::Exception->throw(
 			"No Traffic Router profile found for CDN: $cdn_name");
 	}
-	elsif (scalar( @{ $profile_cache->{'EDGE'} } ) == 0
-		&& scalar( @{ $profile_cache->{'MID'} } ) == 0 )
+	elsif ( ( !defined( $profile_cache->{'EDGE'} ) || scalar( @{ $profile_cache->{'EDGE'} } ) == 0 )
+		&& ( !defined( $profile_cache->{'MID'} ) || scalar( @{ $profile_cache->{'MID'} } ) == 0 ) )
 	{
 		my $e = Mojo::Exception->throw(
 			"No profiles found for CDN_name: " . $cdn_name );
