@@ -1,0 +1,77 @@
+<!--
+     Copyright 2015 Comcast Cable Communications Management, LLC
+
+     Licensed under the Apache License, Version 2.0 (the "License");
+     you may not use this file except in compliance with the License.
+     You may obtain a copy of the License at
+
+     http://www.apache.org/licenses/LICENSE-2.0
+
+     Unless required by applicable law or agreed to in writing, software
+     distributed under the License is distributed on an "AS IS" BASIS,
+     WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+     See the License for the specific language governing permissions and
+     limitations under the License.
+ -->
+<!DOCTYPE html>
+<style>
+#roleselect {
+    margin-left: 5px;
+}
+</style>
+
+% if (defined (flash 'alertmsg')) {
+<script> 
+var alertmsg = "<%= flash 'alertmsg' %>"; 
+alertmsg = alertmsg.replace(/__NEWLINE__/g, "\n");
+alert(alertmsg);
+
+ %= include 'user/_listroles.js'
+
+</script>
+% }
+
+<script type="text/javascript">
+
+      %= include 'user/_listroles.js'
+
+	  // wait for the DOM to be loaded 
+	  $(document).ready(function () {
+		  listroles("<%= $role_id %>");
+	   });
+
+</script>
+	<head>
+		<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
+		<title><%= title %></title>
+		<link type="text/css" href="/css/site.css" rel="stylesheet" />
+		<script type="text/javascript" src="/js/application.js"></script>
+  </head>
+
+<body>
+	<div id="accordion"  class="add_cachegroup_popup">
+<div class="dialog_body" style="margin-left:10px; height: 400px">
+      <h3><a href="#">Add Federation Mapping</a></h3>
+
+	  <div style="border: none; text-align:left; height: 80px; width: 600px;">
+		%= include 'common/_errors'
+		%= include 'common/_flash'
+	  </div>
+
+	  <div style="margin-left:10px;">
+		%= form_for federation_create => (id => 'federation_create')  => begin 
+			%= include 'federation/_form'
+			<div class="bottomButtons" style="margin-left: 500px;">
+			  <div style="float:left;">
+				 %= submit_button 'Add', class=> 'button'
+				<button id="close_button" class="button">Close</button>
+			 </div>
+			</div>
+		% end
+	  </div>
+
+     </div>
+  </div>
+</body>
+</html>
+
