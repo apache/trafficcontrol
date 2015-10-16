@@ -43,15 +43,10 @@ sub register {
 				my $rs = $self->db->resultset('RascalHostsByCdn')->search();
 				while ( my $row = $rs->next ) {
 					next unless $cdn eq $row->cdn_name;
-					$traffic_monitor_row = $row;
+					$hostname = $row->host_name . "." . $row->domain_name;
+					$port     = $row->tcp_port;
 					last;
 				}
-				if ( !defined($traffic_monitor_row) ) {
-					cluck("No TrafficMonitor servers found for: $cdn");
-					return;
-				}
-				$hostname = $traffic_monitor_row->host_name . "." . $traffic_monitor_row->domain_name;
-				$port     = $traffic_monitor_row->tcp_port;
 			}
 			elsif ( exists $args->{hostname} ) {
 				$hostname = $args->{hostname};
@@ -60,6 +55,11 @@ sub register {
 			else {
 				confess("Supply a cdn or host in the argument hashref");
 			}
+
+			if ( !$hostname || !$port ) {
+				return;
+			}
+
 			my $traffic_monitor_connection = new Utils::Rascal( $hostname, $port );
 			my $proxy_param =
 				$self->db->resultset('Parameter')->search( { -and => [ name => 'tm.traffic_mon_fwd_proxy', config_file => 'global' ] } )->single();
