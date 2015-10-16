@@ -58,11 +58,8 @@ sub graphs_redis {
 		push( @cdn_names, $ds->cdn->name );
 		$ds_capacity = $ds->global_max_mbps / 1000;    # everything is in kbps in the stats
 	}
-	else {                                             # we want all the CDNs
-		my $rs = $self->db->resultset('Cdn');
-		while ( my $row = $rs->next ) {
-			push( @cdn_names, $row->name );
-		}
+	else {                                             # we want all the CDNs with edges
+		@cdn_names = $self->db->resultset('Server')->search({ 'type.name' => 'EDGE' }, { prefetch => [ 'cdn', 'type' ], group_by => 'cdn.name' } )->get_column('cdn.name')->all();
 	}
 	$self->stash(
 		cdn_names   => \@cdn_names,
@@ -77,11 +74,7 @@ sub graphs_redis {
 sub daily_summary {
 	my $self = shift;
 
-	my @cdn_names;
-	my $rs = $self->db->resultset('Cdn');
-	while ( my $row = $rs->next ) {
-		push( @cdn_names, $row->name );
-	}
+	my @cdn_names = $self->db->resultset('Server')->search({ 'type.name' => 'EDGE' }, { prefetch => [ 'cdn', 'type' ], group_by => 'cdn.name' } )->get_column('cdn.name')->all();
 
 	my $tool_instance =
 		$self->db->resultset('Parameter')->search( { -and => [ name => 'tm.instance_name', config_file => 'global' ] } )->get_column('value')->single();
