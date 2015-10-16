@@ -108,8 +108,8 @@ public class NetworkNodeTest {
 			}
 		}
 
-		final long runTime = (System.currentTimeMillis() - startTime) / 1000;
-		final long tps = iterations / runTime;
+		final long runTime = System.currentTimeMillis() - startTime;
+		final long tps = (iterations / runTime) * 1000;
 
 		assertThat(tps, greaterThanOrEqualTo(nnTPS));
 	}
