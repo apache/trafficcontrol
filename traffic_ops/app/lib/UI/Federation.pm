@@ -64,8 +64,8 @@ sub edit {
 	my $fed_id = $self->param('federation_id');
 
 	my $federation;
-	my $selected_ds_id;
-	my $deliveryservice_name;
+	my $ds_id;
+	my $deliveryservice_name = "None";
 	my $feds = $self->db->resultset('Federation')->search( { 'id' => $fed_id } );
 	while ( my $f = $feds->next ) {
 		$federation = $f;
@@ -73,7 +73,7 @@ sub edit {
 		my $federation_deliveryservices =
 			$self->db->resultset('FederationDeliveryservice')->search( { federation => $fed_id }, { prefetch => [ 'federation', 'deliveryservice' ] } );
 		while ( my $fd = $federation_deliveryservices->next ) {
-			$selected_ds_id       = $fd->deliveryservice->id;
+			$ds_id                = $fd->deliveryservice->id;
 			$deliveryservice_name = $fd->deliveryservice->xml_id;
 		}
 	}
@@ -90,10 +90,11 @@ sub edit {
 	my $tm_user          = $dbh->single;
 	&stash_role($self);
 
-	my $delivery_services = get_delivery_services( $self, $selected_ds_id );
+	$self->app->log->debug( "deliveryservice_name #-> " . Dumper($deliveryservice_name) );
+	my $delivery_services = get_delivery_services( $self, $ds_id );
 	$self->stash(
 		tm_user              => $tm_user,
-		selected_ds_id       => $selected_ds_id,
+		ds_id                => $ds_id,
 		deliveryservice_name => $deliveryservice_name,
 		role_id              => FEDERATION_ROLE_ID,      # the federation role
 		role_name            => $role_name,
