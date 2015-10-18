@@ -49,6 +49,7 @@ sub add {
 
 	$self->stash(
 		tm_user              => $tm_user,
+		ds_id                => undef,
 		role_name            => undef,
 		deliveryservice_name => undef,
 		federation           => {},
