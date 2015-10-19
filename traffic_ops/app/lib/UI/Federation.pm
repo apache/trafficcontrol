@@ -44,19 +44,15 @@ sub add {
 	my $tm_user          = $dbh->single;
 	&stash_role($self);
 
-	#TODO: drichardson - remove hard coded DS
-	my $delivery_services = get_delivery_services( $self, 1 );
-
+	# default the ds_id to 0 because _form.html.ep expects it to be there
 	$self->stash(
-		tm_user              => $tm_user,
-		ds_id                => 0,
-		role_name            => undef,
-		deliveryservice_name => undef,
-		federation           => {},
-		delivery_services    => $delivery_services,
-		fbox_layout          => 1,
-		role_id              => FEDERATION_ROLE_ID,    # the federation role
-		mode                 => 'add'
+		tm_user     => $tm_user,
+		ds_id       => 0,
+		role_name   => undef,
+		federation  => {},
+		fbox_layout => 1,
+		role_id     => FEDERATION_ROLE_ID,    # the federation role
+		mode        => 'add'
 	);
 }
 
@@ -66,7 +62,6 @@ sub edit {
 
 	my $federation;
 	my $ds_id;
-	my $deliveryservice_name;
 	my $feds = $self->db->resultset('Federation')->search( { 'id' => $fed_id } );
 	while ( my $f = $feds->next ) {
 		$federation = $f;
@@ -74,8 +69,7 @@ sub edit {
 		my $federation_deliveryservices =
 			$self->db->resultset('FederationDeliveryservice')->search( { federation => $fed_id }, { prefetch => [ 'federation', 'deliveryservice' ] } );
 		while ( my $fd = $federation_deliveryservices->next ) {
-			$ds_id                = $fd->deliveryservice->id;
-			$deliveryservice_name = $fd->deliveryservice->xml_id;
+			$ds_id = $fd->deliveryservice->id;
 		}
 	}
 
@@ -91,18 +85,17 @@ sub edit {
 	my $tm_user          = $dbh->single;
 	&stash_role($self);
 
-	$self->app->log->debug( "deliveryservice_name #-> " . Dumper($deliveryservice_name) );
 	my $delivery_services = get_delivery_services( $self, $ds_id );
+	$self->app->log->debug( "delivery_services #-> " . Dumper($delivery_services) );
 	$self->stash(
-		tm_user              => $tm_user,
-		ds_id                => $ds_id,
-		deliveryservice_name => $deliveryservice_name,
-		role_id              => FEDERATION_ROLE_ID,      # the federation role
-		role_name            => $role_name,
-		federation           => $federation,
-		mode                 => 'edit',
-		fbox_layout          => 1,
-		delivery_services    => $delivery_services
+		tm_user           => $tm_user,
+		ds_id             => $ds_id,
+		role_id           => FEDERATION_ROLE_ID,    # the federation role
+		role_name         => $role_name,
+		federation        => $federation,
+		mode              => 'edit',
+		fbox_layout       => 1,
+		delivery_services => $delivery_services
 	);
 	return $self->render('federation/edit');
 }
@@ -175,6 +168,7 @@ sub get_delivery_services {
 sub update {
 	my $self        = shift;
 	my $fed_id      = $self->param('federation_id');
+	my $ds_id       = $self->param('ds_id');
 	my $cname       = $self->param('federation.cname');
 	my $description = $self->param('federation.description');
 	my $ttl         = $self->param('federation.ttl');
@@ -196,6 +190,13 @@ sub update {
 			$ft->update();
 		}
 
+		my $fdses =
+			$self->db->resultset('FederationDeliveryservice')->search( { federation => $fed_id }, { prefetch => [ 'federation', 'deliveryservice' ] } );
+		while ( my $fd = $fdses->next ) {
+			$fd->deliveryservice($ds_id);
+			$fd->update();
+		}
+
 		$self->flash( message => "Federation was updated successfully." );
 		$self->stash( mode => 'edit' );
 		return $self->redirect_to( '/federation/' . $fed_id . '/edit' );
@@ -203,29 +204,6 @@ sub update {
 	else {
 		$self->edit();
 	}
-}
-
-sub associated_delivery_services {
-	my $self       = shift;
-	my $tm_user_id = shift;
-	my $ds_ids     = shift;
-
-	my $new_id = -1;
-
-	# Sweep the existing DeliveryserviceTmUser relationships
-	my $delete = $self->db->resultset('DeliveryserviceTmuser')->search( { tm_user_id => $tm_user_id } );
-	$delete->delete();
-
-	# Attached the saved delivery services
-	foreach my $ds_id ( @{$ds_ids} ) {
-		my $ds_name = $self->db->resultset('Deliveryservice')->search( { id => $ds_id } )->get_column('xml_id')->single();
-		my $insert = $self->db->resultset('DeliveryserviceTmuser')->create( { deliveryservice => $ds_id, tm_user_id => $tm_user_id } );
-
-		$new_id = $insert->tm_user_id;
-		$insert->insert();
-		&log( $self, "Associated Delivery service " . $ds_name . " <-> with tm_user_id: " . $tm_user_id, "UICHANGE" );
-	}
-
 }
 
 # Create
@@ -244,8 +222,8 @@ sub create {
 	);
 	if ( $self->is_valid("add") ) {
 		my $new_id = $self->create_federation_mapping($ds_id);
-		if ( $new_id != -1 ) {
-			$self->flash( message => 'Federation created successfully.' );
+		if ( $new_id > 0 ) {
+			$self->app->log->debug("redirecting....");
 			return $self->redirect_to('/close_fancybox.html');
 		}
 	}
@@ -268,7 +246,8 @@ sub create_federation_mapping {
 			ttl         => $ttl,
 		}
 	);
-	$federation_id = $fed->insert();
+	my $f = $fed->insert();
+	$federation_id = $f->id;
 
 	if ( $federation_id > 0 ) {
 		my $fed_ds_id = -1;

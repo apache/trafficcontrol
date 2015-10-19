@@ -577,8 +577,16 @@ sub afederation {
 
 	if ( $feds->count > 0 ) {
 		while ( my $f = $feds->next ) {
-			my $fed_id = $f->id;
-			@line = [ $f->id, $f->cname, $f->description, $f->ttl ];
+			my $fed_id   = $f->id;
+			my $fed_dses = $f->federation_deliveryservices;
+			my $xml_id;
+
+			# An assumption is being made that there is currently only a 1-1 relationship of the CNAME to the DeliveryService
+			# Even though the datamodel supports multiples (at the moment)
+			while ( my $fd = $fed_dses->next ) {
+				$xml_id = $fd->deliveryservice->xml_id;
+			}
+			@line = [ $f->id, $f->cname, $xml_id, $f->description, $f->ttl ];
 			push( @{ $data{'aaData'} }, @line );
 		}
 	}
