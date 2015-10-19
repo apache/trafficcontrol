@@ -26,9 +26,11 @@
 <script type="text/javascript">
 
       %= include 'user/_listroles.js'
+      %= include 'federation/_listdeliveryservices.js'
 
       // wait for the DOM to be loaded 
       $(document).ready(function () {
+          listdeliveryservices("<%= $ds_id %>");
           listroles("<%= $role_id %>");
 
            $("#delete_button").click(function() {

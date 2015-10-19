@@ -75,8 +75,22 @@ Test::TestHelper->load_all_fixtures($ft);
 ok $t->post_ok( '/login', => form => { u => Test::TestHelper::ADMIN_USER, p => Test::TestHelper::ADMIN_USER_PASSWORD } )->status_is(302)
 	->or( sub { diag $t->tx->res->content->asset->{content}; } );
 
-$t->get_ok('/federation')->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } );
+ok $t->get_ok('/federation')->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } ), 'Does Federation page exist?';
 
+ok $t->post_ok(
+	'/federation',
+	=> form => {
+		'federation.cname'       => 'cname-test',
+		'federation.description' => 'desc',
+		'federation.ttl'         => 60,
+		'federation.ds_id'       => 1,
+	}
+	)->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } ),
+	'Can a federation be created?';
+
+ok $t->get_ok('/federation/1/edit')->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } ), 'Does Federation page exist?';
+
+#logout
 ok $t->get_ok('/logout')->status_is(302)->or( sub { diag $t->tx->res->content->asset->{content}; } );
 
 $dbh->disconnect();
