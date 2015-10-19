@@ -25,7 +25,7 @@
 	var re_row_num = Object;
 	var row = 0;
 	$(function(){
-		$.get("/datatype/orderby/id", function(data){
+		$.get("/datatype/orderby/description", function(data){
 			$.each(data, function(idx, val) {
 				if (data[idx].use_in_table == "deliveryservice") {
 					if (data[idx].id == "<%= $selected_type %>") {
