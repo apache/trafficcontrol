@@ -1,14 +1,14 @@
 %define debug_package %{nil}
 Name:		traffic_stats
-Version:	@VERSION@
-Release:	@RELEASE@
+Version:	1.2.1
+Release:	ff4f9c1
 Summary:	Tool to pull data from traffic monitor and store in Influxdb
 Packager:	david_neuman2 at Cable dot Comcast dot com
 Vendor:		Comcast Cable
 Group:		Applications/Communications
 License:	Apache License, Version 2.0
 URL:		https://github.com/comcast/traffic_control/
-Source:		~/rpmbuild/SOURCES/traffic_stats-@VERSION@.tar.gz
+Source:		~/rpmbuild/SOURCES/traffic_stats-1.2.1.tar.gz
 
 %description
 Installs traffic_stats which performs the follwing functions:
