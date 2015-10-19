@@ -15,7 +15,7 @@
  */
 
 function listdeliveryservices(selected_ds_id) {
-	$("#delivery_service").html("<select id=\"dsselect\" name=\"delivery_service\"></select>");	
+	$("#delivery_service").html("<select id=\"dsselect\" name=\"ds_id\"></select>");	
 	$.get("/api/1.2/deliveryservices.json?orderby=name", function(data){
 		var response = data['response'];
 		$.each(response, function(idx, val) {
