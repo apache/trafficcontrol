@@ -66,4 +66,8 @@ public class Request {
 		}
 		this.hostname = hostname.toLowerCase();
 	}
+
+	public String getType() {
+		return "unknown";
+	}
 }

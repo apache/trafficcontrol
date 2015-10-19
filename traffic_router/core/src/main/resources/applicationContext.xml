@@ -67,7 +67,10 @@
 		<property name="statTracker" ref="statTracker" />
 		<property name="nameServer" ref="NameServer" />
 		<property name="trafficOpsUtils" ref="trafficOpsUtils" />
+		<property name="federationRegistry" ref="federationsRegistry" />
 	</bean>
+
+	<bean id="federationsRegistry" class="com.comcast.cdn.traffic_control.traffic_router.core.loc.FederationRegistry"/>
 
 	<bean id="federationsWatcher" class="com.comcast.cdn.traffic_control.traffic_router.core.loc.FederationsWatcher" init-method="init">
 		<property name="executorService" ref="ScheduledExecutorService" />
@@ -75,6 +78,7 @@
 		<property name="pollingInterval" value="$[cache.federations.database.refresh.period]" />
 		<property name="trafficOpsUtils" ref="trafficOpsUtils" />
 		<property name="trafficRouterManager" ref="trafficRouterManager" />
+		<property name="federationRegistry" ref="federationsRegistry" />
 	</bean>
 
 	<bean id="ConfigHandler" class="com.comcast.cdn.traffic_control.traffic_router.core.config.ConfigHandler">
