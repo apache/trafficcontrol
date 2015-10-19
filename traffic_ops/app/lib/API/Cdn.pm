@@ -454,7 +454,6 @@ sub gen_traffic_router_config {
 	my $rs_config = $self->db->resultset('Parameter')
 		->search( \%condition, { join => 'profile_parameters' } );
 	while ( my $row = $rs_config->next ) {
-		$self->app->log->info( "name = " . $row->name );
 		if ( $row->name eq 'domain_name' ) {
 			$ccr_domain_name = $row->value;
 		}
@@ -638,6 +637,7 @@ sub gen_traffic_router_config {
 				}
 			}
 		}
+		my $domains;
 		foreach my $regex ( sort keys %{$regex_to_props} ) {
 			my $set_number = $regex_to_props->{$regex}->{'setNumber'};
 			my $pattern    = $regex_to_props->{$regex}->{'pattern'};
@@ -649,6 +649,11 @@ sub gen_traffic_router_config {
 					},
 					{ 'matchType' => 'HOST', 'regex' => $pattern }
 				);
+				my $host = $pattern;
+				$host =~ s/\\//g;
+				$host =~ s/\.\*//g;
+				$host =~ s/\.//g;\
+				push @$domains, "$host.$ccr_domain_name";
 			}
 			elsif ( $type eq 'PATH_REGEXP' ) {
 				push(
@@ -667,6 +672,7 @@ sub gen_traffic_router_config {
 				);
 			}
 		}
+		$delivery_service->{'domains'} = $domains;
 		if ( scalar(@server_subrows) ) {
 
 			#my $host_regex = qr/(^(\.)+\*\\\.)(.*)(\\\.(\.)+\*$)/;
