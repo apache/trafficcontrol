@@ -39,25 +39,7 @@ my %definition_for = (
 			description => 'resolver4 type',
 			ttl         => 86400,
 		},
-	},
-	name3 => {
-		new   => 'Federation',
-		using => {
-			id          => 3,
-			cname       => 'cname3.',
-			description => 'resolver6 type',
-			ttl         => 86400,
-		},
-	},
-	name4 => {
-		new   => 'Federation',
-		using => {
-			id          => 4,
-			cname       => 'cname4.',
-			description => 'resolver6 type',
-			ttl         => 86400,
-		},
-	},
+	}
 );
 
 sub get_definition {

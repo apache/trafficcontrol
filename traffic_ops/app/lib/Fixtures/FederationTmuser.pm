@@ -37,23 +37,7 @@ my %definition_for = (
 			tm_user    => 5,
 			role       => 7,
 		},
-	},
-	federation_tm_user3 => {
-		new   => 'FederationTmuser',
-		using => {
-			federation => 3,
-			tm_user    => 5,
-			role       => 7,
-		},
-	},
-	federation_tm_user4 => {
-		new   => 'FederationTmuser',
-		using => {
-			federation => 4,
-			tm_user    => 5,
-			role       => 7,
-		},
-	},
+	}
 );
 
 sub get_definition {

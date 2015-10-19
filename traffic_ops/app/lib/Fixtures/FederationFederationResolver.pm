@@ -33,20 +33,20 @@ my %definition_for = (
 		new   => 'FederationFederationResolver',
 		using => {
 			federation          => 1,
-			federation_resolver => 2,
+			federation_resolver => 3,
 		},
 	},
 	federation3 => {
 		new   => 'FederationFederationResolver',
 		using => {
-			federation          => 1,
-			federation_resolver => 3,
+			federation          => 2,
+			federation_resolver => 2,
 		},
 	},
 	federation4 => {
 		new   => 'FederationFederationResolver',
 		using => {
-			federation          => 1,
+			federation          => 2,
 			federation_resolver => 4,
 		},
 	},
