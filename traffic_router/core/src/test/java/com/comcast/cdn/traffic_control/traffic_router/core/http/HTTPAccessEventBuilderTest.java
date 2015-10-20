@@ -137,7 +137,7 @@ public class HTTPAccessEventBuilderTest {
         Map<String, String> httpAccessRequestHeaders = new HashMap<String, String>();
         httpAccessRequestHeaders.put("If-Modified-Since", "Thurs, 15 July 2010 12:00:00 UTC");
         httpAccessRequestHeaders.put("Accept", "text/*, text/html, text/html;level=1, */*");
-        httpAccessRequestHeaders.put("Arbitrary", "this|that");
+        httpAccessRequestHeaders.put("Arbitrary", "The cow says \"moo\"");
 
         StatTracker.Track track = new StatTracker.Track();
         HTTPAccessRecord.Builder builder = new HTTPAccessRecord.Builder(new Date(144140633999L), request)
@@ -152,16 +152,8 @@ public class HTTPAccessEventBuilderTest {
 
 
         assertThat(httpAccessEvent, not(containsString(" rh=\"-\"")));
-        assertThat(httpAccessEvent, containsString("If-Modified-Since: Thurs%2C%2015%20July%202010%2012%3A00%3A00%20UTC"));
-        assertThat(httpAccessEvent, containsString("Accept: text%2F%2A%2C%20text%2Fhtml%2C%20text%2Fhtml%3Blevel%3D1%2C%20%2A%2F%2A"));
-        assertThat(httpAccessEvent, containsString("Arbitrary: this%7Cthat"));
-        assertThat(httpAccessEvent, not(startsWith("|")));
-        assertThat(httpAccessEvent, not(endsWith("|")));
-
-        int index = httpAccessEvent.indexOf('|');
-        assertThat(index, not(-1));
-
-        index = httpAccessEvent.indexOf('|', index + 1);
-        assertThat(index, not(-1));
+        assertThat(httpAccessEvent, containsString("rh=\"If-Modified-Since: Thurs, 15 July 2010 12:00:00 UTC\""));
+        assertThat(httpAccessEvent, containsString("rh=\"Accept: text/*, text/html, text/html;level=1, */*\""));
+        assertThat(httpAccessEvent, containsString("rh=\"Arbitrary: The cow says 'moo'"));
     }
 }

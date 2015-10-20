@@ -31,7 +31,7 @@ public class DeliveryServiceTest {
         requestHeaderNames.add("Content-Type");
         requestHeaderNames.add("If-Modified-Since");
 
-        jsonConfiguration.put("requestHeaderNames", requestHeaderNames);
+        jsonConfiguration.put("requestHeaders", requestHeaderNames);
 
         DeliveryService deliveryService = new DeliveryService("a-delivery-service", jsonConfiguration);
 
