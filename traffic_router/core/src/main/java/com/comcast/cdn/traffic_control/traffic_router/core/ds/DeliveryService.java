@@ -65,7 +65,7 @@ public class DeliveryService {
 	private final Dispersion dispersion;
 	private final boolean ip6RoutingEnabled;
 	private final Map<String, String> responseHeaders = new HashMap<String, String>();
-	private final Set<String> requestHeaderNames = new HashSet<String>();
+	private final Set<String> requestHeaders = new HashSet<String>();
 
 	public DeliveryService(final String id, final JSONObject dsJo) throws JSONException {
 		this.id = id;
@@ -97,7 +97,7 @@ public class DeliveryService {
 		this.dispersion = new Dispersion(dsJo.optJSONObject("dispersion"));
 		this.ip6RoutingEnabled = dsJo.optBoolean("ip6RoutingEnabled", false);
 		setResponseHeaders(dsJo.optJSONObject("responseHeaders"));
-		setRequestHeaderNames(dsJo.optJSONArray("requestHeaderNames"));
+		setRequestHeaders(dsJo.optJSONArray("requestHeaders"));
 	}
 
 	public String getId() {
@@ -443,17 +443,17 @@ public class DeliveryService {
 		}
 	}
 
-	public Set<String> getRequestHeaderNames() {
-		return requestHeaderNames;
+	public Set<String> getRequestHeaders() {
+		return requestHeaders;
 	}
 
-	private void setRequestHeaderNames(final JSONArray jsonRequestHeaderNames) throws JSONException {
+	private void setRequestHeaders(final JSONArray jsonRequestHeaderNames) throws JSONException {
 		if (jsonRequestHeaderNames == null) {
 			return;
 		}
 
 		for (int i = 0; i < jsonRequestHeaderNames.length(); i++) {
-			requestHeaderNames.add(jsonRequestHeaderNames.getString(i));
+			requestHeaders.add(jsonRequestHeaderNames.getString(i));
 		}
 	}
 }

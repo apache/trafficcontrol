@@ -17,7 +17,7 @@ public class DeliveryServiceTest {
         JSONObject jsonConfiguration = new JSONObject();
         jsonConfiguration.put("coverageZoneOnly", false);
         DeliveryService deliveryService = new DeliveryService("a-delivery-service", jsonConfiguration);
-        assertThat(deliveryService.getRequestHeaderNames().size(), equalTo(0));
+        assertThat(deliveryService.getRequestHeaders().size(), equalTo(0));
     }
 
     @Test
@@ -35,7 +35,7 @@ public class DeliveryServiceTest {
 
         DeliveryService deliveryService = new DeliveryService("a-delivery-service", jsonConfiguration);
 
-        assertThat(deliveryService.getRequestHeaderNames(), containsInAnyOrder("Cache-Control", "Cookie", "Content-Type", "If-Modified-Since"));
+        assertThat(deliveryService.getRequestHeaders(), containsInAnyOrder("Cache-Control", "Cookie", "Content-Type", "If-Modified-Since"));
     }
 
 }

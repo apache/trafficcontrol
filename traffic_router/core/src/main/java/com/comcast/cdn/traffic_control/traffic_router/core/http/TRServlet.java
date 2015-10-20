@@ -177,7 +177,7 @@ public class TRServlet extends HttpServlet {
 			httpAccessRecordBuilder.responseURL(null);
 			httpAccessRecordBuilder.rerr(e.getMessage());
 		} finally {
-			final Map<String,String> accessRequestHeaders = new HttpAccessRequestHeaders().makeMap(httpServletRequest, deliveryService.getRequestHeaderNames());
+			final Map<String,String> accessRequestHeaders = new HttpAccessRequestHeaders().makeMap(httpServletRequest, deliveryService.getRequestHeaders());
 
 			final HTTPAccessRecord access = httpAccessRecordBuilder.resultType(track.getResult())
 				.resultLocation(track.getResultLocation())

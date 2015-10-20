@@ -16,7 +16,6 @@
 
 package com.comcast.cdn.traffic_control.traffic_router.core.http;
 
-import com.comcast.cdn.traffic_control.traffic_router.core.dns.DNSAccessRecord;
 import com.comcast.cdn.traffic_control.traffic_router.core.ds.DeliveryService;
 import com.comcast.cdn.traffic_control.traffic_router.core.request.HTTPRequest;
 import com.comcast.cdn.traffic_control.traffic_router.core.router.HTTPRouteResult;
@@ -25,7 +24,6 @@ import com.comcast.cdn.traffic_control.traffic_router.core.router.TrafficRouter;
 import com.comcast.cdn.traffic_control.traffic_router.core.router.TrafficRouterManager;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.powermock.api.mockito.PowerMockito;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
 
@@ -84,7 +82,7 @@ public class TRServletTest {
         hnames.add("If-Modified-Since");
 
         DeliveryService deliveryService = mock(DeliveryService.class);
-        when(deliveryService.getRequestHeaderNames()).thenReturn(hnames);
+        when(deliveryService.getRequestHeaders()).thenReturn(hnames);
         when(deliveryService.getResponseHeaders()).thenReturn(new HashMap<String, String>());
 
         HTTPRouteResult httpRouteResult = mock(HTTPRouteResult.class);
