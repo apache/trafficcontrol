@@ -160,18 +160,13 @@ sub external_index {
   my $data;
 
   my $rs_data;
-  if ( &is_admin($self) ) {
-    $rs_data = $self->find_federations();
+  my ( $rc, $response, @federation_ids )
+    = $self->find_federation_tmuser($current_username);
+  if ( $rc == SUCCESS ) {
+    $rs_data = $self->find_federations( \@federation_ids );
   }
   else {
-    my ( $rc, $response, @federation_ids )
-      = $self->find_federation_tmuser($current_username);
-    if ( $rc == SUCCESS ) {
-      $rs_data = $self->find_federations( \@federation_ids );
-    }
-    else {
-      return $self->alert($response);
-    }
+    return $self->alert($response);
   }
 
   while ( my $row = $rs_data->next ) {
@@ -272,8 +267,8 @@ sub add {
     my $map    = $ds->{'mappings'};
 
     my ( $is_valid, $result ) = $self->is_valid(
-      {   xml_id   => $xml_id,
-        mappings => $map
+      {   deliveryService => $xml_id,
+        mappings        => $map
       }
     );
     if ( $is_valid == ERROR ) {
@@ -309,9 +304,10 @@ sub is_valid {
   my $federation = shift;
 
   my $rules = {
-    fields => [qw/xml_id mappings/],
+    fields => [qw/deliveryService mappings/],
 
-    checks => [ [qw/xml_id mappings/] => is_required("is required") ]
+    checks =>
+      [ [qw/deliveryService mappings/] => is_required("is required") ]
   };
 
   my $result = validate( $federation, $rules );
@@ -347,12 +343,12 @@ sub find_federation_deliveryservice {
 
     if ( !scalar @federation_ids ) {
       $response
-        = "No federation(s) found for user $current_username on delivery service $xml_id.";
+        = "No federation(s) found for user $current_username on delivery service '$xml_id'.";
       return ( ERROR, $response, @federation_ids );
     }
     if ( @federation_ids > 1 ) {
       $response
-        = "Found more than one federation for Delivery Service $xml_id.  Please contact your administrator.";
+        = "Found more than one federation for Delivery Service '$xml_id'.  Please contact your administrator.";
       return ( ERROR, $response, @federation_ids );
     }
   }
@@ -390,7 +386,7 @@ sub add_resolvers {
   }
 
   my $response
-    = "$current_username successfully added federation resolvers for $xml_id: [ "
+    = "$current_username successfully added federation resolvers for '$xml_id': [ "
     . join( ', ', @resolver_ips ) . " ]";
   return ( SUCCESS, $response );
 }
