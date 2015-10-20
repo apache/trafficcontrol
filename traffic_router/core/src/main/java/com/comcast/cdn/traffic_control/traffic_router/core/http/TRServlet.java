@@ -22,6 +22,7 @@ import java.util.Date;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
 
 import javax.servlet.ServletConfig;
 import javax.servlet.ServletException;
@@ -177,7 +178,10 @@ public class TRServlet extends HttpServlet {
 			httpAccessRecordBuilder.responseURL(null);
 			httpAccessRecordBuilder.rerr(e.getMessage());
 		} finally {
-			final Map<String,String> accessRequestHeaders = new HttpAccessRequestHeaders().makeMap(httpServletRequest, deliveryService.getRequestHeaders());
+			final Set<String> requestHeaders = trafficRouterManager.getTrafficRouter().getRequestHeaders();
+			requestHeaders.addAll(deliveryService.getRequestHeaders());
+
+			final Map<String,String> accessRequestHeaders = new HttpAccessRequestHeaders().makeMap(httpServletRequest, requestHeaders);
 
 			final HTTPAccessRecord access = httpAccessRecordBuilder.resultType(track.getResult())
 				.resultLocation(track.getResultLocation())

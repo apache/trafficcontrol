@@ -25,9 +25,11 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
+import java.util.Set;
 import java.util.SortedMap;
 import java.util.TreeMap;
 
@@ -76,6 +78,7 @@ public class TrafficRouter {
 	private final FederationRegistry federationRegistry;
 
 	private final Random random = new Random(System.nanoTime());
+	private Set<String> requestHeaders = new HashSet<String>();
 
 	public TrafficRouter(final CacheRegister cr, 
 			final GeolocationService geolocationService, 
@@ -636,5 +639,13 @@ public class TrafficRouter {
 
 	public Zone getZone(final Name qname, final int qtype, final InetAddress clientAddress, final boolean isDnssecRequest, final DNSAccessRecord.Builder builder) {
 		return zoneManager.getZone(qname, qtype, clientAddress, isDnssecRequest, builder);
+	}
+
+	public void setRequestHeaders(final Set<String> requestHeaders) {
+		this.requestHeaders = requestHeaders;
+	}
+
+	public Set<String> getRequestHeaders() {
+		return requestHeaders;
 	}
 }
