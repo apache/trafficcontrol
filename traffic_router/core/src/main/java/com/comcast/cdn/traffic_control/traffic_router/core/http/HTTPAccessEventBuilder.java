@@ -1,13 +1,18 @@
 package com.comcast.cdn.traffic_control.traffic_router.core.http;
 
 import com.comcast.cdn.traffic_control.traffic_router.core.loc.Geolocation;
+import org.apache.log4j.Logger;
 
 import javax.servlet.http.HttpServletRequest;
+import java.io.UnsupportedEncodingException;
 import java.math.RoundingMode;
+import java.net.URLEncoder;
 import java.text.DecimalFormat;
 import java.util.Date;
+import java.util.Map;
 
 public class HTTPAccessEventBuilder {
+    private static final Logger LOGGER = Logger.getLogger(HTTPAccessEventBuilder.class);
     private static String formatRequest(final HttpServletRequest request) {
         String url = formatObject(request.getRequestURL());
 
@@ -27,6 +32,39 @@ public class HTTPAccessEventBuilder {
 
     private static String formatObject(final Object o) {
         return (o == null) ? "-" : o.toString();
+    }
+
+    private static String formatRequestHeaders(final Map<String, String> requestHeaders) {
+        if (requestHeaders == null || requestHeaders.isEmpty()) {
+            return "-";
+        }
+
+        final StringBuilder stringBuilder = new StringBuilder();
+        boolean first = true;
+        for (Map.Entry<String, String> entry : requestHeaders.entrySet()) {
+            if (entry.getValue() == null || entry.getValue().isEmpty()) {
+                continue;
+            }
+
+            if (!first) {
+                stringBuilder.append('|');
+            }
+            else {
+                first = false;
+            }
+
+            stringBuilder.append(entry.getKey()).append(": ");
+
+            try {
+                stringBuilder.append(URLEncoder.encode(entry.getValue(),"utf-8").replaceAll("\\+", "%20").replaceAll("\\*", "%2A"));
+            } catch (UnsupportedEncodingException e) {
+                LOGGER.debug("This is not possible");
+            }
+
+
+        }
+
+        return stringBuilder.toString();
     }
 
     @SuppressWarnings("PMD.UseStringBufferForStringAppends")
@@ -78,6 +116,7 @@ public class HTTPAccessEventBuilder {
         final String respurl = " rurl=\"" + formatObject(httpAccessRecord.getResponseURL()) + "\"";
         stringBuilder.append(respurl);
 
+        stringBuilder.append(" rh=\"" + formatRequestHeaders(httpAccessRecord.getRequestHeaders()) + "\"");
         return stringBuilder.toString();
     }
 }

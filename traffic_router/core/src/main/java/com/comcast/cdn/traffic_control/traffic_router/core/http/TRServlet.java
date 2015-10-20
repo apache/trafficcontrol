@@ -132,21 +132,25 @@ public class TRServlet extends HttpServlet {
 		writeHttpResponse(response, request, req, track, httpAccessRecord);
 	}
 
-	private void writeHttpResponse(final HttpServletResponse response, final HttpServletRequest request, 
-			final HTTPRequest req, final Track track, final HTTPAccessRecord httpAccessRecord) throws IOException {
-		final String format = request.getParameter("format");
+	private void writeHttpResponse(final HttpServletResponse response, final HttpServletRequest httpServletRequest,
+			final HTTPRequest request, final Track track, final HTTPAccessRecord httpAccessRecord) throws IOException {
+		final String format = httpServletRequest.getParameter("format");
 		final HTTPAccessRecord.Builder httpAccessRecordBuilder = new HTTPAccessRecord.Builder(httpAccessRecord);
+		DeliveryService deliveryService = null;
 		try {
 			final TrafficRouter trafficRouter = trafficRouterManager.getTrafficRouter();
-			final HTTPRouteResult routeResult = trafficRouter.route(req, track);
+			final HTTPRouteResult routeResult = trafficRouter.route(request, track);
+
+			if (routeResult != null) {
+				deliveryService = routeResult.getDeliveryService();
+			}
 
 			if (routeResult == null || routeResult.getUrl() == null) {
 				httpAccessRecordBuilder.responseCode(HttpServletResponse.SC_SERVICE_UNAVAILABLE);
 				response.sendError(HttpServletResponse.SC_SERVICE_UNAVAILABLE);
 			} else {
-				final DeliveryService ds = routeResult.getDeliveryService();
 				final URL location = routeResult.getUrl();
-				final Map<String, String> responseHeaders = ds.getResponseHeaders();
+				final Map<String, String> responseHeaders = deliveryService.getResponseHeaders();
 
 				for (String key : responseHeaders.keySet()) {
 					response.addHeader(key, responseHeaders.get(key));
@@ -173,7 +177,12 @@ public class TRServlet extends HttpServlet {
 			httpAccessRecordBuilder.responseURL(null);
 			httpAccessRecordBuilder.rerr(e.getMessage());
 		} finally {
-			final HTTPAccessRecord access = httpAccessRecordBuilder.resultType(track.getResult()).resultLocation(track.getResultLocation()).build();
+			final Map<String,String> accessRequestHeaders = new HttpAccessRequestHeaders().makeMap(httpServletRequest, deliveryService.getRequestHeaderNames());
+
+			final HTTPAccessRecord access = httpAccessRecordBuilder.resultType(track.getResult())
+				.resultLocation(track.getResultLocation())
+				.requestHeaders(accessRequestHeaders)
+				.build();
 			ACCESS.info(HTTPAccessEventBuilder.create(access));
 			statTracker.saveTrack(track);
 		}
