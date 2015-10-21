@@ -18,7 +18,7 @@ package client
 
 import (
 	"bytes"
-	"code.google.com/p/go.net/publicsuffix"
+	"golang.org/x/net/publicsuffix"
 	"crypto/tls"
 	"encoding/json"
 	"errors"

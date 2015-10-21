@@ -25,7 +25,7 @@ use MIME::Base64;
 use Data::Dumper;
 
 $| = 1;
-my $script_version = "0.54a";
+my $script_version = "0.55a";
 my $date           = `/bin/date`;
 chomp($date);
 print "$date\nVersion of this script: $script_version\n";
@@ -265,7 +265,7 @@ sub process_cfg_file {
 
 	&smart_mkdir($config_dir);
 
-	$result = &curl_me($url) if ( !defined($result) );
+	$result = &curl_me($url) if ( !defined($result) && defined($url) );
 
 	return $CFG_FILE_NOT_PROCESSED if ( !&validate_result( \$url, \$result ) );
 
@@ -1949,6 +1949,8 @@ sub validate_result {
 sub set_url {
 	my $filename = shift;
 	my $filepath = $cfg_file_tracker->{$filename}->{'location'};
+
+	return if (!defined($cfg_file_tracker->{$filename}->{'fname-in-TO'}));
 
 	if ( $filename ne "regex_revalidate.config" ) {
 		return "$traffic_ops_host\/genfiles\/view\/$hostname_short\/" . $cfg_file_tracker->{$filename}->{'fname-in-TO'};

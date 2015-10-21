@@ -22,13 +22,15 @@ use lib qw(/opt/traffic_ops/install/lib /opt/traffic_ops/lib/perl5 /opt/traffic_
 
 use JSON;
 use InstallUtils;
+use File::Temp;
+use Data::Dumper;
 
-my $ca = "/etc/pki/tls/certs/localhost.ca";
-my $csr = "/etc/pki/tls/certs/localhost.csr";
-my $cert = "/etc/pki/tls/certs/localhost.crt";
+my $ca       = "/etc/pki/tls/certs/localhost.ca";
+my $csr      = "/etc/pki/tls/certs/localhost.csr";
+my $cert     = "/etc/pki/tls/certs/localhost.crt";
 my $cdn_conf = "/opt/traffic_ops/app/conf/cdn.conf";
-my $key = "/etc/pki/tls/private/localhost.key";
-my $msg = << 'EOF';
+my $key      = "/etc/pki/tls/private/localhost.key";
+my $msg      = << 'EOF';
 
 	We're now running a script to generate a self signed X509 SSL certificate.
 	When prompted to enter a pass phrase, just enter 'pass' each time.  The
@@ -41,45 +43,84 @@ my $msg = << 'EOF';
 
 EOF
 
-sub writeCdn_conf () {
-  open (CDN, ">$cdn_conf") or die ("open(): $!");
-  print CDN "{\n\thypnotoad => {\n";
-  print CDN "\t\tlisten => ['https://*:443?cert=${cert}&key=${key}&ca=${ca}&verify=0x00&ciphers=AES128-GCM-SHA256:RC4:HIGH:!MD5:!aNULL:!EDH:!ED'],\n";
-  print CDN "\t\tuser => 'trafops',\n";
-  print CDN "\t\tgroup => 'trafops',\n";
-  print CDN "\t\tpid_file => '/var/run/traffic_ops.pid',\n";
-  print CDN "\t\tworkers => 48\n";
-  print CDN "\t}\n}\n";
+sub writeCdn_conf {
+	my $cdn_conf = shift;
+
+	# listen param to be inserted
+	my $listen_str = "https://*:443?cert=${cert}&key=${key}&ca=${ca}&verify=0x00&ciphers=AES128-GCM-SHA256:RC4:HIGH:!MD5:!aNULL:!EDH:!ED";
+
+	# load as perl hash to find string to be replaced
+	my $cdnh = do $cdn_conf;
+	if ( exists $cdnh->{hypnotoad} ) {
+		$cdnh->{hypnotoad}{listen} = [$listen_str];
+	}
+	else {
+
+		# add the whole hypnotoad config without affecting anything else in the config
+		$cdnh->{hypnotoad} = {
+			listen   => [$listen_str],
+			user     => 'trafops',
+			group    => 'trafops',
+			pid_file => '/var/run/traffic_ops.pid',
+			workers  => 48,
+		};
+	}
+
+	# dump conf data in compact but readable form
+	my $dumper = Data::Dumper->new( [$cdnh] );
+	$dumper->Indent(1)->Terse(1)->Quotekeys(0);
+
+	# write whole config to temp file
+	my $tmpfile = File::Temp->new();
+	print $tmpfile $dumper->Dump();
+	close $tmpfile;
+
+	# make backup of current file
+	my $backup_num = 0;
+	my $backup_name;
+	do {
+		$backup_num++;
+		$backup_name = "$cdn_conf.backup$backup_num";
+	} while ( -e $backup_name );
+	rename( $cdn_conf, $backup_name ) or die("rename(): $!");
+
+	# rename temp file to cdn.conf and set ownership/permissions same as backup
+	my @stats = stat($backup_name);
+	my ( $uid, $gid, $perm ) = @stats[ 4, 5, 2 ];
+	rename( "$tmpfile", $cdn_conf ) or die("rename(): $!");
+
+	chown $uid, $gid, $cdn_conf;
+	chmod $perm, $cdn_conf;
 }
 
-InstallUtils::execCommand ("/usr/bin/tput","clear");
+InstallUtils::execCommand( "/usr/bin/tput", "clear" );
 print $msg;
-InstallUtils::promptUser ("Hit Enter when you are ready to continue","");
+InstallUtils::promptUser( "Hit Enter when you are ready to continue", "" );
 
 print "Postinstall SSL Certificate Creation.\n\nGenerating an RSA Private Server Key.\n\n";
-my $result = InstallUtils::execCommand ("openssl","genrsa","-des3","-out","server.key","1024");
+my $result = InstallUtils::execCommand( "openssl", "genrsa", "-des3", "-out", "server.key", "1024" );
 
-if ($result != 0) {
+if ( $result != 0 ) {
 	print "Key generation failed.\n";
 	exit 1;
 }
 
 print "\nThe server key has been generated.\n\nCreating a Certificate Signing Request (CSR)\n\n";
 
-$result = InstallUtils::execCommand ("openssl","req","-new","-key","server.key","-out","server.csr");
+$result = InstallUtils::execCommand( "openssl", "req", "-new", "-key", "server.key", "-out", "server.csr" );
 
-if ($result != 0) {
+if ( $result != 0 ) {
 	print "CSR generation failed.\n";
 }
 
 print "\nThe Certificate Signing Request has been generated.\n";
 print "Removing the pass phrase from the server key.\n";
 
-InstallUtils::execCommand ("/bin/mv", "server.key","server.key.orig");
+InstallUtils::execCommand( "/bin/mv", "server.key", "server.key.orig" );
 
-$result = InstallUtils::execCommand ("openssl","rsa","-in","server.key.orig","-out","server.key");
+$result = InstallUtils::execCommand( "openssl", "rsa", "-in", "server.key.orig", "-out", "server.key" );
 
-if ($result != 0) {
+if ( $result != 0 ) {
 	print "Failed to remove the server key pass phrase.\n";
 	exit 2;
 }
@@ -88,24 +129,24 @@ print "\nThe pass phrase has been removed from the server key.\n";
 
 print "\nGenerating a Self-signed certificate.\n";
 
-$result = InstallUtils::execCommand ("openssl","x509","-req","-days","365","-in","server.csr","-signkey","server.key","-out","server.crt");
+$result = InstallUtils::execCommand( "openssl", "x509", "-req", "-days", "365", "-in", "server.csr", "-signkey", "server.key", "-out", "server.crt" );
 
-if ($result != 0) {
+if ( $result != 0 ) {
 	print "Failed to generate a self signed certificate.\n";
 }
 
 print "\nA server key and self signed certificate has been generated.\n";
 print "\nInstalling the server key and server certificate.\n";
 
-$result = InstallUtils::execCommand ("/bin/cp","server.key","$key");
-if ($result != 0) {
+$result = InstallUtils::execCommand( "/bin/cp", "server.key", "$key" );
+if ( $result != 0 ) {
 	print "Failed to install the private server key.\n";
 	exit 3;
 }
-$result = InstallUtils::execCommand ("/bin/chmod","600","$key");
-$result = InstallUtils::execCommand ("/bin/chown","trafops:trafops","$key");
+$result = InstallUtils::execCommand( "/bin/chmod", "600",             "$key" );
+$result = InstallUtils::execCommand( "/bin/chown", "trafops:trafops", "$key" );
 
-if ($result != 0) {
+if ( $result != 0 ) {
 	print "Failed to install the private server key.\n";
 	exit 4;
 }
@@ -113,32 +154,32 @@ if ($result != 0) {
 print "\nThe private key has been installed.\n";
 print "\nInstalling the self signed certificate.\n";
 
-$result = InstallUtils::execCommand ("/bin/cp","server.crt","$cert");
+$result = InstallUtils::execCommand( "/bin/cp", "server.crt", "$cert" );
 
-if ($result != 0) {
+if ( $result != 0 ) {
 	print "Failed to install the self signed certificate.\n";
 	exit 5;
 }
 
-$result = InstallUtils::execCommand ("/bin/chmod","600","$cert");
-$result = InstallUtils::execCommand ("/bin/chown","trafops:trafops","$cert");
+$result = InstallUtils::execCommand( "/bin/chmod", "600",             "$cert" );
+$result = InstallUtils::execCommand( "/bin/chown", "trafops:trafops", "$cert" );
 
-if ($result != 0) {
+if ( $result != 0 ) {
 	print "Failed to install the self signed certificate.\n";
 	exit 6;
 }
 
 print "\nSaving the self signed csr.\n";
-$result = InstallUtils::execCommand ("/bin/cp","server.csr","$csr");
+$result = InstallUtils::execCommand( "/bin/cp", "server.csr", "$csr" );
 
-if ($result != 0) {
+if ( $result != 0 ) {
 	print "Failed to save the self signed csr.\n";
 	exit 7;
 }
-$result = InstallUtils::execCommand ("/bin/chmod","664","$csr");
-$result = InstallUtils::execCommand ("/bin/chown","trafops:trafops","$csr");
+$result = InstallUtils::execCommand( "/bin/chmod", "664",             "$csr" );
+$result = InstallUtils::execCommand( "/bin/chown", "trafops:trafops", "$csr" );
 
-writeCdn_conf;
+writeCdn_conf($cdn_conf);
 
 my $msg = << 'EOF';
 

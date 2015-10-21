@@ -74,7 +74,10 @@ Navigating the Install
 -----------------------
 To begin the install:
 
-1. Install Traffic Ops: ``sudo yum install traffic_ops``
+1. Install Traffic Ops: 
+  Download the traffic_ops rpm package from http://traffic-control-cdn.net/downloads/index.html
+  
+  ``sudo rpm -ivh traffic_ops-1.*.*-****.x86_64.rpm``
 
 
 
@@ -367,80 +370,6 @@ To begin the install:
     traffic_ops #
 
 Traffic Ops is now installed!
-
-3. Download the web dependencies (this will be added to the installer in the future): ::
-
-    traffic_ops # pwd
-    /opt/traffic_ops/install/bin
-    traffic_ops # ./download_web_deps
-    Finished curling https://cdn.datatables.net/1.10.4/js/jquery.dataTables.min.js | size is: 78746
-    Finished curling https://github.com/fancyapps/fancyBox/zipball/v2.1.5 | size is: 541026
-    Finished curling http://www.flotcharts.org/downloads/flot-0.8.3.zip | size is: 649913
-    Finished curling https://github.com/krzysu/flot.tooltip/releases/download/0.8.4/jquery.flot.tooltip-0.8.4.zip | size is: 7669
-    Finished curling https://gflot.googlecode.com/svn-history/r154/trunk/flot/jquery.flot.axislabels.js | size is: 17321
-    Finished curling https://github.com/alpixel/jMenu/archive/master.zip | size is: 41836
-    Finished curling https://code.jquery.com/jquery-1.11.2.min.js | size is: 95931
-    Finished curling https://code.jquery.com/ui/1.11.4/jquery-ui.min.js | size is: 240427
-    Finished curling https://code.jquery.com/ui/1.7.3/themes/dark-hive/jquery-ui.css | size is: 27499
-    Finished curling http://jquery-ui.googlecode.com/svn/tags/1.7.3/themes/dark-hive/images/ui-bg_flat_30_cccccc_40x100.png | size is: 180
-    Finished curling http://jquery-ui.googlecode.com/svn/tags/1.7.3/themes/dark-hive/images/ui-bg_flat_50_5c5c5c_40x100.png | size is: 180
-    Finished curling http://jquery-ui.googlecode.com/svn/tags/1.7.3/themes/dark-hive/images/ui-bg_glass_40_ffc73d_1x400.png | size is: 131
-    Finished curling http://jquery-ui.googlecode.com/svn/tags/1.7.3/themes/dark-hive/images/ui-bg_highlight-hard_20_0972a5_1x100.png | size is: 114
-    Finished curling http://jquery-ui.googlecode.com/svn/tags/1.7.3/themes/dark-hive/images/ui-bg_highlight-soft_33_003147_1x100.png | size is: 127
-    Finished curling http://jquery-ui.googlecode.com/svn/tags/1.7.3/themes/dark-hive/images/ui-bg_highlight-soft_35_222222_1x100.png | size is: 113
-    Finished curling http://jquery-ui.googlecode.com/svn/tags/1.7.3/themes/dark-hive/images/ui-bg_highlight-soft_44_444444_1x100.png | size is: 117
-    Finished curling http://jquery-ui.googlecode.com/svn/tags/1.7.3/themes/dark-hive/images/ui-bg_highlight-soft_80_eeeeee_1x100.png | size is: 95
-    Finished curling http://jquery-ui.googlecode.com/svn/tags/1.7.3/themes/dark-hive/images/ui-bg_loop_25_000000_21x21.png | size is: 235
-    Finished curling http://jquery-ui.googlecode.com/svn/tags/1.7.3/themes/dark-hive/images/ui-icons_222222_256x240.png | size is: 4369
-    Finished curling http://jquery-ui.googlecode.com/svn/tags/1.7.3/themes/dark-hive/images/ui-icons_4b8e0b_256x240.png | size is: 4369
-    Finished curling http://jquery-ui.googlecode.com/svn/tags/1.7.3/themes/dark-hive/images/ui-icons_a83300_256x240.png | size is: 4369
-    Finished curling http://jquery-ui.googlecode.com/svn/tags/1.7.3/themes/dark-hive/images/ui-icons_cccccc_256x240.png | size is: 4369
-    Finished curling http://jquery-ui.googlecode.com/svn/tags/1.7.3/themes/dark-hive/images/ui-icons_ffffff_256x240.png | size is: 4369
-    Finished curling https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/js/bootstrap.min.js | size is: 35951
-    Output file: ../../app/public/js/jquery.dataTables.min.js does not exist, putting into place.
-    Making dir: ../../app/public/js/fancybox/
-    Output file: ../../app/public/js/fancybox//jquery.fancybox-buttons.js does not exist. Putting file from zip into place.
-    Output file: ../../app/public/js/fancybox//fancybox_loading@2x.gif does not exist. Putting file from zip into place.
-    Output file: ../../app/public/js/fancybox//fancybox_loading.gif does not exist. Putting file from zip into place.
-    Output file: ../../app/public/js/fancybox//fancybox_buttons.png does not exist. Putting file from zip into place.
-    Output file: ../../app/public/js/fancybox//jquery.fancybox-thumbs.js does not exist. Putting file from zip into place.
-    Output file: ../../app/public/js/fancybox//jquery.fancybox-buttons.css does not exist. Putting file from zip into place.
-    Output file: ../../app/public/js/fancybox//jquery.fancybox-thumbs.css does not exist. Putting file from zip into place.
-    Output file: ../../app/public/js/fancybox//fancybox_sprite@2x.png does not exist. Putting file from zip into place.
-    Output file: ../../app/public/js/fancybox//jquery.fancybox.css does not exist. Putting file from zip into place.
-    Output file: ../../app/public/js/fancybox//jquery.fancybox-media.js does not exist. Putting file from zip into place.
-    Output file: ../../app/public/js/fancybox//fancybox_overlay.png does not exist. Putting file from zip into place.
-    Output file: ../../app/public/js/fancybox//fancybox_sprite.png does not exist. Putting file from zip into place.
-    Output file: ../../app/public/js/fancybox//jquery.fancybox.js does not exist. Putting file from zip into place.
-    Making dir: ../../app/public/js/flot/
-    Output file: ../../app/public/js/flot//jquery.flot.min.js does not exist. Putting file from zip into place.
-    Output file: ../../app/public/js/flot//jquery.flot.selection.js does not exist. Putting file from zip into place.
-    Output file: ../../app/public/js/flot//jquery.flot.stack.js does not exist. Putting file from zip into place.
-    Output file: ../../app/public/js/flot//jquery.flot.time.js does not exist. Putting file from zip into place.
-    Output file: ../../app/public/js/flot//jquery.flot.tooltip.js does not exist. Putting file from zip into place.
-    Output file: ../../app/public/js/flot/jquery.flot.axislabels.js does not exist, putting into place.
-    Output file: ../../app/public/js//jMenu.jquery.min.js does not exist. Putting file from zip into place.
-    Output file: ../../app/public/css//jmenu.css does not exist. Putting file from zip into place.
-    Output file: ../../app/public/js/jquery-1.11.2.min.js does not exist, putting into place.
-    Output file: ../../app/public/js/jquery-ui.min.js does not exist, putting into place.
-    Output file: ../../app/public/css/jquery-ui.css does not exist, putting into place.
-    Making dir: ../../app/public/css/images/
-    Output file: ../../app/public/css/images/ui-bg_flat_30_cccccc_40x100.png does not exist, putting into place.
-    Output file: ../../app/public/css/images/ui-bg_flat_50_5c5c5c_40x100.png does not exist, putting into place.
-    Output file: ../../app/public/css/images/ui-bg_glass_40_ffc73d_1x400.png does not exist, putting into place.
-    Output file: ../../app/public/css/images/ui-bg_highlight-hard_20_0972a5_1x100.png does not exist, putting into place.
-    Output file: ../../app/public/css/images/ui-bg_highlight-soft_33_003147_1x100.png does not exist, putting into place.
-    Output file: ../../app/public/css/images/ui-bg_highlight-soft_35_222222_1x100.png does not exist, putting into place.
-    Output file: ../../app/public/css/images/ui-bg_highlight-soft_44_444444_1x100.png does not exist, putting into place.
-    Output file: ../../app/public/css/images/ui-bg_highlight-soft_80_eeeeee_1x100.png does not exist, putting into place.
-    Output file: ../../app/public/css/images/ui-bg_loop_25_000000_21x21.png does not exist, putting into place.
-    Output file: ../../app/public/css/images/ui-icons_222222_256x240.png does not exist, putting into place.
-    Output file: ../../app/public/css/images/ui-icons_4b8e0b_256x240.png does not exist, putting into place.
-    Output file: ../../app/public/css/images/ui-icons_a83300_256x240.png does not exist, putting into place.
-    Output file: ../../app/public/css/images/ui-icons_cccccc_256x240.png does not exist, putting into place.
-    Output file: ../../app/public/css/images/ui-icons_ffffff_256x240.png does not exist, putting into place.
-    Output file: ../../app/public/js/bootstrap.min.js does not exist, putting into place.
-    traffic_ops #
 
 Upgrading Traffic Ops
 =====================

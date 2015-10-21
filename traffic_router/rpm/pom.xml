@@ -32,6 +32,9 @@
 		<developerConnection>scm:git:file://</developerConnection>
 	</scm>
 
+	<properties>
+		<revcount>!!!!!!!!!!!!!!!!! FAIL FAIL FAIL !!!!!!!!!!  You need to add -Drevcount=`git rev-list HEAD | wc -l` to your maven command   </revcount>
+	</properties>
 	<build>
 		<plugins>
 			<plugin>
@@ -157,7 +160,7 @@
 							<group>Applications/Internet</group>
 							<name>${project.parent.artifactId}</name>
 							<!--<release>${env.BUILD_SVN_REVISION}</release> -->
-							<release>${buildNumber}.el6</release>
+							<release>${revcount}.${buildNumber}.el6</release>
 							<!-- <release>${scmVersion}</release> -->
 							<needarch>x86_64</needarch>
 							<mappings>
