@@ -16,18 +16,6 @@
 # limitations under the License.
 #
 
-
-tc_dir=$(dirname $(dirname $(readlink -f $0)))
-functions_sh="$tc_dir/rpm/functions.sh"
-if [[ ! -r $functions_sh ]]; then
-	echo "Error: Can't find $functions_sh"
-	exit 1
-fi
-. "$functions_sh"
-
-# Deteremine release version
-tc_version=$(getVersion $releaseDir)
-
 # By default all sub-projects are built.  Supply a list of projects to build if
 # only a subset is wanted.
 all_projects="\
@@ -38,8 +26,8 @@ all_projects="\
 	traffic_stats \
 "
 
-if [[ $# > 0 ]]; then
-	projects="$@"
+if [[ $# -gt 0 ]]; then
+	projects="$*"
 else
 	projects=$all_projects
 fi
