@@ -21,21 +21,21 @@
 %define TRAFFIC_OPS_GROUP trafops
 %define TRAFFIC_OPS_LOG_DIR /var/log/traffic_ops
 
-Summary: Traffic Ops UI
-Name: traffic_ops
-Version: %{traffic_ops_version}
-Release: %{build_number}
-License: N/A
-Group: Base System/System Tools
-Prefix: /opt/traffic_ops
-Source: %{_sourcedir}/traffic_ops-%{traffic_ops_version}.tgz
-URL: http://www.comcast.com
-Vendor: Comcast
-Packager: John Rushford <John_Rushford@cable.comcast.com>
-BuildRoot: /var/tmp/%{name}-root
-AutoReqProv: no
-Requires: expat-devel, mod_ssl, mkisofs, libpcap-devel mysql, mysql-server, openssl, perl-DBI, perl-DBD-MySQL, perl-Digest-SHA1, perl-WWW-Curl
-Requires(pre): /usr/sbin/useradd, /usr/bin/getent
+Summary:          Traffic Ops UI
+Name:             traffic_ops
+Version:          %{traffic_control_version}
+Release:          %{build_numner}
+License:          Apache License, Version 2.0
+Group:            Base System/System Tools
+Prefix:           /opt/traffic_ops
+Source:           %{_sourcedir}/traffic_ops-%{traffic_ops_version}.tgz
+URL:	          https://github.com/Comcast/traffic_control/
+Vendor:	          Comcast
+Packager:         daniel_kirkwood at Cable dot Comcast dot com
+BuildRoot:        /var/tmp/%{name}-root
+AutoReqProv:      no
+Requires:         expat-devel, mod_ssl, mkisofs, libpcap-devel mysql, mysql-server, openssl, perl-DBI, perl-DBD-MySQL, perl-Digest-SHA1, perl-WWW-Curl
+Requires(pre):    /usr/sbin/useradd, /usr/bin/getent
 Requires(postun): /usr/sbin/userdel
 
 %define PACKAGEDIR %{prefix}

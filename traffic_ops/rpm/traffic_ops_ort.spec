@@ -2,23 +2,25 @@
 Name:		traffic_ops_ort
 Version:	0.55b
 Release:	1%{?dist}
+
 Summary:	Installs ORT script for Traffic Control caches
-Packager:	mark_torluemke at Cable dot Comcast dot com
-Vendor:		Comcast
-Group:		Applications/Communications
+Name:		traffic_ops_ort
+Version:	%{traffic_control_version}
+Release:	%{build_number}
 License:	Apache License, Version 2.0
-Requires:	perl-JSON
+Group:		Applications/Communications
+Source0:	traffic_ops_ort-%{version}.tgz
 URL:		https://github.com/Comcast/traffic_control/
-Source0:	traffic_ops_ort.tgz
+Vendor:		Comcast
+Packager:	daniel_kirkwood at Cable dot Comcast dot com
+Requires:	perl-JSON
 
 
 %description
 Installs ORT script for Traffic Ops caches
 
 %prep
-rm -f $RPM_SOURCE_DIR/traffic_ops_ort.pl
-rm -f $RPM_SOURCE_DIR/supermicro_udev_mapper.pl
-tar xvf $RPM_SOURCE_DIR/traffic_ops_ort.tgz -C $RPM_SOURCE_DIR
+tar xvf %{SOURCE0} -C $RPM_SOURCE_DIR
 
 
 %build
@@ -26,8 +28,8 @@ tar xvf $RPM_SOURCE_DIR/traffic_ops_ort.tgz -C $RPM_SOURCE_DIR
 
 %install
 mkdir -p ${RPM_BUILD_ROOT}/opt/ort
-cp -r ${RPM_SOURCE_DIR}/traffic_ops_ort.pl ${RPM_BUILD_ROOT}/opt/ort
-cp -r ${RPM_SOURCE_DIR}/supermicro_udev_mapper.pl ${RPM_BUILD_ROOT}/opt/ort
+cp -p ${RPM_SOURCE_DIR}/traffic_ops_ort-%{version}/traffic_ops_ort.pl ${RPM_BUILD_ROOT}/opt/ort
+cp -p ${RPM_SOURCE_DIR}/traffic_ops_ort-%{version}/supermicro_udev_mapper.pl ${RPM_BUILD_ROOT}/opt/ort
 
 %clean
 rm -rf ${RPM_BUILD_ROOT}
