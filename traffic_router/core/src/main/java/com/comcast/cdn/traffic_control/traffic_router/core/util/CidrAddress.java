@@ -12,7 +12,7 @@ public class CidrAddress implements Comparable<CidrAddress> {
     private final byte[] hostBytes;
     private final byte[] maskBytes;
     private final int netmaskLength;
-    private final String cidrString;
+    private final InetAddress address;
 
     public static CidrAddress fromString(final String cidrString) throws NetworkNodeException {
         final String[] hostNetworkArray = cidrString.split("/");
@@ -46,14 +46,13 @@ public class CidrAddress implements Comparable<CidrAddress> {
 
     public CidrAddress(final InetAddress address, final int netmaskLength) throws NetworkNodeException {
         this.netmaskLength = netmaskLength;
+        this.address = address;
         final byte[] addressBytes = address.getAddress();
 
-        cidrString = address.toString() + "/" + netmaskLength;
-
         if (address instanceof Inet4Address && (netmaskLength > 32 || netmaskLength < 0)) {
-            throw new NetworkNodeException("Rejecting IPv4 subnet with invalid netmask: " + cidrString);
+            throw new NetworkNodeException("Rejecting IPv4 subnet with invalid netmask: " + getCidrString());
         } else if (address instanceof Inet6Address && (netmaskLength > 128 || netmaskLength < 0)) {
-            throw new NetworkNodeException("Rejecting IPv6 subnet with invalid netmask: " + cidrString);
+            throw new NetworkNodeException("Rejecting IPv6 subnet with invalid netmask: " + getCidrString());
         }
 
         hostBytes = addressBytes;
@@ -128,8 +127,12 @@ public class CidrAddress implements Comparable<CidrAddress> {
         return result;
     }
 
+    private String getCidrString() {
+        return "CidrAddress{" + address.toString() + "/" + netmaskLength + "}";
+    }
+
     @Override
     public String toString() {
-        return "CidrAddress{" + cidrString + "}";
+        return getCidrString();
     }
 }

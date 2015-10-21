@@ -6,6 +6,9 @@
 package InstallUtils;
 
 use Term::ReadPassword;
+use base qw{ Exporter };
+our @EXPORT_OK = qw{ execCommand randomWord promptUser promptRequired promptPassword promptPasswordVerify trim};
+our %EXPORT_TAGS = ( all => \@EXPORT_OK );
 
 sub execCommand {
 	my ( $cmd, @args ) = @_;
@@ -56,6 +59,33 @@ sub promptUser {
 		}
 		return $_;
 	}
+}
+
+sub promptRequired {
+	my $val = '';
+	while ( length($val) == 0 ) {
+		$val = promptUser(@_);
+	}
+	return $val;
+}
+
+sub promptPassword {
+	my $prompt = shift;
+	my $pw = promptRequired( $prompt, '', 1 );
+	return $pw;
+}
+
+sub promptPasswordVerify {
+	my $prompt = shift;
+	my $pw     = shift;
+
+	while (1) {
+		$pw = promptPassword($prompt);
+		my $verify = promptPassword("Re-Enter $prompt");
+		last if $pw eq $verify;
+		print "\nError: passwords do not match, try again.\n\n";
+	}
+	return $pw;
 }
 
 sub trim {

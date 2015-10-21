@@ -233,7 +233,7 @@
 {"name":"location","config_file":"storage.config","value":"/opt/trafficserver/etc/trafficserver/"}
 {"name":"location","config_file":"volume.config","value":"/opt/trafficserver/etc/trafficserver/"}
 {"name":"location","config_file":"50-ats.rules","value":"/etc/udev/rules.d/"}
-{"name":"location","config_file":"dns.zone","value":"/etc/kabletown/zones/\u003czonename\u003e.info"}
+{"name":"location","config_file":"dns.zone","value":"/etc/kabletown/zones/<zonename>.info"}
 {"name":"CONFIG proxy.config.http.parent_proxy_routing_enable","config_file":"records.config","value":"INT 0"}
 {"name":"CONFIG proxy.config.url_remap.remap_required","config_file":"records.config","value":"INT 0"}
 {"name":"location","config_file":"http-log4j.properties","value":"/etc/kabletown"}
@@ -244,13 +244,13 @@
 {"name":"location","config_file":"ip_allow.config","value":"/opt/trafficserver/etc/trafficserver"}
 {"name":"CONFIG proxy.config.cluster.cluster_configuration ","config_file":"records.config","value":"STRING cluster.config"}
 {"name":"ramdisk_size","config_file":"grub.conf","value":"ramdisk_size=16777216"}
-{"name":"cron_syncds","config_file":"crontab_root","value":"*/15 * * * * /opt/ort/cdn_install_ort.pl syncds error \u0026amp;gt; /tmp/ort/syncds.log 2\u0026amp;gt;\u0026amp;amp;1"}
+{"name":"cron_syncds","config_file":"crontab_root","value":"*/15 * * * * /opt/ort/cdn_install_ort.pl syncds error > /tmp/ort/syncds.log 2>&1"}
 {"name":"location","config_file":"crontab_root","value":"/var/spool/cron"}
 {"name":"monitor:///opt/tomcat/logs/access.log","config_file":"inputs.conf","value":"index=index_test;sourcetype=access_ccr"}
 {"name":"purge_allow_ip","config_file":"ip_allow.config","value":"10.10.10.10"}
 {"name":"astats_over_http.so","config_file":"plugin.config","value":"_astats 10.10.10.10"}
 {"name":"health.threshold.loadavg","config_file":"rascal.properties","value":"25.0"}
-{"name":"health.threshold.availableBandwidthInKbps","config_file":"rascal.properties","value":"\u003e1750000"}
+{"name":"health.threshold.availableBandwidthInKbps","config_file":"rascal.properties","value":">1750000"}
 {"name":"history.count","config_file":"rascal.properties","value":"30"}
 {"name":"cacheurl.so","config_file":"plugin.config","value":""}
 {"name":"location","config_file":"cacheurl.config","value":"/opt/trafficserver/etc/trafficserver/"}
@@ -268,7 +268,7 @@
 {"name":"tm.polling.interval","config_file":"rascal-config.txt","value":"60000"}
 {"name":"location","config_file":"rascal-config.txt","value":"/opt/traffic_monitor/conf"}
 {"name":"health.threshold.queryTime","config_file":"rascal.properties","value":"1000"}
-{"name":"health.polling.url","config_file":"rascal.properties","value":"http://${hostname}/_astats?application=\u0026inf.name=${interface_name}"}
+{"name":"health.polling.url","config_file":"rascal.properties","value":"http://${hostname}/_astats?application=&inf.name=${interface_name}"}
 {"name":"health.threadPool","config_file":"rascal-config.txt","value":"4"}
 {"name":"health.event-count","config_file":"rascal-config.txt","value":"200"}
 {"name":"hack.ttl","config_file":"rascal-config.txt","value":"30"}
@@ -323,7 +323,7 @@
 {"name":"CONFIG proxy.config.exec_thread.limit","config_file":"records.config","value":"INT 32"}
 {"name":"CONFIG proxy.config.allocator.thread_freelist_size","config_file":"records.config","value":"INT 1024"}
 {"name":"CONFIG proxy.config.mlock_enabled","config_file":"records.config","value":"INT 2"}
-{"name":"LogFormat.Format","config_file":"logs_xml.config","value":"%\u003ccqtq\u003e chi=%\u003cchi\u003e phn=%\u003cphn\u003e shn=%\u003cshn\u003e url=%\u003ccquuc\u003e cqhm=%\u003ccqhm\u003e cqhv=%\u003ccqhv\u003e pssc=%\u003cpssc\u003e ttms=%\u003cttms\u003e b=%\u003cpscl\u003e sssc=%\u003csssc\u003e sscl=%\u003csscl\u003e cfsc=%\u003ccfsc\u003e pfsc=%\u003cpfsc\u003e crc=%\u003ccrc\u003e phr=%\u003cphr\u003e uas=\"%<{User-Agent}cqh>\""}
+{"name":"LogFormat.Format","config_file":"logs_xml.config","value":"%<cqtq> chi=%<chi> phn=%<phn> shn=%<shn> url=%<cquuc> cqhm=%<cqhm> cqhv=%<cqhv> pssc=%<pssc> ttms=%<ttms> b=%<pscl> sssc=%<sssc> sscl=%<sscl> cfsc=%<cfsc> pfsc=%<pfsc> crc=%<crc> phr=%<phr> uas=\"%<{User-Agent}cqh>\""}
 {"name":"LogFormat.Name","config_file":"logs_xml.config","value":"custom_ats_2"}
 {"name":"LogObject.Filename","config_file":"logs_xml.config","value":"custom_ats_2"}
 {"name":"CONFIG proxy.config.cache.ram_cache.size","config_file":"records.config","value":"INT 34359738368"}
@@ -351,7 +351,7 @@
 {"name":"tm.instance_name","config_file":"global","value":"kabletown cdn"}
 {"name":"CONFIG proxy.config.cache.ram_cache_cutoff","config_file":"records.config","value":"INT 0"}
 {"name":"CONFIG proxy.config.cache.ram_cache_cutoff","config_file":"records.config","value":"INT 268435456"}
-{"name":"health.threshold.availableBandwidthInKbps","config_file":"rascal.properties","value":"\u003e11500000"}
+{"name":"health.threshold.availableBandwidthInKbps","config_file":"rascal.properties","value":">11500000"}
 {"name":"DsStats","config_file":"redis.config","value":"tps_3xx"}
 {"name":"DsStats","config_file":"redis.config","value":"tps_4xx"}
 {"name":"DsStats","config_file":"redis.config","value":"tps_5xx"}
@@ -371,12 +371,12 @@
 {"name":"CONFIG proxy.config.allocator.hugepages","config_file":"records.config","value":"INT 0"}
 {"name":"CONFIG proxy.config.http.negative_caching_enabled","config_file":"records.config","value":"INT 1"}
 {"name":"CONFIG proxy.config.http.negative_caching_lifetime","config_file":"records.config","value":"INT 3"}
-{"name":"health.threshold.availableBandwidthInKbps","config_file":"rascal.properties","value":"\u003e3500000"}
+{"name":"health.threshold.availableBandwidthInKbps","config_file":"rascal.properties","value":">3500000"}
 {"name":"record_types","config_file":"astats.config","value":"122"}
 {"name":"CONFIG proxy.config.http.transaction_active_timeout_in","config_file":"records.config","value":"INT 0"}
 {"name":"CONFIG proxy.config.body_factory.enable_customizations","config_file":"records.config","value":"INT 1"}
 {"name":"CONFIG proxy.config.http.negative_caching_lifetime","config_file":"records.config","value":"INT 1"}
-{"name":"cron_ort_syncds","config_file":"traffic_ops_ort_syncds.cron","value":"*/15 * * * * root /opt/ort/traffic_ops_ort.pl syncds warn https://tm.kabletown.net admin:password\u003e /tmp/ort/syncds.log 2\u003e\u00261"}
+{"name":"cron_ort_syncds","config_file":"traffic_ops_ort_syncds.cron","value":"*/15 * * * * root /opt/ort/traffic_ops_ort.pl syncds warn https://tm.kabletown.net admin:password > /tmp/ort/syncds.log 2>&1"}
 {"name":"location","config_file":"traffic_ops_ort_syncds.cron","value":"/etc/cron.d"}
 {"name":"tm.traffic_mon_fwd_proxy","config_file":"global","value":"http://tm.kabletown.net:81"}
 {"name":"CONFIG proxy.config.body_factory.template_sets_dir","config_file":"records.config","value":"STRING etc/trafficserver/body_factory"}

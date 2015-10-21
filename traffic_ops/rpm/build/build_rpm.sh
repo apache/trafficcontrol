@@ -113,7 +113,7 @@ function initBuildArea() {
 		{ echo "Could not copy source files to $targetpath: $!"; exit 1; }
 
 	# compile go executables used during postinstall
-	cd $targetpath/install/go
+	cd $GITREPO/install/go
 	export GOPATH=$(pwd)
 	export GOBIN=$targetpath/install/bin
 
@@ -125,6 +125,7 @@ function initBuildArea() {
 		fi
 		(cd $d && go get || { echo "Could not compile $d"; exit 1; } )
 	done
+	/bin/cp bin/* $targetpath/install/bin
 
    	cd $srcpath
 	tar czvf $target.tgz $target || { echo "Could not create tar archive $target.tgz from $(pwd)/$target"; exit 1; }

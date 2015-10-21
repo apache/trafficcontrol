@@ -25,13 +25,11 @@ $ENV{PERL5LIB} = "/opt/traffic_ops/install/lib:/opt/traffic_ops/install/lib/perl
 
 use DBI;
 use JSON;
-use InstallUtils;
+use InstallUtils qw{ :all };
 use Digest::SHA1 qw(sha1_hex);
 use Data::Dumper;
 use File::Temp;
 
-my %dbconf            = ();
-my %ldapconf          = ();
 my $database_conf     = "/opt/traffic_ops/app/conf/production/database.conf";
 my $ldap_conf         = "/opt/traffic_ops/app/conf/ldap.conf";
 my $cdn_conf          = "/opt/traffic_ops/app/conf/cdn.conf";
@@ -40,17 +38,7 @@ my $parameters_file   = "/opt/traffic_ops/install/data/json/parameters.json";
 my $users_file        = "/opt/traffic_ops/install/data/json/users.json";
 my %dbdriver          = ( mysql => "mymysql", );
 
-my $reconfigure     = "/opt/traffic_ops/.reconfigure";
-my $dbAdminUser     = "";
-my $dbAdminPw       = "";
-my $verifyDbAdminPw = "";
-
-my $tmAdminUser     = "";
-my $tmAdminPw       = "";
-my $verifyTmAdminPw = "";
-my $ans             = "";
-my $connected       = 0;
-my %user            = ();
+my $reconfigure = "/opt/traffic_ops/.reconfigure";
 
 my $installMsg = << 'EOF';
 
@@ -60,10 +48,74 @@ configure the Traffic Ops mysql database.
 
 EOF
 
+sub readJson {
+	my $file = shift;
+	open( my $fh, '<', $file ) or return;
+	local $/;    # slurp mode
+	my $text = <$fh>;
+	undef $fh;
+	return JSON->new->utf8->decode($text);
+}
+
+sub writeJson {
+	my $file      = shift;
+	my $data      = shift;
+	my $json_text = JSON->new->utf8->encode($data);
+
+	open( my $fh, '>', $file ) or die("open(): $!");
+	print $fh $json_text, "\n";
+	undef $fh;
+}
+
+sub writeYamlToFH {
+	my $fh     = shift;
+	my $data   = shift;
+	my $level  = shift || 0;
+	my $prefix = shift || '';
+
+	my $type   = ref($data);
+	my $indent = ' ' x $level;
+	if ( $type eq '' ) {
+
+		# scalar
+		print $fh "$indent$prefix$data\n";
+	}
+	elsif ( $type eq 'HASH' ) {
+		foreach my $key ( keys %$data ) {
+			my $value = $data->{$key};
+			if ( ref($value) eq '' ) {
+				print $fh "$indent$key: $value\n";
+			}
+			else {
+				print $fh "$indent$key:\n";
+				writeYamlToFH( $fh, $data->{$key}, $level + 1 );
+			}
+		}
+	}
+	elsif ( $type eq 'ARRAY' ) {
+		foreach my $d (@$data) {
+			writeYamlToFH( $fh, $d, $level + 1, '- ' );
+		}
+	}
+}
+
+sub writeYaml {
+	my $file = shift;
+	my $data = shift;
+	open my $fh, '>', $file or die "open(): $!";
+	writeYamlToFH( $fh, $data );
+}
+
 # Init.
 sub init () {
-	do {
-		InstallUtils::execCommand( "/usr/bin/tput", "clear" );
+	my $c      = readJson($database_conf);
+	my %dbconf = %$c;
+	my $dbAdminUser;
+	my $dbAdminPw;
+
+	# loop exits on successful db connect
+	while (1) {
+		execCommand( "/usr/bin/tput", "clear" );
 
 		if ($DBI::errstr) {
 			print "Error connecting to database using the supplied information: $DBI::errstr\n";
@@ -71,88 +123,43 @@ sub init () {
 
 		print "\n$installMsg\n";
 
-		my $type = "";
-		while ( length $type == 0 ) {
-			$type = InstallUtils::promptUser( "Database type", "mysql" );
-		}
-		$dbconf{"type"} = $type;
-
-		my $dbname = "";
-		while ( length $dbname == 0 ) {
-			$dbname = InstallUtils::promptUser( "Database name", "traffic_ops_db" );
-		}
-		$dbconf{"dbname"} = $dbname;
-
-		my $hostname = "";
-		while ( length $hostname == 0 ) {
-			$hostname = InstallUtils::promptUser( "Database server hostname IP or FQDN", "localhost" );
-		}
-		$dbconf{"hostname"} = $hostname;
-
-		my $port = "";
-		while ( length $port == 0 ) {
-			$port = InstallUtils::promptUser( "Database port number", "3306" );
-		}
-		$dbconf{"port"} = $port;
-
-		my $user = "";
-		while ( length $user == 0 ) {
-			$user = InstallUtils::promptUser( "Traffic Ops database user", "traffic_ops" );
-		}
-
-		$dbconf{"user"} = $user;
-
-		my $password = "";
-		my $compare  = "";
-		do {
-			$password = InstallUtils::promptUser( "Password for $user",          "", "noEcho" );
-			$compare  = InstallUtils::promptUser( "Re-Enter password for $user", "", "noEcho" );
-			if ( $compare ne $password ) {
-				print "\nError: passwords do not match, try again.\n\n";
-				$password = "";
-				$compare  = "";
-			}
-		} while ( length $password == 0 );
-		$dbconf{"password"} = $password;
-
+		$dbconf{type}     = promptUser( "Database type",                       $dbconf{type}     || "mysql" );
+		$dbconf{dbname}   = promptUser( "Database name",                       $dbconf{dbname}   || "traffic_ops_db" );
+		$dbconf{hostname} = promptUser( "Database server hostname IP or FQDN", $dbconf{hostname} || "localhost" );
+		$dbconf{port}     = promptUser( "Database port number",                $dbconf{port}     || "3306" );
+		$dbconf{user}     = promptUser( "Traffic Ops database user",           $dbconf{user}     || "traffic_ops" );
+		$dbconf{password} = promptPasswordVerify("Password for $dbconf{user}");
+		$dbconf{description} = "$dbconf{type} database on $dbconf{hostname}:$dbconf{port}";
 		print "\n";
-		$dbAdminUser = "";
-		while ( length $dbAdminUser == 0 ) {
-			$dbAdminUser = InstallUtils::promptUser( "Database server root (admin) user name", "root" );
-		}
-		$dbAdminPw = "";
-		$compare   = "";
-		do {
-			$dbAdminPw = InstallUtils::promptUser( "Database server $dbAdminUser password", "", "noEcho" );
-		} while ( length $dbAdminPw == 0 );
+		$dbAdminUser = promptUser( "Database server root (admin) user name", "root" );
+		$dbAdminPw = promptPassword("Database server $dbAdminUser password");
 
-		print "Database Type: $dbconf{'type'}\n";
-		print "Database Name: $dbconf{'dbname'}\n";
-		print "Hostname: $dbconf{'hostname'}\n";
-		print "Port: $dbconf{'port'}\n";
-		print "Database User: $dbconf{'user'}\n";
-		$ans = InstallUtils::promptUser( "Is the above information correct (y/n)", "n" );
+		print "Database Type: $dbconf{type}\n";
+		print "Database Name: $dbconf{dbname}\n";
+		print "Hostname: $dbconf{hostname}\n";
+		print "Port: $dbconf{port}\n";
+		print "Database User: $dbconf{user}\n";
+		my $ans = promptUser( "Is the above information correct (y/n)", "n" );
 
 		if ( $ans eq "y" ) {
-			my $dsn = sprintf( "DBI:mysql:%s:%s:%s", "mysql", $dbconf{'hostname'}, $dbconf{'port'} );
+			my $dsn = sprintf( "DBI:mysql:%s:%s:%s", "mysql", $dbconf{hostname}, $dbconf{port} );
 			my $dbh = DBI->connect( $dsn, $dbAdminUser, $dbAdminPw );
-
 			if ($dbh) {
-				$connected = 1;
+
+				# Success!
 				$dbh->disconnect();
+				last;
 			}
 		}
-	} while ( $ans ne "y" || !$connected );
+	}
 
-	my $json_text = JSON->new->utf8->encode( \%dbconf );
-
-	open( FH, ">$database_conf" ) or die("open(): $!");
-	print FH $json_text, "\n";
-	close(FH);
-	open( FH, ">$migrations_dbconf" ) or die("open(): $!");
-	print FH
-		"\nproduction:\n driver: $dbdriver{$dbconf{'type'}}\n open: tcp:$dbconf{'hostname'}:$dbconf{'port'}*$dbconf{'dbname'}/$dbconf{'user'}/$dbconf{'password'}\n";
+	writeJson( $database_conf, \%dbconf );
 	print "\nThe database properties have been saved to $database_conf\n";
+
+	# migrations dbconf is in YAML
+	my $driver = $dbdriver{ $dbconf{type} };
+	my %migrations = ( production => { driver => $driver, open => "tcp:$dbconf{hostname}:$dbconf{port}*$dbconf{dbname}/$dbconf{user}/$dbconf{password}" } );
+	writeYaml( $migrations_dbconf, \%migrations );
 
 	my $msg = << 'EOF';
 
@@ -162,160 +169,88 @@ sub init () {
 EOF
 
 	print $msg, "\n";
-	$ans = "";
-	my %parameters = ();
+	my $parameters = readJson($parameters_file);
+	while (1) {
 
-	do {
-		my $tmurl = "";
-		while ( length $tmurl == 0 ) {
-			$tmurl = InstallUtils::promptUser( "Traffic Ops url", "https://localhost" );
-		}
-		$parameters{"tm.url"} = $tmurl;
+		my $tmurl = promptUser( "Traffic Ops url", $parameters->{"tm.url"} || "https://localhost" );
+		$parameters->{"tm.url"}     = $tmurl;
+		$parameters->{"tm.infourl"} = "$tmurl/info";
 
-		my $infourl = "$tmurl/info";
-
-		# while (length $infourl == 0) {
-		# 	$infourl = InstallUtils::promptUser ("Traffic Ops info url");
-		# }
-		$parameters{"tminfo.url"} = $infourl;
-
-		my $cdnname = "";
-		while ( length $cdnname == 0 ) {
-			$cdnname = InstallUtils::promptUser( "Human-readable CDN Name.  (No whitespace, please)", "kabletown_cdn" );
-		}
-		$parameters{"cdnname"} = $cdnname;
-
-		my $domainname = "";
-		while ( length $domainname == 0 ) {
-			$domainname = InstallUtils::promptUser( "DNS sub-domain for which your CDN is authoritative", "cdn1.kabletown.net" );
-		}
-		$parameters{"domainname"} = $domainname;
+		$parameters->{cdnname}    = promptUser( "Human-readable CDN Name.  (No whitespace, please)",  $parameters->{cdnname}    || "kabletown_cdn" );
+		$parameters->{domainname} = promptUser( "DNS sub-domain for which your CDN is authoritative", $parameters->{domainname} || "cdn1.kabletown.net" );
 
 		my $geolocationUrl = "$tmurl/routing/GeoIP2-City.mmdb.gz";
-		$parameters{"geolocation.polling.url"} = $geolocationUrl;
+		$parameters->{"geolocation.polling.url"} = $geolocationUrl;
 
 		my $coverageZoneUrl = "$tmurl/routing/coverage-zone.json";
-		$parameters{"coveragezone.polling.url"} = $coverageZoneUrl;
+		$parameters->{"coveragezone.polling.url"} = $coverageZoneUrl;
 
-		my $centos65TarballFqn = "";
-		my $untarOrSkip        = "";
-		while ( $untarOrSkip eq "" ) {
-			while ( length $centos65TarballFqn == 0 ) {
-				$centos65TarballFqn =
-					InstallUtils::promptUser( "Fully qualified name of your CentOS 6.5 ISO kickstart tar file, or 'na' to skip and add files later",
-					"/var/cache/centos65.tgz" );
+		my $centos65TarballFqn = '';
+		my $skip;
+		while (1) {
+			$centos65TarballFqn = promptUser( "Fully qualified name of your CentOS 6.5 ISO kickstart tar file, or 'na' to skip and add files later",
+				"/var/cache/centos65.tgz" );
+			if ( $centos65TarballFqn eq 'na' ) {
+				$skip = 1;
+				last;
 			}
-			if ( $centos65TarballFqn eq "na" ) {
-				$untarOrSkip = "skip";
+			if ( -f $centos65TarballFqn ) {
+				last;
 			}
-			else {
-				if ( -e $centos65TarballFqn ) {
-					$untarOrSkip = "untar";
-				}
-				else {
-					print "\nNo file named $centos65TarballFqn found.\n\n";
-					$centos65TarballFqn = "";
-				}
-			}
+			print "\nNo file named $centos65TarballFqn found.\n\n";
 		}
 
-		my $kickstartFilesFqn = "";
-		while ( length $kickstartFilesFqn == 0 ) {
-			$kickstartFilesFqn = InstallUtils::promptUser( "Fully qualified location to store your ISO kickstart files", "/var/www/files" );
-		}
-
+		my $kickstartFilesFqn = promptUser( "Fully qualified location to store your ISO kickstart files", "/var/www/files" );
 		my $parametersJson = "/opt/traffic_ops/install/data/json/parameter.json";
-		open( OUT, ">>$parametersJson" ) || die "$parametersJson : $!";
-		print OUT "{\"name\":\"kickstart.files.location\",\"config_file\":\"mkisofs\",\"value\":\"$kickstartFilesFqn\"}\n";
-		close(OUT);
+		writeJson( $parametersJson, { name => 'kickstart.files.location', config_file => 'mkisofs', value => $kickstartFilesFqn } );
 
-		InstallUtils::execCommand( "/bin/cp", "/opt/traffic_ops/install/data/perl/osversions.cfg", "$kickstartFilesFqn" );
+		execCommand( "/bin/cp", "/opt/traffic_ops/install/data/perl/osversions.cfg", $kickstartFilesFqn );
 
-		if ( $untarOrSkip eq "untar" ) {
+		if ( !$skip ) {
 			print "\nUntarring CentOS 6.5 ISO kickstart tar file.\n";
 			print "\nFirst creating $kickstartFilesFqn.\n";
-			InstallUtils::execCommand( "/bin/mkdir", "-p", "$kickstartFilesFqn" );
+			execCommand( "/bin/mkdir", "-p", $kickstartFilesFqn );
 			print "\nAnd then the untar.\n";
-			InstallUtils::execCommand( "/bin/tar", "-xzf", "$centos65TarballFqn", "-C", "$kickstartFilesFqn" );
+			execCommand( "/bin/tar", "-xzf", $centos65TarballFqn, "-C", $kickstartFilesFqn );
 		}
 
-		print "\nTraffic Ops URL: $parameters{'tm.url'}\n";
-		print "Traffic Ops Info URL: $parameters{'tm.infourl'}\n";
-		print "Domainname: $parameters{'domainname'}\n";
-		print "CDN Name: $parameters{'cdnname'}\n";
-		print "GeoLocation Polling URL: $parameters{'geolocation.polling.url'}\n";
-		print "CoverageZone Polling URL: $parameters{'coveragezone.polling.url'}\n\n";
-		$ans = InstallUtils::promptUser( "Is the above information correct (y/n)", "n" );
-
-	} while ( $ans ne "y" );
-
-	my $parameters_text = JSON->new->utf8->encode( \%parameters );
-
-	open( FH, ">$parameters_file" ) or die("open(): $!");
-	print FH $parameters_text, "\n";
-	close(FH);
-
+		print "\nTraffic Ops URL: $parameters->{'tm.url'}\n";
+		print "Traffic Ops Info URL: $parameters->{'tm.infourl'}\n";
+		print "Domainname: $parameters->{domainname}\n";
+		print "CDN Name: $parameters->{cdnname}\n";
+		print "GeoLocation Polling URL: $parameters->{'geolocation.polling.url'}\n";
+		print "CoverageZone Polling URL: $parameters->{'coveragezone.polling.url'}\n\n";
+		my $ans = promptUser( "Is the above information correct (y/n)", "n" );
+		if ( $ans eq 'y' ) {
+			last;
+		}
+	}
+	writeJson( $parameters_file, $parameters );
 	print "Parameter information has been saved to $parameters_file\n\n";
 
-	$tmAdminUser = "";
 	print "\nAdding an administration user to the Traffic Ops database.\n\n";
-	while ( length $tmAdminUser == 0 ) {
-		$tmAdminUser = InstallUtils::promptUser("Administration username for Traffic Ops");
-	}
-	$user{"username"} = $tmAdminUser;
+	my %user = ();
+	my $tmAdminUser = promptUser( "Administration username for Traffic Ops", 'admin' );
+	$user{username} = $tmAdminUser;
+	my $tmAdminPw = promptPasswordVerify("Password for the admin user $tmAdminUser");
+	$user{password} = sha1_hex($tmAdminPw);
 
-	$tmAdminPw       = "1";
-	$verifyTmAdminPw = "2";
+	writeJson( $users_file, \%user );
 
-	while ( !defined $tmAdminPw || $tmAdminPw eq "" || $tmAdminPw ne $verifyTmAdminPw ) {
-		$tmAdminPw       = InstallUtils::promptUser( "Password for the admin user $tmAdminUser", "", 1 );
-		$verifyTmAdminPw = InstallUtils::promptUser( "Verify the password for $tmAdminUser",     "", 1 );
-	}
-
-	$user{"password"} = sha1_hex($tmAdminPw);
-
-	my $users_text = JSON->new->utf8->encode( \%user );
-	open( FH, ">$users_file" ) or die("open(): $!");
-	print FH $users_text, "\n";
-	close(FH);
-
-	$ans = InstallUtils::promptUser( "Do you wish to create an ldap configuration for access to traffic ops [y/n] ?", "n" );
+	my $ans = promptUser( "Do you wish to create an ldap configuration for access to traffic ops [y/n] ?", "n" );
 	if ( $ans eq "y" ) {
-		my $correct                = "";
-		my $ldap_host              = "";
-		my $ldap_admin_dn          = "";
-		my $ldap_admin_pass        = "";
-		my $verify_ldap_admin_pass = "";
-		my $ldap_search_base       = "";
-
-		do {
-			do {
-				$ldap_host = InstallUtils::promptUser( "LDAP server hostname", "ldap.foobar.com" );
-			} while ( $ldap_host eq "" );
-			do {
-				$ldap_admin_dn = InstallUtils::promptUser( "LDAP Admin DN", "admin\@foobar.com" );
-			} while ( $ldap_admin_dn eq "" );
-			do {
-				$ldap_admin_pass        = InstallUtils::promptUser( "LDAP Admin Password",        "", 1 );
-				$verify_ldap_admin_pass = InstallUtils::promptUser( "Verify LDAP Admin Password", "", 1 );
-			} while ( $ldap_admin_pass eq "" || $ldap_admin_pass ne $verify_ldap_admin_pass );
-			do {
-				$ldap_search_base = InstallUtils::promptUser( "LDAP Search Base", "dc=foobar,dc=com" );
-			} while ( $ldap_search_base eq "" );
-
-			$correct = InstallUtils::promptUser( "Are the above values correct [y/n]?", "y" );
-		} while ( $correct ne "y" );
-
-		$ldapconf{"host"}        = $ldap_host;
-		$ldapconf{"admin_dn"}    = $ldap_admin_dn;
-		$ldapconf{"admin_pass"}  = $ldap_admin_pass;
-		$ldapconf{"search_base"} = $ldap_search_base;
-
-		my $ldap_json_text = JSON->new->utf8->encode( \%ldapconf );
-		open( FH, ">$ldap_conf" ) or die("open(): $!");
-		print FH $ldap_json_text, "\n";
-		close(FH);
-
+		my %ldapconf = readJson($ldap_conf);
+		while (1) {
+			$ldapconf{host}     = promptUser( "LDAP server hostname", $ldapconf{host}     || "ldap.foobar.com" );
+			$ldapconf{admin_dn} = promptUser( "LDAP Admin DN",        $ldapconf{admin_dn} || 'admin@foobar.com' );
+			$ldapconf{admin_pass} = promptPasswordVerify("LDAP Admin Password");
+			$ldapconf{search_base} = promptUser( "LDAP Search Base", "dc=foobar,dc=com" );
+			my $correct = promptUser( "Are the above values correct [y/n]?", "y" );
+			if ( $correct eq 'y' ) {
+				last;
+			}
+		}
+		writeJson( $ldap_conf, \%ldapconf );
 		print "The ldap configuration has been saved.\n\n";
 	}
 
@@ -326,7 +261,7 @@ EOF
 	# Call mysql initialization script.
 	#
 	print "Creating database\n";
-	my $result = InstallUtils::execCommand( "/opt/traffic_ops/install/bin/create_db", $dbAdminUser, $dbAdminPw );
+	my $result = execCommand( "/opt/traffic_ops/install/bin/create_db", $dbAdminUser, $dbAdminPw );
 	if ( $result != 0 ) {
 		print "failed to create the database.\n";
 		exit 1;
@@ -334,7 +269,7 @@ EOF
 
 	print "Setting up database\n";
 	chdir("/opt/traffic_ops/app");
-	$result = InstallUtils::execCommand( "/usr/bin/perl", "db/admin.pl", "--env=production", "setup" );
+	$result = execCommand( "/usr/bin/perl", "db/admin.pl", "--env=production", "setup" );
 
 	if ( $result != 0 ) {
 		print "Database initialization failed.\n";
@@ -344,7 +279,7 @@ EOF
 		print "Database initialization succeeded.\n";
 	}
 
-	$result = InstallUtils::execCommand( "/opt/traffic_ops/install/bin/dataload", $dbAdminUser, $dbAdminPw );
+	$result = execCommand( "/opt/traffic_ops/install/bin/dataload", $dbAdminUser, $dbAdminPw );
 	if ( $result != 0 ) {
 		print "failed to load seed data.\n";
 		exit 1;
@@ -352,7 +287,7 @@ EOF
 
 	print "Downloading MaxMind data.\n";
 	chdir("/opt/traffic_ops/app/public/routing");
-	$result = InstallUtils::execCommand("/usr/bin/wget http://geolite.maxmind.com/download/geoip/database/GeoLite2-City.mmdb.gz");
+	$result = execCommand("/usr/bin/wget http://geolite.maxmind.com/download/geoip/database/GeoLite2-City.mmdb.gz");
 	if ( $result != 0 ) {
 		print "failed to download MaxMind data.\n";
 
@@ -360,7 +295,7 @@ EOF
 	}
 
 	print "Copying coverage zone file to public dir.\n";
-	$result = InstallUtils::execCommand("/bin/mv /opt/traffic_ops/app/public/coverage-zone.json .");
+	$result = execCommand("/bin/mv /opt/traffic_ops/app/public/coverage-zone.json .");
 	if ( $result != 0 ) {
 		print "failed to copy coverage zone file.\n";
 
@@ -369,7 +304,7 @@ EOF
 
 	if ( -x "/usr/bin/openssl" ) {
 		print "\nInstalling SSL Certificates.\n\n";
-		$result = InstallUtils::execCommand("/opt/traffic_ops/install/bin/generateCert");
+		$result = execCommand("/opt/traffic_ops/install/bin/generateCert");
 
 		if ( $result != 0 ) {
 			print "\nSSL Certificate Installation failed.\n";
@@ -390,9 +325,9 @@ sub writeSecret {
 	print "\n\nTraffic Ops requires a secret key to generate authentication cookies.\n\n";
 
 	# read conf file -- see if secrets already there
-	my $conf_data;
-	unless ( $conf_data = do $cdn_conf ) {
-		my $err = $@ // $!;
+	my $cdnh = do $cdn_conf;
+	unless ( ref($cdnh) eq 'HASH' ) {
+		my $err = $@ || $! || ' -- not a HASH';
 		if ($err) {
 			print "Could not load $cdn_conf $err";
 			exit 4;
@@ -400,10 +335,10 @@ sub writeSecret {
 	}
 
 	# newSecret
-	my $secrets = $conf_data->{secrets};
+	my $secrets = $cdnh->{secrets};
 	if ( ( ref $secrets eq 'ARRAY' ) && scalar @$secrets > 0 ) {
 		print "One or more secrets found in $cdn_conf.\n";
-		$ans = InstallUtils::promptUser( " Do want to add a new one (only 2 will be kept) [y/n] ?", "y" );
+		my $ans = promptUser( " Do want to add a new one (only 2 will be kept) [y/n] ?", "y" );
 		if ( $ans eq "n" ) {
 
 			# nothing further to do...
@@ -413,13 +348,14 @@ sub writeSecret {
 	my $new_secret = "";
 	while ( length $new_secret == 0 ) {
 		print "Adding a new secret.\n";
-		my $ans = InstallUtils::promptUser( " Do you want one generated for you [y/n] ?", "y" );
+		my $ans = promptUser( " Do you want one generated for you [y/n] ?", "y" );
 		if ( $ans eq "n" ) {
-			$new_secret = InstallUtils::promptUser( "Secret key:", "" );
+			$new_secret = promptUser( "Secret key:", "" );
 		}
 		else {
+
 			# create random word 12 chars long
-			$new_secret = InstallUtils::randomWord(12);
+			$new_secret = randomWord(12);
 		}
 	}
 
@@ -429,24 +365,14 @@ sub writeSecret {
 		$#{$secrets} = 1;
 	}
 
-	# open temp file to gather modified conf file
+	# dump conf data in compact but readable form
+	my $dumper = Data::Dumper->new( [$cdnh] );
+	$dumper->Indent(1)->Terse(1)->Quotekeys(0);
+
+	# write whole config to temp file
 	my $tmpfile = File::Temp->new();
-
-	# format secrets on a single line without $VAR1 =...
-	local $Data::Dumper::Terse  = 1;
-	local $Data::Dumper::Indent = 0;
-	my $secrets_str = Dumper($secrets);
-
-	# read in current $cdn_conf, find "secrets" entry and replace it
-	# NOTE that this requires secrets to be maintained on a single line which is replaced entirely...
-	open( my $infh, '<', $cdn_conf ) or die("open(): $!");
-	while (<$infh>) {
-		next unless /^\s*secrets\b/;
-		s/secrets.*/secrets => $secrets_str,/;
-	}
-	continue {
-		print $tmpfile $_;
-	}
+	print $tmpfile $dumper->Dump();
+	close $tmpfile;
 
 	# rename current config file to something unique so it's not lost
 	my $backup_num = 0;
@@ -469,12 +395,12 @@ sub writeSecret {
 chdir("/opt/traffic_ops/install/bin");
 
 if ( -f $reconfigure ) {
-	my $rc = InstallUtils::execCommand( "/opt/traffic_ops/install/bin/build_trafficops_perl_library", "-i" );
+	my $rc = execCommand( "/opt/traffic_ops/install/bin/build_trafficops_perl_library", "-i" );
 	if ( $rc != 0 ) {
 		print "ERROR: failed to install perl dependencies, check the console output and rerun postinstall once you've resolved the error.\n";
 		exit 5;
 	}
-	$rc = InstallUtils::execCommand( "./download_web_deps", "-i" );
+	$rc = execCommand( "./download_web_deps", "-i" );
 	if ( $rc != 0 ) {
 		print "ERROR: failed to install Traffic Ops Web dependencies, check the console output and rerun postinstall once you've resolved the error.\n";
 		exit 5;
@@ -483,12 +409,12 @@ if ( -f $reconfigure ) {
 	unlink($reconfigure);
 }
 else {
-	my $rc = InstallUtils::execCommand("/opt/traffic_ops/install/bin/build_trafficops_perl_library");
+	my $rc = execCommand("/opt/traffic_ops/install/bin/build_trafficops_perl_library");
 	if ( $rc != 0 ) {
 		print "ERROR: failed to install perl dependencies, check the console output and rerun postinstall once you've resolved the error.\n";
 		exit 6;
 	}
-	$rc = InstallUtils::execCommand( "./download_web_deps", "-i" );
+	$rc = execCommand( "./download_web_deps", "-i" );
 	if ( $rc != 0 ) {
 		print "ERROR: failed to install Traffic Ops Web dependencies, check the console output and rerun postinstall once you've resolved the error.\n";
 		exit 5;
@@ -496,26 +422,22 @@ else {
 }
 
 print "\nStarting Traffic Ops.\n\n";
-InstallUtils::execCommand("/sbin/service traffic_ops start");
+execCommand("/sbin/service traffic_ops start");
 
 print "\nWaiting for Traffic Ops to start.\n\n";
 sleep(5);
 
 #print "\nRunning smoke tests.\n\n";
-#$rc = InstallUtils::execCommand ("/opt/traffic_ops/install/bin/systemtest", "localhost", $user{"username"}, $tmAdminPw, "0");
+#$rc = execCommand ("/opt/traffic_ops/install/bin/systemtest", "localhost", $user{username}, $tmAdminPw, "0");
 
-$ans = "";
-while ( length $ans == 0 ) {
-	$ans = InstallUtils::promptUser( "\nShutdown Traffic Ops [y/n]", "n" );
-}
+my $ans = promptUser( "\nShutdown Traffic Ops [y/n]", "n" );
 if ( $ans eq "y" ) {
 	print "\nShutting down Traffic Ops.\n\n";
-	InstallUtils::execCommand( "/sbin/service", "traffic_ops", "stop" );
+	execCommand( "/sbin/service", "traffic_ops", "stop" );
 }
 
 print "\nTo start Traffic Ops:  service traffic_ops start\n";
 print "To stop Traffic Ops:   service traffic_ops stop\n";
-
 print "\n";
 
 exit 0;

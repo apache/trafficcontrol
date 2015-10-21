@@ -62,10 +62,10 @@ func loadCdn(db *sql.DB, dbName string) (sql.Result, error) {
 	return cdn, nil
 }
 
-func loadProfile(db *sql.DB, dbName string, cdnID int64) error {
+func loadProfile(db *sql.DB, dbName string) error {
 	fmt.Println("Seeding profile data...")
 
-	stmt, err := db.Prepare("insert ignore into " + dbName + ".profile (name, description, cdn_id) values (?,?,?)")
+	stmt, err := db.Prepare("insert ignore into " + dbName + ".profile (name, description) values (?,?)")
 	if err != nil {
 		fmt.Println("Couldn't prepare profile insert statment")
 		return err
@@ -91,7 +91,7 @@ func loadProfile(db *sql.DB, dbName string, cdnID int64) error {
 		}
 
 		fmt.Printf("\t Inserting profile: %+v \n", p)
-		_, err = stmt.Exec(p.Name, p.Description, cdnID)
+		_, err = stmt.Exec(p.Name, p.Description)
 		if err != nil {
 			fmt.Println("\t An error occured inserting profile with name ", p.Name)
 			return err
@@ -451,18 +451,13 @@ func main() {
 	}
 
 	// read cdn json file
-	cdn, err := loadCdn(db, c.DbName)
+	_, err = loadCdn(db, c.DbName)
 	if err != nil {
 		fmt.Println(err)
 	}
 
-	cdnID, err := cdn.LastInsertId()
-	if err != nil {
-		fmt.Println("error: ", err)
-	}
-
 	// read profile json file
-	if err = loadProfile(db, c.DbName, cdnID); err != nil {
+	if err = loadProfile(db, c.DbName); err != nil {
 		fmt.Println(err)
 	}
 

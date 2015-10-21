@@ -435,9 +435,6 @@
 							<preremoveScriptlet>
 								<scriptFile>src/main/scripts/preremove.sh</scriptFile>
 							</preremoveScriptlet>
-							<postremoveScriptlet>
-								<script>echo "Removing ${deploy.dir}";rm -rf ${deploy.dir}</script>
-							</postremoveScriptlet>
 						</configuration>
 					</plugin>
 				</plugins>
