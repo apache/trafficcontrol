@@ -352,6 +352,10 @@ sub find_federation_deliveryservice {
       return ( ERROR, $response, @federation_ids );
     }
   }
+  else {
+    $response = "No federation(s) found for user $current_username.";
+    return ( ERROR, $response, @federation_ids );
+  }
 
   return ( SUCCESS, $response, $federation_ids[0] );
 }
