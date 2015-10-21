@@ -164,15 +164,7 @@ sub gen_crconfig_json {
 
 	my %cache_tracker;
 	my $rs_caches = $self->db->resultset('Server')->search(
-		{   'profile' => {
-				-in => [
-					@{ $profile_cache->{'EDGE'} },
-					@{ $profile_cache->{'MID'} },
-					@{ $profile_cache->{'CCR'} },
-					@{ $profile_cache->{'RASCAL'} }
-				]
-			}
-		},
+		{ 'type.name' => { -in => [ 'EDGE', 'MID', 'CCR', 'RASCAL', 'TR', 'TM' ] }, 'cdn_id' => $cdn_id  },
 		{   prefetch => [ 'type', 'status', 'cachegroup', 'profile' ],
 			columns  => [
 				'host_name',  'domain_name',
