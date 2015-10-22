@@ -146,8 +146,6 @@ div.block .input{
 }
 .main { margin-top:10px;}
 .popup { padding-left: 10px; height: 650px; width: 900px; margin-top:10px;}
-.add_user_popup { height: 630px; width: 800px;}
-.edit_user_popup { height: 900px; width: 1100px;}
 .send_registration_popup { height: 140px; width: 300px;}
 .fancybox.iframe { padding: 3px; }
 .fancybox-skin { padding: 3px; height: 200px; }

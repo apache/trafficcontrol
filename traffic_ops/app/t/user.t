@@ -65,59 +65,5 @@ ok $t->get_ok('/datauser')->status_is(200)->json_is( '/0/username', 'admin' )->j
 ok $t->get_ok('/datauser/orderby/role')->status_is(200)->json_has('/0/rolename')->json_has('/0/username')->json_has('/0/id')->json_has('/0/role'),
 	'Does the user sort by role?';
 
-=cut
-TODO: drichardson update the tm_user then check that the field got updated.
-ok $t->post_ok(
-	'/user',
-	=> form => {
-		'tm_user.full_name'            => 'fullname',
-		'tm_user.username'             => 'testcase',
-		'tm_user.phone_number'         => 'phone_number',
-		'tm_user.email'                => 'email@email.com',
-		'tm_user.local_passwd'         => 'password',
-		'tm_user.confirm_local_passwd' => 'password',
-		'tm_user.role'                 => 4,
-	}
-	)->status_is(302)->or( sub { diag $t->tx->res->content->asset->{content}; } ),
-	'Can a user be updated?';
-
-sub upd_and_del() {
-	my $q        = 'select id from tm_user where username = \'username\'';
-	my $get_user = $dbh->prepare($q);
-	$get_user->execute();
-	my $p = $get_user->fetchall_arrayref( {} );
-	$get_user->finish();
-	my $i = 0;
-	while ( defined( $p->[$i] ) ) {
-		diag $p->[$i]->{name};
-		my $id = $p->[$i]->{id};
-		$t->post_ok(
-			      '/user/'
-				. $id
-				. '/update' => form => {
-				username             => 'username',
-				full_name            => 'full_name',
-				role                 => '4',
-				uid                  => '3',
-				gid                  => '9',
-				local_passwd         => 'local_passwd',
-				confirm_local_passwd => 'confirm_local_passwd',
-				company              => 'company',
-				email                => 'email',
-				new_user             => 1,
-				address_line1        => 'address_line1',
-				address_line2        => 'address_line2',
-				city                 => 'city',
-				state_or_province    => 'state_or_province',
-				phone_number         => 'phone_number',
-				postal_code          => 'postal_code',
-				country              => 'country',
-				local_user           => 1,
-				}
-		)->status_is(302)->or( sub { diag $t->tx->res->content->asset->{content}; } );
-		$i++;
-	}
-}
-=cut
 ok $t->get_ok('/logout')->status_is(302)->or( sub { diag $t->tx->res->content->asset->{content}; } );
 done_testing();
