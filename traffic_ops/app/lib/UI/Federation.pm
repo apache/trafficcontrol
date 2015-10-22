@@ -116,11 +116,11 @@ sub resolvers {
 		my $ip_addresses = $resolvers->{$r};
 		foreach my $ip_addr (@$ip_addresses) {
 			my $resolver_node = { label => $ip_addr };
-			push( @$children, $resolver_node );
+			push( @{$children}, $resolver_node );
 		}
 
 		$nodes = { label => $r, children => $children };
-		push( @$data, $nodes );
+		push( @{$data}, $nodes );
 	}
 	return $self->render( json => $data );
 }
@@ -141,11 +141,11 @@ sub group_resolvers {
 		my $type_name       = lc $row->federation_resolver->type->name;
 
 		if ( defined $resolvers->{$type_name} ) {
-			push( $resolvers->{$type_name}, $ip_address );
+			push( @{ $resolvers->{$type_name} }, $ip_address );
 		}
 		else {
 			@{ $resolvers->{$type_name} } = ();
-			push( $resolvers->{$type_name}, $ip_address );
+			push( @{ $resolvers->{$type_name} }, $ip_address );
 		}
 	}
 	return $resolvers;
