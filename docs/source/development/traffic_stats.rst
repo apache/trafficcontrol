@@ -19,16 +19,16 @@ Traffic Stats
 
 Introduction
 ============
-Traffic Stats is a collection of utilities written in `Go <http.golang.org>`_ that are used to acquire and store statistics about CDNs controlled by Traffic Control.  Traffic Stats mines metrics from Traffic Monitor's JSON APIs and stores the data in `InfluxDb <http://influxdb.com>`_.  Data is typically stored in InfluxDb on a short-term basis (30 days or less) and is used to drive graphs created by `Grafana <http://grafana.org>`_ which are linked from Traffic Ops.  Traffic Stats also calculates daily statistics from InfluxDb and stores them in the Traffic Ops database.
+Traffic Stats is a utility written in `Go <http.golang.org>`_ that is used to acquire and store statistics about CDNs controlled by Traffic Control.  Traffic Stats mines metrics from Traffic Monitor's JSON APIs and stores the data in `InfluxDb <http://influxdb.com>`_.  Data is typically stored in InfluxDb on a short-term basis (30 days or less) and is used to drive graphs created by `Grafana <http://grafana.org>`_ which are linked from Traffic Ops.  Traffic Stats also calculates daily statistics from InfluxDb and stores them in the Traffic Ops database.
 
 Software Requirements
 =====================
 To work on Traffic Stats you need a \*nix (MacOS and Linux are most commonly used) environment that has the following installed:
 
-	* `Go 1.4.x or above <https://golang.org/doc/install>`_
+	* `Go 1.5.x or above <https://golang.org/doc/install>`_
 	* Access to a working instance of Traffic Ops
 	* Access to a working instance of Traffic Monitor
-	* `InfluxDb version 0.9.1 or greater <https://influxdb.com/download/index.html>`_
+	* `InfluxDb version 0.9.3 or greater <https://influxdb.com/download/index.html>`_
 
 Traffic Stats Project Tree Overview
 =====================================
@@ -49,7 +49,7 @@ To install the Traffic Ops Developer environment:
 	- From the traffic_ops/client directory run ``go test`` to test the client code.  This will run all unit tests for the client and return the results.  If there are missing dependencies you will need to run ``go get <dependency name>`` to get the dependency
 	- Once the tests pass, run ``go install`` to build and install the Traffic Ops client package.  This makes it accessible to Traffic Stats.
 	- Navigate to your cloned repo under Traffic Stats
-	- Run ``go build traffic_stats`` to build traffic_stats.  You will need to run ``go get`` for any missing dependencies.
+	- Run ``go build traffic_stats.go`` to build traffic_stats.  You will need to run ``go get`` for any missing dependencies.
 
 
 Test Cases
