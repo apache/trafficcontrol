@@ -26,12 +26,16 @@
 
 	  		</ul>
 	  	</li>
-	  	<li><a href="/delivery_services" id="nav-ds">Delivery Services</a></li>
-	  	<li><a href="/servers" id="nav-s">Servers</a>
+	  	<li><a id="nav-ds" href="/delivery_services">Delivery Services</a>
+                        <ul>
+	  		                    <li><a href="/federation">Federation</a></li>
+                        </ul>
+        </li>
+	  	<li><a id="nav-s" href="/servers">Servers</a>
                         <ul>
                                 <li><a href="/uploadservercsv">Upload Server CSV</a></li>
                         </ul>
-                </li>
+        </li>
 	  	<li><a id="nav-p">Parameters</a>
 	  	<ul>
   			<li><a href="/parameters/profile/global">Global Profile</a></li>

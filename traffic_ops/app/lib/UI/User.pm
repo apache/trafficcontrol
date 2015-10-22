@@ -135,13 +135,11 @@ sub send_registration {
 
 sub edit {
 	my $self = shift;
-	my $sep  = "__NEWLINE__";                                             # the line separator sub that with \n in the .ep javascript
 	my $id   = $self->param('id');
 	my $dbh  = $self->db->resultset('TmUser')->search( { id => $id } );
 	my $data = $dbh->single;
 	&stash_role($self);
 
-	# TODO: drichardson - mode helps to enable/disable features in the _form.html.erb (is there a better way? ) $self->stash(
 	my %delivery_services = get_delivery_services( $self, $id );
 	$self->stash(
 		tm_user           => $data,

@@ -86,11 +86,11 @@ $fake_lwp->mock( 'query', sub { return $fake_response } );
 
 ok $t->get_ok(
 	'/api/1.2/deliveryservice_stats.json?deliveryServiceName=test-ds1&metricType=kbps&startDate=2015-05-06T20:00:00-06:00&endDate=2015-05-06T20:00:00-06:00&interval=60s'
-)->status_is(200)->json_has( '/response', 'has a response' ), 'Query1';
+)->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } )->json_has( '/response', 'has a response' ), 'Query1';
 
 ok $t->get_ok(
 	'/api/1.2/deliveryservice_stats.json?deliveryServiceName=test-ds1&metricType=kbps&startDate=2015-05-06T20:00:00-06:00&endDate=2015-05-06T20:00:00-06:00&interval=60s'
-)->status_is(200)->json_has( '/response', 'has a response' ), 'Query2';
+)->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } )->json_has( '/response', 'has a response' ), 'Query2';
 
 ok $t->get_ok('/api/1.2/deliveryservice_stats.json?metricType=kbps&startDate=2015-05-06T20:00:00-06:00&endDate=2015-05-06T20:00:00-06:00')->status_is(400)
 	->json_is( "/alerts/0/text", 'deliveryServiceName query parameter is required' )->or( sub { diag $t->tx->res->content->asset->{content}; } ),

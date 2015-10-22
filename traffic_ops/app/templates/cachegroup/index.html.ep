@@ -68,9 +68,7 @@ $(function () {
 		'transitionIn'    : 'elastic',
 		'transitionOut'   : 'elastic',
 		'type'            : 'iframe',
-		'iframe'          : {'scrolling'       : 'yes'},
-		'height'          : '500px',
-		'width'           : '670px'
+		'iframe'          : {'scrolling'       : 'yes'}
 		})
 });
 </script>
