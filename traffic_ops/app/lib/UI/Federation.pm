@@ -155,13 +155,10 @@ sub group_resolvers {
 		my $ip_address      = $row->federation_resolver->ip_address;
 		my $type_name       = lc $row->federation_resolver->type->name;
 
-		if ( defined $resolvers->{$type_name} ) {
-			push( @{ $resolvers->{$type_name} }, $ip_address );
+		if ( !defined $resolvers->{$type_name} ) {
+			$resolvers->{$type_name} = [];
 		}
-		else {
-			@{ $resolvers->{$type_name} } = ();
-			push( @{ $resolvers->{$type_name} }, $ip_address );
-		}
+		push( @{ $resolvers->{$type_name} }, $ip_address );
 	}
 	return $resolvers;
 }
