@@ -14,7 +14,7 @@
      limitations under the License.
  */
 
-function listdeliveryservices(selected_ds_id) {
+function listDeliveryServices(selected_ds_id) {
 	$("#delivery_service").html("<select id=\"dsselect\" name=\"ds_id\"></select>");	
 	$.get("/api/1.2/deliveryservices.json?orderby=name", function(data){
 		var response = data['response'];

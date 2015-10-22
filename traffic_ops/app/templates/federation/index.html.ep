@@ -97,6 +97,9 @@ $(document).ready(function () {
                             <td>Delivery Service</td>
                             <td>Description</td>
                             <td>TTL</td>
+                            <td>Full Name</td>
+                            <td>Username</td>
+                            <td>Company</td>
                         </tr>
                     </thead>
                 </table>

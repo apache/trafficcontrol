@@ -51,4 +51,8 @@
 			%= label_for 'delivery_service' => '* Delivery Services', class => 'label'
 			%= label_for 'deliveryservice' => 'ds_id', id=> 'delivery_service', class => 'field'
 	   </div>
+	   <div class="block">
+			%= label_for 'user' => '* User', class => 'label'
+			%= label_for 'user' => 'user_id', id=> 'user', class => 'field'
+	   </div>
    </div>
