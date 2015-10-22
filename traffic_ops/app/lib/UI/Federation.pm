@@ -333,13 +333,8 @@ sub delete {
 		my $resolvers =
 			$self->db->resultset('FederationFederationResolver')
 			->search( { federation => $fed_id }, { prefetch => [ 'federation', 'federation_resolver' ] } );
-		my $ip_address;
-		my $cname;
-		while ( my $row = $resolvers->next ) {
-			my $id = $row->id;
-		}
 		$delete->delete();
-		&log( $self, "Deleted federation: " . $fed_id . " cname: " . $cname . " ip_address: " . $ip_address, "UICHANGE" );
+		&log( $self, "Deleted federation: " . $fed_id . " cname: " . $cname, "UICHANGE" );
 	}
 	return $self->redirect_to('/close_fancybox.html');
 }
