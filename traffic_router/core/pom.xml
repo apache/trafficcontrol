@@ -205,6 +205,9 @@
 				<artifactId>maven-surefire-plugin</artifactId>
 				<configuration>
 					<argLine>-DminimumTPS=80 -DnnTPS=12000</argLine>
+					<systemPropertyVariables>
+						<log4j.configuration>file:src/test/resources/log4j.maven.properties</log4j.configuration>
+					</systemPropertyVariables>
 				</configuration>
 			</plugin>
 		</plugins>
