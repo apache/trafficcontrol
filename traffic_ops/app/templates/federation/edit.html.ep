@@ -27,11 +27,13 @@
 
       %= include 'user/_listroles.js'
       %= include 'federation/_listdeliveryservices.js'
+      %= include 'federation/_listfederationusers.js'
 
       // wait for the DOM to be loaded 
       $(document).ready(function () {
-          listdeliveryservices("<%= $ds_id %>");
+          listDeliveryServices("<%= $ds_id %>");
           listroles("<%= $role_id %>");
+          listFederationUsers("<%= $user_id %>");
 
            $("#delete_button").click(function() {
                 var r=confirm("Are you sure?");
