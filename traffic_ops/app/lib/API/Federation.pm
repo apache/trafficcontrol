@@ -171,13 +171,10 @@ sub external_index {
 		my @resolvers     = $self->find_federation_resolvers($federation_id);
 		for my $resolver (@resolvers) {
 			my $type = lc $resolver->type->name;
-			if ( defined $mapping->{$type} ) {
-				push( $mapping->{$type}, $resolver->ip_address );
-			}
-			else {
+			if ( !defined $mapping->{$type} ) {
 				@{ $mapping->{$type} } = ();
-				push( $mapping->{$type}, $resolver->ip_address );
 			}
+			push( @{ $mapping->{$type} }, $resolver->ip_address );
 		}
 
 		my $xml_id = $row->deliveryservice->xml_id;
