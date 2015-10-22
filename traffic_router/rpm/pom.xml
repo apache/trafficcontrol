@@ -177,9 +177,7 @@
 							<copyright>2011, Comcast Converged Products</copyright>
 							<group>Applications/Internet</group>
 							<name>${project.parent.artifactId}</name>
-							<!--<release>${env.BUILD_SVN_REVISION}</release> -->
 							<release>${env.GIT_REV_COUNT}.${buildNumber}.el6</release>
-							<!-- <release>${scmVersion}</release> -->
 							<needarch>x86_64</needarch>
 							<mappings>
 								<mapping>
