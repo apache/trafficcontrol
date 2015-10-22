@@ -19,16 +19,20 @@
 #----------------------------------------
 function buildRpm () {
 	echo "Building the rpm."
-	cd "$BUILDRPM/BUILD"
-	mvn package || { echo "RPM BUILD FAILED: $!"; exit 1; }
+
+	version="-DTC_VERSION=$TC_VERSION"
+	targetdir="-Dproject.build.directory=$BUILDRPM/BUILD"
+
+	mvn "$version" "$targetdir" install || { echo "RPM BUILD FAILED: $?"; exit 1; }
+
 	echo "========================================================================================"
 	echo "RPM BUILD SUCCEEDED, See $DIST/$RPM for the newly built rpm."
 	echo "========================================================================================"
 	echo
-	mkdir -p "$DIST" || { echo "Could not create $DIST: $!"; exit 1; }
+	mkdir -p "$DIST" || { echo "Could not create $DIST: $?"; exit 1; }
 
-	/bin/cp "$RPMBUILD"/RPMS/*/*.rpm "$DIST/." || { echo "Could not copy rpm to $DIST: $!"; exit 1; }
-	/bin/cp "$RPMBUILD"/SRPMS/*/*.rpm "$DIST/." || { echo "Could not copy source rpm to $DIST: $!"; exit 1; }
+	/bin/cp "$RPMBUILD"/RPMS/*/*.rpm "$DIST/." || { echo "Could not copy rpm to $DIST: $?"; exit 1; }
+	/bin/cp "$RPMBUILD"/SRPMS/*/*.rpm "$DIST/." || { echo "Could not copy source rpm to $DIST: $?"; exit 1; }
 }
 
 
@@ -68,18 +72,19 @@ function checkEnvironment() {
 function initBuildArea() {
 	echo "Initializing the build area."
 	/bin/rm -rf "$RPMBUILD" && \
-		mkdir -p "$RPMBUILD"/{SPECS,SOURCES,RPMS,SRPMS,BUILD,BUILDROOT} || { echo "Could not create $RPMBUILD: $!"; exit 1; }
+		mkdir -p "$RPMBUILD"/{SPECS,SOURCES,RPMS,SRPMS,BUILD,BUILDROOT} || { echo "Could not create $RPMBUILD: $?"; exit 1; }
 
-	# TODO: what can be cut out here?
-	/bin/cp -r "$TM_DIR"/{build,etc,src} "$RPMBUILD"/SOURCES/.
-	/bin/cp -r "$TM_DIR"/{build,etc,src} "$RPMBUILD"/BUILD/.
-	/bin/sed "s:@VERSION@:$TC_VERSION:" < "$TM_DIR/pom.xml.tmpl" >"$RPMBUILD/BUILD/pom.xml"
-
-	# tar/gzip the source
 	local target="$PACKAGE-$TC_VERSION"
 	local targetpath="$RPMBUILD/SOURCES/$target"
+	mkdir -p "$targetpath" || { echo "Could not create $targetpath: $?"; exit 1; }
 
-	tar -czvf "$targetpath.tgz" -C "$RPMBUILD/SOURCES" "$target" || { echo "Could not create tar archive $targetpath.tgz: $!"; exit 1; }
+	# TODO: what can be cut out here?
+	/bin/cp -r "$TM_DIR"/{build,etc,src} "$targetpath"/.
+	/bin/cp -r "$TM_DIR"/{build,etc,src} "$RPMBUILD"/BUILD/.
+
+	# tar/gzip the source
+
+	tar -czvf "$targetpath.tgz" -C "$RPMBUILD/SOURCES" "$target" || { echo "Could not create tar archive $targetpath.tgz: $?"; exit 1; }
 
 	echo "The build area has been initialized."
 }
