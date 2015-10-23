@@ -37,7 +37,7 @@ for p in $projects; do
 	case $p in
 		traffic_ops)     (cd traffic_ops/rpm && ./build_rpm.sh) ;;
 		traffic_ops_ort) (cd traffic_ops/rpm && ./build_ort_rpm.sh) ;;
-		traffic_monitor) (cd traffic_monitor/rpm && ./build_rpm.sh) ;;
+		traffic_monitor) (cd traffic_monitor/build  && ./build_rpm.sh) ;;
 		traffic_router)  (cd traffic_router/rpm && ./build_rpm.sh) ;;
 		traffic_stats)   (cd traffic_stats/rpm && ./build_rpm.sh) ;;
 		*) echo "No project named $p"; exit 1;;

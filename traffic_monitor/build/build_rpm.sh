@@ -21,9 +21,10 @@ function buildRpm () {
 	echo "Building the rpm."
 
 	version="-DTC_VERSION=$TC_VERSION"
-	targetdir="-Dproject.build.directory=$BUILDRPM/BUILD"
-
-	mvn "$version" "$targetdir" install || { echo "RPM BUILD FAILED: $?"; exit 1; }
+	#targetdir="-Dproject.build.directory=$RPMBUILD/BUILD"
+	cd "$RPMBUILD/BUILD" || { echo "Could not cd to $RPMBUILD/BUILD: $?"; exit 1; }
+	export GIT_REV_COUNT=0
+	mvn "$version" install || { echo "RPM BUILD FAILED: $?"; exit 1; }
 
 	echo "========================================================================================"
 	echo "RPM BUILD SUCCEEDED, See $DIST/$RPM for the newly built rpm."
@@ -79,8 +80,10 @@ function initBuildArea() {
 	mkdir -p "$targetpath" || { echo "Could not create $targetpath: $?"; exit 1; }
 
 	# TODO: what can be cut out here?
-	/bin/cp -r "$TM_DIR"/{build,etc,src} "$targetpath"/.
-	/bin/cp -r "$TM_DIR"/{build,etc,src} "$RPMBUILD"/BUILD/.
+	/bin/cp -r "$TM_DIR"/{build,etc,src} "$targetpath"/. || { echo "Could not copy to $targetpath: $?"; exit 1; }
+	/bin/cp -r "$TM_DIR"/{build,etc,src} "$targetpath"/. || { echo "Could not copy to $targetpath: $?"; exit 1; }
+	/bin/cp -r "$TM_DIR"/{build,etc,src} "$RPMBUILD"/BUILD/. || { echo "Could not copy to $RPMBUILD/BUILD: $?"; exit 1; }
+	/bin/cp  "$TM_DIR"/pom.xml "$RPMBUILD"/BUILD/. || { echo "Could not copy to $RPMBUILD/BUILD: $?"; exit 1; }
 
 	# tar/gzip the source
 
