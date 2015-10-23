@@ -47,18 +47,23 @@
 	   </div>
 	 <% } %>
 
-	   <div class="block">
+   <div class="block">
+		%= label_for 'delivery_service' => '* Delivery Services', class => 'label'
         <% unless(field('ds_id')->valid) { %>
-          <span class="field-with-error"><%= field('ds_id')->error %></span>
-            <% } %>
-			%= label_for 'delivery_service' => '* Delivery Services', class => 'label'
-			%= label_for 'deliveryservice' => 'ds_id', id=> 'delivery_service', class => 'field'
-	   </div>
-	   <div class="block">
-        <% unless(field('user_id')->valid) { %>
-          <span class="field-with-error"><%= field('user_id')->error %></span>
-            <% } %>
-			%= label_for 'user' => '* User', class => 'label'
-			%= label_for 'user' => 'user_id', id=> 'user', class => 'field'
-	   </div>
+		  <div>
+            <span class="field-with-error"><%= field('ds_id')->error %></span>
+		  </div>
+         <% } %>
+		 %= label_for 'deliveryservice' => 'ds_id', id=> 'delivery_service', class => 'field'
    </div>
+
+   <div class="block">
+		%= label_for 'user' => '* User', class => 'label'
+        <% unless(field('user_id')->valid) { %>
+		  <div>
+              <span class="field-with-error"><%= field('user_id')->error %></span>
+		  </div>
+         <% } %>
+		%= label_for 'user' => 'user_id', id=> 'user', class => 'field'
+   </div>
+</div>
