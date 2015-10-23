@@ -49,7 +49,7 @@ sub index {
 		for my $resolver (@resolvers) {
 			my $type = lc $resolver->type->name;
 			if ( !defined $mapping->{$type} ) {
-				@{ $mapping->{$type} } = ();
+				$mapping->{$type} = [];
 			}
 			push( @{ $mapping->{$type} }, $resolver->ip_address );
 		}
@@ -127,12 +127,10 @@ sub add_delivery_service {
 	my $m      = shift;
 	my $data   = shift;
 
-	my $map;
-	push( @{$map}, $m );
 	push(
 		@{$data}, {
 			"deliveryService" => $xml_id,
-			"mappings"        => $map
+			"mappings"        => [$m]
 		}
 	);
 	return $data;
@@ -143,9 +141,7 @@ sub update_delivery_service {
 	my $ds   = shift;
 	my $m    = shift;
 
-	my $map = $ds->{'mappings'};
-	push( @{$map}, $m );
-	$ds->{'mappings'} = $map;
+	push( @{ $ds->{'mappings'} }, $m );
 }
 
 sub external_index {
@@ -172,7 +168,7 @@ sub external_index {
 		for my $resolver (@resolvers) {
 			my $type = lc $resolver->type->name;
 			if ( !defined $mapping->{$type} ) {
-				@{ $mapping->{$type} } = ();
+				$mapping->{$type} = [];
 			}
 			push( @{ $mapping->{$type} }, $resolver->ip_address );
 		}
@@ -191,7 +187,7 @@ sub external_index {
 			$data = $self->add_delivery_service( $xml_id, $mapping, $data );
 		}
 	}
-	$self->success( \@{$data} );
+	$self->success($data);
 }
 
 sub find_federation_tmuser {
@@ -435,7 +431,8 @@ sub delete_federation_resolver {
 	my @resolvers;
 	my @resolver_ips;
 	if ( scalar @federation_ids ) {
-		@resolvers = $self->db->resultset('FederationResolver')
+		@resolvers =
+			$self->db->resultset('FederationResolver')
 			->search( { 'federation_federation_resolvers.federation' => { -in => \@federation_ids } }, { prefetch => 'federation_federation_resolvers' } );
 
 		if ( scalar @resolvers ) {
