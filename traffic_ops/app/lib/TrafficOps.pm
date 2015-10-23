@@ -94,8 +94,6 @@ sub startup {
 	$mode = $self->mode;
 	$self->app->types->type( iso => 'application/octet-stream' );
 
-	#$self->log->info( "Types version: " . Dumper( $self->app->types ) . "\n" );
-
 	$self->setup_logging($mode);
 	$self->validate_cdn_conf();
 	$self->setup_mojo_plugins();
