@@ -21,9 +21,9 @@ function buildRpm () {
 	echo "Building the rpm."
 
 	version="-DTC_VERSION=$TC_VERSION"
-	targetdir="-Dproject.build.directory=$RPMBUILD/BUILD"
-	cd "$RPMBUILD/BUILD" || { echo "Could not cd to $RPMBUILD/BUILD: $?"; exit 1; }
-	export GIT_REV_COUNT=0
+	targetdir="-Dproject.build.directory=$BLDPATH"
+	cd "$BLDPATH" || { echo "Could not cd to $BLDPATH: $?"; exit 1; }
+	export GIT_REV_COUNT=nogit
 	mvn "$version" "$targetdir" install || { echo "RPM BUILD FAILED: $?"; exit 1; }
 
 	echo "========================================================================================"
@@ -32,12 +32,19 @@ function buildRpm () {
 	echo
 	mkdir -p "$DIST" || { echo "Could not create $DIST: $?"; exit 1; }
 
-	rpm=$(find "$RPMBUILD/BUILD" -name 'traffic_monitor*.rpm')
+	rpm=$(find "$BLDPATH" -name "${PACKAGE}*.rpm")
 	if [[ -z $rpm ]]; then
-		echo "$PACKAGE*.rpm not found anywhere in $RPMBUILD/BUILD: $?"; exit 1;
+		echo "$PACKAGE*.rpm not found anywhere in $BLDPATH: $?"; exit 1;
 	fi
+	/bin/cp "$rpm" "$RPMPATH" || { echo "Could not copy $rpm to $RPMPATH: $?"; exit 1; }
 	/bin/cp "$rpm" "$DIST/." || { echo "Could not copy $rpm to $DIST: $?"; exit 1; }
-	/bin/cp "$RPMBUILD"/SRPMS/*/*.rpm "$DIST/." || { echo "Could not copy source rpm to $DIST: $?"; exit 1; }
+
+	# TODO: build src rpm separately -- mvn rpm plugin does not do src rpms
+	#cd "RPMBUILD" && \
+	#	rpmbuild -bs --define "_topdir $(pwd)" \
+        #                 --define "traffic_control_version $TC_VERSION" \
+        #                 --define "build_number $BUILD_NUMBER" -ba SPECS/traffic_monitor.spec
+	#/bin/cp "$RPMBUILD"/SRPMS/*/*.rpm "$DIST/." || { echo "Could not copy source rpm to $DIST: $?"; exit 1; }
 }
 
 
@@ -79,18 +86,23 @@ function initBuildArea() {
 	mkdir -p "$RPMBUILD"/{SPECS,SOURCES,RPMS,SRPMS,BUILD,BUILDROOT} || { echo "Could not create $RPMBUILD: $?"; exit 1; }
 
 	local target="$PACKAGE-$TC_VERSION"
-	local targetpath="$RPMBUILD/SOURCES/$target"
-	mkdir -p "$targetpath" || { echo "Could not create $targetpath: $?"; exit 1; }
+	# export these so build fcn has them
+	export SRCPATH="$RPMBUILD/SOURCES/$target"
+	export BLDPATH="$RPMBUILD/BUILD/$target"
+	export RPMPATH="$RPMBUILD/RPMS"
+	mkdir -p "$SRCPATH" || { echo "Could not create $SRCPATH: $?"; exit 1; }
+	mkdir -p "$BLDPATH" || { echo "Could not create $BLDPATH: $?"; exit 1; }
 
 	# TODO: what can be cut out here?
-	/bin/cp -r "$TM_DIR"/{build,etc,src} "$targetpath"/. || { echo "Could not copy to $targetpath: $?"; exit 1; }
-	/bin/cp -r "$TM_DIR"/{build,etc,src} "$targetpath"/. || { echo "Could not copy to $targetpath: $?"; exit 1; }
-	/bin/cp -r "$TM_DIR"/{build,etc,src} "$RPMBUILD"/BUILD/. || { echo "Could not copy to $RPMBUILD/BUILD: $?"; exit 1; }
-	/bin/cp  "$TM_DIR"/pom.xml "$RPMBUILD"/BUILD/. || { echo "Could not copy to $RPMBUILD/BUILD: $?"; exit 1; }
+	/bin/cp -r "$TM_DIR"/{build,etc,src} "$SRCPATH"/. || { echo "Could not copy to $SRCPATH: $?"; exit 1; }
+	/bin/cp -r "$TM_DIR"/{build,etc,src} "$SRCPATH"/. || { echo "Could not copy to $SRCPATH: $?"; exit 1; }
+	/bin/cp -r "$TM_DIR"/{build,etc,src} "$BLDPATH" || { echo "Could not copy to $BLDPATH: $?"; exit 1; }
+	/bin/cp  "$TM_DIR"/pom.xml "$SRCPATH" || { echo "Could not copy to $SRCPATH: $?"; exit 1; }
+	/bin/cp  "$TM_DIR"/pom.xml "$BLDPATH" || { echo "Could not copy to $BLDPATH: $?"; exit 1; }
 
 	# tar/gzip the source
 
-	tar -czvf "$targetpath.tgz" -C "$RPMBUILD/SOURCES" "$target" || { echo "Could not create tar archive $targetpath.tgz: $?"; exit 1; }
+	tar -czvf "$targetpath.tgz" -C "$SRCPATH" "$target" || { echo "Could not create tar archive $targetpath.tgz: $?"; exit 1; }
 
 	echo "The build area has been initialized."
 }
