@@ -315,6 +315,8 @@ sub is_valid {
 	$self->field('federation.cname')->is_required;
 	$self->field('federation.cname')->is_like( qr/\.$/, "CNAME must end with a period." );
 	$self->field('federation.ttl')->is_required;
+	$self->field('ds_id')->is_required;
+	$self->field('user_id')->is_required;
 
 	return $self->valid;
 }

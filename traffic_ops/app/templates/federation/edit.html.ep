@@ -98,10 +98,10 @@
         <div class="dialog_body" style="margin-left:10px; width: 550px;">
              <h3><a href="#">Federation Mapping</a></h3>
 
-                                <form id="edit_form" method="POST" action="/federation/<%= $federation->id %>">
+			  <form id="edit_form" method="POST" action="/federation/<%= $federation->id %>">
 
-                                     %= include 'common/_errors'
-                                     %= include 'common/_flash'
+				   %= include 'common/_errors'
+				   %= include 'common/_flash'
 
 
                    <div class="deliveryServicesForm">
@@ -118,9 +118,9 @@
                    <div style="padding:10px;padding-bottom:20px;">
                       <a href="#" class="button" id="delete_button">Delete</a>
                        %= submit_button 'Save', id => 'save_button', class=> 'button', style=> 'margin-left:270px;'
-                       %= submit_button 'Close', id => 'close_button', class=> 'button'
-                   </div>
                 </form>
+                 %= link_to 'Close', id => 'close_button', class=> 'button'
+               </div>
 
        </div>
   </div>
