@@ -252,8 +252,8 @@ sub create {
 		if ( $new_id > 0 ) {
 			$self->app->log->debug("redirecting....");
 
-			#return $self->redirect_to('/close_fancybox.html');
-			return $self->render('federation/add');
+			$self->flash( message => "Successfully added Federation!" );
+			return $self->redirect_to("/federation/$new_id/edit");
 		}
 	}
 	else {
