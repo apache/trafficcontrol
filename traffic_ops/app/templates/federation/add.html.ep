@@ -84,7 +84,7 @@ alert(alertmsg);
             <div class="bottomButtons" style="margin-left: 300px;">
               <div style="float:left;">
                  %= submit_button 'Add', class=> 'button'
-                <button id="close_button" class="button">Close</button>
+			     <button id="close_button" class="button">Close</button>
              </div>
             </div>
         % end

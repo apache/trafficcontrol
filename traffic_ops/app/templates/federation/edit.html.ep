@@ -118,8 +118,8 @@
                    <div style="padding:10px;padding-bottom:20px;">
                       <a href="#" class="button" id="delete_button">Delete</a>
                        %= submit_button 'Save', id => 'save_button', class=> 'button', style=> 'margin-left:270px;'
+			     	   <button id="close_button" class="button">Close</button>
                 </form>
-                 %= link_to 'Close', id => 'close_button', class=> 'button'
                </div>
 
        </div>

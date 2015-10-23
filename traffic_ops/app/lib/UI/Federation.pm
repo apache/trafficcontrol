@@ -190,7 +190,7 @@ sub update {
 	my $description = $self->param('federation.description');
 	my $ttl         = $self->param('federation.ttl');
 
-	my $is_valid = $self->is_valid("edit");
+	my $is_valid = $self->is_valid();
 	if ( $self->is_valid("edit") ) {
 		my $dbh = $self->db->resultset('Federation')->find( { id => $fed_id } );
 		$dbh->cname($cname);
@@ -251,7 +251,9 @@ sub create {
 		my $new_id = $self->create_federation( $ds_id, $user_id, $cname, $desc, $ttl );
 		if ( $new_id > 0 ) {
 			$self->app->log->debug("redirecting....");
-			return $self->redirect_to('/close_fancybox.html');
+
+			#return $self->redirect_to('/close_fancybox.html');
+			return $self->render('federation/add');
 		}
 	}
 	else {
@@ -310,7 +312,6 @@ sub create_federation {
 
 sub is_valid {
 	my $self = shift;
-	my $mode = shift;
 
 	$self->field('federation.cname')->is_required;
 	$self->field('federation.cname')->is_like( qr/\.$/, "CNAME must end with a period." );
@@ -336,7 +337,8 @@ sub delete {
 			$self->db->resultset('FederationFederationResolver')
 			->search( { federation => $fed_id }, { prefetch => [ 'federation', 'federation_resolver' ] } );
 		$delete->delete();
-		&log( $self, "Deleted federation: " . $fed_id . " cname: " . $cname, "UICHANGE" );
+		my $msg = sprintf( "Deleted federation: %s cname: %s", $fed_id, $cname );
+		&log( $self, $msg, "UICHANGE" );
 	}
 	return $self->redirect_to('/close_fancybox.html');
 }
