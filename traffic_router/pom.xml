@@ -27,7 +27,7 @@
 		<module>connector</module>
 		<module>core</module>
 		<module>api</module>
-		<module>rpm</module>
+		<module>build</module>
 	</modules>
 
 	<properties>
