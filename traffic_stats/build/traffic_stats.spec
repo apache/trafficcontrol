@@ -117,4 +117,4 @@ if [ -e /etc/init.d/ts_daily_summary ]; then
 	/etc/init.d/ts_daily_summary stop
 	/sbin/chkconfig --del ts_daily_summary
 fi
-	
+

@@ -21,10 +21,10 @@ function buildRpm () {
 	echo "Building the rpm."
 
 	version="-DTC_VERSION=$TC_VERSION"
-	#targetdir="-Dproject.build.directory=$RPMBUILD/BUILD"
+	targetdir="-Dproject.build.directory=$RPMBUILD/BUILD"
 	cd "$RPMBUILD/BUILD" || { echo "Could not cd to $RPMBUILD/BUILD: $?"; exit 1; }
 	export GIT_REV_COUNT=0
-	mvn "$version" install || { echo "RPM BUILD FAILED: $?"; exit 1; }
+	mvn "$version" "$targetdir" install || { echo "RPM BUILD FAILED: $?"; exit 1; }
 
 	echo "========================================================================================"
 	echo "RPM BUILD SUCCEEDED, See $DIST/$RPM for the newly built rpm."
@@ -32,7 +32,11 @@ function buildRpm () {
 	echo
 	mkdir -p "$DIST" || { echo "Could not create $DIST: $?"; exit 1; }
 
-	/bin/cp "$RPMBUILD"/RPMS/*/*.rpm "$DIST/." || { echo "Could not copy rpm to $DIST: $?"; exit 1; }
+	rpm=$(find "$RPMBUILD/BUILD" -name 'traffic_monitor*.rpm')
+	if [[ -z $rpm ]]; then
+		echo "$PACKAGE*.rpm not found anywhere in $RPMBUILD/BUILD: $?"; exit 1;
+	fi
+	/bin/cp "$rpm" "$DIST/." || { echo "Could not copy $rpm to $DIST: $?"; exit 1; }
 	/bin/cp "$RPMBUILD"/SRPMS/*/*.rpm "$DIST/." || { echo "Could not copy source rpm to $DIST: $?"; exit 1; }
 }
 
@@ -44,7 +48,7 @@ function checkEnvironment() {
 	local scriptdir=$(dirname "$script")
 	export TM_DIR=$(dirname "$scriptdir")
 	export TC_DIR=$(dirname "$TM_DIR")
-	functions_sh="$TC_DIR/rpm/functions.sh"
+	functions_sh="$TC_DIR/build/functions.sh"
 	if [[ ! -r $functions_sh ]]; then
 		echo "Error: Can't find $functions_sh"
 		exit 1
@@ -72,8 +76,7 @@ function checkEnvironment() {
 # ---------------------------------------
 function initBuildArea() {
 	echo "Initializing the build area."
-	/bin/rm -rf "$RPMBUILD" && \
-		mkdir -p "$RPMBUILD"/{SPECS,SOURCES,RPMS,SRPMS,BUILD,BUILDROOT} || { echo "Could not create $RPMBUILD: $?"; exit 1; }
+	mkdir -p "$RPMBUILD"/{SPECS,SOURCES,RPMS,SRPMS,BUILD,BUILDROOT} || { echo "Could not create $RPMBUILD: $?"; exit 1; }
 
 	local target="$PACKAGE-$TC_VERSION"
 	local targetpath="$RPMBUILD/SOURCES/$target"

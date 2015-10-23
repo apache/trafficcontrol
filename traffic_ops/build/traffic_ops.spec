@@ -24,11 +24,11 @@
 Summary:          Traffic Ops UI
 Name:             traffic_ops
 Version:          %{traffic_control_version}
-Release:          %{build_numner}
+Release:          %{build_number}
 License:          Apache License, Version 2.0
 Group:            Base System/System Tools
 Prefix:           /opt/traffic_ops
-Source:           %{_sourcedir}/traffic_ops-%{traffic_ops_version}.tgz
+Source:           %{_sourcedir}/traffic_ops-%{traffic_control_version}.tgz
 URL:	          https://github.com/Comcast/traffic_control/
 Vendor:	          Comcast
 Packager:         daniel_kirkwood at Cable dot Comcast dot com
@@ -57,7 +57,7 @@ Built: %(date) by %{getenv: USER}
 		%__mkdir -p $RPM_BUILD_ROOT/%{PACKAGEDIR}
     fi
 
-	%__cp -R $RPM_BUILD_DIR/traffic_ops-%{traffic_ops_version}/* $RPM_BUILD_ROOT/%{PACKAGEDIR}
+	%__cp -R $RPM_BUILD_DIR/traffic_ops-%{traffic_control_version}/* $RPM_BUILD_ROOT/%{PACKAGEDIR}
 
 	if [ ! -d $RPM_BUILD_ROOT/%{PACKAGEDIR}/app/public/CRConfig-Snapshots ]; then
         %__mkdir -p $RPM_BUILD_ROOT/%{PACKAGEDIR}/app/public/CRConfig-Snapshots

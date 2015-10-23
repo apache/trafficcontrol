@@ -35,11 +35,11 @@ fi
 for p in $projects; do
 	echo "-----  Building $p ..."
 	case $p in
-		traffic_ops)     (cd traffic_ops/rpm && ./build_rpm.sh) ;;
-		traffic_ops_ort) (cd traffic_ops/rpm && ./build_ort_rpm.sh) ;;
+		traffic_ops)     (cd traffic_ops/build && ./build_rpm.sh) ;;
+		traffic_ops_ort) (cd traffic_ops/build && ./build_ort_rpm.sh) ;;
 		traffic_monitor) (cd traffic_monitor/build  && ./build_rpm.sh) ;;
-		traffic_router)  (cd traffic_router/rpm && ./build_rpm.sh) ;;
-		traffic_stats)   (cd traffic_stats/rpm && ./build_rpm.sh) ;;
+		traffic_router)  (cd traffic_router/build && ./build_rpm.sh) ;;
+		traffic_stats)   (cd traffic_stats/build && ./build_rpm.sh) ;;
 		*) echo "No project named $p"; exit 1;;
 	esac || (echo "$p failed: $!"; exit 1)
 done

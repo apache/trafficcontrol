@@ -23,7 +23,7 @@ function buildRpm () {
 	cd "$RPMBUILD" && \
 		rpmbuild --define "_topdir $(pwd)" \
 			 --define "traffic_control_version $TC_VERSION" \
-			 --define "build_number $BUILD_NUMBER" -ba SPECS/traffic_ops.spec
+			 --define "build_number $BUILD_NUMBER" -ba SPECS/traffic_ops_ort.spec
 
 	if [[ $? -ne  0 ]]; then
 		echo -e "\nRPM BUILD FAILED.\n\n"
@@ -49,7 +49,7 @@ function checkEnvironment() {
 	local scriptdir=$(dirname "$script")
 	export TO_DIR=$(dirname "$scriptdir")
 	export TC_DIR=$(dirname "$TO_DIR")
-	functions_sh="$TC_DIR/rpm/functions.sh"
+	functions_sh="$TC_DIR/build/functions.sh"
 	if [[ ! -r $functions_sh ]]; then
 		echo "Error: Can't find $functions_sh"
 		exit 1
@@ -58,7 +58,7 @@ function checkEnvironment() {
 
 	# 
 	# get traffic_control src path -- relative to build_rpm.sh script
-	export PACKAGE="traffic_ops"
+	export PACKAGE="traffic_ops_ort"
 	export TC_VERSION=$(getVersion "$TC_DIR")
 	export BUILD_NUMBER=${BUILD_NUMBER:-$(getBuildNumber)}
 	export WORKSPACE=${WORKSPACE:-$TC_DIR}
@@ -67,10 +67,6 @@ function checkEnvironment() {
 	export RPM="${PACKAGE}-${TC_VERSION}-${BUILD_NUMBER}.x86_64.rpm"
 	export IN_GIT=$(isInGitTree)
 
-	# verify required tools available in path
-	for pgm in go ; do
-		type $pgm 2>/dev/null || { echo "$pgm not found in PATH"; exit 1; }
-	done
 	echo "Build environment has been verified."
 
 	echo "=================================================="
@@ -84,39 +80,18 @@ function checkEnvironment() {
 # ---------------------------------------
 function initBuildArea() {
 	echo "Initializing the build area."
-	/bin/rm -rf "$RPMBUILD" && \
-		mkdir -p "$RPMBUILD"/{SPECS,SOURCES,RPMS,SRPMS,BUILD,BUILDROOT} || { echo "Could not create $RPMBUILD: $!"; exit 1; }
+	mkdir -p "$RPMBUILD"/{SPECS,SOURCES,RPMS,SRPMS,BUILD,BUILDROOT} || { echo "Could not create $RPMBUILD: $!"; exit 1; }
 
-	/bin/cp -r "$TO_DIR"/rpm/*.spec "$RPMBUILD"/SPECS/. || { echo "Could not copy spec files: $!"; exit 1; }
+	/bin/cp -r "$TO_DIR"/build/*.spec "$RPMBUILD"/SPECS/. || { echo "Could not copy spec files: $!"; exit 1; }
 
 	# build the go scripts for database initialization and tm testing.
 
 	# tar/gzip the source
 	local target="$PACKAGE-$TC_VERSION"
 	local targetpath="$RPMBUILD/SOURCES/$target"
-	/bin/mkdir -p "$targetpath/app" || { echo "Could not create $targetpath"; exit 1; }
-	cd "$TO_DIR" || { echo "Could not cd to $TO_DIR: $!"; exit 1; }
-	for d in app/{bin,conf,cpanfile,db,lib,public,script,templates} doc etc install; do
-		/bin/cp -r "$d" "$targetpath/$d" || { echo "Could not copy $d files to $targetpath: $!"; exit 1; }
-	done
+	mkdir -p "$targetpath"
+	/bin/cp -p "$TO_DIR"/bin/*.pl "$targetpath"/. || { echo "Could not copy $target files: $!"; exit 1; }
 
-	# compile go executables used during postinstall
-	local bldinstall="$RPMBUILD/BUILD/install"
-	mkdir -p "$bldinstall"
-	cp -r "$TO_DIR/install/go" "$bldinstall" || { echo "Could not copy to $bldinstall: $!"; exit 1; }
-	cd "$bldinstall/go" || { echo "Could not cd to $bldinstall/go: $!"; exit 1; }
-
-	export GOPATH=$(pwd)
-	export GOBIN="$targetpath/install/bin"
-
-	echo "Compiling go executables"
-	for d in src/comcast.com/*; do
-		if [[ ! -d "$d" ]]; then
-			echo "Could not find $d"
-			exit 1
-		fi
-		(cd "$d" && go get || { echo "Could not compile $d"; exit 1; } )
-	done
 
 	tar -czvf "$targetpath.tgz" -C "$RPMBUILD/SOURCES" "$target" || { echo "Could not create tar archive $targetpath.tgz: $!"; exit 1; }
 
