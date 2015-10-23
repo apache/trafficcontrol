@@ -81,10 +81,10 @@ alert(alertmsg);
       <div style="margin-left:10px;">
         %= form_for federation_create => (id => 'add_form')  => begin 
             %= include 'federation/_form'
-            <div class="bottomButtons" style="margin-left: 300px;">
+            <div class="bottomButtons" style="margin-left: 350px;">
               <div style="float:left;">
-                 %= submit_button 'Add', class=> 'button'
-                <button id="close_button" class="button">Close</button>
+                 %= submit_button 'Add', id=> 'newfederation', class=> 'button'
+			     <button id="close_button" class="button">Close</button>
              </div>
             </div>
         % end
