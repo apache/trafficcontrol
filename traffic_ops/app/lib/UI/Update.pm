@@ -30,11 +30,19 @@ sub readupdate {
     $rs_servers = $self->db->resultset("Server")->search(undef);
   }
   else {
-    $rs_servers = $self->db->resultset("Server")->search( { host_name => $host_name } );
+    $rs_servers = $self->db->resultset("Server")
+      ->search( { host_name => $host_name } );
   }
 
   while ( my $row = $rs_servers->next ) {
-    push( @data, { host_name => $row->host_name, upd_pending => $row->upd_pending, host_id => $row->id, status => $row->status->name } );
+    push(
+      @data,
+      {   host_name   => $row->host_name,
+        upd_pending => $row->upd_pending,
+        host_id     => $row->id,
+        status      => $row->status->name
+      }
+    );
   }
 
   $self->render( json => \@data );
@@ -51,23 +59,34 @@ sub postupdate {
   }
 
   if ( !defined($updated) ) {
-    $self->render_text( "Failed request.  Must provide updated status", status => 500, layout => undef );
+    $self->render_text(
+      "Failed request.  Must provide updated status",
+      status => 500,
+      layout => undef
+    );
     return;
   }
 
   # resolve server id
-  my $serverid = $self->db->resultset("Server")->search( { host_name => $host_name } )->get_column('id')->single;
+  my $serverid = $self->db->resultset("Server")
+    ->search( { host_name => $host_name } )->get_column('id')->single;
   if ( !defined $serverid ) {
-    $self->render_text( "Failed request.  Unknown server", status => 500, layout => undef );
+    $self->render_text(
+      "Failed request.  Unknown server",
+      status => 500,
+      layout => undef
+    );
     return;
   }
 
-  my $update_server = $self->db->resultset('Server')->search( { id => $serverid } );
+  my $update_server
+    = $self->db->resultset('Server')->search( { id => $serverid } );
   if ( defined $updated ) {
     $update_server->update( { upd_pending => $updated } );
   }
 
-print "YAY\n\n";
+  print "YAY\n\n";
+
   # $self->render_text("Success", layout=>undef);
 
 }
@@ -86,19 +105,23 @@ sub postupdatequeue {
   if ( $host eq "all" ) {
 
     # default is only edges
-    my $update = $self->db->resultset('Server')->search( { type => $edge_type } );
+    my $update = $self->db->resultset('Server')
+      ->search( { type => $edge_type } );
     $update->update( { upd_pending => $setqueue } );
   }
   elsif ( $host eq "edges" ) {
-    my $update = $self->db->resultset('Server')->search( { type => $edge_type  } );
+    my $update = $self->db->resultset('Server')
+      ->search( { type => $edge_type } );
     $update->update( { upd_pending => $setqueue } );
   }
   else {
-    my $update = $self->db->resultset('Server')->search( { id => $host, } );
+    my $update
+      = $self->db->resultset('Server')->search( { id => $host, } );
     $update->update( { upd_pending => $setqueue } );
   }
 
-  &log( $self, "Flip Update bit (Queue Updates) for server(s):" . $host, "OPER" );
+  &log( $self, "Flip Update bit (Queue Updates) for server(s):" . $host,
+    "OPER" );
 
   # $self->render_text("Success", layout=>undef);
   #return $self->redirect_to('/#tabs=1');
