@@ -337,7 +337,9 @@ public class ZoneManager extends Resolver {
 					domain = domain.replaceAll("\\+\\z", ".") + tld;
 				}
 
-				dsMap.put(domain, ds);
+				if (domain.endsWith(tld)) {
+					dsMap.put(domain, ds);
+				}
 			}
 		}
 
@@ -524,7 +526,7 @@ public class ZoneManager extends Resolver {
 			return new Name(fqdn + ".");
 		}
 	}
-	
+
 	private static Name getGlueName(final DeliveryService ds, final JSONObject trJo, final Name name, final String trName) throws TextParseException {
 		if (ds == null && trJo != null && trJo.has("fqdn") && trJo.optString("fqdn") != null) {
 			return newName(trJo.optString("fqdn"));
@@ -538,6 +540,10 @@ public class ZoneManager extends Resolver {
 	private static final Map<String, List<Record>> populateZoneMap(final Map<String, List<Record>> zoneMap,
 			final Map<String, DeliveryService> dsMap, final CacheRegister data) throws IOException {
 		final Map<String, List<Record>> superDomains = new HashMap<String, List<Record>>();
+
+		for (final String domain : dsMap.keySet()) {
+			zoneMap.put(domain, new ArrayList<Record>());
+		}
 
 		for (final Cache c : data.getCacheMap().values()) {
 			for (final DeliveryServiceReference dsr : c.getDeliveryServices()) {
@@ -559,7 +565,7 @@ public class ZoneManager extends Resolver {
 					continue;
 				}
 
-				final Name name = new Name(fqdn+".");
+				final Name name = newName(fqdn);
 				final JSONObject ttl = ds.getTtls();
 
 				try {

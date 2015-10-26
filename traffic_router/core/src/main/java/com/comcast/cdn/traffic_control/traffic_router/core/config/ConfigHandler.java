@@ -226,7 +226,7 @@ public class ConfigHandler {
 
 									final String tld = cacheRegister.getConfig().optString("domain_name").toLowerCase();
 
-									if (name.contains(tld)) {
+									if (name.endsWith(tld)) {
 										final String reName = name.replaceAll("^.*?\\.", "");
 
 										if (!dsNames.contains(reName)) {
