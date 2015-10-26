@@ -164,7 +164,7 @@ sub gen_crconfig_json {
 
 	my %cache_tracker;
 	my $rs_caches = $self->db->resultset('Server')->search(
-		{ 'type.name' => { -in => [ 'EDGE', 'MID', 'CCR', 'RASCAL', 'TR', 'TM' ] }, 'cdn_id' => $cdn_id  },
+		{ 'type.name' => { -in => [ 'EDGE', 'MID', 'CCR', 'RASCAL', 'TR', 'TM' ] }, 'me.cdn_id' => $cdn_id  },
 		{   prefetch => [ 'type', 'status', 'cachegroup', 'profile' ],
 			columns  => [
 				'host_name',  'domain_name',
@@ -338,12 +338,13 @@ sub gen_crconfig_json {
 					},
 					{ 'match-type' => 'HOST', 'regex' => $pattern }
 				);
-				my $host = $pattern;
-				$host =~ s/\\//g;
-				$host =~ s/\.\*//g;
-				$host =~ s/\.//g;\
-				push @$domains, "$host.$ccr_domain_name";
-
+				if ($set_number == 0) {
+					my $host = $pattern;
+					$host =~ s/\\//g;
+					$host =~ s/\.\*//g;
+					$host =~ s/\.//g;\
+					push @$domains, "$host.$ccr_domain_name";
+				}
 			}
 			elsif ( $type eq 'PATH_REGEXP' ) {
 				push(
