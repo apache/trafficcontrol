@@ -38,24 +38,41 @@ Installs traffic_stats which performs the follwing functions:
 %setup
 
 %build
+export GOPATH=$(pwd)
+# Create build area with proper gopath structure
+mkdir -p pkg bin || { echo "Could not create directories in $(pwd): $!"; exit 1; }
+mkdir -p src/github.com/comcast/traffic_control/{traffic_ops,traffic_stats} || { echo "Could not create src directories in $(pwd): $!"; exit 1; }
+
+# get traffic_ops client
+godir=src/github.com/comcast/traffic_control/traffic_ops/client
+rsync -av $TC_DIR/traffic_ops/client/ $godir || { echo "Could not copy traffic_ops client: $!"; exit 1; }
+( cd "$godir" && go get -v ) || { echo "Could not build go program at $(pwd): $!"; exit 1; }
+
+godir=src/github.com/comcast/traffic_control/traffic_stats
+( mkdir -p "$godir" && \
+  cp *.go "$godir" && \
+  cd "$godir" && \
+  go get -v || { echo "Could not build go program at $(pwd): $!"; exit 1; } \
+)
 
 %install
-mkdir -p ${RPM_BUILD_ROOT}/opt/traffic_stats
-mkdir -p ${RPM_BUILD_ROOT}/opt/traffic_stats/bin
-mkdir -p ${RPM_BUILD_ROOT}/opt/traffic_stats/conf
-mkdir -p ${RPM_BUILD_ROOT}/opt/traffic_stats/backup
-mkdir -p ${RPM_BUILD_ROOT}/opt/traffic_stats/var/run
-mkdir -p ${RPM_BUILD_ROOT}/opt/traffic_stats/var/log/traffic_stats
-mkdir -p ${RPM_BUILD_ROOT}/etc/init.d
-mkdir -p ${RPM_BUILD_ROOT}/etc/logrotate.d
-mkdir -p ${RPM_BUILD_ROOT}/usr/share/grafana/public/dashboards/
+mkdir -p "${RPM_BUILD_ROOT}"/opt/traffic_stats
+mkdir -p "${RPM_BUILD_ROOT}"/opt/traffic_stats/bin
+mkdir -p "${RPM_BUILD_ROOT}"/opt/traffic_stats/conf
+mkdir -p "${RPM_BUILD_ROOT}"/opt/traffic_stats/backup
+mkdir -p "${RPM_BUILD_ROOT}"/opt/traffic_stats/var/run
+mkdir -p "${RPM_BUILD_ROOT}"/opt/traffic_stats/var/log/traffic_stats
+mkdir -p "${RPM_BUILD_ROOT}"/etc/init.d
+mkdir -p "${RPM_BUILD_ROOT}"/etc/logrotate.d
+mkdir -p "${RPM_BUILD_ROOT}"/usr/share/grafana/public/dashboards/
 
-cp $GOPATH/src/github.com/comcast/traffic_control/traffic_stats/traffic_stats ${RPM_BUILD_ROOT}/opt/traffic_stats/bin/traffic_stats
-cp $GOPATH/src/github.com/comcast/traffic_control/traffic_stats/traffic_stats.cfg ${RPM_BUILD_ROOT}/opt/traffic_stats/conf/traffic_stats.cfg
-cp $GOPATH/src/github.com/comcast/traffic_control/traffic_stats/traffic_stats_seelog.xml ${RPM_BUILD_ROOT}/opt/traffic_stats/conf/traffic_stats_seelog.xml
-cp $GOPATH/src/github.com/comcast/traffic_control/traffic_stats/traffic_stats.init ${RPM_BUILD_ROOT}/etc/init.d/traffic_stats
-cp $GOPATH/src/github.com/comcast/traffic_control/traffic_stats/traffic_stats.logrotate ${RPM_BUILD_ROOT}/etc/logrotate.d/traffic_stats
-cp $GOPATH/src/github.com/comcast/traffic_control/traffic_stats/grafana/*.js ${RPM_BUILD_ROOT}/usr/share/grafana/public/dashboards/
+src=src/github.com/comcast/traffic_control/traffic_stats
+cp -p bin/traffic_stats     "${RPM_BUILD_ROOT}"/opt/traffic_stats/bin/traffic_stats
+cp traffic_stats.cfg        "${RPM_BUILD_ROOT}"/opt/traffic_stats/conf/traffic_stats.cfg
+cp traffic_stats_seelog.xml "${RPM_BUILD_ROOT}"/opt/traffic_stats/conf/traffic_stats_seelog.xml
+cp traffic_stats.init       "${RPM_BUILD_ROOT}"/etc/init.d/traffic_stats
+cp traffic_stats.logrotate  "${RPM_BUILD_ROOT}"/etc/logrotate.d/traffic_stats
+cp grafana/*.js             "${RPM_BUILD_ROOT}"/usr/share/grafana/public/dashboards/
 
 %pre
 /usr/bin/getent group traffic_stats >/dev/null

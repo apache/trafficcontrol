@@ -39,8 +39,8 @@ function buildRpm () {
 
 	mkdir -p "$DIST" || { echo "Could not create $DIST: $!"; exit 1; }
 
-	cp "$RPMBUILD"/RPMS/*/*.rpm "$DIST/." || { echo "Could not copy rpm to $DIST: $!"; exit 1; }
-	cp "$RPMBUILD"/SRPMS/*/*.rpm "$DIST/." || { echo "Could not copy source rpm to $DIST: $!"; exit 1; }
+	cp "$RPMBUILD/RPMS/$(uname -m)/$RPM" "$DIST/." || { echo "Could not copy rpm to $DIST: $!"; exit 1; }
+	cp "$RPMBUILD/SRPMS/$SRPM" "$DIST/." || { echo "Could not copy source rpm to $DIST: $!"; exit 1; }
 }
 
 #----------------------------------------
@@ -67,7 +67,8 @@ function checkEnvironment() {
 	export WORKSPACE=${WORKSPACE:-$TC_DIR}
 	export RPMBUILD="$WORKSPACE/rpmbuild"
 	export DIST="$WORKSPACE/dist"
-	export RPM="${PACKAGE}-${TC_VERSION}-${BUILD_NUMBER}.x86_64.rpm"
+	export RPM="${PACKAGE}-${TC_VERSION}-${BUILD_NUMBER}.$(uname -m).rpm"
+	export SRPM="${PACKAGE}-${TC_VERSION}-${BUILD_NUMBER}.src.rpm"
 	export IN_GIT=$(isInGitTree)
 	export GIT_SHORT_REVISION=$(git rev-parse --short HEAD)
 
@@ -91,28 +92,10 @@ function initBuildArea() {
 	# tar/gzip the source
 	local target="$PACKAGE-$TC_VERSION"
 	local srcpath="$RPMBUILD/SOURCES/$target"
-	export GOPATH="$RPMBUILD/BUILD/$target"
-	rm -rf "$srcpath" "$GOPATH" || { echo "Could not clean up $srcpath and $GOPATH: $!"; exit 1; }
+	rm -rf "$srcpath" || { echo "Could not clean up $srcpath : $!"; exit 1; }
 
 	mkdir -p "$srcpath"
-	# Create sources for src.rpm
 	rsync -avp "$TS_DIR"/ "$srcpath" || { echo "Could not copy $TS_DIR to $srcpath: $!"; exit 1; }
-	# Create build area with proper gopath structure
-	mkdir -p "$GOPATH"/{src,pkg,bin} || { echo "Could not create directories in $GOPATH: $!"; exit 1; }
-	mkdir -p "$GOPATH"/src/github.com/comcast/traffic_control/{traffic_ops,traffic_stats} || { echo "Could not create src directories in $GOPATH: $!"; exit 1; }
-	
-	# get traffic_ops client
-	local godir=$GOPATH/src/github.com/comcast/traffic_control/traffic_ops/client
-	rsync -av $TC_DIR/traffic_ops/client/ $godir || { echo "Could not copy traffic_ops client: $!"; exit 1; }
-	cd "$godir" || { echo "Could not cd to $godir: $!"; exit 1; }
-	go get -v || { echo "Could not build go program: $!"; exit 1; }
-
-	godir="$GOPATH"/src/github.com/comcast/traffic_control/traffic_stats
-	mkdir -p "$godir" || { echo "Could not create directories in $GOPATH: $!"; exit 1; }
-
-	cp "$TS_DIR"/*.go "$godir" || { echo "Could not copy files to $godir: $!"; exit 1; }
-	cd "$godir" || { echo "Could not cd to $godir: $!"; exit 1; }
-	go get -v || { echo "Could not build go program: $!"; exit 1; }
 
 	tar -czvf "$srcpath".tgz -C "$RPMBUILD/SOURCES" "$target" || { echo "Could not create tar archive $srcpath: $!"; exit 1; }
 
