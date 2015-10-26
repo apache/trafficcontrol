@@ -37,8 +37,8 @@ function buildRpm () {
 
 	mkdir -p "$DIST" || { echo "Could not create $DIST: $!"; exit 1; }
 
-	/bin/cp "$RPMBUILD"/RPMS/*/*.rpm "$DIST/." || { echo "Could not copy rpm to $DIST: $!"; exit 1; }
-	/bin/cp "$RPMBUILD"/SRPMS/*/*.rpm "$DIST/." || { echo "Could not copy source rpm to $DIST: $!"; exit 1; }
+	cp "$RPMBUILD/RPMS/$(uname -m)/$RPM" "$DIST/." || { echo "Could not copy rpm to $DIST: $!"; exit 1; }
+	cp "$RPMBUILD/SRPMS/$SRPM" "$DIST/." || { echo "Could not copy source rpm to $DIST: $!"; exit 1; }
 }
 
 
@@ -64,7 +64,8 @@ function checkEnvironment() {
 	export WORKSPACE=${WORKSPACE:-$TC_DIR}
 	export RPMBUILD="$WORKSPACE/rpmbuild"
 	export DIST="$WORKSPACE/dist"
-	export RPM="${PACKAGE}-${TC_VERSION}-${BUILD_NUMBER}.x86_64.rpm"
+	export RPM="${PACKAGE}-${TC_VERSION}-${BUILD_NUMBER}.$(uname -m).rpm"
+	export SRPM="${PACKAGE}-${TC_VERSION}-${BUILD_NUMBER}.src.rpm"
 	export IN_GIT=$(isInGitTree)
 
 	# verify required tools available in path
@@ -86,17 +87,17 @@ function initBuildArea() {
 	echo "Initializing the build area."
 	mkdir -p "$RPMBUILD"/{SPECS,SOURCES,RPMS,SRPMS,BUILD,BUILDROOT} || { echo "Could not create $RPMBUILD: $!"; exit 1; }
 
-	/bin/cp -r "$TO_DIR"/build/*.spec "$RPMBUILD"/SPECS/. || { echo "Could not copy spec files: $!"; exit 1; }
+	cp -r "$TO_DIR"/build/*.spec "$RPMBUILD"/SPECS/. || { echo "Could not copy spec files: $!"; exit 1; }
 
 	# build the go scripts for database initialization and tm testing.
 
 	# tar/gzip the source
 	local target="$PACKAGE-$TC_VERSION"
 	local targetpath="$RPMBUILD/SOURCES/$target"
-	/bin/mkdir -p "$targetpath/app" || { echo "Could not create $targetpath"; exit 1; }
+	mkdir -p "$targetpath/app" || { echo "Could not create $targetpath"; exit 1; }
 	cd "$TO_DIR" || { echo "Could not cd to $TO_DIR: $!"; exit 1; }
 	for d in app/{bin,conf,cpanfile,db,lib,public,script,templates} doc etc install; do
-		/bin/cp -r "$d" "$targetpath/$d" || { echo "Could not copy $d files to $targetpath: $!"; exit 1; }
+		cp -r "$d" "$targetpath/$d" || { echo "Could not copy $d files to $targetpath: $!"; exit 1; }
 	done
 
 	# compile go executables used during postinstall
