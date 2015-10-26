@@ -17,19 +17,6 @@
 #
 
 #----------------------------------------
-function getTrafficControlDir() {
-	local script=$(readlink -f "$0")
-	local scriptdir=$(dirname "$script")
-	export TS_DIR=$(dirname "$scriptdir")
-	export TC_DIR=$(dirname "$TS_DIR")
-
-	functions_sh="$TC_DIR/build/functions.sh"
-	if [[ ! -r $functions_sh ]]; then
-		echo "Error: Can't find $functions_sh"
-		exit 1
-	fi
-	. "$functions_sh"
-}
 
 #----------------------------------------
 function buildRpm () {
@@ -52,17 +39,29 @@ function buildRpm () {
 
 	mkdir -p "$DIST" || { echo "Could not create $DIST: $!"; exit 1; }
 
-	/bin/cp "$RPMBUILD"/RPMS/*/*.rpm "$DIST/." || { echo "Could not copy rpm to $DIST: $!"; exit 1; }
-	/bin/cp "$RPMBUILD"/SRPMS/*/*.rpm "$DIST/." || { echo "Could not copy source rpm to $DIST: $!"; exit 1; }
+	cp "$RPMBUILD"/RPMS/*/*.rpm "$DIST/." || { echo "Could not copy rpm to $DIST: $!"; exit 1; }
+	cp "$RPMBUILD"/SRPMS/*/*.rpm "$DIST/." || { echo "Could not copy source rpm to $DIST: $!"; exit 1; }
 }
 
 #----------------------------------------
 function checkEnvironment() {
 	echo "Verifying the build configuration environment."
 
+	local script=$(readlink -f "$0")
+	local scriptdir=$(dirname "$script")
+	export TS_DIR=$(dirname "$scriptdir")
+	export TC_DIR=$(dirname "$TS_DIR")
+
+	functions_sh="$TC_DIR/build/functions.sh"
+	if [[ ! -r $functions_sh ]]; then
+		echo "Error: Can't find $functions_sh"
+		exit 1
+	fi
+	. "$functions_sh"
+
 	# 
 	# get traffic_control src path -- relative to build_rpm.sh script
-	export PACKAGE="traffic_ops_ort"
+	export PACKAGE="traffic_stats"
 	export TC_VERSION=$(getVersion "$TC_DIR")
 	export BUILD_NUMBER=${BUILD_NUMBER:-$(getBuildNumber)}
 	export WORKSPACE=${WORKSPACE:-$TC_DIR}
@@ -70,6 +69,7 @@ function checkEnvironment() {
 	export DIST="$WORKSPACE/dist"
 	export RPM="${PACKAGE}-${TC_VERSION}-${BUILD_NUMBER}.x86_64.rpm"
 	export IN_GIT=$(isInGitTree)
+	export GIT_SHORT_REVISION=$(git rev-parse --short HEAD)
 
 	echo "Build environment has been verified."
 
@@ -86,18 +86,35 @@ function initBuildArea() {
 	echo "Initializing the build area."
 	mkdir -p "$RPMBUILD"/{SPECS,SOURCES,RPMS,SRPMS,BUILD,BUILDROOT} || { echo "Could not create $RPMBUILD: $!"; exit 1; }
 
-	/bin/cp -r "$TS_DIR"/build/*.spec "$RPMBUILD"/SPECS/. || { echo "Could not copy spec files: $!"; exit 1; }
-
-	# build the go scripts for database initialization and tm testing.
+	cp "$TS_DIR"/build/*.spec "$RPMBUILD"/SPECS/. || { echo "Could not copy spec files: $!"; exit 1; }
 
 	# tar/gzip the source
 	local target="$PACKAGE-$TC_VERSION"
-	local targetpath="$RPMBUILD/SOURCES/$target"
-	mkdir -p "$targetpath"
-	/bin/cp -p "$TS_DIR"/bin/*.pl "$targetpath"/. || { echo "Could not copy $target files: $!"; exit 1; }
+	local srcpath="$RPMBUILD/SOURCES/$target"
+	export GOPATH="$RPMBUILD/BUILD/$target"
+	rm -rf "$srcpath" "$GOPATH" || { echo "Could not clean up $srcpath and $GOPATH: $!"; exit 1; }
 
+	mkdir -p "$srcpath"
+	# Create sources for src.rpm
+	rsync -avp "$TS_DIR"/ "$srcpath" || { echo "Could not copy $TS_DIR to $srcpath: $!"; exit 1; }
+	# Create build area with proper gopath structure
+	mkdir -p "$GOPATH"/{src,pkg,bin} || { echo "Could not create directories in $GOPATH: $!"; exit 1; }
+	mkdir -p "$GOPATH"/src/github.com/comcast/traffic_control/{traffic_ops,traffic_stats} || { echo "Could not create src directories in $GOPATH: $!"; exit 1; }
+	
+	# get traffic_ops client
+	local godir=$GOPATH/src/github.com/comcast/traffic_control/traffic_ops/client
+	rsync -av $TC_DIR/traffic_ops/client/ $godir || { echo "Could not copy traffic_ops client: $!"; exit 1; }
+	cd "$godir" || { echo "Could not cd to $godir: $!"; exit 1; }
+	go get -v || { echo "Could not build go program: $!"; exit 1; }
 
-	tar -czvf "$targetpath.tgz" -C "$RPMBUILD/SOURCES" "$target" || { echo "Could not create tar archive $targetpath.tgz: $!"; exit 1; }
+	godir="$GOPATH"/src/github.com/comcast/traffic_control/traffic_stats
+	mkdir -p "$godir" || { echo "Could not create directories in $GOPATH: $!"; exit 1; }
+
+	cp "$TS_DIR"/*.go "$godir" || { echo "Could not copy files to $godir: $!"; exit 1; }
+	cd "$godir" || { echo "Could not cd to $godir: $!"; exit 1; }
+	go get -v || { echo "Could not build go program: $!"; exit 1; }
+
+	tar -czvf "$srcpath".tgz -C "$RPMBUILD/SOURCES" "$target" || { echo "Could not create tar archive $srcpath: $!"; exit 1; }
 
 	echo "The build area has been initialized."
 }
@@ -107,54 +124,3 @@ function initBuildArea() {
 checkEnvironment
 initBuildArea
 buildRpm
-
-GIT_SHORT_REVISION=`git rev-parse --short HEAD`; export GIT_SHORT_REVISION
-export WORKSPACE=/vol1/jenkins/jobs
-GOPATH=$HOME/go; export GOPATH
-
-#. ~/.bash_profile
-
-##build traffic_ops client
-/usr/bin/rsync -av --delete $WORKSPACE/traffic_stats/workspace/traffic_ops/client/ $GOPATH/src/github.com/comcast/traffic_control/traffic_ops/client/
-cd $GOPATH/src/github.com/comcast/traffic_control/traffic_ops/client/
-/usr/local/bin/go install
-
-##build influxdb client
-#cd $GOPATH/src/github.com/influxdb/influxdb/client/
-#git pull
-#/usr/local/bin/go install
-
-
-#traffic_stats
-/usr/bin/rsync -av --delete $WORKSPACE/traffic_stats/workspace/traffic_stats/ $GOPATH/src/github.com/comcast/traffic_control/traffic_stats/
-cd $GOPATH/src/github.com/comcast/traffic_control/traffic_stats
-/usr/local/bin/go get
-
-sed -i -e "s/@VERSION@/$VERSION/g" traffic_stats.spec
-sed -i -e "s/@RELEASE@/$GIT_SHORT_REVISION/g" traffic_stats.spec
-#go get all
-/usr/local/bin/go build traffic_stats.go
-
-
-rm -rf $WORKSPACE/traffic_stats/SOURCES/traffic_stats*
-rm -rf $WORKSPACE/traffic_stats/RPMS/x86_64/traffic_stats*
-
-mkdir -p ${targetpath}/opt/traffic_stats
-mkdir -p ${targetpath}/opt/traffic_stats/bin
-mkdir -p ${targetpath}/opt/traffic_stats/conf
-mkdir -p ${targetpath}/opt/traffic_stats/var/log
-mkdir -p ${targetpath}/etc/init.d
-mkdir -p ${targetpath}/etc/logrotate.d
-
-cp $GOPATH/src/github.com/comcast/traffic_control/traffic_stats/traffic_stats ${targetpath}/opt/traffic_stats/bin
-cp $WORKSPACE/traffic_stats/workspace/traffic_stats/traffic_stats.cfg ${targetpath}/opt/traffic_stats/conf/traffic_stats.cfg
-cp $WORKSPACE/traffic_stats/workspace/traffic_stats/traffic_stats_seelog.xml ${targetpath}/opt/traffic_stats/conf
-cp $WORKSPACE/traffic_stats/workspace/traffic_stats/traffic_stats.init ${targetpath}/etc/init.d/traffic_stats
-cp $WORKSPACE/traffic_stats/workspace/traffic_stats/traffic_stats.logrotate ${targetpath}/etc/logrotate.d/traffic_stats
-
-cd "$RPMBUILD/SOURCES"
-tar -zcvf ${target}.tar.gz ${target}
-cd "$RPMBUILD"
-
-rpmbuild -b traffic_stats.spec
-
