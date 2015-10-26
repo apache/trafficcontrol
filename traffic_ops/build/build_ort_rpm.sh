@@ -35,10 +35,12 @@ function buildRpm () {
 	echo "========================================================================================"
 	echo
 
+	rpm="${PACKAGE}-${TC_VERSION}-${BUILD_NUMBER}.$(uname -m).rpm"
+	srpm="${PACKAGE}-${TC_VERSION}-${BUILD_NUMBER}.src.rpm"
 	mkdir -p "$DIST" || { echo "Could not create $DIST: $!"; exit 1; }
 
-	/bin/cp "$RPMBUILD"/RPMS/*/*.rpm "$DIST/." || { echo "Could not copy rpm to $DIST: $!"; exit 1; }
-	/bin/cp "$RPMBUILD"/SRPMS/*/*.rpm "$DIST/." || { echo "Could not copy source rpm to $DIST: $!"; exit 1; }
+	/bin/cp "$RPMBUILD"/RPMS/*/$rpm "$DIST/." || { echo "Could not copy $rpm to $DIST: $!"; exit 1; }
+	/bin/cp "$RPMBUILD"/SRPMS/$srpm "$DIST/." || { echo "Could not copy $srpm to $DIST: $!"; exit 1; }
 }
 
 
@@ -64,7 +66,6 @@ function checkEnvironment() {
 	export WORKSPACE=${WORKSPACE:-$TC_DIR}
 	export RPMBUILD="$WORKSPACE/rpmbuild"
 	export DIST="$WORKSPACE/dist"
-	export RPM="${PACKAGE}-${TC_VERSION}-${BUILD_NUMBER}.x86_64.rpm"
 	export IN_GIT=$(isInGitTree)
 
 	echo "Build environment has been verified."
@@ -88,12 +89,12 @@ function initBuildArea() {
 
 	# tar/gzip the source
 	local target="$PACKAGE-$TC_VERSION"
-	local targetpath="$RPMBUILD/SOURCES/$target"
-	mkdir -p "$targetpath"
-	/bin/cp -p "$TO_DIR"/bin/*.pl "$targetpath"/. || { echo "Could not copy $target files: $!"; exit 1; }
+	local srcpath="$RPMBUILD/SOURCES/$target"
+	mkdir -p "$srcpath"
+	/bin/cp -p "$TO_DIR"/bin/*.pl "$srcpath"/. || { echo "Could not copy $target files: $!"; exit 1; }
 
 
-	tar -czvf "$targetpath.tgz" -C "$RPMBUILD/SOURCES" "$target" || { echo "Could not create tar archive $targetpath.tgz: $!"; exit 1; }
+	tar -czvf "$srcpath.tgz" -C "$RPMBUILD/SOURCES" "$target" || { echo "Could not create tar archive $srcpath.tgz: $!"; exit 1; }
 
 	echo "The build area has been initialized."
 }

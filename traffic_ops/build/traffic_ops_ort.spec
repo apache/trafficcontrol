@@ -1,10 +1,6 @@
 %define debug_package %{nil}
 Name:		traffic_ops_ort
-Version:	0.55b
-Release:	1%{?dist}
-
 Summary:	Installs ORT script for Traffic Control caches
-Name:		traffic_ops_ort
 Version:	%{traffic_control_version}
 Release:	%{build_number}
 License:	Apache License, Version 2.0
