@@ -323,19 +323,34 @@ sub is_valid {
 sub delete {
 	my $self   = shift;
 	my $fed_id = $self->param('federation_id');
-	my $cname  = $self->param('federation.cname');
 
 	if ( !&is_oper($self) ) {
 		$self->flash( alertmsg => "No can do. Get more privs." );
 	}
 	else {
-		my $delete = $self->db->resultset('Federation')->search( { id => $fed_id } );
-		my $resolvers =
+		my $fedfed_resolver =
 			$self->db->resultset('FederationFederationResolver')
-			->search( { federation => $fed_id }, { prefetch => [ 'federation', 'federation_resolver' ] } );
-		$delete->delete();
-		my $msg = sprintf( "Deleted federation: %s cname: %s", $fed_id, $cname );
-		&log( $self, $msg, "UICHANGE" );
+			->search( { federation => $fed_id }, { prefetch => [ 'federation', 'federation_resolver' ] } )->single();
+		my $fed_resolver_id = $fedfed_resolver->federation_resolver->id;
+		$self->app->log->debug( "fed_resolver_id #-> " . $fed_resolver_id );
+
+		if ( defined($fedfed_resolver) ) {
+			$fedfed_resolver->delete();
+		}
+
+		my $fed_resolver = $self->db->resultset('FederationResolver')->search( { id => $fed_resolver_id } )->single();
+		if ( defined($fed_resolver) ) {
+			$fed_resolver->delete();
+		}
+
+		my $federation = $self->db->resultset('Federation')->search( { id => $fed_id } )->single();
+		if ( defined($federation) ) {
+			my $cname = $federation->cname;
+			$federation->delete();
+			my $msg = sprintf( "Deleted Federation -- cname: %s", $cname );
+			&log( $self, $msg, "UICHANGE" );
+		}
+
 	}
 	return $self->redirect_to('/close_fancybox.html');
 }
