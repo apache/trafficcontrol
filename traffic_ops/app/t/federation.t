@@ -90,6 +90,16 @@ ok $t->post_ok(
 
 ok $t->get_ok('/federation/1/edit')->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } ), 'Does Federation page exist?';
 
+ok $t->get_ok('/federation/1/delete')->status_is(302)->or( sub { diag $t->tx->res->content->asset->{content}; } ), 'Can a federation be deleted?';
+ok $t->get_ok('/federation/2/delete')->status_is(302)->or( sub { diag $t->tx->res->content->asset->{content}; } ), 'Can a federation be deleted?';
+ok $t->get_ok('/federation/3/delete')->status_is(302)->or( sub { diag $t->tx->res->content->asset->{content}; } ), 'Can a federation be deleted?';
+ok $t->get_ok('/federation/4/delete')->status_is(302)->or( sub { diag $t->tx->res->content->asset->{content}; } ), 'Can a federation be deleted?';
+
+ok $t->get_ok('/federation/1/edit')->status_is(404)->or( sub { diag $t->tx->res->content->asset->{content}; } ), 'Does the deleted Federation exist?';
+ok $t->get_ok('/federation/2/edit')->status_is(404)->or( sub { diag $t->tx->res->content->asset->{content}; } ), 'Does the deleted Federation exist?';
+ok $t->get_ok('/federation/3/edit')->status_is(404)->or( sub { diag $t->tx->res->content->asset->{content}; } ), 'Does the deleted Federation exist?';
+ok $t->get_ok('/federation/4/edit')->status_is(404)->or( sub { diag $t->tx->res->content->asset->{content}; } ), 'Does the deleted Federation exist?';
+
 #logout
 ok $t->get_ok('/logout')->status_is(302)->or( sub { diag $t->tx->res->content->asset->{content}; } );
 
