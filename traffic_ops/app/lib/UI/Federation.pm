@@ -64,43 +64,49 @@ sub edit {
 	my $federation;
 	my $ds_id;
 	my $feds = $self->db->resultset('Federation')->search( { 'id' => $fed_id } );
-	while ( my $f = $feds->next ) {
-		$federation = $f;
-		my $fed_id = $f->id;
-		my $federation_deliveryservices =
-			$self->db->resultset('FederationDeliveryservice')->search( { federation => $fed_id }, { prefetch => [ 'federation', 'deliveryservice' ] } );
-		while ( my $fd = $federation_deliveryservices->next ) {
-			$ds_id = $fd->deliveryservice->id;
+	my $fed_count = $feds->count();
+	if ( $fed_count > 0 ) {
+		while ( my $f = $feds->next ) {
+			$federation = $f;
+			my $fed_id = $f->id;
+			my $federation_deliveryservices =
+				$self->db->resultset('FederationDeliveryservice')->search( { federation => $fed_id }, { prefetch => [ 'federation', 'deliveryservice' ] } );
+			while ( my $fd = $federation_deliveryservices->next ) {
+				$ds_id = $fd->deliveryservice->id;
+			}
 		}
+
+		my $role_name;
+		my $user_id;
+		my $ftusers =
+			$self->db->resultset('FederationTmuser')->search( { federation => $fed_id }, { prefetch => [ 'federation', 'tm_user' ] } );
+		while ( my $ft = $ftusers->next ) {
+			$user_id   = $ft->tm_user->id;
+			$role_name = $ft->role->name;
+		}
+
+		my $current_username = $self->current_user()->{username};
+		my $dbh              = $self->db->resultset('TmUser')->search( { username => $current_username } );
+		my $tm_user          = $dbh->single;
+		&stash_role($self);
+
+		my $delivery_services = get_delivery_services( $self, $ds_id );
+		$self->stash(
+			tm_user           => $tm_user,
+			ds_id             => $ds_id,
+			user_id           => $user_id,              # the federation role
+			role_id           => FEDERATION_ROLE_ID,    # the federation role
+			role_name         => $role_name,
+			federation        => $federation,
+			mode              => 'edit',
+			fbox_layout       => 1,
+			delivery_services => $delivery_services
+		);
+		return $self->render('federation/edit');
 	}
-
-	my $role_name;
-	my $user_id;
-	my $ftusers =
-		$self->db->resultset('FederationTmuser')->search( { federation => $fed_id }, { prefetch => [ 'federation', 'tm_user' ] } );
-	while ( my $ft = $ftusers->next ) {
-		$user_id   = $ft->tm_user->id;
-		$role_name = $ft->role->name;
+	else {
+		return $self->not_found();
 	}
-
-	my $current_username = $self->current_user()->{username};
-	my $dbh              = $self->db->resultset('TmUser')->search( { username => $current_username } );
-	my $tm_user          = $dbh->single;
-	&stash_role($self);
-
-	my $delivery_services = get_delivery_services( $self, $ds_id );
-	$self->stash(
-		tm_user           => $tm_user,
-		ds_id             => $ds_id,
-		user_id           => $user_id,              # the federation role
-		role_id           => FEDERATION_ROLE_ID,    # the federation role
-		role_name         => $role_name,
-		federation        => $federation,
-		mode              => 'edit',
-		fbox_layout       => 1,
-		delivery_services => $delivery_services
-	);
-	return $self->render('federation/edit');
 }
 
 # .json format for the jqTree widge
@@ -178,11 +184,10 @@ sub get_delivery_services {
 
 # Update
 sub update {
-	my $self    = shift;
-	my $fed_id  = $self->param('federation_id');
-	my $ds_id   = $self->param('ds_id');
-	my $user_id = $self->param('user_id');
-	$self->app->log->debug( "user_id #-> " . $user_id );
+	my $self        = shift;
+	my $fed_id      = $self->param('federation_id');
+	my $ds_id       = $self->param('ds_id');
+	my $user_id     = $self->param('user_id');
 	my $cname       = $self->param('federation.cname');
 	my $description = $self->param('federation.description');
 	my $ttl         = $self->param('federation.ttl');
@@ -332,7 +337,6 @@ sub delete {
 			$self->db->resultset('FederationFederationResolver')
 			->search( { federation => $fed_id }, { prefetch => [ 'federation', 'federation_resolver' ] } )->single();
 		my $fed_resolver_id = $fedfed_resolver->federation_resolver->id;
-		$self->app->log->debug( "fed_resolver_id #-> " . $fed_resolver_id );
 
 		if ( defined($fedfed_resolver) ) {
 			$fedfed_resolver->delete();
