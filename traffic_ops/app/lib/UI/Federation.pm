@@ -40,8 +40,9 @@ sub add {
 	my $self = shift;
 
 	my $current_username = $self->current_user()->{username};
-	my $dbh              = $self->db->resultset('TmUser')->search( { username => $current_username } );
-	my $tm_user          = $dbh->single;
+	my $dbh              = $self->db->resultset('TmUser')
+		->search( { username => $current_username } );
+	my $tm_user = $dbh->single;
 	&stash_role($self);
 
 	# default the ds_id to 0 because _form.html.ep expects it to be there
@@ -63,14 +64,17 @@ sub edit {
 
 	my $federation;
 	my $ds_id;
-	my $feds = $self->db->resultset('Federation')->search( { 'id' => $fed_id } );
+	my $feds
+		= $self->db->resultset('Federation')->search( { 'id' => $fed_id } );
 	my $fed_count = $feds->count();
 	if ( $fed_count > 0 ) {
 		while ( my $f = $feds->next ) {
 			$federation = $f;
 			my $fed_id = $f->id;
-			my $federation_deliveryservices =
-				$self->db->resultset('FederationDeliveryservice')->search( { federation => $fed_id }, { prefetch => [ 'federation', 'deliveryservice' ] } );
+			my $federation_deliveryservices
+				= $self->db->resultset('FederationDeliveryservice')
+				->search( { federation => $fed_id },
+				{ prefetch => [ 'federation', 'deliveryservice' ] } );
 			while ( my $fd = $federation_deliveryservices->next ) {
 				$ds_id = $fd->deliveryservice->id;
 			}
@@ -78,16 +82,19 @@ sub edit {
 
 		my $role_name;
 		my $user_id;
-		my $ftusers =
-			$self->db->resultset('FederationTmuser')->search( { federation => $fed_id }, { prefetch => [ 'federation', 'tm_user' ] } );
+		my $ftusers
+			= $self->db->resultset('FederationTmuser')
+			->search( { federation => $fed_id },
+			{ prefetch => [ 'federation', 'tm_user' ] } );
 		while ( my $ft = $ftusers->next ) {
 			$user_id   = $ft->tm_user->id;
 			$role_name = $ft->role->name;
 		}
 
 		my $current_username = $self->current_user()->{username};
-		my $dbh              = $self->db->resultset('TmUser')->search( { username => $current_username } );
-		my $tm_user          = $dbh->single;
+		my $dbh              = $self->db->resultset('TmUser')
+			->search( { username => $current_username } );
+		my $tm_user = $dbh->single;
 		&stash_role($self);
 
 		my $delivery_services = get_delivery_services( $self, $ds_id );
@@ -113,10 +120,19 @@ sub edit {
 sub users {
 	my $self = shift;
 	my $data;
-	my $fed_users =
-		$self->db->resultset('TmUser')->search( { role => FEDERATION_ROLE_ID }, { order_by => 'full_name' } );
+	my $fed_users
+		= $self->db->resultset('TmUser')
+		->search( { role => FEDERATION_ROLE_ID },
+		{ order_by => 'full_name' } );
 	while ( my $row = $fed_users->next ) {
-		push( @$data, { id => $row->id, username => $row->username, fullname => $row->full_name, tenant => $row->company } );
+		push(
+			@$data,
+			{   id       => $row->id,
+				username => $row->username,
+				fullname => $row->full_name,
+				tenant   => $row->company
+			}
+		);
 	}
 	return $self->render( json => $data );
 }
@@ -127,8 +143,10 @@ sub resolvers {
 	my $fed_id = $self->param('federation_id');
 
 	my $data;
-	my $fed_fed_resolvers =
-		$self->db->resultset('FederationFederationResolver')->search( { federation => $fed_id }, { prefetch => ['federation_resolver'] } );
+	my $fed_fed_resolvers
+		= $self->db->resultset('FederationFederationResolver')
+		->search( { federation => $fed_id },
+		{ prefetch => ['federation_resolver'] } );
 	my $nodes;
 	my $resolvers = $self->group_resolvers($fed_id);
 
@@ -152,8 +170,10 @@ sub group_resolvers {
 	my $fed_id = shift;
 
 	my $data;
-	my $fed_fed_resolvers =
-		$self->db->resultset('FederationFederationResolver')->search( { federation => $fed_id }, { prefetch => ['federation_resolver'] } );
+	my $fed_fed_resolvers
+		= $self->db->resultset('FederationFederationResolver')
+		->search( { federation => $fed_id },
+		{ prefetch => ['federation_resolver'] } );
 	my $resolvers;
 	while ( my $row = $fed_fed_resolvers->next ) {
 		my $fed_resolver    = $row->federation_resolver;
@@ -172,11 +192,13 @@ sub group_resolvers {
 sub get_delivery_services {
 	my $self   = shift;
 	my $id     = shift;
-	my @ds_ids = $self->db->resultset('Deliveryservice')->search( undef, { orderby => "xml_id" } )->get_column('id')->all;
+	my @ds_ids = $self->db->resultset('Deliveryservice')
+		->search( undef, { orderby => "xml_id" } )->get_column('id')->all;
 
 	my $delivery_services;
 	for my $ds_id ( uniq(@ds_ids) ) {
-		my $desc = $self->db->resultset('Deliveryservice')->search( { id => $ds_id } )->get_column('xml_id')->single;
+		my $desc = $self->db->resultset('Deliveryservice')
+			->search( { id => $ds_id } )->get_column('xml_id')->single;
 		$delivery_services->{$ds_id} = $desc;
 	}
 	return $delivery_services;
@@ -194,15 +216,15 @@ sub update {
 
 	my $is_valid = $self->is_valid();
 	if ( $self->is_valid("edit") ) {
-		my $dbh = $self->db->resultset('Federation')->find( { id => $fed_id } );
+		my $dbh
+			= $self->db->resultset('Federation')->find( { id => $fed_id } );
 		$dbh->cname($cname);
 		$dbh->description($description);
 		$dbh->ttl($ttl);
 		$dbh->update();
 
 		my $ft = $self->db->resultset('FederationTmuser')->find_or_create(
-			{
-				federation => $fed_id,
+			{   federation => $fed_id,
 				role       => FEDERATION_ROLE_ID
 			}
 		);
@@ -214,8 +236,10 @@ sub update {
 			$ft->update();
 		}
 
-		my $fdses =
-			$self->db->resultset('FederationDeliveryservice')->search( { federation => $fed_id }, { prefetch => [ 'federation', 'deliveryservice' ] } );
+		my $fdses
+			= $self->db->resultset('FederationDeliveryservice')
+			->search( { federation => $fed_id },
+			{ prefetch => [ 'federation', 'deliveryservice' ] } );
 		while ( my $fd = $fdses->next ) {
 			$fd->deliveryservice($ds_id);
 			$fd->update();
@@ -250,7 +274,9 @@ sub create {
 		mode                 => 'add'
 	);
 	if ( $self->is_valid("add") ) {
-		my $new_id = $self->create_federation( $ds_id, $user_id, $cname, $desc, $ttl );
+		my $new_id
+			= $self->create_federation( $ds_id, $user_id, $cname, $desc,
+			$ttl );
 		if ( $new_id > 0 ) {
 			$self->app->log->debug("redirecting....");
 
@@ -273,8 +299,7 @@ sub create_federation {
 	my $ttl           = shift;
 	my $federation_id = -1;
 	my $fed           = $self->db->resultset('Federation')->create(
-		{
-			cname       => $cname,
+		{   cname       => $cname,
 			description => $desc,
 			ttl         => $ttl,
 		}
@@ -284,18 +309,17 @@ sub create_federation {
 
 	if ( $federation_id > 0 ) {
 		my $fed_ds_id = -1;
-		my $fed_ds    = $self->db->resultset('FederationDeliveryservice')->create(
-			{
-				federation      => $federation_id,
+		my $fed_ds
+			= $self->db->resultset('FederationDeliveryservice')->create(
+			{   federation      => $federation_id,
 				deliveryservice => $ds_id,
 			}
-		);
+			);
 		$fed_ds_id = $fed_ds->insert();
 
 		if ( $fed_ds_id > 0 ) {
 			my $ft = $self->db->resultset('FederationTmuser')->create(
-				{
-					federation => $federation_id,
+				{   federation => $federation_id,
 					tm_user    => $user_id,
 					role       => FEDERATION_ROLE_ID,
 				}
@@ -303,10 +327,18 @@ sub create_federation {
 		}
 		$fed_ds_id = $fed_ds->insert();
 
-		my $ds = $self->db->resultset('Deliveryservice')->search( { id => $ds_id } )->single();
+		my $ds = $self->db->resultset('Deliveryservice')
+			->search( { id => $ds_id } )->single();
 
-		# if the insert has failed, we don't even get here, we go to the exception page.
-		&log( $self, "Created federation with CNAME: " . $cname . " and Delivery Service:  " . $ds->xml_id, "UICHANGE" );
+# if the insert has failed, we don't even get here, we go to the exception page.
+		&log(
+			$self,
+			"Created federation with CNAME: "
+				. $cname
+				. " and Delivery Service:  "
+				. $ds->xml_id,
+			"UICHANGE"
+		);
 	}
 	return $federation_id;
 
@@ -316,7 +348,8 @@ sub is_valid {
 	my $self = shift;
 
 	$self->field('federation.cname')->is_required;
-	$self->field('federation.cname')->is_like( qr/\.$/, "CNAME must end with a period." );
+	$self->field('federation.cname')
+		->is_like( qr/\.$/, "CNAME must end with a period." );
 	$self->field('federation.ttl')->is_required;
 	$self->field('ds_id')->is_required;
 	$self->field('user_id')->is_required;
@@ -333,21 +366,25 @@ sub delete {
 		$self->flash( alertmsg => "No can do. Get more privs." );
 	}
 	else {
-		my $fedfed_resolver =
-			$self->db->resultset('FederationFederationResolver')
-			->search( { federation => $fed_id }, { prefetch => [ 'federation', 'federation_resolver' ] } )->single();
-		my $fed_resolver_id = $fedfed_resolver->federation_resolver->id;
 
-		if ( defined($fedfed_resolver) ) {
-			$fedfed_resolver->delete();
-		}
+		my $fed_resolver
+			= $self->db->resultset('FederationResolver')->search(
+			{ 'federation_federation_resolvers.federation' => $fed_id },
+			{ prefetch => 'federation_federation_resolvers' }
+			);
 
-		my $fed_resolver = $self->db->resultset('FederationResolver')->search( { id => $fed_resolver_id } )->single();
 		if ( defined($fed_resolver) ) {
 			$fed_resolver->delete();
 		}
 
-		my $federation = $self->db->resultset('Federation')->search( { id => $fed_id } )->single();
+# my $fed_resolver = $self->db->resultset('FederationResolver')->search( { id => $fed_resolver_id } )->single();
+# if ( defined($fed_resolver) ) {
+# 	$fed_resolver->delete();
+# }
+
+		my $federation
+			= $self->db->resultset('Federation')->search( { id => $fed_id } )
+			->single();
 		if ( defined($federation) ) {
 			my $cname = $federation->cname;
 			$federation->delete();
