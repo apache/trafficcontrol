@@ -320,6 +320,11 @@ sub is_valid {
 	$self->field('federation.ttl')->is_required;
 	$self->field('ds_id')->is_required;
 	$self->field('user_id')->is_required;
+	my $cname = $self->param('federation.cname');
+	my $existing_fed = $self->db->resultset('Federation')->search( { cname => $cname } )->get_column('cname')->single();
+	if ($existing_fed) {
+		$self->field('federation.cname')->is_equal( "", "A Federation with name \"$cname\" already exists." );
+	}
 
 	return $self->valid;
 }
