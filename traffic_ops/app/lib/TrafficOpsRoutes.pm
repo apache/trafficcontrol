@@ -345,7 +345,7 @@ sub ui_routes {
 	$r->get('/update/:host_name')->over( authenticated => 1 )->to( 'Server#readupdate', namespace => $namespace );
 	$r->post('/update/:host_name')->over( authenticated => 1 )->to( 'Server#postupdate', namespace => $namespace );
 	$r->post('/postupdatequeue/:id')->over( authenticated => 1 )->to( 'Server#postupdatequeue', namespace => $namespace );
-	$r->post('/postupdatequeue/:cdn/:cachegroup')->over( authenticated => 1 )->to( 'Server#postupdatequeue', namespace => $namespace );
+	$r->post('/postupdatequeue/:cdn/#cachegroup')->over( authenticated => 1 )->to( 'Server#postupdatequeue', namespace => $namespace );
 
 	# -- User
 	$r->post('/user/register/send')->over( authenticated => 1 )->name('user_register_send')->to( 'User#send_registration', namespace => $namespace );
