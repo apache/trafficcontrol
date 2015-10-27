@@ -125,7 +125,7 @@ function initBuildArea() {
 	/bin/cp -r "$SRCPATH"/* "$BLDPATH"
 
 	# tar/gzip the source
-	tar -czvf "$targetpath.tgz" -C "$RPMBUILD/SOURCES" "$target" || { echo "Could not create tar archive $targetpath.tgz: $?"; exit 1; }
+	tar -czvf "$SRCPATH".tgz -C "$RPMBUILD/SOURCES" "$target" || { echo "Could not create tar archive $SRCPATH.tgz: $?"; exit 1; }
 
 	echo "The build area has been initialized."
 }

@@ -21,8 +21,6 @@
 all_projects="\
 	traffic_ops \
 	traffic_ops_ort \
-	traffic_monitor \
-	traffic_router \
 	traffic_stats \
 "
 
