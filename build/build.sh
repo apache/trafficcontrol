@@ -22,6 +22,8 @@ all_projects="\
 	traffic_ops \
 	traffic_ops_ort \
 	traffic_stats \
+	traffic_monitor \
+	traffic_router \
 "
 
 if [[ $# -gt 0 ]]; then

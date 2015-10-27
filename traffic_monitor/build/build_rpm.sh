@@ -22,17 +22,18 @@ function buildRpm () {
 
 	version="-DTC_VERSION=$TC_VERSION"
 	targetdir="-Dproject.build.directory=$(pwd)"
-	export GIT_REV_COUNT=nogit
-	mvn "$version" "$targetdir" install || { echo "RPM BUILD FAILED: $?"; exit 1; }
+	export GIT_REV_COUNT=$(git rev-list HEAD | wc -l)
+	mvn "$version" "$targetdir" package || { echo "RPM BUILD FAILED: $?"; exit 1; }
 
+	echo
 	echo "========================================================================================"
 	echo "RPM BUILD SUCCEEDED, See $DIST/$RPM for the newly built rpm."
 	echo "========================================================================================"
 	echo
 	mkdir -p "$DIST" || { echo "Could not create $DIST: $?"; exit 1; }
 
-	cp "$RPMBUILD/RPMS/$(uname -m)/$RPM" "$DIST/." || { echo "Could not copy $rpm to $DIST: $?"; exit 1; }
-	cp "$RPMBUILD/SRPMS/$SRPM" "$DIST/." || { echo "Could not copy $rpm to $DIST: $?"; exit 1; }
+	cp "$RPMBUILD/RPMS/$(uname -m)/$RPM" "$DIST/." || { echo "Could not copy $RPM to $DIST: $?"; exit 1; }
+	cp "$RPMBUILD/SRPMS/$SRPM" "$DIST/." || { echo "Could not copy $SRPM to $DIST: $?"; exit 1; }
 
 	# TODO: build src rpm separately -- mvn rpm plugin does not do src rpms
 	#cd "RPMBUILD" && \
@@ -65,7 +66,9 @@ function checkEnvironment() {
 	export WORKSPACE=${WORKSPACE:-$TC_DIR}
 	export RPMBUILD="$WORKSPACE/rpmbuild"
 	export DIST="$WORKSPACE/dist"
-	export RPM="${PACKAGE}-${TC_VERSION}-${BUILD_NUMBER}.x86_64.rpm"
+	export RPM="${PACKAGE}-${TC_VERSION}-${BUILD_NUMBER}.$(uname -m).rpm"
+	export SRPM="${PACKAGE}-${TC_VERSION}-${BUILD_NUMBER}.src.rpm"
+	echo "Build environment has been verified."
 
 	echo "=================================================="
 	echo "WORKSPACE: $WORKSPACE"
@@ -80,19 +83,17 @@ function initBuildArea() {
 	echo "Initializing the build area."
 	mkdir -p "$RPMBUILD"/{SPECS,SOURCES,RPMS,SRPMS,BUILD,BUILDROOT} || { echo "Could not create $RPMBUILD: $?"; exit 1; }
 
+	# tar/gzip the source
 	local target="$PACKAGE-$TC_VERSION"
-	# export these so build fcn has them
-	export SRCPATH="$RPMBUILD/SOURCES/$target"
-	mkdir -p "$SRCPATH" || { echo "Could not create $SRCPATH: $?"; exit 1; }
+	local srcpath="$RPMBUILD/SOURCES/$target"
+	mkdir -p "$srcpath" || { echo "Could not create $srcpath: $?"; exit 1; }
 
 	# TODO: what can be cut out here?
-	cp -r "$TM_DIR"/{build,etc,src} "$SRCPATH"/. || { echo "Could not copy to $SRCPATH: $?"; exit 1; }
-	cp -r "$TM_DIR"/{build,etc,src} "$SRCPATH"/. || { echo "Could not copy to $SRCPATH: $?"; exit 1; }
-	cp  "$TM_DIR"/pom.xml "$SRCPATH" || { echo "Could not copy to $SRCPATH: $?"; exit 1; }
+	cp -r "$TM_DIR"/{build,etc,src} "$srcpath"/. || { echo "Could not copy to $srcpath: $?"; exit 1; }
+	cp -r "$TM_DIR"/{build,etc,src} "$srcpath"/. || { echo "Could not copy to $srcpath: $?"; exit 1; }
+	cp  "$TM_DIR"/pom.xml "$srcpath" || { echo "Could not copy to $srcpath: $?"; exit 1; }
 
-	# tar/gzip the source
-
-	tar -czvf "$SRCPATH".tgz -C "$RPMBUILD/SOURCES" "$target" || { echo "Could not create tar archive $SRCPATH.tgz: $?"; exit 1; }
+	tar -czvf "$srcpath.tgz" -C "$RPMBUILD/SOURCES" "$target" || { echo "Could not create tar archive $srcpath.tgz: $?"; exit 1; }
 
 	echo "The build area has been initialized."
 }

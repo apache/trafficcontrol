@@ -23,24 +23,18 @@ function buildRpm () {
 	cd "$RPMBUILD" && \
 		rpmbuild --define "_topdir $(pwd)" \
 			 --define "traffic_control_version $TC_VERSION" \
-			 --define "build_number $BUILD_NUMBER" -ba SPECS/traffic_ops_ort.spec
+			 --define "build_number $BUILD_NUMBER" -ba SPECS/$PACKAGE.spec || \
+			 { echo "RPM BUILD FAILED: $?"; exit 1; }
 
-	if [[ $? -ne  0 ]]; then
-		echo -e "\nRPM BUILD FAILED.\n\n"
-		exit 1
-	fi
 	echo
 	echo "========================================================================================"
 	echo "RPM BUILD SUCCEEDED, See $DIST/$RPM for the newly built rpm."
 	echo "========================================================================================"
 	echo
+	mkdir -p "$DIST" || { echo "Could not create $DIST: $?"; exit 1; }
 
-	rpm="${PACKAGE}-${TC_VERSION}-${BUILD_NUMBER}.$(uname -m).rpm"
-	srpm="${PACKAGE}-${TC_VERSION}-${BUILD_NUMBER}.src.rpm"
-	mkdir -p "$DIST" || { echo "Could not create $DIST: $!"; exit 1; }
-
-	/bin/cp "$RPMBUILD"/RPMS/*/$rpm "$DIST/." || { echo "Could not copy $rpm to $DIST: $!"; exit 1; }
-	/bin/cp "$RPMBUILD"/SRPMS/$srpm "$DIST/." || { echo "Could not copy $srpm to $DIST: $!"; exit 1; }
+	cp "$RPMBUILD/RPMS/$(uname -m)/$RPM" "$DIST/." || { echo "Could not copy $RPM to $DIST: $?"; exit 1; }
+	cp "$RPMBUILD/SRPMS/$SRPM" "$DIST/." || { echo "Could not copy $SRPM to $DIST: $?"; exit 1; }
 }
 
 
@@ -66,8 +60,8 @@ function checkEnvironment() {
 	export WORKSPACE=${WORKSPACE:-$TC_DIR}
 	export RPMBUILD="$WORKSPACE/rpmbuild"
 	export DIST="$WORKSPACE/dist"
-	export IN_GIT=$(isInGitTree)
-
+	export RPM="${PACKAGE}-${TC_VERSION}-${BUILD_NUMBER}.$(uname -m).rpm"
+	export SRPM="${PACKAGE}-${TC_VERSION}-${BUILD_NUMBER}.src.rpm"
 	echo "Build environment has been verified."
 
 	echo "=================================================="
@@ -81,20 +75,18 @@ function checkEnvironment() {
 # ---------------------------------------
 function initBuildArea() {
 	echo "Initializing the build area."
-	mkdir -p "$RPMBUILD"/{SPECS,SOURCES,RPMS,SRPMS,BUILD,BUILDROOT} || { echo "Could not create $RPMBUILD: $!"; exit 1; }
-
-	/bin/cp -r "$TO_DIR"/build/*.spec "$RPMBUILD"/SPECS/. || { echo "Could not copy spec files: $!"; exit 1; }
-
-	# build the go scripts for database initialization and tm testing.
+	mkdir -p "$RPMBUILD"/{SPECS,SOURCES,RPMS,SRPMS,BUILD,BUILDROOT} || { echo "Could not create $RPMBUILD: $?"; exit 1; }
 
 	# tar/gzip the source
 	local target="$PACKAGE-$TC_VERSION"
 	local srcpath="$RPMBUILD/SOURCES/$target"
-	mkdir -p "$srcpath"
-	/bin/cp -p "$TO_DIR"/bin/*.pl "$srcpath"/. || { echo "Could not copy $target files: $!"; exit 1; }
+	mkdir -p "$srcpath" || { echo "Could not create $srcpath: $?"; exit 1; }
 
+	# TODO: what can be cut out here?
+	cp "$TO_DIR"/bin/*.pl "$srcpath"/. || { echo "Could not copy to $srcpath: $?"; exit 1; }
 
-	tar -czvf "$srcpath.tgz" -C "$RPMBUILD/SOURCES" "$target" || { echo "Could not create tar archive $srcpath.tgz: $!"; exit 1; }
+	tar -czvf "$srcpath.tgz" -C "$RPMBUILD/SOURCES" "$target" || { echo "Could not create tar archive $srcpath.tgz: $?"; exit 1; }
+	cp "$TO_DIR/build/$PACKAGE.spec" "$RPMBUILD/SPECS/." || { echo "Could not copy spec files: $?"; exit 1; }
 
 	echo "The build area has been initialized."
 }

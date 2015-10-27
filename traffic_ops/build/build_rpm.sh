@@ -23,22 +23,18 @@ function buildRpm () {
 	cd "$RPMBUILD" && \
 		rpmbuild --define "_topdir $(pwd)" \
 			 --define "traffic_control_version $TC_VERSION" \
-			 --define "build_number $BUILD_NUMBER" -ba SPECS/traffic_ops.spec
+			 --define "build_number $BUILD_NUMBER" -ba SPECS/$PACKAGE.spec || \
+			 { echo "RPM BUILD FAILED: $?"; exit 1; }
 
-	if [[ $? -ne  0 ]]; then
-		echo -e "\nRPM BUILD FAILED.\n\n"
-		exit 1
-	fi
 	echo
 	echo "========================================================================================"
 	echo "RPM BUILD SUCCEEDED, See $DIST/$RPM for the newly built rpm."
 	echo "========================================================================================"
 	echo
+	mkdir -p "$DIST" || { echo "Could not create $DIST: $?"; exit 1; }
 
-	mkdir -p "$DIST" || { echo "Could not create $DIST: $!"; exit 1; }
-
-	cp "$RPMBUILD/RPMS/$(uname -m)/$RPM" "$DIST/." || { echo "Could not copy rpm to $DIST: $!"; exit 1; }
-	cp "$RPMBUILD/SRPMS/$SRPM" "$DIST/." || { echo "Could not copy source rpm to $DIST: $!"; exit 1; }
+	cp "$RPMBUILD/RPMS/$(uname -m)/$RPM" "$DIST/." || { echo "Could not copy $RPM to $DIST: $?"; exit 1; }
+	cp "$RPMBUILD/SRPMS/$SRPM" "$DIST/." || { echo "Could not copy $SRPM to $DIST: $?"; exit 1; }
 }
 
 
@@ -66,7 +62,6 @@ function checkEnvironment() {
 	export DIST="$WORKSPACE/dist"
 	export RPM="${PACKAGE}-${TC_VERSION}-${BUILD_NUMBER}.$(uname -m).rpm"
 	export SRPM="${PACKAGE}-${TC_VERSION}-${BUILD_NUMBER}.src.rpm"
-	export IN_GIT=$(isInGitTree)
 
 	# verify required tools available in path
 	for pgm in go ; do
@@ -85,29 +80,26 @@ function checkEnvironment() {
 # ---------------------------------------
 function initBuildArea() {
 	echo "Initializing the build area."
-	mkdir -p "$RPMBUILD"/{SPECS,SOURCES,RPMS,SRPMS,BUILD,BUILDROOT} || { echo "Could not create $RPMBUILD: $!"; exit 1; }
-
-	cp -r "$TO_DIR"/build/*.spec "$RPMBUILD"/SPECS/. || { echo "Could not copy spec files: $!"; exit 1; }
-
-	# build the go scripts for database initialization and tm testing.
+	mkdir -p "$RPMBUILD"/{SPECS,SOURCES,RPMS,SRPMS,BUILD,BUILDROOT} || { echo "Could not create $RPMBUILD: $?"; exit 1; }
 
 	# tar/gzip the source
 	local target="$PACKAGE-$TC_VERSION"
-	local targetpath="$RPMBUILD/SOURCES/$target"
-	mkdir -p "$targetpath/app" || { echo "Could not create $targetpath"; exit 1; }
-	cd "$TO_DIR" || { echo "Could not cd to $TO_DIR: $!"; exit 1; }
+	local srcpath="$RPMBUILD/SOURCES/$target"
+	mkdir -p "$srcpath" || { echo "Could not create $srcpath: $?"; exit 1; }
+
+	cd "$TO_DIR" || { echo "Could not cd to $TO_DIR: $?"; exit 1; }
 	for d in app/{bin,conf,cpanfile,db,lib,public,script,templates} doc etc install; do
-		cp -r "$d" "$targetpath/$d" || { echo "Could not copy $d files to $targetpath: $!"; exit 1; }
+		cp -r "$d" "$srcpath/$d" || { echo "Could not copy $d files to $srcpath: $?"; exit 1; }
 	done
 
 	# compile go executables used during postinstall
 	local bldinstall="$RPMBUILD/BUILD/install"
 	mkdir -p "$bldinstall"
-	cp -r "$TO_DIR/install/go" "$bldinstall" || { echo "Could not copy to $bldinstall: $!"; exit 1; }
-	cd "$bldinstall/go" || { echo "Could not cd to $bldinstall/go: $!"; exit 1; }
+	cp -r "$TO_DIR/install/go" "$bldinstall" || { echo "Could not copy to $bldinstall: $?"; exit 1; }
+	cd "$bldinstall/go" || { echo "Could not cd to $bldinstall/go: $?"; exit 1; }
 
 	export GOPATH=$(pwd)
-	export GOBIN="$targetpath/install/bin"
+	export GOBIN="$srcpath/install/bin"
 
 	echo "Compiling go executables"
 	for d in src/comcast.com/*; do
@@ -118,7 +110,8 @@ function initBuildArea() {
 		(cd "$d" && go get || { echo "Could not compile $d"; exit 1; } )
 	done
 
-	tar -czvf "$targetpath.tgz" -C "$RPMBUILD/SOURCES" "$target" || { echo "Could not create tar archive $targetpath.tgz: $!"; exit 1; }
+	tar -czvf "$srcpath.tgz" -C "$RPMBUILD/SOURCES" "$target" || { echo "Could not create tar archive $srcpath.tgz: $?"; exit 1; }
+	cp "$TO_DIR/build/$PACKAGE.spec" "$RPMBUILD/SPECS/." || { echo "Could not copy spec files: $?"; exit 1; }
 
 	echo "The build area has been initialized."
 }

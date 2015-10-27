@@ -29,47 +29,44 @@ function installDnsSec {
 	tar xzvf "$dnssec".tar.gz ||  \
 		{ echo "Could not extract required $dnssec library: $?"; exit 1; }
 
-	fn=$(find $dnssec/. -name jdnssec-tools.jar)
-	if [[ -z $fn ]]; then
-		echo "jdnssec-tools.jar found in $BLDPATH: $?"; exit 1;
-	fi
-	mvn install:install-file -Dfile="$fn" -DgroupId=jdnssec -Dpackaging=jar \
-		-DartifactId=jdnssec-tools -Dversion="$dnssecversion" || \
-		{ echo "Could not install required $dnssec library: $?"; exit 1; }
+	(cd "$dnssec" && \
+	 mvn install::install-file -Dfile=./lib/jdnssec-tools.jar -DgroupId=jdnssec -Dpackaging=jar \
+		-DartifactId=jdnssec-tools -Dversion="$dnssecversion" \
+	)  || { echo "Could not install required $dnssec library: $?"; exit 1; } \
 }
 
 #----------------------------------------
 function buildRpm () {
 	echo "Building the rpm."
-	version="-DTC_VERSION=$TC_VERSION"
-	targetdir="-Dproject.build.directory=$BLDPATH"
+	local version="-DTC_VERSION=$TC_VERSION"
+	local targetdir="-Dproject.build.directory=$BLDPATH"
 	cd "$BLDPATH" || { echo "Could not cd to $BLDPATH: $?"; exit 1; }
 
 	installDnsSec
 
 	# Do the rpmbuild
-	mvn -DminimumTPS=1 "$version" "$targetdir" package ||  \
+	export GIT_REV_COUNT=$(git rev-list HEAD | wc -l)
+	mvn -Dmaven.test.skip=true -DminimumTPS=1 "$version" "$targetdir" package ||  \
 		{ echo "RPM BUILD FAILED: $?"; exit 1; }
-
+	local rpm=$(find -name \*.rpm)
+	if [[ -z $rpm ]]; then
+		echo "Could not find rpm file $RPM in $(pwd)"
+		exit 1;
+	fi
 	echo "========================================================================================"
 	echo "RPM BUILD SUCCEEDED, See $DIST/$RPM for the newly built rpm."
 	echo "========================================================================================"
 	echo
 	mkdir -p "$DIST" || { echo "Could not create $DIST: $?"; exit 1; }
 
-	rpm=$(find "$BLDPATH" -name "${PACKAGE}*.rpm")
-	if [[ -z $rpm ]]; then
-		echo "$PACKAGE*.rpm not found anywhere in $BLDPATH: $?"; exit 1;
-	fi
-	/bin/cp "$rpm" "$RPMPATH" || { echo "Could not copy $rpm to $RPMPATH: $?"; exit 1; }
-	/bin/cp "$rpm" "$DIST/." || { echo "Could not copy $rpm to $DIST: $?"; exit 1; }
+	cp "$rpm" "$DIST/." || { echo "Could not copy $rpm to $DIST: $?"; exit 1; }
 
 	# TODO: build src rpm separately -- mvn rpm plugin does not do src rpms
 	#cd "RPMBUILD" && \
 	#	rpmbuild -bs --define "_topdir $(pwd)" \
         #                 --define "traffic_control_version $TC_VERSION" \
         #                 --define "build_number $BUILD_NUMBER" -ba SPECS/${PACKAGE}.spec
-	#/bin/cp "$RPMBUILD"/SRPMS/*/*.rpm "$DIST/." || { echo "Could not copy source rpm to $DIST: $?"; exit 1; }
+	#cp "$RPMBUILD"/SRPMS/*/*.rpm "$DIST/." || { echo "Could not copy source rpm to $DIST: $?"; exit 1; }
 }
 
 
@@ -114,15 +111,13 @@ function initBuildArea() {
 	# export these so build fcn has them
 	export SRCPATH="$RPMBUILD/SOURCES/$target"
 	export BLDPATH="$RPMBUILD/BUILD/$target"
-	export RPMPATH="$RPMBUILD/RPMS"
-	rm -rf "$BLDPATH" "$SRCPATH"
 	mkdir -p "$SRCPATH" || { echo "Could not create $SRCPATH: $?"; exit 1; }
 	mkdir -p "$BLDPATH" || { echo "Could not create $BLDPATH: $?"; exit 1; }
 
 	# TODO: what can be cut out here?
-	/bin/cp -r "$TM_DIR"/{api,build,connector,core} "$SRCPATH"/. || { echo "Could not copy to $SRCPATH: $?"; exit 1; }
-	/bin/cp  "$TM_DIR"/pom.xml "$SRCPATH" || { echo "Could not copy to $SRCPATH: $?"; exit 1; }
-	/bin/cp -r "$SRCPATH"/* "$BLDPATH"
+	cp -r "$TM_DIR"/{api,build,connector,core} "$SRCPATH"/. || { echo "Could not copy to $SRCPATH: $?"; exit 1; }
+	cp  "$TM_DIR"/pom.xml "$SRCPATH" || { echo "Could not copy to $SRCPATH: $?"; exit 1; }
+	cp -r "$SRCPATH"/* "$BLDPATH"
 
 	# tar/gzip the source
 	tar -czvf "$SRCPATH".tgz -C "$RPMBUILD/SOURCES" "$target" || { echo "Could not create tar archive $SRCPATH.tgz: $?"; exit 1; }

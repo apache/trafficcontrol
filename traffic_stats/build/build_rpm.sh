@@ -17,41 +17,34 @@
 #
 
 #----------------------------------------
-
-#----------------------------------------
 function buildRpm () {
 	echo "Building the rpm."
 
 	cd "$RPMBUILD" && \
 		rpmbuild --define "_topdir $(pwd)" \
 			 --define "traffic_control_version $TC_VERSION" \
-			 --define "build_number $BUILD_NUMBER" -ba "SPECS/$PACKAGE.spec"
+			 --define "build_number $BUILD_NUMBER" -ba SPECS/$PACKAGE.spec || \
+			 { echo "RPM BUILD FAILED: $?"; exit 1; }
 
-	if [[ $? -ne  0 ]]; then
-		echo -e "\nRPM BUILD FAILED.\n\n"
-		exit 1
-	fi
 	echo
 	echo "========================================================================================"
 	echo "RPM BUILD SUCCEEDED, See $DIST/$RPM for the newly built rpm."
 	echo "========================================================================================"
 	echo
+	mkdir -p "$DIST" || { echo "Could not create $DIST: $?"; exit 1; }
 
-	mkdir -p "$DIST" || { echo "Could not create $DIST: $!"; exit 1; }
-
-	cp "$RPMBUILD/RPMS/$(uname -m)/$RPM" "$DIST/." || { echo "Could not copy rpm to $DIST: $!"; exit 1; }
-	cp "$RPMBUILD/SRPMS/$SRPM" "$DIST/." || { echo "Could not copy source rpm to $DIST: $!"; exit 1; }
+	cp "$RPMBUILD/RPMS/$(uname -m)/$RPM" "$DIST/." || { echo "Could not copy $RPM to $DIST: $?"; exit 1; }
+	cp "$RPMBUILD/SRPMS/$SRPM" "$DIST/." || { echo "Could not copy $SRPM to $DIST: $?"; exit 1; }
 }
+
 
 #----------------------------------------
 function checkEnvironment() {
 	echo "Verifying the build configuration environment."
-
 	local script=$(readlink -f "$0")
 	local scriptdir=$(dirname "$script")
 	export TS_DIR=$(dirname "$scriptdir")
 	export TC_DIR=$(dirname "$TS_DIR")
-
 	functions_sh="$TC_DIR/build/functions.sh"
 	if [[ ! -r $functions_sh ]]; then
 		echo "Error: Can't find $functions_sh"
@@ -69,9 +62,6 @@ function checkEnvironment() {
 	export DIST="$WORKSPACE/dist"
 	export RPM="${PACKAGE}-${TC_VERSION}-${BUILD_NUMBER}.$(uname -m).rpm"
 	export SRPM="${PACKAGE}-${TC_VERSION}-${BUILD_NUMBER}.src.rpm"
-	export IN_GIT=$(isInGitTree)
-	export GIT_SHORT_REVISION=$(git rev-parse --short HEAD)
-
 	echo "Build environment has been verified."
 
 	echo "=================================================="
@@ -85,19 +75,17 @@ function checkEnvironment() {
 # ---------------------------------------
 function initBuildArea() {
 	echo "Initializing the build area."
-	mkdir -p "$RPMBUILD"/{SPECS,SOURCES,RPMS,SRPMS,BUILD,BUILDROOT} || { echo "Could not create $RPMBUILD: $!"; exit 1; }
-
-	cp "$TS_DIR"/build/*.spec "$RPMBUILD"/SPECS/. || { echo "Could not copy spec files: $!"; exit 1; }
+	mkdir -p "$RPMBUILD"/{SPECS,SOURCES,RPMS,SRPMS,BUILD,BUILDROOT} || { echo "Could not create $RPMBUILD: $?"; exit 1; }
 
 	# tar/gzip the source
 	local target="$PACKAGE-$TC_VERSION"
 	local srcpath="$RPMBUILD/SOURCES/$target"
-	rm -rf "$srcpath" || { echo "Could not clean up $srcpath : $!"; exit 1; }
+	mkdir -p "$srcpath" || { echo "Could not create $srcpath: $?"; exit 1; }
 
-	mkdir -p "$srcpath"
-	rsync -avp "$TS_DIR"/ "$srcpath" || { echo "Could not copy $TS_DIR to $srcpath: $!"; exit 1; }
+	cp -r "$TS_DIR"/ "$srcpath" || { echo "Could not copy $TS_DIR to $srcpath: $?"; exit 1; }
 
-	tar -czvf "$srcpath".tgz -C "$RPMBUILD/SOURCES" "$target" || { echo "Could not create tar archive $srcpath: $!"; exit 1; }
+	tar -czvf "$srcpath.tgz" -C "$RPMBUILD/SOURCES" "$target" || { echo "Could not create tar archive $srcpath.tgz: $?"; exit 1; }
+	cp "$TS_DIR/build/$PACKAGE.spec" "$RPMBUILD/SPECS/." || { echo "Could not copy spec files: $?"; exit 1; }
 
 	echo "The build area has been initialized."
 }
