@@ -89,7 +89,13 @@ function initBuildArea() {
 
 	cd "$TO_DIR" || { echo "Could not cd to $TO_DIR: $?"; exit 1; }
 	for d in app/{bin,conf,cpanfile,db,lib,public,script,templates} doc etc install; do
-		cp -r "$d" "$srcpath/$d" || { echo "Could not copy $d files to $srcpath: $?"; exit 1; }
+		if [[ -d "$d" ]]; then
+			mkdir -p "$srcpath/$d" || { echo "Could not create $srcpath/$d: $?"; exit 1; }
+			cp -r "$d"/* "$srcpath/$d" || { echo "Could not copy $d files to $srcpath: $?"; exit 1; }
+		else
+			cp "$d" "$srcpath/$d" || { echo "Could not copy $d to $srcpath: $?"; exit 1; }
+		fi
+
 	done
 
 	# compile go executables used during postinstall

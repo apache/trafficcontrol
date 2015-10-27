@@ -20,11 +20,17 @@
 function buildRpm () {
 	echo "Building the rpm."
 
-	version="-DTC_VERSION=$TC_VERSION"
-	targetdir="-Dproject.build.directory=$(pwd)"
+	local version="-Dtraffic_control.version=$TC_VERSION"
+	local targetdir="-Dproject.build.directory=$(pwd)"
 	export GIT_REV_COUNT=$(git rev-list HEAD | wc -l)
+	cd "$BLDPATH" || { echo "Could not cd to $BLDPATH: $?"; exit 1; }
 	mvn "$version" "$targetdir" package || { echo "RPM BUILD FAILED: $?"; exit 1; }
 
+	local rpm=$(find -name \*.rpm)
+	if [[ -z $rpm ]]; then
+		echo "Could not find rpm file $RPM in $(pwd)"
+		exit 1;
+	fi
 	echo
 	echo "========================================================================================"
 	echo "RPM BUILD SUCCEEDED, See $DIST/$RPM for the newly built rpm."
@@ -32,8 +38,7 @@ function buildRpm () {
 	echo
 	mkdir -p "$DIST" || { echo "Could not create $DIST: $?"; exit 1; }
 
-	cp "$RPMBUILD/RPMS/$(uname -m)/$RPM" "$DIST/." || { echo "Could not copy $RPM to $DIST: $?"; exit 1; }
-	cp "$RPMBUILD/SRPMS/$SRPM" "$DIST/." || { echo "Could not copy $SRPM to $DIST: $?"; exit 1; }
+	cp "$rpm" "$DIST/." || { echo "Could not copy $RPM to $DIST: $?"; exit 1; }
 
 	# TODO: build src rpm separately -- mvn rpm plugin does not do src rpms
 	#cd "RPMBUILD" && \
@@ -86,7 +91,9 @@ function initBuildArea() {
 	# tar/gzip the source
 	local target="$PACKAGE-$TC_VERSION"
 	local srcpath="$RPMBUILD/SOURCES/$target"
+	export BLDPATH="$RPMBUILD/BUILD/$target"
 	mkdir -p "$srcpath" || { echo "Could not create $srcpath: $?"; exit 1; }
+	mkdir -p "$BLDPATH" || { echo "Could not create $BLDPATH: $?"; exit 1; }
 
 	# TODO: what can be cut out here?
 	cp -r "$TM_DIR"/{build,etc,src} "$srcpath"/. || { echo "Could not copy to $srcpath: $?"; exit 1; }
@@ -94,6 +101,7 @@ function initBuildArea() {
 	cp  "$TM_DIR"/pom.xml "$srcpath" || { echo "Could not copy to $srcpath: $?"; exit 1; }
 
 	tar -czvf "$srcpath.tgz" -C "$RPMBUILD/SOURCES" "$target" || { echo "Could not create tar archive $srcpath.tgz: $?"; exit 1; }
+	cp -r "$srcpath"/* "$BLDPATH"
 
 	echo "The build area has been initialized."
 }

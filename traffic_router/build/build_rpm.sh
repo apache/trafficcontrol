@@ -38,7 +38,7 @@ function installDnsSec {
 #----------------------------------------
 function buildRpm () {
 	echo "Building the rpm."
-	local version="-DTC_VERSION=$TC_VERSION"
+	local version="-Dtraffic_control.version=$TC_VERSION"
 	local targetdir="-Dproject.build.directory=$BLDPATH"
 	cd "$BLDPATH" || { echo "Could not cd to $BLDPATH: $?"; exit 1; }
 
