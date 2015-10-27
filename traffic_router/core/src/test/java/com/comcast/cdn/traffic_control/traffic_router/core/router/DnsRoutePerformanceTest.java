@@ -154,11 +154,6 @@ public class DnsRoutePerformanceTest {
                 dnsRequest.setClientIP(clientIP);
                 trafficRouter.route(dnsRequest, track);
                 stats.put(track.getResult(), stats.get(track.getResult()) + 1);
-                ResultType resultType = track.getResult();
-
-                String errStr = cacheGroup + ": " + clientIP + " / " + resultType + " / " + track.getResultDetails() + " / " + track.getResultLocation();
-                assertThat(errStr, resultType, not(ResultType.MISS));
-
                 clients++;
             }
         }
