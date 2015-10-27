@@ -118,17 +118,19 @@ public class DNSAccessEventBuilder {
     }
 
     private static String createQuery(final Record query) {
-        final String qname = query.getName().toString();
-        final String qtype = Type.string(query.getType());
-        final String qclass = DClass.string(query.getDClass());
-        final long ttl = query.getTTL();
+        if (query != null && query.getName() != null) {
+            final String qname = query.getName().toString();
+            final String qtype = Type.string(query.getType());
+            final String qclass = DClass.string(query.getDClass());
+            final long ttl = query.getTTL();
 
-        return new StringBuilder()
-            .append("fqdn=").append(qname)
-            .append(" type=").append(qtype)
-            .append(" class=").append(qclass)
-            .append(" ttl=").append(ttl)
-            .toString();
+            return new StringBuilder()
+                    .append("fqdn=").append(qname)
+                    .append(" type=").append(qtype)
+                    .append(" class=").append(qclass)
+                    .append(" ttl=").append(ttl)
+                    .toString();
+        }
+        return "";
     }
-
 }
