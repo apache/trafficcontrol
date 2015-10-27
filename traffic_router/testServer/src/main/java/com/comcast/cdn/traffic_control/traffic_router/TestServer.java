@@ -10,11 +10,11 @@ import org.eclipse.jetty.webapp.WebAppContext;
 import javax.management.MBeanServer;
 import java.lang.management.ManagementFactory;
 
-public class RouterAndApiApp
+public class TestServer
 {
-    public static void main( String[] args ) throws Exception
+    public static void main(String[] args) throws Exception
     {
-        PropertyConfigurator.configure("standalone/src/test/resources/log4j.properties");
+        PropertyConfigurator.configure("testServer/src/test/resources/log4j.properties");
 
         Server server = new Server();
         SocketConnector connector = new SocketConnector();
@@ -30,7 +30,8 @@ public class RouterAndApiApp
         WebAppContext trafficRouterContext = new WebAppContext("core/src/main/webapp", "/ignoreitall");
         handlers.addHandler(trafficRouterContext);
 
-        WebAppContext apiContext = new WebAppContext("api/src/main/webapp", "/");
+        WebAppContext apiContext = new WebAppContext();
+        apiContext.setWar("api/src/main/webapp");
         handlers.addHandler(apiContext);
 
         handlers.setServer(server);

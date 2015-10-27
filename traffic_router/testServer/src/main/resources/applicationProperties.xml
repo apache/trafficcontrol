@@ -25,10 +25,10 @@
 		<property name="placeholderSuffix" value="]" />
 		<property name="locations">
 			<list>
-				<value>file:standalone/src/test/resources/cache.properties</value>
-				<value>file:standalone/src/test/resources/traffic_monitor.properties</value>
+				<value>file:testServer/src/test/resources/cache.properties</value>
+				<value>file:testServer/src/test/resources/traffic_monitor.properties</value>
 				<value>file:core/src/test/resources/traffic_ops.properties</value>
-				<value>file:standalone/src/test/resources/dns.properties</value>
+				<value>file:testServer/src/test/resources/dns.properties</value>
 				<value>file:core/src/test/resources/http.properties</value>
 			</list>
 		</property>
