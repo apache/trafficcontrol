@@ -160,6 +160,23 @@ $t->get_ok("/api/1.2/federations.json")->status_is(200)->or( sub { diag $t->tx->
 	->json_is( "/response/0/deliveryService", "test-ds1" )->json_is( "/response/0/mappings/0/cname", "cname1." )
 	->json_is( "/response/0/mappings/0/ttl", "86400" )->json_is( "/response/0/mappings/0/resolve4/0", "127.4.4.4/32" );
 
+$t->put_ok(
+	"/api/1.2/federations",
+	json => {
+		federations => [
+			{
+				deliveryService => "test-ds1",
+				mappings        => { resolve4 => ["255.255.255.255/32"] }
+			}
+		]
+	}
+)->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } );
+
+$t->get_ok("/api/1.2/federations.json")->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } )
+	->json_is( "/response/0/deliveryService", "test-ds1" )->json_is( "/response/0/mappings/0/cname", "cname1." )
+	->json_is( "/response/0/mappings/0/ttl", "86400" )->json_is( "/response/0/mappings/0/resolve4/0", "255.255.255.255/32" );
+
+
 ok $t->get_ok("/logout")->status_is(302)->or( sub { diag $t->tx->res->content->asset->{content}; } );
 
 ####### Cleanup DB ######################################################################
