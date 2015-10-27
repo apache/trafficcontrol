@@ -6,6 +6,7 @@ import javax.servlet.http.HttpServletRequest;
 import java.math.RoundingMode;
 import java.text.DecimalFormat;
 import java.util.Date;
+import java.util.Map;
 
 public class HTTPAccessEventBuilder {
     private static String formatRequest(final HttpServletRequest request) {
@@ -27,6 +28,34 @@ public class HTTPAccessEventBuilder {
 
     private static String formatObject(final Object o) {
         return (o == null) ? "-" : o.toString();
+    }
+
+    private static String formatRequestHeaders(final Map<String, String> requestHeaders) {
+        if (requestHeaders == null || requestHeaders.isEmpty()) {
+            return "rh=\"-\"";
+        }
+
+        final StringBuilder stringBuilder = new StringBuilder();
+        boolean first = true;
+        for (Map.Entry<String, String> entry : requestHeaders.entrySet()) {
+            if (entry.getValue() == null || entry.getValue().isEmpty()) {
+                continue;
+            }
+
+            if (!first) {
+                stringBuilder.append(' ');
+            }
+            else {
+                first = false;
+            }
+
+            stringBuilder.append("rh=\"");
+            stringBuilder.append(entry.getKey()).append(": ");
+            stringBuilder.append(entry.getValue().replaceAll("\"", "'"));
+            stringBuilder.append('"');
+        }
+
+        return stringBuilder.toString();
     }
 
     @SuppressWarnings("PMD.UseStringBufferForStringAppends")
@@ -75,9 +104,10 @@ public class HTTPAccessEventBuilder {
             stringBuilder.append(" pssc=").append(pssc).append(" ttms=").append(ttms);
         }
 
-        final String respurl = " rurl=\"" + formatObject(httpAccessRecord.getResponseURL()) + "\"";
+        final String respurl = " rurl=\"" + formatObject(httpAccessRecord.getResponseURL()) + "\" ";
         stringBuilder.append(respurl);
 
+        stringBuilder.append(formatRequestHeaders(httpAccessRecord.getRequestHeaders()));
         return stringBuilder.toString();
     }
 }

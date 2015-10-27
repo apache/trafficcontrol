@@ -23,6 +23,8 @@ import com.comcast.cdn.traffic_control.traffic_router.core.router.StatTracker.Tr
 import javax.servlet.http.HttpServletRequest;
 import java.net.URL;
 import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
 
 // Using Josh Bloch Builder pattern so suppress these warnings.
 @SuppressWarnings({"PMD.MissingStaticMethodInNonInstantiatableClass",
@@ -39,6 +41,7 @@ public class HTTPAccessRecord {
     private final String rerr;
     private final ResultDetails resultDetails;
     private final Geolocation resultLocation;
+    private final Map<String, String> requestHeaders;
 
     public Date getRequestDate() {
         return requestDate;
@@ -72,6 +75,10 @@ public class HTTPAccessRecord {
         return resultLocation;
     }
 
+    public Map<String, String> getRequestHeaders() {
+        return requestHeaders;
+    }
+
     public static class Builder {
         private final Date requestDate;
         private final HttpServletRequest request;
@@ -81,6 +88,7 @@ public class HTTPAccessRecord {
         private String rerr;
         private ResultDetails resultDetails;
         private Geolocation resultLocation;
+        private Map<String, String> requestHeaders = new HashMap<String, String>();
 
         public Builder(final Date requestDate, final HttpServletRequest request) {
             this.requestDate = requestDate;
@@ -124,6 +132,11 @@ public class HTTPAccessRecord {
             return this;
         }
 
+        public Builder requestHeaders(final Map<String,String> requestHeaders) {
+            this.requestHeaders = requestHeaders;
+            return this;
+        }
+
         public HTTPAccessRecord build() {
             return new HTTPAccessRecord(this);
         }
@@ -138,6 +151,7 @@ public class HTTPAccessRecord {
         rerr = builder.rerr;
         resultDetails = builder.resultDetails;
         resultLocation = builder.resultLocation;
+        requestHeaders = builder.requestHeaders;
     }
 
     @Override
