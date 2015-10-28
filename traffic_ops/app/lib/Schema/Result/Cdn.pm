@@ -32,8 +32,8 @@ __PACKAGE__->table("cdn");
 =head2 name
 
   data_type: 'varchar'
-  is_nullable: 0
-  size: 1024
+  is_nullable: 1
+  size: 127
 
 =head2 last_updated
 
@@ -48,7 +48,7 @@ __PACKAGE__->add_columns(
   "id",
   { data_type => "integer", is_auto_increment => 1, is_nullable => 0 },
   "name",
-  { data_type => "varchar", is_nullable => 0, size => 1024 },
+  { data_type => "varchar", is_nullable => 1, size => 127 },
   "last_updated",
   {
     data_type => "timestamp",
@@ -70,6 +70,20 @@ __PACKAGE__->add_columns(
 
 __PACKAGE__->set_primary_key("id");
 
+=head1 UNIQUE CONSTRAINTS
+
+=head2 C<cdn_cdn_UNIQUE>
+
+=over 4
+
+=item * L</name>
+
+=back
+
+=cut
+
+__PACKAGE__->add_unique_constraint("cdn_cdn_UNIQUE", ["name"]);
+
 =head1 RELATIONS
 
 =head2 deliveryservices
@@ -83,6 +97,21 @@ Related object: L<Schema::Result::Deliveryservice>
 __PACKAGE__->has_many(
   "deliveryservices",
   "Schema::Result::Deliveryservice",
+  { "foreign.cdn_id" => "self.id" },
+  { cascade_copy => 0, cascade_delete => 0 },
+);
+
+=head2 profiles
+
+Type: has_many
+
+Related object: L<Schema::Result::Profile>
+
+=cut
+
+__PACKAGE__->has_many(
+  "profiles",
+  "Schema::Result::Profile",
   { "foreign.cdn_id" => "self.id" },
   { cascade_copy => 0, cascade_delete => 0 },
 );
@@ -103,8 +132,8 @@ __PACKAGE__->has_many(
 );
 
 
-# Created by DBIx::Class::Schema::Loader v0.07043 @ 2015-10-05 11:50:01
-# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:qb0+mfREkeEhmnu1KN1YXQ
+# Created by DBIx::Class::Schema::Loader v0.07042 @ 2015-10-27 15:25:33
+# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:7QVOBKX7NdcANmsS+ytNxA
 
 
 # You can replace this text with custom code or comments, and it will be preserved on regeneration

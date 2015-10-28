@@ -134,10 +134,9 @@ sub gen_crconfig_json {
 		if ( $row->parameter->name eq 'tld.ttls.NS' ) {
 			$tld_ttls_ns = $row->parameter->value;
 		}
-
 		if ( $row->parameter->name eq 'domain_name' ) {
 			$ccr_domain_name = $row->parameter->value;
-			$data_obj->{'config'}->{ $row->parameter->name }
+			$data_obj->{'config'}->{ $row->parameter->name }	
 				= $row->parameter->value;
 		}
 		elsif ( $row->parameter->name =~ m/^tld/ ) {
@@ -147,10 +146,21 @@ sub gen_crconfig_json {
 			$data_obj->{'config'}->{$top_key}->{$second_key}
 				= $row->parameter->value;
 		}
+		elsif ($row->parameter->name eq 'LogRequestHeaders') {
+			my $headers;
+			foreach my $header (
+				split( /__RETURN__/, $row->parameter->value ) )
+			{
+				$header  = &trim_spaces($header);	
+				push(@$headers, $header);
+			}
+			$data_obj->{'config'}->{'requestHeaders'} = $headers;
+		}
 		else {
 			$data_obj->{'config'}->{ $row->parameter->name }
 				= $row->parameter->value;
 		}
+
 
 	}
 
@@ -514,6 +524,19 @@ sub gen_crconfig_json {
 				$data_obj->{'deliveryServices'}->{ $row->xml_id }
 					->{'responseHeaders'}->{$header_name} = $header_value;
 			}
+		}
+
+		if ( defined( $row->tr_request_headers )
+			&& $row->tr_request_headers ne "" )
+		{
+			my $headers;
+			foreach my $header (
+				split( /__RETURN__/, $row->tr_request_headers ) )
+			{
+				$header  = &trim_spaces($header);	
+				push(@$headers, $header);
+			}
+			$data_obj->{'deliveryServices'}->{ $row->xml_id }->{'requestHeaders'} = $headers;
 		}
 
 		if ( defined( $row->miss_lat ) && $row->miss_lat ne "" ) {

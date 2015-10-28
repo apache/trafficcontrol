@@ -419,7 +419,18 @@
 			<% if ($priv_level >= 20) { %>
 				%= field('ds.tr_response_headers')->text(class => 'field', id => 'ds.tr_response_headers', name => 'ds.tr_response_headers');
 			<% } else { %>
-				%= field('ds.mid_header_rewrite')->text(class => 'field', readonly => 'readonly');
+				%= field('ds.tr_response_headers')->text(class => 'field', readonly => 'readonly');
+			<% }  %>
+	</div><br>
+	<div class="block" id="tr_request_headers">
+		<% unless (field('ds.tr_request_headers')->valid) { %>
+			<span class="field-with-error"><%= field('ds.tr_request_headers')->error %></span>
+		<% } %>
+		%= label_for 'tr_request_headers' => 'Traffic Router Log Request Headers', class => 'label'
+			<% if ($priv_level >= 20) { %>
+				%= field('ds.tr_request_headers')->text(class => 'field', id => 'ds.tr_request_headers', name => 'ds.tr_request_headers');
+			<% } else { %>
+				%= field('ds.tr_request_headers')->text(class => 'field', readonly => 'readonly');
 			<% }  %>
 	</div><br>
 	<div class="block" id="regex_remap_row">
