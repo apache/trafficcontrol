@@ -19,7 +19,7 @@
 # ---------------------------------------
 function getVersion() {
 	local d="$1"
-	local vf="$d/VERSION.txt"
+	local vf="$d/VERSION"
 	cat "$vf" || { echo "Could not read $vf: $!"; exit 1; }
 }
 
