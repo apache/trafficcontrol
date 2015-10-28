@@ -277,7 +277,7 @@ public class ZoneManager extends Resolver {
 			}
 		};
 
-		return CacheBuilder.from(spec).removalListener(removalListener).build(
+		return CacheBuilder.from(spec).recordStats().removalListener(removalListener).build(
 			new CacheLoader<ZoneKey, Zone>() {
 				final boolean writeZone = (cacheType == ZoneCacheType.STATIC) ? true : false;
 
