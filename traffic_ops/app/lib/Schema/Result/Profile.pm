@@ -41,12 +41,6 @@ __PACKAGE__->table("profile");
   is_nullable: 1
   size: 256
 
-=head2 cdn_id
-
-  data_type: 'integer'
-  is_foreign_key: 1
-  is_nullable: 1
-
 =head2 last_updated
 
   data_type: 'timestamp'
@@ -63,8 +57,6 @@ __PACKAGE__->add_columns(
   { data_type => "varchar", is_nullable => 0, size => 45 },
   "description",
   { data_type => "varchar", is_nullable => 1, size => 256 },
-  "cdn_id",
-  { data_type => "integer", is_foreign_key => 1, is_nullable => 1 },
   "last_updated",
   {
     data_type => "timestamp",
@@ -101,26 +93,6 @@ __PACKAGE__->set_primary_key("id");
 __PACKAGE__->add_unique_constraint("name_UNIQUE", ["name"]);
 
 =head1 RELATIONS
-
-=head2 cdn
-
-Type: belongs_to
-
-Related object: L<Schema::Result::Cdn>
-
-=cut
-
-__PACKAGE__->belongs_to(
-  "cdn",
-  "Schema::Result::Cdn",
-  { id => "cdn_id" },
-  {
-    is_deferrable => 1,
-    join_type     => "LEFT",
-    on_delete     => "SET NULL",
-    on_update     => "RESTRICT",
-  },
-);
 
 =head2 deliveryservices
 
@@ -168,8 +140,8 @@ __PACKAGE__->has_many(
 );
 
 
-# Created by DBIx::Class::Schema::Loader v0.07042 @ 2015-10-27 15:25:33
-# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:E0CpqZtcfimUTs677Z6hiQ
+# Created by DBIx::Class::Schema::Loader v0.07043 @ 2015-10-05 11:28:28
+# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:9iu0tHvzgk8ndjVwNDiB/w
 
 
 # You can replace this text with custom code or comments, and it will be preserved on regeneration
