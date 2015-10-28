@@ -742,7 +742,7 @@ public class ZoneManager extends Resolver {
 		Record record = null;
 
 		if (address.isAlias()) {
-			record = new CNAMERecord(name, DClass.IN, address.getTTL(), new Name(address.getAlias() +"."));			
+			record = new CNAMERecord(name, DClass.IN, address.getTTL(), newName(address.getAlias()));
 		} else if (address.isInet4()) { // address instanceof Inet4Address
 			record = new ARecord(name, DClass.IN, address.getTTL(), address.getAddress());
 		} else if (address.isInet6()) {
