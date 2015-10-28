@@ -44,8 +44,8 @@ function buildRpm () {
 
 	installDnsSec
 
-	# Do the rpmbuild
-	export GIT_REV_COUNT=$(git rev-list HEAD | wc -l)
+	# mvn uses this:
+	export GIT_REV_COUNT=$(getRevCount)
 	mvn -Dmaven.test.skip=true -DminimumTPS=1 "$version" "$targetdir" package ||  \
 		{ echo "RPM BUILD FAILED: $?"; exit 1; }
 	local rpm=$(find -name \*.rpm)

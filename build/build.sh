@@ -21,18 +21,18 @@
 
 # make sure we start out in traffic_control dir
 top=${0%%/*}
-[[ -n $top ]] && cd $top
+[[ -n $top ]] && cd "$top" || { echo "Could not cd $top"; exit 1; }
 
 if [[ $# -gt 0 ]]; then
-	projects="$*"
+	projects=( $@ )
 else
 	# get all subdirs containing build/build_rpm.sh
-	projects=*/build/build_rpm.sh
+	projects=( */build/build_rpm.sh )
 fi
 
-badproj=()
-goodproj=()
-for p in $projects; do
+declare -a badproj
+declare -a goodproj
+for p in "${projects[@]}"; do
 	# strip from first /
 	p=${p%%/*}
 	bldscript="$p/build/build_rpm.sh"
@@ -51,17 +51,17 @@ for p in $projects; do
 	fi
 done
 
-if [[ -n $goodproj ]]; then
+if [[ ${#goodproj[@]} -ne 0 ]]; then
 	echo "The following subdirectories built successfully: "
-	for p in $goodproj; do
+	for p in "${goodproj[@]}"; do
 		echo "   $p"
 	done
 	echo "See $(pwd)/dist for newly built rpms."
 fi
 
-if [[ -n $badproj ]]; then
+if [[ ${#badproj[@]} -ne 0 ]]; then
 	echo "The following subdirectories had errors: "
-	for p in $badproj; do
+	for p in "${badproj[@]}"; do
 		echo "   $p"
 	done
 	exit 1

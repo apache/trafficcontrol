@@ -22,7 +22,8 @@ function buildRpm () {
 
 	local version="-Dtraffic_control.version=$TC_VERSION"
 	local targetdir="-Dproject.build.directory=$(pwd)"
-	export GIT_REV_COUNT=$(git rev-list HEAD | wc -l)
+	# mvn uses this:
+	export GIT_REV_COUNT=$(getRevCount)
 	cd "$BLDPATH" || { echo "Could not cd to $BLDPATH: $?"; exit 1; }
 	mvn "$version" "$targetdir" package || { echo "RPM BUILD FAILED: $?"; exit 1; }
 

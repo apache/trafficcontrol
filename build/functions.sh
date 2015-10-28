@@ -23,6 +23,10 @@ function getVersion() {
 	cat "$vf" || { echo "Could not read $vf: $!"; exit 1; }
 }
 
+function getRevCount() {
+	git rev-list HEAD 2>/dev/null | wc -l
+}
+
 # ---------------------------------------
 function isInGitTree() {
 	git rev-parse --is-inside-work-tree 2>/dev/null
