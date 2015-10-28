@@ -30,22 +30,58 @@ use Utils::Helper::ResponseHelper;
 
 sub index {
 	my $self = shift;
-	my $data = getserverdata($self);
-	$self->success($data);
+	my $dsId = $self->param('dsId');
+	if ( defined $dsId ) {
+		if ( $self->is_delivery_service_assigned($dsId) || &is_admin($self) || &is_oper($self) ) {
+			my $data = getserverdata( $self, $dsId );
+			$self->success($data);
+		}
+		else {
+			$self->forbidden();
+		}
+	}
+	else {
+		if ( &is_admin($self) || &is_oper($self) ) {
+			my $data = getserverdata($self);
+			$self->success($data);
+		}
+		else {
+			$self->forbidden();
+		}
+	}
 }
 
 sub getserverdata {
 	my $self = shift;
+	my $dsId = shift;
 	my @data;
 	my $isadmin = &is_admin($self);
 	my $orderby = $self->param('orderby') || "host_name";
-	my $rs_data = $self->db->resultset('Server')->search(
-		undef, {
-			prefetch => [ 'cdn', 'cachegroup', 'type', 'profile', 'status', 'phys_location' ],
-			order_by => 'me.' . $orderby,
-		}
-	);
-	while ( my $row = $rs_data->next ) {
+	my $servers;
+	if ( defined $dsId ) {
+		my @deliveryservice_servers = $self->db->resultset('DeliveryserviceServer')->search(
+			{
+				deliveryservice => $dsId,
+			}
+		)->get_column('server')->all();
+		$servers = $self->db->resultset('Server')->search(
+			{ 'me.id' => { -in => \@deliveryservice_servers } },
+			{
+				prefetch => [ 'cdn', 'cachegroup', 'type', 'profile', 'status', 'phys_location' ],
+				order_by => 'me.' . $orderby,
+			}
+		);
+	}
+	else {
+		$servers = $self->db->resultset('Server')->search(
+			undef, {
+				prefetch => [ 'cdn', 'cachegroup', 'type', 'profile', 'status', 'phys_location' ],
+				order_by => 'me.' . $orderby,
+			}
+		);
+	}
+
+	while ( my $row = $servers->next ) {
 		my $cdn_name = defined( $row->cdn_id ) ? $row->cdn->name : "";
 
 		push(
