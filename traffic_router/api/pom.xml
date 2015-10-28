@@ -163,7 +163,6 @@
 			<groupId>org.springframework</groupId>
 			<artifactId>spring-webmvc</artifactId>
 			<version>3.0.5.RELEASE</version>
-			<scope>compile</scope>
 		</dependency>
 
 		<dependency>
