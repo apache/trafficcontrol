@@ -264,6 +264,12 @@ __PACKAGE__->table("deliveryservice");
   is_nullable: 1
   size: 255
 
+=head2 tr_request_headers
+
+  data_type: 'varchar'
+  is_nullable: 1
+  size: 1024
+
 =cut
 
 __PACKAGE__->add_columns(
@@ -356,6 +362,8 @@ __PACKAGE__->add_columns(
   { data_type => "integer", default_value => 1, is_nullable => 1 },
   "dns_bypass_cname",
   { data_type => "varchar", is_nullable => 1, size => 255 },
+  "tr_request_headers",
+  { data_type => "varchar", is_nullable => 1, size => 1024 },
 );
 
 =head1 PRIMARY KEY
@@ -541,8 +549,8 @@ __PACKAGE__->belongs_to(
 );
 
 
-# Created by DBIx::Class::Schema::Loader v0.07042 @ 2015-10-07 13:43:30
-# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:G/zQ8LHEg0T1IUmTromIuQ
+# Created by DBIx::Class::Schema::Loader v0.07042 @ 2015-10-27 15:25:33
+# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:YlxzkXo06gfjP97F1btVGg
 
 # Created by DBIx::Class::Schema::Loader v0.07043 @ 2015-10-05 11:50:01
 # DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:AUTdFMjQ60ItRfFMfKsB1A

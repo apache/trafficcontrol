@@ -268,6 +268,7 @@ sub read {
 				"edge_header_rewrite"    => $row->edge_header_rewrite,
 				"mid_header_rewrite"     => $row->mid_header_rewrite,
 				"tr_response_headers"    => $row->tr_response_headers,
+				"tr_request_headers"    => $row->tr_request_headers,
 				"regex_remap"            => $row->regex_remap,
 				"long_desc"              => $row->long_desc,
 				"long_desc_1"            => $row->long_desc_1,
@@ -572,7 +573,15 @@ sub check_deliveryservice_input {
 		&& $self->param('ds.tr_response_headers') ne "" )
 	{
 		$self->field('ds.tr_response_headers')->is_equal( "",
-			"TR Response Headers is only valid for HTTP (302) delivery services"
+			"TR Response Headers are only valid for HTTP (302) delivery services"
+		);
+	}
+	if (   $self->param('ds.type.name') =~ /^DNS/
+		&& defined( $self->param('ds.tr_request_headers') )
+		&& $self->param('ds.tr_request_headers') ne "" )
+	{
+		$self->field('ds.tr_request_headers')->is_equal( "",
+			"TR Log Request Headers are only valid for HTTP (302) delivery services"
 		);
 	}
 
@@ -883,6 +892,8 @@ sub update {
 			: $self->param('ds.mid_header_rewrite'),
 			tr_response_headers => $self->param('ds.tr_response_headers') eq
 				"" ? undef : $self->param('ds.tr_response_headers'),
+			tr_request_headers => $self->param('ds.tr_request_headers') eq
+				"" ? undef : $self->param('ds.tr_request_headers'),
 			regex_remap => $self->param('ds.regex_remap') eq "" ? undef
 			: $self->param('ds.regex_remap'),
 			origin_shield => $self->param('ds.origin_shield') eq "" ? undef
