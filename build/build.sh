@@ -18,28 +18,51 @@
 
 # By default all sub-projects are built.  Supply a list of projects to build if
 # only a subset is wanted.
-all_projects="\
-	traffic_ops \
-	traffic_ops_ort \
-	traffic_stats \
-	traffic_monitor \
-	traffic_router \
-"
+
+# make sure we start out in traffic_control dir
+top=${0%%/*}
+[[ -n $top ]] && cd $top
 
 if [[ $# -gt 0 ]]; then
 	projects="$*"
 else
-	projects=$all_projects
+	# get all subdirs containing build/build_rpm.sh
+	projects=*/build/build_rpm.sh
 fi
 
+badproj=()
+goodproj=()
 for p in $projects; do
+	# strip from first /
+	p=${p%%/*}
+	bldscript="$p/build/build_rpm.sh"
+	if [[ ! -x $bldscript ]]; then
+		echo "$bldscript not found"
+		badproj+=($p)
+		continue
+	fi
+
 	echo "-----  Building $p ..."
-	case $p in
-		traffic_ops)     (cd traffic_ops/build && ./build_rpm.sh) ;;
-		traffic_ops_ort) (cd traffic_ops/build && ./build_ort_rpm.sh) ;;
-		traffic_monitor) (cd traffic_monitor/build  && ./build_rpm.sh) ;;
-		traffic_router)  (cd traffic_router/build && ./build_rpm.sh) ;;
-		traffic_stats)   (cd traffic_stats/build && ./build_rpm.sh) ;;
-		*) echo "No project named $p"; exit 1;;
-	esac || (echo "$p failed: $!"; exit 1)
+	if $bldscript; then
+		goodproj+=($p)
+	else
+		echo "$p failed: $!"
+		badproj+=($p)
+	fi
 done
+
+if [[ -n $goodproj ]]; then
+	echo "The following subdirectories built successfully: "
+	for p in $goodproj; do
+		echo "   $p"
+	done
+	echo "See $(pwd)/dist for newly built rpms."
+fi
+
+if [[ -n $badproj ]]; then
+	echo "The following subdirectories had errors: "
+	for p in $badproj; do
+		echo "   $p"
+	done
+	exit 1
+fi
