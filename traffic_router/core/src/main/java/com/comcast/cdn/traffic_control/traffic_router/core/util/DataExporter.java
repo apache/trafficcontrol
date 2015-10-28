@@ -237,8 +237,8 @@ public class DataExporter {
 		return createCacheStatsMap(trafficRouterManager.getTrafficRouter().getZoneManager().getDynamicCacheStats());
 	}
 
-	private Map<String, Object> createCacheStatsMap(CacheStats cacheStats) {
-		Map<String, Object> cacheStatsMap = new HashMap<String, Object>();
+	private Map<String, Object> createCacheStatsMap(final CacheStats cacheStats) {
+		final Map<String, Object> cacheStatsMap = new HashMap<String, Object>();
 		cacheStatsMap.put("requestCount", cacheStats.requestCount());
 		cacheStatsMap.put("hitCount", cacheStats.hitCount());
 		cacheStatsMap.put("missCount", cacheStats.missCount());
