@@ -24,7 +24,7 @@ top=${0%%/*}
 [[ -n $top ]] && cd "$top" || { echo "Could not cd $top"; exit 1; }
 
 if [[ $# -gt 0 ]]; then
-	projects=( $@ )
+	projects=( "$*" )
 else
 	# get all subdirs containing build/build_rpm.sh
 	projects=( */build/build_rpm.sh )
