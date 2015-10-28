@@ -37,6 +37,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
+import com.google.common.cache.CacheStats;
 import org.apache.commons.io.IOUtils;
 import org.apache.log4j.Logger;
 import org.json.JSONArray;
@@ -895,5 +896,13 @@ public class ZoneManager extends Resolver {
 
 	private static void setTopLevelDomain(final Name topLevelDomain) {
 		ZoneManager.topLevelDomain = topLevelDomain;
+	}
+
+	public CacheStats getStaticCacheStats() {
+		return zoneCache.stats();
+	}
+
+	public CacheStats getDynamicCacheStats() {
+		return dynamicZoneCache.stats();
 	}
 }

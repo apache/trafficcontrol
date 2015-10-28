@@ -27,7 +27,7 @@ public class TestServer
 
         HandlerCollection handlers = new HandlerCollection();
 
-        WebAppContext trafficRouterContext = new WebAppContext("core/src/main/webapp", "/ignoreitall");
+        WebAppContext trafficRouterContext = new WebAppContext("core/src/main/webapp", "/trafficrouter");
         handlers.addHandler(trafficRouterContext);
 
         WebAppContext apiContext = new WebAppContext();
