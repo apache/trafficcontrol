@@ -16,11 +16,7 @@
 
 package com.comcast.cdn.traffic_control.traffic_router.core.router;
 
-import java.net.URL;
-
 import org.apache.log4j.Logger;
-import org.junit.After;
-import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -30,8 +26,6 @@ import com.comcast.cdn.traffic_control.traffic_router.core.TestBase;
 import com.comcast.cdn.traffic_control.traffic_router.core.loc.GeolocationDatabaseUpdater;
 import com.comcast.cdn.traffic_control.traffic_router.core.loc.NetworkUpdater;
 import com.comcast.cdn.traffic_control.traffic_router.core.request.HTTPRequest;
-import com.comcast.cdn.traffic_control.traffic_router.core.router.TrafficRouterManager;
-import com.comcast.cdn.traffic_control.traffic_router.core.router.StatTracker;
 import com.comcast.cdn.traffic_control.traffic_router.core.router.StatTracker.Track;
 
 public class StatelessTrafficRouterTest {
@@ -53,42 +47,25 @@ public class StatelessTrafficRouterTest {
 		}
 	}
 
-	@AfterClass
-	public static void tearDownAfterClass() throws Exception {
-	}
-
 	@Before
 	public void setUp() throws Exception {
-		try {
-			trafficRouterManager = (TrafficRouterManager) context.getBean("trafficRouterManager");
-			geolocationDatabaseUpdater = (GeolocationDatabaseUpdater) context.getBean("geolocationDatabaseUpdater");
-			networkUpdater = (NetworkUpdater) context.getBean("networkUpdater");
+		trafficRouterManager = (TrafficRouterManager) context.getBean("trafficRouterManager");
+		geolocationDatabaseUpdater = (GeolocationDatabaseUpdater) context.getBean("geolocationDatabaseUpdater");
+		networkUpdater = (NetworkUpdater) context.getBean("networkUpdater");
 
-			while (!networkUpdater.isLoaded()) {
-				LOGGER.info("Waiting for a valid location database before proceeding");
-				Thread.sleep(1000);
-			}
+		while (!networkUpdater.isLoaded()) {
+			LOGGER.info("Waiting for a valid location database before proceeding");
+			Thread.sleep(1000);
+		}
 
-			while (!geolocationDatabaseUpdater.isLoaded()) {
-				LOGGER.info("Waiting for a valid Maxmind database before proceeding");
-				Thread.sleep(1000);
-			}
-		} catch(Exception e) {
-			e.printStackTrace();
+		while (!geolocationDatabaseUpdater.isLoaded()) {
+			LOGGER.info("Waiting for a valid Maxmind database before proceeding");
+			Thread.sleep(1000);
 		}
 	}
 
-	@After
-	public void tearDown() throws Exception {
-	}
-
 	@Test
-	public void testRouteDNSRequestTrack() {
-		//		fail("Not yet implemented");
-	}
-
-	@Test
-	public void testRouteHTTPRequestTrack() {
+	public void testRouteHTTPRequestTrack() throws Exception {
 		HTTPRequest req = new HTTPRequest();
 		req.setClientIP("10.0.0.1");
 		req.setPath("/QualityLevels(96000)/Fragments(audio_eng=20720000000)");
@@ -96,28 +73,7 @@ public class StatelessTrafficRouterTest {
 		req.setHostname("somehost.cdn.net");
 		req.setRequestedUrl("http://somehost.cdn.net/QualityLevels(96000)/Fragments(audio_eng=20720000000)");
 		Track track = StatTracker.getTrack();
-		try {
-			HTTPRouteResult routeResult = trafficRouterManager.getTrafficRouter().route(req, track);
-			if (routeResult == null) {
-//				fail("HTTP route returned null");
-				System.out.println("HTTP route returned null");
-			} else {
-				System.out.println(routeResult.getUrl());
-			}
-		} catch (Exception e2) {
-			e2.printStackTrace();
-//			fail(e2.toString());
-		}
-	}
-
-	@Test
-	public void testConsistentHash() {
-		//		fail("Not yet implemented");
-	}
-
-	@Test
-	public void testSelectDeliveryService() {
-		//		fail("Not yet implemented");
+		trafficRouterManager.getTrafficRouter().route(req, track);
 	}
 
 }

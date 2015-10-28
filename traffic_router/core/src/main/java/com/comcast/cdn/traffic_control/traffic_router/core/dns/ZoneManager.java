@@ -37,6 +37,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
+import com.google.common.cache.CacheStats;
 import org.apache.commons.io.IOUtils;
 import org.apache.log4j.Logger;
 import org.json.JSONArray;
@@ -276,7 +277,7 @@ public class ZoneManager extends Resolver {
 			}
 		};
 
-		return CacheBuilder.from(spec).removalListener(removalListener).build(
+		return CacheBuilder.from(spec).recordStats().removalListener(removalListener).build(
 			new CacheLoader<ZoneKey, Zone>() {
 				final boolean writeZone = (cacheType == ZoneCacheType.STATIC) ? true : false;
 
@@ -742,7 +743,7 @@ public class ZoneManager extends Resolver {
 		Record record = null;
 
 		if (address.isAlias()) {
-			record = new CNAMERecord(name, DClass.IN, address.getTTL(), new Name(address.getAlias() +"."));			
+			record = new CNAMERecord(name, DClass.IN, address.getTTL(), newName(address.getAlias()));
 		} else if (address.isInet4()) { // address instanceof Inet4Address
 			record = new ARecord(name, DClass.IN, address.getTTL(), address.getAddress());
 		} else if (address.isInet6()) {
@@ -901,5 +902,13 @@ public class ZoneManager extends Resolver {
 
 	private static void setTopLevelDomain(final Name topLevelDomain) {
 		ZoneManager.topLevelDomain = topLevelDomain;
+	}
+
+	public CacheStats getStaticCacheStats() {
+		return zoneCache.stats();
+	}
+
+	public CacheStats getDynamicCacheStats() {
+		return dynamicZoneCache.stats();
 	}
 }

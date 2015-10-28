@@ -326,6 +326,7 @@ sub setup_mojo_plugins {
 	}
 
 	$self->plugin( AccessLog => { log => "$logging_root_dir/access.log" } );
+	$self->plugin('ParamExpand', max_array => 256);
 
 	#FormFields
 	$self->plugin('FormFields');

@@ -1,5 +1,39 @@
 package com.comcast.cdn.traffic_control.traffic_router.core.router;
 
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.equalTo;
+import static org.hamcrest.Matchers.greaterThan;
+import static org.hamcrest.Matchers.not;
+import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyBoolean;
+import static org.mockito.Matchers.anyString;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
+import static org.powermock.api.mockito.PowerMockito.doCallRealMethod;
+import static org.powermock.api.mockito.PowerMockito.doReturn;
+import static org.powermock.api.mockito.PowerMockito.spy;
+import static org.powermock.api.mockito.PowerMockito.whenNew;
+
+import java.io.File;
+import java.io.FileReader;
+import java.net.InetAddress;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
+import org.apache.commons.pool.ObjectPool;
+import org.json.JSONArray;
+import org.json.JSONObject;
+import org.json.JSONTokener;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.powermock.core.classloader.annotations.PrepareForTest;
+import org.powermock.modules.junit4.PowerMockRunner;
+
 import com.comcast.cdn.traffic_control.traffic_router.core.cache.CacheLocation;
 import com.comcast.cdn.traffic_control.traffic_router.core.cache.CacheRegister;
 import com.comcast.cdn.traffic_control.traffic_router.core.dns.ZoneManager;
@@ -13,47 +47,14 @@ import com.comcast.cdn.traffic_control.traffic_router.core.request.Request;
 import com.comcast.cdn.traffic_control.traffic_router.core.router.StatTracker.Track;
 import com.comcast.cdn.traffic_control.traffic_router.core.router.StatTracker.Track.ResultType;
 import com.comcast.cdn.traffic_control.traffic_router.core.util.TrafficOpsUtils;
-import org.apache.commons.pool.ObjectPool;
-import org.json.JSONArray;
-import org.json.JSONObject;
-import org.json.JSONTokener;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.powermock.core.classloader.annotations.PrepareForTest;
-import org.powermock.modules.junit4.PowerMockRunner;
-
-import java.io.File;
-import java.io.FileReader;
-import java.net.Inet4Address;
-import java.net.InetAddress;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.equalTo;
-import static org.hamcrest.Matchers.greaterThan;
-import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.anyBoolean;
-import static org.mockito.Matchers.anyString;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
-import static org.powermock.api.mockito.PowerMockito.doCallRealMethod;
-import static org.powermock.api.mockito.PowerMockito.doReturn;
-import static org.powermock.api.mockito.PowerMockito.spy;
-import static org.powermock.api.mockito.PowerMockito.whenNew;
+import com.google.common.net.InetAddresses;
 
 @RunWith(PowerMockRunner.class)
 @PrepareForTest(TrafficRouter.class)
 public class DnsRoutePerformanceTest {
 
     private TrafficRouter trafficRouter;
-    private List<String> hostStrings;
+    private Map<String, Set<String>> hostMap = new HashMap<String, Set<String>>();
 
     long minimumTPS = Long.parseLong(System.getProperty("minimumTPS"));
 
@@ -94,6 +95,7 @@ public class DnsRoutePerformanceTest {
         when(deliveryService.isAvailable()).thenReturn(true);
         when(deliveryService.isLocationAvailable(any(CacheLocation.class))).thenReturn(true);
         when(deliveryService.getId()).thenReturn("omg-01");
+        when(deliveryService.supportLocation(any(Geolocation.class), anyString())).thenCallRealMethod();
 
         doReturn(deliveryService).when(trafficRouter).selectDeliveryService(any(Request.class), anyBoolean());
 
@@ -103,6 +105,7 @@ public class DnsRoutePerformanceTest {
         doCallRealMethod().when(trafficRouter, "selectCache", any(CacheLocation.class), any(DeliveryService.class));
         doCallRealMethod().when(trafficRouter, "getSupportingCaches", any(List.class), any(DeliveryService.class));
         doCallRealMethod().when(trafficRouter).setState(any(JSONObject.class));
+        doReturn(new Geolocation(39.739167, -104.984722)).when(trafficRouter).getLocation(anyString());
 
         trafficRouter.setState(healthObject);
 
@@ -110,18 +113,25 @@ public class DnsRoutePerformanceTest {
         JSONObject coverageZones = coverageZoneMap.getJSONObject("coverageZones");
 
         Iterator iterator = coverageZones.keys();
-        this.hostStrings = new ArrayList<String>();
 
         while (iterator.hasNext()) {
             String coverageZoneName = (String) iterator.next();
             JSONObject coverageZoneJson = coverageZones.getJSONObject(coverageZoneName);
             JSONArray networks = coverageZoneJson.getJSONArray("network");
+            Set<String> hosts = hostMap.get(coverageZoneName);
+
+            if (hosts == null) {
+                hosts = new HashSet<String>();
+            }
 
             for (int i = 0; i < networks.length(); i++) {
-                String network = networks.getString(i);
-                final String hostString = network.replaceAll("0\\/\\d\\d", "5");
-                hostStrings.add(hostString);
+                String network = networks.getString(i).split("/")[0];
+                InetAddress ip = InetAddresses.forString(network);
+                ip = InetAddresses.increment(ip);
+                hosts.add(InetAddresses.toAddrString(ip));
             }
+
+            hostMap.put(coverageZoneName, hosts);
         }
     }
 
@@ -137,19 +147,25 @@ public class DnsRoutePerformanceTest {
         }
 
         long before = System.currentTimeMillis();
+        int clients = 0;
 
-        for (String hostString : hostStrings) {
-            dnsRequest.setClientIP(hostString);
-            trafficRouter.route(dnsRequest, track);
-            stats.put(track.getResult(), stats.get(track.getResult()) + 1);
+        for (String cacheGroup : hostMap.keySet()) {
+            for (String clientIP : hostMap.get(cacheGroup)) {
+                dnsRequest.setClientIP(clientIP);
+                trafficRouter.route(dnsRequest, track);
+                stats.put(track.getResult(), stats.get(track.getResult()) + 1);
+                clients++;
+            }
         }
 
-        long tps = hostStrings.size() / ((System.currentTimeMillis() - before) / 1000);
+        long tps = clients / ((System.currentTimeMillis() - before) / 1000);
         assertThat(tps, greaterThan(minimumTPS));
 
         for (ResultType resultType : ResultType.values()) {
-            if (resultType != ResultType.CZ && resultType != ResultType.MISS) {
+            if (resultType != ResultType.CZ && resultType != ResultType.GEO) {
                 assertThat(stats.get(resultType), equalTo(0));
+            } else {
+                assertThat(stats.get(resultType), greaterThan(0));
             }
         }
 

@@ -63,7 +63,8 @@ sub edit {
 
 	my $federation;
 	my $ds_id;
-	my $feds = $self->db->resultset('Federation')->search( { 'id' => $fed_id } );
+	my $feds =
+		$self->db->resultset('Federation')->search( { 'id' => $fed_id } );
 	my $fed_count = $feds->count();
 	if ( $fed_count > 0 ) {
 		while ( my $f = $feds->next ) {
@@ -78,8 +79,7 @@ sub edit {
 
 		my $role_name;
 		my $user_id;
-		my $ftusers =
-			$self->db->resultset('FederationTmuser')->search( { federation => $fed_id }, { prefetch => [ 'federation', 'tm_user' ] } );
+		my $ftusers = $self->db->resultset('FederationTmuser')->search( { federation => $fed_id }, { prefetch => [ 'federation', 'tm_user' ] } );
 		while ( my $ft = $ftusers->next ) {
 			$user_id   = $ft->tm_user->id;
 			$role_name = $ft->role->name;
@@ -113,10 +113,16 @@ sub edit {
 sub users {
 	my $self = shift;
 	my $data;
-	my $fed_users =
-		$self->db->resultset('TmUser')->search( { role => FEDERATION_ROLE_ID }, { order_by => 'full_name' } );
+	my $fed_users = $self->db->resultset('TmUser')->search( { role => FEDERATION_ROLE_ID }, { order_by => 'full_name' } );
 	while ( my $row = $fed_users->next ) {
-		push( @$data, { id => $row->id, username => $row->username, fullname => $row->full_name, tenant => $row->company } );
+		push(
+			@$data, {
+				id       => $row->id,
+				username => $row->username,
+				fullname => $row->full_name,
+				tenant   => $row->company
+			}
+		);
 	}
 	return $self->render( json => $data );
 }
@@ -194,7 +200,8 @@ sub update {
 
 	my $is_valid = $self->is_valid();
 	if ( $self->is_valid("edit") ) {
-		my $dbh = $self->db->resultset('Federation')->find( { id => $fed_id } );
+		my $dbh =
+			$self->db->resultset('Federation')->find( { id => $fed_id } );
 		$dbh->cname($cname);
 		$dbh->description($description);
 		$dbh->ttl($ttl);
@@ -320,6 +327,11 @@ sub is_valid {
 	$self->field('federation.ttl')->is_required;
 	$self->field('ds_id')->is_required;
 	$self->field('user_id')->is_required;
+	my $cname = $self->param('federation.cname');
+	my $existing_fed = $self->db->resultset('Federation')->search( { cname => $cname } )->get_column('cname')->single();
+	if ($existing_fed) {
+		$self->field('federation.cname')->is_equal( "", "A Federation with name \"$cname\" already exists." );
+	}
 
 	return $self->valid;
 }
@@ -333,16 +345,10 @@ sub delete {
 		$self->flash( alertmsg => "No can do. Get more privs." );
 	}
 	else {
-		my $fedfed_resolver =
-			$self->db->resultset('FederationFederationResolver')
-			->search( { federation => $fed_id }, { prefetch => [ 'federation', 'federation_resolver' ] } )->single();
-		my $fed_resolver_id = $fedfed_resolver->federation_resolver->id;
 
-		if ( defined($fedfed_resolver) ) {
-			$fedfed_resolver->delete();
-		}
+		my $fed_resolver = $self->db->resultset('FederationResolver')
+			->search( { 'federation_federation_resolvers.federation' => $fed_id }, { prefetch => 'federation_federation_resolvers' } );
 
-		my $fed_resolver = $self->db->resultset('FederationResolver')->search( { id => $fed_resolver_id } )->single();
 		if ( defined($fed_resolver) ) {
 			$fed_resolver->delete();
 		}
