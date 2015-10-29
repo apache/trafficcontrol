@@ -77,49 +77,52 @@ public class NameServer {
 
 	@SuppressWarnings({"PMD.CyclomaticComplexity", "PMD.NPathComplexity"})
 	private void addAnswers(final Message request, final Message response, final InetAddress clientAddress, final DNSAccessRecord.Builder builder) {
-		final Record question = request.getQuestion();
-		final int qclass = question.getDClass();
-		final Name qname = question.getName();
-		final OPTRecord qopt = request.getOPT();
-		boolean dnssecRequest = false;
-		int qtype = question.getType();
-		int flags = 0;
+			final Record question = request.getQuestion();
+		if (question != null) {
+			final int qclass = question.getDClass();
+			final Name qname = question.getName();
+			final OPTRecord qopt = request.getOPT();
+			boolean dnssecRequest = false;
+			int qtype = question.getType();
 
-		if ((qopt != null) && (qopt.getVersion() > MAX_SUPPORTED_EDNS_VERS)) {
-			response.getHeader().setRcode(Rcode.NOTIMP);
-			final OPTRecord opt = new OPTRecord(0, Rcode.BADVERS, MAX_SUPPORTED_EDNS_VERS);
-			response.addRecord(opt, Section.ADDITIONAL);
-			return;
-		}
+			int flags = 0;
 
-		if ((qclass != DClass.IN) && (qclass != DClass.ANY)) {
-			response.getHeader().setRcode(Rcode.REFUSED);
-			return;
-		}
+			if ((qopt != null) && (qopt.getVersion() > MAX_SUPPORTED_EDNS_VERS)) {
+				response.getHeader().setRcode(Rcode.NOTIMP);
+				final OPTRecord opt = new OPTRecord(0, Rcode.BADVERS, MAX_SUPPORTED_EDNS_VERS);
+				response.addRecord(opt, Section.ADDITIONAL);
+				return;
+			}
 
-		if (qopt != null && (qopt.getFlags() & ExtendedFlags.DO) != 0) {
-			flags = FLAG_DNSSECOK;
-			dnssecRequest = true;
-		}
+			if ((qclass != DClass.IN) && (qclass != DClass.ANY)) {
+				response.getHeader().setRcode(Rcode.REFUSED);
+				return;
+			}
 
-		if (qtype == Type.SIG || qtype == Type.RRSIG) {
-			qtype = Type.ANY;
-			flags |= FLAG_SIGONLY;
-		}
+			if (qopt != null && (qopt.getFlags() & ExtendedFlags.DO) != 0) {
+				flags = FLAG_DNSSECOK;
+				dnssecRequest = true;
+			}
 
-		final Zone zone = trafficRouterManager.getTrafficRouter().getZone(qname, qtype, clientAddress, dnssecRequest, builder);
+			if (qtype == Type.SIG || qtype == Type.RRSIG) {
+				qtype = Type.ANY;
+				flags |= FLAG_SIGONLY;
+			}
 
-		if (zone == null) {
-			response.getHeader().setRcode(Rcode.REFUSED);
-			return;
-		}
+			final Zone zone = trafficRouterManager.getTrafficRouter().getZone(qname, qtype, clientAddress, dnssecRequest, builder);
 
-		lookup(qname, qtype, zone, response, 0, flags);
+			if (zone == null) {
+				response.getHeader().setRcode(Rcode.REFUSED);
+				return;
+			}
 
-		if (qopt != null && flags == FLAG_DNSSECOK) {
-			final int optflags = ExtendedFlags.DO;
-			final OPTRecord opt = new OPTRecord(1280, (byte) 0, (byte) 0, optflags);
-			response.addRecord(opt, Section.ADDITIONAL);
+			lookup(qname, qtype, zone, response, 0, flags);
+
+			if (qopt != null && flags == FLAG_DNSSECOK) {
+				final int optflags = ExtendedFlags.DO;
+				final OPTRecord opt = new OPTRecord(1280, (byte) 0, (byte) 0, optflags);
+				response.addRecord(opt, Section.ADDITIONAL);
+			}
 		}
 	}
 

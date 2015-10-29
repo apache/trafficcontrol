@@ -132,6 +132,21 @@ __PACKAGE__->has_many(
   { cascade_copy => 0, cascade_delete => 0 },
 );
 
+=head2 federation_resolvers
+
+Type: has_many
+
+Related object: L<Schema::Result::FederationResolver>
+
+=cut
+
+__PACKAGE__->has_many(
+  "federation_resolvers",
+  "Schema::Result::FederationResolver",
+  { "foreign.type" => "self.id" },
+  { cascade_copy => 0, cascade_delete => 0 },
+);
+
 =head2 regexes
 
 Type: has_many
@@ -193,8 +208,8 @@ __PACKAGE__->has_many(
 );
 
 
-# Created by DBIx::Class::Schema::Loader v0.07043 @ 2015-06-23 14:24:12
-# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:gLRvkh8jz2f1qU6I0DHSZQ
+# Created by DBIx::Class::Schema::Loader v0.07042 @ 2015-09-28 14:50:43
+# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:h5Bl3BAfcoDtSF94ETyFbw
 
 
 # You can replace this text with custom code or comments, and it will be preserved on regeneration

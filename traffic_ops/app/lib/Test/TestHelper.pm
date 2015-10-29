@@ -53,6 +53,9 @@ use constant ADMIN_USER_PASSWORD => 'password';
 use constant PORTAL_USER          => 'portal';
 use constant PORTAL_USER_PASSWORD => 'password';
 
+use constant FEDERATION_USER          => 'federation';
+use constant FEDERATION_USER_PASSWORD => 'password';
+
 sub load_all_fixtures {
 	my $self    = shift;
 	my $fixture = shift;

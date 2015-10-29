@@ -26,6 +26,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 
+import com.google.common.cache.CacheStats;
 import org.apache.log4j.Logger;
 import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -88,7 +89,7 @@ public class DataExporter {
 	}
 
 	public Map<String, Object> getCachesByIp(final String ip) {
-		LOGGER.warn("/ip/"+ip);
+		LOGGER.warn("/ip/" + ip);
 
 		final Map<String, Object> map = new HashMap<String, Object>();
 		map.put("requestIp", ip);
@@ -227,4 +228,30 @@ public class DataExporter {
 
 		return maxAge;
 	}
+
+	public Map<String, Object> getStaticZoneCacheStats() {
+		return createCacheStatsMap(trafficRouterManager.getTrafficRouter().getZoneManager().getStaticCacheStats());
+	}
+
+	public Map<String, Object> getDynamicZoneCacheStats() {
+		return createCacheStatsMap(trafficRouterManager.getTrafficRouter().getZoneManager().getDynamicCacheStats());
+	}
+
+	private Map<String, Object> createCacheStatsMap(final CacheStats cacheStats) {
+		final Map<String, Object> cacheStatsMap = new HashMap<String, Object>();
+		cacheStatsMap.put("requestCount", cacheStats.requestCount());
+		cacheStatsMap.put("hitCount", cacheStats.hitCount());
+		cacheStatsMap.put("missCount", cacheStats.missCount());
+		cacheStatsMap.put("hitRate", cacheStats.hitRate());
+		cacheStatsMap.put("missRate", cacheStats.missRate());
+		cacheStatsMap.put("evictionCount", cacheStats.evictionCount());
+		cacheStatsMap.put("loadCount", cacheStats.loadCount());
+		cacheStatsMap.put("loadSuccessCount", cacheStats.loadSuccessCount());
+		cacheStatsMap.put("loadExceptionCount", cacheStats.loadExceptionCount());
+		cacheStatsMap.put("loadExceptionRate", cacheStats.loadExceptionRate());
+		cacheStatsMap.put("totalLoadTime", cacheStats.totalLoadTime());
+		cacheStatsMap.put("averageLoadPenalty", cacheStats.averageLoadPenalty());
+		return cacheStatsMap;
+	}
+
 }

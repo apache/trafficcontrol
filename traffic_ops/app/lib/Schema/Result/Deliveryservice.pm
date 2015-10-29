@@ -264,6 +264,12 @@ __PACKAGE__->table("deliveryservice");
   is_nullable: 1
   size: 255
 
+=head2 tr_request_headers
+
+  data_type: 'varchar'
+  is_nullable: 1
+  size: 1024
+
 =cut
 
 __PACKAGE__->add_columns(
@@ -356,6 +362,8 @@ __PACKAGE__->add_columns(
   { data_type => "integer", default_value => 1, is_nullable => 1 },
   "dns_bypass_cname",
   { data_type => "varchar", is_nullable => 1, size => 255 },
+  "tr_request_headers",
+  { data_type => "varchar", is_nullable => 1, size => 1024 },
 );
 
 =head1 PRIMARY KEY
@@ -465,6 +473,21 @@ __PACKAGE__->has_many(
   { cascade_copy => 0, cascade_delete => 0 },
 );
 
+=head2 federation_deliveryservices
+
+Type: has_many
+
+Related object: L<Schema::Result::FederationDeliveryservice>
+
+=cut
+
+__PACKAGE__->has_many(
+  "federation_deliveryservices",
+  "Schema::Result::FederationDeliveryservice",
+  { "foreign.deliveryservice" => "self.id" },
+  { cascade_copy => 0, cascade_delete => 0 },
+);
+
 =head2 jobs
 
 Type: has_many
@@ -526,9 +549,11 @@ __PACKAGE__->belongs_to(
 );
 
 
+# Created by DBIx::Class::Schema::Loader v0.07042 @ 2015-10-27 15:25:33
+# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:YlxzkXo06gfjP97F1btVGg
+
 # Created by DBIx::Class::Schema::Loader v0.07043 @ 2015-10-05 11:50:01
 # DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:AUTdFMjQ60ItRfFMfKsB1A
-
 
 # You can replace this text with custom code or comments, and it will be preserved on regeneration
 1;

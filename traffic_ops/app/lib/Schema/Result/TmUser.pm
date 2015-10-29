@@ -257,6 +257,21 @@ __PACKAGE__->has_many(
   { cascade_copy => 0, cascade_delete => 0 },
 );
 
+=head2 federation_tmusers
+
+Type: has_many
+
+Related object: L<Schema::Result::FederationTmuser>
+
+=cut
+
+__PACKAGE__->has_many(
+  "federation_tmusers",
+  "Schema::Result::FederationTmuser",
+  { "foreign.tm_user" => "self.id" },
+  { cascade_copy => 0, cascade_delete => 0 },
+);
+
 =head2 jobs
 
 Type: has_many
@@ -308,8 +323,8 @@ __PACKAGE__->belongs_to(
 );
 
 
-# Created by DBIx::Class::Schema::Loader v0.07043 @ 2015-05-21 13:27:11
-# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:B62pvRbjLu3jDE8NnAxmNQ
+# Created by DBIx::Class::Schema::Loader v0.07042 @ 2015-10-01 13:20:58
+# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:ItqKDNXF30OoTN/XDznBIA
 
 
 # You can replace this text with custom code or comments, and it will be preserved on regeneration

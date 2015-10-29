@@ -122,6 +122,7 @@ sub ui_routes {
 	$r->get('/cdn/add')->over( authenticated => 1 )->to( 'Cdn#add', namespace => $namespace );
 	$r->post('/cdn/create')->over( authenticated => 1 )->to( 'Cdn#create', namespace => $namespace );
 	$r->get('/cdn/:id/delete')->over( authenticated => 1 )->to( 'Cdn#delete', namespace => $namespace );
+
 	# mode is either 'edit' or 'view'.
 	$r->route('/cdn/:mode/:id')->via('GET')->over( authenticated => 1 )->to( 'Cdn#view', namespace => $namespace );
 	$r->post('/cdn/:id/update')->over( authenticated => 1 )->to( 'Cdn#update', namespace => $namespace );
@@ -175,6 +176,16 @@ sub ui_routes {
 	$r->post('/dstmuser')->over( authenticated => 1 )->to( 'DeliveryServiceTmUser#create', namespace => $namespace );
 	$r->get('/dstmuser/:ds/:tm_user_id/delete')->over( authenticated => 1 )->to( 'DeliveryServiceTmUser#delete', namespace => $namespace );
 
+	# -- Federation
+	$r->get('/federation')->over( authenticated => 1 )->to( 'Federation#index', namespace => $namespace );
+	$r->get('/federation/:federation_id/delete')->name("federation_delete")->over( authenticated => 1 )->to( 'Federation#delete', namespace => $namespace );
+	$r->get('/federation/:federation_id/edit')->name("federation_edit")->over( authenticated => 1 )->to( 'Federation#edit', namespace => $namespace );
+	$r->get('/federation/add')->name('federation_add')->over( authenticated => 1 )->to( 'Federation#add', namespace => $namespace );
+	$r->post('/federation')->name('federation_create')->to( 'Federation#create', namespace => $namespace );
+	$r->post('/federation/:federation_id')->name('federation_update')->to( 'Federation#update', namespace => $namespace );
+	$r->get( "/federation/resolvers" => [ format => [qw(json)] ] )->to( 'Federation#resolvers', namespace => $namespace );
+	$r->get( "/federation/users"     => [ format => [qw(json)] ] )->to( 'Federation#users',     namespace => $namespace );
+
 	# -- Gendbdump - Get DB dump
 	$r->get('/dbdump')->over( authenticated => 1 )->to( 'GenDbDump#dbdump', namespace => $namespace );
 
@@ -207,7 +218,6 @@ sub ui_routes {
 	$r->get('/job/new')->over( authenticated => 1 )->to( 'Job#addjob', namespace => $namespace );
 	$r->get('/jobs')->over( authenticated => 1 )->to( 'Job#jobs', namespace => $namespace );
 
-	$r->get('/hardware/:filter/:byvalue')->over( authenticated => 1 )->to( 'Hardware#hardware', namespace => $namespace );
 	$r->get('/custom_charts')->over( authenticated => 1 )->to( 'CustomCharts#custom', namespace => $namespace );
 	$r->get('/custom_charts_single')->over( authenticated => 1 )->to( 'CustomCharts#custom_single_chart', namespace => $namespace );
 	$r->get('/custom_charts_single/cache/#cdn/#cdn_location/:cache/:stat')->over( authenticated => 1 )
@@ -335,7 +345,7 @@ sub ui_routes {
 	$r->get('/update/:host_name')->over( authenticated => 1 )->to( 'Server#readupdate', namespace => $namespace );
 	$r->post('/update/:host_name')->over( authenticated => 1 )->to( 'Server#postupdate', namespace => $namespace );
 	$r->post('/postupdatequeue/:id')->over( authenticated => 1 )->to( 'Server#postupdatequeue', namespace => $namespace );
-	$r->post('/postupdatequeue/:cdn/:cachegroup')->over( authenticated => 1 )->to( 'Server#postupdatequeue', namespace => $namespace );
+	$r->post('/postupdatequeue/:cdn/#cachegroup')->over( authenticated => 1 )->to( 'Server#postupdatequeue', namespace => $namespace );
 
 	# -- User
 	$r->post('/user/register/send')->over( authenticated => 1 )->name('user_register_send')->to( 'User#send_registration', namespace => $namespace );
@@ -398,9 +408,18 @@ sub api_routes {
 	$r->get( "/api/$version/cachegroups/:parameter_id/parameter/available" => [ format => [qw(json)] ] )->over( authenticated => 1 )
 		->to( 'Cachegroup#available_for_parameter', namespace => $namespace );
 
+	# -- Federation
+	$r->get( "/internal/api/$version/federations" => [ format => [qw(json)] ] )->over( authenticated => 1 )
+		->to( 'Federation#index', namespace => $namespace );
+	$r->get( "/api/$version/federations" => [ format => [qw(json)] ] )->over( authenticated => 1 )
+		->to( 'Federation#external_index', namespace => $namespace );
+	$r->post("/api/$version/federations")->over( authenticated => 1 )->to( 'Federation#add', namespace => $namespace );
+	$r->delete("/api/$version/federations")->over( authenticated => 1 )->to( 'Federation#delete', namespace => $namespace );
+	$r->put("/api/$version/federations")->over( authenticated => 1 )->to( 'Federation#update', namespace => $namespace );
+
 	# -- CDN -- #NEW
-	$r->get( "/api/$version/cdns" => [ format => [qw(json)] ] )->over( authenticated => 1 )->to( 'Cdn#index', namespace => $namespace );
-	$r->get( "/api/$version/cdns/name/:name" => [ format => [qw(json)] ] )->over( authenticated => 1 )->to( 'Cdn#name', namespace => $namespace );
+	$r->get( "/api/$version/cdns"            => [ format => [qw(json)] ] )->over( authenticated => 1 )->to( 'Cdn#index', namespace => $namespace );
+	$r->get( "/api/$version/cdns/name/:name" => [ format => [qw(json)] ] )->over( authenticated => 1 )->to( 'Cdn#name',  namespace => $namespace );
 
 	# -- CHANGE LOG - #NEW
 	$r->get( "/api/$version/logs"            => [ format => [qw(json)] ] )->over( authenticated => 1 )->to( 'ChangeLog#index', namespace => $namespace );
@@ -479,7 +498,7 @@ sub api_routes {
 	$r->get( "/api/$version/deliveryservices/xmlId/:xmlId/urlkeys" => [ format => [qw(json)] ] )->over( authenticated => 1 )
 		->to( 'KeysUrlSig#view_by_xmlid', namespace => 'API::DeliveryService' );
 
-	#	->over( authenticated => 1 )->to( 'DeliveryService#get_summary', namespace => $namespace );
+	#       ->over( authenticated => 1 )->to( 'DeliveryService#get_summary', namespace => $namespace );
 	# -- DELIVERY SERVICE SERVER - #NEW
 	# Supports ?orderby=key
 	$r->get("/api/$version/deliveryserviceserver")->over( authenticated => 1 )->to( 'DeliveryServiceServer#index', namespace => $namespace );

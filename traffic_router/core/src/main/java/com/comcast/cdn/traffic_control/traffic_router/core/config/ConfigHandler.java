@@ -113,6 +113,7 @@ public class ConfigHandler {
 				federationsWatcher.configure(config);
 
 				trafficRouterManager.setCacheRegister(cacheRegister);
+				trafficRouterManager.getTrafficRouter().setRequestHeaders(parseRequestHeaders(config.optJSONArray("requestHeaders")));
 				setLastSnapshotTimestamp(sts);
 			} catch (ParseException e) {
 				LOGGER.error(e, e);
@@ -226,7 +227,7 @@ public class ConfigHandler {
 
 									final String tld = cacheRegister.getConfig().optString("domain_name").toLowerCase();
 
-									if (name.contains(tld)) {
+									if (name.endsWith(tld)) {
 										final String reName = name.replaceAll("^.*?\\.", "");
 
 										if (!dsNames.contains(reName)) {
@@ -427,5 +428,24 @@ public class ConfigHandler {
 
 	public void setTrafficOpsUtils(final TrafficOpsUtils trafficOpsUtils) {
 		this.trafficOpsUtils = trafficOpsUtils;
+	}
+
+	private Set<String> parseRequestHeaders(final JSONArray requestHeaders) {
+		final Set<String> headers = new HashSet<String>();
+
+		if (requestHeaders == null) {
+			return headers;
+		}
+
+		for (int i = 0; i < requestHeaders.length(); i++) {
+			try {
+				headers.add(requestHeaders.getString(i));
+			}
+			catch (JSONException e) {
+				LOGGER.warn("Failed parsing request header from config at position " + i, e);
+			}
+		}
+
+		return headers;
 	}
 }

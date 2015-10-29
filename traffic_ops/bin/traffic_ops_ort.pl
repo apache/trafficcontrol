@@ -25,7 +25,7 @@ use MIME::Base64;
 use Data::Dumper;
 
 $| = 1;
-my $script_version = "0.55a";
+my $script_version = "0.55b";
 my $date           = `/bin/date`;
 chomp($date);
 print "$date\nVersion of this script: $script_version\n";
@@ -921,6 +921,7 @@ sub check_plugins {
 			( my @parts ) = split( /\@plugin\=/, $liner );
 			foreach my $i ( 1..$#parts ) {
 				( my $plugin_name, my $plugin_config_file ) = split( /\@pparam\=/, $parts[$i] );
+				($plugin_config_file) = split( /\s+/, $plugin_config_file);
 				if (defined( $plugin_config_file ) ) {
 					( my @parts ) = split( /\//, $plugin_config_file );
 					$plugin_config_file = $parts[$#parts];

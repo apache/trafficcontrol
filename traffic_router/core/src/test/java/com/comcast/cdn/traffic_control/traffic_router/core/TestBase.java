@@ -17,13 +17,13 @@
 package com.comcast.cdn.traffic_control.traffic_router.core;
 
 import org.springframework.context.ApplicationContext;
-import org.springframework.context.support.ClassPathXmlApplicationContext;
+import org.springframework.context.support.FileSystemXmlApplicationContext;
 
 public class TestBase {
 	static private ApplicationContext context;
 	public static ApplicationContext getContext() {
 		if(context!=null) return context;
-		return context = new ClassPathXmlApplicationContext("/applicationContext.xml");
+		return context = new FileSystemXmlApplicationContext("src/main/webapp/WEB-INF/applicationContext.xml");
 	}
 
 }
