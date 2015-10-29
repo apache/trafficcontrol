@@ -16,7 +16,7 @@ public class FederationsBuilderTest {
 
         String json = "{ response: [ " +
             "{ " +
-                "'deliveryService' : 'ccp-omg-01', " +
+                "'deliveryService' : 'kable-town-01', " +
                 "'mappings' : [ " +
                     "{ 'cname' : 'cname1', " +
                         "'ttl' : '86400', " +
@@ -27,7 +27,7 @@ public class FederationsBuilderTest {
                 "] " +
             "}, " +
             "{ " +
-                "'deliveryService' : 'ccp-omg-02', " +
+                "'deliveryService' : 'kable-town-02', " +
                 "'mappings' : [ { 'cname' : 'cname4' , 'ttl' : '86400' } ]" +
             "} " +
         "] }";
@@ -35,7 +35,7 @@ public class FederationsBuilderTest {
         List<Federation> federations = federationsBuilder.fromJSON(json);
 
         assertThat(federations.size(), equalTo(2));
-        assertThat(federations.get(0).getDeliveryService(), equalTo("ccp-omg-01"));
+        assertThat(federations.get(0).getDeliveryService(), equalTo("kable-town-01"));
         assertThat(federations.get(0).getFederationMappings(), not(nullValue()));
     }
 }
