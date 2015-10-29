@@ -23,6 +23,7 @@ public class FederationRegistry {
             for (final Federation federation : federations) {
                 if (deliveryServiceId.equals(federation.getDeliveryService())) {
                     targetFederation = federation;
+                    break;
                 }
             }
         }
