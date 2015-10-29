@@ -27,14 +27,14 @@ public class FederationsWatcher extends AbstractServiceUpdater {
             return;
         }
 
-        setDataBaseURL(federationsURL.toString(), pollingInterval);
-
         // avoid recreating the fetcher if possible
         if (!authorizationURL.equals(this.authorizationURL) || !postData.equals(this.postData)) {
             this.authorizationURL = authorizationURL;
             this.postData = postData;
             fetcher = new ProtectedFetcher(authorizationURL.toString(), postData, 120000);
         }
+
+        setDataBaseURL(federationsURL.toString(), pollingInterval);
     }
 
     public void configure(final JSONObject config) {
