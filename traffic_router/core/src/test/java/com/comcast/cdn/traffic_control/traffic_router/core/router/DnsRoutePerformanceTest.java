@@ -20,6 +20,7 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Random;
 import java.util.Set;
 
 import org.apache.commons.pool.ObjectPool;
@@ -55,7 +56,7 @@ public class DnsRoutePerformanceTest {
     private Map<String, Set<String>> hostMap = new HashMap<String, Set<String>>();
 
     long minimumTPS = Long.parseLong(System.getProperty("minimumTPS"));
-    private String name;
+    private List<String> names;
 
     @Before
     public void before() throws Exception {
@@ -73,7 +74,7 @@ public class DnsRoutePerformanceTest {
             locations.add(new CacheLocation(loc, jo.optString("zoneId"), new Geolocation(jo.getDouble("latitude"), jo.getDouble("longitude"))));
         }
 
-        name = new DnsNameGenerator().getNames(configJson.getJSONObject("deliveryServices")).get(0);
+        names = new DnsNameGenerator().getNames(configJson.getJSONObject("deliveryServices"), configJson.getJSONObject("config"));
 
         cacheRegister.setConfig(configJson);
         CacheRegisterBuilder.parseDeliveryServiceConfig(configJson.getJSONObject("deliveryServices"), cacheRegister);
@@ -84,6 +85,7 @@ public class DnsRoutePerformanceTest {
         NetworkNode.generateTree(new File("src/test/db/czmap.json"));
 
         ZoneManager zoneManager = mock(ZoneManager.class);
+
         whenNew(ZoneManager.class).withArguments(any(TrafficRouter.class), any(StatTracker.class), any(TrafficOpsUtils.class)).thenReturn(zoneManager);
 
         trafficRouter = new TrafficRouter(cacheRegister, mock(GeolocationService.class), mock(GeolocationService.class),
@@ -142,9 +144,11 @@ public class DnsRoutePerformanceTest {
         long before = System.currentTimeMillis();
         int clients = 0;
 
+        // Make it random within the test run but the same random sequence between two test runs
+        Random random = new Random(hostMap.keySet().size());
         for (String cacheGroup : hostMap.keySet()) {
             for (String clientIP : hostMap.get(cacheGroup)) {
-                dnsRequest.setHostname(name);
+                dnsRequest.setHostname(names.get(random.nextInt(names.size())));
                 dnsRequest.setClientIP(clientIP);
                 trafficRouter.route(dnsRequest, track);
                 stats.put(track.getResult(), stats.get(track.getResult()) + 1);
@@ -152,6 +156,8 @@ public class DnsRoutePerformanceTest {
             }
         }
         long tps = clients / ((System.currentTimeMillis() - before) / 1000);
+
+        System.out.println("TPS was " + tps + " for routing dns request with hostname " + names);
 
         for (ResultType resultType : ResultType.values()) {
             if (resultType != ResultType.CZ && resultType != ResultType.GEO) {
