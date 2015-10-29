@@ -28,15 +28,17 @@ Release:          %{build_number}
 License:          Apache License, Version 2.0
 Group:            Base System/System Tools
 Prefix:           /opt/traffic_ops
-Source:           %{_sourcedir}/traffic_ops-%{traffic_control_version}.tgz
+Source:           %{_sourcedir}/traffic_ops-%{version}.tgz
 URL:	          https://github.com/Comcast/traffic_control/
 Vendor:	          Comcast
 Packager:         daniel_kirkwood at Cable dot Comcast dot com
-BuildRoot:        /var/tmp/%{name}-root
 AutoReqProv:      no
 Requires:         expat-devel, mod_ssl, mkisofs, libpcap-devel mysql, mysql-server, openssl, perl-DBI, perl-DBD-MySQL, perl-Digest-SHA1, perl-WWW-Curl
 Requires(pre):    /usr/sbin/useradd, /usr/bin/getent
 Requires(postun): /usr/sbin/userdel
+
+# go get requires git to be updated on Centos 6.x
+BuildRequires:    git >= 1.7.12
 
 %define PACKAGEDIR %{prefix}
 
@@ -52,20 +54,17 @@ Built: %(date) by %{getenv: USER}
 %build
     # compile go executables used during postinstall
 
-
     export GOPATH="$(pwd)/install/go"
     export GOBIN="$(pwd)/install/bin"
 
     echo "Compiling go executables"
     for d in install/go/src/comcast.com/*; do
-        if [[ ! -d $d ]]; then
-            echo "Could not find $d"
-            exit 1
-        fi
-        (cd "$d" && go get || { echo "Could not compile $d"; exit 1; } )
+	(cd "$d" && go get -ldflags "-B 0x%{commit}" -v ) || \
+	    { echo "Could not compile $d"; exit 1; }
     done
 
 %install
+
     if [ -d $RPM_BUILD_ROOT ]; then
 		%__rm -rf $RPM_BUILD_ROOT
     fi
@@ -74,9 +73,9 @@ Built: %(date) by %{getenv: USER}
 		%__mkdir -p $RPM_BUILD_ROOT/%{PACKAGEDIR}
     fi
 
-	%__cp -R $RPM_BUILD_DIR/traffic_ops-%{traffic_control_version}/* $RPM_BUILD_ROOT/%{PACKAGEDIR}
+    %__cp -R $RPM_BUILD_DIR/traffic_ops-%{version}/* $RPM_BUILD_ROOT/%{PACKAGEDIR}
 
-	if [ ! -d $RPM_BUILD_ROOT/%{PACKAGEDIR}/app/public/CRConfig-Snapshots ]; then
+    if [ ! -d $RPM_BUILD_ROOT/%{PACKAGEDIR}/app/public/CRConfig-Snapshots ]; then
         %__mkdir -p $RPM_BUILD_ROOT/%{PACKAGEDIR}/app/public/CRConfig-Snapshots
     fi
     if [ ! -d $RPM_BUILD_ROOT/%{PACKAGEDIR}/app/public/routing ]; then

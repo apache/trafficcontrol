@@ -48,15 +48,8 @@ function initBuildArea() {
 
 	to_src=$(createSourceDir traffic_ops)
 	cd "$TO_DIR" || { echo "Could not cd to $TO_DIR: $?"; exit 1; }
-	for d in app/{bin,conf,cpanfile,db,lib,public,script,templates} doc etc install; do
-		if [[ -d "$d" ]]; then
-			mkdir -p "$to_src/$d" || { echo "Could not create $to_src/$d: $?"; exit 1; }
-			cp -r "$d"/* "$to_src/$d" || { echo "Could not copy $d files to $to_src: $?"; exit 1; }
-		else
-			cp "$d" "$to_src/$d" || { echo "Could not copy $d to $to_src: $?"; exit 1; }
-		fi
-
-	done
+	rsync -av app/{bin,conf,cpanfile,db,lib,public,script,templates} doc etc install "$to_src"/ || \
+		 { echo "Could not copy to $to_src: $?"; exit 1; }
 
 	tar -czvf "$to_src.tgz" -C "$RPMBUILD"/SOURCES $(basename "$to_src") || { echo "Could not create tar archive $to_src.tgz: $?"; exit 1; }
 	cp "$TO_DIR"/build/*.spec "$RPMBUILD"/SPECS/. || { echo "Could not copy spec files: $?"; exit 1; }

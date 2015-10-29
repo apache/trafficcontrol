@@ -45,6 +45,10 @@ function getBuildNumber() {
 	fi
 }
 
+function getCommit() {
+	git rev-parse HEAD
+}
+
 # ---------------------------------------
 function checkEnvironment {
 	export TC_VERSION=$(getVersion "$TC_DIR")
@@ -78,7 +82,9 @@ function buildRpm () {
 		cd "$RPMBUILD" && \
 			rpmbuild --define "_topdir $(pwd)" \
 				 --define "traffic_control_version $TC_VERSION" \
-				 --define "build_number $BUILD_NUMBER" -ba SPECS/$package.spec || \
+				 --define "commit $(getCommit)" \
+				 --define "build_number $BUILD_NUMBER" \
+				 -ba SPECS/$package.spec || \
 				 { echo "RPM BUILD FAILED: $?"; exit 1; }
 
 		echo
