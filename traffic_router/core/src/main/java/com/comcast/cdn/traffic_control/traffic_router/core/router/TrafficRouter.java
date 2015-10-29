@@ -45,7 +45,6 @@ import com.comcast.cdn.traffic_control.traffic_router.core.cache.Cache;
 import com.comcast.cdn.traffic_control.traffic_router.core.cache.CacheLocation;
 import com.comcast.cdn.traffic_control.traffic_router.core.cache.CacheRegister;
 import com.comcast.cdn.traffic_control.traffic_router.core.cache.InetRecord;
-import com.comcast.cdn.traffic_control.traffic_router.core.cache.Cache.DeliveryServiceReference;
 import com.comcast.cdn.traffic_control.traffic_router.core.dns.ZoneManager;
 import com.comcast.cdn.traffic_control.traffic_router.core.dns.DNSAccessRecord;
 import com.comcast.cdn.traffic_control.traffic_router.core.ds.DeliveryService;
@@ -115,23 +114,12 @@ public class TrafficRouter {
 			if(cache.hasAuthority()) {
 				isAvailable = cache.isAvailable();
 			}
-			if (!isAvailable || !cacheSupportsDeliveryService(cache, ds)) {
+			if (!isAvailable || !cache.hasDeliveryService(ds.getId())) {
 				caches.remove(i);
 				i--;
 			}
 		}
 		return caches;
-	}
-
-	private boolean cacheSupportsDeliveryService(final Cache cache, final DeliveryService ds) {
-		boolean result = false;
-		for (final DeliveryServiceReference dsRef : cache.getDeliveryServices()) {
-			if (dsRef.getDeliveryServiceId().equals(ds.getId())) {
-				result = true;
-				break;
-			}
-		}
-		return result;
 	}
 
 	public CacheRegister getCacheRegister() {

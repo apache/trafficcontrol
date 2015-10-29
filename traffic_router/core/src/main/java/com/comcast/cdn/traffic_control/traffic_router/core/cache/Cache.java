@@ -21,7 +21,9 @@ import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.SortedSet;
 import java.util.TreeSet;
 
@@ -44,8 +46,8 @@ public class Cache implements Comparable<Cache> {
 	private String fqdn;
 	private List<InetRecord> ipAddresses;
 	private int port;
-	private Collection<DeliveryServiceReference> deliveryServices = new ArrayList<DeliveryServiceReference>();
-	final private List<Double> hashValues;
+	private final Map<String, DeliveryServiceReference> deliveryServices = new HashMap<String, DeliveryServiceReference>();
+	private final List<Double> hashValues;
 
 	final private int replicas;
 
@@ -89,7 +91,7 @@ public class Cache implements Comparable<Cache> {
 	}
 
 	public Collection<DeliveryServiceReference> getDeliveryServices() {
-		return deliveryServices;
+		return deliveryServices.values();
 	}
 
 	public String getFqdn() {
@@ -188,7 +190,13 @@ public class Cache implements Comparable<Cache> {
 	}
 
 	public void setDeliveryServices(final Collection<DeliveryServiceReference> deliveryServices) {
-		this.deliveryServices = deliveryServices;
+		for (DeliveryServiceReference deliveryServiceReference : deliveryServices) {
+			this.deliveryServices.put(deliveryServiceReference.getDeliveryServiceId(), deliveryServiceReference);
+		}
+	}
+
+	public boolean hasDeliveryService(final String deliveryServiceId) {
+		return deliveryServices.containsKey(deliveryServiceId);
 	}
 
 	public void setFqdn(final String fqdn) {
