@@ -36,7 +36,7 @@ public class FederationRegistryTest {
         List<FederationMapping> federationMappings = new ArrayList<FederationMapping>();
         federationMappings.add(federationMapping);
 
-        Federation federation = new Federation("ccp-omg-01", federationMappings);
+        Federation federation = new Federation("kable-town-01", federationMappings);
 
         federations = new ArrayList<Federation>();
         federations.add(federation);
@@ -48,10 +48,10 @@ public class FederationRegistryTest {
         FederationRegistry federationRegistry = new FederationRegistry();
         federationRegistry.setFederations(federations);
 
-        List<InetRecord> inetRecords = federationRegistry.findInetRecords("ccp-omg-01", CidrAddress.fromString("192.168.10.11/24"));
+        List<InetRecord> inetRecords = federationRegistry.findInetRecords("kable-town-01", CidrAddress.fromString("192.168.10.11/24"));
         assertThat(inetRecords, containsInAnyOrder(new InetRecord("cname1", 1234)));
 
-        inetRecords = federationRegistry.findInetRecords("ccp-omg-01", CidrAddress.fromString("192.168.10.11/16"));
+        inetRecords = federationRegistry.findInetRecords("kable-town-01", CidrAddress.fromString("192.168.10.11/16"));
         assertThat(inetRecords, containsInAnyOrder(new InetRecord("cname1", 1234)));
     }
 }
