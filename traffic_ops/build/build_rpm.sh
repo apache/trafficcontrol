@@ -17,29 +17,9 @@
 #
 
 #----------------------------------------
-function buildRpm () {
-	echo "Building the rpm."
-
-	cd "$RPMBUILD" && \
-		rpmbuild --define "_topdir $(pwd)" \
-			 --define "traffic_control_version $TC_VERSION" \
-			 --define "build_number $BUILD_NUMBER" -ba SPECS/$PACKAGE.spec || \
-			 { echo "RPM BUILD FAILED: $?"; exit 1; }
-
-	echo
-	echo "========================================================================================"
-	echo "RPM BUILD SUCCEEDED, See $DIST/$RPM for the newly built rpm."
-	echo "========================================================================================"
-	echo
-	mkdir -p "$DIST" || { echo "Could not create $DIST: $?"; exit 1; }
-
-	cp "$RPMBUILD/RPMS/$(uname -m)/$RPM" "$DIST/." || { echo "Could not copy $RPM to $DIST: $?"; exit 1; }
-	cp "$RPMBUILD/SRPMS/$SRPM" "$DIST/." || { echo "Could not copy $SRPM to $DIST: $?"; exit 1; }
-}
-
 
 #----------------------------------------
-function checkEnvironment() {
+function importFunctions() {
 	echo "Verifying the build configuration environment."
 	local script=$(readlink -f "$0")
 	local scriptdir=$(dirname "$script")
@@ -51,30 +31,14 @@ function checkEnvironment() {
 		exit 1
 	fi
 	. "$functions_sh"
+}
 
-	# 
-	# get traffic_control src path -- relative to build_rpm.sh script
-	export PACKAGE="traffic_ops"
-	export TC_VERSION=$(getVersion "$TC_DIR")
-	export BUILD_NUMBER=${BUILD_NUMBER:-$(getBuildNumber)}
-	export WORKSPACE=${WORKSPACE:-$TC_DIR}
-	export RPMBUILD="$WORKSPACE/rpmbuild"
-	export DIST="$WORKSPACE/dist"
-	export RPM="${PACKAGE}-${TC_VERSION}-${BUILD_NUMBER}.$(uname -m).rpm"
-	export SRPM="${PACKAGE}-${TC_VERSION}-${BUILD_NUMBER}.src.rpm"
 
-	# verify required tools available in path
-	for pgm in go ; do
-		type $pgm 2>/dev/null || { echo "$pgm not found in PATH"; exit 1; }
-	done
-	echo "Build environment has been verified."
-
-	echo "=================================================="
-	echo "WORKSPACE: $WORKSPACE"
-	echo "BUILD_NUMBER: $BUILD_NUMBER"
-	echo "TC_VERSION: $TC_VERSION"
-	echo "RPM: $RPM"
-	echo "--------------------------------------------------"
+function createSourceDir() {
+	local target="$1-$TC_VERSION"
+	local srcpath="$RPMBUILD/SOURCES/$target"
+	mkdir -p "$srcpath" || { echo "Could not create $srcpath: $?"; exit 1; }
+	echo "$srcpath"
 }
 
 # ---------------------------------------
@@ -82,48 +46,26 @@ function initBuildArea() {
 	echo "Initializing the build area."
 	mkdir -p "$RPMBUILD"/{SPECS,SOURCES,RPMS,SRPMS,BUILD,BUILDROOT} || { echo "Could not create $RPMBUILD: $?"; exit 1; }
 
-	# tar/gzip the source
-	local target="$PACKAGE-$TC_VERSION"
-	local srcpath="$RPMBUILD/SOURCES/$target"
-	mkdir -p "$srcpath" || { echo "Could not create $srcpath: $?"; exit 1; }
-
+	to_src=$(createSourceDir traffic_ops)
 	cd "$TO_DIR" || { echo "Could not cd to $TO_DIR: $?"; exit 1; }
 	for d in app/{bin,conf,cpanfile,db,lib,public,script,templates} doc etc install; do
 		if [[ -d "$d" ]]; then
-			mkdir -p "$srcpath/$d" || { echo "Could not create $srcpath/$d: $?"; exit 1; }
-			cp -r "$d"/* "$srcpath/$d" || { echo "Could not copy $d files to $srcpath: $?"; exit 1; }
+			mkdir -p "$to_src/$d" || { echo "Could not create $to_src/$d: $?"; exit 1; }
+			cp -r "$d"/* "$to_src/$d" || { echo "Could not copy $d files to $to_src: $?"; exit 1; }
 		else
-			cp "$d" "$srcpath/$d" || { echo "Could not copy $d to $srcpath: $?"; exit 1; }
+			cp "$d" "$to_src/$d" || { echo "Could not copy $d to $to_src: $?"; exit 1; }
 		fi
 
 	done
 
-	# compile go executables used during postinstall
-	local bldinstall="$RPMBUILD/BUILD/install"
-	mkdir -p "$bldinstall"
-	cp -r "$TO_DIR/install/go" "$bldinstall" || { echo "Could not copy to $bldinstall: $?"; exit 1; }
-	cd "$bldinstall/go" || { echo "Could not cd to $bldinstall/go: $?"; exit 1; }
-
-	export GOPATH=$(pwd)
-	export GOBIN="$srcpath/install/bin"
-
-	echo "Compiling go executables"
-	for d in src/comcast.com/*; do
-		if [[ ! -d "$d" ]]; then
-			echo "Could not find $d"
-			exit 1
-		fi
-		(cd "$d" && go get || { echo "Could not compile $d"; exit 1; } )
-	done
-
-	tar -czvf "$srcpath.tgz" -C "$RPMBUILD/SOURCES" "$target" || { echo "Could not create tar archive $srcpath.tgz: $?"; exit 1; }
-	cp "$TO_DIR/build/$PACKAGE.spec" "$RPMBUILD/SPECS/." || { echo "Could not copy spec files: $?"; exit 1; }
+	tar -czvf "$to_src.tgz" -C "$RPMBUILD"/SOURCES $(basename "$to_src") || { echo "Could not create tar archive $to_src.tgz: $?"; exit 1; }
+	cp "$TO_DIR"/build/*.spec "$RPMBUILD"/SPECS/. || { echo "Could not copy spec files: $?"; exit 1; }
 
 	echo "The build area has been initialized."
 }
 
 # ---------------------------------------
-
+importFunctions
 checkEnvironment
 initBuildArea
-buildRpm
+buildRpm traffic_ops traffic_ops_ort

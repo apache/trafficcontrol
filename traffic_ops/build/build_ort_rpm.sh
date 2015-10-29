@@ -53,15 +53,11 @@ function checkEnvironment() {
 	. "$functions_sh"
 
 	# 
-	# get traffic_control src path -- relative to build_rpm.sh script
-	export PACKAGE="traffic_ops_ort"
 	export TC_VERSION=$(getVersion "$TC_DIR")
 	export BUILD_NUMBER=${BUILD_NUMBER:-$(getBuildNumber)}
 	export WORKSPACE=${WORKSPACE:-$TC_DIR}
 	export RPMBUILD="$WORKSPACE/rpmbuild"
 	export DIST="$WORKSPACE/dist"
-	export RPM="${PACKAGE}-${TC_VERSION}-${BUILD_NUMBER}.$(uname -m).rpm"
-	export SRPM="${PACKAGE}-${TC_VERSION}-${BUILD_NUMBER}.src.rpm"
 	echo "Build environment has been verified."
 
 	echo "=================================================="

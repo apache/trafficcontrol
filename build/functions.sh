@@ -36,7 +36,7 @@ function isInGitTree() {
 function getBuildNumber() {
 	local in_git=$(isInGitTree)
 	if [[ $in_git ]]; then
-		local commits=$(git rev-list HEAD | wc -l)
+		local commits=$(getRevCount)
 		local sha=$(git rev-parse --short=8 HEAD)
 		echo "$commits.$sha"
 	else
@@ -44,3 +44,51 @@ function getBuildNumber() {
 		tar cf - . | sha1sum || { echo "Could not produce sha1sum of tar'd directory"; exit 1; }
 	fi
 }
+
+# ---------------------------------------
+function checkEnvironment {
+	export TC_VERSION=$(getVersion "$TC_DIR")
+	export BUILD_NUMBER=${BUILD_NUMBER:-$(getBuildNumber)}
+	export WORKSPACE=${WORKSPACE:-$TC_DIR}
+	export RPMBUILD="$WORKSPACE/rpmbuild"
+	export DIST="$WORKSPACE/dist"
+
+	mkdir -p "$DIST" || { echo "Could not create $DIST: $?"; exit 1; }
+
+	# verify required tools available in path
+	for pgm in go ; do
+		type $pgm 2>/dev/null || { echo "$pgm not found in PATH"; exit 1; }
+	done
+	echo "Build environment has been verified."
+
+	echo "=================================================="
+	echo "WORKSPACE: $WORKSPACE"
+	echo "BUILD_NUMBER: $BUILD_NUMBER"
+	echo "TC_VERSION: $TC_VERSION"
+	echo "--------------------------------------------------"
+}
+
+# ---------------------------------------
+function buildRpm () {
+	for package in "$@"; do
+		local rpm="${package}-${TC_VERSION}-${BUILD_NUMBER}.$(uname -m).rpm"
+		local srpm="${package}-${TC_VERSION}-${BUILD_NUMBER}.src.rpm"
+		echo "Building the rpm."
+
+		cd "$RPMBUILD" && \
+			rpmbuild --define "_topdir $(pwd)" \
+				 --define "traffic_control_version $TC_VERSION" \
+				 --define "build_number $BUILD_NUMBER" -ba SPECS/$package.spec || \
+				 { echo "RPM BUILD FAILED: $?"; exit 1; }
+
+		echo
+		echo "========================================================================================"
+		echo "RPM BUILD FOR $package SUCCEEDED, See $DIST/$rpm for the newly built rpm."
+		echo "========================================================================================"
+		echo
+
+		cp "$RPMBUILD/RPMS/$(uname -m)/$rpm" "$DIST/." || { echo "Could not copy $rpm to $DIST: $?"; exit 1; }
+		cp "$RPMBUILD/SRPMS/$srpm" "$DIST/." || { echo "Could not copy $srpm to $DIST: $?"; exit 1; }
+	done
+}
+

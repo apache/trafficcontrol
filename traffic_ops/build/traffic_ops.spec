@@ -46,7 +46,24 @@ Installs Traffic Ops.
 Built: %(date) by %{getenv: USER}
 
 %prep
+
 %setup
+
+%build
+    # compile go executables used during postinstall
+
+
+    export GOPATH="$(pwd)/install/go"
+    export GOBIN="$(pwd)/install/bin"
+
+    echo "Compiling go executables"
+    for d in install/go/src/comcast.com/*; do
+        if [[ ! -d $d ]]; then
+            echo "Could not find $d"
+            exit 1
+        fi
+        (cd "$d" && go get || { echo "Could not compile $d"; exit 1; } )
+    done
 
 %install
     if [ -d $RPM_BUILD_ROOT ]; then
