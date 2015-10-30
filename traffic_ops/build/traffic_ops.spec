@@ -52,10 +52,11 @@ Built: %(date) by %{getenv: USER}
 %setup
 
 %build
-    # compile go executables used during postinstall
+    # update version referenced in the source
+    perl -pi.bak -e 's:@VERSION@:%{version}:' app/lib/UI/Utils.pm
 
+    # compile go executables used during postinstall
     # suppress strip of go execs
-    %define __os_install_post %{nil}
     %define debug_package %{nil}
 
     export GOPATH="$(pwd)/install/go"
