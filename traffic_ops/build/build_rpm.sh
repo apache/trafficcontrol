@@ -17,17 +17,14 @@
 #
 
 #----------------------------------------
-
-#----------------------------------------
 function importFunctions() {
-	echo "Verifying the build configuration environment."
 	local script=$(readlink -f "$0")
 	local scriptdir=$(dirname "$script")
 	export TO_DIR=$(dirname "$scriptdir")
 	export TC_DIR=$(dirname "$TO_DIR")
-	functions_sh="$TC_DIR/build/functions.sh"
+	functions_sh="$tc_dir/build/functions.sh"
 	if [[ ! -r $functions_sh ]]; then
-		echo "Error: Can't find $functions_sh"
+		echo "error: can't find $functions_sh"
 		exit 1
 	fi
 	. "$functions_sh"
@@ -39,7 +36,7 @@ function initBuildArea() {
 	echo "Initializing the build area."
 	mkdir -p "$RPMBUILD"/{SPECS,SOURCES,RPMS,SRPMS,BUILD,BUILDROOT} || { echo "Could not create $RPMBUILD: $?"; exit 1; }
 
-	to_dest=$(createSourceDir traffic_ops)
+	local to_dest=$(createSourceDir traffic_ops)
 	cd "$TO_DIR" || \
 		 { echo "Could not cd to $TO_DIR: $?"; exit 1; }
 	rsync -av doc etc install "$to_dest"/ || \

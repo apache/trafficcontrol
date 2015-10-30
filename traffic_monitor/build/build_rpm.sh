@@ -35,12 +35,10 @@ function importFunctions() {
 function buildRpmTrafficMonitor () {
 	echo "Building the rpm."
 
+	cd "$TM_DIR" || { echo "Could not cd to $TM_DIR: $?"; exit 1; }
 	local version="-Dtraffic_control.version=$TC_VERSION"
-	local targetdir="-Dproject.build.directory=$(pwd)"
-	# mvn uses this:
 	export GIT_REV_COUNT=$(getRevCount)
-	cd "$BLDPATH" || { echo "Could not cd to $BLDPATH: $?"; exit 1; }
-	mvn "$version" "$targetdir" package || { echo "RPM BUILD FAILED: $?"; exit 1; }
+	mvn "$version" package || { echo "RPM BUILD FAILED: $?"; exit 1; }
 
 	local rpm=$(find -name \*.rpm)
 	if [[ -z $rpm ]]; then
@@ -64,30 +62,6 @@ function buildRpmTrafficMonitor () {
 	#cp "$RPMBUILD"/SRPMS/*/*.rpm "$DIST/." || { echo "Could not copy source rpm to $DIST: $?"; exit 1; }
 }
 
-
-#----------------------------------------
-function checkEnvironment() {
-	echo "Verifying the build configuration environment."
-	# 
-	# get traffic_control src path -- relative to build_rpm.sh script
-	export PACKAGE="traffic_monitor"
-	export TC_VERSION=$(getVersion "$TC_DIR")
-	export BUILD_NUMBER=${BUILD_NUMBER:-$(getBuildNumber)}
-	export WORKSPACE=${WORKSPACE:-$TC_DIR}
-	export RPMBUILD="$WORKSPACE/rpmbuild"
-	export DIST="$WORKSPACE/dist"
-	export RPM="${PACKAGE}-${TC_VERSION}-${BUILD_NUMBER}.$(uname -m).rpm"
-	export SRPM="${PACKAGE}-${TC_VERSION}-${BUILD_NUMBER}.src.rpm"
-	echo "Build environment has been verified."
-
-	echo "=================================================="
-	echo "WORKSPACE: $WORKSPACE"
-	echo "BUILD_NUMBER: $BUILD_NUMBER"
-	echo "TC_VERSION: $TC_VERSION"
-	echo "RPM: $RPM"
-	echo "--------------------------------------------------"
-}
-
 # ---------------------------------------
 function initBuildArea() {
 	echo "Initializing the build area."
@@ -95,7 +69,6 @@ function initBuildArea() {
 
 	tm_dest=$(createSourceDir traffic_monitor)
 
-	cp -r "$TM_DIR"/{build,etc,src} "$tm_dest"/. || { echo "Could not copy to $tm_dest: $?"; exit 1; }
 	cp -r "$TM_DIR"/{build,etc,src} "$tm_dest"/. || { echo "Could not copy to $tm_dest: $?"; exit 1; }
 	cp  "$TM_DIR"/pom.xml "$tm_dest" || { echo "Could not copy to $tm_dest: $?"; exit 1; }
 
