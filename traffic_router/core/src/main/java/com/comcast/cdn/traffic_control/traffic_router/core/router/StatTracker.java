@@ -21,7 +21,6 @@ import java.util.List;
 import java.util.Map;
 
 import com.comcast.cdn.traffic_control.traffic_router.core.loc.Geolocation;
-import org.apache.log4j.Logger;
 
 import com.comcast.cdn.traffic_control.traffic_router.core.cache.CacheRegister;
 import com.comcast.cdn.traffic_control.traffic_router.core.ds.DeliveryService;
@@ -29,7 +28,6 @@ import com.comcast.cdn.traffic_control.traffic_router.core.router.StatTracker.Tr
 import com.comcast.cdn.traffic_control.traffic_router.core.router.StatTracker.Track.RouteType;
 
 public class StatTracker {
-	private static final Logger LOGGER = Logger.getLogger(StatTracker.class);
 	private String dnsRoutingName;
 	private String httpRoutingName;
 
@@ -241,8 +239,6 @@ public class StatTracker {
 			final DeliveryService ds = cacheRegister.getDeliveryService(dsId);
 
 			if (ds != null) {
-				LOGGER.info("Initializing statistics for " + ds);
-
 				for (int i = 0; i < dsNames.size(); i++) {
 					final Track t = getTrack();
 					final StringBuffer dsName = new StringBuffer(dsNames.get(i));

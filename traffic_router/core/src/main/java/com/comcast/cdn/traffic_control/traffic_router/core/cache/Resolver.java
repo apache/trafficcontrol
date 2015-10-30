@@ -39,7 +39,7 @@ public class Resolver {
 				}
 			}
 			if (ipAddresses.isEmpty()) {
-				LOGGER.warn(String.format("No public addresses found for: (%s)", fqdn));
+				LOGGER.info(String.format("No public addresses found for: (%s)", fqdn));
 //				ipAddresses = null; // jlaue - give it a chance to recover next time?  
 			}
 		} catch (final UnknownHostException e) {

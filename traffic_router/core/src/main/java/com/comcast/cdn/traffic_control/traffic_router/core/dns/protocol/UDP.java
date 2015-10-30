@@ -51,7 +51,6 @@ public class UDP extends AbstractProtocol {
                 submit(new UDPPacketHandler(packet));
             } catch (final IOException e) {
 				LOGGER.warn("error: " + e);
-				LOGGER.debug(e,e);
             }
         }
     }

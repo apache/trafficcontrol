@@ -97,7 +97,7 @@ public final class SignatureManager {
 					LOGGER.fatal(e, e);
 				}
 			} else {
-				LOGGER.warn("DNSSEC not enabled; to enable, set dnssec.enabled = true in the profile parameters for this Traffic Router in Traffic Ops");
+				LOGGER.info("DNSSEC not enabled; to enable, set dnssec.enabled = true in the profile parameters for this Traffic Router in Traffic Ops");
 			}
 		}
 	}
@@ -216,7 +216,6 @@ public final class SignatureManager {
 
 					if (content != null) {
 						keyPairs = new JSONObject(content);
-						LOGGER.debug(keyPairs);
 						break;
 					}
 				} catch (IOException ex) {
