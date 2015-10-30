@@ -17,7 +17,22 @@
 #
 
 #----------------------------------------
-function buildRpm () {
+function importFunctions() {
+	echo "Verifying the build configuration environment."
+	local script=$(readlink -f "$0")
+	local scriptdir=$(dirname "$script")
+	export TM_DIR=$(dirname "$scriptdir")
+	export TC_DIR=$(dirname "$TM_DIR")
+	functions_sh="$TC_DIR/build/functions.sh"
+	if [[ ! -r $functions_sh ]]; then
+		echo "Error: Can't find $functions_sh"
+		exit 1
+	fi
+	. "$functions_sh"
+}
+
+#----------------------------------------
+function buildRpmTrafficMonitor () {
 	echo "Building the rpm."
 
 	local version="-Dtraffic_control.version=$TC_VERSION"
@@ -53,17 +68,6 @@ function buildRpm () {
 #----------------------------------------
 function checkEnvironment() {
 	echo "Verifying the build configuration environment."
-	local script=$(readlink -f "$0")
-	local scriptdir=$(dirname "$script")
-	export TM_DIR=$(dirname "$scriptdir")
-	export TC_DIR=$(dirname "$TM_DIR")
-	functions_sh="$TC_DIR/build/functions.sh"
-	if [[ ! -r $functions_sh ]]; then
-		echo "Error: Can't find $functions_sh"
-		exit 1
-	fi
-	. "$functions_sh"
-
 	# 
 	# get traffic_control src path -- relative to build_rpm.sh script
 	export PACKAGE="traffic_monitor"
@@ -89,26 +93,20 @@ function initBuildArea() {
 	echo "Initializing the build area."
 	mkdir -p "$RPMBUILD"/{SPECS,SOURCES,RPMS,SRPMS,BUILD,BUILDROOT} || { echo "Could not create $RPMBUILD: $?"; exit 1; }
 
-	# tar/gzip the source
-	local target="$PACKAGE-$TC_VERSION"
-	local srcpath="$RPMBUILD/SOURCES/$target"
-	export BLDPATH="$RPMBUILD/BUILD/$target"
-	mkdir -p "$srcpath" || { echo "Could not create $srcpath: $?"; exit 1; }
-	mkdir -p "$BLDPATH" || { echo "Could not create $BLDPATH: $?"; exit 1; }
+	tm_dest=$(createSourceDir traffic_monitor)
 
-	# TODO: what can be cut out here?
-	cp -r "$TM_DIR"/{build,etc,src} "$srcpath"/. || { echo "Could not copy to $srcpath: $?"; exit 1; }
-	cp -r "$TM_DIR"/{build,etc,src} "$srcpath"/. || { echo "Could not copy to $srcpath: $?"; exit 1; }
-	cp  "$TM_DIR"/pom.xml "$srcpath" || { echo "Could not copy to $srcpath: $?"; exit 1; }
+	cp -r "$TM_DIR"/{build,etc,src} "$tm_dest"/. || { echo "Could not copy to $tm_dest: $?"; exit 1; }
+	cp -r "$TM_DIR"/{build,etc,src} "$tm_dest"/. || { echo "Could not copy to $tm_dest: $?"; exit 1; }
+	cp  "$TM_DIR"/pom.xml "$tm_dest" || { echo "Could not copy to $tm_dest: $?"; exit 1; }
 
-	tar -czvf "$srcpath.tgz" -C "$RPMBUILD/SOURCES" "$target" || { echo "Could not create tar archive $srcpath.tgz: $?"; exit 1; }
-	cp -r "$srcpath"/* "$BLDPATH"
+	tar -czvf "$tm_dest.tgz" -C "$RPMBUILD"/SOURCES $(basename "$tm_dest") || { echo "Could not create tar archive $tm_dest.tgz: $?"; exit 1; }
 
 	echo "The build area has been initialized."
 }
 
 # ---------------------------------------
 
+importFunctions
 checkEnvironment
 initBuildArea
-buildRpm
+buildRpmTrafficMonitor

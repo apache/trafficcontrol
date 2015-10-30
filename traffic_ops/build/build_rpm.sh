@@ -34,13 +34,6 @@ function importFunctions() {
 }
 
 
-function createSourceDir() {
-	local target="$1-$TC_VERSION"
-	local srcpath="$RPMBUILD/SOURCES/$target"
-	mkdir -p "$srcpath" || { echo "Could not create $srcpath: $?"; exit 1; }
-	echo "$srcpath"
-}
-
 # ---------------------------------------
 function initBuildArea() {
 	echo "Initializing the build area."

@@ -17,6 +17,21 @@
 #
 
 #----------------------------------------
+function importFunctions() {
+	echo "Verifying the build configuration environment."
+	local script=$(readlink -f "$0")
+	local scriptdir=$(dirname "$script")
+	export TR_DIR=$(dirname "$scriptdir")
+	export TC_DIR=$(dirname "$TR_DIR")
+	functions_sh="$TC_DIR/build/functions.sh"
+	if [[ ! -r $functions_sh ]]; then
+		echo "Error: Can't find $functions_sh"
+		exit 1
+	fi
+	. "$functions_sh"
+}
+
+#----------------------------------------
 function installDnsSec {
 	# download and integrate dnssec library
 	local dnssecversion=0.12
@@ -36,7 +51,7 @@ function installDnsSec {
 }
 
 #----------------------------------------
-function buildRpm () {
+function buildRpmTrafficRouter () {
 	echo "Building the rpm."
 	local version="-Dtraffic_control.version=$TC_VERSION"
 	local targetdir="-Dproject.build.directory=$BLDPATH"
@@ -75,8 +90,8 @@ function checkEnvironment() {
 	echo "Verifying the build configuration environment."
 	local script=$(readlink -f "$0")
 	local scriptdir=$(dirname "$script")
-	export TM_DIR=$(dirname "$scriptdir")
-	export TC_DIR=$(dirname "$TM_DIR")
+	export TR_DIR=$(dirname "$scriptdir")
+	export TC_DIR=$(dirname "$TR_DIR")
 	functions_sh="$TC_DIR/build/functions.sh"
 	if [[ ! -r $functions_sh ]]; then
 		echo "Error: Can't find $functions_sh"
@@ -107,26 +122,22 @@ function initBuildArea() {
 	echo "Initializing the build area."
 	mkdir -p "$RPMBUILD"/{SPECS,SOURCES,RPMS,SRPMS,BUILD,BUILDROOT} || { echo "Could not create $RPMBUILD: $?"; exit 1; }
 
-	local target="$PACKAGE-$TC_VERSION"
-	# export these so build fcn has them
-	export SRCPATH="$RPMBUILD/SOURCES/$target"
-	export BLDPATH="$RPMBUILD/BUILD/$target"
-	mkdir -p "$SRCPATH" || { echo "Could not create $SRCPATH: $?"; exit 1; }
-	mkdir -p "$BLDPATH" || { echo "Could not create $BLDPATH: $?"; exit 1; }
+	tr_dest=$(createSourceDir traffic_monitor)
 
 	# TODO: what can be cut out here?
-	cp -r "$TM_DIR"/{api,build,connector,core} "$SRCPATH"/. || { echo "Could not copy to $SRCPATH: $?"; exit 1; }
-	cp  "$TM_DIR"/pom.xml "$SRCPATH" || { echo "Could not copy to $SRCPATH: $?"; exit 1; }
-	cp -r "$SRCPATH"/* "$BLDPATH"
+	cp -r "$TR_DIR"/{api,build,connector,core} "$tr_dest"/. || { echo "Could not copy to $tr_dest: $?"; exit 1; }
+	cp  "$TR_DIR"/pom.xml "$tr_dest" || { echo "Could not copy to $tr_dest: $?"; exit 1; }
+	cp -r "$tr_dest"/* "$BLDPATH"
 
 	# tar/gzip the source
-	tar -czvf "$SRCPATH".tgz -C "$RPMBUILD/SOURCES" "$target" || { echo "Could not create tar archive $SRCPATH.tgz: $?"; exit 1; }
+	tar -czvf "$tr_dest".tgz -C "$RPMBUILD/SOURCES" $(basename $tr_dest) || { echo "Could not create tar archive $tr_dest: $?"; exit 1; }
 
 	echo "The build area has been initialized."
 }
 
 # ---------------------------------------
 
+importFunctions
 checkEnvironment
 initBuildArea
-buildRpm
+buildRpmTrafficRouter
