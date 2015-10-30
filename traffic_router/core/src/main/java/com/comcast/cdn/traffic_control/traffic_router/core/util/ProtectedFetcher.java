@@ -20,10 +20,7 @@ import java.io.IOException;
 import java.net.HttpCookie;
 import java.net.HttpURLConnection;
 
-import org.apache.log4j.Logger;
-
 public class ProtectedFetcher extends Fetcher {
-	private static final Logger LOGGER = Logger.getLogger(ProtectedFetcher.class);
 	private String authorizationEndpoint;
 	private String data;
 	private HttpCookie cookie;
@@ -37,7 +34,6 @@ public class ProtectedFetcher extends Fetcher {
 	@Override
 	protected HttpURLConnection getConnection(final String url, final String data, final String method, final long lastFetchedTime) throws IOException {
 		if (!isCookieValid()) {
-			LOGGER.debug("Cookie is no longer valid; re-authenticating to " + getAuthorizationEndpoint() + " cookie = " + cookie);
 			extractCookie(super.getConnection(getAuthorizationEndpoint(), getData(), POST_STR, 0L));
 		}
 
@@ -46,9 +42,7 @@ public class ProtectedFetcher extends Fetcher {
 
 	private HttpURLConnection extractCookie(final HttpURLConnection http) throws IOException {
 		if (http.getHeaderField("Set-Cookie") != null) {
-			LOGGER.info("Storing cookie from: " + http.getURL().toString());
 			setCookie(HttpCookie.parse(http.getHeaderField("Set-Cookie")).get(0));
-			LOGGER.debug("cookie: "+ getCookie());
 		}
 
 		return http;
@@ -60,10 +54,6 @@ public class ProtectedFetcher extends Fetcher {
 		} else {
 			return false;
 		}
-	}
-
-	private HttpCookie getCookie() throws IOException {
-		return cookie;
 	}
 
 	private void setCookie(final HttpCookie cookie) {

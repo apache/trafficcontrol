@@ -221,12 +221,9 @@ public class TrafficRouter {
 		}
 
 		if (ds.isCoverageZoneOnly()) {
-			LOGGER.warn(String.format("No Cache found in CZM (%s, ip=%s, path=%s), geo not supported", request.getType(), request.getClientIP(), request.getHostname()));
 			track.setResult(ResultType.MISS);
 			track.setResultDetails(ResultDetails.DS_CZ_ONLY);
-		}
-		else {
-			LOGGER.warn(String.format("No Cache found by CZM (%s, ip=%s, path=%s)", request.getType(), request.getClientIP(), request.getHostname()));
+		} else {
 			caches = selectCachesByGeo(request, ds, cacheLocation, track);
 		}
 
@@ -253,7 +250,6 @@ public class TrafficRouter {
 		final List<Cache> caches = getCachesByGeo(request, deliveryService, clientLocation, resultLocation);
 		
 		if (caches == null || caches.isEmpty()) {
-			LOGGER.warn(String.format("No Cache found by Geo (%s, ip=%s, path=%s)", request.getType(), request.getClientIP(), request.getHostname()));
 			track.setResultDetails(ResultDetails.GEO_NO_CACHE_FOUND);
 		}
 
@@ -267,7 +263,6 @@ public class TrafficRouter {
 		final DeliveryService ds = selectDeliveryService(request, false);
 
 		if (ds == null) {
-			LOGGER.warn("[dns] No DeliveryService found for: " + request.getHostname());
 			track.setResult(ResultType.STATIC_ROUTE);
 			track.setResultDetails(ResultDetails.DS_NOT_FOUND);
 			return null;
@@ -276,7 +271,6 @@ public class TrafficRouter {
 		final DNSRouteResult result = new DNSRouteResult();
 
 		if (!ds.isAvailable()) {
-			LOGGER.warn("deliveryService not available: " + ds);
 			result.setAddresses(ds.getFailureDnsResponse(request, track));
 			return result;
 		}
@@ -291,7 +285,6 @@ public class TrafficRouter {
 		}
 
 		if (ds.isCoverageZoneOnly()) {
-			LOGGER.info(String.format("No Cache found in CZM (%s, ip=%s, path=%s), geo not supported", request.getType(), request.getClientIP(), request.getHostname()));
 			track.setResult(ResultType.MISS);
 			track.setResultDetails(ResultDetails.DS_CZ_ONLY);
 			result.setAddresses(ds.getFailureDnsResponse(request, track));
@@ -310,14 +303,12 @@ public class TrafficRouter {
 			LOGGER.error("Bad client address: '" + request.getClientIP() + "'");
 		}
 
-		LOGGER.info(String.format("No Cache found by CZM (%s, ip=%s, path=%s)", request.getType(), request.getClientIP(), request.getHostname()));
 		caches = selectCachesByGeo(request, ds, cacheLocation, track);
 
 		if (caches != null) {
 			track.setResult(ResultType.GEO);
 			result.setAddresses(inetRecordsFromCaches(ds, caches));
-		}
-		else {
+		} else {
 			track.setResult(ResultType.MISS);
 			result.setAddresses(ds.getFailureDnsResponse(request, track));
 		}
@@ -386,7 +377,6 @@ public class TrafficRouter {
 		final DeliveryService ds = selectDeliveryService(request, true);
 
 		if (ds == null) {
-			LOGGER.warn("No DeliveryService found for: " + request.getRequestedUrl());
 			track.setResult(ResultType.DS_MISS);
 			track.setResultDetails(ResultDetails.DS_NOT_FOUND);
 			return null;
@@ -397,7 +387,6 @@ public class TrafficRouter {
 		routeResult.setDeliveryService(ds);
 
 		if (!ds.isAvailable()) {
-			LOGGER.warn("deliveryService unavailable: " + ds);
 			routeResult.setUrl(ds.getFailureHttpResponse(request, track));
 			return routeResult;
 		}
@@ -503,11 +492,7 @@ public class TrafficRouter {
 			}
 		}
 
-		final Cache result = (foundCache != null) ? foundCache : minCache;
-		if (LOGGER.isDebugEnabled()) {
-			LOGGER.debug("Selected cache: " + result);
-		}
-		return result;
+		return (foundCache != null) ? foundCache : minCache;
 	}
 
 	/**
@@ -529,11 +514,11 @@ public class TrafficRouter {
 			try {
 				hash = hashFunction.hash(request);
 			} catch (final Exception e) {
-				LOGGER.debug(e.getMessage(), e);
+				LOGGER.error(e.getMessage(), e);
 			}
 			hashFunctionPool.returnObject(hashFunction);
 		} catch (final Exception e) {
-			LOGGER.debug(e.getMessage(), e);
+			LOGGER.error(e.getMessage(), e);
 		}
 		if (hash == 0) {
 			LOGGER.warn("Problem with hashFunctionPool, request: " + request);

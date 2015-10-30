@@ -122,13 +122,6 @@ public class TRServlet extends HttpServlet {
 		}
 		req.setHeaders(headers);
 
-		if (LOGGER.isDebugEnabled()) {
-			LOGGER.debug("Request Client: " + req.getClientIP());
-			LOGGER.debug("Request Server: " + req.getHostname());
-			LOGGER.debug("Request Path: " + req.getPath());
-			LOGGER.debug("Request Query String: " + req.getQueryString());
-		}
-
 		final HTTPAccessRecord httpAccessRecord = new HTTPAccessRecord.Builder(requestDate, request).build();
 		writeHttpResponse(response, request, req, track, httpAccessRecord);
 	}

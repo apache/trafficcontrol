@@ -22,13 +22,11 @@ import java.util.List;
 import java.util.Random;
 import java.util.SortedMap;
 
-import org.apache.log4j.Logger;
 import org.json.JSONObject;
 
 import com.comcast.cdn.traffic_control.traffic_router.core.cache.Cache;
 
 public class Dispersion {
-	public static final Logger LOGGER = Logger.getLogger(Dispersion.class);
 	public final static int DEFAULT_LIMIT = 1;
 	public final static boolean DEFAULT_SHUFFLED = true;
 
@@ -66,13 +64,7 @@ public class Dispersion {
 		final List<Cache> cacheList = this.getCacheList(cacheMap);
 
 		if (cacheList != null) {
-			final Cache cache = cacheList.get(0);
-
-			if (LOGGER.isDebugEnabled()) {
-				LOGGER.debug("Selected cache: " + cache);
-			}
-
-			return cache;
+			return cacheList.get(0);
 		}
 
 		return null;
