@@ -54,6 +54,10 @@ Built: %(date) by %{getenv: USER}
 %build
     # compile go executables used during postinstall
 
+    # suppress strip of go execs
+    %define __os_install_post %{nil}
+    %define debug_package %{nil}
+
     export GOPATH="$(pwd)/install/go"
     export GOBIN="$(pwd)/install/bin"
 
@@ -158,7 +162,13 @@ fi
 %defattr(644,root,root,755)
 %attr(755,root,root) %{PACKAGEDIR}/app/bin/*
 %config(noreplace)/opt/traffic_ops/app/conf/*
-%{PACKAGEDIR}/install/*
-%{PACKAGEDIR}/app/*
-%{PACKAGEDIR}/etc/*
-%{PACKAGEDIR}/doc/*
+%{PACKAGEDIR}/app/cpanfile
+%{PACKAGEDIR}/app/db
+%{PACKAGEDIR}/app/lib
+%{PACKAGEDIR}/app/public
+%{PACKAGEDIR}/app/script
+%{PACKAGEDIR}/app/templates
+%{PACKAGEDIR}/install
+%exclude %{PACKAGEDIR}/install/go
+%{PACKAGEDIR}/etc
+%doc %{PACKAGEDIR}/doc
