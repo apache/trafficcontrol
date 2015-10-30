@@ -53,16 +53,15 @@ function installDnsSec {
 #----------------------------------------
 function buildRpmTrafficRouter () {
 	echo "Building the rpm."
-	local version="-Dtraffic_control.version=$TC_VERSION"
-	local targetdir="-Dproject.build.directory=$BLDPATH"
-	cd "$BLDPATH" || { echo "Could not cd to $BLDPATH: $?"; exit 1; }
 
 	installDnsSec
 
-	# mvn uses this:
+	cd "$TR_DIR" || { echo "Could not cd to $TR_DIR: $?"; exit 1; }
+	local version="-Dtraffic_control.version=$TC_VERSION"
 	export GIT_REV_COUNT=$(getRevCount)
-	mvn -Dmaven.test.skip=true -DminimumTPS=1 "$version" "$targetdir" package ||  \
+	mvn -Dmaven.test.skip=true -DminimumTPS=1 "$version" package ||  \
 		{ echo "RPM BUILD FAILED: $?"; exit 1; }
+
 	local rpm=$(find -name \*.rpm)
 	if [[ -z $rpm ]]; then
 		echo "Could not find rpm file $RPM in $(pwd)"

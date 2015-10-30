@@ -22,7 +22,7 @@ function importFunctions() {
 	local scriptdir=$(dirname "$script")
 	export TO_DIR=$(dirname "$scriptdir")
 	export TC_DIR=$(dirname "$TO_DIR")
-	functions_sh="$tc_dir/build/functions.sh"
+	functions_sh="$TC_DIR/build/functions.sh"
 	if [[ ! -r $functions_sh ]]; then
 		echo "error: can't find $functions_sh"
 		exit 1
