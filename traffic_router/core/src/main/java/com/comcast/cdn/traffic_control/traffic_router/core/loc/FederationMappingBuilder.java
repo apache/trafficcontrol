@@ -28,7 +28,7 @@ public class FederationMappingBuilder {
                 network = buildAddresses(networkArray);
             }
             catch (JSONException e) {
-                LOGGER.warn("Failed getting ipv4 address array");
+                LOGGER.warn("Failed getting ipv4 address array likely due to bad json data: " + e.getMessage());
             }
         }
 
@@ -40,7 +40,7 @@ public class FederationMappingBuilder {
                 network6 = buildAddresses(network6Array);
             }
             catch (JSONException e) {
-                LOGGER.warn("Failed getting ipv6 address array");
+                LOGGER.warn("Failed getting ipv6 address array likely due to bad json data: " + e.getMessage());
             }
         }
 

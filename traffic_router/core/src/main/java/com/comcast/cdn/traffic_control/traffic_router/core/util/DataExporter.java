@@ -89,7 +89,6 @@ public class DataExporter {
 	}
 
 	public Map<String, Object> getCachesByIp(final String ip) {
-		LOGGER.warn("/ip/" + ip);
 
 		final Map<String, Object> map = new HashMap<String, Object>();
 		map.put("requestIp", ip);

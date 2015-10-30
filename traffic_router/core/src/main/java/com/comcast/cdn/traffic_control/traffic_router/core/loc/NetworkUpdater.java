@@ -19,14 +19,11 @@ package com.comcast.cdn.traffic_control.traffic_router.core.loc;
 import java.io.File;
 import java.io.IOException;
 
-import org.apache.log4j.Logger;
 import org.apache.wicket.ajax.json.JSONException;
 
 public class NetworkUpdater extends AbstractServiceUpdater {
-	private static final Logger LOGGER = Logger.getLogger(NetworkUpdater.class);
 
 	public NetworkUpdater() {
-		LOGGER.debug("init...");
 		sourceCompressed = false;
 		tmpPrefix = "czf";
 		tmpSuffix = ".json";

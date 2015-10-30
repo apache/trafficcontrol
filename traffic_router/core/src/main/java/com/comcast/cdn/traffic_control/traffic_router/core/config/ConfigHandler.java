@@ -92,8 +92,6 @@ public class ConfigHandler {
 			if (sts <= getLastSnapshotTimestamp()) {
 				LOGGER.warn("Incoming TrConfig snapshot timestamp (" + sts + ") is older or equal to the loaded timestamp (" + getLastSnapshotTimestamp() + "); unable to process");
 				return false;
-			} else {
-				LOGGER.debug("Incoming TrConfig snapshot timestamp (" + sts + ") is newer than the loaded timestamp (" + getLastSnapshotTimestamp() + "); processing new TrConfig");
 			}
 
 			try {
