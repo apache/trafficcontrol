@@ -17,12 +17,6 @@
 #
 
 # ---------------------------------------
-function getVersion() {
-	local d="$1"
-	local vf="$d/VERSION"
-	cat "$vf" || { echo "Could not read $vf: $!"; exit 1; }
-}
-
 function getRevCount() {
 	git rev-list HEAD 2>/dev/null | wc -l
 }
@@ -45,6 +39,15 @@ function getBuildNumber() {
 	fi
 }
 
+# ---------------------------------------
+function getVersion() {
+	local d="$1"
+	local vf="$d/VERSION"
+	[ -r $vf ] || { echo "Could not read $vf: $!"; exit 1; }
+	cat "$vf"
+}
+
+# ---------------------------------------
 function getCommit() {
 	git rev-parse HEAD
 }

@@ -20,7 +20,8 @@
 # only a subset is wanted.
 
 # make sure we start out in traffic_control dir
-top=${0%%/*}
+topscript=$(readlink -f $0)
+top=$(dirname $(dirname "$topscript"))
 [[ -n $top ]] && cd "$top" || { echo "Could not cd $top"; exit 1; }
 
 if [[ $# -gt 0 ]]; then

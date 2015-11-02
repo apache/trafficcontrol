@@ -53,8 +53,7 @@ Built: %(date) by %{getenv: USER}
 
 %build
     # update version referenced in the source
-    perl -pi.bak -e 's:@VERSION@:%{version}:' app/lib/UI/Utils.pm
-
+    perl -pi.bak -e 's/__VERSION__/%{version}-%{release}/' app/lib/UI/Utils.pm
     # compile go executables used during postinstall
     # suppress strip of go execs
     %define debug_package %{nil}
