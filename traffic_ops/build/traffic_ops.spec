@@ -37,9 +37,6 @@ Requires:         expat-devel, mod_ssl, mkisofs, libpcap-devel mysql, mysql-serv
 Requires(pre):    /usr/sbin/useradd, /usr/bin/getent
 Requires(postun): /usr/sbin/userdel
 
-# go get requires git to be updated on Centos 6.x
-BuildRequires:    git >= 1.7.12
-
 %define PACKAGEDIR %{prefix}
 
 %description

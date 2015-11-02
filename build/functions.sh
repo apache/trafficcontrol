@@ -17,6 +17,33 @@
 #
 
 # ---------------------------------------
+# versionOk checks version number against required version.
+#   ``versionOk 1.2.3 2.0.4.7'' returns false value indicating
+#       version you have is not at least version you need
+#   if versionOk $haveversion $needversion; then
+#      echo "Need at least version $needversion"; exit 1
+#   fi
+function versionOk() {
+	local h=$1 n=$2
+	# string compare -- no need to do more if the same
+	[[ $h == $n ]] && return 0
+
+	# split into fields
+	local have=(${h//\./ })
+	local need=(${n//\./ })
+	# cmp first entry of each array.  Bail when unequal.
+	while [[ -n $have && $have -eq $need ]]; do
+		# pop 1st entry from each
+		have=("${have[@]:1}")
+		need=("${need[@]:1}")
+	done
+	if [[ ${have:-0} -lt ${need:-0} ]]; then
+		return 1
+	fi
+	return 0
+}
+
+# ---------------------------------------
 function getRevCount() {
 	git rev-list HEAD 2>/dev/null | wc -l
 }
@@ -63,9 +90,15 @@ function checkEnvironment {
 	mkdir -p "$DIST" || { echo "Could not create $DIST: $?"; exit 1; }
 
 	# verify required tools available in path
-	for pgm in go ; do
+	for pgm in git go ; do
 		type $pgm 2>/dev/null || { echo "$pgm not found in PATH"; exit 1; }
 	done
+	# verify git version
+	requiredGitVersion=1.7.12
+	if ! versionOk $(git --version | tr -dc 0-9. ) "$requiredGitVersion"; then
+		echo "$(git --version) must be at least $requiredGitVersion"
+		exit 1
+	fi
 	echo "Build environment has been verified."
 
 	echo "=================================================="
