@@ -96,4 +96,45 @@ sub get_db_name {
 	return $conf->{cache_stats_db_name};
 }
 
+sub current_bandwidth {
+	my $self = shift;
+	my $cdn  = $self->param('cdnName');
+	my $query = "SELECT sum(value)/6 FROM \"bandwidth\" WHERE time < now() - 60s and time > now() - 120s";
+	if ($cdn) {
+		$query = "SELECT sum(value)/6 FROM \"bandwidth\" WHERE time < now() - 60s and time > now() - 120s and cdn = \'$cdn\'";
+	}
+	$self->app->log->debug("query = $query");
+	my $response_container = $self->influxdb_query("cache_stats", $query);
+	my $response           = $response_container->{'response'};
+	my $content            = $response->{_content};
+	my $summary_content;
+	my $bandwidth = "err";
+	if ( $response->is_success() ) {
+		$summary_content   = decode_json($content);
+		$bandwidth           = $summary_content->{results}[0]{series}[0]{values}[0][1];
+		$bandwidth = $bandwidth/1000000;
+	}
+	return $self->success({"bandwidth" => $bandwidth});
+}
+
+sub current_connections {
+	my $self = shift;
+	my $cdn  = $self->param('cdnName');
+	my $query = "select sum(value) from \"ats.proxy.process.http.current_client_connections\" where time > now() - 120s and time < now() - 60s";
+	if ($cdn) {
+		$query = "select sum(value) from \"ats.proxy.process.http.current_client_connections\" where time > now() - 120s and time < now() - 60s and cdn = \'$cdn\'";
+	}
+	$self->app->log->debug("query = $query");
+	my $response_container = $self->influxdb_query("cache_stats", $query);
+	my $response           = $response_container->{'response'};
+	my $content            = $response->{_content};
+	my $summary_content;
+	my $connections = "err";
+	if ( $response->is_success() ) {
+		$summary_content   = decode_json($content);
+		$connections           = $summary_content->{results}[0]{series}[0]{values}[0][1];
+	}
+	return $self->success({"connections" => $connections});
+}
+
 1;

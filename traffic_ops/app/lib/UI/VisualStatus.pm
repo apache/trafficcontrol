@@ -20,9 +20,29 @@ package UI::VisualStatus;
 
 use UI::Utils;
 use Mojo::Base 'Mojolicious::Controller';
+use Data::Dumper;
+use JSON;
+use Extensions::TrafficStats::Builder::CacheStatsBuilder;
 
 sub graphs {
 	my $self = shift;
+	my $match_string = $self->param('matchstring');
+	
+	my @cdn_names;
+	my $ds_capacity = 0;
+	my ( $ds_name, $loc_name, $host_name ) = split( /:/, $match_string );
+	if ( $host_name ne 'all' ) {    # we want a specific host, it has to be in only one CDN
+		my $server = $self->db->resultset('Server')->search( { host_name => $host_name }, { prefetch => 'cdn' } )->single();
+		push( @cdn_names, $server->cdn->name );
+	}
+	elsif ( $ds_name ne 'all' ) {    # we want a specific DS, it has to be in only one CDN
+		my $ds = $self->db->resultset('Deliveryservice')->search( { xml_id => $ds_name }, { prefetch => 'cdn' } )->single();
+		push( @cdn_names, $ds->cdn->name );
+		$ds_capacity = $ds->global_max_mbps / 1000;    # everything is in kbps in the stats
+	}
+	else {                                             # we want all the CDNs with edges
+		@cdn_names = $self->db->resultset('Server')->search({ 'type.name' => 'EDGE' }, { prefetch => [ 'cdn', 'type' ], group_by => 'cdn.name' } )->get_column('cdn.name')->all();
+	}
 
 	my $pparam =
 		$self->db->resultset('ProfileParameter')
@@ -32,9 +52,32 @@ sub graphs {
 		$self->db->resultset('ProfileParameter')
 		->search( { -and => [ 'parameter.name' => 'visual_status_panel_2', 'profile.name' => 'GLOBAL' ] }, { prefetch => [ 'parameter', 'profile' ] } )->single();
 	my $p2_url = defined($pparam) ? $pparam->parameter->value : undef;
+	
+	my $bw_total = 0;
+	my $bandwidth = "err";
+	my %cdn_bandwidth;
+	foreach my $cdn (@cdn_names) {
+		my $query = "SELECT sum(value)/6 FROM \"bandwidth\" WHERE time < now() - 60s and time > now() - 120s and cdn = \'$cdn\'";
+		my $response_container = $self->influxdb_query("cache_stats", $query);
+		my $response           = $response_container->{'response'};
+		my $content            = $response->{_content};
+		my $summary_content;
+		if ( $response->is_success() ) {
+			$summary_content   = decode_json($content);
+			$bandwidth           = $summary_content->{results}[0]{series}[0]{values}[0][1];
+			$bandwidth = $bandwidth/1000000;
+			$bw_total += $bandwidth;	
+			$cdn_bandwidth{$cdn} = sprintf("%.2f", $bandwidth);
+		}
+	}
+	$cdn_bandwidth{"all"} = sprintf("%.2f", $bw_total);
+	
 	$self->stash(
+		cdn_names   => \@cdn_names,	
+		ds_capacity => $ds_capacity,
 		panel_1_url => $p1_url,
-		panel_2_url => $p2_url
+		panel_2_url => $p2_url,
+		cdn_bandwidth => \%cdn_bandwidth
 	);
 
 	&navbarpage($self);
@@ -62,7 +105,7 @@ sub graphs_redis {
 		@cdn_names = $self->db->resultset('Server')->search({ 'type.name' => 'EDGE' }, { prefetch => [ 'cdn', 'type' ], group_by => 'cdn.name' } )->get_column('cdn.name')->all();
 	}
 	$self->stash(
-		cdn_names   => \@cdn_names,
+		cdn_names   => \@cdn_names,	
 		graph_page  => 1,
 		matchstring => $match_string,
 		ds_capacity => $ds_capacity,
