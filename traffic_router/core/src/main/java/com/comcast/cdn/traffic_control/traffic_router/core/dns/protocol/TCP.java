@@ -49,7 +49,6 @@ public class TCP extends AbstractProtocol {
                 submit(handler);
             } catch (final IOException e) {
 				LOGGER.warn("error: " + e);
-				LOGGER.debug(e,e);
             }
         }
     }

@@ -79,7 +79,6 @@ public class TrafficMonitorWatcher  {
 				return trafficRouterManager.setState(new JSONObject(jsonStr));
 			} catch (JSONException e) {
 				LOGGER.warn("problem with json: ",e);
-				LOGGER.debug("problem with json: "+jsonStr);
 			} catch (UnknownHostException e) {
 				LOGGER.warn(e,e);
 			}
@@ -108,8 +107,6 @@ public class TrafficMonitorWatcher  {
 
 	@SuppressWarnings("PMD.CyclomaticComplexity")
 	public void init() {
-		LOGGER.info("Start");
-
 		final AbstractUpdatable crHandler = new AbstractUpdatable() {
 			@Override
 			public boolean update(final String configStr) {
@@ -118,7 +115,6 @@ public class TrafficMonitorWatcher  {
 						return configHandler.processConfig(configStr);
 					} catch (JSONException e) {
 						LOGGER.warn(e, e);
-						LOGGER.warn("JSON document length: " + configStr.length());
 					} catch (TrafficRouterException e) {
 						LOGGER.fatal(e, e);
 					}
@@ -239,13 +235,11 @@ public class TrafficMonitorWatcher  {
 		synchronized(hostSync) {
 			if (hosts == null || hosts.length == 0) {
 				hosts = newHosts;
-				LOGGER.warn("traffic_monitor.bootstrap.hosts: " + Arrays.toString(hosts));
+				LOGGER.info("traffic_monitor.bootstrap.hosts: " + Arrays.toString(hosts));
 			} else if (!Arrays.asList(hosts).containsAll(Arrays.asList(newHosts))
 					|| !Arrays.asList(newHosts).containsAll(Arrays.asList(hosts))) {
 				hosts = newHosts;
-				LOGGER.warn("traffic_monitor.bootstrap.hosts changed to: " + Arrays.toString(hosts));
-			} else {
-				LOGGER.debug("traffic_monitor.bootstrap.hosts unchanged: " + Arrays.toString(hosts));
+				LOGGER.info("traffic_monitor.bootstrap.hosts changed to: " + Arrays.toString(hosts));
 			}
 		}
 	}
@@ -275,7 +269,7 @@ public class TrafficMonitorWatcher  {
 			final boolean localConfig = Boolean.parseBoolean(props.getProperty("traffic_monitor.bootstrap.local", "false"));
 
 			if (localConfig != isLocalConfig()) {
-				LOGGER.warn("traffic_monitor.bootstrap.local changed to: " + localConfig);
+				LOGGER.info("traffic_monitor.bootstrap.local changed to: " + localConfig);
 				setLocalConfig(localConfig);
 			}
 
@@ -298,15 +292,11 @@ public class TrafficMonitorWatcher  {
 
 				if (newReloadPeriod != reloadPeriod) {
 					reloadPeriod = newReloadPeriod;
-					LOGGER.warn("traffic_monitor.properties.reload.period changed to: "+reloadPeriod);
-				}
-				else {
-					LOGGER.debug("traffic_monitor.properties.reload.period: "+reloadPeriod);
+					LOGGER.info("traffic_monitor.properties.reload.period changed to: " + reloadPeriod);
 				}
 			}
 		} catch (Exception e) {
 			LOGGER.warn(e,e);
-			LOGGER.debug(e,e);
 		}
 
 		if (hosts==null) {
@@ -345,7 +335,6 @@ public class TrafficMonitorWatcher  {
 
 	public static void setOnlineMonitors(final List<String> onlineMonitors) {
 		synchronized(monitorSync) {
-			LOGGER.debug("Setting online Monitors to: " + onlineMonitors);
 			TrafficMonitorWatcher.onlineMonitors = onlineMonitors;
 			setBootstrapped(true);
 			setHosts(onlineMonitors.toArray(new String[onlineMonitors.size()]));

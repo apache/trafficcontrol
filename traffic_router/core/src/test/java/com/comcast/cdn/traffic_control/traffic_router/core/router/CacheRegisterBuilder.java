@@ -103,25 +103,32 @@ public class CacheRegisterBuilder {
         final List<DeliveryServiceMatcher> dnsServiceMatchers = new ArrayList<DeliveryServiceMatcher>();
         final List<DeliveryServiceMatcher> httpServiceMatchers = new ArrayList<DeliveryServiceMatcher>();
         final Map<String,DeliveryService> dsMap = new HashMap<String,DeliveryService>();
+
         for(String dsId : JSONObject.getNames(deliveryServices)) {
             final JSONObject dsJo = deliveryServices.getJSONObject(dsId);
             final JSONArray matchsets = dsJo.getJSONArray("matchsets");
             final DeliveryService ds = new DeliveryService(dsId, dsJo);
             boolean isDns = false;
+
             dsMap.put(dsId, ds);
+
             for (int i = 0; i < matchsets.length(); i++) {
                 final JSONObject matchset = matchsets.getJSONObject(i);
                 final String protocol = matchset.getString("protocol");
-                if("DNS".equals(protocol)) {
+
+                if ("DNS".equals(protocol)) {
                     isDns = true;
                 }
-                final JSONArray list = matchset.getJSONArray("matchlist");
+
                 final DeliveryServiceMatcher m = new DeliveryServiceMatcher(ds);
-                if("HTTP".equals(protocol)) {
+
+                if ("HTTP".equals(protocol)) {
                     httpServiceMatchers.add(m);
                 } else if("DNS".equals(protocol)) {
                     dnsServiceMatchers.add(m);
                 }
+
+                final JSONArray list = matchset.getJSONArray("matchlist");
                 for (int j = 0; j < list.length(); j++) {
                     final JSONObject matcherJo = list.getJSONObject(j);
                     final DeliveryServiceMatcher.Type type = DeliveryServiceMatcher.Type.valueOf(matcherJo.getString("match-type"));
@@ -129,10 +136,13 @@ public class CacheRegisterBuilder {
                     m.addMatch(type, matcherJo.getString("regex"), target);
                 }
             }
+
             ds.setDns(isDns);
         }
+
         cacheRegister.setDeliveryServiceMap(dsMap);
         cacheRegister.setDnsDeliveryServiceMatchers(dnsServiceMatchers);
         cacheRegister.setHttpDeliveryServiceMatchers(httpServiceMatchers);
     }
+
 }

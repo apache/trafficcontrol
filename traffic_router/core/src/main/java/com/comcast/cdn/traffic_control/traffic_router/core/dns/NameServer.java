@@ -296,7 +296,6 @@ public class NameServer {
 		 * Given that we know we're shutting down and NameServer relies on ZoneManager,
 		 * we'll call destroy while we can without hacking Spring too hard.
 		 */
-		LOGGER.info("Calling destroy on ZoneManager");
 		ZoneManager.destroy();
 	}
 }
