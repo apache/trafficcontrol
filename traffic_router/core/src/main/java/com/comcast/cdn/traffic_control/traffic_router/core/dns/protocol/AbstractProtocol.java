@@ -107,7 +107,7 @@ public abstract class AbstractProtocol implements Protocol {
      *            the DNS request in wire format
      * @return the DNS response in wire format
      */
-    protected byte[] query(final InetAddress client, final byte[] request) {
+    protected byte[] query(final InetAddress client, final byte[] request) throws WireParseException {
         Message query = null;
         Message response = null;
         final long queryTimeMillis = System.currentTimeMillis();
@@ -123,7 +123,7 @@ public abstract class AbstractProtocol implements Protocol {
             ACCESS.info(DNSAccessEventBuilder.create(dnsAccessRecord));
         } catch (final WireParseException e) {
             ACCESS.info(DNSAccessEventBuilder.create(dnsAccessRecord, e));
-            throw new IllegalArgumentException(e);
+            throw e;
         } catch (final Exception e) {
             ACCESS.info(DNSAccessEventBuilder.create(dnsAccessRecord, e));
             response = createServerFail(query);
