@@ -66,24 +66,37 @@ public class StatTracker {
 		public void setStaticRouteCount(final int staticRouteCount) {
 			this.staticRouteCount = staticRouteCount;
 		}
+
+		public int getFedCount() {
+			return fedCount;
+		}
+
+		public void setFedCount(int fedCount) {
+			this.fedCount = fedCount;
+		}
+
 		public int czCount;
 		public int geoCount;
 		public int missCount;
 		public int dsrCount;
 		public int errCount;
 		public int staticRouteCount;
+		public int fedCount;
 	}
-	public static class Track {
 
+	public static class Track {
 		public static enum RouteType {
 			DNS,HTTP
 		}
+
 		public static enum ResultType {
 			ERROR, CZ, GEO, MISS, STATIC_ROUTE, DS_REDIRECT, DS_MISS, INIT, FED
 		}
+
 		public enum ResultDetails {
 			NO_DETAILS, DS_NOT_FOUND, DS_NO_BYPASS, DS_BYPASS, DS_CZ_ONLY, DS_CLIENT_GEO_UNSUPPORTED, GEO_NO_CACHE_FOUND
 		}
+
 		long time;
 		RouteType routeType;
 		String fqdn;
@@ -205,6 +218,7 @@ public class StatTracker {
 			incTally(t, tallies);
 		}
 	}
+
 	private static void incTally(final Track t, final Tallies tallies) {
 		switch(t.result) {
 		case ERROR:
@@ -225,10 +239,14 @@ public class StatTracker {
 		case STATIC_ROUTE:
 			tallies.staticRouteCount++;
 			break;
+		case FED:
+			tallies.fedCount++;
+			break;
 		default:
 			break;
 		}
 	}
+
 	public void init() {
 		appStartTime = System.currentTimeMillis();
 	}

@@ -55,6 +55,9 @@ public class DataExporter {
 	@Autowired
 	private StatTracker statTracker;
 
+	@Autowired
+	private FederationExporter federationExporter;
+
 	public void setTrafficRouterManager(final TrafficRouterManager trafficRouterManager) {
 		this.trafficRouterManager = trafficRouterManager;
 	}
@@ -114,8 +117,23 @@ public class DataExporter {
 			map.put("locationByGeo", e.toString());
 		}
 
+		try {
+			final CidrAddress cidrAddress = CidrAddress.fromString(ip);
+
+			List<Object> federationsList = federationExporter.getMatchingFederations(cidrAddress);
+
+			if (federationsList.isEmpty()) {
+				map.put("locationByFederation", "not found");
+			} else {
+				map.put("locationByFederation", federationsList);
+			}
+		} catch (NetworkNodeException e) {
+			map.put("locationByFederation", "not found");
+		}
+
 		return map;
 	}
+
 
 	private CacheLocation getLocationFromCzm(final String ip) {
 		NetworkNode nn = null;
@@ -253,4 +271,7 @@ public class DataExporter {
 		return cacheStatsMap;
 	}
 
+	public void setFederationExporter(FederationExporter federationExporter) {
+		this.federationExporter = federationExporter;
+	}
 }

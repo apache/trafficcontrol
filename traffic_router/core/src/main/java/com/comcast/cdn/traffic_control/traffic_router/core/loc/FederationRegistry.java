@@ -58,4 +58,16 @@ public class FederationRegistry {
         inetRecords.add(inetRecord);
         return inetRecords;
     }
+
+	public List<Federation> findFederations(final CidrAddress cidrAddress) {
+		List<Federation> results = new ArrayList<Federation>();
+
+		for (Federation federation : federations) {
+			if (federation.containsCidrAddress(cidrAddress)) {
+				results.add(federation);
+			}
+		}
+
+		return results;
+	}
 }
