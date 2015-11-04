@@ -382,12 +382,7 @@
 {"profile":"EDGE1_CDN_520","parameter":"location","config_file":"set_dscp_40.config","value":"/opt/trafficserver/etc/trafficserver/dscp"}
 {"profile":"EDGE1_CDN_520","parameter":"location","config_file":"set_dscp_48.config","value":"/opt/trafficserver/etc/trafficserver/dscp"}
 {"profile":"EDGE1_CDN_520","parameter":"location","config_file":"set_dscp_56.config","value":"/opt/trafficserver/etc/trafficserver/dscp"}
-{"profile":"EDGE1_CDN_520","parameter":"location","config_file":"8080_fwd.config","value":"/opt/trafficserver/etc/trafficserver"}
-{"profile":"EDGE1_CDN_520","parameter":"line1","config_file":"8080_fwd.config","value":"cond %{READ_REQUEST_HDR_HOOK}"}
-{"profile":"EDGE1_CDN_520","parameter":"line2","config_file":"8080_fwd.config","value":"cond %{INCOMING-PORT} =8080"}
-{"profile":"EDGE1_CDN_520","parameter":"line3","config_file":"8080_fwd.config","value":"skip-remap true"}
-{"profile":"EDGE1_CDN_520","parameter":"header_rewrite.so","config_file":"plugin.config","value":"/opt/trafficserver/etc/trafficserver/8080_fwd.config"}
-{"profile":"EDGE1_CDN_520","parameter":"CONFIG proxy.config.http.server_ports","config_file":"records.config","value":"STRING 80 80:ipv6 443:ssl 443:ipv6:ssl 8080 8080:ipv6"}
+{"profile":"EDGE1_CDN_520","parameter":"CONFIG proxy.config.http.server_ports","config_file":"records.config","value":"STRING 80 80:ipv6 443:ssl 443:ipv6:ssl"}
 {"profile":"EDGE1_CDN_520","parameter":"location","config_file":"ssl_multicert.config","value":"/opt/trafficserver/etc/trafficserver"}
 {"profile":"EDGE1_CDN_520","parameter":"location","config_file":"bg_fetch.config","value":"/opt/trafficserver/etc/trafficserver"}
 {"profile":"EDGE1_CDN_520","parameter":"qstring","config_file":"parent.config","value":"ignore"}

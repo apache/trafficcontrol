@@ -1,5 +1,7 @@
 package com.comcast.cdn.traffic_control.traffic_router.core.loc;
 
+import com.comcast.cdn.traffic_control.traffic_router.core.util.CidrAddress;
+
 import java.util.List;
 
 public class Federation implements Comparable<Federation> {
@@ -44,5 +46,15 @@ public class Federation implements Comparable<Federation> {
     @Override
     public int compareTo(final Federation other) {
         return deliveryService.compareTo(other.deliveryService);
+    }
+
+    public boolean containsCidrAddress(final CidrAddress cidrAddress) {
+        for (FederationMapping federationMapping : federationMappings) {
+            if (federationMapping.containsCidrAddress(cidrAddress)) {
+                return true;
+            }
+        }
+
+        return false;
     }
 }

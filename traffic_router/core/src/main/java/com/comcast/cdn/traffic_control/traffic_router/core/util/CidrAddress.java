@@ -135,4 +135,8 @@ public class CidrAddress implements Comparable<CidrAddress> {
     public String toString() {
         return getCidrString();
     }
+
+    public String getAddressString() {
+        return address.toString() + "/" + netmaskLength;
+    }
 }
