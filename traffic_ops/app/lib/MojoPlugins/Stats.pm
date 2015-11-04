@@ -290,7 +290,6 @@ sub register {
 			}
 			else {
 				my $mkbps_match = $cdn_name . ":" . $ds_name . ":" . $cg_name . ":" . $host_name . ":maxKbps";
-				$self->app->log->debug("mkbps_match = $mkbps_match");
 				$capacity = ( $redis->zrange( $mkbps_match, -1, -1 ) )[0];
 			}
 
