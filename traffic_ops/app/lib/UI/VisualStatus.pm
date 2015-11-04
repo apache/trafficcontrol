@@ -22,7 +22,6 @@ use UI::Utils;
 use Mojo::Base 'Mojolicious::Controller';
 use Data::Dumper;
 use JSON;
-use Extensions::TrafficStats::Builder::CacheStatsBuilder;
 
 sub graphs {
 	my $self = shift;
