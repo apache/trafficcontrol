@@ -47,7 +47,6 @@ function getCurrentBandwidth(cdn_name) {
         $.getJSON( bwUrl + "?cdnName=" + cdn_name, function() {})
          .done(function(data) {
             bandwidth = data.response.bandwidth.toFixed(2);
-            console.log("cdn_name = " + cdn_name + " bandwidth = " + bandwidth);
             $('#' + cdn_name + '_gbps_val').text(bandwidth);
             // get capacity
             var capacityUrl = "/internal/api/1.2/current_capacity.json";
@@ -55,7 +54,6 @@ function getCurrentBandwidth(cdn_name) {
             .done(function(data) {
             var capacity = Math.round(data.response.capacity);
             var percentage = Math.round(bandwidth/capacity * 100);
-            console.log("cdn = " + cdn_name + " bandwidth = " + bandwidth + " capacity = " + capacity + " percentage = " + percentage);
             setProgress(cdn_name + "_percent_indicator", percentage);
             setText(cdn_name + "_percent_indicator", "avail: " + capacity + ", used: " + percentage);
             $('#' + cdn_name + '_gbps_val').text(bandwidth);
