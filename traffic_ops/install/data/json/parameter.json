@@ -401,13 +401,8 @@
 {"name":"location","config_file":"set_dscp_40.config","value":"/opt/trafficserver/etc/trafficserver/dscp"}
 {"name":"location","config_file":"set_dscp_48.config","value":"/opt/trafficserver/etc/trafficserver/dscp"}
 {"name":"location","config_file":"set_dscp_56.config","value":"/opt/trafficserver/etc/trafficserver/dscp"}
-{"name":"location","config_file":"8080_fwd.config","value":"/opt/trafficserver/etc/trafficserver"}
-{"name":"line1","config_file":"8080_fwd.config","value":"cond %{READ_REQUEST_HDR_HOOK}"}
-{"name":"line2","config_file":"8080_fwd.config","value":"cond %{INCOMING-PORT} =8080"}
-{"name":"line3","config_file":"8080_fwd.config","value":"skip-remap true"}
-{"name":"header_rewrite.so","config_file":"plugin.config","value":"/opt/trafficserver/etc/trafficserver/8080_fwd.config"}
 {"name":"CONFIG proxy.config.cache.ip_allow.filename","config_file":"records.config","value":"STRING ip_allow.config"}
-{"name":"CONFIG proxy.config.http.server_ports","config_file":"records.config","value":"STRING 80 80:ipv6 443:ssl 443:ipv6:ssl 8080 8080:ipv6"}
+{"name":"CONFIG proxy.config.http.server_ports","config_file":"records.config","value":"STRING 80 80:ipv6 443:ssl 443:ipv6:ssl"}
 {"name":"location","config_file":"hdr_rw_kinx-prog.config","value":"/opt/trafficserver/etc/trafficserver"}
 {"name":"geolocation.polling.url","config_file":"CRConfig.json","value":"http://cdn-tools.cdnl.kabletown.net/cdn/MaxMind/GeoLiteCity.dat.gz"}
 {"name":"geolocation6.polling.url","config_file":"CRConfig.json","value":"http://cdn-tools.cdnl.kabletown.net/cdn/MaxMind/GeoLiteCityv6.dat.gz"}
