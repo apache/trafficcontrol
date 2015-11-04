@@ -771,6 +771,7 @@ sub traffic_stats_routes {
 	$r->get( "/api/$version/cache_stats" => [ format => [qw(json)] ] )->over( authenticated => 1 )->to( 'CacheStats#index', namespace => $namespace );
 	$r->get( "internal/api/$version/current_bandwidth" => [ format => [qw(json)] ] )->to( 'CacheStats#current_bandwidth', namespace => $namespace );
 	$r->get( "internal/api/$version/current_connections" => [ format => [qw(json)] ] )->to( 'CacheStats#current_connections', namespace => $namespace );
+	$r->get( "internal/api/$version/current_capacity" => [ format => [qw(json)] ] )->to( 'CacheStats#current_capacity', namespace => $namespace );
 }
 
 sub catch_all {

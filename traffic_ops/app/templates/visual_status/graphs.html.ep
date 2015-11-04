@@ -40,15 +40,31 @@ function refreshStats()
 }
 
 function getCurrentBandwidth(cdn_name) {
-    var url = "/internal/api/1.2/current_bandwidth.json";
+    var bwUrl = "/internal/api/1.2/current_bandwidth.json";
     if (cdn_name != null) {
-        $.getJSON( url + "?cdnName=" + cdn_name, function() {})
+        var bandwidth = 0;
+        // get bandwidth
+        $.getJSON( bwUrl + "?cdnName=" + cdn_name, function() {})
          .done(function(data) {
-            $('#' + cdn_name + '_gbps_val').text(data.response.bandwidth.toFixed(2));
+            bandwidth = data.response.bandwidth.toFixed(2);
+            console.log("cdn_name = " + cdn_name + " bandwidth = " + bandwidth);
+            $('#' + cdn_name + '_gbps_val').text(bandwidth);
+            // get capacity
+            var capacityUrl = "/internal/api/1.2/current_capacity.json";
+            $.getJSON( capacityUrl + "?cdnName=" + cdn_name, function() {})
+            .done(function(data) {
+            var capacity = Math.round(data.response.capacity);
+            var percentage = Math.round(bandwidth/capacity * 100);
+            console.log("cdn = " + cdn_name + " bandwidth = " + bandwidth + " capacity = " + capacity + " percentage = " + percentage);
+            setProgress(cdn_name + "_percent_indicator", percentage);
+            setText(cdn_name + "_percent_indicator", "avail: " + capacity + ", used: " + percentage);
+            $('#' + cdn_name + '_gbps_val').text(bandwidth);
+            });
         });
+        
     }
     else {
-        $.getJSON( url, function() {})
+        $.getJSON( bwUrl, function() {})
          .done(function(data) {
             $('#total_gbps_val').text(data.response.bandwidth.toFixed(2));
         });   
@@ -60,22 +76,27 @@ function getCurrentConnections(cdn_name) {
     if (cdn_name != null) {
         $.getJSON( url + "?cdnName=" + cdn_name, function() {})
          .done(function(data) {
-            $('#' + cdn_name + '_conn_val').text(data.response.connections.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",")); //toLocaleString doesnt work across browsers, this regex does.
+            var connections = Math.round(data.response.connections).toString();
+            $('#' + cdn_name + '_conn_val').text(connections.replace(/\B(?=(\d{3})+(?!\d))/g, ",")); //toLocaleString doesnt work across browsers, this regex does.
         });
     }
     else {
         $.getJSON( url, function() {})
          .done(function(data) {
-            $('#total_conn_val').text(data.response.connections.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",")); //toLocaleString doesnt work across browsers, this regex does.
+            var connections = Math.round(data.response.connections).toString();
+            $('#total_conn_val').text(connections.replace(/\B(?=(\d{3})+(?!\d))/g, ",")); //toLocaleString doesnt work across browsers, this regex does.
         });   
     }
 }
+
 //refresh every 30 seconds
 setInterval('refreshStats()', 30000);
 
 </script>
+<script type="text/javascript" src="/js/percentagebar.js"></script>
+
 <style>
-.statistics_section { float:left; width:315px; height:240; color:white; font-size:150%; width:305px; background-color:#898989; margin-right:5px; padding:5px; border:1px solid #121212; }
+.statistics_section { float:left; width:35%; color:white; font-size:150%; width:305px; background-color:#898989; margin-right:5px; padding:5px; border:1px solid #121212; }
 .ui-progressbar {
   position: relative;
 }
@@ -93,9 +114,10 @@ setInterval('refreshStats()', 30000);
 .progress_bar {
   float:right;
   height: 10px;
-  width: 115px;
+  width: 100px;
   float:right;
 }
+#graph_panel {width: 65%; float: left;}
 #stat_value, #total_gbps_val, #total_conn_val { font-size: 225%; text-align: right;}
 
 </style>
@@ -110,14 +132,14 @@ setInterval('refreshStats()', 30000);
             <div id="total_gbps_val"></div>
             % foreach my $cdn ( @{ $cdn_names }) {
                 <div><%= $cdn %> Gbps: </div>
-                <!-- <div><script>percentLabel('<%= $cdn %>_percent_indicator',0);</script></div> -->
-                <!-- <div><script>progressBar('<%= $cdn %>_percent_indicator',0);</script></div> -->
+                <div><script>percentLabel('<%= $cdn %>_percent_indicator',0);</script></div>
+                <div><script>progressBar('<%= $cdn %>_percent_indicator',0);</script></div>
                 <div id="stat_value">
                     <div id="<%= $cdn %>_gbps_val"></div>
                 </div>
             % } 
         </div>
-        <div style="width: 65%; float: left;">
+        <div id = "graph_panel">
             <iframe src="<%= $panel_1_url %>" width=100% height="400" frameborder="0"></iframe>
         </div>
         <div class="statistics_section" style = "clear:left;">
@@ -132,7 +154,7 @@ setInterval('refreshStats()', 30000);
                 </div>
             % } 
         </div>
-        <div style="width: 65%; float: left;">
+        <div id="graph_panel">
             <iframe src="<%= $panel_2_url %>" width=100% height="400" frameborder="0"></iframe>
         </div>
     </div>
