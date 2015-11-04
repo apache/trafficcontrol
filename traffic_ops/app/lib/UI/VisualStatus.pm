@@ -53,31 +53,11 @@ sub graphs {
 		->search( { -and => [ 'parameter.name' => 'visual_status_panel_2', 'profile.name' => 'GLOBAL' ] }, { prefetch => [ 'parameter', 'profile' ] } )->single();
 	my $p2_url = defined($pparam) ? $pparam->parameter->value : undef;
 	
-	my $bw_total = 0;
-	my $bandwidth = "err";
-	my %cdn_bandwidth;
-	foreach my $cdn (@cdn_names) {
-		my $query = "SELECT sum(value)/6 FROM \"bandwidth\" WHERE time < now() - 60s and time > now() - 120s and cdn = \'$cdn\'";
-		my $response_container = $self->influxdb_query("cache_stats", $query);
-		my $response           = $response_container->{'response'};
-		my $content            = $response->{_content};
-		my $summary_content;
-		if ( $response->is_success() ) {
-			$summary_content   = decode_json($content);
-			$bandwidth           = $summary_content->{results}[0]{series}[0]{values}[0][1];
-			$bandwidth = $bandwidth/1000000;
-			$bw_total += $bandwidth;	
-			$cdn_bandwidth{$cdn} = sprintf("%.2f", $bandwidth);
-		}
-	}
-	$cdn_bandwidth{"all"} = sprintf("%.2f", $bw_total);
-	
 	$self->stash(
 		cdn_names   => \@cdn_names,	
 		ds_capacity => $ds_capacity,
 		panel_1_url => $p1_url,
-		panel_2_url => $p2_url,
-		cdn_bandwidth => \%cdn_bandwidth
+		panel_2_url => $p2_url
 	);
 
 	&navbarpage($self);
