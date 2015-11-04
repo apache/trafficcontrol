@@ -3,8 +3,6 @@ package com.comcast.cdn.traffic_control.traffic_router.core.loc;
 import com.comcast.cdn.traffic_control.traffic_router.core.util.CidrAddress;
 import com.comcast.cdn.traffic_control.traffic_router.core.util.ComparableTreeSet;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Set;
 
 public class FederationMapping implements Comparable<FederationMapping> {
@@ -105,8 +103,8 @@ public class FederationMapping implements Comparable<FederationMapping> {
         return getResolveMatches(resolve6, cidrAddress);
     }
 
-    protected ComparableTreeSet<CidrAddress> getResolveMatches(final Set<CidrAddress> resolves, CidrAddress cidrAddress) {
-        ComparableTreeSet<CidrAddress> cidrAddresses = new ComparableTreeSet<CidrAddress>();
+    protected ComparableTreeSet<CidrAddress> getResolveMatches(final Set<CidrAddress> resolves, final CidrAddress cidrAddress) {
+        final ComparableTreeSet<CidrAddress> cidrAddresses = new ComparableTreeSet<CidrAddress>();
 
         for (CidrAddress cidrAddressResolve4 : resolves) {
             if (cidrAddressResolve4.includesAddress(cidrAddress)) {

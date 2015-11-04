@@ -60,7 +60,7 @@ public class FederationRegistry {
     }
 
 	public List<Federation> findFederations(final CidrAddress cidrAddress) {
-		List<Federation> results = new ArrayList<Federation>();
+		final List<Federation> results = new ArrayList<Federation>();
 
 		for (Federation federation : federations) {
 			if (federation.containsCidrAddress(cidrAddress)) {

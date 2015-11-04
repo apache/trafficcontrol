@@ -17,17 +17,17 @@ public class FederationExporter {
 	@Autowired
 	private FederationRegistry federationRegistry;
 
-	public List<Object> getMatchingFederations(CidrAddress cidrAddress) {
-		List<Object> federationsList = new ArrayList<Object>();
+	public List<Object> getMatchingFederations(final CidrAddress cidrAddress) {
+		final List<Object> federationsList = new ArrayList<Object>();
 
 		for (Federation federation : federationRegistry.findFederations(cidrAddress)) {
-			List<Map<String, Object>> filteredFederationMappings = new ArrayList<Map<String, Object>>();
+			final List<Map<String, Object>> filteredFederationMappings = new ArrayList<Map<String, Object>>();
 
 			for (FederationMapping federationMapping : federation.getFederationMappings()) {
 				filteredFederationMappings.add(getMappingProperties(cidrAddress, federationMapping));
 			}
 
-			Map<String, Object> federationProperties = new HashMap<String, Object>();
+			final Map<String, Object> federationProperties = new HashMap<String, Object>();
 			federationProperties.put("deliveryService", federation.getDeliveryService());
 			federationProperties.put("federationMappings", filteredFederationMappings);
 
@@ -36,21 +36,21 @@ public class FederationExporter {
 		return federationsList;
 	}
 
-	private Map<String, Object> getMappingProperties(CidrAddress cidrAddress, FederationMapping federationMapping) {
+	private Map<String, Object> getMappingProperties(final CidrAddress cidrAddress, final FederationMapping federationMapping) {
 		final FederationMapping filteredMapping = federationMapping.createFilteredMapping(cidrAddress);
-		Map<String, Object> properties = new HashMap<String, Object>();
+		final Map<String, Object> properties = new HashMap<String, Object>();
 
 		properties.put("cname", filteredMapping.getCname());
 		properties.put("ttl", filteredMapping.getTtl());
 
-		addstuff("resolve4", filteredMapping.getResolve4(), properties);
-		addstuff("resolve6", filteredMapping.getResolve6(), properties);
+		addAddressProperties("resolve4", filteredMapping.getResolve4(), properties);
+		addAddressProperties("resolve6", filteredMapping.getResolve6(), properties);
 
 		return properties;
 	}
 
-	private Map<String, Object> addstuff(String propertyName, ComparableTreeSet<CidrAddress> cidrAddresses, Map<String, Object> properties) {
-		List<String> addressStrings = new ArrayList<String>();
+	private Map<String, Object> addAddressProperties(final String propertyName, final ComparableTreeSet<CidrAddress> cidrAddresses, final Map<String, Object> properties) {
+		final List<String> addressStrings = new ArrayList<String>();
 
 		if (cidrAddresses.isEmpty()) {
 			return properties;
@@ -64,7 +64,7 @@ public class FederationExporter {
 		return properties;
 	}
 
-	public void setFederationRegistry(FederationRegistry federationRegistry) {
+	public void setFederationRegistry(final FederationRegistry federationRegistry) {
 		this.federationRegistry = federationRegistry;
 	}
 }

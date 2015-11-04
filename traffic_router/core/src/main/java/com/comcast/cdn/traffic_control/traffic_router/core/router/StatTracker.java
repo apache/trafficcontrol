@@ -27,6 +27,7 @@ import com.comcast.cdn.traffic_control.traffic_router.core.ds.DeliveryService;
 import com.comcast.cdn.traffic_control.traffic_router.core.router.StatTracker.Track.ResultType;
 import com.comcast.cdn.traffic_control.traffic_router.core.router.StatTracker.Track.RouteType;
 
+@SuppressWarnings("PMD.ExcessivePublicCount")
 public class StatTracker {
 	private String dnsRoutingName;
 	private String httpRoutingName;
@@ -71,7 +72,7 @@ public class StatTracker {
 			return fedCount;
 		}
 
-		public void setFedCount(int fedCount) {
+		public void setFedCount(final int fedCount) {
 			this.fedCount = fedCount;
 		}
 
