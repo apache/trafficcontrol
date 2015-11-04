@@ -33,7 +33,8 @@ sub register {
 			my $email_to = shift || confess("Please supply an email address.");
 			my $token    = shift || confess("Please supply a GUID token");
 
-			my $portal_base_url = $self->config->{'portal'}{'base_url'};
+			my $portal_base_url   = $self->config->{'portal'}{'base_url'};
+			my $portal_email_from = $self->config->{'portal'}{'email_from'};
 
 			$self->app->log->info( "MOJO_CONFIG: " . $ENV{MOJO_CONFIG} );
 			$self->app->log->info( "portal_base_url: " . $portal_base_url );
@@ -51,15 +52,28 @@ sub register {
 
 			my $rc;
 			$self->stash( tm_user => $tm_user, fbox_layout => 1, mode => 'add' );
+
 			if ( defined($email_to) ) {
-				$rc = $self->mail(
-					subject  => $instance_name . " Password Reset Request",
-					to       => $email_to,
-					template => 'user/reset_password',
-					format   => 'mail'
-				);
+				if ( defined($portal_email_from) ) {
+					$self->mail(
+						subject  => $instance_name . " Password Reset Request",
+						from     => $portal_email_from,
+						to       => $email_to,
+						template => 'user/reset_password',
+						format   => 'mail'
+					);
+				}
+				else {
+					$self->mail(
+						subject  => $instance_name . " Password Reset Request",
+						to       => $email_to,
+						template => 'user/reset_password',
+						format   => 'mail'
+					);
+				}
 
 			}
+
 			return $rc;
 		}
 	);
