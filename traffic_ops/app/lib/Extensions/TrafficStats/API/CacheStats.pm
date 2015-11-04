@@ -96,4 +96,64 @@ sub get_db_name {
 	return $conf->{cache_stats_db_name};
 }
 
+sub current_bandwidth {
+	my $self = shift;
+	my $cdn  = $self->param('cdnName');
+	my $query = "SELECT sum(value)/6 FROM \"bandwidth\" WHERE time < now() - 60s and time > now() - 120s";
+	if ($cdn) {
+		$query = "SELECT sum(value)/6 FROM \"bandwidth\" WHERE time < now() - 60s and time > now() - 120s and cdn = \'$cdn\'";
+	}
+	my $response_container = $self->influxdb_query("cache_stats", $query);
+	my $response           = $response_container->{'response'};
+	my $content            = $response->{_content};
+	my $summary_content;
+	my $bandwidth = "err";
+	if ( $response->is_success() ) {
+		$summary_content   = decode_json($content);
+		$bandwidth           = $summary_content->{results}[0]{series}[0]{values}[0][1];
+		$bandwidth = $bandwidth/1000000;
+	}
+	return $self->success({"bandwidth" => $bandwidth});
+}
+
+sub current_connections {
+	my $self = shift;
+	my $cdn  = $self->param('cdnName');
+	my $query = "select sum(value)/6 from \"ats.proxy.process.http.current_client_connections\" where time > now() - 120s and time < now() - 60s";
+	if ($cdn) {
+		$query = "select sum(value)/6 from \"ats.proxy.process.http.current_client_connections\" where time > now() - 120s and time < now() - 60s and cdn = \'$cdn\'";
+	}
+	my $response_container = $self->influxdb_query("cache_stats", $query);
+	my $response           = $response_container->{'response'};
+	my $content            = $response->{_content};
+	my $summary_content;
+	my $connections = "err";
+	if ( $response->is_success() ) {
+		$summary_content   = decode_json($content);
+		$connections           = $summary_content->{results}[0]{series}[0]{values}[0][1];
+	}
+	return $self->success({"connections" => $connections});
+}
+
+sub current_capacity {
+	my $self = shift;
+	my $cdn  = $self->param('cdnName');
+	my $query = "select sum(value)/6 from \"maxKbps\" where time > now() - 120s and time < now() - 60s";
+	if ($cdn) {
+		$query = "select sum(value)/6 from \"maxKbps\" where time > now() - 120s and time < now() - 60s and cdn = \'$cdn\'";
+	}
+	my $response_container = $self->influxdb_query("cache_stats", $query);
+	my $response           = $response_container->{'response'};
+	my $content            = $response->{_content};
+	my $summary_content;
+	my $capacity = "err";
+	if ( $response->is_success() ) {
+		$summary_content   = decode_json($content);
+		$capacity           = $summary_content->{results}[0]{series}[0]{values}[0][1];
+		$capacity = $capacity/1000000; #convert to Gbps
+		$capacity = $capacity * 0.85;    # need a better way to figure out percentage of max besides hard-coding
+	}
+	return $self->success({"capacity" => $capacity});
+}
+
 1;
