@@ -77,7 +77,8 @@ public class NameServer {
 
 	@SuppressWarnings({"PMD.CyclomaticComplexity", "PMD.NPathComplexity"})
 	private void addAnswers(final Message request, final Message response, final InetAddress clientAddress, final DNSAccessRecord.Builder builder) {
-			final Record question = request.getQuestion();
+		final Record question = request.getQuestion();
+
 		if (question != null) {
 			final int qclass = question.getDClass();
 			final Name qname = question.getName();
@@ -109,14 +110,11 @@ public class NameServer {
 				flags |= FLAG_SIGONLY;
 			}
 
-			final Zone zone = trafficRouterManager.getTrafficRouter().getZone(qname, qtype, clientAddress, dnssecRequest, builder);
+			lookup(qname, qtype, clientAddress, response, flags, dnssecRequest, builder);
 
-			if (zone == null) {
-				response.getHeader().setRcode(Rcode.REFUSED);
+			if (response.getHeader().getRcode() == Rcode.REFUSED) {
 				return;
 			}
-
-			lookup(qname, qtype, zone, response, 0, flags);
 
 			if (qopt != null && flags == FLAG_DNSSECOK) {
 				final int optflags = ExtendedFlags.DO;
@@ -190,9 +188,30 @@ public class NameServer {
 		}
 	}
 
+	private void lookup(final Name qname, final int qtype, final InetAddress clientAddress, final Message response, final int flags, final boolean dnssecRequest, final DNSAccessRecord.Builder builder) {
+		lookup(qname, qtype, clientAddress, null, response, 0, flags, dnssecRequest, builder);
+	}
+
 	@SuppressWarnings({"unchecked", "PMD.CyclomaticComplexity", "PMD.NPathComplexity"})
-	private static void lookup(final Name qname, final int qtype, final Zone zone, final Message response, final int iteration, final int flags) {
+	private void lookup(final Name qname, final int qtype, final InetAddress clientAddress, final Zone incomingZone, final Message response, final int iteration, final int flags, final boolean dnssecRequest, final DNSAccessRecord.Builder builder) {
 		if (iteration > MAX_ITERATIONS) {
+			return;
+		}
+
+		Zone zone = incomingZone;
+
+		// this allows us to locate zones for which we are authoritative
+		if (zone == null || !qname.subdomain(zone.getOrigin())) {
+			zone = trafficRouterManager.getTrafficRouter().getZone(qname, qtype, clientAddress, dnssecRequest, builder);
+		}
+
+		// null means we did not find a zone for which we are authoritative
+		if (zone == null) {
+			if (iteration == 0) {
+				// refuse the query if we're not authoritative and we're not recursing
+				response.getHeader().setRcode(Rcode.REFUSED);
+			}
+
 			return;
 		}
 
@@ -204,6 +223,16 @@ public class NameServer {
 			}
 
 			addAuthority(zone, response, flags);
+		} else if (sr.isCNAME()) {
+			final CNAMERecord cname = sr.getCNAME();
+			final RRset cnameSet = new RRset(cname);
+			addRRset(qname, response, cnameSet, Section.ANSWER, flags);
+
+			/*
+			 * Allow recursive lookups for CNAME targets; the logic above allows us to
+			 * ensure that we only recurse for domains for which we are authoritative.
+			 */
+			lookup(cname.getTarget(), qtype, clientAddress, zone, response, iteration + 1, flags, dnssecRequest, builder);
 		} else if (sr.isNXDOMAIN()) {
 			response.getHeader().setRcode(Rcode.NXDOMAIN);
 
@@ -273,11 +302,6 @@ public class NameServer {
 
 			addSOA(zone, response, Section.AUTHORITY, flags);
 			response.getHeader().setFlag(Flags.AA);
-		} else if (sr.isCNAME()) {
-			final CNAMERecord cname = sr.getCNAME();
-			final RRset cnameSet = new RRset(cname);
-			addRRset(qname, response, cnameSet, Section.ANSWER, flags);
-			lookup(cname.getTarget(), qtype, zone, response, iteration + 1, flags);
 		}
 	}
 
