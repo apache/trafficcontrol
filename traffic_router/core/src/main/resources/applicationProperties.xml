@@ -23,6 +23,7 @@
 		class="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer">
 		<property name="placeholderPrefix" value="$[" />
 		<property name="placeholderSuffix" value="]" />
+		<property name="ignoreUnresolvablePlaceholders" value="true" />
 		<property name="locations">
 			<list>
 				<value>file:/opt/traffic_router/conf/cache.properties</value>
