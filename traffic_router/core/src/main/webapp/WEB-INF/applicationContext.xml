@@ -231,4 +231,7 @@
 		</property>
 	</bean>
 
+    <bean name="staticContentAccessFilter" class="com.comcast.cdn.traffic_control.traffic_router.core.request.StaticContentAccessFilter">
+        <property name="doNotLog" value="$[http.access.static.content.donotlog]" />
+    </bean>
 </beans>
