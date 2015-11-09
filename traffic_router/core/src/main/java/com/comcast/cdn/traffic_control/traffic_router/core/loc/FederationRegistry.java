@@ -37,9 +37,12 @@ public class FederationRegistry {
             ComparableTreeSet<CidrAddress> cidrAddresses;
             if (cidrAddress.isIpV6()) {
                 cidrAddresses = federationMapping.getResolve6();
-            }
-            else {
+            } else {
                 cidrAddresses = federationMapping.getResolve4();
+            }
+
+            if (cidrAddresses == null) {
+                return null;
             }
 
             for (CidrAddress resolverAddress : cidrAddresses) {
