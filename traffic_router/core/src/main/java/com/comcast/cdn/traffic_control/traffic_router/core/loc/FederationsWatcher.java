@@ -22,7 +22,7 @@ public class FederationsWatcher extends AbstractServiceUpdater {
     private TrafficOpsUtils trafficOpsUtils;
     private FederationRegistry federationRegistry;
 
-    public void configure(final URL authorizationURL, final String postData, final URL federationsURL, final long pollingInterval) {
+    public void configure(final URL authorizationURL, final String postData, final URL federationsURL, final long pollingInterval, final int timeout) {
         if (authorizationURL.equals(this.authorizationURL) && postData.equals(this.postData) &&
             federationsURL.equals(federationsURL) && pollingInterval == getPollingInterval()) {
             return;
@@ -32,7 +32,7 @@ public class FederationsWatcher extends AbstractServiceUpdater {
         if (!authorizationURL.equals(this.authorizationURL) || !postData.equals(this.postData)) {
             this.authorizationURL = authorizationURL;
             this.postData = postData;
-            fetcher = new ProtectedFetcher(authorizationURL.toString(), postData, 120000);
+            fetcher = new ProtectedFetcher(authorizationURL.toString(), postData, timeout);
         }
 
         setDataBaseURL(federationsURL.toString(), pollingInterval);
@@ -68,8 +68,10 @@ public class FederationsWatcher extends AbstractServiceUpdater {
             interval = getPollingInterval();
         }
 
+        final int timeout = config.optInt("federationmapping.polling.timeout", 15 * 1000); // socket timeouts are in ms
+
         if (authUrl != null && jsonData != null && fedsUrl != null && interval != -1L) {
-            configure(authUrl, jsonData, fedsUrl, interval);
+            configure(authUrl, jsonData, fedsUrl, interval, timeout);
         }
     }
 
