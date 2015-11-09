@@ -1096,14 +1096,8 @@ sub regex_revalidate_dot_config {
 	# my $text   = $self->header_comment( $server->host_name );
 	my $server = &server_data( $self, $id );
 
-	# Purges are CDN - wide.
-	my $param =
-		$self->db->resultset('ProfileParameter')
-		->search( { -and => [ profile => $server->profile->id, 'parameter.config_file' => 'CRConfig.json', 'parameter.name' => 'domain_name' ] },
-		{ prefetch => [ { parameter => undef }, { profile => undef } ] } )->single();
-	my $server_domain = $param->parameter->value;
 
-	my $text = "# DO NOT EDIT - Generated for " . $server_domain . " by " . &name_version_string($self) . " on " . `date`;
+	my $text = "# DO NOT EDIT - Generated for CDN " . $server->cdn->name . " by " . &name_version_string($self) . " on " . `date`;
 
 	my $max_days =
 		$self->db->resultset('Parameter')->search( { name => "maxRevalDurationDays" }, { config_file => "regex_revalidate.config" } )->get_column('value')
@@ -1114,13 +1108,16 @@ sub regex_revalidate_dot_config {
 	}
 
 	my %regex_time;
-	my $rs = $self->db->resultset('Job')->search( { start_time => \$interval } );
 	##DN- even though we made these params, the front-end is still hard-coded to validate ttl between 48 - 672...
 	my $max_hours =
 		$self->db->resultset('Parameter')->search( { name => "ttl_max_hours" }, { config_file => "regex_revalidate.config" } )->get_column('value')->single;
 	my $min_hours =
 		$self->db->resultset('Parameter')->search( { name => "ttl_min_hours" }, { config_file => "regex_revalidate.config" } )->get_column('value')->single;
+
+	my $rs = $self->db->resultset('Job')->search( { start_time => \$interval } );
 	while ( my $row = $rs->next ) {
+		# Purges are CDN - wide, and the job entry has the ds id in it.
+		my $job_cdn = $self->db->resultset('Cdn')->search( { id => $row->job_deliveryservice->cdn_id} )->single();
 		my $parameters = $row->parameters;
 		my $ttl;
 		if ( $row->keyword eq "PURGE" && ( defined($parameters) && $parameters =~ /TTL:(\d+)h/ ) ) {
@@ -1149,29 +1146,13 @@ sub regex_revalidate_dot_config {
 		}
 		my $asset_url = $row->asset_url;
 
-		my ( $scheme, $asset_hostname, $path, $query, $fragment ) = $row->asset_url =~ m|(?:([^:/?#]+):)?(?://([^/?#]*))?([^?#]*)(?:\?([^#]*))?(?:#(.*))?|;
-		my $org_server = "$scheme://$asset_hostname";
+		if ( $server->cdn_id == $job_cdn->id ) {
 
-		my $rs =
-			$self->db->resultset('Deliveryservice')
-			->search( { org_server_fqdn => $org_server }, { prefetch => [ { 'type' => undef }, { 'profile' => undef } ] } );
-
-		while ( my $dsrow = $rs->next ) {
-			my $ds_cdn_domain = $self->db->resultset('Parameter')->search(
-				{ -and => [ 'me.name' => 'domain_name', 'deliveryservices.id' => $dsrow->id ] },
-				{
-					join     => { profile_parameters => { profile => { deliveryservices => undef } } },
-					distinct => 1
-				}
-			)->get_column('value')->single();
-			if ( $ds_cdn_domain eq $server_domain ) {
-
-				# if there are multipe with same re, pick the longes lasting.
-				if ( !defined( $regex_time{ $row->asset_url } )
-					|| ( defined( $regex_time{ $row->asset_url } ) && $purge_end > $regex_time{ $row->asset_url } ) )
-				{
-					$regex_time{ $row->asset_url } = $purge_end;
-				}
+			# if there are multipe with same re, pick the longes lasting.
+			if ( !defined( $regex_time{ $row->asset_url } )
+				|| ( defined( $regex_time{ $row->asset_url } ) && $purge_end > $regex_time{ $row->asset_url } ) )
+			{
+				$regex_time{ $row->asset_url } = $purge_end;
 			}
 		}
 	}
