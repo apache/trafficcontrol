@@ -52,12 +52,12 @@ public class FederationExporter {
 	private Map<String, Object> addAddressProperties(final String propertyName, final ComparableTreeSet<CidrAddress> cidrAddresses, final Map<String, Object> properties) {
 		final List<String> addressStrings = new ArrayList<String>();
 
-		if (cidrAddresses.isEmpty()) {
+		if (cidrAddresses == null || cidrAddresses.isEmpty()) {
 			return properties;
 		}
 
-		for (CidrAddress cidrAddress4 : cidrAddresses) {
-			addressStrings.add(cidrAddress4.getAddressString());
+		for (CidrAddress cidrAddress : cidrAddresses) {
+			addressStrings.add(cidrAddress.getAddressString());
 		}
 
 		properties.put(propertyName, addressStrings);
