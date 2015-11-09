@@ -43,7 +43,6 @@ public class FederationsWatcher extends AbstractServiceUpdater {
         String jsonData;
         URL fedsUrl = null;
         long interval = -1L;
-        int timeout;
 
         try {
             authUrl = new URL(trafficOpsUtils.getAuthUrl());
@@ -69,7 +68,7 @@ public class FederationsWatcher extends AbstractServiceUpdater {
             interval = getPollingInterval();
         }
 
-        timeout = config.optInt("federationmapping.polling.timeout", 15 * 1000); // socket timeouts are in ms
+        final int timeout = config.optInt("federationmapping.polling.timeout", 15 * 1000); // socket timeouts are in ms
 
         if (authUrl != null && jsonData != null && fedsUrl != null && interval != -1L) {
             configure(authUrl, jsonData, fedsUrl, interval, timeout);
