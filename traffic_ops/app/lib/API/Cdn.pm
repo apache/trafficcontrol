@@ -946,27 +946,44 @@ sub domains {
 sub dnssec_keys {
 	my $self       = shift;
 	my $is_updated = 0;
-	if ( !&is_admin($self) ) {
-		$self->alert(
-			{ Error => " - You must be an ADMIN to perform this operation!" }
-		);
-	}
-	else {
+	if ( &is_admin($self) ) {
 		my $cdn_name = $self->param('name');
 		my $keys;
 		my $response_container = $self->riak_get( "dnssec", $cdn_name );
 		my $get_keys = $response_container->{'response'};
 		if ( $get_keys->is_success() ) {
 			$keys = decode_json( $get_keys->content );
+			return $self->success($keys);
 		}
 		else {
 			return $self->alert(
 				{   Error =>
 						" - Dnssec keys for $cdn_name do not exist!  Response was: "
-						. $get_keys->content
-				}
-			);
+						. $get_keys->content});
 		}
+	}
+	return $self->alert({ Error => " - You must be an ADMIN to perform this operation!" });
+}
+
+#checks if keys are expired and re-generates them if they are.
+sub dnssec_keys_tickle {
+	my $self       = shift;
+	my $is_updated = 0;
+	my $error_message;
+	my $rs_data = $self->db->resultset("Cdn")->search( {}, { order_by => "name" } );
+	while ( my $row = $rs_data->next ) {
+		my $cdn_name = $row->name;
+		$self->app->log->debug("cdn_name = $cdn_name");
+		my $keys;
+		my $response_container = $self->riak_get( "dnssec", $cdn_name );
+		my $get_keys = $response_container->{'response'};
+		if ( !$get_keys->is_success() ) {
+			$error_message = "Can't update dnssec keys for $cdn_name!  Response was: " . $get_keys->content;
+			$self->app->log->warn($error_message);
+			next;
+		}
+		
+		$keys = decode_json( $get_keys->content );
 
    #get DNSKEY ttl, generation multiplier, and effective mutiplier for CDN TLD
 		my $profile_id = $self->get_profile_id_by_cdn($cdn_name);
@@ -1061,7 +1078,6 @@ sub dnssec_keys {
 		my @ds_rs
 			= $self->db->resultset('Deliveryservice')->search( \%search );
 		foreach my $ds (@ds_rs) {
-
 			#check if keys exist for ds
 			my $xml_id  = $ds->xml_id;
 			my $ds_keys = $keys->{$xml_id};
@@ -1088,7 +1104,7 @@ sub dnssec_keys {
 					$deliveryservice_regexes, $data, $domain_name,
 					$data->protocol );
 
-#first one is the one we want.  period at end for dnssec, substring off stuff we dont want
+	#first one is the one we want.  period at end for dnssec, substring off stuff we dont want
 				my $ds_name = $example_urls[0] . ".";
 				my $length = length($ds_name) - index( $ds_name, "." );
 				$ds_name
@@ -1175,15 +1191,16 @@ sub dnssec_keys {
 		}
 
 		my $response = $response_container->{"response"};
-		$response->is_success()
-			? $self->success($keys)
-			: $self->alert(
-			{   Error =>
-					" - A record for dnssec key $cdn_name could not be found.  Response was: "
-					. $response->content
-			}
-			);
+		if (!$response->is_success()){ 
+			$error_message = "dnssec keys could not be stored for $cdn_name!  Response was: " . $response->content;
+			$self->app->log->warn($error_message);
+			next;
+		}
 	}
+	if ($error_message) {
+		return $self->alert({ Error => $error_message });
+	}
+	return $self->success("Thanks!")
 }
 
 sub regen_expired_keys {
