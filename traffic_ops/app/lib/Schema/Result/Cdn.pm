@@ -42,6 +42,12 @@ __PACKAGE__->table("cdn");
   default_value: current_timestamp
   is_nullable: 0
 
+=head2 dnssec_enabled
+
+  data_type: 'tinyint'
+  default_value: 0
+  is_nullable: 1
+
 =cut
 
 __PACKAGE__->add_columns(
@@ -56,6 +62,8 @@ __PACKAGE__->add_columns(
     default_value => \"current_timestamp",
     is_nullable => 0,
   },
+  "dnssec_enabled",
+  { data_type => "tinyint", default_value => 0, is_nullable => 1 },
 );
 
 =head1 PRIMARY KEY
@@ -101,21 +109,6 @@ __PACKAGE__->has_many(
   { cascade_copy => 0, cascade_delete => 0 },
 );
 
-=head2 profiles
-
-Type: has_many
-
-Related object: L<Schema::Result::Profile>
-
-=cut
-
-__PACKAGE__->has_many(
-  "profiles",
-  "Schema::Result::Profile",
-  { "foreign.cdn_id" => "self.id" },
-  { cascade_copy => 0, cascade_delete => 0 },
-);
-
 =head2 servers
 
 Type: has_many
@@ -132,8 +125,8 @@ __PACKAGE__->has_many(
 );
 
 
-# Created by DBIx::Class::Schema::Loader v0.07042 @ 2015-10-27 15:25:33
-# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:7QVOBKX7NdcANmsS+ytNxA
+# Created by DBIx::Class::Schema::Loader v0.07042 @ 2015-11-10 11:16:40
+# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:uQW1V4fQTKv/ccBtWZawTQ
 
 
 # You can replace this text with custom code or comments, and it will be preserved on regeneration

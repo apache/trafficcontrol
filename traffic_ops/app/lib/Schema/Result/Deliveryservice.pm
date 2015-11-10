@@ -106,7 +106,7 @@ __PACKAGE__->table("deliveryservice");
 
   data_type: 'integer'
   is_foreign_key: 1
-  is_nullable: 1
+  is_nullable: 0
 
 =head2 ccr_dns_ttl
 
@@ -302,7 +302,7 @@ __PACKAGE__->add_columns(
   "profile",
   { data_type => "integer", is_foreign_key => 1, is_nullable => 0 },
   "cdn_id",
-  { data_type => "integer", is_foreign_key => 1, is_nullable => 1 },
+  { data_type => "integer", is_foreign_key => 1, is_nullable => 0 },
   "ccr_dns_ttl",
   { data_type => "integer", is_nullable => 1 },
   "global_max_mbps",
@@ -420,12 +420,7 @@ __PACKAGE__->belongs_to(
   "cdn",
   "Schema::Result::Cdn",
   { id => "cdn_id" },
-  {
-    is_deferrable => 1,
-    join_type     => "LEFT",
-    on_delete     => "SET NULL",
-    on_update     => "RESTRICT",
-  },
+  { is_deferrable => 1, on_delete => "RESTRICT", on_update => "RESTRICT" },
 );
 
 =head2 deliveryservice_regexes
@@ -549,8 +544,8 @@ __PACKAGE__->belongs_to(
 );
 
 
-# Created by DBIx::Class::Schema::Loader v0.07042 @ 2015-10-27 15:25:33
-# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:YlxzkXo06gfjP97F1btVGg
+# Created by DBIx::Class::Schema::Loader v0.07042 @ 2015-11-10 11:16:40
+# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:2p4L0dAyERKNVw+WQu2mBw
 
 # Created by DBIx::Class::Schema::Loader v0.07043 @ 2015-10-05 11:50:01
 # DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:AUTdFMjQ60ItRfFMfKsB1A
