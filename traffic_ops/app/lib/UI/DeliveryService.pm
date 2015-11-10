@@ -1092,6 +1092,7 @@ sub create {
 	my $self = shift;
 	return $self->redirect_to("/modify_error") if !&is_oper($self);
 	my $new_id = -1;
+	my $cdn_id = $self->param('ds.cdn_id');
 
 	if ( $self->check_deliveryservice_input() ) {
 		my $insert = $self->db->resultset('Deliveryservice')->create(
@@ -1111,7 +1112,7 @@ sub create {
 				multi_site_origin => $self->param('ds.multi_site_origin'),
 				ccr_dns_ttl       => $self->param('ds.ccr_dns_ttl'),
 				type              => $self->param('ds.type'),
-				cdn_id            => $self->param('ds.cdn_id'),
+				cdn_id            => $cdn_id,
 				profile           => $self->param('ds.profile'),
 				global_max_mbps   => $self->param('ds.global_max_mbps') eq ""
 				? 0
@@ -1248,18 +1249,12 @@ sub create {
 		);
 
 		##create dnssec keys for the new DS if DNSSEC is enabled for the CDN
-		my $dnssec_enabled_rs
-			= $self->db->resultset('ProfileParameter')->search(
-			{   -and => [
-					'parameter.name' => 'dnssec.enabled',
-					'profile.id'     => $self->param('ds.profile')
-				]
-			},
-			{ prefetch => [ 'parameter', 'profile' ] }
-			)->single();
-		if ($dnssec_enabled_rs) {
-			my $dnssec_enabled = $dnssec_enabled_rs->parameter->value;
-			$self->create_dnssec_keys( $self->param('ds.profile'),
+		my $cdn_rs = $self->db->resultset('Cdn')->search( { id => $cdn_id} )->single();
+		my $dnssec_enabled = $cdn_rs->dnssec_enabled;
+
+		if ($dnssec_enabled == 1) {
+			$self->app->log->debug("dnssec is enabled, creating dnssec keys");
+			$self->create_dnssec_keys( $cdn_rs->name,
 				$self->param('ds.xml_id'), $new_id );
 		}
 		$self->flash( message => "Success!" );
@@ -1284,21 +1279,22 @@ sub create {
 
 sub create_dnssec_keys {
 	my $self       = shift;
-	my $profile_id = shift;
+	my $cdn_name   = shift;
 	my $xml_id     = shift;
 	my $ds_id      = shift;
-
-	#get CDN name
 	my $dnskey_ttl;
 
-	my $cdn_rs = $self->db->resultset('Server')->search(
-		{ 'me.id' => $profile_id },
-		{   prefetch => 'cdn',
-			select   => 'me.cdn_id',
-			distinct => 1
-		}
-	);
-	my $cdn_name = $cdn_rs->next->cdn->name;
+	#get CDN name
+	# $self->app->log->debug("profile_id = $profile_id");
+
+	# my $cdn_rs = $self->db->resultset('Server')->search(
+	# 	{ 'me.id' => $profile_id },
+	# 	{   prefetch => 'cdn',
+	# 		select   => 'me.cdn_id',
+	# 		distinct => 1
+	# 	}
+	# );
+	# my $cdn_name = $cdn_rs->next->cdn->name;
 
 	#get keys for cdn
 	my $keys;

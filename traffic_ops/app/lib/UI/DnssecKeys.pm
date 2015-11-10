@@ -71,11 +71,12 @@ sub manage {
 	#get active flag
 	my $profile_id = $self->get_profile_id_by_cdn($cdn_name);
 	my $active = "false";
-	my %condition = ( 'parameter.name' => 'dnssec.enabled', 'profile.id' => $profile_id);
-	my $rs_pp = $self->db->resultset('ProfileParameter')->search( \%condition, { prefetch => [ { 'parameter' => undef }, { 'profile' => undef } ] } )->single;
-	if ($rs_pp) {
-		$active = $rs_pp->parameter->value;
+	my $cdn_rs = $self->db->resultset('Cdn')->search( { name => $cdn_name} )->single();
+	my $dnssec_enabled = $cdn_rs->dnssec_enabled;
+	if ($dnssec_enabled){
+		$active = "true";
 	}
+
 	#stash all the things
 	$self->stash(
 		msgs   => [],
@@ -175,31 +176,9 @@ sub activate {
 	my $self     = shift;
 	my $cdn_name = $self->param('dnssec.cdn_name');
 	my $active = $self->param('dnssec.active_flag');
-	my $profile_id = $self->get_profile_id_by_cdn($cdn_name);
-	# find or create dnssec.enabled param
-	my $param_id = $self->db->resultset('Parameter')->find_or_create(
-	{
-			name        => 'dnssec.enabled',
-			config_file => 'CRConfig.json',
-			value       => 'true',
-		}
-	);
-	$param_id = $param_id->id;
-	if ($active eq 'true') {
-		#associate param to cdn profile_id
-		my $pp_insert = $self->db->resultset('ProfileParameter')->find_or_create(
-			{
-				profile   => $profile_id,
-				parameter => $param_id,
-			}
-		);
-	} else {
-		#delete current profile_parameter record, if exists
-		my $pp_rs = $self->db->resultset('ProfileParameter')->search({profile => $profile_id, parameter => $param_id});
-		if ($pp_rs) {
-			$pp_rs->delete();
-		}
-	}
+	
+	$active eq 'true' ? $self->db->resultset('Cdn')->search( { name => $cdn_name} )->update( {dnssec_enabled => 1} ) : $self->db->resultset('Cdn')->search( { name => $cdn_name} )->update( {dnssec_enabled => 0} );
+	
 	&stash_role($self);	
 	$self->stash(
 		msgs   => [],
