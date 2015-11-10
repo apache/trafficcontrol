@@ -1,0 +1,116 @@
+package com.comcast.cdn.traffic_control.traffic_router.core.request;
+
+import com.comcast.cdn.traffic_control.traffic_router.core.ds.DeliveryServiceMatcher.Type;
+import com.comcast.cdn.traffic_control.traffic_router.core.util.ComparableStringByLength;
+
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
+public class RequestMatcher implements Comparable<RequestMatcher> {
+	// This "meta" pattern is used to strip away all leading and trailing non-word characters except '.' and '-' from the original regex
+	private static final String META_REGEX = "([\\W])*([\\w-\\./]+).*";
+	private static final Pattern metaPattern = Pattern.compile(META_REGEX);
+
+	private final Type type;
+	private final Pattern pattern;
+	private String requestHeader = "";
+	private final ComparableStringByLength comparableRegex;
+
+	public RequestMatcher(final Type type, final String regex, final String requestHeader) {
+		if (type == Type.HEADER && (requestHeader == null || requestHeader.isEmpty())) {
+			throw new IllegalArgumentException("Request Header name must be supplied for type HEADER");
+		}
+
+		this.type = type;
+		this.requestHeader =requestHeader;
+		pattern = Pattern.compile(regex, Pattern.CASE_INSENSITIVE);
+
+		final Matcher matcher = metaPattern.matcher(regex);
+		matcher.matches();
+		comparableRegex = new ComparableStringByLength(matcher.group(2));
+	}
+
+	public RequestMatcher(final Type type, final String regex) {
+		this(type, regex, "");
+	}
+
+	public boolean matches(final Request request) {
+		final String target = getTarget(request);
+
+		if (target.isEmpty()) {
+			return false;
+		}
+
+		return pattern.matcher(target).matches();
+	}
+
+	private String getTarget(final Request request) {
+		if (type == Type.HOST) {
+			return request.getHostname();
+		}
+
+		if (!(request instanceof HTTPRequest)) {
+			return null;
+		}
+
+		final HTTPRequest httpRequest = (HTTPRequest) request;
+		if (type == Type.HEADER) {
+			return httpRequest.getHeaders().get(requestHeader);
+		}
+
+		if (type == Type.PATH) {
+			if (httpRequest.getQueryString() == null) {
+				return httpRequest.getPath();
+			}
+
+			return httpRequest.getPath() + "?" + httpRequest.getQueryString();
+		}
+
+		return "";
+	}
+
+	@Override
+	public int compareTo(final RequestMatcher other) {
+		if (this == other || this.equals(other)) {
+			return 0;
+		}
+		return this.comparableRegex.compareTo(other.comparableRegex);
+	}
+
+	@Override
+	@SuppressWarnings({"PMD.IfStmtsMustUseBraces" , "PMD.CyclomaticComplexity"})
+	public boolean equals(final Object other) {
+		if (this == other) return true;
+		if (other == null || getClass() != other.getClass()) return false;
+
+		final RequestMatcher that = (RequestMatcher) other;
+
+		if (type != that.type) return false;
+
+		if (pattern != null ? !pattern.pattern().equals(that.pattern.pattern()) : that.pattern != null) return false;
+		if (requestHeader != null ? !requestHeader.equals(that.requestHeader) : that.requestHeader != null)
+			return false;
+		return !(comparableRegex != null ? !comparableRegex.equals(that.comparableRegex) : that.comparableRegex != null);
+
+	}
+
+	@Override
+	@SuppressWarnings({"PMD.CyclomaticComplexity", "PMD.NPathComplexity"})
+	public int hashCode() {
+		int result = type != null ? type.hashCode() : 0;
+		result = 31 * result + (pattern != null ? pattern.pattern().hashCode() : 0);
+		result = 31 * result + (requestHeader != null ? requestHeader.hashCode() : 0);
+		result = 31 * result + (comparableRegex != null ? comparableRegex.hashCode() : 0);
+		return result;
+	}
+
+	@Override
+	public String toString() {
+		return "RequestMatcher{" +
+			"type=" + type +
+			", pattern=" + pattern +
+			", requestHeader='" + requestHeader + '\'' +
+			", comparableRegex=" + comparableRegex +
+			'}';
+	}
+}
