@@ -34,7 +34,7 @@ use constant KEY    => "mybucket";
 #no_transactions=>0 ==> delete fixtures after every execution
 
 #GET
-my $riak_util = Connection::RiakAdapter->new( "server1", BUCKET, Test::TestHelper::ADMIN_USER, Test::TestHelper::ADMIN_USER_PASSWORD );
+my $riak_util = Connection::RiakAdapter->new( Test::TestHelper::ADMIN_USER, Test::TestHelper::ADMIN_USER_PASSWORD );
 
 my $fake_answer = "OK";
 my $fake_lwp    = new Test::MockModule( 'LWP::UserAgent', no_auto => 1 );
