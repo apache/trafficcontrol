@@ -108,6 +108,14 @@ sub gen_crconfig_json {
 		{ prefetch => [ { 'parameter' => undef }, { 'profile' => undef } ] }
 	);
 
+	#add dnssec.enabled value to config section
+	my $cdn_rs = $self->db->resultset('Cdn')->search({name => $cdn_name})->single();
+	my $dnssec_enabled = "false";
+	if ($cdn_rs->dnssec_enabled == 1) {
+		$dnssec_enabled = "true";
+	} 
+	$data_obj->{'config'}->{'dnssec.enabled'} = $dnssec_enabled;
+	
 	while ( my $row = $rs_pp->next ) {
 
 		$param_cache{ $row->profile->id }->{ $row->parameter->name }
