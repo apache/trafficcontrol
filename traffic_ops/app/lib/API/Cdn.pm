@@ -972,235 +972,235 @@ sub dnssec_keys_tickle {
 	my $error_message;
 	my $rs_data = $self->db->resultset("Cdn")->search( {}, { order_by => "name" } );
 	while ( my $row = $rs_data->next ) {
-		my $cdn_name = $row->name;
-		$self->app->log->debug("cdn_name = $cdn_name");
-		my $keys;
-		my $response_container = $self->riak_get( "dnssec", $cdn_name );
-		my $get_keys = $response_container->{'response'};
-		if ( !$get_keys->is_success() ) {
-			$error_message = "Can't update dnssec keys for $cdn_name!  Response was: " . $get_keys->content;
-			$self->app->log->warn($error_message);
-			next;
-		}
-		
-		$keys = decode_json( $get_keys->content );
-
-   #get DNSKEY ttl, generation multiplier, and effective mutiplier for CDN TLD
-		my $profile_id = $self->get_profile_id_by_cdn($cdn_name);
-		my $dnskey_gen_multiplier;
-		my $dnskey_ttl;
-		my $dnskey_effective_multiplier;
-		my %condition = (
-			'parameter.name' => 'tld.ttls.DNSKEY',
-			'profile.name'   => $profile_id
-		);
-		my $rs_pp = $self->db->resultset('ProfileParameter')->search(
-			\%condition,
-			{   prefetch =>
-					[ { 'parameter' => undef }, { 'profile' => undef } ]
+		if ($row->dnssec_enabled == 1) {
+			my $cdn_name = $row->name;
+			my $keys;
+			my $response_container = $self->riak_get( "dnssec", $cdn_name );
+			my $get_keys = $response_container->{'response'};
+			if ( !$get_keys->is_success() ) {
+				$error_message = "Can't update dnssec keys for $cdn_name!  Response was: " . $get_keys->content;
+				$self->app->log->warn($error_message);
+				next;
 			}
-		)->single;
-		$rs_pp ? $dnskey_ttl = $rs_pp->parameter->value : $dnskey_ttl = '60';
 
-		%condition = (
-			'parameter.name' => 'DNSKEY.generation.multiplier',
-			'profile.name'   => $profile_id
-		);
-		$rs_pp = $self->db->resultset('ProfileParameter')->search(
-			\%condition,
-			{   prefetch =>
-					[ { 'parameter' => undef }, { 'profile' => undef } ]
-			}
-		)->single;
-		$rs_pp
-			? $dnskey_gen_multiplier
-			= $rs_pp->parameter->value
-			: $dnskey_gen_multiplier = '10';
+			$keys = decode_json( $get_keys->content );
 
-		%condition = (
-			'parameter.name' => 'DNSKEY.effective.multiplier',
-			'profile.name'   => $profile_id
-		);
-		$rs_pp = $self->db->resultset('ProfileParameter')->search(
-			\%condition,
-			{   prefetch =>
-					[ { 'parameter' => undef }, { 'profile' => undef } ]
-			}
-		)->single;
-		$rs_pp
-			? $dnskey_effective_multiplier
-			= $rs_pp->parameter->value
-			: $dnskey_effective_multiplier = '10';
+	   #get DNSKEY ttl, generation multiplier, and effective mutiplier for CDN TLD
+			my $profile_id = $self->get_profile_id_by_cdn($cdn_name);
+			my $dnskey_gen_multiplier;
+			my $dnskey_ttl;
+			my $dnskey_effective_multiplier;
+			my %condition = (
+				'parameter.name' => 'tld.ttls.DNSKEY',
+				'profile.name'   => $profile_id
+			);
+			my $rs_pp = $self->db->resultset('ProfileParameter')->search(
+				\%condition,
+				{   prefetch =>
+						[ { 'parameter' => undef }, { 'profile' => undef } ]
+				}
+			)->single;
+			$rs_pp ? $dnskey_ttl = $rs_pp->parameter->value : $dnskey_ttl = '60';
 
-		my $key_expiration
-			= time() - ( $dnskey_ttl * $dnskey_gen_multiplier );
+			%condition = (
+				'parameter.name' => 'DNSKEY.generation.multiplier',
+				'profile.name'   => $profile_id
+			);
+			$rs_pp = $self->db->resultset('ProfileParameter')->search(
+				\%condition,
+				{   prefetch =>
+						[ { 'parameter' => undef }, { 'profile' => undef } ]
+				}
+			)->single;
+			$rs_pp
+				? $dnskey_gen_multiplier
+				= $rs_pp->parameter->value
+				: $dnskey_gen_multiplier = '10';
 
-		#get default expiration days and ttl for DSs from CDN record
-		my $default_k_exp_days = "365";
-		my $default_z_exp_days = "30";
-		my $cdn_ksk            = $keys->{$cdn_name}->{ksk};
-		foreach my $cdn_krecord (@$cdn_ksk) {
-			my $cdn_kstatus = $cdn_krecord->{status};
-			if ( $cdn_kstatus eq 'new' )
-			{    #ignore anything other than the 'new' record
-				my $cdn_k_exp   = $cdn_krecord->{expirationDate};
-				my $cdn_k_incep = $cdn_krecord->{inceptionDate};
-				$default_k_exp_days = ( $cdn_k_exp - $cdn_k_incep ) / 86400;
-			}
-		}
-		my $cdn_zsk = $keys->{$cdn_name}->{zsk};
-		foreach my $cdn_zrecord (@$cdn_zsk) {
-			my $cdn_zstatus = $cdn_zrecord->{status};
-			if ( $cdn_zstatus eq 'new' )
-			{    #ignore anything other than the 'new' record
-				my $cdn_z_exp   = $cdn_zrecord->{expirationDate};
-				my $cdn_z_incep = $cdn_zrecord->{inceptionDate};
-				$default_z_exp_days = ( $cdn_z_exp - $cdn_z_incep ) / 86400;
+			%condition = (
+				'parameter.name' => 'DNSKEY.effective.multiplier',
+				'profile.name'   => $profile_id
+			);
+			$rs_pp = $self->db->resultset('ProfileParameter')->search(
+				\%condition,
+				{   prefetch =>
+						[ { 'parameter' => undef }, { 'profile' => undef } ]
+				}
+			)->single;
+			$rs_pp
+				? $dnskey_effective_multiplier
+				= $rs_pp->parameter->value
+				: $dnskey_effective_multiplier = '10';
 
-				#check if zsk is expired, if so re-generate
-				if ( ($cdn_z_exp) < $key_expiration ) {
+			my $key_expiration
+				= time() - ( $dnskey_ttl * $dnskey_gen_multiplier );
 
-					#if expired create new keys
-					$self->app->log->info(
-						"The ZSK keys for $cdn_name are expired!");
-					my $effective_date = $cdn_z_exp
-						- ( $dnskey_ttl * $dnskey_effective_multiplier );
-					my $new_dnssec_keys
-						= $self->regen_expired_keys( "zsk", $cdn_name, $keys,
-						$effective_date );
-					$keys->{$cdn_name} = $new_dnssec_keys;
+			#get default expiration days and ttl for DSs from CDN record
+			my $default_k_exp_days = "365";
+			my $default_z_exp_days = "30";
+			my $cdn_ksk            = $keys->{$cdn_name}->{ksk};
+			foreach my $cdn_krecord (@$cdn_ksk) {
+				my $cdn_kstatus = $cdn_krecord->{status};
+				if ( $cdn_kstatus eq 'new' )
+				{    #ignore anything other than the 'new' record
+					my $cdn_k_exp   = $cdn_krecord->{expirationDate};
+					my $cdn_k_incep = $cdn_krecord->{inceptionDate};
+					$default_k_exp_days = ( $cdn_k_exp - $cdn_k_incep ) / 86400;
 				}
 			}
-		}
+			my $cdn_zsk = $keys->{$cdn_name}->{zsk};
+			foreach my $cdn_zrecord (@$cdn_zsk) {
+				my $cdn_zstatus = $cdn_zrecord->{status};
+				if ( $cdn_zstatus eq 'new' )
+				{    #ignore anything other than the 'new' record
+					my $cdn_z_exp   = $cdn_zrecord->{expirationDate};
+					my $cdn_z_incep = $cdn_zrecord->{inceptionDate};
+					$default_z_exp_days = ( $cdn_z_exp - $cdn_z_incep ) / 86400;
 
-		#get DeliveryServices for CDN
-		my %search = ( profile => $profile_id );
-		my @ds_rs
-			= $self->db->resultset('Deliveryservice')->search( \%search );
-		foreach my $ds (@ds_rs) {
-			#check if keys exist for ds
-			my $xml_id  = $ds->xml_id;
-			my $ds_keys = $keys->{$xml_id};
-			if ( !$ds_keys ) {
+					#check if zsk is expired, if so re-generate
+					if ( ($cdn_z_exp) < $key_expiration ) {
 
-				#create keys
-				$self->app->log->info("Keys do not exist for ds $xml_id");
-				my $ds_id = $ds->id;
-
-				#create the ds domain name for dnssec keys
-				my $domain_name
-					= UI::DeliveryService::get_cdn_domain( $self, $ds_id );
-				my $deliveryservice_regexes
-					= UI::DeliveryService::get_regexp_set( $self, $ds_id );
-				my $rs_ds = $self->db->resultset('Deliveryservice')->search(
-					{ 'me.xml_id' => $xml_id },
-					{   prefetch =>
-							[ { 'type' => undef }, { 'profile' => undef } ]
+						#if expired create new keys
+						$self->app->log->info(
+							"The ZSK keys for $cdn_name are expired!");
+						my $effective_date = $cdn_z_exp
+							- ( $dnskey_ttl * $dnskey_effective_multiplier );
+						my $new_dnssec_keys
+							= $self->regen_expired_keys( "zsk", $cdn_name, $keys,
+							$effective_date );
+						$keys->{$cdn_name} = $new_dnssec_keys;
 					}
-				);
-				my $data = $rs_ds->single;
-				my @example_urls
-					= UI::DeliveryService::get_example_urls( $self, $ds_id,
-					$deliveryservice_regexes, $data, $domain_name,
-					$data->protocol );
-
-	#first one is the one we want.  period at end for dnssec, substring off stuff we dont want
-				my $ds_name = $example_urls[0] . ".";
-				my $length = length($ds_name) - index( $ds_name, "." );
-				$ds_name
-					= substr( $ds_name, index( $ds_name, "." ) + 1, $length );
-
-				my $inception = time();
-				my $z_expiration
-					= $inception + ( 86400 * $default_z_exp_days );
-				my $k_expiration
-					= $inception + ( 86400 * $default_k_exp_days );
-
-				my $zsk
-					= $self->get_dnssec_keys( "zsk", $ds_name, $dnskey_ttl,
-					$inception, $z_expiration, "new", $inception );
-				my $ksk
-					= $self->get_dnssec_keys( "ksk", $ds_name, $dnskey_ttl,
-					$inception, $k_expiration, "new", $inception );
-
-				#add to keys hash
-				$keys->{$xml_id} = { zsk => [$zsk], ksk => [$ksk] };
-
-				#update is_updated param
-				$is_updated = 1;
+				}
 			}
 
-			#if keys do exist, check expiration
-			else {
-				my $ksk = $ds_keys->{ksk};
-				foreach my $krecord (@$ksk) {
-					my $kstatus = $krecord->{status};
-					if ( $kstatus eq 'new' )
-					{    #ignore anything other than the 'new' record
-						    #check if expired
-						if ( $krecord->{expirationDate} < $key_expiration ) {
+			#get DeliveryServices for CDN
+			my %search = ( profile => $profile_id );
+			my @ds_rs
+				= $self->db->resultset('Deliveryservice')->search( \%search );
+			foreach my $ds (@ds_rs) {
+				#check if keys exist for ds
+				my $xml_id  = $ds->xml_id;
+				my $ds_keys = $keys->{$xml_id};
+				if ( !$ds_keys ) {
 
-							#if expired create new keys
-							$self->app->log->info(
-								"The KSK keys for $xml_id are expired!");
-							my $effective_date
-								= $krecord->{expirationDate}
-								- (
-								$dnskey_ttl * $dnskey_effective_multiplier );
-							my $new_dnssec_keys
-								= $self->regen_expired_keys( "ksk", $xml_id,
-								$keys, $effective_date );
-							$keys->{$xml_id} = $new_dnssec_keys;
+					#create keys
+					$self->app->log->info("Keys do not exist for ds $xml_id");
+					my $ds_id = $ds->id;
 
-							#update is_updated param
-							$is_updated = 1;
+					#create the ds domain name for dnssec keys
+					my $domain_name
+						= UI::DeliveryService::get_cdn_domain( $self, $ds_id );
+					my $deliveryservice_regexes
+						= UI::DeliveryService::get_regexp_set( $self, $ds_id );
+					my $rs_ds = $self->db->resultset('Deliveryservice')->search(
+						{ 'me.xml_id' => $xml_id },
+						{   prefetch =>
+								[ { 'type' => undef }, { 'profile' => undef } ]
+						}
+					);
+					my $data = $rs_ds->single;
+					my @example_urls
+						= UI::DeliveryService::get_example_urls( $self, $ds_id,
+						$deliveryservice_regexes, $data, $domain_name,
+						$data->protocol );
+
+		#first one is the one we want.  period at end for dnssec, substring off stuff we dont want
+					my $ds_name = $example_urls[0] . ".";
+					my $length = length($ds_name) - CORE::index( $ds_name, "." );
+					$ds_name
+						= substr( $ds_name, CORE::index( $ds_name, "." ) + 1, $length );
+
+					my $inception = time();
+					my $z_expiration
+						= $inception + ( 86400 * $default_z_exp_days );
+					my $k_expiration
+						= $inception + ( 86400 * $default_k_exp_days );
+
+					my $zsk
+						= $self->get_dnssec_keys( "zsk", $ds_name, $dnskey_ttl,
+						$inception, $z_expiration, "new", $inception );
+					my $ksk
+						= $self->get_dnssec_keys( "ksk", $ds_name, $dnskey_ttl,
+						$inception, $k_expiration, "new", $inception );
+
+					#add to keys hash
+					$keys->{$xml_id} = { zsk => [$zsk], ksk => [$ksk] };
+
+					#update is_updated param
+					$is_updated = 1;
+				}
+
+				#if keys do exist, check expiration
+				else {
+					my $ksk = $ds_keys->{ksk};
+					foreach my $krecord (@$ksk) {
+						my $kstatus = $krecord->{status};
+						if ( $kstatus eq 'new' )
+						{    #ignore anything other than the 'new' record
+							    #check if expired
+							if ( $krecord->{expirationDate} < $key_expiration ) {
+
+								#if expired create new keys
+								$self->app->log->info(
+									"The KSK keys for $xml_id are expired!");
+								my $effective_date
+									= $krecord->{expirationDate}
+									- (
+									$dnskey_ttl * $dnskey_effective_multiplier );
+								my $new_dnssec_keys
+									= $self->regen_expired_keys( "ksk", $xml_id,
+									$keys, $effective_date );
+								$keys->{$xml_id} = $new_dnssec_keys;
+
+								#update is_updated param
+								$is_updated = 1;
+							}
+						}
+					}
+					my $zsk = $ds_keys->{zsk};
+					foreach my $zrecord (@$zsk) {
+						my $zstatus = $zrecord->{status};
+						if ( $zstatus eq 'new' ) {
+							if ( $zrecord->{expirationDate} < $key_expiration ) {
+
+								#if expired create new keys
+								$self->app->log->info(
+									"The ZSK keys for $xml_id are expired!");
+								my $effective_date
+									= $zrecord->{expirationDate}
+									- (
+									$dnskey_ttl * $dnskey_effective_multiplier );
+								my $new_dnssec_keys
+									= $self->regen_expired_keys( "zsk", $xml_id,
+									$keys, $effective_date );
+								$keys->{$xml_id} = $new_dnssec_keys;
+
+								#update is_updated param
+								$is_updated = 1;
+							}
 						}
 					}
 				}
-				my $zsk = $ds_keys->{zsk};
-				foreach my $zrecord (@$zsk) {
-					my $zstatus = $zrecord->{status};
-					if ( $zstatus eq 'new' ) {
-						if ( $zrecord->{expirationDate} < $key_expiration ) {
+			}
+			if ( $is_updated == 1 ) {
+				# #convert hash to json and store in Riak
+				my $json_data = encode_json($keys);
+				$response_container
+					= $self->riak_put( "dnssec", $cdn_name, $json_data );
+			}
 
-							#if expired create new keys
-							$self->app->log->info(
-								"The ZSK keys for $xml_id are expired!");
-							my $effective_date
-								= $zrecord->{expirationDate}
-								- (
-								$dnskey_ttl * $dnskey_effective_multiplier );
-							my $new_dnssec_keys
-								= $self->regen_expired_keys( "zsk", $xml_id,
-								$keys, $effective_date );
-							$keys->{$xml_id} = $new_dnssec_keys;
-
-							#update is_updated param
-							$is_updated = 1;
-						}
-					}
-				}
+			my $response = $response_container->{"response"};
+			if (!$response->is_success()){ 
+				$error_message = "dnssec keys could not be stored for $cdn_name!  Response was: " . $response->content;
+				$self->app->log->warn($error_message);
+				next;
 			}
 		}
-		if ( $is_updated == 1 ) {
-
-			# #convert hash to json and store in Riak
-			my $json_data = encode_json($keys);
-			$response_container
-				= $self->riak_put( "dnssec", $cdn_name, $json_data );
-		}
-
-		my $response = $response_container->{"response"};
-		if (!$response->is_success()){ 
-			$error_message = "dnssec keys could not be stored for $cdn_name!  Response was: " . $response->content;
-			$self->app->log->warn($error_message);
-			next;
-		}
-	}
 	if ($error_message) {
 		return $self->alert({ Error => $error_message });
 	}
 	return $self->success("Thanks!")
+	}
 }
 
 sub regen_expired_keys {
