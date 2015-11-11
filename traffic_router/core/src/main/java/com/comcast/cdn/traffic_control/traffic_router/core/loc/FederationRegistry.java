@@ -42,7 +42,7 @@ public class FederationRegistry {
             }
 
             if (cidrAddresses == null) {
-                return null;
+                continue;
             }
 
             for (CidrAddress resolverAddress : cidrAddresses) {
