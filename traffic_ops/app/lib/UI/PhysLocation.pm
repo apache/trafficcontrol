@@ -20,6 +20,7 @@ package UI::PhysLocation;
 use UI::Utils;
 
 use Mojo::Base 'Mojolicious::Controller';
+use Email::Valid;
 use Data::Dumper;
 
 my $finfo = __FILE__ . ":";
@@ -349,8 +350,11 @@ sub is_valid {
 	$self->field('location.state')->is_required->is_like( qr/^[A-Z]{2}/, "Uppercase 2 char. state abbreviation." );
 	$self->field('location.zip')->is_required->is_like( qr/^[0-9]{5,5}$/, "Enter a valid 5 digit zipcode." );
 	$self->field('location.phone')->is_like( qr/^$|[0-9]{3}\-[0-9]{3}\-[0-9]{4}/, "Phone number format is: ###-###-####" );
-	$self->field('location.email')->is_like( qr/^$|[\w\.]\@[\w\.]/,               "Enter a valid email address." );
-
+	$self->field('location.email')->check( sub {
+			my ( $value, $params ) = @_;
+			return if Email::Valid->address($value);
+			return  "Enter a valid email address.";
+			});
 	return $self->valid;
 }
 

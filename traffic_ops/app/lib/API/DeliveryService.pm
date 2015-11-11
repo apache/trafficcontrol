@@ -19,6 +19,7 @@ package API::DeliveryService;
 
 # JvD Note: you always want to put Utils as the first use. Sh*t don't work if it's after the Mojo lines.
 use UI::Utils;
+use UI::DeliveryService;
 use Mojo::Base 'Mojolicious::Controller';
 use Data::Dumper;
 use Common::ReturnCodes qw(SUCCESS ERROR);
@@ -80,7 +81,7 @@ sub get_data {
 	while ( my $row = $rs->next ) {
 		next if ( defined($tm_user_id) && !defined( $ds_hash{ $row->id } ) );
 
-		my $cdn_name = defined( $row->cdn_id ) ? $row->cdn->name : "";
+		my $cdn_name  = defined( $row->cdn_id ) ? $row->cdn->name : "";
 		my $re_rs     = $row->deliveryservice_regexes;
 		my @matchlist = ();
 		while ( my $re_row = $re_rs->next ) {
@@ -92,6 +93,9 @@ sub get_data {
 				}
 			);
 		}
+		my $cdn_domain = &UI::DeliveryService::get_cdn_domain( $self, $row->id );
+		my $regexp_set = &UI::DeliveryService::get_regexp_set( $self, $row->id );
+		my @example_urls = &UI::DeliveryService::get_example_urls( $self, $row->id, $regexp_set, $row, $cdn_domain, $row->protocol );
 		push(
 			@data, {
 				"id"                   => $row->id,
@@ -136,6 +140,7 @@ sub get_data {
 				"cacheurl"             => $row->cacheurl,
 				"remapText"            => $row->remap_text,
 				"initialDispersion"    => $row->initial_dispersion,
+				"exampleURLs"          => \@example_urls,
 			}
 		);
 	}

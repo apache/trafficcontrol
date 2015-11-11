@@ -74,10 +74,28 @@ $t->post_ok(
 	}
 )->status_is(302)->or( sub { diag $t->tx->res->content->asset->{content}; } );
 
+# test strange email address
+$t->post_ok(
+	'/phys_location/create' => form => {
+		'location.name'       => 'try-bad-email',
+		'location.short_name' => 'jlp',
+		'location.address'    => '4100 East Dry Creek Rd.',
+		'location.city'       => 'Centennial',
+		'location.zip'        => '80184',
+		'location.state'      => 'CO',
+		'location.phone'      => '',
+		'location.poc'        => 'Bubba',
+		'location.email'      => 'Louie was here',
+		'location.comments'   => 'boo',
+		'location.region'     => '1',
+	}
+)->status_is(200)->message( 'invalid email' );
+
 # modify and delete it
-&upd_and_del();
+&upd_and_del( );
 
 sub upd_and_del() {
+	my %overrides = @_;
 	my $q      = 'select id from phys_location where name = \'jlp-test-location\'';
 	my $get_ds = $dbh->prepare($q);
 	$get_ds->execute();

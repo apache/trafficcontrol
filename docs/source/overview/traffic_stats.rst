@@ -20,7 +20,7 @@
 
 Traffic Stats
 =============
-Traffic Stats is a program written in `Go <http.golang.org>`_ that is used to acquire and store statistics about CDNs controlled by Traffic Control.  Traffic Stats mines metrics from Traffic Monitor's JSON APIs and stores the data in `InfluxDb <http://influxdb.com>`_.  Data is typically stored in InfluxDb on a short-term basis (30 days or less) and is used to drive graphs created by `Grafana <http://grafana.org>`_ which are linked from Traffic Ops.  Traffic Ops performs two functions:  first it gathers stat data for Edge Caches and Delivery Services at a configurable interval (10 second default) from the Traffic Monitor API's and stores the data in InfluxDb; second it summarizes all of the stats once a day (around midnight UTC) and creates a daily rollup contraining the Max Gbps served and the Total Bytes served.
+Traffic Stats is a program written in `Go <http.golang.org>`_ that is used to acquire and store statistics about CDNs controlled by Traffic Control.  Traffic Stats mines metrics from Traffic Monitor's JSON APIs and stores the data in `InfluxDb <http://influxdb.com>`_.  Data is typically stored in InfluxDb on a short-term basis (30 days or less) and is used to drive graphs created by `Grafana <http://grafana.org>`_ which are linked from Traffic Ops.  Traffic Stats performs two functions:  first it gathers stat data for Edge Caches and Delivery Services at a configurable interval (10 second default) from the Traffic Monitor API's and stores the data in InfluxDb; second it summarizes all of the stats once a day (around midnight UTC) and creates a daily rollup containing the Max Gbps served and the Total Bytes served.
 
 Stat data is stored in three different databases:
 

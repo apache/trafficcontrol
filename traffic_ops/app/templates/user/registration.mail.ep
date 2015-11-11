@@ -37,22 +37,11 @@
 </style>
 
 <body>
-  <section>A new account has been created for you on the <%= $instance_name %> Portal.</section>
-  <p/>
-  <section><%= $instance_name %> offers direct content delivery to millions of consumers in North America and internationally.</section>
-  <p/>
-  <a class="button_link" href="<%= $tm_user->{portal_base_url} %>/#/user/register?token=<%= $tm_user->{token} %>">Click to Finish Your Registration</a> 
-  <p/>
-  <section>You'll find a dashboard that provides access to all of your delivery services or you can explore individual delivery services as well as the overall <%= $instance_name %> analytics.</section>
-  <p/>
-  <section>The welcome guide for the <%= $instance_name %> can be found at:</section>
-  <a href="<%= $tm_user->{portal_base_url} %>/#/collateral"><%= $tm_user->{portal_base_url} %>/#/collateral</a>
-  <p/>
-  If you have any questions, please contact your
-  <%= $instance_name %> Product Owner listed in the welcome guide.</section>
-  <p/>
-
-  Thank you,<br/>
-  The <%= $instance_name %> Team<br/>
+  <p>A new account has been created for you on the <%= $instance_name %> Portal. In the <%= $instance_name %> Portal, you'll find a dashboard that provides access to all of your delivery services.</p>
+  <a class="button_link" href="<%= $tm_user->{portal_base_url} %>/#/user/register?token=<%= $tm_user->{token} %>">Click to Finish Your Registration</a>
+  <p>More information regarding the <%= $instance_name %> can be found at: <a href="<%= $tm_user->{portal_base_url} %>/#/about"><%= $tm_user->{portal_base_url} %>/#/about</a></p>
+  <p>If you have any questions, please contact your <a href="<%= $tm_user->{portal_base_url} %>/#/about/contact"><%= $instance_name %> Product Owner</a>.</p>
+  <p>Thank you,</p>
+  <p>The <%= $instance_name %> Team</p>
 </body>
 </html>

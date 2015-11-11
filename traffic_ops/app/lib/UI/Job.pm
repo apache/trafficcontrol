@@ -67,7 +67,16 @@ sub newjob {
 	}
 
 	if ( $self->is_valid_job() ) {
-		my $org_server_fqdn = $self->db->resultset("Deliveryservice")->search( { xml_id => $ds_xml_id } )->get_column('org_server_fqdn')->single();
+		my $ds = $self->db->resultset("Deliveryservice")->search( { xml_id => $ds_xml_id }, { prefetch => [ 'type', 'profile', 'cdn' ] } )->single();
+		my $org_server_fqdn;
+		if ($ds->type->name eq 'ANY_MAP') {
+			$org_server_fqdn = $ds->remap_text;
+			$org_server_fqdn =~ s/^\S+\s+(\S+)\s+.*/$1/; # get the thing after (re)map
+			$org_server_fqdn =~ s/\/$//;
+		} else {
+			$org_server_fqdn = $ds->org_server_fqdn;
+		}
+		my $ds_id = $ds->id;
 
 		$user = $self->db->resultset('TmUser')->search( { username => $self->current_user()->{username} } )->get_column('id')->single();
 
@@ -134,17 +143,18 @@ sub newjob {
 			}
 			my $insert = $self->db->resultset('Job')->create(
 				{
-					agent        => 1,
-					object_type  => $object_type,
-					object_name  => $object_name,
-					entered_time => $entered_time,
-					keyword      => $keyword,
-					parameters   => $parameters,
-					asset_url    => $org_server_fqdn,
-					asset_type   => $asset_type,
-					status       => $status,
-					job_user     => $user,
-					start_time   => $start_time_gmt,
+					agent               => 1,
+					object_type         => $object_type,
+					object_name         => $object_name,
+					entered_time        => $entered_time,
+					keyword             => $keyword,
+					parameters          => $parameters,
+					asset_url           => $org_server_fqdn,
+					asset_type          => $asset_type,
+					status              => $status,
+					job_user            => $user,
+					start_time          => $start_time_gmt,
+					job_deliveryservice => $ds->id,
 				}
 			);
 			$insert->insert();
