@@ -66,7 +66,7 @@ public class RequestMatcher implements Comparable<RequestMatcher> {
 			return httpRequest.getPath() + "?" + httpRequest.getQueryString();
 		}
 
-		return "";
+		return null;
 	}
 
 	@Override

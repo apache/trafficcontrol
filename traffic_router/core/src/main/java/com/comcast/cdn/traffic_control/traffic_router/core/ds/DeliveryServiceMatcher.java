@@ -106,7 +106,7 @@ public class DeliveryServiceMatcher implements Comparable<DeliveryServiceMatcher
 			map.put(thatMatcher, that);
 		}
 
-		if (map.size() == 0) {
+		if (map.isEmpty()) {
 			return 0;
 		}
 
