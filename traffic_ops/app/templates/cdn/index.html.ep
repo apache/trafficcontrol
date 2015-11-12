@@ -83,6 +83,7 @@ $(function () {
 					<tr>
 						<td></td>
 						<td>Name</td>
+						<td>DNSSEC enabled?</td>
 						<td>Last Updated</td>
 					</tr>
 				</thead>

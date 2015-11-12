@@ -602,6 +602,9 @@ sub api_routes {
 	$r->get( "/api/$version/cdns/name/:name/dnsseckeys/delete" => [ format => [qw(json)] ] )->over( authenticated => 1 )
 		->to( 'Cdn#delete_dnssec_keys', namespace => $namespace );
 
+	#checks expiration of keys and re-generates if necessary.  Used by Cron.
+	$r->get( "/internal/api/$version/cdns/dnsseckeys/refresh" => [ format => [qw(json)] ] )->to( 'Cdn#dnssec_keys_refresh', namespace => $namespace );
+
 	# -- CDN: Topology
 	# USED TO BE - GET /api/$version/configs/cdns
 	$r->get( "/api/$version/cdns/configs" => [ format => [qw(json)] ] )->via('GET')->over( authenticated => 1 )

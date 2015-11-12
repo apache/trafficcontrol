@@ -97,7 +97,7 @@ public final class SignatureManager {
 					LOGGER.fatal(e, e);
 				}
 			} else {
-				LOGGER.info("DNSSEC not enabled; to enable, set dnssec.enabled = true in the profile parameters for this Traffic Router in Traffic Ops");
+				LOGGER.info("DNSSEC not enabled; to enable, activate DNSSEC for this Traffic Router's CDN in Traffic Ops");
 			}
 		}
 	}
