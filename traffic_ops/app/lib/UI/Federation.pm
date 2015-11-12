@@ -28,7 +28,8 @@ use Mojolicious::Validator::Validation;
 use Email::Valid;
 use Data::GUID;
 use Data::Dumper;
-use constant FEDERATION_ROLE_ID => 7;
+use constant FEDERATION_ROLE_ID     => 7;
+use constant DNS_DELIVERYSERVICE_ID => 9;
 
 # List of Federation Mappings
 sub index {
@@ -178,7 +179,7 @@ sub group_resolvers {
 sub get_delivery_services {
 	my $self   = shift;
 	my $id     = shift;
-	my @ds_ids = $self->db->resultset('Deliveryservice')->search( undef, { orderby => "xml_id" } )->get_column('id')->all;
+	my @ds_ids = $self->db->resultset('Deliveryservice')->search( { type => DNS_DELIVERYSERVICE_ID }, { orderby => "xml_id" } )->get_column('id')->all;
 
 	my $delivery_services;
 	for my $ds_id ( uniq(@ds_ids) ) {
