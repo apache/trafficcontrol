@@ -8,8 +8,27 @@ import java.util.TreeSet;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.equalTo;
+import static org.junit.Assert.fail;
 
 public class ComparableStringByLengthTest {
+
+	@Test
+	public void itDoesNotAllowNullOrEmptyString() {
+		try {
+			new ComparableStringByLength(null);
+			fail("Should have caught IllegalArugmentException");
+		} catch (IllegalArgumentException e) {
+			assertThat(e.getMessage(), equalTo("String parameter must be non-null and non-empty"));
+		}
+
+		try {
+			new ComparableStringByLength("");
+			fail("Should have caught IllegalArgumentException");
+		} catch (IllegalArgumentException e) {
+			assertThat(e.getMessage(), equalTo("String parameter must be non-null and non-empty"));
+		}
+	}
+
 	@Test
 	public void itSortsAscendingToShorterStrings() {
 		String[] strings = new String[] {
@@ -29,5 +48,22 @@ public class ComparableStringByLengthTest {
 		assertThat(iterator.next().toString(), equalTo("ba"));
 		assertThat(iterator.next().toString(), equalTo("a"));
 		assertThat(iterator.next().toString(), equalTo("b"));
+	}
+
+	@Test
+	public void itProperlySupportsEquals() {
+		ComparableStringByLength abc = new ComparableStringByLength("abc");
+		ComparableStringByLength def = abc;
+
+		assertThat(abc.equals(def), equalTo(true));
+		assertThat(abc.equals(new ComparableStringByLength("abc")), equalTo(true));
+		assertThat(abc.equals(null), equalTo(false));
+		assertThat(abc.equals(""), equalTo(false));
+		assertThat(abc.equals(new Long(1L)), equalTo(false));
+	}
+
+	@Test
+	public void itUsesStringFieldForHashcode() {
+		assertThat(new ComparableStringByLength("abc").hashCode(), equalTo("abc".hashCode()));
 	}
 }

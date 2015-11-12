@@ -288,20 +288,20 @@ public class ConfigHandler {
 					isDns = true;
 				}
 
-				final JSONArray list = matchset.getJSONArray("matchlist");
-				final DeliveryServiceMatcher m = new DeliveryServiceMatcher(ds);
+				final DeliveryServiceMatcher deliveryServiceMatcher = new DeliveryServiceMatcher(ds);
 
 				if ("HTTP".equals(protocol)) {
-					httpServiceMatchers.add(m);
-				} else if("DNS".equals(protocol)) {
-					dnsServiceMatchers.add(m);
+					httpServiceMatchers.add(deliveryServiceMatcher);
+				} else if ("DNS".equals(protocol)) {
+					dnsServiceMatchers.add(deliveryServiceMatcher);
 				}
 
+				final JSONArray list = matchset.getJSONArray("matchlist");
 				for (int j = 0; j < list.length(); j++) {
 					final JSONObject matcherJo = list.getJSONObject(j);
 					final Type type = Type.valueOf(matcherJo.getString("match-type"));
 					final String target = matcherJo.optString("target");
-					m.addMatch(type, matcherJo.getString("regex"), target);
+					deliveryServiceMatcher.addMatch(type, matcherJo.getString("regex"), target);
 				}
 			}
 

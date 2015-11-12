@@ -22,7 +22,7 @@ public class RequestMatcher implements Comparable<RequestMatcher> {
 		}
 
 		this.type = type;
-		this.requestHeader =requestHeader;
+		this.requestHeader = requestHeader;
 		pattern = Pattern.compile(regex, Pattern.CASE_INSENSITIVE);
 
 		final Matcher matcher = metaPattern.matcher(regex);
@@ -37,7 +37,7 @@ public class RequestMatcher implements Comparable<RequestMatcher> {
 	public boolean matches(final Request request) {
 		final String target = getTarget(request);
 
-		if (target.isEmpty()) {
+		if (target == null) {
 			return false;
 		}
 

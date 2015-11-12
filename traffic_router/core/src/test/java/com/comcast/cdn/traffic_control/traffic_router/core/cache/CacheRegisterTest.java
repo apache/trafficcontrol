@@ -3,6 +3,7 @@ package com.comcast.cdn.traffic_control.traffic_router.core.cache;
 import com.comcast.cdn.traffic_control.traffic_router.core.ds.DeliveryService;
 import com.comcast.cdn.traffic_control.traffic_router.core.ds.DeliveryServiceMatcher;
 import com.comcast.cdn.traffic_control.traffic_router.core.request.HTTPRequest;
+import com.comcast.cdn.traffic_control.traffic_router.core.request.Request;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -12,6 +13,7 @@ import static com.comcast.cdn.traffic_control.traffic_router.core.ds.DeliverySer
 import static com.comcast.cdn.traffic_control.traffic_router.core.ds.DeliveryServiceMatcher.Type.PATH;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.equalTo;
+import static org.hamcrest.Matchers.nullValue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -43,6 +45,14 @@ public class CacheRegisterTest {
 		deliveryServiceMatchers.add(deliveryServiceMatcher3);
 
 		cacheRegister.setHttpDeliveryServiceMatchers(deliveryServiceMatchers);
+
+		DeliveryServiceMatcher dnsMatcher1 = new DeliveryServiceMatcher(deliveryService1);
+		dnsMatcher1.addMatch(HOST, ".*\\.service01-kabletown\\..*", "");
+
+		TreeSet<DeliveryServiceMatcher> dnsMatchers = new TreeSet<DeliveryServiceMatcher>();
+		dnsMatchers.add(dnsMatcher1);
+
+		cacheRegister.setDnsDeliveryServiceMatchers(dnsMatchers);
 	}
 
 	@Test
@@ -52,5 +62,24 @@ public class CacheRegisterTest {
 		httpRequest.setPath("foo/abcde/bar");
 
 		assertThat(cacheRegister.getDeliveryService(httpRequest, true).getId(), equalTo("delivery service 2"));
+
+		Request request = new Request();
+		request.setHostname("foo.service01-kabletown.com");
+		assertThat(cacheRegister.getDeliveryService(request, false).getId(), equalTo("delivery service 1"));
+	}
+
+	@Test
+	public void itReturnsNullForDeliveryServiceWhenItHasNoMatchers() {
+		cacheRegister.setHttpDeliveryServiceMatchers(null);
+
+		HTTPRequest httpRequest = new HTTPRequest();
+		httpRequest.setHostname("foo.service01-kabletown.com");
+		httpRequest.setPath("foo/abcde/bar");
+		assertThat(cacheRegister.getDeliveryService(httpRequest, true), nullValue());
+
+		cacheRegister.setDnsDeliveryServiceMatchers(null);
+		Request request = new Request();
+		request.setHostname("foo.service01-kabletown.com");
+		assertThat(cacheRegister.getDeliveryService(request, false), nullValue());
 	}
 }

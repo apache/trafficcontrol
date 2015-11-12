@@ -1,6 +1,7 @@
 package com.comcast.cdn.traffic_control.traffic_router.core.ds;
 
 import com.comcast.cdn.traffic_control.traffic_router.core.request.HTTPRequest;
+import com.comcast.cdn.traffic_control.traffic_router.core.request.Request;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.powermock.core.classloader.annotations.PrepareForTest;
@@ -13,6 +14,7 @@ import static org.junit.Assert.assertThat;
 import static org.mockito.Mockito.mock;
 import static com.comcast.cdn.traffic_control.traffic_router.core.ds.DeliveryServiceMatcher.Type.HOST;
 import static com.comcast.cdn.traffic_control.traffic_router.core.ds.DeliveryServiceMatcher.Type.PATH;
+import static org.mockito.Mockito.when;
 
 @PrepareForTest(DeliveryService.class)
 @RunWith(PowerMockRunner.class)
@@ -38,6 +40,17 @@ public class DeliveryServiceMatcherTest {
 		HTTPRequest httpRequest = new HTTPRequest();
 		httpRequest.setHostname("foo.serviceZZ-kabletown.com.bar");
 		httpRequest.setPath("foo/abcd/bar");
+		assertThat(deliveryServiceMatcher.matches(httpRequest), equalTo(false));
+	}
+
+	@Test
+	public void itReturnsFalseWhenItHasNoMatchers() {
+		DeliveryServiceMatcher deliveryServiceMatcher = new DeliveryServiceMatcher(mock(DeliveryService.class));
+
+		Request request = new Request();
+		assertThat(deliveryServiceMatcher.matches(request), equalTo(false));
+
+		HTTPRequest httpRequest = new HTTPRequest();
 		assertThat(deliveryServiceMatcher.matches(httpRequest), equalTo(false));
 	}
 
@@ -79,5 +92,27 @@ public class DeliveryServiceMatcherTest {
 
 		assertThat(deliveryServiceMatcher1.compareTo(deliveryServiceMatcher2), equalTo(-1));
 		assertThat(deliveryServiceMatcher2.compareTo(deliveryServiceMatcher1), equalTo(1));
+	}
+
+	@Test
+	public void compareToReturns0WhenSameMatchersDifferentDeliveryServices() {
+		DeliveryService deliveryService1 = mock(DeliveryService.class);
+		when(deliveryService1.getId()).thenReturn("delivery service 1");
+
+		DeliveryService deliveryService2 = mock(DeliveryService.class);
+		when(deliveryService2.getId()).thenReturn("delivery service 2");
+
+		DeliveryServiceMatcher deliveryServiceMatcher1 = new DeliveryServiceMatcher(deliveryService1);
+		deliveryServiceMatcher1.addMatch(HOST, ".*\\.service01-kabletown.com\\..*", "");
+		deliveryServiceMatcher1.addMatch(PATH, ".*abc.*", "");
+
+		DeliveryServiceMatcher deliveryServiceMatcher2 = new DeliveryServiceMatcher(deliveryService2);
+		deliveryServiceMatcher2.addMatch(HOST, ".*\\.service01-kabletown.com\\..*", "");
+		deliveryServiceMatcher2.addMatch(PATH, ".*abc.*", "");
+
+		assertThat(deliveryServiceMatcher1.equals(deliveryServiceMatcher2), equalTo(false));
+		assertThat(deliveryServiceMatcher2.equals(deliveryServiceMatcher1), equalTo(false));
+
+		assertThat(deliveryServiceMatcher1.compareTo(deliveryServiceMatcher2), equalTo(0));
 	}
 }

@@ -17,35 +17,89 @@ import java.util.Set;
 import java.util.TreeSet;
 
 public class RequestMatcherTest {
+
+	@Test
+	public void itDoesNotAllowHEADERmatchesWithoutHeaderName() {
+		try {
+			new RequestMatcher(HEADER, ".*kabletown.*");
+			fail("Should have thrown IllegalArgumentException");
+		} catch (IllegalArgumentException iae) {
+			assertThat(iae.getMessage(), equalTo("Request Header name must be supplied for type HEADER"));
+		}
+
+		try {
+			new RequestMatcher(HEADER, ".*kabletown.*", "");
+			fail("Should have thrown IllegalArgumentException");
+		} catch (IllegalArgumentException iae) {
+			assertThat(iae.getMessage(), equalTo("Request Header name must be supplied for type HEADER"));
+		}
+	}
+
 	@Test
 	public void itMatchesByHost() {
 		Request request = new Request();
-		request.setHostname("foo.host.bar");
-
 		RequestMatcher requestMatcher = new RequestMatcher(HOST, ".*\\.host\\..*", "");
+
+		assertThat(requestMatcher.matches(request), equalTo(false));
+
+		request.setHostname("foo.host.bar");
 		assertThat(requestMatcher.matches(request), equalTo(true));
 	}
 
 	@Test
 	public void itMatchesByPath() {
+		RequestMatcher requestMatcher = new RequestMatcher(PATH, ".*path.*");
+		Request request = new Request();
+
+		assertThat(requestMatcher.matches(request), equalTo(false));
+
 		HTTPRequest httpRequest = new HTTPRequest();
 		httpRequest.setPath("/foo/path/bar");
 
-		RequestMatcher requestMatcher = new RequestMatcher(PATH, ".*path.*");
+		assertThat(requestMatcher.matches(httpRequest), equalTo(true));
+	}
+
+	@Test
+	public void itMatchesByQuery() {
+		RequestMatcher requestMatcher = new RequestMatcher(PATH, ".*car=red.*");
+		Request request = new Request();
+
+		assertThat(requestMatcher.matches(request), equalTo(false));
+
+		HTTPRequest httpRequest = new HTTPRequest();
+		httpRequest.setPath("/foo/path/bar");
+		httpRequest.setQueryString("car=red");
+
+		assertThat(requestMatcher.matches(httpRequest), equalTo(true));
+	}
+
+	@Test
+	public void itMatchesByPathAndQuery() {
+		RequestMatcher requestMatcher = new RequestMatcher(PATH, "\\/foo\\/path\\/bar\\?car=red");
+		Request request = new Request();
+
+		assertThat(requestMatcher.matches(request), equalTo(false));
+
+		HTTPRequest httpRequest = new HTTPRequest();
+		httpRequest.setPath("/foo/path/bar");
+		httpRequest.setQueryString("car=red");
+
 		assertThat(requestMatcher.matches(httpRequest), equalTo(true));
 	}
 
 	@Test
 	public void itMatchesByRequestHeader() {
+		RequestMatcher requestMatcher = new RequestMatcher(HEADER, ".*kabletown.*", "Host");
+		Request request = new Request();
+		assertThat(requestMatcher.matches(request), equalTo(false));
+
 		Map<String, String> headers = new HashMap<String, String>();
-		headers.put("foo", "something.abcd.else");
+		headers.put("Host", "www.kabletown.com");
 
 		HTTPRequest httpRequest = new HTTPRequest();
 		httpRequest.setHeaders(headers);
 
-		RequestMatcher requestMatcher = new RequestMatcher(HEADER, ".*abcd.*", "foo");
 		assertThat(requestMatcher.matches(httpRequest), equalTo(true));
-
 	}
 
 	@Test

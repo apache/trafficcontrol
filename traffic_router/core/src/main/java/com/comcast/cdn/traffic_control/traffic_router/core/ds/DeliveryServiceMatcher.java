@@ -56,7 +56,7 @@ public class DeliveryServiceMatcher implements Comparable<DeliveryServiceMatcher
 			}
 		}
 
-		return true;
+		return !requestMatchers.isEmpty();
 	}
 
 	@Override
@@ -104,6 +104,10 @@ public class DeliveryServiceMatcher implements Comparable<DeliveryServiceMatcher
 
 		for (RequestMatcher thatMatcher : uniqueToThat) {
 			map.put(thatMatcher, that);
+		}
+
+		if (map.size() == 0) {
+			return 0;
 		}
 
 		return (this == map.firstEntry().getValue()) ? -1 : 1;

@@ -4,6 +4,10 @@ public class ComparableStringByLength implements Comparable<ComparableStringByLe
 	final private String string;
 
 	public ComparableStringByLength(final String string) {
+		if (string == null || string.length() == 0) {
+			throw new IllegalArgumentException("String parameter must be non-null and non-empty");
+		}
+
 		this.string = string;
 	}
 
@@ -22,24 +26,28 @@ public class ComparableStringByLength implements Comparable<ComparableStringByLe
 	}
 
 	@Override
-	@SuppressWarnings("PMD.IfStmtsMustUseBraces")
 	public boolean equals(final Object other) {
-		if (this == other) return true;
+		if (this == other) {
+			return true;
+		}
 
-		if (other == null || (getClass() != other.getClass() && String.class != other.getClass())) return false;
+		if (other == null) {
+			return false;
+		}
+
+		if (getClass() != other.getClass() && String.class != other.getClass()) {
+			return false;
+		}
 
 		if (String.class == other.getClass()) {
 			return string.equals(other);
 		}
 
-		final ComparableStringByLength that = (ComparableStringByLength) other;
-
-		return !(string != null ? !string.equals(that.string) : that.string != null);
-
+		return string.equals(((ComparableStringByLength) other).string);
 	}
 
 	@Override
 	public int hashCode() {
-		return string != null ? string.hashCode() : 0;
+		return string.hashCode();
 	}
 }
