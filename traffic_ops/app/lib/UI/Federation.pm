@@ -111,7 +111,9 @@ sub edit {
 sub users {
 	my $self = shift;
 	my $data;
-	my $fed_users = $self->db->resultset('TmUser')->search( { role => FEDERATION_ROLE }, { order_by => 'full_name' } );
+	my $federation_role_id = $self->db->resultset('Role')->search( { name => FEDERATION_ROLE }, undef )->get_column('id')->single();
+
+	my $fed_users = $self->db->resultset('TmUser')->search( { role => $federation_role_id }, { order_by => 'full_name' } );
 	while ( my $row = $fed_users->next ) {
 		push(
 			@$data, {
@@ -176,7 +178,7 @@ sub group_resolvers {
 sub get_delivery_services {
 	my $self   = shift;
 	my $id     = shift;
-	my @ds_ids = $self->db->resultset('Deliveryservice')->search( { name => { -like => 'DNS%' } }, { orderby => "xml_id" } )->get_column('id')->all;
+	my @ds_ids = $self->db->resultset('Type')->search( { name => { -like => 'DNS%' } } )->get_column('id')->all;
 
 	my $delivery_services;
 	for my $ds_id ( uniq(@ds_ids) ) {
@@ -196,6 +198,8 @@ sub update {
 	my $description = $self->param('federation.description');
 	my $ttl         = $self->param('federation.ttl');
 
+	my $federation_role_id = $self->db->resultset('Role')->search( { name => FEDERATION_ROLE }, undef )->get_column('id')->single();
+	$self->app->log->debug( "federation_role_id #-> " . $federation_role_id );
 	my $is_valid = $self->is_valid();
 	if ( $self->is_valid("edit") ) {
 		my $dbh =
@@ -205,17 +209,19 @@ sub update {
 		$dbh->ttl($ttl);
 		$dbh->update();
 
+		$self->app->log->debug( "fed_id #-> " . $fed_id );
 		my $ft = $self->db->resultset('FederationTmuser')->find_or_create(
 			{
 				federation => $fed_id,
-				role       => FEDERATION_ROLE
+				tm_user    => $user_id,
+				role       => $federation_role_id,
 			}
 		);
 
 		if ( defined($ft) ) {
 			$ft->federation($fed_id);
 			$ft->tm_user($user_id);
-			$ft->role(FEDERATION_ROLE);
+			$ft->role($federation_role_id);
 			$ft->update();
 		}
 
@@ -254,7 +260,12 @@ sub create {
 		mode                 => 'add'
 	);
 
-	if ( $self->is_valid("add") ) {
+	my $existing_fed = $self->db->resultset('Federation')->search( { cname => $cname } )->get_column('cname')->single();
+	$self->app->log->debug( "existing_fed #-> " . $existing_fed );
+	if ($existing_fed) {
+		$self->field('federation.cname')->is_equal( "", "A Federation with name \"$cname\" already exists." );
+	}
+	if ( $existing_fed && $self->is_valid("add") ) {
 		my $new_id = $self->create_federation( $ds_id, $user_id, $cname, $desc, $ttl );
 		if ( $new_id > 0 ) {
 			$self->app->log->debug("redirecting....");
@@ -298,11 +309,12 @@ sub create_federation {
 		$fed_ds_id = $fed_ds->insert();
 
 		if ( $fed_ds_id > 0 ) {
+			my $federation_role_id = $self->db->resultset('Role')->search( { name => FEDERATION_ROLE }, undef )->get_column('id')->single();
 			my $ft = $self->db->resultset('FederationTmuser')->create(
 				{
 					federation => $federation_id,
 					tm_user    => $user_id,
-					role       => FEDERATION_ROLE,
+					role       => $federation_role_id,
 				}
 			);
 		}
@@ -325,11 +337,6 @@ sub is_valid {
 	$self->field('federation.ttl')->is_required;
 	$self->field('ds_id')->is_required;
 	$self->field('user_id')->is_required;
-	my $cname = $self->param('federation.cname');
-	my $existing_fed = $self->db->resultset('Federation')->search( { cname => $cname } )->get_column('cname')->single();
-	if ($existing_fed) {
-		$self->field('federation.cname')->is_equal( "", "A Federation with name \"$cname\" already exists." );
-	}
 
 	return $self->valid;
 }
