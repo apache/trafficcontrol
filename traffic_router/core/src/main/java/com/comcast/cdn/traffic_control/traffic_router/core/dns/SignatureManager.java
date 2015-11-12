@@ -290,7 +290,7 @@ public final class SignatureManager {
 					LOGGER.debug("key selected: " + kpw.toString());
 					keys.add(kpw);
 				} else if (wantSigningKey) {
-					if (!kpw.isUsable()) { // inception or effective date in the future
+					if (!kpw.isUsable()) { // effective date in the future
 						LOGGER.debug("Skipping unusable signing key: " + kpw.toString());
 						continue;
 					} else if (!isExpiredKeyAllowed() && kpw.isExpired()) {

@@ -115,7 +115,7 @@ public class DNSKeyPairWrapper extends DnsKeyPair {
 
 	public boolean isUsable() {
 		final Date now = Calendar.getInstance().getTime();
-		return getEffective().before(now) && getInception().before(now);
+		return getEffective().before(now);
 	}
 
 	public boolean isKeyCached(final long maxTTL) {
