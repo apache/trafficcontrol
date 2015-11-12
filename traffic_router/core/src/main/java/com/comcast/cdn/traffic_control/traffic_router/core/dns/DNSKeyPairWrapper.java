@@ -19,6 +19,7 @@ package com.comcast.cdn.traffic_control.traffic_router.core.dns;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Calendar;
 import java.util.Date;
 
 import javax.xml.bind.DatatypeConverter;
@@ -106,6 +107,27 @@ public class DNSKeyPairWrapper extends DnsKeyPair {
 
 	public boolean isKeySigningKey() {
 		return ((getDNSKEYRecord().getFlags() & DNSKEYRecord.Flags.SEP_KEY) != 0);
+	}
+
+	public boolean isExpired() {
+		return getExpiration().before(Calendar.getInstance().getTime());
+	}
+
+	public boolean isUsable() {
+		final Date now = Calendar.getInstance().getTime();
+		return getEffective().before(now) && getInception().before(now);
+	}
+
+	public boolean isKeyCached(final long maxTTL) {
+		return getExpiration().after(new Date(System.currentTimeMillis() - (maxTTL * 1000)));
+	}
+
+	public boolean isOlder(final DNSKeyPairWrapper other) {
+		return getEffective().before(other.getEffective());
+	}
+
+	public boolean isNewer(final DNSKeyPairWrapper other) {
+		return getEffective().after(other.getEffective());
 	}
 
 	@Override

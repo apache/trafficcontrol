@@ -54,6 +54,7 @@ public final class SignatureManager {
 	private static ScheduledExecutorService keyMaintenanceExecutor;
 	private TrafficOpsUtils trafficOpsUtils;
 	private boolean dnssecEnabled = false;
+	private boolean expiredKeyAllowed = true;
 	private Map<String, List<DNSKeyPairWrapper>> keyMap;
 	private static ProtectedFetcher fetcher = null;
 	private ZoneManager zoneManager;
@@ -77,6 +78,7 @@ public final class SignatureManager {
 
 			if (config.optBoolean("dnssec.enabled")) {
 				setDnssecEnabled(true);
+				setExpiredKeyAllowed(config.optBoolean("dnssec.allow.expired.keys", true)); // allowing this by default is the safest option
 				setExpirationMultiplier(config.optInt("signaturemanager.expiration.multiplier", 5)); // signature validity is maxTTL * this
 				final ScheduledExecutorService me = Executors.newScheduledThreadPool(1);
 				final int maintenanceInterval = config.optInt("keystore.maintenance.interval", 300); // default 300 seconds, do we calculate based on the complimentary settings for key generation in TO?
@@ -264,10 +266,9 @@ public final class SignatureManager {
 		return getKeyPairs(name, false, false, maxTTL);
 	}
 
-	@SuppressWarnings("PMD.CyclomaticComplexity")
+	@SuppressWarnings({"PMD.CyclomaticComplexity", "PMD.NPathComplexity"})
 	private List<DNSKeyPairWrapper> getKeyPairs(final Name name, final boolean wantKsk, final boolean wantSigningKey, final long maxTTL) throws IOException, NoSuchAlgorithmException {
 		final List<DNSKeyPairWrapper> keyPairs = keyMap.get(name.toString());
-		final Date now = new Date();
 		DNSKeyPairWrapper signingKey = null;
 
 		if (keyPairs == null) {
@@ -285,22 +286,28 @@ public final class SignatureManager {
 				if ((isKsk && !wantKsk) || (!isKsk && wantKsk)) {
 					LOGGER.debug("Skipping key: wantKsk = " + wantKsk + "; key: " + kpw.toString());
 					continue;
-				} else if (!wantSigningKey && (kpw.getExpiration().after(new Date(System.currentTimeMillis() - (maxTTL * 1000))))) {
+				} else if (!wantSigningKey && (isExpiredKeyAllowed() || kpw.isKeyCached(maxTTL))) {
 					LOGGER.debug("key selected: " + kpw.toString());
 					keys.add(kpw);
 				} else if (wantSigningKey) {
-					if (kpw.getEffective().after(now) || kpw.getInception().after(now) || kpw.getExpiration().before(now)) {
-						// this key is either expired or should not be used yet
+					if (!kpw.isUsable()) { // inception or effective date in the future
 						LOGGER.debug("Skipping unusable signing key: " + kpw.toString());
+						continue;
+					} else if (!isExpiredKeyAllowed() && kpw.isExpired()) {
+						LOGGER.warn("Unable to use expired signing key: " + kpw.toString());
 						continue;
 					}
 
-					// Locate the key with the earliest valid effective date
+					// Locate the key with the earliest valid effective date accounting for expiration
 					if ((isKsk && wantKsk) || (!isKsk && !wantKsk)) {
 						if (signingKey == null) {
 							signingKey = kpw;
-						} else if (kpw.getEffective().before(signingKey.getEffective())) {
+						} else if (signingKey.isExpired() && !kpw.isExpired()) {
 							signingKey = kpw;
+						} else if (signingKey.isExpired() && kpw.isNewer(signingKey)) {
+							signingKey = kpw; // if we have an expired key, try to find the most recent
+						} else if (!signingKey.isExpired() && !kpw.isExpired() && kpw.isOlder(signingKey)) {
+							signingKey = kpw; // otherwise use the oldest valid/non-expired key
 						}
 					}
 				}
@@ -310,7 +317,12 @@ public final class SignatureManager {
 		}
 
 		if (wantSigningKey && signingKey != null) {
-			LOGGER.debug("Signing key selected: " + signingKey.toString());
+			if (signingKey.isExpired()) {
+				LOGGER.warn("Using expired signing key: " + signingKey.toString());
+			} else {
+				LOGGER.debug("Signing key selected: " + signingKey.toString());
+			}
+
 			keys.clear(); // in case we have something in here for some reason (shouldn't happen)
 			keys.add(signingKey);
 		} else if (wantSigningKey && signingKey == null) {
@@ -538,5 +550,13 @@ public final class SignatureManager {
 
 	private void setTrafficOpsUtils(final TrafficOpsUtils trafficOpsUtils) {
 		this.trafficOpsUtils = trafficOpsUtils;
+	}
+
+	public boolean isExpiredKeyAllowed() {
+		return expiredKeyAllowed;
+	}
+
+	public void setExpiredKeyAllowed(final boolean expiredKeyAllowed) {
+		this.expiredKeyAllowed = expiredKeyAllowed;
 	}
 }
