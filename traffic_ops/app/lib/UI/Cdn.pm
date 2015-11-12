@@ -334,7 +334,7 @@ sub aserver {
 				my $pparam =
 					$self->db->resultset('ProfileParameter')->search( { -and => [ 'parameter.name' => 'server_graph_url', 'profile.name' => 'GLOBAL' ] },
 					{ prefetch => [ 'parameter', 'profile' ] } )->single();
-				my $srvg_url = defined($pparam) ? $pparam->parameter->value : undef;
+				my $srvg_url = defined($pparam) ? $pparam->parameter->value : '';
 				$aux_url = $srvg_url . $row->host_name;
 				$img     = "graph.png";
 			}

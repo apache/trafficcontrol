@@ -82,7 +82,7 @@ sub register {
 						$active_server = activate_next_online_server( $self, $schema_result_file );
 						$helper_class->set_server($active_server);
 						if ( defined($active_server) ) {
-							$self->app->log->warn( "Found BAD ONLINE server, skipping: " . $active_server );
+							$self->app->log->warn( "Found BAD ONLINE server, skipping; switched to " . $active_server );
 						}
 						else {
 							$self->app->log->warn("No active server defined");

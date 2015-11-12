@@ -108,5 +108,14 @@ ok $t->get_ok('/api/1.2/deliveryservice_stats.json?deliveryServiceName=test-ds1&
 	->status_is(400)->json_is( "/alerts/0/text", 'endDate query parameter is required' )->or( sub { diag $t->tx->res->content->asset->{content}; } ),
 	'endDate is required';
 
+
+# Test as portal user -- no deliveryservice assigned
+ok $t->post_ok( '/login', => form => { u => Test::TestHelper::CODEBIG_USER, p => Test::TestHelper::CODEBIG_PASSWORD } )->status_is(302)
+	->or( sub { diag $t->tx->res->content->asset->{content}; } );
+
+ok $t->get_ok(
+	'/api/1.2/deliveryservice_stats.json?deliveryServiceName=test-ds1&metricType=kbps&startDate=2015-05-06T20:00:00-06:00&endDate=2015-05-06T20:00:00-06:00&interval=60s'
+)->status_is(403)->json_is( "/alerts/0/text", 'Forbidden' )->or( sub { diag $t->tx->res->content->asset->{content}; } ), 'codebig user should not have any deliveryservices';
+
 $dbh->disconnect();
 done_testing();
