@@ -85,7 +85,7 @@ Built: %(date) by %{getenv: USER}
 %post
 
     %__cp %{PACKAGEDIR}/etc/init.d/traffic_ops /etc/init.d/traffic_ops
-    %__cp %{PACKAGEDIR}/etc/cron.d/trafops_dnssec_tickle /etc/init.d/trafops_dnssec_tickle
+    %__cp %{PACKAGEDIR}/etc/cron.d/trafops_dnssec_refresh /etc/init.d/trafops_dnssec_refresh
      %__cp %{PACKAGEDIR}/etc/logrotate.d/traffic_ops /etc/logrotate.d/traffic_ops
      %__cp %{PACKAGEDIR}/etc/logrotate.d/traffic_ops_access /etc/logrotate.d/traffic_ops_access
     %__chown root:root /etc/init.d/traffic_ops

@@ -603,7 +603,7 @@ sub api_routes {
 		->to( 'Cdn#delete_dnssec_keys', namespace => $namespace );
 
 	#checks expiration of keys and re-generates if necessary.  Used by Cron.
-	$r->get( "/internal/api/$version/cdns/dnsseckeys/tickle" => [ format => [qw(json)] ] )->to( 'Cdn#dnssec_keys_tickle', namespace => $namespace );
+	$r->get( "/internal/api/$version/cdns/dnsseckeys/refresh" => [ format => [qw(json)] ] )->to( 'Cdn#dnssec_keys_refresh', namespace => $namespace );
 
 	# -- CDN: Topology
 	# USED TO BE - GET /api/$version/configs/cdns

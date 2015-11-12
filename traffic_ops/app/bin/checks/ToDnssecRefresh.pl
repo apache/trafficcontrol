@@ -14,7 +14,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-# DNSSEC tickle, checks to see if DNSSEC keys need to be re-generated.
+# DNSSEC refresh, checks to see if DNSSEC keys need to be re-generated.
 #
 
 use strict;
@@ -65,11 +65,11 @@ my $b_url = $jconf->{base_url};
 
 my $ua = LWP::UserAgent->new;
 $ua->timeout(30);
-my $url       = "$b_url/internal/api/1.2/cdns/dnsseckeys/tickle.json";
+my $url       = "$b_url/internal/api/1.2/cdns/dnsseckeys/refresh.json";
 TRACE "getting $url";
 my $response = $ua->get($url);
 if ( $response->is_success ) {
-	DEBUG "Successfully tickled dnssec keys response was " . $response->decoded_content;
+	DEBUG "Successfully refreshed dnssec keys response was " . $response->decoded_content;
 }
 else {
  ERROR "Error trying to update keys, response was " . $response->status_line;

@@ -845,7 +845,7 @@ sub dnssec_keys {
 }
 
 #checks if keys are expired and re-generates them if they are.
-sub dnssec_keys_tickle {
+sub dnssec_keys_refresh {
 	my $self       = shift;
 	my $is_updated = 0;
 	my $error_message;
