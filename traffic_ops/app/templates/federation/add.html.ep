@@ -40,7 +40,7 @@ alert(alertmsg);
       // wait for the DOM to be loaded 
       $(document).ready(function () {
           listDeliveryServices("<%= $ds_id %>");
-          listroles("<%= $role_id %>");
+          listroles("<%= $role_name %>");
           listFederationUsers("<%= $user_id %>");
        });
 

@@ -28,8 +28,7 @@ use Mojolicious::Validator::Validation;
 use Email::Valid;
 use Data::GUID;
 use Data::Dumper;
-use constant FEDERATION_ROLE_ID     => 7;
-use constant DNS_DELIVERYSERVICE_ID => 9;
+use constant FEDERATION_ROLE => 'federation';
 
 # List of Federation Mappings
 sub index {
@@ -50,10 +49,9 @@ sub add {
 		tm_user     => $tm_user,
 		ds_id       => 0,
 		user_id     => 0,
-		role_name   => undef,
 		federation  => {},
 		fbox_layout => 1,
-		role_id     => FEDERATION_ROLE_ID,    # the federation role
+		role_name   => FEDERATION_ROLE,    # the federation role
 		mode        => 'add'
 	);
 }
@@ -95,8 +93,7 @@ sub edit {
 		$self->stash(
 			tm_user           => $tm_user,
 			ds_id             => $ds_id,
-			user_id           => $user_id,              # the federation role
-			role_id           => FEDERATION_ROLE_ID,    # the federation role
+			user_id           => $user_id,
 			role_name         => $role_name,
 			federation        => $federation,
 			mode              => 'edit',
@@ -114,7 +111,7 @@ sub edit {
 sub users {
 	my $self = shift;
 	my $data;
-	my $fed_users = $self->db->resultset('TmUser')->search( { role => FEDERATION_ROLE_ID }, { order_by => 'full_name' } );
+	my $fed_users = $self->db->resultset('TmUser')->search( { role => FEDERATION_ROLE }, { order_by => 'full_name' } );
 	while ( my $row = $fed_users->next ) {
 		push(
 			@$data, {
@@ -179,7 +176,7 @@ sub group_resolvers {
 sub get_delivery_services {
 	my $self   = shift;
 	my $id     = shift;
-	my @ds_ids = $self->db->resultset('Deliveryservice')->search( { type => DNS_DELIVERYSERVICE_ID }, { orderby => "xml_id" } )->get_column('id')->all;
+	my @ds_ids = $self->db->resultset('Deliveryservice')->search( { name => { -like => 'DNS%' } }, { orderby => "xml_id" } )->get_column('id')->all;
 
 	my $delivery_services;
 	for my $ds_id ( uniq(@ds_ids) ) {
@@ -211,14 +208,14 @@ sub update {
 		my $ft = $self->db->resultset('FederationTmuser')->find_or_create(
 			{
 				federation => $fed_id,
-				role       => FEDERATION_ROLE_ID
+				role       => FEDERATION_ROLE
 			}
 		);
 
 		if ( defined($ft) ) {
 			$ft->federation($fed_id);
 			$ft->tm_user($user_id);
-			$ft->role(FEDERATION_ROLE_ID);
+			$ft->role(FEDERATION_ROLE);
 			$ft->update();
 		}
 
@@ -248,15 +245,15 @@ sub create {
 	my $ttl     = $self->param("federation.ttl");
 	&stash_role($self);
 	$self->stash(
-		role_name            => undef,
 		deliveryservice_name => undef,
 		user_id              => $user_id,
 		ds_id                => $ds_id,
 		federation           => {},
 		fbox_layout          => 1,
-		role_id              => FEDERATION_ROLE_ID,    # the federation role
+		role_name            => FEDERATION_ROLE,
 		mode                 => 'add'
 	);
+
 	if ( $self->is_valid("add") ) {
 		my $new_id = $self->create_federation( $ds_id, $user_id, $cname, $desc, $ttl );
 		if ( $new_id > 0 ) {
@@ -305,7 +302,7 @@ sub create_federation {
 				{
 					federation => $federation_id,
 					tm_user    => $user_id,
-					role       => FEDERATION_ROLE_ID,
+					role       => FEDERATION_ROLE,
 				}
 			);
 		}
