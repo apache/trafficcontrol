@@ -56,6 +56,9 @@ use constant PORTAL_USER_PASSWORD => 'password';
 use constant FEDERATION_USER          => 'federation';
 use constant FEDERATION_USER_PASSWORD => 'password';
 
+use constant CODEBIG_USER     => 'codebig';
+use constant CODEBIG_PASSWORD => 'password';
+
 sub load_all_fixtures {
 	my $self    = shift;
 	my $fixture = shift;
