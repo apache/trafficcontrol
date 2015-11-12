@@ -65,6 +65,8 @@ my $b_url = $jconf->{base_url};
 
 my $ua = LWP::UserAgent->new;
 $ua->timeout(30);
+$ua->ssl_opts(verify_hostname => 0);
+
 my $url       = "$b_url/internal/api/1.2/cdns/dnsseckeys/refresh.json";
 TRACE "getting $url";
 my $response = $ua->get($url);
