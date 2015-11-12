@@ -270,54 +270,54 @@ public final class SignatureManager {
 		final Date now = new Date();
 		DNSKeyPairWrapper signingKey = null;
 
-		if (keyPairs != null) {
-			final List<DNSKeyPairWrapper> keys = new ArrayList<DNSKeyPairWrapper>();
-
-			for (DNSKeyPairWrapper kpw : keyPairs) {
-				final DnsKeyPair kp = (DnsKeyPair) kpw;
-				final Name kn = kp.getDNSKEYRecord().getName();
-				final boolean isKsk = kpw.isKeySigningKey();
-
-				if (kn.equals(name)) {
-					if ((isKsk && !wantKsk) || (!isKsk && wantKsk)) {
-						LOGGER.debug("Skipping key: wantKsk = " + wantKsk + "; key: " + kpw.toString());
-						continue;
-					} else if (!wantSigningKey && (kpw.getExpiration().after(new Date(System.currentTimeMillis() - (maxTTL * 1000))))) {
-						LOGGER.debug("key selected: " + kpw.toString());
-						keys.add(kpw);
-					} else if (wantSigningKey) {
-						if (kpw.getEffective().after(now) || kpw.getInception().after(now) || kpw.getExpiration().before(now)) {
-							// this key is either expired or should not be used yet
-							LOGGER.debug("Skipping unusable signing key: " + kpw.toString());
-							continue;
-						}
-
-						// Locate the key with the earliest valid effective date
-						if ((isKsk && wantKsk) || (!isKsk && !wantKsk)) {
-							if (signingKey == null) {
-								signingKey = kpw;
-							} else if (kpw.getEffective().before(signingKey.getEffective())) {
-								signingKey = kpw;
-							}
-						}
-					}
-				} else {
-					LOGGER.warn("Invalid key for " + name + "; it is intended for " + kpw.toString());
-				}
-			}
-
-			if (wantSigningKey && signingKey != null) {
-				LOGGER.debug("Signing key selected: " + signingKey.toString());
-				keys.clear(); // in case we have something in here for some reason (shouldn't happen)
-				keys.add(signingKey);
-			} else if (wantSigningKey && signingKey == null) {
-				LOGGER.fatal("Unable to find signing key for " + name);
-			}
-
-			return keys;
-		} else {
+		if (keyPairs == null) {
 			return null;
 		}
+
+		final List<DNSKeyPairWrapper> keys = new ArrayList<DNSKeyPairWrapper>();
+
+		for (DNSKeyPairWrapper kpw : keyPairs) {
+			final DnsKeyPair kp = (DnsKeyPair) kpw;
+			final Name kn = kp.getDNSKEYRecord().getName();
+			final boolean isKsk = kpw.isKeySigningKey();
+
+			if (kn.equals(name)) {
+				if ((isKsk && !wantKsk) || (!isKsk && wantKsk)) {
+					LOGGER.debug("Skipping key: wantKsk = " + wantKsk + "; key: " + kpw.toString());
+					continue;
+				} else if (!wantSigningKey && (kpw.getExpiration().after(new Date(System.currentTimeMillis() - (maxTTL * 1000))))) {
+					LOGGER.debug("key selected: " + kpw.toString());
+					keys.add(kpw);
+				} else if (wantSigningKey) {
+					if (kpw.getEffective().after(now) || kpw.getInception().after(now) || kpw.getExpiration().before(now)) {
+						// this key is either expired or should not be used yet
+						LOGGER.debug("Skipping unusable signing key: " + kpw.toString());
+						continue;
+					}
+
+					// Locate the key with the earliest valid effective date
+					if ((isKsk && wantKsk) || (!isKsk && !wantKsk)) {
+						if (signingKey == null) {
+							signingKey = kpw;
+						} else if (kpw.getEffective().before(signingKey.getEffective())) {
+							signingKey = kpw;
+						}
+					}
+				}
+			} else {
+				LOGGER.warn("Invalid key for " + name + "; it is intended for " + kpw.toString());
+			}
+		}
+
+		if (wantSigningKey && signingKey != null) {
+			LOGGER.debug("Signing key selected: " + signingKey.toString());
+			keys.clear(); // in case we have something in here for some reason (shouldn't happen)
+			keys.add(signingKey);
+		} else if (wantSigningKey && signingKey == null) {
+			LOGGER.fatal("Unable to find signing key for " + name);
+		}
+
+		return keys;
 	}
 
 	private Calendar calculateKeyExpiration(final List<DNSKeyPairWrapper> keyPairs) {
