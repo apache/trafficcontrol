@@ -24,6 +24,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.TreeSet;
 
 import com.comcast.cdn.traffic_control.traffic_router.core.loc.*;
 import org.apache.log4j.Logger;
@@ -268,37 +269,45 @@ public class ConfigHandler {
 	 * @throws JSONException 
 	 */
 	private void parseDeliveryServiceConfig(final JSONObject deliveryServices, final CacheRegister cacheRegister) throws JSONException {
-		final List<DeliveryServiceMatcher> dnsServiceMatchers = new ArrayList<DeliveryServiceMatcher>();
-		final List<DeliveryServiceMatcher> httpServiceMatchers = new ArrayList<DeliveryServiceMatcher>();
+		final TreeSet<DeliveryServiceMatcher> dnsServiceMatchers = new TreeSet<DeliveryServiceMatcher>();
+		final TreeSet<DeliveryServiceMatcher> httpServiceMatchers = new TreeSet<DeliveryServiceMatcher>();
 		final Map<String,DeliveryService> dsMap = new HashMap<String,DeliveryService>();
-		for(String dsId : JSONObject.getNames(deliveryServices)) {
+
+		for (String dsId : JSONObject.getNames(deliveryServices)) {
 			final JSONObject dsJo = deliveryServices.getJSONObject(dsId);
 			final JSONArray matchsets = dsJo.getJSONArray("matchsets");
 			final DeliveryService ds = new DeliveryService(dsId, dsJo);
 			boolean isDns = false;
 			dsMap.put(dsId, ds);
+
 			for (int i = 0; i < matchsets.length(); i++) {
 				final JSONObject matchset = matchsets.getJSONObject(i);
 				final String protocol = matchset.getString("protocol");
-				if("DNS".equals(protocol)) {
+
+				if ("DNS".equals(protocol)) {
 					isDns = true;
 				}
-				final JSONArray list = matchset.getJSONArray("matchlist");
-				final DeliveryServiceMatcher m = new DeliveryServiceMatcher(ds);
-				if("HTTP".equals(protocol)) {
-					httpServiceMatchers.add(m);
-				} else if("DNS".equals(protocol)) {
-					dnsServiceMatchers.add(m);
+
+				final DeliveryServiceMatcher deliveryServiceMatcher = new DeliveryServiceMatcher(ds);
+
+				if ("HTTP".equals(protocol)) {
+					httpServiceMatchers.add(deliveryServiceMatcher);
+				} else if ("DNS".equals(protocol)) {
+					dnsServiceMatchers.add(deliveryServiceMatcher);
 				}
+
+				final JSONArray list = matchset.getJSONArray("matchlist");
 				for (int j = 0; j < list.length(); j++) {
 					final JSONObject matcherJo = list.getJSONObject(j);
 					final Type type = Type.valueOf(matcherJo.getString("match-type"));
 					final String target = matcherJo.optString("target");
-					m.addMatch(type, matcherJo.getString("regex"), target);
+					deliveryServiceMatcher.addMatch(type, matcherJo.getString("regex"), target);
 				}
 			}
+
 			ds.setDns(isDns);
 		}
+
 		cacheRegister.setDeliveryServiceMap(dsMap);
 		cacheRegister.setDnsDeliveryServiceMatchers(dnsServiceMatchers);
 		cacheRegister.setHttpDeliveryServiceMatchers(httpServiceMatchers);

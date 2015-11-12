@@ -15,6 +15,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.TreeSet;
 
 public class CacheRegisterBuilder {
 
@@ -100,8 +101,8 @@ public class CacheRegisterBuilder {
     }
 
     public static void parseDeliveryServiceConfig(final JSONObject deliveryServices, final CacheRegister cacheRegister) throws JSONException {
-        final List<DeliveryServiceMatcher> dnsServiceMatchers = new ArrayList<DeliveryServiceMatcher>();
-        final List<DeliveryServiceMatcher> httpServiceMatchers = new ArrayList<DeliveryServiceMatcher>();
+        final TreeSet<DeliveryServiceMatcher> dnsServiceMatchers = new TreeSet<DeliveryServiceMatcher>();
+        final TreeSet<DeliveryServiceMatcher> httpServiceMatchers = new TreeSet<DeliveryServiceMatcher>();
         final Map<String,DeliveryService> dsMap = new HashMap<String,DeliveryService>();
 
         for(String dsId : JSONObject.getNames(deliveryServices)) {
