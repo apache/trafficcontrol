@@ -199,7 +199,6 @@ sub update {
 	my $ttl         = $self->param('federation.ttl');
 
 	my $federation_role_id = $self->db->resultset('Role')->search( { name => FEDERATION_ROLE }, undef )->get_column('id')->single();
-	$self->app->log->debug( "federation_role_id #-> " . $federation_role_id );
 	my $is_valid = $self->is_valid();
 	if ( $self->is_valid("edit") ) {
 		my $dbh =
@@ -209,7 +208,6 @@ sub update {
 		$dbh->ttl($ttl);
 		$dbh->update();
 
-		$self->app->log->debug( "fed_id #-> " . $fed_id );
 		my $ft = $self->db->resultset('FederationTmuser')->find_or_create(
 			{
 				federation => $fed_id,
@@ -261,7 +259,6 @@ sub create {
 	);
 
 	my $existing_fed = $self->db->resultset('Federation')->search( { cname => $cname } )->get_column('cname')->single();
-	$self->app->log->debug( "existing_fed #-> " . $existing_fed );
 	if ($existing_fed) {
 		$self->field('federation.cname')->is_equal( "", "A Federation with name \"$cname\" already exists." );
 	}
