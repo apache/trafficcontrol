@@ -910,7 +910,7 @@ sub dnssec_keys_tickle {
 				: $dnskey_effective_multiplier = '10';
 
 			my $key_expiration
-				= time() - ( $dnskey_ttl * $dnskey_gen_multiplier );
+				= time() + ( $dnskey_ttl * $dnskey_gen_multiplier );
 
 			#get default expiration days and ttl for DSs from CDN record
 			my $default_k_exp_days = "365";
@@ -935,7 +935,7 @@ sub dnssec_keys_tickle {
 					$default_z_exp_days = ( $cdn_z_exp - $cdn_z_incep ) / 86400;
 
 					#check if zsk is expired, if so re-generate
-					if ( ($cdn_z_exp) < $key_expiration ) {
+					if ( $cdn_z_exp < $key_expiration ) {
 
 						#if expired create new keys
 						$self->app->log->info(
