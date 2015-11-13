@@ -367,7 +367,7 @@ public final class SignatureManager {
 			if (nextRefresh >= szk.getRefreshHorizon()) {
 				LOGGER.info(getRefreshMessage(type, szk, true, "refresh horizon approaching"));
 				return true;
-			} else if (now >= szk.getEarliestSigningKeyExpiration()) {
+			} else if (!isExpiredKeyAllowed() && now >= szk.getEarliestSigningKeyExpiration()) {
 				/*
 				 * The earliest signing key has expired, so force a resigning 
 				 * which will be done with new keys. This is because the keys themselves
