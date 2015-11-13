@@ -21,7 +21,6 @@ package UI::Topology;
 use UI::Utils;
 use UI::Render;
 use List::Compare;
-use Scalar::Util qw/reftype/;
 use JSON;
 use Data::Dumper;
 use Mojo::Base 'Mojolicious::Controller';
@@ -85,10 +84,13 @@ sub gen_crconfig_json {
 	my @profile_caches;
 	for my $cachetype (qw/CCR EDGE MID/) {
 		my $r = $profile_cache->{$cachetype};
-		if ( reftype($r) eq 'ARRAY' && scalar @{$r} != 0 ) {
+		if ( defined($r) && scalar @{$r} != 0 ) {
 			push @profile_caches, @{$r};
 		}
 		else {
+			if ( $cachetype eq 'CCR' ) {
+				$cachetype = 'Traffic Router';
+			}
 			my $e = Mojo::Exception->throw( "No $cachetype profiles found for CDN: " . $cdn_name );
 		}
 	}
