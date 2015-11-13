@@ -43,6 +43,7 @@ import com.comcast.cdn.traffic_control.traffic_router.core.loc.GeolocationServic
 import com.comcast.cdn.traffic_control.traffic_router.core.loc.NetworkNode;
 import com.comcast.cdn.traffic_control.traffic_router.core.request.DNSRequest;
 import com.comcast.cdn.traffic_control.traffic_router.core.request.Request;
+import com.comcast.cdn.traffic_control.traffic_router.core.router.DnsNameGenerator;
 import com.comcast.cdn.traffic_control.traffic_router.core.router.StatTracker.Track;
 import com.comcast.cdn.traffic_control.traffic_router.core.router.StatTracker.Track.ResultType;
 import com.comcast.cdn.traffic_control.traffic_router.core.util.TrafficOpsUtils;
