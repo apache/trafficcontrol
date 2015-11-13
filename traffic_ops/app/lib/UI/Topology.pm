@@ -90,10 +90,15 @@ sub gen_crconfig_json {
 	}
 
 	my %param_cache;
+	my @profile_caches;
+	for my $cachetype (qw/CCR EDGE MID/) {
+		my $r = $profile_cache->{$cachetype};
+		push @profile_caches, @{$r} if defined $r;
+	}
 	my %condition = (
 		-and => [
 			profile => {
-				-in => [ @{ $profile_cache->{'CCR'} }, @{ $profile_cache->{'EDGE'} }, @{ $profile_cache->{'MID'} } ]
+				-in => \@profile_caches,
 			},
 			'parameter.config_file' => 'CRConfig.json'
 		]
@@ -101,13 +106,13 @@ sub gen_crconfig_json {
 	my $rs_pp = $self->db->resultset('ProfileParameter')->search( \%condition, { prefetch => [ { 'parameter' => undef }, { 'profile' => undef } ] } );
 
 	#add dnssec.enabled value to config section
-	my $cdn_rs = $self->db->resultset('Cdn')->search({name => $cdn_name})->single();
+	my $cdn_rs = $self->db->resultset('Cdn')->search( { name => $cdn_name } )->single();
 	my $dnssec_enabled = "false";
-	if ($cdn_rs->dnssec_enabled == 1) {
+	if ( $cdn_rs->dnssec_enabled == 1 ) {
 		$dnssec_enabled = "true";
-	} 
+	}
 	$data_obj->{'config'}->{'dnssec.enabled'} = $dnssec_enabled;
-	
+
 	while ( my $row = $rs_pp->next ) {
 
 		$param_cache{ $row->profile->id }->{ $row->parameter->name } = $row->parameter->value;
