@@ -21,6 +21,7 @@ package UI::Topology;
 use UI::Utils;
 use UI::Render;
 use List::Compare;
+use Scalar::Util qw/reftype/;
 use JSON;
 use Data::Dumper;
 use Mojo::Base 'Mojolicious::Controller';
@@ -80,20 +81,16 @@ sub gen_crconfig_json {
 		$cdn_id = defined($cdn_id) ? next : $row->cdn->id;
 	}
 
-	if ( !defined( $profile_cache->{'CCR'} ) || scalar( @{ $profile_cache->{'CCR'} } ) == 0 ) {
-		my $e = Mojo::Exception->throw("No Traffic Router profile found for CDN: $cdn_name");
-	}
-	elsif (( !defined( $profile_cache->{'EDGE'} ) || scalar( @{ $profile_cache->{'EDGE'} } ) == 0 )
-		&& ( !defined( $profile_cache->{'MID'} ) || scalar( @{ $profile_cache->{'MID'} } ) == 0 ) )
-	{
-		my $e = Mojo::Exception->throw( "No profiles found for CDN_name: " . $cdn_name );
-	}
-
 	my %param_cache;
 	my @profile_caches;
 	for my $cachetype (qw/CCR EDGE MID/) {
 		my $r = $profile_cache->{$cachetype};
-		push @profile_caches, @{$r} if defined $r;
+		if ( reftype($r) eq 'ARRAY' && scalar @{$r} != 0 ) {
+			push @profile_caches, @{$r};
+		}
+		else {
+			my $e = Mojo::Exception->throw( "No $cachetype profiles found for CDN: " . $cdn_name );
+		}
 	}
 	my %condition = (
 		-and => [
