@@ -1074,11 +1074,11 @@ sub dnssec_keys_refresh {
 				next;
 			}
 		}
+	}
 	if ($error_message) {
 		return $self->alert({ Error => $error_message });
 	}
 	return $self->success("Thanks!")
-	}
 }
 
 sub regen_expired_keys {
