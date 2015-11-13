@@ -23,15 +23,12 @@ use utf8;
 use Carp qw(cluck confess);
 use UI::Utils;
 use Data::Dumper;
-use Mojo::UserAgent;
 use JSON;
-use IO::Socket::SSL qw();
-use LWP::UserAgent qw();
-use File::Slurp;
+use List::Util qw/shuffle/;
 
 use constant MAX_TRIES => 20;
 ##To track the active server we want to use
-state $active_server = "NOT FOUND";
+state %active_server_for;
 
 sub register {
 	my ( $self, $app, $conf ) = @_;
@@ -50,101 +47,74 @@ sub register {
 			my $method_function    = shift || confess("Supply a Helper class 'method'");
 			my $schema_result_file = shift || confess("Supply a schema result file, ie: 'InfluxDBHostsOnline'");
 
-			my $content;
 			my $response;
-			my $i           = 0;
-			my $status_code = 200;
-			my $message;
+			my $active_server = $active_server_for{$schema_result_file};
+			my @rs = randomize_online_servers( $self, $schema_result_file );
+			if ( defined $active_server ) {
+				if ( !grep { $_ eq $active_server } @rs ) {
 
-			my $active_server = activate_next_online_server( $self, $schema_result_file );
-			if ( defined($active_server) ) {
-				$helper_class->set_server($active_server);
-
-				while ( ( $status_code <= 500 ) && ( $i <= MAX_TRIES ) ) {
-
-					# This is the magic!! Dynamically invoke the method on the util to prevent
-					# if-then-else
-					$response    = $helper_class->$method_function($self);
-					$status_code = $response->{_rc};
-					$content     = $response->{_content};
-
-					if ( $i >= MAX_TRIES ) {
-						$message = "Couldn't connect to any " . $server_type . " servers.  Please make sure they are online!";
-						$self->app->log->error( "Error: " . $message );
-						return { response => $response, server => $active_server };
-						last;    #bail
-					}
-
-					if ( $response->is_success ) {
-						return { response => $response, server => $active_server };
-					}
-					elsif ( $status_code == 500 ) {
-						$active_server = activate_next_online_server( $self, $schema_result_file );
-						$helper_class->set_server($active_server);
-						if ( defined($active_server) ) {
-							$self->app->log->warn( "Found BAD ONLINE server, skipping; switched to " . $active_server );
-						}
-						else {
-							$self->app->log->warn("No active server defined");
-						}
-					}
-					else {
-						$self->app->log->error( "Active Server Severe Error: " . $status_code . " - " . $content );
-						return { response => $response, server => $active_server };
-					}
-					$i++;
+					# active server no longer listed as available
+					undef $active_server;
+				}
+				else {
+					# remove active_server from list so it's not reused immediately
+					@rs = grep { $_ ne $active_server } @rs;
 				}
 			}
-			else {
-				my $message = "No "
-					. $server_type
-					. " servers are set to ONLINE in the database.  Please verify "
-					. $server_type
-					. " servers are online and reachable from Traffic Ops.";
-				$response = HTTP::Response->new( 400, undef, HTTP::Headers->new, $message );
-				return { response => $response, server => $active_server };
+
+			for my $server (@rs) {
+
+				# This is the magic!! Dynamically invoke the method on the util to prevent
+				# if-then-else
+				$helper_class->set_server($server);
+				$response = $helper_class->$method_function($self);
+				my $status_code = $response->{_rc};
+				if ( $response->is_success ) {
+					$self->app->log->info("Using server, $server");
+					$active_server = $server;
+					last;
+				}
+
+				if ( $status_code == 500 ) {
+					$self->app->log->warn("Found BAD ONLINE server, $server -- skipping");
+				}
+				else {
+					my $content = $response->{_content};
+					$self->app->log->error( "Active Server Severe Error: " . $status_code . " - " . $content );
+				}
 			}
+
+			$active_server_for{$schema_result_file} = $active_server;
+			if ( !defined $active_server ) {
+
+				# modify response
+				my $message =
+					"No $server_type servers are set to ONLINE in the database.  Please verify $server_type servers are online and reachable from Traffic Ops.";
+				$response = HTTP::Response->new( 400, undef, HTTP::Headers->new, $message );
+			}
+			return { response => $response, server => $active_server };
 		}
 	);
 }
 
-# This subroutine only handles looking in the database (randomly) for
-# 'ONLINE' servers based upon the specified '$schema_result_file' then
-# making the discovered server the 'active' server.
-sub activate_next_online_server {
+sub server_id {
+	my $server = shift;
+	my $id;
+	if ( defined $server ) {
+		$id = $server->host_name . '.' . $server->domain_name . ':' . $server->tcp_port;
+	}
+	return $id;
+}
+
+sub randomize_online_servers {
 	my $self               = shift;
 	my $schema_result_file = shift;
 
-	#get servers, if active_server then don't use, unless its the only one online.
-	my @rs   = $self->db->resultset($schema_result_file)->search();
-	my $size = @rs;
-	if ( $size == 1 ) {
-		my $server = $rs[0]->host_name . "." . $rs[0]->domain_name . ":" . $rs[0]->tcp_port;
-		return $server;
-	}
-	elsif ( $size > 1 ) {
-		my $server_index = int( rand($size) );
-		my $server       = $rs[$server_index]->host_name . "." . $rs[$server_index]->domain_name . ":" . $rs[$server_index]->tcp_port;
-		my $i            = 0;
+	my @rs = $self->db->resultset($schema_result_file)->search();
+	@rs = map { server_id($_) } @rs;
 
-		# Keep looking until we find a different server.
-		while ( $server eq $active_server && $i < MAX_TRIES ) {
-			$server_index = int( rand($size) );
-			$server       = $rs[$server_index]->host_name . "." . $rs[$server_index]->domain_name . ":" . $rs[$server_index]->tcp_port;
-			$i++;    #safeguard from inifinite loop
-		}
-		$active_server = $server;
-		$self->app->log->debug( "CURRENT active_server #-> " . $active_server );
-
-		# Perls way of maintain a 'state' variable.
-		state $active_server;
-
-		return $server;
-	}
-	else {
-		$active_server = undef;
-		return undef;
-	}
+	# if two or more, return shuffled list with current one removed
+	return shuffle(@rs);
 }
 
 1;
