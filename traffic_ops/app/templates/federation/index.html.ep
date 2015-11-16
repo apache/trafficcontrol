@@ -83,7 +83,7 @@ $(document).ready(function () {
 });
 </script>
 
-    <body id="misc">
+    <body id="delivery_services">
     %= include 'navbar'
     <div class="ui-tab-float-right-on-table">Federation</div>
 
