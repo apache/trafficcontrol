@@ -22,12 +22,11 @@ Hardware Info
 
 .. _to-api-v11-hwinfo-route:
 
-/api/1.1/hwinfo
-+++++++++++++++
-
 **GET /api/1.1/hwinfo.json**
 
   Authentication Required: Yes
+
+  Role(s) Required: Yes
 
   **Response Properties**
 
@@ -46,7 +45,6 @@ Hardware Info
   +--------------------+--------+----------------------------------------------------------------------+
 
   **Response Example** ::
-
 
     {
      "response": [

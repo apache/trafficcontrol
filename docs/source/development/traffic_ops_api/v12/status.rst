@@ -21,14 +21,13 @@ Status
 
 .. _to-api-v12-statuses-route:
 
-/api/1.2/statuses
-+++++++++++++++++
-
 **GET /api/1.2/statuses.json**
 
   Retrieves a list of the server status codes available. May be useful when the status is retrieved from other APIs as a number and not a string.
 
   Authentication Required: Yes
+
+  Role(s) Required: None
 
   **Response Properties**
 

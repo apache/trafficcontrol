@@ -22,10 +22,11 @@ Change Logs
 
 .. _to-api-v11-change-logs-route:
 
-/api/1.1/logs
-+++++++++++++
-
 **GET /api/1.1/logs.json**
+
+  Authentication Required: Yes
+
+  Role(s) Required: None
 
   **Response Properties**
 
@@ -53,7 +54,7 @@ Change Logs
            "ticketNum": null,
            "level": "OPER",
            "lastUpdated": "2015-02-04 22:59:13",
-           "user": "mtorlu9137e",
+           "user": "userid852",
            "id": "22661",
            "message": "Snapshot CRConfig created."
         },
@@ -61,7 +62,7 @@ Change Logs
            "ticketNum": null,
            "level": "APICHANGE",
            "lastUpdated": "2015-02-03 17:04:20",
-           "user": "admin",
+           "user": "userid853",
            "id": "22658",
            "message": "Update server odol-atsec-nyc-23.kbaletown.net status=REPORTED"
         },
@@ -71,6 +72,10 @@ Change Logs
 |
 
 **GET /api/1.1/logs/:days/days.json**
+
+  Authentication Required: Yes
+
+  Role(s) Required: None
 
   **Request Route Parameters**
 
@@ -106,7 +111,7 @@ Change Logs
            "ticketNum": null,
            "level": "OPER",
            "lastUpdated": "2015-02-04 22:59:13",
-           "user": "mtorlu9137e",
+           "user": "userid852",
            "id": "22661",
            "message": "Snapshot CRConfig created."
         },
@@ -114,7 +119,7 @@ Change Logs
            "ticketNum": null,
            "level": "APICHANGE",
            "lastUpdated": "2015-02-03 17:04:20",
-           "user": "admin",
+           "user": "userid853",
            "id": "22658",
            "message": "Update server odol-atsec-nyc-23.kabletown.net status=REPORTED"
         }
@@ -125,20 +130,23 @@ Change Logs
 
 **GET /api/1.1/logs/newcount.json**
 
+  Authentication Required: Yes
+
+  Role(s) Required: None
+
   **Response Properties**
 
   +----------------------+--------+------------------------------------------------+
   | Parameter            | Type   | Description                                    |
   +======================+========+================================================+
-  |``newLogcount``       | string |                                                |
+  |``newLogcount``       |  int   |                                                |
   +----------------------+--------+------------------------------------------------+
-
 
   **Response Example** ::
 
     {
-     "response": {
-        "newLogcount": 0
-     },
+         "response": {
+            "newLogcount": 0
+         }
     }
 

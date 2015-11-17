@@ -21,10 +21,9 @@ System
 
 .. _to-api-v12-sys-route:
 
-/api/1.2/system/info
-++++++++++++++++++++
-
   Authentication Required: Yes
+
+  Role(s) Required: None
 
   **Response Properties**
 

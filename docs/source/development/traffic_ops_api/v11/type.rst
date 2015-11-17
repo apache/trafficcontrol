@@ -21,12 +21,11 @@ Types
 
 .. _to-api-v11-types-route:
 
-/api/1.1/types
-++++++++++++++
-
 **GET /api/1.1/types.json**
 
   Authentication Required: Yes
+
+  Role(s) Required: None
 
   **Response Properties**
 
@@ -61,12 +60,11 @@ Types
 
 |
 
-
 **GET /api/1.1/types/trimmed.json**
 
   Authentication Required: Yes
 
-  Response Content Type: application/json
+  Role(s) Required: None
 
   **Response Properties**
 

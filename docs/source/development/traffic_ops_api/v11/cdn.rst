@@ -21,16 +21,75 @@ CDN
 
 .. _to-api-v11-cdn-health-route:
 
-/api/1.1/cdns
-+++++++++++++
+**GET /api/1.1/cdns.json**
+
+  Authentication Required: Yes
+
+  Role(s) Required: None
+
+  **Response Properties**
+
+  +------------------+--------+-------------------------------------------------+
+  |    Parameter     |  Type  |                   Description                   |
+  +==================+========+=================================================+
+  | ``name``         | string | CDN name.                                       |
+  +------------------+--------+-------------------------------------------------+
+  | ``id``           |  int   | CDN id.                                         |
+  +------------------+--------+-------------------------------------------------+
+
+  **Response Example** ::
+
+    {
+     "response": [
+           {
+              "name": "over-the-top",
+              "id": 1
+           }
+        ]
+    }
+
+|
+
+**GET /api/1.1/cdns/name/:name.json**
+
+  Authentication Required: Yes
+
+  Role(s) Required: None
+
+  **Response Properties**
+
+  +------------------+--------+-------------------------------------------------+
+  |    Parameter     |  Type  |                   Description                   |
+  +==================+========+=================================================+
+  | ``name``         | string | CDN name.                                       |
+  +------------------+--------+-------------------------------------------------+
+  | ``id``           |  int   | CDN id.                                         |
+  +------------------+--------+-------------------------------------------------+
+
+  **Response Example** ::
+
+    {
+     "response": [
+           {
+              "name": "over-the-top",
+              "id": 1
+           }
+        ]
+    }
+
+|
 
 Health
 ++++++
 
 **GET /api/1.1/cdns/health.json**
 
+  Retrieves the health of all locations (cache groups) for all CDNs.
+
   Authentication Required: Yes
-  
+
+  Role(s) Required: None
+
   **Response Properties**
 
   +------------------+--------+-------------------------------------------------+
@@ -79,7 +138,9 @@ Health
   Retrieves the health of all locations (cache groups) for a given CDN.
 
   Authentication Required: Yes
-  
+
+  Role(s) Required: None
+
   **Request Route Parameters**
 
   +-----------------+----------+---------------------------------------------------+
@@ -106,7 +167,7 @@ Health
   | ``>offline``     | int    | The number of offline caches for the cache      |
   |                  |        | group.                                          |
   +------------------+--------+-------------------------------------------------+
-  | * ``name``       | string | Cache group name.                               |
+  | ``>name``        | string | Cache group name.                               |
   +------------------+--------+-------------------------------------------------+
 
   **Response Example** ::
@@ -137,7 +198,9 @@ Health
   Retrieves the high-level CDN usage metrics.
 
   Authentication Required: Yes
-  
+
+  Role(s) Required: None
+
   **Response Properties**
 
   +----------------------+--------+------------------------------------------------+
@@ -154,17 +217,21 @@ Health
   **Response Example** ::
 
     {
-     "response": {
-        "currentGbps": 149.368167,
-        "tps": 36805,
-        "maxGbps": 3961
-     },
+         "response": {
+            "currentGbps": 149.368167,
+            "tps": 36805,
+            "maxGbps": 3961
+         }
     }
 
 
 **GET /api/1.1/cdns/capacity.json**
 
   Retrieves the aggregate capacity percentages of all locations (cache groups) for a given CDN.
+
+  Authentication Required: Yes
+
+  Role(s) Required: None
 
   **Response Properties**
 
@@ -183,12 +250,12 @@ Health
   **Response Example** ::
 
     {
-     "response": {
-        "availablePercent": 89.0939840205533,
-        "unavailablePercent": 0,
-        "utilizedPercent": 10.9060020300395,
-        "maintenancePercent": 0.0000139494071146245
-     },
+         "response": {
+            "availablePercent": 89.0939840205533,
+            "unavailablePercent": 0,
+            "utilizedPercent": 10.9060020300395,
+            "maintenancePercent": 0.0000139494071146245
+         }
     }
 
 |
@@ -200,9 +267,11 @@ Routing
 
 **GET /api/1.1/cdns/routing.json**
 
-  Authentication Required: Yes
-  
   Retrieves the aggregate routing percentages of all locations (cache groups) for a given CDN.
+
+  Authentication Required: Yes
+
+  Role(s) Required: None
 
   **Response Properties**
 
@@ -225,14 +294,14 @@ Routing
   **Response Example** ::
 
    {
-     "response": {
-        "staticRoute": 0,
-        "miss": 0,
-        "geo": 37.8855391018869,
-        "err": 0,
-        "cz": 62.1144608981131,
-        "dsr": 0
-     },
+         "response": {
+            "staticRoute": 0,
+            "miss": 0,
+            "geo": 37.8855391018869,
+            "err": 0,
+            "cz": 62.1144608981131,
+            "dsr": 0
+         }
     }
 
 |
@@ -242,12 +311,13 @@ Routing
 Metrics
 +++++++
 
-
 **GET /api/1.1/cdns/metric_types/:metric/start_date/:start/end_date/:end.json**
 
-  Authentication Required: Yes
-  
   Retrieves edge metrics of one or all locations (cache groups).
+
+  Authentication Required: Yes
+
+  Role(s) Required: None
 
   **Request Route Parameters**
 
@@ -295,7 +365,6 @@ Metrics
 
   **Response Example** ::
 
-
     {
      "response": [
         {
@@ -334,7 +403,9 @@ Domains
 **GET /api/1.1/cdns/domains.json**
 
   Authentication Required: Yes
-  
+
+  Role(s) Required: None
+
   **Response Properties**
 
   +----------------------+--------+------------------------------------------------+
@@ -359,14 +430,14 @@ Domains
            "profileId": "5",
            "parameterId": "404",
            "profileName": "CR_FOO",
-           "profileDescription": "Comcast Content Router for foo.domain.net",
+           "profileDescription": "Content Router for foo.domain.net",
            "domainName": "foo.domain.net"
         },
         {
            "profileId": "8",
            "parameterId": "405",
            "profileName": "CR_BAR",
-           "profileDescription": "Comcast Content Router for bar.domain.net",
+           "profileDescription": "Content Router for bar.domain.net",
            "domainName": "bar.domain.net"
         }
      ],
@@ -378,44 +449,15 @@ Domains
 
 Topology
 ++++++++
-**GET /api/1.1/cdns/configs.json**
-
-  Retrieves a list of the CDNs available.
-
-  Authentication Required: Yes
-  
-  **Request Route Parameters**
-  None
-
-
-  **Response Properties**
-
-  +-----------------------+--------+-----------------------------------------------+
-  | Parameter             | Type   | Description                                   |
-  +=======================+========+===============================================+
-  |``id``                 | string |                                               |
-  +-----------------------+--------+-----------------------------------------------+
-  |``value``              | string |                                               |
-  +-----------------------+--------+-----------------------------------------------+
-  |``name``               | string |                                               |
-  +-----------------------+--------+-----------------------------------------------+
-  |``config_file``        | string |                                               |
-  +-----------------------+--------+-----------------------------------------------+
-
-  **Response Example** ::
-
-    TBD    
-
-
-
-|
 
 **GET /api/1.1/cdns/:cdn_name/configs.json**
 
   Retrieves CDN config information based upon the provided cdn name.
 
   Authentication Required: Yes
-  
+
+  Role(s) Required: None
+
   **Request Route Parameters**
 
   +--------------+----------+-----------------------+
@@ -440,10 +482,7 @@ Topology
 
   **Response Example** ::
 
-    TBD    
-
-
-
+    TBD
 |
 
 **GET /api/1.1/cdns/:name/configs/monitoring.json**
@@ -451,13 +490,15 @@ Topology
   Retrieves CDN monitoring information.
 
   Authentication Required: Yes
-  
+
+  Role(s) Required: None
+
   **Request Route Parameters**
 
   +----------+----------+-------------+
   |   Name   | Required | Description |
   +==========+==========+=============+
-  | ``name`` | yes      |             |
+  | ``name`` | yes      |  CDN name   |
   +----------+----------+-------------+
 
   **Response Properties**
@@ -579,9 +620,6 @@ Topology
   ::
 
     TBD
-
-  
-
 |
 
 **GET /api/1.1/cdns/:name/configs/routing.json**
@@ -589,7 +627,9 @@ Topology
   Retrieves CDN routing information.
 
   Authentication Required: Yes
-  
+
+  Role(s) Required: None
+
   **Request Route Parameters**
 
   +----------+----------+-------------+
@@ -807,7 +847,7 @@ DNSSEC Keys
 
   Authentication Required: Yes
 
-  Role Required: Admin
+  Role(s) Required: Admin
 
   **Request Route Parameters**
 
@@ -885,7 +925,6 @@ DNSSEC Keys
       },
     }
 
-
 |
 
 **GET /api/1.1/cdns/name/:name/dnsseckeys/delete.json**
@@ -894,7 +933,7 @@ DNSSEC Keys
 
   Authentication Required: Yes
 
-  Role Required: Admin
+  Role(s) Required: Admin
 
   **Request Route Parameters**
 
@@ -912,17 +951,12 @@ DNSSEC Keys
   | ``response`` | string | success response |
   +--------------+--------+------------------+
 
-
-
   **Response Example**
-
-
   ::
 
     {  
       "response": "Successfully deleted dnssec keys for <cdn>"
     }
-
 
 |
   
@@ -932,7 +966,7 @@ DNSSEC Keys
 
   Authentication Required: Yes
 
-  Role Required:  Admin
+  Role(s) Required: Admin
 
   **Request Properties**
 
@@ -952,7 +986,6 @@ DNSSEC Keys
 
   **Request Example** ::
 
-
     {
       "key": "cdn1",
       "name" "ott.kabletown.com",
@@ -970,7 +1003,6 @@ DNSSEC Keys
   +--------------+--------+-----------------+
   | ``version``  | string | API version     |
   +--------------+--------+-----------------+
-
 
   **Response Example** ::
 

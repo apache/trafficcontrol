@@ -22,12 +22,11 @@ Profiles
 
 .. _to-api-v12-profiles-route:
 
-/api/1.2/profiles
-+++++++++++++++++
-
-**GET /api/1.2/profiles**
+**GET /api/1.2/profiles.json**
 
 	Authentication Required: Yes
+
+	Role(s) Required: None
 
 	**Response Properties**
 
@@ -43,34 +42,44 @@ Profiles
 	| ``description`` | string | The description for the profile                    |
 	+-----------------+--------+----------------------------------------------------+
 
+    **Response Example** ::
 
-	**Response Example** ::
+    {
+     "response": [
+        {
+            "lastUpdated": "2012-10-08 19:34:45",
+            "name": "CCR_TOP",
+            "id": "8",
+            "description": "Content Router for top.foobar.net"
+        }
+     ]
+    }
 
-		TBD
-  
-
-| 
-
+|
 
 **GET /api/1.2/profiles/trimmed.json**
 
 	Authentication Required: Yes
 
+	Role(s) Required: None
+
 	**Response Properties**
 
-	+-------------+--------+-------------+
-	|  Parameter  |  Type  | Description |
-	+=============+========+=============+
-	| ``alerts``  | array  |             |
-	+-------------+--------+-------------+
-	| ``>level``  | string |             |
-	+-------------+--------+-------------+
-	| ``>text``   | string |             |
-	+-------------+--------+-------------+
-	| ``version`` | string |             |
-	+-------------+--------+-------------+
+	+-----------------+--------+----------------------------------------------------+
+	|    Parameter    |  Type  |                    Description                     |
+	+=================+========+====================================================+
+	| ``name``        | string | The name for the profile                           |
+	+-----------------+--------+----------------------------------------------------+
 
-	**Response Example** ::
+    **Response Example** ::
 
-	 	TBD 
+    {
+     "response": [
+        {
+            "name": "CCR_TOP"
+        }
+     ]
+    }
 
+
+|

@@ -21,12 +21,11 @@ Physical Location
 
 .. _to-api-v12-phys-loc-route:
 
-/api/1.2/phys_locations
-+++++++++++++++++++++++
-
 **GET /api/1.2/phys_locations.json**
 
   Authentication Required: Yes
+
+  Role(s) Required: None
 
   **Response Properties**
 
@@ -93,22 +92,21 @@ Physical Location
      ],
     }
 
-
 |
 
 **GET /api/1.2/phys_locations/trimmed.json**
 
   Authentication Required: Yes
 
-  **Response Messages**
+  Role(s) Required: None
 
   **Response Properties**
 
-  +----------------------+--------+------------------------------------------------+
-  | Parameter            | Type   | Description                                    |
-  +======================+========+================================================+
-  |``name``              | array  |                                                |
-  +----------------------+--------+------------------------------------------------+
+  +----------------------+---------+------------------------------------------------+
+  | Parameter            | Type    | Description                                    |
+  +======================+=========+================================================+
+  |``name``              | string  |                                                |
+  +----------------------+---------+------------------------------------------------+
 
   **Response Example** ::
 

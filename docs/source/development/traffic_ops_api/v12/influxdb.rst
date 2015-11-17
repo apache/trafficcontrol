@@ -26,15 +26,7 @@ InfluxDB
 
 Authentication Required: Yes
 
-Response Content Type: application/json
-
-**Response Messages**
-
-::
-
-
-  HTTP Status Code: 200
-  Reason: Success
+Role(s) Required: None
 
 **Response Properties**
 
@@ -44,10 +36,7 @@ Response Content Type: application/json
 | ``aaData``           | array  |                                                |
 +----------------------+--------+------------------------------------------------+
 
-
 **Response Example**
-
-
 ::
 
   {
@@ -82,15 +71,7 @@ Response Content Type: application/json
 
 Authentication Required: Yes
 
-Response Content Type: application/json
-
-**Response Messages**
-
-::
-
-
-  HTTP Status Code: 200
-  Reason: Success
+Role(s) Required: None
 
 **Response Properties**
 
@@ -113,8 +94,6 @@ Response Content Type: application/json
 +----------------------+--------+------------------------------------------------+
 
 **Response Example**
-
-
 ::
 
   {
@@ -134,6 +113,8 @@ Response Content Type: application/json
 
 Authentication Required: Yes
 
+Role(s) Required: None
+
 **Request Route Parameters**
 
 +--------------------------+--------+--------------------------------------------+
@@ -141,18 +122,6 @@ Authentication Required: Yes
 +==========================+========+============================================+
 |``host_name``             | string |                                            |
 +--------------------------+--------+--------------------------------------------+
-
-**Request Example**
-
-Response Content Type: application/json
-
-**Response Messages**
-
-::
-
-
-  HTTP Status Code: 200
-  Reason: Success
 
 **Response Properties**
 
@@ -315,8 +284,6 @@ Response Content Type: application/json
 +-------------------------------------+--------+-------------+
 
 **Response Example**
-
-
 ::
 
   {
@@ -422,10 +389,11 @@ Response Content Type: application/json
 
 |
 
-
 **GET /api/1.2/redis/match/#match/start_date/:start_date/end_date/:end_date/interval/:interval.json**
 
-Authentication Required: 
+Authentication Required: Yes
+
+Role(s) Required: None
 
 **Request Route Parameters**
 
@@ -438,18 +406,6 @@ Authentication Required:
 +--------------------------+--------+--------------------------------------------+
 |``interval``              | string |                                            |
 +--------------------------+--------+--------------------------------------------+
-
-**Request Example**
-
-Response Content Type: application/json
-
-**Response Messages**
-
-::
-
-
-  HTTP Status Code: 200
-  Reason: Success
 
 **Response Properties**
 
@@ -466,6 +422,8 @@ Response Content Type: application/json
 +-------------+--------+-------------+
 
 **Response Example**
+
+TBD
 
 
 
