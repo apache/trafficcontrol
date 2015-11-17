@@ -20,12 +20,12 @@ public class FederationMappingBuilder {
         final String cname = jsonObject.getString("cname");
         final int ttl = jsonObject.getInt("ttl");
 
-        ComparableTreeSet<CidrAddress> network = null;
+        final ComparableTreeSet<CidrAddress> network = new ComparableTreeSet<CidrAddress>();
         if (jsonObject.has("resolve4")) {
             final JSONArray networkArray = jsonObject.getJSONArray("resolve4");
 
             try {
-                network = buildAddresses(networkArray);
+                network.addAll(buildAddresses(networkArray));
             }
             catch (JSONException e) {
                 LOGGER.warn("Failed getting ipv4 address array likely due to bad json data: " + e.getMessage());
@@ -33,11 +33,11 @@ public class FederationMappingBuilder {
         }
 
 
-        ComparableTreeSet<CidrAddress> network6 = null;
+        final ComparableTreeSet<CidrAddress> network6 = new ComparableTreeSet<CidrAddress>();
         if (jsonObject.has("resolve6")) {
             final JSONArray network6Array = jsonObject.getJSONArray("resolve6");
             try {
-                network6 = buildAddresses(network6Array);
+                network6.addAll(buildAddresses(network6Array));
             }
             catch (JSONException e) {
                 LOGGER.warn("Failed getting ipv6 address array likely due to bad json data: " + e.getMessage());
