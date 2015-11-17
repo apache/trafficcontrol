@@ -8,14 +8,18 @@ import java.util.Set;
 public class FederationMapping implements Comparable<FederationMapping> {
     private final String cname;
     private final int ttl;
-    private final ComparableTreeSet<CidrAddress> resolve4;
-    private final ComparableTreeSet<CidrAddress> resolve6;
+    private ComparableTreeSet<CidrAddress> resolve4 = new ComparableTreeSet<CidrAddress>();
+    private ComparableTreeSet<CidrAddress> resolve6 = new ComparableTreeSet<CidrAddress>();
 
     public FederationMapping(final String cname, final int ttl, final ComparableTreeSet<CidrAddress> resolve4, final ComparableTreeSet<CidrAddress> resolve6) {
         this.cname = cname;
         this.ttl = ttl;
-        this.resolve4 = resolve4;
-        this.resolve6 = resolve6;
+        if (resolve4 != null) {
+            this.resolve4 = resolve4;
+        }
+        if (resolve6 != null) {
+            this.resolve6 = resolve6;
+        }
     }
 
     public String getCname() {
