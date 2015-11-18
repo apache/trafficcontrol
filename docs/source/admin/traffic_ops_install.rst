@@ -128,7 +128,7 @@ To begin the install:
 
   The next phase of the install will ask you about the local environment for your CDN.
 
-  .. Note:: before proceeding to this step, the database has to have at least a root password, and needs to be started. When using mysql, please type ``service mysqld start`` as root in another terminal and follow the instructions on the screen to set the root passwd.
+  .. Note:: Before proceeding to this step, the database has to have at least a root password, and needs to be started. When using mysql, please type ``service mysqld start`` as root in another terminal and follow the instructions on the screen to set the root password.
 
   .. Note:: CentOS files note.
 
@@ -227,11 +227,11 @@ To begin the install:
     +----------------------------------------------------+-----------------------------------------------------------------------------------------------+
     | Traffic Ops database user                          | The username Traffic Ops will use to read/write from the database                             |
     +----------------------------------------------------+-----------------------------------------------------------------------------------------------+
-    | password for traffic ops                           | The passwdord for the above database user                                                     |
+    | Password for traffic ops                           | The password for the above database user                                                      |
     +----------------------------------------------------+-----------------------------------------------------------------------------------------------+
-    | Database server root (admin) user name             | Priviledged database user that has permission to create the database and user for Traffic Ops |
+    | Database server root (admin) user name             | Privileged database user that has permission to create the database and user for Traffic Ops  |
     +----------------------------------------------------+-----------------------------------------------------------------------------------------------+
-    | Database server root (admin) user password         | The password for the above priviledged database user                                          |
+    | Database server root (admin) user password         | The password for the above privileged database user                                           |
     +----------------------------------------------------+-----------------------------------------------------------------------------------------------+
     | Traffic Ops url                                    | The URL to connect to this instance of Traffic Ops, usually https://<traffic ops host FQDN>/  |
     +----------------------------------------------------+-----------------------------------------------------------------------------------------------+
@@ -244,7 +244,7 @@ To begin the install:
     | Administration username for Traffic Ops            | The Administration (highest privilege) Traffic Ops user to create;                            |
     |                                                    | use this user to login for the first time and create other users                              |
     +----------------------------------------------------+-----------------------------------------------------------------------------------------------+
-    | Password for the admin user                        | The passwd for the above user                                                                 |
+    | Password for the admin user                        | The password for the above user                                                               |
     +----------------------------------------------------+-----------------------------------------------------------------------------------------------+
 
 
