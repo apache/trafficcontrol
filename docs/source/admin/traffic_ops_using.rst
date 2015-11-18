@@ -193,8 +193,36 @@ The Graph View shows a live view of the last 24 hours of bits per seconds served
 
 Server Checks
 +++++++++++++
-Server Checks are .. 
 
++------+-----------------------------------------------------------------------+
+| Name |                 Description                                           |
++======+=======================================================================+
+| ILO  | Ping the iLO interface for EDGE or MID servers                        |
++------+-----------------------------------------------------------------------+
+| 10G  | Ping the IPv4 address of the EDGE or MID servers                      |
++------+-----------------------------------------------------------------------+
+| 10G6 | Ping the IPv6 address of the EDGE or MID servers                      |
++------+-----------------------------------------------------------------------+
+| MTU  | Ping the EDGE or MID using the configured MTU from Traffic Ops        |
++------+-----------------------------------------------------------------------+
+| FQDN | DNS check that matches what the DNS servers responds with compared to |
+|      | what Traffic Ops has.                                                 |
++------+-----------------------------------------------------------------------+
+| DSCP | Checks the DSCP value of packets from the edge server to the Traffic  |
+|      | Ops server.                                                           |
++------+-----------------------------------------------------------------------+
+| RTR  | Content Router checks. Checks the health of the Content Routers.      |
+|      | Checks the health of the caches using the Content Routers.            |
++------+-----------------------------------------------------------------------+
+| CHR  | Cache Hit Ratio in percent.                                           |
++------+-----------------------------------------------------------------------+
+| CDU  | Total Cache Disk Usage in percent.                                    |
++------+-----------------------------------------------------------------------+
+| ORT  | Operational Readiness Test. Uses the ORT script on the edge and mid   | 
+|      | servers to determine if the configuration in Traffic Ops matches the  |
+|      | configuration on the edge or mid. The user that this script runs as   |
+|      | must have an ssh key on the edge servers.                             |
++------+-----------------------------------------------------------------------+
 
 Daily Summary
 +++++++++++++
