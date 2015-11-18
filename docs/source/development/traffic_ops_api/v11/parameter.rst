@@ -21,6 +21,9 @@ Parameter
 
 .. _to-api-v11-parameters-route:
 
+/api/1.1/parameters
++++++++++++++++++++
+
 **GET /api/1.1/parameters.json**
 
   Authentication Required: Yes

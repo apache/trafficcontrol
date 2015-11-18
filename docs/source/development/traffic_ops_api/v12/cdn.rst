@@ -21,6 +21,9 @@ CDN
 
 .. _to-api-v12-cdn-route:
 
+/api/1.2/cdns
++++++++++++++
+
 **GET /api/1.2/cdns.json**
 
   Authentication Required: Yes
@@ -79,7 +82,6 @@ CDN
 
 |
 
-
 Health
 ++++++
 
@@ -132,7 +134,6 @@ Health
         ]
      },
     }
-
 
 |
 
@@ -226,6 +227,7 @@ Health
          }
     }
 
+|
 
 **GET /api/1.2/cdns/capacity.json**
 
@@ -830,6 +832,7 @@ Topology
 **Response Example**
 ::
   TBD
+|
 
  
 .. _to-api-v12-cdn-dnsseckeys:

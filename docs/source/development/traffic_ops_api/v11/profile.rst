@@ -21,6 +21,9 @@ Profiles
 
 .. _to-api-v11-profiles-route:
 
+/api/1.1/profiles
++++++++++++++++++
+
 **GET /api/1.1/profiles.json**
 
 	Authentication Required: Yes
@@ -41,8 +44,7 @@ Profiles
 	| ``description`` | string | The description for the profile                    |
 	+-----------------+--------+----------------------------------------------------+
 
-    **Response Example**
-    ::
+  **Response Example** ::
 
     {
      "response": [
@@ -50,13 +52,12 @@ Profiles
             "lastUpdated": "2012-10-08 19:34:45",
             "name": "CCR_TOP",
             "id": "8",
-            "description": "Content Router for top.foobar.net",
+            "description": "Content Router for top.foobar.net"
         }
      ]
     }
 
 |
-
 
 **GET /api/1.1/profiles/trimmed.json**
 
@@ -81,6 +82,5 @@ Profiles
         }
      ]
     }
-
 
 |

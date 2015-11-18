@@ -22,6 +22,9 @@ Change Logs
 
 .. _to-api-v11-change-logs-route:
 
+/api/1.1/logs
++++++++++++++
+
 **GET /api/1.1/logs.json**
 
   Authentication Required: Yes

@@ -21,6 +21,9 @@ Types
 
 .. _to-api-v12-types-route:
 
+/api/1.2/types
+++++++++++++++
+
 **GET /api/1.2/types.json**
 
   Authentication Required: Yes
@@ -57,7 +60,6 @@ Types
      ],
     }
 
-
 |
 
 **GET /api/1.2/types/trimmed.json**
@@ -93,3 +95,4 @@ Types
      ],
     }
 
+|

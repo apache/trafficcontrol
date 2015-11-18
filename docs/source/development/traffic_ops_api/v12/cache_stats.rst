@@ -22,6 +22,9 @@ Cache Statistics
 
 .. _to-api-v12-cache-stats-route:
 
+/api/1.2/cache_stats
+++++++++++++++++++++
+
 **GET /api/1.2/cache_stats.json**
 
   Retrieves statistics about the CDN. 

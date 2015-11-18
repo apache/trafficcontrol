@@ -21,6 +21,9 @@ Roles
 
 .. _to-api-v11-roles-route:
 
+/api/1.1/roles
+++++++++++++++
+
 **GET /api/1.1/roles.json**
 
   Authentication Required: Yes

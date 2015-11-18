@@ -22,6 +22,9 @@ Delivery Service Statistics
 
 .. _to-api-v12-ds-stats-route:
 
+/api/1.2/deliveryservice_stats
+++++++++++++++++++++++++++++++
+
 **GET /api/1.2/deliveryservice_stats.json**
 
   Retrieves statistics on the delivery services. See also `Using Traffic Ops - Delivery Service <http://traffic-control-cdn.net/docs/latest/admin/traffic_ops_using.html#delivery-service>`_.
@@ -149,6 +152,5 @@ Delivery Service Statistics
                         }
                     }
                 }
-
 
 |

@@ -21,6 +21,9 @@ Physical Location
 
 .. _to-api-v12-phys-loc-route:
 
+/api/1.2/phys_locations
++++++++++++++++++++++++
+
 **GET /api/1.2/phys_locations.json**
 
   Authentication Required: Yes
@@ -118,7 +121,7 @@ Physical Location
         {
            "name": "Ashburn"
         }
-     ],
+     ]
     }
 
-
+|

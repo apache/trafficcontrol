@@ -21,6 +21,9 @@ TO Extensions
 
 .. _to-api-v12-ext-route:
 
+/api/1.2/to_extensions
+++++++++++++++++++++++
+
 **GET /api/1.2/to_extensions.json**
 
 Retrieves the list of extensions.
@@ -56,7 +59,6 @@ Role(s) Required: None
 +--------------------------+--------+--------------------------------------------+
 
 **Response Example** ::
-
 
   {
          "response": [
@@ -123,7 +125,6 @@ Role(s) Required: None
 
   **Request Example** ::
 
-
     {
           "name": "ILO_PING",
           "version": "1.0.0",
@@ -161,7 +162,6 @@ Role(s) Required: None
      ],
     }
 
-
 |
 
 **POST /api/1.2/to_extensions/:id/delete**
@@ -194,13 +194,14 @@ Role(s) Required: None
 
   **Response Example** ::
 
-  {
+    {
      "alerts": [
         {
            "level": "success",
            "text": "Extension deleted."
         }
-     ]
-  }
+     ],
+    }
+
 
 |

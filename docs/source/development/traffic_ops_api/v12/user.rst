@@ -21,6 +21,9 @@ Users
 
 .. _to-api-v12-users-route:
 
+/api/1.2/users
+++++++++++++++
+
 **GET /api/1.2/users.json**
 
   Retrieves all users.
@@ -657,8 +660,6 @@ Role(s) Required: None
 
   **Response Example** ::
 
-    
-
     {
      "alerts": [
         {
@@ -668,4 +669,5 @@ Role(s) Required: None
      ],
     }
 
+|
   

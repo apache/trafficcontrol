@@ -21,6 +21,9 @@ Server
 
 .. _to-api-v11-servers-route:
 
+/api/1.1/servers
+++++++++++++++++
+
 **GET /api/1.1/servers.json**
 
   Retrieves properties of CDN servers.

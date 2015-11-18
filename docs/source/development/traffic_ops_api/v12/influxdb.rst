@@ -21,7 +21,6 @@ InfluxDB
 
 .. Note:: The documentation needs a thorough review!
 
-
 **GET /api/1.2/traffic_monitor/stats.json**
 
 Authentication Required: Yes

@@ -29,6 +29,8 @@ Hardware Info
 
   Authentication Required: Yes
 
+  Role(s) Required: None
+
   **Response Properties**
 
   +--------------------+--------+----------------------------------------------------------------------+
@@ -47,7 +49,6 @@ Hardware Info
 
   **Response Example** ::
 
-
     {
      "response": [
         {
@@ -62,6 +63,6 @@ Hardware Info
            "val": "D1S4",
            "description": "Physical Disk 0:1:1"
         }
-     ],
+     ]
     }
-
+|

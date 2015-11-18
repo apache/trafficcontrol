@@ -21,6 +21,9 @@ Parameter
 
 .. _to-api-v12-parameters-route:
 
+/api/1.2/parameters
++++++++++++++++++++
+
 **GET /api/1.2/parameters.json**
 
   Authentication Required: Yes
@@ -42,7 +45,6 @@ Parameter
   +------------------+--------+----------------------------------------------------+
 
   **Response Example** ::
-
 
     {
      "response": [
@@ -99,7 +101,6 @@ Parameter
 
   **Response Example** ::
 
-
     {
      "response": [
         {
@@ -123,4 +124,4 @@ Parameter
      ],
     }
 
-
+|

@@ -21,6 +21,9 @@ Cache Group
 
 .. _to-api-v11-cachegroups-route:
 
+/api/1.1/cachegroups
+++++++++++++++++++++
+
 **GET /api/1.1/cachegroups.json**
 
   Authentication Required: Yes

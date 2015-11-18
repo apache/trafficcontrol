@@ -23,6 +23,9 @@ Redis
 
 .. _to-api-v11-redis-route:
 
+/api/1.1/redis
+++++++++++++++
+
 **GET /api/1.1/traffic_monitor/stats.json**
 
 Authentication Required: Yes

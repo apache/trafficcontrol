@@ -21,6 +21,9 @@ Regions
 
 .. _to-api-v11-regions-route:
 
+/api/1.1/regions
+++++++++++++++++
+
 **GET /api/1.1/regions.json**
 
   Authentication Required: Yes
