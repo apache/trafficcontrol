@@ -80,20 +80,24 @@ sub gen_crconfig_json {
 		$cdn_id = defined($cdn_id) ? next : $row->cdn->id;
 	}
 
-	if ( !defined( $profile_cache->{'CCR'} ) || scalar( @{ $profile_cache->{'CCR'} } ) == 0 ) {
-		my $e = Mojo::Exception->throw("No Traffic Router profile found for CDN: $cdn_name");
-	}
-	elsif (( !defined( $profile_cache->{'EDGE'} ) || scalar( @{ $profile_cache->{'EDGE'} } ) == 0 )
-		&& ( !defined( $profile_cache->{'MID'} ) || scalar( @{ $profile_cache->{'MID'} } ) == 0 ) )
-	{
-		my $e = Mojo::Exception->throw( "No profiles found for CDN_name: " . $cdn_name );
-	}
-
 	my %param_cache;
+	my @profile_caches;
+	for my $cachetype (qw/CCR EDGE MID/) {
+		my $r = $profile_cache->{$cachetype};
+		if ( defined($r) && scalar @{$r} != 0 ) {
+			push @profile_caches, @{$r};
+		}
+		else {
+			if ( $cachetype eq 'CCR' ) {
+				$cachetype = 'Traffic Router';
+			}
+			my $e = Mojo::Exception->throw( "No $cachetype profiles found for CDN: " . $cdn_name );
+		}
+	}
 	my %condition = (
 		-and => [
 			profile => {
-				-in => [ @{ $profile_cache->{'CCR'} }, @{ $profile_cache->{'EDGE'} }, @{ $profile_cache->{'MID'} } ]
+				-in => \@profile_caches,
 			},
 			'parameter.config_file' => 'CRConfig.json'
 		]
@@ -101,13 +105,13 @@ sub gen_crconfig_json {
 	my $rs_pp = $self->db->resultset('ProfileParameter')->search( \%condition, { prefetch => [ { 'parameter' => undef }, { 'profile' => undef } ] } );
 
 	#add dnssec.enabled value to config section
-	my $cdn_rs = $self->db->resultset('Cdn')->search({name => $cdn_name})->single();
+	my $cdn_rs = $self->db->resultset('Cdn')->search( { name => $cdn_name } )->single();
 	my $dnssec_enabled = "false";
-	if ($cdn_rs->dnssec_enabled == 1) {
+	if ( $cdn_rs->dnssec_enabled == 1 ) {
 		$dnssec_enabled = "true";
-	} 
+	}
 	$data_obj->{'config'}->{'dnssec.enabled'} = $dnssec_enabled;
-	
+
 	while ( my $row = $rs_pp->next ) {
 
 		$param_cache{ $row->profile->id }->{ $row->parameter->name } = $row->parameter->value;
