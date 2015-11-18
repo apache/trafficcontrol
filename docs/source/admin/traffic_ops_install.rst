@@ -128,7 +128,7 @@ To begin the install:
 
   The next phase of the install will ask you about the local environment for your CDN.
 
-  .. Note:: before proceeding to this step, the database has to have at least a root password, and needs to be started. When using mysql, please type ``service mysqld start`` as root in another terminal and follow the instructions on the screen to set the root passwd.
+  .. Note:: Before proceeding to this step, the database has to have at least a root password, and needs to be started. When using mysql, please type ``service mysqld start`` as root in another terminal and follow the instructions on the screen to set the root passwd.
 
   .. Note:: CentOS files note.
 
