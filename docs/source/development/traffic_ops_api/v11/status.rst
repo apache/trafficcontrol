@@ -30,6 +30,8 @@ Status
 
   Authentication Required: Yes
 
+  Role(s) Required: None
+
   **Response Properties**
 
   +-----------------+--------+--------------------------------------------------------------------------------+

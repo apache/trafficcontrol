@@ -28,7 +28,9 @@ ASN
 **GET /api/1.2/asns.json**
 
   Authentication Required: Yes
-  
+
+  Role(s) Required: None
+
   **Response Properties**
 
   +------------------+--------+-------------------------------------------------------------------------+
@@ -47,7 +49,6 @@ ASN
 
   **Response Example** ::
 
-
     {
      "response": {
         "asns": [
@@ -64,6 +65,7 @@ ASN
               "cachegroup": "us-pa-pittsburgh"
            }
         ]
-     },
+     }
     }
 
+|

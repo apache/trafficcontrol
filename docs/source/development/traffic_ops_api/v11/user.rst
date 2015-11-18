@@ -30,6 +30,8 @@ Users
 
   Authentication Required: Yes
 
+  Role(s) Required: None
+
   **Response Properties**
 
   +----------------------+--------+------------------------------------------------+
@@ -70,7 +72,6 @@ Users
   |``gid``               | string |                                                |
   +----------------------+--------+------------------------------------------------+
 
-
   **Response Example** ::
 
 
@@ -97,7 +98,6 @@ Users
      }
     ]
 
-
 |
 
 **GET /api/1.1/user/current.json**
@@ -105,6 +105,8 @@ Users
   Retrieves the profile for the authenticated user.
 
   Authentication Required: Yes
+
+  Role(s) Required: None
 
   **Request Properties**
 
@@ -178,6 +180,8 @@ Users
 
   Authentication Required: Yes
 
+  Role(s) Required: None
+
   **Request Properties**
 
   +----------------------+--------+------------------------------------------------+
@@ -219,7 +223,6 @@ Users
   +----------------------+--------+------------------------------------------------+
 
   **Request Example** ::
-
 
     {
      "user": {
@@ -268,12 +271,23 @@ Users
             ],
     }
 
+|
 
-**GET /api/1.1/user/current/jobs.json?keyword=PURGE**
+**GET /api/1.1/user/current/jobs.json**
 
-  Retrieves the user's list of content invalidation requests.
+  Retrieves the user's list of jobs.
 
   Authentication Required: Yes
+
+  Role(s) Required: None
+
+  **Request Query Parameters**
+
+  +--------------+----------+----------------------------------------+
+  |    Name      | Required |              Description               |
+  +==============+==========+========================================+
+  | ``keyword``  | no       | PURGE                                  |
+  +--------------+----------+----------------------------------------+
 
   **Response Properties**
 
@@ -346,6 +360,7 @@ Invalidating content on the CDN is sometimes necessary when the origin was mis-c
 
 Authentication Required: Yes
 
+Role(s) Required: Yes
 
   **Request Properties**
 
@@ -386,7 +401,7 @@ Authentication Required: Yes
            "ttl": 54
     }
 
-  Response Content Type: application/json
+|
 
   **Response Properties**
 
@@ -417,11 +432,13 @@ Authentication Required: Yes
 
 |
 
-**POST /api/1.1/user/login { u: '', p: '' }**
+**POST /api/1.1/user/login**
 
   Authentication of a user using username and password. Traffic Ops will send back a session cookie.
 
   Authentication Required: No
+
+  Role(s) Required: None
 
   **Request Properties**
 
@@ -433,16 +450,14 @@ Authentication Required: Yes
   |``p``                 | string | password                                       |
   +----------------------+--------+------------------------------------------------+
 
-  **Request Example**
-
-  ::
+  **Request Example** ::
 
     {
-     "u": "username",
-     "p": "password"
-   }
+       "u": "username",
+       "p": "password"
+    }
 
-  Response Content Type: application/json
+|
 
   **Response Properties**
 
@@ -475,6 +490,8 @@ Authentication Required: Yes
 
   Authentication Required: Yes
 
+  Role(s) Required: None
+
   **Request Route Parameters**
 
   +-----------------+----------+---------------------------------------------------+
@@ -494,7 +511,6 @@ Authentication Required: Yes
   +----------------------+--------+------------------------------------------------+
 
   **Response Example** ::
-
 
     {
      "response": [
@@ -517,7 +533,9 @@ Authentication Required: Yes
 
   Authentication Required: No
 
-  **Request Route Properties**
+  Role(s) Required: None
+
+  **Request Properties**
 
   +----------------------+--------+------------------------------------------------+
   | Parameter            | Type   | Description                                    |
@@ -525,16 +543,13 @@ Authentication Required: Yes
   |``t``                 | string | token-value                                    |
   +----------------------+--------+------------------------------------------------+
 
-  **Request Example**
-
-  ::
-
+  **Request Example** ::
 
     {
-     "t": "token-value"
+       "t": "token-value"
     }
 
-  Response Content Type: application/json
+|
 
   **Response Properties**
 
@@ -561,15 +576,15 @@ Authentication Required: Yes
      ],
     }
 
-
 |
-
 
 **POST /api/1.1/user/logout**
 
   User logout. Invalidates the session cookie.
 
   Authentication Required: Yes
+
+  Role(s) Required: None
 
   **Response Properties**
 
@@ -607,6 +622,8 @@ Authentication Required: Yes
 
   Authentication Required: No
 
+  Role(s) Required: None
+
   **Request Properties**
 
   +----------------------+--------+------------------------------------------------+
@@ -617,12 +634,13 @@ Authentication Required: Yes
   +----------------------+--------+------------------------------------------------+
 
   **Request Example**
-
   ::
 
     {
      "email": "email@email.com"
     }
+
+|
 
   **Response Properties**
 
@@ -646,7 +664,7 @@ Authentication Required: Yes
      "alerts": [
         {
            "level": "success",
-           "text": "Successfully logged in."
+           "text": "Successfully sent password reset to email 'email@email.com'"
         }
      ],
     }
