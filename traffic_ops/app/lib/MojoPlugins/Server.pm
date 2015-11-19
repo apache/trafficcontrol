@@ -23,7 +23,6 @@ use utf8;
 use Carp qw(cluck confess);
 use UI::Utils;
 use Data::Dumper;
-use JSON;
 use List::Util qw/shuffle/;
 
 use constant MAX_TRIES => 20;
@@ -57,8 +56,10 @@ sub register {
 					undef $active_server;
 				}
 				else {
-					# remove active_server from list so it's not reused immediately
+					# remove active_server from list 
 					@rs = grep { $_ ne $active_server } @rs;
+					# tack it to the end so it's not reused immediately, but still available if the only one that responds
+					push @rs, $active_server;
 				}
 			}
 
