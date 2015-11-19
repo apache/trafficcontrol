@@ -28,7 +28,6 @@ At the conclusion of the build,  all rpms are copied into the __$WORKSPACE/dist_
 
 #### traffic_ops:
 * perl 5.10 or higher
-* carton (http://search.cpan.org/perldoc?Carton)
 * go 1.4 or higher
 
 #### traffic_stats:
