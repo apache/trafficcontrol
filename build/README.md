@@ -24,6 +24,7 @@ At the conclusion of the build,  all rpms are copied into the __$WORKSPACE/dist_
 
 * CentOS 6.x
 * rpmbuild (yum install rpm-build)
+* git 1.7.12 or higher
 
 #### traffic_ops:
 * perl 5.10 or higher
