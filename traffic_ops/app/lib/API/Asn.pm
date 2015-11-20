@@ -39,6 +39,6 @@ sub index {
 			}
 		);
 	}
-	$self->success( { "asns" => \@data } );
+	$self->success( \@data );
 }
 1;
