@@ -24,7 +24,7 @@
 	<parent>
 		<groupId>com.comcast.cdn.traffic_control.traffic_router</groupId>
 		<artifactId>traffic_router</artifactId>
-		<version>1.2.1</version>
+		<version>${project.version}</version>
 	</parent>
 
 	<scm>
