@@ -56,8 +56,9 @@ sub register {
 					undef $active_server;
 				}
 				else {
-					# remove active_server from list 
+					# remove active_server from list
 					@rs = grep { $_ ne $active_server } @rs;
+
 					# tack it to the end so it's not reused immediately, but still available if the only one that responds
 					push @rs, $active_server;
 				}
