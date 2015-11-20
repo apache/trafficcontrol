@@ -158,12 +158,14 @@ fi
 %files
 %defattr(644,root,root,755)
 %attr(755,root,root) %{PACKAGEDIR}/app/bin/*
+%attr(755,root,root) %{PACKAGEDIR}/app/script/*
+%attr(755,root,root) %{PACKAGEDIR}/app/db/*.pl
+%attr(755,root,root) %{PACKAGEDIR}/app/db/*.sh
 %config(noreplace)/opt/traffic_ops/app/conf/*
 %{PACKAGEDIR}/app/cpanfile
 %{PACKAGEDIR}/app/db
 %{PACKAGEDIR}/app/lib
 %{PACKAGEDIR}/app/public
-%{PACKAGEDIR}/app/script
 %{PACKAGEDIR}/app/templates
 %{PACKAGEDIR}/install
 %exclude %{PACKAGEDIR}/install/go
