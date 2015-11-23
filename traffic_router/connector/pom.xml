@@ -26,7 +26,7 @@
 	<parent>
 		<groupId>com.comcast.cdn.traffic_control.traffic_router</groupId>
 		<artifactId>traffic_router</artifactId>
-		<version>${traffic_control.version}</version>
+        <version>${env.TRAFFIC_CONTROL_VERSION}</version>
 	</parent>
 
 	<properties>
