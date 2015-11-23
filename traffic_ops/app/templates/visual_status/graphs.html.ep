@@ -94,7 +94,7 @@ setInterval('refreshStats()', 30000);
 <script type="text/javascript" src="/js/percentagebar.js"></script>
 
 <style>
-.statistics_section { float:left; width:35%; color:white; font-size:150%; height:400px; width:305px; background-color:#898989; margin-right:5px; padding:5px; border:1px solid #121212; }
+.statistics_section { float:left; width:35%; color:white; font-size:150%; height:400px; width:305px; background-color:#1f1f1f; margin-right:5px; border:solid 1px grey; }
 .ui-progressbar {
   position: relative;
 }
@@ -115,7 +115,7 @@ setInterval('refreshStats()', 30000);
   width: 100px;
   float:right;
 }
-#graph_panel {width: 65%; float: left;}
+#graph_panel {width: 65%; float: left; border:solid 1px grey;}
 #stat_value, #total_gbps_val, #total_conn_val { font-size: 225%; text-align: right;}
 #stat_label{padding-top: 30px};
 
@@ -146,8 +146,6 @@ setInterval('refreshStats()', 30000);
             <div id="total_conn_val"></div>
             % foreach my $cdn ( @{ $cdn_names }) {
                 <div id ="stat_label"><%= $cdn %> Connections: </div>
-                <!-- <div><script>percentLabel('<%= $cdn %>_percent_indicator',0);</script></div> -->
-                <!-- <div><script>progressBar('<%= $cdn %>_percent_indicator',0);</script></div> -->
                 <div id="stat_value">
                     <div id="<%= $cdn %>_conn_val"></div>
                 </div>
