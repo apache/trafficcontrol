@@ -1,14 +1,32 @@
+#
+# Copyright 2015 Comcast Cable Communications Management, LLC
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+# http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+#
+# RPM spec file for Traffic Stats (tm).
+#
 %define debug_package %{nil}
 Name:		traffic_stats
-Version:	@VERSION@
-Release:	@RELEASE@
+Version:        %{traffic_control_version}
+Release:        %{build_number}
 Summary:	Tool to pull data from traffic monitor and store in Influxdb
 Packager:	david_neuman2 at Cable dot Comcast dot com
 Vendor:		Comcast Cable
 Group:		Applications/Communications
 License:	Apache License, Version 2.0
 URL:		https://github.com/comcast/traffic_control/
-Source:		~/rpmbuild/SOURCES/traffic_stats-@VERSION@.tar.gz
+Source:		%{_sourcedir}/traffic_stats-%{traffic_control_version}.tgz
 
 %description
 Installs traffic_stats which performs the follwing functions:
@@ -20,24 +38,43 @@ Installs traffic_stats which performs the follwing functions:
 %setup
 
 %build
+export GOPATH=$(pwd)
+# Create build area with proper gopath structure
+mkdir -p src pkg bin || { echo "Could not create directories in $(pwd): $!"; exit 1; }
+
+# get traffic_ops client
+godir=src/github.com/comcast/traffic_control/traffic_ops/client
+( mkdir -p "$godir" && \
+  cd "$godir" && \
+  cp -r "$TC_DIR"/traffic_ops/client/* . && \
+  go get -v \
+) || { echo "Could not build go program at $(pwd): $!"; exit 1; }
+
+godir=src/github.com/comcast/traffic_control/traffic_stats
+( mkdir -p "$godir" && \
+  cd "$godir" && \
+  cp -r "$TC_DIR"/traffic_stats/* . && \
+  go get -v \
+) || { echo "Could not build go program at $(pwd): $!"; exit 1; }
 
 %install
-mkdir -p ${RPM_BUILD_ROOT}/opt/traffic_stats
-mkdir -p ${RPM_BUILD_ROOT}/opt/traffic_stats/bin
-mkdir -p ${RPM_BUILD_ROOT}/opt/traffic_stats/conf
-mkdir -p ${RPM_BUILD_ROOT}/opt/traffic_stats/backup
-mkdir -p ${RPM_BUILD_ROOT}/opt/traffic_stats/var/run
-mkdir -p ${RPM_BUILD_ROOT}/opt/traffic_stats/var/log/traffic_stats
-mkdir -p ${RPM_BUILD_ROOT}/etc/init.d
-mkdir -p ${RPM_BUILD_ROOT}/etc/logrotate.d
-mkdir -p ${RPM_BUILD_ROOT}/usr/share/grafana/public/dashboards/
+mkdir -p "${RPM_BUILD_ROOT}"/opt/traffic_stats
+mkdir -p "${RPM_BUILD_ROOT}"/opt/traffic_stats/bin
+mkdir -p "${RPM_BUILD_ROOT}"/opt/traffic_stats/conf
+mkdir -p "${RPM_BUILD_ROOT}"/opt/traffic_stats/backup
+mkdir -p "${RPM_BUILD_ROOT}"/opt/traffic_stats/var/run
+mkdir -p "${RPM_BUILD_ROOT}"/opt/traffic_stats/var/log/traffic_stats
+mkdir -p "${RPM_BUILD_ROOT}"/etc/init.d
+mkdir -p "${RPM_BUILD_ROOT}"/etc/logrotate.d
+mkdir -p "${RPM_BUILD_ROOT}"/usr/share/grafana/public/dashboards/
 
-cp $GOPATH/src/github.com/comcast/traffic_control/traffic_stats/traffic_stats ${RPM_BUILD_ROOT}/opt/traffic_stats/bin/traffic_stats
-cp $GOPATH/src/github.com/comcast/traffic_control/traffic_stats/traffic_stats.cfg ${RPM_BUILD_ROOT}/opt/traffic_stats/conf/traffic_stats.cfg
-cp $GOPATH/src/github.com/comcast/traffic_control/traffic_stats/traffic_stats_seelog.xml ${RPM_BUILD_ROOT}/opt/traffic_stats/conf/traffic_stats_seelog.xml
-cp $GOPATH/src/github.com/comcast/traffic_control/traffic_stats/traffic_stats.init ${RPM_BUILD_ROOT}/etc/init.d/traffic_stats
-cp $GOPATH/src/github.com/comcast/traffic_control/traffic_stats/traffic_stats.logrotate ${RPM_BUILD_ROOT}/etc/logrotate.d/traffic_stats
-cp $GOPATH/src/github.com/comcast/traffic_control/traffic_stats/grafana/*.js ${RPM_BUILD_ROOT}/usr/share/grafana/public/dashboards/
+src=src/github.com/comcast/traffic_control/traffic_stats
+cp -p bin/traffic_stats     "${RPM_BUILD_ROOT}"/opt/traffic_stats/bin/traffic_stats
+cp "$src"/traffic_stats.cfg        "${RPM_BUILD_ROOT}"/opt/traffic_stats/conf/traffic_stats.cfg
+cp "$src"/traffic_stats_seelog.xml "${RPM_BUILD_ROOT}"/opt/traffic_stats/conf/traffic_stats_seelog.xml
+cp "$src"/traffic_stats.init       "${RPM_BUILD_ROOT}"/etc/init.d/traffic_stats
+cp "$src"/traffic_stats.logrotate  "${RPM_BUILD_ROOT}"/etc/logrotate.d/traffic_stats
+cp "$src"/grafana/*.js             "${RPM_BUILD_ROOT}"/usr/share/grafana/public/dashboards/
 
 %pre
 /usr/bin/getent group traffic_stats >/dev/null
@@ -117,4 +154,4 @@ if [ -e /etc/init.d/ts_daily_summary ]; then
 	/etc/init.d/ts_daily_summary stop
 	/sbin/chkconfig --del ts_daily_summary
 fi
-	
+

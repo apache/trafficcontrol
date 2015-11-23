@@ -599,6 +599,7 @@ API 1.2 Reference
   traffic_ops_api/v12/changelog
   traffic_ops_api/v12/deliveryservice
   traffic_ops_api/v12/deliveryservice_stats
+  traffic_ops_api/v12/federation
   traffic_ops_api/v12/hwinfo
   traffic_ops_api/v12/parameter
   traffic_ops_api/v12/phys_location
