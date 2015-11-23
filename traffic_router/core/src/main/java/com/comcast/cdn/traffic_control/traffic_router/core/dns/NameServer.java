@@ -223,22 +223,22 @@ public class NameServer {
 
 			addAuthority(zone, response, flags);
 		} else if (sr.isCNAME()) {
-				/*
-				 * This is an ugly hack to work around the answers() method not working for CNAMEs.
-				 * A CNAME results in isSuccessful() being false, and answers() requires isSuccessful()
-				 * to be true. Because of this, we can either use reflection (slow) or use the getNS() method, which
-				 * returns the RRset stored internally in "data" and is not actually specific to NS records.
-				 * Our CNAME and RRSIGs are in this RRset, so use getNS() despite its name.
-				 * Refer to the dnsjava SetResponse code for more information.
-				 */
-				final RRset rrset = sr.getNS();
-				addRRset(qname, response, rrset, Section.ANSWER, flags);
+			/*
+			 * This is an ugly hack to work around the answers() method not working for CNAMEs.
+			 * A CNAME results in isSuccessful() being false, and answers() requires isSuccessful()
+			 * to be true. Because of this, we can either use reflection (slow) or use the getNS() method, which
+			 * returns the RRset stored internally in "data" and is not actually specific to NS records.
+			 * Our CNAME and RRSIGs are in this RRset, so use getNS() despite its name.
+			 * Refer to the dnsjava SetResponse code for more information.
+			 */
+			final RRset rrset = sr.getNS();
+			addRRset(qname, response, rrset, Section.ANSWER, flags);
 
-				/*
-				 * Allow recursive lookups for CNAME targets; the logic above allows us to
-				 * ensure that we only recurse for domains for which we are authoritative.
-				 */
-				lookup(sr.getCNAME().getTarget(), qtype, clientAddress, zone, response, iteration + 1, flags, dnssecRequest, builder);
+			/*
+			 * Allow recursive lookups for CNAME targets; the logic above allows us to
+			 * ensure that we only recurse for domains for which we are authoritative.
+			 */
+			lookup(sr.getCNAME().getTarget(), qtype, clientAddress, zone, response, iteration + 1, flags, dnssecRequest, builder);
 		} else if (sr.isNXDOMAIN()) {
 			response.getHeader().setRcode(Rcode.NXDOMAIN);
 
