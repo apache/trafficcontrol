@@ -16,7 +16,9 @@
 
 package com.comcast.cdn.traffic_control.traffic_router.core.dns;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 
 import java.io.File;
 import java.io.FileReader;
@@ -95,6 +97,7 @@ public class ZoneManagerTest {
 		TrafficRouter trafficRouter = trafficRouterManager.getTrafficRouter();
 		CacheRegister cacheRegister = trafficRouter.getCacheRegister();
 		Map<String, Collection<CacheLocation>> edgeLocations = new HashMap<String, Collection<CacheLocation>>();
+		Set<String> dnsLimited = new HashSet<String>();
 
 		for (Cache c : cacheRegister.getCacheMap().values()) {
 			for (DeliveryServiceReference dsr : c.getDeliveryServices()) {
@@ -102,6 +105,10 @@ public class ZoneManagerTest {
 
 				if (!ds.isDns()) continue;
 				final String edgeName = dsr.getFqdn() + ".";
+
+				if (ds.getMaxDnsIps() > 0) {
+					dnsLimited.add(edgeName);
+				}
 
 				if (!edgeLocations.containsKey(edgeName)) {
 					edgeLocations.put(edgeName, new HashSet<CacheLocation>());
@@ -119,11 +126,52 @@ public class ZoneManagerTest {
 
 		for (String name : edgeLocations.keySet()) {
 			for (CacheLocation location : edgeLocations.get(name)) {
-				final InetAddress source = netMap.get(location.getId());
 				// need to iterate through the CZF and submit a bunch of these into a job queue to run repeatedly/fast
-				final Zone zone = trafficRouter.getZone(new Name(name), Type.A, source, true, builder);
-				assertNotNull(zone);
-				//LOGGER.info(zone);
+				final InetAddress source = netMap.get(location.getId());
+				final Name n = new Name(name);
+				final Map<Zone, Integer> zoneTracker = new HashMap<Zone, Integer>();
+				final Set<Zone> zones = new HashSet<Zone>();
+				final int seenThreshold = 5;
+
+				while (true) {
+					final Zone zone = trafficRouter.getZone(n, Type.A, source, true, builder); // this should load the zone into the dynamicZoneCache
+					assertNotNull(zone);
+
+					if (!zoneTracker.containsKey(zone)) {
+						zoneTracker.put(zone, 1);
+					} else {
+						final int count = zoneTracker.get(zone);
+						zoneTracker.put(zone, count + 1);
+					}
+
+					if (!dnsLimited.contains(n.toString())) {
+						break;
+					}
+
+					/*
+					 * If we have limits on the number of records, continue building the cache
+					 */
+					boolean allSeen = true;
+
+					for (Integer count : zoneTracker.values()) {
+						if (count < seenThreshold) {
+							allSeen = false;
+							break;
+						}
+					}
+
+					if (allSeen) {
+						break;
+					}
+				}
+
+				zones.addAll(zoneTracker.keySet());
+				//System.out.println("Generated " + zones.size() + " zone(s) for " + n.toString() + " for cache group " + location.getId());
+
+				for (int i = 0; i < 500; i++) {
+					final Zone cachedZone = trafficRouter.getZone(n, Type.A, source, true, builder); // this should be a cache hit
+					assertTrue(zones.contains(cachedZone));
+				}
 			}
 		}
 	}
