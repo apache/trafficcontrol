@@ -19,7 +19,7 @@
 
 	<artifactId>traffic_router</artifactId>
 	<groupId>com.comcast.cdn.traffic_control.traffic_router</groupId>
-	<version>${traffic_control.version}</version>
+	<version>${env.TRAFFIC_CONTROL_VERSION}</version>
 	<packaging>pom</packaging>
 	<name>traffic_router</name>
 
@@ -29,7 +29,6 @@
 		<module>api</module>
 		<module>build</module>
 	</modules>
-
 	<properties>
 		<deploy.dir>/opt/traffic_router</deploy.dir>
 		<wicket.version>6.0.0</wicket.version>
