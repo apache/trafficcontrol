@@ -112,7 +112,7 @@ setInterval('getDailySummary()', 300000);
     % } else {
 		<h3><a href="#">Configuration Incomplete!</a></h3>
 		<div>
-		    <b>No parameters 'daily_bw_url' and 'daily_served_url' found associated with the 'GLOBAL' profile. Please reference the <a href="http://traffic-control-cdn.net/docs/latest/admin/traffic_ops_using.html#graph-view">online documentation</a> to configure this view. </b>
+		    <b>No parameters 'daily_bw_url' and 'daily_served_url' found associated with the 'GLOBAL' profile. Please reference the <a href="http://traffic-control-cdn.net/docs/latest/admin/traffic_stats.html">online documentation</a> to configure this view. </b>
 	   </div>
 	% }
 </body>
