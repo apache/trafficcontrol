@@ -64,7 +64,7 @@ setInterval('getDailySummary()', 300000);
 .statistics_section { float:left; width:35%; color:white; font-size:150%; height:400px; width:305px; background-color:#1f1f1f; margin-right:5px; border:solid 1px grey; }
 .stat_label{padding-top: 3px}
 .stat_title { font-size: 125%; text-decoration: underline;}
-.stat_value, #total_gbps_val, #total_conn_val { font-size: 225%; text-align: right;};
+.stat_value, #total_gbps_val, #total_conn_val { font-size: 225%; text-align: right; padding-right: 10px};
 </style>
 
 <body id="edge_health">

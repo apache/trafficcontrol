@@ -116,8 +116,8 @@ setInterval('refreshStats()', 30000);
   float:right;
 }
 #graph_panel {width: 65%; float: left; border:solid 1px grey;}
-#stat_value, #total_gbps_val, #total_conn_val { font-size: 225%; text-align: right;}
-#stat_label{padding-top: 30px};
+#stat_value, #total_gbps_val, #total_conn_val { font-size: 225%; text-align: right; padding-right: 10px;}
+#stat_label{padding-top: 30px;};
 
 </style>
 
