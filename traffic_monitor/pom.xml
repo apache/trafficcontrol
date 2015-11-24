@@ -150,21 +150,6 @@
 				<version>2.5</version>
 				<executions>
 					<execution>
-						<phase>validate</phase>
-						<id>enforce-environment-variable-is-set</id>
-						<goals>
-							<goal>enforce</goal>
-						</goals>
-						<configuration>
-							<rules>
-								<requireEnvironmentVariable>
-									<variableName>TRAFFIC_CONTROL_VERSION</variableName>
-								</requireEnvironmentVariable>
-							</rules>
-							<fail>true</fail>
-						</configuration>
-					</execution>
-					<execution>
 						<id>PMD</id>
 						<phase>verify</phase>
 						<goals>
@@ -269,6 +254,21 @@
 				<artifactId>maven-enforcer-plugin</artifactId>
 				<version>1.4.1</version>
 				<executions>
+					<execution>
+						<phase>validate</phase>
+						<id>enforce-environment-variable-is-set0</id>
+						<goals>
+							<goal>enforce</goal>
+						</goals>
+						<configuration>
+							<rules>
+								<requireEnvironmentVariable>
+									<variableName>TRAFFIC_CONTROL_VERSION</variableName>
+								</requireEnvironmentVariable>
+							</rules>
+							<fail>true</fail>
+						</configuration>
+					</execution>
 					<execution>
 						<phase>package</phase>
 						<id>enforce-environment-variable-is-set</id>
