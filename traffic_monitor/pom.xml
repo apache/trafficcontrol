@@ -5,7 +5,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>com.comcast.cdn.traffic_control</groupId>
 	<packaging>war</packaging>
-	<version>${traffic_control.version}</version>
+	<version>${env.TRAFFIC_CONTROL_VERSION}</version>
 	<name>traffic_monitor</name>
 	<description></description>
 
@@ -254,6 +254,21 @@
 				<artifactId>maven-enforcer-plugin</artifactId>
 				<version>1.4.1</version>
 				<executions>
+					<execution>
+						<phase>validate</phase>
+						<id>enforce-environment-variable-is-set0</id>
+						<goals>
+							<goal>enforce</goal>
+						</goals>
+						<configuration>
+							<rules>
+								<requireEnvironmentVariable>
+									<variableName>TRAFFIC_CONTROL_VERSION</variableName>
+								</requireEnvironmentVariable>
+							</rules>
+							<fail>true</fail>
+						</configuration>
+					</execution>
 					<execution>
 						<phase>package</phase>
 						<id>enforce-environment-variable-is-set</id>

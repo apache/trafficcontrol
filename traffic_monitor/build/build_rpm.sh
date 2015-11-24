@@ -36,9 +36,9 @@ function buildRpmTrafficMonitor () {
 	echo "Building the rpm."
 
 	cd "$TM_DIR" || { echo "Could not cd to $TM_DIR: $?"; exit 1; }
-	local version="-Dtraffic_control.version=$TC_VERSION"
+	export TRAFFIC_CONTROL_VERSION="$TC_VERSION"
 	export GIT_REV_COUNT=$(getRevCount)
-	mvn "$version" package || { echo "RPM BUILD FAILED: $?"; exit 1; }
+	mvn package || { echo "RPM BUILD FAILED: $?"; exit 1; }
 
 	local rpm=$(find -name \*.rpm)
 	if [[ -z $rpm ]]; then
