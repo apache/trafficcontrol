@@ -75,21 +75,29 @@ public class CacheWatcher {
 	class FetchService extends Thread {
 		public FetchService() {
 		}
+
 		final Runtime runtime = Runtime.getRuntime();
 
 		private List<CacheState> checkCaches(final RouterConfig crConfig) {
-			maxMemory.set(runtime.maxMemory()/(1024*1024));
-			totalMem.set(runtime.totalMemory()/(1024*1024));
-			freeMem.set(runtime.freeMemory()/(1024*1024));
+			maxMemory.set(runtime.maxMemory() / (1024 * 1024));
+			totalMem.set(runtime.totalMemory() / (1024 * 1024));
+			freeMem.set(runtime.freeMemory() / (1024 * 1024));
 
 			//					List<AtsServer> servers = new ArrayList<AtsServer>(config.getAtsServer());
 			final List<CacheState> retList = new ArrayList<CacheState>();
 //			DsState.startUpdateAll();
 
 			final List<Cache> myList = crConfig.getCacheList();
-			for(Cache cache : myList) {
-				if(!isActive) { return retList; }
-				if(!myHealthDeterminer.shouldMonitor(cache)) { continue; }
+			for (Cache cache : myList) {
+
+				if (!isActive) {
+					return retList;
+				}
+
+				if (!myHealthDeterminer.shouldMonitor(cache)) {
+					continue;
+				}
+
 				final CacheState state = CacheState.getOrCreate(cache);
 				state.fetchAndUpdate(myHealthDeterminer, fetchCount, errorCount);
 				retList.add(state);
@@ -100,7 +108,11 @@ public class CacheWatcher {
 
 		private void cacheTimePad() {
 			final int t = config.getCacheTimePad();
-			if(t == 0) { return; }
+
+			if (t == 0) {
+				return;
+			}
+
 			try {
 				Thread.sleep(t);
 			} catch (InterruptedException e) {
@@ -117,11 +129,12 @@ public class CacheWatcher {
 					if (crConfig == null) {
 						try {
 							Thread.sleep(config.getHealthPollingInterval());
-						} catch (InterruptedException e) { }
+						} catch (InterruptedException e) {
+						}
 
 						continue;
 					}
-	
+
 					final List<CacheState> states = checkCaches(crConfig);
 
 					boolean waitForFinish = true;
@@ -139,7 +152,8 @@ public class CacheWatcher {
 
 					try {
 						Thread.sleep(Math.max(config.getHealthPollingInterval() - (completedTime - time), 0));
-					} catch (InterruptedException e) { }
+					} catch (InterruptedException e) {
+					}
 
 					itercount.inc();
 
@@ -150,13 +164,14 @@ public class CacheWatcher {
 					queryIntervalActual.set(completedTime - time);
 					queryIntervalDelta.set((completedTime - time) - config.getHealthPollingInterval());
 
-					LOGGER.info("Pool time elapsed: "+mytime);
+					LOGGER.info("Pool time elapsed: " + mytime);
 				} catch (Exception e) {
-					LOGGER.warn(e,e);
+					LOGGER.warn(e, e);
 
 					try {
 						Thread.sleep(100);
-					} catch (InterruptedException ex) { }
+					} catch (InterruptedException ex) {
+					}
 				}
 
 				if (!isActive) {
@@ -171,25 +186,42 @@ public class CacheWatcher {
 		private static final long serialVersionUID = 1L;
 		private final String label;
 		long i = 0;
+
 		public CacheDataModel(final String label) {
 			this.label = label;
-			if(label == null) { super.setObject(null); }
-			else { super.setObject(label + ": "); }
+
+			if (label == null) {
+				super.setObject(null);
+			} else {
+				super.setObject(label + ": ");
+			}
 		}
-		public String getKey() {return label;}
-		public String getValue() { return String.valueOf(i); }
+
+		public String getKey() {
+			return label;
+		}
+
+		public String getValue() {
+			return String.valueOf(i);
+		}
+
 		public void inc() {
-			synchronized(this) {
+			synchronized (this) {
 				i++;
 				this.set(i);
 			}
 		}
+
 		public void setObject(final String o) {
-			if(label == null) { super.setObject(o); }
-			else { super.setObject(label + ": "+o); }
+			if (label == null) {
+				super.setObject(o);
+			} else {
+				super.setObject(label + ": " + o);
+			}
 		}
+
 		public void set(final long arg) {
-			synchronized(this) {
+			synchronized (this) {
 				i = arg;
 				this.setObject(String.valueOf(arg));
 			}
@@ -198,17 +230,20 @@ public class CacheWatcher {
 
 	public void destroy() {
 		LOGGER.warn("CacheWatcher: shutting down ");
-		isActive  = false;
+
+		isActive = false;
 		final long time = System.currentTimeMillis();
+
 		mainThread.interrupt();
 		CacheState.shutdown();
-		while(mainThread.isAlive()) {
+
+		while (mainThread.isAlive()) {
 			try {
 				Thread.sleep(10);
 			} catch (InterruptedException e) {
 			}
 		}
-		LOGGER.warn("Stopped: Termination time: "+(System.currentTimeMillis() - time));	
+		LOGGER.warn("Stopped: Termination time: " + (System.currentTimeMillis() - time));
 	}
 
 	public long getCycleCount() {
@@ -217,6 +252,3 @@ public class CacheWatcher {
 	}
 
 }
-
-
-

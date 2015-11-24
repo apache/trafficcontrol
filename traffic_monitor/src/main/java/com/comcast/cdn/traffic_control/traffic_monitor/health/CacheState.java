@@ -60,7 +60,7 @@ public class CacheState extends AbstractState {
 	}
 
 	public static List<CacheState> getCacheStates() {
-		synchronized(states) {
+		synchronized (states) {
 			return new ArrayList<CacheState>(states.values());
 		}
 	}
@@ -68,39 +68,49 @@ public class CacheState extends AbstractState {
 	public static CacheState getOrCreate(final Cache cache) {
 		return getOrCreate(cache.getHostname(), cache);
 	}
+
 	public static CacheState getOrCreate(final String host, final Cache cache) {
-		synchronized(states) {
+		synchronized (states) {
 			CacheState as = states.get(host);
-			if(as == null) {
+
+			if (as == null) {
 				as = new CacheState(host);
 				states.put(host, as);
 			}
+
 			as.setCache(cache);
 			return as;
 		}
 	}
+
 	private void setCache(final Cache cache) {
 		this.cache = cache;
 	}
 
 	public static CacheState getState(final String host) {
-		synchronized(states) {
+		synchronized (states) {
 			return states.get(host);
 		}
 	}
+
 	public static boolean has(final String host) {
-		if(states.get(host)==null) { return false; }
+		if (states.get(host) == null) {
+			return false;
+		}
+
 		return true;
 	}
 
 	public static void removeAllBut(final List<CacheState> retList) {
 		final List<String> hostnames = new ArrayList<String>();
-		for(CacheState cs : retList) {
+
+		for (CacheState cs : retList) {
 			hostnames.add(cs.getId());
 		}
-		synchronized(states) {
-			for(String key : new ArrayList<String>(states.keySet())) {
-				if(!hostnames.contains(key)) {
+
+		synchronized (states) {
+			for (String key : new ArrayList<String>(states.keySet())) {
+				if (!hostnames.contains(key)) {
 					states.remove(key);
 				}
 			}
@@ -113,15 +123,17 @@ public class CacheState extends AbstractState {
 	}
 
 	public void fetchAndUpdate(final HealthDeterminer myHealthDeterminer, final CacheDataModel fetchCount, final CacheDataModel errorCount) {
-		if(!HealthDeterminer.shouldFetchStats(cache)) {
-			synchronized(cache) {
+		if (!HealthDeterminer.shouldFetchStats(cache)) {
+			synchronized (cache) {
 				// TODO : clear states
 				cache.setState(this, myHealthDeterminer);
 			}
 			return;
 		}
+
 		final AsyncHttpClient asyncClient = getAsyncHttpClient();
 		final long time = System.currentTimeMillis();
+
 		try {
 			fetchCount.inc();
 			this.startUpdate();
@@ -131,21 +143,21 @@ public class CacheState extends AbstractState {
 			requestTimeout = System.currentTimeMillis() + myHealthDeterminer.getConnectionTimeout(cache, 2000);
 			future = asyncClient.executeRequest(getRequest(asyncClient, url), getAsyncHanlder(myHealthDeterminer, time, url, errorCount));
 		} catch (IOException e) {
-			LOGGER.warn(e,e);
+			LOGGER.warn(e, e);
 		}
 	}
 
 
-
-	private AsyncHandler<Object> getAsyncHanlder(final HealthDeterminer myHealthDeterminer, final long time, 
-			final String url, final CacheDataModel errorCount) {
-		if(handler == null) {
+	private AsyncHandler<Object> getAsyncHanlder(final HealthDeterminer myHealthDeterminer, final long time,
+	                                             final String url, final CacheDataModel errorCount) {
+		if (handler == null) {
 			handler = new UpdateHandler(this, errorCount);
 		}
-		return handler.update(myHealthDeterminer,time,url);
-	}
-	private static class UpdateHandler extends AsyncCompletionHandler<java.lang.Object> {
 
+		return handler.update(myHealthDeterminer, time, url);
+	}
+
+	private static class UpdateHandler extends AsyncCompletionHandler<java.lang.Object> {
 		final private CacheState state;
 		final private CacheDataModel errorCount;
 		private long time;
@@ -169,18 +181,19 @@ public class CacheState extends AbstractState {
 			// Do something with the Response
 			final int code = response.getStatusCode();
 			state.put("queryTime", String.valueOf(System.currentTimeMillis() - time));
-			if(code != 200) {
-				synchronized(state.cache) {
+
+			if (code != 200) {
+				synchronized (state.cache) {
 					state.cache.setError(state, code + " - " + response.getStatusText(), myHealthDeterminer);
 				}
 				return code;
 			}
 
 			//			final long queryTime = System.currentTimeMillis() - time;
-			final Map<String,String> stats = getMap(response.getResponseBody() , url);
+			final Map<String, String> stats = getMap(response.getResponseBody(), url);
 			state.put(stats);
 
-			synchronized(state.cache) {
+			synchronized (state.cache) {
 				state.cache.setState(state, myHealthDeterminer);
 			}
 
@@ -188,20 +201,22 @@ public class CacheState extends AbstractState {
 		}
 
 		@Override
-		public void onThrowable(final Throwable t){
+		public void onThrowable(final Throwable t) {
 			LOGGER.warn(t + " : " + url);
-			LOGGER.debug("",t);
+			LOGGER.debug("", t);
+
 			state.put("queryTime", String.valueOf(System.currentTimeMillis() - time));
+
 			try {
 				errorCount.inc();
-				synchronized(state.cache) {
+				synchronized (state.cache) {
 					state.cache.setError(state, t.toString(), myHealthDeterminer);
 				}
-			} catch(Exception e2) {
-				LOGGER.warn(e2,e2);
+			} catch (Exception e2) {
+				LOGGER.warn(e2, e2);
 			}
 		}
-	};
+	}
 
 	private Request getRequest(final AsyncHttpClient asyncClient, final String url) {
 		if (request == null || !this.getCache().getQueryIp().equals(usedIp) || this.getCache().getQueryPort() != usedPort || !url.equals(usedUrl)) {
@@ -221,7 +236,11 @@ public class CacheState extends AbstractState {
 			usedIp = this.getCache().getQueryIp();
 			usedPort = this.getCache().getQueryPort();
 			usedUrl = url;
-			if(usedPort == 0) { usedPort = 80;}
+
+			if (usedPort == 0) {
+				usedPort = 80;
+			}
+
 			final ProxyServer proxyServer = new ProxyServer(usedIp, usedPort);
 			builder.setProxyServer(proxyServer);
 			request = builder.build();
@@ -230,32 +249,39 @@ public class CacheState extends AbstractState {
 	}
 
 	private AsyncHttpClient getAsyncHttpClient() {
-		synchronized(LOGGER) {
-			if(asyncHttpClient == null) {
+		synchronized (LOGGER) {
+			if (asyncHttpClient == null) {
 				final AsyncHttpClientConfig cf = new AsyncHttpClientConfig.Builder()
-				//			.setConnectionTimeoutInMs(myTimeout)
-				//			.addRequestFilter(new ThrottleRequestFilter(10))
-				.build();
+					//			.setConnectionTimeoutInMs(myTimeout)
+					//			.addRequestFilter(new ThrottleRequestFilter(10))
+					.build();
 				asyncHttpClient = new AsyncHttpClient(cf);
 			}
 		}
+
 		return asyncHttpClient;
 	}
 
 	public boolean completeFetch(final HealthDeterminer myHealthDeterminer, final CacheDataModel errorCount) {
-		if(future == null) { return true; }
-		if(future.isDone()) {
+		if (future == null) {
 			return true;
 		}
-		if(System.currentTimeMillis() > requestTimeout) {
+
+		if (future.isDone()) {
+			return true;
+		}
+
+		if (System.currentTimeMillis() > requestTimeout) {
 			try {
 				future.cancel(true);
 				//				errorCount.inc();
-			} catch(Exception e) {
-				LOGGER.warn("Error on cancel: "+e);
+			} catch (Exception e) {
+				LOGGER.warn("Error on cancel: " + e);
 			}
+
 			return true;
 		}
+
 		return false;
 	}
 
@@ -263,31 +289,38 @@ public class CacheState extends AbstractState {
 		return HealthDeterminer.getStatusUrl(cache);
 	}
 
-	public static Map<String,String> getMap(final String jsonStr, final String stateUrl) throws JSONException {
-		final Map<String,String> map = new HashMap<String, String>();
-		final JSONObject json = new JSONObject( jsonStr );
+	public static Map<String, String> getMap(final String jsonStr, final String stateUrl) throws JSONException {
+		final Map<String, String> map = new HashMap<String, String>();
+		final JSONObject json = new JSONObject(jsonStr);
 		JSONObject global = json.optJSONObject("global");
-		if(global == null) {
+
+		if (global == null) {
 			global = json.optJSONObject("ats");
 		}
+
 		Iterator<?> keys = global.keys();
-		while(keys.hasNext()) {
+
+		while (keys.hasNext()) {
 			final String key = (String) keys.next();
-			map.put("ats."+key, String.valueOf(global.get(key)));
+			map.put("ats." + key, String.valueOf(global.get(key)));
 		}
-		global = json.optJSONObject( "system");
+
+		global = json.optJSONObject("system");
 		keys = global.keys();
-		while(keys.hasNext()) {
+
+		while (keys.hasNext()) {
 			final String key = (String) keys.next();
-			map.put("system."+key, String.valueOf(global.get(key)));
+			map.put("system." + key, String.valueOf(global.get(key)));
 		}
+
 		//		map.put("queryTime", Long.toString(queryTime));
 		map.put("stateUrl", stateUrl);
+
 		return map;
 	}
 
 	public static void shutdown() {
-		while(!asyncHttpClient.isClosed()) {
+		while (!asyncHttpClient.isClosed()) {
 			LOGGER.warn("closing");
 			asyncHttpClient.close();
 		}
@@ -296,19 +329,20 @@ public class CacheState extends AbstractState {
 
 	@Override
 	protected KeyValue getKeyValue(final String key, final AbstractState state) {
-		return new KeyValue(key,this) {
+		return new KeyValue(key, this) {
 			private static final long serialVersionUID = 1L;
+
 			@Override
-			public String getObject( ) {
-				if(stateId != null) {
+			public String getObject() {
+				if (stateId != null) {
 					return CacheState.get(stateId, key);
 				}
 				return val;
 			}
 		};
 	}
+
 	public static String get(final String stateId, final String key) {
 		return getState(stateId).getLastValue(key);
 	}
-
 }
