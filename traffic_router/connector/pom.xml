@@ -36,8 +36,9 @@
 	<build>
 		<plugins>
 			<plugin>
-				<artifactId>maven-pmd-plugin</artifactId>
-				<version>2.5</version>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-enforcer-plugin</artifactId>
+				<version>1.4.1</version>
 				<executions>
 					<execution>
 						<phase>validate</phase>

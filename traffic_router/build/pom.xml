@@ -131,7 +131,7 @@
 				<executions>
 					<execution>
 						<phase>validate</phase>
-						<id>enforce-environment-variable-is-set</id>
+						<id>enforce-environment-variable-is-set0</id>
 						<goals>
 							<goal>enforce</goal>
 						</goals>
