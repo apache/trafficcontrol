@@ -269,7 +269,7 @@ if (($force == 0) || ($force == 3) || ($force == 4) || ($force == 5)) {
          $healthy{$cache} = $total_ccrs->{ $cdn_name{$cache} }
       }
       if ($healthy{$cache} < ( $total_ccrs->{ $cdn_name{$cache} } - ( defined( $bad_ccrs->{ $cdn_name{$cache} } ) ? $bad_ccrs->{ $cdn_name{$cache} } : 0 ) ))  {
-         my $msg = $cache . " => " . $healthy{$cache} . " out of " . ( $total_ccrs->{ $cdn_name{$cache} } - ( defined( $bad_ccrs->{ $cdn_name{$cache} } ) ? $bad_ccrs->{ $cdn_name{$cache} } : 0 )) . " healthy CCRs think it is OK.";
+         my $msg = $cache . " => " . $healthy{$cache} . " out of " . ( $total_ccrs->{ $cdn_name{$cache} } - ( defined( $bad_ccrs->{ $cdn_name{$cache} } ) ? $bad_ccrs->{ $cdn_name{$cache} } : 0 )) . " healthy Content Routers think it is OK.";
          ERROR $msg;
          if ($sslg) {
             my $result;
@@ -294,7 +294,7 @@ if (($force == 0) || ($force == 3) || ($force == 4) || ($force == 5)) {
          $ext->post_result( $server_assoc{$cache}->{id}, $check_name, 0 ) if (!$quiet);
       }
       elsif ($healthy{$cache} == $total_ccrs->{ $cdn_name{$cache} }) {
-         my $msg = $cache . " is marked ONLINE by all CCRs.";
+         my $msg = $cache . " is marked ONLINE by all Content Routers.";
          if ($force == 5) {
             $msg = "Force: OK ".$msg;
          }
@@ -324,7 +324,7 @@ if (($force == 0) || ($force == 6) || ($force == 7)) {
          $unhealthy{$cache} = $total_ccrs->{ $cdn_name{$cache} };
       }
       if ($unhealthy{$cache} == $total_ccrs->{ $cdn_name{$cache} }) {
-         my $msg = $cache . " is marked OFFLINE by all CCRs.";
+         my $msg = $cache . " is marked OFFLINE by all Content Routers.";
          ERROR $msg;
          if ($sslg) {
             my $result;
@@ -357,10 +357,13 @@ if (($force == 0) || ($force == 8)) {
       # By this time we should have already logged any 'FAIL' messages
       if (($ccr_assoc{$ccr}->{status} eq "OPERATIONAL") || ($force == 8)) {
          my $msg = $ccr . " is OK.";
+         if ($force == 8) {
+            $msg = "Force: OK ".$msg;
+         }
          INFO $msg;
          if ($sslg) {
-            my @tmp = ($ccr,$check_name,$chck_lng_nm,'OK',$ccr_assoc{$ccr}->{cmsStatus});
-            syslog(LOG_ERR, "hostname=%s check=%s name=\"%s\" result=%s status=%s msg=\"\"", @tmp);
+            my @tmp = ($ccr,$check_name,$chck_lng_nm,'OK',$ccr_assoc{$ccr}->{cmsStatus},$msg);
+            syslog(LOG_ERR, "hostname=%s check=%s name=\"%s\" result=%s status=%s msg=\"%s\"", @tmp);
          }
       }
    }
@@ -376,14 +379,16 @@ sub get_crs_stat() {
 
 	my $ua = LWP::UserAgent->new;
 	TRACE "getting locations: " . $url;
+   TRACE "Force: ".$force;
 	my $response = $ua->get( $url );
 
-	if ( !$response->is_success ) {
+	if ( !$response->is_success || ($force == 9) || ($force == 10)) {
 		ERROR $ccr . " Not responding! - " . $response->status_line . ".";
 		$ccr_assoc{$ccr_name}->{status} = "DOWN";
       # log a FAIL message for this content router.
       if ($sslg) {
          my $result;
+         my $msg = "Unable to connect to content router API. response: ".$response->status_line;
          # Only FAIL if online or reported
          if (($ccr_assoc{$ccr_name}->{cmsStatus} =~ m/ONLINE/) || ($ccr_assoc{$ccr_name}->{cmsStatus} =~ m/REPORTED/)) {
             $result = "FAIL";
@@ -391,8 +396,15 @@ sub get_crs_stat() {
          else {
             $result = "OK";
          }
-         my @tmp = ($ccr_name,$check_name,$chck_lng_nm,$result,$ccr_assoc{$ccr_name}->{cmsStatus},
-                    "Unable to connect to content router API. response: ".$response->status_line);
+         if ($force == 9) {
+            $result = "FAIL";
+            $msg = "Force: FAIL ".$msg;
+         } elsif ($force == 10) {
+            $result = "OK";
+            $msg = "Force: OK ".$msg;
+         }
+         my @tmp = ($ccr_name,$check_name,$chck_lng_nm,$result,
+                    $ccr_assoc{$ccr_name}->{cmsStatus},$msg);
          syslog(LOG_ERR, "hostname=%s check=%s name=\"%s\" result=%s status=%s msg=\"%s\"", @tmp);
       }
 		return;
@@ -404,10 +416,11 @@ sub get_crs_stat() {
 	foreach my $location ( sort @{ $loc_var->{locations} } ) {
 		TRACE "getting " . $url ."/".$location . "/caches";
 		my $response = $ua->get( $url."/".$location."/caches" );
-		if ( !$response->is_success ) {
+		if ( !$response->is_success  || ($force == 11) || ($force == 12)) {
 			ERROR $ccr . " Not responding! - " . $response->status_line . ".";
          if ($sslg) {
             my $result;
+            my $msg = "Unable to get cache info for $location. response: ".$response->status_line;
             # Only FAIL if online or reported
             if (($ccr_assoc{$ccr_name}->{cmsStatus} =~ m/ONLINE/) || ($ccr_assoc{$ccr_name}->{cmsStatus} =~ m/REPORTED/)) {
                $result = "FAIL";
@@ -415,9 +428,16 @@ sub get_crs_stat() {
             else {
                $result = "OK";
             }
+            if ($force == 11) {
+               $result = "FAIL";
+               $msg = "Force: FAIL ".$msg
+            } elsif ($force == 12) {
+               $result = "OK";
+               $msg = "Force: OK ".$msg
+            }
             # Log a FAIL message for this content router
-            my @tmp = ($ccr_name,$check_name,$chck_lng_nm,$result,$ccr_assoc{$ccr_name}->{cmsStatus},
-                       "Unable to get cache info for $location. response: ".$response->status_line);
+            my @tmp = ($ccr_name,$check_name,$chck_lng_nm,$result,
+                       $ccr_assoc{$ccr_name}->{cmsStatus},$msg);
             syslog(LOG_ERR, "hostname=%s check=%s name=\"%s\" result=%s status=%s msg=\"%s\"", @tmp);
          }
 			next;
@@ -449,7 +469,15 @@ sub help() {
    print "        5: OK - Cache healthy by all CRs\n";
    print "        6: FAIL - Cache offline but ONLINE or REPORTED in Traffic Ops.\n";
    print "        7: OK - Cache offline but ONLINE or REPORTED in Traffic Ops.\n";
-   print "        8: OK - For all CRs.\n";
+   print "        8: OK - For all Content Routers.\n";
+   print "        9: FAIL - Could not connect to Content Router API. Content Router is\n";
+   print "             ONLINE or REPORTED in Traffic Ops.\n";
+   print "        10: OK - Could not connect to Content Router API. Content Router is not\n";
+   print "             ONLINE or REPORTED in Traffic Ops.\n";
+   print "        11: FAIL - Could not get cache info for a location from Content Router\n";
+   print "             API. Content Router is ONLINE or REPORTED in Traffic Ops.\n";
+   print "        12: OK - Could not get cache info for a location Content Router API.\n";
+   print "             Content Router is not ONLINE or REPORTED in Traffic Ops.\n";
    print "-h   Print this message\n";
    print "-l   Debug level\n";
    print "-q   Don't post results to Traffic Ops.\n";
