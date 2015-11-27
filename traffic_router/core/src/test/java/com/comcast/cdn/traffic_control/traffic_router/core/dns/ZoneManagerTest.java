@@ -27,6 +27,7 @@ import java.net.UnknownHostException;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -48,6 +49,7 @@ import com.comcast.cdn.traffic_control.traffic_router.core.cache.Cache;
 import com.comcast.cdn.traffic_control.traffic_router.core.cache.Cache.DeliveryServiceReference;
 import com.comcast.cdn.traffic_control.traffic_router.core.cache.CacheLocation;
 import com.comcast.cdn.traffic_control.traffic_router.core.cache.CacheRegister;
+import com.comcast.cdn.traffic_control.traffic_router.core.cache.InetRecord;
 import com.comcast.cdn.traffic_control.traffic_router.core.ds.DeliveryService;
 import com.comcast.cdn.traffic_control.traffic_router.core.router.TrafficRouter;
 import com.comcast.cdn.traffic_control.traffic_router.core.router.TrafficRouterManager;
@@ -91,86 +93,44 @@ public class ZoneManagerTest {
 		builder = new DNSAccessRecord.Builder(1, InetAddress.getByName("192.168.12.34"));
 	}
 
-
 	@Test
 	public void testDynamicZoneCache() throws TextParseException, UnknownHostException {
 		TrafficRouter trafficRouter = trafficRouterManager.getTrafficRouter();
 		CacheRegister cacheRegister = trafficRouter.getCacheRegister();
-		Map<String, Collection<CacheLocation>> edgeLocations = new HashMap<String, Collection<CacheLocation>>();
-		Set<String> dnsLimited = new HashSet<String>();
 
-		for (Cache c : cacheRegister.getCacheMap().values()) {
-			for (DeliveryServiceReference dsr : c.getDeliveryServices()) {
-				final DeliveryService ds = cacheRegister.getDeliveryService(dsr.getDeliveryServiceId());
+		for (final DeliveryService ds : cacheRegister.getDeliveryServices().values()) {
+			if (!ds.isDns()) continue;
 
-				if (!ds.isDns()) continue;
-				final String edgeName = dsr.getFqdn() + ".";
+			final JSONArray domains = ds.getDomains();
 
-				if (ds.getMaxDnsIps() > 0) {
-					dnsLimited.add(edgeName);
-				}
-
-				if (!edgeLocations.containsKey(edgeName)) {
-					edgeLocations.put(edgeName, new HashSet<CacheLocation>());
-				}
+			for (int i = 0; i < domains.length(); i++) {
+				final String domain = domains.optString(i);
+				final Name edgeName = new Name(ZoneManager.getDnsRoutingName() + "." + domain + ".");
 
 				for (CacheLocation location : cacheRegister.getCacheLocations()) {
-					if (ds.isLocationAvailable(location)) {
-						final Collection<CacheLocation> locations = edgeLocations.get(edgeName);
-						locations.add(location);
-						edgeLocations.put(edgeName, locations);
-					}
-				}
-			}
-		}
+					final List<Cache> caches = trafficRouter.selectCachesByCZ(ds, location);
 
-		for (String name : edgeLocations.keySet()) {
-			for (CacheLocation location : edgeLocations.get(name)) {
-				// need to iterate through the CZF and submit a bunch of these into a job queue to run repeatedly/fast
-				final InetAddress source = netMap.get(location.getId());
-				final Name n = new Name(name);
-				final Map<Zone, Integer> zoneTracker = new HashMap<Zone, Integer>();
-				final Set<Zone> zones = new HashSet<Zone>();
-				final int seenThreshold = 5;
+					int p = 1;
 
-				while (true) {
-					final Zone zone = trafficRouter.getZone(n, Type.A, source, true, builder); // this should load the zone into the dynamicZoneCache
-					assertNotNull(zone);
-
-					if (!zoneTracker.containsKey(zone)) {
-						zoneTracker.put(zone, 1);
-					} else {
-						final int count = zoneTracker.get(zone);
-						zoneTracker.put(zone, count + 1);
-					}
-
-					if (!dnsLimited.contains(n.toString())) {
-						break;
-					}
-
-					/*
-					 * If we have limits on the number of records, continue building the cache
-					 */
-					boolean allSeen = true;
-
-					for (Integer count : zoneTracker.values()) {
-						if (count < seenThreshold) {
-							allSeen = false;
-							break;
+					if (ds.getMaxDnsIps() > 0 && !trafficRouter.isConsistentDNSRouting() && caches.size() > ds.getMaxDnsIps()) {
+						for (int c = caches.size(); c > (caches.size() - ds.getMaxDnsIps()); c--) {
+							p *= c;
 						}
 					}
 
-					if (allSeen) {
-						break;
+					final Set<Zone> zones = new HashSet<Zone>();
+					final InetAddress source = netMap.get(location.getId());
+
+					while (zones.size() != p) {
+						final Zone zone = trafficRouter.getZone(edgeName, Type.A, source, true, builder); // this should load the zone into the dynamicZoneCache
+						assertNotNull(zone);
+						zones.add(zone);
 					}
-				}
 
-				zones.addAll(zoneTracker.keySet());
-				//System.out.println("Generated " + zones.size() + " zone(s) for " + n.toString() + " for cache group " + location.getId());
-
-				for (int i = 0; i < 500; i++) {
-					final Zone cachedZone = trafficRouter.getZone(n, Type.A, source, true, builder); // this should be a cache hit
-					assertTrue(zones.contains(cachedZone));
+					for (int j = 0; j <= (p * 100); j++) {
+						final Zone zone = trafficRouter.getZone(edgeName, Type.A, source, true, builder);
+						assertTrue(zones.contains(zone));
+					}
 				}
 			}
 		}

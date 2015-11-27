@@ -24,6 +24,7 @@ import java.util.Random;
 import java.util.Set;
 
 import org.apache.commons.pool.ObjectPool;
+import org.apache.commons.pool.impl.GenericObjectPool;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.json.JSONTokener;
@@ -37,6 +38,7 @@ import com.comcast.cdn.traffic_control.traffic_router.core.cache.CacheLocation;
 import com.comcast.cdn.traffic_control.traffic_router.core.cache.CacheRegister;
 import com.comcast.cdn.traffic_control.traffic_router.core.dns.ZoneManager;
 import com.comcast.cdn.traffic_control.traffic_router.core.ds.DeliveryService;
+import com.comcast.cdn.traffic_control.traffic_router.core.hash.MD5HashFunctionPoolableObjectFactory;
 import com.comcast.cdn.traffic_control.traffic_router.core.loc.FederationRegistry;
 import com.comcast.cdn.traffic_control.traffic_router.core.loc.Geolocation;
 import com.comcast.cdn.traffic_control.traffic_router.core.loc.GeolocationService;
@@ -87,10 +89,13 @@ public class DnsRoutePerformanceTest {
 
         ZoneManager zoneManager = mock(ZoneManager.class);
 
+        MD5HashFunctionPoolableObjectFactory md5factory = new MD5HashFunctionPoolableObjectFactory();
+        GenericObjectPool pool = new GenericObjectPool(md5factory);
+
         whenNew(ZoneManager.class).withArguments(any(TrafficRouter.class), any(StatTracker.class), any(TrafficOpsUtils.class)).thenReturn(zoneManager);
 
         trafficRouter = new TrafficRouter(cacheRegister, mock(GeolocationService.class), mock(GeolocationService.class),
-            mock(ObjectPool.class), mock(StatTracker.class), mock(TrafficOpsUtils.class), mock(FederationRegistry.class));
+            pool, mock(StatTracker.class), mock(TrafficOpsUtils.class), mock(FederationRegistry.class));
 
         trafficRouter = spy(trafficRouter);
 

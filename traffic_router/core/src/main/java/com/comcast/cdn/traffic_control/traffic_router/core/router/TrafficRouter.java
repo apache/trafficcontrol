@@ -366,6 +366,10 @@ public class TrafficRouter {
 		return clientLocation;
 	}
 
+	public List<Cache> selectCachesByCZ(final DeliveryService ds, final CacheLocation cacheLocation) {
+		return selectCachesByCZ(ds, cacheLocation, null);
+	}
+
 	private List<Cache> selectCachesByCZ(final DeliveryService ds, final CacheLocation cacheLocation, final Track track) {
 		if (cacheLocation == null || !ds.isLocationAvailable(cacheLocation)) {
 			return null;
@@ -373,7 +377,7 @@ public class TrafficRouter {
 
 		final List<Cache> caches = selectCache(cacheLocation, ds);
 
-		if (caches != null) {
+		if (caches != null && track != null) {
 			track.setResult(ResultType.CZ);
 			track.setResultLocation(cacheLocation.getGeolocation());
 		}
