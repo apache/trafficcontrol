@@ -39,7 +39,7 @@ public class ZoneManagerUnitTest {
         PowerMockito.spy(ZoneManager.class);
         PowerMockito.doReturn("edge").when(ZoneManager.class, "getDnsRoutingName");
         PowerMockito.doNothing().when(ZoneManager.class, "initTopLevelDomain", cacheRegister);
-        PowerMockito.doNothing().when(ZoneManager.class, "initZoneCache", cacheRegister);
+        PowerMockito.doNothing().when(ZoneManager.class, "initZoneCache", trafficRouter);
 
         SignatureManager signatureManager = PowerMockito.mock(SignatureManager.class);
         whenNew(SignatureManager.class).withArguments(any(ZoneManager.class), any(CacheRegister.class), any(TrafficOpsUtils.class)).thenReturn(signatureManager);
