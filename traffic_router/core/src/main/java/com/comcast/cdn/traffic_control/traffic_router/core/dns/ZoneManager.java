@@ -91,6 +91,7 @@ public class ZoneManager extends Resolver {
 	private static LoadingCache<ZoneKey, Zone> zoneCache = null;
 	private static ScheduledExecutorService zoneMaintenanceExecutor = null;
 	private static ExecutorService zoneExecutor = null;
+	private static final int DEFAULT_PRIMER_LIMIT = 500;
 	private final StatTracker statTracker;
 
 	private static String zoneDirectory;
@@ -415,9 +416,11 @@ public class ZoneManager extends Resolver {
 				public void run() {
 					try {
 						final Zone zone = zc.get(signatureManager.generateZoneKey(name, list)); // cause the zone to be loaded into the new cache
+						final boolean primeDynCache = config.optBoolean("dynamic.cache.primer.enabled", true);
+						final int primerLimit = config.optInt("dynamic.cache.primer.limit", DEFAULT_PRIMER_LIMIT);
 
 						// prime the dynamic zone cache
-						if (ds != null && ds.isDns()) {
+						if (primeDynCache && ds != null && ds.isDns()) {
 							final DNSRequest request = new DNSRequest();
 							final Name edgeName = newName(getDnsRoutingName(), domain);
 							request.setHostname(edgeName.toString(true)); // Name.toString(true) - omit the trailing dot
@@ -440,13 +443,13 @@ public class ZoneManager extends Resolver {
 
 								final Set<List<InetRecord>> pset = new HashSet<List<InetRecord>>();
 
-								while (pset.size() != p) {
+								while (pset.size() < p && pset.size() < primerLimit) {
 									final List<InetRecord> records = tr.inetRecordsFromCaches(ds, caches, request);
 
 									if (!pset.contains(records)) {
-										LOGGER.debug("Priming " + ds.getId() + " @ " + cacheLocation.getId() + "; permutation " + (pset.size() + 1) + "/" + p);
 										fillDynamicZone(dzc, zone, edgeName, records, signatureManager.isDnssecEnabled());
 										pset.add(records);
+										LOGGER.debug("Primed " + ds.getId() + " @ " + cacheLocation.getId() + "; permutation " + pset.size() + "/" + p);
 									}
 								}
 							}
