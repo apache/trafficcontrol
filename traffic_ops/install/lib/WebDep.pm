@@ -62,7 +62,10 @@ sub getDeps {
 
 sub getSrcFileName {
 	my $self = shift;
-	return join( '/', $self->{source_dir}, $self->{filename} );
+	my @parts;
+	push @parts, $self->{source_dir} if $self->{source_dir} ne '';
+	push @parts, $self->{filename};
+	return join( '/', @parts );
 }
 
 sub getDestFileName {
@@ -70,35 +73,41 @@ sub getDestFileName {
 	return join( '/', $self->{final_dir}, $self->{filename} );
 }
 
-sub getCdnLoc {
+sub getDownloadContent {
 	my $self = shift;
-	my ( $response_body, $err ) = _getCdnLoc( $self->{cdn_location} );
+	my ( $response_body, $err ) = _getDownloadContent( $self->{cdn_location} );
 	return ( $response_body, $err );
 }
 
 sub getContent {
 	my $self = shift;
-	my ( $cdnloc, $err ) = $self->getCdnLoc();
+	my ( $content, $err ) = $self->getDownloadContent();
 	if ( defined $err ) {
 		die "$err\n";
 	}
 	my $srcfn = $self->getSrcFileName();
 	if ( !exists $self->{content} ) {
 		if ( $self->{compression} eq 'zip' ) {
-
-			#my $u = IO::Uncompress::Unzip->new( $cdnloc, Name => $srcfn ) or die "IO::Uncompress::Unzip failed: $UnzipError\n";
-			my $u = new IO::Uncompress::Unzip($cdnloc) or die "IO::Uncompress::Unzip failed: $UnzipError\n";
-			my $buffer;
-			my $content = "";
-			while ( $u->read($buffer) > 0 ) {
-				$content .= $buffer;
+			print "Unzipping $srcfn\n";
+			my $u = IO::Uncompress::Unzip->new( \$content ) or die "IO::Uncompress::Unzip failed: $UnzipError\n";
+			my $found;
+			while ( $u->nextStream() > 0 && !$u->eof() ) {
+				my $name = $u->getHeaderInfo()->{Name};
+				if ( $name eq $srcfn ) {
+					$found = $name;
+					last;
+				}
 			}
-			$self->{content} = $content;
+			if ( !defined $found ) {
+				die "$srcfn not found in " . $self->{cdn_location} . "\n";
+			}
+
+			undef $/;    # slurp mode
+			$content = <$u>;
+			$u->close();
 		}
-		else {
-			# no compression
-			$self->{content} = $cdnloc;
-		}
+
+		$self->{content} = $content;
 	}
 	return $self->{content};
 }
@@ -129,21 +138,17 @@ sub update {
 
 	# download archive
 	if ( $self->needsUpdating() ) {
-		if ( -f $destfn ) {
-			$action = "Replaced";
-		}
-		else {
-			$action = "Created";
-			my $final_dir = $self->{final_dir};
+		$action = ( -f $destfn ) ? "Replaced" : "Created";
 
-			if ( !-d $final_dir ) {
-				print "Making dir: $final_dir\n";
-				mkpath($final_dir);
-			}
-			open my $ofn, '>', $destfn or die "Can't write to $destfn\n";
-			print $ofn, $self->getContent();
-			close $ofn;
+		my $final_dir = $self->{final_dir};
+
+		if ( !-d $final_dir ) {
+			print "Making dir: $final_dir\n";
+			mkpath($final_dir);
 		}
+		open my $ofh, '>', $destfn or die "Can't write to $destfn\n";
+		print $ofh $self->getContent();
+		close $ofh;
 	}
 	else {
 		$action = "Kept";
@@ -204,19 +209,19 @@ sub curlMe {
 
 {
 	# cache cdn locs -- some files extracted from same downloaded archive
-	my %cdn_loc_for;
+	my %content_for;
 
-	sub _getCdnLoc {
+	sub _getDownloadContent {
 		my $cdnloc = shift;
 		my $err;
-		if ( !exists $cdn_loc_for{$cdnloc} ) {
+		if ( !exists $content_for{$cdnloc} ) {
 			my $response_body;
 			( $response_body, $err ) = curlMe($cdnloc);
-			$cdn_loc_for{$cdnloc} = $response_body;
+			$content_for{$cdnloc} = $response_body;
 		}
 
 		# could be undef indicating previous error
-		return ( $cdn_loc_for{$cdnloc}, $err );
+		return ( $content_for{$cdnloc}, $err );
 	}
 }
 
