@@ -75,11 +75,11 @@ alert(alertmsg);
 						 </div>
 						 <div style="margin-top:10px;padding:10px;">
 						   <a href="#" id="reset_button" class="button">Reset Password</a>
-						   %= submit_button 'Save', id => 'save_button', class=> 'button', style=> 'margin-left:250px;'
+						   %= submit_button 'Save', id => 'save_button', class=> 'button', style=> 'margin-left:200px;'
+						   <a href="#" id="close_button" class="button">Close</a>
 						 </div>
-						   <button id="close_button" class="button">Close</button>
 				   </div>
-				</form>
+			</form>
 
               <script type="text/javascript">
 

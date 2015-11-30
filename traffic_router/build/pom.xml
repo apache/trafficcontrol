@@ -24,7 +24,7 @@
 	<parent>
 		<groupId>com.comcast.cdn.traffic_control.traffic_router</groupId>
 		<artifactId>traffic_router</artifactId>
-		<version>1.2.1</version>
+		<version>${env.TRAFFIC_CONTROL_VERSION}</version>
 	</parent>
 
 	<scm>
@@ -129,6 +129,21 @@
 				<artifactId>maven-enforcer-plugin</artifactId>
 				<version>1.4.1</version>
 				<executions>
+					<execution>
+						<phase>validate</phase>
+						<id>enforce-environment-variable-is-set0</id>
+						<goals>
+							<goal>enforce</goal>
+						</goals>
+						<configuration>
+							<rules>
+								<requireEnvironmentVariable>
+									<variableName>TRAFFIC_CONTROL_VERSION</variableName>
+								</requireEnvironmentVariable>
+							</rules>
+							<fail>true</fail>
+						</configuration>
+					</execution>
 					<execution>
 						<phase>package</phase>
 						<id>enforce-environment-variable-is-set</id>

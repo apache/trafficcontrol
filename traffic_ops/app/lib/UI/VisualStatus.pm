@@ -92,15 +92,21 @@ sub graphs_redis {
 sub daily_summary {
 	my $self = shift;
 
+	my $pparam =
+	$self->db->resultset('ProfileParameter')
+		->search( { -and => [ 'parameter.name' => 'daily_bw_url', 'profile.name' => 'GLOBAL' ] }, { prefetch => [ 'parameter', 'profile' ] } )->single();
+	my $bw_url = defined($pparam) ? $pparam->parameter->value : undef;
+	$pparam =
+		$self->db->resultset('ProfileParameter')
+		->search( { -and => [ 'parameter.name' => 'daily_served_url', 'profile.name' => 'GLOBAL' ] }, { prefetch => [ 'parameter', 'profile' ] } )->single();
+	my $served_url = defined($pparam) ? $pparam->parameter->value : undef;
+
 	my @cdn_names = $self->db->resultset('Server')->search({ 'type.name' => 'EDGE' }, { prefetch => [ 'cdn', 'type' ], group_by => 'cdn.name' } )->get_column('cdn.name')->all();
 
-	my $tool_instance =
-		$self->db->resultset('Parameter')->search( { -and => [ name => 'tm.instance_name', config_file => 'global' ] } )->get_column('value')->single();
-
 	$self->stash(
-		cdn_names     => \@cdn_names,
-		tool_instance => $tool_instance,
-		graph_page    => 1,
+		daily_bw_url => $bw_url,
+		daily_served_url => $served_url,
+		cdn_names => \@cdn_names
 	);
 
 	&navbarpage($self);
