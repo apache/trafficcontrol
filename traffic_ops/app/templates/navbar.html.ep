@@ -28,7 +28,7 @@
 	  	</li>
 	  	<li><a id="nav-ds" href="/delivery_services">Delivery Services</a>
                         <ul>
-	  		                    <li><a href="/federation">Federation</a></li>
+	  		                    <li><a href="/federation">Federations</a></li>
                         </ul>
         </li>
 	  	<li><a id="nav-s" href="/servers">Servers</a>
