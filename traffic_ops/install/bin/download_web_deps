@@ -25,12 +25,11 @@ use WebDep;
 
 my @deps = WebDep->getDeps("$Bin/web_deps.txt");
 
-my $errors = 0;
+my $errors   = 0;
+my $warnings = 0;
 foreach my $dep (@deps) {
 	my $fn  = $dep->getDestFileName();
 	my $src = $dep->getSrcFileName();
-
-	print "Getting $fn from $src\n";
 
 	# download source to compare with current version
 	my ( $action, $err ) = $dep->update();
@@ -41,6 +40,10 @@ foreach my $dep (@deps) {
 			# count errors when no file and can't be fetched
 			$errors++;
 		}
+		else {
+			# file exists but can't be updated
+			$warnings++;
+		}
 		next;
 	}
 	else {
@@ -49,6 +52,9 @@ foreach my $dep (@deps) {
 	}
 }
 
+if ($warnings) {
+	print "WARNING: Some files exist but can't be updated\n";
+}
 if ($errors) {
 	print "FATAL: Unable to update one or more files.\n";
 	exit 1;

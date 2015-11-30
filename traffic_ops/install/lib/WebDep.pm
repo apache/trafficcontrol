@@ -88,7 +88,8 @@ sub getContent {
 	my $srcfn = $self->getSrcFileName();
 	if ( !exists $self->{content} ) {
 		if ( $self->{compression} eq 'zip' ) {
-			print "Unzipping $srcfn\n";
+
+			#print "Unzipping $srcfn\n";
 			my $u = IO::Uncompress::Unzip->new( \$content ) or die "IO::Uncompress::Unzip failed: $UnzipError\n";
 			my $found;
 			while ( $u->nextStream() > 0 && !$u->eof() ) {
@@ -116,17 +117,14 @@ sub needsUpdating {
 	my $self = shift;
 	my $fn   = $self->getDestFileName();
 
-	if ( -f $fn ) {
+	# checksum and compare
+	open my $fh, '<', $fn or die "Can't open existing file: $fn\n";
+	my $md5_existing = md5_hex(<$fh>);
+	close $fh;
 
-		# checksum and compare
-		open my $fh, '<', $fn or die "Can't open existing file: $fn\n";
-		my $md5_existing = md5_hex(<$fh>);
-		close $fh;
-
-		my $md5_new = md5_hex( $self->getContent() );
-		return ( $md5_new ne $md5_existing );
-	}
-	return 1;
+	my $md5_new       = md5_hex( $self->getContent() );
+	my $needsUpdating = ( $md5_new ne $md5_existing );
+	return $needsUpdating;
 }
 
 sub update {
@@ -137,21 +135,29 @@ sub update {
 	my $action = "";
 
 	# download archive
-	if ( $self->needsUpdating() ) {
-		$action = ( -f $destfn ) ? "Replaced" : "Created";
-
-		my $final_dir = $self->{final_dir};
-
-		if ( !-d $final_dir ) {
-			print "Making dir: $final_dir\n";
-			mkpath($final_dir);
+	if ( -f $destfn ) {
+		if ( !$self->needsUpdating() ) {
+			$action = "Kept";
+			return ( $action, $err );
 		}
-		open my $ofh, '>', $destfn or die "Can't write to $destfn\n";
-		print $ofh $self->getContent();
-		close $ofh;
+
+		# exists but needs to be replaced
+		$action = "Replaced";
 	}
 	else {
-		$action = "Kept";
+		$action = "Created";
+	}
+	my $final_dir = $self->{final_dir};
+
+	if ( !-d $final_dir ) {
+		print "Making dir: $final_dir\n";
+		mkpath($final_dir);
+	}
+	my $content = $self->getContent();
+	open my $ofh, '>', $destfn or $err = "Can't write to $destfn";
+	if ( !defined $err ) {
+		print $ofh $content;
+		close $ofh;
 	}
 	return ( $action, $err );
 }
