@@ -106,8 +106,9 @@ The following tabs are available in the menu at the top of the Traffic Ops user 
   +--------------------+-----------------------------------------------------------------------------------------------------------------------------------+
   | Invalidate Content | Invalidate or purge content from the CDN. See :ref:`rl-purge`                                                                     |
   +--------------------+-----------------------------------------------------------------------------------------------------------------------------------+
-  | Manage DNSSEC keys | Activate or Deactivate DNSSEC for a CDN.  Manage DNSSEC keys for a CDN                                                            |
+  | Manage DNSSEC keys | Manage DNSSEC Keys for a chosen CDN.                                                                                              |
   +--------------------+-----------------------------------------------------------------------------------------------------------------------------------+
+  
   
 * **Misc**
 
@@ -990,15 +991,13 @@ Once these fields have been correctly entered, a user can click Generate KSK.  T
 
 Additionally, Traffic Ops also performs some systematic management of DNSSEC keys.  This management is necessary to help keep keys in sync for Delivery Services in a CDN as well as to make sure keys do not expire without human intervention. 
 
-  **Generation of keys for new Delivery Services**
+**Generation of keys for new Delivery Services**
   
-  Each time the DNSSEC Keys `API <../development/traffic_ops_api/v12/cdn.html#dnssec-keys>`_ is accessed by a client to get keys for a CDN, Traffic Ops checks all Delivery Services for the CDN and makes sure that DNSSEC Keys exist and are not expired for that Delivery Service.  If keys do not yet exist for that Delivery Service then Traffic Ops will create the keys, store them in `Traffic Vault <../overview/traffic_vault.html>`_, and return them along with all other keys for the CDN. 
+If a new Delivery Service is created and added to a CDN that has DNSSEC enabled, Traffic Ops will create DNSSEC keys for the Delivery Service and store them in Traffic Vault.
 
-  Furthermore, if a new Delivery Service is created and added to a CDN that has DNSSEC enabled, Traffic Ops will create DNSSEC keys for the Delivery Service and store them in Traffic Vault.
+**Regeneration of expiring keys for a Delivery Service**  
 
-  **Regeneration of expiring keys for a Delivery Service**  
-
-  Each time the DNSSEC Keys `API <../development/traffic_ops_api/v12/cdn.html#dnssec-keys>`_ is accessed by a client to get keys for a CDN, Traffic Ops checks to make sure the keys are not expired before returning them.  If keys are expired for a Delivery Service traffic ops will regenerate new keys and store them in Traffic Vault before returning them.  This process is the same for the CDN TLD ZSK, however Traffic Ops will not re-generate the CDN TLD KSK systematically.  The reason is that when a KSK is regenerated for the CDN TLD then a new DS Record will also be created.  The new DS Record needs to be added to the parent zone before Traffic Router attempts to sign with the new KSK in order for DNSSEC to work correctly.  Therefore, management of the KSK needs to be a manual process. 
+Traffic Ops has a process, controlled by cron, to check for expired or expiring keys and re-generate them.  The process runs at 5 minute intervals to check and see if keys are expired or close to expiring (withing 10 minutes by default).  If keys are expired for a Delivery Service, traffic ops will regenerate new keys and store them in Traffic Vault.  This process is the same for the CDN TLD ZSK, however Traffic Ops will not re-generate the CDN TLD KSK systematically.  The reason is that when a KSK is regenerated for the CDN TLD then a new DS Record will also be created.  The new DS Record needs to be added to the parent zone before Traffic Router attempts to sign with the new KSK in order for DNSSEC to work correctly.  Therefore, management of the KSK needs to be a manual process. 
 
 
   
