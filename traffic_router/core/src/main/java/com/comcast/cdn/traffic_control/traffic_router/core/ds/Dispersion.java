@@ -33,10 +33,15 @@ public class Dispersion {
 	private int limit = DEFAULT_LIMIT;
 	private boolean shuffled = DEFAULT_SHUFFLED;
 
-	public Dispersion(final JSONObject jo) {
+	public Dispersion(final JSONObject dsJo) {
+		final JSONObject jo = dsJo.optJSONObject("dispersion");
+
 		if (jo != null) {
-			this.setLimit(jo.optInt("limit", DEFAULT_LIMIT));
+			this.setLimit(jo.optInt("limit", DEFAULT_LIMIT)); // optInt to avoid JSONException
 			this.setShuffled(jo.optBoolean("shuffled", DEFAULT_SHUFFLED));
+		} else if (dsJo.has("maxDnsIpsForLocation")) {
+			// if no specific dispersion, use maxDnsIpsForLocation (should be DNS DSs only)
+			this.setLimit(dsJo.optInt("maxDnsIpsForLocation", DEFAULT_LIMIT));
 		}
 	}
 
