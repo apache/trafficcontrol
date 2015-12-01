@@ -59,7 +59,13 @@ The following tabs are available in the menu at the top of the Traffic Ops user 
 
 * **Delivery Services**
 
-  The main Delivery Service table. This is where you Create/Read/Update/Delete Delivery Services of all types. There are currently no sub menus for this tab.
+  The main Delivery Service table. This is where you Create/Read/Update/Delete Delivery Services of all types. Hover over to get the following sub option:
+
+  +-------------+--------------------------------------+
+  |    Option   |             Description              |
+  +=============+======================================+
+  | Federations | Add/Edit/Delete Federation Mappings. |
+  +-------------+--------------------------------------+
 
 * **Servers**
 
@@ -194,11 +200,12 @@ The Graph View shows a live view of the last 24 hours of bits per seconds served
 
 Server Checks
 +++++++++++++
-Server Checks are .. 
+The server checks page is inteded to give an overview of the Servers managed by Traffic Control as well as their status. This data comes from `Traffic Ops extensions <traffic_ops_extensions.html>`_.
 
 
 Daily Summary
 +++++++++++++
+Displays daily max gbps and bytes served for all CDNs.  In order for the graphs to appear, the 'daily_bw_url' and 'daily_served_url' parameters need to be be created, assigned to the global profile, and have a value of a grafana graph.  For more information on configuring grafana, see the `Traffic Stats <traffic_stats.html>`_  section.
 
 .. _rl-server:
 
@@ -389,6 +396,12 @@ One of the most important settings when creating the delivery service is the sel
 +-----------------+----------------------------------------------------------------------------------------------------------------------------------------------------------------+
 
 .. Note:: Once created, the Traffic Ops user interface does not allow you to change the delivery service type; the drop down is greyed out. There are many things that can go wrong when changing the type, and it is safer to delete the delivery service, and recreate it.
+
+Federations
++++++++++++
+  Federations allow for other (federated) CDNs (at a different ISP, MSO, etc) to add a list of resolvers and a CNAME to Traffic Ops.  When a request is made from one of their clients, Traffic Router will return the CNAME.  This allows the federated CDN to serve the content without the content provider changing the URL, or having to manage multiple URLs.
+
+  Before adding a federation in the Traffic Ops UI, a user with the federations role needs to be created.  This user will be assigned to the federation and will be able to add resolvers to the federation via the Traffic Ops `Federation API <../development/traffic_ops_api/v12/federation.html>`_. 
 
 .. index::
   Header Rewrite
