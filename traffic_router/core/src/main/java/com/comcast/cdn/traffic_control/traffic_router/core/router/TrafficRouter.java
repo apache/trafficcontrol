@@ -75,6 +75,7 @@ public class TrafficRouter {
 	private final GeolocationService geolocationService6;
 	private final ObjectPool hashFunctionPool;
 	private final FederationRegistry federationRegistry;
+	private final boolean consistentDNSRouting;
 
 	private final Random random = new Random(System.nanoTime());
 	private Set<String> requestHeaders = new HashSet<String>();
@@ -91,6 +92,7 @@ public class TrafficRouter {
 		this.geolocationService6 = geolocationService6;
 		this.hashFunctionPool = hashFunctionPool;
 		this.federationRegistry = federationRegistry;
+		this.consistentDNSRouting = cr.getConfig().optBoolean("consistent.dns.routing", false); // previous/default behavior
 		this.zoneManager = new ZoneManager(this, statTracker, trafficOpsUtils);
 	}
 
@@ -280,7 +282,7 @@ public class TrafficRouter {
 
 		if (caches != null) {
 			track.setResult(ResultType.CZ);
-			result.setAddresses(inetRecordsFromCaches(ds, caches));
+			result.setAddresses(inetRecordsFromCaches(ds, caches, request));
 			return result;
 		}
 
@@ -307,7 +309,7 @@ public class TrafficRouter {
 
 		if (caches != null) {
 			track.setResult(ResultType.GEO);
-			result.setAddresses(inetRecordsFromCaches(ds, caches));
+			result.setAddresses(inetRecordsFromCaches(ds, caches, request));
 		} else {
 			track.setResult(ResultType.MISS);
 			result.setAddresses(ds.getFailureDnsResponse(request, track));
@@ -316,32 +318,42 @@ public class TrafficRouter {
 		return result;
 	}
 
-	private List<InetRecord> inetRecordsFromCaches(final DeliveryService ds, final List<Cache> caches) {
+	public List<InetRecord> inetRecordsFromCaches(final DeliveryService ds, final List<Cache> caches, final Request request) {
 		final List<InetRecord> addresses = new ArrayList<InetRecord>();
 		final int maxDnsIps = ds.getMaxDnsIps();
+		List<Cache> selectedCaches;
 
-		/*
-		 * We also shuffle in NameServer when adding Records to the Message prior
-		 * to sending it out, as the Records are sorted later when we fill the
-		 * dynamic zone if DNSSEC is enabled. We shuffle here prior to pruning
-		 * for maxDnsIps so that we ensure we are spreading load across all caches
-		 * assigned to this delivery service.
-		 */
-		if (maxDnsIps > 0) {
+		if (maxDnsIps > 0 && isConsistentDNSRouting()) { // only consistent hash if we must
+			final SortedMap<Double, Cache> cacheMap = consistentHash(caches, request.getHostname());
+			final Dispersion dispersion = ds.getDispersion();
+			selectedCaches = dispersion.getCacheList(cacheMap);
+		} else if (maxDnsIps > 0) {
+			/*
+			 * We also shuffle in NameServer when adding Records to the Message prior
+			 * to sending it out, as the Records are sorted later when we fill the
+			 * dynamic zone if DNSSEC is enabled. We shuffle here prior to pruning
+			 * for maxDnsIps so that we ensure we are spreading load across all caches
+			 * assigned to this delivery service.
+			*/
 			Collections.shuffle(caches, random);
+
+			selectedCaches = new ArrayList<Cache>();
+
+			for (final Cache cache : caches) {
+				selectedCaches.add(cache);
+
+				if (selectedCaches.size() >= maxDnsIps) {
+					break;
+				}
+			}
+		} else {
+			selectedCaches = caches;
 		}
 
-		int i = 0;
-
-		for (final Cache cache : caches) {
-			if (maxDnsIps!=0 && i >= maxDnsIps) {
-				break;
-			}
-
-			i++;
-
+		for (final Cache cache : selectedCaches) {
 			addresses.addAll(cache.getIpAddresses(ds.getTtls(), zoneManager, ds.isIp6RoutingEnabled()));
 		}
+
 		return addresses;
 	}
 
@@ -356,6 +368,10 @@ public class TrafficRouter {
 		return clientLocation;
 	}
 
+	public List<Cache> selectCachesByCZ(final DeliveryService ds, final CacheLocation cacheLocation) {
+		return selectCachesByCZ(ds, cacheLocation, null);
+	}
+
 	private List<Cache> selectCachesByCZ(final DeliveryService ds, final CacheLocation cacheLocation, final Track track) {
 		if (cacheLocation == null || !ds.isLocationAvailable(cacheLocation)) {
 			return null;
@@ -363,7 +379,7 @@ public class TrafficRouter {
 
 		final List<Cache> caches = selectCache(cacheLocation, ds);
 
-		if (caches != null) {
+		if (caches != null && track != null) {
 			track.setResult(ResultType.CZ);
 			track.setResultLocation(cacheLocation.getGeolocation());
 		}
@@ -620,5 +636,9 @@ public class TrafficRouter {
 
 	public Set<String> getRequestHeaders() {
 		return requestHeaders;
+	}
+
+	public boolean isConsistentDNSRouting() {
+		return consistentDNSRouting;
 	}
 }

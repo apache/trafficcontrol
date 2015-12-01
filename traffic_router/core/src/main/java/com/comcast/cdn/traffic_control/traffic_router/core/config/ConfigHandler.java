@@ -284,16 +284,13 @@ public class ConfigHandler {
 				final JSONObject matchset = matchsets.getJSONObject(i);
 				final String protocol = matchset.getString("protocol");
 
-				if ("DNS".equals(protocol)) {
-					isDns = true;
-				}
-
 				final DeliveryServiceMatcher deliveryServiceMatcher = new DeliveryServiceMatcher(ds);
 
 				if ("HTTP".equals(protocol)) {
 					httpServiceMatchers.add(deliveryServiceMatcher);
 				} else if ("DNS".equals(protocol)) {
 					dnsServiceMatchers.add(deliveryServiceMatcher);
+					isDns = true;
 				}
 
 				final JSONArray list = matchset.getJSONArray("matchlist");
