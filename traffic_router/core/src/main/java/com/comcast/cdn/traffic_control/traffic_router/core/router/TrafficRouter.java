@@ -321,7 +321,7 @@ public class TrafficRouter {
 	public List<InetRecord> inetRecordsFromCaches(final DeliveryService ds, final List<Cache> caches, final Request request) {
 		final List<InetRecord> addresses = new ArrayList<InetRecord>();
 		final int maxDnsIps = ds.getMaxDnsIps();
-		List<Cache> selectedCaches = new ArrayList<Cache>();
+		List<Cache> selectedCaches;
 
 		if (maxDnsIps > 0 && isConsistentDNSRouting()) { // only consistent hash if we must
 			final SortedMap<Double, Cache> cacheMap = consistentHash(caches, request.getHostname());
@@ -336,6 +336,8 @@ public class TrafficRouter {
 			 * assigned to this delivery service.
 			*/
 			Collections.shuffle(caches, random);
+
+			selectedCaches = new ArrayList<Cache>();
 
 			for (final Cache cache : caches) {
 				selectedCaches.add(cache);
