@@ -24,8 +24,6 @@ import java.io.File;
 import java.io.FileReader;
 import java.math.BigInteger;
 import java.net.InetAddress;
-import java.net.UnknownHostException;
-import java.security.NoSuchAlgorithmException;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -92,7 +90,7 @@ public class ZoneManagerTest {
 	}
 
 	@Test
-	public void testDynamicZoneCache() throws TextParseException, UnknownHostException, NoSuchAlgorithmException {
+	public void testDynamicZoneCache() throws TextParseException {
 		TrafficRouter trafficRouter = trafficRouterManager.getTrafficRouter();
 		CacheRegister cacheRegister = trafficRouter.getCacheRegister();
 		ZoneManager zoneManager = trafficRouter.getZoneManager();
