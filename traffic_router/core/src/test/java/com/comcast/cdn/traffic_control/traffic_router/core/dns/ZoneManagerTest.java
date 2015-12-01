@@ -22,9 +22,10 @@ import static org.junit.Assert.assertTrue;
 
 import java.io.File;
 import java.io.FileReader;
+import java.math.BigInteger;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
-import java.util.Collection;
+import java.security.NoSuchAlgorithmException;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -37,7 +38,6 @@ import org.json.JSONObject;
 import org.json.JSONTokener;
 import org.junit.Before;
 import org.junit.BeforeClass;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.springframework.context.ApplicationContext;
 import org.xbill.DNS.Name;
@@ -47,13 +47,12 @@ import org.xbill.DNS.Zone;
 
 import com.comcast.cdn.traffic_control.traffic_router.core.TestBase;
 import com.comcast.cdn.traffic_control.traffic_router.core.cache.Cache;
-import com.comcast.cdn.traffic_control.traffic_router.core.cache.Cache.DeliveryServiceReference;
 import com.comcast.cdn.traffic_control.traffic_router.core.cache.CacheLocation;
 import com.comcast.cdn.traffic_control.traffic_router.core.cache.CacheRegister;
-import com.comcast.cdn.traffic_control.traffic_router.core.cache.InetRecord;
 import com.comcast.cdn.traffic_control.traffic_router.core.ds.DeliveryService;
 import com.comcast.cdn.traffic_control.traffic_router.core.router.TrafficRouter;
 import com.comcast.cdn.traffic_control.traffic_router.core.router.TrafficRouterManager;
+import com.google.common.cache.CacheStats;
 import com.google.common.net.InetAddresses;
 
 public class ZoneManagerTest {
@@ -62,7 +61,6 @@ public class ZoneManagerTest {
 	private TrafficRouterManager trafficRouterManager;
 	private String defaultDnsRoutingName;
 	private Map<String, InetAddress> netMap = new HashMap<String, InetAddress>();
-	private DNSAccessRecord.Builder builder;
 
 	@BeforeClass
 	public static void setUpBeforeClass() throws Exception {
@@ -91,18 +89,18 @@ public class ZoneManagerTest {
 			netMap.put(loc, ip);
 		}
 
-		builder = new DNSAccessRecord.Builder(1, InetAddress.getByName("192.168.12.34"));
 	}
 
 	@Test
-	@Ignore
-	public void testDynamicZoneCache() throws TextParseException, UnknownHostException {
-		// note - disabled for now until we gain consensus on how we want to treat and test large permutations
+	public void testDynamicZoneCache() throws TextParseException, UnknownHostException, NoSuchAlgorithmException {
 		TrafficRouter trafficRouter = trafficRouterManager.getTrafficRouter();
 		CacheRegister cacheRegister = trafficRouter.getCacheRegister();
+		ZoneManager zoneManager = trafficRouter.getZoneManager();
 
 		for (final DeliveryService ds : cacheRegister.getDeliveryServices().values()) {
-			if (!ds.isDns()) continue;
+			if (!ds.isDns()) {
+				continue;
+			}
 
 			final JSONArray domains = ds.getDomains();
 
@@ -117,30 +115,52 @@ public class ZoneManagerTest {
 						continue;
 					}
 
-					int p = 1;
+					final InetAddress source = netMap.get(location.getId());
+					final DNSAccessRecord.Builder builder = new DNSAccessRecord.Builder(1, source);
+					final Set<Zone> zones = new HashSet<Zone>();
+					final int maxDnsIps = ds.getMaxDnsIps();
+					long combinations = 1;
 
-					if (ds.getMaxDnsIps() > 0 && !trafficRouter.isConsistentDNSRouting() && caches.size() > ds.getMaxDnsIps()) {
-						for (int c = caches.size(); c > (caches.size() - ds.getMaxDnsIps()); c--) {
-							p *= c;
+					if (maxDnsIps > 0 && !trafficRouter.isConsistentDNSRouting() && caches.size() > maxDnsIps) {
+						final BigInteger top = fact(caches.size());
+						final BigInteger f = fact(caches.size() - maxDnsIps);
+						final BigInteger s = fact(maxDnsIps);
+
+						combinations = top.divide(f.multiply(s)).longValue();
+						int c = 0;
+
+						while (c < (combinations * 100)) {
+							final Zone zone = trafficRouter.getZone(edgeName, Type.A, source, true, builder); // this should load the zone into the dynamicZoneCache if not already there
+							assertNotNull(zone);
+							zones.add(zone);
+							c++;
 						}
 					}
 
-					final Set<Zone> zones = new HashSet<Zone>();
-					final InetAddress source = netMap.get(location.getId());
+					final CacheStats cacheStats = zoneManager.getDynamicCacheStats();
 
-					while (zones.size() != p) {
-						LOGGER.fatal(edgeName + " " + zones.size() + "/" + p + "/" + location.getId() + "/" + caches.size());
-						final Zone zone = trafficRouter.getZone(edgeName, Type.A, source, true, builder); // this should load the zone into the dynamicZoneCache
-						assertNotNull(zone);
-						zones.add(zone);
-					}
-
-					for (int j = 0; j <= (p * 100); j++) {
+					for (int j = 0; j <= (combinations * 100); j++) {
+						final long missCount = new Long(cacheStats.missCount());
 						final Zone zone = trafficRouter.getZone(edgeName, Type.A, source, true, builder);
-						assertTrue(zones.contains(zone));
+						assertNotNull(zone);
+						assertEquals(missCount, cacheStats.missCount()); // should always be a cache hit so these should remain the same
+
+						if (!zones.isEmpty()) {
+							assertTrue(zones.contains(zone));
+						}
 					}
 				}
 			}
 		}
+	}
+
+	private BigInteger fact(final int n) {
+		BigInteger p = new BigInteger("1");
+
+		for (long c = n; c > 0; c--) {
+			p = p.multiply(BigInteger.valueOf(c));
+		}
+
+		return p;
 	}
 }
