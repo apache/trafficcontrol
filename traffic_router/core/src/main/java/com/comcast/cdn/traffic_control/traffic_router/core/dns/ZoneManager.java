@@ -27,9 +27,11 @@ import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
@@ -37,7 +39,6 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
-import com.google.common.cache.CacheStats;
 import org.apache.commons.io.IOUtils;
 import org.apache.log4j.Logger;
 import org.json.JSONArray;
@@ -59,6 +60,7 @@ import org.xbill.DNS.Zone;
 
 import com.comcast.cdn.traffic_control.traffic_router.core.cache.Cache;
 import com.comcast.cdn.traffic_control.traffic_router.core.cache.Cache.DeliveryServiceReference;
+import com.comcast.cdn.traffic_control.traffic_router.core.cache.CacheLocation;
 import com.comcast.cdn.traffic_control.traffic_router.core.cache.CacheRegister;
 import com.comcast.cdn.traffic_control.traffic_router.core.cache.InetRecord;
 import com.comcast.cdn.traffic_control.traffic_router.core.cache.Resolver;
@@ -67,11 +69,12 @@ import com.comcast.cdn.traffic_control.traffic_router.core.request.DNSRequest;
 import com.comcast.cdn.traffic_control.traffic_router.core.router.DNSRouteResult;
 import com.comcast.cdn.traffic_control.traffic_router.core.router.StatTracker;
 import com.comcast.cdn.traffic_control.traffic_router.core.router.StatTracker.Track;
-import com.comcast.cdn.traffic_control.traffic_router.core.util.TrafficOpsUtils;
 import com.comcast.cdn.traffic_control.traffic_router.core.router.TrafficRouter;
+import com.comcast.cdn.traffic_control.traffic_router.core.util.TrafficOpsUtils;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheBuilderSpec;
 import com.google.common.cache.CacheLoader;
+import com.google.common.cache.CacheStats;
 import com.google.common.cache.LoadingCache;
 import com.google.common.cache.RemovalListener;
 import com.google.common.cache.RemovalNotification;
@@ -88,6 +91,7 @@ public class ZoneManager extends Resolver {
 	private static LoadingCache<ZoneKey, Zone> zoneCache = null;
 	private static ScheduledExecutorService zoneMaintenanceExecutor = null;
 	private static ExecutorService zoneExecutor = null;
+	private static final int DEFAULT_PRIMER_LIMIT = 500;
 	private final StatTracker statTracker;
 
 	private static String zoneDirectory;
@@ -103,7 +107,7 @@ public class ZoneManager extends Resolver {
 	public ZoneManager(final TrafficRouter tr, final StatTracker statTracker, final TrafficOpsUtils trafficOpsUtils) throws IOException {
 		initTopLevelDomain(tr.getCacheRegister());
 		initSignatureManager(tr.getCacheRegister(), trafficOpsUtils);
-		initZoneCache(tr.getCacheRegister());
+		initZoneCache(tr);
 		this.trafficRouter = tr;
 		this.statTracker = statTracker;
 	}
@@ -114,8 +118,8 @@ public class ZoneManager extends Resolver {
 		signatureManager.destroy();
 	}
 
-	protected void rebuildZoneCache(final CacheRegister cacheRegister) {
-		initZoneCache(cacheRegister);
+	protected void rebuildZoneCache() {
+		initZoneCache(trafficRouter);
 	}
 
 	@SuppressWarnings("PMD.UseStringBufferForStringAppends")
@@ -134,8 +138,9 @@ public class ZoneManager extends Resolver {
 		ZoneManager.signatureManager = sm;
 	}
 
-	protected static void initZoneCache(final CacheRegister cacheRegister) {
+	protected static void initZoneCache(final TrafficRouter tr) {
 		synchronized(ZoneManager.class) {
+			final CacheRegister cacheRegister = tr.getCacheRegister();
 			final JSONObject config = cacheRegister.getConfig();
 
 			int poolSize = 1;
@@ -164,7 +169,7 @@ public class ZoneManager extends Resolver {
 
 			try {
 				LOGGER.info("Generating zone data");
-				generateZones(cacheRegister, zc, initExecutor);
+				generateZones(tr, zc, dzc, initExecutor);
 				initExecutor.shutdown();
 				initExecutor.awaitTermination(5, TimeUnit.MINUTES);
 				LOGGER.info("Zone generation complete");
@@ -271,7 +276,7 @@ public class ZoneManager extends Resolver {
 				final boolean writeZone = (cacheType == ZoneCacheType.STATIC) ? true : false;
 
 				public Zone load(final ZoneKey zoneKey) throws IOException, GeneralSecurityException {
-					LOGGER.info("loading zone " + zoneKey.getName());
+					LOGGER.info("loading " + cacheType + " zone " + zoneKey.getName());
 					return loadZone(zoneKey, writeZone);
 				}
 
@@ -309,7 +314,8 @@ public class ZoneManager extends Resolver {
 		return zone;
 	}
 
-	private static void generateZones(final CacheRegister data, final LoadingCache<ZoneKey, Zone> zc, final ExecutorService initExecutor) throws IOException {
+	private static void generateZones(final TrafficRouter tr, final LoadingCache<ZoneKey, Zone> zc, final LoadingCache<ZoneKey, Zone> dzc, final ExecutorService initExecutor) throws IOException {
+		final CacheRegister data = tr.getCacheRegister();
 		final Map<String, List<Record>> zoneMap = new HashMap<String, List<Record>>();
 		final Map<String, DeliveryService> dsMap = new HashMap<String, DeliveryService>();
 		final String tld = getTopLevelDomain().toString(true); // Name.toString(true) - omit the trailing dot
@@ -335,8 +341,8 @@ public class ZoneManager extends Resolver {
 		}
 
 		final Map<String, List<Record>> superDomains = populateZoneMap(zoneMap, dsMap, data);
-		final List<Record> superRecords = fillZones(zoneMap, dsMap, data, zc, initExecutor);
-		final List<Record> upstreamRecords = fillZones(superDomains, dsMap, data, superRecords, zc, initExecutor);
+		final List<Record> superRecords = fillZones(zoneMap, dsMap, tr, zc, dzc, initExecutor);
+		final List<Record> upstreamRecords = fillZones(superDomains, dsMap, tr, superRecords, zc, dzc, initExecutor);
 
 		for (final Record record : upstreamRecords) {
 			if (record.getType() == Type.DS) {
@@ -345,12 +351,12 @@ public class ZoneManager extends Resolver {
 		}
 	}
 
-	private static List<Record> fillZones(final Map<String, List<Record>> zoneMap, final Map<String, DeliveryService> dsMap, final CacheRegister data, final LoadingCache<ZoneKey, Zone> zc, final ExecutorService initExecutor)
+	private static List<Record> fillZones(final Map<String, List<Record>> zoneMap, final Map<String, DeliveryService> dsMap, final TrafficRouter tr, final LoadingCache<ZoneKey, Zone> zc, final LoadingCache<ZoneKey, Zone> dzc, final ExecutorService initExecutor)
 			throws IOException {
-		return fillZones(zoneMap, dsMap, data, null, zc, initExecutor);
+		return fillZones(zoneMap, dsMap, tr, null, zc, dzc, initExecutor);
 	}
 
-	private static List<Record> fillZones(final Map<String, List<Record>> zoneMap, final Map<String, DeliveryService> dsMap, final CacheRegister data, final List<Record> superRecords, final LoadingCache<ZoneKey, Zone> zc, final ExecutorService initExecutor)
+	private static List<Record> fillZones(final Map<String, List<Record>> zoneMap, final Map<String, DeliveryService> dsMap, final TrafficRouter tr, final List<Record> superRecords, final LoadingCache<ZoneKey, Zone> zc, final LoadingCache<ZoneKey, Zone> dzc, final ExecutorService initExecutor)
 			throws IOException {
 		final String hostname = InetAddress.getLocalHost().getHostName().replaceAll("\\..*", "");
 
@@ -361,15 +367,17 @@ public class ZoneManager extends Resolver {
 				zoneMap.get(domain).addAll(superRecords);
 			}
 
-			records.addAll(createZone(domain, zoneMap, dsMap, data, zc, initExecutor, hostname));
+			records.addAll(createZone(domain, zoneMap, dsMap, tr, zc, dzc, initExecutor, hostname));
 		}
 
 		return records;
 	}
 
+	@SuppressWarnings("PMD.CyclomaticComplexity")
 	private static List<Record> createZone(final String domain, final Map<String, List<Record>> zoneMap, final Map<String, DeliveryService> dsMap, 
-			final CacheRegister data, final LoadingCache<ZoneKey, Zone> zc, final ExecutorService initExecutor, final String hostname) throws IOException {
+			final TrafficRouter tr, final LoadingCache<ZoneKey, Zone> zc, final LoadingCache<ZoneKey, Zone> dzc, final ExecutorService initExecutor, final String hostname) throws IOException {
 		final DeliveryService ds = dsMap.get(domain);
+		final CacheRegister data = tr.getCacheRegister();
 		final JSONObject trafficRouters = data.getTrafficRouters();
 		final JSONObject config = data.getConfig();
 
@@ -407,9 +415,49 @@ public class ZoneManager extends Resolver {
 				@Override
 				public void run() {
 					try {
-						zc.get(signatureManager.generateZoneKey(name, list)); // cause the zone to be loaded into the new cache
+						final Zone zone = zc.get(signatureManager.generateZoneKey(name, list)); // cause the zone to be loaded into the new cache
+						final boolean primeDynCache = config.optBoolean("dynamic.cache.primer.enabled", true);
+						final int primerLimit = config.optInt("dynamic.cache.primer.limit", DEFAULT_PRIMER_LIMIT);
+
+						// prime the dynamic zone cache
+						if (primeDynCache && ds != null && ds.isDns()) {
+							final DNSRequest request = new DNSRequest();
+							final Name edgeName = newName(getDnsRoutingName(), domain);
+							request.setHostname(edgeName.toString(true)); // Name.toString(true) - omit the trailing dot
+
+							for (final CacheLocation cacheLocation : data.getCacheLocations()) {
+								final List<Cache> caches = tr.selectCachesByCZ(ds, cacheLocation);
+
+								if (caches == null) {
+									continue;
+								}
+
+								// calculate number of permutations if maxDnsIpsForLocation > 0 and we're not using consistent DNS routing
+								int p = 1;
+
+								if (ds.getMaxDnsIps() > 0 && !tr.isConsistentDNSRouting() && caches.size() > ds.getMaxDnsIps()) {
+									for (int c = caches.size(); c > (caches.size() - ds.getMaxDnsIps()); c--) {
+										p *= c;
+									}
+								}
+
+								final Set<List<InetRecord>> pset = new HashSet<List<InetRecord>>();
+
+								while (pset.size() < p && pset.size() < primerLimit) {
+									final List<InetRecord> records = tr.inetRecordsFromCaches(ds, caches, request);
+
+									if (!pset.contains(records)) {
+										fillDynamicZone(dzc, zone, edgeName, records, signatureManager.isDnssecEnabled());
+										pset.add(records);
+										LOGGER.debug("Primed " + ds.getId() + " @ " + cacheLocation.getId() + "; permutation " + pset.size() + "/" + p);
+									}
+								}
+							}
+						}
 					} catch (ExecutionException ex) {
 						LOGGER.fatal("Unable to load zone into cache: " + ex.getMessage(), ex);
+					} catch (TextParseException ex) { // only occurs due to newName above
+						LOGGER.fatal("Unable to prime dynamic zone " + domain, ex);
 					}
 				}
 			});
@@ -672,7 +720,7 @@ public class ZoneManager extends Resolver {
 			final DNSRouteResult result = trafficRouter.route(request, track);
 
 			if (result != null) {
-				return fillDynamicZone(staticZone, name, result.getAddresses(), dnssecRequest);
+				return fillDynamicZone(dynamicZoneCache, staticZone, name, result.getAddresses(), dnssecRequest);
 			} else {
 				return null;
 			}
@@ -687,7 +735,7 @@ public class ZoneManager extends Resolver {
 		return null;
 	}
 
-	private static Zone fillDynamicZone(final Zone staticZone, final Name name, final List<InetRecord> addresses, final boolean dnssecRequest) {
+	private static Zone fillDynamicZone(final LoadingCache<ZoneKey, Zone> dzc, final Zone staticZone, final Name name, final List<InetRecord> addresses, final boolean dnssecRequest) {
 		if (addresses == null) {
 			return null;
 		}
@@ -708,7 +756,7 @@ public class ZoneManager extends Resolver {
 			if (recordsAdded > 0) {
 				try {
 					final ZoneKey zoneKey = signatureManager.generateDynamicZoneKey(staticZone.getOrigin(), records, dnssecRequest);
-					final Zone zone = dynamicZoneCache.get(zoneKey);
+					final Zone zone = dzc.get(zoneKey);
 					return zone;
 				} catch (ExecutionException e) {
 					LOGGER.error(e, e);
@@ -852,7 +900,7 @@ public class ZoneManager extends Resolver {
 		ZoneManager.zoneDirectory = zoneDirectory;
 	}
 
-	private static String getDnsRoutingName() {
+	protected static String getDnsRoutingName() {
 		return dnsRoutingName;
 	}
 

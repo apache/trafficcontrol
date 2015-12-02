@@ -94,7 +94,7 @@ public class DeliveryService {
 			missLocation = null;
 		}
 
-		this.dispersion = new Dispersion(dsJo.optJSONObject("dispersion"));
+		this.dispersion = new Dispersion(dsJo);
 		this.ip6RoutingEnabled = dsJo.optBoolean("ip6RoutingEnabled", false);
 		setResponseHeaders(dsJo.optJSONObject("responseHeaders"));
 		setRequestHeaders(dsJo.optJSONArray("requestHeaders"));
