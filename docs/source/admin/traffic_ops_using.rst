@@ -399,7 +399,7 @@ One of the most important settings when creating the delivery service is the sel
 
 Federations
 +++++++++++
-  Federations allow for other (federated) CDNs (at a different ISP, MSO, etc) to add a list of resolvers and a CNAME to Traffic Ops.  When a request is made from one of their clients, Traffic Router will return the CNAME.  This allows the federated CDN to serve the content without the content provider changing the URL, or having to manage multiple URLs.
+  Federations allow for other (federated) CDNs (at a different ISP, MSO, etc) to add a list of resolvers and a CNAME to a delivery service Traffic Ops.  When a request is made from one of federated CDN's clients, Traffic Router will return the CNAME configured in the federation mapping.  This allows the federated CDN to serve the content without the content provider changing the URL, or having to manage multiple URLs.
 
   Before adding a federation in the Traffic Ops UI, a user with the federations role needs to be created.  This user will be assigned to the federation and will be able to add resolvers to the federation via the Traffic Ops `Federation API <../development/traffic_ops_api/v12/federation.html>`_. 
 

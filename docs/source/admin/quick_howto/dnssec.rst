@@ -66,7 +66,7 @@ Configure DNSSEC
 	
 	A dig command with +dnssec added should show you the signed responses.  
 
-	``dig edge1.cdn.kabletown.net. +dnssec``
+	``dig edge.cdn.kabletown.net. +dnssec``
 
 6)	When KSK expiration is approaching (default 365 days), it is necessary to manually generate a new KSK for the TLD (Top Level Domain) and add the DS Record to the parent zone.  In order to avoid signing errors, it is suggested that an effective date is chosen which allows time for the DS Record to be added to the parent zone before the new KSK becomes active.  
 
