@@ -52,7 +52,7 @@ Configure Federations
 	
 **The Federation user can now add resolvers to the Federation Mapping in Traffic Ops.**
 
-5)	The federation user logs to traffic ops and stores the mojolicious cookie.  The mojolicious cookie can be obtained manually using chrome or via curl.
+5)	The federation user logs to traffic ops and stores the mojolicious cookie.  The mojolicious cookie can be obtained manually using the debug tools on a web browser or via curl.
 
 	Example::
 
@@ -112,3 +112,25 @@ Configure Federations
 
 8) Any requests made from a client that resolves to one of the federation resolvers will now be given a CNAME from Traffic Router.
 
+	Example::
+
+		$ dig @tr.kabletown.net edge.images-c1.kabletown.net
+
+		; <<>> DiG 9.7.3-RedHat-9.7.3-2.el6 <<>> @tr.kabletown.net edge.images-c1.kabletown.net
+		; (1 server found)
+		;; global options: +cmd
+		;; Got answer:
+		;; ->>HEADER<<- opcode: QUERY, status: NOERROR, id: 45110
+		;; flags: qr rd; QUERY: 1, ANSWER: 1, AUTHORITY: 0, ADDITIONAL: 0
+		;; WARNING: recursion requested but not available
+
+		;; QUESTION SECTION:
+		;edge.images-c1.kabletown.net.	IN A
+
+		;; ANSWER SECTION:
+		edge.images-c1.kabletown.net.	30 IN CNAME img.mega-cdn.net.
+
+		;; Query time: 9 msec
+		;; SERVER: 10.10.10.10#53(10.10.10.10)
+		;; WHEN: Wed Dec  2 22:05:26 2015
+		;; MSG SIZE  rcvd: 84
