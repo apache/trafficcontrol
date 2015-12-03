@@ -18,11 +18,14 @@ package com.comcast.cdn.traffic_control.traffic_monitor.health;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.CancellationException;
 import java.util.concurrent.Future;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.log4j.Logger;
 import org.apache.wicket.ajax.json.JSONException;
@@ -122,7 +125,7 @@ public class CacheState extends AbstractState {
 		return cache;
 	}
 
-	public void fetchAndUpdate(final HealthDeterminer myHealthDeterminer, final CacheDataModel fetchCount, final CacheDataModel errorCount) {
+	public void fetchAndUpdate(final HealthDeterminer myHealthDeterminer, final CacheDataModel fetchCount, final CacheDataModel errorCount, final AtomicInteger failCount) {
 		if (!HealthDeterminer.shouldFetchStats(cache)) {
 			synchronized (cache) {
 				// TODO : clear states
@@ -141,7 +144,7 @@ public class CacheState extends AbstractState {
 			this.put("_queryUrl", url);
 			this.setHistoryTime(cache.getHistoryTime());
 			requestTimeout = System.currentTimeMillis() + myHealthDeterminer.getConnectionTimeout(cache, 2000);
-			future = asyncClient.executeRequest(getRequest(asyncClient, url), getAsyncHanlder(myHealthDeterminer, time, url, errorCount));
+			future = asyncClient.executeRequest(getRequest(asyncClient, url), getAsyncHanlder(myHealthDeterminer, time, url, errorCount, failCount));
 		} catch (IOException e) {
 			LOGGER.warn(e, e);
 		}
@@ -149,12 +152,12 @@ public class CacheState extends AbstractState {
 
 
 	private AsyncHandler<Object> getAsyncHanlder(final HealthDeterminer myHealthDeterminer, final long time,
-	                                             final String url, final CacheDataModel errorCount) {
+	                                             final String url, final CacheDataModel errorCount, final AtomicInteger failCount) {
 		if (handler == null) {
 			handler = new UpdateHandler(this, errorCount);
 		}
 
-		return handler.update(myHealthDeterminer, time, url);
+		return handler.update(myHealthDeterminer, time, url, failCount);
 	}
 
 	private static class UpdateHandler extends AsyncCompletionHandler<java.lang.Object> {
@@ -163,16 +166,18 @@ public class CacheState extends AbstractState {
 		private long time;
 		private HealthDeterminer myHealthDeterminer;
 		private String url;
+		private AtomicInteger failCount;
 
 		public UpdateHandler(final CacheState cacheState, final CacheDataModel errorCount) {
 			this.state = cacheState;
 			this.errorCount = errorCount;
 		}
 
-		public AsyncHandler<Object> update(final HealthDeterminer myHealthDeterminer, final long time, final String url) {
+		public AsyncHandler<Object> update(final HealthDeterminer myHealthDeterminer, final long time, final String url, AtomicInteger failCount) {
 			this.myHealthDeterminer = myHealthDeterminer;
 			this.time = time;
 			this.url = url;
+			this.failCount = failCount;
 			return this;
 		}
 
@@ -202,8 +207,12 @@ public class CacheState extends AbstractState {
 
 		@Override
 		public void onThrowable(final Throwable t) {
-			LOGGER.warn(t + " : " + url);
-			LOGGER.debug("", t);
+			if (!(t instanceof CancellationException)) {
+				LOGGER.warn(t + " : " + url);
+				failCount.incrementAndGet();
+			} else {
+				LOGGER.warn("Request to " + url + " failed to complete in time");
+			}
 
 			state.put("queryTime", String.valueOf(System.currentTimeMillis() - time));
 
@@ -262,10 +271,13 @@ public class CacheState extends AbstractState {
 		return asyncHttpClient;
 	}
 
-	public boolean completeFetch(final HealthDeterminer myHealthDeterminer, final CacheDataModel errorCount) {
+	public boolean completeFetch(final HealthDeterminer myHealthDeterminer, final CacheDataModel errorCount, final AtomicInteger cancelCount, final AtomicInteger failCount) {
 		if (future == null) {
 			return true;
 		}
+
+		// Does this logic change make performance better????
+		// if (future.isDone() || future.isCancelled()) {
 
 		if (future.isDone()) {
 			return true;
@@ -274,6 +286,7 @@ public class CacheState extends AbstractState {
 		if (System.currentTimeMillis() > requestTimeout) {
 			try {
 				future.cancel(true);
+				cancelCount.incrementAndGet();
 				//				errorCount.inc();
 			} catch (Exception e) {
 				LOGGER.warn("Error on cancel: " + e);

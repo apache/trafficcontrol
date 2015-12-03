@@ -18,6 +18,7 @@ package com.comcast.cdn.traffic_control.traffic_monitor.health;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.log4j.Logger;
 import org.apache.wicket.model.Model;
@@ -78,7 +79,7 @@ public class CacheWatcher {
 
 		final Runtime runtime = Runtime.getRuntime();
 
-		private List<CacheState> checkCaches(final RouterConfig crConfig) {
+		private List<CacheState> checkCaches(final RouterConfig crConfig, final AtomicInteger failCount) {
 			maxMemory.set(runtime.maxMemory() / (1024 * 1024));
 			totalMem.set(runtime.totalMemory() / (1024 * 1024));
 			freeMem.set(runtime.freeMemory() / (1024 * 1024));
@@ -99,7 +100,7 @@ public class CacheWatcher {
 				}
 
 				final CacheState state = CacheState.getOrCreate(cache);
-				state.fetchAndUpdate(myHealthDeterminer, fetchCount, errorCount);
+				state.fetchAndUpdate(myHealthDeterminer, fetchCount, errorCount, failCount);
 				retList.add(state);
 				cacheTimePad();
 			}
@@ -120,7 +121,7 @@ public class CacheWatcher {
 			}
 		}
 
-		public void run() { // run the service
+		public void run() {
 			while (true) {
 				try {
 					final long time = System.currentTimeMillis();
@@ -135,15 +136,17 @@ public class CacheWatcher {
 						continue;
 					}
 
-					final List<CacheState> states = checkCaches(crConfig);
+					final AtomicInteger failCount = new AtomicInteger(0);
+					final List<CacheState> states = checkCaches(crConfig, failCount);
 
 					boolean waitForFinish = true;
 
+					final AtomicInteger cancelCount = new AtomicInteger(0);
 					while (waitForFinish) {
 						waitForFinish = false;
 
 						for (CacheState cs : states) {
-							waitForFinish |= !cs.completeFetch(myHealthDeterminer, errorCount);
+							waitForFinish |= !cs.completeFetch(myHealthDeterminer, errorCount, cancelCount, failCount);
 						}
 					}
 
@@ -164,7 +167,7 @@ public class CacheWatcher {
 					queryIntervalActual.set(completedTime - time);
 					queryIntervalDelta.set((completedTime - time) - config.getHealthPollingInterval());
 
-					LOGGER.info("Pool time elapsed: " + mytime);
+					LOGGER.info("Check time of " + states.size() + " caches elapsed: " + mytime + " msec, (Active time was " + (completedTime - time) + ") msec, " + cancelCount.get() + " checks were cancelled, " + failCount.get() + " failed");
 				} catch (Exception e) {
 					LOGGER.warn(e, e);
 
