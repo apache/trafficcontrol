@@ -192,11 +192,7 @@ sub ds_data {
 	if ( $server->type->name eq "MID" ) {
 
 		# the mids will do all deliveryservices in this CDN
-		my $domain =
-			$self->db->resultset('ProfileParameter')
-			->search( { -and => [ profile => $server->profile->id, 'parameter.name' => 'domain_name', 'parameter.config_file' => 'CRConfig.json' ] },
-			{ prefetch => [ 'parameter', 'profile' ] } )->get_column('parameter.value')->single();
-
+		my $domain = $self->profile_param_value( $server->profile->id, 'CRConfig.json', 'domain_name', '' );
 		$rs = $self->db->resultset('DeliveryServiceInfoForDomainList')->search( {}, { bind => [$domain] } );
 	}
 	else {
@@ -324,12 +320,29 @@ sub param_data {
 	return $data;
 }
 
+sub profile_param_value {
+	my $self       = shift;
+	my $pid        = shift;
+	my $file       = shift;
+	my $param_name = shift;
+	my $default    = shift;
+
+	# assign $ds_domain, $weight and $port, and cache the results %profile_cache
+	my $param =
+		$self->db->resultset('ProfileParameter')
+		->search( { -and => [ profile => $pid, 'parameter.config_file' => $file, 'parameter.name' => $param_name ] },
+		{ prefetch => [ 'parameter', 'profile' ] } )->single();
+
+	return ( defined $param ? $param->parameter->value : $default );
+}
+
 sub parent_data {
 	my $self   = shift;
 	my $server = shift;
 
 	my $pinfo;
 	my @parent_cachegroup_ids;
+	my @secondary_parent_cachegroup_ids;
 	my $org_loc_type_id = &type_id( $self, "ORG_LOC" );
 	if ( $server->type->name eq 'MID' ) {
 
@@ -338,26 +351,22 @@ sub parent_data {
 	}
 	else {
 		@parent_cachegroup_ids = $self->db->resultset('Cachegroup')->search( { id => $server->cachegroup->id } )->get_column('parent_cachegroup_id')->all();
+		@secondary_parent_cachegroup_ids =
+			$self->db->resultset('Cachegroup')->search( { id => $server->cachegroup->id } )->get_column('secondary_parent_cachegroup_id')->all();
 	}
 
 	my $online   = &admin_status_id( $self, "ONLINE" );
 	my $reported = &admin_status_id( $self, "REPORTED" );
 
 	# get the server's cdn domain
-	my $param =
-		$self->db->resultset('ProfileParameter')
-		->search( { -and => [ profile => $server->profile->id, 'parameter.config_file' => 'CRConfig.json', 'parameter.name' => 'domain_name' ] },
-		{ prefetch => [ { parameter => undef }, { profile => undef } ] } )->single();
-	my $server_domain = $param->parameter->value;
+	my $server_domain = $self->profile_param_value( $server->profile->id, 'CRConfig.json', 'domain_name' );
 
-	my $condition->{"status"} = { -in => [ $online, $reported ] };
+	my %condition = ( status => { -in => [ $online, $reported ] } );
 	if (@parent_cachegroup_ids) {
-		$condition->{"cachegroup"} = { -in => \@parent_cachegroup_ids };
+		$condition{cachegroup} = { -in => \@parent_cachegroup_ids };
 	}
 
-	my $rs_parent =
-		$self->db->resultset('Server')->search( { %$condition },
-		{ prefetch => [ 'cachegroup', 'status', 'type', 'profile' ] } );
+	my $rs_parent = $self->db->resultset('Server')->search( \%condition, { prefetch => [ 'cachegroup', 'status', 'type', 'profile' ] } );
 
 	my %profile_cache    = ();
 	my $deliveryservices = undef;
@@ -377,38 +386,14 @@ sub parent_data {
 		}
 
 		# get the profile info, and cache it in %profile_cache
-		my $ds_domain      = undef;
-		my $weight         = undef;
-		my $port           = undef;
-		my $use_ip_address = undef;
-		my $pid            = $row->profile->id;
+		my $pid = $row->profile->id;
 		if ( !defined( $profile_cache{$pid} ) ) {
 
 			# assign $ds_domain, $weight and $port, and cache the results %profile_cache
-			my $param =
-				$self->db->resultset('ProfileParameter')
-				->search( { -and => [ profile => $pid, 'parameter.config_file' => 'CRConfig.json', 'parameter.name' => 'domain_name' ] },
-				{ prefetch => [ 'parameter', 'profile' ] } )->single();
-			$ds_domain = $param->parameter->value;
-			$profile_cache{$pid}->{domain_name} = $ds_domain;
-			$param =
-				$self->db->resultset('ProfileParameter')
-				->search( { -and => [ profile => $pid, 'parameter.config_file' => 'parent.config', 'parameter.name' => 'weight' ] },
-				{ prefetch => [ 'parameter', 'profile' ] } )->single();
-			$weight = defined($param) ? $param->parameter->value : "0.999";
-			$profile_cache{$pid}->{weight} = $weight;
-			$param =
-				$self->db->resultset('ProfileParameter')
-				->search( { -and => [ profile => $pid, 'parameter.config_file' => 'parent.config', 'parameter.name' => 'port' ] },
-				{ prefetch => [ 'parameter', 'profile' ] } )->single();
-			$port = defined($param) ? $param->parameter->value : undef;
-			$profile_cache{$pid}->{port} = $port;
-			$param =
-				$self->db->resultset('ProfileParameter')
-				->search( { -and => [ profile => $pid, 'parameter.config_file' => 'parent.config', 'parameter.name' => 'use_ip_address' ] },
-				{ prefetch => [ 'parameter', 'profile' ] } )->single();
-			$use_ip_address = defined($param) ? $param->parameter->value : 0;
-			$profile_cache{$pid}->{use_ip_address} = $use_ip_address;
+			$profile_cache{$pid}{domain_name}    = $self->profile_param_value( $pid, 'CRConfig.json', 'domain_name',    undef );
+			$profile_cache{$pid}{weight}         = $self->profile_param_value( $pid, 'parent.config', 'weight',         '0.999' );
+			$profile_cache{$pid}{port}           = $self->profile_param_value( $pid, 'parent.config', 'port',           undef );
+			$profile_cache{$pid}{use_ip_address} = $self->profile_param_value( $pid, 'parent.config', 'use_ip_address', 0 );
 		}
 	}
 
@@ -924,10 +909,7 @@ sub build_remap_line {
 		$text .= " \@plugin=regex_remap.so \@pparam=" . $dqs_file;
 	}
 	elsif ( $remap->{qstring_ignore} == 1 ) {
-		my $global_exists =
-			$self->db->resultset('ProfileParameter')
-			->search( { -and => [ profile => $server->profile->id, 'parameter.config_file' => 'cacheurl.config', 'parameter.name' => 'location' ] },
-			{ prefetch => [ 'parameter', 'profile' ] } )->single();
+		my $global_exists = $self->profile_param_value( $server->profile->id, 'cacheurl.config', 'location', undef );
 		if ($global_exists) {
 			$self->app->log->debug(
 				"qstring_ignore == 1, but global cacheurl.config param exists, so skipping remap rename config_file=cacheurl.config parameter if you want to change"
@@ -958,6 +940,22 @@ sub build_remap_line {
 	return $text;
 }
 
+sub format_parent_info {
+	my $parent = shift;
+	if ( !defined $parent ) {
+		return "";    # should never happen..
+	}
+	my $host =
+		( $parent->{use_ip_address} == 1 )
+		? $parent->{ip_address}
+		: $parent->{host_name} . '.' . $parent->{domain_name};
+
+	my $port   = $parent->{port};
+	my $weight = $parent->{weight};
+	my $text   = "$host:$port|$weight;";
+	return $text;
+}
+
 sub parent_dot_config {
 	my $self = shift;
 	my $id   = shift;
@@ -982,31 +980,23 @@ sub parent_dot_config {
 			my $org_fqdn = $ds->{org};
 			$org_fqdn =~ s/https?:\/\///;
 			if ( defined($os) ) {
+				my $pselect_alg = $self->profile_param_value( $server->profile->id, 'parent.config', 'algorithm', undef );
 				my $algorithm = "";
-				my $param =
-					$self->db->resultset('ProfileParameter')
-					->search( { -and => [ profile => $server->profile->id, 'parameter.config_file' => 'parent.config', 'parameter.name' => 'algorithm' ] },
-					{ prefetch => [ 'parameter', 'profile' ] } )->single();
-				my $pselect_alg = defined($param) ? $param->parameter->value : undef;
 				if ( defined($pselect_alg) ) {
 					$algorithm = "round_robin=$pselect_alg";
 				}
 				$text .= "dest_domain=$org_fqdn parent=$os $algorithm go_direct=true\n";
 			}
 			elsif ($multi_site_origin) {
-
 				$text .= "dest_domain=$org_fqdn parent=\"";
 				my $pinfo = $self->parent_data($server);
 
 				#print Dumper($pinfo);
+				my @parent_info;
 				foreach my $parent ( @{ $pinfo->{$org_fqdn} } ) {
-					if ( $parent->{use_ip_address} == 1 ) {
-						$text .= $parent->{ip_address} . ":" . $parent->{port} . "|" . $parent->{weight} . ";";
-					}
-					else {
-						$text .= $parent->{"host_name"} . "." . $parent->{"domain_name"} . ":" . $parent->{"port"} . "|" . $parent->{"weight"} . ";";
-					}
+					push @parent_info, format_parent_info($parent);
 				}
+
 				$text .= "\" round_robin=consistent_hash go_direct=false parent_is_proxy=false\n";
 			}
 		}
@@ -1022,6 +1012,7 @@ sub parent_dot_config {
 
 		my %done = ();
 
+		# MODIFY HERE
 		foreach my $remap ( @{ $data->{dslist} } ) {
 			if ( $remap->{type} eq "HTTP_NO_CACHE" || $remap->{type} eq "HTTP_LIVE" || $remap->{type} eq "DNS_LIVE" ) {
 				if ( !defined( $done{ $remap->{org} } ) ) {
@@ -1033,11 +1024,9 @@ sub parent_dot_config {
 			}
 		}
 
-		my $param =
-			$self->db->resultset('ProfileParameter')
-			->search( { -and => [ profile => $server->profile->id, 'parameter.config_file' => 'parent.config', 'parameter.name' => 'algorithm' ] },
-			{ prefetch => [ 'parameter', 'profile' ] } )->single();
-		my $pselect_alg = defined($param) ? $param->parameter->value : undef;
+		#  MODIFY TO HERE
+
+		my $pselect_alg = $self->profile_param_value( $server->profile->id, 'parent.config', 'algorithm', undef );
 		if ( defined($pselect_alg) && $pselect_alg eq 'consistent_hash' ) {
 
 			$text .= "dest_domain=. parent=\"";
@@ -1054,11 +1043,7 @@ sub parent_dot_config {
 			$text .= "\" round_robin=urlhash go_direct=false";
 		}
 
-		$param =
-			$self->db->resultset('ProfileParameter')
-			->search( { -and => [ profile => $server->profile->id, 'parameter.config_file' => 'parent.config', 'parameter.name' => 'qstring' ] },
-			{ prefetch => [ 'parameter', 'profile' ] } )->single();
-		my $qstring = defined($param) ? $param->parameter->value : undef;
+		my $qstring = $self->profile_param_value( $server->profile->id, 'parent.config', 'qstring', undef );
 		if ( defined($qstring) ) {
 			$text .= " qstring=" . $qstring;
 		}
@@ -1096,7 +1081,6 @@ sub regex_revalidate_dot_config {
 	# my $text   = $self->header_comment( $server->host_name );
 	my $server = &server_data( $self, $id );
 
-
 	my $text = "# DO NOT EDIT - Generated for CDN " . $server->cdn->name . " by " . &name_version_string($self) . " on " . `date`;
 
 	my $max_days =
@@ -1116,8 +1100,9 @@ sub regex_revalidate_dot_config {
 
 	my $rs = $self->db->resultset('Job')->search( { start_time => \$interval } );
 	while ( my $row = $rs->next ) {
+
 		# Purges are CDN - wide, and the job entry has the ds id in it.
-		my $job_cdn = $self->db->resultset('Cdn')->search( { id => $row->job_deliveryservice->cdn_id} )->single();
+		my $job_cdn = $self->db->resultset('Cdn')->search( { id => $row->job_deliveryservice->cdn_id } )->single();
 		my $parameters = $row->parameters;
 		my $ttl;
 		if ( $row->keyword eq "PURGE" && ( defined($parameters) && $parameters =~ /TTL:(\d+)h/ ) ) {
@@ -1187,10 +1172,7 @@ sub drop_qstring_dot_config {
 	my $text   = $self->header_comment( $server->host_name );
 
 	$server = &server_data( $self, $id );
-	my $drop_qstring =
-		$self->db->resultset('ProfileParameter')
-		->search( { -and => [ profile => $server->profile->id, 'parameter.name' => 'content', 'parameter.config_file' => 'drop_qstring.config' ] },
-		{ prefetch => [ 'parameter', 'profile' ] } )->get_column('parameter.value')->single();
+	my $drop_qstring = $self->profile_param_value( $server->profile->id, 'drop_qstring.config', 'content', undef );
 	if ($drop_qstring) {
 		$text .= $drop_qstring . "\n";
 	}
@@ -1273,18 +1255,20 @@ sub to_ext_dot_config {
 	my $text   = $self->header_comment( $server->host_name );
 
 	# get the subroutine name for this file from the parameter
-	my $subroutine =
-		$self->db->resultset('ProfileParameter')
-		->search( { -and => [ profile => $server->profile->id, 'parameter.config_file' => $file, 'parameter.name' => 'SubRoutine' ] },
-		{ prefetch => [ 'parameter', 'profile' ] } )->get_column('parameter.value')->single();
+	my $subroutine = $self->profile_param_value( $server->profile->id, $file, 'SubRoutine', undef );
 	$self->app->log->error( "ToExtDotConfigFile == " . $subroutine );
 
-	my $package;
-	( $package = $subroutine ) =~ s/(.*)(::)(.*)/$1/;
-	eval "use $package;";
+	# TODO: previous code didn't check for undef -- what to do here?
+	if ( defined $subroutine ) {
+		my $package;
+		( $package = $subroutine ) =~ s/(.*)(::)(.*)/$1/;
+		eval "use $package;";
 
-	# And call it - the below calls the subroutine in the var $subroutine.
-	$text .= &{ \&{$subroutine} }( $self, $id, $file );
+		# And call it - the below calls the subroutine in the var $subroutine.
+		$text .= $subroutine->( $self, $id, $file );
+
+		# $text .= &{ \&{$subroutine} }( $self, $id, $file );
+	}
 
 	return $text;
 }
