@@ -59,7 +59,13 @@ The following tabs are available in the menu at the top of the Traffic Ops user 
 
 * **Delivery Services**
 
-  The main Delivery Service table. This is where you Create/Read/Update/Delete Delivery Services of all types. There are currently no sub menus for this tab.
+  The main Delivery Service table. This is where you Create/Read/Update/Delete Delivery Services of all types. Hover over to get the following sub option:
+
+  +-------------+--------------------------------------+
+  |    Option   |             Description              |
+  +=============+======================================+
+  | Federations | Add/Edit/Delete Federation Mappings. |
+  +-------------+--------------------------------------+
 
 * **Servers**
 
@@ -93,22 +99,23 @@ The following tabs are available in the menu at the top of the Traffic Ops user 
 
   Tools for working with Traffic Ops and it's servers. Hover over this tab to get the following options:
 
-  +----------------------+-----------------------------------------------------------------------------------------------------------------------------------+
-  |        Option        |                                                            Description                                                            |
-  +======================+===================================================================================================================================+
-  | Generate ISO         | Generate a bootable image for any of the servers in the Servers table (or any server for that matter). See :ref:`rl-generate-iso` |
-  +----------------------+-----------------------------------------------------------------------------------------------------------------------------------+
-  | Queue Updates        | Send Updates to the caches. See :ref:`rl-queue-updates`                                                                           |
-  +----------------------+-----------------------------------------------------------------------------------------------------------------------------------+
-  | DB Dump              | Backup the Database to a .sql file.                                                                                               |
-  +----------------------+-----------------------------------------------------------------------------------------------------------------------------------+
-  | Snapshot CRConfig    | Send updates to the Traffic Monitor / Traffic Router servers.  See :ref:`rl-queue-updates`                                        |
-  +----------------------+-----------------------------------------------------------------------------------------------------------------------------------+
-  | Invalidate Content   | Invalidate or purge content from the CDN. See :ref:`rl-purge`                                                                     |
-  +----------------------+-----------------------------------------------------------------------------------------------------------------------------------+
-  | Generate DNSSEC keys | Neuman?                                                                                                                           |
-  +----------------------+-----------------------------------------------------------------------------------------------------------------------------------+
-
+  +--------------------+-----------------------------------------------------------------------------------------------------------------------------------+
+  |       Option       |                                                            Description                                                            |
+  +====================+===================================================================================================================================+
+  | Generate ISO       | Generate a bootable image for any of the servers in the Servers table (or any server for that matter). See :ref:`rl-generate-iso` |
+  +--------------------+-----------------------------------------------------------------------------------------------------------------------------------+
+  | Queue Updates      | Send Updates to the caches. See :ref:`rl-queue-updates`                                                                           |
+  +--------------------+-----------------------------------------------------------------------------------------------------------------------------------+
+  | DB Dump            | Backup the Database to a .sql file.                                                                                               |
+  +--------------------+-----------------------------------------------------------------------------------------------------------------------------------+
+  | Snapshot CRConfig  | Send updates to the Traffic Monitor / Traffic Router servers.  See :ref:`rl-queue-updates`                                        |
+  +--------------------+-----------------------------------------------------------------------------------------------------------------------------------+
+  | Invalidate Content | Invalidate or purge content from the CDN. See :ref:`rl-purge`                                                                     |
+  +--------------------+-----------------------------------------------------------------------------------------------------------------------------------+
+  | Manage DNSSEC keys | Manage DNSSEC Keys for a chosen CDN.                                                                                              |
+  +--------------------+-----------------------------------------------------------------------------------------------------------------------------------+
+  
+  
 * **Misc**
 
   Miscellaneous editing options. Hover over this tab to get the following options:
@@ -193,11 +200,12 @@ The Graph View shows a live view of the last 24 hours of bits per seconds served
 
 Server Checks
 +++++++++++++
-Server Checks are .. 
+The server checks page is inteded to give an overview of the Servers managed by Traffic Control as well as their status. This data comes from `Traffic Ops extensions <traffic_ops_extensions.html>`_.
 
 
 Daily Summary
 +++++++++++++
+Displays daily max gbps and bytes served for all CDNs.  In order for the graphs to appear, the 'daily_bw_url' and 'daily_served_url' parameters need to be be created, assigned to the global profile, and have a value of a grafana graph.  For more information on configuring grafana, see the `Traffic Stats <traffic_stats.html>`_  section.
 
 .. _rl-server:
 
@@ -388,6 +396,12 @@ One of the most important settings when creating the delivery service is the sel
 +-----------------+----------------------------------------------------------------------------------------------------------------------------------------------------------------+
 
 .. Note:: Once created, the Traffic Ops user interface does not allow you to change the delivery service type; the drop down is greyed out. There are many things that can go wrong when changing the type, and it is safer to delete the delivery service, and recreate it.
+
+Federations
++++++++++++
+  Federations allow for other (federated) CDNs (at a different ISP, MSO, etc) to add a list of resolvers and a CNAME to a delivery service Traffic Ops.  When a request is made from one of federated CDN's clients, Traffic Router will return the CNAME configured in the federation mapping.  This allows the federated CDN to serve the content without the content provider changing the URL, or having to manage multiple URLs.
+
+  Before adding a federation in the Traffic Ops UI, a user with the federations role needs to be created.  This user will be assigned to the federation and will be able to add resolvers to the federation via the Traffic Ops `Federation API <../development/traffic_ops_api/v12/federation.html>`_. 
 
 .. index::
   Header Rewrite
@@ -996,15 +1010,13 @@ Once these fields have been correctly entered, a user can click Generate KSK.  T
 
 Additionally, Traffic Ops also performs some systematic management of DNSSEC keys.  This management is necessary to help keep keys in sync for Delivery Services in a CDN as well as to make sure keys do not expire without human intervention. 
 
-  **Generation of keys for new Delivery Services**
+**Generation of keys for new Delivery Services**
   
-  Each time the DNSSEC Keys `API <../development/traffic_ops_api/v12/cdn.html#dnssec-keys>`_ is accessed by a client to get keys for a CDN, Traffic Ops checks all Delivery Services for the CDN and makes sure that DNSSEC Keys exist and are not expired for that Delivery Service.  If keys do not yet exist for that Delivery Service then Traffic Ops will create the keys, store them in `Traffic Vault <../overview/traffic_vault.html>`_, and return them along with all other keys for the CDN. 
+If a new Delivery Service is created and added to a CDN that has DNSSEC enabled, Traffic Ops will create DNSSEC keys for the Delivery Service and store them in Traffic Vault.
 
-  Furthermore, if a new Delivery Service is created and added to a CDN that has DNSSEC enabled, Traffic Ops will create DNSSEC keys for the Delivery Service and store them in Traffic Vault.
+**Regeneration of expiring keys for a Delivery Service**  
 
-  **Regeneration of expiring keys for a Delivery Service**  
-
-  Each time the DNSSEC Keys `API <../development/traffic_ops_api/v12/cdn.html#dnssec-keys>`_ is accessed by a client to get keys for a CDN, Traffic Ops checks to make sure the keys are not expired before returning them.  If keys are expired for a Delivery Service traffic ops will regenerate new keys and store them in Traffic Vault before returning them.  This process is the same for the CDN TLD ZSK, however Traffic Ops will not re-generate the CDN TLD KSK systematically.  The reason is that when a KSK is regenerated for the CDN TLD then a new DS Record will also be created.  The new DS Record needs to be added to the parent zone before Traffic Router attempts to sign with the new KSK in order for DNSSEC to work correctly.  Therefore, management of the KSK needs to be a manual process. 
+Traffic Ops has a process, controlled by cron, to check for expired or expiring keys and re-generate them.  The process runs at 5 minute intervals to check and see if keys are expired or close to expiring (withing 10 minutes by default).  If keys are expired for a Delivery Service, traffic ops will regenerate new keys and store them in Traffic Vault.  This process is the same for the CDN TLD ZSK, however Traffic Ops will not re-generate the CDN TLD KSK systematically.  The reason is that when a KSK is regenerated for the CDN TLD then a new DS Record will also be created.  The new DS Record needs to be added to the parent zone before Traffic Router attempts to sign with the new KSK in order for DNSSEC to work correctly.  Therefore, management of the KSK needs to be a manual process. 
 
 
   
