@@ -26,13 +26,135 @@ $(function () {
 })
 
 </script>
+<script>
+
+function refreshStats()
+{
+     % foreach my $cdn_name (sort @{ $cdn_names } ) {
+        getCurrentBandwidth("<%= $cdn_name %>");
+        getCurrentConnections("<%= $cdn_name %>");
+    % } 
+    getCurrentBandwidth();
+    getCurrentConnections();
+
+}
+
+function getCurrentBandwidth(cdn_name) {
+    var bwUrl = "/internal/api/1.2/current_bandwidth.json";
+    if (cdn_name != null) {
+        var bandwidth = 0;
+        // get bandwidth
+        $.getJSON( bwUrl + "?cdnName=" + cdn_name, function() {})
+         .done(function(data) {
+            bandwidth = data.response.bandwidth.toFixed(2);
+            $('#' + cdn_name + '_gbps_val').text(bandwidth);
+            // get capacity
+            var capacityUrl = "/internal/api/1.2/current_capacity.json";
+            $.getJSON( capacityUrl + "?cdnName=" + cdn_name, function() {})
+            .done(function(data) {
+            var capacity = Math.round(data.response.capacity);
+            var percentage = Math.round(bandwidth/capacity * 100);
+            setProgress(cdn_name + "_percent_indicator", percentage);
+            setText(cdn_name + "_percent_indicator", "avail: " + capacity + ", used: " + percentage);
+            $('#' + cdn_name + '_gbps_val').text(bandwidth);
+            });
+        });
+        
+    }
+    else {
+        $.getJSON( bwUrl, function() {})
+         .done(function(data) {
+            $('#total_gbps_val').text(data.response.bandwidth.toFixed(2));
+        });   
+    }
+}
+
+function getCurrentConnections(cdn_name) {
+    var url = "/internal/api/1.2/current_connections.json";
+    if (cdn_name != null) {
+        $.getJSON( url + "?cdnName=" + cdn_name, function() {})
+         .done(function(data) {
+            var connections = Math.round(data.response.connections).toString();
+            $('#' + cdn_name + '_conn_val').text(connections.replace(/\B(?=(\d{3})+(?!\d))/g, ",")); //toLocaleString doesnt work across browsers, this regex does.
+        });
+    }
+    else {
+        $.getJSON( url, function() {})
+         .done(function(data) {
+            var connections = Math.round(data.response.connections).toString();
+            $('#total_conn_val').text(connections.replace(/\B(?=(\d{3})+(?!\d))/g, ",")); //toLocaleString doesnt work across browsers, this regex does.
+        });   
+    }
+}
+
+//refresh every 30 seconds
+setInterval('refreshStats()', 30000);
+
+</script>
+<script type="text/javascript" src="/js/percentagebar.js"></script>
+
+<style>
+.statistics_section { float:left; width:35%; color:white; font-size:150%; height:400px; width:305px; background-color:#1f1f1f; margin-right:5px; border:solid 1px grey; }
+.ui-progressbar {
+  position: relative;
+}
+.progress-label {
+  /*position: absolute;*/
+  left: 50%;
+  top: 4px;
+  text-shadow: 1px 1px 0 #fff;
+}
+.percent_label {
+  clear:both;
+  float:left;
+  margin-left:10px;
+}
+.progress_bar {
+  float:right;
+  height: 10px;
+  width: 100px;
+  float:right;
+}
+#graph_panel {width: 65%; float: left; border:solid 1px grey;}
+#stat_value, #total_gbps_val, #total_conn_val { font-size: 225%; text-align: right; padding-right: 10px;}
+#stat_label{padding-top: 30px;};
+
+</style>
 
 <body id="edge_health">
   %= include 'navbar'
-  <div id=accordion>
+  <div id="accordion">
 	% if ( defined($panel_1_url) && defined($panel_2_url) ) {
-        <iframe src="<%= $panel_1_url %>" width=100% height="450" frameborder="0"></iframe>
-        <iframe src="<%= $panel_2_url %>" width=100% height="450" frameborder="0"></iframe>
+        <div class="statistics_section">
+            <script>refreshStats()</script>
+            <div id ="stat_label">total Gbps:</div>
+            <div id="total_gbps_val"></div>
+            % foreach my $cdn ( @{ $cdn_names }) {
+                <div id ="stat_label"><%= $cdn %> Gbps: </div>
+                <div><script>percentLabel('<%= $cdn %>_percent_indicator',0);</script></div>
+                <div><script>progressBar('<%= $cdn %>_percent_indicator',0);</script></div>
+                <div id="stat_value">
+                    <div id="<%= $cdn %>_gbps_val"></div>
+                </div>
+            % } 
+        </div>
+        <div id = "graph_panel">
+            <iframe src="<%= $panel_1_url %>" width=100% height="400" frameborder="0"></iframe>
+        </div><br>
+        <div class="statistics_section" style = "clear:left;">
+            <div id ="stat_label">total Connections:</div>
+            <div id="total_conn_val"></div>
+            % foreach my $cdn ( @{ $cdn_names }) {
+                <div id ="stat_label"><%= $cdn %> Connections: </div>
+                <div id="stat_value">
+                    <div id="<%= $cdn %>_conn_val"></div>
+                </div>
+            % } 
+        </div>
+        <div id="graph_panel">
+            <iframe src="<%= $panel_2_url %>" width=100% height="400" frameborder="0"></iframe>
+        </div>
+    </div>
     % } else {
 		<h3><a href="#">Configuration Incomplete!</a></h3>
 		<div>

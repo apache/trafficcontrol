@@ -602,6 +602,9 @@ sub api_routes {
 	$r->get( "/api/$version/cdns/name/:name/dnsseckeys/delete" => [ format => [qw(json)] ] )->over( authenticated => 1 )
 		->to( 'Cdn#delete_dnssec_keys', namespace => $namespace );
 
+	#checks expiration of keys and re-generates if necessary.  Used by Cron.
+	$r->get( "/internal/api/$version/cdns/dnsseckeys/refresh" => [ format => [qw(json)] ] )->to( 'Cdn#dnssec_keys_refresh', namespace => $namespace );
+
 	# -- CDN: Topology
 	# USED TO BE - GET /api/$version/configs/cdns
 	$r->get( "/api/$version/cdns/configs" => [ format => [qw(json)] ] )->via('GET')->over( authenticated => 1 )
@@ -769,6 +772,10 @@ sub traffic_stats_routes {
 	$r->get( "/api/$version/deliveryservice_stats" => [ format => [qw(json)] ] )->over( authenticated => 1 )
 		->to( 'DeliveryServiceStats#index', namespace => $namespace );
 	$r->get( "/api/$version/cache_stats" => [ format => [qw(json)] ] )->over( authenticated => 1 )->to( 'CacheStats#index', namespace => $namespace );
+	$r->get( "internal/api/$version/current_bandwidth" => [ format => [qw(json)] ] )->to( 'CacheStats#current_bandwidth', namespace => $namespace );
+	$r->get( "internal/api/$version/current_connections" => [ format => [qw(json)] ] )->to( 'CacheStats#current_connections', namespace => $namespace );
+	$r->get( "internal/api/$version/current_capacity" => [ format => [qw(json)] ] )->to( 'CacheStats#current_capacity', namespace => $namespace );
+	$r->get( "internal/api/$version/daily_summary" => [ format => [qw(json)] ] )->to( 'CacheStats#daily_summary', namespace => $namespace );
 }
 
 sub catch_all {

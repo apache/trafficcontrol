@@ -27,7 +27,9 @@ Cache Group
 **GET /api/1.1/cachegroups.json**
 
   Authentication Required: Yes
-  
+
+  Role(s) Required: None
+
   **Response Properties**
 
   +------------------------+--------+--------------------------------------------------------------------------+
@@ -88,7 +90,9 @@ Cache Group
 **GET /api/1.1/cachegroups/trimmed.json**
 
   Authentication Required: Yes
-  
+
+  Role(s) Required: None
+
   **Response Properties**
 
   +----------------------+--------+------------------------------------------------+
@@ -96,7 +100,6 @@ Cache Group
   +======================+========+================================================+
   |``name``              | string |                                                |
   +----------------------+--------+------------------------------------------------+
-
 
   **Response Example** ::
 
@@ -116,7 +119,9 @@ Cache Group
 **GET /api/1.1/cachegroup/:parameter_id/parameter.json**
 
   Authentication Required: Yes
-  
+
+  Role(s) Required: None
+
   **Request Route Parameters**
 
   +------------------+----------+-------------+
@@ -158,7 +163,9 @@ Cache Group
 **GET /api/1.1/cachegroupparameters.json**
 
   Authentication Required: Yes
-  
+
+  Role(s) Required: None
+
   **Response Properties**
 
   +--------------------------+--------+-----------------------------------------+
@@ -203,7 +210,9 @@ Cache Group
 **GET /api/1.1/cachegroups/:parameter_id/parameter/available.json**
 
   Authentication Required: Yes
-  
+
+  Role(s) Required: None
+
   **Request Route Parameters**
 
   +------------------+----------+-------------+

@@ -32,7 +32,7 @@
       // wait for the DOM to be loaded 
       $(document).ready(function () {
           listDeliveryServices("<%= $ds_id %>");
-          listroles("<%= $role_id %>");
+          listroles("<%= $role_name %>");
           listFederationUsers("<%= $user_id %>");
 
            $("#delete_button").click(function() {
@@ -118,7 +118,7 @@
                    <div style="padding:10px;padding-bottom:20px;">
                       <a href="#" class="button" id="delete_button">Delete</a>
                        %= submit_button 'Save', id => 'save_button', class=> 'button', style=> 'margin-left:270px;'
-			     	   <button id="close_button" class="button">Close</button>
+					   <a href="#" id="close_button" class="button">Close</a>
                 </form>
                </div>
 

@@ -53,7 +53,6 @@ public class MaxmindGeolocationService implements GeolocationService {
 		} catch (AddressNotFoundException ex) {
 			// this is fine; we'll just return null below and send them to Chicago
 		} catch (Exception ex) {
-			LOGGER.error(ex, ex);
 			throw new GeolocationException("Caught exception while attempting to determine location: " + ex.getMessage(), ex);
 		} finally {
 			lock.readLock().unlock();
@@ -133,7 +132,6 @@ public class MaxmindGeolocationService implements GeolocationService {
 
 	@Override
 	public void verifyDatabase(final File dbFile) throws IOException {
-		LOGGER.info("Attempting to verify " + dbFile.getAbsolutePath());
 		final DatabaseReader dbr = new DatabaseReader.Builder(dbFile).build();
 		dbr.close();
 	}

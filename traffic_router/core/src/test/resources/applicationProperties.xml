@@ -23,6 +23,7 @@
 		class="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer">
 		<property name="placeholderPrefix" value="$[" />
 		<property name="placeholderSuffix" value="]" />
+		<property name="ignoreUnresolvablePlaceholders" value="true" />
 		<property name="locations">
 			<list>
 				<value>file:src/test/resources/cache.properties</value>

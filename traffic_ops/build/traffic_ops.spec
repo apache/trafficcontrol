@@ -21,21 +21,20 @@
 %define TRAFFIC_OPS_GROUP trafops
 %define TRAFFIC_OPS_LOG_DIR /var/log/traffic_ops
 
-Summary: Traffic Ops UI
-Name: traffic_ops
-Version: %{traffic_ops_version}
-Release: %{build_number}
-License: N/A
-Group: Base System/System Tools
-Prefix: /opt/traffic_ops
-Source: %{_sourcedir}/traffic_ops-%{traffic_ops_version}.tgz
-URL: http://www.comcast.com
-Vendor: Comcast
-Packager: John Rushford <John_Rushford@cable.comcast.com>
-BuildRoot: /var/tmp/%{name}-root
-AutoReqProv: no
-Requires: expat-devel, mod_ssl, mkisofs, libpcap-devel mysql, mysql-server, openssl, perl-DBI, perl-DBD-MySQL, perl-Digest-SHA1, perl-WWW-Curl
-Requires(pre): /usr/sbin/useradd, /usr/bin/getent
+Summary:          Traffic Ops UI
+Name:             traffic_ops
+Version:          %{traffic_control_version}
+Release:          %{build_number}
+License:          Apache License, Version 2.0
+Group:            Base System/System Tools
+Prefix:           /opt/traffic_ops
+Source:           %{_sourcedir}/traffic_ops-%{version}.tgz
+URL:	          https://github.com/Comcast/traffic_control/
+Vendor:	          Comcast
+Packager:         daniel_kirkwood at Cable dot Comcast dot com
+AutoReqProv:      no
+Requires:         expat-devel, mod_ssl, mkisofs, libpcap-devel mysql, mysql-server, openssl, perl-DBI, perl-DBD-MySQL, perl-Digest-SHA1, perl-WWW-Curl
+Requires(pre):    /usr/sbin/useradd, /usr/bin/getent
 Requires(postun): /usr/sbin/userdel
 
 %define PACKAGEDIR %{prefix}
@@ -46,9 +45,27 @@ Installs Traffic Ops.
 Built: %(date) by %{getenv: USER}
 
 %prep
+
 %setup
 
+%build
+    # update version referenced in the source
+    perl -pi.bak -e 's/__VERSION__/%{version}-%{release}/' app/lib/UI/Utils.pm
+    # compile go executables used during postinstall
+    # suppress strip of go execs
+    %define debug_package %{nil}
+
+    export GOPATH="$(pwd)/install/go"
+    export GOBIN="$(pwd)/install/bin"
+
+    echo "Compiling go executables"
+    for d in install/go/src/comcast.com/*; do
+	(cd "$d" && go get -ldflags "-B 0x%{commit}" -v ) || \
+	    { echo "Could not compile $d"; exit 1; }
+    done
+
 %install
+
     if [ -d $RPM_BUILD_ROOT ]; then
 		%__rm -rf $RPM_BUILD_ROOT
     fi
@@ -57,9 +74,9 @@ Built: %(date) by %{getenv: USER}
 		%__mkdir -p $RPM_BUILD_ROOT/%{PACKAGEDIR}
     fi
 
-	%__cp -R $RPM_BUILD_DIR/traffic_ops-%{traffic_ops_version}/* $RPM_BUILD_ROOT/%{PACKAGEDIR}
+    %__cp -R $RPM_BUILD_DIR/traffic_ops-%{version}/* $RPM_BUILD_ROOT/%{PACKAGEDIR}
 
-	if [ ! -d $RPM_BUILD_ROOT/%{PACKAGEDIR}/app/public/CRConfig-Snapshots ]; then
+    if [ ! -d $RPM_BUILD_ROOT/%{PACKAGEDIR}/app/public/CRConfig-Snapshots ]; then
         %__mkdir -p $RPM_BUILD_ROOT/%{PACKAGEDIR}/app/public/CRConfig-Snapshots
     fi
     if [ ! -d $RPM_BUILD_ROOT/%{PACKAGEDIR}/app/public/routing ]; then
@@ -85,9 +102,11 @@ Built: %(date) by %{getenv: USER}
 %post
 
     %__cp %{PACKAGEDIR}/etc/init.d/traffic_ops /etc/init.d/traffic_ops
+    %__cp %{PACKAGEDIR}/etc/cron.d/trafops_dnssec_refresh /etc/cron.d/trafops_dnssec_refresh
      %__cp %{PACKAGEDIR}/etc/logrotate.d/traffic_ops /etc/logrotate.d/traffic_ops
      %__cp %{PACKAGEDIR}/etc/logrotate.d/traffic_ops_access /etc/logrotate.d/traffic_ops_access
     %__chown root:root /etc/init.d/traffic_ops
+    %__chown root:root /etc/cron.d/trafops_dnssec_refresh
     %__chown root:root /etc/logrotate.d/traffic_ops
     %__chown root:root /etc/logrotate.d/traffic_ops_access
     %__chmod +x /etc/init.d/traffic_ops
@@ -139,8 +158,16 @@ fi
 %files
 %defattr(644,root,root,755)
 %attr(755,root,root) %{PACKAGEDIR}/app/bin/*
+%attr(755,root,root) %{PACKAGEDIR}/app/script/*
+%attr(755,root,root) %{PACKAGEDIR}/app/db/*.pl
+%attr(755,root,root) %{PACKAGEDIR}/app/db/*.sh
 %config(noreplace)/opt/traffic_ops/app/conf/*
-%{PACKAGEDIR}/install/*
-%{PACKAGEDIR}/app/*
-%{PACKAGEDIR}/etc/*
-%{PACKAGEDIR}/doc/*
+%{PACKAGEDIR}/app/cpanfile
+%{PACKAGEDIR}/app/db
+%{PACKAGEDIR}/app/lib
+%{PACKAGEDIR}/app/public
+%{PACKAGEDIR}/app/templates
+%{PACKAGEDIR}/install
+%exclude %{PACKAGEDIR}/install/go
+%{PACKAGEDIR}/etc
+%doc %{PACKAGEDIR}/doc

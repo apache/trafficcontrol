@@ -23,6 +23,7 @@ public class FederationRegistry {
             for (final Federation federation : federations) {
                 if (deliveryServiceId.equals(federation.getDeliveryService())) {
                     targetFederation = federation;
+                    break;
                 }
             }
         }
@@ -36,9 +37,12 @@ public class FederationRegistry {
             ComparableTreeSet<CidrAddress> cidrAddresses;
             if (cidrAddress.isIpV6()) {
                 cidrAddresses = federationMapping.getResolve6();
-            }
-            else {
+            } else {
                 cidrAddresses = federationMapping.getResolve4();
+            }
+
+            if (cidrAddresses == null) {
+                continue;
             }
 
             for (CidrAddress resolverAddress : cidrAddresses) {
@@ -57,4 +61,16 @@ public class FederationRegistry {
         inetRecords.add(inetRecord);
         return inetRecords;
     }
+
+	public List<Federation> findFederations(final CidrAddress cidrAddress) {
+		final List<Federation> results = new ArrayList<Federation>();
+
+		for (Federation federation : federations) {
+			if (federation.containsCidrAddress(cidrAddress)) {
+				results.add(federation);
+			}
+		}
+
+		return results;
+	}
 }

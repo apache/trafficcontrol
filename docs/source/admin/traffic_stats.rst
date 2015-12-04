@@ -156,7 +156,7 @@ Configuration
 
 **Configuring Traffic Ops to use Grafana Dashboards**
 
-	To configure Traffic Ops to use Grafana Dashboards, you need to enter the following parameters and assign them to the GLOBAL profile.  This assumes you followed the above instructions to install and configure InfluxDB and Grafana.  You will need to place 'cdn-stats' and 'deliveryservice-stats' with the name of your dashboards.
+	To configure Traffic Ops to use Grafana Dashboards, you need to enter the following parameters and assign them to the GLOBAL profile.  This assumes you followed the above instructions to install and configure InfluxDB and Grafana.  You will need to place 'cdn-stats','deliveryservice-stats', and 'daily-summary' with the name of your dashboards.
 
 	+---------------------------+------------------------------------------------------------------------------------------------+
 	|       parameter name      |                                        parameter value                                         |
@@ -172,4 +172,8 @@ Configuration
 	| visual_status_panel_1     | https://<grafanaHost>/dashboard/solo/db/cdn-stats?panelId=2&fullscreen&from=now-24h&to=now-60s |
 	+---------------------------+------------------------------------------------------------------------------------------------+
 	| visual_status_panel_2     | https://<grafanaHost>/dashboard/solo/db/cdn-stats?panelId=1&fullscreen&from=now-24h&to=now-60s |
+	+---------------------------+------------------------------------------------------------------------------------------------+
+	| daily_bw_url              | https://<grafanaHost>/dashboard/solo/db/daily-summary?panelId=1&fullscreen&from=now-3y&to=now  |
+	+---------------------------+------------------------------------------------------------------------------------------------+
+	| daily_served_url          | https://<grafanaHost>/dashboard/solo/db/daily-summary?panelId=2&fullscreen&from=now-3y&to=now  |
 	+---------------------------+------------------------------------------------------------------------------------------------+

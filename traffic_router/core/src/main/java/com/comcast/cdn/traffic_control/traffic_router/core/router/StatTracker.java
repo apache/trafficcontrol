@@ -21,15 +21,14 @@ import java.util.List;
 import java.util.Map;
 
 import com.comcast.cdn.traffic_control.traffic_router.core.loc.Geolocation;
-import org.apache.log4j.Logger;
 
 import com.comcast.cdn.traffic_control.traffic_router.core.cache.CacheRegister;
 import com.comcast.cdn.traffic_control.traffic_router.core.ds.DeliveryService;
 import com.comcast.cdn.traffic_control.traffic_router.core.router.StatTracker.Track.ResultType;
 import com.comcast.cdn.traffic_control.traffic_router.core.router.StatTracker.Track.RouteType;
 
+@SuppressWarnings("PMD.ExcessivePublicCount")
 public class StatTracker {
-	private static final Logger LOGGER = Logger.getLogger(StatTracker.class);
 	private String dnsRoutingName;
 	private String httpRoutingName;
 
@@ -68,24 +67,37 @@ public class StatTracker {
 		public void setStaticRouteCount(final int staticRouteCount) {
 			this.staticRouteCount = staticRouteCount;
 		}
+
+		public int getFedCount() {
+			return fedCount;
+		}
+
+		public void setFedCount(final int fedCount) {
+			this.fedCount = fedCount;
+		}
+
 		public int czCount;
 		public int geoCount;
 		public int missCount;
 		public int dsrCount;
 		public int errCount;
 		public int staticRouteCount;
+		public int fedCount;
 	}
-	public static class Track {
 
+	public static class Track {
 		public static enum RouteType {
 			DNS,HTTP
 		}
+
 		public static enum ResultType {
 			ERROR, CZ, GEO, MISS, STATIC_ROUTE, DS_REDIRECT, DS_MISS, INIT, FED
 		}
+
 		public enum ResultDetails {
 			NO_DETAILS, DS_NOT_FOUND, DS_NO_BYPASS, DS_BYPASS, DS_CZ_ONLY, DS_CLIENT_GEO_UNSUPPORTED, GEO_NO_CACHE_FOUND
 		}
+
 		long time;
 		RouteType routeType;
 		String fqdn;
@@ -207,6 +219,7 @@ public class StatTracker {
 			incTally(t, tallies);
 		}
 	}
+
 	private static void incTally(final Track t, final Tallies tallies) {
 		switch(t.result) {
 		case ERROR:
@@ -227,10 +240,14 @@ public class StatTracker {
 		case STATIC_ROUTE:
 			tallies.staticRouteCount++;
 			break;
+		case FED:
+			tallies.fedCount++;
+			break;
 		default:
 			break;
 		}
 	}
+
 	public void init() {
 		appStartTime = System.currentTimeMillis();
 	}
@@ -241,8 +258,6 @@ public class StatTracker {
 			final DeliveryService ds = cacheRegister.getDeliveryService(dsId);
 
 			if (ds != null) {
-				LOGGER.info("Initializing statistics for " + ds);
-
 				for (int i = 0; i < dsNames.size(); i++) {
 					final Track t = getTrack();
 					final StringBuffer dsName = new StringBuffer(dsNames.get(i));

@@ -24,6 +24,7 @@ import java.net.InetAddress;
 import org.apache.log4j.Logger;
 import org.xbill.DNS.Message;
 import org.xbill.DNS.OPTRecord;
+import org.xbill.DNS.WireParseException;
 
 public class UDP extends AbstractProtocol {
     private static final Logger LOGGER = Logger.getLogger(UDP.class);
@@ -51,7 +52,6 @@ public class UDP extends AbstractProtocol {
                 submit(new UDPPacketHandler(packet));
             } catch (final IOException e) {
 				LOGGER.warn("error: " + e);
-				LOGGER.debug(e,e);
             }
         }
     }
@@ -97,6 +97,7 @@ public class UDP extends AbstractProtocol {
         }
 
         @Override
+        @SuppressWarnings("PMD.EmptyCatchBlock")
         public void run() {
             try {
                 final InetAddress client = packet.getAddress();
@@ -107,6 +108,8 @@ public class UDP extends AbstractProtocol {
                 final DatagramPacket outPacket = new DatagramPacket(response, response.length,
                         packet.getSocketAddress());
                 getDatagramSocket().send(outPacket);
+            } catch (final WireParseException e) {
+                // This is already recorded in the access log
             } catch (final Exception e) {
                 LOGGER.error(e.getMessage(), e);
             }

@@ -24,9 +24,13 @@ Parameter
 /api/1.2/parameters
 +++++++++++++++++++
 
+**GET /api/1.2/parameters.json**
+
   Authentication Required: Yes
 
-  **Return Values**
+  Role(s) Required: None
+
+  **Response Properties**
 
   +------------------+--------+----------------------------------------------------+
   |    Parameter     |  Type  |                    Description                     |
@@ -41,7 +45,6 @@ Parameter
   +------------------+--------+----------------------------------------------------+
 
   **Response Example** ::
-
 
     {
      "response": [
@@ -68,9 +71,11 @@ Parameter
 
 |
 
-**GET /api/1.2/parameters/profile/:profile_name.json**
+**GET /api/1.2/parameters/profile/:name.json**
 
   Authentication Required: Yes
+
+  Role(s) Required: None
 
   **Request Route Parameters**
 
@@ -80,7 +85,7 @@ Parameter
   | ``profile_name`` | yes      |             |
   +------------------+----------+-------------+
 
-  **Return Values**
+  **Response Properties**
 
   +------------------+--------+----------------------------------------------------+
   |    Parameter     |  Type  |                    Description                     |
@@ -94,9 +99,7 @@ Parameter
   | ``config_file``  | string | The parameter config_file                          |
   +------------------+--------+----------------------------------------------------+
 
-
   **Response Example** ::
-
 
     {
      "response": [
@@ -121,4 +124,4 @@ Parameter
      ],
     }
 
-
+|

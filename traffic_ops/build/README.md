@@ -7,7 +7,7 @@ $ git clone http://github.com/Comcast/traffic_control.git
 2. Bring up Vagrant environment (http://www.vagrantup.com)
 ```
 $ cd <repo dir>
-$ cp traffic_control/traffic_ops/rpm/Vagrantfile ./
+$ cp traffic_control/traffic_ops/build/Vagrantfile ./
 $ vagrant up
 ```
 3. ssh into vagrant environment
@@ -23,7 +23,7 @@ $ vagrant ssh
    - *BUILD\_NUMBER* (# of commits in branch + last commit identifier)
 5. Build the RPM
 ```
-$ cd /vagrant/traffic_control/rpm/build
+$ cd /vagrant/traffic_control/traffic_ops/build
 $ ./build_rpm.sh
 ```
 Notes:  

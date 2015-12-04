@@ -19,7 +19,7 @@
 
 	<artifactId>traffic_router</artifactId>
 	<groupId>com.comcast.cdn.traffic_control.traffic_router</groupId>
-	<version>1.2.1</version>
+	<version>${env.TRAFFIC_CONTROL_VERSION}</version>
 	<packaging>pom</packaging>
 	<name>traffic_router</name>
 
@@ -27,9 +27,8 @@
 		<module>connector</module>
 		<module>core</module>
 		<module>api</module>
-		<module>rpm</module>
+		<module>build</module>
 	</modules>
-
 	<properties>
 		<deploy.dir>/opt/traffic_router</deploy.dir>
 		<wicket.version>6.0.0</wicket.version>
@@ -51,6 +50,28 @@
 
 	<build>
 		<plugins>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-enforcer-plugin</artifactId>
+				<version>1.4.1</version>
+				<executions>
+					<execution>
+						<phase>validate</phase>
+						<id>enforce-environment-variable-is-set</id>
+						<goals>
+							<goal>enforce</goal>
+						</goals>
+						<configuration>
+							<rules>
+								<requireEnvironmentVariable>
+									<variableName>TRAFFIC_CONTROL_VERSION</variableName>
+								</requireEnvironmentVariable>
+							</rules>
+							<fail>true</fail>
+						</configuration>
+					</execution>
+				</executions>
+			</plugin>
 			<plugin>
 				<inherited>true</inherited>
 				<groupId>org.apache.maven.plugins</groupId>

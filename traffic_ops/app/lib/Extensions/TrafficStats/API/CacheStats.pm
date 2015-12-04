@@ -96,4 +96,92 @@ sub get_db_name {
 	return $conf->{cache_stats_db_name};
 }
 
+sub get_stat {
+	my $self = shift;
+	my $database = shift;
+	my $query = shift;
+	
+	my $response_container = $self->influxdb_query($database, $query);
+	my $response           = $response_container->{'response'};
+	my $content            = $response->{_content};
+	my $summary_content;
+
+	if ( $response->is_success() ) {
+		$summary_content   = decode_json($content);
+		return $summary_content->{results}[0]{series}[0]{values}[0][1];
+	}
+	
+	return "err";
+}
+
+sub current_bandwidth {
+	my $self = shift;
+	my $cdn  = $self->param('cdnName');
+	my $query = "SELECT sum(value)/6 FROM \"bandwidth\" WHERE time < now() - 60s and time > now() - 120s";
+	if ($cdn) {
+		$query = "SELECT sum(value)/6 FROM \"bandwidth\" WHERE time < now() - 60s and time > now() - 120s and cdn = \'$cdn\'";
+	}
+	my $bandwidth = $self->get_stat("cache_stats", $query);
+	return $self->success({"bandwidth" => $bandwidth/1000000});
+}
+
+sub current_connections {
+	my $self = shift;
+	my $cdn  = $self->param('cdnName');
+	my $query = "select sum(value)/6 from \"ats.proxy.process.http.current_client_connections\" where time > now() - 120s and time < now() - 60s";
+	if ($cdn) {
+		$query = "select sum(value)/6 from \"ats.proxy.process.http.current_client_connections\" where time > now() - 120s and time < now() - 60s and cdn = \'$cdn\'";
+	}
+	my $connections = $self->get_stat("cache_stats", $query);
+	return $self->success({"connections" => $connections});
+}
+
+sub current_capacity {
+	my $self = shift;
+	my $cdn  = $self->param('cdnName');
+	my $query = "select sum(value)/6 from \"maxKbps\" where time > now() - 120s and time < now() - 60s";
+	if ($cdn) {
+		$query = "select sum(value)/6 from \"maxKbps\" where time > now() - 120s and time < now() - 60s and cdn = \'$cdn\'";
+	}
+	my $capacity = $self->get_stat("cache_stats", $query);
+	$capacity = $capacity/1000000; #convert to Gbps
+	$capacity = $capacity * 0.85;    # need a better way to figure out percentage of max besides hard-coding
+	return $self->success({"capacity" => $capacity});
+}
+
+sub daily_summary {
+	my $self = shift;
+	my $query = "";
+	my $database = "daily_stats";
+	my $total_bytesserved = 0;
+
+	my $daily_stats;
+	my @max_gbps;
+	my @pb_served;
+	#get cdns
+	my @cdn_names = $self->db->resultset('Server')->search({ 'type.name' => 'EDGE' }, { prefetch => [ 'cdn', 'type' ], group_by => 'cdn.name' } )->get_column('cdn.name')->all();
+	foreach my $cdn (@cdn_names) {
+		my $bytes_served;
+		my $max;
+		#get max bw
+		$max->{"cdn"} = $cdn;
+		$bytes_served->{"cdn"} = $cdn;
+		my $max_bw = $self->get_stat($database, "select max(value) from \"daily_maxgbps\" where cdn = \'$cdn\'");
+		$max->{"highest"} = $max_bw;
+		#get last bw
+		my $last_bw = $self->get_stat($database, "select last(value) from \"daily_maxgbps\" where cdn = \'$cdn\'"); 
+		$max->{"yesterday"} = $last_bw;
+		push(@max_gbps, $max);
+		#get bytesserved
+		my $bytesserved = $self->get_stat($database, "select sum(value) from \"daily_bytesserved\" where cdn = \'$cdn\'"); 
+		$bytes_served->{"bytesServed"} = $bytesserved/1000;
+		push(@pb_served, $bytes_served);
+		$total_bytesserved += $bytesserved;
+	}
+	push(@pb_served, ({cdn => "total", bytesServed => $total_bytesserved/1000}));
+	$daily_stats->{"maxGbps"} = \@max_gbps;
+	$daily_stats->{"petaBytesServed"} = \@pb_served;
+	return $self->success({%$daily_stats});
+}
+
 1;

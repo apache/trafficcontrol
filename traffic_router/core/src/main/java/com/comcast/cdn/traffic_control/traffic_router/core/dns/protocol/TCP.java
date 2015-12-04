@@ -25,6 +25,7 @@ import java.net.Socket;
 
 import org.apache.log4j.Logger;
 import org.xbill.DNS.Message;
+import org.xbill.DNS.WireParseException;
 
 public class TCP extends AbstractProtocol {
     private static final Logger LOGGER = Logger.getLogger(TCP.class);
@@ -49,7 +50,6 @@ public class TCP extends AbstractProtocol {
                 submit(handler);
             } catch (final IOException e) {
 				LOGGER.warn("error: " + e);
-				LOGGER.debug(e,e);
             }
         }
     }
@@ -85,6 +85,7 @@ public class TCP extends AbstractProtocol {
         }
 
         @Override
+        @SuppressWarnings("PMD.EmptyCatchBlock")
         public void run() {
             try {
                 final InetAddress client = socket.getInetAddress();
@@ -99,6 +100,8 @@ public class TCP extends AbstractProtocol {
                 final byte[] response = query(client, request);
                 os.writeShort(response.length);
                 os.write(response);
+            } catch (final WireParseException e) {
+                // This is already recorded in the access log
             } catch (final Exception e) {
                 LOGGER.error(e.getMessage(), e);
             } finally {

@@ -48,12 +48,16 @@ import com.comcast.cdn.traffic_control.traffic_router.core.status.model.CacheMod
 
 public class DataExporter {
 	private static final Logger LOGGER = Logger.getLogger(DataExporter.class);
+	private static final String NOT_FOUND_MESSAGE = "not found";
 
 	@Autowired
 	private TrafficRouterManager trafficRouterManager;
 
 	@Autowired
 	private StatTracker statTracker;
+
+	@Autowired
+	private FederationExporter federationExporter;
 
 	public void setTrafficRouterManager(final TrafficRouterManager trafficRouterManager) {
 		this.trafficRouterManager = trafficRouterManager;
@@ -89,7 +93,6 @@ public class DataExporter {
 	}
 
 	public Map<String, Object> getCachesByIp(final String ip) {
-		LOGGER.warn("/ip/" + ip);
 
 		final Map<String, Object> map = new HashMap<String, Object>();
 		map.put("requestIp", ip);
@@ -99,7 +102,7 @@ public class DataExporter {
 		if (cl != null) {
 			map.put("locationByCoverageZone", cl.getProperties());
 		} else {
-			map.put("locationByCoverageZone", "not found");
+			map.put("locationByCoverageZone", NOT_FOUND_MESSAGE);
 		}
 
 		try {
@@ -108,15 +111,29 @@ public class DataExporter {
 			if (gl != null) {
 				map.put("locationByGeo", gl.getProperties());
 			} else {
-				map.put("locationByGeo", "not found");
+				map.put("locationByGeo", NOT_FOUND_MESSAGE);
 			}
 		} catch (GeolocationException e) {
 			LOGGER.warn(e,e);
 			map.put("locationByGeo", e.toString());
 		}
 
+		try {
+			final CidrAddress cidrAddress = CidrAddress.fromString(ip);
+			final List<Object> federationsList = federationExporter.getMatchingFederations(cidrAddress);
+
+			if (federationsList.isEmpty()) {
+				map.put("locationByFederation", "not found");
+			} else {
+				map.put("locationByFederation", federationsList);
+			}
+		} catch (NetworkNodeException e) {
+			map.put("locationByFederation", NOT_FOUND_MESSAGE);
+		}
+
 		return map;
 	}
+
 
 	private CacheLocation getLocationFromCzm(final String ip) {
 		NetworkNode nn = null;
@@ -254,4 +271,7 @@ public class DataExporter {
 		return cacheStatsMap;
 	}
 
+	public void setFederationExporter(final FederationExporter federationExporter) {
+		this.federationExporter = federationExporter;
+	}
 }

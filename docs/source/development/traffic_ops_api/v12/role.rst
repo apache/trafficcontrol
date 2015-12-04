@@ -28,6 +28,8 @@ Roles
 
   Authentication Required: Yes
 
+  Role(s) Required: None
+
   **Response Properties**
 
   +----------------------+--------+------------------------------------------------+
@@ -52,6 +54,7 @@ Roles
            "privLevel": "10",
            "description": "read-only user"
         }
-     ],
+     ]
     }
 
+|

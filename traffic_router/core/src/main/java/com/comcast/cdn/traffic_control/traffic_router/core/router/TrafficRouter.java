@@ -45,7 +45,6 @@ import com.comcast.cdn.traffic_control.traffic_router.core.cache.Cache;
 import com.comcast.cdn.traffic_control.traffic_router.core.cache.CacheLocation;
 import com.comcast.cdn.traffic_control.traffic_router.core.cache.CacheRegister;
 import com.comcast.cdn.traffic_control.traffic_router.core.cache.InetRecord;
-import com.comcast.cdn.traffic_control.traffic_router.core.cache.Cache.DeliveryServiceReference;
 import com.comcast.cdn.traffic_control.traffic_router.core.dns.ZoneManager;
 import com.comcast.cdn.traffic_control.traffic_router.core.dns.DNSAccessRecord;
 import com.comcast.cdn.traffic_control.traffic_router.core.ds.DeliveryService;
@@ -76,6 +75,7 @@ public class TrafficRouter {
 	private final GeolocationService geolocationService6;
 	private final ObjectPool hashFunctionPool;
 	private final FederationRegistry federationRegistry;
+	private final boolean consistentDNSRouting;
 
 	private final Random random = new Random(System.nanoTime());
 	private Set<String> requestHeaders = new HashSet<String>();
@@ -92,6 +92,7 @@ public class TrafficRouter {
 		this.geolocationService6 = geolocationService6;
 		this.hashFunctionPool = hashFunctionPool;
 		this.federationRegistry = federationRegistry;
+		this.consistentDNSRouting = cr.getConfig().optBoolean("consistent.dns.routing", false); // previous/default behavior
 		this.zoneManager = new ZoneManager(this, statTracker, trafficOpsUtils);
 	}
 
@@ -115,23 +116,12 @@ public class TrafficRouter {
 			if(cache.hasAuthority()) {
 				isAvailable = cache.isAvailable();
 			}
-			if (!isAvailable || !cacheSupportsDeliveryService(cache, ds)) {
+			if (!isAvailable || !cache.hasDeliveryService(ds.getId())) {
 				caches.remove(i);
 				i--;
 			}
 		}
 		return caches;
-	}
-
-	private boolean cacheSupportsDeliveryService(final Cache cache, final DeliveryService ds) {
-		boolean result = false;
-		for (final DeliveryServiceReference dsRef : cache.getDeliveryServices()) {
-			if (dsRef.getDeliveryServiceId().equals(ds.getId())) {
-				result = true;
-				break;
-			}
-		}
-		return result;
 	}
 
 	public CacheRegister getCacheRegister() {
@@ -233,12 +223,9 @@ public class TrafficRouter {
 		}
 
 		if (ds.isCoverageZoneOnly()) {
-			LOGGER.warn(String.format("No Cache found in CZM (%s, ip=%s, path=%s), geo not supported", request.getType(), request.getClientIP(), request.getHostname()));
 			track.setResult(ResultType.MISS);
 			track.setResultDetails(ResultDetails.DS_CZ_ONLY);
-		}
-		else {
-			LOGGER.warn(String.format("No Cache found by CZM (%s, ip=%s, path=%s)", request.getType(), request.getClientIP(), request.getHostname()));
+		} else {
 			caches = selectCachesByGeo(request, ds, cacheLocation, track);
 		}
 
@@ -265,7 +252,6 @@ public class TrafficRouter {
 		final List<Cache> caches = getCachesByGeo(request, deliveryService, clientLocation, resultLocation);
 		
 		if (caches == null || caches.isEmpty()) {
-			LOGGER.warn(String.format("No Cache found by Geo (%s, ip=%s, path=%s)", request.getType(), request.getClientIP(), request.getHostname()));
 			track.setResultDetails(ResultDetails.GEO_NO_CACHE_FOUND);
 		}
 
@@ -279,7 +265,6 @@ public class TrafficRouter {
 		final DeliveryService ds = selectDeliveryService(request, false);
 
 		if (ds == null) {
-			LOGGER.warn("[dns] No DeliveryService found for: " + request.getHostname());
 			track.setResult(ResultType.STATIC_ROUTE);
 			track.setResultDetails(ResultDetails.DS_NOT_FOUND);
 			return null;
@@ -288,7 +273,6 @@ public class TrafficRouter {
 		final DNSRouteResult result = new DNSRouteResult();
 
 		if (!ds.isAvailable()) {
-			LOGGER.warn("deliveryService not available: " + ds);
 			result.setAddresses(ds.getFailureDnsResponse(request, track));
 			return result;
 		}
@@ -298,12 +282,11 @@ public class TrafficRouter {
 
 		if (caches != null) {
 			track.setResult(ResultType.CZ);
-			result.setAddresses(inetRecordsFromCaches(ds, caches));
+			result.setAddresses(inetRecordsFromCaches(ds, caches, request));
 			return result;
 		}
 
 		if (ds.isCoverageZoneOnly()) {
-			LOGGER.info(String.format("No Cache found in CZM (%s, ip=%s, path=%s), geo not supported", request.getType(), request.getClientIP(), request.getHostname()));
 			track.setResult(ResultType.MISS);
 			track.setResultDetails(ResultDetails.DS_CZ_ONLY);
 			result.setAddresses(ds.getFailureDnsResponse(request, track));
@@ -322,14 +305,12 @@ public class TrafficRouter {
 			LOGGER.error("Bad client address: '" + request.getClientIP() + "'");
 		}
 
-		LOGGER.info(String.format("No Cache found by CZM (%s, ip=%s, path=%s)", request.getType(), request.getClientIP(), request.getHostname()));
 		caches = selectCachesByGeo(request, ds, cacheLocation, track);
 
 		if (caches != null) {
 			track.setResult(ResultType.GEO);
-			result.setAddresses(inetRecordsFromCaches(ds, caches));
-		}
-		else {
+			result.setAddresses(inetRecordsFromCaches(ds, caches, request));
+		} else {
 			track.setResult(ResultType.MISS);
 			result.setAddresses(ds.getFailureDnsResponse(request, track));
 		}
@@ -337,32 +318,42 @@ public class TrafficRouter {
 		return result;
 	}
 
-	private List<InetRecord> inetRecordsFromCaches(final DeliveryService ds, final List<Cache> caches) {
+	public List<InetRecord> inetRecordsFromCaches(final DeliveryService ds, final List<Cache> caches, final Request request) {
 		final List<InetRecord> addresses = new ArrayList<InetRecord>();
 		final int maxDnsIps = ds.getMaxDnsIps();
+		List<Cache> selectedCaches;
 
-		/*
-		 * We also shuffle in NameServer when adding Records to the Message prior
-		 * to sending it out, as the Records are sorted later when we fill the
-		 * dynamic zone if DNSSEC is enabled. We shuffle here prior to pruning
-		 * for maxDnsIps so that we ensure we are spreading load across all caches
-		 * assigned to this delivery service.
-		 */
-		if (maxDnsIps > 0) {
+		if (maxDnsIps > 0 && isConsistentDNSRouting()) { // only consistent hash if we must
+			final SortedMap<Double, Cache> cacheMap = consistentHash(caches, request.getHostname());
+			final Dispersion dispersion = ds.getDispersion();
+			selectedCaches = dispersion.getCacheList(cacheMap);
+		} else if (maxDnsIps > 0) {
+			/*
+			 * We also shuffle in NameServer when adding Records to the Message prior
+			 * to sending it out, as the Records are sorted later when we fill the
+			 * dynamic zone if DNSSEC is enabled. We shuffle here prior to pruning
+			 * for maxDnsIps so that we ensure we are spreading load across all caches
+			 * assigned to this delivery service.
+			*/
 			Collections.shuffle(caches, random);
+
+			selectedCaches = new ArrayList<Cache>();
+
+			for (final Cache cache : caches) {
+				selectedCaches.add(cache);
+
+				if (selectedCaches.size() >= maxDnsIps) {
+					break;
+				}
+			}
+		} else {
+			selectedCaches = caches;
 		}
 
-		int i = 0;
-
-		for (final Cache cache : caches) {
-			if (maxDnsIps!=0 && i >= maxDnsIps) {
-				break;
-			}
-
-			i++;
-
+		for (final Cache cache : selectedCaches) {
 			addresses.addAll(cache.getIpAddresses(ds.getTtls(), zoneManager, ds.isIp6RoutingEnabled()));
 		}
+
 		return addresses;
 	}
 
@@ -377,6 +368,10 @@ public class TrafficRouter {
 		return clientLocation;
 	}
 
+	public List<Cache> selectCachesByCZ(final DeliveryService ds, final CacheLocation cacheLocation) {
+		return selectCachesByCZ(ds, cacheLocation, null);
+	}
+
 	private List<Cache> selectCachesByCZ(final DeliveryService ds, final CacheLocation cacheLocation, final Track track) {
 		if (cacheLocation == null || !ds.isLocationAvailable(cacheLocation)) {
 			return null;
@@ -384,7 +379,7 @@ public class TrafficRouter {
 
 		final List<Cache> caches = selectCache(cacheLocation, ds);
 
-		if (caches != null) {
+		if (caches != null && track != null) {
 			track.setResult(ResultType.CZ);
 			track.setResultLocation(cacheLocation.getGeolocation());
 		}
@@ -398,7 +393,6 @@ public class TrafficRouter {
 		final DeliveryService ds = selectDeliveryService(request, true);
 
 		if (ds == null) {
-			LOGGER.warn("No DeliveryService found for: " + request.getRequestedUrl());
 			track.setResult(ResultType.DS_MISS);
 			track.setResultDetails(ResultDetails.DS_NOT_FOUND);
 			return null;
@@ -409,7 +403,6 @@ public class TrafficRouter {
 		routeResult.setDeliveryService(ds);
 
 		if (!ds.isAvailable()) {
-			LOGGER.warn("deliveryService unavailable: " + ds);
 			routeResult.setUrl(ds.getFailureHttpResponse(request, track));
 			return routeResult;
 		}
@@ -515,11 +508,7 @@ public class TrafficRouter {
 			}
 		}
 
-		final Cache result = (foundCache != null) ? foundCache : minCache;
-		if (LOGGER.isDebugEnabled()) {
-			LOGGER.debug("Selected cache: " + result);
-		}
-		return result;
+		return (foundCache != null) ? foundCache : minCache;
 	}
 
 	/**
@@ -541,11 +530,11 @@ public class TrafficRouter {
 			try {
 				hash = hashFunction.hash(request);
 			} catch (final Exception e) {
-				LOGGER.debug(e.getMessage(), e);
+				LOGGER.error(e.getMessage(), e);
 			}
 			hashFunctionPool.returnObject(hashFunction);
 		} catch (final Exception e) {
-			LOGGER.debug(e.getMessage(), e);
+			LOGGER.error(e.getMessage(), e);
 		}
 		if (hash == 0) {
 			LOGGER.warn("Problem with hashFunctionPool, request: " + request);
@@ -647,5 +636,9 @@ public class TrafficRouter {
 
 	public Set<String> getRequestHeaders() {
 		return requestHeaders;
+	}
+
+	public boolean isConsistentDNSRouting() {
+		return consistentDNSRouting;
 	}
 }

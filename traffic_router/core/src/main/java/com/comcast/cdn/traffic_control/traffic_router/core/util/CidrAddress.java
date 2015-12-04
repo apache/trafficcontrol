@@ -16,7 +16,7 @@ public class CidrAddress implements Comparable<CidrAddress> {
 
     public static CidrAddress fromString(final String cidrString) throws NetworkNodeException {
         final String[] hostNetworkArray = cidrString.split("/");
-        final String host = hostNetworkArray[0];
+        final String host = hostNetworkArray[0].trim();
 
         InetAddress address;
         try {
@@ -31,7 +31,7 @@ public class CidrAddress implements Comparable<CidrAddress> {
 
         int netmaskLength;
         try {
-            netmaskLength = Integer.parseInt(hostNetworkArray[1]);
+            netmaskLength = Integer.parseInt(hostNetworkArray[1].trim());
         }
         catch (NumberFormatException e) {
             throw new NetworkNodeException(e);
@@ -134,5 +134,9 @@ public class CidrAddress implements Comparable<CidrAddress> {
     @Override
     public String toString() {
         return getCidrString();
+    }
+
+    public String getAddressString() {
+        return address.toString() + "/" + netmaskLength;
     }
 }

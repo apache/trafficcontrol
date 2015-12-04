@@ -11,6 +11,7 @@ import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.net.URL;
+import java.util.concurrent.TimeUnit;
 
 public class FederationsWatcher extends AbstractServiceUpdater {
     private static final Logger LOGGER = Logger.getLogger(FederationsWatcher.class);
@@ -21,20 +22,20 @@ public class FederationsWatcher extends AbstractServiceUpdater {
     private TrafficOpsUtils trafficOpsUtils;
     private FederationRegistry federationRegistry;
 
-    public void configure(final URL authorizationURL, final String postData, final URL federationsURL, final long pollingInterval) {
+    public void configure(final URL authorizationURL, final String postData, final URL federationsURL, final long pollingInterval, final int timeout) {
         if (authorizationURL.equals(this.authorizationURL) && postData.equals(this.postData) &&
             federationsURL.equals(federationsURL) && pollingInterval == getPollingInterval()) {
             return;
         }
 
-        setDataBaseURL(federationsURL.toString(), pollingInterval);
-
         // avoid recreating the fetcher if possible
         if (!authorizationURL.equals(this.authorizationURL) || !postData.equals(this.postData)) {
             this.authorizationURL = authorizationURL;
             this.postData = postData;
-            fetcher = new ProtectedFetcher(authorizationURL.toString(), postData, 120000);
+            fetcher = new ProtectedFetcher(authorizationURL.toString(), postData, timeout);
         }
+
+        setDataBaseURL(federationsURL.toString(), pollingInterval);
     }
 
     public void configure(final JSONObject config) {
@@ -47,7 +48,8 @@ public class FederationsWatcher extends AbstractServiceUpdater {
             authUrl = new URL(trafficOpsUtils.getAuthUrl());
             jsonData = trafficOpsUtils.getAuthJSON().toString();
         } catch (Exception e) {
-            LOGGER.warn("Failed Getting Configuration for ProtectedFetcher for FederationsWatcher: " + e.getMessage());
+            LOGGER.warn("Failed to update URL for TrafficOps authorization, " +
+                "check the api.auth.url, and the TrafficOps username and password configuration setting: " + e.getMessage());
             // All or nothing, don't allow the watcher to be halfway misconfigured
             authUrl = this.authorizationURL;
             jsonData = this.postData;
@@ -55,18 +57,21 @@ public class FederationsWatcher extends AbstractServiceUpdater {
         try{
             fedsUrl = new URL(trafficOpsUtils.getUrl("federationmapping.polling.url"));
         } catch (Exception e) {
-            LOGGER.warn("Invalid Federation Polling URL: " + e.getMessage());
+            LOGGER.warn("Invalid Federation Polling URL, check the federationmapping.polling.url configuration: " + e.getMessage());
         }
 
         try {
             interval = config.getLong("federationmapping.polling.interval");
         } catch (JSONException e) {
-            LOGGER.warn("Failed getting configuration for FederationsWatcher Polling Interval " + e.getMessage());
+            LOGGER.warn("Bad configuration value for federationmapping.polling.interval, ignoring configuration value and keeping it at "
+                + interval + " " + TimeUnit.MILLISECONDS + ": " + e.getMessage());
             interval = getPollingInterval();
         }
 
+        final int timeout = config.optInt("federationmapping.polling.timeout", 15 * 1000); // socket timeouts are in ms
+
         if (authUrl != null && jsonData != null && fedsUrl != null && interval != -1L) {
-            configure(authUrl, jsonData, fedsUrl, interval);
+            configure(authUrl, jsonData, fedsUrl, interval, timeout);
         }
     }
 
@@ -96,7 +101,7 @@ public class FederationsWatcher extends AbstractServiceUpdater {
     @Override
     protected File downloadDatabase(final String url, final File existingDb) {
         if (fetcher == null) {
-            LOGGER.warn("Fetcher has not been initialized; unable download federations until configuration is processed.");
+            LOGGER.warn("Waiting for federations configuration to be processed, unable download federations");
             return null;
         }
 
