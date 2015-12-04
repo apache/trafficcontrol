@@ -160,7 +160,7 @@ sub newjob {
 			$insert->insert();
 			$response{"job"} = $insert->id;
 
-			&log( $self, "UI entry " . $response{job} . " forced new regex_revalidate.config snapshot", "CODEBIG" );
+			&log( $self, "UI entry " . $response{job} . " forced new regex_revalidate.config snapshot", "UICHANGE" );
 			$self->snapshot_regex_revalidate();
 			my $ds_id = $self->db->resultset('Deliveryservice')->search( { xml_id => $ds_xml_id }, { prefetch => ['profile'] } )->get_column('id')->single();	
 			$self->set_update_server_bits($ds_id);

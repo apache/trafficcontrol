@@ -202,17 +202,9 @@ sub log() {
 
 	# my $user    = $self->tx->req->env->{REMOTE_USER};
 
-	# For testing on local morbo
-	#	if ( !defined($user) ) { $user = "jvando001"; }
 	my $user;
-	if ( $level eq 'CODEBIG' ) {
-		$user = "codebig";
-	}
-	else {
-		$user = $self->current_user()->{username};
-	}
-
 	$user = $self->db->resultset('TmUser')->search( { username => $user } )->get_column('id')->single;
+
 	my $insert = $self->db->resultset('Log')->create(
 		{
 			tm_user => 0 + $user,    # the 0 + forces it to be treated as a number, and no ''
