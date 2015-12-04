@@ -272,14 +272,7 @@ public class CacheState extends AbstractState {
 	}
 
 	public boolean completeFetch(final HealthDeterminer myHealthDeterminer, final CacheDataModel errorCount, final AtomicInteger cancelCount, final AtomicInteger failCount) {
-		if (future == null) {
-			return true;
-		}
-
-		// Does this logic change make performance better????
-		// if (future.isDone() || future.isCancelled()) {
-
-		if (future.isDone()) {
+		if (future == null || future.isDone() || future.isCancelled()) {
 			return true;
 		}
 
