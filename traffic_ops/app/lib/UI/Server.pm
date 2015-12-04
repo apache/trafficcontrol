@@ -65,9 +65,10 @@ sub view {
 }
 
 sub server_by_id {
-	my $self       = shift;
-	my $serverid   = $self->param('id');
-	my $server_row = $self->db->resultset("Server")->search( { id => $serverid } )->single;
+	my $self     = shift;
+	my $serverid = $self->param('id');
+	my $server_row =
+		$self->db->resultset("Server")->search( { id => $serverid } )->single;
 	if ( defined($server_row) ) {
 		my %data = (
 			"id"             => $server_row->id,
@@ -160,7 +161,11 @@ sub serverdetail {
 	my @data;
 	my $select = undef;
 	$select = $self->param('select') if ( defined $self->param('select') );
-	my $rs_data = $self->db->resultset('Server')->search( undef, { prefetch => [ 'cdn', 'cachegroup', 'type', 'profile', 'status', 'phys_location' ], } );
+	my $rs_data = $self->db->resultset('Server')->search(
+		undef, {
+			prefetch => [ 'cdn', 'cachegroup', 'type', 'profile', 'status', 'phys_location' ],
+		}
+	);
 	while ( my $row = $rs_data->next ) {
 		my $cdn_name = defined( $row->cdn_id ) ? $row->cdn->name : "";
 		my $fqdn = $row->host_name . "." . $row->domain_name;
@@ -198,7 +203,8 @@ sub serverdetail {
 			"router_port_name" => $row->router_port_name,
 		};
 		my $id = $row->id;
-		my $rs_hwinfo_data = $self->db->resultset('Hwinfo')->search( { 'serverid' => $id } );
+		my $rs_hwinfo_data =
+			$self->db->resultset('Hwinfo')->search( { 'serverid' => $id } );
 		while ( my $hwinfo_row = $rs_hwinfo_data->next ) {
 			$serv->{ $hwinfo_row->description } = $hwinfo_row->val;
 		}
@@ -217,7 +223,14 @@ sub edge_ds_status {
 	my %servers_in_cg = ();
 	my %servers_in_ds = ();
 	my $etype         = &type_id( $self, 'EDGE' );
-	my $rs_servers_cg = $self->db->resultset('Server')->search( { cachegroup => $cachegroup_id, profile => $profile_id, type => $etype } );
+	my $rs_servers_cg = $self->db->resultset('Server')->search(
+		{
+			cachegroup => $cachegroup_id,
+			profile    => $profile_id,
+			type       => $etype
+		}
+	);
+
 	while ( my $row = $rs_servers_cg->next ) {
 		$servers_in_cg{ $row->host_name } = $row->id;
 
@@ -257,7 +270,8 @@ sub delete {
 		my $delete = $self->db->resultset('Server')->search( { id => $id } );
 		my $host_name = $delete->get_column('host_name')->single();
 		$delete->delete();
-		$delete = $self->db->resultset('Servercheck')->search( { server => $id } );
+		$delete =
+			$self->db->resultset('Servercheck')->search( { server => $id } );
 		$delete->delete();
 		&log( $self, "Delete server with id:" . $id . " named " . $host_name, "UICHANGE" );
 	}
@@ -304,7 +318,9 @@ sub check_server_input {
 	foreach my $param (qw/host_name domain_name ip_address ip_netmask ip_gateway interface_mtu interface_name cdn cachegroup type profile/) {
 
 		#print "$param -> " . $paramHashRef->{$param} . "\n";
-		if ( !defined( $paramHashRef->{$param} ) || $paramHashRef->{$param} eq "" ) {
+		if ( !defined( $paramHashRef->{$param} )
+			|| $paramHashRef->{$param} eq "" )
+		{
 			$err .= $param . " is a required field.";
 			if ( defined( $paramHashRef->{'csv_line_number'} ) ) {
 				$err = '</li><li>' . $errorCSVLineDelim . '[LINE #:' . $paramHashRef->{'csv_line_number'} . ']:  ' . $err . '\n';
@@ -516,9 +532,11 @@ sub update {
 		if ( $org_server->type->id != $update->type->id ) {
 
 			# server type changed:  servercheck entry required for EDGE and MID, but not others. Add or remove servercheck entry accordingly
-			my %need_servercheck = map { &type_id( $self, $_ ) => 1 } qw{ EDGE MID };
-			my $newtype_id       = $update->type->id;
-			my $servercheck      = $self->db->resultset('Servercheck')->search( { server => $id } );
+			my %need_servercheck =
+				map { &type_id( $self, $_ ) => 1 } qw{ EDGE MID };
+			my $newtype_id = $update->type->id;
+			my $servercheck =
+				$self->db->resultset('Servercheck')->search( { server => $id } );
 			if ( $servercheck != 0 && !$need_servercheck{$newtype_id} ) {
 
 				# servercheck entry found but not needed -- delete it
@@ -599,8 +617,8 @@ sub set_serverstatus {
 sub cgi_params_to_param_hash_ref {
 	my $self         = shift;
 	my $paramHashRef = {};
-	foreach
-		my $requiredParam (qw/host_name domain_name ip_address ip_netmask ip_gateway interface_mtu interface_name cdn cachegroup type profile phys_location/)
+	foreach my $requiredParam (
+		qw/host_name domain_name ip_address ip_netmask ip_gateway interface_mtu interface_name cdn cachegroup type profile phys_location/)
 	{
 		$paramHashRef->{$requiredParam} = $self->param($requiredParam);
 	}
@@ -738,7 +756,10 @@ sub create {
 				return $self->redirect_to( $stripped . $qstring );
 			}
 			else {
-				return $self->render( text => "ERR = " . $err, layout => undef );    # for testing - $referer is not defined there.
+				return $self->render(
+					text   => "ERR = " . $err,
+					layout => undef
+				);    # for testing - $referer is not defined there.
 			}
 		}
 		else {
@@ -849,14 +870,20 @@ sub readupdate {
 		$rs_servers = $self->db->resultset("Server")->search(undef);
 	}
 	else {
-		$rs_servers = $self->db->resultset("Server")->search( { host_name => $host_name } );
-		if ( $rs_servers->single->type->name eq "EDGE" ) {
-			my $parent_cg =
-				$self->db->resultset('Cachegroup')->search( { id => $rs_servers->single->cachegroup->id } )->get_column('parent_cachegroup_id')->single;
-			my $rs_parents = $self->db->resultset('Server')->search( { cachegroup => $parent_cg } );
-			while ( my $prow = $rs_parents->next ) {
-				if ( $prow->upd_pending == 1 && $prow->status->name ne "OFFLINE" ) {
-					$parent_pending{ $rs_servers->single->host_name } = 1;
+		$rs_servers =
+			$self->db->resultset("Server")->search( { host_name => $host_name } );
+		my $count = $rs_servers->count();
+		if ( $count > 0 ) {
+			if ( $rs_servers->single->type->name eq "EDGE" ) {
+				my $parent_cg =
+					$self->db->resultset('Cachegroup')->search( { id => $rs_servers->single->cachegroup->id } )->get_column('parent_cachegroup_id')->single;
+				my $rs_parents = $self->db->resultset('Server')->search( { cachegroup => $parent_cg } );
+				while ( my $prow = $rs_parents->next ) {
+					if (   $prow->upd_pending == 1
+						&& $prow->status->name ne "OFFLINE" )
+					{
+						$parent_pending{ $rs_servers->single->host_name } = 1;
+					}
 				}
 			}
 		}
@@ -901,18 +928,27 @@ sub postupdate {
 	}
 
 	if ( !defined($updated) ) {
-		$self->render_text( "Failed request.  Must provide updated status", status => 500, layout => undef );
+		$self->render_text(
+			"Failed request.  Must provide updated status",
+			status => 500,
+			layout => undef
+		);
 		return;
 	}
 
 	# resolve server id
 	my $serverid = $self->db->resultset("Server")->search( { host_name => $host_name } )->get_column('id')->single;
 	if ( !defined $serverid ) {
-		$self->render_text( "Failed request.  Unknown server", status => 500, layout => undef );
+		$self->render_text(
+			"Failed request.  Unknown server",
+			status => 500,
+			layout => undef
+		);
 		return;
 	}
 
-	my $update_server = $self->db->resultset('Server')->search( { id => $serverid } );
+	my $update_server =
+		$self->db->resultset('Server')->search( { id => $serverid } );
 	if ( defined $updated ) {
 		$update_server->update( { upd_pending => $updated } );
 	}
@@ -939,12 +975,11 @@ sub postupdatequeue {
 			$update = $self->db->resultset('Server')->search(undef);
 		}
 		else {
-			$update
-				= $self->db->resultset('Server')->search( { id => $host, } );
+			$update =
+				$self->db->resultset('Server')->search( { id => $host, } );
 		}
 		$update->update( { upd_pending => $setqueue } );
-		&log( $self, "Flip Update bit (Queue Updates) for server(s):" . $host,
-			"OPER" );
+		&log( $self, "Flip Update bit (Queue Updates) for server(s):" . $host, "OPER" );
 	}
 	elsif ( defined($cdn) && defined($cachegroup) ) {
 		my @profiles;
@@ -952,27 +987,26 @@ sub postupdatequeue {
 
 			@profiles = $self->db->resultset('Server')->search(
 				{ 'cdn.name' => $cdn },
-				{   prefetch => 'cdn',
+				{
+					prefetch => 'cdn',
 					select   => 'me.profile',
 					distinct => 1
 				}
 			)->get_column('profile')->all();
 		}
 		else {
-			@profiles = $self->db->resultset('Profile')->search(undef)
-				->get_column('id')->all;
+			@profiles = $self->db->resultset('Profile')->search(undef)->get_column('id')->all;
 		}
 		my @cachegroups;
 		if ( $cachegroup ne "all" ) {
-			@cachegroups = $self->db->resultset('Cachegroup')
-				->search( { name => $cachegroup } )->get_column('id')->all;
+			@cachegroups = $self->db->resultset('Cachegroup')->search( { name => $cachegroup } )->get_column('id')->all;
 		}
 		else {
-			@cachegroups = $self->db->resultset('Cachegroup')->search(undef)
-				->get_column('id')->all;
+			@cachegroups = $self->db->resultset('Cachegroup')->search(undef)->get_column('id')->all;
 		}
 		my $update = $self->db->resultset('Server')->search(
-			{   -and => [
+			{
+				-and => [
 					cachegroup => { -in => \@cachegroups },
 					profile    => { -in => \@profiles }
 				]
@@ -981,22 +1015,11 @@ sub postupdatequeue {
 
 		if ( $update->count() > 0 ) {
 			$update->update( { upd_pending => $setqueue } );
-			$self->app->log->debug(
-				"Flip Update bit (Queue Updates) for servers in CDN: $cdn, Cachegroup: $cachegroup"
-			);
-			&log(
-				$self,
-				"Flip Update bit (Queue Updates) for servers in CDN:"
-					. $cdn
-					. " cachegroup:"
-					. $cachegroup,
-				"OPER"
-			);
+			$self->app->log->debug("Flip Update bit (Queue Updates) for servers in CDN: $cdn, Cachegroup: $cachegroup");
+			&log( $self, "Flip Update bit (Queue Updates) for servers in CDN:" . $cdn . " cachegroup:" . $cachegroup, "OPER" );
 		}
 		else {
-			$self->app->log->debug(
-				"No Queue Updates for servers in CDN: $cdn, Cachegroup: $cachegroup"
-			);
+			$self->app->log->debug("No Queue Updates for servers in CDN: $cdn, Cachegroup: $cachegroup");
 		}
 	}
 
