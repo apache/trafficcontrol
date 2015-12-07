@@ -36,8 +36,6 @@ ASN
   +------------------+--------+-------------------------------------------------------------------------+
   |    Parameter     |  Type  |                               Description                               |
   +==================+========+=========================================================================+
-  | ``asns``         | array  | A collection of asns                                                    |
-  +------------------+--------+-------------------------------------------------------------------------+
   | ``>lastUpdated`` | string | The Time / Date this server entry was last updated                      |
   +------------------+--------+-------------------------------------------------------------------------+
   | ``>id``          | string | Local unique identifier for the ASN                                     |
@@ -50,22 +48,20 @@ ASN
   **Response Example** ::
 
     {
-     "response": {
-        "asns": [
-           {
-              "lastUpdated": "2012-09-17 21:41:22",
-              "id": "27",
-              "asn": "7015",
-              "cachegroup": "us-ma-woburn"
-           },
-           {
-              "lastUpdated": "2012-09-17 21:41:22",
-              "id": "28",
-              "asn": "7016",
-              "cachegroup": "us-pa-pittsburgh"
-           }
-        ]
-     }
+     "response": [
+        {
+          "lastUpdated": "2012-09-17 21:41:22",
+          "id": "27",
+          "asn": "7015",
+          "cachegroup": "us-ma-woburn"
+        },
+        {
+          "lastUpdated": "2012-09-17 21:41:22",
+          "id": "28",
+          "asn": "7016",
+          "cachegroup": "us-pa-pittsburgh"
+        }
+      ]
     }
 
 |
