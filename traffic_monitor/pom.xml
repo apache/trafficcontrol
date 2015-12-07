@@ -86,6 +86,12 @@
 			<artifactId>wicket-examples-war</artifactId>
 			<version>0.2</version>
 			<classifier>test-sources</classifier>
+			<exclusions>
+				<exclusion>
+					<groupId>org.apache.wicket</groupId>
+					<artifactId>wicket-atmosphere</artifactId>
+				</exclusion>
+			</exclusions>
 		</dependency>
 		<dependency>
 			<groupId>org.apache.wicket</groupId>
