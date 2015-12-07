@@ -75,14 +75,14 @@ $t->post_ok( '/api/1.1/user/login', json => { u => Test::TestHelper::PORTAL_USER
 $t->get_ok('/api/1.1/user/current.json')->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } )
 	->json_is( "/response/username", Test::TestHelper::PORTAL_USER );
 
-ok $t->post_ok( '/api/1.1/user/current/update', json => { user => { addressLine1 => 'newaddress', email => 'testportal@kabletown.com', role => 4 } } )
+ok $t->post_ok( '/api/1.1/user/current/update', json => { user => { addressLine1 => 'newaddress', email => 'testportal1@kabletown.com', role => 4 } } )
 	->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } )->json_is( "/alerts/0/level", "success" ),
 	"Verify that we can update the user but ignore the role unless an admin";
 
 # Verify changes.
 ok $t->get_ok('/api/1.1/user/current.json')->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } )
 	->json_is( "/response/username", Test::TestHelper::PORTAL_USER )->json_is( "/response/addressLine1", 'newaddress' )
-	->json_is( "/response/email", 'testportal@kabletown.com' )->json_is( "/response/role", 6 ), "Verify the update happened and the role didn't change";
+	->json_is( "/response/email", 'testportal1@kabletown.com' )->json_is( "/response/role", 6 ), "Verify the update happened and the role didn't change";
 
 # Test required fields
 $t->post_ok( '/api/1.1/user/current/update', json => { address_line1 => 'newaddress' } )->status_is(400)
