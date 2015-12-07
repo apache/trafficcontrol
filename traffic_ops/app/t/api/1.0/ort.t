@@ -25,11 +25,17 @@ use warnings;
 no warnings 'once';
 use warnings 'all';
 use Test::TestHelper;
+use Test::TrafficServerConfig;
 
 #no_transactions=>1 ==> keep fixtures after every execution, beware of duplicate data!
 #no_transactions=>0 ==> delete fixtures after every execution
 
 BEGIN { $ENV{MOJO_MODE} = "test" }
+
+sub debug {
+  my $json = JSON->new;
+  print "Content: " . $json->pretty->encode( Test::TrafficServerConfig::loadConfig(@_) ). "\n";
+}
 
 my $schema = Schema->connect_to_database;
 my $dbh    = Schema->database_handle;
@@ -79,6 +85,8 @@ sub genfiles_check {
 	$t->get_ok( '/genfiles/view/' . $host_name . '/ip_allow.config' )->status_is(200)->or( sub     { diag $t->tx->res->content->asset->{content}; } );
 	$t->get_ok( '/genfiles/view/' . $host_name . '/logs_xml.config' )->status_is(200)->or( sub     { diag $t->tx->res->content->asset->{content}; } );
 	$t->get_ok( '/genfiles/view/' . $host_name . '/parent.config' )->status_is(200)->or( sub       { diag $t->tx->res->content->asset->{content}; } );
+	debug( $t->tx->res->content->asset->{content} );
+
 	$t->get_ok( '/genfiles/view/' . $host_name . '/plugin.config' )->status_is(200)->or( sub       { diag $t->tx->res->content->asset->{content}; } );
 	$t->get_ok( '/genfiles/view/' . $host_name . '/records.config' )->status_is(200)->or( sub      { diag $t->tx->res->content->asset->{content}; } );
 
