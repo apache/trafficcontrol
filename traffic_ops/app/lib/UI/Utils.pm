@@ -203,6 +203,7 @@ sub log() {
 	# my $user    = $self->tx->req->env->{REMOTE_USER};
 
 	my $user;
+        $user = $self->current_user()->{username};
 	$user = $self->db->resultset('TmUser')->search( { username => $user } )->get_column('id')->single;
 
 	my $insert = $self->db->resultset('Log')->create(
