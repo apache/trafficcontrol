@@ -55,7 +55,7 @@ sub register {
 
 			if ( defined($email_to) ) {
 				if ( defined($portal_email_from) ) {
-					$self->mail(
+					$rc = $self->mail(
 						subject  => $instance_name . " Password Reset Request",
 						from     => $portal_email_from,
 						to       => $email_to,
@@ -64,7 +64,7 @@ sub register {
 					);
 				}
 				else {
-					$self->mail(
+					$rc = $self->mail(
 						subject  => $instance_name . " Password Reset Request",
 						to       => $email_to,
 						template => 'user/reset_password',
