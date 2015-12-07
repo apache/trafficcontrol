@@ -428,7 +428,8 @@ sub api_routes {
 		->to( 'ChangeLog#newlogcount', namespace => $namespace );
 
 	# -- CRANS - #NEW
-	$r->get( "/api/$version/asns" => [ format => [qw(json)] ] )->over( authenticated => 1 )->to( 'Asn#index', namespace => $namespace );
+	$r->get( "/api/1.1/asns" => [ format => [qw(json)] ] )->over( authenticated => 1 )->to( 'Asn#v11_index', namespace => $namespace );
+	$r->get( "/api/1.2/asns" => [ format => [qw(json)] ] )->over( authenticated => 1 )->to( 'Asn#index', namespace => $namespace );
 
 	# -- HWINFO - #NEW
 	# Supports: ?orderby=key
