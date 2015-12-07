@@ -17,12 +17,12 @@
 
 -- +goose Up
 -- SQL in section 'Up' is executed when this migration is applied
-insert into type (name, description) values ('PENDING', 'Job is queued, but has not been picked up by any agents yet');
-insert into type (name, description) values ('IN_PROGRESS', 'Job is being processed by agents');
-insert into type (name, description) values ('COMPLETED', 'Job has finished');
-insert into type (name, description) values ('CANCELLED', 'Job was cancelled');
-insert into type (name, description) values ('PURGE', 'Initial Purge state');
-insert into type (name, description, active) values ('dummy','Description of Purge Agent','1');
+insert into job_status (name, description) values ('PENDING', 'Job is queued, but has not been picked up by any agents yet');
+insert into job_status (name, description) values ('IN_PROGRESS', 'Job is being processed by agents');
+insert into job_status (name, description) values ('COMPLETED', 'Job has finished');
+insert into job_status (name, description) values ('CANCELLED', 'Job was cancelled');
+insert into job_status (name, description) values ('PURGE', 'Initial Purge state');
+insert into job_agent (name, description, active) values ('dummy','Description of Purge Agent','1');
 
 -- +goose Down
 -- SQL section 'Down' is executed when this migration is rolled back
