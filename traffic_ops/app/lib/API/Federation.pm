@@ -53,8 +53,6 @@ sub index {
 		$rs_data = $self->find_federations();
 	}
 
-	print "\n\n data " . Dumper($data) . "\n\n";
-
 	while ( my $row = $rs_data->next ) {
 		my $mapping;
 		$mapping->{'cname'} = $row->federation->cname;
