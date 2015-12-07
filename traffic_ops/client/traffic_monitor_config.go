@@ -83,7 +83,6 @@ func (to *Session) TrafficMonitorConfig(cdn string) (TrafficMonitorConfig, error
 
 func trafficMonitorConfigUnmarshall(body []byte) (TrafficMonitorConfig, error) {
 	var tmConfigResponse TmConfigResponse
-	//var trafficMonitorConfig TrafficMonitorConfig
 	err := json.Unmarshal(body, &tmConfigResponse)
 	return tmConfigResponse.Response, err
 }
