@@ -56,6 +56,9 @@ import com.comcast.cdn.traffic_control.traffic_router.core.loc.GeolocationExcept
 import com.comcast.cdn.traffic_control.traffic_router.core.loc.GeolocationService;
 import com.comcast.cdn.traffic_control.traffic_router.core.loc.NetworkNode;
 import com.comcast.cdn.traffic_control.traffic_router.core.loc.NetworkNodeException;
+import com.comcast.cdn.traffic_control.traffic_router.core.loc.RegionalGeo;
+import com.comcast.cdn.traffic_control.traffic_router.core.loc.RegionalGeoResult;
+import com.comcast.cdn.traffic_control.traffic_router.core.loc.RegionalGeoResult.RegionalGeoResultType;
 import com.comcast.cdn.traffic_control.traffic_router.core.request.DNSRequest;
 import com.comcast.cdn.traffic_control.traffic_router.core.request.HTTPRequest;
 import com.comcast.cdn.traffic_control.traffic_router.core.request.Request;
@@ -214,9 +217,9 @@ public class TrafficRouter {
 		}
 		return null;
 	}
-	protected List<Cache> selectCache(final Request request, final DeliveryService ds, final Track track) throws GeolocationException {
+	protected List<Cache> selectCache(final Request request, final DeliveryService ds, final Track track, final RegionalGeoResult regionalGeoResult) throws GeolocationException {
 		final CacheLocation cacheLocation = getCoverageZoneCache(request.getClientIP());
-		List<Cache> caches = selectCachesByCZ(ds, cacheLocation, track);
+		List<Cache> caches = selectCachesByCZ(request, ds, cacheLocation, track, regionalGeoResult);
 
 		if (caches != null) {
 			return caches;
@@ -226,13 +229,14 @@ public class TrafficRouter {
 			track.setResult(ResultType.MISS);
 			track.setResultDetails(ResultDetails.DS_CZ_ONLY);
 		} else {
-			caches = selectCachesByGeo(request, ds, cacheLocation, track);
+			caches = selectCachesByGeo(request, ds, cacheLocation, track, regionalGeoResult);
 		}
 
 		return caches;
 	}
 
-	public List<Cache> selectCachesByGeo(final Request request, final DeliveryService deliveryService, final CacheLocation cacheLocation, final Track track) throws GeolocationException {
+	@SuppressWarnings("PMD.CyclomaticComplexity")
+	public List<Cache> selectCachesByGeo(final Request request, final DeliveryService deliveryService, final CacheLocation cacheLocation, final Track track, final RegionalGeoResult regionalGeoResult) throws GeolocationException {
 
 		Geolocation clientLocation = null;
 
@@ -246,7 +250,15 @@ public class TrafficRouter {
 			track.setResultDetails(ResultDetails.DS_CLIENT_GEO_UNSUPPORTED);
 			return null;
 		}
-		
+
+		if (deliveryService.isRegionalGeoEnabled()) {
+			enforceRegionalGeo(request, deliveryService.getId(), clientLocation, track, regionalGeoResult);
+			if (regionalGeoResult.getType() == RegionalGeoResultType.DENIED
+				|| regionalGeoResult.getType() == RegionalGeoResultType.ALTERNATE_WITHOUT_CACHE) {
+				return null;
+			}
+		}
+
 		final Map<String, Double> resultLocation = new HashMap<String, Double>();
 
 		final List<Cache> caches = getCachesByGeo(request, deliveryService, clientLocation, resultLocation);
@@ -255,7 +267,14 @@ public class TrafficRouter {
 			track.setResultDetails(ResultDetails.GEO_NO_CACHE_FOUND);
 		}
 
-		track.setResult(ResultType.GEO);
+		if (deliveryService.isRegionalGeoEnabled()
+			&& regionalGeoResult.getType() == RegionalGeoResultType.ALTERNATE_WITH_CACHE) {
+			// track already set
+			LOGGER.debug("RegionalGeo: GEO & ALTERNATE_WITH_CACHE");
+		} else {
+			track.setResult(ResultType.GEO);
+		}
+
 		return caches;
 	}
 
@@ -278,7 +297,7 @@ public class TrafficRouter {
 		}
 
 		final CacheLocation cacheLocation = getCoverageZoneCache(request.getClientIP());
-		List<Cache> caches = selectCachesByCZ(ds, cacheLocation, track);
+		List<Cache> caches = selectCachesByCZ(request, ds, cacheLocation, track, null);
 
 		if (caches != null) {
 			track.setResult(ResultType.CZ);
@@ -305,7 +324,7 @@ public class TrafficRouter {
 			LOGGER.error("Bad client address: '" + request.getClientIP() + "'");
 		}
 
-		caches = selectCachesByGeo(request, ds, cacheLocation, track);
+		caches = selectCachesByGeo(request, ds, cacheLocation, track, null);
 
 		if (caches != null) {
 			track.setResult(ResultType.GEO);
@@ -369,10 +388,11 @@ public class TrafficRouter {
 	}
 
 	public List<Cache> selectCachesByCZ(final DeliveryService ds, final CacheLocation cacheLocation) {
-		return selectCachesByCZ(ds, cacheLocation, null);
+		return selectCachesByCZ(null, ds, cacheLocation, null, null);
 	}
 
-	private List<Cache> selectCachesByCZ(final DeliveryService ds, final CacheLocation cacheLocation, final Track track) {
+	private List<Cache> selectCachesByCZ(final Request request, final DeliveryService ds, final CacheLocation cacheLocation, final Track track, final RegionalGeoResult regionalGeoResult) {
+
 		if (cacheLocation == null || !ds.isLocationAvailable(cacheLocation)) {
 			return null;
 		}
@@ -382,6 +402,19 @@ public class TrafficRouter {
 		if (caches != null && track != null) {
 			track.setResult(ResultType.CZ);
 			track.setResultLocation(cacheLocation.getGeolocation());
+
+			if (ds.isRegionalGeoEnabled()) {
+				enforceRegionalGeo(request, ds.getId(), cacheLocation.getGeolocation(), track, regionalGeoResult);
+				if (regionalGeoResult.getType() == RegionalGeoResultType.DENIED
+					|| regionalGeoResult.getType() == RegionalGeoResultType.ALTERNATE_WITHOUT_CACHE) {
+					return null;
+				} else if (regionalGeoResult.getType() == RegionalGeoResultType.ALTERNATE_WITH_CACHE) {
+					return caches;
+				}
+				// else RegionalGeoResultType.ALLOWED, go on
+			}
+
+			track.setResult(ResultType.CZ);
 		}
 
 		return caches;
@@ -407,9 +440,24 @@ public class TrafficRouter {
 			return routeResult;
 		}
 
-		final List<Cache> caches = selectCache(request, ds, track);
+		final RegionalGeoResult regionalGeoResult = new RegionalGeoResult();
+		final List<Cache> caches = selectCache(request, ds, track, regionalGeoResult);
 
 		if (caches == null) {
+			if (ds.isRegionalGeoEnabled()) {
+				if (regionalGeoResult.getType() == RegionalGeoResultType.ALTERNATE_WITHOUT_CACHE) {
+					routeResult.setUrl(new URL(regionalGeoResult.getUrl()));
+					LOGGER.debug("RegionalGeo: redirect to alternate url " + regionalGeoResult.getUrl()
+								+ " for " + request.getRequestedUrl());
+					return routeResult;
+				} else if (regionalGeoResult.getType() == RegionalGeoResultType.DENIED) {
+					routeResult.setResponseCode(regionalGeoResult.getHttpResponseCode());
+					return routeResult;
+				} else {
+					LOGGER.warn("RegionalGeo: no cache found");
+				}
+			}
+
 			routeResult.setUrl(ds.getFailureHttpResponse(request, track));
 			return routeResult;
 		}
@@ -417,7 +465,15 @@ public class TrafficRouter {
 		final Dispersion dispersion = ds.getDispersion();
 		final Cache cache = dispersion.getCache(consistentHash(caches, request.getPath()));
 
-		routeResult.setUrl(new URL(ds.createURIString(request, cache)));
+		URL finalUrl = null;
+		if (ds.isRegionalGeoEnabled()
+			&& regionalGeoResult.getType() == RegionalGeoResultType.ALTERNATE_WITH_CACHE) {
+			finalUrl = new URL(ds.createURIString(request, regionalGeoResult.getUrl(), cache));
+		} else {
+			finalUrl = new URL(ds.createURIString(request, cache));
+		}
+
+		routeResult.setUrl(finalUrl);
 
 		return routeResult;
 	}
@@ -640,5 +696,60 @@ public class TrafficRouter {
 
 	public boolean isConsistentDNSRouting() {
 		return consistentDNSRouting;
+	}
+
+	private void enforceRegionalGeo(final Request request,
+		final String dsvcId, final Geolocation clientGeoLocation,
+		final Track track, final RegionalGeoResult result) {
+
+		final HTTPRequest httpRequest = HTTPRequest.class.cast(request);
+		final String requestUrl = httpRequest.getRequestedUrl();
+
+		LOGGER.debug("RegionalGeo: enforcing");
+
+		// if geo has not been retrieved OR postal code is empty, try to lookup Geo DB
+		Geolocation geoLocation = null;
+		if (clientGeoLocation == null || clientGeoLocation.getPostalCode() == null) {
+			try {
+				geoLocation = getLocation(httpRequest.getClientIP());
+			} catch (GeolocationException e) {
+				LOGGER.warn("RegionalGeo: failed looking up Client GeoLocation: " + e.getMessage());
+			}
+			LOGGER.debug("RegionalGeo: retrieve geo location for " + httpRequest.getClientIP());
+		} else {
+			geoLocation = clientGeoLocation;
+		}
+
+		String postalCode = null;
+		if (geoLocation != null) {
+			postalCode = geoLocation.getPostalCode();
+		}
+
+		RegionalGeo.enforce(dsvcId, requestUrl, httpRequest.getClientIP(), postalCode, result);
+
+		final RegionalGeoResultType regionalGeoResultType = result.getType();
+		LOGGER.debug("RegionalGeo: result " + regionalGeoResultType + ", dsvc " + dsvcId
+		             + ", url " + requestUrl);
+
+		// If the request is either denied or redirected to alternate url
+		// with full fqdn like "http://example.com/path/abc.html",
+		// cache selection process is skipped.
+		// If the request is not allowed and redirected to url with
+		// alternate url like "/patch/abc.html", cache selection is still needed.
+		if (regionalGeoResultType == RegionalGeoResultType.DENIED) {
+			track.setResult(ResultType.RGDENY);
+			track.setResultDetails(ResultDetails.REGIONAL_GEO_NO_RULE);
+		} else if (regionalGeoResultType == RegionalGeoResultType.ALTERNATE_WITHOUT_CACHE) {
+			track.setResult(ResultType.RGALT);
+			track.setResultDetails(ResultDetails.REGIONAL_GEO_ALTERNATE_WITHOUT_CACHE);
+		} else if (regionalGeoResultType == RegionalGeoResultType.ALTERNATE_WITH_CACHE) {
+			track.setResult(ResultType.RGALT);
+			track.setResultDetails(ResultDetails.REGIONAL_GEO_ALTERNATE_WITH_CACHE);
+		}
+		// else RegionalGeoResultType.ALLOWED
+
+		track.setResultInfo(result.toString());
+
+		// So far, following cache selection is still based on request url instead of alternate url.
 	}
 }

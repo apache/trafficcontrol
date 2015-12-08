@@ -60,6 +60,7 @@ public class ConfigHandler {
 
 	private NetworkUpdater networkUpdater;
 	private FederationsWatcher federationsWatcher;
+	private RegionalGeoUpdater regionalGeoUpdater;
 
 	public String getConfigDir() {
 		return configDir;
@@ -74,6 +75,10 @@ public class ConfigHandler {
 	}
 	public NetworkUpdater getNetworkUpdater () {
 		return networkUpdater;
+	}
+
+	public RegionalGeoUpdater getRegionalGeoUpdater() {
+		return regionalGeoUpdater;
 	}
 
 	public boolean processConfig(final String jsonStr) throws JSONException, IOException, TrafficRouterException  {
@@ -98,6 +103,7 @@ public class ConfigHandler {
 			try {
 				parseGeolocationConfig(config);
 				parseCoverageZoneNetworkConfig(config);
+				parseRegionalGeoConfig(config);
 
 				final CacheRegister cacheRegister = new CacheRegister();
 				cacheRegister.setTrafficRouters(jo.getJSONObject("contentRouters"));
@@ -142,6 +148,9 @@ public class ConfigHandler {
 	}
 	public void setNetworkUpdater(final NetworkUpdater nu) {
 		this.networkUpdater = nu;
+	}
+	public void setRegionalGeoUpdater(final RegionalGeoUpdater rgu) {
+		this.regionalGeoUpdater = rgu;
 	}
 
 	/**
@@ -343,6 +352,23 @@ public class ConfigHandler {
 				config.getString("coveragezone.polling.url"),
 				config.optLong("coveragezone.polling.interval")
 			);
+	}
+	/**
+	 * Parses the RegionalGeo database configuration and updates the database if the URL has
+	 * changed.
+	 *
+	 * @param config
+	 *           the {@link TrafficRouterConfiguration}
+	 */
+	private void parseRegionalGeoConfig(final JSONObject config) {
+		try {
+			getRegionalGeoUpdater().setDataBaseURL(
+				config.getString("regional_geoblock.polling.url"),
+				config.optLong("regional_geoblock.polling.interval")
+			);
+		} catch (JSONException e) {
+			LOGGER.warn("RegionalGeo Err: exception parse cr-config ", e);
+		}
 	}
 
 	/**

@@ -43,6 +43,7 @@ import com.comcast.cdn.traffic_control.traffic_router.core.loc.FederationRegistr
 import com.comcast.cdn.traffic_control.traffic_router.core.loc.Geolocation;
 import com.comcast.cdn.traffic_control.traffic_router.core.loc.GeolocationService;
 import com.comcast.cdn.traffic_control.traffic_router.core.loc.NetworkNode;
+import com.comcast.cdn.traffic_control.traffic_router.core.loc.RegionalGeoResult;
 import com.comcast.cdn.traffic_control.traffic_router.core.request.DNSRequest;
 import com.comcast.cdn.traffic_control.traffic_router.core.request.Request;
 import com.comcast.cdn.traffic_control.traffic_router.core.router.DnsNameGenerator;
@@ -101,7 +102,7 @@ public class DnsRoutePerformanceTest {
 
         doCallRealMethod().when(trafficRouter).getCoverageZoneCache(anyString());
 
-        doCallRealMethod().when(trafficRouter).selectCache(any(Request.class), any(DeliveryService.class), any(Track.class));
+        doCallRealMethod().when(trafficRouter).selectCache(any(Request.class), any(DeliveryService.class), any(Track.class), any(RegionalGeoResult.class));
         doCallRealMethod().when(trafficRouter, "selectCache", any(CacheLocation.class), any(DeliveryService.class));
         doCallRealMethod().when(trafficRouter, "getSupportingCaches", any(List.class), any(DeliveryService.class));
         doCallRealMethod().when(trafficRouter).setState(any(JSONObject.class));

@@ -127,7 +127,7 @@ public class NetworkNode implements Comparable<NetworkNode> {
 			final JSONObject json = new JSONObject(new JSONTokener(new FileReader(f)));
 			return generateTree(json);
 	}
-	private static class SuperNode extends NetworkNode {
+	public static class SuperNode extends NetworkNode {
 		private Map<NetworkNode, NetworkNode> children6;
 
 		public SuperNode() throws NetworkNodeException {

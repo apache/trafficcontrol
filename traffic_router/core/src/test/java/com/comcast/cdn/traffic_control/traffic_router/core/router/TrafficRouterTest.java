@@ -7,6 +7,7 @@ import com.comcast.cdn.traffic_control.traffic_router.core.ds.DeliveryService;
 import com.comcast.cdn.traffic_control.traffic_router.core.ds.Dispersion;
 import com.comcast.cdn.traffic_control.traffic_router.core.loc.FederationRegistry;
 import com.comcast.cdn.traffic_control.traffic_router.core.loc.Geolocation;
+import com.comcast.cdn.traffic_control.traffic_router.core.loc.RegionalGeoResult;
 import com.comcast.cdn.traffic_control.traffic_router.core.request.DNSRequest;
 import com.comcast.cdn.traffic_control.traffic_router.core.request.HTTPRequest;
 import com.comcast.cdn.traffic_control.traffic_router.core.request.Request;
@@ -89,8 +90,8 @@ public class TrafficRouterTest {
     @Test
     public void itSetsResultToGeo() throws Exception {
 
-        when(trafficRouter.selectCache(any(Request.class), any(DeliveryService.class), any(Track.class))).thenCallRealMethod();
-        when(trafficRouter.selectCachesByGeo(any(Request.class), any(DeliveryService.class), any(CacheLocation.class), any(Track.class))).thenCallRealMethod();
+        when(trafficRouter.selectCache(any(Request.class), any(DeliveryService.class), any(Track.class), any(RegionalGeoResult.class))).thenCallRealMethod();
+        when(trafficRouter.selectCachesByGeo(any(Request.class), any(DeliveryService.class), any(CacheLocation.class), any(Track.class), any(RegionalGeoResult.class))).thenCallRealMethod();
 
         Geolocation clientLocation = new Geolocation(40, -100);
         when(trafficRouter.getClientLocation(any(Request.class), any(DeliveryService.class), any(CacheLocation.class))).thenReturn(clientLocation);

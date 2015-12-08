@@ -4,6 +4,7 @@ import com.comcast.cdn.traffic_control.traffic_router.core.cache.CacheLocation;
 import com.comcast.cdn.traffic_control.traffic_router.core.cache.CacheRegister;
 import com.comcast.cdn.traffic_control.traffic_router.core.ds.DeliveryService;
 import com.comcast.cdn.traffic_control.traffic_router.core.loc.FederationRegistry;
+import com.comcast.cdn.traffic_control.traffic_router.core.loc.RegionalGeoResult;
 import com.comcast.cdn.traffic_control.traffic_router.core.request.DNSRequest;
 import com.comcast.cdn.traffic_control.traffic_router.core.request.Request;
 import com.comcast.cdn.traffic_control.traffic_router.core.router.StatTracker.Track;
@@ -48,7 +49,7 @@ public class DNSRoutingMissesTest {
         trafficRouter = mock(TrafficRouter.class);
         when(trafficRouter.getCacheRegister()).thenReturn(mock(CacheRegister.class));
         Whitebox.setInternalState(trafficRouter, "federationRegistry", federationRegistry);
-        when(trafficRouter.selectCachesByGeo(any(Request.class), any(DeliveryService.class), any(CacheLocation.class), any(Track.class))).thenCallRealMethod();
+        when(trafficRouter.selectCachesByGeo(any(Request.class), any(DeliveryService.class), any(CacheLocation.class), any(Track.class), any(RegionalGeoResult.class))).thenCallRealMethod();
 
         track = spy(StatTracker.getTrack());
         doCallRealMethod().when(trafficRouter).route(request, track);
@@ -134,7 +135,7 @@ public class DNSRoutingMissesTest {
 
     @Test
     public void itSetsDetailsWhenCacheNotFoundByGeolocation() throws Exception {
-        doCallRealMethod().when(trafficRouter).selectCachesByGeo(any(Request.class), any(DeliveryService.class), any(CacheLocation.class), any(Track.class));
+        doCallRealMethod().when(trafficRouter).selectCachesByGeo(any(Request.class), any(DeliveryService.class), any(CacheLocation.class), any(Track.class), any(RegionalGeoResult.class));
         CacheLocation cacheLocation = mock(CacheLocation.class);
         CacheRegister cacheRegister = mock(CacheRegister.class);
 

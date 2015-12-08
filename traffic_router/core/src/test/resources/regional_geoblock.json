@@ -1,0 +1,58 @@
+{
+    "delivery_services": [
+        {
+            "redirect_url": "http://example.com/redirect_T1",
+            "delivery_service_id": "ds-geoblock-exclude",
+            "geolocation": {
+                "exclude_postal_code": [
+                    "V5G",
+                    "M7A"
+                ]
+            },
+            "url_regex": ".*TSN1"
+        },
+        {
+            "redirect_url": "/path/redirect_T2",
+            "delivery_service_id": "ds-geoblock-include",
+            "geolocation": {
+                "include_postal_code": [
+                    "V5G",
+                    "M7A"
+                ]
+            },
+            "url_regex": ".*TSN2"
+        },
+        {
+            "redirect_url": "redirect_T3",
+            "delivery_service_id": "ds-geoblock-include",
+            "geolocation": {
+                "include_postal_code": [
+                    "V5G",
+                    "M7A"
+                ]
+            },
+            "url_regex": ".*TSN3"
+        },
+        {
+            "redirect_url": "/redirect_T4",
+            "delivery_service_id": "ds-geoblock-include",
+            "geolocation": {
+                "include_postal_code": [
+                    "N6G",
+                    "M7A"
+                ]
+            },
+            "IP_white_list": [
+                "10.74.50.0/24",
+                "129.100.254.1/22",
+                "70.76.100.1/22",
+                "184.66.16.1/22"
+            ],
+            "url_regex": ".*TSN4"
+        }
+    ],
+    "Customer": "CU",
+    "Version": "1",
+    "date": "2015-10-19 03:28:25",
+    "Name": "Regional Geoblocking Policy"
+}

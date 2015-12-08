@@ -76,6 +76,19 @@ public class StatTracker {
 			this.fedCount = fedCount;
 		}
 
+		public int getRegionalDeniedCount() {
+			return regionalDeniedCount;
+		}
+		public void setRegionalDeniedCount(final int regionalDeniedCount) {
+			this.regionalDeniedCount = regionalDeniedCount;
+		}
+		public int getRegionalAlternateCount() {
+			return regionalAlternateCount;
+		}
+		public void setRegionalAlternateCount(final int regionalAlternateCount) {
+			this.regionalAlternateCount = regionalAlternateCount;
+		}
+
 		public int czCount;
 		public int geoCount;
 		public int missCount;
@@ -83,6 +96,8 @@ public class StatTracker {
 		public int errCount;
 		public int staticRouteCount;
 		public int fedCount;
+		public int regionalDeniedCount;
+		public int regionalAlternateCount;
 	}
 
 	public static class Track {
@@ -91,11 +106,12 @@ public class StatTracker {
 		}
 
 		public static enum ResultType {
-			ERROR, CZ, GEO, MISS, STATIC_ROUTE, DS_REDIRECT, DS_MISS, INIT, FED
+			ERROR, CZ, GEO, MISS, STATIC_ROUTE, DS_REDIRECT, DS_MISS, INIT, FED, RGDENY, RGALT
 		}
 
 		public enum ResultDetails {
-			NO_DETAILS, DS_NOT_FOUND, DS_NO_BYPASS, DS_BYPASS, DS_CZ_ONLY, DS_CLIENT_GEO_UNSUPPORTED, GEO_NO_CACHE_FOUND
+			NO_DETAILS, DS_NOT_FOUND, DS_NO_BYPASS, DS_BYPASS, DS_CZ_ONLY, DS_CLIENT_GEO_UNSUPPORTED, GEO_NO_CACHE_FOUND,
+			REGIONAL_GEO_NO_RULE, REGIONAL_GEO_ALTERNATE_WITHOUT_CACHE, REGIONAL_GEO_ALTERNATE_WITH_CACHE
 		}
 
 		long time;
@@ -104,6 +120,7 @@ public class StatTracker {
 		ResultType result = ResultType.ERROR;
 		ResultDetails resultDetails = ResultDetails.NO_DETAILS;
 		Geolocation resultLocation;
+		String resultInfo;
 
 		public Track() {
 			start();
@@ -134,6 +151,13 @@ public class StatTracker {
 
 		public Geolocation getResultLocation() {
 			return resultLocation;
+		}
+
+		public void setResultInfo(final String info) {
+			this.resultInfo = info;
+		}
+		public String getResultInfo() {
+			return resultInfo;
 		}
 
 		public final void start() {
@@ -220,6 +244,7 @@ public class StatTracker {
 		}
 	}
 
+	@SuppressWarnings("PMD.CyclomaticComplexity")
 	private static void incTally(final Track t, final Tallies tallies) {
 		switch(t.result) {
 		case ERROR:
@@ -242,6 +267,12 @@ public class StatTracker {
 			break;
 		case FED:
 			tallies.fedCount++;
+			break;
+		case RGDENY:
+			tallies.regionalDeniedCount++;
+			break;
+		case RGALT:
+			tallies.regionalAlternateCount++;
 			break;
 		default:
 			break;
