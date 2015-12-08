@@ -270,6 +270,11 @@ __PACKAGE__->table("deliveryservice");
   is_nullable: 1
   size: 1024
 
+=head2 regional_geo_blocking
+
+  data_type: 'tinyint'
+  is_nullable: 0
+
 =cut
 
 __PACKAGE__->add_columns(
@@ -364,6 +369,8 @@ __PACKAGE__->add_columns(
   { data_type => "varchar", is_nullable => 1, size => 255 },
   "tr_request_headers",
   { data_type => "varchar", is_nullable => 1, size => 1024 },
+  "regional_geo_blocking",
+  { data_type => "tinyint", is_nullable => 0 },
 );
 
 =head1 PRIMARY KEY

@@ -286,6 +286,7 @@ sub read {
 				"cacheurl"               => $row->cacheurl,
 				"remap_text"             => $row->remap_text,
 				"initial_dispersion"     => $row->initial_dispersion,
+				"regional_geo_blocking"  => $row->regional_geo_blocking,
 			}
 		);
 	}
@@ -883,6 +884,7 @@ sub update {
 			active               => $self->param('ds.active'),
 			protocol             => $self->param('ds.protocol'),
 			ipv6_routing_enabled => $self->param('ds.ipv6_routing_enabled'),
+			regional_geo_blocking => $self->param('ds.regional_geo_blocking'),
 			range_request_handling =>
 				$self->param('ds.range_request_handling'),
 			edge_header_rewrite => $self->param('ds.edge_header_rewrite') eq
@@ -1132,6 +1134,7 @@ sub create {
 				: $self->param('ds.max_dns_answers'),
 				info_url   => $self->param('ds.info_url'),
 				check_path => $self->param('ds.check_path'),
+				regional_geo_blocking => $self->param('ds.regional_geo_blocking'),
 				active     => $self->param('ds.active'),
 				protocol   => $self->param('ds.protocol'),
 				ipv6_routing_enabled =>

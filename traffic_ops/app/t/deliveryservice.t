@@ -97,6 +97,7 @@ ok $t->post_ok(
 		'ds.range_request_handling' => '0',
 		'ds.ipv6_routing_enabled'   => '1',
 		'ds.display_name'           => 'display name',
+		'ds.regional_geo_blocking'  => '1',
 	}
 )->status_is(302), "create HTTP delivery service";
 my $t1_id = &get_ds_id('tst_xml_id_1');
@@ -143,6 +144,7 @@ ok $t->post_ok(
 		're_type_0'                 => 'HOST_REGEXP',
 		'ds.ipv6_routing_enabled'   => '0',
 		'ds.display_name'           => 'display name 2',
+		'ds.regional_geo_blocking'  => '0',
 	}
 )->status_is(302), "create DNS DeliveryService";
 my $t2_id = &get_ds_id('tst_xml_id_2');
@@ -192,8 +194,23 @@ ok $t->post_ok(
 		're_type_1'                 => 'PATH_REGEXP',
 		'ds.ipv6_routing_enabled'   => '1',
 		'ds.display_name'           => 'display name 3',
+		'ds.regional_geo_blocking'  => '0',
 	}
 )->status_is(302), "create HTTP_NO_CACHE deliveryservice";
+
+#Validate create
+# Note the 4 is the index, not the id.
+#This can potentially make the tests fragile if more ds's are added to the fixtures...
+ok $t->get_ok('/datadeliveryservice')->status_is(200)
+	->json_is( '/4/dscp' => '40' )
+	->json_is( '/4/active' => '1' )
+	->json_is( '/4/protocol' => '0' )
+	->json_is( '/4/display_name' => 'display name' )
+	->json_is('/4/regional_geo_blocking' => '1' )
+	->json_is('/0/regional_geo_blocking' => '1' )
+	->json_is('/1/regional_geo_blocking' => '0' ),
+	"validate delivery services were created";
+
 $t3_id = &get_ds_id('tst_xml_id_3');
 ok defined($t3_id), "validated delivery service with all fields was added";
 
@@ -240,6 +257,7 @@ ok $t->post_ok(
 		'ds.ipv6_routing_enabled'   => '1',
 		'ds.display_name'           => 'Testing Delivery Service',
 		'ds.tr_response_headers'    => '',
+		'ds.regional_geo_blocking'  => '1',
 		}
 
 )->status_is(302), "update deliveryservice";
@@ -257,7 +275,7 @@ ok $t->get_ok('/datadeliveryservice')->status_is(200)->or( sub { diag $t->tx->re
 	->json_is( '/6/global_max_tps' => 10001 )->json_is( '/6/miss_lat' => '0' )->json_is( '/6/miss_long' => '0' )
 	->json_is( '/6/long_desc' => 'long_update' )->json_is( '/6/long_desc_1' => 'cust_update' )->json_is( '/6/long_desc_2' => 'service_update' )
 	->json_is( '/6/info_url' => 'http://knutsel-update.com' )->json_is( '/6/protocol' => '1' )->json_is( '/6/profile_name' => 'MID1' )
-	->json_is( '/6/display_name' => 'Testing Delivery Service' ),
+	->json_is( '/6/display_name' => 'Testing Delivery Service' )->json_is('/6/regional_geo_blocking' => '1' ),
 	"validate delivery service was updated";
 
 #delete delivery service
