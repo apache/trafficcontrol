@@ -313,7 +313,7 @@ func loadCustomParams(db *sql.DB, dbName string) error {
 		return err
 	}
 
-	file, err := os.Open("/opt/traffic_ops/install/data/json/parameters.json") //should probably rename this file to be more meaningful
+	file, err := os.Open("/opt/traffic_ops/install/data/json/post_install.json")
 	if err != nil {
 		return err
 	}
