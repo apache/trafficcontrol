@@ -342,7 +342,6 @@ sub parent_data {
 
 	my $pinfo;
 	my @parent_cachegroup_ids;
-	my @secondary_parent_cachegroup_ids;
 	my $org_loc_type_id = &type_id( $self, "ORG_LOC" );
 	if ( $server->type->name eq 'MID' ) {
 
@@ -351,8 +350,6 @@ sub parent_data {
 	}
 	else {
 		@parent_cachegroup_ids = $self->db->resultset('Cachegroup')->search( { id => $server->cachegroup->id } )->get_column('parent_cachegroup_id')->all();
-		@secondary_parent_cachegroup_ids =
-			$self->db->resultset('Cachegroup')->search( { id => $server->cachegroup->id } )->get_column('secondary_parent_cachegroup_id')->all();
 	}
 
 	my $online   = &admin_status_id( $self, "ONLINE" );
