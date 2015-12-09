@@ -25,4 +25,4 @@ Traffic Control is a complicated system, and documenting it is not trivial. Some
   multi_site.rst
   dnssec.rst
   federations.rst
-
+  regionalgeo.rst
