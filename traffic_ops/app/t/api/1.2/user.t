@@ -97,6 +97,10 @@ ok $t->post_ok( '/api/1.2/user/current/update', json => { user => { email => '@k
 	->or( sub { diag $t->tx->res->content->asset->{content}; } )->json_is( "/alerts/0/level", "error" ),
 	"Verify that the emails are valid";
 
+ok $t->post_ok( '/api/1.2/user/current/update', json => { user => { username => Test::TestHelper::PORTAL_USER } } )->status_is(400)
+	->or( sub { diag $t->tx->res->content->asset->{content}; } )->json_is( "/alerts/0/level", "error" ),
+	"Verify that the usernames are unique";
+
 ok $t->post_ok('/api/1.2/user/logout')->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } );
 $dbh->disconnect();
 
