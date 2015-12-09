@@ -89,11 +89,6 @@ $t->post_ok( '/api/1.2/user/current/update', json => { address_line1 => 'newaddr
 	->or( sub { diag $t->tx->res->content->asset->{content}; } )->json_is( "/alerts/0/text", "email is required" );
 
 # ensure unique emails
-
-ok $t->post_ok( '/api/1.2/user/current/update', json => { user => { email => 'testportal@kabletown.com' } } )->status_is(200)
-	->or( sub { diag $t->tx->res->content->asset->{content}; } )->json_is( "/alerts/0/level", "error" ),
-	"Verify that the emails are unique.";
-
 ok $t->post_ok( '/api/1.2/user/current/update', json => { user => { email => 'testportal@kabletown.com' } } )->status_is(400)
 	->or( sub { diag $t->tx->res->content->asset->{content}; } )->json_is( "/alerts/0/level", "error" ),
 	"Verify that the emails are unique";

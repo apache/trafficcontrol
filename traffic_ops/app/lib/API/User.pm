@@ -303,7 +303,16 @@ sub is_valid {
 			email => sub {
 				my ( $value, $params ) = @_;
 				Email::Valid->address($value) ? undef : 'email is not a valid format';
-			}
+			},
+
+			# pass2 must be equal to pass
+			username => sub {
+				my $value  = shift;
+				my $params = shift;
+				if ( defined( $params->{'username'} ) ) {
+					return $self->is_username_taken( $value, $params );
+				}
+			},
 
 		]
 	};
@@ -321,6 +330,20 @@ sub is_valid {
 		return ( 0, $result->{error} );
 	}
 
+}
+
+sub is_username_taken {
+	my $self   = shift;
+	my $value  = shift;
+	my $params = shift;
+
+	my $dbh = $self->db->resultset('TmUser')->search( { username => $value } );
+	my $count = $dbh->count();
+	if ( $count > 0 ) {
+		return "is already taken";
+	}
+
+	return undef;
 }
 
 sub is_email_taken {
