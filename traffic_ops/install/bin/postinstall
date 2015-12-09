@@ -34,7 +34,7 @@ my $database_conf     = "/opt/traffic_ops/app/conf/production/database.conf";
 my $ldap_conf         = "/opt/traffic_ops/app/conf/ldap.conf";
 my $cdn_conf          = "/opt/traffic_ops/app/conf/cdn.conf";
 my $migrations_dbconf = "/opt/traffic_ops/app/db/dbconf.yml";
-my $parameters_file   = "/opt/traffic_ops/install/data/json/parameters.json";
+my $post_install_cfg  = "/opt/traffic_ops/install/data/json/post_install.json";
 my $users_file        = "/opt/traffic_ops/install/data/json/users.json";
 my %dbdriver          = ( mysql => "mymysql", );
 
@@ -58,13 +58,13 @@ sub readJson {
 }
 
 sub writeJson {
-	my $file      = shift;
-	my $data      = shift;
-	my $json_text = JSON->new->utf8->encode($data);
-
+	my $file = shift;
 	open( my $fh, '>', $file ) or die("open(): $!");
-	print $fh $json_text, "\n";
-	undef $fh;
+	foreach my $data (@_) {
+		my $json_text = JSON->new->utf8->encode($data);
+		print $fh $json_text, "\n";
+	}
+	close $fh;
 }
 
 sub writeYamlToFH {
@@ -169,7 +169,7 @@ sub init () {
 EOF
 
 	print $msg, "\n";
-	my $parameters = readJson($parameters_file);
+	my $parameters = readJson($post_install_cfg);
 	while (1) {
 
 		my $tmurl = promptUser( "Traffic Ops url", $parameters->{"tm.url"} || "https://localhost" );
@@ -202,7 +202,22 @@ EOF
 
 		my $kickstartFilesFqn = promptUser( "Fully qualified location to store your ISO kickstart files", "/var/www/files" );
 		my $parametersJson = "/opt/traffic_ops/install/data/json/parameter.json";
-		writeJson( $parametersJson, { name => 'kickstart.files.location', config_file => 'mkisofs', value => $kickstartFilesFqn } );
+
+		## Replace parameter with $kickstartFilesFqn
+		open( my $json_fh, "<:encoding(UTF-8)", $parametersJson )
+			or die("Can't open \$filename\": $!\n");
+
+		my $json = JSON->new;
+		my @json_obj;
+		while ( my $json_text = <$json_fh> ) {
+			my $data = $json->decode($json_text);
+
+			if ( $data->{"name"} eq "kickstart.files.location" ) {
+				$data->{"value"} = $kickstartFilesFqn;
+			}
+			push @json_obj, $data;
+		}
+		writeJson( $parametersJson, @json_obj );
 
 		execCommand( "/bin/cp", "/opt/traffic_ops/install/data/perl/osversions.cfg", $kickstartFilesFqn );
 
@@ -225,8 +240,8 @@ EOF
 			last;
 		}
 	}
-	writeJson( $parameters_file, $parameters );
-	print "Parameter information has been saved to $parameters_file\n\n";
+	writeJson( $post_install_cfg, $parameters );
+	print "Install information has been saved to $post_install_cfg\n\n";
 
 	print "\nAdding an administration user to the Traffic Ops database.\n\n";
 	my %user = ();
