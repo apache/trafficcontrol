@@ -145,6 +145,7 @@ sub current {
 	my $self = shift;
 	my @data;
 	my $current_username = $self->current_user()->{username};
+
 	# $self->app->log->debug( "current_username #-> " . $current_username );
 	my $dbh = $self->db->resultset('TmUser')->search( { username => $current_username } );
 	while ( my $row = $dbh->next ) {
@@ -289,10 +290,19 @@ sub is_valid {
 				}
 			},
 
+			# pass2 must be equal to pass
+			email => sub {
+				my $value  = shift;
+				my $params = shift;
+				if ( defined( $params->{'email'} ) ) {
+					return $self->is_email_taken( $value, $params );
+				}
+			},
+
 			# custom sub validates an email address
 			email => sub {
 				my ( $value, $params ) = @_;
-				Email::Valid->address($value) ? undef : 'Invalid email format';
+				Email::Valid->address($value) ? undef : 'email is not a valid format';
 			}
 
 		]
@@ -311,6 +321,20 @@ sub is_valid {
 		return ( 0, $result->{error} );
 	}
 
+}
+
+sub is_email_taken {
+	my $self   = shift;
+	my $value  = shift;
+	my $params = shift;
+
+	my $dbh = $self->db->resultset('TmUser')->search( { email => $value } );
+	my $count = $dbh->count();
+	if ( $count > 0 ) {
+		return "is already taken";
+	}
+
+	return undef;
 }
 
 sub is_good_password {
