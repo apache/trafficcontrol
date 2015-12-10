@@ -49,8 +49,15 @@ sub loadConfig {
 					last;
 				}
 				if ( $remainder =~ /^$uq(.*?)$uq(.*)/ or $remainder =~ /(\S+)(.*)/ ) {
-					$h{$k} = $1;
+					my $val = $1;
 					$cur = $2;
+					if ( $k =~ /parent/ ) {
+						my @parents = split /;/, $val;
+						$h{$k} = \@parents;
+					}
+					else {
+						$h{$k} = $val;
+					}
 				}
 				else {
 					die "Malformed? $k=$remainder";
