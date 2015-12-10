@@ -36,13 +36,13 @@ ASN
   +------------------+--------+-------------------------------------------------------------------------+
   |    Parameter     |  Type  |                               Description                               |
   +==================+========+=========================================================================+
-  | ``lastUpdated`` | string | The Time / Date this server entry was last updated                      |
+  | ``lastUpdated`` | string | The Time / Date this server entry was last updated                       |
   +------------------+--------+-------------------------------------------------------------------------+
-  | ``id``          | string | Local unique identifier for the ASN                                     |
+  | ``id``          | string | Local unique identifier for the ASN                                      |
   +------------------+--------+-------------------------------------------------------------------------+
-  | ``asn``         | string | Autonomous System Numbers per APNIC for identifying a service provider. |
+  | ``asn``         | string | Autonomous System Numbers per APNIC for identifying a service provider.  |
   +------------------+--------+-------------------------------------------------------------------------+
-  | ``cachegroup``  | string | Related cachegroup name                                                 |
+  | ``cachegroup``  | string | Related cachegroup name                                                  |
   +------------------+--------+-------------------------------------------------------------------------+
 
   **Response Example** ::
