@@ -215,19 +215,24 @@ func Get(tableName string) ([]map[string]interface{}, error) {
 	regStr := ""
 	joinStr := ""
 	onStr := ""
-
+	prevJointable := "" // prevents errors like "Error 1066: Not unique table/alias: 'type'"
 	cols := GetColumnNames(tableName)
 	for _, col := range cols {
 		if val, ok := foreignKeyMap[col]; ok && col != tableName {
 			if col == "parent_cachegroup_id" {
 
-				joinStr += "cachegroup2.name as parent_cachegroup,"
+				if val.Table != prevJointable { // XXX Should be a smarter way to prevent dupe joins
+					joinStr += "cachegroup2.name as parent_cachegroup,"
 
-				onStr += " join cachegroup as cachegroup2 on cachegroup.parent_cachegroup_id = cachegroup2.id "
+					onStr += " join cachegroup as cachegroup2 on cachegroup.parent_cachegroup_id = cachegroup2.id "
+				}
 			} else {
 				joinStr += val.Table + "." + val.Column + " as " + val.Alias + ","
-				onStr += " join " + val.Table + " on " + tableName + "." + col + " = " + val.Table + ".id "
+				if val.Table != prevJointable {
+					onStr += " join " + val.Table + " on " + tableName + "." + col + " = " + val.Table + ".id "
+				}
 			}
+			prevJointable = val.Table
 		} else {
 			regStr += tableName + "." + col + ","
 		}
