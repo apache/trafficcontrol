@@ -967,7 +967,7 @@ sub parent_dot_config {
 	}
 
 	# Origin Shield or Multi Site Origin
-	$self->app->log->debug( "id = $id and server_type = $server_type,  hostname = " . $server->{host_name} );
+	#$self->app->log->debug( "id = $id and server_type = $server_type,  hostname = " . $server->{host_name} );
 	if ( $server_type eq 'MID' ) {
 		foreach my $ds ( @{ $data->{dslist} } ) {
 			my $xml_id            = $ds->{ds_xml_id};

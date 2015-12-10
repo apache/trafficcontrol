@@ -2,10 +2,58 @@ package Test::TrafficServerConfig;
 
 use strict;
 use warnings;
+use Carp qw/cluck/;
 
 BEGIN {
 	use Exporter;
 	our @EXPORT_OK = qw{ loadConfigFile loadConfig };
+}
+
+sub parseConfigLine {
+	my $line = shift;
+	my $uq   = qr/(?<!\\)"/;
+	my %h;
+
+	$line =~ s/^\s+//;
+	$line =~ s/\s+$//;
+
+	my $qs;    # in quoted string
+	while ( $line =~ s/^\s*(.+?)($uq|\s)// ) {
+		my ( $pre, $found ) = ( $1, $2 );
+		if ( !defined $qs ) {
+
+			# not in quoted string
+			if ( $found !~ qr/$uq/ ) {
+				my ( $k, $v ) = split /=/, $pre;
+				$h{$k} = $v;
+			}
+			else {
+				# start of quoted string skip spaces until next quote;
+				$qs = 1;
+			}
+		}
+		else {
+			if ( $found eq '"' ) {
+
+				# end of quote -- go back to looking for space
+				undef $qs;
+			}
+
+			# else keep looking for end quote
+		}
+	}
+	return \%h;
+}
+
+sub parseConfig {
+	my $lines = shift;
+	my $uq    = qr/(?<!\\)"/;
+	my @config;
+	for my $line ( split /\n/, $lines ) {
+		next if $line =~ /^\s*#/;
+		push @config, parseConfigLine($line);
+	}
+	return \@config;
 }
 
 sub loadConfigFile {
@@ -20,57 +68,7 @@ sub loadConfigFile {
 	my $txt = <$cfh>;
 	close $cfh;
 
-	return loadConfig($txt);
-}
-
-sub loadConfig {
-	my $lines = shift;
-	my $uq    = qr/(?<!\\)"/;
-	my @config;
-	for my $line ( split /\n/, $lines ) {
-
-		$line =~ s{\s*#.*}{};
-		next unless $line =~ /\S/;
-
-		# create hash to represent this one line and populate
-		my %h;
-		my $cur = '';
-
-		# split on unescaped quotes -- avoids need for quote-pairing
-		my @b = split /$uq/, $line;
-
-		while ( scalar @b > 0 ) {
-			$cur .= shift @b;
-			while ( $cur =~ /^[,\s]*(\w+)=+(.*)/ ) {
-				my ( $k, $remainder ) = ( $1, $2 );
-				if ( length $remainder == 0 ) {
-
-					# incomplete -- add next chunk
-					last;
-				}
-				if ( $remainder =~ /^$uq(.*?)$uq(.*)/ or $remainder =~ /(\S+)(.*)/ ) {
-					my $val = $1;
-					$cur = $2;
-					if ( $k =~ /parent/ ) {
-						my @parents = split /;/, $val;
-						$h{$k} = \@parents;
-					}
-					else {
-						$h{$k} = $val;
-					}
-				}
-				else {
-					die "Malformed? $k=$remainder";
-				}
-			}
-		}
-		if ( length $cur != 0 ) {
-			die "$cur left over.  Malformed line?: $line";
-		}
-
-		push @config, \%h;
-	}
-	return \@config;
+	return parseConfig($txt);
 }
 
 1;
