@@ -28,6 +28,13 @@ var (
 	tableMap      map[string][]string
 )
 
+const (
+	//
+	NOJOIN = iota
+	//
+	JOIN = iota
+)
+
 func check(e error) {
 	if e != nil {
 		panic(e)
@@ -211,14 +218,14 @@ func GetForeignKeyValues(tableName string, colName string) map[string]interface{
 	return rowArray
 }
 
-func Get(tableName string) ([]map[string]interface{}, error) {
+func Get(tableName string, Mode int) ([]map[string]interface{}, error) {
 	regStr := ""
 	joinStr := ""
 	onStr := ""
 	prevJointable := "" // prevents errors like "Error 1066: Not unique table/alias: 'type'"
 	cols := GetColumnNames(tableName)
 	for _, col := range cols {
-		if val, ok := foreignKeyMap[col]; ok && col != tableName {
+		if val, ok := foreignKeyMap[col]; ok && col != tableName && Mode == JOIN {
 			if col == "parent_cachegroup_id" {
 
 				if val.Table != prevJointable { // XXX Should be a smarter way to prevent dupe joins

@@ -99,9 +99,13 @@ func apiHandler(w http.ResponseWriter, r *http.Request) {
 	var columns []string
 	var columnAliases []string
 	var columnMap map[string]map[string]interface{}
-	//GETS the request
+	// default - GETS the request
 	if tableName != "" {
-		rows, err = sqlParser.Get(tableName)
+		mode := sqlParser.JOIN
+		if r.URL.Query().Get("join") == "no" {
+			mode = sqlParser.NOJOIN
+		}
+		rows, err = sqlParser.Get(tableName, mode)
 		columns = sqlParser.GetColumnNames(tableName)
 		columnAliases, columnMap = sqlParser.GetForeignKeyColumns(tableName)
 		if err != nil {
