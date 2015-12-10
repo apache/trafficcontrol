@@ -967,7 +967,7 @@ sub parent_dot_config {
 	}
 
 	# Origin Shield or Multi Site Origin
-	$self->app->log->debug("id = $id and server_type = $server_type");
+	$self->app->log->debug( "id = $id and server_type = $server_type,  hostname = " . $server->{host_name} );
 	if ( $server_type eq 'MID' ) {
 		foreach my $ds ( @{ $data->{dslist} } ) {
 			my $xml_id            = $ds->{ds_xml_id};
@@ -1009,19 +1009,32 @@ sub parent_dot_config {
 
 		my %done = ();
 
-		# MODIFY HERE
 		foreach my $remap ( @{ $data->{dslist} } ) {
+			my $org = $remap->{org};
+			next if $done{$org};
 			if ( $remap->{type} eq "HTTP_NO_CACHE" || $remap->{type} eq "HTTP_LIVE" || $remap->{type} eq "DNS_LIVE" ) {
-				if ( !defined( $done{ $remap->{org} } ) ) {
-					my $org_fqdn = $remap->{org};
-					$org_fqdn =~ s/https?:\/\///;
-					$text .= "dest_domain=" . $org_fqdn . " go_direct=true\n";
-					$done{ $remap->{org} } = 1;
-				}
+				my $org_fqdn = $remap->{org};
+				$org_fqdn =~ s/https?:\/\///;
+				$text .= "dest_domain=" . $org_fqdn . " go_direct=true\n";
 			}
-		}
+			else {
+				my $org_fqdn = $remap->{org};
+				$org_fqdn =~ s/https?:\/\///;
 
-		#  MODIFY TO HERE
+				my $qstring = $self->profile_param_value( $server->profile->id, 'parent.config', 'qstring', undef );
+				$qstring = ( defined $qstring ) ? "qstring=$qstring" : '';
+
+				my @parent_info;
+				foreach my $parent ( @{ $pinfo->{all_parents} } ) {
+					push @parent_info, format_parent_info($parent);
+				}
+				my $parents     = 'parent="' . join( '', @parent_info ) . '"';
+				my $round_robin = 'round_robin=consistent_hash';
+				my $go_direct   = 'go_direct=false';
+				$text .= "dest_domain=$org_fqdn $parents $round_robin $go_direct $qstring\n";
+			}
+			$done{$org} = 1;
+		}
 
 		my $pselect_alg = $self->profile_param_value( $server->profile->id, 'parent.config', 'algorithm', undef );
 		if ( defined($pselect_alg) && $pselect_alg eq 'consistent_hash' ) {
