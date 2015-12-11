@@ -19,7 +19,7 @@ Administrator's Guide
 
 Traffic Control is distributed in source form for the developer, but also as a binary package. This guide details how to install and configure a Traffic Control CDN using the binary packages, as well as how to perform common operations running a CDN.
 
-When installing a complete CDN from scratch, you probably want to install servers in the following order:
+When installing a complete CDN from scratch, a sample recommended order is:
 
 1. Traffic Ops
 2. Traffic Vault (Riak)
