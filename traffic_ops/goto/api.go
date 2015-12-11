@@ -102,11 +102,11 @@ func apiHandler(w http.ResponseWriter, r *http.Request) {
 	var columnMap map[string]map[string]interface{}
 	// default - GETS the request
 	if tableName != "" {
-		mode := sqlParser.JOIN
+		joinFKs := true
 		if r.URL.Query().Get("join") == "no" {
-			mode = sqlParser.NOJOIN
+			joinFKs = false
 		}
-		rows, err = sqlParser.Get(tableName, mode)
+		rows, err = sqlParser.Get(tableName, joinFKs)
 		columns = sqlParser.GetColumnNames(tableName)
 		columnAliases, columnMap = sqlParser.GetForeignKeyColumns(tableName)
 		if err != nil {
