@@ -70,9 +70,7 @@ func (enc *Encoder) Encode(tableName string, v interface{}) error {
 	for rowNum, rowMap := range m {
 		enc.w.Write([]byte("'" + strconv.Itoa(rowNum) + "' => { new => '" + tableName + "', => using => { "))
 
-		// fmt.Println(">>", rowNum, " :: ", rowMap["id"])
 		for key, val := range rowMap {
-			// fmt.Println(key, " => ", val)
 			var keyval string
 			var ok bool
 			if keyval, ok = val.(string); ok {
