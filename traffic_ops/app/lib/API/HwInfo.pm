@@ -20,12 +20,14 @@ use UI::Utils;
 use Mojo::Base 'Mojolicious::Controller';
 
 sub index {
-	my $self = shift;
+	my $self    = shift;
 	my $orderby = $self->param('orderby') || "serverid";
+	my $limit   = $self->param('limit') || 1000;
 	my @data;
 
 	# get list of servers in one query
-	my $rs_data = $self->db->resultset("Hwinfo")->search( undef, { prefetch => [ { 'serverid' => undef, } ], order_by => 'me.' . $orderby } );
+	my $rs_data =
+		$self->db->resultset("Hwinfo")->search( undef, { prefetch => [ { 'serverid' => undef, } ], order_by => 'me.' . $orderby, rows => $limit } );
 	while ( my $row = $rs_data->next ) {
 		my $id = $row->id;
 		push(
@@ -39,7 +41,7 @@ sub index {
 		);
 	}
 
-	$self->success( \@data );
+	$self->success( \@data, undef, $limit, undef );
 }
 
 1;
