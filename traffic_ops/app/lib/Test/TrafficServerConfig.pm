@@ -9,37 +9,32 @@ BEGIN {
 	our @EXPORT_OK = qw{ loadConfigFile loadConfig };
 }
 
+my $keyval_re = qr/
+	(\w+)=               # key=
+	(
+		"[^"]*"  |       # quoted string
+		[^"\s]*          # unquoted value (no spaces)
+	)
+	(?:\s+|$)            # white space or end-of-line
+	/x;
+
 sub parseConfigLine {
 	my $line = shift;
-	my $uq   = qr/(?<!\\)"/;
 	my %h;
 
 	$line =~ s/^\s+//;
 	$line =~ s/\s+$//;
 
-	my $qs;    # in quoted string
-	while ( $line =~ s/^\s*(.+?)($uq|\s)// ) {
-		my ( $pre, $found ) = ( $1, $2 );
-		if ( !defined $qs ) {
+	while ( $line =~ /${keyval_re}\s*/g ) {
+		my ( $k, $v ) = ( $1, $2 );
 
-			# not in quoted string
-			if ( $found !~ qr/$uq/ ) {
-				my ( $k, $v ) = split /=/, $pre;
-				$h{$k} = $v;
-			}
-			else {
-				# start of quoted string skip spaces until next quote;
-				$qs = 1;
-			}
+		# remove surrounding quotes if there
+		$v =~ s/^"(.*)"$/$1/;
+		if ( $k =~ /parent/ ) {
+			$h{$k} = [ split /;/, $v ];
 		}
 		else {
-			if ( $found eq '"' ) {
-
-				# end of quote -- go back to looking for space
-				undef $qs;
-			}
-
-			# else keep looking for end quote
+			$h{$k} = $v;
 		}
 	}
 	return \%h;
