@@ -28,6 +28,7 @@
 		<module>core</module>
 		<module>api</module>
 		<module>build</module>
+		<module>testServer</module>
 	</modules>
 	<properties>
 		<deploy.dir>/opt/traffic_router</deploy.dir>
