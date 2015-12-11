@@ -133,6 +133,7 @@ public class CacheWatcher {
 						} catch (InterruptedException e) {
 						}
 
+						LOGGER.warn("No router config available, skipping health check");
 						continue;
 					}
 
@@ -178,6 +179,7 @@ public class CacheWatcher {
 				}
 
 				if (!isActive) {
+					LOGGER.warn("Not active");
 					return;
 				}
 			}
