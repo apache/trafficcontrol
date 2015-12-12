@@ -106,7 +106,7 @@ func apiHandler(w http.ResponseWriter, r *http.Request) {
 		if r.URL.Query().Get("join") == "no" {
 			joinFKs = false
 		}
-		rows, err = sqlParser.Get(tableName, joinFKs)
+		rows, err = sqlParser.Get(tableName, joinFKs, tableParameters)
 		columns = sqlParser.GetColumnNames(tableName)
 		columnAliases, columnMap = sqlParser.GetForeignKeyColumns(tableName)
 		if err != nil {
