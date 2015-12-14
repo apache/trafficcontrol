@@ -296,7 +296,7 @@ my %definition_for = (
 			profile          => 2,
 			cdn_id           => 2,
 			cachegroup       => 2,
-			phys_location    => 1,
+			phys_location    => 2,
 		},
 	},
 	riak_server2 => {
@@ -331,7 +331,7 @@ my %definition_for = (
 			profile          => 5,
 			cdn_id           => 1,
 			cachegroup       => 1,
-			phys_location    => 1,
+			phys_location    => 2,
 		},
 	},
 	influxdb_server1 => {
@@ -366,7 +366,7 @@ my %definition_for = (
 			profile          => 5,
 			cdn_id           => 1,
 			cachegroup       => 1,
-			phys_location    => 1,
+			phys_location    => 3,
 		},
 	},
 	influxdb_server2 => {
@@ -401,7 +401,7 @@ my %definition_for = (
 			profile          => 5,
 			cdn_id           => 1,
 			cachegroup       => 1,
-			phys_location    => 1,
+			phys_location    => 3,
 		},
 	},
 );

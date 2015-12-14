@@ -67,7 +67,7 @@ sub view {
 
 	# if ( $mode eq "view" ) {
 	my $data = $rs_param->single;
-	$self->stash( profile => $data );
+	$self->stash( profile     => $data );
 	$self->stash( param_count => $param_count );
 
 	&stash_role($self);
@@ -83,14 +83,11 @@ sub readprofile {
 	my @data;
 	my $orderby = "name";
 	$orderby = $self->param('orderby') if ( defined $self->param('orderby') );
-	my $rs_data
-		= $self->db->resultset("Profile")
-		->search( undef,
-		{ order_by => 'me.' . $orderby } );
+	my $rs_data = $self->db->resultset("Profile")->search( undef, { order_by => 'me.' . $orderby } );
 	while ( my $row = $rs_data->next ) {
 		push(
-			@data,
-			{   "id"           => $row->id,
+			@data, {
+				"id"           => $row->id,
 				"name"         => $row->name,
 				"description"  => $row->description,
 				"last_updated" => $row->last_updated,
@@ -303,7 +300,7 @@ sub doImport {
 
 		my $new_count      = 0;
 		my $existing_count = 0;
-		my $done;
+		my %done;
 		foreach my $param ( @{ $data->{parameters} } ) {
 			my $param_name        = $param->{name};
 			my $param_config_file = $param->{config_file};
@@ -312,7 +309,6 @@ sub doImport {
 				$self->db->resultset('Parameter')
 				->search( { -and => [ name => $param_name, value => $param_value, config_file => $param_config_file ] }, { rows => 1 } )->get_column('id')
 				->single();
-			next if defined( $done->{$param_id} );    # sometimes the profiles we import have dupes?
 			if ( !defined($param_id) ) {
 				my $insert = $self->db->resultset('Parameter')->create(
 					{
@@ -326,6 +322,7 @@ sub doImport {
 				$new_count++;
 			}
 			else {
+				next if defined( $done{$param_id} );    # sometimes the profiles we import have dupes?
 				$existing_count++;
 			}
 
@@ -336,7 +333,7 @@ sub doImport {
 				}
 			);
 			$link_insert->insert();
-			$done->{$param_id} = $new_id;
+			$done{$param_id} = $new_id;
 		}
 		&log( $self, "Import profile " . $p_name . " with " . $new_count . " new and " . $existing_count . " existing parameters.", "UICHANGE" );
 		$self->flash( message => => "Success!" );
@@ -419,20 +416,23 @@ sub acompareprofile {
 	my $rs = $self->db->resultset('ProfileParameter')->search( { profile => $pid1 }, { prefetch => [ { parameter => undef }, { profile => undef } ] } );
 	my $params1;
 	while ( my $row = $rs->next ) {
-		$params1->{ $row->parameter->name . ':' . $row->parameter->config_file } = { name => $row->parameter->name, config_file => $row->parameter->config_file, value => $row->parameter->value };
+		$params1->{ $row->parameter->name . ':' . $row->parameter->config_file } =
+			{ name => $row->parameter->name, config_file => $row->parameter->config_file, value => $row->parameter->value };
 	}
 
 	$rs = $self->db->resultset('ProfileParameter')->search( { profile => $pid2 }, { prefetch => [ { parameter => undef }, { profile => undef } ] } );
 	my $params2;
 	while ( my $row = $rs->next ) {
-		$params2->{ $row->parameter->name . ':' . $row->parameter->config_file } = { name => $row->parameter->name, config_file => $row->parameter->config_file, value => $row->parameter->value };
+		$params2->{ $row->parameter->name . ':' . $row->parameter->config_file } =
+			{ name => $row->parameter->name, config_file => $row->parameter->config_file, value => $row->parameter->value };
 	}
 
 	foreach my $key ( keys %{$params1} ) {
 		if ( !defined( $params2->{$key} ) ) {
 			my @line = [ $params1->{$key}->{name}, $params1->{$key}->{config_file}, $params1->{$key}->{value}, "undef" ];
 			push( @{ $data{'aaData'} }, @line );
-		} elsif ($params1->{$key}->{value} ne $params2->{$key}->{value}) {
+		}
+		elsif ( $params1->{$key}->{value} ne $params2->{$key}->{value} ) {
 			my @line = [ $params1->{$key}->{name}, $params1->{$key}->{config_file}, $params1->{$key}->{value}, $params2->{$key}->{value} ];
 			push( @{ $data{'aaData'} }, @line );
 		}

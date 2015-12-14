@@ -27,6 +27,7 @@ use UI::Tools;
 use MojoPlugins::Response;
 use MojoPlugins::Job;
 use Utils::Helper::ResponseHelper;
+use String::CamelCase qw(decamelize);
 
 sub index {
 	my $self   = shift;
@@ -59,9 +60,12 @@ sub getserverdata {
 	my $self  = shift;
 	my $ds_id = shift;
 	my @data;
-	my $isadmin = &is_admin($self);
-	my $orderby = $self->param('orderby') || "host_name";
+	my $isadmin           = &is_admin($self);
+	my $orderby           = $self->param('orderby') || "hostName";
+	my $limit             = $self->param('limit') || 1000;
+	my $orderby_snakecase = lcfirst( decamelize($orderby) );
 	my $servers;
+
 	if ( defined $ds_id ) {
 
 		# we want the edge cache servers and mid cache servers (but only mids if the delivery service uses mids)
@@ -82,7 +86,7 @@ sub getserverdata {
 		$servers = $self->db->resultset('Server')->search(
 			[@criteria], {
 				prefetch => [ 'cdn', 'cachegroup', 'type', 'profile', 'status', 'phys_location' ],
-				order_by => 'me.' . $orderby,
+				order_by => 'me.' . $orderby_snakecase,
 			}
 		);
 	}
@@ -91,7 +95,7 @@ sub getserverdata {
 		$servers = $self->db->resultset('Server')->search(
 			undef, {
 				prefetch => [ 'cdn', 'cachegroup', 'type', 'profile', 'status', 'phys_location' ],
-				order_by => 'me.' . $orderby,
+				order_by => 'me.' . $orderby_snakecase,
 			}
 		);
 	}
@@ -105,8 +109,6 @@ sub getserverdata {
 				"hostName"       => $row->host_name,
 				"domainName"     => $row->domain_name,
 				"tcpPort"        => $row->tcp_port,
-				"xmppId"         => $row->xmpp_id,
-				"xmppPasswd"     => "**********",
 				"interfaceName"  => $row->interface_name,
 				"ipAddress"      => $row->ip_address,
 				"ipNetmask"      => $row->ip_netmask,
@@ -139,25 +141,24 @@ sub getserverdata {
 	return ( \@data );
 }
 
-sub summary {
+sub totals {
 	my $self = shift;
 
-	# TODO: drichardson - loop through this select to make this more dynamic.
-	# Based on this: SELECT * FROM TYPE WHERE ID IN (SELECT TYPE FROM SERVER);
-	my $edges   = $self->get_count_by_type('EDGE');
-	my $mids    = $self->get_count_by_type('MID');
-	my $rascals = $self->get_count_by_type('RASCAL');
-	my $ccrs    = $self->get_count_by_type('CCR');
-	my $redis   = $self->get_count_by_type('REDIS');
+	my @data;
+	my @rs = $self->db->resultset('ServerTypes')->search();
+	foreach my $rs (@rs) {
+		my $type_name = $rs->name;
+		my $count     = $self->get_count_by_type($type_name);
+		push(
+			@data, {
+				"type"  => $rs->name,
+				"count" => $count,
+			}
+		);
+	}
 
-	my $response_body = [
-		{ type => 'CCR',    count => $ccrs },
-		{ type => 'EDGE',   count => $edges },
-		{ type => 'MID',    count => $mids },
-		{ type => 'REDIS',  count => $redis },
-		{ type => 'RASCAL', count => $rascals }
-	];
-	return $self->success($response_body);
+	return $self->success( \@data );
+
 }
 
 sub get_count_by_type {
@@ -166,7 +167,7 @@ sub get_count_by_type {
 	return $self->db->resultset('Server')->search( { 'type.name' => $type_name }, { join => 'type' } )->count();
 }
 
-sub details {
+sub details_v11 {
 	my $self = shift;
 	my @data;
 	my $isadmin   = &is_admin($self);
@@ -181,7 +182,7 @@ sub details {
 			"domainName"     => $row->domain_name,
 			"tcpPort"        => $row->tcp_port,
 			"xmppId"         => $row->xmpp_id,
-			"xmppPasswd"     => $row->xmpp_passwd,
+			"xmppPasswd"     => $isadmin ? $row->xmpp_passwd : "********",
 			"interfaceName"  => $row->interface_name,
 			"ipAddress"      => $row->ip_address,
 			"ipNetmask"      => $row->ip_netmask,
@@ -219,6 +220,81 @@ sub details {
 		push( @data, $serv );
 	}
 	$self->success(@data);
+}
+
+sub details {
+	my $self              = shift;
+	my $orderby           = $self->param('orderby') || "hostName";
+	my $orderby_snakecase = lcfirst( decamelize($orderby) );
+	my $limit             = $self->param('limit') || 1000;
+	my @data;
+	my $isadmin          = &is_admin($self);
+	my $phys_location_id = $self->param('physLocationID');
+	my $host_name        = $self->param('hostName');
+
+	if ( !defined($phys_location_id) && !defined($host_name) ) {
+		return $self->alert("Missing required fields: 'hostName' or 'physLocationID'");
+	}
+
+	my $rs_data = $self->db->resultset('Server')->search(
+		[ { host_name => $host_name }, { phys_location => $phys_location_id } ], {
+			prefetch => [ 'cachegroup', 'type', 'profile', 'status', 'phys_location', 'hwinfos', 'deliveryservice_servers' ],
+			order_by => 'me.' . $orderby_snakecase
+		}
+	);
+
+	if ( $rs_data->count() > 0 ) {
+
+		while ( my $row = $rs_data->next ) {
+
+			my $serv = {
+				"id"             => $row->id,
+				"hostName"       => $row->host_name,
+				"domainName"     => $row->domain_name,
+				"tcpPort"        => $row->tcp_port,
+				"xmppId"         => $row->xmpp_id,
+				"xmppPasswd"     => $isadmin ? $row->xmpp_passwd : "********",
+				"interfaceName"  => $row->interface_name,
+				"ipAddress"      => $row->ip_address,
+				"ipNetmask"      => $row->ip_netmask,
+				"ipGateway"      => $row->ip_gateway,
+				"ip6Address"     => $row->ip6_address,
+				"ip6Gateway"     => $row->ip6_gateway,
+				"interfaceMtu"   => $row->interface_mtu,
+				"cachegroup"     => $row->cachegroup->name,
+				"physLocation"   => $row->phys_location->name,
+				"rack"           => $row->rack,
+				"type"           => $row->type->name,
+				"status"         => $row->status->name,
+				"profile"        => $row->profile->name,
+				"mgmtIpAddress"  => $row->mgmt_ip_address,
+				"mgmtIpNetmask"  => $row->mgmt_ip_netmask,
+				"mgmtIpGateway"  => $row->mgmt_ip_gateway,
+				"iloIpAddress"   => $row->ilo_ip_address,
+				"iloIpNetmask"   => $row->ilo_ip_netmask,
+				"iloIpGateway"   => $row->ilo_ip_gateway,
+				"iloUsername"    => $row->ilo_username,
+				"routerHostName" => $row->router_host_name,
+				"routerPortName" => $row->router_port_name,
+			};
+			my $hw_rs = $row->hwinfos;
+			while ( my $hwinfo_row = $hw_rs->next ) {
+				$serv->{hardwareInfo}->{ $hwinfo_row->description } = $hwinfo_row->val;
+			}
+
+			my $rs_ds_data = $row->deliveryservice_servers;
+			while ( my $dsrow = $rs_ds_data->next ) {
+				push( @{ $serv->{deliveryservices} }, $dsrow->deliveryservice->id );
+			}
+
+			push( @data, $serv );
+		}
+		my $size = @data;
+		$self->success( \@data, $orderby, $limit, $size );
+	}
+	else {
+		$self->success( [] );
+	}
 }
 
 1;
