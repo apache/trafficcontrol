@@ -39,7 +39,6 @@ Test::TestHelper->load_core_data($schema);
 ok $t->post_ok( '/login', => form => { u => Test::TestHelper::ADMIN_USER, p => Test::TestHelper::ADMIN_USER_PASSWORD } )->status_is(302)
 	->or( sub { diag $t->tx->res->content->asset->{content}; } );
 
-#/api/1.1/server/hostname/odol-atsec-alb-01/details.json
 $t->get_ok('/api/1.1/servers.json?orderby=id')->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } )
 	->json_is( "/response/1/status", "ONLINE" )->json_is( "/response/1/ipGateway", "127.0.0.2" )->json_is( "/response/1/ip6Gateway", "2345:1234:12:9::1" )
 	->json_is( "/response/1/tcpPort", "80" )->json_is( "/response/1/cachegroup", "mid-northeast-group" )
@@ -68,13 +67,11 @@ $t->get_ok('/api/1.1/servers.json?orderby=id')->status_is(200)->or( sub { diag $
 	->json_is( "/response/8/status", "ONLINE" )->json_is( "/response/8/ipGateway", "127.0.0.9" )->json_is( "/response/8/ip6Gateway", "2345:1234:12:f::1" )
 	->json_is( "/response/8/tcpPort", "8088" )->json_is( "/response/8/cachegroup", "mid-northeast-group" )->json_is( "/response/8/hostName", "riak02" )
 	->json_is( "/response/8/domainName", "kabletown.net" )->json_is( "/response/8/ipAddress", "127.0.0.9" )->json_is( "/response/8/profile", "RIAK1" )
-	->json_is( "/response/8/type", "RIAK" )->json_is( "/response/8/physLocation", "Denver" )->json_is( "/response/8/interfaceName", "eth1" )
+	->json_is( "/response/8/type", "RIAK" )->json_is( "/response/8/physLocation", "Boulder" )->json_is( "/response/8/interfaceName", "eth1" )
 	->json_is( "/response/8/interfaceMtu", "1500" );
 
-#/api/1.1/server/hostname/odol-atsec-alb-01/details.json
-$t->get_ok('/api/1.1/servers/hostname/atlanta-edge-01/details.json?orderby=host_name')->status_is(200)
-	->or( sub { diag $t->tx->res->content->asset->{content}; } )->json_is( "/response/ipGateway", "127.0.0.1" )
-	->json_is( "/response/deliveryservices/0", "1" );
+$t->get_ok('/api/1.1/servers/hostname/atlanta-edge-01/details.json')->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } )
+	->json_is( "/response/ipGateway", "127.0.0.1" )->json_is( "/response/deliveryservices/0", "1" );
 
 ok $t->get_ok('/logout')->status_is(302)->or( sub { diag $t->tx->res->content->asset->{content}; } );
 $dbh->disconnect();
