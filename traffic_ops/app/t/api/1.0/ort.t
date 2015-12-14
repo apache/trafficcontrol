@@ -78,9 +78,12 @@ sub genfiles_check {
 	$t->get_ok( '/genfiles/view/' . $host_name . '/hosting.config' )->status_is(200)->or( sub      { diag $t->tx->res->content->asset->{content}; } );
 	$t->get_ok( '/genfiles/view/' . $host_name . '/ip_allow.config' )->status_is(200)->or( sub     { diag $t->tx->res->content->asset->{content}; } );
 	$t->get_ok( '/genfiles/view/' . $host_name . '/logs_xml.config' )->status_is(200)->or( sub     { diag $t->tx->res->content->asset->{content}; } );
-	$t->get_ok( '/genfiles/view/' . $host_name . '/parent.config' )->status_is(200)->or( sub       { diag $t->tx->res->content->asset->{content}; } );
-	$t->get_ok( '/genfiles/view/' . $host_name . '/plugin.config' )->status_is(200)->or( sub       { diag $t->tx->res->content->asset->{content}; } );
-	$t->get_ok( '/genfiles/view/' . $host_name . '/records.config' )->status_is(200)->or( sub      { diag $t->tx->res->content->asset->{content}; } );
+	$t->get_ok( '/genfiles/view/' . $host_name . '/parent.config' )->status_is(200)->or( sub       { diag $t->tx->res->content->asset->{content}; } )
+		->content_like( qr/^# DO NOT EDIT/,                   'parent.config: has at least lead comment' )
+		->content_like( qr/-mid.*(?!parent=)|-edge.*parent=/, 'parent.config: if mid, no parent=; if edge, need parent=' );
+
+	$t->get_ok( '/genfiles/view/' . $host_name . '/plugin.config' )->status_is(200)->or( sub  { diag $t->tx->res->content->asset->{content}; } );
+	$t->get_ok( '/genfiles/view/' . $host_name . '/records.config' )->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } );
 
 	#$t->get_ok( '/genfiles/view/' . $host_name . '/regex_revalidate.config' )->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } );
 	$t->get_ok( '/genfiles/view/' . $host_name . '/remap.config' )->status_is(200)->or( sub   { diag $t->tx->res->content->asset->{content}; } );
