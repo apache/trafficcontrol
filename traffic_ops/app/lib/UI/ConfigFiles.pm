@@ -365,8 +365,8 @@ sub parent_data {
 
 	my $rs_parent = $self->db->resultset('Server')->search( \%condition, { prefetch => [ 'cachegroup', 'status', 'type', 'profile' ] } );
 
-	my %profile_cache    = ();
-	my $deliveryservices = undef;
+	my %profile_cache;
+	my %deliveryservices;
 	while ( my $row = $rs_parent->next ) {
 
 		next unless ( $row->type->name eq 'ORG' || $row->type->name eq 'EDGE' || $row->type->name eq 'MID' );
@@ -375,11 +375,11 @@ sub parent_data {
 			while ( my $ds_row = $rs_ds->next ) {
 				my $ds_domain = $ds_row->deliveryservice->org_server_fqdn;
 				$ds_domain =~ s/https?:\/\/(.*)/$1/;
-				push( @{ $deliveryservices->{$ds_domain} }, $row );
+				push( @{ $deliveryservices{$ds_domain} }, $row );
 			}
 		}
 		else {
-			push( @{ $deliveryservices->{"all_parents"} }, $row );
+			push( @{ $deliveryservices{"all_parents"} }, $row );
 		}
 
 		# get the profile info, and cache it in %profile_cache
@@ -394,10 +394,10 @@ sub parent_data {
 		}
 	}
 
-	foreach my $prefix ( keys %{$deliveryservices} ) {
+	foreach my $prefix ( keys %deliveryservices ) {
 		my $i = 0;
 		$rs_parent->reset;
-		foreach my $row ( @{ $deliveryservices->{$prefix} } ) {
+		foreach my $row ( @{ $deliveryservices{$prefix} } ) {
 			my $pid            = $row->profile->id;
 			my $ds_domain      = $profile_cache{$pid}->{domain_name};
 			my $weight         = $profile_cache{$pid}->{weight};
