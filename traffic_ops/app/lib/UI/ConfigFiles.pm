@@ -340,7 +340,6 @@ sub parent_data {
 	my $self   = shift;
 	my $server = shift;
 
-	my $pinfo;
 	my @parent_cachegroup_ids;
 	my $org_loc_type_id = &type_id( $self, "ORG_LOC" );
 	if ( $server->type->name eq 'MID' ) {
@@ -367,6 +366,7 @@ sub parent_data {
 
 	my %profile_cache;
 	my %deliveryservices;
+	my %parent_info;
 	while ( my $row = $rs_parent->next ) {
 
 		next unless ( $row->type->name eq 'ORG' || $row->type->name eq 'EDGE' || $row->type->name eq 'MID' );
@@ -387,10 +387,12 @@ sub parent_data {
 		if ( !defined( $profile_cache{$pid} ) ) {
 
 			# assign $ds_domain, $weight and $port, and cache the results %profile_cache
-			$profile_cache{$pid}{domain_name}    = $self->profile_param_value( $pid, 'CRConfig.json', 'domain_name',    undef );
-			$profile_cache{$pid}{weight}         = $self->profile_param_value( $pid, 'parent.config', 'weight',         '0.999' );
-			$profile_cache{$pid}{port}           = $self->profile_param_value( $pid, 'parent.config', 'port',           undef );
-			$profile_cache{$pid}{use_ip_address} = $self->profile_param_value( $pid, 'parent.config', 'use_ip_address', 0 );
+			$profile_cache{$pid} = {
+				domain_name    => $self->profile_param_value( $pid, 'CRConfig.json', 'domain_name',    undef ),
+				weight         => $self->profile_param_value( $pid, 'parent.config', 'weight',         '0.999' ),
+				port           => $self->profile_param_value( $pid, 'parent.config', 'port',           undef ),
+				use_ip_address => $self->profile_param_value( $pid, 'parent.config', 'use_ip_address', 0 ),
+			};
 		}
 	}
 
@@ -404,23 +406,25 @@ sub parent_data {
 			my $port           = $profile_cache{$pid}->{port};
 			my $use_ip_address = $profile_cache{$pid}->{use_ip_address};
 			if ( defined($ds_domain) && defined($server_domain) && $ds_domain eq $server_domain ) {
-				$pinfo->{$prefix}->[$i]->{"host_name"}      = $row->host_name;
-				$pinfo->{$prefix}->[$i]->{"port"}           = defined($port) ? $port : $row->tcp_port;
-				$pinfo->{$prefix}->[$i]->{"domain_name"}    = $row->domain_name;
-				$pinfo->{$prefix}->[$i]->{"weight"}         = $weight;
-				$pinfo->{$prefix}->[$i]->{"use_ip_address"} = $use_ip_address;
-				$pinfo->{$prefix}->[$i]->{"ip_address"}     = $row->ip_address;
+				my %p = (
+					host_name      => $row->host_name,
+					port           => defined($port) ? $port : $row->tcp_port,
+					domain_name    => $row->domain_name,
+					weight         => $weight,
+					use_ip_address => $use_ip_address,
+					ip_address     => $row->ip_address,
+				);
 				if ( $server->cachegroup->parent_cachegroup_id == $row->cachegroup->id ) {
-					$pinfo->{$prefix}->[$i]->{"preferred"} = 1;
+					$p{preferred} = 1;
 				}
 				else {
-					$pinfo->{$prefix}->[$i]->{"preferred"} = 0;
+					$p{preferred} = 0;
 				}
-				$i++;
+				push @{ $parent_info{$prefix} }, \%p;
 			}
 		}
 	}
-	return $pinfo;
+	return \%parent_info;
 }
 
 sub ip_allow_data {
