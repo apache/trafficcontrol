@@ -90,6 +90,9 @@ sub register {
 			my %search = ( profile => $profile_id );
 			my @ds_rs = $self->db->resultset('Deliveryservice')->search( \%search );
 			foreach my $ds (@ds_rs) {
+					if ($ds->type->name !~ m/^HTTP/ && $ds->type->name !~ m/^DNS/) {
+						next;
+					}
 				my $xml_id = $ds->xml_id;
 				my $ds_id  = $ds->id;
 
