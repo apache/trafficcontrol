@@ -28,8 +28,10 @@
 		<module>core</module>
 		<module>api</module>
 		<module>build</module>
-		<module>testServer</module>
+		<!--uncomment this to run testServer, will cause TR build to fail-->
+		<!--<module>testServer</module>-->
 	</modules>
+
 	<properties>
 		<deploy.dir>/opt/traffic_router</deploy.dir>
 		<wicket.version>6.0.0</wicket.version>
