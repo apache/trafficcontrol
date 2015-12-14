@@ -41,6 +41,7 @@ sub index {
 			}
 		);
 	}
+	$self->app->log->debug( "data #-> " . Dumper(@data) );
 	$self->success( \@data, $orderby, $limit, $page );
 }
 
