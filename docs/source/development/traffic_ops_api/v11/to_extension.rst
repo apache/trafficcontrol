@@ -30,9 +30,9 @@ Retrieves the list of extensions.
 
 Authentication Required: Yes
 
-Response Content Type: application/json
+Role(s) Required: None
 
-**Return Values**
+**Response Properties**
 
 +--------------------------+--------+--------------------------------------------+
 | Parameter                | Type   | Description                                |
@@ -59,7 +59,6 @@ Response Content Type: application/json
 +--------------------------+--------+--------------------------------------------+
 
 **Response Example** ::
-
 
   {
          "response": [
@@ -98,6 +97,8 @@ Response Content Type: application/json
   Creates a Traffic Ops extension.
 
   Authentication Required: Yes
+
+  Role(s) Required: None
 
   **Request Parameters**
 
@@ -138,8 +139,7 @@ Response Content Type: application/json
           "type": "CHECK_EXTENSION_BOOL",
     }
 
-  Response Content Type: application/json
-    
+|
 
   **Response Properties**
 
@@ -173,6 +173,8 @@ Response Content Type: application/json
 
   Authentication Required: Yes
 
+  Role(s) Required: None
+
   **Request Route Parameters**
 
   +--------+----------+-----------------+
@@ -180,9 +182,6 @@ Response Content Type: application/json
   +========+==========+=================+
   | ``id`` | yes      | TO extension id |
   +--------+----------+-----------------+
-
-  Response Content Type: application/json
-
 
   **Response Properties**
 
@@ -198,13 +197,15 @@ Response Content Type: application/json
 
   **Response Example** ::
 
-      {
+    {
      "alerts": [
         {
            "level": "success",
            "text": "Extension deleted."
         }
      ],
-      }
+    }
 
-  
+
+|
+

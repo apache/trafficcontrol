@@ -21,10 +21,14 @@ System
 
 .. _to-api-v12-sys-route:
 
-/api/1.2/system/info
-++++++++++++++++++++
+/api/1.1/system
++++++++++++++++
+
+**GET /api/1.2/system/info.json**
 
   Authentication Required: Yes
+
+  Role(s) Required: None
 
   **Response Properties**
 
@@ -73,4 +77,5 @@ System
       },
     }
 
+|
 

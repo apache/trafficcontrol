@@ -34,8 +34,6 @@ flot				, 0.8.3		, http://www.flotcharts.org/downloads/flot-0.8.3.zip											
 flot				, 0.8.3		, http://www.flotcharts.org/downloads/flot-0.8.3.zip																, zip	, jquery.flot.time.js						, flot/											, ../../app/public/js/flot/
 flot				, 0.8.3		, https://github.com/krzysu/flot.tooltip/releases/download/0.8.4/jquery.flot.tooltip-0.8.4.zip						, zip	, jquery.flot.tooltip.js					, /			      								, ../../app/public/js/flot/
 flot				, 0.8.3		, https://gflot.googlecode.com/svn-history/r154/trunk/flot/jquery.flot.axislabels.js						    	, none	, jquery.flot.axislabels.js		    		, flot/											, ../../app/public/js/flot/
-jmenu				, 2.0		, https://github.com/alpixel/jMenu/archive/master.zip																, zip	, jMenu.jquery.min.js						, jMenu-master/js/								, ../../app/public/js/
-jmenu				, 2.0		, https://github.com/alpixel/jMenu/archive/master.zip																, zip	, jmenu.css									, jMenu-master/css/								, ../../app/public/css/
 jquery				, 1.11.2	, https://code.jquery.com/jquery-1.11.2.min.js																		, none	, jquery-1.11.2.min.js						, .												, ../../app/public/js/
 jquery-ui 			, 1.11.4 	, https://code.jquery.com/ui/1.11.4/jquery-ui.min.js 																, none 	, jquery-ui.min.js 							, . 											, ../../app/public/js/
 jquery-ui-dark-hive	, 1.7.3 	, https://code.jquery.com/ui/1.7.3/themes/dark-hive/jquery-ui.css 													, none 	, jquery-ui.css 							, . 											, ../../app/public/css/

@@ -262,7 +262,7 @@ sub create {
 	if ($existing_fed) {
 		$self->field('federation.cname')->is_equal( "", "A Federation with name \"$cname\" already exists." );
 	}
-	if ( $existing_fed && $self->is_valid("add") ) {
+	if ( !$existing_fed && $self->is_valid("add") ) {
 		my $new_id = $self->create_federation( $ds_id, $user_id, $cname, $desc, $ttl );
 		if ( $new_id > 0 ) {
 			$self->app->log->debug("redirecting....");

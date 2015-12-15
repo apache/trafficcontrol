@@ -156,7 +156,7 @@ public final class SignatureManager {
 							// incoming key map has new keys
 							LOGGER.debug("Found new keys in incoming keyMap; rebuilding zone caches");
 							keyMap = newKeyMap;
-							getZoneManager().rebuildZoneCache(cacheRegister);
+							getZoneManager().rebuildZoneCache();
 						} // no need to overwrite the keymap if they're the same, so no else leg
 					} else {
 						LOGGER.fatal("Unable to read keyPairData: " + keyPairData);

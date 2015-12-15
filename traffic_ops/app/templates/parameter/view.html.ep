@@ -15,9 +15,10 @@
  -->
 <script>
 $(function () {
-    $("#save_button").click(function() {
+    $("#save_button").click(function(event) {
         var r = confirm(warnString());
         if (r == false) {
+            event.preventDefault(); // cancel the default action associated with this mouseevent - submitting the form
             return;
         } 
         $("#cancel_button").click(function() {

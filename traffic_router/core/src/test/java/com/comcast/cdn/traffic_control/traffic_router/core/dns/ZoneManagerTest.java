@@ -16,15 +16,17 @@
 
 package com.comcast.cdn.traffic_control.traffic_router.core.dns;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 
 import java.io.File;
 import java.io.FileReader;
+import java.math.BigInteger;
 import java.net.InetAddress;
-import java.net.UnknownHostException;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -43,12 +45,12 @@ import org.xbill.DNS.Zone;
 
 import com.comcast.cdn.traffic_control.traffic_router.core.TestBase;
 import com.comcast.cdn.traffic_control.traffic_router.core.cache.Cache;
-import com.comcast.cdn.traffic_control.traffic_router.core.cache.Cache.DeliveryServiceReference;
 import com.comcast.cdn.traffic_control.traffic_router.core.cache.CacheLocation;
 import com.comcast.cdn.traffic_control.traffic_router.core.cache.CacheRegister;
 import com.comcast.cdn.traffic_control.traffic_router.core.ds.DeliveryService;
 import com.comcast.cdn.traffic_control.traffic_router.core.router.TrafficRouter;
 import com.comcast.cdn.traffic_control.traffic_router.core.router.TrafficRouterManager;
+import com.google.common.cache.CacheStats;
 import com.google.common.net.InetAddresses;
 
 public class ZoneManagerTest {
@@ -57,7 +59,6 @@ public class ZoneManagerTest {
 	private TrafficRouterManager trafficRouterManager;
 	private String defaultDnsRoutingName;
 	private Map<String, InetAddress> netMap = new HashMap<String, InetAddress>();
-	private DNSAccessRecord.Builder builder;
 
 	@BeforeClass
 	public static void setUpBeforeClass() throws Exception {
@@ -86,45 +87,78 @@ public class ZoneManagerTest {
 			netMap.put(loc, ip);
 		}
 
-		builder = new DNSAccessRecord.Builder(1, InetAddress.getByName("192.168.12.34"));
 	}
 
-
 	@Test
-	public void testDynamicZoneCache() throws TextParseException, UnknownHostException {
+	public void testDynamicZoneCache() throws TextParseException {
 		TrafficRouter trafficRouter = trafficRouterManager.getTrafficRouter();
 		CacheRegister cacheRegister = trafficRouter.getCacheRegister();
-		Map<String, Collection<CacheLocation>> edgeLocations = new HashMap<String, Collection<CacheLocation>>();
+		ZoneManager zoneManager = trafficRouter.getZoneManager();
 
-		for (Cache c : cacheRegister.getCacheMap().values()) {
-			for (DeliveryServiceReference dsr : c.getDeliveryServices()) {
-				final DeliveryService ds = cacheRegister.getDeliveryService(dsr.getDeliveryServiceId());
+		for (final DeliveryService ds : cacheRegister.getDeliveryServices().values()) {
+			if (!ds.isDns()) {
+				continue;
+			}
 
-				if (!ds.isDns()) continue;
-				final String edgeName = dsr.getFqdn() + ".";
+			final JSONArray domains = ds.getDomains();
 
-				if (!edgeLocations.containsKey(edgeName)) {
-					edgeLocations.put(edgeName, new HashSet<CacheLocation>());
-				}
+			for (int i = 0; i < domains.length(); i++) {
+				final String domain = domains.optString(i);
+				final Name edgeName = new Name(ZoneManager.getDnsRoutingName() + "." + domain + ".");
 
 				for (CacheLocation location : cacheRegister.getCacheLocations()) {
-					if (ds.isLocationAvailable(location)) {
-						final Collection<CacheLocation> locations = edgeLocations.get(edgeName);
-						locations.add(location);
-						edgeLocations.put(edgeName, locations);
+					final List<Cache> caches = trafficRouter.selectCachesByCZ(ds, location);
+
+					if (caches == null) {
+						continue;
+					}
+
+					final InetAddress source = netMap.get(location.getId());
+					final DNSAccessRecord.Builder builder = new DNSAccessRecord.Builder(1, source);
+					final Set<Zone> zones = new HashSet<Zone>();
+					final int maxDnsIps = ds.getMaxDnsIps();
+					long combinations = 1;
+
+					if (maxDnsIps > 0 && !trafficRouter.isConsistentDNSRouting() && caches.size() > maxDnsIps) {
+						final BigInteger top = fact(caches.size());
+						final BigInteger f = fact(caches.size() - maxDnsIps);
+						final BigInteger s = fact(maxDnsIps);
+
+						combinations = top.divide(f.multiply(s)).longValue();
+						int c = 0;
+
+						while (c < (combinations * 100)) {
+							final Zone zone = trafficRouter.getZone(edgeName, Type.A, source, true, builder); // this should load the zone into the dynamicZoneCache if not already there
+							assertNotNull(zone);
+							zones.add(zone);
+							c++;
+						}
+					}
+
+					final CacheStats cacheStats = zoneManager.getDynamicCacheStats();
+
+					for (int j = 0; j <= (combinations * 100); j++) {
+						final long missCount = new Long(cacheStats.missCount());
+						final Zone zone = trafficRouter.getZone(edgeName, Type.A, source, true, builder);
+						assertNotNull(zone);
+						assertEquals(missCount, cacheStats.missCount()); // should always be a cache hit so these should remain the same
+
+						if (!zones.isEmpty()) {
+							assertTrue(zones.contains(zone));
+						}
 					}
 				}
 			}
 		}
+	}
 
-		for (String name : edgeLocations.keySet()) {
-			for (CacheLocation location : edgeLocations.get(name)) {
-				final InetAddress source = netMap.get(location.getId());
-				// need to iterate through the CZF and submit a bunch of these into a job queue to run repeatedly/fast
-				final Zone zone = trafficRouter.getZone(new Name(name), Type.A, source, true, builder);
-				assertNotNull(zone);
-				//LOGGER.info(zone);
-			}
+	private BigInteger fact(final int n) {
+		BigInteger p = new BigInteger("1");
+
+		for (long c = n; c > 0; c--) {
+			p = p.multiply(BigInteger.valueOf(c));
 		}
+
+		return p;
 	}
 }

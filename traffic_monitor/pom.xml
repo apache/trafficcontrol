@@ -5,7 +5,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>com.comcast.cdn.traffic_control</groupId>
 	<packaging>war</packaging>
-	<version>1.2.1</version>
+	<version>${env.TRAFFIC_CONTROL_VERSION}</version>
 	<name>traffic_monitor</name>
 	<description></description>
 
@@ -86,6 +86,12 @@
 			<artifactId>wicket-examples-war</artifactId>
 			<version>0.2</version>
 			<classifier>test-sources</classifier>
+			<exclusions>
+				<exclusion>
+					<groupId>org.apache.wicket</groupId>
+					<artifactId>wicket-atmosphere</artifactId>
+				</exclusion>
+			</exclusions>
 		</dependency>
 		<dependency>
 			<groupId>org.apache.wicket</groupId>
@@ -254,6 +260,21 @@
 				<artifactId>maven-enforcer-plugin</artifactId>
 				<version>1.4.1</version>
 				<executions>
+					<execution>
+						<phase>validate</phase>
+						<id>enforce-environment-variable-is-set0</id>
+						<goals>
+							<goal>enforce</goal>
+						</goals>
+						<configuration>
+							<rules>
+								<requireEnvironmentVariable>
+									<variableName>TRAFFIC_CONTROL_VERSION</variableName>
+								</requireEnvironmentVariable>
+							</rules>
+							<fail>true</fail>
+						</configuration>
+					</execution>
 					<execution>
 						<phase>package</phase>
 						<id>enforce-environment-variable-is-set</id>

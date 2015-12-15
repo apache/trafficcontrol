@@ -428,7 +428,8 @@ sub api_routes {
 		->to( 'ChangeLog#newlogcount', namespace => $namespace );
 
 	# -- CRANS - #NEW
-	$r->get( "/api/$version/asns" => [ format => [qw(json)] ] )->over( authenticated => 1 )->to( 'Asn#index', namespace => $namespace );
+	$r->get( "/api/1.1/asns" => [ format => [qw(json)] ] )->over( authenticated => 1 )->to( 'Asn#v11_index', namespace => $namespace );
+	$r->get( "/api/1.2/asns" => [ format => [qw(json)] ] )->over( authenticated => 1 )->to( 'Asn#index', namespace => $namespace );
 
 	# -- HWINFO - #NEW
 	# Supports: ?orderby=key
@@ -775,6 +776,7 @@ sub traffic_stats_routes {
 	$r->get( "internal/api/$version/current_bandwidth" => [ format => [qw(json)] ] )->to( 'CacheStats#current_bandwidth', namespace => $namespace );
 	$r->get( "internal/api/$version/current_connections" => [ format => [qw(json)] ] )->to( 'CacheStats#current_connections', namespace => $namespace );
 	$r->get( "internal/api/$version/current_capacity" => [ format => [qw(json)] ] )->to( 'CacheStats#current_capacity', namespace => $namespace );
+	$r->get( "internal/api/$version/daily_summary" => [ format => [qw(json)] ] )->to( 'CacheStats#daily_summary', namespace => $namespace );
 }
 
 sub catch_all {

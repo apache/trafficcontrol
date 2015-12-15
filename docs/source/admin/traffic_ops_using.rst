@@ -59,7 +59,13 @@ The following tabs are available in the menu at the top of the Traffic Ops user 
 
 * **Delivery Services**
 
-  The main Delivery Service table. This is where you Create/Read/Update/Delete Delivery Services of all types. There are currently no sub menus for this tab.
+  The main Delivery Service table. This is where you Create/Read/Update/Delete Delivery Services of all types. Hover over to get the following sub option:
+
+  +-------------+--------------------------------------+
+  |    Option   |             Description              |
+  +=============+======================================+
+  | Federations | Add/Edit/Delete Federation Mappings. |
+  +-------------+--------------------------------------+
 
 * **Servers**
 
@@ -93,22 +99,23 @@ The following tabs are available in the menu at the top of the Traffic Ops user 
 
   Tools for working with Traffic Ops and it's servers. Hover over this tab to get the following options:
 
-  +----------------------+-----------------------------------------------------------------------------------------------------------------------------------+
-  |        Option        |                                                            Description                                                            |
-  +======================+===================================================================================================================================+
-  | Generate ISO         | Generate a bootable image for any of the servers in the Servers table (or any server for that matter). See :ref:`rl-generate-iso` |
-  +----------------------+-----------------------------------------------------------------------------------------------------------------------------------+
-  | Queue Updates        | Send Updates to the caches. See :ref:`rl-queue-updates`                                                                           |
-  +----------------------+-----------------------------------------------------------------------------------------------------------------------------------+
-  | DB Dump              | Backup the Database to a .sql file.                                                                                               |
-  +----------------------+-----------------------------------------------------------------------------------------------------------------------------------+
-  | Snapshot CRConfig    | Send updates to the Traffic Monitor / Traffic Router servers.  See :ref:`rl-queue-updates`                                        |
-  +----------------------+-----------------------------------------------------------------------------------------------------------------------------------+
-  | Invalidate Content   | Invalidate or purge content from the CDN. See :ref:`rl-purge`                                                                     |
-  +----------------------+-----------------------------------------------------------------------------------------------------------------------------------+
-  | Generate DNSSEC keys | Neuman?                                                                                                                           |
-  +----------------------+-----------------------------------------------------------------------------------------------------------------------------------+
-
+  +--------------------+-----------------------------------------------------------------------------------------------------------------------------------+
+  |       Option       |                                                            Description                                                            |
+  +====================+===================================================================================================================================+
+  | Generate ISO       | Generate a bootable image for any of the servers in the Servers table (or any server for that matter). See :ref:`rl-generate-iso` |
+  +--------------------+-----------------------------------------------------------------------------------------------------------------------------------+
+  | Queue Updates      | Send Updates to the caches. See :ref:`rl-queue-updates`                                                                           |
+  +--------------------+-----------------------------------------------------------------------------------------------------------------------------------+
+  | DB Dump            | Backup the Database to a .sql file.                                                                                               |
+  +--------------------+-----------------------------------------------------------------------------------------------------------------------------------+
+  | Snapshot CRConfig  | Send updates to the Traffic Monitor / Traffic Router servers.  See :ref:`rl-queue-updates`                                        |
+  +--------------------+-----------------------------------------------------------------------------------------------------------------------------------+
+  | Invalidate Content | Invalidate or purge content from the CDN. See :ref:`rl-purge`                                                                     |
+  +--------------------+-----------------------------------------------------------------------------------------------------------------------------------+
+  | Manage DNSSEC keys | Manage DNSSEC Keys for a chosen CDN.                                                                                              |
+  +--------------------+-----------------------------------------------------------------------------------------------------------------------------------+
+  
+  
 * **Misc**
 
   Miscellaneous editing options. Hover over this tab to get the following options:
@@ -193,6 +200,7 @@ The Graph View shows a live view of the last 24 hours of bits per seconds served
 
 Server Checks
 +++++++++++++
+The server checks page is inteded to give an overview of the Servers managed by Traffic Control as well as their status. This data comes from `Traffic Ops extensions <traffic_ops_extensions.html>`_.
 
 +------+-----------------------------------------------------------------------+
 | Name |                 Description                                           |
@@ -226,6 +234,7 @@ Server Checks
 
 Daily Summary
 +++++++++++++
+Displays daily max gbps and bytes served for all CDNs.  In order for the graphs to appear, the 'daily_bw_url' and 'daily_served_url' parameters need to be be created, assigned to the global profile, and have a value of a grafana graph.  For more information on configuring grafana, see the `Traffic Stats <traffic_stats.html>`_  section.
 
 .. _rl-server:
 
@@ -321,11 +330,11 @@ The fields in the Delivery Service view are:
 | Range Request Handling                           | (experimental)  How to treat range requests:                                                                                                                                                                        |
 |                                                  |                                                                                                                                                                                                                     |
 |                                                  | - 0 Do not cache (ranges requested from files taht are already cached due to a non range request will be a HIT)                                                                                                     |
-|                                                  | - 1 Use the `background_fetch <https://docs.trafficserver.apache.org/en/latest/reference/plugins/background_fetch.en.html>`_ plugin.                                                                                |
+|                                                  | - 1 Use the `background_fetch <https://docs.trafficserver.apache.org/en/latest/admin-guide/plugins/background_fetch.en.html>`_ plugin.                                                                              |
 |                                                  | - 2 Use the cache_range_requests plugin.                                                                                                                                                                            |
 +--------------------------------------------------+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
 | Delivery Service DNS TTL                         | The Time To Live on the DNS record for the Traffic Router A and AAAA records (``tr.<deliveryservice>.<cdn-domain>``) for a HTTP delivery service *or* for the A and                                                 |
-|                                                  | AAAAA records of the edge name (``edge.<deliveryservice>.<cdn-domain>``).                                                                                                                                           |
+|                                                  | AAAA records of the edge name (``edge.<deliveryservice>.<cdn-domain>``).                                                                                                                                            |
 +--------------------------------------------------+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
 | Origin Server Base URL                           | The Origin Server's base URL. This includes the protocol (http or https). Example: ``http://movies.origin.com``                                                                                                     |
 +--------------------------------------------------+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
@@ -347,9 +356,9 @@ The fields in the Delivery Service view are:
 +--------------------------------------------------+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
 | Mid Header Rewrite Rules                         | Header Rewrite rules to apply for this delivery service at the MID tier. See :ref:`rl-header-rewrite`. [1]_                                                                                                         |
 +--------------------------------------------------+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-| Regex Remap Expression                           | Regex Remap rule to apply to this delivery service at the Edge tier. See `ATS documentation on regex_remap <https://docs.trafficserver.apache.org/en/latest/reference/plugins/regex_remap.en.html>`_. [1]_          |
+| Regex Remap Expression                           | Regex Remap rule to apply to this delivery service at the Edge tier. See `ATS documentation on regex_remap <https://docs.trafficserver.apache.org/en/latest/admin-guide/plugins/regex_remap.en.html>`_. [1]_        |
 +--------------------------------------------------+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-| Cache URL expression                             | Cache URL rule to apply to this delivery service. See `ATS documentation on cacheurl <https://docs.trafficserver.apache.org/en/latest/reference/plugins/cacheurl.en.html>`_. [1]_                                   |
+| Cache URL expression                             | Cache URL rule to apply to this delivery service. See `ATS documentation on cacheurl <https://docs.trafficserver.apache.org/en/latest/admin-guide/plugins/cacheurl.en.html>`_. [1]_                                 |
 +--------------------------------------------------+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
 | Raw remap text                                   | For HTTP and DNS deliveryservices, this will get added to the end of the remap line on the cache verbatim. For ANY_MAP deliveryservices this is the remap line. [1]_                                                |
 +--------------------------------------------------+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
@@ -417,6 +426,12 @@ One of the most important settings when creating the delivery service is the sel
 
 .. Note:: Once created, the Traffic Ops user interface does not allow you to change the delivery service type; the drop down is greyed out. There are many things that can go wrong when changing the type, and it is safer to delete the delivery service, and recreate it.
 
+Federations
++++++++++++
+  Federations allow for other (federated) CDNs (at a different ISP, MSO, etc) to add a list of resolvers and a CNAME to a delivery service Traffic Ops.  When a request is made from one of federated CDN's clients, Traffic Router will return the CNAME configured in the federation mapping.  This allows the federated CDN to serve the content without the content provider changing the URL, or having to manage multiple URLs.
+
+  Before adding a federation in the Traffic Ops UI, a user with the federations role needs to be created.  This user will be assigned to the federation and will be able to add resolvers to the federation via the Traffic Ops `Federation API <../development/traffic_ops_api/v12/federation.html>`_. 
+
 .. index::
   Header Rewrite
 
@@ -424,7 +439,7 @@ One of the most important settings when creating the delivery service is the sel
 
 Header Rewrite Options and DSCP
 +++++++++++++++++++++++++++++++
-Most header manipulation and per-delivery service configuration overrides are done using the `ATS Header Rewrite Plugin <https://docs.trafficserver.apache.org/en/latest/reference/plugins/header_rewrite.en.html>`_. Traffic Control allows you to enter header rewrite rules to be applied at the edge and at the mid level. The syntax used in Traffic Ops is the same as the one described in the ATS documentation, except for some special strings that will get replaced:
+Most header manipulation and per-delivery service configuration overrides are done using the `ATS Header Rewrite Plugin <https://docs.trafficserver.apache.org/en/latest/admin-guide/plugins/header_rewrite.en.html>`_. Traffic Control allows you to enter header rewrite rules to be applied at the edge and at the mid level. The syntax used in Traffic Ops is the same as the one described in the ATS documentation, except for some special strings that will get replaced:
 
 +-------------------+--------------------------+
 | Traffic Ops Entry |    Gets Replaced with    |
@@ -663,9 +678,15 @@ CCR Profile or Traffic Router Profile
 +-----------------------------------------+------------------------+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
 | api.auth.url                            | CRConfig.json          | The API authentication URL (https://${tmHostname}/api/1.1/user/login); ${tmHostname} is a search and replace token used by Traffic Router to construct the correct URL)                                   |
 +-----------------------------------------+------------------------+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| consistent.dns.routing                  | CRConfig.json          | Control whether DNS Delivery Services use consistent hashing on the edge FQDN to select caches for answers. May improve performance if set to true; defaults to false                                     |
++-----------------------------------------+------------------------+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
 | dnssec.enabled                          | CRConfig.json          | Whether DNSSEC is enabled; this parameter is updated via the DNSSEC administration user interface.                                                                                                        |
 +-----------------------------------------+------------------------+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
 | dnssec.allow.expired.keys               | CRConfig.json          | Allow Traffic Router to use expired DNSSEC keys to sign zones; default is true. This helps prevent DNSSEC related outages due to failed Traffic Control components or connectivity issues.                |
++-----------------------------------------+------------------------+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| dynamic.cache.primer.enabled            | CRConfig.json          | Allow Traffic Router to attempt to prime the dynamic zone cache; defaults to true                                                                                                                         |
++-----------------------------------------+------------------------+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| dynamic.cache.primer.limit              | CRConfig.json          | Limit the number of permutations to prime when dynamic zone cache priming is enabled; defaults to 500                                                                                                     |
 +-----------------------------------------+------------------------+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
 | keystore.maintenance.interval           | CRConfig.json          | The interval in seconds which Traffic Router will check the keystore API for new DNSSEC keys                                                                                                              |
 +-----------------------------------------+------------------------+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
@@ -1018,15 +1039,13 @@ Once these fields have been correctly entered, a user can click Generate KSK.  T
 
 Additionally, Traffic Ops also performs some systematic management of DNSSEC keys.  This management is necessary to help keep keys in sync for Delivery Services in a CDN as well as to make sure keys do not expire without human intervention. 
 
-  **Generation of keys for new Delivery Services**
+**Generation of keys for new Delivery Services**
   
-  Each time the DNSSEC Keys `API <../development/traffic_ops_api/v12/cdn.html#dnssec-keys>`_ is accessed by a client to get keys for a CDN, Traffic Ops checks all Delivery Services for the CDN and makes sure that DNSSEC Keys exist and are not expired for that Delivery Service.  If keys do not yet exist for that Delivery Service then Traffic Ops will create the keys, store them in `Traffic Vault <../overview/traffic_vault.html>`_, and return them along with all other keys for the CDN. 
+If a new Delivery Service is created and added to a CDN that has DNSSEC enabled, Traffic Ops will create DNSSEC keys for the Delivery Service and store them in Traffic Vault.
 
-  Furthermore, if a new Delivery Service is created and added to a CDN that has DNSSEC enabled, Traffic Ops will create DNSSEC keys for the Delivery Service and store them in Traffic Vault.
+**Regeneration of expiring keys for a Delivery Service**  
 
-  **Regeneration of expiring keys for a Delivery Service**  
-
-  Each time the DNSSEC Keys `API <../development/traffic_ops_api/v12/cdn.html#dnssec-keys>`_ is accessed by a client to get keys for a CDN, Traffic Ops checks to make sure the keys are not expired before returning them.  If keys are expired for a Delivery Service traffic ops will regenerate new keys and store them in Traffic Vault before returning them.  This process is the same for the CDN TLD ZSK, however Traffic Ops will not re-generate the CDN TLD KSK systematically.  The reason is that when a KSK is regenerated for the CDN TLD then a new DS Record will also be created.  The new DS Record needs to be added to the parent zone before Traffic Router attempts to sign with the new KSK in order for DNSSEC to work correctly.  Therefore, management of the KSK needs to be a manual process. 
+Traffic Ops has a process, controlled by cron, to check for expired or expiring keys and re-generate them.  The process runs at 5 minute intervals to check and see if keys are expired or close to expiring (withing 10 minutes by default).  If keys are expired for a Delivery Service, traffic ops will regenerate new keys and store them in Traffic Vault.  This process is the same for the CDN TLD ZSK, however Traffic Ops will not re-generate the CDN TLD KSK systematically.  The reason is that when a KSK is regenerated for the CDN TLD then a new DS Record will also be created.  The new DS Record needs to be added to the parent zone before Traffic Router attempts to sign with the new KSK in order for DNSSEC to work correctly.  Therefore, management of the KSK needs to be a manual process. 
 
 
   
