@@ -18,9 +18,9 @@
 # Plugin for the "FQDN" check.
 #
 # example cron entry
-# 0 * * * * /opt/traffic_ops/app/bin/checks/ToFQDNCheck.pl -c "{\"base_url\": \"https://localhost\", \"check_name\": \"FQDN\", \"name\": \"FQDN\"}"
+# 0 * * * * root /opt/traffic_ops/app/bin/checks/ToFQDNCheck.pl -c "{\"base_url\": \"https://localhost\", \"check_name\": \"FQDN\"}" >> /var/log/traffic_ops/extensionCheck.log 2>&1
 # example cron entry with syslog
-# 0 * * * * /opt/traffic_ops/app/bin/checks/ToFQDNCheck.pl -c "{\"base_url\": \"https://localhost\", \"check_name\": \"FQDN\", \"name\": \"FQDN\", \"syslog_facility\": \"local0\"}"
+# 0 * * * * root /opt/traffic_ops/app/bin/checks/ToFQDNCheck.pl -c "{\"base_url\": \"https://localhost\", \"check_name\": \"FQDN\", \"name\": \"DNS Lookup\", \"syslog_facility\": \"local0\"}" > /dev/null 2>&1
 
 use strict;
 use warnings;
@@ -35,12 +35,17 @@ use Sys::Syslog qw(:standard :macros);
 use Net::DNS;
 use NetAddr::IP;
 
-my $VERSION = "0.01";
+my $VERSION = "0.02";
 
 STDOUT->autoflush(1);
 
 my %args = ();
-getopts( "l:c:", \%args );
+getopts( "c:f:hl:q", \%args );
+
+if ($args{h}) {
+   &help();
+   exit();
+}
 
 Log::Log4perl->easy_init($ERROR);
 if ( defined( $args{l} ) ) {
@@ -66,10 +71,22 @@ if ($@) {
 }
 
 my $sslg = undef;
+my $chck_lng_nm;
 if (defined($jconf->{syslog_facility})) {
+   $chck_lng_nm = $jconf->{name};
    setlogmask(LOG_UPTO(LOG_INFO));
    openlog ('ToChecks', '', $jconf->{syslog_facility});
    $sslg = 1;
+}
+
+my $force = 0;
+if (defined($args{f})) {
+   $force = $args{f};
+}
+
+my $quiet;
+if ($args{q}) {
+   $quiet = 1;
 }
 
 TRACE Dumper($jconf);
@@ -79,7 +96,6 @@ my $ext = Extensions::Helper->new( { base_url => $b_url, token => '91504CE6-8E4A
 
 my $jdataserver    = $ext->get(Extensions::Helper::SERVERLIST_PATH);
 my $chck_nm     = $jconf->{check_name};
-my $chck_lng_nm    = $jconf->{name};
 foreach my $server ( @{$jdataserver} ) {
 	if ( $server->{type} eq 'EDGE' || $server->{type} eq 'MID' ) {
       my $status = 1;
@@ -94,7 +110,18 @@ foreach my $server ( @{$jdataserver} ) {
          $srv_ip6 = 'not defined';
       }
 
-      my @rslt = &fqdn_check( $srv_nm, "A" );
+      my @rslt;
+      if ($force == 0) {
+         @rslt = &fqdn_check( $srv_nm, "A" );
+      } elsif ($force == 1) {
+         @rslt = (0, "match");
+      } elsif ($force == 2) {
+         @rslt = (0, "NXDOMAIN");
+      } elsif ($force == 3) {
+         @rslt = (1, "127.0.0.1");
+      } elsif ($force == 4) {
+         @rslt = (1, $srv_ip);
+      }
       if (!$rslt[0]) {  # IPv4 query failed
          # IPv4 DNS lookup failed
          if ($rslt[1] =~ m/match/) {
@@ -130,13 +157,23 @@ foreach my $server ( @{$jdataserver} ) {
       } else {
          if ($sslg) {
             my @tmp = ($srv_nm, $chck_nm, $chck_lng_nm, 'OK');
-            syslog(LOG_INFO, "hostname=%s check=%s name=\"%s\" result=%s target=A", @tmp);
+            syslog(LOG_INFO, "hostname=%s check=%s name=\"%s\" result=%s target=A msg=\"\"", @tmp);
          }
       }
 
       # Check IPv6
       if ($srv_ip6 !~ m/not defined/) {
-         @rslt = &fqdn_check($srv_nm, "AAAA");
+         if ($force == 0) {
+            @rslt = &fqdn_check($srv_nm, "AAAA");
+         } elsif ($force == 1) {
+            @rslt = (0, "match");
+         } elsif ($force == 2) {
+            @rslt = (0, "NXDOMAIN");
+         } elsif ($force == 3) {
+            @rslt = (1, "::1");
+         } elsif ($force == 4) {
+            @rslt = (1, $srv_ip6);
+         }
          if (!$rslt[0]) {
             # IPv6 DNS lookup failed
             if ($rslt[1] =~ m/match/) {
@@ -171,26 +208,18 @@ foreach my $server ( @{$jdataserver} ) {
          } else {
             if ($sslg) {
                my @tmp = ($srv_nm, $chck_nm, $chck_lng_nm, 'OK');
-               syslog(LOG_INFO, "hostname=%s check=%s name=\"%s\" result=%s target=AAAA", @tmp);
+               syslog(LOG_INFO, "hostname=%s check=%s name=\"%s\" result=%s target=AAAA msg=\"\"", @tmp);
             }
          }
       }
 
 		DEBUG $chck_nm . " >> ".$srv_nm." result: ".$rslt[1]." status: ".$status;
-      # assuming that if someone is asking for output they are debugging script
-      # and don't post to DB. This allows for testing on prod server because
-      # it is hard to test everything in the lab. Is it not? And who's going to
-      # know anyway besides you and me. ;)
 		$ext->post_result( $server->{id}, $chck_nm, $status )
-         if (!defined($args{l}));
+         if (!$quiet);
 	}
 }
 
 closelog();
-
-sub help {
-	print "The -c argument is mandatory\n";
-}
 
 sub fqdn_check {
    my ($hostname,$type) = @_;
@@ -238,3 +267,30 @@ sub fqdn_check {
 
    return @result;
 }
+
+sub help {
+   print "ToFQDNCheck.pl -c \"{\\\"base_url\\\": \\\"https://localhost\\\", \\\"check_name\\\": \\\"FQDN\\\"[, \\\"name\\\": \\\"DNS Lookup\\\", \\\"syslog_facility\\\": \\\"local0\\\"]}\" [-f <1-4>] [-l <1-3>]\n";
+   print "\n";
+   print "-c   json formatted list of variables\n";
+   print "     base_url: required\n";
+   print "        URL of the Traffic Ops server.\n";
+   print "     check_name: required\n";
+   print "        The name of this check.\n";
+   print "     name: optional\n";
+   print "        The long name of this check. used in conjuction with syslog_facility.\n";
+   print "     syslog_facility: optional\n";
+   print "        The syslog facility to send messages. Requires the \"name\" option to\n";
+   print "        be set.\n";
+   print "-f   Force a FAIL or OK message\n";
+   print "        1: FAIL Blank A record in DNS\n";
+   print "        2: FAIL DNS failure\n";
+   print "        3: FAIL mis-match between DNS and Traffic Ops.\n";
+   print "        4: OK\n";
+   print "-h   Print this message\n";
+   print "-l   Debug level\n";
+   print "-q   Don't post results to Traffic Ops.\n";
+   print "================================================================================\n";
+   # the above line of equal signs is 80 columns
+   print "\n";
+}
+
