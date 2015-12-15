@@ -24,6 +24,7 @@ use Data::Dumper;
 use UI::ConfigFiles;
 use Date::Manip;
 use JSON;
+use String::CamelCase qw(decamelize);
 
 # Yes or no
 my %yesno = ( 0 => "no", 1 => "yes", 2 => "no" );
@@ -438,8 +439,11 @@ sub adeliveryservice {
 }
 
 sub ahwinfo {
-	my $self = shift;
-	my %data = ( "aaData" => undef );
+	my $self              = shift;
+	my $limit             = $self->param("limit");
+	my $orderby           = $self->param('orderby') || "hostName";
+	my $orderby_snakecase = lcfirst( decamelize($orderby) );
+	my %data              = ( "aaData" => undef );
 
 	my $rs;
 	if (   defined( $self->param('filter') )
@@ -448,7 +452,7 @@ sub ahwinfo {
 	{
 		my $col = $self->param('filter');
 		my $val = $self->param('value');
-		$rs = $self->db->resultset('Hwinfo')->search( { $col => $val }, { prefetch => ['serverid'] } );
+		$rs = $self->db->resultset('Hwinfo')->search( { $col => $val }, { prefetch => ['serverid'], order_by => 'me.' . $orderby_snakecase } );
 	}
 	else {
 		$rs = $self->db->resultset('Hwinfo')->search( undef, { prefetch => ['serverid'] } );
