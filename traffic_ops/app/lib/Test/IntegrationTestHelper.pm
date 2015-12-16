@@ -129,6 +129,7 @@ sub load_core_data {
 	$self->load_all_fixtures( Fixtures::Integration::Server->new($schema_values) );
 	$self->load_all_fixtures( Fixtures::Integration::Deliveryservice->new($schema_values) );
 	$self->load_all_fixtures( Fixtures::Integration::DeliveryserviceRegex->new($schema_values) );
+	$self->load_all_fixtures( Fixtures::Integration::DeliveryserviceServer->new($schema_values) );
 	$self->load_all_fixtures( Fixtures::Integration::ToExtension->new($schema_values) );
 
 	diag "Done!";
