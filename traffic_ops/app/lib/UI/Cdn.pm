@@ -24,6 +24,7 @@ use Data::Dumper;
 use UI::ConfigFiles;
 use Date::Manip;
 use JSON;
+use Hash::Merge qw( merge );
 
 # Yes or no
 my %yesno = ( 0 => "no", 1 => "yes", 2 => "no" );
@@ -438,9 +439,12 @@ sub adeliveryservice {
 }
 
 sub ahwinfo {
-	my $self = shift;
-	my %data = ( "aaData" => undef );
-
+	my $self           = shift;
+	my $sColumns       = $self->param("sColumns");
+	my $iDisplayLength = $self->param("iDisplayLength");
+	my $sort           = $self->param("sSortDir_0");
+	my $sSearch        = $self->param("sSearch");
+	my %data           = ( "aaData" => undef );
 	my $rs;
 	if (   defined( $self->param('filter') )
 		&& defined( $self->param('value') )
@@ -451,12 +455,41 @@ sub ahwinfo {
 		$rs = $self->db->resultset('Hwinfo')->search( { $col => $val }, { prefetch => ['serverid'] } );
 	}
 	else {
-		$rs = $self->db->resultset('Hwinfo')->search( undef, { prefetch => ['serverid'] } );
+
+		# Original
+		#$rs = $self->db->resultset('Hwinfo')->search( undef, { prefetch => ['serverid'] } );
+		$rs = $self->db->resultset('Hwinfo')->search(
+			{
+				-or => {
+					'me.description'     => { -like => '%' . $sSearch . '%' },
+					'me.val'             => { -like => '%' . $sSearch . '%' },
+					'serverid.host_name' => { -like => '%' . $sSearch . '%' }
+				}
+			},
+			{ rows => $iDisplayLength, prefetch => [ { 'serverid' => undef } ], join => 'serverid' },
+		);
+
 	}
 	while ( my $row = $rs->next ) {
 		my @line = [ $row->serverid->id, $row->serverid->host_name . "." . $row->serverid->domain_name, $row->description, $row->val, $row->last_updated ];
 		push( @{ $data{'aaData'} }, @line );
 	}
+	my $total_display_records;
+	if ( defined( $data{"aaData"} ) ) {
+		$total_display_records = scalar keys $data{"aaData"};
+	}
+	else {
+		$total_display_records = 0;
+	}
+	my %itotals_display_records = ( iTotalDisplayRecords => $total_display_records );
+	%data = %{ merge( \%data, \%itotals_display_records ) };
+
+	# Count all records
+	$rs = $self->db->resultset('Hwinfo')->search();
+	my $total_records = $rs->count;
+	my %itotal_records = ( iTotalRecords => $total_records );
+	%data = %{ merge( \%data, \%itotal_records ) };
+
 	$self->render( json => \%data );
 }
 

@@ -13,6 +13,7 @@
      See the License for the specific language governing permissions and
      limitations under the License.
  -->
+<link rel="stylesheet" type="text/css" href="/css/datatables.css">
 % title 'Hardware';
 % if (defined (flash 'alertmsg')) {
 <script>
@@ -33,9 +34,15 @@ $(function () {
 
 		$('#dthwinfo').dataTable({
 			"bJQueryUI": true,
+			"sPaginationType": "full_numbers",
 			"sScrollY": calcDataTableHeight(),
 			"bScrollCollapse": true,
-			"bPaginate": false,
+			"bServerSide": true,
+			"iDisplayLength": 100,
+			"bPaginate": true,
+			"bInfo": true,
+			"bFilter": true,
+			"bLengthChange": true,
 			"bProcessing": true,
 			"aoColumnDefs": [
 			{
