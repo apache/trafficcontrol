@@ -76,16 +76,25 @@ sub view {
 		push( @cachegroup_vars, $var );
 	}
 
-	$self->stash( cachegroup_vars => \@cachegroup_vars );
-
+	my $parent_name = "NO_PARENT";
 	if ( defined( $data->parent_cachegroup_id ) ) {
 		my $parent_id = $data->parent_cachegroup_id;
 		$rs_param = $self->db->resultset('Cachegroup')->search( { id => $parent_id } );
-		$self->stash( parent_name => $rs_param->single->name );
 	}
-	else {
-		$self->stash( parent_name => "NO_PARENT" );
+
+	my $secondary_parent_name = "NO_PARENT";
+	if ( defined( $data->secondary_parent_cachegroup_id ) ) {
+		my $secondary_parent_id = $data->secondary_parent_cachegroup_id;
+		$rs_param = $self->db->resultset('Cachegroup')->search( { id => $secondary_parent_id } );
 	}
+
+	$self->stash(
+		cachegroup_vars                => \@cachegroup_vars,
+		parent_cachegroup_id           => $data->parent_cachegroup_id // -1,
+		parent_name                    => $parent_name,
+		secondary_parent_cachegroup_id => $data->secondary_parent_cachegroup_id // -1,
+		secondary_parent_name          => $secondary_parent_name,
+	);
 
 	# $self->stash( cg_data => $data );
 
@@ -212,12 +221,11 @@ sub check_cachegroup_input {
 
 # Update
 sub update {
-	my $self                 = shift;
-	my $id                   = $self->param('id');
-	my $parent_cachegroup_id = $self->param('cg_data.parent_cachegroup_id');
-	my $priv_level           = $self->stash('priv_level');
-	my $cachegroup_vars      = $self->stash('cachegroup_vars');
-	my $extra_vars           = $self->stash('extra_vars');
+	my $self            = shift;
+	my $id              = $self->param('id');
+	my $priv_level      = $self->stash('priv_level');
+	my $cachegroup_vars = $self->stash('cachegroup_vars');
+	my $extra_vars      = $self->stash('extra_vars');
 
 	$self->stash(
 		id              => $id,
@@ -226,23 +234,17 @@ sub update {
 		cachegroup_vars => $cachegroup_vars,
 		extra_vars      => $extra_vars,
 		cg_data         => {
-			id                   => $id,
-			name                 => $self->param('cg_data.name'),
-			short_name           => $self->param('cg_data.short_name'),
-			latitude             => $self->param('cg_data.latitude'),
-			longitude            => $self->param('cg_data.longitude'),
-			parent_cachegroup_id => $parent_cachegroup_id,
-			type                 => $self->param('cg_data.type')
+			id                             => $id,
+			name                           => $self->param('cg_data.name'),
+			short_name                     => $self->param('cg_data.short_name'),
+			latitude                       => $self->param('cg_data.latitude'),
+			longitude                      => $self->param('cg_data.longitude'),
+			parent_cachegroup_id           => $self->param('cg_data.parent_cachegroup_id') // -1,
+			secondary_parent_cachegroup_id => $self->param('cg_data.secondary_parent_cachegroup_id') // -1,
+			type                           => $self->param('cg_data.type')
 		}
 	);
 
-	if ( defined($parent_cachegroup_id) && $parent_cachegroup_id != -1 ) {
-		my $rs_param = $self->db->resultset('Cachegroup')->search( { id => $parent_cachegroup_id } );
-		$self->stash( parent_name => $rs_param->single->name );
-	}
-	else {
-		$self->stash( parent_name => 'NO_PARENT' );
-	}
 	if ( !$self->isValidCachegroup() ) {
 		return $self->render( template => 'cachegroup/edit' );
 	}
@@ -261,6 +263,9 @@ sub update {
 		$update->longitude( $self->param('cg_data.longitude') );
 		if ( $parent_cachegroup_id != -1 ) {
 			$update->parent_cachegroup_id( $self->param('cg_data.parent_cachegroup_id') );
+		}
+		if ( $secondary_parent_cachegroup_id != -1 ) {
+			$update->secondary_parent_cachegroup_id( $self->param('cg_data.secondary_parent_cachegroup_id') );
 		}
 		$update->type( $self->param('cg_data.type') );
 		$update->update();
