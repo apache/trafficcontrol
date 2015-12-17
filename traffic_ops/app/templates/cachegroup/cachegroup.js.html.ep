@@ -29,18 +29,20 @@ function listtypes(selected_type) {
 }
 
 function populateCachegroups(sel_ele, post_op) {
-	$.get("/api/1.1/cachegroups.json", function(data){
-		var response = data['response'];
-		var selected_id = -1;
-		sel_ele.append("<option value=-1>NO_PARENT</option>");
-		$.each(response, function(idx, val) {
-			sel_ele.append("<option value=" + response[idx].id + ">" + response[idx].name + "</option>");
-		});
-		// call post_op if provided
-		if (typeof post_op === 'function') {
-		  post_op()
-		}
-	}, "json");
+  $.when(function() {
+	  return $.get("/api/1.1/cachegroups.json", function(data){
+		  var response = data['response'];
+		  var selected_id = -1;
+		  sel_ele.append("<option value=-1>NO_PARENT</option>");
+		  $.each(response, function(idx, val) {
+			  sel_ele.append("<option value=" + response[idx].id + ">" + response[idx].name + "</option>");
+		  });
+	  }, "json");
+  }())
+  .then(function() {
+	if (typeof post_op === 'function') {
+		post_op();
+	}});
 }
 
 function selectOptionByText( sel, txt ) {

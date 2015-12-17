@@ -21,8 +21,9 @@
 
 $(function () { 
 	listtypes("<%= $selected_type %>");
-	populateCachegroups($(".cachegroupselects"), function() {
-	  selectOptionByText($("#cachegroupselect"), "<%= $parent_name %>");
+	populateCachegroups($(".cg_select"), function() {
+	  selectOptionByText($("#cg_parent"), "<%= $parent_name %>");
+	  selectOptionByText($("#cg_secondary"), "<%= $secondary_parent_name %>");
    })
 });
 

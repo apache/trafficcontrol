@@ -32,7 +32,7 @@
     		$(function () {
       			$(document).ready(function () {
         			listtypes("NONE");
-					populateCachegroups($(".cachegroupselects"));
+					populateCachegroups($(".cg_select"));
         			// Accordion
         			$("#accordion").accordion({
             			header: "h3",
