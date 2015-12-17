@@ -1,4 +1,5 @@
 use utf8;
+
 package Schema::Result::Cachegroup;
 
 # Created by DBIx::Class::Schema::Loader
@@ -57,6 +58,12 @@ __PACKAGE__->table("cachegroup");
   is_foreign_key: 1
   is_nullable: 1
 
+=head2 secondary_parent_cachegroup_id
+
+  data_type: 'integer'
+  is_foreign_key: 1
+  is_nullable: 1
+
 =head2 type
 
   data_type: 'integer'
@@ -73,27 +80,28 @@ __PACKAGE__->table("cachegroup");
 =cut
 
 __PACKAGE__->add_columns(
-  "id",
-  { data_type => "integer", is_auto_increment => 1, is_nullable => 0 },
-  "name",
-  { data_type => "varchar", is_nullable => 0, size => 45 },
-  "short_name",
-  { data_type => "varchar", is_nullable => 0, size => 255 },
-  "latitude",
-  { data_type => "double precision", is_nullable => 1 },
-  "longitude",
-  { data_type => "double precision", is_nullable => 1 },
-  "parent_cachegroup_id",
-  { data_type => "integer", is_foreign_key => 1, is_nullable => 1 },
-  "type",
-  { data_type => "integer", is_foreign_key => 1, is_nullable => 0 },
-  "last_updated",
-  {
-    data_type => "timestamp",
-    datetime_undef_if_invalid => 1,
-    default_value => \"current_timestamp",
-    is_nullable => 1,
-  },
+	"id",
+	{ data_type => "integer", is_auto_increment => 1, is_nullable => 0 },
+	"name",
+	{ data_type => "varchar", is_nullable => 0, size => 45 },
+	"short_name",
+	{ data_type => "varchar", is_nullable => 0, size => 255 },
+	"latitude",
+	{ data_type => "double precision", is_nullable => 1 },
+	"longitude",
+	{ data_type => "double precision", is_nullable => 1 },
+	"parent_cachegroup_id",
+	{ data_type => "integer", is_foreign_key => 1, is_nullable => 1 },
+	"secondary_parent_cachegroup_id",
+	{ data_type => "integer", is_foreign_key => 1, is_nullable => 1 },
+	"type",
+	{ data_type => "integer", is_foreign_key => 1, is_nullable => 0 },
+	"last_updated", {
+		data_type                 => "timestamp",
+		datetime_undef_if_invalid => 1,
+		default_value             => \"current_timestamp",
+		is_nullable               => 1,
+	},
 );
 
 =head1 PRIMARY KEY
@@ -108,7 +116,7 @@ __PACKAGE__->add_columns(
 
 =cut
 
-__PACKAGE__->set_primary_key("id", "type");
+__PACKAGE__->set_primary_key( "id", "type" );
 
 =head1 UNIQUE CONSTRAINTS
 
@@ -122,7 +130,7 @@ __PACKAGE__->set_primary_key("id", "type");
 
 =cut
 
-__PACKAGE__->add_unique_constraint("cg_name_UNIQUE", ["name"]);
+__PACKAGE__->add_unique_constraint( "cg_name_UNIQUE", ["name"] );
 
 =head2 C<cg_short_UNIQUE>
 
@@ -134,7 +142,7 @@ __PACKAGE__->add_unique_constraint("cg_name_UNIQUE", ["name"]);
 
 =cut
 
-__PACKAGE__->add_unique_constraint("cg_short_UNIQUE", ["short_name"]);
+__PACKAGE__->add_unique_constraint( "cg_short_UNIQUE", ["short_name"] );
 
 =head2 C<lo_id_UNIQUE>
 
@@ -146,7 +154,7 @@ __PACKAGE__->add_unique_constraint("cg_short_UNIQUE", ["short_name"]);
 
 =cut
 
-__PACKAGE__->add_unique_constraint("lo_id_UNIQUE", ["id"]);
+__PACKAGE__->add_unique_constraint( "lo_id_UNIQUE", ["id"] );
 
 =head1 RELATIONS
 
@@ -158,12 +166,7 @@ Related object: L<Schema::Result::Asn>
 
 =cut
 
-__PACKAGE__->has_many(
-  "asns",
-  "Schema::Result::Asn",
-  { "foreign.cachegroup" => "self.id" },
-  { cascade_copy => 0, cascade_delete => 0 },
-);
+__PACKAGE__->has_many( "asns", "Schema::Result::Asn", { "foreign.cachegroup" => "self.id" }, { cascade_copy => 0, cascade_delete => 0 }, );
 
 =head2 cachegroup_parameters
 
@@ -174,10 +177,10 @@ Related object: L<Schema::Result::CachegroupParameter>
 =cut
 
 __PACKAGE__->has_many(
-  "cachegroup_parameters",
-  "Schema::Result::CachegroupParameter",
-  { "foreign.cachegroup" => "self.id" },
-  { cascade_copy => 0, cascade_delete => 0 },
+	"cachegroup_parameters",
+	"Schema::Result::CachegroupParameter",
+	{ "foreign.cachegroup" => "self.id" },
+	{ cascade_copy         => 0, cascade_delete => 0 },
 );
 
 =head2 cachegroups
@@ -189,10 +192,9 @@ Related object: L<Schema::Result::Cachegroup>
 =cut
 
 __PACKAGE__->has_many(
-  "cachegroups",
-  "Schema::Result::Cachegroup",
-  { "foreign.parent_cachegroup_id" => "self.id" },
-  { cascade_copy => 0, cascade_delete => 0 },
+	"cachegroups", "Schema::Result::Cachegroup",
+	{ "foreign.parent_cachegroup_id" => "self.id" },
+	{ cascade_copy                   => 0, cascade_delete => 0 },
 );
 
 =head2 parent_cachegroup
@@ -204,15 +206,49 @@ Related object: L<Schema::Result::Cachegroup>
 =cut
 
 __PACKAGE__->belongs_to(
-  "parent_cachegroup",
-  "Schema::Result::Cachegroup",
-  { id => "parent_cachegroup_id" },
-  {
-    is_deferrable => 1,
-    join_type     => "LEFT",
-    on_delete     => "NO ACTION",
-    on_update     => "NO ACTION",
-  },
+	"parent_cachegroup",
+	"Schema::Result::Cachegroup",
+	{ id => "parent_cachegroup_id" },
+	{
+		is_deferrable => 1,
+		join_type     => "LEFT",
+		on_delete     => "NO ACTION",
+		on_update     => "NO ACTION",
+	},
+);
+
+=head2 secondary_cachegroups
+
+Type: has_many
+
+Related object: L<Schema::Result::Cachegroup>
+
+=cut
+
+__PACKAGE__->has_many(
+	"secondary_cachegroups", "Schema::Result::Cachegroup",
+	{ "foreign.secondary_parent_cachegroup_id" => "self.id" },
+	{ cascade_copy                             => 0, cascade_delete => 0 },
+);
+
+=head2 secondary_parent_cachegroup
+
+Type: belongs_to
+
+Related object: L<Schema::Result::Cachegroup>
+
+=cut
+
+__PACKAGE__->belongs_to(
+	"secondary_parent_cachegroup",
+	"Schema::Result::Cachegroup",
+	{ id => "secondary_parent_cachegroup_id" },
+	{
+		is_deferrable => 1,
+		join_type     => "LEFT",
+		on_delete     => "NO ACTION",
+		on_update     => "NO ACTION",
+	},
 );
 
 =head2 servers
@@ -223,12 +259,7 @@ Related object: L<Schema::Result::Server>
 
 =cut
 
-__PACKAGE__->has_many(
-  "servers",
-  "Schema::Result::Server",
-  { "foreign.cachegroup" => "self.id" },
-  { cascade_copy => 0, cascade_delete => 0 },
-);
+__PACKAGE__->has_many( "servers", "Schema::Result::Server", { "foreign.cachegroup" => "self.id" }, { cascade_copy => 0, cascade_delete => 0 }, );
 
 =head2 staticdnsentries
 
@@ -239,10 +270,10 @@ Related object: L<Schema::Result::Staticdnsentry>
 =cut
 
 __PACKAGE__->has_many(
-  "staticdnsentries",
-  "Schema::Result::Staticdnsentry",
-  { "foreign.cachegroup" => "self.id" },
-  { cascade_copy => 0, cascade_delete => 0 },
+	"staticdnsentries",
+	"Schema::Result::Staticdnsentry",
+	{ "foreign.cachegroup" => "self.id" },
+	{ cascade_copy         => 0, cascade_delete => 0 },
 );
 
 =head2 type
@@ -253,17 +284,10 @@ Related object: L<Schema::Result::Type>
 
 =cut
 
-__PACKAGE__->belongs_to(
-  "type",
-  "Schema::Result::Type",
-  { id => "type" },
-  { is_deferrable => 1, on_delete => "NO ACTION", on_update => "NO ACTION" },
-);
-
+__PACKAGE__->belongs_to( "type", "Schema::Result::Type", { id => "type" }, { is_deferrable => 1, on_delete => "NO ACTION", on_update => "NO ACTION" }, );
 
 # Created by DBIx::Class::Schema::Loader v0.07043 @ 2015-09-23 09:00:52
 # DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:F55DlMj08AluZL0Jz6glJQ
-
 
 # You can replace this text with custom code or comments, and it will be preserved on regeneration
 #
