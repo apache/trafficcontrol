@@ -252,16 +252,9 @@ func Get(tableName string, joinFKs bool, tableParameters []string) ([]map[string
 	sep := "where "
 	for _, param := range tableParameters {
 		if strings.ContainsAny(param, "=") { // > < and such?
-			// validCol := false
 			selectArr := strings.Split(param, "=")
 			selectCol := selectArr[0]
 			selectVal := selectArr[1]
-			// fmt.Println("Col:", selectCol, " Val:", selectVal)
-			// for _, colName := range cols {
-			// 	if colName == selectCol {
-			// 		validCol = true
-			// 	}
-			// }
 			if strings.Contains(param, ";") { // prevent SQL injection. The rest will error in SQL
 				err := errors.New("Invalid SQL detected:" + param)
 				fmt.Println(err)
