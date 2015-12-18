@@ -438,56 +438,88 @@ sub adeliveryservice {
 	$self->render( json => \%data );
 }
 
-sub ahwinfo {
+sub hwinfo {
 	my $self           = shift;
-	my $sColumns       = $self->param("sColumns");
-	my $iDisplayLength = $self->param("iDisplayLength");
-	my $sort           = $self->param("sSortDir_0");
-	my $sSearch        = $self->param("sSearch");
-	my %data           = ( "aaData" => undef );
+	my $idisplay_start = $self->param("iDisplayStart");
+	my $sort_order     = $self->param("sSortDir_0") || "asc";
+	my $search_field   = $self->param("sSearch");
+	my $sort_column    = $self->param("iSortCol_0");
+
+	# NOTE: If changes are made to send additional columns then this mapping has to be updated
+	# to match the Column Number coming from datatables to it's name
+	# Unfortunately, this is a short coming with the jquery datatables ui widget in that it expects
+	# an array arrays instead of an array of hashes
+	$self->app->log->debug( "sort_order #-> " . $sort_order );
+	my $sort_direction = sprintf( "-%s", $sort_order );
+	$self->app->log->debug( "sort_direction #-> " . $sort_direction );
+	my %column_number_to_name = ( '1' => 'serverid', '2' => 'description', '3' => 'val' );
+	my $column_name = $column_number_to_name{$sort_column} || "serverid";
+
+	#$self->app->log->debug( "names #-> " . Dumper( $self->req->query_params ) );
+
+	$self->app->log->debug( "idisplay_start #-> " . $idisplay_start );
+	my $idisplay_length = $self->param("iDisplayLength");
+	$self->app->log->debug( "idisplay_length #-> " . $idisplay_length );
+	$self->app->log->debug( "search_field #-> " . $search_field );
+	$self->app->log->debug( "column_name #-> " . $column_name );
+	$self->app->log->debug( "sort_column #-> " . $sort_column );
+
+	my %data = ( "data" => [] );
 	my $rs;
-	if (   defined( $self->param('filter') )
-		&& defined( $self->param('value') )
-		&& $self->param('value') ne "all" )
-	{
-		my $col = $self->param('filter');
-		my $val = $self->param('value');
-		$rs = $self->db->resultset('Hwinfo')->search( { $col => $val }, { prefetch => ['serverid'] } );
-	}
-	else {
 
-		# Original
-		#$rs = $self->db->resultset('Hwinfo')->search( undef, { prefetch => ['serverid'] } );
-		$rs = $self->db->resultset('Hwinfo')->search(
-			{
-				-or => {
-					'me.description'     => { -like => '%' . $sSearch . '%' },
-					'me.val'             => { -like => '%' . $sSearch . '%' },
-					'serverid.host_name' => { -like => '%' . $sSearch . '%' }
-				}
-			},
-			{ rows => $iDisplayLength, prefetch => [ { 'serverid' => undef } ], join => 'serverid' },
-		);
+	my %condition;
+	my %attrs;
+	my %limit;
 
-	}
+	#if (search_field eq ''){
+	%condition = (
+		-or => {
+			'me.description'     => { -like => '%' . $search_field . '%' },
+			'me.val'             => { -like => '%' . $search_field . '%' },
+			'serverid.host_name' => { -like => '%' . $search_field . '%' }
+		}
+	);
+
+	#} else {
+	#}
+	%limit = ( order_by => { $sort_direction => $column_name }, page => $idisplay_start, rows => $idisplay_length );
+	%attrs = ( attrs => [ { 'serverid' => undef } ], join => 'serverid', %limit );
+
+	# Original
+	#$rs = $self->db->resultset('Hwinfo')->search( undef, { attrs => ['serverid'] } );
+	$rs = $self->db->resultset('Hwinfo')->search( \%condition, \%attrs );
+
 	while ( my $row = $rs->next ) {
 		my @line = [ $row->serverid->id, $row->serverid->host_name . "." . $row->serverid->domain_name, $row->description, $row->val, $row->last_updated ];
-		push( @{ $data{'aaData'} }, @line );
+		push( @{ $data{'data'} }, @line );
 	}
-	my $total_display_records;
-	if ( defined( $data{"aaData"} ) ) {
-		$total_display_records = scalar keys $data{"aaData"};
+	my $total_display_records = 0;
+	if ( defined( $data{"data"} ) ) {
+		$total_display_records = scalar keys $data{"data"};
 	}
-	else {
-		$total_display_records = 0;
-	}
-	my %itotals_display_records = ( iTotalDisplayRecords => $total_display_records );
+	my %itotals_display_records = ( iTotalRecords => $total_display_records );
 	%data = %{ merge( \%data, \%itotals_display_records ) };
 
 	# Count all records
-	$rs = $self->db->resultset('Hwinfo')->search();
+	if ( $search_field eq '' ) {
+		$rs = $self->db->resultset('Hwinfo')->search();
+	}
+	else {
+		$rs = $self->db->resultset('Hwinfo')->search(
+			{
+				-or => {
+					'me.description'     => { -like => '%' . $search_field . '%' },
+					'me.val'             => { -like => '%' . $search_field . '%' },
+					'serverid.host_name' => { -like => '%' . $search_field . '%' }
+				}
+			},
+			{ page => $idisplay_start, prefetch => [ { 'serverid' => undef } ], join => 'serverid' },
+		);
+
+	}
+
 	my $total_records = $rs->count;
-	my %itotal_records = ( iTotalRecords => $total_records );
+	my %itotal_records = ( iTotalDisplayRecords => $total_records );
 	%data = %{ merge( \%data, \%itotal_records ) };
 
 	$self->render( json => \%data );
@@ -720,7 +752,7 @@ sub aadata {
 		&adeliveryservice($self);
 	}
 	elsif ( $table eq 'Hwinfo' ) {
-		&ahwinfo($self);
+		&hwinfo($self);
 	}
 	elsif ( $table eq 'Federation' ) {
 		&afederation($self);
