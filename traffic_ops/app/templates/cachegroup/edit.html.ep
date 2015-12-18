@@ -22,7 +22,9 @@
 $(function () { 
 	listtypes("<%= $selected_type %>");
 	populateCachegroups($(".cg_select"), function() {
+console.warn("Setting parent to <%= $parent_name %>");
 	  selectOptionByText($("#cg_parent"), "<%= $parent_name %>");
+console.warn("Setting secondary to <%= $secondary_parent_name %>");
 	  selectOptionByText($("#cg_secondary"), "<%= $secondary_parent_name %>");
    })
 });

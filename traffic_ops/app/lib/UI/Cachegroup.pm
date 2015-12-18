@@ -1,4 +1,5 @@
 package UI::Cachegroup;
+
 #
 # Copyright 2015 Comcast Cable Communications Management, LLC
 #
@@ -79,13 +80,15 @@ sub view {
 	my $parent_name = "NO_PARENT";
 	if ( defined( $data->parent_cachegroup_id ) ) {
 		my $parent_id = $data->parent_cachegroup_id;
-		$rs_param = $self->db->resultset('Cachegroup')->search( { id => $parent_id } );
+		my $rs = $self->db->resultset('Cachegroup')->search( { id => $parent_id } )->single;
+		$parent_name = $rs->name;
 	}
 
 	my $secondary_parent_name = "NO_PARENT";
 	if ( defined( $data->secondary_parent_cachegroup_id ) ) {
 		my $secondary_parent_id = $data->secondary_parent_cachegroup_id;
-		$rs_param = $self->db->resultset('Cachegroup')->search( { id => $secondary_parent_id } );
+		my $rs = $self->db->resultset('Cachegroup')->search( { id => $secondary_parent_id } )->single;
+		$secondary_parent_name = $rs->name;
 	}
 
 	$self->stash(
@@ -178,11 +181,7 @@ sub readcachegrouptrimmed {
 	}
 	my $rs_data = $self->db->resultset("Cachegroup")->search( undef, { prefetch => [ { 'type' => undef, } ], order_by => 'me.' . $orderby } );
 	while ( my $row = $rs_data->next ) {
-		push(
-			@data, {
-				"name" => $row->name,
-			}
-		);
+		push( @data, { "name" => $row->name, } );
 	}
 	$self->render( json => \@data );
 }
@@ -221,11 +220,13 @@ sub check_cachegroup_input {
 
 # Update
 sub update {
-	my $self            = shift;
-	my $id              = $self->param('id');
-	my $priv_level      = $self->stash('priv_level');
-	my $cachegroup_vars = $self->stash('cachegroup_vars');
-	my $extra_vars      = $self->stash('extra_vars');
+	my $self                           = shift;
+	my $id                             = $self->param('id');
+	my $priv_level                     = $self->stash('priv_level');
+	my $cachegroup_vars                = $self->stash('cachegroup_vars');
+	my $extra_vars                     = $self->stash('extra_vars');
+	my $parent_cachegroup_id           = $self->param('cg_data.parent_cachegroup_id') // -1;
+	my $secondary_parent_cachegroup_id = $self->param('cg_data.secondary_parent_cachegroup_id') // -1;
 
 	$self->stash(
 		id              => $id,
@@ -239,8 +240,8 @@ sub update {
 			short_name                     => $self->param('cg_data.short_name'),
 			latitude                       => $self->param('cg_data.latitude'),
 			longitude                      => $self->param('cg_data.longitude'),
-			parent_cachegroup_id           => $self->param('cg_data.parent_cachegroup_id') // -1,
-			secondary_parent_cachegroup_id => $self->param('cg_data.secondary_parent_cachegroup_id') // -1,
+			parent_cachegroup_id           => $parent_cachegroup_id,
+			secondary_parent_cachegroup_id => $secondary_parent_cachegroup_id,
 			type                           => $self->param('cg_data.type')
 		}
 	);
