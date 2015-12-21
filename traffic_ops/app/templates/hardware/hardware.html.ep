@@ -33,25 +33,22 @@ $(function () {
 %= include 'jmenu'
 
 		$('#dthwinfo').dataTable({
-			"bJQueryUI": true,
-			"sPaginationType": "full_numbers",
-			'sPageNumber': 'paginate_number',
-			'sPageNumbers': 'paginate_numbers',
-			'sPageEllipsis': 'paginate_ellipsis',
-			"sScrollY": calcDataTableHeight(),
-			"bScrollCollapse": true,
-			"bServerSide": true,
-			"iDisplayLength": 100,
-			"bPaginate": true,
-			"bInfo": true,
-			"bFilter": true,
-			"bLengthChange": true,
-			"aoColumnDefs": [
+			jQueryUI: true,
+			pagination: "full_numbers",
+			scrollY: calcDataTableHeight(),
+			scrollCollapse: true,
+			serverSide: true,
+			pageLength: 100,
+			paging: true,
+			info: true,
+			searching: true,
+			lengthChange: true,
+			columnDefs: [
 			{
-				"mRender": function (data, type, full) {
+				render: function (data, type, full) {
 					return "<a class='fancybox fancybox.iframe' href='/serveriframe/view/" + full[0] + "'>Edit</a>";
 				},
-				"aTargets": [0]
+				targets: [0]
 			}],
 			"sAjaxSource": src
 		});
