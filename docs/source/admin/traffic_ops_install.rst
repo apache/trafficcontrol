@@ -176,7 +176,7 @@ To begin the install:
       CoverageZone Polling URL: https://traffic-ops.kabletown.net/routing/coverage-zone.json
 
       Is the above information correct (y/n) [n]:  y
-      Parameter information has been saved to /opt/traffic_ops/install/data/json/parameters.json
+      Install information has been saved to /opt/traffic_ops/install/data/json/post_install.json
 
 
       Adding an administration user to the Traffic Ops database.
