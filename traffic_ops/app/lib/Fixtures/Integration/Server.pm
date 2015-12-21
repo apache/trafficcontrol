@@ -1,484 +1,110 @@
 package Fixtures::Integration::Server;
-#
-# Copyright 2015 Comcast Cable Communications Management, LLC
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
-#
+
+# Do not edit! Generated code.
+# See https://github.com/Comcast/traffic_control/wiki/The%20Kabletown%20example
+
 use Moose;
 extends 'DBIx::Class::EasyFixture';
 use namespace::autoclean;
-use Data::Dumper;
 
-my %definition_for = ();
-
-sub gen_data {
-	my @cache_groups = ( 'nyc', 'lax', 'chi', 'hou', 'phl', 'den' );
-	my @profiles = ( 45, 45, 45, 45, 26, 26, 26, 26, 26 );
-	my $cgr_no = 0;
-
-
-
-	my $cdn_profiles->{"45"} = 1;
-	$cdn_profiles->{"26"} = 2;
-
-	# EDGES - 8 per cache group
-	my $site = 0;
-	my $id   = 1;    # so we have predictable id numbers
-	foreach my $cg (@cache_groups) {
-		my $net1 = '10.10.' . $cgr_no . '.';
-		my $net2 = '172.16.' . $cgr_no . '.';
-		my $net3 = '2033:D0D0:3300::' . $cgr_no . ":";
-
-		foreach my $i ( 0 .. 8 ) {
-			if ( $i == 4 ) {    # half of each cg is in a site
-				$site++;
-			}
-			my $profile_id = $profiles[$i];
-			my $cdn_id = $cdn_profiles->{$profile_id};
-
-			my $hostname = 'atsec-' . $cache_groups[$cgr_no] . '-0' . $i;
-			$definition_for{$hostname} = {
-				new   => 'Server',
-				using => {
-					id               => $id++,
-					host_name        => $hostname,
-					domain_name      => $cache_groups[$cgr_no] . '.kabletown.net',
-					tcp_port         => 80,
-					xmpp_id          => $hostname . '-dummyxmpp',
-					xmpp_passwd      => 'X',
-					interface_name   => 'bond0',
-					ip_address       => $net1 . ( $i + 2 ),
-					ip_netmask       => '255.255.255.0',
-					ip_gateway       => $net1 . '1',
-					ip6_address      => $net3 . ( $i + 2 ) . '/64',
-					ip6_gateway      => $net3 . '1',
-					interface_mtu    => 9000,
-					rack             => 'RR 119.02',
-					mgmt_ip_address  => '',
-					mgmt_ip_netmask  => '',
-					mgmt_ip_gateway  => '',
-					ilo_ip_address   => $net2 . ( $i + 6 ),
-					ilo_ip_netmask   => '255.255.255.0',
-					ilo_ip_gateway   => $net2 . '1',
-					ilo_username     => '',
-					ilo_password     => '',
-					router_host_name => 'rtr-' . $cache_groups[$cgr_no] . '.kabletown.net',
-					router_port_name => $cgr_no,
-					type             => 1,
-					status           => 3,
-					profile          => $profile_id,
-					cdn_id           => $cdn_id,
-					cachegroup       => ( 91 + $cgr_no ),
-					phys_location    => ( $site + 1 ),
-				}
-			};
-		}
-		$cgr_no++;
-		$site++;
-	}
-
-	# MIDS  - 8 per cache group
-	@cache_groups = ( 'east', 'west' );
-	@profiles     = ( 31,     30 );
-	$cdn_profiles->{"31"} = 1;
-	$cdn_profiles->{"30"} = 2;
-
-	$cgr_no       = 0;
-	$site         = 0;
-	foreach my $cg (@cache_groups) {
-		my $net1 = '10.11.' . $cgr_no . '.';
-		my $net2 = '172.17.' . $cgr_no . '.';
-		my $net3 = '2033:D0D1:3300::' . $cgr_no . ":";
-
-		foreach my $i ( 0 .. 8 ) {
-			if ( $i == 4 ) {    # half of each cg is in a site
-				$site++;
-			}
-			my $hostname = 'atsmid-' . $cache_groups[$cgr_no] . '-0' . $i;
-
-			my $profile_id = $profiles[ ( $i % 2 == 0 ? 1 : 0 ) ];
-			my $cdn_id = $cdn_profiles->{$profile_id};
-
-			$definition_for{$hostname} = {
-				new   => 'Server',
-				using => {
-					id               => $id++,
-					host_name        => $hostname,
-					domain_name      => $cache_groups[$cgr_no] . '.kabletown.net',
-					tcp_port         => 80,
-					xmpp_id          => $hostname . '-dummyxmpp',
-					xmpp_passwd      => 'X',
-					interface_name   => 'bond0',
-					ip_address       => $net1 . ( $i + 1 ),
-					ip_netmask       => '255.255.255.0',
-					ip_gateway       => $net1 . '1',
-					ip6_address      => $net3 . ( $i + 2 ) . '/64',
-					ip6_gateway      => $net3 . '1',
-					interface_mtu    => 9000,
-					rack             => 'RR 119.02',
-					mgmt_ip_address  => '',
-					mgmt_ip_netmask  => '',
-					mgmt_ip_gateway  => '',
-					ilo_ip_address   => $net2 . ( $i + 6 ),
-					ilo_ip_netmask   => '255.255.255.0',
-					ilo_ip_gateway   => $net2 . '1',
-					ilo_username     => '',
-					ilo_password     => '',
-					router_host_name => 'rtr-' . $cache_groups[$cgr_no] . '.kabletown.net',
-					router_port_name => $cgr_no,
-					type             => 2,
-					status           => 2,
-					profile          => $profile_id,
-					cdn_id           => $cdn_id,
-					cachegroup       => ( $cgr_no + 1 ),
-					phys_location    => ( $site + 1 ),
-				}
-			};
-		}
-		$cgr_no++;
-		$site++;
-	}
-
-	# traffic routers
-	my $hostname = 'trtr-clw-01';
-	$definition_for{$hostname} = {
-		new   => 'Server',
-		using => {
-			id             => $id++,
-			host_name      => $hostname,
-			domain_name    => 'clw.kabletown.net',
-			tcp_port       => 80,
-			xmpp_id        => $hostname . '-dummyxmpp',
-			xmpp_passwd    => 'X',
-			interface_name => 'bond0',
-			ip_address     => '172.39.39.39',
-			ip_netmask     => '255.255.255.0',
-			ip_gateway     => '172.39.39.1',
-			ip6_address    => '2033:D0D1:3300::333/64',
-			ip6_gateway    => '2033:D0D1:3300::1',
-			interface_mtu  => 9000,
-			rack           => 'RR 119.02',
-			type           => 4,
-			status         => 2,
-			profile        => 5,
-			cdn_id         => 1,
-			cachegroup     => 3,
-			phys_location  => 100,
-		}
-	};
-	$hostname = 'trtr-clw-02';
-	$definition_for{$hostname} = {
-		new   => 'Server',
-		using => {
-			id             => $id++,
-			host_name      => $hostname,
-			domain_name    => 'clw.kabletown.net',
-			tcp_port       => 80,
-			xmpp_id        => $hostname . '-dummyxmpp',
-			xmpp_passwd    => 'X',
-			interface_name => 'bond0',
-			ip_address     => '172.39.39.49',
-			ip_netmask     => '255.255.255.0',
-			ip_gateway     => '172.39.39.1',
-			ip6_address    => '2033:D0D1:3300::334/64',
-			ip6_gateway    => '2033:D0D1:3300::1',
-			interface_mtu  => 9000,
-			rack           => 'RR 119.02',
-			type           => 4,
-			status         => 2,
-			profile        => 8,
-			cdn_id         => 2,
-			cachegroup     => 3,
-			phys_location  => 101,
-		}
-	};
-	$hostname = 'trtr-cle-01';
-	$definition_for{$hostname} = {
-		new   => 'Server',
-		using => {
-			id             => $id++,
-			host_name      => $hostname,
-			domain_name    => 'cle.kabletown.net',
-			tcp_port       => 80,
-			xmpp_id        => $hostname . '-dummyxmpp',
-			xmpp_passwd    => 'X',
-			interface_name => 'bond0',
-			ip_address     => '172.39.99.39',
-			ip_netmask     => '255.255.255.0',
-			ip_gateway     => '172.39.99.1',
-			ip6_address    => '2033:D0D1:3300::335/64',
-			ip6_gateway    => '2033:D0D1:3300::1',
-			interface_mtu  => 9000,
-			rack           => 'RR 119.02',
-			type           => 4,
-			status         => 2,
-			profile        => 5,
-			cdn_id         => 1,
-			cachegroup     => 5,
-			phys_location  => 100,
-		}
-	};
-	$hostname = 'trtr-cle-02';
-	$definition_for{$hostname} = {
-		new   => 'Server',
-		using => {
-			id             => $id++,
-			host_name      => $hostname,
-			domain_name    => 'cle.kabletown.net',
-			tcp_port       => 80,
-			xmpp_id        => $hostname . '-dummyxmpp',
-			xmpp_passwd    => 'X',
-			interface_name => 'bond0',
-			ip_address     => '172.39.99.49',
-			ip_netmask     => '255.255.255.0',
-			ip_gateway     => '172.39.99.1',
-			ip6_address    => '2033:D0D1:3300::336/64',
-			ip6_gateway    => '2033:D0D1:3300::1',
-			interface_mtu  => 9000,
-			rack           => 'RR 119.02',
-			type           => 4,
-			status         => 2,
-			profile        => 8,
-			cdn_id         => 2,
-			cachegroup     => 5,
-			phys_location  => 101,
-		}
-	};
-
-	# traffic monitors
-	$hostname = 'trmon-clw-01';
-	$definition_for{$hostname} = {
-		new   => 'Server',
-		using => {
-			id             => $id++,
-			host_name      => $hostname,
-			domain_name    => 'clw.kabletown.net',
-			tcp_port       => 80,
-			xmpp_id        => $hostname . '-dummyxmpp',
-			xmpp_passwd    => 'X',
-			interface_name => 'bond0',
-			ip_address     => '172.39.29.39',
-			ip_netmask     => '255.255.255.0',
-			ip_gateway     => '172.39.29.1',
-			ip6_address    => '2033:D021:3300::333/64',
-			ip6_gateway    => '2033:D021:3300::1',
-			interface_mtu  => 9000,
-			rack           => 'RR 119.02',
-			type           => 15,
-			status         => 2,
-			profile        => 11,
-			cdn_id         => 1,
-			cachegroup     => 3,
-			phys_location  => 100,
-		}
-	};
-	$hostname = 'trmon-clw-02';
-	$definition_for{$hostname} = {
-		new   => 'Server',
-		using => {
-			id             => $id++,
-			host_name      => $hostname,
-			domain_name    => 'clw.kabletown.net',
-			tcp_port       => 80,
-			xmpp_id        => $hostname . '-dummyxmpp',
-			xmpp_passwd    => 'X',
-			interface_name => 'bond0',
-			ip_address     => '172.39.29.49',
-			ip_netmask     => '255.255.255.0',
-			ip_gateway     => '172.39.29.1',
-			ip6_address    => '2033:D021:3300::334/64',
-			ip6_gateway    => '2033:D021:3300::1',
-			interface_mtu  => 9000,
-			rack           => 'RR 119.02',
-			type           => 15,
-			status         => 2,
-			profile        => 12,
-			cdn_id         => 2,
-			cachegroup     => 3,
-			phys_location  => 101,
-		}
-	};
-	$hostname = 'trmon-cle-01';
-	$definition_for{$hostname} = {
-		new   => 'Server',
-		using => {
-			id             => $id++,
-			host_name      => $hostname,
-			domain_name    => 'cle.kabletown.net',
-			tcp_port       => 80,
-			xmpp_id        => $hostname . '-dummyxmpp',
-			xmpp_passwd    => 'X',
-			interface_name => 'bond0',
-			ip_address     => '172.39.19.39',
-			ip_netmask     => '255.255.255.0',
-			ip_gateway     => '172.39.19.1',
-			ip6_address    => '2033:D011:3300::335/64',
-			ip6_gateway    => '2033:D011:3300::1',
-			interface_mtu  => 9000,
-			rack           => 'RR 119.02',
-			type           => 15,
-			status         => 2,
-			profile        => 11,
-			cdn_id         => 1,
-			cachegroup     => 5,
-			phys_location  => 100,
-		}
-	};
-	$hostname = 'trmon-cle-02';
-	$definition_for{$hostname} = {
-		new   => 'Server',
-		using => {
-			id             => $id++,
-			host_name      => $hostname,
-			domain_name    => 'cle.kabletown.net',
-			tcp_port       => 80,
-			xmpp_id        => $hostname . '-dummyxmpp',
-			xmpp_passwd    => 'X',
-			interface_name => 'bond0',
-			ip_address     => '172.39.19.49',
-			ip_netmask     => '255.255.255.0',
-			ip_gateway     => '172.39.19.1',
-			ip6_address    => '2033:D011:3300::336/64',
-			ip6_gateway    => '2033:D011:3300::1',
-			interface_mtu  => 9000,
-			rack           => 'RR 119.02',
-			type           => 15,
-			status         => 2,
-			profile        => 12,
-			cdn_id         => 2,
-			cachegroup     => 5,
-			phys_location  => 101,
-		}
-	};
-	$hostname = 'riak1';
-	$definition_for{$hostname} = {
-		new   => 'Server',
-		using => {
-			id               => $id++,
-			host_name        => $hostname,
-			domain_name      => 'kabletown.net',
-			tcp_port         => 8088,
-			xmpp_id          => '',
-			xmpp_passwd      => '',
-			interface_name   => 'eth1',
-			ip_address       => '127.0.0.5',
-			ip_netmask       => '255.255.252.0',
-			ip_gateway       => '127.0.0.5',
-			interface_mtu    => 1500,
-			rack             => 'RR 119.02',
-			mgmt_ip_address  => '',
-			mgmt_ip_netmask  => '',
-			mgmt_ip_gateway  => '',
-			ilo_ip_address   => '',
-			ilo_ip_netmask   => '',
-			ilo_ip_gateway   => '',
-			ilo_username     => '',
-			ilo_password     => '',
-			router_host_name => '',
-			router_port_name => '',
-			type             => 10,
-			status           => 2,
-			profile          => 47,
-			cdn_id           => 2,
-			cachegroup       => 1,
-			phys_location    => 1,
-		},
-	},
-
-	$id = 1000;
-	$hostname = 'org1';
-	$definition_for{$hostname} = {
-		new   => 'Server',
-		using => {
-			id               => $id++,
-			host_name        => $hostname,
-			domain_name      => 'kabletown.net',
-			tcp_port         => 80,
-			xmpp_id          => '',
-			xmpp_passwd      => '',
-			interface_name   => 'eth1',
-			ip_address       => '10.11.10.2',
-			ip_netmask       => '255.255.252.0',
-			ip_gateway       => '10.11.10.1',
-			interface_mtu    => 1500,
-			rack             => 'RR 119.02',
-			mgmt_ip_address  => '',
-			mgmt_ip_netmask  => '',
-			mgmt_ip_gateway  => '',
-			ilo_ip_address   => '',
-			ilo_ip_netmask   => '',
-			ilo_ip_gateway   => '',
-			ilo_username     => '',
-			ilo_password     => '',
-			router_host_name => '',
-			router_port_name => '',
-			type             => 36,
-			status           => 2,
-			profile          => 48,
-			cdn_id           => 1,
-			cachegroup       => 101,
-			phys_location    => 1,
-		},
-	},
-	$hostname = 'org2';
-	$definition_for{$hostname} = {
-		new   => 'Server',
-		using => {
-			id               => $id++,
-			host_name        => $hostname,
-			domain_name      => 'kabletown.net',
-			tcp_port         => 80,
-			xmpp_id          => '',
-			xmpp_passwd      => '',
-			interface_name   => 'eth1',
-			ip_address       => '10.11.12.2',
-			ip_netmask       => '255.255.252.0',
-			ip_gateway       => '10.11.12.1',
-			interface_mtu    => 1500,
-			rack             => 'RR 119.02',
-			mgmt_ip_address  => '',
-			mgmt_ip_netmask  => '',
-			mgmt_ip_gateway  => '',
-			ilo_ip_address   => '',
-			ilo_ip_netmask   => '',
-			ilo_ip_gateway   => '',
-			ilo_username     => '',
-			ilo_password     => '',
-			router_host_name => '',
-			router_port_name => '',
-			type             => 36,
-			status           => 2,
-			profile          => 49,
-			cdn_id           => 1,
-			cachegroup       => 102,
-			phys_location    => 1,
-		},
-	},
-}
+my %definition_for = (
+'0' => { new => 'Server', => using => { interface_mtu => '9000', cachegroup => '91', interface_name => 'bond0', xmpp_id => 'atsec-nyc-00-dummyxmpp', router_host_name => 'rtr-nyc.kabletown.net', status => '3', cdn_id => '1', host_name => 'atsec-nyc-00', id => '1', ilo_password => '', phys_location => '1', rack => 'RR 119.02', tcp_port => '80', domain_name => 'nyc.kabletown.net', ilo_ip_address => '172.16.0.6', ilo_ip_gateway => '172.16.0.1', ip_address => '10.10.0.2', type => '1', ip6_gateway => '2033:D0D0:3300::0:1', last_updated => '2015-12-10 15:44:36', mgmt_ip_address => '', profile => '45', ip6_address => '2033:D0D0:3300::0:2/64', mgmt_ip_netmask => '', xmpp_passwd => 'X', upd_pending => '0', ilo_username => '', ip_gateway => '10.10.0.1', ip_netmask => '255.255.255.0', router_port_name => '0', ilo_ip_netmask => '255.255.255.0', mgmt_ip_gateway => '', }, }, 
+'1' => { new => 'Server', => using => { domain_name => 'nyc.kabletown.net', interface_mtu => '9000', interface_name => 'bond0', ip6_gateway => '2033:D0D0:3300::0:1', tcp_port => '80', cachegroup => '91', ilo_password => '', ip_address => '10.10.0.3', xmpp_passwd => 'X', host_name => 'atsec-nyc-01', ilo_ip_address => '172.16.0.7', mgmt_ip_address => '', type => '1', cdn_id => '1', phys_location => '1', xmpp_id => 'atsec-nyc-01-dummyxmpp', ip_netmask => '255.255.255.0', router_host_name => 'rtr-nyc.kabletown.net', upd_pending => '0', rack => 'RR 119.02', last_updated => '2015-12-10 15:44:37', mgmt_ip_netmask => '', status => '3', ip_gateway => '10.10.0.1', mgmt_ip_gateway => '', ip6_address => '2033:D0D0:3300::0:3/64', ilo_ip_gateway => '172.16.0.1', ilo_ip_netmask => '255.255.255.0', ilo_username => '', profile => '45', router_port_name => '0', id => '2', }, }, 
+'2' => { new => 'Server', => using => { host_name => 'atsec-nyc-02', mgmt_ip_netmask => '', rack => 'RR 119.02', cachegroup => '91', domain_name => 'nyc.kabletown.net', ip6_gateway => '2033:D0D0:3300::0:1', last_updated => '2015-12-10 15:44:37', cdn_id => '1', interface_mtu => '9000', status => '3', ip_gateway => '10.10.0.1', router_port_name => '0', phys_location => '1', profile => '45', type => '1', ilo_ip_address => '172.16.0.8', ip6_address => '2033:D0D0:3300::0:4/64', mgmt_ip_address => '', router_host_name => 'rtr-nyc.kabletown.net', tcp_port => '80', xmpp_passwd => 'X', ilo_ip_gateway => '172.16.0.1', ip_netmask => '255.255.255.0', ip_address => '10.10.0.4', upd_pending => '0', xmpp_id => 'atsec-nyc-02-dummyxmpp', id => '3', ilo_ip_netmask => '255.255.255.0', interface_name => 'bond0', mgmt_ip_gateway => '', ilo_password => '', ilo_username => '', }, }, 
+'3' => { new => 'Server', => using => { phys_location => '1', router_host_name => 'rtr-nyc.kabletown.net', status => '3', mgmt_ip_address => '', mgmt_ip_gateway => '', profile => '45', tcp_port => '80', xmpp_id => 'atsec-nyc-03-dummyxmpp', ip_address => '10.10.0.5', mgmt_ip_netmask => '', ip6_address => '2033:D0D0:3300::0:5/64', id => '4', ip_netmask => '255.255.255.0', cachegroup => '91', xmpp_passwd => 'X', upd_pending => '0', ilo_password => '', ip_gateway => '10.10.0.1', type => '1', ilo_ip_address => '172.16.0.9', host_name => 'atsec-nyc-03', ilo_ip_gateway => '172.16.0.1', ilo_ip_netmask => '255.255.255.0', ip6_gateway => '2033:D0D0:3300::0:1', last_updated => '2015-12-10 15:44:37', rack => 'RR 119.02', router_port_name => '0', domain_name => 'nyc.kabletown.net', ilo_username => '', interface_mtu => '9000', interface_name => 'bond0', cdn_id => '1', }, }, 
+'4' => { new => 'Server', => using => { ip_address => '10.10.0.6', status => '3', ilo_ip_netmask => '255.255.255.0', interface_mtu => '9000', router_host_name => 'rtr-nyc.kabletown.net', domain_name => 'nyc.kabletown.net', ilo_ip_gateway => '172.16.0.1', ip6_gateway => '2033:D0D0:3300::0:1', last_updated => '2015-12-10 15:44:37', mgmt_ip_netmask => '', rack => 'RR 119.02', profile => '26', type => '1', cachegroup => '91', ilo_username => '', interface_name => 'bond0', mgmt_ip_address => '', mgmt_ip_gateway => '', phys_location => '2', xmpp_id => 'atsec-nyc-04-dummyxmpp', host_name => 'atsec-nyc-04', ip6_address => '2033:D0D0:3300::0:6/64', ilo_ip_address => '172.16.0.10', ilo_password => '', ip_gateway => '10.10.0.1', xmpp_passwd => 'X', cdn_id => '2', id => '5', ip_netmask => '255.255.255.0', router_port_name => '0', tcp_port => '80', upd_pending => '0', }, }, 
+'5' => { new => 'Server', => using => { ilo_ip_netmask => '255.255.255.0', ip_address => '10.10.0.7', cachegroup => '91', host_name => 'atsec-nyc-05', id => '6', ilo_ip_gateway => '172.16.0.1', mgmt_ip_address => '', profile => '26', router_port_name => '0', xmpp_passwd => 'X', last_updated => '2015-12-10 15:44:37', status => '3', interface_name => 'bond0', ip6_gateway => '2033:D0D0:3300::0:1', phys_location => '2', upd_pending => '0', xmpp_id => 'atsec-nyc-05-dummyxmpp', ilo_password => '', ip6_address => '2033:D0D0:3300::0:7/64', rack => 'RR 119.02', router_host_name => 'rtr-nyc.kabletown.net', cdn_id => '2', interface_mtu => '9000', ip_gateway => '10.10.0.1', type => '1', ilo_ip_address => '172.16.0.11', ip_netmask => '255.255.255.0', mgmt_ip_gateway => '', mgmt_ip_netmask => '', domain_name => 'nyc.kabletown.net', ilo_username => '', tcp_port => '80', }, }, 
+'6' => { new => 'Server', => using => { ip6_gateway => '2033:D0D0:3300::0:1', ip_netmask => '255.255.255.0', mgmt_ip_netmask => '', phys_location => '2', upd_pending => '0', interface_mtu => '9000', ilo_username => '', ip6_address => '2033:D0D0:3300::0:8/64', ip_address => '10.10.0.8', xmpp_id => 'atsec-nyc-06-dummyxmpp', ilo_password => '', status => '3', rack => 'RR 119.02', id => '7', last_updated => '2015-12-10 15:44:36', mgmt_ip_address => '', type => '1', host_name => 'atsec-nyc-06', domain_name => 'nyc.kabletown.net', ilo_ip_netmask => '255.255.255.0', ip_gateway => '10.10.0.1', cdn_id => '2', router_host_name => 'rtr-nyc.kabletown.net', router_port_name => '0', tcp_port => '80', xmpp_passwd => 'X', mgmt_ip_gateway => '', ilo_ip_gateway => '172.16.0.1', ilo_ip_address => '172.16.0.12', interface_name => 'bond0', profile => '26', cachegroup => '91', }, }, 
+'7' => { new => 'Server', => using => { upd_pending => '0', xmpp_passwd => 'X', ip6_gateway => '2033:D0D0:3300::0:1', ip_gateway => '10.10.0.1', phys_location => '2', mgmt_ip_address => '', profile => '26', type => '1', mgmt_ip_netmask => '', router_port_name => '0', xmpp_id => 'atsec-nyc-07-dummyxmpp', domain_name => 'nyc.kabletown.net', interface_mtu => '9000', mgmt_ip_gateway => '', ilo_ip_gateway => '172.16.0.1', last_updated => '2015-12-10 15:44:37', ilo_ip_address => '172.16.0.13', ilo_password => '', ilo_username => '', interface_name => 'bond0', ip6_address => '2033:D0D0:3300::0:9/64', ip_netmask => '255.255.255.0', rack => 'RR 119.02', status => '3', cdn_id => '2', id => '8', ilo_ip_netmask => '255.255.255.0', cachegroup => '91', tcp_port => '80', host_name => 'atsec-nyc-07', ip_address => '10.10.0.9', router_host_name => 'rtr-nyc.kabletown.net', }, }, 
+'8' => { new => 'Server', => using => { status => '3', tcp_port => '80', ilo_ip_address => '172.16.0.14', ip_netmask => '255.255.255.0', router_port_name => '0', mgmt_ip_netmask => '', router_host_name => 'rtr-nyc.kabletown.net', type => '1', domain_name => 'nyc.kabletown.net', ilo_ip_netmask => '255.255.255.0', ip6_gateway => '2033:D0D0:3300::0:1', ip_address => '10.10.0.10', last_updated => '2015-12-10 15:44:36', mgmt_ip_address => '', xmpp_id => 'atsec-nyc-08-dummyxmpp', interface_mtu => '9000', interface_name => 'bond0', ip6_address => '2033:D0D0:3300::0:10/64', ilo_ip_gateway => '172.16.0.1', ip_gateway => '10.10.0.1', profile => '26', rack => 'RR 119.02', upd_pending => '0', cachegroup => '91', ilo_password => '', ilo_username => '', xmpp_passwd => 'X', cdn_id => '2', id => '9', mgmt_ip_gateway => '', host_name => 'atsec-nyc-08', phys_location => '2', }, }, 
+'9' => { new => 'Server', => using => { status => '3', ilo_ip_netmask => '255.255.255.0', mgmt_ip_address => '', phys_location => '3', profile => '45', router_host_name => 'rtr-lax.kabletown.net', tcp_port => '80', xmpp_id => 'atsec-lax-00-dummyxmpp', ilo_username => '', ip6_address => '2033:D0D0:3300::1:2/64', domain_name => 'lax.kabletown.net', interface_mtu => '9000', ip_netmask => '255.255.255.0', mgmt_ip_gateway => '', cachegroup => '92', cdn_id => '1', rack => 'RR 119.02', ilo_ip_gateway => '172.16.1.1', ip_gateway => '10.10.1.1', upd_pending => '0', interface_name => 'bond0', ip_address => '10.10.1.2', ilo_password => '', ip6_gateway => '2033:D0D0:3300::1:1', mgmt_ip_netmask => '', host_name => 'atsec-lax-00', id => '10', router_port_name => '1', type => '1', xmpp_passwd => 'X', ilo_ip_address => '172.16.1.6', last_updated => '2015-12-10 15:44:37', }, }, 
+'10' => { new => 'Server', => using => { mgmt_ip_address => '', status => '3', upd_pending => '0', ilo_ip_netmask => '255.255.255.0', interface_name => 'bond0', cdn_id => '1', ilo_username => '', ip_netmask => '255.255.255.0', last_updated => '2015-12-10 15:44:37', rack => 'RR 119.02', ilo_ip_address => '172.16.1.7', mgmt_ip_gateway => '', host_name => 'atsec-lax-01', interface_mtu => '9000', ip6_address => '2033:D0D0:3300::1:3/64', ip6_gateway => '2033:D0D0:3300::1:1', ip_gateway => '10.10.1.1', mgmt_ip_netmask => '', profile => '45', router_port_name => '1', ilo_ip_gateway => '172.16.1.1', xmpp_passwd => 'X', xmpp_id => 'atsec-lax-01-dummyxmpp', ip_address => '10.10.1.3', tcp_port => '80', type => '1', ilo_password => '', id => '11', phys_location => '3', router_host_name => 'rtr-lax.kabletown.net', domain_name => 'lax.kabletown.net', cachegroup => '92', }, }, 
+'11' => { new => 'Server', => using => { ilo_password => '', host_name => 'atsec-lax-02', id => '12', interface_name => 'bond0', rack => 'RR 119.02', upd_pending => '0', domain_name => 'lax.kabletown.net', ip6_gateway => '2033:D0D0:3300::1:1', profile => '45', xmpp_id => 'atsec-lax-02-dummyxmpp', cachegroup => '92', ilo_ip_netmask => '255.255.255.0', interface_mtu => '9000', ip6_address => '2033:D0D0:3300::1:4/64', last_updated => '2015-12-10 15:44:37', tcp_port => '80', ilo_ip_gateway => '172.16.1.1', mgmt_ip_netmask => '', router_port_name => '1', xmpp_passwd => 'X', ilo_username => '', ip_netmask => '255.255.255.0', ip_address => '10.10.1.4', mgmt_ip_address => '', mgmt_ip_gateway => '', router_host_name => 'rtr-lax.kabletown.net', type => '1', cdn_id => '1', ilo_ip_address => '172.16.1.8', ip_gateway => '10.10.1.1', phys_location => '3', status => '3', }, }, 
+'12' => { new => 'Server', => using => { domain_name => 'lax.kabletown.net', ilo_ip_gateway => '172.16.1.1', ilo_password => '', xmpp_id => 'atsec-lax-03-dummyxmpp', cdn_id => '1', interface_name => 'bond0', ip6_address => '2033:D0D0:3300::1:5/64', tcp_port => '80', host_name => 'atsec-lax-03', interface_mtu => '9000', ip_gateway => '10.10.1.1', router_host_name => 'rtr-lax.kabletown.net', status => '3', cachegroup => '92', ilo_ip_address => '172.16.1.9', last_updated => '2015-12-10 15:44:37', phys_location => '3', profile => '45', rack => 'RR 119.02', type => '1', xmpp_passwd => 'X', ilo_username => '', mgmt_ip_address => '', upd_pending => '0', ip6_gateway => '2033:D0D0:3300::1:1', mgmt_ip_gateway => '', ip_address => '10.10.1.5', ip_netmask => '255.255.255.0', id => '13', ilo_ip_netmask => '255.255.255.0', mgmt_ip_netmask => '', router_port_name => '1', }, }, 
+'13' => { new => 'Server', => using => { id => '14', ilo_ip_address => '172.16.1.10', ilo_password => '', ip_gateway => '10.10.1.1', profile => '26', host_name => 'atsec-lax-04', ilo_username => '', ip6_gateway => '2033:D0D0:3300::1:1', mgmt_ip_netmask => '', tcp_port => '80', ilo_ip_netmask => '255.255.255.0', ip_address => '10.10.1.6', type => '1', cdn_id => '2', mgmt_ip_gateway => '', upd_pending => '0', ip_netmask => '255.255.255.0', mgmt_ip_address => '', phys_location => '4', rack => 'RR 119.02', router_host_name => 'rtr-lax.kabletown.net', router_port_name => '1', cachegroup => '92', ip6_address => '2033:D0D0:3300::1:6/64', last_updated => '2015-12-10 15:44:37', status => '3', interface_mtu => '9000', interface_name => 'bond0', ilo_ip_gateway => '172.16.1.1', xmpp_id => 'atsec-lax-04-dummyxmpp', xmpp_passwd => 'X', domain_name => 'lax.kabletown.net', }, }, 
+'14' => { new => 'Server', => using => { cdn_id => '2', ip6_address => '2033:D0D0:3300::1:7/64', mgmt_ip_gateway => '', profile => '26', xmpp_id => 'atsec-lax-05-dummyxmpp', ilo_password => '', ilo_username => '', ip_gateway => '10.10.1.1', upd_pending => '0', mgmt_ip_address => '', domain_name => 'lax.kabletown.net', id => '15', ilo_ip_netmask => '255.255.255.0', interface_name => 'bond0', ip6_gateway => '2033:D0D0:3300::1:1', ip_address => '10.10.1.7', interface_mtu => '9000', last_updated => '2015-12-10 15:44:36', phys_location => '4', status => '3', xmpp_passwd => 'X', cachegroup => '92', ilo_ip_address => '172.16.1.11', ip_netmask => '255.255.255.0', router_host_name => 'rtr-lax.kabletown.net', tcp_port => '80', host_name => 'atsec-lax-05', ilo_ip_gateway => '172.16.1.1', mgmt_ip_netmask => '', type => '1', rack => 'RR 119.02', router_port_name => '1', }, }, 
+'15' => { new => 'Server', => using => { ilo_ip_netmask => '255.255.255.0', ip6_gateway => '2033:D0D0:3300::1:1', rack => 'RR 119.02', status => '3', type => '1', cachegroup => '92', ip_address => '10.10.1.8', ip_gateway => '10.10.1.1', phys_location => '4', xmpp_id => 'atsec-lax-06-dummyxmpp', cdn_id => '2', interface_name => 'bond0', mgmt_ip_address => '', tcp_port => '80', ilo_ip_gateway => '172.16.1.1', router_host_name => 'rtr-lax.kabletown.net', router_port_name => '1', id => '16', last_updated => '2015-12-10 15:44:37', ip_netmask => '255.255.255.0', mgmt_ip_netmask => '', domain_name => 'lax.kabletown.net', ilo_password => '', interface_mtu => '9000', mgmt_ip_gateway => '', profile => '26', upd_pending => '0', ip6_address => '2033:D0D0:3300::1:8/64', xmpp_passwd => 'X', host_name => 'atsec-lax-06', ilo_ip_address => '172.16.1.12', ilo_username => '', }, }, 
+'16' => { new => 'Server', => using => { ip_netmask => '255.255.255.0', mgmt_ip_gateway => '', router_host_name => 'rtr-lax.kabletown.net', ilo_username => '', ip6_address => '2033:D0D0:3300::1:9/64', ip_gateway => '10.10.1.1', domain_name => 'lax.kabletown.net', ilo_ip_address => '172.16.1.13', interface_mtu => '9000', xmpp_passwd => 'X', cdn_id => '2', id => '17', rack => 'RR 119.02', mgmt_ip_address => '', status => '3', xmpp_id => 'atsec-lax-07-dummyxmpp', ilo_ip_gateway => '172.16.1.1', ilo_ip_netmask => '255.255.255.0', ip6_gateway => '2033:D0D0:3300::1:1', router_port_name => '1', tcp_port => '80', type => '1', host_name => 'atsec-lax-07', ilo_password => '', interface_name => 'bond0', upd_pending => '0', mgmt_ip_netmask => '', phys_location => '4', profile => '26', cachegroup => '92', ip_address => '10.10.1.9', last_updated => '2015-12-10 15:44:37', }, }, 
+'17' => { new => 'Server', => using => { cdn_id => '2', ilo_username => '', interface_name => 'bond0', ip_netmask => '255.255.255.0', profile => '26', router_host_name => 'rtr-lax.kabletown.net', domain_name => 'lax.kabletown.net', id => '18', ilo_password => '', last_updated => '2015-12-10 15:44:37', mgmt_ip_address => '', phys_location => '4', interface_mtu => '9000', xmpp_passwd => 'X', host_name => 'atsec-lax-08', ilo_ip_gateway => '172.16.1.1', ip6_address => '2033:D0D0:3300::1:10/64', mgmt_ip_gateway => '', upd_pending => '0', ilo_ip_netmask => '255.255.255.0', ip_address => '10.10.1.10', status => '3', type => '1', mgmt_ip_netmask => '', rack => 'RR 119.02', router_port_name => '1', xmpp_id => 'atsec-lax-08-dummyxmpp', cachegroup => '92', ilo_ip_address => '172.16.1.14', ip6_gateway => '2033:D0D0:3300::1:1', ip_gateway => '10.10.1.1', tcp_port => '80', }, }, 
+'18' => { new => 'Server', => using => { ilo_ip_gateway => '172.16.2.1', interface_name => 'bond0', phys_location => '5', cachegroup => '93', domain_name => 'chi.kabletown.net', id => '19', ip6_gateway => '2033:D0D0:3300::2:1', rack => 'RR 119.02', ilo_ip_address => '172.16.2.6', interface_mtu => '9000', router_host_name => 'rtr-chi.kabletown.net', router_port_name => '2', xmpp_id => 'atsec-chi-00-dummyxmpp', host_name => 'atsec-chi-00', ilo_ip_netmask => '255.255.255.0', ip_netmask => '255.255.255.0', mgmt_ip_address => '', mgmt_ip_netmask => '', status => '3', upd_pending => '0', ilo_password => '', ilo_username => '', xmpp_passwd => 'X', last_updated => '2015-12-10 15:44:37', mgmt_ip_gateway => '', profile => '45', type => '1', cdn_id => '1', ip6_address => '2033:D0D0:3300::2:2/64', ip_address => '10.10.2.2', ip_gateway => '10.10.2.1', tcp_port => '80', }, }, 
+'19' => { new => 'Server', => using => { domain_name => 'chi.kabletown.net', mgmt_ip_netmask => '', upd_pending => '0', ip_address => '10.10.2.3', type => '1', ilo_ip_netmask => '255.255.255.0', ip6_gateway => '2033:D0D0:3300::2:1', phys_location => '5', xmpp_passwd => 'X', id => '20', ip_netmask => '255.255.255.0', rack => 'RR 119.02', router_port_name => '2', status => '3', cachegroup => '93', cdn_id => '1', host_name => 'atsec-chi-01', ilo_ip_address => '172.16.2.7', ilo_password => '', ilo_ip_gateway => '172.16.2.1', ip_gateway => '10.10.2.1', last_updated => '2015-12-10 15:44:37', profile => '45', xmpp_id => 'atsec-chi-01-dummyxmpp', mgmt_ip_gateway => '', router_host_name => 'rtr-chi.kabletown.net', tcp_port => '80', ilo_username => '', interface_mtu => '9000', interface_name => 'bond0', ip6_address => '2033:D0D0:3300::2:3/64', mgmt_ip_address => '', }, }, 
+'20' => { new => 'Server', => using => { cdn_id => '1', interface_mtu => '9000', xmpp_passwd => 'X', host_name => 'atsec-chi-02', ilo_ip_gateway => '172.16.2.1', type => '1', ilo_ip_netmask => '255.255.255.0', ilo_username => '', ip6_address => '2033:D0D0:3300::2:4/64', mgmt_ip_gateway => '', cachegroup => '93', ilo_password => '', last_updated => '2015-12-10 15:44:37', router_port_name => '2', interface_name => 'bond0', profile => '45', status => '3', tcp_port => '80', xmpp_id => 'atsec-chi-02-dummyxmpp', domain_name => 'chi.kabletown.net', ip_address => '10.10.2.4', ip_netmask => '255.255.255.0', mgmt_ip_address => '', phys_location => '5', router_host_name => 'rtr-chi.kabletown.net', upd_pending => '0', mgmt_ip_netmask => '', rack => 'RR 119.02', id => '21', ilo_ip_address => '172.16.2.8', ip6_gateway => '2033:D0D0:3300::2:1', ip_gateway => '10.10.2.1', }, }, 
+'21' => { new => 'Server', => using => { interface_mtu => '9000', mgmt_ip_netmask => '', router_host_name => 'rtr-chi.kabletown.net', tcp_port => '80', id => '22', ilo_ip_gateway => '172.16.2.1', ip_address => '10.10.2.5', mgmt_ip_address => '', phys_location => '5', ip6_gateway => '2033:D0D0:3300::2:1', rack => 'RR 119.02', ilo_ip_address => '172.16.2.9', ilo_ip_netmask => '255.255.255.0', ilo_password => '', ip6_address => '2033:D0D0:3300::2:5/64', cdn_id => '1', host_name => 'atsec-chi-03', ilo_username => '', router_port_name => '2', type => '1', cachegroup => '93', domain_name => 'chi.kabletown.net', interface_name => 'bond0', ip_gateway => '10.10.2.1', ip_netmask => '255.255.255.0', mgmt_ip_gateway => '', profile => '45', upd_pending => '0', xmpp_id => 'atsec-chi-03-dummyxmpp', last_updated => '2015-12-10 15:44:37', status => '3', xmpp_passwd => 'X', }, }, 
+'22' => { new => 'Server', => using => { mgmt_ip_address => '', upd_pending => '0', last_updated => '2015-12-10 15:44:37', interface_mtu => '9000', profile => '26', domain_name => 'chi.kabletown.net', mgmt_ip_gateway => '', phys_location => '6', interface_name => 'bond0', ip6_address => '2033:D0D0:3300::2:6/64', ip_netmask => '255.255.255.0', mgmt_ip_netmask => '', router_host_name => 'rtr-chi.kabletown.net', xmpp_id => 'atsec-chi-04-dummyxmpp', ilo_ip_gateway => '172.16.2.1', id => '23', ip_address => '10.10.2.6', ip_gateway => '10.10.2.1', rack => 'RR 119.02', type => '1', cachegroup => '93', ilo_ip_netmask => '255.255.255.0', ilo_password => '', ilo_username => '', router_port_name => '2', tcp_port => '80', cdn_id => '2', ilo_ip_address => '172.16.2.10', ip6_gateway => '2033:D0D0:3300::2:1', status => '3', xmpp_passwd => 'X', host_name => 'atsec-chi-04', }, }, 
+'23' => { new => 'Server', => using => { ilo_ip_address => '172.16.2.11', ilo_ip_gateway => '172.16.2.1', router_host_name => 'rtr-chi.kabletown.net', domain_name => 'chi.kabletown.net', host_name => 'atsec-chi-05', ip_netmask => '255.255.255.0', mgmt_ip_address => '', status => '3', cachegroup => '93', ilo_username => '', xmpp_id => 'atsec-chi-05-dummyxmpp', profile => '26', ip_gateway => '10.10.2.1', tcp_port => '80', upd_pending => '0', xmpp_passwd => 'X', ilo_password => '', ip_address => '10.10.2.7', phys_location => '6', rack => 'RR 119.02', ip6_address => '2033:D0D0:3300::2:7/64', mgmt_ip_gateway => '', id => '24', router_port_name => '2', interface_mtu => '9000', interface_name => 'bond0', ip6_gateway => '2033:D0D0:3300::2:1', last_updated => '2015-12-10 15:44:37', mgmt_ip_netmask => '', type => '1', cdn_id => '2', ilo_ip_netmask => '255.255.255.0', }, }, 
+'24' => { new => 'Server', => using => { type => '1', cachegroup => '93', ip_address => '10.10.2.8', mgmt_ip_address => '', router_port_name => '2', ilo_ip_gateway => '172.16.2.1', ip_gateway => '10.10.2.1', ip_netmask => '255.255.255.0', mgmt_ip_netmask => '', interface_mtu => '9000', interface_name => 'bond0', phys_location => '6', id => '25', mgmt_ip_gateway => '', xmpp_passwd => 'X', ilo_password => '', ip6_gateway => '2033:D0D0:3300::2:1', rack => 'RR 119.02', ilo_ip_address => '172.16.2.12', tcp_port => '80', xmpp_id => 'atsec-chi-06-dummyxmpp', cdn_id => '2', profile => '26', router_host_name => 'rtr-chi.kabletown.net', status => '3', ip6_address => '2033:D0D0:3300::2:8/64', last_updated => '2015-12-10 15:44:37', upd_pending => '0', domain_name => 'chi.kabletown.net', host_name => 'atsec-chi-06', ilo_ip_netmask => '255.255.255.0', ilo_username => '', }, }, 
+'25' => { new => 'Server', => using => { ip_address => '10.10.2.9', last_updated => '2015-12-10 15:44:37', xmpp_id => 'atsec-chi-07-dummyxmpp', xmpp_passwd => 'X', ilo_username => '', phys_location => '6', profile => '26', tcp_port => '80', upd_pending => '0', mgmt_ip_netmask => '', cachegroup => '93', id => '26', ilo_password => '', interface_mtu => '9000', interface_name => 'bond0', ilo_ip_gateway => '172.16.2.1', ip6_gateway => '2033:D0D0:3300::2:1', router_host_name => 'rtr-chi.kabletown.net', ip6_address => '2033:D0D0:3300::2:9/64', ip_netmask => '255.255.255.0', mgmt_ip_address => '', router_port_name => '2', host_name => 'atsec-chi-07', ilo_ip_address => '172.16.2.13', rack => 'RR 119.02', status => '3', domain_name => 'chi.kabletown.net', ilo_ip_netmask => '255.255.255.0', ip_gateway => '10.10.2.1', mgmt_ip_gateway => '', cdn_id => '2', type => '1', }, }, 
+'26' => { new => 'Server', => using => { id => '27', ilo_ip_address => '172.16.2.14', ilo_ip_gateway => '172.16.2.1', mgmt_ip_netmask => '', router_port_name => '2', cdn_id => '2', ilo_ip_netmask => '255.255.255.0', ilo_password => '', ip_gateway => '10.10.2.1', ilo_username => '', last_updated => '2015-12-10 15:44:37', phys_location => '6', status => '3', ip_address => '10.10.2.10', upd_pending => '0', host_name => 'atsec-chi-08', rack => 'RR 119.02', tcp_port => '80', cachegroup => '93', interface_mtu => '9000', ip6_gateway => '2033:D0D0:3300::2:1', mgmt_ip_address => '', profile => '26', router_host_name => 'rtr-chi.kabletown.net', interface_name => 'bond0', ip6_address => '2033:D0D0:3300::2:10/64', ip_netmask => '255.255.255.0', mgmt_ip_gateway => '', type => '1', domain_name => 'chi.kabletown.net', xmpp_id => 'atsec-chi-08-dummyxmpp', xmpp_passwd => 'X', }, }, 
+'27' => { new => 'Server', => using => { ilo_username => '', ip6_gateway => '2033:D0D0:3300::3:1', last_updated => '2015-12-10 15:44:37', xmpp_id => 'atsec-hou-00-dummyxmpp', ilo_ip_gateway => '172.16.3.1', interface_name => 'bond0', type => '1', router_host_name => 'rtr-hou.kabletown.net', status => '3', upd_pending => '0', cachegroup => '94', id => '28', ilo_ip_address => '172.16.3.6', mgmt_ip_address => '', cdn_id => '1', ilo_password => '', tcp_port => '80', mgmt_ip_gateway => '', mgmt_ip_netmask => '', xmpp_passwd => 'X', domain_name => 'hou.kabletown.net', ilo_ip_netmask => '255.255.255.0', ip6_address => '2033:D0D0:3300::3:2/64', ip_gateway => '10.10.3.1', router_port_name => '3', host_name => 'atsec-hou-00', ip_address => '10.10.3.2', profile => '45', rack => 'RR 119.02', phys_location => '7', interface_mtu => '9000', ip_netmask => '255.255.255.0', }, }, 
+'28' => { new => 'Server', => using => { cachegroup => '94', ilo_password => '', interface_name => 'bond0', ip_gateway => '10.10.3.1', router_host_name => 'rtr-hou.kabletown.net', host_name => 'atsec-hou-01', ilo_ip_netmask => '255.255.255.0', ilo_username => '', rack => 'RR 119.02', xmpp_passwd => 'X', ilo_ip_address => '172.16.3.7', interface_mtu => '9000', mgmt_ip_address => '', domain_name => 'hou.kabletown.net', ip6_gateway => '2033:D0D0:3300::3:1', phys_location => '7', profile => '45', ilo_ip_gateway => '172.16.3.1', mgmt_ip_netmask => '', tcp_port => '80', cdn_id => '1', id => '29', ip_address => '10.10.3.3', ip_netmask => '255.255.255.0', mgmt_ip_gateway => '', router_port_name => '3', status => '3', type => '1', xmpp_id => 'atsec-hou-01-dummyxmpp', ip6_address => '2033:D0D0:3300::3:3/64', last_updated => '2015-12-10 15:44:36', upd_pending => '0', }, }, 
+'29' => { new => 'Server', => using => { upd_pending => '0', cdn_id => '1', router_port_name => '3', ip6_address => '2033:D0D0:3300::3:4/64', tcp_port => '80', host_name => 'atsec-hou-02', ilo_password => '', rack => 'RR 119.02', id => '30', ilo_ip_netmask => '255.255.255.0', ip_address => '10.10.3.4', last_updated => '2015-12-10 15:44:37', mgmt_ip_gateway => '', type => '1', ilo_ip_gateway => '172.16.3.1', interface_name => 'bond0', profile => '45', status => '3', xmpp_id => 'atsec-hou-02-dummyxmpp', domain_name => 'hou.kabletown.net', mgmt_ip_netmask => '', xmpp_passwd => 'X', ilo_ip_address => '172.16.3.8', ip6_gateway => '2033:D0D0:3300::3:1', mgmt_ip_address => '', phys_location => '7', router_host_name => 'rtr-hou.kabletown.net', ip_gateway => '10.10.3.1', ip_netmask => '255.255.255.0', interface_mtu => '9000', cachegroup => '94', ilo_username => '', }, }, 
+'30' => { new => 'Server', => using => { ilo_ip_address => '172.16.3.9', ilo_username => '', ip_netmask => '255.255.255.0', upd_pending => '0', domain_name => 'hou.kabletown.net', host_name => 'atsec-hou-03', ilo_ip_gateway => '172.16.3.1', ilo_ip_netmask => '255.255.255.0', interface_mtu => '9000', status => '3', xmpp_passwd => 'X', cachegroup => '94', id => '31', mgmt_ip_netmask => '', router_port_name => '3', ip_address => '10.10.3.5', xmpp_id => 'atsec-hou-03-dummyxmpp', ilo_password => '', ip6_address => '2033:D0D0:3300::3:5/64', cdn_id => '1', ip6_gateway => '2033:D0D0:3300::3:1', ip_gateway => '10.10.3.1', last_updated => '2015-12-10 15:44:37', mgmt_ip_address => '', mgmt_ip_gateway => '', profile => '45', router_host_name => 'rtr-hou.kabletown.net', tcp_port => '80', type => '1', interface_name => 'bond0', phys_location => '7', rack => 'RR 119.02', }, }, 
+'31' => { new => 'Server', => using => { ilo_ip_netmask => '255.255.255.0', interface_mtu => '9000', ip6_address => '2033:D0D0:3300::3:6/64', tcp_port => '80', domain_name => 'hou.kabletown.net', ilo_username => '', ip_address => '10.10.3.6', ilo_password => '', ip6_gateway => '2033:D0D0:3300::3:1', mgmt_ip_netmask => '', status => '3', xmpp_passwd => 'X', cdn_id => '2', type => '1', interface_name => 'bond0', mgmt_ip_gateway => '', rack => 'RR 119.02', router_host_name => 'rtr-hou.kabletown.net', router_port_name => '3', mgmt_ip_address => '', cachegroup => '94', ip_gateway => '10.10.3.1', ip_netmask => '255.255.255.0', last_updated => '2015-12-10 15:44:37', profile => '26', upd_pending => '0', xmpp_id => 'atsec-hou-04-dummyxmpp', host_name => 'atsec-hou-04', id => '32', ilo_ip_address => '172.16.3.10', ilo_ip_gateway => '172.16.3.1', phys_location => '8', }, }, 
+'32' => { new => 'Server', => using => { domain_name => 'hou.kabletown.net', ip6_gateway => '2033:D0D0:3300::3:1', profile => '26', rack => 'RR 119.02', cachegroup => '94', ilo_ip_gateway => '172.16.3.1', interface_mtu => '9000', ip_gateway => '10.10.3.1', mgmt_ip_gateway => '', last_updated => '2015-12-10 15:44:37', router_host_name => 'rtr-hou.kabletown.net', status => '3', xmpp_passwd => 'X', ilo_ip_netmask => '255.255.255.0', type => '1', ilo_password => '', ilo_username => '', interface_name => 'bond0', ip6_address => '2033:D0D0:3300::3:7/64', mgmt_ip_netmask => '', phys_location => '8', tcp_port => '80', upd_pending => '0', host_name => 'atsec-hou-05', id => '33', ip_address => '10.10.3.7', cdn_id => '2', ilo_ip_address => '172.16.3.11', ip_netmask => '255.255.255.0', mgmt_ip_address => '', xmpp_id => 'atsec-hou-05-dummyxmpp', router_port_name => '3', }, }, 
+'33' => { new => 'Server', => using => { ilo_ip_address => '172.16.3.12', ip_gateway => '10.10.3.1', ip_netmask => '255.255.255.0', last_updated => '2015-12-10 15:44:37', mgmt_ip_gateway => '', host_name => 'atsec-hou-06', ilo_ip_gateway => '172.16.3.1', mgmt_ip_netmask => '', phys_location => '8', status => '3', tcp_port => '80', cdn_id => '2', interface_mtu => '9000', ip6_gateway => '2033:D0D0:3300::3:1', upd_pending => '0', xmpp_id => 'atsec-hou-06-dummyxmpp', ilo_password => '', interface_name => 'bond0', ilo_ip_netmask => '255.255.255.0', profile => '26', ilo_username => '', rack => 'RR 119.02', cachegroup => '94', domain_name => 'hou.kabletown.net', xmpp_passwd => 'X', ip6_address => '2033:D0D0:3300::3:8/64', router_port_name => '3', mgmt_ip_address => '', router_host_name => 'rtr-hou.kabletown.net', type => '1', id => '34', ip_address => '10.10.3.8', }, }, 
+'34' => { new => 'Server', => using => { domain_name => 'hou.kabletown.net', ilo_ip_gateway => '172.16.3.1', ip6_address => '2033:D0D0:3300::3:9/64', ip_address => '10.10.3.9', ip6_gateway => '2033:D0D0:3300::3:1', xmpp_id => 'atsec-hou-07-dummyxmpp', cachegroup => '94', ilo_ip_netmask => '255.255.255.0', ip_gateway => '10.10.3.1', ip_netmask => '255.255.255.0', rack => 'RR 119.02', xmpp_passwd => 'X', ilo_ip_address => '172.16.3.13', interface_name => 'bond0', router_host_name => 'rtr-hou.kabletown.net', status => '3', type => '1', profile => '26', router_port_name => '3', tcp_port => '80', cdn_id => '2', id => '35', ilo_password => '', ilo_username => '', mgmt_ip_gateway => '', upd_pending => '0', host_name => 'atsec-hou-07', interface_mtu => '9000', last_updated => '2015-12-10 15:44:37', mgmt_ip_address => '', mgmt_ip_netmask => '', phys_location => '8', }, }, 
+'35' => { new => 'Server', => using => { upd_pending => '0', cdn_id => '2', interface_mtu => '9000', ilo_ip_gateway => '172.16.3.1', ilo_username => '', xmpp_id => 'atsec-hou-08-dummyxmpp', domain_name => 'hou.kabletown.net', host_name => 'atsec-hou-08', mgmt_ip_address => '', mgmt_ip_gateway => '', router_host_name => 'rtr-hou.kabletown.net', type => '1', ilo_ip_address => '172.16.3.14', ip_address => '10.10.3.10', ip6_address => '2033:D0D0:3300::3:10/64', ip_netmask => '255.255.255.0', mgmt_ip_netmask => '', status => '3', tcp_port => '80', xmpp_passwd => 'X', id => '36', interface_name => 'bond0', ilo_ip_netmask => '255.255.255.0', ilo_password => '', ip_gateway => '10.10.3.1', last_updated => '2015-12-10 15:44:36', ip6_gateway => '2033:D0D0:3300::3:1', rack => 'RR 119.02', profile => '26', router_port_name => '3', cachegroup => '94', phys_location => '8', }, }, 
+'36' => { new => 'Server', => using => { id => '37', ilo_ip_gateway => '172.16.4.1', ilo_password => '', ip_address => '10.10.4.2', ip6_address => '2033:D0D0:3300::4:2/64', tcp_port => '80', domain_name => 'phl.kabletown.net', ilo_username => '', ip6_gateway => '2033:D0D0:3300::4:1', router_port_name => '4', upd_pending => '0', ilo_ip_address => '172.16.4.6', interface_name => 'bond0', mgmt_ip_address => '', router_host_name => 'rtr-phl.kabletown.net', host_name => 'atsec-phl-00', interface_mtu => '9000', mgmt_ip_netmask => '', xmpp_passwd => 'X', cachegroup => '95', cdn_id => '1', ip_gateway => '10.10.4.1', type => '1', xmpp_id => 'atsec-phl-00-dummyxmpp', ilo_ip_netmask => '255.255.255.0', ip_netmask => '255.255.255.0', profile => '45', status => '3', last_updated => '2015-12-10 15:44:36', mgmt_ip_gateway => '', phys_location => '9', rack => 'RR 119.02', }, }, 
+'37' => { new => 'Server', => using => { phys_location => '9', router_port_name => '4', ilo_password => '', ip6_address => '2033:D0D0:3300::4:3/64', ilo_ip_netmask => '255.255.255.0', mgmt_ip_netmask => '', rack => 'RR 119.02', tcp_port => '80', type => '1', cachegroup => '95', ilo_ip_gateway => '172.16.4.1', ip_gateway => '10.10.4.1', router_host_name => 'rtr-phl.kabletown.net', interface_name => 'bond0', ip6_gateway => '2033:D0D0:3300::4:1', mgmt_ip_address => '', status => '3', last_updated => '2015-12-10 15:44:36', cdn_id => '1', ilo_ip_address => '172.16.4.7', ilo_username => '', ip_netmask => '255.255.255.0', host_name => 'atsec-phl-01', id => '38', domain_name => 'phl.kabletown.net', ip_address => '10.10.4.3', profile => '45', upd_pending => '0', xmpp_id => 'atsec-phl-01-dummyxmpp', xmpp_passwd => 'X', interface_mtu => '9000', mgmt_ip_gateway => '', }, }, 
+'38' => { new => 'Server', => using => { host_name => 'atsec-phl-02', ilo_ip_netmask => '255.255.255.0', tcp_port => '80', xmpp_id => 'atsec-phl-02-dummyxmpp', router_port_name => '4', xmpp_passwd => 'X', ilo_ip_gateway => '172.16.4.1', ip_address => '10.10.4.4', mgmt_ip_gateway => '', mgmt_ip_netmask => '', ilo_username => '', interface_name => 'bond0', ip6_address => '2033:D0D0:3300::4:4/64', type => '1', mgmt_ip_address => '', id => '39', interface_mtu => '9000', ip6_gateway => '2033:D0D0:3300::4:1', ip_netmask => '255.255.255.0', status => '3', ilo_password => '', last_updated => '2015-12-10 15:44:37', phys_location => '9', profile => '45', cdn_id => '1', upd_pending => '0', router_host_name => 'rtr-phl.kabletown.net', rack => 'RR 119.02', cachegroup => '95', domain_name => 'phl.kabletown.net', ilo_ip_address => '172.16.4.8', ip_gateway => '10.10.4.1', }, }, 
+'39' => { new => 'Server', => using => { phys_location => '9', status => '3', upd_pending => '0', ilo_ip_netmask => '255.255.255.0', ilo_username => '', mgmt_ip_gateway => '', type => '1', domain_name => 'phl.kabletown.net', ilo_ip_address => '172.16.4.9', interface_name => 'bond0', profile => '45', rack => 'RR 119.02', host_name => 'atsec-phl-03', ip_netmask => '255.255.255.0', mgmt_ip_netmask => '', router_port_name => '4', ilo_ip_gateway => '172.16.4.1', ilo_password => '', ip6_gateway => '2033:D0D0:3300::4:1', ip_address => '10.10.4.5', xmpp_passwd => 'X', cachegroup => '95', cdn_id => '1', interface_mtu => '9000', ip6_address => '2033:D0D0:3300::4:5/64', tcp_port => '80', id => '40', ip_gateway => '10.10.4.1', last_updated => '2015-12-10 15:44:37', mgmt_ip_address => '', router_host_name => 'rtr-phl.kabletown.net', xmpp_id => 'atsec-phl-03-dummyxmpp', }, }, 
+'40' => { new => 'Server', => using => { cachegroup => '95', ilo_ip_netmask => '255.255.255.0', ilo_password => '', interface_name => 'bond0', ip_address => '10.10.4.6', ip_netmask => '255.255.255.0', tcp_port => '80', cdn_id => '2', router_port_name => '4', xmpp_passwd => 'X', mgmt_ip_address => '', xmpp_id => 'atsec-phl-04-dummyxmpp', id => '41', ilo_ip_address => '172.16.4.10', ilo_username => '', router_host_name => 'rtr-phl.kabletown.net', type => '1', host_name => 'atsec-phl-04', ilo_ip_gateway => '172.16.4.1', ip_gateway => '10.10.4.1', mgmt_ip_gateway => '', rack => 'RR 119.02', status => '3', upd_pending => '0', interface_mtu => '9000', last_updated => '2015-12-10 15:44:37', phys_location => '10', domain_name => 'phl.kabletown.net', ip6_address => '2033:D0D0:3300::4:6/64', ip6_gateway => '2033:D0D0:3300::4:1', mgmt_ip_netmask => '', profile => '26', }, }, 
+'41' => { new => 'Server', => using => { cachegroup => '95', ilo_username => '', interface_name => 'bond0', ip6_gateway => '2033:D0D0:3300::4:1', ip_netmask => '255.255.255.0', tcp_port => '80', host_name => 'atsec-phl-05', ilo_ip_address => '172.16.4.11', ilo_ip_netmask => '255.255.255.0', last_updated => '2015-12-10 15:44:37', status => '3', domain_name => 'phl.kabletown.net', id => '42', ip_gateway => '10.10.4.1', router_host_name => 'rtr-phl.kabletown.net', xmpp_passwd => 'X', type => '1', phys_location => '10', upd_pending => '0', xmpp_id => 'atsec-phl-05-dummyxmpp', cdn_id => '2', ilo_ip_gateway => '172.16.4.1', interface_mtu => '9000', mgmt_ip_netmask => '', ilo_password => '', ip6_address => '2033:D0D0:3300::4:7/64', ip_address => '10.10.4.7', mgmt_ip_address => '', mgmt_ip_gateway => '', profile => '26', rack => 'RR 119.02', router_port_name => '4', }, }, 
+'42' => { new => 'Server', => using => { cachegroup => '95', ilo_password => '', router_host_name => 'rtr-phl.kabletown.net', router_port_name => '4', interface_mtu => '9000', ilo_ip_address => '172.16.4.12', ilo_ip_gateway => '172.16.4.1', ip6_address => '2033:D0D0:3300::4:8/64', type => '1', ilo_username => '', interface_name => 'bond0', ip6_gateway => '2033:D0D0:3300::4:1', mgmt_ip_gateway => '', profile => '26', tcp_port => '80', cdn_id => '2', host_name => 'atsec-phl-06', ilo_ip_netmask => '255.255.255.0', ip_address => '10.10.4.8', last_updated => '2015-12-10 15:44:37', mgmt_ip_address => '', mgmt_ip_netmask => '', xmpp_passwd => 'X', ip_netmask => '255.255.255.0', phys_location => '10', rack => 'RR 119.02', id => '43', ip_gateway => '10.10.4.1', status => '3', upd_pending => '0', domain_name => 'phl.kabletown.net', xmpp_id => 'atsec-phl-06-dummyxmpp', }, }, 
+'43' => { new => 'Server', => using => { cachegroup => '95', domain_name => 'phl.kabletown.net', ilo_password => '', ip_gateway => '10.10.4.1', mgmt_ip_gateway => '', profile => '26', host_name => 'atsec-phl-07', ilo_ip_gateway => '172.16.4.1', last_updated => '2015-12-10 15:44:37', cdn_id => '2', ip_address => '10.10.4.9', ip_netmask => '255.255.255.0', rack => 'RR 119.02', ilo_ip_address => '172.16.4.13', ip6_gateway => '2033:D0D0:3300::4:1', mgmt_ip_address => '', xmpp_passwd => 'X', ilo_username => '', type => '1', xmpp_id => 'atsec-phl-07-dummyxmpp', id => '44', interface_mtu => '9000', mgmt_ip_netmask => '', router_host_name => 'rtr-phl.kabletown.net', router_port_name => '4', tcp_port => '80', phys_location => '10', status => '3', ilo_ip_netmask => '255.255.255.0', interface_name => 'bond0', ip6_address => '2033:D0D0:3300::4:9/64', upd_pending => '0', }, }, 
+'44' => { new => 'Server', => using => { cdn_id => '2', host_name => 'atsec-phl-08', id => '45', last_updated => '2015-12-10 15:44:37', mgmt_ip_netmask => '', router_port_name => '4', type => '1', cachegroup => '95', ip6_gateway => '2033:D0D0:3300::4:1', xmpp_id => 'atsec-phl-08-dummyxmpp', rack => 'RR 119.02', tcp_port => '80', xmpp_passwd => 'X', domain_name => 'phl.kabletown.net', ilo_username => '', ip6_address => '2033:D0D0:3300::4:10/64', mgmt_ip_gateway => '', ilo_ip_address => '172.16.4.14', ilo_ip_gateway => '172.16.4.1', interface_mtu => '9000', interface_name => 'bond0', phys_location => '10', upd_pending => '0', mgmt_ip_address => '', profile => '26', ip_netmask => '255.255.255.0', router_host_name => 'rtr-phl.kabletown.net', ilo_ip_netmask => '255.255.255.0', ilo_password => '', ip_address => '10.10.4.10', ip_gateway => '10.10.4.1', status => '3', }, }, 
+'45' => { new => 'Server', => using => { ilo_ip_address => '172.16.5.6', interface_name => 'bond0', ip_address => '10.10.5.2', type => '1', xmpp_id => 'atsec-den-00-dummyxmpp', cdn_id => '1', ilo_ip_gateway => '172.16.5.1', ilo_password => '', interface_mtu => '9000', ip6_gateway => '2033:D0D0:3300::5:1', mgmt_ip_address => '', domain_name => 'den.kabletown.net', id => '46', ilo_ip_netmask => '255.255.255.0', ilo_username => '', mgmt_ip_gateway => '', tcp_port => '80', ip_gateway => '10.10.5.1', rack => 'RR 119.02', phys_location => '11', profile => '45', cachegroup => '96', host_name => 'atsec-den-00', xmpp_passwd => 'X', ip6_address => '2033:D0D0:3300::5:2/64', last_updated => '2015-12-10 15:44:37', mgmt_ip_netmask => '', ip_netmask => '255.255.255.0', router_host_name => 'rtr-den.kabletown.net', router_port_name => '5', status => '3', upd_pending => '0', }, }, 
+'46' => { new => 'Server', => using => { domain_name => 'den.kabletown.net', ip6_gateway => '2033:D0D0:3300::5:1', xmpp_passwd => 'X', cachegroup => '96', ilo_password => '', interface_mtu => '9000', ip6_address => '2033:D0D0:3300::5:3/64', upd_pending => '0', ilo_ip_gateway => '172.16.5.1', ilo_username => '', rack => 'RR 119.02', router_port_name => '5', mgmt_ip_netmask => '', type => '1', xmpp_id => 'atsec-den-01-dummyxmpp', cdn_id => '1', id => '47', ilo_ip_netmask => '255.255.255.0', last_updated => '2015-12-10 15:44:37', mgmt_ip_gateway => '', ip_address => '10.10.5.3', profile => '45', router_host_name => 'rtr-den.kabletown.net', status => '3', host_name => 'atsec-den-01', ilo_ip_address => '172.16.5.7', interface_name => 'bond0', ip_netmask => '255.255.255.0', mgmt_ip_address => '', phys_location => '11', tcp_port => '80', ip_gateway => '10.10.5.1', }, }, 
+'47' => { new => 'Server', => using => { host_name => 'atsec-den-02', ilo_ip_address => '172.16.5.8', mgmt_ip_address => '', router_port_name => '5', ip_address => '10.10.5.4', ip_netmask => '255.255.255.0', mgmt_ip_netmask => '', type => '1', ilo_username => '', interface_mtu => '9000', ip_gateway => '10.10.5.1', tcp_port => '80', upd_pending => '0', status => '3', domain_name => 'den.kabletown.net', phys_location => '11', profile => '45', cachegroup => '96', cdn_id => '1', id => '48', ip6_gateway => '2033:D0D0:3300::5:1', xmpp_id => 'atsec-den-02-dummyxmpp', ilo_password => '', ip6_address => '2033:D0D0:3300::5:4/64', mgmt_ip_gateway => '', rack => 'RR 119.02', router_host_name => 'rtr-den.kabletown.net', ilo_ip_gateway => '172.16.5.1', ilo_ip_netmask => '255.255.255.0', interface_name => 'bond0', last_updated => '2015-12-10 15:44:37', xmpp_passwd => 'X', }, }, 
+'48' => { new => 'Server', => using => { mgmt_ip_netmask => '', status => '3', cdn_id => '1', domain_name => 'den.kabletown.net', id => '49', ilo_ip_address => '172.16.5.9', ilo_password => '', ip6_address => '2033:D0D0:3300::5:5/64', xmpp_passwd => 'X', ip_address => '10.10.5.5', type => '1', ip6_gateway => '2033:D0D0:3300::5:1', ip_netmask => '255.255.255.0', phys_location => '11', profile => '45', upd_pending => '0', ilo_ip_gateway => '172.16.5.1', rack => 'RR 119.02', host_name => 'atsec-den-03', interface_name => 'bond0', last_updated => '2015-12-10 15:44:37', mgmt_ip_gateway => '', router_host_name => 'rtr-den.kabletown.net', cachegroup => '96', ilo_ip_netmask => '255.255.255.0', interface_mtu => '9000', mgmt_ip_address => '', ilo_username => '', xmpp_id => 'atsec-den-03-dummyxmpp', ip_gateway => '10.10.5.1', router_port_name => '5', tcp_port => '80', }, }, 
+'49' => { new => 'Server', => using => { domain_name => 'den.kabletown.net', ilo_ip_address => '172.16.5.10', ilo_username => '', ip6_gateway => '2033:D0D0:3300::5:1', mgmt_ip_address => '', router_host_name => 'rtr-den.kabletown.net', upd_pending => '0', cdn_id => '2', ip_netmask => '255.255.255.0', cachegroup => '96', type => '1', phys_location => '12', interface_name => 'bond0', ilo_ip_netmask => '255.255.255.0', ilo_ip_gateway => '172.16.5.1', ip6_address => '2033:D0D0:3300::5:6/64', profile => '26', id => '50', ip_gateway => '10.10.5.1', last_updated => '2015-12-10 15:44:37', rack => 'RR 119.02', status => '3', ip_address => '10.10.5.6', interface_mtu => '9000', mgmt_ip_gateway => '', router_port_name => '5', tcp_port => '80', xmpp_passwd => 'X', host_name => 'atsec-den-04', mgmt_ip_netmask => '', xmpp_id => 'atsec-den-04-dummyxmpp', ilo_password => '', }, }, 
+'50' => { new => 'Server', => using => { cachegroup => '96', ilo_username => '', interface_name => 'bond0', ip_address => '10.10.5.7', id => '51', ip6_gateway => '2033:D0D0:3300::5:1', ip_gateway => '10.10.5.1', mgmt_ip_gateway => '', profile => '26', router_host_name => 'rtr-den.kabletown.net', ilo_ip_gateway => '172.16.5.1', ilo_password => '', last_updated => '2015-12-10 15:44:37', status => '3', upd_pending => '0', xmpp_passwd => 'X', interface_mtu => '9000', router_port_name => '5', cdn_id => '2', ip_netmask => '255.255.255.0', tcp_port => '80', type => '1', xmpp_id => 'atsec-den-05-dummyxmpp', domain_name => 'den.kabletown.net', host_name => 'atsec-den-05', ilo_ip_address => '172.16.5.11', ilo_ip_netmask => '255.255.255.0', ip6_address => '2033:D0D0:3300::5:7/64', mgmt_ip_address => '', mgmt_ip_netmask => '', phys_location => '12', rack => 'RR 119.02', }, }, 
+'51' => { new => 'Server', => using => { ilo_ip_netmask => '255.255.255.0', ip6_address => '2033:D0D0:3300::5:8/64', rack => 'RR 119.02', router_host_name => 'rtr-den.kabletown.net', cdn_id => '2', domain_name => 'den.kabletown.net', host_name => 'atsec-den-06', ilo_ip_gateway => '172.16.5.1', ilo_username => '', ip6_gateway => '2033:D0D0:3300::5:1', id => '52', mgmt_ip_address => '', mgmt_ip_gateway => '', phys_location => '12', status => '3', upd_pending => '0', xmpp_id => 'atsec-den-06-dummyxmpp', cachegroup => '96', ilo_ip_address => '172.16.5.12', interface_name => 'bond0', ip_gateway => '10.10.5.1', profile => '26', xmpp_passwd => 'X', ilo_password => '', ip_address => '10.10.5.8', ip_netmask => '255.255.255.0', last_updated => '2015-12-10 15:44:37', router_port_name => '5', tcp_port => '80', interface_mtu => '9000', mgmt_ip_netmask => '', type => '1', }, }, 
+'52' => { new => 'Server', => using => { interface_mtu => '9000', interface_name => 'bond0', rack => 'RR 119.02', host_name => 'atsec-den-07', mgmt_ip_address => '', cdn_id => '2', domain_name => 'den.kabletown.net', ilo_ip_netmask => '255.255.255.0', ilo_username => '', ip6_gateway => '2033:D0D0:3300::5:1', ip_netmask => '255.255.255.0', mgmt_ip_gateway => '', status => '3', cachegroup => '96', ip_address => '10.10.5.9', type => '1', ilo_password => '', ilo_ip_address => '172.16.5.13', router_port_name => '5', tcp_port => '80', id => '53', ip_gateway => '10.10.5.1', profile => '26', ip6_address => '2033:D0D0:3300::5:9/64', xmpp_id => 'atsec-den-07-dummyxmpp', xmpp_passwd => 'X', router_host_name => 'rtr-den.kabletown.net', last_updated => '2015-12-10 15:44:37', mgmt_ip_netmask => '', phys_location => '12', upd_pending => '0', ilo_ip_gateway => '172.16.5.1', }, }, 
+'53' => { new => 'Server', => using => { ip_address => '10.10.5.10', ip_netmask => '255.255.255.0', last_updated => '2015-12-10 15:44:37', mgmt_ip_netmask => '', rack => 'RR 119.02', cdn_id => '2', ip6_gateway => '2033:D0D0:3300::5:1', phys_location => '12', domain_name => 'den.kabletown.net', interface_mtu => '9000', ilo_password => '', interface_name => 'bond0', router_host_name => 'rtr-den.kabletown.net', status => '3', cachegroup => '96', ilo_ip_netmask => '255.255.255.0', mgmt_ip_gateway => '', profile => '26', type => '1', upd_pending => '0', xmpp_passwd => 'X', id => '54', mgmt_ip_address => '', ilo_ip_gateway => '172.16.5.1', tcp_port => '80', host_name => 'atsec-den-08', ilo_ip_address => '172.16.5.14', router_port_name => '5', xmpp_id => 'atsec-den-08-dummyxmpp', ip6_address => '2033:D0D0:3300::5:10/64', ip_gateway => '10.10.5.1', ilo_username => '', }, }, 
+'54' => { new => 'Server', => using => { ip_gateway => '10.11.0.1', last_updated => '2015-12-10 15:44:37', cachegroup => '1', domain_name => 'east.kabletown.net', ilo_username => '', rack => 'RR 119.02', router_port_name => '0', ilo_ip_address => '172.17.0.6', ip_address => '10.11.0.1', mgmt_ip_netmask => '', profile => '30', host_name => 'atsmid-east-00', tcp_port => '80', type => '2', upd_pending => '0', xmpp_id => 'atsmid-east-00-dummyxmpp', ilo_ip_gateway => '172.17.0.1', interface_mtu => '9000', interface_name => 'bond0', ip_netmask => '255.255.255.0', mgmt_ip_address => '', router_host_name => 'rtr-east.kabletown.net', id => '55', status => '2', cdn_id => '2', ilo_password => '', ip6_address => '2033:D0D1:3300::0:2/64', mgmt_ip_gateway => '', ilo_ip_netmask => '255.255.255.0', ip6_gateway => '2033:D0D1:3300::0:1', phys_location => '1', xmpp_passwd => 'X', }, }, 
+'55' => { new => 'Server', => using => { profile => '31', router_host_name => 'rtr-east.kabletown.net', tcp_port => '80', xmpp_passwd => 'X', host_name => 'atsmid-east-01', last_updated => '2015-12-10 15:44:37', mgmt_ip_gateway => '', mgmt_ip_netmask => '', upd_pending => '0', ilo_ip_gateway => '172.17.0.1', interface_mtu => '9000', ip_gateway => '10.11.0.1', type => '2', ip6_address => '2033:D0D1:3300::0:3/64', ilo_ip_address => '172.17.0.7', ilo_ip_netmask => '255.255.255.0', ilo_password => '', ilo_username => '', cachegroup => '1', phys_location => '1', rack => 'RR 119.02', domain_name => 'east.kabletown.net', ip6_gateway => '2033:D0D1:3300::0:1', xmpp_id => 'atsmid-east-01-dummyxmpp', router_port_name => '0', status => '2', mgmt_ip_address => '', cdn_id => '1', id => '56', interface_name => 'bond0', ip_netmask => '255.255.255.0', ip_address => '10.11.0.2', }, }, 
+'56' => { new => 'Server', => using => { interface_mtu => '9000', status => '2', xmpp_id => 'atsmid-east-02-dummyxmpp', ilo_ip_address => '172.17.0.8', ip_netmask => '255.255.255.0', rack => 'RR 119.02', type => '2', xmpp_passwd => 'X', ilo_ip_gateway => '172.17.0.1', ilo_username => '', ip_gateway => '10.11.0.1', mgmt_ip_address => '', tcp_port => '80', interface_name => 'bond0', ip6_address => '2033:D0D1:3300::0:4/64', mgmt_ip_gateway => '', phys_location => '1', profile => '30', upd_pending => '0', cdn_id => '2', domain_name => 'east.kabletown.net', id => '57', ilo_ip_netmask => '255.255.255.0', ip_address => '10.11.0.3', router_port_name => '0', cachegroup => '1', ilo_password => '', ip6_gateway => '2033:D0D1:3300::0:1', last_updated => '2015-12-10 15:44:37', router_host_name => 'rtr-east.kabletown.net', host_name => 'atsmid-east-02', mgmt_ip_netmask => '', }, }, 
+'57' => { new => 'Server', => using => { ip_gateway => '10.11.0.1', last_updated => '2015-12-10 15:44:37', rack => 'RR 119.02', id => '58', ilo_username => '', ip6_address => '2033:D0D1:3300::0:5/64', xmpp_id => 'atsmid-east-03-dummyxmpp', mgmt_ip_address => '', phys_location => '1', profile => '31', mgmt_ip_gateway => '', tcp_port => '80', type => '2', cachegroup => '1', ilo_ip_gateway => '172.17.0.1', interface_name => 'bond0', host_name => 'atsmid-east-03', router_port_name => '0', status => '2', router_host_name => 'rtr-east.kabletown.net', xmpp_passwd => 'X', ilo_ip_address => '172.17.0.9', ilo_password => '', ip_netmask => '255.255.255.0', interface_mtu => '9000', ip_address => '10.11.0.4', mgmt_ip_netmask => '', upd_pending => '0', cdn_id => '1', ilo_ip_netmask => '255.255.255.0', ip6_gateway => '2033:D0D1:3300::0:1', domain_name => 'east.kabletown.net', }, }, 
+'58' => { new => 'Server', => using => { cachegroup => '1', host_name => 'atsmid-east-04', interface_name => 'bond0', profile => '30', id => '59', ilo_ip_netmask => '255.255.255.0', ilo_password => '', ip6_address => '2033:D0D1:3300::0:6/64', ip_gateway => '10.11.0.1', ip_netmask => '255.255.255.0', cdn_id => '2', ip6_gateway => '2033:D0D1:3300::0:1', last_updated => '2015-12-10 15:44:37', mgmt_ip_netmask => '', tcp_port => '80', xmpp_passwd => 'X', ilo_ip_address => '172.17.0.10', mgmt_ip_gateway => '', status => '2', interface_mtu => '9000', upd_pending => '0', ilo_username => '', rack => 'RR 119.02', router_port_name => '0', domain_name => 'east.kabletown.net', mgmt_ip_address => '', router_host_name => 'rtr-east.kabletown.net', xmpp_id => 'atsmid-east-04-dummyxmpp', ilo_ip_gateway => '172.17.0.1', ip_address => '10.11.0.5', phys_location => '2', type => '2', }, }, 
+'59' => { new => 'Server', => using => { ilo_ip_address => '172.17.0.11', profile => '31', cdn_id => '1', ilo_ip_netmask => '255.255.255.0', ip_address => '10.11.0.6', status => '2', xmpp_id => 'atsmid-east-05-dummyxmpp', xmpp_passwd => 'X', ilo_ip_gateway => '172.17.0.1', ilo_password => '', interface_mtu => '9000', tcp_port => '80', cachegroup => '1', domain_name => 'east.kabletown.net', id => '60', ilo_username => '', upd_pending => '0', mgmt_ip_netmask => '', router_port_name => '0', type => '2', interface_name => 'bond0', ip_gateway => '10.11.0.1', mgmt_ip_address => '', host_name => 'atsmid-east-05', ip6_gateway => '2033:D0D1:3300::0:1', ip_netmask => '255.255.255.0', phys_location => '2', ip6_address => '2033:D0D1:3300::0:7/64', last_updated => '2015-12-10 15:44:37', mgmt_ip_gateway => '', rack => 'RR 119.02', router_host_name => 'rtr-east.kabletown.net', }, }, 
+'60' => { new => 'Server', => using => { xmpp_passwd => 'X', router_port_name => '0', upd_pending => '0', cdn_id => '2', ilo_password => '', ilo_username => '', ip6_address => '2033:D0D1:3300::0:8/64', ilo_ip_netmask => '255.255.255.0', mgmt_ip_netmask => '', phys_location => '2', profile => '30', ilo_ip_address => '172.17.0.12', last_updated => '2015-12-10 15:44:36', router_host_name => 'rtr-east.kabletown.net', tcp_port => '80', id => '61', ip_netmask => '255.255.255.0', status => '2', type => '2', domain_name => 'east.kabletown.net', ip6_gateway => '2033:D0D1:3300::0:1', ip_address => '10.11.0.7', cachegroup => '1', ip_gateway => '10.11.0.1', mgmt_ip_address => '', mgmt_ip_gateway => '', rack => 'RR 119.02', xmpp_id => 'atsmid-east-06-dummyxmpp', host_name => 'atsmid-east-06', ilo_ip_gateway => '172.17.0.1', interface_mtu => '9000', interface_name => 'bond0', }, }, 
+'61' => { new => 'Server', => using => { domain_name => 'east.kabletown.net', status => '2', xmpp_id => 'atsmid-east-07-dummyxmpp', last_updated => '2015-12-10 15:44:37', xmpp_passwd => 'X', cachegroup => '1', ilo_ip_address => '172.17.0.13', interface_name => 'bond0', ip6_gateway => '2033:D0D1:3300::0:1', ip_gateway => '10.11.0.1', ilo_ip_netmask => '255.255.255.0', interface_mtu => '9000', ip_address => '10.11.0.8', phys_location => '2', router_host_name => 'rtr-east.kabletown.net', ilo_ip_gateway => '172.17.0.1', ip6_address => '2033:D0D1:3300::0:9/64', ip_netmask => '255.255.255.0', rack => 'RR 119.02', type => '2', upd_pending => '0', id => '62', mgmt_ip_address => '', mgmt_ip_gateway => '', profile => '31', tcp_port => '80', host_name => 'atsmid-east-07', ilo_username => '', router_port_name => '0', cdn_id => '1', ilo_password => '', mgmt_ip_netmask => '', }, }, 
+'62' => { new => 'Server', => using => { type => '2', domain_name => 'east.kabletown.net', ilo_ip_address => '172.17.0.14', interface_mtu => '9000', ip_netmask => '255.255.255.0', mgmt_ip_gateway => '', phys_location => '2', ilo_password => '', ip_gateway => '10.11.0.1', tcp_port => '80', cdn_id => '2', router_port_name => '0', upd_pending => '0', xmpp_id => 'atsmid-east-08-dummyxmpp', ip6_address => '2033:D0D1:3300::0:10/64', profile => '30', interface_name => 'bond0', ip6_gateway => '2033:D0D1:3300::0:1', last_updated => '2015-12-10 15:44:37', mgmt_ip_netmask => '', xmpp_passwd => 'X', cachegroup => '1', id => '63', ip_address => '10.11.0.9', mgmt_ip_address => '', ilo_ip_netmask => '255.255.255.0', rack => 'RR 119.02', router_host_name => 'rtr-east.kabletown.net', host_name => 'atsmid-east-08', ilo_ip_gateway => '172.17.0.1', ilo_username => '', status => '2', }, }, 
+'63' => { new => 'Server', => using => { host_name => 'atsmid-west-00', ip_netmask => '255.255.255.0', router_host_name => 'rtr-west.kabletown.net', ilo_ip_gateway => '172.17.1.1', last_updated => '2015-12-10 15:44:37', ilo_ip_address => '172.17.1.6', ilo_username => '', ip_address => '10.11.1.1', rack => 'RR 119.02', mgmt_ip_address => '', mgmt_ip_netmask => '', phys_location => '3', xmpp_id => 'atsmid-west-00-dummyxmpp', xmpp_passwd => 'X', cdn_id => '2', domain_name => 'west.kabletown.net', ip_gateway => '10.11.1.1', router_port_name => '1', type => '2', id => '64', ilo_password => '', interface_name => 'bond0', profile => '30', status => '2', mgmt_ip_gateway => '', upd_pending => '0', tcp_port => '80', cachegroup => '2', ilo_ip_netmask => '255.255.255.0', interface_mtu => '9000', ip6_address => '2033:D0D1:3300::1:2/64', ip6_gateway => '2033:D0D1:3300::1:1', }, }, 
+'64' => { new => 'Server', => using => { router_host_name => 'rtr-west.kabletown.net', type => '2', upd_pending => '0', ilo_ip_netmask => '255.255.255.0', rack => 'RR 119.02', ip_address => '10.11.1.2', status => '2', ilo_ip_address => '172.17.1.7', interface_name => 'bond0', mgmt_ip_netmask => '', phys_location => '3', profile => '31', tcp_port => '80', id => '65', ilo_ip_gateway => '172.17.1.1', ip_netmask => '255.255.255.0', last_updated => '2015-12-10 15:44:37', ilo_username => '', interface_mtu => '9000', ip6_address => '2033:D0D1:3300::1:3/64', ip6_gateway => '2033:D0D1:3300::1:1', mgmt_ip_gateway => '', cachegroup => '2', domain_name => 'west.kabletown.net', mgmt_ip_address => '', xmpp_id => 'atsmid-west-01-dummyxmpp', xmpp_passwd => 'X', cdn_id => '1', ip_gateway => '10.11.1.1', router_port_name => '1', host_name => 'atsmid-west-01', ilo_password => '', }, }, 
+'65' => { new => 'Server', => using => { ilo_password => '', ilo_username => '', ip_netmask => '255.255.255.0', status => '2', tcp_port => '80', cachegroup => '2', host_name => 'atsmid-west-02', ip_gateway => '10.11.1.1', router_host_name => 'rtr-west.kabletown.net', ilo_ip_address => '172.17.1.8', ip_address => '10.11.1.3', router_port_name => '1', domain_name => 'west.kabletown.net', ilo_ip_netmask => '255.255.255.0', ip6_gateway => '2033:D0D1:3300::1:1', mgmt_ip_gateway => '', rack => 'RR 119.02', xmpp_id => 'atsmid-west-02-dummyxmpp', xmpp_passwd => 'X', type => '2', id => '66', interface_mtu => '9000', ip6_address => '2033:D0D1:3300::1:4/64', last_updated => '2015-12-10 15:44:37', profile => '30', cdn_id => '2', ilo_ip_gateway => '172.17.1.1', mgmt_ip_address => '', mgmt_ip_netmask => '', phys_location => '3', interface_name => 'bond0', upd_pending => '0', }, }, 
+'66' => { new => 'Server', => using => { id => '67', ilo_username => '', ilo_ip_gateway => '172.17.1.1', cdn_id => '1', ilo_ip_address => '172.17.1.9', ip6_address => '2033:D0D1:3300::1:5/64', ip_address => '10.11.1.4', profile => '31', domain_name => 'west.kabletown.net', interface_name => 'bond0', mgmt_ip_netmask => '', status => '2', host_name => 'atsmid-west-03', ilo_password => '', interface_mtu => '9000', mgmt_ip_gateway => '', ip_netmask => '255.255.255.0', phys_location => '3', tcp_port => '80', upd_pending => '0', cachegroup => '2', ip6_gateway => '2033:D0D1:3300::1:1', mgmt_ip_address => '', rack => 'RR 119.02', router_host_name => 'rtr-west.kabletown.net', router_port_name => '1', xmpp_id => 'atsmid-west-03-dummyxmpp', ilo_ip_netmask => '255.255.255.0', ip_gateway => '10.11.1.1', last_updated => '2015-12-10 15:44:37', type => '2', xmpp_passwd => 'X', }, }, 
+'67' => { new => 'Server', => using => { ip_netmask => '255.255.255.0', mgmt_ip_address => '', type => '2', ip6_address => '2033:D0D1:3300::1:6/64', mgmt_ip_gateway => '', profile => '30', cachegroup => '2', ilo_ip_address => '172.17.1.10', interface_name => 'bond0', router_host_name => 'rtr-west.kabletown.net', router_port_name => '1', upd_pending => '0', xmpp_id => 'atsmid-west-04-dummyxmpp', cdn_id => '2', phys_location => '4', host_name => 'atsmid-west-04', ilo_password => '', ip_gateway => '10.11.1.1', last_updated => '2015-12-10 15:44:36', id => '68', ilo_ip_gateway => '172.17.1.1', ip6_gateway => '2033:D0D1:3300::1:1', mgmt_ip_netmask => '', status => '2', xmpp_passwd => 'X', domain_name => 'west.kabletown.net', ilo_ip_netmask => '255.255.255.0', tcp_port => '80', ilo_username => '', interface_mtu => '9000', ip_address => '10.11.1.5', rack => 'RR 119.02', }, }, 
+'68' => { new => 'Server', => using => { phys_location => '4', tcp_port => '80', ip6_address => '2033:D0D1:3300::1:7/64', ip_gateway => '10.11.1.1', mgmt_ip_gateway => '', router_port_name => '1', xmpp_passwd => 'X', ilo_ip_netmask => '255.255.255.0', type => '2', cachegroup => '2', host_name => 'atsmid-west-05', ip6_gateway => '2033:D0D1:3300::1:1', ip_netmask => '255.255.255.0', last_updated => '2015-12-10 15:44:37', mgmt_ip_address => '', rack => 'RR 119.02', interface_name => 'bond0', ip_address => '10.11.1.6', profile => '31', router_host_name => 'rtr-west.kabletown.net', ilo_ip_gateway => '172.17.1.1', ilo_username => '', id => '69', ilo_ip_address => '172.17.1.11', interface_mtu => '9000', upd_pending => '0', xmpp_id => 'atsmid-west-05-dummyxmpp', cdn_id => '1', domain_name => 'west.kabletown.net', ilo_password => '', mgmt_ip_netmask => '', status => '2', }, }, 
+'69' => { new => 'Server', => using => { id => '70', ilo_username => '', ip_gateway => '10.11.1.1', last_updated => '2015-12-10 15:44:37', mgmt_ip_netmask => '', router_host_name => 'rtr-west.kabletown.net', upd_pending => '0', xmpp_id => 'atsmid-west-06-dummyxmpp', host_name => 'atsmid-west-06', interface_mtu => '9000', ip6_address => '2033:D0D1:3300::1:8/64', ip6_gateway => '2033:D0D1:3300::1:1', ip_netmask => '255.255.255.0', profile => '30', cachegroup => '2', ip_address => '10.11.1.7', type => '2', xmpp_passwd => 'X', domain_name => 'west.kabletown.net', ilo_ip_address => '172.17.1.12', ilo_password => '', tcp_port => '80', cdn_id => '2', interface_name => 'bond0', mgmt_ip_address => '', phys_location => '4', router_port_name => '1', status => '2', ilo_ip_gateway => '172.17.1.1', ilo_ip_netmask => '255.255.255.0', mgmt_ip_gateway => '', rack => 'RR 119.02', }, }, 
+'70' => { new => 'Server', => using => { ilo_ip_netmask => '255.255.255.0', ip_address => '10.11.1.8', id => '71', ilo_password => '', status => '2', xmpp_id => 'atsmid-west-07-dummyxmpp', router_host_name => 'rtr-west.kabletown.net', upd_pending => '0', router_port_name => '1', xmpp_passwd => 'X', host_name => 'atsmid-west-07', ip6_address => '2033:D0D1:3300::1:9/64', last_updated => '2015-12-10 15:44:37', mgmt_ip_netmask => '', phys_location => '4', rack => 'RR 119.02', mgmt_ip_gateway => '', tcp_port => '80', cachegroup => '2', domain_name => 'west.kabletown.net', ilo_username => '', interface_mtu => '9000', interface_name => 'bond0', ip6_gateway => '2033:D0D1:3300::1:1', ilo_ip_gateway => '172.17.1.1', ip_gateway => '10.11.1.1', ip_netmask => '255.255.255.0', profile => '31', cdn_id => '1', type => '2', ilo_ip_address => '172.17.1.13', mgmt_ip_address => '', }, }, 
+'71' => { new => 'Server', => using => { ilo_ip_netmask => '255.255.255.0', ip_address => '10.11.1.9', ilo_ip_address => '172.17.1.14', interface_mtu => '9000', ip6_gateway => '2033:D0D1:3300::1:1', router_host_name => 'rtr-west.kabletown.net', upd_pending => '0', cdn_id => '2', ilo_username => '', ip_netmask => '255.255.255.0', tcp_port => '80', rack => 'RR 119.02', router_port_name => '1', type => '2', cachegroup => '2', domain_name => 'west.kabletown.net', host_name => 'atsmid-west-08', profile => '30', interface_name => 'bond0', last_updated => '2015-12-10 15:44:37', mgmt_ip_gateway => '', phys_location => '4', xmpp_passwd => 'X', id => '72', ilo_ip_gateway => '172.17.1.1', ip6_address => '2033:D0D1:3300::1:10/64', status => '2', ip_gateway => '10.11.1.1', mgmt_ip_netmask => '', ilo_password => '', mgmt_ip_address => '', xmpp_id => 'atsmid-west-08-dummyxmpp', }, }, 
+'72' => { new => 'Server', => using => { domain_name => 'clw.kabletown.net', ip6_address => '2033:D0D1:3300::333/64', rack => 'RR 119.02', ilo_ip_address => undef, ilo_username => undef, mgmt_ip_address => undef, mgmt_ip_gateway => undef, router_host_name => undef, status => '2', type => '4', host_name => 'trtr-clw-01', profile => '5', xmpp_passwd => 'X', cachegroup => '3', mgmt_ip_netmask => undef, cdn_id => '1', id => '73', ilo_password => undef, interface_name => 'bond0', ip_address => '172.39.39.39', ip_gateway => '172.39.39.1', router_port_name => undef, interface_mtu => '9000', ip_netmask => '255.255.255.0', ilo_ip_gateway => undef, ip6_gateway => '2033:D0D1:3300::1', xmpp_id => 'trtr-clw-01-dummyxmpp', ilo_ip_netmask => undef, last_updated => '2015-12-10 15:44:37', phys_location => '100', tcp_port => '80', upd_pending => '0', }, }, 
+'73' => { new => 'Server', => using => { id => '74', ilo_username => undef, interface_name => 'bond0', mgmt_ip_address => undef, router_host_name => undef, mgmt_ip_gateway => undef, rack => 'RR 119.02', cachegroup => '3', ilo_ip_gateway => undef, ilo_password => undef, interface_mtu => '9000', ip6_address => '2033:D0D1:3300::334/64', ip6_gateway => '2033:D0D1:3300::1', ip_address => '172.39.39.49', ip_netmask => '255.255.255.0', status => '2', mgmt_ip_netmask => undef, tcp_port => '80', host_name => 'trtr-clw-02', last_updated => '2015-12-10 15:44:37', phys_location => '101', upd_pending => '0', cdn_id => '2', ilo_ip_netmask => undef, xmpp_passwd => 'X', profile => '8', router_port_name => undef, type => '4', domain_name => 'clw.kabletown.net', ilo_ip_address => undef, ip_gateway => '172.39.39.1', xmpp_id => 'trtr-clw-02-dummyxmpp', }, }, 
+'74' => { new => 'Server', => using => { interface_mtu => '9000', mgmt_ip_address => undef, upd_pending => '0', id => '75', ilo_ip_address => undef, ilo_ip_netmask => undef, rack => 'RR 119.02', xmpp_id => 'trtr-cle-01-dummyxmpp', domain_name => 'cle.kabletown.net', ip6_address => '2033:D0D1:3300::335/64', ip6_gateway => '2033:D0D1:3300::1', ip_gateway => '172.39.99.1', mgmt_ip_gateway => undef, profile => '5', cachegroup => '5', host_name => 'trtr-cle-01', ip_address => '172.39.99.39', phys_location => '100', ilo_ip_gateway => undef, last_updated => '2015-12-10 15:44:37', mgmt_ip_netmask => undef, xmpp_passwd => 'X', cdn_id => '1', ip_netmask => '255.255.255.0', tcp_port => '80', router_host_name => undef, status => '2', type => '4', ilo_password => undef, ilo_username => undef, interface_name => 'bond0', router_port_name => undef, }, }, 
+'75' => { new => 'Server', => using => { ip_gateway => '172.39.99.1', phys_location => '101', profile => '8', type => '4', upd_pending => '0', xmpp_id => 'trtr-cle-02-dummyxmpp', domain_name => 'cle.kabletown.net', ilo_ip_gateway => undef, xmpp_passwd => 'X', host_name => 'trtr-cle-02', interface_name => 'bond0', cachegroup => '5', cdn_id => '2', ilo_ip_netmask => undef, mgmt_ip_address => undef, mgmt_ip_netmask => undef, ilo_username => undef, router_port_name => undef, id => '76', ilo_ip_address => undef, status => '2', interface_mtu => '9000', last_updated => '2015-12-10 15:44:37', ip_netmask => '255.255.255.0', mgmt_ip_gateway => undef, ip6_address => '2033:D0D1:3300::336/64', ip6_gateway => '2033:D0D1:3300::1', rack => 'RR 119.02', router_host_name => undef, tcp_port => '80', ilo_password => undef, ip_address => '172.39.99.49', }, }, 
+'76' => { new => 'Server', => using => { domain_name => 'clw.kabletown.net', ilo_username => undef, ip6_gateway => '2033:D021:3300::1', ilo_ip_gateway => undef, ip_gateway => '172.39.29.1', status => '2', xmpp_passwd => 'X', ilo_ip_address => undef, upd_pending => '0', profile => '11', type => '15', router_host_name => undef, router_port_name => undef, cachegroup => '3', interface_name => 'bond0', ip_address => '172.39.29.39', mgmt_ip_gateway => undef, host_name => 'trmon-clw-01', ilo_password => undef, interface_mtu => '9000', tcp_port => '80', mgmt_ip_netmask => undef, xmpp_id => 'trmon-clw-01-dummyxmpp', cdn_id => '1', id => '77', ilo_ip_netmask => undef, mgmt_ip_address => undef, rack => 'RR 119.02', ip6_address => '2033:D021:3300::333/64', ip_netmask => '255.255.255.0', last_updated => '2015-12-10 15:44:37', phys_location => '100', }, }, 
+'77' => { new => 'Server', => using => { ilo_ip_netmask => undef, interface_name => 'bond0', router_port_name => undef, type => '15', upd_pending => '0', host_name => 'trmon-clw-02', ilo_ip_address => undef, ilo_ip_gateway => undef, ip6_address => '2033:D021:3300::334/64', id => '78', status => '2', tcp_port => '80', mgmt_ip_address => undef, phys_location => '101', mgmt_ip_netmask => undef, domain_name => 'clw.kabletown.net', ip6_gateway => '2033:D021:3300::1', ip_gateway => '172.39.29.1', profile => '12', rack => 'RR 119.02', xmpp_passwd => 'X', cachegroup => '3', last_updated => '2015-12-10 15:44:37', router_host_name => undef, interface_mtu => '9000', ilo_password => undef, ilo_username => undef, mgmt_ip_gateway => undef, xmpp_id => 'trmon-clw-02-dummyxmpp', cdn_id => '2', ip_netmask => '255.255.255.0', ip_address => '172.39.29.49', }, }, 
+'78' => { new => 'Server', => using => { xmpp_id => 'trmon-cle-01-dummyxmpp', ilo_ip_netmask => undef, ip6_gateway => '2033:D011:3300::1', ip_netmask => '255.255.255.0', interface_mtu => '9000', mgmt_ip_gateway => undef, phys_location => '100', rack => 'RR 119.02', domain_name => 'cle.kabletown.net', host_name => 'trmon-cle-01', ilo_username => undef, xmpp_passwd => 'X', cachegroup => '5', mgmt_ip_netmask => undef, last_updated => '2015-12-10 15:44:37', router_port_name => undef, cdn_id => '1', ilo_password => undef, interface_name => 'bond0', router_host_name => undef, status => '2', tcp_port => '80', type => '15', ip6_address => '2033:D011:3300::335/64', ip_address => '172.39.19.39', mgmt_ip_address => undef, ip_gateway => '172.39.19.1', profile => '11', id => '79', ilo_ip_address => undef, ilo_ip_gateway => undef, upd_pending => '0', }, }, 
+'79' => { new => 'Server', => using => { mgmt_ip_gateway => undef, upd_pending => '0', host_name => 'trmon-cle-02', ip_netmask => '255.255.255.0', cdn_id => '2', ilo_ip_netmask => undef, mgmt_ip_netmask => undef, phys_location => '101', cachegroup => '5', ilo_ip_address => undef, ilo_ip_gateway => undef, ilo_username => undef, interface_name => 'bond0', ip6_gateway => '2033:D011:3300::1', ip_gateway => '172.39.19.1', router_port_name => undef, xmpp_id => 'trmon-cle-02-dummyxmpp', id => '80', ip6_address => '2033:D011:3300::336/64', rack => 'RR 119.02', xmpp_passwd => 'X', tcp_port => '80', domain_name => 'cle.kabletown.net', interface_mtu => '9000', ip_address => '172.39.19.49', mgmt_ip_address => undef, profile => '12', status => '2', ilo_password => undef, last_updated => '2015-12-10 15:44:37', router_host_name => undef, type => '15', }, }, 
+'80' => { new => 'Server', => using => { upd_pending => '0', ilo_ip_address => '', interface_name => 'eth1', ip_address => '127.0.0.5', tcp_port => '8088', status => '2', id => '81', ilo_username => '', mgmt_ip_address => '', rack => 'RR 119.02', ilo_password => '', interface_mtu => '1500', ip6_address => undef, router_host_name => '', domain_name => 'kabletown.net', ip_gateway => '127.0.0.5', profile => '47', xmpp_id => '', cachegroup => '1', cdn_id => '2', ilo_ip_netmask => '', ip6_gateway => undef, mgmt_ip_gateway => '', xmpp_passwd => '', ilo_ip_gateway => '', ip_netmask => '255.255.252.0', mgmt_ip_netmask => '', router_port_name => '', host_name => 'riak1', last_updated => '2015-12-10 15:44:36', phys_location => '1', type => '10', }, }, 
+'81' => { new => 'Server', => using => { ip_address => '10.11.10.2', status => '2', type => '36', cdn_id => '1', interface_name => 'eth1', ip6_gateway => undef, last_updated => '2015-12-10 15:44:37', router_host_name => '', router_port_name => '', tcp_port => '80', cachegroup => '101', ilo_ip_netmask => '', mgmt_ip_address => '', rack => 'RR 119.02', ilo_ip_address => '', ilo_ip_gateway => '', ilo_password => '', ip6_address => undef, mgmt_ip_netmask => '', domain_name => 'kabletown.net', ilo_username => '', xmpp_id => '', xmpp_passwd => '', host_name => 'org1', id => '1000', ip_gateway => '10.11.10.1', ip_netmask => '255.255.252.0', profile => '48', upd_pending => '0', interface_mtu => '1500', mgmt_ip_gateway => '', phys_location => '1', }, }, 
+'82' => { new => 'Server', => using => { ilo_ip_gateway => '', ip_gateway => '10.11.12.1', mgmt_ip_netmask => '', router_port_name => '', tcp_port => '80', ip6_address => undef, status => '2', xmpp_passwd => '', cdn_id => '1', ilo_ip_address => '', ilo_ip_netmask => '', interface_mtu => '1500', rack => 'RR 119.02', host_name => 'org2', id => '1001', ip6_gateway => undef, ip_address => '10.11.12.2', type => '36', ilo_password => '', ip_netmask => '255.255.252.0', profile => '49', router_host_name => '', domain_name => 'kabletown.net', ilo_username => '', upd_pending => '0', xmpp_id => '', phys_location => '1', cachegroup => '102', interface_name => 'eth1', last_updated => '2015-12-10 15:44:37', mgmt_ip_address => '', mgmt_ip_gateway => '', }, }, 
+); 
 
 sub name {
-	return "Server";
+		return "Server";
 }
 
-sub get_definition {
-	my ( $self, $name ) = @_;
-	return $definition_for{$name};
+sub get_definition { 
+		my ( $self, $name ) = @_;
+		return $definition_for{$name};
 }
 
 sub all_fixture_names {
-	return keys %definition_for;
+		return keys %definition_for;
 }
 
 __PACKAGE__->meta->make_immutable;
-
 1;
