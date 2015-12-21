@@ -101,10 +101,8 @@ public class TRServlet extends HttpServlet {
 		final String fip = request.getParameter(FAKE_IP);
 
 		if (xmm != null) {
-			LOGGER.info(X_MM_CLIENT_IP + " value (header): " + xmm + ", for " + req.getHostname());
 			req.setClientIP(xmm);
 		} else if (fip != null) {
-			LOGGER.info("Fake IP Address (param): " + fip + ", for " + req.getHostname());
 			req.setClientIP(fip);
 		}
 
