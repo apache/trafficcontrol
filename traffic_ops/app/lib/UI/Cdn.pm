@@ -452,7 +452,7 @@ sub hwinfo {
 	$self->app->log->debug( "sort_order #-> " . $sort_order );
 	my $sort_direction = sprintf( "-%s", $sort_order );
 	$self->app->log->debug( "sort_direction #-> " . $sort_direction );
-	my %column_number_to_name = ( '1' => 'serverid', '2' => 'description', '3' => 'val' );
+	my %column_number_to_name = ( 1 => 'serverid.host_name', 2 => 'description', 3 => 'val', 4 => 'last_updated' );
 	my $column_name = $column_number_to_name{$sort_column} || "serverid";
 
 	#$self->app->log->debug( "names #-> " . Dumper( $self->req->query_params ) );

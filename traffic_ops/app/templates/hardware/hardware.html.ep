@@ -35,6 +35,9 @@ $(function () {
 		$('#dthwinfo').dataTable({
 			"bJQueryUI": true,
 			"sPaginationType": "full_numbers",
+			'sPageNumber': 'paginate_number',
+			'sPageNumbers': 'paginate_numbers',
+			'sPageEllipsis': 'paginate_ellipsis',
 			"sScrollY": calcDataTableHeight(),
 			"bScrollCollapse": true,
 			"bServerSide": true,
@@ -43,7 +46,6 @@ $(function () {
 			"bInfo": true,
 			"bFilter": true,
 			"bLengthChange": true,
-			"bProcessing": true,
 			"aoColumnDefs": [
 			{
 				"mRender": function (data, type, full) {
