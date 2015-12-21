@@ -143,9 +143,10 @@ sub teardown {
 # Tearing down the Cachegroup table requires deleting them in a specific order, because
 # of the 'parent_cachegroup_id' and nested references.
 sub teardown_cachegroup {
-	my $self        = shift;
-	my $schema      = shift;
-	my $cachegroups = $schema->resultset("Cachegroup")->search( undef, { order_by => { -desc => 'parent_cachegroup_id' } } );
+	my $self   = shift;
+	my $schema = shift;
+	my $cachegroups =
+		$schema->resultset("Cachegroup")->search( undef, { order_by => { -desc => [qw{parent_cachegroup_id secondary_parent_cachegroup_id}] } } );
 	while ( my $row = $cachegroups->next ) {
 		$row->delete();
 	}

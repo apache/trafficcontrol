@@ -1,0 +1,53 @@
+#!/usr/bin/perl
+
+use strict;
+use JSON;
+use Test::TrafficServerConfig;
+
+my $json = JSON->new;
+
+foreach my $a (@ARGV) {
+ 	my $cfg = Test::TrafficServerConfig::loadConfigFile($a);
+	print $json->pretty->encode($cfg);
+}
+
+=pod
+
+my @config;
+
+while (<>) {
+	s{\s*#.*}{};
+	next unless /\S/;
+
+	# split on unescaped quotes -- avoids need for quote-pairing
+	my @b = split /(?<!\\)"/;
+	my @joined;
+	my $cur = '';
+
+	# create hash to represent this one line and populate
+	my %h;
+	while (scalar @b > 0) {
+	  $cur .= shift @b;
+	  while ($cur =~ /^\s*(\w+)=(.*)/) {
+		my ($k, $next) = ($1, $2);
+		if (length $next == 0) {
+		  # incomplete -- add quote and go to next chunk
+		  last;
+		}
+		if ($next =~ /^"([^"]*)"(.*)/ or $next =~ /(\S+)(.*)/) {
+		  $h{$k} = $1;
+		  $cur = $2;
+		}
+		else {
+		  die "Malformed? $k=$next";
+		}
+	  }
+	}
+	if (length $cur != 0) {
+	  die "$cur left over.  Malformed?";
+	}
+
+	push @config, \%h;
+}
+
+print $json->pretty->encode(\@config);
