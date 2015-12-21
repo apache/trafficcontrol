@@ -916,7 +916,7 @@ sub create {
 				ipv6_routing_enabled   => $self->param('ds.ipv6_routing_enabled'),
 				range_request_handling => $self->param('ds.range_request_handling'),
 				edge_header_rewrite    => $self->paramDefault('ds.edge_header_rewrite'),
-				mid_header_rewrite     => $self->param( 'ds.mid_header_rewrite', undef ),
+				mid_header_rewrite     => $self->paramDefault( 'ds.mid_header_rewrite', undef ),
 				regex_remap        => $self->paramDefault( 'ds.regex_remap',        undef ),
 				origin_shield      => $self->paramDefault( 'ds.origin_shield',      undef ),
 				cacheurl           => $self->paramDefault( 'ds.cacheurl',           undef ),
