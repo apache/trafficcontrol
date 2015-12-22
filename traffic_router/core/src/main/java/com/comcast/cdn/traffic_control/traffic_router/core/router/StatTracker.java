@@ -21,6 +21,7 @@ import java.util.List;
 import java.util.Map;
 
 import com.comcast.cdn.traffic_control.traffic_router.core.loc.Geolocation;
+import com.comcast.cdn.traffic_control.traffic_router.core.loc.RegionalGeoResult;
 
 import com.comcast.cdn.traffic_control.traffic_router.core.cache.CacheRegister;
 import com.comcast.cdn.traffic_control.traffic_router.core.ds.DeliveryService;
@@ -120,7 +121,7 @@ public class StatTracker {
 		ResultType result = ResultType.ERROR;
 		ResultDetails resultDetails = ResultDetails.NO_DETAILS;
 		Geolocation resultLocation;
-		String resultInfo;
+		RegionalGeoResult regionalGeoResult;
 
 		public Track() {
 			start();
@@ -153,11 +154,11 @@ public class StatTracker {
 			return resultLocation;
 		}
 
-		public void setResultInfo(final String info) {
-			this.resultInfo = info;
+		public void setRegionalGeoResult(final RegionalGeoResult regionalGeoResult) {
+			this.regionalGeoResult = regionalGeoResult;
 		}
-		public String getResultInfo() {
-			return resultInfo;
+		public RegionalGeoResult getRegionalGeoResult() {
+			return regionalGeoResult;
 		}
 
 		public final void start() {

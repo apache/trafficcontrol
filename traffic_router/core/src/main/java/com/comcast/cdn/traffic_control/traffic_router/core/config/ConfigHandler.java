@@ -361,14 +361,14 @@ public class ConfigHandler {
 	 *           the {@link TrafficRouterConfiguration}
 	 */
 	private void parseRegionalGeoConfig(final JSONObject config) {
-		try {
-			getRegionalGeoUpdater().setDataBaseURL(
-				config.getString("regional_geoblock.polling.url"),
-				config.optLong("regional_geoblock.polling.interval")
-			);
-		} catch (JSONException e) {
-			LOGGER.warn("RegionalGeo Err: exception parse cr-config ", e);
+		final String url = config.optString("regional_geoblock.polling.url", null);
+		if (url == null) {
+			LOGGER.info("regional_geoblock.polling.url not configured");
+			return;
 		}
+
+		final long interval = config.optLong("regional_geoblock.polling.interval");
+		getRegionalGeoUpdater().setDataBaseURL(url, interval);
 	}
 
 	/**

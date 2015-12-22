@@ -748,7 +748,7 @@ public class TrafficRouter {
 		}
 		// else RegionalGeoResultType.ALLOWED
 
-		track.setResultInfo(result.toString());
+		track.setRegionalGeoResult(result);
 
 		// So far, following cache selection is still based on request url instead of alternate url.
 	}

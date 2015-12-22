@@ -160,7 +160,6 @@ public class TRServlet extends HttpServlet {
 					response.sendRedirect(location.toString());
 				}
 			}
-			httpAccessRecordBuilder.rerr(track.getResultInfo());
 		} catch (final IOException e) {
 			httpAccessRecordBuilder.responseCode(-1);
 			httpAccessRecordBuilder.responseURL(null);

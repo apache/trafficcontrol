@@ -17,6 +17,7 @@
 package com.comcast.cdn.traffic_control.traffic_router.core.http;
 
 import com.comcast.cdn.traffic_control.traffic_router.core.loc.Geolocation;
+import com.comcast.cdn.traffic_control.traffic_router.core.loc.RegionalGeoResult;
 import com.comcast.cdn.traffic_control.traffic_router.core.router.StatTracker.Track.ResultDetails;
 import com.comcast.cdn.traffic_control.traffic_router.core.router.StatTracker.Track.ResultType;
 
@@ -42,6 +43,7 @@ public class HTTPAccessRecord {
     private final ResultDetails resultDetails;
     private final Geolocation resultLocation;
     private final Map<String, String> requestHeaders;
+    private final RegionalGeoResult regionalGeoResult;
 
     public Date getRequestDate() {
         return requestDate;
@@ -79,6 +81,10 @@ public class HTTPAccessRecord {
         return requestHeaders;
     }
 
+    public RegionalGeoResult getRegionalGeoResult() {
+        return regionalGeoResult;
+    }
+
     public static class Builder {
         private final Date requestDate;
         private final HttpServletRequest request;
@@ -89,6 +95,7 @@ public class HTTPAccessRecord {
         private ResultDetails resultDetails;
         private Geolocation resultLocation;
         private Map<String, String> requestHeaders = new HashMap<String, String>();
+        private RegionalGeoResult regionalGeoResult;
 
         public Builder(final Date requestDate, final HttpServletRequest request) {
             this.requestDate = requestDate;
@@ -137,6 +144,11 @@ public class HTTPAccessRecord {
             return this;
         }
 
+        public Builder regionalGeoResult(final RegionalGeoResult regionalGeoResult) {
+            this.regionalGeoResult = regionalGeoResult;
+            return this;
+        }
+
         public HTTPAccessRecord build() {
             return new HTTPAccessRecord(this);
         }
@@ -152,6 +164,7 @@ public class HTTPAccessRecord {
         resultDetails = builder.resultDetails;
         resultLocation = builder.resultLocation;
         requestHeaders = builder.requestHeaders;
+        regionalGeoResult = builder.regionalGeoResult;
     }
 
     @Override
@@ -193,6 +206,7 @@ public class HTTPAccessRecord {
                 ", resultType=" + resultType +
                 ", rerr='" + rerr + '\'' +
                 ", resultDetails=" + resultDetails +
+                ", rgb=" + regionalGeoResult +
                 '}';
     }
 }
