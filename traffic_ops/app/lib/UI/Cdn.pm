@@ -444,34 +444,34 @@ sub hwinfo {
 	my $sort_order     = $self->param("sSortDir_0") || "asc";
 	my $search_field   = $self->param("sSearch");
 	my $sort_column    = $self->param("iSortCol_0");
+	my $echo           = $self->param("sEcho");
 
 	# NOTE: If changes are made to send additional columns then this mapping has to be updated
 	# to match the Column Number coming from datatables to it's name
 	# Unfortunately, this is a short coming with the jquery datatables ui widget in that it expects
 	# an array arrays instead of an array of hashes
-	$self->app->log->debug( "sort_order #-> " . $sort_order );
 	my $sort_direction = sprintf( "-%s", $sort_order );
-	$self->app->log->debug( "sort_direction #-> " . $sort_direction );
 	my %column_number_to_name = ( 1 => 'serverid.host_name', 2 => 'description', 3 => 'val', 4 => 'last_updated' );
 	my $column_name = $column_number_to_name{$sort_column} || "serverid";
 
 	#$self->app->log->debug( "names #-> " . Dumper( $self->req->query_params ) );
 
+	my $idisplay_length = $self->param("iDisplayLength") || 10;
+	$self->app->log->debug( "sort_direction #-> " . $sort_direction );
+	$self->app->log->debug( "sort_order #-> " . $sort_order );
 	$self->app->log->debug( "idisplay_start #-> " . $idisplay_start );
-	my $idisplay_length = $self->param("iDisplayLength");
 	$self->app->log->debug( "idisplay_length #-> " . $idisplay_length );
 	$self->app->log->debug( "search_field #-> " . $search_field );
 	$self->app->log->debug( "column_name #-> " . $column_name );
 	$self->app->log->debug( "sort_column #-> " . $sort_column );
 
 	my %data = ( "data" => [] );
-	my $rs;
 
 	my %condition;
 	my %attrs;
-	my %limit;
+	my %nolimit;
+	my %nolimit_attrs;
 
-	#if (search_field eq ''){
 	%condition = (
 		-or => {
 			'me.description'     => { -like => '%' . $search_field . '%' },
@@ -480,47 +480,42 @@ sub hwinfo {
 		}
 	);
 
-	#} else {
-	#}
-	%limit = ( order_by => { $sort_direction => $column_name }, page => $idisplay_start, rows => $idisplay_length );
+	my $total_count = $self->db->resultset('Hwinfo')->search()->count();
+	my $filtered_count;
+	my $dbh;
+	if ( $search_field eq '' ) {
+
+		# if no filtering has occurred obviouslly these would be equal
+		$filtered_count = $total_count;
+	}
+	else {
+		# Now count the filtered records
+		my %filtered_attrs = ( attrs => [ { 'serverid' => undef } ], join => 'serverid', undef );
+		my $filtered = $self->db->resultset('Hwinfo')->search( \%condition, \%filtered_attrs );
+		$filtered_count = $filtered->count();
+	}
+	my $page = $idisplay_start + 1;
+
+	#my %limit = ( page => 100, rows => 100, order_by => { $sort_direction => $column_name } );
+
+	my %limit = ( offset => $idisplay_start, rows => $idisplay_length, order_by => { $sort_direction => $column_name } );
 	%attrs = ( attrs => [ { 'serverid' => undef } ], join => 'serverid', %limit );
 
-	# Original
-	#$rs = $self->db->resultset('Hwinfo')->search( undef, { attrs => ['serverid'] } );
-	$rs = $self->db->resultset('Hwinfo')->search( \%condition, \%attrs );
+	$dbh = $self->db->resultset('Hwinfo')->search( \%condition, \%attrs );
 
-	while ( my $row = $rs->next ) {
+	$self->app->log->debug( "total_count #-> " . $total_count );
+	$self->app->log->debug( "filtered_count #-> " . $filtered_count );
+
+	# Now load up the rows
+	while ( my $row = $dbh->next ) {
 		my @line = [ $row->serverid->id, $row->serverid->host_name . "." . $row->serverid->domain_name, $row->description, $row->val, $row->last_updated ];
 		push( @{ $data{'data'} }, @line );
 	}
-	my $total_display_records = 0;
-	if ( defined( $data{"data"} ) ) {
-		$total_display_records = scalar keys $data{"data"};
-	}
-	my %itotals_display_records = ( iTotalRecords => $total_display_records );
-	%data = %{ merge( \%data, \%itotals_display_records ) };
 
-	# Count all records
-	if ( $search_field eq '' ) {
-		$rs = $self->db->resultset('Hwinfo')->search();
-	}
-	else {
-		$rs = $self->db->resultset('Hwinfo')->search(
-			{
-				-or => {
-					'me.description'     => { -like => '%' . $search_field . '%' },
-					'me.val'             => { -like => '%' . $search_field . '%' },
-					'serverid.host_name' => { -like => '%' . $search_field . '%' }
-				}
-			},
-			{ page => $idisplay_start, prefetch => [ { 'serverid' => undef } ], join => 'serverid' },
-		);
+	%data = %{ merge( \%data, { recordsTotal    => $total_count } ) };
+	%data = %{ merge( \%data, { recordsFiltered => $filtered_count } ) };
 
-	}
-
-	my $total_records = $rs->count;
-	my %itotal_records = ( iTotalDisplayRecords => $total_records );
-	%data = %{ merge( \%data, \%itotal_records ) };
+	#$self->app->log->debug( "data #-> " . Dumper( \%data ) );
 
 	$self->render( json => \%data );
 }

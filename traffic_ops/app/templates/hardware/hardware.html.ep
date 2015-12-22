@@ -34,7 +34,7 @@ $(function () {
 
 		$('#dthwinfo').dataTable({
 			jQueryUI: true,
-			pagination: "full_numbers",
+			pagination: "simple_numbers",
 			scrollY: calcDataTableHeight(),
 			scrollCollapse: true,
 			serverSide: true,
@@ -46,7 +46,7 @@ $(function () {
 			columnDefs: [
 			{
 				render: function (data, type, full) {
-					return "<a class='fancybox fancybox.iframe' href='/serveriframe/view/" + full[0] + "'>Edit</a>";
+					return "<a class='fancybox fancybox.iframe' href='/server/" + full[0] + "/view'>Edit</a>";
 				},
 				targets: [0]
 			}],
