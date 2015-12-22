@@ -695,58 +695,6 @@ sub update {
 		#print "global_max_mbps = " . $self->param('ds.global_max_mbps') . "\n";
 		# if error check passes
 		my %hash = (
-<<<<<<< HEAD
-			xml_id            => $self->param('ds.xml_id'),
-			display_name      => $self->param('ds.display_name'),
-			dscp              => $self->param('ds.dscp'),
-			signed            => $self->param('ds.signed'),
-			qstring_ignore    => $self->param('ds.qstring_ignore'),
-			geo_limit         => $self->param('ds.geo_limit'),
-			org_server_fqdn   => $self->param('ds.org_server_fqdn'),
-			multi_site_origin => $self->param('ds.multi_site_origin'),
-			ccr_dns_ttl       => $self->param('ds.ccr_dns_ttl'),
-			type              => $self->param('ds.type.id'),
-			cdn_id            => $self->param('ds.cdn_id'),
-			profile           => $self->param('ds.profile'),
-			global_max_mbps   => $self->param('ds.global_max_mbps') eq "" ? 0
-			: $self->hr_string_to_mbps(
-				$self->param('ds.global_max_mbps')
-			),
-			global_max_tps => $self->param('ds.global_max_tps') eq "" ? 0
-			: $self->param('ds.global_max_tps'),
-			miss_lat             => $self->param('ds.miss_lat'),
-			miss_long            => $self->param('ds.miss_long'),
-			long_desc            => $self->param('ds.long_desc'),
-			long_desc_1          => $self->param('ds.long_desc_1'),
-			long_desc_2          => $self->param('ds.long_desc_2'),
-			info_url             => $self->param('ds.info_url'),
-			check_path           => $self->param('ds.check_path'),
-			active               => $self->param('ds.active'),
-			protocol             => $self->param('ds.protocol'),
-			ipv6_routing_enabled => $self->param('ds.ipv6_routing_enabled'),
-			regional_geo_blocking => $self->param('ds.regional_geo_blocking'),
-			range_request_handling =>
-				$self->param('ds.range_request_handling'),
-			edge_header_rewrite => $self->param('ds.edge_header_rewrite') eq
-				"" ? undef : $self->param('ds.edge_header_rewrite'),
-			mid_header_rewrite => $self->param('ds.mid_header_rewrite') eq ""
-			? undef
-			: $self->param('ds.mid_header_rewrite'),
-			tr_response_headers => $self->param('ds.tr_response_headers') eq
-				"" ? undef : $self->param('ds.tr_response_headers'),
-			tr_request_headers => $self->param('ds.tr_request_headers') eq ""
-			? undef
-			: $self->param('ds.tr_request_headers'),
-			regex_remap => $self->param('ds.regex_remap') eq "" ? undef
-			: $self->param('ds.regex_remap'),
-			origin_shield => $self->param('ds.origin_shield') eq "" ? undef
-			: $self->param('ds.origin_shield'),
-			cacheurl => $self->param('ds.cacheurl') eq "" ? undef
-			: $self->param('ds.cacheurl'),
-			remap_text => $self->param('ds.remap_text') eq "" ? undef
-			: $self->param('ds.remap_text'),
-			initial_dispersion => $self->param('ds.initial_dispersion'),
-=======
 			xml_id                 => $self->param('ds.xml_id'),
 			display_name           => $self->param('ds.display_name'),
 			dscp                   => $self->param('ds.dscp'),
@@ -771,6 +719,7 @@ sub update {
 			active                 => $self->param('ds.active'),
 			protocol               => $self->param('ds.protocol'),
 			ipv6_routing_enabled   => $self->param('ds.ipv6_routing_enabled'),
+			regional_geo_blocking => $self->param('ds.regional_geo_blocking'),
 			range_request_handling => $self->param('ds.range_request_handling'),
 			edge_header_rewrite    => $self->paramDefault( 'ds.edge_header_rewrite', undef ),
 			mid_header_rewrite     => $self->paramDefault( 'ds.mid_header_rewrite', undef ),
@@ -781,7 +730,6 @@ sub update {
 			cacheurl           => $self->paramDefault( 'ds.cacheurl',           undef ),
 			remap_text         => $self->paramDefault( 'ds.remap_text',         undef ),
 			initial_dispersion => $self->paramDefault( 'ds.initial_dispersion', 1 ),
->>>>>>> upstream/master
 		);
 
 		if ( $self->param('ds.type') == &type_id( $self, "DNS" ) ) {
@@ -937,64 +885,6 @@ sub create {
 
 	if ( $self->check_deliveryservice_input() ) {
 		my $insert = $self->db->resultset('Deliveryservice')->create(
-<<<<<<< HEAD
-			{   xml_id       => $self->param('ds.xml_id'),
-				display_name => $self->param('ds.display_name'),
-				dscp         => $self->param('ds.dscp') eq "" ? 0
-				: $self->param('ds.dscp'),
-				signed            => $self->param('ds.signed'),
-				qstring_ignore    => $self->param('ds.qstring_ignore'),
-				geo_limit         => $self->param('ds.geo_limit'),
-				http_bypass_fqdn  => $self->param('ds.http_bypass_fqdn'),
-				dns_bypass_ip     => $self->param('ds.dns_bypass_ip'),
-				dns_bypass_ip6    => $self->param('ds.dns_bypass_ip6'),
-				dns_bypass_cname  => $self->param('ds.dns_bypass_cname'),
-				dns_bypass_ttl    => $self->param('ds.dns_bypass_ttl'),
-				org_server_fqdn   => $self->param('ds.org_server_fqdn'),
-				multi_site_origin => $self->param('ds.multi_site_origin'),
-				ccr_dns_ttl       => $self->param('ds.ccr_dns_ttl'),
-				type              => $self->param('ds.type'),
-				cdn_id            => $cdn_id,
-				profile           => $self->param('ds.profile'),
-				global_max_mbps   => $self->param('ds.global_max_mbps') eq ""
-				? 0
-				: $self->hr_string_to_mbps(
-					$self->param('ds.global_max_mbps')
-				),
-				global_max_tps => $self->param('ds.global_max_tps') eq "" ? 0
-				: $self->param('ds.global_max_tps'),
-				miss_lat        => $self->param('ds.miss_lat'),
-				miss_long       => $self->param('ds.miss_long'),
-				long_desc       => $self->param('ds.long_desc'),
-				long_desc_1     => $self->param('ds.long_desc_1'),
-				long_desc_2     => $self->param('ds.long_desc_2'),
-				max_dns_answers => $self->param('ds.max_dns_answers') eq ""
-				? 0
-				: $self->param('ds.max_dns_answers'),
-				info_url   => $self->param('ds.info_url'),
-				check_path => $self->param('ds.check_path'),
-				regional_geo_blocking => $self->param('ds.regional_geo_blocking'),
-				active     => $self->param('ds.active'),
-				protocol   => $self->param('ds.protocol'),
-				ipv6_routing_enabled =>
-					$self->param('ds.ipv6_routing_enabled'),
-				range_request_handling =>
-					$self->param('ds.range_request_handling'),
-				edge_header_rewrite => $self->param('ds.edge_header_rewrite')
-					eq "" ? undef : $self->param('ds.edge_header_rewrite'),
-				mid_header_rewrite => $self->param('ds.mid_header_rewrite')
-					eq "" ? undef : $self->param('ds.mid_header_rewrite'),
-				regex_remap => $self->param('ds.regex_remap') eq "" ? undef
-				: $self->param('ds.regex_remap'),
-				origin_shield => $self->param('ds.origin_shield') eq ""
-				? undef
-				: $self->param('ds.origin_shield'),
-				cacheurl => $self->param('ds.cacheurl') eq "" ? undef
-				: $self->param('ds.cacheurl'),
-				remap_text => $self->param('ds.remap_text') eq "" ? undef
-				: $self->param('ds.remap_text'),
-				initial_dispersion => $self->param('ds.initial_dispersion'),
-=======
 			{
 				xml_id                 => $self->param('ds.xml_id'),
 				display_name           => $self->param('ds.display_name'),
@@ -1023,6 +913,7 @@ sub create {
 				max_dns_answers        => $self->paramDefault( 'ds.max_dns_answers', 0 ),
 				info_url               => $self->param('ds.info_url'),
 				check_path             => $self->param('ds.check_path'),
+				regional_geo_blocking  => $self->param('ds.regional_geo_blocking'),
 				active                 => $self->param('ds.active'),
 				protocol               => $self->param('ds.protocol'),
 				ipv6_routing_enabled   => $self->param('ds.ipv6_routing_enabled'),
@@ -1034,7 +925,6 @@ sub create {
 				cacheurl           => $self->paramDefault( 'ds.cacheurl',           undef ),
 				remap_text         => $self->paramDefault( 'ds.remap_text',         undef ),
 				initial_dispersion => $self->paramDefault( 'ds.initial_dispersion', 1 ),
->>>>>>> upstream/master
 			}
 		);
 		$insert->insert();
