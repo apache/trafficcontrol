@@ -440,10 +440,10 @@ sub adeliveryservice {
 
 sub hwinfo {
 	my $self           = shift;
-	my $idisplay_start = $self->param("iDisplayStart");
+	my $idisplay_start = $self->param("iDisplayStart") || 0;
 	my $sort_order     = $self->param("sSortDir_0") || "asc";
-	my $search_field   = $self->param("sSearch");
-	my $sort_column    = $self->param("iSortCol_0");
+	my $search_field   = $self->param("sSearch") || '';
+	my $sort_column    = $self->param("iSortCol_0") || "id";
 	my $echo           = $self->param("sEcho");
 
 	# NOTE: If changes are made to send additional columns then this mapping has to be updated
