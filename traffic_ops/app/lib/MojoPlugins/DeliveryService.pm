@@ -29,6 +29,16 @@ sub register {
 	my ( $self, $app, $conf ) = @_;
 
 	$app->renderer->add_helper(
+		paramDefault => sub {
+			my $self    = shift;
+			my $p       = shift;
+			my $default = shift;
+
+			return $self->param($p) // $default;
+		},
+	);
+
+	$app->renderer->add_helper(
 		hr_string_to_mbps => sub {
 			my $self = shift;
 			my $inp  = shift;

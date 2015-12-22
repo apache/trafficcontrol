@@ -53,6 +53,8 @@ public class TRServlet extends HttpServlet {
 	private static final Logger LOGGER = Logger.getLogger(TRServlet.class);
 	private static final Logger ACCESS = Logger.getLogger("com.comcast.cdn.traffic_control.traffic_router.core.access");
 
+	public static final String X_MM_CLIENT_IP = "X-MM-Client-IP";
+	public static final String FAKE_IP = "fakeClientIpAddress";
 
 	private TrafficRouterManager trafficRouterManager;
 	private StatTracker statTracker;
@@ -83,15 +85,8 @@ public class TRServlet extends HttpServlet {
 		this.trafficRouterManager = trafficRouterManager;
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see javax.servlet.http.HttpServlet#doGet(javax.servlet.http.HttpServletRequest,
-	 * javax.servlet.http.HttpServletResponse)
-	 */
 	@Override
-	protected void doGet(final HttpServletRequest request, final HttpServletResponse response) 
-			throws ServletException, IOException {
+	protected void doGet(final HttpServletRequest request, final HttpServletResponse response) throws ServletException, IOException {
 		final Date requestDate = new Date();
 
 		final HTTPRequest req = new HTTPRequest();
@@ -102,14 +97,12 @@ public class TRServlet extends HttpServlet {
 		req.setRequestedUrl(request.getRequestURL().toString());
 
 		final StatTracker.Track track = StatTracker.getTrack();
-		final String xmm = request.getHeader("X-MM-Client-IP");
-		final String fip = request.getParameter("fakeClientIpAddress");
+		final String xmm = request.getHeader(X_MM_CLIENT_IP);
+		final String fip = request.getParameter(FAKE_IP);
 
 		if (xmm != null) {
-			LOGGER.info("X-MM-Client-IP value (header): " + xmm + ", for " + req.getHostname());
 			req.setClientIP(xmm);
 		} else if (fip != null) {
-			LOGGER.info("Fake IP Address (param): " + fip + ", for " + req.getHostname());
 			req.setClientIP(fip);
 		}
 
@@ -186,6 +179,7 @@ public class TRServlet extends HttpServlet {
 			final HTTPAccessRecord access = httpAccessRecordBuilder.resultType(track.getResult())
 				.resultLocation(track.getResultLocation())
 				.requestHeaders(accessRequestHeaders)
+				.regionalGeoResult(track.getRegionalGeoResult())
 				.build();
 			ACCESS.info(HTTPAccessEventBuilder.create(access));
 			statTracker.saveTrack(track);

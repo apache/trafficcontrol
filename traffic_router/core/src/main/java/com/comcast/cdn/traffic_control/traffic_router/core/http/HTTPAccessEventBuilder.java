@@ -65,7 +65,7 @@ public class HTTPAccessEventBuilder {
 
         final HttpServletRequest httpServletRequest = httpAccessRecord.getRequest();
 
-        final String chi = formatObject(httpServletRequest.getRemoteAddr());
+        String chi = formatObject(httpServletRequest.getRemoteAddr());
         final String url = formatRequest(httpServletRequest);
         final String cqhm = formatObject(httpServletRequest.getMethod());
         final String cqhv = formatObject(httpServletRequest.getProtocol());
@@ -85,6 +85,16 @@ public class HTTPAccessEventBuilder {
             final DecimalFormat decimalFormat = new DecimalFormat(".##");
             decimalFormat.setRoundingMode(RoundingMode.DOWN);
             rloc = decimalFormat.format(resultLocation.getLatitude()) + "," + decimalFormat.format(resultLocation.getLongitude());
+        }
+
+
+        final String xMmClientIpHeader = httpServletRequest.getHeader(TRServlet.X_MM_CLIENT_IP);
+        final String fakeIpParameter = httpServletRequest.getParameter(TRServlet.FAKE_IP);
+
+        if (xMmClientIpHeader != null) {
+            chi = xMmClientIpHeader;
+        } else if (fakeIpParameter != null) {
+            chi = fakeIpParameter;
         }
 
         final StringBuilder stringBuilder = new StringBuilder(timeString)

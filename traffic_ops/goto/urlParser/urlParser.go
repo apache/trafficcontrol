@@ -36,6 +36,7 @@ type Request struct {
 }
 
 //makes a new request given a string url
+// XXX: why are we not using r.Url.Query?
 func ParseURL(url string) Request {
 	r := Request{"", "", make([]string, 0)}
 
@@ -61,6 +62,9 @@ func ParseURL(url string) Request {
 		if len(qMarkSplit) > 1 {
 			paramSplit := strings.Split(qMarkSplit[1], "&")
 			for _, param := range paramSplit {
+				if strings.HasPrefix(param, "format=") || strings.HasPrefix(param, "join=") {
+					continue
+				}
 				r.Parameters = append(r.Parameters, param)
 			}
 		}

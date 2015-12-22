@@ -1,6 +1,7 @@
 package sqlParser
 
 import (
+	"fmt"
 	"strings"
 )
 
@@ -97,7 +98,7 @@ func GetColTypeMap() map[string]string {
 	return colMap
 }
 
-func GetTableMap() map[string][]string {
+func GetTableMap(environment string) map[string][]string {
 	var tableNames []string
 	var tableMap = make(map[string][]string)
 
@@ -106,7 +107,8 @@ func GetTableMap() map[string][]string {
 
 	tableInterface[0] = &tableRawBytes
 
-	rows, err := globalDB.Query("SELECT TABLE_NAME FROM information_schema.tables where table_type='base table' or table_type='view'")
+	fmt.Println("db", environment)
+	rows, err := globalDB.Query("SELECT TABLE_NAME FROM information_schema.tables where (table_type='base table' or table_type='view') and table_schema='" + environment + "'")
 	check(err)
 
 	for rows.Next() {
@@ -117,7 +119,10 @@ func GetTableMap() map[string][]string {
 	}
 
 	for _, table := range tableNames {
-		rows, err = globalDB.Query("SELECT column_name from information_schema.columns where table_name='" + table + "' ORDER BY column_name asc")
+
+		query := "SELECT column_name from information_schema.columns where table_name='" + table + "' and table_schema='" + environment + "' ORDER BY column_name asc"
+		fmt.Println(query)
+		rows, err = globalDB.Query(query)
 		check(err)
 
 		colMap := make([]string, 0)
