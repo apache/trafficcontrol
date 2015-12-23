@@ -28,17 +28,26 @@ function listtypes(selected_type) {
 	}, "json");
 }
 
-function listcachegroups(selected_parent) {
-	$.get("/api/1.1/cachegroups.json", function(data){
-		var response = data['response'];
-		$("#cachegroupselect").append("<option value=-1>NO_PARENT</option>");
-		$.each(response, function(idx, val) {
-			if (response[idx].name == selected_parent) {
-				$("#cachegroupselect").append("<option selected=\"selected\" value=" + response[idx].id + ">" + response[idx].name  + "</option>");
-			} else {
-				$("#cachegroupselect").append("<option value=" + response[idx].id + ">" + response[idx].name + "</option>");
-			}
-		});
-	}, "json");
+function populateCachegroups(sel_ele, post_op) {
+  $.when(function() {
+	  return $.get("/api/1.1/cachegroups.json", function(data){
+		  var response = data['response'];
+		  var selected_id = -1;
+		  sel_ele.append("<option value=-1>NO_PARENT</option>");
+		  $.each(response, function(idx, val) {
+			  sel_ele.append("<option value=" + response[idx].id + ">" + response[idx].name + "</option>");
+		  });
+	  }, "json");
+  }())
+  .then(function() {
+	if (typeof post_op === 'function') {
+		post_op();
+	}});
+}
+
+function selectOptionByText( sel, txt ) {
+    sel.find("option")
+    .filter(function() { x = $.trim( $(this).text() );  return (x === txt); })
+    .attr('selected','selected');
 }
 

@@ -37,15 +37,18 @@ Test::TestHelper->unload_core_data($schema);
 Test::TestHelper->load_core_data($schema);
 
 ok $t->post_ok( '/login', => form => { u => Test::TestHelper::ADMIN_USER, p => Test::TestHelper::ADMIN_USER_PASSWORD } )->status_is(302)
-	->or( sub { diag $t->tx->res->content->asset->{content}; } );
+	->or( sub { diag $t->tx->res->content->asset->{content}; } ), 'Should login?';
 
-$t->get_ok('/api/1.2/servers/details.json?hostName=atlanta-edge-01')->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } )
-	->json_is( "/response/0/ipGateway", "127.0.0.1" )->json_is( "/response/0/deliveryservices/0", "1" );
+ok $t->get_ok('/api/1.2/servers/details.json?hostName=atlanta-edge-01')->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } )
+	->json_is( "/response/0/ipGateway", "127.0.0.1" )->json_is( "/response/0/deliveryservices/0", "1" ), 'Does the hostname details return?';
 
-=cut
-$t->get_ok('/api/1.2/servers/details.json?orderby=hostName')->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } )
-	->json_is( "/response/ipGateway", "127.0.0.1" )->json_is( "/response/deliveryservices/0", "1" );
-=cut
+ok $t->get_ok('/api/1.2/servers/details.json?physLocationID=1')->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } )
+	->json_is( "/response/0/ipGateway", "127.0.0.1" )->json_is( "/response/0/deliveryservices/0", "1" ), 'Does the physLocationID details return?';
+
+ok $t->get_ok('/api/1.2/servers/details.json')->status_is(400)->or( sub { diag $t->tx->res->content->asset->{content}; } ),
+	'Does the validation error occur?';
+ok $t->get_ok('/api/1.2/servers/details.json?orderby=hostName')->status_is(400)->or( sub { diag $t->tx->res->content->asset->{content}; } ),
+	'Does the orderby work?';
 
 ok $t->get_ok('/logout')->status_is(302)->or( sub { diag $t->tx->res->content->asset->{content}; } );
 $dbh->disconnect();

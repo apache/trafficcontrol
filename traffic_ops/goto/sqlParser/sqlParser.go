@@ -16,9 +16,11 @@ package sqlParser
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/jmoiron/sqlx"
+	"strings"
 )
 
 var (
@@ -26,6 +28,7 @@ var (
 	colTypeMap    map[string]string
 	foreignKeyMap map[string]ForeignKey
 	tableMap      map[string][]string
+	databaseName  string
 )
 
 func check(e error) {
@@ -44,7 +47,8 @@ func InitializeDatabase(username string, password string, environment string) sq
 	globalDB = *db
 
 	//set global colTypeMap
-	tableMap = GetTableMap()
+	databaseName = environment
+	tableMap = GetTableMap(databaseName)
 	colTypeMap = GetColTypeMap()
 	foreignKeyMap = GetForeignKeyMap()
 	return *db
@@ -89,7 +93,7 @@ func GetTableNames() []string {
 
 	tableInterface[0] = &tableRawBytes
 
-	rows, err := globalDB.Query("SELECT TABLE_NAME FROM information_schema.tables where table_type='base table' or table_type='view'")
+	rows, err := globalDB.Query("SELECT TABLE_NAME FROM information_schema.tables where (table_type='base table' or table_type='view') and table_schema='" + databaseName + "'")
 	check(err)
 
 	for rows.Next() {
@@ -211,25 +215,31 @@ func GetForeignKeyValues(tableName string, colName string) map[string]interface{
 	return rowArray
 }
 
-func Get(tableName string) ([]map[string]interface{}, error) {
+func Get(tableName string, joinFKs bool, tableParameters []string) ([]map[string]interface{}, error) {
 	regStr := ""
+	whereStr := ""
 	joinStr := ""
 	onStr := ""
-
 	cols := GetColumnNames(tableName)
 	for _, col := range cols {
-		if val, ok := foreignKeyMap[col]; ok && col != tableName {
+		if val, ok := foreignKeyMap[col]; ok && col != tableName && joinFKs {
+			joinCols := GetColumnNames((val.Table))
+			for _, joinCol := range joinCols {
+				regStr += val.Table + "." + joinCol + " as " + val.Table + "_" + joinCol + ","
+			}
 			if col == "parent_cachegroup_id" {
-
 				joinStr += "cachegroup2.name as parent_cachegroup,"
-
 				onStr += " join cachegroup as cachegroup2 on cachegroup.parent_cachegroup_id = cachegroup2.id "
 			} else {
 				joinStr += val.Table + "." + val.Column + " as " + val.Alias + ","
 				onStr += " join " + val.Table + " on " + tableName + "." + col + " = " + val.Table + ".id "
 			}
 		} else {
-			regStr += tableName + "." + col + ","
+			if joinFKs {
+				regStr += tableName + "." + col + " as " + tableName + "_" + col + ","
+			} else {
+				regStr += tableName + "." + col + ","
+			}
 		}
 	}
 
@@ -239,9 +249,26 @@ func Get(tableName string) ([]map[string]interface{}, error) {
 		joinStr = ", " + joinStr[:len(joinStr)-1]
 	}
 
+	sep := "where "
+	for _, param := range tableParameters {
+		if strings.ContainsAny(param, "=") { // > < and such?
+			selectArr := strings.Split(param, "=")
+			selectCol := selectArr[0]
+			selectVal := selectArr[1]
+			if strings.Contains(param, ";") { // prevent SQL injection. The rest will error in SQL
+				err := errors.New("Invalid SQL detected:" + param)
+				fmt.Println(err)
+				return nil, err
+			}
+
+			whereStr += sep + selectCol + "=\"" + selectVal + "\""
+			sep = " and "
+		}
+	}
+
 	queryStr := "select " + regStr + joinStr + " from " + tableName + " "
 
-	queryStr += onStr
+	queryStr += onStr + " " + whereStr
 
 	fmt.Println(queryStr)
 	//do the query
@@ -382,7 +409,7 @@ func PostViews(jsonByte []byte) (string, error) {
 func MakeView(viewName string, view string) error {
 	qStr := "create view " + viewName + " as " + view
 	_, err := globalDB.Query(qStr)
-	tableMap = GetTableMap()
+	tableMap = GetTableMap(databaseName)
 	return err
 }
 

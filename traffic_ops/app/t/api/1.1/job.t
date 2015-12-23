@@ -189,6 +189,16 @@ ok $t->get_ok('/api/1.1/user/current/jobs.json?keyword=PURGE&dsId=1')->status_is
 	->or( sub { diag $t->tx->res->content->asset->{content}; } ),
 	'Does the correct job return with keyword=PURGE? and dsId=1';
 
+ok $t->post_ok(
+	'/api/1.1/user/current/jobs',
+	json => {
+		regex     => '/foo1/.*',
+		ttl       => 48,
+		startTime => $now,
+	}
+	)->status_is(400)->or( sub { diag $t->tx->res->content->asset->{content}; } ),
+	'Will not create a purge job without the dsId?';
+
 ok $t->post_ok('/api/1.1/user/logout')->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } );
 
 $dbh->disconnect();

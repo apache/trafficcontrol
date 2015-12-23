@@ -17,11 +17,10 @@
 # ORT check extension. Checks how many errors there are running the "ort" script on the cache
 #
 # example cron entry
-# 40 * * * * ssh_key_user /opt/traffic_ops/app/bin/checks/ToORTCheck.pl -c "{\"base_url\": \"https://localhost\", \"check_name\": \"ORT\", \"name\": \"Operational Readiness Test\", \"ssh_user\": \"<ssh_key_user>\", \"to_user\": \"<some_user>\", \"to_pass\": \"<some_pass>\"}"
+# 40 * * * * ssh_key_edge_user /opt/traffic_ops/app/bin/checks/ToORTCheck.pl -c "{\"base_url\": \"https://localhost\", \"check_name\": \"ORT\"}" >> /var/log/traffic_ops/extensionCheck.log 2>&1
+#
 # example cron entry with syslog
-# 40 * * * * ssh_key_user /opt/traffic_ops/app/bin/checks/ToORTCheck.pl -c "{\"base_url\": \"https://localhost\", \"check_name\": \"ORT\", \"name\": \"Operational Readiness Test\", \"ssh_user\": \"<ssh_key_user>\", \"to_user\": \"<some_user>\", \"to_pass\": \"<some_pass>\", \"syslog_facility\": \"local0\"}"
-
-# TODO: use tokens instead of username and password.
+# 40 * * * * ssh_key_edge_user /opt/traffic_ops/app/bin/checks/ToORTCheck.pl -c "{\"base_url\": \"https://localhost\", \"check_name\": \"ORT\", \"name\": \"Operational Readiness Test\", \"syslog_facility\": \"local0\"}" > /dev/null 2>&1
 
 use strict;
 use warnings;
@@ -35,10 +34,10 @@ use JSON;
 use Extensions::Helper;
 use Sys::Syslog qw(:standard :macros);
 
-my $VERSION = "0.02";
+my $VERSION = "0.03";
 
 my %args = ();
-getopts( "hl:c:", \%args );
+getopts( "c:f:hl:q", \%args );
 
 if ($args{h}) {
    &help();
@@ -47,6 +46,7 @@ if ($args{h}) {
 
 if ( !defined( $args{c} ) ) {
    ERROR "-c not defined";
+   print "\n\n";
 	&help();
 	exit(1);
 }
@@ -55,25 +55,38 @@ my $jconf = undef;
 eval { $jconf = decode_json( $args{c} ) };
 if ($@) {
 	ERROR("Bad json config: $@");
+   print "\n\n";
    &help();
 	exit(1);
 }
 
 my $check_name  = $jconf->{check_name};
-my $chck_lng_nm = $jconf->{name};
 my $to_user     = $jconf->{to_user};
 my $to_pass     = $jconf->{to_pass};
 
 if ( $check_name ne "ORT" ) {
 	ERROR "This Check Extension is exclusively for the ORT (Operational Readiness Test) check.";
+   print "\n\n";
    &help();
 	exit(4);
 }
 
 my $sslg = undef;
+my $chck_lng_nm;
 if (defined($jconf->{syslog_facility})) {
+   $chck_lng_nm = $jconf->{name};
    openlog ('ToChecks', '', $jconf->{syslog_facility});
    $sslg = 1;
+}
+
+my $force = 0;
+if (defined($args{f})) {
+   $force = $args{f};
+}
+
+my $quiet;
+if ($args{q}) {
+   $quiet = 1;
 }
 
 Log::Log4perl->easy_init($ERROR);
@@ -103,7 +116,8 @@ foreach my $p (@{$glbl_prms}) {
 
 foreach my $server ( @{$jdataserver} ) {
 	if ( $server->{type} eq 'EDGE' || $server->{type} eq 'MID' ) {
-		&ort_check( $server->{ipAddress}, $server->{hostName}, $server->{id} );
+		&ort_check( $server->{ipAddress}, $server->{hostName}, $server->{id},
+                  $server->{domainName}, $server->{status} );
 	}
 }
 
@@ -111,69 +125,105 @@ sub ort_check() {
 	my $ipaddr    = shift;
 	my $host_name = shift;
 	my $host_id   = shift;
+   my $domain    = shift;
+   my $status    = shift;
+
+   my $ort_version = "unknown";
+   my $host_name_fqdn = $host_name.".".$domain;
 
 	my $cmd = "/usr/bin/sudo /opt/ort/traffic_ops_ort.pl report WARN ".$to_url." '".$to_user.":".$to_pass."'";
 	#$cmd = "ssh -t -o \"StrictHostKeyChecking no\" -i ~$username/.ssh/."$key." -l " . $username . " " . $ipaddr . " " . $cmd;
-	$cmd = "ssh -t -o \"StrictHostKeyChecking no\" ".$ipaddr." ".$cmd." 2>&1";
+	$cmd = "ssh -t -o ConnectTimeout=5 -o \"UserKnownHostsFile /dev/null\" -o \"StrictHostKeyChecking no\" -o \"BatchMode yes\" ".$ipaddr." ".$cmd." 2>&1";
 	TRACE $host_name . " running " . $cmd;
-	my $out = `$cmd`;
+   my $out = '';
+   my $msg = '';
+   my ($fatals, $errors, $warns);
+   if ($force == 0) {
+      $out = `$cmd`;
+      my $results = "/var/www/html/ort/" . $host_id;
 
-   my $results = "/var/www/html/ort/" . $host_id;
+      if ( !-d $results ) {
+         mkdir($results);
+      }
 
-	if ( !-d $results ) {
-		mkdir($results);
-	}
-
-   # TODO integrate this file into Traffic Ops
-   my $filename = $results."/results";
-   open(my $fh, '>', $filename);
-   if (!$fh) {
-      ERROR "Could not open file '$filename' $!";
-   } else {
-      print $fh $out;
-   }
-   close $fh;
-
-	my @lines = split( /\n/, $out );
-	my $errors = grep /^ERROR/, @lines;
-   my $fatals = grep /^FATAL/, @lines;
-   my $warns = grep /^WARN/, @lines;
-   if ($out =~ m/Connection timed out/) {
-      ERROR "Could not connect to server.";
-      $errors = -1;
-   }
-   if ($sslg) {
-      if ($errors == -1) {
-         my @tmp = ($host_name,$check_name,$chck_lng_nm,'FAIL');
-         syslog(LOG_ERR, "hostname=%s check=%s name=\"%s\" result=%s msg=\"Could not SSH to server\"", @tmp);
+      # TODO integrate this file into Traffic Ops GUI
+      my $filename = $results."/results";
+      open(my $fh, '>', $filename);
+      if (!$fh) {
+         ERROR "Could not open file '$filename' $!";
       } else {
-         my @tmp = ($host_name,$check_name,$chck_lng_nm,'OK',$errors,$fatals,$warns);
-         syslog(LOG_ERR, "hostname=%s check=%s name=\"%s\" result=%s errors=%s fatals=%s warnings=%s", @tmp);
+         print $fh $out;
+      }
+      close $fh;
+
+      my @lines = split( /\n/, $out );
+      $errors = grep /^ERROR/, @lines;
+      $fatals = grep /^FATAL/, @lines;
+      $warns = grep /^WARN/, @lines;
+      foreach my $line (@lines) {
+         if ($line =~ m/^Version/) {
+            chomp($line);
+            my @tmp = split(" ", $line);
+            $ort_version = $tmp[-1];
+         }
+      }
+      DEBUG "ORT version: ".$ort_version;
+      if ($out =~ m/Connection timed out/) {
+         ERROR "Could not connect to server.";
+         $msg = "Could not connect to server.";
+         $errors = -1;
+      } elsif ($out =~ m/Permission denied/) {
+         $msg = "Permission Denied";
+         ERROR "Permission Denied";
+         $errors = -1;
+      }
+   } elsif ($force == 1) {
+      $msg = "Force: FAIL";
+      $errors = -1;
+   } elsif ($force == 2) {
+      $msg = "Force: OK";
+      $errors = 1;
+      $fatals = 1;
+      $warns = 1;
+   }
+
+
+   if ($sslg) {
+      if ($errors < 0) {
+         my @tmp = ($host_name_fqdn,$check_name,$chck_lng_nm,'FAIL',$status,$ort_version,$msg);
+         syslog(LOG_ERR, "hostname=%s check=%s name=\"%s\" result=%s status=%s ort_version=%s msg=\"%s\"", @tmp);
+      } elsif (($errors >= 0) || ($force == 2)) {
+         my @tmp = ($host_name_fqdn,$check_name,$chck_lng_nm,'OK',$status,$ort_version,$errors,$fatals,$warns,$msg);
+         syslog(LOG_ERR, "hostname=%s check=%s name=\"%s\" result=%s status=%s ort_version=%s errors=%s fatals=%s warnings=%s msg=\"%s\"", @tmp);
       }
    }
 	TRACE $host_name . " score: " . $errors;
-	$ext->post_result( $host_id, $check_name, $errors );
+	$ext->post_result( $host_id, $check_name, $errors ) if (!$quiet);
 }
 
+sub ltrim { my $s = shift; $s =~ s/^\s+//;       return $s };
+sub rtrim { my $s = shift; $s =~ s/\s+$//;       return $s };
+sub  trim { my $s = shift; $s =~ s/^\s+|\s+$//g; return $s };
+
 sub help() {
-   print "ToORTCheck.pl -c \"{\\\"base_url\\\": \\\"https://localhost\\\", \\\"check_name\\\": \\\"ORT\\\", \\\"name\\\": \\\"Operational Readiness Test\\\", \\\"syslog_facility\\\": \\\"local0\\\"}\"\n";
+   print "ToORTCheck.pl -c \"{\\\"base_url\\\": \\\"https://localhost\\\", \\\"check_name\\\": \\\"ORT\\\"[, \\\"name\\\": \\\"Operational Readiness Test\\\", \\\"syslog_facility\\\": \\\"local0\\\"]}\" [-f <1-2>] [-l <1-3>]\n";
    print "\n";
    print "-c   json formatted list of variables\n";
    print "     base_url: required\n";
    print "        URL of the Traffic Ops server.\n";
    print "     check_name: required\n";
-   print "        The name of this check. Don't ask.\n";
-   print "     to_user: required\n";
-   print "        Traffic Ops user.\n";
-   print "     to_pass: required\n";
-   print "        Password for the Traffic Ops user\n";
+   print "        The name of this check.\n";
    print "     name: optional\n";
    print "        The long name of this check. used in conjuction with syslog_facility.\n";
    print "     syslog_facility: optional\n";
    print "        The syslog facility to send messages. Requires the \"name\" option to\n";
    print "        be set.\n";
+   print "-f   Force a FAIL or OK message\n";
+   print "        1: FAIL\n";
+   print "        2: OK\n";
    print "-h   Print this message\n";
    print "-l   Debug level\n";
+   print "-q   Don't post results to Traffic Ops.\n";
    print "================================================================================\n";
    # the above line of equal signs is 80 columns
    print "Note: The user running this script must have an authorized public key on the\n";
