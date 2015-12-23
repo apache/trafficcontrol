@@ -134,40 +134,40 @@ public final class RegionalGeo  {
         final RegionalGeo rg = new RegionalGeo();
         rg.setFallback(true);
         try {
-            final JSONArray dsvcsJson = json.getJSONArray("delivery_services");
+            final JSONArray dsvcsJson = json.getJSONArray("deliveryServices");
             LOGGER.info("RegionalGeo: parse json with rule count " + dsvcsJson.length());
 
             for (int i = 0; i < dsvcsJson.length(); i++) {
                 final JSONObject ruleJson = dsvcsJson.getJSONObject(i);
 
-                final String dsvcId = ruleJson.getString("delivery_service_id");
+                final String dsvcId = ruleJson.getString("deliveryServiceId");
                 if (dsvcId.trim().isEmpty()) {
-                    LOGGER.error("RegionalGeo ERR: delivery_service_id empty");
+                    LOGGER.error("RegionalGeo ERR: deliveryServiceId empty");
                     return null;
                 }
 
-                final String urlRegex = ruleJson.getString("url_regex");
+                final String urlRegex = ruleJson.getString("urlRegex");
                 if (urlRegex.trim().isEmpty()) {
-                    LOGGER.error("RegionalGeo ERR: url_regex empty");
+                    LOGGER.error("RegionalGeo ERR: urlRegex empty");
                     return null;
                 }
 
-                final String redirectUrl = ruleJson.getString("redirect_url");
+                final String redirectUrl = ruleJson.getString("redirectUrl");
                 if (redirectUrl.trim().isEmpty()) {
-                    LOGGER.error("RegionalGeo ERR: redirect_url empty");
+                    LOGGER.error("RegionalGeo ERR: redirectUrl empty");
                     return null;
                 }
 
                 // FSAs (postal codes)
-                final JSONObject locationJson = ruleJson.getJSONObject("geolocation");
+                final JSONObject locationJson = ruleJson.getJSONObject("geoLocation");
 
-                JSONArray postalsJson = locationJson.optJSONArray("include_postal_code");
+                JSONArray postalsJson = locationJson.optJSONArray("includePostalCode");
 
                 RegionalGeoRule.PostalsType postalsType;
                 if (postalsJson != null) {
                     postalsType = RegionalGeoRule.PostalsType.INCLUDE;
                 } else {
-                    postalsJson = locationJson.optJSONArray("exclude_postal_code");
+                    postalsJson = locationJson.optJSONArray("excludePostalCode");
                     if (postalsJson == null) {
                         LOGGER.error("RegionalGeo ERR: no include/exclude in geolocation");
                         return null;
@@ -183,7 +183,7 @@ public final class RegionalGeo  {
 
                 // white list
                 NetworkNode whiteListRoot = null;
-                final JSONArray whiteListJson = ruleJson.optJSONArray("IP_white_list");
+                final JSONArray whiteListJson = ruleJson.optJSONArray("ipWhiteList");
                 if (whiteListJson != null) {
                     whiteListRoot = parseWhiteListJson(whiteListJson);
                 }

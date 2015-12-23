@@ -1,58 +1,58 @@
 {
-    "delivery_services": [
+    "deliveryServices": [
         {
-            "redirect_url": "http://example.com/redirect_T1",
-            "delivery_service_id": "ds-geoblock-exclude",
-            "geolocation": {
-                "exclude_postal_code": [
+            "redirectUrl": "http://example.com/redirect_T1",
+            "deliveryServiceId": "ds-geoblock-exclude",
+            "geoLocation": {
+                "excludePostalCode": [
                     "V5G",
                     "M7A"
                 ]
             },
-            "url_regex": ".*TSN1"
+            "urlRegex": ".*live1"
         },
         {
-            "redirect_url": "/path/redirect_T2",
-            "delivery_service_id": "ds-geoblock-include",
-            "geolocation": {
-                "include_postal_code": [
+            "redirectUrl": "/path/redirect_T2",
+            "deliveryServiceId": "ds-geoblock-include",
+            "geoLocation": {
+                "includePostalCode": [
                     "V5G",
                     "M7A"
                 ]
             },
-            "url_regex": ".*TSN2"
+            "urlRegex": ".*live2"
         },
         {
-            "redirect_url": "redirect_T3",
-            "delivery_service_id": "ds-geoblock-include",
-            "geolocation": {
-                "include_postal_code": [
+            "redirectUrl": "redirect_T3",
+            "deliveryServiceId": "ds-geoblock-include",
+            "geoLocation": {
+                "includePostalCode": [
                     "V5G",
                     "M7A"
                 ]
             },
-            "url_regex": ".*TSN3"
+            "urlRegex": ".*live3"
         },
         {
-            "redirect_url": "/redirect_T4",
-            "delivery_service_id": "ds-geoblock-include",
-            "geolocation": {
-                "include_postal_code": [
+            "redirectUrl": "/redirect_T4",
+            "deliveryServiceId": "ds-geoblock-include",
+            "geoLocation": {
+                "includePostalCode": [
                     "N6G",
                     "M7A"
                 ]
             },
-            "IP_white_list": [
+            "ipWhiteList": [
                 "10.74.50.0/24",
                 "129.100.254.1/22",
                 "70.76.100.1/22",
                 "184.66.16.1/22"
             ],
-            "url_regex": ".*TSN4"
+            "urlRegex": ".*live4"
         }
     ],
-    "Customer": "CU",
-    "Version": "1",
+    "customer": "CU",
+    "version": "1",
     "date": "2015-10-19 03:28:25",
-    "Name": "Regional Geoblocking Policy"
+    "name": "Regional Geoblocking Policy"
 }

@@ -46,7 +46,7 @@ public class RegionalGeoTest {
     @Test
     public void testEnforceAllowed() {
         final String dsvcId = "ds-geoblock-exclude";
-        final String url = "http://ds1.example.com/TSN1";
+        final String url = "http://ds1.example.com/live1";
         final String postal = "N7G";
         final String ip = "10.0.0.1";
 
@@ -61,7 +61,7 @@ public class RegionalGeoTest {
     @Test
     public void testEnforceAlternateWithCache() {
         final String dsvcId = "ds-geoblock-include";
-        final String url = "http://ds2.example.com/TSN2";
+        final String url = "http://ds2.example.com/live2";
         final String postal = "N7G";
         final String ip = "10.0.0.1";
 
@@ -76,7 +76,7 @@ public class RegionalGeoTest {
     @Test
     public void testEnforceAlternateWithoutCache() {
         final String dsvcId = "ds-geoblock-exclude";
-        final String url = "http://ds1.example.com/TSN1";
+        final String url = "http://ds1.example.com/live1";
         final String postal = "V5G";
         final String ip = "10.0.0.1";
 
@@ -91,7 +91,7 @@ public class RegionalGeoTest {
     @Test
     public void testEnforceDeniedNoDsvc() {
         final String dsvcId = "ds-geoblock-no-exist";
-        final String url = "http://ds1.example.com/TSN1";
+        final String url = "http://ds1.example.com/live1";
         final String postal = "V5G";
         final String ip = "10.0.0.1";
 
@@ -105,7 +105,7 @@ public class RegionalGeoTest {
     @Test
     public void testEnforceDeniedNoRegexMatch() {
         final String dsvcId = "ds-geoblock-include";
-        final String url = "http://ds1.example.com/TSN-NOT-EXIST";
+        final String url = "http://ds1.example.com/live-not-exist";
         final String postal = "V5G";
         final String ip = "10.0.0.1";
 
@@ -119,7 +119,7 @@ public class RegionalGeoTest {
     @Test
     public void testEnforceAlternateToPathNoSlash() {
         final String dsvcId = "ds-geoblock-include";
-        final String url = "http://ds1.example.com/TSN3";
+        final String url = "http://ds1.example.com/live3";
         final String postal = "V5D";
         final String ip = "10.0.0.1";
 
@@ -134,7 +134,7 @@ public class RegionalGeoTest {
     @Test
     public void testEnforceAlternateNullPostal() {
         final String dsvcId = "ds-geoblock-exclude";
-        final String url = "http://ds1.example.com/TSN1";
+        final String url = "http://ds1.example.com/live1";
         final String postal = null;
         final String ip = "10.0.0.1";
 
@@ -149,7 +149,7 @@ public class RegionalGeoTest {
     @Test
     public void testEnforceAlternateEmptyPostalInclude() {
         final String dsvcId = "ds-geoblock-include";
-        final String url = "http://ds2.example.com/TSN2";
+        final String url = "http://ds2.example.com/live2";
         final String postal = "";
         final String ip = "10.0.0.1";
 
@@ -164,7 +164,7 @@ public class RegionalGeoTest {
     @Test
     public void testEnforceAlternateEmptyPostalExclude() {
         final String dsvcId = "ds-geoblock-exclude";
-        final String url = "http://ds1.example.com/TSN1";
+        final String url = "http://ds1.example.com/live1";
         final String postal = "";
         final String ip = "10.0.0.1";
 
@@ -179,7 +179,7 @@ public class RegionalGeoTest {
     @Test
     public void testEnforceAllowLongPostal() {
         final String dsvcId = "ds-geoblock-include";
-        final String url = "http://ds2.example.com/TSN2";
+        final String url = "http://ds2.example.com/live2";
         final String postal = "V5G 123";
         final String ip = "10.0.0.1";
 
@@ -194,7 +194,7 @@ public class RegionalGeoTest {
     @Test
     public void testEnforceAlternateLongPotal() {
         final String dsvcId = "ds-geoblock-include";
-        final String url = "http://ds2.example.com/TSN2";
+        final String url = "http://ds2.example.com/live2";
         final String postal = "N7G 123";
         final String ip = "10.0.0.1";
 
@@ -209,7 +209,7 @@ public class RegionalGeoTest {
     @Test
     public void testEnforceWhiteListAllowed() {
         final String dsvcId = "ds-geoblock-include";
-        final String url = "http://ds1.example.com/TSN4";
+        final String url = "http://ds1.example.com/live4";
         final String postal = null;
         final String ip = "129.100.254.2";
 
@@ -224,7 +224,7 @@ public class RegionalGeoTest {
     @Test
     public void testEnforceNotInWhiteListAlternate() {
         final String dsvcId = "ds-geoblock-include";
-        final String url = "http://ds1.example.com/TSN4";
+        final String url = "http://ds1.example.com/live4";
         final String postal = "N7G";
         final String ip = "129.202.254.2";
 
@@ -239,7 +239,7 @@ public class RegionalGeoTest {
     @Test
     public void testEnforceNotInWhiteListAllowedByPostal() {
         final String dsvcId = "ds-geoblock-include";
-        final String url = "http://ds1.example.com/TSN4";
+        final String url = "http://ds1.example.com/live4";
         final String postal = "N6G";
         final String ip = "129.202.254.2";
 
