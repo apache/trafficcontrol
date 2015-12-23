@@ -24,7 +24,7 @@ Configure Regional Geo-blocking (RGB)
 
 1)	Prepare RGB configuration file
 
-RGB uses a configuration file in JSON format to define geo-blocking rules for delivery services. The file needs to be put on an HTTP server accessible to Traffic Router. An example of the JSON is as followed::
+RGB uses a configuration file in JSON format to define regional geo-blocking rules for delivery services. The file needs to be put on an HTTP server accessible to Traffic Router. An example of the JSON is as follows::
 
     {
     "deliveryServices":
