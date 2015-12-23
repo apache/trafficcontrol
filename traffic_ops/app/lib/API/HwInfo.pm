@@ -55,20 +55,11 @@ sub data {
 	# to match the Column Number coming from datatables to it's name
 	# Unfortunately, this is a short coming with the jquery datatables ui widget in that it expects
 	# an array arrays instead of an array of hashes
-	$self->app->log->debug( "sort_order #-> " . $sort_order );
-	my $sort_direction = sprintf( "-%s", $sort_order );
-	$self->app->log->debug( "sort_direction #-> " . $sort_direction );
-	my %column_number_to_name = ( 1 => 'serverid.host_name', 2 => 'description', 3 => 'val', 4 => 'last_updated' );
-	my $column_name = $column_number_to_name{$sort_column} || "serverid";
+	my $sort_direction        = sprintf( "-%s", $sort_order );
+	my @column_number_to_name = qw{ serverid.host_name description val last_updated };
+	my $column_name           = $column_number_to_name[ $sort_column - 1 ] || "serverid";
 
-	#$self->app->log->debug( "names #-> " . Dumper( $self->req->query_params ) );
-
-	$self->app->log->debug( "idisplay_start #-> " . $idisplay_start );
 	my $idisplay_length = $self->param("iDisplayLength");
-	$self->app->log->debug( "idisplay_length #-> " . $idisplay_length );
-	$self->app->log->debug( "search_field #-> " . $search_field );
-	$self->app->log->debug( "column_name #-> " . $column_name );
-	$self->app->log->debug( "sort_column #-> " . $sort_column );
 
 	my %data = ( "data" => [] );
 	my $rs;
