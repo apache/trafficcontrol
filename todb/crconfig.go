@@ -3,6 +3,7 @@ package todb
 import (
 	"fmt"
 	"gopkg.in/guregu/null.v3"
+	"reflect"
 	"strings"
 )
 
@@ -45,14 +46,14 @@ type ContentRouter struct {
 // where type.name = "RASCAL";
 
 type Monitor struct {
-	Profile  string `db:"profile" json:"profile"`
-	Location string `db:"location" json:"location"`
-	Ip       string `db:"ip" json:"ip"`
-	Status   string `db:"status" json:"status"`
-	Ip6      string `db:"ip6" json:"ip6"`
-	Port     int64  `db:"port" json:"port"`
-	Fqdn     string `db:"fqdn" json:"fqdn"`
-	Cdnname  string `db:"cdnname" json:"cdnname"`
+	Profile  string      `db:"profile" json:"profile"`
+	Location string      `db:"location" json:"location"`
+	Ip       string      `db:"ip" json:"ip"`
+	Status   string      `db:"status" json:"status"`
+	Ip6      null.String `db:"ip6" json:"ip6"`
+	Port     int64       `db:"port" json:"port"`
+	Fqdn     string      `db:"fqdn" json:"fqdn"`
+	Cdnname  string      `db:"cdnname" json:"cdnname"`
 }
 
 type EdgeLocation struct {
@@ -101,36 +102,101 @@ type Ttls struct {
 }
 
 type Config struct {
-	// API_cache_control_max_age              string `json:"api.cache-control.max-age"`
-	// Consistent_dns_routing                 string `json:"consistent.dns.routing"`
-	// Coveragezone_polling_interval          string `json:"coveragezone.polling.interval"`
-	// Coveragezone_polling_url               string `json:"coveragezone.polling.url"`
-	// Dnssec_dynamic_response_expiration     string `json:"dnssec.dynamic.response.expiration"`
-	// Dnssec_enabled                         string `json:"dnssec.enabled"`
-	// DomainName                             string `json:"domain_name"`
-	// Federationmapping_polling_interval     string `json:"federationmapping.polling.interval"`
-	// Federationmapping_polling_url          string `json:"federationmapping.polling.url"`
-	// Geolocation_polling_interval           string `json:"geolocation.polling.interval"`
-	// Geolocation_polling_url                string `json:"geolocation.polling.url"`
-	// Keystore_maintenance_interval          string `json:"keystore.maintenance.interval"`
 	ParamMap map[string]string `json:"misc"`
 	Soa      Soa               `json:"soa"`
-	// Dnssec_inception                       string `json:"title-vi.dnssec.inception"`
-	Ttls Ttls `json:"ttls"`
-	// Weight                                 string `json:"weight"`
-	// Zonemanager_cache_maintenance_interval string `json:"zonemanager.cache.maintenance.interval"`
-	// Zonemanager_threadpool_scale           string `json:"zonemanager.threadpool.scale"`
+	Ttls     Ttls              `json:"ttls"`
+}
+
+type MactchListEntry struct {
+	MatchType string `json:"match-type"`
+	Regex     string `json:"regex"`
+}
+
+type MatchSetEntry struct {
+	Matchlist []MactchListEntry `json:"matchlist"`
+	Protocol  string            `json:"protocol"`
+}
+
+type MissLocation struct {
+	Longitude null.Float `db:"longitude" json:"long"`
+	Latitude  null.Float `db:"latitude" json:"lat"`
+}
+
+type Dispersion struct {
+	Limit    int      `json:"limit"`
+	Shuffled null.Int `json:"shuffled"`
+}
+
+type CrDeliveryService struct {
+	CoverageZoneOnly     string            `json:"coverageZoneOnly"`
+	Domains              []string          `json:"domains"`
+	IP6RoutingEnabled    string            `json:"ip6RoutingEnabled"`
+	MatchSets            []MatchSetEntry   `json:"matchsets"`
+	MaxDNSIpsForLocation null.Int          `json:"maxDnsIpsForLocation"`
+	MissLocation         MissLocation      `json:"missLocation"`
+	Soa                  Soa               `json:"soa"`
+	TTL                  null.Int          `json:"ttl"`
+	Ttls                 Ttls              `json:"ttls"`
+	ResponseHeaders      map[string]string `json:"responseHeaders"`
+	Dispersion           Dispersion        `json:"dispersion"`
+	GeoEnabled           map[string]string `json:"geoEnabled"`
+}
+
+// create view crconfig_ds_data as select xml_id, profile, ccr_dns_ttl, global_max_mbps, global_max_tps,
+// max_dns_answers, miss_lat, miss_long, protocoltype.name as protocol, ipv6_routing_enabled,
+// tr_request_headers, tr_response_headers, initial_dispersion, dns_bypass_cname,
+// dns_bypass_ip, dns_bypass_ip6, dns_bypass_ttl, cdn.name as cdn_name,
+// regex.pattern as match_pattern, regextype.name as match_type
+// from deliveryservice
+// join cdn on cdn.id = deliveryservice.cdn_id
+// join deliveryservice_regex on deliveryservice_regex.deliveryservice = deliveryservice.id
+// join regex on regex.id = deliveryservice_regex.regex
+// join type as protocoltype on protocoltype.id = deliveryservice.type
+// join type as regextype on regextype.id = regex.type;
+
+type CrconfigDsData struct {
+	XmlId              string      `db:"xml_id" json:"xmlId"`
+	Profile            int64       `db:"profile" json:"profile"`
+	CcrDnsTtl          null.Int    `db:"ccr_dns_ttl" json:"ccrDnsTtl"`
+	GlobalMaxMbps      null.Int    `db:"global_max_mbps" json:"globalMaxMbps"`
+	GlobalMaxTps       null.Int    `db:"global_max_tps" json:"globalMaxTps"`
+	MaxDnsAnswers      null.Int    `db:"max_dns_answers" json:"maxDnsAnswers"`
+	MissLat            null.Float  `db:"miss_lat" json:"missLat"`
+	MissLong           null.Float  `db:"miss_long" json:"missLong"`
+	Protocol           string      `db:"protocol" json:"protocol"`
+	Ipv6RoutingEnabled null.Int    `db:"ipv6_routing_enabled" json:"ipv6RoutingEnabled"`
+	TrRequestHeaders   null.String `db:"tr_request_headers" json:"trRequestHeaders"`
+	TrResponseHeaders  null.String `db:"tr_response_headers" json:"trResponseHeaders"`
+	InitialDispersion  null.Int    `db:"initial_dispersion" json:"initialDispersion"`
+	DnsBypassCname     null.String `db:"dns_bypass_cname" json:"dnsBypassCname"`
+	DnsBypassIp        null.String `db:"dns_bypass_ip" json:"dnsBypassIp"`
+	DnsBypassIp6       null.String `db:"dns_bypass_ip6" json:"dnsBypassIp6"`
+	DnsBypassTtl       null.Int    `db:"dns_bypass_ttl" json:"dnsBypassTtl"`
+	GeoLimit           int64       `db:"geo_limit" json:"geoLimit"`
+	CdnName            null.String `db:"cdn_name" json:"cdnName"`
+	MatchPattern       string      `db:"match_pattern" json:"matchPattern"`
+	MatchType          string      `db:"match_type" json:"matchType"`
 }
 
 type CRConfig struct {
-	ContentRouters []ContentRouter `json:"contentRouters"`
-	Monitors       []Monitor       `json:"monitors"`
-	EdgeLocations  []EdgeLocation  `json:"edgeLocations"`
-	Config         Config          `json:"config"`
+	ContentRouters   []ContentRouter              `json:"contentRouters"`
+	Monitors         []Monitor                    `json:"monitors"`
+	EdgeLocations    []EdgeLocation               `json:"edgeLocations"`
+	Config           Config                       `json:"config"`
+	DeliveryServices map[string]CrDeliveryService `json:"deliveryServices"`
+}
+
+func boolString(in interface{}) string {
+	if reflect.TypeOf(in) == nil {
+		return "false"
+	}
+
+	return "false"
 }
 
 func GetCRConfig(cdnName string) (interface{}, error) {
 
+	// contentRouters section
 	crQuery := "select * from content_routers where cdnname=\"" + cdnName + "\""
 	fmt.Println(crQuery)
 	crs := []ContentRouter{}
@@ -139,6 +205,8 @@ func GetCRConfig(cdnName string) (interface{}, error) {
 		fmt.Println(err)
 		return nil, err
 	}
+
+	// monitors section
 	mQuery := "select * from monitors where cdnname=\"" + cdnName + "\""
 	fmt.Println(mQuery)
 	ms := []Monitor{}
@@ -147,6 +215,8 @@ func GetCRConfig(cdnName string) (interface{}, error) {
 		fmt.Println(err)
 		return nil, err
 	}
+
+	// edgeLocations section
 	eQuery := "select name,longitude,latitude from cachegroup where type in (select id from type where name=\"EDGE_LOC\")"
 	fmt.Println(eQuery)
 	edges := []EdgeLocation{}
@@ -155,6 +225,11 @@ func GetCRConfig(cdnName string) (interface{}, error) {
 		fmt.Println(err)
 		return nil, err
 	}
+
+	// stats section
+	// TODO JvD
+
+	// config section
 	pQuery := "select * from crconfig_params where cdn_name=\"" + cdnName + "\""
 	fmt.Println(pQuery)
 	params := []CRConfigParam{}
@@ -173,18 +248,6 @@ func GetCRConfig(cdnName string) (interface{}, error) {
 		}
 	}
 	cfg := Config{
-		// API_cache_control_max_age:          pmap["api.cache-control.max-age"],
-		// Consistent_dns_routing:             pmap[""],
-		// Coveragezone_polling_interval:      pmap[""],
-		// Coveragezone_polling_url:           pmap["coveragezone.polling.url"],
-		// Dnssec_dynamic_response_expiration: pmap[""],
-		// Dnssec_enabled:                     pmap[""],
-		// DomainName:                         pmap[""],
-		// Federationmapping_polling_interval: pmap[""],
-		// Federationmapping_polling_url:      pmap[""],
-		// Geolocation_polling_interval:       pmap[""],
-		// Geolocation_polling_url:            pmap[""],
-		// Keystore_maintenance_interval:      pmap[""],
 		ParamMap: miscMap,
 		Soa: Soa{
 			Admin:   pmap["tld.soa.admin"],
@@ -193,24 +256,91 @@ func GetCRConfig(cdnName string) (interface{}, error) {
 			Refresh: pmap["tld.soa.refresh"],
 			Retry:   pmap["tld.soa.retry"],
 		},
-		// Dnssec_inception: "",
 		Ttls: Ttls{
-			A:      pmap["tld.ttl.A"],
-			AAAA:   pmap["tld.ttl.AAA"],
-			DNSKEY: pmap["tld.ttl.DNSKEY"],
-			DS:     pmap["tld.ttl.DS"],
-			NS:     pmap["tld.ttl.NS"],
-			SOA:    pmap["tld.ttl.SOA"],
+			A:      pmap["tld.ttls.A"],
+			AAAA:   pmap["tld.ttls.AAAA"],
+			DNSKEY: pmap["tld.ttls.DNSKEY"],
+			DS:     pmap["tld.ttls.DS"],
+			NS:     pmap["tld.ttls.NS"],
+			SOA:    pmap["tld.ttls.SOA"],
 		},
-		// Weight: "",
-		// Zonemanager_cache_maintenance_interval: "",
-		// Zonemanager_threadpool_scale:           "",
 	}
 
+	// deliveryServices Section
+	dQuery := "select * from crconfig_ds_data where cdn_name=\"" + cdnName + "\""
+	fmt.Println(">>>> ", dQuery)
+	ds := []CrconfigDsData{}
+	err = globalDB.Select(&ds, dQuery)
+	if err != nil {
+		fmt.Println(err)
+		return nil, err
+	}
+	dsMap := make(map[string]CrDeliveryService)
+	for _, deliveryService := range ds {
+		GeoMap := make(map[string]string) // TODO: should this 1->USA, and 2->CA be hardcoded here?
+		CzfOnly := "false"
+		if deliveryService.GeoLimit == 1 {
+			CzfOnly = "true"
+		} else if deliveryService.GeoLimit == 2 {
+			GeoMap["countryCode"] = "USA"
+		} else if deliveryService.GeoLimit == 3 {
+			GeoMap["countryCode"] = "CA"
+		}
+		// respHdrs := make(map[string]string)
+		// domains := make([]string, 0, 0)
+		// msets := make([]MatchSetEntry, 0, 0)
+		dsMap[deliveryService.XmlId] = CrDeliveryService{
+			CoverageZoneOnly: CzfOnly,
+			// Domains:              domains,
+			IP6RoutingEnabled: boolString(deliveryService.Ipv6RoutingEnabled),
+			// MatchSets:            msets,
+			MaxDNSIpsForLocation: deliveryService.MaxDnsAnswers,
+			MissLocation: MissLocation{
+				Latitude:  deliveryService.MissLat,
+				Longitude: deliveryService.MissLong,
+			},
+			Soa: Soa{
+				Admin:   pmap["tld.soa.admin"],
+				Expire:  pmap["tld.soa.expire"],
+				Minimum: pmap["tld.soa.minimum"],
+				Refresh: pmap["tld.soa.refresh"],
+				Retry:   pmap["tld.soa.retry"],
+			},
+			TTL: deliveryService.CcrDnsTtl,
+			Ttls: Ttls{
+				A:      pmap["tld.ttls.A"],
+				AAAA:   pmap["tld.ttls.AAAA"],
+				DNSKEY: pmap["tld.ttls.DNSKEY"],
+				DS:     pmap["tld.ttls.DS"],
+				NS:     pmap["tld.ttls.NS"],
+				SOA:    pmap["tld.ttls.SOA"],
+			},
+			// ResponseHeaders: respHdrs,
+			Dispersion: Dispersion{
+				Shuffled: deliveryService.InitialDispersion,
+				Limit:    1,
+			},
+			GeoEnabled: GeoMap,
+		}
+		//https://code.google.com/p/go/issues/detail?id=3117
+		dService := dsMap[deliveryService.XmlId]
+		domains := dService.Domains
+		if domains == nil {
+			domains = make([]string, 0, 0)
+		}
+		dService.Domains = append(domains, "hey") // put real domain here
+		// put matchlists in
+		// put headers in
+		dsMap[deliveryService.XmlId] = dService
+	}
+
+	// contentServers Section
+
 	return CRConfig{
-		ContentRouters: crs,
-		Monitors:       ms,
-		EdgeLocations:  edges,
-		Config:         cfg,
+		ContentRouters:   crs,
+		Monitors:         ms,
+		EdgeLocations:    edges,
+		Config:           cfg,
+		DeliveryServices: dsMap,
 	}, nil
 }
