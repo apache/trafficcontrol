@@ -24,6 +24,7 @@ use Data::Dumper;
 use UI::ConfigFiles;
 use Date::Manip;
 use JSON;
+use Hash::Merge qw(merge);
 use String::CamelCase qw(decamelize);
 
 # Yes or no
@@ -438,30 +439,72 @@ sub adeliveryservice {
 	$self->render( json => \%data );
 }
 
-sub ahwinfo {
-	my $self              = shift;
-	my $limit             = $self->param("limit");
-	my $orderby           = $self->param('orderby') || "hostName";
-	my $orderby_snakecase = lcfirst( decamelize($orderby) );
-	my %data              = ( "aaData" => undef );
+<<<< <<< HEAD
+sub hwinfo {
+	my $self           = shift;
+	my $idisplay_start = $self->param("iDisplayStart") || 0;
+	my $sort_order     = $self->param("sSortDir_0") || "asc";
+	my $search_field   = $self->param("sSearch") || '';
+	my $sort_column    = $self->param("iSortCol_0") || "id";
+	my $echo           = $self->param("sEcho");
 
-	my $rs;
-	if (   defined( $self->param('filter') )
-		&& defined( $self->param('value') )
-		&& $self->param('value') ne "all" )
-	{
-		my $col = $self->param('filter');
-		my $val = $self->param('value');
-		$rs = $self->db->resultset('Hwinfo')->search( { $col => $val }, { prefetch => ['serverid'], order_by => 'me.' . $orderby_snakecase } );
+	# NOTE: If changes are made to send additional columns then this mapping has to be updated
+	# to match the Column Number coming from datatables to it's name
+	# Unfortunately, this is a short coming with the jquery datatables ui widget in that it expects
+	# an array arrays instead of an array of hashes
+	my $sort_direction        = sprintf( "-%s", $sort_order );
+	my @column_number_to_name = qw{ serverid.host_name description val last_updated  };
+	my $column_name           = $column_number_to_name[ $sort_column - 1 ] || "serverid";
+
+	my $idisplay_length = $self->param("iDisplayLength") || 10;
+my %data = ( "data" => [] );
+
+my %condition;
+my %attrs;
+my %nolimit;
+my %nolimit_attrs;
+
+%condition = (
+	-or => {
+		'me.description'     => { -like => '%' . $search_field . '%' },
+		'me.val'             => { -like => '%' . $search_field . '%' },
+		'serverid.host_name' => { -like => '%' . $search_field . '%' }
 	}
-	else {
-		$rs = $self->db->resultset('Hwinfo')->search( undef, { prefetch => ['serverid'] } );
-	}
-	while ( my $row = $rs->next ) {
-		my @line = [ $row->serverid->id, $row->serverid->host_name . "." . $row->serverid->domain_name, $row->description, $row->val, $row->last_updated ];
-		push( @{ $data{'aaData'} }, @line );
-	}
-	$self->render( json => \%data );
+);
+
+my $total_count = $self->db->resultset('Hwinfo')->search()->count();
+my $filtered_count;
+my $dbh;
+if ( $search_field eq '' ) {
+
+	# if no filtering has occurred obviouslly these would be equal
+	$filtered_count = $total_count;
+}
+else {
+	# Now count the filtered records
+	my %filtered_attrs = ( attrs => [ { 'serverid' => undef } ], join => 'serverid', undef );
+	my $filtered = $self->db->resultset('Hwinfo')->search( \%condition, \%filtered_attrs );
+	$filtered_count = $filtered->count();
+}
+my $page = $idisplay_start + 1;
+
+#my %limit = ( page => 100, rows => 100, order_by => { $sort_direction => $column_name } );
+
+my %limit = ( offset => $idisplay_start, rows => $idisplay_length, order_by => { $sort_direction => $column_name } );
+%attrs = ( attrs => [ { 'serverid' => undef } ], join => 'serverid', %limit );
+
+$dbh = $self->db->resultset('Hwinfo')->search( \%condition, \%attrs );
+
+# Now load up the rows
+while ( my $row = $dbh->next ) {
+	my @line = [ $row->serverid->id, $row->serverid->host_name . "." . $row->serverid->domain_name, $row->description, $row->val, $row->last_updated ];
+	push( @{ $data{'data'} }, @line );
+}
+
+%data = %{ merge( \%data, { recordsTotal    => $total_count } ) };
+%data = %{ merge( \%data, { recordsFiltered => $filtered_count } ) };
+
+$self->render( json => \%data );
 }
 
 sub ajob {
@@ -691,7 +734,7 @@ sub aadata {
 		&adeliveryservice($self);
 	}
 	elsif ( $table eq 'Hwinfo' ) {
-		&ahwinfo($self);
+		&hwinfo($self);
 	}
 	elsif ( $table eq 'Federation' ) {
 		&afederation($self);

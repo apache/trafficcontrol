@@ -13,6 +13,7 @@
      See the License for the specific language governing permissions and
      limitations under the License.
  -->
+<link rel="stylesheet" type="text/css" href="/css/datatables.css">
 % title 'Hardware';
 % if (defined (flash 'alertmsg')) {
 <script>
@@ -32,17 +33,22 @@ $(function () {
 %= include 'jmenu'
 
 		$('#dthwinfo').dataTable({
-			"bJQueryUI": true,
-			"sScrollY": calcDataTableHeight(),
-			"bScrollCollapse": true,
-			"bPaginate": false,
-			"bProcessing": true,
-			"aoColumnDefs": [
+			jQueryUI: true,
+			pagination: "simple_numbers",
+			scrollY: calcDataTableHeight(),
+			scrollCollapse: true,
+			serverSide: true,
+			pageLength: 100,
+			paging: true,
+			info: true,
+			searching: true,
+			lengthChange: true,
+			columnDefs: [
 			{
-				"mRender": function (data, type, full) {
-					return "<a class='fancybox fancybox.iframe' href='/serveriframe/view/" + full[0] + "'>Edit</a>";
+				render: function (data, type, full) {
+					return "<a class='fancybox fancybox.iframe' href='/server/" + full[0] + "/view'>Edit</a>";
 				},
-				"aTargets": [0]
+				targets: [0]
 			}],
 			"sAjaxSource": src
 		});

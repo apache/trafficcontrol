@@ -433,6 +433,7 @@ sub api_routes {
 
 	# -- HWINFO - #NEW
 	# Supports: ?orderby=key
+	$r->get( "/api/$version/hwinfo/dtdata" => [ format => [qw(json)] ] )->over( authenticated => 1 )->to( 'HwInfo#data', namespace => $namespace );
 	$r->get("/api/$version/hwinfo")->over( authenticated => 1 )->to( 'HwInfo#index', namespace => $namespace );
 
 	# -- KEYS
