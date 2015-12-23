@@ -439,7 +439,6 @@ sub adeliveryservice {
 	$self->render( json => \%data );
 }
 
-<<<< <<< HEAD
 sub hwinfo {
 	my $self           = shift;
 	my $idisplay_start = $self->param("iDisplayStart") || 0;
@@ -457,54 +456,54 @@ sub hwinfo {
 	my $column_name           = $column_number_to_name[ $sort_column - 1 ] || "serverid";
 
 	my $idisplay_length = $self->param("iDisplayLength") || 10;
-my %data = ( "data" => [] );
+	my %data = ( "data" => [] );
 
-my %condition;
-my %attrs;
-my %nolimit;
-my %nolimit_attrs;
+	my %condition;
+	my %attrs;
+	my %nolimit;
+	my %nolimit_attrs;
 
-%condition = (
-	-or => {
-		'me.description'     => { -like => '%' . $search_field . '%' },
-		'me.val'             => { -like => '%' . $search_field . '%' },
-		'serverid.host_name' => { -like => '%' . $search_field . '%' }
+	%condition = (
+		-or => {
+			'me.description'     => { -like => '%' . $search_field . '%' },
+			'me.val'             => { -like => '%' . $search_field . '%' },
+			'serverid.host_name' => { -like => '%' . $search_field . '%' }
+		}
+	);
+
+	my $total_count = $self->db->resultset('Hwinfo')->search()->count();
+	my $filtered_count;
+	my $dbh;
+	if ( $search_field eq '' ) {
+
+		# if no filtering has occurred obviouslly these would be equal
+		$filtered_count = $total_count;
 	}
-);
+	else {
+		# Now count the filtered records
+		my %filtered_attrs = ( attrs => [ { 'serverid' => undef } ], join => 'serverid', undef );
+		my $filtered = $self->db->resultset('Hwinfo')->search( \%condition, \%filtered_attrs );
+		$filtered_count = $filtered->count();
+	}
+	my $page = $idisplay_start + 1;
 
-my $total_count = $self->db->resultset('Hwinfo')->search()->count();
-my $filtered_count;
-my $dbh;
-if ( $search_field eq '' ) {
+	#my %limit = ( page => 100, rows => 100, order_by => { $sort_direction => $column_name } );
 
-	# if no filtering has occurred obviouslly these would be equal
-	$filtered_count = $total_count;
-}
-else {
-	# Now count the filtered records
-	my %filtered_attrs = ( attrs => [ { 'serverid' => undef } ], join => 'serverid', undef );
-	my $filtered = $self->db->resultset('Hwinfo')->search( \%condition, \%filtered_attrs );
-	$filtered_count = $filtered->count();
-}
-my $page = $idisplay_start + 1;
+	my %limit = ( offset => $idisplay_start, rows => $idisplay_length, order_by => { $sort_direction => $column_name } );
+	%attrs = ( attrs => [ { 'serverid' => undef } ], join => 'serverid', %limit );
 
-#my %limit = ( page => 100, rows => 100, order_by => { $sort_direction => $column_name } );
+	$dbh = $self->db->resultset('Hwinfo')->search( \%condition, \%attrs );
 
-my %limit = ( offset => $idisplay_start, rows => $idisplay_length, order_by => { $sort_direction => $column_name } );
-%attrs = ( attrs => [ { 'serverid' => undef } ], join => 'serverid', %limit );
+	# Now load up the rows
+	while ( my $row = $dbh->next ) {
+		my @line = [ $row->serverid->id, $row->serverid->host_name . "." . $row->serverid->domain_name, $row->description, $row->val, $row->last_updated ];
+		push( @{ $data{'data'} }, @line );
+	}
 
-$dbh = $self->db->resultset('Hwinfo')->search( \%condition, \%attrs );
+	%data = %{ merge( \%data, { recordsTotal    => $total_count } ) };
+	%data = %{ merge( \%data, { recordsFiltered => $filtered_count } ) };
 
-# Now load up the rows
-while ( my $row = $dbh->next ) {
-	my @line = [ $row->serverid->id, $row->serverid->host_name . "." . $row->serverid->domain_name, $row->description, $row->val, $row->last_updated ];
-	push( @{ $data{'data'} }, @line );
-}
-
-%data = %{ merge( \%data, { recordsTotal    => $total_count } ) };
-%data = %{ merge( \%data, { recordsFiltered => $filtered_count } ) };
-
-$self->render( json => \%data );
+	$self->render( json => \%data );
 }
 
 sub ajob {
