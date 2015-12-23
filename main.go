@@ -18,8 +18,17 @@ func main() {
 	router := mux.NewRouter().StrictSlash(true)
 	router.HandleFunc("/hello/{name}", index).Methods("GET")
 	router.HandleFunc("/api/2.0/raw/{table}.json", handleTable)
+	router.HandleFunc("/api/2.0/{cdn}/CRConfig.json", handleCRConfig)
 
 	log.Fatal(http.ListenAndServe(":8080", router))
+}
+
+func handleCRConfig(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	cdn := vars["cdn"]
+	resp, _ := db.CRConfig(cdn)
+	enc := json.NewEncoder(w)
+	enc.Encode(resp)
 }
 
 func handleTable(w http.ResponseWriter, r *http.Request) {

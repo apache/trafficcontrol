@@ -107,9 +107,6 @@ func writeStructs(schemas []ColumnSchema) (int, error) {
 
 	currentTable := ""
 
-	// neededImports := make(map[string]bool)
-
-	// First, get body text into var out
 	out := ""
 	for _, cs := range schemas {
 
@@ -121,9 +118,6 @@ func writeStructs(schemas []ColumnSchema) (int, error) {
 		}
 
 		goType, _, err := goType(&cs)
-		// if requiredImport != "" {
-		// 	neededImports[requiredImport] = true
-		// }
 
 		if err != nil {
 			log.Fatal(err)
@@ -138,19 +132,11 @@ func writeStructs(schemas []ColumnSchema) (int, error) {
 	}
 	out = out + "}"
 
-	// Now add the header section
 	header := "package " + config.PkgName + "\n\n"
 	header += "import (\n"
 	header += "\"gopkg.in/guregu/null.v3\"\n"
 	header += "\"time\"\n"
 	header += ")\n\n"
-	// if len(neededImports) > 0 {
-	// 	header = header + "import (\n"
-	// 	for imp := range neededImports {
-	// 		header = header + "\t\"" + imp + "\"\n"
-	// 	}
-	// 	header = header + ")\n\n"
-	// }
 
 	totalBytes, err := fmt.Fprint(file, header+out)
 	if err != nil {
