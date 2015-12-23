@@ -26,7 +26,7 @@ func main() {
 func handleCRConfig(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	cdn := vars["cdn"]
-	resp, _ := db.CRConfig(cdn)
+	resp, _ := db.GetCRConfig(cdn)
 	enc := json.NewEncoder(w)
 	enc.Encode(resp)
 }
