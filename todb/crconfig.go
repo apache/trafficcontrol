@@ -152,7 +152,8 @@ type CrDeliveryService struct {
 	Soa                  Soa               `json:"soa"`
 	TTL                  null.Int          `json:"ttl"`
 	Ttls                 Ttls              `json:"ttls"`
-	ResponseHeaders      map[string]string `json:"responseHeaders"`
+	ResponseHeaders      map[string]string `json:"responseHeaders,omitempty"`
+	RequestHeaders       []string          `json:"requestHeaders,omitempty"`
 	Dispersion           Dispersion        `json:"dispersion"`
 	GeoEnabled           map[string]string `json:"geoEnabled"`
 }
@@ -309,15 +310,39 @@ func configSection(cdnName string) (Config, map[string]string, error) {
 	return cfg, pmap, nil
 }
 
+func genReqHeaderList(inString string) []string {
+	if inString == "" {
+		return nil
+	}
+	retArray := make([]string, 0, 0)
+	for _, header := range strings.Split(inString, "__RETURN__") {
+		retArray = append(retArray, header)
+	}
+	return retArray
+}
+
+func genRespHeaderList(inString string) map[string]string {
+	if inString == "" {
+		return nil
+	}
+	retMap := make(map[string]string)
+	for _, line := range strings.Split(inString, "__RETURN__") {
+		fields := strings.Split(line, ":")
+		retMap[fields[0]] = fields[1]
+	}
+	return retMap
+}
+
 func deliveryServicesSection(cdnName string, pmap map[string]string) (map[string]CrDeliveryService, error) {
 	dQuery := "select * from crconfig_ds_data where cdn_name=\"" + cdnName + "\""
-	fmt.Println(">>>> ", dQuery)
+	fmt.Println(dQuery)
 	ds := []CrconfigDsData{}
 	err := globalDB.Select(&ds, dQuery)
 	if err != nil {
 		fmt.Println(err)
 		return nil, err
 	}
+	reqHeaderList := genReqHeaderList(pmap["LogRequestHeaders"])
 	ccrDomain := pmap["domain_name"]
 	dsMap := make(map[string]CrDeliveryService)
 	for _, deliveryService := range ds {
@@ -360,7 +385,8 @@ func deliveryServicesSection(cdnName string, pmap map[string]string) (map[string
 					NS:     pmap["tld.ttls.NS"],
 					SOA:    pmap["tld.ttls.SOA"],
 				},
-				// ResponseHeaders: respHdrs,
+				ResponseHeaders: genRespHeaderList(deliveryService.TrResponseHeaders.String), // TODO JvD test this
+				RequestHeaders:  reqHeaderList,
 				Dispersion: Dispersion{
 					Shuffled: deliveryService.InitialDispersion,
 					Limit:    1,
@@ -382,9 +408,11 @@ func deliveryServicesSection(cdnName string, pmap map[string]string) (map[string
 		if dService.MatchSets == nil {
 			dService.MatchSets = make([]MatchSetEntry, 0, 0)
 		}
+		mType := deliveryService.MatchType
+		mType = strings.Replace(mType, "_REGEXP", "", 1)
 		mle := MactchListEntry{
 			Regex:     deliveryService.MatchPattern,
-			MatchType: deliveryService.MatchType,
+			MatchType: mType,
 		}
 		ml := make([]MactchListEntry, 0, 0)
 		ml = append(ml, mle)
@@ -393,7 +421,10 @@ func deliveryServicesSection(cdnName string, pmap map[string]string) (map[string
 			MatchList: ml,
 		}
 		dService.MatchSets = append(dService.MatchSets, mse)
-		// put headers in
+
+		if deliveryService.TrRequestHeaders.String != "" { // TODO JvD: test this.
+			dService.RequestHeaders = append(dService.RequestHeaders, genReqHeaderList(deliveryService.TrRequestHeaders.String)...)
+		}
 		dsMap[deliveryService.XmlId] = dService
 	}
 	return dsMap, nil
