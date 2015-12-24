@@ -23,7 +23,7 @@ import (
 
 // use this view
 // create view content_routers as select ip_address as ip, ip6_address as ip6, profile.name as profile, cachegroup.name as location,
-// status.name as status, server.tcp_port as port, concat(server.host_name, ".", server.domain_name) as fqdn,
+// status.name as status, server.tcp_port as port, host_name, concat(server.host_name, ".", server.domain_name) as fqdn,
 // parameter.value as apiport, cdn.name as cdnname
 // from server
 // join profile on profile.id = server.profile
@@ -34,7 +34,6 @@ import (
 // join cdn on cdn.id = server.cdn_id
 // join type on type.id = server.type
 // where type.name = "CCR" and parameter.name="api.port";
-
 type ContentRouter struct {
 	Profile  string `db:"profile" json:"profile"`
 	Apiport  int64  `db:"apiport" json:"api.port"`
@@ -44,13 +43,14 @@ type ContentRouter struct {
 	Ip6      string `db:"ip6" json:"ip6"`
 	Port     int64  `db:"port" json:"port"`
 	Fqdn     string `db:"fqdn" json:"fqdn"`
+	HostName string `db:"host_name" json:"hostName,omitempty"`
 	Cdnname  string `db:"cdnname" json:"cdnname"`
 }
 
 // use this view
 // create view monitors as select ip_address as ip, ip6_address as ip6, profile.name as profile, cachegroup.name as location,
 // status.name as status, server.tcp_port as port, concat(server.host_name, ".", server.domain_name) as fqdn,
-// cdn.name as cdnname
+// cdn.name as cdnname, host_name
 // from server
 // join profile on profile.id = server.profile
 // join cachegroup on cachegroup.id = server.cachegroup
@@ -67,11 +67,12 @@ type Monitor struct {
 	Ip6      null.String `db:"ip6" json:"ip6"`
 	Port     int64       `db:"port" json:"port"`
 	Fqdn     string      `db:"fqdn" json:"fqdn"`
+	HostName string      `db:"host_name" json:"hostName,omitempty"`
 	Cdnname  string      `db:"cdnname" json:"cdnname"`
 }
 
 type EdgeLocation struct {
-	Name      string     `db:"name" json:"name"`
+	Name      string     `db:"name" json:"name,omitempty"`
 	Longitude null.Float `db:"longitude" json:"longitude"`
 	Latitude  null.Float `db:"latitude" json:"latitude"`
 }
@@ -194,9 +195,9 @@ type CrconfigDsData struct {
 }
 
 type CRConfig struct {
-	ContentRouters   []ContentRouter              `json:"contentRouters"`
-	Monitors         []Monitor                    `json:"monitors"`
-	EdgeLocations    []EdgeLocation               `json:"edgeLocations"`
+	ContentRouters   map[string]ContentRouter     `json:"contentRouters"`
+	Monitors         map[string]Monitor           `json:"monitors"`
+	EdgeLocations    map[string]EdgeLocation      `json:"edgeLocations"`
 	Config           Config                       `json:"config"`
 	DeliveryServices map[string]CrDeliveryService `json:"deliveryServices"`
 }
@@ -212,7 +213,7 @@ func boolString(in interface{}) string {
 	return "false"
 }
 
-func contentRoutersSection(cdnName string) ([]ContentRouter, error) {
+func contentRoutersSection(cdnName string) (map[string]ContentRouter, error) {
 	crQuery := "select * from content_routers where cdnname=\"" + cdnName + "\""
 	// fmt.Println(crQuery)
 	crs := []ContentRouter{}
@@ -221,10 +222,17 @@ func contentRoutersSection(cdnName string) ([]ContentRouter, error) {
 		fmt.Println(err)
 		return nil, err
 	}
-	return crs, nil
+	retMap := make(map[string]ContentRouter)
+	for _, row := range crs {
+		out := row
+		out.HostName = "" // omitempty will make it dissapear
+		retMap[row.HostName] = out
+	}
+
+	return retMap, nil
 }
 
-func monitorSecttion(cdnName string) ([]Monitor, error) {
+func monitorSecttion(cdnName string) (map[string]Monitor, error) {
 	mQuery := "select * from monitors where cdnname=\"" + cdnName + "\""
 	// fmt.Println(mQuery)
 	ms := []Monitor{}
@@ -233,10 +241,17 @@ func monitorSecttion(cdnName string) ([]Monitor, error) {
 		fmt.Println(err)
 		return nil, err
 	}
-	return ms, nil
+	retMap := make(map[string]Monitor)
+	for _, row := range ms {
+		out := row
+		out.HostName = "" // omitempty will make it dissapear
+		retMap[row.HostName] = out
+	}
+
+	return retMap, nil
 }
 
-func edgeLocationSection(cdnName string) ([]EdgeLocation, error) {
+func edgeLocationSection(cdnName string) (map[string]EdgeLocation, error) {
 	eQuery := "select name,longitude,latitude from cachegroup where type in (select id from type where name=\"EDGE_LOC\")"
 	// fmt.Println(eQuery)
 	edges := []EdgeLocation{}
@@ -245,7 +260,14 @@ func edgeLocationSection(cdnName string) ([]EdgeLocation, error) {
 		fmt.Println(err)
 		return nil, err
 	}
-	return edges, nil
+	retMap := make(map[string]EdgeLocation)
+	for _, row := range edges {
+		out := row
+		out.Name = "" // omitempty will make it dissapear
+		retMap[row.Name] = out
+	}
+
+	return retMap, nil
 }
 
 func configSection(cdnName string) (Config, map[string]string, error) {
