@@ -211,49 +211,50 @@ func boolString(in interface{}) string {
 	return "false"
 }
 
-func GetCRConfig(cdnName string) (interface{}, error) {
-
-	// contentRouters section
+func contentRoutersSection(cdnName string) ([]ContentRouter, error) {
 	crQuery := "select * from content_routers where cdnname=\"" + cdnName + "\""
-	fmt.Println(crQuery)
+	// fmt.Println(crQuery)
 	crs := []ContentRouter{}
 	err := globalDB.Select(&crs, crQuery)
 	if err != nil {
 		fmt.Println(err)
 		return nil, err
 	}
+	return crs, nil
+}
 
-	// monitors section
+func monitorSecttion(cdnName string) ([]Monitor, error) {
 	mQuery := "select * from monitors where cdnname=\"" + cdnName + "\""
-	fmt.Println(mQuery)
+	// fmt.Println(mQuery)
 	ms := []Monitor{}
-	err = globalDB.Select(&ms, mQuery)
+	err := globalDB.Select(&ms, mQuery)
 	if err != nil {
 		fmt.Println(err)
 		return nil, err
 	}
+	return ms, nil
+}
 
-	// edgeLocations section
+func edgeLocationSection(cdnName string) ([]EdgeLocation, error) {
 	eQuery := "select name,longitude,latitude from cachegroup where type in (select id from type where name=\"EDGE_LOC\")"
-	fmt.Println(eQuery)
+	// fmt.Println(eQuery)
 	edges := []EdgeLocation{}
-	err = globalDB.Select(&edges, eQuery)
+	err := globalDB.Select(&edges, eQuery)
 	if err != nil {
 		fmt.Println(err)
 		return nil, err
 	}
+	return edges, nil
+}
 
-	// stats section
-	// TODO JvD
-
-	// config section
+func configSection(cdnName string) (Config, map[string]string, error) {
 	pQuery := "select * from crconfig_params where cdn_name=\"" + cdnName + "\""
 	fmt.Println(pQuery)
 	params := []CRConfigParam{}
-	err = globalDB.Select(&params, pQuery)
+	err := globalDB.Select(&params, pQuery)
 	if err != nil {
 		fmt.Println(err)
-		return nil, err
+		return Config{}, nil, err
 	}
 
 	pmap := make(map[string]string)
@@ -282,12 +283,14 @@ func GetCRConfig(cdnName string) (interface{}, error) {
 			SOA:    pmap["tld.ttls.SOA"],
 		},
 	}
+	return cfg, pmap, nil
+}
 
-	// deliveryServices Section
+func deliveryServicesSection(cdnName string, pmap map[string]string) (map[string]CrDeliveryService, error) {
 	dQuery := "select * from crconfig_ds_data where cdn_name=\"" + cdnName + "\""
 	fmt.Println(">>>> ", dQuery)
 	ds := []CrconfigDsData{}
-	err = globalDB.Select(&ds, dQuery)
+	err := globalDB.Select(&ds, dQuery)
 	if err != nil {
 		fmt.Println(err)
 		return nil, err
@@ -350,9 +353,25 @@ func GetCRConfig(cdnName string) (interface{}, error) {
 		// put headers in
 		dsMap[deliveryService.XmlId] = dService
 	}
+	return dsMap, nil
+}
 
-	// contentServers Section
+func GetCRConfig(cdnName string) (interface{}, error) {
 
+	crs, err := contentRoutersSection(cdnName)
+	ms, err := monitorSecttion(cdnName)
+	edges, err := edgeLocationSection(cdnName)
+	cfg, pmap, err := configSection(cdnName)
+	dsMap, err := deliveryServicesSection(cdnName, pmap)
+
+	// stats section
+	// contentServers section
+	// TODO JvD
+
+	if err != nil {
+		fmt.Println(err)
+		return nil, err
+	}
 	return CRConfig{
 		ContentRouters:   crs,
 		Monitors:         ms,
