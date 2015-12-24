@@ -142,33 +142,45 @@ type Dispersion struct {
 	Shuffled null.Int `json:"shuffled"`
 }
 
+type CrStaticDnsEntry struct {
+	Name  string `json:"name"`
+	Ttl   string `json:"ttl"`
+	Value string `json:"value"`
+	Type  string `json:"type"`
+}
+
 type CrDeliveryService struct {
-	CoverageZoneOnly     string            `json:"coverageZoneOnly"`
-	Domains              []string          `json:"domains"`
-	IP6RoutingEnabled    string            `json:"ip6RoutingEnabled"`
-	MatchSets            []MatchSetEntry   `json:"matchsets"`
-	MaxDNSIpsForLocation null.Int          `json:"maxDnsIpsForLocation"`
-	MissLocation         MissLocation      `json:"missLocation"`
-	Soa                  Soa               `json:"soa"`
-	TTL                  null.Int          `json:"ttl"`
-	Ttls                 Ttls              `json:"ttls"`
-	ResponseHeaders      map[string]string `json:"responseHeaders,omitempty"`
-	RequestHeaders       []string          `json:"requestHeaders,omitempty"`
-	Dispersion           Dispersion        `json:"dispersion"`
-	GeoEnabled           map[string]string `json:"geoEnabled"`
+	CoverageZoneOnly     string             `json:"coverageZoneOnly"`
+	Domains              []string           `json:"domains"`
+	IP6RoutingEnabled    string             `json:"ip6RoutingEnabled"`
+	MatchSets            []MatchSetEntry    `json:"matchsets"`
+	MaxDNSIpsForLocation null.Int           `json:"maxDnsIpsForLocation"`
+	MissLocation         MissLocation       `json:"missLocation"`
+	Soa                  Soa                `json:"soa"`
+	TTL                  null.Int           `json:"ttl"`
+	StaticDnsEntries     []CrStaticDnsEntry `json:"staticDnsEntries,omitempty"`
+	Ttls                 Ttls               `json:"ttls"`
+	ResponseHeaders      map[string]string  `json:"responseHeaders,omitempty"`
+	RequestHeaders       []string           `json:"requestHeaders,omitempty"`
+	Dispersion           Dispersion         `json:"dispersion"`
+	GeoEnabled           map[string]string  `json:"geoEnabled"`
 }
 
 // create view crconfig_ds_data as select xml_id, profile, ccr_dns_ttl, global_max_mbps, global_max_tps,
 // max_dns_answers, miss_lat, miss_long, protocoltype.name as protocol, ipv6_routing_enabled,
 // tr_request_headers, tr_response_headers, initial_dispersion, dns_bypass_cname,
 // dns_bypass_ip, dns_bypass_ip6, dns_bypass_ttl, geo_limit, cdn.name as cdn_name,
-// regex.pattern as match_pattern, regextype.name as match_type, deliveryservice_regex.set_number
+// regex.pattern as match_pattern, regextype.name as match_type, deliveryservice_regex.set_number,
+// staticdnsentry.host as sdns_host, staticdnsentry.address as sdns_address,
+// staticdnsentry.ttl as sdns_ttl, sdnstype.name as sdns_type
 // from deliveryservice
 // join cdn on cdn.id = deliveryservice.cdn_id
+// join staticdnsentry on staticdnsentry.deliveryservice = deliveryservice.id
 // join deliveryservice_regex on deliveryservice_regex.deliveryservice = deliveryservice.id
 // join regex on regex.id = deliveryservice_regex.regex
 // join type as protocoltype on protocoltype.id = deliveryservice.type
 // join type as regextype on regextype.id = regex.type
+// join type as sdnstype on sdnstype.id = staticdnsentry.type
 
 type CrconfigDsData struct {
 	XmlId              string      `db:"xml_id" json:"xmlId"`
@@ -193,6 +205,10 @@ type CrconfigDsData struct {
 	MatchPattern       string      `db:"match_pattern" json:"matchPattern"`
 	MatchType          string      `db:"match_type" json:"matchType"`
 	SetNumber          int64       `db:"set_number" json:"setNumber"`
+	SdnsHost           null.String `db:"sdns_host" json:"SdnsHost"`
+	SdnsAddress        null.String `db:"sdns_address" json:"SdnsAddress"`
+	SdnsTtl            null.String `db:"sdns_ttl" json:"SdnsTtl"`
+	SdnsType           null.String `db:"sdns_type" json:"SdnsType"`
 }
 
 type CRConfig struct {
@@ -424,6 +440,19 @@ func deliveryServicesSection(cdnName string, pmap map[string]string) (map[string
 
 		if deliveryService.TrRequestHeaders.String != "" { // TODO JvD: test this.
 			dService.RequestHeaders = append(dService.RequestHeaders, genReqHeaderList(deliveryService.TrRequestHeaders.String)...)
+		}
+
+		if dService.StaticDnsEntries == nil {
+			dService.StaticDnsEntries = make([]CrStaticDnsEntry, 0, 0)
+		}
+		if deliveryService.SdnsHost.String != "" {
+			SdnsEntry := CrStaticDnsEntry{
+				Value: deliveryService.SdnsAddress.String,
+				Name:  deliveryService.SdnsHost.String,
+				Ttl:   deliveryService.SdnsTtl.String,
+				Type:  deliveryService.SdnsType.String,
+			}
+			dService.StaticDnsEntries = append(dService.StaticDnsEntries, SdnsEntry)
 		}
 		dsMap[deliveryService.XmlId] = dService
 	}
