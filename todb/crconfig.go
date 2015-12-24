@@ -18,6 +18,7 @@ import (
 	"fmt"
 	"gopkg.in/guregu/null.v3"
 	"reflect"
+	"strconv"
 	"strings"
 )
 
@@ -175,12 +176,12 @@ type CrDeliveryService struct {
 // staticdnsentry.ttl as sdns_ttl, sdnstype.name as sdns_type
 // from deliveryservice
 // join cdn on cdn.id = deliveryservice.cdn_id
-// join staticdnsentry on staticdnsentry.deliveryservice = deliveryservice.id
+// left outer join staticdnsentry on deliveryservice.id = staticdnsentry.deliveryservice
 // join deliveryservice_regex on deliveryservice_regex.deliveryservice = deliveryservice.id
 // join regex on regex.id = deliveryservice_regex.regex
 // join type as protocoltype on protocoltype.id = deliveryservice.type
 // join type as regextype on regextype.id = regex.type
-// join type as sdnstype on sdnstype.id = staticdnsentry.type
+// left outer join type as sdnstype on sdnstype.id = staticdnsentry.type;
 
 type CrconfigDsData struct {
 	XmlId              string      `db:"xml_id" json:"xmlId"`
@@ -211,12 +212,81 @@ type CrconfigDsData struct {
 	SdnsType           null.String `db:"sdns_type" json:"SdnsType"`
 }
 
+// create view content_servers as select distinct  host_name as host_name, profile.name as profile,
+// type.name as type, cachegroup.name as location_id, ip_address as ip, cdn.name as cdnname,
+// status.name as status, cachegroup.name as cache_group, ip6_address as ip6, tcp_port as port,
+// concat(host_name, ".", domain_name) as fqdn, interface_name, parameter.value as hash_count
+// from server
+// join profile on profile.id = server.profile
+// join profile_parameter on profile_parameter.profile = profile.id
+// join parameter on parameter.id = profile_parameter.parameter
+// join cachegroup on cachegroup.id = server.cachegroup
+// join type on type.id = server.type
+// join status on status.id = server.status
+// join cdn on cdn.id = server.cdn_id
+// and parameter.name = 'weight'
+// and server.status in (select id from status where name='REPORTED' or name='ONLINE')
+// and server.type=(select id from type where name='EDGE');
+type CrContentServer struct {
+	HostName      string      `db:"host_name" json:"hostName"`
+	Profile       string      `db:"profile" json:"profile"`
+	Type          string      `db:"type" json:"type"`
+	LocationId    string      `db:"location_id" json:"locationId"`
+	Ip            string      `db:"ip" json:"ip"`
+	Status        string      `db:"status" json:"status"`
+	CacheGroup    string      `db:"cache_group" json:"cacheGroup"`
+	Ip6           null.String `db:"ip6" json:"ip6"`
+	Port          null.Int    `db:"port" json:"port"`
+	Fqdn          string      `db:"fqdn" json:"fqdn"`
+	InterfaceName string      `db:"interface_name" json:"interfaceName"`
+	HashCount     string      `db:"hash_count" json:"hashCount"`
+	CdnName       null.String `db:"cdnname" json:"cdnName"`
+}
+
+type ContentServerDomainList []string
+type ContentServerDsMap map[string]ContentServerDomainList
+
+type ContentServer struct {
+	Fqdn             string             `json:"fqdn"`
+	HashCount        int                `json:"hashCount"`
+	HashID           string             `json:"hashId"`
+	InterfaceName    string             `json:"interfaceName"`
+	IP               string             `json:"ip"`
+	IP6              null.String        `json:"ip6"`
+	LocationID       string             `json:"locationId"`
+	Port             null.Int           `json:"port"`
+	Profile          string             `json:"profile"`
+	Status           string             `json:"status"`
+	Type             string             `json:"type"`
+	DeliveryServices ContentServerDsMap `json:"deliveryServices"`
+}
+
+// create view cr_deliveryservice_server as select distinct regex.pattern as
+// pattern, xml_id, deliveryservice.id as ds_id, server.id as srv_id,
+// cdn.name as cdnname, server.host_name as server_name
+// from deliveryservice
+// join deliveryservice_regex on deliveryservice_regex.deliveryservice = deliveryservice.id
+// join regex on regex.id = deliveryservice_regex.regex
+// join deliveryservice_server on deliveryservice.id = deliveryservice_server.deliveryservice
+// join server on server.id = deliveryservice_server.server
+// join cdn on cdn.id = server.cdn_id;
+type CrDeliveryserviceServer struct {
+	Pattern    string      `db:"pattern" json:"pattern"`
+	XmlId      string      `db:"xml_id" json:"xmlId"`
+	DsId       int64       `db:"ds_id" json:"id"`
+	SrvId      int64       `db:"srv_id" json:"srvId"`
+	ServerName string      `db:"server_name" json:"servername"`
+	Cdnname    null.String `db:"cdnname" json:"cdnname"`
+	DsType     string      `db:"ds_type" json:"dsType"`
+}
+
 type CRConfig struct {
 	ContentRouters   map[string]ContentRouter     `json:"contentRouters"`
 	Monitors         map[string]Monitor           `json:"monitors"`
 	EdgeLocations    map[string]EdgeLocation      `json:"edgeLocations"`
 	Config           Config                       `json:"config"`
 	DeliveryServices map[string]CrDeliveryService `json:"deliveryServices"`
+	ContentServers   map[string]ContentServer     `json:"contentServers"`
 }
 
 func boolString(in interface{}) string {
@@ -422,7 +492,7 @@ func deliveryServicesSection(cdnName string, pmap map[string]string) (map[string
 		}
 		// TODO JvD: add support of set entry 1, 2, 3
 		if dService.MatchSets == nil {
-			dService.MatchSets = make([]MatchSetEntry, 0, 0)
+			dService.MatchSets = make([]MatchSetEntry, 0, 10)
 		}
 		mType := deliveryService.MatchType
 		mType = strings.Replace(mType, "_REGEXP", "", 1)
@@ -430,7 +500,7 @@ func deliveryServicesSection(cdnName string, pmap map[string]string) (map[string
 			Regex:     deliveryService.MatchPattern,
 			MatchType: mType,
 		}
-		ml := make([]MactchListEntry, 0, 0)
+		ml := make([]MactchListEntry, 0, 10)
 		ml = append(ml, mle)
 		mse := MatchSetEntry{
 			Protocol:  deliveryService.Protocol,
@@ -443,7 +513,7 @@ func deliveryServicesSection(cdnName string, pmap map[string]string) (map[string
 		}
 
 		if dService.StaticDnsEntries == nil {
-			dService.StaticDnsEntries = make([]CrStaticDnsEntry, 0, 0)
+			dService.StaticDnsEntries = make([]CrStaticDnsEntry, 0, 10)
 		}
 		if deliveryService.SdnsHost.String != "" {
 			SdnsEntry := CrStaticDnsEntry{
@@ -459,6 +529,66 @@ func deliveryServicesSection(cdnName string, pmap map[string]string) (map[string
 	return dsMap, nil
 }
 
+func contentServersSection(cdnName string, ccrDomain string) (map[string]ContentServer, error) {
+	csQuery := "select * from content_servers where cdnname=\"" + cdnName + "\""
+	fmt.Println(csQuery)
+	cServers := []CrContentServer{}
+	err := globalDB.Select(&cServers, csQuery)
+	if err != nil {
+		fmt.Println(err)
+		return nil, err
+	}
+	dsServerQuery := "select * from cr_deliveryservice_server"
+	dsServers := []CrDeliveryserviceServer{}
+	err = globalDB.Select(&dsServers, dsServerQuery)
+	if err != nil {
+		fmt.Println(err)
+		return nil, err
+	}
+	dsMap := make(map[string]ContentServerDsMap)
+	for _, row := range dsServers {
+		if dsMap[row.ServerName] == nil {
+			dsMap[row.ServerName] = make(ContentServerDsMap)
+		}
+		if dsMap[row.ServerName][row.XmlId] == nil {
+			dsMap[row.ServerName][row.XmlId] = make(ContentServerDomainList, 0, 10)
+		}
+		pattern := row.Pattern
+		if strings.HasSuffix(pattern, "\\..*") {
+			pattern = strings.Replace(pattern, ".*\\.", "", 1)
+			pattern = strings.Replace(pattern, "\\..*", "", 1)
+			if strings.HasPrefix(row.DsType, "HTTP") {
+				pattern = row.ServerName + "." + pattern + "." + ccrDomain
+			} else {
+				pattern = "edge." + pattern + "." + ccrDomain
+			}
+		}
+		dsMap[row.ServerName][row.XmlId] = append(dsMap[row.ServerName][row.XmlId], pattern)
+	}
+
+	retMap := make(map[string]ContentServer)
+	for _, row := range cServers {
+		hCount, _ := strconv.Atoi(row.HashCount)
+		hCount = hCount * 1000 // TODO JvD
+		retMap[row.HostName] = ContentServer{
+			Fqdn:             row.Fqdn,
+			HashCount:        hCount,
+			HashID:           row.HostName,
+			InterfaceName:    row.InterfaceName,
+			IP:               row.Ip,
+			IP6:              row.Ip6,
+			LocationID:       row.CacheGroup,
+			Port:             row.Port,
+			Profile:          row.Profile,
+			Status:           row.Status,
+			Type:             row.Status,
+			DeliveryServices: dsMap[row.HostName],
+		}
+	}
+
+	return retMap, nil
+}
+
 func GetCRConfig(cdnName string) (interface{}, error) {
 
 	crs, err := contentRoutersSection(cdnName)
@@ -466,9 +596,9 @@ func GetCRConfig(cdnName string) (interface{}, error) {
 	edges, err := edgeLocationSection(cdnName)
 	cfg, pmap, err := configSection(cdnName)
 	dsMap, err := deliveryServicesSection(cdnName, pmap)
+	cServermap, err := contentServersSection(cdnName, pmap["domain_name"])
 
 	// stats section
-	// contentServers section
 	// TODO JvD
 
 	if err != nil {
@@ -481,5 +611,6 @@ func GetCRConfig(cdnName string) (interface{}, error) {
 		EdgeLocations:    edges,
 		Config:           cfg,
 		DeliveryServices: dsMap,
+		ContentServers:   cServermap,
 	}, nil
 }
