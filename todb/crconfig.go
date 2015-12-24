@@ -20,6 +20,7 @@ import (
 	"reflect"
 	"strconv"
 	"strings"
+	"time"
 )
 
 // use this view
@@ -280,10 +281,20 @@ type CrDeliveryserviceServer struct {
 	DsType     string      `db:"ds_type" json:"dsType"`
 }
 
+type Stats struct {
+	CDNName   string `json:"CDN_name"`
+	Date      int    `json:"date"`
+	TmHost    string `json:"tm_host"`
+	TmPath    string `json:"tm_path"`
+	TmUser    string `json:"tm_user"`
+	TmVersion string `json:"tm_version"`
+}
+
 type CRConfig struct {
 	ContentRouters   map[string]ContentRouter     `json:"contentRouters"`
 	Monitors         map[string]Monitor           `json:"monitors"`
 	EdgeLocations    map[string]EdgeLocation      `json:"edgeLocations"`
+	Stats            Stats                        `json:"stats"`
 	Config           Config                       `json:"config"`
 	DeliveryServices map[string]CrDeliveryService `json:"deliveryServices"`
 	ContentServers   map[string]ContentServer     `json:"contentServers"`
@@ -589,27 +600,38 @@ func contentServersSection(cdnName string, ccrDomain string) (map[string]Content
 	return retMap, nil
 }
 
-func GetCRConfig(cdnName string) (interface{}, error) {
+func statsSection(cdnName string) (Stats, error) {
+	stats := Stats{
+		CDNName:   cdnName,
+		Date:      int(time.Now().Unix()),
+		TmHost:    "dummy",
+		TmPath:    "dummy",
+		TmUser:    "jvd",
+		TmVersion: "2.0!",
+	}
+	return stats, nil
+}
 
+func GetCRConfig(cdnName string) (interface{}, error) {
 	crs, err := contentRoutersSection(cdnName)
 	ms, err := monitorSecttion(cdnName)
 	edges, err := edgeLocationSection(cdnName)
 	cfg, pmap, err := configSection(cdnName)
 	dsMap, err := deliveryServicesSection(cdnName, pmap)
 	cServermap, err := contentServersSection(cdnName, pmap["domain_name"])
-
-	// stats section
-	// TODO JvD
+	stats, err := statsSection(cdnName)
 
 	if err != nil {
 		fmt.Println(err)
 		return nil, err
 	}
+
 	return CRConfig{
 		ContentRouters:   crs,
 		Monitors:         ms,
 		EdgeLocations:    edges,
 		Config:           cfg,
+		Stats:            stats,
 		DeliveryServices: dsMap,
 		ContentServers:   cServermap,
 	}, nil
