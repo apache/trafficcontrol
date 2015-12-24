@@ -127,7 +127,7 @@ type MactchListEntry struct {
 }
 
 type MatchSetEntry struct {
-	Matchlist []MactchListEntry `json:"matchlist"`
+	MatchList []MactchListEntry `json:"matchlist"`
 	Protocol  string            `json:"protocol"`
 }
 
@@ -159,14 +159,14 @@ type CrDeliveryService struct {
 // create view crconfig_ds_data as select xml_id, profile, ccr_dns_ttl, global_max_mbps, global_max_tps,
 // max_dns_answers, miss_lat, miss_long, protocoltype.name as protocol, ipv6_routing_enabled,
 // tr_request_headers, tr_response_headers, initial_dispersion, dns_bypass_cname,
-// dns_bypass_ip, dns_bypass_ip6, dns_bypass_ttl, cdn.name as cdn_name,
-// regex.pattern as match_pattern, regextype.name as match_type
+// dns_bypass_ip, dns_bypass_ip6, dns_bypass_ttl, geo_limit, cdn.name as cdn_name,
+// regex.pattern as match_pattern, regextype.name as match_type, deliveryservice_regex.set_number
 // from deliveryservice
 // join cdn on cdn.id = deliveryservice.cdn_id
 // join deliveryservice_regex on deliveryservice_regex.deliveryservice = deliveryservice.id
 // join regex on regex.id = deliveryservice_regex.regex
 // join type as protocoltype on protocoltype.id = deliveryservice.type
-// join type as regextype on regextype.id = regex.type;
+// join type as regextype on regextype.id = regex.type
 
 type CrconfigDsData struct {
 	XmlId              string      `db:"xml_id" json:"xmlId"`
@@ -190,6 +190,7 @@ type CrconfigDsData struct {
 	CdnName            null.String `db:"cdn_name" json:"cdnName"`
 	MatchPattern       string      `db:"match_pattern" json:"matchPattern"`
 	MatchType          string      `db:"match_type" json:"matchType"`
+	SetNumber          int64       `db:"set_number" json:"setNumber"`
 }
 
 type CRConfig struct {
@@ -295,6 +296,7 @@ func deliveryServicesSection(cdnName string, pmap map[string]string) (map[string
 		fmt.Println(err)
 		return nil, err
 	}
+	ccrDomain := pmap["domain_name"]
 	dsMap := make(map[string]CrDeliveryService)
 	for _, deliveryService := range ds {
 		GeoMap := make(map[string]string) // TODO: should this 1->USA, and 2->CA be hardcoded here?
@@ -309,47 +311,66 @@ func deliveryServicesSection(cdnName string, pmap map[string]string) (map[string
 		// respHdrs := make(map[string]string)
 		// domains := make([]string, 0, 0)
 		// msets := make([]MatchSetEntry, 0, 0)
-		dsMap[deliveryService.XmlId] = CrDeliveryService{
-			CoverageZoneOnly: CzfOnly,
-			// Domains:              domains,
-			IP6RoutingEnabled: boolString(deliveryService.Ipv6RoutingEnabled),
-			// MatchSets:            msets,
-			MaxDNSIpsForLocation: deliveryService.MaxDnsAnswers,
-			MissLocation: MissLocation{
-				Latitude:  deliveryService.MissLat,
-				Longitude: deliveryService.MissLong,
-			},
-			Soa: Soa{
-				Admin:   pmap["tld.soa.admin"],
-				Expire:  pmap["tld.soa.expire"],
-				Minimum: pmap["tld.soa.minimum"],
-				Refresh: pmap["tld.soa.refresh"],
-				Retry:   pmap["tld.soa.retry"],
-			},
-			TTL: deliveryService.CcrDnsTtl,
-			Ttls: Ttls{
-				A:      pmap["tld.ttls.A"],
-				AAAA:   pmap["tld.ttls.AAAA"],
-				DNSKEY: pmap["tld.ttls.DNSKEY"],
-				DS:     pmap["tld.ttls.DS"],
-				NS:     pmap["tld.ttls.NS"],
-				SOA:    pmap["tld.ttls.SOA"],
-			},
-			// ResponseHeaders: respHdrs,
-			Dispersion: Dispersion{
-				Shuffled: deliveryService.InitialDispersion,
-				Limit:    1,
-			},
-			GeoEnabled: GeoMap,
+		if _, ok := dsMap[deliveryService.XmlId]; !ok { // there are multiple rows for each DS, only create the struct once
+			dsMap[deliveryService.XmlId] = CrDeliveryService{
+				CoverageZoneOnly: CzfOnly,
+				// Domains:              domains,
+				IP6RoutingEnabled: boolString(deliveryService.Ipv6RoutingEnabled),
+				// MatchSets:            msets,
+				MaxDNSIpsForLocation: deliveryService.MaxDnsAnswers,
+				MissLocation: MissLocation{
+					Latitude:  deliveryService.MissLat,
+					Longitude: deliveryService.MissLong,
+				},
+				Soa: Soa{
+					Admin:   pmap["tld.soa.admin"],
+					Expire:  pmap["tld.soa.expire"],
+					Minimum: pmap["tld.soa.minimum"],
+					Refresh: pmap["tld.soa.refresh"],
+					Retry:   pmap["tld.soa.retry"],
+				},
+				TTL: deliveryService.CcrDnsTtl,
+				Ttls: Ttls{
+					A:      pmap["tld.ttls.A"],
+					AAAA:   pmap["tld.ttls.AAAA"],
+					DNSKEY: pmap["tld.ttls.DNSKEY"],
+					DS:     pmap["tld.ttls.DS"],
+					NS:     pmap["tld.ttls.NS"],
+					SOA:    pmap["tld.ttls.SOA"],
+				},
+				// ResponseHeaders: respHdrs,
+				Dispersion: Dispersion{
+					Shuffled: deliveryService.InitialDispersion,
+					Limit:    1,
+				},
+				GeoEnabled: GeoMap,
+			}
 		}
-		//https://code.google.com/p/go/issues/detail?id=3117
 		dService := dsMap[deliveryService.XmlId]
-		domains := dService.Domains
-		if domains == nil {
-			domains = make([]string, 0, 0)
+		if deliveryService.MatchType == "HOST_REGEXP" && deliveryService.SetNumber == 0 { // TODO JvD: why / how is this an array?
+			if dService.Domains == nil {
+				dService.Domains = make([]string, 0, 0)
+			}
+			dsDomain := deliveryService.MatchPattern + "." + ccrDomain
+			dsDomain = strings.Replace(dsDomain, ".*\\.", "", 1) // XXX check to see if this should be smarter??
+			dsDomain = strings.Replace(dsDomain, "\\..*", "", 1) // XXX check to see if this should be smarter??
+			dService.Domains = append(dService.Domains, dsDomain)
 		}
-		dService.Domains = append(domains, "hey") // put real domain here
-		// put matchlists in
+		// TODO JvD: add support of set entry 1, 2, 3
+		if dService.MatchSets == nil {
+			dService.MatchSets = make([]MatchSetEntry, 0, 0)
+		}
+		mle := MactchListEntry{
+			Regex:     deliveryService.MatchPattern,
+			MatchType: deliveryService.MatchType,
+		}
+		ml := make([]MactchListEntry, 0, 0)
+		ml = append(ml, mle)
+		mse := MatchSetEntry{
+			Protocol:  deliveryService.Protocol,
+			MatchList: ml,
+		}
+		dService.MatchSets = append(dService.MatchSets, mse)
 		// put headers in
 		dsMap[deliveryService.XmlId] = dService
 	}
