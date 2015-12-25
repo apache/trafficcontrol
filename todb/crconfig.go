@@ -23,6 +23,9 @@ import (
 	"time"
 )
 
+// Note: a lot of these structs are generated from the DB. No need to type them all out, there's tools for that.
+// a view will generate structs also with get_structs.go
+
 // use this view
 // create view content_routers as select ip_address as ip, ip6_address as ip6, profile.name as profile, cachegroup.name as location,
 // status.name as status, server.tcp_port as port, host_name, concat(server.host_name, ".", server.domain_name) as fqdn,
@@ -168,6 +171,7 @@ type CrDeliveryService struct {
 	GeoEnabled           map[string]string  `json:"geoEnabled"`
 }
 
+// use this view
 // create view crconfig_ds_data as select xml_id, profile, ccr_dns_ttl, global_max_mbps, global_max_tps,
 // max_dns_answers, miss_lat, miss_long, protocoltype.name as protocol, ipv6_routing_enabled,
 // tr_request_headers, tr_response_headers, initial_dispersion, dns_bypass_cname,
@@ -213,6 +217,7 @@ type CrconfigDsData struct {
 	SdnsType           null.String `db:"sdns_type" json:"SdnsType"`
 }
 
+// use this view
 // create view content_servers as select distinct  host_name as host_name, profile.name as profile,
 // type.name as type, cachegroup.name as location_id, ip_address as ip, cdn.name as cdnname,
 // status.name as status, cachegroup.name as cache_group, ip6_address as ip6, tcp_port as port,
@@ -262,6 +267,7 @@ type ContentServer struct {
 	DeliveryServices ContentServerDsMap `json:"deliveryServices"`
 }
 
+// use this view
 // create view cr_deliveryservice_server as select distinct regex.pattern as
 // pattern, xml_id, deliveryservice.id as ds_id, server.id as srv_id,
 // cdn.name as cdnname, server.host_name as server_name
@@ -313,7 +319,6 @@ func boolString(in interface{}) string {
 
 func contentRoutersSection(cdnName string) (map[string]ContentRouter, error) {
 	crQuery := "select * from content_routers where cdnname=\"" + cdnName + "\""
-	// fmt.Println(crQuery)
 	crs := []ContentRouter{}
 	err := globalDB.Select(&crs, crQuery)
 	if err != nil {
@@ -332,7 +337,6 @@ func contentRoutersSection(cdnName string) (map[string]ContentRouter, error) {
 
 func monitorSecttion(cdnName string) (map[string]Monitor, error) {
 	mQuery := "select * from monitors where cdnname=\"" + cdnName + "\""
-	// fmt.Println(mQuery)
 	ms := []Monitor{}
 	err := globalDB.Select(&ms, mQuery)
 	if err != nil {
@@ -351,7 +355,6 @@ func monitorSecttion(cdnName string) (map[string]Monitor, error) {
 
 func edgeLocationSection(cdnName string) (map[string]EdgeLocation, error) {
 	eQuery := "select name,longitude,latitude from cachegroup where type in (select id from type where name=\"EDGE_LOC\")"
-	// fmt.Println(eQuery)
 	edges := []EdgeLocation{}
 	err := globalDB.Select(&edges, eQuery)
 	if err != nil {
@@ -370,7 +373,6 @@ func edgeLocationSection(cdnName string) (map[string]EdgeLocation, error) {
 
 func configSection(cdnName string) (Config, map[string]string, error) {
 	pQuery := "select * from crconfig_params where cdn_name=\"" + cdnName + "\""
-	fmt.Println(pQuery)
 	params := []CRConfigParam{}
 	err := globalDB.Select(&params, pQuery)
 	if err != nil {
@@ -432,7 +434,6 @@ func genRespHeaderList(inString string) map[string]string {
 
 func deliveryServicesSection(cdnName string, pmap map[string]string) (map[string]CrDeliveryService, error) {
 	dQuery := "select * from crconfig_ds_data where cdn_name=\"" + cdnName + "\""
-	fmt.Println(dQuery)
 	ds := []CrconfigDsData{}
 	err := globalDB.Select(&ds, dQuery)
 	if err != nil {
@@ -452,15 +453,10 @@ func deliveryServicesSection(cdnName string, pmap map[string]string) (map[string
 		} else if deliveryService.GeoLimit == 3 {
 			GeoMap["countryCode"] = "CA"
 		}
-		// respHdrs := make(map[string]string)
-		// domains := make([]string, 0, 0)
-		// msets := make([]MatchSetEntry, 0, 0)
 		if _, ok := dsMap[deliveryService.XmlId]; !ok { // there are multiple rows for each DS, only create the struct once
 			dsMap[deliveryService.XmlId] = CrDeliveryService{
-				CoverageZoneOnly: CzfOnly,
-				// Domains:              domains,
-				IP6RoutingEnabled: boolString(deliveryService.Ipv6RoutingEnabled),
-				// MatchSets:            msets,
+				CoverageZoneOnly:     CzfOnly,
+				IP6RoutingEnabled:    boolString(deliveryService.Ipv6RoutingEnabled),
 				MaxDNSIpsForLocation: deliveryService.MaxDnsAnswers,
 				MissLocation: MissLocation{
 					Latitude:  deliveryService.MissLat,
@@ -493,18 +489,18 @@ func deliveryServicesSection(cdnName string, pmap map[string]string) (map[string
 		}
 		dService := dsMap[deliveryService.XmlId]
 		if deliveryService.MatchType == "HOST_REGEXP" && deliveryService.SetNumber == 0 { // TODO JvD: why / how is this an array?
-			if dService.Domains == nil {
-				dService.Domains = make([]string, 0, 0)
-			}
+			// if dService.Domains == nil {
+			// 	dService.Domains = make([]string, 0, 0)
+			// }
 			dsDomain := deliveryService.MatchPattern + "." + ccrDomain
 			dsDomain = strings.Replace(dsDomain, ".*\\.", "", 1) // XXX check to see if this should be smarter??
 			dsDomain = strings.Replace(dsDomain, "\\..*", "", 1) // XXX check to see if this should be smarter??
 			dService.Domains = append(dService.Domains, dsDomain)
 		}
 		// TODO JvD: add support of set entry 1, 2, 3
-		if dService.MatchSets == nil {
-			dService.MatchSets = make([]MatchSetEntry, 0, 10)
-		}
+		// if dService.MatchSets == nil {
+		// 	dService.MatchSets = make([]MatchSetEntry, 0, 10)
+		// }
 		mType := deliveryService.MatchType
 		mType = strings.Replace(mType, "_REGEXP", "", 1)
 		mle := MactchListEntry{
@@ -523,9 +519,9 @@ func deliveryServicesSection(cdnName string, pmap map[string]string) (map[string
 			dService.RequestHeaders = append(dService.RequestHeaders, genReqHeaderList(deliveryService.TrRequestHeaders.String)...)
 		}
 
-		if dService.StaticDnsEntries == nil {
-			dService.StaticDnsEntries = make([]CrStaticDnsEntry, 0, 10)
-		}
+		// if dService.StaticDnsEntries == nil {
+		// 	dService.StaticDnsEntries = make([]CrStaticDnsEntry, 0, 10)
+		// }
 		if deliveryService.SdnsHost.String != "" {
 			SdnsEntry := CrStaticDnsEntry{
 				Value: deliveryService.SdnsAddress.String,
@@ -542,7 +538,6 @@ func deliveryServicesSection(cdnName string, pmap map[string]string) (map[string
 
 func contentServersSection(cdnName string, ccrDomain string) (map[string]ContentServer, error) {
 	csQuery := "select * from content_servers where cdnname=\"" + cdnName + "\""
-	fmt.Println(csQuery)
 	cServers := []CrContentServer{}
 	err := globalDB.Select(&cServers, csQuery)
 	if err != nil {
@@ -561,9 +556,9 @@ func contentServersSection(cdnName string, ccrDomain string) (map[string]Content
 		if dsMap[row.ServerName] == nil {
 			dsMap[row.ServerName] = make(ContentServerDsMap)
 		}
-		if dsMap[row.ServerName][row.XmlId] == nil {
-			dsMap[row.ServerName][row.XmlId] = make(ContentServerDomainList, 0, 10)
-		}
+		// if dsMap[row.ServerName][row.XmlId] == nil {
+		// 	dsMap[row.ServerName][row.XmlId] = make(ContentServerDomainList, 0, 10)
+		// }
 		pattern := row.Pattern
 		if strings.HasSuffix(pattern, "\\..*") {
 			pattern = strings.Replace(pattern, ".*\\.", "", 1)
