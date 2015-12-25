@@ -46,7 +46,6 @@ import com.comcast.cdn.traffic_control.traffic_router.core.router.StatTracker.Tr
 /**
  * Servlet to handle content routing requests.
  */
-@SuppressWarnings("PMD.MoreThanOneLogger")
 public class TRServlet extends HttpServlet {
 	private static final long serialVersionUID = 1L;
 

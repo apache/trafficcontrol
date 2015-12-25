@@ -228,6 +228,18 @@ __PACKAGE__->set_primary_key("id");
 
 =head1 UNIQUE CONSTRAINTS
 
+=head2 C<tmuser_email_UNIQUE>
+
+=over 4
+
+=item * L</email>
+
+=back
+
+=cut
+
+__PACKAGE__->add_unique_constraint("tmuser_email_UNIQUE", ["email"]);
+
 =head2 C<username_UNIQUE>
 
 =over 4
@@ -323,8 +335,8 @@ __PACKAGE__->belongs_to(
 );
 
 
-# Created by DBIx::Class::Schema::Loader v0.07042 @ 2015-10-01 13:20:58
-# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:ItqKDNXF30OoTN/XDznBIA
+# Created by DBIx::Class::Schema::Loader v0.07042 @ 2015-12-09 15:54:44
+# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:jq4kq9tcGwjlTbDHrTOFiw
 
 
 # You can replace this text with custom code or comments, and it will be preserved on regeneration

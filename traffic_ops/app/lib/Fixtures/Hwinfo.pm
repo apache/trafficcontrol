@@ -65,6 +65,24 @@ my %definition_for = (
 			val         => 'Beetle',
 		},
 	},
+	hw6 => {
+		new   => 'Hwinfo',
+		using => {
+			id          => 6,
+			serverid    => 3,
+			description => 'Manufacturer',
+			val         => 'Ferrari',
+		},
+	},
+	hw6 => {
+		new   => 'Hwinfo',
+		using => {
+			id          => 7,
+			serverid    => 3,
+			description => 'Model',
+			val         => 'Spider',
+		},
+	},
 );
 
 sub get_definition {

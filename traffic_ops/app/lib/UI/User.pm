@@ -263,8 +263,9 @@ sub is_valid {
 	if ( $mode =~ /add/ ) {
 		$self->field('tm_user.local_passwd')->is_required;
 		$self->field('tm_user.confirm_local_passwd')->is_required;
-
 		$self->is_username_taken( $self->param('tm_user.username') );
+		$self->is_email_taken();
+		$self->is_email_format_valid();
 	}
 
 	$self->field('tm_user.local_passwd')->is_equal( 'tm_user.confirm_local_passwd', "The 'Password' and 'Confirm Password' must match." );
