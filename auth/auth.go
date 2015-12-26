@@ -23,6 +23,7 @@ import (
 	"encoding/hex"
 	"fmt"
 	"net/http"
+	"strings"
 
 	ctx "github.com/gorilla/context"
 	"github.com/gorilla/securecookie"
@@ -89,7 +90,14 @@ func Login(w http.ResponseWriter, r *http.Request) {
 	username, password := r.FormValue("username"), r.FormValue("password")
 	session, _ := Store.Get(r, "trafficOps")
 	u, err := todb.GetTmUser(username)
-	redirectTarget := "/hello/jvd"
+	redirectTarget := "/"
+	if flashes := session.Flashes(); len(flashes) > 0 {
+		for _, flashMsg := range flashes {
+			if strings.HasPrefix(flashMsg.(string), "pathDenied:") {
+				redirectTarget = strings.Replace(flashMsg.(string), "pathDenied:", "", 1)
+			}
+		}
+	}
 	encBytes := sha1.Sum([]byte(password))
 	encString := hex.EncodeToString(encBytes[:])
 	// fmt.Println("sha1:", hex.EncodeToString(encBytes[:]), " localpasswd:", u.LocalPasswd.String, "err:", err)
@@ -110,6 +118,7 @@ func Login(w http.ResponseWriter, r *http.Request) {
 func Logout(w http.ResponseWriter, r *http.Request) {
 	session, _ := Store.Get(r, "trafficOps")
 	delete(session.Values, "id")
+	session.Save(r, w)
 	http.Redirect(w, r, "/login", 302)
 }
 
@@ -118,10 +127,13 @@ func Logout(w http.ResponseWriter, r *http.Request) {
 func RequireLogin(handler http.Handler) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		u := ctx.Get(r, "user")
-		fmt.Println(">", u)
+		// fmt.Println(">", u)
 		if u != nil {
 			handler.ServeHTTP(w, r)
 		} else {
+			session, _ := Store.Get(r, "trafficOps")
+			session.AddFlash("pathDenied:" + r.URL.EscapedPath())
+			session.Save(r, w)
 			http.Redirect(w, r, "/login", 302)
 		}
 	}

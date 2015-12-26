@@ -12,6 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+// Started from https://raw.githubusercontent.com/jordan-wright/gophish
+
 package router
 
 import (
