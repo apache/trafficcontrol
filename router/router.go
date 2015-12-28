@@ -22,7 +22,7 @@ import (
 
 	"encoding/json"
 	"fmt"
-	"log"
+	// "log"
 	"net/http"
 
 	"github.com/gorilla/mux"
@@ -38,6 +38,7 @@ func CreateRouter() http.Handler {
 	router.HandleFunc("/hello/{name}", auth.Use(hello, auth.RequireLogin)).Methods("GET")
 
 	router.HandleFunc("/api/2.0/raw/{table}.json", auth.Use(handleTable, auth.RequireLogin))
+	router.HandleFunc("/api/2.0/{name}/{key}/{value}/{details.json", auth.Use(handleDetail, auth.RequireLogin))
 	router.HandleFunc("/api/2.0/{cdn}/CRConfig.json", auth.Use(handleCRConfig, auth.RequireLogin))
 	return auth.Use(router.ServeHTTP, auth.GetContext)
 }
@@ -50,29 +51,33 @@ func handleCRConfig(w http.ResponseWriter, r *http.Request) {
 	enc.Encode(resp)
 }
 
-func handleTable(w http.ResponseWriter, r *http.Request) {
-	log.Println("Responding to /api request")
-	log.Println(r.UserAgent())
-
+func setHeaders(w http.ResponseWriter) {
 	w.Header().Set("Access-Control-Allow-Origin", "*")
 	w.Header().Set("Access-Control-Allow-Methods", "GET, PUT, POST, DELETE")
 	w.Header().Set("Access-Control-Allow-Headers", "Origin, Authorization, X-Requested-With, Content-Type")
+}
 
+func handleDetail(w http.ResponseWriter, r *http.Request) {
+	setHeaders(w)
 	vars := mux.Vars(r)
 	table := vars["table"]
-
-	rows, _ := db.GetTable(table)
-	// fmt.Print(rows)
+	key := vars["key"]
+	value := vars["value"]
+	rows, _ := db.GetDetails(table, key, value)
 	enc := json.NewEncoder(w)
 	enc.Encode(rows)
-	// w.WriteHeader(http.StatusOK)
-	// fmt.Fprintln(w, "table:", table)
+}
+
+func handleTable(w http.ResponseWriter, r *http.Request) {
+	setHeaders(w)
+	vars := mux.Vars(r)
+	table := vars["table"]
+	rows, _ := db.GetTable(table)
+	enc := json.NewEncoder(w)
+	enc.Encode(rows)
 }
 
 func hello(w http.ResponseWriter, r *http.Request) {
-	log.Println("Responding to /hello request")
-	log.Println(r.UserAgent())
-
 	vars := mux.Vars(r)
 	name := vars["name"]
 

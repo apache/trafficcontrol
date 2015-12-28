@@ -29,7 +29,7 @@ import (
 )
 
 func main() {
-	db.InitializeDatabase(os.Args[1], os.Args[2], os.Args[3])
+	db.InitializeDatabase(os.Args[1], os.Args[2], os.Args[3], os.Args[4])
 	// router := mux.NewRouter().StrictSlash(true)
 	// router.HandleFunc("/login", auth.LoginPage).Methods("GET")
 	// router.HandleFunc("/login", auth.Login).Methods("POST")

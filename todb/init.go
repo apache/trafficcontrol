@@ -17,6 +17,7 @@ package todb
 import (
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/jmoiron/sqlx"
+	_ "github.com/lib/pq"
 )
 
 var (
@@ -30,10 +31,16 @@ func check(e error) {
 	}
 }
 
-func InitializeDatabase(username string, password string, environment string) {
-	db, err := sqlx.Connect("mysql", username+":"+password+"@tcp(localhost:3306)/"+environment+"?parseTime=True")
-	check(err)
+func InitializeDatabase(dbtype, username, password, environment string) {
+	connString := ""
+	if dbtype == "mysql" {
+		connString = username + ":" + password + "@tcp(localhost:3306)/" + environment + "?parseTime=True"
+	} else if dbtype == "postgres" {
+		connString = "user=" + username + " dbname=" + environment + " password=" + password + " sslmode=disable"
+	}
 
+	db, err := sqlx.Connect(dbtype, connString)
+	check(err)
 	globalDB = *db
 	databaseName = environment
 }

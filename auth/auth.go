@@ -30,10 +30,10 @@ import (
 	"github.com/gorilla/sessions"
 )
 
-type Flash struct {
-	Type    string
-	Message string
-}
+// type Flash struct {
+// 	Type    string
+// 	Message string
+// }
 
 const loginPage = `
 <h1>Login</h1>
@@ -100,7 +100,7 @@ func Login(w http.ResponseWriter, r *http.Request) {
 	}
 	encBytes := sha1.Sum([]byte(password))
 	encString := hex.EncodeToString(encBytes[:])
-	// fmt.Println("sha1:", hex.EncodeToString(encBytes[:]), " localpasswd:", u.LocalPasswd.String, "err:", err)
+	fmt.Println("sha1:", hex.EncodeToString(encBytes[:]), " localpasswd:", u.LocalPasswd.String, "err:", err)
 	if err != nil || u.LocalPasswd.String != encString {
 		ctx.Set(r, "user", nil)
 		fmt.Println("Invalid passwd")

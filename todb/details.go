@@ -21,12 +21,10 @@ import (
 	"fmt"
 )
 
-// name is like getTmUser - TODO JvD
-func GetTmUser(username string) (TmUser, error) {
-	ret := TmUser{}
-	err := globalDB.Get(&ret, "select * from tm_user where username=$1", username)
-	if err != nil {
-		fmt.Println(err)
+func GetDetails(tableName, key, value string) (interface{}, error) {
+	if tableName == "server" {
+		// return getServerDetails(key, value)
+		fmt.Println("server")
 	}
-	return ret, err
+	return nil, nil
 }
