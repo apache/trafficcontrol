@@ -1033,3 +1033,143 @@ SSL Keys
     {  
       "response": "Successfully added ssl keys for ds-01"
     }
+
+
+|
+
+**POST /api/1.1/deliveryservices/request**
+
+  Allows a user to send a delivery service request to a specified email address.
+
+  Authentication Required: Yes
+
+  Role(s) Required: None
+
+  **Request Properties**
+
+  +----------------------------------------+--------+----------+---------------------------------------------------------------------------------------------+
+  |  Parameter                             |  Type  | Required |           Description                                                                       |
+  +========================================+========+==========+=============================================================================================+
+  | ``emailTo``                            | string | yes      | The email to which the delivery service request will be sent.                               |
+  +----------------------------------------+--------+----------+---------------------------------------------------------------------------------------------+
+  | ``dsParams``                           | hash   | yes      | Parameters for the delivery service request.                                                |
+  +----------------------------------------+--------+----------+---------------------------------------------------------------------------------------------+
+  | ``>customer``                          | string | yes      | Name of the customer to associated with the delivery service.                               |
+  +----------------------------------------+--------+----------+---------------------------------------------------------------------------------------------+
+  | ``>deliveryProtocol``                  | string | yes      | Eg. http or http/https                                                                      |
+  +----------------------------------------+--------+----------+---------------------------------------------------------------------------------------------+
+  | ``>routingType``                       | string | yes      | Eg. DNS or HTTP Redirect                                                                    |
+  +----------------------------------------+--------+----------+---------------------------------------------------------------------------------------------+
+  | ``>serviceDesc``                       | string | yes      | A description of the delivery service.                                                      |
+  +----------------------------------------+--------+----------+---------------------------------------------------------------------------------------------+
+  | ``>peakBpsEstimate``                   | string | yes      | Used to manage cache efficiency and plan for capacity.                                      |
+  +----------------------------------------+--------+----------+---------------------------------------------------------------------------------------------+
+  | ``>peakTpsEstimate``                   | string | yes      | Used to manage cache efficiency and plan for capacity.                                      |
+  +----------------------------------------+--------+----------+---------------------------------------------------------------------------------------------+
+  | ``>maxLibrarySizeEstimate``            | string | yes      | Used to manage cache efficiency and plan for capacity.                                      |
+  +----------------------------------------+--------+----------+---------------------------------------------------------------------------------------------+
+  | ``>originUrl``                         | string | yes      | The URL path to the origin server.                                                          |
+  +----------------------------------------+--------+----------+---------------------------------------------------------------------------------------------+
+  | ``>originDynamicRemap``                | bool   | yes      | This is a feature which allows services to use multiple origin URLs for the same service.   |
+  +----------------------------------------+--------+----------+---------------------------------------------------------------------------------------------+
+  | ``>originTestFile``                    | string | yes      | A URL path to a test file available on the origin server.                                   |
+  +----------------------------------------+--------+----------+---------------------------------------------------------------------------------------------+
+  | ``>originAclWhitelist``                | bool   | yes      | Is access to your origin restricted using an access control list (ACL or whitelist) of Ips? |
+  +----------------------------------------+--------+----------+---------------------------------------------------------------------------------------------+
+  | ``>originHeaders``                     | string | no       | Header values that must be passed to requests to your origin.                               |
+  +----------------------------------------+--------+----------+---------------------------------------------------------------------------------------------+
+  | ``>otherOriginSecurity``               | string | no       | Other origin security measures that need to be considered for access.                       |
+  +----------------------------------------+--------+----------+---------------------------------------------------------------------------------------------+
+  | ``>queryStringHandling``               | string | yes      | How to handle query strings that come with the request.                                     |
+  +----------------------------------------+--------+----------+---------------------------------------------------------------------------------------------+
+  | ``>rangeRequestHandling``              | string | yes      | How to handle range requests.                                                               |
+  +----------------------------------------+--------+----------+---------------------------------------------------------------------------------------------+
+  | ``>signedURLs``                        | bool   | yes      | Are Urls signed?                                                                            |
+  +----------------------------------------+--------+----------+---------------------------------------------------------------------------------------------+
+  | ``>negativeCachingCustomization``      | bool   | yes      | Any customization required for negative caching?                                            |
+  +----------------------------------------+--------+----------+---------------------------------------------------------------------------------------------+
+  | ``>negativeCachingCustomizationNote``  | string | yes      | Negative caching customization instructions.                                                |
+  +----------------------------------------+--------+----------+---------------------------------------------------------------------------------------------+
+  | ``>serviceAliases``                    | array  | no       | Service aliases which will be used for this service.                                        |
+  +----------------------------------------+--------+----------+---------------------------------------------------------------------------------------------+
+  | ``>rateLimitingGbps``                  | int    | no       | Rate Limiting - Bandwidth (Gbps)                                                            |
+  +----------------------------------------+--------+----------+---------------------------------------------------------------------------------------------+
+  | ``>rateLimitingTPS``                   | int    | no       | Rate Limiting - Transactions/Second                                                         |
+  +----------------------------------------+--------+----------+---------------------------------------------------------------------------------------------+
+  | ``>overflowService``                   | string | no       | An overflow point (URL or IP address) used if rate limits are met.                          |
+  +----------------------------------------+--------+----------+---------------------------------------------------------------------------------------------+
+  | ``>headerRewriteEdge``                 | string | no       | Headers can be added or altered at each layer of the CDN.                                   |
+  +----------------------------------------+--------+----------+---------------------------------------------------------------------------------------------+
+  | ``>headerRewriteMid``                  | string | no       | Headers can be added or altered at each layer of the CDN.                                   |
+  +----------------------------------------+--------+----------+---------------------------------------------------------------------------------------------+
+  | ``>headerRewriteRedirectRouter``       | string | no       | Headers can be added or altered at each layer of the CDN.                                   |
+  +----------------------------------------+--------+----------+---------------------------------------------------------------------------------------------+
+  | ``>notes``                             | string | no       | Additional instructions to provide the delivery service provisioning team.                  |
+  +----------------------------------------+--------+----------+---------------------------------------------------------------------------------------------+
+
+  **Request Example** ::
+
+    {
+       "emailTo": "foo@bar.com",
+       "dsParams": {
+          "customer": "XYZ Corporation",
+          "contentType": "video-on-demand",
+          "deliveryProtocol": "http",
+          "routingType": "dns",
+          "serviceDesc": "service description goes here",
+          "peakBpsEstimate": "less-than-5-Gbps",
+          "peakTpsEstimate": "less-than-1000-TPS",
+          "maxLibrarySizeEstimate": "less-than-200-GB",
+          "originUrl": "http://myorigin.com",
+          "originDynamicRemap": false,
+          "originTestFile": "http://myorigin.com/crossdomain.xml",
+          "originAclWhitelist": true,
+          "originHeaders": "",
+          "otherOriginSecurity": "",
+          "queryStringHandling": "ignore-in-cache-key-and-pass-up",
+          "rangeRequestHandling": "range-requests-not-used",
+          "signedURLs": true,
+          "negativeCachingCustomization": true,
+          "negativeCachingCustomizationNote": "negative caching instructions",
+          "serviceAliases": [
+             "http://alias1.com",
+             "http://alias2.com"
+          ],
+          "rateLimitingGbps": 50,
+          "rateLimitingTPS": 5000,
+          "overflowService": "http://overflowcdn.com",
+          "headerRewriteEdge": "",
+          "headerRewriteMid": "",
+          "headerRewriteRedirectRouter": "",
+          "notes": ""
+       }
+    }
+
+|
+
+  **Response Properties**
+
+  +-------------+--------+----------------------------------+
+  |  Parameter  |  Type  |           Description            |
+  +=============+========+==================================+
+  | ``alerts``  | array  | A collection of alert messages.  |
+  +-------------+--------+----------------------------------+
+  | ``>level``  | string | Success, info, warning or error. |
+  +-------------+--------+----------------------------------+
+  | ``>text``   | string | Alert message.                   |
+  +-------------+--------+----------------------------------+
+  | ``version`` | string |                                  |
+  +-------------+--------+----------------------------------+
+
+  **Response Example** ::
+
+    {
+      "alerts": [
+            {
+                "level": "success",
+                "text": "Delivery Service request sent to foo@bar.com."
+            }
+        ]
+    }
+
+|

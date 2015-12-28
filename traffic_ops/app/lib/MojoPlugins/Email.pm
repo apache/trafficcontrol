@@ -28,6 +28,34 @@ sub register {
 	my ( $self, $app, $conf ) = @_;
 
 	$app->renderer->add_helper(
+		send_deliveryservice_request => sub {
+			my $self     = shift || confess("Call on an instance of MojoPlugins::Email");
+			my $email_to = shift || confess("Please provide an email to send this request to.");
+			my $params   = shift || confess("Please provide deliveryservice request params.");
+
+			my $instance_name =
+				$self->db->resultset('Parameter')->search( { -and => [ name => 'tm.instance_name', config_file => 'global' ] } )->get_column('value')
+				->single();
+			$self->stash( instance_name => $instance_name );
+
+			my $current_user = $self->db->resultset('TmUser')->search( { username => $self->current_user()->{username} } )->single();
+			$self->stash( current_user => $current_user );
+
+			$self->stash( params => $params );
+
+			my $rc;
+			$rc = $self->mail(
+				subject  => $instance_name . " Delivery Service Request",
+				to       => $email_to,
+				template => 'delivery_service/request',
+				format   => 'mail'
+			);
+
+			return $rc;
+		}
+	);
+
+	$app->renderer->add_helper(
 		send_password_reset_email => sub {
 			my $self     = shift || confess("Call on an instance of MojoPlugins::Email");
 			my $email_to = shift || confess("Please supply an email address.");

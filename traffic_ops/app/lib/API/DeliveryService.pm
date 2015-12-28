@@ -21,6 +21,10 @@ package API::DeliveryService;
 use UI::Utils;
 use UI::DeliveryService;
 use Mojo::Base 'Mojolicious::Controller';
+use Mojolicious::Validator;
+use Mojolicious::Validator::Validation;
+use Email::Valid;
+use Validate::Tiny ':all';
 use Data::Dumper;
 use Common::ReturnCodes qw(SUCCESS ERROR);
 
@@ -308,6 +312,61 @@ sub state {
 	else {
 		$self->not_found();
 	}
+}
+
+sub request {
+	my $self      = shift;
+	my $email_to  = $self->req->json->{emailTo};
+	my $ds_params = $self->req->json->{dsParams};
+
+	my $is_email_valid = Email::Valid->address($email_to);
+
+	if ( !$is_email_valid ) {
+		return $self->alert("Please provide a valid email address to send the delivery service request to.");
+	}
+
+	my ( $is_valid, $result ) = $self->is_deliveryservice_request_valid($ds_params);
+
+	if ($is_valid) {
+		if ( $self->send_deliveryservice_request( $email_to, $ds_params ) ) {
+			return $self->success_message( "Delivery Service request sent to " . $email_to );
+		}
+	}
+	else {
+		return $self->alert($result);
+	}
+}
+
+sub is_deliveryservice_request_valid {
+	my $self      = shift;
+	my $ds_params = shift;
+
+	my $rules = {
+		fields => [
+			qw/customer contentType deliveryProtocol routingType serviceDesc peakBpsEstimate peakTpsEstimate maxLibrarySizeEstimate originUrl originDynamicRemap originTestFile originAclWhitelist originHeaders otherOriginSecurity queryStringHandling rangeRequestHandling signedURLs negativeCachingCustomization negativeCachingCustomizationNote serviceAliases rateLimitingGbps rateLimitingTPS overflowService headerRewriteEdge headerRewriteMid headerRewriteRedirectRouter notes/
+		],
+
+		# Validation checks to perform
+		checks => [
+
+			# required deliveryservice request fields
+			[
+				qw/customer contentType deliveryProtocol routingType serviceDesc peakBpsEstimate peakTpsEstimate maxLibrarySizeEstimate originUrl originDynamicRemap originTestFile originAclWhitelist queryStringHandling rangeRequestHandling signedURLs negativeCachingCustomization rateLimitingGbps rateLimitingTPS/
+			] => is_required("is required")
+
+		]
+	};
+
+	# Validate the input against the rules
+	my $result = validate( $ds_params, $rules );
+
+	if ( $result->{success} ) {
+		return ( 1, $result->{data} );
+	}
+	else {
+		return ( 0, $result->{error} );
+	}
+
 }
 
 1;
