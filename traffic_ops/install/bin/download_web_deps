@@ -1,4 +1,5 @@
 #!/usr/bin/perl
+
 #
 # Copyright 2015 Comcast Cable Communications Management, LLC
 #
@@ -7,7 +8,7 @@
 # You may obtain a copy of the License at
 #
 # http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -17,228 +18,44 @@
 
 use strict;
 use warnings;
-use Getopt::Std;
-use WWW::Curl::Easy;
-use Digest::MD5 qw(md5 md5_hex md5_base64);
-use File::Path;
-use IO::Uncompress::Unzip qw(unzip $UnzipError);
-use Cwd;
-use Data::Dumper;
+use FindBin qw{$Bin};
+use lib "$Bin/../lib";
+use InstallUtils;
+use WebDep;
 
-#################################
-##			MAIN 	          ##
-#################################
+my @deps = WebDep->getDeps("$Bin/web_deps.txt");
 
-$ENV{PERL_MM_USE_DEFAULT}=1;
-$ENV{PERL_MM_NONINTERACTIVE}=1;
-$ENV{AUTOMATED_TESTING}=1;
+my $errors   = 0;
+my $warnings = 0;
+foreach my $dep (@deps) {
+	my $fn  = $dep->getDestFileName();
+	my $src = $dep->getSrcFileName();
 
-checkCwd();
+	# download source to compare with current version
+	my ( $action, $err ) = $dep->update();
+	if ( defined $err ) {
+		print "Unable to update $fn: $err\n";
+		if ( !-f $fn ) {
 
-my $deps = getDeps("web_deps.txt");
-
-my %cdn_locs;
-foreach my $dep_obj ( @{$deps} ) {
-	next if exists ($cdn_locs{$dep_obj->{'cdn_location'}} );
-	$cdn_locs{$dep_obj->{'cdn_location'}} = curlMe ( $dep_obj->{'cdn_location'} ); 
-}
-
-foreach my $dep_obj ( @{$deps} ) {
-
-	my $result = $cdn_locs{$dep_obj->{'cdn_location'}};
-	if (!-d($dep_obj->{'final_dir'}) ) {
-		print "Making dir: " . $dep_obj->{'final_dir'} . "\n";
-		mkpath($dep_obj->{'final_dir'});
-	}
-
-	if ( $dep_obj->{'compression'} eq 'zip' ) {
-		my $u = new IO::Uncompress::Unzip \$result or die "IO::Uncompress::Unzip failed: $UnzipError\n";
-		while ($u->nextStream() > 0 && !$u->eof()) {
-
-			my $name = $u->getHeaderInfo()->{Name};
-			my $look_for;
-			if ( $dep_obj->{'source_dir'} eq "/" ) {
-				$look_for = $dep_obj->{'filename'};
-			}
-			elsif ( $dep_obj->{'source_dir'} =~ m/\/$/ ) {
-				$look_for = $dep_obj->{'source_dir'} . $dep_obj->{'filename'};
-			} else { 
-				$look_for = $dep_obj->{'source_dir'} . "/" . $dep_obj->{'filename'};	
-			}
-
-			if ( $look_for eq $name ) {
-
-				my $buffer;
-				my $save;
-
-				while ($u->read($buffer) > 0) {
-					$save .= $buffer;
-				}
-
-				my $output_file = $dep_obj->{'final_dir'} . "/" . $dep_obj->{'filename'};
-
-				if (-f $output_file) {
-					my $needed = &checkMd5(\$save, $output_file);
-
-					if (!$needed) {
-						print "Output file: $output_file exists, and does not need to be replaced\n";
-						last;
-					}
-					else {
-						print "Output file: $output_file exists, but needs to be replaced\n";
-					}
-				}
-				else {
-					print "Output file: $output_file does not exist. Putting file from zip into place.\n";
-				}
-
-				open my $fh, '>', $output_file || die "Can't open $output_file\n";
-				print $fh $save;
-				close ($fh);
-
-				last;
-			}
-		}
-	}
-	elsif ( $dep_obj->{'compression'} eq 'none' ) {
-
-		my $output_file = $dep_obj->{'final_dir'} . $dep_obj->{'filename'};
-		my $needed = &checkMd5(\$result, $output_file);
-
-		if (!$needed) {
-			print "Output file: $output_file already exists, and does not need to be replaced\n";
-			next;
+			# count errors when no file and can't be fetched
+			$errors++;
 		}
 		else {
-			if (-f $output_file) {
-				print "Found output file: $output_file already exists, and needs to be replaced\n";
-			}
-			else {
-				print "Output file: $output_file does not exist, putting into place.\n";
-			}
+			# file exists but can't be updated
+			$warnings++;
 		}
-
-		open my $fh, '>', $output_file || die "Can't open $output_file !\n";
-		print $fh $result;
-		close ($fh);
-	}
-}
-
-sub checkCwd {
-	my $current_dir = getcwd();
-	my $dir_string = "traffic_ops/install/bin";
-	if ($current_dir !~ m/$dir_string$/) {
-		print "Must run from $dir_string/!\n";
-		exit 1;
-	}
-}
-
-sub checkMd5 {
-	my $buffer_ref = shift;
-	my $file = shift;
-
-	my $buffer = $$buffer_ref;
-	my $md5_new = md5_hex($buffer);
-
-	if (-f $file) {
-		open my $fh, '<', $file || die "Can't open existing file: $file\n";
-		my $md5_existing = md5_hex(<$fh>);
-
-		if ($md5_new eq $md5_existing) {
-			return 0;
-		}
-		else {
-			return 1;
-		}
+		next;
 	}
 	else {
-		return 1;
+		# report what was done..
+		print "$action $fn\n";
 	}
 }
 
-sub getDeps {
-	my $file = shift;
-	my $deps;
-	open my $fh, '<', $file || die "Can't open $file\n";
-	while (<$fh>) {
-		my $line = $_;
-		next if ($line =~ m/^\#/);
-		chomp($line);
-		my $obj;
-		my ($dep_name, $dep_vers, $dep_cdn, $dep_compression, $dep_filename, $dep_source_dir, $dep_final_dir) = split(/\s*\,\s*/, $line);
-		$obj->{'name'} 			= defined($dep_name) 			? $dep_name 			: next;
-		$obj->{'version'} 		= defined($dep_vers) 			? $dep_vers 			: next;
-		$obj->{'cdn_location'} 	= defined($dep_cdn)  			? $dep_cdn  			: next;
-		$obj->{'compression'} 	= defined($dep_compression) 	? $dep_compression		: next;
-		$obj->{'filename'} 		= defined($dep_filename) 		? $dep_filename			: next;
-		$obj->{'source_dir'} 	= defined($dep_source_dir) 		? $dep_source_dir 		: next;
-		$obj->{'final_dir'} 	= defined($dep_final_dir) 		? $dep_final_dir 		: next;
-		push ( @{$deps}, $obj );
-	}
-	return $deps;
+if ($warnings) {
+	print "WARNING: Some files exist but can't be updated\n";
 }
-
-
-sub execCommand {
-	my ($command, @args) = @_;
-	my $pid = fork ();
-	my $result = 0;
-
-	if ($pid == 0) {
-		exec ($command, @args);
-		exit 0;
-	}
-	else {
-		wait;
-		$result = $?;
-		if ($result != 0) {
-			print "ERROR executing: $command,  args: " . join (' ', @args) . "\n";
-		}
-	}
-	return $result;
-}
-
-sub trim {
-	my $str = shift;
-
-	$str =~ s/^\s+//;
-	$str =~ s/^\s+$//;
-
-	return $str;
-}
-
-sub curlMe {
-	my $url = shift;
-	my $curl = WWW::Curl::Easy->new;
-	my $response_body;
-	open(my $fileb, ">", \$response_body);
-
-	$curl->setopt(CURLOPT_VERBOSE, 0);
-	if ($url =~ m/https/) {
-		$curl->setopt(CURLOPT_SSL_VERIFYHOST, 0);
-		$curl->setopt(CURLOPT_SSL_VERIFYPEER, 0);
-	}
-	$curl->setopt(CURLOPT_IPRESOLVE, 1);
-	$curl->setopt(CURLOPT_FOLLOWLOCATION, 1);
-	$curl->setopt(CURLOPT_CONNECTTIMEOUT, 5);
-	$curl->setopt(CURLOPT_TIMEOUT, 15);
-	$curl->setopt(CURLOPT_HEADER,0);
-	$curl->setopt(CURLOPT_URL, $url);
-	$curl->setopt(CURLOPT_WRITEDATA, $fileb);
-	my $retcode = $curl->perform;
-	my $response_code = $curl->getinfo(CURLINFO_HTTP_CODE);
-	if ($response_code != 200) {
-		print "FATAL: Got HTTP $response_code response for '$url' Cannot continue, bailing!\n";
-		exit 1;
-	}
-	my $size = length($response_body);
-	if ($size == 0) {
-		print "FATAL: URL: $url returned empty!! Bailing!\n";
-		exit 1;
-	}
-	else {
-		print "Finished curling $url | size is: $size\n";
-	}
-	return $response_body;
-
+if ($errors) {
+	print "FATAL: Unable to update one or more files.\n";
+	exit 1;
 }
