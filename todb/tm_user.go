@@ -146,6 +146,7 @@ func putTmUser(id int, payload []byte) (interface{}, error) {
 		fmt.Println(err)
 		return nil, err
 	}
+	v.LastUpdated = time.Now()
 	sqlString := "UPDATE tm_user SET "
 	sqlString += "username = :username"
 	sqlString += ",role = :role"
@@ -153,6 +154,7 @@ func putTmUser(id int, payload []byte) (interface{}, error) {
 	sqlString += ",gid = :gid"
 	sqlString += ",local_passwd = :local_passwd"
 	sqlString += ",confirm_local_passwd = :confirm_local_passwd"
+	sqlString += ",last_updated = :last_updated"
 	sqlString += ",company = :company"
 	sqlString += ",email = :email"
 	sqlString += ",full_name = :full_name"

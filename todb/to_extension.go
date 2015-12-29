@@ -116,6 +116,7 @@ func putToExtension(id int, payload []byte) (interface{}, error) {
 		fmt.Println(err)
 		return nil, err
 	}
+	v.LastUpdated = time.Now()
 	sqlString := "UPDATE to_extension SET "
 	sqlString += "name = :name"
 	sqlString += ",version = :version"
@@ -127,6 +128,7 @@ func putToExtension(id int, payload []byte) (interface{}, error) {
 	sqlString += ",servercheck_short_name = :servercheck_short_name"
 	sqlString += ",servercheck_column_name = :servercheck_column_name"
 	sqlString += ",type = :type"
+	sqlString += ",last_updated = :last_updated"
 	sqlString += " WHERE id=:id"
 	result, err := globalDB.NamedExec(sqlString, v)
 	if err != nil {

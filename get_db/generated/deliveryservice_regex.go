@@ -21,6 +21,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"gopkg.in/guregu/null.v3"
+	"time"
 )
 
 type DeliveryserviceRegex struct {
@@ -92,6 +93,7 @@ func putDeliveryserviceRegex(id int, payload []byte) (interface{}, error) {
 		fmt.Println(err)
 		return nil, err
 	}
+	v.LastUpdated = time.Now()
 	sqlString := "UPDATE deliveryservice_regex SET "
 	sqlString += "deliveryservice = :deliveryservice"
 	sqlString += ",regex = :regex"

@@ -90,9 +90,11 @@ func putDeliveryserviceTmuser(id int, payload []byte) (interface{}, error) {
 		fmt.Println(err)
 		return nil, err
 	}
+	v.LastUpdated = time.Now()
 	sqlString := "UPDATE deliveryservice_tmuser SET "
 	sqlString += "deliveryservice = :deliveryservice"
 	sqlString += ",tm_user_id = :tm_user_id"
+	sqlString += ",last_updated = :last_updated"
 	sqlString += " WHERE id=:id"
 	result, err := globalDB.NamedExec(sqlString, v)
 	if err != nil {

@@ -88,9 +88,9 @@ func writeFile(schemas []ColumnSchema, table string) (int, error) {
 	if strings.Contains(sString, "null.") {
 		header += "\"gopkg.in/guregu/null.v3\"\n"
 	}
-	if strings.Contains(sString, "time.") {
-		header += "\"time\"\n"
-	}
+	// if strings.Contains(sString, "time.") {
+	header += "\"time\"\n"
+	// }
 	header += "\"encoding/json\"\n"
 	header += ")\n\n"
 
@@ -129,7 +129,7 @@ func updString(schemas []ColumnSchema, table string, prefix string, varName stri
 	out := ""
 	sep := ""
 	for _, cs := range schemas {
-		if cs.TableName == table && cs.ColumnName != "id" && cs.ColumnName != "last_updated" {
+		if cs.TableName == table && cs.ColumnName != "id" {
 			out += varName + "+= \"" + sep + cs.ColumnName + " = :" + cs.ColumnName + "\"\n"
 			sep = ","
 		}
@@ -202,6 +202,7 @@ func handleString(schemas []ColumnSchema, table string) string {
 	out += "    	fmt.Println(err)\n"
 	out += "    	return nil, err\n"
 	out += "    }\n"
+	out += "    v.LastUpdated = time.Now()\n"
 	out += genUpdateVarLines(schemas, table)
 	out += "    result, err := globalDB.NamedExec(sqlString, v)\n"
 	out += "    if err != nil {\n"

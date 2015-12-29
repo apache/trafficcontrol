@@ -98,11 +98,13 @@ func putLog(id int, payload []byte) (interface{}, error) {
 		fmt.Println(err)
 		return nil, err
 	}
+	v.LastUpdated = time.Now()
 	sqlString := "UPDATE log SET "
 	sqlString += "level = :level"
 	sqlString += ",message = :message"
 	sqlString += ",tm_user = :tm_user"
 	sqlString += ",ticketnum = :ticketnum"
+	sqlString += ",last_updated = :last_updated"
 	sqlString += " WHERE id=:id"
 	result, err := globalDB.NamedExec(sqlString, v)
 	if err != nil {

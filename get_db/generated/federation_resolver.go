@@ -91,9 +91,11 @@ func putFederationResolver(id int, payload []byte) (interface{}, error) {
 		fmt.Println(err)
 		return nil, err
 	}
+	v.LastUpdated = time.Now()
 	sqlString := "UPDATE federation_resolver SET "
 	sqlString += "ip_address = :ip_address"
 	sqlString += ",type = :type"
+	sqlString += ",last_updated = :last_updated"
 	sqlString += " WHERE id=:id"
 	result, err := globalDB.NamedExec(sqlString, v)
 	if err != nil {

@@ -91,9 +91,11 @@ func putRegion(id int, payload []byte) (interface{}, error) {
 		fmt.Println(err)
 		return nil, err
 	}
+	v.LastUpdated = time.Now()
 	sqlString := "UPDATE region SET "
 	sqlString += "name = :name"
 	sqlString += ",division = :division"
+	sqlString += ",last_updated = :last_updated"
 	sqlString += " WHERE id=:id"
 	result, err := globalDB.NamedExec(sqlString, v)
 	if err != nil {

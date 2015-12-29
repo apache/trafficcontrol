@@ -119,6 +119,7 @@ func putPhysLocation(id int, payload []byte) (interface{}, error) {
 		fmt.Println(err)
 		return nil, err
 	}
+	v.LastUpdated = time.Now()
 	sqlString := "UPDATE phys_location SET "
 	sqlString += "name = :name"
 	sqlString += ",short_name = :short_name"
@@ -131,6 +132,7 @@ func putPhysLocation(id int, payload []byte) (interface{}, error) {
 	sqlString += ",email = :email"
 	sqlString += ",comments = :comments"
 	sqlString += ",region = :region"
+	sqlString += ",last_updated = :last_updated"
 	sqlString += " WHERE id=:id"
 	result, err := globalDB.NamedExec(sqlString, v)
 	if err != nil {

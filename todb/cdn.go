@@ -92,8 +92,10 @@ func putCdn(id int, payload []byte) (interface{}, error) {
 		fmt.Println(err)
 		return nil, err
 	}
+	v.LastUpdated = time.Now()
 	sqlString := "UPDATE cdn SET "
 	sqlString += "name = :name"
+	sqlString += ",last_updated = :last_updated"
 	sqlString += ",dnssec_enabled = :dnssec_enabled"
 	sqlString += " WHERE id=:id"
 	result, err := globalDB.NamedExec(sqlString, v)

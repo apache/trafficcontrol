@@ -93,6 +93,7 @@ func putGooseDbVersion(id int, payload []byte) (interface{}, error) {
 		fmt.Println(err)
 		return nil, err
 	}
+	v.LastUpdated = time.Now()
 	sqlString := "UPDATE goose_db_version SET "
 	sqlString += "version_id = :version_id"
 	sqlString += ",is_applied = :is_applied"

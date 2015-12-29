@@ -90,9 +90,11 @@ func putCachegroupParameter(id int, payload []byte) (interface{}, error) {
 		fmt.Println(err)
 		return nil, err
 	}
+	v.LastUpdated = time.Now()
 	sqlString := "UPDATE cachegroup_parameter SET "
 	sqlString += "cachegroup = :cachegroup"
 	sqlString += ",parameter = :parameter"
+	sqlString += ",last_updated = :last_updated"
 	sqlString += " WHERE id=:id"
 	result, err := globalDB.NamedExec(sqlString, v)
 	if err != nil {

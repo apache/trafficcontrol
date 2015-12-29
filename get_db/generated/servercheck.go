@@ -182,6 +182,7 @@ func putServercheck(id int, payload []byte) (interface{}, error) {
 		fmt.Println(err)
 		return nil, err
 	}
+	v.LastUpdated = time.Now()
 	sqlString := "UPDATE servercheck SET "
 	sqlString += "server = :server"
 	sqlString += ",aa = :aa"
@@ -215,6 +216,7 @@ func putServercheck(id int, payload []byte) (interface{}, error) {
 	sqlString += ",bc = :bc"
 	sqlString += ",bd = :bd"
 	sqlString += ",be = :be"
+	sqlString += ",last_updated = :last_updated"
 	sqlString += " WHERE id=:id"
 	result, err := globalDB.NamedExec(sqlString, v)
 	if err != nil {

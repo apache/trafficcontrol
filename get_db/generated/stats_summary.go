@@ -102,6 +102,7 @@ func putStatsSummary(id int, payload []byte) (interface{}, error) {
 		fmt.Println(err)
 		return nil, err
 	}
+	v.LastUpdated = time.Now()
 	sqlString := "UPDATE stats_summary SET "
 	sqlString += "cdn_name = :cdn_name"
 	sqlString += ",deliveryservice_name = :deliveryservice_name"

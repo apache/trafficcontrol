@@ -90,9 +90,11 @@ func putDeliveryserviceServer(id int, payload []byte) (interface{}, error) {
 		fmt.Println(err)
 		return nil, err
 	}
+	v.LastUpdated = time.Now()
 	sqlString := "UPDATE deliveryservice_server SET "
 	sqlString += "deliveryservice = :deliveryservice"
 	sqlString += ",server = :server"
+	sqlString += ",last_updated = :last_updated"
 	sqlString += " WHERE id=:id"
 	result, err := globalDB.NamedExec(sqlString, v)
 	if err != nil {

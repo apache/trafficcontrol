@@ -93,10 +93,12 @@ func putFederationTmuser(id int, payload []byte) (interface{}, error) {
 		fmt.Println(err)
 		return nil, err
 	}
+	v.LastUpdated = time.Now()
 	sqlString := "UPDATE federation_tmuser SET "
 	sqlString += "federation = :federation"
 	sqlString += ",tm_user = :tm_user"
 	sqlString += ",role = :role"
+	sqlString += ",last_updated = :last_updated"
 	sqlString += " WHERE id=:id"
 	result, err := globalDB.NamedExec(sqlString, v)
 	if err != nil {

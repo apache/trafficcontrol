@@ -95,10 +95,12 @@ func putFederation(id int, payload []byte) (interface{}, error) {
 		fmt.Println(err)
 		return nil, err
 	}
+	v.LastUpdated = time.Now()
 	sqlString := "UPDATE federation SET "
 	sqlString += "cname = :cname"
 	sqlString += ",description = :description"
 	sqlString += ",ttl = :ttl"
+	sqlString += ",last_updated = :last_updated"
 	sqlString += " WHERE id=:id"
 	result, err := globalDB.NamedExec(sqlString, v)
 	if err != nil {

@@ -176,6 +176,7 @@ func putServer(id int, payload []byte) (interface{}, error) {
 		fmt.Println(err)
 		return nil, err
 	}
+	v.LastUpdated = time.Now()
 	sqlString := "UPDATE server SET "
 	sqlString += "host_name = :host_name"
 	sqlString += ",domain_name = :domain_name"
@@ -207,6 +208,7 @@ func putServer(id int, payload []byte) (interface{}, error) {
 	sqlString += ",ilo_password = :ilo_password"
 	sqlString += ",router_host_name = :router_host_name"
 	sqlString += ",router_port_name = :router_port_name"
+	sqlString += ",last_updated = :last_updated"
 	sqlString += " WHERE id=:id"
 	result, err := globalDB.NamedExec(sqlString, v)
 	if err != nil {

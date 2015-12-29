@@ -104,6 +104,7 @@ func putCachegroup(id int, payload []byte) (interface{}, error) {
 		fmt.Println(err)
 		return nil, err
 	}
+	v.LastUpdated = time.Now()
 	sqlString := "UPDATE cachegroup SET "
 	sqlString += "name = :name"
 	sqlString += ",short_name = :short_name"
@@ -111,6 +112,7 @@ func putCachegroup(id int, payload []byte) (interface{}, error) {
 	sqlString += ",longitude = :longitude"
 	sqlString += ",parent_cachegroup_id = :parent_cachegroup_id"
 	sqlString += ",type = :type"
+	sqlString += ",last_updated = :last_updated"
 	sqlString += " WHERE id=:id"
 	result, err := globalDB.NamedExec(sqlString, v)
 	if err != nil {

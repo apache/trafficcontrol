@@ -122,6 +122,7 @@ func putJob(id int, payload []byte) (interface{}, error) {
 		fmt.Println(err)
 		return nil, err
 	}
+	v.LastUpdated = time.Now()
 	sqlString := "UPDATE job SET "
 	sqlString += "agent = :agent"
 	sqlString += ",object_type = :object_type"
@@ -134,6 +135,7 @@ func putJob(id int, payload []byte) (interface{}, error) {
 	sqlString += ",start_time = :start_time"
 	sqlString += ",entered_time = :entered_time"
 	sqlString += ",job_user = :job_user"
+	sqlString += ",last_updated = :last_updated"
 	sqlString += ",job_deliveryservice = :job_deliveryservice"
 	sqlString += " WHERE id=:id"
 	result, err := globalDB.NamedExec(sqlString, v)

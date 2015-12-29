@@ -21,6 +21,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"gopkg.in/guregu/null.v3"
+	"time"
 )
 
 type Role struct {
@@ -93,6 +94,7 @@ func putRole(id int, payload []byte) (interface{}, error) {
 		fmt.Println(err)
 		return nil, err
 	}
+	v.LastUpdated = time.Now()
 	sqlString := "UPDATE role SET "
 	sqlString += "name = :name"
 	sqlString += ",description = :description"

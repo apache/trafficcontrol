@@ -104,6 +104,7 @@ func putStaticdnsentry(id int, payload []byte) (interface{}, error) {
 		fmt.Println(err)
 		return nil, err
 	}
+	v.LastUpdated = time.Now()
 	sqlString := "UPDATE staticdnsentry SET "
 	sqlString += "host = :host"
 	sqlString += ",address = :address"
@@ -111,6 +112,7 @@ func putStaticdnsentry(id int, payload []byte) (interface{}, error) {
 	sqlString += ",ttl = :ttl"
 	sqlString += ",deliveryservice = :deliveryservice"
 	sqlString += ",cachegroup = :cachegroup"
+	sqlString += ",last_updated = :last_updated"
 	sqlString += " WHERE id=:id"
 	result, err := globalDB.NamedExec(sqlString, v)
 	if err != nil {

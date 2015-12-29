@@ -90,9 +90,11 @@ func putProfileParameter(id int, payload []byte) (interface{}, error) {
 		fmt.Println(err)
 		return nil, err
 	}
+	v.LastUpdated = time.Now()
 	sqlString := "UPDATE profile_parameter SET "
 	sqlString += "profile = :profile"
 	sqlString += ",parameter = :parameter"
+	sqlString += ",last_updated = :last_updated"
 	sqlString += " WHERE id=:id"
 	result, err := globalDB.NamedExec(sqlString, v)
 	if err != nil {

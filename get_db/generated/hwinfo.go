@@ -94,10 +94,12 @@ func putHwinfo(id int, payload []byte) (interface{}, error) {
 		fmt.Println(err)
 		return nil, err
 	}
+	v.LastUpdated = time.Now()
 	sqlString := "UPDATE hwinfo SET "
 	sqlString += "serverid = :serverid"
 	sqlString += ",description = :description"
 	sqlString += ",val = :val"
+	sqlString += ",last_updated = :last_updated"
 	sqlString += " WHERE id=:id"
 	result, err := globalDB.NamedExec(sqlString, v)
 	if err != nil {

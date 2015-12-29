@@ -209,6 +209,7 @@ func putDeliveryservice(id int, payload []byte) (interface{}, error) {
 		fmt.Println(err)
 		return nil, err
 	}
+	v.LastUpdated = time.Now()
 	sqlString := "UPDATE deliveryservice SET "
 	sqlString += "xml_id = :xml_id"
 	sqlString += ",active = :active"
@@ -235,6 +236,7 @@ func putDeliveryservice(id int, payload []byte) (interface{}, error) {
 	sqlString += ",miss_lat = :miss_lat"
 	sqlString += ",miss_long = :miss_long"
 	sqlString += ",check_path = :check_path"
+	sqlString += ",last_updated = :last_updated"
 	sqlString += ",protocol = :protocol"
 	sqlString += ",ssl_key_version = :ssl_key_version"
 	sqlString += ",ipv6_routing_enabled = :ipv6_routing_enabled"
