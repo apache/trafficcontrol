@@ -21,114 +21,49 @@ import (
 // "fmt"
 )
 
+type actionhandler func(method string, id int, payload []byte) (interface{}, error)
+type actionmap map[string]actionhandler
+
+var funcMap = actionmap{
+	"asn":                  handleAsn,
+	"cachegroup":           handleCachegroup,
+	"cachegroup_parameter": handleCachegroupParameter,
+	"cdn":                            handleCdn,
+	"deliveryservice":                handleDeliveryservice,
+	"deliveryservice_regex":          handleDeliveryserviceRegex,
+	"deliveryservice_server":         handleDeliveryserviceServer,
+	"deliveryservice_tmuser":         handleDeliveryserviceTmuser,
+	"division":                       handleDivision,
+	"federation":                     handleFederation,
+	"federation_deliveryservice":     handleFederationDeliveryservice,
+	"federation_federation_resolver": handleFederationFederationResolver,
+	"federation_resolver":            handleFederationResolver,
+	"federation_tmuser":              handleFederationTmuser,
+	"goose_db_version":               handleGooseDbVersion,
+	"hwinfo":                         handleHwinfo,
+	"job":                            handleJob,
+	"job_agent":                      handleJobAgent,
+	"job_result":                     handleJobResult,
+	"job_status":                     handleJobStatus,
+	"log":                            handleLog,
+	"parameter":                      handleParameter,
+	"phys_location":                  handlePhysLocation,
+	"profile":                        handleProfile,
+	"profile_parameter":              handleProfileParameter,
+	"regex":                          handleRegex,
+	"region":                         handleRegion,
+	"role":                           handleRole,
+	"server":                         handleServer,
+	"servercheck":                    handleServercheck,
+	"staticdnsentry":                 handleStaticdnsentry,
+	"stats_summary":                  handleStatsSummary,
+	"status":                         handleStatus,
+	"tm_user":                        handleTmUser,
+	"to_extension":                   handleToExtension,
+	"type":                           handleType,
+}
+
 func Action(tableName, method string, id int, payload []byte) (interface{}, error) {
-	if tableName == "asn" {
-		return handleAsn(method, id, payload)
-	}
-	if tableName == "cachegroup" {
-		return handleCachegroup(method, id, payload)
-	}
-	if tableName == "cachegroup_parameter" {
-		return handleCachegroupParameter(method, id, payload)
-	}
-	if tableName == "cdn" {
-		return handleCdn(method, id, payload)
-	}
-	if tableName == "deliveryservice" {
-		return handleDeliveryservice(method, id, payload)
-	}
-	if tableName == "deliveryservice_regex" {
-		return handleDeliveryserviceRegex(method, id, payload)
-	}
-	if tableName == "deliveryservice_server" {
-		return handleDeliveryserviceServer(method, id, payload)
-	}
-	if tableName == "deliveryservice_tmuser" {
-		return handleDeliveryserviceTmuser(method, id, payload)
-	}
-	if tableName == "division" {
-		return handleDivision(method, id, payload)
-	}
-	if tableName == "federation" {
-		return handleFederation(method, id, payload)
-	}
-	if tableName == "federation_deliveryservice" {
-		return handleFederationDeliveryservice(method, id, payload)
-	}
-	if tableName == "federation_federation_resolver" {
-		return handleFederationFederationResolver(method, id, payload)
-	}
-	if tableName == "federation_resolver" {
-		return handleFederationResolver(method, id, payload)
-	}
-	if tableName == "federation_tmuser" {
-		return handleFederationTmuser(method, id, payload)
-	}
-	if tableName == "goose_db_version" {
-		return handleGooseDbVersion(method, id, payload)
-	}
-	if tableName == "hwinfo" {
-		return handleHwinfo(method, id, payload)
-	}
-	if tableName == "job" {
-		return handleJob(method, id, payload)
-	}
-	if tableName == "job_agent" {
-		return handleJobAgent(method, id, payload)
-	}
-	if tableName == "job_result" {
-		return handleJobResult(method, id, payload)
-	}
-	if tableName == "job_status" {
-		return handleJobStatus(method, id, payload)
-	}
-	if tableName == "log" {
-		return handleLog(method, id, payload)
-	}
-	if tableName == "parameter" {
-		return handleParameter(method, id, payload)
-	}
-	if tableName == "phys_location" {
-		return handlePhysLocation(method, id, payload)
-	}
-	if tableName == "profile" {
-		return handleProfile(method, id, payload)
-	}
-	if tableName == "profile_parameter" {
-		return handleProfileParameter(method, id, payload)
-	}
-	if tableName == "regex" {
-		return handleRegex(method, id, payload)
-	}
-	if tableName == "region" {
-		return handleRegion(method, id, payload)
-	}
-	if tableName == "role" {
-		return handleRole(method, id, payload)
-	}
-	if tableName == "server" {
-		return handleServer(method, id, payload)
-	}
-	if tableName == "servercheck" {
-		return handleServercheck(method, id, payload)
-	}
-	if tableName == "staticdnsentry" {
-		return handleStaticdnsentry(method, id, payload)
-	}
-	if tableName == "stats_summary" {
-		return handleStatsSummary(method, id, payload)
-	}
-	if tableName == "status" {
-		return handleStatus(method, id, payload)
-	}
-	if tableName == "tm_user" {
-		return handleTmUser(method, id, payload)
-	}
-	if tableName == "to_extension" {
-		return handleToExtension(method, id, payload)
-	}
-	if tableName == "type" {
-		return handleType(method, id, payload)
-	}
-	return nil, nil
+
+	return funcMap[tableName](method, id, payload)
 }

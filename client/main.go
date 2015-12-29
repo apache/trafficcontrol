@@ -33,10 +33,9 @@ func main() {
 		fmt.Println("err 11:", err)
 	}
 	fmt.Println(resp)
-	hResp, e := client.PostJson("/api/2.0/asn", []byte("{\"asn\":99, \"cachegroup\":28}"))
+	hResp, e := client.PostJson("/api/2.0/asn", []byte("{\"asn\":777799, \"cachegroup\":28}"))
 	if e != nil {
 		fmt.Println("err 22:", e)
 	}
 	fmt.Println(hResp)
-
 }

@@ -14,7 +14,7 @@
 
 // Started from https://raw.githubusercontent.com/jordan-wright/gophish
 
-package router
+package routes
 
 import (
 	auth "../auth"
@@ -23,9 +23,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
-	"strconv"
-	// "github.com/serenize/snaker"
 	"net/http"
+	"strconv"
 
 	"github.com/gorilla/mux"
 )
