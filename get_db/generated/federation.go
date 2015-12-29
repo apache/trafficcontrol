@@ -34,43 +34,85 @@ type Federation struct {
 
 func handleFederation(method string, id int, payload []byte) (interface{}, error) {
 	if method == "GET" {
-		ret := []Federation{}
-		if id >= 0 {
-			err := globalDB.Select(&ret, "select * from federation where id=$1", id)
-			if err != nil {
-				fmt.Println(err)
-				return nil, err
-			}
-		} else {
-			queryStr := "select * from federation"
-			err := globalDB.Select(&ret, queryStr)
-			if err != nil {
-				fmt.Println(err)
-				return nil, err
-			}
-		}
-		return ret, nil
+		return getFederation(id)
 	} else if method == "POST" {
-		var v Asn
-		err := json.Unmarshal(payload, &v)
-		if err != nil {
-			fmt.Println(err)
-		}
-		insertString := "INSERT INTO federation("
-		insertString += "cname"
-		insertString += ",description"
-		insertString += ",ttl"
-		insertString += ") VALUES ("
-		insertString += ":cname"
-		insertString += ",:description"
-		insertString += ",:ttl"
-		insertString += ")"
-		result, err := globalDB.NamedExec(insertString, v)
+		return postFederation(payload)
+	} else if method == "PUT" {
+		return putFederation(id, payload)
+	} else if method == "DELETE" {
+		return delFederation(id)
+	}
+	return nil, nil
+}
+
+func getFederation(id int) (interface{}, error) {
+	ret := []Federation{}
+	if id >= 0 {
+		err := globalDB.Select(&ret, "select * from federation where id=$1", id)
 		if err != nil {
 			fmt.Println(err)
 			return nil, err
 		}
-		return result.LastInsertId()
+	} else {
+		queryStr := "select * from federation"
+		err := globalDB.Select(&ret, queryStr)
+		if err != nil {
+			fmt.Println(err)
+			return nil, err
+		}
 	}
-	return nil, nil
+	return ret, nil
+}
+
+func postFederation(payload []byte) (interface{}, error) {
+	var v Asn
+	err := json.Unmarshal(payload, &v)
+	if err != nil {
+		fmt.Println(err)
+	}
+	sqlString := "INSERT INTO federation("
+	sqlString += "cname"
+	sqlString += ",description"
+	sqlString += ",ttl"
+	sqlString += ") VALUES ("
+	sqlString += ":cname"
+	sqlString += ",:description"
+	sqlString += ",:ttl"
+	sqlString += ")"
+	result, err := globalDB.NamedExec(sqlString, v)
+	if err != nil {
+		fmt.Println(err)
+		return nil, err
+	}
+	return result, err
+}
+
+func putFederation(id int, payload []byte) (interface{}, error) {
+	// Note this depends on the json having the correct id!
+	var v Asn
+	err := json.Unmarshal(payload, &v)
+	if err != nil {
+		fmt.Println(err)
+		return nil, err
+	}
+	sqlString := "UPDATE federation SET "
+	sqlString += "cname = :cname"
+	sqlString += ",description = :description"
+	sqlString += ",ttl = :ttl"
+	sqlString += " WHERE id=:id"
+	result, err := globalDB.NamedExec(sqlString, v)
+	if err != nil {
+		fmt.Println(err)
+		return nil, err
+	}
+	return result, err
+}
+
+func delFederation(id int) (interface{}, error) {
+	result, err := globalDB.NamedExec("DELETE FROM federation WHERE id=:id", id)
+	if err != nil {
+		fmt.Println(err)
+		return nil, err
+	}
+	return result, err
 }

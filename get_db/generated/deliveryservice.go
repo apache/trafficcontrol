@@ -72,119 +72,199 @@ type Deliveryservice struct {
 
 func handleDeliveryservice(method string, id int, payload []byte) (interface{}, error) {
 	if method == "GET" {
-		ret := []Deliveryservice{}
-		if id >= 0 {
-			err := globalDB.Select(&ret, "select * from deliveryservice where id=$1", id)
-			if err != nil {
-				fmt.Println(err)
-				return nil, err
-			}
-		} else {
-			queryStr := "select * from deliveryservice"
-			err := globalDB.Select(&ret, queryStr)
-			if err != nil {
-				fmt.Println(err)
-				return nil, err
-			}
-		}
-		return ret, nil
+		return getDeliveryservice(id)
 	} else if method == "POST" {
-		var v Asn
-		err := json.Unmarshal(payload, &v)
-		if err != nil {
-			fmt.Println(err)
-		}
-		insertString := "INSERT INTO deliveryservice("
-		insertString += "xml_id"
-		insertString += ",active"
-		insertString += ",dscp"
-		insertString += ",signed"
-		insertString += ",qstring_ignore"
-		insertString += ",geo_limit"
-		insertString += ",http_bypass_fqdn"
-		insertString += ",dns_bypass_ip"
-		insertString += ",dns_bypass_ip6"
-		insertString += ",dns_bypass_ttl"
-		insertString += ",org_server_fqdn"
-		insertString += ",type"
-		insertString += ",profile"
-		insertString += ",cdn_id"
-		insertString += ",ccr_dns_ttl"
-		insertString += ",global_max_mbps"
-		insertString += ",global_max_tps"
-		insertString += ",long_desc"
-		insertString += ",long_desc_1"
-		insertString += ",long_desc_2"
-		insertString += ",max_dns_answers"
-		insertString += ",info_url"
-		insertString += ",miss_lat"
-		insertString += ",miss_long"
-		insertString += ",check_path"
-		insertString += ",protocol"
-		insertString += ",ssl_key_version"
-		insertString += ",ipv6_routing_enabled"
-		insertString += ",range_request_handling"
-		insertString += ",edge_header_rewrite"
-		insertString += ",origin_shield"
-		insertString += ",mid_header_rewrite"
-		insertString += ",regex_remap"
-		insertString += ",cacheurl"
-		insertString += ",remap_text"
-		insertString += ",multi_site_origin"
-		insertString += ",display_name"
-		insertString += ",tr_response_headers"
-		insertString += ",initial_dispersion"
-		insertString += ",dns_bypass_cname"
-		insertString += ",tr_request_headers"
-		insertString += ") VALUES ("
-		insertString += ":xml_id"
-		insertString += ",:active"
-		insertString += ",:dscp"
-		insertString += ",:signed"
-		insertString += ",:qstring_ignore"
-		insertString += ",:geo_limit"
-		insertString += ",:http_bypass_fqdn"
-		insertString += ",:dns_bypass_ip"
-		insertString += ",:dns_bypass_ip6"
-		insertString += ",:dns_bypass_ttl"
-		insertString += ",:org_server_fqdn"
-		insertString += ",:type"
-		insertString += ",:profile"
-		insertString += ",:cdn_id"
-		insertString += ",:ccr_dns_ttl"
-		insertString += ",:global_max_mbps"
-		insertString += ",:global_max_tps"
-		insertString += ",:long_desc"
-		insertString += ",:long_desc_1"
-		insertString += ",:long_desc_2"
-		insertString += ",:max_dns_answers"
-		insertString += ",:info_url"
-		insertString += ",:miss_lat"
-		insertString += ",:miss_long"
-		insertString += ",:check_path"
-		insertString += ",:protocol"
-		insertString += ",:ssl_key_version"
-		insertString += ",:ipv6_routing_enabled"
-		insertString += ",:range_request_handling"
-		insertString += ",:edge_header_rewrite"
-		insertString += ",:origin_shield"
-		insertString += ",:mid_header_rewrite"
-		insertString += ",:regex_remap"
-		insertString += ",:cacheurl"
-		insertString += ",:remap_text"
-		insertString += ",:multi_site_origin"
-		insertString += ",:display_name"
-		insertString += ",:tr_response_headers"
-		insertString += ",:initial_dispersion"
-		insertString += ",:dns_bypass_cname"
-		insertString += ",:tr_request_headers"
-		insertString += ")"
-		result, err := globalDB.NamedExec(insertString, v)
+		return postDeliveryservice(payload)
+	} else if method == "PUT" {
+		return putDeliveryservice(id, payload)
+	} else if method == "DELETE" {
+		return delDeliveryservice(id)
+	}
+	return nil, nil
+}
+
+func getDeliveryservice(id int) (interface{}, error) {
+	ret := []Deliveryservice{}
+	if id >= 0 {
+		err := globalDB.Select(&ret, "select * from deliveryservice where id=$1", id)
 		if err != nil {
 			fmt.Println(err)
 			return nil, err
 		}
-		return result.LastInsertId()
+	} else {
+		queryStr := "select * from deliveryservice"
+		err := globalDB.Select(&ret, queryStr)
+		if err != nil {
+			fmt.Println(err)
+			return nil, err
+		}
 	}
-	return nil, nil
+	return ret, nil
+}
+
+func postDeliveryservice(payload []byte) (interface{}, error) {
+	var v Asn
+	err := json.Unmarshal(payload, &v)
+	if err != nil {
+		fmt.Println(err)
+	}
+	sqlString := "INSERT INTO deliveryservice("
+	sqlString += "xml_id"
+	sqlString += ",active"
+	sqlString += ",dscp"
+	sqlString += ",signed"
+	sqlString += ",qstring_ignore"
+	sqlString += ",geo_limit"
+	sqlString += ",http_bypass_fqdn"
+	sqlString += ",dns_bypass_ip"
+	sqlString += ",dns_bypass_ip6"
+	sqlString += ",dns_bypass_ttl"
+	sqlString += ",org_server_fqdn"
+	sqlString += ",type"
+	sqlString += ",profile"
+	sqlString += ",cdn_id"
+	sqlString += ",ccr_dns_ttl"
+	sqlString += ",global_max_mbps"
+	sqlString += ",global_max_tps"
+	sqlString += ",long_desc"
+	sqlString += ",long_desc_1"
+	sqlString += ",long_desc_2"
+	sqlString += ",max_dns_answers"
+	sqlString += ",info_url"
+	sqlString += ",miss_lat"
+	sqlString += ",miss_long"
+	sqlString += ",check_path"
+	sqlString += ",protocol"
+	sqlString += ",ssl_key_version"
+	sqlString += ",ipv6_routing_enabled"
+	sqlString += ",range_request_handling"
+	sqlString += ",edge_header_rewrite"
+	sqlString += ",origin_shield"
+	sqlString += ",mid_header_rewrite"
+	sqlString += ",regex_remap"
+	sqlString += ",cacheurl"
+	sqlString += ",remap_text"
+	sqlString += ",multi_site_origin"
+	sqlString += ",display_name"
+	sqlString += ",tr_response_headers"
+	sqlString += ",initial_dispersion"
+	sqlString += ",dns_bypass_cname"
+	sqlString += ",tr_request_headers"
+	sqlString += ") VALUES ("
+	sqlString += ":xml_id"
+	sqlString += ",:active"
+	sqlString += ",:dscp"
+	sqlString += ",:signed"
+	sqlString += ",:qstring_ignore"
+	sqlString += ",:geo_limit"
+	sqlString += ",:http_bypass_fqdn"
+	sqlString += ",:dns_bypass_ip"
+	sqlString += ",:dns_bypass_ip6"
+	sqlString += ",:dns_bypass_ttl"
+	sqlString += ",:org_server_fqdn"
+	sqlString += ",:type"
+	sqlString += ",:profile"
+	sqlString += ",:cdn_id"
+	sqlString += ",:ccr_dns_ttl"
+	sqlString += ",:global_max_mbps"
+	sqlString += ",:global_max_tps"
+	sqlString += ",:long_desc"
+	sqlString += ",:long_desc_1"
+	sqlString += ",:long_desc_2"
+	sqlString += ",:max_dns_answers"
+	sqlString += ",:info_url"
+	sqlString += ",:miss_lat"
+	sqlString += ",:miss_long"
+	sqlString += ",:check_path"
+	sqlString += ",:protocol"
+	sqlString += ",:ssl_key_version"
+	sqlString += ",:ipv6_routing_enabled"
+	sqlString += ",:range_request_handling"
+	sqlString += ",:edge_header_rewrite"
+	sqlString += ",:origin_shield"
+	sqlString += ",:mid_header_rewrite"
+	sqlString += ",:regex_remap"
+	sqlString += ",:cacheurl"
+	sqlString += ",:remap_text"
+	sqlString += ",:multi_site_origin"
+	sqlString += ",:display_name"
+	sqlString += ",:tr_response_headers"
+	sqlString += ",:initial_dispersion"
+	sqlString += ",:dns_bypass_cname"
+	sqlString += ",:tr_request_headers"
+	sqlString += ")"
+	result, err := globalDB.NamedExec(sqlString, v)
+	if err != nil {
+		fmt.Println(err)
+		return nil, err
+	}
+	return result, err
+}
+
+func putDeliveryservice(id int, payload []byte) (interface{}, error) {
+	// Note this depends on the json having the correct id!
+	var v Asn
+	err := json.Unmarshal(payload, &v)
+	if err != nil {
+		fmt.Println(err)
+		return nil, err
+	}
+	sqlString := "UPDATE deliveryservice SET "
+	sqlString += "xml_id = :xml_id"
+	sqlString += ",active = :active"
+	sqlString += ",dscp = :dscp"
+	sqlString += ",signed = :signed"
+	sqlString += ",qstring_ignore = :qstring_ignore"
+	sqlString += ",geo_limit = :geo_limit"
+	sqlString += ",http_bypass_fqdn = :http_bypass_fqdn"
+	sqlString += ",dns_bypass_ip = :dns_bypass_ip"
+	sqlString += ",dns_bypass_ip6 = :dns_bypass_ip6"
+	sqlString += ",dns_bypass_ttl = :dns_bypass_ttl"
+	sqlString += ",org_server_fqdn = :org_server_fqdn"
+	sqlString += ",type = :type"
+	sqlString += ",profile = :profile"
+	sqlString += ",cdn_id = :cdn_id"
+	sqlString += ",ccr_dns_ttl = :ccr_dns_ttl"
+	sqlString += ",global_max_mbps = :global_max_mbps"
+	sqlString += ",global_max_tps = :global_max_tps"
+	sqlString += ",long_desc = :long_desc"
+	sqlString += ",long_desc_1 = :long_desc_1"
+	sqlString += ",long_desc_2 = :long_desc_2"
+	sqlString += ",max_dns_answers = :max_dns_answers"
+	sqlString += ",info_url = :info_url"
+	sqlString += ",miss_lat = :miss_lat"
+	sqlString += ",miss_long = :miss_long"
+	sqlString += ",check_path = :check_path"
+	sqlString += ",protocol = :protocol"
+	sqlString += ",ssl_key_version = :ssl_key_version"
+	sqlString += ",ipv6_routing_enabled = :ipv6_routing_enabled"
+	sqlString += ",range_request_handling = :range_request_handling"
+	sqlString += ",edge_header_rewrite = :edge_header_rewrite"
+	sqlString += ",origin_shield = :origin_shield"
+	sqlString += ",mid_header_rewrite = :mid_header_rewrite"
+	sqlString += ",regex_remap = :regex_remap"
+	sqlString += ",cacheurl = :cacheurl"
+	sqlString += ",remap_text = :remap_text"
+	sqlString += ",multi_site_origin = :multi_site_origin"
+	sqlString += ",display_name = :display_name"
+	sqlString += ",tr_response_headers = :tr_response_headers"
+	sqlString += ",initial_dispersion = :initial_dispersion"
+	sqlString += ",dns_bypass_cname = :dns_bypass_cname"
+	sqlString += ",tr_request_headers = :tr_request_headers"
+	sqlString += " WHERE id=:id"
+	result, err := globalDB.NamedExec(sqlString, v)
+	if err != nil {
+		fmt.Println(err)
+		return nil, err
+	}
+	return result, err
+}
+
+func delDeliveryservice(id int) (interface{}, error) {
+	result, err := globalDB.NamedExec("DELETE FROM deliveryservice WHERE id=:id", id)
+	if err != nil {
+		fmt.Println(err)
+		return nil, err
+	}
+	return result, err
 }

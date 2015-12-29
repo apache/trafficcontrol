@@ -32,43 +32,85 @@ type GooseDbVersion struct {
 
 func handleGooseDbVersion(method string, id int, payload []byte) (interface{}, error) {
 	if method == "GET" {
-		ret := []GooseDbVersion{}
-		if id >= 0 {
-			err := globalDB.Select(&ret, "select * from goose_db_version where id=$1", id)
-			if err != nil {
-				fmt.Println(err)
-				return nil, err
-			}
-		} else {
-			queryStr := "select * from goose_db_version"
-			err := globalDB.Select(&ret, queryStr)
-			if err != nil {
-				fmt.Println(err)
-				return nil, err
-			}
-		}
-		return ret, nil
+		return getGooseDbVersion(id)
 	} else if method == "POST" {
-		var v Asn
-		err := json.Unmarshal(payload, &v)
-		if err != nil {
-			fmt.Println(err)
-		}
-		insertString := "INSERT INTO goose_db_version("
-		insertString += "version_id"
-		insertString += ",is_applied"
-		insertString += ",tstamp"
-		insertString += ") VALUES ("
-		insertString += ":version_id"
-		insertString += ",:is_applied"
-		insertString += ",:tstamp"
-		insertString += ")"
-		result, err := globalDB.NamedExec(insertString, v)
+		return postGooseDbVersion(payload)
+	} else if method == "PUT" {
+		return putGooseDbVersion(id, payload)
+	} else if method == "DELETE" {
+		return delGooseDbVersion(id)
+	}
+	return nil, nil
+}
+
+func getGooseDbVersion(id int) (interface{}, error) {
+	ret := []GooseDbVersion{}
+	if id >= 0 {
+		err := globalDB.Select(&ret, "select * from goose_db_version where id=$1", id)
 		if err != nil {
 			fmt.Println(err)
 			return nil, err
 		}
-		return result.LastInsertId()
+	} else {
+		queryStr := "select * from goose_db_version"
+		err := globalDB.Select(&ret, queryStr)
+		if err != nil {
+			fmt.Println(err)
+			return nil, err
+		}
 	}
-	return nil, nil
+	return ret, nil
+}
+
+func postGooseDbVersion(payload []byte) (interface{}, error) {
+	var v Asn
+	err := json.Unmarshal(payload, &v)
+	if err != nil {
+		fmt.Println(err)
+	}
+	sqlString := "INSERT INTO goose_db_version("
+	sqlString += "version_id"
+	sqlString += ",is_applied"
+	sqlString += ",tstamp"
+	sqlString += ") VALUES ("
+	sqlString += ":version_id"
+	sqlString += ",:is_applied"
+	sqlString += ",:tstamp"
+	sqlString += ")"
+	result, err := globalDB.NamedExec(sqlString, v)
+	if err != nil {
+		fmt.Println(err)
+		return nil, err
+	}
+	return result, err
+}
+
+func putGooseDbVersion(id int, payload []byte) (interface{}, error) {
+	// Note this depends on the json having the correct id!
+	var v Asn
+	err := json.Unmarshal(payload, &v)
+	if err != nil {
+		fmt.Println(err)
+		return nil, err
+	}
+	sqlString := "UPDATE goose_db_version SET "
+	sqlString += "version_id = :version_id"
+	sqlString += ",is_applied = :is_applied"
+	sqlString += ",tstamp = :tstamp"
+	sqlString += " WHERE id=:id"
+	result, err := globalDB.NamedExec(sqlString, v)
+	if err != nil {
+		fmt.Println(err)
+		return nil, err
+	}
+	return result, err
+}
+
+func delGooseDbVersion(id int) (interface{}, error) {
+	result, err := globalDB.NamedExec("DELETE FROM goose_db_version WHERE id=:id", id)
+	if err != nil {
+		fmt.Println(err)
+		return nil, err
+	}
+	return result, err
 }

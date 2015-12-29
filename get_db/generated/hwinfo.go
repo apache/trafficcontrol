@@ -33,43 +33,85 @@ type Hwinfo struct {
 
 func handleHwinfo(method string, id int, payload []byte) (interface{}, error) {
 	if method == "GET" {
-		ret := []Hwinfo{}
-		if id >= 0 {
-			err := globalDB.Select(&ret, "select * from hwinfo where id=$1", id)
-			if err != nil {
-				fmt.Println(err)
-				return nil, err
-			}
-		} else {
-			queryStr := "select * from hwinfo"
-			err := globalDB.Select(&ret, queryStr)
-			if err != nil {
-				fmt.Println(err)
-				return nil, err
-			}
-		}
-		return ret, nil
+		return getHwinfo(id)
 	} else if method == "POST" {
-		var v Asn
-		err := json.Unmarshal(payload, &v)
-		if err != nil {
-			fmt.Println(err)
-		}
-		insertString := "INSERT INTO hwinfo("
-		insertString += "serverid"
-		insertString += ",description"
-		insertString += ",val"
-		insertString += ") VALUES ("
-		insertString += ":serverid"
-		insertString += ",:description"
-		insertString += ",:val"
-		insertString += ")"
-		result, err := globalDB.NamedExec(insertString, v)
+		return postHwinfo(payload)
+	} else if method == "PUT" {
+		return putHwinfo(id, payload)
+	} else if method == "DELETE" {
+		return delHwinfo(id)
+	}
+	return nil, nil
+}
+
+func getHwinfo(id int) (interface{}, error) {
+	ret := []Hwinfo{}
+	if id >= 0 {
+		err := globalDB.Select(&ret, "select * from hwinfo where id=$1", id)
 		if err != nil {
 			fmt.Println(err)
 			return nil, err
 		}
-		return result.LastInsertId()
+	} else {
+		queryStr := "select * from hwinfo"
+		err := globalDB.Select(&ret, queryStr)
+		if err != nil {
+			fmt.Println(err)
+			return nil, err
+		}
 	}
-	return nil, nil
+	return ret, nil
+}
+
+func postHwinfo(payload []byte) (interface{}, error) {
+	var v Asn
+	err := json.Unmarshal(payload, &v)
+	if err != nil {
+		fmt.Println(err)
+	}
+	sqlString := "INSERT INTO hwinfo("
+	sqlString += "serverid"
+	sqlString += ",description"
+	sqlString += ",val"
+	sqlString += ") VALUES ("
+	sqlString += ":serverid"
+	sqlString += ",:description"
+	sqlString += ",:val"
+	sqlString += ")"
+	result, err := globalDB.NamedExec(sqlString, v)
+	if err != nil {
+		fmt.Println(err)
+		return nil, err
+	}
+	return result, err
+}
+
+func putHwinfo(id int, payload []byte) (interface{}, error) {
+	// Note this depends on the json having the correct id!
+	var v Asn
+	err := json.Unmarshal(payload, &v)
+	if err != nil {
+		fmt.Println(err)
+		return nil, err
+	}
+	sqlString := "UPDATE hwinfo SET "
+	sqlString += "serverid = :serverid"
+	sqlString += ",description = :description"
+	sqlString += ",val = :val"
+	sqlString += " WHERE id=:id"
+	result, err := globalDB.NamedExec(sqlString, v)
+	if err != nil {
+		fmt.Println(err)
+		return nil, err
+	}
+	return result, err
+}
+
+func delHwinfo(id int) (interface{}, error) {
+	result, err := globalDB.NamedExec("DELETE FROM hwinfo WHERE id=:id", id)
+	if err != nil {
+		fmt.Println(err)
+		return nil, err
+	}
+	return result, err
 }

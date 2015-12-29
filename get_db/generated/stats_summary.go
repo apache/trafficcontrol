@@ -35,49 +35,94 @@ type StatsSummary struct {
 
 func handleStatsSummary(method string, id int, payload []byte) (interface{}, error) {
 	if method == "GET" {
-		ret := []StatsSummary{}
-		if id >= 0 {
-			err := globalDB.Select(&ret, "select * from stats_summary where id=$1", id)
-			if err != nil {
-				fmt.Println(err)
-				return nil, err
-			}
-		} else {
-			queryStr := "select * from stats_summary"
-			err := globalDB.Select(&ret, queryStr)
-			if err != nil {
-				fmt.Println(err)
-				return nil, err
-			}
-		}
-		return ret, nil
+		return getStatsSummary(id)
 	} else if method == "POST" {
-		var v Asn
-		err := json.Unmarshal(payload, &v)
-		if err != nil {
-			fmt.Println(err)
-		}
-		insertString := "INSERT INTO stats_summary("
-		insertString += "cdn_name"
-		insertString += ",deliveryservice_name"
-		insertString += ",stat_name"
-		insertString += ",stat_value"
-		insertString += ",summary_time"
-		insertString += ",stat_date"
-		insertString += ") VALUES ("
-		insertString += ":cdn_name"
-		insertString += ",:deliveryservice_name"
-		insertString += ",:stat_name"
-		insertString += ",:stat_value"
-		insertString += ",:summary_time"
-		insertString += ",:stat_date"
-		insertString += ")"
-		result, err := globalDB.NamedExec(insertString, v)
+		return postStatsSummary(payload)
+	} else if method == "PUT" {
+		return putStatsSummary(id, payload)
+	} else if method == "DELETE" {
+		return delStatsSummary(id)
+	}
+	return nil, nil
+}
+
+func getStatsSummary(id int) (interface{}, error) {
+	ret := []StatsSummary{}
+	if id >= 0 {
+		err := globalDB.Select(&ret, "select * from stats_summary where id=$1", id)
 		if err != nil {
 			fmt.Println(err)
 			return nil, err
 		}
-		return result.LastInsertId()
+	} else {
+		queryStr := "select * from stats_summary"
+		err := globalDB.Select(&ret, queryStr)
+		if err != nil {
+			fmt.Println(err)
+			return nil, err
+		}
 	}
-	return nil, nil
+	return ret, nil
+}
+
+func postStatsSummary(payload []byte) (interface{}, error) {
+	var v Asn
+	err := json.Unmarshal(payload, &v)
+	if err != nil {
+		fmt.Println(err)
+	}
+	sqlString := "INSERT INTO stats_summary("
+	sqlString += "cdn_name"
+	sqlString += ",deliveryservice_name"
+	sqlString += ",stat_name"
+	sqlString += ",stat_value"
+	sqlString += ",summary_time"
+	sqlString += ",stat_date"
+	sqlString += ") VALUES ("
+	sqlString += ":cdn_name"
+	sqlString += ",:deliveryservice_name"
+	sqlString += ",:stat_name"
+	sqlString += ",:stat_value"
+	sqlString += ",:summary_time"
+	sqlString += ",:stat_date"
+	sqlString += ")"
+	result, err := globalDB.NamedExec(sqlString, v)
+	if err != nil {
+		fmt.Println(err)
+		return nil, err
+	}
+	return result, err
+}
+
+func putStatsSummary(id int, payload []byte) (interface{}, error) {
+	// Note this depends on the json having the correct id!
+	var v Asn
+	err := json.Unmarshal(payload, &v)
+	if err != nil {
+		fmt.Println(err)
+		return nil, err
+	}
+	sqlString := "UPDATE stats_summary SET "
+	sqlString += "cdn_name = :cdn_name"
+	sqlString += ",deliveryservice_name = :deliveryservice_name"
+	sqlString += ",stat_name = :stat_name"
+	sqlString += ",stat_value = :stat_value"
+	sqlString += ",summary_time = :summary_time"
+	sqlString += ",stat_date = :stat_date"
+	sqlString += " WHERE id=:id"
+	result, err := globalDB.NamedExec(sqlString, v)
+	if err != nil {
+		fmt.Println(err)
+		return nil, err
+	}
+	return result, err
+}
+
+func delStatsSummary(id int) (interface{}, error) {
+	result, err := globalDB.NamedExec("DELETE FROM stats_summary WHERE id=:id", id)
+	if err != nil {
+		fmt.Println(err)
+		return nil, err
+	}
+	return result, err
 }

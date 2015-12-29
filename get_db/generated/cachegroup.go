@@ -37,49 +37,94 @@ type Cachegroup struct {
 
 func handleCachegroup(method string, id int, payload []byte) (interface{}, error) {
 	if method == "GET" {
-		ret := []Cachegroup{}
-		if id >= 0 {
-			err := globalDB.Select(&ret, "select * from cachegroup where id=$1", id)
-			if err != nil {
-				fmt.Println(err)
-				return nil, err
-			}
-		} else {
-			queryStr := "select * from cachegroup"
-			err := globalDB.Select(&ret, queryStr)
-			if err != nil {
-				fmt.Println(err)
-				return nil, err
-			}
-		}
-		return ret, nil
+		return getCachegroup(id)
 	} else if method == "POST" {
-		var v Asn
-		err := json.Unmarshal(payload, &v)
-		if err != nil {
-			fmt.Println(err)
-		}
-		insertString := "INSERT INTO cachegroup("
-		insertString += "name"
-		insertString += ",short_name"
-		insertString += ",latitude"
-		insertString += ",longitude"
-		insertString += ",parent_cachegroup_id"
-		insertString += ",type"
-		insertString += ") VALUES ("
-		insertString += ":name"
-		insertString += ",:short_name"
-		insertString += ",:latitude"
-		insertString += ",:longitude"
-		insertString += ",:parent_cachegroup_id"
-		insertString += ",:type"
-		insertString += ")"
-		result, err := globalDB.NamedExec(insertString, v)
+		return postCachegroup(payload)
+	} else if method == "PUT" {
+		return putCachegroup(id, payload)
+	} else if method == "DELETE" {
+		return delCachegroup(id)
+	}
+	return nil, nil
+}
+
+func getCachegroup(id int) (interface{}, error) {
+	ret := []Cachegroup{}
+	if id >= 0 {
+		err := globalDB.Select(&ret, "select * from cachegroup where id=$1", id)
 		if err != nil {
 			fmt.Println(err)
 			return nil, err
 		}
-		return result.LastInsertId()
+	} else {
+		queryStr := "select * from cachegroup"
+		err := globalDB.Select(&ret, queryStr)
+		if err != nil {
+			fmt.Println(err)
+			return nil, err
+		}
 	}
-	return nil, nil
+	return ret, nil
+}
+
+func postCachegroup(payload []byte) (interface{}, error) {
+	var v Asn
+	err := json.Unmarshal(payload, &v)
+	if err != nil {
+		fmt.Println(err)
+	}
+	sqlString := "INSERT INTO cachegroup("
+	sqlString += "name"
+	sqlString += ",short_name"
+	sqlString += ",latitude"
+	sqlString += ",longitude"
+	sqlString += ",parent_cachegroup_id"
+	sqlString += ",type"
+	sqlString += ") VALUES ("
+	sqlString += ":name"
+	sqlString += ",:short_name"
+	sqlString += ",:latitude"
+	sqlString += ",:longitude"
+	sqlString += ",:parent_cachegroup_id"
+	sqlString += ",:type"
+	sqlString += ")"
+	result, err := globalDB.NamedExec(sqlString, v)
+	if err != nil {
+		fmt.Println(err)
+		return nil, err
+	}
+	return result, err
+}
+
+func putCachegroup(id int, payload []byte) (interface{}, error) {
+	// Note this depends on the json having the correct id!
+	var v Asn
+	err := json.Unmarshal(payload, &v)
+	if err != nil {
+		fmt.Println(err)
+		return nil, err
+	}
+	sqlString := "UPDATE cachegroup SET "
+	sqlString += "name = :name"
+	sqlString += ",short_name = :short_name"
+	sqlString += ",latitude = :latitude"
+	sqlString += ",longitude = :longitude"
+	sqlString += ",parent_cachegroup_id = :parent_cachegroup_id"
+	sqlString += ",type = :type"
+	sqlString += " WHERE id=:id"
+	result, err := globalDB.NamedExec(sqlString, v)
+	if err != nil {
+		fmt.Println(err)
+		return nil, err
+	}
+	return result, err
+}
+
+func delCachegroup(id int) (interface{}, error) {
+	result, err := globalDB.NamedExec("DELETE FROM cachegroup WHERE id=:id", id)
+	if err != nil {
+		fmt.Println(err)
+		return nil, err
+	}
+	return result, err
 }

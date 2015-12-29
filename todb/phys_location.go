@@ -42,59 +42,109 @@ type PhysLocation struct {
 
 func handlePhysLocation(method string, id int, payload []byte) (interface{}, error) {
 	if method == "GET" {
-		ret := []PhysLocation{}
-		if id >= 0 {
-			err := globalDB.Select(&ret, "select * from phys_location where id=$1", id)
-			if err != nil {
-				fmt.Println(err)
-				return nil, err
-			}
-		} else {
-			queryStr := "select * from phys_location"
-			err := globalDB.Select(&ret, queryStr)
-			if err != nil {
-				fmt.Println(err)
-				return nil, err
-			}
-		}
-		return ret, nil
+		return getPhysLocation(id)
 	} else if method == "POST" {
-		var v Asn
-		err := json.Unmarshal(payload, &v)
-		if err != nil {
-			fmt.Println(err)
-		}
-		insertString := "INSERT INTO phys_location("
-		insertString += "name"
-		insertString += ",short_name"
-		insertString += ",address"
-		insertString += ",city"
-		insertString += ",state"
-		insertString += ",zip"
-		insertString += ",poc"
-		insertString += ",phone"
-		insertString += ",email"
-		insertString += ",comments"
-		insertString += ",region"
-		insertString += ") VALUES ("
-		insertString += ":name"
-		insertString += ",:short_name"
-		insertString += ",:address"
-		insertString += ",:city"
-		insertString += ",:state"
-		insertString += ",:zip"
-		insertString += ",:poc"
-		insertString += ",:phone"
-		insertString += ",:email"
-		insertString += ",:comments"
-		insertString += ",:region"
-		insertString += ")"
-		result, err := globalDB.NamedExec(insertString, v)
+		return postPhysLocation(payload)
+	} else if method == "PUT" {
+		return putPhysLocation(id, payload)
+	} else if method == "DELETE" {
+		return delPhysLocation(id)
+	}
+	return nil, nil
+}
+
+func getPhysLocation(id int) (interface{}, error) {
+	ret := []PhysLocation{}
+	if id >= 0 {
+		err := globalDB.Select(&ret, "select * from phys_location where id=$1", id)
 		if err != nil {
 			fmt.Println(err)
 			return nil, err
 		}
-		return result.LastInsertId()
+	} else {
+		queryStr := "select * from phys_location"
+		err := globalDB.Select(&ret, queryStr)
+		if err != nil {
+			fmt.Println(err)
+			return nil, err
+		}
 	}
-	return nil, nil
+	return ret, nil
+}
+
+func postPhysLocation(payload []byte) (interface{}, error) {
+	var v Asn
+	err := json.Unmarshal(payload, &v)
+	if err != nil {
+		fmt.Println(err)
+	}
+	sqlString := "INSERT INTO phys_location("
+	sqlString += "name"
+	sqlString += ",short_name"
+	sqlString += ",address"
+	sqlString += ",city"
+	sqlString += ",state"
+	sqlString += ",zip"
+	sqlString += ",poc"
+	sqlString += ",phone"
+	sqlString += ",email"
+	sqlString += ",comments"
+	sqlString += ",region"
+	sqlString += ") VALUES ("
+	sqlString += ":name"
+	sqlString += ",:short_name"
+	sqlString += ",:address"
+	sqlString += ",:city"
+	sqlString += ",:state"
+	sqlString += ",:zip"
+	sqlString += ",:poc"
+	sqlString += ",:phone"
+	sqlString += ",:email"
+	sqlString += ",:comments"
+	sqlString += ",:region"
+	sqlString += ")"
+	result, err := globalDB.NamedExec(sqlString, v)
+	if err != nil {
+		fmt.Println(err)
+		return nil, err
+	}
+	return result, err
+}
+
+func putPhysLocation(id int, payload []byte) (interface{}, error) {
+	// Note this depends on the json having the correct id!
+	var v Asn
+	err := json.Unmarshal(payload, &v)
+	if err != nil {
+		fmt.Println(err)
+		return nil, err
+	}
+	sqlString := "UPDATE phys_location SET "
+	sqlString += "name = :name"
+	sqlString += ",short_name = :short_name"
+	sqlString += ",address = :address"
+	sqlString += ",city = :city"
+	sqlString += ",state = :state"
+	sqlString += ",zip = :zip"
+	sqlString += ",poc = :poc"
+	sqlString += ",phone = :phone"
+	sqlString += ",email = :email"
+	sqlString += ",comments = :comments"
+	sqlString += ",region = :region"
+	sqlString += " WHERE id=:id"
+	result, err := globalDB.NamedExec(sqlString, v)
+	if err != nil {
+		fmt.Println(err)
+		return nil, err
+	}
+	return result, err
+}
+
+func delPhysLocation(id int) (interface{}, error) {
+	result, err := globalDB.NamedExec("DELETE FROM phys_location WHERE id=:id", id)
+	if err != nil {
+		fmt.Println(err)
+		return nil, err
+	}
+	return result, err
 }

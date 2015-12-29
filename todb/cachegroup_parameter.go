@@ -31,41 +31,82 @@ type CachegroupParameter struct {
 
 func handleCachegroupParameter(method string, id int, payload []byte) (interface{}, error) {
 	if method == "GET" {
-		ret := []CachegroupParameter{}
-		if id >= 0 {
-			err := globalDB.Select(&ret, "select * from cachegroup_parameter where id=$1", id)
-			if err != nil {
-				fmt.Println(err)
-				return nil, err
-			}
-		} else {
-			queryStr := "select * from cachegroup_parameter"
-			err := globalDB.Select(&ret, queryStr)
-			if err != nil {
-				fmt.Println(err)
-				return nil, err
-			}
-		}
-		return ret, nil
+		return getCachegroupParameter(id)
 	} else if method == "POST" {
-		var v Asn
-		err := json.Unmarshal(payload, &v)
-		if err != nil {
-			fmt.Println(err)
-		}
-		insertString := "INSERT INTO cachegroup_parameter("
-		insertString += "cachegroup"
-		insertString += ",parameter"
-		insertString += ") VALUES ("
-		insertString += ":cachegroup"
-		insertString += ",:parameter"
-		insertString += ")"
-		result, err := globalDB.NamedExec(insertString, v)
+		return postCachegroupParameter(payload)
+	} else if method == "PUT" {
+		return putCachegroupParameter(id, payload)
+	} else if method == "DELETE" {
+		return delCachegroupParameter(id)
+	}
+	return nil, nil
+}
+
+func getCachegroupParameter(id int) (interface{}, error) {
+	ret := []CachegroupParameter{}
+	if id >= 0 {
+		err := globalDB.Select(&ret, "select * from cachegroup_parameter where id=$1", id)
 		if err != nil {
 			fmt.Println(err)
 			return nil, err
 		}
-		return result.LastInsertId()
+	} else {
+		queryStr := "select * from cachegroup_parameter"
+		err := globalDB.Select(&ret, queryStr)
+		if err != nil {
+			fmt.Println(err)
+			return nil, err
+		}
 	}
-	return nil, nil
+	return ret, nil
+}
+
+func postCachegroupParameter(payload []byte) (interface{}, error) {
+	var v Asn
+	err := json.Unmarshal(payload, &v)
+	if err != nil {
+		fmt.Println(err)
+	}
+	sqlString := "INSERT INTO cachegroup_parameter("
+	sqlString += "cachegroup"
+	sqlString += ",parameter"
+	sqlString += ") VALUES ("
+	sqlString += ":cachegroup"
+	sqlString += ",:parameter"
+	sqlString += ")"
+	result, err := globalDB.NamedExec(sqlString, v)
+	if err != nil {
+		fmt.Println(err)
+		return nil, err
+	}
+	return result, err
+}
+
+func putCachegroupParameter(id int, payload []byte) (interface{}, error) {
+	// Note this depends on the json having the correct id!
+	var v Asn
+	err := json.Unmarshal(payload, &v)
+	if err != nil {
+		fmt.Println(err)
+		return nil, err
+	}
+	sqlString := "UPDATE cachegroup_parameter SET "
+	sqlString += "cachegroup = :cachegroup"
+	sqlString += ",parameter = :parameter"
+	sqlString += " WHERE id=:id"
+	result, err := globalDB.NamedExec(sqlString, v)
+	if err != nil {
+		fmt.Println(err)
+		return nil, err
+	}
+	return result, err
+}
+
+func delCachegroupParameter(id int) (interface{}, error) {
+	result, err := globalDB.NamedExec("DELETE FROM cachegroup_parameter WHERE id=:id", id)
+	if err != nil {
+		fmt.Println(err)
+		return nil, err
+	}
+	return result, err
 }

@@ -61,97 +61,166 @@ type Server struct {
 
 func handleServer(method string, id int, payload []byte) (interface{}, error) {
 	if method == "GET" {
-		ret := []Server{}
-		if id >= 0 {
-			err := globalDB.Select(&ret, "select * from server where id=$1", id)
-			if err != nil {
-				fmt.Println(err)
-				return nil, err
-			}
-		} else {
-			queryStr := "select * from server"
-			err := globalDB.Select(&ret, queryStr)
-			if err != nil {
-				fmt.Println(err)
-				return nil, err
-			}
-		}
-		return ret, nil
+		return getServer(id)
 	} else if method == "POST" {
-		var v Asn
-		err := json.Unmarshal(payload, &v)
-		if err != nil {
-			fmt.Println(err)
-		}
-		insertString := "INSERT INTO server("
-		insertString += "host_name"
-		insertString += ",domain_name"
-		insertString += ",tcp_port"
-		insertString += ",xmpp_id"
-		insertString += ",xmpp_passwd"
-		insertString += ",interface_name"
-		insertString += ",ip_address"
-		insertString += ",ip_netmask"
-		insertString += ",ip_gateway"
-		insertString += ",ip6_address"
-		insertString += ",ip6_gateway"
-		insertString += ",interface_mtu"
-		insertString += ",phys_location"
-		insertString += ",rack"
-		insertString += ",cachegroup"
-		insertString += ",type"
-		insertString += ",status"
-		insertString += ",upd_pending"
-		insertString += ",profile"
-		insertString += ",cdn_id"
-		insertString += ",mgmt_ip_address"
-		insertString += ",mgmt_ip_netmask"
-		insertString += ",mgmt_ip_gateway"
-		insertString += ",ilo_ip_address"
-		insertString += ",ilo_ip_netmask"
-		insertString += ",ilo_ip_gateway"
-		insertString += ",ilo_username"
-		insertString += ",ilo_password"
-		insertString += ",router_host_name"
-		insertString += ",router_port_name"
-		insertString += ") VALUES ("
-		insertString += ":host_name"
-		insertString += ",:domain_name"
-		insertString += ",:tcp_port"
-		insertString += ",:xmpp_id"
-		insertString += ",:xmpp_passwd"
-		insertString += ",:interface_name"
-		insertString += ",:ip_address"
-		insertString += ",:ip_netmask"
-		insertString += ",:ip_gateway"
-		insertString += ",:ip6_address"
-		insertString += ",:ip6_gateway"
-		insertString += ",:interface_mtu"
-		insertString += ",:phys_location"
-		insertString += ",:rack"
-		insertString += ",:cachegroup"
-		insertString += ",:type"
-		insertString += ",:status"
-		insertString += ",:upd_pending"
-		insertString += ",:profile"
-		insertString += ",:cdn_id"
-		insertString += ",:mgmt_ip_address"
-		insertString += ",:mgmt_ip_netmask"
-		insertString += ",:mgmt_ip_gateway"
-		insertString += ",:ilo_ip_address"
-		insertString += ",:ilo_ip_netmask"
-		insertString += ",:ilo_ip_gateway"
-		insertString += ",:ilo_username"
-		insertString += ",:ilo_password"
-		insertString += ",:router_host_name"
-		insertString += ",:router_port_name"
-		insertString += ")"
-		result, err := globalDB.NamedExec(insertString, v)
+		return postServer(payload)
+	} else if method == "PUT" {
+		return putServer(id, payload)
+	} else if method == "DELETE" {
+		return delServer(id)
+	}
+	return nil, nil
+}
+
+func getServer(id int) (interface{}, error) {
+	ret := []Server{}
+	if id >= 0 {
+		err := globalDB.Select(&ret, "select * from server where id=$1", id)
 		if err != nil {
 			fmt.Println(err)
 			return nil, err
 		}
-		return result.LastInsertId()
+	} else {
+		queryStr := "select * from server"
+		err := globalDB.Select(&ret, queryStr)
+		if err != nil {
+			fmt.Println(err)
+			return nil, err
+		}
 	}
-	return nil, nil
+	return ret, nil
+}
+
+func postServer(payload []byte) (interface{}, error) {
+	var v Asn
+	err := json.Unmarshal(payload, &v)
+	if err != nil {
+		fmt.Println(err)
+	}
+	sqlString := "INSERT INTO server("
+	sqlString += "host_name"
+	sqlString += ",domain_name"
+	sqlString += ",tcp_port"
+	sqlString += ",xmpp_id"
+	sqlString += ",xmpp_passwd"
+	sqlString += ",interface_name"
+	sqlString += ",ip_address"
+	sqlString += ",ip_netmask"
+	sqlString += ",ip_gateway"
+	sqlString += ",ip6_address"
+	sqlString += ",ip6_gateway"
+	sqlString += ",interface_mtu"
+	sqlString += ",phys_location"
+	sqlString += ",rack"
+	sqlString += ",cachegroup"
+	sqlString += ",type"
+	sqlString += ",status"
+	sqlString += ",upd_pending"
+	sqlString += ",profile"
+	sqlString += ",cdn_id"
+	sqlString += ",mgmt_ip_address"
+	sqlString += ",mgmt_ip_netmask"
+	sqlString += ",mgmt_ip_gateway"
+	sqlString += ",ilo_ip_address"
+	sqlString += ",ilo_ip_netmask"
+	sqlString += ",ilo_ip_gateway"
+	sqlString += ",ilo_username"
+	sqlString += ",ilo_password"
+	sqlString += ",router_host_name"
+	sqlString += ",router_port_name"
+	sqlString += ") VALUES ("
+	sqlString += ":host_name"
+	sqlString += ",:domain_name"
+	sqlString += ",:tcp_port"
+	sqlString += ",:xmpp_id"
+	sqlString += ",:xmpp_passwd"
+	sqlString += ",:interface_name"
+	sqlString += ",:ip_address"
+	sqlString += ",:ip_netmask"
+	sqlString += ",:ip_gateway"
+	sqlString += ",:ip6_address"
+	sqlString += ",:ip6_gateway"
+	sqlString += ",:interface_mtu"
+	sqlString += ",:phys_location"
+	sqlString += ",:rack"
+	sqlString += ",:cachegroup"
+	sqlString += ",:type"
+	sqlString += ",:status"
+	sqlString += ",:upd_pending"
+	sqlString += ",:profile"
+	sqlString += ",:cdn_id"
+	sqlString += ",:mgmt_ip_address"
+	sqlString += ",:mgmt_ip_netmask"
+	sqlString += ",:mgmt_ip_gateway"
+	sqlString += ",:ilo_ip_address"
+	sqlString += ",:ilo_ip_netmask"
+	sqlString += ",:ilo_ip_gateway"
+	sqlString += ",:ilo_username"
+	sqlString += ",:ilo_password"
+	sqlString += ",:router_host_name"
+	sqlString += ",:router_port_name"
+	sqlString += ")"
+	result, err := globalDB.NamedExec(sqlString, v)
+	if err != nil {
+		fmt.Println(err)
+		return nil, err
+	}
+	return result, err
+}
+
+func putServer(id int, payload []byte) (interface{}, error) {
+	// Note this depends on the json having the correct id!
+	var v Asn
+	err := json.Unmarshal(payload, &v)
+	if err != nil {
+		fmt.Println(err)
+		return nil, err
+	}
+	sqlString := "UPDATE server SET "
+	sqlString += "host_name = :host_name"
+	sqlString += ",domain_name = :domain_name"
+	sqlString += ",tcp_port = :tcp_port"
+	sqlString += ",xmpp_id = :xmpp_id"
+	sqlString += ",xmpp_passwd = :xmpp_passwd"
+	sqlString += ",interface_name = :interface_name"
+	sqlString += ",ip_address = :ip_address"
+	sqlString += ",ip_netmask = :ip_netmask"
+	sqlString += ",ip_gateway = :ip_gateway"
+	sqlString += ",ip6_address = :ip6_address"
+	sqlString += ",ip6_gateway = :ip6_gateway"
+	sqlString += ",interface_mtu = :interface_mtu"
+	sqlString += ",phys_location = :phys_location"
+	sqlString += ",rack = :rack"
+	sqlString += ",cachegroup = :cachegroup"
+	sqlString += ",type = :type"
+	sqlString += ",status = :status"
+	sqlString += ",upd_pending = :upd_pending"
+	sqlString += ",profile = :profile"
+	sqlString += ",cdn_id = :cdn_id"
+	sqlString += ",mgmt_ip_address = :mgmt_ip_address"
+	sqlString += ",mgmt_ip_netmask = :mgmt_ip_netmask"
+	sqlString += ",mgmt_ip_gateway = :mgmt_ip_gateway"
+	sqlString += ",ilo_ip_address = :ilo_ip_address"
+	sqlString += ",ilo_ip_netmask = :ilo_ip_netmask"
+	sqlString += ",ilo_ip_gateway = :ilo_ip_gateway"
+	sqlString += ",ilo_username = :ilo_username"
+	sqlString += ",ilo_password = :ilo_password"
+	sqlString += ",router_host_name = :router_host_name"
+	sqlString += ",router_port_name = :router_port_name"
+	sqlString += " WHERE id=:id"
+	result, err := globalDB.NamedExec(sqlString, v)
+	if err != nil {
+		fmt.Println(err)
+		return nil, err
+	}
+	return result, err
+}
+
+func delServer(id int) (interface{}, error) {
+	result, err := globalDB.NamedExec("DELETE FROM server WHERE id=:id", id)
+	if err != nil {
+		fmt.Println(err)
+		return nil, err
+	}
+	return result, err
 }

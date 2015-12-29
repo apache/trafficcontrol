@@ -31,39 +31,79 @@ type Division struct {
 
 func handleDivision(method string, id int, payload []byte) (interface{}, error) {
 	if method == "GET" {
-		ret := []Division{}
-		if id >= 0 {
-			err := globalDB.Select(&ret, "select * from division where id=$1", id)
-			if err != nil {
-				fmt.Println(err)
-				return nil, err
-			}
-		} else {
-			queryStr := "select * from division"
-			err := globalDB.Select(&ret, queryStr)
-			if err != nil {
-				fmt.Println(err)
-				return nil, err
-			}
-		}
-		return ret, nil
+		return getDivision(id)
 	} else if method == "POST" {
-		var v Asn
-		err := json.Unmarshal(payload, &v)
-		if err != nil {
-			fmt.Println(err)
-		}
-		insertString := "INSERT INTO division("
-		insertString += "name"
-		insertString += ") VALUES ("
-		insertString += ":name"
-		insertString += ")"
-		result, err := globalDB.NamedExec(insertString, v)
+		return postDivision(payload)
+	} else if method == "PUT" {
+		return putDivision(id, payload)
+	} else if method == "DELETE" {
+		return delDivision(id)
+	}
+	return nil, nil
+}
+
+func getDivision(id int) (interface{}, error) {
+	ret := []Division{}
+	if id >= 0 {
+		err := globalDB.Select(&ret, "select * from division where id=$1", id)
 		if err != nil {
 			fmt.Println(err)
 			return nil, err
 		}
-		return result.LastInsertId()
+	} else {
+		queryStr := "select * from division"
+		err := globalDB.Select(&ret, queryStr)
+		if err != nil {
+			fmt.Println(err)
+			return nil, err
+		}
 	}
-	return nil, nil
+	return ret, nil
+}
+
+func postDivision(payload []byte) (interface{}, error) {
+	var v Asn
+	err := json.Unmarshal(payload, &v)
+	if err != nil {
+		fmt.Println(err)
+	}
+	sqlString := "INSERT INTO division("
+	sqlString += "name"
+	sqlString += ") VALUES ("
+	sqlString += ":name"
+	sqlString += ")"
+	result, err := globalDB.NamedExec(sqlString, v)
+	if err != nil {
+		fmt.Println(err)
+		return nil, err
+	}
+	return result, err
+}
+
+func putDivision(id int, payload []byte) (interface{}, error) {
+	// Note this depends on the json having the correct id!
+	var v Asn
+	err := json.Unmarshal(payload, &v)
+	if err != nil {
+		fmt.Println(err)
+		return nil, err
+	}
+	sqlString := "UPDATE division SET "
+	sqlString += "name = :name"
+	sqlString += " WHERE id=:id"
+	result, err := globalDB.NamedExec(sqlString, v)
+	if err != nil {
+		fmt.Println(err)
+		return nil, err
+	}
+	return result, err
+}
+
+func delDivision(id int) (interface{}, error) {
+	result, err := globalDB.NamedExec("DELETE FROM division WHERE id=:id", id)
+	if err != nil {
+		fmt.Println(err)
+		return nil, err
+	}
+	return result, err
 }

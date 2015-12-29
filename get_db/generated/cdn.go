@@ -33,41 +33,82 @@ type Cdn struct {
 
 func handleCdn(method string, id int, payload []byte) (interface{}, error) {
 	if method == "GET" {
-		ret := []Cdn{}
-		if id >= 0 {
-			err := globalDB.Select(&ret, "select * from cdn where id=$1", id)
-			if err != nil {
-				fmt.Println(err)
-				return nil, err
-			}
-		} else {
-			queryStr := "select * from cdn"
-			err := globalDB.Select(&ret, queryStr)
-			if err != nil {
-				fmt.Println(err)
-				return nil, err
-			}
-		}
-		return ret, nil
+		return getCdn(id)
 	} else if method == "POST" {
-		var v Asn
-		err := json.Unmarshal(payload, &v)
-		if err != nil {
-			fmt.Println(err)
-		}
-		insertString := "INSERT INTO cdn("
-		insertString += "name"
-		insertString += ",dnssec_enabled"
-		insertString += ") VALUES ("
-		insertString += ":name"
-		insertString += ",:dnssec_enabled"
-		insertString += ")"
-		result, err := globalDB.NamedExec(insertString, v)
+		return postCdn(payload)
+	} else if method == "PUT" {
+		return putCdn(id, payload)
+	} else if method == "DELETE" {
+		return delCdn(id)
+	}
+	return nil, nil
+}
+
+func getCdn(id int) (interface{}, error) {
+	ret := []Cdn{}
+	if id >= 0 {
+		err := globalDB.Select(&ret, "select * from cdn where id=$1", id)
 		if err != nil {
 			fmt.Println(err)
 			return nil, err
 		}
-		return result.LastInsertId()
+	} else {
+		queryStr := "select * from cdn"
+		err := globalDB.Select(&ret, queryStr)
+		if err != nil {
+			fmt.Println(err)
+			return nil, err
+		}
 	}
-	return nil, nil
+	return ret, nil
+}
+
+func postCdn(payload []byte) (interface{}, error) {
+	var v Asn
+	err := json.Unmarshal(payload, &v)
+	if err != nil {
+		fmt.Println(err)
+	}
+	sqlString := "INSERT INTO cdn("
+	sqlString += "name"
+	sqlString += ",dnssec_enabled"
+	sqlString += ") VALUES ("
+	sqlString += ":name"
+	sqlString += ",:dnssec_enabled"
+	sqlString += ")"
+	result, err := globalDB.NamedExec(sqlString, v)
+	if err != nil {
+		fmt.Println(err)
+		return nil, err
+	}
+	return result, err
+}
+
+func putCdn(id int, payload []byte) (interface{}, error) {
+	// Note this depends on the json having the correct id!
+	var v Asn
+	err := json.Unmarshal(payload, &v)
+	if err != nil {
+		fmt.Println(err)
+		return nil, err
+	}
+	sqlString := "UPDATE cdn SET "
+	sqlString += "name = :name"
+	sqlString += ",dnssec_enabled = :dnssec_enabled"
+	sqlString += " WHERE id=:id"
+	result, err := globalDB.NamedExec(sqlString, v)
+	if err != nil {
+		fmt.Println(err)
+		return nil, err
+	}
+	return result, err
+}
+
+func delCdn(id int) (interface{}, error) {
+	result, err := globalDB.NamedExec("DELETE FROM cdn WHERE id=:id", id)
+	if err != nil {
+		fmt.Println(err)
+		return nil, err
+	}
+	return result, err
 }

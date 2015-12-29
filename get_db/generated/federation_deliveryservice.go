@@ -31,41 +31,82 @@ type FederationDeliveryservice struct {
 
 func handleFederationDeliveryservice(method string, id int, payload []byte) (interface{}, error) {
 	if method == "GET" {
-		ret := []FederationDeliveryservice{}
-		if id >= 0 {
-			err := globalDB.Select(&ret, "select * from federation_deliveryservice where id=$1", id)
-			if err != nil {
-				fmt.Println(err)
-				return nil, err
-			}
-		} else {
-			queryStr := "select * from federation_deliveryservice"
-			err := globalDB.Select(&ret, queryStr)
-			if err != nil {
-				fmt.Println(err)
-				return nil, err
-			}
-		}
-		return ret, nil
+		return getFederationDeliveryservice(id)
 	} else if method == "POST" {
-		var v Asn
-		err := json.Unmarshal(payload, &v)
-		if err != nil {
-			fmt.Println(err)
-		}
-		insertString := "INSERT INTO federation_deliveryservice("
-		insertString += "federation"
-		insertString += ",deliveryservice"
-		insertString += ") VALUES ("
-		insertString += ":federation"
-		insertString += ",:deliveryservice"
-		insertString += ")"
-		result, err := globalDB.NamedExec(insertString, v)
+		return postFederationDeliveryservice(payload)
+	} else if method == "PUT" {
+		return putFederationDeliveryservice(id, payload)
+	} else if method == "DELETE" {
+		return delFederationDeliveryservice(id)
+	}
+	return nil, nil
+}
+
+func getFederationDeliveryservice(id int) (interface{}, error) {
+	ret := []FederationDeliveryservice{}
+	if id >= 0 {
+		err := globalDB.Select(&ret, "select * from federation_deliveryservice where id=$1", id)
 		if err != nil {
 			fmt.Println(err)
 			return nil, err
 		}
-		return result.LastInsertId()
+	} else {
+		queryStr := "select * from federation_deliveryservice"
+		err := globalDB.Select(&ret, queryStr)
+		if err != nil {
+			fmt.Println(err)
+			return nil, err
+		}
 	}
-	return nil, nil
+	return ret, nil
+}
+
+func postFederationDeliveryservice(payload []byte) (interface{}, error) {
+	var v Asn
+	err := json.Unmarshal(payload, &v)
+	if err != nil {
+		fmt.Println(err)
+	}
+	sqlString := "INSERT INTO federation_deliveryservice("
+	sqlString += "federation"
+	sqlString += ",deliveryservice"
+	sqlString += ") VALUES ("
+	sqlString += ":federation"
+	sqlString += ",:deliveryservice"
+	sqlString += ")"
+	result, err := globalDB.NamedExec(sqlString, v)
+	if err != nil {
+		fmt.Println(err)
+		return nil, err
+	}
+	return result, err
+}
+
+func putFederationDeliveryservice(id int, payload []byte) (interface{}, error) {
+	// Note this depends on the json having the correct id!
+	var v Asn
+	err := json.Unmarshal(payload, &v)
+	if err != nil {
+		fmt.Println(err)
+		return nil, err
+	}
+	sqlString := "UPDATE federation_deliveryservice SET "
+	sqlString += "federation = :federation"
+	sqlString += ",deliveryservice = :deliveryservice"
+	sqlString += " WHERE id=:id"
+	result, err := globalDB.NamedExec(sqlString, v)
+	if err != nil {
+		fmt.Println(err)
+		return nil, err
+	}
+	return result, err
+}
+
+func delFederationDeliveryservice(id int) (interface{}, error) {
+	result, err := globalDB.NamedExec("DELETE FROM federation_deliveryservice WHERE id=:id", id)
+	if err != nil {
+		fmt.Println(err)
+		return nil, err
+	}
+	return result, err
 }

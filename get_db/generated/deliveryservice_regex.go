@@ -31,43 +31,85 @@ type DeliveryserviceRegex struct {
 
 func handleDeliveryserviceRegex(method string, id int, payload []byte) (interface{}, error) {
 	if method == "GET" {
-		ret := []DeliveryserviceRegex{}
-		if id >= 0 {
-			err := globalDB.Select(&ret, "select * from deliveryservice_regex where id=$1", id)
-			if err != nil {
-				fmt.Println(err)
-				return nil, err
-			}
-		} else {
-			queryStr := "select * from deliveryservice_regex"
-			err := globalDB.Select(&ret, queryStr)
-			if err != nil {
-				fmt.Println(err)
-				return nil, err
-			}
-		}
-		return ret, nil
+		return getDeliveryserviceRegex(id)
 	} else if method == "POST" {
-		var v Asn
-		err := json.Unmarshal(payload, &v)
-		if err != nil {
-			fmt.Println(err)
-		}
-		insertString := "INSERT INTO deliveryservice_regex("
-		insertString += "deliveryservice"
-		insertString += ",regex"
-		insertString += ",set_number"
-		insertString += ") VALUES ("
-		insertString += ":deliveryservice"
-		insertString += ",:regex"
-		insertString += ",:set_number"
-		insertString += ")"
-		result, err := globalDB.NamedExec(insertString, v)
+		return postDeliveryserviceRegex(payload)
+	} else if method == "PUT" {
+		return putDeliveryserviceRegex(id, payload)
+	} else if method == "DELETE" {
+		return delDeliveryserviceRegex(id)
+	}
+	return nil, nil
+}
+
+func getDeliveryserviceRegex(id int) (interface{}, error) {
+	ret := []DeliveryserviceRegex{}
+	if id >= 0 {
+		err := globalDB.Select(&ret, "select * from deliveryservice_regex where id=$1", id)
 		if err != nil {
 			fmt.Println(err)
 			return nil, err
 		}
-		return result.LastInsertId()
+	} else {
+		queryStr := "select * from deliveryservice_regex"
+		err := globalDB.Select(&ret, queryStr)
+		if err != nil {
+			fmt.Println(err)
+			return nil, err
+		}
 	}
-	return nil, nil
+	return ret, nil
+}
+
+func postDeliveryserviceRegex(payload []byte) (interface{}, error) {
+	var v Asn
+	err := json.Unmarshal(payload, &v)
+	if err != nil {
+		fmt.Println(err)
+	}
+	sqlString := "INSERT INTO deliveryservice_regex("
+	sqlString += "deliveryservice"
+	sqlString += ",regex"
+	sqlString += ",set_number"
+	sqlString += ") VALUES ("
+	sqlString += ":deliveryservice"
+	sqlString += ",:regex"
+	sqlString += ",:set_number"
+	sqlString += ")"
+	result, err := globalDB.NamedExec(sqlString, v)
+	if err != nil {
+		fmt.Println(err)
+		return nil, err
+	}
+	return result, err
+}
+
+func putDeliveryserviceRegex(id int, payload []byte) (interface{}, error) {
+	// Note this depends on the json having the correct id!
+	var v Asn
+	err := json.Unmarshal(payload, &v)
+	if err != nil {
+		fmt.Println(err)
+		return nil, err
+	}
+	sqlString := "UPDATE deliveryservice_regex SET "
+	sqlString += "deliveryservice = :deliveryservice"
+	sqlString += ",regex = :regex"
+	sqlString += ",set_number = :set_number"
+	sqlString += " WHERE id=:id"
+	result, err := globalDB.NamedExec(sqlString, v)
+	if err != nil {
+		fmt.Println(err)
+		return nil, err
+	}
+	return result, err
+}
+
+func delDeliveryserviceRegex(id int) (interface{}, error) {
+	result, err := globalDB.NamedExec("DELETE FROM deliveryservice_regex WHERE id=:id", id)
+	if err != nil {
+		fmt.Println(err)
+		return nil, err
+	}
+	return result, err
 }

@@ -32,41 +32,82 @@ type Asn struct {
 
 func handleAsn(method string, id int, payload []byte) (interface{}, error) {
 	if method == "GET" {
-		ret := []Asn{}
-		if id >= 0 {
-			err := globalDB.Select(&ret, "select * from asn where id=$1", id)
-			if err != nil {
-				fmt.Println(err)
-				return nil, err
-			}
-		} else {
-			queryStr := "select * from asn"
-			err := globalDB.Select(&ret, queryStr)
-			if err != nil {
-				fmt.Println(err)
-				return nil, err
-			}
-		}
-		return ret, nil
+		return getAsn(id)
 	} else if method == "POST" {
-		var v Asn
-		err := json.Unmarshal(payload, &v)
-		if err != nil {
-			fmt.Println(err)
-		}
-		insertString := "INSERT INTO asn("
-		insertString += "asn"
-		insertString += ",cachegroup"
-		insertString += ") VALUES ("
-		insertString += ":asn"
-		insertString += ",:cachegroup"
-		insertString += ")"
-		result, err := globalDB.NamedExec(insertString, v)
+		return postAsn(payload)
+	} else if method == "PUT" {
+		return putAsn(id, payload)
+	} else if method == "DELETE" {
+		return delAsn(id)
+	}
+	return nil, nil
+}
+
+func getAsn(id int) (interface{}, error) {
+	ret := []Asn{}
+	if id >= 0 {
+		err := globalDB.Select(&ret, "select * from asn where id=$1", id)
 		if err != nil {
 			fmt.Println(err)
 			return nil, err
 		}
-		return result.LastInsertId()
+	} else {
+		queryStr := "select * from asn"
+		err := globalDB.Select(&ret, queryStr)
+		if err != nil {
+			fmt.Println(err)
+			return nil, err
+		}
 	}
-	return nil, nil
+	return ret, nil
+}
+
+func postAsn(payload []byte) (interface{}, error) {
+	var v Asn
+	err := json.Unmarshal(payload, &v)
+	if err != nil {
+		fmt.Println(err)
+	}
+	sqlString := "INSERT INTO asn("
+	sqlString += "asn"
+	sqlString += ",cachegroup"
+	sqlString += ") VALUES ("
+	sqlString += ":asn"
+	sqlString += ",:cachegroup"
+	sqlString += ")"
+	result, err := globalDB.NamedExec(sqlString, v)
+	if err != nil {
+		fmt.Println(err)
+		return nil, err
+	}
+	return result, err
+}
+
+func putAsn(id int, payload []byte) (interface{}, error) {
+	// Note this depends on the json having the correct id!
+	var v Asn
+	err := json.Unmarshal(payload, &v)
+	if err != nil {
+		fmt.Println(err)
+		return nil, err
+	}
+	sqlString := "UPDATE asn SET "
+	sqlString += "asn = :asn"
+	sqlString += ",cachegroup = :cachegroup"
+	sqlString += " WHERE id=:id"
+	result, err := globalDB.NamedExec(sqlString, v)
+	if err != nil {
+		fmt.Println(err)
+		return nil, err
+	}
+	return result, err
+}
+
+func delAsn(id int) (interface{}, error) {
+	result, err := globalDB.NamedExec("DELETE FROM asn WHERE id=:id", id)
+	if err != nil {
+		fmt.Println(err)
+		return nil, err
+	}
+	return result, err
 }

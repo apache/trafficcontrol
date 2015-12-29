@@ -63,101 +63,172 @@ type Servercheck struct {
 
 func handleServercheck(method string, id int, payload []byte) (interface{}, error) {
 	if method == "GET" {
-		ret := []Servercheck{}
-		if id >= 0 {
-			err := globalDB.Select(&ret, "select * from servercheck where id=$1", id)
-			if err != nil {
-				fmt.Println(err)
-				return nil, err
-			}
-		} else {
-			queryStr := "select * from servercheck"
-			err := globalDB.Select(&ret, queryStr)
-			if err != nil {
-				fmt.Println(err)
-				return nil, err
-			}
-		}
-		return ret, nil
+		return getServercheck(id)
 	} else if method == "POST" {
-		var v Asn
-		err := json.Unmarshal(payload, &v)
-		if err != nil {
-			fmt.Println(err)
-		}
-		insertString := "INSERT INTO servercheck("
-		insertString += "server"
-		insertString += ",aa"
-		insertString += ",ab"
-		insertString += ",ac"
-		insertString += ",ad"
-		insertString += ",ae"
-		insertString += ",af"
-		insertString += ",ag"
-		insertString += ",ah"
-		insertString += ",ai"
-		insertString += ",aj"
-		insertString += ",ak"
-		insertString += ",al"
-		insertString += ",am"
-		insertString += ",an"
-		insertString += ",ao"
-		insertString += ",ap"
-		insertString += ",aq"
-		insertString += ",ar"
-		insertString += ",as"
-		insertString += ",at"
-		insertString += ",au"
-		insertString += ",av"
-		insertString += ",aw"
-		insertString += ",ax"
-		insertString += ",ay"
-		insertString += ",az"
-		insertString += ",ba"
-		insertString += ",bb"
-		insertString += ",bc"
-		insertString += ",bd"
-		insertString += ",be"
-		insertString += ") VALUES ("
-		insertString += ":server"
-		insertString += ",:aa"
-		insertString += ",:ab"
-		insertString += ",:ac"
-		insertString += ",:ad"
-		insertString += ",:ae"
-		insertString += ",:af"
-		insertString += ",:ag"
-		insertString += ",:ah"
-		insertString += ",:ai"
-		insertString += ",:aj"
-		insertString += ",:ak"
-		insertString += ",:al"
-		insertString += ",:am"
-		insertString += ",:an"
-		insertString += ",:ao"
-		insertString += ",:ap"
-		insertString += ",:aq"
-		insertString += ",:ar"
-		insertString += ",:as"
-		insertString += ",:at"
-		insertString += ",:au"
-		insertString += ",:av"
-		insertString += ",:aw"
-		insertString += ",:ax"
-		insertString += ",:ay"
-		insertString += ",:az"
-		insertString += ",:ba"
-		insertString += ",:bb"
-		insertString += ",:bc"
-		insertString += ",:bd"
-		insertString += ",:be"
-		insertString += ")"
-		result, err := globalDB.NamedExec(insertString, v)
+		return postServercheck(payload)
+	} else if method == "PUT" {
+		return putServercheck(id, payload)
+	} else if method == "DELETE" {
+		return delServercheck(id)
+	}
+	return nil, nil
+}
+
+func getServercheck(id int) (interface{}, error) {
+	ret := []Servercheck{}
+	if id >= 0 {
+		err := globalDB.Select(&ret, "select * from servercheck where id=$1", id)
 		if err != nil {
 			fmt.Println(err)
 			return nil, err
 		}
-		return result.LastInsertId()
+	} else {
+		queryStr := "select * from servercheck"
+		err := globalDB.Select(&ret, queryStr)
+		if err != nil {
+			fmt.Println(err)
+			return nil, err
+		}
 	}
-	return nil, nil
+	return ret, nil
+}
+
+func postServercheck(payload []byte) (interface{}, error) {
+	var v Asn
+	err := json.Unmarshal(payload, &v)
+	if err != nil {
+		fmt.Println(err)
+	}
+	sqlString := "INSERT INTO servercheck("
+	sqlString += "server"
+	sqlString += ",aa"
+	sqlString += ",ab"
+	sqlString += ",ac"
+	sqlString += ",ad"
+	sqlString += ",ae"
+	sqlString += ",af"
+	sqlString += ",ag"
+	sqlString += ",ah"
+	sqlString += ",ai"
+	sqlString += ",aj"
+	sqlString += ",ak"
+	sqlString += ",al"
+	sqlString += ",am"
+	sqlString += ",an"
+	sqlString += ",ao"
+	sqlString += ",ap"
+	sqlString += ",aq"
+	sqlString += ",ar"
+	sqlString += ",as"
+	sqlString += ",at"
+	sqlString += ",au"
+	sqlString += ",av"
+	sqlString += ",aw"
+	sqlString += ",ax"
+	sqlString += ",ay"
+	sqlString += ",az"
+	sqlString += ",ba"
+	sqlString += ",bb"
+	sqlString += ",bc"
+	sqlString += ",bd"
+	sqlString += ",be"
+	sqlString += ") VALUES ("
+	sqlString += ":server"
+	sqlString += ",:aa"
+	sqlString += ",:ab"
+	sqlString += ",:ac"
+	sqlString += ",:ad"
+	sqlString += ",:ae"
+	sqlString += ",:af"
+	sqlString += ",:ag"
+	sqlString += ",:ah"
+	sqlString += ",:ai"
+	sqlString += ",:aj"
+	sqlString += ",:ak"
+	sqlString += ",:al"
+	sqlString += ",:am"
+	sqlString += ",:an"
+	sqlString += ",:ao"
+	sqlString += ",:ap"
+	sqlString += ",:aq"
+	sqlString += ",:ar"
+	sqlString += ",:as"
+	sqlString += ",:at"
+	sqlString += ",:au"
+	sqlString += ",:av"
+	sqlString += ",:aw"
+	sqlString += ",:ax"
+	sqlString += ",:ay"
+	sqlString += ",:az"
+	sqlString += ",:ba"
+	sqlString += ",:bb"
+	sqlString += ",:bc"
+	sqlString += ",:bd"
+	sqlString += ",:be"
+	sqlString += ")"
+	result, err := globalDB.NamedExec(sqlString, v)
+	if err != nil {
+		fmt.Println(err)
+		return nil, err
+	}
+	return result, err
+}
+
+func putServercheck(id int, payload []byte) (interface{}, error) {
+	// Note this depends on the json having the correct id!
+	var v Asn
+	err := json.Unmarshal(payload, &v)
+	if err != nil {
+		fmt.Println(err)
+		return nil, err
+	}
+	sqlString := "UPDATE servercheck SET "
+	sqlString += "server = :server"
+	sqlString += ",aa = :aa"
+	sqlString += ",ab = :ab"
+	sqlString += ",ac = :ac"
+	sqlString += ",ad = :ad"
+	sqlString += ",ae = :ae"
+	sqlString += ",af = :af"
+	sqlString += ",ag = :ag"
+	sqlString += ",ah = :ah"
+	sqlString += ",ai = :ai"
+	sqlString += ",aj = :aj"
+	sqlString += ",ak = :ak"
+	sqlString += ",al = :al"
+	sqlString += ",am = :am"
+	sqlString += ",an = :an"
+	sqlString += ",ao = :ao"
+	sqlString += ",ap = :ap"
+	sqlString += ",aq = :aq"
+	sqlString += ",ar = :ar"
+	sqlString += ",as = :as"
+	sqlString += ",at = :at"
+	sqlString += ",au = :au"
+	sqlString += ",av = :av"
+	sqlString += ",aw = :aw"
+	sqlString += ",ax = :ax"
+	sqlString += ",ay = :ay"
+	sqlString += ",az = :az"
+	sqlString += ",ba = :ba"
+	sqlString += ",bb = :bb"
+	sqlString += ",bc = :bc"
+	sqlString += ",bd = :bd"
+	sqlString += ",be = :be"
+	sqlString += " WHERE id=:id"
+	result, err := globalDB.NamedExec(sqlString, v)
+	if err != nil {
+		fmt.Println(err)
+		return nil, err
+	}
+	return result, err
+}
+
+func delServercheck(id int) (interface{}, error) {
+	result, err := globalDB.NamedExec("DELETE FROM servercheck WHERE id=:id", id)
+	if err != nil {
+		fmt.Println(err)
+		return nil, err
+	}
+	return result, err
 }

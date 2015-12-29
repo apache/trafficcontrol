@@ -116,11 +116,31 @@ func colString(schemas []ColumnSchema, table string, prefix string, varName stri
 }
 
 func genInsertVarLines(schemas []ColumnSchema, table string) string {
-	out := "insertString := \"INSERT INTO " + table + "(\"\n"
-	out += colString(schemas, table, "", "insertString")
-	out += "insertString += \") VALUES (\"\n"
-	out += colString(schemas, table, ":", "insertString")
-	out += "insertString += \")\"\n"
+	out := "sqlString := \"INSERT INTO " + table + "(\"\n"
+	out += colString(schemas, table, "", "sqlString")
+	out += "sqlString += \") VALUES (\"\n"
+	out += colString(schemas, table, ":", "sqlString")
+	out += "sqlString += \")\"\n"
+
+	return out
+}
+
+func updString(schemas []ColumnSchema, table string, prefix string, varName string) string {
+	out := ""
+	sep := ""
+	for _, cs := range schemas {
+		if cs.TableName == table && cs.ColumnName != "id" && cs.ColumnName != "last_updated" {
+			out += varName + "+= \"" + sep + cs.ColumnName + " = :" + cs.ColumnName + "\"\n"
+			sep = ","
+		}
+	}
+	return out
+}
+
+func genUpdateVarLines(schemas []ColumnSchema, table string) string {
+	out := "sqlString := \"UPDATE " + table + " SET \"\n"
+	out += updString(schemas, table, "", "sqlString")
+	out += "sqlString += \" WHERE id=:id\"\n"
 
 	return out
 }
@@ -129,43 +149,76 @@ func handleString(schemas []ColumnSchema, table string) string {
 	// out := "func handle" + formatName(table) + "()([]" + formatName(table) + ", error) {\n"
 	out := "func handle" + formatName(table) + "(method string, id int, payload []byte)(interface{}, error) {\n"
 	out += "    if method == \"GET\" {\n"
-	out += "	    ret := []" + formatName(table) + "{}\n"
-	out += "        if id >= 0 {\n"
-	out += "    	    err := globalDB.Select(&ret, \"select * from " + table + " where id=$1\", id)\n"
-	out += "    	    if err != nil {\n"
-	out += "    		    fmt.Println(err)\n"
-	out += "    		    return nil, err\n"
-	out += "    		}\n"
-	out += "    	} else {\n"
-	out += "    		queryStr := \"select * from " + table + "\"\n"
-	out += "    	    err := globalDB.Select(&ret, queryStr)\n"
-	out += "    	    if err != nil {\n"
-	out += "    		    fmt.Println(err)\n"
-	out += "    		    return nil, err\n"
-	out += "    	    }\n"
-	out += "   	    }\n"
-	out += "    	return ret, nil\n"
-	out += "    	} else if method == \"POST\" {\n"
-	out += "    		var v Asn\n"
-	out += "    		err := json.Unmarshal(payload, &v)\n"
-	out += "    		if err != nil {\n"
-	out += "    			fmt.Println(err)\n"
-	out += "    		}\n"
-	out += genInsertVarLines(schemas, table)
-	// out += "    		result, err := globalDB.NamedExec(\"INSERT INTO " + table + "("
-	// out += colString(schemas, table, "")
-	// out += ") VALUES ("
-	// out += colString(schemas, table, ":")
-	out += "            result, err := globalDB.NamedExec(insertString, v)\n"
-	out += "    		if err != nil {\n"
-	out += "    			fmt.Println(err)\n"
-	out += "    			return nil, err\n"
-	out += "    		}\n"
-	out += "    		return result.LastInsertId()\n"
+	out += "        return get" + formatName(table) + "(id)\n"
+	out += "   	} else if method == \"POST\" {\n"
+	out += "        return post" + formatName(table) + "(payload)\n"
+	out += "    } else if method == \"PUT\" {\n"
+	out += "        return put" + formatName(table) + "(id, payload)\n"
+	out += "    } else if method == \"DELETE\" {\n"
+	out += "        return del" + formatName(table) + "(id)\n"
 	out += "    }\n"
 	out += "    return nil, nil\n"
 	out += "}\n\n"
 
+	out += "func get" + formatName(table) + "(id int) (interface{}, error) {\n"
+	out += "    ret := []" + formatName(table) + "{}\n"
+	out += "    if id >= 0 {\n"
+	out += "	    err := globalDB.Select(&ret, \"select * from " + table + " where id=$1\", id)\n"
+	out += "	    if err != nil {\n"
+	out += "		    fmt.Println(err)\n"
+	out += "		    return nil, err\n"
+	out += "		}\n"
+	out += "	} else {\n"
+	out += "		queryStr := \"select * from " + table + "\"\n"
+	out += "	    err := globalDB.Select(&ret, queryStr)\n"
+	out += "	    if err != nil {\n"
+	out += "		    fmt.Println(err)\n"
+	out += "		    return nil, err\n"
+	out += "	    }\n"
+	out += "    }\n"
+	out += "	return ret, nil\n"
+	out += "}\n\n"
+
+	out += "func post" + formatName(table) + "(payload []byte) (interface{}, error) {\n"
+	out += "	var v Asn\n"
+	out += "	err := json.Unmarshal(payload, &v)\n"
+	out += "	if err != nil {\n"
+	out += "		fmt.Println(err)\n"
+	out += "	}\n"
+	out += genInsertVarLines(schemas, table)
+	out += "    result, err := globalDB.NamedExec(sqlString, v)\n"
+	out += "    if err != nil {\n"
+	out += "        fmt.Println(err)\n"
+	out += "    	return nil, err\n"
+	out += "    }\n"
+	out += "    return result, err\n"
+	out += "}\n\n"
+
+	out += "func put" + formatName(table) + "(id int, payload []byte) (interface{}, error) {\n"
+	out += "// Note this depends on the json having the correct id!\n"
+	out += "    var v Asn\n"
+	out += "    err := json.Unmarshal(payload, &v)\n"
+	out += "    if err != nil {\n"
+	out += "    	fmt.Println(err)\n"
+	out += "    	return nil, err\n"
+	out += "    }\n"
+	out += genUpdateVarLines(schemas, table)
+	out += "    result, err := globalDB.NamedExec(sqlString, v)\n"
+	out += "    if err != nil {\n"
+	out += "    	fmt.Println(err)\n"
+	out += "    	return nil, err\n"
+	out += "    }\n"
+	out += "    return result, err\n"
+	out += "}\n\n"
+
+	out += "func del" + formatName(table) + "(id int) (interface{}, error) {\n"
+	out += "    result, err := globalDB.NamedExec(\"DELETE FROM " + table + " WHERE id=:id\", id)\n"
+	out += "    if err != nil {\n"
+	out += "    	fmt.Println(err)\n"
+	out += "    	return nil, err\n"
+	out += "    }\n"
+	out += "    return result, err\n"
+	out += "}\n\n"
 	return out
 }
 

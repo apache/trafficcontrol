@@ -35,45 +35,88 @@ type JobResult struct {
 
 func handleJobResult(method string, id int, payload []byte) (interface{}, error) {
 	if method == "GET" {
-		ret := []JobResult{}
-		if id >= 0 {
-			err := globalDB.Select(&ret, "select * from job_result where id=$1", id)
-			if err != nil {
-				fmt.Println(err)
-				return nil, err
-			}
-		} else {
-			queryStr := "select * from job_result"
-			err := globalDB.Select(&ret, queryStr)
-			if err != nil {
-				fmt.Println(err)
-				return nil, err
-			}
-		}
-		return ret, nil
+		return getJobResult(id)
 	} else if method == "POST" {
-		var v Asn
-		err := json.Unmarshal(payload, &v)
-		if err != nil {
-			fmt.Println(err)
-		}
-		insertString := "INSERT INTO job_result("
-		insertString += "job"
-		insertString += ",agent"
-		insertString += ",result"
-		insertString += ",description"
-		insertString += ") VALUES ("
-		insertString += ":job"
-		insertString += ",:agent"
-		insertString += ",:result"
-		insertString += ",:description"
-		insertString += ")"
-		result, err := globalDB.NamedExec(insertString, v)
+		return postJobResult(payload)
+	} else if method == "PUT" {
+		return putJobResult(id, payload)
+	} else if method == "DELETE" {
+		return delJobResult(id)
+	}
+	return nil, nil
+}
+
+func getJobResult(id int) (interface{}, error) {
+	ret := []JobResult{}
+	if id >= 0 {
+		err := globalDB.Select(&ret, "select * from job_result where id=$1", id)
 		if err != nil {
 			fmt.Println(err)
 			return nil, err
 		}
-		return result.LastInsertId()
+	} else {
+		queryStr := "select * from job_result"
+		err := globalDB.Select(&ret, queryStr)
+		if err != nil {
+			fmt.Println(err)
+			return nil, err
+		}
 	}
-	return nil, nil
+	return ret, nil
+}
+
+func postJobResult(payload []byte) (interface{}, error) {
+	var v Asn
+	err := json.Unmarshal(payload, &v)
+	if err != nil {
+		fmt.Println(err)
+	}
+	sqlString := "INSERT INTO job_result("
+	sqlString += "job"
+	sqlString += ",agent"
+	sqlString += ",result"
+	sqlString += ",description"
+	sqlString += ") VALUES ("
+	sqlString += ":job"
+	sqlString += ",:agent"
+	sqlString += ",:result"
+	sqlString += ",:description"
+	sqlString += ")"
+	result, err := globalDB.NamedExec(sqlString, v)
+	if err != nil {
+		fmt.Println(err)
+		return nil, err
+	}
+	return result, err
+}
+
+func putJobResult(id int, payload []byte) (interface{}, error) {
+	// Note this depends on the json having the correct id!
+	var v Asn
+	err := json.Unmarshal(payload, &v)
+	if err != nil {
+		fmt.Println(err)
+		return nil, err
+	}
+	sqlString := "UPDATE job_result SET "
+	sqlString += "job = :job"
+	sqlString += ",agent = :agent"
+	sqlString += ",result = :result"
+	sqlString += ",description = :description"
+	sqlString += " WHERE id=:id"
+	result, err := globalDB.NamedExec(sqlString, v)
+	if err != nil {
+		fmt.Println(err)
+		return nil, err
+	}
+	return result, err
+}
+
+func delJobResult(id int) (interface{}, error) {
+	result, err := globalDB.NamedExec("DELETE FROM job_result WHERE id=:id", id)
+	if err != nil {
+		fmt.Println(err)
+		return nil, err
+	}
+	return result, err
 }

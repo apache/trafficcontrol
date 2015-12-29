@@ -31,41 +31,82 @@ type DeliveryserviceServer struct {
 
 func handleDeliveryserviceServer(method string, id int, payload []byte) (interface{}, error) {
 	if method == "GET" {
-		ret := []DeliveryserviceServer{}
-		if id >= 0 {
-			err := globalDB.Select(&ret, "select * from deliveryservice_server where id=$1", id)
-			if err != nil {
-				fmt.Println(err)
-				return nil, err
-			}
-		} else {
-			queryStr := "select * from deliveryservice_server"
-			err := globalDB.Select(&ret, queryStr)
-			if err != nil {
-				fmt.Println(err)
-				return nil, err
-			}
-		}
-		return ret, nil
+		return getDeliveryserviceServer(id)
 	} else if method == "POST" {
-		var v Asn
-		err := json.Unmarshal(payload, &v)
-		if err != nil {
-			fmt.Println(err)
-		}
-		insertString := "INSERT INTO deliveryservice_server("
-		insertString += "deliveryservice"
-		insertString += ",server"
-		insertString += ") VALUES ("
-		insertString += ":deliveryservice"
-		insertString += ",:server"
-		insertString += ")"
-		result, err := globalDB.NamedExec(insertString, v)
+		return postDeliveryserviceServer(payload)
+	} else if method == "PUT" {
+		return putDeliveryserviceServer(id, payload)
+	} else if method == "DELETE" {
+		return delDeliveryserviceServer(id)
+	}
+	return nil, nil
+}
+
+func getDeliveryserviceServer(id int) (interface{}, error) {
+	ret := []DeliveryserviceServer{}
+	if id >= 0 {
+		err := globalDB.Select(&ret, "select * from deliveryservice_server where id=$1", id)
 		if err != nil {
 			fmt.Println(err)
 			return nil, err
 		}
-		return result.LastInsertId()
+	} else {
+		queryStr := "select * from deliveryservice_server"
+		err := globalDB.Select(&ret, queryStr)
+		if err != nil {
+			fmt.Println(err)
+			return nil, err
+		}
 	}
-	return nil, nil
+	return ret, nil
+}
+
+func postDeliveryserviceServer(payload []byte) (interface{}, error) {
+	var v Asn
+	err := json.Unmarshal(payload, &v)
+	if err != nil {
+		fmt.Println(err)
+	}
+	sqlString := "INSERT INTO deliveryservice_server("
+	sqlString += "deliveryservice"
+	sqlString += ",server"
+	sqlString += ") VALUES ("
+	sqlString += ":deliveryservice"
+	sqlString += ",:server"
+	sqlString += ")"
+	result, err := globalDB.NamedExec(sqlString, v)
+	if err != nil {
+		fmt.Println(err)
+		return nil, err
+	}
+	return result, err
+}
+
+func putDeliveryserviceServer(id int, payload []byte) (interface{}, error) {
+	// Note this depends on the json having the correct id!
+	var v Asn
+	err := json.Unmarshal(payload, &v)
+	if err != nil {
+		fmt.Println(err)
+		return nil, err
+	}
+	sqlString := "UPDATE deliveryservice_server SET "
+	sqlString += "deliveryservice = :deliveryservice"
+	sqlString += ",server = :server"
+	sqlString += " WHERE id=:id"
+	result, err := globalDB.NamedExec(sqlString, v)
+	if err != nil {
+		fmt.Println(err)
+		return nil, err
+	}
+	return result, err
+}
+
+func delDeliveryserviceServer(id int) (interface{}, error) {
+	result, err := globalDB.NamedExec("DELETE FROM deliveryservice_server WHERE id=:id", id)
+	if err != nil {
+		fmt.Println(err)
+		return nil, err
+	}
+	return result, err
 }

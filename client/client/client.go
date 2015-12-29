@@ -121,10 +121,19 @@ func (to *Session) PostJson(path string, body []byte) (*http.Response, error) {
 		return nil, err
 	}
 	defer resp.Body.Close()
-	// resp, err := to.UserAgent.Post(to.Url+path, "application/json", body)
-	// if err != nil {
-	// 	log.Println(err)
-	// }
+	return resp, err
+}
+
+func (to *Session) PutJson(path string, body []byte) (*http.Response, error) {
+	req, err := http.NewRequest("PUT", to.Url+path, bytes.NewBuffer(body))
+	req.Header.Set("Content-Type", "application/json")
+
+	resp, err := to.UserAgent.Do(req)
+	if err != nil {
+		log.Println(err)
+		return nil, err
+	}
+	defer resp.Body.Close()
 	return resp, err
 }
 

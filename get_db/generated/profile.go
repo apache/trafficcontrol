@@ -33,41 +33,82 @@ type Profile struct {
 
 func handleProfile(method string, id int, payload []byte) (interface{}, error) {
 	if method == "GET" {
-		ret := []Profile{}
-		if id >= 0 {
-			err := globalDB.Select(&ret, "select * from profile where id=$1", id)
-			if err != nil {
-				fmt.Println(err)
-				return nil, err
-			}
-		} else {
-			queryStr := "select * from profile"
-			err := globalDB.Select(&ret, queryStr)
-			if err != nil {
-				fmt.Println(err)
-				return nil, err
-			}
-		}
-		return ret, nil
+		return getProfile(id)
 	} else if method == "POST" {
-		var v Asn
-		err := json.Unmarshal(payload, &v)
-		if err != nil {
-			fmt.Println(err)
-		}
-		insertString := "INSERT INTO profile("
-		insertString += "name"
-		insertString += ",description"
-		insertString += ") VALUES ("
-		insertString += ":name"
-		insertString += ",:description"
-		insertString += ")"
-		result, err := globalDB.NamedExec(insertString, v)
+		return postProfile(payload)
+	} else if method == "PUT" {
+		return putProfile(id, payload)
+	} else if method == "DELETE" {
+		return delProfile(id)
+	}
+	return nil, nil
+}
+
+func getProfile(id int) (interface{}, error) {
+	ret := []Profile{}
+	if id >= 0 {
+		err := globalDB.Select(&ret, "select * from profile where id=$1", id)
 		if err != nil {
 			fmt.Println(err)
 			return nil, err
 		}
-		return result.LastInsertId()
+	} else {
+		queryStr := "select * from profile"
+		err := globalDB.Select(&ret, queryStr)
+		if err != nil {
+			fmt.Println(err)
+			return nil, err
+		}
 	}
-	return nil, nil
+	return ret, nil
+}
+
+func postProfile(payload []byte) (interface{}, error) {
+	var v Asn
+	err := json.Unmarshal(payload, &v)
+	if err != nil {
+		fmt.Println(err)
+	}
+	sqlString := "INSERT INTO profile("
+	sqlString += "name"
+	sqlString += ",description"
+	sqlString += ") VALUES ("
+	sqlString += ":name"
+	sqlString += ",:description"
+	sqlString += ")"
+	result, err := globalDB.NamedExec(sqlString, v)
+	if err != nil {
+		fmt.Println(err)
+		return nil, err
+	}
+	return result, err
+}
+
+func putProfile(id int, payload []byte) (interface{}, error) {
+	// Note this depends on the json having the correct id!
+	var v Asn
+	err := json.Unmarshal(payload, &v)
+	if err != nil {
+		fmt.Println(err)
+		return nil, err
+	}
+	sqlString := "UPDATE profile SET "
+	sqlString += "name = :name"
+	sqlString += ",description = :description"
+	sqlString += " WHERE id=:id"
+	result, err := globalDB.NamedExec(sqlString, v)
+	if err != nil {
+		fmt.Println(err)
+		return nil, err
+	}
+	return result, err
+}
+
+func delProfile(id int) (interface{}, error) {
+	result, err := globalDB.NamedExec("DELETE FROM profile WHERE id=:id", id)
+	if err != nil {
+		fmt.Println(err)
+		return nil, err
+	}
+	return result, err
 }

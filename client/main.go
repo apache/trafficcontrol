@@ -33,7 +33,13 @@ func main() {
 		fmt.Println("err 11:", err)
 	}
 	fmt.Println(resp)
-	hResp, e := client.PostJson("/api/2.0/asn", []byte("{\"asn\":777799, \"cachegroup\":28}"))
+	hResp, e := client.PostJson("/api/2.0/asn", []byte("{\"asn\":45454, \"cachegroup\":28}"))
+	if e != nil {
+		fmt.Println("err 22:", e)
+	}
+	fmt.Println(hResp)
+
+	hResp, e = client.PutJson("/api/2.0/asn/62", []byte("{\"id\": 61, \"asn\":54321, \"cachegroup\":28}"))
 	if e != nil {
 		fmt.Println("err 22:", e)
 	}

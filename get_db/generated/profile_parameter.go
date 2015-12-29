@@ -31,41 +31,82 @@ type ProfileParameter struct {
 
 func handleProfileParameter(method string, id int, payload []byte) (interface{}, error) {
 	if method == "GET" {
-		ret := []ProfileParameter{}
-		if id >= 0 {
-			err := globalDB.Select(&ret, "select * from profile_parameter where id=$1", id)
-			if err != nil {
-				fmt.Println(err)
-				return nil, err
-			}
-		} else {
-			queryStr := "select * from profile_parameter"
-			err := globalDB.Select(&ret, queryStr)
-			if err != nil {
-				fmt.Println(err)
-				return nil, err
-			}
-		}
-		return ret, nil
+		return getProfileParameter(id)
 	} else if method == "POST" {
-		var v Asn
-		err := json.Unmarshal(payload, &v)
-		if err != nil {
-			fmt.Println(err)
-		}
-		insertString := "INSERT INTO profile_parameter("
-		insertString += "profile"
-		insertString += ",parameter"
-		insertString += ") VALUES ("
-		insertString += ":profile"
-		insertString += ",:parameter"
-		insertString += ")"
-		result, err := globalDB.NamedExec(insertString, v)
+		return postProfileParameter(payload)
+	} else if method == "PUT" {
+		return putProfileParameter(id, payload)
+	} else if method == "DELETE" {
+		return delProfileParameter(id)
+	}
+	return nil, nil
+}
+
+func getProfileParameter(id int) (interface{}, error) {
+	ret := []ProfileParameter{}
+	if id >= 0 {
+		err := globalDB.Select(&ret, "select * from profile_parameter where id=$1", id)
 		if err != nil {
 			fmt.Println(err)
 			return nil, err
 		}
-		return result.LastInsertId()
+	} else {
+		queryStr := "select * from profile_parameter"
+		err := globalDB.Select(&ret, queryStr)
+		if err != nil {
+			fmt.Println(err)
+			return nil, err
+		}
 	}
-	return nil, nil
+	return ret, nil
+}
+
+func postProfileParameter(payload []byte) (interface{}, error) {
+	var v Asn
+	err := json.Unmarshal(payload, &v)
+	if err != nil {
+		fmt.Println(err)
+	}
+	sqlString := "INSERT INTO profile_parameter("
+	sqlString += "profile"
+	sqlString += ",parameter"
+	sqlString += ") VALUES ("
+	sqlString += ":profile"
+	sqlString += ",:parameter"
+	sqlString += ")"
+	result, err := globalDB.NamedExec(sqlString, v)
+	if err != nil {
+		fmt.Println(err)
+		return nil, err
+	}
+	return result, err
+}
+
+func putProfileParameter(id int, payload []byte) (interface{}, error) {
+	// Note this depends on the json having the correct id!
+	var v Asn
+	err := json.Unmarshal(payload, &v)
+	if err != nil {
+		fmt.Println(err)
+		return nil, err
+	}
+	sqlString := "UPDATE profile_parameter SET "
+	sqlString += "profile = :profile"
+	sqlString += ",parameter = :parameter"
+	sqlString += " WHERE id=:id"
+	result, err := globalDB.NamedExec(sqlString, v)
+	if err != nil {
+		fmt.Println(err)
+		return nil, err
+	}
+	return result, err
+}
+
+func delProfileParameter(id int) (interface{}, error) {
+	result, err := globalDB.NamedExec("DELETE FROM profile_parameter WHERE id=:id", id)
+	if err != nil {
+		fmt.Println(err)
+		return nil, err
+	}
+	return result, err
 }

@@ -41,57 +41,106 @@ type ToExtension struct {
 
 func handleToExtension(method string, id int, payload []byte) (interface{}, error) {
 	if method == "GET" {
-		ret := []ToExtension{}
-		if id >= 0 {
-			err := globalDB.Select(&ret, "select * from to_extension where id=$1", id)
-			if err != nil {
-				fmt.Println(err)
-				return nil, err
-			}
-		} else {
-			queryStr := "select * from to_extension"
-			err := globalDB.Select(&ret, queryStr)
-			if err != nil {
-				fmt.Println(err)
-				return nil, err
-			}
-		}
-		return ret, nil
+		return getToExtension(id)
 	} else if method == "POST" {
-		var v Asn
-		err := json.Unmarshal(payload, &v)
-		if err != nil {
-			fmt.Println(err)
-		}
-		insertString := "INSERT INTO to_extension("
-		insertString += "name"
-		insertString += ",version"
-		insertString += ",info_url"
-		insertString += ",script_file"
-		insertString += ",isactive"
-		insertString += ",additional_config_json"
-		insertString += ",description"
-		insertString += ",servercheck_short_name"
-		insertString += ",servercheck_column_name"
-		insertString += ",type"
-		insertString += ") VALUES ("
-		insertString += ":name"
-		insertString += ",:version"
-		insertString += ",:info_url"
-		insertString += ",:script_file"
-		insertString += ",:isactive"
-		insertString += ",:additional_config_json"
-		insertString += ",:description"
-		insertString += ",:servercheck_short_name"
-		insertString += ",:servercheck_column_name"
-		insertString += ",:type"
-		insertString += ")"
-		result, err := globalDB.NamedExec(insertString, v)
+		return postToExtension(payload)
+	} else if method == "PUT" {
+		return putToExtension(id, payload)
+	} else if method == "DELETE" {
+		return delToExtension(id)
+	}
+	return nil, nil
+}
+
+func getToExtension(id int) (interface{}, error) {
+	ret := []ToExtension{}
+	if id >= 0 {
+		err := globalDB.Select(&ret, "select * from to_extension where id=$1", id)
 		if err != nil {
 			fmt.Println(err)
 			return nil, err
 		}
-		return result.LastInsertId()
+	} else {
+		queryStr := "select * from to_extension"
+		err := globalDB.Select(&ret, queryStr)
+		if err != nil {
+			fmt.Println(err)
+			return nil, err
+		}
 	}
-	return nil, nil
+	return ret, nil
+}
+
+func postToExtension(payload []byte) (interface{}, error) {
+	var v Asn
+	err := json.Unmarshal(payload, &v)
+	if err != nil {
+		fmt.Println(err)
+	}
+	sqlString := "INSERT INTO to_extension("
+	sqlString += "name"
+	sqlString += ",version"
+	sqlString += ",info_url"
+	sqlString += ",script_file"
+	sqlString += ",isactive"
+	sqlString += ",additional_config_json"
+	sqlString += ",description"
+	sqlString += ",servercheck_short_name"
+	sqlString += ",servercheck_column_name"
+	sqlString += ",type"
+	sqlString += ") VALUES ("
+	sqlString += ":name"
+	sqlString += ",:version"
+	sqlString += ",:info_url"
+	sqlString += ",:script_file"
+	sqlString += ",:isactive"
+	sqlString += ",:additional_config_json"
+	sqlString += ",:description"
+	sqlString += ",:servercheck_short_name"
+	sqlString += ",:servercheck_column_name"
+	sqlString += ",:type"
+	sqlString += ")"
+	result, err := globalDB.NamedExec(sqlString, v)
+	if err != nil {
+		fmt.Println(err)
+		return nil, err
+	}
+	return result, err
+}
+
+func putToExtension(id int, payload []byte) (interface{}, error) {
+	// Note this depends on the json having the correct id!
+	var v Asn
+	err := json.Unmarshal(payload, &v)
+	if err != nil {
+		fmt.Println(err)
+		return nil, err
+	}
+	sqlString := "UPDATE to_extension SET "
+	sqlString += "name = :name"
+	sqlString += ",version = :version"
+	sqlString += ",info_url = :info_url"
+	sqlString += ",script_file = :script_file"
+	sqlString += ",isactive = :isactive"
+	sqlString += ",additional_config_json = :additional_config_json"
+	sqlString += ",description = :description"
+	sqlString += ",servercheck_short_name = :servercheck_short_name"
+	sqlString += ",servercheck_column_name = :servercheck_column_name"
+	sqlString += ",type = :type"
+	sqlString += " WHERE id=:id"
+	result, err := globalDB.NamedExec(sqlString, v)
+	if err != nil {
+		fmt.Println(err)
+		return nil, err
+	}
+	return result, err
+}
+
+func delToExtension(id int) (interface{}, error) {
+	result, err := globalDB.NamedExec("DELETE FROM to_extension WHERE id=:id", id)
+	if err != nil {
+		fmt.Println(err)
+		return nil, err
+	}
+	return result, err
 }

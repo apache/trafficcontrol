@@ -43,61 +43,112 @@ type Job struct {
 
 func handleJob(method string, id int, payload []byte) (interface{}, error) {
 	if method == "GET" {
-		ret := []Job{}
-		if id >= 0 {
-			err := globalDB.Select(&ret, "select * from job where id=$1", id)
-			if err != nil {
-				fmt.Println(err)
-				return nil, err
-			}
-		} else {
-			queryStr := "select * from job"
-			err := globalDB.Select(&ret, queryStr)
-			if err != nil {
-				fmt.Println(err)
-				return nil, err
-			}
-		}
-		return ret, nil
+		return getJob(id)
 	} else if method == "POST" {
-		var v Asn
-		err := json.Unmarshal(payload, &v)
-		if err != nil {
-			fmt.Println(err)
-		}
-		insertString := "INSERT INTO job("
-		insertString += "agent"
-		insertString += ",object_type"
-		insertString += ",object_name"
-		insertString += ",keyword"
-		insertString += ",parameters"
-		insertString += ",asset_url"
-		insertString += ",asset_type"
-		insertString += ",status"
-		insertString += ",start_time"
-		insertString += ",entered_time"
-		insertString += ",job_user"
-		insertString += ",job_deliveryservice"
-		insertString += ") VALUES ("
-		insertString += ":agent"
-		insertString += ",:object_type"
-		insertString += ",:object_name"
-		insertString += ",:keyword"
-		insertString += ",:parameters"
-		insertString += ",:asset_url"
-		insertString += ",:asset_type"
-		insertString += ",:status"
-		insertString += ",:start_time"
-		insertString += ",:entered_time"
-		insertString += ",:job_user"
-		insertString += ",:job_deliveryservice"
-		insertString += ")"
-		result, err := globalDB.NamedExec(insertString, v)
+		return postJob(payload)
+	} else if method == "PUT" {
+		return putJob(id, payload)
+	} else if method == "DELETE" {
+		return delJob(id)
+	}
+	return nil, nil
+}
+
+func getJob(id int) (interface{}, error) {
+	ret := []Job{}
+	if id >= 0 {
+		err := globalDB.Select(&ret, "select * from job where id=$1", id)
 		if err != nil {
 			fmt.Println(err)
 			return nil, err
 		}
-		return result.LastInsertId()
+	} else {
+		queryStr := "select * from job"
+		err := globalDB.Select(&ret, queryStr)
+		if err != nil {
+			fmt.Println(err)
+			return nil, err
+		}
 	}
-	return nil, nil
+	return ret, nil
+}
+
+func postJob(payload []byte) (interface{}, error) {
+	var v Asn
+	err := json.Unmarshal(payload, &v)
+	if err != nil {
+		fmt.Println(err)
+	}
+	sqlString := "INSERT INTO job("
+	sqlString += "agent"
+	sqlString += ",object_type"
+	sqlString += ",object_name"
+	sqlString += ",keyword"
+	sqlString += ",parameters"
+	sqlString += ",asset_url"
+	sqlString += ",asset_type"
+	sqlString += ",status"
+	sqlString += ",start_time"
+	sqlString += ",entered_time"
+	sqlString += ",job_user"
+	sqlString += ",job_deliveryservice"
+	sqlString += ") VALUES ("
+	sqlString += ":agent"
+	sqlString += ",:object_type"
+	sqlString += ",:object_name"
+	sqlString += ",:keyword"
+	sqlString += ",:parameters"
+	sqlString += ",:asset_url"
+	sqlString += ",:asset_type"
+	sqlString += ",:status"
+	sqlString += ",:start_time"
+	sqlString += ",:entered_time"
+	sqlString += ",:job_user"
+	sqlString += ",:job_deliveryservice"
+	sqlString += ")"
+	result, err := globalDB.NamedExec(sqlString, v)
+	if err != nil {
+		fmt.Println(err)
+		return nil, err
+	}
+	return result, err
+}
+
+func putJob(id int, payload []byte) (interface{}, error) {
+	// Note this depends on the json having the correct id!
+	var v Asn
+	err := json.Unmarshal(payload, &v)
+	if err != nil {
+		fmt.Println(err)
+		return nil, err
+	}
+	sqlString := "UPDATE job SET "
+	sqlString += "agent = :agent"
+	sqlString += ",object_type = :object_type"
+	sqlString += ",object_name = :object_name"
+	sqlString += ",keyword = :keyword"
+	sqlString += ",parameters = :parameters"
+	sqlString += ",asset_url = :asset_url"
+	sqlString += ",asset_type = :asset_type"
+	sqlString += ",status = :status"
+	sqlString += ",start_time = :start_time"
+	sqlString += ",entered_time = :entered_time"
+	sqlString += ",job_user = :job_user"
+	sqlString += ",job_deliveryservice = :job_deliveryservice"
+	sqlString += " WHERE id=:id"
+	result, err := globalDB.NamedExec(sqlString, v)
+	if err != nil {
+		fmt.Println(err)
+		return nil, err
+	}
+	return result, err
+}
+
+func delJob(id int) (interface{}, error) {
+	result, err := globalDB.NamedExec("DELETE FROM job WHERE id=:id", id)
+	if err != nil {
+		fmt.Println(err)
+		return nil, err
+	}
+	return result, err
 }

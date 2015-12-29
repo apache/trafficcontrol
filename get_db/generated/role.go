@@ -32,43 +32,85 @@ type Role struct {
 
 func handleRole(method string, id int, payload []byte) (interface{}, error) {
 	if method == "GET" {
-		ret := []Role{}
-		if id >= 0 {
-			err := globalDB.Select(&ret, "select * from role where id=$1", id)
-			if err != nil {
-				fmt.Println(err)
-				return nil, err
-			}
-		} else {
-			queryStr := "select * from role"
-			err := globalDB.Select(&ret, queryStr)
-			if err != nil {
-				fmt.Println(err)
-				return nil, err
-			}
-		}
-		return ret, nil
+		return getRole(id)
 	} else if method == "POST" {
-		var v Asn
-		err := json.Unmarshal(payload, &v)
-		if err != nil {
-			fmt.Println(err)
-		}
-		insertString := "INSERT INTO role("
-		insertString += "name"
-		insertString += ",description"
-		insertString += ",priv_level"
-		insertString += ") VALUES ("
-		insertString += ":name"
-		insertString += ",:description"
-		insertString += ",:priv_level"
-		insertString += ")"
-		result, err := globalDB.NamedExec(insertString, v)
+		return postRole(payload)
+	} else if method == "PUT" {
+		return putRole(id, payload)
+	} else if method == "DELETE" {
+		return delRole(id)
+	}
+	return nil, nil
+}
+
+func getRole(id int) (interface{}, error) {
+	ret := []Role{}
+	if id >= 0 {
+		err := globalDB.Select(&ret, "select * from role where id=$1", id)
 		if err != nil {
 			fmt.Println(err)
 			return nil, err
 		}
-		return result.LastInsertId()
+	} else {
+		queryStr := "select * from role"
+		err := globalDB.Select(&ret, queryStr)
+		if err != nil {
+			fmt.Println(err)
+			return nil, err
+		}
 	}
-	return nil, nil
+	return ret, nil
+}
+
+func postRole(payload []byte) (interface{}, error) {
+	var v Asn
+	err := json.Unmarshal(payload, &v)
+	if err != nil {
+		fmt.Println(err)
+	}
+	sqlString := "INSERT INTO role("
+	sqlString += "name"
+	sqlString += ",description"
+	sqlString += ",priv_level"
+	sqlString += ") VALUES ("
+	sqlString += ":name"
+	sqlString += ",:description"
+	sqlString += ",:priv_level"
+	sqlString += ")"
+	result, err := globalDB.NamedExec(sqlString, v)
+	if err != nil {
+		fmt.Println(err)
+		return nil, err
+	}
+	return result, err
+}
+
+func putRole(id int, payload []byte) (interface{}, error) {
+	// Note this depends on the json having the correct id!
+	var v Asn
+	err := json.Unmarshal(payload, &v)
+	if err != nil {
+		fmt.Println(err)
+		return nil, err
+	}
+	sqlString := "UPDATE role SET "
+	sqlString += "name = :name"
+	sqlString += ",description = :description"
+	sqlString += ",priv_level = :priv_level"
+	sqlString += " WHERE id=:id"
+	result, err := globalDB.NamedExec(sqlString, v)
+	if err != nil {
+		fmt.Println(err)
+		return nil, err
+	}
+	return result, err
+}
+
+func delRole(id int) (interface{}, error) {
+	result, err := globalDB.NamedExec("DELETE FROM role WHERE id=:id", id)
+	if err != nil {
+		fmt.Println(err)
+		return nil, err
+	}
+	return result, err
 }

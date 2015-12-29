@@ -34,43 +34,85 @@ type Type struct {
 
 func handleType(method string, id int, payload []byte) (interface{}, error) {
 	if method == "GET" {
-		ret := []Type{}
-		if id >= 0 {
-			err := globalDB.Select(&ret, "select * from type where id=$1", id)
-			if err != nil {
-				fmt.Println(err)
-				return nil, err
-			}
-		} else {
-			queryStr := "select * from type"
-			err := globalDB.Select(&ret, queryStr)
-			if err != nil {
-				fmt.Println(err)
-				return nil, err
-			}
-		}
-		return ret, nil
+		return getType(id)
 	} else if method == "POST" {
-		var v Asn
-		err := json.Unmarshal(payload, &v)
-		if err != nil {
-			fmt.Println(err)
-		}
-		insertString := "INSERT INTO type("
-		insertString += "name"
-		insertString += ",description"
-		insertString += ",use_in_table"
-		insertString += ") VALUES ("
-		insertString += ":name"
-		insertString += ",:description"
-		insertString += ",:use_in_table"
-		insertString += ")"
-		result, err := globalDB.NamedExec(insertString, v)
+		return postType(payload)
+	} else if method == "PUT" {
+		return putType(id, payload)
+	} else if method == "DELETE" {
+		return delType(id)
+	}
+	return nil, nil
+}
+
+func getType(id int) (interface{}, error) {
+	ret := []Type{}
+	if id >= 0 {
+		err := globalDB.Select(&ret, "select * from type where id=$1", id)
 		if err != nil {
 			fmt.Println(err)
 			return nil, err
 		}
-		return result.LastInsertId()
+	} else {
+		queryStr := "select * from type"
+		err := globalDB.Select(&ret, queryStr)
+		if err != nil {
+			fmt.Println(err)
+			return nil, err
+		}
 	}
-	return nil, nil
+	return ret, nil
+}
+
+func postType(payload []byte) (interface{}, error) {
+	var v Asn
+	err := json.Unmarshal(payload, &v)
+	if err != nil {
+		fmt.Println(err)
+	}
+	sqlString := "INSERT INTO type("
+	sqlString += "name"
+	sqlString += ",description"
+	sqlString += ",use_in_table"
+	sqlString += ") VALUES ("
+	sqlString += ":name"
+	sqlString += ",:description"
+	sqlString += ",:use_in_table"
+	sqlString += ")"
+	result, err := globalDB.NamedExec(sqlString, v)
+	if err != nil {
+		fmt.Println(err)
+		return nil, err
+	}
+	return result, err
+}
+
+func putType(id int, payload []byte) (interface{}, error) {
+	// Note this depends on the json having the correct id!
+	var v Asn
+	err := json.Unmarshal(payload, &v)
+	if err != nil {
+		fmt.Println(err)
+		return nil, err
+	}
+	sqlString := "UPDATE type SET "
+	sqlString += "name = :name"
+	sqlString += ",description = :description"
+	sqlString += ",use_in_table = :use_in_table"
+	sqlString += " WHERE id=:id"
+	result, err := globalDB.NamedExec(sqlString, v)
+	if err != nil {
+		fmt.Println(err)
+		return nil, err
+	}
+	return result, err
+}
+
+func delType(id int) (interface{}, error) {
+	result, err := globalDB.NamedExec("DELETE FROM type WHERE id=:id", id)
+	if err != nil {
+		fmt.Println(err)
+		return nil, err
+	}
+	return result, err
 }

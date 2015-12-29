@@ -33,43 +33,85 @@ type Parameter struct {
 
 func handleParameter(method string, id int, payload []byte) (interface{}, error) {
 	if method == "GET" {
-		ret := []Parameter{}
-		if id >= 0 {
-			err := globalDB.Select(&ret, "select * from parameter where id=$1", id)
-			if err != nil {
-				fmt.Println(err)
-				return nil, err
-			}
-		} else {
-			queryStr := "select * from parameter"
-			err := globalDB.Select(&ret, queryStr)
-			if err != nil {
-				fmt.Println(err)
-				return nil, err
-			}
-		}
-		return ret, nil
+		return getParameter(id)
 	} else if method == "POST" {
-		var v Asn
-		err := json.Unmarshal(payload, &v)
-		if err != nil {
-			fmt.Println(err)
-		}
-		insertString := "INSERT INTO parameter("
-		insertString += "name"
-		insertString += ",config_file"
-		insertString += ",value"
-		insertString += ") VALUES ("
-		insertString += ":name"
-		insertString += ",:config_file"
-		insertString += ",:value"
-		insertString += ")"
-		result, err := globalDB.NamedExec(insertString, v)
+		return postParameter(payload)
+	} else if method == "PUT" {
+		return putParameter(id, payload)
+	} else if method == "DELETE" {
+		return delParameter(id)
+	}
+	return nil, nil
+}
+
+func getParameter(id int) (interface{}, error) {
+	ret := []Parameter{}
+	if id >= 0 {
+		err := globalDB.Select(&ret, "select * from parameter where id=$1", id)
 		if err != nil {
 			fmt.Println(err)
 			return nil, err
 		}
-		return result.LastInsertId()
+	} else {
+		queryStr := "select * from parameter"
+		err := globalDB.Select(&ret, queryStr)
+		if err != nil {
+			fmt.Println(err)
+			return nil, err
+		}
 	}
-	return nil, nil
+	return ret, nil
+}
+
+func postParameter(payload []byte) (interface{}, error) {
+	var v Asn
+	err := json.Unmarshal(payload, &v)
+	if err != nil {
+		fmt.Println(err)
+	}
+	sqlString := "INSERT INTO parameter("
+	sqlString += "name"
+	sqlString += ",config_file"
+	sqlString += ",value"
+	sqlString += ") VALUES ("
+	sqlString += ":name"
+	sqlString += ",:config_file"
+	sqlString += ",:value"
+	sqlString += ")"
+	result, err := globalDB.NamedExec(sqlString, v)
+	if err != nil {
+		fmt.Println(err)
+		return nil, err
+	}
+	return result, err
+}
+
+func putParameter(id int, payload []byte) (interface{}, error) {
+	// Note this depends on the json having the correct id!
+	var v Asn
+	err := json.Unmarshal(payload, &v)
+	if err != nil {
+		fmt.Println(err)
+		return nil, err
+	}
+	sqlString := "UPDATE parameter SET "
+	sqlString += "name = :name"
+	sqlString += ",config_file = :config_file"
+	sqlString += ",value = :value"
+	sqlString += " WHERE id=:id"
+	result, err := globalDB.NamedExec(sqlString, v)
+	if err != nil {
+		fmt.Println(err)
+		return nil, err
+	}
+	return result, err
+}
+
+func delParameter(id int) (interface{}, error) {
+	result, err := globalDB.NamedExec("DELETE FROM parameter WHERE id=:id", id)
+	if err != nil {
+		fmt.Println(err)
+		return nil, err
+	}
+	return result, err
 }

@@ -51,77 +51,136 @@ type TmUser struct {
 
 func handleTmUser(method string, id int, payload []byte) (interface{}, error) {
 	if method == "GET" {
-		ret := []TmUser{}
-		if id >= 0 {
-			err := globalDB.Select(&ret, "select * from tm_user where id=$1", id)
-			if err != nil {
-				fmt.Println(err)
-				return nil, err
-			}
-		} else {
-			queryStr := "select * from tm_user"
-			err := globalDB.Select(&ret, queryStr)
-			if err != nil {
-				fmt.Println(err)
-				return nil, err
-			}
-		}
-		return ret, nil
+		return getTmUser(id)
 	} else if method == "POST" {
-		var v Asn
-		err := json.Unmarshal(payload, &v)
-		if err != nil {
-			fmt.Println(err)
-		}
-		insertString := "INSERT INTO tm_user("
-		insertString += "username"
-		insertString += ",role"
-		insertString += ",uid"
-		insertString += ",gid"
-		insertString += ",local_passwd"
-		insertString += ",confirm_local_passwd"
-		insertString += ",company"
-		insertString += ",email"
-		insertString += ",full_name"
-		insertString += ",new_user"
-		insertString += ",address_line1"
-		insertString += ",address_line2"
-		insertString += ",city"
-		insertString += ",state_or_province"
-		insertString += ",phone_number"
-		insertString += ",postal_code"
-		insertString += ",country"
-		insertString += ",local_user"
-		insertString += ",token"
-		insertString += ",registration_sent"
-		insertString += ") VALUES ("
-		insertString += ":username"
-		insertString += ",:role"
-		insertString += ",:uid"
-		insertString += ",:gid"
-		insertString += ",:local_passwd"
-		insertString += ",:confirm_local_passwd"
-		insertString += ",:company"
-		insertString += ",:email"
-		insertString += ",:full_name"
-		insertString += ",:new_user"
-		insertString += ",:address_line1"
-		insertString += ",:address_line2"
-		insertString += ",:city"
-		insertString += ",:state_or_province"
-		insertString += ",:phone_number"
-		insertString += ",:postal_code"
-		insertString += ",:country"
-		insertString += ",:local_user"
-		insertString += ",:token"
-		insertString += ",:registration_sent"
-		insertString += ")"
-		result, err := globalDB.NamedExec(insertString, v)
+		return postTmUser(payload)
+	} else if method == "PUT" {
+		return putTmUser(id, payload)
+	} else if method == "DELETE" {
+		return delTmUser(id)
+	}
+	return nil, nil
+}
+
+func getTmUser(id int) (interface{}, error) {
+	ret := []TmUser{}
+	if id >= 0 {
+		err := globalDB.Select(&ret, "select * from tm_user where id=$1", id)
 		if err != nil {
 			fmt.Println(err)
 			return nil, err
 		}
-		return result.LastInsertId()
+	} else {
+		queryStr := "select * from tm_user"
+		err := globalDB.Select(&ret, queryStr)
+		if err != nil {
+			fmt.Println(err)
+			return nil, err
+		}
 	}
-	return nil, nil
+	return ret, nil
+}
+
+func postTmUser(payload []byte) (interface{}, error) {
+	var v Asn
+	err := json.Unmarshal(payload, &v)
+	if err != nil {
+		fmt.Println(err)
+	}
+	sqlString := "INSERT INTO tm_user("
+	sqlString += "username"
+	sqlString += ",role"
+	sqlString += ",uid"
+	sqlString += ",gid"
+	sqlString += ",local_passwd"
+	sqlString += ",confirm_local_passwd"
+	sqlString += ",company"
+	sqlString += ",email"
+	sqlString += ",full_name"
+	sqlString += ",new_user"
+	sqlString += ",address_line1"
+	sqlString += ",address_line2"
+	sqlString += ",city"
+	sqlString += ",state_or_province"
+	sqlString += ",phone_number"
+	sqlString += ",postal_code"
+	sqlString += ",country"
+	sqlString += ",local_user"
+	sqlString += ",token"
+	sqlString += ",registration_sent"
+	sqlString += ") VALUES ("
+	sqlString += ":username"
+	sqlString += ",:role"
+	sqlString += ",:uid"
+	sqlString += ",:gid"
+	sqlString += ",:local_passwd"
+	sqlString += ",:confirm_local_passwd"
+	sqlString += ",:company"
+	sqlString += ",:email"
+	sqlString += ",:full_name"
+	sqlString += ",:new_user"
+	sqlString += ",:address_line1"
+	sqlString += ",:address_line2"
+	sqlString += ",:city"
+	sqlString += ",:state_or_province"
+	sqlString += ",:phone_number"
+	sqlString += ",:postal_code"
+	sqlString += ",:country"
+	sqlString += ",:local_user"
+	sqlString += ",:token"
+	sqlString += ",:registration_sent"
+	sqlString += ")"
+	result, err := globalDB.NamedExec(sqlString, v)
+	if err != nil {
+		fmt.Println(err)
+		return nil, err
+	}
+	return result, err
+}
+
+func putTmUser(id int, payload []byte) (interface{}, error) {
+	// Note this depends on the json having the correct id!
+	var v Asn
+	err := json.Unmarshal(payload, &v)
+	if err != nil {
+		fmt.Println(err)
+		return nil, err
+	}
+	sqlString := "UPDATE tm_user SET "
+	sqlString += "username = :username"
+	sqlString += ",role = :role"
+	sqlString += ",uid = :uid"
+	sqlString += ",gid = :gid"
+	sqlString += ",local_passwd = :local_passwd"
+	sqlString += ",confirm_local_passwd = :confirm_local_passwd"
+	sqlString += ",company = :company"
+	sqlString += ",email = :email"
+	sqlString += ",full_name = :full_name"
+	sqlString += ",new_user = :new_user"
+	sqlString += ",address_line1 = :address_line1"
+	sqlString += ",address_line2 = :address_line2"
+	sqlString += ",city = :city"
+	sqlString += ",state_or_province = :state_or_province"
+	sqlString += ",phone_number = :phone_number"
+	sqlString += ",postal_code = :postal_code"
+	sqlString += ",country = :country"
+	sqlString += ",local_user = :local_user"
+	sqlString += ",token = :token"
+	sqlString += ",registration_sent = :registration_sent"
+	sqlString += " WHERE id=:id"
+	result, err := globalDB.NamedExec(sqlString, v)
+	if err != nil {
+		fmt.Println(err)
+		return nil, err
+	}
+	return result, err
+}
+
+func delTmUser(id int) (interface{}, error) {
+	result, err := globalDB.NamedExec("DELETE FROM tm_user WHERE id=:id", id)
+	if err != nil {
+		fmt.Println(err)
+		return nil, err
+	}
+	return result, err
 }

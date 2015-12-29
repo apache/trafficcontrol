@@ -37,49 +37,94 @@ type Staticdnsentry struct {
 
 func handleStaticdnsentry(method string, id int, payload []byte) (interface{}, error) {
 	if method == "GET" {
-		ret := []Staticdnsentry{}
-		if id >= 0 {
-			err := globalDB.Select(&ret, "select * from staticdnsentry where id=$1", id)
-			if err != nil {
-				fmt.Println(err)
-				return nil, err
-			}
-		} else {
-			queryStr := "select * from staticdnsentry"
-			err := globalDB.Select(&ret, queryStr)
-			if err != nil {
-				fmt.Println(err)
-				return nil, err
-			}
-		}
-		return ret, nil
+		return getStaticdnsentry(id)
 	} else if method == "POST" {
-		var v Asn
-		err := json.Unmarshal(payload, &v)
-		if err != nil {
-			fmt.Println(err)
-		}
-		insertString := "INSERT INTO staticdnsentry("
-		insertString += "host"
-		insertString += ",address"
-		insertString += ",type"
-		insertString += ",ttl"
-		insertString += ",deliveryservice"
-		insertString += ",cachegroup"
-		insertString += ") VALUES ("
-		insertString += ":host"
-		insertString += ",:address"
-		insertString += ",:type"
-		insertString += ",:ttl"
-		insertString += ",:deliveryservice"
-		insertString += ",:cachegroup"
-		insertString += ")"
-		result, err := globalDB.NamedExec(insertString, v)
+		return postStaticdnsentry(payload)
+	} else if method == "PUT" {
+		return putStaticdnsentry(id, payload)
+	} else if method == "DELETE" {
+		return delStaticdnsentry(id)
+	}
+	return nil, nil
+}
+
+func getStaticdnsentry(id int) (interface{}, error) {
+	ret := []Staticdnsentry{}
+	if id >= 0 {
+		err := globalDB.Select(&ret, "select * from staticdnsentry where id=$1", id)
 		if err != nil {
 			fmt.Println(err)
 			return nil, err
 		}
-		return result.LastInsertId()
+	} else {
+		queryStr := "select * from staticdnsentry"
+		err := globalDB.Select(&ret, queryStr)
+		if err != nil {
+			fmt.Println(err)
+			return nil, err
+		}
 	}
-	return nil, nil
+	return ret, nil
+}
+
+func postStaticdnsentry(payload []byte) (interface{}, error) {
+	var v Asn
+	err := json.Unmarshal(payload, &v)
+	if err != nil {
+		fmt.Println(err)
+	}
+	sqlString := "INSERT INTO staticdnsentry("
+	sqlString += "host"
+	sqlString += ",address"
+	sqlString += ",type"
+	sqlString += ",ttl"
+	sqlString += ",deliveryservice"
+	sqlString += ",cachegroup"
+	sqlString += ") VALUES ("
+	sqlString += ":host"
+	sqlString += ",:address"
+	sqlString += ",:type"
+	sqlString += ",:ttl"
+	sqlString += ",:deliveryservice"
+	sqlString += ",:cachegroup"
+	sqlString += ")"
+	result, err := globalDB.NamedExec(sqlString, v)
+	if err != nil {
+		fmt.Println(err)
+		return nil, err
+	}
+	return result, err
+}
+
+func putStaticdnsentry(id int, payload []byte) (interface{}, error) {
+	// Note this depends on the json having the correct id!
+	var v Asn
+	err := json.Unmarshal(payload, &v)
+	if err != nil {
+		fmt.Println(err)
+		return nil, err
+	}
+	sqlString := "UPDATE staticdnsentry SET "
+	sqlString += "host = :host"
+	sqlString += ",address = :address"
+	sqlString += ",type = :type"
+	sqlString += ",ttl = :ttl"
+	sqlString += ",deliveryservice = :deliveryservice"
+	sqlString += ",cachegroup = :cachegroup"
+	sqlString += " WHERE id=:id"
+	result, err := globalDB.NamedExec(sqlString, v)
+	if err != nil {
+		fmt.Println(err)
+		return nil, err
+	}
+	return result, err
+}
+
+func delStaticdnsentry(id int) (interface{}, error) {
+	result, err := globalDB.NamedExec("DELETE FROM staticdnsentry WHERE id=:id", id)
+	if err != nil {
+		fmt.Println(err)
+		return nil, err
+	}
+	return result, err
 }
