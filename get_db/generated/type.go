@@ -111,7 +111,7 @@ func putType(id int, payload []byte) (interface{}, error) {
 }
 
 func delType(id int) (interface{}, error) {
-	result, err := globalDB.NamedExec("DELETE FROM type WHERE id=:id", id)
+	result, err := globalDB.Exec("DELETE FROM type WHERE id=$1", id)
 	if err != nil {
 		fmt.Println(err)
 		return nil, err

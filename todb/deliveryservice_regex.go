@@ -108,7 +108,7 @@ func putDeliveryserviceRegex(id int, payload []byte) (interface{}, error) {
 }
 
 func delDeliveryserviceRegex(id int) (interface{}, error) {
-	result, err := globalDB.NamedExec("DELETE FROM deliveryservice_regex WHERE id=:id", id)
+	result, err := globalDB.Exec("DELETE FROM deliveryservice_regex WHERE id=$1", id)
 	if err != nil {
 		fmt.Println(err)
 		return nil, err

@@ -137,6 +137,17 @@ func (to *Session) PutJson(path string, body []byte) (*http.Response, error) {
 	return resp, err
 }
 
+func (to *Session) Delete(path string) (*http.Response, error) {
+	req, err := http.NewRequest("DELETE", to.Url+path, nil)
+	resp, err := to.UserAgent.Do(req)
+	if err != nil {
+		log.Println(err)
+		return nil, err
+	}
+	defer resp.Body.Close()
+	return resp, err
+}
+
 // getText
 // HTTP GET the path, return the response as a string.
 func (to *Session) GetText(path string) (string, error) {

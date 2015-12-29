@@ -105,7 +105,7 @@ func putProfileParameter(id int, payload []byte) (interface{}, error) {
 }
 
 func delProfileParameter(id int) (interface{}, error) {
-	result, err := globalDB.NamedExec("DELETE FROM profile_parameter WHERE id=:id", id)
+	result, err := globalDB.Exec("DELETE FROM profile_parameter WHERE id=$1", id)
 	if err != nil {
 		fmt.Println(err)
 		return nil, err

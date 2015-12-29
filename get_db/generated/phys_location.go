@@ -143,7 +143,7 @@ func putPhysLocation(id int, payload []byte) (interface{}, error) {
 }
 
 func delPhysLocation(id int) (interface{}, error) {
-	result, err := globalDB.NamedExec("DELETE FROM phys_location WHERE id=:id", id)
+	result, err := globalDB.Exec("DELETE FROM phys_location WHERE id=$1", id)
 	if err != nil {
 		fmt.Println(err)
 		return nil, err

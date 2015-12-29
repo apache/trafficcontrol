@@ -115,7 +115,7 @@ func putLog(id int, payload []byte) (interface{}, error) {
 }
 
 func delLog(id int) (interface{}, error) {
-	result, err := globalDB.NamedExec("DELETE FROM log WHERE id=:id", id)
+	result, err := globalDB.Exec("DELETE FROM log WHERE id=$1", id)
 	if err != nil {
 		fmt.Println(err)
 		return nil, err

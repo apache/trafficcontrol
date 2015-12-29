@@ -102,7 +102,7 @@ func putDivision(id int, payload []byte) (interface{}, error) {
 }
 
 func delDivision(id int) (interface{}, error) {
-	result, err := globalDB.NamedExec("DELETE FROM division WHERE id=:id", id)
+	result, err := globalDB.Exec("DELETE FROM division WHERE id=$1", id)
 	if err != nil {
 		fmt.Println(err)
 		return nil, err

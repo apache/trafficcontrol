@@ -263,7 +263,7 @@ func putDeliveryservice(id int, payload []byte) (interface{}, error) {
 }
 
 func delDeliveryservice(id int) (interface{}, error) {
-	result, err := globalDB.NamedExec("DELETE FROM deliveryservice WHERE id=:id", id)
+	result, err := globalDB.Exec("DELETE FROM deliveryservice WHERE id=$1", id)
 	if err != nil {
 		fmt.Println(err)
 		return nil, err

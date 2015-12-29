@@ -41,7 +41,13 @@ func main() {
 
 	hResp, e = client.PutJson("/api/2.0/asn/62", []byte("{\"id\": 61, \"asn\":54321, \"cachegroup\":28}"))
 	if e != nil {
-		fmt.Println("err 22:", e)
+		fmt.Println("err 32:", e)
+	}
+	fmt.Println(hResp)
+
+	hResp, e = client.Delete("/api/2.0/asn/85")
+	if e != nil {
+		fmt.Println("err 42:", e)
 	}
 	fmt.Println(hResp)
 }

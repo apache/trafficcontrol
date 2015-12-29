@@ -213,7 +213,7 @@ func handleString(schemas []ColumnSchema, table string) string {
 	out += "}\n\n"
 
 	out += "func del" + formatName(table) + "(id int) (interface{}, error) {\n"
-	out += "    result, err := globalDB.NamedExec(\"DELETE FROM " + table + " WHERE id=:id\", id)\n"
+	out += "    result, err := globalDB.Exec(\"DELETE FROM " + table + " WHERE id=$1\", id)\n"
 	out += "    if err != nil {\n"
 	out += "    	fmt.Println(err)\n"
 	out += "    	return nil, err\n"

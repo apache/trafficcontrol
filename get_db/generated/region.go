@@ -106,7 +106,7 @@ func putRegion(id int, payload []byte) (interface{}, error) {
 }
 
 func delRegion(id int) (interface{}, error) {
-	result, err := globalDB.NamedExec("DELETE FROM region WHERE id=:id", id)
+	result, err := globalDB.Exec("DELETE FROM region WHERE id=$1", id)
 	if err != nil {
 		fmt.Println(err)
 		return nil, err

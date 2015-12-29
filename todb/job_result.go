@@ -115,7 +115,7 @@ func putJobResult(id int, payload []byte) (interface{}, error) {
 }
 
 func delJobResult(id int) (interface{}, error) {
-	result, err := globalDB.NamedExec("DELETE FROM job_result WHERE id=:id", id)
+	result, err := globalDB.Exec("DELETE FROM job_result WHERE id=$1", id)
 	if err != nil {
 		fmt.Println(err)
 		return nil, err

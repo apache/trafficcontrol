@@ -219,7 +219,7 @@ func putServer(id int, payload []byte) (interface{}, error) {
 }
 
 func delServer(id int) (interface{}, error) {
-	result, err := globalDB.NamedExec("DELETE FROM server WHERE id=:id", id)
+	result, err := globalDB.Exec("DELETE FROM server WHERE id=$1", id)
 	if err != nil {
 		fmt.Println(err)
 		return nil, err

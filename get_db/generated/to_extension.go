@@ -139,7 +139,7 @@ func putToExtension(id int, payload []byte) (interface{}, error) {
 }
 
 func delToExtension(id int) (interface{}, error) {
-	result, err := globalDB.NamedExec("DELETE FROM to_extension WHERE id=:id", id)
+	result, err := globalDB.Exec("DELETE FROM to_extension WHERE id=$1", id)
 	if err != nil {
 		fmt.Println(err)
 		return nil, err

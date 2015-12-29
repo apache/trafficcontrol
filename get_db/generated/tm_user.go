@@ -179,7 +179,7 @@ func putTmUser(id int, payload []byte) (interface{}, error) {
 }
 
 func delTmUser(id int) (interface{}, error) {
-	result, err := globalDB.NamedExec("DELETE FROM tm_user WHERE id=:id", id)
+	result, err := globalDB.Exec("DELETE FROM tm_user WHERE id=$1", id)
 	if err != nil {
 		fmt.Println(err)
 		return nil, err

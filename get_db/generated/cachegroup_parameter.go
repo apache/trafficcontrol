@@ -105,7 +105,7 @@ func putCachegroupParameter(id int, payload []byte) (interface{}, error) {
 }
 
 func delCachegroupParameter(id int) (interface{}, error) {
-	result, err := globalDB.NamedExec("DELETE FROM cachegroup_parameter WHERE id=:id", id)
+	result, err := globalDB.Exec("DELETE FROM cachegroup_parameter WHERE id=$1", id)
 	if err != nil {
 		fmt.Println(err)
 		return nil, err

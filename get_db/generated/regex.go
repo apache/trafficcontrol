@@ -106,7 +106,7 @@ func putRegex(id int, payload []byte) (interface{}, error) {
 }
 
 func delRegex(id int) (interface{}, error) {
-	result, err := globalDB.NamedExec("DELETE FROM regex WHERE id=:id", id)
+	result, err := globalDB.Exec("DELETE FROM regex WHERE id=$1", id)
 	if err != nil {
 		fmt.Println(err)
 		return nil, err

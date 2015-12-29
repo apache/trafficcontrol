@@ -107,7 +107,7 @@ func putStatus(id int, payload []byte) (interface{}, error) {
 }
 
 func delStatus(id int) (interface{}, error) {
-	result, err := globalDB.NamedExec("DELETE FROM status WHERE id=:id", id)
+	result, err := globalDB.Exec("DELETE FROM status WHERE id=$1", id)
 	if err != nil {
 		fmt.Println(err)
 		return nil, err
