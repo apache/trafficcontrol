@@ -22,7 +22,8 @@ import (
 
 	"encoding/json"
 	"fmt"
-	// "log"
+	"strconv"
+	// "github.com/serenize/snaker"
 	"net/http"
 
 	"github.com/gorilla/mux"
@@ -37,8 +38,10 @@ func CreateRouter() http.Handler {
 	router.HandleFunc("/login", auth.Login).Methods("POST")
 	router.HandleFunc("/hello/{name}", auth.Use(hello, auth.RequireLogin)).Methods("GET")
 
-	router.HandleFunc("/api/2.0/raw/{table}.json", auth.Use(handleTable, auth.RequireLogin))
-	router.HandleFunc("/api/2.0/{name}/{key}/{value}/{details.json", auth.Use(handleDetail, auth.RequireLogin))
+	// router.HandleFunc("/api/2.0/{table}", auth.Use(listTable, auth.RequireLogin)).Methods("GET")
+	router.HandleFunc("/api/2.0/{table}", auth.Use(apiHandler, auth.RequireLogin)).Methods("GET")
+	router.HandleFunc("/api/2.0/{table}/{id}", auth.Use(apiHandler, auth.RequireLogin)).Methods("GET", "POST", "PUT", "DELETE")
+	// router.HandleFunc("/api/2.0/{name}/{key}/{value}/{details.json", auth.Use(handleDetail, auth.RequireLogin))
 	router.HandleFunc("/api/2.0/{cdn}/CRConfig.json", auth.Use(handleCRConfig, auth.RequireLogin))
 	return auth.Use(router.ServeHTTP, auth.GetContext)
 }
@@ -57,26 +60,44 @@ func setHeaders(w http.ResponseWriter) {
 	w.Header().Set("Access-Control-Allow-Headers", "Origin, Authorization, X-Requested-With, Content-Type")
 }
 
-func handleDetail(w http.ResponseWriter, r *http.Request) {
+// func handleDetail(w http.ResponseWriter, r *http.Request) {
+// 	setHeaders(w)
+// 	vars := mux.Vars(r)
+// 	table := vars["table"]
+// 	key := vars["key"]
+// 	value := vars["value"]
+// 	rows, _ := db.GetDetails(table, key, value)
+// 	enc := json.NewEncoder(w)
+// 	enc.Encode(rows)
+// }
+
+// func listTable(w http.ResponseWriter, r *http.Request) {
+// 	setHeaders(w)
+// 	vars := mux.Vars(r)
+// 	table := snaker.CamelToSnake(vars["table"])
+// 	rows, _ := db.GetTable(table)
+// 	enc := json.NewEncoder(w)
+// 	enc.Encode(rows)
+// }
+
+func apiHandler(w http.ResponseWriter, r *http.Request) {
 	setHeaders(w)
 	vars := mux.Vars(r)
+	// table := snaker.CamelToSnake(vars["table"])
 	table := vars["table"]
-	key := vars["key"]
-	value := vars["value"]
-	rows, _ := db.GetDetails(table, key, value)
+	id := -1
+	if vars["id"] != "" {
+		num, err := strconv.Atoi(vars["id"])
+		if err != nil {
+			fmt.Println("error 323222")
+		}
+		id = num
+	}
+	// fmt.Fprintln(w, "Hello:", table)
+	response, _ := db.Action(table, r.Method, id)
 	enc := json.NewEncoder(w)
-	enc.Encode(rows)
+	enc.Encode(response)
 }
-
-func handleTable(w http.ResponseWriter, r *http.Request) {
-	setHeaders(w)
-	vars := mux.Vars(r)
-	table := vars["table"]
-	rows, _ := db.GetTable(table)
-	enc := json.NewEncoder(w)
-	enc.Encode(rows)
-}
-
 func hello(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	name := vars["name"]
