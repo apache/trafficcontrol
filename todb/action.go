@@ -21,114 +21,114 @@ import (
 // "fmt"
 )
 
-func Action(tableName, method string, id int) (interface{}, error) {
+func Action(tableName, method string, id int, payload []byte) (interface{}, error) {
 	if tableName == "asn" {
-		return handleAsn(method, id)
+		return handleAsn(method, id, payload)
 	}
 	if tableName == "cachegroup" {
-		return handleCachegroup(method, id)
+		return handleCachegroup(method, id, payload)
 	}
 	if tableName == "cachegroup_parameter" {
-		return handleCachegroupParameter(method, id)
+		return handleCachegroupParameter(method, id, payload)
 	}
 	if tableName == "cdn" {
-		return handleCdn(method, id)
+		return handleCdn(method, id, payload)
 	}
 	if tableName == "deliveryservice" {
-		return handleDeliveryservice(method, id)
+		return handleDeliveryservice(method, id, payload)
 	}
 	if tableName == "deliveryservice_regex" {
-		return handleDeliveryserviceRegex(method, id)
+		return handleDeliveryserviceRegex(method, id, payload)
 	}
 	if tableName == "deliveryservice_server" {
-		return handleDeliveryserviceServer(method, id)
+		return handleDeliveryserviceServer(method, id, payload)
 	}
 	if tableName == "deliveryservice_tmuser" {
-		return handleDeliveryserviceTmuser(method, id)
+		return handleDeliveryserviceTmuser(method, id, payload)
 	}
 	if tableName == "division" {
-		return handleDivision(method, id)
+		return handleDivision(method, id, payload)
 	}
 	if tableName == "federation" {
-		return handleFederation(method, id)
+		return handleFederation(method, id, payload)
 	}
 	if tableName == "federation_deliveryservice" {
-		return handleFederationDeliveryservice(method, id)
+		return handleFederationDeliveryservice(method, id, payload)
 	}
 	if tableName == "federation_federation_resolver" {
-		return handleFederationFederationResolver(method, id)
+		return handleFederationFederationResolver(method, id, payload)
 	}
 	if tableName == "federation_resolver" {
-		return handleFederationResolver(method, id)
+		return handleFederationResolver(method, id, payload)
 	}
 	if tableName == "federation_tmuser" {
-		return handleFederationTmuser(method, id)
+		return handleFederationTmuser(method, id, payload)
 	}
 	if tableName == "goose_db_version" {
-		return handleGooseDbVersion(method, id)
+		return handleGooseDbVersion(method, id, payload)
 	}
 	if tableName == "hwinfo" {
-		return handleHwinfo(method, id)
+		return handleHwinfo(method, id, payload)
 	}
 	if tableName == "job" {
-		return handleJob(method, id)
+		return handleJob(method, id, payload)
 	}
 	if tableName == "job_agent" {
-		return handleJobAgent(method, id)
+		return handleJobAgent(method, id, payload)
 	}
 	if tableName == "job_result" {
-		return handleJobResult(method, id)
+		return handleJobResult(method, id, payload)
 	}
 	if tableName == "job_status" {
-		return handleJobStatus(method, id)
+		return handleJobStatus(method, id, payload)
 	}
 	if tableName == "log" {
-		return handleLog(method, id)
+		return handleLog(method, id, payload)
 	}
 	if tableName == "parameter" {
-		return handleParameter(method, id)
+		return handleParameter(method, id, payload)
 	}
 	if tableName == "phys_location" {
-		return handlePhysLocation(method, id)
+		return handlePhysLocation(method, id, payload)
 	}
 	if tableName == "profile" {
-		return handleProfile(method, id)
+		return handleProfile(method, id, payload)
 	}
 	if tableName == "profile_parameter" {
-		return handleProfileParameter(method, id)
+		return handleProfileParameter(method, id, payload)
 	}
 	if tableName == "regex" {
-		return handleRegex(method, id)
+		return handleRegex(method, id, payload)
 	}
 	if tableName == "region" {
-		return handleRegion(method, id)
+		return handleRegion(method, id, payload)
 	}
 	if tableName == "role" {
-		return handleRole(method, id)
+		return handleRole(method, id, payload)
 	}
 	if tableName == "server" {
-		return handleServer(method, id)
+		return handleServer(method, id, payload)
 	}
 	if tableName == "servercheck" {
-		return handleServercheck(method, id)
+		return handleServercheck(method, id, payload)
 	}
 	if tableName == "staticdnsentry" {
-		return handleStaticdnsentry(method, id)
+		return handleStaticdnsentry(method, id, payload)
 	}
 	if tableName == "stats_summary" {
-		return handleStatsSummary(method, id)
+		return handleStatsSummary(method, id, payload)
 	}
 	if tableName == "status" {
-		return handleStatus(method, id)
+		return handleStatus(method, id, payload)
 	}
 	if tableName == "tm_user" {
-		return handleTmUser(method, id)
+		return handleTmUser(method, id, payload)
 	}
 	if tableName == "to_extension" {
-		return handleToExtension(method, id)
+		return handleToExtension(method, id, payload)
 	}
 	if tableName == "type" {
-		return handleType(method, id)
+		return handleType(method, id, payload)
 	}
 	return nil, nil
 }

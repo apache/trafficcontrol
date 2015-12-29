@@ -17,11 +17,14 @@
 package auth
 
 import (
+	"../output_format"
 	"../todb"
 
 	"crypto/sha1"
 	"encoding/hex"
+	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"net/http"
 	"strings"
 
@@ -85,9 +88,35 @@ func GetContext(handler http.Handler) http.HandlerFunc {
 	}
 }
 
+type loginJson struct {
+	U string `json:"u"`
+	P string `json:"p"`
+}
+
 // Login attempts to login the user given a request. Only works for local passwd at this time
 func Login(w http.ResponseWriter, r *http.Request) {
-	username, password := r.FormValue("username"), r.FormValue("password")
+	fmt.Println("Starting Login...")
+	username := ""
+	password := ""
+	htmlSession := true
+	if r.FormValue("username") != "" {
+		username, password = r.FormValue("username"), r.FormValue("password")
+	} else if r.Method == "POST" {
+		body, err := ioutil.ReadAll(r.Body)
+		if err != nil {
+			panic("booboo")
+		}
+		fmt.Println("body:", string(body))
+		var lj loginJson
+		err = json.Unmarshal(body, &lj)
+		if err != nil {
+			panic("boo")
+		}
+		username = lj.U
+		password = lj.P
+		fmt.Println("u:", lj.U, " p:", lj.P)
+		htmlSession = false
+	}
 	session, _ := Store.Get(r, "trafficOps")
 	u, err := todb.GetTmUser(username)
 	redirectTarget := "/"
@@ -111,7 +140,18 @@ func Login(w http.ResponseWriter, r *http.Request) {
 		session.Values["id"] = u.Id
 	}
 	session.Save(r, w)
-	http.Redirect(w, r, redirectTarget, 302)
+	if htmlSession {
+		http.Redirect(w, r, redirectTarget, 302)
+	} else {
+		respTxt := output_format.MakeApiResponse("", "Successfully logged in.", "")
+		js, err := json.Marshal(respTxt)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		w.Header().Set("Content-Type", "application/json")
+		w.Write(js)
+	}
 }
 
 // Logout destroys the current user session

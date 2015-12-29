@@ -22,6 +22,7 @@ import (
 
 	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"strconv"
 	// "github.com/serenize/snaker"
 	"net/http"
@@ -39,8 +40,8 @@ func CreateRouter() http.Handler {
 	router.HandleFunc("/hello/{name}", auth.Use(hello, auth.RequireLogin)).Methods("GET")
 
 	// router.HandleFunc("/api/2.0/{table}", auth.Use(listTable, auth.RequireLogin)).Methods("GET")
-	router.HandleFunc("/api/2.0/{table}", auth.Use(apiHandler, auth.RequireLogin)).Methods("GET")
-	router.HandleFunc("/api/2.0/{table}/{id}", auth.Use(apiHandler, auth.RequireLogin)).Methods("GET", "POST", "PUT", "DELETE")
+	router.HandleFunc("/api/2.0/{table}", auth.Use(apiHandler, auth.RequireLogin)).Methods("GET", "POST")
+	router.HandleFunc("/api/2.0/{table}/{id}", auth.Use(apiHandler, auth.RequireLogin)).Methods("GET", "PUT", "DELETE")
 	// router.HandleFunc("/api/2.0/{name}/{key}/{value}/{details.json", auth.Use(handleDetail, auth.RequireLogin))
 	router.HandleFunc("/api/2.0/{cdn}/CRConfig.json", auth.Use(handleCRConfig, auth.RequireLogin))
 	return auth.Use(router.ServeHTTP, auth.GetContext)
@@ -94,10 +95,15 @@ func apiHandler(w http.ResponseWriter, r *http.Request) {
 		id = num
 	}
 	// fmt.Fprintln(w, "Hello:", table)
-	response, _ := db.Action(table, r.Method, id)
+	body, err := ioutil.ReadAll(r.Body)
+	response, err := db.Action(table, r.Method, id, body)
+	if err != nil {
+		fmt.Println("error 42 ", err)
+	}
 	enc := json.NewEncoder(w)
 	enc.Encode(response)
 }
+
 func hello(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	name := vars["name"]
