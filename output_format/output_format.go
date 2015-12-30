@@ -22,6 +22,8 @@ import (
 	"strconv"
 )
 
+const APIVERSION = 2.0
+
 // {"alerts":[{"level":"success","text":"Successfully logged in."}],"version":"1.1"}
 type Result struct {
 	Alerts  []Alert
@@ -47,27 +49,34 @@ func MakeAlert(alertTxt string, alertLevel string) []Alert {
 	return alerts
 }
 
-//wraps the given interface r into a returned Wrapper
-//prepped for encoding to stream
+// wraps the given interface r into a returned Wrapper
+// prepped for encoding to stream
 func MakeApiResponse(r interface{}, alerts []Alert, err error) ApiWrapper {
 	var w ApiWrapper
 	if err != nil {
-
+		alerts = append(alerts, Alert{Level: "error", Text: "Internal error:" + err.Error()})
+		w = ApiWrapper{
+			Version: APIVERSION,
+			Alerts:  alerts,
+		}
 	} else {
 		w = ApiWrapper{
-			Version: 2.0,
+			Version: APIVERSION,
 			Alerts:  alerts,
 		}
 		if r != nil {
 			rType := reflect.TypeOf(r)
-			fmt.Println("rType:", rType.Kind())
 			if rType.Kind() == reflect.Slice {
+				rows := reflect.ValueOf(r)
+				numRows := strconv.Itoa(rows.Len())
+				alerts = append(alerts, Alert{Level: "success", Text: numRows + " rows returned."})
 				w = ApiWrapper{
 					Resp:    r,
-					Version: 2.0,
+					Version: APIVERSION,
 					Alerts:  alerts,
 				}
 			} else if rType.Kind() == reflect.Struct {
+				// lastInserted doesn't work w pq
 				// lastInserted, err := r.(sql.Result).LastInsertId()
 				// if err != nil {
 				// 	fmt.Println("error on LastInsertedId")
@@ -75,21 +84,16 @@ func MakeApiResponse(r interface{}, alerts []Alert, err error) ApiWrapper {
 				rowsAffected, err := r.(sql.Result).RowsAffected()
 				if err != nil {
 					fmt.Println("error on RowsAffected()")
+					alerts = append(alerts, Alert{Level: "error", Text: "Internal error:" + err.Error()})
 				} else {
-					// fmt.Println(lastInserted, " <<< >>> ", rowsAffected)
 					alerts = append(alerts, Alert{Level: "success", Text: strconv.FormatInt(rowsAffected, 10) + " rows affected."})
 				}
 				w = ApiWrapper{
-					Version: 2.0,
+					Version: APIVERSION,
 					Alerts:  alerts,
 				}
 
-			} else if rType.Kind() == reflect.Interface {
-				fmt.Println("result is struct")
 			}
-		}
-		if alerts == nil {
-			alerts = MakeAlert("Complete.", "success")
 		}
 	}
 
