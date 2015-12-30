@@ -15,7 +15,11 @@
 package output_format
 
 import (
-// "fmt"
+	"fmt"
+	// "github.com/jmoiron/sqlx"
+	"database/sql"
+	"reflect"
+	"strconv"
 )
 
 // {"alerts":[{"level":"success","text":"Successfully logged in."}],"version":"1.1"}
@@ -50,13 +54,42 @@ func MakeApiResponse(r interface{}, alerts []Alert, err error) ApiWrapper {
 	if err != nil {
 
 	} else {
-		if alerts == nil {
-			alerts = MakeAlert("Complete.", "success")
-		}
 		w = ApiWrapper{
-			Resp:    r,
 			Version: 2.0,
 			Alerts:  alerts,
+		}
+		if r != nil {
+			rType := reflect.TypeOf(r)
+			fmt.Println("rType:", rType.Kind())
+			if rType.Kind() == reflect.Slice {
+				w = ApiWrapper{
+					Resp:    r,
+					Version: 2.0,
+					Alerts:  alerts,
+				}
+			} else if rType.Kind() == reflect.Struct {
+				// lastInserted, err := r.(sql.Result).LastInsertId()
+				// if err != nil {
+				// 	fmt.Println("error on LastInsertedId")
+				// }
+				rowsAffected, err := r.(sql.Result).RowsAffected()
+				if err != nil {
+					fmt.Println("error on RowsAffected()")
+				} else {
+					// fmt.Println(lastInserted, " <<< >>> ", rowsAffected)
+					alerts = append(alerts, Alert{Level: "success", Text: strconv.FormatInt(rowsAffected, 10) + " rows affected."})
+				}
+				w = ApiWrapper{
+					Version: 2.0,
+					Alerts:  alerts,
+				}
+
+			} else if rType.Kind() == reflect.Interface {
+				fmt.Println("result is struct")
+			}
+		}
+		if alerts == nil {
+			alerts = MakeAlert("Complete.", "success")
 		}
 	}
 

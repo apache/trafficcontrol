@@ -120,12 +120,11 @@ func (to *Session) PostJson(path string, body []byte) ([]byte, error) {
 		log.Println(err)
 		return nil, err
 	}
-	defer resp.Body.Close()
 	body, err = ioutil.ReadAll(resp.Body)
 	return body, err
 }
 
-func (to *Session) PutJson(path string, body []byte) (*http.Response, error) {
+func (to *Session) PutJson(path string, body []byte) ([]byte, error) {
 	req, err := http.NewRequest("PUT", to.Url+path, bytes.NewBuffer(body))
 	req.Header.Set("Content-Type", "application/json")
 
@@ -134,19 +133,21 @@ func (to *Session) PutJson(path string, body []byte) (*http.Response, error) {
 		log.Println(err)
 		return nil, err
 	}
-	defer resp.Body.Close()
-	return resp, err
+	var respBody []byte
+	respBody, err = ioutil.ReadAll(resp.Body)
+	return respBody, err
 }
 
-func (to *Session) Delete(path string) (*http.Response, error) {
+func (to *Session) Delete(path string) ([]byte, error) {
 	req, err := http.NewRequest("DELETE", to.Url+path, nil)
 	resp, err := to.UserAgent.Do(req)
 	if err != nil {
 		log.Println(err)
 		return nil, err
 	}
-	defer resp.Body.Close()
-	return resp, err
+	var respBody []byte
+	respBody, err = ioutil.ReadAll(resp.Body)
+	return respBody, err
 }
 
 // getText
