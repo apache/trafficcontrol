@@ -39,13 +39,13 @@ func main() {
 	}
 	fmt.Println(string(ret))
 
-	ret, e = client.PutJson("/api/2.0/asn/104", []byte("{\"id\": 61, \"asn\":54321, \"cachegroup\":28}"))
+	ret, e = client.PutJson("/api/2.0/asn/103", []byte("{\"id\": 61, \"asn\":54321, \"cachegroup\":28}"))
 	if e != nil {
 		fmt.Println("err 32:", e)
 	}
 	fmt.Println(string(ret))
 
-	ret, e = client.Delete("/api/2.0/asn/88")
+	ret, e = client.Delete("/api/2.0/asn/104")
 	if e != nil {
 		fmt.Println("err 42:", e)
 	}

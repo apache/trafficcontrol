@@ -195,9 +195,9 @@ func handleString(schemas []ColumnSchema, table string) string {
 	out += "}\n\n"
 
 	out += "func put" + formatName(table) + "(id int, payload []byte) (interface{}, error) {\n"
-	out += "// Note this depends on the json having the correct id!\n"
 	out += "    var v Asn\n"
 	out += "    err := json.Unmarshal(payload, &v)\n"
+	out += "    v.Id = int64(id) // overwirte the id in the payload\n"
 	out += "    if err != nil {\n"
 	out += "    	fmt.Println(err)\n"
 	out += "    	return nil, err\n"

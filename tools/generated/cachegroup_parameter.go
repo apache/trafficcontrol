@@ -83,9 +83,9 @@ func postCachegroupParameter(payload []byte) (interface{}, error) {
 }
 
 func putCachegroupParameter(id int, payload []byte) (interface{}, error) {
-	// Note this depends on the json having the correct id!
 	var v Asn
 	err := json.Unmarshal(payload, &v)
+	v.Id = int64(id) // overwirte the id in the payload
 	if err != nil {
 		fmt.Println(err)
 		return nil, err
