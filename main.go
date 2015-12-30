@@ -18,6 +18,7 @@ import (
 	routes "./routes"
 	db "./todb"
 
+	"fmt"
 	"github.com/gorilla/handlers"
 	"log"
 	"net/http"
@@ -30,5 +31,13 @@ func main() {
 	var Logger = log.New(os.Stdout, " ", log.Ldate|log.Ltime|log.Lshortfile)
 
 	Logger.Printf("Starting server...")
-	http.ListenAndServe(":8080", handlers.CombinedLoggingHandler(os.Stdout, routes.CreateRouter()))
+	err := http.ListenAndServe(":8080", handlers.CombinedLoggingHandler(os.Stdout, routes.CreateRouter()))
+
+	// for https. Make sure you have the server.pem and server.key file. To gen self signed:
+	// openssl genrsa -out server.key 2048
+	// openssl req -new -x509 -key server.key -out server.pem -days 3650
+	// err := http.ListenAndServeTLS(":1443", "server.pem", "server.key", handlers.CombinedLoggingHandler(os.Stdout, routes.CreateRouter()))
+	if err != nil {
+		fmt.Println(err.Error())
+	}
 }
