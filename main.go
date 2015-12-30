@@ -18,6 +18,7 @@ import (
 	routes "./routes"
 	db "./todb"
 
+	"encoding/json"
 	"fmt"
 	"github.com/gorilla/handlers"
 	"log"
@@ -25,18 +26,44 @@ import (
 	"os"
 )
 
+type Config struct {
+	DbTypeName       string `json:"dbTypeName"`
+	DbName           string `json:"dbName"`
+	DbUser           string `json:"dbUser"`
+	DbPassword       string `json:"dbPassword"`
+	ListenerType     string `json:"listenerType,omitempty"`
+	ListenerPort     string `json:"listenerPort"`
+	ListenerCertFile string `json:"listenerCertFile",omitempty"`
+	ListenerKeyFile  string `json:"listenerKeyFile",omitempty"`
+}
+
 func main() {
-	db.InitializeDatabase(os.Args[1], os.Args[2], os.Args[3], os.Args[4])
+	file, err := os.Open(os.Args[1])
+	if err != nil {
+		fmt.Println("Error opening config file:", err.Error())
+	}
+	decoder := json.NewDecoder(file)
+	config := Config{}
+	err = decoder.Decode(&config)
+	if err != nil {
+		fmt.Println("Error reading config file:", err.Error())
+	}
+
+	db.InitializeDatabase(config.DbTypeName, config.DbUser, config.DbPassword, config.DbName)
 
 	var Logger = log.New(os.Stdout, " ", log.Ldate|log.Ltime|log.Lshortfile)
+	Logger.Printf("Starting " + config.ListenerType + " server on port " + config.ListenerPort + "...")
 
-	Logger.Printf("Starting server...")
-	err := http.ListenAndServe(":8080", handlers.CombinedLoggingHandler(os.Stdout, routes.CreateRouter()))
+	if config.ListenerType == "https" {
+		// for https. Make sure you have the server.pem and server.key file. To gen self signed:
+		// openssl genrsa -out server.key 2048
+		// openssl req -new -x509 -key server.key -out server.pem -days 3650
+		err = http.ListenAndServeTLS(":"+config.ListenerPort, config.ListenerCertFile, config.ListenerKeyFile,
+			handlers.CombinedLoggingHandler(os.Stdout, routes.CreateRouter()))
+	} else {
+		err = http.ListenAndServe(":"+config.ListenerPort, handlers.CombinedLoggingHandler(os.Stdout, routes.CreateRouter()))
+	}
 
-	// for https. Make sure you have the server.pem and server.key file. To gen self signed:
-	// openssl genrsa -out server.key 2048
-	// openssl req -new -x509 -key server.key -out server.pem -days 3650
-	// err := http.ListenAndServeTLS(":1443", "server.pem", "server.key", handlers.CombinedLoggingHandler(os.Stdout, routes.CreateRouter()))
 	if err != nil {
 		fmt.Println(err.Error())
 	}
