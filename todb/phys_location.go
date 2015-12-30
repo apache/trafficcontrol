@@ -26,12 +26,12 @@ import (
 
 type PhysLocation struct {
 	Id          int64       `db:"id" json:"id"`
-	Name        string      `db:"name" json:"name"`
-	ShortName   string      `db:"short_name" json:"shortName"`
-	Address     string      `db:"address" json:"address"`
-	City        string      `db:"city" json:"city"`
-	State       string      `db:"state" json:"state"`
-	Zip         string      `db:"zip" json:"zip"`
+	Name        null.String `db:"name" json:"name"`
+	ShortName   null.String `db:"short_name" json:"shortName"`
+	Address     null.String `db:"address" json:"address"`
+	City        null.String `db:"city" json:"city"`
+	State       null.String `db:"state" json:"state"`
+	Zip         null.String `db:"zip" json:"zip"`
 	Poc         null.String `db:"poc" json:"poc"`
 	Phone       null.String `db:"phone" json:"phone"`
 	Email       null.String `db:"email" json:"email"`

@@ -26,9 +26,9 @@ import (
 // Note: a lot of these structs are generated from the DB. No need to type them all out, there's tools for that.
 // a view will generate structs also with get_structs.go
 
-// use this view
+// use this view (pq)
 // create view content_routers as select ip_address as ip, ip6_address as ip6, profile.name as profile, cachegroup.name as location,
-// status.name as status, server.tcp_port as port, host_name, concat(server.host_name, ".", server.domain_name) as fqdn,
+// status.name as status, server.tcp_port as port, host_name, concat(server.host_name, '.', server.domain_name) as fqdn,
 // parameter.value as apiport, cdn.name as cdnname
 // from server
 // join profile on profile.id = server.profile
@@ -38,7 +38,7 @@ import (
 // join status on status.id = server.status
 // join cdn on cdn.id = server.cdn_id
 // join type on type.id = server.type
-// where type.name = "CCR" and parameter.name="api.port";
+// where type.name = 'CCR' and parameter.name='api.port';
 type ContentRouter struct {
 	Profile  string `db:"profile" json:"profile"`
 	Apiport  int64  `db:"apiport" json:"api.port"`
@@ -52,9 +52,9 @@ type ContentRouter struct {
 	Cdnname  string `db:"cdnname" json:"cdnname"`
 }
 
-// use this view
+// use this view (pq)
 // create view monitors as select ip_address as ip, ip6_address as ip6, profile.name as profile, cachegroup.name as location,
-// status.name as status, server.tcp_port as port, concat(server.host_name, ".", server.domain_name) as fqdn,
+// status.name as status, server.tcp_port as port, concat(server.host_name, '.', server.domain_name) as fqdn,
 // cdn.name as cdnname, host_name
 // from server
 // join profile on profile.id = server.profile
@@ -62,7 +62,7 @@ type ContentRouter struct {
 // join status on status.id = server.status
 // join cdn on cdn.id = server.cdn_id
 // join type on type.id = server.type
-// where type.name = "RASCAL";
+// where type.name = 'RASCAL';
 
 type Monitor struct {
 	Profile  string      `db:"profile" json:"profile"`
@@ -82,7 +82,7 @@ type EdgeLocation struct {
 	Latitude  null.Float `db:"latitude" json:"latitude"`
 }
 
-// use this view
+// use this view (pq)
 // create view crconfig_params as select distinct cdn.name as cdn_name, cdn.id as cdn_id,
 // server.profile as profile_id,
 // server.type as stype, parameter.name as pname,
@@ -92,7 +92,7 @@ type EdgeLocation struct {
 // join profile on profile.id = server.profile
 // join profile_parameter on profile_parameter.profile = server.profile
 // join parameter on parameter.id = profile_parameter.parameter
-// where server.type in (select id from type where name in ("EDGE", "MID", "CCR"))
+// where server.type in (select id from type where name in ('EDGE', 'MID', 'CCR'))
 // and parameter.config_file = 'CRConfig.json';
 type CRConfigParam struct {
 	CdnName        string `db:"cdn_name"`
@@ -221,7 +221,7 @@ type CrconfigDsData struct {
 // create view content_servers as select distinct  host_name as host_name, profile.name as profile,
 // type.name as type, cachegroup.name as location_id, ip_address as ip, cdn.name as cdnname,
 // status.name as status, cachegroup.name as cache_group, ip6_address as ip6, tcp_port as port,
-// concat(host_name, ".", domain_name) as fqdn, interface_name, parameter.value as hash_count
+// concat(host_name, '.', domain_name) as fqdn, interface_name, parameter.value as hash_count
 // from server
 // join profile on profile.id = server.profile
 // join profile_parameter on profile_parameter.profile = profile.id
@@ -233,6 +233,7 @@ type CrconfigDsData struct {
 // and parameter.name = 'weight'
 // and server.status in (select id from status where name='REPORTED' or name='ONLINE')
 // and server.type=(select id from type where name='EDGE');
+// this struct is for the db query
 type CrContentServer struct {
 	HostName      string      `db:"host_name" json:"hostName"`
 	Profile       string      `db:"profile" json:"profile"`
@@ -268,7 +269,7 @@ type ContentServer struct {
 }
 
 // use this view
-// create view cr_deliveryservice_server as select distinct regex.pattern as
+// create or replace view cr_deliveryservice_server as select distinct regex.pattern as
 // pattern, xml_id, deliveryservice.id as ds_id, server.id as srv_id,
 // cdn.name as cdnname, server.host_name as server_name
 // from deliveryservice
@@ -276,7 +277,8 @@ type ContentServer struct {
 // join regex on regex.id = deliveryservice_regex.regex
 // join deliveryservice_server on deliveryservice.id = deliveryservice_server.deliveryservice
 // join server on server.id = deliveryservice_server.server
-// join cdn on cdn.id = server.cdn_id;
+// join cdn on cdn.id = server.cdn_id
+// where deliveryservice.type != (select id from type where name='ANY_MAP');
 type CrDeliveryserviceServer struct {
 	Pattern    string      `db:"pattern" json:"pattern"`
 	XmlId      string      `db:"xml_id" json:"xmlId"`
@@ -318,7 +320,7 @@ func boolString(in interface{}) string {
 }
 
 func contentRoutersSection(cdnName string) (map[string]ContentRouter, error) {
-	crQuery := "select * from content_routers where cdnname=\"" + cdnName + "\""
+	crQuery := "select * from content_routers where cdnname='" + cdnName + "'"
 	crs := []ContentRouter{}
 	err := globalDB.Select(&crs, crQuery)
 	if err != nil {
@@ -336,7 +338,7 @@ func contentRoutersSection(cdnName string) (map[string]ContentRouter, error) {
 }
 
 func monitorSecttion(cdnName string) (map[string]Monitor, error) {
-	mQuery := "select * from monitors where cdnname=\"" + cdnName + "\""
+	mQuery := "select * from monitors where cdnname='" + cdnName + "'"
 	ms := []Monitor{}
 	err := globalDB.Select(&ms, mQuery)
 	if err != nil {
@@ -354,7 +356,7 @@ func monitorSecttion(cdnName string) (map[string]Monitor, error) {
 }
 
 func edgeLocationSection(cdnName string) (map[string]EdgeLocation, error) {
-	eQuery := "select name,longitude,latitude from cachegroup where type in (select id from type where name=\"EDGE_LOC\")"
+	eQuery := "select name,longitude,latitude from cachegroup where type in (select id from type where name='EDGE_LOC')"
 	edges := []EdgeLocation{}
 	err := globalDB.Select(&edges, eQuery)
 	if err != nil {
@@ -372,7 +374,7 @@ func edgeLocationSection(cdnName string) (map[string]EdgeLocation, error) {
 }
 
 func configSection(cdnName string) (Config, map[string]string, error) {
-	pQuery := "select * from crconfig_params where cdn_name=\"" + cdnName + "\""
+	pQuery := "select * from crconfig_params where cdn_name='" + cdnName + "'"
 	params := []CRConfigParam{}
 	err := globalDB.Select(&params, pQuery)
 	if err != nil {
@@ -433,7 +435,7 @@ func genRespHeaderList(inString string) map[string]string {
 }
 
 func deliveryServicesSection(cdnName string, pmap map[string]string) (map[string]CrDeliveryService, error) {
-	dQuery := "select * from crconfig_ds_data where cdn_name=\"" + cdnName + "\""
+	dQuery := "select * from crconfig_ds_data where cdn_name='" + cdnName + "'"
 	ds := []CrconfigDsData{}
 	err := globalDB.Select(&ds, dQuery)
 	if err != nil {
@@ -537,7 +539,8 @@ func deliveryServicesSection(cdnName string, pmap map[string]string) (map[string
 }
 
 func contentServersSection(cdnName string, ccrDomain string) (map[string]ContentServer, error) {
-	csQuery := "select * from content_servers where cdnname=\"" + cdnName + "\""
+	fmt.Println("Starting ContentServerSection")
+	csQuery := "select * from content_servers where cdnname='" + cdnName + "'"
 	cServers := []CrContentServer{}
 	err := globalDB.Select(&cServers, csQuery)
 	if err != nil {
@@ -548,7 +551,7 @@ func contentServersSection(cdnName string, ccrDomain string) (map[string]Content
 	dsServers := []CrDeliveryserviceServer{}
 	err = globalDB.Select(&dsServers, dsServerQuery)
 	if err != nil {
-		fmt.Println(err)
+		fmt.Println("ERROR: >> ", err)
 		return nil, err
 	}
 	dsMap := make(map[string]ContentServerDsMap)
@@ -592,6 +595,7 @@ func contentServersSection(cdnName string, ccrDomain string) (map[string]Content
 		}
 	}
 
+	fmt.Println("EndContentServerSection")
 	return retMap, nil
 }
 

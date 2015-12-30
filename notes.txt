@@ -2,4 +2,4 @@ http://www.restapitutorial.com/httpstatuscodes.html
  - Should we be returning 201 created with a Location: on successful post?
  - more things like that? 
  - should we limit the ats files to know ats hosts and CRConfig to known CRConfig users, etc?
- - parameter and phys_location need manual intervetion (null.String for value and ?? )
+ - parameter.value and phys_location.* need manual intervetion (null.String)

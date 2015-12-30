@@ -20,15 +20,16 @@ package todb
 import (
 	"encoding/json"
 	"fmt"
+	"gopkg.in/guregu/null.v3"
 	"time"
 )
 
 type Parameter struct {
-	Id          int64     `db:"id" json:"id"`
-	Name        string    `db:"name" json:"name"`
-	ConfigFile  string    `db:"config_file" json:"configFile"`
-	Value       string    `db:"value" json:"value"`
-	LastUpdated time.Time `db:"last_updated" json:"lastUpdated"`
+	Id          int64       `db:"id" json:"id"`
+	Name        string      `db:"name" json:"name"`
+	ConfigFile  string      `db:"config_file" json:"configFile"`
+	Value       null.String `db:"value" json:"value"`
+	LastUpdated time.Time   `db:"last_updated" json:"lastUpdated"`
 }
 
 func handleParameter(method string, id int, payload []byte) (interface{}, error) {
