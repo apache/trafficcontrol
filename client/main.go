@@ -33,21 +33,21 @@ func main() {
 		fmt.Println("err 11:", err)
 	}
 	fmt.Println(resp)
-	hResp, e := client.PostJson("/api/2.0/asn", []byte("{\"asn\":45454, \"cachegroup\":28}"))
+	ret, e := client.PostJson("/api/2.0/asn", []byte("{\"asn\":45454, \"cachegroup\":28}"))
 	if e != nil {
 		fmt.Println("err 22:", e)
 	}
-	fmt.Println(hResp)
+	fmt.Println(string(ret))
 
-	hResp, e = client.PutJson("/api/2.0/asn/62", []byte("{\"id\": 61, \"asn\":54321, \"cachegroup\":28}"))
-	if e != nil {
-		fmt.Println("err 32:", e)
-	}
-	fmt.Println(hResp)
+	// hResp, e = client.PutJson("/api/2.0/asn/62", []byte("{\"id\": 61, \"asn\":54321, \"cachegroup\":28}"))
+	// if e != nil {
+	// 	fmt.Println("err 32:", e)
+	// }
+	// fmt.Println(hResp)
 
-	hResp, e = client.Delete("/api/2.0/asn/85")
-	if e != nil {
-		fmt.Println("err 42:", e)
-	}
-	fmt.Println(hResp)
+	// hResp, e = client.Delete("/api/2.0/asn/88")
+	// if e != nil {
+	// 	fmt.Println("err 42:", e)
+	// }
+	// fmt.Println(hResp)
 }

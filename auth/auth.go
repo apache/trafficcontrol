@@ -17,7 +17,7 @@
 package auth
 
 import (
-	"../output_format"
+	output "../output_format"
 	"../todb"
 
 	"crypto/sha1"
@@ -73,7 +73,7 @@ func GetContext(handler http.Handler) http.HandlerFunc {
 		// Put the session in the context so that
 		ctx.Set(r, "session", session)
 		if id, ok := session.Values["id"]; ok {
-			fmt.Println("userid ", id)
+			// fmt.Println("userid ", id)
 			if err != nil {
 				ctx.Set(r, "user", nil)
 			} else {
@@ -106,7 +106,7 @@ func Login(w http.ResponseWriter, r *http.Request) {
 		if err != nil {
 			panic("booboo")
 		}
-		fmt.Println("body:", string(body))
+		// fmt.Println("body:", string(body))
 		var lj loginJson
 		err = json.Unmarshal(body, &lj)
 		if err != nil {
@@ -114,7 +114,7 @@ func Login(w http.ResponseWriter, r *http.Request) {
 		}
 		username = lj.U
 		password = lj.P
-		fmt.Println("u:", lj.U, " p:", lj.P)
+		// fmt.Println("u:", lj.U, " p:", lj.P)
 		htmlSession = false
 	}
 	session, _ := Store.Get(r, "trafficOps")
@@ -129,7 +129,7 @@ func Login(w http.ResponseWriter, r *http.Request) {
 	}
 	encBytes := sha1.Sum([]byte(password))
 	encString := hex.EncodeToString(encBytes[:])
-	fmt.Println("sha1:", hex.EncodeToString(encBytes[:]), " localpasswd:", u.LocalPasswd.String, "err:", err)
+	// fmt.Println("sha1:", hex.EncodeToString(encBytes[:]), " localpasswd:", u.LocalPasswd.String, "err:", err)
 	if err != nil || u.LocalPasswd.String != encString {
 		ctx.Set(r, "user", nil)
 		fmt.Println("Invalid passwd")
@@ -143,7 +143,7 @@ func Login(w http.ResponseWriter, r *http.Request) {
 	if htmlSession {
 		http.Redirect(w, r, redirectTarget, 302)
 	} else {
-		respTxt := output_format.MakeApiResponse("", "Successfully logged in.", "")
+		respTxt := output.MakeApiResponse(nil, output.MakeAlert("Successfully logged in.", "success"), nil)
 		js, err := json.Marshal(respTxt)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)

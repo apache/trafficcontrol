@@ -18,6 +18,7 @@ package routes
 
 import (
 	auth "../auth"
+	output "../output_format"
 	db "../todb"
 
 	"encoding/json"
@@ -38,7 +39,6 @@ func CreateRouter() http.Handler {
 	router.HandleFunc("/login", auth.Login).Methods("POST")
 	router.HandleFunc("/hello/{name}", auth.Use(hello, auth.RequireLogin)).Methods("GET")
 
-	// router.HandleFunc("/api/2.0/{table}", auth.Use(listTable, auth.RequireLogin)).Methods("GET")
 	router.HandleFunc("/api/2.0/{table}", auth.Use(apiHandler, auth.RequireLogin)).Methods("GET", "POST")
 	router.HandleFunc("/api/2.0/{table}/{id}", auth.Use(apiHandler, auth.RequireLogin)).Methods("GET", "PUT", "DELETE")
 	// router.HandleFunc("/api/2.0/{name}/{key}/{value}/{details.json", auth.Use(handleDetail, auth.RequireLogin))
@@ -60,30 +60,9 @@ func setHeaders(w http.ResponseWriter) {
 	w.Header().Set("Access-Control-Allow-Headers", "Origin, Authorization, X-Requested-With, Content-Type")
 }
 
-// func handleDetail(w http.ResponseWriter, r *http.Request) {
-// 	setHeaders(w)
-// 	vars := mux.Vars(r)
-// 	table := vars["table"]
-// 	key := vars["key"]
-// 	value := vars["value"]
-// 	rows, _ := db.GetDetails(table, key, value)
-// 	enc := json.NewEncoder(w)
-// 	enc.Encode(rows)
-// }
-
-// func listTable(w http.ResponseWriter, r *http.Request) {
-// 	setHeaders(w)
-// 	vars := mux.Vars(r)
-// 	table := snaker.CamelToSnake(vars["table"])
-// 	rows, _ := db.GetTable(table)
-// 	enc := json.NewEncoder(w)
-// 	enc.Encode(rows)
-// }
-
 func apiHandler(w http.ResponseWriter, r *http.Request) {
 	setHeaders(w)
 	vars := mux.Vars(r)
-	// table := snaker.CamelToSnake(vars["table"])
 	table := vars["table"]
 	id := -1
 	if vars["id"] != "" {
@@ -93,14 +72,14 @@ func apiHandler(w http.ResponseWriter, r *http.Request) {
 		}
 		id = num
 	}
-	// fmt.Fprintln(w, "Hello:", table)
 	body, err := ioutil.ReadAll(r.Body)
 	response, err := db.Action(table, r.Method, id, body)
 	if err != nil {
 		fmt.Println("error 42 ", err)
 	}
+	jresponse := output.MakeApiResponse(response, nil, nil)
 	enc := json.NewEncoder(w)
-	enc.Encode(response)
+	enc.Encode(jresponse)
 }
 
 func hello(w http.ResponseWriter, r *http.Request) {

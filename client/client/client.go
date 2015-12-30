@@ -111,7 +111,7 @@ func (to *Session) getBytes(path string) ([]byte, error) {
 	return body, err
 }
 
-func (to *Session) PostJson(path string, body []byte) (*http.Response, error) {
+func (to *Session) PostJson(path string, body []byte) ([]byte, error) {
 	req, err := http.NewRequest("POST", to.Url+path, bytes.NewBuffer(body))
 	req.Header.Set("Content-Type", "application/json")
 
@@ -121,7 +121,8 @@ func (to *Session) PostJson(path string, body []byte) (*http.Response, error) {
 		return nil, err
 	}
 	defer resp.Body.Close()
-	return resp, err
+	body, err = ioutil.ReadAll(resp.Body)
+	return body, err
 }
 
 func (to *Session) PutJson(path string, body []byte) (*http.Response, error) {

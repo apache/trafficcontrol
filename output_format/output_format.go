@@ -14,6 +14,10 @@
 
 package output_format
 
+import (
+// "fmt"
+)
+
 // {"alerts":[{"level":"success","text":"Successfully logged in."}],"version":"1.1"}
 type Result struct {
 	Alerts  []Alert
@@ -32,32 +36,28 @@ type ApiWrapper struct {
 	Alerts  []Alert     `json:"alerts,omitempty"`
 }
 
+func MakeAlert(alertTxt string, alertLevel string) []Alert {
+	alert := Alert{Level: alertLevel, Text: alertTxt}
+	var alerts []Alert
+	alerts = append(alerts, alert)
+	return alerts
+}
+
 //wraps the given interface r into a returned Wrapper
 //prepped for encoding to stream
-func MakeApiResponse(r interface{}, alertString, errString string) ApiWrapper {
-	// if alert == "" {
-	// 	w := ApiWrapper{
-	// 		Resp:    r,
-	// 		Error:   err,
-	// 		Version: 2.0,
-	// 	}
+func MakeApiResponse(r interface{}, alerts []Alert, err error) ApiWrapper {
+	var w ApiWrapper
+	if err != nil {
 
-	// } else {
-	// 	w := ApiWrapper{
-	// 		Resp:    r,
-	// 		Error:   err,
-	// 		Version: 2.0,
-	// 		Alert:   Alert{Level: 1, String: alert},
-	// 	}
-	// }
-	alert := Alert{Level: "success", Text: alertString}
-	alerts := make([]Alert, 0, 1)
-	alerts = append(alerts, alert)
-	w := ApiWrapper{
-		Resp:    r,
-		Error:   errString,
-		Version: 2.0,
-		Alerts:  alerts,
+	} else {
+		if alerts == nil {
+			alerts = MakeAlert("Complete.", "success")
+		}
+		w = ApiWrapper{
+			Resp:    r,
+			Version: 2.0,
+			Alerts:  alerts,
+		}
 	}
 
 	return w
