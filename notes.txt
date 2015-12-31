@@ -3,3 +3,4 @@ http://www.restapitutorial.com/httpstatuscodes.html
  - more things like that? 
  - should we limit the ats files to know ats hosts and CRConfig to known CRConfig users, etc?
  - parameter.value and phys_location.* need manual intervetion (null.String)
+ - maybe it is better to just pass (w http.ResponseWriter, r *http.Request) to the actions, and have the action funcs write to w without returning?

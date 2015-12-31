@@ -61,6 +61,10 @@ func setHeaders(w http.ResponseWriter) {
 }
 
 func apiHandler(w http.ResponseWriter, r *http.Request) {
+	// maybe it is better to just pass (w http.ResponseWriter, r *http.Request) to the actions,
+	// and have the action funcs write to w without returning?
+	// TODO: handle admin/oper can CUD, rest can r
+	// TODO: handle deliveryservice_tmuser for portal
 	setHeaders(w)
 	vars := mux.Vars(r)
 	table := vars["table"]

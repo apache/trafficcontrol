@@ -539,7 +539,6 @@ func deliveryServicesSection(cdnName string, pmap map[string]string) (map[string
 }
 
 func contentServersSection(cdnName string, ccrDomain string) (map[string]ContentServer, error) {
-	fmt.Println("Starting ContentServerSection")
 	csQuery := "select * from content_servers where cdnname='" + cdnName + "'"
 	cServers := []CrContentServer{}
 	err := globalDB.Select(&cServers, csQuery)
@@ -595,7 +594,6 @@ func contentServersSection(cdnName string, ccrDomain string) (map[string]Content
 		}
 	}
 
-	fmt.Println("EndContentServerSection")
 	return retMap, nil
 }
 
