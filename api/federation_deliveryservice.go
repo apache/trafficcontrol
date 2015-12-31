@@ -47,7 +47,7 @@ func getFederationDeliveryservice(id int) (interface{}, error) {
 	ret := []FederationDeliveryservice{}
 	arg := FederationDeliveryservice{Federation: int64(id)}
 	if id >= 0 {
-		nstmt, err := db.GlobalDB.PrepareNamed(`select * from federation_deliveryservice where federation=:id`)
+		nstmt, err := db.GlobalDB.PrepareNamed(`select * from federation_deliveryservice where federation=:federation`)
 		err = nstmt.Select(&ret, arg)
 		if err != nil {
 			fmt.Println(err)

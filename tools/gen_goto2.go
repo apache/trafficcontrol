@@ -186,7 +186,7 @@ func handleString(schemas []ColumnSchema, table string) string {
 	out += "    ret := []" + formatName(table) + "{}\n"
 	out += "    arg := " + formatName(table) + "{" + formatName(idColumn) + ": int64(id)}\n"
 	out += "    if id >= 0 {\n"
-	out += "        nstmt, err := db.GlobalDB.PrepareNamed(`select * from " + table + " where " + idColumn + "=:id`)\n"
+	out += "        nstmt, err := db.GlobalDB.PrepareNamed(`select * from " + table + " where " + idColumn + "=:" + idColumn + "`)\n"
 	out += "        err = nstmt.Select(&ret, arg)\n"
 	out += "	    if err != nil {\n"
 	out += "	        fmt.Println(err)\n"

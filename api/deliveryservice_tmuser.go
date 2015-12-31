@@ -47,7 +47,7 @@ func getDeliveryserviceTmuser(id int) (interface{}, error) {
 	ret := []DeliveryserviceTmuser{}
 	arg := DeliveryserviceTmuser{Deliveryservice: int64(id)}
 	if id >= 0 {
-		nstmt, err := db.GlobalDB.PrepareNamed(`select * from deliveryservice_tmuser where deliveryservice=:id`)
+		nstmt, err := db.GlobalDB.PrepareNamed(`select * from deliveryservice_tmuser where deliveryservice=:deliveryservice`)
 		err = nstmt.Select(&ret, arg)
 		if err != nil {
 			fmt.Println(err)

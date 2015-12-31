@@ -47,7 +47,7 @@ func getFederationFederationResolver(id int) (interface{}, error) {
 	ret := []FederationFederationResolver{}
 	arg := FederationFederationResolver{Federation: int64(id)}
 	if id >= 0 {
-		nstmt, err := db.GlobalDB.PrepareNamed(`select * from federation_federation_resolver where federation=:id`)
+		nstmt, err := db.GlobalDB.PrepareNamed(`select * from federation_federation_resolver where federation=:federation`)
 		err = nstmt.Select(&ret, arg)
 		if err != nil {
 			fmt.Println(err)

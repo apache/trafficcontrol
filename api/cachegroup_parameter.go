@@ -47,7 +47,7 @@ func getCachegroupParameter(id int) (interface{}, error) {
 	ret := []CachegroupParameter{}
 	arg := CachegroupParameter{Cachegroup: int64(id)}
 	if id >= 0 {
-		nstmt, err := db.GlobalDB.PrepareNamed(`select * from cachegroup_parameter where cachegroup=:id`)
+		nstmt, err := db.GlobalDB.PrepareNamed(`select * from cachegroup_parameter where cachegroup=:cachegroup`)
 		err = nstmt.Select(&ret, arg)
 		if err != nil {
 			fmt.Println(err)

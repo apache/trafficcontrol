@@ -47,7 +47,7 @@ func getProfileParameter(id int) (interface{}, error) {
 	ret := []ProfileParameter{}
 	arg := ProfileParameter{Profile: int64(id)}
 	if id >= 0 {
-		nstmt, err := db.GlobalDB.PrepareNamed(`select * from profile_parameter where profile=:id`)
+		nstmt, err := db.GlobalDB.PrepareNamed(`select * from profile_parameter where profile=:profile`)
 		err = nstmt.Select(&ret, arg)
 		if err != nil {
 			fmt.Println(err)

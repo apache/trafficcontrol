@@ -48,7 +48,7 @@ func getDeliveryserviceRegex(id int) (interface{}, error) {
 	ret := []DeliveryserviceRegex{}
 	arg := DeliveryserviceRegex{Deliveryservice: int64(id)}
 	if id >= 0 {
-		nstmt, err := db.GlobalDB.PrepareNamed(`select * from deliveryservice_regex where deliveryservice=:id`)
+		nstmt, err := db.GlobalDB.PrepareNamed(`select * from deliveryservice_regex where deliveryservice=:deliveryservice`)
 		err = nstmt.Select(&ret, arg)
 		if err != nil {
 			fmt.Println(err)

@@ -48,7 +48,7 @@ func getFederationTmuser(id int) (interface{}, error) {
 	ret := []FederationTmuser{}
 	arg := FederationTmuser{Federation: int64(id)}
 	if id >= 0 {
-		nstmt, err := db.GlobalDB.PrepareNamed(`select * from federation_tmuser where federation=:id`)
+		nstmt, err := db.GlobalDB.PrepareNamed(`select * from federation_tmuser where federation=:federation`)
 		err = nstmt.Select(&ret, arg)
 		if err != nil {
 			fmt.Println(err)
