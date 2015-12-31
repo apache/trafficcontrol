@@ -11,4 +11,5 @@ conf/*.conf
 conf/*.config
 conf/server.pem
 conf/server.key
+tools/generated/*
 
