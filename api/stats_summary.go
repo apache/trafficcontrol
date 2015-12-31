@@ -49,12 +49,15 @@ func handleStatsSummary(method string, id int, payload []byte) (interface{}, err
 
 func getStatsSummary(id int) (interface{}, error) {
 	ret := []StatsSummary{}
+	arg := StatsSummary{Id: int64(id)}
 	if id >= 0 {
-		err := db.GlobalDB.Select(&ret, "select * from stats_summary where id=$1", id)
+		nstmt, err := db.GlobalDB.PrepareNamed(`select * from stats_summary where id=:id`)
+		err = nstmt.Select(&ret, arg)
 		if err != nil {
 			fmt.Println(err)
 			return nil, err
 		}
+		nstmt.Close()
 	} else {
 		queryStr := "select * from stats_summary"
 		err := db.GlobalDB.Select(&ret, queryStr)
@@ -121,7 +124,8 @@ func putStatsSummary(id int, payload []byte) (interface{}, error) {
 }
 
 func delStatsSummary(id int) (interface{}, error) {
-	result, err := db.GlobalDB.Exec("DELETE FROM stats_summary WHERE id=$1", id)
+	arg := StatsSummary{Id: int64(id)}
+	result, err := db.GlobalDB.NamedExec("DELETE FROM stats_summary WHERE id=:id", arg)
 	if err != nil {
 		fmt.Println(err)
 		return nil, err

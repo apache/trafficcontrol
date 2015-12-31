@@ -47,12 +47,15 @@ func handleCdn(method string, id int, payload []byte) (interface{}, error) {
 
 func getCdn(id int) (interface{}, error) {
 	ret := []Cdn{}
+	arg := Cdn{Id: int64(id)}
 	if id >= 0 {
-		err := db.GlobalDB.Select(&ret, "select * from cdn where id=$1", id)
+		nstmt, err := db.GlobalDB.PrepareNamed(`select * from cdn where id=:id`)
+		err = nstmt.Select(&ret, arg)
 		if err != nil {
 			fmt.Println(err)
 			return nil, err
 		}
+		nstmt.Close()
 	} else {
 		queryStr := "select * from cdn"
 		err := db.GlobalDB.Select(&ret, queryStr)
@@ -108,7 +111,8 @@ func putCdn(id int, payload []byte) (interface{}, error) {
 }
 
 func delCdn(id int) (interface{}, error) {
-	result, err := db.GlobalDB.Exec("DELETE FROM cdn WHERE id=$1", id)
+	arg := Cdn{Id: int64(id)}
+	result, err := db.GlobalDB.NamedExec("DELETE FROM cdn WHERE id=:id", arg)
 	if err != nil {
 		fmt.Println(err)
 		return nil, err

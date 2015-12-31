@@ -82,7 +82,7 @@ func apiHandler(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		fmt.Println("error 42 ", err)
 	}
-	jresponse := output.MakeApiResponse(response, nil, nil)
+	jresponse := output.MakeApiResponse(response, nil, err)
 	enc := json.NewEncoder(w)
 	enc.Encode(jresponse)
 }

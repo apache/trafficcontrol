@@ -47,12 +47,15 @@ func handleHwinfo(method string, id int, payload []byte) (interface{}, error) {
 
 func getHwinfo(id int) (interface{}, error) {
 	ret := []Hwinfo{}
+	arg := Hwinfo{Id: int64(id)}
 	if id >= 0 {
-		err := db.GlobalDB.Select(&ret, "select * from hwinfo where id=$1", id)
+		nstmt, err := db.GlobalDB.PrepareNamed(`select * from hwinfo where id=:id`)
+		err = nstmt.Select(&ret, arg)
 		if err != nil {
 			fmt.Println(err)
 			return nil, err
 		}
+		nstmt.Close()
 	} else {
 		queryStr := "select * from hwinfo"
 		err := db.GlobalDB.Select(&ret, queryStr)
@@ -111,7 +114,8 @@ func putHwinfo(id int, payload []byte) (interface{}, error) {
 }
 
 func delHwinfo(id int) (interface{}, error) {
-	result, err := db.GlobalDB.Exec("DELETE FROM hwinfo WHERE id=$1", id)
+	arg := Hwinfo{Id: int64(id)}
+	result, err := db.GlobalDB.NamedExec("DELETE FROM hwinfo WHERE id=:id", arg)
 	if err != nil {
 		fmt.Println(err)
 		return nil, err

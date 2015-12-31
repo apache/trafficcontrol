@@ -49,12 +49,15 @@ func handleLog(method string, id int, payload []byte) (interface{}, error) {
 
 func getLog(id int) (interface{}, error) {
 	ret := []Log{}
+	arg := Log{Id: int64(id)}
 	if id >= 0 {
-		err := db.GlobalDB.Select(&ret, "select * from log where id=$1", id)
+		nstmt, err := db.GlobalDB.PrepareNamed(`select * from log where id=:id`)
+		err = nstmt.Select(&ret, arg)
 		if err != nil {
 			fmt.Println(err)
 			return nil, err
 		}
+		nstmt.Close()
 	} else {
 		queryStr := "select * from log"
 		err := db.GlobalDB.Select(&ret, queryStr)
@@ -116,7 +119,8 @@ func putLog(id int, payload []byte) (interface{}, error) {
 }
 
 func delLog(id int) (interface{}, error) {
-	result, err := db.GlobalDB.Exec("DELETE FROM log WHERE id=$1", id)
+	arg := Log{Id: int64(id)}
+	result, err := db.GlobalDB.NamedExec("DELETE FROM log WHERE id=:id", arg)
 	if err != nil {
 		fmt.Println(err)
 		return nil, err

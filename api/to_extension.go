@@ -55,12 +55,15 @@ func handleToExtension(method string, id int, payload []byte) (interface{}, erro
 
 func getToExtension(id int) (interface{}, error) {
 	ret := []ToExtension{}
+	arg := ToExtension{Id: int64(id)}
 	if id >= 0 {
-		err := db.GlobalDB.Select(&ret, "select * from to_extension where id=$1", id)
+		nstmt, err := db.GlobalDB.PrepareNamed(`select * from to_extension where id=:id`)
+		err = nstmt.Select(&ret, arg)
 		if err != nil {
 			fmt.Println(err)
 			return nil, err
 		}
+		nstmt.Close()
 	} else {
 		queryStr := "select * from to_extension"
 		err := db.GlobalDB.Select(&ret, queryStr)
@@ -140,7 +143,8 @@ func putToExtension(id int, payload []byte) (interface{}, error) {
 }
 
 func delToExtension(id int) (interface{}, error) {
-	result, err := db.GlobalDB.Exec("DELETE FROM to_extension WHERE id=$1", id)
+	arg := ToExtension{Id: int64(id)}
+	result, err := db.GlobalDB.NamedExec("DELETE FROM to_extension WHERE id=:id", arg)
 	if err != nil {
 		fmt.Println(err)
 		return nil, err

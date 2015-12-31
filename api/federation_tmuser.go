@@ -46,12 +46,15 @@ func handleFederationTmuser(method string, id int, payload []byte) (interface{},
 
 func getFederationTmuser(id int) (interface{}, error) {
 	ret := []FederationTmuser{}
+	arg := FederationTmuser{Federation: int64(id)}
 	if id >= 0 {
-		err := db.GlobalDB.Select(&ret, "select * from federation_tmuser where id=$1", id)
+		nstmt, err := db.GlobalDB.PrepareNamed(`select * from federation_tmuser where federation=:id`)
+		err = nstmt.Select(&ret, arg)
 		if err != nil {
 			fmt.Println(err)
 			return nil, err
 		}
+		nstmt.Close()
 	} else {
 		queryStr := "select * from federation_tmuser"
 		err := db.GlobalDB.Select(&ret, queryStr)
@@ -110,7 +113,8 @@ func putFederationTmuser(id int, payload []byte) (interface{}, error) {
 }
 
 func delFederationTmuser(id int) (interface{}, error) {
-	result, err := db.GlobalDB.Exec("DELETE FROM federation_tmuser WHERE id=$1", id)
+	arg := FederationTmuser{Federation: int64(id)}
+	result, err := db.GlobalDB.NamedExec("DELETE FROM federation_tmuser WHERE id=:id", arg)
 	if err != nil {
 		fmt.Println(err)
 		return nil, err

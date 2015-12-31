@@ -47,12 +47,15 @@ func handleStatus(method string, id int, payload []byte) (interface{}, error) {
 
 func getStatus(id int) (interface{}, error) {
 	ret := []Status{}
+	arg := Status{Id: int64(id)}
 	if id >= 0 {
-		err := db.GlobalDB.Select(&ret, "select * from status where id=$1", id)
+		nstmt, err := db.GlobalDB.PrepareNamed(`select * from status where id=:id`)
+		err = nstmt.Select(&ret, arg)
 		if err != nil {
 			fmt.Println(err)
 			return nil, err
 		}
+		nstmt.Close()
 	} else {
 		queryStr := "select * from status"
 		err := db.GlobalDB.Select(&ret, queryStr)
@@ -108,7 +111,8 @@ func putStatus(id int, payload []byte) (interface{}, error) {
 }
 
 func delStatus(id int) (interface{}, error) {
-	result, err := db.GlobalDB.Exec("DELETE FROM status WHERE id=$1", id)
+	arg := Status{Id: int64(id)}
+	result, err := db.GlobalDB.NamedExec("DELETE FROM status WHERE id=:id", arg)
 	if err != nil {
 		fmt.Println(err)
 		return nil, err

@@ -47,12 +47,15 @@ func handleJobStatus(method string, id int, payload []byte) (interface{}, error)
 
 func getJobStatus(id int) (interface{}, error) {
 	ret := []JobStatus{}
+	arg := JobStatus{Id: int64(id)}
 	if id >= 0 {
-		err := db.GlobalDB.Select(&ret, "select * from job_status where id=$1", id)
+		nstmt, err := db.GlobalDB.PrepareNamed(`select * from job_status where id=:id`)
+		err = nstmt.Select(&ret, arg)
 		if err != nil {
 			fmt.Println(err)
 			return nil, err
 		}
+		nstmt.Close()
 	} else {
 		queryStr := "select * from job_status"
 		err := db.GlobalDB.Select(&ret, queryStr)
@@ -108,7 +111,8 @@ func putJobStatus(id int, payload []byte) (interface{}, error) {
 }
 
 func delJobStatus(id int) (interface{}, error) {
-	result, err := db.GlobalDB.Exec("DELETE FROM job_status WHERE id=$1", id)
+	arg := JobStatus{Id: int64(id)}
+	result, err := db.GlobalDB.NamedExec("DELETE FROM job_status WHERE id=:id", arg)
 	if err != nil {
 		fmt.Println(err)
 		return nil, err

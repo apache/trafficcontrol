@@ -46,12 +46,15 @@ func handleAsn(method string, id int, payload []byte) (interface{}, error) {
 
 func getAsn(id int) (interface{}, error) {
 	ret := []Asn{}
+	arg := Asn{Id: int64(id)}
 	if id >= 0 {
-		err := db.GlobalDB.Select(&ret, "select * from asn where id=$1", id)
+		nstmt, err := db.GlobalDB.PrepareNamed(`select * from asn where id=:id`)
+		err = nstmt.Select(&ret, arg)
 		if err != nil {
 			fmt.Println(err)
 			return nil, err
 		}
+		nstmt.Close()
 	} else {
 		queryStr := "select * from asn"
 		err := db.GlobalDB.Select(&ret, queryStr)
@@ -107,7 +110,8 @@ func putAsn(id int, payload []byte) (interface{}, error) {
 }
 
 func delAsn(id int) (interface{}, error) {
-	result, err := db.GlobalDB.Exec("DELETE FROM asn WHERE id=$1", id)
+	arg := Asn{Id: int64(id)}
+	result, err := db.GlobalDB.NamedExec("DELETE FROM asn WHERE id=:id", arg)
 	if err != nil {
 		fmt.Println(err)
 		return nil, err

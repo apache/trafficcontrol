@@ -95,7 +95,7 @@ type loginJson struct {
 
 // Login attempts to login the user given a request. Only works for local passwd at this time
 func Login(w http.ResponseWriter, r *http.Request) {
-	fmt.Println("Starting Login...")
+	// fmt.Println("Starting Login...")
 	username := ""
 	password := ""
 	htmlSession := true
@@ -118,7 +118,7 @@ func Login(w http.ResponseWriter, r *http.Request) {
 		htmlSession = false
 	}
 	session, _ := Store.Get(r, "trafficOps")
-	u, err := api.GetTmUser(username)
+	u, err := api.GetTmUserByName(username)
 	redirectTarget := "/"
 	if flashes := session.Flashes(); len(flashes) > 0 {
 		for _, flashMsg := range flashes {

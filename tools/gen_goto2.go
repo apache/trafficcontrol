@@ -59,6 +59,15 @@ type ColumnSchema struct {
 	ColumnKey              string
 }
 
+func idCol(schemas []ColumnSchema, table string) string {
+	for _, cs := range schemas {
+		if cs.TableName == table {
+			return cs.ColumnName // the first one, it's ordered
+		}
+	}
+	return ""
+}
+
 func writeFile(schemas []ColumnSchema, table string) (int, error) {
 	file, err := os.Create("./generated/" + table + ".go")
 	if err != nil {
@@ -161,14 +170,29 @@ func handleString(schemas []ColumnSchema, table string) string {
 	out += "    return nil, nil\n"
 	out += "}\n\n"
 
+	// 	arg := TmUser{Username: null.StringFrom(username)}
+	// nstmt, err := db.GlobalDB.PrepareNamed(`select * from tm_user where username=:username`)
+	// err = nstmt.Select(&ret, arg)
+	// if err != nil {
+	// 	fmt.Println(err)
+	// }
+	// if len(ret) != 1 {
+	// 	err := errors.New("Username " + username + " is not unique!")
+	// }
+	// nstmt.Close()
+
+	idColumn := idCol(schemas, table)
 	out += "func get" + formatName(table) + "(id int) (interface{}, error) {\n"
 	out += "    ret := []" + formatName(table) + "{}\n"
+	out += "    arg := " + formatName(table) + "{" + formatName(idColumn) + ": int64(id)}\n"
 	out += "    if id >= 0 {\n"
-	out += "	    err := db.GlobalDB.Select(&ret, \"select * from " + table + " where id=$1\", id)\n"
+	out += "        nstmt, err := db.GlobalDB.PrepareNamed(`select * from " + table + " where " + idColumn + "=:id`)\n"
+	out += "        err = nstmt.Select(&ret, arg)\n"
 	out += "	    if err != nil {\n"
-	out += "		    fmt.Println(err)\n"
-	out += "		    return nil, err\n"
-	out += "		}\n"
+	out += "	        fmt.Println(err)\n"
+	out += "	        return nil, err\n"
+	out += "	    }\n"
+	out += "        nstmt.Close()\n"
 	out += "	} else {\n"
 	out += "		queryStr := \"select * from " + table + "\"\n"
 	out += "	    err := db.GlobalDB.Select(&ret, queryStr)\n"
@@ -214,7 +238,8 @@ func handleString(schemas []ColumnSchema, table string) string {
 	out += "}\n\n"
 
 	out += "func del" + formatName(table) + "(id int) (interface{}, error) {\n"
-	out += "    result, err := db.GlobalDB.Exec(\"DELETE FROM " + table + " WHERE id=$1\", id)\n"
+	out += "    arg := " + formatName(table) + "{" + formatName(idColumn) + ": int64(id)}\n"
+	out += "    result, err := db.GlobalDB.NamedExec(\"DELETE FROM " + table + " WHERE id=:id\", arg)\n"
 	out += "    if err != nil {\n"
 	out += "    	fmt.Println(err)\n"
 	out += "    	return nil, err\n"

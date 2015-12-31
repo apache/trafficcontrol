@@ -48,12 +48,15 @@ func handleJobAgent(method string, id int, payload []byte) (interface{}, error) 
 
 func getJobAgent(id int) (interface{}, error) {
 	ret := []JobAgent{}
+	arg := JobAgent{Id: int64(id)}
 	if id >= 0 {
-		err := db.GlobalDB.Select(&ret, "select * from job_agent where id=$1", id)
+		nstmt, err := db.GlobalDB.PrepareNamed(`select * from job_agent where id=:id`)
+		err = nstmt.Select(&ret, arg)
 		if err != nil {
 			fmt.Println(err)
 			return nil, err
 		}
+		nstmt.Close()
 	} else {
 		queryStr := "select * from job_agent"
 		err := db.GlobalDB.Select(&ret, queryStr)
@@ -112,7 +115,8 @@ func putJobAgent(id int, payload []byte) (interface{}, error) {
 }
 
 func delJobAgent(id int) (interface{}, error) {
-	result, err := db.GlobalDB.Exec("DELETE FROM job_agent WHERE id=$1", id)
+	arg := JobAgent{Id: int64(id)}
+	result, err := db.GlobalDB.NamedExec("DELETE FROM job_agent WHERE id=:id", arg)
 	if err != nil {
 		fmt.Println(err)
 		return nil, err

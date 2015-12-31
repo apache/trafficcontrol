@@ -48,12 +48,15 @@ func handleFederation(method string, id int, payload []byte) (interface{}, error
 
 func getFederation(id int) (interface{}, error) {
 	ret := []Federation{}
+	arg := Federation{Id: int64(id)}
 	if id >= 0 {
-		err := db.GlobalDB.Select(&ret, "select * from federation where id=$1", id)
+		nstmt, err := db.GlobalDB.PrepareNamed(`select * from federation where id=:id`)
+		err = nstmt.Select(&ret, arg)
 		if err != nil {
 			fmt.Println(err)
 			return nil, err
 		}
+		nstmt.Close()
 	} else {
 		queryStr := "select * from federation"
 		err := db.GlobalDB.Select(&ret, queryStr)
@@ -112,7 +115,8 @@ func putFederation(id int, payload []byte) (interface{}, error) {
 }
 
 func delFederation(id int) (interface{}, error) {
-	result, err := db.GlobalDB.Exec("DELETE FROM federation WHERE id=$1", id)
+	arg := Federation{Id: int64(id)}
+	result, err := db.GlobalDB.NamedExec("DELETE FROM federation WHERE id=:id", arg)
 	if err != nil {
 		fmt.Println(err)
 		return nil, err

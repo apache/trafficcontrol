@@ -45,12 +45,15 @@ func handleDeliveryserviceServer(method string, id int, payload []byte) (interfa
 
 func getDeliveryserviceServer(id int) (interface{}, error) {
 	ret := []DeliveryserviceServer{}
+	arg := DeliveryserviceServer{Deliveryservice: int64(id)}
 	if id >= 0 {
-		err := db.GlobalDB.Select(&ret, "select * from deliveryservice_server where id=$1", id)
+		nstmt, err := db.GlobalDB.PrepareNamed(`select * from deliveryservice_server where deliveryservice=:id`)
+		err = nstmt.Select(&ret, arg)
 		if err != nil {
 			fmt.Println(err)
 			return nil, err
 		}
+		nstmt.Close()
 	} else {
 		queryStr := "select * from deliveryservice_server"
 		err := db.GlobalDB.Select(&ret, queryStr)
@@ -106,7 +109,8 @@ func putDeliveryserviceServer(id int, payload []byte) (interface{}, error) {
 }
 
 func delDeliveryserviceServer(id int) (interface{}, error) {
-	result, err := db.GlobalDB.Exec("DELETE FROM deliveryservice_server WHERE id=$1", id)
+	arg := DeliveryserviceServer{Deliveryservice: int64(id)}
+	result, err := db.GlobalDB.NamedExec("DELETE FROM deliveryservice_server WHERE id=:id", arg)
 	if err != nil {
 		fmt.Println(err)
 		return nil, err

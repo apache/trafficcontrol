@@ -77,12 +77,15 @@ func handleServercheck(method string, id int, payload []byte) (interface{}, erro
 
 func getServercheck(id int) (interface{}, error) {
 	ret := []Servercheck{}
+	arg := Servercheck{Id: int64(id)}
 	if id >= 0 {
-		err := db.GlobalDB.Select(&ret, "select * from servercheck where id=$1", id)
+		nstmt, err := db.GlobalDB.PrepareNamed(`select * from servercheck where id=:id`)
+		err = nstmt.Select(&ret, arg)
 		if err != nil {
 			fmt.Println(err)
 			return nil, err
 		}
+		nstmt.Close()
 	} else {
 		queryStr := "select * from servercheck"
 		err := db.GlobalDB.Select(&ret, queryStr)
@@ -228,7 +231,8 @@ func putServercheck(id int, payload []byte) (interface{}, error) {
 }
 
 func delServercheck(id int) (interface{}, error) {
-	result, err := db.GlobalDB.Exec("DELETE FROM servercheck WHERE id=$1", id)
+	arg := Servercheck{Id: int64(id)}
+	result, err := db.GlobalDB.NamedExec("DELETE FROM servercheck WHERE id=:id", arg)
 	if err != nil {
 		fmt.Println(err)
 		return nil, err

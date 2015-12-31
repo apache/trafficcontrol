@@ -51,12 +51,15 @@ func handleStaticdnsentry(method string, id int, payload []byte) (interface{}, e
 
 func getStaticdnsentry(id int) (interface{}, error) {
 	ret := []Staticdnsentry{}
+	arg := Staticdnsentry{Id: int64(id)}
 	if id >= 0 {
-		err := db.GlobalDB.Select(&ret, "select * from staticdnsentry where id=$1", id)
+		nstmt, err := db.GlobalDB.PrepareNamed(`select * from staticdnsentry where id=:id`)
+		err = nstmt.Select(&ret, arg)
 		if err != nil {
 			fmt.Println(err)
 			return nil, err
 		}
+		nstmt.Close()
 	} else {
 		queryStr := "select * from staticdnsentry"
 		err := db.GlobalDB.Select(&ret, queryStr)
@@ -124,7 +127,8 @@ func putStaticdnsentry(id int, payload []byte) (interface{}, error) {
 }
 
 func delStaticdnsentry(id int) (interface{}, error) {
-	result, err := db.GlobalDB.Exec("DELETE FROM staticdnsentry WHERE id=$1", id)
+	arg := Staticdnsentry{Id: int64(id)}
+	result, err := db.GlobalDB.NamedExec("DELETE FROM staticdnsentry WHERE id=:id", arg)
 	if err != nil {
 		fmt.Println(err)
 		return nil, err

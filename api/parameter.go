@@ -47,12 +47,15 @@ func handleParameter(method string, id int, payload []byte) (interface{}, error)
 
 func getParameter(id int) (interface{}, error) {
 	ret := []Parameter{}
+	arg := Parameter{Id: int64(id)}
 	if id >= 0 {
-		err := db.GlobalDB.Select(&ret, "select * from parameter where id=$1", id)
+		nstmt, err := db.GlobalDB.PrepareNamed(`select * from parameter where id=:id`)
+		err = nstmt.Select(&ret, arg)
 		if err != nil {
 			fmt.Println(err)
 			return nil, err
 		}
+		nstmt.Close()
 	} else {
 		queryStr := "select * from parameter"
 		err := db.GlobalDB.Select(&ret, queryStr)
@@ -111,7 +114,8 @@ func putParameter(id int, payload []byte) (interface{}, error) {
 }
 
 func delParameter(id int) (interface{}, error) {
-	result, err := db.GlobalDB.Exec("DELETE FROM parameter WHERE id=$1", id)
+	arg := Parameter{Id: int64(id)}
+	result, err := db.GlobalDB.NamedExec("DELETE FROM parameter WHERE id=:id", arg)
 	if err != nil {
 		fmt.Println(err)
 		return nil, err

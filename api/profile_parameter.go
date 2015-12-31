@@ -45,12 +45,15 @@ func handleProfileParameter(method string, id int, payload []byte) (interface{},
 
 func getProfileParameter(id int) (interface{}, error) {
 	ret := []ProfileParameter{}
+	arg := ProfileParameter{Profile: int64(id)}
 	if id >= 0 {
-		err := db.GlobalDB.Select(&ret, "select * from profile_parameter where id=$1", id)
+		nstmt, err := db.GlobalDB.PrepareNamed(`select * from profile_parameter where profile=:id`)
+		err = nstmt.Select(&ret, arg)
 		if err != nil {
 			fmt.Println(err)
 			return nil, err
 		}
+		nstmt.Close()
 	} else {
 		queryStr := "select * from profile_parameter"
 		err := db.GlobalDB.Select(&ret, queryStr)
@@ -106,7 +109,8 @@ func putProfileParameter(id int, payload []byte) (interface{}, error) {
 }
 
 func delProfileParameter(id int) (interface{}, error) {
-	result, err := db.GlobalDB.Exec("DELETE FROM profile_parameter WHERE id=$1", id)
+	arg := ProfileParameter{Profile: int64(id)}
+	result, err := db.GlobalDB.NamedExec("DELETE FROM profile_parameter WHERE id=:id", arg)
 	if err != nil {
 		fmt.Println(err)
 		return nil, err

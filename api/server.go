@@ -75,12 +75,15 @@ func handleServer(method string, id int, payload []byte) (interface{}, error) {
 
 func getServer(id int) (interface{}, error) {
 	ret := []Server{}
+	arg := Server{Id: int64(id)}
 	if id >= 0 {
-		err := db.GlobalDB.Select(&ret, "select * from server where id=$1", id)
+		nstmt, err := db.GlobalDB.PrepareNamed(`select * from server where id=:id`)
+		err = nstmt.Select(&ret, arg)
 		if err != nil {
 			fmt.Println(err)
 			return nil, err
 		}
+		nstmt.Close()
 	} else {
 		queryStr := "select * from server"
 		err := db.GlobalDB.Select(&ret, queryStr)
@@ -220,7 +223,8 @@ func putServer(id int, payload []byte) (interface{}, error) {
 }
 
 func delServer(id int) (interface{}, error) {
-	result, err := db.GlobalDB.Exec("DELETE FROM server WHERE id=$1", id)
+	arg := Server{Id: int64(id)}
+	result, err := db.GlobalDB.NamedExec("DELETE FROM server WHERE id=:id", arg)
 	if err != nil {
 		fmt.Println(err)
 		return nil, err

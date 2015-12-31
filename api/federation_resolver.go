@@ -46,12 +46,15 @@ func handleFederationResolver(method string, id int, payload []byte) (interface{
 
 func getFederationResolver(id int) (interface{}, error) {
 	ret := []FederationResolver{}
+	arg := FederationResolver{Id: int64(id)}
 	if id >= 0 {
-		err := db.GlobalDB.Select(&ret, "select * from federation_resolver where id=$1", id)
+		nstmt, err := db.GlobalDB.PrepareNamed(`select * from federation_resolver where id=:id`)
+		err = nstmt.Select(&ret, arg)
 		if err != nil {
 			fmt.Println(err)
 			return nil, err
 		}
+		nstmt.Close()
 	} else {
 		queryStr := "select * from federation_resolver"
 		err := db.GlobalDB.Select(&ret, queryStr)
@@ -107,7 +110,8 @@ func putFederationResolver(id int, payload []byte) (interface{}, error) {
 }
 
 func delFederationResolver(id int) (interface{}, error) {
-	result, err := db.GlobalDB.Exec("DELETE FROM federation_resolver WHERE id=$1", id)
+	arg := FederationResolver{Id: int64(id)}
+	result, err := db.GlobalDB.NamedExec("DELETE FROM federation_resolver WHERE id=:id", arg)
 	if err != nil {
 		fmt.Println(err)
 		return nil, err

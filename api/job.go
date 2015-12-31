@@ -57,12 +57,15 @@ func handleJob(method string, id int, payload []byte) (interface{}, error) {
 
 func getJob(id int) (interface{}, error) {
 	ret := []Job{}
+	arg := Job{Id: int64(id)}
 	if id >= 0 {
-		err := db.GlobalDB.Select(&ret, "select * from job where id=$1", id)
+		nstmt, err := db.GlobalDB.PrepareNamed(`select * from job where id=:id`)
+		err = nstmt.Select(&ret, arg)
 		if err != nil {
 			fmt.Println(err)
 			return nil, err
 		}
+		nstmt.Close()
 	} else {
 		queryStr := "select * from job"
 		err := db.GlobalDB.Select(&ret, queryStr)
@@ -148,7 +151,8 @@ func putJob(id int, payload []byte) (interface{}, error) {
 }
 
 func delJob(id int) (interface{}, error) {
-	result, err := db.GlobalDB.Exec("DELETE FROM job WHERE id=$1", id)
+	arg := Job{Id: int64(id)}
+	result, err := db.GlobalDB.NamedExec("DELETE FROM job WHERE id=:id", arg)
 	if err != nil {
 		fmt.Println(err)
 		return nil, err
