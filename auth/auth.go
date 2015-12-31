@@ -17,8 +17,8 @@
 package auth
 
 import (
+	"../api"
 	output "../output_format"
-	"../todb"
 
 	"crypto/sha1"
 	"encoding/hex"
@@ -118,7 +118,7 @@ func Login(w http.ResponseWriter, r *http.Request) {
 		htmlSession = false
 	}
 	session, _ := Store.Get(r, "trafficOps")
-	u, err := todb.GetTmUser(username)
+	u, err := api.GetTmUser(username)
 	redirectTarget := "/"
 	if flashes := session.Flashes(); len(flashes) > 0 {
 		for _, flashMsg := range flashes {

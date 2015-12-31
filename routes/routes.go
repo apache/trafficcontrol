@@ -17,9 +17,10 @@
 package routes
 
 import (
-	auth "../auth"
+	"../api"
+	"../auth"
+	"../crconfig"
 	output "../output_format"
-	db "../todb"
 
 	"encoding/json"
 	"fmt"
@@ -49,7 +50,7 @@ func CreateRouter() http.Handler {
 func handleCRConfig(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	cdn := vars["cdn"]
-	resp, _ := db.GetCRConfig(cdn)
+	resp, _ := crconfig.GetCRConfig(cdn)
 	enc := json.NewEncoder(w)
 	enc.Encode(resp)
 }
@@ -77,7 +78,7 @@ func apiHandler(w http.ResponseWriter, r *http.Request) {
 		id = num
 	}
 	body, err := ioutil.ReadAll(r.Body)
-	response, err := db.Action(table, r.Method, id, body)
+	response, err := api.Action(table, r.Method, id, body)
 	if err != nil {
 		fmt.Println("error 42 ", err)
 	}

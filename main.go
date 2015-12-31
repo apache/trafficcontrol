@@ -15,8 +15,9 @@
 package main
 
 import (
+	// "./api"
+	"./db"
 	routes "./routes"
-	db "./todb"
 
 	"encoding/json"
 	"fmt"

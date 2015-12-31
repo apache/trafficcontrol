@@ -31,7 +31,7 @@ var defaults = Configuration{
 	DbUser:     os.Args[1],
 	DbPassword: os.Args[2],
 	DbName:     os.Args[3],
-	PkgName:    "todb",
+	PkgName:    "api",
 	TagLabel:   "db",
 }
 
@@ -89,6 +89,7 @@ func writeFile(schemas []ColumnSchema, table string) (int, error) {
 		header += "\"gopkg.in/guregu/null.v3\"\n"
 	}
 	// if strings.Contains(sString, "time.") {
+	header += "\"../db\"\n"
 	header += "\"time\"\n"
 	// }
 	header += "\"encoding/json\"\n"
@@ -163,14 +164,14 @@ func handleString(schemas []ColumnSchema, table string) string {
 	out += "func get" + formatName(table) + "(id int) (interface{}, error) {\n"
 	out += "    ret := []" + formatName(table) + "{}\n"
 	out += "    if id >= 0 {\n"
-	out += "	    err := globalDB.Select(&ret, \"select * from " + table + " where id=$1\", id)\n"
+	out += "	    err := db.GlobalDB.Select(&ret, \"select * from " + table + " where id=$1\", id)\n"
 	out += "	    if err != nil {\n"
 	out += "		    fmt.Println(err)\n"
 	out += "		    return nil, err\n"
 	out += "		}\n"
 	out += "	} else {\n"
 	out += "		queryStr := \"select * from " + table + "\"\n"
-	out += "	    err := globalDB.Select(&ret, queryStr)\n"
+	out += "	    err := db.GlobalDB.Select(&ret, queryStr)\n"
 	out += "	    if err != nil {\n"
 	out += "		    fmt.Println(err)\n"
 	out += "		    return nil, err\n"
@@ -186,7 +187,7 @@ func handleString(schemas []ColumnSchema, table string) string {
 	out += "		fmt.Println(err)\n"
 	out += "	}\n"
 	out += genInsertVarLines(schemas, table)
-	out += "    result, err := globalDB.NamedExec(sqlString, v)\n"
+	out += "    result, err := db.GlobalDB.NamedExec(sqlString, v)\n"
 	out += "    if err != nil {\n"
 	out += "        fmt.Println(err)\n"
 	out += "    	return nil, err\n"
@@ -204,7 +205,7 @@ func handleString(schemas []ColumnSchema, table string) string {
 	out += "    }\n"
 	out += "    v.LastUpdated = time.Now()\n"
 	out += genUpdateVarLines(schemas, table)
-	out += "    result, err := globalDB.NamedExec(sqlString, v)\n"
+	out += "    result, err := db.GlobalDB.NamedExec(sqlString, v)\n"
 	out += "    if err != nil {\n"
 	out += "    	fmt.Println(err)\n"
 	out += "    	return nil, err\n"
@@ -213,7 +214,7 @@ func handleString(schemas []ColumnSchema, table string) string {
 	out += "}\n\n"
 
 	out += "func del" + formatName(table) + "(id int) (interface{}, error) {\n"
-	out += "    result, err := globalDB.Exec(\"DELETE FROM " + table + " WHERE id=$1\", id)\n"
+	out += "    result, err := db.GlobalDB.Exec(\"DELETE FROM " + table + " WHERE id=$1\", id)\n"
 	out += "    if err != nil {\n"
 	out += "    	fmt.Println(err)\n"
 	out += "    	return nil, err\n"
