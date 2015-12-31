@@ -66,7 +66,7 @@ func getProfileParameter(id int) (interface{}, error) {
 }
 
 func postProfileParameter(payload []byte) (interface{}, error) {
-	var v Asn
+	var v ProfileParameter
 	err := json.Unmarshal(payload, &v)
 	if err != nil {
 		fmt.Println(err)
@@ -87,9 +87,9 @@ func postProfileParameter(payload []byte) (interface{}, error) {
 }
 
 func putProfileParameter(id int, payload []byte) (interface{}, error) {
-	var v Asn
+	var v ProfileParameter
 	err := json.Unmarshal(payload, &v)
-	v.Id = int64(id) // overwirte the id in the payload
+	v.Profile = int64(id) // overwrite the id in the payload
 	if err != nil {
 		fmt.Println(err)
 		return nil, err
@@ -99,7 +99,7 @@ func putProfileParameter(id int, payload []byte) (interface{}, error) {
 	sqlString += "profile = :profile"
 	sqlString += ",parameter = :parameter"
 	sqlString += ",last_updated = :last_updated"
-	sqlString += " WHERE id=:id"
+	sqlString += " WHERE profile=:profile"
 	result, err := db.GlobalDB.NamedExec(sqlString, v)
 	if err != nil {
 		fmt.Println(err)

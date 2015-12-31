@@ -90,7 +90,7 @@ func postAsn(payload []byte) (interface{}, error) {
 func putAsn(id int, payload []byte) (interface{}, error) {
 	var v Asn
 	err := json.Unmarshal(payload, &v)
-	v.Id = int64(id) // overwirte the id in the payload
+	v.Id = int64(id) // overwrite the id in the payload
 	if err != nil {
 		fmt.Println(err)
 		return nil, err

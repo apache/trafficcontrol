@@ -69,7 +69,7 @@ func getJobAgent(id int) (interface{}, error) {
 }
 
 func postJobAgent(payload []byte) (interface{}, error) {
-	var v Asn
+	var v JobAgent
 	err := json.Unmarshal(payload, &v)
 	if err != nil {
 		fmt.Println(err)
@@ -92,9 +92,9 @@ func postJobAgent(payload []byte) (interface{}, error) {
 }
 
 func putJobAgent(id int, payload []byte) (interface{}, error) {
-	var v Asn
+	var v JobAgent
 	err := json.Unmarshal(payload, &v)
-	v.Id = int64(id) // overwirte the id in the payload
+	v.Id = int64(id) // overwrite the id in the payload
 	if err != nil {
 		fmt.Println(err)
 		return nil, err

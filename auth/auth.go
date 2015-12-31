@@ -53,6 +53,16 @@ var Store = sessions.NewCookieStore(
 	[]byte(securecookie.GenerateRandomKey(64)), //Signing key
 	[]byte(securecookie.GenerateRandomKey(32)))
 
+type loginJson struct {
+	U string `json:"u"`
+	P string `json:"p"`
+}
+
+type SessionUser struct {
+	UserId int64
+	Role   int64
+}
+
 func LoginPage(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprintf(w, loginPage)
 }
@@ -68,29 +78,22 @@ func GetContext(handler http.Handler) http.HandlerFunc {
 			http.Error(w, "Error parsing request", http.StatusInternalServerError)
 		}
 		// Set the context appropriately here.
-		// Set the session
-		session, _ := Store.Get(r, "trafficOps")
+		session, err := Store.Get(r, "trafficOps")
+		if err != nil {
+			fmt.Println(err)
+		}
 		// Put the session in the context so that
 		ctx.Set(r, "session", session)
-		if id, ok := session.Values["id"]; ok {
-			// fmt.Println("userid ", id)
-			if err != nil {
-				ctx.Set(r, "user", nil)
-			} else {
-				ctx.Set(r, "user", id)
-			}
+		val := session.Values["user"]
+		if user, ok := val.(SessionUser); !ok {
+			fmt.Println("No valid SessionUser found!")
 		} else {
-			ctx.Set(r, "user", nil)
+			ctx.Set(r, "user", user)
 		}
 		handler.ServeHTTP(w, r)
 		// Remove context contents
 		ctx.Clear(r)
 	}
-}
-
-type loginJson struct {
-	U string `json:"u"`
-	P string `json:"p"`
 }
 
 // Login attempts to login the user given a request. Only works for local passwd at this time
@@ -106,7 +109,6 @@ func Login(w http.ResponseWriter, r *http.Request) {
 		if err != nil {
 			panic("booboo")
 		}
-		// fmt.Println("body:", string(body))
 		var lj loginJson
 		err = json.Unmarshal(body, &lj)
 		if err != nil {
@@ -114,10 +116,10 @@ func Login(w http.ResponseWriter, r *http.Request) {
 		}
 		username = lj.U
 		password = lj.P
-		// fmt.Println("u:", lj.U, " p:", lj.P)
 		htmlSession = false
 	}
 	session, _ := Store.Get(r, "trafficOps")
+	u := api.TmUser{}
 	u, err := api.GetTmUserByName(username)
 	redirectTarget := "/"
 	if flashes := session.Flashes(); len(flashes) > 0 {
@@ -136,8 +138,7 @@ func Login(w http.ResponseWriter, r *http.Request) {
 		redirectTarget = "/login"
 		delete(session.Values, "id")
 	} else {
-		ctx.Set(r, "user", u)
-		session.Values["id"] = u.Id
+		session.Values["user"] = SessionUser{UserId: u.Id, Role: u.Role.Int64}
 	}
 	session.Save(r, w)
 	if htmlSession {
@@ -167,8 +168,8 @@ func Logout(w http.ResponseWriter, r *http.Request) {
 func RequireLogin(handler http.Handler) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		u := ctx.Get(r, "user")
-		// fmt.Println(">", u)
 		if u != nil {
+			fmt.Println("userId:", u.(SessionUser).UserId, " userRole:", u.(SessionUser).Role)
 			handler.ServeHTTP(w, r)
 		} else {
 			session, _ := Store.Get(r, "trafficOps")

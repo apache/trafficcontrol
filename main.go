@@ -16,9 +16,11 @@ package main
 
 import (
 	// "./api"
+	"./auth"
 	"./db"
 	routes "./routes"
 
+	"encoding/gob"
 	"encoding/json"
 	"fmt"
 	"github.com/gorilla/handlers"
@@ -49,6 +51,8 @@ func main() {
 	if err != nil {
 		fmt.Println("Error reading config file:", err.Error())
 	}
+
+	gob.Register(auth.SessionUser{}) // this is needed to pass the SessionUser struct around in the gorilla session.
 
 	db.InitializeDatabase(config.DbTypeName, config.DbUser, config.DbPassword, config.DbName)
 

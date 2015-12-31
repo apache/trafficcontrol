@@ -66,7 +66,7 @@ func getDivision(id int) (interface{}, error) {
 }
 
 func postDivision(payload []byte) (interface{}, error) {
-	var v Asn
+	var v Division
 	err := json.Unmarshal(payload, &v)
 	if err != nil {
 		fmt.Println(err)
@@ -85,9 +85,9 @@ func postDivision(payload []byte) (interface{}, error) {
 }
 
 func putDivision(id int, payload []byte) (interface{}, error) {
-	var v Asn
+	var v Division
 	err := json.Unmarshal(payload, &v)
-	v.Id = int64(id) // overwirte the id in the payload
+	v.Id = int64(id) // overwrite the id in the payload
 	if err != nil {
 		fmt.Println(err)
 		return nil, err

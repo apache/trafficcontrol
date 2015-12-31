@@ -66,7 +66,7 @@ func getFederationDeliveryservice(id int) (interface{}, error) {
 }
 
 func postFederationDeliveryservice(payload []byte) (interface{}, error) {
-	var v Asn
+	var v FederationDeliveryservice
 	err := json.Unmarshal(payload, &v)
 	if err != nil {
 		fmt.Println(err)
@@ -87,9 +87,9 @@ func postFederationDeliveryservice(payload []byte) (interface{}, error) {
 }
 
 func putFederationDeliveryservice(id int, payload []byte) (interface{}, error) {
-	var v Asn
+	var v FederationDeliveryservice
 	err := json.Unmarshal(payload, &v)
-	v.Id = int64(id) // overwirte the id in the payload
+	v.Federation = int64(id) // overwrite the id in the payload
 	if err != nil {
 		fmt.Println(err)
 		return nil, err
@@ -99,7 +99,7 @@ func putFederationDeliveryservice(id int, payload []byte) (interface{}, error) {
 	sqlString += "federation = :federation"
 	sqlString += ",deliveryservice = :deliveryservice"
 	sqlString += ",last_updated = :last_updated"
-	sqlString += " WHERE id=:id"
+	sqlString += " WHERE federation=:federation"
 	result, err := db.GlobalDB.NamedExec(sqlString, v)
 	if err != nil {
 		fmt.Println(err)

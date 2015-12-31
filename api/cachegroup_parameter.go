@@ -66,7 +66,7 @@ func getCachegroupParameter(id int) (interface{}, error) {
 }
 
 func postCachegroupParameter(payload []byte) (interface{}, error) {
-	var v Asn
+	var v CachegroupParameter
 	err := json.Unmarshal(payload, &v)
 	if err != nil {
 		fmt.Println(err)
@@ -87,9 +87,9 @@ func postCachegroupParameter(payload []byte) (interface{}, error) {
 }
 
 func putCachegroupParameter(id int, payload []byte) (interface{}, error) {
-	var v Asn
+	var v CachegroupParameter
 	err := json.Unmarshal(payload, &v)
-	v.Id = int64(id) // overwirte the id in the payload
+	v.Cachegroup = int64(id) // overwrite the id in the payload
 	if err != nil {
 		fmt.Println(err)
 		return nil, err
@@ -99,7 +99,7 @@ func putCachegroupParameter(id int, payload []byte) (interface{}, error) {
 	sqlString += "cachegroup = :cachegroup"
 	sqlString += ",parameter = :parameter"
 	sqlString += ",last_updated = :last_updated"
-	sqlString += " WHERE id=:id"
+	sqlString += " WHERE cachegroup=:cachegroup"
 	result, err := db.GlobalDB.NamedExec(sqlString, v)
 	if err != nil {
 		fmt.Println(err)

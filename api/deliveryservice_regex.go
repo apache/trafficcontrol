@@ -22,7 +22,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"gopkg.in/guregu/null.v3"
-	"time"
 )
 
 type DeliveryserviceRegex struct {
@@ -67,7 +66,7 @@ func getDeliveryserviceRegex(id int) (interface{}, error) {
 }
 
 func postDeliveryserviceRegex(payload []byte) (interface{}, error) {
-	var v Asn
+	var v DeliveryserviceRegex
 	err := json.Unmarshal(payload, &v)
 	if err != nil {
 		fmt.Println(err)
@@ -90,19 +89,18 @@ func postDeliveryserviceRegex(payload []byte) (interface{}, error) {
 }
 
 func putDeliveryserviceRegex(id int, payload []byte) (interface{}, error) {
-	var v Asn
+	var v DeliveryserviceRegex
 	err := json.Unmarshal(payload, &v)
-	v.Id = int64(id) // overwirte the id in the payload
+	v.Deliveryservice = int64(id) // overwrite the id in the payload
 	if err != nil {
 		fmt.Println(err)
 		return nil, err
 	}
-	v.LastUpdated = time.Now()
 	sqlString := "UPDATE deliveryservice_regex SET "
 	sqlString += "deliveryservice = :deliveryservice"
 	sqlString += ",regex = :regex"
 	sqlString += ",set_number = :set_number"
-	sqlString += " WHERE id=:id"
+	sqlString += " WHERE deliveryservice=:deliveryservice"
 	result, err := db.GlobalDB.NamedExec(sqlString, v)
 	if err != nil {
 		fmt.Println(err)

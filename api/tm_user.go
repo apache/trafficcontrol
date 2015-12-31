@@ -86,7 +86,7 @@ func getTmUser(id int) (interface{}, error) {
 }
 
 func postTmUser(payload []byte) (interface{}, error) {
-	var v Asn
+	var v TmUser
 	err := json.Unmarshal(payload, &v)
 	if err != nil {
 		fmt.Println(err)
@@ -143,9 +143,9 @@ func postTmUser(payload []byte) (interface{}, error) {
 }
 
 func putTmUser(id int, payload []byte) (interface{}, error) {
-	var v Asn
+	var v TmUser
 	err := json.Unmarshal(payload, &v)
-	v.Id = int64(id) // overwirte the id in the payload
+	v.Id = int64(id) // overwrite the id in the payload
 	if err != nil {
 		fmt.Println(err)
 		return nil, err

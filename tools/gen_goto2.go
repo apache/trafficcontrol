@@ -97,10 +97,10 @@ func writeFile(schemas []ColumnSchema, table string) (int, error) {
 	if strings.Contains(sString, "null.") {
 		header += "\"gopkg.in/guregu/null.v3\"\n"
 	}
-	// if strings.Contains(sString, "time.") {
 	header += "\"../db\"\n"
-	header += "\"time\"\n"
-	// }
+	if strings.Contains(sString, "time.") {
+		header += "\"time\"\n"
+	}
 	header += "\"encoding/json\"\n"
 	header += ")\n\n"
 
@@ -147,12 +147,23 @@ func updString(schemas []ColumnSchema, table string, prefix string, varName stri
 	return out
 }
 
-func genUpdateVarLines(schemas []ColumnSchema, table string) string {
+func genUpdateVarLines(schemas []ColumnSchema, table string, whereCol string) string {
 	out := "sqlString := \"UPDATE " + table + " SET \"\n"
 	out += updString(schemas, table, "", "sqlString")
-	out += "sqlString += \" WHERE id=:id\"\n"
+	out += "sqlString += \" WHERE " + whereCol + "=:" + whereCol + "\"\n"
 
 	return out
+}
+
+func hasLastUpdated(schemas []ColumnSchema, table string) bool {
+	for _, cs := range schemas {
+		if cs.TableName == table {
+			if cs.ColumnName == "last_updated" {
+				return true
+			}
+		}
+	}
+	return false
 }
 
 func handleString(schemas []ColumnSchema, table string) string {
@@ -182,6 +193,7 @@ func handleString(schemas []ColumnSchema, table string) string {
 	// nstmt.Close()
 
 	idColumn := idCol(schemas, table)
+	updateLastUpdated := hasLastUpdated(schemas, table)
 	out += "func get" + formatName(table) + "(id int) (interface{}, error) {\n"
 	out += "    ret := []" + formatName(table) + "{}\n"
 	out += "    arg := " + formatName(table) + "{" + formatName(idColumn) + ": int64(id)}\n"
@@ -205,7 +217,7 @@ func handleString(schemas []ColumnSchema, table string) string {
 	out += "}\n\n"
 
 	out += "func post" + formatName(table) + "(payload []byte) (interface{}, error) {\n"
-	out += "	var v Asn\n"
+	out += "	var v " + formatName(table) + "\n"
 	out += "	err := json.Unmarshal(payload, &v)\n"
 	out += "	if err != nil {\n"
 	out += "		fmt.Println(err)\n"
@@ -220,15 +232,17 @@ func handleString(schemas []ColumnSchema, table string) string {
 	out += "}\n\n"
 
 	out += "func put" + formatName(table) + "(id int, payload []byte) (interface{}, error) {\n"
-	out += "    var v Asn\n"
+	out += "    var v " + formatName(table) + "\n"
 	out += "    err := json.Unmarshal(payload, &v)\n"
-	out += "    v.Id = int64(id) // overwirte the id in the payload\n"
+	out += "    v." + formatName(idColumn) + "= int64(id) // overwrite the id in the payload\n"
 	out += "    if err != nil {\n"
 	out += "    	fmt.Println(err)\n"
 	out += "    	return nil, err\n"
 	out += "    }\n"
-	out += "    v.LastUpdated = time.Now()\n"
-	out += genUpdateVarLines(schemas, table)
+	if updateLastUpdated {
+		out += "    v.LastUpdated = time.Now()\n"
+	}
+	out += genUpdateVarLines(schemas, table, idColumn)
 	out += "    result, err := db.GlobalDB.NamedExec(sqlString, v)\n"
 	out += "    if err != nil {\n"
 	out += "    	fmt.Println(err)\n"

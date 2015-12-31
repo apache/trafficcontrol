@@ -96,7 +96,7 @@ func getServer(id int) (interface{}, error) {
 }
 
 func postServer(payload []byte) (interface{}, error) {
-	var v Asn
+	var v Server
 	err := json.Unmarshal(payload, &v)
 	if err != nil {
 		fmt.Println(err)
@@ -173,9 +173,9 @@ func postServer(payload []byte) (interface{}, error) {
 }
 
 func putServer(id int, payload []byte) (interface{}, error) {
-	var v Asn
+	var v Server
 	err := json.Unmarshal(payload, &v)
-	v.Id = int64(id) // overwirte the id in the payload
+	v.Id = int64(id) // overwrite the id in the payload
 	if err != nil {
 		fmt.Println(err)
 		return nil, err

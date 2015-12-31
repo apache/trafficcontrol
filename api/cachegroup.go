@@ -72,7 +72,7 @@ func getCachegroup(id int) (interface{}, error) {
 }
 
 func postCachegroup(payload []byte) (interface{}, error) {
-	var v Asn
+	var v Cachegroup
 	err := json.Unmarshal(payload, &v)
 	if err != nil {
 		fmt.Println(err)
@@ -101,9 +101,9 @@ func postCachegroup(payload []byte) (interface{}, error) {
 }
 
 func putCachegroup(id int, payload []byte) (interface{}, error) {
-	var v Asn
+	var v Cachegroup
 	err := json.Unmarshal(payload, &v)
-	v.Id = int64(id) // overwirte the id in the payload
+	v.Id = int64(id) // overwrite the id in the payload
 	if err != nil {
 		fmt.Println(err)
 		return nil, err

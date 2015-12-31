@@ -36,13 +36,11 @@ import (
 func CreateRouter() http.Handler {
 	router := mux.NewRouter().StrictSlash(true)
 	router.HandleFunc("/login", auth.LoginPage).Methods("GET")
-	router.HandleFunc("/logout", auth.Use(auth.Logout, auth.RequireLogin)).Methods("GET")
 	router.HandleFunc("/login", auth.Login).Methods("POST")
-	router.HandleFunc("/hello/{name}", auth.Use(hello, auth.RequireLogin)).Methods("GET")
+	router.HandleFunc("/logout", auth.Use(auth.Logout, auth.RequireLogin)).Methods("GET")
 
 	router.HandleFunc("/api/2.0/{table}", auth.Use(apiHandler, auth.RequireLogin)).Methods("GET", "POST")
 	router.HandleFunc("/api/2.0/{table}/{id}", auth.Use(apiHandler, auth.RequireLogin)).Methods("GET", "PUT", "DELETE")
-	// router.HandleFunc("/api/2.0/{name}/{key}/{value}/{details.json", auth.Use(handleDetail, auth.RequireLogin))
 	router.HandleFunc("/crc/{cdn}/CRConfig.json", auth.Use(handleCRConfig, auth.RequireLogin))
 	return auth.Use(router.ServeHTTP, auth.GetContext)
 }
@@ -85,12 +83,4 @@ func apiHandler(w http.ResponseWriter, r *http.Request) {
 	jresponse := output.MakeApiResponse(response, nil, err)
 	enc := json.NewEncoder(w)
 	enc.Encode(jresponse)
-}
-
-func hello(w http.ResponseWriter, r *http.Request) {
-	vars := mux.Vars(r)
-	name := vars["name"]
-
-	w.WriteHeader(http.StatusOK)
-	fmt.Fprintln(w, "Hello:", name)
 }
