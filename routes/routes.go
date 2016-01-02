@@ -20,6 +20,7 @@ import (
 	"../api"
 	"../auth"
 	"../crconfig"
+	"../csconfig"
 	output "../output_format"
 
 	"encoding/json"
@@ -41,7 +42,10 @@ func CreateRouter() http.Handler {
 
 	router.HandleFunc("/api/2.0/{table}", auth.Use(apiHandler, auth.RequireLogin)).Methods("GET", "POST")
 	router.HandleFunc("/api/2.0/{table}/{id}", auth.Use(apiHandler, auth.RequireLogin)).Methods("GET", "PUT", "DELETE")
-	router.HandleFunc("/crc/{cdn}/CRConfig.json", auth.Use(handleCRConfig, auth.RequireLogin))
+
+	router.HandleFunc("/config/cr/{cdn}/CRConfig.json", auth.Use(handleCRConfig, auth.RequireLogin))
+	router.HandleFunc("/config/csconfig/{hostname}", auth.Use(handleCSConfig, auth.RequireLogin))
+
 	return auth.Use(router.ServeHTTP, auth.GetContext)
 }
 
@@ -49,6 +53,14 @@ func handleCRConfig(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	cdn := vars["cdn"]
 	resp, _ := crconfig.GetCRConfig(cdn)
+	enc := json.NewEncoder(w)
+	enc.Encode(resp)
+}
+
+func handleCSConfig(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	hostName := vars["hostname"]
+	resp, _ := csconfig.GetCSConfig(hostName)
 	enc := json.NewEncoder(w)
 	enc.Encode(resp)
 }
