@@ -18,9 +18,9 @@
 package api
 
 import (
-	"../db"
 	"encoding/json"
 	"fmt"
+	"github.com/Comcast/traffic_control/traffic_ops/goto2/db"
 	"time"
 )
 

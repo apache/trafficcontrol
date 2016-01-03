@@ -17,13 +17,13 @@
 package auth
 
 import (
-	"../api"
-	output "../output_format"
-
 	"crypto/sha1"
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
+	api "github.com/Comcast/traffic_control/traffic_ops/goto2/api"
+	output "github.com/Comcast/traffic_control/traffic_ops/goto2/output_format"
+	// jwt "github.com/dgrijalva/jwt-go"
 	"io/ioutil"
 	"net/http"
 	"strings"
@@ -163,6 +163,12 @@ func Logout(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, "/login", 302)
 }
 
+func DONTRequireLogin(handler http.Handler) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		handler.ServeHTTP(w, r)
+	}
+}
+
 // RequireLogin is a simple middleware which checks to see if the user is currently logged in.
 // If not, the function returns a 302 redirect to the login page.
 func RequireLogin(handler http.Handler) http.HandlerFunc {
@@ -179,6 +185,24 @@ func RequireLogin(handler http.Handler) http.HandlerFunc {
 		}
 	}
 }
+
+// func RequireTokenAuthentication(rw http.ResponseWriter, req *http.Request, next http.HandlerFunc) {
+// 	authBackend := InitJWTAuthenticationBackend()
+
+// 	token, err := jwt.ParseFromRequest(req, func(token *jwt.Token) (interface{}, error) {
+// 		if _, ok := token.Method.(*jwt.SigningMethodRSA); !ok {
+// 			return nil, fmt.Errorf("Unexpected signing method: %v", token.Header["alg"])
+// 		} else {
+// 			return authBackend.PublicKey, nil
+// 		}
+// 	})
+
+// 	if err == nil && token.Valid && !authBackend.IsInBlacklist(req.Header.Get("Authorization")) {
+// 		next(rw, req)
+// 	} else {
+// 		rw.WriteHeader(http.StatusUnauthorized)
+// 	}
+// }
 
 // Use allows us to stack middleware to process the request
 // Example taken from https://github.com/gorilla/mux/pull/36#issuecomment-25849172

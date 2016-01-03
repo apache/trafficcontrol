@@ -15,9 +15,9 @@
 package csconfig
 
 import (
-	"../api"
-	"../db"
 	"fmt"
+	"github.com/Comcast/traffic_control/traffic_ops/goto2/api"
+	"github.com/Comcast/traffic_control/traffic_ops/goto2/db"
 	"gopkg.in/guregu/null.v3"
 	// "reflect"
 	// "strconv"

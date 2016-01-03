@@ -17,11 +17,11 @@
 package routes
 
 import (
-	"../api"
-	"../auth"
-	"../crconfig"
-	"../csconfig"
-	output "../output_format"
+	"github.com/Comcast/traffic_control/traffic_ops/goto2/api"
+	"github.com/Comcast/traffic_control/traffic_ops/goto2/auth"
+	"github.com/Comcast/traffic_control/traffic_ops/goto2/crconfig"
+	"github.com/Comcast/traffic_control/traffic_ops/goto2/csconfig"
+	output "github.com/Comcast/traffic_control/traffic_ops/goto2/output_format"
 
 	"encoding/json"
 	"fmt"
@@ -40,8 +40,8 @@ func CreateRouter() http.Handler {
 	router.HandleFunc("/login", auth.Login).Methods("POST")
 	router.HandleFunc("/logout", auth.Use(auth.Logout, auth.RequireLogin)).Methods("GET")
 
-	router.HandleFunc("/api/2.0/{table}", auth.Use(apiHandler, auth.RequireLogin)).Methods("GET", "POST")
-	router.HandleFunc("/api/2.0/{table}/{id}", auth.Use(apiHandler, auth.RequireLogin)).Methods("GET", "PUT", "DELETE")
+	router.HandleFunc("/api/2.0/{table}", auth.Use(apiHandler, auth.DONTRequireLogin)).Methods("GET", "POST", "OPTIONS")
+	router.HandleFunc("/api/2.0/{table}/{id}", auth.Use(apiHandler, auth.DONTRequireLogin)).Methods("GET", "PUT", "DELETE", "OPTIONS")
 
 	router.HandleFunc("/config/cr/{cdn}/CRConfig.json", auth.Use(handleCRConfig, auth.RequireLogin))
 	router.HandleFunc("/config/csconfig/{hostname}", auth.Use(handleCSConfig, auth.RequireLogin))
@@ -69,6 +69,7 @@ func setHeaders(w http.ResponseWriter) {
 	w.Header().Set("Access-Control-Allow-Origin", "*")
 	w.Header().Set("Access-Control-Allow-Methods", "GET, PUT, POST, DELETE")
 	w.Header().Set("Access-Control-Allow-Headers", "Origin, Authorization, X-Requested-With, Content-Type")
+	// w.Header().Set("X-JvD", "boo")
 }
 
 func apiHandler(w http.ResponseWriter, r *http.Request) {
@@ -77,6 +78,10 @@ func apiHandler(w http.ResponseWriter, r *http.Request) {
 	// TODO: handle admin/oper can CUD, rest can r
 	// TODO: handle deliveryservice_tmuser for portal
 	setHeaders(w)
+	if r.Method == "OPTIONS" {
+		w.WriteHeader(http.StatusOK)
+		return
+	}
 	vars := mux.Vars(r)
 	table := vars["table"]
 	id := -1
@@ -93,6 +98,7 @@ func apiHandler(w http.ResponseWriter, r *http.Request) {
 		fmt.Println("error 42 ", err)
 	}
 	jresponse := output.MakeApiResponse(response, nil, err)
+	w.Header().Set("Content-Type", "application/json")
 	enc := json.NewEncoder(w)
 	enc.Encode(jresponse)
 }

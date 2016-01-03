@@ -18,9 +18,9 @@
 package api
 
 import (
-	"../db"
 	"encoding/json"
 	"fmt"
+	"github.com/Comcast/traffic_control/traffic_ops/goto2/db"
 	"time"
 )
 
@@ -44,6 +44,13 @@ func handleAsn(method string, id int, payload []byte) (interface{}, error) {
 	return nil, nil
 }
 
+// @Title getAsn
+// @Description retrieves Asn information
+// @Accept  application/json
+// @Param   id              path    int     false        "Asn id"
+// @Success 200 {array}    Asn
+// @Resource /api/2.0
+// @Router /api/2.0/asn/{id} [get]
 func getAsn(id int) (interface{}, error) {
 	ret := []Asn{}
 	arg := Asn{Id: int64(id)}

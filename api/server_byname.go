@@ -18,9 +18,9 @@
 package api
 
 import (
-	"../db"
 	"errors"
 	"fmt"
+	"github.com/Comcast/traffic_control/traffic_ops/goto2/db"
 )
 
 func GetServerByName(serverName string) (Server, error) {

@@ -12,6 +12,15 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+// @APIVersion 2.0 alpha
+// @APITitle Traffic Operations
+// @APIDescription Traffic Ops API
+// @Contact https://traffic-control-cdn.net
+// @License Apache 2.0
+// @LicenseUrl http://www.apache.org/licenses/LICENSE-2.0
+
+// @SubApi Version 2.0 API [/api/2.0]
+
 package api
 
 type actionhandler func(method string, id int, payload []byte) (interface{}, error)

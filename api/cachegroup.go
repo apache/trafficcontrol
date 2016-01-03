@@ -18,10 +18,11 @@
 package api
 
 import (
-	"../db"
 	"encoding/json"
 	"fmt"
-	"gopkg.in/guregu/null.v3"
+	"github.com/Comcast/traffic_control/traffic_ops/goto2/db"
+	_ "github.com/Comcast/traffic_control/traffic_ops/goto2/output_format"
+	null "gopkg.in/guregu/null.v3"
 	"time"
 )
 
@@ -49,6 +50,13 @@ func handleCachegroup(method string, id int, payload []byte) (interface{}, error
 	return nil, nil
 }
 
+// @Title getCachegroup
+// @Description retrieves cachegroup information
+// @Accept  application/json
+// @Param   id              path    int     false        "cachegroup id"
+// @Success 200 {array}    Cachegroup
+// @Resource /api/2.0
+// @Router /api/2.0/cachegroup/{id} [get]
 func getCachegroup(id int) (interface{}, error) {
 	ret := []Cachegroup{}
 	arg := Cachegroup{Id: int64(id)}
@@ -71,6 +79,18 @@ func getCachegroup(id int) (interface{}, error) {
 	return ret, nil
 }
 
+// @Title postCachegroup
+// @Description enter a new cachegroup
+// @Accept  application/json
+// @Param   shortName           json    string       true        "cachegroup short name"
+// @Param   name                json    string       true        "cachegroup name"
+// @Param   longitude           json    null.Float   false       "Location longitude"
+// @Param   latitide            json    null.Float   false       "Location latitiude"
+// @Param   type                json    int          true        "CG type"
+// @Param   parentCachegroupId  json    int          false       "Parent cachegroup id"
+// @Success 200 {object}    output_format.ApiWrapper
+// @Resource /api/2.0
+// @Router /api/2.0/cachegroup [post]
 func postCachegroup(payload []byte) (interface{}, error) {
 	var v Cachegroup
 	err := json.Unmarshal(payload, &v)
@@ -100,6 +120,19 @@ func postCachegroup(payload []byte) (interface{}, error) {
 	return result, err
 }
 
+// @Title putCachegroup
+// @Description modify an existing cachegroup
+// @Accept  json
+// @Param   id                  path    int          true        "cachegroup id"
+// @Param   shortName           json    string       true        "cachegroup short name"
+// @Param   name                json    string       true        "cachegroup name"
+// @Param   longitude           json    null.Float   false       "Location longitude"
+// @Param   latitide            json    null.Float   false       "Location latitiude"
+// @Param   type                json    int          true        "CG type"
+// @Param   parentCachegroupId  json    int          false       "Parent cachegroup id"
+// @Success 200 {array}    Cachegroup
+// @Resource /api/2.0
+// @Router /api/2.0/cachegroup/{id} [put]
 func putCachegroup(id int, payload []byte) (interface{}, error) {
 	var v Cachegroup
 	err := json.Unmarshal(payload, &v)
@@ -126,6 +159,13 @@ func putCachegroup(id int, payload []byte) (interface{}, error) {
 	return result, err
 }
 
+// @Title delCachegroup
+// @Description deletes a cachegroup
+// @Accept  json
+// @Param   id              path    int     true        "cachegroup id"
+// @Success 200 {array}    Cachegroup
+// @Resource /api/2.0
+// @Router /api/2.0/cachegroup/{id} [delete]
 func delCachegroup(id int) (interface{}, error) {
 	arg := Cachegroup{Id: int64(id)}
 	result, err := db.GlobalDB.NamedExec("DELETE FROM cachegroup WHERE id=:id", arg)

@@ -16,9 +16,9 @@ package main
 
 import (
 	// "./api"
-	"./auth"
-	"./db"
-	routes "./routes"
+	"github.com/Comcast/traffic_control/traffic_ops/goto2/auth"
+	"github.com/Comcast/traffic_control/traffic_ops/goto2/db"
+	"github.com/Comcast/traffic_control/traffic_ops/goto2/routes"
 
 	"encoding/gob"
 	"encoding/json"

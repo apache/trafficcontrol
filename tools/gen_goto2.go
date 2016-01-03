@@ -97,7 +97,7 @@ func writeFile(schemas []ColumnSchema, table string) (int, error) {
 	if strings.Contains(sString, "null.") {
 		header += "\"gopkg.in/guregu/null.v3\"\n"
 	}
-	header += "\"../db\"\n"
+	header += "\"github.com/Comcast/traffic_control/traffic_ops/goto2/db\"\n"
 	if strings.Contains(sString, "time.") {
 		header += "\"time\"\n"
 	}
