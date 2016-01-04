@@ -40,8 +40,9 @@ func CreateRouter() http.Handler {
 	router.HandleFunc("/login", auth.Login).Methods("POST")
 	router.HandleFunc("/logout", auth.Use(auth.Logout, auth.RequireLogin)).Methods("GET")
 
-	router.HandleFunc("/api/2.0/{table}", auth.Use(apiHandler, auth.DONTRequireLogin)).Methods("GET", "POST", "OPTIONS")
-	router.HandleFunc("/api/2.0/{table}/{id}", auth.Use(apiHandler, auth.DONTRequireLogin)).Methods("GET", "PUT", "DELETE", "OPTIONS")
+	router.HandleFunc("/api/2.0/{table}", auth.Use(apiHandler, auth.DONTRequireLogin)).Methods("OPTIONS")
+	router.HandleFunc("/api/2.0/{table}", auth.Use(apiHandler, auth.RequireLogin)).Methods("GET", "POST", "OPTIONS")
+	router.HandleFunc("/api/2.0/{table}/{id}", auth.Use(apiHandler, auth.RequireLogin)).Methods("GET", "PUT", "DELETE", "OPTIONS")
 
 	router.HandleFunc("/config/cr/{cdn}/CRConfig.json", auth.Use(handleCRConfig, auth.RequireLogin))
 	router.HandleFunc("/config/csconfig/{hostname}", auth.Use(handleCSConfig, auth.RequireLogin))

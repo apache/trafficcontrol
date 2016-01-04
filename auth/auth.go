@@ -22,15 +22,16 @@ import (
 	"encoding/json"
 	"fmt"
 	api "github.com/Comcast/traffic_control/traffic_ops/goto2/api"
-	output "github.com/Comcast/traffic_control/traffic_ops/goto2/output_format"
-	// jwt "github.com/dgrijalva/jwt-go"
+	// output "github.com/Comcast/traffic_control/traffic_ops/goto2/output_format"
+	jwt "github.com/dgrijalva/jwt-go"
 	"io/ioutil"
 	"net/http"
 	"strings"
+	"time"
 
 	ctx "github.com/gorilla/context"
-	"github.com/gorilla/securecookie"
-	"github.com/gorilla/sessions"
+	// "github.com/gorilla/securecookie"
+	// "github.com/gorilla/sessions"
 )
 
 // type Flash struct {
@@ -49,9 +50,9 @@ const loginPage = `
 </form>
 `
 
-var Store = sessions.NewCookieStore(
-	[]byte(securecookie.GenerateRandomKey(64)), //Signing key
-	[]byte(securecookie.GenerateRandomKey(32)))
+// var Store = sessions.NewCookieStore(
+// 	[]byte(securecookie.GenerateRandomKey(64)), //Signing key
+// 	[]byte(securecookie.GenerateRandomKey(32)))
 
 type loginJson struct {
 	U string `json:"u"`
@@ -63,32 +64,59 @@ type SessionUser struct {
 	Role   int64
 }
 
+type TokenResponse struct {
+	Token string
+}
+
 func LoginPage(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprintf(w, loginPage)
+}
+
+func validateToken(tokenString string) (*jwt.Token, error) {
+
+	tokenString = strings.Replace(tokenString, "Bearer ", "", 1)
+	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
+		// Don't forget to validate the alg is what you expect:
+		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+			return nil, fmt.Errorf("Unexpected signing method: %v", token.Header["alg"])
+		}
+		return []byte("mySigningKey"), nil // JvD
+	})
+
+	if err == nil && token.Valid {
+		fmt.Println("TOKEN IS GOOD -- user:", token.Claims["userid"], " role:", token.Claims["role"])
+	} else {
+		fmt.Println("TOKEN IS BAD", err)
+	}
+	return token, err
 }
 
 // GetContext wraps each request in a function which fills in the context for a given request.
 // This includes setting the User and Session keys and values as necessary for use in later functions.
 func GetContext(handler http.Handler) http.HandlerFunc {
 	// Set the context here
+
 	return func(w http.ResponseWriter, r *http.Request) {
+		//
 		// Parse the request form
-		err := r.ParseForm()
-		if err != nil {
-			http.Error(w, "Error parsing request", http.StatusInternalServerError)
-		}
+		// err := r.ParseForm()
+		// if err != nil {
+		// 	http.Error(w, "Error parsing request", http.StatusInternalServerError)
+		// }
 		// Set the context appropriately here.
-		session, err := Store.Get(r, "trafficOps")
-		if err != nil {
-			fmt.Println(err)
-		}
+		// session, err := Store.Get(r, "trafficOps")
+		// if err != nil {
+		// 	fmt.Println(err)
+		// }
 		// Put the session in the context so that
-		ctx.Set(r, "session", session)
-		val := session.Values["user"]
-		if user, ok := val.(SessionUser); !ok {
-			fmt.Println("No valid SessionUser found!")
+		// ctx.Set(r, "session", session)
+		// val := session.Values["user"]
+		token, err := validateToken(r.Header.Get("Authorization"))
+		if err != nil {
+			fmt.Println("No valid token found!")
 		} else {
-			ctx.Set(r, "user", user)
+			ctx.Set(r, "user", token.Claims["userid"])
+			ctx.Set(r, "role", token.Claims["role"])
 		}
 		handler.ServeHTTP(w, r)
 		// Remove context contents
@@ -101,70 +129,88 @@ func Login(w http.ResponseWriter, r *http.Request) {
 	// fmt.Println("Starting Login...")
 	username := ""
 	password := ""
-	htmlSession := true
-	if r.FormValue("username") != "" {
-		username, password = r.FormValue("username"), r.FormValue("password")
-	} else if r.Method == "POST" {
-		body, err := ioutil.ReadAll(r.Body)
-		if err != nil {
-			panic("booboo")
-		}
-		var lj loginJson
-		err = json.Unmarshal(body, &lj)
-		if err != nil {
-			panic("boo")
-		}
-		username = lj.U
-		password = lj.P
-		htmlSession = false
+	// htmlSession := true
+	// if r.FormValue("username") != "" {
+	// 	username, password = r.FormValue("username"), r.FormValue("password")
+	// } else if r.Method == "POST" {
+	body, err := ioutil.ReadAll(r.Body)
+	if err != nil {
+		fmt.Println("booboo", err.Error())
 	}
-	session, _ := Store.Get(r, "trafficOps")
+	var lj loginJson
+	fmt.Println(body)
+	err = json.Unmarshal(body, &lj)
+	if err != nil {
+		fmt.Println("boo", err.Error())
+	}
+	username = lj.U
+	password = lj.P
+	// htmlSession = false
+	// }
+	// session, _ := Store.Get(r, "trafficOps")
 	u := api.TmUser{}
-	u, err := api.GetTmUserByName(username)
-	redirectTarget := "/"
-	if flashes := session.Flashes(); len(flashes) > 0 {
-		for _, flashMsg := range flashes {
-			if strings.HasPrefix(flashMsg.(string), "pathDenied:") {
-				redirectTarget = strings.Replace(flashMsg.(string), "pathDenied:", "", 1)
-			}
-		}
-	}
+	u, err = api.GetTmUserByName(username)
+
 	encBytes := sha1.Sum([]byte(password))
 	encString := hex.EncodeToString(encBytes[:])
 	// fmt.Println("sha1:", hex.EncodeToString(encBytes[:]), " localpasswd:", u.LocalPasswd.String, "err:", err)
+	// redirectTarget := "/"
+	// if flashes := session.Flashes(); len(flashes) > 0 {
+	// 	for _, flashMsg := range flashes {
+	// 		if strings.HasPrefix(flashMsg.(string), "pathDenied:") {
+	// 			redirectTarget = strings.Replace(flashMsg.(string), "pathDenied:", "", 1)
+	// 		}
+	// 	}
+	// }
 	if err != nil || u.LocalPasswd.String != encString {
 		ctx.Set(r, "user", nil)
 		fmt.Println("Invalid passwd")
-		redirectTarget = "/login"
-		delete(session.Values, "id")
-	} else {
-		session.Values["user"] = SessionUser{UserId: u.Id, Role: u.Role.Int64}
+		// redirectTarget = "/login"
+		// delete(session.Values, "id")
 	}
-	session.Save(r, w)
-	if htmlSession {
-		http.Redirect(w, r, redirectTarget, 302)
-	} else {
-		respTxt := output.MakeApiResponse(nil, output.MakeAlert("Successfully logged in.", "success"), nil)
-		js, err := json.Marshal(respTxt)
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
-		}
-		w.Header().Set("Content-Type", "application/json")
-		w.Write(js)
+	// else {
+	// 	session.Values["user"] = SessionUser{UserId: u.Id, Role: u.Role.Int64}
+	// }
+	// session.Save(r, w)
+	// if htmlSession {
+	// 	http.Redirect(w, r, redirectTarget, 302)
+	// } else {
+	// Create the token
+	token := jwt.New(jwt.SigningMethodHS256)
+	// Set some claims
+	token.Claims["userid"] = u.Id
+	token.Claims["role"] = u.Role
+	token.Claims["exp"] = time.Now().Add(time.Hour * 72).Unix()
+	// Sign and get the complete encoded token as a string
+	tokenString, err := token.SignedString([]byte("mySigningKey")) // TODO JvD
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
 	}
+	js, err := json.Marshal(TokenResponse{Token: tokenString})
+	// respTxt := output.MakeApiResponse(nil, output.MakeAlert("Successfully logged in.", "success"), nil)
+	// js, err := json.Marshal(respTxt)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.Write(js)
+	// }
 }
 
 // Logout destroys the current user session
 func Logout(w http.ResponseWriter, r *http.Request) {
-	session, _ := Store.Get(r, "trafficOps")
-	delete(session.Values, "id")
-	session.Save(r, w)
+	// session, _ := Store.Get(r, "trafficOps")
+	// delete(session.Values, "id")
+	// session.Save(r, w)
 	http.Redirect(w, r, "/login", 302)
 }
 
 func DONTRequireLogin(handler http.Handler) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		// token := validateToken(r.Header.Get("Authorization"))
+		// fmt.Println("token:", token)
 		handler.ServeHTTP(w, r)
 	}
 }
@@ -173,36 +219,22 @@ func DONTRequireLogin(handler http.Handler) http.HandlerFunc {
 // If not, the function returns a 302 redirect to the login page.
 func RequireLogin(handler http.Handler) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		u := ctx.Get(r, "user")
-		if u != nil {
-			fmt.Println("userId:", u.(SessionUser).UserId, " userRole:", u.(SessionUser).Role)
+		user := ctx.Get(r, "user")
+		role := ctx.Get(r, "role")
+		if user != nil {
+			fmt.Println("userId:", user, " userRole:", role)
 			handler.ServeHTTP(w, r)
 		} else {
-			session, _ := Store.Get(r, "trafficOps")
-			session.AddFlash("pathDenied:" + r.URL.EscapedPath())
-			session.Save(r, w)
-			http.Redirect(w, r, "/login", 302)
+			w.WriteHeader(403)
 		}
+		// else {
+		// 	session, _ := Store.Get(r, "trafficOps")
+		// 	session.AddFlash("pathDenied:" + r.URL.EscapedPath())
+		// 	session.Save(r, w)
+		// 	http.Redirect(w, r, "/login", 302)
+		// }
 	}
 }
-
-// func RequireTokenAuthentication(rw http.ResponseWriter, req *http.Request, next http.HandlerFunc) {
-// 	authBackend := InitJWTAuthenticationBackend()
-
-// 	token, err := jwt.ParseFromRequest(req, func(token *jwt.Token) (interface{}, error) {
-// 		if _, ok := token.Method.(*jwt.SigningMethodRSA); !ok {
-// 			return nil, fmt.Errorf("Unexpected signing method: %v", token.Header["alg"])
-// 		} else {
-// 			return authBackend.PublicKey, nil
-// 		}
-// 	})
-
-// 	if err == nil && token.Valid && !authBackend.IsInBlacklist(req.Header.Get("Authorization")) {
-// 		next(rw, req)
-// 	} else {
-// 		rw.WriteHeader(http.StatusUnauthorized)
-// 	}
-// }
 
 // Use allows us to stack middleware to process the request
 // Example taken from https://github.com/gorilla/mux/pull/36#issuecomment-25849172

@@ -11,3 +11,10 @@ http://www.restapitutorial.com/httpstatuscodes.html
  
  - maybe it is better to just pass (w http.ResponseWriter, r *http.Request) to the actions, and have the action funcs write to w without returning?
 
+ - conventions for view names, (tablenames, columns, fk refs, )
+ - review tables parameter/profile, type, job, servercheck, to_extension
+
+ - pass encoder which has the write
+ - pass db, not db.GlobalDB
+ 
+ - 
