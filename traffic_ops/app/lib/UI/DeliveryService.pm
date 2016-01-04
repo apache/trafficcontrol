@@ -880,6 +880,12 @@ sub create {
 	return $self->redirect_to("/modify_error") if !&is_oper($self);
 	my $new_id = -1;
 	my $cdn_id = $self->param('ds.cdn_id');
+	my $xml_id = $self->param('ds.xml_id');
+
+	my $existing = $self->db->resultset('Deliveryservice')->search( { xml_id => $xml_id } )->get_column('xml_id')->single();
+	if ($existing) {
+		$self->field('ds.xml_id')->is_equal( "", "A Delivery service with xml_id \"$xml_id\" already exists." );
+	}
 
 	if ( $self->check_deliveryservice_input() ) {
 		my $insert = $self->db->resultset('Deliveryservice')->create(
