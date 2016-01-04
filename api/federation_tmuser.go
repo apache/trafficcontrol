@@ -21,6 +21,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/Comcast/traffic_control/traffic_ops/goto2/db"
+	_ "github.com/Comcast/traffic_control/traffic_ops/goto2/output_format" // needed for swagger
 	"time"
 )
 
@@ -45,27 +46,59 @@ func handleFederationTmuser(method string, id int, payload []byte) (interface{},
 }
 
 func getFederationTmuser(id int) (interface{}, error) {
+	if id >= 0 {
+		return getFederationTmuserById(id)
+	} else {
+		return getFederationTmusers()
+	}
+}
+
+// @Title getFederationTmuserById
+// @Description retrieves the federation_tmuser information for a certain id
+// @Accept  application/json
+// @Param   id              path    int     false        "The row id"
+// @Success 200 {array}    FederationTmuser
+// @Resource /api/2.0
+// @Router /api/2.0/federation_tmuser/{id} [get]
+func getFederationTmuserById(id int) (interface{}, error) {
 	ret := []FederationTmuser{}
 	arg := FederationTmuser{Federation: int64(id)}
-	if id >= 0 {
-		nstmt, err := db.GlobalDB.PrepareNamed(`select * from federation_tmuser where federation=:federation`)
-		err = nstmt.Select(&ret, arg)
-		if err != nil {
-			fmt.Println(err)
-			return nil, err
-		}
-		nstmt.Close()
-	} else {
-		queryStr := "select * from federation_tmuser"
-		err := db.GlobalDB.Select(&ret, queryStr)
-		if err != nil {
-			fmt.Println(err)
-			return nil, err
-		}
+	nstmt, err := db.GlobalDB.PrepareNamed(`select * from federation_tmuser where federation=:federation`)
+	err = nstmt.Select(&ret, arg)
+	if err != nil {
+		fmt.Println(err)
+		return nil, err
+	}
+	nstmt.Close()
+	return ret, nil
+}
+
+// @Title getFederationTmusers
+// @Description retrieves the federation_tmuser information for a certain id
+// @Accept  application/json
+// @Success 200 {array}    FederationTmuser
+// @Resource /api/2.0
+// @Router /api/2.0/federation_tmuser [get]
+func getFederationTmusers() (interface{}, error) {
+	ret := []FederationTmuser{}
+	queryStr := "select * from federation_tmuser"
+	err := db.GlobalDB.Select(&ret, queryStr)
+	if err != nil {
+		fmt.Println(err)
+		return nil, err
 	}
 	return ret, nil
 }
 
+// @Title postFederationTmuser
+// @Description enter a new federation_tmuser
+// @Accept  application/json
+// @Param           Federation json      int64   false "federation description"
+// @Param               TmUser json      int64   false "tm_user description"
+// @Param                 Role json      int64   false "role description"
+// @Success 200 {object}    output_format.ApiWrapper
+// @Resource /api/2.0
+// @Router /api/2.0/federation_tmuser [post]
 func postFederationTmuser(payload []byte) (interface{}, error) {
 	var v FederationTmuser
 	err := json.Unmarshal(payload, &v)
@@ -89,6 +122,15 @@ func postFederationTmuser(payload []byte) (interface{}, error) {
 	return result, err
 }
 
+// @Title putFederationTmuser
+// @Description modify an existing federation_tmuserentry
+// @Accept  application/json
+// @Param           Federation json      int64   false "federation description"
+// @Param               TmUser json      int64   false "tm_user description"
+// @Param                 Role json      int64   false "role description"
+// @Success 200 {object}    output_format.ApiWrapper
+// @Resource /api/2.0
+// @Router /api/2.0/federation_tmuser [put]
 func putFederationTmuser(id int, payload []byte) (interface{}, error) {
 	var v FederationTmuser
 	err := json.Unmarshal(payload, &v)
@@ -112,6 +154,13 @@ func putFederationTmuser(id int, payload []byte) (interface{}, error) {
 	return result, err
 }
 
+// @Title delFederationTmuserById
+// @Description deletes federation_tmuser information for a certain id
+// @Accept  application/json
+// @Param   id              path    int     false        "The row id"
+// @Success 200 {array}    FederationTmuser
+// @Resource /api/2.0
+// @Router /api/2.0/federation_tmuser/{id} [delete]
 func delFederationTmuser(id int) (interface{}, error) {
 	arg := FederationTmuser{Federation: int64(id)}
 	result, err := db.GlobalDB.NamedExec("DELETE FROM federation_tmuser WHERE id=:id", arg)

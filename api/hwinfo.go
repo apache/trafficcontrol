@@ -21,6 +21,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/Comcast/traffic_control/traffic_ops/goto2/db"
+	_ "github.com/Comcast/traffic_control/traffic_ops/goto2/output_format" // needed for swagger
 	"time"
 )
 
@@ -46,27 +47,59 @@ func handleHwinfo(method string, id int, payload []byte) (interface{}, error) {
 }
 
 func getHwinfo(id int) (interface{}, error) {
+	if id >= 0 {
+		return getHwinfoById(id)
+	} else {
+		return getHwinfos()
+	}
+}
+
+// @Title getHwinfoById
+// @Description retrieves the hwinfo information for a certain id
+// @Accept  application/json
+// @Param   id              path    int     false        "The row id"
+// @Success 200 {array}    Hwinfo
+// @Resource /api/2.0
+// @Router /api/2.0/hwinfo/{id} [get]
+func getHwinfoById(id int) (interface{}, error) {
 	ret := []Hwinfo{}
 	arg := Hwinfo{Id: int64(id)}
-	if id >= 0 {
-		nstmt, err := db.GlobalDB.PrepareNamed(`select * from hwinfo where id=:id`)
-		err = nstmt.Select(&ret, arg)
-		if err != nil {
-			fmt.Println(err)
-			return nil, err
-		}
-		nstmt.Close()
-	} else {
-		queryStr := "select * from hwinfo"
-		err := db.GlobalDB.Select(&ret, queryStr)
-		if err != nil {
-			fmt.Println(err)
-			return nil, err
-		}
+	nstmt, err := db.GlobalDB.PrepareNamed(`select * from hwinfo where id=:id`)
+	err = nstmt.Select(&ret, arg)
+	if err != nil {
+		fmt.Println(err)
+		return nil, err
+	}
+	nstmt.Close()
+	return ret, nil
+}
+
+// @Title getHwinfos
+// @Description retrieves the hwinfo information for a certain id
+// @Accept  application/json
+// @Success 200 {array}    Hwinfo
+// @Resource /api/2.0
+// @Router /api/2.0/hwinfo [get]
+func getHwinfos() (interface{}, error) {
+	ret := []Hwinfo{}
+	queryStr := "select * from hwinfo"
+	err := db.GlobalDB.Select(&ret, queryStr)
+	if err != nil {
+		fmt.Println(err)
+		return nil, err
 	}
 	return ret, nil
 }
 
+// @Title postHwinfo
+// @Description enter a new hwinfo
+// @Accept  application/json
+// @Param             Serverid json      int64   false "serverid description"
+// @Param          Description json     string   false "description description"
+// @Param                  Val json     string   false "val description"
+// @Success 200 {object}    output_format.ApiWrapper
+// @Resource /api/2.0
+// @Router /api/2.0/hwinfo [post]
 func postHwinfo(payload []byte) (interface{}, error) {
 	var v Hwinfo
 	err := json.Unmarshal(payload, &v)
@@ -90,6 +123,15 @@ func postHwinfo(payload []byte) (interface{}, error) {
 	return result, err
 }
 
+// @Title putHwinfo
+// @Description modify an existing hwinfoentry
+// @Accept  application/json
+// @Param             Serverid json      int64   false "serverid description"
+// @Param          Description json     string   false "description description"
+// @Param                  Val json     string   false "val description"
+// @Success 200 {object}    output_format.ApiWrapper
+// @Resource /api/2.0
+// @Router /api/2.0/hwinfo [put]
 func putHwinfo(id int, payload []byte) (interface{}, error) {
 	var v Hwinfo
 	err := json.Unmarshal(payload, &v)
@@ -113,6 +155,13 @@ func putHwinfo(id int, payload []byte) (interface{}, error) {
 	return result, err
 }
 
+// @Title delHwinfoById
+// @Description deletes hwinfo information for a certain id
+// @Accept  application/json
+// @Param   id              path    int     false        "The row id"
+// @Success 200 {array}    Hwinfo
+// @Resource /api/2.0
+// @Router /api/2.0/hwinfo/{id} [delete]
 func delHwinfo(id int) (interface{}, error) {
 	arg := Hwinfo{Id: int64(id)}
 	result, err := db.GlobalDB.NamedExec("DELETE FROM hwinfo WHERE id=:id", arg)

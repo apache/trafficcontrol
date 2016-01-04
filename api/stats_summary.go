@@ -21,6 +21,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/Comcast/traffic_control/traffic_ops/goto2/db"
+	_ "github.com/Comcast/traffic_control/traffic_ops/goto2/output_format" // needed for swagger
 	"time"
 )
 
@@ -48,27 +49,62 @@ func handleStatsSummary(method string, id int, payload []byte) (interface{}, err
 }
 
 func getStatsSummary(id int) (interface{}, error) {
+	if id >= 0 {
+		return getStatsSummaryById(id)
+	} else {
+		return getStatsSummarys()
+	}
+}
+
+// @Title getStatsSummaryById
+// @Description retrieves the stats_summary information for a certain id
+// @Accept  application/json
+// @Param   id              path    int     false        "The row id"
+// @Success 200 {array}    StatsSummary
+// @Resource /api/2.0
+// @Router /api/2.0/stats_summary/{id} [get]
+func getStatsSummaryById(id int) (interface{}, error) {
 	ret := []StatsSummary{}
 	arg := StatsSummary{Id: int64(id)}
-	if id >= 0 {
-		nstmt, err := db.GlobalDB.PrepareNamed(`select * from stats_summary where id=:id`)
-		err = nstmt.Select(&ret, arg)
-		if err != nil {
-			fmt.Println(err)
-			return nil, err
-		}
-		nstmt.Close()
-	} else {
-		queryStr := "select * from stats_summary"
-		err := db.GlobalDB.Select(&ret, queryStr)
-		if err != nil {
-			fmt.Println(err)
-			return nil, err
-		}
+	nstmt, err := db.GlobalDB.PrepareNamed(`select * from stats_summary where id=:id`)
+	err = nstmt.Select(&ret, arg)
+	if err != nil {
+		fmt.Println(err)
+		return nil, err
+	}
+	nstmt.Close()
+	return ret, nil
+}
+
+// @Title getStatsSummarys
+// @Description retrieves the stats_summary information for a certain id
+// @Accept  application/json
+// @Success 200 {array}    StatsSummary
+// @Resource /api/2.0
+// @Router /api/2.0/stats_summary [get]
+func getStatsSummarys() (interface{}, error) {
+	ret := []StatsSummary{}
+	queryStr := "select * from stats_summary"
+	err := db.GlobalDB.Select(&ret, queryStr)
+	if err != nil {
+		fmt.Println(err)
+		return nil, err
 	}
 	return ret, nil
 }
 
+// @Title postStatsSummary
+// @Description enter a new stats_summary
+// @Accept  application/json
+// @Param              CdnName json     string   false "cdn_name description"
+// @Param  DeliveryserviceName json     string   false "deliveryservice_name description"
+// @Param             StatName json     string   false "stat_name description"
+// @Param            StatValue json    float64   false "stat_value description"
+// @Param          SummaryTime json  time.Time   false "summary_time description"
+// @Param             StatDate json  time.Time    true "stat_date description"
+// @Success 200 {object}    output_format.ApiWrapper
+// @Resource /api/2.0
+// @Router /api/2.0/stats_summary [post]
 func postStatsSummary(payload []byte) (interface{}, error) {
 	var v StatsSummary
 	err := json.Unmarshal(payload, &v)
@@ -98,6 +134,18 @@ func postStatsSummary(payload []byte) (interface{}, error) {
 	return result, err
 }
 
+// @Title putStatsSummary
+// @Description modify an existing stats_summaryentry
+// @Accept  application/json
+// @Param              CdnName json     string   false "cdn_name description"
+// @Param  DeliveryserviceName json     string   false "deliveryservice_name description"
+// @Param             StatName json     string   false "stat_name description"
+// @Param            StatValue json    float64   false "stat_value description"
+// @Param          SummaryTime json  time.Time   false "summary_time description"
+// @Param             StatDate json  time.Time    true "stat_date description"
+// @Success 200 {object}    output_format.ApiWrapper
+// @Resource /api/2.0
+// @Router /api/2.0/stats_summary [put]
 func putStatsSummary(id int, payload []byte) (interface{}, error) {
 	var v StatsSummary
 	err := json.Unmarshal(payload, &v)
@@ -122,6 +170,13 @@ func putStatsSummary(id int, payload []byte) (interface{}, error) {
 	return result, err
 }
 
+// @Title delStatsSummaryById
+// @Description deletes stats_summary information for a certain id
+// @Accept  application/json
+// @Param   id              path    int     false        "The row id"
+// @Success 200 {array}    StatsSummary
+// @Resource /api/2.0
+// @Router /api/2.0/stats_summary/{id} [delete]
 func delStatsSummary(id int) (interface{}, error) {
 	arg := StatsSummary{Id: int64(id)}
 	result, err := db.GlobalDB.NamedExec("DELETE FROM stats_summary WHERE id=:id", arg)

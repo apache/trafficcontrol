@@ -21,6 +21,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/Comcast/traffic_control/traffic_ops/goto2/db"
+	_ "github.com/Comcast/traffic_control/traffic_ops/goto2/output_format" // needed for swagger
 	"time"
 )
 
@@ -45,27 +46,58 @@ func handleRegex(method string, id int, payload []byte) (interface{}, error) {
 }
 
 func getRegex(id int) (interface{}, error) {
+	if id >= 0 {
+		return getRegexById(id)
+	} else {
+		return getRegexs()
+	}
+}
+
+// @Title getRegexById
+// @Description retrieves the regex information for a certain id
+// @Accept  application/json
+// @Param   id              path    int     false        "The row id"
+// @Success 200 {array}    Regex
+// @Resource /api/2.0
+// @Router /api/2.0/regex/{id} [get]
+func getRegexById(id int) (interface{}, error) {
 	ret := []Regex{}
 	arg := Regex{Id: int64(id)}
-	if id >= 0 {
-		nstmt, err := db.GlobalDB.PrepareNamed(`select * from regex where id=:id`)
-		err = nstmt.Select(&ret, arg)
-		if err != nil {
-			fmt.Println(err)
-			return nil, err
-		}
-		nstmt.Close()
-	} else {
-		queryStr := "select * from regex"
-		err := db.GlobalDB.Select(&ret, queryStr)
-		if err != nil {
-			fmt.Println(err)
-			return nil, err
-		}
+	nstmt, err := db.GlobalDB.PrepareNamed(`select * from regex where id=:id`)
+	err = nstmt.Select(&ret, arg)
+	if err != nil {
+		fmt.Println(err)
+		return nil, err
+	}
+	nstmt.Close()
+	return ret, nil
+}
+
+// @Title getRegexs
+// @Description retrieves the regex information for a certain id
+// @Accept  application/json
+// @Success 200 {array}    Regex
+// @Resource /api/2.0
+// @Router /api/2.0/regex [get]
+func getRegexs() (interface{}, error) {
+	ret := []Regex{}
+	queryStr := "select * from regex"
+	err := db.GlobalDB.Select(&ret, queryStr)
+	if err != nil {
+		fmt.Println(err)
+		return nil, err
 	}
 	return ret, nil
 }
 
+// @Title postRegex
+// @Description enter a new regex
+// @Accept  application/json
+// @Param              Pattern json     string   false "pattern description"
+// @Param                 Type json      int64   false "type description"
+// @Success 200 {object}    output_format.ApiWrapper
+// @Resource /api/2.0
+// @Router /api/2.0/regex [post]
 func postRegex(payload []byte) (interface{}, error) {
 	var v Regex
 	err := json.Unmarshal(payload, &v)
@@ -87,6 +119,14 @@ func postRegex(payload []byte) (interface{}, error) {
 	return result, err
 }
 
+// @Title putRegex
+// @Description modify an existing regexentry
+// @Accept  application/json
+// @Param              Pattern json     string   false "pattern description"
+// @Param                 Type json      int64   false "type description"
+// @Success 200 {object}    output_format.ApiWrapper
+// @Resource /api/2.0
+// @Router /api/2.0/regex [put]
 func putRegex(id int, payload []byte) (interface{}, error) {
 	var v Regex
 	err := json.Unmarshal(payload, &v)
@@ -109,6 +149,13 @@ func putRegex(id int, payload []byte) (interface{}, error) {
 	return result, err
 }
 
+// @Title delRegexById
+// @Description deletes regex information for a certain id
+// @Accept  application/json
+// @Param   id              path    int     false        "The row id"
+// @Success 200 {array}    Regex
+// @Resource /api/2.0
+// @Router /api/2.0/regex/{id} [delete]
 func delRegex(id int) (interface{}, error) {
 	arg := Regex{Id: int64(id)}
 	result, err := db.GlobalDB.NamedExec("DELETE FROM regex WHERE id=:id", arg)

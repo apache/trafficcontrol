@@ -21,7 +21,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/Comcast/traffic_control/traffic_ops/goto2/db"
-	"gopkg.in/guregu/null.v3"
+	_ "github.com/Comcast/traffic_control/traffic_ops/goto2/output_format" // needed for swagger
+	null "gopkg.in/guregu/null.v3"
 	"time"
 )
 
@@ -64,27 +65,76 @@ func handleTmUser(method string, id int, payload []byte) (interface{}, error) {
 }
 
 func getTmUser(id int) (interface{}, error) {
+	if id >= 0 {
+		return getTmUserById(id)
+	} else {
+		return getTmUsers()
+	}
+}
+
+// @Title getTmUserById
+// @Description retrieves the tm_user information for a certain id
+// @Accept  application/json
+// @Param   id              path    int     false        "The row id"
+// @Success 200 {array}    TmUser
+// @Resource /api/2.0
+// @Router /api/2.0/tm_user/{id} [get]
+func getTmUserById(id int) (interface{}, error) {
 	ret := []TmUser{}
 	arg := TmUser{Id: int64(id)}
-	if id >= 0 {
-		nstmt, err := db.GlobalDB.PrepareNamed(`select * from tm_user where id=:id`)
-		err = nstmt.Select(&ret, arg)
-		if err != nil {
-			fmt.Println(err)
-			return nil, err
-		}
-		nstmt.Close()
-	} else {
-		queryStr := "select * from tm_user"
-		err := db.GlobalDB.Select(&ret, queryStr)
-		if err != nil {
-			fmt.Println(err)
-			return nil, err
-		}
+	nstmt, err := db.GlobalDB.PrepareNamed(`select * from tm_user where id=:id`)
+	err = nstmt.Select(&ret, arg)
+	if err != nil {
+		fmt.Println(err)
+		return nil, err
+	}
+	nstmt.Close()
+	return ret, nil
+}
+
+// @Title getTmUsers
+// @Description retrieves the tm_user information for a certain id
+// @Accept  application/json
+// @Success 200 {array}    TmUser
+// @Resource /api/2.0
+// @Router /api/2.0/tm_user [get]
+func getTmUsers() (interface{}, error) {
+	ret := []TmUser{}
+	queryStr := "select * from tm_user"
+	err := db.GlobalDB.Select(&ret, queryStr)
+	if err != nil {
+		fmt.Println(err)
+		return nil, err
 	}
 	return ret, nil
 }
 
+// @Title postTmUser
+// @Description enter a new tm_user
+// @Accept  application/json
+// @Param             Username json     string    true "username description"
+// @Param                 Role json        int    true "role description"
+// @Param                  Uid json        int    true "uid description"
+// @Param                  Gid json        int    true "gid description"
+// @Param          LocalPasswd json     string    true "local_passwd description"
+// @Param   ConfirmLocalPasswd json     string    true "confirm_local_passwd description"
+// @Param              Company json     string    true "company description"
+// @Param                Email json     string    true "email description"
+// @Param             FullName json     string    true "full_name description"
+// @Param              NewUser json      int64   false "new_user description"
+// @Param         AddressLine1 json     string    true "address_line1 description"
+// @Param         AddressLine2 json     string    true "address_line2 description"
+// @Param                 City json     string    true "city description"
+// @Param      StateOrProvince json     string    true "state_or_province description"
+// @Param          PhoneNumber json     string    true "phone_number description"
+// @Param           PostalCode json     string    true "postal_code description"
+// @Param              Country json     string    true "country description"
+// @Param            LocalUser json      int64   false "local_user description"
+// @Param                Token json     string    true "token description"
+// @Param     RegistrationSent json  time.Time   false "registration_sent description"
+// @Success 200 {object}    output_format.ApiWrapper
+// @Resource /api/2.0
+// @Router /api/2.0/tm_user [post]
 func postTmUser(payload []byte) (interface{}, error) {
 	var v TmUser
 	err := json.Unmarshal(payload, &v)
@@ -142,6 +192,32 @@ func postTmUser(payload []byte) (interface{}, error) {
 	return result, err
 }
 
+// @Title putTmUser
+// @Description modify an existing tm_userentry
+// @Accept  application/json
+// @Param             Username json null.String    true "username description"
+// @Param                 Role json   null.Int    true "role description"
+// @Param                  Uid json   null.Int    true "uid description"
+// @Param                  Gid json   null.Int    true "gid description"
+// @Param          LocalPasswd json null.String    true "local_passwd description"
+// @Param   ConfirmLocalPasswd json null.String    true "confirm_local_passwd description"
+// @Param              Company json null.String    true "company description"
+// @Param                Email json null.String    true "email description"
+// @Param             FullName json null.String    true "full_name description"
+// @Param              NewUser json      int64   false "new_user description"
+// @Param         AddressLine1 json null.String    true "address_line1 description"
+// @Param         AddressLine2 json null.String    true "address_line2 description"
+// @Param                 City json null.String    true "city description"
+// @Param      StateOrProvince json null.String    true "state_or_province description"
+// @Param          PhoneNumber json null.String    true "phone_number description"
+// @Param           PostalCode json null.String    true "postal_code description"
+// @Param              Country json null.String    true "country description"
+// @Param            LocalUser json      int64   false "local_user description"
+// @Param                Token json null.String    true "token description"
+// @Param     RegistrationSent json  time.Time   false "registration_sent description"
+// @Success 200 {object}    output_format.ApiWrapper
+// @Resource /api/2.0
+// @Router /api/2.0/tm_user [put]
 func putTmUser(id int, payload []byte) (interface{}, error) {
 	var v TmUser
 	err := json.Unmarshal(payload, &v)
@@ -182,6 +258,13 @@ func putTmUser(id int, payload []byte) (interface{}, error) {
 	return result, err
 }
 
+// @Title delTmUserById
+// @Description deletes tm_user information for a certain id
+// @Accept  application/json
+// @Param   id              path    int     false        "The row id"
+// @Success 200 {array}    TmUser
+// @Resource /api/2.0
+// @Router /api/2.0/tm_user/{id} [delete]
 func delTmUser(id int) (interface{}, error) {
 	arg := TmUser{Id: int64(id)}
 	result, err := db.GlobalDB.NamedExec("DELETE FROM tm_user WHERE id=:id", arg)

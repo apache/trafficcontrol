@@ -21,7 +21,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/Comcast/traffic_control/traffic_ops/goto2/db"
-	"gopkg.in/guregu/null.v3"
+	_ "github.com/Comcast/traffic_control/traffic_ops/goto2/output_format" // needed for swagger
+	null "gopkg.in/guregu/null.v3"
 	"time"
 )
 
@@ -56,27 +57,68 @@ func handleJob(method string, id int, payload []byte) (interface{}, error) {
 }
 
 func getJob(id int) (interface{}, error) {
+	if id >= 0 {
+		return getJobById(id)
+	} else {
+		return getJobs()
+	}
+}
+
+// @Title getJobById
+// @Description retrieves the job information for a certain id
+// @Accept  application/json
+// @Param   id              path    int     false        "The row id"
+// @Success 200 {array}    Job
+// @Resource /api/2.0
+// @Router /api/2.0/job/{id} [get]
+func getJobById(id int) (interface{}, error) {
 	ret := []Job{}
 	arg := Job{Id: int64(id)}
-	if id >= 0 {
-		nstmt, err := db.GlobalDB.PrepareNamed(`select * from job where id=:id`)
-		err = nstmt.Select(&ret, arg)
-		if err != nil {
-			fmt.Println(err)
-			return nil, err
-		}
-		nstmt.Close()
-	} else {
-		queryStr := "select * from job"
-		err := db.GlobalDB.Select(&ret, queryStr)
-		if err != nil {
-			fmt.Println(err)
-			return nil, err
-		}
+	nstmt, err := db.GlobalDB.PrepareNamed(`select * from job where id=:id`)
+	err = nstmt.Select(&ret, arg)
+	if err != nil {
+		fmt.Println(err)
+		return nil, err
+	}
+	nstmt.Close()
+	return ret, nil
+}
+
+// @Title getJobs
+// @Description retrieves the job information for a certain id
+// @Accept  application/json
+// @Success 200 {array}    Job
+// @Resource /api/2.0
+// @Router /api/2.0/job [get]
+func getJobs() (interface{}, error) {
+	ret := []Job{}
+	queryStr := "select * from job"
+	err := db.GlobalDB.Select(&ret, queryStr)
+	if err != nil {
+		fmt.Println(err)
+		return nil, err
 	}
 	return ret, nil
 }
 
+// @Title postJob
+// @Description enter a new job
+// @Accept  application/json
+// @Param                Agent json        int    true "agent description"
+// @Param           ObjectType json     string    true "object_type description"
+// @Param           ObjectName json     string    true "object_name description"
+// @Param              Keyword json     string   false "keyword description"
+// @Param           Parameters json     string    true "parameters description"
+// @Param             AssetUrl json     string   false "asset_url description"
+// @Param            AssetType json     string   false "asset_type description"
+// @Param               Status json      int64   false "status description"
+// @Param            StartTime json  time.Time   false "start_time description"
+// @Param          EnteredTime json  time.Time   false "entered_time description"
+// @Param              JobUser json      int64   false "job_user description"
+// @Param   JobDeliveryservice json        int    true "job_deliveryservice description"
+// @Success 200 {object}    output_format.ApiWrapper
+// @Resource /api/2.0
+// @Router /api/2.0/job [post]
 func postJob(payload []byte) (interface{}, error) {
 	var v Job
 	err := json.Unmarshal(payload, &v)
@@ -118,6 +160,24 @@ func postJob(payload []byte) (interface{}, error) {
 	return result, err
 }
 
+// @Title putJob
+// @Description modify an existing jobentry
+// @Accept  application/json
+// @Param                Agent json   null.Int    true "agent description"
+// @Param           ObjectType json null.String    true "object_type description"
+// @Param           ObjectName json null.String    true "object_name description"
+// @Param              Keyword json     string   false "keyword description"
+// @Param           Parameters json null.String    true "parameters description"
+// @Param             AssetUrl json     string   false "asset_url description"
+// @Param            AssetType json     string   false "asset_type description"
+// @Param               Status json      int64   false "status description"
+// @Param            StartTime json  time.Time   false "start_time description"
+// @Param          EnteredTime json  time.Time   false "entered_time description"
+// @Param              JobUser json      int64   false "job_user description"
+// @Param   JobDeliveryservice json   null.Int    true "job_deliveryservice description"
+// @Success 200 {object}    output_format.ApiWrapper
+// @Resource /api/2.0
+// @Router /api/2.0/job [put]
 func putJob(id int, payload []byte) (interface{}, error) {
 	var v Job
 	err := json.Unmarshal(payload, &v)
@@ -150,6 +210,13 @@ func putJob(id int, payload []byte) (interface{}, error) {
 	return result, err
 }
 
+// @Title delJobById
+// @Description deletes job information for a certain id
+// @Accept  application/json
+// @Param   id              path    int     false        "The row id"
+// @Success 200 {array}    Job
+// @Resource /api/2.0
+// @Router /api/2.0/job/{id} [delete]
 func delJob(id int) (interface{}, error) {
 	arg := Job{Id: int64(id)}
 	result, err := db.GlobalDB.NamedExec("DELETE FROM job WHERE id=:id", arg)

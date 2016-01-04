@@ -21,7 +21,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/Comcast/traffic_control/traffic_ops/goto2/db"
-	_ "github.com/Comcast/traffic_control/traffic_ops/goto2/output_format"
+	_ "github.com/Comcast/traffic_control/traffic_ops/goto2/output_format" // needed for swagger
 	null "gopkg.in/guregu/null.v3"
 	"time"
 )
@@ -50,31 +50,47 @@ func handleCachegroup(method string, id int, payload []byte) (interface{}, error
 	return nil, nil
 }
 
-// @Title getCachegroup
-// @Description retrieves cachegroup information
+func getCachegroup(id int) (interface{}, error) {
+	if id >= 0 {
+		return getCachegroupById(id)
+	} else {
+		return getCachegroups()
+	}
+}
+
+// @Title getCachegroupById
+// @Description retrieves the cachegroup information for a certain id
 // @Accept  application/json
-// @Param   id              path    int     false        "cachegroup id"
+// @Param   id              path    int     false        "The row id"
 // @Success 200 {array}    Cachegroup
 // @Resource /api/2.0
 // @Router /api/2.0/cachegroup/{id} [get]
-func getCachegroup(id int) (interface{}, error) {
+func getCachegroupById(id int) (interface{}, error) {
 	ret := []Cachegroup{}
 	arg := Cachegroup{Id: int64(id)}
-	if id >= 0 {
-		nstmt, err := db.GlobalDB.PrepareNamed(`select * from cachegroup where id=:id`)
-		err = nstmt.Select(&ret, arg)
-		if err != nil {
-			fmt.Println(err)
-			return nil, err
-		}
-		nstmt.Close()
-	} else {
-		queryStr := "select * from cachegroup"
-		err := db.GlobalDB.Select(&ret, queryStr)
-		if err != nil {
-			fmt.Println(err)
-			return nil, err
-		}
+	nstmt, err := db.GlobalDB.PrepareNamed(`select * from cachegroup where id=:id`)
+	err = nstmt.Select(&ret, arg)
+	if err != nil {
+		fmt.Println(err)
+		return nil, err
+	}
+	nstmt.Close()
+	return ret, nil
+}
+
+// @Title getCachegroups
+// @Description retrieves the cachegroup information for a certain id
+// @Accept  application/json
+// @Success 200 {array}    Cachegroup
+// @Resource /api/2.0
+// @Router /api/2.0/cachegroup [get]
+func getCachegroups() (interface{}, error) {
+	ret := []Cachegroup{}
+	queryStr := "select * from cachegroup"
+	err := db.GlobalDB.Select(&ret, queryStr)
+	if err != nil {
+		fmt.Println(err)
+		return nil, err
 	}
 	return ret, nil
 }
@@ -82,12 +98,12 @@ func getCachegroup(id int) (interface{}, error) {
 // @Title postCachegroup
 // @Description enter a new cachegroup
 // @Accept  application/json
-// @Param   shortName           json    string       true        "cachegroup short name"
-// @Param   name                json    string       true        "cachegroup name"
-// @Param   longitude           json    null.Float   false       "Location longitude"
-// @Param   latitide            json    null.Float   false       "Location latitiude"
-// @Param   type                json    int          true        "CG type"
-// @Param   parentCachegroupId  json    int          false       "Parent cachegroup id"
+// @Param                 Name json     string   false "name description"
+// @Param            ShortName json     string   false "short_name description"
+// @Param             Latitude json    float64    true "latitude description"
+// @Param            Longitude json    float64    true "longitude description"
+// @Param   ParentCachegroupId json        int    true "parent_cachegroup_id description"
+// @Param                 Type json      int64   false "type description"
 // @Success 200 {object}    output_format.ApiWrapper
 // @Resource /api/2.0
 // @Router /api/2.0/cachegroup [post]
@@ -121,18 +137,17 @@ func postCachegroup(payload []byte) (interface{}, error) {
 }
 
 // @Title putCachegroup
-// @Description modify an existing cachegroup
-// @Accept  json
-// @Param   id                  path    int          true        "cachegroup id"
-// @Param   shortName           json    string       true        "cachegroup short name"
-// @Param   name                json    string       true        "cachegroup name"
-// @Param   longitude           json    null.Float   false       "Location longitude"
-// @Param   latitide            json    null.Float   false       "Location latitiude"
-// @Param   type                json    int          true        "CG type"
-// @Param   parentCachegroupId  json    int          false       "Parent cachegroup id"
-// @Success 200 {array}    Cachegroup
+// @Description modify an existing cachegroupentry
+// @Accept  application/json
+// @Param                 Name json     string   false "name description"
+// @Param            ShortName json     string   false "short_name description"
+// @Param             Latitude json null.Float    true "latitude description"
+// @Param            Longitude json null.Float    true "longitude description"
+// @Param   ParentCachegroupId json   null.Int    true "parent_cachegroup_id description"
+// @Param                 Type json      int64   false "type description"
+// @Success 200 {object}    output_format.ApiWrapper
 // @Resource /api/2.0
-// @Router /api/2.0/cachegroup/{id} [put]
+// @Router /api/2.0/cachegroup [put]
 func putCachegroup(id int, payload []byte) (interface{}, error) {
 	var v Cachegroup
 	err := json.Unmarshal(payload, &v)
@@ -159,10 +174,10 @@ func putCachegroup(id int, payload []byte) (interface{}, error) {
 	return result, err
 }
 
-// @Title delCachegroup
-// @Description deletes a cachegroup
-// @Accept  json
-// @Param   id              path    int     true        "cachegroup id"
+// @Title delCachegroupById
+// @Description deletes cachegroup information for a certain id
+// @Accept  application/json
+// @Param   id              path    int     false        "The row id"
 // @Success 200 {array}    Cachegroup
 // @Resource /api/2.0
 // @Router /api/2.0/cachegroup/{id} [delete]

@@ -21,6 +21,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/Comcast/traffic_control/traffic_ops/goto2/db"
+	_ "github.com/Comcast/traffic_control/traffic_ops/goto2/output_format" // needed for swagger
 	"time"
 )
 
@@ -45,27 +46,59 @@ func handleGooseDbVersion(method string, id int, payload []byte) (interface{}, e
 }
 
 func getGooseDbVersion(id int) (interface{}, error) {
+	if id >= 0 {
+		return getGooseDbVersionById(id)
+	} else {
+		return getGooseDbVersions()
+	}
+}
+
+// @Title getGooseDbVersionById
+// @Description retrieves the goose_db_version information for a certain id
+// @Accept  application/json
+// @Param   id              path    int     false        "The row id"
+// @Success 200 {array}    GooseDbVersion
+// @Resource /api/2.0
+// @Router /api/2.0/goose_db_version/{id} [get]
+func getGooseDbVersionById(id int) (interface{}, error) {
 	ret := []GooseDbVersion{}
 	arg := GooseDbVersion{Id: int64(id)}
-	if id >= 0 {
-		nstmt, err := db.GlobalDB.PrepareNamed(`select * from goose_db_version where id=:id`)
-		err = nstmt.Select(&ret, arg)
-		if err != nil {
-			fmt.Println(err)
-			return nil, err
-		}
-		nstmt.Close()
-	} else {
-		queryStr := "select * from goose_db_version"
-		err := db.GlobalDB.Select(&ret, queryStr)
-		if err != nil {
-			fmt.Println(err)
-			return nil, err
-		}
+	nstmt, err := db.GlobalDB.PrepareNamed(`select * from goose_db_version where id=:id`)
+	err = nstmt.Select(&ret, arg)
+	if err != nil {
+		fmt.Println(err)
+		return nil, err
+	}
+	nstmt.Close()
+	return ret, nil
+}
+
+// @Title getGooseDbVersions
+// @Description retrieves the goose_db_version information for a certain id
+// @Accept  application/json
+// @Success 200 {array}    GooseDbVersion
+// @Resource /api/2.0
+// @Router /api/2.0/goose_db_version [get]
+func getGooseDbVersions() (interface{}, error) {
+	ret := []GooseDbVersion{}
+	queryStr := "select * from goose_db_version"
+	err := db.GlobalDB.Select(&ret, queryStr)
+	if err != nil {
+		fmt.Println(err)
+		return nil, err
 	}
 	return ret, nil
 }
 
+// @Title postGooseDbVersion
+// @Description enter a new goose_db_version
+// @Accept  application/json
+// @Param            VersionId json      int64   false "version_id description"
+// @Param            IsApplied json      int64   false "is_applied description"
+// @Param               Tstamp json  time.Time    true "tstamp description"
+// @Success 200 {object}    output_format.ApiWrapper
+// @Resource /api/2.0
+// @Router /api/2.0/goose_db_version [post]
 func postGooseDbVersion(payload []byte) (interface{}, error) {
 	var v GooseDbVersion
 	err := json.Unmarshal(payload, &v)
@@ -89,6 +122,15 @@ func postGooseDbVersion(payload []byte) (interface{}, error) {
 	return result, err
 }
 
+// @Title putGooseDbVersion
+// @Description modify an existing goose_db_versionentry
+// @Accept  application/json
+// @Param            VersionId json      int64   false "version_id description"
+// @Param            IsApplied json      int64   false "is_applied description"
+// @Param               Tstamp json  time.Time    true "tstamp description"
+// @Success 200 {object}    output_format.ApiWrapper
+// @Resource /api/2.0
+// @Router /api/2.0/goose_db_version [put]
 func putGooseDbVersion(id int, payload []byte) (interface{}, error) {
 	var v GooseDbVersion
 	err := json.Unmarshal(payload, &v)
@@ -110,6 +152,13 @@ func putGooseDbVersion(id int, payload []byte) (interface{}, error) {
 	return result, err
 }
 
+// @Title delGooseDbVersionById
+// @Description deletes goose_db_version information for a certain id
+// @Accept  application/json
+// @Param   id              path    int     false        "The row id"
+// @Success 200 {array}    GooseDbVersion
+// @Resource /api/2.0
+// @Router /api/2.0/goose_db_version/{id} [delete]
 func delGooseDbVersion(id int) (interface{}, error) {
 	arg := GooseDbVersion{Id: int64(id)}
 	result, err := db.GlobalDB.NamedExec("DELETE FROM goose_db_version WHERE id=:id", arg)

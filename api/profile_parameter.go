@@ -21,6 +21,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/Comcast/traffic_control/traffic_ops/goto2/db"
+	_ "github.com/Comcast/traffic_control/traffic_ops/goto2/output_format" // needed for swagger
 	"time"
 )
 
@@ -44,27 +45,58 @@ func handleProfileParameter(method string, id int, payload []byte) (interface{},
 }
 
 func getProfileParameter(id int) (interface{}, error) {
+	if id >= 0 {
+		return getProfileParameterById(id)
+	} else {
+		return getProfileParameters()
+	}
+}
+
+// @Title getProfileParameterById
+// @Description retrieves the profile_parameter information for a certain id
+// @Accept  application/json
+// @Param   id              path    int     false        "The row id"
+// @Success 200 {array}    ProfileParameter
+// @Resource /api/2.0
+// @Router /api/2.0/profile_parameter/{id} [get]
+func getProfileParameterById(id int) (interface{}, error) {
 	ret := []ProfileParameter{}
 	arg := ProfileParameter{Profile: int64(id)}
-	if id >= 0 {
-		nstmt, err := db.GlobalDB.PrepareNamed(`select * from profile_parameter where profile=:profile`)
-		err = nstmt.Select(&ret, arg)
-		if err != nil {
-			fmt.Println(err)
-			return nil, err
-		}
-		nstmt.Close()
-	} else {
-		queryStr := "select * from profile_parameter"
-		err := db.GlobalDB.Select(&ret, queryStr)
-		if err != nil {
-			fmt.Println(err)
-			return nil, err
-		}
+	nstmt, err := db.GlobalDB.PrepareNamed(`select * from profile_parameter where profile=:profile`)
+	err = nstmt.Select(&ret, arg)
+	if err != nil {
+		fmt.Println(err)
+		return nil, err
+	}
+	nstmt.Close()
+	return ret, nil
+}
+
+// @Title getProfileParameters
+// @Description retrieves the profile_parameter information for a certain id
+// @Accept  application/json
+// @Success 200 {array}    ProfileParameter
+// @Resource /api/2.0
+// @Router /api/2.0/profile_parameter [get]
+func getProfileParameters() (interface{}, error) {
+	ret := []ProfileParameter{}
+	queryStr := "select * from profile_parameter"
+	err := db.GlobalDB.Select(&ret, queryStr)
+	if err != nil {
+		fmt.Println(err)
+		return nil, err
 	}
 	return ret, nil
 }
 
+// @Title postProfileParameter
+// @Description enter a new profile_parameter
+// @Accept  application/json
+// @Param              Profile json      int64   false "profile description"
+// @Param            Parameter json      int64   false "parameter description"
+// @Success 200 {object}    output_format.ApiWrapper
+// @Resource /api/2.0
+// @Router /api/2.0/profile_parameter [post]
 func postProfileParameter(payload []byte) (interface{}, error) {
 	var v ProfileParameter
 	err := json.Unmarshal(payload, &v)
@@ -86,6 +118,14 @@ func postProfileParameter(payload []byte) (interface{}, error) {
 	return result, err
 }
 
+// @Title putProfileParameter
+// @Description modify an existing profile_parameterentry
+// @Accept  application/json
+// @Param              Profile json      int64   false "profile description"
+// @Param            Parameter json      int64   false "parameter description"
+// @Success 200 {object}    output_format.ApiWrapper
+// @Resource /api/2.0
+// @Router /api/2.0/profile_parameter [put]
 func putProfileParameter(id int, payload []byte) (interface{}, error) {
 	var v ProfileParameter
 	err := json.Unmarshal(payload, &v)
@@ -108,6 +148,13 @@ func putProfileParameter(id int, payload []byte) (interface{}, error) {
 	return result, err
 }
 
+// @Title delProfileParameterById
+// @Description deletes profile_parameter information for a certain id
+// @Accept  application/json
+// @Param   id              path    int     false        "The row id"
+// @Success 200 {array}    ProfileParameter
+// @Resource /api/2.0
+// @Router /api/2.0/profile_parameter/{id} [delete]
 func delProfileParameter(id int) (interface{}, error) {
 	arg := ProfileParameter{Profile: int64(id)}
 	result, err := db.GlobalDB.NamedExec("DELETE FROM profile_parameter WHERE id=:id", arg)

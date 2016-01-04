@@ -21,7 +21,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/Comcast/traffic_control/traffic_ops/goto2/db"
-	"gopkg.in/guregu/null.v3"
+	_ "github.com/Comcast/traffic_control/traffic_ops/goto2/output_format" // needed for swagger
+	null "gopkg.in/guregu/null.v3"
 	"time"
 )
 
@@ -55,27 +56,67 @@ func handlePhysLocation(method string, id int, payload []byte) (interface{}, err
 }
 
 func getPhysLocation(id int) (interface{}, error) {
+	if id >= 0 {
+		return getPhysLocationById(id)
+	} else {
+		return getPhysLocations()
+	}
+}
+
+// @Title getPhysLocationById
+// @Description retrieves the phys_location information for a certain id
+// @Accept  application/json
+// @Param   id              path    int     false        "The row id"
+// @Success 200 {array}    PhysLocation
+// @Resource /api/2.0
+// @Router /api/2.0/phys_location/{id} [get]
+func getPhysLocationById(id int) (interface{}, error) {
 	ret := []PhysLocation{}
 	arg := PhysLocation{Id: int64(id)}
-	if id >= 0 {
-		nstmt, err := db.GlobalDB.PrepareNamed(`select * from phys_location where id=:id`)
-		err = nstmt.Select(&ret, arg)
-		if err != nil {
-			fmt.Println(err)
-			return nil, err
-		}
-		nstmt.Close()
-	} else {
-		queryStr := "select * from phys_location"
-		err := db.GlobalDB.Select(&ret, queryStr)
-		if err != nil {
-			fmt.Println(err)
-			return nil, err
-		}
+	nstmt, err := db.GlobalDB.PrepareNamed(`select * from phys_location where id=:id`)
+	err = nstmt.Select(&ret, arg)
+	if err != nil {
+		fmt.Println(err)
+		return nil, err
+	}
+	nstmt.Close()
+	return ret, nil
+}
+
+// @Title getPhysLocations
+// @Description retrieves the phys_location information for a certain id
+// @Accept  application/json
+// @Success 200 {array}    PhysLocation
+// @Resource /api/2.0
+// @Router /api/2.0/phys_location [get]
+func getPhysLocations() (interface{}, error) {
+	ret := []PhysLocation{}
+	queryStr := "select * from phys_location"
+	err := db.GlobalDB.Select(&ret, queryStr)
+	if err != nil {
+		fmt.Println(err)
+		return nil, err
 	}
 	return ret, nil
 }
 
+// @Title postPhysLocation
+// @Description enter a new phys_location
+// @Accept  application/json
+// @Param                 Name json     string   false "name description"
+// @Param            ShortName json     string   false "short_name description"
+// @Param              Address json     string   false "address description"
+// @Param                 City json     string   false "city description"
+// @Param                State json     string   false "state description"
+// @Param                  Zip json     string   false "zip description"
+// @Param                  Poc json     string    true "poc description"
+// @Param                Phone json     string    true "phone description"
+// @Param                Email json     string    true "email description"
+// @Param             Comments json     string    true "comments description"
+// @Param               Region json      int64   false "region description"
+// @Success 200 {object}    output_format.ApiWrapper
+// @Resource /api/2.0
+// @Router /api/2.0/phys_location [post]
 func postPhysLocation(payload []byte) (interface{}, error) {
 	var v PhysLocation
 	err := json.Unmarshal(payload, &v)
@@ -115,6 +156,23 @@ func postPhysLocation(payload []byte) (interface{}, error) {
 	return result, err
 }
 
+// @Title putPhysLocation
+// @Description modify an existing phys_locationentry
+// @Accept  application/json
+// @Param                 Name json     string   false "name description"
+// @Param            ShortName json     string   false "short_name description"
+// @Param              Address json     string   false "address description"
+// @Param                 City json     string   false "city description"
+// @Param                State json     string   false "state description"
+// @Param                  Zip json     string   false "zip description"
+// @Param                  Poc json null.String    true "poc description"
+// @Param                Phone json null.String    true "phone description"
+// @Param                Email json null.String    true "email description"
+// @Param             Comments json null.String    true "comments description"
+// @Param               Region json      int64   false "region description"
+// @Success 200 {object}    output_format.ApiWrapper
+// @Resource /api/2.0
+// @Router /api/2.0/phys_location [put]
 func putPhysLocation(id int, payload []byte) (interface{}, error) {
 	var v PhysLocation
 	err := json.Unmarshal(payload, &v)
@@ -146,6 +204,13 @@ func putPhysLocation(id int, payload []byte) (interface{}, error) {
 	return result, err
 }
 
+// @Title delPhysLocationById
+// @Description deletes phys_location information for a certain id
+// @Accept  application/json
+// @Param   id              path    int     false        "The row id"
+// @Success 200 {array}    PhysLocation
+// @Resource /api/2.0
+// @Router /api/2.0/phys_location/{id} [delete]
 func delPhysLocation(id int) (interface{}, error) {
 	arg := PhysLocation{Id: int64(id)}
 	result, err := db.GlobalDB.NamedExec("DELETE FROM phys_location WHERE id=:id", arg)

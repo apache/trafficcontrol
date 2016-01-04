@@ -21,6 +21,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/Comcast/traffic_control/traffic_ops/goto2/db"
+	_ "github.com/Comcast/traffic_control/traffic_ops/goto2/output_format" // needed for swagger
 	"time"
 )
 
@@ -45,27 +46,58 @@ func handleFederationResolver(method string, id int, payload []byte) (interface{
 }
 
 func getFederationResolver(id int) (interface{}, error) {
+	if id >= 0 {
+		return getFederationResolverById(id)
+	} else {
+		return getFederationResolvers()
+	}
+}
+
+// @Title getFederationResolverById
+// @Description retrieves the federation_resolver information for a certain id
+// @Accept  application/json
+// @Param   id              path    int     false        "The row id"
+// @Success 200 {array}    FederationResolver
+// @Resource /api/2.0
+// @Router /api/2.0/federation_resolver/{id} [get]
+func getFederationResolverById(id int) (interface{}, error) {
 	ret := []FederationResolver{}
 	arg := FederationResolver{Id: int64(id)}
-	if id >= 0 {
-		nstmt, err := db.GlobalDB.PrepareNamed(`select * from federation_resolver where id=:id`)
-		err = nstmt.Select(&ret, arg)
-		if err != nil {
-			fmt.Println(err)
-			return nil, err
-		}
-		nstmt.Close()
-	} else {
-		queryStr := "select * from federation_resolver"
-		err := db.GlobalDB.Select(&ret, queryStr)
-		if err != nil {
-			fmt.Println(err)
-			return nil, err
-		}
+	nstmt, err := db.GlobalDB.PrepareNamed(`select * from federation_resolver where id=:id`)
+	err = nstmt.Select(&ret, arg)
+	if err != nil {
+		fmt.Println(err)
+		return nil, err
+	}
+	nstmt.Close()
+	return ret, nil
+}
+
+// @Title getFederationResolvers
+// @Description retrieves the federation_resolver information for a certain id
+// @Accept  application/json
+// @Success 200 {array}    FederationResolver
+// @Resource /api/2.0
+// @Router /api/2.0/federation_resolver [get]
+func getFederationResolvers() (interface{}, error) {
+	ret := []FederationResolver{}
+	queryStr := "select * from federation_resolver"
+	err := db.GlobalDB.Select(&ret, queryStr)
+	if err != nil {
+		fmt.Println(err)
+		return nil, err
 	}
 	return ret, nil
 }
 
+// @Title postFederationResolver
+// @Description enter a new federation_resolver
+// @Accept  application/json
+// @Param            IpAddress json     string   false "ip_address description"
+// @Param                 Type json      int64   false "type description"
+// @Success 200 {object}    output_format.ApiWrapper
+// @Resource /api/2.0
+// @Router /api/2.0/federation_resolver [post]
 func postFederationResolver(payload []byte) (interface{}, error) {
 	var v FederationResolver
 	err := json.Unmarshal(payload, &v)
@@ -87,6 +119,14 @@ func postFederationResolver(payload []byte) (interface{}, error) {
 	return result, err
 }
 
+// @Title putFederationResolver
+// @Description modify an existing federation_resolverentry
+// @Accept  application/json
+// @Param            IpAddress json     string   false "ip_address description"
+// @Param                 Type json      int64   false "type description"
+// @Success 200 {object}    output_format.ApiWrapper
+// @Resource /api/2.0
+// @Router /api/2.0/federation_resolver [put]
 func putFederationResolver(id int, payload []byte) (interface{}, error) {
 	var v FederationResolver
 	err := json.Unmarshal(payload, &v)
@@ -109,6 +149,13 @@ func putFederationResolver(id int, payload []byte) (interface{}, error) {
 	return result, err
 }
 
+// @Title delFederationResolverById
+// @Description deletes federation_resolver information for a certain id
+// @Accept  application/json
+// @Param   id              path    int     false        "The row id"
+// @Success 200 {array}    FederationResolver
+// @Resource /api/2.0
+// @Router /api/2.0/federation_resolver/{id} [delete]
 func delFederationResolver(id int) (interface{}, error) {
 	arg := FederationResolver{Id: int64(id)}
 	result, err := db.GlobalDB.NamedExec("DELETE FROM federation_resolver WHERE id=:id", arg)

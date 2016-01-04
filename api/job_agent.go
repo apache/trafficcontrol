@@ -21,7 +21,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/Comcast/traffic_control/traffic_ops/goto2/db"
-	"gopkg.in/guregu/null.v3"
+	_ "github.com/Comcast/traffic_control/traffic_ops/goto2/output_format" // needed for swagger
+	null "gopkg.in/guregu/null.v3"
 	"time"
 )
 
@@ -47,27 +48,59 @@ func handleJobAgent(method string, id int, payload []byte) (interface{}, error) 
 }
 
 func getJobAgent(id int) (interface{}, error) {
+	if id >= 0 {
+		return getJobAgentById(id)
+	} else {
+		return getJobAgents()
+	}
+}
+
+// @Title getJobAgentById
+// @Description retrieves the job_agent information for a certain id
+// @Accept  application/json
+// @Param   id              path    int     false        "The row id"
+// @Success 200 {array}    JobAgent
+// @Resource /api/2.0
+// @Router /api/2.0/job_agent/{id} [get]
+func getJobAgentById(id int) (interface{}, error) {
 	ret := []JobAgent{}
 	arg := JobAgent{Id: int64(id)}
-	if id >= 0 {
-		nstmt, err := db.GlobalDB.PrepareNamed(`select * from job_agent where id=:id`)
-		err = nstmt.Select(&ret, arg)
-		if err != nil {
-			fmt.Println(err)
-			return nil, err
-		}
-		nstmt.Close()
-	} else {
-		queryStr := "select * from job_agent"
-		err := db.GlobalDB.Select(&ret, queryStr)
-		if err != nil {
-			fmt.Println(err)
-			return nil, err
-		}
+	nstmt, err := db.GlobalDB.PrepareNamed(`select * from job_agent where id=:id`)
+	err = nstmt.Select(&ret, arg)
+	if err != nil {
+		fmt.Println(err)
+		return nil, err
+	}
+	nstmt.Close()
+	return ret, nil
+}
+
+// @Title getJobAgents
+// @Description retrieves the job_agent information for a certain id
+// @Accept  application/json
+// @Success 200 {array}    JobAgent
+// @Resource /api/2.0
+// @Router /api/2.0/job_agent [get]
+func getJobAgents() (interface{}, error) {
+	ret := []JobAgent{}
+	queryStr := "select * from job_agent"
+	err := db.GlobalDB.Select(&ret, queryStr)
+	if err != nil {
+		fmt.Println(err)
+		return nil, err
 	}
 	return ret, nil
 }
 
+// @Title postJobAgent
+// @Description enter a new job_agent
+// @Accept  application/json
+// @Param                 Name json     string    true "name description"
+// @Param          Description json     string    true "description description"
+// @Param               Active json      int64   false "active description"
+// @Success 200 {object}    output_format.ApiWrapper
+// @Resource /api/2.0
+// @Router /api/2.0/job_agent [post]
 func postJobAgent(payload []byte) (interface{}, error) {
 	var v JobAgent
 	err := json.Unmarshal(payload, &v)
@@ -91,6 +124,15 @@ func postJobAgent(payload []byte) (interface{}, error) {
 	return result, err
 }
 
+// @Title putJobAgent
+// @Description modify an existing job_agententry
+// @Accept  application/json
+// @Param                 Name json null.String    true "name description"
+// @Param          Description json null.String    true "description description"
+// @Param               Active json      int64   false "active description"
+// @Success 200 {object}    output_format.ApiWrapper
+// @Resource /api/2.0
+// @Router /api/2.0/job_agent [put]
 func putJobAgent(id int, payload []byte) (interface{}, error) {
 	var v JobAgent
 	err := json.Unmarshal(payload, &v)
@@ -114,6 +156,13 @@ func putJobAgent(id int, payload []byte) (interface{}, error) {
 	return result, err
 }
 
+// @Title delJobAgentById
+// @Description deletes job_agent information for a certain id
+// @Accept  application/json
+// @Param   id              path    int     false        "The row id"
+// @Success 200 {array}    JobAgent
+// @Resource /api/2.0
+// @Router /api/2.0/job_agent/{id} [delete]
 func delJobAgent(id int) (interface{}, error) {
 	arg := JobAgent{Id: int64(id)}
 	result, err := db.GlobalDB.NamedExec("DELETE FROM job_agent WHERE id=:id", arg)

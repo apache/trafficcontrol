@@ -21,7 +21,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/Comcast/traffic_control/traffic_ops/goto2/db"
-	"gopkg.in/guregu/null.v3"
+	_ "github.com/Comcast/traffic_control/traffic_ops/goto2/output_format" // needed for swagger
+	null "gopkg.in/guregu/null.v3"
 	"time"
 )
 
@@ -85,27 +86,97 @@ func handleDeliveryservice(method string, id int, payload []byte) (interface{}, 
 }
 
 func getDeliveryservice(id int) (interface{}, error) {
+	if id >= 0 {
+		return getDeliveryserviceById(id)
+	} else {
+		return getDeliveryservices()
+	}
+}
+
+// @Title getDeliveryserviceById
+// @Description retrieves the deliveryservice information for a certain id
+// @Accept  application/json
+// @Param   id              path    int     false        "The row id"
+// @Success 200 {array}    Deliveryservice
+// @Resource /api/2.0
+// @Router /api/2.0/deliveryservice/{id} [get]
+func getDeliveryserviceById(id int) (interface{}, error) {
 	ret := []Deliveryservice{}
 	arg := Deliveryservice{Id: int64(id)}
-	if id >= 0 {
-		nstmt, err := db.GlobalDB.PrepareNamed(`select * from deliveryservice where id=:id`)
-		err = nstmt.Select(&ret, arg)
-		if err != nil {
-			fmt.Println(err)
-			return nil, err
-		}
-		nstmt.Close()
-	} else {
-		queryStr := "select * from deliveryservice"
-		err := db.GlobalDB.Select(&ret, queryStr)
-		if err != nil {
-			fmt.Println(err)
-			return nil, err
-		}
+	nstmt, err := db.GlobalDB.PrepareNamed(`select * from deliveryservice where id=:id`)
+	err = nstmt.Select(&ret, arg)
+	if err != nil {
+		fmt.Println(err)
+		return nil, err
+	}
+	nstmt.Close()
+	return ret, nil
+}
+
+// @Title getDeliveryservices
+// @Description retrieves the deliveryservice information for a certain id
+// @Accept  application/json
+// @Success 200 {array}    Deliveryservice
+// @Resource /api/2.0
+// @Router /api/2.0/deliveryservice [get]
+func getDeliveryservices() (interface{}, error) {
+	ret := []Deliveryservice{}
+	queryStr := "select * from deliveryservice"
+	err := db.GlobalDB.Select(&ret, queryStr)
+	if err != nil {
+		fmt.Println(err)
+		return nil, err
 	}
 	return ret, nil
 }
 
+// @Title postDeliveryservice
+// @Description enter a new deliveryservice
+// @Accept  application/json
+// @Param                XmlId json     string   false "xml_id description"
+// @Param               Active json      int64   false "active description"
+// @Param                 Dscp json      int64   false "dscp description"
+// @Param               Signed json        int    true "signed description"
+// @Param        QstringIgnore json        int    true "qstring_ignore description"
+// @Param             GeoLimit json        int    true "geo_limit description"
+// @Param       HttpBypassFqdn json     string    true "http_bypass_fqdn description"
+// @Param          DnsBypassIp json     string    true "dns_bypass_ip description"
+// @Param         DnsBypassIp6 json     string    true "dns_bypass_ip6 description"
+// @Param         DnsBypassTtl json        int    true "dns_bypass_ttl description"
+// @Param        OrgServerFqdn json     string    true "org_server_fqdn description"
+// @Param                 Type json      int64   false "type description"
+// @Param              Profile json      int64   false "profile description"
+// @Param                CdnId json      int64   false "cdn_id description"
+// @Param            CcrDnsTtl json        int    true "ccr_dns_ttl description"
+// @Param        GlobalMaxMbps json        int    true "global_max_mbps description"
+// @Param         GlobalMaxTps json        int    true "global_max_tps description"
+// @Param             LongDesc json     string    true "long_desc description"
+// @Param            LongDesc1 json     string    true "long_desc_1 description"
+// @Param            LongDesc2 json     string    true "long_desc_2 description"
+// @Param        MaxDnsAnswers json        int    true "max_dns_answers description"
+// @Param              InfoUrl json     string    true "info_url description"
+// @Param              MissLat json    float64    true "miss_lat description"
+// @Param             MissLong json    float64    true "miss_long description"
+// @Param            CheckPath json     string    true "check_path description"
+// @Param             Protocol json        int    true "protocol description"
+// @Param        SslKeyVersion json        int    true "ssl_key_version description"
+// @Param   Ipv6RoutingEnabled json        int    true "ipv6_routing_enabled description"
+// @Param RangeRequestHandling json        int    true "range_request_handling description"
+// @Param    EdgeHeaderRewrite json     string    true "edge_header_rewrite description"
+// @Param         OriginShield json     string    true "origin_shield description"
+// @Param     MidHeaderRewrite json     string    true "mid_header_rewrite description"
+// @Param           RegexRemap json     string    true "regex_remap description"
+// @Param             Cacheurl json     string    true "cacheurl description"
+// @Param            RemapText json     string    true "remap_text description"
+// @Param      MultiSiteOrigin json        int    true "multi_site_origin description"
+// @Param          DisplayName json     string   false "display_name description"
+// @Param    TrResponseHeaders json     string    true "tr_response_headers description"
+// @Param    InitialDispersion json        int    true "initial_dispersion description"
+// @Param       DnsBypassCname json     string    true "dns_bypass_cname description"
+// @Param     TrRequestHeaders json     string    true "tr_request_headers description"
+// @Success 200 {object}    output_format.ApiWrapper
+// @Resource /api/2.0
+// @Router /api/2.0/deliveryservice [post]
 func postDeliveryservice(payload []byte) (interface{}, error) {
 	var v Deliveryservice
 	err := json.Unmarshal(payload, &v)
@@ -205,6 +276,53 @@ func postDeliveryservice(payload []byte) (interface{}, error) {
 	return result, err
 }
 
+// @Title putDeliveryservice
+// @Description modify an existing deliveryserviceentry
+// @Accept  application/json
+// @Param                XmlId json     string   false "xml_id description"
+// @Param               Active json      int64   false "active description"
+// @Param                 Dscp json      int64   false "dscp description"
+// @Param               Signed json   null.Int    true "signed description"
+// @Param        QstringIgnore json   null.Int    true "qstring_ignore description"
+// @Param             GeoLimit json   null.Int    true "geo_limit description"
+// @Param       HttpBypassFqdn json null.String    true "http_bypass_fqdn description"
+// @Param          DnsBypassIp json null.String    true "dns_bypass_ip description"
+// @Param         DnsBypassIp6 json null.String    true "dns_bypass_ip6 description"
+// @Param         DnsBypassTtl json   null.Int    true "dns_bypass_ttl description"
+// @Param        OrgServerFqdn json null.String    true "org_server_fqdn description"
+// @Param                 Type json      int64   false "type description"
+// @Param              Profile json      int64   false "profile description"
+// @Param                CdnId json      int64   false "cdn_id description"
+// @Param            CcrDnsTtl json   null.Int    true "ccr_dns_ttl description"
+// @Param        GlobalMaxMbps json   null.Int    true "global_max_mbps description"
+// @Param         GlobalMaxTps json   null.Int    true "global_max_tps description"
+// @Param             LongDesc json null.String    true "long_desc description"
+// @Param            LongDesc1 json null.String    true "long_desc_1 description"
+// @Param            LongDesc2 json null.String    true "long_desc_2 description"
+// @Param        MaxDnsAnswers json   null.Int    true "max_dns_answers description"
+// @Param              InfoUrl json null.String    true "info_url description"
+// @Param              MissLat json null.Float    true "miss_lat description"
+// @Param             MissLong json null.Float    true "miss_long description"
+// @Param            CheckPath json null.String    true "check_path description"
+// @Param             Protocol json   null.Int    true "protocol description"
+// @Param        SslKeyVersion json   null.Int    true "ssl_key_version description"
+// @Param   Ipv6RoutingEnabled json   null.Int    true "ipv6_routing_enabled description"
+// @Param RangeRequestHandling json   null.Int    true "range_request_handling description"
+// @Param    EdgeHeaderRewrite json null.String    true "edge_header_rewrite description"
+// @Param         OriginShield json null.String    true "origin_shield description"
+// @Param     MidHeaderRewrite json null.String    true "mid_header_rewrite description"
+// @Param           RegexRemap json null.String    true "regex_remap description"
+// @Param             Cacheurl json null.String    true "cacheurl description"
+// @Param            RemapText json null.String    true "remap_text description"
+// @Param      MultiSiteOrigin json   null.Int    true "multi_site_origin description"
+// @Param          DisplayName json     string   false "display_name description"
+// @Param    TrResponseHeaders json null.String    true "tr_response_headers description"
+// @Param    InitialDispersion json   null.Int    true "initial_dispersion description"
+// @Param       DnsBypassCname json null.String    true "dns_bypass_cname description"
+// @Param     TrRequestHeaders json null.String    true "tr_request_headers description"
+// @Success 200 {object}    output_format.ApiWrapper
+// @Resource /api/2.0
+// @Router /api/2.0/deliveryservice [put]
 func putDeliveryservice(id int, payload []byte) (interface{}, error) {
 	var v Deliveryservice
 	err := json.Unmarshal(payload, &v)
@@ -266,6 +384,13 @@ func putDeliveryservice(id int, payload []byte) (interface{}, error) {
 	return result, err
 }
 
+// @Title delDeliveryserviceById
+// @Description deletes deliveryservice information for a certain id
+// @Accept  application/json
+// @Param   id              path    int     false        "The row id"
+// @Success 200 {array}    Deliveryservice
+// @Resource /api/2.0
+// @Router /api/2.0/deliveryservice/{id} [delete]
 func delDeliveryservice(id int) (interface{}, error) {
 	arg := Deliveryservice{Id: int64(id)}
 	result, err := db.GlobalDB.NamedExec("DELETE FROM deliveryservice WHERE id=:id", arg)

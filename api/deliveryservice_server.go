@@ -21,6 +21,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/Comcast/traffic_control/traffic_ops/goto2/db"
+	_ "github.com/Comcast/traffic_control/traffic_ops/goto2/output_format" // needed for swagger
 	"time"
 )
 
@@ -44,27 +45,58 @@ func handleDeliveryserviceServer(method string, id int, payload []byte) (interfa
 }
 
 func getDeliveryserviceServer(id int) (interface{}, error) {
+	if id >= 0 {
+		return getDeliveryserviceServerById(id)
+	} else {
+		return getDeliveryserviceServers()
+	}
+}
+
+// @Title getDeliveryserviceServerById
+// @Description retrieves the deliveryservice_server information for a certain id
+// @Accept  application/json
+// @Param   id              path    int     false        "The row id"
+// @Success 200 {array}    DeliveryserviceServer
+// @Resource /api/2.0
+// @Router /api/2.0/deliveryservice_server/{id} [get]
+func getDeliveryserviceServerById(id int) (interface{}, error) {
 	ret := []DeliveryserviceServer{}
 	arg := DeliveryserviceServer{Deliveryservice: int64(id)}
-	if id >= 0 {
-		nstmt, err := db.GlobalDB.PrepareNamed(`select * from deliveryservice_server where deliveryservice=:deliveryservice`)
-		err = nstmt.Select(&ret, arg)
-		if err != nil {
-			fmt.Println(err)
-			return nil, err
-		}
-		nstmt.Close()
-	} else {
-		queryStr := "select * from deliveryservice_server"
-		err := db.GlobalDB.Select(&ret, queryStr)
-		if err != nil {
-			fmt.Println(err)
-			return nil, err
-		}
+	nstmt, err := db.GlobalDB.PrepareNamed(`select * from deliveryservice_server where deliveryservice=:deliveryservice`)
+	err = nstmt.Select(&ret, arg)
+	if err != nil {
+		fmt.Println(err)
+		return nil, err
+	}
+	nstmt.Close()
+	return ret, nil
+}
+
+// @Title getDeliveryserviceServers
+// @Description retrieves the deliveryservice_server information for a certain id
+// @Accept  application/json
+// @Success 200 {array}    DeliveryserviceServer
+// @Resource /api/2.0
+// @Router /api/2.0/deliveryservice_server [get]
+func getDeliveryserviceServers() (interface{}, error) {
+	ret := []DeliveryserviceServer{}
+	queryStr := "select * from deliveryservice_server"
+	err := db.GlobalDB.Select(&ret, queryStr)
+	if err != nil {
+		fmt.Println(err)
+		return nil, err
 	}
 	return ret, nil
 }
 
+// @Title postDeliveryserviceServer
+// @Description enter a new deliveryservice_server
+// @Accept  application/json
+// @Param      Deliveryservice json      int64   false "deliveryservice description"
+// @Param               Server json      int64   false "server description"
+// @Success 200 {object}    output_format.ApiWrapper
+// @Resource /api/2.0
+// @Router /api/2.0/deliveryservice_server [post]
 func postDeliveryserviceServer(payload []byte) (interface{}, error) {
 	var v DeliveryserviceServer
 	err := json.Unmarshal(payload, &v)
@@ -86,6 +118,14 @@ func postDeliveryserviceServer(payload []byte) (interface{}, error) {
 	return result, err
 }
 
+// @Title putDeliveryserviceServer
+// @Description modify an existing deliveryservice_serverentry
+// @Accept  application/json
+// @Param      Deliveryservice json      int64   false "deliveryservice description"
+// @Param               Server json      int64   false "server description"
+// @Success 200 {object}    output_format.ApiWrapper
+// @Resource /api/2.0
+// @Router /api/2.0/deliveryservice_server [put]
 func putDeliveryserviceServer(id int, payload []byte) (interface{}, error) {
 	var v DeliveryserviceServer
 	err := json.Unmarshal(payload, &v)
@@ -108,6 +148,13 @@ func putDeliveryserviceServer(id int, payload []byte) (interface{}, error) {
 	return result, err
 }
 
+// @Title delDeliveryserviceServerById
+// @Description deletes deliveryservice_server information for a certain id
+// @Accept  application/json
+// @Param   id              path    int     false        "The row id"
+// @Success 200 {array}    DeliveryserviceServer
+// @Resource /api/2.0
+// @Router /api/2.0/deliveryservice_server/{id} [delete]
 func delDeliveryserviceServer(id int) (interface{}, error) {
 	arg := DeliveryserviceServer{Deliveryservice: int64(id)}
 	result, err := db.GlobalDB.NamedExec("DELETE FROM deliveryservice_server WHERE id=:id", arg)

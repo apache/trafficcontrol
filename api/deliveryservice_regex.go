@@ -21,7 +21,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/Comcast/traffic_control/traffic_ops/goto2/db"
-	"gopkg.in/guregu/null.v3"
+	_ "github.com/Comcast/traffic_control/traffic_ops/goto2/output_format" // needed for swagger
+	null "gopkg.in/guregu/null.v3"
 )
 
 type DeliveryserviceRegex struct {
@@ -44,27 +45,59 @@ func handleDeliveryserviceRegex(method string, id int, payload []byte) (interfac
 }
 
 func getDeliveryserviceRegex(id int) (interface{}, error) {
+	if id >= 0 {
+		return getDeliveryserviceRegexById(id)
+	} else {
+		return getDeliveryserviceRegexs()
+	}
+}
+
+// @Title getDeliveryserviceRegexById
+// @Description retrieves the deliveryservice_regex information for a certain id
+// @Accept  application/json
+// @Param   id              path    int     false        "The row id"
+// @Success 200 {array}    DeliveryserviceRegex
+// @Resource /api/2.0
+// @Router /api/2.0/deliveryservice_regex/{id} [get]
+func getDeliveryserviceRegexById(id int) (interface{}, error) {
 	ret := []DeliveryserviceRegex{}
 	arg := DeliveryserviceRegex{Deliveryservice: int64(id)}
-	if id >= 0 {
-		nstmt, err := db.GlobalDB.PrepareNamed(`select * from deliveryservice_regex where deliveryservice=:deliveryservice`)
-		err = nstmt.Select(&ret, arg)
-		if err != nil {
-			fmt.Println(err)
-			return nil, err
-		}
-		nstmt.Close()
-	} else {
-		queryStr := "select * from deliveryservice_regex"
-		err := db.GlobalDB.Select(&ret, queryStr)
-		if err != nil {
-			fmt.Println(err)
-			return nil, err
-		}
+	nstmt, err := db.GlobalDB.PrepareNamed(`select * from deliveryservice_regex where deliveryservice=:deliveryservice`)
+	err = nstmt.Select(&ret, arg)
+	if err != nil {
+		fmt.Println(err)
+		return nil, err
+	}
+	nstmt.Close()
+	return ret, nil
+}
+
+// @Title getDeliveryserviceRegexs
+// @Description retrieves the deliveryservice_regex information for a certain id
+// @Accept  application/json
+// @Success 200 {array}    DeliveryserviceRegex
+// @Resource /api/2.0
+// @Router /api/2.0/deliveryservice_regex [get]
+func getDeliveryserviceRegexs() (interface{}, error) {
+	ret := []DeliveryserviceRegex{}
+	queryStr := "select * from deliveryservice_regex"
+	err := db.GlobalDB.Select(&ret, queryStr)
+	if err != nil {
+		fmt.Println(err)
+		return nil, err
 	}
 	return ret, nil
 }
 
+// @Title postDeliveryserviceRegex
+// @Description enter a new deliveryservice_regex
+// @Accept  application/json
+// @Param      Deliveryservice json      int64   false "deliveryservice description"
+// @Param                Regex json      int64   false "regex description"
+// @Param            SetNumber json        int    true "set_number description"
+// @Success 200 {object}    output_format.ApiWrapper
+// @Resource /api/2.0
+// @Router /api/2.0/deliveryservice_regex [post]
 func postDeliveryserviceRegex(payload []byte) (interface{}, error) {
 	var v DeliveryserviceRegex
 	err := json.Unmarshal(payload, &v)
@@ -88,6 +121,15 @@ func postDeliveryserviceRegex(payload []byte) (interface{}, error) {
 	return result, err
 }
 
+// @Title putDeliveryserviceRegex
+// @Description modify an existing deliveryservice_regexentry
+// @Accept  application/json
+// @Param      Deliveryservice json      int64   false "deliveryservice description"
+// @Param                Regex json      int64   false "regex description"
+// @Param            SetNumber json   null.Int    true "set_number description"
+// @Success 200 {object}    output_format.ApiWrapper
+// @Resource /api/2.0
+// @Router /api/2.0/deliveryservice_regex [put]
 func putDeliveryserviceRegex(id int, payload []byte) (interface{}, error) {
 	var v DeliveryserviceRegex
 	err := json.Unmarshal(payload, &v)
@@ -109,6 +151,13 @@ func putDeliveryserviceRegex(id int, payload []byte) (interface{}, error) {
 	return result, err
 }
 
+// @Title delDeliveryserviceRegexById
+// @Description deletes deliveryservice_regex information for a certain id
+// @Accept  application/json
+// @Param   id              path    int     false        "The row id"
+// @Success 200 {array}    DeliveryserviceRegex
+// @Resource /api/2.0
+// @Router /api/2.0/deliveryservice_regex/{id} [delete]
 func delDeliveryserviceRegex(id int) (interface{}, error) {
 	arg := DeliveryserviceRegex{Deliveryservice: int64(id)}
 	result, err := db.GlobalDB.NamedExec("DELETE FROM deliveryservice_regex WHERE id=:id", arg)

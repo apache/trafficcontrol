@@ -21,7 +21,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/Comcast/traffic_control/traffic_ops/goto2/db"
-	"gopkg.in/guregu/null.v3"
+	_ "github.com/Comcast/traffic_control/traffic_ops/goto2/output_format" // needed for swagger
+	null "gopkg.in/guregu/null.v3"
 	"time"
 )
 
@@ -46,27 +47,58 @@ func handleJobStatus(method string, id int, payload []byte) (interface{}, error)
 }
 
 func getJobStatus(id int) (interface{}, error) {
+	if id >= 0 {
+		return getJobStatusById(id)
+	} else {
+		return getJobStatuss()
+	}
+}
+
+// @Title getJobStatusById
+// @Description retrieves the job_status information for a certain id
+// @Accept  application/json
+// @Param   id              path    int     false        "The row id"
+// @Success 200 {array}    JobStatus
+// @Resource /api/2.0
+// @Router /api/2.0/job_status/{id} [get]
+func getJobStatusById(id int) (interface{}, error) {
 	ret := []JobStatus{}
 	arg := JobStatus{Id: int64(id)}
-	if id >= 0 {
-		nstmt, err := db.GlobalDB.PrepareNamed(`select * from job_status where id=:id`)
-		err = nstmt.Select(&ret, arg)
-		if err != nil {
-			fmt.Println(err)
-			return nil, err
-		}
-		nstmt.Close()
-	} else {
-		queryStr := "select * from job_status"
-		err := db.GlobalDB.Select(&ret, queryStr)
-		if err != nil {
-			fmt.Println(err)
-			return nil, err
-		}
+	nstmt, err := db.GlobalDB.PrepareNamed(`select * from job_status where id=:id`)
+	err = nstmt.Select(&ret, arg)
+	if err != nil {
+		fmt.Println(err)
+		return nil, err
+	}
+	nstmt.Close()
+	return ret, nil
+}
+
+// @Title getJobStatuss
+// @Description retrieves the job_status information for a certain id
+// @Accept  application/json
+// @Success 200 {array}    JobStatus
+// @Resource /api/2.0
+// @Router /api/2.0/job_status [get]
+func getJobStatuss() (interface{}, error) {
+	ret := []JobStatus{}
+	queryStr := "select * from job_status"
+	err := db.GlobalDB.Select(&ret, queryStr)
+	if err != nil {
+		fmt.Println(err)
+		return nil, err
 	}
 	return ret, nil
 }
 
+// @Title postJobStatus
+// @Description enter a new job_status
+// @Accept  application/json
+// @Param                 Name json     string    true "name description"
+// @Param          Description json     string    true "description description"
+// @Success 200 {object}    output_format.ApiWrapper
+// @Resource /api/2.0
+// @Router /api/2.0/job_status [post]
 func postJobStatus(payload []byte) (interface{}, error) {
 	var v JobStatus
 	err := json.Unmarshal(payload, &v)
@@ -88,6 +120,14 @@ func postJobStatus(payload []byte) (interface{}, error) {
 	return result, err
 }
 
+// @Title putJobStatus
+// @Description modify an existing job_statusentry
+// @Accept  application/json
+// @Param                 Name json null.String    true "name description"
+// @Param          Description json null.String    true "description description"
+// @Success 200 {object}    output_format.ApiWrapper
+// @Resource /api/2.0
+// @Router /api/2.0/job_status [put]
 func putJobStatus(id int, payload []byte) (interface{}, error) {
 	var v JobStatus
 	err := json.Unmarshal(payload, &v)
@@ -110,6 +150,13 @@ func putJobStatus(id int, payload []byte) (interface{}, error) {
 	return result, err
 }
 
+// @Title delJobStatusById
+// @Description deletes job_status information for a certain id
+// @Accept  application/json
+// @Param   id              path    int     false        "The row id"
+// @Success 200 {array}    JobStatus
+// @Resource /api/2.0
+// @Router /api/2.0/job_status/{id} [delete]
 func delJobStatus(id int) (interface{}, error) {
 	arg := JobStatus{Id: int64(id)}
 	result, err := db.GlobalDB.NamedExec("DELETE FROM job_status WHERE id=:id", arg)

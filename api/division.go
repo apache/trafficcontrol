@@ -21,6 +21,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/Comcast/traffic_control/traffic_ops/goto2/db"
+	_ "github.com/Comcast/traffic_control/traffic_ops/goto2/output_format" // needed for swagger
 	"time"
 )
 
@@ -44,27 +45,57 @@ func handleDivision(method string, id int, payload []byte) (interface{}, error) 
 }
 
 func getDivision(id int) (interface{}, error) {
+	if id >= 0 {
+		return getDivisionById(id)
+	} else {
+		return getDivisions()
+	}
+}
+
+// @Title getDivisionById
+// @Description retrieves the division information for a certain id
+// @Accept  application/json
+// @Param   id              path    int     false        "The row id"
+// @Success 200 {array}    Division
+// @Resource /api/2.0
+// @Router /api/2.0/division/{id} [get]
+func getDivisionById(id int) (interface{}, error) {
 	ret := []Division{}
 	arg := Division{Id: int64(id)}
-	if id >= 0 {
-		nstmt, err := db.GlobalDB.PrepareNamed(`select * from division where id=:id`)
-		err = nstmt.Select(&ret, arg)
-		if err != nil {
-			fmt.Println(err)
-			return nil, err
-		}
-		nstmt.Close()
-	} else {
-		queryStr := "select * from division"
-		err := db.GlobalDB.Select(&ret, queryStr)
-		if err != nil {
-			fmt.Println(err)
-			return nil, err
-		}
+	nstmt, err := db.GlobalDB.PrepareNamed(`select * from division where id=:id`)
+	err = nstmt.Select(&ret, arg)
+	if err != nil {
+		fmt.Println(err)
+		return nil, err
+	}
+	nstmt.Close()
+	return ret, nil
+}
+
+// @Title getDivisions
+// @Description retrieves the division information for a certain id
+// @Accept  application/json
+// @Success 200 {array}    Division
+// @Resource /api/2.0
+// @Router /api/2.0/division [get]
+func getDivisions() (interface{}, error) {
+	ret := []Division{}
+	queryStr := "select * from division"
+	err := db.GlobalDB.Select(&ret, queryStr)
+	if err != nil {
+		fmt.Println(err)
+		return nil, err
 	}
 	return ret, nil
 }
 
+// @Title postDivision
+// @Description enter a new division
+// @Accept  application/json
+// @Param                 Name json     string   false "name description"
+// @Success 200 {object}    output_format.ApiWrapper
+// @Resource /api/2.0
+// @Router /api/2.0/division [post]
 func postDivision(payload []byte) (interface{}, error) {
 	var v Division
 	err := json.Unmarshal(payload, &v)
@@ -84,6 +115,13 @@ func postDivision(payload []byte) (interface{}, error) {
 	return result, err
 }
 
+// @Title putDivision
+// @Description modify an existing divisionentry
+// @Accept  application/json
+// @Param                 Name json     string   false "name description"
+// @Success 200 {object}    output_format.ApiWrapper
+// @Resource /api/2.0
+// @Router /api/2.0/division [put]
 func putDivision(id int, payload []byte) (interface{}, error) {
 	var v Division
 	err := json.Unmarshal(payload, &v)
@@ -105,6 +143,13 @@ func putDivision(id int, payload []byte) (interface{}, error) {
 	return result, err
 }
 
+// @Title delDivisionById
+// @Description deletes division information for a certain id
+// @Accept  application/json
+// @Param   id              path    int     false        "The row id"
+// @Success 200 {array}    Division
+// @Resource /api/2.0
+// @Router /api/2.0/division/{id} [delete]
 func delDivision(id int) (interface{}, error) {
 	arg := Division{Id: int64(id)}
 	result, err := db.GlobalDB.NamedExec("DELETE FROM division WHERE id=:id", arg)

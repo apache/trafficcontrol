@@ -21,6 +21,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/Comcast/traffic_control/traffic_ops/goto2/db"
+	_ "github.com/Comcast/traffic_control/traffic_ops/goto2/output_format" // needed for swagger
 	"time"
 )
 
@@ -44,27 +45,58 @@ func handleDeliveryserviceTmuser(method string, id int, payload []byte) (interfa
 }
 
 func getDeliveryserviceTmuser(id int) (interface{}, error) {
+	if id >= 0 {
+		return getDeliveryserviceTmuserById(id)
+	} else {
+		return getDeliveryserviceTmusers()
+	}
+}
+
+// @Title getDeliveryserviceTmuserById
+// @Description retrieves the deliveryservice_tmuser information for a certain id
+// @Accept  application/json
+// @Param   id              path    int     false        "The row id"
+// @Success 200 {array}    DeliveryserviceTmuser
+// @Resource /api/2.0
+// @Router /api/2.0/deliveryservice_tmuser/{id} [get]
+func getDeliveryserviceTmuserById(id int) (interface{}, error) {
 	ret := []DeliveryserviceTmuser{}
 	arg := DeliveryserviceTmuser{Deliveryservice: int64(id)}
-	if id >= 0 {
-		nstmt, err := db.GlobalDB.PrepareNamed(`select * from deliveryservice_tmuser where deliveryservice=:deliveryservice`)
-		err = nstmt.Select(&ret, arg)
-		if err != nil {
-			fmt.Println(err)
-			return nil, err
-		}
-		nstmt.Close()
-	} else {
-		queryStr := "select * from deliveryservice_tmuser"
-		err := db.GlobalDB.Select(&ret, queryStr)
-		if err != nil {
-			fmt.Println(err)
-			return nil, err
-		}
+	nstmt, err := db.GlobalDB.PrepareNamed(`select * from deliveryservice_tmuser where deliveryservice=:deliveryservice`)
+	err = nstmt.Select(&ret, arg)
+	if err != nil {
+		fmt.Println(err)
+		return nil, err
+	}
+	nstmt.Close()
+	return ret, nil
+}
+
+// @Title getDeliveryserviceTmusers
+// @Description retrieves the deliveryservice_tmuser information for a certain id
+// @Accept  application/json
+// @Success 200 {array}    DeliveryserviceTmuser
+// @Resource /api/2.0
+// @Router /api/2.0/deliveryservice_tmuser [get]
+func getDeliveryserviceTmusers() (interface{}, error) {
+	ret := []DeliveryserviceTmuser{}
+	queryStr := "select * from deliveryservice_tmuser"
+	err := db.GlobalDB.Select(&ret, queryStr)
+	if err != nil {
+		fmt.Println(err)
+		return nil, err
 	}
 	return ret, nil
 }
 
+// @Title postDeliveryserviceTmuser
+// @Description enter a new deliveryservice_tmuser
+// @Accept  application/json
+// @Param      Deliveryservice json      int64   false "deliveryservice description"
+// @Param             TmUserId json      int64   false "tm_user_id description"
+// @Success 200 {object}    output_format.ApiWrapper
+// @Resource /api/2.0
+// @Router /api/2.0/deliveryservice_tmuser [post]
 func postDeliveryserviceTmuser(payload []byte) (interface{}, error) {
 	var v DeliveryserviceTmuser
 	err := json.Unmarshal(payload, &v)
@@ -86,6 +118,14 @@ func postDeliveryserviceTmuser(payload []byte) (interface{}, error) {
 	return result, err
 }
 
+// @Title putDeliveryserviceTmuser
+// @Description modify an existing deliveryservice_tmuserentry
+// @Accept  application/json
+// @Param      Deliveryservice json      int64   false "deliveryservice description"
+// @Param             TmUserId json      int64   false "tm_user_id description"
+// @Success 200 {object}    output_format.ApiWrapper
+// @Resource /api/2.0
+// @Router /api/2.0/deliveryservice_tmuser [put]
 func putDeliveryserviceTmuser(id int, payload []byte) (interface{}, error) {
 	var v DeliveryserviceTmuser
 	err := json.Unmarshal(payload, &v)
@@ -108,6 +148,13 @@ func putDeliveryserviceTmuser(id int, payload []byte) (interface{}, error) {
 	return result, err
 }
 
+// @Title delDeliveryserviceTmuserById
+// @Description deletes deliveryservice_tmuser information for a certain id
+// @Accept  application/json
+// @Param   id              path    int     false        "The row id"
+// @Success 200 {array}    DeliveryserviceTmuser
+// @Resource /api/2.0
+// @Router /api/2.0/deliveryservice_tmuser/{id} [delete]
 func delDeliveryserviceTmuser(id int) (interface{}, error) {
 	arg := DeliveryserviceTmuser{Deliveryservice: int64(id)}
 	result, err := db.GlobalDB.NamedExec("DELETE FROM deliveryservice_tmuser WHERE id=:id", arg)

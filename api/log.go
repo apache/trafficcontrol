@@ -21,7 +21,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/Comcast/traffic_control/traffic_ops/goto2/db"
-	"gopkg.in/guregu/null.v3"
+	_ "github.com/Comcast/traffic_control/traffic_ops/goto2/output_format" // needed for swagger
+	null "gopkg.in/guregu/null.v3"
 	"time"
 )
 
@@ -48,27 +49,60 @@ func handleLog(method string, id int, payload []byte) (interface{}, error) {
 }
 
 func getLog(id int) (interface{}, error) {
+	if id >= 0 {
+		return getLogById(id)
+	} else {
+		return getLogs()
+	}
+}
+
+// @Title getLogById
+// @Description retrieves the log information for a certain id
+// @Accept  application/json
+// @Param   id              path    int     false        "The row id"
+// @Success 200 {array}    Log
+// @Resource /api/2.0
+// @Router /api/2.0/log/{id} [get]
+func getLogById(id int) (interface{}, error) {
 	ret := []Log{}
 	arg := Log{Id: int64(id)}
-	if id >= 0 {
-		nstmt, err := db.GlobalDB.PrepareNamed(`select * from log where id=:id`)
-		err = nstmt.Select(&ret, arg)
-		if err != nil {
-			fmt.Println(err)
-			return nil, err
-		}
-		nstmt.Close()
-	} else {
-		queryStr := "select * from log"
-		err := db.GlobalDB.Select(&ret, queryStr)
-		if err != nil {
-			fmt.Println(err)
-			return nil, err
-		}
+	nstmt, err := db.GlobalDB.PrepareNamed(`select * from log where id=:id`)
+	err = nstmt.Select(&ret, arg)
+	if err != nil {
+		fmt.Println(err)
+		return nil, err
+	}
+	nstmt.Close()
+	return ret, nil
+}
+
+// @Title getLogs
+// @Description retrieves the log information for a certain id
+// @Accept  application/json
+// @Success 200 {array}    Log
+// @Resource /api/2.0
+// @Router /api/2.0/log [get]
+func getLogs() (interface{}, error) {
+	ret := []Log{}
+	queryStr := "select * from log"
+	err := db.GlobalDB.Select(&ret, queryStr)
+	if err != nil {
+		fmt.Println(err)
+		return nil, err
 	}
 	return ret, nil
 }
 
+// @Title postLog
+// @Description enter a new log
+// @Accept  application/json
+// @Param                Level json     string    true "level description"
+// @Param              Message json     string   false "message description"
+// @Param               TmUser json      int64   false "tm_user description"
+// @Param            Ticketnum json     string    true "ticketnum description"
+// @Success 200 {object}    output_format.ApiWrapper
+// @Resource /api/2.0
+// @Router /api/2.0/log [post]
 func postLog(payload []byte) (interface{}, error) {
 	var v Log
 	err := json.Unmarshal(payload, &v)
@@ -94,6 +128,16 @@ func postLog(payload []byte) (interface{}, error) {
 	return result, err
 }
 
+// @Title putLog
+// @Description modify an existing logentry
+// @Accept  application/json
+// @Param                Level json null.String    true "level description"
+// @Param              Message json     string   false "message description"
+// @Param               TmUser json      int64   false "tm_user description"
+// @Param            Ticketnum json null.String    true "ticketnum description"
+// @Success 200 {object}    output_format.ApiWrapper
+// @Resource /api/2.0
+// @Router /api/2.0/log [put]
 func putLog(id int, payload []byte) (interface{}, error) {
 	var v Log
 	err := json.Unmarshal(payload, &v)
@@ -118,6 +162,13 @@ func putLog(id int, payload []byte) (interface{}, error) {
 	return result, err
 }
 
+// @Title delLogById
+// @Description deletes log information for a certain id
+// @Accept  application/json
+// @Param   id              path    int     false        "The row id"
+// @Success 200 {array}    Log
+// @Resource /api/2.0
+// @Router /api/2.0/log/{id} [delete]
 func delLog(id int) (interface{}, error) {
 	arg := Log{Id: int64(id)}
 	result, err := db.GlobalDB.NamedExec("DELETE FROM log WHERE id=:id", arg)

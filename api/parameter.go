@@ -21,6 +21,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/Comcast/traffic_control/traffic_ops/goto2/db"
+	_ "github.com/Comcast/traffic_control/traffic_ops/goto2/output_format" // needed for swagger
 	"time"
 )
 
@@ -46,27 +47,59 @@ func handleParameter(method string, id int, payload []byte) (interface{}, error)
 }
 
 func getParameter(id int) (interface{}, error) {
+	if id >= 0 {
+		return getParameterById(id)
+	} else {
+		return getParameters()
+	}
+}
+
+// @Title getParameterById
+// @Description retrieves the parameter information for a certain id
+// @Accept  application/json
+// @Param   id              path    int     false        "The row id"
+// @Success 200 {array}    Parameter
+// @Resource /api/2.0
+// @Router /api/2.0/parameter/{id} [get]
+func getParameterById(id int) (interface{}, error) {
 	ret := []Parameter{}
 	arg := Parameter{Id: int64(id)}
-	if id >= 0 {
-		nstmt, err := db.GlobalDB.PrepareNamed(`select * from parameter where id=:id`)
-		err = nstmt.Select(&ret, arg)
-		if err != nil {
-			fmt.Println(err)
-			return nil, err
-		}
-		nstmt.Close()
-	} else {
-		queryStr := "select * from parameter"
-		err := db.GlobalDB.Select(&ret, queryStr)
-		if err != nil {
-			fmt.Println(err)
-			return nil, err
-		}
+	nstmt, err := db.GlobalDB.PrepareNamed(`select * from parameter where id=:id`)
+	err = nstmt.Select(&ret, arg)
+	if err != nil {
+		fmt.Println(err)
+		return nil, err
+	}
+	nstmt.Close()
+	return ret, nil
+}
+
+// @Title getParameters
+// @Description retrieves the parameter information for a certain id
+// @Accept  application/json
+// @Success 200 {array}    Parameter
+// @Resource /api/2.0
+// @Router /api/2.0/parameter [get]
+func getParameters() (interface{}, error) {
+	ret := []Parameter{}
+	queryStr := "select * from parameter"
+	err := db.GlobalDB.Select(&ret, queryStr)
+	if err != nil {
+		fmt.Println(err)
+		return nil, err
 	}
 	return ret, nil
 }
 
+// @Title postParameter
+// @Description enter a new parameter
+// @Accept  application/json
+// @Param                 Name json     string   false "name description"
+// @Param           ConfigFile json     string   false "config_file description"
+// @Param                Value json     string   false "value description"
+// @Success 200 {object}    output_format.ApiWrapper
+// @Resource /api/2.0
+// @Router /api/2.0/parameter [post]
 func postParameter(payload []byte) (interface{}, error) {
 	var v Parameter
 	err := json.Unmarshal(payload, &v)
@@ -90,6 +123,15 @@ func postParameter(payload []byte) (interface{}, error) {
 	return result, err
 }
 
+// @Title putParameter
+// @Description modify an existing parameterentry
+// @Accept  application/json
+// @Param                 Name json     string   false "name description"
+// @Param           ConfigFile json     string   false "config_file description"
+// @Param                Value json     string   false "value description"
+// @Success 200 {object}    output_format.ApiWrapper
+// @Resource /api/2.0
+// @Router /api/2.0/parameter [put]
 func putParameter(id int, payload []byte) (interface{}, error) {
 	var v Parameter
 	err := json.Unmarshal(payload, &v)
@@ -113,6 +155,13 @@ func putParameter(id int, payload []byte) (interface{}, error) {
 	return result, err
 }
 
+// @Title delParameterById
+// @Description deletes parameter information for a certain id
+// @Accept  application/json
+// @Param   id              path    int     false        "The row id"
+// @Success 200 {array}    Parameter
+// @Resource /api/2.0
+// @Router /api/2.0/parameter/{id} [delete]
 func delParameter(id int) (interface{}, error) {
 	arg := Parameter{Id: int64(id)}
 	result, err := db.GlobalDB.NamedExec("DELETE FROM parameter WHERE id=:id", arg)

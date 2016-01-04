@@ -95,9 +95,10 @@ func writeFile(schemas []ColumnSchema, table string) (int, error) {
 	sString := structString(schemas, table)
 
 	if strings.Contains(sString, "null.") {
-		header += "\"gopkg.in/guregu/null.v3\"\n"
+		header += "null \"gopkg.in/guregu/null.v3\"\n"
 	}
 	header += "\"github.com/Comcast/traffic_control/traffic_ops/goto2/db\"\n"
+	header += "_ \"github.com/Comcast/traffic_control/traffic_ops/goto2/output_format\" // needed for swagger\n"
 	if strings.Contains(sString, "time.") {
 		header += "\"time\"\n"
 	}
@@ -166,8 +167,58 @@ func hasLastUpdated(schemas []ColumnSchema, table string) bool {
 	return false
 }
 
+func genApiPostDocChangeLines(schemas []ColumnSchema, table string) string {
+	out := ""
+	for _, cs := range schemas {
+		if cs.TableName == table && cs.ColumnName != "id" && cs.ColumnName != "last_updated" {
+			goType, _, err := goType(&cs)
+			if err != nil {
+				log.Fatal(err)
+			}
+			goType = strings.Replace(goType, "null.", "", 1)
+			goType = strings.Replace(goType, string(goType[0]), strings.ToLower(string(goType[0])), 1)
+			if goType == "float" {
+				goType = strings.Replace(goType, "float", "float64", 1)
+			}
+			nullable := "false"
+			if cs.IsNullable == "YES" {
+				nullable = "true"
+			}
+			out += fmt.Sprintf("// @Param %20s json %10s %7s \"%s description\"\n",
+				formatName(cs.ColumnName), goType, nullable, cs.ColumnName)
+		}
+	}
+	return out
+}
+
+func genApiPutDocChangeLines(schemas []ColumnSchema, table string) string {
+	out := ""
+	for _, cs := range schemas {
+		if cs.TableName == table && cs.ColumnName != "id" && cs.ColumnName != "last_updated" {
+			goType, _, err := goType(&cs)
+			if err != nil {
+				log.Fatal(err)
+			}
+			goType = strings.Replace(goType, "null.", "", 1)
+			goType = strings.Replace(goType, string(goType[0]), strings.ToLower(string(goType[0])), 1)
+			if goType == "float" {
+				goType = strings.Replace(goType, "float", "float64", 1)
+			}
+			nullable := "false"
+			if cs.IsNullable == "YES" {
+				nullable = "true"
+			}
+			out += fmt.Sprintf("// @Param %20s json %10s %7s \"%s description\"\n",
+				formatName(cs.ColumnName), goType, nullable, cs.ColumnName)
+		}
+	}
+	return out
+}
+
 func handleString(schemas []ColumnSchema, table string) string {
-	// out := "func handle" + formatName(table) + "()([]" + formatName(table) + ", error) {\n"
+	idColumn := idCol(schemas, table)
+	updateLastUpdated := hasLastUpdated(schemas, table)
+
 	out := "func handle" + formatName(table) + "(method string, id int, payload []byte)(interface{}, error) {\n"
 	out += "    if method == \"GET\" {\n"
 	out += "        return get" + formatName(table) + "(id)\n"
@@ -181,41 +232,58 @@ func handleString(schemas []ColumnSchema, table string) string {
 	out += "    return nil, nil\n"
 	out += "}\n\n"
 
-	// 	arg := TmUser{Username: null.StringFrom(username)}
-	// nstmt, err := db.GlobalDB.PrepareNamed(`select * from tm_user where username=:username`)
-	// err = nstmt.Select(&ret, arg)
-	// if err != nil {
-	// 	fmt.Println(err)
-	// }
-	// if len(ret) != 1 {
-	// 	err := errors.New("Username " + username + " is not unique!")
-	// }
-	// nstmt.Close()
-
-	idColumn := idCol(schemas, table)
-	updateLastUpdated := hasLastUpdated(schemas, table)
 	out += "func get" + formatName(table) + "(id int) (interface{}, error) {\n"
+	out += "    if id >= 0 {\n"
+	out += "        return get" + formatName(table) + "ById(id)\n"
+	out += "	} else {\n"
+	out += "        return get" + formatName(table) + "s()\n"
+	out += "    }\n"
+	out += "}\n\n"
+
+	out += "// @Title get" + formatName(table) + "ById\n"
+	out += "// @Description retrieves the " + table + " information for a certain id\n"
+	out += "// @Accept  application/json\n"
+	out += "// @Param   id              path    int     false        \"The row id\"\n"
+	out += "// @Success 200 {array}    " + formatName(table) + "\n"
+	out += "// @Resource /api/2.0\n"
+	out += "// @Router /api/2.0/" + table + "/{id} [get]\n"
+	out += "func get" + formatName(table) + "ById(id int) (interface{}, error) {\n"
 	out += "    ret := []" + formatName(table) + "{}\n"
 	out += "    arg := " + formatName(table) + "{" + formatName(idColumn) + ": int64(id)}\n"
-	out += "    if id >= 0 {\n"
-	out += "        nstmt, err := db.GlobalDB.PrepareNamed(`select * from " + table + " where " + idColumn + "=:" + idColumn + "`)\n"
-	out += "        err = nstmt.Select(&ret, arg)\n"
-	out += "	    if err != nil {\n"
-	out += "	        fmt.Println(err)\n"
-	out += "	        return nil, err\n"
-	out += "	    }\n"
-	out += "        nstmt.Close()\n"
-	out += "	} else {\n"
-	out += "		queryStr := \"select * from " + table + "\"\n"
-	out += "	    err := db.GlobalDB.Select(&ret, queryStr)\n"
-	out += "	    if err != nil {\n"
-	out += "		    fmt.Println(err)\n"
-	out += "		    return nil, err\n"
-	out += "	    }\n"
-	out += "    }\n"
+	out += "    nstmt, err := db.GlobalDB.PrepareNamed(`select * from " + table + " where " + idColumn + "=:" + idColumn + "`)\n"
+	out += "    err = nstmt.Select(&ret, arg)\n"
+	out += "	if err != nil {\n"
+	out += "	    fmt.Println(err)\n"
+	out += "	    return nil, err\n"
+	out += "	}\n"
+	out += "    nstmt.Close()\n"
 	out += "	return ret, nil\n"
 	out += "}\n\n"
 
+	out += "// @Title get" + formatName(table) + "s\n"
+	out += "// @Description retrieves the " + table + " information for a certain id\n"
+	out += "// @Accept  application/json\n"
+	out += "// @Success 200 {array}    " + formatName(table) + "\n"
+	out += "// @Resource /api/2.0\n"
+	out += "// @Router /api/2.0/" + table + " [get]\n"
+	out += "func get" + formatName(table) + "s() (interface{}, error) {\n"
+	out += "    ret := []" + formatName(table) + "{}\n"
+	out += "	queryStr := \"select * from " + table + "\"\n"
+	out += "	err := db.GlobalDB.Select(&ret, queryStr)\n"
+	out += "	if err != nil {\n"
+	out += "	   fmt.Println(err)\n"
+	out += "	   return nil, err\n"
+	out += "	}\n"
+	out += "	return ret, nil\n"
+	out += "}\n\n"
+
+	out += "// @Title post" + formatName(table) + "\n"
+	out += "// @Description enter a new " + table + "\n"
+	out += "// @Accept  application/json\n"
+	out += genApiPostDocChangeLines(schemas, table)
+	out += "// @Success 200 {object}    output_format.ApiWrapper\n"
+	out += "// @Resource /api/2.0\n"
+	out += "// @Router /api/2.0/" + table + " [post]\n"
 	out += "func post" + formatName(table) + "(payload []byte) (interface{}, error) {\n"
 	out += "	var v " + formatName(table) + "\n"
 	out += "	err := json.Unmarshal(payload, &v)\n"
@@ -231,6 +299,13 @@ func handleString(schemas []ColumnSchema, table string) string {
 	out += "    return result, err\n"
 	out += "}\n\n"
 
+	out += "// @Title put" + formatName(table) + "\n"
+	out += "// @Description modify an existing " + table + "entry\n"
+	out += "// @Accept  application/json\n"
+	out += genApiPutDocChangeLines(schemas, table)
+	out += "// @Success 200 {object}    output_format.ApiWrapper\n"
+	out += "// @Resource /api/2.0\n"
+	out += "// @Router /api/2.0/" + table + " [put]\n"
 	out += "func put" + formatName(table) + "(id int, payload []byte) (interface{}, error) {\n"
 	out += "    var v " + formatName(table) + "\n"
 	out += "    err := json.Unmarshal(payload, &v)\n"
@@ -251,6 +326,13 @@ func handleString(schemas []ColumnSchema, table string) string {
 	out += "    return result, err\n"
 	out += "}\n\n"
 
+	out += "// @Title del" + formatName(table) + "ById\n"
+	out += "// @Description deletes " + table + " information for a certain id\n"
+	out += "// @Accept  application/json\n"
+	out += "// @Param   id              path    int     false        \"The row id\"\n"
+	out += "// @Success 200 {array}    " + formatName(table) + "\n"
+	out += "// @Resource /api/2.0\n"
+	out += "// @Router /api/2.0/" + table + "/{id} [delete]\n"
 	out += "func del" + formatName(table) + "(id int) (interface{}, error) {\n"
 	out += "    arg := " + formatName(table) + "{" + formatName(idColumn) + ": int64(id)}\n"
 	out += "    result, err := db.GlobalDB.NamedExec(\"DELETE FROM " + table + " WHERE id=:id\", arg)\n"

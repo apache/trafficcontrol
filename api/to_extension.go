@@ -21,7 +21,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/Comcast/traffic_control/traffic_ops/goto2/db"
-	"gopkg.in/guregu/null.v3"
+	_ "github.com/Comcast/traffic_control/traffic_ops/goto2/output_format" // needed for swagger
+	null "gopkg.in/guregu/null.v3"
 	"time"
 )
 
@@ -54,27 +55,66 @@ func handleToExtension(method string, id int, payload []byte) (interface{}, erro
 }
 
 func getToExtension(id int) (interface{}, error) {
+	if id >= 0 {
+		return getToExtensionById(id)
+	} else {
+		return getToExtensions()
+	}
+}
+
+// @Title getToExtensionById
+// @Description retrieves the to_extension information for a certain id
+// @Accept  application/json
+// @Param   id              path    int     false        "The row id"
+// @Success 200 {array}    ToExtension
+// @Resource /api/2.0
+// @Router /api/2.0/to_extension/{id} [get]
+func getToExtensionById(id int) (interface{}, error) {
 	ret := []ToExtension{}
 	arg := ToExtension{Id: int64(id)}
-	if id >= 0 {
-		nstmt, err := db.GlobalDB.PrepareNamed(`select * from to_extension where id=:id`)
-		err = nstmt.Select(&ret, arg)
-		if err != nil {
-			fmt.Println(err)
-			return nil, err
-		}
-		nstmt.Close()
-	} else {
-		queryStr := "select * from to_extension"
-		err := db.GlobalDB.Select(&ret, queryStr)
-		if err != nil {
-			fmt.Println(err)
-			return nil, err
-		}
+	nstmt, err := db.GlobalDB.PrepareNamed(`select * from to_extension where id=:id`)
+	err = nstmt.Select(&ret, arg)
+	if err != nil {
+		fmt.Println(err)
+		return nil, err
+	}
+	nstmt.Close()
+	return ret, nil
+}
+
+// @Title getToExtensions
+// @Description retrieves the to_extension information for a certain id
+// @Accept  application/json
+// @Success 200 {array}    ToExtension
+// @Resource /api/2.0
+// @Router /api/2.0/to_extension [get]
+func getToExtensions() (interface{}, error) {
+	ret := []ToExtension{}
+	queryStr := "select * from to_extension"
+	err := db.GlobalDB.Select(&ret, queryStr)
+	if err != nil {
+		fmt.Println(err)
+		return nil, err
 	}
 	return ret, nil
 }
 
+// @Title postToExtension
+// @Description enter a new to_extension
+// @Accept  application/json
+// @Param                 Name json     string   false "name description"
+// @Param              Version json     string   false "version description"
+// @Param              InfoUrl json     string   false "info_url description"
+// @Param           ScriptFile json     string   false "script_file description"
+// @Param             Isactive json      int64   false "isactive description"
+// @Param AdditionalConfigJson json     string    true "additional_config_json description"
+// @Param          Description json     string    true "description description"
+// @Param ServercheckShortName json     string    true "servercheck_short_name description"
+// @Param ServercheckColumnName json     string    true "servercheck_column_name description"
+// @Param                 Type json      int64   false "type description"
+// @Success 200 {object}    output_format.ApiWrapper
+// @Resource /api/2.0
+// @Router /api/2.0/to_extension [post]
 func postToExtension(payload []byte) (interface{}, error) {
 	var v ToExtension
 	err := json.Unmarshal(payload, &v)
@@ -112,6 +152,22 @@ func postToExtension(payload []byte) (interface{}, error) {
 	return result, err
 }
 
+// @Title putToExtension
+// @Description modify an existing to_extensionentry
+// @Accept  application/json
+// @Param                 Name json     string   false "name description"
+// @Param              Version json     string   false "version description"
+// @Param              InfoUrl json     string   false "info_url description"
+// @Param           ScriptFile json     string   false "script_file description"
+// @Param             Isactive json      int64   false "isactive description"
+// @Param AdditionalConfigJson json null.String    true "additional_config_json description"
+// @Param          Description json null.String    true "description description"
+// @Param ServercheckShortName json null.String    true "servercheck_short_name description"
+// @Param ServercheckColumnName json null.String    true "servercheck_column_name description"
+// @Param                 Type json      int64   false "type description"
+// @Success 200 {object}    output_format.ApiWrapper
+// @Resource /api/2.0
+// @Router /api/2.0/to_extension [put]
 func putToExtension(id int, payload []byte) (interface{}, error) {
 	var v ToExtension
 	err := json.Unmarshal(payload, &v)
@@ -142,6 +198,13 @@ func putToExtension(id int, payload []byte) (interface{}, error) {
 	return result, err
 }
 
+// @Title delToExtensionById
+// @Description deletes to_extension information for a certain id
+// @Accept  application/json
+// @Param   id              path    int     false        "The row id"
+// @Success 200 {array}    ToExtension
+// @Resource /api/2.0
+// @Router /api/2.0/to_extension/{id} [delete]
 func delToExtension(id int) (interface{}, error) {
 	arg := ToExtension{Id: int64(id)}
 	result, err := db.GlobalDB.NamedExec("DELETE FROM to_extension WHERE id=:id", arg)

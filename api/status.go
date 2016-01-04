@@ -21,7 +21,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/Comcast/traffic_control/traffic_ops/goto2/db"
-	"gopkg.in/guregu/null.v3"
+	_ "github.com/Comcast/traffic_control/traffic_ops/goto2/output_format" // needed for swagger
+	null "gopkg.in/guregu/null.v3"
 	"time"
 )
 
@@ -46,27 +47,58 @@ func handleStatus(method string, id int, payload []byte) (interface{}, error) {
 }
 
 func getStatus(id int) (interface{}, error) {
+	if id >= 0 {
+		return getStatusById(id)
+	} else {
+		return getStatuss()
+	}
+}
+
+// @Title getStatusById
+// @Description retrieves the status information for a certain id
+// @Accept  application/json
+// @Param   id              path    int     false        "The row id"
+// @Success 200 {array}    Status
+// @Resource /api/2.0
+// @Router /api/2.0/status/{id} [get]
+func getStatusById(id int) (interface{}, error) {
 	ret := []Status{}
 	arg := Status{Id: int64(id)}
-	if id >= 0 {
-		nstmt, err := db.GlobalDB.PrepareNamed(`select * from status where id=:id`)
-		err = nstmt.Select(&ret, arg)
-		if err != nil {
-			fmt.Println(err)
-			return nil, err
-		}
-		nstmt.Close()
-	} else {
-		queryStr := "select * from status"
-		err := db.GlobalDB.Select(&ret, queryStr)
-		if err != nil {
-			fmt.Println(err)
-			return nil, err
-		}
+	nstmt, err := db.GlobalDB.PrepareNamed(`select * from status where id=:id`)
+	err = nstmt.Select(&ret, arg)
+	if err != nil {
+		fmt.Println(err)
+		return nil, err
+	}
+	nstmt.Close()
+	return ret, nil
+}
+
+// @Title getStatuss
+// @Description retrieves the status information for a certain id
+// @Accept  application/json
+// @Success 200 {array}    Status
+// @Resource /api/2.0
+// @Router /api/2.0/status [get]
+func getStatuss() (interface{}, error) {
+	ret := []Status{}
+	queryStr := "select * from status"
+	err := db.GlobalDB.Select(&ret, queryStr)
+	if err != nil {
+		fmt.Println(err)
+		return nil, err
 	}
 	return ret, nil
 }
 
+// @Title postStatus
+// @Description enter a new status
+// @Accept  application/json
+// @Param                 Name json     string   false "name description"
+// @Param          Description json     string    true "description description"
+// @Success 200 {object}    output_format.ApiWrapper
+// @Resource /api/2.0
+// @Router /api/2.0/status [post]
 func postStatus(payload []byte) (interface{}, error) {
 	var v Status
 	err := json.Unmarshal(payload, &v)
@@ -88,6 +120,14 @@ func postStatus(payload []byte) (interface{}, error) {
 	return result, err
 }
 
+// @Title putStatus
+// @Description modify an existing statusentry
+// @Accept  application/json
+// @Param                 Name json     string   false "name description"
+// @Param          Description json null.String    true "description description"
+// @Success 200 {object}    output_format.ApiWrapper
+// @Resource /api/2.0
+// @Router /api/2.0/status [put]
 func putStatus(id int, payload []byte) (interface{}, error) {
 	var v Status
 	err := json.Unmarshal(payload, &v)
@@ -110,6 +150,13 @@ func putStatus(id int, payload []byte) (interface{}, error) {
 	return result, err
 }
 
+// @Title delStatusById
+// @Description deletes status information for a certain id
+// @Accept  application/json
+// @Param   id              path    int     false        "The row id"
+// @Success 200 {array}    Status
+// @Resource /api/2.0
+// @Router /api/2.0/status/{id} [delete]
 func delStatus(id int) (interface{}, error) {
 	arg := Status{Id: int64(id)}
 	result, err := db.GlobalDB.NamedExec("DELETE FROM status WHERE id=:id", arg)

@@ -21,7 +21,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/Comcast/traffic_control/traffic_ops/goto2/db"
-	"gopkg.in/guregu/null.v3"
+	_ "github.com/Comcast/traffic_control/traffic_ops/goto2/output_format" // needed for swagger
+	null "gopkg.in/guregu/null.v3"
 	"time"
 )
 
@@ -50,27 +51,62 @@ func handleStaticdnsentry(method string, id int, payload []byte) (interface{}, e
 }
 
 func getStaticdnsentry(id int) (interface{}, error) {
+	if id >= 0 {
+		return getStaticdnsentryById(id)
+	} else {
+		return getStaticdnsentrys()
+	}
+}
+
+// @Title getStaticdnsentryById
+// @Description retrieves the staticdnsentry information for a certain id
+// @Accept  application/json
+// @Param   id              path    int     false        "The row id"
+// @Success 200 {array}    Staticdnsentry
+// @Resource /api/2.0
+// @Router /api/2.0/staticdnsentry/{id} [get]
+func getStaticdnsentryById(id int) (interface{}, error) {
 	ret := []Staticdnsentry{}
 	arg := Staticdnsentry{Id: int64(id)}
-	if id >= 0 {
-		nstmt, err := db.GlobalDB.PrepareNamed(`select * from staticdnsentry where id=:id`)
-		err = nstmt.Select(&ret, arg)
-		if err != nil {
-			fmt.Println(err)
-			return nil, err
-		}
-		nstmt.Close()
-	} else {
-		queryStr := "select * from staticdnsentry"
-		err := db.GlobalDB.Select(&ret, queryStr)
-		if err != nil {
-			fmt.Println(err)
-			return nil, err
-		}
+	nstmt, err := db.GlobalDB.PrepareNamed(`select * from staticdnsentry where id=:id`)
+	err = nstmt.Select(&ret, arg)
+	if err != nil {
+		fmt.Println(err)
+		return nil, err
+	}
+	nstmt.Close()
+	return ret, nil
+}
+
+// @Title getStaticdnsentrys
+// @Description retrieves the staticdnsentry information for a certain id
+// @Accept  application/json
+// @Success 200 {array}    Staticdnsentry
+// @Resource /api/2.0
+// @Router /api/2.0/staticdnsentry [get]
+func getStaticdnsentrys() (interface{}, error) {
+	ret := []Staticdnsentry{}
+	queryStr := "select * from staticdnsentry"
+	err := db.GlobalDB.Select(&ret, queryStr)
+	if err != nil {
+		fmt.Println(err)
+		return nil, err
 	}
 	return ret, nil
 }
 
+// @Title postStaticdnsentry
+// @Description enter a new staticdnsentry
+// @Accept  application/json
+// @Param                 Host json     string   false "host description"
+// @Param              Address json     string   false "address description"
+// @Param                 Type json      int64   false "type description"
+// @Param                  Ttl json      int64   false "ttl description"
+// @Param      Deliveryservice json      int64   false "deliveryservice description"
+// @Param           Cachegroup json        int    true "cachegroup description"
+// @Success 200 {object}    output_format.ApiWrapper
+// @Resource /api/2.0
+// @Router /api/2.0/staticdnsentry [post]
 func postStaticdnsentry(payload []byte) (interface{}, error) {
 	var v Staticdnsentry
 	err := json.Unmarshal(payload, &v)
@@ -100,6 +136,18 @@ func postStaticdnsentry(payload []byte) (interface{}, error) {
 	return result, err
 }
 
+// @Title putStaticdnsentry
+// @Description modify an existing staticdnsentryentry
+// @Accept  application/json
+// @Param                 Host json     string   false "host description"
+// @Param              Address json     string   false "address description"
+// @Param                 Type json      int64   false "type description"
+// @Param                  Ttl json      int64   false "ttl description"
+// @Param      Deliveryservice json      int64   false "deliveryservice description"
+// @Param           Cachegroup json   null.Int    true "cachegroup description"
+// @Success 200 {object}    output_format.ApiWrapper
+// @Resource /api/2.0
+// @Router /api/2.0/staticdnsentry [put]
 func putStaticdnsentry(id int, payload []byte) (interface{}, error) {
 	var v Staticdnsentry
 	err := json.Unmarshal(payload, &v)
@@ -126,6 +174,13 @@ func putStaticdnsentry(id int, payload []byte) (interface{}, error) {
 	return result, err
 }
 
+// @Title delStaticdnsentryById
+// @Description deletes staticdnsentry information for a certain id
+// @Accept  application/json
+// @Param   id              path    int     false        "The row id"
+// @Success 200 {array}    Staticdnsentry
+// @Resource /api/2.0
+// @Router /api/2.0/staticdnsentry/{id} [delete]
 func delStaticdnsentry(id int) (interface{}, error) {
 	arg := Staticdnsentry{Id: int64(id)}
 	result, err := db.GlobalDB.NamedExec("DELETE FROM staticdnsentry WHERE id=:id", arg)

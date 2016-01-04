@@ -21,6 +21,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/Comcast/traffic_control/traffic_ops/goto2/db"
+	_ "github.com/Comcast/traffic_control/traffic_ops/goto2/output_format" // needed for swagger
 	"time"
 )
 
@@ -44,27 +45,58 @@ func handleFederationDeliveryservice(method string, id int, payload []byte) (int
 }
 
 func getFederationDeliveryservice(id int) (interface{}, error) {
+	if id >= 0 {
+		return getFederationDeliveryserviceById(id)
+	} else {
+		return getFederationDeliveryservices()
+	}
+}
+
+// @Title getFederationDeliveryserviceById
+// @Description retrieves the federation_deliveryservice information for a certain id
+// @Accept  application/json
+// @Param   id              path    int     false        "The row id"
+// @Success 200 {array}    FederationDeliveryservice
+// @Resource /api/2.0
+// @Router /api/2.0/federation_deliveryservice/{id} [get]
+func getFederationDeliveryserviceById(id int) (interface{}, error) {
 	ret := []FederationDeliveryservice{}
 	arg := FederationDeliveryservice{Federation: int64(id)}
-	if id >= 0 {
-		nstmt, err := db.GlobalDB.PrepareNamed(`select * from federation_deliveryservice where federation=:federation`)
-		err = nstmt.Select(&ret, arg)
-		if err != nil {
-			fmt.Println(err)
-			return nil, err
-		}
-		nstmt.Close()
-	} else {
-		queryStr := "select * from federation_deliveryservice"
-		err := db.GlobalDB.Select(&ret, queryStr)
-		if err != nil {
-			fmt.Println(err)
-			return nil, err
-		}
+	nstmt, err := db.GlobalDB.PrepareNamed(`select * from federation_deliveryservice where federation=:federation`)
+	err = nstmt.Select(&ret, arg)
+	if err != nil {
+		fmt.Println(err)
+		return nil, err
+	}
+	nstmt.Close()
+	return ret, nil
+}
+
+// @Title getFederationDeliveryservices
+// @Description retrieves the federation_deliveryservice information for a certain id
+// @Accept  application/json
+// @Success 200 {array}    FederationDeliveryservice
+// @Resource /api/2.0
+// @Router /api/2.0/federation_deliveryservice [get]
+func getFederationDeliveryservices() (interface{}, error) {
+	ret := []FederationDeliveryservice{}
+	queryStr := "select * from federation_deliveryservice"
+	err := db.GlobalDB.Select(&ret, queryStr)
+	if err != nil {
+		fmt.Println(err)
+		return nil, err
 	}
 	return ret, nil
 }
 
+// @Title postFederationDeliveryservice
+// @Description enter a new federation_deliveryservice
+// @Accept  application/json
+// @Param           Federation json      int64   false "federation description"
+// @Param      Deliveryservice json      int64   false "deliveryservice description"
+// @Success 200 {object}    output_format.ApiWrapper
+// @Resource /api/2.0
+// @Router /api/2.0/federation_deliveryservice [post]
 func postFederationDeliveryservice(payload []byte) (interface{}, error) {
 	var v FederationDeliveryservice
 	err := json.Unmarshal(payload, &v)
@@ -86,6 +118,14 @@ func postFederationDeliveryservice(payload []byte) (interface{}, error) {
 	return result, err
 }
 
+// @Title putFederationDeliveryservice
+// @Description modify an existing federation_deliveryserviceentry
+// @Accept  application/json
+// @Param           Federation json      int64   false "federation description"
+// @Param      Deliveryservice json      int64   false "deliveryservice description"
+// @Success 200 {object}    output_format.ApiWrapper
+// @Resource /api/2.0
+// @Router /api/2.0/federation_deliveryservice [put]
 func putFederationDeliveryservice(id int, payload []byte) (interface{}, error) {
 	var v FederationDeliveryservice
 	err := json.Unmarshal(payload, &v)
@@ -108,6 +148,13 @@ func putFederationDeliveryservice(id int, payload []byte) (interface{}, error) {
 	return result, err
 }
 
+// @Title delFederationDeliveryserviceById
+// @Description deletes federation_deliveryservice information for a certain id
+// @Accept  application/json
+// @Param   id              path    int     false        "The row id"
+// @Success 200 {array}    FederationDeliveryservice
+// @Resource /api/2.0
+// @Router /api/2.0/federation_deliveryservice/{id} [delete]
 func delFederationDeliveryservice(id int) (interface{}, error) {
 	arg := FederationDeliveryservice{Federation: int64(id)}
 	result, err := db.GlobalDB.NamedExec("DELETE FROM federation_deliveryservice WHERE id=:id", arg)

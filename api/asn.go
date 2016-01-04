@@ -21,6 +21,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/Comcast/traffic_control/traffic_ops/goto2/db"
+	_ "github.com/Comcast/traffic_control/traffic_ops/goto2/output_format" // needed for swagger
 	"time"
 )
 
@@ -44,35 +45,59 @@ func handleAsn(method string, id int, payload []byte) (interface{}, error) {
 	return nil, nil
 }
 
-// @Title getAsn
-// @Description retrieves Asn information
+func getAsn(id int) (interface{}, error) {
+	if id >= 0 {
+		return getAsnById(id)
+	} else {
+		return getAsns()
+	}
+}
+
+// @Title getAsnById
+// @Description retrieves the asn information for a certain id
 // @Accept  application/json
-// @Param   id              path    int     false        "Asn id"
+// @Param   id              path    int     false        "The row id"
 // @Success 200 {array}    Asn
 // @Resource /api/2.0
 // @Router /api/2.0/asn/{id} [get]
-func getAsn(id int) (interface{}, error) {
+func getAsnById(id int) (interface{}, error) {
 	ret := []Asn{}
 	arg := Asn{Id: int64(id)}
-	if id >= 0 {
-		nstmt, err := db.GlobalDB.PrepareNamed(`select * from asn where id=:id`)
-		err = nstmt.Select(&ret, arg)
-		if err != nil {
-			fmt.Println(err)
-			return nil, err
-		}
-		nstmt.Close()
-	} else {
-		queryStr := "select * from asn"
-		err := db.GlobalDB.Select(&ret, queryStr)
-		if err != nil {
-			fmt.Println(err)
-			return nil, err
-		}
+	nstmt, err := db.GlobalDB.PrepareNamed(`select * from asn where id=:id`)
+	err = nstmt.Select(&ret, arg)
+	if err != nil {
+		fmt.Println(err)
+		return nil, err
+	}
+	nstmt.Close()
+	return ret, nil
+}
+
+// @Title getAsns
+// @Description retrieves the asn information for a certain id
+// @Accept  application/json
+// @Success 200 {array}    Asn
+// @Resource /api/2.0
+// @Router /api/2.0/asn [get]
+func getAsns() (interface{}, error) {
+	ret := []Asn{}
+	queryStr := "select * from asn"
+	err := db.GlobalDB.Select(&ret, queryStr)
+	if err != nil {
+		fmt.Println(err)
+		return nil, err
 	}
 	return ret, nil
 }
 
+// @Title postAsn
+// @Description enter a new asn
+// @Accept  application/json
+// @Param                  Asn json      int64   false "asn description"
+// @Param           Cachegroup json      int64   false "cachegroup description"
+// @Success 200 {object}    output_format.ApiWrapper
+// @Resource /api/2.0
+// @Router /api/2.0/asn [post]
 func postAsn(payload []byte) (interface{}, error) {
 	var v Asn
 	err := json.Unmarshal(payload, &v)
@@ -94,6 +119,14 @@ func postAsn(payload []byte) (interface{}, error) {
 	return result, err
 }
 
+// @Title putAsn
+// @Description modify an existing asnentry
+// @Accept  application/json
+// @Param                  Asn json      int64   false "asn description"
+// @Param           Cachegroup json      int64   false "cachegroup description"
+// @Success 200 {object}    output_format.ApiWrapper
+// @Resource /api/2.0
+// @Router /api/2.0/asn [put]
 func putAsn(id int, payload []byte) (interface{}, error) {
 	var v Asn
 	err := json.Unmarshal(payload, &v)
@@ -116,6 +149,13 @@ func putAsn(id int, payload []byte) (interface{}, error) {
 	return result, err
 }
 
+// @Title delAsnById
+// @Description deletes asn information for a certain id
+// @Accept  application/json
+// @Param   id              path    int     false        "The row id"
+// @Success 200 {array}    Asn
+// @Resource /api/2.0
+// @Router /api/2.0/asn/{id} [delete]
 func delAsn(id int) (interface{}, error) {
 	arg := Asn{Id: int64(id)}
 	result, err := db.GlobalDB.NamedExec("DELETE FROM asn WHERE id=:id", arg)

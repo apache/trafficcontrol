@@ -21,7 +21,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/Comcast/traffic_control/traffic_ops/goto2/db"
-	"gopkg.in/guregu/null.v3"
+	_ "github.com/Comcast/traffic_control/traffic_ops/goto2/output_format" // needed for swagger
+	null "gopkg.in/guregu/null.v3"
 	"time"
 )
 
@@ -46,27 +47,58 @@ func handleCdn(method string, id int, payload []byte) (interface{}, error) {
 }
 
 func getCdn(id int) (interface{}, error) {
+	if id >= 0 {
+		return getCdnById(id)
+	} else {
+		return getCdns()
+	}
+}
+
+// @Title getCdnById
+// @Description retrieves the cdn information for a certain id
+// @Accept  application/json
+// @Param   id              path    int     false        "The row id"
+// @Success 200 {array}    Cdn
+// @Resource /api/2.0
+// @Router /api/2.0/cdn/{id} [get]
+func getCdnById(id int) (interface{}, error) {
 	ret := []Cdn{}
 	arg := Cdn{Id: int64(id)}
-	if id >= 0 {
-		nstmt, err := db.GlobalDB.PrepareNamed(`select * from cdn where id=:id`)
-		err = nstmt.Select(&ret, arg)
-		if err != nil {
-			fmt.Println(err)
-			return nil, err
-		}
-		nstmt.Close()
-	} else {
-		queryStr := "select * from cdn"
-		err := db.GlobalDB.Select(&ret, queryStr)
-		if err != nil {
-			fmt.Println(err)
-			return nil, err
-		}
+	nstmt, err := db.GlobalDB.PrepareNamed(`select * from cdn where id=:id`)
+	err = nstmt.Select(&ret, arg)
+	if err != nil {
+		fmt.Println(err)
+		return nil, err
+	}
+	nstmt.Close()
+	return ret, nil
+}
+
+// @Title getCdns
+// @Description retrieves the cdn information for a certain id
+// @Accept  application/json
+// @Success 200 {array}    Cdn
+// @Resource /api/2.0
+// @Router /api/2.0/cdn [get]
+func getCdns() (interface{}, error) {
+	ret := []Cdn{}
+	queryStr := "select * from cdn"
+	err := db.GlobalDB.Select(&ret, queryStr)
+	if err != nil {
+		fmt.Println(err)
+		return nil, err
 	}
 	return ret, nil
 }
 
+// @Title postCdn
+// @Description enter a new cdn
+// @Accept  application/json
+// @Param                 Name json     string    true "name description"
+// @Param        DnssecEnabled json        int    true "dnssec_enabled description"
+// @Success 200 {object}    output_format.ApiWrapper
+// @Resource /api/2.0
+// @Router /api/2.0/cdn [post]
 func postCdn(payload []byte) (interface{}, error) {
 	var v Cdn
 	err := json.Unmarshal(payload, &v)
@@ -88,6 +120,14 @@ func postCdn(payload []byte) (interface{}, error) {
 	return result, err
 }
 
+// @Title putCdn
+// @Description modify an existing cdnentry
+// @Accept  application/json
+// @Param                 Name json null.String    true "name description"
+// @Param        DnssecEnabled json   null.Int    true "dnssec_enabled description"
+// @Success 200 {object}    output_format.ApiWrapper
+// @Resource /api/2.0
+// @Router /api/2.0/cdn [put]
 func putCdn(id int, payload []byte) (interface{}, error) {
 	var v Cdn
 	err := json.Unmarshal(payload, &v)
@@ -110,6 +150,13 @@ func putCdn(id int, payload []byte) (interface{}, error) {
 	return result, err
 }
 
+// @Title delCdnById
+// @Description deletes cdn information for a certain id
+// @Accept  application/json
+// @Param   id              path    int     false        "The row id"
+// @Success 200 {array}    Cdn
+// @Resource /api/2.0
+// @Router /api/2.0/cdn/{id} [delete]
 func delCdn(id int) (interface{}, error) {
 	arg := Cdn{Id: int64(id)}
 	result, err := db.GlobalDB.NamedExec("DELETE FROM cdn WHERE id=:id", arg)

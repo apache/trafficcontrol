@@ -21,7 +21,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/Comcast/traffic_control/traffic_ops/goto2/db"
-	"gopkg.in/guregu/null.v3"
+	_ "github.com/Comcast/traffic_control/traffic_ops/goto2/output_format" // needed for swagger
+	null "gopkg.in/guregu/null.v3"
 	"time"
 )
 
@@ -47,27 +48,59 @@ func handleType(method string, id int, payload []byte) (interface{}, error) {
 }
 
 func getType(id int) (interface{}, error) {
+	if id >= 0 {
+		return getTypeById(id)
+	} else {
+		return getTypes()
+	}
+}
+
+// @Title getTypeById
+// @Description retrieves the type information for a certain id
+// @Accept  application/json
+// @Param   id              path    int     false        "The row id"
+// @Success 200 {array}    Type
+// @Resource /api/2.0
+// @Router /api/2.0/type/{id} [get]
+func getTypeById(id int) (interface{}, error) {
 	ret := []Type{}
 	arg := Type{Id: int64(id)}
-	if id >= 0 {
-		nstmt, err := db.GlobalDB.PrepareNamed(`select * from type where id=:id`)
-		err = nstmt.Select(&ret, arg)
-		if err != nil {
-			fmt.Println(err)
-			return nil, err
-		}
-		nstmt.Close()
-	} else {
-		queryStr := "select * from type"
-		err := db.GlobalDB.Select(&ret, queryStr)
-		if err != nil {
-			fmt.Println(err)
-			return nil, err
-		}
+	nstmt, err := db.GlobalDB.PrepareNamed(`select * from type where id=:id`)
+	err = nstmt.Select(&ret, arg)
+	if err != nil {
+		fmt.Println(err)
+		return nil, err
+	}
+	nstmt.Close()
+	return ret, nil
+}
+
+// @Title getTypes
+// @Description retrieves the type information for a certain id
+// @Accept  application/json
+// @Success 200 {array}    Type
+// @Resource /api/2.0
+// @Router /api/2.0/type [get]
+func getTypes() (interface{}, error) {
+	ret := []Type{}
+	queryStr := "select * from type"
+	err := db.GlobalDB.Select(&ret, queryStr)
+	if err != nil {
+		fmt.Println(err)
+		return nil, err
 	}
 	return ret, nil
 }
 
+// @Title postType
+// @Description enter a new type
+// @Accept  application/json
+// @Param                 Name json     string   false "name description"
+// @Param          Description json     string    true "description description"
+// @Param           UseInTable json     string    true "use_in_table description"
+// @Success 200 {object}    output_format.ApiWrapper
+// @Resource /api/2.0
+// @Router /api/2.0/type [post]
 func postType(payload []byte) (interface{}, error) {
 	var v Type
 	err := json.Unmarshal(payload, &v)
@@ -91,6 +124,15 @@ func postType(payload []byte) (interface{}, error) {
 	return result, err
 }
 
+// @Title putType
+// @Description modify an existing typeentry
+// @Accept  application/json
+// @Param                 Name json     string   false "name description"
+// @Param          Description json null.String    true "description description"
+// @Param           UseInTable json null.String    true "use_in_table description"
+// @Success 200 {object}    output_format.ApiWrapper
+// @Resource /api/2.0
+// @Router /api/2.0/type [put]
 func putType(id int, payload []byte) (interface{}, error) {
 	var v Type
 	err := json.Unmarshal(payload, &v)
@@ -114,6 +156,13 @@ func putType(id int, payload []byte) (interface{}, error) {
 	return result, err
 }
 
+// @Title delTypeById
+// @Description deletes type information for a certain id
+// @Accept  application/json
+// @Param   id              path    int     false        "The row id"
+// @Success 200 {array}    Type
+// @Resource /api/2.0
+// @Router /api/2.0/type/{id} [delete]
 func delType(id int) (interface{}, error) {
 	arg := Type{Id: int64(id)}
 	result, err := db.GlobalDB.NamedExec("DELETE FROM type WHERE id=:id", arg)

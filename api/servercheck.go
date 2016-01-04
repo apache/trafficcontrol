@@ -21,7 +21,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/Comcast/traffic_control/traffic_ops/goto2/db"
-	"gopkg.in/guregu/null.v3"
+	_ "github.com/Comcast/traffic_control/traffic_ops/goto2/output_format" // needed for swagger
+	null "gopkg.in/guregu/null.v3"
 	"time"
 )
 
@@ -76,27 +77,88 @@ func handleServercheck(method string, id int, payload []byte) (interface{}, erro
 }
 
 func getServercheck(id int) (interface{}, error) {
+	if id >= 0 {
+		return getServercheckById(id)
+	} else {
+		return getServerchecks()
+	}
+}
+
+// @Title getServercheckById
+// @Description retrieves the servercheck information for a certain id
+// @Accept  application/json
+// @Param   id              path    int     false        "The row id"
+// @Success 200 {array}    Servercheck
+// @Resource /api/2.0
+// @Router /api/2.0/servercheck/{id} [get]
+func getServercheckById(id int) (interface{}, error) {
 	ret := []Servercheck{}
 	arg := Servercheck{Id: int64(id)}
-	if id >= 0 {
-		nstmt, err := db.GlobalDB.PrepareNamed(`select * from servercheck where id=:id`)
-		err = nstmt.Select(&ret, arg)
-		if err != nil {
-			fmt.Println(err)
-			return nil, err
-		}
-		nstmt.Close()
-	} else {
-		queryStr := "select * from servercheck"
-		err := db.GlobalDB.Select(&ret, queryStr)
-		if err != nil {
-			fmt.Println(err)
-			return nil, err
-		}
+	nstmt, err := db.GlobalDB.PrepareNamed(`select * from servercheck where id=:id`)
+	err = nstmt.Select(&ret, arg)
+	if err != nil {
+		fmt.Println(err)
+		return nil, err
+	}
+	nstmt.Close()
+	return ret, nil
+}
+
+// @Title getServerchecks
+// @Description retrieves the servercheck information for a certain id
+// @Accept  application/json
+// @Success 200 {array}    Servercheck
+// @Resource /api/2.0
+// @Router /api/2.0/servercheck [get]
+func getServerchecks() (interface{}, error) {
+	ret := []Servercheck{}
+	queryStr := "select * from servercheck"
+	err := db.GlobalDB.Select(&ret, queryStr)
+	if err != nil {
+		fmt.Println(err)
+		return nil, err
 	}
 	return ret, nil
 }
 
+// @Title postServercheck
+// @Description enter a new servercheck
+// @Accept  application/json
+// @Param               Server json      int64   false "server description"
+// @Param                   Aa json        int    true "aa description"
+// @Param                   Ab json        int    true "ab description"
+// @Param                   Ac json        int    true "ac description"
+// @Param                   Ad json        int    true "ad description"
+// @Param                   Ae json        int    true "ae description"
+// @Param                   Af json        int    true "af description"
+// @Param                   Ag json        int    true "ag description"
+// @Param                   Ah json        int    true "ah description"
+// @Param                   Ai json        int    true "ai description"
+// @Param                   Aj json        int    true "aj description"
+// @Param                   Ak json        int    true "ak description"
+// @Param                   Al json        int    true "al description"
+// @Param                   Am json        int    true "am description"
+// @Param                   An json        int    true "an description"
+// @Param                   Ao json        int    true "ao description"
+// @Param                   Ap json        int    true "ap description"
+// @Param                   Aq json        int    true "aq description"
+// @Param                   Ar json        int    true "ar description"
+// @Param                   As json        int    true "as description"
+// @Param                   At json        int    true "at description"
+// @Param                   Au json        int    true "au description"
+// @Param                   Av json        int    true "av description"
+// @Param                   Aw json        int    true "aw description"
+// @Param                   Ax json        int    true "ax description"
+// @Param                   Ay json        int    true "ay description"
+// @Param                   Az json        int    true "az description"
+// @Param                   Ba json        int    true "ba description"
+// @Param                   Bb json        int    true "bb description"
+// @Param                   Bc json        int    true "bc description"
+// @Param                   Bd json        int    true "bd description"
+// @Param                   Be json        int    true "be description"
+// @Success 200 {object}    output_format.ApiWrapper
+// @Resource /api/2.0
+// @Router /api/2.0/servercheck [post]
 func postServercheck(payload []byte) (interface{}, error) {
 	var v Servercheck
 	err := json.Unmarshal(payload, &v)
@@ -178,6 +240,44 @@ func postServercheck(payload []byte) (interface{}, error) {
 	return result, err
 }
 
+// @Title putServercheck
+// @Description modify an existing servercheckentry
+// @Accept  application/json
+// @Param               Server json      int64   false "server description"
+// @Param                   Aa json   null.Int    true "aa description"
+// @Param                   Ab json   null.Int    true "ab description"
+// @Param                   Ac json   null.Int    true "ac description"
+// @Param                   Ad json   null.Int    true "ad description"
+// @Param                   Ae json   null.Int    true "ae description"
+// @Param                   Af json   null.Int    true "af description"
+// @Param                   Ag json   null.Int    true "ag description"
+// @Param                   Ah json   null.Int    true "ah description"
+// @Param                   Ai json   null.Int    true "ai description"
+// @Param                   Aj json   null.Int    true "aj description"
+// @Param                   Ak json   null.Int    true "ak description"
+// @Param                   Al json   null.Int    true "al description"
+// @Param                   Am json   null.Int    true "am description"
+// @Param                   An json   null.Int    true "an description"
+// @Param                   Ao json   null.Int    true "ao description"
+// @Param                   Ap json   null.Int    true "ap description"
+// @Param                   Aq json   null.Int    true "aq description"
+// @Param                   Ar json   null.Int    true "ar description"
+// @Param                   As json   null.Int    true "as description"
+// @Param                   At json   null.Int    true "at description"
+// @Param                   Au json   null.Int    true "au description"
+// @Param                   Av json   null.Int    true "av description"
+// @Param                   Aw json   null.Int    true "aw description"
+// @Param                   Ax json   null.Int    true "ax description"
+// @Param                   Ay json   null.Int    true "ay description"
+// @Param                   Az json   null.Int    true "az description"
+// @Param                   Ba json   null.Int    true "ba description"
+// @Param                   Bb json   null.Int    true "bb description"
+// @Param                   Bc json   null.Int    true "bc description"
+// @Param                   Bd json   null.Int    true "bd description"
+// @Param                   Be json   null.Int    true "be description"
+// @Success 200 {object}    output_format.ApiWrapper
+// @Resource /api/2.0
+// @Router /api/2.0/servercheck [put]
 func putServercheck(id int, payload []byte) (interface{}, error) {
 	var v Servercheck
 	err := json.Unmarshal(payload, &v)
@@ -230,6 +330,13 @@ func putServercheck(id int, payload []byte) (interface{}, error) {
 	return result, err
 }
 
+// @Title delServercheckById
+// @Description deletes servercheck information for a certain id
+// @Accept  application/json
+// @Param   id              path    int     false        "The row id"
+// @Success 200 {array}    Servercheck
+// @Resource /api/2.0
+// @Router /api/2.0/servercheck/{id} [delete]
 func delServercheck(id int) (interface{}, error) {
 	arg := Servercheck{Id: int64(id)}
 	result, err := db.GlobalDB.NamedExec("DELETE FROM servercheck WHERE id=:id", arg)
