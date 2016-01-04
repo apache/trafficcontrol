@@ -955,6 +955,11 @@ sub dnssec_keys_refresh {
 			my @ds_rs
 				= $self->db->resultset('Deliveryservice')->search( \%search );
 			foreach my $ds (@ds_rs) {
+				if (   $ds->type->name !~ m/^HTTP/
+					&& $ds->type->name !~ m/^DNS/ )
+				{
+					next;
+				}
 				#check if keys exist for ds
 				my $xml_id  = $ds->xml_id;
 				my $ds_keys = $keys->{$xml_id};
