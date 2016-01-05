@@ -41,11 +41,11 @@ public class DNSKeyPairWrapper extends DnsKeyPair {
 	private Date expiration;
 	private String name;
 
-	public DNSKeyPairWrapper(final JSONObject keyPair) throws JSONException, IOException {
+	public DNSKeyPairWrapper(final JSONObject keyPair, final long defaultTTL) throws JSONException, IOException {
 		this.inception = new Date(1000L * keyPair.getLong("inceptionDate"));
 		this.effective = new Date(1000L * keyPair.getLong("effectiveDate"));
 		this.expiration = new Date(1000L * keyPair.getLong("expirationDate"));
-		this.ttl = keyPair.getLong("ttl");
+		this.ttl = keyPair.optLong("ttl", defaultTTL);
 		this.name = keyPair.getString("name");
 		//this.status = keyPair.getString("status"); // this field is used by Traffic Ops; we detect expiration by using the above dates
 

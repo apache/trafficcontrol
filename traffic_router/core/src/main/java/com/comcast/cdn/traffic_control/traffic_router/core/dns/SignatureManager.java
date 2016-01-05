@@ -108,13 +108,15 @@ public final class SignatureManager {
 	private Runnable getKeyMaintenanceRunnable(final CacheRegister cacheRegister) {
 		return new Runnable() {
 			public void run() {
-				final Map<String, List<DNSKeyPairWrapper>> newKeyMap = new HashMap<String, List<DNSKeyPairWrapper>>();
-				final JSONObject keyPairData = fetchKeyPairData(cacheRegister);
-
 				try {
+					final Map<String, List<DNSKeyPairWrapper>> newKeyMap = new HashMap<String, List<DNSKeyPairWrapper>>();
+					final JSONObject keyPairData = fetchKeyPairData(cacheRegister);
+
 					if (keyPairData != null) {
 						final JSONObject response = keyPairData.getJSONObject("response");
 						final Iterator<?> dsIt = response.keys();
+						final JSONObject config = cacheRegister.getConfig();
+						final long defaultTTL = ZoneUtils.getLong(config.optJSONObject("ttls"), "DNSKEY", 60);
 
 						while (dsIt.hasNext()) {
 							final JSONObject keyTypes = response.getJSONObject((String) dsIt.next());
@@ -126,8 +128,7 @@ public final class SignatureManager {
 								for (int i = 0; i < keyPairs.length(); i++) {
 									try {
 										final JSONObject keyPair = keyPairs.getJSONObject(i);
-										final DNSKeyPairWrapper dkpw = new DNSKeyPairWrapper(keyPair);
-
+										final DNSKeyPairWrapper dkpw = new DNSKeyPairWrapper(keyPair, defaultTTL);
 
 										if (!newKeyMap.containsKey(dkpw.getName())) {
 											newKeyMap.put(dkpw.getName(), new ArrayList<DNSKeyPairWrapper>());
@@ -139,7 +140,7 @@ public final class SignatureManager {
 
 										LOGGER.debug("Added " + dkpw.toString() + " to incoming keyList");
 									} catch (JSONException ex) {
-										LOGGER.fatal(ex, ex);
+										LOGGER.fatal("JSONException caught while parsing key for " + keyPairs.getJSONObject(i), ex);
 									} catch (TextParseException ex) {
 										LOGGER.fatal(ex, ex);
 									} catch (IOException ex) {
@@ -163,6 +164,8 @@ public final class SignatureManager {
 					}
 				} catch (JSONException ex) {
 					LOGGER.fatal(ex, ex);
+				} catch (RuntimeException ex) {
+					LOGGER.fatal("RuntimeException caught while trying to maintain keyMap", ex);
 				}
 			}
 		};
@@ -362,7 +365,7 @@ public final class SignatureManager {
 		if (zoneKey instanceof SignedZoneKey) {
 			final SignedZoneKey szk = (SignedZoneKey) zoneKey;
 			final long now = System.currentTimeMillis();
-			final long nextRefresh = now + refreshInterval;
+			final long nextRefresh = now + (refreshInterval * 1000); // refreshInterval is in seconds, convert to millis
 
 			if (nextRefresh >= szk.getRefreshHorizon()) {
 				LOGGER.info(getRefreshMessage(type, szk, true, "refresh horizon approaching"));
@@ -509,7 +512,7 @@ public final class SignatureManager {
 	private ZoneKey generateZoneKey(final Name name, final List<Record> list, final boolean dynamicRequest, final boolean dnssecRequest) {
 		if (dynamicRequest && !dnssecRequest) {
 			return new ZoneKey(name, list);
-		} else if ((isDnssecEnabled() && name.subdomain(ZoneManager.getTopLevelDomain()))) {
+		} else if ((isDnssecEnabled(name) && name.subdomain(ZoneManager.getTopLevelDomain()))) {
 			return new SignedZoneKey(name, list);
 		} else {
 			return new ZoneKey(name, list);
@@ -518,6 +521,10 @@ public final class SignatureManager {
 
 	protected boolean isDnssecEnabled() {
 		return dnssecEnabled;
+	}
+
+	private boolean isDnssecEnabled(final Name name) {
+		return dnssecEnabled && keyMap.containsKey(name.toString());
 	}
 
 	private void setDnssecEnabled(final boolean dnssecEnabled) {
