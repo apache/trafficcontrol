@@ -64,7 +64,7 @@ func main() {
 		printUsage()
 		return
 	}
-	
+
 	file, err := os.Open(os.Args[1])
 	if err != nil {
 		fmt.Println("Error opening config file:", err)

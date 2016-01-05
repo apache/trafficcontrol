@@ -1,9 +1,10 @@
 package todb
 
 import (
-"fmt"
+	"fmt"
 )
-func getApiDeliveryservice()([]ApiDeliveryservice, error) {
+
+func getApiDeliveryservice() ([]ApiDeliveryservice, error) {
 	ret := []ApiDeliveryservice{}
 	queryStr := "select * from api_deliveryservice"
 	err := globalDB.Select(&ret, queryStr)
@@ -14,7 +15,7 @@ func getApiDeliveryservice()([]ApiDeliveryservice, error) {
 	return ret, nil
 }
 
-func getAsn()([]Asn, error) {
+func getAsn() ([]Asn, error) {
 	ret := []Asn{}
 	queryStr := "select * from asn"
 	err := globalDB.Select(&ret, queryStr)
@@ -25,7 +26,7 @@ func getAsn()([]Asn, error) {
 	return ret, nil
 }
 
-func getCachegroup()([]Cachegroup, error) {
+func getCachegroup() ([]Cachegroup, error) {
 	ret := []Cachegroup{}
 	queryStr := "select * from cachegroup"
 	err := globalDB.Select(&ret, queryStr)
@@ -36,7 +37,7 @@ func getCachegroup()([]Cachegroup, error) {
 	return ret, nil
 }
 
-func getCachegroupParameter()([]CachegroupParameter, error) {
+func getCachegroupParameter() ([]CachegroupParameter, error) {
 	ret := []CachegroupParameter{}
 	queryStr := "select * from cachegroup_parameter"
 	err := globalDB.Select(&ret, queryStr)
@@ -47,7 +48,7 @@ func getCachegroupParameter()([]CachegroupParameter, error) {
 	return ret, nil
 }
 
-func getCdn()([]Cdn, error) {
+func getCdn() ([]Cdn, error) {
 	ret := []Cdn{}
 	queryStr := "select * from cdn"
 	err := globalDB.Select(&ret, queryStr)
@@ -58,7 +59,7 @@ func getCdn()([]Cdn, error) {
 	return ret, nil
 }
 
-func getContentRouters()([]ContentRouters, error) {
+func getContentRouters() ([]ContentRouters, error) {
 	ret := []ContentRouters{}
 	queryStr := "select * from content_routers"
 	err := globalDB.Select(&ret, queryStr)
@@ -69,7 +70,7 @@ func getContentRouters()([]ContentRouters, error) {
 	return ret, nil
 }
 
-func getContentServers()([]ContentServers, error) {
+func getContentServers() ([]ContentServers, error) {
 	ret := []ContentServers{}
 	queryStr := "select * from content_servers"
 	err := globalDB.Select(&ret, queryStr)
@@ -80,7 +81,7 @@ func getContentServers()([]ContentServers, error) {
 	return ret, nil
 }
 
-func getCrconfigDsData()([]CrconfigDsData, error) {
+func getCrconfigDsData() ([]CrconfigDsData, error) {
 	ret := []CrconfigDsData{}
 	queryStr := "select * from crconfig_ds_data"
 	err := globalDB.Select(&ret, queryStr)
@@ -91,7 +92,7 @@ func getCrconfigDsData()([]CrconfigDsData, error) {
 	return ret, nil
 }
 
-func getCrconfigParams()([]CrconfigParams, error) {
+func getCrconfigParams() ([]CrconfigParams, error) {
 	ret := []CrconfigParams{}
 	queryStr := "select * from crconfig_params"
 	err := globalDB.Select(&ret, queryStr)
@@ -102,7 +103,7 @@ func getCrconfigParams()([]CrconfigParams, error) {
 	return ret, nil
 }
 
-func getCrDeliveryserviceServer()([]CrDeliveryserviceServer, error) {
+func getCrDeliveryserviceServer() ([]CrDeliveryserviceServer, error) {
 	ret := []CrDeliveryserviceServer{}
 	queryStr := "select * from cr_deliveryservice_server"
 	err := globalDB.Select(&ret, queryStr)
@@ -113,7 +114,7 @@ func getCrDeliveryserviceServer()([]CrDeliveryserviceServer, error) {
 	return ret, nil
 }
 
-func getCsconfigParams()([]CsconfigParams, error) {
+func getCsconfigParams() ([]CsconfigParams, error) {
 	ret := []CsconfigParams{}
 	queryStr := "select * from csconfig_params"
 	err := globalDB.Select(&ret, queryStr)
@@ -124,7 +125,7 @@ func getCsconfigParams()([]CsconfigParams, error) {
 	return ret, nil
 }
 
-func getCsconfigRemap()([]CsconfigRemap, error) {
+func getCsconfigRemap() ([]CsconfigRemap, error) {
 	ret := []CsconfigRemap{}
 	queryStr := "select * from csconfig_remap"
 	err := globalDB.Select(&ret, queryStr)
@@ -135,7 +136,7 @@ func getCsconfigRemap()([]CsconfigRemap, error) {
 	return ret, nil
 }
 
-func getDeliveryservice()([]Deliveryservice, error) {
+func getDeliveryservice() ([]Deliveryservice, error) {
 	ret := []Deliveryservice{}
 	queryStr := "select * from deliveryservice"
 	err := globalDB.Select(&ret, queryStr)
@@ -146,7 +147,7 @@ func getDeliveryservice()([]Deliveryservice, error) {
 	return ret, nil
 }
 
-func getDeliveryserviceRegex()([]DeliveryserviceRegex, error) {
+func getDeliveryserviceRegex() ([]DeliveryserviceRegex, error) {
 	ret := []DeliveryserviceRegex{}
 	queryStr := "select * from deliveryservice_regex"
 	err := globalDB.Select(&ret, queryStr)
@@ -157,7 +158,7 @@ func getDeliveryserviceRegex()([]DeliveryserviceRegex, error) {
 	return ret, nil
 }
 
-func getDeliveryserviceServer()([]DeliveryserviceServer, error) {
+func getDeliveryserviceServer() ([]DeliveryserviceServer, error) {
 	ret := []DeliveryserviceServer{}
 	queryStr := "select * from deliveryservice_server"
 	err := globalDB.Select(&ret, queryStr)
@@ -168,7 +169,7 @@ func getDeliveryserviceServer()([]DeliveryserviceServer, error) {
 	return ret, nil
 }
 
-func getDeliveryserviceTmuser()([]DeliveryserviceTmuser, error) {
+func getDeliveryserviceTmuser() ([]DeliveryserviceTmuser, error) {
 	ret := []DeliveryserviceTmuser{}
 	queryStr := "select * from deliveryservice_tmuser"
 	err := globalDB.Select(&ret, queryStr)
@@ -179,7 +180,7 @@ func getDeliveryserviceTmuser()([]DeliveryserviceTmuser, error) {
 	return ret, nil
 }
 
-func getDivision()([]Division, error) {
+func getDivision() ([]Division, error) {
 	ret := []Division{}
 	queryStr := "select * from division"
 	err := globalDB.Select(&ret, queryStr)
@@ -190,7 +191,7 @@ func getDivision()([]Division, error) {
 	return ret, nil
 }
 
-func getFederation()([]Federation, error) {
+func getFederation() ([]Federation, error) {
 	ret := []Federation{}
 	queryStr := "select * from federation"
 	err := globalDB.Select(&ret, queryStr)
@@ -201,7 +202,7 @@ func getFederation()([]Federation, error) {
 	return ret, nil
 }
 
-func getFederationDeliveryservice()([]FederationDeliveryservice, error) {
+func getFederationDeliveryservice() ([]FederationDeliveryservice, error) {
 	ret := []FederationDeliveryservice{}
 	queryStr := "select * from federation_deliveryservice"
 	err := globalDB.Select(&ret, queryStr)
@@ -212,7 +213,7 @@ func getFederationDeliveryservice()([]FederationDeliveryservice, error) {
 	return ret, nil
 }
 
-func getFederationFederationResolver()([]FederationFederationResolver, error) {
+func getFederationFederationResolver() ([]FederationFederationResolver, error) {
 	ret := []FederationFederationResolver{}
 	queryStr := "select * from federation_federation_resolver"
 	err := globalDB.Select(&ret, queryStr)
@@ -223,7 +224,7 @@ func getFederationFederationResolver()([]FederationFederationResolver, error) {
 	return ret, nil
 }
 
-func getFederationResolver()([]FederationResolver, error) {
+func getFederationResolver() ([]FederationResolver, error) {
 	ret := []FederationResolver{}
 	queryStr := "select * from federation_resolver"
 	err := globalDB.Select(&ret, queryStr)
@@ -234,7 +235,7 @@ func getFederationResolver()([]FederationResolver, error) {
 	return ret, nil
 }
 
-func getFederationTmuser()([]FederationTmuser, error) {
+func getFederationTmuser() ([]FederationTmuser, error) {
 	ret := []FederationTmuser{}
 	queryStr := "select * from federation_tmuser"
 	err := globalDB.Select(&ret, queryStr)
@@ -245,7 +246,7 @@ func getFederationTmuser()([]FederationTmuser, error) {
 	return ret, nil
 }
 
-func getGooseDbVersion()([]GooseDbVersion, error) {
+func getGooseDbVersion() ([]GooseDbVersion, error) {
 	ret := []GooseDbVersion{}
 	queryStr := "select * from goose_db_version"
 	err := globalDB.Select(&ret, queryStr)
@@ -256,7 +257,7 @@ func getGooseDbVersion()([]GooseDbVersion, error) {
 	return ret, nil
 }
 
-func getHwinfo()([]Hwinfo, error) {
+func getHwinfo() ([]Hwinfo, error) {
 	ret := []Hwinfo{}
 	queryStr := "select * from hwinfo"
 	err := globalDB.Select(&ret, queryStr)
@@ -267,7 +268,7 @@ func getHwinfo()([]Hwinfo, error) {
 	return ret, nil
 }
 
-func getJob()([]Job, error) {
+func getJob() ([]Job, error) {
 	ret := []Job{}
 	queryStr := "select * from job"
 	err := globalDB.Select(&ret, queryStr)
@@ -278,7 +279,7 @@ func getJob()([]Job, error) {
 	return ret, nil
 }
 
-func getJobAgent()([]JobAgent, error) {
+func getJobAgent() ([]JobAgent, error) {
 	ret := []JobAgent{}
 	queryStr := "select * from job_agent"
 	err := globalDB.Select(&ret, queryStr)
@@ -289,7 +290,7 @@ func getJobAgent()([]JobAgent, error) {
 	return ret, nil
 }
 
-func getJobResult()([]JobResult, error) {
+func getJobResult() ([]JobResult, error) {
 	ret := []JobResult{}
 	queryStr := "select * from job_result"
 	err := globalDB.Select(&ret, queryStr)
@@ -300,7 +301,7 @@ func getJobResult()([]JobResult, error) {
 	return ret, nil
 }
 
-func getJobStatus()([]JobStatus, error) {
+func getJobStatus() ([]JobStatus, error) {
 	ret := []JobStatus{}
 	queryStr := "select * from job_status"
 	err := globalDB.Select(&ret, queryStr)
@@ -311,7 +312,7 @@ func getJobStatus()([]JobStatus, error) {
 	return ret, nil
 }
 
-func getLog()([]Log, error) {
+func getLog() ([]Log, error) {
 	ret := []Log{}
 	queryStr := "select * from log"
 	err := globalDB.Select(&ret, queryStr)
@@ -322,7 +323,7 @@ func getLog()([]Log, error) {
 	return ret, nil
 }
 
-func getMonitors()([]Monitors, error) {
+func getMonitors() ([]Monitors, error) {
 	ret := []Monitors{}
 	queryStr := "select * from monitors"
 	err := globalDB.Select(&ret, queryStr)
@@ -333,7 +334,7 @@ func getMonitors()([]Monitors, error) {
 	return ret, nil
 }
 
-func getParameter()([]Parameter, error) {
+func getParameter() ([]Parameter, error) {
 	ret := []Parameter{}
 	queryStr := "select * from parameter"
 	err := globalDB.Select(&ret, queryStr)
@@ -344,7 +345,7 @@ func getParameter()([]Parameter, error) {
 	return ret, nil
 }
 
-func getPhysLocation()([]PhysLocation, error) {
+func getPhysLocation() ([]PhysLocation, error) {
 	ret := []PhysLocation{}
 	queryStr := "select * from phys_location"
 	err := globalDB.Select(&ret, queryStr)
@@ -355,7 +356,7 @@ func getPhysLocation()([]PhysLocation, error) {
 	return ret, nil
 }
 
-func getProfile()([]Profile, error) {
+func getProfile() ([]Profile, error) {
 	ret := []Profile{}
 	queryStr := "select * from profile"
 	err := globalDB.Select(&ret, queryStr)
@@ -366,7 +367,7 @@ func getProfile()([]Profile, error) {
 	return ret, nil
 }
 
-func getProfileParameter()([]ProfileParameter, error) {
+func getProfileParameter() ([]ProfileParameter, error) {
 	ret := []ProfileParameter{}
 	queryStr := "select * from profile_parameter"
 	err := globalDB.Select(&ret, queryStr)
@@ -377,7 +378,7 @@ func getProfileParameter()([]ProfileParameter, error) {
 	return ret, nil
 }
 
-func getRegex()([]Regex, error) {
+func getRegex() ([]Regex, error) {
 	ret := []Regex{}
 	queryStr := "select * from regex"
 	err := globalDB.Select(&ret, queryStr)
@@ -388,7 +389,7 @@ func getRegex()([]Regex, error) {
 	return ret, nil
 }
 
-func getRegion()([]Region, error) {
+func getRegion() ([]Region, error) {
 	ret := []Region{}
 	queryStr := "select * from region"
 	err := globalDB.Select(&ret, queryStr)
@@ -399,7 +400,7 @@ func getRegion()([]Region, error) {
 	return ret, nil
 }
 
-func getRole()([]Role, error) {
+func getRole() ([]Role, error) {
 	ret := []Role{}
 	queryStr := "select * from role"
 	err := globalDB.Select(&ret, queryStr)
@@ -410,7 +411,7 @@ func getRole()([]Role, error) {
 	return ret, nil
 }
 
-func getServer()([]Server, error) {
+func getServer() ([]Server, error) {
 	ret := []Server{}
 	queryStr := "select * from server"
 	err := globalDB.Select(&ret, queryStr)
@@ -421,7 +422,7 @@ func getServer()([]Server, error) {
 	return ret, nil
 }
 
-func getServercheck()([]Servercheck, error) {
+func getServercheck() ([]Servercheck, error) {
 	ret := []Servercheck{}
 	queryStr := "select * from servercheck"
 	err := globalDB.Select(&ret, queryStr)
@@ -432,7 +433,7 @@ func getServercheck()([]Servercheck, error) {
 	return ret, nil
 }
 
-func getStaticdnsentry()([]Staticdnsentry, error) {
+func getStaticdnsentry() ([]Staticdnsentry, error) {
 	ret := []Staticdnsentry{}
 	queryStr := "select * from staticdnsentry"
 	err := globalDB.Select(&ret, queryStr)
@@ -443,7 +444,7 @@ func getStaticdnsentry()([]Staticdnsentry, error) {
 	return ret, nil
 }
 
-func getStatsSummary()([]StatsSummary, error) {
+func getStatsSummary() ([]StatsSummary, error) {
 	ret := []StatsSummary{}
 	queryStr := "select * from stats_summary"
 	err := globalDB.Select(&ret, queryStr)
@@ -454,7 +455,7 @@ func getStatsSummary()([]StatsSummary, error) {
 	return ret, nil
 }
 
-func getStatus()([]Status, error) {
+func getStatus() ([]Status, error) {
 	ret := []Status{}
 	queryStr := "select * from status"
 	err := globalDB.Select(&ret, queryStr)
@@ -465,7 +466,7 @@ func getStatus()([]Status, error) {
 	return ret, nil
 }
 
-func getTmUser()([]TmUser, error) {
+func getTmUser() ([]TmUser, error) {
 	ret := []TmUser{}
 	queryStr := "select * from tm_user"
 	err := globalDB.Select(&ret, queryStr)
@@ -476,7 +477,7 @@ func getTmUser()([]TmUser, error) {
 	return ret, nil
 }
 
-func getToExtension()([]ToExtension, error) {
+func getToExtension() ([]ToExtension, error) {
 	ret := []ToExtension{}
 	queryStr := "select * from to_extension"
 	err := globalDB.Select(&ret, queryStr)
@@ -487,7 +488,7 @@ func getToExtension()([]ToExtension, error) {
 	return ret, nil
 }
 
-func getType()([]Type, error) {
+func getType() ([]Type, error) {
 	ret := []Type{}
 	queryStr := "select * from type"
 	err := globalDB.Select(&ret, queryStr)
@@ -636,4 +637,3 @@ func GetTable(tableName string) (interface{}, error) {
 	}
 	return nil, nil
 }
-
