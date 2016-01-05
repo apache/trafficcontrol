@@ -510,7 +510,7 @@ public final class SignatureManager {
 	private ZoneKey generateZoneKey(final Name name, final List<Record> list, final boolean dynamicRequest, final boolean dnssecRequest) {
 		if (dynamicRequest && !dnssecRequest) {
 			return new ZoneKey(name, list);
-		} else if ((isDnssecEnabled() && name.subdomain(ZoneManager.getTopLevelDomain()))) {
+		} else if ((isDnssecEnabled(name) && name.subdomain(ZoneManager.getTopLevelDomain()))) {
 			return new SignedZoneKey(name, list);
 		} else {
 			return new ZoneKey(name, list);
@@ -519,6 +519,10 @@ public final class SignatureManager {
 
 	protected boolean isDnssecEnabled() {
 		return dnssecEnabled;
+	}
+
+	private boolean isDnssecEnabled(final Name name) {
+		return dnssecEnabled && keyMap.containsKey(name.toString());
 	}
 
 	private void setDnssecEnabled(final boolean dnssecEnabled) {
