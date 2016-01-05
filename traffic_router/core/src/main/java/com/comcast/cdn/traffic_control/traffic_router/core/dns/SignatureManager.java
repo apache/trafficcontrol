@@ -363,7 +363,7 @@ public final class SignatureManager {
 		if (zoneKey instanceof SignedZoneKey) {
 			final SignedZoneKey szk = (SignedZoneKey) zoneKey;
 			final long now = System.currentTimeMillis();
-			final long nextRefresh = now + refreshInterval;
+			final long nextRefresh = now + (refreshInterval * 1000); // refreshInterval is in seconds, convert to millis
 
 			if (nextRefresh >= szk.getRefreshHorizon()) {
 				LOGGER.info(getRefreshMessage(type, szk, true, "refresh horizon approaching"));
