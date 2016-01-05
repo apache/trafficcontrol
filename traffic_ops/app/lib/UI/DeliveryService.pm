@@ -1027,7 +1027,6 @@ sub create_dnssec_keys {
 	my $cdn_name = shift;
 	my $xml_id   = shift;
 	my $ds_id    = shift;
-	my $dnskey_ttl;
 
 	#get keys for cdn
 	my $keys;
@@ -1041,6 +1040,8 @@ sub create_dnssec_keys {
 
 	my $cdn_zsk = $keys->{$cdn_name}->{zsk};
 	my $z_exp_days = $self->get_key_expiration_days( $cdn_zsk, "30" );
+
+	my $dnskey_ttl = $self->get_key_ttl($cdn_ksk, "60");
 
 	#create the ds domain name for dnssec keys
 	my $domain_name             = $self->get_cdn_domain($ds_id);
@@ -1090,6 +1091,20 @@ sub get_key_expiration_days {
 		}
 	}
 	return $default_exp;
+}
+
+sub get_key_ttl {
+	my $self        = shift;
+	my $keys        = shift;
+	my $ttl 		= shift;
+	
+	foreach my $key (@$keys) {
+		my $status = $key->{status};
+		if ( $status eq 'new' ) {    #ignore anything other than the 'new' record
+			return $key->{ttl};
+		}
+	}
+	return $ttl;
 }
 
 # for the add delivery service view
