@@ -36,9 +36,7 @@ import (
 // This function returns an http.Handler to be used in http.ListenAndServe().
 func CreateRouter() http.Handler {
 	router := mux.NewRouter().StrictSlash(true)
-	router.HandleFunc("/login", auth.LoginPage).Methods("GET")
 	router.HandleFunc("/login", auth.Login).Methods("POST")
-	router.HandleFunc("/logout", auth.Use(auth.Logout, auth.RequireLogin)).Methods("GET")
 
 	router.HandleFunc("/api/2.0/{table}", auth.Use(apiHandler, auth.DONTRequireLogin)).Methods("OPTIONS")
 	router.HandleFunc("/api/2.0/{table}", auth.Use(apiHandler, auth.RequireLogin)).Methods("GET", "POST", "OPTIONS")

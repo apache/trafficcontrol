@@ -22,7 +22,6 @@ import (
 	"encoding/json"
 	"fmt"
 	api "github.com/Comcast/traffic_control/traffic_ops/goto2/api"
-	// output "github.com/Comcast/traffic_control/traffic_ops/goto2/output_format"
 	jwt "github.com/dgrijalva/jwt-go"
 	"io/ioutil"
 	"net/http"
@@ -30,29 +29,7 @@ import (
 	"time"
 
 	ctx "github.com/gorilla/context"
-	// "github.com/gorilla/securecookie"
-	// "github.com/gorilla/sessions"
 )
-
-// type Flash struct {
-// 	Type    string
-// 	Message string
-// }
-
-const loginPage = `
-<h1>Login</h1>
-<form method="post" action="/login">
-    <label for="name">User name</label>
-    <input type="text" id="username" name="username">
-    <label for="password">Password</label>
-    <input type="password" id="password" name="password">
-    <button type="submit">Login</button>
-</form>
-`
-
-// var Store = sessions.NewCookieStore(
-// 	[]byte(securecookie.GenerateRandomKey(64)), //Signing key
-// 	[]byte(securecookie.GenerateRandomKey(32)))
 
 type loginJson struct {
 	U string `json:"u"`
@@ -68,9 +45,8 @@ type TokenResponse struct {
 	Token string
 }
 
-func LoginPage(w http.ResponseWriter, r *http.Request) {
-	fmt.Fprintf(w, loginPage)
-}
+// to get a token:
+//  curl --header "Content-Type:application/json" -XPOST http://host:port/login -d'{"u":"yourusername", "p":"yourpassword}'
 
 func validateToken(tokenString string) (*jwt.Token, error) {
 
@@ -97,20 +73,6 @@ func GetContext(handler http.Handler) http.HandlerFunc {
 	// Set the context here
 
 	return func(w http.ResponseWriter, r *http.Request) {
-		//
-		// Parse the request form
-		// err := r.ParseForm()
-		// if err != nil {
-		// 	http.Error(w, "Error parsing request", http.StatusInternalServerError)
-		// }
-		// Set the context appropriately here.
-		// session, err := Store.Get(r, "trafficOps")
-		// if err != nil {
-		// 	fmt.Println(err)
-		// }
-		// Put the session in the context so that
-		// ctx.Set(r, "session", session)
-		// val := session.Values["user"]
 		token, err := validateToken(r.Header.Get("Authorization"))
 		if err != nil {
 			fmt.Println("No valid token found!")
@@ -126,13 +88,8 @@ func GetContext(handler http.Handler) http.HandlerFunc {
 
 // Login attempts to login the user given a request. Only works for local passwd at this time
 func Login(w http.ResponseWriter, r *http.Request) {
-	// fmt.Println("Starting Login...")
 	username := ""
 	password := ""
-	// htmlSession := true
-	// if r.FormValue("username") != "" {
-	// 	username, password = r.FormValue("username"), r.FormValue("password")
-	// } else if r.Method == "POST" {
 	body, err := ioutil.ReadAll(r.Body)
 	if err != nil {
 		fmt.Println("booboo", err.Error())
@@ -145,36 +102,15 @@ func Login(w http.ResponseWriter, r *http.Request) {
 	}
 	username = lj.U
 	password = lj.P
-	// htmlSession = false
-	// }
-	// session, _ := Store.Get(r, "trafficOps")
 	u := api.TmUser{}
 	u, err = api.GetTmUserByName(username)
 
 	encBytes := sha1.Sum([]byte(password))
 	encString := hex.EncodeToString(encBytes[:])
-	// fmt.Println("sha1:", hex.EncodeToString(encBytes[:]), " localpasswd:", u.LocalPasswd.String, "err:", err)
-	// redirectTarget := "/"
-	// if flashes := session.Flashes(); len(flashes) > 0 {
-	// 	for _, flashMsg := range flashes {
-	// 		if strings.HasPrefix(flashMsg.(string), "pathDenied:") {
-	// 			redirectTarget = strings.Replace(flashMsg.(string), "pathDenied:", "", 1)
-	// 		}
-	// 	}
-	// }
 	if err != nil || u.LocalPasswd.String != encString {
 		ctx.Set(r, "user", nil)
 		fmt.Println("Invalid passwd")
-		// redirectTarget = "/login"
-		// delete(session.Values, "id")
 	}
-	// else {
-	// 	session.Values["user"] = SessionUser{UserId: u.Id, Role: u.Role.Int64}
-	// }
-	// session.Save(r, w)
-	// if htmlSession {
-	// 	http.Redirect(w, r, redirectTarget, 302)
-	// } else {
 	// Create the token
 	token := jwt.New(jwt.SigningMethodHS256)
 	// Set some claims
@@ -188,29 +124,22 @@ func Login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	js, err := json.Marshal(TokenResponse{Token: tokenString})
-	// respTxt := output.MakeApiResponse(nil, output.MakeAlert("Successfully logged in.", "success"), nil)
-	// js, err := json.Marshal(respTxt)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
 	w.Write(js)
-	// }
 }
 
 // Logout destroys the current user session
 func Logout(w http.ResponseWriter, r *http.Request) {
-	// session, _ := Store.Get(r, "trafficOps")
-	// delete(session.Values, "id")
-	// session.Save(r, w)
+	// TODO JvD: revoke the token?
 	http.Redirect(w, r, "/login", 302)
 }
 
 func DONTRequireLogin(handler http.Handler) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		// token := validateToken(r.Header.Get("Authorization"))
-		// fmt.Println("token:", token)
 		handler.ServeHTTP(w, r)
 	}
 }
@@ -227,12 +156,6 @@ func RequireLogin(handler http.Handler) http.HandlerFunc {
 		} else {
 			w.WriteHeader(403)
 		}
-		// else {
-		// 	session, _ := Store.Get(r, "trafficOps")
-		// 	session.AddFlash("pathDenied:" + r.URL.EscapedPath())
-		// 	session.Save(r, w)
-		// 	http.Redirect(w, r, "/login", 302)
-		// }
 	}
 }
 
