@@ -27,6 +27,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"path"
 )
 
 type Config struct {
@@ -34,27 +35,52 @@ type Config struct {
 	DbName           string `json:"dbName"`
 	DbUser           string `json:"dbUser"`
 	DbPassword       string `json:"dbPassword"`
+	DbServer         string `json:"dbServer"`
+	DbPort           uint   `json:"dbPort"`
 	ListenerType     string `json:"listenerType,omitempty"`
 	ListenerPort     string `json:"listenerPort"`
 	ListenerCertFile string `json:"listenerCertFile",omitempty"`
 	ListenerKeyFile  string `json:"listenerKeyFile",omitempty"`
 }
 
+func printUsage() {
+	exampleConfig := `{
+	"dbTypeName":"mysql",
+	"dbName":"my-db",
+	"dbUser":"my-user",
+	"dbPassword":"my-secret-pass",
+	"dbServer":"localhost",
+	"dbPort":3306,
+	"listenerPort":"8080"
+}`
+	fmt.Println("Usage: " + path.Base(os.Args[0]) + " configfile")
+	fmt.Println("")
+	fmt.Println("Example config file:")
+	fmt.Println(exampleConfig)
+}
+
 func main() {
+	if len(os.Args) < 2 {
+		printUsage()
+		return
+	}
+	
 	file, err := os.Open(os.Args[1])
 	if err != nil {
-		fmt.Println("Error opening config file:", err.Error())
+		fmt.Println("Error opening config file:", err)
+		return
 	}
 	decoder := json.NewDecoder(file)
 	config := Config{}
 	err = decoder.Decode(&config)
 	if err != nil {
-		fmt.Println("Error reading config file:", err.Error())
+		fmt.Println("Error reading config file:", err)
+		return
 	}
 
 	gob.Register(auth.SessionUser{}) // this is needed to pass the SessionUser struct around in the gorilla session.
 
-	db.InitializeDatabase(config.DbTypeName, config.DbUser, config.DbPassword, config.DbName)
+	db.InitializeDatabase(config.DbTypeName, config.DbUser, config.DbPassword, config.DbName, config.DbServer, config.DbPort)
 
 	var Logger = log.New(os.Stdout, " ", log.Ldate|log.Ltime|log.Lshortfile)
 	Logger.Printf("Starting " + config.ListenerType + " server on port " + config.ListenerPort + "...")
@@ -70,6 +96,6 @@ func main() {
 	}
 
 	if err != nil {
-		fmt.Println(err.Error())
+		fmt.Println(err)
 	}
 }

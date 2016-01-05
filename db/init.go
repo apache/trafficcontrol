@@ -18,6 +18,7 @@ import (
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/jmoiron/sqlx"
 	_ "github.com/lib/pq"
+	"fmt"
 )
 
 var (
@@ -31,12 +32,12 @@ func check(e error) {
 	}
 }
 
-func InitializeDatabase(dbtype, username, password, environment string) {
+func InitializeDatabase(dbtype, username, password, environment, server string, port uint) {
 	connString := ""
 	if dbtype == "mysql" {
-		connString = username + ":" + password + "@tcp(localhost:3306)/" + environment + "?parseTime=True"
+		connString = fmt.Sprintf("%s:%s@tcp(%s:%d)/%s?parseTime=True", username, password, server, port, environment)
 	} else if dbtype == "postgres" {
-		connString = "user=" + username + " dbname=" + environment + " password=" + password + " sslmode=disable"
+		connString = fmt.Sprintf("host=%s port=%d dbname=%s user=%s password=%s sslmode=disable", username, environment, password, server, port)
 	}
 
 	db, err := sqlx.Connect(dbtype, connString)
