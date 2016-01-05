@@ -108,10 +108,10 @@ public final class SignatureManager {
 	private Runnable getKeyMaintenanceRunnable(final CacheRegister cacheRegister) {
 		return new Runnable() {
 			public void run() {
-				final Map<String, List<DNSKeyPairWrapper>> newKeyMap = new HashMap<String, List<DNSKeyPairWrapper>>();
-				final JSONObject keyPairData = fetchKeyPairData(cacheRegister);
-
 				try {
+					final Map<String, List<DNSKeyPairWrapper>> newKeyMap = new HashMap<String, List<DNSKeyPairWrapper>>();
+					final JSONObject keyPairData = fetchKeyPairData(cacheRegister);
+
 					if (keyPairData != null) {
 						final JSONObject response = keyPairData.getJSONObject("response");
 						final Iterator<?> dsIt = response.keys();
@@ -164,6 +164,8 @@ public final class SignatureManager {
 					}
 				} catch (JSONException ex) {
 					LOGGER.fatal(ex, ex);
+				} catch (RuntimeException ex) {
+					LOGGER.fatal("RuntimeException caught while trying to maintain keyMap", ex);
 				}
 			}
 		};
