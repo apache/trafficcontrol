@@ -23,6 +23,10 @@
 
 package api
 
+import (
+	"errors"
+)
+
 type actionhandler func(method string, id int, payload []byte) (interface{}, error)
 type actionmap map[string]actionhandler
 
@@ -66,5 +70,9 @@ var funcMap = actionmap{
 }
 
 func Action(tableName, method string, id int, payload []byte) (interface{}, error) {
-	return funcMap[tableName](method, id, payload)
+	if f, ok := funcMap[tableName]; !ok {
+		return nil, errors.New("endpoint not found")
+	} else {
+		return f(method, id, payload)
+	}
 }
