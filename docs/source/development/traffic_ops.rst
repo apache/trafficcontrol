@@ -26,10 +26,15 @@ Software Requirements
 To work on Traffic Ops you need a \*nix (MacOS and Linux are most commonly used) environment that has the following installed:
 
 * `Carton 1.0.12 <http://search.cpan.org/~miyagawa/Carton-v1.0.12/lib/Carton.pm>`_
+
+  * cpan JSON
+  * cpan JSON::PP
+
 * `Go 1.4 <http://golang.org/doc/install>`_
 * Perl 5.10.1
 * Git
 * MySQL 5.1.52
+* `Goose <https://bitbucket.org/liamstask/goose/>`_
 
 Traffic Ops Project Tree Overview
 =======================================
@@ -128,6 +133,8 @@ Example: ``db/admin.pl --env=test reset``
 
 Purpose:  This script is used to manage the database. The environments are defined in the dbconf.yml, as well as the database names.
 
+* To use the ``admin.pl`` script, you may need to add ``traffic_ops/lib`` and ``traffic_ops/local/lib/perl5`` to your `PERL5LIB <http://modperlbook.org/html/3-9-2-2-Using-the-PERL5LIB-environment-variable.html>`_ environment variable.
+
 +-----------+--------------------------------------------------------------------+
 | Arguments | Description                                                        |
 +===========+====================================================================+
@@ -221,8 +228,9 @@ To install the Traffic Ops Developer environment:
 
 5. (Optional) To load temporary data into the tables: ``$ perl bin/db/setup_kabletown.pl``
 
+6. Run the postinstall script: ``traffic_ops/install/bin/postinstall``
 
-6. To start Traffic Ops, enter ``$ bin/start.pl``
+7. To start Traffic Ops, enter ``$ bin/start.pl``
 
    The local Traffic Ops instance uses an open source framework called morbo, starting following the start command execution.
 
@@ -236,13 +244,13 @@ To install the Traffic Ops Developer environment:
    Server available at http://127.0.0.1:3000.
 
 
-7. Using a browser, navigate to the given address: ``http://127.0.0.1:3000``
-8. For the initial log in:
+8. Using a browser, navigate to the given address: ``http://127.0.0.1:3000``
+9. For the initial log in:
   
   * User name: admin
   * Password: password
 
-9. Change the log in information.
+10. Change the log in information.
 
 Test Cases
 ==========

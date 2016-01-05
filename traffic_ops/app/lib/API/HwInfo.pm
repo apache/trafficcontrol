@@ -92,7 +92,7 @@ sub data {
 	}
 	my $total_display_records = 0;
 	if ( defined( $data{"data"} ) ) {
-		$total_display_records = scalar keys $data{"data"};
+		$total_display_records = scalar @{ $data{"data"} };
 	}
 	my %itotals_display_records = ( iTotalRecords => $total_display_records );
 	%data = %{ merge( \%data, \%itotals_display_records ) };
