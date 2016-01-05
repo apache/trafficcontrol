@@ -115,6 +115,8 @@ public final class SignatureManager {
 					if (keyPairData != null) {
 						final JSONObject response = keyPairData.getJSONObject("response");
 						final Iterator<?> dsIt = response.keys();
+						final JSONObject config = cacheRegister.getConfig();
+						final long defaultTTL = ZoneUtils.getLong(config.optJSONObject("ttls"), "DNSKEY", 60);
 
 						while (dsIt.hasNext()) {
 							final JSONObject keyTypes = response.getJSONObject((String) dsIt.next());
@@ -126,8 +128,7 @@ public final class SignatureManager {
 								for (int i = 0; i < keyPairs.length(); i++) {
 									try {
 										final JSONObject keyPair = keyPairs.getJSONObject(i);
-										final DNSKeyPairWrapper dkpw = new DNSKeyPairWrapper(keyPair);
-
+										final DNSKeyPairWrapper dkpw = new DNSKeyPairWrapper(keyPair, defaultTTL);
 
 										if (!newKeyMap.containsKey(dkpw.getName())) {
 											newKeyMap.put(dkpw.getName(), new ArrayList<DNSKeyPairWrapper>());
@@ -139,7 +140,7 @@ public final class SignatureManager {
 
 										LOGGER.debug("Added " + dkpw.toString() + " to incoming keyList");
 									} catch (JSONException ex) {
-										LOGGER.fatal(ex, ex);
+										LOGGER.fatal("JSONException caught while parsing key for " + keyPairs.getJSONObject(i), ex);
 									} catch (TextParseException ex) {
 										LOGGER.fatal(ex, ex);
 									} catch (IOException ex) {
