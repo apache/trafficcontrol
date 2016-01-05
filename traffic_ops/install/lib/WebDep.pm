@@ -53,7 +53,14 @@ sub getDeps {
 		}
 		$obj->{filename} =~ s{^/}{};
 		$obj->{source_dir} =~ s{/$}{};
-		$obj->{final_dir} = abs_path( $obj->{final_dir} );
+		$obj->{source_dir} =~ s{/$}{};
+
+		my $final_dir = $obj->{final_dir};
+		if ( !-d $final_dir ) {
+			print "Making dir: $final_dir\n";
+			mkpath($final_dir);
+		}
+		$obj->{final_dir} = abs_path($final_dir);
 		push( @deps, $obj );
 	}
 	chdir($oldcwd);
@@ -146,12 +153,6 @@ sub update {
 	}
 	else {
 		$action = "Created";
-	}
-	my $final_dir = $self->{final_dir};
-
-	if ( !-d $final_dir ) {
-		print "Making dir: $final_dir\n";
-		mkpath($final_dir);
 	}
 	my $content = $self->getContent();
 	open my $ofh, '>', $destfn or $err = "Can't write to $destfn";
