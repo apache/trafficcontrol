@@ -15,6 +15,7 @@
 package db
 
 import (
+	"errors"
 	"fmt"
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/jmoiron/sqlx"
@@ -32,16 +33,52 @@ func check(e error) {
 	}
 }
 
-func InitializeDatabase(dbtype, username, password, environment, server string, port uint) {
-	connString := ""
+func createConnectionStringMysql(server, database, user, pass string, port uint) (string, error) {
+	defaultMysqlPort := uint(3306)
+	if server == "" {
+		server = "localhost"
+	}
+	if port == 0 {
+		port = defaultMysqlPort
+	}
+	return fmt.Sprintf("%s:%s@tcp(%s:%d)/%s?parseTime=True", user, pass, server, port, database), nil
+}
+
+func createConnectionStringPostgres(server, database, user, pass string, port uint) (string, error) {
+	connString := fmt.Sprintf("dbname=%s user=%s password=%s sslmode=disable", database, user, pass)
+	if server != "" {
+		connString += fmt.Sprintf(" host=%s", server)
+	}
+	if server != "" {
+		connString += fmt.Sprintf(" port=%d", port)
+	}
+	return connString, nil
+}
+
+func createConnectionString(dbtype, username, password, environment, server string, port uint) (string, error) {
 	if dbtype == "mysql" {
-		connString = fmt.Sprintf("%s:%s@tcp(%s:%d)/%s?parseTime=True", username, password, server, port, environment)
+		return createConnectionStringMysql(server, environment, username, password, port)
 	} else if dbtype == "postgres" {
-		connString = fmt.Sprintf("host=%s port=%d dbname=%s user=%s password=%s sslmode=disable", username, environment, password, server, port)
+		return createConnectionStringPostgres(server, environment, username, password, port)
+	}
+	return "", errors.New("invalid database type")
+}
+
+// InitializeDatabase initializes the global GlobalDB variable.
+// The server is optional, and defaults to localhost if empty
+// The port is optional, and defaults to the default database port if 0
+func InitializeDatabase(dbtype, username, password, environment, server string, port uint) error {
+	connString, err := createConnectionString(dbtype, username, password, environment, server, port)
+	if err != nil {
+		return err
 	}
 
 	db, err := sqlx.Connect(dbtype, connString)
-	check(err)
+	if err != nil {
+		return err
+	}
+
 	GlobalDB = *db
 	DatabaseName = environment
+	return nil
 }
