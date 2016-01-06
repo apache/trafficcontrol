@@ -54,7 +54,7 @@ func MakeAlert(alertTxt string, alertLevel string) []Alert {
 func MakeApiResponse(r interface{}, alerts []Alert, err error) ApiWrapper {
 	var w ApiWrapper
 	if err != nil {
-		alerts = append(alerts, Alert{Level: "error", Text: "Internal error:" + err.Error()})
+		alerts = append(alerts, Alert{Level: "error", Text: "Internal error: " + err.Error()})
 		w = ApiWrapper{
 			Version: APIVERSION,
 			Alerts:  alerts,
