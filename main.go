@@ -35,8 +35,8 @@ type Config struct {
 	DbName           string `json:"dbName"`
 	DbUser           string `json:"dbUser"`
 	DbPassword       string `json:"dbPassword"`
-	DbServer         string `json:"dbServer"`
-	DbPort           uint   `json:"dbPort"`
+	DbServer         string `json:"dbServer,omitempty"`
+	DbPort           uint   `json:"dbPort,omitempty"`
 	ListenerType     string `json:"listenerType,omitempty"`
 	ListenerPort     string `json:"listenerPort"`
 	ListenerCertFile string `json:"listenerCertFile",omitempty"`
@@ -80,7 +80,11 @@ func main() {
 
 	gob.Register(auth.SessionUser{}) // this is needed to pass the SessionUser struct around in the gorilla session.
 
-	db.InitializeDatabase(config.DbTypeName, config.DbUser, config.DbPassword, config.DbName, config.DbServer, config.DbPort)
+	err = db.InitializeDatabase(config.DbTypeName, config.DbUser, config.DbPassword, config.DbName, config.DbServer, config.DbPort)
+	if err != nil {
+		fmt.Println("Error initializing database:", err)
+		return
+	}
 
 	var Logger = log.New(os.Stdout, " ", log.Ldate|log.Ltime|log.Lshortfile)
 	Logger.Printf("Starting " + config.ListenerType + " server on port " + config.ListenerPort + "...")
