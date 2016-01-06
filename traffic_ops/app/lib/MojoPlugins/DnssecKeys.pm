@@ -33,14 +33,14 @@ sub register {
 
 	$app->renderer->add_helper(
 		generate_store_dnssec_keys => sub {
-			my $self       = shift;
-			my $key        = shift;
-			my $name       = shift;
-			my $ttl        = shift;
-			my $k_exp_days = shift;
-			my $z_exp_days = shift;
+			my $self          = shift;
+			my $key           = shift;
+			my $name          = shift;
+			my $ttl           = shift;
+			my $k_exp_days    = shift;
+			my $z_exp_days    = shift;
 			my $effectiveDate = shift;
-			my $keys = {};
+			my $keys          = {};
 
 			my $inception    = time();
 			my $z_expiration = time() + ( 86400 * $z_exp_days );
@@ -50,37 +50,42 @@ sub register {
 			if ( ( substr( $name, -1 ) ) ne "." ) {
 				$name = $name . ".";
 			}
+
 			#get old keys if they exist
-			my $old_keys = {};
+			my $old_keys           = {};
 			my $response_container = $self->riak_get( "dnssec", $key );
-			my $get_keys = $response_container->{'response'};
+			my $get_keys           = $response_container->{'response'};
 			if ( $get_keys->is_success() ) {
 				$old_keys = decode_json( $get_keys->content );
 			}
-			
+
 			# #create new keys for cdn TLD
 			$self->app->log->info("Creating keys for $key.");
-			my @zsk = $self->get_dnssec_keys( "zsk", $name, $ttl, $inception, $z_expiration, "new", $effectiveDate );
-			my @ksk = $self->get_dnssec_keys( "ksk", $name, $ttl, $inception, $k_expiration, "new", $effectiveDate, "1");
+			my @zsk = $self->get_dnssec_keys( "zsk", $name, $ttl, $inception,
+				$z_expiration, "new", $effectiveDate );
+			my @ksk = $self->get_dnssec_keys( "ksk", $name, $ttl, $inception,
+				$k_expiration, "new", $effectiveDate, "1" );
 
-			#get old ksk 
-			my $krecord = &get_existing_record($self, $old_keys, $key, "ksk");
-			if (defined($krecord)) {
-				$krecord->{status} = "existing";
+			#get old ksk
+			my $krecord
+				= &get_existing_record( $self, $old_keys, $key, "ksk" );
+			if ( defined($krecord) ) {
+				$krecord->{status}         = "existing";
 				$krecord->{expirationDate} = $effectiveDate;
 				push @ksk, $krecord;
 			}
 
 			#get old zsk
-			my $zrecord = &get_existing_record($self, $old_keys, $key, "zsk");
-			if (defined($zrecord)) {
-				$zrecord->{status} = "existing";
+			my $zrecord
+				= &get_existing_record( $self, $old_keys, $key, "zsk" );
+			if ( defined($zrecord) ) {
+				$zrecord->{status}         = "existing";
 				$zrecord->{expirationDate} = $effectiveDate;
 				push @zsk, $zrecord;
 			}
 
 			#add to keys hash
-			$keys->{$key} = {zsk => [@zsk], ksk => [@ksk] };
+			$keys->{$key} = { zsk => [@zsk], ksk => [@ksk] };
 
 			#delivery services
 			#first get profile_id
@@ -88,57 +93,78 @@ sub register {
 
 			#then get deliveryservices
 			my %search = ( profile => $profile_id );
-			my @ds_rs = $self->db->resultset('Deliveryservice')->search( \%search );
+			my @ds_rs
+				= $self->db->resultset('Deliveryservice')->search( \%search );
 			foreach my $ds (@ds_rs) {
+				if (   $ds->type->name !~ m/^HTTP/
+					&& $ds->type->name !~ m/^DNS/ )
+				{
+					next;
+				}
 				my $xml_id = $ds->xml_id;
 				my $ds_id  = $ds->id;
 
 				#create the ds domain name for dnssec keys
-				my $domain_name = UI::DeliveryService::get_cdn_domain( $self, $ds_id );
-				my $ds_regexes = UI::DeliveryService::get_regexp_set( $self, $ds_id );
-				my $rs_ds =
-					$self->db->resultset('Deliveryservice')
-					->search( { 'me.xml_id' => $xml_id }, { prefetch => [ { 'type' => undef }, { 'profile' => undef } ] } );
+				my $domain_name
+					= UI::DeliveryService::get_cdn_domain( $self, $ds_id );
+				my $ds_regexes
+					= UI::DeliveryService::get_regexp_set( $self, $ds_id );
+				my $rs_ds = $self->db->resultset('Deliveryservice')->search(
+					{ 'me.xml_id' => $xml_id },
+					{   prefetch =>
+							[ { 'type' => undef }, { 'profile' => undef } ]
+					}
+				);
 				my $data = $rs_ds->single;
-				my @example_urls = UI::DeliveryService::get_example_urls( $self, $ds_id, $ds_regexes, $data, $domain_name, $data->protocol );
+				my @example_urls
+					= UI::DeliveryService::get_example_urls( $self, $ds_id,
+					$ds_regexes, $data, $domain_name, $data->protocol );
 
-				#first one is the one we want.  period at end for dnssec, substring off stuff we dont want
+#first one is the one we want.  period at end for dnssec, substring off stuff we dont want
 				my $ds_name = $example_urls[0] . ".";
 				my $length = length($ds_name) - index( $ds_name, "." );
-				$ds_name = substr( $ds_name, index( $ds_name, "." ) + 1, $length );
+				$ds_name
+					= substr( $ds_name, index( $ds_name, "." ) + 1, $length );
 				$self->app->log->info("Creating keys for $xml_id.");
-				my @zsk = $self->get_dnssec_keys( "zsk", $ds_name, $ttl, $inception, $z_expiration, "new", $effectiveDate );
-				my @ksk = $self->get_dnssec_keys( "ksk", $ds_name, $ttl, $inception, $k_expiration, "new", $effectiveDate );
+				my @zsk = $self->get_dnssec_keys( "zsk", $ds_name, $ttl,
+					$inception, $z_expiration, "new", $effectiveDate );
+				my @ksk = $self->get_dnssec_keys( "ksk", $ds_name, $ttl,
+					$inception, $k_expiration, "new", $effectiveDate );
 
-				#get old ksk 
-				my $krecord = &get_existing_record($self, $old_keys, $xml_id, "ksk");
-				if (defined($krecord)) {
-					$krecord->{status} = "existing";
+				#get old ksk
+				my $krecord = &get_existing_record( $self, $old_keys, $xml_id,
+					"ksk" );
+				if ( defined($krecord) ) {
+					$krecord->{status}         = "existing";
 					$krecord->{expirationDate} = $effectiveDate;
 					push @ksk, $krecord;
 				}
 
 				#get old zsk
-				my $zrecord = &get_existing_record($self, $old_keys, $xml_id, "zsk");
-				if (defined($zrecord)) {
-					$zrecord->{status} = "existing";
+				my $zrecord = &get_existing_record( $self, $old_keys, $xml_id,
+					"zsk" );
+				if ( defined($zrecord) ) {
+					$zrecord->{status}         = "existing";
 					$zrecord->{expirationDate} = $effectiveDate;
 					push @zsk, $zrecord;
 				}
 
 				#add to keys hash
-				$keys->{$xml_id} = {zsk => [@zsk], ksk => [@ksk] };
+				$keys->{$xml_id} = { zsk => [@zsk], ksk => [@ksk] };
 			}
 
 			#add a param to the database to track changes
 			#check to see if param already exists
-			my $param_id =
-				$self->db->resultset('Parameter')->search( { name => $key . ".dnssec.inception", config_file => "CRConfig.json" } )->get_column('id')
-				->single();
+			my $param_id = $self->db->resultset('Parameter')->search(
+				{   name        => $key . ".dnssec.inception",
+					config_file => "CRConfig.json"
+				}
+			)->get_column('id')->single();
 
 			#if exists, update
 			if ( defined($param_id) ) {
-				my $param_update = $self->db->resultset('Parameter')->find( { id => $param_id } );
+				my $param_update = $self->db->resultset('Parameter')
+					->find( { id => $param_id } );
 				$param_update->value($inception);
 				$param_update->update();
 			}
@@ -146,8 +172,7 @@ sub register {
 			#else insert param
 			else {
 				my $param_insert = $self->db->resultset('Parameter')->create(
-					{
-						name        => $key . ".dnssec.inception",
+					{   name        => $key . ".dnssec.inception",
 						config_file => "CRConfig.json",
 						value       => $inception,
 					}
@@ -156,17 +181,17 @@ sub register {
 				$param_id = $param_insert->id();
 
 				#insert into profile_param
-				my $pp_insert = $self->db->resultset('ProfileParameter')->create(
-					{
-						profile   => $profile_id,
+				my $pp_insert
+					= $self->db->resultset('ProfileParameter')->create(
+					{   profile   => $profile_id,
 						parameter => $param_id,
 					}
-				);
+					);
 				$pp_insert->insert();
 
 			}
 
-			my $json_data = encode_json( $keys );
+			my $json_data = encode_json($keys);
 			my $response = $self->riak_put( "dnssec", $key, $json_data );
 
 			return $response;
@@ -174,8 +199,8 @@ sub register {
 	);
 	$app->renderer->add_helper(
 		get_profile_id_by_cdn => sub {
-			my $self      = shift;
-			my $cdn_name  = shift;
+			my $self     = shift;
+			my $cdn_name = shift;
 
 			my %condition = (
 				-and => [
@@ -198,26 +223,25 @@ sub register {
 		}
 	);
 
-
 	$app->renderer->add_helper(
 		get_dnssec_keys => sub {
-			my $self       = shift;
-			my $type       = shift;
-			my $name       = shift;
-			my $ttl        = shift;
-			my $inception  = shift;
-			my $expiration = shift;
-			my $status 	= shift;
+			my $self          = shift;
+			my $type          = shift;
+			my $name          = shift;
+			my $ttl           = shift;
+			my $inception     = shift;
+			my $expiration    = shift;
+			my $status        = shift;
 			my $effectiveDate = shift;
-			my $tld = shift;
-			my %keys       = ();
-			my %response = (
+			my $tld           = shift;
+			my %keys          = ();
+			my %response      = (
 				inceptionDate  => $inception,
 				expirationDate => $expiration,
 				name           => $name,
 				ttl            => $ttl,
-				status			=> $status,
-				effectiveDate	=> $effectiveDate
+				status         => $status,
+				effectiveDate  => $effectiveDate
 			);
 
 			if ( $type eq "zsk" ) {
@@ -227,9 +251,10 @@ sub register {
 			else {
 				%keys = &gen_keys( $self, $name, 1, $ttl, $tld );
 			}
+
 			#add keys to response
-			$response{private}  = $keys{private_key};
-			$response{public}   = $keys{public_key};
+			$response{private} = $keys{private_key};
+			$response{public}  = $keys{public_key};
 			if ($tld) {
 				$response{dsRecord} = $keys{ds_record};
 			}
@@ -242,24 +267,28 @@ sub register {
 		my $name = shift;
 		my $ksk  = shift;
 		my $ttl  = shift;
-		my $tld = shift || 0;
+		my $tld  = shift || 0;
 		my $bits = 1024;
 		my $flags |= 256;
-		my $algorithm = 5;    # http://www.iana.org/assignments/dns-sec-alg-numbers/dns-sec-alg-numbers.xhtml
-		my $protocol  = 3;
+		my $algorithm = 5
+			; # http://www.iana.org/assignments/dns-sec-alg-numbers/dns-sec-alg-numbers.xhtml
+		my $protocol = 3;
 		my %response = ();
 
 		if ($ksk) {
-			$flags |= 1;      # ksk
+			$flags |= 1;    # ksk
 			$bits *= 2;
 		}
 
-		my $keypair = Net::DNS::SEC::Private->generate_rsa( $name, $flags, $bits, $algorithm );
+		my $keypair
+			= Net::DNS::SEC::Private->generate_rsa( $name, $flags, $bits,
+			$algorithm );
 		my $private_key = encode_base64( $keypair->dump_rsa_priv );
+
 		#trim whitespace
 		$private_key =~ s/\s+$//;
 		$response{private_key} = $private_key;
-		
+
 		my $dnskey_rr = new Net::DNS::RR(
 			name      => $name,
 			type      => "DNSKEY",
@@ -270,17 +299,23 @@ sub register {
 			ttl       => $ttl
 		);
 		my $public_key = encode_base64( $dnskey_rr->plain );
+
 		#trim whitespace
 		$public_key =~ s/\s+$//;
 		$response{public_key} = $public_key;
+
 		#create ds record
-		if ($ksk && $tld) {
-			my $ds_rr = create Net::DNS::RR::DS($dnskey_rr, digtype => 'SHA-256', ttl => $ttl);
+		if ( $ksk && $tld ) {
+			my $ds_rr = create Net::DNS::RR::DS(
+				$dnskey_rr,
+				digtype => 'SHA-256',
+				ttl     => $ttl
+			);
 			my %ds_record = (
-				digest => $ds_rr->digest,
+				digest     => $ds_rr->digest,
 				digestType => $ds_rr->digtype,
-				algorithm => $ds_rr->algorithm
-				);
+				algorithm  => $ds_rr->algorithm
+			);
 			$response{ds_record} = \%ds_record;
 		}
 		return %response;
@@ -289,15 +324,15 @@ sub register {
 	sub get_existing_record {
 		my $self = shift;
 		my $keys = shift;
-		my $key = shift;
+		my $key  = shift;
 		my $type = shift;
-		
+
 		my $existing = $keys->{$key}->{$type};
-			foreach my $record (@$existing) {
-				if ( $record->{status} eq 'new' ) {
-					return $record;
-				}
+		foreach my $record (@$existing) {
+			if ( $record->{status} eq 'new' ) {
+				return $record;
 			}
+		}
 		return undef;
 	}
 

@@ -216,8 +216,12 @@ public class ZoneManager extends Resolver {
 				cache.cleanUp();
 
 				for (final ZoneKey zoneKey : cache.asMap().keySet()) {
-					if (signatureManager.needsRefresh(type, zoneKey, refreshInterval)) {
-						cache.refresh(zoneKey);
+					try {
+						if (signatureManager.needsRefresh(type, zoneKey, refreshInterval)) {
+							cache.refresh(zoneKey);
+						}
+					} catch (RuntimeException ex) {
+						LOGGER.fatal("RuntimeException caught on " + zoneKey.getClass().getSimpleName() + " for " + zoneKey.getName(), ex);
 					}
 				}
 			}
@@ -267,7 +271,7 @@ public class ZoneManager extends Resolver {
 	private static LoadingCache<ZoneKey, Zone> createZoneCache(final ZoneCacheType cacheType, final CacheBuilderSpec spec) {
 		final RemovalListener<ZoneKey, Zone> removalListener = new RemovalListener<ZoneKey, Zone>() {
 			public void onRemoval(final RemovalNotification<ZoneKey, Zone> removal) {
-					LOGGER.info(cacheType + ": " + removal.getKey().getName() + " evicted from cache: " + removal.getCause());
+				LOGGER.info(cacheType + " " + removal.getKey().getClass().getSimpleName() + " " + removal.getKey().getName() + " evicted from cache: " + removal.getCause());
 			}
 		};
 
@@ -276,7 +280,7 @@ public class ZoneManager extends Resolver {
 				final boolean writeZone = (cacheType == ZoneCacheType.STATIC) ? true : false;
 
 				public Zone load(final ZoneKey zoneKey) throws IOException, GeneralSecurityException {
-					LOGGER.info("loading " + cacheType + " zone " + zoneKey.getName());
+					LOGGER.info("loading " + cacheType +  " " + zoneKey.getClass().getSimpleName() + " " + zoneKey.getName());
 					return loadZone(zoneKey, writeZone);
 				}
 
