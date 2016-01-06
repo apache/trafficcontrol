@@ -343,7 +343,7 @@ sub is_deliveryservice_request_valid {
 
 	my $rules = {
 		fields => [
-			qw/customer contentType deliveryProtocol routingType serviceDesc peakBpsEstimate peakTpsEstimate maxLibrarySizeEstimate originUrl originDynamicRemap originTestFile originAclWhitelist originHeaders otherOriginSecurity queryStringHandling rangeRequestHandling signedURLs negativeCachingCustomization negativeCachingCustomizationNote serviceAliases rateLimitingGbps rateLimitingTPS overflowService headerRewriteEdge headerRewriteMid headerRewriteRedirectRouter notes/
+			qw/customer contentType deliveryProtocol routingType serviceDesc peakBPSEstimate peakTPSEstimate maxLibrarySizeEstimate originURL hasOriginDynamicRemap originTestFile hasOriginACLWhitelist originHeaders otherOriginSecurity queryStringHandling rangeRequestHandling hasSignedURLs hasNegativeCachingCustomization negativeCachingCustomizationNote serviceAliases rateLimitingGBPS rateLimitingTPS overflowService headerRewriteEdge headerRewriteMid headerRewriteRedirectRouter notes/
 		],
 
 		# Validation checks to perform
@@ -351,7 +351,7 @@ sub is_deliveryservice_request_valid {
 
 			# required deliveryservice request fields
 			[
-				qw/customer contentType deliveryProtocol routingType serviceDesc peakBpsEstimate peakTpsEstimate maxLibrarySizeEstimate originUrl originDynamicRemap originTestFile originAclWhitelist queryStringHandling rangeRequestHandling signedURLs negativeCachingCustomization rateLimitingGbps rateLimitingTPS/
+				qw/customer contentType deliveryProtocol routingType serviceDesc peakBPSEstimate peakTPSEstimate maxLibrarySizeEstimate originURL hasOriginDynamicRemap originTestFile hasOriginACLWhitelist queryStringHandling rangeRequestHandling hasSignedURLs hasNegativeCachingCustomization rateLimitingGBPS rateLimitingTPS/
 			] => is_required("is required")
 
 		]

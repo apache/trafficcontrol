@@ -1039,7 +1039,7 @@ SSL Keys
 
 **POST /api/1.1/deliveryservices/request**
 
-  Allows a user to send a delivery service request to a specified email address.
+  Allows a user to send delivery service request details to a specified email address.
 
   Authentication Required: Yes
 
@@ -1062,19 +1062,19 @@ SSL Keys
   +----------------------------------------+--------+----------+---------------------------------------------------------------------------------------------+
   | ``>serviceDesc``                       | string | yes      | A description of the delivery service.                                                      |
   +----------------------------------------+--------+----------+---------------------------------------------------------------------------------------------+
-  | ``>peakBpsEstimate``                   | string | yes      | Used to manage cache efficiency and plan for capacity.                                      |
+  | ``>peakBPSEstimate``                   | string | yes      | Used to manage cache efficiency and plan for capacity.                                      |
   +----------------------------------------+--------+----------+---------------------------------------------------------------------------------------------+
-  | ``>peakTpsEstimate``                   | string | yes      | Used to manage cache efficiency and plan for capacity.                                      |
+  | ``>peakTPSEstimate``                   | string | yes      | Used to manage cache efficiency and plan for capacity.                                      |
   +----------------------------------------+--------+----------+---------------------------------------------------------------------------------------------+
   | ``>maxLibrarySizeEstimate``            | string | yes      | Used to manage cache efficiency and plan for capacity.                                      |
   +----------------------------------------+--------+----------+---------------------------------------------------------------------------------------------+
-  | ``>originUrl``                         | string | yes      | The URL path to the origin server.                                                          |
+  | ``>originURL``                         | string | yes      | The URL path to the origin server.                                                          |
   +----------------------------------------+--------+----------+---------------------------------------------------------------------------------------------+
-  | ``>originDynamicRemap``                | bool   | yes      | This is a feature which allows services to use multiple origin URLs for the same service.   |
+  | ``>hasOriginDynamicRemap``             | bool   | yes      | This is a feature which allows services to use multiple origin URLs for the same service.   |
   +----------------------------------------+--------+----------+---------------------------------------------------------------------------------------------+
   | ``>originTestFile``                    | string | yes      | A URL path to a test file available on the origin server.                                   |
   +----------------------------------------+--------+----------+---------------------------------------------------------------------------------------------+
-  | ``>originAclWhitelist``                | bool   | yes      | Is access to your origin restricted using an access control list (ACL or whitelist) of Ips? |
+  | ``>hasOriginACLWhitelist``             | bool   | yes      | Is access to your origin restricted using an access control list (ACL or whitelist) of Ips? |
   +----------------------------------------+--------+----------+---------------------------------------------------------------------------------------------+
   | ``>originHeaders``                     | string | no       | Header values that must be passed to requests to your origin.                               |
   +----------------------------------------+--------+----------+---------------------------------------------------------------------------------------------+
@@ -1084,15 +1084,15 @@ SSL Keys
   +----------------------------------------+--------+----------+---------------------------------------------------------------------------------------------+
   | ``>rangeRequestHandling``              | string | yes      | How to handle range requests.                                                               |
   +----------------------------------------+--------+----------+---------------------------------------------------------------------------------------------+
-  | ``>signedURLs``                        | bool   | yes      | Are Urls signed?                                                                            |
+  | ``>hasSignedURLs``                     | bool   | yes      | Are Urls signed?                                                                            |
   +----------------------------------------+--------+----------+---------------------------------------------------------------------------------------------+
-  | ``>negativeCachingCustomization``      | bool   | yes      | Any customization required for negative caching?                                            |
+  | ``>hasNegativeCachingCustomization``   | bool   | yes      | Any customization required for negative caching?                                            |
   +----------------------------------------+--------+----------+---------------------------------------------------------------------------------------------+
   | ``>negativeCachingCustomizationNote``  | string | yes      | Negative caching customization instructions.                                                |
   +----------------------------------------+--------+----------+---------------------------------------------------------------------------------------------+
   | ``>serviceAliases``                    | array  | no       | Service aliases which will be used for this service.                                        |
   +----------------------------------------+--------+----------+---------------------------------------------------------------------------------------------+
-  | ``>rateLimitingGbps``                  | int    | no       | Rate Limiting - Bandwidth (Gbps)                                                            |
+  | ``>rateLimitingGBPS``                  | int    | no       | Rate Limiting - Bandwidth (Gigabits per second)                                             |
   +----------------------------------------+--------+----------+---------------------------------------------------------------------------------------------+
   | ``>rateLimitingTPS``                   | int    | no       | Rate Limiting - Transactions/Second                                                         |
   +----------------------------------------+--------+----------+---------------------------------------------------------------------------------------------+
@@ -1117,25 +1117,25 @@ SSL Keys
           "deliveryProtocol": "http",
           "routingType": "dns",
           "serviceDesc": "service description goes here",
-          "peakBpsEstimate": "less-than-5-Gbps",
-          "peakTpsEstimate": "less-than-1000-TPS",
+          "peakBPSEstimate": "less-than-5-Gbps",
+          "peakTPSEstimate": "less-than-1000-TPS",
           "maxLibrarySizeEstimate": "less-than-200-GB",
-          "originUrl": "http://myorigin.com",
-          "originDynamicRemap": false,
+          "originURL": "http://myorigin.com",
+          "hasOriginDynamicRemap": false,
           "originTestFile": "http://myorigin.com/crossdomain.xml",
-          "originAclWhitelist": true,
+          "hasOriginACLWhitelist": true,
           "originHeaders": "",
           "otherOriginSecurity": "",
           "queryStringHandling": "ignore-in-cache-key-and-pass-up",
           "rangeRequestHandling": "range-requests-not-used",
-          "signedURLs": true,
-          "negativeCachingCustomization": true,
+          "hasSignedURLs": true,
+          "hasNegativeCachingCustomization": true,
           "negativeCachingCustomizationNote": "negative caching instructions",
           "serviceAliases": [
              "http://alias1.com",
              "http://alias2.com"
           ],
-          "rateLimitingGbps": 50,
+          "rateLimitingGBPS": 50,
           "rateLimitingTPS": 5000,
           "overflowService": "http://overflowcdn.com",
           "headerRewriteEdge": "",

@@ -44,11 +44,11 @@
             <tr><th colspan="2"><h4>Traffic &amp; Library Estimates</h4></th></tr>
             <tr>
                 <td>Peak Bandwidth Estimate:</td>
-                <td><%= $params->{peakBpsEstimate} %></td>
+                <td><%= $params->{peakBPSEstimate} %></td>
             </tr>
             <tr>
                 <td>Peak Transactions Per Second Estimate:</td>
-                <td><%= $params->{peakTpsEstimate} %></td>
+                <td><%= $params->{peakTPSEstimate} %></td>
             </tr>
             <tr>
                 <td>Max Library Size Estimate:</td>
@@ -57,11 +57,11 @@
             <tr><th colspan="2"><h4>Origin Server &amp; Security</h4></th></tr>
             <tr>
                 <td>Origin Server URL:</td>
-                <td><%= $params->{originUrl} %></td>
+                <td><%= $params->{originURL} %></td>
             </tr>
             <tr>
                 <td>Origin Dynamic Remap:</td>
-                <td><%= $params->{originDynamicRemap} ? 'true' : 'false' %></td>
+                <td><%= $params->{hasOriginDynamicRemap} ? 'true' : 'false' %></td>
             </tr>
             <tr>
                 <td>Origin Test File:</td>
@@ -69,7 +69,7 @@
             </tr>
             <tr>
                 <td>ACL/Whitelist to Access Origin:</td>
-                <td><%= $params->{originAclWhitelist} ? 'true' : 'false' %></td>
+                <td><%= $params->{hasOriginACLWhitelist} ? 'true' : 'false' %></td>
             </tr>
             <tr>
                 <td>Header to Access Origin:</td>
@@ -90,11 +90,11 @@
             </tr>
             <tr>
                 <td>Signed URLs / URL Tokenization:</td>
-                <td><%= $params->{signedURLs} ? 'true' : 'false' %></td>
+                <td><%= $params->{hasSignedURLs} ? 'true' : 'false' %></td>
             </tr>
             <tr>
                 <td>Negative Caching Customization:</td>
-                <td><%= $params->{negativeCachingCustomization} ? 'true' : 'false' %></td>
+                <td><%= $params->{hasNegativeCachingCustomization} ? 'true' : 'false' %></td>
             </tr>
             <tr>
                 <td>Negative Caching Instructions:</td>
@@ -109,7 +109,7 @@
             <tr><th colspan="2"><h4>Service Limits</h4></th></tr>
             <tr>
                 <td>Rate Limiting - Bandwidth (Gbps):</td>
-                <td><%= $params->{rateLimitingGbps} %></td>
+                <td><%= $params->{rateLimitingGBPS} %></td>
             </tr>
             <tr>
                 <td>Rate Limiting - Transactions/Second:</td>
