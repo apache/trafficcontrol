@@ -1052,7 +1052,7 @@ SSL Keys
   +========================================+========+==========+=============================================================================================+
   | ``emailTo``                            | string | yes      | The email to which the delivery service request will be sent.                               |
   +----------------------------------------+--------+----------+---------------------------------------------------------------------------------------------+
-  | ``dsParams``                           | hash   | yes      | Parameters for the delivery service request.                                                |
+  | ``details``                            | hash   | yes      | Parameters for the delivery service request.                                                |
   +----------------------------------------+--------+----------+---------------------------------------------------------------------------------------------+
   | ``>customer``                          | string | yes      | Name of the customer to associated with the delivery service.                               |
   +----------------------------------------+--------+----------+---------------------------------------------------------------------------------------------+
@@ -1111,7 +1111,7 @@ SSL Keys
 
     {
        "emailTo": "foo@bar.com",
-       "dsParams": {
+       "details": {
           "customer": "XYZ Corporation",
           "contentType": "video-on-demand",
           "deliveryProtocol": "http",

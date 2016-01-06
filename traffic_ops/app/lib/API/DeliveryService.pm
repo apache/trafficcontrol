@@ -317,7 +317,7 @@ sub state {
 sub request {
 	my $self      = shift;
 	my $email_to  = $self->req->json->{emailTo};
-	my $ds_params = $self->req->json->{dsParams};
+	my $details = $self->req->json->{details};
 
 	my $is_email_valid = Email::Valid->address($email_to);
 
@@ -325,10 +325,10 @@ sub request {
 		return $self->alert("Please provide a valid email address to send the delivery service request to.");
 	}
 
-	my ( $is_valid, $result ) = $self->is_deliveryservice_request_valid($ds_params);
+	my ( $is_valid, $result ) = $self->is_deliveryservice_request_valid($details);
 
 	if ($is_valid) {
-		if ( $self->send_deliveryservice_request( $email_to, $ds_params ) ) {
+		if ( $self->send_deliveryservice_request( $email_to, $details ) ) {
 			return $self->success_message( "Delivery Service request sent to " . $email_to );
 		}
 	}
@@ -339,7 +339,7 @@ sub request {
 
 sub is_deliveryservice_request_valid {
 	my $self      = shift;
-	my $ds_params = shift;
+	my $details = shift;
 
 	my $rules = {
 		fields => [
@@ -358,7 +358,7 @@ sub is_deliveryservice_request_valid {
 	};
 
 	# Validate the input against the rules
-	my $result = validate( $ds_params, $rules );
+	my $result = validate( $details, $rules );
 
 	if ( $result->{success} ) {
 		return ( 1, $result->{data} );

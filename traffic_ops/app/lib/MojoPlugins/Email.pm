@@ -31,7 +31,7 @@ sub register {
 		send_deliveryservice_request => sub {
 			my $self     = shift || confess("Call on an instance of MojoPlugins::Email");
 			my $email_to = shift || confess("Please provide an email to send this request to.");
-			my $params   = shift || confess("Please provide deliveryservice request params.");
+			my $details   = shift || confess("Please provide deliveryservice request details.");
 
 			my $instance_name =
 				$self->db->resultset('Parameter')->search( { -and => [ name => 'tm.instance_name', config_file => 'global' ] } )->get_column('value')
@@ -41,7 +41,7 @@ sub register {
 			my $current_user = $self->db->resultset('TmUser')->search( { username => $self->current_user()->{username} } )->single();
 			$self->stash( current_user => $current_user );
 
-			$self->stash( params => $params );
+			$self->stash( params => $details );
 
 			my $rc;
 			$rc = $self->mail(
