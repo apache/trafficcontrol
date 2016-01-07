@@ -25,7 +25,7 @@ Packager:	david_neuman2 at Cable dot Comcast dot com
 Vendor:		Comcast Cable
 Group:		Applications/Communications
 License:	Apache License, Version 2.0
-URL:		https://github.com/comcast/traffic_control/
+URL:		https://github.com/Comcast/traffic_control/
 Source:		%{_sourcedir}/traffic_stats-%{traffic_control_version}.tgz
 
 %description
@@ -42,19 +42,31 @@ export GOPATH=$(pwd)
 # Create build area with proper gopath structure
 mkdir -p src pkg bin || { echo "Could not create directories in $(pwd): $!"; exit 1; }
 
+go_get_version() {
+  local src=$1
+  local version=$2
+  (
+   cd $src && \
+   git checkout $version && \
+   go get -v \
+  )
+}
 # get traffic_ops client
-godir=src/github.com/comcast/traffic_control/traffic_ops/client
+godir=src/github.com/Comcast/traffic_control/traffic_ops/client
 ( mkdir -p "$godir" && \
   cd "$godir" && \
   cp -r "$TC_DIR"/traffic_ops/client/* . && \
   go get -v \
 ) || { echo "Could not build go program at $(pwd): $!"; exit 1; }
 
-godir=src/github.com/comcast/traffic_control/traffic_stats
+godir=src/github.com/Comcast/traffic_control/traffic_stats
+oldpwd=$(pwd)
 ( mkdir -p "$godir" && \
   cd "$godir" && \
   cp -r "$TC_DIR"/traffic_stats/* . && \
-  go get -v \
+  go get -d -v && \
+  go_get_version "$oldpwd"/src/github.com/influxdb/influxdb v0.9.4 && \
+  go install -v \
 ) || { echo "Could not build go program at $(pwd): $!"; exit 1; }
 
 %install
@@ -68,7 +80,7 @@ mkdir -p "${RPM_BUILD_ROOT}"/etc/init.d
 mkdir -p "${RPM_BUILD_ROOT}"/etc/logrotate.d
 mkdir -p "${RPM_BUILD_ROOT}"/usr/share/grafana/public/dashboards/
 
-src=src/github.com/comcast/traffic_control/traffic_stats
+src=src/github.com/Comcast/traffic_control/traffic_stats
 cp -p bin/traffic_stats     "${RPM_BUILD_ROOT}"/opt/traffic_stats/bin/traffic_stats
 cp "$src"/traffic_stats.cfg        "${RPM_BUILD_ROOT}"/opt/traffic_stats/conf/traffic_stats.cfg
 cp "$src"/traffic_stats_seelog.xml "${RPM_BUILD_ROOT}"/opt/traffic_stats/conf/traffic_stats_seelog.xml
