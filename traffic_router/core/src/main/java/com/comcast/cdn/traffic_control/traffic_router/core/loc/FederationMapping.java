@@ -34,6 +34,10 @@ public class FederationMapping implements Comparable<FederationMapping> {
         return resolve6;
     }
 
+    public ComparableTreeSet<CidrAddress> getResolveAddresses(final CidrAddress cidrAddress) {
+        return (cidrAddress.isIpV6()) ? getResolve6() : getResolve4();
+    }
+
     @Override
     @SuppressWarnings({"PMD.CyclomaticComplexity", "PMD.NPathComplexity", "PMD.IfStmtsMustUseBraces"})
     public boolean equals(final Object o) {

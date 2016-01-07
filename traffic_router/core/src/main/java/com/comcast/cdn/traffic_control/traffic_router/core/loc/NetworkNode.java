@@ -21,6 +21,8 @@ import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 
@@ -157,32 +159,37 @@ public class NetworkNode implements Comparable<NetworkNode> {
         }
     }
 
-    protected Boolean add(final Map<NetworkNode,NetworkNode> children, final NetworkNode nn) {
-        if (compareTo(nn) != 0) {
+    protected Boolean add(final Map<NetworkNode,NetworkNode> children, final NetworkNode networkNode) {
+        if (compareTo(networkNode) != 0) {
             return false;
         }
 
-        final NetworkNode child = children.get(nn);
-
-        if (child == null) {
-            children.put(nn,nn);
-            return true;
+        for (NetworkNode child : children.values()) {
+            if (child.cidrAddress.equals(networkNode.cidrAddress)) {
+                return false;
+            }
         }
 
-        if (child.cidrAddress.getNetmaskLength() == nn.cidrAddress.getNetmaskLength()) {
-            return false;
+        final List<NetworkNode> movedChildren = new ArrayList<NetworkNode>();
+
+        for (NetworkNode child : children.values()) {
+            if (networkNode.cidrAddress.includesAddress(child.cidrAddress)) {
+                movedChildren.add(child);
+                networkNode.add(child);
+            }
         }
 
-        if (child.cidrAddress.getNetmaskLength() < nn.cidrAddress.getNetmaskLength()) {
-            // one is a subnet of another...
-            child.add(nn);
-            return true;
+        for (NetworkNode movedChild : movedChildren) {
+            children.remove(movedChild);
         }
 
-        // swap
-        nn.add(child);
-        children.remove(child);
-        children.put(nn, nn);
+        for (NetworkNode child : children.values()) {
+            if (child.cidrAddress.includesAddress(networkNode.cidrAddress)) {
+                return child.add(networkNode);
+            }
+        }
+
+        children.put(networkNode, networkNode);
         return true;
     }
 
