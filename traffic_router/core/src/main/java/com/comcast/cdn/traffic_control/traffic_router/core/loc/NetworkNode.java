@@ -34,260 +34,260 @@ import org.apache.wicket.ajax.json.JSONTokener;
 import com.comcast.cdn.traffic_control.traffic_router.core.cache.CacheLocation;
 
 public class NetworkNode implements Comparable<NetworkNode> {
-	private static final Logger LOGGER = Logger.getLogger(NetworkNode.class);
-	private static final String DEFAULT_SUB_STR = "0.0.0.0/0";
+    private static final Logger LOGGER = Logger.getLogger(NetworkNode.class);
+    private static final String DEFAULT_SUB_STR = "0.0.0.0/0";
 
-	private static NetworkNode instance;
+    private static NetworkNode instance;
 
-	private CidrAddress cidrAddress;
-	private String loc;
-	private CacheLocation cacheLocation = null;
-	protected Map<NetworkNode,NetworkNode> children;
+    private CidrAddress cidrAddress;
+    private String loc;
+    private CacheLocation cacheLocation = null;
+    protected Map<NetworkNode,NetworkNode> children;
 
-	public static NetworkNode getInstance() {
-		if (instance != null) {
-			return instance;
-		}
+    public static NetworkNode getInstance() {
+        if (instance != null) {
+            return instance;
+        }
 
-		try {
-			instance = new NetworkNode(DEFAULT_SUB_STR);
-		} catch (NetworkNodeException e) {
-			LOGGER.warn(e);
-		}
+        try {
+            instance = new NetworkNode(DEFAULT_SUB_STR);
+        } catch (NetworkNodeException e) {
+            LOGGER.warn(e);
+        }
 
-		return instance;
-	}
+        return instance;
+    }
 
-	public static NetworkNode generateTree(final File f) throws NetworkNodeException, FileNotFoundException, JSONException  {
-		return generateTree(new JSONObject(new JSONTokener(new FileReader(f))));
-	}
+    public static NetworkNode generateTree(final File f) throws NetworkNodeException, FileNotFoundException, JSONException  {
+        return generateTree(new JSONObject(new JSONTokener(new FileReader(f))));
+    }
 
-	@SuppressWarnings("PMD.CyclomaticComplexity")
-	public static NetworkNode generateTree(final JSONObject json) {
-		try {
-			final JSONObject coverageZones = json.getJSONObject("coverageZones");
+    @SuppressWarnings("PMD.CyclomaticComplexity")
+    public static NetworkNode generateTree(final JSONObject json) {
+        try {
+            final JSONObject coverageZones = json.getJSONObject("coverageZones");
 
-			final SuperNode root = new SuperNode();
-			instance = root;
+            final SuperNode root = new SuperNode();
+            instance = root;
 
-			for (String loc : JSONObject.getNames(coverageZones)) {
-				final JSONObject locData = coverageZones.getJSONObject(loc);
+            for (String loc : JSONObject.getNames(coverageZones)) {
+                final JSONObject locData = coverageZones.getJSONObject(loc);
 
-				try {
-					final JSONArray network6 = locData.getJSONArray("network6");
+                try {
+                    final JSONArray network6 = locData.getJSONArray("network6");
 
-					for (int i = 0; i < network6.length(); i++) {
-						final String ip = network6.getString(i);
+                    for (int i = 0; i < network6.length(); i++) {
+                        final String ip = network6.getString(i);
 
-						try {
-							root.add6(new NetworkNode(ip, loc));
-						} catch (NetworkNodeException ex) {
-							LOGGER.error(ex, ex);
-						}
-					}
-				} catch (JSONException ex) {
-					LOGGER.warn("An exception was caught while accessing the network6 key of " + loc + " in the incoming coverage zone file: " + ex.getMessage());
-				}
+                        try {
+                            root.add6(new NetworkNode(ip, loc));
+                        } catch (NetworkNodeException ex) {
+                            LOGGER.error(ex, ex);
+                        }
+                    }
+                } catch (JSONException ex) {
+                    LOGGER.warn("An exception was caught while accessing the network6 key of " + loc + " in the incoming coverage zone file: " + ex.getMessage());
+                }
 
-				try {
-					final JSONArray network = locData.getJSONArray("network");
+                try {
+                    final JSONArray network = locData.getJSONArray("network");
 
-					for (int i = 0; i < network.length(); i++) {
-						final String ip = network.getString(i);
+                    for (int i = 0; i < network.length(); i++) {
+                        final String ip = network.getString(i);
 
-						try {
-							root.add(new NetworkNode(ip, loc));
-						} catch (NetworkNodeException ex) {
-							LOGGER.error(ex, ex);
-						}
-					}
-				} catch (JSONException ex) {
-					LOGGER.warn("An exception was caught while accessing the network key of " + loc + " in the incoming coverage zone file: " + ex.getMessage());
-				}
-			}
+                        try {
+                            root.add(new NetworkNode(ip, loc));
+                        } catch (NetworkNodeException ex) {
+                            LOGGER.error(ex, ex);
+                        }
+                    }
+                } catch (JSONException ex) {
+                    LOGGER.warn("An exception was caught while accessing the network key of " + loc + " in the incoming coverage zone file: " + ex.getMessage());
+                }
+            }
 
-			return root;
-		} catch (JSONException e) {
-			LOGGER.warn(e,e);
-		} catch (NetworkNodeException ex) {
-			LOGGER.fatal(ex, ex);
-		}
+            return root;
+        } catch (JSONException e) {
+            LOGGER.warn(e,e);
+        } catch (NetworkNodeException ex) {
+            LOGGER.fatal(ex, ex);
+        }
 
-		return null;
-	}
+        return null;
+    }
 
-	public NetworkNode(final String str) throws NetworkNodeException {
-		this(str, null);
-	}
+    public NetworkNode(final String str) throws NetworkNodeException {
+        this(str, null);
+    }
 
-	public NetworkNode(final String str, final String loc) throws NetworkNodeException {
-		this.loc = loc;
-		cidrAddress = CidrAddress.fromString(str);
-	}
+    public NetworkNode(final String str, final String loc) throws NetworkNodeException {
+        this.loc = loc;
+        cidrAddress = CidrAddress.fromString(str);
+    }
 
-	public NetworkNode getNetwork(final String ip) throws NetworkNodeException {
-		return getNetwork(new NetworkNode(ip));
-	}
+    public NetworkNode getNetwork(final String ip) throws NetworkNodeException {
+        return getNetwork(new NetworkNode(ip));
+    }
 
-	public NetworkNode getNetwork(final NetworkNode ipnn) {
-		if (this.compareTo(ipnn) != 0) {
-			return null;
-		}
+    public NetworkNode getNetwork(final NetworkNode ipnn) {
+        if (this.compareTo(ipnn) != 0) {
+            return null;
+        }
 
-		if (children == null) {
-			return this;
-		}
+        if (children == null) {
+            return this;
+        }
 
-		final NetworkNode c = children.get(ipnn);
+        final NetworkNode c = children.get(ipnn);
 
-		if (c == null) {
-			return this;
-		}
+        if (c == null) {
+            return this;
+        }
 
-		return c.getNetwork(ipnn);
-	}
+        return c.getNetwork(ipnn);
+    }
 
-	public Boolean add(final NetworkNode nn) {
-		synchronized(this) {
-			if (children == null) {
-				children = new TreeMap<NetworkNode,NetworkNode>();
-			}
+    public Boolean add(final NetworkNode nn) {
+        synchronized(this) {
+            if (children == null) {
+                children = new TreeMap<NetworkNode,NetworkNode>();
+            }
 
-			return add(children, nn);
-		}
-	}
+            return add(children, nn);
+        }
+    }
 
-	protected Boolean add(final Map<NetworkNode,NetworkNode> children, final NetworkNode nn) {
-		if (compareTo(nn) != 0) {
-			return false;
-		}
+    protected Boolean add(final Map<NetworkNode,NetworkNode> children, final NetworkNode nn) {
+        if (compareTo(nn) != 0) {
+            return false;
+        }
 
-		final NetworkNode child = children.get(nn);
+        final NetworkNode child = children.get(nn);
 
-		if (child == null) {
-			children.put(nn,nn);
-			return true;
-		}
+        if (child == null) {
+            children.put(nn,nn);
+            return true;
+        }
 
-		if (child.cidrAddress.getNetmaskLength() == nn.cidrAddress.getNetmaskLength()) {
-			return false;
-		}
+        if (child.cidrAddress.getNetmaskLength() == nn.cidrAddress.getNetmaskLength()) {
+            return false;
+        }
 
-		if (child.cidrAddress.getNetmaskLength() < nn.cidrAddress.getNetmaskLength()) {
-			// one is a subnet of another...
-			child.add(nn);
-			return true;
-		}
+        if (child.cidrAddress.getNetmaskLength() < nn.cidrAddress.getNetmaskLength()) {
+            // one is a subnet of another...
+            child.add(nn);
+            return true;
+        }
 
-		// swap
-		nn.add(child);
-		children.remove(child);
-		children.put(nn, nn);
-		return true;
-	}
+        // swap
+        nn.add(child);
+        children.remove(child);
+        children.put(nn, nn);
+        return true;
+    }
 
-	public String getLoc() {
-		return loc;
-	}
+    public String getLoc() {
+        return loc;
+    }
 
-	public void setLoc(final String loc) {
-		this.loc = loc;
-	}
+    public void setLoc(final String loc) {
+        this.loc = loc;
+    }
 
-	public CacheLocation getCacheLocation() {
-		return cacheLocation;
-	}
+    public CacheLocation getCacheLocation() {
+        return cacheLocation;
+    }
 
-	public void setCacheLocation(final CacheLocation cacheLocation) {
-		this.cacheLocation = cacheLocation;
-	}
+    public void setCacheLocation(final CacheLocation cacheLocation) {
+        this.cacheLocation = cacheLocation;
+    }
 
-	public int size() {
-		if (children == null) {
-			return 1;
-		}
+    public int size() {
+        if (children == null) {
+            return 1;
+        }
 
-		int size = 1;
+        int size = 1;
 
-		for(NetworkNode child : children.keySet()) {
-			size += child.size();
-		}
+        for(NetworkNode child : children.keySet()) {
+            size += child.size();
+        }
 
-		return size;
-	}
+        return size;
+    }
 
-	public void clearCacheLocations() {
-		synchronized(this) {
-			cacheLocation = null;
+    public void clearCacheLocations() {
+        synchronized(this) {
+            cacheLocation = null;
 
-			if (this instanceof SuperNode) {
-				final SuperNode superNode = (SuperNode) this;
+            if (this instanceof SuperNode) {
+                final SuperNode superNode = (SuperNode) this;
 
-				if (superNode.children6 != null) {
-					for (NetworkNode child : superNode.children6.keySet()) {
-						child.clearCacheLocations();
-					}
-				}
-			}
+                if (superNode.children6 != null) {
+                    for (NetworkNode child : superNode.children6.keySet()) {
+                        child.clearCacheLocations();
+                    }
+                }
+            }
 
-			if (children != null) {
-				for (NetworkNode child : children.keySet()) {
-					child.clearCacheLocations();
-				}
-			}
-		}
-	}
+            if (children != null) {
+                for (NetworkNode child : children.keySet()) {
+                    child.clearCacheLocations();
+                }
+            }
+        }
+    }
 
-	private static class SuperNode extends NetworkNode {
-		private Map<NetworkNode, NetworkNode> children6;
+    private static class SuperNode extends NetworkNode {
+        private Map<NetworkNode, NetworkNode> children6;
 
-		public SuperNode() throws NetworkNodeException {
-			super(DEFAULT_SUB_STR);
-		}
+        public SuperNode() throws NetworkNodeException {
+            super(DEFAULT_SUB_STR);
+        }
 
-		public Boolean add6(final NetworkNode nn) {
-			if(children6 == null) {
-				children6 = new TreeMap<NetworkNode,NetworkNode>();
-			}
-			return add(children6, nn);
-		}
+        public Boolean add6(final NetworkNode nn) {
+            if(children6 == null) {
+                children6 = new TreeMap<NetworkNode,NetworkNode>();
+            }
+            return add(children6, nn);
+        }
 
-		public NetworkNode getNetwork(final String ip) throws NetworkNodeException {
-			final NetworkNode nn = new NetworkNode(ip);
-			if (nn.cidrAddress.isIpV6()) {
-				return getNetwork6(nn);
-			}
-			return getNetwork(nn);
-		}
+        public NetworkNode getNetwork(final String ip) throws NetworkNodeException {
+            final NetworkNode nn = new NetworkNode(ip);
+            if (nn.cidrAddress.isIpV6()) {
+                return getNetwork6(nn);
+            }
+            return getNetwork(nn);
+        }
 
-		public NetworkNode getNetwork6(final NetworkNode networkNode) {
-			if (children6 == null) {
-				return this;
-			}
+        public NetworkNode getNetwork6(final NetworkNode networkNode) {
+            if (children6 == null) {
+                return this;
+            }
 
-			final NetworkNode c = children6.get(networkNode);
+            final NetworkNode c = children6.get(networkNode);
 
-			if (c == null) {
-				return this;
-			}
+            if (c == null) {
+                return this;
+            }
 
-			return c.getNetwork(networkNode);
-		}
-	}
+            return c.getNetwork(networkNode);
+        }
+    }
 
-	@Override
-	public int compareTo(final NetworkNode other) {
-		return cidrAddress.compareTo(other.cidrAddress);
-	}
+    @Override
+    public int compareTo(final NetworkNode other) {
+        return cidrAddress.compareTo(other.cidrAddress);
+    }
 
-	public String toString() {
-		String str = "";
-		try {
-			str = InetAddress.getByAddress(cidrAddress.getHostBytes()).toString().replace("/", "");
-		} catch (UnknownHostException e) {
-			LOGGER.warn(e,e);
-		}
+    public String toString() {
+        String str = "";
+        try {
+            str = InetAddress.getByAddress(cidrAddress.getHostBytes()).toString().replace("/", "");
+        } catch (UnknownHostException e) {
+            LOGGER.warn(e,e);
+        }
 
-		return "[" + str + "/" + cidrAddress.getNetmaskLength() + "] - location:" + this.getLoc();
-	}
+        return "[" + str + "/" + cidrAddress.getNetmaskLength() + "] - location:" + this.getLoc();
+    }
 }
