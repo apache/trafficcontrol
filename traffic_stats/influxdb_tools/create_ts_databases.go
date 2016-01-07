@@ -22,7 +22,8 @@ package main
 import (
 	"flag"
 	"fmt"
-	influx "github.com/influxdb/influxdb/client/v2"
+	influx "github.com/influxdb/influxdb/client"
+	"net/url"
 )
 
 func main() {
@@ -31,18 +32,18 @@ func main() {
 	replication := flag.String("replication", "3", "The number of nodes in the cluster")
 	flag.Parse()
 	fmt.Printf("creating datbases for influxUrl: %v with a replication of %v\n", *influxUrl, *replication)
-
-	client, err := influx.NewHTTPClient(influx.HTTPConfig{
-		Addr: *influxUrl,
+	iu, _ := url.Parse(*influxUrl)
+	client, err := influx.NewClient(influx.Config{
+		URL: *iu,
 	})
 	if err != nil {
 		fmt.Printf("Error creating influx client: %v", err)
 		panic("could not create influx client")
 	}
 
-	createCacheStats(client, replication)
-	createDailyStats(client, replication)
-	createDeliveryServiceStats(client, replication)
+	createCacheStats(*client, replication)
+	createDailyStats(*client, replication)
+	createDeliveryServiceStats(*client, replication)
 
 }
 
