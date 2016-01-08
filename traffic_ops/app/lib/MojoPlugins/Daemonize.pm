@@ -36,11 +36,6 @@ sub register {
 			if ( $pid == 0 ) {
 				$self->inactivity_timeout(0);
 
-				# close open fds (/proc/$$/fd/$i)
-				#for my $i(0 .. 1024) {
-				#	POSIX::close($i);
-				#}
-
 				POSIX::setsid();
 				open( STDIN, "< /dev/null" )
 					|| confess("Can't read /dev/null: $!");
