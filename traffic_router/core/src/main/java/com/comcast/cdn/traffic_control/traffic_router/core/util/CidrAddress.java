@@ -76,6 +76,10 @@ public class CidrAddress implements Comparable<CidrAddress> {
     }
 
     public boolean includesAddress(final CidrAddress other) {
+        if (netmaskLength >= other.netmaskLength) {
+            return false;
+        }
+
         return compareTo(other) == 0;
     }
 
