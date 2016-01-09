@@ -93,9 +93,7 @@ func getRoles() (interface{}, error) {
 // @Title postRole
 // @Description enter a new role
 // @Accept  application/json
-// @Param                 Name json     string   false "name description"
-// @Param          Description json     string    true "description description"
-// @Param            PrivLevel json      int64   false "priv_level description"
+// @Param                 Body body     Role   true "Role object that should be added to the table"
 // @Success 200 {object}    output_format.ApiWrapper
 // @Resource /api/2.0
 // @Router /api/2.0/role [post]
@@ -125,9 +123,7 @@ func postRole(payload []byte) (interface{}, error) {
 // @Title putRole
 // @Description modify an existing roleentry
 // @Accept  application/json
-// @Param                 Name json     string   false "name description"
-// @Param          Description json null.String    true "description description"
-// @Param            PrivLevel json      int64   false "priv_level description"
+// @Param                 Body body     Role   true "Role object that should be added to the table"
 // @Success 200 {object}    output_format.ApiWrapper
 // @Resource /api/2.0
 // @Router /api/2.0/role [put]

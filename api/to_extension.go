@@ -102,16 +102,7 @@ func getToExtensions() (interface{}, error) {
 // @Title postToExtension
 // @Description enter a new to_extension
 // @Accept  application/json
-// @Param                 Name json     string   false "name description"
-// @Param              Version json     string   false "version description"
-// @Param              InfoUrl json     string   false "info_url description"
-// @Param           ScriptFile json     string   false "script_file description"
-// @Param             Isactive json      int64   false "isactive description"
-// @Param AdditionalConfigJson json     string    true "additional_config_json description"
-// @Param          Description json     string    true "description description"
-// @Param ServercheckShortName json     string    true "servercheck_short_name description"
-// @Param ServercheckColumnName json     string    true "servercheck_column_name description"
-// @Param                 Type json      int64   false "type description"
+// @Param                 Body body     ToExtension   true "ToExtension object that should be added to the table"
 // @Success 200 {object}    output_format.ApiWrapper
 // @Resource /api/2.0
 // @Router /api/2.0/to_extension [post]
@@ -155,16 +146,7 @@ func postToExtension(payload []byte) (interface{}, error) {
 // @Title putToExtension
 // @Description modify an existing to_extensionentry
 // @Accept  application/json
-// @Param                 Name json     string   false "name description"
-// @Param              Version json     string   false "version description"
-// @Param              InfoUrl json     string   false "info_url description"
-// @Param           ScriptFile json     string   false "script_file description"
-// @Param             Isactive json      int64   false "isactive description"
-// @Param AdditionalConfigJson json null.String    true "additional_config_json description"
-// @Param          Description json null.String    true "description description"
-// @Param ServercheckShortName json null.String    true "servercheck_short_name description"
-// @Param ServercheckColumnName json null.String    true "servercheck_column_name description"
-// @Param                 Type json      int64   false "type description"
+// @Param                 Body body     ToExtension   true "ToExtension object that should be added to the table"
 // @Success 200 {object}    output_format.ApiWrapper
 // @Resource /api/2.0
 // @Router /api/2.0/to_extension [put]

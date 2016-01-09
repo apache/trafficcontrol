@@ -94,8 +94,7 @@ func getStatuss() (interface{}, error) {
 // @Title postStatus
 // @Description enter a new status
 // @Accept  application/json
-// @Param                 Name json     string   false "name description"
-// @Param          Description json     string    true "description description"
+// @Param                 Body body     Status   true "Status object that should be added to the table"
 // @Success 200 {object}    output_format.ApiWrapper
 // @Resource /api/2.0
 // @Router /api/2.0/status [post]
@@ -123,8 +122,7 @@ func postStatus(payload []byte) (interface{}, error) {
 // @Title putStatus
 // @Description modify an existing statusentry
 // @Accept  application/json
-// @Param                 Name json     string   false "name description"
-// @Param          Description json null.String    true "description description"
+// @Param                 Body body     Status   true "Status object that should be added to the table"
 // @Success 200 {object}    output_format.ApiWrapper
 // @Resource /api/2.0
 // @Router /api/2.0/status [put]

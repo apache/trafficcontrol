@@ -92,8 +92,7 @@ func getCachegroupParameters() (interface{}, error) {
 // @Title postCachegroupParameter
 // @Description enter a new cachegroup_parameter
 // @Accept  application/json
-// @Param           Cachegroup json      int64   false "cachegroup description"
-// @Param            Parameter json      int64   false "parameter description"
+// @Param                 Body body     CachegroupParameter   true "CachegroupParameter object that should be added to the table"
 // @Success 200 {object}    output_format.ApiWrapper
 // @Resource /api/2.0
 // @Router /api/2.0/cachegroup_parameter [post]
@@ -121,8 +120,7 @@ func postCachegroupParameter(payload []byte) (interface{}, error) {
 // @Title putCachegroupParameter
 // @Description modify an existing cachegroup_parameterentry
 // @Accept  application/json
-// @Param           Cachegroup json      int64   false "cachegroup description"
-// @Param            Parameter json      int64   false "parameter description"
+// @Param                 Body body     CachegroupParameter   true "CachegroupParameter object that should be added to the table"
 // @Success 200 {object}    output_format.ApiWrapper
 // @Resource /api/2.0
 // @Router /api/2.0/cachegroup_parameter [put]

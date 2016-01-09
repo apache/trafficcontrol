@@ -93,8 +93,7 @@ func getRegions() (interface{}, error) {
 // @Title postRegion
 // @Description enter a new region
 // @Accept  application/json
-// @Param                 Name json     string   false "name description"
-// @Param             Division json      int64   false "division description"
+// @Param                 Body body     Region   true "Region object that should be added to the table"
 // @Success 200 {object}    output_format.ApiWrapper
 // @Resource /api/2.0
 // @Router /api/2.0/region [post]
@@ -122,8 +121,7 @@ func postRegion(payload []byte) (interface{}, error) {
 // @Title putRegion
 // @Description modify an existing regionentry
 // @Accept  application/json
-// @Param                 Name json     string   false "name description"
-// @Param             Division json      int64   false "division description"
+// @Param                 Body body     Region   true "Region object that should be added to the table"
 // @Success 200 {object}    output_format.ApiWrapper
 // @Resource /api/2.0
 // @Router /api/2.0/region [put]

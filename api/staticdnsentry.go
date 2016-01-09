@@ -98,12 +98,7 @@ func getStaticdnsentrys() (interface{}, error) {
 // @Title postStaticdnsentry
 // @Description enter a new staticdnsentry
 // @Accept  application/json
-// @Param                 Host json     string   false "host description"
-// @Param              Address json     string   false "address description"
-// @Param                 Type json      int64   false "type description"
-// @Param                  Ttl json      int64   false "ttl description"
-// @Param      Deliveryservice json      int64   false "deliveryservice description"
-// @Param           Cachegroup json        int    true "cachegroup description"
+// @Param                 Body body     Staticdnsentry   true "Staticdnsentry object that should be added to the table"
 // @Success 200 {object}    output_format.ApiWrapper
 // @Resource /api/2.0
 // @Router /api/2.0/staticdnsentry [post]
@@ -139,12 +134,7 @@ func postStaticdnsentry(payload []byte) (interface{}, error) {
 // @Title putStaticdnsentry
 // @Description modify an existing staticdnsentryentry
 // @Accept  application/json
-// @Param                 Host json     string   false "host description"
-// @Param              Address json     string   false "address description"
-// @Param                 Type json      int64   false "type description"
-// @Param                  Ttl json      int64   false "ttl description"
-// @Param      Deliveryservice json      int64   false "deliveryservice description"
-// @Param           Cachegroup json   null.Int    true "cachegroup description"
+// @Param                 Body body     Staticdnsentry   true "Staticdnsentry object that should be added to the table"
 // @Success 200 {object}    output_format.ApiWrapper
 // @Resource /api/2.0
 // @Router /api/2.0/staticdnsentry [put]

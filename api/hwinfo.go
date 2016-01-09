@@ -94,9 +94,7 @@ func getHwinfos() (interface{}, error) {
 // @Title postHwinfo
 // @Description enter a new hwinfo
 // @Accept  application/json
-// @Param             Serverid json      int64   false "serverid description"
-// @Param          Description json     string   false "description description"
-// @Param                  Val json     string   false "val description"
+// @Param                 Body body     Hwinfo   true "Hwinfo object that should be added to the table"
 // @Success 200 {object}    output_format.ApiWrapper
 // @Resource /api/2.0
 // @Router /api/2.0/hwinfo [post]
@@ -126,9 +124,7 @@ func postHwinfo(payload []byte) (interface{}, error) {
 // @Title putHwinfo
 // @Description modify an existing hwinfoentry
 // @Accept  application/json
-// @Param             Serverid json      int64   false "serverid description"
-// @Param          Description json     string   false "description description"
-// @Param                  Val json     string   false "val description"
+// @Param                 Body body     Hwinfo   true "Hwinfo object that should be added to the table"
 // @Success 200 {object}    output_format.ApiWrapper
 // @Resource /api/2.0
 // @Router /api/2.0/hwinfo [put]

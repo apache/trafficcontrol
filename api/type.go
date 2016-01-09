@@ -95,9 +95,7 @@ func getTypes() (interface{}, error) {
 // @Title postType
 // @Description enter a new type
 // @Accept  application/json
-// @Param                 Name json     string   false "name description"
-// @Param          Description json     string    true "description description"
-// @Param           UseInTable json     string    true "use_in_table description"
+// @Param                 Body body     Type   true "Type object that should be added to the table"
 // @Success 200 {object}    output_format.ApiWrapper
 // @Resource /api/2.0
 // @Router /api/2.0/type [post]
@@ -127,9 +125,7 @@ func postType(payload []byte) (interface{}, error) {
 // @Title putType
 // @Description modify an existing typeentry
 // @Accept  application/json
-// @Param                 Name json     string   false "name description"
-// @Param          Description json null.String    true "description description"
-// @Param           UseInTable json null.String    true "use_in_table description"
+// @Param                 Body body     Type   true "Type object that should be added to the table"
 // @Success 200 {object}    output_format.ApiWrapper
 // @Resource /api/2.0
 // @Router /api/2.0/type [put]

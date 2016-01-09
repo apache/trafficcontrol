@@ -94,8 +94,7 @@ func getProfiles() (interface{}, error) {
 // @Title postProfile
 // @Description enter a new profile
 // @Accept  application/json
-// @Param                 Name json     string   false "name description"
-// @Param          Description json     string    true "description description"
+// @Param                 Body body     Profile   true "Profile object that should be added to the table"
 // @Success 200 {object}    output_format.ApiWrapper
 // @Resource /api/2.0
 // @Router /api/2.0/profile [post]
@@ -123,8 +122,7 @@ func postProfile(payload []byte) (interface{}, error) {
 // @Title putProfile
 // @Description modify an existing profileentry
 // @Accept  application/json
-// @Param                 Name json     string   false "name description"
-// @Param          Description json null.String    true "description description"
+// @Param                 Body body     Profile   true "Profile object that should be added to the table"
 // @Success 200 {object}    output_format.ApiWrapper
 // @Resource /api/2.0
 // @Router /api/2.0/profile [put]

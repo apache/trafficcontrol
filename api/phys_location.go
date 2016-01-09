@@ -103,17 +103,7 @@ func getPhysLocations() (interface{}, error) {
 // @Title postPhysLocation
 // @Description enter a new phys_location
 // @Accept  application/json
-// @Param                 Name json     string   false "name description"
-// @Param            ShortName json     string   false "short_name description"
-// @Param              Address json     string   false "address description"
-// @Param                 City json     string   false "city description"
-// @Param                State json     string   false "state description"
-// @Param                  Zip json     string   false "zip description"
-// @Param                  Poc json     string    true "poc description"
-// @Param                Phone json     string    true "phone description"
-// @Param                Email json     string    true "email description"
-// @Param             Comments json     string    true "comments description"
-// @Param               Region json      int64   false "region description"
+// @Param                 Body body     PhysLocation   true "PhysLocation object that should be added to the table"
 // @Success 200 {object}    output_format.ApiWrapper
 // @Resource /api/2.0
 // @Router /api/2.0/phys_location [post]
@@ -159,17 +149,7 @@ func postPhysLocation(payload []byte) (interface{}, error) {
 // @Title putPhysLocation
 // @Description modify an existing phys_locationentry
 // @Accept  application/json
-// @Param                 Name json     string   false "name description"
-// @Param            ShortName json     string   false "short_name description"
-// @Param              Address json     string   false "address description"
-// @Param                 City json     string   false "city description"
-// @Param                State json     string   false "state description"
-// @Param                  Zip json     string   false "zip description"
-// @Param                  Poc json null.String    true "poc description"
-// @Param                Phone json null.String    true "phone description"
-// @Param                Email json null.String    true "email description"
-// @Param             Comments json null.String    true "comments description"
-// @Param               Region json      int64   false "region description"
+// @Param                 Body body     PhysLocation   true "PhysLocation object that should be added to the table"
 // @Success 200 {object}    output_format.ApiWrapper
 // @Resource /api/2.0
 // @Router /api/2.0/phys_location [put]

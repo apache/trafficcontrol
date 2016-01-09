@@ -92,9 +92,7 @@ func getDeliveryserviceRegexs() (interface{}, error) {
 // @Title postDeliveryserviceRegex
 // @Description enter a new deliveryservice_regex
 // @Accept  application/json
-// @Param      Deliveryservice json      int64   false "deliveryservice description"
-// @Param                Regex json      int64   false "regex description"
-// @Param            SetNumber json        int    true "set_number description"
+// @Param                 Body body     DeliveryserviceRegex   true "DeliveryserviceRegex object that should be added to the table"
 // @Success 200 {object}    output_format.ApiWrapper
 // @Resource /api/2.0
 // @Router /api/2.0/deliveryservice_regex [post]
@@ -124,9 +122,7 @@ func postDeliveryserviceRegex(payload []byte) (interface{}, error) {
 // @Title putDeliveryserviceRegex
 // @Description modify an existing deliveryservice_regexentry
 // @Accept  application/json
-// @Param      Deliveryservice json      int64   false "deliveryservice description"
-// @Param                Regex json      int64   false "regex description"
-// @Param            SetNumber json   null.Int    true "set_number description"
+// @Param                 Body body     DeliveryserviceRegex   true "DeliveryserviceRegex object that should be added to the table"
 // @Success 200 {object}    output_format.ApiWrapper
 // @Resource /api/2.0
 // @Router /api/2.0/deliveryservice_regex [put]

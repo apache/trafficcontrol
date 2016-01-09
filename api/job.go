@@ -104,18 +104,7 @@ func getJobs() (interface{}, error) {
 // @Title postJob
 // @Description enter a new job
 // @Accept  application/json
-// @Param                Agent json        int    true "agent description"
-// @Param           ObjectType json     string    true "object_type description"
-// @Param           ObjectName json     string    true "object_name description"
-// @Param              Keyword json     string   false "keyword description"
-// @Param           Parameters json     string    true "parameters description"
-// @Param             AssetUrl json     string   false "asset_url description"
-// @Param            AssetType json     string   false "asset_type description"
-// @Param               Status json      int64   false "status description"
-// @Param            StartTime json  time.Time   false "start_time description"
-// @Param          EnteredTime json  time.Time   false "entered_time description"
-// @Param              JobUser json      int64   false "job_user description"
-// @Param   JobDeliveryservice json        int    true "job_deliveryservice description"
+// @Param                 Body body     Job   true "Job object that should be added to the table"
 // @Success 200 {object}    output_format.ApiWrapper
 // @Resource /api/2.0
 // @Router /api/2.0/job [post]
@@ -163,18 +152,7 @@ func postJob(payload []byte) (interface{}, error) {
 // @Title putJob
 // @Description modify an existing jobentry
 // @Accept  application/json
-// @Param                Agent json   null.Int    true "agent description"
-// @Param           ObjectType json null.String    true "object_type description"
-// @Param           ObjectName json null.String    true "object_name description"
-// @Param              Keyword json     string   false "keyword description"
-// @Param           Parameters json null.String    true "parameters description"
-// @Param             AssetUrl json     string   false "asset_url description"
-// @Param            AssetType json     string   false "asset_type description"
-// @Param               Status json      int64   false "status description"
-// @Param            StartTime json  time.Time   false "start_time description"
-// @Param          EnteredTime json  time.Time   false "entered_time description"
-// @Param              JobUser json      int64   false "job_user description"
-// @Param   JobDeliveryservice json   null.Int    true "job_deliveryservice description"
+// @Param                 Body body     Job   true "Job object that should be added to the table"
 // @Success 200 {object}    output_format.ApiWrapper
 // @Resource /api/2.0
 // @Router /api/2.0/job [put]

@@ -93,9 +93,7 @@ func getFederationTmusers() (interface{}, error) {
 // @Title postFederationTmuser
 // @Description enter a new federation_tmuser
 // @Accept  application/json
-// @Param           Federation json      int64   false "federation description"
-// @Param               TmUser json      int64   false "tm_user description"
-// @Param                 Role json      int64   false "role description"
+// @Param                 Body body     FederationTmuser   true "FederationTmuser object that should be added to the table"
 // @Success 200 {object}    output_format.ApiWrapper
 // @Resource /api/2.0
 // @Router /api/2.0/federation_tmuser [post]
@@ -125,9 +123,7 @@ func postFederationTmuser(payload []byte) (interface{}, error) {
 // @Title putFederationTmuser
 // @Description modify an existing federation_tmuserentry
 // @Accept  application/json
-// @Param           Federation json      int64   false "federation description"
-// @Param               TmUser json      int64   false "tm_user description"
-// @Param                 Role json      int64   false "role description"
+// @Param                 Body body     FederationTmuser   true "FederationTmuser object that should be added to the table"
 // @Success 200 {object}    output_format.ApiWrapper
 // @Resource /api/2.0
 // @Router /api/2.0/federation_tmuser [put]

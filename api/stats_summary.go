@@ -96,12 +96,7 @@ func getStatsSummarys() (interface{}, error) {
 // @Title postStatsSummary
 // @Description enter a new stats_summary
 // @Accept  application/json
-// @Param              CdnName json     string   false "cdn_name description"
-// @Param  DeliveryserviceName json     string   false "deliveryservice_name description"
-// @Param             StatName json     string   false "stat_name description"
-// @Param            StatValue json    float64   false "stat_value description"
-// @Param          SummaryTime json  time.Time   false "summary_time description"
-// @Param             StatDate json  time.Time    true "stat_date description"
+// @Param                 Body body     StatsSummary   true "StatsSummary object that should be added to the table"
 // @Success 200 {object}    output_format.ApiWrapper
 // @Resource /api/2.0
 // @Router /api/2.0/stats_summary [post]
@@ -137,12 +132,7 @@ func postStatsSummary(payload []byte) (interface{}, error) {
 // @Title putStatsSummary
 // @Description modify an existing stats_summaryentry
 // @Accept  application/json
-// @Param              CdnName json     string   false "cdn_name description"
-// @Param  DeliveryserviceName json     string   false "deliveryservice_name description"
-// @Param             StatName json     string   false "stat_name description"
-// @Param            StatValue json    float64   false "stat_value description"
-// @Param          SummaryTime json  time.Time   false "summary_time description"
-// @Param             StatDate json  time.Time    true "stat_date description"
+// @Param                 Body body     StatsSummary   true "StatsSummary object that should be added to the table"
 // @Success 200 {object}    output_format.ApiWrapper
 // @Resource /api/2.0
 // @Router /api/2.0/stats_summary [put]

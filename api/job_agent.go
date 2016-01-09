@@ -95,9 +95,7 @@ func getJobAgents() (interface{}, error) {
 // @Title postJobAgent
 // @Description enter a new job_agent
 // @Accept  application/json
-// @Param                 Name json     string    true "name description"
-// @Param          Description json     string    true "description description"
-// @Param               Active json      int64   false "active description"
+// @Param                 Body body     JobAgent   true "JobAgent object that should be added to the table"
 // @Success 200 {object}    output_format.ApiWrapper
 // @Resource /api/2.0
 // @Router /api/2.0/job_agent [post]
@@ -127,9 +125,7 @@ func postJobAgent(payload []byte) (interface{}, error) {
 // @Title putJobAgent
 // @Description modify an existing job_agententry
 // @Accept  application/json
-// @Param                 Name json null.String    true "name description"
-// @Param          Description json null.String    true "description description"
-// @Param               Active json      int64   false "active description"
+// @Param                 Body body     JobAgent   true "JobAgent object that should be added to the table"
 // @Success 200 {object}    output_format.ApiWrapper
 // @Resource /api/2.0
 // @Router /api/2.0/job_agent [put]

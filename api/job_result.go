@@ -96,10 +96,7 @@ func getJobResults() (interface{}, error) {
 // @Title postJobResult
 // @Description enter a new job_result
 // @Accept  application/json
-// @Param                  Job json      int64   false "job description"
-// @Param                Agent json      int64   false "agent description"
-// @Param               Result json     string   false "result description"
-// @Param          Description json     string    true "description description"
+// @Param                 Body body     JobResult   true "JobResult object that should be added to the table"
 // @Success 200 {object}    output_format.ApiWrapper
 // @Resource /api/2.0
 // @Router /api/2.0/job_result [post]
@@ -131,10 +128,7 @@ func postJobResult(payload []byte) (interface{}, error) {
 // @Title putJobResult
 // @Description modify an existing job_resultentry
 // @Accept  application/json
-// @Param                  Job json      int64   false "job description"
-// @Param                Agent json      int64   false "agent description"
-// @Param               Result json     string   false "result description"
-// @Param          Description json null.String    true "description description"
+// @Param                 Body body     JobResult   true "JobResult object that should be added to the table"
 // @Success 200 {object}    output_format.ApiWrapper
 // @Resource /api/2.0
 // @Router /api/2.0/job_result [put]

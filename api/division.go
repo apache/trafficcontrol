@@ -92,7 +92,7 @@ func getDivisions() (interface{}, error) {
 // @Title postDivision
 // @Description enter a new division
 // @Accept  application/json
-// @Param                 Name json     string   false "name description"
+// @Param                 Body body     Division   true "Division object that should be added to the table"
 // @Success 200 {object}    output_format.ApiWrapper
 // @Resource /api/2.0
 // @Router /api/2.0/division [post]
@@ -118,7 +118,7 @@ func postDivision(payload []byte) (interface{}, error) {
 // @Title putDivision
 // @Description modify an existing divisionentry
 // @Accept  application/json
-// @Param                 Name json     string   false "name description"
+// @Param                 Body body     Division   true "Division object that should be added to the table"
 // @Success 200 {object}    output_format.ApiWrapper
 // @Resource /api/2.0
 // @Router /api/2.0/division [put]

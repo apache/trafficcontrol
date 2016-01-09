@@ -92,8 +92,7 @@ func getFederationDeliveryservices() (interface{}, error) {
 // @Title postFederationDeliveryservice
 // @Description enter a new federation_deliveryservice
 // @Accept  application/json
-// @Param           Federation json      int64   false "federation description"
-// @Param      Deliveryservice json      int64   false "deliveryservice description"
+// @Param                 Body body     FederationDeliveryservice   true "FederationDeliveryservice object that should be added to the table"
 // @Success 200 {object}    output_format.ApiWrapper
 // @Resource /api/2.0
 // @Router /api/2.0/federation_deliveryservice [post]
@@ -121,8 +120,7 @@ func postFederationDeliveryservice(payload []byte) (interface{}, error) {
 // @Title putFederationDeliveryservice
 // @Description modify an existing federation_deliveryserviceentry
 // @Accept  application/json
-// @Param           Federation json      int64   false "federation description"
-// @Param      Deliveryservice json      int64   false "deliveryservice description"
+// @Param                 Body body     FederationDeliveryservice   true "FederationDeliveryservice object that should be added to the table"
 // @Success 200 {object}    output_format.ApiWrapper
 // @Resource /api/2.0
 // @Router /api/2.0/federation_deliveryservice [put]

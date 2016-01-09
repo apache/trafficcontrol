@@ -112,26 +112,7 @@ func getTmUsers() (interface{}, error) {
 // @Title postTmUser
 // @Description enter a new tm_user
 // @Accept  application/json
-// @Param             Username json     string    true "username description"
-// @Param                 Role json        int    true "role description"
-// @Param                  Uid json        int    true "uid description"
-// @Param                  Gid json        int    true "gid description"
-// @Param          LocalPasswd json     string    true "local_passwd description"
-// @Param   ConfirmLocalPasswd json     string    true "confirm_local_passwd description"
-// @Param              Company json     string    true "company description"
-// @Param                Email json     string    true "email description"
-// @Param             FullName json     string    true "full_name description"
-// @Param              NewUser json      int64   false "new_user description"
-// @Param         AddressLine1 json     string    true "address_line1 description"
-// @Param         AddressLine2 json     string    true "address_line2 description"
-// @Param                 City json     string    true "city description"
-// @Param      StateOrProvince json     string    true "state_or_province description"
-// @Param          PhoneNumber json     string    true "phone_number description"
-// @Param           PostalCode json     string    true "postal_code description"
-// @Param              Country json     string    true "country description"
-// @Param            LocalUser json      int64   false "local_user description"
-// @Param                Token json     string    true "token description"
-// @Param     RegistrationSent json  time.Time   false "registration_sent description"
+// @Param                 Body body     TmUser   true "TmUser object that should be added to the table"
 // @Success 200 {object}    output_format.ApiWrapper
 // @Resource /api/2.0
 // @Router /api/2.0/tm_user [post]
@@ -195,26 +176,7 @@ func postTmUser(payload []byte) (interface{}, error) {
 // @Title putTmUser
 // @Description modify an existing tm_userentry
 // @Accept  application/json
-// @Param             Username json null.String    true "username description"
-// @Param                 Role json   null.Int    true "role description"
-// @Param                  Uid json   null.Int    true "uid description"
-// @Param                  Gid json   null.Int    true "gid description"
-// @Param          LocalPasswd json null.String    true "local_passwd description"
-// @Param   ConfirmLocalPasswd json null.String    true "confirm_local_passwd description"
-// @Param              Company json null.String    true "company description"
-// @Param                Email json null.String    true "email description"
-// @Param             FullName json null.String    true "full_name description"
-// @Param              NewUser json      int64   false "new_user description"
-// @Param         AddressLine1 json null.String    true "address_line1 description"
-// @Param         AddressLine2 json null.String    true "address_line2 description"
-// @Param                 City json null.String    true "city description"
-// @Param      StateOrProvince json null.String    true "state_or_province description"
-// @Param          PhoneNumber json null.String    true "phone_number description"
-// @Param           PostalCode json null.String    true "postal_code description"
-// @Param              Country json null.String    true "country description"
-// @Param            LocalUser json      int64   false "local_user description"
-// @Param                Token json null.String    true "token description"
-// @Param     RegistrationSent json  time.Time   false "registration_sent description"
+// @Param                 Body body     TmUser   true "TmUser object that should be added to the table"
 // @Success 200 {object}    output_format.ApiWrapper
 // @Resource /api/2.0
 // @Router /api/2.0/tm_user [put]

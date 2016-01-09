@@ -93,8 +93,7 @@ func getAsns() (interface{}, error) {
 // @Title postAsn
 // @Description enter a new asn
 // @Accept  application/json
-// @Param                  Asn json      int64   false "asn description"
-// @Param           Cachegroup json      int64   false "cachegroup description"
+// @Param                 Body body     Asn   true "Asn object that should be added to the table"
 // @Success 200 {object}    output_format.ApiWrapper
 // @Resource /api/2.0
 // @Router /api/2.0/asn [post]
@@ -122,8 +121,7 @@ func postAsn(payload []byte) (interface{}, error) {
 // @Title putAsn
 // @Description modify an existing asnentry
 // @Accept  application/json
-// @Param                  Asn json      int64   false "asn description"
-// @Param           Cachegroup json      int64   false "cachegroup description"
+// @Param                 Body body     Asn   true "Asn object that should be added to the table"
 // @Success 200 {object}    output_format.ApiWrapper
 // @Resource /api/2.0
 // @Router /api/2.0/asn [put]

@@ -98,12 +98,7 @@ func getCachegroups() (interface{}, error) {
 // @Title postCachegroup
 // @Description enter a new cachegroup
 // @Accept  application/json
-// @Param                 Name json     string   false "name description"
-// @Param            ShortName json     string   false "short_name description"
-// @Param             Latitude json    float64    true "latitude description"
-// @Param            Longitude json    float64    true "longitude description"
-// @Param   ParentCachegroupId json        int    true "parent_cachegroup_id description"
-// @Param                 Type json      int64   false "type description"
+// @Param                 Body body     Cachegroup   true "Cachegroup object that should be added to the table"
 // @Success 200 {object}    output_format.ApiWrapper
 // @Resource /api/2.0
 // @Router /api/2.0/cachegroup [post]
@@ -139,12 +134,7 @@ func postCachegroup(payload []byte) (interface{}, error) {
 // @Title putCachegroup
 // @Description modify an existing cachegroupentry
 // @Accept  application/json
-// @Param                 Name json     string   false "name description"
-// @Param            ShortName json     string   false "short_name description"
-// @Param             Latitude json null.Float    true "latitude description"
-// @Param            Longitude json null.Float    true "longitude description"
-// @Param   ParentCachegroupId json   null.Int    true "parent_cachegroup_id description"
-// @Param                 Type json      int64   false "type description"
+// @Param                 Body body     Cachegroup   true "Cachegroup object that should be added to the table"
 // @Success 200 {object}    output_format.ApiWrapper
 // @Resource /api/2.0
 // @Router /api/2.0/cachegroup [put]

@@ -93,8 +93,7 @@ func getFederationResolvers() (interface{}, error) {
 // @Title postFederationResolver
 // @Description enter a new federation_resolver
 // @Accept  application/json
-// @Param            IpAddress json     string   false "ip_address description"
-// @Param                 Type json      int64   false "type description"
+// @Param                 Body body     FederationResolver   true "FederationResolver object that should be added to the table"
 // @Success 200 {object}    output_format.ApiWrapper
 // @Resource /api/2.0
 // @Router /api/2.0/federation_resolver [post]
@@ -122,8 +121,7 @@ func postFederationResolver(payload []byte) (interface{}, error) {
 // @Title putFederationResolver
 // @Description modify an existing federation_resolverentry
 // @Accept  application/json
-// @Param            IpAddress json     string   false "ip_address description"
-// @Param                 Type json      int64   false "type description"
+// @Param                 Body body     FederationResolver   true "FederationResolver object that should be added to the table"
 // @Success 200 {object}    output_format.ApiWrapper
 // @Resource /api/2.0
 // @Router /api/2.0/federation_resolver [put]

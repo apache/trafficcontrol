@@ -96,10 +96,7 @@ func getLogs() (interface{}, error) {
 // @Title postLog
 // @Description enter a new log
 // @Accept  application/json
-// @Param                Level json     string    true "level description"
-// @Param              Message json     string   false "message description"
-// @Param               TmUser json      int64   false "tm_user description"
-// @Param            Ticketnum json     string    true "ticketnum description"
+// @Param                 Body body     Log   true "Log object that should be added to the table"
 // @Success 200 {object}    output_format.ApiWrapper
 // @Resource /api/2.0
 // @Router /api/2.0/log [post]
@@ -131,10 +128,7 @@ func postLog(payload []byte) (interface{}, error) {
 // @Title putLog
 // @Description modify an existing logentry
 // @Accept  application/json
-// @Param                Level json null.String    true "level description"
-// @Param              Message json     string   false "message description"
-// @Param               TmUser json      int64   false "tm_user description"
-// @Param            Ticketnum json null.String    true "ticketnum description"
+// @Param                 Body body     Log   true "Log object that should be added to the table"
 // @Success 200 {object}    output_format.ApiWrapper
 // @Resource /api/2.0
 // @Router /api/2.0/log [put]

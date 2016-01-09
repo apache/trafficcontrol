@@ -92,8 +92,7 @@ func getDeliveryserviceTmusers() (interface{}, error) {
 // @Title postDeliveryserviceTmuser
 // @Description enter a new deliveryservice_tmuser
 // @Accept  application/json
-// @Param      Deliveryservice json      int64   false "deliveryservice description"
-// @Param             TmUserId json      int64   false "tm_user_id description"
+// @Param                 Body body     DeliveryserviceTmuser   true "DeliveryserviceTmuser object that should be added to the table"
 // @Success 200 {object}    output_format.ApiWrapper
 // @Resource /api/2.0
 // @Router /api/2.0/deliveryservice_tmuser [post]
@@ -121,8 +120,7 @@ func postDeliveryserviceTmuser(payload []byte) (interface{}, error) {
 // @Title putDeliveryserviceTmuser
 // @Description modify an existing deliveryservice_tmuserentry
 // @Accept  application/json
-// @Param      Deliveryservice json      int64   false "deliveryservice description"
-// @Param             TmUserId json      int64   false "tm_user_id description"
+// @Param                 Body body     DeliveryserviceTmuser   true "DeliveryserviceTmuser object that should be added to the table"
 // @Success 200 {object}    output_format.ApiWrapper
 // @Resource /api/2.0
 // @Router /api/2.0/deliveryservice_tmuser [put]

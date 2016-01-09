@@ -167,53 +167,53 @@ func hasLastUpdated(schemas []ColumnSchema, table string) bool {
 	return false
 }
 
-func genApiPostDocChangeLines(schemas []ColumnSchema, table string) string {
-	out := ""
-	for _, cs := range schemas {
-		if cs.TableName == table && cs.ColumnName != "id" && cs.ColumnName != "last_updated" {
-			goType, _, err := goType(&cs)
-			if err != nil {
-				log.Fatal(err)
-			}
-			goType = strings.Replace(goType, "null.", "", 1)
-			goType = strings.Replace(goType, string(goType[0]), strings.ToLower(string(goType[0])), 1)
-			if goType == "float" {
-				goType = strings.Replace(goType, "float", "float64", 1)
-			}
-			nullable := "false"
-			if cs.IsNullable == "YES" {
-				nullable = "true"
-			}
-			out += fmt.Sprintf("// @Param %20s json %10s %7s \"%s description\"\n",
-				formatName(cs.ColumnName), goType, nullable, cs.ColumnName)
-		}
-	}
-	return out
-}
+// func genApiPostDocChangeLines(schemas []ColumnSchema, table string) string {
+// 	out := ""
+// 	for _, cs := range schemas {
+// 		if cs.TableName == table && cs.ColumnName != "id" && cs.ColumnName != "last_updated" {
+// 			goType, _, err := goType(&cs)
+// 			if err != nil {
+// 				log.Fatal(err)
+// 			}
+// 			goType = strings.Replace(goType, "null.", "", 1)
+// 			goType = strings.Replace(goType, string(goType[0]), strings.ToLower(string(goType[0])), 1)
+// 			if goType == "float" {
+// 				goType = strings.Replace(goType, "float", "float64", 1)
+// 			}
+// 			nullable := "false"
+// 			if cs.IsNullable == "YES" {
+// 				nullable = "true"
+// 			}
+// 			out += fmt.Sprintf("// @Param %20s json %10s %7s \"%s description\"\n",
+// 				formatName(cs.ColumnName), goType, nullable, cs.ColumnName)
+// 		}
+// 	}
+// 	return out
+// }
 
-func genApiPutDocChangeLines(schemas []ColumnSchema, table string) string {
-	out := ""
-	for _, cs := range schemas {
-		if cs.TableName == table && cs.ColumnName != "id" && cs.ColumnName != "last_updated" {
-			goType, _, err := goType(&cs)
-			if err != nil {
-				log.Fatal(err)
-			}
-			goType = strings.Replace(goType, "null.", "", 1)
-			goType = strings.Replace(goType, string(goType[0]), strings.ToLower(string(goType[0])), 1)
-			if goType == "float" {
-				goType = strings.Replace(goType, "float", "float64", 1)
-			}
-			nullable := "false"
-			if cs.IsNullable == "YES" {
-				nullable = "true"
-			}
-			out += fmt.Sprintf("// @Param %20s json %10s %7s \"%s description\"\n",
-				formatName(cs.ColumnName), goType, nullable, cs.ColumnName)
-		}
-	}
-	return out
-}
+// func genApiPutDocChangeLines(schemas []ColumnSchema, table string) string {
+// 	out := ""
+// 	for _, cs := range schemas {
+// 		if cs.TableName == table && cs.ColumnName != "id" && cs.ColumnName != "last_updated" {
+// 			goType, _, err := goType(&cs)
+// 			if err != nil {
+// 				log.Fatal(err)
+// 			}
+// 			goType = strings.Replace(goType, "null.", "", 1)
+// 			goType = strings.Replace(goType, string(goType[0]), strings.ToLower(string(goType[0])), 1)
+// 			if goType == "float" {
+// 				goType = strings.Replace(goType, "float", "float64", 1)
+// 			}
+// 			nullable := "false"
+// 			if cs.IsNullable == "YES" {
+// 				nullable = "true"
+// 			}
+// 			out += fmt.Sprintf("// @Param %20s json %10s %7s \"%s description\"\n",
+// 				formatName(cs.ColumnName), goType, nullable, cs.ColumnName)
+// 		}
+// 	}
+// 	return out
+// }
 
 func handleString(schemas []ColumnSchema, table string) string {
 	idColumn := idCol(schemas, table)
@@ -280,7 +280,7 @@ func handleString(schemas []ColumnSchema, table string) string {
 	out += "// @Title post" + formatName(table) + "\n"
 	out += "// @Description enter a new " + table + "\n"
 	out += "// @Accept  application/json\n"
-	out += genApiPostDocChangeLines(schemas, table)
+	out += "// @Param                 Body body     " + formatName(table) + "   true \"" + formatName(table) + " object that should be added to the table\"\n"
 	out += "// @Success 200 {object}    output_format.ApiWrapper\n"
 	out += "// @Resource /api/2.0\n"
 	out += "// @Router /api/2.0/" + table + " [post]\n"
@@ -302,7 +302,7 @@ func handleString(schemas []ColumnSchema, table string) string {
 	out += "// @Title put" + formatName(table) + "\n"
 	out += "// @Description modify an existing " + table + "entry\n"
 	out += "// @Accept  application/json\n"
-	out += genApiPutDocChangeLines(schemas, table)
+	out += "// @Param                 Body body     " + formatName(table) + "   true \"" + formatName(table) + " object that should be added to the table\"\n"
 	out += "// @Success 200 {object}    output_format.ApiWrapper\n"
 	out += "// @Resource /api/2.0\n"
 	out += "// @Router /api/2.0/" + table + " [put]\n"

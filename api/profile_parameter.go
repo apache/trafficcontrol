@@ -92,8 +92,7 @@ func getProfileParameters() (interface{}, error) {
 // @Title postProfileParameter
 // @Description enter a new profile_parameter
 // @Accept  application/json
-// @Param              Profile json      int64   false "profile description"
-// @Param            Parameter json      int64   false "parameter description"
+// @Param                 Body body     ProfileParameter   true "ProfileParameter object that should be added to the table"
 // @Success 200 {object}    output_format.ApiWrapper
 // @Resource /api/2.0
 // @Router /api/2.0/profile_parameter [post]
@@ -121,8 +120,7 @@ func postProfileParameter(payload []byte) (interface{}, error) {
 // @Title putProfileParameter
 // @Description modify an existing profile_parameterentry
 // @Accept  application/json
-// @Param              Profile json      int64   false "profile description"
-// @Param            Parameter json      int64   false "parameter description"
+// @Param                 Body body     ProfileParameter   true "ProfileParameter object that should be added to the table"
 // @Success 200 {object}    output_format.ApiWrapper
 // @Resource /api/2.0
 // @Router /api/2.0/profile_parameter [put]

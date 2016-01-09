@@ -93,9 +93,7 @@ func getGooseDbVersions() (interface{}, error) {
 // @Title postGooseDbVersion
 // @Description enter a new goose_db_version
 // @Accept  application/json
-// @Param            VersionId json      int64   false "version_id description"
-// @Param            IsApplied json      int64   false "is_applied description"
-// @Param               Tstamp json  time.Time    true "tstamp description"
+// @Param                 Body body     GooseDbVersion   true "GooseDbVersion object that should be added to the table"
 // @Success 200 {object}    output_format.ApiWrapper
 // @Resource /api/2.0
 // @Router /api/2.0/goose_db_version [post]
@@ -125,9 +123,7 @@ func postGooseDbVersion(payload []byte) (interface{}, error) {
 // @Title putGooseDbVersion
 // @Description modify an existing goose_db_versionentry
 // @Accept  application/json
-// @Param            VersionId json      int64   false "version_id description"
-// @Param            IsApplied json      int64   false "is_applied description"
-// @Param               Tstamp json  time.Time    true "tstamp description"
+// @Param                 Body body     GooseDbVersion   true "GooseDbVersion object that should be added to the table"
 // @Success 200 {object}    output_format.ApiWrapper
 // @Resource /api/2.0
 // @Router /api/2.0/goose_db_version [put]

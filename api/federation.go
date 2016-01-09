@@ -95,9 +95,7 @@ func getFederations() (interface{}, error) {
 // @Title postFederation
 // @Description enter a new federation
 // @Accept  application/json
-// @Param                Cname json     string   false "cname description"
-// @Param          Description json     string    true "description description"
-// @Param                  Ttl json      int64   false "ttl description"
+// @Param                 Body body     Federation   true "Federation object that should be added to the table"
 // @Success 200 {object}    output_format.ApiWrapper
 // @Resource /api/2.0
 // @Router /api/2.0/federation [post]
@@ -127,9 +125,7 @@ func postFederation(payload []byte) (interface{}, error) {
 // @Title putFederation
 // @Description modify an existing federationentry
 // @Accept  application/json
-// @Param                Cname json     string   false "cname description"
-// @Param          Description json null.String    true "description description"
-// @Param                  Ttl json      int64   false "ttl description"
+// @Param                 Body body     Federation   true "Federation object that should be added to the table"
 // @Success 200 {object}    output_format.ApiWrapper
 // @Resource /api/2.0
 // @Router /api/2.0/federation [put]

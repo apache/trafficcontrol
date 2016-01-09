@@ -94,9 +94,7 @@ func getParameters() (interface{}, error) {
 // @Title postParameter
 // @Description enter a new parameter
 // @Accept  application/json
-// @Param                 Name json     string   false "name description"
-// @Param           ConfigFile json     string   false "config_file description"
-// @Param                Value json     string   false "value description"
+// @Param                 Body body     Parameter   true "Parameter object that should be added to the table"
 // @Success 200 {object}    output_format.ApiWrapper
 // @Resource /api/2.0
 // @Router /api/2.0/parameter [post]
@@ -126,9 +124,7 @@ func postParameter(payload []byte) (interface{}, error) {
 // @Title putParameter
 // @Description modify an existing parameterentry
 // @Accept  application/json
-// @Param                 Name json     string   false "name description"
-// @Param           ConfigFile json     string   false "config_file description"
-// @Param                Value json     string   false "value description"
+// @Param                 Body body     Parameter   true "Parameter object that should be added to the table"
 // @Success 200 {object}    output_format.ApiWrapper
 // @Resource /api/2.0
 // @Router /api/2.0/parameter [put]

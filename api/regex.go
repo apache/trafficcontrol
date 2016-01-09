@@ -93,8 +93,7 @@ func getRegexs() (interface{}, error) {
 // @Title postRegex
 // @Description enter a new regex
 // @Accept  application/json
-// @Param              Pattern json     string   false "pattern description"
-// @Param                 Type json      int64   false "type description"
+// @Param                 Body body     Regex   true "Regex object that should be added to the table"
 // @Success 200 {object}    output_format.ApiWrapper
 // @Resource /api/2.0
 // @Router /api/2.0/regex [post]
@@ -122,8 +121,7 @@ func postRegex(payload []byte) (interface{}, error) {
 // @Title putRegex
 // @Description modify an existing regexentry
 // @Accept  application/json
-// @Param              Pattern json     string   false "pattern description"
-// @Param                 Type json      int64   false "type description"
+// @Param                 Body body     Regex   true "Regex object that should be added to the table"
 // @Success 200 {object}    output_format.ApiWrapper
 // @Resource /api/2.0
 // @Router /api/2.0/regex [put]

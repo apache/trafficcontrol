@@ -94,8 +94,7 @@ func getJobStatuss() (interface{}, error) {
 // @Title postJobStatus
 // @Description enter a new job_status
 // @Accept  application/json
-// @Param                 Name json     string    true "name description"
-// @Param          Description json     string    true "description description"
+// @Param                 Body body     JobStatus   true "JobStatus object that should be added to the table"
 // @Success 200 {object}    output_format.ApiWrapper
 // @Resource /api/2.0
 // @Router /api/2.0/job_status [post]
@@ -123,8 +122,7 @@ func postJobStatus(payload []byte) (interface{}, error) {
 // @Title putJobStatus
 // @Description modify an existing job_statusentry
 // @Accept  application/json
-// @Param                 Name json null.String    true "name description"
-// @Param          Description json null.String    true "description description"
+// @Param                 Body body     JobStatus   true "JobStatus object that should be added to the table"
 // @Success 200 {object}    output_format.ApiWrapper
 // @Resource /api/2.0
 // @Router /api/2.0/job_status [put]
