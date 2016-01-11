@@ -85,12 +85,7 @@ sub index {
 		}
 	}
 
-	if ( ($error_message) ) {
-		$self->alert($error_message);
-	}
-	else {
-		return $self->success( \@data );
-	}
+	return ( defined($error_message) ) ? $self->alert($error_message) : $self->success( \@data );
 }
 
 sub get_delivery_service {
@@ -130,12 +125,7 @@ sub get_delivery_service {
 		}
 	}
 
-	if ( defined($error_message) ) {
-		return ( $error_message, undef );
-	}
-	else {
-		return ( undef, $servers );
-	}
+	return ( defined($error_message) ) ? ( $error_message, undef ) : ( undef, $servers );
 }
 
 sub get_delivery_service_by_id {
@@ -158,16 +148,18 @@ sub get_delivery_service_by_id {
 	}
 	elsif ( $self->is_delivery_service_assigned($dsId) ) {
 		my $tm_user = $self->db->resultset('TmUser')->search( { username => $current_user } )->single();
-		my @ds_ids =
+		my $ds_id =
 			$self->db->resultset('DeliveryserviceTmuser')->search( { tm_user_id => $tm_user->id, deliveryservice => $dsId } )
-			->get_column('deliveryservice')->all();
+			->get_column('deliveryservice')->single();
 
-		@ds_servers = $self->db->resultset('DeliveryserviceServer')->search( { deliveryservice => { -in => \@ds_ids } } )->get_column('server')->all();
+		@ds_servers = $self->db->resultset('DeliveryserviceServer')->search( { deliveryservice => $ds_id } )->get_column('server')->all();
 	}
 	elsif ( !$self->is_delivery_service_assigned($dsId) ) {
 		$error_message = "Delivery Service ID '$dsId' is not assigned to user '$current_user'.  Please contact your administrator.";
 	}
 
+
+	my $servers;
 	if ( scalar(@ds_servers) ) {
 		my $ds = $self->db->resultset('Deliveryservice')->search( { 'me.id' => $dsId }, { prefetch => ['type'] } )->single();
 		my @criteria = [ { 'me.id' => { -in => \@ds_servers } } ];
@@ -177,18 +169,15 @@ sub get_delivery_service_by_id {
 			push( @criteria, { 'type.name' => "MID", 'me.cdn_id' => $ds->cdn_id } );
 		}
 
-		my $servers = $self->db->resultset('Server')->search(
+		$servers = $self->db->resultset('Server')->search(
 			[@criteria], {
 				prefetch => [ 'cdn', 'cachegroup', 'type', 'profile', 'status', 'phys_location' ],
 				order_by => 'me.' . $orderby_snakecase,
 			}
 		);
-
-		return ( undef, $servers );
 	}
-	else {
-		return ( $error_message, undef );
-	}
+	
+	return ( defined($error_message) ) ? ( $error_message, undef ) : ( undef, $servers );
 }
 
 sub totals {

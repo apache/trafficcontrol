@@ -120,12 +120,7 @@ sub delivery_services {
 		}
 	}
 
-	if ( defined($error_message) ) {
-		return $self->alert($error_message);
-	}
-	else {
-		return $self->success( \@data );
-	}
+	return ( defined($error_message) ) ? $self->alert($error_message) :  $self->success( \@data );
 }
 
 sub get_delivery_services {
@@ -180,13 +175,7 @@ sub get_delivery_service_by_id {
 		$error_message = "Delivery Service ID '$id' does not exist in the database.  Please contact your administrator.";
 	}
 
-
-	if ( defined($error_message) ) {
-		return ( $error_message, undef, undef );
-	}
-	else {
-		return ( undef, $rs, $tm_user_id );
-	}
+	return ( defined($error_message) ) ? ( $error_message, undef, undef ) : ( undef, $rs, $tm_user_id );
 }
 
 sub routing {
