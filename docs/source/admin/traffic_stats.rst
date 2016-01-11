@@ -199,7 +199,7 @@ They are specific for traffic stats and are not meant to be generic to influxdb.
 			- example: ./create_ts_databases -influxUrl=localhost:8086 -replication=3
 
 **sync_ts_databases**
-	This script is used to sync one influxdb environment to another.  Possible use cases are syncing from Production to Development or Syncing a new cluster once brought online.
+	This script is used to sync one influxdb environment to another.  Only data from continuous queries is synced as it is downsampled data and much smaller in size than syncing raw data.  Possible use cases are syncing from Production to Development or Syncing a new cluster once brought online.
 
 	**How to use sync_ts_databases:**
 
