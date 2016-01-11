@@ -39,6 +39,7 @@ func CreateRouter() http.Handler {
 	router.HandleFunc("/login", auth.Login).Methods("POST")
 
 	router.HandleFunc("/api/2.0/{table}", auth.Use(apiHandler, auth.DONTRequireLogin)).Methods("OPTIONS")
+	router.HandleFunc("/api/2.0/{table}/{id}", auth.Use(apiHandler, auth.DONTRequireLogin)).Methods("OPTIONS")
 	router.HandleFunc("/api/2.0/{table}", auth.Use(apiHandler, auth.RequireLogin)).Methods("GET", "POST", "OPTIONS")
 	router.HandleFunc("/api/2.0/{table}/{id}", auth.Use(apiHandler, auth.RequireLogin)).Methods("GET", "PUT", "DELETE", "OPTIONS")
 
