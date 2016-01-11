@@ -121,10 +121,11 @@ func postRegion(payload []byte) (interface{}, error) {
 // @Title putRegion
 // @Description modify an existing regionentry
 // @Accept  application/json
+// @Param   id              path    int     true        "The row id"
 // @Param                 Body body     Region   true "Region object that should be added to the table"
 // @Success 200 {object}    output_format.ApiWrapper
 // @Resource /api/2.0
-// @Router /api/2.0/region [put]
+// @Router /api/2.0/region/{id}  [put]
 func putRegion(id int, payload []byte) (interface{}, error) {
 	var v Region
 	err := json.Unmarshal(payload, &v)

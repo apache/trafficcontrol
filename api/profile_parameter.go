@@ -120,10 +120,11 @@ func postProfileParameter(payload []byte) (interface{}, error) {
 // @Title putProfileParameter
 // @Description modify an existing profile_parameterentry
 // @Accept  application/json
+// @Param   id              path    int     true        "The row id"
 // @Param                 Body body     ProfileParameter   true "ProfileParameter object that should be added to the table"
 // @Success 200 {object}    output_format.ApiWrapper
 // @Resource /api/2.0
-// @Router /api/2.0/profile_parameter [put]
+// @Router /api/2.0/profile_parameter/{id}  [put]
 func putProfileParameter(id int, payload []byte) (interface{}, error) {
 	var v ProfileParameter
 	err := json.Unmarshal(payload, &v)

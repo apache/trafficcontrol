@@ -125,10 +125,11 @@ func postJobAgent(payload []byte) (interface{}, error) {
 // @Title putJobAgent
 // @Description modify an existing job_agententry
 // @Accept  application/json
+// @Param   id              path    int     true        "The row id"
 // @Param                 Body body     JobAgent   true "JobAgent object that should be added to the table"
 // @Success 200 {object}    output_format.ApiWrapper
 // @Resource /api/2.0
-// @Router /api/2.0/job_agent [put]
+// @Router /api/2.0/job_agent/{id}  [put]
 func putJobAgent(id int, payload []byte) (interface{}, error) {
 	var v JobAgent
 	err := json.Unmarshal(payload, &v)

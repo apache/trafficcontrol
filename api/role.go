@@ -123,10 +123,11 @@ func postRole(payload []byte) (interface{}, error) {
 // @Title putRole
 // @Description modify an existing roleentry
 // @Accept  application/json
+// @Param   id              path    int     true        "The row id"
 // @Param                 Body body     Role   true "Role object that should be added to the table"
 // @Success 200 {object}    output_format.ApiWrapper
 // @Resource /api/2.0
-// @Router /api/2.0/role [put]
+// @Router /api/2.0/role/{id}  [put]
 func putRole(id int, payload []byte) (interface{}, error) {
 	var v Role
 	err := json.Unmarshal(payload, &v)

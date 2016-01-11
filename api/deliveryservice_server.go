@@ -120,10 +120,11 @@ func postDeliveryserviceServer(payload []byte) (interface{}, error) {
 // @Title putDeliveryserviceServer
 // @Description modify an existing deliveryservice_serverentry
 // @Accept  application/json
+// @Param   id              path    int     true        "The row id"
 // @Param                 Body body     DeliveryserviceServer   true "DeliveryserviceServer object that should be added to the table"
 // @Success 200 {object}    output_format.ApiWrapper
 // @Resource /api/2.0
-// @Router /api/2.0/deliveryservice_server [put]
+// @Router /api/2.0/deliveryservice_server/{id}  [put]
 func putDeliveryserviceServer(id int, payload []byte) (interface{}, error) {
 	var v DeliveryserviceServer
 	err := json.Unmarshal(payload, &v)

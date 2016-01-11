@@ -122,10 +122,11 @@ func postCdn(payload []byte) (interface{}, error) {
 // @Title putCdn
 // @Description modify an existing cdnentry
 // @Accept  application/json
+// @Param   id              path    int     true        "The row id"
 // @Param                 Body body     Cdn   true "Cdn object that should be added to the table"
 // @Success 200 {object}    output_format.ApiWrapper
 // @Resource /api/2.0
-// @Router /api/2.0/cdn [put]
+// @Router /api/2.0/cdn/{id}  [put]
 func putCdn(id int, payload []byte) (interface{}, error) {
 	var v Cdn
 	err := json.Unmarshal(payload, &v)

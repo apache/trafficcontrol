@@ -123,10 +123,11 @@ func postFederationTmuser(payload []byte) (interface{}, error) {
 // @Title putFederationTmuser
 // @Description modify an existing federation_tmuserentry
 // @Accept  application/json
+// @Param   id              path    int     true        "The row id"
 // @Param                 Body body     FederationTmuser   true "FederationTmuser object that should be added to the table"
 // @Success 200 {object}    output_format.ApiWrapper
 // @Resource /api/2.0
-// @Router /api/2.0/federation_tmuser [put]
+// @Router /api/2.0/federation_tmuser/{id}  [put]
 func putFederationTmuser(id int, payload []byte) (interface{}, error) {
 	var v FederationTmuser
 	err := json.Unmarshal(payload, &v)

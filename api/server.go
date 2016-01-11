@@ -206,10 +206,11 @@ func postServer(payload []byte) (interface{}, error) {
 // @Title putServer
 // @Description modify an existing serverentry
 // @Accept  application/json
+// @Param   id              path    int     true        "The row id"
 // @Param                 Body body     Server   true "Server object that should be added to the table"
 // @Success 200 {object}    output_format.ApiWrapper
 // @Resource /api/2.0
-// @Router /api/2.0/server [put]
+// @Router /api/2.0/server/{id}  [put]
 func putServer(id int, payload []byte) (interface{}, error) {
 	var v Server
 	err := json.Unmarshal(payload, &v)

@@ -125,10 +125,11 @@ func postFederation(payload []byte) (interface{}, error) {
 // @Title putFederation
 // @Description modify an existing federationentry
 // @Accept  application/json
+// @Param   id              path    int     true        "The row id"
 // @Param                 Body body     Federation   true "Federation object that should be added to the table"
 // @Success 200 {object}    output_format.ApiWrapper
 // @Resource /api/2.0
-// @Router /api/2.0/federation [put]
+// @Router /api/2.0/federation/{id}  [put]
 func putFederation(id int, payload []byte) (interface{}, error) {
 	var v Federation
 	err := json.Unmarshal(payload, &v)

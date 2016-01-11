@@ -122,10 +122,11 @@ func postJobStatus(payload []byte) (interface{}, error) {
 // @Title putJobStatus
 // @Description modify an existing job_statusentry
 // @Accept  application/json
+// @Param   id              path    int     true        "The row id"
 // @Param                 Body body     JobStatus   true "JobStatus object that should be added to the table"
 // @Success 200 {object}    output_format.ApiWrapper
 // @Resource /api/2.0
-// @Router /api/2.0/job_status [put]
+// @Router /api/2.0/job_status/{id}  [put]
 func putJobStatus(id int, payload []byte) (interface{}, error) {
 	var v JobStatus
 	err := json.Unmarshal(payload, &v)

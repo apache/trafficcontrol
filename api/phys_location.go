@@ -149,10 +149,11 @@ func postPhysLocation(payload []byte) (interface{}, error) {
 // @Title putPhysLocation
 // @Description modify an existing phys_locationentry
 // @Accept  application/json
+// @Param   id              path    int     true        "The row id"
 // @Param                 Body body     PhysLocation   true "PhysLocation object that should be added to the table"
 // @Success 200 {object}    output_format.ApiWrapper
 // @Resource /api/2.0
-// @Router /api/2.0/phys_location [put]
+// @Router /api/2.0/phys_location/{id}  [put]
 func putPhysLocation(id int, payload []byte) (interface{}, error) {
 	var v PhysLocation
 	err := json.Unmarshal(payload, &v)

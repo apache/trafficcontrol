@@ -128,10 +128,11 @@ func postLog(payload []byte) (interface{}, error) {
 // @Title putLog
 // @Description modify an existing logentry
 // @Accept  application/json
+// @Param   id              path    int     true        "The row id"
 // @Param                 Body body     Log   true "Log object that should be added to the table"
 // @Success 200 {object}    output_format.ApiWrapper
 // @Resource /api/2.0
-// @Router /api/2.0/log [put]
+// @Router /api/2.0/log/{id}  [put]
 func putLog(id int, payload []byte) (interface{}, error) {
 	var v Log
 	err := json.Unmarshal(payload, &v)

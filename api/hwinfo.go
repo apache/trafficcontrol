@@ -124,10 +124,11 @@ func postHwinfo(payload []byte) (interface{}, error) {
 // @Title putHwinfo
 // @Description modify an existing hwinfoentry
 // @Accept  application/json
+// @Param   id              path    int     true        "The row id"
 // @Param                 Body body     Hwinfo   true "Hwinfo object that should be added to the table"
 // @Success 200 {object}    output_format.ApiWrapper
 // @Resource /api/2.0
-// @Router /api/2.0/hwinfo [put]
+// @Router /api/2.0/hwinfo/{id}  [put]
 func putHwinfo(id int, payload []byte) (interface{}, error) {
 	var v Hwinfo
 	err := json.Unmarshal(payload, &v)

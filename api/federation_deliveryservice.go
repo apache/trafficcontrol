@@ -120,10 +120,11 @@ func postFederationDeliveryservice(payload []byte) (interface{}, error) {
 // @Title putFederationDeliveryservice
 // @Description modify an existing federation_deliveryserviceentry
 // @Accept  application/json
+// @Param   id              path    int     true        "The row id"
 // @Param                 Body body     FederationDeliveryservice   true "FederationDeliveryservice object that should be added to the table"
 // @Success 200 {object}    output_format.ApiWrapper
 // @Resource /api/2.0
-// @Router /api/2.0/federation_deliveryservice [put]
+// @Router /api/2.0/federation_deliveryservice/{id}  [put]
 func putFederationDeliveryservice(id int, payload []byte) (interface{}, error) {
 	var v FederationDeliveryservice
 	err := json.Unmarshal(payload, &v)

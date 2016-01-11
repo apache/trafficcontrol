@@ -123,10 +123,11 @@ func postGooseDbVersion(payload []byte) (interface{}, error) {
 // @Title putGooseDbVersion
 // @Description modify an existing goose_db_versionentry
 // @Accept  application/json
+// @Param   id              path    int     true        "The row id"
 // @Param                 Body body     GooseDbVersion   true "GooseDbVersion object that should be added to the table"
 // @Success 200 {object}    output_format.ApiWrapper
 // @Resource /api/2.0
-// @Router /api/2.0/goose_db_version [put]
+// @Router /api/2.0/goose_db_version/{id}  [put]
 func putGooseDbVersion(id int, payload []byte) (interface{}, error) {
 	var v GooseDbVersion
 	err := json.Unmarshal(payload, &v)

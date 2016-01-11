@@ -146,10 +146,11 @@ func postToExtension(payload []byte) (interface{}, error) {
 // @Title putToExtension
 // @Description modify an existing to_extensionentry
 // @Accept  application/json
+// @Param   id              path    int     true        "The row id"
 // @Param                 Body body     ToExtension   true "ToExtension object that should be added to the table"
 // @Success 200 {object}    output_format.ApiWrapper
 // @Resource /api/2.0
-// @Router /api/2.0/to_extension [put]
+// @Router /api/2.0/to_extension/{id}  [put]
 func putToExtension(id int, payload []byte) (interface{}, error) {
 	var v ToExtension
 	err := json.Unmarshal(payload, &v)

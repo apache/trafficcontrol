@@ -124,10 +124,11 @@ func postParameter(payload []byte) (interface{}, error) {
 // @Title putParameter
 // @Description modify an existing parameterentry
 // @Accept  application/json
+// @Param   id              path    int     true        "The row id"
 // @Param                 Body body     Parameter   true "Parameter object that should be added to the table"
 // @Success 200 {object}    output_format.ApiWrapper
 // @Resource /api/2.0
-// @Router /api/2.0/parameter [put]
+// @Router /api/2.0/parameter/{id}  [put]
 func putParameter(id int, payload []byte) (interface{}, error) {
 	var v Parameter
 	err := json.Unmarshal(payload, &v)

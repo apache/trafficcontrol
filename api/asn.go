@@ -121,10 +121,11 @@ func postAsn(payload []byte) (interface{}, error) {
 // @Title putAsn
 // @Description modify an existing asnentry
 // @Accept  application/json
+// @Param   id              path    int     true        "The row id"
 // @Param                 Body body     Asn   true "Asn object that should be added to the table"
 // @Success 200 {object}    output_format.ApiWrapper
 // @Resource /api/2.0
-// @Router /api/2.0/asn [put]
+// @Router /api/2.0/asn/{id}  [put]
 func putAsn(id int, payload []byte) (interface{}, error) {
 	var v Asn
 	err := json.Unmarshal(payload, &v)

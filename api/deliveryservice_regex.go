@@ -122,10 +122,11 @@ func postDeliveryserviceRegex(payload []byte) (interface{}, error) {
 // @Title putDeliveryserviceRegex
 // @Description modify an existing deliveryservice_regexentry
 // @Accept  application/json
+// @Param   id              path    int     true        "The row id"
 // @Param                 Body body     DeliveryserviceRegex   true "DeliveryserviceRegex object that should be added to the table"
 // @Success 200 {object}    output_format.ApiWrapper
 // @Resource /api/2.0
-// @Router /api/2.0/deliveryservice_regex [put]
+// @Router /api/2.0/deliveryservice_regex/{id}  [put]
 func putDeliveryserviceRegex(id int, payload []byte) (interface{}, error) {
 	var v DeliveryserviceRegex
 	err := json.Unmarshal(payload, &v)

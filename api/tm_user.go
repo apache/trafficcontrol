@@ -176,10 +176,11 @@ func postTmUser(payload []byte) (interface{}, error) {
 // @Title putTmUser
 // @Description modify an existing tm_userentry
 // @Accept  application/json
+// @Param   id              path    int     true        "The row id"
 // @Param                 Body body     TmUser   true "TmUser object that should be added to the table"
 // @Success 200 {object}    output_format.ApiWrapper
 // @Resource /api/2.0
-// @Router /api/2.0/tm_user [put]
+// @Router /api/2.0/tm_user/{id}  [put]
 func putTmUser(id int, payload []byte) (interface{}, error) {
 	var v TmUser
 	err := json.Unmarshal(payload, &v)

@@ -125,10 +125,11 @@ func postType(payload []byte) (interface{}, error) {
 // @Title putType
 // @Description modify an existing typeentry
 // @Accept  application/json
+// @Param   id              path    int     true        "The row id"
 // @Param                 Body body     Type   true "Type object that should be added to the table"
 // @Success 200 {object}    output_format.ApiWrapper
 // @Resource /api/2.0
-// @Router /api/2.0/type [put]
+// @Router /api/2.0/type/{id}  [put]
 func putType(id int, payload []byte) (interface{}, error) {
 	var v Type
 	err := json.Unmarshal(payload, &v)

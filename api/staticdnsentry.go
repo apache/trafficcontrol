@@ -134,10 +134,11 @@ func postStaticdnsentry(payload []byte) (interface{}, error) {
 // @Title putStaticdnsentry
 // @Description modify an existing staticdnsentryentry
 // @Accept  application/json
+// @Param   id              path    int     true        "The row id"
 // @Param                 Body body     Staticdnsentry   true "Staticdnsentry object that should be added to the table"
 // @Success 200 {object}    output_format.ApiWrapper
 // @Resource /api/2.0
-// @Router /api/2.0/staticdnsentry [put]
+// @Router /api/2.0/staticdnsentry/{id}  [put]
 func putStaticdnsentry(id int, payload []byte) (interface{}, error) {
 	var v Staticdnsentry
 	err := json.Unmarshal(payload, &v)

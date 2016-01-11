@@ -120,10 +120,11 @@ func postCachegroupParameter(payload []byte) (interface{}, error) {
 // @Title putCachegroupParameter
 // @Description modify an existing cachegroup_parameterentry
 // @Accept  application/json
+// @Param   id              path    int     true        "The row id"
 // @Param                 Body body     CachegroupParameter   true "CachegroupParameter object that should be added to the table"
 // @Success 200 {object}    output_format.ApiWrapper
 // @Resource /api/2.0
-// @Router /api/2.0/cachegroup_parameter [put]
+// @Router /api/2.0/cachegroup_parameter/{id}  [put]
 func putCachegroupParameter(id int, payload []byte) (interface{}, error) {
 	var v CachegroupParameter
 	err := json.Unmarshal(payload, &v)

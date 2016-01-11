@@ -118,10 +118,11 @@ func postDivision(payload []byte) (interface{}, error) {
 // @Title putDivision
 // @Description modify an existing divisionentry
 // @Accept  application/json
+// @Param   id              path    int     true        "The row id"
 // @Param                 Body body     Division   true "Division object that should be added to the table"
 // @Success 200 {object}    output_format.ApiWrapper
 // @Resource /api/2.0
-// @Router /api/2.0/division [put]
+// @Router /api/2.0/division/{id}  [put]
 func putDivision(id int, payload []byte) (interface{}, error) {
 	var v Division
 	err := json.Unmarshal(payload, &v)

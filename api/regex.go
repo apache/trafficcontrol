@@ -121,10 +121,11 @@ func postRegex(payload []byte) (interface{}, error) {
 // @Title putRegex
 // @Description modify an existing regexentry
 // @Accept  application/json
+// @Param   id              path    int     true        "The row id"
 // @Param                 Body body     Regex   true "Regex object that should be added to the table"
 // @Success 200 {object}    output_format.ApiWrapper
 // @Resource /api/2.0
-// @Router /api/2.0/regex [put]
+// @Router /api/2.0/regex/{id}  [put]
 func putRegex(id int, payload []byte) (interface{}, error) {
 	var v Regex
 	err := json.Unmarshal(payload, &v)

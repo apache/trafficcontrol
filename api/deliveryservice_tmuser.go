@@ -120,10 +120,11 @@ func postDeliveryserviceTmuser(payload []byte) (interface{}, error) {
 // @Title putDeliveryserviceTmuser
 // @Description modify an existing deliveryservice_tmuserentry
 // @Accept  application/json
+// @Param   id              path    int     true        "The row id"
 // @Param                 Body body     DeliveryserviceTmuser   true "DeliveryserviceTmuser object that should be added to the table"
 // @Success 200 {object}    output_format.ApiWrapper
 // @Resource /api/2.0
-// @Router /api/2.0/deliveryservice_tmuser [put]
+// @Router /api/2.0/deliveryservice_tmuser/{id}  [put]
 func putDeliveryserviceTmuser(id int, payload []byte) (interface{}, error) {
 	var v DeliveryserviceTmuser
 	err := json.Unmarshal(payload, &v)
