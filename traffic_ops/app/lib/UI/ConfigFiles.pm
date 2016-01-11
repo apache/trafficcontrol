@@ -1138,6 +1138,7 @@ sub regex_revalidate_dot_config {
 
 	my $rs = $self->db->resultset('Job')->search( { start_time => \$interval } );
 	while ( my $row = $rs->next ) {
+		next unless defined( $row->job_deliveryservice );
 
 		# Purges are CDN - wide, and the job entry has the ds id in it.
 		my $job_cdn = $self->db->resultset('Cdn')->search( { id => $row->job_deliveryservice->cdn_id } )->single();
