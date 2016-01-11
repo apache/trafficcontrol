@@ -35,12 +35,12 @@ sub index {
 	my $ds_id        = $self->param('dsId');
 
 	my $servers;
-	my $error_message;
+	my $forbidden;
 	if ( defined $ds_id ) {
-		( $error_message, $servers ) = $self->get_delivery_service_by_id( $current_user, $ds_id );
+		( $forbidden, $servers ) = $self->get_delivery_service_by_id( $current_user, $ds_id );
 	}
 	else {
-		( $error_message, $servers ) = $self->get_delivery_service($current_user);
+		$servers = $self->get_delivery_service($current_user);
 	}
 
 	my @data;
@@ -85,7 +85,7 @@ sub index {
 		}
 	}
 
-	return ( defined($error_message) ) ? $self->alert($error_message) : $self->success( \@data );
+	return defined($forbidden) ? $self->forbidden() : $self->success(\@data);
 }
 
 sub get_delivery_service {
@@ -93,9 +93,8 @@ sub get_delivery_service {
 	my $current_user      = shift;
 	my $orderby           = $self->param('orderby') || "hostName";
 	my $orderby_snakecase = lcfirst( decamelize($orderby) );
-	
+
 	my $servers;
-	my $error_message;
 	if ( &is_privileged($self) ) {
 		$servers = $self->db->resultset('Server')->search(
 			undef, {
@@ -108,24 +107,19 @@ sub get_delivery_service {
 		my $tm_user = $self->db->resultset('TmUser')->search( { username => $current_user } )->single();
 		my @ds_ids = $self->db->resultset('DeliveryserviceTmuser')->search( { tm_user_id => $tm_user->id } )->get_column('deliveryservice')->all();
 
-		if ( @ds_ids == 0 ) {
-			$error_message = "No delivery service(s) assigned for user '$current_user'.  Please contact your administrator.";
-		}
-		else {
-			my @ds_servers =
-				$self->db->resultset('DeliveryserviceServer')->search( { deliveryservice => { -in => \@ds_ids } } )->get_column('server')->all();
+		my @ds_servers =
+			$self->db->resultset('DeliveryserviceServer')->search( { deliveryservice => { -in => \@ds_ids } } )->get_column('server')->all();
 
-			$servers = $self->db->resultset('Server')->search(
-				{ 'me.id' => { -in => \@ds_servers } },
-				{
-					prefetch => [ 'cdn', 'cachegroup', 'type', 'profile', 'status', 'phys_location' ],
-					order_by => 'me.' . $orderby_snakecase,
-				}
-			);
-		}
+		$servers = $self->db->resultset('Server')->search(
+			{ 'me.id' => { -in => \@ds_servers } },
+			{
+				prefetch => [ 'cdn', 'cachegroup', 'type', 'profile', 'status', 'phys_location' ],
+				order_by => 'me.' . $orderby_snakecase,
+			}
+		);
 	}
 
-	return ( defined($error_message) ) ? ( $error_message, undef ) : ( undef, $servers );
+	return $servers;
 }
 
 sub get_delivery_service_by_id {
@@ -135,14 +129,9 @@ sub get_delivery_service_by_id {
 	my $orderby           = $self->param('orderby') || "hostName";
 	my $orderby_snakecase = lcfirst( decamelize($orderby) );
 	my $helper            = new Utils::Helper( { mojo => $self } );
-	
-	my @ds_servers;
-	my $error_message;
-	if ( !$helper->is_valid_delivery_service($dsId) ) {
-		$error_message = "Delivery Service ID '$dsId' does not exist in the database.  Please contact your administrator.";
-		return ( $error_message, undef );
-	}
 
+	my @ds_servers;
+	my $forbidden;
 	if ( &is_privileged($self) ) {
 		@ds_servers = $self->db->resultset('DeliveryserviceServer')->search( { deliveryservice => $dsId } )->get_column('server')->all();
 	}
@@ -155,9 +144,8 @@ sub get_delivery_service_by_id {
 		@ds_servers = $self->db->resultset('DeliveryserviceServer')->search( { deliveryservice => $ds_id } )->get_column('server')->all();
 	}
 	elsif ( !$self->is_delivery_service_assigned($dsId) ) {
-		$error_message = "Delivery Service ID '$dsId' is not assigned to user '$current_user'.  Please contact your administrator.";
+		$forbidden = "true";
 	}
-
 
 	my $servers;
 	if ( scalar(@ds_servers) ) {
@@ -176,8 +164,8 @@ sub get_delivery_service_by_id {
 			}
 		);
 	}
-	
-	return ( defined($error_message) ) ? ( $error_message, undef ) : ( undef, $servers );
+
+	return ( $forbidden, $servers );
 }
 
 sub totals {

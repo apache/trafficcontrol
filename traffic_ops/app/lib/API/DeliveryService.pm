@@ -42,19 +42,17 @@ sub delivery_services {
 
 	my $rs;
 	my $tm_user_id;
-	my $error_message;
+	my $forbidden;
 	if ( defined($id) ) {
-		( $error_message, $rs, $tm_user_id ) = $self->get_delivery_service_by_id( $current_user, $id );
+		( $forbidden, $rs, $tm_user_id ) = $self->get_delivery_service_by_id( $current_user, $id );
 	}
 	else {
-		( $error_message, $rs, $tm_user_id ) = $self->get_delivery_services($current_user);
+		( $rs, $tm_user_id ) = $self->get_delivery_services($current_user);
 	}
 
 	my @data;
 	if ( defined($rs) ) {
 		while ( my $row = $rs->next ) {
-			next if ( defined($tm_user_id) ) );
-
 			my $cdn_name  = defined( $row->cdn_id ) ? $row->cdn->name : "";
 			my $re_rs     = $row->deliveryservice_regexes;
 			my @matchlist = ();
@@ -120,13 +118,13 @@ sub delivery_services {
 		}
 	}
 
-	return ( defined($error_message) ) ? $self->alert($error_message) :  $self->success( \@data );
+	return defined($forbidden) ? $self->forbidden() : $self->success(\@data);
 }
 
 sub get_delivery_services {
 	my $self         = shift;
 	my $current_user = shift;
-	
+
 	my $tm_user_id;
 	my $rs;
 	if ( &is_privileged($self) ) {
@@ -135,48 +133,45 @@ sub get_delivery_services {
 	else {
 		my $tm_user = $self->db->resultset('TmUser')->search( { username => $current_user } )->single();
 		$tm_user_id = $tm_user->id;
-		$rs         = $self->db->resultset('DeliveryserviceTmuser')
-			->search( { tm_user_id => $tm_user_id }, { prefetch => [ 'cdn', 'deliveryservice_regexes' ], order_by => 'xml_id' } );
+
+		my @ds_ids = $self->db->resultset('DeliveryserviceTmuser')->search( { tm_user_id => $tm_user_id } )->get_column('deliveryservice')->all();
+		$rs = $self->db->resultset('Deliveryservice')
+			->search( { 'me.id' => { -in => \@ds_ids } }, { prefetch => [ 'cdn', 'deliveryservice_regexes' ], order_by => 'xml_id' } );
 	}
 
-	if ( $rs == 0 ) {
-		my $error_message = "No delivery service(s) assigned for user '$current_user'.  Please contact your administrator.";
-		return ( $error_message, undef, undef );
-	}
-	else {
-		return ( undef, $rs, $tm_user_id );
-	}
+	return ( $rs, $tm_user_id );
 }
 
 sub get_delivery_service_by_id {
 	my $self         = shift;
 	my $current_user = shift;
 	my $id           = shift;
-	
+
 	my $tm_user_id;
 	my $rs;
-	my $error_message;
+	my $forbidden;
 	if ( &is_privileged($self) ) {
-		$rs = $self->db->resultset('DeliveryserviceTmuser')
-			->search( { deliveryservice => $id }, { prefetch => [ 'cdn', 'deliveryservice_regexes' ], order_by => 'xml_id' } );
+		my @ds_ids =
+		$rs = $self->db->resultset('Deliveryservice')
+			->search( { 'me.id' => $id }, { prefetch => [ 'cdn', 'deliveryservice_regexes' ], order_by => 'xml_id' } );
 	}
 	elsif ( $self->is_delivery_service_assigned($id) ) {
 		my $tm_user = $self->db->resultset('TmUser')->search( { username => $current_user } )->single();
 		$tm_user_id = $tm_user->id;
+
+		my @ds_ids =
+			$self->db->resultset('DeliveryserviceTmuser')->search( { tm_user_id => $tm_user_id, deliveryservice => $id } )->get_column('deliveryservice')->all();
 		$rs =
-			$self->db->resultset('DeliveryserviceTmuser')
-			->search( { tm_user_id => $tm_user_id, deliveryservice => $id }, { prefetch => [ 'cdn', 'deliveryservice_regexes' ], order_by => 'xml_id' } );
+			$self->db->resultset('Deliveryservice')
+			->search( { 'me.id' => { -in => \@ds_ids } }, { prefetch => [ 'cdn', 'deliveryservice_regexes' ], order_by => 'xml_id' } );
 	}
 	elsif ( !$self->is_delivery_service_assigned($id) ) {
-		$error_message = "Delivery Service ID '$id' is not assigned to user '$current_user'.  Please contact your administrator.";
+		$forbidden = "true";
 	}
 
-	if ( $rs == 0 ) {
-		$error_message = "Delivery Service ID '$id' does not exist in the database.  Please contact your administrator.";
-	}
-
-	return ( defined($error_message) ) ? ( $error_message, undef, undef ) : ( undef, $rs, $tm_user_id );
+	return ( $forbidden, $rs, $tm_user_id );
 }
+
 
 sub routing {
 	my $self = shift;
