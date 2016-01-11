@@ -64,22 +64,7 @@ Configuration
 
 	Once InfluxDB is installed and clustering is configured, Databases and Retention Policies need to be created.  Traffic Stats writes to three different databases: cache_stats, deliveryservice_stats, and daily_stats.  More information about the databases and what data is stored in each can be found on the `overview <../overview/traffic_stats.html>`_ page.
 
-	By default the cache_stats and deliveryservice_stats databases are set to store raw data for 26 hours with a retention policy called "daily"; the daily_stats database is set to store data infinitely with a retention policy called "daily_stats".The following commands can be completed via the InfluxDB `client <https://influxdb.com/download/index.html>`_ or via the admin user interface (http://influxdb_url:8083).
-
-	*Creating Databases:*
-		``create database cache_stats``
-
-		``create database deliveryservice_stats``
-
-		``create database daily_stats``
-
-	*Creating Retention Policies:*
-		``create retention policy daily on cache_stats duration 26h replication 3 DEFAULT``
-
-		``create retention policy daily on deliveryservice_stats duration 26h replication 3 DEFAULT``
-
-		``create retention policy daily_stats on daily_stats duration INF replication 3 DEFAULT``
-
+	To easily create databases, retention policies, and continuous queries, run create_ts_databases.go from the influxdb_tools directory.  See the `InfluxDb Tools <traffic_stats.html#influxdb-tools>`_ section below for more information.
 
 **Configuring Grafana:**
 
@@ -99,7 +84,7 @@ Configuration
 		- Choose your data source at the bottom
 		- You can have grafana help you create a query, or you can create your own.  Here is a sample query:
 
-			``SELECT sum(value)*1000/6 FROM "bandwidth" WHERE $timeFilter and time < now() - 60s GROUP BY time(60s), cdn``
+			``SELECT sum(value)*1000 FROM "monthly"."bandwidth.cdn.1min" WHERE $timeFilter GROUP BY time(60s), cdn``
 		- Once you have the graph the way you want it, click the 'Save Dashboard' button at the top
 		- You should now have a new saved graph
 
@@ -177,3 +162,70 @@ Configuration
 	+---------------------------+------------------------------------------------------------------------------------------------+
 	| daily_served_url          | https://<grafanaHost>/dashboard/solo/db/daily-summary?panelId=2&fullscreen&from=now-3y&to=now  |
 	+---------------------------+------------------------------------------------------------------------------------------------+
+
+InfluxDb Tools
+=========================
+
+Under the Traffic Stats source directory there is a directory called influxdb_tools.  These tools are meant to be used as one-off scripts to help a user quickly get new databases and continuous queries setup in influxdb.  
+They are specific for traffic stats and are not meant to be generic to influxdb.  Below is an brief description of each script along with how to use it.
+
+**create_ts_databases**
+	This script creates all `databases <https://influxdb.com/docs/v0.9/concepts/glossary.html#database>`_, `retention policies <https://influxdb.com/docs/v0.9/concepts/glossary.html#retention-policy-rp>`_, and `continuous queries <https://influxdb.com/docs/v0.9/concepts/glossary.html#continuous-query-cq>`_ required by traffic stats.
+
+	**How to use create_ts_databases:**
+	
+	Pre-Requisites: 
+
+		1. Go 1.4 or later
+		2. Influxdb 0.9.4 or later
+		3. configured $GOPATH (e.g. export GOPATH=~/go)
+
+	Using create_ts_databases.go
+
+		1. Install InfluxDb Client (0.9.4 version):
+			- go get github.com/influxdata/influxdb
+			- cd $GOPATH/src/github.com/influxdata/influxdb
+			- git checkout 0.9.4
+			- go install
+
+		2. Build it:
+			- go build create_ts_databases.go
+
+		3. Run it:
+			- ./create_ts_databases
+			- optional flags:
+				- influxUrl -  The influxdb url and port
+				- replication -  The number of nodes in the cluster
+			- example: ./create_ts_databases -influxUrl=localhost:8086 -replication=3
+
+**sync_ts_databases**
+	This script is used to sync one influxdb environment to another.  Possible use cases are syncing from Production to Development or Syncing a new cluster once brought online.
+
+	**How to use sync_ts_databases:**
+
+	Pre-Requisites: 
+
+		1. Go 1.4 or later
+		2. Influxdb 0.9.4 or later
+		3. configured $GOPATH (e.g. export GOPATH=~/go)
+
+	Using sync_ts_databases.go:
+		
+		1. Install InfluxDb Client (0.9.4 version)
+			- go get github.com/influxdata/influxdb
+			- cd $GOPATH/src/github.com/influxdata/influxdb
+			- git checkout 0.9.4
+			- go install
+
+		2. Build it
+			- go build sync_ts_databases.go
+
+		3. Run it 
+			- required flags:
+				- sourceUrl - The URL of the source database 
+				- targetUrl - The URL of the target database
+			-optional flags:
+				- database - The database to sync (default = sync all databases)
+				- days - Days in the past to sync (default = sync all data)
+			- example: ./sync_ts_databases -sourceUrl=http://influxdb-production-01.kabletown.net:8086 -targetUrl=http://influxdb-dev-01.kabletown.net:8086 -database=cache_stats -days=7
+
