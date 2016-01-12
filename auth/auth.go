@@ -92,24 +92,34 @@ func Login(w http.ResponseWriter, r *http.Request) {
 	password := ""
 	body, err := ioutil.ReadAll(r.Body)
 	if err != nil {
-		fmt.Println("booboo", err.Error())
+		fmt.Println("Error reading body: ", err.Error())
+		http.Error(w, "Error reading body: "+err.Error(), http.StatusBadRequest)
+		return
 	}
 	var lj loginJson
 	fmt.Println(body)
 	err = json.Unmarshal(body, &lj)
 	if err != nil {
-		fmt.Println("boo", err.Error())
+		fmt.Println("Error unmarshalling JSON: ", err.Error())
+		http.Error(w, "Invalid JSON: "+err.Error(), http.StatusBadRequest)
+		return
 	}
 	username = lj.U
 	password = lj.P
 	u := api.TmUser{}
 	u, err = api.GetTmUserByName(username)
+	if err != nil {
+		http.Error(w, "Invalid user: "+err.Error(), http.StatusUnauthorized)
+		return
+	}
 
 	encBytes := sha1.Sum([]byte(password))
 	encString := hex.EncodeToString(encBytes[:])
 	if err != nil || u.LocalPasswd.String != encString {
 		ctx.Set(r, "user", nil)
 		fmt.Println("Invalid passwd")
+		http.Error(w, "Invalid password: "+err.Error(), http.StatusUnauthorized)
+		return
 	}
 	// Create the token
 	token := jwt.New(jwt.SigningMethodHS256)
@@ -135,7 +145,7 @@ func Login(w http.ResponseWriter, r *http.Request) {
 // Logout destroys the current user session
 func Logout(w http.ResponseWriter, r *http.Request) {
 	// TODO JvD: revoke the token?
-	http.Redirect(w, r, "/login", 302)
+	http.Redirect(w, r, "/login", http.StatusFound)
 }
 
 func DONTRequireLogin(handler http.Handler) http.HandlerFunc {
@@ -154,7 +164,7 @@ func RequireLogin(handler http.Handler) http.HandlerFunc {
 			fmt.Println("userId:", user, " userRole:", role)
 			handler.ServeHTTP(w, r)
 		} else {
-			w.WriteHeader(403)
+			w.WriteHeader(http.StatusForbidden)
 		}
 	}
 }
