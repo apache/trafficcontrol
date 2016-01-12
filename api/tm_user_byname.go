@@ -27,7 +27,6 @@ import (
 // This is not in the tm_user.go file because that gets (re) generated still
 
 func GetTmUserByName(username string) (TmUser, error) {
-
 	ret := []TmUser{}
 	// this works in pq - $1
 	// err := db.GlobalDB.Get(&ret, "select * from tm_user where username=$1", username)
@@ -44,13 +43,21 @@ func GetTmUserByName(username string) (TmUser, error) {
 	// this works in both
 	arg := TmUser{Username: null.StringFrom(username)}
 	nstmt, err := db.GlobalDB.PrepareNamed(`select * from tm_user where username=:username`)
+	if err != nil {
+		fmt.Println(err)
+		return TmUser{}, err
+	}
+	defer nstmt.Close()
+
 	err = nstmt.Select(&ret, arg)
 	if err != nil {
 		fmt.Println(err)
+		return TmUser{}, err
 	}
 	if len(ret) != 1 {
 		err = errors.New("Username " + username + " is not unique!")
+		return TmUser{}, err
 	}
-	nstmt.Close()
+
 	return ret[0], err
 }
