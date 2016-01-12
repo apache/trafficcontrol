@@ -15,9 +15,9 @@
 package crconfig
 
 import (
-	"fmt"
 	"github.com/Comcast/traffic_control/traffic_ops/goto2/db"
 	"gopkg.in/guregu/null.v3"
+	"log"
 	"reflect"
 	"strconv"
 	"strings"
@@ -325,7 +325,7 @@ func contentRoutersSection(cdnName string) (map[string]ContentRouter, error) {
 	crs := []ContentRouter{}
 	err := db.GlobalDB.Select(&crs, crQuery)
 	if err != nil {
-		fmt.Println(err)
+		log.Println(err)
 		return nil, err
 	}
 	retMap := make(map[string]ContentRouter)
@@ -343,7 +343,7 @@ func monitorSecttion(cdnName string) (map[string]Monitor, error) {
 	ms := []Monitor{}
 	err := db.GlobalDB.Select(&ms, mQuery)
 	if err != nil {
-		fmt.Println(err)
+		log.Println(err)
 		return nil, err
 	}
 	retMap := make(map[string]Monitor)
@@ -361,7 +361,7 @@ func edgeLocationSection(cdnName string) (map[string]EdgeLocation, error) {
 	edges := []EdgeLocation{}
 	err := db.GlobalDB.Select(&edges, eQuery)
 	if err != nil {
-		fmt.Println(err)
+		log.Println(err)
 		return nil, err
 	}
 	retMap := make(map[string]EdgeLocation)
@@ -379,7 +379,7 @@ func configSection(cdnName string) (Config, map[string]string, error) {
 	params := []CRConfigParam{}
 	err := db.GlobalDB.Select(&params, pQuery)
 	if err != nil {
-		fmt.Println(err)
+		log.Println(err)
 		return Config{}, nil, err
 	}
 
@@ -440,7 +440,7 @@ func deliveryServicesSection(cdnName string, pmap map[string]string) (map[string
 	ds := []CrconfigDsData{}
 	err := db.GlobalDB.Select(&ds, dQuery)
 	if err != nil {
-		fmt.Println(err)
+		log.Println(err)
 		return nil, err
 	}
 	reqHeaderList := genReqHeaderList(pmap["LogRequestHeaders"])
@@ -544,14 +544,14 @@ func contentServersSection(cdnName string, ccrDomain string) (map[string]Content
 	cServers := []CrContentServer{}
 	err := db.GlobalDB.Select(&cServers, csQuery)
 	if err != nil {
-		fmt.Println(err)
+		log.Println(err)
 		return nil, err
 	}
 	dsServerQuery := "select * from cr_deliveryservice_server"
 	dsServers := []CrDeliveryserviceServer{}
 	err = db.GlobalDB.Select(&dsServers, dsServerQuery)
 	if err != nil {
-		fmt.Println("ERROR: >> ", err)
+		log.Println("ERROR: >> ", err)
 		return nil, err
 	}
 	dsMap := make(map[string]ContentServerDsMap)
@@ -620,7 +620,7 @@ func GetCRConfig(cdnName string) (interface{}, error) {
 	stats, err := statsSection(cdnName)
 
 	if err != nil {
-		fmt.Println(err)
+		log.Println(err)
 		return nil, err
 	}
 

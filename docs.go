@@ -1,5 +1,5 @@
-
 package main
+
 //This file is generated automatically. Do not try to edit it manually.
 
 var resourceListingJson = `{
@@ -24,7 +24,7 @@ var resourceListingJson = `{
         "licenseUrl": "http://www.apache.org/licenses/LICENSE-2.0"
     }
 }`
-var apiDescriptionsJson = map[string]string{"api/2.0":`{
+var apiDescriptionsJson = map[string]string{"api/2.0": `{
     "apiVersion": "2.0 alpha",
     "swaggerVersion": "1.2",
     "basePath": "{{.}}",
@@ -7896,4 +7896,4 @@ var apiDescriptionsJson = map[string]string{"api/2.0":`{
             }
         }
     }
-}`,}
+}`}

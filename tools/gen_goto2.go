@@ -90,7 +90,7 @@ func writeFile(schemas []ColumnSchema, table string) (int, error) {
 
 	header := "package " + config.PkgName + "\n\n"
 	header += "import (\n"
-	header += "\"fmt\"\n"
+	header += "\"log\"\n"
 
 	sString := structString(schemas, table)
 
@@ -253,7 +253,7 @@ func handleString(schemas []ColumnSchema, table string) string {
 	out += "    nstmt, err := db.GlobalDB.PrepareNamed(`select * from " + table + " where " + idColumn + "=:" + idColumn + "`)\n"
 	out += "    err = nstmt.Select(&ret, arg)\n"
 	out += "	if err != nil {\n"
-	out += "	    fmt.Println(err)\n"
+	out += "	    log.Println(err)\n"
 	out += "	    return nil, err\n"
 	out += "	}\n"
 	out += "    nstmt.Close()\n"
@@ -271,7 +271,7 @@ func handleString(schemas []ColumnSchema, table string) string {
 	out += "	queryStr := \"select * from " + table + "\"\n"
 	out += "	err := db.GlobalDB.Select(&ret, queryStr)\n"
 	out += "	if err != nil {\n"
-	out += "	   fmt.Println(err)\n"
+	out += "	   log.Println(err)\n"
 	out += "	   return nil, err\n"
 	out += "	}\n"
 	out += "	return ret, nil\n"
@@ -288,12 +288,12 @@ func handleString(schemas []ColumnSchema, table string) string {
 	out += "	var v " + formatName(table) + "\n"
 	out += "	err := json.Unmarshal(payload, &v)\n"
 	out += "	if err != nil {\n"
-	out += "		fmt.Println(err)\n"
+	out += "		log.Println(err)\n"
 	out += "	}\n"
 	out += genInsertVarLines(schemas, table)
 	out += "    result, err := db.GlobalDB.NamedExec(sqlString, v)\n"
 	out += "    if err != nil {\n"
-	out += "        fmt.Println(err)\n"
+	out += "        log.Println(err)\n"
 	out += "    	return nil, err\n"
 	out += "    }\n"
 	out += "    return result, err\n"
@@ -312,7 +312,7 @@ func handleString(schemas []ColumnSchema, table string) string {
 	out += "    err := json.Unmarshal(payload, &v)\n"
 	out += "    v." + formatName(idColumn) + "= int64(id) // overwrite the id in the payload\n"
 	out += "    if err != nil {\n"
-	out += "    	fmt.Println(err)\n"
+	out += "    	log.Println(err)\n"
 	out += "    	return nil, err\n"
 	out += "    }\n"
 	if updateLastUpdated {
@@ -321,7 +321,7 @@ func handleString(schemas []ColumnSchema, table string) string {
 	out += genUpdateVarLines(schemas, table, idColumn)
 	out += "    result, err := db.GlobalDB.NamedExec(sqlString, v)\n"
 	out += "    if err != nil {\n"
-	out += "    	fmt.Println(err)\n"
+	out += "    	log.Println(err)\n"
 	out += "    	return nil, err\n"
 	out += "    }\n"
 	out += "    return result, err\n"
@@ -338,7 +338,7 @@ func handleString(schemas []ColumnSchema, table string) string {
 	out += "    arg := " + formatName(table) + "{" + formatName(idColumn) + ": int64(id)}\n"
 	out += "    result, err := db.GlobalDB.NamedExec(\"DELETE FROM " + table + " WHERE id=:id\", arg)\n"
 	out += "    if err != nil {\n"
-	out += "    	fmt.Println(err)\n"
+	out += "    	log.Println(err)\n"
 	out += "    	return nil, err\n"
 	out += "    }\n"
 	out += "    return result, err\n"
@@ -369,7 +369,11 @@ func structString(schemas []ColumnSchema, table string) string {
 }
 
 func getSchema() ([]ColumnSchema, []string) {
-	conn, err := sql.Open("mysql", config.DbUser+":"+config.DbPassword+"@/information_schema")
+	server := "192.168.99.100"
+	port := 3306
+	database := "information_schema"
+	connStr := fmt.Sprintf("%s:%s@tcp(%s:%d)/%s?parseTime=True", config.DbUser, config.DbPassword, server, port, database)
+	conn, err := sql.Open("mysql", connStr)
 	if err != nil {
 		log.Fatal(err)
 	}

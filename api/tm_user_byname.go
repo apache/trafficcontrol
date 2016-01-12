@@ -19,9 +19,9 @@ package api
 
 import (
 	"errors"
-	"fmt"
 	"github.com/Comcast/traffic_control/traffic_ops/goto2/db"
 	"gopkg.in/guregu/null.v3"
+	"log"
 )
 
 // This is not in the tm_user.go file because that gets (re) generated still
@@ -31,27 +31,27 @@ func GetTmUserByName(username string) (TmUser, error) {
 	// this works in pq - $1
 	// err := db.GlobalDB.Get(&ret, "select * from tm_user where username=$1", username)
 	// if err != nil {
-	// 	fmt.Println(err)
+	// 	log.Println(err)
 	// }
 
 	// this works in mysql - ?
 	// err := db.GlobalDB.Get(&ret, "select * from tm_user where username=?", username)
 	// if err != nil {
-	// 	fmt.Println(err)
+	// 	log.Println(err)
 	// }
 
 	// this works in both
 	arg := TmUser{Username: null.StringFrom(username)}
 	nstmt, err := db.GlobalDB.PrepareNamed(`select * from tm_user where username=:username`)
 	if err != nil {
-		fmt.Println(err)
+		log.Println(err)
 		return TmUser{}, err
 	}
 	defer nstmt.Close()
 
 	err = nstmt.Select(&ret, arg)
 	if err != nil {
-		fmt.Println(err)
+		log.Println(err)
 		return TmUser{}, err
 	}
 	if len(ret) != 1 {

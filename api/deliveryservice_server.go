@@ -19,9 +19,9 @@ package api
 
 import (
 	"encoding/json"
-	"fmt"
 	"github.com/Comcast/traffic_control/traffic_ops/goto2/db"
 	_ "github.com/Comcast/traffic_control/traffic_ops/goto2/output_format" // needed for swagger
+	"log"
 	"time"
 )
 
@@ -65,7 +65,7 @@ func getDeliveryserviceServerById(id int) (interface{}, error) {
 	nstmt, err := db.GlobalDB.PrepareNamed(`select * from deliveryservice_server where deliveryservice=:deliveryservice`)
 	err = nstmt.Select(&ret, arg)
 	if err != nil {
-		fmt.Println(err)
+		log.Println(err)
 		return nil, err
 	}
 	nstmt.Close()
@@ -83,7 +83,7 @@ func getDeliveryserviceServers() (interface{}, error) {
 	queryStr := "select * from deliveryservice_server"
 	err := db.GlobalDB.Select(&ret, queryStr)
 	if err != nil {
-		fmt.Println(err)
+		log.Println(err)
 		return nil, err
 	}
 	return ret, nil
@@ -100,7 +100,7 @@ func postDeliveryserviceServer(payload []byte) (interface{}, error) {
 	var v DeliveryserviceServer
 	err := json.Unmarshal(payload, &v)
 	if err != nil {
-		fmt.Println(err)
+		log.Println(err)
 	}
 	sqlString := "INSERT INTO deliveryservice_server("
 	sqlString += "deliveryservice"
@@ -111,7 +111,7 @@ func postDeliveryserviceServer(payload []byte) (interface{}, error) {
 	sqlString += ")"
 	result, err := db.GlobalDB.NamedExec(sqlString, v)
 	if err != nil {
-		fmt.Println(err)
+		log.Println(err)
 		return nil, err
 	}
 	return result, err
@@ -130,7 +130,7 @@ func putDeliveryserviceServer(id int, payload []byte) (interface{}, error) {
 	err := json.Unmarshal(payload, &v)
 	v.Deliveryservice = int64(id) // overwrite the id in the payload
 	if err != nil {
-		fmt.Println(err)
+		log.Println(err)
 		return nil, err
 	}
 	v.LastUpdated = time.Now()
@@ -141,7 +141,7 @@ func putDeliveryserviceServer(id int, payload []byte) (interface{}, error) {
 	sqlString += " WHERE deliveryservice=:deliveryservice"
 	result, err := db.GlobalDB.NamedExec(sqlString, v)
 	if err != nil {
-		fmt.Println(err)
+		log.Println(err)
 		return nil, err
 	}
 	return result, err
@@ -158,7 +158,7 @@ func delDeliveryserviceServer(id int) (interface{}, error) {
 	arg := DeliveryserviceServer{Deliveryservice: int64(id)}
 	result, err := db.GlobalDB.NamedExec("DELETE FROM deliveryservice_server WHERE id=:id", arg)
 	if err != nil {
-		fmt.Println(err)
+		log.Println(err)
 		return nil, err
 	}
 	return result, err

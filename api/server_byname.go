@@ -19,8 +19,8 @@ package api
 
 import (
 	"errors"
-	"fmt"
 	"github.com/Comcast/traffic_control/traffic_ops/goto2/db"
+	"log"
 )
 
 func GetServerByName(serverName string) (Server, error) {
@@ -30,7 +30,7 @@ func GetServerByName(serverName string) (Server, error) {
 	nstmt, err := db.GlobalDB.PrepareNamed(`select * from server where host_name=:host_name`)
 	err = nstmt.Select(&ret, arg)
 	if err != nil {
-		fmt.Println(err)
+		log.Println(err)
 	}
 	if len(ret) != 1 {
 		err = errors.New("Host name " + serverName + " is not unique!")

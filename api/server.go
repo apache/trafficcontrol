@@ -19,10 +19,10 @@ package api
 
 import (
 	"encoding/json"
-	"fmt"
 	"github.com/Comcast/traffic_control/traffic_ops/goto2/db"
 	_ "github.com/Comcast/traffic_control/traffic_ops/goto2/output_format" // needed for swagger
 	null "gopkg.in/guregu/null.v3"
+	"log"
 	"time"
 )
 
@@ -47,7 +47,7 @@ type Server struct {
 	Status         int64       `db:"status" json:"status"`
 	UpdPending     int64       `db:"upd_pending" json:"updPending"`
 	Profile        int64       `db:"profile" json:"profile"`
-	CdnId          int64       `db:"cdn_id" json:"cdnId"`
+	CdnId          null.Int    `db:"cdn_id" json:"cdnId"`
 	MgmtIpAddress  null.String `db:"mgmt_ip_address" json:"mgmtIpAddress"`
 	MgmtIpNetmask  null.String `db:"mgmt_ip_netmask" json:"mgmtIpNetmask"`
 	MgmtIpGateway  null.String `db:"mgmt_ip_gateway" json:"mgmtIpGateway"`
@@ -95,7 +95,7 @@ func getServerById(id int) (interface{}, error) {
 	nstmt, err := db.GlobalDB.PrepareNamed(`select * from server where id=:id`)
 	err = nstmt.Select(&ret, arg)
 	if err != nil {
-		fmt.Println(err)
+		log.Println(err)
 		return nil, err
 	}
 	nstmt.Close()
@@ -113,7 +113,7 @@ func getServers() (interface{}, error) {
 	queryStr := "select * from server"
 	err := db.GlobalDB.Select(&ret, queryStr)
 	if err != nil {
-		fmt.Println(err)
+		log.Println(err)
 		return nil, err
 	}
 	return ret, nil
@@ -130,7 +130,7 @@ func postServer(payload []byte) (interface{}, error) {
 	var v Server
 	err := json.Unmarshal(payload, &v)
 	if err != nil {
-		fmt.Println(err)
+		log.Println(err)
 	}
 	sqlString := "INSERT INTO server("
 	sqlString += "host_name"
@@ -197,7 +197,7 @@ func postServer(payload []byte) (interface{}, error) {
 	sqlString += ")"
 	result, err := db.GlobalDB.NamedExec(sqlString, v)
 	if err != nil {
-		fmt.Println(err)
+		log.Println(err)
 		return nil, err
 	}
 	return result, err
@@ -216,7 +216,7 @@ func putServer(id int, payload []byte) (interface{}, error) {
 	err := json.Unmarshal(payload, &v)
 	v.Id = int64(id) // overwrite the id in the payload
 	if err != nil {
-		fmt.Println(err)
+		log.Println(err)
 		return nil, err
 	}
 	v.LastUpdated = time.Now()
@@ -255,7 +255,7 @@ func putServer(id int, payload []byte) (interface{}, error) {
 	sqlString += " WHERE id=:id"
 	result, err := db.GlobalDB.NamedExec(sqlString, v)
 	if err != nil {
-		fmt.Println(err)
+		log.Println(err)
 		return nil, err
 	}
 	return result, err
@@ -272,7 +272,7 @@ func delServer(id int) (interface{}, error) {
 	arg := Server{Id: int64(id)}
 	result, err := db.GlobalDB.NamedExec("DELETE FROM server WHERE id=:id", arg)
 	if err != nil {
-		fmt.Println(err)
+		log.Println(err)
 		return nil, err
 	}
 	return result, err

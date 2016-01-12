@@ -19,18 +19,17 @@ package api
 
 import (
 	"encoding/json"
-	"fmt"
 	"github.com/Comcast/traffic_control/traffic_ops/goto2/db"
 	_ "github.com/Comcast/traffic_control/traffic_ops/goto2/output_format" // needed for swagger
 	null "gopkg.in/guregu/null.v3"
+	"log"
 	"time"
 )
 
 type Cdn struct {
-	Id            int64       `db:"id" json:"id"`
-	Name          null.String `db:"name" json:"name"`
-	LastUpdated   time.Time   `db:"last_updated" json:"lastUpdated"`
-	DnssecEnabled null.Int    `db:"dnssec_enabled" json:"dnssecEnabled"`
+	Id          int64       `db:"id" json:"id"`
+	Name        null.String `db:"name" json:"name"`
+	LastUpdated time.Time   `db:"last_updated" json:"lastUpdated"`
 }
 
 func handleCdn(method string, id int, payload []byte) (interface{}, error) {
@@ -67,7 +66,7 @@ func getCdnById(id int) (interface{}, error) {
 	nstmt, err := db.GlobalDB.PrepareNamed(`select * from cdn where id=:id`)
 	err = nstmt.Select(&ret, arg)
 	if err != nil {
-		fmt.Println(err)
+		log.Println(err)
 		return nil, err
 	}
 	nstmt.Close()
@@ -85,7 +84,7 @@ func getCdns() (interface{}, error) {
 	queryStr := "select * from cdn"
 	err := db.GlobalDB.Select(&ret, queryStr)
 	if err != nil {
-		fmt.Println(err)
+		log.Println(err)
 		return nil, err
 	}
 	return ret, nil
@@ -102,18 +101,16 @@ func postCdn(payload []byte) (interface{}, error) {
 	var v Cdn
 	err := json.Unmarshal(payload, &v)
 	if err != nil {
-		fmt.Println(err)
+		log.Println(err)
 	}
 	sqlString := "INSERT INTO cdn("
 	sqlString += "name"
-	sqlString += ",dnssec_enabled"
 	sqlString += ") VALUES ("
 	sqlString += ":name"
-	sqlString += ",:dnssec_enabled"
 	sqlString += ")"
 	result, err := db.GlobalDB.NamedExec(sqlString, v)
 	if err != nil {
-		fmt.Println(err)
+		log.Println(err)
 		return nil, err
 	}
 	return result, err
@@ -132,18 +129,17 @@ func putCdn(id int, payload []byte) (interface{}, error) {
 	err := json.Unmarshal(payload, &v)
 	v.Id = int64(id) // overwrite the id in the payload
 	if err != nil {
-		fmt.Println(err)
+		log.Println(err)
 		return nil, err
 	}
 	v.LastUpdated = time.Now()
 	sqlString := "UPDATE cdn SET "
 	sqlString += "name = :name"
 	sqlString += ",last_updated = :last_updated"
-	sqlString += ",dnssec_enabled = :dnssec_enabled"
 	sqlString += " WHERE id=:id"
 	result, err := db.GlobalDB.NamedExec(sqlString, v)
 	if err != nil {
-		fmt.Println(err)
+		log.Println(err)
 		return nil, err
 	}
 	return result, err
@@ -160,7 +156,7 @@ func delCdn(id int) (interface{}, error) {
 	arg := Cdn{Id: int64(id)}
 	result, err := db.GlobalDB.NamedExec("DELETE FROM cdn WHERE id=:id", arg)
 	if err != nil {
-		fmt.Println(err)
+		log.Println(err)
 		return nil, err
 	}
 	return result, err

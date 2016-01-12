@@ -19,9 +19,9 @@ package api
 
 import (
 	"encoding/json"
-	"fmt"
 	"github.com/Comcast/traffic_control/traffic_ops/goto2/db"
 	_ "github.com/Comcast/traffic_control/traffic_ops/goto2/output_format" // needed for swagger
+	"log"
 	"time"
 )
 
@@ -65,7 +65,7 @@ func getFederationFederationResolverById(id int) (interface{}, error) {
 	nstmt, err := db.GlobalDB.PrepareNamed(`select * from federation_federation_resolver where federation=:federation`)
 	err = nstmt.Select(&ret, arg)
 	if err != nil {
-		fmt.Println(err)
+		log.Println(err)
 		return nil, err
 	}
 	nstmt.Close()
@@ -83,7 +83,7 @@ func getFederationFederationResolvers() (interface{}, error) {
 	queryStr := "select * from federation_federation_resolver"
 	err := db.GlobalDB.Select(&ret, queryStr)
 	if err != nil {
-		fmt.Println(err)
+		log.Println(err)
 		return nil, err
 	}
 	return ret, nil
@@ -100,7 +100,7 @@ func postFederationFederationResolver(payload []byte) (interface{}, error) {
 	var v FederationFederationResolver
 	err := json.Unmarshal(payload, &v)
 	if err != nil {
-		fmt.Println(err)
+		log.Println(err)
 	}
 	sqlString := "INSERT INTO federation_federation_resolver("
 	sqlString += "federation"
@@ -111,7 +111,7 @@ func postFederationFederationResolver(payload []byte) (interface{}, error) {
 	sqlString += ")"
 	result, err := db.GlobalDB.NamedExec(sqlString, v)
 	if err != nil {
-		fmt.Println(err)
+		log.Println(err)
 		return nil, err
 	}
 	return result, err
@@ -130,7 +130,7 @@ func putFederationFederationResolver(id int, payload []byte) (interface{}, error
 	err := json.Unmarshal(payload, &v)
 	v.Federation = int64(id) // overwrite the id in the payload
 	if err != nil {
-		fmt.Println(err)
+		log.Println(err)
 		return nil, err
 	}
 	v.LastUpdated = time.Now()
@@ -141,7 +141,7 @@ func putFederationFederationResolver(id int, payload []byte) (interface{}, error
 	sqlString += " WHERE federation=:federation"
 	result, err := db.GlobalDB.NamedExec(sqlString, v)
 	if err != nil {
-		fmt.Println(err)
+		log.Println(err)
 		return nil, err
 	}
 	return result, err
@@ -158,7 +158,7 @@ func delFederationFederationResolver(id int) (interface{}, error) {
 	arg := FederationFederationResolver{Federation: int64(id)}
 	result, err := db.GlobalDB.NamedExec("DELETE FROM federation_federation_resolver WHERE id=:id", arg)
 	if err != nil {
-		fmt.Println(err)
+		log.Println(err)
 		return nil, err
 	}
 	return result, err
