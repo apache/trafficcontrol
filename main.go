@@ -38,8 +38,8 @@ type Config struct {
 	DbPort           uint   `json:"dbPort,omitempty"`
 	ListenerType     string `json:"listenerType,omitempty"`
 	ListenerPort     string `json:"listenerPort"`
-	ListenerCertFile string `json:"listenerCertFile",omitempty"`
-	ListenerKeyFile  string `json:"listenerKeyFile",omitempty"`
+	ListenerCertFile string `json:"listenerCertFile,omitempty"`
+	ListenerKeyFile  string `json:"listenerKeyFile,omitempty"`
 }
 
 func printUsage() {
