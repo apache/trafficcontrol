@@ -19,10 +19,10 @@ package api
 
 import (
 	"encoding/json"
-	"fmt"
 	"github.com/Comcast/traffic_control/traffic_ops/goto2/db"
 	_ "github.com/Comcast/traffic_control/traffic_ops/goto2/output_format" // needed for swagger
 	null "gopkg.in/guregu/null.v3"
+	"log"
 	"time"
 )
 
@@ -41,7 +41,7 @@ type Deliveryservice struct {
 	OrgServerFqdn        null.String `db:"org_server_fqdn" json:"orgServerFqdn"`
 	Type                 int64       `db:"type" json:"type"`
 	Profile              int64       `db:"profile" json:"profile"`
-	CdnId                int64       `db:"cdn_id" json:"cdnId"`
+	CdnId                null.Int    `db:"cdn_id" json:"cdnId"`
 	CcrDnsTtl            null.Int    `db:"ccr_dns_ttl" json:"ccrDnsTtl"`
 	GlobalMaxMbps        null.Int    `db:"global_max_mbps" json:"globalMaxMbps"`
 	GlobalMaxTps         null.Int    `db:"global_max_tps" json:"globalMaxTps"`
@@ -69,7 +69,6 @@ type Deliveryservice struct {
 	TrResponseHeaders    null.String `db:"tr_response_headers" json:"trResponseHeaders"`
 	InitialDispersion    null.Int    `db:"initial_dispersion" json:"initialDispersion"`
 	DnsBypassCname       null.String `db:"dns_bypass_cname" json:"dnsBypassCname"`
-	TrRequestHeaders     null.String `db:"tr_request_headers" json:"trRequestHeaders"`
 }
 
 func handleDeliveryservice(method string, id int, payload []byte) (interface{}, error) {
@@ -106,7 +105,7 @@ func getDeliveryserviceById(id int) (interface{}, error) {
 	nstmt, err := db.GlobalDB.PrepareNamed(`select * from deliveryservice where id=:id`)
 	err = nstmt.Select(&ret, arg)
 	if err != nil {
-		fmt.Println(err)
+		log.Println(err)
 		return nil, err
 	}
 	nstmt.Close()
@@ -124,7 +123,7 @@ func getDeliveryservices() (interface{}, error) {
 	queryStr := "select * from deliveryservice"
 	err := db.GlobalDB.Select(&ret, queryStr)
 	if err != nil {
-		fmt.Println(err)
+		log.Println(err)
 		return nil, err
 	}
 	return ret, nil
@@ -141,7 +140,7 @@ func postDeliveryservice(payload []byte) (interface{}, error) {
 	var v Deliveryservice
 	err := json.Unmarshal(payload, &v)
 	if err != nil {
-		fmt.Println(err)
+		log.Println(err)
 	}
 	sqlString := "INSERT INTO deliveryservice("
 	sqlString += "xml_id"
@@ -184,7 +183,6 @@ func postDeliveryservice(payload []byte) (interface{}, error) {
 	sqlString += ",tr_response_headers"
 	sqlString += ",initial_dispersion"
 	sqlString += ",dns_bypass_cname"
-	sqlString += ",tr_request_headers"
 	sqlString += ") VALUES ("
 	sqlString += ":xml_id"
 	sqlString += ",:active"
@@ -226,11 +224,10 @@ func postDeliveryservice(payload []byte) (interface{}, error) {
 	sqlString += ",:tr_response_headers"
 	sqlString += ",:initial_dispersion"
 	sqlString += ",:dns_bypass_cname"
-	sqlString += ",:tr_request_headers"
 	sqlString += ")"
 	result, err := db.GlobalDB.NamedExec(sqlString, v)
 	if err != nil {
-		fmt.Println(err)
+		log.Println(err)
 		return nil, err
 	}
 	return result, err
@@ -249,7 +246,7 @@ func putDeliveryservice(id int, payload []byte) (interface{}, error) {
 	err := json.Unmarshal(payload, &v)
 	v.Id = int64(id) // overwrite the id in the payload
 	if err != nil {
-		fmt.Println(err)
+		log.Println(err)
 		return nil, err
 	}
 	v.LastUpdated = time.Now()
@@ -295,11 +292,10 @@ func putDeliveryservice(id int, payload []byte) (interface{}, error) {
 	sqlString += ",tr_response_headers = :tr_response_headers"
 	sqlString += ",initial_dispersion = :initial_dispersion"
 	sqlString += ",dns_bypass_cname = :dns_bypass_cname"
-	sqlString += ",tr_request_headers = :tr_request_headers"
 	sqlString += " WHERE id=:id"
 	result, err := db.GlobalDB.NamedExec(sqlString, v)
 	if err != nil {
-		fmt.Println(err)
+		log.Println(err)
 		return nil, err
 	}
 	return result, err
@@ -316,7 +312,7 @@ func delDeliveryservice(id int) (interface{}, error) {
 	arg := Deliveryservice{Id: int64(id)}
 	result, err := db.GlobalDB.NamedExec("DELETE FROM deliveryservice WHERE id=:id", arg)
 	if err != nil {
-		fmt.Println(err)
+		log.Println(err)
 		return nil, err
 	}
 	return result, err

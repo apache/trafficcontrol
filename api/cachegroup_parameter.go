@@ -19,9 +19,9 @@ package api
 
 import (
 	"encoding/json"
-	"fmt"
 	"github.com/Comcast/traffic_control/traffic_ops/goto2/db"
 	_ "github.com/Comcast/traffic_control/traffic_ops/goto2/output_format" // needed for swagger
+	"log"
 	"time"
 )
 
@@ -65,7 +65,7 @@ func getCachegroupParameterById(id int) (interface{}, error) {
 	nstmt, err := db.GlobalDB.PrepareNamed(`select * from cachegroup_parameter where cachegroup=:cachegroup`)
 	err = nstmt.Select(&ret, arg)
 	if err != nil {
-		fmt.Println(err)
+		log.Println(err)
 		return nil, err
 	}
 	nstmt.Close()
@@ -83,7 +83,7 @@ func getCachegroupParameters() (interface{}, error) {
 	queryStr := "select * from cachegroup_parameter"
 	err := db.GlobalDB.Select(&ret, queryStr)
 	if err != nil {
-		fmt.Println(err)
+		log.Println(err)
 		return nil, err
 	}
 	return ret, nil
@@ -100,7 +100,7 @@ func postCachegroupParameter(payload []byte) (interface{}, error) {
 	var v CachegroupParameter
 	err := json.Unmarshal(payload, &v)
 	if err != nil {
-		fmt.Println(err)
+		log.Println(err)
 	}
 	sqlString := "INSERT INTO cachegroup_parameter("
 	sqlString += "cachegroup"
@@ -111,7 +111,7 @@ func postCachegroupParameter(payload []byte) (interface{}, error) {
 	sqlString += ")"
 	result, err := db.GlobalDB.NamedExec(sqlString, v)
 	if err != nil {
-		fmt.Println(err)
+		log.Println(err)
 		return nil, err
 	}
 	return result, err
@@ -130,7 +130,7 @@ func putCachegroupParameter(id int, payload []byte) (interface{}, error) {
 	err := json.Unmarshal(payload, &v)
 	v.Cachegroup = int64(id) // overwrite the id in the payload
 	if err != nil {
-		fmt.Println(err)
+		log.Println(err)
 		return nil, err
 	}
 	v.LastUpdated = time.Now()
@@ -141,7 +141,7 @@ func putCachegroupParameter(id int, payload []byte) (interface{}, error) {
 	sqlString += " WHERE cachegroup=:cachegroup"
 	result, err := db.GlobalDB.NamedExec(sqlString, v)
 	if err != nil {
-		fmt.Println(err)
+		log.Println(err)
 		return nil, err
 	}
 	return result, err
@@ -158,7 +158,7 @@ func delCachegroupParameter(id int) (interface{}, error) {
 	arg := CachegroupParameter{Cachegroup: int64(id)}
 	result, err := db.GlobalDB.NamedExec("DELETE FROM cachegroup_parameter WHERE id=:id", arg)
 	if err != nil {
-		fmt.Println(err)
+		log.Println(err)
 		return nil, err
 	}
 	return result, err

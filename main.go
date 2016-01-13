@@ -22,7 +22,6 @@ import (
 
 	"encoding/gob"
 	"encoding/json"
-	"fmt"
 	"github.com/gorilla/handlers"
 	"log"
 	"net/http"
@@ -53,10 +52,10 @@ func printUsage() {
 	"dbPort":3306,
 	"listenerPort":"8080"
 }`
-	fmt.Println("Usage: " + path.Base(os.Args[0]) + " configfile")
-	fmt.Println("")
-	fmt.Println("Example config file:")
-	fmt.Println(exampleConfig)
+	log.Println("Usage: " + path.Base(os.Args[0]) + " configfile")
+	log.Println("")
+	log.Println("Example config file:")
+	log.Println(exampleConfig)
 }
 
 func main() {
@@ -65,16 +64,18 @@ func main() {
 		return
 	}
 
+	log.SetOutput(os.Stdout)
+
 	file, err := os.Open(os.Args[1])
 	if err != nil {
-		fmt.Println("Error opening config file:", err)
+		log.Println("Error opening config file:", err)
 		return
 	}
 	decoder := json.NewDecoder(file)
 	config := Config{}
 	err = decoder.Decode(&config)
 	if err != nil {
-		fmt.Println("Error reading config file:", err)
+		log.Println("Error reading config file:", err)
 		return
 	}
 
@@ -82,7 +83,7 @@ func main() {
 
 	err = db.InitializeDatabase(config.DbTypeName, config.DbUser, config.DbPassword, config.DbName, config.DbServer, config.DbPort)
 	if err != nil {
-		fmt.Println("Error initializing database:", err)
+		log.Println("Error initializing database:", err)
 		return
 	}
 
@@ -100,6 +101,6 @@ func main() {
 	}
 
 	if err != nil {
-		fmt.Println(err)
+		log.Println(err)
 	}
 }

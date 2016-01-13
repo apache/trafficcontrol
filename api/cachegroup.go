@@ -19,10 +19,10 @@ package api
 
 import (
 	"encoding/json"
-	"fmt"
 	"github.com/Comcast/traffic_control/traffic_ops/goto2/db"
 	_ "github.com/Comcast/traffic_control/traffic_ops/goto2/output_format" // needed for swagger
 	null "gopkg.in/guregu/null.v3"
+	"log"
 	"time"
 )
 
@@ -71,7 +71,7 @@ func getCachegroupById(id int) (interface{}, error) {
 	nstmt, err := db.GlobalDB.PrepareNamed(`select * from cachegroup where id=:id`)
 	err = nstmt.Select(&ret, arg)
 	if err != nil {
-		fmt.Println(err)
+		log.Println(err)
 		return nil, err
 	}
 	nstmt.Close()
@@ -89,7 +89,7 @@ func getCachegroups() (interface{}, error) {
 	queryStr := "select * from cachegroup"
 	err := db.GlobalDB.Select(&ret, queryStr)
 	if err != nil {
-		fmt.Println(err)
+		log.Println(err)
 		return nil, err
 	}
 	return ret, nil
@@ -106,7 +106,7 @@ func postCachegroup(payload []byte) (interface{}, error) {
 	var v Cachegroup
 	err := json.Unmarshal(payload, &v)
 	if err != nil {
-		fmt.Println(err)
+		log.Println(err)
 	}
 	sqlString := "INSERT INTO cachegroup("
 	sqlString += "name"
@@ -125,7 +125,7 @@ func postCachegroup(payload []byte) (interface{}, error) {
 	sqlString += ")"
 	result, err := db.GlobalDB.NamedExec(sqlString, v)
 	if err != nil {
-		fmt.Println(err)
+		log.Println(err)
 		return nil, err
 	}
 	return result, err
@@ -144,7 +144,7 @@ func putCachegroup(id int, payload []byte) (interface{}, error) {
 	err := json.Unmarshal(payload, &v)
 	v.Id = int64(id) // overwrite the id in the payload
 	if err != nil {
-		fmt.Println(err)
+		log.Println(err)
 		return nil, err
 	}
 	v.LastUpdated = time.Now()
@@ -159,7 +159,7 @@ func putCachegroup(id int, payload []byte) (interface{}, error) {
 	sqlString += " WHERE id=:id"
 	result, err := db.GlobalDB.NamedExec(sqlString, v)
 	if err != nil {
-		fmt.Println(err)
+		log.Println(err)
 		return nil, err
 	}
 	return result, err
@@ -176,7 +176,7 @@ func delCachegroup(id int) (interface{}, error) {
 	arg := Cachegroup{Id: int64(id)}
 	result, err := db.GlobalDB.NamedExec("DELETE FROM cachegroup WHERE id=:id", arg)
 	if err != nil {
-		fmt.Println(err)
+		log.Println(err)
 		return nil, err
 	}
 	return result, err

@@ -19,10 +19,10 @@ package api
 
 import (
 	"encoding/json"
-	"fmt"
 	"github.com/Comcast/traffic_control/traffic_ops/goto2/db"
 	_ "github.com/Comcast/traffic_control/traffic_ops/goto2/output_format" // needed for swagger
 	null "gopkg.in/guregu/null.v3"
+	"log"
 )
 
 type Role struct {
@@ -66,7 +66,7 @@ func getRoleById(id int) (interface{}, error) {
 	nstmt, err := db.GlobalDB.PrepareNamed(`select * from role where id=:id`)
 	err = nstmt.Select(&ret, arg)
 	if err != nil {
-		fmt.Println(err)
+		log.Println(err)
 		return nil, err
 	}
 	nstmt.Close()
@@ -84,7 +84,7 @@ func getRoles() (interface{}, error) {
 	queryStr := "select * from role"
 	err := db.GlobalDB.Select(&ret, queryStr)
 	if err != nil {
-		fmt.Println(err)
+		log.Println(err)
 		return nil, err
 	}
 	return ret, nil
@@ -101,7 +101,7 @@ func postRole(payload []byte) (interface{}, error) {
 	var v Role
 	err := json.Unmarshal(payload, &v)
 	if err != nil {
-		fmt.Println(err)
+		log.Println(err)
 	}
 	sqlString := "INSERT INTO role("
 	sqlString += "name"
@@ -114,7 +114,7 @@ func postRole(payload []byte) (interface{}, error) {
 	sqlString += ")"
 	result, err := db.GlobalDB.NamedExec(sqlString, v)
 	if err != nil {
-		fmt.Println(err)
+		log.Println(err)
 		return nil, err
 	}
 	return result, err
@@ -133,7 +133,7 @@ func putRole(id int, payload []byte) (interface{}, error) {
 	err := json.Unmarshal(payload, &v)
 	v.Id = int64(id) // overwrite the id in the payload
 	if err != nil {
-		fmt.Println(err)
+		log.Println(err)
 		return nil, err
 	}
 	sqlString := "UPDATE role SET "
@@ -143,7 +143,7 @@ func putRole(id int, payload []byte) (interface{}, error) {
 	sqlString += " WHERE id=:id"
 	result, err := db.GlobalDB.NamedExec(sqlString, v)
 	if err != nil {
-		fmt.Println(err)
+		log.Println(err)
 		return nil, err
 	}
 	return result, err
@@ -160,7 +160,7 @@ func delRole(id int) (interface{}, error) {
 	arg := Role{Id: int64(id)}
 	result, err := db.GlobalDB.NamedExec("DELETE FROM role WHERE id=:id", arg)
 	if err != nil {
-		fmt.Println(err)
+		log.Println(err)
 		return nil, err
 	}
 	return result, err

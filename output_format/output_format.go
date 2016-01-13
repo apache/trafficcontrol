@@ -15,7 +15,7 @@
 package output_format
 
 import (
-	"fmt"
+	"log"
 	// "github.com/jmoiron/sqlx"
 	"database/sql"
 	"reflect"
@@ -79,11 +79,11 @@ func MakeApiResponse(r interface{}, alerts []Alert, err error) ApiWrapper {
 				// lastInserted doesn't work w pq
 				// lastInserted, err := r.(sql.Result).LastInsertId()
 				// if err != nil {
-				// 	fmt.Println("error on LastInsertedId")
+				// 	log.Println("error on LastInsertedId")
 				// }
 				rowsAffected, err := r.(sql.Result).RowsAffected()
 				if err != nil {
-					fmt.Println("error on RowsAffected()")
+					log.Println("error on RowsAffected()")
 					alerts = append(alerts, Alert{Level: "error", Text: "Internal error:" + err.Error()})
 				} else {
 					alerts = append(alerts, Alert{Level: "success", Text: strconv.FormatInt(rowsAffected, 10) + " rows affected."})

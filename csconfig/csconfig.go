@@ -15,10 +15,10 @@
 package csconfig
 
 import (
-	"fmt"
 	"github.com/Comcast/traffic_control/traffic_ops/goto2/api"
 	"github.com/Comcast/traffic_control/traffic_ops/goto2/db"
 	"gopkg.in/guregu/null.v3"
+	"log"
 	// "reflect"
 	// "strconv"
 	// "strings"
@@ -108,7 +108,7 @@ func getCSConfigParams(profile int64) ([]CsconfigParam, error) {
 	nstmt, err := db.GlobalDB.PrepareNamed(`select * from csconfig_params where profile=:profile`)
 	err = nstmt.Select(&ret, arg)
 	if err != nil {
-		fmt.Println(err)
+		log.Println(err)
 		return nil, err
 	}
 	nstmt.Close()
@@ -121,7 +121,7 @@ func getCSConfigRemap(serverId int64) ([]CsconfigRemap, error) {
 	nstmt, err := db.GlobalDB.PrepareNamed(`select * from csconfig_remap where server_id=:id`)
 	err = nstmt.Select(&ret, arg)
 	if err != nil {
-		fmt.Println(err)
+		log.Println(err)
 		return nil, err
 	}
 	nstmt.Close()
@@ -134,19 +134,19 @@ func GetCSConfig(hostName string) (interface{}, error) {
 
 	server, err := api.GetServerByName(hostName)
 	if err != nil {
-		fmt.Println(err)
+		log.Println(err)
 		return nil, err
 	}
 
 	params, err := getCSConfigParams(server.Profile)
 	if err != nil {
-		fmt.Println(err)
+		log.Println(err)
 		return nil, err
 	}
 
 	remaps, err := getCSConfigRemap(server.Id)
 	if err != nil {
-		fmt.Println(err)
+		log.Println(err)
 		return nil, err
 	}
 

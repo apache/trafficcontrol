@@ -24,8 +24,8 @@ import (
 	output "github.com/Comcast/traffic_control/traffic_ops/goto2/output_format"
 
 	"encoding/json"
-	"fmt"
 	"io/ioutil"
+	"log"
 	"net/http"
 	"strconv"
 
@@ -88,14 +88,14 @@ func apiHandler(w http.ResponseWriter, r *http.Request) {
 	if vars["id"] != "" {
 		num, err := strconv.Atoi(vars["id"])
 		if err != nil {
-			fmt.Println("error 323222")
+			log.Println("error 323222")
 		}
 		id = num
 	}
 	body, err := ioutil.ReadAll(r.Body)
 	response, err := api.Action(table, r.Method, id, body)
 	if err != nil {
-		fmt.Println("error 42 ", err)
+		log.Println("error 42 ", err)
 	}
 	jresponse := output.MakeApiResponse(response, nil, err)
 	w.Header().Set("Content-Type", "application/json")

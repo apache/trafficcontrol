@@ -24,6 +24,7 @@ import (
 	api "github.com/Comcast/traffic_control/traffic_ops/goto2/api"
 	jwt "github.com/dgrijalva/jwt-go"
 	"io/ioutil"
+	"log"
 	"net/http"
 	"strings"
 	"time"
@@ -60,9 +61,9 @@ func validateToken(tokenString string) (*jwt.Token, error) {
 	})
 
 	if err == nil && token.Valid {
-		fmt.Println("TOKEN IS GOOD -- user:", token.Claims["userid"], " role:", token.Claims["role"])
+		log.Println("TOKEN IS GOOD -- user:", token.Claims["userid"], " role:", token.Claims["role"])
 	} else {
-		fmt.Println("TOKEN IS BAD", err)
+		log.Println("TOKEN IS BAD", err)
 	}
 	return token, err
 }
@@ -75,7 +76,7 @@ func GetContext(handler http.Handler) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		token, err := validateToken(r.Header.Get("Authorization"))
 		if err != nil {
-			fmt.Println("No valid token found!")
+			log.Println("No valid token found!")
 		} else {
 			ctx.Set(r, "user", token.Claims["userid"])
 			ctx.Set(r, "role", token.Claims["role"])
@@ -92,24 +93,34 @@ func Login(w http.ResponseWriter, r *http.Request) {
 	password := ""
 	body, err := ioutil.ReadAll(r.Body)
 	if err != nil {
-		fmt.Println("booboo", err.Error())
+		log.Println("Error reading body: ", err.Error())
+		http.Error(w, "Error reading body: "+err.Error(), http.StatusBadRequest)
+		return
 	}
 	var lj loginJson
-	fmt.Println(body)
+	log.Println(body)
 	err = json.Unmarshal(body, &lj)
 	if err != nil {
-		fmt.Println("boo", err.Error())
+		log.Println("Error unmarshalling JSON: ", err.Error())
+		http.Error(w, "Invalid JSON: "+err.Error(), http.StatusBadRequest)
+		return
 	}
 	username = lj.U
 	password = lj.P
 	u := api.TmUser{}
 	u, err = api.GetTmUserByName(username)
+	if err != nil {
+		http.Error(w, "Invalid user: "+err.Error(), http.StatusUnauthorized)
+		return
+	}
 
 	encBytes := sha1.Sum([]byte(password))
 	encString := hex.EncodeToString(encBytes[:])
 	if err != nil || u.LocalPasswd.String != encString {
 		ctx.Set(r, "user", nil)
-		fmt.Println("Invalid passwd")
+		log.Println("Invalid passwd")
+		http.Error(w, "Invalid password: "+err.Error(), http.StatusUnauthorized)
+		return
 	}
 	// Create the token
 	token := jwt.New(jwt.SigningMethodHS256)
@@ -135,7 +146,7 @@ func Login(w http.ResponseWriter, r *http.Request) {
 // Logout destroys the current user session
 func Logout(w http.ResponseWriter, r *http.Request) {
 	// TODO JvD: revoke the token?
-	http.Redirect(w, r, "/login", 302)
+	http.Redirect(w, r, "/login", http.StatusFound)
 }
 
 func DONTRequireLogin(handler http.Handler) http.HandlerFunc {
@@ -151,10 +162,10 @@ func RequireLogin(handler http.Handler) http.HandlerFunc {
 		user := ctx.Get(r, "user")
 		role := ctx.Get(r, "role")
 		if user != nil {
-			fmt.Println("userId:", user, " userRole:", role)
+			log.Println("userId:", user, " userRole:", role)
 			handler.ServeHTTP(w, r)
 		} else {
-			w.WriteHeader(403)
+			w.WriteHeader(http.StatusForbidden)
 		}
 	}
 }

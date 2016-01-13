@@ -19,10 +19,10 @@ package api
 
 import (
 	"encoding/json"
-	"fmt"
 	"github.com/Comcast/traffic_control/traffic_ops/goto2/db"
 	_ "github.com/Comcast/traffic_control/traffic_ops/goto2/output_format" // needed for swagger
 	null "gopkg.in/guregu/null.v3"
+	"log"
 	"time"
 )
 
@@ -77,7 +77,7 @@ func getJobById(id int) (interface{}, error) {
 	nstmt, err := db.GlobalDB.PrepareNamed(`select * from job where id=:id`)
 	err = nstmt.Select(&ret, arg)
 	if err != nil {
-		fmt.Println(err)
+		log.Println(err)
 		return nil, err
 	}
 	nstmt.Close()
@@ -95,7 +95,7 @@ func getJobs() (interface{}, error) {
 	queryStr := "select * from job"
 	err := db.GlobalDB.Select(&ret, queryStr)
 	if err != nil {
-		fmt.Println(err)
+		log.Println(err)
 		return nil, err
 	}
 	return ret, nil
@@ -112,7 +112,7 @@ func postJob(payload []byte) (interface{}, error) {
 	var v Job
 	err := json.Unmarshal(payload, &v)
 	if err != nil {
-		fmt.Println(err)
+		log.Println(err)
 	}
 	sqlString := "INSERT INTO job("
 	sqlString += "agent"
@@ -143,7 +143,7 @@ func postJob(payload []byte) (interface{}, error) {
 	sqlString += ")"
 	result, err := db.GlobalDB.NamedExec(sqlString, v)
 	if err != nil {
-		fmt.Println(err)
+		log.Println(err)
 		return nil, err
 	}
 	return result, err
@@ -162,7 +162,7 @@ func putJob(id int, payload []byte) (interface{}, error) {
 	err := json.Unmarshal(payload, &v)
 	v.Id = int64(id) // overwrite the id in the payload
 	if err != nil {
-		fmt.Println(err)
+		log.Println(err)
 		return nil, err
 	}
 	v.LastUpdated = time.Now()
@@ -183,7 +183,7 @@ func putJob(id int, payload []byte) (interface{}, error) {
 	sqlString += " WHERE id=:id"
 	result, err := db.GlobalDB.NamedExec(sqlString, v)
 	if err != nil {
-		fmt.Println(err)
+		log.Println(err)
 		return nil, err
 	}
 	return result, err
@@ -200,7 +200,7 @@ func delJob(id int) (interface{}, error) {
 	arg := Job{Id: int64(id)}
 	result, err := db.GlobalDB.NamedExec("DELETE FROM job WHERE id=:id", arg)
 	if err != nil {
-		fmt.Println(err)
+		log.Println(err)
 		return nil, err
 	}
 	return result, err

@@ -19,9 +19,9 @@ package api
 
 import (
 	"encoding/json"
-	"fmt"
 	"github.com/Comcast/traffic_control/traffic_ops/goto2/db"
 	_ "github.com/Comcast/traffic_control/traffic_ops/goto2/output_format" // needed for swagger
+	"log"
 	"time"
 )
 
@@ -67,7 +67,7 @@ func getParameterById(id int) (interface{}, error) {
 	nstmt, err := db.GlobalDB.PrepareNamed(`select * from parameter where id=:id`)
 	err = nstmt.Select(&ret, arg)
 	if err != nil {
-		fmt.Println(err)
+		log.Println(err)
 		return nil, err
 	}
 	nstmt.Close()
@@ -85,7 +85,7 @@ func getParameters() (interface{}, error) {
 	queryStr := "select * from parameter"
 	err := db.GlobalDB.Select(&ret, queryStr)
 	if err != nil {
-		fmt.Println(err)
+		log.Println(err)
 		return nil, err
 	}
 	return ret, nil
@@ -102,7 +102,7 @@ func postParameter(payload []byte) (interface{}, error) {
 	var v Parameter
 	err := json.Unmarshal(payload, &v)
 	if err != nil {
-		fmt.Println(err)
+		log.Println(err)
 	}
 	sqlString := "INSERT INTO parameter("
 	sqlString += "name"
@@ -115,7 +115,7 @@ func postParameter(payload []byte) (interface{}, error) {
 	sqlString += ")"
 	result, err := db.GlobalDB.NamedExec(sqlString, v)
 	if err != nil {
-		fmt.Println(err)
+		log.Println(err)
 		return nil, err
 	}
 	return result, err
@@ -134,7 +134,7 @@ func putParameter(id int, payload []byte) (interface{}, error) {
 	err := json.Unmarshal(payload, &v)
 	v.Id = int64(id) // overwrite the id in the payload
 	if err != nil {
-		fmt.Println(err)
+		log.Println(err)
 		return nil, err
 	}
 	v.LastUpdated = time.Now()
@@ -146,7 +146,7 @@ func putParameter(id int, payload []byte) (interface{}, error) {
 	sqlString += " WHERE id=:id"
 	result, err := db.GlobalDB.NamedExec(sqlString, v)
 	if err != nil {
-		fmt.Println(err)
+		log.Println(err)
 		return nil, err
 	}
 	return result, err
@@ -163,7 +163,7 @@ func delParameter(id int) (interface{}, error) {
 	arg := Parameter{Id: int64(id)}
 	result, err := db.GlobalDB.NamedExec("DELETE FROM parameter WHERE id=:id", arg)
 	if err != nil {
-		fmt.Println(err)
+		log.Println(err)
 		return nil, err
 	}
 	return result, err

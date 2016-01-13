@@ -19,9 +19,9 @@ package api
 
 import (
 	"encoding/json"
-	"fmt"
 	"github.com/Comcast/traffic_control/traffic_ops/goto2/db"
 	_ "github.com/Comcast/traffic_control/traffic_ops/goto2/output_format" // needed for swagger
+	"log"
 	"time"
 )
 
@@ -65,7 +65,7 @@ func getProfileParameterById(id int) (interface{}, error) {
 	nstmt, err := db.GlobalDB.PrepareNamed(`select * from profile_parameter where profile=:profile`)
 	err = nstmt.Select(&ret, arg)
 	if err != nil {
-		fmt.Println(err)
+		log.Println(err)
 		return nil, err
 	}
 	nstmt.Close()
@@ -83,7 +83,7 @@ func getProfileParameters() (interface{}, error) {
 	queryStr := "select * from profile_parameter"
 	err := db.GlobalDB.Select(&ret, queryStr)
 	if err != nil {
-		fmt.Println(err)
+		log.Println(err)
 		return nil, err
 	}
 	return ret, nil
@@ -100,7 +100,7 @@ func postProfileParameter(payload []byte) (interface{}, error) {
 	var v ProfileParameter
 	err := json.Unmarshal(payload, &v)
 	if err != nil {
-		fmt.Println(err)
+		log.Println(err)
 	}
 	sqlString := "INSERT INTO profile_parameter("
 	sqlString += "profile"
@@ -111,7 +111,7 @@ func postProfileParameter(payload []byte) (interface{}, error) {
 	sqlString += ")"
 	result, err := db.GlobalDB.NamedExec(sqlString, v)
 	if err != nil {
-		fmt.Println(err)
+		log.Println(err)
 		return nil, err
 	}
 	return result, err
@@ -130,7 +130,7 @@ func putProfileParameter(id int, payload []byte) (interface{}, error) {
 	err := json.Unmarshal(payload, &v)
 	v.Profile = int64(id) // overwrite the id in the payload
 	if err != nil {
-		fmt.Println(err)
+		log.Println(err)
 		return nil, err
 	}
 	v.LastUpdated = time.Now()
@@ -141,7 +141,7 @@ func putProfileParameter(id int, payload []byte) (interface{}, error) {
 	sqlString += " WHERE profile=:profile"
 	result, err := db.GlobalDB.NamedExec(sqlString, v)
 	if err != nil {
-		fmt.Println(err)
+		log.Println(err)
 		return nil, err
 	}
 	return result, err
@@ -158,7 +158,7 @@ func delProfileParameter(id int) (interface{}, error) {
 	arg := ProfileParameter{Profile: int64(id)}
 	result, err := db.GlobalDB.NamedExec("DELETE FROM profile_parameter WHERE id=:id", arg)
 	if err != nil {
-		fmt.Println(err)
+		log.Println(err)
 		return nil, err
 	}
 	return result, err
