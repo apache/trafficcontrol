@@ -28,13 +28,18 @@ import org.apache.wicket.ajax.json.JSONObject;
 import com.comcast.cdn.traffic_control.traffic_monitor.config.ConfigHandler;
 
 public class Event extends JSONObject implements Serializable {
+	private static final Logger EVENT_LOGGER = Logger.getLogger("com.comcast.cdn.traffic_control.traffic_monitor.event");
 	private static final Logger LOGGER = Logger.getLogger(Event.class);
 	private static final long serialVersionUID = 1L;
 	static List<JSONObject> rollingLog = new LinkedList<JSONObject>();
 	static int logIndex = 0;
 
 	public static Event logStateChange(final String hostname, final boolean isAvailable, final String message) {
-		LOGGER.warn(String.format("logStateChange: %s, isAvailable=%s, %s", hostname, String.valueOf(isAvailable), message));
+		final long currentTimeMillis = System.currentTimeMillis();
+		final String timeString = String.format("%d.%03d", currentTimeMillis / 1000, currentTimeMillis % 1000);
+
+		EVENT_LOGGER.info(String.format("%s logStateChange: %s, isAvailable=%s, %s", timeString , hostname, String.valueOf(isAvailable), message));
+
 		synchronized (rollingLog) {
 			final Event ret = new Event(hostname, isAvailable, message);
 			rollingLog.add(0, ret);
