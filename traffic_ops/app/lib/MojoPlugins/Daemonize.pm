@@ -26,6 +26,7 @@ sub register {
 	$app->renderer->add_helper(
 		daemonize => sub {
 			my $self = shift;
+			$SIG{CHLD} = 'IGNORE';
 			my $pid  = fork();
 
 			if ( !defined($pid) ) {

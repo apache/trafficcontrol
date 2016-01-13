@@ -862,7 +862,7 @@ sub dnssec_keys_refresh {
 
 	# we're in the fork()ed process now
 	$self->refresh_keys();
-	$self->render( text => 'Done checking DNSSEC keys for refresh' );
+	exit(0);
 }
 
 sub refresh_keys {
