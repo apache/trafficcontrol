@@ -32,7 +32,7 @@ import (
 
 const apiPath = "/api/2.0/"
 
-// CreateAdminRouter creates the routes for handling requests to the web interface.
+// CreateRouter creates the routes for handling requests to the web interface.
 // This function returns an http.Handler to be used in http.ListenAndServe().
 func CreateRouter() http.Handler {
 	router := mux.NewRouter().StrictSlash(true)
@@ -45,12 +45,16 @@ func CreateRouter() http.Handler {
 	return auth.Use(router.ServeHTTP, auth.GetContext)
 }
 
+// setHeaders writes the universal headers needed by all routes,
+// along with the given accepted HTTP Methods.
 func setHeaders(w http.ResponseWriter, methods api.ApiMethods) {
 	w.Header().Set("Access-Control-Allow-Origin", "*")
 	w.Header().Set("Access-Control-Allow-Methods", methods.String())
 	w.Header().Set("Access-Control-Allow-Headers", "Origin, Authorization, X-Requested-With, Content-Type")
 }
 
+// optionsHandler handles HTTP OPTIONS requests, writing the
+// appropriate options and an HTTP OK.
 func optionsHandler(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	table := vars["table"]
@@ -69,28 +73,37 @@ func optionsHandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+// wrapApiHandler takes an api.ApiHandlerFunc and returns a func with the
+// signature expected by http.HandleFunc.
+//
+// The returned func sets the headers, reads the params, calls the
+// handler with the params, encodes the handlers response, and writes it.
+func wrapApiHandler(f api.ApiHandlerFunc, methods api.ApiMethods) func(w http.ResponseWriter, r *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
+		setHeaders(w, methods)
+		body, err := ioutil.ReadAll(r.Body)
+		response, err := f(mux.Vars(r), body)
+		if err != nil {
+			log.Println(err)
+		}
+		jresponse := output.MakeApiResponse(response, nil, err)
+		w.Header().Set("Content-Type", "application/json")
+		enc := json.NewEncoder(w)
+		enc.Encode(jresponse)
+	}
+}
+
+// addApiHandlers adds each API handler to the given router.
 func addApiHandlers(router *mux.Router) {
 	for route, funcs := range api.ApiHandlers() {
-		wrapRouter := func(f api.ApiHandlerFunc) func(w http.ResponseWriter, r *http.Request) {
-			return func(w http.ResponseWriter, r *http.Request) {
-				setHeaders(w, funcs.Methods())
-				body, err := ioutil.ReadAll(r.Body)
-				response, err := f(mux.Vars(r), body)
-				if err != nil {
-					log.Println(err)
-				}
-				jresponse := output.MakeApiResponse(response, nil, err)
-				w.Header().Set("Content-Type", "application/json")
-				enc := json.NewEncoder(w)
-				enc.Encode(jresponse)
-			}
-		}
 		for method, f := range funcs {
-			router.HandleFunc(apiPath+route, auth.Use(wrapRouter(f), auth.RequireLogin)).Methods(method.String())
+			router.HandleFunc(apiPath+route, auth.Use(wrapApiHandler(f, funcs.Methods()), auth.RequireLogin)).Methods(method.String())
 		}
 	}
 }
 
+// handleCRConfig handles requests to the CRConfig endpoint,
+// returning the encoded CRConfig data for the requested CDN.
 func handleCRConfig(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	cdn := vars["cdn"]
@@ -99,6 +112,8 @@ func handleCRConfig(w http.ResponseWriter, r *http.Request) {
 	enc.Encode(resp)
 }
 
+// handleCSConfig handles requests to the CSConfig endpoint,
+// returning the encoded CSConfig data for the requested host.
 func handleCSConfig(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	hostName := vars["hostname"]
