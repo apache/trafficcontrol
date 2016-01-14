@@ -1,5 +1,5 @@
 ##### Intro
-This is a prototype for Traffic Ops 2.0.  See also https://github.com/Comcast/traffic_control/wiki/Traffic_Ops_20
+This is a prototype for Traffic Ops 2.0 server.  See also https://github.com/Comcast/traffic_control/wiki/Traffic_Ops_20
 
 ##### One time generation of CRUD files 
   ```
