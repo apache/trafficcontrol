@@ -18,9 +18,9 @@ package main
 
 import (
 	"database/sql"
+	_ "github.com/go-sql-driver/mysql"	
 	"errors"
 	"fmt"
-	_ "github.com/go-sql-driver/mysql"
 	"log"
 	"os"
 	"os/exec"
@@ -107,13 +107,13 @@ func writeFile(schemas []ColumnSchema, table string) (int, error) {
 	header := "package " + config.PkgName + "\n\n"
 	header += "import (\n"
 	header += "\"log\"\n"
-
+	header += "\"github.com/jmoiron/sqlx\"\n"
+	
 	sString := structString(schemas, table)
 
 	if strings.Contains(sString, "null.") {
 		header += "null \"gopkg.in/guregu/null.v3\"\n"
 	}
-	header += "\"github.com/Comcast/traffic_control/traffic_ops/goto2/db\"\n"
 	header += "_ \"github.com/Comcast/traffic_control/traffic_ops/goto2/output_format\" // needed for swagger\n"
 	if strings.Contains(sString, "time.") {
 		header += "\"time\"\n"
@@ -235,27 +235,7 @@ func handleString(schemas []ColumnSchema, table string) string {
 	idColumn := idCol(schemas, table)
 	updateLastUpdated := hasLastUpdated(schemas, table)
 
-	out := "func handle" + formatName(table) + "(method string, id int, payload []byte)(interface{}, error) {\n"
-	out += "    if method == \"GET\" {\n"
-	out += "        return get" + formatName(table) + "(id)\n"
-	out += "   	} else if method == \"POST\" {\n"
-	out += "        return post" + formatName(table) + "(payload)\n"
-	out += "    } else if method == \"PUT\" {\n"
-	out += "        return put" + formatName(table) + "(id, payload)\n"
-	out += "    } else if method == \"DELETE\" {\n"
-	out += "        return del" + formatName(table) + "(id)\n"
-	out += "    }\n"
-	out += "    return nil, nil\n"
-	out += "}\n\n"
-
-	out += "func get" + formatName(table) + "(id int) (interface{}, error) {\n"
-	out += "    if id >= 0 {\n"
-	out += "        return get" + formatName(table) + "ById(id)\n"
-	out += "	} else {\n"
-	out += "        return get" + formatName(table) + "s()\n"
-	out += "    }\n"
-	out += "}\n\n"
-
+	out := ""
 	out += "// @Title get" + formatName(table) + "ById\n"
 	out += "// @Description retrieves the " + table + " information for a certain id\n"
 	out += "// @Accept  application/json\n"
@@ -263,10 +243,10 @@ func handleString(schemas []ColumnSchema, table string) string {
 	out += "// @Success 200 {array}    " + formatName(table) + "\n"
 	out += "// @Resource /api/2.0\n"
 	out += "// @Router /api/2.0/" + table + "/{id} [get]\n"
-	out += "func get" + formatName(table) + "ById(id int) (interface{}, error) {\n"
+	out += "func get" + formatName(table) + "ById(id int, db *sqlx.DB) (interface{}, error) {\n"
 	out += "    ret := []" + formatName(table) + "{}\n"
 	out += "    arg := " + formatName(table) + "{" + formatName(idColumn) + ": int64(id)}\n"
-	out += "    nstmt, err := db.GlobalDB.PrepareNamed(`select * from " + table + " where " + idColumn + "=:" + idColumn + "`)\n"
+	out += "    nstmt, err := db.PrepareNamed(`select * from " + table + " where " + idColumn + "=:" + idColumn + "`)\n"
 	out += "    err = nstmt.Select(&ret, arg)\n"
 	out += "	if err != nil {\n"
 	out += "	    log.Println(err)\n"
@@ -282,10 +262,10 @@ func handleString(schemas []ColumnSchema, table string) string {
 	out += "// @Success 200 {array}    " + formatName(table) + "\n"
 	out += "// @Resource /api/2.0\n"
 	out += "// @Router /api/2.0/" + table + " [get]\n"
-	out += "func get" + formatName(table) + "s() (interface{}, error) {\n"
+	out += "func get" + formatName(table) + "s(db *sqlx.DB) (interface{}, error) {\n"
 	out += "    ret := []" + formatName(table) + "{}\n"
 	out += "	queryStr := \"select * from " + table + "\"\n"
-	out += "	err := db.GlobalDB.Select(&ret, queryStr)\n"
+	out += "	err := db.Select(&ret, queryStr)\n"
 	out += "	if err != nil {\n"
 	out += "	   log.Println(err)\n"
 	out += "	   return nil, err\n"
@@ -300,14 +280,14 @@ func handleString(schemas []ColumnSchema, table string) string {
 	out += "// @Success 200 {object}    output_format.ApiWrapper\n"
 	out += "// @Resource /api/2.0\n"
 	out += "// @Router /api/2.0/" + table + " [post]\n"
-	out += "func post" + formatName(table) + "(payload []byte) (interface{}, error) {\n"
+	out += "func post" + formatName(table) + "(payload []byte, db *sqlx.DB) (interface{}, error) {\n"
 	out += "	var v " + formatName(table) + "\n"
 	out += "	err := json.Unmarshal(payload, &v)\n"
 	out += "	if err != nil {\n"
 	out += "		log.Println(err)\n"
 	out += "	}\n"
 	out += genInsertVarLines(schemas, table)
-	out += "    result, err := db.GlobalDB.NamedExec(sqlString, v)\n"
+	out += "    result, err := db.NamedExec(sqlString, v)\n"
 	out += "    if err != nil {\n"
 	out += "        log.Println(err)\n"
 	out += "    	return nil, err\n"
@@ -323,7 +303,7 @@ func handleString(schemas []ColumnSchema, table string) string {
 	out += "// @Success 200 {object}    output_format.ApiWrapper\n"
 	out += "// @Resource /api/2.0\n"
 	out += "// @Router /api/2.0/" + table + "/{id}  [put]\n"
-	out += "func put" + formatName(table) + "(id int, payload []byte) (interface{}, error) {\n"
+	out += "func put" + formatName(table) + "(id int, payload []byte, db *sqlx.DB) (interface{}, error) {\n"
 	out += "    var v " + formatName(table) + "\n"
 	out += "    err := json.Unmarshal(payload, &v)\n"
 	out += "    v." + formatName(idColumn) + "= int64(id) // overwrite the id in the payload\n"
@@ -335,7 +315,7 @@ func handleString(schemas []ColumnSchema, table string) string {
 		out += "    v.LastUpdated = time.Now()\n"
 	}
 	out += genUpdateVarLines(schemas, table, idColumn)
-	out += "    result, err := db.GlobalDB.NamedExec(sqlString, v)\n"
+	out += "    result, err := db.NamedExec(sqlString, v)\n"
 	out += "    if err != nil {\n"
 	out += "    	log.Println(err)\n"
 	out += "    	return nil, err\n"
@@ -350,9 +330,9 @@ func handleString(schemas []ColumnSchema, table string) string {
 	out += "// @Success 200 {array}    " + formatName(table) + "\n"
 	out += "// @Resource /api/2.0\n"
 	out += "// @Router /api/2.0/" + table + "/{id} [delete]\n"
-	out += "func del" + formatName(table) + "(id int) (interface{}, error) {\n"
+	out += "func del" + formatName(table) + "(id int, db *sqlx.DB) (interface{}, error) {\n"
 	out += "    arg := " + formatName(table) + "{" + formatName(idColumn) + ": int64(id)}\n"
-	out += "    result, err := db.GlobalDB.NamedExec(\"DELETE FROM " + table + " WHERE id=:id\", arg)\n"
+	out += "    result, err := db.NamedExec(\"DELETE FROM " + table + " WHERE id=:id\", arg)\n"
 	out += "    if err != nil {\n"
 	out += "    	log.Println(err)\n"
 	out += "    	return nil, err\n"

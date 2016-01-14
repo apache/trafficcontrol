@@ -19,8 +19,8 @@ package api
 
 import (
 	"encoding/json"
-	"github.com/Comcast/traffic_control/traffic_ops/goto2/db"
 	_ "github.com/Comcast/traffic_control/traffic_ops/goto2/output_format" // needed for swagger
+	"github.com/jmoiron/sqlx"
 	null "gopkg.in/guregu/null.v3"
 	"log"
 	"time"
@@ -37,27 +37,6 @@ type Cachegroup struct {
 	LastUpdated        time.Time  `db:"last_updated" json:"lastUpdated"`
 }
 
-func handleCachegroup(method string, id int, payload []byte) (interface{}, error) {
-	if method == "GET" {
-		return getCachegroup(id)
-	} else if method == "POST" {
-		return postCachegroup(payload)
-	} else if method == "PUT" {
-		return putCachegroup(id, payload)
-	} else if method == "DELETE" {
-		return delCachegroup(id)
-	}
-	return nil, nil
-}
-
-func getCachegroup(id int) (interface{}, error) {
-	if id >= 0 {
-		return getCachegroupById(id)
-	} else {
-		return getCachegroups()
-	}
-}
-
 // @Title getCachegroupById
 // @Description retrieves the cachegroup information for a certain id
 // @Accept  application/json
@@ -65,10 +44,10 @@ func getCachegroup(id int) (interface{}, error) {
 // @Success 200 {array}    Cachegroup
 // @Resource /api/2.0
 // @Router /api/2.0/cachegroup/{id} [get]
-func getCachegroupById(id int) (interface{}, error) {
+func getCachegroupById(id int, db *sqlx.DB) (interface{}, error) {
 	ret := []Cachegroup{}
 	arg := Cachegroup{Id: int64(id)}
-	nstmt, err := db.GlobalDB.PrepareNamed(`select * from cachegroup where id=:id`)
+	nstmt, err := db.PrepareNamed(`select * from cachegroup where id=:id`)
 	err = nstmt.Select(&ret, arg)
 	if err != nil {
 		log.Println(err)
@@ -84,10 +63,10 @@ func getCachegroupById(id int) (interface{}, error) {
 // @Success 200 {array}    Cachegroup
 // @Resource /api/2.0
 // @Router /api/2.0/cachegroup [get]
-func getCachegroups() (interface{}, error) {
+func getCachegroups(db *sqlx.DB) (interface{}, error) {
 	ret := []Cachegroup{}
 	queryStr := "select * from cachegroup"
-	err := db.GlobalDB.Select(&ret, queryStr)
+	err := db.Select(&ret, queryStr)
 	if err != nil {
 		log.Println(err)
 		return nil, err
@@ -102,7 +81,7 @@ func getCachegroups() (interface{}, error) {
 // @Success 200 {object}    output_format.ApiWrapper
 // @Resource /api/2.0
 // @Router /api/2.0/cachegroup [post]
-func postCachegroup(payload []byte) (interface{}, error) {
+func postCachegroup(payload []byte, db *sqlx.DB) (interface{}, error) {
 	var v Cachegroup
 	err := json.Unmarshal(payload, &v)
 	if err != nil {
@@ -123,7 +102,7 @@ func postCachegroup(payload []byte) (interface{}, error) {
 	sqlString += ",:parent_cachegroup_id"
 	sqlString += ",:type"
 	sqlString += ")"
-	result, err := db.GlobalDB.NamedExec(sqlString, v)
+	result, err := db.NamedExec(sqlString, v)
 	if err != nil {
 		log.Println(err)
 		return nil, err
@@ -139,7 +118,7 @@ func postCachegroup(payload []byte) (interface{}, error) {
 // @Success 200 {object}    output_format.ApiWrapper
 // @Resource /api/2.0
 // @Router /api/2.0/cachegroup/{id}  [put]
-func putCachegroup(id int, payload []byte) (interface{}, error) {
+func putCachegroup(id int, payload []byte, db *sqlx.DB) (interface{}, error) {
 	var v Cachegroup
 	err := json.Unmarshal(payload, &v)
 	v.Id = int64(id) // overwrite the id in the payload
@@ -157,7 +136,7 @@ func putCachegroup(id int, payload []byte) (interface{}, error) {
 	sqlString += ",type = :type"
 	sqlString += ",last_updated = :last_updated"
 	sqlString += " WHERE id=:id"
-	result, err := db.GlobalDB.NamedExec(sqlString, v)
+	result, err := db.NamedExec(sqlString, v)
 	if err != nil {
 		log.Println(err)
 		return nil, err
@@ -172,9 +151,9 @@ func putCachegroup(id int, payload []byte) (interface{}, error) {
 // @Success 200 {array}    Cachegroup
 // @Resource /api/2.0
 // @Router /api/2.0/cachegroup/{id} [delete]
-func delCachegroup(id int) (interface{}, error) {
+func delCachegroup(id int, db *sqlx.DB) (interface{}, error) {
 	arg := Cachegroup{Id: int64(id)}
-	result, err := db.GlobalDB.NamedExec("DELETE FROM cachegroup WHERE id=:id", arg)
+	result, err := db.NamedExec("DELETE FROM cachegroup WHERE id=:id", arg)
 	if err != nil {
 		log.Println(err)
 		return nil, err

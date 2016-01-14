@@ -19,8 +19,8 @@ package api
 
 import (
 	"encoding/json"
-	"github.com/Comcast/traffic_control/traffic_ops/goto2/db"
 	_ "github.com/Comcast/traffic_control/traffic_ops/goto2/output_format" // needed for swagger
+	"github.com/jmoiron/sqlx"
 	null "gopkg.in/guregu/null.v3"
 	"log"
 	"time"
@@ -63,27 +63,6 @@ type Servercheck struct {
 	LastUpdated time.Time `db:"last_updated" json:"lastUpdated"`
 }
 
-func handleServercheck(method string, id int, payload []byte) (interface{}, error) {
-	if method == "GET" {
-		return getServercheck(id)
-	} else if method == "POST" {
-		return postServercheck(payload)
-	} else if method == "PUT" {
-		return putServercheck(id, payload)
-	} else if method == "DELETE" {
-		return delServercheck(id)
-	}
-	return nil, nil
-}
-
-func getServercheck(id int) (interface{}, error) {
-	if id >= 0 {
-		return getServercheckById(id)
-	} else {
-		return getServerchecks()
-	}
-}
-
 // @Title getServercheckById
 // @Description retrieves the servercheck information for a certain id
 // @Accept  application/json
@@ -91,10 +70,10 @@ func getServercheck(id int) (interface{}, error) {
 // @Success 200 {array}    Servercheck
 // @Resource /api/2.0
 // @Router /api/2.0/servercheck/{id} [get]
-func getServercheckById(id int) (interface{}, error) {
+func getServercheckById(id int, db *sqlx.DB) (interface{}, error) {
 	ret := []Servercheck{}
 	arg := Servercheck{Id: int64(id)}
-	nstmt, err := db.GlobalDB.PrepareNamed(`select * from servercheck where id=:id`)
+	nstmt, err := db.PrepareNamed(`select * from servercheck where id=:id`)
 	err = nstmt.Select(&ret, arg)
 	if err != nil {
 		log.Println(err)
@@ -110,10 +89,10 @@ func getServercheckById(id int) (interface{}, error) {
 // @Success 200 {array}    Servercheck
 // @Resource /api/2.0
 // @Router /api/2.0/servercheck [get]
-func getServerchecks() (interface{}, error) {
+func getServerchecks(db *sqlx.DB) (interface{}, error) {
 	ret := []Servercheck{}
 	queryStr := "select * from servercheck"
-	err := db.GlobalDB.Select(&ret, queryStr)
+	err := db.Select(&ret, queryStr)
 	if err != nil {
 		log.Println(err)
 		return nil, err
@@ -128,7 +107,7 @@ func getServerchecks() (interface{}, error) {
 // @Success 200 {object}    output_format.ApiWrapper
 // @Resource /api/2.0
 // @Router /api/2.0/servercheck [post]
-func postServercheck(payload []byte) (interface{}, error) {
+func postServercheck(payload []byte, db *sqlx.DB) (interface{}, error) {
 	var v Servercheck
 	err := json.Unmarshal(payload, &v)
 	if err != nil {
@@ -201,7 +180,7 @@ func postServercheck(payload []byte) (interface{}, error) {
 	sqlString += ",:bd"
 	sqlString += ",:be"
 	sqlString += ")"
-	result, err := db.GlobalDB.NamedExec(sqlString, v)
+	result, err := db.NamedExec(sqlString, v)
 	if err != nil {
 		log.Println(err)
 		return nil, err
@@ -217,7 +196,7 @@ func postServercheck(payload []byte) (interface{}, error) {
 // @Success 200 {object}    output_format.ApiWrapper
 // @Resource /api/2.0
 // @Router /api/2.0/servercheck/{id}  [put]
-func putServercheck(id int, payload []byte) (interface{}, error) {
+func putServercheck(id int, payload []byte, db *sqlx.DB) (interface{}, error) {
 	var v Servercheck
 	err := json.Unmarshal(payload, &v)
 	v.Id = int64(id) // overwrite the id in the payload
@@ -261,7 +240,7 @@ func putServercheck(id int, payload []byte) (interface{}, error) {
 	sqlString += ",be = :be"
 	sqlString += ",last_updated = :last_updated"
 	sqlString += " WHERE id=:id"
-	result, err := db.GlobalDB.NamedExec(sqlString, v)
+	result, err := db.NamedExec(sqlString, v)
 	if err != nil {
 		log.Println(err)
 		return nil, err
@@ -276,9 +255,9 @@ func putServercheck(id int, payload []byte) (interface{}, error) {
 // @Success 200 {array}    Servercheck
 // @Resource /api/2.0
 // @Router /api/2.0/servercheck/{id} [delete]
-func delServercheck(id int) (interface{}, error) {
+func delServercheck(id int, db *sqlx.DB) (interface{}, error) {
 	arg := Servercheck{Id: int64(id)}
-	result, err := db.GlobalDB.NamedExec("DELETE FROM servercheck WHERE id=:id", arg)
+	result, err := db.NamedExec("DELETE FROM servercheck WHERE id=:id", arg)
 	if err != nil {
 		log.Println(err)
 		return nil, err

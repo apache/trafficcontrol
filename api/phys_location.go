@@ -19,8 +19,8 @@ package api
 
 import (
 	"encoding/json"
-	"github.com/Comcast/traffic_control/traffic_ops/goto2/db"
 	_ "github.com/Comcast/traffic_control/traffic_ops/goto2/output_format" // needed for swagger
+	"github.com/jmoiron/sqlx"
 	null "gopkg.in/guregu/null.v3"
 	"log"
 	"time"
@@ -42,27 +42,6 @@ type PhysLocation struct {
 	LastUpdated time.Time   `db:"last_updated" json:"lastUpdated"`
 }
 
-func handlePhysLocation(method string, id int, payload []byte) (interface{}, error) {
-	if method == "GET" {
-		return getPhysLocation(id)
-	} else if method == "POST" {
-		return postPhysLocation(payload)
-	} else if method == "PUT" {
-		return putPhysLocation(id, payload)
-	} else if method == "DELETE" {
-		return delPhysLocation(id)
-	}
-	return nil, nil
-}
-
-func getPhysLocation(id int) (interface{}, error) {
-	if id >= 0 {
-		return getPhysLocationById(id)
-	} else {
-		return getPhysLocations()
-	}
-}
-
 // @Title getPhysLocationById
 // @Description retrieves the phys_location information for a certain id
 // @Accept  application/json
@@ -70,10 +49,10 @@ func getPhysLocation(id int) (interface{}, error) {
 // @Success 200 {array}    PhysLocation
 // @Resource /api/2.0
 // @Router /api/2.0/phys_location/{id} [get]
-func getPhysLocationById(id int) (interface{}, error) {
+func getPhysLocationById(id int, db *sqlx.DB) (interface{}, error) {
 	ret := []PhysLocation{}
 	arg := PhysLocation{Id: int64(id)}
-	nstmt, err := db.GlobalDB.PrepareNamed(`select * from phys_location where id=:id`)
+	nstmt, err := db.PrepareNamed(`select * from phys_location where id=:id`)
 	err = nstmt.Select(&ret, arg)
 	if err != nil {
 		log.Println(err)
@@ -89,10 +68,10 @@ func getPhysLocationById(id int) (interface{}, error) {
 // @Success 200 {array}    PhysLocation
 // @Resource /api/2.0
 // @Router /api/2.0/phys_location [get]
-func getPhysLocations() (interface{}, error) {
+func getPhysLocations(db *sqlx.DB) (interface{}, error) {
 	ret := []PhysLocation{}
 	queryStr := "select * from phys_location"
-	err := db.GlobalDB.Select(&ret, queryStr)
+	err := db.Select(&ret, queryStr)
 	if err != nil {
 		log.Println(err)
 		return nil, err
@@ -107,7 +86,7 @@ func getPhysLocations() (interface{}, error) {
 // @Success 200 {object}    output_format.ApiWrapper
 // @Resource /api/2.0
 // @Router /api/2.0/phys_location [post]
-func postPhysLocation(payload []byte) (interface{}, error) {
+func postPhysLocation(payload []byte, db *sqlx.DB) (interface{}, error) {
 	var v PhysLocation
 	err := json.Unmarshal(payload, &v)
 	if err != nil {
@@ -138,7 +117,7 @@ func postPhysLocation(payload []byte) (interface{}, error) {
 	sqlString += ",:comments"
 	sqlString += ",:region"
 	sqlString += ")"
-	result, err := db.GlobalDB.NamedExec(sqlString, v)
+	result, err := db.NamedExec(sqlString, v)
 	if err != nil {
 		log.Println(err)
 		return nil, err
@@ -154,7 +133,7 @@ func postPhysLocation(payload []byte) (interface{}, error) {
 // @Success 200 {object}    output_format.ApiWrapper
 // @Resource /api/2.0
 // @Router /api/2.0/phys_location/{id}  [put]
-func putPhysLocation(id int, payload []byte) (interface{}, error) {
+func putPhysLocation(id int, payload []byte, db *sqlx.DB) (interface{}, error) {
 	var v PhysLocation
 	err := json.Unmarshal(payload, &v)
 	v.Id = int64(id) // overwrite the id in the payload
@@ -177,7 +156,7 @@ func putPhysLocation(id int, payload []byte) (interface{}, error) {
 	sqlString += ",region = :region"
 	sqlString += ",last_updated = :last_updated"
 	sqlString += " WHERE id=:id"
-	result, err := db.GlobalDB.NamedExec(sqlString, v)
+	result, err := db.NamedExec(sqlString, v)
 	if err != nil {
 		log.Println(err)
 		return nil, err
@@ -192,9 +171,9 @@ func putPhysLocation(id int, payload []byte) (interface{}, error) {
 // @Success 200 {array}    PhysLocation
 // @Resource /api/2.0
 // @Router /api/2.0/phys_location/{id} [delete]
-func delPhysLocation(id int) (interface{}, error) {
+func delPhysLocation(id int, db *sqlx.DB) (interface{}, error) {
 	arg := PhysLocation{Id: int64(id)}
-	result, err := db.GlobalDB.NamedExec("DELETE FROM phys_location WHERE id=:id", arg)
+	result, err := db.NamedExec("DELETE FROM phys_location WHERE id=:id", arg)
 	if err != nil {
 		log.Println(err)
 		return nil, err

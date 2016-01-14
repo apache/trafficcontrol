@@ -19,8 +19,8 @@ package api
 
 import (
 	"encoding/json"
-	"github.com/Comcast/traffic_control/traffic_ops/goto2/db"
 	_ "github.com/Comcast/traffic_control/traffic_ops/goto2/output_format" // needed for swagger
+	"github.com/jmoiron/sqlx"
 	"log"
 	"time"
 )
@@ -35,27 +35,6 @@ type StatsSummary struct {
 	StatDate            time.Time `db:"stat_date" json:"statDate"`
 }
 
-func handleStatsSummary(method string, id int, payload []byte) (interface{}, error) {
-	if method == "GET" {
-		return getStatsSummary(id)
-	} else if method == "POST" {
-		return postStatsSummary(payload)
-	} else if method == "PUT" {
-		return putStatsSummary(id, payload)
-	} else if method == "DELETE" {
-		return delStatsSummary(id)
-	}
-	return nil, nil
-}
-
-func getStatsSummary(id int) (interface{}, error) {
-	if id >= 0 {
-		return getStatsSummaryById(id)
-	} else {
-		return getStatsSummarys()
-	}
-}
-
 // @Title getStatsSummaryById
 // @Description retrieves the stats_summary information for a certain id
 // @Accept  application/json
@@ -63,10 +42,10 @@ func getStatsSummary(id int) (interface{}, error) {
 // @Success 200 {array}    StatsSummary
 // @Resource /api/2.0
 // @Router /api/2.0/stats_summary/{id} [get]
-func getStatsSummaryById(id int) (interface{}, error) {
+func getStatsSummaryById(id int, db *sqlx.DB) (interface{}, error) {
 	ret := []StatsSummary{}
 	arg := StatsSummary{Id: int64(id)}
-	nstmt, err := db.GlobalDB.PrepareNamed(`select * from stats_summary where id=:id`)
+	nstmt, err := db.PrepareNamed(`select * from stats_summary where id=:id`)
 	err = nstmt.Select(&ret, arg)
 	if err != nil {
 		log.Println(err)
@@ -82,10 +61,10 @@ func getStatsSummaryById(id int) (interface{}, error) {
 // @Success 200 {array}    StatsSummary
 // @Resource /api/2.0
 // @Router /api/2.0/stats_summary [get]
-func getStatsSummarys() (interface{}, error) {
+func getStatsSummarys(db *sqlx.DB) (interface{}, error) {
 	ret := []StatsSummary{}
 	queryStr := "select * from stats_summary"
-	err := db.GlobalDB.Select(&ret, queryStr)
+	err := db.Select(&ret, queryStr)
 	if err != nil {
 		log.Println(err)
 		return nil, err
@@ -100,7 +79,7 @@ func getStatsSummarys() (interface{}, error) {
 // @Success 200 {object}    output_format.ApiWrapper
 // @Resource /api/2.0
 // @Router /api/2.0/stats_summary [post]
-func postStatsSummary(payload []byte) (interface{}, error) {
+func postStatsSummary(payload []byte, db *sqlx.DB) (interface{}, error) {
 	var v StatsSummary
 	err := json.Unmarshal(payload, &v)
 	if err != nil {
@@ -121,7 +100,7 @@ func postStatsSummary(payload []byte) (interface{}, error) {
 	sqlString += ",:summary_time"
 	sqlString += ",:stat_date"
 	sqlString += ")"
-	result, err := db.GlobalDB.NamedExec(sqlString, v)
+	result, err := db.NamedExec(sqlString, v)
 	if err != nil {
 		log.Println(err)
 		return nil, err
@@ -137,7 +116,7 @@ func postStatsSummary(payload []byte) (interface{}, error) {
 // @Success 200 {object}    output_format.ApiWrapper
 // @Resource /api/2.0
 // @Router /api/2.0/stats_summary/{id}  [put]
-func putStatsSummary(id int, payload []byte) (interface{}, error) {
+func putStatsSummary(id int, payload []byte, db *sqlx.DB) (interface{}, error) {
 	var v StatsSummary
 	err := json.Unmarshal(payload, &v)
 	v.Id = int64(id) // overwrite the id in the payload
@@ -153,7 +132,7 @@ func putStatsSummary(id int, payload []byte) (interface{}, error) {
 	sqlString += ",summary_time = :summary_time"
 	sqlString += ",stat_date = :stat_date"
 	sqlString += " WHERE id=:id"
-	result, err := db.GlobalDB.NamedExec(sqlString, v)
+	result, err := db.NamedExec(sqlString, v)
 	if err != nil {
 		log.Println(err)
 		return nil, err
@@ -168,9 +147,9 @@ func putStatsSummary(id int, payload []byte) (interface{}, error) {
 // @Success 200 {array}    StatsSummary
 // @Resource /api/2.0
 // @Router /api/2.0/stats_summary/{id} [delete]
-func delStatsSummary(id int) (interface{}, error) {
+func delStatsSummary(id int, db *sqlx.DB) (interface{}, error) {
 	arg := StatsSummary{Id: int64(id)}
-	result, err := db.GlobalDB.NamedExec("DELETE FROM stats_summary WHERE id=:id", arg)
+	result, err := db.NamedExec("DELETE FROM stats_summary WHERE id=:id", arg)
 	if err != nil {
 		log.Println(err)
 		return nil, err

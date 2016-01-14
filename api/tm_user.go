@@ -19,8 +19,8 @@ package api
 
 import (
 	"encoding/json"
-	"github.com/Comcast/traffic_control/traffic_ops/goto2/db"
 	_ "github.com/Comcast/traffic_control/traffic_ops/goto2/output_format" // needed for swagger
+	"github.com/jmoiron/sqlx"
 	null "gopkg.in/guregu/null.v3"
 	"log"
 	"time"
@@ -51,27 +51,6 @@ type TmUser struct {
 	RegistrationSent   time.Time   `db:"registration_sent" json:"registrationSent"`
 }
 
-func handleTmUser(method string, id int, payload []byte) (interface{}, error) {
-	if method == "GET" {
-		return getTmUser(id)
-	} else if method == "POST" {
-		return postTmUser(payload)
-	} else if method == "PUT" {
-		return putTmUser(id, payload)
-	} else if method == "DELETE" {
-		return delTmUser(id)
-	}
-	return nil, nil
-}
-
-func getTmUser(id int) (interface{}, error) {
-	if id >= 0 {
-		return getTmUserById(id)
-	} else {
-		return getTmUsers()
-	}
-}
-
 // @Title getTmUserById
 // @Description retrieves the tm_user information for a certain id
 // @Accept  application/json
@@ -79,10 +58,10 @@ func getTmUser(id int) (interface{}, error) {
 // @Success 200 {array}    TmUser
 // @Resource /api/2.0
 // @Router /api/2.0/tm_user/{id} [get]
-func getTmUserById(id int) (interface{}, error) {
+func getTmUserById(id int, db *sqlx.DB) (interface{}, error) {
 	ret := []TmUser{}
 	arg := TmUser{Id: int64(id)}
-	nstmt, err := db.GlobalDB.PrepareNamed(`select * from tm_user where id=:id`)
+	nstmt, err := db.PrepareNamed(`select * from tm_user where id=:id`)
 	err = nstmt.Select(&ret, arg)
 	if err != nil {
 		log.Println(err)
@@ -98,10 +77,10 @@ func getTmUserById(id int) (interface{}, error) {
 // @Success 200 {array}    TmUser
 // @Resource /api/2.0
 // @Router /api/2.0/tm_user [get]
-func getTmUsers() (interface{}, error) {
+func getTmUsers(db *sqlx.DB) (interface{}, error) {
 	ret := []TmUser{}
 	queryStr := "select * from tm_user"
-	err := db.GlobalDB.Select(&ret, queryStr)
+	err := db.Select(&ret, queryStr)
 	if err != nil {
 		log.Println(err)
 		return nil, err
@@ -116,7 +95,7 @@ func getTmUsers() (interface{}, error) {
 // @Success 200 {object}    output_format.ApiWrapper
 // @Resource /api/2.0
 // @Router /api/2.0/tm_user [post]
-func postTmUser(payload []byte) (interface{}, error) {
+func postTmUser(payload []byte, db *sqlx.DB) (interface{}, error) {
 	var v TmUser
 	err := json.Unmarshal(payload, &v)
 	if err != nil {
@@ -165,7 +144,7 @@ func postTmUser(payload []byte) (interface{}, error) {
 	sqlString += ",:token"
 	sqlString += ",:registration_sent"
 	sqlString += ")"
-	result, err := db.GlobalDB.NamedExec(sqlString, v)
+	result, err := db.NamedExec(sqlString, v)
 	if err != nil {
 		log.Println(err)
 		return nil, err
@@ -181,7 +160,7 @@ func postTmUser(payload []byte) (interface{}, error) {
 // @Success 200 {object}    output_format.ApiWrapper
 // @Resource /api/2.0
 // @Router /api/2.0/tm_user/{id}  [put]
-func putTmUser(id int, payload []byte) (interface{}, error) {
+func putTmUser(id int, payload []byte, db *sqlx.DB) (interface{}, error) {
 	var v TmUser
 	err := json.Unmarshal(payload, &v)
 	v.Id = int64(id) // overwrite the id in the payload
@@ -213,7 +192,7 @@ func putTmUser(id int, payload []byte) (interface{}, error) {
 	sqlString += ",token = :token"
 	sqlString += ",registration_sent = :registration_sent"
 	sqlString += " WHERE id=:id"
-	result, err := db.GlobalDB.NamedExec(sqlString, v)
+	result, err := db.NamedExec(sqlString, v)
 	if err != nil {
 		log.Println(err)
 		return nil, err
@@ -228,9 +207,9 @@ func putTmUser(id int, payload []byte) (interface{}, error) {
 // @Success 200 {array}    TmUser
 // @Resource /api/2.0
 // @Router /api/2.0/tm_user/{id} [delete]
-func delTmUser(id int) (interface{}, error) {
+func delTmUser(id int, db *sqlx.DB) (interface{}, error) {
 	arg := TmUser{Id: int64(id)}
-	result, err := db.GlobalDB.NamedExec("DELETE FROM tm_user WHERE id=:id", arg)
+	result, err := db.NamedExec("DELETE FROM tm_user WHERE id=:id", arg)
 	if err != nil {
 		log.Println(err)
 		return nil, err

@@ -19,8 +19,8 @@ package api
 
 import (
 	"encoding/json"
-	"github.com/Comcast/traffic_control/traffic_ops/goto2/db"
 	_ "github.com/Comcast/traffic_control/traffic_ops/goto2/output_format" // needed for swagger
+	"github.com/jmoiron/sqlx"
 	"log"
 	"time"
 )
@@ -32,27 +32,6 @@ type Asn struct {
 	LastUpdated time.Time `db:"last_updated" json:"lastUpdated"`
 }
 
-func handleAsn(method string, id int, payload []byte) (interface{}, error) {
-	if method == "GET" {
-		return getAsn(id)
-	} else if method == "POST" {
-		return postAsn(payload)
-	} else if method == "PUT" {
-		return putAsn(id, payload)
-	} else if method == "DELETE" {
-		return delAsn(id)
-	}
-	return nil, nil
-}
-
-func getAsn(id int) (interface{}, error) {
-	if id >= 0 {
-		return getAsnById(id)
-	} else {
-		return getAsns()
-	}
-}
-
 // @Title getAsnById
 // @Description retrieves the asn information for a certain id
 // @Accept  application/json
@@ -60,10 +39,10 @@ func getAsn(id int) (interface{}, error) {
 // @Success 200 {array}    Asn
 // @Resource /api/2.0
 // @Router /api/2.0/asn/{id} [get]
-func getAsnById(id int) (interface{}, error) {
+func getAsnById(id int, db *sqlx.DB) (interface{}, error) {
 	ret := []Asn{}
 	arg := Asn{Id: int64(id)}
-	nstmt, err := db.GlobalDB.PrepareNamed(`select * from asn where id=:id`)
+	nstmt, err := db.PrepareNamed(`select * from asn where id=:id`)
 	err = nstmt.Select(&ret, arg)
 	if err != nil {
 		log.Println(err)
@@ -79,10 +58,10 @@ func getAsnById(id int) (interface{}, error) {
 // @Success 200 {array}    Asn
 // @Resource /api/2.0
 // @Router /api/2.0/asn [get]
-func getAsns() (interface{}, error) {
+func getAsns(db *sqlx.DB) (interface{}, error) {
 	ret := []Asn{}
 	queryStr := "select * from asn"
-	err := db.GlobalDB.Select(&ret, queryStr)
+	err := db.Select(&ret, queryStr)
 	if err != nil {
 		log.Println(err)
 		return nil, err
@@ -97,7 +76,7 @@ func getAsns() (interface{}, error) {
 // @Success 200 {object}    output_format.ApiWrapper
 // @Resource /api/2.0
 // @Router /api/2.0/asn [post]
-func postAsn(payload []byte) (interface{}, error) {
+func postAsn(payload []byte, db *sqlx.DB) (interface{}, error) {
 	var v Asn
 	err := json.Unmarshal(payload, &v)
 	if err != nil {
@@ -110,7 +89,7 @@ func postAsn(payload []byte) (interface{}, error) {
 	sqlString += ":asn"
 	sqlString += ",:cachegroup"
 	sqlString += ")"
-	result, err := db.GlobalDB.NamedExec(sqlString, v)
+	result, err := db.NamedExec(sqlString, v)
 	if err != nil {
 		log.Println(err)
 		return nil, err
@@ -126,7 +105,7 @@ func postAsn(payload []byte) (interface{}, error) {
 // @Success 200 {object}    output_format.ApiWrapper
 // @Resource /api/2.0
 // @Router /api/2.0/asn/{id}  [put]
-func putAsn(id int, payload []byte) (interface{}, error) {
+func putAsn(id int, payload []byte, db *sqlx.DB) (interface{}, error) {
 	var v Asn
 	err := json.Unmarshal(payload, &v)
 	v.Id = int64(id) // overwrite the id in the payload
@@ -140,7 +119,7 @@ func putAsn(id int, payload []byte) (interface{}, error) {
 	sqlString += ",cachegroup = :cachegroup"
 	sqlString += ",last_updated = :last_updated"
 	sqlString += " WHERE id=:id"
-	result, err := db.GlobalDB.NamedExec(sqlString, v)
+	result, err := db.NamedExec(sqlString, v)
 	if err != nil {
 		log.Println(err)
 		return nil, err
@@ -155,9 +134,9 @@ func putAsn(id int, payload []byte) (interface{}, error) {
 // @Success 200 {array}    Asn
 // @Resource /api/2.0
 // @Router /api/2.0/asn/{id} [delete]
-func delAsn(id int) (interface{}, error) {
+func delAsn(id int, db *sqlx.DB) (interface{}, error) {
 	arg := Asn{Id: int64(id)}
-	result, err := db.GlobalDB.NamedExec("DELETE FROM asn WHERE id=:id", arg)
+	result, err := db.NamedExec("DELETE FROM asn WHERE id=:id", arg)
 	if err != nil {
 		log.Println(err)
 		return nil, err

@@ -19,8 +19,8 @@ package api
 
 import (
 	"encoding/json"
-	"github.com/Comcast/traffic_control/traffic_ops/goto2/db"
 	_ "github.com/Comcast/traffic_control/traffic_ops/goto2/output_format" // needed for swagger
+	"github.com/jmoiron/sqlx"
 	null "gopkg.in/guregu/null.v3"
 	"log"
 	"time"
@@ -71,27 +71,6 @@ type Deliveryservice struct {
 	DnsBypassCname       null.String `db:"dns_bypass_cname" json:"dnsBypassCname"`
 }
 
-func handleDeliveryservice(method string, id int, payload []byte) (interface{}, error) {
-	if method == "GET" {
-		return getDeliveryservice(id)
-	} else if method == "POST" {
-		return postDeliveryservice(payload)
-	} else if method == "PUT" {
-		return putDeliveryservice(id, payload)
-	} else if method == "DELETE" {
-		return delDeliveryservice(id)
-	}
-	return nil, nil
-}
-
-func getDeliveryservice(id int) (interface{}, error) {
-	if id >= 0 {
-		return getDeliveryserviceById(id)
-	} else {
-		return getDeliveryservices()
-	}
-}
-
 // @Title getDeliveryserviceById
 // @Description retrieves the deliveryservice information for a certain id
 // @Accept  application/json
@@ -99,10 +78,10 @@ func getDeliveryservice(id int) (interface{}, error) {
 // @Success 200 {array}    Deliveryservice
 // @Resource /api/2.0
 // @Router /api/2.0/deliveryservice/{id} [get]
-func getDeliveryserviceById(id int) (interface{}, error) {
+func getDeliveryserviceById(id int, db *sqlx.DB) (interface{}, error) {
 	ret := []Deliveryservice{}
 	arg := Deliveryservice{Id: int64(id)}
-	nstmt, err := db.GlobalDB.PrepareNamed(`select * from deliveryservice where id=:id`)
+	nstmt, err := db.PrepareNamed(`select * from deliveryservice where id=:id`)
 	err = nstmt.Select(&ret, arg)
 	if err != nil {
 		log.Println(err)
@@ -118,10 +97,10 @@ func getDeliveryserviceById(id int) (interface{}, error) {
 // @Success 200 {array}    Deliveryservice
 // @Resource /api/2.0
 // @Router /api/2.0/deliveryservice [get]
-func getDeliveryservices() (interface{}, error) {
+func getDeliveryservices(db *sqlx.DB) (interface{}, error) {
 	ret := []Deliveryservice{}
 	queryStr := "select * from deliveryservice"
-	err := db.GlobalDB.Select(&ret, queryStr)
+	err := db.Select(&ret, queryStr)
 	if err != nil {
 		log.Println(err)
 		return nil, err
@@ -136,7 +115,7 @@ func getDeliveryservices() (interface{}, error) {
 // @Success 200 {object}    output_format.ApiWrapper
 // @Resource /api/2.0
 // @Router /api/2.0/deliveryservice [post]
-func postDeliveryservice(payload []byte) (interface{}, error) {
+func postDeliveryservice(payload []byte, db *sqlx.DB) (interface{}, error) {
 	var v Deliveryservice
 	err := json.Unmarshal(payload, &v)
 	if err != nil {
@@ -225,7 +204,7 @@ func postDeliveryservice(payload []byte) (interface{}, error) {
 	sqlString += ",:initial_dispersion"
 	sqlString += ",:dns_bypass_cname"
 	sqlString += ")"
-	result, err := db.GlobalDB.NamedExec(sqlString, v)
+	result, err := db.NamedExec(sqlString, v)
 	if err != nil {
 		log.Println(err)
 		return nil, err
@@ -241,7 +220,7 @@ func postDeliveryservice(payload []byte) (interface{}, error) {
 // @Success 200 {object}    output_format.ApiWrapper
 // @Resource /api/2.0
 // @Router /api/2.0/deliveryservice/{id}  [put]
-func putDeliveryservice(id int, payload []byte) (interface{}, error) {
+func putDeliveryservice(id int, payload []byte, db *sqlx.DB) (interface{}, error) {
 	var v Deliveryservice
 	err := json.Unmarshal(payload, &v)
 	v.Id = int64(id) // overwrite the id in the payload
@@ -293,7 +272,7 @@ func putDeliveryservice(id int, payload []byte) (interface{}, error) {
 	sqlString += ",initial_dispersion = :initial_dispersion"
 	sqlString += ",dns_bypass_cname = :dns_bypass_cname"
 	sqlString += " WHERE id=:id"
-	result, err := db.GlobalDB.NamedExec(sqlString, v)
+	result, err := db.NamedExec(sqlString, v)
 	if err != nil {
 		log.Println(err)
 		return nil, err
@@ -308,9 +287,9 @@ func putDeliveryservice(id int, payload []byte) (interface{}, error) {
 // @Success 200 {array}    Deliveryservice
 // @Resource /api/2.0
 // @Router /api/2.0/deliveryservice/{id} [delete]
-func delDeliveryservice(id int) (interface{}, error) {
+func delDeliveryservice(id int, db *sqlx.DB) (interface{}, error) {
 	arg := Deliveryservice{Id: int64(id)}
-	result, err := db.GlobalDB.NamedExec("DELETE FROM deliveryservice WHERE id=:id", arg)
+	result, err := db.NamedExec("DELETE FROM deliveryservice WHERE id=:id", arg)
 	if err != nil {
 		log.Println(err)
 		return nil, err

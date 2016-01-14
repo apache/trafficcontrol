@@ -25,6 +25,7 @@ import (
 
 	"encoding/json"
 	"github.com/gorilla/mux"
+	"github.com/jmoiron/sqlx"	
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -34,14 +35,14 @@ const apiPath = "/api/2.0/"
 
 // CreateRouter creates the routes for handling requests to the web interface.
 // This function returns an http.Handler to be used in http.ListenAndServe().
-func CreateRouter() http.Handler {
+func CreateRouter(db *sqlx.DB) http.Handler {
 	router := mux.NewRouter().StrictSlash(true)
-	router.HandleFunc("/login", auth.Login).Methods("POST")
+	router.HandleFunc("/login", auth.GetLoginFunc(db)).Methods("POST")
 	router.HandleFunc(apiPath+"{table}", auth.Use(optionsHandler, auth.DONTRequireLogin)).Methods("OPTIONS")
 	router.HandleFunc(apiPath+"{table}/{id}", auth.Use(optionsHandler, auth.DONTRequireLogin)).Methods("OPTIONS")
-	router.HandleFunc("/config/cr/{cdn}/CRConfig.json", auth.Use(handleCRConfig, auth.RequireLogin))
-	router.HandleFunc("/config/csconfig/{hostname}", auth.Use(handleCSConfig, auth.RequireLogin))
-	addApiHandlers(router)
+	router.HandleFunc("/config/cr/{cdn}/CRConfig.json", auth.Use(getHandleCRConfigFunc(db), auth.RequireLogin))
+	router.HandleFunc("/config/csconfig/{hostname}", auth.Use(getHandleCSConfigFunc(db), auth.RequireLogin))
+	addApiHandlers(router, db)
 	return auth.Use(router.ServeHTTP, auth.GetContext)
 }
 
@@ -78,11 +79,11 @@ func optionsHandler(w http.ResponseWriter, r *http.Request) {
 //
 // The returned func sets the headers, reads the params, calls the
 // handler with the params, encodes the handlers response, and writes it.
-func wrapApiHandler(f api.ApiHandlerFunc, methods api.ApiMethods) func(w http.ResponseWriter, r *http.Request) {
+func wrapApiHandler(f api.ApiHandlerFunc, methods api.ApiMethods, db *sqlx.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		setHeaders(w, methods)
 		body, err := ioutil.ReadAll(r.Body)
-		response, err := f(mux.Vars(r), body)
+		response, err := f(mux.Vars(r), body, db)
 		if err != nil {
 			log.Println(err)
 		}
@@ -94,30 +95,34 @@ func wrapApiHandler(f api.ApiHandlerFunc, methods api.ApiMethods) func(w http.Re
 }
 
 // addApiHandlers adds each API handler to the given router.
-func addApiHandlers(router *mux.Router) {
+func addApiHandlers(router *mux.Router, db *sqlx.DB) {
 	for route, funcs := range api.ApiHandlers() {
 		for method, f := range funcs {
-			router.HandleFunc(apiPath+route, auth.Use(wrapApiHandler(f, funcs.Methods()), auth.RequireLogin)).Methods(method.String())
+			router.HandleFunc(apiPath+route, auth.Use(wrapApiHandler(f, funcs.Methods(), db), auth.RequireLogin)).Methods(method.String())
 		}
 	}
 }
 
-// handleCRConfig handles requests to the CRConfig endpoint,
+// getHandleCRConfigFunc returns a func which handles requests to the CRConfig endpoint,
 // returning the encoded CRConfig data for the requested CDN.
-func handleCRConfig(w http.ResponseWriter, r *http.Request) {
-	vars := mux.Vars(r)
-	cdn := vars["cdn"]
-	resp, _ := crconfig.GetCRConfig(cdn)
-	enc := json.NewEncoder(w)
-	enc.Encode(resp)
+func getHandleCRConfigFunc(db *sqlx.DB) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		vars := mux.Vars(r)
+		cdn := vars["cdn"]
+		resp, _ := crconfig.GetCRConfig(cdn, db)
+		enc := json.NewEncoder(w)
+		enc.Encode(resp)
+	}
 }
 
-// handleCSConfig handles requests to the CSConfig endpoint,
+// getHandleCSConfigFunc returns a func which handles requests to the CSConfig endpoint,
 // returning the encoded CSConfig data for the requested host.
-func handleCSConfig(w http.ResponseWriter, r *http.Request) {
-	vars := mux.Vars(r)
-	hostName := vars["hostname"]
-	resp, _ := csconfig.GetCSConfig(hostName)
-	enc := json.NewEncoder(w)
-	enc.Encode(resp)
+func getHandleCSConfigFunc(db *sqlx.DB) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		vars := mux.Vars(r)
+		hostName := vars["hostname"]
+		resp, _ := csconfig.GetCSConfig(hostName, db)
+		enc := json.NewEncoder(w)
+		enc.Encode(resp)
+	}
 }

@@ -26,6 +26,7 @@ package api
 import (
 	"errors"
 	"strconv"
+	"github.com/jmoiron/sqlx"	
 )
 
 type ApiMethod int
@@ -65,7 +66,7 @@ func (methods ApiMethods) String() string {
 	return s
 }
 
-type ApiHandlerFunc func(pathParams map[string]string, payload []byte) (interface{}, error)
+type ApiHandlerFunc func(pathParams map[string]string, payload []byte, dbb *sqlx.DB) (interface{}, error)
 type ApiHandlerFuncMap map[ApiMethod]ApiHandlerFunc
 
 func (handlerMap ApiHandlerFuncMap) Methods() ApiMethods {
@@ -147,37 +148,37 @@ func ApiHandlers() map[string]ApiHandlerFuncMap {
 	}
 }
 
-type EmptyHandlerFunc func() (interface{}, error)
-type IntHandlerFunc func(id int) (interface{}, error)
-type BodyHandlerFunc func(payload []byte) (interface{}, error)
-type IntBodyHandlerFunc func(id int, payload []byte) (interface{}, error)
+type EmptyHandlerFunc func(db *sqlx.DB) (interface{}, error)
+type IntHandlerFunc func(id int, db *sqlx.DB) (interface{}, error)
+type BodyHandlerFunc func(payload []byte, db *sqlx.DB) (interface{}, error)
+type IntBodyHandlerFunc func(id int, payload []byte, db *sqlx.DB) (interface{}, error)
 
 func idBodyWrap(f IntBodyHandlerFunc) ApiHandlerFunc {
-	return func(pathParams map[string]string, payload []byte) (interface{}, error) {
+	return func(pathParams map[string]string, payload []byte, db *sqlx.DB) (interface{}, error) {
 		if strid, ok := pathParams["id"]; !ok {
 			return nil, errors.New("Id missing")
 		} else if id, err := strconv.Atoi(strid); err != nil {
 			return nil, errors.New("Id is not an integer: " + strid)
 		} else {
-			return f(id, payload)
+			return f(id, payload, db)
 		}
 	}
 }
 
 func idWrap(f IntHandlerFunc) ApiHandlerFunc {
-	return idBodyWrap(func(id int, payload []byte) (interface{}, error) {
-		return f(id)
+	return idBodyWrap(func(id int, payload []byte, db *sqlx.DB) (interface{}, error) {
+		return f(id, db)
 	})
 }
 
 func bodyWrap(f BodyHandlerFunc) ApiHandlerFunc {
-	return func(pathParams map[string]string, payload []byte) (interface{}, error) {
-		return f(payload)
+	return func(pathParams map[string]string, payload []byte, db *sqlx.DB) (interface{}, error) {
+		return f(payload, db)
 	}
 }
 
 func emptyWrap(f EmptyHandlerFunc) ApiHandlerFunc {
-	return func(pathParams map[string]string, payload []byte) (interface{}, error) {
-		return f()
+	return func(pathParams map[string]string, payload []byte, db *sqlx.DB) (interface{}, error) {
+		return f(db)
 	}
 }

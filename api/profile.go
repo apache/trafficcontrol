@@ -19,8 +19,8 @@ package api
 
 import (
 	"encoding/json"
-	"github.com/Comcast/traffic_control/traffic_ops/goto2/db"
 	_ "github.com/Comcast/traffic_control/traffic_ops/goto2/output_format" // needed for swagger
+	"github.com/jmoiron/sqlx"
 	null "gopkg.in/guregu/null.v3"
 	"log"
 	"time"
@@ -33,27 +33,6 @@ type Profile struct {
 	LastUpdated time.Time   `db:"last_updated" json:"lastUpdated"`
 }
 
-func handleProfile(method string, id int, payload []byte) (interface{}, error) {
-	if method == "GET" {
-		return getProfile(id)
-	} else if method == "POST" {
-		return postProfile(payload)
-	} else if method == "PUT" {
-		return putProfile(id, payload)
-	} else if method == "DELETE" {
-		return delProfile(id)
-	}
-	return nil, nil
-}
-
-func getProfile(id int) (interface{}, error) {
-	if id >= 0 {
-		return getProfileById(id)
-	} else {
-		return getProfiles()
-	}
-}
-
 // @Title getProfileById
 // @Description retrieves the profile information for a certain id
 // @Accept  application/json
@@ -61,10 +40,10 @@ func getProfile(id int) (interface{}, error) {
 // @Success 200 {array}    Profile
 // @Resource /api/2.0
 // @Router /api/2.0/profile/{id} [get]
-func getProfileById(id int) (interface{}, error) {
+func getProfileById(id int, db *sqlx.DB) (interface{}, error) {
 	ret := []Profile{}
 	arg := Profile{Id: int64(id)}
-	nstmt, err := db.GlobalDB.PrepareNamed(`select * from profile where id=:id`)
+	nstmt, err := db.PrepareNamed(`select * from profile where id=:id`)
 	err = nstmt.Select(&ret, arg)
 	if err != nil {
 		log.Println(err)
@@ -80,10 +59,10 @@ func getProfileById(id int) (interface{}, error) {
 // @Success 200 {array}    Profile
 // @Resource /api/2.0
 // @Router /api/2.0/profile [get]
-func getProfiles() (interface{}, error) {
+func getProfiles(db *sqlx.DB) (interface{}, error) {
 	ret := []Profile{}
 	queryStr := "select * from profile"
-	err := db.GlobalDB.Select(&ret, queryStr)
+	err := db.Select(&ret, queryStr)
 	if err != nil {
 		log.Println(err)
 		return nil, err
@@ -98,7 +77,7 @@ func getProfiles() (interface{}, error) {
 // @Success 200 {object}    output_format.ApiWrapper
 // @Resource /api/2.0
 // @Router /api/2.0/profile [post]
-func postProfile(payload []byte) (interface{}, error) {
+func postProfile(payload []byte, db *sqlx.DB) (interface{}, error) {
 	var v Profile
 	err := json.Unmarshal(payload, &v)
 	if err != nil {
@@ -111,7 +90,7 @@ func postProfile(payload []byte) (interface{}, error) {
 	sqlString += ":name"
 	sqlString += ",:description"
 	sqlString += ")"
-	result, err := db.GlobalDB.NamedExec(sqlString, v)
+	result, err := db.NamedExec(sqlString, v)
 	if err != nil {
 		log.Println(err)
 		return nil, err
@@ -127,7 +106,7 @@ func postProfile(payload []byte) (interface{}, error) {
 // @Success 200 {object}    output_format.ApiWrapper
 // @Resource /api/2.0
 // @Router /api/2.0/profile/{id}  [put]
-func putProfile(id int, payload []byte) (interface{}, error) {
+func putProfile(id int, payload []byte, db *sqlx.DB) (interface{}, error) {
 	var v Profile
 	err := json.Unmarshal(payload, &v)
 	v.Id = int64(id) // overwrite the id in the payload
@@ -141,7 +120,7 @@ func putProfile(id int, payload []byte) (interface{}, error) {
 	sqlString += ",description = :description"
 	sqlString += ",last_updated = :last_updated"
 	sqlString += " WHERE id=:id"
-	result, err := db.GlobalDB.NamedExec(sqlString, v)
+	result, err := db.NamedExec(sqlString, v)
 	if err != nil {
 		log.Println(err)
 		return nil, err
@@ -156,9 +135,9 @@ func putProfile(id int, payload []byte) (interface{}, error) {
 // @Success 200 {array}    Profile
 // @Resource /api/2.0
 // @Router /api/2.0/profile/{id} [delete]
-func delProfile(id int) (interface{}, error) {
+func delProfile(id int, db *sqlx.DB) (interface{}, error) {
 	arg := Profile{Id: int64(id)}
-	result, err := db.GlobalDB.NamedExec("DELETE FROM profile WHERE id=:id", arg)
+	result, err := db.NamedExec("DELETE FROM profile WHERE id=:id", arg)
 	if err != nil {
 		log.Println(err)
 		return nil, err

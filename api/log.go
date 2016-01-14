@@ -19,8 +19,8 @@ package api
 
 import (
 	"encoding/json"
-	"github.com/Comcast/traffic_control/traffic_ops/goto2/db"
 	_ "github.com/Comcast/traffic_control/traffic_ops/goto2/output_format" // needed for swagger
+	"github.com/jmoiron/sqlx"
 	null "gopkg.in/guregu/null.v3"
 	"log"
 	"time"
@@ -35,27 +35,6 @@ type Log struct {
 	LastUpdated time.Time   `db:"last_updated" json:"lastUpdated"`
 }
 
-func handleLog(method string, id int, payload []byte) (interface{}, error) {
-	if method == "GET" {
-		return getLog(id)
-	} else if method == "POST" {
-		return postLog(payload)
-	} else if method == "PUT" {
-		return putLog(id, payload)
-	} else if method == "DELETE" {
-		return delLog(id)
-	}
-	return nil, nil
-}
-
-func getLog(id int) (interface{}, error) {
-	if id >= 0 {
-		return getLogById(id)
-	} else {
-		return getLogs()
-	}
-}
-
 // @Title getLogById
 // @Description retrieves the log information for a certain id
 // @Accept  application/json
@@ -63,10 +42,10 @@ func getLog(id int) (interface{}, error) {
 // @Success 200 {array}    Log
 // @Resource /api/2.0
 // @Router /api/2.0/log/{id} [get]
-func getLogById(id int) (interface{}, error) {
+func getLogById(id int, db *sqlx.DB) (interface{}, error) {
 	ret := []Log{}
 	arg := Log{Id: int64(id)}
-	nstmt, err := db.GlobalDB.PrepareNamed(`select * from log where id=:id`)
+	nstmt, err := db.PrepareNamed(`select * from log where id=:id`)
 	err = nstmt.Select(&ret, arg)
 	if err != nil {
 		log.Println(err)
@@ -82,10 +61,10 @@ func getLogById(id int) (interface{}, error) {
 // @Success 200 {array}    Log
 // @Resource /api/2.0
 // @Router /api/2.0/log [get]
-func getLogs() (interface{}, error) {
+func getLogs(db *sqlx.DB) (interface{}, error) {
 	ret := []Log{}
 	queryStr := "select * from log"
-	err := db.GlobalDB.Select(&ret, queryStr)
+	err := db.Select(&ret, queryStr)
 	if err != nil {
 		log.Println(err)
 		return nil, err
@@ -100,7 +79,7 @@ func getLogs() (interface{}, error) {
 // @Success 200 {object}    output_format.ApiWrapper
 // @Resource /api/2.0
 // @Router /api/2.0/log [post]
-func postLog(payload []byte) (interface{}, error) {
+func postLog(payload []byte, db *sqlx.DB) (interface{}, error) {
 	var v Log
 	err := json.Unmarshal(payload, &v)
 	if err != nil {
@@ -117,7 +96,7 @@ func postLog(payload []byte) (interface{}, error) {
 	sqlString += ",:tm_user"
 	sqlString += ",:ticketnum"
 	sqlString += ")"
-	result, err := db.GlobalDB.NamedExec(sqlString, v)
+	result, err := db.NamedExec(sqlString, v)
 	if err != nil {
 		log.Println(err)
 		return nil, err
@@ -133,7 +112,7 @@ func postLog(payload []byte) (interface{}, error) {
 // @Success 200 {object}    output_format.ApiWrapper
 // @Resource /api/2.0
 // @Router /api/2.0/log/{id}  [put]
-func putLog(id int, payload []byte) (interface{}, error) {
+func putLog(id int, payload []byte, db *sqlx.DB) (interface{}, error) {
 	var v Log
 	err := json.Unmarshal(payload, &v)
 	v.Id = int64(id) // overwrite the id in the payload
@@ -149,7 +128,7 @@ func putLog(id int, payload []byte) (interface{}, error) {
 	sqlString += ",ticketnum = :ticketnum"
 	sqlString += ",last_updated = :last_updated"
 	sqlString += " WHERE id=:id"
-	result, err := db.GlobalDB.NamedExec(sqlString, v)
+	result, err := db.NamedExec(sqlString, v)
 	if err != nil {
 		log.Println(err)
 		return nil, err
@@ -164,9 +143,9 @@ func putLog(id int, payload []byte) (interface{}, error) {
 // @Success 200 {array}    Log
 // @Resource /api/2.0
 // @Router /api/2.0/log/{id} [delete]
-func delLog(id int) (interface{}, error) {
+func delLog(id int, db *sqlx.DB) (interface{}, error) {
 	arg := Log{Id: int64(id)}
-	result, err := db.GlobalDB.NamedExec("DELETE FROM log WHERE id=:id", arg)
+	result, err := db.NamedExec("DELETE FROM log WHERE id=:id", arg)
 	if err != nil {
 		log.Println(err)
 		return nil, err

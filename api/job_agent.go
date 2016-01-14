@@ -19,8 +19,8 @@ package api
 
 import (
 	"encoding/json"
-	"github.com/Comcast/traffic_control/traffic_ops/goto2/db"
 	_ "github.com/Comcast/traffic_control/traffic_ops/goto2/output_format" // needed for swagger
+	"github.com/jmoiron/sqlx"
 	null "gopkg.in/guregu/null.v3"
 	"log"
 	"time"
@@ -34,27 +34,6 @@ type JobAgent struct {
 	LastUpdated time.Time   `db:"last_updated" json:"lastUpdated"`
 }
 
-func handleJobAgent(method string, id int, payload []byte) (interface{}, error) {
-	if method == "GET" {
-		return getJobAgent(id)
-	} else if method == "POST" {
-		return postJobAgent(payload)
-	} else if method == "PUT" {
-		return putJobAgent(id, payload)
-	} else if method == "DELETE" {
-		return delJobAgent(id)
-	}
-	return nil, nil
-}
-
-func getJobAgent(id int) (interface{}, error) {
-	if id >= 0 {
-		return getJobAgentById(id)
-	} else {
-		return getJobAgents()
-	}
-}
-
 // @Title getJobAgentById
 // @Description retrieves the job_agent information for a certain id
 // @Accept  application/json
@@ -62,10 +41,10 @@ func getJobAgent(id int) (interface{}, error) {
 // @Success 200 {array}    JobAgent
 // @Resource /api/2.0
 // @Router /api/2.0/job_agent/{id} [get]
-func getJobAgentById(id int) (interface{}, error) {
+func getJobAgentById(id int, db *sqlx.DB) (interface{}, error) {
 	ret := []JobAgent{}
 	arg := JobAgent{Id: int64(id)}
-	nstmt, err := db.GlobalDB.PrepareNamed(`select * from job_agent where id=:id`)
+	nstmt, err := db.PrepareNamed(`select * from job_agent where id=:id`)
 	err = nstmt.Select(&ret, arg)
 	if err != nil {
 		log.Println(err)
@@ -81,10 +60,10 @@ func getJobAgentById(id int) (interface{}, error) {
 // @Success 200 {array}    JobAgent
 // @Resource /api/2.0
 // @Router /api/2.0/job_agent [get]
-func getJobAgents() (interface{}, error) {
+func getJobAgents(db *sqlx.DB) (interface{}, error) {
 	ret := []JobAgent{}
 	queryStr := "select * from job_agent"
-	err := db.GlobalDB.Select(&ret, queryStr)
+	err := db.Select(&ret, queryStr)
 	if err != nil {
 		log.Println(err)
 		return nil, err
@@ -99,7 +78,7 @@ func getJobAgents() (interface{}, error) {
 // @Success 200 {object}    output_format.ApiWrapper
 // @Resource /api/2.0
 // @Router /api/2.0/job_agent [post]
-func postJobAgent(payload []byte) (interface{}, error) {
+func postJobAgent(payload []byte, db *sqlx.DB) (interface{}, error) {
 	var v JobAgent
 	err := json.Unmarshal(payload, &v)
 	if err != nil {
@@ -114,7 +93,7 @@ func postJobAgent(payload []byte) (interface{}, error) {
 	sqlString += ",:description"
 	sqlString += ",:active"
 	sqlString += ")"
-	result, err := db.GlobalDB.NamedExec(sqlString, v)
+	result, err := db.NamedExec(sqlString, v)
 	if err != nil {
 		log.Println(err)
 		return nil, err
@@ -130,7 +109,7 @@ func postJobAgent(payload []byte) (interface{}, error) {
 // @Success 200 {object}    output_format.ApiWrapper
 // @Resource /api/2.0
 // @Router /api/2.0/job_agent/{id}  [put]
-func putJobAgent(id int, payload []byte) (interface{}, error) {
+func putJobAgent(id int, payload []byte, db *sqlx.DB) (interface{}, error) {
 	var v JobAgent
 	err := json.Unmarshal(payload, &v)
 	v.Id = int64(id) // overwrite the id in the payload
@@ -145,7 +124,7 @@ func putJobAgent(id int, payload []byte) (interface{}, error) {
 	sqlString += ",active = :active"
 	sqlString += ",last_updated = :last_updated"
 	sqlString += " WHERE id=:id"
-	result, err := db.GlobalDB.NamedExec(sqlString, v)
+	result, err := db.NamedExec(sqlString, v)
 	if err != nil {
 		log.Println(err)
 		return nil, err
@@ -160,9 +139,9 @@ func putJobAgent(id int, payload []byte) (interface{}, error) {
 // @Success 200 {array}    JobAgent
 // @Resource /api/2.0
 // @Router /api/2.0/job_agent/{id} [delete]
-func delJobAgent(id int) (interface{}, error) {
+func delJobAgent(id int, db *sqlx.DB) (interface{}, error) {
 	arg := JobAgent{Id: int64(id)}
-	result, err := db.GlobalDB.NamedExec("DELETE FROM job_agent WHERE id=:id", arg)
+	result, err := db.NamedExec("DELETE FROM job_agent WHERE id=:id", arg)
 	if err != nil {
 		log.Println(err)
 		return nil, err

@@ -81,7 +81,7 @@ func main() {
 
 	gob.Register(auth.SessionUser{}) // this is needed to pass the SessionUser struct around in the gorilla session.
 
-	err = db.InitializeDatabase(config.DbTypeName, config.DbUser, config.DbPassword, config.DbName, config.DbServer, config.DbPort)
+	dbb, err := db.InitializeDatabase(config.DbTypeName, config.DbUser, config.DbPassword, config.DbName, config.DbServer, config.DbPort)
 	if err != nil {
 		log.Println("Error initializing database:", err)
 		return
@@ -95,9 +95,9 @@ func main() {
 		// openssl genrsa -out server.key 2048
 		// openssl req -new -x509 -key server.key -out server.pem -days 3650
 		err = http.ListenAndServeTLS(":"+config.ListenerPort, config.ListenerCertFile, config.ListenerKeyFile,
-			handlers.CombinedLoggingHandler(os.Stdout, routes.CreateRouter()))
+			handlers.CombinedLoggingHandler(os.Stdout, routes.CreateRouter(dbb)))
 	} else {
-		err = http.ListenAndServe(":"+config.ListenerPort, handlers.CombinedLoggingHandler(os.Stdout, routes.CreateRouter()))
+		err = http.ListenAndServe(":"+config.ListenerPort, handlers.CombinedLoggingHandler(os.Stdout, routes.CreateRouter(dbb)))
 	}
 
 	if err != nil {

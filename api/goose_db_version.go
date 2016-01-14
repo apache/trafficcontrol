@@ -19,8 +19,8 @@ package api
 
 import (
 	"encoding/json"
-	"github.com/Comcast/traffic_control/traffic_ops/goto2/db"
 	_ "github.com/Comcast/traffic_control/traffic_ops/goto2/output_format" // needed for swagger
+	"github.com/jmoiron/sqlx"
 	"log"
 	"time"
 )
@@ -32,27 +32,6 @@ type GooseDbVersion struct {
 	Tstamp    time.Time `db:"tstamp" json:"tstamp"`
 }
 
-func handleGooseDbVersion(method string, id int, payload []byte) (interface{}, error) {
-	if method == "GET" {
-		return getGooseDbVersion(id)
-	} else if method == "POST" {
-		return postGooseDbVersion(payload)
-	} else if method == "PUT" {
-		return putGooseDbVersion(id, payload)
-	} else if method == "DELETE" {
-		return delGooseDbVersion(id)
-	}
-	return nil, nil
-}
-
-func getGooseDbVersion(id int) (interface{}, error) {
-	if id >= 0 {
-		return getGooseDbVersionById(id)
-	} else {
-		return getGooseDbVersions()
-	}
-}
-
 // @Title getGooseDbVersionById
 // @Description retrieves the goose_db_version information for a certain id
 // @Accept  application/json
@@ -60,10 +39,10 @@ func getGooseDbVersion(id int) (interface{}, error) {
 // @Success 200 {array}    GooseDbVersion
 // @Resource /api/2.0
 // @Router /api/2.0/goose_db_version/{id} [get]
-func getGooseDbVersionById(id int) (interface{}, error) {
+func getGooseDbVersionById(id int, db *sqlx.DB) (interface{}, error) {
 	ret := []GooseDbVersion{}
 	arg := GooseDbVersion{Id: int64(id)}
-	nstmt, err := db.GlobalDB.PrepareNamed(`select * from goose_db_version where id=:id`)
+	nstmt, err := db.PrepareNamed(`select * from goose_db_version where id=:id`)
 	err = nstmt.Select(&ret, arg)
 	if err != nil {
 		log.Println(err)
@@ -79,10 +58,10 @@ func getGooseDbVersionById(id int) (interface{}, error) {
 // @Success 200 {array}    GooseDbVersion
 // @Resource /api/2.0
 // @Router /api/2.0/goose_db_version [get]
-func getGooseDbVersions() (interface{}, error) {
+func getGooseDbVersions(db *sqlx.DB) (interface{}, error) {
 	ret := []GooseDbVersion{}
 	queryStr := "select * from goose_db_version"
-	err := db.GlobalDB.Select(&ret, queryStr)
+	err := db.Select(&ret, queryStr)
 	if err != nil {
 		log.Println(err)
 		return nil, err
@@ -97,7 +76,7 @@ func getGooseDbVersions() (interface{}, error) {
 // @Success 200 {object}    output_format.ApiWrapper
 // @Resource /api/2.0
 // @Router /api/2.0/goose_db_version [post]
-func postGooseDbVersion(payload []byte) (interface{}, error) {
+func postGooseDbVersion(payload []byte, db *sqlx.DB) (interface{}, error) {
 	var v GooseDbVersion
 	err := json.Unmarshal(payload, &v)
 	if err != nil {
@@ -112,7 +91,7 @@ func postGooseDbVersion(payload []byte) (interface{}, error) {
 	sqlString += ",:is_applied"
 	sqlString += ",:tstamp"
 	sqlString += ")"
-	result, err := db.GlobalDB.NamedExec(sqlString, v)
+	result, err := db.NamedExec(sqlString, v)
 	if err != nil {
 		log.Println(err)
 		return nil, err
@@ -128,7 +107,7 @@ func postGooseDbVersion(payload []byte) (interface{}, error) {
 // @Success 200 {object}    output_format.ApiWrapper
 // @Resource /api/2.0
 // @Router /api/2.0/goose_db_version/{id}  [put]
-func putGooseDbVersion(id int, payload []byte) (interface{}, error) {
+func putGooseDbVersion(id int, payload []byte, db *sqlx.DB) (interface{}, error) {
 	var v GooseDbVersion
 	err := json.Unmarshal(payload, &v)
 	v.Id = int64(id) // overwrite the id in the payload
@@ -141,7 +120,7 @@ func putGooseDbVersion(id int, payload []byte) (interface{}, error) {
 	sqlString += ",is_applied = :is_applied"
 	sqlString += ",tstamp = :tstamp"
 	sqlString += " WHERE id=:id"
-	result, err := db.GlobalDB.NamedExec(sqlString, v)
+	result, err := db.NamedExec(sqlString, v)
 	if err != nil {
 		log.Println(err)
 		return nil, err
@@ -156,9 +135,9 @@ func putGooseDbVersion(id int, payload []byte) (interface{}, error) {
 // @Success 200 {array}    GooseDbVersion
 // @Resource /api/2.0
 // @Router /api/2.0/goose_db_version/{id} [delete]
-func delGooseDbVersion(id int) (interface{}, error) {
+func delGooseDbVersion(id int, db *sqlx.DB) (interface{}, error) {
 	arg := GooseDbVersion{Id: int64(id)}
-	result, err := db.GlobalDB.NamedExec("DELETE FROM goose_db_version WHERE id=:id", arg)
+	result, err := db.NamedExec("DELETE FROM goose_db_version WHERE id=:id", arg)
 	if err != nil {
 		log.Println(err)
 		return nil, err

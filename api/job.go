@@ -19,8 +19,8 @@ package api
 
 import (
 	"encoding/json"
-	"github.com/Comcast/traffic_control/traffic_ops/goto2/db"
 	_ "github.com/Comcast/traffic_control/traffic_ops/goto2/output_format" // needed for swagger
+	"github.com/jmoiron/sqlx"
 	null "gopkg.in/guregu/null.v3"
 	"log"
 	"time"
@@ -43,27 +43,6 @@ type Job struct {
 	JobDeliveryservice null.Int    `db:"job_deliveryservice" json:"jobDeliveryservice"`
 }
 
-func handleJob(method string, id int, payload []byte) (interface{}, error) {
-	if method == "GET" {
-		return getJob(id)
-	} else if method == "POST" {
-		return postJob(payload)
-	} else if method == "PUT" {
-		return putJob(id, payload)
-	} else if method == "DELETE" {
-		return delJob(id)
-	}
-	return nil, nil
-}
-
-func getJob(id int) (interface{}, error) {
-	if id >= 0 {
-		return getJobById(id)
-	} else {
-		return getJobs()
-	}
-}
-
 // @Title getJobById
 // @Description retrieves the job information for a certain id
 // @Accept  application/json
@@ -71,10 +50,10 @@ func getJob(id int) (interface{}, error) {
 // @Success 200 {array}    Job
 // @Resource /api/2.0
 // @Router /api/2.0/job/{id} [get]
-func getJobById(id int) (interface{}, error) {
+func getJobById(id int, db *sqlx.DB) (interface{}, error) {
 	ret := []Job{}
 	arg := Job{Id: int64(id)}
-	nstmt, err := db.GlobalDB.PrepareNamed(`select * from job where id=:id`)
+	nstmt, err := db.PrepareNamed(`select * from job where id=:id`)
 	err = nstmt.Select(&ret, arg)
 	if err != nil {
 		log.Println(err)
@@ -90,10 +69,10 @@ func getJobById(id int) (interface{}, error) {
 // @Success 200 {array}    Job
 // @Resource /api/2.0
 // @Router /api/2.0/job [get]
-func getJobs() (interface{}, error) {
+func getJobs(db *sqlx.DB) (interface{}, error) {
 	ret := []Job{}
 	queryStr := "select * from job"
-	err := db.GlobalDB.Select(&ret, queryStr)
+	err := db.Select(&ret, queryStr)
 	if err != nil {
 		log.Println(err)
 		return nil, err
@@ -108,7 +87,7 @@ func getJobs() (interface{}, error) {
 // @Success 200 {object}    output_format.ApiWrapper
 // @Resource /api/2.0
 // @Router /api/2.0/job [post]
-func postJob(payload []byte) (interface{}, error) {
+func postJob(payload []byte, db *sqlx.DB) (interface{}, error) {
 	var v Job
 	err := json.Unmarshal(payload, &v)
 	if err != nil {
@@ -141,7 +120,7 @@ func postJob(payload []byte) (interface{}, error) {
 	sqlString += ",:job_user"
 	sqlString += ",:job_deliveryservice"
 	sqlString += ")"
-	result, err := db.GlobalDB.NamedExec(sqlString, v)
+	result, err := db.NamedExec(sqlString, v)
 	if err != nil {
 		log.Println(err)
 		return nil, err
@@ -157,7 +136,7 @@ func postJob(payload []byte) (interface{}, error) {
 // @Success 200 {object}    output_format.ApiWrapper
 // @Resource /api/2.0
 // @Router /api/2.0/job/{id}  [put]
-func putJob(id int, payload []byte) (interface{}, error) {
+func putJob(id int, payload []byte, db *sqlx.DB) (interface{}, error) {
 	var v Job
 	err := json.Unmarshal(payload, &v)
 	v.Id = int64(id) // overwrite the id in the payload
@@ -181,7 +160,7 @@ func putJob(id int, payload []byte) (interface{}, error) {
 	sqlString += ",last_updated = :last_updated"
 	sqlString += ",job_deliveryservice = :job_deliveryservice"
 	sqlString += " WHERE id=:id"
-	result, err := db.GlobalDB.NamedExec(sqlString, v)
+	result, err := db.NamedExec(sqlString, v)
 	if err != nil {
 		log.Println(err)
 		return nil, err
@@ -196,9 +175,9 @@ func putJob(id int, payload []byte) (interface{}, error) {
 // @Success 200 {array}    Job
 // @Resource /api/2.0
 // @Router /api/2.0/job/{id} [delete]
-func delJob(id int) (interface{}, error) {
+func delJob(id int, db *sqlx.DB) (interface{}, error) {
 	arg := Job{Id: int64(id)}
-	result, err := db.GlobalDB.NamedExec("DELETE FROM job WHERE id=:id", arg)
+	result, err := db.NamedExec("DELETE FROM job WHERE id=:id", arg)
 	if err != nil {
 		log.Println(err)
 		return nil, err

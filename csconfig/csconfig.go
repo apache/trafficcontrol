@@ -16,9 +16,9 @@ package csconfig
 
 import (
 	"github.com/Comcast/traffic_control/traffic_ops/goto2/api"
-	"github.com/Comcast/traffic_control/traffic_ops/goto2/db"
 	"gopkg.in/guregu/null.v3"
 	"log"
+	"github.com/jmoiron/sqlx"	
 	// "reflect"
 	// "strconv"
 	// "strings"
@@ -102,10 +102,10 @@ type CsConfig struct {
 	Params []CsconfigParam `json:"allParams"`
 }
 
-func getCSConfigParams(profile int64) ([]CsconfigParam, error) {
+func getCSConfigParams(profile int64, db *sqlx.DB) ([]CsconfigParam, error) {
 	ret := []CsconfigParam{}
 	arg := CsconfigParam{Profile: profile}
-	nstmt, err := db.GlobalDB.PrepareNamed(`select * from csconfig_params where profile=:profile`)
+	nstmt, err := db.PrepareNamed(`select * from csconfig_params where profile=:profile`)
 	err = nstmt.Select(&ret, arg)
 	if err != nil {
 		log.Println(err)
@@ -115,10 +115,10 @@ func getCSConfigParams(profile int64) ([]CsconfigParam, error) {
 	return ret, nil
 }
 
-func getCSConfigRemap(serverId int64) ([]CsconfigRemap, error) {
+func getCSConfigRemap(serverId int64, db *sqlx.DB) ([]CsconfigRemap, error) {
 	ret := []CsconfigRemap{}
 	arg := api.Server{Id: serverId}
-	nstmt, err := db.GlobalDB.PrepareNamed(`select * from csconfig_remap where server_id=:id`)
+	nstmt, err := db.PrepareNamed(`select * from csconfig_remap where server_id=:id`)
 	err = nstmt.Select(&ret, arg)
 	if err != nil {
 		log.Println(err)
@@ -128,23 +128,23 @@ func getCSConfigRemap(serverId int64) ([]CsconfigRemap, error) {
 	return ret, nil
 }
 
-func GetCSConfig(hostName string) (interface{}, error) {
+func GetCSConfig(hostName string, db *sqlx.DB) (interface{}, error) {
 
 	// stats, err := statsSection(cdnName)
 
-	server, err := api.GetServerByName(hostName)
+	server, err := api.GetServerByName(hostName, db)
 	if err != nil {
 		log.Println(err)
 		return nil, err
 	}
 
-	params, err := getCSConfigParams(server.Profile)
+	params, err := getCSConfigParams(server.Profile, db)
 	if err != nil {
 		log.Println(err)
 		return nil, err
 	}
 
-	remaps, err := getCSConfigRemap(server.Id)
+	remaps, err := getCSConfigRemap(server.Id, db)
 	if err != nil {
 		log.Println(err)
 		return nil, err
