@@ -15,13 +15,13 @@
 package crconfig
 
 import (
-	"github.com/Comcast/traffic_control/traffic_ops/goto2/db"
 	"gopkg.in/guregu/null.v3"
 	"log"
 	"reflect"
 	"strconv"
 	"strings"
 	"time"
+	"github.com/jmoiron/sqlx"	
 )
 
 // Note: a lot of these structs are generated from the DB. No need to type them all out, there's tools for that.
@@ -320,10 +320,10 @@ func boolString(in interface{}) string {
 	return "false"
 }
 
-func contentRoutersSection(cdnName string) (map[string]ContentRouter, error) {
+func contentRoutersSection(cdnName string, db *sqlx.DB) (map[string]ContentRouter, error) {
 	crQuery := "select * from content_routers where cdnname='" + cdnName + "'"
 	crs := []ContentRouter{}
-	err := db.GlobalDB.Select(&crs, crQuery)
+	err := db.Select(&crs, crQuery)
 	if err != nil {
 		log.Println(err)
 		return nil, err
@@ -338,10 +338,10 @@ func contentRoutersSection(cdnName string) (map[string]ContentRouter, error) {
 	return retMap, nil
 }
 
-func monitorSecttion(cdnName string) (map[string]Monitor, error) {
+func monitorSecttion(cdnName string, db *sqlx.DB) (map[string]Monitor, error) {
 	mQuery := "select * from monitors where cdnname='" + cdnName + "'"
 	ms := []Monitor{}
-	err := db.GlobalDB.Select(&ms, mQuery)
+	err := db.Select(&ms, mQuery)
 	if err != nil {
 		log.Println(err)
 		return nil, err
@@ -356,10 +356,10 @@ func monitorSecttion(cdnName string) (map[string]Monitor, error) {
 	return retMap, nil
 }
 
-func edgeLocationSection(cdnName string) (map[string]EdgeLocation, error) {
+func edgeLocationSection(cdnName string, db *sqlx.DB) (map[string]EdgeLocation, error) {
 	eQuery := "select name,longitude,latitude from cachegroup where type in (select id from type where name='EDGE_LOC')"
 	edges := []EdgeLocation{}
-	err := db.GlobalDB.Select(&edges, eQuery)
+	err := db.Select(&edges, eQuery)
 	if err != nil {
 		log.Println(err)
 		return nil, err
@@ -374,10 +374,10 @@ func edgeLocationSection(cdnName string) (map[string]EdgeLocation, error) {
 	return retMap, nil
 }
 
-func configSection(cdnName string) (Config, map[string]string, error) {
+func configSection(cdnName string, db *sqlx.DB) (Config, map[string]string, error) {
 	pQuery := "select * from crconfig_params where cdn_name='" + cdnName + "'"
 	params := []CRConfigParam{}
-	err := db.GlobalDB.Select(&params, pQuery)
+	err := db.Select(&params, pQuery)
 	if err != nil {
 		log.Println(err)
 		return Config{}, nil, err
@@ -435,10 +435,10 @@ func genRespHeaderList(inString string) map[string]string {
 	return retMap
 }
 
-func deliveryServicesSection(cdnName string, pmap map[string]string) (map[string]CrDeliveryService, error) {
+func deliveryServicesSection(cdnName string, pmap map[string]string, db *sqlx.DB) (map[string]CrDeliveryService, error) {
 	dQuery := "select * from crconfig_ds_data where cdn_name='" + cdnName + "'"
 	ds := []CrconfigDsData{}
-	err := db.GlobalDB.Select(&ds, dQuery)
+	err := db.Select(&ds, dQuery)
 	if err != nil {
 		log.Println(err)
 		return nil, err
@@ -539,17 +539,17 @@ func deliveryServicesSection(cdnName string, pmap map[string]string) (map[string
 	return dsMap, nil
 }
 
-func contentServersSection(cdnName string, ccrDomain string) (map[string]ContentServer, error) {
+func contentServersSection(cdnName string, ccrDomain string, db *sqlx.DB) (map[string]ContentServer, error) {
 	csQuery := "select * from content_servers where cdnname='" + cdnName + "'"
 	cServers := []CrContentServer{}
-	err := db.GlobalDB.Select(&cServers, csQuery)
+	err := db.Select(&cServers, csQuery)
 	if err != nil {
 		log.Println(err)
 		return nil, err
 	}
 	dsServerQuery := "select * from cr_deliveryservice_server"
 	dsServers := []CrDeliveryserviceServer{}
-	err = db.GlobalDB.Select(&dsServers, dsServerQuery)
+	err = db.Select(&dsServers, dsServerQuery)
 	if err != nil {
 		log.Println("ERROR: >> ", err)
 		return nil, err
@@ -610,13 +610,13 @@ func statsSection(cdnName string) (Stats, error) {
 	return stats, nil
 }
 
-func GetCRConfig(cdnName string) (interface{}, error) {
-	crs, err := contentRoutersSection(cdnName)
-	ms, err := monitorSecttion(cdnName)
-	edges, err := edgeLocationSection(cdnName)
-	cfg, pmap, err := configSection(cdnName)
-	dsMap, err := deliveryServicesSection(cdnName, pmap)
-	cServermap, err := contentServersSection(cdnName, pmap["domain_name"])
+func GetCRConfig(cdnName string, db *sqlx.DB) (interface{}, error) {
+	crs, err := contentRoutersSection(cdnName, db)
+	ms, err := monitorSecttion(cdnName, db)
+	edges, err := edgeLocationSection(cdnName, db)
+	cfg, pmap, err := configSection(cdnName, db)
+	dsMap, err := deliveryServicesSection(cdnName, pmap, db)
+	cServermap, err := contentServersSection(cdnName, pmap["domain_name"], db)
 	stats, err := statsSection(cdnName)
 
 	if err != nil {

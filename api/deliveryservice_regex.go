@@ -19,8 +19,8 @@ package api
 
 import (
 	"encoding/json"
-	"github.com/Comcast/traffic_control/traffic_ops/goto2/db"
 	_ "github.com/Comcast/traffic_control/traffic_ops/goto2/output_format" // needed for swagger
+	"github.com/jmoiron/sqlx"
 	null "gopkg.in/guregu/null.v3"
 	"log"
 )
@@ -31,27 +31,6 @@ type DeliveryserviceRegex struct {
 	SetNumber       null.Int `db:"set_number" json:"setNumber"`
 }
 
-func handleDeliveryserviceRegex(method string, id int, payload []byte) (interface{}, error) {
-	if method == "GET" {
-		return getDeliveryserviceRegex(id)
-	} else if method == "POST" {
-		return postDeliveryserviceRegex(payload)
-	} else if method == "PUT" {
-		return putDeliveryserviceRegex(id, payload)
-	} else if method == "DELETE" {
-		return delDeliveryserviceRegex(id)
-	}
-	return nil, nil
-}
-
-func getDeliveryserviceRegex(id int) (interface{}, error) {
-	if id >= 0 {
-		return getDeliveryserviceRegexById(id)
-	} else {
-		return getDeliveryserviceRegexs()
-	}
-}
-
 // @Title getDeliveryserviceRegexById
 // @Description retrieves the deliveryservice_regex information for a certain id
 // @Accept  application/json
@@ -59,10 +38,10 @@ func getDeliveryserviceRegex(id int) (interface{}, error) {
 // @Success 200 {array}    DeliveryserviceRegex
 // @Resource /api/2.0
 // @Router /api/2.0/deliveryservice_regex/{id} [get]
-func getDeliveryserviceRegexById(id int) (interface{}, error) {
+func getDeliveryserviceRegexById(id int, db *sqlx.DB) (interface{}, error) {
 	ret := []DeliveryserviceRegex{}
 	arg := DeliveryserviceRegex{Deliveryservice: int64(id)}
-	nstmt, err := db.GlobalDB.PrepareNamed(`select * from deliveryservice_regex where deliveryservice=:deliveryservice`)
+	nstmt, err := db.PrepareNamed(`select * from deliveryservice_regex where deliveryservice=:deliveryservice`)
 	err = nstmt.Select(&ret, arg)
 	if err != nil {
 		log.Println(err)
@@ -78,10 +57,10 @@ func getDeliveryserviceRegexById(id int) (interface{}, error) {
 // @Success 200 {array}    DeliveryserviceRegex
 // @Resource /api/2.0
 // @Router /api/2.0/deliveryservice_regex [get]
-func getDeliveryserviceRegexs() (interface{}, error) {
+func getDeliveryserviceRegexs(db *sqlx.DB) (interface{}, error) {
 	ret := []DeliveryserviceRegex{}
 	queryStr := "select * from deliveryservice_regex"
-	err := db.GlobalDB.Select(&ret, queryStr)
+	err := db.Select(&ret, queryStr)
 	if err != nil {
 		log.Println(err)
 		return nil, err
@@ -96,7 +75,7 @@ func getDeliveryserviceRegexs() (interface{}, error) {
 // @Success 200 {object}    output_format.ApiWrapper
 // @Resource /api/2.0
 // @Router /api/2.0/deliveryservice_regex [post]
-func postDeliveryserviceRegex(payload []byte) (interface{}, error) {
+func postDeliveryserviceRegex(payload []byte, db *sqlx.DB) (interface{}, error) {
 	var v DeliveryserviceRegex
 	err := json.Unmarshal(payload, &v)
 	if err != nil {
@@ -111,7 +90,7 @@ func postDeliveryserviceRegex(payload []byte) (interface{}, error) {
 	sqlString += ",:regex"
 	sqlString += ",:set_number"
 	sqlString += ")"
-	result, err := db.GlobalDB.NamedExec(sqlString, v)
+	result, err := db.NamedExec(sqlString, v)
 	if err != nil {
 		log.Println(err)
 		return nil, err
@@ -127,7 +106,7 @@ func postDeliveryserviceRegex(payload []byte) (interface{}, error) {
 // @Success 200 {object}    output_format.ApiWrapper
 // @Resource /api/2.0
 // @Router /api/2.0/deliveryservice_regex/{id}  [put]
-func putDeliveryserviceRegex(id int, payload []byte) (interface{}, error) {
+func putDeliveryserviceRegex(id int, payload []byte, db *sqlx.DB) (interface{}, error) {
 	var v DeliveryserviceRegex
 	err := json.Unmarshal(payload, &v)
 	v.Deliveryservice = int64(id) // overwrite the id in the payload
@@ -140,7 +119,7 @@ func putDeliveryserviceRegex(id int, payload []byte) (interface{}, error) {
 	sqlString += ",regex = :regex"
 	sqlString += ",set_number = :set_number"
 	sqlString += " WHERE deliveryservice=:deliveryservice"
-	result, err := db.GlobalDB.NamedExec(sqlString, v)
+	result, err := db.NamedExec(sqlString, v)
 	if err != nil {
 		log.Println(err)
 		return nil, err
@@ -155,9 +134,9 @@ func putDeliveryserviceRegex(id int, payload []byte) (interface{}, error) {
 // @Success 200 {array}    DeliveryserviceRegex
 // @Resource /api/2.0
 // @Router /api/2.0/deliveryservice_regex/{id} [delete]
-func delDeliveryserviceRegex(id int) (interface{}, error) {
+func delDeliveryserviceRegex(id int, db *sqlx.DB) (interface{}, error) {
 	arg := DeliveryserviceRegex{Deliveryservice: int64(id)}
-	result, err := db.GlobalDB.NamedExec("DELETE FROM deliveryservice_regex WHERE id=:id", arg)
+	result, err := db.NamedExec("DELETE FROM deliveryservice_regex WHERE id=:id", arg)
 	if err != nil {
 		log.Println(err)
 		return nil, err

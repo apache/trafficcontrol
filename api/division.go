@@ -19,8 +19,8 @@ package api
 
 import (
 	"encoding/json"
-	"github.com/Comcast/traffic_control/traffic_ops/goto2/db"
 	_ "github.com/Comcast/traffic_control/traffic_ops/goto2/output_format" // needed for swagger
+	"github.com/jmoiron/sqlx"
 	"log"
 	"time"
 )
@@ -31,27 +31,6 @@ type Division struct {
 	LastUpdated time.Time `db:"last_updated" json:"lastUpdated"`
 }
 
-func handleDivision(method string, id int, payload []byte) (interface{}, error) {
-	if method == "GET" {
-		return getDivision(id)
-	} else if method == "POST" {
-		return postDivision(payload)
-	} else if method == "PUT" {
-		return putDivision(id, payload)
-	} else if method == "DELETE" {
-		return delDivision(id)
-	}
-	return nil, nil
-}
-
-func getDivision(id int) (interface{}, error) {
-	if id >= 0 {
-		return getDivisionById(id)
-	} else {
-		return getDivisions()
-	}
-}
-
 // @Title getDivisionById
 // @Description retrieves the division information for a certain id
 // @Accept  application/json
@@ -59,10 +38,10 @@ func getDivision(id int) (interface{}, error) {
 // @Success 200 {array}    Division
 // @Resource /api/2.0
 // @Router /api/2.0/division/{id} [get]
-func getDivisionById(id int) (interface{}, error) {
+func getDivisionById(id int, db *sqlx.DB) (interface{}, error) {
 	ret := []Division{}
 	arg := Division{Id: int64(id)}
-	nstmt, err := db.GlobalDB.PrepareNamed(`select * from division where id=:id`)
+	nstmt, err := db.PrepareNamed(`select * from division where id=:id`)
 	err = nstmt.Select(&ret, arg)
 	if err != nil {
 		log.Println(err)
@@ -78,10 +57,10 @@ func getDivisionById(id int) (interface{}, error) {
 // @Success 200 {array}    Division
 // @Resource /api/2.0
 // @Router /api/2.0/division [get]
-func getDivisions() (interface{}, error) {
+func getDivisions(db *sqlx.DB) (interface{}, error) {
 	ret := []Division{}
 	queryStr := "select * from division"
-	err := db.GlobalDB.Select(&ret, queryStr)
+	err := db.Select(&ret, queryStr)
 	if err != nil {
 		log.Println(err)
 		return nil, err
@@ -96,7 +75,7 @@ func getDivisions() (interface{}, error) {
 // @Success 200 {object}    output_format.ApiWrapper
 // @Resource /api/2.0
 // @Router /api/2.0/division [post]
-func postDivision(payload []byte) (interface{}, error) {
+func postDivision(payload []byte, db *sqlx.DB) (interface{}, error) {
 	var v Division
 	err := json.Unmarshal(payload, &v)
 	if err != nil {
@@ -107,7 +86,7 @@ func postDivision(payload []byte) (interface{}, error) {
 	sqlString += ") VALUES ("
 	sqlString += ":name"
 	sqlString += ")"
-	result, err := db.GlobalDB.NamedExec(sqlString, v)
+	result, err := db.NamedExec(sqlString, v)
 	if err != nil {
 		log.Println(err)
 		return nil, err
@@ -123,7 +102,7 @@ func postDivision(payload []byte) (interface{}, error) {
 // @Success 200 {object}    output_format.ApiWrapper
 // @Resource /api/2.0
 // @Router /api/2.0/division/{id}  [put]
-func putDivision(id int, payload []byte) (interface{}, error) {
+func putDivision(id int, payload []byte, db *sqlx.DB) (interface{}, error) {
 	var v Division
 	err := json.Unmarshal(payload, &v)
 	v.Id = int64(id) // overwrite the id in the payload
@@ -136,7 +115,7 @@ func putDivision(id int, payload []byte) (interface{}, error) {
 	sqlString += "name = :name"
 	sqlString += ",last_updated = :last_updated"
 	sqlString += " WHERE id=:id"
-	result, err := db.GlobalDB.NamedExec(sqlString, v)
+	result, err := db.NamedExec(sqlString, v)
 	if err != nil {
 		log.Println(err)
 		return nil, err
@@ -151,9 +130,9 @@ func putDivision(id int, payload []byte) (interface{}, error) {
 // @Success 200 {array}    Division
 // @Resource /api/2.0
 // @Router /api/2.0/division/{id} [delete]
-func delDivision(id int) (interface{}, error) {
+func delDivision(id int, db *sqlx.DB) (interface{}, error) {
 	arg := Division{Id: int64(id)}
-	result, err := db.GlobalDB.NamedExec("DELETE FROM division WHERE id=:id", arg)
+	result, err := db.NamedExec("DELETE FROM division WHERE id=:id", arg)
 	if err != nil {
 		log.Println(err)
 		return nil, err

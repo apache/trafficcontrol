@@ -19,8 +19,8 @@ package api
 
 import (
 	"encoding/json"
-	"github.com/Comcast/traffic_control/traffic_ops/goto2/db"
 	_ "github.com/Comcast/traffic_control/traffic_ops/goto2/output_format" // needed for swagger
+	"github.com/jmoiron/sqlx"
 	null "gopkg.in/guregu/null.v3"
 	"log"
 	"time"
@@ -33,27 +33,6 @@ type JobStatus struct {
 	LastUpdated time.Time   `db:"last_updated" json:"lastUpdated"`
 }
 
-func handleJobStatus(method string, id int, payload []byte) (interface{}, error) {
-	if method == "GET" {
-		return getJobStatus(id)
-	} else if method == "POST" {
-		return postJobStatus(payload)
-	} else if method == "PUT" {
-		return putJobStatus(id, payload)
-	} else if method == "DELETE" {
-		return delJobStatus(id)
-	}
-	return nil, nil
-}
-
-func getJobStatus(id int) (interface{}, error) {
-	if id >= 0 {
-		return getJobStatusById(id)
-	} else {
-		return getJobStatuss()
-	}
-}
-
 // @Title getJobStatusById
 // @Description retrieves the job_status information for a certain id
 // @Accept  application/json
@@ -61,10 +40,10 @@ func getJobStatus(id int) (interface{}, error) {
 // @Success 200 {array}    JobStatus
 // @Resource /api/2.0
 // @Router /api/2.0/job_status/{id} [get]
-func getJobStatusById(id int) (interface{}, error) {
+func getJobStatusById(id int, db *sqlx.DB) (interface{}, error) {
 	ret := []JobStatus{}
 	arg := JobStatus{Id: int64(id)}
-	nstmt, err := db.GlobalDB.PrepareNamed(`select * from job_status where id=:id`)
+	nstmt, err := db.PrepareNamed(`select * from job_status where id=:id`)
 	err = nstmt.Select(&ret, arg)
 	if err != nil {
 		log.Println(err)
@@ -80,10 +59,10 @@ func getJobStatusById(id int) (interface{}, error) {
 // @Success 200 {array}    JobStatus
 // @Resource /api/2.0
 // @Router /api/2.0/job_status [get]
-func getJobStatuss() (interface{}, error) {
+func getJobStatuss(db *sqlx.DB) (interface{}, error) {
 	ret := []JobStatus{}
 	queryStr := "select * from job_status"
-	err := db.GlobalDB.Select(&ret, queryStr)
+	err := db.Select(&ret, queryStr)
 	if err != nil {
 		log.Println(err)
 		return nil, err
@@ -98,7 +77,7 @@ func getJobStatuss() (interface{}, error) {
 // @Success 200 {object}    output_format.ApiWrapper
 // @Resource /api/2.0
 // @Router /api/2.0/job_status [post]
-func postJobStatus(payload []byte) (interface{}, error) {
+func postJobStatus(payload []byte, db *sqlx.DB) (interface{}, error) {
 	var v JobStatus
 	err := json.Unmarshal(payload, &v)
 	if err != nil {
@@ -111,7 +90,7 @@ func postJobStatus(payload []byte) (interface{}, error) {
 	sqlString += ":name"
 	sqlString += ",:description"
 	sqlString += ")"
-	result, err := db.GlobalDB.NamedExec(sqlString, v)
+	result, err := db.NamedExec(sqlString, v)
 	if err != nil {
 		log.Println(err)
 		return nil, err
@@ -127,7 +106,7 @@ func postJobStatus(payload []byte) (interface{}, error) {
 // @Success 200 {object}    output_format.ApiWrapper
 // @Resource /api/2.0
 // @Router /api/2.0/job_status/{id}  [put]
-func putJobStatus(id int, payload []byte) (interface{}, error) {
+func putJobStatus(id int, payload []byte, db *sqlx.DB) (interface{}, error) {
 	var v JobStatus
 	err := json.Unmarshal(payload, &v)
 	v.Id = int64(id) // overwrite the id in the payload
@@ -141,7 +120,7 @@ func putJobStatus(id int, payload []byte) (interface{}, error) {
 	sqlString += ",description = :description"
 	sqlString += ",last_updated = :last_updated"
 	sqlString += " WHERE id=:id"
-	result, err := db.GlobalDB.NamedExec(sqlString, v)
+	result, err := db.NamedExec(sqlString, v)
 	if err != nil {
 		log.Println(err)
 		return nil, err
@@ -156,9 +135,9 @@ func putJobStatus(id int, payload []byte) (interface{}, error) {
 // @Success 200 {array}    JobStatus
 // @Resource /api/2.0
 // @Router /api/2.0/job_status/{id} [delete]
-func delJobStatus(id int) (interface{}, error) {
+func delJobStatus(id int, db *sqlx.DB) (interface{}, error) {
 	arg := JobStatus{Id: int64(id)}
-	result, err := db.GlobalDB.NamedExec("DELETE FROM job_status WHERE id=:id", arg)
+	result, err := db.NamedExec("DELETE FROM job_status WHERE id=:id", arg)
 	if err != nil {
 		log.Println(err)
 		return nil, err

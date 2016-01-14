@@ -19,8 +19,8 @@ package api
 
 import (
 	"encoding/json"
-	"github.com/Comcast/traffic_control/traffic_ops/goto2/db"
 	_ "github.com/Comcast/traffic_control/traffic_ops/goto2/output_format" // needed for swagger
+	"github.com/jmoiron/sqlx"
 	"log"
 	"time"
 )
@@ -32,27 +32,6 @@ type Regex struct {
 	LastUpdated time.Time `db:"last_updated" json:"lastUpdated"`
 }
 
-func handleRegex(method string, id int, payload []byte) (interface{}, error) {
-	if method == "GET" {
-		return getRegex(id)
-	} else if method == "POST" {
-		return postRegex(payload)
-	} else if method == "PUT" {
-		return putRegex(id, payload)
-	} else if method == "DELETE" {
-		return delRegex(id)
-	}
-	return nil, nil
-}
-
-func getRegex(id int) (interface{}, error) {
-	if id >= 0 {
-		return getRegexById(id)
-	} else {
-		return getRegexs()
-	}
-}
-
 // @Title getRegexById
 // @Description retrieves the regex information for a certain id
 // @Accept  application/json
@@ -60,10 +39,10 @@ func getRegex(id int) (interface{}, error) {
 // @Success 200 {array}    Regex
 // @Resource /api/2.0
 // @Router /api/2.0/regex/{id} [get]
-func getRegexById(id int) (interface{}, error) {
+func getRegexById(id int, db *sqlx.DB) (interface{}, error) {
 	ret := []Regex{}
 	arg := Regex{Id: int64(id)}
-	nstmt, err := db.GlobalDB.PrepareNamed(`select * from regex where id=:id`)
+	nstmt, err := db.PrepareNamed(`select * from regex where id=:id`)
 	err = nstmt.Select(&ret, arg)
 	if err != nil {
 		log.Println(err)
@@ -79,10 +58,10 @@ func getRegexById(id int) (interface{}, error) {
 // @Success 200 {array}    Regex
 // @Resource /api/2.0
 // @Router /api/2.0/regex [get]
-func getRegexs() (interface{}, error) {
+func getRegexs(db *sqlx.DB) (interface{}, error) {
 	ret := []Regex{}
 	queryStr := "select * from regex"
-	err := db.GlobalDB.Select(&ret, queryStr)
+	err := db.Select(&ret, queryStr)
 	if err != nil {
 		log.Println(err)
 		return nil, err
@@ -97,7 +76,7 @@ func getRegexs() (interface{}, error) {
 // @Success 200 {object}    output_format.ApiWrapper
 // @Resource /api/2.0
 // @Router /api/2.0/regex [post]
-func postRegex(payload []byte) (interface{}, error) {
+func postRegex(payload []byte, db *sqlx.DB) (interface{}, error) {
 	var v Regex
 	err := json.Unmarshal(payload, &v)
 	if err != nil {
@@ -110,7 +89,7 @@ func postRegex(payload []byte) (interface{}, error) {
 	sqlString += ":pattern"
 	sqlString += ",:type"
 	sqlString += ")"
-	result, err := db.GlobalDB.NamedExec(sqlString, v)
+	result, err := db.NamedExec(sqlString, v)
 	if err != nil {
 		log.Println(err)
 		return nil, err
@@ -126,7 +105,7 @@ func postRegex(payload []byte) (interface{}, error) {
 // @Success 200 {object}    output_format.ApiWrapper
 // @Resource /api/2.0
 // @Router /api/2.0/regex/{id}  [put]
-func putRegex(id int, payload []byte) (interface{}, error) {
+func putRegex(id int, payload []byte, db *sqlx.DB) (interface{}, error) {
 	var v Regex
 	err := json.Unmarshal(payload, &v)
 	v.Id = int64(id) // overwrite the id in the payload
@@ -140,7 +119,7 @@ func putRegex(id int, payload []byte) (interface{}, error) {
 	sqlString += ",type = :type"
 	sqlString += ",last_updated = :last_updated"
 	sqlString += " WHERE id=:id"
-	result, err := db.GlobalDB.NamedExec(sqlString, v)
+	result, err := db.NamedExec(sqlString, v)
 	if err != nil {
 		log.Println(err)
 		return nil, err
@@ -155,9 +134,9 @@ func putRegex(id int, payload []byte) (interface{}, error) {
 // @Success 200 {array}    Regex
 // @Resource /api/2.0
 // @Router /api/2.0/regex/{id} [delete]
-func delRegex(id int) (interface{}, error) {
+func delRegex(id int, db *sqlx.DB) (interface{}, error) {
 	arg := Regex{Id: int64(id)}
-	result, err := db.GlobalDB.NamedExec("DELETE FROM regex WHERE id=:id", arg)
+	result, err := db.NamedExec("DELETE FROM regex WHERE id=:id", arg)
 	if err != nil {
 		log.Println(err)
 		return nil, err

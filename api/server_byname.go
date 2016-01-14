@@ -19,15 +19,15 @@ package api
 
 import (
 	"errors"
-	"github.com/Comcast/traffic_control/traffic_ops/goto2/db"
+	"github.com/jmoiron/sqlx"	
 	"log"
 )
 
-func GetServerByName(serverName string) (Server, error) {
+func GetServerByName(serverName string, db *sqlx.DB) (Server, error) {
 
 	ret := []Server{}
 	arg := Server{HostName: serverName}
-	nstmt, err := db.GlobalDB.PrepareNamed(`select * from server where host_name=:host_name`)
+	nstmt, err := db.PrepareNamed(`select * from server where host_name=:host_name`)
 	err = nstmt.Select(&ret, arg)
 	if err != nil {
 		log.Println(err)

@@ -19,7 +19,7 @@ package api
 
 import (
 	"encoding/json"
-	"github.com/Comcast/traffic_control/traffic_ops/goto2/db"
+	"github.com/jmoiron/sqlx"	
 	_ "github.com/Comcast/traffic_control/traffic_ops/goto2/output_format" // needed for swagger
 	"log"
 	"time"
@@ -32,27 +32,6 @@ type FederationTmuser struct {
 	LastUpdated time.Time `db:"last_updated" json:"lastUpdated"`
 }
 
-func handleFederationTmuser(method string, id int, payload []byte) (interface{}, error) {
-	if method == "GET" {
-		return getFederationTmuser(id)
-	} else if method == "POST" {
-		return postFederationTmuser(payload)
-	} else if method == "PUT" {
-		return putFederationTmuser(id, payload)
-	} else if method == "DELETE" {
-		return delFederationTmuser(id)
-	}
-	return nil, nil
-}
-
-func getFederationTmuser(id int) (interface{}, error) {
-	if id >= 0 {
-		return getFederationTmuserById(id)
-	} else {
-		return getFederationTmusers()
-	}
-}
-
 // @Title getFederationTmuserById
 // @Description retrieves the federation_tmuser information for a certain id
 // @Accept  application/json
@@ -60,10 +39,10 @@ func getFederationTmuser(id int) (interface{}, error) {
 // @Success 200 {array}    FederationTmuser
 // @Resource /api/2.0
 // @Router /api/2.0/federation_tmuser/{id} [get]
-func getFederationTmuserById(id int) (interface{}, error) {
+func getFederationTmuserById(id int, db *sqlx.DB) (interface{}, error) {
 	ret := []FederationTmuser{}
 	arg := FederationTmuser{Federation: int64(id)}
-	nstmt, err := db.GlobalDB.PrepareNamed(`select * from federation_tmuser where federation=:federation`)
+	nstmt, err := db.PrepareNamed(`select * from federation_tmuser where federation=:federation`)
 	err = nstmt.Select(&ret, arg)
 	if err != nil {
 		log.Println(err)
@@ -79,10 +58,10 @@ func getFederationTmuserById(id int) (interface{}, error) {
 // @Success 200 {array}    FederationTmuser
 // @Resource /api/2.0
 // @Router /api/2.0/federation_tmuser [get]
-func getFederationTmusers() (interface{}, error) {
+func getFederationTmusers(db *sqlx.DB) (interface{}, error) {
 	ret := []FederationTmuser{}
 	queryStr := "select * from federation_tmuser"
-	err := db.GlobalDB.Select(&ret, queryStr)
+	err := db.Select(&ret, queryStr)
 	if err != nil {
 		log.Println(err)
 		return nil, err
@@ -97,7 +76,7 @@ func getFederationTmusers() (interface{}, error) {
 // @Success 200 {object}    output_format.ApiWrapper
 // @Resource /api/2.0
 // @Router /api/2.0/federation_tmuser [post]
-func postFederationTmuser(payload []byte) (interface{}, error) {
+func postFederationTmuser(payload []byte, db *sqlx.DB) (interface{}, error) {
 	var v FederationTmuser
 	err := json.Unmarshal(payload, &v)
 	if err != nil {
@@ -112,7 +91,7 @@ func postFederationTmuser(payload []byte) (interface{}, error) {
 	sqlString += ",:tm_user"
 	sqlString += ",:role"
 	sqlString += ")"
-	result, err := db.GlobalDB.NamedExec(sqlString, v)
+	result, err := db.NamedExec(sqlString, v)
 	if err != nil {
 		log.Println(err)
 		return nil, err
@@ -128,7 +107,7 @@ func postFederationTmuser(payload []byte) (interface{}, error) {
 // @Success 200 {object}    output_format.ApiWrapper
 // @Resource /api/2.0
 // @Router /api/2.0/federation_tmuser/{id}  [put]
-func putFederationTmuser(id int, payload []byte) (interface{}, error) {
+func putFederationTmuser(id int, payload []byte, db *sqlx.DB) (interface{}, error) {
 	var v FederationTmuser
 	err := json.Unmarshal(payload, &v)
 	v.Federation = int64(id) // overwrite the id in the payload
@@ -143,7 +122,7 @@ func putFederationTmuser(id int, payload []byte) (interface{}, error) {
 	sqlString += ",role = :role"
 	sqlString += ",last_updated = :last_updated"
 	sqlString += " WHERE federation=:federation"
-	result, err := db.GlobalDB.NamedExec(sqlString, v)
+	result, err := db.NamedExec(sqlString, v)
 	if err != nil {
 		log.Println(err)
 		return nil, err
@@ -158,9 +137,9 @@ func putFederationTmuser(id int, payload []byte) (interface{}, error) {
 // @Success 200 {array}    FederationTmuser
 // @Resource /api/2.0
 // @Router /api/2.0/federation_tmuser/{id} [delete]
-func delFederationTmuser(id int) (interface{}, error) {
+func delFederationTmuser(id int, db *sqlx.DB) (interface{}, error) {
 	arg := FederationTmuser{Federation: int64(id)}
-	result, err := db.GlobalDB.NamedExec("DELETE FROM federation_tmuser WHERE id=:id", arg)
+	result, err := db.NamedExec("DELETE FROM federation_tmuser WHERE id=:id", arg)
 	if err != nil {
 		log.Println(err)
 		return nil, err

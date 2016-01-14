@@ -19,7 +19,7 @@ package api
 
 import (
 	"encoding/json"
-	"github.com/Comcast/traffic_control/traffic_ops/goto2/db"
+	"github.com/jmoiron/sqlx"
 	_ "github.com/Comcast/traffic_control/traffic_ops/goto2/output_format" // needed for swagger
 	"log"
 	"time"
@@ -31,27 +31,6 @@ type FederationFederationResolver struct {
 	LastUpdated        time.Time `db:"last_updated" json:"lastUpdated"`
 }
 
-func handleFederationFederationResolver(method string, id int, payload []byte) (interface{}, error) {
-	if method == "GET" {
-		return getFederationFederationResolver(id)
-	} else if method == "POST" {
-		return postFederationFederationResolver(payload)
-	} else if method == "PUT" {
-		return putFederationFederationResolver(id, payload)
-	} else if method == "DELETE" {
-		return delFederationFederationResolver(id)
-	}
-	return nil, nil
-}
-
-func getFederationFederationResolver(id int) (interface{}, error) {
-	if id >= 0 {
-		return getFederationFederationResolverById(id)
-	} else {
-		return getFederationFederationResolvers()
-	}
-}
-
 // @Title getFederationFederationResolverById
 // @Description retrieves the federation_federation_resolver information for a certain id
 // @Accept  application/json
@@ -59,10 +38,10 @@ func getFederationFederationResolver(id int) (interface{}, error) {
 // @Success 200 {array}    FederationFederationResolver
 // @Resource /api/2.0
 // @Router /api/2.0/federation_federation_resolver/{id} [get]
-func getFederationFederationResolverById(id int) (interface{}, error) {
+func getFederationFederationResolverById(id int, db *sqlx.DB) (interface{}, error) {
 	ret := []FederationFederationResolver{}
 	arg := FederationFederationResolver{Federation: int64(id)}
-	nstmt, err := db.GlobalDB.PrepareNamed(`select * from federation_federation_resolver where federation=:federation`)
+	nstmt, err := db.PrepareNamed(`select * from federation_federation_resolver where federation=:federation`)
 	err = nstmt.Select(&ret, arg)
 	if err != nil {
 		log.Println(err)
@@ -78,10 +57,10 @@ func getFederationFederationResolverById(id int) (interface{}, error) {
 // @Success 200 {array}    FederationFederationResolver
 // @Resource /api/2.0
 // @Router /api/2.0/federation_federation_resolver [get]
-func getFederationFederationResolvers() (interface{}, error) {
+func getFederationFederationResolvers(db *sqlx.DB) (interface{}, error) {
 	ret := []FederationFederationResolver{}
 	queryStr := "select * from federation_federation_resolver"
-	err := db.GlobalDB.Select(&ret, queryStr)
+	err := db.Select(&ret, queryStr)
 	if err != nil {
 		log.Println(err)
 		return nil, err
@@ -96,7 +75,7 @@ func getFederationFederationResolvers() (interface{}, error) {
 // @Success 200 {object}    output_format.ApiWrapper
 // @Resource /api/2.0
 // @Router /api/2.0/federation_federation_resolver [post]
-func postFederationFederationResolver(payload []byte) (interface{}, error) {
+func postFederationFederationResolver(payload []byte, db *sqlx.DB) (interface{}, error) {
 	var v FederationFederationResolver
 	err := json.Unmarshal(payload, &v)
 	if err != nil {
@@ -109,7 +88,7 @@ func postFederationFederationResolver(payload []byte) (interface{}, error) {
 	sqlString += ":federation"
 	sqlString += ",:federation_resolver"
 	sqlString += ")"
-	result, err := db.GlobalDB.NamedExec(sqlString, v)
+	result, err := db.NamedExec(sqlString, v)
 	if err != nil {
 		log.Println(err)
 		return nil, err
@@ -125,7 +104,7 @@ func postFederationFederationResolver(payload []byte) (interface{}, error) {
 // @Success 200 {object}    output_format.ApiWrapper
 // @Resource /api/2.0
 // @Router /api/2.0/federation_federation_resolver/{id}  [put]
-func putFederationFederationResolver(id int, payload []byte) (interface{}, error) {
+func putFederationFederationResolver(id int, payload []byte, db *sqlx.DB) (interface{}, error) {
 	var v FederationFederationResolver
 	err := json.Unmarshal(payload, &v)
 	v.Federation = int64(id) // overwrite the id in the payload
@@ -139,7 +118,7 @@ func putFederationFederationResolver(id int, payload []byte) (interface{}, error
 	sqlString += ",federation_resolver = :federation_resolver"
 	sqlString += ",last_updated = :last_updated"
 	sqlString += " WHERE federation=:federation"
-	result, err := db.GlobalDB.NamedExec(sqlString, v)
+	result, err := db.NamedExec(sqlString, v)
 	if err != nil {
 		log.Println(err)
 		return nil, err
@@ -154,9 +133,9 @@ func putFederationFederationResolver(id int, payload []byte) (interface{}, error
 // @Success 200 {array}    FederationFederationResolver
 // @Resource /api/2.0
 // @Router /api/2.0/federation_federation_resolver/{id} [delete]
-func delFederationFederationResolver(id int) (interface{}, error) {
+func delFederationFederationResolver(id int, db *sqlx.DB) (interface{}, error) {
 	arg := FederationFederationResolver{Federation: int64(id)}
-	result, err := db.GlobalDB.NamedExec("DELETE FROM federation_federation_resolver WHERE id=:id", arg)
+	result, err := db.NamedExec("DELETE FROM federation_federation_resolver WHERE id=:id", arg)
 	if err != nil {
 		log.Println(err)
 		return nil, err

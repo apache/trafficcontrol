@@ -19,14 +19,14 @@ package api
 
 import (
 	"errors"
-	"github.com/Comcast/traffic_control/traffic_ops/goto2/db"
 	"gopkg.in/guregu/null.v3"
 	"log"
+	"github.com/jmoiron/sqlx"		
 )
 
 // This is not in the tm_user.go file because that gets (re) generated still
 
-func GetTmUserByName(username string) (TmUser, error) {
+func GetTmUserByName(username string, db *sqlx.DB) (TmUser, error) {
 	ret := []TmUser{}
 	// this works in pq - $1
 	// err := db.GlobalDB.Get(&ret, "select * from tm_user where username=$1", username)
@@ -42,7 +42,7 @@ func GetTmUserByName(username string) (TmUser, error) {
 
 	// this works in both
 	arg := TmUser{Username: null.StringFrom(username)}
-	nstmt, err := db.GlobalDB.PrepareNamed(`select * from tm_user where username=:username`)
+	nstmt, err := db.PrepareNamed(`select * from tm_user where username=:username`)
 	if err != nil {
 		log.Println(err)
 		return TmUser{}, err

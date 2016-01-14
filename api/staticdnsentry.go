@@ -19,8 +19,8 @@ package api
 
 import (
 	"encoding/json"
-	"github.com/Comcast/traffic_control/traffic_ops/goto2/db"
 	_ "github.com/Comcast/traffic_control/traffic_ops/goto2/output_format" // needed for swagger
+	"github.com/jmoiron/sqlx"
 	null "gopkg.in/guregu/null.v3"
 	"log"
 	"time"
@@ -37,27 +37,6 @@ type Staticdnsentry struct {
 	LastUpdated     time.Time `db:"last_updated" json:"lastUpdated"`
 }
 
-func handleStaticdnsentry(method string, id int, payload []byte) (interface{}, error) {
-	if method == "GET" {
-		return getStaticdnsentry(id)
-	} else if method == "POST" {
-		return postStaticdnsentry(payload)
-	} else if method == "PUT" {
-		return putStaticdnsentry(id, payload)
-	} else if method == "DELETE" {
-		return delStaticdnsentry(id)
-	}
-	return nil, nil
-}
-
-func getStaticdnsentry(id int) (interface{}, error) {
-	if id >= 0 {
-		return getStaticdnsentryById(id)
-	} else {
-		return getStaticdnsentrys()
-	}
-}
-
 // @Title getStaticdnsentryById
 // @Description retrieves the staticdnsentry information for a certain id
 // @Accept  application/json
@@ -65,10 +44,10 @@ func getStaticdnsentry(id int) (interface{}, error) {
 // @Success 200 {array}    Staticdnsentry
 // @Resource /api/2.0
 // @Router /api/2.0/staticdnsentry/{id} [get]
-func getStaticdnsentryById(id int) (interface{}, error) {
+func getStaticdnsentryById(id int, db *sqlx.DB) (interface{}, error) {
 	ret := []Staticdnsentry{}
 	arg := Staticdnsentry{Id: int64(id)}
-	nstmt, err := db.GlobalDB.PrepareNamed(`select * from staticdnsentry where id=:id`)
+	nstmt, err := db.PrepareNamed(`select * from staticdnsentry where id=:id`)
 	err = nstmt.Select(&ret, arg)
 	if err != nil {
 		log.Println(err)
@@ -84,10 +63,10 @@ func getStaticdnsentryById(id int) (interface{}, error) {
 // @Success 200 {array}    Staticdnsentry
 // @Resource /api/2.0
 // @Router /api/2.0/staticdnsentry [get]
-func getStaticdnsentrys() (interface{}, error) {
+func getStaticdnsentrys(db *sqlx.DB) (interface{}, error) {
 	ret := []Staticdnsentry{}
 	queryStr := "select * from staticdnsentry"
-	err := db.GlobalDB.Select(&ret, queryStr)
+	err := db.Select(&ret, queryStr)
 	if err != nil {
 		log.Println(err)
 		return nil, err
@@ -102,7 +81,7 @@ func getStaticdnsentrys() (interface{}, error) {
 // @Success 200 {object}    output_format.ApiWrapper
 // @Resource /api/2.0
 // @Router /api/2.0/staticdnsentry [post]
-func postStaticdnsentry(payload []byte) (interface{}, error) {
+func postStaticdnsentry(payload []byte, db *sqlx.DB) (interface{}, error) {
 	var v Staticdnsentry
 	err := json.Unmarshal(payload, &v)
 	if err != nil {
@@ -123,7 +102,7 @@ func postStaticdnsentry(payload []byte) (interface{}, error) {
 	sqlString += ",:deliveryservice"
 	sqlString += ",:cachegroup"
 	sqlString += ")"
-	result, err := db.GlobalDB.NamedExec(sqlString, v)
+	result, err := db.NamedExec(sqlString, v)
 	if err != nil {
 		log.Println(err)
 		return nil, err
@@ -139,7 +118,7 @@ func postStaticdnsentry(payload []byte) (interface{}, error) {
 // @Success 200 {object}    output_format.ApiWrapper
 // @Resource /api/2.0
 // @Router /api/2.0/staticdnsentry/{id}  [put]
-func putStaticdnsentry(id int, payload []byte) (interface{}, error) {
+func putStaticdnsentry(id int, payload []byte, db *sqlx.DB) (interface{}, error) {
 	var v Staticdnsentry
 	err := json.Unmarshal(payload, &v)
 	v.Id = int64(id) // overwrite the id in the payload
@@ -157,7 +136,7 @@ func putStaticdnsentry(id int, payload []byte) (interface{}, error) {
 	sqlString += ",cachegroup = :cachegroup"
 	sqlString += ",last_updated = :last_updated"
 	sqlString += " WHERE id=:id"
-	result, err := db.GlobalDB.NamedExec(sqlString, v)
+	result, err := db.NamedExec(sqlString, v)
 	if err != nil {
 		log.Println(err)
 		return nil, err
@@ -172,9 +151,9 @@ func putStaticdnsentry(id int, payload []byte) (interface{}, error) {
 // @Success 200 {array}    Staticdnsentry
 // @Resource /api/2.0
 // @Router /api/2.0/staticdnsentry/{id} [delete]
-func delStaticdnsentry(id int) (interface{}, error) {
+func delStaticdnsentry(id int, db *sqlx.DB) (interface{}, error) {
 	arg := Staticdnsentry{Id: int64(id)}
-	result, err := db.GlobalDB.NamedExec("DELETE FROM staticdnsentry WHERE id=:id", arg)
+	result, err := db.NamedExec("DELETE FROM staticdnsentry WHERE id=:id", arg)
 	if err != nil {
 		log.Println(err)
 		return nil, err

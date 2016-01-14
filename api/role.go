@@ -19,8 +19,8 @@ package api
 
 import (
 	"encoding/json"
-	"github.com/Comcast/traffic_control/traffic_ops/goto2/db"
 	_ "github.com/Comcast/traffic_control/traffic_ops/goto2/output_format" // needed for swagger
+	"github.com/jmoiron/sqlx"
 	null "gopkg.in/guregu/null.v3"
 	"log"
 )
@@ -32,27 +32,6 @@ type Role struct {
 	PrivLevel   int64       `db:"priv_level" json:"privLevel"`
 }
 
-func handleRole(method string, id int, payload []byte) (interface{}, error) {
-	if method == "GET" {
-		return getRole(id)
-	} else if method == "POST" {
-		return postRole(payload)
-	} else if method == "PUT" {
-		return putRole(id, payload)
-	} else if method == "DELETE" {
-		return delRole(id)
-	}
-	return nil, nil
-}
-
-func getRole(id int) (interface{}, error) {
-	if id >= 0 {
-		return getRoleById(id)
-	} else {
-		return getRoles()
-	}
-}
-
 // @Title getRoleById
 // @Description retrieves the role information for a certain id
 // @Accept  application/json
@@ -60,10 +39,10 @@ func getRole(id int) (interface{}, error) {
 // @Success 200 {array}    Role
 // @Resource /api/2.0
 // @Router /api/2.0/role/{id} [get]
-func getRoleById(id int) (interface{}, error) {
+func getRoleById(id int, db *sqlx.DB) (interface{}, error) {
 	ret := []Role{}
 	arg := Role{Id: int64(id)}
-	nstmt, err := db.GlobalDB.PrepareNamed(`select * from role where id=:id`)
+	nstmt, err := db.PrepareNamed(`select * from role where id=:id`)
 	err = nstmt.Select(&ret, arg)
 	if err != nil {
 		log.Println(err)
@@ -79,10 +58,10 @@ func getRoleById(id int) (interface{}, error) {
 // @Success 200 {array}    Role
 // @Resource /api/2.0
 // @Router /api/2.0/role [get]
-func getRoles() (interface{}, error) {
+func getRoles(db *sqlx.DB) (interface{}, error) {
 	ret := []Role{}
 	queryStr := "select * from role"
-	err := db.GlobalDB.Select(&ret, queryStr)
+	err := db.Select(&ret, queryStr)
 	if err != nil {
 		log.Println(err)
 		return nil, err
@@ -97,7 +76,7 @@ func getRoles() (interface{}, error) {
 // @Success 200 {object}    output_format.ApiWrapper
 // @Resource /api/2.0
 // @Router /api/2.0/role [post]
-func postRole(payload []byte) (interface{}, error) {
+func postRole(payload []byte, db *sqlx.DB) (interface{}, error) {
 	var v Role
 	err := json.Unmarshal(payload, &v)
 	if err != nil {
@@ -112,7 +91,7 @@ func postRole(payload []byte) (interface{}, error) {
 	sqlString += ",:description"
 	sqlString += ",:priv_level"
 	sqlString += ")"
-	result, err := db.GlobalDB.NamedExec(sqlString, v)
+	result, err := db.NamedExec(sqlString, v)
 	if err != nil {
 		log.Println(err)
 		return nil, err
@@ -128,7 +107,7 @@ func postRole(payload []byte) (interface{}, error) {
 // @Success 200 {object}    output_format.ApiWrapper
 // @Resource /api/2.0
 // @Router /api/2.0/role/{id}  [put]
-func putRole(id int, payload []byte) (interface{}, error) {
+func putRole(id int, payload []byte, db *sqlx.DB) (interface{}, error) {
 	var v Role
 	err := json.Unmarshal(payload, &v)
 	v.Id = int64(id) // overwrite the id in the payload
@@ -141,7 +120,7 @@ func putRole(id int, payload []byte) (interface{}, error) {
 	sqlString += ",description = :description"
 	sqlString += ",priv_level = :priv_level"
 	sqlString += " WHERE id=:id"
-	result, err := db.GlobalDB.NamedExec(sqlString, v)
+	result, err := db.NamedExec(sqlString, v)
 	if err != nil {
 		log.Println(err)
 		return nil, err
@@ -156,9 +135,9 @@ func putRole(id int, payload []byte) (interface{}, error) {
 // @Success 200 {array}    Role
 // @Resource /api/2.0
 // @Router /api/2.0/role/{id} [delete]
-func delRole(id int) (interface{}, error) {
+func delRole(id int, db *sqlx.DB) (interface{}, error) {
 	arg := Role{Id: int64(id)}
-	result, err := db.GlobalDB.NamedExec("DELETE FROM role WHERE id=:id", arg)
+	result, err := db.NamedExec("DELETE FROM role WHERE id=:id", arg)
 	if err != nil {
 		log.Println(err)
 		return nil, err

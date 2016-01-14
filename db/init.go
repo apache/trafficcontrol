@@ -22,11 +22,6 @@ import (
 	_ "github.com/lib/pq"
 )
 
-var (
-	GlobalDB     sqlx.DB
-	DatabaseName string
-)
-
 func check(e error) {
 	if e != nil {
 		panic(e)
@@ -64,21 +59,19 @@ func createConnectionString(dbtype, username, password, environment, server stri
 	return "", errors.New("invalid database type")
 }
 
-// InitializeDatabase initializes the global GlobalDB variable.
+// InitializeDatabase initializes the database and returns the db variable.
 // The server is optional, and defaults to localhost if empty
 // The port is optional, and defaults to the default database port if 0
-func InitializeDatabase(dbtype, username, password, environment, server string, port uint) error {
+func InitializeDatabase(dbtype, username, password, environment, server string, port uint) (*sqlx.DB, error) {
 	connString, err := createConnectionString(dbtype, username, password, environment, server, port)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	db, err := sqlx.Connect(dbtype, connString)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
-	GlobalDB = *db
-	DatabaseName = environment
-	return nil
+	return db, nil
 }

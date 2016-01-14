@@ -28,7 +28,8 @@ import (
 	"net/http"
 	"strings"
 	"time"
-
+	"github.com/jmoiron/sqlx"
+	
 	ctx "github.com/gorilla/context"
 )
 
@@ -88,59 +89,61 @@ func GetContext(handler http.Handler) http.HandlerFunc {
 }
 
 // Login attempts to login the user given a request. Only works for local passwd at this time
-func Login(w http.ResponseWriter, r *http.Request) {
-	username := ""
-	password := ""
-	body, err := ioutil.ReadAll(r.Body)
-	if err != nil {
-		log.Println("Error reading body: ", err.Error())
-		http.Error(w, "Error reading body: "+err.Error(), http.StatusBadRequest)
-		return
-	}
-	var lj loginJson
-	log.Println(body)
-	err = json.Unmarshal(body, &lj)
-	if err != nil {
-		log.Println("Error unmarshalling JSON: ", err.Error())
-		http.Error(w, "Invalid JSON: "+err.Error(), http.StatusBadRequest)
-		return
-	}
-	username = lj.U
-	password = lj.P
-	u := api.TmUser{}
-	u, err = api.GetTmUserByName(username)
-	if err != nil {
-		http.Error(w, "Invalid user: "+err.Error(), http.StatusUnauthorized)
-		return
-	}
+func GetLoginFunc(db *sqlx.DB) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		username := ""
+		password := ""
+		body, err := ioutil.ReadAll(r.Body)
+		if err != nil {
+			log.Println("Error reading body: ", err.Error())
+			http.Error(w, "Error reading body: "+err.Error(), http.StatusBadRequest)
+			return
+		}
+		var lj loginJson
+		log.Println(body)
+		err = json.Unmarshal(body, &lj)
+		if err != nil {
+			log.Println("Error unmarshalling JSON: ", err.Error())
+			http.Error(w, "Invalid JSON: "+err.Error(), http.StatusBadRequest)
+			return
+		}
+		username = lj.U
+		password = lj.P
+		u := api.TmUser{}
+		u, err = api.GetTmUserByName(username, db)
+		if err != nil {
+			http.Error(w, "Invalid user: "+err.Error(), http.StatusUnauthorized)
+			return
+		}
 
-	encBytes := sha1.Sum([]byte(password))
-	encString := hex.EncodeToString(encBytes[:])
-	if err != nil || u.LocalPasswd.String != encString {
-		ctx.Set(r, "user", nil)
-		log.Println("Invalid passwd")
-		http.Error(w, "Invalid password: "+err.Error(), http.StatusUnauthorized)
-		return
+		encBytes := sha1.Sum([]byte(password))
+		encString := hex.EncodeToString(encBytes[:])
+		if err != nil || u.LocalPasswd.String != encString {
+			ctx.Set(r, "user", nil)
+			log.Println("Invalid passwd")
+			http.Error(w, "Invalid password: "+err.Error(), http.StatusUnauthorized)
+			return
+		}
+		// Create the token
+		token := jwt.New(jwt.SigningMethodHS256)
+		// Set some claims
+		token.Claims["userid"] = u.Id
+		token.Claims["role"] = u.Role
+		token.Claims["exp"] = time.Now().Add(time.Hour * 72).Unix()
+		// Sign and get the complete encoded token as a string
+		tokenString, err := token.SignedString([]byte("mySigningKey")) // TODO JvD
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		js, err := json.Marshal(TokenResponse{Token: tokenString})
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		w.Header().Set("Content-Type", "application/json")
+		w.Write(js)
 	}
-	// Create the token
-	token := jwt.New(jwt.SigningMethodHS256)
-	// Set some claims
-	token.Claims["userid"] = u.Id
-	token.Claims["role"] = u.Role
-	token.Claims["exp"] = time.Now().Add(time.Hour * 72).Unix()
-	// Sign and get the complete encoded token as a string
-	tokenString, err := token.SignedString([]byte("mySigningKey")) // TODO JvD
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-	js, err := json.Marshal(TokenResponse{Token: tokenString})
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-	w.Header().Set("Content-Type", "application/json")
-	w.Write(js)
 }
 
 // Logout destroys the current user session

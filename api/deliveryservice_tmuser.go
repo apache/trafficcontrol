@@ -19,8 +19,8 @@ package api
 
 import (
 	"encoding/json"
-	"github.com/Comcast/traffic_control/traffic_ops/goto2/db"
 	_ "github.com/Comcast/traffic_control/traffic_ops/goto2/output_format" // needed for swagger
+	"github.com/jmoiron/sqlx"
 	"log"
 	"time"
 )
@@ -31,27 +31,6 @@ type DeliveryserviceTmuser struct {
 	LastUpdated     time.Time `db:"last_updated" json:"lastUpdated"`
 }
 
-func handleDeliveryserviceTmuser(method string, id int, payload []byte) (interface{}, error) {
-	if method == "GET" {
-		return getDeliveryserviceTmuser(id)
-	} else if method == "POST" {
-		return postDeliveryserviceTmuser(payload)
-	} else if method == "PUT" {
-		return putDeliveryserviceTmuser(id, payload)
-	} else if method == "DELETE" {
-		return delDeliveryserviceTmuser(id)
-	}
-	return nil, nil
-}
-
-func getDeliveryserviceTmuser(id int) (interface{}, error) {
-	if id >= 0 {
-		return getDeliveryserviceTmuserById(id)
-	} else {
-		return getDeliveryserviceTmusers()
-	}
-}
-
 // @Title getDeliveryserviceTmuserById
 // @Description retrieves the deliveryservice_tmuser information for a certain id
 // @Accept  application/json
@@ -59,10 +38,10 @@ func getDeliveryserviceTmuser(id int) (interface{}, error) {
 // @Success 200 {array}    DeliveryserviceTmuser
 // @Resource /api/2.0
 // @Router /api/2.0/deliveryservice_tmuser/{id} [get]
-func getDeliveryserviceTmuserById(id int) (interface{}, error) {
+func getDeliveryserviceTmuserById(id int, db *sqlx.DB) (interface{}, error) {
 	ret := []DeliveryserviceTmuser{}
 	arg := DeliveryserviceTmuser{Deliveryservice: int64(id)}
-	nstmt, err := db.GlobalDB.PrepareNamed(`select * from deliveryservice_tmuser where deliveryservice=:deliveryservice`)
+	nstmt, err := db.PrepareNamed(`select * from deliveryservice_tmuser where deliveryservice=:deliveryservice`)
 	err = nstmt.Select(&ret, arg)
 	if err != nil {
 		log.Println(err)
@@ -78,10 +57,10 @@ func getDeliveryserviceTmuserById(id int) (interface{}, error) {
 // @Success 200 {array}    DeliveryserviceTmuser
 // @Resource /api/2.0
 // @Router /api/2.0/deliveryservice_tmuser [get]
-func getDeliveryserviceTmusers() (interface{}, error) {
+func getDeliveryserviceTmusers(db *sqlx.DB) (interface{}, error) {
 	ret := []DeliveryserviceTmuser{}
 	queryStr := "select * from deliveryservice_tmuser"
-	err := db.GlobalDB.Select(&ret, queryStr)
+	err := db.Select(&ret, queryStr)
 	if err != nil {
 		log.Println(err)
 		return nil, err
@@ -96,7 +75,7 @@ func getDeliveryserviceTmusers() (interface{}, error) {
 // @Success 200 {object}    output_format.ApiWrapper
 // @Resource /api/2.0
 // @Router /api/2.0/deliveryservice_tmuser [post]
-func postDeliveryserviceTmuser(payload []byte) (interface{}, error) {
+func postDeliveryserviceTmuser(payload []byte, db *sqlx.DB) (interface{}, error) {
 	var v DeliveryserviceTmuser
 	err := json.Unmarshal(payload, &v)
 	if err != nil {
@@ -109,7 +88,7 @@ func postDeliveryserviceTmuser(payload []byte) (interface{}, error) {
 	sqlString += ":deliveryservice"
 	sqlString += ",:tm_user_id"
 	sqlString += ")"
-	result, err := db.GlobalDB.NamedExec(sqlString, v)
+	result, err := db.NamedExec(sqlString, v)
 	if err != nil {
 		log.Println(err)
 		return nil, err
@@ -125,7 +104,7 @@ func postDeliveryserviceTmuser(payload []byte) (interface{}, error) {
 // @Success 200 {object}    output_format.ApiWrapper
 // @Resource /api/2.0
 // @Router /api/2.0/deliveryservice_tmuser/{id}  [put]
-func putDeliveryserviceTmuser(id int, payload []byte) (interface{}, error) {
+func putDeliveryserviceTmuser(id int, payload []byte, db *sqlx.DB) (interface{}, error) {
 	var v DeliveryserviceTmuser
 	err := json.Unmarshal(payload, &v)
 	v.Deliveryservice = int64(id) // overwrite the id in the payload
@@ -139,7 +118,7 @@ func putDeliveryserviceTmuser(id int, payload []byte) (interface{}, error) {
 	sqlString += ",tm_user_id = :tm_user_id"
 	sqlString += ",last_updated = :last_updated"
 	sqlString += " WHERE deliveryservice=:deliveryservice"
-	result, err := db.GlobalDB.NamedExec(sqlString, v)
+	result, err := db.NamedExec(sqlString, v)
 	if err != nil {
 		log.Println(err)
 		return nil, err
@@ -154,9 +133,9 @@ func putDeliveryserviceTmuser(id int, payload []byte) (interface{}, error) {
 // @Success 200 {array}    DeliveryserviceTmuser
 // @Resource /api/2.0
 // @Router /api/2.0/deliveryservice_tmuser/{id} [delete]
-func delDeliveryserviceTmuser(id int) (interface{}, error) {
+func delDeliveryserviceTmuser(id int, db *sqlx.DB) (interface{}, error) {
 	arg := DeliveryserviceTmuser{Deliveryservice: int64(id)}
-	result, err := db.GlobalDB.NamedExec("DELETE FROM deliveryservice_tmuser WHERE id=:id", arg)
+	result, err := db.NamedExec("DELETE FROM deliveryservice_tmuser WHERE id=:id", arg)
 	if err != nil {
 		log.Println(err)
 		return nil, err
