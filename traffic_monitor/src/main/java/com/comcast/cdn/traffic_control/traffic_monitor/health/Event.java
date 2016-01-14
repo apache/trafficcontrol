@@ -38,7 +38,7 @@ public class Event extends JSONObject implements Serializable {
 		final long currentTimeMillis = System.currentTimeMillis();
 		final String timeString = String.format("%d.%03d", currentTimeMillis / 1000, currentTimeMillis % 1000);
 
-		EVENT_LOGGER.info(String.format("%s logStateChange: %s, isAvailable=%s, %s", timeString , hostname, String.valueOf(isAvailable), message));
+		EVENT_LOGGER.info(String.format("%s host=\"%s\", available=%s, msg=\"%s\"", timeString , hostname, String.valueOf(isAvailable), message));
 
 		synchronized (rollingLog) {
 			final Event ret = new Event(hostname, isAvailable, message);
