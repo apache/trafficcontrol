@@ -24,29 +24,71 @@ import (
 	output "github.com/Comcast/traffic_control/traffic_ops/goto2/output_format"
 
 	"encoding/json"
+	"github.com/gorilla/mux"
 	"io/ioutil"
 	"log"
 	"net/http"
-	"strconv"
-
-	"github.com/gorilla/mux"
 )
+
+const apiPath = "/api/2.0/"
 
 // CreateAdminRouter creates the routes for handling requests to the web interface.
 // This function returns an http.Handler to be used in http.ListenAndServe().
 func CreateRouter() http.Handler {
 	router := mux.NewRouter().StrictSlash(true)
 	router.HandleFunc("/login", auth.Login).Methods("POST")
-
-	router.HandleFunc("/api/2.0/{table}", auth.Use(apiHandler, auth.DONTRequireLogin)).Methods("OPTIONS")
-	router.HandleFunc("/api/2.0/{table}/{id}", auth.Use(apiHandler, auth.DONTRequireLogin)).Methods("OPTIONS")
-	router.HandleFunc("/api/2.0/{table}", auth.Use(apiHandler, auth.RequireLogin)).Methods("GET", "POST", "OPTIONS")
-	router.HandleFunc("/api/2.0/{table}/{id}", auth.Use(apiHandler, auth.RequireLogin)).Methods("GET", "PUT", "DELETE", "OPTIONS")
-
+	router.HandleFunc(apiPath+"{table}", auth.Use(optionsHandler, auth.DONTRequireLogin)).Methods("OPTIONS")
+	router.HandleFunc(apiPath+"{table}/{id}", auth.Use(optionsHandler, auth.DONTRequireLogin)).Methods("OPTIONS")
 	router.HandleFunc("/config/cr/{cdn}/CRConfig.json", auth.Use(handleCRConfig, auth.RequireLogin))
 	router.HandleFunc("/config/csconfig/{hostname}", auth.Use(handleCSConfig, auth.RequireLogin))
-
+	addApiHandlers(router)
 	return auth.Use(router.ServeHTTP, auth.GetContext)
+}
+
+func setHeaders(w http.ResponseWriter, methods api.ApiMethods) {
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+	w.Header().Set("Access-Control-Allow-Methods", methods.String())
+	w.Header().Set("Access-Control-Allow-Headers", "Origin, Authorization, X-Requested-With, Content-Type")
+}
+
+func optionsHandler(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	table := vars["table"]
+	route := table
+	if _, ok := vars["id"]; ok {
+		route += "/{id}"
+	}
+
+	apiHandlers := api.ApiHandlers()
+	if tableHandlers, ok := apiHandlers[route]; !ok {
+		w.WriteHeader(http.StatusNotFound)
+		return
+	} else {
+		setHeaders(w, tableHandlers.Methods())
+		w.WriteHeader(http.StatusOK)
+	}
+}
+
+func addApiHandlers(router *mux.Router) {
+	for route, funcs := range api.ApiHandlers() {
+		wrapRouter := func(f api.ApiHandlerFunc) func(w http.ResponseWriter, r *http.Request) {
+			return func(w http.ResponseWriter, r *http.Request) {
+				setHeaders(w, funcs.Methods())
+				body, err := ioutil.ReadAll(r.Body)
+				response, err := f(mux.Vars(r), body)
+				if err != nil {
+					log.Println(err)
+				}
+				jresponse := output.MakeApiResponse(response, nil, err)
+				w.Header().Set("Content-Type", "application/json")
+				enc := json.NewEncoder(w)
+				enc.Encode(jresponse)
+			}
+		}
+		for method, f := range funcs {
+			router.HandleFunc(apiPath+route, auth.Use(wrapRouter(f), auth.RequireLogin)).Methods(method.String())
+		}
+	}
 }
 
 func handleCRConfig(w http.ResponseWriter, r *http.Request) {
@@ -63,42 +105,4 @@ func handleCSConfig(w http.ResponseWriter, r *http.Request) {
 	resp, _ := csconfig.GetCSConfig(hostName)
 	enc := json.NewEncoder(w)
 	enc.Encode(resp)
-}
-
-func setHeaders(w http.ResponseWriter) {
-	w.Header().Set("Access-Control-Allow-Origin", "*")
-	w.Header().Set("Access-Control-Allow-Methods", "GET, PUT, POST, DELETE")
-	w.Header().Set("Access-Control-Allow-Headers", "Origin, Authorization, X-Requested-With, Content-Type")
-	// w.Header().Set("X-JvD", "boo")
-}
-
-func apiHandler(w http.ResponseWriter, r *http.Request) {
-	// maybe it is better to just pass (w http.ResponseWriter, r *http.Request) to the actions,
-	// and have the action funcs write to w without returning?
-	// TODO: handle admin/oper can CUD, rest can r
-	// TODO: handle deliveryservice_tmuser for portal
-	setHeaders(w)
-	if r.Method == "OPTIONS" {
-		w.WriteHeader(http.StatusOK)
-		return
-	}
-	vars := mux.Vars(r)
-	table := vars["table"]
-	id := -1
-	if vars["id"] != "" {
-		num, err := strconv.Atoi(vars["id"])
-		if err != nil {
-			log.Println("error 323222")
-		}
-		id = num
-	}
-	body, err := ioutil.ReadAll(r.Body)
-	response, err := api.Action(table, r.Method, id, body)
-	if err != nil {
-		log.Println("error 42 ", err)
-	}
-	jresponse := output.MakeApiResponse(response, nil, err)
-	w.Header().Set("Content-Type", "application/json")
-	enc := json.NewEncoder(w)
-	enc.Encode(jresponse)
 }
