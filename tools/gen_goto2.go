@@ -369,7 +369,7 @@ func structString(schemas []ColumnSchema, table string) string {
 }
 
 func getSchema() ([]ColumnSchema, []string) {
-	server := "192.168.99.100"
+	server := "localhost"
 	port := 3306
 	database := "information_schema"
 	connStr := fmt.Sprintf("%s:%s@tcp(%s:%d)/%s?parseTime=True", config.DbUser, config.DbPassword, server, port, database)
