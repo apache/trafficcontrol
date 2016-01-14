@@ -27,20 +27,36 @@ import (
 	"strings"
 )
 
-var defaults = Configuration{
-	DbUser:     os.Args[1],
-	DbPassword: os.Args[2],
-	DbName:     os.Args[3],
-	PkgName:    "api",
-	TagLabel:   "db",
-}
-
 var config Configuration
+
+func configurationDefaults() (Configuration, error) {
+	if len(os.Args) < 4 {
+		return Configuration{}, errors.New("Missing arguments")
+	}
+	cfg := Configuration{
+		DbUser:     os.Args[1],
+		DbPassword: os.Args[2],
+		DbName:     os.Args[3],
+		DbServer:   "localhost",
+		DbPort:     "3306",
+		PkgName:    "api",
+		TagLabel:   "db",
+	}
+	if len(os.Args) > 4 {
+		cfg.DbServer = os.Args[4]
+	}
+	if len(os.Args) > 5 {
+		cfg.DbPort = os.Args[5]
+	}
+	return cfg, nil
+}
 
 type Configuration struct {
 	DbUser     string `json:"db_user"`
 	DbPassword string `json:"db_password"`
 	DbName     string `json:"db_name"`
+	DbServer   string `json:"db_server"`
+	DbPort     string `json:"db_port"`
 	// PkgName gives name of the package using the stucts
 	PkgName string `json:"pkg_name"`
 	// TagLabel produces tags commonly used to match database field names with Go struct members
@@ -369,10 +385,8 @@ func structString(schemas []ColumnSchema, table string) string {
 }
 
 func getSchema() ([]ColumnSchema, []string) {
-	server := "localhost"
-	port := 3306
 	database := "information_schema"
-	connStr := fmt.Sprintf("%s:%s@tcp(%s:%d)/%s?parseTime=True", config.DbUser, config.DbPassword, server, port, database)
+	connStr := fmt.Sprintf("%s:%s@tcp(%s:%s)/%s?parseTime=True", config.DbUser, config.DbPassword, config.DbServer, config.DbPort, database)
 	conn, err := sql.Open("mysql", connStr)
 	if err != nil {
 		log.Fatal(err)
@@ -473,9 +487,17 @@ func goType(col *ColumnSchema) (string, string, error) {
 	return gt, requiredImport, nil
 }
 
-func main() {
+func printUsage() {
+	fmt.Println("Usage: go run gen_goto2.go mysqlUser mysqlPass database [server] [port]")
+}
 
-	config = defaults
+func main() {
+	var err error
+	config, err = configurationDefaults()
+	if err != nil {
+		printUsage()
+		return
+	}
 
 	columns, tables := getSchema()
 	fmt.Println(tables)
