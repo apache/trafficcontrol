@@ -21,6 +21,10 @@ package API::DeliveryService;
 use UI::Utils;
 use UI::DeliveryService;
 use Mojo::Base 'Mojolicious::Controller';
+use Mojolicious::Validator;
+use Mojolicious::Validator::Validation;
+use Email::Valid;
+use Validate::Tiny ':all';
 use Data::Dumper;
 use Common::ReturnCodes qw(SUCCESS ERROR);
 
@@ -308,6 +312,61 @@ sub state {
 	else {
 		$self->not_found();
 	}
+}
+
+sub request {
+	my $self      = shift;
+	my $email_to  = $self->req->json->{emailTo};
+	my $details = $self->req->json->{details};
+
+	my $is_email_valid = Email::Valid->address($email_to);
+
+	if ( !$is_email_valid ) {
+		return $self->alert("Please provide a valid email address to send the delivery service request to.");
+	}
+
+	my ( $is_valid, $result ) = $self->is_deliveryservice_request_valid($details);
+
+	if ($is_valid) {
+		if ( $self->send_deliveryservice_request( $email_to, $details ) ) {
+			return $self->success_message( "Delivery Service request sent to " . $email_to );
+		}
+	}
+	else {
+		return $self->alert($result);
+	}
+}
+
+sub is_deliveryservice_request_valid {
+	my $self      = shift;
+	my $details = shift;
+
+	my $rules = {
+		fields => [
+			qw/customer contentType deliveryProtocol routingType serviceDesc peakBPSEstimate peakTPSEstimate maxLibrarySizeEstimate originURL hasOriginDynamicRemap originTestFile hasOriginACLWhitelist originHeaders otherOriginSecurity queryStringHandling rangeRequestHandling hasSignedURLs hasNegativeCachingCustomization negativeCachingCustomizationNote serviceAliases rateLimitingGBPS rateLimitingTPS overflowService headerRewriteEdge headerRewriteMid headerRewriteRedirectRouter notes/
+		],
+
+		# Validation checks to perform
+		checks => [
+
+			# required deliveryservice request fields
+			[
+				qw/customer contentType deliveryProtocol routingType serviceDesc peakBPSEstimate peakTPSEstimate maxLibrarySizeEstimate originURL hasOriginDynamicRemap originTestFile hasOriginACLWhitelist queryStringHandling rangeRequestHandling hasSignedURLs hasNegativeCachingCustomization rateLimitingGBPS rateLimitingTPS/
+			] => is_required("is required")
+
+		]
+	};
+
+	# Validate the input against the rules
+	my $result = validate( $details, $rules );
+
+	if ( $result->{success} ) {
+		return ( 1, $result->{data} );
+	}
+	else {
+		return ( 0, $result->{error} );
+	}
+
 }
 
 1;

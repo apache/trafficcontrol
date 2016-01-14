@@ -24,7 +24,6 @@ import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -112,7 +111,7 @@ public class TrafficRouter {
 	 *            the DeliveryService to check
 	 * @return collection of supported caches
 	 */
-	protected List<Cache> getSupportingCaches(final List<Cache> caches, final DeliveryService ds) {
+	public List<Cache> getSupportingCaches(final List<Cache> caches, final DeliveryService ds) {
 		for(int i = 0; i < caches.size(); i++) {
 			final Cache cache = caches.get(i);
 			boolean isAvailable = true;
@@ -193,21 +192,16 @@ public class TrafficRouter {
 		return hashFunctionPool;
 	}
 
-	public List<Cache> getCachesByGeo(final Request request, final DeliveryService ds, final Geolocation clientLocation, final Map<String, Double> resultLocation) throws GeolocationException {
-		final String zoneId = null; 
-		// the specific use of the popularity zone
-		// manager was not understood and not used
-		// and was therefore was eliminated
-		// final String zoneId = getZoneManager().getZone(request.getRequestedUrl());
-		final int locationLimit = ds.getLocationLimit();
+	public List<Cache> getCachesByGeo(final Request request, final DeliveryService ds, final Geolocation clientLocation, final Track track) throws GeolocationException {
 		int locationsTested = 0;
-		final List<CacheLocation> cacheLocations = orderCacheLocations(request,
-				getCacheRegister().getCacheLocations(zoneId), ds, clientLocation);
+
+		final int locationLimit = ds.getLocationLimit();
+		final List<CacheLocation> cacheLocations = orderCacheLocations(request, getCacheRegister().getCacheLocations(null), ds, clientLocation);
+
 		for (final CacheLocation location : cacheLocations) {
 			final List<Cache> caches = selectCache(location, ds);
 			if (caches != null) {
-				resultLocation.put("latitude", location.getGeolocation().getLatitude());
-				resultLocation.put("longitude", location.getGeolocation().getLongitude());
+				track.setResultLocation(location.getGeolocation());
 				return caches;
 			}
 			locationsTested++;
@@ -215,6 +209,7 @@ public class TrafficRouter {
 				return null;
 			}
 		}
+
 		return null;
 	}
 	protected List<Cache> selectCache(final Request request, final DeliveryService ds, final Track track, final RegionalGeoResult regionalGeoResult) throws GeolocationException {
@@ -259,9 +254,7 @@ public class TrafficRouter {
 			}
 		}
 
-		final Map<String, Double> resultLocation = new HashMap<String, Double>();
-
-		final List<Cache> caches = getCachesByGeo(request, deliveryService, clientLocation, resultLocation);
+		final List<Cache> caches = getCachesByGeo(request, deliveryService, clientLocation, track);
 		
 		if (caches == null || caches.isEmpty()) {
 			track.setResultDetails(ResultDetails.GEO_NO_CACHE_FOUND);
@@ -636,19 +629,16 @@ public class TrafficRouter {
 	 * @param ds
 	 * @return the ordered list of locations
 	 */
-	protected List<CacheLocation> orderCacheLocations(final Request request,
-			final Collection<CacheLocation> cacheLocations,
-			final DeliveryService ds,
-			final Geolocation clientLocation) {
+	public List<CacheLocation> orderCacheLocations(final Request request, final Collection<CacheLocation> cacheLocations, final DeliveryService ds, final Geolocation clientLocation) {
 		final List<CacheLocation> locations = new ArrayList<CacheLocation>();
+
 		for(final CacheLocation cl : cacheLocations) {
 			if(ds.isLocationAvailable(cl)) {
 				locations.add(cl);
 			}
 		}
 
-		Collections.sort(locations, new CacheLocationComparator(
-				clientLocation));
+		Collections.sort(locations, new CacheLocationComparator(clientLocation));
 
 		return locations;
 	}
