@@ -145,7 +145,7 @@ sub current {
 	my $self = shift;
 	my @data;
 	my $current_username = $self->current_user()->{username};
-	# $self->app->log->debug( "current_username #-> " . $current_username );
+
 	my $dbh = $self->db->resultset('TmUser')->search( { username => $current_username } );
 	while ( my $row = $dbh->next ) {
 		push(
@@ -196,7 +196,8 @@ sub update_current {
 	my ( $is_valid, $result ) = $self->is_valid($user);
 
 	if ($is_valid) {
-		my $dbh = $self->db->resultset('TmUser')->find( { username => $self->current_user()->{username} } );
+		my $username = $self->current_user()->{username};
+		my $dbh = $self->db->resultset('TmUser')->find( { username => $username } );
 
 		# These if "defined" checks allow for partial user updates, otherwise the entire
 		# user would need to be passed through.
@@ -271,14 +272,14 @@ sub is_valid {
 
 	my $rules = {
 		fields => [
-			qw/fullName username role uid gid localPasswd confirmLocalPasswd company email newUser addressLine1 addressLine2 city stateOrProvince phoneNumber postalCode country localUser/
+			qw/fullName username email role uid gid localPasswd confirmLocalPasswd company newUser addressLine1 addressLine2 city stateOrProvince phoneNumber postalCode country localUser/
 		],
 
 		# Checks to perform on all fields
 		checks => [
 
 			# All of these are required
-			[qw/full_name email/] => is_required("is required"),
+			[qw/full_name username email/] => is_required("is required"),
 
 			# pass2 must be equal to pass
 			localPasswd => sub {
@@ -289,11 +290,29 @@ sub is_valid {
 				}
 			},
 
+			# pass2 must be equal to pass
+			email => sub {
+				my $value  = shift;
+				my $params = shift;
+				if ( defined( $params->{'email'} ) ) {
+					return $self->is_email_taken( $value, $params );
+				}
+			},
+
 			# custom sub validates an email address
 			email => sub {
 				my ( $value, $params ) = @_;
-				Email::Valid->address($value) ? undef : 'Invalid email format';
-			}
+				Email::Valid->address($value) ? undef : 'email is not a valid format';
+			},
+
+			# pass2 must be equal to pass
+			username => sub {
+				my $value  = shift;
+				my $params = shift;
+				if ( defined( $params->{'username'} ) ) {
+					return $self->is_username_taken( $value, $params );
+				}
+			},
 
 		]
 	};
@@ -311,6 +330,56 @@ sub is_valid {
 		return ( 0, $result->{error} );
 	}
 
+}
+
+sub is_username_taken {
+	my $self     = shift;
+	my $username = shift;
+	my $params   = shift;
+
+	my $dbh = $self->db->resultset('TmUser')->search( { username => $username } );
+	my $user_data = $dbh->single;
+	if ( defined($user_data) ) {
+		my $user_id = $user_data->id;
+
+		# Allow the current user to be modified
+		my $current_user = $self->db->resultset('TmUser')->search( { username => $self->current_user()->{username} } )->single;
+		my $current_userid = $current_user->id;
+
+		my %condition = ( -and => [ { username => $username }, { id => { '!=' => $current_userid } } ] );
+		my $count = $self->db->resultset('TmUser')->search( \%condition )->count();
+
+		if ( $count > 0 ) {
+			return "is already taken";
+		}
+	}
+
+	return undef;
+}
+
+sub is_email_taken {
+	my $self   = shift;
+	my $email  = shift;
+	my $params = shift;
+
+	my $dbh = $self->db->resultset('TmUser')->search( { email => $email } );
+	my $user_data = $dbh->single;
+	if ( defined($user_data) ) {
+		my $user_id = $user_data->id;
+
+		# Allow the current user to be modified
+		my $current_user = $self->db->resultset('TmUser')->search( { username => $self->current_user()->{username} } )->single;
+		my $current_userid = $current_user->id;
+
+		my %condition = ( -and => [ { email => $email }, { id => { '!=' => $current_userid } } ] );
+		my $count = $self->db->resultset('TmUser')->search( \%condition )->count();
+
+		if ( $count > 0 ) {
+			return "is already taken";
+		}
+	}
+
+	return undef;
 }
 
 sub is_good_password {

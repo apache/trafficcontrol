@@ -34,19 +34,14 @@ public class FederationRegistry {
 
         for (final FederationMapping federationMapping : targetFederation.getFederationMappings()) {
 
-            ComparableTreeSet<CidrAddress> cidrAddresses;
-            if (cidrAddress.isIpV6()) {
-                cidrAddresses = federationMapping.getResolve6();
-            } else {
-                cidrAddresses = federationMapping.getResolve4();
-            }
+            final ComparableTreeSet<CidrAddress> cidrAddresses = federationMapping.getResolveAddresses(cidrAddress);
 
             if (cidrAddresses == null) {
                 continue;
             }
 
             for (CidrAddress resolverAddress : cidrAddresses) {
-                if (resolverAddress.includesAddress(cidrAddress)) {
+                if (resolverAddress.equals(cidrAddress) || resolverAddress.includesAddress(cidrAddress)) {
                     return createInetRecords(federationMapping);
                 }
             }

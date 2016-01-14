@@ -51,7 +51,15 @@
 			<span class="field-with-error"><%= field('cg_data.parent_cachegroup_id')->error %></span>
 		<% } %>
 		%= label_for 'parent_cache_group' => '* Parent Cache Group', class => 'label'
-		%= field('cg_data.parent_cachegroup_id')->select(class => 'field', id => 'cachegroupselect', name => 'cg_data.parent_cachegroup_id', style=>"width:315px;");
+		%= field('cg_data.parent_cachegroup_id')->select(class => 'field', class => 'cg_select', id => 'cg_parent', name => 'cg_data.parent_cachegroup_id', style=>"width:315px;");
+	</div>
+	<br>
+	<div class="block">
+		<% unless (field('cg_data.secondary_parent_cachegroup_id')->valid) { %>
+			<span class="field-with-error"><%= field('cg_data.secondary_parent_cachegroup_id')->error %></span>
+		<% } %>
+		%= label_for 'secondary_parent_cache_group' => '* Secondary Parent Cache Group', class => 'label'
+		%= field('cg_data.secondary_parent_cachegroup_id')->select(class => 'field', class => 'cg_select', id => 'cg_secondary', name => 'cg_data.secondary_parent_cachegroup_id', style=>"width:315px;");
 	</div>
 	<br>
 	<div class="block">
