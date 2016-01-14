@@ -40,14 +40,16 @@ public class Event extends JSONObject implements Serializable {
 
 		EVENT_LOGGER.info(String.format("%s host=\"%s\", available=%s, msg=\"%s\"", timeString , hostname, String.valueOf(isAvailable), message));
 
+		final Event ret = new Event(hostname, isAvailable, message);
+		final int eventLogCount = ConfigHandler.getConfig().getEventLogCount();
+
 		synchronized (rollingLog) {
-			final Event ret = new Event(hostname, isAvailable, message);
 			rollingLog.add(0, ret);
-			while(rollingLog.size() > ConfigHandler.getConfig().getEventLogCount()) {
+			while(rollingLog.size() > eventLogCount) {
 				rollingLog.remove(rollingLog.size()-1);
 			}
-			return ret;
 		}
+		return ret;
 	}
 
 	public static List<JSONObject> getEventLog() {
