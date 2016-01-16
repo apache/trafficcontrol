@@ -99,9 +99,11 @@ Note: for now, we are using the web.go method to get the swagger pages up, later
 
 3. Run the web.go app:
   ```
-  [jvd@laika swagger-ui (master *%=)]$ go run web.go docs.go -port 8081 -api http://localhost:8080 -staticPath ./dist
-  2016/01/14 07:53:20 62372 0.0.0.0:8081
+  [jvd@laika swagger-ui (master=)]$ cp ../web.go-example ./web.go
+  [jvd@laika swagger-ui (master %=)]$ go run web.go docs.go -port 8081 -api http://localhost:8080 -staticPath ./dist
+  2016/01/16 09:29:26 6167 0.0.0.0:8081
   ```
+  
 4. Get a token (make sure you have the go api app running on port 8080):
    ```
    [jvd@laika ~]$ curl --header "Content-Type:application/json" -XPOST http://localhost:8080/login -d'{"u":"jvd", "p":"******"}'

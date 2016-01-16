@@ -15,7 +15,6 @@
 package main
 
 import (
-	// "./api"
 	"github.com/Comcast/traffic_control/traffic_ops/experimental/server/auth"
 	"github.com/Comcast/traffic_control/traffic_ops/experimental/server/db"
 	"github.com/Comcast/traffic_control/traffic_ops/experimental/server/routes"
@@ -29,6 +28,7 @@ import (
 	"path"
 )
 
+// Config holds the configuration of the server.
 type Config struct {
 	DbTypeName       string `json:"dbTypeName"`
 	DbName           string `json:"dbName"`
