@@ -47,6 +47,7 @@ This is a prototype for Traffic Ops 2.0 server.  See also https://github.com/Com
 ##### Using swagger and the go swagger tools
 We're using https://github.com/yvasiyarov/swagger to generate the swagger testing files. To get the swagger pages up:
 Note: for now, we are using the web.go method to get the swagger pages up, later we'll move that to a hosted index.json. To start, do:
+
 1. Get the latest swagger ui, and mod it to point to the right place, and support jwt:
   ```
   [jvd@laika swagger-ui (master *=)]$ git diff
@@ -85,30 +86,15 @@ Note: for now, we are using the web.go method to get the swagger pages up, later
   [jvd@laika swagger-ui (master *=)]$
   ```
 
-2. Generate the docs.go file and copy it to where the swagger UI files live:
+2. Generate the docs.go file:
   ```
-  jvd@laika playground (master *%=)]$ swagger -apiPackage github.com/Comcast/traffic_control/traffic_ops/experimental/server/api -mainApiFile github.com/Comcast/traffic_control/traffic_ops/experimental/server/api/action.go -format go
-  2016/01/14 07:47:27 Start parsing
-  2016/01/14 07:47:29 Finish parsing
-  2016/01/14 07:47:29 Doc file generated
-  [jvd@laika playground (master *%=)]$ ls -ltr
-  total 696
-  -rw-r--r--   1 jvd  staff    1899 Jan 12 12:04 web.go
-  -rw-r--r--   1 jvd  staff     991 Jan 12 12:04 notes.txt
-  drwxr-xr-x   3 jvd  staff     102 Jan 12 12:04 db
-  drwxr-xr-x   4 jvd  staff     136 Jan 12 12:04 client
-  drwxr-xr-x   3 jvd  staff     102 Jan 13 09:05 routes
-  drwxr-xr-x   3 jvd  staff     102 Jan 13 09:05 output_format
-  drwxr-xr-x   3 jvd  staff     102 Jan 13 09:05 csconfig
-  drwxr-xr-x   3 jvd  staff     102 Jan 13 09:05 crconfig
-  drwxr-xr-x   3 jvd  staff     102 Jan 13 09:05 auth
-  drwxr-xr-x  41 jvd  staff    1394 Jan 13 09:05 api
-  -rw-r--r--   1 jvd  staff    3267 Jan 13 09:05 main.go
-  drwxr-xr-x   5 jvd  staff     170 Jan 13 15:39 tools
-  drwxr-xr-x   5 jvd  staff     170 Jan 13 17:41 conf
-  -rw-r--r--   1 jvd  staff    7663 Jan 14 07:46 README.md
-  -rw-r--r--   1 jvd  staff  335376 Jan 14 07:47 docs.go
-  [jvd@laika playground (master *%=)]$ cp docs.go ../../swagger-api/swagger-ui/
+  [jvd@laika swagger-ui (master=)]$ pwd
+  /Users/jvd/go/src/github.com/yvasiyarov/swagger/swagger-ui
+  [jvd@laika swagger-ui (master=)]$ swagger -apiPackage github.com/Comcast/traffic_control/traffic_ops/experimental/server/api -mainApiFile github.com/Comcast/traffic_control/traffic_ops/experimental/server/api/api.go -format go
+  2016/01/16 09:26:19 Start parsing
+  2016/01/16 09:26:19 Finish parsing
+  2016/01/16 09:26:19 Doc file generated
+  [jvd@laika swagger-ui (master=)]$
   ```
 
 3. Run the web.go app:
