@@ -88,22 +88,30 @@ Note: for now, we are using the web.go method to get the swagger pages up, later
 
 2. Generate the docs.go file:
   ```
-  [jvd@laika swagger-ui (master=)]$ pwd
-  /Users/jvd/go/src/github.com/yvasiyarov/swagger/swagger-ui
-  [jvd@laika swagger-ui (master=)]$ swagger -apiPackage github.com/Comcast/traffic_control/traffic_ops/experimental/server/api -mainApiFile github.com/Comcast/traffic_control/traffic_ops/experimental/server/api/api.go -format go
-  2016/01/16 09:26:19 Start parsing
-  2016/01/16 09:26:19 Finish parsing
-  2016/01/16 09:26:19 Doc file generated
-  [jvd@laika swagger-ui (master=)]$
+  [jvd@laika swagger-api]$ pwd
+  /Users/jvd/work/gh/swagger-api
+  [jvd@laika swagger-api]$ swagger -apiPackage github.com/Comcast/traffic_control/traffic_ops/experimental/server/api -mainApiFile github.com/Comcast/traffic_control/traffic_ops/experimental/server/api/api.go -format go
+  2016/01/16 09:57:34 Start parsing
+  2016/01/16 09:57:36 Finish parsing
+  2016/01/16 09:57:36 Doc file generated
+  [jvd@laika swagger-api]$ ls -l *.go
+  -rw-r--r--  1 jvd  staff  343786 Jan 16 09:57 docs.go
+  -rw-r--r--  1 jvd  staff    2212 Jan 14 08:59 web.go
   ```
 
 3. Run the web.go app:
   ```
-  [jvd@laika swagger-ui (master=)]$ cp ../web.go-example ./web.go
-  [jvd@laika swagger-ui (master %=)]$ go run web.go docs.go -port 8081 -api http://localhost:8080 -staticPath ./dist
-  2016/01/16 09:29:26 6167 0.0.0.0:8081
+   [jvd@laika swagger-api]$ pwd
+  /Users/jvd/work/gh/swagger-api
+  [jvd@laika swagger-api]$ ls -l *.go
+  -rw-r--r--  1 jvd  staff  343786 Jan 16 09:57 docs.go
+  -rw-r--r--  1 jvd  staff    2212 Jan 14 08:59 web.go
+  [jvd@laika swagger-api]$ go run web.go docs.go -port 8081 -api http://localhost:8080 -staticPath ./swagger-ui/dist/
+  Hi
+  Handle!! /api/2.0/ 0x2200
+  2016/01/16 09:57:47 7807 0.0.0.0:8081
   ```
-  
+
 4. Get a token (make sure you have the go api app running on port 8080):
    ```
    [jvd@laika ~]$ curl --header "Content-Type:application/json" -XPOST http://localhost:8080/login -d'{"u":"jvd", "p":"******"}'

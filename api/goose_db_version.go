@@ -21,15 +21,17 @@ import (
 	"encoding/json"
 	_ "github.com/Comcast/traffic_control/traffic_ops/experimental/server/output_format" // needed for swagger
 	"github.com/jmoiron/sqlx"
+	null "gopkg.in/guregu/null.v3"
 	"log"
 	"time"
 )
 
 type GooseDbVersion struct {
-	Id        int64     `db:"id" json:"id"`
-	VersionId int64     `db:"version_id" json:"versionId"`
-	IsApplied int64     `db:"is_applied" json:"isApplied"`
-	Tstamp    time.Time `db:"tstamp" json:"tstamp"`
+	Id            int64     `db:"id" json:"id"`
+	VersionId     int64     `db:"version_id" json:"versionId"`
+	IsApplied     int64     `db:"is_applied" json:"isApplied"`
+	Tstamp        time.Time `db:"tstamp" json:"tstamp"`
+	IsAppliedBool null.Bool `db:"is_applied_bool" json:"isAppliedBool"`
 }
 
 // @Title getGooseDbVersionById
@@ -86,10 +88,12 @@ func postGooseDbVersion(payload []byte, db *sqlx.DB) (interface{}, error) {
 	sqlString += "version_id"
 	sqlString += ",is_applied"
 	sqlString += ",tstamp"
+	sqlString += ",is_applied_bool"
 	sqlString += ") VALUES ("
 	sqlString += ":version_id"
 	sqlString += ",:is_applied"
 	sqlString += ",:tstamp"
+	sqlString += ",:is_applied_bool"
 	sqlString += ")"
 	result, err := db.NamedExec(sqlString, v)
 	if err != nil {
@@ -119,6 +123,7 @@ func putGooseDbVersion(id int, payload []byte, db *sqlx.DB) (interface{}, error)
 	sqlString += "version_id = :version_id"
 	sqlString += ",is_applied = :is_applied"
 	sqlString += ",tstamp = :tstamp"
+	sqlString += ",is_applied_bool = :is_applied_bool"
 	sqlString += " WHERE id=:id"
 	result, err := db.NamedExec(sqlString, v)
 	if err != nil {
