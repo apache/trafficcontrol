@@ -21,15 +21,15 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
-	api "github.com/Comcast/traffic_control/traffic_ops/goto2/api"
+	api "github.com/Comcast/traffic_control/traffic_ops/experimental/server/api"
 	jwt "github.com/dgrijalva/jwt-go"
+	"github.com/jmoiron/sqlx"
 	"io/ioutil"
 	"log"
 	"net/http"
 	"strings"
 	"time"
-	"github.com/jmoiron/sqlx"
-	
+
 	ctx "github.com/gorilla/context"
 )
 

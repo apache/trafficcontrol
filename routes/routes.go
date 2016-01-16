@@ -17,15 +17,15 @@
 package routes
 
 import (
-	"github.com/Comcast/traffic_control/traffic_ops/goto2/api"
-	"github.com/Comcast/traffic_control/traffic_ops/goto2/auth"
-	"github.com/Comcast/traffic_control/traffic_ops/goto2/crconfig"
-	"github.com/Comcast/traffic_control/traffic_ops/goto2/csconfig"
-	output "github.com/Comcast/traffic_control/traffic_ops/goto2/output_format"
+	"github.com/Comcast/traffic_control/traffic_ops/experimental/server/api"
+	"github.com/Comcast/traffic_control/traffic_ops/experimental/server/auth"
+	"github.com/Comcast/traffic_control/traffic_ops/experimental/server/crconfig"
+	"github.com/Comcast/traffic_control/traffic_ops/experimental/server/csconfig"
+	output "github.com/Comcast/traffic_control/traffic_ops/experimental/server/output_format"
 
 	"encoding/json"
 	"github.com/gorilla/mux"
-	"github.com/jmoiron/sqlx"	
+	"github.com/jmoiron/sqlx"
 	"io/ioutil"
 	"log"
 	"net/http"

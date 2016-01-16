@@ -15,10 +15,10 @@
 package csconfig
 
 import (
-	"github.com/Comcast/traffic_control/traffic_ops/goto2/api"
+	"github.com/Comcast/traffic_control/traffic_ops/experimental/server/api"
+	"github.com/jmoiron/sqlx"
 	"gopkg.in/guregu/null.v3"
 	"log"
-	"github.com/jmoiron/sqlx"	
 	// "reflect"
 	// "strconv"
 	// "strings"

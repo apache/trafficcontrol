@@ -87,7 +87,7 @@ Note: for now, we are using the web.go method to get the swagger pages up, later
 
 2. Generate the docs.go file and copy it to where the swagger UI files live:
   ```
-  jvd@laika playground (master *%=)]$ swagger -apiPackage github.com/Comcast/traffic_control/traffic_ops/goto2/api -mainApiFile github.com/Comcast/traffic_control/traffic_ops/goto2/api/action.go -format go
+  jvd@laika playground (master *%=)]$ swagger -apiPackage github.com/Comcast/traffic_control/traffic_ops/experimental/server/api -mainApiFile github.com/Comcast/traffic_control/traffic_ops/experimental/server/api/action.go -format go
   2016/01/14 07:47:27 Start parsing
   2016/01/14 07:47:29 Finish parsing
   2016/01/14 07:47:29 Doc file generated
