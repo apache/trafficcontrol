@@ -21,6 +21,7 @@ import (
 	"errors"
 	"fmt"
 	_ "github.com/go-sql-driver/mysql"
+	_ "github.com/lib/pq"
 	"log"
 	"os"
 	"os/exec"
@@ -30,28 +31,24 @@ import (
 var config Configuration
 
 func configurationDefaults() (Configuration, error) {
-	if len(os.Args) < 4 {
-		return Configuration{}, errors.New("Missing arguments")
+	if len(os.Args) != 7 {
+		return Configuration{}, errors.New("Usage " + os.Args[0] + " <dbtype> <dbuser> <dbpasswd> <dbname> <dbserver> <dbport>")
 	}
 	cfg := Configuration{
-		DbUser:     os.Args[1],
-		DbPassword: os.Args[2],
-		DbName:     os.Args[3],
-		DbServer:   "localhost",
-		DbPort:     "3306",
+		DbType:     os.Args[1],
+		DbUser:     os.Args[2],
+		DbPassword: os.Args[3],
+		DbName:     os.Args[4],
+		DbServer:   os.Args[5],
+		DbPort:     os.Args[6],
 		PkgName:    "api",
 		TagLabel:   "db",
-	}
-	if len(os.Args) > 4 {
-		cfg.DbServer = os.Args[4]
-	}
-	if len(os.Args) > 5 {
-		cfg.DbPort = os.Args[5]
 	}
 	return cfg, nil
 }
 
 type Configuration struct {
+	DbType     string `json:"db_type"`
 	DbUser     string `json:"db_user"`
 	DbPassword string `json:"db_password"`
 	DbName     string `json:"db_name"`
@@ -365,50 +362,102 @@ func structString(schemas []ColumnSchema, table string) string {
 }
 
 func getSchema() ([]ColumnSchema, []string) {
-	database := "information_schema"
-	connStr := fmt.Sprintf("%s:%s@tcp(%s:%s)/%s?parseTime=True", config.DbUser, config.DbPassword, config.DbServer, config.DbPort, database)
-	conn, err := sql.Open("mysql", connStr)
-	if err != nil {
-		log.Fatal(err)
-	}
-	defer conn.Close()
-
-	q := "SELECT TABLE_NAME, COLUMN_NAME, IS_NULLABLE, DATA_TYPE, " +
-		"CHARACTER_MAXIMUM_LENGTH, NUMERIC_PRECISION, NUMERIC_SCALE, COLUMN_TYPE, " +
-		"COLUMN_KEY FROM COLUMNS WHERE TABLE_SCHEMA = ? ORDER BY TABLE_NAME, ORDINAL_POSITION"
-	rows, err := conn.Query(q, config.DbName)
-	if err != nil {
-		log.Fatal(err)
-	}
 	columns := []ColumnSchema{}
-	for rows.Next() {
-		cs := ColumnSchema{}
-		err := rows.Scan(&cs.TableName, &cs.ColumnName, &cs.IsNullable, &cs.DataType,
-			&cs.CharacterMaximumLength, &cs.NumericPrecision, &cs.NumericScale,
-			&cs.ColumnType, &cs.ColumnKey)
+	tables := []string{}
+	database := "information_schema"
+	if config.DbType == "mysql" {
+		connStr := fmt.Sprintf("%s:%s@tcp(%s:%s)/%s?parseTime=True", config.DbUser, config.DbPassword, config.DbServer, config.DbPort, database)
+		conn, err := sql.Open(config.DbType, connStr)
 		if err != nil {
 			log.Fatal(err)
 		}
-		columns = append(columns, cs)
-	}
-	if err := rows.Err(); err != nil {
-		log.Fatal(err)
+		defer conn.Close()
+
+		q := "SELECT TABLE_NAME, COLUMN_NAME, IS_NULLABLE, DATA_TYPE, " +
+			"CHARACTER_MAXIMUM_LENGTH, NUMERIC_PRECISION, NUMERIC_SCALE, COLUMN_TYPE, " +
+			"COLUMN_KEY FROM COLUMNS WHERE TABLE_SCHEMA = ? ORDER BY TABLE_NAME, ORDINAL_POSITION"
+		rows, err := conn.Query(q, config.DbName)
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		for rows.Next() {
+			cs := ColumnSchema{}
+			err := rows.Scan(&cs.TableName, &cs.ColumnName, &cs.IsNullable, &cs.DataType,
+				&cs.CharacterMaximumLength, &cs.NumericPrecision, &cs.NumericScale,
+				&cs.ColumnType, &cs.ColumnKey)
+			if err != nil {
+				log.Fatal(err)
+			}
+			columns = append(columns, cs)
+		}
+		if err := rows.Err(); err != nil {
+			log.Fatal(err)
+		}
+
+		q = "select TABLE_NAME from tables WHERE TABLE_SCHEMA = ? AND table_type='BASE TABLE'"
+		rows, err = conn.Query(q, config.DbName)
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		for rows.Next() {
+			var tableName string
+			err := rows.Scan(&tableName)
+			if err != nil {
+				log.Fatal(err)
+			}
+			tables = append(tables, tableName)
+		}
+
+	} else if config.DbType == "postgres" {
+		connStr := fmt.Sprintf("dbname=%s user=%s password=%s sslmode=disable host=%s port=%s", config.DbName, config.DbUser, config.DbPassword, config.DbServer, config.DbPort)
+		conn, err := sql.Open(config.DbType, connStr)
+		if err != nil {
+			log.Fatal(err)
+		}
+		defer conn.Close()
+
+		q := "SELECT TABLE_NAME, COLUMN_NAME, IS_NULLABLE, DATA_TYPE, " +
+			"CHARACTER_MAXIMUM_LENGTH, NUMERIC_PRECISION, NUMERIC_SCALE " +
+			"FROM information_schema.COLUMNS ORDER BY TABLE_NAME, ORDINAL_POSITION"
+		rows, err := conn.Query(q)
+		fmt.Println(q)
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		for rows.Next() {
+			cs := ColumnSchema{}
+			err := rows.Scan(&cs.TableName, &cs.ColumnName, &cs.IsNullable, &cs.DataType,
+				&cs.CharacterMaximumLength, &cs.NumericPrecision, &cs.NumericScale)
+			if err != nil {
+				log.Fatal(err)
+			}
+			columns = append(columns, cs)
+		}
+		if err := rows.Err(); err != nil {
+			log.Fatal(err)
+		}
+
+		q = "select TABLE_NAME from information_schema.tables where table_type='BASE TABLE' and table_schema='public';" // TODO make schema param
+		fmt.Println(q)
+		rows, err = conn.Query(q)
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		for rows.Next() {
+			var tableName string
+			err := rows.Scan(&tableName)
+			if err != nil {
+				log.Fatal(err)
+			}
+			tables = append(tables, tableName)
+		}
+
 	}
 
-	q = "select TABLE_NAME from tables WHERE TABLE_SCHEMA = ? AND table_type='BASE TABLE'"
-	rows, err = conn.Query(q, config.DbName)
-	if err != nil {
-		log.Fatal(err)
-	}
-	tables := []string{}
-	for rows.Next() {
-		var tableName string
-		err := rows.Scan(&tableName)
-		if err != nil {
-			log.Fatal(err)
-		}
-		tables = append(tables, tableName)
-	}
 	return columns, tables
 }
 
@@ -437,7 +486,7 @@ func goType(col *ColumnSchema) (string, string, error) {
 	}
 	var gt string = ""
 	switch col.DataType {
-	case "char", "varchar", "enum", "text", "longtext", "mediumtext", "tinytext":
+	case "char", "varchar", "enum", "text", "longtext", "mediumtext", "tinytext", "character varying":
 		if col.IsNullable == "YES" {
 			gt = "null.String"
 		} else {
@@ -445,19 +494,25 @@ func goType(col *ColumnSchema) (string, string, error) {
 		}
 	case "blob", "mediumblob", "longblob", "varbinary", "binary":
 		gt = "[]byte"
-	case "date", "time", "datetime", "timestamp":
+	case "date", "time", "datetime", "timestamp", "tstamp", "timestamp without time zone":
 		gt, requiredImport = "time.Time", "time"
-	case "tinyint", "smallint", "int", "mediumint", "bigint":
+	case "tinyint", "smallint", "int", "mediumint", "bigint", "numeric", "integer":
 		if col.IsNullable == "YES" {
 			gt = "null.Int"
 		} else {
 			gt = "int64"
 		}
-	case "float", "decimal", "double":
+	case "float", "decimal", "double", "double precision", "real":
 		if col.IsNullable == "YES" {
 			gt = "null.Float"
 		} else {
 			gt = "float64"
+		}
+	case "boolean":
+		if col.IsNullable == "YES" {
+			gt = "null.Bool"
+		} else {
+			gt = "bool"
 		}
 	}
 	if gt == "" {
@@ -467,15 +522,15 @@ func goType(col *ColumnSchema) (string, string, error) {
 	return gt, requiredImport, nil
 }
 
-func printUsage() {
-	fmt.Println("Usage: go run gen_experimental/server.go mysqlUser mysqlPass database [server] [port]")
+func printUsage(err error) {
+	fmt.Println(err.Error())
 }
 
 func main() {
 	var err error
 	config, err = configurationDefaults()
 	if err != nil {
-		printUsage()
+		printUsage(err)
 		return
 	}
 
