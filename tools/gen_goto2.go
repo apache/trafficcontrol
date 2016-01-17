@@ -422,7 +422,6 @@ func getSchema() ([]ColumnSchema, []string) {
 			"CHARACTER_MAXIMUM_LENGTH, NUMERIC_PRECISION, NUMERIC_SCALE " +
 			"FROM information_schema.COLUMNS ORDER BY TABLE_NAME, ORDINAL_POSITION"
 		rows, err := conn.Query(q)
-		fmt.Println(q)
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -441,7 +440,6 @@ func getSchema() ([]ColumnSchema, []string) {
 		}
 
 		q = "select TABLE_NAME from information_schema.tables where table_type='BASE TABLE' and table_schema='public';" // TODO make schema param
-		fmt.Println(q)
 		rows, err = conn.Query(q)
 		if err != nil {
 			log.Fatal(err)

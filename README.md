@@ -3,44 +3,44 @@ This is a prototype for Traffic Ops 2.0 server.  See also https://github.com/Com
 
 ##### One time generation of CRUD files 
   ```
-  [jvd@laika tools (master *=)]$ go run gen_goto2.go root ******* to_development
-  [asn cachegroup cachegroup_parameter cdn deliveryservice deliveryservice_regex deliveryservice_server deliveryservice_tmuser division federation federation_deliveryservice federation_federation_resolver federation_resolver federation_tmuser goose_db_version hwinfo job job_agent job_result job_status log parameter phys_location profile profile_parameter regex region role server servercheck staticdnsentry stats_summary status tm_user to_extension type]
-  asn: Ok 4809
-  cachegroup: Ok 6064
-  cachegroup_parameter: Ok 5644
-  cdn: Ok 4882
-  deliveryservice: Ok 11863
-  deliveryservice_regex: Ok 5768
-  deliveryservice_server: Ok 5787
-  deliveryservice_tmuser: Ok 5811
-  division: Ok 4905
-  federation: Ok 5295
-  federation_deliveryservice: Ok 5968
-  federation_federation_resolver: Ok 6150
-  federation_resolver: Ok 5535
-  federation_tmuser: Ok 5592
-  goose_db_version: Ok 5387
-  hwinfo: Ok 5092
-  job: Ok 6364
-  job_agent: Ok 5235
-  job_result: Ok 5382
-  job_status: Ok 5163
-  log: Ok 5110
-  parameter: Ok 5218
-  phys_location: Ok 6328
-  profile: Ok 5049
-  profile_parameter: Ok 5461
-  regex: Ok 4890
-  region: Ok 4944
-  role: Ok 4909
-  server: Ok 9382
-  servercheck: Ok 8004
-  staticdnsentry: Ok 5880
-  stats_summary: Ok 5804
-  status: Ok 5002
-  tm_user: Ok 7678
-  to_extension: Ok 6608
-  type: Ok 5071
+  [jvd@laika tools (master=)]$ go run gen_goto2.go postgres to_user **** to_development localhost 5432
+  [goose_db_version federation_deliveryservice hwinfo job_result log deliveryservice_regex deliveryservice_server deliveryservice_tmuser federation_federation_resolver federation_resolver federation_tmuser federation job job_agent job_status deliveryservice parameter division cdn region profile_parameter role servercheck status stats_summary to_extension tm_user type asn cachegroup_parameter cachegroup profile regex phys_location server staticdnsentry]
+  goose_db_version: Ok 5032
+  federation_deliveryservice: Ok 5312
+  hwinfo: Ok 4588
+  job_result: Ok 4854
+  log: Ok 4630
+  deliveryservice_regex: Ok 5152
+  deliveryservice_server: Ok 5163
+  deliveryservice_tmuser: Ok 5187
+  federation_federation_resolver: Ok 5470
+  federation_resolver: Ok 4935
+  federation_tmuser: Ok 5008
+  federation: Ok 4759
+  job: Ok 5884
+  job_agent: Ok 4715
+  job_status: Ok 4635
+  deliveryservice: Ok 11287
+  parameter: Ok 4690
+  division: Ok 4385
+  cdn: Ok 4402
+  region: Ok 4440
+  profile_parameter: Ok 4877
+  role: Ok 4421
+  servercheck: Ok 7460
+  status: Ok 4498
+  stats_summary: Ok 5252
+  to_extension: Ok 6064
+  tm_user: Ok 7174
+  type: Ok 4583
+  asn: Ok 4329
+  cachegroup_parameter: Ok 5036
+  cachegroup: Ok 5528
+  profile: Ok 4537
+  regex: Ok 4394
+  phys_location: Ok 5776
+  server: Ok 8878
+  staticdnsentry: Ok 5312
   [jvd@laika tools (master *=)]$
   ```
 
