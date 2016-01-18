@@ -27,15 +27,27 @@ import (
 )
 
 type Cachegroup struct {
-	Id                          int64      `db:"id" json:"id"`
-	Name                        string     `db:"name" json:"name"`
-	ShortName                   string     `db:"short_name" json:"shortName"`
-	Latitude                    null.Float `db:"latitude" json:"latitude"`
-	Longitude                   null.Float `db:"longitude" json:"longitude"`
-	ParentCachegroupId          null.Int   `db:"parent_cachegroup_id" json:"parentCachegroupId"`
-	SecondaryParentCachegroupId null.Int   `db:"secondary_parent_cachegroup_id" json:"secondaryParentCachegroupId"`
-	Type                        int64      `db:"type" json:"type"`
-	LastUpdated                 time.Time  `db:"last_updated" json:"lastUpdated"`
+	Id          int64      `db:"id" json:"id"`
+	Name        string     `db:"name" json:"name"`
+	ShortName   string     `db:"short_name" json:"shortName"`
+	Latitude    null.Float `db:"latitude" json:"latitude"`
+	Longitude   null.Float `db:"longitude" json:"longitude"`
+	LastUpdated time.Time  `db:"last_updated" json:"lastUpdated"`
+	Links       struct {
+		Self               string `db:"self" json:"_self"`
+		ParentCachegroupId struct {
+			ID  int64  `db:"parent_cachegroup_id" json:"id"`
+			Ref string `db:"cachegroup_id_ref" json:"_ref"`
+		} `json:"parent_cachegroup_id" db:-`
+		SecondaryParentCachegroupId struct {
+			ID  int64  `db:"secondary_parent_cachegroup_id" json:"id"`
+			Ref string `db:"cachegroup_id_ref" json:"_ref"`
+		} `json:"secondary_parent_cachegroup_id" db:-`
+		Type struct {
+			ID  int64  `db:"type" json:"id"`
+			Ref string `db:"type_id_ref" json:"_ref"`
+		} `json:"type" db:-`
+	} `json:"_links" db:-`
 }
 
 // @Title getCachegroupById
@@ -47,8 +59,14 @@ type Cachegroup struct {
 // @Router /api/2.0/cachegroup/{id} [get]
 func getCachegroupById(id int, db *sqlx.DB) (interface{}, error) {
 	ret := []Cachegroup{}
-	arg := Cachegroup{Id: int64(id)}
-	nstmt, err := db.PrepareNamed(`select * from cachegroup where id=:id`)
+	arg := Cachegroup{}
+	arg.Id = int64(id)
+	queryStr := "select *, concat('" + API_PATH + "cachegroup/', id) as self "
+	queryStr += ", concat('" + API_PATH + "cachegroup/', parent_cachegroup_id) as cachegroup_id_ref"
+	queryStr += ", concat('" + API_PATH + "cachegroup/', secondary_parent_cachegroup_id) as cachegroup_id_ref"
+	queryStr += ", concat('" + API_PATH + "type/', type) as type_id_ref"
+	queryStr += " from cachegroup where id=:id"
+	nstmt, err := db.PrepareNamed(queryStr)
 	err = nstmt.Select(&ret, arg)
 	if err != nil {
 		log.Println(err)
@@ -59,14 +77,18 @@ func getCachegroupById(id int, db *sqlx.DB) (interface{}, error) {
 }
 
 // @Title getCachegroups
-// @Description retrieves the cachegroup information for a certain id
+// @Description retrieves the cachegroup
 // @Accept  application/json
 // @Success 200 {array}    Cachegroup
 // @Resource /api/2.0
 // @Router /api/2.0/cachegroup [get]
 func getCachegroups(db *sqlx.DB) (interface{}, error) {
 	ret := []Cachegroup{}
-	queryStr := "select * from cachegroup"
+	queryStr := "select *, concat('" + API_PATH + "cachegroup/', id) as self "
+	queryStr += ", concat('" + API_PATH + "cachegroup/', parent_cachegroup_id) as cachegroup_id_ref"
+	queryStr += ", concat('" + API_PATH + "cachegroup/', secondary_parent_cachegroup_id) as cachegroup_id_ref"
+	queryStr += ", concat('" + API_PATH + "type/', type) as type_id_ref"
+	queryStr += " from cachegroup"
 	err := db.Select(&ret, queryStr)
 	if err != nil {
 		log.Println(err)
@@ -156,7 +178,8 @@ func putCachegroup(id int, payload []byte, db *sqlx.DB) (interface{}, error) {
 // @Resource /api/2.0
 // @Router /api/2.0/cachegroup/{id} [delete]
 func delCachegroup(id int, db *sqlx.DB) (interface{}, error) {
-	arg := Cachegroup{Id: int64(id)}
+	arg := Cachegroup{}
+	arg.Id = int64(id)
 	result, err := db.NamedExec("DELETE FROM cachegroup WHERE id=:id", arg)
 	if err != nil {
 		log.Println(err)

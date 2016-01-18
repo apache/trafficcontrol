@@ -31,6 +31,9 @@ type Profile struct {
 	Name        string      `db:"name" json:"name"`
 	Description null.String `db:"description" json:"description"`
 	LastUpdated time.Time   `db:"last_updated" json:"lastUpdated"`
+	Links       struct {
+		Self string `db:"self" json:"_self"`
+	} `json:"_links" db:-`
 }
 
 // @Title getProfileById
@@ -42,8 +45,11 @@ type Profile struct {
 // @Router /api/2.0/profile/{id} [get]
 func getProfileById(id int, db *sqlx.DB) (interface{}, error) {
 	ret := []Profile{}
-	arg := Profile{Id: int64(id)}
-	nstmt, err := db.PrepareNamed(`select * from profile where id=:id`)
+	arg := Profile{}
+	arg.Id = int64(id)
+	queryStr := "select *, concat('" + API_PATH + "profile/', id) as self "
+	queryStr += " from profile where id=:id"
+	nstmt, err := db.PrepareNamed(queryStr)
 	err = nstmt.Select(&ret, arg)
 	if err != nil {
 		log.Println(err)
@@ -54,14 +60,15 @@ func getProfileById(id int, db *sqlx.DB) (interface{}, error) {
 }
 
 // @Title getProfiles
-// @Description retrieves the profile information for a certain id
+// @Description retrieves the profile
 // @Accept  application/json
 // @Success 200 {array}    Profile
 // @Resource /api/2.0
 // @Router /api/2.0/profile [get]
 func getProfiles(db *sqlx.DB) (interface{}, error) {
 	ret := []Profile{}
-	queryStr := "select * from profile"
+	queryStr := "select *, concat('" + API_PATH + "profile/', id) as self "
+	queryStr += " from profile"
 	err := db.Select(&ret, queryStr)
 	if err != nil {
 		log.Println(err)
@@ -136,7 +143,8 @@ func putProfile(id int, payload []byte, db *sqlx.DB) (interface{}, error) {
 // @Resource /api/2.0
 // @Router /api/2.0/profile/{id} [delete]
 func delProfile(id int, db *sqlx.DB) (interface{}, error) {
-	arg := Profile{Id: int64(id)}
+	arg := Profile{}
+	arg.Id = int64(id)
 	result, err := db.NamedExec("DELETE FROM profile WHERE id=:id", arg)
 	if err != nil {
 		log.Println(err)

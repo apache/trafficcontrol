@@ -28,8 +28,14 @@ import (
 type Region struct {
 	Id          int64     `db:"id" json:"id"`
 	Name        string    `db:"name" json:"name"`
-	Division    int64     `db:"division" json:"division"`
 	LastUpdated time.Time `db:"last_updated" json:"lastUpdated"`
+	Links       struct {
+		Self     string `db:"self" json:"_self"`
+		Division struct {
+			ID  int64  `db:"division" json:"id"`
+			Ref string `db:"division_id_ref" json:"_ref"`
+		} `json:"division" db:-`
+	} `json:"_links" db:-`
 }
 
 // @Title getRegionById
@@ -41,8 +47,12 @@ type Region struct {
 // @Router /api/2.0/region/{id} [get]
 func getRegionById(id int, db *sqlx.DB) (interface{}, error) {
 	ret := []Region{}
-	arg := Region{Id: int64(id)}
-	nstmt, err := db.PrepareNamed(`select * from region where id=:id`)
+	arg := Region{}
+	arg.Id = int64(id)
+	queryStr := "select *, concat('" + API_PATH + "region/', id) as self "
+	queryStr += ", concat('" + API_PATH + "division/', division) as division_id_ref"
+	queryStr += " from region where id=:id"
+	nstmt, err := db.PrepareNamed(queryStr)
 	err = nstmt.Select(&ret, arg)
 	if err != nil {
 		log.Println(err)
@@ -53,14 +63,16 @@ func getRegionById(id int, db *sqlx.DB) (interface{}, error) {
 }
 
 // @Title getRegions
-// @Description retrieves the region information for a certain id
+// @Description retrieves the region
 // @Accept  application/json
 // @Success 200 {array}    Region
 // @Resource /api/2.0
 // @Router /api/2.0/region [get]
 func getRegions(db *sqlx.DB) (interface{}, error) {
 	ret := []Region{}
-	queryStr := "select * from region"
+	queryStr := "select *, concat('" + API_PATH + "region/', id) as self "
+	queryStr += ", concat('" + API_PATH + "division/', division) as division_id_ref"
+	queryStr += " from region"
 	err := db.Select(&ret, queryStr)
 	if err != nil {
 		log.Println(err)
@@ -135,7 +147,8 @@ func putRegion(id int, payload []byte, db *sqlx.DB) (interface{}, error) {
 // @Resource /api/2.0
 // @Router /api/2.0/region/{id} [delete]
 func delRegion(id int, db *sqlx.DB) (interface{}, error) {
-	arg := Region{Id: int64(id)}
+	arg := Region{}
+	arg.Id = int64(id)
 	result, err := db.NamedExec("DELETE FROM region WHERE id=:id", arg)
 	if err != nil {
 		log.Println(err)

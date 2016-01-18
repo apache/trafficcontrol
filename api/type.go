@@ -32,6 +32,9 @@ type Type struct {
 	Description null.String `db:"description" json:"description"`
 	UseInTable  null.String `db:"use_in_table" json:"useInTable"`
 	LastUpdated time.Time   `db:"last_updated" json:"lastUpdated"`
+	Links       struct {
+		Self string `db:"self" json:"_self"`
+	} `json:"_links" db:-`
 }
 
 // @Title getTypeById
@@ -43,8 +46,11 @@ type Type struct {
 // @Router /api/2.0/type/{id} [get]
 func getTypeById(id int, db *sqlx.DB) (interface{}, error) {
 	ret := []Type{}
-	arg := Type{Id: int64(id)}
-	nstmt, err := db.PrepareNamed(`select * from type where id=:id`)
+	arg := Type{}
+	arg.Id = int64(id)
+	queryStr := "select *, concat('" + API_PATH + "type/', id) as self "
+	queryStr += " from type where id=:id"
+	nstmt, err := db.PrepareNamed(queryStr)
 	err = nstmt.Select(&ret, arg)
 	if err != nil {
 		log.Println(err)
@@ -55,14 +61,15 @@ func getTypeById(id int, db *sqlx.DB) (interface{}, error) {
 }
 
 // @Title getTypes
-// @Description retrieves the type information for a certain id
+// @Description retrieves the type
 // @Accept  application/json
 // @Success 200 {array}    Type
 // @Resource /api/2.0
 // @Router /api/2.0/type [get]
 func getTypes(db *sqlx.DB) (interface{}, error) {
 	ret := []Type{}
-	queryStr := "select * from type"
+	queryStr := "select *, concat('" + API_PATH + "type/', id) as self "
+	queryStr += " from type"
 	err := db.Select(&ret, queryStr)
 	if err != nil {
 		log.Println(err)
@@ -140,7 +147,8 @@ func putType(id int, payload []byte, db *sqlx.DB) (interface{}, error) {
 // @Resource /api/2.0
 // @Router /api/2.0/type/{id} [delete]
 func delType(id int, db *sqlx.DB) (interface{}, error) {
-	arg := Type{Id: int64(id)}
+	arg := Type{}
+	arg.Id = int64(id)
 	result, err := db.NamedExec("DELETE FROM type WHERE id=:id", arg)
 	if err != nil {
 		log.Println(err)

@@ -28,8 +28,14 @@ import (
 type FederationResolver struct {
 	Id          int64     `db:"id" json:"id"`
 	IpAddress   string    `db:"ip_address" json:"ipAddress"`
-	Type        int64     `db:"type" json:"type"`
 	LastUpdated time.Time `db:"last_updated" json:"lastUpdated"`
+	Links       struct {
+		Self string `db:"self" json:"_self"`
+		Type struct {
+			ID  int64  `db:"type" json:"id"`
+			Ref string `db:"type_id_ref" json:"_ref"`
+		} `json:"type" db:-`
+	} `json:"_links" db:-`
 }
 
 // @Title getFederationResolverById
@@ -41,8 +47,12 @@ type FederationResolver struct {
 // @Router /api/2.0/federation_resolver/{id} [get]
 func getFederationResolverById(id int, db *sqlx.DB) (interface{}, error) {
 	ret := []FederationResolver{}
-	arg := FederationResolver{Id: int64(id)}
-	nstmt, err := db.PrepareNamed(`select * from federation_resolver where id=:id`)
+	arg := FederationResolver{}
+	arg.Id = int64(id)
+	queryStr := "select *, concat('" + API_PATH + "federation_resolver/', id) as self "
+	queryStr += ", concat('" + API_PATH + "type/', type) as type_id_ref"
+	queryStr += " from federation_resolver where id=:id"
+	nstmt, err := db.PrepareNamed(queryStr)
 	err = nstmt.Select(&ret, arg)
 	if err != nil {
 		log.Println(err)
@@ -53,14 +63,16 @@ func getFederationResolverById(id int, db *sqlx.DB) (interface{}, error) {
 }
 
 // @Title getFederationResolvers
-// @Description retrieves the federation_resolver information for a certain id
+// @Description retrieves the federation_resolver
 // @Accept  application/json
 // @Success 200 {array}    FederationResolver
 // @Resource /api/2.0
 // @Router /api/2.0/federation_resolver [get]
 func getFederationResolvers(db *sqlx.DB) (interface{}, error) {
 	ret := []FederationResolver{}
-	queryStr := "select * from federation_resolver"
+	queryStr := "select *, concat('" + API_PATH + "federation_resolver/', id) as self "
+	queryStr += ", concat('" + API_PATH + "type/', type) as type_id_ref"
+	queryStr += " from federation_resolver"
 	err := db.Select(&ret, queryStr)
 	if err != nil {
 		log.Println(err)
@@ -135,7 +147,8 @@ func putFederationResolver(id int, payload []byte, db *sqlx.DB) (interface{}, er
 // @Resource /api/2.0
 // @Router /api/2.0/federation_resolver/{id} [delete]
 func delFederationResolver(id int, db *sqlx.DB) (interface{}, error) {
-	arg := FederationResolver{Id: int64(id)}
+	arg := FederationResolver{}
+	arg.Id = int64(id)
 	result, err := db.NamedExec("DELETE FROM federation_resolver WHERE id=:id", arg)
 	if err != nil {
 		log.Println(err)

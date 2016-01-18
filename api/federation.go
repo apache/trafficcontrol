@@ -32,6 +32,9 @@ type Federation struct {
 	Description null.String `db:"description" json:"description"`
 	Ttl         int64       `db:"ttl" json:"ttl"`
 	LastUpdated time.Time   `db:"last_updated" json:"lastUpdated"`
+	Links       struct {
+		Self string `db:"self" json:"_self"`
+	} `json:"_links" db:-`
 }
 
 // @Title getFederationById
@@ -43,8 +46,11 @@ type Federation struct {
 // @Router /api/2.0/federation/{id} [get]
 func getFederationById(id int, db *sqlx.DB) (interface{}, error) {
 	ret := []Federation{}
-	arg := Federation{Id: int64(id)}
-	nstmt, err := db.PrepareNamed(`select * from federation where id=:id`)
+	arg := Federation{}
+	arg.Id = int64(id)
+	queryStr := "select *, concat('" + API_PATH + "federation/', id) as self "
+	queryStr += " from federation where id=:id"
+	nstmt, err := db.PrepareNamed(queryStr)
 	err = nstmt.Select(&ret, arg)
 	if err != nil {
 		log.Println(err)
@@ -55,14 +61,15 @@ func getFederationById(id int, db *sqlx.DB) (interface{}, error) {
 }
 
 // @Title getFederations
-// @Description retrieves the federation information for a certain id
+// @Description retrieves the federation
 // @Accept  application/json
 // @Success 200 {array}    Federation
 // @Resource /api/2.0
 // @Router /api/2.0/federation [get]
 func getFederations(db *sqlx.DB) (interface{}, error) {
 	ret := []Federation{}
-	queryStr := "select * from federation"
+	queryStr := "select *, concat('" + API_PATH + "federation/', id) as self "
+	queryStr += " from federation"
 	err := db.Select(&ret, queryStr)
 	if err != nil {
 		log.Println(err)
@@ -140,7 +147,8 @@ func putFederation(id int, payload []byte, db *sqlx.DB) (interface{}, error) {
 // @Resource /api/2.0
 // @Router /api/2.0/federation/{id} [delete]
 func delFederation(id int, db *sqlx.DB) (interface{}, error) {
-	arg := Federation{Id: int64(id)}
+	arg := Federation{}
+	arg.Id = int64(id)
 	result, err := db.NamedExec("DELETE FROM federation WHERE id=:id", arg)
 	if err != nil {
 		log.Println(err)

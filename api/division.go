@@ -29,6 +29,9 @@ type Division struct {
 	Id          int64     `db:"id" json:"id"`
 	Name        string    `db:"name" json:"name"`
 	LastUpdated time.Time `db:"last_updated" json:"lastUpdated"`
+	Links       struct {
+		Self string `db:"self" json:"_self"`
+	} `json:"_links" db:-`
 }
 
 // @Title getDivisionById
@@ -40,8 +43,11 @@ type Division struct {
 // @Router /api/2.0/division/{id} [get]
 func getDivisionById(id int, db *sqlx.DB) (interface{}, error) {
 	ret := []Division{}
-	arg := Division{Id: int64(id)}
-	nstmt, err := db.PrepareNamed(`select * from division where id=:id`)
+	arg := Division{}
+	arg.Id = int64(id)
+	queryStr := "select *, concat('" + API_PATH + "division/', id) as self "
+	queryStr += " from division where id=:id"
+	nstmt, err := db.PrepareNamed(queryStr)
 	err = nstmt.Select(&ret, arg)
 	if err != nil {
 		log.Println(err)
@@ -52,14 +58,15 @@ func getDivisionById(id int, db *sqlx.DB) (interface{}, error) {
 }
 
 // @Title getDivisions
-// @Description retrieves the division information for a certain id
+// @Description retrieves the division
 // @Accept  application/json
 // @Success 200 {array}    Division
 // @Resource /api/2.0
 // @Router /api/2.0/division [get]
 func getDivisions(db *sqlx.DB) (interface{}, error) {
 	ret := []Division{}
-	queryStr := "select * from division"
+	queryStr := "select *, concat('" + API_PATH + "division/', id) as self "
+	queryStr += " from division"
 	err := db.Select(&ret, queryStr)
 	if err != nil {
 		log.Println(err)
@@ -131,7 +138,8 @@ func putDivision(id int, payload []byte, db *sqlx.DB) (interface{}, error) {
 // @Resource /api/2.0
 // @Router /api/2.0/division/{id} [delete]
 func delDivision(id int, db *sqlx.DB) (interface{}, error) {
-	arg := Division{Id: int64(id)}
+	arg := Division{}
+	arg.Id = int64(id)
 	result, err := db.NamedExec("DELETE FROM division WHERE id=:id", arg)
 	if err != nil {
 		log.Println(err)

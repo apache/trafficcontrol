@@ -29,6 +29,8 @@ const (
 	DELETE
 )
 
+const API_PATH = "/api/2.0/"
+
 func (m ApiMethod) String() string {
 	switch m {
 	case GET:

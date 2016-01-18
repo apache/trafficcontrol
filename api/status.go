@@ -31,6 +31,9 @@ type Status struct {
 	Name        string      `db:"name" json:"name"`
 	Description null.String `db:"description" json:"description"`
 	LastUpdated time.Time   `db:"last_updated" json:"lastUpdated"`
+	Links       struct {
+		Self string `db:"self" json:"_self"`
+	} `json:"_links" db:-`
 }
 
 // @Title getStatusById
@@ -42,8 +45,11 @@ type Status struct {
 // @Router /api/2.0/status/{id} [get]
 func getStatusById(id int, db *sqlx.DB) (interface{}, error) {
 	ret := []Status{}
-	arg := Status{Id: int64(id)}
-	nstmt, err := db.PrepareNamed(`select * from status where id=:id`)
+	arg := Status{}
+	arg.Id = int64(id)
+	queryStr := "select *, concat('" + API_PATH + "status/', id) as self "
+	queryStr += " from status where id=:id"
+	nstmt, err := db.PrepareNamed(queryStr)
 	err = nstmt.Select(&ret, arg)
 	if err != nil {
 		log.Println(err)
@@ -54,14 +60,15 @@ func getStatusById(id int, db *sqlx.DB) (interface{}, error) {
 }
 
 // @Title getStatuss
-// @Description retrieves the status information for a certain id
+// @Description retrieves the status
 // @Accept  application/json
 // @Success 200 {array}    Status
 // @Resource /api/2.0
 // @Router /api/2.0/status [get]
 func getStatuss(db *sqlx.DB) (interface{}, error) {
 	ret := []Status{}
-	queryStr := "select * from status"
+	queryStr := "select *, concat('" + API_PATH + "status/', id) as self "
+	queryStr += " from status"
 	err := db.Select(&ret, queryStr)
 	if err != nil {
 		log.Println(err)
@@ -136,7 +143,8 @@ func putStatus(id int, payload []byte, db *sqlx.DB) (interface{}, error) {
 // @Resource /api/2.0
 // @Router /api/2.0/status/{id} [delete]
 func delStatus(id int, db *sqlx.DB) (interface{}, error) {
-	arg := Status{Id: int64(id)}
+	arg := Status{}
+	arg.Id = int64(id)
 	result, err := db.NamedExec("DELETE FROM status WHERE id=:id", arg)
 	if err != nil {
 		log.Println(err)

@@ -33,6 +33,9 @@ type StatsSummary struct {
 	StatValue           float64   `db:"stat_value" json:"statValue"`
 	SummaryTime         time.Time `db:"summary_time" json:"summaryTime"`
 	StatDate            time.Time `db:"stat_date" json:"statDate"`
+	Links               struct {
+		Self string `db:"self" json:"_self"`
+	} `json:"_links" db:-`
 }
 
 // @Title getStatsSummaryById
@@ -44,8 +47,11 @@ type StatsSummary struct {
 // @Router /api/2.0/stats_summary/{id} [get]
 func getStatsSummaryById(id int, db *sqlx.DB) (interface{}, error) {
 	ret := []StatsSummary{}
-	arg := StatsSummary{Id: int64(id)}
-	nstmt, err := db.PrepareNamed(`select * from stats_summary where id=:id`)
+	arg := StatsSummary{}
+	arg.Id = int64(id)
+	queryStr := "select *, concat('" + API_PATH + "stats_summary/', id) as self "
+	queryStr += " from stats_summary where id=:id"
+	nstmt, err := db.PrepareNamed(queryStr)
 	err = nstmt.Select(&ret, arg)
 	if err != nil {
 		log.Println(err)
@@ -56,14 +62,15 @@ func getStatsSummaryById(id int, db *sqlx.DB) (interface{}, error) {
 }
 
 // @Title getStatsSummarys
-// @Description retrieves the stats_summary information for a certain id
+// @Description retrieves the stats_summary
 // @Accept  application/json
 // @Success 200 {array}    StatsSummary
 // @Resource /api/2.0
 // @Router /api/2.0/stats_summary [get]
 func getStatsSummarys(db *sqlx.DB) (interface{}, error) {
 	ret := []StatsSummary{}
-	queryStr := "select * from stats_summary"
+	queryStr := "select *, concat('" + API_PATH + "stats_summary/', id) as self "
+	queryStr += " from stats_summary"
 	err := db.Select(&ret, queryStr)
 	if err != nil {
 		log.Println(err)
@@ -148,7 +155,8 @@ func putStatsSummary(id int, payload []byte, db *sqlx.DB) (interface{}, error) {
 // @Resource /api/2.0
 // @Router /api/2.0/stats_summary/{id} [delete]
 func delStatsSummary(id int, db *sqlx.DB) (interface{}, error) {
-	arg := StatsSummary{Id: int64(id)}
+	arg := StatsSummary{}
+	arg.Id = int64(id)
 	result, err := db.NamedExec("DELETE FROM stats_summary WHERE id=:id", arg)
 	if err != nil {
 		log.Println(err)

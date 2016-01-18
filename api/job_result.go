@@ -28,11 +28,20 @@ import (
 
 type JobResult struct {
 	Id          int64       `db:"id" json:"id"`
-	Job         int64       `db:"job" json:"job"`
-	Agent       int64       `db:"agent" json:"agent"`
 	Result      string      `db:"result" json:"result"`
 	Description null.String `db:"description" json:"description"`
 	LastUpdated time.Time   `db:"last_updated" json:"lastUpdated"`
+	Links       struct {
+		Self string `db:"self" json:"_self"`
+		Job  struct {
+			ID  int64  `db:"job" json:"id"`
+			Ref string `db:"job_id_ref" json:"_ref"`
+		} `json:"job" db:-`
+		Agent struct {
+			ID  int64  `db:"agent" json:"id"`
+			Ref string `db:"job_agent_id_ref" json:"_ref"`
+		} `json:"agent" db:-`
+	} `json:"_links" db:-`
 }
 
 // @Title getJobResultById
@@ -44,8 +53,13 @@ type JobResult struct {
 // @Router /api/2.0/job_result/{id} [get]
 func getJobResultById(id int, db *sqlx.DB) (interface{}, error) {
 	ret := []JobResult{}
-	arg := JobResult{Id: int64(id)}
-	nstmt, err := db.PrepareNamed(`select * from job_result where id=:id`)
+	arg := JobResult{}
+	arg.Id = int64(id)
+	queryStr := "select *, concat('" + API_PATH + "job_result/', id) as self "
+	queryStr += ", concat('" + API_PATH + "job/', job) as job_id_ref"
+	queryStr += ", concat('" + API_PATH + "job_agent/', agent) as job_agent_id_ref"
+	queryStr += " from job_result where id=:id"
+	nstmt, err := db.PrepareNamed(queryStr)
 	err = nstmt.Select(&ret, arg)
 	if err != nil {
 		log.Println(err)
@@ -56,14 +70,17 @@ func getJobResultById(id int, db *sqlx.DB) (interface{}, error) {
 }
 
 // @Title getJobResults
-// @Description retrieves the job_result information for a certain id
+// @Description retrieves the job_result
 // @Accept  application/json
 // @Success 200 {array}    JobResult
 // @Resource /api/2.0
 // @Router /api/2.0/job_result [get]
 func getJobResults(db *sqlx.DB) (interface{}, error) {
 	ret := []JobResult{}
-	queryStr := "select * from job_result"
+	queryStr := "select *, concat('" + API_PATH + "job_result/', id) as self "
+	queryStr += ", concat('" + API_PATH + "job/', job) as job_id_ref"
+	queryStr += ", concat('" + API_PATH + "job_agent/', agent) as job_agent_id_ref"
+	queryStr += " from job_result"
 	err := db.Select(&ret, queryStr)
 	if err != nil {
 		log.Println(err)
@@ -144,7 +161,8 @@ func putJobResult(id int, payload []byte, db *sqlx.DB) (interface{}, error) {
 // @Resource /api/2.0
 // @Router /api/2.0/job_result/{id} [delete]
 func delJobResult(id int, db *sqlx.DB) (interface{}, error) {
-	arg := JobResult{Id: int64(id)}
+	arg := JobResult{}
+	arg.Id = int64(id)
 	result, err := db.NamedExec("DELETE FROM job_result WHERE id=:id", arg)
 	if err != nil {
 		log.Println(err)

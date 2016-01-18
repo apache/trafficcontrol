@@ -21,20 +21,31 @@ import (
 	"encoding/json"
 	_ "github.com/Comcast/traffic_control/traffic_ops/experimental/server/output_format" // needed for swagger
 	"github.com/jmoiron/sqlx"
-	null "gopkg.in/guregu/null.v3"
 	"log"
 	"time"
 )
 
 type Staticdnsentry struct {
-	Id              int64     `db:"id" json:"id"`
-	Host            string    `db:"host" json:"host"`
-	Address         string    `db:"address" json:"address"`
-	Type            int64     `db:"type" json:"type"`
-	Ttl             int64     `db:"ttl" json:"ttl"`
-	Deliveryservice int64     `db:"deliveryservice" json:"deliveryservice"`
-	Cachegroup      null.Int  `db:"cachegroup" json:"cachegroup"`
-	LastUpdated     time.Time `db:"last_updated" json:"lastUpdated"`
+	Id          int64     `db:"id" json:"id"`
+	Host        string    `db:"host" json:"host"`
+	Address     string    `db:"address" json:"address"`
+	Ttl         int64     `db:"ttl" json:"ttl"`
+	LastUpdated time.Time `db:"last_updated" json:"lastUpdated"`
+	Links       struct {
+		Self string `db:"self" json:"_self"`
+		Type struct {
+			ID  int64  `db:"type" json:"id"`
+			Ref string `db:"type_id_ref" json:"_ref"`
+		} `json:"type" db:-`
+		Deliveryservice struct {
+			ID  int64  `db:"deliveryservice" json:"id"`
+			Ref string `db:"deliveryservice_id_ref" json:"_ref"`
+		} `json:"deliveryservice" db:-`
+		Cachegroup struct {
+			ID  int64  `db:"cachegroup" json:"id"`
+			Ref string `db:"cachegroup_id_ref" json:"_ref"`
+		} `json:"cachegroup" db:-`
+	} `json:"_links" db:-`
 }
 
 // @Title getStaticdnsentryById
@@ -46,8 +57,14 @@ type Staticdnsentry struct {
 // @Router /api/2.0/staticdnsentry/{id} [get]
 func getStaticdnsentryById(id int, db *sqlx.DB) (interface{}, error) {
 	ret := []Staticdnsentry{}
-	arg := Staticdnsentry{Id: int64(id)}
-	nstmt, err := db.PrepareNamed(`select * from staticdnsentry where id=:id`)
+	arg := Staticdnsentry{}
+	arg.Id = int64(id)
+	queryStr := "select *, concat('" + API_PATH + "staticdnsentry/', id) as self "
+	queryStr += ", concat('" + API_PATH + "type/', type) as type_id_ref"
+	queryStr += ", concat('" + API_PATH + "deliveryservice/', deliveryservice) as deliveryservice_id_ref"
+	queryStr += ", concat('" + API_PATH + "cachegroup/', cachegroup) as cachegroup_id_ref"
+	queryStr += " from staticdnsentry where id=:id"
+	nstmt, err := db.PrepareNamed(queryStr)
 	err = nstmt.Select(&ret, arg)
 	if err != nil {
 		log.Println(err)
@@ -58,14 +75,18 @@ func getStaticdnsentryById(id int, db *sqlx.DB) (interface{}, error) {
 }
 
 // @Title getStaticdnsentrys
-// @Description retrieves the staticdnsentry information for a certain id
+// @Description retrieves the staticdnsentry
 // @Accept  application/json
 // @Success 200 {array}    Staticdnsentry
 // @Resource /api/2.0
 // @Router /api/2.0/staticdnsentry [get]
 func getStaticdnsentrys(db *sqlx.DB) (interface{}, error) {
 	ret := []Staticdnsentry{}
-	queryStr := "select * from staticdnsentry"
+	queryStr := "select *, concat('" + API_PATH + "staticdnsentry/', id) as self "
+	queryStr += ", concat('" + API_PATH + "type/', type) as type_id_ref"
+	queryStr += ", concat('" + API_PATH + "deliveryservice/', deliveryservice) as deliveryservice_id_ref"
+	queryStr += ", concat('" + API_PATH + "cachegroup/', cachegroup) as cachegroup_id_ref"
+	queryStr += " from staticdnsentry"
 	err := db.Select(&ret, queryStr)
 	if err != nil {
 		log.Println(err)
@@ -152,7 +173,8 @@ func putStaticdnsentry(id int, payload []byte, db *sqlx.DB) (interface{}, error)
 // @Resource /api/2.0
 // @Router /api/2.0/staticdnsentry/{id} [delete]
 func delStaticdnsentry(id int, db *sqlx.DB) (interface{}, error) {
-	arg := Staticdnsentry{Id: int64(id)}
+	arg := Staticdnsentry{}
+	arg.Id = int64(id)
 	result, err := db.NamedExec("DELETE FROM staticdnsentry WHERE id=:id", arg)
 	if err != nil {
 		log.Println(err)

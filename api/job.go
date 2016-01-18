@@ -27,20 +27,35 @@ import (
 )
 
 type Job struct {
-	Id                 int64       `db:"id" json:"id"`
-	Agent              null.Int    `db:"agent" json:"agent"`
-	ObjectType         null.String `db:"object_type" json:"objectType"`
-	ObjectName         null.String `db:"object_name" json:"objectName"`
-	Keyword            string      `db:"keyword" json:"keyword"`
-	Parameters         null.String `db:"parameters" json:"parameters"`
-	AssetUrl           string      `db:"asset_url" json:"assetUrl"`
-	AssetType          string      `db:"asset_type" json:"assetType"`
-	Status             int64       `db:"status" json:"status"`
-	StartTime          time.Time   `db:"start_time" json:"startTime"`
-	EnteredTime        time.Time   `db:"entered_time" json:"enteredTime"`
-	JobUser            int64       `db:"job_user" json:"jobUser"`
-	LastUpdated        time.Time   `db:"last_updated" json:"lastUpdated"`
-	JobDeliveryservice null.Int    `db:"job_deliveryservice" json:"jobDeliveryservice"`
+	Id          int64       `db:"id" json:"id"`
+	ObjectType  null.String `db:"object_type" json:"objectType"`
+	ObjectName  null.String `db:"object_name" json:"objectName"`
+	Keyword     string      `db:"keyword" json:"keyword"`
+	Parameters  null.String `db:"parameters" json:"parameters"`
+	AssetUrl    string      `db:"asset_url" json:"assetUrl"`
+	AssetType   string      `db:"asset_type" json:"assetType"`
+	StartTime   time.Time   `db:"start_time" json:"startTime"`
+	EnteredTime time.Time   `db:"entered_time" json:"enteredTime"`
+	LastUpdated time.Time   `db:"last_updated" json:"lastUpdated"`
+	Links       struct {
+		Self  string `db:"self" json:"_self"`
+		Agent struct {
+			ID  int64  `db:"agent" json:"id"`
+			Ref string `db:"job_agent_id_ref" json:"_ref"`
+		} `json:"agent" db:-`
+		Status struct {
+			ID  int64  `db:"status" json:"id"`
+			Ref string `db:"job_status_id_ref" json:"_ref"`
+		} `json:"status" db:-`
+		JobUser struct {
+			ID  int64  `db:"job_user" json:"id"`
+			Ref string `db:"tm_user_id_ref" json:"_ref"`
+		} `json:"job_user" db:-`
+		JobDeliveryservice struct {
+			ID  int64  `db:"job_deliveryservice" json:"id"`
+			Ref string `db:"deliveryservice_id_ref" json:"_ref"`
+		} `json:"job_deliveryservice" db:-`
+	} `json:"_links" db:-`
 }
 
 // @Title getJobById
@@ -52,8 +67,15 @@ type Job struct {
 // @Router /api/2.0/job/{id} [get]
 func getJobById(id int, db *sqlx.DB) (interface{}, error) {
 	ret := []Job{}
-	arg := Job{Id: int64(id)}
-	nstmt, err := db.PrepareNamed(`select * from job where id=:id`)
+	arg := Job{}
+	arg.Id = int64(id)
+	queryStr := "select *, concat('" + API_PATH + "job/', id) as self "
+	queryStr += ", concat('" + API_PATH + "job_agent/', agent) as job_agent_id_ref"
+	queryStr += ", concat('" + API_PATH + "job_status/', status) as job_status_id_ref"
+	queryStr += ", concat('" + API_PATH + "tm_user/', job_user) as tm_user_id_ref"
+	queryStr += ", concat('" + API_PATH + "deliveryservice/', job_deliveryservice) as deliveryservice_id_ref"
+	queryStr += " from job where id=:id"
+	nstmt, err := db.PrepareNamed(queryStr)
 	err = nstmt.Select(&ret, arg)
 	if err != nil {
 		log.Println(err)
@@ -64,14 +86,19 @@ func getJobById(id int, db *sqlx.DB) (interface{}, error) {
 }
 
 // @Title getJobs
-// @Description retrieves the job information for a certain id
+// @Description retrieves the job
 // @Accept  application/json
 // @Success 200 {array}    Job
 // @Resource /api/2.0
 // @Router /api/2.0/job [get]
 func getJobs(db *sqlx.DB) (interface{}, error) {
 	ret := []Job{}
-	queryStr := "select * from job"
+	queryStr := "select *, concat('" + API_PATH + "job/', id) as self "
+	queryStr += ", concat('" + API_PATH + "job_agent/', agent) as job_agent_id_ref"
+	queryStr += ", concat('" + API_PATH + "job_status/', status) as job_status_id_ref"
+	queryStr += ", concat('" + API_PATH + "tm_user/', job_user) as tm_user_id_ref"
+	queryStr += ", concat('" + API_PATH + "deliveryservice/', job_deliveryservice) as deliveryservice_id_ref"
+	queryStr += " from job"
 	err := db.Select(&ret, queryStr)
 	if err != nil {
 		log.Println(err)
@@ -176,7 +203,8 @@ func putJob(id int, payload []byte, db *sqlx.DB) (interface{}, error) {
 // @Resource /api/2.0
 // @Router /api/2.0/job/{id} [delete]
 func delJob(id int, db *sqlx.DB) (interface{}, error) {
-	arg := Job{Id: int64(id)}
+	arg := Job{}
+	arg.Id = int64(id)
 	result, err := db.NamedExec("DELETE FROM job WHERE id=:id", arg)
 	if err != nil {
 		log.Println(err)

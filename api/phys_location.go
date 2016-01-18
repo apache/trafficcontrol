@@ -38,8 +38,14 @@ type PhysLocation struct {
 	Phone       null.String `db:"phone" json:"phone"`
 	Email       null.String `db:"email" json:"email"`
 	Comments    null.String `db:"comments" json:"comments"`
-	Region      int64       `db:"region" json:"region"`
 	LastUpdated time.Time   `db:"last_updated" json:"lastUpdated"`
+	Links       struct {
+		Self   string `db:"self" json:"_self"`
+		Region struct {
+			ID  int64  `db:"region" json:"id"`
+			Ref string `db:"region_id_ref" json:"_ref"`
+		} `json:"region" db:-`
+	} `json:"_links" db:-`
 }
 
 // @Title getPhysLocationById
@@ -51,8 +57,12 @@ type PhysLocation struct {
 // @Router /api/2.0/phys_location/{id} [get]
 func getPhysLocationById(id int, db *sqlx.DB) (interface{}, error) {
 	ret := []PhysLocation{}
-	arg := PhysLocation{Id: int64(id)}
-	nstmt, err := db.PrepareNamed(`select * from phys_location where id=:id`)
+	arg := PhysLocation{}
+	arg.Id = int64(id)
+	queryStr := "select *, concat('" + API_PATH + "phys_location/', id) as self "
+	queryStr += ", concat('" + API_PATH + "region/', region) as region_id_ref"
+	queryStr += " from phys_location where id=:id"
+	nstmt, err := db.PrepareNamed(queryStr)
 	err = nstmt.Select(&ret, arg)
 	if err != nil {
 		log.Println(err)
@@ -63,14 +73,16 @@ func getPhysLocationById(id int, db *sqlx.DB) (interface{}, error) {
 }
 
 // @Title getPhysLocations
-// @Description retrieves the phys_location information for a certain id
+// @Description retrieves the phys_location
 // @Accept  application/json
 // @Success 200 {array}    PhysLocation
 // @Resource /api/2.0
 // @Router /api/2.0/phys_location [get]
 func getPhysLocations(db *sqlx.DB) (interface{}, error) {
 	ret := []PhysLocation{}
-	queryStr := "select * from phys_location"
+	queryStr := "select *, concat('" + API_PATH + "phys_location/', id) as self "
+	queryStr += ", concat('" + API_PATH + "region/', region) as region_id_ref"
+	queryStr += " from phys_location"
 	err := db.Select(&ret, queryStr)
 	if err != nil {
 		log.Println(err)
@@ -172,7 +184,8 @@ func putPhysLocation(id int, payload []byte, db *sqlx.DB) (interface{}, error) {
 // @Resource /api/2.0
 // @Router /api/2.0/phys_location/{id} [delete]
 func delPhysLocation(id int, db *sqlx.DB) (interface{}, error) {
-	arg := PhysLocation{Id: int64(id)}
+	arg := PhysLocation{}
+	arg.Id = int64(id)
 	result, err := db.NamedExec("DELETE FROM phys_location WHERE id=:id", arg)
 	if err != nil {
 		log.Println(err)

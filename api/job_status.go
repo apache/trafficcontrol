@@ -31,6 +31,9 @@ type JobStatus struct {
 	Name        null.String `db:"name" json:"name"`
 	Description null.String `db:"description" json:"description"`
 	LastUpdated time.Time   `db:"last_updated" json:"lastUpdated"`
+	Links       struct {
+		Self string `db:"self" json:"_self"`
+	} `json:"_links" db:-`
 }
 
 // @Title getJobStatusById
@@ -42,8 +45,11 @@ type JobStatus struct {
 // @Router /api/2.0/job_status/{id} [get]
 func getJobStatusById(id int, db *sqlx.DB) (interface{}, error) {
 	ret := []JobStatus{}
-	arg := JobStatus{Id: int64(id)}
-	nstmt, err := db.PrepareNamed(`select * from job_status where id=:id`)
+	arg := JobStatus{}
+	arg.Id = int64(id)
+	queryStr := "select *, concat('" + API_PATH + "job_status/', id) as self "
+	queryStr += " from job_status where id=:id"
+	nstmt, err := db.PrepareNamed(queryStr)
 	err = nstmt.Select(&ret, arg)
 	if err != nil {
 		log.Println(err)
@@ -54,14 +60,15 @@ func getJobStatusById(id int, db *sqlx.DB) (interface{}, error) {
 }
 
 // @Title getJobStatuss
-// @Description retrieves the job_status information for a certain id
+// @Description retrieves the job_status
 // @Accept  application/json
 // @Success 200 {array}    JobStatus
 // @Resource /api/2.0
 // @Router /api/2.0/job_status [get]
 func getJobStatuss(db *sqlx.DB) (interface{}, error) {
 	ret := []JobStatus{}
-	queryStr := "select * from job_status"
+	queryStr := "select *, concat('" + API_PATH + "job_status/', id) as self "
+	queryStr += " from job_status"
 	err := db.Select(&ret, queryStr)
 	if err != nil {
 		log.Println(err)
@@ -136,7 +143,8 @@ func putJobStatus(id int, payload []byte, db *sqlx.DB) (interface{}, error) {
 // @Resource /api/2.0
 // @Router /api/2.0/job_status/{id} [delete]
 func delJobStatus(id int, db *sqlx.DB) (interface{}, error) {
-	arg := JobStatus{Id: int64(id)}
+	arg := JobStatus{}
+	arg.Id = int64(id)
 	result, err := db.NamedExec("DELETE FROM job_status WHERE id=:id", arg)
 	if err != nil {
 		log.Println(err)

@@ -26,9 +26,18 @@ import (
 )
 
 type DeliveryserviceTmuser struct {
-	Deliveryservice int64     `db:"deliveryservice" json:"deliveryservice"`
-	TmUserId        int64     `db:"tm_user_id" json:"tmUserId"`
-	LastUpdated     time.Time `db:"last_updated" json:"lastUpdated"`
+	LastUpdated time.Time `db:"last_updated" json:"lastUpdated"`
+	Links       struct {
+		Self     string `db:"self" json:"_self"`
+		TmUserId struct {
+			ID  int64  `db:"tm_user_id" json:"id"`
+			Ref string `db:"tm_user_id_ref" json:"_ref"`
+		} `json:"tm_user_id" db:-`
+		Deliveryservice struct {
+			ID  int64  `db:"deliveryservice" json:"id"`
+			Ref string `db:"deliveryservice_id_ref" json:"_ref"`
+		} `json:"deliveryservice" db:-`
+	} `json:"_links" db:-`
 }
 
 // @Title getDeliveryserviceTmuserById
@@ -40,8 +49,13 @@ type DeliveryserviceTmuser struct {
 // @Router /api/2.0/deliveryservice_tmuser/{id} [get]
 func getDeliveryserviceTmuserById(id int, db *sqlx.DB) (interface{}, error) {
 	ret := []DeliveryserviceTmuser{}
-	arg := DeliveryserviceTmuser{Deliveryservice: int64(id)}
-	nstmt, err := db.PrepareNamed(`select * from deliveryservice_tmuser where deliveryservice=:deliveryservice`)
+	arg := DeliveryserviceTmuser{}
+	arg.Links.Deliveryservice.ID = int64(id)
+	queryStr := "select *, concat('" + API_PATH + "deliveryservice_tmuser/', id) as self "
+	queryStr += ", concat('" + API_PATH + "deliveryservice/', deliveryservice) as deliveryservice_id_ref"
+	queryStr += ", concat('" + API_PATH + "tm_user/', tm_user_id) as tm_user_id_ref"
+	queryStr += " from deliveryservice_tmuser where Links.Deliveryservice.ID=:Links.Deliveryservice.ID"
+	nstmt, err := db.PrepareNamed(queryStr)
 	err = nstmt.Select(&ret, arg)
 	if err != nil {
 		log.Println(err)
@@ -52,14 +66,17 @@ func getDeliveryserviceTmuserById(id int, db *sqlx.DB) (interface{}, error) {
 }
 
 // @Title getDeliveryserviceTmusers
-// @Description retrieves the deliveryservice_tmuser information for a certain id
+// @Description retrieves the deliveryservice_tmuser
 // @Accept  application/json
 // @Success 200 {array}    DeliveryserviceTmuser
 // @Resource /api/2.0
 // @Router /api/2.0/deliveryservice_tmuser [get]
 func getDeliveryserviceTmusers(db *sqlx.DB) (interface{}, error) {
 	ret := []DeliveryserviceTmuser{}
-	queryStr := "select * from deliveryservice_tmuser"
+	queryStr := "select *, concat('" + API_PATH + "deliveryservice_tmuser/', id) as self "
+	queryStr += ", concat('" + API_PATH + "deliveryservice/', deliveryservice) as deliveryservice_id_ref"
+	queryStr += ", concat('" + API_PATH + "tm_user/', tm_user_id) as tm_user_id_ref"
+	queryStr += " from deliveryservice_tmuser"
 	err := db.Select(&ret, queryStr)
 	if err != nil {
 		log.Println(err)
@@ -107,7 +124,7 @@ func postDeliveryserviceTmuser(payload []byte, db *sqlx.DB) (interface{}, error)
 func putDeliveryserviceTmuser(id int, payload []byte, db *sqlx.DB) (interface{}, error) {
 	var v DeliveryserviceTmuser
 	err := json.Unmarshal(payload, &v)
-	v.Deliveryservice = int64(id) // overwrite the id in the payload
+	v.Links.Deliveryservice.ID = int64(id) // overwrite the id in the payload
 	if err != nil {
 		log.Println(err)
 		return nil, err
@@ -117,7 +134,7 @@ func putDeliveryserviceTmuser(id int, payload []byte, db *sqlx.DB) (interface{},
 	sqlString += "deliveryservice = :deliveryservice"
 	sqlString += ",tm_user_id = :tm_user_id"
 	sqlString += ",last_updated = :last_updated"
-	sqlString += " WHERE deliveryservice=:deliveryservice"
+	sqlString += " WHERE Links.Deliveryservice.ID=:Links.Deliveryservice.ID"
 	result, err := db.NamedExec(sqlString, v)
 	if err != nil {
 		log.Println(err)
@@ -134,7 +151,8 @@ func putDeliveryserviceTmuser(id int, payload []byte, db *sqlx.DB) (interface{},
 // @Resource /api/2.0
 // @Router /api/2.0/deliveryservice_tmuser/{id} [delete]
 func delDeliveryserviceTmuser(id int, db *sqlx.DB) (interface{}, error) {
-	arg := DeliveryserviceTmuser{Deliveryservice: int64(id)}
+	arg := DeliveryserviceTmuser{}
+	arg.Links.Deliveryservice.ID = int64(id)
 	result, err := db.NamedExec("DELETE FROM deliveryservice_tmuser WHERE id=:id", arg)
 	if err != nil {
 		log.Println(err)

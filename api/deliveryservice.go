@@ -39,9 +39,6 @@ type Deliveryservice struct {
 	DnsBypassIp6         null.String `db:"dns_bypass_ip6" json:"dnsBypassIp6"`
 	DnsBypassTtl         null.Int    `db:"dns_bypass_ttl" json:"dnsBypassTtl"`
 	OrgServerFqdn        null.String `db:"org_server_fqdn" json:"orgServerFqdn"`
-	Type                 int64       `db:"type" json:"type"`
-	Profile              int64       `db:"profile" json:"profile"`
-	CdnId                int64       `db:"cdn_id" json:"cdnId"`
 	CcrDnsTtl            null.Int    `db:"ccr_dns_ttl" json:"ccrDnsTtl"`
 	GlobalMaxMbps        null.Int    `db:"global_max_mbps" json:"globalMaxMbps"`
 	GlobalMaxTps         null.Int    `db:"global_max_tps" json:"globalMaxTps"`
@@ -70,6 +67,21 @@ type Deliveryservice struct {
 	InitialDispersion    null.Int    `db:"initial_dispersion" json:"initialDispersion"`
 	DnsBypassCname       null.String `db:"dns_bypass_cname" json:"dnsBypassCname"`
 	TrRequestHeaders     null.String `db:"tr_request_headers" json:"trRequestHeaders"`
+	Links                struct {
+		Self  string `db:"self" json:"_self"`
+		CdnId struct {
+			ID  int64  `db:"cdn_id" json:"id"`
+			Ref string `db:"cdn_id_ref" json:"_ref"`
+		} `json:"cdn_id" db:-`
+		Type struct {
+			ID  int64  `db:"type" json:"id"`
+			Ref string `db:"type_id_ref" json:"_ref"`
+		} `json:"type" db:-`
+		Profile struct {
+			ID  int64  `db:"profile" json:"id"`
+			Ref string `db:"profile_id_ref" json:"_ref"`
+		} `json:"profile" db:-`
+	} `json:"_links" db:-`
 }
 
 // @Title getDeliveryserviceById
@@ -81,8 +93,14 @@ type Deliveryservice struct {
 // @Router /api/2.0/deliveryservice/{id} [get]
 func getDeliveryserviceById(id int, db *sqlx.DB) (interface{}, error) {
 	ret := []Deliveryservice{}
-	arg := Deliveryservice{Id: int64(id)}
-	nstmt, err := db.PrepareNamed(`select * from deliveryservice where id=:id`)
+	arg := Deliveryservice{}
+	arg.Id = int64(id)
+	queryStr := "select *, concat('" + API_PATH + "deliveryservice/', id) as self "
+	queryStr += ", concat('" + API_PATH + "type/', type) as type_id_ref"
+	queryStr += ", concat('" + API_PATH + "profile/', profile) as profile_id_ref"
+	queryStr += ", concat('" + API_PATH + "cdn/', cdn_id) as cdn_id_ref"
+	queryStr += " from deliveryservice where id=:id"
+	nstmt, err := db.PrepareNamed(queryStr)
 	err = nstmt.Select(&ret, arg)
 	if err != nil {
 		log.Println(err)
@@ -93,14 +111,18 @@ func getDeliveryserviceById(id int, db *sqlx.DB) (interface{}, error) {
 }
 
 // @Title getDeliveryservices
-// @Description retrieves the deliveryservice information for a certain id
+// @Description retrieves the deliveryservice
 // @Accept  application/json
 // @Success 200 {array}    Deliveryservice
 // @Resource /api/2.0
 // @Router /api/2.0/deliveryservice [get]
 func getDeliveryservices(db *sqlx.DB) (interface{}, error) {
 	ret := []Deliveryservice{}
-	queryStr := "select * from deliveryservice"
+	queryStr := "select *, concat('" + API_PATH + "deliveryservice/', id) as self "
+	queryStr += ", concat('" + API_PATH + "type/', type) as type_id_ref"
+	queryStr += ", concat('" + API_PATH + "profile/', profile) as profile_id_ref"
+	queryStr += ", concat('" + API_PATH + "cdn/', cdn_id) as cdn_id_ref"
+	queryStr += " from deliveryservice"
 	err := db.Select(&ret, queryStr)
 	if err != nil {
 		log.Println(err)
@@ -292,7 +314,8 @@ func putDeliveryservice(id int, payload []byte, db *sqlx.DB) (interface{}, error
 // @Resource /api/2.0
 // @Router /api/2.0/deliveryservice/{id} [delete]
 func delDeliveryservice(id int, db *sqlx.DB) (interface{}, error) {
-	arg := Deliveryservice{Id: int64(id)}
+	arg := Deliveryservice{}
+	arg.Id = int64(id)
 	result, err := db.NamedExec("DELETE FROM deliveryservice WHERE id=:id", arg)
 	if err != nil {
 		log.Println(err)
