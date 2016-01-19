@@ -85,6 +85,7 @@ type RunningConfig struct {
 	LastSummaryTime time.Time
 }
 
+//Timers struct containts all the timers
 type Timers struct {
 	Poll         <-chan time.Time
 	DailySummary <-chan time.Time
@@ -360,8 +361,8 @@ func queryDB(con *influx.Client, cmd string, database string) (res []influx.Resu
 func writeSummaryStats(config StartupConfig, statsSummary traffic_ops.StatsSummary) {
 	to, err := traffic_ops.Login(config.ToURL, config.ToUser, config.ToPasswd, true)
 	if err != nil {
-		new_err := fmt.Errorf("Could not store summary stats! Error logging in to %v: %v", config.ToURL, err)
-		log.Error(new_err)
+		newErr := fmt.Errorf("Could not store summary stats! Error logging in to %v: %v", config.ToURL, err)
+		log.Error(newErr)
 		return
 	}
 	err = to.AddSummaryStats(statsSummary)
@@ -751,26 +752,27 @@ func sendMetrics(config StartupConfig, runningConfig RunningConfig, bps influx.B
 
 	pts := bps.Points
 	for len(pts) > 0 {
-		chunk_bps := influx.BatchPoints{
+		chunkBps := influx.BatchPoints{
 			Database:        bps.Database,
 			RetentionPolicy: bps.RetentionPolicy,
 		}
 
-		chunk_bps.Points = pts[:IntMin(maxPublishSize, len(pts))]
+		chunkBps.Points = pts[:IntMin(maxPublishSize, len(pts))]
 		pts = pts[IntMin(maxPublishSize, len(pts)):]
 
-		_, err = influxClient.Write(chunk_bps)
+		_, err = influxClient.Write(chunkBps)
 		if err != nil {
 			if retry {
-				config.BpsChan <- chunk_bps
+				config.BpsChan <- chunkBps
 			}
 			errHndlr(err, ERROR)
 		} else {
-			log.Debug("Sent ", len(chunk_bps.Points), " stats")
+			log.Debug("Sent ", len(chunkBps.Points), " stats")
 		}
 	}
 }
 
+//IntMin returns the lesser of two ints
 func IntMin(a, b int) int {
 	if a < b {
 		return a
@@ -778,6 +780,7 @@ func IntMin(a, b int) int {
 	return b
 }
 
+//FloatMax returns the greater of two float64 values
 func FloatMax(a, b float64) float64 {
 	if a > b {
 		return a
