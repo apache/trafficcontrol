@@ -146,31 +146,59 @@ sub current {
 	my @data;
 	my $current_username = $self->current_user()->{username};
 
-	my $dbh = $self->db->resultset('TmUser')->search( { username => $current_username } );
-	while ( my $row = $dbh->next ) {
+	if ( &is_ldap($self) ) {
+		my $role = $self->db->resultset('Role')->search( { name => "read-only" } )->get_column('id')->single;
 		push(
 			@data, {
-				"id"              => $row->id,
-				"username"        => $row->username,
-				"role"            => $row->role->id,
-				"uid"             => $row->uid,
-				"gid"             => $row->gid,
-				"company"         => $row->company,
-				"email"           => $row->email,
-				"fullName"        => $row->full_name,
-				"newUser"         => \$row->new_user,
-				"localUser"       => \$row->local_user,
-				"addressLine1"    => $row->address_line1,
-				"addressLine2"    => $row->address_line2,
-				"city"            => $row->city,
-				"stateOrProvince" => $row->state_or_province,
-				"phoneNumber"     => $row->phone_number,
-				"postalCode"      => $row->postal_code,
-				"country"         => $row->country,
+				"id"              => "",
+				"username"        => $current_username,
+				"role"            => $role,
+				"uid"             => "",
+				"gid"             => "",
+				"company"         => "",
+				"email"           => "",
+				"fullName"        => "",
+				"newUser"         => "",
+				"localUser"       => "",
+				"addressLine1"    => "",
+				"addressLine2"    => "",
+				"city"            => "",
+				"stateOrProvince" => "",
+				"phoneNumber"     => "",
+				"postalCode"      => "",
+				"country"         => "",
 			}
 		);
+
+		return $self->success( \@data );
 	}
-	return $self->success(@data);
+	else {
+		my $dbh = $self->db->resultset('TmUser')->search( { username => $current_username } );
+		while ( my $row = $dbh->next ) {
+			push(
+				@data, {
+					"id"              => $row->id,
+					"username"        => $row->username,
+					"role"            => $row->role->id,
+					"uid"             => $row->uid,
+					"gid"             => $row->gid,
+					"company"         => $row->company,
+					"email"           => $row->email,
+					"fullName"        => $row->full_name,
+					"newUser"         => \$row->new_user,
+					"localUser"       => \$row->local_user,
+					"addressLine1"    => $row->address_line1,
+					"addressLine2"    => $row->address_line2,
+					"city"            => $row->city,
+					"stateOrProvince" => $row->state_or_province,
+					"phoneNumber"     => $row->phone_number,
+					"postalCode"      => $row->postal_code,
+					"country"         => $row->country,
+				}
+			);
+		}
+		return $self->success(@data);
+	}
 }
 
 # Update
