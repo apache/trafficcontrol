@@ -30,6 +30,9 @@ type Role struct {
 	Name        string      `db:"name" json:"name"`
 	Description null.String `db:"description" json:"description"`
 	PrivLevel   int64       `db:"priv_level" json:"privLevel"`
+	Links       struct {
+		Self string `db:"self" json:"_self"`
+	} `json:"_links" db:-`
 }
 
 // @Title getRoleById
@@ -41,8 +44,11 @@ type Role struct {
 // @Router /api/2.0/role/{id} [get]
 func getRoleById(id int, db *sqlx.DB) (interface{}, error) {
 	ret := []Role{}
-	arg := Role{Id: int64(id)}
-	nstmt, err := db.PrepareNamed(`select * from role where id=:id`)
+	arg := Role{}
+	arg.Id = int64(id)
+	queryStr := "select *, concat('" + API_PATH + "role/', id) as self "
+	queryStr += " from role where id=:id"
+	nstmt, err := db.PrepareNamed(queryStr)
 	err = nstmt.Select(&ret, arg)
 	if err != nil {
 		log.Println(err)
@@ -53,14 +59,15 @@ func getRoleById(id int, db *sqlx.DB) (interface{}, error) {
 }
 
 // @Title getRoles
-// @Description retrieves the role information for a certain id
+// @Description retrieves the role
 // @Accept  application/json
 // @Success 200 {array}    Role
 // @Resource /api/2.0
 // @Router /api/2.0/role [get]
 func getRoles(db *sqlx.DB) (interface{}, error) {
 	ret := []Role{}
-	queryStr := "select * from role"
+	queryStr := "select *, concat('" + API_PATH + "role/', id) as self "
+	queryStr += " from role"
 	err := db.Select(&ret, queryStr)
 	if err != nil {
 		log.Println(err)
@@ -136,7 +143,8 @@ func putRole(id int, payload []byte, db *sqlx.DB) (interface{}, error) {
 // @Resource /api/2.0
 // @Router /api/2.0/role/{id} [delete]
 func delRole(id int, db *sqlx.DB) (interface{}, error) {
-	arg := Role{Id: int64(id)}
+	arg := Role{}
+	arg.Id = int64(id)
 	result, err := db.NamedExec("DELETE FROM role WHERE id=:id", arg)
 	if err != nil {
 		log.Println(err)

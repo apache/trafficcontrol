@@ -26,9 +26,18 @@ import (
 )
 
 type DeliveryserviceRegex struct {
-	Deliveryservice int64    `db:"deliveryservice" json:"deliveryservice"`
-	Regex           int64    `db:"regex" json:"regex"`
-	SetNumber       null.Int `db:"set_number" json:"setNumber"`
+	SetNumber null.Int `db:"set_number" json:"setNumber"`
+	Links     struct {
+		Self            string `db:"self" json:"_self"`
+		Deliveryservice struct {
+			ID  int64  `db:"deliveryservice" json:"id"`
+			Ref string `db:"deliveryservice_id_ref" json:"_ref"`
+		} `json:"deliveryservice" db:-`
+		Regex struct {
+			ID  int64  `db:"regex" json:"id"`
+			Ref string `db:"regex_id_ref" json:"_ref"`
+		} `json:"regex" db:-`
+	} `json:"_links" db:-`
 }
 
 // @Title getDeliveryserviceRegexById
@@ -40,8 +49,13 @@ type DeliveryserviceRegex struct {
 // @Router /api/2.0/deliveryservice_regex/{id} [get]
 func getDeliveryserviceRegexById(id int, db *sqlx.DB) (interface{}, error) {
 	ret := []DeliveryserviceRegex{}
-	arg := DeliveryserviceRegex{Deliveryservice: int64(id)}
-	nstmt, err := db.PrepareNamed(`select * from deliveryservice_regex where deliveryservice=:deliveryservice`)
+	arg := DeliveryserviceRegex{}
+	arg.Links.Deliveryservice.ID = int64(id)
+	queryStr := "select *, concat('" + API_PATH + "deliveryservice_regex/', id) as self "
+	queryStr += ", concat('" + API_PATH + "deliveryservice/', deliveryservice) as deliveryservice_id_ref"
+	queryStr += ", concat('" + API_PATH + "regex/', regex) as regex_id_ref"
+	queryStr += " from deliveryservice_regex where Links.Deliveryservice.ID=:Links.Deliveryservice.ID"
+	nstmt, err := db.PrepareNamed(queryStr)
 	err = nstmt.Select(&ret, arg)
 	if err != nil {
 		log.Println(err)
@@ -52,14 +66,17 @@ func getDeliveryserviceRegexById(id int, db *sqlx.DB) (interface{}, error) {
 }
 
 // @Title getDeliveryserviceRegexs
-// @Description retrieves the deliveryservice_regex information for a certain id
+// @Description retrieves the deliveryservice_regex
 // @Accept  application/json
 // @Success 200 {array}    DeliveryserviceRegex
 // @Resource /api/2.0
 // @Router /api/2.0/deliveryservice_regex [get]
 func getDeliveryserviceRegexs(db *sqlx.DB) (interface{}, error) {
 	ret := []DeliveryserviceRegex{}
-	queryStr := "select * from deliveryservice_regex"
+	queryStr := "select *, concat('" + API_PATH + "deliveryservice_regex/', id) as self "
+	queryStr += ", concat('" + API_PATH + "deliveryservice/', deliveryservice) as deliveryservice_id_ref"
+	queryStr += ", concat('" + API_PATH + "regex/', regex) as regex_id_ref"
+	queryStr += " from deliveryservice_regex"
 	err := db.Select(&ret, queryStr)
 	if err != nil {
 		log.Println(err)
@@ -109,7 +126,7 @@ func postDeliveryserviceRegex(payload []byte, db *sqlx.DB) (interface{}, error) 
 func putDeliveryserviceRegex(id int, payload []byte, db *sqlx.DB) (interface{}, error) {
 	var v DeliveryserviceRegex
 	err := json.Unmarshal(payload, &v)
-	v.Deliveryservice = int64(id) // overwrite the id in the payload
+	v.Links.Deliveryservice.ID = int64(id) // overwrite the id in the payload
 	if err != nil {
 		log.Println(err)
 		return nil, err
@@ -118,7 +135,7 @@ func putDeliveryserviceRegex(id int, payload []byte, db *sqlx.DB) (interface{}, 
 	sqlString += "deliveryservice = :deliveryservice"
 	sqlString += ",regex = :regex"
 	sqlString += ",set_number = :set_number"
-	sqlString += " WHERE deliveryservice=:deliveryservice"
+	sqlString += " WHERE Links.Deliveryservice.ID=:Links.Deliveryservice.ID"
 	result, err := db.NamedExec(sqlString, v)
 	if err != nil {
 		log.Println(err)
@@ -135,7 +152,8 @@ func putDeliveryserviceRegex(id int, payload []byte, db *sqlx.DB) (interface{}, 
 // @Resource /api/2.0
 // @Router /api/2.0/deliveryservice_regex/{id} [delete]
 func delDeliveryserviceRegex(id int, db *sqlx.DB) (interface{}, error) {
-	arg := DeliveryserviceRegex{Deliveryservice: int64(id)}
+	arg := DeliveryserviceRegex{}
+	arg.Links.Deliveryservice.ID = int64(id)
 	result, err := db.NamedExec("DELETE FROM deliveryservice_regex WHERE id=:id", arg)
 	if err != nil {
 		log.Println(err)

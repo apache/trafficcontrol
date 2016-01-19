@@ -28,8 +28,14 @@ import (
 type Asn struct {
 	Id          int64     `db:"id" json:"id"`
 	Asn         int64     `db:"asn" json:"asn"`
-	Cachegroup  int64     `db:"cachegroup" json:"cachegroup"`
 	LastUpdated time.Time `db:"last_updated" json:"lastUpdated"`
+	Links       struct {
+		Self       string `db:"self" json:"_self"`
+		Cachegroup struct {
+			ID  int64  `db:"cachegroup" json:"id"`
+			Ref string `db:"cachegroup_id_ref" json:"_ref"`
+		} `json:"cachegroup" db:-`
+	} `json:"_links" db:-`
 }
 
 // @Title getAsnById
@@ -41,8 +47,12 @@ type Asn struct {
 // @Router /api/2.0/asn/{id} [get]
 func getAsnById(id int, db *sqlx.DB) (interface{}, error) {
 	ret := []Asn{}
-	arg := Asn{Id: int64(id)}
-	nstmt, err := db.PrepareNamed(`select * from asn where id=:id`)
+	arg := Asn{}
+	arg.Id = int64(id)
+	queryStr := "select *, concat('" + API_PATH + "asn/', id) as self "
+	queryStr += ", concat('" + API_PATH + "cachegroup/', cachegroup) as cachegroup_id_ref"
+	queryStr += " from asn where id=:id"
+	nstmt, err := db.PrepareNamed(queryStr)
 	err = nstmt.Select(&ret, arg)
 	if err != nil {
 		log.Println(err)
@@ -53,14 +63,16 @@ func getAsnById(id int, db *sqlx.DB) (interface{}, error) {
 }
 
 // @Title getAsns
-// @Description retrieves the asn information for a certain id
+// @Description retrieves the asn
 // @Accept  application/json
 // @Success 200 {array}    Asn
 // @Resource /api/2.0
 // @Router /api/2.0/asn [get]
 func getAsns(db *sqlx.DB) (interface{}, error) {
 	ret := []Asn{}
-	queryStr := "select * from asn"
+	queryStr := "select *, concat('" + API_PATH + "asn/', id) as self "
+	queryStr += ", concat('" + API_PATH + "cachegroup/', cachegroup) as cachegroup_id_ref"
+	queryStr += " from asn"
 	err := db.Select(&ret, queryStr)
 	if err != nil {
 		log.Println(err)
@@ -135,7 +147,8 @@ func putAsn(id int, payload []byte, db *sqlx.DB) (interface{}, error) {
 // @Resource /api/2.0
 // @Router /api/2.0/asn/{id} [delete]
 func delAsn(id int, db *sqlx.DB) (interface{}, error) {
-	arg := Asn{Id: int64(id)}
+	arg := Asn{}
+	arg.Id = int64(id)
 	result, err := db.NamedExec("DELETE FROM asn WHERE id=:id", arg)
 	if err != nil {
 		log.Println(err)

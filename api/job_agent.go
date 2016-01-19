@@ -32,6 +32,9 @@ type JobAgent struct {
 	Description null.String `db:"description" json:"description"`
 	Active      int64       `db:"active" json:"active"`
 	LastUpdated time.Time   `db:"last_updated" json:"lastUpdated"`
+	Links       struct {
+		Self string `db:"self" json:"_self"`
+	} `json:"_links" db:-`
 }
 
 // @Title getJobAgentById
@@ -43,8 +46,11 @@ type JobAgent struct {
 // @Router /api/2.0/job_agent/{id} [get]
 func getJobAgentById(id int, db *sqlx.DB) (interface{}, error) {
 	ret := []JobAgent{}
-	arg := JobAgent{Id: int64(id)}
-	nstmt, err := db.PrepareNamed(`select * from job_agent where id=:id`)
+	arg := JobAgent{}
+	arg.Id = int64(id)
+	queryStr := "select *, concat('" + API_PATH + "job_agent/', id) as self "
+	queryStr += " from job_agent where id=:id"
+	nstmt, err := db.PrepareNamed(queryStr)
 	err = nstmt.Select(&ret, arg)
 	if err != nil {
 		log.Println(err)
@@ -55,14 +61,15 @@ func getJobAgentById(id int, db *sqlx.DB) (interface{}, error) {
 }
 
 // @Title getJobAgents
-// @Description retrieves the job_agent information for a certain id
+// @Description retrieves the job_agent
 // @Accept  application/json
 // @Success 200 {array}    JobAgent
 // @Resource /api/2.0
 // @Router /api/2.0/job_agent [get]
 func getJobAgents(db *sqlx.DB) (interface{}, error) {
 	ret := []JobAgent{}
-	queryStr := "select * from job_agent"
+	queryStr := "select *, concat('" + API_PATH + "job_agent/', id) as self "
+	queryStr += " from job_agent"
 	err := db.Select(&ret, queryStr)
 	if err != nil {
 		log.Println(err)
@@ -140,7 +147,8 @@ func putJobAgent(id int, payload []byte, db *sqlx.DB) (interface{}, error) {
 // @Resource /api/2.0
 // @Router /api/2.0/job_agent/{id} [delete]
 func delJobAgent(id int, db *sqlx.DB) (interface{}, error) {
-	arg := JobAgent{Id: int64(id)}
+	arg := JobAgent{}
+	arg.Id = int64(id)
 	result, err := db.NamedExec("DELETE FROM job_agent WHERE id=:id", arg)
 	if err != nil {
 		log.Println(err)

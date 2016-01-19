@@ -28,8 +28,14 @@ import (
 type Regex struct {
 	Id          int64     `db:"id" json:"id"`
 	Pattern     string    `db:"pattern" json:"pattern"`
-	Type        int64     `db:"type" json:"type"`
 	LastUpdated time.Time `db:"last_updated" json:"lastUpdated"`
+	Links       struct {
+		Self string `db:"self" json:"_self"`
+		Type struct {
+			ID  int64  `db:"type" json:"id"`
+			Ref string `db:"type_id_ref" json:"_ref"`
+		} `json:"type" db:-`
+	} `json:"_links" db:-`
 }
 
 // @Title getRegexById
@@ -41,8 +47,12 @@ type Regex struct {
 // @Router /api/2.0/regex/{id} [get]
 func getRegexById(id int, db *sqlx.DB) (interface{}, error) {
 	ret := []Regex{}
-	arg := Regex{Id: int64(id)}
-	nstmt, err := db.PrepareNamed(`select * from regex where id=:id`)
+	arg := Regex{}
+	arg.Id = int64(id)
+	queryStr := "select *, concat('" + API_PATH + "regex/', id) as self "
+	queryStr += ", concat('" + API_PATH + "type/', type) as type_id_ref"
+	queryStr += " from regex where id=:id"
+	nstmt, err := db.PrepareNamed(queryStr)
 	err = nstmt.Select(&ret, arg)
 	if err != nil {
 		log.Println(err)
@@ -53,14 +63,16 @@ func getRegexById(id int, db *sqlx.DB) (interface{}, error) {
 }
 
 // @Title getRegexs
-// @Description retrieves the regex information for a certain id
+// @Description retrieves the regex
 // @Accept  application/json
 // @Success 200 {array}    Regex
 // @Resource /api/2.0
 // @Router /api/2.0/regex [get]
 func getRegexs(db *sqlx.DB) (interface{}, error) {
 	ret := []Regex{}
-	queryStr := "select * from regex"
+	queryStr := "select *, concat('" + API_PATH + "regex/', id) as self "
+	queryStr += ", concat('" + API_PATH + "type/', type) as type_id_ref"
+	queryStr += " from regex"
 	err := db.Select(&ret, queryStr)
 	if err != nil {
 		log.Println(err)
@@ -135,7 +147,8 @@ func putRegex(id int, payload []byte, db *sqlx.DB) (interface{}, error) {
 // @Resource /api/2.0
 // @Router /api/2.0/regex/{id} [delete]
 func delRegex(id int, db *sqlx.DB) (interface{}, error) {
-	arg := Regex{Id: int64(id)}
+	arg := Regex{}
+	arg.Id = int64(id)
 	result, err := db.NamedExec("DELETE FROM regex WHERE id=:id", arg)
 	if err != nil {
 		log.Println(err)

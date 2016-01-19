@@ -26,9 +26,18 @@ import (
 )
 
 type DeliveryserviceServer struct {
-	Deliveryservice int64     `db:"deliveryservice" json:"deliveryservice"`
-	Server          int64     `db:"server" json:"server"`
-	LastUpdated     time.Time `db:"last_updated" json:"lastUpdated"`
+	LastUpdated time.Time `db:"last_updated" json:"lastUpdated"`
+	Links       struct {
+		Self            string `db:"self" json:"_self"`
+		Deliveryservice struct {
+			ID  int64  `db:"deliveryservice" json:"id"`
+			Ref string `db:"deliveryservice_id_ref" json:"_ref"`
+		} `json:"deliveryservice" db:-`
+		Server struct {
+			ID  int64  `db:"server" json:"id"`
+			Ref string `db:"server_id_ref" json:"_ref"`
+		} `json:"server" db:-`
+	} `json:"_links" db:-`
 }
 
 // @Title getDeliveryserviceServerById
@@ -40,8 +49,13 @@ type DeliveryserviceServer struct {
 // @Router /api/2.0/deliveryservice_server/{id} [get]
 func getDeliveryserviceServerById(id int, db *sqlx.DB) (interface{}, error) {
 	ret := []DeliveryserviceServer{}
-	arg := DeliveryserviceServer{Deliveryservice: int64(id)}
-	nstmt, err := db.PrepareNamed(`select * from deliveryservice_server where deliveryservice=:deliveryservice`)
+	arg := DeliveryserviceServer{}
+	arg.Links.Deliveryservice.ID = int64(id)
+	queryStr := "select *, concat('" + API_PATH + "deliveryservice_server/', id) as self "
+	queryStr += ", concat('" + API_PATH + "deliveryservice/', deliveryservice) as deliveryservice_id_ref"
+	queryStr += ", concat('" + API_PATH + "server/', server) as server_id_ref"
+	queryStr += " from deliveryservice_server where Links.Deliveryservice.ID=:Links.Deliveryservice.ID"
+	nstmt, err := db.PrepareNamed(queryStr)
 	err = nstmt.Select(&ret, arg)
 	if err != nil {
 		log.Println(err)
@@ -52,14 +66,17 @@ func getDeliveryserviceServerById(id int, db *sqlx.DB) (interface{}, error) {
 }
 
 // @Title getDeliveryserviceServers
-// @Description retrieves the deliveryservice_server information for a certain id
+// @Description retrieves the deliveryservice_server
 // @Accept  application/json
 // @Success 200 {array}    DeliveryserviceServer
 // @Resource /api/2.0
 // @Router /api/2.0/deliveryservice_server [get]
 func getDeliveryserviceServers(db *sqlx.DB) (interface{}, error) {
 	ret := []DeliveryserviceServer{}
-	queryStr := "select * from deliveryservice_server"
+	queryStr := "select *, concat('" + API_PATH + "deliveryservice_server/', id) as self "
+	queryStr += ", concat('" + API_PATH + "deliveryservice/', deliveryservice) as deliveryservice_id_ref"
+	queryStr += ", concat('" + API_PATH + "server/', server) as server_id_ref"
+	queryStr += " from deliveryservice_server"
 	err := db.Select(&ret, queryStr)
 	if err != nil {
 		log.Println(err)
@@ -107,7 +124,7 @@ func postDeliveryserviceServer(payload []byte, db *sqlx.DB) (interface{}, error)
 func putDeliveryserviceServer(id int, payload []byte, db *sqlx.DB) (interface{}, error) {
 	var v DeliveryserviceServer
 	err := json.Unmarshal(payload, &v)
-	v.Deliveryservice = int64(id) // overwrite the id in the payload
+	v.Links.Deliveryservice.ID = int64(id) // overwrite the id in the payload
 	if err != nil {
 		log.Println(err)
 		return nil, err
@@ -117,7 +134,7 @@ func putDeliveryserviceServer(id int, payload []byte, db *sqlx.DB) (interface{},
 	sqlString += "deliveryservice = :deliveryservice"
 	sqlString += ",server = :server"
 	sqlString += ",last_updated = :last_updated"
-	sqlString += " WHERE deliveryservice=:deliveryservice"
+	sqlString += " WHERE Links.Deliveryservice.ID=:Links.Deliveryservice.ID"
 	result, err := db.NamedExec(sqlString, v)
 	if err != nil {
 		log.Println(err)
@@ -134,7 +151,8 @@ func putDeliveryserviceServer(id int, payload []byte, db *sqlx.DB) (interface{},
 // @Resource /api/2.0
 // @Router /api/2.0/deliveryservice_server/{id} [delete]
 func delDeliveryserviceServer(id int, db *sqlx.DB) (interface{}, error) {
-	arg := DeliveryserviceServer{Deliveryservice: int64(id)}
+	arg := DeliveryserviceServer{}
+	arg.Links.Deliveryservice.ID = int64(id)
 	result, err := db.NamedExec("DELETE FROM deliveryservice_server WHERE id=:id", arg)
 	if err != nil {
 		log.Println(err)

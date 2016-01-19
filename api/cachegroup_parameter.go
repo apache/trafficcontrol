@@ -26,9 +26,18 @@ import (
 )
 
 type CachegroupParameter struct {
-	Cachegroup  int64     `db:"cachegroup" json:"cachegroup"`
-	Parameter   int64     `db:"parameter" json:"parameter"`
 	LastUpdated time.Time `db:"last_updated" json:"lastUpdated"`
+	Links       struct {
+		Self       string `db:"self" json:"_self"`
+		Cachegroup struct {
+			ID  int64  `db:"cachegroup" json:"id"`
+			Ref string `db:"cachegroup_id_ref" json:"_ref"`
+		} `json:"cachegroup" db:-`
+		Parameter struct {
+			ID  int64  `db:"parameter" json:"id"`
+			Ref string `db:"parameter_id_ref" json:"_ref"`
+		} `json:"parameter" db:-`
+	} `json:"_links" db:-`
 }
 
 // @Title getCachegroupParameterById
@@ -40,8 +49,13 @@ type CachegroupParameter struct {
 // @Router /api/2.0/cachegroup_parameter/{id} [get]
 func getCachegroupParameterById(id int, db *sqlx.DB) (interface{}, error) {
 	ret := []CachegroupParameter{}
-	arg := CachegroupParameter{Cachegroup: int64(id)}
-	nstmt, err := db.PrepareNamed(`select * from cachegroup_parameter where cachegroup=:cachegroup`)
+	arg := CachegroupParameter{}
+	arg.Links.Cachegroup.ID = int64(id)
+	queryStr := "select *, concat('" + API_PATH + "cachegroup_parameter/', id) as self "
+	queryStr += ", concat('" + API_PATH + "cachegroup/', cachegroup) as cachegroup_id_ref"
+	queryStr += ", concat('" + API_PATH + "parameter/', parameter) as parameter_id_ref"
+	queryStr += " from cachegroup_parameter where Links.Cachegroup.ID=:Links.Cachegroup.ID"
+	nstmt, err := db.PrepareNamed(queryStr)
 	err = nstmt.Select(&ret, arg)
 	if err != nil {
 		log.Println(err)
@@ -52,14 +66,17 @@ func getCachegroupParameterById(id int, db *sqlx.DB) (interface{}, error) {
 }
 
 // @Title getCachegroupParameters
-// @Description retrieves the cachegroup_parameter information for a certain id
+// @Description retrieves the cachegroup_parameter
 // @Accept  application/json
 // @Success 200 {array}    CachegroupParameter
 // @Resource /api/2.0
 // @Router /api/2.0/cachegroup_parameter [get]
 func getCachegroupParameters(db *sqlx.DB) (interface{}, error) {
 	ret := []CachegroupParameter{}
-	queryStr := "select * from cachegroup_parameter"
+	queryStr := "select *, concat('" + API_PATH + "cachegroup_parameter/', id) as self "
+	queryStr += ", concat('" + API_PATH + "cachegroup/', cachegroup) as cachegroup_id_ref"
+	queryStr += ", concat('" + API_PATH + "parameter/', parameter) as parameter_id_ref"
+	queryStr += " from cachegroup_parameter"
 	err := db.Select(&ret, queryStr)
 	if err != nil {
 		log.Println(err)
@@ -107,7 +124,7 @@ func postCachegroupParameter(payload []byte, db *sqlx.DB) (interface{}, error) {
 func putCachegroupParameter(id int, payload []byte, db *sqlx.DB) (interface{}, error) {
 	var v CachegroupParameter
 	err := json.Unmarshal(payload, &v)
-	v.Cachegroup = int64(id) // overwrite the id in the payload
+	v.Links.Cachegroup.ID = int64(id) // overwrite the id in the payload
 	if err != nil {
 		log.Println(err)
 		return nil, err
@@ -117,7 +134,7 @@ func putCachegroupParameter(id int, payload []byte, db *sqlx.DB) (interface{}, e
 	sqlString += "cachegroup = :cachegroup"
 	sqlString += ",parameter = :parameter"
 	sqlString += ",last_updated = :last_updated"
-	sqlString += " WHERE cachegroup=:cachegroup"
+	sqlString += " WHERE Links.Cachegroup.ID=:Links.Cachegroup.ID"
 	result, err := db.NamedExec(sqlString, v)
 	if err != nil {
 		log.Println(err)
@@ -134,7 +151,8 @@ func putCachegroupParameter(id int, payload []byte, db *sqlx.DB) (interface{}, e
 // @Resource /api/2.0
 // @Router /api/2.0/cachegroup_parameter/{id} [delete]
 func delCachegroupParameter(id int, db *sqlx.DB) (interface{}, error) {
-	arg := CachegroupParameter{Cachegroup: int64(id)}
+	arg := CachegroupParameter{}
+	arg.Links.Cachegroup.ID = int64(id)
 	result, err := db.NamedExec("DELETE FROM cachegroup_parameter WHERE id=:id", arg)
 	if err != nil {
 		log.Println(err)

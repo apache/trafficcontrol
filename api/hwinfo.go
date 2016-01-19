@@ -27,10 +27,16 @@ import (
 
 type Hwinfo struct {
 	Id          int64     `db:"id" json:"id"`
-	Serverid    int64     `db:"serverid" json:"serverid"`
 	Description string    `db:"description" json:"description"`
 	Val         string    `db:"val" json:"val"`
 	LastUpdated time.Time `db:"last_updated" json:"lastUpdated"`
+	Links       struct {
+		Self     string `db:"self" json:"_self"`
+		Serverid struct {
+			ID  int64  `db:"serverid" json:"id"`
+			Ref string `db:"server_id_ref" json:"_ref"`
+		} `json:"serverid" db:-`
+	} `json:"_links" db:-`
 }
 
 // @Title getHwinfoById
@@ -42,8 +48,12 @@ type Hwinfo struct {
 // @Router /api/2.0/hwinfo/{id} [get]
 func getHwinfoById(id int, db *sqlx.DB) (interface{}, error) {
 	ret := []Hwinfo{}
-	arg := Hwinfo{Id: int64(id)}
-	nstmt, err := db.PrepareNamed(`select * from hwinfo where id=:id`)
+	arg := Hwinfo{}
+	arg.Id = int64(id)
+	queryStr := "select *, concat('" + API_PATH + "hwinfo/', id) as self "
+	queryStr += ", concat('" + API_PATH + "server/', serverid) as server_id_ref"
+	queryStr += " from hwinfo where id=:id"
+	nstmt, err := db.PrepareNamed(queryStr)
 	err = nstmt.Select(&ret, arg)
 	if err != nil {
 		log.Println(err)
@@ -54,14 +64,16 @@ func getHwinfoById(id int, db *sqlx.DB) (interface{}, error) {
 }
 
 // @Title getHwinfos
-// @Description retrieves the hwinfo information for a certain id
+// @Description retrieves the hwinfo
 // @Accept  application/json
 // @Success 200 {array}    Hwinfo
 // @Resource /api/2.0
 // @Router /api/2.0/hwinfo [get]
 func getHwinfos(db *sqlx.DB) (interface{}, error) {
 	ret := []Hwinfo{}
-	queryStr := "select * from hwinfo"
+	queryStr := "select *, concat('" + API_PATH + "hwinfo/', id) as self "
+	queryStr += ", concat('" + API_PATH + "server/', serverid) as server_id_ref"
+	queryStr += " from hwinfo"
 	err := db.Select(&ret, queryStr)
 	if err != nil {
 		log.Println(err)
@@ -139,7 +151,8 @@ func putHwinfo(id int, payload []byte, db *sqlx.DB) (interface{}, error) {
 // @Resource /api/2.0
 // @Router /api/2.0/hwinfo/{id} [delete]
 func delHwinfo(id int, db *sqlx.DB) (interface{}, error) {
-	arg := Hwinfo{Id: int64(id)}
+	arg := Hwinfo{}
+	arg.Id = int64(id)
 	result, err := db.NamedExec("DELETE FROM hwinfo WHERE id=:id", arg)
 	if err != nil {
 		log.Println(err)

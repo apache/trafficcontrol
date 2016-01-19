@@ -37,8 +37,14 @@ type ToExtension struct {
 	Description           null.String `db:"description" json:"description"`
 	ServercheckShortName  null.String `db:"servercheck_short_name" json:"servercheckShortName"`
 	ServercheckColumnName null.String `db:"servercheck_column_name" json:"servercheckColumnName"`
-	Type                  int64       `db:"type" json:"type"`
 	LastUpdated           time.Time   `db:"last_updated" json:"lastUpdated"`
+	Links                 struct {
+		Self string `db:"self" json:"_self"`
+		Type struct {
+			ID  int64  `db:"type" json:"id"`
+			Ref string `db:"type_id_ref" json:"_ref"`
+		} `json:"type" db:-`
+	} `json:"_links" db:-`
 }
 
 // @Title getToExtensionById
@@ -50,8 +56,12 @@ type ToExtension struct {
 // @Router /api/2.0/to_extension/{id} [get]
 func getToExtensionById(id int, db *sqlx.DB) (interface{}, error) {
 	ret := []ToExtension{}
-	arg := ToExtension{Id: int64(id)}
-	nstmt, err := db.PrepareNamed(`select * from to_extension where id=:id`)
+	arg := ToExtension{}
+	arg.Id = int64(id)
+	queryStr := "select *, concat('" + API_PATH + "to_extension/', id) as self "
+	queryStr += ", concat('" + API_PATH + "type/', type) as type_id_ref"
+	queryStr += " from to_extension where id=:id"
+	nstmt, err := db.PrepareNamed(queryStr)
 	err = nstmt.Select(&ret, arg)
 	if err != nil {
 		log.Println(err)
@@ -62,14 +72,16 @@ func getToExtensionById(id int, db *sqlx.DB) (interface{}, error) {
 }
 
 // @Title getToExtensions
-// @Description retrieves the to_extension information for a certain id
+// @Description retrieves the to_extension
 // @Accept  application/json
 // @Success 200 {array}    ToExtension
 // @Resource /api/2.0
 // @Router /api/2.0/to_extension [get]
 func getToExtensions(db *sqlx.DB) (interface{}, error) {
 	ret := []ToExtension{}
-	queryStr := "select * from to_extension"
+	queryStr := "select *, concat('" + API_PATH + "to_extension/', id) as self "
+	queryStr += ", concat('" + API_PATH + "type/', type) as type_id_ref"
+	queryStr += " from to_extension"
 	err := db.Select(&ret, queryStr)
 	if err != nil {
 		log.Println(err)
@@ -168,7 +180,8 @@ func putToExtension(id int, payload []byte, db *sqlx.DB) (interface{}, error) {
 // @Resource /api/2.0
 // @Router /api/2.0/to_extension/{id} [delete]
 func delToExtension(id int, db *sqlx.DB) (interface{}, error) {
-	arg := ToExtension{Id: int64(id)}
+	arg := ToExtension{}
+	arg.Id = int64(id)
 	result, err := db.NamedExec("DELETE FROM to_extension WHERE id=:id", arg)
 	if err != nil {
 		log.Println(err)

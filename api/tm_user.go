@@ -29,7 +29,6 @@ import (
 type TmUser struct {
 	Id                 int64       `db:"id" json:"id"`
 	Username           null.String `db:"username" json:"username"`
-	Role               null.Int    `db:"role" json:"role"`
 	Uid                null.Int    `db:"uid" json:"uid"`
 	Gid                null.Int    `db:"gid" json:"gid"`
 	LocalPasswd        null.String `db:"local_passwd" json:"localPasswd"`
@@ -49,6 +48,13 @@ type TmUser struct {
 	LocalUser          int64       `db:"local_user" json:"localUser"`
 	Token              null.String `db:"token" json:"token"`
 	RegistrationSent   time.Time   `db:"registration_sent" json:"registrationSent"`
+	Links              struct {
+		Self string `db:"self" json:"_self"`
+		Role struct {
+			ID  int64  `db:"role" json:"id"`
+			Ref string `db:"role_id_ref" json:"_ref"`
+		} `json:"role" db:-`
+	} `json:"_links" db:-`
 }
 
 // @Title getTmUserById
@@ -60,8 +66,12 @@ type TmUser struct {
 // @Router /api/2.0/tm_user/{id} [get]
 func getTmUserById(id int, db *sqlx.DB) (interface{}, error) {
 	ret := []TmUser{}
-	arg := TmUser{Id: int64(id)}
-	nstmt, err := db.PrepareNamed(`select * from tm_user where id=:id`)
+	arg := TmUser{}
+	arg.Id = int64(id)
+	queryStr := "select *, concat('" + API_PATH + "tm_user/', id) as self "
+	queryStr += ", concat('" + API_PATH + "role/', role) as role_id_ref"
+	queryStr += " from tm_user where id=:id"
+	nstmt, err := db.PrepareNamed(queryStr)
 	err = nstmt.Select(&ret, arg)
 	if err != nil {
 		log.Println(err)
@@ -72,14 +82,16 @@ func getTmUserById(id int, db *sqlx.DB) (interface{}, error) {
 }
 
 // @Title getTmUsers
-// @Description retrieves the tm_user information for a certain id
+// @Description retrieves the tm_user
 // @Accept  application/json
 // @Success 200 {array}    TmUser
 // @Resource /api/2.0
 // @Router /api/2.0/tm_user [get]
 func getTmUsers(db *sqlx.DB) (interface{}, error) {
 	ret := []TmUser{}
-	queryStr := "select * from tm_user"
+	queryStr := "select *, concat('" + API_PATH + "tm_user/', id) as self "
+	queryStr += ", concat('" + API_PATH + "role/', role) as role_id_ref"
+	queryStr += " from tm_user"
 	err := db.Select(&ret, queryStr)
 	if err != nil {
 		log.Println(err)
@@ -208,7 +220,8 @@ func putTmUser(id int, payload []byte, db *sqlx.DB) (interface{}, error) {
 // @Resource /api/2.0
 // @Router /api/2.0/tm_user/{id} [delete]
 func delTmUser(id int, db *sqlx.DB) (interface{}, error) {
-	arg := TmUser{Id: int64(id)}
+	arg := TmUser{}
+	arg.Id = int64(id)
 	result, err := db.NamedExec("DELETE FROM tm_user WHERE id=:id", arg)
 	if err != nil {
 		log.Println(err)

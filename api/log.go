@@ -30,9 +30,15 @@ type Log struct {
 	Id          int64       `db:"id" json:"id"`
 	Level       null.String `db:"level" json:"level"`
 	Message     string      `db:"message" json:"message"`
-	TmUser      int64       `db:"tm_user" json:"tmUser"`
 	Ticketnum   null.String `db:"ticketnum" json:"ticketnum"`
 	LastUpdated time.Time   `db:"last_updated" json:"lastUpdated"`
+	Links       struct {
+		Self   string `db:"self" json:"_self"`
+		TmUser struct {
+			ID  int64  `db:"tm_user" json:"id"`
+			Ref string `db:"tm_user_id_ref" json:"_ref"`
+		} `json:"tm_user" db:-`
+	} `json:"_links" db:-`
 }
 
 // @Title getLogById
@@ -44,8 +50,12 @@ type Log struct {
 // @Router /api/2.0/log/{id} [get]
 func getLogById(id int, db *sqlx.DB) (interface{}, error) {
 	ret := []Log{}
-	arg := Log{Id: int64(id)}
-	nstmt, err := db.PrepareNamed(`select * from log where id=:id`)
+	arg := Log{}
+	arg.Id = int64(id)
+	queryStr := "select *, concat('" + API_PATH + "log/', id) as self "
+	queryStr += ", concat('" + API_PATH + "tm_user/', tm_user) as tm_user_id_ref"
+	queryStr += " from log where id=:id"
+	nstmt, err := db.PrepareNamed(queryStr)
 	err = nstmt.Select(&ret, arg)
 	if err != nil {
 		log.Println(err)
@@ -56,14 +66,16 @@ func getLogById(id int, db *sqlx.DB) (interface{}, error) {
 }
 
 // @Title getLogs
-// @Description retrieves the log information for a certain id
+// @Description retrieves the log
 // @Accept  application/json
 // @Success 200 {array}    Log
 // @Resource /api/2.0
 // @Router /api/2.0/log [get]
 func getLogs(db *sqlx.DB) (interface{}, error) {
 	ret := []Log{}
-	queryStr := "select * from log"
+	queryStr := "select *, concat('" + API_PATH + "log/', id) as self "
+	queryStr += ", concat('" + API_PATH + "tm_user/', tm_user) as tm_user_id_ref"
+	queryStr += " from log"
 	err := db.Select(&ret, queryStr)
 	if err != nil {
 		log.Println(err)
@@ -144,7 +156,8 @@ func putLog(id int, payload []byte, db *sqlx.DB) (interface{}, error) {
 // @Resource /api/2.0
 // @Router /api/2.0/log/{id} [delete]
 func delLog(id int, db *sqlx.DB) (interface{}, error) {
-	arg := Log{Id: int64(id)}
+	arg := Log{}
+	arg.Id = int64(id)
 	result, err := db.NamedExec("DELETE FROM log WHERE id=:id", arg)
 	if err != nil {
 		log.Println(err)

@@ -26,10 +26,22 @@ import (
 )
 
 type FederationTmuser struct {
-	Federation  int64     `db:"federation" json:"federation"`
-	TmUser      int64     `db:"tm_user" json:"tmUser"`
-	Role        int64     `db:"role" json:"role"`
 	LastUpdated time.Time `db:"last_updated" json:"lastUpdated"`
+	Links       struct {
+		Self string `db:"self" json:"_self"`
+		Role struct {
+			ID  int64  `db:"role" json:"id"`
+			Ref string `db:"role_id_ref" json:"_ref"`
+		} `json:"role" db:-`
+		Federation struct {
+			ID  int64  `db:"federation" json:"id"`
+			Ref string `db:"federation_id_ref" json:"_ref"`
+		} `json:"federation" db:-`
+		TmUser struct {
+			ID  int64  `db:"tm_user" json:"id"`
+			Ref string `db:"tm_user_id_ref" json:"_ref"`
+		} `json:"tm_user" db:-`
+	} `json:"_links" db:-`
 }
 
 // @Title getFederationTmuserById
@@ -41,8 +53,14 @@ type FederationTmuser struct {
 // @Router /api/2.0/federation_tmuser/{id} [get]
 func getFederationTmuserById(id int, db *sqlx.DB) (interface{}, error) {
 	ret := []FederationTmuser{}
-	arg := FederationTmuser{Federation: int64(id)}
-	nstmt, err := db.PrepareNamed(`select * from federation_tmuser where federation=:federation`)
+	arg := FederationTmuser{}
+	arg.Links.Federation.ID = int64(id)
+	queryStr := "select *, concat('" + API_PATH + "federation_tmuser/', id) as self "
+	queryStr += ", concat('" + API_PATH + "federation/', federation) as federation_id_ref"
+	queryStr += ", concat('" + API_PATH + "tm_user/', tm_user) as tm_user_id_ref"
+	queryStr += ", concat('" + API_PATH + "role/', role) as role_id_ref"
+	queryStr += " from federation_tmuser where Links.Federation.ID=:Links.Federation.ID"
+	nstmt, err := db.PrepareNamed(queryStr)
 	err = nstmt.Select(&ret, arg)
 	if err != nil {
 		log.Println(err)
@@ -53,14 +71,18 @@ func getFederationTmuserById(id int, db *sqlx.DB) (interface{}, error) {
 }
 
 // @Title getFederationTmusers
-// @Description retrieves the federation_tmuser information for a certain id
+// @Description retrieves the federation_tmuser
 // @Accept  application/json
 // @Success 200 {array}    FederationTmuser
 // @Resource /api/2.0
 // @Router /api/2.0/federation_tmuser [get]
 func getFederationTmusers(db *sqlx.DB) (interface{}, error) {
 	ret := []FederationTmuser{}
-	queryStr := "select * from federation_tmuser"
+	queryStr := "select *, concat('" + API_PATH + "federation_tmuser/', id) as self "
+	queryStr += ", concat('" + API_PATH + "federation/', federation) as federation_id_ref"
+	queryStr += ", concat('" + API_PATH + "tm_user/', tm_user) as tm_user_id_ref"
+	queryStr += ", concat('" + API_PATH + "role/', role) as role_id_ref"
+	queryStr += " from federation_tmuser"
 	err := db.Select(&ret, queryStr)
 	if err != nil {
 		log.Println(err)
@@ -110,7 +132,7 @@ func postFederationTmuser(payload []byte, db *sqlx.DB) (interface{}, error) {
 func putFederationTmuser(id int, payload []byte, db *sqlx.DB) (interface{}, error) {
 	var v FederationTmuser
 	err := json.Unmarshal(payload, &v)
-	v.Federation = int64(id) // overwrite the id in the payload
+	v.Links.Federation.ID = int64(id) // overwrite the id in the payload
 	if err != nil {
 		log.Println(err)
 		return nil, err
@@ -121,7 +143,7 @@ func putFederationTmuser(id int, payload []byte, db *sqlx.DB) (interface{}, erro
 	sqlString += ",tm_user = :tm_user"
 	sqlString += ",role = :role"
 	sqlString += ",last_updated = :last_updated"
-	sqlString += " WHERE federation=:federation"
+	sqlString += " WHERE Links.Federation.ID=:Links.Federation.ID"
 	result, err := db.NamedExec(sqlString, v)
 	if err != nil {
 		log.Println(err)
@@ -138,7 +160,8 @@ func putFederationTmuser(id int, payload []byte, db *sqlx.DB) (interface{}, erro
 // @Resource /api/2.0
 // @Router /api/2.0/federation_tmuser/{id} [delete]
 func delFederationTmuser(id int, db *sqlx.DB) (interface{}, error) {
-	arg := FederationTmuser{Federation: int64(id)}
+	arg := FederationTmuser{}
+	arg.Links.Federation.ID = int64(id)
 	result, err := db.NamedExec("DELETE FROM federation_tmuser WHERE id=:id", arg)
 	if err != nil {
 		log.Println(err)

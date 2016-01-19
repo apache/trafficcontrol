@@ -31,6 +31,9 @@ type Parameter struct {
 	ConfigFile  string    `db:"config_file" json:"configFile"`
 	Value       string    `db:"value" json:"value"`
 	LastUpdated time.Time `db:"last_updated" json:"lastUpdated"`
+	Links       struct {
+		Self string `db:"self" json:"_self"`
+	} `json:"_links" db:-`
 }
 
 // @Title getParameterById
@@ -42,8 +45,11 @@ type Parameter struct {
 // @Router /api/2.0/parameter/{id} [get]
 func getParameterById(id int, db *sqlx.DB) (interface{}, error) {
 	ret := []Parameter{}
-	arg := Parameter{Id: int64(id)}
-	nstmt, err := db.PrepareNamed(`select * from parameter where id=:id`)
+	arg := Parameter{}
+	arg.Id = int64(id)
+	queryStr := "select *, concat('" + API_PATH + "parameter/', id) as self "
+	queryStr += " from parameter where id=:id"
+	nstmt, err := db.PrepareNamed(queryStr)
 	err = nstmt.Select(&ret, arg)
 	if err != nil {
 		log.Println(err)
@@ -54,14 +60,15 @@ func getParameterById(id int, db *sqlx.DB) (interface{}, error) {
 }
 
 // @Title getParameters
-// @Description retrieves the parameter information for a certain id
+// @Description retrieves the parameter
 // @Accept  application/json
 // @Success 200 {array}    Parameter
 // @Resource /api/2.0
 // @Router /api/2.0/parameter [get]
 func getParameters(db *sqlx.DB) (interface{}, error) {
 	ret := []Parameter{}
-	queryStr := "select * from parameter"
+	queryStr := "select *, concat('" + API_PATH + "parameter/', id) as self "
+	queryStr += " from parameter"
 	err := db.Select(&ret, queryStr)
 	if err != nil {
 		log.Println(err)
@@ -139,7 +146,8 @@ func putParameter(id int, payload []byte, db *sqlx.DB) (interface{}, error) {
 // @Resource /api/2.0
 // @Router /api/2.0/parameter/{id} [delete]
 func delParameter(id int, db *sqlx.DB) (interface{}, error) {
-	arg := Parameter{Id: int64(id)}
+	arg := Parameter{}
+	arg.Id = int64(id)
 	result, err := db.NamedExec("DELETE FROM parameter WHERE id=:id", arg)
 	if err != nil {
 		log.Println(err)

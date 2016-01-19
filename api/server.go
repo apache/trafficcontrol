@@ -40,14 +40,8 @@ type Server struct {
 	Ip6Address     null.String `db:"ip6_address" json:"ip6Address"`
 	Ip6Gateway     null.String `db:"ip6_gateway" json:"ip6Gateway"`
 	InterfaceMtu   int64       `db:"interface_mtu" json:"interfaceMtu"`
-	PhysLocation   int64       `db:"phys_location" json:"physLocation"`
 	Rack           null.String `db:"rack" json:"rack"`
-	Cachegroup     int64       `db:"cachegroup" json:"cachegroup"`
-	Type           int64       `db:"type" json:"type"`
-	Status         int64       `db:"status" json:"status"`
 	UpdPending     int64       `db:"upd_pending" json:"updPending"`
-	Profile        int64       `db:"profile" json:"profile"`
-	CdnId          int64       `db:"cdn_id" json:"cdnId"`
 	MgmtIpAddress  null.String `db:"mgmt_ip_address" json:"mgmtIpAddress"`
 	MgmtIpNetmask  null.String `db:"mgmt_ip_netmask" json:"mgmtIpNetmask"`
 	MgmtIpGateway  null.String `db:"mgmt_ip_gateway" json:"mgmtIpGateway"`
@@ -59,6 +53,33 @@ type Server struct {
 	RouterHostName null.String `db:"router_host_name" json:"routerHostName"`
 	RouterPortName null.String `db:"router_port_name" json:"routerPortName"`
 	LastUpdated    time.Time   `db:"last_updated" json:"lastUpdated"`
+	Links          struct {
+		Self  string `db:"self" json:"_self"`
+		CdnId struct {
+			ID  int64  `db:"cdn_id" json:"id"`
+			Ref string `db:"cdn_id_ref" json:"_ref"`
+		} `json:"cdn_id" db:-`
+		PhysLocation struct {
+			ID  int64  `db:"phys_location" json:"id"`
+			Ref string `db:"phys_location_id_ref" json:"_ref"`
+		} `json:"phys_location" db:-`
+		Cachegroup struct {
+			ID  int64  `db:"cachegroup" json:"id"`
+			Ref string `db:"cachegroup_id_ref" json:"_ref"`
+		} `json:"cachegroup" db:-`
+		Type struct {
+			ID  int64  `db:"type" json:"id"`
+			Ref string `db:"type_id_ref" json:"_ref"`
+		} `json:"type" db:-`
+		Status struct {
+			ID  int64  `db:"status" json:"id"`
+			Ref string `db:"status_id_ref" json:"_ref"`
+		} `json:"status" db:-`
+		Profile struct {
+			ID  int64  `db:"profile" json:"id"`
+			Ref string `db:"profile_id_ref" json:"_ref"`
+		} `json:"profile" db:-`
+	} `json:"_links" db:-`
 }
 
 // @Title getServerById
@@ -70,8 +91,17 @@ type Server struct {
 // @Router /api/2.0/server/{id} [get]
 func getServerById(id int, db *sqlx.DB) (interface{}, error) {
 	ret := []Server{}
-	arg := Server{Id: int64(id)}
-	nstmt, err := db.PrepareNamed(`select * from server where id=:id`)
+	arg := Server{}
+	arg.Id = int64(id)
+	queryStr := "select *, concat('" + API_PATH + "server/', id) as self "
+	queryStr += ", concat('" + API_PATH + "phys_location/', phys_location) as phys_location_id_ref"
+	queryStr += ", concat('" + API_PATH + "cachegroup/', cachegroup) as cachegroup_id_ref"
+	queryStr += ", concat('" + API_PATH + "type/', type) as type_id_ref"
+	queryStr += ", concat('" + API_PATH + "status/', status) as status_id_ref"
+	queryStr += ", concat('" + API_PATH + "profile/', profile) as profile_id_ref"
+	queryStr += ", concat('" + API_PATH + "cdn/', cdn_id) as cdn_id_ref"
+	queryStr += " from server where id=:id"
+	nstmt, err := db.PrepareNamed(queryStr)
 	err = nstmt.Select(&ret, arg)
 	if err != nil {
 		log.Println(err)
@@ -82,14 +112,21 @@ func getServerById(id int, db *sqlx.DB) (interface{}, error) {
 }
 
 // @Title getServers
-// @Description retrieves the server information for a certain id
+// @Description retrieves the server
 // @Accept  application/json
 // @Success 200 {array}    Server
 // @Resource /api/2.0
 // @Router /api/2.0/server [get]
 func getServers(db *sqlx.DB) (interface{}, error) {
 	ret := []Server{}
-	queryStr := "select * from server"
+	queryStr := "select *, concat('" + API_PATH + "server/', id) as self "
+	queryStr += ", concat('" + API_PATH + "phys_location/', phys_location) as phys_location_id_ref"
+	queryStr += ", concat('" + API_PATH + "cachegroup/', cachegroup) as cachegroup_id_ref"
+	queryStr += ", concat('" + API_PATH + "type/', type) as type_id_ref"
+	queryStr += ", concat('" + API_PATH + "status/', status) as status_id_ref"
+	queryStr += ", concat('" + API_PATH + "profile/', profile) as profile_id_ref"
+	queryStr += ", concat('" + API_PATH + "cdn/', cdn_id) as cdn_id_ref"
+	queryStr += " from server"
 	err := db.Select(&ret, queryStr)
 	if err != nil {
 		log.Println(err)
@@ -248,7 +285,8 @@ func putServer(id int, payload []byte, db *sqlx.DB) (interface{}, error) {
 // @Resource /api/2.0
 // @Router /api/2.0/server/{id} [delete]
 func delServer(id int, db *sqlx.DB) (interface{}, error) {
-	arg := Server{Id: int64(id)}
+	arg := Server{}
+	arg.Id = int64(id)
 	result, err := db.NamedExec("DELETE FROM server WHERE id=:id", arg)
 	if err != nil {
 		log.Println(err)

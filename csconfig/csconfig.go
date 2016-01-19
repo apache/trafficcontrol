@@ -138,7 +138,7 @@ func GetCSConfig(hostName string, db *sqlx.DB) (interface{}, error) {
 		return nil, err
 	}
 
-	params, err := getCSConfigParams(server.Profile, db)
+	params, err := getCSConfigParams(server.Links.Profile.ID, db)
 	if err != nil {
 		log.Println(err)
 		return nil, err

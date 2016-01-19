@@ -70,12 +70,27 @@ type ColumnSchema struct {
 	NumericScale           sql.NullInt64
 	ColumnType             string
 	ColumnKey              string
+	ColumnForeignTable     string
+	ColumForeignColumn     string
+}
+
+type FKSchema struct {
+	ConstraintName    string
+	TableName         string
+	columnName        string
+	ForeignTableName  string
+	ForeignColumnName string
 }
 
 func idCol(schemas []ColumnSchema, table string) string {
 	for _, cs := range schemas {
-		if cs.TableName == table {
-			return cs.ColumnName // the first one, it's ordered
+		if cs.TableName == table { // the first one, it's ordered
+			if cs.ColumnName == "id" {
+				return cs.ColumnName
+			} else {
+				return "Links." + formatName(cs.ColumnName) + ".ID"
+			}
+
 		}
 	}
 	return ""
@@ -242,8 +257,17 @@ func handleString(schemas []ColumnSchema, table string) string {
 	out += "// @Router /api/2.0/" + table + "/{id} [get]\n"
 	out += "func get" + formatName(table) + "ById(id int, db *sqlx.DB) (interface{}, error) {\n"
 	out += "    ret := []" + formatName(table) + "{}\n"
-	out += "    arg := " + formatName(table) + "{" + formatName(idColumn) + ": int64(id)}\n"
-	out += "    nstmt, err := db.PrepareNamed(`select * from " + table + " where " + idColumn + "=:" + idColumn + "`)\n"
+	out += "    arg := " + formatName(table) + "{}\n"
+	out += "    arg." + formatName(idColumn) + "= int64(id)\n"
+	out += "    queryStr := \"select *, concat('\" + API_PATH + \"" + table + "/', id) as self \"\n"
+	for _, col := range schemas {
+		if col.TableName == table && col.ColumnForeignTable != "" {
+			out += "queryStr += \", concat('\" + API_PATH + \"" + col.ColumnForeignTable + "/', " + col.ColumnName + ") as "
+			out += col.ColumnForeignTable + "_" + col.ColumForeignColumn + "_ref\"\n"
+		}
+	}
+	out += "queryStr += \" from " + table + " where " + idColumn + "=:" + idColumn + "\"\n"
+	out += "    nstmt, err := db.PrepareNamed(queryStr)\n"
 	out += "    err = nstmt.Select(&ret, arg)\n"
 	out += "	if err != nil {\n"
 	out += "	    log.Println(err)\n"
@@ -254,14 +278,21 @@ func handleString(schemas []ColumnSchema, table string) string {
 	out += "}\n\n"
 
 	out += "// @Title get" + formatName(table) + "s\n"
-	out += "// @Description retrieves the " + table + " information for a certain id\n"
+	out += "// @Description retrieves the " + table + "\n"
 	out += "// @Accept  application/json\n"
 	out += "// @Success 200 {array}    " + formatName(table) + "\n"
 	out += "// @Resource /api/2.0\n"
 	out += "// @Router /api/2.0/" + table + " [get]\n"
 	out += "func get" + formatName(table) + "s(db *sqlx.DB) (interface{}, error) {\n"
 	out += "    ret := []" + formatName(table) + "{}\n"
-	out += "	queryStr := \"select * from " + table + "\"\n"
+	out += "    queryStr := \"select *, concat('\" + API_PATH + \"" + table + "/', id) as self \"\n"
+	for _, col := range schemas {
+		if col.TableName == table && col.ColumnForeignTable != "" {
+			out += "queryStr += \", concat('\" + API_PATH + \"" + col.ColumnForeignTable + "/', " + col.ColumnName + ") as "
+			out += col.ColumnForeignTable + "_" + col.ColumForeignColumn + "_ref\"\n"
+		}
+	}
+	out += "queryStr += \" from " + table + "\"\n"
 	out += "	err := db.Select(&ret, queryStr)\n"
 	out += "	if err != nil {\n"
 	out += "	   log.Println(err)\n"
@@ -328,7 +359,8 @@ func handleString(schemas []ColumnSchema, table string) string {
 	out += "// @Resource /api/2.0\n"
 	out += "// @Router /api/2.0/" + table + "/{id} [delete]\n"
 	out += "func del" + formatName(table) + "(id int, db *sqlx.DB) (interface{}, error) {\n"
-	out += "    arg := " + formatName(table) + "{" + formatName(idColumn) + ": int64(id)}\n"
+	out += "    arg := " + formatName(table) + "{}\n"
+	out += "    arg." + formatName(idColumn) + "= int64(id)\n"
 	out += "    result, err := db.NamedExec(\"DELETE FROM " + table + " WHERE id=:id\", arg)\n"
 	out += "    if err != nil {\n"
 	out += "    	log.Println(err)\n"
@@ -342,20 +374,37 @@ func handleString(schemas []ColumnSchema, table string) string {
 func structString(schemas []ColumnSchema, table string) string {
 
 	out := "type " + formatName(table) + " struct{\n"
-	for _, cs := range schemas {
+	linkMap := make(map[string]int)
+	for i, cs := range schemas {
 		if cs.TableName == table {
 			goType, _, err := goType(&cs)
 
 			if err != nil {
 				log.Fatal(err)
 			}
-			out = out + "\t" + formatName(cs.ColumnName) + " " + goType
-			if len(config.TagLabel) > 0 {
-				out = out + "\t`" + config.TagLabel + ":\"" + cs.ColumnName + "\" json:\"" + formatNameLower(cs.ColumnName) + "\"`"
+			// fmt.Println(cs)
+			if cs.ColumForeignColumn == "" {
+				out = out + "\t" + formatName(cs.ColumnName) + " " + goType
+				if len(config.TagLabel) > 0 {
+					out = out + "\t`" + config.TagLabel + ":\"" + cs.ColumnName + "\" json:\"" + formatNameLower(cs.ColumnName) + "\"`"
+				}
+				out = out + "\n"
+			} else {
+				// fmt.Println(cs, ">"+cs.ColumForeignColumn+"<")
+				// out = out + "\t" + formatName(cs.ColumnName) + " >>>> " + goType
+				linkMap[cs.ColumnName] = i
 			}
-			out = out + "\n"
 		}
 	}
+	out += "\tLinks struct {\n"
+	out += "\t\tSelf string `db:\"self\" json:\"_self\"`\n"
+	for fk, index := range linkMap {
+		out += "\t\t" + formatName(fk) + " struct { \n"
+		out += "\t\tID  int64  `db:\"" + fk + "\" json:\"" + schemas[index].ColumForeignColumn + "\"`\n"
+		out += "\t\tRef string `db:\"" + schemas[index].ColumnForeignTable + "_" + schemas[index].ColumForeignColumn + "_ref\" json:\"_ref\"`\n"
+		out += "\t\t} `json:\"" + fk + "\" db:-`\n"
+	}
+	out += "\t} `json:\"_links\" db:-`\n"
 	out = out + "}\n\n"
 
 	return out
@@ -422,7 +471,6 @@ func getSchema() ([]ColumnSchema, []string) {
 			"CHARACTER_MAXIMUM_LENGTH, NUMERIC_PRECISION, NUMERIC_SCALE " +
 			"FROM information_schema.COLUMNS ORDER BY TABLE_NAME, ORDINAL_POSITION"
 		rows, err := conn.Query(q)
-		fmt.Println(q)
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -431,6 +479,8 @@ func getSchema() ([]ColumnSchema, []string) {
 			cs := ColumnSchema{}
 			err := rows.Scan(&cs.TableName, &cs.ColumnName, &cs.IsNullable, &cs.DataType,
 				&cs.CharacterMaximumLength, &cs.NumericPrecision, &cs.NumericScale)
+			cs.ColumForeignColumn = ""
+			cs.ColumnForeignTable = ""
 			if err != nil {
 				log.Fatal(err)
 			}
@@ -441,7 +491,6 @@ func getSchema() ([]ColumnSchema, []string) {
 		}
 
 		q = "select TABLE_NAME from information_schema.tables where table_type='BASE TABLE' and table_schema='public';" // TODO make schema param
-		fmt.Println(q)
 		rows, err = conn.Query(q)
 		if err != nil {
 			log.Fatal(err)
@@ -456,8 +505,39 @@ func getSchema() ([]ColumnSchema, []string) {
 			tables = append(tables, tableName)
 		}
 
-	}
+		// this query could probably be combined into one of the previous ones by someone smarter than me.
+		q = `SELECT
+    			tc.constraint_name, tc.table_name, kcu.column_name, 
+    			ccu.table_name AS foreign_table_name,
+    			ccu.column_name AS foreign_column_name 
+			FROM 
+    			information_schema.table_constraints AS tc 
+    			JOIN information_schema.key_column_usage AS kcu
+      			ON tc.constraint_name = kcu.constraint_name
+    			JOIN information_schema.constraint_column_usage AS ccu
+      			ON ccu.constraint_name = tc.constraint_name
+			WHERE constraint_type = 'FOREIGN KEY'`
+		rows, err = conn.Query(q)
+		if err != nil {
+			log.Fatal(err)
+		}
 
+		for rows.Next() {
+			fk := FKSchema{}
+			err := rows.Scan(&fk.ConstraintName, &fk.TableName, &fk.columnName, &fk.ForeignTableName, &fk.ForeignColumnName)
+			if err != nil {
+				log.Fatal(err)
+			}
+			for i, _ := range columns {
+				if columns[i].ColumnName == fk.columnName && columns[i].TableName == fk.TableName {
+					fmt.Println("Setting fk " + fk.ForeignTableName + "." + fk.ForeignColumnName + " for " + columns[i].TableName + "." + columns[i].ColumnName)
+					columns[i].ColumnForeignTable = fk.ForeignTableName
+					columns[i].ColumForeignColumn = fk.ForeignColumnName
+					break
+				}
+			}
+		}
+	}
 	return columns, tables
 }
 
@@ -537,6 +617,9 @@ func main() {
 	columns, tables := getSchema()
 	fmt.Println(tables)
 	for _, table := range tables {
+		if table == "goose_db_version" {
+			continue
+		}
 		bytes, err := writeFile(columns, table)
 		if err != nil {
 			log.Fatal(err)

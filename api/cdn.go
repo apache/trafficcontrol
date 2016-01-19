@@ -31,6 +31,9 @@ type Cdn struct {
 	Name          null.String `db:"name" json:"name"`
 	LastUpdated   time.Time   `db:"last_updated" json:"lastUpdated"`
 	DnssecEnabled null.Int    `db:"dnssec_enabled" json:"dnssecEnabled"`
+	Links         struct {
+		Self string `db:"self" json:"_self"`
+	} `json:"_links" db:-`
 }
 
 // @Title getCdnById
@@ -42,8 +45,11 @@ type Cdn struct {
 // @Router /api/2.0/cdn/{id} [get]
 func getCdnById(id int, db *sqlx.DB) (interface{}, error) {
 	ret := []Cdn{}
-	arg := Cdn{Id: int64(id)}
-	nstmt, err := db.PrepareNamed(`select * from cdn where id=:id`)
+	arg := Cdn{}
+	arg.Id = int64(id)
+	queryStr := "select *, concat('" + API_PATH + "cdn/', id) as self "
+	queryStr += " from cdn where id=:id"
+	nstmt, err := db.PrepareNamed(queryStr)
 	err = nstmt.Select(&ret, arg)
 	if err != nil {
 		log.Println(err)
@@ -54,14 +60,15 @@ func getCdnById(id int, db *sqlx.DB) (interface{}, error) {
 }
 
 // @Title getCdns
-// @Description retrieves the cdn information for a certain id
+// @Description retrieves the cdn
 // @Accept  application/json
 // @Success 200 {array}    Cdn
 // @Resource /api/2.0
 // @Router /api/2.0/cdn [get]
 func getCdns(db *sqlx.DB) (interface{}, error) {
 	ret := []Cdn{}
-	queryStr := "select * from cdn"
+	queryStr := "select *, concat('" + API_PATH + "cdn/', id) as self "
+	queryStr += " from cdn"
 	err := db.Select(&ret, queryStr)
 	if err != nil {
 		log.Println(err)
@@ -136,7 +143,8 @@ func putCdn(id int, payload []byte, db *sqlx.DB) (interface{}, error) {
 // @Resource /api/2.0
 // @Router /api/2.0/cdn/{id} [delete]
 func delCdn(id int, db *sqlx.DB) (interface{}, error) {
-	arg := Cdn{Id: int64(id)}
+	arg := Cdn{}
+	arg.Id = int64(id)
 	result, err := db.NamedExec("DELETE FROM cdn WHERE id=:id", arg)
 	if err != nil {
 		log.Println(err)

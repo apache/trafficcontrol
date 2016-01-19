@@ -28,7 +28,6 @@ import (
 
 type Servercheck struct {
 	Id          int64     `db:"id" json:"id"`
-	Server      int64     `db:"server" json:"server"`
 	Aa          null.Int  `db:"aa" json:"aa"`
 	Ab          null.Int  `db:"ab" json:"ab"`
 	Ac          null.Int  `db:"ac" json:"ac"`
@@ -61,6 +60,13 @@ type Servercheck struct {
 	Bd          null.Int  `db:"bd" json:"bd"`
 	Be          null.Int  `db:"be" json:"be"`
 	LastUpdated time.Time `db:"last_updated" json:"lastUpdated"`
+	Links       struct {
+		Self   string `db:"self" json:"_self"`
+		Server struct {
+			ID  int64  `db:"server" json:"id"`
+			Ref string `db:"server_id_ref" json:"_ref"`
+		} `json:"server" db:-`
+	} `json:"_links" db:-`
 }
 
 // @Title getServercheckById
@@ -72,8 +78,12 @@ type Servercheck struct {
 // @Router /api/2.0/servercheck/{id} [get]
 func getServercheckById(id int, db *sqlx.DB) (interface{}, error) {
 	ret := []Servercheck{}
-	arg := Servercheck{Id: int64(id)}
-	nstmt, err := db.PrepareNamed(`select * from servercheck where id=:id`)
+	arg := Servercheck{}
+	arg.Id = int64(id)
+	queryStr := "select *, concat('" + API_PATH + "servercheck/', id) as self "
+	queryStr += ", concat('" + API_PATH + "server/', server) as server_id_ref"
+	queryStr += " from servercheck where id=:id"
+	nstmt, err := db.PrepareNamed(queryStr)
 	err = nstmt.Select(&ret, arg)
 	if err != nil {
 		log.Println(err)
@@ -84,14 +94,16 @@ func getServercheckById(id int, db *sqlx.DB) (interface{}, error) {
 }
 
 // @Title getServerchecks
-// @Description retrieves the servercheck information for a certain id
+// @Description retrieves the servercheck
 // @Accept  application/json
 // @Success 200 {array}    Servercheck
 // @Resource /api/2.0
 // @Router /api/2.0/servercheck [get]
 func getServerchecks(db *sqlx.DB) (interface{}, error) {
 	ret := []Servercheck{}
-	queryStr := "select * from servercheck"
+	queryStr := "select *, concat('" + API_PATH + "servercheck/', id) as self "
+	queryStr += ", concat('" + API_PATH + "server/', server) as server_id_ref"
+	queryStr += " from servercheck"
 	err := db.Select(&ret, queryStr)
 	if err != nil {
 		log.Println(err)
@@ -256,7 +268,8 @@ func putServercheck(id int, payload []byte, db *sqlx.DB) (interface{}, error) {
 // @Resource /api/2.0
 // @Router /api/2.0/servercheck/{id} [delete]
 func delServercheck(id int, db *sqlx.DB) (interface{}, error) {
-	arg := Servercheck{Id: int64(id)}
+	arg := Servercheck{}
+	arg.Id = int64(id)
 	result, err := db.NamedExec("DELETE FROM servercheck WHERE id=:id", arg)
 	if err != nil {
 		log.Println(err)
