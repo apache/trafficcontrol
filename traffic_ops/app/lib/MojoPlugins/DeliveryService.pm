@@ -78,7 +78,7 @@ sub register {
 			elsif ($user_id) {
 				my $result = $self->db->resultset("Deliveryservice")->search( { id => $id } )->single();
 
-				if ( exists( $ds_hash{ $result->id } ) ) {
+				if ( defined($result) && exists( $ds_hash{ $result->id } ) ) {
 					return (1);
 				}
 			}
