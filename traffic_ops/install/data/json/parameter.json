@@ -423,3 +423,4 @@
 {"name":"location","config_file":"ssl_multicert.config","value":"/opt/trafficserver/etc/trafficserver"}
 {"name":"location","config_file":"bg_fetch.config","value":"/opt/trafficserver/etc/trafficserver"}
 {"name":"qstring","config_file":"parent.config","value":"ignore"}
+{"name":"kickstart.files.location","config_file":"mkisofs","value":"__KICKSTART-FILE__"}

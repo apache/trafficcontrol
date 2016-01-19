@@ -226,7 +226,7 @@ ok $t->post_ok(
 		'ds.cdn_id'                 => '2',
 		'ds.qstring_ignore'         => '0',
 		'ds.signed'                 => '0',
-		'ds.type.id'                => '7',
+		'ds.type'                   => '7',
 		'ds.xml_id'                 => 'tst_xml_id_3_update',
 		'ds.protocol'               => '1',
 		'ds.edge_header_rewrite'    => '',

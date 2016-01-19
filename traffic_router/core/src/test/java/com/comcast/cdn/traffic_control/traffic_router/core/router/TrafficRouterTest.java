@@ -2,6 +2,7 @@ package com.comcast.cdn.traffic_control.traffic_router.core.router;
 
 import com.comcast.cdn.traffic_control.traffic_router.core.cache.Cache;
 import com.comcast.cdn.traffic_control.traffic_router.core.cache.CacheLocation;
+import com.comcast.cdn.traffic_control.traffic_router.core.cache.CacheRegister;
 import com.comcast.cdn.traffic_control.traffic_router.core.cache.InetRecord;
 import com.comcast.cdn.traffic_control.traffic_router.core.ds.DeliveryService;
 import com.comcast.cdn.traffic_control.traffic_router.core.ds.Dispersion;
@@ -15,10 +16,11 @@ import com.comcast.cdn.traffic_control.traffic_router.core.util.CidrAddress;
 import org.junit.Before;
 import org.junit.Test;
 import org.powermock.reflect.Whitebox;
+import org.xbill.DNS.Type;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
-import java.util.Map;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsInAnyOrder;
@@ -34,10 +36,12 @@ import static org.mockito.Mockito.when;
 public class TrafficRouterTest {
 
     private TrafficRouter trafficRouter;
+    private DeliveryService deliveryService;
+    private FederationRegistry federationRegistry;
 
     @Before
     public void before() throws Exception {
-        DeliveryService deliveryService = mock(DeliveryService.class);
+        deliveryService = mock(DeliveryService.class);
         when(deliveryService.isAvailable()).thenReturn(true);
         when(deliveryService.isCoverageZoneOnly()).thenReturn(false);
         when(deliveryService.getDispersion()).thenReturn(mock(Dispersion.class));
@@ -48,7 +52,7 @@ public class TrafficRouterTest {
         InetRecord inetRecord = new InetRecord("cname1", 12345);
         inetRecords.add(inetRecord);
 
-        FederationRegistry federationRegistry = mock(FederationRegistry.class);
+        federationRegistry = mock(FederationRegistry.class);
         when(federationRegistry.findInetRecords(anyString(), any(CidrAddress.class))).thenReturn(inetRecords);
 
         trafficRouter = mock(TrafficRouter.class);
@@ -88,6 +92,20 @@ public class TrafficRouterTest {
 
     @Test
     public void itSetsResultToGeo() throws Exception {
+        Cache cache = mock(Cache.class);
+        when(cache.hasDeliveryService(anyString())).thenReturn(true);
+        CacheLocation cacheLocation = new CacheLocation("", "some-zone-id", new Geolocation(50,50));
+
+        cacheLocation.addCache(cache);
+
+        Collection<CacheLocation> cacheLocationCollection = new ArrayList<CacheLocation>();
+        cacheLocationCollection.add(cacheLocation);
+
+        CacheRegister cacheRegister = mock(CacheRegister.class);
+        when(cacheRegister.getCacheLocations(null)).thenReturn(cacheLocationCollection);
+
+        when(trafficRouter.getCacheRegister()).thenReturn(cacheRegister);
+        when(deliveryService.isLocationAvailable(cacheLocation)).thenReturn(true);
 
         when(trafficRouter.selectCache(any(Request.class), any(DeliveryService.class), any(Track.class))).thenCallRealMethod();
         when(trafficRouter.selectCachesByGeo(any(Request.class), any(DeliveryService.class), any(CacheLocation.class), any(Track.class))).thenCallRealMethod();
@@ -95,11 +113,9 @@ public class TrafficRouterTest {
         Geolocation clientLocation = new Geolocation(40, -100);
         when(trafficRouter.getClientLocation(any(Request.class), any(DeliveryService.class), any(CacheLocation.class))).thenReturn(clientLocation);
 
-        List<Cache> caches = new ArrayList<Cache>();
-        Cache cache = mock(Cache.class);
-        caches.add(cache);
-
-        when(trafficRouter.getCachesByGeo(any(Request.class), any(DeliveryService.class), any(Geolocation.class), any(Map.class))).thenReturn(caches);
+        when(trafficRouter.getCachesByGeo(any(Request.class), any(DeliveryService.class), any(Geolocation.class), any(Track.class))).thenCallRealMethod();
+        when(trafficRouter.orderCacheLocations(any(Request.class), any(Collection.class), any(DeliveryService.class), any(Geolocation.class))).thenCallRealMethod();
+        when(trafficRouter.getSupportingCaches(any(List.class), any(DeliveryService.class))).thenCallRealMethod();
 
         HTTPRequest httpRequest = new HTTPRequest();
         httpRequest.setClientIP("192.168.10.11");
@@ -110,5 +126,19 @@ public class TrafficRouterTest {
         trafficRouter.route(httpRequest, track);
 
         assertThat(track.getResult(), equalTo(Track.ResultType.GEO));
+        assertThat(track.getResultLocation(), equalTo(new Geolocation(50, 50)));
+
+        when(federationRegistry.findInetRecords(anyString(), any(CidrAddress.class))).thenReturn(null);
+
+        DNSRequest dnsRequest = new DNSRequest();
+        dnsRequest.setClientIP("192.168.1.2");
+        dnsRequest.setClientIP("10.10.10.10");
+        dnsRequest.setQtype(Type.A);
+
+        track = StatTracker.getTrack();
+        trafficRouter.route(dnsRequest, track);
+
+        assertThat(track.getResult(), equalTo(Track.ResultType.GEO));
+        assertThat(track.getResultLocation(), equalTo(new Geolocation(50, 50)));
     }
 }

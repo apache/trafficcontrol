@@ -17,21 +17,19 @@ package main;
 use Mojo::Base -strict;
 use Test::More;
 use Test::Mojo;
-use DBI;
+use Data::Dumper;
 use strict;
 use warnings;
-no warnings 'once';
-use warnings 'all';
+use Schema;
 use Test::TestHelper;
+use Fixtures::TmUser;
 use Fixtures::Hwinfo;
 
 #no_transactions=>1 ==> keep fixtures after every execution, beware of duplicate data!
 #no_transactions=>0 ==> delete fixtures after every execution
 
 BEGIN { $ENV{MOJO_MODE} = "test" }
-
 my $schema = Schema->connect_to_database;
-my $dbh    = Schema->database_handle;
 my $t      = Test::Mojo->new('TrafficOps');
 
 Test::TestHelper->unload_core_data($schema);
@@ -41,13 +39,6 @@ ok $t->post_ok( '/login', => form => { u => Test::TestHelper::ADMIN_USER, p => T
 	->or( sub { diag $t->tx->res->content->asset->{content}; } );
 
 Test::TestHelper->load_all_fixtures( Fixtures::Hwinfo->new( { schema => $schema, no_transactions => 1 } ) );
-
-my $q      = 'select * from hwinfo limit 1';
-my $get_ds = $dbh->prepare($q);
-$get_ds->execute();
-my $p = $get_ds->fetchall_arrayref( {} );
-$get_ds->finish();
-$dbh->disconnect();
 
 # the jsons
 # Note the 3 is the index in the array returned, not the id.  It's safe to assume there are at least 3 rows of hw info.

@@ -29,3 +29,4 @@ traffic_router/*/*.log
 traffic_router/*.log
 traffic_router/*/*.iml
 traffic_router/*.iml
+.dbInfo

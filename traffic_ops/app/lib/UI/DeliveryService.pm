@@ -335,9 +335,11 @@ sub check_deliveryservice_input {
 
 	# TODO:  what restrictions on display_name?
 
-	if ( defined( $self->param('ds.type') )
-		&& $self->param('ds.type') == &type_id( $self, 'ANY_MAP' ) )
-	{
+	my $typename
+		= $self->db->resultset('Type')
+		->search( { id => $self->param('ds.type') } )->get_column('name')
+		->single();
+	if ( $typename eq 'ANY_MAP' ) {
 		return
 			$self->valid
 			; # Anything goes for the ANY_MAP, but ds.type is only set on create
@@ -568,21 +570,21 @@ sub check_deliveryservice_input {
 			->is_equal( "", "Invalid global_max_tps (NaN)." );
 	}
 
-	if (   $self->param('ds.type.name') =~ /^DNS/
-		&& defined( $self->param('ds.tr_response_headers') )
-		&& $self->param('ds.tr_response_headers') ne "" )
-	{
-		$self->field('ds.tr_response_headers')->is_equal( "",
-			"TR Response Headers are only valid for HTTP (302) delivery services"
-		);
-	}
-	if (   $self->param('ds.type.name') =~ /^DNS/
-		&& defined( $self->param('ds.tr_request_headers') )
-		&& $self->param('ds.tr_request_headers') ne "" )
-	{
-		$self->field('ds.tr_request_headers')->is_equal( "",
-			"TR Log Request Headers are only valid for HTTP (302) delivery services"
-		);
+	if ( $typename =~ /^DNS/ ) {
+		if ( defined( $self->param('ds.tr_response_headers') )
+			&& $self->param('ds.tr_response_headers') ne "" )
+		{
+			$self->field('ds.tr_response_headers')->is_equal( "",
+				"TR Response Headers are only valid for HTTP (302) delivery services"
+			);
+		}
+		if ( defined( $self->param('ds.tr_request_headers') )
+			&& $self->param('ds.tr_request_headers') ne "" )
+		{
+			$self->field('ds.tr_request_headers')->is_equal( "",
+				"TR Log Request Headers are only valid for HTTP (302) delivery services"
+			);
+		}
 	}
 
 #TODO:  Fix this to work the right way.
@@ -855,66 +857,63 @@ sub update {
 	  #print "global_max_mbps = " . $self->param('ds.global_max_mbps') . "\n";
 	  # if error check passes
 		my %hash = (
-			xml_id            => $self->param('ds.xml_id'),
-			display_name      => $self->param('ds.display_name'),
-			dscp              => $self->param('ds.dscp'),
-			signed            => $self->param('ds.signed'),
-			qstring_ignore    => $self->param('ds.qstring_ignore'),
-			geo_limit         => $self->param('ds.geo_limit'),
-			org_server_fqdn   => $self->param('ds.org_server_fqdn'),
-			multi_site_origin => $self->param('ds.multi_site_origin'),
-			ccr_dns_ttl       => $self->param('ds.ccr_dns_ttl'),
-			type              => $self->param('ds.type.id'),
-			cdn_id            => $self->param('ds.cdn_id'),
-			profile           => $self->param('ds.profile'),
-			global_max_mbps   => $self->param('ds.global_max_mbps') eq "" ? 0
-			: $self->hr_string_to_mbps(
-				$self->param('ds.global_max_mbps')
+			xml_id            => $self->paramAsScalar('ds.xml_id'),
+			display_name      => $self->paramAsScalar('ds.display_name'),
+			dscp              => $self->paramAsScalar('ds.dscp'),
+			signed            => $self->paramAsScalar('ds.signed'),
+			qstring_ignore    => $self->paramAsScalar('ds.qstring_ignore'),
+			geo_limit         => $self->paramAsScalar('ds.geo_limit'),
+			org_server_fqdn   => $self->paramAsScalar('ds.org_server_fqdn'),
+			multi_site_origin => $self->paramAsScalar('ds.multi_site_origin'),
+			ccr_dns_ttl       => $self->paramAsScalar('ds.ccr_dns_ttl'),
+			type              => $self->paramAsScalar('ds.type'),
+			cdn_id            => $self->paramAsScalar('ds.cdn_id'),
+			profile           => $self->paramAsScalar('ds.profile'),
+			global_max_mbps   => $self->hr_string_to_mbps(
+				$self->paramAsScalar( 'ds.global_max_mbps', 0 )
 			),
-			global_max_tps => $self->param('ds.global_max_tps') eq "" ? 0
-			: $self->param('ds.global_max_tps'),
-			miss_lat             => $self->param('ds.miss_lat'),
-			miss_long            => $self->param('ds.miss_long'),
-			long_desc            => $self->param('ds.long_desc'),
-			long_desc_1          => $self->param('ds.long_desc_1'),
-			long_desc_2          => $self->param('ds.long_desc_2'),
-			info_url             => $self->param('ds.info_url'),
-			check_path           => $self->param('ds.check_path'),
-			active               => $self->param('ds.active'),
-			protocol             => $self->param('ds.protocol'),
-			ipv6_routing_enabled => $self->param('ds.ipv6_routing_enabled'),
+			global_max_tps => $self->paramAsScalar( 'ds.global_max_tps', 0 ),
+			miss_lat       => $self->paramAsScalar('ds.miss_lat'),
+			miss_long      => $self->paramAsScalar('ds.miss_long'),
+			long_desc      => $self->paramAsScalar('ds.long_desc'),
+			long_desc_1    => $self->paramAsScalar('ds.long_desc_1'),
+			long_desc_2    => $self->paramAsScalar('ds.long_desc_2'),
+			info_url       => $self->paramAsScalar('ds.info_url'),
+			check_path     => $self->paramAsScalar('ds.check_path'),
+			active         => $self->paramAsScalar('ds.active'),
+			protocol       => $self->paramAsScalar('ds.protocol'),
+			ipv6_routing_enabled =>
+				$self->paramAsScalar('ds.ipv6_routing_enabled'),
 			range_request_handling =>
-				$self->param('ds.range_request_handling'),
-			edge_header_rewrite => $self->param('ds.edge_header_rewrite') eq
-				"" ? undef : $self->param('ds.edge_header_rewrite'),
-			mid_header_rewrite => $self->param('ds.mid_header_rewrite') eq ""
-			? undef
-			: $self->param('ds.mid_header_rewrite'),
-			tr_response_headers => $self->param('ds.tr_response_headers') eq
-				"" ? undef : $self->param('ds.tr_response_headers'),
-			tr_request_headers => $self->param('ds.tr_request_headers') eq ""
-			? undef
-			: $self->param('ds.tr_request_headers'),
-			regex_remap => $self->param('ds.regex_remap') eq "" ? undef
-			: $self->param('ds.regex_remap'),
-			origin_shield => $self->param('ds.origin_shield') eq "" ? undef
-			: $self->param('ds.origin_shield'),
-			cacheurl => $self->param('ds.cacheurl') eq "" ? undef
-			: $self->param('ds.cacheurl'),
-			remap_text => $self->param('ds.remap_text') eq "" ? undef
-			: $self->param('ds.remap_text'),
-			initial_dispersion => $self->param('ds.initial_dispersion'),
+				$self->paramAsScalar('ds.range_request_handling'),
+			edge_header_rewrite =>
+				$self->paramAsScalar( 'ds.edge_header_rewrite', undef ),
+			mid_header_rewrite =>
+				$self->paramAsScalar( 'ds.mid_header_rewrite', undef ),
+			tr_response_headers =>
+				$self->paramAsScalar( 'ds.tr_response_headers', undef ),
+			tr_request_headers =>
+				$self->paramAsScalar( 'ds.tr_request_headers', undef ),
+			regex_remap => $self->paramAsScalar( 'ds.regex_remap', undef ),
+			origin_shield =>
+				$self->paramAsScalar( 'ds.origin_shield', undef ),
+			cacheurl   => $self->paramAsScalar( 'ds.cacheurl',   undef ),
+			remap_text => $self->paramAsScalar( 'ds.remap_text', undef ),
+			initial_dispersion =>
+				$self->paramAsScalar( 'ds.initial_dispersion', 1 ),
 		);
 
-		if ( $self->param('ds.type.id') == &type_id( $self, "DNS" ) ) {
-			$hash{dns_bypass_ip}    = $self->param('ds.dns_bypass_ip');
-			$hash{dns_bypass_ip6}   = $self->param('ds.dns_bypass_ip6');
-			$hash{dns_bypass_cname} = $self->param('ds.dns_bypass_cname');
-			$hash{max_dns_answers}  = $self->param('ds.max_dns_answers');
+		if ( $self->paramAsScalar('ds.type') == &type_id( $self, "DNS" ) ) {
+			$hash{dns_bypass_ip}  = $self->paramAsScalar('ds.dns_bypass_ip');
+			$hash{dns_bypass_ip6} = $self->paramAsScalar('ds.dns_bypass_ip6');
+			$hash{dns_bypass_cname}
+				= $self->paramAsScalar('ds.dns_bypass_cname');
+			$hash{max_dns_answers}
+				= $self->paramAsScalar('ds.max_dns_answers');
 			$hash{dns_bypass_ttl}
-				= $self->param('ds.dns_bypass_ttl') eq ""
+				= $self->paramAsScalar('ds.dns_bypass_ttl') eq ""
 				? undef
-				: $self->param('ds.dns_bypass_ttl');
+				: $self->paramAsScalar('ds.dns_bypass_ttl');
 		}
 		else {
 			$hash{http_bypass_fqdn} = $self->param('ds.http_bypass_fqdn');
@@ -1094,64 +1093,67 @@ sub create {
 	return $self->redirect_to("/modify_error") if !&is_oper($self);
 	my $new_id = -1;
 	my $cdn_id = $self->param('ds.cdn_id');
+	my $xml_id = $self->param('ds.xml_id');
+
+	my $existing = $self->db->resultset('Deliveryservice')->search( { xml_id => $xml_id } )->get_column('xml_id')->single();
+	if ($existing) {
+		$self->field('ds.xml_id')->is_equal( "", "A Delivery service with xml_id \"$xml_id\" already exists." );
+	}
 
 	if ( $self->check_deliveryservice_input() ) {
 		my $insert = $self->db->resultset('Deliveryservice')->create(
-			{   xml_id       => $self->param('ds.xml_id'),
-				display_name => $self->param('ds.display_name'),
-				dscp         => $self->param('ds.dscp') eq "" ? 0
-				: $self->param('ds.dscp'),
-				signed            => $self->param('ds.signed'),
-				qstring_ignore    => $self->param('ds.qstring_ignore'),
-				geo_limit         => $self->param('ds.geo_limit'),
-				http_bypass_fqdn  => $self->param('ds.http_bypass_fqdn'),
-				dns_bypass_ip     => $self->param('ds.dns_bypass_ip'),
-				dns_bypass_ip6    => $self->param('ds.dns_bypass_ip6'),
-				dns_bypass_cname  => $self->param('ds.dns_bypass_cname'),
-				dns_bypass_ttl    => $self->param('ds.dns_bypass_ttl'),
-				org_server_fqdn   => $self->param('ds.org_server_fqdn'),
-				multi_site_origin => $self->param('ds.multi_site_origin'),
-				ccr_dns_ttl       => $self->param('ds.ccr_dns_ttl'),
-				type              => $self->param('ds.type'),
-				cdn_id            => $cdn_id,
-				profile           => $self->param('ds.profile'),
-				global_max_mbps   => $self->param('ds.global_max_mbps') eq ""
-				? 0
-				: $self->hr_string_to_mbps(
-					$self->param('ds.global_max_mbps')
+			{   xml_id         => $self->paramAsScalar('ds.xml_id'),
+				display_name   => $self->paramAsScalar('ds.display_name'),
+				dscp           => $self->paramAsScalar( 'ds.dscp', 0 ),
+				signed         => $self->paramAsScalar('ds.signed'),
+				qstring_ignore => $self->paramAsScalar('ds.qstring_ignore'),
+				geo_limit      => $self->paramAsScalar('ds.geo_limit'),
+				http_bypass_fqdn =>
+					$self->paramAsScalar('ds.http_bypass_fqdn'),
+				dns_bypass_ip  => $self->paramAsScalar('ds.dns_bypass_ip'),
+				dns_bypass_ip6 => $self->paramAsScalar('ds.dns_bypass_ip6'),
+				dns_bypass_cname =>
+					$self->paramAsScalar('ds.dns_bypass_cname'),
+				dns_bypass_ttl  => $self->paramAsScalar('ds.dns_bypass_ttl'),
+				org_server_fqdn => $self->paramAsScalar('ds.org_server_fqdn'),
+				multi_site_origin =>
+					$self->paramAsScalar('ds.multi_site_origin'),
+				ccr_dns_ttl     => $self->paramAsScalar('ds.ccr_dns_ttl'),
+				type            => $self->paramAsScalar('ds.type'),
+				cdn_id          => $cdn_id,
+				profile         => $self->paramAsScalar('ds.profile'),
+				global_max_mbps => $self->hr_string_to_mbps(
+					$self->paramAsScalar( 'ds.global_max_mbps', 0 )
 				),
-				global_max_tps => $self->param('ds.global_max_tps') eq "" ? 0
-				: $self->param('ds.global_max_tps'),
-				miss_lat        => $self->param('ds.miss_lat'),
-				miss_long       => $self->param('ds.miss_long'),
-				long_desc       => $self->param('ds.long_desc'),
-				long_desc_1     => $self->param('ds.long_desc_1'),
-				long_desc_2     => $self->param('ds.long_desc_2'),
-				max_dns_answers => $self->param('ds.max_dns_answers') eq ""
-				? 0
-				: $self->param('ds.max_dns_answers'),
-				info_url   => $self->param('ds.info_url'),
-				check_path => $self->param('ds.check_path'),
-				active     => $self->param('ds.active'),
-				protocol   => $self->param('ds.protocol'),
+				global_max_tps =>
+					$self->paramAsScalar( 'ds.global_max_tps', 0 ),
+				miss_lat    => $self->paramAsScalar('ds.miss_lat'),
+				miss_long   => $self->paramAsScalar('ds.miss_long'),
+				long_desc   => $self->paramAsScalar('ds.long_desc'),
+				long_desc_1 => $self->paramAsScalar('ds.long_desc_1'),
+				long_desc_2 => $self->paramAsScalar('ds.long_desc_2'),
+				max_dns_answers =>
+					$self->paramAsScalar( 'ds.max_dns_answers', 0 ),
+				info_url   => $self->paramAsScalar('ds.info_url'),
+				check_path => $self->paramAsScalar('ds.check_path'),
+				active     => $self->paramAsScalar('ds.active'),
+				protocol   => $self->paramAsScalar('ds.protocol'),
 				ipv6_routing_enabled =>
-					$self->param('ds.ipv6_routing_enabled'),
+					$self->paramAsScalar('ds.ipv6_routing_enabled'),
 				range_request_handling =>
-					$self->param('ds.range_request_handling'),
-				edge_header_rewrite => $self->param('ds.edge_header_rewrite')
-					eq "" ? undef : $self->param('ds.edge_header_rewrite'),
-				mid_header_rewrite => $self->param('ds.mid_header_rewrite')
-					eq "" ? undef : $self->param('ds.mid_header_rewrite'),
-				regex_remap => $self->param('ds.regex_remap') eq "" ? undef
-				: $self->param('ds.regex_remap'),
-				origin_shield => $self->param('ds.origin_shield') eq ""
-				? undef
-				: $self->param('ds.origin_shield'),
-				cacheurl => $self->param('ds.cacheurl') eq "" ? undef
-				: $self->param('ds.cacheurl'),
-				remap_text => $self->param('ds.remap_text') eq "" ? undef
-				: $self->param('ds.remap_text'),
-				initial_dispersion => $self->param('ds.initial_dispersion'),
+					$self->paramAsScalar('ds.range_request_handling'),
+				edge_header_rewrite =>
+					$self->paramAsScalar('ds.edge_header_rewrite'),
+				mid_header_rewrite =>
+					$self->paramAsScalar( 'ds.mid_header_rewrite', undef ),
+				regex_remap =>
+					$self->paramAsScalar( 'ds.regex_remap', undef ),
+				origin_shield =>
+					$self->paramAsScalar( 'ds.origin_shield', undef ),
+				cacheurl   => $self->paramAsScalar( 'ds.cacheurl',   undef ),
+				remap_text => $self->paramAsScalar( 'ds.remap_text', undef ),
+				initial_dispersion =>
+					$self->paramAsScalar( 'ds.initial_dispersion', 1 ),
 			}
 		);
 		$insert->insert();
@@ -1244,6 +1246,7 @@ sub create {
 			$self->param('ds.regex_remap')
 		);
 		$self->cacheurl(
+			$new_id,
 			$self->param('ds.profile'),
 			$self->param('ds.xml_id'),
 			$self->param('ds.cacheurl')
@@ -1284,7 +1287,6 @@ sub create_dnssec_keys {
 	my $cdn_name = shift;
 	my $xml_id   = shift;
 	my $ds_id    = shift;
-	my $dnskey_ttl;
 
 	#get keys for cdn
 	my $keys;
@@ -1298,6 +1300,8 @@ sub create_dnssec_keys {
 
 	my $cdn_zsk = $keys->{$cdn_name}->{zsk};
 	my $z_exp_days = $self->get_key_expiration_days( $cdn_zsk, "30" );
+
+	my $dnskey_ttl = $self->get_key_ttl( $cdn_ksk, "60" );
 
 	#create the ds domain name for dnssec keys
 	my $domain_name             = $self->get_cdn_domain($ds_id);
@@ -1320,14 +1324,17 @@ sub create_dnssec_keys {
 	my $k_expiration = $inception + ( 86400 * $k_exp_days );
 
 	my $zsk
-		= $self->get_dnssec_keys( "zsk", $ds_name, $dnskey_ttl,
-		$inception, $z_expiration, "new", $inception );
+		= $self->get_dnssec_keys( "zsk", $ds_name, $dnskey_ttl, $inception,
+		$z_expiration, "new", $inception );
 	my $ksk
-		= $self->get_dnssec_keys( "ksk", $ds_name, $dnskey_ttl,
-		$inception, $k_expiration, "new", $inception );
+		= $self->get_dnssec_keys( "ksk", $ds_name, $dnskey_ttl, $inception,
+		$k_expiration, "new", $inception );
 
 	#add to keys hash
-	$keys->{$xml_id} = { zsk => [$zsk], ksk => [$ksk] };
+	$keys->{$xml_id} = {
+		zsk => [$zsk],
+		ksk => [$ksk]
+	};
 
 	#put keys back in Riak
 	my $json_data = encode_json($keys);
@@ -1347,6 +1354,20 @@ sub get_key_expiration_days {
 		}
 	}
 	return $default_exp;
+}
+
+sub get_key_ttl {
+	my $self = shift;
+	my $keys = shift;
+	my $ttl  = shift;
+
+	foreach my $key (@$keys) {
+		my $status = $key->{status};
+		if ( $status eq 'new' ) { #ignore anything other than the 'new' record
+			return $key->{ttl};
+		}
+	}
+	return $ttl;
 }
 
 # for the add delivery service view

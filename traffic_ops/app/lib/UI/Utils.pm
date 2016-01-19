@@ -42,7 +42,7 @@ use constant ADMIN      => 30;
 
 our %EXPORT_TAGS = (
 	'all' => [
-		qw(trim_whitespace is_admin is_oper log is_ipaddress is_ip6address is_netmask in_same_net is_hostname admin_status_id type_id
+		qw(trim_whitespace is_admin is_oper is_ldap is_privileged log is_ipaddress is_ip6address is_netmask in_same_net is_hostname admin_status_id type_id
 			profile_id profile_ids tm_version tm_url name_version_string is_regexp stash_role navbarpage rascal_hosts_by_cdn)
 	]
 );
@@ -202,17 +202,10 @@ sub log() {
 
 	# my $user    = $self->tx->req->env->{REMOTE_USER};
 
-	# For testing on local morbo
-	#	if ( !defined($user) ) { $user = "jvando001"; }
 	my $user;
-	if ( $level eq 'CODEBIG' ) {
-		$user = "codebig";
-	}
-	else {
-		$user = $self->current_user()->{username};
-	}
-
+        $user = $self->current_user()->{username};
 	$user = $self->db->resultset('TmUser')->search( { username => $user } )->get_column('id')->single;
+
 	my $insert = $self->db->resultset('Log')->create(
 		{
 			tm_user => 0 + $user,    # the 0 + forces it to be treated as a number, and no ''
@@ -242,6 +235,31 @@ sub is_admin() {
 	my $self = shift;
 
 	return &has_priv( $self, ADMIN );
+}
+
+# returns true if the user is logged in via LDAP.
+sub is_ldap() {
+	my $self = shift;
+	my $ldap_user = "true";
+
+	my $user = $self->current_user()->{username};
+	my $tm_user = $self->db->resultset('TmUser')->search( { username => $user } )->single;
+	if ( defined($tm_user) ) {
+		$ldap_user = undef;
+	}
+	return $ldap_user;
+}
+
+# Returns true if the user has admin or oper privileges or is logged in via ldap.
+sub is_privileged() {
+	my $self = shift;
+	my $priv_user;
+
+	if ( &is_admin($self) || &is_oper($self) || &is_ldap($self) ) {
+		$priv_user = "true";
+		return $priv_user
+	}
+	return $priv_user;
 }
 
 ## not exported ##

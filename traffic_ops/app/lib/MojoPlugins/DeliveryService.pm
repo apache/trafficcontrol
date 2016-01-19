@@ -29,6 +29,18 @@ sub register {
 	my ( $self, $app, $conf ) = @_;
 
 	$app->renderer->add_helper(
+
+		# ensure param returned as a scalar no matter the context,  and allow default value to be provided
+		paramAsScalar => sub {
+			my $self    = shift;
+			my $p       = shift;
+			my $default = shift;
+
+			return scalar( $self->param($p) // $default );
+		},
+	);
+
+	$app->renderer->add_helper(
 		hr_string_to_mbps => sub {
 			my $self = shift;
 			my $inp  = shift;
@@ -66,7 +78,7 @@ sub register {
 			elsif ($user_id) {
 				my $result = $self->db->resultset("Deliveryservice")->search( { id => $id } )->single();
 
-				if ( exists( $ds_hash{ $result->id } ) ) {
+				if ( defined($result) && exists( $ds_hash{ $result->id } ) ) {
 					return (1);
 				}
 			}

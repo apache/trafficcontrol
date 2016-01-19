@@ -428,10 +428,12 @@ sub api_routes {
 		->to( 'ChangeLog#newlogcount', namespace => $namespace );
 
 	# -- CRANS - #NEW
-	$r->get( "/api/$version/asns" => [ format => [qw(json)] ] )->over( authenticated => 1 )->to( 'Asn#index', namespace => $namespace );
+	$r->get( "/api/1.1/asns" => [ format => [qw(json)] ] )->over( authenticated => 1 )->to( 'Asn#v11_index', namespace => $namespace );
+	$r->get( "/api/1.2/asns" => [ format => [qw(json)] ] )->over( authenticated => 1 )->to( 'Asn#index',     namespace => $namespace );
 
 	# -- HWINFO - #NEW
 	# Supports: ?orderby=key
+	$r->get( "/api/$version/hwinfo/dtdata" => [ format => [qw(json)] ] )->over( authenticated => 1 )->to( 'HwInfo#data', namespace => $namespace );
 	$r->get("/api/$version/hwinfo")->over( authenticated => 1 )->to( 'HwInfo#index', namespace => $namespace );
 
 	# -- KEYS
@@ -471,6 +473,9 @@ sub api_routes {
 	# USED TO BE - GET /api/$version/services/:id/state
 	$r->get( "/api/$version/deliveryservices/:id/state" => [ format => [qw(json)] ] )->over( authenticated => 1 )
 		->to( 'DeliveryService#state', namespace => $namespace );
+
+	# -- DELIVERY SERVICE: Request
+	$r->post( "/api/$version/deliveryservices/request")->over( authenticated => 1 )->to( 'DeliveryService#request', namespace => $namespace );
 
 	## -- DELIVERY SERVICE: SSL Keys
 	## Support for SSL private keys, certs, and csrs
@@ -540,11 +545,12 @@ sub api_routes {
 	$r->get("/api/$version/roles")->over( authenticated => 1 )->to( 'Role#index', namespace => $namespace );
 
 	# -- SERVER #NEW
-	$r->get( "/api/$version/servers"         => [ format => [qw(json)] ] )->over( authenticated => 1 )->to( 'Server#index',   namespace => $namespace );
-	$r->get( "/api/$version/servers/summary" => [ format => [qw(json)] ] )->over( authenticated => 1 )->to( 'Server#summary', namespace => $namespace );
+	$r->get( "/api/$version/servers"        => [ format => [qw(json)] ] )->over( authenticated => 1 )->to( 'Server#index',  namespace => $namespace );
+	$r->get( "/api/$version/servers/totals" => [ format => [qw(json)] ] )->over( authenticated => 1 )->to( 'Server#totals', namespace => $namespace );
 	$r->get( "/api/$version/servers/hostname/:name/details" => [ format => [qw(json)] ] )->over( authenticated => 1 )
-		->to( 'Server#details', namespace => $namespace );
-	$r->get( "/api/$version/servers/checks" => [ format => [qw(json)] ] )->over( authenticated => 1 )->to( 'ServerCheck#read', namespace => $namespace );
+		->to( 'Server#details_v11', namespace => $namespace );
+	$r->get( "/api/$version/servers/details" => [ format => [qw(json)] ] )->over( authenticated => 1 )->to( 'Server#details',   namespace => $namespace );
+	$r->get( "/api/$version/servers/checks"  => [ format => [qw(json)] ] )->over( authenticated => 1 )->to( 'ServerCheck#read', namespace => $namespace );
 	$r->get( "/api/$version/servercheck/aadata" => [ format => [qw(json)] ] )->over( authenticated => 1 )
 		->to( 'ServerCheck#aadata', namespace => $namespace );
 	$r->post("/api/$version/servercheck")->over( authenticated => 1 )->to( 'ServerCheck#update', namespace => $namespace );
@@ -772,10 +778,10 @@ sub traffic_stats_routes {
 	$r->get( "/api/$version/deliveryservice_stats" => [ format => [qw(json)] ] )->over( authenticated => 1 )
 		->to( 'DeliveryServiceStats#index', namespace => $namespace );
 	$r->get( "/api/$version/cache_stats" => [ format => [qw(json)] ] )->over( authenticated => 1 )->to( 'CacheStats#index', namespace => $namespace );
-	$r->get( "internal/api/$version/current_bandwidth" => [ format => [qw(json)] ] )->to( 'CacheStats#current_bandwidth', namespace => $namespace );
+	$r->get( "internal/api/$version/current_bandwidth"   => [ format => [qw(json)] ] )->to( 'CacheStats#current_bandwidth',   namespace => $namespace );
 	$r->get( "internal/api/$version/current_connections" => [ format => [qw(json)] ] )->to( 'CacheStats#current_connections', namespace => $namespace );
-	$r->get( "internal/api/$version/current_capacity" => [ format => [qw(json)] ] )->to( 'CacheStats#current_capacity', namespace => $namespace );
-	$r->get( "internal/api/$version/daily_summary" => [ format => [qw(json)] ] )->to( 'CacheStats#daily_summary', namespace => $namespace );
+	$r->get( "internal/api/$version/current_capacity"    => [ format => [qw(json)] ] )->to( 'CacheStats#current_capacity',    namespace => $namespace );
+	$r->get( "internal/api/$version/daily_summary"       => [ format => [qw(json)] ] )->to( 'CacheStats#daily_summary',       namespace => $namespace );
 }
 
 sub catch_all {

@@ -846,10 +846,31 @@ sub dnssec_keys {
 
 #checks if keys are expired and re-generates them if they are.
 sub dnssec_keys_refresh {
+	my $self = shift;
+
+	# daemonize so we can avoid blocking
+	my $pid = $self->daemonize();
+
+	if ( !defined($pid) || $pid < 0 ) {
+		my $error = "Unable to daemonize to check DNSSEC keys for refresh in the background";
+		$self->app->log->fatal($error);
+		return $self->alert( { Error => $error } );
+	}
+	elsif ( $pid > 0 ) {
+		return $self->success("Checking DNSSEC keys for refresh in the background");
+	}
+
+	# we're in the fork()ed process now
+	$self->refresh_keys();
+	exit(0);
+}
+
+sub refresh_keys {
 	my $self       = shift;
 	my $is_updated = 0;
 	my $error_message;
 	my $rs_data = $self->db->resultset("Cdn")->search( {}, { order_by => "name" } );
+
 	while ( my $row = $rs_data->next ) {
 		if ($row->dnssec_enabled == 1) {
 			my $cdn_name = $row->name;
@@ -864,7 +885,7 @@ sub dnssec_keys_refresh {
 
 			$keys = decode_json( $get_keys->content );
 
-	   #get DNSKEY ttl, generation multiplier, and effective mutiplier for CDN TLD
+			#get DNSKEY ttl, generation multiplier, and effective mutiplier for CDN TLD
 			my $profile_id = $self->get_profile_id_by_cdn($cdn_name);
 			my $dnskey_gen_multiplier;
 			my $dnskey_ttl;
@@ -878,7 +899,7 @@ sub dnssec_keys_refresh {
 				{   prefetch =>
 						[ { 'parameter' => undef }, { 'profile' => undef } ] }	)->single;
 			$rs_pp ? $dnskey_ttl = $rs_pp->parameter->value : $dnskey_ttl = '60';
-			
+
 			%condition = (
 				'parameter.name' => 'DNSKEY.generation.multiplier',
 				'profile.name'   => $profile_id
@@ -955,6 +976,11 @@ sub dnssec_keys_refresh {
 			my @ds_rs
 				= $self->db->resultset('Deliveryservice')->search( \%search );
 			foreach my $ds (@ds_rs) {
+				if (   $ds->type->name !~ m/^HTTP/
+					&& $ds->type->name !~ m/^DNS/ )
+				{
+					next;
+				}
 				#check if keys exist for ds
 				my $xml_id  = $ds->xml_id;
 				my $ds_keys = $keys->{$xml_id};
@@ -981,7 +1007,7 @@ sub dnssec_keys_refresh {
 						$deliveryservice_regexes, $data, $domain_name,
 						$data->protocol );
 
-		#first one is the one we want.  period at end for dnssec, substring off stuff we dont want
+					#first one is the one we want.  period at end for dnssec, substring off stuff we dont want
 					my $ds_name = $example_urls[0] . ".";
 					my $length = length($ds_name) - CORE::index( $ds_name, "." );
 					$ds_name
@@ -1059,7 +1085,7 @@ sub dnssec_keys_refresh {
 					}
 				}
 			}
-			
+
 			if ( $is_updated == 1 ) {
 				# #convert hash to json and store in Riak
 				my $json_data = encode_json($keys);
@@ -1075,10 +1101,6 @@ sub dnssec_keys_refresh {
 			}
 		}
 	}
-	if ($error_message) {
-		return $self->alert({ Error => $error_message });
-	}
-	return $self->success("Thanks!")
 }
 
 sub regen_expired_keys {

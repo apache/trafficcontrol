@@ -22,13 +22,14 @@ my %definition_for = (
 	edge_atl => {
 		new   => 'Cachegroup',
 		using => {
-			id         => 3,
-			name       => 'edge_atl_group',
-			short_name => 'atl',
-			type       => 1,
-			latitude   => 120,
-			longitude  => 120,
-			parent_cachegroup_id => 1,
+			id                             => 3,
+			name                           => 'edge_atl_group',
+			short_name                     => 'atl',
+			type                           => 1,
+			latitude                       => 120,
+			longitude                      => 120,
+			parent_cachegroup_id           => 1,
+			secondary_parent_cachegroup_id => 2,
 		},
 	},
 );

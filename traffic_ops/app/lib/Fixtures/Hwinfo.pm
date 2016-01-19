@@ -38,6 +38,51 @@ my %definition_for = (
 			val         => '1.0.0.29',
 		},
 	},
+	hw3 => {
+		new   => 'Hwinfo',
+		using => {
+			id          => 3,
+			serverid    => 2,
+			description => 'ServiceTag',
+			val         => 'XXX',
+		},
+	},
+	hw4 => {
+		new   => 'Hwinfo',
+		using => {
+			id          => 4,
+			serverid    => 2,
+			description => 'Manufacturer',
+			val         => 'Dell Inc.',
+		},
+	},
+	hw5 => {
+		new   => 'Hwinfo',
+		using => {
+			id          => 5,
+			serverid    => 2,
+			description => 'Model',
+			val         => 'Beetle',
+		},
+	},
+	hw6 => {
+		new   => 'Hwinfo',
+		using => {
+			id          => 6,
+			serverid    => 3,
+			description => 'Manufacturer',
+			val         => 'Ferrari',
+		},
+	},
+	hw6 => {
+		new   => 'Hwinfo',
+		using => {
+			id          => 7,
+			serverid    => 3,
+			description => 'Model',
+			val         => 'Spider',
+		},
+	},
 );
 
 sub get_definition {

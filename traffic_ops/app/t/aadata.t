@@ -30,6 +30,7 @@ my $t      = Test::Mojo->new('TrafficOps');
 
 #unload data for a clean test
 Test::TestHelper->unload_core_data($schema);
+
 #load core test data
 Test::TestHelper->load_core_data($schema);
 
@@ -37,14 +38,13 @@ Test::TestHelper->load_core_data($schema);
 ok $t->post_ok( '/login', => form => { u => Test::TestHelper::ADMIN_USER, p => Test::TestHelper::ADMIN_USER_PASSWORD } )->status_is(302)
 	->or( sub { diag $t->tx->res->content->asset->{content}; } );
 
-
 $t->get_ok('/aadata/Server')->status_is(200)->json_has('/aaData')->json_has('atlanta-mid-01');
 
 $t->get_ok('/aadata/ProfileParameter')->status_is(200)->json_has('/aaData')->json_has('domain_name');
 
 $t->get_ok('/aadata/ServerSelect')->status_is(200)->json_has('/aaData')->json_has('atlanta-edge-01');
 
-$t->get_ok('/aadata/Hwinfo')->status_is(200)->json_has('/aaData')->json_has('atlanta-edge-01.ga.atlanta.kabletown.net');
+$t->get_ok('/aadata/Hwinfo')->status_is(200)->json_has('/data')->json_has('atlanta-edge-01.ga.atlanta.kabletown.net');
 
 $t->get_ok('/aadata/Log')->status_is(200)->json_has('/aaData');
 

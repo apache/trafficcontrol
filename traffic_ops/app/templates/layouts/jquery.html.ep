@@ -31,7 +31,7 @@
 		<script type="text/javascript" src="/js/jquery-ui.min.js"></script>
 
 % if (!stash ('fbox_layout') && !stash 'exception') {
-		<script type="text/javascript" src="/js/jquery.dataTables.min.js"></script>
+		<script type="text/javascript" src="/js/jquery.dataTables.js"></script>
 		<!--<script type="text/javascript" src="/js/DataTables-1.10.3/media/js/jquery.dataTables.js"></script>-->
 
 <script>

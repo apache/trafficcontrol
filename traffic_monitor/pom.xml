@@ -86,6 +86,12 @@
 			<artifactId>wicket-examples-war</artifactId>
 			<version>0.2</version>
 			<classifier>test-sources</classifier>
+			<exclusions>
+				<exclusion>
+					<groupId>org.apache.wicket</groupId>
+					<artifactId>wicket-atmosphere</artifactId>
+				</exclusion>
+			</exclusions>
 		</dependency>
 		<dependency>
 			<groupId>org.apache.wicket</groupId>
@@ -151,7 +157,7 @@
 				<executions>
 					<execution>
 						<id>PMD</id>
-						<phase>verify</phase>
+						<phase>compile</phase>
 						<goals>
 							<goal>check</goal>
 						</goals>
@@ -470,6 +476,9 @@
 							<preremoveScriptlet>
 								<scriptFile>src/main/scripts/preremove.sh</scriptFile>
 							</preremoveScriptlet>
+							<postremoveScriptlet>
+								<scriptFile>src/main/scripts/postremove.sh</scriptFile>
+							</postremoveScriptlet>
 						</configuration>
 					</plugin>
 				</plugins>

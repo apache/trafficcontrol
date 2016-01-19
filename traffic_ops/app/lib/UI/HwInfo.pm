@@ -21,32 +21,14 @@ use Mojo::Base 'Mojolicious::Controller';
 use Data::Dumper;
 
 sub readhwinfo {
-	my $self    = shift;
-	my $orderby = "serverid";
+	my $self = shift;
 	my @data;
-	$orderby = $self->param('orderby') if ( defined $self->param('orderby') );
+	my $orderby = $self->param('orderby') || "serverid";
+	my $limit   = $self->param('limit')   || 1000;
 
 	# get list of servers in one query
+	my $rs_data = $self->db->resultset("Hwinfo")->search( undef, { rows => $limit } );
 
-=cut
-	my $rs_data = $self->db->resultset("Hwinfo")->search( undef, { prefetch => [ { 'serverid' => undef, } ], order_by => 'me.' . $orderby } );
-	while ( my $row = $rs_data->next ) {
-		my $id = $row->id;
-		push(
-			@data, {
-				"serverid"     => $row->serverid->host_name,
-				"description"  => $row->description,
-				"val"          => $row->val,
-				"last_updated" => $row->last_updated,
-			}
-		);
-	}
-=cut
-
-	# get list of servers in one query
-	my $rs_data = $self->db->resultset("Hwinfo")->search();
-
-	#my $rs_data = $self->db->resultset("Hwinfo")->search( undef, { prefetch => [ { 'serverid' => undef, } ], order_by => 'me.' . $orderby } );
 	while ( my $row = $rs_data->next ) {
 		my $id = $row->id;
 		push(

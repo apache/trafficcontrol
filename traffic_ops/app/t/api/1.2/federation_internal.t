@@ -83,6 +83,17 @@ $t->get_ok("/internal/api/1.2/federations.json")->status_is(200)->or( sub { diag
 	->json_is( "/response/1/mappings/0/ttl", "86400" )->json_is( "/response/1/mappings/0/resolve4/0", "127.0.0.2\/32" )
 	->json_is( "/response/1/mappings/0/resolve4/0", "127.0.0.2/32" );
 
+$t->get_ok("/internal/api/1.2/federations.json?cdnName=cdn1")->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } )
+	->json_is( "/response/0/cdnName", "cdn1" )
+
+	->json_is( "/response/1/deliveryService", "test-ds1" )->json_is( "/response/1/mappings/0/cname", "cname1." )
+	->json_is( "/response/1/mappings/0/ttl", "86400" )->json_is( "/response/1/mappings/0/resolve4/0", "127.0.0.1\/32" )
+	->json_is( "/response/1/mappings/0/resolve4/0", "127.0.0.1/32" )
+
+	->json_is( "/response/2/deliveryService", "test-ds2" )->json_is( "/response/2/mappings/0/cname", "cname2." )
+	->json_is( "/response/2/mappings/0/ttl", "86400" )->json_is( "/response/2/mappings/0/resolve4/0", "127.0.0.2\/32" )
+	->json_is( "/response/2/mappings/0/resolve4/0", "127.0.0.2/32" );
+
 ok $t->get_ok("/logout")->status_is(302)->or( sub { diag $t->tx->res->content->asset->{content}; } );
 
 ####### Federation User ###########################################################################

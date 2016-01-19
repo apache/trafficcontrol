@@ -15,6 +15,7 @@
 package main
 
 import (
+	"./mooseFixture"
 	"./outputFormatter"
 	"./sqlParser"
 	"./urlParser"
@@ -99,9 +100,13 @@ func apiHandler(w http.ResponseWriter, r *http.Request) {
 	var columns []string
 	var columnAliases []string
 	var columnMap map[string]map[string]interface{}
-	//GETS the request
+	// default - GETS the request
 	if tableName != "" {
-		rows, err = sqlParser.Get(tableName)
+		joinFKs := true
+		if r.URL.Query().Get("join") == "no" {
+			joinFKs = false
+		}
+		rows, err = sqlParser.Get(tableName, joinFKs, tableParameters)
 		columns = sqlParser.GetColumnNames(tableName)
 		columnAliases, columnMap = sqlParser.GetForeignKeyColumns(tableName)
 		if err != nil {
@@ -110,11 +115,16 @@ func apiHandler(w http.ResponseWriter, r *http.Request) {
 	} else {
 		rows = nil
 	}
-	resp := outputFormatter.MakeApiWrapper(rows, columns, columnAliases, columnMap, errString, isTable)
-	//encoder writes the resultant "Response" struct (see outputFormatter) to writer
-	enc := json.NewEncoder(w)
-	enc.Encode(resp)
 
+	if r.URL.Query().Get("format") == "moosefixture" {
+		enc := mooseFixture.NewEncoder(w)
+		enc.Encode(tableName, rows)
+	} else {
+		resp := outputFormatter.MakeApiWrapper(rows, columns, columnAliases, columnMap, errString, isTable)
+		//encoder writes the resultant "Response" struct (see outputFormatter) to writer
+		enc := json.NewEncoder(w)
+		enc.Encode(resp)
+	}
 }
 
 func main() {

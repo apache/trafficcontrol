@@ -34,6 +34,7 @@ my $STATUS_KEY   = "status";
 my $JSON_KEY     = "json";
 my $RESPONSE_KEY = "response";
 my $LIMIT_KEY    = "limit";
+my $SIZE_KEY     = "size";
 my $ORDERBY_KEY  = "orderby";
 my $PAGE_KEY     = "page";
 my $INFO_KEY     = "supplemental";
@@ -50,24 +51,23 @@ sub register {
 			# optional args
 			my $orderby = shift;
 			my $limit   = shift;
+			my $size    = shift;
 			my $page    = shift;
 
-			my $response_body;
-			if ( defined($limit) && defined($page) && defined($orderby) ) {
-				$response_body = { $RESPONSE_KEY => $body, $LIMIT_KEY => $limit, $PAGE_KEY => $page, $ORDERBY_KEY => $orderby };
+			my $response_body = { $RESPONSE_KEY => $body };
+			if ( defined($orderby) ) {
+				$response_body = merge( $response_body, { $ORDERBY_KEY => $orderby } );
 			}
-			elsif ( defined($limit) && defined($page) ) {
-				$response_body = { $RESPONSE_KEY => $body, $LIMIT_KEY => $limit, $PAGE_KEY => $page };
+			if ( defined($limit) ) {
+				$response_body = merge( $response_body, { $LIMIT_KEY => $limit } );
 			}
-			elsif ( defined($limit) ) {
-				$response_body = { $RESPONSE_KEY => $body, $LIMIT_KEY => $limit };
+			if ( defined($page) ) {
+				$response_body = merge( $response_body, { $PAGE_KEY => $page } );
 			}
-			elsif ( defined($page) ) {
-				$response_body = { $RESPONSE_KEY => $body, $PAGE_KEY => $limit };
+			if ( defined($size) ) {
+				$response_body = merge( $response_body, { $SIZE_KEY => $size } );
 			}
-			else {
-				$response_body = { $RESPONSE_KEY => $body };
-			}
+
 			return $self->render( $STATUS_KEY => 200, $JSON_KEY => $response_body );
 		}
 	);

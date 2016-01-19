@@ -18,9 +18,9 @@
 #
 
 # example cron entry
-# 0 * * * * root /opt/traffic_ops/app/bin/checks/ToDSCPCheck.pl -c "{\"base_url\": \"https://localhost\", \"check_name\": \"DSCP\", \"name\": \"Delivery Service\", \"cms_interface\": \"eth0\"}"
+# 0 * * * * root /opt/traffic_ops/app/bin/checks/ToDSCPCheck.pl -c "{\"base_url\": \"https://localhost\", \"check_name\": \"DSCP\", \"cms_interface\": \"eth0\"}" >> /var/log/traffic_ops/extensionCheck.log 2>&1
 # example cron entry with syslog
-# 0 * * * * root /opt/traffic_ops/app/bin/checks/ToDSCPCheck.pl -c "{\"base_url\": \"https://localhost\", \"check_name\": \"DSCP\", \"name\": \"Delivery Service\", \"cms_interface\": \"eth0\", \"syslog_facility\": \"local0\"}"
+# 0 * * * * root /opt/traffic_ops/app/bin/checks/ToDSCPCheck.pl -c "{\"base_url\": \"https://localhost\", \"check_name\": \"DSCP\", \"name\": \"Delivery Service\", \"cms_interface\": \"eth0\", \"syslog_facility\": \"local0\"}" > /dev/null 2>&1
 
 use strict;
 use warnings;
@@ -38,19 +38,23 @@ use Extensions::Helper;
 use Sys::Syslog qw(:standard :macros);
 use IO::Handle;
 
-my $VERSION = "0.02";
+my $VERSION = "0.03";
 
 STDOUT->autoflush(1);
 
 my %args = ();
-getopts( "l:c:", \%args );
+getopts( "c:f:hl:q", \%args );
+
+if ($args{h}) {
+   &help();
+   exit();
+}
 
 Log::Log4perl->easy_init($ERROR);
 if ( defined( $args{l} ) ) {
    if    ( $args{l} == 1 ) { Log::Log4perl->easy_init($INFO); }
    elsif ( $args{l} == 2 ) { Log::Log4perl->easy_init($DEBUG); }
-   elsif ( $args{l} == 3 ) { Log::Log4perl->easy_init($TRACE); }
-   elsif ( $args{l} > 3 )  { Log::Log4perl->easy_init($TRACE); }
+   elsif ( $args{l} >= 3 ) { Log::Log4perl->easy_init($TRACE); }
    else                    { Log::Log4perl->easy_init($INFO); }
 }
 
@@ -66,11 +70,15 @@ my $jconf = undef;
 eval { $jconf = decode_json( $args{c} ) };
 if ($@) {
    ERROR("Bad json config: $@");
+   print "\n\n";
+   &help();
    exit(1);
 }
 
 my $sslg = undef;
+my $chck_lng_nm;
 if (defined($jconf->{syslog_facility})) {
+   $chck_lng_nm = $jconf->{name};
    setlogmask(LOG_UPTO(LOG_INFO));
    openlog ('ToChecks', '', $jconf->{syslog_facility});
    $sslg = 1;
@@ -81,21 +89,36 @@ if (defined($jconf->{cms_interface})) {
    $cms_int = $jconf->{cms_interface};
 } else {
    ERROR "cms_interface must be defined.";
+   print "\n\n";
+   &help();
    exit(1);
 }
+
+my $force = 0;
+if (defined($args{f})) {
+   $force = $args{f};
+}
+
+my $quiet;
+if ($args{q}) {
+   $quiet = 1;
+}
+
+my $check_name = $jconf->{check_name};
+if ( $check_name ne "DSCP" ) {
+   ERROR "This Check Extension is exclusively for DSCP.";
+   print "\n\n";
+   &help();
+   exit(4);
+}
+
+
+TRACE( "force: " . $args{f} . "" );
 
 TRACE Dumper($jconf);
 my $b_url = $jconf->{base_url};
 Extensions::Helper->import();
 my $ext = Extensions::Helper->new( { base_url => $b_url, token => '91504CE6-8E4A-46B2-9F9F-FE7C15228498' } );
-
-my $check_name = $jconf->{check_name};
-if ( $check_name ne "DSCP" ) {
-   ERROR "This Check Extension is exclusively for DSCP.";
-   exit(4);
-}
-
-my $chck_lng_nm = $jconf->{name};
 
 my %ds_info           = ();
 my $jdeliveryservices = $ext->get( Extensions::Helper::DSLIST_PATH );
@@ -114,6 +137,7 @@ foreach my $server ( @{$jdataserver} ) {
    my $host_name  = trim($server->{hostName});
    my $fqdn       = $host_name.".".trim($server->{domainName});
    my $interface  = trim($server->{interfaceName});
+   my $status     = $server->{status};
    my $details    = $ext->get( '/api/1.1/servers/hostname/' . $host_name . '/details.json' );
    my $successful = 1; # assume all is good
    $ip6 =~ s/\/\d+$//;
@@ -145,7 +169,7 @@ foreach my $server ( @{$jdataserver} ) {
                   $tmp =~ s/\.\*//g;
                   $header .= $tmp;
                   if ( !defined( $domain_name_for_profile{ $ds->{profileName} } ) ) {
-                     my $param_list = $ext->get( '/api/1.1/parameters/profile/' . $ds->{profileName} . '.json' );    ## TODO: create /api, use that
+                     my $param_list = $ext->get( '/api/1.1/parameters/profile/' . $ds->{profileName} . '.json' );
                      foreach my $p ( @{$param_list} ) {
                         if ( $p->{name} eq 'domain_name' ) {
                            $domain_name_for_profile{ $ds->{profileName} } = $p->{value};
@@ -170,29 +194,40 @@ foreach my $server ( @{$jdataserver} ) {
 
             TRACE "About to check header: ".$header." url: ".$url;
 
-            my $dscp_found = &get_dscp( $url, $ip, $cms_int, $header, "ipv4");
+
+            my $dscp_found;
+            if ($force == 0) {
+               $dscp_found = &get_dscp( $url, $ip, $cms_int, $header, "ipv4");
+            } elsif ($force == 1) {
+               $dscp_found = -1;
+            } elsif ($force == 2) {
+               $dscp_found = $ds->{dscp};
+            } elsif ($force == 3) {
+               $dscp_found = $ds->{dscp} + 1;
+            }
             my $target = $ds->{xmlId}.":ipv4";
             if ($dscp_found == -1) {
                $successful = 0;
                TRACE "Failed deliveryService: ".$ds->{profileName};
                if ($sslg) {
-                  my @tmp = ($fqdn, $check_name, $chck_lng_nm, 'FAIL',
+                  my @tmp = ($fqdn, $check_name, $chck_lng_nm, 'FAIL',$status,
                              $target,$header,"Unable to connect to server");
-                  syslog(LOG_INFO, "hostname=%s check=%s name=\"%s\" result=%s target=%s url=%s msg=\"%s\"", @tmp);
+                  syslog(LOG_INFO, "hostname=%s check=%s name=\"%s\" result=%s status=%s target=%s url=%s msg=\"%s\"", @tmp);
                }
-            } elsif ( $dscp_found == $ds->{dscp} ) {
+            } elsif ($dscp_found == $ds->{dscp}) {
                TRACE "Success deliveryService: ".$ds->{profileName}." xmlId: ".$ds->{xmlId};
                if ($sslg) {
-                  my @tmp = ($fqdn,$check_name,$chck_lng_nm,'OK',$target,$header);
-                  syslog(LOG_INFO, "hostname=%s check=%s name=\"%s\" result=%s target=%s url=%s", @tmp);
+                  my @tmp = ($fqdn,$check_name,$chck_lng_nm,'OK',$status,
+                             $target,$header);
+                  syslog(LOG_INFO, "hostname=%s check=%s name=\"%s\" result=%s status=%s target=%s url=%s msg=\"\"", @tmp);
                }
             } else {
                $successful = 0;
                TRACE "Fail deliveryService: ".$ds->{profileName};
                if ($sslg) {
-                  my @tmp = ($fqdn,$check_name,$chck_lng_nm,'FAIL',
+                  my @tmp = ($fqdn,$check_name,$chck_lng_nm,'FAIL',$status,
                              $target,$header,"Expected DSCP value of $ds->{dscp} got $dscp_found");
-                  syslog(LOG_ERR, "hostname=%s check=%s name=\"%s\" result=%s target=%s url=%s msg=\"%s\"", @tmp);
+                  syslog(LOG_ERR, "hostname=%s check=%s name=\"%s\" result=%s status=%s target=%s url=%s msg=\"%s\"", @tmp);
                }
             }
 
@@ -204,30 +239,39 @@ foreach my $server ( @{$jdataserver} ) {
 
             TRACE "About to check header: ".$header." url: ".$url;
 
-            $dscp_found = &get_dscp( $url, $ip6, $cms_int, $header, "ipv6");
+            if ($force == 0) {
+               $dscp_found = &get_dscp( $url, $ip6, $cms_int, $header, "ipv6");
+            } elsif ($force == 1) {
+               $dscp_found = -1;
+            } elsif ($force == 2) {
+               $dscp_found = $ds->{dscp};
+            } elsif ($force == 3) {
+               $dscp_found = $ds->{dscp} + 1;
+            }
             $target = $ds->{xmlId}.":ipv6";
             if ($dscp_found == -1) {
                $successful = 0;
                TRACE "Failed deliveryService: ".$ds->{profileName};
                if ($sslg) {
-                  my @tmp = ($fqdn, $check_name, $chck_lng_nm, 'FAIL',
-                             $target,$header,"Unable to connect to server");
-                  syslog(LOG_INFO, "hostname=%s check=%s name=\"%s\" result=%s target=%s url=%s msg=\"%s\"", @tmp);
+                  my @tmp = ($fqdn, $check_name, $chck_lng_nm, 'FAIL',$status,
+                             $target,$header,"Unable to connect to edge server");
+                  syslog(LOG_INFO, "hostname=%s check=%s name=\"%s\" result=%s status=%s target=%s url=%s msg=\"%s\"", @tmp);
                }
             } elsif ( $dscp_found == $ds->{dscp} ) {
                TRACE "Success deliveryService: ".$ds->{profileName};
                if ($sslg) {
-                  my @tmp = ($fqdn, $check_name, $chck_lng_nm, 'OK',$target,$header);
-                  syslog(LOG_INFO, "hostname=%s check=%s name=\"%s\" result=%s target=%s url=%s", @tmp);
+                  my @tmp = ($fqdn,$check_name,$chck_lng_nm,'OK',$status,
+                             $target,$header);
+                  syslog(LOG_INFO, "hostname=%s check=%s name=\"%s\" result=%s status=%s target=%s url=%s msg=\"\"", @tmp);
                }
             } else {
                $successful = 0;
                TRACE "Fail deliveryService: ".$ds->{profileName};
                if ($sslg) {
                   my $target = $ds->{xmlId}.":ipv6";
-                  my @tmp = ($fqdn, $check_name, $chck_lng_nm, 'FAIL',
+                  my @tmp = ($fqdn, $check_name, $chck_lng_nm, 'FAIL',$status,
                              $target,$header,"Expected DSCP value of $ds->{dscp} got $dscp_found");
-                  syslog(LOG_ERR, "hostname=%s check=%s name=\"%s\" result=%s target=%s url=%s msg=\"%s\"", @tmp);
+                  syslog(LOG_ERR, "hostname=%s check=%s name=\"%s\" result=%s status=%s target=%s url=%s msg=\"%s\"", @tmp);
                }
             }
          }
@@ -237,9 +281,9 @@ foreach my $server ( @{$jdataserver} ) {
       }
    }
    if ($successful) {
-      $ext->post_result( $server->{id}, $check_name, 1 );
+      $ext->post_result( $server->{id}, $check_name, 1 ) if (!$quiet);
    } else {
-      $ext->post_result( $server->{id}, $check_name, 0 );
+      $ext->post_result( $server->{id}, $check_name, 0 ) if (!$quiet);
    }
 }
 
@@ -326,3 +370,30 @@ sub get_dscp() {
 sub ltrim { my $s = shift; $s =~ s/^\s+//;       return $s };
 sub rtrim { my $s = shift; $s =~ s/\s+$//;       return $s };
 sub  trim { my $s = shift; $s =~ s/^\s+|\s+$//g; return $s };
+
+sub help() {
+   print "ToDSCPCheck.pl -c \"{\\\"base_url\\\": \\\"https://localhost\\\", \\\"check_name\\\": \\\"DSCP\\\", \\\"cms_interface\\\": \\\"eth0\\\"[, \\\"name\\\": \\\"DSCP Service Check\\\", \\\"syslog_facility\\\": \\\"local0\\\"]}\" [-f <1-3>] [-l <1-3>]\n";
+   print "\n";
+   print "-c   json formatted list of variables\n";
+   print "     base_url: required\n";
+   print "        URL of the Traffic Ops server.\n";
+   print "     check_name: required\n";
+   print "        The name of this check.\n";
+   print "     cms_interface: required\n";
+   print "        Interface used to communicate with edges.\n";
+   print "     name: optional\n";
+   print "        The long name of this check. used in conjuction with syslog_facility.\n";
+   print "     syslog_facility: optional\n";
+   print "        The syslog facility to send messages. Requires the \"name\" option to\n";
+   print "        be set.\n";
+   print "-f   Force a FAIL or OK message\n";
+   print "        1: FAIL Unable to connect to edge server.\n";
+   print "        2: OK\n";
+   print "        3: FAIL DSCP values didn't match.\n";
+   print "-h   Print this message\n";
+   print "-l   Debug level\n";
+   print "-q   Don't post results to Traffic Ops.\n";
+   print "================================================================================\n";
+   # the above line of equal signs is 80 columns
+   print "\n";
+}

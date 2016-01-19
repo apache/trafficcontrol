@@ -93,13 +93,16 @@ sub create {
 		my $tm_user = $self->db->resultset('TmUser')->search( { username => $self->current_user()->{username} } )->single();
 		my $tm_user_id = $tm_user->id;
 
-		# select deliveryservice from deliveryservice_tmuser where deliveryservice=$ds_id
-		my $dbh = $self->db->resultset('DeliveryserviceTmuser')->search( { deliveryservice => $ds_id, tm_user_id => $tm_user_id }, { id => 1 } );
-		my $count = $dbh->count();
+		if ( defined($ds_id) ) {
 
-		if ( $count == 0 ) {
-			$self->forbidden();
-			return;
+			# select deliveryservice from deliveryservice_tmuser where deliveryservice=$ds_id
+			my $dbh = $self->db->resultset('DeliveryserviceTmuser')->search( { deliveryservice => $ds_id, tm_user_id => $tm_user_id }, { id => 1 } );
+			my $count = $dbh->count();
+
+			if ( $count == 0 ) {
+				$self->forbidden();
+				return;
+			}
 		}
 	}
 
@@ -135,7 +138,7 @@ sub is_valid {
 		checks => [
 
 			# All of these are required
-			[qw/regex startTime ttl/] => is_required("is required"),
+			[qw/regex startTime ttl dsId/] => is_required("is required"),
 
 			ttl => sub {
 				my $value  = shift;

@@ -20,6 +20,7 @@ package MojoPlugins::Validation;
 use Mojo::Base 'Mojolicious::Plugin';
 use Data::Dumper;
 use Data::Dump qw(dump);
+use Email::Valid;
 
 sub register {
 	my ( $self, $app, $conf ) = @_;
@@ -42,6 +43,38 @@ sub register {
 			my $db_username = $self->db->resultset('TmUser')->find( { username => $username } );
 			if ( defined($db_username) ) {
 				$self->field('tm_user.username')->is_like( qr/$db_username/, "Username is already taken" );
+			}
+		}
+	);
+
+	$app->renderer->add_helper(
+		is_email_taken => sub {
+			my $self = shift;
+
+			my $email = $self->param('tm_user.email');
+			$self->app->log->debug( "email #-> " . Dumper($email) );
+			my $dbh = $self->db->resultset('TmUser')->search( { email => $email } );
+			my $count = $dbh->count();
+			if ( $count > 0 ) {
+
+				#$self->app->log->debug( "email #-> " . Dumper($email) );
+				my $db_email = $dbh->single()->email;
+				$self->field('tm_user.email')->is_like( qr/ . $db_email . /, "Email is already taken" );
+			}
+		}
+	);
+
+	$app->renderer->add_helper(
+		is_email_format_valid => sub {
+			my $self  = shift;
+			my $email = $self->param('tm_user.email');
+
+			#$self->app->log->debug( "valid email #-> " . Dumper($email) );
+			if ( defined($email) ) {
+				unless ( Email::Valid->address( -address => $email, -mxcheck => 1 ) ) {
+					$self->field('tm_user.email')->is_like( qr/ . $email . /, "Email is not a valid format" );
+				}
+
 			}
 		}
 	);

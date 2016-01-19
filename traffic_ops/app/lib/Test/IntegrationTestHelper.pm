@@ -26,26 +26,42 @@ use Test::More;
 use Test::Mojo;
 use Moose;
 
+use Fixtures::Integration::Asn;
+use Fixtures::Integration::CachegroupParameter;
+use Fixtures::Integration::Cachegroup;
 use Fixtures::Integration::Cdn;
 use Fixtures::Integration::Deliveryservice;
-use Fixtures::Integration::OrgCacheGroup;
-use Fixtures::Integration::OtherCacheGroup;
-use Fixtures::Integration::EdgeCacheGroup;
-use Fixtures::Integration::Profile;
+use Fixtures::Integration::DeliveryserviceRegex;
+use Fixtures::Integration::DeliveryserviceServer;
+use Fixtures::Integration::DeliveryserviceTmuser;
+use Fixtures::Integration::Division;
+use Fixtures::Integration::FederationDeliveryservice;
+use Fixtures::Integration::FederationFederationResolver;
+use Fixtures::Integration::Federation;
+use Fixtures::Integration::FederationResolver;
+use Fixtures::Integration::FederationTmuser;
+use Fixtures::Integration::GooseDbVersion;
+use Fixtures::Integration::Hwinfo;
+use Fixtures::Integration::JobAgent;
+use Fixtures::Integration::Job;
+use Fixtures::Integration::JobResult;
+use Fixtures::Integration::JobStatus;
+use Fixtures::Integration::Log;
 use Fixtures::Integration::Parameter;
+use Fixtures::Integration::PhysLocation;
 use Fixtures::Integration::ProfileParameter;
+use Fixtures::Integration::Profile;
+use Fixtures::Integration::Regex;
+use Fixtures::Integration::Region;
 use Fixtures::Integration::Role;
+use Fixtures::Integration::Servercheck;
 use Fixtures::Integration::Server;
-use Fixtures::Integration::Asn;
+use Fixtures::Integration::Staticdnsentry;
+use Fixtures::Integration::StatsSummary;
 use Fixtures::Integration::Status;
 use Fixtures::Integration::TmUser;
-use Fixtures::Integration::Type;
 use Fixtures::Integration::ToExtension;
-use Fixtures::Integration::Division;
-use Fixtures::Integration::Region;
-use Fixtures::Integration::PhysLocation;
-use Fixtures::Integration::Regex;
-use Fixtures::Integration::DeliveryserviceRegex;
+use Fixtures::Integration::Type;
 
 use Data::Dumper;
 
@@ -57,11 +73,30 @@ sub load_all_fixtures {
 	if ( $fixture->can("gen_data") ) {
 		$fixture->gen_data();
 	}
-	my @fixture_names = $fixture->all_fixture_names;
-	foreach my $fixture_name (@fixture_names) {
-		$fixture->load($fixture_name);
-
-		#ok $fixture->load($fixture_name), 'Does the ' . $fixture_name . ' load?';
+	if ( $fixture->name ne "Cachegroup" ) {
+		my @fixture_names = $fixture->all_fixture_names;
+		foreach my $fixture_name (@fixture_names) {
+			$fixture->load($fixture_name);
+		}
+	}
+	else {
+		# these shenanigans are here to first add ORG(36), then MID(7) and then the rest to prevent foreign key failures
+		my @fixture_names = $fixture->all_fixture_names;
+		foreach my $fixture_name (@fixture_names) {
+			my $cg = $fixture->get_definition($fixture_name);
+			if ( $cg->{using}->{type} == 36 ) {
+				$fixture->load($fixture_name);
+			}
+		}
+		foreach my $fixture_name (@fixture_names) {
+			my $cg = $fixture->get_definition($fixture_name);
+			if ( $cg->{using}->{type} == 7 ) {
+				$fixture->load($fixture_name);
+			}
+		}
+		foreach my $fixture_name (@fixture_names) {
+			$fixture->load($fixture_name);
+		}
 	}
 }
 
@@ -70,47 +105,6 @@ sub teardown {
 	my $schema     = shift;
 	my $table_name = shift;
 	$schema->resultset($table_name)->delete_all;
-
-	#ok $schema->resultset($table_name)->delete_all, 'Does the ' . $table_name . ' teardown?';
-}
-
-sub link_servers {
-	my $self   = shift;
-	my $schema = shift;
-
-	my $rs = $schema->resultset('Server')->search( {} );
-	while ( my $server = $rs->next ) {
-		my $i = $schema->resultset('Servercheck')->create( { server => $server->id } );
-		$i->insert();
-		if ( $server->type->name eq 'EDGE' ) {
-			if ( $server->profile->name =~ /CDN1/ ) {
-				$i = $schema->resultset('DeliveryserviceServer')->create( { server => $server->id, deliveryservice => 1 } );
-				$i->insert();
-				$i = $schema->resultset('DeliveryserviceServer')->create( { server => $server->id, deliveryservice => 2 } );
-				$i->insert();
-				$i = $schema->resultset('DeliveryserviceServer')->create( { server => $server->id, deliveryservice => 3 } );
-				$i->insert();
-				$i = $schema->resultset('DeliveryserviceServer')->create( { server => $server->id, deliveryservice => 4 } );
-				$i->insert();
-			}
-			else {
-				$i = $schema->resultset('DeliveryserviceServer')->create( { server => $server->id, deliveryservice => 11 } );
-				$i->insert();
-				$i = $schema->resultset('DeliveryserviceServer')->create( { server => $server->id, deliveryservice => 12 } );
-				$i->insert();
-				$i = $schema->resultset('DeliveryserviceServer')->create( { server => $server->id, deliveryservice => 13 } );
-				$i->insert();
-				$i = $schema->resultset('DeliveryserviceServer')->create( { server => $server->id, deliveryservice => 14 } );
-				$i->insert();
-			}
-		}
-		if ( $server->type->name eq 'MID' ) {
-			if ( $server->profile->name =~ /CDN1/ ) {
-				$i = $schema->resultset('DeliveryserviceServer')->create( { server => $server->id, deliveryservice => 1 } );
-				$i->insert();
-			}
-		}
-	}
 }
 
 sub load_core_data {
@@ -126,29 +120,28 @@ sub load_core_data {
 	$self->load_all_fixtures( Fixtures::Integration::Region->new($schema_values) );
 	$self->load_all_fixtures( Fixtures::Integration::PhysLocation->new($schema_values) );
 	$self->load_all_fixtures( Fixtures::Integration::Status->new($schema_values) );
+	$self->load_all_fixtures( Fixtures::Integration::Cachegroup->new($schema_values) );
 	$self->load_all_fixtures( Fixtures::Integration::Regex->new($schema_values) );
 	$self->load_all_fixtures( Fixtures::Integration::Parameter->new($schema_values) );
 	$self->load_all_fixtures( Fixtures::Integration::Profile->new($schema_values) );
 	$self->load_all_fixtures( Fixtures::Integration::ProfileParameter->new($schema_values) );
-	$self->load_all_fixtures( Fixtures::Integration::OrgCacheGroup->new($schema_values) );
-	$self->load_all_fixtures( Fixtures::Integration::OtherCacheGroup->new($schema_values) );
-	$self->load_all_fixtures( Fixtures::Integration::EdgeCacheGroup->new($schema_values) );
 	$self->load_all_fixtures( Fixtures::Integration::Asn->new($schema_values) );
 	$self->load_all_fixtures( Fixtures::Integration::Server->new($schema_values) );
 	$self->load_all_fixtures( Fixtures::Integration::Deliveryservice->new($schema_values) );
 	$self->load_all_fixtures( Fixtures::Integration::DeliveryserviceRegex->new($schema_values) );
+	$self->load_all_fixtures( Fixtures::Integration::DeliveryserviceServer->new($schema_values) );
 	$self->load_all_fixtures( Fixtures::Integration::ToExtension->new($schema_values) );
 
-	$self->link_servers($schema);
 	diag "Done!";
 }
 
 sub delete_cachegroups {
-	my $self    = shift;
-	my $schema  = shift;
-#	my $sql     = 'IS NOT NULL AND type != 7';
-#	my $parents = $schema->resultset('Cachegroup')->search( { parent_cachegroup_id => \$sql } );
-#	$parents->delete;
+	my $self   = shift;
+	my $schema = shift;
+
+	#	my $sql     = 'IS NOT NULL AND type != 7';
+	#	my $parents = $schema->resultset('Cachegroup')->search( { parent_cachegroup_id => \$sql } );
+	#	$parents->delete;
 	my $orgs = $schema->resultset('Cachegroup')->search( { type => 6 } );
 	$orgs->delete;
 	$orgs = $schema->resultset('Cachegroup')->search( { type => 7 } );
