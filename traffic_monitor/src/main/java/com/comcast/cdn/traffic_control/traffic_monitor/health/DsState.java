@@ -85,11 +85,11 @@ public class DsState extends AbstractState {
 
 		loc.accumulate(stati);
 
-		EmbeddedStati cacheStati = cacheStatiMap.get(state.id);
+		EmbeddedStati cacheStati = cacheStatiMap.get(state.stateId);
 
 		if (cacheStati == null) {
-			cacheStati = new EmbeddedStati("cache", state.id);
-			cacheStatiMap.put(state.id, cacheStati);
+			cacheStati = new EmbeddedStati("cache", state.stateId);
+			cacheStatiMap.put(state.stateId, cacheStati);
 		}
 
 		cacheStati.accumulate(stati);
@@ -370,7 +370,7 @@ public class DsState extends AbstractState {
 			this.status_4xx = toLong(cs.getValue(propBase+".status_4xx", index));
 			this.status_5xx = toLong(cs.getValue(propBase+".status_5xx", index));
 			this.dsId = dsId;
-			this.csId = cs.id;
+			this.csId = cs.stateId;
 		}
 		public static boolean checkBytes(final List<DataPoint> dps, final String id) {
 			long lastGoodIndex = -1;
@@ -499,7 +499,7 @@ public class DsState extends AbstractState {
 	}
 	@Override
 	protected KeyValue getKeyValue(final String key, final AbstractState state) {
-		return new KeyValue(key,this) {
+		return new KeyValue(key,"") {
 			private static final long serialVersionUID = 1L;
 			@Override
 			public String getObject( ) {

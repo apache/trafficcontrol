@@ -42,17 +42,17 @@ abstract public class AbstractState implements java.io.Serializable {
 	public static final String IS_HEALTHY_STR = "isHealthy";
 	private long historyTime = 5*60*1000;
 
-	final String id;
+	final String stateId;
 	private final Map<String,List<DataPoint>> stats = new HashMap<String,List<DataPoint>>();
 	protected final Set<String> hiddenStats = new HashSet<String>();
 	private int index;
 	private Event lastEvent = null;
 
-	protected AbstractState(final String id) {
-		this.id = id;
+	protected AbstractState(final String stateId) {
+		this.stateId = stateId;
 	}
 	public String getId() {
-		return id;
+		return stateId;
 	}
 
 	protected void put(final Map<String, String> stati) {
@@ -279,19 +279,19 @@ abstract public class AbstractState implements java.io.Serializable {
 		for(String key : stats.keySet()) {
 			final List<DataPoint> l = stats.get(key);
 			if(l.isEmpty()) {
-				LOGGER.warn("list empty for "+key + " - "+this.id);
+				LOGGER.warn("list empty for "+key + " - "+this.stateId);
 				continue;
 			}
 			while(l.get(0).getIndex() < baseIndex) {
 				if(l.size() == 1) {
-					LOGGER.warn(String.format("%s - %s: index %d < baseIndex %d", key, this.id, l.get(0).getIndex(), baseIndex));
+					LOGGER.warn(String.format("%s - %s: index %d < baseIndex %d", key, this.stateId, l.get(0).getIndex(), baseIndex));
 					break;
 				}
 				synchronized(this) {
 					l.remove(0);
 				}
 				if(l.isEmpty()) {
-					LOGGER.warn("list empty for "+key + " - "+this.id);
+					LOGGER.warn("list empty for "+key + " - "+this.stateId);
 					break;
 				}
 			}
@@ -333,7 +333,7 @@ abstract public class AbstractState implements java.io.Serializable {
 		boolean logChange = true;
 
 		if (!isHealthy) {
-			LOGGER.debug(String.format("Error on '%s': %s", id, error));
+			LOGGER.debug(String.format("Error on '%s': %s", stateId, error));
 		}
 
 		if (lastEvent != null && getBool(IS_HEALTHY_STR) == isHealthy && getBool(IS_AVAILABLE_STR) == isAvailable) {

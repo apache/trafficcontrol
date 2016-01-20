@@ -335,7 +335,7 @@ public class CacheState extends AbstractState {
 
 	@Override
 	protected KeyValue getKeyValue(final String key, final AbstractState state) {
-		return new KeyValue(key, this) {
+		return new KeyValue(key, "") {
 			private static final long serialVersionUID = 1L;
 
 			@Override
