@@ -21,6 +21,8 @@ import java.text.NumberFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
+import com.comcast.cdn.traffic_control.traffic_monitor.health.AbstractState;
+import com.comcast.cdn.traffic_control.traffic_monitor.health.CacheStateRegistry;
 import org.apache.log4j.Logger;
 import org.apache.wicket.Component;
 import org.apache.wicket.ajax.json.JSONException;
@@ -33,7 +35,6 @@ import org.apache.wicket.util.time.Duration;
 
 import com.comcast.cdn.traffic_control.traffic_monitor.config.ConfigHandler;
 import com.comcast.cdn.traffic_control.traffic_monitor.config.MonitorConfig;
-import com.comcast.cdn.traffic_control.traffic_monitor.health.CacheState;
 import com.comcast.cdn.traffic_control.traffic_monitor.publish.Stats;
 import com.comcast.cdn.traffic_control.traffic_monitor.wicket.behaviors.MultiUpdatingTimerBehavior;
 import com.comcast.cdn.traffic_control.traffic_monitor.wicket.components.CacheListPanel;
@@ -45,6 +46,7 @@ public class Index extends MonitorPage implements IHeaderContributor {
 	private static final long serialVersionUID = 1L;
 
 	final public static NumberFormat NUMBER_FORMAT = new DecimalFormat("#,###.00");
+	private final CacheStateRegistry cacheStateRegistry = CacheStateRegistry.getInstance();
 
 	public Index() {
 		final Behavior updater = new MultiUpdatingTimerBehavior(Duration.seconds(1));
@@ -74,7 +76,19 @@ public class Index extends MonitorPage implements IHeaderContributor {
 
 		final Component[] updateList = new Component[] {servers_count};
 
-		final Label servers_available = new Label("servers_available", getServersAvailableModel());
+		final Label servers_available = new Label("servers_available", new Model<String>("") {
+			@Override
+			public String getObject() {
+				int cnt = 0;
+				for (AbstractState cs : cacheStateRegistry.getAll()) {
+					if (cs != null && cs.isAvailable()) {
+						cnt++;
+					}
+				}
+				return String.valueOf(cnt);
+			}
+		});
+
 		servers_available.add(updater);
 		add(servers_available);
 
@@ -90,7 +104,7 @@ public class Index extends MonitorPage implements IHeaderContributor {
 
 			@Override
 			public Integer getObject( ) {
-				return CacheState.getCacheStates().size();
+				return cacheStateRegistry.size();
 			}
 		};
 	}
@@ -102,9 +116,8 @@ public class Index extends MonitorPage implements IHeaderContributor {
 			@Override
 			public String getObject( ) {
 				int cnt = 0;
-				for(CacheState cs : CacheState.getCacheStates()) {
-					//					CacheState cs = CacheState.get(server);
-					if ( cs != null && cs.isError() ) { 
+				for(AbstractState cs : cacheStateRegistry.getAll()) {
+					if ( cs != null && cs.isError() ) {
 						cnt++;
 					}
 				}
@@ -120,7 +133,7 @@ public class Index extends MonitorPage implements IHeaderContributor {
 			@Override
 			public String getObject( ) {
 				long bw = 0;
-				for(CacheState cs : CacheState.getCacheStates()) {
+				for(AbstractState cs : cacheStateRegistry.getAll()) {
 					bw += cs.getDouble(key);
 				}
 				return NUMBER_FORMAT.format(bw);
@@ -139,22 +152,6 @@ public class Index extends MonitorPage implements IHeaderContributor {
 				final String host = config.getEffectiveProps().get("tm.hostname");
 				final String cdnName = config.getEffectiveProps().get("cdnName");
 				return host+"/"+cdnName;
-			}
-		};
-	}
-
-	protected static Model<String> getServersAvailableModel() {
-		return new Model<String>("") {
-			private static final long serialVersionUID = 1L;
-
-			@Override
-			public String getObject( ) {
-				int cnt = 0;
-				for(CacheState cs : CacheState.getCacheStates()) {
-					//					CacheState cs = CacheState.get(server);
-					if ( cs != null && cs.isAvailable() ) { cnt++; }
-				}
-				return String.valueOf(cnt);
 			}
 		};
 	}

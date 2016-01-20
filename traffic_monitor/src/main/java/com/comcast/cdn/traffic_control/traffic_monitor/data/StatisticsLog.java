@@ -164,7 +164,7 @@ public class StatisticsLog {
 					final int toIndex = statistics.size();
 					final int fromIndex = Math.max(0, toIndex - hc);
 
-					filteredStatistics.put(key, (LinkedList<DataPoint>) statistics.subList(fromIndex, toIndex));
+					filteredStatistics.put(key, new LinkedList<DataPoint>(statistics.subList(fromIndex, toIndex)));
 				}
 			}
 		}

@@ -102,7 +102,7 @@ public class DeliveryServiceStateRegistry extends StateRegistry {
 	public void startUpdateAll() {
 		synchronized(states) {
 			for(AbstractState ds :states.values()) {
-//				ds.prepareStatisticsForUpdate();
+				ds.prepareStatisticsForUpdate();
 			}
 		}
 	}
@@ -195,4 +195,5 @@ public class DeliveryServiceStateRegistry extends StateRegistry {
 
 		return false;
 	}
+
 }

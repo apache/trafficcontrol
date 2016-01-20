@@ -17,9 +17,13 @@
 package com.comcast.cdn.traffic_control.traffic_monitor.wicket.components;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.TreeMap;
 
+import com.comcast.cdn.traffic_control.traffic_monitor.health.AbstractState;
+import com.comcast.cdn.traffic_control.traffic_monitor.health.CacheStateRegistry;
+import com.comcast.cdn.traffic_control.traffic_monitor.wicket.models.CacheStateModel;
 import org.apache.wicket.Component;
 import org.apache.wicket.Page;
 import org.apache.wicket.ajax.AbstractAjaxTimerBehavior;
@@ -35,14 +39,12 @@ import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.Model;
 import org.apache.wicket.util.time.Duration;
 
-import com.comcast.cdn.traffic_control.traffic_monitor.health.CacheState;
 import com.comcast.cdn.traffic_control.traffic_monitor.health.HealthDeterminer;
 import com.comcast.cdn.traffic_control.traffic_monitor.wicket.behaviors.UpdatingAttributeAppender;
 
 public class CacheListPanel extends Panel {
-	//	private static final Logger LOGGER = Logger.getLogger(ServerListPanel.class);
 	private static final long serialVersionUID = 1L;
-
+	private final CacheStateRegistry cacheStateRegistry = CacheStateRegistry.getInstance();
 	ListView<String> servers;
 	Component[] updateList;
 	String hostname;
@@ -77,7 +79,7 @@ public class CacheListPanel extends Panel {
 			@Override
 			protected final void onTimer(final AjaxRequestTarget target) {
 				//				target.add(getComponent());
-				final int size = CacheState.getCacheStates().size();
+				final int size = cacheStateRegistry.size();
 				if(serverCount != size) {
 					serverCount = size;
 					servers.setList(getServerList());
@@ -106,7 +108,7 @@ public class CacheListPanel extends Panel {
 
 					@Override
 					public String getObject() {
-						final CacheState cs = CacheState.getState(cacheName);
+						final AbstractState cs = cacheStateRegistry.get(cacheName);
 
 						if (cs != null && !cs.isAvailable())  {
 							final String status = cs.getLastValue(HealthDeterminer.STATUS);
@@ -167,31 +169,10 @@ public class CacheListPanel extends Panel {
 		};
 	}
 
-	static class CacheStateModel extends Model<String> {
-		private static final long serialVersionUID = 1L;
-		String csName;
-		String key;
-		public CacheStateModel(final String cs, final String key) {
-			this.csName = cs;
-			this.key = key;
-		}
-		@Override
-		public String getObject( ) {
-			final CacheState cs = CacheState.getState(csName);
-			if(cs == null) { return "err"; }
-			if("_status_string_".equals(key)) {
-				return cs.getStatusString();
-			}
-			final boolean clearData = cs.getBool("clearData");
-			if(clearData) { return "-"; }
-			return cs.getLastValue(key);
-		}
-	}
-
 	public final List<String> getServerList() {
-		final List<CacheState> list = CacheState.getCacheStates();
-		final TreeMap<String, CacheState> tmap = new TreeMap<String, CacheState>();
-		for(CacheState cs : list) {
+		final Collection<AbstractState> list = cacheStateRegistry.getAll();
+		final TreeMap<String, AbstractState> tmap = new TreeMap<String, AbstractState>();
+		for(AbstractState cs : list) {
 			tmap.put(cs.getId(), cs);
 		}
 		return new ArrayList<String>(tmap.keySet());

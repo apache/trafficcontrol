@@ -16,8 +16,6 @@
 
 package com.comcast.cdn.traffic_control.traffic_monitor.health;
 
-import java.util.List;
-
 import org.apache.log4j.Logger;
 
 import com.comcast.cdn.traffic_control.traffic_monitor.config.ConfigHandler;
@@ -28,12 +26,10 @@ public class DsWatcher {
 	private static final Logger LOGGER = Logger.getLogger(DsWatcher.class);
 
 	private HealthDeterminer myHealthDeterminer;
-
 	final MonitorConfig config = ConfigHandler.getConfig();
-	
 	boolean isActive = true;
-
 	private FetchService mainThread;
+	private final DeliveryServiceStateRegistry deliveryServiceStateRegistry = DeliveryServiceStateRegistry.getInstance();
 
 	public DsWatcher init(final HealthDeterminer hd) {
 		myHealthDeterminer = hd;
@@ -58,9 +54,8 @@ public class DsWatcher {
 						continue;
 					}
 	
-					final List<CacheState> states = CacheState.getCacheStates();
-					DsState.startUpdateAll();
-					DsState.completeAll(states, myHealthDeterminer, crConfig.getDsList(), time-config.getDsCacheLeniency());
+					deliveryServiceStateRegistry.startUpdateAll();
+					deliveryServiceStateRegistry.completeUpdateAll(myHealthDeterminer, crConfig.getDsList(), time-config.getDsCacheLeniency());
 					try {
 						Thread.sleep(Math.max(config.getHealthDsInterval()-(System.currentTimeMillis()-time),0));
 					} catch (InterruptedException e) { }

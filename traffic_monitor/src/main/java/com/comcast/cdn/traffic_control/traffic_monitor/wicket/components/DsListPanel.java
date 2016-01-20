@@ -17,10 +17,12 @@
 package com.comcast.cdn.traffic_control.traffic_monitor.wicket.components;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
 import java.util.TreeMap;
 
+import com.comcast.cdn.traffic_control.traffic_monitor.health.AbstractState;
+import com.comcast.cdn.traffic_control.traffic_monitor.health.DeliveryServiceStateRegistry;
+import com.comcast.cdn.traffic_control.traffic_monitor.wicket.models.DsStateModel;
 import org.apache.wicket.Component;
 import org.apache.wicket.Page;
 import org.apache.wicket.ajax.AbstractAjaxTimerBehavior;
@@ -36,13 +38,12 @@ import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.Model;
 import org.apache.wicket.util.time.Duration;
 
-import com.comcast.cdn.traffic_control.traffic_monitor.health.DsState;
 import com.comcast.cdn.traffic_control.traffic_monitor.wicket.behaviors.UpdatingAttributeAppender;
 
 public class DsListPanel extends Panel {
-//	private static final Logger LOGGER = Logger.getLogger(ServerListPanel.class);
 	private static final long serialVersionUID = 1L;
 
+	private final DeliveryServiceStateRegistry deliveryServiceStateRegistry = DeliveryServiceStateRegistry.getInstance();
 	ListView<String> servers;
 	Component[] updateList;
 	String dsId;
@@ -53,7 +54,6 @@ public class DsListPanel extends Panel {
 		final ModalWindow modal1;
 		add(modal1 = new ModalWindow("modal2"));
 		modal1.setInitialWidth(1000);
-		//      modal1.setCookieName("modal-1");
 		modal1.setPageCreator(new ModalWindow.PageCreator() {
 			private static final long serialVersionUID = 1L;
 			public Page createPage() {
@@ -76,7 +76,7 @@ public class DsListPanel extends Panel {
 			int serverCount = 0;
 			@Override
 			protected final void onTimer(final AjaxRequestTarget target) {
-				final int size = DsState.getDsStates().size();
+				final int size = DeliveryServiceStateRegistry.getInstance().size();
 				if(serverCount != size) {
 					serverCount = size;
 					servers.setList(getDsList());
@@ -105,9 +105,8 @@ public class DsListPanel extends Panel {
 
 					@Override
 					public String getObject( ) {
-						//						if ( cacheState.isError() ) return "error";
-						final DsState cs = DsState.get(dsName);
-						if ( cs != null && !cs.isAvailable() ) { return "error"; }// "grey"
+						final AbstractState state = deliveryServiceStateRegistry.get(dsName);
+						if ( state != null && !state.isAvailable() ) { return "error"; }
 						else { return " "; }
 					}
 				}, " "));
@@ -162,32 +161,10 @@ public class DsListPanel extends Panel {
 		};
 	}
 
-	static class DsStateModel extends Model<String> {
-		private static final long serialVersionUID = 1L;
-		String csName;
-		String key;
-		public DsStateModel(final String cs, final String key) {
-			this.csName = cs;
-			this.key = key;
-		}
-		@Override
-		public String getObject( ) {
-			final DsState cs = DsState.getState(csName);
-			if(cs == null) { return "err"; }
-			if("_status_string_".equals(key)) {
-				return cs.getStatusString();
-			}
-			final boolean clearData = cs.getBool("clearData");
-			if(clearData) { return "-"; }
-			return cs.getLastValue(key);
-		}
-	}
-
 	public final List<String> getDsList() {
-		final Collection<DsState> list = DsState.getDsStates();
-		final TreeMap<String, DsState> tmap = new TreeMap<String, DsState>();
-		for(DsState cs : list) {
-			tmap.put(cs.getId(), cs);
+		final TreeMap<String, AbstractState> tmap = new TreeMap<String, AbstractState>();
+		for(AbstractState state : deliveryServiceStateRegistry.getAll()) {
+			tmap.put(state.getId(), state);
 		}
 		return new ArrayList<String>(tmap.keySet());
 	}

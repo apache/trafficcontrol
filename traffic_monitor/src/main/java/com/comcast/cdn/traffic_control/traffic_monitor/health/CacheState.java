@@ -17,10 +17,8 @@
 package com.comcast.cdn.traffic_control.traffic_monitor.health;
 
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
-import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CancellationException;
 import java.util.concurrent.Future;
@@ -44,7 +42,6 @@ import com.ning.http.client.Response;
 public class CacheState extends AbstractState {
 	private static final Logger LOGGER = Logger.getLogger(CacheState.class);
 	private static final long serialVersionUID = 1L;
-	private static Map<String, CacheState> states = new HashMap<String, CacheState>();
 
 	transient private Future<Object> future;
 	transient private Request request;
@@ -60,64 +57,9 @@ public class CacheState extends AbstractState {
 		super(id);
 	}
 
-	public static List<CacheState> getCacheStates() {
-		synchronized (states) {
-			return new ArrayList<CacheState>(states.values());
-		}
-	}
-
-	public static CacheState getOrCreate(final Cache cache) {
-		return getOrCreate(cache.getHostname(), cache);
-	}
-
-	public static CacheState getOrCreate(final String host, final Cache cache) {
-		synchronized (states) {
-			CacheState as = states.get(host);
-
-			if (as == null) {
-				as = new CacheState(host);
-				states.put(host, as);
-			}
-
-			as.setCache(cache);
-			return as;
-		}
-	}
-
 	public void setCache(final Cache cache) {
 		this.cache = cache;
 	}
-
-	public static CacheState getState(final String host) {
-		synchronized (states) {
-			return states.get(host);
-		}
-	}
-
-	public static boolean has(final String host) {
-		if (states.get(host) == null) {
-			return false;
-		}
-
-		return true;
-	}
-
-	public static void removeAllBut(final List<CacheState> retList) {
-		final List<String> hostnames = new ArrayList<String>();
-
-		for (CacheState cs : retList) {
-			hostnames.add(cs.getId());
-		}
-
-		synchronized (states) {
-			for (String key : new ArrayList<String>(states.keySet())) {
-				if (!hostnames.contains(key)) {
-					states.remove(key);
-				}
-			}
-		}
-	}
-
 
 	public Cache getCache() {
 		return cache;
@@ -327,9 +269,5 @@ public class CacheState extends AbstractState {
 			LOGGER.warn("closing");
 			asyncHttpClient.close();
 		}
-	}
-
-	public static String get(final String stateId, final String key) {
-		return getState(stateId).getLastValue(key);
 	}
 }
