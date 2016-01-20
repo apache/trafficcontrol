@@ -20,7 +20,6 @@ import java.util.List;
 
 import org.apache.wicket.Component;
 import org.apache.wicket.Page;
-import org.apache.wicket.RequestListenerInterface;
 import org.apache.wicket.WicketRuntimeException;
 import org.apache.wicket.ajax.AjaxChannel;
 import org.apache.wicket.ajax.AjaxRequestTarget;
@@ -37,7 +36,6 @@ import org.apache.wicket.ajax.json.JsonFunction;
 import org.apache.wicket.ajax.json.JsonUtils;
 import org.apache.wicket.behavior.Behavior;
 import org.apache.wicket.behavior.IBehaviorListener;
-import org.apache.wicket.markup.ComponentTag;
 import org.apache.wicket.markup.head.IHeaderResponse;
 import org.apache.wicket.markup.head.JavaScriptHeaderItem;
 import org.apache.wicket.markup.html.IComponentAwareHeaderContributor;
@@ -52,16 +50,18 @@ import org.apache.wicket.util.lang.Args;
 import org.apache.wicket.util.string.Strings;
 import org.apache.wicket.util.time.Duration;
 
-public abstract class AbstractMultiAjaxBehavior extends Behavior implements
-		IBehaviorListener // extends AbstractAjaxBehavior
+/**
+ * This class is mostly copied from
+ * @see org.apache.wicket.ajax.AbstractDefaultAjaxBehavior
+ */
+public abstract class AbstractMultiAjaxBehavior extends Behavior implements IBehaviorListener
 {
 	private static final long serialVersionUID = 1L;
-	
 	public static final String FUNC_STR = "function(attrs){%s}";
+	protected Component component;
 
 	/** reference to the default indicator gif file. */
-	public static final ResourceReference INDICATOR = new PackageResourceReference(
-			AbstractMultiAjaxBehavior.class, "indicator.gif");
+	public static final ResourceReference INDICATOR = new PackageResourceReference(AbstractMultiAjaxBehavior.class, "indicator.gif");
 
 	/**
 	 * Subclasses should call super.onBind()
@@ -77,18 +77,15 @@ public abstract class AbstractMultiAjaxBehavior extends Behavior implements
 	 *      org.apache.wicket.markup.head.IHeaderResponse)
 	 */
 	@Override
-	public void renderHead(final Component component,
-			final IHeaderResponse response) {
+	public void renderHead(final Component component, final IHeaderResponse response) {
 		super.renderHead(component, response);
 
-		CoreLibrariesContributor.contributeAjax(component.getApplication(),
-				response);
+		CoreLibrariesContributor.contributeAjax(component.getApplication(), response);
 
 		final RequestCycle requestCycle = component.getRequestCycle();
 		final Url baseUrl = requestCycle.getUrlRenderer().getBaseUrl();
 		final CharSequence ajaxBaseUrl = Strings.escapeMarkup(baseUrl.toString());
-		response.render(JavaScriptHeaderItem.forScript("Wicket.Ajax.baseUrl=\""
-				+ ajaxBaseUrl + "\";", "wicket-ajax-base-url"));
+		response.render(JavaScriptHeaderItem.forScript("Wicket.Ajax.baseUrl=\"" + ajaxBaseUrl + "\";", "wicket-ajax-base-url"));
 
 		renderExtraHeaderContributors(component, response);
 	}
@@ -102,13 +99,8 @@ public abstract class AbstractMultiAjaxBehavior extends Behavior implements
 	 * @param response
 	 *            the current header response
 	 */
-	private void renderExtraHeaderContributors(final Component component,
-			final IHeaderResponse response) {
-		final AjaxRequestAttributes attributes = getAttributes();
-
-		final List<IAjaxCallListener> ajaxCallListeners = attributes
-				.getAjaxCallListeners();
-		for (IAjaxCallListener ajaxCallListener : ajaxCallListeners) {
+	private void renderExtraHeaderContributors(final Component component, final IHeaderResponse response) {
+		for (IAjaxCallListener ajaxCallListener : getAttributes().getAjaxCallListeners()) {
 			if (ajaxCallListener instanceof IComponentAwareHeaderContributor) {
 				final IComponentAwareHeaderContributor contributor = (IComponentAwareHeaderContributor) ajaxCallListener;
 				contributor.renderHead(component, response);
@@ -121,9 +113,7 @@ public abstract class AbstractMultiAjaxBehavior extends Behavior implements
 	 * @since 6.0
 	 */
 	protected final AjaxRequestAttributes getAttributes() {
-		final AjaxRequestAttributes attributes = new AjaxRequestAttributes();
-		updateAjaxAttributes(attributes);
-		return attributes;
+		return updateAjaxAttributes(new AjaxRequestAttributes());
 	}
 
 	/**
@@ -132,7 +122,8 @@ public abstract class AbstractMultiAjaxBehavior extends Behavior implements
 	 * @param attributes
 	 * @since 6.0
 	 */
-	protected void updateAjaxAttributes(final AjaxRequestAttributes attributes) {
+	protected AjaxRequestAttributes updateAjaxAttributes(final AjaxRequestAttributes attributes) {
+		return attributes;
 	}
 
 	/**
@@ -159,17 +150,6 @@ public abstract class AbstractMultiAjaxBehavior extends Behavior implements
 	 */
 	protected final CharSequence renderAjaxAttributes(final Component component) {
 		final AjaxRequestAttributes attributes = getAttributes();
-		return renderAjaxAttributes(component, attributes);
-	}
-
-	/**
-	 * 
-	 * @param component
-	 * @param attributes
-	 * @return the attributes as string in JSON format
-	 */
-	protected final CharSequence renderAjaxAttributes(
-			final Component component, final AjaxRequestAttributes attributes) {
 		final JSONObject attributesJson = new JSONObject();
 
 		try {
@@ -388,11 +368,8 @@ public abstract class AbstractMultiAjaxBehavior extends Behavior implements
 	 *         {@linkplain #getCallbackFunction(CallbackParameter...) callback
 	 *         function}.
 	 */
-	public CharSequence getCallbackFunctionBody(
-			final CallbackParameter... extraParameters) {
-		final AjaxRequestAttributes attributes = getAttributes();
-		final CharSequence attrsJson = renderAjaxAttributes(getComponent(),
-				attributes);
+	public CharSequence getCallbackFunctionBody(final CallbackParameter... extraParameters) {
+		final CharSequence attrsJson = renderAjaxAttributes(getComponent());
 		final StringBuilder sb = new StringBuilder();
 		sb.append("var attrs = ");
 		sb.append(attrsJson);
@@ -412,7 +389,7 @@ public abstract class AbstractMultiAjaxBehavior extends Behavior implements
 			}
 		}
 		sb.append("};\n");
-		if (attributes.getExtraParameters().isEmpty()) {
+		if (getAttributes().getExtraParameters().isEmpty()) {
 			sb.append("attrs.ep = params;\n");
 		} else {
 			sb.append("attrs.ep = Wicket.merge(attrs.ep, params);\n");
@@ -463,13 +440,7 @@ public abstract class AbstractMultiAjaxBehavior extends Behavior implements
 		respond(target);
 	}
 
-	/**
-	 * @param target
-	 *            The AJAX target
-	 */
 	protected abstract void respond(AjaxRequestTarget target);
-
-	protected Component component;
 
 	protected final Component getComponent() {
 		return component;
@@ -494,57 +465,13 @@ public abstract class AbstractMultiAjaxBehavior extends Behavior implements
 	}
 
 	/**
-	 * Gets the url that references this handler.
-	 * 
 	 * @return the url that references this handler
 	 */
 	public CharSequence getCallbackUrl() {
 		if (getComponent() == null) {
-			throw new IllegalArgumentException(
-					"Behavior must be bound to a component to create the URL");
+			throw new IllegalArgumentException("Behavior must be bound to a component to create the URL");
 		}
 
-		final RequestListenerInterface rli;
-
-		rli = IBehaviorListener.INTERFACE;
-
-		return getComponent().urlFor(this, rli, new PageParameters());
-	}
-
-	/**
-	 * @see org.apache.wicket.behavior.Behavior#onComponentTag(org.apache.wicket.Component,
-	 *      org.apache.wicket.markup.ComponentTag)
-	 */
-	@Override
-	public final void onComponentTag(final Component component,
-			final ComponentTag tag) {
-		onComponentTag(tag);
-	}
-
-	/**
-	 * @see org.apache.wicket.behavior.Behavior#afterRender(org.apache.wicket.Component)
-	 */
-	@Override
-	public final void afterRender(final Component hostComponent) {
-		onComponentRendered();
-	}
-
-	/**
-	 * Called any time a component that has this handler registered is rendering
-	 * the component tag. Use this method e.g. to bind to javascript event
-	 * handlers of the tag
-	 * 
-	 * @param tag
-	 *            the tag that is rendered
-	 */
-	protected void onComponentTag(final ComponentTag tag) {
-	}
-
-	/**
-	 * Called to indicate that the component that has this handler registered
-	 * has been rendered. Use this method to do any cleaning up of temporary
-	 * state
-	 */
-	protected void onComponentRendered() {
+		return getComponent().urlFor(this, IBehaviorListener.INTERFACE, new PageParameters());
 	}
 }

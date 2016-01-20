@@ -22,14 +22,20 @@ import org.apache.wicket.ajax.json.JSONObject;
 public class MonitorConfig extends Config  {
 	private static final long serialVersionUID = 1L;
 
+	// This is used by src/main/bin/config-doc.sh which is used by src/main/bin/traffic_monitor_config.pl which must be run after rpm install of traffic monitor
+	@SuppressWarnings("PMD")
+	public static void main(final String[] args) throws JSONException {
+		final JSONObject doc = ConfigHandler.getConfig().getConfigDoc();
+		System.out.println(doc.toString(2));
+	}
+
 	public MonitorConfig() {
 	}
+
 	public MonitorConfig(final JSONObject jsonObject) throws JSONException {
 		super(jsonObject);
 	}
-//	public String getDataServerUrl() {
-//		return getPropertyString("tm.dataServer.polling.url", "https://${tmHostname}/dataserver", "Url for the list of servers (json)");
-//	}
+
 	public String getCrConfigUrl() {
 		return getPropertyString("tm.crConfig.json.polling.url", "https://${tmHostname}/CRConfig-Snapshots/${cdnName}/CRConfig.json", "Url for the cr-config (json)");
 	}
@@ -103,14 +109,5 @@ public class MonitorConfig extends Config  {
 	}
 	public int getStartupMinCycles() {
 		return getInt("health.startupMinCycles", 2, "The number of query cycles that must be completed before this Traffic Monitor will start reporting");
-	}
-	public boolean allowConfigEdit() {
-		return getBool("allow.config.edit", false, "Allow the running configuration to be edited through the UI");
-	}
-
-	@SuppressWarnings("PMD")
-	public static void main(final String[] args) throws JSONException {
-		final JSONObject doc = ConfigHandler.getConfig().getConfigDoc();
-		System.out.println(doc.toString(2));
 	}
 }

@@ -44,9 +44,7 @@ import com.comcast.cdn.traffic_control.traffic_monitor.wicket.behaviors.MultiUpd
 import com.comcast.cdn.traffic_control.traffic_monitor.wicket.components.CacheListPanel;
 import com.comcast.cdn.traffic_control.traffic_monitor.wicket.components.ConfigPanel;
 import com.comcast.cdn.traffic_control.traffic_monitor.wicket.components.DsListPanel;
-import com.comcast.cdn.traffic_control.traffic_monitor.wicket.components.EditConfigPanel;
 import com.comcast.cdn.traffic_control.traffic_monitor.wicket.components.EventLogPanel;
-import com.comcast.cdn.traffic_control.traffic_monitor.wicket.components.GraphPanel;
 import com.comcast.cdn.traffic_control.traffic_monitor.wicket.components.StatusPanel;
 
 public class Index extends MonitorPage implements IHeaderContributor {
@@ -56,12 +54,9 @@ public class Index extends MonitorPage implements IHeaderContributor {
 	final public static NumberFormat NUMBER_FORMAT = new DecimalFormat("#,###.00");
 
 	public Index() {
+		final Behavior updater = new MultiUpdatingTimerBehavior(Duration.seconds(1));
 
-		final Behavior updater = new MultiUpdatingTimerBehavior(Duration.seconds(1));//AjaxSelfUpdatingTimerBehavior
-
-
-		final Model<Integer> serverListSize = getServerListSizeModel();
-		final Label servers_count = new Label("servers_count", serverListSize);
+		final Label servers_count = new Label("servers_count", getServerListSizeModel());
 		servers_count.setOutputMarkupId(true);
 		add(servers_count);
 
@@ -84,7 +79,7 @@ public class Index extends MonitorPage implements IHeaderContributor {
 		source.add(updater);
 		add(source);
 
-		final Component[] updateList = new Component[] {servers_count}; //graph, 
+		final Component[] updateList = new Component[] {servers_count};
 
 		final Label servers_available = new Label("servers_available", getServersAvailableModel());
 		servers_available.add(updater);
@@ -97,15 +92,18 @@ public class Index extends MonitorPage implements IHeaderContributor {
 
 		add(getTabbedPanel(updater));
 	}
+
 	private Model<Integer> getServerListSizeModel() {
 		return new Model<Integer>() {
 			private static final long serialVersionUID = 1L;
+
 			@Override
 			public Integer getObject( ) {
 				return new Integer(CacheState.getCacheStates().size());
 			}
 		};
 	}
+
 	private Model<String> getServersDownModel() {
 		return new Model<String>("") {
 			private static final long serialVersionUID = 1L;
@@ -123,9 +121,11 @@ public class Index extends MonitorPage implements IHeaderContributor {
 			}
 		};
 	}
+
 	private Model<String> getCacheStateSumModel(final String key) {
 		return new Model<String>("") {
 			private static final long serialVersionUID = 1L;
+
 			@Override
 			public String getObject( ) {
 				long bw = 0;
@@ -136,9 +136,11 @@ public class Index extends MonitorPage implements IHeaderContributor {
 			}
 		};
 	}
+
 	private Model<String> getSourceModel() {
 		return new Model<String>(""){
 			private static final long serialVersionUID = 1L;
+
 			@Override
 			public String getObject( ) {
 				final MonitorConfig config = ConfigHandler.getConfig();
@@ -149,6 +151,7 @@ public class Index extends MonitorPage implements IHeaderContributor {
 			}
 		};
 	}
+
 	protected static Model<String> getServersAvailableModel() {
 		return new Model<String>("") {
 			private static final long serialVersionUID = 1L;
@@ -164,50 +167,48 @@ public class Index extends MonitorPage implements IHeaderContributor {
 			}
 		};
 	}
+
 	private String getVersionStr() {
 		try {
-			final JSONObject stats;
-			stats = Stats.getVersionInfo().getJSONObject("stats");
+			final JSONObject stats = Stats.getVersionInfo().getJSONObject("stats");
 			final String name = stats.getString("name");
 			final String version = stats.getString("version");
 			final String revision = stats.getString("git-revision").replace("${buildNumber}","");
-			String dateStr = null;
+			String dateStr;
+
 			try {
-				dateStr = " ("+(new SimpleDateFormat("yyyy-MM-dd").format(
-						new Date(stats.getLong("buildTimestamp"))))+")";
-			} catch (JSONException e) { 
-				dateStr = "(dev build)"; 
+				dateStr = " (" + (new SimpleDateFormat("yyyy-MM-dd").format(new Date(stats.getLong("buildTimestamp")))) + ")";
+			} catch (JSONException e) {
+				dateStr = "(dev build)";
 			}
-			return name+"-"+version+"-"+revision+dateStr;
+
+			return name + "-" + version + "-" + revision + dateStr;
 		} catch (JSONException e) {
 			LOGGER.warn(e,e);
 		}
+
 		return "";
 	}
+
 	private AjaxTabbedPanel<AbstractTab> getTabbedPanel(final Behavior updater) {
 		final List<AbstractTab> tabs=new ArrayList<AbstractTab>();
+
 		tabs.add(new AbstractTab(new Model<String>("Status")) {
 			private static final long serialVersionUID = 1L;
+
 			public WebMarkupContainer getPanel(final String panelId) {
 				return new StatusPanel(panelId);
 			}
 		});
+
 		tabs.add(new AbstractTab(new Model<String>("Config")) {
 			private static final long serialVersionUID = 1L;
+
 			public WebMarkupContainer getPanel(final String panelId) {
 				return new ConfigPanel(panelId, updater);
 			}
 		});
 
-		final MonitorConfig config = ConfigHandler.getConfig();
-		if(config != null && config.allowConfigEdit()) {
-			tabs.add(new AbstractTab(new Model<String>("Edit Config")) {
-				private static final long serialVersionUID = 1L;
-				public WebMarkupContainer getPanel(final String panelId) {
-					return new EditConfigPanel(panelId);
-				}
-			});
-		}
 		return new AjaxTabbedPanel<AbstractTab>("tabs", tabs);
 	}
 }

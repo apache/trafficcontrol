@@ -42,14 +42,10 @@ public class MonitorApplication extends WebApplication {
 	private DsWatcher dsw;
 	private static long startTime;
 
-	/**
-	 * Constructor
-	 */
-	public MonitorApplication() {
-	}
 	public static MonitorApplication get() {
 		return (MonitorApplication) Application.get();
 	}
+
 	/**
 	 * @see org.apache.wicket.Application#getHomePage()
 	 */
@@ -64,12 +60,9 @@ public class MonitorApplication extends WebApplication {
 	@Override
 	public void init() {
 		super.init();
-		// add your configuration here
 		getResourceSettings().setResourcePollFrequency(Duration.ONE_SECOND);
 
-		/*
-		 * This allows us to override the Host header sent via URLConnection
-		 */
+		// This allows us to override the Host header sent via URLConnection
 		System.setProperty("sun.net.http.allowRestrictedHeaders", "true");
 
 		final HealthDeterminer hd = new HealthDeterminer();
@@ -99,16 +92,18 @@ public class MonitorApplication extends WebApplication {
 		ConfigHandler.destroy();
 		LOGGER.warn("MonitorApplication: shutting down ");
 		tmw.destroy();
-		if(forceDown) {
+
+		if (forceDown) {
 			LOGGER.warn("MonitorApplication: System.exit");
 			System.exit(0);
 		}
+
 		cw.destroy();
 		dsw.destroy();
 		pw.destroy();
 	}
+
 	public static long getUptime() {
 		return System.currentTimeMillis() - startTime;
 	}
-
 }

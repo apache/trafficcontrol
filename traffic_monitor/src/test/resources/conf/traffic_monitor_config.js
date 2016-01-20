@@ -1,7 +1,6 @@
 {"traffic_monitor_config": {
   "tm.healthParams.polling.url": "https://${tmHostname}/health/${cdnName}",
   "hack.ttl": "30",
-  "allow.config.edit": false,
   "tm.auth.url": "https://${tmHostname}/login",
   "tm.auth.username": "admin",
   "tm.auth.password": 'password',
