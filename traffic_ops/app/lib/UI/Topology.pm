@@ -280,7 +280,7 @@ sub gen_crconfig_json {
 	my $regexps;
 	my $rs_ds = $self->db->resultset('Deliveryservice')->search(
 		{
-			'me.profile' => { -in => @{ $profile_cache->{'CCR'} } },
+			'me.profile' => { -in => \@{ $profile_cache->{'CCR'} } },
 			'active'     => 1
 		},
 		{ prefetch => [ 'deliveryservice_servers', 'deliveryservice_regexes', 'type' ] }
