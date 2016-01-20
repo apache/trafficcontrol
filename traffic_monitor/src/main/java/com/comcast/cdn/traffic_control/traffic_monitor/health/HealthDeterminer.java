@@ -26,7 +26,6 @@ import org.apache.wicket.ajax.json.JSONException;
 import org.apache.wicket.ajax.json.JSONObject;
 
 import com.comcast.cdn.traffic_control.traffic_monitor.config.Cache;
-import com.comcast.cdn.traffic_control.traffic_monitor.health.DsState.EmbeddedStati;
 import com.comcast.cdn.traffic_control.traffic_monitor.util.Updatable;
 
 public class HealthDeterminer {

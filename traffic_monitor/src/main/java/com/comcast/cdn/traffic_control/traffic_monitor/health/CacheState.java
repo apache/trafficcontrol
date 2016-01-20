@@ -86,7 +86,7 @@ public class CacheState extends AbstractState {
 		}
 	}
 
-	private void setCache(final Cache cache) {
+	public void setCache(final Cache cache) {
 		this.cache = cache;
 	}
 

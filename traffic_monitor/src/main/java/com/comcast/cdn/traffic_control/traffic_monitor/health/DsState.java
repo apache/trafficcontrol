@@ -16,7 +16,6 @@
 
 package com.comcast.cdn.traffic_control.traffic_monitor.health;
 
-import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -164,7 +163,7 @@ public class DsState extends AbstractState {
 
 						for(String fqdn : fqdns) {
 							final String propBase = "ats.plugin.remap_stats."+fqdn;
-							final DsState.DsStati stati = DsState.createStati(propBase, crstate, lenientTime, dsId);
+							final DsStati stati = DsState.createStati(propBase, crstate, lenientTime, dsId);
 
 							dss.accumulate(stati, location, crstate);
 
@@ -222,58 +221,6 @@ public class DsState extends AbstractState {
 		return fqdns;
 	}
 
-	public static class EmbeddedStati implements java.io.Serializable {
-		private static final long serialVersionUID = 1L;
-		private DsStati currentDtati;
-		private final String id;
-
-		public EmbeddedStati(final String base, final String id, final String delimiter) {
-			final StringBuilder statId = new StringBuilder();
-
-			if (base != null) {
-				statId.append(base);
-				statId.append(delimiter);
-			}
-
-			statId.append(id);
-
-			this.id = statId.toString();
-		}
-
-		public EmbeddedStati(final String base, final String id) {
-			this(base, id, ".");
-		}
-
-		public EmbeddedStati(final String id) {
-			this(null, id, ".");
-		}
-
-		public void accumulate(final DsStati stati) {
-			if (currentDtati == null) {
-				currentDtati = new DsStati(stati);
-			} else {
-				currentDtati.accumulate(stati);
-			}
-		}
-
-		public Map<String, String> completeRound() {
-			if (currentDtati == null) {
-				return null;
-			}
-
-			final Map<String, String> r = new HashMap<String, String>();
-
-			r.putAll(currentDtati.getStati(this.getId()));
-			currentDtati = null;
-
-			return r;
-		}
-
-		public String getId() {
-			return id;
-		}
-	}
-
 	public static DsStati createStati(final String propBase, final CacheState cs, final long leniency, final String dsId) {
 		DsStati ds = null;
 		synchronized (cs) {
@@ -288,10 +235,10 @@ public class DsState extends AbstractState {
 			if(time < leniency) {
 				return null;
 			}
-			ds  = new DsState.DsStati(propBase, cs, lastIndex, dsId);
+			ds  = new DsStati(propBase, cs, lastIndex, dsId);
 			final long prevIndex = getLastGoodIndex(dps, lastIndex-1);
 			if(prevIndex >= 0) {
-				final DsStati priorDs = new DsState.DsStati(propBase, cs, prevIndex, dsId);
+				final DsStati priorDs = new DsStati(propBase, cs, prevIndex, dsId);
 				if(!ds.calculateKbps(priorDs)) {
 					if(LOGGER.isInfoEnabled()) {
 						printDps(dps, propBase);
@@ -330,170 +277,6 @@ public class DsState extends AbstractState {
 		return -1;
 	}
 
-	public static class DsStati implements java.io.Serializable {
-		private static final long serialVersionUID = 1L;
-		long csIndex = 0;
-		long in_bytes; 
-		long out_bytes; 
-		long status_2xx;
-		long status_3xx; 
-		long status_4xx; 
-		long status_5xx;
-		boolean error = false;
-
-		double kbps;
-		double tps_2xx;
-		double tps_3xx;
-		double tps_4xx;
-		double tps_5xx;
-		double tps_total;
-
-		String dsId;
-		String csId;
-
-		public static final int BITS_IN_BYTE = 8;
-		//		public static final int BITS_IN_KBPS = 1000;
-		public static final int MS_IN_SEC = 1000;
-		public final long time;
-
-		public DsStati(final String propBase, final CacheState cs, final long index, final String dsId) {
-			this.csIndex = index;
-			this.time = cs.getTime(index);
-			String v = cs.getValue(propBase+".in_bytes", index);
-			this.in_bytes = toLong(v);
-			final String k = propBase+".out_bytes";
-			v = cs.getValue(k, index);
-			this.out_bytes = toLong(v);
-			v = cs.getValue(propBase+".status_2xx", index);
-			this.status_2xx = toLong(v);
-			this.status_3xx = toLong(cs.getValue(propBase+".status_3xx", index));
-			this.status_4xx = toLong(cs.getValue(propBase+".status_4xx", index));
-			this.status_5xx = toLong(cs.getValue(propBase+".status_5xx", index));
-			this.dsId = dsId;
-			this.csId = cs.stateId;
-		}
-		public static boolean checkBytes(final List<DataPoint> dps, final String id) {
-			long lastGoodIndex = -1;
-			long goodValue = 0;
-			for(int i = dps.size()-1; i >= 0; i--) {
-				if(dps.get(i).getValue()==null) {
-					continue;
-				}
-				if(lastGoodIndex == -1) {
-					lastGoodIndex = dps.get(i).getIndex();
-					goodValue = toLong(dps.get(i).getValue());
-				} else {
-					final long v = toLong(dps.get(i).getValue());
-					if(v > goodValue) {
-						LOGGER.warn(id+" - data error:" + v +" > "+ goodValue);
-						return true;
-					}
-					break;
-				}
-			}
-			return false;
-		}
-		public DsStati(final DsStati stati) {
-			this.error = stati.error;
-			this.time = stati.time;
-			this.in_bytes = stati.in_bytes;
-			this.out_bytes = stati.out_bytes;
-			this.status_2xx = stati.status_2xx;
-			this.status_3xx = stati.status_3xx;
-			this.status_4xx = stati.status_4xx;
-			this.status_5xx = stati.status_5xx;
-
-			this.kbps = stati.kbps;
-			this.tps_2xx = stati.tps_2xx;
-			this.tps_3xx = stati.tps_3xx;
-			this.tps_4xx = stati.tps_4xx;
-			this.tps_5xx = stati.tps_5xx;
-			this.tps_total = stati.tps_total;
-		}
-		private static long toLong(final String str) {
-			if(str == null) {
-				return 0;
-			}
-			return (long) Double.parseDouble(str);
-		}
-		void accumulate(final DsStati ds) {
-			this.in_bytes += ds.in_bytes;
-			this.out_bytes += ds.out_bytes;
-			this.status_2xx += ds.status_2xx;
-			this.status_3xx += ds.status_3xx;
-			this.status_4xx += ds.status_4xx;
-			this.status_5xx += ds.status_5xx;
-
-			this.kbps += ds.kbps;
-			this.tps_2xx += ds.tps_2xx;
-			this.tps_3xx += ds.tps_3xx;
-			this.tps_4xx += ds.tps_4xx;
-			this.tps_5xx += ds.tps_5xx;
-			this.tps_total += ds.tps_total;
-		}
-
-		public boolean calculateKbps(final DsStati prior) {
-			if(prior == null) {
-				LOGGER.warn("why is prior null");
-				return false;
-			}
-			if(prior.time == 0) {
-				LOGGER.warn("why is prior.time==0");
-			}
-			if((out_bytes == 0 || prior.out_bytes == 0) && out_bytes != prior.out_bytes) {
-				LOGGER.warn(dsId+": throwing out "+csId+": out_bytes==0");
-				if(prior.out_bytes != 0) {
-					LOGGER.warn("\t prior.out_bytes="+prior.out_bytes);
-				}
-				return false;
-			}
-			final long deltaTimeMs = time - prior.time; // / MS_IN_SEC
-			if(LOGGER.isDebugEnabled()) {
-				LOGGER.debug(String.format("time delta: %d, index: %d -> %d", deltaTimeMs, prior.csIndex, this.csIndex));
-			}
-			if(deltaTimeMs == 0) {
-				LOGGER.warn("time delta 0");
-				return false;
-			}
-			final long delta = (out_bytes - prior.out_bytes);
-			// as long as the numbers are not too large, dividing both num and denom by 1000 is a waste of time
-			//			rates.kbps = (delta / BITS_IN_KBPS) * BITS_IN_BYTE / deltaTime;
-			kbps = ((double) delta / (double) deltaTimeMs) * BITS_IN_BYTE;
-			if(kbps < 0.0) {
-				LOGGER.warn(dsId+": throwing out "+csId+": kbps="+ kbps);
-				kbps = 0.0;
-				return false;
-			}
-
-			final double deltaTime = (double) deltaTimeMs / (double) MS_IN_SEC;
-
-			tps_2xx = ((double) status_2xx - (double) prior.status_2xx) / deltaTime;
-			tps_3xx = ((double) status_3xx - (double) prior.status_3xx) / deltaTime;
-			tps_4xx = ((double) status_4xx - (double) prior.status_4xx) / deltaTime;
-			tps_5xx = ((double) status_5xx - (double) prior.status_5xx) / deltaTime;
-			tps_total = tps_2xx + tps_3xx + tps_4xx + tps_5xx;
-
-			return true;
-		}
-		Map<String, String> getStati(final String base) {
-			final Map<String, String> r = new HashMap<String, String>();
-			r.put(base+".in_bytes", String.valueOf(in_bytes));
-			r.put(base+".out_bytes", String.valueOf(out_bytes));
-			r.put(base+".status_2xx", String.valueOf(status_2xx));
-			r.put(base+".status_3xx", String.valueOf(status_3xx));
-			r.put(base+".status_4xx", String.valueOf(status_4xx));
-			r.put(base+".status_5xx", String.valueOf(status_5xx));
-
-			DecimalFormat df = new DecimalFormat("0.00");
-			r.put(base+".kbps", df.format(kbps));
-			r.put(base+".tps_2xx", df.format(tps_2xx));
-			r.put(base+".tps_3xx", df.format(tps_3xx));
-			r.put(base+".tps_4xx", df.format(tps_4xx));
-			r.put(base+".tps_5xx", df.format(tps_5xx));
-			r.put(base+".tps_total", df.format(tps_total));
-			return r;
-		}
-	}
 	public static Collection<DsState> getDsStates() {
 		return states.values();
 	}
