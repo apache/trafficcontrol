@@ -201,9 +201,14 @@ public class Cache implements java.io.Serializable {
 
 		final JSONArray ja = deliveryServices.optJSONArray(deliveryServiceId);
 
-		for (int i = 0; i < ja.length(); i++) {
-			fqdns.add(ja.getString(i));
+		if (ja != null) {
+			for (int i = 0; i < ja.length(); i++) {
+				fqdns.add(ja.getString(i));
+			}
+			return fqdns;
 		}
+
+		fqdns.add(deliveryServices.optString(deliveryServiceId));
 
 		return fqdns;
 	}

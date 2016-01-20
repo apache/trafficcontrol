@@ -234,14 +234,19 @@ public class StatisticsLog {
 			}
 
 
-			while (dataPoints.size() > 1 && dataPoints.getFirst().getIndex() < baseIndex) {
+			while (dataPoints.getFirst().getIndex() < baseIndex) {
+				if (dataPoints.size() == 1) {
+					LOGGER.warn(String.format("%s - %s: index %d < baseIndex %d", key, stateId, dataPoints.getFirst().getIndex(), baseIndex));
+					break;
+				}
+
 				dataPoints.remove();
+
+				if (dataPoints.isEmpty()) {
+					LOGGER.warn(String.format("list empty for %s - %s", key, stateId));
+				}
 			}
 
-			if (dataPoints.size() == 1) {
-				LOGGER.warn(String.format("%s - %s: index %d < baseIndex %d", key, stateId, dataPoints.getFirst().getIndex(), baseIndex));
-				break;
-			}
 		}
 	}
 

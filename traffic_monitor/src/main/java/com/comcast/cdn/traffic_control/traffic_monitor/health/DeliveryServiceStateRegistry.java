@@ -33,7 +33,7 @@ public class DeliveryServiceStateRegistry extends StateRegistry implements Seria
 
 			if (state instanceof CacheState) {
 				CacheState cacheState = (CacheState) state;
-				if (!cacheState.getCache().hasDeliveryServices()) {
+				if (cacheState.getCache() == null || !cacheState.getCache().hasDeliveryServices()) {
 					continue;
 				}
 

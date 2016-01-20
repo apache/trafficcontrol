@@ -1,6 +1,7 @@
 package com.comcast.cdn.traffic_control.traffic_monitor.health;
 
 import com.comcast.cdn.traffic_control.traffic_monitor.config.Cache;
+import org.apache.log4j.Logger;
 
 import java.io.Serializable;
 import java.util.ArrayList;
@@ -10,6 +11,7 @@ import static com.comcast.cdn.traffic_control.traffic_monitor.health.HealthDeter
 import static com.comcast.cdn.traffic_control.traffic_monitor.health.HealthDeterminer.AdminStatus.OFFLINE;
 
 public class CacheStateRegistry extends StateRegistry implements Serializable {
+	private static final Logger LOGGER = Logger.getLogger(CacheStateRegistry.class);
 	// Recommended Singleton Pattern implementation
 	// https://community.oracle.com/docs/DOC-918906
 
@@ -24,8 +26,18 @@ public class CacheStateRegistry extends StateRegistry implements Serializable {
 	}
 
 	public CacheState getOrCreate(final Cache cache) {
+		if (cache == null) {
+			LOGGER.warn("Tried to create cache state from a null value cache");
+			return null;
+		}
 		CacheState cacheState = (CacheState) getOrCreate(cache.getHostname());
-		cacheState.setCache(cache);
+
+		if (cacheState == null) {
+			LOGGER.warn("getOrCreate returned a null CacheState");
+		} else {
+			cacheState.setCache(cache);
+		}
+
 		return cacheState;
 	}
 

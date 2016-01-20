@@ -39,7 +39,8 @@ public class StateRegistry {
 	}
 
 	public AbstractState put(AbstractState abstractState) {
-		return states.put(abstractState.getId(), abstractState);
+		states.put(abstractState.getId(), abstractState);
+		return abstractState;
 	}
 
 	public int size() {
@@ -53,6 +54,10 @@ public class StateRegistry {
 	}
 
 	public String get(final String stateId, final String key) {
+		if (!has(stateId)) {
+			return "";
+		}
+
 		return get(stateId).getLastValue(key);
 	}
 
