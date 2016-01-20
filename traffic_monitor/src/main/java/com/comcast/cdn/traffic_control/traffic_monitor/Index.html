@@ -49,23 +49,15 @@ $(".tab a").live("click",function(){
 		<div class="top-bar">
 			<div class="status-bar">
 				<ul>
-				<li><a href="#" class="hider" data-target="top-bar-hidden"><img
-						class="show" width="16" src="tune.png" /><img class="hide hidden"
-						width="16" src="tune-grey.png" /></a></li>
-				<li>Caches: count=<span wicket:id="servers_count"></span>
-					available=<span wicket:id="servers_available"></span>
-					down=<span wicket:id="servers_down"></span>
-				</li>
-				<li>Bandwidth: <span wicket:id="totalBandwidth"></span>/<span wicket:id="totalBandwidthAvailable"></span>
-				</li>
-				<li>Source: <span wicket:id="source"></span>
-				</li>
-				<li style="float: right;"><span wicket:id="version"></span></li>
+					<li>Caches: count=<span wicket:id="servers_count"></span>
+						available=<span wicket:id="servers_available"></span>
+						down=<span wicket:id="servers_down"></span>
+					</li>
+					<li>Bandwidth: <span wicket:id="totalBandwidth"></span>/<span wicket:id="totalBandwidthAvailable"></span> </li>
+					<li>Source: <span wicket:id="source"></span></li>
+					<li style="float: right;"><span wicket:id="version"></span></li>
 				</ul>
 				<br clear="all" />
-			</div>
-			<div class="top-bar-hidden">
-				<div wicket:id="tabs" class="tabpanel ">[tabbed panel will be here]</div>
 			</div>
 		</div>
 		</div>

@@ -19,19 +19,14 @@ package com.comcast.cdn.traffic_control.traffic_monitor;
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
 import java.util.Date;
-import java.util.List;
 
 import org.apache.log4j.Logger;
 import org.apache.wicket.Component;
 import org.apache.wicket.ajax.json.JSONException;
 import org.apache.wicket.ajax.json.JSONObject;
 import org.apache.wicket.behavior.Behavior;
-import org.apache.wicket.extensions.ajax.markup.html.tabs.AjaxTabbedPanel;
-import org.apache.wicket.extensions.markup.html.tabs.AbstractTab;
 import org.apache.wicket.markup.html.IHeaderContributor;
-import org.apache.wicket.markup.html.WebMarkupContainer;
 import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.model.Model;
 import org.apache.wicket.util.time.Duration;
@@ -42,10 +37,8 @@ import com.comcast.cdn.traffic_control.traffic_monitor.health.CacheState;
 import com.comcast.cdn.traffic_control.traffic_monitor.publish.Stats;
 import com.comcast.cdn.traffic_control.traffic_monitor.wicket.behaviors.MultiUpdatingTimerBehavior;
 import com.comcast.cdn.traffic_control.traffic_monitor.wicket.components.CacheListPanel;
-import com.comcast.cdn.traffic_control.traffic_monitor.wicket.components.ConfigPanel;
 import com.comcast.cdn.traffic_control.traffic_monitor.wicket.components.DsListPanel;
 import com.comcast.cdn.traffic_control.traffic_monitor.wicket.components.EventLogPanel;
-import com.comcast.cdn.traffic_control.traffic_monitor.wicket.components.StatusPanel;
 
 public class Index extends MonitorPage implements IHeaderContributor {
 	private static final Logger LOGGER = Logger.getLogger(Index.class);
@@ -89,8 +82,6 @@ public class Index extends MonitorPage implements IHeaderContributor {
 		add(new EventLogPanel("eventLog"));
 
 		add(new DsListPanel("dsList", updater, updateList));
-
-		add(getTabbedPanel(updater));
 	}
 
 	private Model<Integer> getServerListSizeModel() {
@@ -99,7 +90,7 @@ public class Index extends MonitorPage implements IHeaderContributor {
 
 			@Override
 			public Integer getObject( ) {
-				return new Integer(CacheState.getCacheStates().size());
+				return CacheState.getCacheStates().size();
 			}
 		};
 	}
@@ -188,28 +179,6 @@ public class Index extends MonitorPage implements IHeaderContributor {
 		}
 
 		return "";
-	}
-
-	private AjaxTabbedPanel<AbstractTab> getTabbedPanel(final Behavior updater) {
-		final List<AbstractTab> tabs=new ArrayList<AbstractTab>();
-
-		tabs.add(new AbstractTab(new Model<String>("Status")) {
-			private static final long serialVersionUID = 1L;
-
-			public WebMarkupContainer getPanel(final String panelId) {
-				return new StatusPanel(panelId);
-			}
-		});
-
-		tabs.add(new AbstractTab(new Model<String>("Config")) {
-			private static final long serialVersionUID = 1L;
-
-			public WebMarkupContainer getPanel(final String panelId) {
-				return new ConfigPanel(panelId, updater);
-			}
-		});
-
-		return new AjaxTabbedPanel<AbstractTab>("tabs", tabs);
 	}
 }
 
