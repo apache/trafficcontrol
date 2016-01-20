@@ -20,9 +20,6 @@ import org.apache.wicket.util.tester.WicketTester;
 import org.junit.Before;
 import org.junit.Test;
 
-import com.comcast.cdn.traffic_control.traffic_monitor.Index;
-import com.comcast.cdn.traffic_control.traffic_monitor.MonitorApplication;
-
 /**
  * Simple test using the WicketTester
  */
