@@ -21,6 +21,10 @@ package API::DeliveryService;
 use UI::Utils;
 use UI::DeliveryService;
 use Mojo::Base 'Mojolicious::Controller';
+use Mojolicious::Validator;
+use Mojolicious::Validator::Validation;
+use Email::Valid;
+use Validate::Tiny ':all';
 use Data::Dumper;
 use Common::ReturnCodes qw(SUCCESS ERROR);
 
@@ -36,116 +40,142 @@ my $valid_metric_types = {
 };
 
 sub delivery_services {
-	my $self = shift;
-	my $id   = $self->param('id');
+	my $self         = shift;
+	my $id           = $self->param('id');
+	my $current_user = $self->current_user()->{username};
 
-	if ( defined($id) && $self->is_valid_delivery_service($id) ) {
-		if ( $self->is_delivery_service_assigned($id) || &is_admin($self) || &is_oper($self) ) {
-			return $self->get_data();
-		}
-		else {
-			return $self->forbidden();
-		}
-	}
-	if ( defined($id) && !$self->is_valid_delivery_service($id) ) {
-		return $self->not_found();
-	}
-	else {
-		return $self->get_data();
-	}
-}
-
-sub get_data {
-	my $self = shift;
-	my $id   = $self->param('id');
-	my @data;
-	my $portal_role = $self->db->resultset('Role')->search( { name => 'portal' } )->get_column('id')->single();
-	my $tm_user    = $self->db->resultset('TmUser')->search( { username => $self->current_user()->{username} } )->single();
-	my $tm_user_id = $tm_user->id;
-	my @ds_ids     = ();
-
-	if ( defined($tm_user_id) && $tm_user->role->id eq $portal_role ) {
-		@ds_ids = $self->db->resultset('DeliveryserviceTmuser')->search( { tm_user_id => $tm_user_id } )->get_column('deliveryservice')->all();
-	}
-	else {
-		@ds_ids = $self->db->resultset('Deliveryservice')->search(undef)->get_column('id')->all();
-	}
-	my %ds_hash = map { $_ => 1 } @ds_ids;
 	my $rs;
+	my $tm_user_id;
+	my $forbidden;
 	if ( defined($id) ) {
-		$rs = $self->db->resultset("Deliveryservice")->search( { 'me.id' => $id }, { prefetch => [ 'cdn', 'deliveryservice_regexes' ] } );
+		( $forbidden, $rs, $tm_user_id ) = $self->get_delivery_service_by_id( $current_user, $id );
 	}
 	else {
-		$rs = $self->db->resultset("Deliveryservice")->search( undef, { prefetch => [ 'cdn', 'deliveryservice_regexes' ], order_by => 'xml_id' } );
+		( $rs, $tm_user_id ) = $self->get_delivery_services($current_user);
 	}
-	while ( my $row = $rs->next ) {
-		next if ( defined($tm_user_id) && !defined( $ds_hash{ $row->id } ) );
 
-		my $cdn_name  = defined( $row->cdn_id ) ? $row->cdn->name : "";
-		my $re_rs     = $row->deliveryservice_regexes;
-		my @matchlist = ();
-		while ( my $re_row = $re_rs->next ) {
+	my @data;
+	if ( defined($rs) ) {
+		while ( my $row = $rs->next ) {
+			my $cdn_name  = defined( $row->cdn_id ) ? $row->cdn->name : "";
+			my $re_rs     = $row->deliveryservice_regexes;
+			my @matchlist = ();
+			while ( my $re_row = $re_rs->next ) {
+				push(
+					@matchlist, {
+						type      => $re_row->regex->type->name,
+						pattern   => $re_row->regex->pattern,
+						setNumber => $re_row->set_number,
+					}
+				);
+			}
+			my $cdn_domain = &UI::DeliveryService::get_cdn_domain( $self, $row->id );
+			my $regexp_set = &UI::DeliveryService::get_regexp_set( $self, $row->id );
+			my @example_urls = &UI::DeliveryService::get_example_urls( $self, $row->id, $regexp_set, $row, $cdn_domain, $row->protocol );
 			push(
-				@matchlist, {
-					type      => $re_row->regex->type->name,
-					pattern   => $re_row->regex->pattern,
-					setNumber => $re_row->set_number,
+				@data, {
+					"id"                   => $row->id,
+					"xmlId"                => $row->xml_id,
+					"displayName"          => $row->display_name,
+					"dscp"                 => $row->dscp,
+					"signed"               => \$row->signed,
+					"qstringIgnore"        => $row->qstring_ignore,
+					"geoLimit"             => $row->geo_limit,
+					"httpBypassFqdn"       => $row->http_bypass_fqdn,
+					"dnsBypassIp"          => $row->dns_bypass_ip,
+					"dnsBypassIp6"         => $row->dns_bypass_ip6,
+					"dnsBypassCname"       => $row->dns_bypass_cname,
+					"dnsBypassTtl"         => $row->dns_bypass_ttl,
+					"orgServerFqdn"        => $row->org_server_fqdn,
+					"multiSiteOrigin"      => $row->multi_site_origin,
+					"ccrDnsTtl"            => $row->ccr_dns_ttl,
+					"type"                 => $row->type->name,
+					"profileName"          => $row->profile->name,
+					"profileDescription"   => $row->profile->description,
+					"cdnName"              => $cdn_name,
+					"globalMaxMbps"        => $row->global_max_mbps,
+					"globalMaxTps"         => $row->global_max_tps,
+					"headerRewrite"        => $row->edge_header_rewrite,
+					"edgeHeaderRewrite"    => $row->edge_header_rewrite,
+					"midHeaderRewrite"     => $row->mid_header_rewrite,
+					"trResponseHeaders"    => $row->tr_response_headers,
+					"regexRemap"           => $row->regex_remap,
+					"longDesc"             => $row->long_desc,
+					"longDesc1"            => $row->long_desc_1,
+					"longDesc2"            => $row->long_desc_2,
+					"maxDnsAnswers"        => $row->max_dns_answers,
+					"infoUrl"              => $row->info_url,
+					"missLat"              => $row->miss_lat,
+					"missLong"             => $row->miss_long,
+					"checkPath"            => $row->check_path,
+					"matchList"            => \@matchlist,
+					"active"               => \$row->active,
+					"protocol"             => $row->protocol,
+					"ipv6RoutingEnabled"   => \$row->ipv6_routing_enabled,
+					"rangeRequestHandling" => $row->range_request_handling,
+					"cacheurl"             => $row->cacheurl,
+					"remapText"            => $row->remap_text,
+					"initialDispersion"    => $row->initial_dispersion,
+					"exampleURLs"          => \@example_urls,
 				}
 			);
 		}
-		my $cdn_domain = &UI::DeliveryService::get_cdn_domain( $self, $row->id );
-		my $regexp_set = &UI::DeliveryService::get_regexp_set( $self, $row->id );
-		my @example_urls = &UI::DeliveryService::get_example_urls( $self, $row->id, $regexp_set, $row, $cdn_domain, $row->protocol );
-		push(
-			@data, {
-				"id"                   => $row->id,
-				"xmlId"                => $row->xml_id,
-				"displayName"          => $row->display_name,
-				"dscp"                 => $row->dscp,
-				"signed"               => \$row->signed,
-				"qstringIgnore"        => $row->qstring_ignore,
-				"geoLimit"             => $row->geo_limit,
-				"httpBypassFqdn"       => $row->http_bypass_fqdn,
-				"dnsBypassIp"          => $row->dns_bypass_ip,
-				"dnsBypassIp6"         => $row->dns_bypass_ip6,
-				"dnsBypassCname"       => $row->dns_bypass_cname,
-				"dnsBypassTtl"         => $row->dns_bypass_ttl,
-				"orgServerFqdn"        => $row->org_server_fqdn,
-				"multiSiteOrigin"      => $row->multi_site_origin,
-				"ccrDnsTtl"            => $row->ccr_dns_ttl,
-				"type"                 => $row->type->name,
-				"profileName"          => $row->profile->name,
-				"profileDescription"   => $row->profile->description,
-				"cdnName"              => $cdn_name,
-				"globalMaxMbps"        => $row->global_max_mbps,
-				"globalMaxTps"         => $row->global_max_tps,
-				"headerRewrite"        => $row->edge_header_rewrite,
-				"edgeHeaderRewrite"    => $row->edge_header_rewrite,
-				"midHeaderRewrite"     => $row->mid_header_rewrite,
-				"trResponseHeaders"    => $row->tr_response_headers,
-				"regexRemap"           => $row->regex_remap,
-				"longDesc"             => $row->long_desc,
-				"longDesc1"            => $row->long_desc_1,
-				"longDesc2"            => $row->long_desc_2,
-				"maxDnsAnswers"        => $row->max_dns_answers,
-				"infoUrl"              => $row->info_url,
-				"missLat"              => $row->miss_lat,
-				"missLong"             => $row->miss_long,
-				"checkPath"            => $row->check_path,
-				"matchList"            => \@matchlist,
-				"active"               => \$row->active,
-				"protocol"             => $row->protocol,
-				"ipv6RoutingEnabled"   => \$row->ipv6_routing_enabled,
-				"rangeRequestHandling" => $row->range_request_handling,
-				"cacheurl"             => $row->cacheurl,
-				"remapText"            => $row->remap_text,
-				"initialDispersion"    => $row->initial_dispersion,
-				"exampleURLs"          => \@example_urls,
-			}
-		);
 	}
-	return $self->success( \@data );
+
+	return defined($forbidden) ? $self->forbidden() : $self->success(\@data);
 }
+
+sub get_delivery_services {
+	my $self         = shift;
+	my $current_user = shift;
+
+	my $tm_user_id;
+	my $rs;
+	if ( &is_privileged($self) ) {
+		$rs = $self->db->resultset('Deliveryservice')->search( undef, { prefetch => [ 'cdn', 'deliveryservice_regexes' ], order_by => 'xml_id' } );
+	}
+	else {
+		my $tm_user = $self->db->resultset('TmUser')->search( { username => $current_user } )->single();
+		$tm_user_id = $tm_user->id;
+
+		my @ds_ids = $self->db->resultset('DeliveryserviceTmuser')->search( { tm_user_id => $tm_user_id } )->get_column('deliveryservice')->all();
+		$rs = $self->db->resultset('Deliveryservice')
+			->search( { 'me.id' => { -in => \@ds_ids } }, { prefetch => [ 'cdn', 'deliveryservice_regexes' ], order_by => 'xml_id' } );
+	}
+
+	return ( $rs, $tm_user_id );
+}
+
+sub get_delivery_service_by_id {
+	my $self         = shift;
+	my $current_user = shift;
+	my $id           = shift;
+
+	my $tm_user_id;
+	my $rs;
+	my $forbidden;
+	if ( &is_privileged($self) ) {
+		my @ds_ids =
+		$rs = $self->db->resultset('Deliveryservice')
+			->search( { 'me.id' => $id }, { prefetch => [ 'cdn', 'deliveryservice_regexes' ], order_by => 'xml_id' } );
+	}
+	elsif ( $self->is_delivery_service_assigned($id) ) {
+		my $tm_user = $self->db->resultset('TmUser')->search( { username => $current_user } )->single();
+		$tm_user_id = $tm_user->id;
+
+		my @ds_ids =
+			$self->db->resultset('DeliveryserviceTmuser')->search( { tm_user_id => $tm_user_id, deliveryservice => $id } )->get_column('deliveryservice')->all();
+		$rs =
+			$self->db->resultset('Deliveryservice')
+			->search( { 'me.id' => { -in => \@ds_ids } }, { prefetch => [ 'cdn', 'deliveryservice_regexes' ], order_by => 'xml_id' } );
+	}
+	elsif ( !$self->is_delivery_service_assigned($id) ) {
+		$forbidden = "true";
+	}
+
+	return ( $forbidden, $rs, $tm_user_id );
+}
+
 
 sub routing {
 	my $self = shift;
@@ -308,6 +338,61 @@ sub state {
 	else {
 		$self->not_found();
 	}
+}
+
+sub request {
+	my $self      = shift;
+	my $email_to  = $self->req->json->{emailTo};
+	my $details = $self->req->json->{details};
+
+	my $is_email_valid = Email::Valid->address($email_to);
+
+	if ( !$is_email_valid ) {
+		return $self->alert("Please provide a valid email address to send the delivery service request to.");
+	}
+
+	my ( $is_valid, $result ) = $self->is_deliveryservice_request_valid($details);
+
+	if ($is_valid) {
+		if ( $self->send_deliveryservice_request( $email_to, $details ) ) {
+			return $self->success_message( "Delivery Service request sent to " . $email_to );
+		}
+	}
+	else {
+		return $self->alert($result);
+	}
+}
+
+sub is_deliveryservice_request_valid {
+	my $self      = shift;
+	my $details = shift;
+
+	my $rules = {
+		fields => [
+			qw/customer contentType deliveryProtocol routingType serviceDesc peakBPSEstimate peakTPSEstimate maxLibrarySizeEstimate originURL hasOriginDynamicRemap originTestFile hasOriginACLWhitelist originHeaders otherOriginSecurity queryStringHandling rangeRequestHandling hasSignedURLs hasNegativeCachingCustomization negativeCachingCustomizationNote serviceAliases rateLimitingGBPS rateLimitingTPS overflowService headerRewriteEdge headerRewriteMid headerRewriteRedirectRouter notes/
+		],
+
+		# Validation checks to perform
+		checks => [
+
+			# required deliveryservice request fields
+			[
+				qw/customer contentType deliveryProtocol routingType serviceDesc peakBPSEstimate peakTPSEstimate maxLibrarySizeEstimate originURL hasOriginDynamicRemap originTestFile hasOriginACLWhitelist queryStringHandling rangeRequestHandling hasSignedURLs hasNegativeCachingCustomization rateLimitingGBPS rateLimitingTPS/
+			] => is_required("is required")
+
+		]
+	};
+
+	# Validate the input against the rules
+	my $result = validate( $details, $rules );
+
+	if ( $result->{success} ) {
+		return ( 1, $result->{data} );
+	}
+	else {
+		return ( 0, $result->{error} );
+	}
+
 }
 
 1;

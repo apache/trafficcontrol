@@ -157,7 +157,7 @@
 				<executions>
 					<execution>
 						<id>PMD</id>
-						<phase>verify</phase>
+						<phase>compile</phase>
 						<goals>
 							<goal>check</goal>
 						</goals>
@@ -476,6 +476,9 @@
 							<preremoveScriptlet>
 								<scriptFile>src/main/scripts/preremove.sh</scriptFile>
 							</preremoveScriptlet>
+							<postremoveScriptlet>
+								<scriptFile>src/main/scripts/postremove.sh</scriptFile>
+							</postremoveScriptlet>
 						</configuration>
 					</plugin>
 				</plugins>

@@ -98,7 +98,7 @@ sub register {
 				}
 			);
 			my $result = $update_server_bit_rs->update( { upd_pending => 1 } );
-			&log( $self, "Set upd_pending = 1 for all applicable caches", "CODEBIG" );
+			&log( $self, "Set upd_pending = 1 for all applicable caches", "OPER" );
 		}
 	);
 

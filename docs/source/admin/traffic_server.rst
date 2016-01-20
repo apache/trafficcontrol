@@ -19,9 +19,9 @@ Traffic Server Administration
 *****************************
 Installing Traffic Server
 =========================
-1. Select **Servers**.
+1. Select **Servers** in the Traffic Ops web interface.
 2. Scroll to the bottom of the page and click **Add Server**.
-3. Complete the Required Info: section.
+3. Complete the *Required Info*: section.
 4. Click **Submit**.
 5. Click **Save**.
 

@@ -108,7 +108,7 @@ public class ConfigHandler {
 				parseLocationConfig(jo.getJSONObject("edgeLocations"), cacheRegister);
 				parseCacheConfig(jo.getJSONObject("contentServers"), cacheRegister);
 				parseMonitorConfig(jo.getJSONObject("monitors"));
-				NetworkNode.getInstance().clearCacheCache();
+				NetworkNode.getInstance().clearCacheLocations();
 				federationsWatcher.configure(config);
 
 				trafficRouterManager.setCacheRegister(cacheRegister);

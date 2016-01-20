@@ -474,6 +474,9 @@ sub api_routes {
 	$r->get( "/api/$version/deliveryservices/:id/state" => [ format => [qw(json)] ] )->over( authenticated => 1 )
 		->to( 'DeliveryService#state', namespace => $namespace );
 
+	# -- DELIVERY SERVICE: Request
+	$r->post( "/api/$version/deliveryservices/request")->over( authenticated => 1 )->to( 'DeliveryService#request', namespace => $namespace );
+
 	## -- DELIVERY SERVICE: SSL Keys
 	## Support for SSL private keys, certs, and csrs
 	#gets the latest key by default unless a version query param is provided with ?version=x
