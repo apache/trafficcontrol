@@ -27,7 +27,6 @@ import org.apache.wicket.ajax.json.JSONArray;
 import org.apache.wicket.ajax.json.JSONException;
 import org.apache.wicket.ajax.json.JSONObject;
 
-import com.comcast.cdn.traffic_control.traffic_monitor.KeyValue;
 import com.comcast.cdn.traffic_control.traffic_monitor.config.Cache;
 import com.comcast.cdn.traffic_control.traffic_monitor.data.DataPoint;
 
@@ -36,7 +35,7 @@ public class DsState extends AbstractState {
 	private static final long serialVersionUID = 1L;
 	private static Map<String, DsState> states = new HashMap<String, DsState>();
 
-	private DsStati currentDtati;
+	private DsStati currentDsStati;
 	private int cachesConfigured = 0;
 	private int cachesAvailable = 0;
 	private int cachesReporting = 0;
@@ -69,10 +68,10 @@ public class DsState extends AbstractState {
 			return;
 		}
 
-		if (currentDtati == null) {
-			currentDtati = stati;
+		if (currentDsStati == null) {
+			currentDsStati = stati;
 		} else {
-			currentDtati.accumulate(stati);
+			currentDsStati.accumulate(stati);
 		}
 
 		EmbeddedStati loc = locs.get(location);
@@ -84,25 +83,25 @@ public class DsState extends AbstractState {
 
 		loc.accumulate(stati);
 
-		EmbeddedStati cacheStati = cacheStatiMap.get(state.stateId);
+		EmbeddedStati cacheStati = cacheStatiMap.get(state.id);
 
 		if (cacheStati == null) {
-			cacheStati = new EmbeddedStati("cache", state.stateId);
-			cacheStatiMap.put(state.stateId, cacheStati);
+			cacheStati = new EmbeddedStati("cache", state.id);
+			cacheStatiMap.put(state.id, cacheStati);
 		}
 
 		cacheStati.accumulate(stati);
 	}
 
 	public boolean completeRound(final JSONObject dsControls) {
-		if (currentDtati != null && currentDtati.out_bytes != 0) {
-			put(currentDtati.getStati("total"));
-			currentDtati = null;
+		if (currentDsStati != null && currentDsStati.out_bytes != 0) {
+			putDataPoints(currentDsStati.getStati("total"));
+			currentDsStati = null;
 		}
 
-		setDp("caches-configured", String.valueOf(cachesConfigured));
-		setDp("caches-available", String.valueOf(cachesAvailable));
-		setDp("caches-reporting", String.valueOf(cachesReporting));
+		putDataPoint("caches-configured", String.valueOf(cachesConfigured));
+		putDataPoint("caches-available", String.valueOf(cachesAvailable));
+		putDataPoint("caches-reporting", String.valueOf(cachesReporting));
 
 		cachesConfigured = 0;
 		cachesAvailable = 0;
@@ -120,14 +119,14 @@ public class DsState extends AbstractState {
 				continue;
 			}
 
-			put(stati);
+			putDataPoints(stati);
 
 			if (!HealthDeterminer.setIsAvailable(this, loc, dsControls)) {
 				sb.append("\"").append(locId).append("\", ");
 			}
 		}
 
-		put("disabledLocations", sb.toString());
+		putDataPoint("disabledLocations", sb.toString());
 
 		for (String cacheId : cacheStatiMap.keySet()) {
 			final EmbeddedStati cacheStat = cacheStatiMap.get(cacheId);
@@ -137,9 +136,9 @@ public class DsState extends AbstractState {
 				continue;
 			}
 
-			hiddenStats.addAll(stati.keySet());
+			addHiddenStats(stati.keySet());
 
-			put(stati);
+			putDataPoints(stati);
 		}
 
 		return true;
@@ -280,19 +279,7 @@ public class DsState extends AbstractState {
 	public static Collection<DsState> getDsStates() {
 		return states.values();
 	}
-	@Override
-	protected KeyValue getKeyValue(final String key, final AbstractState state) {
-		return new KeyValue(key,"") {
-			private static final long serialVersionUID = 1L;
-			@Override
-			public String getObject( ) {
-				if(stateId != null) {
-					return DsState.get(stateId, key);
-				}
-				return val;
-			}
-		};
-	}
+
 	public static String get(final String stateId, final String key) {
 		return get(stateId).getLastValue(key);
 	}
@@ -312,7 +299,7 @@ public class DsState extends AbstractState {
 	public static void startUpdateAll() {
 		synchronized(states) {
 			for(DsState ds :states.values()) {
-				ds.startUpdate();
+				ds.prepareStatisticsForUpdate();
 			}
 		}
 	}

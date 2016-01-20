@@ -32,21 +32,21 @@ public class DsStati implements java.io.Serializable {
 	public static final int MS_IN_SEC = 1000;
 	public final long time;
 
-	public DsStati(final String propBase, final CacheState cs, final long index, final String dsId) {
+	public DsStati(final String propBase, final CacheState cacheState, final long index, final String dsId) {
 		this.csIndex = index;
-		this.time = cs.getTime(index);
-		String v = cs.getValue(propBase + ".in_bytes", index);
+		this.time = cacheState.getTime(index);
+		String v = cacheState.getValue(propBase + ".in_bytes", index);
 		this.in_bytes = toLong(v);
 		final String k = propBase + ".out_bytes";
-		v = cs.getValue(k, index);
+		v = cacheState.getValue(k, index);
 		this.out_bytes = toLong(v);
-		v = cs.getValue(propBase + ".status_2xx", index);
+		v = cacheState.getValue(propBase + ".status_2xx", index);
 		this.status_2xx = toLong(v);
-		this.status_3xx = toLong(cs.getValue(propBase + ".status_3xx", index));
-		this.status_4xx = toLong(cs.getValue(propBase + ".status_4xx", index));
-		this.status_5xx = toLong(cs.getValue(propBase + ".status_5xx", index));
+		this.status_3xx = toLong(cacheState.getValue(propBase + ".status_3xx", index));
+		this.status_4xx = toLong(cacheState.getValue(propBase + ".status_4xx", index));
+		this.status_5xx = toLong(cacheState.getValue(propBase + ".status_5xx", index));
 		this.dsId = dsId;
-		this.csId = cs.stateId;
+		this.csId = cacheState.getId();
 	}
 
 	public DsStati(final DsStati stati) {

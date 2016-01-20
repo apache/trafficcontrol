@@ -5,7 +5,6 @@ import com.comcast.cdn.traffic_control.traffic_monitor.StateKeyValue;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -74,9 +73,9 @@ public class StateRegistry {
 
 		AbstractState cacheState = states.get(hostname);
 
-//		for(String key : cacheState.getStatisticsKeys()) {
-//			modelList.add(new StateKeyValue(key, cacheState, this));
-//		}
+		for(String key : cacheState.getStatisticsKeys()) {
+			modelList.add(new StateKeyValue(key, cacheState, this));
+		}
 
 		return modelList;
 	}

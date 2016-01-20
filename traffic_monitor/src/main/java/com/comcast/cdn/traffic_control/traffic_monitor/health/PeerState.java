@@ -23,10 +23,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import com.comcast.cdn.traffic_control.traffic_monitor.StateKeyValue;
 import org.apache.log4j.Logger;
 
-import com.comcast.cdn.traffic_control.traffic_monitor.KeyValue;
 import com.comcast.cdn.traffic_control.traffic_monitor.config.Cache;
 import com.comcast.cdn.traffic_control.traffic_monitor.config.Peer;
 
@@ -98,20 +96,6 @@ public class PeerState extends AbstractState {
 				}
 			}
 		}
-	}
-
-	@Override
-	protected KeyValue getKeyValue(final String key, final AbstractState state) {
-		return new KeyValue(key,"") {
-			private static final long serialVersionUID = 1L;
-			@Override
-			public String getObject() {
-				if (stateId != null) {
-					return PeerState.get(stateId, key);
-				}
-				return val;
-			}
-		};
 	}
 
 	public static String get(final String stateId, final String key) {

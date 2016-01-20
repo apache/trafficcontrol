@@ -19,6 +19,7 @@ package com.comcast.cdn.traffic_control.traffic_monitor.wicket.components;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.comcast.cdn.traffic_control.traffic_monitor.health.CacheStateRegistry;
 import org.apache.log4j.Logger;
 import org.apache.wicket.behavior.Behavior;
 import org.apache.wicket.markup.html.basic.Label;
@@ -29,7 +30,6 @@ import org.apache.wicket.util.time.Duration;
 
 import com.comcast.cdn.traffic_control.traffic_monitor.KeyValue;
 import com.comcast.cdn.traffic_control.traffic_monitor.MonitorPage;
-import com.comcast.cdn.traffic_control.traffic_monitor.health.CacheState;
 import com.comcast.cdn.traffic_control.traffic_monitor.wicket.behaviors.MultiUpdatingTimerBehavior;
 
 public class CacheDetailsPage extends MonitorPage {
@@ -39,32 +39,35 @@ public class CacheDetailsPage extends MonitorPage {
 	public CacheDetailsPage(final PageParameters pars) {
 		this(pars.get("hostname").toString());
 	}
+
 	public CacheDetailsPage(final String hostnameStr) {
 		final Behavior updater = new MultiUpdatingTimerBehavior(Duration.seconds(1));
 		final Label hostname = new Label("hostname", hostnameStr);
 		hostname.add(updater);
 		add(hostname);
 
-		List<KeyValue> jsonValues = null;
+		List<KeyValue> keyValues;
+
 		try {
-			final CacheState atsState = CacheState.getState(hostnameStr);
-			jsonValues = atsState.getModelList();
+			keyValues = CacheStateRegistry.getInstance().getModelList(hostnameStr);
 		} catch (Exception e) {
 			LOGGER.warn(e,e);
-			jsonValues = new ArrayList<KeyValue>();
-			jsonValues.add(new KeyValue("Error", e.toString()));
+			keyValues = new ArrayList<KeyValue>();
+			keyValues.add(new KeyValue("Error", e.toString()));
 		}
-		final ListView<KeyValue> servers = new ListView<KeyValue>("params", jsonValues ) {
+
+		final ListView<KeyValue> servers = new ListView<KeyValue>("params", keyValues ) {
 			private static final long serialVersionUID = 1L;
 			@Override
 			protected void populateItem(final ListItem<KeyValue> item) {
-				final KeyValue keyval = (KeyValue) item.getModelObject();
+				final KeyValue keyval = item.getModelObject();
 				item.add(new Label("key", keyval.getKey()));
 				final Label v = new Label("value", keyval);
 				v.add(updater);
 				item.add(v);
 			}
 		};
+
 		add(servers);
 	}
 }

@@ -93,7 +93,7 @@ public class CrStates extends JsonPage {
 					jo = jo.getJSONObject("caches");
 				}
 				if(jo.has(id)) {
-					peerSet.put(peer, jo.getJSONObject(id));
+					peerSet.putDataPoint(peer, jo.getJSONObject(id));
 				} else {
 					LOGGER.warn("Cache ("+id+") not found in peer ("+peer+")");
 				}

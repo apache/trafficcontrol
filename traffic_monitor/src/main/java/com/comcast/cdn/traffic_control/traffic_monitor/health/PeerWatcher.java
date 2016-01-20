@@ -143,11 +143,11 @@ public class PeerWatcher {
 					final JSONObject cacheStates = jr.getJSONObject("caches");
 
 					peerState.setReachable(true);
-					peerState.startUpdate();
+					peerState.prepareStatisticsForUpdate();
 
 					for (String id : JSONObject.getNames(cacheStates)) {
 						final JSONObject cache = cacheStates.getJSONObject(id);
-						peerState.put(id, cache.optString(AbstractState.IS_AVAILABLE_STR));
+						peerState.putDataPoint(id, cache.optString(AbstractState.IS_AVAILABLE_STR));
 					}
 				} catch (Exception e) {
 					peerState.setReachable(false, e.getMessage());
