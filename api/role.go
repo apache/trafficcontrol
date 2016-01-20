@@ -30,9 +30,16 @@ type Role struct {
 	Name        string      `db:"name" json:"name"`
 	Description null.String `db:"description" json:"description"`
 	PrivLevel   int64       `db:"priv_level" json:"privLevel"`
-	Links       struct {
-		Self string `db:"self" json:"_self"`
-	} `json:"_links" db:-`
+	Links       RoleLinks   `json:"_links" db:-`
+}
+
+type RoleLinks struct {
+	Self string `db:"self" json:"_self"`
+}
+
+type RoleLink struct {
+	ID  int64  `db:"role" json:"id"`
+	Ref string `db:"role_id_ref" json:"_ref"`
 }
 
 // @Title getRoleById

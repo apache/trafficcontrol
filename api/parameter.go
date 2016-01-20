@@ -26,14 +26,21 @@ import (
 )
 
 type Parameter struct {
-	Id          int64     `db:"id" json:"id"`
-	Name        string    `db:"name" json:"name"`
-	ConfigFile  string    `db:"config_file" json:"configFile"`
-	Value       string    `db:"value" json:"value"`
-	LastUpdated time.Time `db:"last_updated" json:"lastUpdated"`
-	Links       struct {
-		Self string `db:"self" json:"_self"`
-	} `json:"_links" db:-`
+	Id          int64          `db:"id" json:"id"`
+	Name        string         `db:"name" json:"name"`
+	ConfigFile  string         `db:"config_file" json:"configFile"`
+	Value       string         `db:"value" json:"value"`
+	LastUpdated time.Time      `db:"last_updated" json:"lastUpdated"`
+	Links       ParameterLinks `json:"_links" db:-`
+}
+
+type ParameterLinks struct {
+	Self string `db:"self" json:"_self"`
+}
+
+type ParameterLink struct {
+	ID  int64  `db:"parameter" json:"id"`
+	Ref string `db:"parameter_id_ref" json:"_ref"`
 }
 
 // @Title getParameterById

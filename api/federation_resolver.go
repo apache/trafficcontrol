@@ -26,16 +26,20 @@ import (
 )
 
 type FederationResolver struct {
-	Id          int64     `db:"id" json:"id"`
-	IpAddress   string    `db:"ip_address" json:"ipAddress"`
-	LastUpdated time.Time `db:"last_updated" json:"lastUpdated"`
-	Links       struct {
-		Self string `db:"self" json:"_self"`
-		Type struct {
-			ID  int64  `db:"type" json:"id"`
-			Ref string `db:"type_id_ref" json:"_ref"`
-		} `json:"type" db:-`
-	} `json:"_links" db:-`
+	Id          int64                   `db:"id" json:"id"`
+	IpAddress   string                  `db:"ip_address" json:"ipAddress"`
+	LastUpdated time.Time               `db:"last_updated" json:"lastUpdated"`
+	Links       FederationResolverLinks `json:"_links" db:-`
+}
+
+type FederationResolverLinks struct {
+	Self     string   `db:"self" json:"_self"`
+	TypeLink TypeLink `json:"type" db:-`
+}
+
+type FederationResolverLink struct {
+	ID  int64  `db:"federation_resolver" json:"id"`
+	Ref string `db:"federation_resolver_id_ref" json:"_ref"`
 }
 
 // @Title getFederationResolverById

@@ -26,16 +26,20 @@ import (
 )
 
 type Region struct {
-	Id          int64     `db:"id" json:"id"`
-	Name        string    `db:"name" json:"name"`
-	LastUpdated time.Time `db:"last_updated" json:"lastUpdated"`
-	Links       struct {
-		Self     string `db:"self" json:"_self"`
-		Division struct {
-			ID  int64  `db:"division" json:"id"`
-			Ref string `db:"division_id_ref" json:"_ref"`
-		} `json:"division" db:-`
-	} `json:"_links" db:-`
+	Id          int64       `db:"id" json:"id"`
+	Name        string      `db:"name" json:"name"`
+	LastUpdated time.Time   `db:"last_updated" json:"lastUpdated"`
+	Links       RegionLinks `json:"_links" db:-`
+}
+
+type RegionLinks struct {
+	Self         string       `db:"self" json:"_self"`
+	DivisionLink DivisionLink `json:"division" db:-`
+}
+
+type RegionLink struct {
+	ID  int64  `db:"region" json:"id"`
+	Ref string `db:"region_id_ref" json:"_ref"`
 }
 
 // @Title getRegionById

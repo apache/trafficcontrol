@@ -27,21 +27,17 @@ import (
 )
 
 type JobResult struct {
-	Id          int64       `db:"id" json:"id"`
-	Result      string      `db:"result" json:"result"`
-	Description null.String `db:"description" json:"description"`
-	LastUpdated time.Time   `db:"last_updated" json:"lastUpdated"`
-	Links       struct {
-		Self string `db:"self" json:"_self"`
-		Job  struct {
-			ID  int64  `db:"job" json:"id"`
-			Ref string `db:"job_id_ref" json:"_ref"`
-		} `json:"job" db:-`
-		Agent struct {
-			ID  int64  `db:"agent" json:"id"`
-			Ref string `db:"job_agent_id_ref" json:"_ref"`
-		} `json:"agent" db:-`
-	} `json:"_links" db:-`
+	Id          int64          `db:"id" json:"id"`
+	Result      string         `db:"result" json:"result"`
+	Description null.String    `db:"description" json:"description"`
+	LastUpdated time.Time      `db:"last_updated" json:"lastUpdated"`
+	Links       JobResultLinks `json:"_links" db:-`
+}
+
+type JobResultLinks struct {
+	Self         string       `db:"self" json:"_self"`
+	JobLink      JobLink      `json:"job" db:-`
+	JobAgentLink JobAgentLink `json:"job_agent" db:-`
 }
 
 // @Title getJobResultById
@@ -57,7 +53,7 @@ func getJobResultById(id int, db *sqlx.DB) (interface{}, error) {
 	arg.Id = int64(id)
 	queryStr := "select *, concat('" + API_PATH + "job_result/', id) as self "
 	queryStr += ", concat('" + API_PATH + "job/', job) as job_id_ref"
-	queryStr += ", concat('" + API_PATH + "job_agent/', agent) as job_agent_id_ref"
+	queryStr += ", concat('" + API_PATH + "job_agent/', job_agent) as job_agent_id_ref"
 	queryStr += " from job_result where id=:id"
 	nstmt, err := db.PrepareNamed(queryStr)
 	err = nstmt.Select(&ret, arg)
@@ -79,7 +75,7 @@ func getJobResults(db *sqlx.DB) (interface{}, error) {
 	ret := []JobResult{}
 	queryStr := "select *, concat('" + API_PATH + "job_result/', id) as self "
 	queryStr += ", concat('" + API_PATH + "job/', job) as job_id_ref"
-	queryStr += ", concat('" + API_PATH + "job_agent/', agent) as job_agent_id_ref"
+	queryStr += ", concat('" + API_PATH + "job_agent/', job_agent) as job_agent_id_ref"
 	queryStr += " from job_result"
 	err := db.Select(&ret, queryStr)
 	if err != nil {
@@ -104,12 +100,12 @@ func postJobResult(payload []byte, db *sqlx.DB) (interface{}, error) {
 	}
 	sqlString := "INSERT INTO job_result("
 	sqlString += "job"
-	sqlString += ",agent"
+	sqlString += ",job_agent"
 	sqlString += ",result"
 	sqlString += ",description"
 	sqlString += ") VALUES ("
 	sqlString += ":job"
-	sqlString += ",:agent"
+	sqlString += ",:job_agent"
 	sqlString += ",:result"
 	sqlString += ",:description"
 	sqlString += ")"
@@ -140,7 +136,7 @@ func putJobResult(id int, payload []byte, db *sqlx.DB) (interface{}, error) {
 	v.LastUpdated = time.Now()
 	sqlString := "UPDATE job_result SET "
 	sqlString += "job = :job"
-	sqlString += ",agent = :agent"
+	sqlString += ",job_agent = :job_agent"
 	sqlString += ",result = :result"
 	sqlString += ",description = :description"
 	sqlString += ",last_updated = :last_updated"

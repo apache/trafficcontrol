@@ -32,13 +32,12 @@ type Log struct {
 	Message     string      `db:"message" json:"message"`
 	Ticketnum   null.String `db:"ticketnum" json:"ticketnum"`
 	LastUpdated time.Time   `db:"last_updated" json:"lastUpdated"`
-	Links       struct {
-		Self   string `db:"self" json:"_self"`
-		TmUser struct {
-			ID  int64  `db:"tm_user" json:"id"`
-			Ref string `db:"tm_user_id_ref" json:"_ref"`
-		} `json:"tm_user" db:-`
-	} `json:"_links" db:-`
+	Links       LogLinks    `json:"_links" db:-`
+}
+
+type LogLinks struct {
+	Self       string     `db:"self" json:"_self"`
+	TmUserLink TmUserLink `json:"tm_user" db:-`
 }
 
 // @Title getLogById

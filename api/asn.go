@@ -29,13 +29,12 @@ type Asn struct {
 	Id          int64     `db:"id" json:"id"`
 	Asn         int64     `db:"asn" json:"asn"`
 	LastUpdated time.Time `db:"last_updated" json:"lastUpdated"`
-	Links       struct {
-		Self       string `db:"self" json:"_self"`
-		Cachegroup struct {
-			ID  int64  `db:"cachegroup" json:"id"`
-			Ref string `db:"cachegroup_id_ref" json:"_ref"`
-		} `json:"cachegroup" db:-`
-	} `json:"_links" db:-`
+	Links       AsnLinks  `json:"_links" db:-`
+}
+
+type AsnLinks struct {
+	Self           string         `db:"self" json:"_self"`
+	CachegroupLink CachegroupLink `json:"cachegroup" db:-`
 }
 
 // @Title getAsnById

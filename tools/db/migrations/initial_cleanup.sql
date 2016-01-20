@@ -1,0 +1,10 @@
+alter table server rename column cdn_id to cdn;
+alter table deliveryservice rename column cdn_id to cdn;
+alter table deliveryservice_tmuser rename column tm_user_id to tm_user;
+alter table hwinfo rename column serverid to server;
+alter table job rename column agent to job_agent;
+alter table job_result rename column agent to job_agent;
+alter table job rename column job_user to tm_user;
+alter table job rename column job_deliveryservice to deliveryservice;
+alter table cachegroup rename column secondary_parent_cachegroup_id to secondary_parent_cachegroup;
+alter table cachegroup rename column parent_cachegroup_id to parent_cachegroup;

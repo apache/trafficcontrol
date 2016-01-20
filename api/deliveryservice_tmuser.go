@@ -26,18 +26,14 @@ import (
 )
 
 type DeliveryserviceTmuser struct {
-	LastUpdated time.Time `db:"last_updated" json:"lastUpdated"`
-	Links       struct {
-		Self     string `db:"self" json:"_self"`
-		TmUserId struct {
-			ID  int64  `db:"tm_user_id" json:"id"`
-			Ref string `db:"tm_user_id_ref" json:"_ref"`
-		} `json:"tm_user_id" db:-`
-		Deliveryservice struct {
-			ID  int64  `db:"deliveryservice" json:"id"`
-			Ref string `db:"deliveryservice_id_ref" json:"_ref"`
-		} `json:"deliveryservice" db:-`
-	} `json:"_links" db:-`
+	LastUpdated time.Time                  `db:"last_updated" json:"lastUpdated"`
+	Links       DeliveryserviceTmuserLinks `json:"_links" db:-`
+}
+
+type DeliveryserviceTmuserLinks struct {
+	Self                string              `db:"self" json:"_self"`
+	DeliveryserviceLink DeliveryserviceLink `json:"deliveryservice" db:-`
+	TmUserLink          TmUserLink          `json:"tm_user" db:-`
 }
 
 // @Title getDeliveryserviceTmuserById
@@ -50,11 +46,11 @@ type DeliveryserviceTmuser struct {
 func getDeliveryserviceTmuserById(id int, db *sqlx.DB) (interface{}, error) {
 	ret := []DeliveryserviceTmuser{}
 	arg := DeliveryserviceTmuser{}
-	arg.Links.Deliveryservice.ID = int64(id)
+	arg.Links.DeliveryserviceLink.ID = int64(id)
 	queryStr := "select *, concat('" + API_PATH + "deliveryservice_tmuser/', id) as self "
 	queryStr += ", concat('" + API_PATH + "deliveryservice/', deliveryservice) as deliveryservice_id_ref"
-	queryStr += ", concat('" + API_PATH + "tm_user/', tm_user_id) as tm_user_id_ref"
-	queryStr += " from deliveryservice_tmuser where Links.Deliveryservice.ID=:Links.Deliveryservice.ID"
+	queryStr += ", concat('" + API_PATH + "tm_user/', tm_user) as tm_user_id_ref"
+	queryStr += " from deliveryservice_tmuser where Links.DeliveryserviceLink.ID=:Links.DeliveryserviceLink.ID"
 	nstmt, err := db.PrepareNamed(queryStr)
 	err = nstmt.Select(&ret, arg)
 	if err != nil {
@@ -75,7 +71,7 @@ func getDeliveryserviceTmusers(db *sqlx.DB) (interface{}, error) {
 	ret := []DeliveryserviceTmuser{}
 	queryStr := "select *, concat('" + API_PATH + "deliveryservice_tmuser/', id) as self "
 	queryStr += ", concat('" + API_PATH + "deliveryservice/', deliveryservice) as deliveryservice_id_ref"
-	queryStr += ", concat('" + API_PATH + "tm_user/', tm_user_id) as tm_user_id_ref"
+	queryStr += ", concat('" + API_PATH + "tm_user/', tm_user) as tm_user_id_ref"
 	queryStr += " from deliveryservice_tmuser"
 	err := db.Select(&ret, queryStr)
 	if err != nil {
@@ -100,10 +96,10 @@ func postDeliveryserviceTmuser(payload []byte, db *sqlx.DB) (interface{}, error)
 	}
 	sqlString := "INSERT INTO deliveryservice_tmuser("
 	sqlString += "deliveryservice"
-	sqlString += ",tm_user_id"
+	sqlString += ",tm_user"
 	sqlString += ") VALUES ("
 	sqlString += ":deliveryservice"
-	sqlString += ",:tm_user_id"
+	sqlString += ",:tm_user"
 	sqlString += ")"
 	result, err := db.NamedExec(sqlString, v)
 	if err != nil {
@@ -124,7 +120,7 @@ func postDeliveryserviceTmuser(payload []byte, db *sqlx.DB) (interface{}, error)
 func putDeliveryserviceTmuser(id int, payload []byte, db *sqlx.DB) (interface{}, error) {
 	var v DeliveryserviceTmuser
 	err := json.Unmarshal(payload, &v)
-	v.Links.Deliveryservice.ID = int64(id) // overwrite the id in the payload
+	v.Links.DeliveryserviceLink.ID = int64(id) // overwrite the id in the payload
 	if err != nil {
 		log.Println(err)
 		return nil, err
@@ -132,9 +128,9 @@ func putDeliveryserviceTmuser(id int, payload []byte, db *sqlx.DB) (interface{},
 	v.LastUpdated = time.Now()
 	sqlString := "UPDATE deliveryservice_tmuser SET "
 	sqlString += "deliveryservice = :deliveryservice"
-	sqlString += ",tm_user_id = :tm_user_id"
+	sqlString += ",tm_user = :tm_user"
 	sqlString += ",last_updated = :last_updated"
-	sqlString += " WHERE Links.Deliveryservice.ID=:Links.Deliveryservice.ID"
+	sqlString += " WHERE Links.DeliveryserviceLink.ID=:Links.DeliveryserviceLink.ID"
 	result, err := db.NamedExec(sqlString, v)
 	if err != nil {
 		log.Println(err)
@@ -152,7 +148,7 @@ func putDeliveryserviceTmuser(id int, payload []byte, db *sqlx.DB) (interface{},
 // @Router /api/2.0/deliveryservice_tmuser/{id} [delete]
 func delDeliveryserviceTmuser(id int, db *sqlx.DB) (interface{}, error) {
 	arg := DeliveryserviceTmuser{}
-	arg.Links.Deliveryservice.ID = int64(id)
+	arg.Links.DeliveryserviceLink.ID = int64(id)
 	result, err := db.NamedExec("DELETE FROM deliveryservice_tmuser WHERE id=:id", arg)
 	if err != nil {
 		log.Println(err)

@@ -32,9 +32,16 @@ type Type struct {
 	Description null.String `db:"description" json:"description"`
 	UseInTable  null.String `db:"use_in_table" json:"useInTable"`
 	LastUpdated time.Time   `db:"last_updated" json:"lastUpdated"`
-	Links       struct {
-		Self string `db:"self" json:"_self"`
-	} `json:"_links" db:-`
+	Links       TypeLinks   `json:"_links" db:-`
+}
+
+type TypeLinks struct {
+	Self string `db:"self" json:"_self"`
+}
+
+type TypeLink struct {
+	ID  int64  `db:"type" json:"id"`
+	Ref string `db:"type_id_ref" json:"_ref"`
 }
 
 // @Title getTypeById

@@ -26,26 +26,19 @@ import (
 )
 
 type Staticdnsentry struct {
-	Id          int64     `db:"id" json:"id"`
-	Host        string    `db:"host" json:"host"`
-	Address     string    `db:"address" json:"address"`
-	Ttl         int64     `db:"ttl" json:"ttl"`
-	LastUpdated time.Time `db:"last_updated" json:"lastUpdated"`
-	Links       struct {
-		Self string `db:"self" json:"_self"`
-		Type struct {
-			ID  int64  `db:"type" json:"id"`
-			Ref string `db:"type_id_ref" json:"_ref"`
-		} `json:"type" db:-`
-		Deliveryservice struct {
-			ID  int64  `db:"deliveryservice" json:"id"`
-			Ref string `db:"deliveryservice_id_ref" json:"_ref"`
-		} `json:"deliveryservice" db:-`
-		Cachegroup struct {
-			ID  int64  `db:"cachegroup" json:"id"`
-			Ref string `db:"cachegroup_id_ref" json:"_ref"`
-		} `json:"cachegroup" db:-`
-	} `json:"_links" db:-`
+	Id          int64               `db:"id" json:"id"`
+	Host        string              `db:"host" json:"host"`
+	Address     string              `db:"address" json:"address"`
+	Ttl         int64               `db:"ttl" json:"ttl"`
+	LastUpdated time.Time           `db:"last_updated" json:"lastUpdated"`
+	Links       StaticdnsentryLinks `json:"_links" db:-`
+}
+
+type StaticdnsentryLinks struct {
+	Self                string              `db:"self" json:"_self"`
+	TypeLink            TypeLink            `json:"type" db:-`
+	DeliveryserviceLink DeliveryserviceLink `json:"deliveryservice" db:-`
+	CachegroupLink      CachegroupLink      `json:"cachegroup" db:-`
 }
 
 // @Title getStaticdnsentryById

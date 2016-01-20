@@ -31,9 +31,16 @@ type Status struct {
 	Name        string      `db:"name" json:"name"`
 	Description null.String `db:"description" json:"description"`
 	LastUpdated time.Time   `db:"last_updated" json:"lastUpdated"`
-	Links       struct {
-		Self string `db:"self" json:"_self"`
-	} `json:"_links" db:-`
+	Links       StatusLinks `json:"_links" db:-`
+}
+
+type StatusLinks struct {
+	Self string `db:"self" json:"_self"`
+}
+
+type StatusLink struct {
+	ID  int64  `db:"status" json:"id"`
+	Ref string `db:"status_id_ref" json:"_ref"`
 }
 
 // @Title getStatusById

@@ -26,18 +26,14 @@ import (
 )
 
 type ProfileParameter struct {
-	LastUpdated time.Time `db:"last_updated" json:"lastUpdated"`
-	Links       struct {
-		Self    string `db:"self" json:"_self"`
-		Profile struct {
-			ID  int64  `db:"profile" json:"id"`
-			Ref string `db:"profile_id_ref" json:"_ref"`
-		} `json:"profile" db:-`
-		Parameter struct {
-			ID  int64  `db:"parameter" json:"id"`
-			Ref string `db:"parameter_id_ref" json:"_ref"`
-		} `json:"parameter" db:-`
-	} `json:"_links" db:-`
+	LastUpdated time.Time             `db:"last_updated" json:"lastUpdated"`
+	Links       ProfileParameterLinks `json:"_links" db:-`
+}
+
+type ProfileParameterLinks struct {
+	Self          string        `db:"self" json:"_self"`
+	ProfileLink   ProfileLink   `json:"profile" db:-`
+	ParameterLink ParameterLink `json:"parameter" db:-`
 }
 
 // @Title getProfileParameterById
@@ -50,11 +46,11 @@ type ProfileParameter struct {
 func getProfileParameterById(id int, db *sqlx.DB) (interface{}, error) {
 	ret := []ProfileParameter{}
 	arg := ProfileParameter{}
-	arg.Links.Profile.ID = int64(id)
+	arg.Links.ProfileLink.ID = int64(id)
 	queryStr := "select *, concat('" + API_PATH + "profile_parameter/', id) as self "
 	queryStr += ", concat('" + API_PATH + "profile/', profile) as profile_id_ref"
 	queryStr += ", concat('" + API_PATH + "parameter/', parameter) as parameter_id_ref"
-	queryStr += " from profile_parameter where Links.Profile.ID=:Links.Profile.ID"
+	queryStr += " from profile_parameter where Links.ProfileLink.ID=:Links.ProfileLink.ID"
 	nstmt, err := db.PrepareNamed(queryStr)
 	err = nstmt.Select(&ret, arg)
 	if err != nil {
@@ -124,7 +120,7 @@ func postProfileParameter(payload []byte, db *sqlx.DB) (interface{}, error) {
 func putProfileParameter(id int, payload []byte, db *sqlx.DB) (interface{}, error) {
 	var v ProfileParameter
 	err := json.Unmarshal(payload, &v)
-	v.Links.Profile.ID = int64(id) // overwrite the id in the payload
+	v.Links.ProfileLink.ID = int64(id) // overwrite the id in the payload
 	if err != nil {
 		log.Println(err)
 		return nil, err
@@ -134,7 +130,7 @@ func putProfileParameter(id int, payload []byte, db *sqlx.DB) (interface{}, erro
 	sqlString += "profile = :profile"
 	sqlString += ",parameter = :parameter"
 	sqlString += ",last_updated = :last_updated"
-	sqlString += " WHERE Links.Profile.ID=:Links.Profile.ID"
+	sqlString += " WHERE Links.ProfileLink.ID=:Links.ProfileLink.ID"
 	result, err := db.NamedExec(sqlString, v)
 	if err != nil {
 		log.Println(err)
@@ -152,7 +148,7 @@ func putProfileParameter(id int, payload []byte, db *sqlx.DB) (interface{}, erro
 // @Router /api/2.0/profile_parameter/{id} [delete]
 func delProfileParameter(id int, db *sqlx.DB) (interface{}, error) {
 	arg := ProfileParameter{}
-	arg.Links.Profile.ID = int64(id)
+	arg.Links.ProfileLink.ID = int64(id)
 	result, err := db.NamedExec("DELETE FROM profile_parameter WHERE id=:id", arg)
 	if err != nil {
 		log.Println(err)

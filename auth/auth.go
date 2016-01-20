@@ -128,7 +128,7 @@ func GetLoginFunc(db *sqlx.DB) http.HandlerFunc {
 		token := jwt.New(jwt.SigningMethodHS256)
 		// Set some claims
 		token.Claims["userid"] = u.Id
-		token.Claims["role"] = u.Links.Role.ID
+		token.Claims["role"] = u.Links.RoleLink.ID
 		token.Claims["exp"] = time.Now().Add(time.Hour * 72).Unix()
 		// Sign and get the complete encoded token as a string
 		tokenString, err := token.SignedString([]byte("mySigningKey")) // TODO JvD

@@ -88,7 +88,7 @@ func idCol(schemas []ColumnSchema, table string) string {
 			if cs.ColumnName == "id" {
 				return cs.ColumnName
 			} else {
-				return "Links." + formatName(cs.ColumnName) + ".ID"
+				return "Links." + formatName(cs.ColumnName) + "Link.ID"
 			}
 
 		}
@@ -396,17 +396,32 @@ func structString(schemas []ColumnSchema, table string) string {
 			}
 		}
 	}
-	out += "\tLinks struct {\n"
-	out += "\t\tSelf string `db:\"self\" json:\"_self\"`\n"
-	for fk, index := range linkMap {
-		out += "\t\t" + formatName(fk) + " struct { \n"
-		out += "\t\tID  int64  `db:\"" + fk + "\" json:\"" + schemas[index].ColumForeignColumn + "\"`\n"
-		out += "\t\tRef string `db:\"" + schemas[index].ColumnForeignTable + "_" + schemas[index].ColumForeignColumn + "_ref\" json:\"_ref\"`\n"
-		out += "\t\t} `json:\"" + fk + "\" db:-`\n"
-	}
-	out += "\t} `json:\"_links\" db:-`\n"
+	out += "\tLinks " + formatName(table) + "Links `json:\"_links\" db:-`\n"
 	out = out + "}\n\n"
 
+	out += "type " + formatName(table) + "Links struct {\n"
+	out += "\tSelf string `db:\"self\" json:\"_self\"`\n"
+
+	for fk, _ := range linkMap {
+		typeName := formatName(fk)
+		fmt.Println("T:" + typeName)
+		if strings.HasSuffix(typeName, "Cachegroup") {
+			typeName = "Cachegroup"
+			fmt.Println("TTTTTTTTT:" + typeName)
+		}
+		out += "\t\t" + formatName(fk) + "Link " + typeName + "Link `json:\"" + fk + "\" db:-`\n"
+	}
+	out += "} \n\n"
+
+	for index, cs := range schemas {
+		if cs.ColumnForeignTable == table {
+			out += "type " + formatName(table) + "Link struct { \n"
+			out += "\tID  int64  `db:\"" + table + "\" json:\"" + schemas[index].ColumForeignColumn + "\"`\n"
+			out += "\tRef string `db:\"" + schemas[index].ColumnForeignTable + "_" + schemas[index].ColumForeignColumn + "_ref\" json:\"_ref\"`\n"
+			out += "}\n\n"
+			break
+		}
+	}
 	return out
 }
 

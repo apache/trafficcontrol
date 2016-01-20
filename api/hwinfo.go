@@ -26,17 +26,16 @@ import (
 )
 
 type Hwinfo struct {
-	Id          int64     `db:"id" json:"id"`
-	Description string    `db:"description" json:"description"`
-	Val         string    `db:"val" json:"val"`
-	LastUpdated time.Time `db:"last_updated" json:"lastUpdated"`
-	Links       struct {
-		Self     string `db:"self" json:"_self"`
-		Serverid struct {
-			ID  int64  `db:"serverid" json:"id"`
-			Ref string `db:"server_id_ref" json:"_ref"`
-		} `json:"serverid" db:-`
-	} `json:"_links" db:-`
+	Id          int64       `db:"id" json:"id"`
+	Description string      `db:"description" json:"description"`
+	Val         string      `db:"val" json:"val"`
+	LastUpdated time.Time   `db:"last_updated" json:"lastUpdated"`
+	Links       HwinfoLinks `json:"_links" db:-`
+}
+
+type HwinfoLinks struct {
+	Self       string     `db:"self" json:"_self"`
+	ServerLink ServerLink `json:"server" db:-`
 }
 
 // @Title getHwinfoById
@@ -51,7 +50,7 @@ func getHwinfoById(id int, db *sqlx.DB) (interface{}, error) {
 	arg := Hwinfo{}
 	arg.Id = int64(id)
 	queryStr := "select *, concat('" + API_PATH + "hwinfo/', id) as self "
-	queryStr += ", concat('" + API_PATH + "server/', serverid) as server_id_ref"
+	queryStr += ", concat('" + API_PATH + "server/', server) as server_id_ref"
 	queryStr += " from hwinfo where id=:id"
 	nstmt, err := db.PrepareNamed(queryStr)
 	err = nstmt.Select(&ret, arg)
@@ -72,7 +71,7 @@ func getHwinfoById(id int, db *sqlx.DB) (interface{}, error) {
 func getHwinfos(db *sqlx.DB) (interface{}, error) {
 	ret := []Hwinfo{}
 	queryStr := "select *, concat('" + API_PATH + "hwinfo/', id) as self "
-	queryStr += ", concat('" + API_PATH + "server/', serverid) as server_id_ref"
+	queryStr += ", concat('" + API_PATH + "server/', server) as server_id_ref"
 	queryStr += " from hwinfo"
 	err := db.Select(&ret, queryStr)
 	if err != nil {
@@ -96,11 +95,11 @@ func postHwinfo(payload []byte, db *sqlx.DB) (interface{}, error) {
 		log.Println(err)
 	}
 	sqlString := "INSERT INTO hwinfo("
-	sqlString += "serverid"
+	sqlString += "server"
 	sqlString += ",description"
 	sqlString += ",val"
 	sqlString += ") VALUES ("
-	sqlString += ":serverid"
+	sqlString += ":server"
 	sqlString += ",:description"
 	sqlString += ",:val"
 	sqlString += ")"
@@ -130,7 +129,7 @@ func putHwinfo(id int, payload []byte, db *sqlx.DB) (interface{}, error) {
 	}
 	v.LastUpdated = time.Now()
 	sqlString := "UPDATE hwinfo SET "
-	sqlString += "serverid = :serverid"
+	sqlString += "server = :server"
 	sqlString += ",description = :description"
 	sqlString += ",val = :val"
 	sqlString += ",last_updated = :last_updated"

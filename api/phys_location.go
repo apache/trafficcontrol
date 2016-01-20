@@ -27,25 +27,29 @@ import (
 )
 
 type PhysLocation struct {
-	Id          int64       `db:"id" json:"id"`
-	Name        string      `db:"name" json:"name"`
-	ShortName   string      `db:"short_name" json:"shortName"`
-	Address     string      `db:"address" json:"address"`
-	City        string      `db:"city" json:"city"`
-	State       string      `db:"state" json:"state"`
-	Zip         string      `db:"zip" json:"zip"`
-	Poc         null.String `db:"poc" json:"poc"`
-	Phone       null.String `db:"phone" json:"phone"`
-	Email       null.String `db:"email" json:"email"`
-	Comments    null.String `db:"comments" json:"comments"`
-	LastUpdated time.Time   `db:"last_updated" json:"lastUpdated"`
-	Links       struct {
-		Self   string `db:"self" json:"_self"`
-		Region struct {
-			ID  int64  `db:"region" json:"id"`
-			Ref string `db:"region_id_ref" json:"_ref"`
-		} `json:"region" db:-`
-	} `json:"_links" db:-`
+	Id          int64             `db:"id" json:"id"`
+	Name        string            `db:"name" json:"name"`
+	ShortName   string            `db:"short_name" json:"shortName"`
+	Address     string            `db:"address" json:"address"`
+	City        string            `db:"city" json:"city"`
+	State       string            `db:"state" json:"state"`
+	Zip         string            `db:"zip" json:"zip"`
+	Poc         null.String       `db:"poc" json:"poc"`
+	Phone       null.String       `db:"phone" json:"phone"`
+	Email       null.String       `db:"email" json:"email"`
+	Comments    null.String       `db:"comments" json:"comments"`
+	LastUpdated time.Time         `db:"last_updated" json:"lastUpdated"`
+	Links       PhysLocationLinks `json:"_links" db:-`
+}
+
+type PhysLocationLinks struct {
+	Self       string     `db:"self" json:"_self"`
+	RegionLink RegionLink `json:"region" db:-`
+}
+
+type PhysLocationLink struct {
+	ID  int64  `db:"phys_location" json:"id"`
+	Ref string `db:"phys_location_id_ref" json:"_ref"`
 }
 
 // @Title getPhysLocationById
