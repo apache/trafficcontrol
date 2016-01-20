@@ -27,14 +27,21 @@ import (
 )
 
 type JobAgent struct {
-	Id          int64       `db:"id" json:"id"`
-	Name        null.String `db:"name" json:"name"`
-	Description null.String `db:"description" json:"description"`
-	Active      int64       `db:"active" json:"active"`
-	LastUpdated time.Time   `db:"last_updated" json:"lastUpdated"`
-	Links       struct {
-		Self string `db:"self" json:"_self"`
-	} `json:"_links" db:-`
+	Id          int64         `db:"id" json:"id"`
+	Name        null.String   `db:"name" json:"name"`
+	Description null.String   `db:"description" json:"description"`
+	Active      int64         `db:"active" json:"active"`
+	LastUpdated time.Time     `db:"last_updated" json:"lastUpdated"`
+	Links       JobAgentLinks `json:"_links" db:-`
+}
+
+type JobAgentLinks struct {
+	Self string `db:"self" json:"_self"`
+}
+
+type JobAgentLink struct {
+	ID  int64  `db:"job_agent" json:"id"`
+	Ref string `db:"job_agent_id_ref" json:"_ref"`
 }
 
 // @Title getJobAgentById

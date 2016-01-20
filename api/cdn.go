@@ -31,9 +31,16 @@ type Cdn struct {
 	Name          null.String `db:"name" json:"name"`
 	LastUpdated   time.Time   `db:"last_updated" json:"lastUpdated"`
 	DnssecEnabled null.Int    `db:"dnssec_enabled" json:"dnssecEnabled"`
-	Links         struct {
-		Self string `db:"self" json:"_self"`
-	} `json:"_links" db:-`
+	Links         CdnLinks    `json:"_links" db:-`
+}
+
+type CdnLinks struct {
+	Self string `db:"self" json:"_self"`
+}
+
+type CdnLink struct {
+	ID  int64  `db:"cdn" json:"id"`
+	Ref string `db:"cdn_id_ref" json:"_ref"`
 }
 
 // @Title getCdnById

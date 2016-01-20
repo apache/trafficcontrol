@@ -26,18 +26,14 @@ import (
 )
 
 type FederationDeliveryservice struct {
-	LastUpdated time.Time `db:"last_updated" json:"lastUpdated"`
-	Links       struct {
-		Self       string `db:"self" json:"_self"`
-		Federation struct {
-			ID  int64  `db:"federation" json:"id"`
-			Ref string `db:"federation_id_ref" json:"_ref"`
-		} `json:"federation" db:-`
-		Deliveryservice struct {
-			ID  int64  `db:"deliveryservice" json:"id"`
-			Ref string `db:"deliveryservice_id_ref" json:"_ref"`
-		} `json:"deliveryservice" db:-`
-	} `json:"_links" db:-`
+	LastUpdated time.Time                      `db:"last_updated" json:"lastUpdated"`
+	Links       FederationDeliveryserviceLinks `json:"_links" db:-`
+}
+
+type FederationDeliveryserviceLinks struct {
+	Self                string              `db:"self" json:"_self"`
+	FederationLink      FederationLink      `json:"federation" db:-`
+	DeliveryserviceLink DeliveryserviceLink `json:"deliveryservice" db:-`
 }
 
 // @Title getFederationDeliveryserviceById
@@ -50,11 +46,11 @@ type FederationDeliveryservice struct {
 func getFederationDeliveryserviceById(id int, db *sqlx.DB) (interface{}, error) {
 	ret := []FederationDeliveryservice{}
 	arg := FederationDeliveryservice{}
-	arg.Links.Federation.ID = int64(id)
+	arg.Links.FederationLink.ID = int64(id)
 	queryStr := "select *, concat('" + API_PATH + "federation_deliveryservice/', id) as self "
 	queryStr += ", concat('" + API_PATH + "federation/', federation) as federation_id_ref"
 	queryStr += ", concat('" + API_PATH + "deliveryservice/', deliveryservice) as deliveryservice_id_ref"
-	queryStr += " from federation_deliveryservice where Links.Federation.ID=:Links.Federation.ID"
+	queryStr += " from federation_deliveryservice where Links.FederationLink.ID=:Links.FederationLink.ID"
 	nstmt, err := db.PrepareNamed(queryStr)
 	err = nstmt.Select(&ret, arg)
 	if err != nil {
@@ -124,7 +120,7 @@ func postFederationDeliveryservice(payload []byte, db *sqlx.DB) (interface{}, er
 func putFederationDeliveryservice(id int, payload []byte, db *sqlx.DB) (interface{}, error) {
 	var v FederationDeliveryservice
 	err := json.Unmarshal(payload, &v)
-	v.Links.Federation.ID = int64(id) // overwrite the id in the payload
+	v.Links.FederationLink.ID = int64(id) // overwrite the id in the payload
 	if err != nil {
 		log.Println(err)
 		return nil, err
@@ -134,7 +130,7 @@ func putFederationDeliveryservice(id int, payload []byte, db *sqlx.DB) (interfac
 	sqlString += "federation = :federation"
 	sqlString += ",deliveryservice = :deliveryservice"
 	sqlString += ",last_updated = :last_updated"
-	sqlString += " WHERE Links.Federation.ID=:Links.Federation.ID"
+	sqlString += " WHERE Links.FederationLink.ID=:Links.FederationLink.ID"
 	result, err := db.NamedExec(sqlString, v)
 	if err != nil {
 		log.Println(err)
@@ -152,7 +148,7 @@ func putFederationDeliveryservice(id int, payload []byte, db *sqlx.DB) (interfac
 // @Router /api/2.0/federation_deliveryservice/{id} [delete]
 func delFederationDeliveryservice(id int, db *sqlx.DB) (interface{}, error) {
 	arg := FederationDeliveryservice{}
-	arg.Links.Federation.ID = int64(id)
+	arg.Links.FederationLink.ID = int64(id)
 	result, err := db.NamedExec("DELETE FROM federation_deliveryservice WHERE id=:id", arg)
 	if err != nil {
 		log.Println(err)

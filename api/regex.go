@@ -26,16 +26,20 @@ import (
 )
 
 type Regex struct {
-	Id          int64     `db:"id" json:"id"`
-	Pattern     string    `db:"pattern" json:"pattern"`
-	LastUpdated time.Time `db:"last_updated" json:"lastUpdated"`
-	Links       struct {
-		Self string `db:"self" json:"_self"`
-		Type struct {
-			ID  int64  `db:"type" json:"id"`
-			Ref string `db:"type_id_ref" json:"_ref"`
-		} `json:"type" db:-`
-	} `json:"_links" db:-`
+	Id          int64      `db:"id" json:"id"`
+	Pattern     string     `db:"pattern" json:"pattern"`
+	LastUpdated time.Time  `db:"last_updated" json:"lastUpdated"`
+	Links       RegexLinks `json:"_links" db:-`
+}
+
+type RegexLinks struct {
+	Self     string   `db:"self" json:"_self"`
+	TypeLink TypeLink `json:"type" db:-`
+}
+
+type RegexLink struct {
+	ID  int64  `db:"regex" json:"id"`
+	Ref string `db:"regex_id_ref" json:"_ref"`
 }
 
 // @Title getRegexById

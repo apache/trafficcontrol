@@ -26,16 +26,18 @@ import (
 )
 
 type StatsSummary struct {
-	Id                  int64     `db:"id" json:"id"`
-	CdnName             string    `db:"cdn_name" json:"cdnName"`
-	DeliveryserviceName string    `db:"deliveryservice_name" json:"deliveryserviceName"`
-	StatName            string    `db:"stat_name" json:"statName"`
-	StatValue           float64   `db:"stat_value" json:"statValue"`
-	SummaryTime         time.Time `db:"summary_time" json:"summaryTime"`
-	StatDate            time.Time `db:"stat_date" json:"statDate"`
-	Links               struct {
-		Self string `db:"self" json:"_self"`
-	} `json:"_links" db:-`
+	Id                  int64             `db:"id" json:"id"`
+	CdnName             string            `db:"cdn_name" json:"cdnName"`
+	DeliveryserviceName string            `db:"deliveryservice_name" json:"deliveryserviceName"`
+	StatName            string            `db:"stat_name" json:"statName"`
+	StatValue           float64           `db:"stat_value" json:"statValue"`
+	SummaryTime         time.Time         `db:"summary_time" json:"summaryTime"`
+	StatDate            time.Time         `db:"stat_date" json:"statDate"`
+	Links               StatsSummaryLinks `json:"_links" db:-`
+}
+
+type StatsSummaryLinks struct {
+	Self string `db:"self" json:"_self"`
 }
 
 // @Title getStatsSummaryById

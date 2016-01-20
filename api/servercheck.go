@@ -27,46 +27,45 @@ import (
 )
 
 type Servercheck struct {
-	Id          int64     `db:"id" json:"id"`
-	Aa          null.Int  `db:"aa" json:"aa"`
-	Ab          null.Int  `db:"ab" json:"ab"`
-	Ac          null.Int  `db:"ac" json:"ac"`
-	Ad          null.Int  `db:"ad" json:"ad"`
-	Ae          null.Int  `db:"ae" json:"ae"`
-	Af          null.Int  `db:"af" json:"af"`
-	Ag          null.Int  `db:"ag" json:"ag"`
-	Ah          null.Int  `db:"ah" json:"ah"`
-	Ai          null.Int  `db:"ai" json:"ai"`
-	Aj          null.Int  `db:"aj" json:"aj"`
-	Ak          null.Int  `db:"ak" json:"ak"`
-	Al          null.Int  `db:"al" json:"al"`
-	Am          null.Int  `db:"am" json:"am"`
-	An          null.Int  `db:"an" json:"an"`
-	Ao          null.Int  `db:"ao" json:"ao"`
-	Ap          null.Int  `db:"ap" json:"ap"`
-	Aq          null.Int  `db:"aq" json:"aq"`
-	Ar          null.Int  `db:"ar" json:"ar"`
-	As          null.Int  `db:"as" json:"as"`
-	At          null.Int  `db:"at" json:"at"`
-	Au          null.Int  `db:"au" json:"au"`
-	Av          null.Int  `db:"av" json:"av"`
-	Aw          null.Int  `db:"aw" json:"aw"`
-	Ax          null.Int  `db:"ax" json:"ax"`
-	Ay          null.Int  `db:"ay" json:"ay"`
-	Az          null.Int  `db:"az" json:"az"`
-	Ba          null.Int  `db:"ba" json:"ba"`
-	Bb          null.Int  `db:"bb" json:"bb"`
-	Bc          null.Int  `db:"bc" json:"bc"`
-	Bd          null.Int  `db:"bd" json:"bd"`
-	Be          null.Int  `db:"be" json:"be"`
-	LastUpdated time.Time `db:"last_updated" json:"lastUpdated"`
-	Links       struct {
-		Self   string `db:"self" json:"_self"`
-		Server struct {
-			ID  int64  `db:"server" json:"id"`
-			Ref string `db:"server_id_ref" json:"_ref"`
-		} `json:"server" db:-`
-	} `json:"_links" db:-`
+	Id          int64            `db:"id" json:"id"`
+	Aa          null.Int         `db:"aa" json:"aa"`
+	Ab          null.Int         `db:"ab" json:"ab"`
+	Ac          null.Int         `db:"ac" json:"ac"`
+	Ad          null.Int         `db:"ad" json:"ad"`
+	Ae          null.Int         `db:"ae" json:"ae"`
+	Af          null.Int         `db:"af" json:"af"`
+	Ag          null.Int         `db:"ag" json:"ag"`
+	Ah          null.Int         `db:"ah" json:"ah"`
+	Ai          null.Int         `db:"ai" json:"ai"`
+	Aj          null.Int         `db:"aj" json:"aj"`
+	Ak          null.Int         `db:"ak" json:"ak"`
+	Al          null.Int         `db:"al" json:"al"`
+	Am          null.Int         `db:"am" json:"am"`
+	An          null.Int         `db:"an" json:"an"`
+	Ao          null.Int         `db:"ao" json:"ao"`
+	Ap          null.Int         `db:"ap" json:"ap"`
+	Aq          null.Int         `db:"aq" json:"aq"`
+	Ar          null.Int         `db:"ar" json:"ar"`
+	As          null.Int         `db:"as" json:"as"`
+	At          null.Int         `db:"at" json:"at"`
+	Au          null.Int         `db:"au" json:"au"`
+	Av          null.Int         `db:"av" json:"av"`
+	Aw          null.Int         `db:"aw" json:"aw"`
+	Ax          null.Int         `db:"ax" json:"ax"`
+	Ay          null.Int         `db:"ay" json:"ay"`
+	Az          null.Int         `db:"az" json:"az"`
+	Ba          null.Int         `db:"ba" json:"ba"`
+	Bb          null.Int         `db:"bb" json:"bb"`
+	Bc          null.Int         `db:"bc" json:"bc"`
+	Bd          null.Int         `db:"bd" json:"bd"`
+	Be          null.Int         `db:"be" json:"be"`
+	LastUpdated time.Time        `db:"last_updated" json:"lastUpdated"`
+	Links       ServercheckLinks `json:"_links" db:-`
+}
+
+type ServercheckLinks struct {
+	Self       string     `db:"self" json:"_self"`
+	ServerLink ServerLink `json:"server" db:-`
 }
 
 // @Title getServercheckById

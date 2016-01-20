@@ -27,24 +27,23 @@ import (
 )
 
 type ToExtension struct {
-	Id                    int64       `db:"id" json:"id"`
-	Name                  string      `db:"name" json:"name"`
-	Version               string      `db:"version" json:"version"`
-	InfoUrl               string      `db:"info_url" json:"infoUrl"`
-	ScriptFile            string      `db:"script_file" json:"scriptFile"`
-	Isactive              int64       `db:"isactive" json:"isactive"`
-	AdditionalConfigJson  null.String `db:"additional_config_json" json:"additionalConfigJson"`
-	Description           null.String `db:"description" json:"description"`
-	ServercheckShortName  null.String `db:"servercheck_short_name" json:"servercheckShortName"`
-	ServercheckColumnName null.String `db:"servercheck_column_name" json:"servercheckColumnName"`
-	LastUpdated           time.Time   `db:"last_updated" json:"lastUpdated"`
-	Links                 struct {
-		Self string `db:"self" json:"_self"`
-		Type struct {
-			ID  int64  `db:"type" json:"id"`
-			Ref string `db:"type_id_ref" json:"_ref"`
-		} `json:"type" db:-`
-	} `json:"_links" db:-`
+	Id                    int64            `db:"id" json:"id"`
+	Name                  string           `db:"name" json:"name"`
+	Version               string           `db:"version" json:"version"`
+	InfoUrl               string           `db:"info_url" json:"infoUrl"`
+	ScriptFile            string           `db:"script_file" json:"scriptFile"`
+	Isactive              int64            `db:"isactive" json:"isactive"`
+	AdditionalConfigJson  null.String      `db:"additional_config_json" json:"additionalConfigJson"`
+	Description           null.String      `db:"description" json:"description"`
+	ServercheckShortName  null.String      `db:"servercheck_short_name" json:"servercheckShortName"`
+	ServercheckColumnName null.String      `db:"servercheck_column_name" json:"servercheckColumnName"`
+	LastUpdated           time.Time        `db:"last_updated" json:"lastUpdated"`
+	Links                 ToExtensionLinks `json:"_links" db:-`
+}
+
+type ToExtensionLinks struct {
+	Self     string   `db:"self" json:"_self"`
+	TypeLink TypeLink `json:"type" db:-`
 }
 
 // @Title getToExtensionById

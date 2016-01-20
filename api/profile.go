@@ -27,13 +27,20 @@ import (
 )
 
 type Profile struct {
-	Id          int64       `db:"id" json:"id"`
-	Name        string      `db:"name" json:"name"`
-	Description null.String `db:"description" json:"description"`
-	LastUpdated time.Time   `db:"last_updated" json:"lastUpdated"`
-	Links       struct {
-		Self string `db:"self" json:"_self"`
-	} `json:"_links" db:-`
+	Id          int64        `db:"id" json:"id"`
+	Name        string       `db:"name" json:"name"`
+	Description null.String  `db:"description" json:"description"`
+	LastUpdated time.Time    `db:"last_updated" json:"lastUpdated"`
+	Links       ProfileLinks `json:"_links" db:-`
+}
+
+type ProfileLinks struct {
+	Self string `db:"self" json:"_self"`
+}
+
+type ProfileLink struct {
+	ID  int64  `db:"profile" json:"id"`
+	Ref string `db:"profile_id_ref" json:"_ref"`
 }
 
 // @Title getProfileById

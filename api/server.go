@@ -53,33 +53,22 @@ type Server struct {
 	RouterHostName null.String `db:"router_host_name" json:"routerHostName"`
 	RouterPortName null.String `db:"router_port_name" json:"routerPortName"`
 	LastUpdated    time.Time   `db:"last_updated" json:"lastUpdated"`
-	Links          struct {
-		Self  string `db:"self" json:"_self"`
-		CdnId struct {
-			ID  int64  `db:"cdn_id" json:"id"`
-			Ref string `db:"cdn_id_ref" json:"_ref"`
-		} `json:"cdn_id" db:-`
-		PhysLocation struct {
-			ID  int64  `db:"phys_location" json:"id"`
-			Ref string `db:"phys_location_id_ref" json:"_ref"`
-		} `json:"phys_location" db:-`
-		Cachegroup struct {
-			ID  int64  `db:"cachegroup" json:"id"`
-			Ref string `db:"cachegroup_id_ref" json:"_ref"`
-		} `json:"cachegroup" db:-`
-		Type struct {
-			ID  int64  `db:"type" json:"id"`
-			Ref string `db:"type_id_ref" json:"_ref"`
-		} `json:"type" db:-`
-		Status struct {
-			ID  int64  `db:"status" json:"id"`
-			Ref string `db:"status_id_ref" json:"_ref"`
-		} `json:"status" db:-`
-		Profile struct {
-			ID  int64  `db:"profile" json:"id"`
-			Ref string `db:"profile_id_ref" json:"_ref"`
-		} `json:"profile" db:-`
-	} `json:"_links" db:-`
+	Links          ServerLinks `json:"_links" db:-`
+}
+
+type ServerLinks struct {
+	Self             string           `db:"self" json:"_self"`
+	CdnLink          CdnLink          `json:"cdn" db:-`
+	PhysLocationLink PhysLocationLink `json:"phys_location" db:-`
+	CachegroupLink   CachegroupLink   `json:"cachegroup" db:-`
+	TypeLink         TypeLink         `json:"type" db:-`
+	StatusLink       StatusLink       `json:"status" db:-`
+	ProfileLink      ProfileLink      `json:"profile" db:-`
+}
+
+type ServerLink struct {
+	ID  int64  `db:"server" json:"id"`
+	Ref string `db:"server_id_ref" json:"_ref"`
 }
 
 // @Title getServerById
@@ -99,7 +88,7 @@ func getServerById(id int, db *sqlx.DB) (interface{}, error) {
 	queryStr += ", concat('" + API_PATH + "type/', type) as type_id_ref"
 	queryStr += ", concat('" + API_PATH + "status/', status) as status_id_ref"
 	queryStr += ", concat('" + API_PATH + "profile/', profile) as profile_id_ref"
-	queryStr += ", concat('" + API_PATH + "cdn/', cdn_id) as cdn_id_ref"
+	queryStr += ", concat('" + API_PATH + "cdn/', cdn) as cdn_id_ref"
 	queryStr += " from server where id=:id"
 	nstmt, err := db.PrepareNamed(queryStr)
 	err = nstmt.Select(&ret, arg)
@@ -125,7 +114,7 @@ func getServers(db *sqlx.DB) (interface{}, error) {
 	queryStr += ", concat('" + API_PATH + "type/', type) as type_id_ref"
 	queryStr += ", concat('" + API_PATH + "status/', status) as status_id_ref"
 	queryStr += ", concat('" + API_PATH + "profile/', profile) as profile_id_ref"
-	queryStr += ", concat('" + API_PATH + "cdn/', cdn_id) as cdn_id_ref"
+	queryStr += ", concat('" + API_PATH + "cdn/', cdn) as cdn_id_ref"
 	queryStr += " from server"
 	err := db.Select(&ret, queryStr)
 	if err != nil {
@@ -168,7 +157,7 @@ func postServer(payload []byte, db *sqlx.DB) (interface{}, error) {
 	sqlString += ",status"
 	sqlString += ",upd_pending"
 	sqlString += ",profile"
-	sqlString += ",cdn_id"
+	sqlString += ",cdn"
 	sqlString += ",mgmt_ip_address"
 	sqlString += ",mgmt_ip_netmask"
 	sqlString += ",mgmt_ip_gateway"
@@ -199,7 +188,7 @@ func postServer(payload []byte, db *sqlx.DB) (interface{}, error) {
 	sqlString += ",:status"
 	sqlString += ",:upd_pending"
 	sqlString += ",:profile"
-	sqlString += ",:cdn_id"
+	sqlString += ",:cdn"
 	sqlString += ",:mgmt_ip_address"
 	sqlString += ",:mgmt_ip_netmask"
 	sqlString += ",:mgmt_ip_gateway"
@@ -256,7 +245,7 @@ func putServer(id int, payload []byte, db *sqlx.DB) (interface{}, error) {
 	sqlString += ",status = :status"
 	sqlString += ",upd_pending = :upd_pending"
 	sqlString += ",profile = :profile"
-	sqlString += ",cdn_id = :cdn_id"
+	sqlString += ",cdn = :cdn"
 	sqlString += ",mgmt_ip_address = :mgmt_ip_address"
 	sqlString += ",mgmt_ip_netmask = :mgmt_ip_netmask"
 	sqlString += ",mgmt_ip_gateway = :mgmt_ip_gateway"

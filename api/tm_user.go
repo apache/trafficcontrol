@@ -48,13 +48,17 @@ type TmUser struct {
 	LocalUser          int64       `db:"local_user" json:"localUser"`
 	Token              null.String `db:"token" json:"token"`
 	RegistrationSent   time.Time   `db:"registration_sent" json:"registrationSent"`
-	Links              struct {
-		Self string `db:"self" json:"_self"`
-		Role struct {
-			ID  int64  `db:"role" json:"id"`
-			Ref string `db:"role_id_ref" json:"_ref"`
-		} `json:"role" db:-`
-	} `json:"_links" db:-`
+	Links              TmUserLinks `json:"_links" db:-`
+}
+
+type TmUserLinks struct {
+	Self     string   `db:"self" json:"_self"`
+	RoleLink RoleLink `json:"role" db:-`
+}
+
+type TmUserLink struct {
+	ID  int64  `db:"tm_user" json:"id"`
+	Ref string `db:"tm_user_id_ref" json:"_ref"`
 }
 
 // @Title getTmUserById

@@ -26,18 +26,14 @@ import (
 )
 
 type DeliveryserviceServer struct {
-	LastUpdated time.Time `db:"last_updated" json:"lastUpdated"`
-	Links       struct {
-		Self            string `db:"self" json:"_self"`
-		Deliveryservice struct {
-			ID  int64  `db:"deliveryservice" json:"id"`
-			Ref string `db:"deliveryservice_id_ref" json:"_ref"`
-		} `json:"deliveryservice" db:-`
-		Server struct {
-			ID  int64  `db:"server" json:"id"`
-			Ref string `db:"server_id_ref" json:"_ref"`
-		} `json:"server" db:-`
-	} `json:"_links" db:-`
+	LastUpdated time.Time                  `db:"last_updated" json:"lastUpdated"`
+	Links       DeliveryserviceServerLinks `json:"_links" db:-`
+}
+
+type DeliveryserviceServerLinks struct {
+	Self                string              `db:"self" json:"_self"`
+	ServerLink          ServerLink          `json:"server" db:-`
+	DeliveryserviceLink DeliveryserviceLink `json:"deliveryservice" db:-`
 }
 
 // @Title getDeliveryserviceServerById
@@ -50,11 +46,11 @@ type DeliveryserviceServer struct {
 func getDeliveryserviceServerById(id int, db *sqlx.DB) (interface{}, error) {
 	ret := []DeliveryserviceServer{}
 	arg := DeliveryserviceServer{}
-	arg.Links.Deliveryservice.ID = int64(id)
+	arg.Links.DeliveryserviceLink.ID = int64(id)
 	queryStr := "select *, concat('" + API_PATH + "deliveryservice_server/', id) as self "
 	queryStr += ", concat('" + API_PATH + "deliveryservice/', deliveryservice) as deliveryservice_id_ref"
 	queryStr += ", concat('" + API_PATH + "server/', server) as server_id_ref"
-	queryStr += " from deliveryservice_server where Links.Deliveryservice.ID=:Links.Deliveryservice.ID"
+	queryStr += " from deliveryservice_server where Links.DeliveryserviceLink.ID=:Links.DeliveryserviceLink.ID"
 	nstmt, err := db.PrepareNamed(queryStr)
 	err = nstmt.Select(&ret, arg)
 	if err != nil {
@@ -124,7 +120,7 @@ func postDeliveryserviceServer(payload []byte, db *sqlx.DB) (interface{}, error)
 func putDeliveryserviceServer(id int, payload []byte, db *sqlx.DB) (interface{}, error) {
 	var v DeliveryserviceServer
 	err := json.Unmarshal(payload, &v)
-	v.Links.Deliveryservice.ID = int64(id) // overwrite the id in the payload
+	v.Links.DeliveryserviceLink.ID = int64(id) // overwrite the id in the payload
 	if err != nil {
 		log.Println(err)
 		return nil, err
@@ -134,7 +130,7 @@ func putDeliveryserviceServer(id int, payload []byte, db *sqlx.DB) (interface{},
 	sqlString += "deliveryservice = :deliveryservice"
 	sqlString += ",server = :server"
 	sqlString += ",last_updated = :last_updated"
-	sqlString += " WHERE Links.Deliveryservice.ID=:Links.Deliveryservice.ID"
+	sqlString += " WHERE Links.DeliveryserviceLink.ID=:Links.DeliveryserviceLink.ID"
 	result, err := db.NamedExec(sqlString, v)
 	if err != nil {
 		log.Println(err)
@@ -152,7 +148,7 @@ func putDeliveryserviceServer(id int, payload []byte, db *sqlx.DB) (interface{},
 // @Router /api/2.0/deliveryservice_server/{id} [delete]
 func delDeliveryserviceServer(id int, db *sqlx.DB) (interface{}, error) {
 	arg := DeliveryserviceServer{}
-	arg.Links.Deliveryservice.ID = int64(id)
+	arg.Links.DeliveryserviceLink.ID = int64(id)
 	result, err := db.NamedExec("DELETE FROM deliveryservice_server WHERE id=:id", arg)
 	if err != nil {
 		log.Println(err)

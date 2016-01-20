@@ -26,18 +26,14 @@ import (
 )
 
 type FederationFederationResolver struct {
-	LastUpdated time.Time `db:"last_updated" json:"lastUpdated"`
-	Links       struct {
-		Self       string `db:"self" json:"_self"`
-		Federation struct {
-			ID  int64  `db:"federation" json:"id"`
-			Ref string `db:"federation_id_ref" json:"_ref"`
-		} `json:"federation" db:-`
-		FederationResolver struct {
-			ID  int64  `db:"federation_resolver" json:"id"`
-			Ref string `db:"federation_resolver_id_ref" json:"_ref"`
-		} `json:"federation_resolver" db:-`
-	} `json:"_links" db:-`
+	LastUpdated time.Time                         `db:"last_updated" json:"lastUpdated"`
+	Links       FederationFederationResolverLinks `json:"_links" db:-`
+}
+
+type FederationFederationResolverLinks struct {
+	Self                   string                 `db:"self" json:"_self"`
+	FederationResolverLink FederationResolverLink `json:"federation_resolver" db:-`
+	FederationLink         FederationLink         `json:"federation" db:-`
 }
 
 // @Title getFederationFederationResolverById
@@ -50,11 +46,11 @@ type FederationFederationResolver struct {
 func getFederationFederationResolverById(id int, db *sqlx.DB) (interface{}, error) {
 	ret := []FederationFederationResolver{}
 	arg := FederationFederationResolver{}
-	arg.Links.Federation.ID = int64(id)
+	arg.Links.FederationLink.ID = int64(id)
 	queryStr := "select *, concat('" + API_PATH + "federation_federation_resolver/', id) as self "
 	queryStr += ", concat('" + API_PATH + "federation/', federation) as federation_id_ref"
 	queryStr += ", concat('" + API_PATH + "federation_resolver/', federation_resolver) as federation_resolver_id_ref"
-	queryStr += " from federation_federation_resolver where Links.Federation.ID=:Links.Federation.ID"
+	queryStr += " from federation_federation_resolver where Links.FederationLink.ID=:Links.FederationLink.ID"
 	nstmt, err := db.PrepareNamed(queryStr)
 	err = nstmt.Select(&ret, arg)
 	if err != nil {
@@ -124,7 +120,7 @@ func postFederationFederationResolver(payload []byte, db *sqlx.DB) (interface{},
 func putFederationFederationResolver(id int, payload []byte, db *sqlx.DB) (interface{}, error) {
 	var v FederationFederationResolver
 	err := json.Unmarshal(payload, &v)
-	v.Links.Federation.ID = int64(id) // overwrite the id in the payload
+	v.Links.FederationLink.ID = int64(id) // overwrite the id in the payload
 	if err != nil {
 		log.Println(err)
 		return nil, err
@@ -134,7 +130,7 @@ func putFederationFederationResolver(id int, payload []byte, db *sqlx.DB) (inter
 	sqlString += "federation = :federation"
 	sqlString += ",federation_resolver = :federation_resolver"
 	sqlString += ",last_updated = :last_updated"
-	sqlString += " WHERE Links.Federation.ID=:Links.Federation.ID"
+	sqlString += " WHERE Links.FederationLink.ID=:Links.FederationLink.ID"
 	result, err := db.NamedExec(sqlString, v)
 	if err != nil {
 		log.Println(err)
@@ -152,7 +148,7 @@ func putFederationFederationResolver(id int, payload []byte, db *sqlx.DB) (inter
 // @Router /api/2.0/federation_federation_resolver/{id} [delete]
 func delFederationFederationResolver(id int, db *sqlx.DB) (interface{}, error) {
 	arg := FederationFederationResolver{}
-	arg.Links.Federation.ID = int64(id)
+	arg.Links.FederationLink.ID = int64(id)
 	result, err := db.NamedExec("DELETE FROM federation_federation_resolver WHERE id=:id", arg)
 	if err != nil {
 		log.Println(err)

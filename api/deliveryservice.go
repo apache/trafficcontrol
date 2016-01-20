@@ -27,61 +27,59 @@ import (
 )
 
 type Deliveryservice struct {
-	Id                   int64       `db:"id" json:"id"`
-	XmlId                string      `db:"xml_id" json:"xmlId"`
-	Active               int64       `db:"active" json:"active"`
-	Dscp                 int64       `db:"dscp" json:"dscp"`
-	Signed               null.Int    `db:"signed" json:"signed"`
-	QstringIgnore        null.Int    `db:"qstring_ignore" json:"qstringIgnore"`
-	GeoLimit             null.Int    `db:"geo_limit" json:"geoLimit"`
-	HttpBypassFqdn       null.String `db:"http_bypass_fqdn" json:"httpBypassFqdn"`
-	DnsBypassIp          null.String `db:"dns_bypass_ip" json:"dnsBypassIp"`
-	DnsBypassIp6         null.String `db:"dns_bypass_ip6" json:"dnsBypassIp6"`
-	DnsBypassTtl         null.Int    `db:"dns_bypass_ttl" json:"dnsBypassTtl"`
-	OrgServerFqdn        null.String `db:"org_server_fqdn" json:"orgServerFqdn"`
-	CcrDnsTtl            null.Int    `db:"ccr_dns_ttl" json:"ccrDnsTtl"`
-	GlobalMaxMbps        null.Int    `db:"global_max_mbps" json:"globalMaxMbps"`
-	GlobalMaxTps         null.Int    `db:"global_max_tps" json:"globalMaxTps"`
-	LongDesc             null.String `db:"long_desc" json:"longDesc"`
-	LongDesc1            null.String `db:"long_desc_1" json:"longDesc1"`
-	LongDesc2            null.String `db:"long_desc_2" json:"longDesc2"`
-	MaxDnsAnswers        null.Int    `db:"max_dns_answers" json:"maxDnsAnswers"`
-	InfoUrl              null.String `db:"info_url" json:"infoUrl"`
-	MissLat              null.Float  `db:"miss_lat" json:"missLat"`
-	MissLong             null.Float  `db:"miss_long" json:"missLong"`
-	CheckPath            null.String `db:"check_path" json:"checkPath"`
-	LastUpdated          time.Time   `db:"last_updated" json:"lastUpdated"`
-	Protocol             null.Int    `db:"protocol" json:"protocol"`
-	SslKeyVersion        null.Int    `db:"ssl_key_version" json:"sslKeyVersion"`
-	Ipv6RoutingEnabled   null.Int    `db:"ipv6_routing_enabled" json:"ipv6RoutingEnabled"`
-	RangeRequestHandling null.Int    `db:"range_request_handling" json:"rangeRequestHandling"`
-	EdgeHeaderRewrite    null.String `db:"edge_header_rewrite" json:"edgeHeaderRewrite"`
-	OriginShield         null.String `db:"origin_shield" json:"originShield"`
-	MidHeaderRewrite     null.String `db:"mid_header_rewrite" json:"midHeaderRewrite"`
-	RegexRemap           null.String `db:"regex_remap" json:"regexRemap"`
-	Cacheurl             null.String `db:"cacheurl" json:"cacheurl"`
-	RemapText            null.String `db:"remap_text" json:"remapText"`
-	MultiSiteOrigin      null.Int    `db:"multi_site_origin" json:"multiSiteOrigin"`
-	DisplayName          string      `db:"display_name" json:"displayName"`
-	TrResponseHeaders    null.String `db:"tr_response_headers" json:"trResponseHeaders"`
-	InitialDispersion    null.Int    `db:"initial_dispersion" json:"initialDispersion"`
-	DnsBypassCname       null.String `db:"dns_bypass_cname" json:"dnsBypassCname"`
-	TrRequestHeaders     null.String `db:"tr_request_headers" json:"trRequestHeaders"`
-	Links                struct {
-		Self  string `db:"self" json:"_self"`
-		CdnId struct {
-			ID  int64  `db:"cdn_id" json:"id"`
-			Ref string `db:"cdn_id_ref" json:"_ref"`
-		} `json:"cdn_id" db:-`
-		Type struct {
-			ID  int64  `db:"type" json:"id"`
-			Ref string `db:"type_id_ref" json:"_ref"`
-		} `json:"type" db:-`
-		Profile struct {
-			ID  int64  `db:"profile" json:"id"`
-			Ref string `db:"profile_id_ref" json:"_ref"`
-		} `json:"profile" db:-`
-	} `json:"_links" db:-`
+	Id                   int64                `db:"id" json:"id"`
+	XmlId                string               `db:"xml_id" json:"xmlId"`
+	Active               int64                `db:"active" json:"active"`
+	Dscp                 int64                `db:"dscp" json:"dscp"`
+	Signed               null.Int             `db:"signed" json:"signed"`
+	QstringIgnore        null.Int             `db:"qstring_ignore" json:"qstringIgnore"`
+	GeoLimit             null.Int             `db:"geo_limit" json:"geoLimit"`
+	HttpBypassFqdn       null.String          `db:"http_bypass_fqdn" json:"httpBypassFqdn"`
+	DnsBypassIp          null.String          `db:"dns_bypass_ip" json:"dnsBypassIp"`
+	DnsBypassIp6         null.String          `db:"dns_bypass_ip6" json:"dnsBypassIp6"`
+	DnsBypassTtl         null.Int             `db:"dns_bypass_ttl" json:"dnsBypassTtl"`
+	OrgServerFqdn        null.String          `db:"org_server_fqdn" json:"orgServerFqdn"`
+	CcrDnsTtl            null.Int             `db:"ccr_dns_ttl" json:"ccrDnsTtl"`
+	GlobalMaxMbps        null.Int             `db:"global_max_mbps" json:"globalMaxMbps"`
+	GlobalMaxTps         null.Int             `db:"global_max_tps" json:"globalMaxTps"`
+	LongDesc             null.String          `db:"long_desc" json:"longDesc"`
+	LongDesc1            null.String          `db:"long_desc_1" json:"longDesc1"`
+	LongDesc2            null.String          `db:"long_desc_2" json:"longDesc2"`
+	MaxDnsAnswers        null.Int             `db:"max_dns_answers" json:"maxDnsAnswers"`
+	InfoUrl              null.String          `db:"info_url" json:"infoUrl"`
+	MissLat              null.Float           `db:"miss_lat" json:"missLat"`
+	MissLong             null.Float           `db:"miss_long" json:"missLong"`
+	CheckPath            null.String          `db:"check_path" json:"checkPath"`
+	LastUpdated          time.Time            `db:"last_updated" json:"lastUpdated"`
+	Protocol             null.Int             `db:"protocol" json:"protocol"`
+	SslKeyVersion        null.Int             `db:"ssl_key_version" json:"sslKeyVersion"`
+	Ipv6RoutingEnabled   null.Int             `db:"ipv6_routing_enabled" json:"ipv6RoutingEnabled"`
+	RangeRequestHandling null.Int             `db:"range_request_handling" json:"rangeRequestHandling"`
+	EdgeHeaderRewrite    null.String          `db:"edge_header_rewrite" json:"edgeHeaderRewrite"`
+	OriginShield         null.String          `db:"origin_shield" json:"originShield"`
+	MidHeaderRewrite     null.String          `db:"mid_header_rewrite" json:"midHeaderRewrite"`
+	RegexRemap           null.String          `db:"regex_remap" json:"regexRemap"`
+	Cacheurl             null.String          `db:"cacheurl" json:"cacheurl"`
+	RemapText            null.String          `db:"remap_text" json:"remapText"`
+	MultiSiteOrigin      null.Int             `db:"multi_site_origin" json:"multiSiteOrigin"`
+	DisplayName          string               `db:"display_name" json:"displayName"`
+	TrResponseHeaders    null.String          `db:"tr_response_headers" json:"trResponseHeaders"`
+	InitialDispersion    null.Int             `db:"initial_dispersion" json:"initialDispersion"`
+	DnsBypassCname       null.String          `db:"dns_bypass_cname" json:"dnsBypassCname"`
+	TrRequestHeaders     null.String          `db:"tr_request_headers" json:"trRequestHeaders"`
+	Links                DeliveryserviceLinks `json:"_links" db:-`
+}
+
+type DeliveryserviceLinks struct {
+	Self        string      `db:"self" json:"_self"`
+	TypeLink    TypeLink    `json:"type" db:-`
+	ProfileLink ProfileLink `json:"profile" db:-`
+	CdnLink     CdnLink     `json:"cdn" db:-`
+}
+
+type DeliveryserviceLink struct {
+	ID  int64  `db:"deliveryservice" json:"id"`
+	Ref string `db:"deliveryservice_id_ref" json:"_ref"`
 }
 
 // @Title getDeliveryserviceById
@@ -98,7 +96,7 @@ func getDeliveryserviceById(id int, db *sqlx.DB) (interface{}, error) {
 	queryStr := "select *, concat('" + API_PATH + "deliveryservice/', id) as self "
 	queryStr += ", concat('" + API_PATH + "type/', type) as type_id_ref"
 	queryStr += ", concat('" + API_PATH + "profile/', profile) as profile_id_ref"
-	queryStr += ", concat('" + API_PATH + "cdn/', cdn_id) as cdn_id_ref"
+	queryStr += ", concat('" + API_PATH + "cdn/', cdn) as cdn_id_ref"
 	queryStr += " from deliveryservice where id=:id"
 	nstmt, err := db.PrepareNamed(queryStr)
 	err = nstmt.Select(&ret, arg)
@@ -121,7 +119,7 @@ func getDeliveryservices(db *sqlx.DB) (interface{}, error) {
 	queryStr := "select *, concat('" + API_PATH + "deliveryservice/', id) as self "
 	queryStr += ", concat('" + API_PATH + "type/', type) as type_id_ref"
 	queryStr += ", concat('" + API_PATH + "profile/', profile) as profile_id_ref"
-	queryStr += ", concat('" + API_PATH + "cdn/', cdn_id) as cdn_id_ref"
+	queryStr += ", concat('" + API_PATH + "cdn/', cdn) as cdn_id_ref"
 	queryStr += " from deliveryservice"
 	err := db.Select(&ret, queryStr)
 	if err != nil {
@@ -158,7 +156,7 @@ func postDeliveryservice(payload []byte, db *sqlx.DB) (interface{}, error) {
 	sqlString += ",org_server_fqdn"
 	sqlString += ",type"
 	sqlString += ",profile"
-	sqlString += ",cdn_id"
+	sqlString += ",cdn"
 	sqlString += ",ccr_dns_ttl"
 	sqlString += ",global_max_mbps"
 	sqlString += ",global_max_tps"
@@ -200,7 +198,7 @@ func postDeliveryservice(payload []byte, db *sqlx.DB) (interface{}, error) {
 	sqlString += ",:org_server_fqdn"
 	sqlString += ",:type"
 	sqlString += ",:profile"
-	sqlString += ",:cdn_id"
+	sqlString += ",:cdn"
 	sqlString += ",:ccr_dns_ttl"
 	sqlString += ",:global_max_mbps"
 	sqlString += ",:global_max_tps"
@@ -268,7 +266,7 @@ func putDeliveryservice(id int, payload []byte, db *sqlx.DB) (interface{}, error
 	sqlString += ",org_server_fqdn = :org_server_fqdn"
 	sqlString += ",type = :type"
 	sqlString += ",profile = :profile"
-	sqlString += ",cdn_id = :cdn_id"
+	sqlString += ",cdn = :cdn"
 	sqlString += ",ccr_dns_ttl = :ccr_dns_ttl"
 	sqlString += ",global_max_mbps = :global_max_mbps"
 	sqlString += ",global_max_tps = :global_max_tps"

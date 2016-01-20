@@ -27,13 +27,20 @@ import (
 )
 
 type JobStatus struct {
-	Id          int64       `db:"id" json:"id"`
-	Name        null.String `db:"name" json:"name"`
-	Description null.String `db:"description" json:"description"`
-	LastUpdated time.Time   `db:"last_updated" json:"lastUpdated"`
-	Links       struct {
-		Self string `db:"self" json:"_self"`
-	} `json:"_links" db:-`
+	Id          int64          `db:"id" json:"id"`
+	Name        null.String    `db:"name" json:"name"`
+	Description null.String    `db:"description" json:"description"`
+	LastUpdated time.Time      `db:"last_updated" json:"lastUpdated"`
+	Links       JobStatusLinks `json:"_links" db:-`
+}
+
+type JobStatusLinks struct {
+	Self string `db:"self" json:"_self"`
+}
+
+type JobStatusLink struct {
+	ID  int64  `db:"job_status" json:"id"`
+	Ref string `db:"job_status_id_ref" json:"_ref"`
 }
 
 // @Title getJobStatusById
