@@ -2,13 +2,14 @@ package com.comcast.cdn.traffic_control.traffic_monitor.health;
 
 import com.comcast.cdn.traffic_control.traffic_monitor.config.Cache;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
 import static com.comcast.cdn.traffic_control.traffic_monitor.health.HealthDeterminer.AdminStatus.ADMIN_DOWN;
 import static com.comcast.cdn.traffic_control.traffic_monitor.health.HealthDeterminer.AdminStatus.OFFLINE;
 
-public class CacheStateRegistry extends StateRegistry {
+public class CacheStateRegistry extends StateRegistry implements Serializable {
 	// Recommended Singleton Pattern implementation
 	// https://community.oracle.com/docs/DOC-918906
 
@@ -85,5 +86,10 @@ public class CacheStateRegistry extends StateRegistry {
 		}
 
 		return "error";
+	}
+
+	@Override
+	protected AbstractState createState(final String id) {
+		return new CacheState(id);
 	}
 }

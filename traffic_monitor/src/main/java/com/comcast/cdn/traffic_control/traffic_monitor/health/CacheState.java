@@ -53,7 +53,7 @@ public class CacheState extends AbstractState {
 	transient private Cache cache;
 	static private AsyncHttpClient asyncHttpClient;
 
-	private CacheState(final String id) {
+	public CacheState(final String id) {
 		super(id);
 	}
 
