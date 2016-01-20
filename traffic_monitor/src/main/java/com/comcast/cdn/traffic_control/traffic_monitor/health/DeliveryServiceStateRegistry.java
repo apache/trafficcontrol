@@ -7,6 +7,8 @@ import org.apache.wicket.ajax.json.JSONObject;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Deque;
+import java.util.Iterator;
 import java.util.List;
 
 public class DeliveryServiceStateRegistry extends StateRegistry {
@@ -114,13 +116,13 @@ public class DeliveryServiceStateRegistry extends StateRegistry {
 		DsStati dsStati;
 
 		synchronized (cacheState) {
-			final List<DataPoint> dataPoints = cacheState.getDataPoints(propBase + ".out_bytes");
+			final Deque<DataPoint> dataPoints = cacheState.getDataPoints(propBase + ".out_bytes");
 
 			if (dataPoints == null) {
 				return null;
 			}
 
-			long lastIndex = dataPoints.get(dataPoints.size()-1).getIndex();
+			long lastIndex = dataPoints.getLast().getIndex();
 			lastIndex = getLastGoodIndex(dataPoints, lastIndex);
 
 			if (lastIndex < 0) {
@@ -151,18 +153,21 @@ public class DeliveryServiceStateRegistry extends StateRegistry {
 		return dsStati;
 	}
 
-	private long getLastGoodIndex(final List<DataPoint> dataPoints, final long targetIndex) {
+	private long getLastGoodIndex(final Deque<DataPoint> dataPoints, final long targetIndex) {
 		if (targetIndex < 0) {
 			return -1;
 		}
 
-		for (int i = dataPoints.size()-1; i >= 0; i--) {
-			if (dataPoints.get(i).getValue() == null) {
+		Iterator<DataPoint> dataPointIterator = dataPoints.descendingIterator();
+
+		while (dataPointIterator.hasNext()) {
+			DataPoint dataPoint = dataPointIterator.next();
+			if (dataPoint.getValue() == null) {
 				continue;
 			}
 
-			final long index = dataPoints.get(i).getIndex();
-			final long span = dataPoints.get(i).getSpan();
+			final long index = dataPoint.getIndex();
+			final long span = dataPoint.getSpan();
 
 			if (targetIndex <= (index-span)) {
 				continue;
@@ -178,14 +183,13 @@ public class DeliveryServiceStateRegistry extends StateRegistry {
 		return -1;
 	}
 
-	public boolean printDps(final List<DataPoint> dataPoints, final String id) {
+	public boolean printDps(final Deque<DataPoint> dataPoints, final String id) {
 		LOGGER.warn(id + ":");
 
-		for(int i = dataPoints.size()-1; i >= 0; i--) {
-			LOGGER.warn(String.format("\t%d - index: %d, span: %d, value: %s", i,
-				dataPoints.get(i).getIndex(),
-				dataPoints.get(i).getSpan(),
-				dataPoints.get(i).getValue()
+		Iterator<DataPoint> dataPointIterator = dataPoints.descendingIterator();
+		while (dataPointIterator.hasNext()) {
+			DataPoint dataPoint = dataPointIterator.next();
+			LOGGER.warn(String.format("\tindex: %d, span: %d, value: %s", dataPoint.getIndex(), dataPoint.getSpan(), dataPoint.getValue()
 			));
 		}
 

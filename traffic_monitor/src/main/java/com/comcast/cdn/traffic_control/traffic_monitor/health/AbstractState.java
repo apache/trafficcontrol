@@ -16,8 +16,8 @@
 
 package com.comcast.cdn.traffic_control.traffic_monitor.health;
 
+import java.util.Deque;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -65,11 +65,11 @@ abstract public class AbstractState implements java.io.Serializable {
 		return statisticsLog.getKeys();
 	}
 
-	protected Map<String, List<DataPoint>> getStats(final int hc, final String[] statList, final boolean wildcard, final boolean hidden) {
+	protected Map<String, Deque<DataPoint>> getStats(final int hc, final String[] statList, final boolean wildcard, final boolean hidden) {
 		return statisticsLog.filter(hc, statList, wildcard, hidden);
 	}
 
-	protected List<DataPoint> getDataPoints(final String key) {
+	protected Deque<DataPoint> getDataPoints(final String key) {
 		return statisticsLog.get(key);
 	}
 
@@ -102,11 +102,11 @@ abstract public class AbstractState implements java.io.Serializable {
 	}
 
 	public Map<String, DataSummary> getSummary(final long startTime, final long endTime, final String[] stats2, final boolean wildcard, final boolean hidden) {
-		final Map<String, List<DataPoint>> map = getStats(0, stats2, wildcard, hidden);
+		final Map<String, Deque<DataPoint>> map = getStats(0, stats2, wildcard, hidden);
 		final Map<String, DataSummary> retMap = new  HashMap<String, DataSummary>();
 		final long checkPeriod = 5000;
 		for(String key : map.keySet()) {
-			final List<DataPoint> dpList = map.get(key);
+			final Deque<DataPoint> dpList = map.get(key);
 			final DataSummary ds = new DataSummary();
 			retMap.put(key, ds);
 			for(DataPoint dp : dpList) {
@@ -171,7 +171,7 @@ abstract public class AbstractState implements java.io.Serializable {
 	}
 
 	public JSONObject getStatsJson(final int hc, final String[] statList, final boolean wildcard, final boolean hidden) throws JSONException {
-		final Map<String, List<DataPoint>> map = getStats(hc, statList, wildcard, hidden);
+		final Map<String, Deque<DataPoint>> map = getStats(hc, statList, wildcard, hidden);
 		final JSONObject ret = new JSONObject();
 		for(String key : map.keySet()) {
 			final JSONArray a = new JSONArray();

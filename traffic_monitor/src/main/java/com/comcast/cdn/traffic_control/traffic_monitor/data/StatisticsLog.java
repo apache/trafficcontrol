@@ -3,8 +3,10 @@ package com.comcast.cdn.traffic_control.traffic_monitor.data;
 import org.apache.log4j.Logger;
 
 import java.util.Arrays;
+import java.util.Deque;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -12,18 +14,18 @@ import java.util.Set;
 
 public class StatisticsLog {
 	private static final Logger LOGGER = Logger.getLogger(StatisticsLog.class);
-	private final Map<String,List<DataPoint>> data = new HashMap<String,List<DataPoint>>();
+	private final Map<String,Deque<DataPoint>> data = new HashMap<String,Deque<DataPoint>>();
 	protected final Set<String> hiddenKeys = new HashSet<String>();
 	private final List<Long> times = new LinkedList<Long>();
 	private final List<Long> indexes = new LinkedList<Long>();
 	private int index;
 
-	public List<DataPoint> get(final String key) {
+	public Deque<DataPoint> get(final String key) {
 		return data.get(key);
 	}
 
 	public void putDataPoint(final String key, final String value) {
-		List<DataPoint> statistics = data.get(key);
+		Deque<DataPoint> statistics = data.get(key);
 
 		if (statistics == null) {
 			statistics = new LinkedList<DataPoint>();
@@ -40,7 +42,7 @@ public class StatisticsLog {
 		}
 
 		dataPoint = new DataPoint(value, index);
-		statistics.add(dataPoint);
+		statistics.addLast(dataPoint);
 	}
 
 	public DataPoint getLastDataPoint(final String key) {
@@ -48,7 +50,7 @@ public class StatisticsLog {
 			return null;
 		}
 
-		return data.get(key).get(data.size() - 1);
+		return data.get(key).getLast();
 	}
 
 	public Set<String> getKeys() {
@@ -69,11 +71,10 @@ public class StatisticsLog {
 			return null;
 		}
 
-		List<DataPoint> dataPoints = get(key);
+		Iterator<DataPoint> dataPoints = get(key).descendingIterator();
 
-		for (int i = dataPoints.size()-1; i >= 0; i--) {
-			final DataPoint dataPoint = dataPoints.get(i);
-
+		while (dataPoints.hasNext()) {
+			final DataPoint dataPoint = dataPoints.next();
 			if (targetIndex > dataPoint.getIndex()) {
 				return null;
 			}
@@ -137,8 +138,8 @@ public class StatisticsLog {
 		return statisticsKeys;
 	}
 
-	public Map<String, List<DataPoint>> filter(final int hc, final String[] statList, final boolean wildcard, final boolean allowHidden) {
-		final Map<String, List<DataPoint>> filteredStatistics = new HashMap<String,List<DataPoint>>();
+	public Map<String, Deque<DataPoint>> filter(final int hc, final String[] statList, final boolean wildcard, final boolean allowHidden) {
+		final Map<String, Deque<DataPoint>> filteredStatistics = new HashMap<String,Deque<DataPoint>>();
 
 		synchronized(data) {
 			Set<String> statisticsKeys = filterKeys(statList, wildcard);
@@ -149,7 +150,7 @@ public class StatisticsLog {
 					continue;
 				}
 
-				final List<DataPoint> statistics = data.get(key);
+				final LinkedList<DataPoint> statistics = (LinkedList<DataPoint>) data.get(key);
 
 				if (hc == 0 || statistics.size() <= 1) {
 					filteredStatistics.put(key, statistics);
@@ -163,7 +164,7 @@ public class StatisticsLog {
 					final int toIndex = statistics.size();
 					final int fromIndex = Math.max(0, toIndex - hc);
 
-					filteredStatistics.put(key, statistics.subList(fromIndex, toIndex));
+					filteredStatistics.put(key, (LinkedList<DataPoint>) statistics.subList(fromIndex, toIndex));
 				}
 			}
 		}
@@ -225,25 +226,21 @@ public class StatisticsLog {
 		final long baseIndex = indexes.get(0);
 
 		for(String key : data.keySet()) {
-			final List<DataPoint> dataPoints = get(key);
+			final Deque<DataPoint> dataPoints = get(key);
 
 			if (dataPoints.isEmpty()) {
 				LOGGER.warn("list empty for " + key + " - " + stateId);
 				continue;
 			}
 
-			while (dataPoints.get(0).getIndex() < baseIndex) {
-				if (dataPoints.size() == 1) {
-					LOGGER.warn(String.format("%s - %s: index %d < baseIndex %d", key, stateId, dataPoints.get(0).getIndex(), baseIndex));
-					break;
-				}
 
-				dataPoints.remove(0);
+			while (dataPoints.size() > 1 && dataPoints.getFirst().getIndex() < baseIndex) {
+				dataPoints.remove();
+			}
 
-				if (dataPoints.isEmpty()) {
-					LOGGER.warn("list empty for " + key + " - " + stateId);
-					break;
-				}
+			if (dataPoints.size() == 1) {
+				LOGGER.warn(String.format("%s - %s: index %d < baseIndex %d", key, stateId, dataPoints.getFirst().getIndex(), baseIndex));
+				break;
 			}
 		}
 	}

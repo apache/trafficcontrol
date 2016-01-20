@@ -18,7 +18,9 @@ package com.comcast.cdn.traffic_control.traffic_monitor.health;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Deque;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
@@ -221,58 +223,74 @@ public class DsState extends AbstractState {
 	}
 
 	public static DsStati createStati(final String propBase, final CacheState cs, final long leniency, final String dsId) {
-		DsStati ds = null;
+		DsStati dsStati;
 		synchronized (cs) {
-			final List<DataPoint> dps = cs.getDataPoints(propBase+".out_bytes");
-			if(dps == null) {
+			final Deque<DataPoint> dataPoints = cs.getDataPoints(propBase+".out_bytes");
+			if(dataPoints == null) {
 				return null;
 			}
-			long lastIndex = dps.get(dps.size()-1).getIndex();
-			lastIndex = getLastGoodIndex(dps, lastIndex);
+			long lastIndex = dataPoints.getLast().getIndex();
+			lastIndex = getLastGoodIndex(dataPoints, lastIndex);
 			if(lastIndex < 0) { return null; }
 			final long time = cs.getTime(lastIndex);
 			if(time < leniency) {
 				return null;
 			}
-			ds  = new DsStati(propBase, cs, lastIndex, dsId);
-			final long prevIndex = getLastGoodIndex(dps, lastIndex-1);
+			dsStati  = new DsStati(propBase, cs, lastIndex, dsId);
+			final long prevIndex = getLastGoodIndex(dataPoints, lastIndex-1);
 			if(prevIndex >= 0) {
 				final DsStati priorDs = new DsStati(propBase, cs, prevIndex, dsId);
-				if(!ds.calculateKbps(priorDs)) {
+				if(!dsStati.calculateKbps(priorDs)) {
 					if(LOGGER.isInfoEnabled()) {
-						printDps(dps, propBase);
+						printDps(dataPoints, propBase);
 					}
 				}
 			}
 		}
-		return ds;
+		return dsStati;
 	}
-	public static boolean printDps(final List<DataPoint> dps, final String id) {
+
+	public static boolean printDps(final Deque<DataPoint> dataPoints, final String id) {
 		LOGGER.warn(id+":");
-		for(int i = dps.size()-1; i >= 0; i--) {
-			LOGGER.warn(String.format("\t%d - index: %d, span: %d, value: %s", i, 
-					dps.get(i).getIndex(),
-					dps.get(i).getSpan(),
-					dps.get(i).getValue()
-					));
+
+		Iterator<DataPoint> dataPointsIterator = dataPoints.descendingIterator();
+
+		while (dataPointsIterator.hasNext()) {
+			DataPoint dataPoint = dataPointsIterator.next();
+			LOGGER.warn(String.format("\tindex: %d, span: %d, value: %s", dataPoint.getIndex(), dataPoint.getSpan(), dataPoint.getValue()));
 		}
+
 		return false;
 	}
-	private static long getLastGoodIndex(final List<DataPoint> dps, final long targetIndex) {
+
+	private static long getLastGoodIndex(final Deque<DataPoint> dataPoints, final long targetIndex) {
 		if(targetIndex < 0) {
 			return -1;
 		}
-		for(int i = dps.size()-1; i >= 0; i--) {
-			if(dps.get(i).getValue()!=null) {
-				final long index = dps.get(i).getIndex();
-				final long span = dps.get(i).getSpan();
-				if(targetIndex <= (index-span)) { continue; }
-				if(targetIndex < index) {
-					return targetIndex;
-				}
-				return index;
+
+		Iterator<DataPoint> dataPointsIterator = dataPoints.descendingIterator();
+
+		while (dataPointsIterator.hasNext()) {
+			DataPoint dataPoint = dataPointsIterator.next();
+
+			if (dataPoint.getValue() == null) {
+				continue;
 			}
+
+			long index = dataPoint.getIndex();
+			long span = dataPoint.getSpan();
+
+			if (targetIndex <= (index - span)) {
+				continue;
+			}
+
+			if (targetIndex < index) {
+				return targetIndex;
+			}
+
+			return index;
 		}
+
 		return -1;
 	}
 
