@@ -37,15 +37,28 @@ type Cachegroup struct {
 }
 
 type CachegroupLinks struct {
-	Self                          string         `db:"self" json:"_self"`
-	ParentCachegroupLink          CachegroupLink `json:"parent_cachegroup" db:-`
-	SecondaryParentCachegroupLink CachegroupLink `json:"secondary_parent_cachegroup" db:-`
-	TypeLink                      TypeLink       `json:"type" db:-`
+	Self                          string           `db:"self" json:"_self"`
+	ParentCachegroupLink          PCachegroupLink  `json:"parent_cachegroup" db:-`
+	SecondaryParentCachegroupLink SPCachegroupLink `json:"secondary_parent_cachegroup" db:-`
+	TypeLink                      TypeLink         `json:"type" db:-`
 }
 
+// CachegoupLink is for references from other tables - ref the ID.
 type CachegroupLink struct {
 	ID  int64  `db:"cachegroup" json:"id"`
 	Ref string `db:"cachegroup_id_ref" json:"_ref"`
+}
+
+// Special case for self reference parent_cachegroup
+type PCachegroupLink struct {
+	ID  null.Int `db:"parent_cachegroup" json:"id"`
+	Ref string   `db:"cachegroup_id_ref" json:"_ref"`
+}
+
+// Special case for self reference secondary_parent_cachegroup
+type SPCachegroupLink struct {
+	ID  null.Int `db:"secondary_parent_cachegroup" json:"id"`
+	Ref string   `db:"cachegroup_id_ref" json:"_ref"`
 }
 
 // @Title getCachegroupById
