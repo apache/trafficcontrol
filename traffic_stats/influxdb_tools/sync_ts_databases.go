@@ -17,16 +17,17 @@ specific language governing permissions and limitations
 under the License.
 */
 
-package main
+package sync_ts_databases
 
 import (
 	"encoding/json"
 	"flag"
 	"fmt"
-	influx "github.com/influxdb/influxdb/client"
 	"net/url"
 	"os"
 	"time"
+
+	influx "github.com/influxdb/influxdb/client"
 )
 
 type cacheStats struct {

@@ -17,22 +17,23 @@ specific language governing permissions and limitations
 under the License.
 */
 
-package main
+package create_ts_databases
 
 import (
 	"flag"
 	"fmt"
-	influx "github.com/influxdb/influxdb/client"
 	"net/url"
+
+	influx "github.com/influxdb/influxdb/client"
 )
 
 func main() {
 
-	influxUrl := flag.String("url", "http://localhost:8086", "The influxdb url and port")
+	influxURL := flag.String("url", "http://localhost:8086", "The influxdb url and port")
 	replication := flag.String("replication", "3", "The number of nodes in the cluster")
 	flag.Parse()
-	fmt.Printf("creating datbases for influxUrl: %v with a replication of %v\n", *influxUrl, *replication)
-	iu, _ := url.Parse(*influxUrl)
+	fmt.Printf("creating datbases for influxUrl: %v with a replication of %v\n", *influxURL, *replication)
+	iu, _ := url.Parse(*influxURL)
 	client, err := influx.NewClient(influx.Config{
 		URL: *iu,
 	})
