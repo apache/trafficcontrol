@@ -5,14 +5,13 @@ import com.comcast.cdn.traffic_control.traffic_monitor.data.DataPoint;
 import org.apache.log4j.Logger;
 import org.apache.wicket.ajax.json.JSONObject;
 
-import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Deque;
 import java.util.Iterator;
 import java.util.List;
 
-public class DeliveryServiceStateRegistry extends StateRegistry implements Serializable {
+public class DeliveryServiceStateRegistry extends StateRegistry {
 	private static final Logger LOGGER = Logger.getLogger(DeliveryServiceStateRegistry.class);
 
 	// Recommended Singleton Pattern implementation
@@ -190,8 +189,7 @@ public class DeliveryServiceStateRegistry extends StateRegistry implements Seria
 		Iterator<DataPoint> dataPointIterator = dataPoints.descendingIterator();
 		while (dataPointIterator.hasNext()) {
 			DataPoint dataPoint = dataPointIterator.next();
-			LOGGER.warn(String.format("\tindex: %d, span: %d, value: %s", dataPoint.getIndex(), dataPoint.getSpan(), dataPoint.getValue()
-			));
+			LOGGER.warn(String.format("\tindex: %d, span: %d, value: %s", dataPoint.getIndex(), dataPoint.getSpan(), dataPoint.getValue()));
 		}
 
 		return false;

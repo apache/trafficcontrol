@@ -1,14 +1,7 @@
 package com.comcast.cdn.traffic_control.traffic_monitor.health;
 
-import com.comcast.cdn.traffic_control.traffic_monitor.KeyValue;
-import com.comcast.cdn.traffic_control.traffic_monitor.StateKeyValue;
-
-import java.util.ArrayList;
 import java.util.Collection;
-import java.util.List;
 import java.util.Map;
-import java.util.Set;
-import java.util.TreeSet;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class StateRegistry {
@@ -61,28 +54,12 @@ public class StateRegistry {
 		return get(stateId).getLastValue(key);
 	}
 
-	public List<String> getUniqueIds() {
-		final Set<String> idSet = new TreeSet<String>();
-
+	public long getSumOfLongStatistic(final String key) {
+		long sum = 0;
 		for(AbstractState state : states.values()) {
-			idSet.add(state.getId());
+			sum += state.getDouble(key);
 		}
-
-		final List<String> idList = new ArrayList<String>();
-		idList.addAll(idSet);
-		return idList;
-	}
-
-	public List<KeyValue> getModelList(final String hostname) {
-		final List<KeyValue> modelList = new ArrayList<KeyValue>();
-
-		AbstractState cacheState = states.get(hostname);
-
-		for(String key : cacheState.getStatisticsKeys()) {
-			modelList.add(new StateKeyValue(key, cacheState, this));
-		}
-
-		return modelList;
+		return sum;
 	}
 
 	protected AbstractState createState(final String id) {

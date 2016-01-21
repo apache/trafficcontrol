@@ -68,7 +68,6 @@ public class PeerWatcher {
 
 				try {
 					final int poolSize = config.getPeerThreadPool();
-					LOGGER.info("Starting new pool: "+poolSize);
 					pool = Executors.newFixedThreadPool(poolSize);
 					checkPeers(pool, peerMap);
 				} catch(Exception e) {
@@ -88,7 +87,6 @@ public class PeerWatcher {
 				} catch (Exception e) { }
 
 				final long mytime = System.currentTimeMillis()-time;
-				LOGGER.info("Pool time elapsed: "+mytime);
 
 				if(!isActive ) {
 					return;
@@ -137,7 +135,6 @@ public class PeerWatcher {
 							replace("${port}", peer.getPortString());
 
 				try {
-					LOGGER.info("fetching: " + prettyUrl);
 					final String result = Fetcher.fetchContent(url, peer.getHeaderMap(), config.getConnectionTimeout());
 					final JSONObject jr = new JSONObject(result);
 					final JSONObject cacheStates = jr.getJSONObject("caches");

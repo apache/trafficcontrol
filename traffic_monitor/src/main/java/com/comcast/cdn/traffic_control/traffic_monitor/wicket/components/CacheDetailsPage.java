@@ -46,15 +46,21 @@ public class CacheDetailsPage extends MonitorPage {
 		hostname.add(updater);
 		add(hostname);
 
-		List<KeyValue> keyValues;
+		final List<KeyValue> keyValues = new ArrayList<KeyValue>();
 
-		try {
-			keyValues = CacheStateRegistry.getInstance().getModelList(hostnameStr);
-		} catch (Exception e) {
-			LOGGER.warn(e,e);
-			keyValues = new ArrayList<KeyValue>();
-			keyValues.add(new KeyValue("Error", e.toString()));
+		for (String key : CacheStateRegistry.getInstance().get(hostnameStr).getStatisticsKeys()) {
+			keyValues.add(new KeyValue(key, "") {
+				@Override
+				public String getObject() {
+					if (CacheStateRegistry.getInstance().has(hostnameStr)) {
+						return CacheStateRegistry.getInstance().get(hostnameStr, getKey());
+					}
+					return super.getObject();
+				}
+			});
 		}
+
+		LOGGER.warn("Model List size is " + keyValues.size());
 
 		final ListView<KeyValue> servers = new ListView<KeyValue>("params", keyValues ) {
 			private static final long serialVersionUID = 1L;

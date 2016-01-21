@@ -17,6 +17,7 @@
 package com.comcast.cdn.traffic_control.traffic_monitor.health;
 
 import java.io.IOException;
+import java.net.ConnectException;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
@@ -107,6 +108,7 @@ public class CacheState extends AbstractState {
 		private HealthDeterminer myHealthDeterminer;
 		private String url;
 		private AtomicInteger failCount;
+		private Throwable lastThrowable;
 
 		public UpdateHandler(final CacheState cacheState, final CacheDataModel errorCount) {
 			this.state = cacheState;
@@ -123,6 +125,7 @@ public class CacheState extends AbstractState {
 
 		@Override
 		public Integer onCompleted(final Response response) throws JSONException, IOException {
+			lastThrowable = null;
 			// Do something with the Response
 			final int code = response.getStatusCode();
 			state.putDataPoint("queryTime", String.valueOf(System.currentTimeMillis() - time));
@@ -147,13 +150,17 @@ public class CacheState extends AbstractState {
 
 		@Override
 		public void onThrowable(final Throwable t) {
-			if (!(t instanceof CancellationException)) {
-				LOGGER.warn(t + " : " + url);
-				failCount.incrementAndGet();
-			} else {
-				LOGGER.warn("Request to " + url + " failed to complete in time");
+			if (t instanceof  CancellationException) {
+				LOGGER.warn("Request to get state of cache " + state.getCache().getHostname() + " at " + url + " failed to complete in time");
+			} else if (lastThrowable == null || !lastThrowable.getMessage().equals(t.getMessage())) {
+				if (t instanceof ConnectException) {
+					LOGGER.warn("Failed to connect to cache " + state.getCache().getHostname() + " at " + url);
+				} else {
+					LOGGER.warn("Failed to get stats for " + state.getCache().getHostname() + " " + t + " : " + url);
+				}
 			}
 
+			lastThrowable = t;
 			state.putDataPoint("queryTime", String.valueOf(System.currentTimeMillis() - time));
 
 			try {

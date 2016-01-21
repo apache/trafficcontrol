@@ -20,7 +20,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import com.comcast.cdn.traffic_control.traffic_monitor.health.DeliveryServiceStateRegistry;
-import org.apache.log4j.Logger;
 import org.apache.wicket.behavior.Behavior;
 import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.markup.html.list.ListItem;
@@ -33,7 +32,6 @@ import com.comcast.cdn.traffic_control.traffic_monitor.MonitorPage;
 import com.comcast.cdn.traffic_control.traffic_monitor.wicket.behaviors.MultiUpdatingTimerBehavior;
 
 public class DsDetailsPage extends MonitorPage {
-	private static final Logger LOGGER = Logger.getLogger(DsDetailsPage.class);
 	private static final long serialVersionUID = 1L;
 
 	public DsDetailsPage(final PageParameters pars) {
@@ -45,19 +43,25 @@ public class DsDetailsPage extends MonitorPage {
 		hostname.add(updater);
 		add(hostname);
 
-		List<KeyValue> keyValues;
-		try {
-			keyValues = DeliveryServiceStateRegistry.getInstance().getModelList(idStr);
-		} catch (Exception e) {
-			LOGGER.warn(e,e);
-			keyValues = new ArrayList<KeyValue>();
-			keyValues.add(new KeyValue("Error", e.toString()));
+		final List<KeyValue> keyValues = new ArrayList<KeyValue>();
+
+		for (String key : DeliveryServiceStateRegistry.getInstance().get(idStr).getStatisticsKeys()) {
+			keyValues.add(new KeyValue(key, "") {
+				@Override
+				public String getObject() {
+					if (DeliveryServiceStateRegistry.getInstance().has(idStr)) {
+						return DeliveryServiceStateRegistry.getInstance().get(idStr, getKey());
+					}
+					return super.getObject();
+				}
+			});
 		}
+
 		final ListView<KeyValue> servers = new ListView<KeyValue>("params", keyValues ) {
 			private static final long serialVersionUID = 1L;
 			@Override
 			protected void populateItem(final ListItem<KeyValue> item) {
-				final KeyValue keyval = (KeyValue) item.getModelObject();
+				final KeyValue keyval = item.getModelObject();
 				item.add(new Label("key", keyval.getKey()));
 				final Label v = new Label("value", keyval);
 				v.add(updater);

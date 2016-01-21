@@ -30,8 +30,7 @@ import org.apache.wicket.ajax.json.JSONObject;
 import com.comcast.cdn.traffic_control.traffic_monitor.data.DataPoint;
 import com.comcast.cdn.traffic_control.traffic_monitor.data.DataSummary;
 
-abstract public class AbstractState implements java.io.Serializable {
-	private static final long serialVersionUID = 1L;
+abstract public class AbstractState {
 	private static final Logger LOGGER = Logger.getLogger(AbstractState.class);
 	public static final String IS_AVAILABLE_STR = "isAvailable";
 	public static final String IS_HEALTHY_STR = "isHealthy";

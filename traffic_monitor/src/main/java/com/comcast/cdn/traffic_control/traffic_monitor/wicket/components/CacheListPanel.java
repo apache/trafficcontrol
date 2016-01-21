@@ -17,7 +17,6 @@
 package com.comcast.cdn.traffic_control.traffic_monitor.wicket.components;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
 import java.util.TreeMap;
 
@@ -39,12 +38,10 @@ import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.Model;
 import org.apache.wicket.util.time.Duration;
 
-import com.comcast.cdn.traffic_control.traffic_monitor.health.HealthDeterminer;
 import com.comcast.cdn.traffic_control.traffic_monitor.wicket.behaviors.UpdatingAttributeAppender;
 
 public class CacheListPanel extends Panel {
 	private static final long serialVersionUID = 1L;
-	private final CacheStateRegistry cacheStateRegistry = CacheStateRegistry.getInstance();
 	ListView<String> servers;
 	Component[] updateList;
 	String hostname;
@@ -79,7 +76,7 @@ public class CacheListPanel extends Panel {
 			@Override
 			protected final void onTimer(final AjaxRequestTarget target) {
 				//				target.add(getComponent());
-				final int size = cacheStateRegistry.size();
+				final int size = CacheStateRegistry.getInstance().size();
 				if(serverCount != size) {
 					serverCount = size;
 					servers.setList(getServerList());
@@ -89,7 +86,6 @@ public class CacheListPanel extends Panel {
 							target.add(c);
 						}
 					}
-					//					target.add(graph);
 				}
 			}
 		});
@@ -104,31 +100,12 @@ public class CacheListPanel extends Panel {
 				final String cacheName = item.getModelObject();
 
 				item.add(new UpdatingAttributeAppender("class", new Model<String>("") {
-					private static final long serialVersionUID = 1L;
-
 					@Override
 					public String getObject() {
-						final AbstractState cs = cacheStateRegistry.get(cacheName);
-
-						if (cs != null && !cs.isAvailable())  {
-							final String status = cs.getLastValue(HealthDeterminer.STATUS);
-
-							if (status != null) {
-								switch(HealthDeterminer.AdminStatus.valueOf(status)) {
-									case ADMIN_DOWN:
-									case OFFLINE:
-										return "warning";
-									default:
-										return "error";
-								}
-							} else {
-								return "error";
-							}
-						} else {
-							return " ";
-						}
+						return CacheStateRegistry.getInstance().getStatusString(cacheName);
 					}
 				}, " "));
+
 				item.add(updater);
 
 
@@ -151,10 +128,6 @@ public class CacheListPanel extends Panel {
 				label.add(updater);
 				item.add(label);
 
-				//				final PageParameters pars = new PageParameters();
-				//				pars.add("hostname", cacheName);
-				//				final BookmarkablePageLink<Object> link 
-				//					= new BookmarkablePageLink<Object>("fulldetails", FullDetailsPage.class, pars);
 				final AjaxLink<Void> link = new AjaxLink<Void>("fulldetails") {
 					private static final long serialVersionUID = 1L;
 					@Override
@@ -170,9 +143,8 @@ public class CacheListPanel extends Panel {
 	}
 
 	public final List<String> getServerList() {
-		final Collection<AbstractState> list = cacheStateRegistry.getAll();
 		final TreeMap<String, AbstractState> tmap = new TreeMap<String, AbstractState>();
-		for(AbstractState cs : list) {
+		for(AbstractState cs : CacheStateRegistry.getInstance().getAll()) {
 			tmap.put(cs.getId(), cs);
 		}
 		return new ArrayList<String>(tmap.keySet());

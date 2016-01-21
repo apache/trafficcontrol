@@ -21,7 +21,6 @@ import java.text.NumberFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
-import com.comcast.cdn.traffic_control.traffic_monitor.health.AbstractState;
 import com.comcast.cdn.traffic_control.traffic_monitor.health.CacheStateRegistry;
 import org.apache.log4j.Logger;
 import org.apache.wicket.Component;
@@ -46,7 +45,6 @@ public class Index extends MonitorPage implements IHeaderContributor {
 	private static final long serialVersionUID = 1L;
 
 	final public static NumberFormat NUMBER_FORMAT = new DecimalFormat("#,###.00");
-	private final CacheStateRegistry cacheStateRegistry = CacheStateRegistry.getInstance();
 
 	public Index() {
 		final Behavior updater = new MultiUpdatingTimerBehavior(Duration.seconds(1));
@@ -60,11 +58,11 @@ public class Index extends MonitorPage implements IHeaderContributor {
 		servers_down.add(updater);
 		add(servers_down);
 
-		final Label totalBandwidth = new Label("totalBandwidth", getCacheStateSumModel("kbps"));
+		final Label totalBandwidth = new Label("totalBandwidth",getCachesTotalBandwidthModel());
 		totalBandwidth.add(updater);
 		add(totalBandwidth);
 
-		final Label totalBandwidthAvailable = new Label("totalBandwidthAvailable", getCacheStateSumModel("maxKbps"));
+		final Label totalBandwidthAvailable = new Label("totalBandwidthAvailable", getCachesTotalMaxBandwidthModel());
 		totalBandwidthAvailable.add(updater);
 		add(totalBandwidthAvailable);
 
@@ -76,18 +74,7 @@ public class Index extends MonitorPage implements IHeaderContributor {
 
 		final Component[] updateList = new Component[] {servers_count};
 
-		final Label servers_available = new Label("servers_available", new Model<String>("") {
-			@Override
-			public String getObject() {
-				int cnt = 0;
-				for (AbstractState cs : cacheStateRegistry.getAll()) {
-					if (cs != null && cs.isAvailable()) {
-						cnt++;
-					}
-				}
-				return String.valueOf(cnt);
-			}
-		});
+		final Label servers_available = new Label("servers_available",getServersAvailableModel());
 
 		servers_available.add(updater);
 		add(servers_available);
@@ -100,43 +87,41 @@ public class Index extends MonitorPage implements IHeaderContributor {
 
 	private Model<Integer> getServerListSizeModel() {
 		return new Model<Integer>() {
-			private static final long serialVersionUID = 1L;
-
 			@Override
-			public Integer getObject( ) {
-				return cacheStateRegistry.size();
+			public Integer getObject() {
+				return CacheStateRegistry.getInstance().size();
 			}
 		};
 	}
 
 	private Model<String> getServersDownModel() {
 		return new Model<String>("") {
-			private static final long serialVersionUID = 1L;
 
 			@Override
-			public String getObject( ) {
-				int cnt = 0;
-				for(AbstractState cs : cacheStateRegistry.getAll()) {
-					if ( cs != null && cs.isError() ) {
-						cnt++;
-					}
-				}
-				return String.valueOf(cnt);
+			public String getObject() {
+				return Integer.toString(CacheStateRegistry.getInstance().getCachesDownCount());
 			}
 		};
 	}
 
-	private Model<String> getCacheStateSumModel(final String key) {
+	private Model<String> getCachesTotalBandwidthModel() {
 		return new Model<String>("") {
 			private static final long serialVersionUID = 1L;
 
 			@Override
 			public String getObject( ) {
-				long bw = 0;
-				for(AbstractState cs : cacheStateRegistry.getAll()) {
-					bw += cs.getDouble(key);
-				}
-				return NUMBER_FORMAT.format(bw);
+				return NUMBER_FORMAT.format(CacheStateRegistry.getInstance().getCachesBandwidthInKbps());
+			}
+		};
+	}
+
+	private Model<String> getCachesTotalMaxBandwidthModel() {
+		return new Model<String>("") {
+			private static final long serialVersionUID = 1L;
+
+			@Override
+			public String getObject( ) {
+				return NUMBER_FORMAT.format(CacheStateRegistry.getInstance().getCachesMaxBandwidthInKbps());
 			}
 		};
 	}
@@ -176,6 +161,16 @@ public class Index extends MonitorPage implements IHeaderContributor {
 		}
 
 		return "";
+	}
+
+	private Model<String> getServersAvailableModel() {
+		return new Model<String>("") {
+
+			@Override
+			public String getObject() {
+				return Integer.toString(CacheStateRegistry.getInstance().getCachesAvailableCount());
+			}
+		};
 	}
 }
 

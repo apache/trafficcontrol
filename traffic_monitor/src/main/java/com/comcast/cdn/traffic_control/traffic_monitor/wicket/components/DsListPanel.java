@@ -43,7 +43,6 @@ import com.comcast.cdn.traffic_control.traffic_monitor.wicket.behaviors.Updating
 public class DsListPanel extends Panel {
 	private static final long serialVersionUID = 1L;
 
-	private final DeliveryServiceStateRegistry deliveryServiceStateRegistry = DeliveryServiceStateRegistry.getInstance();
 	ListView<String> servers;
 	Component[] updateList;
 	String dsId;
@@ -105,7 +104,7 @@ public class DsListPanel extends Panel {
 
 					@Override
 					public String getObject( ) {
-						final AbstractState state = deliveryServiceStateRegistry.get(dsName);
+						final AbstractState state = DeliveryServiceStateRegistry.getInstance().get(dsName);
 						if ( state != null && !state.isAvailable() ) { return "error"; }
 						else { return " "; }
 					}
@@ -163,7 +162,7 @@ public class DsListPanel extends Panel {
 
 	public final List<String> getDsList() {
 		final TreeMap<String, AbstractState> tmap = new TreeMap<String, AbstractState>();
-		for(AbstractState state : deliveryServiceStateRegistry.getAll()) {
+		for(AbstractState state : DeliveryServiceStateRegistry.getInstance().getAll()) {
 			tmap.put(state.getId(), state);
 		}
 		return new ArrayList<String>(tmap.keySet());
