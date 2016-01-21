@@ -200,7 +200,7 @@ sub update_current {
 		my $dbh = $self->db->resultset('TmUser')->find( { username => $username } );
 
 		# Updating a user implies it is no longer new
-        $db_user->{"new_user"} = 0;
+		$db_user->{"new_user"} = 0;
 
 		# These if "defined" checks allow for partial user updates, otherwise the entire
 		# user would need to be passed through.
