@@ -37,7 +37,7 @@ import (
 
 	traffic_ops "github.com/Comcast/traffic_control/traffic_ops/client"
 	log "github.com/cihub/seelog"
-	influx "github.com/influxdb/influxdb/client"
+	influx "github.com/influxdb/influxdb/client/v2"
 )
 
 const (
@@ -51,8 +51,7 @@ const (
 	defaultPollingInterval             = 10
 	defaultDailySummaryPollingInterval = 60
 	defaultConfigInterval              = 300
-	defaultPublishingInterval          = 30
-	maxPublishSize                     = 10000
+	defaultPublishingInterval          = 10
 )
 
 // StartupConfig contains all fields necessary to create an InfluxDB session.
@@ -100,7 +99,6 @@ func main() {
 	var tickers Timers
 
 	configFile := flag.String("cfg", "", "The config file")
-	testSummary := flag.Bool("testSummary", false, "Test summary mode")
 	flag.Parse()
 
 	config, err = loadStartupConfig(*configFile, config)
@@ -113,10 +111,6 @@ func main() {
 	config.BpsChan = make(chan influx.BatchPoints)
 
 	defer log.Flush()
-
-	if *testSummary {
-		fmt.Println("WARNING: testSummary is on!")
-	}
 
 	configChan := make(chan RunningConfig)
 	go getToData(config, true, configChan)
@@ -160,22 +154,21 @@ func main() {
 			for cdnName, urls := range runningConfig.HealthUrls {
 				for _, url := range urls {
 					log.Debug(cdnName, " -> ", url)
-					if *testSummary {
-						fmt.Println("Skipping stat write - testSummary mode is ON!")
-						continue
-					}
 					go calcMetrics(cdnName, url, runningConfig.CacheGroupMap, config, runningConfig)
 				}
 			}
 		case now := <-tickers.DailySummary:
 			go calcDailySummary(now, config, runningConfig)
 		case batchPoints := <-config.BpsChan:
-			log.Debug("Received ", len(batchPoints.Points), " stats")
-			key := fmt.Sprintf("%s%s", batchPoints.Database, batchPoints.RetentionPolicy)
-			b, ok := Bps[key]
+			log.Debug("Received ", len(batchPoints.Points()), " stats")
+			key := fmt.Sprintf("%s%s", batchPoints.Database(), batchPoints.RetentionPolicy())
+			bp, ok := Bps[key]
 			if ok {
-				b.Points = append(b.Points, batchPoints.Points...)
-				log.Debug("Aggregating ", len(b.Points), " stats to ", key)
+				b := *bp
+				for _, p := range batchPoints.Points() {
+					b.AddPoint(p)
+				}
+				log.Debug("Aggregating ", len(b.Points()), " stats to ", key)
 			} else {
 				Bps[key] = &batchPoints
 				log.Debug("Created ", key)
@@ -263,7 +256,11 @@ func calcDailySummary(now time.Time, config StartupConfig, runningConfig Running
 			return
 		}
 
-		pts := make([]influx.Point, 0, len(res[0].Series)*2)
+		bp, _ := influx.NewBatchPoints(influx.BatchPointsConfig{
+			Database:        "daily_stats",
+			Precision:       "s",
+			RetentionPolicy: config.DailySummaryRetentionPolicy,
+		})
 		for _, row := range res[0].Series {
 			prevtime := startTime
 			max := float64(0)
@@ -300,51 +297,49 @@ func calcDailySummary(now time.Time, config StartupConfig, runningConfig Running
 			statsSummary.StatDate = startTime.Format("2006-01-02")
 			go writeSummaryStats(config, statsSummary)
 
-			// Add Points
-			pts = append(pts,
-				influx.Point{
-					Measurement: statsSummary.StatName,
-					Tags: map[string]string{
-						"deliveryservice": statsSummary.DeliveryService,
-						"cdn":             statsSummary.CdnName,
-					},
-					Fields: map[string]interface{}{
-						"value": maxGbps,
-					},
-					Time:      startTime,
-					Precision: "s",
-				})
+			tags := map[string]string{
+				"deliveryservice": statsSummary.DeliveryService,
+				"cdn":             statsSummary.CdnName,
+			}
+
+			fields := map[string]interface{}{
+				"value": maxGbps,
+			}
+			pt, err := influx.NewPoint(
+				statsSummary.StatName,
+				tags,
+				fields,
+				startTime,
+			)
+			if err != nil {
+				errHndlr(err, ERROR)
+				continue
+			}
+			bp.AddPoint(pt)
 
 			// write bytes served data to traffic_ops
 			statsSummary.StatName = "daily_bytesserved"
 			statsSummary.StatValue = strconv.FormatFloat(bytesServedTb, 'f', 2, 64)
 			go writeSummaryStats(config, statsSummary)
 
-			pts = append(pts,
-				influx.Point{
-					Measurement: statsSummary.StatName,
-					Tags: map[string]string{
-						"deliveryservice": statsSummary.DeliveryService,
-						"cdn":             statsSummary.CdnName,
-					},
-					Fields: map[string]interface{}{
-						"value": bytesServedTb,
-					},
-					Time:      startTime,
-					Precision: "s",
-				})
+			pt, err = influx.NewPoint(
+				statsSummary.StatName,
+				tags,
+				fields,
+				startTime,
+			)
+			if err != nil {
+				errHndlr(err, ERROR)
+				continue
+			}
+			bp.AddPoint(pt)
 		}
-		bps := influx.BatchPoints{
-			Points:          pts,
-			Database:        "daily_stats",
-			RetentionPolicy: config.DailySummaryRetentionPolicy,
-		}
-		config.BpsChan <- bps
-		log.Info("Saved daily stats @ ", now)
+		config.BpsChan <- bp
+		log.Info("Collected daily stats @ ", now)
 	}
 }
 
-func queryDB(con *influx.Client, cmd string, database string) (res []influx.Result, err error) {
+func queryDB(con influx.Client, cmd string, database string) (res []influx.Result, err error) {
 	q := influx.Query{
 		Command:  cmd,
 		Database: database,
@@ -468,17 +463,17 @@ func getToData(config StartupConfig, init bool, configChan chan RunningConfig) {
 
 func calcMetrics(cdnName string, url string, cacheGroupMap map[string]string, config StartupConfig, runningConfig RunningConfig) {
 	sampleTime := int64(time.Now().Unix())
-	// get the data from rascal
-	rascalData, err := getURL(url)
+	// get the data from trafficMonitor
+	trafMonData, err := getURL(url)
 	if err != nil {
-		log.Error("Unable to connect to rascal @ ", url, " - skipping timeslot")
+		log.Error("Unable to connect to Traffic Monitor @ ", url, " - skipping timeslot")
 		return
 	}
 
 	if strings.Contains(url, "CacheStats") {
-		err = calcCacheValues(rascalData, cdnName, sampleTime, cacheGroupMap, config)
+		err = calcCacheValues(trafMonData, cdnName, sampleTime, cacheGroupMap, config)
 	} else if strings.Contains(url, "DsStats") {
-		err = calcDsValues(rascalData, cdnName, sampleTime, config)
+		err = calcDsValues(trafMonData, cdnName, sampleTime, config)
 	} else {
 		log.Warn("Don't know what to do with ", url)
 	}
@@ -532,7 +527,11 @@ func calcDsValues(rascalData []byte, cdnName string, sampleTime int64, config St
 	errHndlr(err, ERROR)
 
 	statCount := 0
-	var pts []influx.Point
+	bps, _ := influx.NewBatchPoints(influx.BatchPointsConfig{
+		Database:        "deliveryservice_stats",
+		Precision:       "ms",
+		RetentionPolicy: config.DsRetentionPolicy,
+	})
 	for dsName, dsData := range jData.DeliveryService {
 		for dsMetric, dsMetricData := range dsData {
 			//create dataKey (influxDb series)
@@ -559,31 +558,31 @@ func calcDsValues(rascalData []byte, cdnName string, sampleTime int64, config St
 			if err != nil {
 				statFloatValue = 0.0
 			}
-			pts = append(pts,
-				influx.Point{
-					Measurement: statName,
-					Tags: map[string]string{
-						"deliveryservice": dsName,
-						"cdn":             cdnName,
-						"cachegroup":      cachegroup,
-					},
-					Fields: map[string]interface{}{
-						"value": statFloatValue,
-					},
-					Time:      newTime,
-					Precision: "ms",
-				},
+			tags := map[string]string{
+				"deliveryservice": dsName,
+				"cdn":             cdnName,
+				"cachegroup":      cachegroup,
+			}
+
+			fields := map[string]interface{}{
+				"value": statFloatValue,
+			}
+			pt, err := influx.NewPoint(
+				statName,
+				tags,
+				fields,
+				newTime,
 			)
+			if err != nil {
+				errHndlr(err, ERROR)
+				continue
+			}
+			bps.AddPoint(pt)
 			statCount++
 		}
 	}
-	bps := influx.BatchPoints{
-		Points:          pts,
-		Database:        "deliveryservice_stats",
-		RetentionPolicy: config.DsRetentionPolicy,
-	}
 	config.BpsChan <- bps
-	log.Info("Saved ", statCount, " deliveryservice stats values for ", cdnName, " @ ", sampleTime)
+	log.Info("Collected ", statCount, " deliveryservice stats values for ", cdnName, " @ ", sampleTime)
 	return nil
 }
 
@@ -614,9 +613,6 @@ func calcDsValues(rascalData []byte, cdnName string, sampleTime int64, config St
 */
 
 func calcCacheValues(trafmonData []byte, cdnName string, sampleTime int64, cacheGroupMap map[string]string, config StartupConfig) error {
-	/* note about the data:
-	keys are cdnName:deliveryService:cacheGroup:cacheName:statName
-	*/
 
 	type CacheStatsJSON struct {
 		Pp     string `json:"pp"`
@@ -633,7 +629,14 @@ func calcCacheValues(trafmonData []byte, cdnName string, sampleTime int64, cache
 	errHndlr(err, ERROR)
 
 	statCount := 0
-	var pts []influx.Point
+	bps, err := influx.NewBatchPoints(influx.BatchPointsConfig{
+		Database:        "cache_stats",
+		Precision:       "ms",
+		RetentionPolicy: config.CacheRetentionPolicy,
+	})
+	if err != nil {
+		errHndlr(err, ERROR)
+	}
 	for cacheName, cacheData := range jData.Caches {
 		for statName, statData := range cacheData {
 			dataKey := statName
@@ -654,33 +657,31 @@ func calcCacheValues(trafmonData []byte, cdnName string, sampleTime int64, cache
 			if err != nil {
 				statFloatValue = 0.00
 			}
-			//add stat data to pts array
-			pts = append(pts,
-				influx.Point{
-					Measurement: dataKey,
-					Tags: map[string]string{
-						"cachegroup": cacheGroupMap[cacheName],
-						"hostname":   cacheName,
-						"cdn":        cdnName,
-					},
-					Fields: map[string]interface{}{
-						"value": statFloatValue,
-					},
-					Time:      newTime,
-					Precision: "ms",
-				},
+			tags := map[string]string{
+				"cachegroup": cacheGroupMap[cacheName],
+				"hostname":   cacheName,
+				"cdn":        cdnName,
+			}
+
+			fields := map[string]interface{}{
+				"value": statFloatValue,
+			}
+			pt, err := influx.NewPoint(
+				dataKey,
+				tags,
+				fields,
+				newTime,
 			)
+			if err != nil {
+				errHndlr(err, ERROR)
+				continue
+			}
+			bps.AddPoint(pt)
 			statCount++
 		}
 	}
-	//create influxdb batch of points
-	bps := influx.BatchPoints{
-		Points:          pts,
-		Database:        "cache_stats",
-		RetentionPolicy: config.CacheRetentionPolicy,
-	}
 	config.BpsChan <- bps
-	log.Info("Saved ", statCount, " cache stats values for ", cdnName, " @ ", sampleTime)
+	log.Debug("Collected ", statCount, " cache stats values for ", cdnName, " @ ", sampleTime)
 	return nil
 }
 
@@ -697,7 +698,7 @@ func getURL(url string) ([]byte, error) {
 	return body, nil
 }
 
-func influxConnect(config StartupConfig, runningConfig RunningConfig) (*influx.Client, error) {
+func influxConnect(config StartupConfig, runningConfig RunningConfig) (influx.Client, error) {
 	// Connect to InfluxDb
 	var urls []*url.URL
 
@@ -714,19 +715,13 @@ func influxConnect(config StartupConfig, runningConfig RunningConfig) (*influx.C
 		url := urls[n]
 		urls = append(urls[:n], urls[n+1:]...)
 
-		conf := influx.Config{
-			URL:      *url,
+		conf := influx.HTTPConfig{
+			Addr:     url.String(),
 			Username: config.InfluxUser,
 			Password: config.InfluxPassword,
 		}
 
-		con, err := influx.NewClient(conf)
-		if err != nil {
-			errHndlr(err, ERROR)
-			continue
-		}
-
-		_, _, err = con.Ping()
+		con, err := influx.NewHTTPClient(conf)
 		if err != nil {
 			errHndlr(err, ERROR)
 			continue
@@ -749,27 +744,9 @@ func sendMetrics(config StartupConfig, runningConfig RunningConfig, bps influx.B
 		errHndlr(err, ERROR)
 		return
 	}
+	influxClient.Write(bps)
 
-	pts := bps.Points
-	for len(pts) > 0 {
-		chunkBps := influx.BatchPoints{
-			Database:        bps.Database,
-			RetentionPolicy: bps.RetentionPolicy,
-		}
-
-		chunkBps.Points = pts[:IntMin(maxPublishSize, len(pts))]
-		pts = pts[IntMin(maxPublishSize, len(pts)):]
-
-		_, err = influxClient.Write(chunkBps)
-		if err != nil {
-			if retry {
-				config.BpsChan <- chunkBps
-			}
-			errHndlr(err, ERROR)
-		} else {
-			log.Debug("Sent ", len(chunkBps.Points), " stats")
-		}
-	}
+	log.Info(fmt.Sprintf("Sent %v stats for %v", len(bps.Points()), bps.Database()))
 }
 
 //IntMin returns the lesser of two ints
