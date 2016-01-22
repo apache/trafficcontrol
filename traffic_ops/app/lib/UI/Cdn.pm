@@ -611,7 +611,7 @@ sub auser {
 
 		my @line = [
 			$row->id,           $row->username, $row->role->name, $row->full_name,  $row->company,  $row->email,
-			$row->phone_number, $row->uid,      $row->gid,        $row->local_user, $row->new_user, $row->last_updated
+			$row->phone_number, $row->uid,      $row->gid,        \1,               \$row->new_user, $row->last_updated
 		];
 		push( @{ $data{'aaData'} }, @line );
 	}
