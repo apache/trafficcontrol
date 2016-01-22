@@ -136,12 +136,6 @@ __PACKAGE__->table("tm_user");
   is_nullable: 1
   size: 256
 
-=head2 local_user
-
-  data_type: 'tinyint'
-  default_value: 0
-  is_nullable: 0
-
 =head2 token
 
   data_type: 'varchar'
@@ -201,8 +195,6 @@ __PACKAGE__->add_columns(
   { data_type => "varchar", is_nullable => 1, size => 11 },
   "country",
   { data_type => "varchar", is_nullable => 1, size => 256 },
-  "local_user",
-  { data_type => "tinyint", default_value => 0, is_nullable => 0 },
   "token",
   { data_type => "varchar", is_nullable => 1, size => 50 },
   "registration_sent",
@@ -335,8 +327,8 @@ __PACKAGE__->belongs_to(
 );
 
 
-# Created by DBIx::Class::Schema::Loader v0.07042 @ 2015-12-09 15:54:44
-# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:jq4kq9tcGwjlTbDHrTOFiw
+# Created by DBIx::Class::Schema::Loader v0.07043 @ 2016-01-22 09:54:38
+# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:xNit7GTzW6J0f2fXJ5GlxQ
 
 
 # You can replace this text with custom code or comments, and it will be preserved on regeneration
