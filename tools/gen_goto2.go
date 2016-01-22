@@ -407,7 +407,6 @@ func structString(schemas []ColumnSchema, table string) string {
 		fmt.Println("T:" + typeName)
 		if strings.HasSuffix(typeName, "Cachegroup") {
 			typeName = "Cachegroup"
-			fmt.Println("TTTTTTTTT:" + typeName)
 		}
 		out += "\t\t" + formatName(fk) + "Link " + typeName + "Link `json:\"" + fk + "\" db:-`\n"
 	}
