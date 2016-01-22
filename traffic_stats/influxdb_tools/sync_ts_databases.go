@@ -277,14 +277,13 @@ func syncDeliveryServiceStat(sourceClient influx.Client, targetClient influx.Cli
 	targetClient.Write(bps)
 }
 func syncDailyStat(sourceClient influx.Client, targetClient influx.Client, statName string, days int) {
-	//get records from source DB
+
 	db := "daily_stats"
 	bps, _ := influx.NewBatchPoints(influx.BatchPointsConfig{
-		Database:        db,
-		Precision:       "ms",
-		RetentionPolicy: "monthly",
+		Database:  db,
+		Precision: "s",
 	})
-
+	//get records from source DB
 	queryString := fmt.Sprintf("select time, cdn, deliveryservice, value from \"%s\"", statName)
 	if days > 0 {
 		queryString += fmt.Sprintf(" where time > now() - %dd", days)
