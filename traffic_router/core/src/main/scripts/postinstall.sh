@@ -38,7 +38,7 @@ if [ -f /opt/traffic_router/conf/*.crt ]; then
 	for file in *.crt; do
 		alias=$(echo $file |sed -e 's/.crt//g' |tr [:upper:] [:lower:])
 		cacerts=$(/bin/find $(dirname $(readlink -f $(which java)))/.. -name cacerts)
-		keytool=$(dirname $(readlink -f $(which java)))
+		keytool=$(dirname $(readlink -f $(which java)))/keytool
 		$keytool -list -alias $alias -keystore $cacerts -storepass changeit -noprompt > /dev/null
 
 		if [ $? -ne 0 ]; then
