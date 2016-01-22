@@ -46,8 +46,9 @@ public class TestHomePage {
 
 		MonitorConfig monitorConfig = mock(MonitorConfig.class);
 		when(monitorConfig.getHealthPollingInterval()).thenReturn(10 * 1000);
-		when(monitorConfig.getHeathUrl()).thenReturn("http://www.kabletown/healthParams");
-		when(monitorConfig.getCrConfigUrl()).thenReturn("http://www.kabletown/crConfig");
+		when(monitorConfig.getTmFrequency()).thenReturn(10 * 1000L);
+		when(monitorConfig.getHeathUrl()).thenReturn("http://example.com/healthParams");
+		when(monitorConfig.getCrConfigUrl()).thenReturn("http://example.com/crConfig");
 
 		ConfigHandler configHandler = mock(ConfigHandler.class);
 

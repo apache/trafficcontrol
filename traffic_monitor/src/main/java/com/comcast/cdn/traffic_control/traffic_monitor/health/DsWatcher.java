@@ -83,7 +83,6 @@ public class DsWatcher {
 		isActive  = false;
 		final long time = System.currentTimeMillis();
 		mainThread.interrupt();
-		CacheState.shutdown();
 		while(mainThread.isAlive()) {
 			try {
 				Thread.sleep(10);

@@ -27,7 +27,7 @@ import org.apache.wicket.request.mapper.parameter.PageParameters;
 
 import com.comcast.cdn.traffic_control.traffic_monitor.MonitorApplication;
 import com.comcast.cdn.traffic_control.traffic_monitor.health.CacheWatcher;
-import com.comcast.cdn.traffic_control.traffic_monitor.health.CacheWatcher.CacheDataModel;
+import com.comcast.cdn.traffic_control.traffic_monitor.wicket.models.CacheDataModel;
 
 public class Stats extends JsonPage {
 	private static final Logger LOGGER = Logger.getLogger(Stats.class);
