@@ -31,7 +31,10 @@ Installation
 
 **Installing InfluxDB:**
 
+	**As of Traffic Stats 1.4.0, InfluxDb 0.9.6 or higher is required.  For InfluxDb versions less than 0.9.6 use Traffic Stats 1.3.0**
+
 	In order to store traffic stats data you will need to install InfluxDB.  It is recommended InfluxDB be installed in a 3 server cluster; VMs are acceptable. The documentation for installing InfluxDB can be found on the InfluxDB `website <https://influxdb.com/docs/v0.9/introduction/installation.html>`_.
+
 
 **Installing Grafana:**
 
@@ -60,7 +63,7 @@ Configuration
 
 **Configuring InfluxDB:**
 
-	It is HIGHLY recommended that InfluxDB be configured for clustering.  Documentation on clustering configuration can be found on the clustering page of the `InfluxDB Website <https://influxdb.com/docs/v0.9/concepts/clustering.html>`_.
+	It is HIGHLY recommended that InfluxDB be configured for clustering.  Documentation on clustering configuration can be found on the clustering page of the `InfluxDB Website <https://docs.influxdata.com/influxdb/v0.9/guides/clustering/>`_.
 
 	Once InfluxDB is installed and clustering is configured, Databases and Retention Policies need to be created.  Traffic Stats writes to three different databases: cache_stats, deliveryservice_stats, and daily_stats.  More information about the databases and what data is stored in each can be found on the `overview <../overview/traffic_stats.html>`_ page.
 

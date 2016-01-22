@@ -228,11 +228,9 @@ sub setup_mojo_plugins {
 				my $user_data = $self->db->resultset('TmUser')->search( { username => $username } )->single;
 				my $role      = "read-only";
 				my $priv      = 10;
-				my $local_user;
 				if ( defined($user_data) ) {
 					$role       = $user_data->role->name;
 					$priv       = $user_data->role->priv_level;
-					$local_user = $user_data->local_user;
 				}
 
 				if ( $role eq 'disallowed' ) {
@@ -243,7 +241,6 @@ sub setup_mojo_plugins {
 					'username'   => $username,
 					'role'       => $role,
 					'priv'       => $priv,
-					'local_user' => $local_user,
 				};
 			},
 			validate_user => sub {

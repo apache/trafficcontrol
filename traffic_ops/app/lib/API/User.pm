@@ -79,7 +79,7 @@ sub index {
 				"email"           => $row->email,
 				"fullName"        => $row->full_name,
 				"newUser"         => \$row->new_user,
-				"localUser"       => \$row->local_user,
+				"localUser"       => \1,
 				"addressLine1"    => $row->address_line1,
 				"addressLine2"    => $row->address_line2,
 				"city"            => $row->city,
@@ -146,31 +146,59 @@ sub current {
 	my @data;
 	my $current_username = $self->current_user()->{username};
 
-	my $dbh = $self->db->resultset('TmUser')->search( { username => $current_username } );
-	while ( my $row = $dbh->next ) {
+	if ( &is_ldap($self) ) {
+		my $role = $self->db->resultset('Role')->search( { name => "read-only" } )->get_column('id')->single;
 		push(
 			@data, {
-				"id"              => $row->id,
-				"username"        => $row->username,
-				"role"            => $row->role->id,
-				"uid"             => $row->uid,
-				"gid"             => $row->gid,
-				"company"         => $row->company,
-				"email"           => $row->email,
-				"fullName"        => $row->full_name,
-				"newUser"         => \$row->new_user,
-				"localUser"       => \$row->local_user,
-				"addressLine1"    => $row->address_line1,
-				"addressLine2"    => $row->address_line2,
-				"city"            => $row->city,
-				"stateOrProvince" => $row->state_or_province,
-				"phoneNumber"     => $row->phone_number,
-				"postalCode"      => $row->postal_code,
-				"country"         => $row->country,
+				"id"              => "0",
+				"username"        => $current_username,
+				"role"            => $role,
+				"uid"             => "0",
+				"gid"             => "0",
+				"company"         => "",
+				"email"           => "",
+				"fullName"        => "",
+				"newUser"         => \0,
+				"localUser"       => \0,
+				"addressLine1"    => "",
+				"addressLine2"    => "",
+				"city"            => "",
+				"stateOrProvince" => "",
+				"phoneNumber"     => "",
+				"postalCode"      => "",
+				"country"         => "",
 			}
 		);
+
+		return $self->success( @data );
 	}
-	return $self->success(@data);
+	else {
+		my $dbh = $self->db->resultset('TmUser')->search( { username => $current_username } );
+		while ( my $row = $dbh->next ) {
+			push(
+				@data, {
+					"id"              => $row->id,
+					"username"        => $row->username,
+					"role"            => $row->role->id,
+					"uid"             => $row->uid,
+					"gid"             => $row->gid,
+					"company"         => $row->company,
+					"email"           => $row->email,
+					"fullName"        => $row->full_name,
+					"newUser"         => \$row->new_user,
+					"localUser"       => \1,
+					"addressLine1"    => $row->address_line1,
+					"addressLine2"    => $row->address_line2,
+					"city"            => $row->city,
+					"stateOrProvince" => $row->state_or_province,
+					"phoneNumber"     => $row->phone_number,
+					"postalCode"      => $row->postal_code,
+					"country"         => $row->country,
+				}
+			);
+		}
+		return $self->success(@data);
+	}
 }
 
 # Update
@@ -178,6 +206,10 @@ sub update_current {
 	my $self = shift;
 
 	my $user = $self->req->json->{user};
+	if ( &is_ldap($self) ) {
+		return $self->alert("Profile cannot be updated because '" . $user->{username} ."' is logged in as LDAP.");
+	}
+
 	my $db_user;
 
 	# Prevent these from getting updated
@@ -237,9 +269,6 @@ sub update_current {
 		if ( defined( $user->{"newUser"} ) ) {
 			$db_user->{"new_user"} = $user->{"newUser"};
 		}
-		if ( defined( $user->{"localUser"} ) ) {
-			$db_user->{"local_user"} = $user->{"localUser"};
-		}
 		if ( defined( $user->{"addressLine1"} ) ) {
 			$db_user->{"address_line1"} = $user->{"addressLine1"};
 		}
@@ -275,7 +304,7 @@ sub is_valid {
 
 	my $rules = {
 		fields => [
-			qw/fullName username email role uid gid localPasswd confirmLocalPasswd company newUser addressLine1 addressLine2 city stateOrProvince phoneNumber postalCode country localUser/
+			qw/fullName username email role uid gid localPasswd confirmLocalPasswd company newUser addressLine1 addressLine2 city stateOrProvince phoneNumber postalCode country/
 		],
 
 		# Checks to perform on all fields

@@ -408,7 +408,7 @@ func loadUsers(db *sql.DB, dbName string) error {
 			return err
 		}
 
-		query := "insert ignore into " + dbName + ".tm_user (username, role, local_passwd, new_user, local_user) values (?,(select id from role where name = ?), ?, 1, 0)"
+		query := "insert ignore into " + dbName + ".tm_user (username, role, local_passwd, new_user) values (?,(select id from role where name = ?), ?, 1, 0)"
 		_, err = db.Exec(query, u.Username, "admin", u.Password)
 		if err != nil {
 			fmt.Println("\t An error occured inserting user with name ", u.Username)

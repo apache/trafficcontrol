@@ -293,7 +293,6 @@ sub create_user {
 			confirm_local_passwd => sha1_hex( $self->param('tm_user.confirm_local_passwd') ),
 			role                 => $self->param('tm_user.role'),
 			new_user             => 0,
-			local_user           => 1,
 			uid                  => 0,
 			gid                  => 0,
 			company              => $self->param('tm_user.company'),

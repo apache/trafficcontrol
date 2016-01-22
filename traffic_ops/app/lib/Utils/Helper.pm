@@ -91,17 +91,6 @@ sub is_delivery_service_assigned {
 	return (0);
 }
 
-sub is_local_user {
-	my $self = shift || confess("Call on an instance of Utils::Helper");
-
-	if ( exists( $self->mojo->current_user()->{local_user} ) && $self->mojo->current_user()->{local_user} ) {
-		return (1);
-	}
-	else {
-		return (0);
-	}
-}
-
 sub not_found {
 	my $self = shift || confess("Call on an instance of Utils::Helper");
 
