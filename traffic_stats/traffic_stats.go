@@ -27,7 +27,6 @@ import (
 	"io/ioutil"
 	"math/rand"
 	"net/http"
-	"net/url"
 	"os"
 	"os/signal"
 	"strconv"
@@ -700,13 +699,10 @@ func getURL(url string) ([]byte, error) {
 
 func influxConnect(config StartupConfig, runningConfig RunningConfig) (influx.Client, error) {
 	// Connect to InfluxDb
-	var urls []*url.URL
+	var urls []string
 
 	for _, InfluxHost := range runningConfig.InfluxDBProps {
-		u, err := url.Parse(fmt.Sprintf("http://%s:%d", InfluxHost.Fqdn, InfluxHost.Port))
-		if err != nil {
-			continue
-		}
+		u := fmt.Sprintf("http://%s:%d", InfluxHost.Fqdn, InfluxHost.Port)
 		urls = append(urls, u)
 	}
 
@@ -716,7 +712,7 @@ func influxConnect(config StartupConfig, runningConfig RunningConfig) (influx.Cl
 		urls = append(urls[:n], urls[n+1:]...)
 
 		conf := influx.HTTPConfig{
-			Addr:     url.String(),
+			Addr:     url,
 			Username: config.InfluxUser,
 			Password: config.InfluxPassword,
 		}
