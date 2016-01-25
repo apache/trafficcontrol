@@ -519,11 +519,11 @@ sub replace_profile_templates() {
 			$parameters->{"health.connection.timeout"} = InstallUtils::promptUser ("Traffic Server Health Connection Timeout (milliseconds)", "2000");
 	  }
 
-		profile_replace("profile.global.traffic_ops");
-		profile_replace("profile.traffic_monitor.traffic_ops");
-		profile_replace("profile.traffic_router.traffic_ops");
-		profile_replace("profile.trafficserver_edge.traffic_ops");
-		profile_replace("profile.trafficserver_mid.traffic_ops");
+		profile_replace("/opt/traffic_ops/install/bin/profile.global.traffic_ops");
+		profile_replace("/opt/traffic_ops/install/bin/profile.traffic_monitor.traffic_ops");
+		profile_replace("/opt/traffic_ops/install/bin/profile.traffic_router.traffic_ops");
+		profile_replace("/opt/traffic_ops/install/bin/profile.trafficserver_edge.traffic_ops");
+		profile_replace("/opt/traffic_ops/install/bin/profile.trafficserver_mid.traffic_ops");
 }
 
 # Takes the Traffic Ops URI, user, and password.
@@ -605,15 +605,15 @@ sub import_profiles() {
 
 		# \todo use an array?
 		print "Importing Global profile...\n";
-		profile_import_single("profile.global.traffic_ops", $toUri, $toCookie);
+		profile_import_single("/opt/traffic_ops/install/bin/profile.global.traffic_ops", $toUri, $toCookie);
 		print "Importing Traffic Monitor profile...\n";
-		profile_import_single("profile.traffic_monitor.traffic_ops", $toUri, $toCookie);
+		profile_import_single("/opt/traffic_ops/install/bin/profile.traffic_monitor.traffic_ops", $toUri, $toCookie);
 		print "Importing Traffic Router profile...\n";
-		profile_import_single("profile.traffic_router.traffic_ops", $toUri, $toCookie);
+		profile_import_single("/opt/traffic_ops/install/bin/profile.traffic_router.traffic_ops", $toUri, $toCookie);
 		print "Importing TrafficServer Edge profile...\n";
-		profile_import_single("profile.trafficserver_edge.traffic_ops", $toUri, $toCookie);
+		profile_import_single("/opt/traffic_ops/install/bin/profile.trafficserver_edge.traffic_ops", $toUri, $toCookie);
 		print "Importing TrafficServer Mid profile...\n";
-		profile_import_single("profile.trafficserver_mid.traffic_ops", $toUri, $toCookie);
+		profile_import_single("/opt/traffic_ops/install/bin/profile.trafficserver_mid.traffic_ops", $toUri, $toCookie);
 		print "Finished Importing Profiles.\n";
 }
 
