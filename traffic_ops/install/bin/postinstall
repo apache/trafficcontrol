@@ -538,6 +538,7 @@ sub get_traffic_ops_cookie {
 		open(my $fileb, ">", \$response_body);
 		my $loginData = "{ \"u\":\"$user\", \"p\":\"$pass\" }";
 		$curl->setopt(WWW::Curl::Easy::CURLOPT_URL, $uri . $loginUri);
+		$curl->setopt(WWW::Curl::Easy::CURLOPT_SSL_VERIFYPEER, 0);
 		$curl->setopt(WWW::Curl::Easy::CURLOPT_HEADER, 1); # include header in response
 		$curl->setopt(WWW::Curl::Easy::CURLOPT_NOBODY, 1); # disclude body in response
 		$curl->setopt(WWW::Curl::Easy::CURLOPT_POST, 1);
@@ -569,6 +570,7 @@ sub profile_import_single {
 
 		my $curl = WWW::Curl::Easy->new;
 		$curl->setopt(WWW::Curl::Easy::CURLOPT_URL, $uri . $profileImportPath);
+		$curl->setopt(WWW::Curl::Easy::CURLOPT_SSL_VERIFYPEER, 0);
 		my $headers = "Cookie: mojolicious=$trafficOpsCookie";
 		#print "headers: $headers\n";
 		$curl->setopt(WWW::Curl::Easy::CURLOPT_HTTPHEADER(), [$headers]);
