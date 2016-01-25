@@ -456,21 +456,6 @@ func main() {
 		fmt.Println(err)
 	}
 
-	// read profile json file
-	if err = loadProfile(db, c.DbName); err != nil {
-		fmt.Println(err)
-	}
-
-	// read parameter json file
-	if err = loadParameter(db, c.DbName); err != nil {
-		fmt.Println(err)
-	}
-
-	// read profile parameter json file
-	if err = loadProfileParameter(db, c.DbName); err != nil {
-		fmt.Println(err)
-	}
-
 	// read type json file
 	if err = loadType(db, c.DbName); err != nil {
 		fmt.Println(err)
