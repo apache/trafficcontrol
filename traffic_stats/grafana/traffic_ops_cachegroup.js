@@ -116,7 +116,7 @@ dashboard.title = which;
           "targets": [
             {
               "rawQuery": true,
-              "query": "SELECT sum(value)*1000/6 FROM \"bandwidth\" WHERE cachegroup='" + which + "' and $timeFilter GROUP BY time(60s), hostname",
+              "query": "SELECT sum(value)*1000 FROM \"monthly\".\"bandwidth.1min\" WHERE cachegroup='" + which + "' and $timeFilter GROUP BY time(60s), hostname",
               "alias": "$tag_hostname"
             }
           ],
