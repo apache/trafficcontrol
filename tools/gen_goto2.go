@@ -313,6 +313,7 @@ func handleString(schemas []ColumnSchema, table string) string {
 	out += "	err := json.Unmarshal(payload, &v)\n"
 	out += "	if err != nil {\n"
 	out += "		log.Println(err)\n"
+	out += "    	return nil, err\n"
 	out += "	}\n"
 	out += genInsertVarLines(schemas, table)
 	out += "    result, err := db.NamedExec(sqlString, v)\n"
@@ -404,7 +405,6 @@ func structString(schemas []ColumnSchema, table string) string {
 
 	for fk, _ := range linkMap {
 		typeName := formatName(fk)
-		fmt.Println("T:" + typeName)
 		if strings.HasSuffix(typeName, "Cachegroup") {
 			typeName = "Cachegroup"
 		}

@@ -32,8 +32,8 @@ type FederationFederationResolver struct {
 
 type FederationFederationResolverLinks struct {
 	Self                   string                 `db:"self" json:"_self"`
-	FederationResolverLink FederationResolverLink `json:"federation_resolver" db:-`
 	FederationLink         FederationLink         `json:"federation" db:-`
+	FederationResolverLink FederationResolverLink `json:"federation_resolver" db:-`
 }
 
 // @Title getFederationFederationResolverById
@@ -93,6 +93,7 @@ func postFederationFederationResolver(payload []byte, db *sqlx.DB) (interface{},
 	err := json.Unmarshal(payload, &v)
 	if err != nil {
 		log.Println(err)
+		return nil, err
 	}
 	sqlString := "INSERT INTO federation_federation_resolver("
 	sqlString += "federation"

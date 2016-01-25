@@ -93,6 +93,7 @@ func postStatsSummary(payload []byte, db *sqlx.DB) (interface{}, error) {
 	err := json.Unmarshal(payload, &v)
 	if err != nil {
 		log.Println(err)
+		return nil, err
 	}
 	sqlString := "INSERT INTO stats_summary("
 	sqlString += "cdn_name"

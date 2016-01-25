@@ -100,6 +100,7 @@ func postStaticdnsentry(payload []byte, db *sqlx.DB) (interface{}, error) {
 	err := json.Unmarshal(payload, &v)
 	if err != nil {
 		log.Println(err)
+		return nil, err
 	}
 	sqlString := "INSERT INTO staticdnsentry("
 	sqlString += "host"

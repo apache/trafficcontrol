@@ -32,8 +32,8 @@ type DeliveryserviceRegex struct {
 
 type DeliveryserviceRegexLinks struct {
 	Self                string              `db:"self" json:"_self"`
-	DeliveryserviceLink DeliveryserviceLink `json:"deliveryservice" db:-`
 	RegexLink           RegexLink           `json:"regex" db:-`
+	DeliveryserviceLink DeliveryserviceLink `json:"deliveryservice" db:-`
 }
 
 // @Title getDeliveryserviceRegexById
@@ -93,6 +93,7 @@ func postDeliveryserviceRegex(payload []byte, db *sqlx.DB) (interface{}, error) 
 	err := json.Unmarshal(payload, &v)
 	if err != nil {
 		log.Println(err)
+		return nil, err
 	}
 	sqlString := "INSERT INTO deliveryservice_regex("
 	sqlString += "deliveryservice"

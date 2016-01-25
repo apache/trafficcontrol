@@ -58,12 +58,12 @@ type Server struct {
 
 type ServerLinks struct {
 	Self             string           `db:"self" json:"_self"`
-	CdnLink          CdnLink          `json:"cdn" db:-`
-	PhysLocationLink PhysLocationLink `json:"phys_location" db:-`
-	CachegroupLink   CachegroupLink   `json:"cachegroup" db:-`
 	TypeLink         TypeLink         `json:"type" db:-`
 	StatusLink       StatusLink       `json:"status" db:-`
 	ProfileLink      ProfileLink      `json:"profile" db:-`
+	CdnLink          CdnLink          `json:"cdn" db:-`
+	PhysLocationLink PhysLocationLink `json:"phys_location" db:-`
+	CachegroupLink   CachegroupLink   `json:"cachegroup" db:-`
 }
 
 type ServerLink struct {
@@ -136,6 +136,7 @@ func postServer(payload []byte, db *sqlx.DB) (interface{}, error) {
 	err := json.Unmarshal(payload, &v)
 	if err != nil {
 		log.Println(err)
+		return nil, err
 	}
 	sqlString := "INSERT INTO server("
 	sqlString += "host_name"

@@ -32,8 +32,8 @@ type FederationDeliveryservice struct {
 
 type FederationDeliveryserviceLinks struct {
 	Self                string              `db:"self" json:"_self"`
-	FederationLink      FederationLink      `json:"federation" db:-`
 	DeliveryserviceLink DeliveryserviceLink `json:"deliveryservice" db:-`
+	FederationLink      FederationLink      `json:"federation" db:-`
 }
 
 // @Title getFederationDeliveryserviceById
@@ -93,6 +93,7 @@ func postFederationDeliveryservice(payload []byte, db *sqlx.DB) (interface{}, er
 	err := json.Unmarshal(payload, &v)
 	if err != nil {
 		log.Println(err)
+		return nil, err
 	}
 	sqlString := "INSERT INTO federation_deliveryservice("
 	sqlString += "federation"

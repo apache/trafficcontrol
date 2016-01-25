@@ -42,10 +42,10 @@ type Job struct {
 
 type JobLinks struct {
 	Self                string              `db:"self" json:"_self"`
-	DeliveryserviceLink DeliveryserviceLink `json:"deliveryservice" db:-`
 	JobAgentLink        JobAgentLink        `json:"job_agent" db:-`
 	StatusLink          StatusLink          `json:"status" db:-`
 	TmUserLink          TmUserLink          `json:"tm_user" db:-`
+	DeliveryserviceLink DeliveryserviceLink `json:"deliveryservice" db:-`
 }
 
 type JobLink struct {
@@ -114,6 +114,7 @@ func postJob(payload []byte, db *sqlx.DB) (interface{}, error) {
 	err := json.Unmarshal(payload, &v)
 	if err != nil {
 		log.Println(err)
+		return nil, err
 	}
 	sqlString := "INSERT INTO job("
 	sqlString += "job_agent"

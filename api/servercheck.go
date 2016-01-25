@@ -123,6 +123,7 @@ func postServercheck(payload []byte, db *sqlx.DB) (interface{}, error) {
 	err := json.Unmarshal(payload, &v)
 	if err != nil {
 		log.Println(err)
+		return nil, err
 	}
 	sqlString := "INSERT INTO servercheck("
 	sqlString += "server"
