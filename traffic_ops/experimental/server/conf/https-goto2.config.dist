@@ -1,0 +1,10 @@
+{
+	"dbTypeName": "postgres",
+	"dbName": "to_production",
+	"dbUser": "tm_user",
+	"dbPassword": "YourPasswdHere",
+	"listenerType": "https",
+	"listenerPort": "1443",
+	"listenerCertFile": "./conf/server.pem",
+	"listenerKeyFile": "./conf/server.key"
+}
