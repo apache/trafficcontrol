@@ -560,28 +560,13 @@ sub get_traffic_ops_cookie {
 
 # Takes the filename of a Traffic Ops (TO) profile to import, the TO URI, and the TO login cookie
 sub profile_import_single {
-		my($profileFilename, $uri, $trafficOpsCookie) = @_;
-
-		my $profileImportPath = "/profile/doImport";
-
-		print $profileFilename . "\n";
-		print "cookie: " . $trafficOpsCookie . "\n";
-		print "uri: " . $uri . $profileImportPath . "\n";
-
-		my $curl = WWW::Curl::Easy->new;
-		$curl->setopt(WWW::Curl::Easy::CURLOPT_URL, $uri . $profileImportPath);
-		$curl->setopt(WWW::Curl::Easy::CURLOPT_SSL_VERIFYPEER, 0);
-		my $headers = "Cookie: mojolicious=$trafficOpsCookie";
-		#print "headers: $headers\n";
-		$curl->setopt(WWW::Curl::Easy::CURLOPT_HTTPHEADER(), [$headers]);
-
-		my $curlForm = WWW::Curl::Form->new;
-		$curlForm->formaddfile($profileFilename, "profile_to_import", "multipart/form-data"); 
-		$curlForm->formadd("filename", $profileFilename);
-
-		$curl->setopt(WWW::Curl::Easy::CURLOPT_POST, 1);
-		$curl->setopt(WWW::Curl::Easy::CURLOPT_HTTPPOST, $curlForm);
-		$curl->perform();
+    my($profileFilename, $uri, $trafficOpsCookie) = @_;
+    print "Importing Profiles with: " . "curl -v -k -X POST -H \"Cookie: mojolicious=$trafficOpsCookie\" -F \"filename=$profileFilename\" -F \"profile_to_import=\@$profileFilename\" $uri/profile/doI\
+mport";
+    my $rc = execCommand("curl -v -k -X POST -H \"Cookie: mojolicious=$trafficOpsCookie\" -F \"filename=$profileFilename\" -F \"profile_to_import=\@$profileFilename\" $uri/profile/doImport");
+    if ( $rc != 0 ) {
+        print "ERROR: failed to import Traffic Ops profile, check the console output and rerun postinstall once you've resolved the error.\n";
+    }
 }
 
 sub import_profiles() {
