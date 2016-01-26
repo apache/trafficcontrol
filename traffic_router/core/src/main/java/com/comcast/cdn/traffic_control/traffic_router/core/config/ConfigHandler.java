@@ -149,8 +149,9 @@ public class ConfigHandler {
 	public void setNetworkUpdater(final NetworkUpdater nu) {
 		this.networkUpdater = nu;
 	}
-	public void setRegionalGeoUpdater(final RegionalGeoUpdater rgu) {
-		this.regionalGeoUpdater = rgu;
+
+	public void setRegionalGeoUpdater(final RegionalGeoUpdater regionalGeoUpdater) {
+		this.regionalGeoUpdater = regionalGeoUpdater;
 	}
 
 	/**
@@ -353,13 +354,7 @@ public class ConfigHandler {
 				config.optLong("coveragezone.polling.interval")
 			);
 	}
-	/**
-	 * Parses the RegionalGeo database configuration and updates the database if the URL has
-	 * changed.
-	 *
-	 * @param config
-	 *           the {@link TrafficRouterConfiguration}
-	 */
+
 	private void parseRegionalGeoConfig(final JSONObject config) {
 		final String url = config.optString("regional_geoblock.polling.url", null);
 		if (url == null) {

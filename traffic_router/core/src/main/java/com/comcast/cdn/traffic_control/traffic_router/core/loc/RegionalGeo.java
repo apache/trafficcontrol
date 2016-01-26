@@ -53,18 +53,19 @@ public final class RegionalGeo  {
         return fallback;
     }
 
-    private RegionalGeoRule matchRule(final String dsvcId, final String url)
-        throws RegionalGeoException {
+    private RegionalGeoRule matchRule(final String dsvcId, final String url) {
 
-        final RegionalGeoDsvc rgd = regionalGeoDsvcs.get(dsvcId);
-        if (rgd == null) {
-            throw new RegionalGeoException("RegionalGeo: dsvc not found: " + dsvcId);
+        final RegionalGeoDsvc regionalGeoDsvc = regionalGeoDsvcs.get(dsvcId);
+        if (regionalGeoDsvc == null) {
+            LOGGER.debug("RegionalGeo: dsvc not found: " + dsvcId);
+            return null;
         }
 
-        final RegionalGeoRule rule = rgd.matchRule(url);
+        final RegionalGeoRule rule = regionalGeoDsvc.matchRule(url);
         if (rule == null) {
-            throw new RegionalGeoException("RegionalGeo: no rule match for dsvc "
-                                           + dsvcId + " with url " + url);
+            LOGGER.debug("RegionalGeo: no rule match for dsvc "
+                         + dsvcId + " with url " + url);
+            return null;
         }
 
         return rule;
@@ -92,19 +93,19 @@ public final class RegionalGeo  {
             return false;
         }
 
-        RegionalGeoDsvc rgd = regionalGeoDsvcs.get(dsvcId);
-        if (rgd == null) {
-            rgd = new RegionalGeoDsvc(dsvcId);
-            regionalGeoDsvcs.put(dsvcId, rgd);
+        RegionalGeoDsvc regionalGeoDsvc = regionalGeoDsvcs.get(dsvcId);
+        if (regionalGeoDsvc == null) {
+            regionalGeoDsvc = new RegionalGeoDsvc(dsvcId);
+            regionalGeoDsvcs.put(dsvcId, regionalGeoDsvc);
         }
 
-        final RegionalGeoRule urlRule = new RegionalGeoRule(rgd,
+        final RegionalGeoRule urlRule = new RegionalGeoRule(regionalGeoDsvc,
                 urlRegex, urlRegexPattern,
                 postalsType, postals,
                 networkRoot, alternateUrl);
 
         LOGGER.info("RegionalGeo: adding " + urlRule);
-        rgd.addRule(urlRule);
+        regionalGeoDsvc.addRule(urlRule);
         return true;
     }
 
@@ -131,8 +132,8 @@ public final class RegionalGeo  {
     @SuppressWarnings("PMD.CyclomaticComplexity")
     private static RegionalGeo parseConfigJson(final JSONObject json) {
 
-        final RegionalGeo rg = new RegionalGeo();
-        rg.setFallback(true);
+        final RegionalGeo regionalGeo = new RegionalGeo();
+        regionalGeo.setFallback(true);
         try {
             final JSONArray dsvcsJson = json.getJSONArray("deliveryServices");
             LOGGER.info("RegionalGeo: parse json with rule count " + dsvcsJson.length());
@@ -188,14 +189,14 @@ public final class RegionalGeo  {
                     whiteListRoot = parseWhiteListJson(whiteListJson);
                 }
 
-                if (!rg.addRule(dsvcId, urlRegex, postalsType, postals, whiteListRoot, redirectUrl)) {
+                if (!regionalGeo.addRule(dsvcId, urlRegex, postalsType, postals, whiteListRoot, redirectUrl)) {
                     LOGGER.error("RegionalGeo ERR: add rule failed on parsing json file");
                     return null;
                 }
             }
 
-            rg.setFallback(false);
-            return rg;
+            regionalGeo.setFallback(false);
+            return regionalGeo;
         } catch (Exception e) {
             LOGGER.error("RegionalGeo ERR: parse json file with exception", e);
         }
@@ -213,13 +214,13 @@ public final class RegionalGeo  {
             return false;
         }
 
-        final RegionalGeo rg = parseConfigJson(json);
-        if (rg == null) {
+        final RegionalGeo regionalGeo = parseConfigJson(json);
+        if (regionalGeo== null) {
             currentConfig.setFallback(true);
             return false;
         }
         
-        currentConfig = rg; // point to the new parsed object
+        currentConfig = regionalGeo; // point to the new parsed object
         currentConfig.setFallback(false);
         LOGGER.debug("RegionalGeo: create instance from new json");
         return true;
@@ -246,13 +247,12 @@ public final class RegionalGeo  {
         result.setUsingFallbackConfig(currentConfig.isFallback());
         result.setAllowedByWhiteList(false);
 
-        try {
-            rule = currentConfig.matchRule(dsvcId, url);
-        } catch (RegionalGeoException e) {
+        rule = currentConfig.matchRule(dsvcId, url);
+        if (rule == null) {
             result.setHttpResponseCode(RegionalGeoResult.REGIONAL_GEO_DENIED_HTTP_CODE);
             result.setType(RegionalGeoResultType.DENIED);
             LOGGER.debug("RegionalGeo: denied for dsvc " + dsvcId
-                         + ", url " + url + ", postal " + postal + ", " + e);
+                         + ", url " + url + ", postal " + postal);
             return;
         }
 

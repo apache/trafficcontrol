@@ -16,8 +16,8 @@
 
 package com.comcast.cdn.traffic_control.traffic_router.core.loc;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.equalTo;
 
 import java.io.File;
 import java.io.FileReader;
@@ -35,11 +35,6 @@ import org.junit.Before;
 import org.junit.Test;
 
 public class RegionalGeoRuleTest {
-    private static final Logger LOGGER = Logger.getLogger(RegionalGeoRuleTest.class);
-
-    @Before
-    public void setUp() throws Exception {
-    }
 
     @Test
     public void testMatchesUrl() throws Exception {
@@ -59,27 +54,27 @@ public class RegionalGeoRuleTest {
         boolean matches;
         String url = "http://example.com/abc.m3u8";
         matches = urlRule.matchesUrl(url);
-        assertEquals(true, matches);
+        assertThat(matches, equalTo(true));
 
         url = "http://example.com/AbC.m3u8";
         matches = urlRule.matchesUrl(url);
-        assertEquals(true, matches);
+        assertThat(matches, equalTo(true));
 
         url = "http://example.com/path/ABC.m3u8";
         matches = urlRule.matchesUrl(url);
-        assertEquals(true, matches);
+        assertThat(matches, equalTo(true));
 
         url = "http://example.com/cbaabc.m3u8";
         matches = urlRule.matchesUrl(url);
-        assertEquals(true, matches);
+        assertThat(matches, equalTo(true));
 
         url = "http://example.com/cba.m3u8";
         matches = urlRule.matchesUrl(url);
-        assertEquals(false, matches);
+        assertThat(matches, equalTo(false));
 
         url = "http://example.com/abcabc.m3u8";
         matches = urlRule.matchesUrl(url);
-        assertEquals(true, matches);
+        assertThat(matches, equalTo(true));
     }
 
     @Test
@@ -102,13 +97,13 @@ public class RegionalGeoRuleTest {
         boolean allowed;
 
         allowed = urlRule.isAllowedPostal("N6G");
-        assertEquals(true, allowed);
+        assertThat(allowed, equalTo(true));
 
         allowed = urlRule.isAllowedPostal("N7G");
-        assertEquals(true, allowed);
+        assertThat(allowed, equalTo(true));
 
         allowed = urlRule.isAllowedPostal("N8G");
-        assertEquals(false, allowed);
+        assertThat(allowed, equalTo(false));
     }
 
     @Test
@@ -131,13 +126,13 @@ public class RegionalGeoRuleTest {
         boolean allowed;
 
         allowed = urlRule.isAllowedPostal("N6G");
-        assertEquals(false, allowed);
+        assertThat(allowed, equalTo(false));
 
         allowed = urlRule.isAllowedPostal("N7G");
-        assertEquals(false, allowed);
+        assertThat(allowed, equalTo(false));
 
         allowed = urlRule.isAllowedPostal("N8G");
-        assertEquals(true, allowed);
+        assertThat(allowed, equalTo(true));
     }
 
     @Test
@@ -154,7 +149,6 @@ public class RegionalGeoRuleTest {
         whiteList.add(new NetworkNode("128.128.50.3/22", location));
         whiteList.add6(new NetworkNode("2001:0db8:0:f101::1/64", location));
         whiteList.add6(new NetworkNode("2001:0db8:0:f101::1/48", location));
-        LOGGER.debug("RegionalGeo: whitelist " + whiteList);
 
         final String alternateUrl = "/alternate.m3u8";
 
@@ -168,37 +162,37 @@ public class RegionalGeoRuleTest {
         boolean in;
 
         in = urlRule.isIpInWhiteList("10.74.50.12");
-        assertEquals(true, in);
+        assertThat(in, equalTo(true));
 
         in = urlRule.isIpInWhiteList("10.75.51.12");
-        assertEquals(false, in);
+        assertThat(in, equalTo(false));
 
         in = urlRule.isIpInWhiteList("10.74.51.1");
-        assertEquals(true, in);
+        assertThat(in, equalTo(true));
 
         in = urlRule.isIpInWhiteList("10.74.50.255");
-        assertEquals(true, in);
+        assertThat(in, equalTo(true));
 
         in = urlRule.isIpInWhiteList("192.168.250.1");
-        assertEquals(true, in);
+        assertThat(in, equalTo(true));
 
         in = urlRule.isIpInWhiteList("128.128.50.3");
-        assertEquals(true, in);
+        assertThat(in, equalTo(true));
 
         in = urlRule.isIpInWhiteList("128.128.50.7");
-        assertEquals(true, in);
+        assertThat(in, equalTo(true));
 
         in = urlRule.isIpInWhiteList("128.128.2.1");
-        assertEquals(false, in);
+        assertThat(in, equalTo(false));
 
         in = urlRule.isIpInWhiteList("2001:0db8:0:f101::2");
-        assertEquals(true, in);
+        assertThat(in, equalTo(true));
 
         in = urlRule.isIpInWhiteList("2001:0db8:0:f102::1");
-        assertEquals(true, in);
+        assertThat(in, equalTo(true));
 
         in = urlRule.isIpInWhiteList("2001:0db8:1:f101::3");
-        assertEquals(false, in);
+        assertThat(in, equalTo(false));
     }
 
     @Test
@@ -211,7 +205,6 @@ public class RegionalGeoRuleTest {
             final String location = RegionalGeoRule.WHITE_LIST_NODE_LOCATION;
             whiteList.add(new NetworkNode("10.256.0.0/10", location));
             //whiteList.add(new NetworkNode("a.b.d.0/10", location));
-            LOGGER.debug("RegionalGeo: whitelist " + whiteList);
 
             final String alternateUrl = "/alternate.m3u8";
 
@@ -225,16 +218,16 @@ public class RegionalGeoRuleTest {
             boolean in;
 
             in = urlRule.isIpInWhiteList("10.74.50.12");
-            assertEquals(false, in);
+            assertThat(in, equalTo(false));
 
             in = urlRule.isIpInWhiteList("10.74.51.12");
-            assertEquals(false, in);
+            assertThat(in, equalTo(false));
 
             in = urlRule.isIpInWhiteList("1.1.50.1");
-            assertEquals(false, in);
+            assertThat(in, equalTo(false));
 
             in = urlRule.isIpInWhiteList("2001:0db8:1:f101::3");
-            assertEquals(false, in);
+            assertThat(in, equalTo(false));
         } catch (NetworkNodeException e) {
 
         }
@@ -248,7 +241,6 @@ public class RegionalGeoRuleTest {
         final NetworkNode.SuperNode whiteList = new NetworkNode.SuperNode();
         final String location = RegionalGeoRule.WHITE_LIST_NODE_LOCATION;
         whiteList.add(new NetworkNode("0.0.0.0/0", location));
-        LOGGER.debug("RegionalGeo: whitelist " + whiteList);
 
         final String alternateUrl = "/alternate.m3u8";
 
@@ -262,19 +254,19 @@ public class RegionalGeoRuleTest {
         boolean in;
 
         in = urlRule.isIpInWhiteList("10.74.50.12");
-        assertEquals(true, in);
+        assertThat(in, equalTo(true));
 
         in = urlRule.isIpInWhiteList("10.74.51.12");
-        assertEquals(true, in);
+        assertThat(in, equalTo(true));
 
         in = urlRule.isIpInWhiteList("1.1.50.1");
-        assertEquals(true, in);
+        assertThat(in, equalTo(true));
 
         in = urlRule.isIpInWhiteList("222.254.254.254");
-        assertEquals(true, in);
+        assertThat(in, equalTo(true));
 
         in = urlRule.isIpInWhiteList("2001:0db8:1:f101::3");
-        assertEquals(false, in);
+        assertThat(in, equalTo(false));
     }
 }
 

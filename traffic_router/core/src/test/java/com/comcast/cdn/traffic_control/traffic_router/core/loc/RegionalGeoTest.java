@@ -16,8 +16,8 @@
 
 package com.comcast.cdn.traffic_control.traffic_router.core.loc;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.equalTo;
 
 import java.io.File;
 import java.io.FileReader;
@@ -35,7 +35,6 @@ import org.junit.Test;
 import com.comcast.cdn.traffic_control.traffic_router.core.loc.RegionalGeoResult.RegionalGeoResultType;
 
 public class RegionalGeoTest {
-    private static final Logger LOGGER = Logger.getLogger(RegionalGeoTest.class);
 
     @Before
     public void setUp() throws Exception {
@@ -54,8 +53,8 @@ public class RegionalGeoTest {
 
         RegionalGeo.enforce(dsvcId, url, ip, postal, result);
 
-        assertEquals(RegionalGeoResultType.ALLOWED, result.getType());
-        assertEquals(url, result.getUrl());
+        assertThat(result.getType(), equalTo(RegionalGeoResultType.ALLOWED));
+        assertThat(result.getUrl(), equalTo(url));
     }
 
     @Test
@@ -69,8 +68,8 @@ public class RegionalGeoTest {
 
         RegionalGeo.enforce(dsvcId, url, ip, postal, result);
 
-        assertEquals(RegionalGeoResultType.ALTERNATE_WITH_CACHE, result.getType());
-        assertEquals("/path/redirect_T2", result.getUrl());
+        assertThat(result.getType(), equalTo(RegionalGeoResultType.ALTERNATE_WITH_CACHE));
+        assertThat(result.getUrl(), equalTo("/path/redirect_T2"));
     }
 
     @Test
@@ -84,8 +83,8 @@ public class RegionalGeoTest {
 
         RegionalGeo.enforce(dsvcId, url, ip, postal, result);
 
-        assertEquals(RegionalGeoResultType.ALTERNATE_WITHOUT_CACHE, result.getType());
-        assertEquals("http://example.com/redirect_T1", result.getUrl());
+        assertThat(result.getType(), equalTo(RegionalGeoResultType.ALTERNATE_WITHOUT_CACHE));
+        assertThat(result.getUrl(), equalTo("http://example.com/redirect_T1"));
     }
 
     @Test
@@ -99,7 +98,7 @@ public class RegionalGeoTest {
 
         RegionalGeo.enforce(dsvcId, url, ip, postal, result);
 
-        assertEquals(RegionalGeoResultType.DENIED, result.getType());
+        assertThat(result.getType(), equalTo(RegionalGeoResultType.DENIED));
     }
 
     @Test
@@ -113,7 +112,7 @@ public class RegionalGeoTest {
 
         RegionalGeo.enforce(dsvcId, url, ip, postal, result);
 
-        assertEquals(RegionalGeoResultType.DENIED, result.getType());
+        assertThat(result.getType(), equalTo(RegionalGeoResultType.DENIED));
     }
 
     @Test
@@ -127,8 +126,8 @@ public class RegionalGeoTest {
 
         RegionalGeo.enforce(dsvcId, url, ip, postal, result);
 
-        assertEquals(RegionalGeoResultType.ALTERNATE_WITH_CACHE, result.getType());
-        assertEquals("/redirect_T3", result.getUrl());
+        assertThat(result.getType(), equalTo(RegionalGeoResultType.ALTERNATE_WITH_CACHE));
+        assertThat(result.getUrl(), equalTo("/redirect_T3"));
     }
 
     @Test
@@ -142,8 +141,8 @@ public class RegionalGeoTest {
 
         RegionalGeo.enforce(dsvcId, url, ip, postal, result);
 
-        assertEquals(RegionalGeoResultType.ALTERNATE_WITHOUT_CACHE, result.getType());
-        assertEquals("http://example.com/redirect_T1", result.getUrl());
+        assertThat(result.getType(), equalTo(RegionalGeoResultType.ALTERNATE_WITHOUT_CACHE));
+        assertThat(result.getUrl(), equalTo("http://example.com/redirect_T1"));
     }
 
     @Test
@@ -157,8 +156,8 @@ public class RegionalGeoTest {
 
         RegionalGeo.enforce(dsvcId, url, ip, postal, result);
 
-        assertEquals(RegionalGeoResultType.ALTERNATE_WITH_CACHE, result.getType());
-        assertEquals("/path/redirect_T2", result.getUrl());
+        assertThat(result.getType(), equalTo(RegionalGeoResultType.ALTERNATE_WITH_CACHE));
+        assertThat(result.getUrl(), equalTo("/path/redirect_T2"));
     }
 
     @Test
@@ -172,8 +171,8 @@ public class RegionalGeoTest {
 
         RegionalGeo.enforce(dsvcId, url, ip, postal, result);
 
-        assertEquals(RegionalGeoResultType.ALTERNATE_WITHOUT_CACHE, result.getType());
-        assertEquals("http://example.com/redirect_T1", result.getUrl());
+        assertThat(result.getType(), equalTo(RegionalGeoResultType.ALTERNATE_WITHOUT_CACHE));
+        assertThat(result.getUrl(), equalTo("http://example.com/redirect_T1"));
     }
 
     @Test
@@ -187,8 +186,8 @@ public class RegionalGeoTest {
 
         RegionalGeo.enforce(dsvcId, url, ip, postal, result);
 
-        assertEquals(RegionalGeoResultType.ALLOWED, result.getType());
-        assertEquals(url, result.getUrl());
+        assertThat(result.getType(), equalTo(RegionalGeoResultType.ALLOWED));
+        assertThat(result.getUrl(), equalTo(url));
     }
 
     @Test
@@ -202,8 +201,8 @@ public class RegionalGeoTest {
 
         RegionalGeo.enforce(dsvcId, url, ip, postal, result);
 
-        assertEquals(RegionalGeoResultType.ALTERNATE_WITH_CACHE, result.getType());
-        assertEquals("/path/redirect_T2", result.getUrl());
+        assertThat(result.getType(), equalTo(RegionalGeoResultType.ALTERNATE_WITH_CACHE));
+        assertThat(result.getUrl(), equalTo("/path/redirect_T2"));
     }
 
     @Test
@@ -217,8 +216,8 @@ public class RegionalGeoTest {
 
         RegionalGeo.enforce(dsvcId, url, ip, postal, result);
 
-        assertEquals(RegionalGeoResultType.ALLOWED, result.getType());
-        assertEquals(url, result.getUrl());
+        assertThat(result.getType(), equalTo(RegionalGeoResultType.ALLOWED));
+        assertThat(result.getUrl(), equalTo(url));
     }
 
     @Test
@@ -232,8 +231,8 @@ public class RegionalGeoTest {
 
         RegionalGeo.enforce(dsvcId, url, ip, postal, result);
 
-        assertEquals(RegionalGeoResultType.ALTERNATE_WITH_CACHE, result.getType());
-        assertEquals("/redirect_T4", result.getUrl());
+        assertThat(result.getType(), equalTo(RegionalGeoResultType.ALTERNATE_WITH_CACHE));
+        assertThat(result.getUrl(), equalTo("/redirect_T4"));
     }
 
     @Test
@@ -247,8 +246,8 @@ public class RegionalGeoTest {
 
         RegionalGeo.enforce(dsvcId, url, ip, postal, result);
 
-        assertEquals(RegionalGeoResultType.ALLOWED, result.getType());
-        assertEquals(url, result.getUrl());
+        assertThat(result.getType(), equalTo(RegionalGeoResultType.ALLOWED));
+        assertThat(result.getUrl(), equalTo(url));
     }
 }
 
