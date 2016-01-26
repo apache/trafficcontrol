@@ -108,7 +108,7 @@ dashboard.title = which;
           "targets": [
             {
               "measurement": "bw",
-              "query": "SELECT mean(value)*1000 FROM \"kbps\" WHERE deliveryservice='" + which + "' and cachegroup = 'total'  and $timeFilter GROUP BY time(60s), deliveryservice ORDER BY asc",
+              "query": "SELECT mean(value)*1000 FROM \"monthly\".\"kbps.ds.1min\" WHERE deliveryservice='" + which + "' and cachegroup = 'total'  and $timeFilter GROUP BY time(60s), deliveryservice ORDER BY asc",
               "rawQuery": true,
               "tags": {
                 "deliveryservice": which
@@ -198,24 +198,24 @@ dashboard.title = which;
               "tags": {
                 "deliveryservice": which
               },
-              "query": "SELECT mean(value) FROM \"tps_2xx\" WHERE $timeFilter AND deliveryservice='" + which + "' GROUP BY time($interval) ORDER BY asc",
+              "query": "SELECT mean(value) FROM \"monthly\".\"tps_2xx.ds.1min\" WHERE $timeFilter AND deliveryservice='" + which + "' GROUP BY time(60s) ORDER BY asc",
               "hide": false,
               "rawQuery": true
             },
             {
               "target": "",
               "rawQuery": true,
-              "query": "SELECT mean(value) FROM \"tps_3xx\" WHERE $timeFilter AND deliveryservice='" + which + "' GROUP BY time($interval) ORDER BY asc"
+              "query": "SELECT mean(value) FROM \"monthly\".\"tps_3xx.ds.1min\" WHERE $timeFilter AND deliveryservice='" + which + "' GROUP BY time(60s) ORDER BY asc"
             },
             {
               "target": "",
               "rawQuery": true,
-              "query": "SELECT mean(value) FROM \"tps_4xx\" WHERE $timeFilter AND deliveryservice='" + which + "' GROUP BY time($interval) ORDER BY asc"
+              "query": "SELECT mean(value) FROM \"monthly\".\"tps_4xx.ds.1min\" WHERE $timeFilter AND deliveryservice='" + which + "' GROUP BY time(60s) ORDER BY asc"
             },
             {
               "target": "",
               "rawQuery": true,
-              "query": "SELECT mean(value) FROM \"tps_5xx\" WHERE $timeFilter AND deliveryservice='" + which + "' GROUP BY time($interval) ORDER BY asc"
+              "query": "SELECT mean(value) FROM \"monthly\".\"tps_5xx.ds.1min\" WHERE $timeFilter AND deliveryservice='" + which + "' GROUP BY time(60s) ORDER BY asc"
             }
           ],
           "aliasColors": {},
@@ -273,7 +273,7 @@ dashboard.title = which;
           "steppedLine": false,
           "targets": [
             {
-              "query": "SELECT sum(value)*1000/6 FROM \"kbps\" WHERE deliveryservice='" + which + "' and cachegroup != 'total' and $timeFilter GROUP BY time(60s), cachegroup",
+              "query": "SELECT mean(value)*1000 FROM \"monthly\".\"kbps.ds.1min\" WHERE deliveryservice='" + which + "' and cachegroup != 'total' and $timeFilter GROUP BY time(60s), cachegroup",
               "rawQuery": true,
               "alias": "$tag_cachegroup"
             }

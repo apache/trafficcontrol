@@ -615,6 +615,7 @@ CREATE TABLE `tm_user` (
   `phone_number` varchar(25) DEFAULT NULL,
   `postal_code` varchar(11) DEFAULT NULL,
   `country` varchar(256) DEFAULT NULL,
+  `local_user` tinyint(1) NOT NULL DEFAULT '0',
   `token` varchar(50) DEFAULT NULL,
   `registration_sent` timestamp NOT NULL DEFAULT '0000-00-00 00:00:00',
   PRIMARY KEY (`id`),
