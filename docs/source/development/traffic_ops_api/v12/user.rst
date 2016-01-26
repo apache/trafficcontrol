@@ -381,7 +381,8 @@ Role(s) Required: None
   +----------------------+--------+------------------------------------------------+
   |``startTime``         | string | Start Time is the time when the revalidation   |
   |                      |        | rule will be made active. Populate             |
-  |                      |        | with the current time to schedule ASAP.        |
+  |                      |        | with the current time to schedule ASAP. This   |
+  |                      |        | value cannot be more than 2 days before now.   |
   +----------------------+--------+------------------------------------------------+
   |``ttl``               | int    | Time To Live is how long the revalidation rule |
   |                      |        | will be active for in hours. It usually makes  |
