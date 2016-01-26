@@ -603,6 +603,12 @@ public class ZoneManager extends Resolver {
 					zoneMap.put(domain, zholder);
 				}
 
+				final String superdomain = domain.split("\\.", 2)[1];
+
+				if (!superDomains.containsKey(superdomain)) {
+					superDomains.put(superdomain, new ArrayList<Record>());
+				}
+
 				if (host.equalsIgnoreCase(getDnsRoutingName())) {
 					continue;
 				}
@@ -626,14 +632,6 @@ public class ZoneManager extends Resolver {
 							DClass.IN,
 							ZoneUtils.getLong(ttl, AAAA, 60),
 							ip6));
-				}
-
-				final String superdomain = domain.split("\\.", 2)[1];
-				zholder = superDomains.get(superdomain);
-
-				if (zholder == null) {
-					zholder = new ArrayList<Record>();
-					superDomains.put(superdomain, zholder);
 				}
 			}
 		}

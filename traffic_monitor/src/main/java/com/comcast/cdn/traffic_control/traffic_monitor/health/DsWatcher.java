@@ -55,6 +55,11 @@ public class DsWatcher {
 					}
 	
 					deliveryServiceStateRegistry.startUpdateAll();
+
+					if (crConfig.getDsList() == null) {
+						LOGGER.warn("No Delivery Services present in CR Config");
+					}
+
 					deliveryServiceStateRegistry.completeUpdateAll(myHealthDeterminer, crConfig.getDsList(), time-config.getDsCacheLeniency());
 					try {
 						Thread.sleep(Math.max(config.getHealthDsInterval()-(System.currentTimeMillis()-time),0));

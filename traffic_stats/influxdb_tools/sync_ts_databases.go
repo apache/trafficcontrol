@@ -23,10 +23,10 @@ import (
 	"encoding/json"
 	"flag"
 	"fmt"
-	influx "github.com/influxdb/influxdb/client"
-	"net/url"
 	"os"
 	"time"
+
+	influx "github.com/influxdb/influxdb/client/v2"
 )
 
 type cacheStats struct {
@@ -51,23 +51,21 @@ type dailyStats struct {
 
 func main() {
 
-	sourceUrl := flag.String("sourceUrl", "http://server1.kabletown.net:8086", "The influxdb url and port")
-	targetUrl := flag.String("targetUrl", "http://server2.kabletown.net:8086", "The influxdb url and port")
+	sourceURL := flag.String("sourceUrl", "http://server1.kabletown.net:8086", "The influxdb url and port")
+	targetURL := flag.String("targetUrl", "http://server2.kabletown.net:8086", "The influxdb url and port")
 	database := flag.String("database", "all", "Sync a specific database")
 	days := flag.Int("days", 0, "Number of days in the past to sync (today - x days), 0 is all")
 	flag.Parse()
-	fmt.Printf("syncing %v to %v for %v database(s) for the past %v day(s)\n", *sourceUrl, *targetUrl, *database, *days)
-	su, _ := url.Parse(*sourceUrl)
-	sourceClient, err := influx.NewClient(influx.Config{
-		URL: *su,
+	fmt.Printf("syncing %v to %v for %v database(s) for the past %v day(s)\n", *sourceURL, *targetURL, *database, *days)
+	sourceClient, err := influx.NewHTTPClient(influx.HTTPConfig{
+		Addr: *sourceURL,
 	})
 	if err != nil {
 		fmt.Printf("Error creating influx sourceClient: %v\n", err)
 		os.Exit(1)
 	}
-	tu, _ := url.Parse(*targetUrl)
-	targetClient, err := influx.NewClient(influx.Config{
-		URL: *tu,
+	targetClient, err := influx.NewHTTPClient(influx.HTTPConfig{
+		Addr: *targetURL,
 	})
 	if err != nil {
 		fmt.Printf("Error creating influx targetClient: %v\n", err)
@@ -82,15 +80,15 @@ func main() {
 
 	switch *database {
 	case "all":
-		go syncCsDb(ch, *sourceClient, *targetClient, *days)
-		go syncDsDb(ch, *sourceClient, *targetClient, *days)
-		go syncDailyDb(ch, *sourceClient, *targetClient, *days)
+		go syncCsDb(ch, sourceClient, targetClient, *days)
+		go syncDsDb(ch, sourceClient, targetClient, *days)
+		go syncDailyDb(ch, sourceClient, targetClient, *days)
 	case "cache_stats":
-		go syncCsDb(ch, *sourceClient, *targetClient, *days)
+		go syncCsDb(ch, sourceClient, targetClient, *days)
 	case "deliveryservice_stats":
-		go syncDsDb(ch, *sourceClient, *targetClient, *days)
+		go syncDsDb(ch, sourceClient, targetClient, *days)
 	case "daily_stats":
-		go syncDailyDb(ch, *sourceClient, *targetClient, *days)
+		go syncDailyDb(ch, sourceClient, targetClient, *days)
 	}
 
 	for i := 1; i <= chSize; i++ {
@@ -167,7 +165,11 @@ func queryDB(client influx.Client, cmd string, db string) (res []influx.Result, 
 func syncCacheStat(sourceClient influx.Client, targetClient influx.Client, statName string, days int) {
 	//get records from source DB
 	db := "cache_stats"
-	var pts []influx.Point
+	bps, _ := influx.NewBatchPoints(influx.BatchPointsConfig{
+		Database:        db,
+		Precision:       "ms",
+		RetentionPolicy: "monthly",
+	})
 
 	queryString := fmt.Sprintf("select time, cdn, hostname, value from \"monthly\".\"%s\"", statName)
 	if days > 0 {
@@ -176,7 +178,7 @@ func syncCacheStat(sourceClient influx.Client, targetClient influx.Client, statN
 	fmt.Println("queryString ", queryString)
 	res, err := queryDB(sourceClient, queryString, db)
 	if err != nil {
-		fmt.Println("An error occured getting %s records from sourceDb", statName)
+		fmt.Printf("An error occured getting %s records from sourceDb\n", statName)
 		return
 	}
 	sourceStats := getCacheStats(res)
@@ -198,35 +200,32 @@ func syncCacheStat(sourceClient influx.Client, targetClient influx.Client, statN
 		}
 		statTime, _ := time.Parse(time.RFC3339, ss.t)
 		tags := map[string]string{"cdn": ss.cdn}
-
-		pts = append(pts,
-			influx.Point{
-				Measurement: statName,
-				Tags:        tags,
-				Fields: map[string]interface{}{
-					"value": ss.value,
-				},
-				Time:      statTime,
-				Precision: "ms",
-			},
+		fields := map[string]interface{}{
+			"value": ss.value,
+		}
+		pt, err := influx.NewPoint(
+			statName,
+			tags,
+			fields,
+			statTime,
 		)
-
+		if err != nil {
+			fmt.Printf("error adding creating point for %v...%v\n", statName, err)
+			continue
+		}
+		bps.AddPoint(pt)
 	}
-	bps := influx.BatchPoints{
-		Points:          pts,
-		Database:        "cache_stats",
-		RetentionPolicy: "monthly",
-	}
-	_, err = targetClient.Write(bps)
-	if err != nil {
-		fmt.Printf("An error occured writing points: %v\n", err)
-	}
+	targetClient.Write(bps)
 }
 
 func syncDeliveryServiceStat(sourceClient influx.Client, targetClient influx.Client, statName string, days int) {
 
 	db := "deliveryservice_stats"
-	var pts []influx.Point
+	bps, _ := influx.NewBatchPoints(influx.BatchPointsConfig{
+		Database:        db,
+		Precision:       "ms",
+		RetentionPolicy: "monthly",
+	})
 
 	queryString := fmt.Sprintf("select time, cachegroup, cdn, deliveryservice, value from \"monthly\".\"%s\"", statName)
 	if days > 0 {
@@ -260,34 +259,31 @@ func syncDeliveryServiceStat(sourceClient influx.Client, targetClient influx.Cli
 			"cachegroup":      ss.cacheGroup,
 			"deliveryservice": ss.deliveryService,
 		}
-		pts = append(pts,
-			influx.Point{
-				Measurement: statName,
-				Tags:        tags,
-				Fields: map[string]interface{}{
-					"value": ss.value,
-				},
-				Time:      statTime,
-				Precision: "ms",
-			},
+		fields := map[string]interface{}{
+			"value": ss.value,
+		}
+		pt, err := influx.NewPoint(
+			statName,
+			tags,
+			fields,
+			statTime,
 		)
-
+		if err != nil {
+			fmt.Printf("error adding creating point for %v...%v\n", statName, err)
+			continue
+		}
+		bps.AddPoint(pt)
 	}
-	bps := influx.BatchPoints{
-		Points:          pts,
-		Database:        "deliveryservice_stats",
-		RetentionPolicy: "monthly",
-	}
-	_, err = targetClient.Write(bps)
-	if err != nil {
-		fmt.Printf("An error occured writing points: %v\n", err)
-	}
+	targetClient.Write(bps)
 }
 func syncDailyStat(sourceClient influx.Client, targetClient influx.Client, statName string, days int) {
-	//get records from source DB
-	db := "daily_stats"
-	var pts []influx.Point
 
+	db := "daily_stats"
+	bps, _ := influx.NewBatchPoints(influx.BatchPointsConfig{
+		Database:  db,
+		Precision: "s",
+	})
+	//get records from source DB
 	queryString := fmt.Sprintf("select time, cdn, deliveryservice, value from \"%s\"", statName)
 	if days > 0 {
 		queryString += fmt.Sprintf(" where time > now() - %dd", days)
@@ -318,26 +314,22 @@ func syncDailyStat(sourceClient influx.Client, targetClient influx.Client, statN
 			"cdn":             ss.cdn,
 			"deliveryservice": ss.deliveryService,
 		}
-		pts = append(pts,
-			influx.Point{
-				Measurement: statName,
-				Tags:        tags,
-				Fields: map[string]interface{}{
-					"value": ss.value,
-				},
-				Time:      statTime,
-				Precision: "ms",
-			},
+		fields := map[string]interface{}{
+			"value": ss.value,
+		}
+		pt, err := influx.NewPoint(
+			statName,
+			tags,
+			fields,
+			statTime,
 		)
+		if err != nil {
+			fmt.Printf("error adding creating point for %v...%v\n", statName, err)
+			continue
+		}
+		bps.AddPoint(pt)
 	}
-	bps := influx.BatchPoints{
-		Points:   pts,
-		Database: "daily_stats",
-	}
-	_, err = targetClient.Write(bps)
-	if err != nil {
-		fmt.Printf("An error occured writing points: %v\n", err)
-	}
+	targetClient.Write(bps)
 }
 
 func getCacheStats(res []influx.Result) map[string]cacheStats {
@@ -352,7 +344,7 @@ func getCacheStats(res []influx.Result) map[string]cacheStats {
 				var err error
 				data.value, err = record[3].(json.Number).Float64()
 				if err != nil {
-					fmt.Println("Couldn't parse value from record %v\n", record)
+					fmt.Printf("Couldn't parse value from record %v\n", record)
 					continue
 				}
 				key := data.t + data.cdn + data.hostname
@@ -380,7 +372,7 @@ func getDeliveryServiceStats(res []influx.Result) map[string]deliveryServiceStat
 				var err error
 				data.value, err = record[4].(json.Number).Float64()
 				if err != nil {
-					fmt.Println("Couldn't parse value from record %v\n", record)
+					fmt.Printf("Couldn't parse value from record %v\n", record)
 					continue
 				}
 				key := data.t + data.cacheGroup + data.cdn + data.deliveryService
@@ -403,7 +395,7 @@ func getDailyStats(res []influx.Result) map[string]dailyStats {
 				var err error
 				data.value, err = record[3].(json.Number).Float64()
 				if err != nil {
-					fmt.Println("Couldn't parse value from record %v\n", record)
+					fmt.Printf("Couldn't parse value from record %v\n", record)
 					continue
 				}
 				key := data.t + data.cdn + data.deliveryService
@@ -412,14 +404,4 @@ func getDailyStats(res []influx.Result) map[string]dailyStats {
 		}
 	}
 	return response
-}
-
-func writeStats(pts []influx.Point, client influx.Client, db string) error {
-	bps := influx.BatchPoints{
-		Points:   pts,
-		Database: db,
-	}
-	var err error
-	_, err = client.Write(bps)
-	return err
 }

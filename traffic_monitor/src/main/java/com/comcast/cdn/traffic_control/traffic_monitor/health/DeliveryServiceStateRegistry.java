@@ -42,15 +42,19 @@ public class DeliveryServiceStateRegistry extends StateRegistry {
 
 		final Collection<String> toRemove = new ArrayList<String>();
 		toRemove.addAll(states.keySet());
-		for(String dsId : JSONObject.getNames(dsList)) {
-			toRemove.remove(dsId);
-			try {
-				final DsState dss = (DsState) getOrCreate(dsId);
-				dss.completeRound(myHealthDeterminer.getDsControls(dss.getId()));
-			} catch(Exception e) {
-				LOGGER.warn(e,e);
+
+		if (dsList != null) {
+			for (String dsId : JSONObject.getNames(dsList)) {
+				toRemove.remove(dsId);
+				try {
+					final DsState dss = (DsState) getOrCreate(dsId);
+					dss.completeRound(myHealthDeterminer.getDsControls(dss.getId()));
+				} catch (Exception e) {
+					LOGGER.warn(e, e);
+				}
 			}
 		}
+
 		for(String id : toRemove) {
 			states.remove(id);
 		}
