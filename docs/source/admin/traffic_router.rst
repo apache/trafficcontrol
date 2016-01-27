@@ -140,3 +140,176 @@ Traffic Router currently follows the zone signing key pre-publishing operational
 Troubleshooting and log files
 =============================
 Traffic Router log files are in ``/opt/traffic_router/var/log``, and Tomcat log files are in ``/opt/tomcat/logs``. Application related logging is in ``/opt/traffic_router/var/log/traffic_router.log``, while access logs are written to ``/opt/traffic_router/var/log/access.log``.
+
+Event Log File Format
+=====================
+
+Summary
+-------
+
+All access events to Traffic Router are logged to the file ``/opt/traffic_router/var/log/access.log``
+This file grows up to 200Mb and gets rolled into older log files, 10 log files total are kept (total of up to 2Gb of logged events per traffic router)
+
+Traffic Router logs access events in a format that largely following `ATS event logging format
+<https://docs.trafficserver.apache.org/en/6.0.x/admin/event-logging-formats.en.html>`_
+
+--------------
+
+Sample Message
+--------------
+
+Items within brackets below are detailed under the HTTP and DNS sections
+::
+  144140678.000 qtype=DNS chi=192.168.10.11 ttms=789 [Fields Specific to the DNS request] rtype=CZ rloc="40.252611,58.439389" rdtl=- rerr="-" [Fields Specific to the DNS result]
+  144140678.000 qtype=HTTP chi=192.168.10.11 ttms=789 [Fields Specific to the HTTP request] rtype=GEO rloc="40.252611,58.439389" rdtl=- rerr="-" [Fields Specific to the HTTP result]
+
+.. Note:: The above message samples contain fields that are always present for every single access event to Traffic Router
+
+**Message Format**
+- Each event that is logged is a series of space separated key value pairs except for the first item. 
+- The first item is always the epoch in seconds with a decimal field precision of up to milliseconds 
+- Each key value pair is in the form of unquoted string, equals character, optionally quoted string 
+- Values that are quoted strings may contain space characters 
+- Values that are not quoted should not contains any space characters 
+
+.. Note:: Any value that is a single dash character or a dash character enclosed in quotes represents an empty value
+
+--------
+
+Fields Always Present
+---------------------
+
++------+---------------------------------------------------------------------------------+---------------------------------------------------------------------------+
+|Name  |Description                                                                      |Data                                                                       |
++======+=================================================================================+===========================================================================+
+|qtype |Whether the request was for DNS or HTTP                                          |Always DNS or HTTP                                                         |
++------+---------------------------------------------------------------------------------+---------------------------------------------------------------------------+
+|chi   |The IP address of the requester                                                  |Depends on whether this was a DNS or HTTP request, see below sections      |
++------+---------------------------------------------------------------------------------+---------------------------------------------------------------------------+
+|ttms  |The amount of time in milliseconds it took Traffic Router to process the request |A number greater than or equal to zero                                     |
++------+---------------------------------------------------------------------------------+---------------------------------------------------------------------------+
+|rtype |Routing Result Type                                                              |One of ERROR, CZ, GEO, MISS, STATIC_ROUTE, DS_REDIRECT, DS_MISS, INIT, FED |
++------+---------------------------------------------------------------------------------+---------------------------------------------------------------------------+
+|rloc  |GeoLocation of result                                                            |Latitude and Longitude in Decimal Degrees                                  |
++------+---------------------------------------------------------------------------------+---------------------------------------------------------------------------+
+|rdtl  |Result Details Associated with unusual conditions                                |One of DS_NOT_FOUND, DS_NO_BYPASS, DS_BYPASS, DS_CZ_ONLY                   |
++------+---------------------------------------------------------------------------------+---------------------------------------------------------------------------+
+|rerr  |Message about internal Traffic Router Error                                      |String                                                                     |
++------+---------------------------------------------------------------------------------+---------------------------------------------------------------------------+
+
+**rtype meanings**
+
++-------------+------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+|Name         |Meaning                                                                                                                                                                 |
++=============+========================================================================================================================================================================+
+|ERROR        |An internal error occurred within Traffic Router, more details may be found in the rerr field                                                                           |
++-------------+------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+|CZ           |The result was derived from Coverage Zone data based on the address in the chi field                                                                                    |
++-------------+------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+|GEO          |The result was derived from geolocation service based on the address in the chi field                                                                                   |
++-------------+------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+|MISS         |Traffic Router was unable to resolve a DNS request or find a cache for the requested resource                                                                           |
++-------------+------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+|STATIC_ROUTE |_*DNS Only*_ No DNS Delivery Service supports the hostname portion of the requested url                                                                                 |
++-------------+------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+|DS_MISS      |_*HTTP Only*_ No HTTP Delivery Service supports either this request's URL path or headers                                                                               |
++-------------+------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+|DS_REDIRECT  |The result is using the Bypass Destination configured for the matched Delivery Service when that Delivery Service is unavailable or does not have the requested resource|
++-------------+------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+|FED          |_*DNS Only*_ The result was obtained through federated coverage zone data outside of any delivery service                                                               |
++-------------+------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+
+**rdtl meanings**
+
++--------------------------+--------------------------------------------------------------------------------------------------------------------------------------------+
+|Name                      |Meaning                                                                                                                                     |
++==========================+============================================================================================================================================+
+|DS_NOT_FOUND              |Always goes with rtypes STATIC_ROUTE and DS_MISS                                                                                            |
++--------------------------+--------------------------------------------------------------------------------------------------------------------------------------------+
+|DS_BYPASS                 |Used Bypass Destination for Redirect of Delivery Service                                                                                    |
++--------------------------+--------------------------------------------------------------------------------------------------------------------------------------------+
+|DS_NO_BYPASS              |No valid Bypass Destination is configured for the matched Delivery Service and the delivery service does not have the requested resource    |
++--------------------------+--------------------------------------------------------------------------------------------------------------------------------------------+
+|DS_CZ_ONLY                |The selected Delivery Service only supports resource lookup based on Coverage Zone data                                                     |
++--------------------------+--------------------------------------------------------------------------------------------------------------------------------------------+
+|DS_CLIENT_GEO_UNSUPPORTED |Traffic Router did not find a resource supported by coverage zone data and was unable to determine the geolocation of the requesting client |
++--------------------------+--------------------------------------------------------------------------------------------------------------------------------------------+
+|GEO_NO_CACHE_FOUND        |Traffic Router could not find a resource via geolocation data based on the requesting client's geolocation                                  |
++--------------------------+--------------------------------------------------------------------------------------------------------------------------------------------+
+
+---------------
+
+HTTP Specifics
+--------------
+
+Sample Message
+::
+  1452197640.936 qtype=HTTP chi=69.241.53.218 url="http://ccr.mm-test.jenkins.cdnlab.comcast.net/some/asset.m3u8" cqhm=GET cqhv=HTTP/1.1 rtype=GEO rloc="40.252611,58.439389" rdtl=- rerr="-" pssc=302 ttms=0 rurl="http://odol-atsec-sim-114.mm-test.jenkins.cdnlab.comcast.net:8090/some/asset.m3u8" rh="Accept: */*" rh="myheader: asdasdasdasfasg"
+
+**Request Fields**
+
++-----+-----------------------------------------------------------------------------------------------------------------------------------------+-------------------------------------------+
+|Name |Description                                                                                                                              |Data                                       |
++=====+=========================================================================================================================================+===========================================+
+|url  |Requested URL with query string                                                                                                          |String                                     |
++-----+-----------------------------------------------------------------------------------------------------------------------------------------+-------------------------------------------+
+|cqhm |Http Method                                                                                                                              |e.g GET, POST                              |
++-----+-----------------------------------------------------------------------------------------------------------------------------------------+-------------------------------------------+
+|cqhv |Http Protocol Version                                                                                                                    |e.g. HTTP/1.1                              |
++-----+-----------------------------------------------------------------------------------------------------------------------------------------+-------------------------------------------+
+|rh   |One or more of these key value pairs may exist in a logged event and are controlled by the configuration of the matched Delivery Service |Key value pair of the format "name: value" |
++-----+-----------------------------------------------------------------------------------------------------------------------------------------+-------------------------------------------+
+
+**Response Fields**
+
++-----+----------------------------------------------------------+------------+
+|Name |Description                                               |Data        |
++=====+==========================================================+============+
+|rurl |The resulting url of the resource requested by the client |A URL String|
++-----+----------------------------------------------------------+------------+
+
+------------
+
+DNS Specifics
+-------------
+
+Sample Message
+::
+  144140678.000 qtype=DNS chi=192.168.10.11 ttms=123 xn=65535 fqdn=www.example.com. type=A class=IN ttl=12345 rcode=NOERROR rtype=CZ rloc="40.252611,58.439389" rdtl=- rerr="-" ans="192.168.1.2 192.168.3.4 0:0:0:0:0:ffff:c0a8:102 0:0:0:0:0:ffff:c0a8:304"
+
+**Request Fields**
+
+.. _qname: http://www.zytrax.com/books/dns/ch15/#qname
+
+.. _qtype: http://www.zytrax.com/books/dns/ch15/#qtype
+
++------+------------------------------------------------------------------+--------------------------------------------------------+
+|Name  |Description                                                       |Data                                                    |
++======+==================================================================+========================================================+
+|xn    |The ID from the client DNS request header                         |a number from 0 to 65535                                |
++------+------------------------------------------------------------------+--------------------------------------------------------+
+|fqdn  |The qname field from the client DNS request message (i.e. The     |A series of DNS labels/domains separated by '.'         |
+|      |fully qualified domain name the client is requesting be resolved) |characters and ending with a '.' character (see qname_) |
++------+------------------------------------------------------------------+--------------------------------------------------------+
+|type  |The qtype field from the client DNS request message (i.e.         |Examples are A (IpV4), AAAA (IpV6), NS (Name Service),  |
+|      |the type of resolution that's requested such as IPv4, IPv6)       |  SOA (Start of Authority), and CNAME, (see qtype_)     |
++------+------------------------------------------------------------------+--------------------------------------------------------+
+|class |The qclass field from the client DNS request message (i.e. The    |Either IN (Internet resource) or ANY (Traffic router    |
+|      |class of resource being requested)                                |  rejects requests with any other value of class)       |
++------+------------------------------------------------------------------+--------------------------------------------------------+
+
+**Response Fields**
+
++------+---------------------------------------------------------------------+-----------------------------------------------------+
+|Name  | Description                                                         | Data                                                |
++======+=====================================================================+=====================================================+
+|ttl   | The 'time to live' in seconds for the answer provided by Traffic    |A number from 0 to 4294967295                        |
+|      | Router (clients can reliably use this answer for this long without  |                                                     |
+|      | re-querying traffic router)                                         |                                                     |
++------+---------------------------------------------------------------------+-----------------------------------------------------+
+|rcode | The result code for the DNS answer provided by Traffic Router       | One of NOERROR (success), NOTIMP (request is not    |
+|      |                                                                     | NOTIMP (request is not  supported),                 |
+|      |                                                                     | REFUSED (request is refused to be answered), or     |
+|      |                                                                     | NXDOMAIN (the domain/name requested does not exist) |
++------+---------------------------------------------------------------------+-----------------------------------------------------+
+
