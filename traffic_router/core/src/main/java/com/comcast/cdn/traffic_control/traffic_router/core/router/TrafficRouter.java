@@ -78,6 +78,7 @@ public class TrafficRouter {
 
 	private final Random random = new Random(System.nanoTime());
 	private Set<String> requestHeaders = new HashSet<String>();
+	private static final Geolocation GEO_ZERO_ZERO = new Geolocation(0,0);
 
 	public TrafficRouter(final CacheRegister cr, 
 			final GeolocationService geolocationService, 
@@ -199,6 +200,9 @@ public class TrafficRouter {
 			final List<Cache> caches = selectCache(location, ds);
 			if (caches != null) {
 				track.setResultLocation(location.getGeolocation());
+				if (track.getResultLocation().equals(GEO_ZERO_ZERO)) {
+					LOGGER.error("Location " + location.getId() + " has Geolocation " + location.getGeolocation());
+				}
 				return caches;
 			}
 			locationsTested++;
