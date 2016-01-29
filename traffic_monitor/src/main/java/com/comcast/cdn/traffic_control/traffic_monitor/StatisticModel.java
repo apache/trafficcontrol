@@ -19,15 +19,11 @@ package com.comcast.cdn.traffic_control.traffic_monitor;
 
 import org.apache.wicket.model.Model;
 
-import com.comcast.cdn.traffic_control.traffic_monitor.health.AbstractState;
-
-public class KeyValue extends Model<String> implements java.io.Serializable {
+public class StatisticModel extends Model<String> implements java.io.Serializable {
 	final private String key;
-	final protected String val;
 
-	public KeyValue(final String key, final String val) {
+	public StatisticModel(final String key) {
 		this.key = key;
-		this.val = val;
 	}
 
 	public String getKey() {
@@ -36,6 +32,6 @@ public class KeyValue extends Model<String> implements java.io.Serializable {
 
 	@Override
 	public String getObject( ) {
-		return val;
+		return "";
 	}
 }

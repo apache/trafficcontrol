@@ -16,58 +16,17 @@
 
 package com.comcast.cdn.traffic_control.traffic_monitor.wicket.components;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import com.comcast.cdn.traffic_control.traffic_monitor.health.DeliveryServiceStateRegistry;
-import org.apache.wicket.behavior.Behavior;
-import org.apache.wicket.markup.html.basic.Label;
-import org.apache.wicket.markup.html.list.ListItem;
-import org.apache.wicket.markup.html.list.ListView;
 import org.apache.wicket.request.mapper.parameter.PageParameters;
-import org.apache.wicket.util.time.Duration;
 
-import com.comcast.cdn.traffic_control.traffic_monitor.KeyValue;
-import com.comcast.cdn.traffic_control.traffic_monitor.MonitorPage;
-import com.comcast.cdn.traffic_control.traffic_monitor.wicket.behaviors.MultiUpdatingTimerBehavior;
-
-public class DsDetailsPage extends MonitorPage {
+public class DsDetailsPage extends StateDetailsPage {
 	private static final long serialVersionUID = 1L;
 
 	public DsDetailsPage(final PageParameters pars) {
 		this(pars.get("id").toString());
 	}
+
 	public DsDetailsPage(final String idStr) {
-		final Behavior updater = new MultiUpdatingTimerBehavior(Duration.seconds(1));
-		final Label hostname = new Label("id", idStr);
-		hostname.add(updater);
-		add(hostname);
-
-		final List<KeyValue> keyValues = new ArrayList<KeyValue>();
-
-		for (String key : DeliveryServiceStateRegistry.getInstance().get(idStr).getStatisticsKeys()) {
-			keyValues.add(new KeyValue(key, "") {
-				@Override
-				public String getObject() {
-					if (DeliveryServiceStateRegistry.getInstance().has(idStr)) {
-						return DeliveryServiceStateRegistry.getInstance().get(idStr, getKey());
-					}
-					return super.getObject();
-				}
-			});
-		}
-
-		final ListView<KeyValue> servers = new ListView<KeyValue>("params", keyValues ) {
-			private static final long serialVersionUID = 1L;
-			@Override
-			protected void populateItem(final ListItem<KeyValue> item) {
-				final KeyValue keyval = item.getModelObject();
-				item.add(new Label("key", keyval.getKey()));
-				final Label v = new Label("value", keyval);
-				v.add(updater);
-				item.add(v);
-			}
-		};
-		add(servers);
+		super(idStr, "id", DeliveryServiceStateRegistry.getInstance());
 	}
 }
