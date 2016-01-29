@@ -135,7 +135,7 @@ public class DNSRoutingMissesTest {
 
     @Test
     public void itSetsDetailsWhenCacheNotFoundByGeolocation() throws Exception {
-        doCallRealMethod().when(trafficRouter).selectCachesByGeo(any(Request.class), any(DeliveryService.class), any(CacheLocation.class), any(Track.class), any(RegionalGeoResult.class));
+        doCallRealMethod().when(trafficRouter).selectCachesByGeo(any(Request.class), any(DeliveryService.class), any(CacheLocation.class), any(Track.class));
         CacheLocation cacheLocation = mock(CacheLocation.class);
         CacheRegister cacheRegister = mock(CacheRegister.class);
 

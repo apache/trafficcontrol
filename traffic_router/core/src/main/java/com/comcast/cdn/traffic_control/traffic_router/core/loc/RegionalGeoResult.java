@@ -54,7 +54,7 @@ public class RegionalGeoResult {
     }
 
     public void setType(final RegionalGeoResultType resultType) {
-        resultType = resultType;
+        this.resultType = resultType;
     }
 
     public boolean isCacheSelectionRequired() {

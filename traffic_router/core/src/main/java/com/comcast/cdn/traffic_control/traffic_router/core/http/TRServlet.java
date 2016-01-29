@@ -117,7 +117,6 @@ public class TRServlet extends HttpServlet {
 		writeHttpResponse(response, request, req, track, httpAccessRecord);
 	}
 
-	@SuppressWarnings("PMD.CyclomaticComplexity")
 	private void writeHttpResponse(final HttpServletResponse response, final HttpServletRequest httpServletRequest,
 			final HTTPRequest request, final Track track, final HTTPAccessRecord httpAccessRecord) throws IOException {
 		final String format = httpServletRequest.getParameter("format");
@@ -132,13 +131,7 @@ public class TRServlet extends HttpServlet {
 			}
 
 			if (routeResult == null || routeResult.getUrl() == null) {
-				if (routeResult != null && routeResult.getResponseCode() > 0) {
-					httpAccessRecordBuilder.responseCode(routeResult.getResponseCode());
-					response.sendError(routeResult.getResponseCode());
-				} else {
-					httpAccessRecordBuilder.responseCode(HttpServletResponse.SC_SERVICE_UNAVAILABLE);
-					response.sendError(HttpServletResponse.SC_SERVICE_UNAVAILABLE);
-				}
+				setErrorResponseCode(response, httpAccessRecordBuilder, routeResult);
 			} else {
 				final URL location = routeResult.getUrl();
 				final Map<String, String> responseHeaders = deliveryService.getResponseHeaders();
@@ -189,6 +182,19 @@ public class TRServlet extends HttpServlet {
 
 	public void setStatTracker(final StatTracker statTracker) {
 		this.statTracker = statTracker;
+	}
+
+	private void setErrorResponseCode(final HttpServletResponse response,
+		final HTTPAccessRecord.Builder httpAccessRecordBuilder, final HTTPRouteResult routeResult) throws IOException {
+
+		if (routeResult != null && routeResult.getResponseCode() > 0) {
+			httpAccessRecordBuilder.responseCode(routeResult.getResponseCode());
+			response.sendError(routeResult.getResponseCode());
+			return;
+		}
+
+		httpAccessRecordBuilder.responseCode(HttpServletResponse.SC_SERVICE_UNAVAILABLE);
+		response.sendError(HttpServletResponse.SC_SERVICE_UNAVAILABLE);
 	}
 
 }

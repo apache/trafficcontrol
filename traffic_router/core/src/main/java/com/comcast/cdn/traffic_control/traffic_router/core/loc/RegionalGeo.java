@@ -23,6 +23,8 @@ import java.util.HashMap;
 import java.util.Set;
 import java.util.HashSet;
 import java.util.regex.Pattern;
+import java.net.MalformedURLException;
+import java.net.URL;
 
 import org.apache.log4j.Logger;
 import org.apache.wicket.ajax.json.JSONArray;
@@ -30,7 +32,18 @@ import org.apache.wicket.ajax.json.JSONException;
 import org.apache.wicket.ajax.json.JSONObject;
 import org.apache.wicket.ajax.json.JSONTokener;
 
+import com.comcast.cdn.traffic_control.traffic_router.core.cache.Cache;
+import com.comcast.cdn.traffic_control.traffic_router.core.ds.DeliveryService;
 import com.comcast.cdn.traffic_control.traffic_router.core.loc.RegionalGeoResult.RegionalGeoResultType;
+import com.comcast.cdn.traffic_control.traffic_router.core.request.HTTPRequest;
+import com.comcast.cdn.traffic_control.traffic_router.core.request.Request;
+import com.comcast.cdn.traffic_control.traffic_router.core.router.StatTracker.Track;
+import com.comcast.cdn.traffic_control.traffic_router.core.router.StatTracker.Track.ResultType;
+import com.comcast.cdn.traffic_control.traffic_router.core.router.StatTracker.Track.ResultDetails;
+import com.comcast.cdn.traffic_control.traffic_router.core.router.TrafficRouter;
+import com.comcast.cdn.traffic_control.traffic_router.core.router.HTTPRouteResult;
+
+import static com.comcast.cdn.traffic_control.traffic_router.core.loc.RegionalGeoResult.RegionalGeoResultType.*;
 
 
 public final class RegionalGeo  {
@@ -109,7 +122,7 @@ public final class RegionalGeo  {
         return true;
     }
 
-    // static methods
+    /// static methods
     private static NetworkNode parseWhiteListJson(final JSONArray json)
         throws JSONException, NetworkNodeException {
 
@@ -129,7 +142,32 @@ public final class RegionalGeo  {
         return root;
     }
 
-    @SuppressWarnings("PMD.CyclomaticComplexity")
+    private static RegionalGeoRule.PostalsType parseLocationJson(final JSONObject locationJson,
+        final Set<String> postals) throws JSONException {
+
+        RegionalGeoRule.PostalsType postalsType = RegionalGeoRule.PostalsType.UNDEFINED;
+        JSONArray postalsJson = locationJson.optJSONArray("includePostalCode");
+        
+        if (postalsJson != null) {
+            postalsType = RegionalGeoRule.PostalsType.INCLUDE;
+        } else {
+            postalsJson = locationJson.optJSONArray("excludePostalCode");
+            if (postalsJson == null) {
+                LOGGER.error("RegionalGeo ERR: no include/exclude in geolocation");
+                return RegionalGeoRule.PostalsType.UNDEFINED;
+            }
+        
+            postalsType = RegionalGeoRule.PostalsType.EXCLUDE;
+        }
+        
+        //final Set<String> postals = new HashSet<String>();
+        for (int j = 0; j < postalsJson.length(); j++) {
+            postals.add(postalsJson.getString(j));
+        }
+        return postalsType;
+
+    }
+
     private static RegionalGeo parseConfigJson(final JSONObject json) {
 
         final RegionalGeo regionalGeo = new RegionalGeo();
@@ -161,7 +199,13 @@ public final class RegionalGeo  {
 
                 // FSAs (postal codes)
                 final JSONObject locationJson = ruleJson.getJSONObject("geoLocation");
-
+                final Set<String> postals = new HashSet<String>();
+                final RegionalGeoRule.PostalsType postalsType = parseLocationJson(locationJson, postals);
+                if (postalsType == RegionalGeoRule.PostalsType.UNDEFINED) {
+                    LOGGER.error("RegionalGeo ERR: geoLocation empty");
+                    return null;
+                }
+/*
                 JSONArray postalsJson = locationJson.optJSONArray("includePostalCode");
 
                 RegionalGeoRule.PostalsType postalsType;
@@ -181,7 +225,7 @@ public final class RegionalGeo  {
                 for (int j = 0; j < postalsJson.length(); j++) {
                     postals.add(postalsJson.getString(j));
                 }
-
+*/
                 // white list
                 NetworkNode whiteListRoot = null;
                 final JSONArray whiteListJson = ruleJson.optJSONArray("ipWhiteList");
@@ -189,6 +233,7 @@ public final class RegionalGeo  {
                     whiteListRoot = parseWhiteListJson(whiteListJson);
                 }
 
+                // add the rule
                 if (!regionalGeo.addRule(dsvcId, urlRegex, postalsType, postals, whiteListRoot, redirectUrl)) {
                     LOGGER.error("RegionalGeo ERR: add rule failed on parsing json file");
                     return null;
@@ -226,63 +271,50 @@ public final class RegionalGeo  {
         return true;
     }
 
-    @SuppressWarnings("PMD.CyclomaticComplexity")
-    public static void enforce(final String dsvcId, final String url,
-            final String ip, final String postalCode,
-            final RegionalGeoResult result) {
+    public static RegionalGeoResult enforce(final String dsvcId, final String url,
+        final String ip, final String postalCode) {
+
+        final RegionalGeoResult result = new RegionalGeoResult();
         boolean allowed = false;
         RegionalGeoRule rule = null;
-        String postal;
-        LOGGER.debug("RegionalGeo: postalCode " + postalCode);
 
-        // Get the first 3 characters in the postal code.
-        // These 3 chars are called FSA in Canadian postal codes.
-        if (postalCode != null && postalCode.length() > 3) {
-            postal = postalCode.substring(0, 3);
-        } else {
-            postal = postalCode;
-        }
-
-        result.setPostal(postal);
+        result.setPostal(postalCode);
         result.setUsingFallbackConfig(currentConfig.isFallback());
         result.setAllowedByWhiteList(false);
+        result.setCacheSelectionRequired(false);
 
         rule = currentConfig.matchRule(dsvcId, url);
         if (rule == null) {
             result.setHttpResponseCode(RegionalGeoResult.REGIONAL_GEO_DENIED_HTTP_CODE);
-            result.setType(RegionalGeoResultType.DENIED);
+            result.setType(DENIED);
             result.setCacheSelectionRequired(false);
             LOGGER.debug("RegionalGeo: denied for dsvc " + dsvcId
-                         + ", url " + url + ", postal " + postal);
-            return;
+                         + ", url " + url + ", postal " + postalCode);
+            return result;
         }
 
-        // first match whitelist, then FSA
+        // first match whitelist, then FSA (postal)
         if (rule.isIpInWhiteList(ip)) {
             LOGGER.debug("RegionalGeo: allowing ip in whitelist");
             allowed = true;
             result.setAllowedByWhiteList(true);
         } else {
-            if (postal == null || postal.isEmpty()) {
+            if (postalCode == null || postalCode.isEmpty()) {
                 LOGGER.warn("RegionalGeo: alternate a request with null or empty postal");
                 allowed = false;
             } else {
-                allowed = rule.isAllowedPostal(postal);
+                allowed = rule.isAllowedPostal(postalCode);
             }
         }
 
         final String alternateUrl = rule.getAlternateUrl();
-        LOGGER.debug("RegionalGeo: allow " + allowed + ", url " + url
-                     + ", postal " + postal);
-
         result.setRuleType(rule.getPostalsType());
 
         if (allowed) {
             result.setUrl(url);
-            result.setType(RegionalGeoResultType.ALLOWED);
+            result.setType(ALLOWED);
             result.setCacheSelectionRequired(true);
         } else {
-
             // For a disallowed client, if alternateUrl starts with "http://"
             // just redirect the client to this url without any cache selection;
             // if alternateUrl only has path and file name like "/path/abc.html",
@@ -290,7 +322,7 @@ public final class RegionalGeo  {
             // added to make it like "http://cache01.example.com/path/abc.html" later.
             if (alternateUrl.toLowerCase().startsWith(HTTP_SCHEME)) {
                 result.setUrl(alternateUrl);
-                result.setType(RegionalGeoResultType.ALTERNATE_WITHOUT_CACHE);
+                result.setType(ALTERNATE_WITHOUT_CACHE);
                 result.setCacheSelectionRequired(false);
             } else {
                 String redirectUrl;
@@ -302,80 +334,100 @@ public final class RegionalGeo  {
 
                 LOGGER.debug("RegionalGeo: alternate with cache url " + redirectUrl);
                 result.setUrl(redirectUrl);
-                result.setType(RegionalGeoResultType.ALTERNATE_WITH_CACHE);
+                result.setType(ALTERNATE_WITH_CACHE);
                 result.setCacheSelectionRequired(true);
             }
         }
+
+        LOGGER.debug("RegionalGeo: result " + result
+                 + ", needCache " + result.isCacheSelectionRequired()
+                 + " for dsvc " + dsvcId + ", url " + url);
+
+        return result;
     }
 
-
-    public RegionalGeoResult enforce(final Request request,
-        final DeliveryService deliveryService, final Track track) {
+    public static void enforce(final TrafficRouter trafficRouter, final Request request,
+        final DeliveryService deliveryService, final Cache cache,
+        final HTTPRouteResult routeResult, final Track track) throws MalformedURLException {
 
         if (!deliveryService.isRegionalGeoEnabled()) {
-            LOGGER.debug("RegionalGeo: not enabled for DeliveryService " + deliveryService.getId());
-            //return null;
+            LOGGER.error("RegionalGeo: not enabled for DeliveryService " + deliveryService.getId());
+            return;
         }
 
         LOGGER.debug("RegionalGeo: enforcing");
 
         Geolocation clientGeolocation = null;
         try {
-            clientGeolocation = TrafficRouter.getClientGeolocation(request, deliveryService, track);
+            clientGeolocation = trafficRouter.getClientGeolocation(request, track);
         } catch (GeolocationException e) {
-            LOGGER.warn("Failed looking up Client GeoLocation: " + e.getMessage());
+            LOGGER.warn("RegionalGeo: failed looking up Client GeoLocation: " + e.getMessage());
         }
 
         String postalCode = null;
         if (clientGeolocation != null) {
             postalCode = clientGeolocation.getPostalCode();
+
+            // Get the first 3 chars in the postal code. These 3 chars are called FSA in Canadian postal codes.
+            if (postalCode != null && postalCode.length() > 3) {
+                postalCode = postalCode.substring(0, 3);
+            }
         }
 
         final HTTPRequest httpRequest = HTTPRequest.class.cast(request);
-        RegionalGeoResult result = enforce(deliveryService.getId(), httpRequest.getRequestedUrl(), 
+        final RegionalGeoResult result = enforce(deliveryService.getId(), httpRequest.getRequestedUrl(), 
                                            httpRequest.getClientIP(), postalCode);
 
-        return result;
-        // So far, following cache selection is still based on request url instead of alternate url.
+        updateTrack(track, result);
+
+        if (result.getType() != DENIED) {
+            routeResult.setUrl(new URL(createRedirectURIString(httpRequest, deliveryService, cache, result)));
+        }
     }
 
 
-    private static void updateTrack(final RegionalGeoResult regionalGeoResult, final ResultType defaultResult, final Track track) {
-
+    private static void updateTrack(final Track track, final RegionalGeoResult regionalGeoResult) {
         track.setRegionalGeoResult(regionalGeoResult);
 
-        // If the request is either denied or redirected to alternate url
-        // with full fqdn like "http://example.com/path/abc.html",
-        // cache selection process is skipped.
-        // If the request is not allowed and redirected to url with
-        // alternate url like "/patch/abc.html", cache selection is still needed.
         final RegionalGeoResultType resultType = regionalGeoResult.getType();
 
-        if (resultType == RegionalGeoResultType.DENIED) {
+        if (resultType == DENIED) {
             track.setResult(ResultType.RGDENY);
             track.setResultDetails(ResultDetails.REGIONAL_GEO_NO_RULE);
             return;
         }
 
-        if (resultType == RegionalGeoResultType.ALTERNATE_WITH_CACHE) {
+        if (resultType == ALTERNATE_WITH_CACHE) {
             track.setResult(ResultType.RGALT);
             track.setResultDetails(ResultDetails.REGIONAL_GEO_ALTERNATE_WITH_CACHE);
             return;
         }
 
-        if (regionalGeoResultType == RegionalGeoResultType.ALTERNATE_WITHOUT_CACHE) {
+        if (resultType == ALTERNATE_WITHOUT_CACHE) {
             track.setResult(ResultType.RGALT);
             track.setResultDetails(ResultDetails.REGIONAL_GEO_ALTERNATE_WITHOUT_CACHE);
             return;
         }
 
-        //LOGGER.debug("RegionalGeo: result " + regionalGeoResultType
-        //         + ", needCache " + result.getNeedCacheSelection()
-        //         + ", dsvc " + dsvcId + ", url " + requestUrl);
+        // else ALLOWED, result & resultDetail shall be normal case, do not modify
+    }   
 
-        // else RegionalGeoResultType.ALLOWED
-        // result & resultDetail shall be normal case
-        track.setResult(defaultResult);
-    }    
+    private static String createRedirectURIString(final HTTPRequest request, final DeliveryService deliveryService, 
+        final Cache cache, final RegionalGeoResult regionalGeoResult) {
+
+        if (regionalGeoResult.getType() == ALLOWED) {
+            return deliveryService.createURIString(request, cache);
+        }
+
+        if (regionalGeoResult.getType() == ALTERNATE_WITH_CACHE) {
+            return deliveryService.createURIString(request, regionalGeoResult.getUrl(), cache);
+        }
+
+        if (regionalGeoResult.getType() == ALTERNATE_WITHOUT_CACHE) {
+            return regionalGeoResult.getUrl();
+        }
+
+        return null;
+    }
 }
 
