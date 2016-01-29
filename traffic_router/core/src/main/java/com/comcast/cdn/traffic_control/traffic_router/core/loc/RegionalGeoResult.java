@@ -27,7 +27,6 @@ public class RegionalGeoResult {
     private String url;
     private int httpResponseCode;
     private RegionalGeoResultType resultType;
-    private boolean cacheSelectionRequired;
     private RegionalGeoRule.PostalsType ruleType;
     private String postal;
     private boolean usingFallbackConfig;
@@ -55,14 +54,6 @@ public class RegionalGeoResult {
 
     public void setType(final RegionalGeoResultType resultType) {
         this.resultType = resultType;
-    }
-
-    public boolean isCacheSelectionRequired() {
-        return cacheSelectionRequired;
-    }
-
-    public void setCacheSelectionRequired(final boolean needCacheSelection) {
-        this.cacheSelectionRequired = needCacheSelection;
     }
 
     public RegionalGeoRule.PostalsType getRuleType() {

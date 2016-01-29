@@ -159,8 +159,7 @@ public final class RegionalGeo  {
         
             postalsType = RegionalGeoRule.PostalsType.EXCLUDE;
         }
-        
-        //final Set<String> postals = new HashSet<String>();
+
         for (int j = 0; j < postalsJson.length(); j++) {
             postals.add(postalsJson.getString(j));
         }
@@ -205,27 +204,7 @@ public final class RegionalGeo  {
                     LOGGER.error("RegionalGeo ERR: geoLocation empty");
                     return null;
                 }
-/*
-                JSONArray postalsJson = locationJson.optJSONArray("includePostalCode");
 
-                RegionalGeoRule.PostalsType postalsType;
-                if (postalsJson != null) {
-                    postalsType = RegionalGeoRule.PostalsType.INCLUDE;
-                } else {
-                    postalsJson = locationJson.optJSONArray("excludePostalCode");
-                    if (postalsJson == null) {
-                        LOGGER.error("RegionalGeo ERR: no include/exclude in geolocation");
-                        return null;
-                    }
-
-                    postalsType = RegionalGeoRule.PostalsType.EXCLUDE;
-                }
-
-                final Set<String> postals = new HashSet<String>();
-                for (int j = 0; j < postalsJson.length(); j++) {
-                    postals.add(postalsJson.getString(j));
-                }
-*/
                 // white list
                 NetworkNode whiteListRoot = null;
                 final JSONArray whiteListJson = ruleJson.optJSONArray("ipWhiteList");
@@ -281,13 +260,11 @@ public final class RegionalGeo  {
         result.setPostal(postalCode);
         result.setUsingFallbackConfig(currentConfig.isFallback());
         result.setAllowedByWhiteList(false);
-        result.setCacheSelectionRequired(false);
 
         rule = currentConfig.matchRule(dsvcId, url);
         if (rule == null) {
             result.setHttpResponseCode(RegionalGeoResult.REGIONAL_GEO_DENIED_HTTP_CODE);
             result.setType(DENIED);
-            result.setCacheSelectionRequired(false);
             LOGGER.debug("RegionalGeo: denied for dsvc " + dsvcId
                          + ", url " + url + ", postal " + postalCode);
             return result;
@@ -313,7 +290,6 @@ public final class RegionalGeo  {
         if (allowed) {
             result.setUrl(url);
             result.setType(ALLOWED);
-            result.setCacheSelectionRequired(true);
         } else {
             // For a disallowed client, if alternateUrl starts with "http://"
             // just redirect the client to this url without any cache selection;
@@ -323,7 +299,6 @@ public final class RegionalGeo  {
             if (alternateUrl.toLowerCase().startsWith(HTTP_SCHEME)) {
                 result.setUrl(alternateUrl);
                 result.setType(ALTERNATE_WITHOUT_CACHE);
-                result.setCacheSelectionRequired(false);
             } else {
                 String redirectUrl;
                 if (alternateUrl.startsWith("/")) { // add a '/' prefix if necessary for url path
@@ -335,13 +310,10 @@ public final class RegionalGeo  {
                 LOGGER.debug("RegionalGeo: alternate with cache url " + redirectUrl);
                 result.setUrl(redirectUrl);
                 result.setType(ALTERNATE_WITH_CACHE);
-                result.setCacheSelectionRequired(true);
             }
         }
 
-        LOGGER.debug("RegionalGeo: result " + result
-                 + ", needCache " + result.isCacheSelectionRequired()
-                 + " for dsvc " + dsvcId + ", url " + url);
+        LOGGER.debug("RegionalGeo: result " + result + " for dsvc " + dsvcId + ", url " + url + ", ip " + ip);
 
         return result;
     }
