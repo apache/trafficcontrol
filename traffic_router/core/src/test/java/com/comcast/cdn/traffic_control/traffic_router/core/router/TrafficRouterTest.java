@@ -109,7 +109,7 @@ public class TrafficRouterTest {
         when(deliveryService.isLocationAvailable(cacheLocation)).thenReturn(true);
 
         when(trafficRouter.selectCache(any(Request.class), any(DeliveryService.class), any(Track.class), any(RegionalGeoResult.class))).thenCallRealMethod();
-        when(trafficRouter.selectCachesByGeo(any(Request.class), any(DeliveryService.class), any(CacheLocation.class), any(Track.class), any(RegionalGeoResult.class))).thenCallRealMethod();
+        when(trafficRouter.selectCachesByGeo(any(Request.class), any(DeliveryService.class), any(CacheLocation.class), any(Track.class))).thenCallRealMethod();
 
         Geolocation clientLocation = new Geolocation(40, -100);
         when(trafficRouter.getClientLocation(any(Request.class), any(DeliveryService.class), any(CacheLocation.class))).thenReturn(clientLocation);

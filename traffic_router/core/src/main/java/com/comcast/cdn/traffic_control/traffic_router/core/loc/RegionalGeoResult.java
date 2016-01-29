@@ -26,7 +26,8 @@ public class RegionalGeoResult {
 
     private String url;
     private int httpResponseCode;
-    private RegionalGeoResultType type;
+    private RegionalGeoResultType resultType;
+    private boolean cacheSelectionRequired;
     private RegionalGeoRule.PostalsType ruleType;
     private String postal;
     private boolean usingFallbackConfig;
@@ -49,11 +50,19 @@ public class RegionalGeoResult {
     }
 
     public RegionalGeoResultType getType() {
-        return type;
+        return resultType;
     }
 
     public void setType(final RegionalGeoResultType resultType) {
-        type = resultType;
+        resultType = resultType;
+    }
+
+    public boolean isCacheSelectionRequired() {
+        return cacheSelectionRequired;
+    }
+
+    public void setCacheSelectionRequired(final boolean needCacheSelection) {
+        this.cacheSelectionRequired = needCacheSelection;
     }
 
     public RegionalGeoRule.PostalsType getRuleType() {
@@ -91,7 +100,7 @@ public class RegionalGeoResult {
         sb.append(':');
 
         // allow:1; disallow:0
-        if (type == RegionalGeoResultType.ALLOWED) {
+        if (resultType == RegionalGeoResultType.ALLOWED) {
             sb.append('1');
         } else {
             sb.append('0');
@@ -99,7 +108,7 @@ public class RegionalGeoResult {
         sb.append(':');
 
         // include rule: I, exclude rule: X, no rule matches: -
-        if (type == RegionalGeoResultType.DENIED) {
+        if (resultType == RegionalGeoResultType.DENIED) {
             sb.append('-');
         } else {
             if (ruleType == null) {

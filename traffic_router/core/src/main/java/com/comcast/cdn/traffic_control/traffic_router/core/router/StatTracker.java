@@ -121,6 +121,10 @@ public class StatTracker {
 		ResultType result = ResultType.ERROR;
 		ResultDetails resultDetails = ResultDetails.NO_DETAILS;
 		Geolocation resultLocation;
+		
+		Geolocation clientGeolocation; // the GEO info always retrieved from GEO DB, not from Cache Location
+		boolean isClientGeolocationQueried;
+
 		RegionalGeoResult regionalGeoResult;
 
 		public Track() {
@@ -152,6 +156,19 @@ public class StatTracker {
 
 		public Geolocation getResultLocation() {
 			return resultLocation;
+		}
+
+		public void setClientGeolocation(final Geolocation clientGeolocation) {
+			this.clientGeolocation = clientGeolocation;
+			this.isClientGeolocationQueried = true;
+		}
+
+		public Geolocation getClientGeolocation() {
+			return clientGeolocation;
+		}
+
+		public boolean isClientGeolocationQueried() {
+			return isClientGeolocationQueried;
 		}
 
 		public void setRegionalGeoResult(final RegionalGeoResult regionalGeoResult) {

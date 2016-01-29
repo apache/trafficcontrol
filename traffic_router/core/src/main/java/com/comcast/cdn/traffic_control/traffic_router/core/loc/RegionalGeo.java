@@ -251,6 +251,7 @@ public final class RegionalGeo  {
         if (rule == null) {
             result.setHttpResponseCode(RegionalGeoResult.REGIONAL_GEO_DENIED_HTTP_CODE);
             result.setType(RegionalGeoResultType.DENIED);
+            result.setCacheSelectionRequired(false);
             LOGGER.debug("RegionalGeo: denied for dsvc " + dsvcId
                          + ", url " + url + ", postal " + postal);
             return;
@@ -279,6 +280,7 @@ public final class RegionalGeo  {
         if (allowed) {
             result.setUrl(url);
             result.setType(RegionalGeoResultType.ALLOWED);
+            result.setCacheSelectionRequired(true);
         } else {
 
             // For a disallowed client, if alternateUrl starts with "http://"
@@ -289,6 +291,7 @@ public final class RegionalGeo  {
             if (alternateUrl.toLowerCase().startsWith(HTTP_SCHEME)) {
                 result.setUrl(alternateUrl);
                 result.setType(RegionalGeoResultType.ALTERNATE_WITHOUT_CACHE);
+                result.setCacheSelectionRequired(false);
             } else {
                 String redirectUrl;
                 if (alternateUrl.startsWith("/")) { // add a '/' prefix if necessary for url path
@@ -300,8 +303,79 @@ public final class RegionalGeo  {
                 LOGGER.debug("RegionalGeo: alternate with cache url " + redirectUrl);
                 result.setUrl(redirectUrl);
                 result.setType(RegionalGeoResultType.ALTERNATE_WITH_CACHE);
+                result.setCacheSelectionRequired(true);
             }
         }
     }
+
+
+    public RegionalGeoResult enforce(final Request request,
+        final DeliveryService deliveryService, final Track track) {
+
+        if (!deliveryService.isRegionalGeoEnabled()) {
+            LOGGER.debug("RegionalGeo: not enabled for DeliveryService " + deliveryService.getId());
+            //return null;
+        }
+
+        LOGGER.debug("RegionalGeo: enforcing");
+
+        Geolocation clientGeolocation = null;
+        try {
+            clientGeolocation = TrafficRouter.getClientGeolocation(request, deliveryService, track);
+        } catch (GeolocationException e) {
+            LOGGER.warn("Failed looking up Client GeoLocation: " + e.getMessage());
+        }
+
+        String postalCode = null;
+        if (clientGeolocation != null) {
+            postalCode = clientGeolocation.getPostalCode();
+        }
+
+        final HTTPRequest httpRequest = HTTPRequest.class.cast(request);
+        RegionalGeoResult result = enforce(deliveryService.getId(), httpRequest.getRequestedUrl(), 
+                                           httpRequest.getClientIP(), postalCode);
+
+        return result;
+        // So far, following cache selection is still based on request url instead of alternate url.
+    }
+
+
+    private static void updateTrack(final RegionalGeoResult regionalGeoResult, final ResultType defaultResult, final Track track) {
+
+        track.setRegionalGeoResult(regionalGeoResult);
+
+        // If the request is either denied or redirected to alternate url
+        // with full fqdn like "http://example.com/path/abc.html",
+        // cache selection process is skipped.
+        // If the request is not allowed and redirected to url with
+        // alternate url like "/patch/abc.html", cache selection is still needed.
+        final RegionalGeoResultType resultType = regionalGeoResult.getType();
+
+        if (resultType == RegionalGeoResultType.DENIED) {
+            track.setResult(ResultType.RGDENY);
+            track.setResultDetails(ResultDetails.REGIONAL_GEO_NO_RULE);
+            return;
+        }
+
+        if (resultType == RegionalGeoResultType.ALTERNATE_WITH_CACHE) {
+            track.setResult(ResultType.RGALT);
+            track.setResultDetails(ResultDetails.REGIONAL_GEO_ALTERNATE_WITH_CACHE);
+            return;
+        }
+
+        if (regionalGeoResultType == RegionalGeoResultType.ALTERNATE_WITHOUT_CACHE) {
+            track.setResult(ResultType.RGALT);
+            track.setResultDetails(ResultDetails.REGIONAL_GEO_ALTERNATE_WITHOUT_CACHE);
+            return;
+        }
+
+        //LOGGER.debug("RegionalGeo: result " + regionalGeoResultType
+        //         + ", needCache " + result.getNeedCacheSelection()
+        //         + ", dsvc " + dsvcId + ", url " + requestUrl);
+
+        // else RegionalGeoResultType.ALLOWED
+        // result & resultDetail shall be normal case
+        track.setResult(defaultResult);
+    }    
 }
 

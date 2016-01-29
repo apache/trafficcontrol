@@ -49,7 +49,7 @@ public class DNSRoutingMissesTest {
         trafficRouter = mock(TrafficRouter.class);
         when(trafficRouter.getCacheRegister()).thenReturn(mock(CacheRegister.class));
         Whitebox.setInternalState(trafficRouter, "federationRegistry", federationRegistry);
-        when(trafficRouter.selectCachesByGeo(any(Request.class), any(DeliveryService.class), any(CacheLocation.class), any(Track.class), any(RegionalGeoResult.class))).thenCallRealMethod();
+        when(trafficRouter.selectCachesByGeo(any(Request.class), any(DeliveryService.class), any(CacheLocation.class), any(Track.class))).thenCallRealMethod();
 
         track = spy(StatTracker.getTrack());
         doCallRealMethod().when(trafficRouter).route(request, track);
