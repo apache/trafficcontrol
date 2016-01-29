@@ -119,7 +119,6 @@
 
     <rule ref="rulesets/javabeans.xml/MissingSerialVersionUID" />
 
-    <rule ref="rulesets/logging-java.xml/MoreThanOneLogger" />
     <rule ref="rulesets/logging-java.xml/LoggerIsNotStaticFinal" />
     <rule ref="rulesets/logging-java.xml/SystemPrintln" />
     <rule ref="rulesets/logging-java.xml/AvoidPrintStackTrace" />

@@ -82,7 +82,7 @@ public class HTTPAccessEventBuilder {
         final Geolocation resultLocation = httpAccessRecord.getResultLocation();
 
         if (resultLocation != null) {
-            final DecimalFormat decimalFormat = new DecimalFormat(".##");
+            final DecimalFormat decimalFormat = new DecimalFormat("0.00");
             decimalFormat.setRoundingMode(RoundingMode.DOWN);
             rloc = decimalFormat.format(resultLocation.getLatitude()) + "," + decimalFormat.format(resultLocation.getLongitude());
         }

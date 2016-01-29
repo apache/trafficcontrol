@@ -1,0 +1,43 @@
+{
+    "parameters": [
+        {
+            "config_file": "global",
+            "name": "tm.url",
+            "value": "{{.TmUrl}}"
+        },
+        {
+            "config_file": "global",
+            "name": "tm.toolname",
+            "value": "{{.TmToolName}}"
+        },
+        {
+            "config_file": "global",
+            "name": "tm.infourl",
+            "value": "{{.TmInfoUrl}}"
+        },
+        {
+            "config_file": "global",
+            "name": "tm.logourl",
+            "value": "/images/tc_logo.png"
+        },
+        {
+            "config_file": "global",
+            "name": "tm.instance_name",
+            "value": "{{.TmInstanceName}}"
+        },
+        {
+            "config_file": "CRConfig.json",
+            "name": "geolocation.polling.url",
+            "value": "{{.GeolocationPollingUrl}}"
+        },
+        {
+            "config_file": "CRConfig.json",
+            "name": "geolocation6.polling.url",
+            "value": "{{.Geolocation6PollingUrl}}"
+        }
+    ],
+    "profile": {
+        "description": "Global Traffic Ops profile, DO NOT DELETE",
+        "name": "GLOBAL"
+    }
+}

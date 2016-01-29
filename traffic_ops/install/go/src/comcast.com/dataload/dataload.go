@@ -408,7 +408,7 @@ func loadUsers(db *sql.DB, dbName string) error {
 			return err
 		}
 
-		query := "insert ignore into " + dbName + ".tm_user (username, role, local_passwd, new_user, local_user) values (?,(select id from role where name = ?), ?, 1, 0)"
+		query := "insert ignore into " + dbName + ".tm_user (username, role, local_passwd, new_user) values (?,(select id from role where name = ?), ?, 1)"
 		_, err = db.Exec(query, u.Username, "admin", u.Password)
 		if err != nil {
 			fmt.Println("\t An error occured inserting user with name ", u.Username)
@@ -453,21 +453,6 @@ func main() {
 	// read cdn json file
 	_, err = loadCdn(db, c.DbName)
 	if err != nil {
-		fmt.Println(err)
-	}
-
-	// read profile json file
-	if err = loadProfile(db, c.DbName); err != nil {
-		fmt.Println(err)
-	}
-
-	// read parameter json file
-	if err = loadParameter(db, c.DbName); err != nil {
-		fmt.Println(err)
-	}
-
-	// read profile parameter json file
-	if err = loadProfileParameter(db, c.DbName); err != nil {
 		fmt.Println(err)
 	}
 

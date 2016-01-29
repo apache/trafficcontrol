@@ -30,57 +30,131 @@ use Utils::Helper::ResponseHelper;
 use String::CamelCase qw(decamelize);
 
 sub index {
-	my $self   = shift;
-	my $ds_id  = $self->param('dsId');
-	my $helper = new Utils::Helper( { mojo => $self } );
+	my $self         = shift;
+	my $current_user = $self->current_user()->{username};
+	my $ds_id        = $self->param('dsId');
+
+	my $servers;
+	my $forbidden;
 	if ( defined $ds_id ) {
-		if ( !$helper->is_valid_delivery_service($ds_id) ) {
-			return $self->alert("Delivery Service does not exist.");
-		}
-		if ( $self->is_delivery_service_assigned($ds_id) || &is_admin($self) || &is_oper($self) ) {
-			my $data = getserverdata( $self, $ds_id );
-			$self->success($data);
-		}
-		else {
-			$self->forbidden();
-		}
+		( $forbidden, $servers ) = $self->get_delivery_service_by_id( $current_user, $ds_id );
 	}
 	else {
-		if ( &is_admin($self) || &is_oper($self) ) {
-			my $data = getserverdata($self);
-			$self->success($data);
-		}
-		else {
-			$self->forbidden();
+		$servers = $self->get_delivery_service($current_user);
+	}
+
+	my @data;
+	if ( defined($servers) ) {
+		while ( my $row = $servers->next ) {
+			my $cdn_name = defined( $row->cdn_id ) ? $row->cdn->name : "";
+
+			push(
+				@data, {
+					"id"             => $row->id,
+					"hostName"       => $row->host_name,
+					"domainName"     => $row->domain_name,
+					"tcpPort"        => $row->tcp_port,
+					"interfaceName"  => $row->interface_name,
+					"ipAddress"      => $row->ip_address,
+					"ipNetmask"      => $row->ip_netmask,
+					"ipGateway"      => $row->ip_gateway,
+					"ip6Address"     => $row->ip6_address,
+					"ip6Gateway"     => $row->ip6_gateway,
+					"interfaceMtu"   => $row->interface_mtu,
+					"cachegroup"     => $row->cachegroup->name,
+					"physLocation"   => $row->phys_location->name,
+					"rack"           => $row->rack,
+					"type"           => $row->type->name,
+					"status"         => $row->status->name,
+					"profile"        => $row->profile->name,
+					"cdnName"        => $cdn_name,
+					"mgmtIpAddress"  => $row->mgmt_ip_address,
+					"mgmtIpNetmask"  => $row->mgmt_ip_netmask,
+					"mgmtIpGateway"  => $row->mgmt_ip_gateway,
+					"iloIpAddress"   => $row->ilo_ip_address,
+					"iloIpNetmask"   => $row->ilo_ip_netmask,
+					"iloIpGateway"   => $row->ilo_ip_gateway,
+					"iloUsername"    => $row->ilo_username,
+					"iloPassword"    => &is_admin($self) ? $row->ilo_password : "********",
+					"routerHostName" => $row->router_host_name,
+					"routerPortName" => $row->router_port_name,
+					"lastUpdated"    => $row->last_updated,
+
+				}
+			);
 		}
 	}
+
+	return defined($forbidden) ? $self->forbidden() : $self->success(\@data);
 }
 
-sub getserverdata {
-	my $self  = shift;
-	my $ds_id = shift;
-	my @data;
-	my $isadmin           = &is_admin($self);
+sub get_delivery_service {
+	my $self              = shift;
+	my $current_user      = shift;
 	my $orderby           = $self->param('orderby') || "hostName";
-	my $limit             = $self->param('limit') || 1000;
 	my $orderby_snakecase = lcfirst( decamelize($orderby) );
+
 	my $servers;
-
-	if ( defined $ds_id ) {
-
-		# we want the edge cache servers and mid cache servers (but only mids if the delivery service uses mids)
-		my @deliveryservice_servers_edge = $self->db->resultset('DeliveryserviceServer')->search(
-			{
-				deliveryservice => $ds_id,
+	if ( &is_privileged($self) ) {
+		$servers = $self->db->resultset('Server')->search(
+			undef, {
+				prefetch => [ 'cdn', 'cachegroup', 'type', 'profile', 'status', 'phys_location' ],
+				order_by => 'me.' . $orderby_snakecase,
 			}
-		)->get_column('server')->all();
+		);
+	}
+	else {
+		my $tm_user = $self->db->resultset('TmUser')->search( { username => $current_user } )->single();
+		my @ds_ids = $self->db->resultset('DeliveryserviceTmuser')->search( { tm_user_id => $tm_user->id } )->get_column('deliveryservice')->all();
 
-		my $ds = $self->db->resultset('Deliveryservice')->search( { 'me.id' => $ds_id }, { prefetch => ['type'] } )->single();
-		my @criteria     = [ { 'me.id' => { -in => \@deliveryservice_servers_edge } } ];
-		my $subsel       = '(SELECT id FROM type where name = "MID")';
-		my @types_no_mid = qw( HTTP_NO_CACHE HTTP_LIVE DNS_LIVE );                         # currently these are the ds types that bypass the mids
+		my @ds_servers =
+			$self->db->resultset('DeliveryserviceServer')->search( { deliveryservice => { -in => \@ds_ids } } )->get_column('server')->all();
+
+		$servers = $self->db->resultset('Server')->search(
+			{ 'me.id' => { -in => \@ds_servers } },
+			{
+				prefetch => [ 'cdn', 'cachegroup', 'type', 'profile', 'status', 'phys_location' ],
+				order_by => 'me.' . $orderby_snakecase,
+			}
+		);
+	}
+
+	return $servers;
+}
+
+sub get_delivery_service_by_id {
+	my $self              = shift;
+	my $current_user      = shift;
+	my $dsId              = shift;
+	my $orderby           = $self->param('orderby') || "hostName";
+	my $orderby_snakecase = lcfirst( decamelize($orderby) );
+	my $helper            = new Utils::Helper( { mojo => $self } );
+
+	my @ds_servers;
+	my $forbidden;
+	if ( &is_privileged($self) ) {
+		@ds_servers = $self->db->resultset('DeliveryserviceServer')->search( { deliveryservice => $dsId } )->get_column('server')->all();
+	}
+	elsif ( $self->is_delivery_service_assigned($dsId) ) {
+		my $tm_user = $self->db->resultset('TmUser')->search( { username => $current_user } )->single();
+		my $ds_id =
+			$self->db->resultset('DeliveryserviceTmuser')->search( { tm_user_id => $tm_user->id, deliveryservice => $dsId } )
+			->get_column('deliveryservice')->single();
+
+		@ds_servers = $self->db->resultset('DeliveryserviceServer')->search( { deliveryservice => $ds_id } )->get_column('server')->all();
+	}
+	elsif ( !$self->is_delivery_service_assigned($dsId) ) {
+		$forbidden = "true";
+	}
+
+	my $servers;
+	if ( scalar(@ds_servers) ) {
+		my $ds = $self->db->resultset('Deliveryservice')->search( { 'me.id' => $dsId }, { prefetch => ['type'] } )->single();
+		my @criteria = [ { 'me.id' => { -in => \@ds_servers } } ];
+
+		my @types_no_mid = qw( HTTP_NO_CACHE HTTP_LIVE DNS_LIVE );    # currently these are the ds types that bypass the mids
 		if ( !grep { $_ eq $ds->type->name } @types_no_mid ) {
-			push( @criteria, { 'me.type' => { -in => \$subsel }, 'me.cdn_id' => $ds->cdn_id } );
+			push( @criteria, { 'type.name' => "MID", 'me.cdn_id' => $ds->cdn_id } );
 		}
 
 		$servers = $self->db->resultset('Server')->search(
@@ -90,55 +164,8 @@ sub getserverdata {
 			}
 		);
 	}
-	else {
-		# get all servers
-		$servers = $self->db->resultset('Server')->search(
-			undef, {
-				prefetch => [ 'cdn', 'cachegroup', 'type', 'profile', 'status', 'phys_location' ],
-				order_by => 'me.' . $orderby_snakecase,
-			}
-		);
-	}
 
-	while ( my $row = $servers->next ) {
-		my $cdn_name = defined( $row->cdn_id ) ? $row->cdn->name : "";
-
-		push(
-			@data, {
-				"id"             => $row->id,
-				"hostName"       => $row->host_name,
-				"domainName"     => $row->domain_name,
-				"tcpPort"        => $row->tcp_port,
-				"interfaceName"  => $row->interface_name,
-				"ipAddress"      => $row->ip_address,
-				"ipNetmask"      => $row->ip_netmask,
-				"ipGateway"      => $row->ip_gateway,
-				"ip6Address"     => $row->ip6_address,
-				"ip6Gateway"     => $row->ip6_gateway,
-				"interfaceMtu"   => $row->interface_mtu,
-				"cachegroup"     => $row->cachegroup->name,
-				"physLocation"   => $row->phys_location->name,
-				"rack"           => $row->rack,
-				"type"           => $row->type->name,
-				"status"         => $row->status->name,
-				"profile"        => $row->profile->name,
-				"cdnName"        => $cdn_name,
-				"mgmtIpAddress"  => $row->mgmt_ip_address,
-				"mgmtIpNetmask"  => $row->mgmt_ip_netmask,
-				"mgmtIpGateway"  => $row->mgmt_ip_gateway,
-				"iloIpAddress"   => $row->ilo_ip_address,
-				"iloIpNetmask"   => $row->ilo_ip_netmask,
-				"iloIpGateway"   => $row->ilo_ip_gateway,
-				"iloUsername"    => $row->ilo_username,
-				"iloPassword"    => $isadmin ? $row->ilo_password : "********",
-				"routerHostName" => $row->router_host_name,
-				"routerPortName" => $row->router_port_name,
-				"lastUpdated"    => $row->last_updated,
-
-			}
-		);
-	}
-	return ( \@data );
+	return ( $forbidden, $servers );
 }
 
 sub totals {

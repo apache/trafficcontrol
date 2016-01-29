@@ -112,7 +112,7 @@ if (type == "deliveryservice") {
           "targets": [
             {
               "measurement": "bw",
-              "query": "SELECT mean(value)*1000 FROM \"kbps\" WHERE deliveryservice='" + which + "' and cachegroup = 'total'  and $timeFilter GROUP BY time(60s), deliveryservice ORDER BY asc",
+              "query": "SELECT mean(value)*1000 FROM \"monthly\".\"kbps.ds.1min\" WHERE deliveryservice='" + which + "' and cachegroup = 'total'  and $timeFilter GROUP BY time(60s), deliveryservice ORDER BY asc",
               "rawQuery": true,
               "tags": {
                 "deliveryservice": which
@@ -201,24 +201,24 @@ if (type == "deliveryservice") {
               "tags": {
                 "deliveryservice": which
               },
-              "query": "SELECT mean(value) FROM \"tps_2xx\" WHERE $timeFilter AND deliveryservice='" + which + "' GROUP BY time($interval) ORDER BY asc",
+              "query": "SELECT mean(value) FROM \"monthly\".\"tps_2xx.ds.1min\" WHERE $timeFilter AND deliveryservice='" + which + "' GROUP BY time(60s) ORDER BY asc",
               "hide": false,
               "rawQuery": true
             },
             {
               "target": "",
               "rawQuery": true,
-              "query": "SELECT mean(value) FROM \"tps_3xx\" WHERE $timeFilter AND deliveryservice='" + which + "' GROUP BY time($interval) ORDER BY asc"
+              "query": "SELECT mean(value) FROM \"monthly\".\"tps_3xx.ds.1min\" WHERE $timeFilter AND deliveryservice='" + which + "' GROUP BY time(60s) ORDER BY asc"
             },
             {
               "target": "",
               "rawQuery": true,
-              "query": "SELECT mean(value) FROM \"tps_4xx\" WHERE $timeFilter AND deliveryservice='" + which + "' GROUP BY time($interval) ORDER BY asc"
+              "query": "SELECT mean(value) FROM \"monthly\".\"tps_4xx.ds.1min\" WHERE $timeFilter AND deliveryservice='" + which + "' GROUP BY time(60s) ORDER BY asc"
             },
             {
               "target": "",
               "rawQuery": true,
-              "query": "SELECT mean(value) FROM \"tps_5xx\" WHERE $timeFilter AND deliveryservice='" + which + "' GROUP BY time($interval) ORDER BY asc"
+              "query": "SELECT mean(value) FROM \"monthly\".\"tps_5xx.ds.1min\" WHERE $timeFilter AND deliveryservice='" + which + "' GROUP BY time(60s) ORDER BY asc"
             }
           ],
           "aliasColors": {},
@@ -276,7 +276,7 @@ if (type == "deliveryservice") {
           "steppedLine": false,
           "targets": [
             {
-              "query": "SELECT sum(value)*1000/6 FROM \"kbps\" WHERE deliveryservice='" + which + "' and cachegroup != 'total' and $timeFilter GROUP BY time(60s), cachegroup",
+              "query": "SELECT mean(value)*1000 FROM \"monthly\".\"kbps.ds.1min\" WHERE deliveryservice='" + which + "' and cachegroup != 'total' and $timeFilter GROUP BY time(60s), cachegroup",
               "rawQuery": true
             }
           ],
@@ -359,7 +359,7 @@ else if ( type == "cachegroup" ) {
           "targets": [
             {
               "rawQuery": true,
-              "query": "SELECT sum(value)*1000/6 FROM \"bandwidth\" WHERE cachegroup='" + which + "' and $timeFilter GROUP BY time(60s), hostname"
+              "query": "SELECT mean(value)*1000 FROM \"monthly\".\"bandwidth.1min\" WHERE cachegroup='" + which + "' and $timeFilter GROUP BY time(60s), hostname"
             }
           ],
           "aliasColors": {},
@@ -434,7 +434,7 @@ else if ( type == "server" ) {
             {
               "measurement": "bandwidth",
               "tags": {},
-              "query": "SELECT sum(value)*1000/6 FROM \"bandwidth\" WHERE hostname='" + which + "'  and $timeFilter GROUP BY time(60s)",
+              "query": "SELECT mean(value)*1000 FROM \"monthly\".\"bandwidth.1min\" WHERE hostname='" + which + "'  and $timeFilter GROUP BY time(60s)",
               "rawQuery": true
             }
           ],
@@ -506,7 +506,7 @@ else if ( type == "server" ) {
             {
               "measurement": "bandwidth",
               "tags": {},
-              "query": "SELECT sum(value)*1000/6 FROM \"ats.proxy.process.http.current_client_connections\" WHERE hostname='" + which + "'  and $timeFilter GROUP BY time(60s)",
+              "query": "SELECT mean(value)*1000 FROM \"monthly\".\"connections.1min\" WHERE hostname='" + which + "'  and $timeFilter GROUP BY time(60s)",
               "rawQuery": true
             }
           ],

@@ -55,13 +55,7 @@ public class ConfigHandler {
 		}
 		return config;
 	}
-	public static void saveConfig() {
-//		try {
-//			saveToXml(config, Config.getDbDir()+ CONFIG_FILENAME);
-//		} catch (JAXBException e) {
-//			e.printStackTrace();
-//		}
-	}
+
 	public static void saveBaseConfig(final Map<String, String> baseconfig) throws JSONException, IOException {
 		final JSONObject o = new JSONObject();
 		o.put("traffic_monitor_config", baseconfig);

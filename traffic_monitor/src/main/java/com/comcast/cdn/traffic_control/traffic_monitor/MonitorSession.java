@@ -21,8 +21,6 @@ import org.apache.wicket.request.Request;
 
 public class MonitorSession extends WebSession {
 	private static final long serialVersionUID = 1L;
-	// create session data here
-//	private Cart cart = new Cart(); 
 
 	public MonitorSession(final Request request) {
 		super(request);

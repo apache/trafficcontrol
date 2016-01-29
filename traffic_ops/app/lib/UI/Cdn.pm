@@ -320,6 +320,10 @@ sub aserver {
 	my $self          = shift;
 	my $server_select = shift;
 	my %data          = ( "aaData" => undef );
+	my $pparam =
+		$self->db->resultset('ProfileParameter')->search( { -and => [ 'parameter.name' => 'server_graph_url', 'profile.name' => 'GLOBAL' ] },
+		{ prefetch => [ 'parameter', 'profile' ] } )->single();
+	my $srvg_url = defined($pparam) ? $pparam->parameter->value : '';
 
 	my $rs = $self->db->resultset('Server')->search( undef, { prefetch => [ 'cdn', 'cachegroup', 'type', 'profile', 'status', 'phys_location' ] } );
 	while ( my $row = $rs->next ) {
@@ -333,10 +337,6 @@ sub aserver {
 			my $img     = "";
 
 			if ( $row->type->name eq "MID" || $row->type->name eq "EDGE" ) {
-				my $pparam =
-					$self->db->resultset('ProfileParameter')->search( { -and => [ 'parameter.name' => 'server_graph_url', 'profile.name' => 'GLOBAL' ] },
-					{ prefetch => [ 'parameter', 'profile' ] } )->single();
-				my $srvg_url = defined($pparam) ? $pparam->parameter->value : '';
 				$aux_url = $srvg_url . $row->host_name;
 				$img     = "graph.png";
 			}
@@ -611,7 +611,7 @@ sub auser {
 
 		my @line = [
 			$row->id,           $row->username, $row->role->name, $row->full_name,  $row->company,  $row->email,
-			$row->phone_number, $row->uid,      $row->gid,        $row->local_user, $row->new_user, $row->last_updated
+			$row->phone_number, $row->uid,      $row->gid,        \1,               \$row->new_user, $row->last_updated
 		];
 		push( @{ $data{'aaData'} }, @line );
 	}

@@ -111,42 +111,78 @@ sub get_stat {
 		return $summary_content->{results}[0]{series}[0]{values}[0][1];
 	}
 	
-	return "err";
+	return "";
 }
 
-sub current_bandwidth {
+sub current_stats {
 	my $self = shift;
-	my $cdn  = $self->param('cdnName');
-	my $query = "SELECT sum(value)/6 FROM \"bandwidth\" WHERE time < now() - 60s and time > now() - 120s";
-	if ($cdn) {
-		$query = "SELECT sum(value)/6 FROM \"bandwidth\" WHERE time < now() - 60s and time > now() - 120s and cdn = \'$cdn\'";
+	my @stats;
+	my $current_bw = $self->get_current_bandwidth();
+	my $conns = $self->get_current_connections();
+	my $capacity = $self->get_current_capacity();
+	my $rs = $self->db->resultset('Cdn');
+	while ( my $cdn = $rs->next ) {
+		my $cdn_name = $cdn->name;
+		my $bw = $current_bw->{$cdn_name};	
+		my $conn = $conns->{$cdn_name};
+		my $cap = $capacity->{$cdn_name};
+		push(@stats, ({cdn => $cdn_name, bandwidth => $bw, connections => $conn, capacity => $cap}));
 	}
-	my $bandwidth = $self->get_stat("cache_stats", $query);
-	return $self->success({"bandwidth" => $bandwidth/1000000});
+	push(@stats, ({cdn => "total", bandwidth => $current_bw->{"total"}, connections => $conns->{"total"}}));
+	return $self->success({"currentStats" => \@stats});
 }
 
-sub current_connections {
+sub get_current_bandwidth {
 	my $self = shift;
-	my $cdn  = $self->param('cdnName');
-	my $query = "select sum(value)/6 from \"ats.proxy.process.http.current_client_connections\" where time > now() - 120s and time < now() - 60s";
-	if ($cdn) {
-		$query = "select sum(value)/6 from \"ats.proxy.process.http.current_client_connections\" where time > now() - 120s and time < now() - 60s and cdn = \'$cdn\'";
+	my $bw;
+	my $total_bw = 0;
+	my $rs = $self->db->resultset('Cdn');
+	while ( my $cdn = $rs->next ) {
+		my $cdn_name = $cdn->name;
+		my $query = "SELECT last(value) FROM \"monthly\".\"bandwidth.cdn.1min\" WHERE cdn = \'$cdn_name\'";
+		my $bandwidth = $self->get_stat("cache_stats", $query);
+		if ($bandwidth) {
+			$bw->{$cdn_name} = $bandwidth/1000000;
+			$total_bw += $bandwidth;
+		}
 	}
-	my $connections = $self->get_stat("cache_stats", $query);
-	return $self->success({"connections" => $connections});
+	$bw->{"total"} = $total_bw/1000000;
+	return $bw;
 }
 
-sub current_capacity {
+sub get_current_connections {
 	my $self = shift;
-	my $cdn  = $self->param('cdnName');
-	my $query = "select sum(value)/6 from \"maxKbps\" where time > now() - 120s and time < now() - 60s";
-	if ($cdn) {
-		$query = "select sum(value)/6 from \"maxKbps\" where time > now() - 120s and time < now() - 60s and cdn = \'$cdn\'";
+	my $conn;
+	my $total_conn = 0;
+	my $rs = $self->db->resultset('Cdn');
+	while ( my $cdn = $rs->next ) {
+		my $cdn_name = $cdn->name;
+		my $query = "select last(value) from \"monthly\".\"connections.cdn.1min\" where cdn = \'$cdn_name\'";
+		my $connections = $self->get_stat("cache_stats", $query);
+		if ($connections) {
+			$conn->{$cdn_name} = $connections;
+			$total_conn += $connections;
+		}
 	}
-	my $capacity = $self->get_stat("cache_stats", $query);
-	$capacity = $capacity/1000000; #convert to Gbps
-	$capacity = $capacity * 0.85;    # need a better way to figure out percentage of max besides hard-coding
-	return $self->success({"capacity" => $capacity});
+	$conn->{"total"} = $total_conn;
+	return $conn;
+}
+
+sub get_current_capacity {
+	my $self = shift;
+	my $cap;
+	my $rs = $self->db->resultset('Cdn');
+	while ( my $cdn = $rs->next ) {
+		my $cdn_name = $cdn->name;
+	  	my $query = "select sum(value)/6 from \"maxKbps\" where time > now() - 120s and time < now() - 60s and cdn = \'$cdn_name\'";
+		my $capacity = $self->get_stat("cache_stats", $query);  	
+		if ($capacity) {
+		$capacity = $capacity/1000000; #convert to Gbps
+		$capacity = $capacity * 0.85;    # need a better way to figure out percentage of max besides hard-coding
+		$cap->{$cdn_name} = $capacity;
+		}
+	}
+	return $cap;
 }
 
 sub daily_summary {
