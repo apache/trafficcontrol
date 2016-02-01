@@ -160,11 +160,14 @@ public class StatTracker {
 
 		public void setClientGeolocation(final Geolocation clientGeolocation) {
 			this.clientGeolocation = clientGeolocation;
-			this.isClientGeolocationQueried = true;
 		}
 
 		public Geolocation getClientGeolocation() {
 			return clientGeolocation;
+		}
+
+		public void setClientGeolocationQueried(final boolean isClientGeolocationQueried) {
+			this.isClientGeolocationQueried = isClientGeolocationQueried;
 		}
 
 		public boolean isClientGeolocationQueried() {

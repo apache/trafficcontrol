@@ -362,6 +362,7 @@ public class TrafficRouter {
 		} else {
 			clientGeolocation = getLocation(request.getClientIP());
 			track.setClientGeolocation(clientGeolocation);
+			track.setClientGeolocationQueried(true);
 		}
 
 		return clientGeolocation;
