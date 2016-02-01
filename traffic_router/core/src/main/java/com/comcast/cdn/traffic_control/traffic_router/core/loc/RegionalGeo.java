@@ -46,7 +46,7 @@ import com.comcast.cdn.traffic_control.traffic_router.core.router.HTTPRouteResul
 import static com.comcast.cdn.traffic_control.traffic_router.core.loc.RegionalGeoResult.RegionalGeoResultType.*;
 
 
-public final class RegionalGeo  {
+public final class RegionalGeo {
     private static final Logger LOGGER = Logger.getLogger(RegionalGeo.class);
     public static final String HTTP_SCHEME = "http://";
     private boolean fallback = false;
@@ -322,11 +322,6 @@ public final class RegionalGeo  {
         final DeliveryService deliveryService, final Cache cache,
         final HTTPRouteResult routeResult, final Track track) throws MalformedURLException {
 
-        if (!deliveryService.isRegionalGeoEnabled()) {
-            LOGGER.error("RegionalGeo: not enabled for DeliveryService " + deliveryService.getId());
-            return;
-        }
-
         LOGGER.debug("RegionalGeo: enforcing");
 
         Geolocation clientGeolocation = null;
@@ -401,7 +396,7 @@ public final class RegionalGeo  {
             return regionalGeoResult.getUrl();
         }
 
-        return null;
+        return null; // DENIED
     }
 }
 
