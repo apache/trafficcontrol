@@ -40,7 +40,6 @@ import com.comcast.cdn.traffic_control.traffic_router.core.ds.Dispersion;
 import com.comcast.cdn.traffic_control.traffic_router.core.loc.Geolocation;
 import com.comcast.cdn.traffic_control.traffic_router.core.loc.GeolocationException;
 import com.comcast.cdn.traffic_control.traffic_router.core.loc.GeolocationService;
-import com.comcast.cdn.traffic_control.traffic_router.core.loc.RegionalGeoResult;
 import com.comcast.cdn.traffic_control.traffic_router.core.request.HTTPRequest;
 import com.comcast.cdn.traffic_control.traffic_router.core.router.TrafficRouter;
 import com.comcast.cdn.traffic_control.traffic_router.core.util.TrafficOpsUtils;
@@ -140,8 +139,7 @@ public class StatelessTrafficRouterPerformanceTest  extends TrafficRouter {
 			return null;
 		}
 		final StatTracker.Track track = StatTracker.getTrack();
-		final RegionalGeoResult regionalGeoResult = new RegionalGeoResult();
-		List<Cache> caches = selectCache(request, ds, track, regionalGeoResult);
+		List<Cache> caches = selectCache(request, ds, track);
 		Dispersion dispersion = ds.getDispersion();
 		Cache cache = dispersion.getCache(consistentHash(caches, request.getPath()));
 		try {
