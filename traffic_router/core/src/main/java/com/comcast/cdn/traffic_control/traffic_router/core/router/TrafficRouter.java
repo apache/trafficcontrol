@@ -355,12 +355,16 @@ public class TrafficRouter {
 		return addresses;
 	}
 
-	public Geolocation getClientGeolocation(final Request request, final Track track) throws GeolocationException {
-		Geolocation clientGeolocation;
+	public Geolocation getClientGeolocation(final Request request, final Track track) {
+		Geolocation clientGeolocation = null;
 		if (track.isClientGeolocationQueried()) {
 			clientGeolocation = track.getClientGeolocation();
 		} else {
-			clientGeolocation = getLocation(request.getClientIP());
+			try {
+				clientGeolocation = getLocation(request.getClientIP());
+			} catch (GeolocationException e) {
+				LOGGER.warn("RegionalGeo: failed looking up Client GeoLocation: " + e.getMessage());
+			}
 			track.setClientGeolocation(clientGeolocation);
 			track.setClientGeolocationQueried(true);
 		}
