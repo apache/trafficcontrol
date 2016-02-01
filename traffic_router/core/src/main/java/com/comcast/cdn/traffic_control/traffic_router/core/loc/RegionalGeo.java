@@ -324,7 +324,12 @@ public final class RegionalGeo {
 
         LOGGER.debug("RegionalGeo: enforcing");
 
-        final Geolocation clientGeolocation = trafficRouter.getClientGeolocation(request, track);
+        Geolocation clientGeolocation = null;
+        try {
+            clientGeolocation = trafficRouter.getClientGeolocation(request, track);
+        } catch (GeolocationException e) {
+            LOGGER.warn("RegionalGeo: failed looking up Client GeoLocation: " + e.getMessage());
+        }
 
         String postalCode = null;
         if (clientGeolocation != null) {

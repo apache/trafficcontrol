@@ -355,18 +355,23 @@ public class TrafficRouter {
 		return addresses;
 	}
 
-	public Geolocation getClientGeolocation(final Request request, final Track track) {
+	public Geolocation getClientGeolocation(final Request request, final Track track) throws GeolocationException {
 		Geolocation clientGeolocation = null;
+
 		if (track.isClientGeolocationQueried()) {
 			clientGeolocation = track.getClientGeolocation();
+			LOGGER.debug("RegionalGeo: get cached geo, " + clientGeolocation);
 		} else {
 			try {
 				clientGeolocation = getLocation(request.getClientIP());
 			} catch (GeolocationException e) {
-				LOGGER.warn("RegionalGeo: failed looking up Client GeoLocation: " + e.getMessage());
+				LOGGER.warn("RegionalGeo: getClientGeolocation catch " + e.getMessage());
+				throw e;
+			} finally {
+				track.setClientGeolocation(clientGeolocation);
+				track.setClientGeolocationQueried(true);
+				LOGGER.debug("RegionalGeo: get geo from db, " + clientGeolocation);
 			}
-			track.setClientGeolocation(clientGeolocation);
-			track.setClientGeolocationQueried(true);
 		}
 
 		return clientGeolocation;
