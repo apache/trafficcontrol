@@ -343,7 +343,7 @@ public final class RegionalGeo {
 
         final HTTPRequest httpRequest = HTTPRequest.class.cast(request);
         final RegionalGeoResult result = enforce(deliveryService.getId(), httpRequest.getRequestedUrl(), 
-                                           httpRequest.getClientIP(), postalCode);
+                                                 httpRequest.getClientIP(), postalCode);
 
         updateTrack(track, result);
 

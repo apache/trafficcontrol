@@ -362,16 +362,10 @@ public class TrafficRouter {
 			clientGeolocation = track.getClientGeolocation();
 			LOGGER.debug("RegionalGeo: get cached geo, " + clientGeolocation);
 		} else {
-			try {
-				clientGeolocation = getLocation(request.getClientIP());
-			} catch (GeolocationException e) {
-				LOGGER.warn("RegionalGeo: getClientGeolocation catch " + e.getMessage());
-				throw e;
-			} finally {
-				track.setClientGeolocation(clientGeolocation);
-				track.setClientGeolocationQueried(true);
-				LOGGER.debug("RegionalGeo: get geo from db, " + clientGeolocation);
-			}
+			clientGeolocation = getLocation(request.getClientIP());
+			track.setClientGeolocation(clientGeolocation);
+			track.setClientGeolocationQueried(true);
+			LOGGER.debug("RegionalGeo: get geo from db, " + clientGeolocation);
 		}
 
 		return clientGeolocation;
