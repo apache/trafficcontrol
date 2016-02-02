@@ -57,7 +57,7 @@ function getCurrentStats() {
 }
 
 //refresh every 30 seconds
-setInterval('getCurrentStats()', 30000);
+setInterval(getCurrentStats, 30000);
 
 </script>
 <script type="text/javascript" src="/js/percentagebar.js"></script>
@@ -95,7 +95,7 @@ setInterval('getCurrentStats()', 30000);
   <div id="accordion">
 	% if ( defined($panel_1_url) && defined($panel_2_url) ) {
         <div class="statistics_section">
-            <script>refreshStats()</script>
+            <script>getCurrentStats()</script>
             <div id ="stat_label">total Gbps:</div>
             <div id="total_gbps_val"></div>
             % foreach my $cdn ( @{ $cdn_names }) {
