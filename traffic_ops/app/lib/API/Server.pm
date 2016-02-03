@@ -33,11 +33,15 @@ sub index {
 	my $self         = shift;
 	my $current_user = $self->current_user()->{username};
 	my $ds_id        = $self->param('dsId');
+	my $type         = $self->param('type');
 
 	my $servers;
 	my $forbidden;
 	if ( defined $ds_id ) {
 		( $forbidden, $servers ) = $self->get_delivery_service_by_id( $current_user, $ds_id );
+	}
+	elsif ( defined $type ) {
+		$servers = $self->get_delivery_service_by_type( $current_user, $type );
 	}
 	else {
 		$servers = $self->get_delivery_service($current_user);
@@ -166,6 +170,42 @@ sub get_delivery_service_by_id {
 	}
 
 	return ( $forbidden, $servers );
+}
+
+sub get_delivery_service_by_type {
+	my $self              = shift;
+	my $current_user      = shift;
+	my $type              = shift;
+	my $orderby           = $self->param('orderby') || "hostName";
+	my $orderby_snakecase = lcfirst( decamelize($orderby) );
+
+	my $servers;
+	if ( &is_privileged($self) ) {
+		$servers = $self->db->resultset('Server')->search(
+			{ 'type.name' => $type },
+			{
+				prefetch => [ 'cdn', 'cachegroup', 'type', 'profile', 'status', 'phys_location' ],
+				order_by => 'me.' . $orderby_snakecase,
+			}
+		);
+	}
+	else {
+		my $tm_user = $self->db->resultset('TmUser')->search( { username => $current_user } )->single();
+		my @ds_ids = $self->db->resultset('DeliveryserviceTmuser')->search( { tm_user_id => $tm_user->id } )->get_column('deliveryservice')->all();
+
+		my @ds_servers =
+			$self->db->resultset('DeliveryserviceServer')->search( { deliveryservice => { -in => \@ds_ids } } )->get_column('server')->all();
+
+		$servers = $self->db->resultset('Server')->search(
+			{ 'me.id' => { -in => \@ds_servers }, 'type.name' => $type },
+			{
+				prefetch => [ 'cdn', 'cachegroup', 'type', 'profile', 'status', 'phys_location' ],
+				order_by => 'me.' . $orderby_snakecase,
+			}
+		);
+	}
+
+	return $servers;
 }
 
 sub totals {
