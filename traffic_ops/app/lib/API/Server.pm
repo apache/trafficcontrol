@@ -38,13 +38,13 @@ sub index {
 	my $servers;
 	my $forbidden;
 	if ( defined $ds_id ) {
-		( $forbidden, $servers ) = $self->get_delivery_service_by_id( $current_user, $ds_id );
+		( $forbidden, $servers ) = $self->get_servers_by_dsid( $current_user, $ds_id );
 	}
 	elsif ( defined $type ) {
 		$servers = $self->get_servers_by_type( $current_user, $type );
 	}
 	else {
-		$servers = $self->get_delivery_service($current_user);
+		$servers = $self->get_servers($current_user);
 	}
 
 	my @data;
@@ -92,7 +92,7 @@ sub index {
 	return defined($forbidden) ? $self->forbidden() : $self->success(\@data);
 }
 
-sub get_delivery_service {
+sub get_servers {
 	my $self              = shift;
 	my $current_user      = shift;
 	my $orderby           = $self->param('orderby') || "hostName";
@@ -126,7 +126,7 @@ sub get_delivery_service {
 	return $servers;
 }
 
-sub get_delivery_service_by_id {
+sub get_servers_by_dsid {
 	my $self              = shift;
 	my $current_user      = shift;
 	my $dsId              = shift;
