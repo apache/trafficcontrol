@@ -41,7 +41,7 @@ sub index {
 		( $forbidden, $servers ) = $self->get_delivery_service_by_id( $current_user, $ds_id );
 	}
 	elsif ( defined $type ) {
-		$servers = $self->get_service_by_type( $current_user, $type );
+		$servers = $self->get_servers_by_type( $current_user, $type );
 	}
 	else {
 		$servers = $self->get_delivery_service($current_user);
@@ -172,7 +172,7 @@ sub get_delivery_service_by_id {
 	return ( $forbidden, $servers );
 }
 
-sub get_service_by_type {
+sub get_servers_by_type {
 	my $self              = shift;
 	my $current_user      = shift;
 	my $type              = shift;
