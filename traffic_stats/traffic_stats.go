@@ -755,10 +755,10 @@ func sendMetrics(config StartupConfig, runningConfig RunningConfig, bps influx.B
 		if err != nil {
 			errHndlr(err, ERROR)
 		}
-		for _, p := range pts[:intMin(maxPublishSize, len(pts))] {
+		for _, p := range pts[:intMin(config.MaxPublishSize, len(pts))] {
 			chunkBps.AddPoint(p)
 		}
-		pts = pts[intMin(maxPublishSize, len(pts)):]
+		pts = pts[intMin(config.MaxPublishSize, len(pts)):]
 
 		influxClient.Write(chunkBps)
 		log.Info(fmt.Sprintf("Sent %v stats for %v", len(chunkBps.Points()), chunkBps.Database()))
