@@ -50,7 +50,8 @@ const (
 	defaultPollingInterval             = 10
 	defaultDailySummaryPollingInterval = 60
 	defaultConfigInterval              = 300
-	defaultPublishingInterval          = 10
+	defaultPublishingInterval          = 30
+	defaultMaxPublishSize              = 10000
 )
 
 // StartupConfig contains all fields necessary to create an InfluxDB session.
@@ -64,6 +65,7 @@ type StartupConfig struct {
 	DailySummaryPollingInterval int                     `json:"dailySummaryPollingInterval"`
 	PublishingInterval          int                     `json:"publishingInterval"`
 	ConfigInterval              int                     `json:"configInterval"`
+	MaxPublishSize              int                     `json:"maxPublishSize"`
 	StatusToMon                 string                  `json:"statusToMon"`
 	SeelogConfig                string                  `json:"seelogConfig"`
 	CacheRetentionPolicy        string                  `json:"cacheRetentionPolicy"`
@@ -219,6 +221,9 @@ func loadStartupConfig(configFile string, oldConfig StartupConfig) (StartupConfi
 	if config.ConfigInterval == 0 {
 		config.ConfigInterval = defaultConfigInterval
 	}
+	if config.MaxPublishSize == 0 {
+		config.MaxPublishSize = defaultMaxPublishSize
+	}
 
 	logger, err := log.LoggerFromConfigAsFile(config.SeelogConfig)
 	if err != nil {
@@ -276,7 +281,7 @@ func calcDailySummary(now time.Time, config StartupConfig, runningConfig Running
 					errHndlr(err, ERROR)
 					continue
 				}
-				max = FloatMax(max, kbps)
+				max = floatMax(max, kbps)
 				duration := sampleTime.Unix() - prevtime.Unix()
 				bytesServed += float64(duration) * kbps / 8
 				prevtime = sampleTime
@@ -731,7 +736,6 @@ func influxConnect(config StartupConfig, runningConfig RunningConfig) (influx.Cl
 }
 
 func sendMetrics(config StartupConfig, runningConfig RunningConfig, bps influx.BatchPoints, retry bool) {
-	//influx connection
 	influxClient, err := influxConnect(config, runningConfig)
 	if err != nil {
 		if retry {
@@ -740,21 +744,38 @@ func sendMetrics(config StartupConfig, runningConfig RunningConfig, bps influx.B
 		errHndlr(err, ERROR)
 		return
 	}
-	influxClient.Write(bps)
 
+	pts := bps.Points()
+	for len(pts) > 0 {
+		chunkBps, err := influx.NewBatchPoints(influx.BatchPointsConfig{
+			Database:        bps.Database(),
+			Precision:       bps.Precision(),
+			RetentionPolicy: bps.RetentionPolicy(),
+		})
+		if err != nil {
+			errHndlr(err, ERROR)
+		}
+		for _, p := range pts[:intMin(maxPublishSize, len(pts))] {
+			chunkBps.AddPoint(p)
+		}
+		pts = pts[intMin(maxPublishSize, len(pts)):]
+
+		influxClient.Write(chunkBps)
+		log.Info(fmt.Sprintf("Sent %v stats for %v", len(chunkBps.Points()), chunkBps.Database()))
+	}
+
+	influxClient.Write(bps)
 	log.Info(fmt.Sprintf("Sent %v stats for %v", len(bps.Points()), bps.Database()))
 }
 
-//IntMin returns the lesser of two ints
-func IntMin(a, b int) int {
+func intMin(a, b int) int {
 	if a < b {
 		return a
 	}
 	return b
 }
 
-//FloatMax returns the greater of two float64 values
-func FloatMax(a, b float64) float64 {
+func floatMax(a, b float64) float64 {
 	if a > b {
 		return a
 	}
