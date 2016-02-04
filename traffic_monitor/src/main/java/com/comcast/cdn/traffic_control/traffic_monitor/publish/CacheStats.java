@@ -16,11 +16,8 @@
 
 package com.comcast.cdn.traffic_control.traffic_monitor.publish;
 
-import java.util.Collection;
 import java.util.Date;
-import java.util.List;
 
-import com.comcast.cdn.traffic_control.traffic_monitor.health.AbstractState;
 import com.comcast.cdn.traffic_control.traffic_monitor.health.CacheStateRegistry;
 import org.apache.wicket.ajax.json.JSONException;
 import org.apache.wicket.ajax.json.JSONObject;
@@ -54,7 +51,6 @@ public class CacheStats extends JsonPage {
 		o.put("date", new Date().toString());
 		o.put("pp", pp);
 		final JSONObject servers = new JSONObject();
-		final Collection<AbstractState> caches = cacheStateRegistry.getAll();
 		if(host != null && !host.equals("")) {
 			if(cacheStateRegistry.has(host)) {
 				servers.put(host,cacheStateRegistry.get(host).getStatsJson(hc, stats, wildcard, hidden));
@@ -62,8 +58,8 @@ public class CacheStats extends JsonPage {
 				o.put("error", "Hostname not found: "+host);
 			}
 		} else {
-			for(AbstractState s : caches) {
-				servers.put(s.getId(),s.getStatsJson(hc, stats, wildcard, hidden));
+			for (CacheState cacheState : cacheStateRegistry.getAll()) {
+				servers.put(cacheState.getId(),cacheState.getStatsJson(hc, stats, wildcard, hidden));
 			}
 		}
 		o.put("caches", servers);

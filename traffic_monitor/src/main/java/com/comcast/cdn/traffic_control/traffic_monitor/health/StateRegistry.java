@@ -1,27 +1,30 @@
 package com.comcast.cdn.traffic_control.traffic_monitor.health;
 
 import java.util.Collection;
+import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
-public class StateRegistry {
-	protected final Map<String, AbstractState> states = new ConcurrentHashMap<String, AbstractState>();
+public class StateRegistry<T extends AbstractState> {
+	protected final Map<String, T> states = new ConcurrentHashMap<String, T>();
 
-	public AbstractState get(final String id) {
+	public T get(final String id) {
 		synchronized(states) {
 			return states.get(id);
 		}
 	}
 
-	public Collection<AbstractState> getAll() {
+	public Collection<T> getAll() {
 		synchronized (states) {
 			return states.values();
 		}
 	}
 
-	public AbstractState getOrCreate(final String id) {
+	public T getOrCreate(final String id) {
 		synchronized (states) {
-			AbstractState abstractState = states.get(id);
+			T abstractState = states.get(id);
 
 			if (abstractState != null) {
 				return abstractState;
@@ -31,7 +34,7 @@ public class StateRegistry {
 		}
 	}
 
-	public AbstractState put(AbstractState abstractState) {
+	public T put(T abstractState) {
 		states.put(abstractState.getId(), abstractState);
 		return abstractState;
 	}
@@ -62,7 +65,27 @@ public class StateRegistry {
 		return sum;
 	}
 
-	protected AbstractState createState(final String id) {
+	public void removeAllBut(final List<T> states) {
+		final Set<String> stateIds = new HashSet<String>();
+
+		for (T state : states) {
+			stateIds.add(state.getId());
+		}
+
+		removeAllBut(stateIds);
+	}
+
+	protected T createState(final String id) {
 		return null;
+	}
+
+	public void removeAllBut(Set<String> stateIds) {
+		synchronized (states) {
+			for (String key : states.keySet()) {
+				if (!stateIds.contains(key)) {
+					states.remove(key);
+				}
+			}
+		}
 	}
 }

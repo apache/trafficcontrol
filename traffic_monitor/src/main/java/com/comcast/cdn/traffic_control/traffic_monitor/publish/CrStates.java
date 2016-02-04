@@ -105,20 +105,19 @@ public class CrStates extends JsonPage {
 		}
 		try {
 			final JSONObject ret = new JSONObject();
-			for(AbstractState abstractState : DeliveryServiceStateRegistry.getInstance().getAll()) {
-				if (!(abstractState instanceof DsState)) {
+
+			for (DsState dsState : DeliveryServiceStateRegistry.getInstance().getAll()) {
+				final JSONObject dsJo = new JSONObject();
+
+				if (!dsState.hasValue(AbstractState.IS_AVAILABLE_STR)) {
 					continue;
 				}
 
-				DsState dsState = (DsState) abstractState;
-				final JSONObject dsJo = new JSONObject();
-				if(!abstractState.hasValue(AbstractState.IS_AVAILABLE_STR)) {
-					continue;
-				}
 				dsJo.put(AbstractState.IS_AVAILABLE_STR, dsState.isAvailable());
 				dsJo.put("disabledLocations", dsState.getDisabledLocations());
-				ret.put(abstractState.getId(), dsJo);
+				ret.put(dsState.getId(), dsJo);
 			}
+
 			return ret;
 		} catch (JSONException e) {
 			LOGGER.warn(e,e);
