@@ -1,16 +1,11 @@
 package com.comcast.cdn.traffic_control.traffic_monitor.health;
 
 import com.comcast.cdn.traffic_control.traffic_monitor.config.Cache;
-import org.apache.log4j.Logger;
-
-import java.util.ArrayList;
-import java.util.List;
 
 import static com.comcast.cdn.traffic_control.traffic_monitor.health.HealthDeterminer.AdminStatus.ADMIN_DOWN;
 import static com.comcast.cdn.traffic_control.traffic_monitor.health.HealthDeterminer.AdminStatus.OFFLINE;
 
-public class CacheStateRegistry extends StateRegistry {
-	private static final Logger LOGGER = Logger.getLogger(CacheStateRegistry.class);
+public class CacheStateRegistry extends StateRegistry<CacheState> {
 	// Recommended Singleton Pattern implementation
 	// https://community.oracle.com/docs/DOC-918906
 
@@ -24,19 +19,9 @@ public class CacheStateRegistry extends StateRegistry {
 		private static final CacheStateRegistry REGISTRY = new CacheStateRegistry();
 	}
 
-	public CacheState getOrCreate(final Cache cache) {
-		if (cache == null) {
-			LOGGER.warn("Tried to create cache state from a null value cache");
-			return null;
-		}
-		CacheState cacheState = (CacheState) getOrCreate(cache.getHostname());
-
-		if (cacheState == null) {
-			LOGGER.warn("getOrCreate returned a null CacheState");
-		} else {
-			cacheState.setCache(cache);
-		}
-
+	public CacheState update(final Cache cache) {
+		CacheState cacheState = getOrCreate(cache.getHostname());
+		cacheState.setCache(cache);
 		return cacheState;
 	}
 
@@ -68,22 +53,6 @@ public class CacheStateRegistry extends StateRegistry {
 		return getSumOfLongStatistic("maxKbps");
 	}
 
- 	public void removeAllBut(final List<CacheState> retList) {
-		final List<String> hostnames = new ArrayList<String>();
-
-		for (CacheState cs : retList) {
-			hostnames.add(cs.getId());
-		}
-
-		synchronized (states) {
-			for (String key : states.keySet()) {
-				if (!hostnames.contains(key)) {
-					states.remove(key);
-				}
-			}
-		}
-	}
-
 	public String getStatusString(final String hostname) {
 		AbstractState cacheState = states.get(hostname);
 		if (cacheState == null || cacheState.isAvailable()) {
@@ -106,7 +75,7 @@ public class CacheStateRegistry extends StateRegistry {
 	}
 
 	@Override
-	protected AbstractState createState(final String id) {
+	protected CacheState createState(final String id) {
 		return new CacheState(id);
 	}
 }

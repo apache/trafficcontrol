@@ -11,7 +11,7 @@ import java.util.Deque;
 import java.util.Iterator;
 import java.util.List;
 
-public class DeliveryServiceStateRegistry extends StateRegistry {
+public class DeliveryServiceStateRegistry extends StateRegistry<DsState> {
 	private static final Logger LOGGER = Logger.getLogger(DeliveryServiceStateRegistry.class);
 
 	// Recommended Singleton Pattern implementation
@@ -28,14 +28,8 @@ public class DeliveryServiceStateRegistry extends StateRegistry {
 	}
 
 	public void completeUpdateAll(final HealthDeterminer myHealthDeterminer, final JSONObject dsList, final long lenientTime) {
-		for(AbstractState state : CacheStateRegistry.getInstance().getAll()) {
-
-			if (state instanceof CacheState) {
-				CacheState cacheState = (CacheState) state;
-				if (cacheState.getCache() == null || !cacheState.getCache().hasDeliveryServices()) {
-					continue;
-				}
-
+		for (CacheState cacheState : CacheStateRegistry.getInstance().getAll()) {
+			if (cacheState.getCache() != null && cacheState.getCache().hasDeliveryServices()) {
 				updateStates(cacheState, lenientTime);
 			}
 		}
@@ -112,7 +106,7 @@ public class DeliveryServiceStateRegistry extends StateRegistry {
 	}
 
 	@Override
-	protected AbstractState createState(final String deliveryServiceId) {
+	protected DsState createState(final String deliveryServiceId) {
 		return new DsState(deliveryServiceId);
 	}
 
