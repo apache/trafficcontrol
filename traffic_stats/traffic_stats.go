@@ -752,6 +752,9 @@ func sendMetrics(config StartupConfig, runningConfig RunningConfig, bps influx.B
 			RetentionPolicy: bps.RetentionPolicy(),
 		})
 		if err != nil {
+			if retry {
+				config.BpsChan <- chunkBps
+			}
 			errHndlr(err, ERROR)
 		}
 		for _, p := range pts[:intMin(config.MaxPublishSize, len(pts))] {
@@ -759,8 +762,15 @@ func sendMetrics(config StartupConfig, runningConfig RunningConfig, bps influx.B
 		}
 		pts = pts[intMin(config.MaxPublishSize, len(pts)):]
 
-		influxClient.Write(chunkBps)
-		log.Info(fmt.Sprintf("Sent %v stats for %v", len(chunkBps.Points()), chunkBps.Database()))
+		err = influxClient.Write(chunkBps)
+		if err != nil {
+			if retry {
+				config.BpsChan <- chunkBps
+			}
+			errHndlr(err, ERROR)
+		} else {
+			log.Info(fmt.Sprintf("Sent %v stats for %v", len(chunkBps.Points()), chunkBps.Database()))
+		}
 	}
 
 }
