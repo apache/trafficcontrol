@@ -16,17 +16,17 @@
 
 package com.comcast.cdn.traffic_control.traffic_monitor.publish;
 
-import java.util.Collection;
 import java.util.Date;
 
+import com.comcast.cdn.traffic_control.traffic_monitor.health.AbstractState;
+import com.comcast.cdn.traffic_control.traffic_monitor.health.DeliveryServiceStateRegistry;
 import org.apache.wicket.ajax.json.JSONException;
 import org.apache.wicket.ajax.json.JSONObject;
 import org.apache.wicket.request.mapper.parameter.PageParameters;
 
-import com.comcast.cdn.traffic_control.traffic_monitor.health.DsState;
-
 public class DsStats extends JsonPage {
 	private static final long serialVersionUID = 1L;
+	private final DeliveryServiceStateRegistry deliveryServiceStateRegistry = DeliveryServiceStateRegistry.getInstance();
 
 
 	/**
@@ -52,14 +52,13 @@ public class DsStats extends JsonPage {
 		o.put("pp", pp);
 		final JSONObject servers = new JSONObject();
 		if(deliveryService != null && !deliveryService.equals("")) {
-			if(DsState.has(deliveryService)) {
-				servers.put(deliveryService,DsState.getState(deliveryService).getStatsJson(hc, stats, wildcard, hidden));
+			if(deliveryServiceStateRegistry.has(deliveryService)) {
+				servers.put(deliveryService, deliveryServiceStateRegistry.get(deliveryService).getStatsJson(hc, stats, wildcard, hidden));
 			} else {
 				o.put("error", "Delivery service not found: "+deliveryService);
 			}
 		} else {
-			final Collection<DsState> states = DsState.getDsStates();
-			for(DsState s : states) {
+			for(AbstractState s : deliveryServiceStateRegistry.getAll()) {
 				servers.put(s.getId(),s.getStatsJson(hc, stats, wildcard, hidden));
 			}
 		}

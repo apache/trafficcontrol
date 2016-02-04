@@ -241,8 +241,6 @@ public class Fetcher {
 		OutputStream out = null;
 
 		try {
-			LOGGER.info("downloadTM: " + url);
-
 			final URL u = new URL(url);
 			final URLConnection urlc = u.openConnection();
 

@@ -161,7 +161,6 @@ public class PeriodicResourceUpdater {
 				for(int i = 0; i < um.urlList.size(); i++) {
 					final String url = um.urlList.get(urlIndex).getObject();
 					try {
-						LOGGER.warn("testing '"+url+"'");
 						newDB = fetchFile(url);
 					} catch(Exception e) {
 						LOGGER.error("Error with '"+url+"' : " + e, e);

@@ -16,13 +16,13 @@
 
 package com.comcast.cdn.traffic_control.traffic_monitor.publish;
 
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 import javax.servlet.http.HttpServletRequest;
 
+import com.comcast.cdn.traffic_control.traffic_monitor.health.DeliveryServiceStateRegistry;
 import org.apache.log4j.Logger;
 import org.apache.wicket.ajax.json.JSONException;
 import org.apache.wicket.ajax.json.JSONObject;
@@ -43,7 +43,6 @@ import com.comcast.cdn.traffic_control.traffic_monitor.health.PeerWatcher;
 public class CrStates extends JsonPage {
 	private static final Logger LOGGER = Logger.getLogger(CrStates.class);
 	private static final long serialVersionUID = 1L;
-	//	private static HealthDeterminer myHealthDeterminer;
 	private static CacheWatcher myCacheWatcher;
 	private static PeerWatcher myPeerWatcher;
 	private static HealthDeterminer myHealthDeterminer;
@@ -76,34 +75,6 @@ public class CrStates extends JsonPage {
 		}
 		return o;
 	}
-	public static Map<String, Long> getCrIps() {
-		return new HashMap<String, Long>(clientIps);
-	}
-
-	// TODO: clean up/merge with PeerWatcher logic?
-	/*private JSONObject getPeerSet(final JSONObject peers, final String id) {
-		try {
-			final JSONObject peerSet = new JSONObject();
-			if(peers == null || peers.length() == 0) {
-				return peerSet;
-			}
-			for(String peer : JSONObject.getNames(peers)) {
-				JSONObject jo = peers.getJSONObject(peer);
-				if(jo.has("caches")) {
-					jo = jo.getJSONObject("caches");
-				}
-				if(jo.has(id)) {
-					peerSet.put(peer, jo.getJSONObject(id));
-				} else {
-					LOGGER.warn("Cache ("+id+") not found in peer ("+peer+")");
-				}
-			}
-			return peerSet;
-		} catch (JSONException e) {
-			LOGGER.warn(e,e);
-		}
-		return null;
-	}*/
 
 	private JSONObject getCrStates(final RouterConfig crConfig, final boolean raw) {
 		if (crConfig == null) {
@@ -134,15 +105,19 @@ public class CrStates extends JsonPage {
 		}
 		try {
 			final JSONObject ret = new JSONObject();
-			final Collection<DsState> dsList = DsState.getDsStates();
-			for(DsState ds : dsList) {
-				final JSONObject dsJo = new JSONObject();
-				if(!ds.hasValue(AbstractState.IS_AVAILABLE_STR)) {
+			for(AbstractState abstractState : DeliveryServiceStateRegistry.getInstance().getAll()) {
+				if (!(abstractState instanceof DsState)) {
 					continue;
 				}
-				dsJo.put(AbstractState.IS_AVAILABLE_STR, ds.isAvailable());
-				dsJo.put("disabledLocations", ds.getDisabledLocations());
-				ret.put(ds.getId(), dsJo);
+
+				DsState dsState = (DsState) abstractState;
+				final JSONObject dsJo = new JSONObject();
+				if(!abstractState.hasValue(AbstractState.IS_AVAILABLE_STR)) {
+					continue;
+				}
+				dsJo.put(AbstractState.IS_AVAILABLE_STR, dsState.isAvailable());
+				dsJo.put("disabledLocations", dsState.getDisabledLocations());
+				ret.put(abstractState.getId(), dsJo);
 			}
 			return ret;
 		} catch (JSONException e) {
