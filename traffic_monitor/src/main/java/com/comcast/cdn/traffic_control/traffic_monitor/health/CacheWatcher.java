@@ -100,7 +100,7 @@ public class CacheWatcher {
 					continue;
 				}
 
-				final CacheState state = cacheStateRegistry.getOrCreate(cache.getHostname());
+				final CacheState state = cacheStateRegistry.update(cache);
 				state.fetchAndUpdate(myHealthDeterminer, fetchCount, errorCount, failCount);
 				retList.add(state);
 				cacheTimePad();
