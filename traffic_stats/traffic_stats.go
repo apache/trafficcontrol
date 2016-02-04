@@ -94,7 +94,7 @@ type Timers struct {
 }
 
 func main() {
-	var Bps map[string]*influx.BatchPoints
+	var Bps map[string]influx.BatchPoints
 	var config StartupConfig
 	var err error
 	var tickers Timers
@@ -108,7 +108,7 @@ func main() {
 		errHndlr(err, FATAL)
 	}
 
-	Bps = make(map[string]*influx.BatchPoints)
+	Bps = make(map[string]influx.BatchPoints)
 	config.BpsChan = make(chan influx.BatchPoints)
 
 	defer log.Flush()
@@ -140,12 +140,12 @@ func main() {
 		case <-termChan:
 			log.Info("Shutdown Request Received - Sending stored metrics then quitting")
 			for _, val := range Bps {
-				sendMetrics(config, runningConfig, *val, false)
+				sendMetrics(config, runningConfig, val, false)
 			}
 			os.Exit(0)
 		case <-tickers.Publish:
 			for key, val := range Bps {
-				go sendMetrics(config, runningConfig, *val, true)
+				go sendMetrics(config, runningConfig, val, true)
 				delete(Bps, key)
 			}
 		case runningConfig = <-configChan:
@@ -165,13 +165,12 @@ func main() {
 			key := fmt.Sprintf("%s%s", batchPoints.Database(), batchPoints.RetentionPolicy())
 			bp, ok := Bps[key]
 			if ok {
-				b := *bp
 				for _, p := range batchPoints.Points() {
-					b.AddPoint(p)
+					bp.AddPoint(p)
 				}
-				log.Debug("Aggregating ", len(b.Points()), " stats to ", key)
+				log.Debug("Aggregating ", len(bp.Points()), " stats to ", key)
 			} else {
-				Bps[key] = &batchPoints
+				Bps[key] = batchPoints
 				log.Debug("Created ", key)
 			}
 		}
@@ -685,7 +684,7 @@ func calcCacheValues(trafmonData []byte, cdnName string, sampleTime int64, cache
 		}
 	}
 	config.BpsChan <- bps
-	log.Debug("Collected ", statCount, " cache stats values for ", cdnName, " @ ", sampleTime)
+	log.Info("Collected ", statCount, " cache stats values for ", cdnName, " @ ", sampleTime)
 	return nil
 }
 
