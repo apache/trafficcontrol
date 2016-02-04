@@ -760,11 +760,9 @@ func sendMetrics(config StartupConfig, runningConfig RunningConfig, bps influx.B
 		pts = pts[intMin(config.MaxPublishSize, len(pts)):]
 
 		influxClient.Write(chunkBps)
-		log.Debug(fmt.Sprintf("Sent %v stats for %v", len(chunkBps.Points()), chunkBps.Database()))
+		log.Info(fmt.Sprintf("Sent %v stats for %v", len(chunkBps.Points()), chunkBps.Database()))
 	}
 
-	influxClient.Write(bps)
-	log.Info(fmt.Sprintf("Sent %v stats for %v", len(bps.Points()), bps.Database()))
 }
 
 func intMin(a, b int) int {
