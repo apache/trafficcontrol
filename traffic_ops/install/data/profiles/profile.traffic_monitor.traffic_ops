@@ -28,7 +28,7 @@
         {
             "config_file": "rascal-config.txt",
             "name": "location",
-            "value": "/opt/rascal/conf"
+            "value": "/opt/traffic_monitor/conf"
         },
         {
             "config_file": "rascal-config.txt",
