@@ -36,7 +36,7 @@ public class PeerWatcher {
 	private FetchService mainThread;
 	private boolean isActive = true;
 
-	final MonitorConfig config = ConfigHandler.getConfig();
+	final MonitorConfig config = ConfigHandler.getInstance().getConfig();
 
 	public PeerWatcher init() {
 		mainThread = new FetchService();
@@ -151,7 +151,7 @@ public class PeerWatcher {
 					LOGGER.warn(e + " to " + prettyUrl);
 				}
 
-				final MonitorConfig config = ConfigHandler.getConfig();
+				final MonitorConfig config = ConfigHandler.getInstance().getConfig();
 				final RouterConfig crConfig = RouterConfig.getCrConfig();
 
 				if (crConfig != null && config.getPeerOptimistic()) {

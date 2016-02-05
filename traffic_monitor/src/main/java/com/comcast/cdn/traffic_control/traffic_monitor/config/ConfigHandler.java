@@ -17,6 +17,7 @@
 package com.comcast.cdn.traffic_control.traffic_monitor.config;
 
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.FileReader;
 
 import org.apache.commons.io.IOUtils;
@@ -25,18 +26,36 @@ import org.apache.wicket.ajax.json.JSONObject;
 
 public class ConfigHandler {
 	private static final Logger LOGGER = Logger.getLogger(ConfigHandler.class);
+	public static final String CONFIG_FILEPATH =   "/opt/traffic_monitor/conf/traffic_monitor_config.js";
+	public static final String VAR_FILEPATH = "/opt/traffic_monitor/var";
+	public static final String DB_FILEPATH = "/opt/traffic_monitor/db/";
 
-	private static final Object lok = new Object();
-	private static String confDir = null;
-	private static String confFile = null;
-	private static MonitorConfig config = null;
-	private static boolean shutdown;
+	private final Object lok = new Object();
+	private String confDir = null;
+	private String confFile = null;
+	private MonitorConfig config = null;
+	private boolean shutdown;
+	private final File configFile = new File(CONFIG_FILEPATH);
+	private File varDirectory = new File(VAR_FILEPATH);
 
-	public static void destroy() {
+	// Recommended Singleton Pattern implementation
+	// https://community.oracle.com/docs/DOC-918906
+
+	private ConfigHandler() { }
+
+	public static ConfigHandler getInstance() {
+		return ConfigHandlerHolder.CONFIG_HANDLER;
+	}
+
+	private static class ConfigHandlerHolder {
+		private static final ConfigHandler CONFIG_HANDLER = new ConfigHandler();
+	}
+
+	public void destroy() {
 		shutdown = true;
 	}
 
-	public static MonitorConfig getConfig() {
+	public MonitorConfig getConfig() {
 		if (shutdown) {
 			return null;
 		}
@@ -46,10 +65,19 @@ public class ConfigHandler {
 				return config;
 			}
 
+			final String confFile = getConfFile();
+
+			if (confFile == null || confFile.isEmpty()) {
+				config = new MonitorConfig();
+				return config;
+			}
+
 			try {
 				final String str = IOUtils.toString(new FileReader(getConfFile()));
 				final JSONObject o = new JSONObject(str);
 				config = new MonitorConfig(o.getJSONObject("traffic_monitor_config"));
+			} catch (FileNotFoundException e) {
+				LOGGER.error("Failed to find traffic monitor configuration file " + CONFIG_FILEPATH);
 			} catch (Exception e) {
 				LOGGER.warn(e, e);
 			}
@@ -62,32 +90,28 @@ public class ConfigHandler {
 		return config;
 	}
 
-	public static String getDbDir() {
+	public String getDbDir() {
 		synchronized (lok) {
 			if (confDir != null) {
 				return confDir;
 			}
 
-			confDir = "target/test-classes/var/";
-
-			if (new File("/opt/traffic_monitor/var").exists()) {
-				confDir = "/opt/traffic_monitor/db/";
+			if (varDirectory.exists()) {
+				confDir = DB_FILEPATH;
 			}
 
 			return confDir;
 		}
 	}
 
-	public static String getConfFile() {
+	public String getConfFile() {
 		synchronized (lok) {
 			if (confFile != null) {
 				return confFile;
 			}
 
-			confFile = "target/test-classes/conf/traffic_monitor_config.js";
-
-			if (new File("/opt/traffic_monitor/conf/traffic_monitor_config.js").exists()) {
-				confFile = "/opt/traffic_monitor/conf/traffic_monitor_config.js";
+			if (configFile.exists()) {
+				confFile = CONFIG_FILEPATH;
 			}
 
 			return confFile;

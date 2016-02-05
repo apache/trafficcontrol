@@ -30,7 +30,7 @@ public class ConfigDoc extends JsonPage {
 	 */
 	@Override
 	public JSONObject getJson(final PageParameters pp) throws JSONException {
-		return ConfigHandler.getConfig().getConfigDoc();
+		return ConfigHandler.getInstance().getConfig().getConfigDoc();
 	}
 
 }

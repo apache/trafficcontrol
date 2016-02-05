@@ -88,8 +88,8 @@ public class MonitorApplication extends WebApplication {
 	}
 
 	public void onDestroy() {
-		final boolean forceDown = ConfigHandler.getConfig().shouldForceSystemExit();
-		ConfigHandler.destroy();
+		final boolean forceDown = ConfigHandler.getInstance().getConfig().shouldForceSystemExit();
+		ConfigHandler.getInstance().destroy();
 		LOGGER.warn("MonitorApplication: shutting down ");
 		tmw.destroy();
 

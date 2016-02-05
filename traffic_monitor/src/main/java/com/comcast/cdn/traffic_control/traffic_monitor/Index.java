@@ -132,7 +132,7 @@ public class Index extends MonitorPage implements IHeaderContributor {
 
 			@Override
 			public String getObject( ) {
-				final MonitorConfig config = ConfigHandler.getConfig();
+				final MonitorConfig config = ConfigHandler.getInstance().getConfig();
 				if(config == null) { return "[no config]"; }
 				final String host = config.getEffectiveProps().get("tm.hostname");
 				final String cdnName = config.getEffectiveProps().get("cdnName");
