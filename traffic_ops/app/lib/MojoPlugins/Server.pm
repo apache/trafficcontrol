@@ -72,7 +72,7 @@ sub register {
 				$response = $helper_class->$method_function($self);
 				my $status_code = $response->{_rc};
 				if ( $response->is_success ) {
-					$self->app->log->info("Using server, $server");
+					$self->app->log->debug("Using server, $server");
 					$active_server = $server;
 					last;
 				}
@@ -82,7 +82,7 @@ sub register {
 				}
 				else {
 					my $content = $response->{_content};
-					$self->app->log->error( "Active Server Severe Error: " . $status_code . " - " . $content );
+					$self->app->log->error( "Active Server Severe Error: " . $status_code . " - " . $server . " - " . $content );
 				}
 			}
 
