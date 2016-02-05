@@ -18,78 +18,79 @@ package com.comcast.cdn.traffic_control.traffic_monitor.config;
 
 import java.io.File;
 import java.io.FileReader;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.util.Map;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.log4j.Logger;
-import org.apache.wicket.ajax.json.JSONException;
 import org.apache.wicket.ajax.json.JSONObject;
 
 public class ConfigHandler {
 	private static final Logger LOGGER = Logger.getLogger(ConfigHandler.class);
+
 	private static final Object lok = new Object();
-
-	static MonitorConfig config = null;
-
+	private static String confDir = null;
+	private static String confFile = null;
+	private static MonitorConfig config = null;
 	private static boolean shutdown;
+
 	public static void destroy() {
 		shutdown = true;
 	}
-	public static MonitorConfig getConfig() {
-		if(shutdown) { return null; }
 
-		synchronized(lok) {
-			if(config != null) {return config; }
+	public static MonitorConfig getConfig() {
+		if (shutdown) {
+			return null;
+		}
+
+		synchronized (lok) {
+			if (config != null) {
+				return config;
+			}
+
 			try {
 				final String str = IOUtils.toString(new FileReader(getConfFile()));
 				final JSONObject o = new JSONObject(str);
 				config = new MonitorConfig(o.getJSONObject("traffic_monitor_config"));
 			} catch (Exception e) {
-				LOGGER.warn(e,e);
+				LOGGER.warn(e, e);
 			}
-			if(config == null) {
+
+			if (config == null) {
 				config = new MonitorConfig();
 			}
 		}
+
 		return config;
 	}
 
-	public static void saveBaseConfig(final Map<String, String> baseconfig) throws JSONException, IOException {
-		final JSONObject o = new JSONObject();
-		o.put("traffic_monitor_config", baseconfig);
-		final FileWriter w = new FileWriter(getConfFile());
-		IOUtils.write(o.toString(2), w);
-		w.flush();
-		w.close();
-		config.userOverrideBaseConfig(o.getJSONObject("traffic_monitor_config"));
-	}
-
-
-	private static String confDir = null;
-	private static String confFile = null;
-
 	public static String getDbDir() {
-		synchronized(lok) {
-			if(confDir != null) { return confDir; }
+		synchronized (lok) {
+			if (confDir != null) {
+				return confDir;
+			}
+
 			confDir = "target/test-classes/var/";
-			if(new File("/opt/traffic_monitor/var").exists()) {
+
+			if (new File("/opt/traffic_monitor/var").exists()) {
 				confDir = "/opt/traffic_monitor/db/";
 			}
+
 			return confDir;
 		}
 	}
+
 	public static String getConfFile() {
-		synchronized(lok) {
-			if(confFile != null) { return confFile; }
+		synchronized (lok) {
+			if (confFile != null) {
+				return confFile;
+			}
 
 			confFile = "target/test-classes/conf/traffic_monitor_config.js";
-			if(new File("/opt/traffic_monitor/conf/traffic_monitor_config.js").exists()) {
+
+			if (new File("/opt/traffic_monitor/conf/traffic_monitor_config.js").exists()) {
 				confFile = "/opt/traffic_monitor/conf/traffic_monitor_config.js";
 			}
+
 			return confFile;
 		}
 	}
-
 }
