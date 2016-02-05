@@ -66,6 +66,7 @@ public class DeliveryService {
 	private final boolean ip6RoutingEnabled;
 	private final Map<String, String> responseHeaders = new HashMap<String, String>();
 	private final Set<String> requestHeaders = new HashSet<String>();
+	private final boolean regionalGeoEnabled;
 
 	public DeliveryService(final String id, final JSONObject dsJo) throws JSONException {
 		this.id = id;
@@ -98,6 +99,7 @@ public class DeliveryService {
 		this.ip6RoutingEnabled = dsJo.optBoolean("ip6RoutingEnabled", false);
 		setResponseHeaders(dsJo.optJSONObject("responseHeaders"));
 		setRequestHeaders(dsJo.optJSONArray("requestHeaders"));
+		this.regionalGeoEnabled = dsJo.optBoolean("regionalGeoBlocking", false);
 	}
 
 	public String getId() {
@@ -215,6 +217,23 @@ public class DeliveryService {
 			}
 			uri.append(tinfo);
 		}
+		return uri.toString();
+	}
+	public String createURIString(final HTTPRequest request, final String alternatePath, final Cache cache) {
+		final StringBuilder uri = new StringBuilder(SCHEME);
+
+		String fqdn = getFQDN(cache);
+		if (fqdn == null) {
+			final String[] cacheName = cache.getFqdn().split(REGEX_PERIOD, 2);
+			fqdn = cacheName[0] + "." + request.getHostname().split(REGEX_PERIOD, 2)[1];
+		}
+		uri.append(fqdn);
+
+		if (cache.getPort() != STANDARD_HTTP_PORT) {
+			uri.append(":").append(cache.getPort());
+		}
+
+		uri.append(alternatePath);
 		return uri.toString();
 	}
 
@@ -453,5 +472,8 @@ public class DeliveryService {
 		for (int i = 0; i < jsonRequestHeaderNames.length(); i++) {
 			requestHeaders.add(jsonRequestHeaderNames.getString(i));
 		}
+	}
+	public boolean isRegionalGeoEnabled() {
+		return regionalGeoEnabled;
 	}
 }
