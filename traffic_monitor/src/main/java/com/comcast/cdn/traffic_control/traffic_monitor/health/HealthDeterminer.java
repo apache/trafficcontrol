@@ -26,7 +26,6 @@ import org.apache.wicket.ajax.json.JSONException;
 import org.apache.wicket.ajax.json.JSONObject;
 
 import com.comcast.cdn.traffic_control.traffic_monitor.config.Cache;
-import com.comcast.cdn.traffic_control.traffic_monitor.health.DsState.EmbeddedStati;
 import com.comcast.cdn.traffic_control.traffic_monitor.util.Updatable;
 
 public class HealthDeterminer {
@@ -161,16 +160,16 @@ public class HealthDeterminer {
 		// first check ONLINEness
 		final String status = cache.getStatus();
 		final String error = getErrorString(cache, state);
-		state.put(STATUS, status);
-		state.put(ERROR_STRING, error);
+		state.putDataPoint(STATUS, status);
+		state.putDataPoint(ERROR_STRING, error);
 		final boolean isHealthy = (error==null);
 		state.setAvailable(getIsAvailable(cache, isHealthy), error);
 	}
 
 	public void setIsAvailable(final Cache cache, final String e, final CacheState state) {
 		final String status = cache.getStatus();
-		state.put(STATUS, status);
-		state.put(ERROR_STRING, e);
+		state.putDataPoint(STATUS, status);
+		state.putDataPoint(ERROR_STRING, e);
 		state.setAvailable(getIsAvailable(cache, false), e);
 	}
 
@@ -190,14 +189,14 @@ public class HealthDeterminer {
 	}
 	String getErrorString(final Cache cache, final CacheState state) {
 		if(shouldClearData(cache.getStatus())) {
-			state.put("clearData", "true");
+			state.putDataPoint("clearData", "true");
 			return null;
 		}
 
 		// this is where all the intelligence goes
 		final String loadStr = state.getLastValue("system.proc.loadavg");
 		final String loadavg = loadStr.split(" ")[0];
-		state.put("loadavg", loadavg);
+		state.putDataPoint("loadavg", loadavg);
 
 		final String str = state.getLastValue("system.proc.net.dev");
 		String tx_bytes= "0";
@@ -229,11 +228,11 @@ public class HealthDeterminer {
 		final double availBandwidthMbps = availBandwidthKbps / 1000.0;
 
 		DecimalFormat df = new DecimalFormat("0.00");
-		state.put("kbps", df.format(kbps));
-		state.put("bandwidth", df.format(kbps));
-		state.put("maxKbps", Long.toString(maxBW));
-		state.put("availableBandwidthInKbps", df.format(availBandwidthKbps));
-		state.put("availableBandwidthInMbps", df.format(availBandwidthMbps));
+		state.putDataPoint("kbps", df.format(kbps));
+		state.putDataPoint("bandwidth", df.format(kbps));
+		state.putDataPoint("maxKbps", Long.toString(maxBW));
+		state.putDataPoint("availableBandwidthInKbps", df.format(availBandwidthKbps));
+		state.putDataPoint("availableBandwidthInMbps", df.format(availBandwidthMbps));
 
 		return mapControlsToError(cache.getControls(), state, "");
 	}
@@ -348,15 +347,15 @@ public class HealthDeterminer {
 	}
 	public static void setIsAvailable(final DsState dsState, final JSONObject dsControls) {
 		if(dsControls == null) {
-			dsState.put(STATUS, "ONLINE");
+			dsState.putDataPoint(STATUS, "ONLINE");
 			dsState.setAvailable(getIsAvailable("ONLINE", true), null);
 			return;
 		}
 		// first check ONLINEness
 		final String status = dsControls.optString(STATUS);
 		final String error = getErrorString(dsControls, dsState);
-		dsState.put(STATUS, status);
-		dsState.put(ERROR_STRING, error);
+		dsState.putDataPoint(STATUS, status);
+		dsState.putDataPoint(ERROR_STRING, error);
 		final boolean isHealthy = (error==null);
 		dsState.setAvailable(getIsAvailable(status, isHealthy), error);
 	}
@@ -378,8 +377,8 @@ public class HealthDeterminer {
 		if(error!=null) {
 			isAvailable = false;
 		}
-		dsState.put("location."+loc.getId()+"."+ERROR_STRING, error );
-		dsState.put("location."+loc.getId()+"."+IS_AVAILABLE_KEY, String.valueOf(isAvailable));
+		dsState.putDataPoint("location."+loc.getId()+"."+ERROR_STRING, error );
+		dsState.putDataPoint("location."+loc.getId()+"."+IS_AVAILABLE_KEY, String.valueOf(isAvailable));
 		return isAvailable;
 	}
 	private static String getErrorString(final JSONObject locControls,

@@ -22,6 +22,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import com.comcast.cdn.traffic_control.traffic_monitor.health.CacheStateRegistry;
 import org.apache.log4j.Logger;
 import org.apache.wicket.ajax.json.JSONException;
 import org.apache.wicket.ajax.json.JSONObject;
@@ -55,7 +56,7 @@ public class RouterConfig {
 //				}
 				final Cache c = new Cache(id,cjo, this);
 				myHealthDeterminer.setControls(c); // set the controls
-				c.setCacheState(CacheState.getState(c.getHostname()));
+				c.setCacheState((CacheState) CacheStateRegistry.getInstance().get(c.getHostname()));
 				al.add(c);
 			} catch (JSONException e) {
 				LOGGER.warn("handleTmJson: ",e);

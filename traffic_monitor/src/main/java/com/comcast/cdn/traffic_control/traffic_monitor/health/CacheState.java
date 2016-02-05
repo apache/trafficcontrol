@@ -17,11 +17,9 @@
 package com.comcast.cdn.traffic_control.traffic_monitor.health;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Date;
+import java.net.ConnectException;
 import java.util.HashMap;
 import java.util.Iterator;
-import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CancellationException;
 import java.util.concurrent.Future;
@@ -31,7 +29,6 @@ import org.apache.log4j.Logger;
 import org.apache.wicket.ajax.json.JSONException;
 import org.apache.wicket.ajax.json.JSONObject;
 
-import com.comcast.cdn.traffic_control.traffic_monitor.KeyValue;
 import com.comcast.cdn.traffic_control.traffic_monitor.config.Cache;
 import com.comcast.cdn.traffic_control.traffic_monitor.health.CacheWatcher.CacheDataModel;
 import com.ning.http.client.AsyncCompletionHandler;
@@ -46,7 +43,6 @@ import com.ning.http.client.Response;
 public class CacheState extends AbstractState {
 	private static final Logger LOGGER = Logger.getLogger(CacheState.class);
 	private static final long serialVersionUID = 1L;
-	private static Map<String, CacheState> states = new HashMap<String, CacheState>();
 
 	transient private Future<Object> future;
 	transient private Request request;
@@ -58,68 +54,13 @@ public class CacheState extends AbstractState {
 	transient private Cache cache;
 	static private AsyncHttpClient asyncHttpClient;
 
-	private CacheState(final String id) {
+	public CacheState(final String id) {
 		super(id);
 	}
 
-	public static List<CacheState> getCacheStates() {
-		synchronized (states) {
-			return new ArrayList<CacheState>(states.values());
-		}
-	}
-
-	public static CacheState getOrCreate(final Cache cache) {
-		return getOrCreate(cache.getHostname(), cache);
-	}
-
-	public static CacheState getOrCreate(final String host, final Cache cache) {
-		synchronized (states) {
-			CacheState as = states.get(host);
-
-			if (as == null) {
-				as = new CacheState(host);
-				states.put(host, as);
-			}
-
-			as.setCache(cache);
-			return as;
-		}
-	}
-
-	private void setCache(final Cache cache) {
+	public void setCache(final Cache cache) {
 		this.cache = cache;
 	}
-
-	public static CacheState getState(final String host) {
-		synchronized (states) {
-			return states.get(host);
-		}
-	}
-
-	public static boolean has(final String host) {
-		if (states.get(host) == null) {
-			return false;
-		}
-
-		return true;
-	}
-
-	public static void removeAllBut(final List<CacheState> retList) {
-		final List<String> hostnames = new ArrayList<String>();
-
-		for (CacheState cs : retList) {
-			hostnames.add(cs.getId());
-		}
-
-		synchronized (states) {
-			for (String key : new ArrayList<String>(states.keySet())) {
-				if (!hostnames.contains(key)) {
-					states.remove(key);
-				}
-			}
-		}
-	}
-
 
 	public Cache getCache() {
 		return cache;
@@ -139,9 +80,9 @@ public class CacheState extends AbstractState {
 
 		try {
 			fetchCount.inc();
-			this.startUpdate();
+			prepareStatisticsForUpdate();
 			final String url = getFetchUrl();
-			this.put("_queryUrl", url);
+			this.putDataPoint("_queryUrl", url);
 			this.setHistoryTime(cache.getHistoryTime());
 			requestTimeout = System.currentTimeMillis() + myHealthDeterminer.getConnectionTimeout(cache, 2000);
 			future = asyncClient.executeRequest(getRequest(asyncClient, url), getAsyncHanlder(myHealthDeterminer, time, url, errorCount, failCount));
@@ -185,7 +126,7 @@ public class CacheState extends AbstractState {
 		public Integer onCompleted(final Response response) throws JSONException, IOException {
 			// Do something with the Response
 			final int code = response.getStatusCode();
-			state.put("queryTime", String.valueOf(System.currentTimeMillis() - time));
+			state.putDataPoint("queryTime", String.valueOf(System.currentTimeMillis() - time));
 
 			if (code != 200) {
 				synchronized (state.cache) {
@@ -194,9 +135,8 @@ public class CacheState extends AbstractState {
 				return code;
 			}
 
-			//			final long queryTime = System.currentTimeMillis() - time;
 			final Map<String, String> stats = getMap(response.getResponseBody(), url);
-			state.put(stats);
+			state.putDataPoints(stats);
 
 			synchronized (state.cache) {
 				state.cache.setState(state, myHealthDeterminer);
@@ -207,14 +147,15 @@ public class CacheState extends AbstractState {
 
 		@Override
 		public void onThrowable(final Throwable t) {
-			if (!(t instanceof CancellationException)) {
-				LOGGER.warn(t + " : " + url);
-				failCount.incrementAndGet();
+			if (t instanceof  CancellationException) {
+				LOGGER.warn("Request to get state of cache " + state.getCache().getHostname() + " at " + url + " failed to complete in time");
+			} else if (t instanceof ConnectException) {
+				LOGGER.warn("Failed to connect to cache " + state.getCache().getHostname() + " at " + url);
 			} else {
-				LOGGER.warn("Request to " + url + " failed to complete in time");
+				LOGGER.warn("Failed to get stats for " + state.getCache().getHostname() + " " + t + " : " + url);
 			}
 
-			state.put("queryTime", String.valueOf(System.currentTimeMillis() - time));
+			state.putDataPoint("queryTime", String.valueOf(System.currentTimeMillis() - time));
 
 			try {
 				errorCount.inc();
@@ -319,7 +260,6 @@ public class CacheState extends AbstractState {
 			map.put("system." + key, String.valueOf(global.get(key)));
 		}
 
-		//		map.put("queryTime", Long.toString(queryTime));
 		map.put("stateUrl", stateUrl);
 
 		return map;
@@ -330,25 +270,5 @@ public class CacheState extends AbstractState {
 			LOGGER.warn("closing");
 			asyncHttpClient.close();
 		}
-	}
-
-
-	@Override
-	protected KeyValue getKeyValue(final String key, final AbstractState state) {
-		return new KeyValue(key, this) {
-			private static final long serialVersionUID = 1L;
-
-			@Override
-			public String getObject() {
-				if (stateId != null) {
-					return CacheState.get(stateId, key);
-				}
-				return val;
-			}
-		};
-	}
-
-	public static String get(final String stateId, final String key) {
-		return getState(stateId).getLastValue(key);
 	}
 }

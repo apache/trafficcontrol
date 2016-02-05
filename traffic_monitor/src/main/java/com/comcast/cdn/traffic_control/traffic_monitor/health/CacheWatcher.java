@@ -32,6 +32,7 @@ public class CacheWatcher {
 	private static final Logger LOGGER = Logger.getLogger(CacheWatcher.class);
 
 	private HealthDeterminer myHealthDeterminer;
+	private final CacheStateRegistry cacheStateRegistry = CacheStateRegistry.getInstance();
 
 	private static final List<CacheDataModel> list = new ArrayList<CacheDataModel>();
 	private static final CacheDataModel itercount = new CacheDataModel("Iteration Count");
@@ -99,7 +100,7 @@ public class CacheWatcher {
 					continue;
 				}
 
-				final CacheState state = CacheState.getOrCreate(cache);
+				final CacheState state = cacheStateRegistry.update(cache);
 				state.fetchAndUpdate(myHealthDeterminer, fetchCount, errorCount, failCount);
 				retList.add(state);
 				cacheTimePad();
@@ -151,7 +152,7 @@ public class CacheWatcher {
 						}
 					}
 
-					CacheState.removeAllBut(states);
+					cacheStateRegistry.removeAllBut(states);
 					final long completedTime = System.currentTimeMillis();
 
 					try {
