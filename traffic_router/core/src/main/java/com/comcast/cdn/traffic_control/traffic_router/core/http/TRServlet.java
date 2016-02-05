@@ -131,8 +131,7 @@ public class TRServlet extends HttpServlet {
 			}
 
 			if (routeResult == null || routeResult.getUrl() == null) {
-				httpAccessRecordBuilder.responseCode(HttpServletResponse.SC_SERVICE_UNAVAILABLE);
-				response.sendError(HttpServletResponse.SC_SERVICE_UNAVAILABLE);
+				setErrorResponseCode(response, httpAccessRecordBuilder, routeResult);
 			} else {
 				final URL location = routeResult.getUrl();
 				final Map<String, String> responseHeaders = deliveryService.getResponseHeaders();
@@ -170,6 +169,7 @@ public class TRServlet extends HttpServlet {
 			final HTTPAccessRecord access = httpAccessRecordBuilder.resultType(track.getResult())
 				.resultLocation(track.getResultLocation())
 				.requestHeaders(accessRequestHeaders)
+				.regionalGeoResult(track.getRegionalGeoResult())
 				.build();
 			ACCESS.info(HTTPAccessEventBuilder.create(access));
 			statTracker.saveTrack(track);
@@ -182,6 +182,19 @@ public class TRServlet extends HttpServlet {
 
 	public void setStatTracker(final StatTracker statTracker) {
 		this.statTracker = statTracker;
+	}
+
+	private void setErrorResponseCode(final HttpServletResponse response,
+		final HTTPAccessRecord.Builder httpAccessRecordBuilder, final HTTPRouteResult routeResult) throws IOException {
+
+		if (routeResult != null && routeResult.getResponseCode() > 0) {
+			httpAccessRecordBuilder.responseCode(routeResult.getResponseCode());
+			response.sendError(routeResult.getResponseCode());
+			return;
+		}
+
+		httpAccessRecordBuilder.responseCode(HttpServletResponse.SC_SERVICE_UNAVAILABLE);
+		response.sendError(HttpServletResponse.SC_SERVICE_UNAVAILABLE);
 	}
 
 }

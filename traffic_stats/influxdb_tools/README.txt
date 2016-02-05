@@ -5,15 +5,15 @@ They are specific for traffic stats and are not meant to be generic to influxdb.
 For more information see: http://traffic-control-cdn.net/docs/latest/admin/traffic_stats.html#influxdb-tools
 
 Pre-Requisites: 
-1. Go 1.4 or later
-2. Influxdb 0.9.4 or later
+1. Go 1.5.x or later
+2. Influxdb 0.9.6.1 or later
 3. configured $GOPATH (e.g. export GOPATH=~/go)
 
 Using create_ts_databases.go
-1. Install InfluxDb Client (0.9.4 version)
+1. Install InfluxDb Client (0.9.6.1 version)
 	- go get github.com/influxdata/influxdb
 	- cd $GOPATH/src/github.com/influxdata/influxdb
-	- git checkout 0.9.4
+	- git checkout 0.9.6.1
 	- go install
 
 2. Build it

@@ -22,6 +22,7 @@ import com.comcast.cdn.traffic_control.traffic_router.core.ds.DeliveryService;
 
 public class HTTPRouteResult implements RouteResult {
 	private URL url;
+	private int responseCode;
 	private DeliveryService deliveryService;
 
 	@Override
@@ -35,6 +36,14 @@ public class HTTPRouteResult implements RouteResult {
 
 	public void setUrl(final URL url) {
 		this.url = url;
+	}
+
+	public int getResponseCode() {
+		return responseCode;
+	}
+
+	public void setResponseCode(final int rc) {
+		this.responseCode = rc;
 	}
 
 	public DeliveryService getDeliveryService() {
