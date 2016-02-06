@@ -4,6 +4,7 @@ import com.comcast.cdn.traffic_control.traffic_monitor.config.ConfigHandler;
 import com.comcast.cdn.traffic_control.traffic_monitor.config.MonitorConfig;
 import org.apache.commons.io.IOUtils;
 import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.powermock.api.mockito.PowerMockito;
@@ -24,26 +25,26 @@ import static org.powermock.api.mockito.PowerMockito.whenNew;
 @PrepareForTest({ConfigHandler.class,File.class,IOUtils.class})
 @RunWith(PowerMockRunner.class)
 public class ConfigHandlerTest {
-	private File mockConfigFile;
-	private File mockVarDirectory;
-	private ConfigHandler configHandler;
+	static File mockConfigFile = mock(File.class);
+	static File mockDbDirectory = mock(File.class);
+	static ConfigHandler configHandler;
+
+	@BeforeClass
+	public static void beforeClass() throws Exception {
+		whenNew(File.class).withArguments("/opt/traffic_monitor/conf/traffic_monitor_config.js").thenReturn(mockConfigFile);
+		whenNew(File.class).withArguments("/opt/traffic_monitor/db/").thenReturn(mockDbDirectory);
+		configHandler = ConfigHandler.getInstance();
+
+	}
 
 	@Before
 	public void before() throws Exception {
-		mockConfigFile = mock(File.class);
-		whenNew(File.class).withArguments("/opt/traffic_monitor/conf/traffic_monitor_config.js").thenReturn(mockConfigFile);
-
-		mockVarDirectory = mock(File.class);
-		whenNew(File.class).withArguments("/opt/traffic_monitor/var").thenReturn(mockVarDirectory);
-
-		configHandler = ConfigHandler.getInstance();
-
 		// Some food for thought about why "true" singletons are generally less desirable than dependency injection...
 		// Without injecting a null monitor config object behind the scenes the tests don't work
+		// we have to do this between every test too because once the singleton gets a hold
+		// of a non-null config, it will never try to update it.
 		MonitorConfig monitorConfig = null;
 		Whitebox.setInternalState(configHandler, "config", monitorConfig);
-		Whitebox.setInternalState(configHandler, "configFile", mockConfigFile);
-		Whitebox.setInternalState(configHandler, "varDirectory", mockVarDirectory);
 	}
 
 	@Test
@@ -81,7 +82,7 @@ public class ConfigHandlerTest {
 	public void itReportsTheDatabaseDirectory() {
 		assertThat(configHandler.getDbDir(), nullValue());
 
-		when(mockVarDirectory.exists()).thenReturn(true);
+		when(mockDbDirectory.exists()).thenReturn(true);
 		assertThat(configHandler.getDbDir(), equalTo("/opt/traffic_monitor/db/"));
 	}
 }

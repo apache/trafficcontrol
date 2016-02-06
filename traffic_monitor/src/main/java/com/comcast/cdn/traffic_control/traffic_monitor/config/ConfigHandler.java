@@ -27,16 +27,14 @@ import org.apache.wicket.ajax.json.JSONObject;
 public class ConfigHandler {
 	private static final Logger LOGGER = Logger.getLogger(ConfigHandler.class);
 	public static final String CONFIG_FILEPATH =   "/opt/traffic_monitor/conf/traffic_monitor_config.js";
-	public static final String VAR_FILEPATH = "/opt/traffic_monitor/var";
 	public static final String DB_FILEPATH = "/opt/traffic_monitor/db/";
 
 	private final Object lok = new Object();
-	private String confDir = null;
 	private String confFile = null;
 	private MonitorConfig config = null;
 	private boolean shutdown;
 	private final File configFile = new File(CONFIG_FILEPATH);
-	private File varDirectory = new File(VAR_FILEPATH);
+	private final File dbDirectory = new File(DB_FILEPATH);
 
 	// Recommended Singleton Pattern implementation
 	// https://community.oracle.com/docs/DOC-918906
@@ -92,15 +90,7 @@ public class ConfigHandler {
 
 	public String getDbDir() {
 		synchronized (lok) {
-			if (confDir != null) {
-				return confDir;
-			}
-
-			if (varDirectory.exists()) {
-				confDir = DB_FILEPATH;
-			}
-
-			return confDir;
+			return dbDirectory.exists() ? DB_FILEPATH : null;
 		}
 	}
 
