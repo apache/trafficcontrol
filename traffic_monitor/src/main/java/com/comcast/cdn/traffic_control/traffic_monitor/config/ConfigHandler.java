@@ -30,7 +30,6 @@ public class ConfigHandler {
 	public static final String DB_FILEPATH = "/opt/traffic_monitor/db/";
 
 	private final Object lok = new Object();
-	private String confFile = null;
 	private MonitorConfig config = null;
 	private boolean shutdown;
 	private final File configFile = new File(CONFIG_FILEPATH);
@@ -63,17 +62,14 @@ public class ConfigHandler {
 				return config;
 			}
 
-			final String confFile = getConfFile();
-
-			if (confFile == null || confFile.isEmpty()) {
+			if (!configFileExists()) {
 				config = new MonitorConfig();
 				return config;
 			}
 
 			try {
-				final String str = IOUtils.toString(new FileReader(getConfFile()));
-				final JSONObject o = new JSONObject(str);
-				config = new MonitorConfig(o.getJSONObject("traffic_monitor_config"));
+				final JSONObject jsonConfig = new JSONObject(IOUtils.toString(new FileReader(configFile)));
+				config = new MonitorConfig(jsonConfig.getJSONObject("traffic_monitor_config"));
 			} catch (FileNotFoundException e) {
 				LOGGER.error("Failed to find traffic monitor configuration file " + CONFIG_FILEPATH);
 			} catch (Exception e) {
@@ -94,17 +90,7 @@ public class ConfigHandler {
 		}
 	}
 
-	public String getConfFile() {
-		synchronized (lok) {
-			if (confFile != null) {
-				return confFile;
-			}
-
-			if (configFile.exists()) {
-				confFile = CONFIG_FILEPATH;
-			}
-
-			return confFile;
-		}
+	public boolean configFileExists() {
+		return configFile.exists();
 	}
 }

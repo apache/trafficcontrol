@@ -88,7 +88,6 @@ public class PeriodicResourceUpdater {
 	}
 	
 	private void add(final UpdateModel um) {
-		LOGGER.info(um.urlList.get(0));
 		um.putCurrent();
 		synchronized(umList) {
 			umList.add(um);
@@ -163,7 +162,7 @@ public class PeriodicResourceUpdater {
 					try {
 						newDB = fetchFile(url);
 					} catch(Exception e) {
-						LOGGER.error("Error with '"+url+"' : " + e, e);
+						LOGGER.error("Error with '" + url + "' : " + e);
 						urlIndex = (urlIndex+1)%um.urlList.size();
 						continue;
 					}

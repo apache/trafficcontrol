@@ -1,7 +1,6 @@
 package config;
 
 import com.comcast.cdn.traffic_control.traffic_monitor.config.ConfigHandler;
-import com.comcast.cdn.traffic_control.traffic_monitor.config.MonitorConfig;
 import org.apache.commons.io.IOUtils;
 import org.junit.Before;
 import org.junit.BeforeClass;
@@ -34,7 +33,6 @@ public class ConfigHandlerTest {
 		whenNew(File.class).withArguments("/opt/traffic_monitor/conf/traffic_monitor_config.js").thenReturn(mockConfigFile);
 		whenNew(File.class).withArguments("/opt/traffic_monitor/db/").thenReturn(mockDbDirectory);
 		configHandler = ConfigHandler.getInstance();
-
 	}
 
 	@Before
@@ -43,20 +41,21 @@ public class ConfigHandlerTest {
 		// Without injecting a null monitor config object behind the scenes the tests don't work
 		// we have to do this between every test too because once the singleton gets a hold
 		// of a non-null config, it will never try to update it.
-		MonitorConfig monitorConfig = null;
-		Whitebox.setInternalState(configHandler, "config", monitorConfig);
+		Whitebox.setInternalState(configHandler, "config", (Object) null);
 	}
 
-	@Test
-	public void itChecksTheFileSystemForTrafficMonitorConfig() throws Exception {
-		assertThat(configHandler.getConfFile(),nullValue());
 
+	@Test
+	public void itIndicatesNoConfigFileFound() {
+		when(mockConfigFile.exists()).thenReturn(false);
+		assertThat(configHandler.configFileExists(), equalTo(false));
 		when(mockConfigFile.exists()).thenReturn(true);
-		assertThat(configHandler.getConfFile(),equalTo("/opt/traffic_monitor/conf/traffic_monitor_config.js"));
+		assertThat(configHandler.configFileExists(), equalTo(true));
 	}
 
 	@Test
 	public void itReturnsMonitorConfigWithDefaults() {
+		when(mockConfigFile.exists()).thenReturn(false);
 		String configUrl = configHandler.getConfig().getCrConfigUrl();
 		assertThat(configUrl, equalTo("https://${tmHostname}/CRConfig-Snapshots/${cdnName}/CRConfig.json"));
 	}
@@ -79,7 +78,7 @@ public class ConfigHandlerTest {
 	}
 
 	@Test
-	public void itReportsTheDatabaseDirectory() {
+	public void itReportsTheDatabaseDirectoryExists() {
 		assertThat(configHandler.getDbDir(), nullValue());
 
 		when(mockDbDirectory.exists()).thenReturn(true);

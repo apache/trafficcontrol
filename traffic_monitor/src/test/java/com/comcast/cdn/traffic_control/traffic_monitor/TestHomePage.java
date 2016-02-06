@@ -16,18 +16,47 @@
 
 package com.comcast.cdn.traffic_control.traffic_monitor;
 
+import com.comcast.cdn.traffic_control.traffic_monitor.config.Config;
+import com.comcast.cdn.traffic_control.traffic_monitor.config.ConfigHandler;
+import com.comcast.cdn.traffic_control.traffic_monitor.config.MonitorConfig;
+import com.comcast.cdn.traffic_control.traffic_monitor.health.CacheWatcher;
 import org.apache.wicket.util.tester.WicketTester;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.powermock.core.classloader.annotations.PrepareForTest;
+import org.powermock.modules.junit4.PowerMockRunner;
 
-/**
- * Simple test using the WicketTester
- */
+import javax.net.ssl.SSLContext;
+
+import static org.powermock.api.mockito.PowerMockito.mock;
+import static org.powermock.api.mockito.PowerMockito.mockStatic;
+import static org.powermock.api.mockito.PowerMockito.when;
+
+@PrepareForTest({ConfigHandler.class, CacheWatcher.class, SSLContext.class})
+@RunWith(PowerMockRunner.class)
 public class TestHomePage {
 	private WicketTester tester;
 
 	@Before
-	public void setUp() {
+	public void setUp() throws Exception {
+		mockStatic(SSLContext.class);
+
+		when(SSLContext.getInstance("TLS")).thenReturn(mock(SSLContext.class));
+
+		MonitorConfig monitorConfig = mock(MonitorConfig.class);
+		when(monitorConfig.getHealthPollingInterval()).thenReturn(10 * 1000);
+		when(monitorConfig.getHeathUrl()).thenReturn("http://www.kabletown/healthParams");
+		when(monitorConfig.getCrConfigUrl()).thenReturn("http://www.kabletown/crConfig");
+
+		ConfigHandler configHandler = mock(ConfigHandler.class);
+
+		when(configHandler.getConfig()).thenReturn(monitorConfig);
+		when(configHandler.configFileExists()).thenReturn(true);
+
+		mockStatic(ConfigHandler.class);
+		when(ConfigHandler.getInstance()).thenReturn(configHandler);
+
 		tester = new WicketTester(new MonitorApplication());
 	}
 

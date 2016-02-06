@@ -60,6 +60,14 @@ public class MonitorApplication extends WebApplication {
 	@Override
 	public void init() {
 		super.init();
+
+		if (!ConfigHandler.getInstance().configFileExists()) {
+			LOGGER.fatal("Cannot find configuration file: " + ConfigHandler.CONFIG_FILEPATH);
+			// This will only stop Tomcat if the security manager allows it
+			// https://tomcat.apache.org/tomcat-6.0-doc/security-manager-howto.html
+			System.exit(1);
+		}
+
 		getResourceSettings().setResourcePollFrequency(Duration.ONE_SECOND);
 
 		// This allows us to override the Host header sent via URLConnection
