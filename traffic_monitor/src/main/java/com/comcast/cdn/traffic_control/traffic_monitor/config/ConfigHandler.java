@@ -56,17 +56,6 @@ public class ConfigHandler {
 		return config;
 	}
 
-	public static void saveBaseConfig(final Map<String, String> baseconfig) throws JSONException, IOException {
-		final JSONObject o = new JSONObject();
-		o.put("traffic_monitor_config", baseconfig);
-		final FileWriter w = new FileWriter(getConfFile());
-		IOUtils.write(o.toString(2), w);
-		w.flush();
-		w.close();
-		config.userOverrideBaseConfig(o.getJSONObject("traffic_monitor_config"));
-	}
-
-
 	private static String confDir = null;
 	private static String confFile = null;
 

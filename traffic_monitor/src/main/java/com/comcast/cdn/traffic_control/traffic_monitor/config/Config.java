@@ -30,168 +30,134 @@ public class Config implements java.io.Serializable {
 	private static final long serialVersionUID = 1L;
 
 	private JSONObject baseProps = new JSONObject();
-	private JSONObject overlayProps = new JSONObject();
 	private JSONObject props = new JSONObject();
 	private final JSONObject propDoc = new JSONObject();
 	private boolean hasForcedPropCalls = false;
 
 	public Config() {
+
 	}
-	public Config(final JSONObject o) throws JSONException {
-		baseProps = o;
-		LOGGER.debug(o.toString(2));
+
+	public Config(final JSONObject properties) {
+		baseProps = properties;
 		props = new JSONObject(baseProps, JSONObject.getNames(baseProps));
 	}
+
 	protected String completePropString(final String pattern) {
 		return pattern;
 	}
 
-	public void userOverrideBaseConfig(final JSONObject o) throws JSONException {
-		baseProps = o;
-		props = overlay(overlayProps);
-	}
-	private JSONObject overlay(final JSONObject o) throws JSONException {
-		overlayProps = o;
-		if(overlayProps == null) { return baseProps; }
+	public void update(final JSONObject overlayJson) throws JSONException {
+		LOGGER.info("update, adding: " + overlayJson.toString(2));
+
+		if (overlayJson == null) {
+			props = baseProps;
+			return;
+		}
+
 		final JSONObject myprops = new JSONObject(baseProps, JSONObject.getNames(baseProps));
-		LOGGER.warn(o.toString(2));
-		final String[] names = JSONObject.getNames(o);
-		if(names != null) {
-			for(String name : names) {
-				myprops.put(name, o.get(name));
-			}
+
+		Iterator<String> names = overlayJson.keys();
+		while (names.hasNext()) {
+			String name = names.next();
+			myprops.put(name, overlayJson.get(name));
 		}
-		return myprops;
+
+		props = myprops;
 	}
-	public void update(final JSONObject o) throws JSONException {
-		LOGGER.warn("update, adding: "+o.toString(2));
-		props = overlay(o);
-	}
-	@SuppressWarnings("unchecked")
-	public Map<String, String> getBaseProps() {
-		final Iterator<String> nameItr = baseProps.keys();
-		final Map<String, String> outMap = new HashMap<String, String>();
-		while(nameItr.hasNext()) {
-			final String key = nameItr.next();
-			outMap.put(key, baseProps.optString(key));
-		}
-		return outMap;
-	}
+
 	@SuppressWarnings("unchecked")
 	public Map<String,String> getEffectiveProps() {
-		final Iterator<String> nameItr = props.keys();
-		final Map<String, String> outMap = new HashMap<String, String>();
-		while(nameItr.hasNext()) {
-			final String key = nameItr.next();
-			final String url = completePropString(props.optString(key));
-			outMap.put(key, url);
+		final Iterator<String> keys = props.keys();
+		final Map<String, String> effectiveProperties = new HashMap<String, String>();
+
+		while (keys.hasNext()) {
+			String key = keys.next();
+			effectiveProperties.put(key, completePropString(props.optString(key)));
 		}
-		return outMap;
-	}
-	public String[] getPropNames() {
-		return JSONObject.getNames(props);
-	}
-	public Object getProp(final String key) {
-		return props.opt(key);
+
+		return effectiveProperties;
 	}
 
 
 	public String getString(final String key, final String defaultValue, final String description) {
-		String ret = defaultValue;
-		if(!propDoc.has(key)) {
-			putDoc(key,defaultValue,description,"propString");
-		}
-		if(props.has(key)) {
-			ret = props.optString(key);
-		}
-		putLast(key,String.valueOf(ret));
-		return ret;
+		updateDefault(key,defaultValue,description,"propString");
+
+		String value = props.has(key) ? props.optString(key) : defaultValue;
+
+		updateValue(key,value);
+		return value;
 	}
+
 	public String getPropertyString(final String key, final String defaultValue, final String description) {
-		String ret = defaultValue;
-		if(!propDoc.has(key)) {
-			putDoc(key,defaultValue,description,"propString");
-		}
-		if(props.has(key)) {
-			ret = props.optString(key);
-		}
-		putLast(key,String.valueOf(ret));
-		return completePropString(ret);
+		return completePropString(getString(key, defaultValue, description));
 	}
+
 	public Long getLong(final String key, final long defaultValue, final String description) {
-		long ret = defaultValue;
-		if(!propDoc.has(key)) {
-			putDoc(key,String.valueOf(defaultValue),description,"Long");
-		}
-		if(props.has(key)) {
-			ret = props.optLong(key);
-		}
-		putLast(key,String.valueOf(ret));
-		return ret;
+		long value = props.has(key) ? props.optLong(key) : defaultValue;
+		updatePropDocs(key, defaultValue, value, description, "Long");
+		return value;
 	}
+
 	public int getInt(final String key, final int defaultValue, final String description) {
-		int ret = defaultValue;
-		if(!propDoc.has(key)) {
-			putDoc(key,String.valueOf(defaultValue),description,"Long");
-		}
-		if(props.has(key)) {
-			ret = props.optInt(key);
-		}
-		putLast(key,String.valueOf(ret));
-		return ret;
+		int value = props.has(key) ? props.optInt(key) : defaultValue;
+		updatePropDocs(key, defaultValue, value, description, "Long");
+		return value;
 	}
+
 	public boolean getBool(final String key, final boolean defaultValue, final String description) {
-		boolean ret = defaultValue;
-		if(!propDoc.has(key)) {
-			putDoc(key,String.valueOf(defaultValue),description,"Long");
-		}
-		if(props.has(key)) {
-			ret = props.optBoolean(key);
-		}
-		putLast(key,String.valueOf(ret));
-		return ret;
+		boolean value = props.has(key) ? props.optBoolean(key) : defaultValue;
+		updatePropDocs(key, defaultValue, value, description, "Long");
+		return value;
 	}
-	private void putLast(final String key, final String value) {
+
+	private void updatePropDocs(final String key, final Object defaultValue, final Object value, final String description, final String type) {
+		updateDefault(key,String.valueOf(defaultValue),description,type);
+		updateValue(key,String.valueOf(value));
+	}
+
+	private void updateDefault(final String key, final String defaultValue, final String description, final String type) {
+		if (propDoc.has(key)) {
+			return;
+		}
+
 		try {
-			if (key.toLowerCase().contains("password")) {
-				propDoc.getJSONObject(key).put("value", "**********");
-			} else {
-				propDoc.getJSONObject(key).put("value", value);
-			}
+			JSONObject json = new JSONObject().put("defaultValue", defaultValue).put("description", description).put("type", type);
+			propDoc.put(key, json);
 		} catch (JSONException e) {
 			LOGGER.warn(e,e);
 		}
 	}
-	private void putDoc(final String key, final String defaultValue, final String description, final String type) {
+
+	private void updateValue(final String key, Object value) {
 		try {
-			final JSONObject o = new JSONObject();
-			o.put("defaultValue", defaultValue);
-			o.put("description", description);
-			o.put("type", type);
-			propDoc.put(key, o);
+			String s = String.valueOf(value);
+			s = (key.toLowerCase().contains("password")) ? "**********" : s;
+			propDoc.getJSONObject(key).put("value", s);
 		} catch (JSONException e) {
 			LOGGER.warn(e,e);
 		}
 	}
+
 	public JSONObject getConfigDoc() {
-		if(!hasForcedPropCalls) {
+		if (!hasForcedPropCalls) {
 			hasForcedPropCalls = true;
-			forcePropCalls();
-		}
-		return propDoc;
-	}
-	protected void forcePropCalls() {
-		for(Method m : this.getClass().getMethods()) {
-			try {
-				final Class<?> rtype = m.getReturnType();
-				final Class<?>[] ptypes = m.getParameterTypes();
-				if(!(rtype.equals(void.class)) && ptypes.length==0) {
-					m.invoke(this, new Object[]{});
+
+			for (Method method : this.getClass().getMethods()) {
+				try {
+					final Class<?> rtype = method.getReturnType();
+					final Class<?>[] ptypes = method.getParameterTypes();
+
+					if (!rtype.equals(void.class) && ptypes.length == 0) {
+						method.invoke(this);
+					}
+				} catch (Exception e) {
+					LOGGER.warn(e,e);
 				}
-			} catch (Exception e) {
-				LOGGER.warn(e,e);
 			}
 		}
+
+		return propDoc;
 	}
 
 }
