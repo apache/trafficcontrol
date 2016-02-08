@@ -164,7 +164,11 @@ Branch         : $new_branch
 Next Tag       : $release_no
 Git Hash       : $git_short_hash
 INFO
-	if ($branch_exists) {
+
+	if ( $release_no !~ /RC/ ) {
+		print $new_branch_info;
+	}
+	elsif ($branch_exists) {
 		print $release_candidate_info;
 	}
 	else {
