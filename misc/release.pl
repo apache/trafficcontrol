@@ -223,19 +223,19 @@ sub parse_variables {
 	my $major;
 	my $minor;
 	my $patch;
-	( $major, $minor, $patch, $build_no ) = ( $release_no =~ /RELEASE-(\d).(\d).(\d)-(.*)/ );
-
-	my ( $rc_build_no, $x ) = ( $build_no =~ /RC(\d+)/ );
-
-	my $next_build_no_version = $rc_build_no + 1;
-	$next_build_no = sprintf( "RC%d", $next_build_no_version );
+	if ( $release_no =~ /RC/ ) {
+		( $major, $minor, $patch, $build_no ) = ( $release_no =~ /RELEASE-(\d).(\d).(\d)-(.*)/ );
+		my ( $rc_build_no, $x ) = ( $build_no =~ /RC(\d+)/ );
+		my $next_build_no_version = $rc_build_no + 1;
+		$next_build_no = sprintf( "RC%d", $next_build_no_version );
+	}
+	else {
+		( $major, $minor, $patch ) = ( $release_no =~ /RELEASE-(\d).(\d).(\d)/ );
+	}
 
 	$version = sprintf( "%s.%s.%s", $major, $minor, $patch );
-
 	my $next_minor = $minor + 1;
-
 	$next_version = sprintf( "%s.%s.%s", $major, $next_minor, $patch );
-
 	$new_branch = sprintf( "%s.%s.x", $major, $minor );
 
 }
