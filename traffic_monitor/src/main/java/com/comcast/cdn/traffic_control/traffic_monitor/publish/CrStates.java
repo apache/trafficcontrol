@@ -57,7 +57,7 @@ public class CrStates extends JsonPage {
 			return null;
 		}
 		boolean raw = true;
-		final MonitorConfig config = ConfigHandler.getConfig();
+		final MonitorConfig config = ConfigHandler.getInstance().getConfig();
 		final RouterConfig crConfig = RouterConfig.getCrConfig();
 		if(crConfig == null || myCacheWatcher.getCycleCount() < config.getStartupMinCycles()) {
 			return null;
@@ -70,7 +70,7 @@ public class CrStates extends JsonPage {
 		}
 		final JSONObject o = new JSONObject();
 		o.put("caches", getCrStates(crConfig, raw));
-		if(ConfigHandler.getConfig().getPublishDsStates()) {
+		if(ConfigHandler.getInstance().getConfig().getPublishDsStates()) {
 			o.put("deliveryServices", getDsStates(crConfig));
 		}
 		return o;
@@ -86,7 +86,7 @@ public class CrStates extends JsonPage {
 			for(Cache c : caches) {
 				synchronized(c) {
 					if(c.getControls() == null) { continue; }
-					final MonitorConfig config = ConfigHandler.getConfig();
+					final MonitorConfig config = ConfigHandler.getInstance().getConfig();
 					servers.put(c.getHostname(), myHealthDeterminer.getJSONStats(c, config.getPeerOptimistic(), raw));
 				}
 			}

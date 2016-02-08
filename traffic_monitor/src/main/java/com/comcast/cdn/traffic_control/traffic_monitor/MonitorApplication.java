@@ -60,6 +60,14 @@ public class MonitorApplication extends WebApplication {
 	@Override
 	public void init() {
 		super.init();
+
+		if (!ConfigHandler.getInstance().configFileExists()) {
+			LOGGER.fatal("Cannot find configuration file: " + ConfigHandler.CONFIG_FILEPATH);
+			// This will only stop Tomcat if the security manager allows it
+			// https://tomcat.apache.org/tomcat-6.0-doc/security-manager-howto.html
+			System.exit(1);
+		}
+
 		getResourceSettings().setResourcePollFrequency(Duration.ONE_SECOND);
 
 		// This allows us to override the Host header sent via URLConnection
@@ -88,8 +96,8 @@ public class MonitorApplication extends WebApplication {
 	}
 
 	public void onDestroy() {
-		final boolean forceDown = ConfigHandler.getConfig().shouldForceSystemExit();
-		ConfigHandler.destroy();
+		final boolean forceDown = ConfigHandler.getInstance().getConfig().shouldForceSystemExit();
+		ConfigHandler.getInstance().destroy();
 		LOGGER.warn("MonitorApplication: shutting down ");
 		tmw.destroy();
 

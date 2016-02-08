@@ -45,13 +45,14 @@ my %definition_for = (
 			miss_lat             => '41.881944',
 			miss_long            => '-87.627778',
 			check_path           => '/crossdomain.xml',
-			type                 => 1,
+			type                 => 8,
 			profile              => 3,
 			cdn_id               => 1,
 			ipv6_routing_enabled => 1,
 			protocol             => 1,
 			display_name         => 'test-ds1-displayname',
 			initial_dispersion   => 1,
+			regional_geo_blocking => 1,
 		},
 	},
 	ds_cdn2 => {
@@ -85,6 +86,7 @@ my %definition_for = (
 			cdn_id             => 1,
 			display_name       => 'test-ds2-displayname',
 			initial_dispersion => 1,
+			regional_geo_blocking => 0,
 		},
 	},
 	ds_cdn3 => {
@@ -118,6 +120,7 @@ my %definition_for = (
 			cdn_id             => 1,
 			display_name       => 'test-ds3-displayname',
 			initial_dispersion => 1,
+			regional_geo_blocking => 0,
 		},
 	},
 	ds_cdn4 => {
@@ -151,6 +154,7 @@ my %definition_for = (
 			cdn_id             => 1,
 			display_name       => 'test-ds4-displayname',
 			initial_dispersion => 1,
+			regional_geo_blocking => 0,
 		},
 	},
 );

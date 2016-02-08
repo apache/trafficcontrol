@@ -46,7 +46,7 @@ public class CacheWatcher {
 	private static final CacheDataModel totalMem = new CacheDataModel("Total Memory (MB)");
 	private static final CacheDataModel maxMemory = new CacheDataModel("Max Memory (MB)");
 
-	final MonitorConfig config = ConfigHandler.getConfig();
+	final MonitorConfig config = ConfigHandler.getInstance().getConfig();
 
 	boolean isActive = true;
 

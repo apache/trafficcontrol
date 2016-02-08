@@ -41,7 +41,7 @@ public class Event extends JSONObject implements Serializable {
 		EVENT_LOGGER.info(String.format("%s host=\"%s\", available=%s, msg=\"%s\"", timeString , hostname, String.valueOf(isAvailable), message));
 
 		final Event ret = new Event(hostname, isAvailable, message);
-		final int eventLogCount = ConfigHandler.getConfig().getEventLogCount();
+		final int eventLogCount = ConfigHandler.getInstance().getConfig().getEventLogCount();
 
 		synchronized (rollingLog) {
 			rollingLog.add(0, ret);
