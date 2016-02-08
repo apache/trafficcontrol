@@ -79,8 +79,9 @@ type RunningConfig struct {
 	HealthUrls    map[string]map[string]string // they 1st map key is CDN_name, the second is DsStats or CacheStats
 	CacheGroupMap map[string]string            // map hostName to cacheGroup
 	InfluxDBProps []struct {
-		Fqdn string
-		Port int64
+		Fqdn         string
+		Port         int64
+		InfluxClient influx.Client
 	}
 	LastSummaryTime time.Time
 }
@@ -401,9 +402,10 @@ func getToData(config StartupConfig, init bool, configChan chan RunningConfig) {
 				port = 8086 //default port
 			}
 			runningConfig.InfluxDBProps = append(runningConfig.InfluxDBProps, struct {
-				Fqdn string
-				Port int64
-			}{fqdn, port})
+				Fqdn         string
+				Port         int64
+				InfluxClient influx.Client
+			}{fqdn, port, nil})
 		}
 	}
 
@@ -703,30 +705,50 @@ func getURL(url string) ([]byte, error) {
 
 func influxConnect(config StartupConfig, runningConfig RunningConfig) (influx.Client, error) {
 	// Connect to InfluxDb
+	urlClients := make(map[string]influx.Client)
 	var urls []string
 
 	for _, InfluxHost := range runningConfig.InfluxDBProps {
 		u := fmt.Sprintf("http://%s:%d", InfluxHost.Fqdn, InfluxHost.Port)
 		urls = append(urls, u)
+		influxClient := InfluxHost.InfluxClient
+		if influxClient == nil {
+			conf := influx.HTTPConfig{
+				Addr:     u,
+				Username: config.InfluxUser,
+				Password: config.InfluxPassword,
+			}
+			con, err := influx.NewHTTPClient(conf)
+			if err != nil {
+				errHndlr(err, ERROR)
+				continue
+			}
+			influxClient = con
+		}
+		urlClients[u] = influxClient
+
 	}
 
 	for len(urls) > 0 {
 		n := rand.Intn(len(urls))
 		url := urls[n]
 		urls = append(urls[:n], urls[n+1:]...)
-
-		conf := influx.HTTPConfig{
-			Addr:     url,
-			Username: config.InfluxUser,
-			Password: config.InfluxPassword,
+		con := urlClients[url]
+		q := influx.Query{
+			Command:  "show databases",
+			Database: "",
 		}
-
-		con, err := influx.NewHTTPClient(conf)
+		_, err := con.Query(q)
 		if err != nil {
 			errHndlr(err, ERROR)
+			//set it to null
+			for _, props := range runningConfig.InfluxDBProps {
+				if strings.Contains(url, props.Fqdn) {
+					props.InfluxClient = nil
+				}
+			}
 			continue
 		}
-
 		return con, nil
 	}
 
@@ -772,7 +794,6 @@ func sendMetrics(config StartupConfig, runningConfig RunningConfig, bps influx.B
 			log.Info(fmt.Sprintf("Sent %v stats for %v", len(chunkBps.Points()), chunkBps.Database()))
 		}
 	}
-
 }
 
 func intMin(a, b int) int {
