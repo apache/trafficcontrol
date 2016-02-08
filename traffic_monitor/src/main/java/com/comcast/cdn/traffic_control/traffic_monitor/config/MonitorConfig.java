@@ -16,11 +16,17 @@
 
 package com.comcast.cdn.traffic_control.traffic_monitor.config;
 
+import org.apache.log4j.Logger;
 import org.apache.wicket.ajax.json.JSONException;
 import org.apache.wicket.ajax.json.JSONObject;
 
+import java.lang.reflect.Method;
+
 public class MonitorConfig extends Config  {
+	private static final Logger LOGGER = Logger.getLogger(MonitorConfig.class);
 	private static final long serialVersionUID = 1L;
+
+	private boolean hasForcedPropCalls = false;
 
 	// This is used by src/main/bin/config-doc.sh which is used by src/main/bin/traffic_monitor_config.pl which must be run after rpm install of traffic monitor
 	@SuppressWarnings("PMD")
@@ -55,7 +61,6 @@ public class MonitorConfig extends Config  {
 	public Long getTmFrequency() {
 		return getLong("tm.polling.interval", 10000, "The polling frequency for getting updates from TM");
 	}
-	@Override
 	protected String completePropString(final String pattern) {
 		if(pattern == null) { return null; }
 		final String tmHostname = getString("tm.hostname", null, "TM hostname");
@@ -109,5 +114,27 @@ public class MonitorConfig extends Config  {
 	}
 	public int getStartupMinCycles() {
 		return getInt("health.startupMinCycles", 2, "The number of query cycles that must be completed before this Traffic Monitor will start reporting");
+	}
+
+	@Override
+	public JSONObject getConfigDoc() {
+		if (!hasForcedPropCalls) {
+			hasForcedPropCalls = true;
+
+			for (Method method : this.getClass().getMethods()) {
+				try {
+					final Class<?> rtype = method.getReturnType();
+					final Class<?>[] ptypes = method.getParameterTypes();
+
+					if (!rtype.equals(void.class) && ptypes.length == 0) {
+						method.invoke(this);
+					}
+				} catch (Exception e) {
+					LOGGER.warn(e,e);
+				}
+			}
+		}
+
+		return super.getConfigDoc();
 	}
 }
