@@ -61,26 +61,6 @@ public class MonitorConfig extends Config  {
 	public Long getTmFrequency() {
 		return getLong("tm.polling.interval", 10000, "The polling frequency for getting updates from TM");
 	}
-	protected String completePropString(final String pattern) {
-		if (pattern == null) {
-			return null;
-		}
-
-		String propertyString = pattern;
-		final String tmHostname = getString("tm.hostname", null, "TM hostname");
-
-		if (tmHostname != null && !tmHostname.isEmpty()) {
-			propertyString = pattern.replace("${tmHostname}", tmHostname);
-		}
-
-		final String cdnName = getString("cdnName", null, "Cluster/CDN name");
-
-		if (cdnName != null && !cdnName.isEmpty()) {
-			propertyString = propertyString.replace("${cdnName}", cdnName);
-		}
-
-		return propertyString;
-	}
 
 	public int getEventLogCount() {
 		return getInt("health.event-count", 200, "The number of historical events that will be kept");
@@ -151,5 +131,30 @@ public class MonitorConfig extends Config  {
 		}
 
 		return super.getConfigDoc();
+	}
+
+	public String getPropertyString(final String key, final String defaultValue, final String description) {
+		return completePropString(getString(key, defaultValue, description));
+	}
+
+	protected String completePropString(final String pattern) {
+		if (pattern == null) {
+			return null;
+		}
+
+		String propertyString = pattern;
+		final String tmHostname = getString("tm.hostname", null, "TM hostname");
+
+		if (tmHostname != null && !tmHostname.isEmpty()) {
+			propertyString = pattern.replace("${tmHostname}", tmHostname);
+		}
+
+		final String cdnName = getString("cdnName", null, "Cluster/CDN name");
+
+		if (cdnName != null && !cdnName.isEmpty()) {
+			propertyString = propertyString.replace("${cdnName}", cdnName);
+		}
+
+		return propertyString;
 	}
 }

@@ -77,10 +77,6 @@ public class Config implements java.io.Serializable {
 		return effectiveProperties;
 	}
 
-	public String getPropertyString(final String key, final String defaultValue, final String description) {
-		return getString(key, defaultValue, description);
-	}
-
 	public String getString(final String key, final String defaultValue, final String description) {
 		String value = props.has(key) ? props.optString(key) : defaultValue;
 		updatePropertiesDoc(key, defaultValue, value, description, "propString");
