@@ -26,7 +26,7 @@ public class DsWatcher {
 	private static final Logger LOGGER = Logger.getLogger(DsWatcher.class);
 
 	private HealthDeterminer myHealthDeterminer;
-	final MonitorConfig config = ConfigHandler.getConfig();
+	final MonitorConfig config = ConfigHandler.getInstance().getConfig();
 	boolean isActive = true;
 	private FetchService mainThread;
 	private final DeliveryServiceStateRegistry deliveryServiceStateRegistry = DeliveryServiceStateRegistry.getInstance();
