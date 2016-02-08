@@ -162,7 +162,9 @@ public class TRServlet extends HttpServlet {
 			httpAccessRecordBuilder.rerr(e.getMessage());
 		} finally {
 			final Set<String> requestHeaders = trafficRouterManager.getTrafficRouter().getRequestHeaders();
-			requestHeaders.addAll(deliveryService.getRequestHeaders());
+			if (deliveryService != null) {
+				requestHeaders.addAll(deliveryService.getRequestHeaders());
+			}
 
 			final Map<String,String> accessRequestHeaders = new HttpAccessRequestHeaders().makeMap(httpServletRequest, requestHeaders);
 
