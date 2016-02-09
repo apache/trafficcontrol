@@ -45,15 +45,15 @@ public class RouterConfig {
 
 		LOGGER.info("Processing new CrConfig");
 
-		for(String id : JSONObject.getNames(caches)) {
+		for (String id : JSONObject.getNames(caches)) {
 			try {
 				final JSONObject cjo = caches.getJSONObject(id);
-				final Cache c = new Cache(id,cjo, this);
+				final Cache c = new Cache(id, cjo, this);
 				myHealthDeterminer.setControls(c);
 				c.setCacheState(CacheStateRegistry.getInstance().get(c.getHostname()));
 				al.add(c);
 			} catch (JSONException e) {
-				LOGGER.warn("handleTmJson: ",e);
+				LOGGER.warn("handleTmJson: ", e);
 			}
 		}
 		cacheList = al;
@@ -88,15 +88,17 @@ public class RouterConfig {
 		peerMap = pm;
 
 		final JSONObject crsJo = o.getJSONObject("contentRouters");
-		for(String key : JSONObject.getNames(crsJo)) {
+		for (String key : JSONObject.getNames(crsJo)) {
 			final JSONObject crJo = crsJo.getJSONObject(key);
 			crJo.put("id", key);
 		}
 		dsList = o.optJSONObject("deliveryServices");
 	}
+
 	public List<Cache> getCacheList() {
 		return cacheList;
 	}
+
 	public Map<String, Peer> getPeerMap() {
 		return peerMap;
 	}
@@ -104,20 +106,23 @@ public class RouterConfig {
 	public JSONObject getDsList() {
 		return dsList;
 	}
+
 	private static RouterConfig crConfig;
+
 	public static TmListener getTmListener(final HealthDeterminer myHealthDeterminer) {
 		return new TmListener() {
-			@Override public void handleCrConfig(final JSONObject o) {
+			@Override
+			public void handleCrConfig(final JSONObject o) {
 				try {
 					crConfig = new RouterConfig(o, myHealthDeterminer);
 				} catch (JSONException e) {
-					if(LOGGER.isDebugEnabled()) {
+					if (LOGGER.isDebugEnabled()) {
 						try {
 							LOGGER.debug(o.toString(2));
 						} catch (JSONException e1) {
-							LOGGER.warn(e1,e1);
+							LOGGER.warn(e1, e1);
 						}
-						LOGGER.debug(e,e);
+						LOGGER.debug(e, e);
 					} else {
 						LOGGER.warn(e);
 					}
@@ -127,6 +132,7 @@ public class RouterConfig {
 
 		};
 	}
+
 	public static RouterConfig getCrConfig() {
 		return crConfig;
 	}
