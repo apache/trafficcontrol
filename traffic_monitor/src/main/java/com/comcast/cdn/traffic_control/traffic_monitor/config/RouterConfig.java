@@ -34,6 +34,8 @@ import com.comcast.cdn.traffic_control.traffic_monitor.util.Network;
 public class RouterConfig {
 	private static final Logger LOGGER = Logger.getLogger(RouterConfig.class);
 
+	private static RouterConfig crConfig;
+
 	final private List<Cache> cacheList = new ArrayList<Cache>();
 	final private Map<String, Peer> peerMap = new HashMap<String, Peer>();
 	final private JSONObject dsList;
@@ -50,7 +52,7 @@ public class RouterConfig {
 				cache.setCacheState(CacheStateRegistry.getInstance().get(cache.getHostname()));
 				cacheList.add(cache);
 			} catch (JSONException e) {
-				LOGGER.warn("handleTmJson: ", e);
+				LOGGER.warn("Failed processing json for cache " + id + ":", e);
 			}
 		}
 
@@ -58,17 +60,15 @@ public class RouterConfig {
 			final JSONObject peers = crConfigJson.optJSONObject("monitors");
 
 			for (String id : JSONObject.getNames(peers)) {
-				final JSONObject peerJson = peers.getJSONObject(id);
+				final Peer peer = new Peer(id, peers.optJSONObject(id));
 
-				final String peerIpAddress = peerJson.getString("ip");
-
-				if (Network.isIpAddressLocal(peerIpAddress)) {
-					LOGGER.warn("Skipping monitor " + id + "; IP address " + peerIpAddress + " is local");
+				if (Network.isIpAddressLocal(peer.getIpAddress())) {
+					LOGGER.warn("Skipping monitor " + id + "; IP address " + peer.getIpAddress() + " is local");
 					continue;
 				}
 
-				if (Network.isLocalName(peerJson.getString("fqdn"))) {
-					LOGGER.warn("Skipping monitor " + id + "; fqdn " + peerJson.getString("fqdn") + " is the local fully qualified name");
+				if (Network.isLocalName(peer.getFqdn())) {
+					LOGGER.warn("Skipping monitor " + id + "; fqdn " + peer.getFqdn() + " is the local fully qualified name");
 					continue;
 				}
 
@@ -77,17 +77,14 @@ public class RouterConfig {
 					continue;
 				}
 
-				final String peerStatus = peerJson.optString(HealthDeterminer.STATUS);
-
-				if (peerStatus != null && peerStatus.equals("ONLINE")) {
-					final Peer peer = new Peer(id, peerJson);
+				if ("ONLINE".equals(peer.getStatus())) {
 					peerMap.put(peer.getId(), peer);
 				}
 			}
 
 			PeerState.removeAllBut(peerMap.keySet());
 		}
-		
+
 		dsList = crConfigJson.optJSONObject("deliveryServices");
 	}
 
@@ -103,29 +100,16 @@ public class RouterConfig {
 		return dsList;
 	}
 
-	private static RouterConfig crConfig;
-
-	public static TmListener getTmListener(final HealthDeterminer myHealthDeterminer) {
+	public static TmListener getTmListener(final HealthDeterminer healthDeterminer) {
 		return new TmListener() {
 			@Override
-			public void handleCrConfig(final JSONObject o) {
+			public void handleCrConfig(final JSONObject crConfigJson) {
 				try {
-					crConfig = new RouterConfig(o, myHealthDeterminer);
-				} catch (JSONException e) {
-					if (LOGGER.isDebugEnabled()) {
-						try {
-							LOGGER.debug(o.toString(2));
-						} catch (JSONException e1) {
-							LOGGER.warn(e1, e1);
-						}
-						LOGGER.debug(e, e);
-					} else {
-						LOGGER.warn(e);
-					}
+					crConfig = new RouterConfig(crConfigJson, healthDeterminer);
+				} catch (Exception e) {
+					LOGGER.warn("Failed Processing CrConfig json",e);
 				}
-
 			}
-
 		};
 	}
 
