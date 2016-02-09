@@ -17,7 +17,6 @@
 package com.comcast.cdn.traffic_control.traffic_monitor.config;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -27,7 +26,6 @@ import org.apache.log4j.Logger;
 import org.apache.wicket.ajax.json.JSONException;
 import org.apache.wicket.ajax.json.JSONObject;
 
-import com.comcast.cdn.traffic_control.traffic_monitor.health.CacheState;
 import com.comcast.cdn.traffic_control.traffic_monitor.health.HealthDeterminer;
 import com.comcast.cdn.traffic_control.traffic_monitor.health.PeerState;
 import com.comcast.cdn.traffic_control.traffic_monitor.health.TmListener;
@@ -39,7 +37,6 @@ public class RouterConfig {
 	final private List<Cache> cacheList;
 	final private Map<String, Peer> peerMap;
 	final private JSONObject dsList;
-	final private Collection<JSONObject> contentRouters;
 
 	public RouterConfig(final JSONObject o, final HealthDeterminer myHealthDeterminer) throws JSONException {
 		final ArrayList<Cache> al = new ArrayList<Cache>();
@@ -51,12 +48,9 @@ public class RouterConfig {
 		for(String id : JSONObject.getNames(caches)) {
 			try {
 				final JSONObject cjo = caches.getJSONObject(id);
-//				if(!myHealthDeterminer.shouldMonitor(cjo)) { // now assumed with CrConfig instead of dataservers
-//					continue;
-//				}
 				final Cache c = new Cache(id,cjo, this);
-				myHealthDeterminer.setControls(c); // set the controls
-				c.setCacheState((CacheState) CacheStateRegistry.getInstance().get(c.getHostname()));
+				myHealthDeterminer.setControls(c);
+				c.setCacheState(CacheStateRegistry.getInstance().get(c.getHostname()));
 				al.add(c);
 			} catch (JSONException e) {
 				LOGGER.warn("handleTmJson: ",e);
@@ -93,26 +87,12 @@ public class RouterConfig {
 
 		peerMap = pm;
 
-		final Collection<JSONObject> list = new ArrayList<JSONObject>();
 		final JSONObject crsJo = o.getJSONObject("contentRouters");
 		for(String key : JSONObject.getNames(crsJo)) {
 			final JSONObject crJo = crsJo.getJSONObject(key);
 			crJo.put("id", key);
-			list.add(crJo);
 		}
-		contentRouters = list;
 		dsList = o.optJSONObject("deliveryServices");
-//		final ArrayList<DeliveryService> dsAl = new ArrayList<DeliveryService>();
-//		for(String id : JSONObject.getNames(dsList)) {
-//			try {
-//				final JSONObject dsjo = dsList.getJSONObject(id);
-//				final DeliveryService c = new DeliveryService(id,dsjo);
-//				dsAl.add(c);
-//			} catch (JSONException e) {
-//				LOGGER.warn("handleTmJson: ",e);
-//			}
-//		}
-//		DeliveryService.setList(dsAl);
 	}
 	public List<Cache> getCacheList() {
 		return cacheList;
@@ -120,9 +100,7 @@ public class RouterConfig {
 	public Map<String, Peer> getPeerMap() {
 		return peerMap;
 	}
-	public Collection<JSONObject> getContentRouters() {
-		return contentRouters;
-	}
+
 	public JSONObject getDsList() {
 		return dsList;
 	}
