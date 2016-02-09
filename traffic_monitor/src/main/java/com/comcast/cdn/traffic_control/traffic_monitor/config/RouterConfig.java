@@ -34,65 +34,61 @@ import com.comcast.cdn.traffic_control.traffic_monitor.util.Network;
 public class RouterConfig {
 	private static final Logger LOGGER = Logger.getLogger(RouterConfig.class);
 
-	final private List<Cache> cacheList;
-	final private Map<String, Peer> peerMap;
+	final private List<Cache> cacheList = new ArrayList<Cache>();
+	final private Map<String, Peer> peerMap = new HashMap<String, Peer>();
 	final private JSONObject dsList;
 
-	public RouterConfig(final JSONObject o, final HealthDeterminer myHealthDeterminer) throws JSONException {
-		final ArrayList<Cache> al = new ArrayList<Cache>();
-		final Map<String, Peer> pm = new HashMap<String, Peer>();
-		final JSONObject caches = o.optJSONObject("contentServers");
+	public RouterConfig(final JSONObject crConfigJson, final HealthDeterminer myHealthDeterminer) throws JSONException {
+		final JSONObject cachesJson = crConfigJson.optJSONObject("contentServers");
 
 		LOGGER.info("Processing new CrConfig");
 
-		for (String id : JSONObject.getNames(caches)) {
+		for (String id : JSONObject.getNames(cachesJson)) {
 			try {
-				final JSONObject cjo = caches.getJSONObject(id);
-				final Cache c = new Cache(id, cjo, this);
-				myHealthDeterminer.setControls(c);
-				c.setCacheState(CacheStateRegistry.getInstance().get(c.getHostname()));
-				al.add(c);
+				final Cache cache = new Cache(id, cachesJson.getJSONObject(id), this);
+				myHealthDeterminer.setControls(cache);
+				cache.setCacheState(CacheStateRegistry.getInstance().get(cache.getHostname()));
+				cacheList.add(cache);
 			} catch (JSONException e) {
 				LOGGER.warn("handleTmJson: ", e);
 			}
 		}
-		cacheList = al;
 
-		if (o.has("monitors")) {
-			final JSONObject peers = o.optJSONObject("monitors");
+		if (crConfigJson.has("monitors")) {
+			final JSONObject peers = crConfigJson.optJSONObject("monitors");
 
 			for (String id : JSONObject.getNames(peers)) {
-				final JSONObject pjo = peers.getJSONObject(id);
+				final JSONObject peerJson = peers.getJSONObject(id);
 
-				final String peerStatus = pjo.optString(HealthDeterminer.STATUS);
-				final String peerIpAddress = pjo.getString("ip");
+				final String peerIpAddress = peerJson.getString("ip");
 
 				if (Network.isIpAddressLocal(peerIpAddress)) {
 					LOGGER.warn("Skipping monitor " + id + "; IP address " + peerIpAddress + " is local");
 					continue;
-				} else if (Network.isLocalName(pjo.getString("fqdn"))) {
-					LOGGER.warn("Skipping monitor " + id + "; fqdn " + pjo.getString("fqdn") + " is the local fully qualified name");
+				}
+
+				if (Network.isLocalName(peerJson.getString("fqdn"))) {
+					LOGGER.warn("Skipping monitor " + id + "; fqdn " + peerJson.getString("fqdn") + " is the local fully qualified name");
 					continue;
-				} else if (Network.isLocalName(id)) {
+				}
+
+				if (Network.isLocalName(id)) {
 					LOGGER.warn("Skipping monitor " + id + "; short name " + id + " is the local hostname");
 					continue;
-				} else if (peerStatus != null && peerStatus.equals("ONLINE")) {
-					final Peer peer = new Peer(id, pjo);
-					pm.put(peer.getId(), peer);
+				}
+
+				final String peerStatus = peerJson.optString(HealthDeterminer.STATUS);
+
+				if (peerStatus != null && peerStatus.equals("ONLINE")) {
+					final Peer peer = new Peer(id, peerJson);
+					peerMap.put(peer.getId(), peer);
 				}
 			}
 
-			PeerState.removeAllBut(pm.keySet());
+			PeerState.removeAllBut(peerMap.keySet());
 		}
-
-		peerMap = pm;
-
-		final JSONObject crsJo = o.getJSONObject("contentRouters");
-		for (String key : JSONObject.getNames(crsJo)) {
-			final JSONObject crJo = crsJo.getJSONObject(key);
-			crJo.put("id", key);
-		}
-		dsList = o.optJSONObject("deliveryServices");
+		
+		dsList = crConfigJson.optJSONObject("deliveryServices");
 	}
 
 	public List<Cache> getCacheList() {
