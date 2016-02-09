@@ -78,7 +78,7 @@ type StartupConfig struct {
 type RunningConfig struct {
 	HealthUrls    map[string]map[string]string // they 1st map key is CDN_name, the second is DsStats or CacheStats
 	CacheGroupMap map[string]string            // map hostName to cacheGroup
-	InfluxDBProps []struct {
+	InfluxDBProps []*struct {
 		Fqdn         string
 		Port         int64
 		InfluxClient influx.Client
@@ -401,7 +401,7 @@ func getToData(config StartupConfig, init bool, configChan chan RunningConfig) {
 			if err != nil {
 				port = 8086 //default port
 			}
-			runningConfig.InfluxDBProps = append(runningConfig.InfluxDBProps, struct {
+			runningConfig.InfluxDBProps = append(runningConfig.InfluxDBProps, &struct {
 				Fqdn         string
 				Port         int64
 				InfluxClient influx.Client
@@ -704,10 +704,8 @@ func getURL(url string) ([]byte, error) {
 }
 
 func influxConnect(config StartupConfig, runningConfig RunningConfig) (influx.Client, error) {
-	// Connect to InfluxDb
 	urlClients := make(map[string]influx.Client)
 	var urls []string
-
 	for _, InfluxHost := range runningConfig.InfluxDBProps {
 		u := fmt.Sprintf("http://%s:%d", InfluxHost.Fqdn, InfluxHost.Port)
 		urls = append(urls, u)
@@ -723,10 +721,10 @@ func influxConnect(config StartupConfig, runningConfig RunningConfig) (influx.Cl
 				errHndlr(err, ERROR)
 				continue
 			}
-			influxClient = con
+			InfluxHost.InfluxClient = con
+			influxClient = InfluxHost.InfluxClient
 		}
 		urlClients[u] = influxClient
-
 	}
 
 	for len(urls) > 0 {
