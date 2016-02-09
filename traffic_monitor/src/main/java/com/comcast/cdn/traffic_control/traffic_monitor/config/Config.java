@@ -33,7 +33,6 @@ public class Config implements java.io.Serializable {
 	private JSONObject overlayProps = new JSONObject();
 	private JSONObject props = new JSONObject();
 	private final JSONObject propDoc = new JSONObject();
-	private boolean hasForcedPropCalls = false;
 
 	public Config() {
 	}
@@ -174,24 +173,6 @@ public class Config implements java.io.Serializable {
 		}
 	}
 	public JSONObject getConfigDoc() {
-		if(!hasForcedPropCalls) {
-			hasForcedPropCalls = true;
-			forcePropCalls();
-		}
 		return propDoc;
 	}
-	protected void forcePropCalls() {
-		for(Method m : this.getClass().getMethods()) {
-			try {
-				final Class<?> rtype = m.getReturnType();
-				final Class<?>[] ptypes = m.getParameterTypes();
-				if(!(rtype.equals(void.class)) && ptypes.length==0) {
-					m.invoke(this, new Object[]{});
-				}
-			} catch (Exception e) {
-				LOGGER.warn(e,e);
-			}
-		}
-	}
-
 }
