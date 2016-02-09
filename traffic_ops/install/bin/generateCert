@@ -98,7 +98,7 @@ print $msg;
 InstallUtils::promptUser( "Hit Enter when you are ready to continue", "" );
 
 print "Postinstall SSL Certificate Creation.\n\nGenerating an RSA Private Server Key.\n\n";
-my $result = InstallUtils::execCommand( "openssl", "genrsa", "-des3", "-out", "server.key", "1024" );
+my $result = InstallUtils::execCommand( "openssl", "genrsa", "-des3", "-out", "server.key", "2048" );
 
 if ( $result != 0 ) {
 	print "Key generation failed.\n";

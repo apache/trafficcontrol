@@ -36,7 +36,7 @@ public class PeerWatcher {
 	private FetchService mainThread;
 	private boolean isActive = true;
 
-	final MonitorConfig config = ConfigHandler.getConfig();
+	final MonitorConfig config = ConfigHandler.getInstance().getConfig();
 
 	public PeerWatcher init() {
 		mainThread = new FetchService();
@@ -68,7 +68,6 @@ public class PeerWatcher {
 
 				try {
 					final int poolSize = config.getPeerThreadPool();
-					LOGGER.info("Starting new pool: "+poolSize);
 					pool = Executors.newFixedThreadPool(poolSize);
 					checkPeers(pool, peerMap);
 				} catch(Exception e) {
@@ -88,7 +87,6 @@ public class PeerWatcher {
 				} catch (Exception e) { }
 
 				final long mytime = System.currentTimeMillis()-time;
-				LOGGER.info("Pool time elapsed: "+mytime);
 
 				if(!isActive ) {
 					return;
@@ -137,24 +135,23 @@ public class PeerWatcher {
 							replace("${port}", peer.getPortString());
 
 				try {
-					LOGGER.info("fetching: " + prettyUrl);
 					final String result = Fetcher.fetchContent(url, peer.getHeaderMap(), config.getConnectionTimeout());
 					final JSONObject jr = new JSONObject(result);
 					final JSONObject cacheStates = jr.getJSONObject("caches");
 
 					peerState.setReachable(true);
-					peerState.startUpdate();
+					peerState.prepareStatisticsForUpdate();
 
 					for (String id : JSONObject.getNames(cacheStates)) {
 						final JSONObject cache = cacheStates.getJSONObject(id);
-						peerState.put(id, cache.optString(AbstractState.IS_AVAILABLE_STR));
+						peerState.putDataPoint(id, cache.optString(AbstractState.IS_AVAILABLE_STR));
 					}
 				} catch (Exception e) {
 					peerState.setReachable(false, e.getMessage());
 					LOGGER.warn(e + " to " + prettyUrl);
 				}
 
-				final MonitorConfig config = ConfigHandler.getConfig();
+				final MonitorConfig config = ConfigHandler.getInstance().getConfig();
 				final RouterConfig crConfig = RouterConfig.getCrConfig();
 
 				if (crConfig != null && config.getPeerOptimistic()) {

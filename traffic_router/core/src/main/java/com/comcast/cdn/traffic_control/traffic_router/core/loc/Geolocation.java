@@ -69,6 +69,10 @@ public class Geolocation {
 		}
 	}
 
+	public String getPostalCode() {
+		return postalCode;
+	}
+
 	public Map<String,String> getProperties() {
 		final Map<String,String> map = new HashMap<String,String>();
 		map.put("latitude", Double.toString(latitude));

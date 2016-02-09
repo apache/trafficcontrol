@@ -532,6 +532,21 @@
 		%= field('ds.origin_shield')->text(class => 'field', readonly => 'readonly');
 		<% } %>
 	</div><br>
+        <div class="block" id="regional_geo_blocking_row">
+        <% unless (field('ds.regional_geo_blocking')->valid) { %>
+	        <span class="field-with-error"><%= field('ds.regional_geo_blocking')->error %></span>
+		<% } %>
+        %= label_for 'regional_geo_blocking' => 'Regional Geoblocking', class => 'label'
+        <% if ($priv_level >= 20) { %>
+        %= field('ds.regional_geo_blocking')->select([ [Disabled => 0], [Enabled => 1]]);
+        <% } else { %>
+			<%  if ($ds-> active == 0 ) {%>
+				%= field('ds.regional_geo_blocking')->text(class => 'field', readonly => 'readonly', value => 'Disabled');
+			<% } else { %>
+				%= field('ds.regional_geo_blocking')->text(class => 'field', readonly => 'readonly', value => 'Enabled');
+			<% } %>
+        <% } %>
+	</div><br>
 		<div class="block" id="active_row">
 		<% unless (field('ds.active')->valid) { %>
 			<span class="field-with-error"><%= field('ds.active')->error %></span>

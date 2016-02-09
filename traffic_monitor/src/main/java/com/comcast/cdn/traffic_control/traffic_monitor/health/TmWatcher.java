@@ -172,7 +172,7 @@ public class TmWatcher {
 				instance = this;
 			}
 		}
-		final MonitorConfig config = ConfigHandler.getConfig();
+		final MonitorConfig config = ConfigHandler.getInstance().getConfig();
 		tmUpdater = new PeriodicResourceUpdater(
 				new Model<Long>() {
 					private static final long serialVersionUID = 1L;

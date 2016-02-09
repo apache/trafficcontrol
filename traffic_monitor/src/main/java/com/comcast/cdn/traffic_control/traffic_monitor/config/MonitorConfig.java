@@ -25,7 +25,7 @@ public class MonitorConfig extends Config  {
 	// This is used by src/main/bin/config-doc.sh which is used by src/main/bin/traffic_monitor_config.pl which must be run after rpm install of traffic monitor
 	@SuppressWarnings("PMD")
 	public static void main(final String[] args) throws JSONException {
-		final JSONObject doc = ConfigHandler.getConfig().getConfigDoc();
+		final JSONObject doc = ConfigHandler.getInstance().getConfig().getConfigDoc();
 		System.out.println(doc.toString(2));
 	}
 
@@ -57,11 +57,26 @@ public class MonitorConfig extends Config  {
 	}
 	@Override
 	protected String completePropString(final String pattern) {
-		if(pattern == null) { return null; }
+		if (pattern == null) {
+			return null;
+		}
+
+		String propertyString = pattern;
 		final String tmHostname = getString("tm.hostname", null, "TM hostname");
+
+		if (tmHostname != null && !tmHostname.isEmpty()) {
+			propertyString = pattern.replace("${tmHostname}", tmHostname);
+		}
+
 		final String cdnName = getString("cdnName", null, "Cluster/CDN name");
-		return pattern.replace("${tmHostname}", tmHostname).replace("${cdnName}", cdnName);
+
+		if (cdnName != null && !cdnName.isEmpty()) {
+			propertyString = propertyString.replace("${cdnName}", cdnName);
+		}
+
+		return propertyString;
 	}
+
 	public int getEventLogCount() {
 		return getInt("health.event-count", 200, "The number of historical events that will be kept");
 	}

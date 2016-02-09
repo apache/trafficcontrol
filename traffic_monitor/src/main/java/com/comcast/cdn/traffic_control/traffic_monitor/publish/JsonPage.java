@@ -44,7 +44,7 @@ public class JsonPage extends WebPage {
 	 */
 	@Override
 	public final void renderPage() {
-		final MonitorConfig config = ConfigHandler.getConfig();
+		final MonitorConfig config = ConfigHandler.getInstance().getConfig();
 		final WebResponse response = (WebResponse)super.getResponse();
 		response.setHeader("Access-Control-Allow-Origin", config.getAccessControlAllowOrigin() );
 		try {

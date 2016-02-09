@@ -97,6 +97,8 @@ public class HTTPAccessEventBuilder {
             chi = fakeIpParameter;
         }
 
+        final String rgb = formatObject(httpAccessRecord.getRegionalGeoResult());
+
         final StringBuilder stringBuilder = new StringBuilder(timeString)
             .append(" qtype=HTTP")
             .append(" chi=" + chi)
@@ -106,7 +108,8 @@ public class HTTPAccessEventBuilder {
             .append(" rtype=" + resultType)
             .append(" rloc=\"" + rloc + "\"")
             .append(" rdtl=" + resultDetails)
-            .append(" rerr=\"" + rerr + "\"");
+            .append(" rerr=\"" + rerr + "\"")
+            .append(" rgb=\"" + rgb + "\"");
 
         if (httpAccessRecord.getResponseCode() != -1) {
             final String pssc = formatObject(httpAccessRecord.getResponseCode());

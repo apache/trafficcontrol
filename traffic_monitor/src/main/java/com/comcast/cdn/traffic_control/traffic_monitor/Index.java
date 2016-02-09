@@ -21,6 +21,7 @@ import java.text.NumberFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
+import com.comcast.cdn.traffic_control.traffic_monitor.health.CacheStateRegistry;
 import org.apache.log4j.Logger;
 import org.apache.wicket.Component;
 import org.apache.wicket.ajax.json.JSONException;
@@ -33,7 +34,6 @@ import org.apache.wicket.util.time.Duration;
 
 import com.comcast.cdn.traffic_control.traffic_monitor.config.ConfigHandler;
 import com.comcast.cdn.traffic_control.traffic_monitor.config.MonitorConfig;
-import com.comcast.cdn.traffic_control.traffic_monitor.health.CacheState;
 import com.comcast.cdn.traffic_control.traffic_monitor.publish.Stats;
 import com.comcast.cdn.traffic_control.traffic_monitor.wicket.behaviors.MultiUpdatingTimerBehavior;
 import com.comcast.cdn.traffic_control.traffic_monitor.wicket.components.CacheListPanel;
@@ -58,11 +58,11 @@ public class Index extends MonitorPage implements IHeaderContributor {
 		servers_down.add(updater);
 		add(servers_down);
 
-		final Label totalBandwidth = new Label("totalBandwidth", getCacheStateSumModel("kbps"));
+		final Label totalBandwidth = new Label("totalBandwidth",getCachesTotalBandwidthModel());
 		totalBandwidth.add(updater);
 		add(totalBandwidth);
 
-		final Label totalBandwidthAvailable = new Label("totalBandwidthAvailable", getCacheStateSumModel("maxKbps"));
+		final Label totalBandwidthAvailable = new Label("totalBandwidthAvailable", getCachesTotalMaxBandwidthModel());
 		totalBandwidthAvailable.add(updater);
 		add(totalBandwidthAvailable);
 
@@ -74,7 +74,8 @@ public class Index extends MonitorPage implements IHeaderContributor {
 
 		final Component[] updateList = new Component[] {servers_count};
 
-		final Label servers_available = new Label("servers_available", getServersAvailableModel());
+		final Label servers_available = new Label("servers_available",getServersAvailableModel());
+
 		servers_available.add(updater);
 		add(servers_available);
 
@@ -86,44 +87,41 @@ public class Index extends MonitorPage implements IHeaderContributor {
 
 	private Model<Integer> getServerListSizeModel() {
 		return new Model<Integer>() {
-			private static final long serialVersionUID = 1L;
-
 			@Override
-			public Integer getObject( ) {
-				return CacheState.getCacheStates().size();
+			public Integer getObject() {
+				return CacheStateRegistry.getInstance().size();
 			}
 		};
 	}
 
 	private Model<String> getServersDownModel() {
 		return new Model<String>("") {
-			private static final long serialVersionUID = 1L;
 
 			@Override
-			public String getObject( ) {
-				int cnt = 0;
-				for(CacheState cs : CacheState.getCacheStates()) {
-					//					CacheState cs = CacheState.get(server);
-					if ( cs != null && cs.isError() ) { 
-						cnt++;
-					}
-				}
-				return String.valueOf(cnt);
+			public String getObject() {
+				return Integer.toString(CacheStateRegistry.getInstance().getCachesDownCount());
 			}
 		};
 	}
 
-	private Model<String> getCacheStateSumModel(final String key) {
+	private Model<String> getCachesTotalBandwidthModel() {
 		return new Model<String>("") {
 			private static final long serialVersionUID = 1L;
 
 			@Override
 			public String getObject( ) {
-				long bw = 0;
-				for(CacheState cs : CacheState.getCacheStates()) {
-					bw += cs.getDouble(key);
-				}
-				return NUMBER_FORMAT.format(bw);
+				return NUMBER_FORMAT.format(CacheStateRegistry.getInstance().getCachesBandwidthInKbps());
+			}
+		};
+	}
+
+	private Model<String> getCachesTotalMaxBandwidthModel() {
+		return new Model<String>("") {
+			private static final long serialVersionUID = 1L;
+
+			@Override
+			public String getObject( ) {
+				return NUMBER_FORMAT.format(CacheStateRegistry.getInstance().getCachesMaxBandwidthInKbps());
 			}
 		};
 	}
@@ -134,27 +132,11 @@ public class Index extends MonitorPage implements IHeaderContributor {
 
 			@Override
 			public String getObject( ) {
-				final MonitorConfig config = ConfigHandler.getConfig();
+				final MonitorConfig config = ConfigHandler.getInstance().getConfig();
 				if(config == null) { return "[no config]"; }
 				final String host = config.getEffectiveProps().get("tm.hostname");
 				final String cdnName = config.getEffectiveProps().get("cdnName");
 				return host+"/"+cdnName;
-			}
-		};
-	}
-
-	protected static Model<String> getServersAvailableModel() {
-		return new Model<String>("") {
-			private static final long serialVersionUID = 1L;
-
-			@Override
-			public String getObject( ) {
-				int cnt = 0;
-				for(CacheState cs : CacheState.getCacheStates()) {
-					//					CacheState cs = CacheState.get(server);
-					if ( cs != null && cs.isAvailable() ) { cnt++; }
-				}
-				return String.valueOf(cnt);
 			}
 		};
 	}
@@ -179,6 +161,16 @@ public class Index extends MonitorPage implements IHeaderContributor {
 		}
 
 		return "";
+	}
+
+	private Model<String> getServersAvailableModel() {
+		return new Model<String>("") {
+
+			@Override
+			public String getObject() {
+				return Integer.toString(CacheStateRegistry.getInstance().getCachesAvailableCount());
+			}
+		};
 	}
 }
 

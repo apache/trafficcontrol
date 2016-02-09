@@ -16,12 +16,17 @@
 
 package com.comcast.cdn.traffic_control.traffic_monitor.config;
 
+import org.apache.wicket.ajax.json.JSONArray;
 import org.apache.wicket.ajax.json.JSONException;
 import org.apache.wicket.ajax.json.JSONObject;
 
 import com.comcast.cdn.traffic_control.traffic_monitor.health.Bandwidth;
 import com.comcast.cdn.traffic_control.traffic_monitor.health.CacheState;
 import com.comcast.cdn.traffic_control.traffic_monitor.health.HealthDeterminer;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 
 public class Cache implements java.io.Serializable {
 	private static final long serialVersionUID = 1L;
@@ -171,7 +176,40 @@ public class Cache implements java.io.Serializable {
 	public String getFqdn() {
 		return json.optString("fqdn");
 	}
+
 	public JSONObject getDeliveryServices() {
 		return json.optJSONObject("deliveryServices");
+	}
+
+	public boolean hasDeliveryServices() {
+		return json.has("deliveryServices");
+	}
+
+	public List<String> getDeliveryServiceIds() {
+		return new ArrayList(Arrays.asList(JSONObject.getNames(getDeliveryServices())));
+	}
+
+	public List<String> getFqdns(final String deliveryServiceId) throws JSONException {
+		final ArrayList<String> fqdns = new ArrayList<String>();
+
+		final JSONObject deliveryServices = getDeliveryServices();
+
+		if (!deliveryServices.has(deliveryServiceId)) {
+			fqdns.add(deliveryServices.getString(deliveryServiceId));
+			return fqdns;
+		}
+
+		final JSONArray ja = deliveryServices.optJSONArray(deliveryServiceId);
+
+		if (ja != null) {
+			for (int i = 0; i < ja.length(); i++) {
+				fqdns.add(ja.getString(i));
+			}
+			return fqdns;
+		}
+
+		fqdns.add(deliveryServices.optString(deliveryServiceId));
+
+		return fqdns;
 	}
 }
