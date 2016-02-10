@@ -764,8 +764,6 @@ func sendMetrics(config StartupConfig, runningConfig RunningConfig, bps influx.B
 		return
 	}
 
-	defer influxClient.Close()
-
 	pts := bps.Points()
 	for len(pts) > 0 {
 		chunkBps, err := influx.NewBatchPoints(influx.BatchPointsConfig{
