@@ -766,8 +766,34 @@ func sendMetrics(config StartupConfig, runningConfig RunningConfig, bps influx.B
 
 	defer influxClient.Close()
 
-	influxClient.Write(bps)
-	log.Info(fmt.Sprintf("Sent %v stats for %v", len(bps.Points()), bps.Database()))
+	pts := bps.Points()
+	for len(pts) > 0 {
+		chunkBps, err := influx.NewBatchPoints(influx.BatchPointsConfig{
+			Database:        bps.Database(),
+			Precision:       bps.Precision(),
+			RetentionPolicy: bps.RetentionPolicy(),
+		})
+		if err != nil {
+			if retry {
+				config.BpsChan <- chunkBps
+			}
+			errHndlr(err, ERROR)
+		}
+		for _, p := range pts[:intMin(config.MaxPublishSize, len(pts))] {
+			chunkBps.AddPoint(p)
+		}
+		pts = pts[intMin(config.MaxPublishSize, len(pts)):]
+
+		err = influxClient.Write(chunkBps)
+		if err != nil {
+			if retry {
+				config.BpsChan <- chunkBps
+			}
+			errHndlr(err, ERROR)
+		} else {
+			log.Info(fmt.Sprintf("Sent %v stats for %v", len(chunkBps.Points()), chunkBps.Database()))
+		}
+	}
 	return
 }
 
