@@ -405,9 +405,10 @@ func getToData(config StartupConfig, init bool, configChan chan RunningConfig) {
 			if err != nil {
 				port = 8086 //default port
 			}
-			var influxDBProps InfluxDBProps
-			influxDBProps.Fqdn = fqdn
-			influxDBProps.Port = port
+			influxDBProps := InfluxDBProps{
+				Fqdn: fqdn,
+				Port: port,
+			}
 			runningConfig.InfluxDBs = append(runningConfig.InfluxDBs, &influxDBProps)
 		}
 	}
@@ -709,11 +710,9 @@ func getURL(url string) ([]byte, error) {
 func influxConnect(config StartupConfig, runningConfig RunningConfig) (influx.Client, error) {
 	var hosts []*InfluxDBProps
 	for _, InfluxHost := range runningConfig.InfluxDBs {
-		influxClient := InfluxHost.InfluxClient
-		if influxClient == nil {
-			url := fmt.Sprintf("http://%s:%d", InfluxHost.Fqdn, InfluxHost.Port)
+		if InfluxHost.InfluxClient == nil {
 			conf := influx.HTTPConfig{
-				Addr:     url,
+				Addr:     fmt.Sprintf("http://%s:%d", InfluxHost.Fqdn, InfluxHost.Port),
 				Username: config.InfluxUser,
 				Password: config.InfluxPassword,
 			}
@@ -723,7 +722,6 @@ func influxConnect(config StartupConfig, runningConfig RunningConfig) (influx.Cl
 				continue
 			}
 			InfluxHost.InfluxClient = con
-			influxClient = InfluxHost.InfluxClient
 		}
 		hosts = append(hosts, InfluxHost)
 	}
@@ -789,7 +787,6 @@ func sendMetrics(config StartupConfig, runningConfig RunningConfig, bps influx.B
 			log.Info(fmt.Sprintf("Sent %v stats for %v", len(chunkBps.Points()), chunkBps.Database()))
 		}
 	}
-	return
 }
 
 func intMin(a, b int) int {
