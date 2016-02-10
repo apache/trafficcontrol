@@ -54,7 +54,7 @@ const (
 	defaultMaxPublishSize              = 10000
 )
 
-// StartupConfig contains all fields necessary to create an InfluxDB session.
+// StartupConfig contains all fields necessary to create a traffic stats session.
 type StartupConfig struct {
 	ToUser                      string                  `json:"toUser"`
 	ToPasswd                    string                  `json:"toPasswd"`
@@ -74,19 +74,23 @@ type StartupConfig struct {
 	BpsChan                     chan influx.BatchPoints `json:"-"`
 }
 
-// RunningConfig contains information about current InfluxDB connections.
+// RunningConfig is used to store runtime configuration for Traffic Stats.  This includes information
+// about caches, cachegroups, health urls, and online InfluxDB servers
 type RunningConfig struct {
-	HealthUrls    map[string]map[string]string // they 1st map key is CDN_name, the second is DsStats or CacheStats
-	CacheGroupMap map[string]string            // map hostName to cacheGroup
-	InfluxDBProps []*struct {
-		Fqdn         string
-		Port         int64
-		InfluxClient influx.Client
-	}
+	HealthUrls      map[string]map[string]string // the 1st map key is CDN_name, the second is DsStats or CacheStats
+	CacheGroupMap   map[string]string            // map hostName to cacheGroup
+	InfluxDBs       []*InfluxDBProps
 	LastSummaryTime time.Time
 }
 
-//Timers struct containts all the timers
+//InfluxDBProps contains information about online InfluxDB servers.
+type InfluxDBProps struct {
+	Fqdn         string
+	Port         int64
+	InfluxClient influx.Client
+}
+
+//Timers struct contains all the timers
 type Timers struct {
 	Poll         <-chan time.Time
 	DailySummary <-chan time.Time
@@ -401,11 +405,10 @@ func getToData(config StartupConfig, init bool, configChan chan RunningConfig) {
 			if err != nil {
 				port = 8086 //default port
 			}
-			runningConfig.InfluxDBProps = append(runningConfig.InfluxDBProps, &struct {
-				Fqdn         string
-				Port         int64
-				InfluxClient influx.Client
-			}{fqdn, port, nil})
+			var influxDBProps InfluxDBProps
+			influxDBProps.Fqdn = fqdn
+			influxDBProps.Port = port
+			runningConfig.InfluxDBs = append(runningConfig.InfluxDBs, &influxDBProps)
 		}
 	}
 
@@ -704,15 +707,13 @@ func getURL(url string) ([]byte, error) {
 }
 
 func influxConnect(config StartupConfig, runningConfig RunningConfig) (influx.Client, error) {
-	urlClients := make(map[string]influx.Client)
-	var urls []string
-	for _, InfluxHost := range runningConfig.InfluxDBProps {
-		u := fmt.Sprintf("http://%s:%d", InfluxHost.Fqdn, InfluxHost.Port)
-		urls = append(urls, u)
+	var hosts []*InfluxDBProps
+	for _, InfluxHost := range runningConfig.InfluxDBs {
 		influxClient := InfluxHost.InfluxClient
 		if influxClient == nil {
+			url := fmt.Sprintf("http://%s:%d", InfluxHost.Fqdn, InfluxHost.Port)
 			conf := influx.HTTPConfig{
-				Addr:     u,
+				Addr:     url,
 				Username: config.InfluxUser,
 				Password: config.InfluxPassword,
 			}
@@ -724,14 +725,14 @@ func influxConnect(config StartupConfig, runningConfig RunningConfig) (influx.Cl
 			InfluxHost.InfluxClient = con
 			influxClient = InfluxHost.InfluxClient
 		}
-		urlClients[u] = influxClient
+		hosts = append(hosts, InfluxHost)
 	}
 
-	for len(urls) > 0 {
-		n := rand.Intn(len(urls))
-		url := urls[n]
-		urls = append(urls[:n], urls[n+1:]...)
-		con := urlClients[url]
+	for len(hosts) > 0 {
+		n := rand.Intn(len(hosts))
+		host := hosts[n]
+		hosts = append(hosts[:n], hosts[n+1:]...)
+		con := host.InfluxClient
 		q := influx.Query{
 			Command:  "show databases",
 			Database: "",
@@ -739,14 +740,10 @@ func influxConnect(config StartupConfig, runningConfig RunningConfig) (influx.Cl
 		_, err := con.Query(q)
 		if err != nil {
 			errHndlr(err, ERROR)
-			//set it to null
-			for _, props := range runningConfig.InfluxDBProps {
-				if strings.Contains(url, props.Fqdn) {
-					props.InfluxClient = nil
-				}
-			}
+			host.InfluxClient = nil
 			continue
 		}
+
 		return con, nil
 	}
 
