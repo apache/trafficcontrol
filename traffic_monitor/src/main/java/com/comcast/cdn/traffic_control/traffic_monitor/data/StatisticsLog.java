@@ -45,7 +45,7 @@ public class StatisticsLog {
 		statistics.addLast(dataPoint);
 	}
 
-	public DataPoint getLastDataPoint(final String key) {
+	private DataPoint getLastDataPoint(final String key) {
 		if (!hasValue(key)) {
 			return null;
 		}
@@ -113,7 +113,7 @@ public class StatisticsLog {
 		}
 	}
 
-	protected Set<String> filterKeys(final String[] statList, final boolean wildcard) {
+	private Set<String> filterKeys(final String[] statList, final boolean wildcard) {
 		Set<String> statisticsKeys;
 
 		if (statList == null) {
@@ -221,7 +221,7 @@ public class StatisticsLog {
 		removeOldest(id);
 	}
 
-	public void addNullDataForIndex(final long index) {
+	private void addNullDataForIndex(final long index) {
 		for(String key : data.keySet()) {
 			if (getLastDataPoint(key).getIndex() != index) {
 				putDataPoint(key, null);
@@ -229,7 +229,7 @@ public class StatisticsLog {
 		}
 	}
 
-	public void removeOldest(final String stateId) {
+	private void removeOldest(final String stateId) {
 		final long baseIndex = indexes.get(0);
 
 		for(String key : data.keySet()) {
