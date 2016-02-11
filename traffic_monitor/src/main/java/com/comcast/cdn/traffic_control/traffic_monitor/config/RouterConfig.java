@@ -54,7 +54,7 @@ public class RouterConfig {
 //				if(!myHealthDeterminer.shouldMonitor(cjo)) { // now assumed with CrConfig instead of dataservers
 //					continue;
 //				}
-				final Cache c = new Cache(id,cjo, this);
+				final Cache c = new Cache(id,cjo);
 				myHealthDeterminer.setControls(c); // set the controls
 				c.setCacheState((CacheState) CacheStateRegistry.getInstance().get(c.getHostname()));
 				al.add(c);
