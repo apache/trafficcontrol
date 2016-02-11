@@ -23,7 +23,7 @@ import (
 	"flag"
 	"fmt"
 
-	influx "github.com/influxdb/influxdb/client/v2"
+	influx "github.com/influxdata/influxdb/client/v2"
 )
 
 func main() {

@@ -144,7 +144,7 @@ public class StatisticsLogTest {
 	}
 
 	@Test
-	public void itGetsValuesForIndexGoo() {
+	public void itReturnsNullForIndexesOutsideDataPointSpan() {
 		mockStatic(System.class);
 
 		StatisticsLog statisticsLog = new StatisticsLog();
