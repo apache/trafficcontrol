@@ -6,21 +6,16 @@ import com.comcast.cdn.traffic_control.traffic_monitor.config.RouterConfig;
 import com.comcast.cdn.traffic_control.traffic_monitor.health.HealthDeterminer;
 import com.comcast.cdn.traffic_control.traffic_monitor.util.Network;
 import org.apache.wicket.ajax.json.JSONObject;
-import org.eclipse.jetty.util.ajax.JSON;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
 
-import java.util.Arrays;
-
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.contains;
 import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.hamcrest.Matchers.equalTo;
-import static org.hamcrest.Matchers.notNullValue;
-import static org.hamcrest.Matchers.nullValue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 import static org.powermock.api.mockito.PowerMockito.mockStatic;
@@ -31,17 +26,15 @@ import static org.powermock.api.mockito.PowerMockito.whenNew;
 public class RouterConfigTest {
 
 	private JSONObject crConfigJson;
-	private JSONObject cache1Json;
-	private JSONObject cache2Json;
 	private Cache cache1;
 	private Cache cache2;
 
 	@Before
 	public void before() throws Exception {
-		cache1Json = new JSONObject();
+		JSONObject cache1Json = new JSONObject();
 		cache1Json.put("foo", "bar");
 
-		cache2Json = new JSONObject();
+		JSONObject cache2Json = new JSONObject();
 		cache2Json.put("foo", "bar");
 
 		JSONObject contentServersJson = new JSONObject();
@@ -92,7 +85,7 @@ public class RouterConfigTest {
 		when(Network.isLocalName("peer3")).thenReturn(true);
 
 		Peer peer4 = mock(Peer.class);
-		when(peer4.getIp6Address()).thenReturn("192.168.10.40");
+		when(peer4.getIpAddress()).thenReturn("192.168.10.40");
 		when(peer4.getFqdn()).thenReturn("peer4.kabletown.com");
 		when(peer4.getId()).thenReturn("peer4");
 		when(peer4.getStatus()).thenReturn("somethingelse");
@@ -102,7 +95,7 @@ public class RouterConfigTest {
 		when(Network.isLocalName("peer4")).thenReturn(false);
 
 		Peer peer5 = mock(Peer.class);
-		when(peer5.getIp6Address()).thenReturn("192.168.10.50");
+		when(peer5.getIpAddress()).thenReturn("192.168.10.50");
 		when(peer5.getFqdn()).thenReturn("peer5.kabletown.com");
 		when(peer5.getId()).thenReturn("peer5");
 		when(peer5.getStatus()).thenReturn("ONLINE");
