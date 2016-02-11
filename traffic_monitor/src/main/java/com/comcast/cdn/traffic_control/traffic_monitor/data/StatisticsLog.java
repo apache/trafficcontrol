@@ -138,7 +138,7 @@ public class StatisticsLog {
 		return statisticsKeys;
 	}
 
-	public Map<String, Deque<DataPoint>> filter(final int hc, final String[] statList, final boolean wildcard, final boolean allowHidden) {
+	public Map<String, Deque<DataPoint>> filter(final int maxItems, final String[] statList, final boolean wildcard, final boolean allowHidden) {
 		final Map<String, Deque<DataPoint>> filteredStatistics = new HashMap<String,Deque<DataPoint>>();
 
 		synchronized(data) {
@@ -152,7 +152,7 @@ public class StatisticsLog {
 
 				final LinkedList<DataPoint> statistics = (LinkedList<DataPoint>) data.get(key);
 
-				if (hc == 0 || statistics.size() <= 1) {
+				if (maxItems == 0 || statistics.size() <= 1) {
 					filteredStatistics.put(key, statistics);
 				} else {
 					/*
@@ -162,7 +162,7 @@ public class StatisticsLog {
 					 */
 
 					final int toIndex = statistics.size();
-					final int fromIndex = Math.max(0, toIndex - hc);
+					final int fromIndex = Math.max(0, toIndex - maxItems);
 
 					filteredStatistics.put(key, new LinkedList<DataPoint>(statistics.subList(fromIndex, toIndex)));
 				}
@@ -192,7 +192,7 @@ public class StatisticsLog {
 		return 0;
 	}
 
-	public void prepareForUpdate(final String id, final long historyTime) {
+	public void prepareForUpdate(final String stateId, final long historyTime) {
 		addNullDataForIndex(index);
 
 		synchronized(data) {
@@ -218,7 +218,7 @@ public class StatisticsLog {
 			}
 		}
 
-		removeOldest(id);
+		removeOldest(stateId);
 	}
 
 	private void addNullDataForIndex(final long index) {
@@ -230,7 +230,7 @@ public class StatisticsLog {
 	}
 
 	private void removeOldest(final String stateId) {
-		final long baseIndex = indexes.get(0);
+		final long oldestIndex = indexes.get(0);
 
 		for(String key : data.keySet()) {
 			final Deque<DataPoint> dataPoints = get(key);
@@ -241,9 +241,9 @@ public class StatisticsLog {
 			}
 
 
-			while (dataPoints.getFirst().getIndex() < baseIndex) {
+			while (dataPoints.getFirst().getIndex() < oldestIndex) {
 				if (dataPoints.size() == 1) {
-					LOGGER.warn(String.format("%s - %s: index %d < baseIndex %d", key, stateId, dataPoints.getFirst().getIndex(), baseIndex));
+					LOGGER.warn(String.format("%s - %s: index %d < baseIndex %d", key, stateId, dataPoints.getFirst().getIndex(), oldestIndex));
 					break;
 				}
 
