@@ -36,7 +36,7 @@ import (
 
 	traffic_ops "github.com/Comcast/traffic_control/traffic_ops/client"
 	log "github.com/cihub/seelog"
-	influx "github.com/influxdb/influxdb/client/v2"
+	influx "github.com/influxdata/influxdb/client/v2"
 )
 
 const (

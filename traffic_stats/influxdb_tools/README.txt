@@ -6,14 +6,14 @@ For more information see: http://traffic-control-cdn.net/docs/latest/admin/traff
 
 Pre-Requisites: 
 1. Go 1.5.x or later
-2. Influxdb 0.9.6.1 or later
+2. Influxdb
 3. configured $GOPATH (e.g. export GOPATH=~/go)
 
 Using create_ts_databases.go
-1. Install InfluxDb Client (0.9.6.1 version)
+1. Install InfluxDb Client
 	- go get github.com/influxdata/influxdb
 	- cd $GOPATH/src/github.com/influxdata/influxdb
-	- git checkout 0.9.6.1
+	- git checkout v0.9.6.1 (or whatever version of influxdb you are running)
 	- go install
 
 2. Build it
@@ -28,10 +28,10 @@ Using create_ts_databases.go
 
 
 Using sync_ts_databases.go
-1. Install InfluxDb Client (0.9.4 version)
+1. Install InfluxDb Client (0.9.6.1 version)
 	- go get github.com/influxdata/influxdb
 	- cd $GOPATH/src/github.com/influxdata/influxdb
-	- git checkout 0.9.4
+	- git checkout v0.9.6.1
 	- go install
 
 2. Build it
