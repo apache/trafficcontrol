@@ -16,7 +16,6 @@
 
 package com.comcast.cdn.traffic_control.traffic_monitor;
 
-import com.comcast.cdn.traffic_control.traffic_monitor.config.Config;
 import com.comcast.cdn.traffic_control.traffic_monitor.config.ConfigHandler;
 import com.comcast.cdn.traffic_control.traffic_monitor.config.MonitorConfig;
 import com.comcast.cdn.traffic_control.traffic_monitor.health.CacheWatcher;
@@ -46,6 +45,7 @@ public class TestHomePage {
 
 		MonitorConfig monitorConfig = mock(MonitorConfig.class);
 		when(monitorConfig.getHealthPollingInterval()).thenReturn(10 * 1000);
+		when(monitorConfig.getTmFrequency()).thenReturn(10 * 1000L);
 		when(monitorConfig.getHeathUrl()).thenReturn("http://example.com/healthParams");
 		when(monitorConfig.getCrConfigUrl()).thenReturn("http://example.com/crConfig");
 		when(monitorConfig.getPeerThreadPool()).thenReturn(1);
