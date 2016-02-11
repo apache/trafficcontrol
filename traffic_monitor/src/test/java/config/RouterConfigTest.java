@@ -147,7 +147,6 @@ public class RouterConfigTest {
 
 	@Test
 	public void itReturnsDeliveryServicesJson() throws Exception {
-		JSONObject crConfigJson = new JSONObject();
 		JSONObject deliveryServicesJson = new JSONObject().put("foo", "bar");
 		crConfigJson.put("deliveryServices", deliveryServicesJson);
 
