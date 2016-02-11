@@ -192,29 +192,36 @@ public class StatisticsLog {
 		return 0;
 	}
 
-	public void prepareForUpdate(final long index, final long historyTime) {
-		final long time = System.currentTimeMillis();
-		final long removeTime = time - historyTime;
-		int removeCount = 0;
+	public void prepareForUpdate(final String id, final long historyTime) {
+		addNullDataForIndex(index);
 
-		times.add(time);
-		indexes.add(index);
+		synchronized(data) {
+			index++;
+			final long time = System.currentTimeMillis();
+			final long removeTime = time - historyTime;
+			int removeCount = 0;
 
-		while (times.get(0) < removeTime) {
-			removeCount++;
-			times.remove(0);
+			times.add(time);
+			indexes.add(new Long(index));
+
+			while (times.get(0) < removeTime) {
+				removeCount++;
+				times.remove(0);
+			}
+
+			if (removeCount == 0) {
+				return;
+			}
+
+			for (int i = 0; i < removeCount; i++) {
+				indexes.remove(0);
+			}
 		}
 
-		if (removeCount == 0) {
-			return;
-		}
-
-		for (int i = 0; i < removeCount; i++) {
-			indexes.remove(0);
-		}
+		removeOldest(id);
 	}
 
-	public void clearNonMatchingDataPoints(final long index) {
+	public void addNullDataForIndex(final long index) {
 		for(String key : data.keySet()) {
 			if (getLastDataPoint(key).getIndex() != index) {
 				putDataPoint(key, null);
@@ -248,16 +255,5 @@ public class StatisticsLog {
 			}
 
 		}
-	}
-
-	public void prepareForUpdate(final String id, final long historyTime) {
-		clearNonMatchingDataPoints(index);
-
-		synchronized(data) {
-			index++;
-			prepareForUpdate(index, historyTime);
-		}
-
-		removeOldest(id);
 	}
 }

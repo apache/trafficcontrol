@@ -20,6 +20,7 @@ import org.apache.wicket.ajax.json.JSONException;
 import org.apache.wicket.ajax.json.JSONObject;
 
 public class MonitorConfig extends Config {
+
 	private static final long serialVersionUID = 1L;
 
 	private boolean hasForcedPropCalls = false;
