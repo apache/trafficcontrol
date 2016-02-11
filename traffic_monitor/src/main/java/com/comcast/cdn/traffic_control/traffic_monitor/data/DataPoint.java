@@ -21,29 +21,42 @@ public class DataPoint implements java.io.Serializable {
 	private long index;
 	private final String value;
 	private int span;
+
 	public DataPoint(final String v, final long index) {
 		this.value = v;
 		this.index = index;
 		this.span = (1);
 	}
+
 	public String getValue() {
 		return value;
 	}
+
 	public boolean matches(final String v) {
-		if(v == null && value == null) { return true; }
-		if(v == null || value == null) { return false; }
+		if (v == null && value == null) {
+			return true;
+		}
+
+		if (v == null || value == null) {
+			return false;
+		}
+
 		return v.equals(value);
 	}
+
 	public long getIndex() {
 		return index;
 	}
+
 	public void setIndex(final int index) {
 		this.index = index;
 	}
+
 	public void update(final long index) {
 		this.index = index;
 		this.span = (this.span + 1);
 	}
+
 	public int getSpan() {
 		return span;
 	}
