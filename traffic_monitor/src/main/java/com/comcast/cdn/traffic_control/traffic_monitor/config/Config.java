@@ -104,7 +104,8 @@ public class Config implements java.io.Serializable {
 	private void updatePropertiesDoc(final String key, final Object defaultValue, final Object value, final String description, final String type) {
 		if (!propDoc.has(key)) {
 			try {
-				JSONObject json = new JSONObject().put("defaultValue", String.valueOf(defaultValue)).put("description", description).put("type", type);
+				String docDefaultValue = (defaultValue != null) ? String.valueOf(defaultValue) : "";
+				JSONObject json = new JSONObject().put("defaultValue", docDefaultValue).put("description", description).put("type", type);
 				propDoc.put(key, json);
 			} catch (JSONException e) {
 				LOGGER.warn(e,e);
