@@ -59,7 +59,7 @@ function buildRpmTrafficRouter () {
 	cd "$TR_DIR" || { echo "Could not cd to $TR_DIR: $?"; exit 1; }
 	export TRAFFIC_CONTROL_VERSION="$TC_VERSION"
 	export GIT_REV_COUNT=$(getRevCount)
-	mvn -Dmaven.test.skip=true -DminimumTPS=1 package ||  \
+	mvn -Dmaven.test.skip=true -DminimumTPS=1 clean package ||  \
 		{ echo "RPM BUILD FAILED: $?"; exit 1; }
 
 	local rpm=$(find -name \*.rpm)
