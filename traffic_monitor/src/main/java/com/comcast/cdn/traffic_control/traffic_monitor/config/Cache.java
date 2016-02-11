@@ -37,8 +37,7 @@ public class Cache implements java.io.Serializable {
 
 	public Bandwidth previousTx;
 	private String error;
-	final private RouterConfig crConfig;
-	public Cache(final String id, final JSONObject o, final RouterConfig crConfig) throws JSONException {
+	public Cache(final String id, final JSONObject o) throws JSONException {
 		json = o;
 //		hostname = json.getString("host_name");
 //		json.getString("ip_address");
@@ -61,10 +60,6 @@ public class Cache implements java.io.Serializable {
 		json.getString("fqdn");
 		json.getString("type"); 
 		json.getInt("port"); 
-		this.crConfig = crConfig;
-	}
-	public RouterConfig getCrConfig() {
-		return crConfig;
 	}
 	public String getHostname() {
 		return hostname;

@@ -40,15 +40,15 @@ public class RouterConfig {
 	final private Map<String, Peer> peerMap = new HashMap<String, Peer>();
 	final private JSONObject dsList;
 
-	public RouterConfig(final JSONObject crConfigJson, final HealthDeterminer myHealthDeterminer) throws JSONException {
+	public RouterConfig(final JSONObject crConfigJson, final HealthDeterminer healthDeterminer) throws JSONException {
 		final JSONObject cachesJson = crConfigJson.optJSONObject("contentServers");
 
 		LOGGER.info("Processing new CrConfig");
 
 		for (String id : JSONObject.getNames(cachesJson)) {
 			try {
-				final Cache cache = new Cache(id, cachesJson.getJSONObject(id), this);
-				myHealthDeterminer.setControls(cache);
+				final Cache cache = new Cache(id, cachesJson.getJSONObject(id));
+				healthDeterminer.setControls(cache);
 				cache.setCacheState(CacheStateRegistry.getInstance().get(cache.getHostname()));
 				cacheList.add(cache);
 			} catch (JSONException e) {
