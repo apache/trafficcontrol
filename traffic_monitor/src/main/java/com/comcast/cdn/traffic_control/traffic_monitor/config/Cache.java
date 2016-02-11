@@ -30,31 +30,17 @@ import java.util.List;
 
 public class Cache implements java.io.Serializable {
 	private static final long serialVersionUID = 1L;
-//	protected List<Property> property;
 	protected String hostname;
 	private CacheState state;
 	final private JSONObject json;
 
 	public Bandwidth previousTx;
-	private String error;
 	final private RouterConfig crConfig;
 	public Cache(final String id, final JSONObject o, final RouterConfig crConfig) throws JSONException {
 		json = o;
-//		hostname = json.getString("host_name");
-//		json.getString("ip_address");
-//		json.optString("ip6_address");
-//		json.getString("interface_name");
-//		json.getString("status");
-//		json.getString("location");
-//		json.getString("profile");
-//		json.getString("domain_name");
-//		json.getString("host_name");
-//		json.getString("type"); 
-//		json.getInt("tcp_port"); 
 		hostname = id;
 		json.getString("ip");
 		json.optString("ip6");
-//		json.getString("interfaceName");
 		json.getString("status");
 		json.getString("locationId");
 		json.getString("profile");
@@ -74,12 +60,6 @@ public class Cache implements java.io.Serializable {
 	}
 	public String toString() {
 		return "Cache Server: " + hostname;
-	}
-	public void setError(final String b, final HealthDeterminer myHealthDeterminer) {
-		error = b;
-	}
-	public String getError() {
-		return error;
 	}
 	public String getIpAddress() {
 		return json.optString("ip");
@@ -104,9 +84,6 @@ public class Cache implements java.io.Serializable {
 	public CacheState getState() {
 		return state;
 	}
-//	public String getDomainName() {
-//		return json.optString("domain_name");
-//	}
 	public boolean isAvailableKnown() {
 		if(state==null) { return false; }
 		final String v = state.getLastValue("isAvailable");
@@ -134,10 +111,6 @@ public class Cache implements java.io.Serializable {
 		return json.optInt("port");
 	}
 	public String getIp() {
-//		if(state != null) {
-//			final String ip = state.getLastValue("resolved-ip");
-//			if(ip != null) { return ip; }
-//		}
 		return getIpAddress();
 	}
 	public String getType() {
@@ -147,7 +120,6 @@ public class Cache implements java.io.Serializable {
 		return json.optString("ip6");
 	}
 	
-//	JSONObject controls;
 	HealthDeterminer healthDeterminer;
 	public void setControls(final HealthDeterminer healthDeterminer) {
 		this.healthDeterminer = healthDeterminer;
@@ -158,9 +130,6 @@ public class Cache implements java.io.Serializable {
 		}
 		return healthDeterminer.getControls(this);
 	}
-	public int getHistoryCount() {
-		return getControls().optInt("history.count");
-	}
 	public void setCacheState(final CacheState cacheState) {
 		state = cacheState;
 	}
@@ -170,9 +139,6 @@ public class Cache implements java.io.Serializable {
 	public String getProfile() {
 		return json.optString("profile");
 	}
-//	public JSONObject getJson() {
-//		return json;
-//	}
 	public String getFqdn() {
 		return json.optString("fqdn");
 	}
@@ -186,7 +152,7 @@ public class Cache implements java.io.Serializable {
 	}
 
 	public List<String> getDeliveryServiceIds() {
-		return new ArrayList(Arrays.asList(JSONObject.getNames(getDeliveryServices())));
+		return  new ArrayList(Arrays.asList(JSONObject.getNames(getDeliveryServices())));
 	}
 
 	public List<String> getFqdns(final String deliveryServiceId) throws JSONException {
