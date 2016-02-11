@@ -48,6 +48,8 @@ public class TestHomePage {
 		when(monitorConfig.getTmFrequency()).thenReturn(10 * 1000L);
 		when(monitorConfig.getHeathUrl()).thenReturn("http://example.com/healthParams");
 		when(monitorConfig.getCrConfigUrl()).thenReturn("http://example.com/crConfig");
+		when(monitorConfig.getPeerThreadPool()).thenReturn(1);
+		when(monitorConfig.getPeerUrl()).thenReturn("http://example.com/publish/CrStates");
 
 		ConfigHandler configHandler = mock(ConfigHandler.class);
 
