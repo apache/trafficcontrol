@@ -174,7 +174,6 @@ sub init () {
 EOF
 
 	print $msg, "\n";
-	$parameters = readJson($post_install_cfg);
 	while (1) {
 
 		my $tmurl = promptUser( "Traffic Ops url", $parameters->{"tm.url"} || "https://localhost" );
@@ -414,6 +413,7 @@ sub writeSecret {
 
 chdir("/opt/traffic_ops/install/bin");
 
+$parameters = readJson($post_install_cfg);
 if ( -f $reconfigure ) {
 	my $rc = execCommand( "/opt/traffic_ops/install/bin/build_trafficops_perl_library", "-i" );
 	if ( $rc != 0 ) {
