@@ -45,7 +45,7 @@ public class StatisticsLog {
 		statistics.addLast(dataPoint);
 	}
 
-	public DataPoint getLastDataPoint(final String key) {
+	private DataPoint getLastDataPoint(final String key) {
 		if (!hasValue(key)) {
 			return null;
 		}
@@ -113,7 +113,7 @@ public class StatisticsLog {
 		}
 	}
 
-	protected Set<String> filterKeys(final String[] statList, final boolean wildcard) {
+	private Set<String> filterKeys(final String[] statList, final boolean wildcard) {
 		Set<String> statisticsKeys;
 
 		if (statList == null) {
@@ -138,7 +138,7 @@ public class StatisticsLog {
 		return statisticsKeys;
 	}
 
-	public Map<String, Deque<DataPoint>> filter(final int hc, final String[] statList, final boolean wildcard, final boolean allowHidden) {
+	public Map<String, Deque<DataPoint>> filter(final int maxItems, final String[] statList, final boolean wildcard, final boolean allowHidden) {
 		final Map<String, Deque<DataPoint>> filteredStatistics = new HashMap<String,Deque<DataPoint>>();
 
 		synchronized(data) {
@@ -152,7 +152,7 @@ public class StatisticsLog {
 
 				final LinkedList<DataPoint> statistics = (LinkedList<DataPoint>) data.get(key);
 
-				if (hc == 0 || statistics.size() <= 1) {
+				if (maxItems == 0 || statistics.size() <= 1) {
 					filteredStatistics.put(key, statistics);
 				} else {
 					/*
@@ -162,7 +162,7 @@ public class StatisticsLog {
 					 */
 
 					final int toIndex = statistics.size();
-					final int fromIndex = Math.max(0, toIndex - hc);
+					final int fromIndex = Math.max(0, toIndex - maxItems);
 
 					filteredStatistics.put(key, new LinkedList<DataPoint>(statistics.subList(fromIndex, toIndex)));
 				}
@@ -192,29 +192,36 @@ public class StatisticsLog {
 		return 0;
 	}
 
-	public void prepareForUpdate(final long index, final long historyTime) {
-		final long time = System.currentTimeMillis();
-		final long removeTime = time - historyTime;
-		int removeCount = 0;
+	public void prepareForUpdate(final String stateId, final long historyTime) {
+		addNullDataForIndex(index);
 
-		times.add(time);
-		indexes.add(index);
+		synchronized(data) {
+			index++;
+			final long time = System.currentTimeMillis();
+			final long removeTime = time - historyTime;
+			int removeCount = 0;
 
-		while (times.get(0) < removeTime) {
-			removeCount++;
-			times.remove(0);
+			times.add(time);
+			indexes.add(new Long(index));
+
+			while (times.get(0) < removeTime) {
+				removeCount++;
+				times.remove(0);
+			}
+
+			if (removeCount == 0) {
+				return;
+			}
+
+			for (int i = 0; i < removeCount; i++) {
+				indexes.remove(0);
+			}
 		}
 
-		if (removeCount == 0) {
-			return;
-		}
-
-		for (int i = 0; i < removeCount; i++) {
-			indexes.remove(0);
-		}
+		removeOldest(stateId);
 	}
 
-	public void clearNonMatchingDataPoints(final long index) {
+	private void addNullDataForIndex(final long index) {
 		for(String key : data.keySet()) {
 			if (getLastDataPoint(key).getIndex() != index) {
 				putDataPoint(key, null);
@@ -222,8 +229,8 @@ public class StatisticsLog {
 		}
 	}
 
-	public void removeOldest(final String stateId) {
-		final long baseIndex = indexes.get(0);
+	private void removeOldest(final String stateId) {
+		final long oldestIndex = indexes.get(0);
 
 		for(String key : data.keySet()) {
 			final Deque<DataPoint> dataPoints = get(key);
@@ -234,9 +241,9 @@ public class StatisticsLog {
 			}
 
 
-			while (dataPoints.getFirst().getIndex() < baseIndex) {
+			while (dataPoints.getFirst().getIndex() < oldestIndex) {
 				if (dataPoints.size() == 1) {
-					LOGGER.warn(String.format("%s - %s: index %d < baseIndex %d", key, stateId, dataPoints.getFirst().getIndex(), baseIndex));
+					LOGGER.warn(String.format("%s - %s: index %d < baseIndex %d", key, stateId, dataPoints.getFirst().getIndex(), oldestIndex));
 					break;
 				}
 
@@ -248,16 +255,5 @@ public class StatisticsLog {
 			}
 
 		}
-	}
-
-	public void prepareForUpdate(final String id, final long historyTime) {
-		clearNonMatchingDataPoints(index);
-
-		synchronized(data) {
-			index++;
-			prepareForUpdate(index, historyTime);
-		}
-
-		removeOldest(id);
 	}
 }

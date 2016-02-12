@@ -3,7 +3,6 @@ package application;
 import com.comcast.cdn.traffic_control.traffic_monitor.MonitorApplication;
 import com.comcast.cdn.traffic_control.traffic_monitor.config.ConfigHandler;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.powermock.core.classloader.annotations.PrepareForTest;
@@ -17,11 +16,11 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.equalTo;
 import static org.junit.Assert.fail;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 import static org.powermock.api.mockito.PowerMockito.mockStatic;
-import static org.powermock.api.mockito.PowerMockito.when;
 
-@RunWith(PowerMockRunner.class)
 @PrepareForTest({MonitorApplication.class, ConfigHandler.class})
+@RunWith(PowerMockRunner.class)
 public class MonitorApplicationTest {
 	private final SecurityManager originalSecurityManager = System.getSecurityManager();
 
@@ -46,13 +45,17 @@ public class MonitorApplicationTest {
 				super.checkExit(status);
 				throw new AccessControlException("Boom");
 			}
-
-
 		});
 	}
 
 	@Test
 	public void itSystemExitsWhenConfigFileIsMissing() {
+		ConfigHandler configHandler = mock(ConfigHandler.class);
+		when(configHandler.configFileExists()).thenReturn(false);
+
+		mockStatic(ConfigHandler.class);
+		when(ConfigHandler.getInstance()).thenReturn(configHandler);
+
 		try {
 			ConfigHandler configHandler = mock(ConfigHandler.class);
 			when(configHandler.configFileExists()).thenReturn(false);

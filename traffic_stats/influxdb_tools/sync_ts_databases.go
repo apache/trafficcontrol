@@ -26,7 +26,7 @@ import (
 	"os"
 	"time"
 
-	influx "github.com/influxdb/influxdb/client/v2"
+	influx "github.com/influxdata/influxdb/client/v2"
 )
 
 type cacheStats struct {

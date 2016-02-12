@@ -35,10 +35,8 @@ public class Cache implements java.io.Serializable {
 	final private JSONObject json;
 
 	public Bandwidth previousTx;
-	private String error;
-	final private RouterConfig crConfig;
 
-	public Cache(final String id, final JSONObject o, final RouterConfig crConfig) throws JSONException {
+	public Cache(final String id, final JSONObject o) throws JSONException {
 		json = o;
 		hostname = id;
 		json.getString("ip");
@@ -47,43 +45,45 @@ public class Cache implements java.io.Serializable {
 		json.getString("locationId");
 		json.getString("profile");
 		json.getString("fqdn");
-		json.getString("type"); 
-		json.getInt("port"); 
-		this.crConfig = crConfig;
+		json.getString("type");
+		json.getInt("port");
 	}
 
-	public RouterConfig getCrConfig() {
-		return crConfig;
-	}
 	public String getHostname() {
 		return hostname;
 	}
+
 	public void setHostname(final String hostname) {
 		this.hostname = hostname;
 	}
+
 	public String toString() {
 		return "Cache Server: " + hostname;
 	}
-	public void setError(final String error) {
-		this.error = error;
-	}
-	public String getError() {
-		return error;
-	}
+
 	public String getIpAddress() {
 		return json.optString("ip");
 	}
+
 	public String getInterfaceName() {
 		return json.optString("interfaceName");
 	}
+
 	public String getStatus() {
 		return json.optString("status");
 	}
+
 	public String getLocation() {
 		return json.optString("locationId");
 	}
-	public void setState(final CacheState state, final HealthDeterminer myHealthDeterminer) {
-		myHealthDeterminer.setIsAvailable(this, state);
+
+	public void setState(final CacheState state, final HealthDeterminer healthDeterminer) {
+		healthDeterminer.setIsAvailable(this, state);
+		this.state = state;
+	}
+
+	public void setError(final CacheState state, final String e, final HealthDeterminer myHealthDeterminer) {
+		myHealthDeterminer.setIsAvailable(this, e, state);
 		this.state = state;
 	}
 
@@ -98,50 +98,63 @@ public class Cache implements java.io.Serializable {
 	public boolean isAvailable() {
 		return state == null || Boolean.parseBoolean(state.getLastValue("isAvailable"));
 	}
-	
+
 	public String getQueryIp() {
 		final String ip = json.optString("queryIp");
-		if(ip != null && !ip.equals("")) { 
-			return ip; 
+
+		if (ip != null && !ip.equals("")) {
+			return ip;
 		}
+
 		return getIp();
 	}
+
 	public int getQueryPort() {
-		if(json.has("queryPort")) {
+		if (json.has("queryPort")) {
 			return json.optInt("queryPort");
 		}
+
 		return json.optInt("port");
 	}
+
 	public String getIp() {
 		return getIpAddress();
 	}
+
 	public String getType() {
 		return json.optString("type");
 	}
+
 	public String getIp6() {
 		return json.optString("ip6");
 	}
-	
+
 	HealthDeterminer healthDeterminer;
+
 	public void setControls(final HealthDeterminer healthDeterminer) {
 		this.healthDeterminer = healthDeterminer;
 	}
+
 	public JSONObject getControls() {
-		if(healthDeterminer==null) {
+		if (healthDeterminer == null) {
 			return null;
 		}
+
 		return healthDeterminer.getControls(this);
 	}
 
 	public void setCacheState(final CacheState cacheState) {
 		state = cacheState;
 	}
+
 	public long getHistoryTime() {
 		return getControls().optInt("history.time");
 	}
+
 	public String getProfile() {
 		return json.optString("profile");
 	}
+
 	public String getFqdn() {
 		return json.optString("fqdn");
 	}
@@ -174,6 +187,7 @@ public class Cache implements java.io.Serializable {
 			for (int i = 0; i < ja.length(); i++) {
 				fqdns.add(ja.getString(i));
 			}
+
 			return fqdns;
 		}
 

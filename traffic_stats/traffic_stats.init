@@ -52,6 +52,15 @@ start() {
         [ "$NETWORKING" = "no" ] && exit 1
         [ -x $prog ] || exit 5
 
+        #Set file limits
+        # Max open files
+        OPEN_FILE_LIMIT=65536
+        ulimit -n $OPEN_FILE_LIMIT
+        if [ $? -ne 0 ]; then
+            echo -n "Failed to set open file limit to $OPEN_FILE_LIMIT"
+            exit 1
+        fi
+
         # Start daemons.
         echo -n $"Starting $name: "
         daemon nohup $prog $options < /dev/null > /opt/traffic_stats/var/log/traffic_stats/traffic_stats.out 2>&1 &
