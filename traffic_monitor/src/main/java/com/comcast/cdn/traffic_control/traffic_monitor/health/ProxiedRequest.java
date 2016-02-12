@@ -41,7 +41,7 @@ public class ProxiedRequest {
 	}
 
 	public ProxiedRequest updateForCache(final Cache cache, final AsyncHttpClient asyncHttpClient) {
-		if (!(cache.getQueryIp().equals(ipAddress) && cache.getQueryPort() == port && cache.getStatisticsUrl().equals(url))) {
+		if (cache.getQueryIp().equals(ipAddress) && cache.getQueryPort() == port && cache.getStatisticsUrl().equals(url)) {
 			return this;
 		}
 
@@ -56,7 +56,7 @@ public class ProxiedRequest {
 
 		if (cache.getQueryPort() != updatedPort) {
 			LOGGER.info("Health polling port change detected for " + cache.getStatisticsUrl() + " (new != old): " + cache.getQueryPort() + " != " + updatedPort);
-			updatedPort = port;
+			updatedPort = cache.getQueryPort();
 		}
 
 		if (!cache.getStatisticsUrl().equals(updatedUrl)) {
