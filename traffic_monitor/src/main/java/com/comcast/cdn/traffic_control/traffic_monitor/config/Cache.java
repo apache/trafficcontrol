@@ -96,7 +96,7 @@ public class Cache implements java.io.Serializable {
 	}
 
 	public boolean isAvailable() {
-		return state == null || Boolean.parseBoolean(state.getLastValue("isAvailable"));
+		return !isAvailableKnown() || Boolean.parseBoolean(state.getLastValue("isAvailable"));
 	}
 
 	public String getQueryIp() {

@@ -56,16 +56,10 @@ public class MonitorApplicationTest {
 		mockStatic(ConfigHandler.class);
 		when(ConfigHandler.getInstance()).thenReturn(configHandler);
 
+		MonitorApplication monitorApplication = new MonitorApplication();
+		Whitebox.setInternalState(monitorApplication, "settingsAccessible", true);
+
 		try {
-			ConfigHandler configHandler = mock(ConfigHandler.class);
-			when(configHandler.configFileExists()).thenReturn(false);
-
-			mockStatic(ConfigHandler.class);
-			when(ConfigHandler.getInstance()).thenReturn(configHandler);
-
-			MonitorApplication monitorApplication = new MonitorApplication();
-			Whitebox.setInternalState(monitorApplication, "settingsAccessible", true);
-
 			monitorApplication.init();
 			fail("Init did not do SystemExit");
 		} catch (AccessControlException e) {
