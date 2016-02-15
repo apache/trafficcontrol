@@ -302,34 +302,41 @@ public class HealthDeterminer {
 		return stateUrl.replace("${hostname}", fqdn).replace("${interface_name}", infname);
 	}
 
-	public JSONObject getJSONStats(final Cache c, final boolean peerOptimistic, final boolean raw) throws JSONException {
-		final JSONObject cj = new JSONObject();
-		final boolean isAvailableKnown = c.isAvailableKnown();
-		final boolean isAvailable = c.isAvailable();
+	public JSONObject getJSONStats(final Cache cache, final boolean peerOptimistic, final boolean raw) throws JSONException {
+		final JSONObject statsJson = new JSONObject();
+		final boolean isAvailableKnown = cache.isAvailableKnown();
+		final boolean isAvailable = cache.isAvailable();
 
-		if (!raw && peerOptimistic && PeerState.isCacheAvailableOnAnyPeer(c)) {
-			cj.put(IS_AVAILABLE_KEY, getIsAvailable(c, true)); // ensure status overrides peer
-			return cj;
+		if (!raw && peerOptimistic && PeerState.isCacheAvailableOnAnyPeer(cache)) {
+			statsJson.put(IS_AVAILABLE_KEY, getIsAvailable(cache, true)); // ensure status overrides peer
+			return statsJson;
 		}
 
 		if (isAvailableKnown) {
-			cj.put(IS_AVAILABLE_KEY, isAvailable);
+			statsJson.put(IS_AVAILABLE_KEY, isAvailable);
 		} else {
-			cj.put(IS_AVAILABLE_KEY, "unknown");
+			statsJson.put(IS_AVAILABLE_KEY, "unknown");
 		}
 
 		if (raw) {
-			String error = c.getState().getLastValue(ERROR_STRING);
+
+			String error = null;
+			String status = cache.getStatus();
+
+			if (cache.getState() != null) {
+				error = cache.getState().getLastValue(ERROR_STRING);
+				status = cache.getState().getLastValue(STATUS);
+			}
 
 			if (error == null) {
 				error = NO_ERROR_FOUND;
 			}
 
-			cj.put(ERROR_STRING, error);
-			cj.put(STATUS, c.getState().getLastValue(STATUS));
+			statsJson.put(ERROR_STRING, error);
+			statsJson.put(STATUS, status);
 		}
 
-		return cj;
+		return statsJson;
 	}
 
 	public int getConnectionTimeout(final Cache cache, final int d) {
