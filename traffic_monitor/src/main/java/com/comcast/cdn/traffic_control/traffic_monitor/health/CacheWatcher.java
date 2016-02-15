@@ -169,7 +169,7 @@ public class CacheWatcher {
 					queryIntervalActual.set(completedTime - time);
 					queryIntervalDelta.set((completedTime - time) - config.getHealthPollingInterval());
 
-					LOGGER.warn("Check time of " + states.size() + " caches elapsed: " + mytime + " msec, (Active time was " + (completedTime - time) + ") msec, " + cancelCount.get() + " checks were cancelled, " + failCount.get() + " failed");
+					LOGGER.debug("Check time of " + states.size() + " caches elapsed: " + mytime + " msec, (Active time was " + (completedTime - time) + ") msec, " + cancelCount.get() + " checks were cancelled, " + failCount.get() + " failed");
 				} catch (Exception e) {
 					LOGGER.warn(e, e);
 
