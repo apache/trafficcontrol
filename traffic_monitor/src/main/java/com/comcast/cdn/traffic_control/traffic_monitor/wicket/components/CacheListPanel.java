@@ -21,6 +21,7 @@ import java.util.List;
 import java.util.TreeMap;
 
 import com.comcast.cdn.traffic_control.traffic_monitor.health.AbstractState;
+import com.comcast.cdn.traffic_control.traffic_monitor.health.CacheState;
 import com.comcast.cdn.traffic_control.traffic_monitor.health.CacheStateRegistry;
 import com.comcast.cdn.traffic_control.traffic_monitor.wicket.models.CacheStateModel;
 import org.apache.wicket.Component;
@@ -52,14 +53,12 @@ public class CacheListPanel extends Panel {
 		final ModalWindow modal1;
 		add(modal1 = new ModalWindow("modal1"));
 		modal1.setInitialWidth(1000);
-		//      modal1.setCookieName("modal-1");
 		modal1.setPageCreator(new ModalWindow.PageCreator() {
 			private static final long serialVersionUID = 1L;
 			public Page createPage() {
 				return new CacheDetailsPage(hostname);
 			}
 		});
-
 
 		this.updateList = updateList;
 		final WebMarkupContainer container = new WebMarkupContainer("listpanel");
@@ -75,7 +74,6 @@ public class CacheListPanel extends Panel {
 			int serverCount = 0;
 			@Override
 			protected final void onTimer(final AjaxRequestTarget target) {
-				//				target.add(getComponent());
 				final int size = CacheStateRegistry.getInstance().size();
 				if(serverCount != size) {
 					serverCount = size;
@@ -98,6 +96,7 @@ public class CacheListPanel extends Panel {
 			@Override
 			protected void populateItem(final ListItem<String> item) {
 				final String cacheName = item.getModelObject();
+				final CacheState cacheState = CacheStateRegistry.getInstance().get(cacheName);
 
 				item.add(new UpdatingAttributeAppender("class", new Model<String>("") {
 					@Override
@@ -108,8 +107,10 @@ public class CacheListPanel extends Panel {
 
 				item.add(updater);
 
-
-				Label label = new Label("status", new CacheStateModel(cacheName, "_status_string_"));
+				Label label = new Label("type", cacheState.getCache().getType());
+				label.add(updater);
+				item.add(label);
+				label = new Label("status", new CacheStateModel(cacheName, "_status_string_"));
 				label.add(updater);
 				item.add(label);
 				label = new Label("loadavg", new CacheStateModel(cacheName, "loadavg"));

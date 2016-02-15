@@ -34,13 +34,37 @@ public class Event extends JSONObject implements Serializable {
 	static List<JSONObject> rollingLog = new LinkedList<JSONObject>();
 	static int logIndex = 0;
 
-	public static Event logStateChange(final String hostname, final boolean isAvailable, final String message) {
+	public enum EventType {
+		CACHE_STATE_CHANGE,
+		PEER_STATE_CHANGE("Peer"),
+		DELIVERY_SERVICE_STATE_CHANGE("Delivery Service");
+
+		private String type;
+
+		EventType(final String type) {
+			this.type = type;
+		}
+
+		EventType() {
+		}
+
+		@Override
+		public String toString() {
+			return (type != null) ? type : "UNKNOWN";
+		}
+
+		public void setType(final String type) {
+			this.type = type;
+		}
+	}
+
+	public static Event logStateChange(final String name, final EventType type, final boolean isAvailable, final String message) {
 		final long currentTimeMillis = System.currentTimeMillis();
 		final String timeString = String.format("%d.%03d", currentTimeMillis / 1000, currentTimeMillis % 1000);
 
-		EVENT_LOGGER.info(String.format("%s host=\"%s\", available=%s, msg=\"%s\"", timeString , hostname, String.valueOf(isAvailable), message));
+		EVENT_LOGGER.info(String.format("%s name=\"%s\", type=%s, available=%s, msg=\"%s\"", timeString , name, type, String.valueOf(isAvailable), message));
 
-		final Event ret = new Event(hostname, isAvailable, message);
+		final Event ret = new Event(name, type, isAvailable, message);
 		final int eventLogCount = ConfigHandler.getInstance().getConfig().getEventLogCount();
 
 		synchronized (rollingLog) {
@@ -58,9 +82,11 @@ public class Event extends JSONObject implements Serializable {
 		}
 	}
 
-	public Event(final String hostname, final boolean isAvailable, final String error) {
+	public Event(final String name, final EventType type, final boolean isAvailable, final String error) {
 		try {
-			this.put("hostname", hostname);
+			this.put("hostname", name); // left this to preserve behavior for any dependent uses
+			this.put("name", name);
+			this.put("type", type.toString());
 			this.put("time", System.currentTimeMillis());
 			this.put("index", logIndex++);
 			this.put("isAvailable", isAvailable);

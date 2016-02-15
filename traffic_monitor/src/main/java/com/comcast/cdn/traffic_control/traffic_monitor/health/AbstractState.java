@@ -16,16 +16,21 @@
 
 package com.comcast.cdn.traffic_control.traffic_monitor.health;
 
+import java.util.ArrayList;
 import java.util.Deque;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
 import com.comcast.cdn.traffic_control.traffic_monitor.data.StatisticsLog;
+import com.comcast.cdn.traffic_control.traffic_monitor.health.Event.EventType;
+
 import org.apache.log4j.Logger;
 import org.apache.wicket.ajax.json.JSONArray;
 import org.apache.wicket.ajax.json.JSONException;
 import org.apache.wicket.ajax.json.JSONObject;
+import org.apache.wicket.util.string.Strings;
 
 import com.comcast.cdn.traffic_control.traffic_monitor.data.DataPoint;
 import com.comcast.cdn.traffic_control.traffic_monitor.data.DataSummary;
@@ -49,6 +54,10 @@ abstract public class AbstractState {
 	}
 
 	protected void putDataPoints(final Map<String, String> statistics) {
+		if (statistics == null) {
+			return;
+		}
+
 		synchronized(this) {
 			for(String key : statistics.keySet()) {
 				putDataPoint(key, statistics.get(key));
@@ -137,19 +146,35 @@ abstract public class AbstractState {
 	}
 
 	public String getStatusString() {
-		String error = getLastValue("error-string");
-		if(error == null) {
-			error = isAvailable()? "available" : "";
+		final List<String> errors = new ArrayList<String>();
+		final String error = getLastValue("error-string");
+		final StringBuilder status = new StringBuilder();
+
+		status.append(getLastValue("status"));
+
+		if (error != null) {
+			errors.add(error);
+		} else {
+			errors.add(isAvailable() ? "available" : "unavailable");
 		}
-		if(getBool("clearData")) { error = "No query"; }
-		return getLastValue("status") + " - " + error;
+
+		if (getBool("clearData")) {
+			errors.add("monitoring disabled");
+		}
+
+		if (!errors.isEmpty()) {
+			status.append(" - ");
+			status.append(Strings.join(", ", errors));
+		}
+
+		return status.toString();
 	}
 
 	public boolean isError() {
 		return getLastValue("error-string") != null;
 	}
 
-	public void setAvailable(final boolean isAvailable, final String error) {
+	public void setAvailable(final EventType type, final boolean isAvailable, final String error) {
 		final boolean isHealthy = (error == null);
 		boolean logChange = true;
 
@@ -165,7 +190,7 @@ abstract public class AbstractState {
 		putDataPoint(IS_HEALTHY_STR, String.valueOf(isHealthy));
 
 		if (logChange) {
-			lastEvent = Event.logStateChange(this.getId(), isAvailable, getStatusString());
+			lastEvent = Event.logStateChange(this.getId(), type, isAvailable, getStatusString());
 		}
 	}
 

@@ -7,22 +7,27 @@ public class EmbeddedStati implements java.io.Serializable {
 	private static final long serialVersionUID = 1L;
 	private DsStati currentDtati;
 	private final String id;
+	private StatType statType;
 
-	public EmbeddedStati(final String base, final String id, final String delimiter) {
+	public enum StatType {
+		LOCATION,
+		CACHE,
+		TYPE
+	};
+
+	public EmbeddedStati(final StatType statType, final String id, final String delimiter) {
 		final StringBuilder statId = new StringBuilder();
 
-		if (base != null) {
-			statId.append(base);
-			statId.append(delimiter);
-		}
-
+		statId.append(statType.toString().toLowerCase());
+		statId.append(delimiter);
 		statId.append(id);
 
 		this.id = statId.toString();
+		this.statType = statType;
 	}
 
-	public EmbeddedStati(final String base, final String id) {
-		this(base, id, ".");
+	public EmbeddedStati(final StatType statType, final String id) {
+		this(statType, id, ".");
 	}
 
 	public void accumulate(final DsStati stati) {
@@ -48,5 +53,13 @@ public class EmbeddedStati implements java.io.Serializable {
 
 	public String getId() {
 		return id;
+	}
+
+	public boolean isHidden() {
+		return (statType == StatType.CACHE) ? true : false;
+	}
+
+	public StatType getStatType() {
+		return statType;
 	}
 }
