@@ -1,0 +1,19 @@
+<section id="loginContainer">
+    <div class="panelForm">
+        <h4>Login</h4>
+        <form name="loginForm" role="form" ng-submit="login(credentials)">
+            <div class="formText">
+                <div class="form-item">
+                    <label>Username</label>
+                    <input id="username" name="username" type="text" class="form-control" autocomplete="off" ng-model="credentials.username" autofocus required>
+                </div>
+                <div class="form-item">
+                    <label>Password</label>
+                    <input id="password" name="password" type="password" class="form-control" autocomplete="off" ng-model="credentials.password" required>
+                </div>
+            </div>
+            <button type="submit" class="btn" ng-disabled="loginForm.$invalid">Log in &nbsp;&nbsp;<i class="fa fa-chevron-circle-right fa-lg"></i></button>
+            <button type="button" class="btn btn-link" ng-click="resetPassword()">Reset Password</button>
+        </form>
+    </div>
+</section>

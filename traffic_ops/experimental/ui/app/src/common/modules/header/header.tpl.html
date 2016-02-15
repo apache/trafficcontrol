@@ -1,0 +1,48 @@
+<div class="nav_menu">
+    <nav role="navigation">
+        <div class="nav toggle">
+            <a id="menu_toggle"><i class="fa fa-bars"></i></a>
+        </div>
+        <ul class="nav navbar-nav navbar-right" ng-show="user.loaded">
+            <li>
+                <div class="btn-group" uib-dropdown is-open="userMenu.isopen">
+                    <button id="userButton" type="button" class="btn btn-link" uib-dropdown-toggle>
+                        <span id="headerUsername">{{user.username}}</span><span ng-show="user.newUser">New User</span> <i class="fa fa-angle-down fa-lg"></i>
+                    </button>
+                    <ul class="uib-dropdown-menu dropdown-usermenu animated fadeInDown" role="menu" aria-labelledby="userMenu-button">
+                        <li ng-show="user.localUser"><a ui-sref="trafficOps.private.user.edit">Manage User Profile</a></li>
+                        <li ng-show="!user.loaded"><a ui-sref="trafficOps.public.login">Login</a></li>
+                        <li ng-show="user.loaded"><a ng-click="logout()">Logout</a></li>
+                    </ul>
+                </div>
+            </li>
+            <li role="presentation" class="dropdown">
+                <div class="btn-group" uib-dropdown is-open="alerts.isopen">
+                    <button id="alertsButton" type="button" class="btn btn-link" uib-dropdown-toggle>
+                        <i class="fa fa-comment-o"></i>
+                        <span class="badge bg-green">6</span>
+                    </button>
+                    <ul class="uib-dropdown-menu list-unstyled msg_list animated fadeInDown" role="menu">
+                        <li ng-repeat="i in [1, 2, 3, 4, 5, 6]">
+                            <a>
+                                <span>
+                                    <span>Attention</span>
+                                    <span class="time">{{i}} mins ago</span>
+                                </span>
+                                <span class="message">This is a notification of some sort. You better take action on it or risk termination.</span>
+                            </a>
+                        </li>
+                        <li>
+                            <div class="text-center">
+                                <a>
+                                    <strong><a href="javascript:void(0);">See All Alerts</a></strong>
+                                    <i class="fa fa-angle-right"></i>
+                                </a>
+                            </div>
+                        </li>
+                    </ul>
+                </div>
+            </li>
+        </ul>
+    </nav>
+</div>
