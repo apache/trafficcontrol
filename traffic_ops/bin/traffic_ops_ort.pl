@@ -197,7 +197,7 @@ foreach my $file ( keys ( %{$cfg_file_tracker} ) ) {
 			last;
 		}
 	}
-} 
+}
 
 if ( ($installed_new_ssl_keys) && !$cfg_file_tracker->{'ssl_multicert.config'}->{'change_applied'} ) {
 	my $return = &touch_file('ssl_multicert.config');
@@ -260,7 +260,7 @@ sub process_cfg_file {
 	( $log_level >> $INFO ) && print "\nINFO: ======== Start processing config file: $cfg_file ========\n";
 
 	my $config_dir = $cfg_file_tracker->{$cfg_file}->{'location'};
-	
+
 	$url = &set_url($cfg_file);
 
 	&smart_mkdir($config_dir);
@@ -921,13 +921,13 @@ sub check_plugins {
 			( my @parts ) = split( /\@plugin\=/, $liner );
 			foreach my $i ( 1..$#parts ) {
 				( my $plugin_name, my $plugin_config_file ) = split( /\@pparam\=/, $parts[$i] );
-				($plugin_config_file) = split( /\s+/, $plugin_config_file);
 				if (defined( $plugin_config_file ) ) {
+					($plugin_config_file) = split( /\s+/, $plugin_config_file);
 					( my @parts ) = split( /\//, $plugin_config_file );
 					$plugin_config_file = $parts[$#parts];
 					$plugin_config_file =~ s/\s+//g;
 					if ( !exists($cfg_file_tracker->{$plugin_config_file}->{'remap_plugin_config_file'}) ) {
-						$cfg_file_tracker->{$plugin_config_file}->{'remap_plugin_config_file'} = 1; 
+						$cfg_file_tracker->{$plugin_config_file}->{'remap_plugin_config_file'} = 1;
 					}
 				}
 				$plugin_name =~ s/\s//g;
