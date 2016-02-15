@@ -62,7 +62,7 @@ public class MonitorApplication extends WebApplication {
 		super.init();
 
 		if (!ConfigHandler.getInstance().configFileExists()) {
-			LOGGER.fatal("Cannot find configuration file: " + ConfigHandler.CONFIG_FILEPATH);
+			LOGGER.fatal("Cannot find configuration file: " + ConfigHandler.getInstance().getConfigFile());
 			// This will only stop Tomcat if the security manager allows it
 			// https://tomcat.apache.org/tomcat-6.0-doc/security-manager-howto.html
 			System.exit(1);

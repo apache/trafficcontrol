@@ -16,26 +16,20 @@
 
 package com.comcast.cdn.traffic_control.traffic_monitor.publish;
 
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
-import javax.servlet.http.HttpServletRequest;
-
-import com.comcast.cdn.traffic_control.traffic_monitor.health.DeliveryServiceStateRegistry;
 import org.apache.log4j.Logger;
 import org.apache.wicket.ajax.json.JSONException;
 import org.apache.wicket.ajax.json.JSONObject;
-import org.apache.wicket.request.cycle.RequestCycle;
-import org.apache.wicket.request.http.WebRequest;
 import org.apache.wicket.request.mapper.parameter.PageParameters;
 
 import com.comcast.cdn.traffic_control.traffic_monitor.config.Cache;
 import com.comcast.cdn.traffic_control.traffic_monitor.config.ConfigHandler;
-import com.comcast.cdn.traffic_control.traffic_monitor.config.RouterConfig;
 import com.comcast.cdn.traffic_control.traffic_monitor.config.MonitorConfig;
+import com.comcast.cdn.traffic_control.traffic_monitor.config.RouterConfig;
 import com.comcast.cdn.traffic_control.traffic_monitor.health.AbstractState;
 import com.comcast.cdn.traffic_control.traffic_monitor.health.CacheWatcher;
+import com.comcast.cdn.traffic_control.traffic_monitor.health.DeliveryServiceStateRegistry;
 import com.comcast.cdn.traffic_control.traffic_monitor.health.DsState;
 import com.comcast.cdn.traffic_control.traffic_monitor.health.HealthDeterminer;
 import com.comcast.cdn.traffic_control.traffic_monitor.health.PeerWatcher;
@@ -46,63 +40,72 @@ public class CrStates extends JsonPage {
 	private static CacheWatcher myCacheWatcher;
 	private static PeerWatcher myPeerWatcher;
 	private static HealthDeterminer myHealthDeterminer;
-	private static Map<String,Long> clientIps = new HashMap<String,Long>();
 
 	/**
 	 * Send out the json!!!!
 	 */
 	@Override
 	public JSONObject getJson(final PageParameters pp) throws JSONException {
-		if(myPeerWatcher == null) {
+		if (myPeerWatcher == null) {
 			return null;
 		}
-		boolean raw = true;
+
 		final MonitorConfig config = ConfigHandler.getInstance().getConfig();
 		final RouterConfig crConfig = RouterConfig.getCrConfig();
-		if(crConfig == null || myCacheWatcher.getCycleCount() < config.getStartupMinCycles()) {
+
+		if (crConfig == null || myCacheWatcher.getCycleCount() < config.getStartupMinCycles()) {
 			return null;
 		}
-		if(pp == null || pp.getPosition("raw") == -1) {
-			final WebRequest req = (WebRequest) RequestCycle.get().getRequest();
-			final HttpServletRequest httpReq = (HttpServletRequest) req.getContainerRequest();
-			clientIps.put(httpReq.getRemoteHost(), new Long(System.currentTimeMillis()));
-			raw = false;
-		}
+
+		final boolean raw = (pp.getPosition("raw") != -1);
+		final String cacheType = pp.get("cacheType").toString();
 		final JSONObject o = new JSONObject();
-		o.put("caches", getCrStates(crConfig, raw));
-		if(ConfigHandler.getInstance().getConfig().getPublishDsStates()) {
+		o.put("caches", getCrStates(crConfig, raw, cacheType));
+
+		if (ConfigHandler.getInstance().getConfig().getPublishDsStates()) {
 			o.put("deliveryServices", getDsStates(crConfig));
 		}
+
 		return o;
 	}
 
-	private JSONObject getCrStates(final RouterConfig crConfig, final boolean raw) {
+	private JSONObject getCrStates(final RouterConfig crConfig, final boolean raw, final String cacheType) {
 		if (crConfig == null) {
 			return null;
 		}
+
 		try {
 			final JSONObject servers = new JSONObject();
 			final List<Cache> caches = crConfig.getCacheList();
-			for(Cache c : caches) {
+
+			for (Cache c : caches) {
 				synchronized(c) {
-					if(c.getControls() == null) { continue; }
+					if (c.getControls() == null || (cacheType != null && !cacheType.equals(c.getType()))) {
+						continue;
+					}
+
 					final MonitorConfig config = ConfigHandler.getInstance().getConfig();
 					servers.put(c.getHostname(), myHealthDeterminer.getJSONStats(c, config.getPeerOptimistic(), raw));
 				}
 			}
-			if(servers.length()==0) {
+
+			if (servers.length() == 0) {
 				LOGGER.warn("no caches returned! ");
 			}
+
 			return servers;
 		} catch (JSONException e) {
-			LOGGER.warn(e,e);
+			LOGGER.warn(e, e);
 		}
+
 		return null;
 	}
+
 	private JSONObject getDsStates(final RouterConfig crConfig) {
-		if(crConfig == null) {
+		if (crConfig == null) {
 			return null;
 		}
+
 		try {
 			final JSONObject ret = new JSONObject();
 
@@ -114,14 +117,15 @@ public class CrStates extends JsonPage {
 				}
 
 				dsJo.put(AbstractState.IS_AVAILABLE_STR, dsState.isAvailable());
-				dsJo.put("disabledLocations", dsState.getDisabledLocations());
+				dsJo.put(DsState.DISABLED_LOCATIONS, dsState.getDisabledLocations());
 				ret.put(dsState.getId(), dsJo);
 			}
 
 			return ret;
 		} catch (JSONException e) {
-			LOGGER.warn(e,e);
+			LOGGER.warn(e, e);
 		}
+
 		return null;
 	}
 
@@ -131,4 +135,3 @@ public class CrStates extends JsonPage {
 		myHealthDeterminer = hd;
 	}
 }
-

@@ -16,6 +16,7 @@
 
 package com.comcast.cdn.traffic_control.traffic_monitor.health;
 
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -23,15 +24,17 @@ import org.apache.wicket.ajax.json.JSONArray;
 import org.apache.wicket.ajax.json.JSONException;
 import org.apache.wicket.ajax.json.JSONObject;
 
+import com.comcast.cdn.traffic_control.traffic_monitor.health.EmbeddedStati.StatType;
+
 public class DsState extends AbstractState {
 	private static final long serialVersionUID = 1L;
+	final private Map<StatType, Map<String, EmbeddedStati>> aggregateStats = new HashMap<StatType, Map<String, EmbeddedStati>>();
+	final public static String DISABLED_LOCATIONS = "disabledLocations";
 
 	private DsStati currentDsStati;
 	private int cachesConfigured = 0;
 	private int cachesAvailable = 0;
 	private int cachesReporting = 0;
-	final private Map<String, EmbeddedStati> locs = new HashMap<String, EmbeddedStati>();
-	final private Map<String, EmbeddedStati> cacheStatiMap = new HashMap<String, EmbeddedStati>();
 
 	public DsState(final String id) {
 		super(id);
@@ -48,23 +51,23 @@ public class DsState extends AbstractState {
 			currentDsStati.accumulate(stati);
 		}
 
-		EmbeddedStati loc = locs.get(location);
+		aggregateStats(StatType.LOCATION, location, stati);
+		aggregateStats(StatType.CACHE, state.id, stati);
+		aggregateStats(StatType.TYPE, state.getCache().getType(), stati);
+	}
 
-		if (loc == null) {
-			loc = new EmbeddedStati("location", location);
-			locs.put(location,loc);
+	private void aggregateStats(final StatType statType, final String statKey, final DsStati dsStat) {
+		if (!aggregateStats.containsKey(statType)) {
+			aggregateStats.put(statType, new HashMap<String, EmbeddedStati>());
 		}
 
-		loc.accumulate(stati);
+		final Map<String, EmbeddedStati> aggregate = aggregateStats.get(statType);
 
-		EmbeddedStati cacheStati = cacheStatiMap.get(state.id);
-
-		if (cacheStati == null) {
-			cacheStati = new EmbeddedStati("cache", state.id);
-			cacheStatiMap.put(state.id, cacheStati);
+		if (!aggregate.containsKey(statKey)) {
+			aggregate.put(statKey, new EmbeddedStati(statType, statKey));
 		}
 
-		cacheStati.accumulate(stati);
+		aggregate.get(statKey).accumulate(dsStat);
 	}
 
 	public boolean completeRound(final JSONObject dsControls) {
@@ -83,43 +86,52 @@ public class DsState extends AbstractState {
 
 		HealthDeterminer.setIsAvailable(this, dsControls);
 
-		final StringBuilder sb = new StringBuilder();
-
-		for (String locId : locs.keySet()) {
-			final EmbeddedStati loc = locs.get(locId);
-			final Map<String, String> stati = loc.completeRound();
-
-			if (stati == null) {
-				continue;
-			}
-
-			putDataPoints(stati);
-
-			if (!HealthDeterminer.setIsAvailable(this, loc, dsControls)) {
-				sb.append("\"").append(locId).append("\", ");
-			}
-		}
-
-		putDataPoint("disabledLocations", sb.toString());
-
-		for (String cacheId : cacheStatiMap.keySet()) {
-			final EmbeddedStati cacheStat = cacheStatiMap.get(cacheId);
-			final Map<String, String> stati = cacheStat.completeRound();
-
-			if (stati == null) {
-				continue;
-			}
-
-			addHiddenStats(stati.keySet());
-
-			putDataPoints(stati);
+		for (Map<String, EmbeddedStati> aggregate : aggregateStats.values()) {
+			processDataPoints(aggregate.values(), dsControls);
 		}
 
 		return true;
 	}
 
+	private void processDataPoints(final Collection<EmbeddedStati> stats, final JSONObject dsControls) {
+		final Map<StatType, StringBuilder> disabled = new HashMap<StatType, StringBuilder>();
+
+		for (EmbeddedStati stat : stats) {
+			final Map<String, String> points = stat.completeRound();
+
+			if (points == null) {
+				continue;
+			}
+
+			putDataPoints(points);
+
+			if (stat.isHidden()) {
+				addHiddenStats(points.keySet());
+			}
+
+			if (stat.getStatType() == StatType.LOCATION) {
+				if (!disabled.containsKey(stat.getStatType())) {
+					disabled.put(stat.getStatType(), new StringBuilder());
+				}
+
+				if (!HealthDeterminer.setIsLocationAvailable(this, stat, dsControls)) {
+					disabled.get(stat.getStatType()).append("\"").append(stat.getId()).append("\", ");
+				}
+			}
+		}
+
+		for (StatType statType : disabled.keySet()) {
+			final StringBuilder sb = disabled.get(statType);
+
+			if (statType == StatType.LOCATION && sb != null) {
+				final String s = sb.toString();
+				putDataPoint(DISABLED_LOCATIONS, s);
+			}
+		}
+	}
+
 	public JSONArray getDisabledLocations() throws JSONException {
-		return new JSONArray("["+this.getLastValue("disabledLocations")+"]");
+		return new JSONArray("["+this.getLastValue(DISABLED_LOCATIONS)+"]");
 	}
 
 	public void addCacheConfigured() {

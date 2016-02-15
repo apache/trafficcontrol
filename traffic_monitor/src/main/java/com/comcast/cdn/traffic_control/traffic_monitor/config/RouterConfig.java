@@ -63,17 +63,17 @@ public class RouterConfig {
 				final Peer peer = new Peer(id, peers.optJSONObject(id));
 
 				if (Network.isIpAddressLocal(peer.getIpAddress())) {
-					LOGGER.warn("Skipping monitor " + id + "; IP address " + peer.getIpAddress() + " is local");
+					LOGGER.debug("Skipping monitor " + id + "; IP address " + peer.getIpAddress() + " is local");
 					continue;
 				}
 
 				if (Network.isLocalName(peer.getFqdn())) {
-					LOGGER.warn("Skipping monitor " + id + "; fqdn " + peer.getFqdn() + " is the local fully qualified name");
+					LOGGER.debug("Skipping monitor " + id + "; fqdn " + peer.getFqdn() + " is the local fully qualified name");
 					continue;
 				}
 
 				if (Network.isLocalName(id)) {
-					LOGGER.warn("Skipping monitor " + id + "; short name " + id + " is the local hostname");
+					LOGGER.debug("Skipping monitor " + id + "; short name " + id + " is the local hostname");
 					continue;
 				}
 

@@ -22,6 +22,7 @@ import java.util.TreeMap;
 
 import com.comcast.cdn.traffic_control.traffic_monitor.health.AbstractState;
 import com.comcast.cdn.traffic_control.traffic_monitor.health.DeliveryServiceStateRegistry;
+import com.comcast.cdn.traffic_control.traffic_monitor.health.DsState;
 import com.comcast.cdn.traffic_control.traffic_monitor.wicket.models.DsStateModel;
 import org.apache.wicket.Component;
 import org.apache.wicket.Page;
@@ -132,7 +133,7 @@ public class DsListPanel extends Panel {
 				label = new Label("tps_5xx", new DsStateModel(dsName, "total.tps_5xx"));
 				label.add(updater);
 				item.add(label);
-				label = new Label("disabled", new DsStateModel(dsName, "disabledLocations"));
+				label = new Label("disabled", new DsStateModel(dsName, DsState.DISABLED_LOCATIONS));
 				label.add(updater);
 				item.add(label);
 
