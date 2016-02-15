@@ -110,7 +110,9 @@ public class DsState extends AbstractState {
 			}
 
 			if (stat.getStatType() == StatType.LOCATION) {
-				disabled.put(stat.getStatType(), new StringBuilder());
+				if (!disabled.containsKey(stat.getStatType())) {
+					disabled.put(stat.getStatType(), new StringBuilder());
+				}
 
 				if (!HealthDeterminer.setIsLocationAvailable(this, stat, dsControls)) {
 					disabled.get(stat.getStatType()).append("\"").append(stat.getId()).append("\", ");
