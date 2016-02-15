@@ -319,14 +319,21 @@ public class HealthDeterminer {
 		}
 
 		if (raw) {
-			String error = c.getState().getLastValue(ERROR_STRING);
+
+			String error = null;
+			String status = c.getStatus();
+
+			if (c.getState() != null) {
+				 error = c.getState().getLastValue(ERROR_STRING);
+				status = c.getState().getLastValue(STATUS);
+			}
 
 			if (error == null) {
 				error = NO_ERROR_FOUND;
 			}
 
 			cj.put(ERROR_STRING, error);
-			cj.put(STATUS, c.getState().getLastValue(STATUS));
+			cj.put(STATUS, status);
 		}
 
 		return cj;
