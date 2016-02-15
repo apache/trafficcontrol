@@ -77,8 +77,8 @@ type StartupConfig struct {
 // RunningConfig is used to store runtime configuration for Traffic Stats.  This includes information
 // about caches, cachegroups, health urls, and online InfluxDB servers
 type RunningConfig struct {
-	HealthUrls      map[string]map[string]string // the 1st map key is CDN_name, the second is DsStats or CacheStats
-	CacheGroupMap   map[string]string            // map hostName to cacheGroup
+	HealthUrls      map[string]map[string]string  // the 1st map key is CDN_name, the second is DsStats or CacheStats
+	CacheMap        map[string]traffic_ops.Server // map hostName to cache
 	InfluxDBs       []*InfluxDBProps
 	LastSummaryTime time.Time
 }
@@ -160,7 +160,7 @@ func main() {
 			for cdnName, urls := range runningConfig.HealthUrls {
 				for _, url := range urls {
 					log.Debug(cdnName, " -> ", url)
-					go calcMetrics(cdnName, url, runningConfig.CacheGroupMap, config, runningConfig)
+					go calcMetrics(cdnName, url, runningConfig.CacheMap, config, runningConfig)
 				}
 			}
 		case now := <-tickers.DailySummary:
@@ -396,9 +396,9 @@ func getToData(config StartupConfig, init bool, configChan chan RunningConfig) {
 		return
 	}
 
-	runningConfig.CacheGroupMap = make(map[string]string)
+	runningConfig.CacheMap = make(map[string]traffic_ops.Server)
 	for _, server := range servers {
-		runningConfig.CacheGroupMap[server.HostName] = server.Location
+		runningConfig.CacheMap[server.HostName] = server
 		if server.Type == "INFLUXDB" && server.Status == "ONLINE" {
 			fqdn := server.HostName + "." + server.DomainName
 			port, err := strconv.ParseInt(server.TcpPort, 10, 32)
@@ -470,7 +470,7 @@ func getToData(config StartupConfig, init bool, configChan chan RunningConfig) {
 	configChan <- runningConfig
 }
 
-func calcMetrics(cdnName string, url string, cacheGroupMap map[string]string, config StartupConfig, runningConfig RunningConfig) {
+func calcMetrics(cdnName string, url string, cacheMap map[string]traffic_ops.Server, config StartupConfig, runningConfig RunningConfig) {
 	sampleTime := int64(time.Now().Unix())
 	// get the data from trafficMonitor
 	trafMonData, err := getURL(url)
@@ -480,7 +480,7 @@ func calcMetrics(cdnName string, url string, cacheGroupMap map[string]string, co
 	}
 
 	if strings.Contains(url, "CacheStats") {
-		err = calcCacheValues(trafMonData, cdnName, sampleTime, cacheGroupMap, config)
+		err = calcCacheValues(trafMonData, cdnName, sampleTime, cacheMap, config)
 	} else if strings.Contains(url, "DsStats") {
 		err = calcDsValues(trafMonData, cdnName, sampleTime, config)
 	} else {
@@ -621,7 +621,7 @@ func calcDsValues(rascalData []byte, cdnName string, sampleTime int64, config St
 }
 */
 
-func calcCacheValues(trafmonData []byte, cdnName string, sampleTime int64, cacheGroupMap map[string]string, config StartupConfig) error {
+func calcCacheValues(trafmonData []byte, cdnName string, sampleTime int64, cacheMap map[string]traffic_ops.Server, config StartupConfig) error {
 
 	type CacheStatsJSON struct {
 		Pp     string `json:"pp"`
@@ -647,6 +647,8 @@ func calcCacheValues(trafmonData []byte, cdnName string, sampleTime int64, cache
 		errHndlr(err, ERROR)
 	}
 	for cacheName, cacheData := range jData.Caches {
+		cache := cacheMap[cacheName]
+
 		for statName, statData := range cacheData {
 			dataKey := statName
 			dataKey = strings.Replace(dataKey, ".bandwidth", ".kbps", 1)
@@ -667,9 +669,10 @@ func calcCacheValues(trafmonData []byte, cdnName string, sampleTime int64, cache
 				statFloatValue = 0.00
 			}
 			tags := map[string]string{
-				"cachegroup": cacheGroupMap[cacheName],
+				"cachegroup": cache.Location,
 				"hostname":   cacheName,
 				"cdn":        cdnName,
+				"type":       cache.Type,
 			}
 
 			fields := map[string]interface{}{
