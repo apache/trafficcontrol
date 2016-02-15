@@ -1,0 +1,31 @@
+<div class="main-nav scroll-view">
+    <div class="navbar nav_title">
+        <span class="site_title">Traffic Ops</span>
+    </div>
+    <div class="clearfix"></div>
+    <div id="sidebar-menu" class="main_menu_side hidden-print main_menu">
+        <div class="menu_section">
+            <ul class="nav side-menu">
+                <li class="side-menu-category"><a href="javascript:void(0);"><i class="fa fa-bar-chart"></i> Monitor <span class="fa fa-chevron-down"></span></a>
+                    <ul class="nav child_menu" style="display: none">
+                        <li class="side-menu-category-item" ng-class="{'current-page': isState('trafficOps.private.dashboards.one')}"><a ng-click="navigateToPath('/dashboards/one')">Dashboard 1</a></li>
+                        <li class="side-menu-category-item" ng-class="{'current-page': isState('trafficOps.private.dashboards.two')}"><a ng-click="navigateToPath('/dashboards/two')">Dashboard 2</a></li>
+                        <li class="side-menu-category-item" ng-class="{'current-page': isState('trafficOps.private.dashboards.three')}"><a ng-click="navigateToPath('/dashboards/three')">Dashboard 3</a></li>
+                    </ul>
+                </li>
+                <li class="side-menu-category"><a href="javascript:void(0);"><i class="fa fa-cog"></i> Settings <span class="fa fa-chevron-down"></span></a>
+                    <ul class="nav child_menu" style="display: none">
+                        <li class="side-menu-category-item" ng-class="{'current-page': isState('trafficOps.private.user.edit')}"><a ng-click="navigateToPath('/user')">User Profile</a></li>
+                    </ul>
+                </li>
+            </ul>
+        </div>
+    </div>
+    <div class="sidebar-footer hidden-small">
+        <a title="Logout" ng-show="user.loaded" ng-click="logout()" uib-popover="Logout" popover-trigger="mouseenter"><i class="fa fa-sign-out"></i></a>
+        <a title="Login" ng-show="!user.loaded" ui-sref="trafficOps.public.login" uib-popover="Login" popover-trigger="mouseenter"><i class="fa fa-sign-in"></i></a>
+        <a title="Settings" uib-popover="Settings" popover-trigger="mouseenter"><i class="fa fa-cog"></i></a>
+        <a title="Release Info" ng-click="releaseVersion()" uib-popover="Release Info" popover-trigger="mouseenter"><i class="fa fa-info"></i></a>
+        <a title="Popout" uib-popover="Popout" popover-trigger="mouseenter"><i class="fa fa-external-link"></i></a>
+    </div>
+</div>
