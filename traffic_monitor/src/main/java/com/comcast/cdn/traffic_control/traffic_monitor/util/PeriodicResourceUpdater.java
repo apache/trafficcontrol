@@ -60,11 +60,13 @@ public class PeriodicResourceUpdater {
 		private boolean hasBeenLoaded = false;
 
 		private void putCurrent() {
-			final File existingDB = new File(ConfigHandler.getInstance().getDbDir() + databaseLocation);
-			if(existingDB.exists()) {
-				LOGGER.warn("loading: "+existingDB.getAbsolutePath());
+			final File existingDB = ConfigHandler.getInstance().getDbFile(databaseLocation);
+
+			if (existingDB.exists()) {
+				LOGGER.warn("loading: " + existingDB.getAbsolutePath());
 				listener.update(existingDB);
 			}
+
 			hasBeenLoaded = true;
 		}
 	}
@@ -152,7 +154,7 @@ public class PeriodicResourceUpdater {
 	}
 
 	public boolean updateDatabase(final UpdateModel um) {
-		final File existingDB = new File(ConfigHandler.getInstance().getDbDir() + um.databaseLocation);
+		final File existingDB = ConfigHandler.getInstance().getDbFile(um.databaseLocation);
 		File newDB = null;
 		try {
 			if (um.hasBeenLoaded) {

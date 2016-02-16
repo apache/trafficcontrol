@@ -8,7 +8,8 @@
 	<wicket:panel>
 		<table style="width: 100%;" class="eventLog">
 			<tr>
-				<th>Server</th>
+				<th>Name</th>
+				<th>Type</th>
 				<th>Status</th>
 				<th>Description</th>
 				<th>Event Time</th>
@@ -18,14 +19,16 @@
 					<td>
 					<span wicket:id="index" class="hidden" data-id="index"></span>
 					<span wicket:id="timeraw" class="hidden" data-id="time"></span>
-					<span wicket:id="hostname" data-id="hostname"></span>
+					<span wicket:id="name" data-id="name"></span>
 					</td>
+					<td><span wicket:id="type" data-id="type"></span></td>
 					<td><span wicket:id="status" data-id="status"></span></td>
 					<td><span wicket:id="description" data-id="description"></span></td>
 					<td><span wicket:id="time" data-id="time"></span></td>
 				</tr>
 				<tr class="hidden template">
-					<td><span data-id="hostname"></span></td>
+					<td><span data-id="name"></span></td>
+					<td><span data-id="type"></span></td>
 					<td><span data-id="status"></span></td>
 					<td><span data-id="description"></span></td>
 					<td><span data-id="time"></span></td>

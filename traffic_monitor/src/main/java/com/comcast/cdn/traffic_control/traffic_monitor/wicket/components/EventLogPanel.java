@@ -70,7 +70,8 @@ public class EventLogPanel extends Panel {
 					}
 					item.add(new Label("timeraw", Long.toString(jo.getLong("time"))));
 					item.add(new Label("description", jo.getString("description")));
-					item.add(new Label("hostname", jo.getString("hostname")));
+					item.add(new Label("name", jo.getString("name")));
+					item.add(new Label("type", jo.getString("type")));
 					String status = "available";
 					if(!jo.getBoolean("isAvailable")) {
 						status = "offline";

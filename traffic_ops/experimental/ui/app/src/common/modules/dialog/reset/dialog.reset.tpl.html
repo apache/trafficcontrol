@@ -1,0 +1,21 @@
+<div class="modal-header">
+    <button type="button" class="close" ng-click="cancel()"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+    <h5 class="modal-title">Reset User Password</h5>
+</div>
+<div class="modal-body">
+    <form name="resetPasswordForm" class="form-horizontal" role="form" novalidate>
+        <div class="form-group" ng-class="{'has-error': hasError(resetPasswordForm.email), 'has-feedback': hasError(resetPasswordForm.email)}">
+            <label for="email" class="col-sm-2 control-label">Email:</label>
+            <div class="col-sm-10">
+                <input id="email" name="email" type="email" class="form-control" placeholder="Enter your email" ng-model="userData.email" required>
+                <small class="input-error" ng-show="hasPropertyError(resetPasswordForm.email, 'required')">Required</small>
+                <small class="input-error" ng-show="hasPropertyError(resetPasswordForm.email, 'email')">Invalid email</small>
+                <span ng-show="hasError(resetPasswordForm.email)" class="form-control-feedback"><i class="fa fa-times"></i></span>
+            </div>
+        </div>
+    </form>
+</div>
+<div class="modal-footer">
+    <button class="btn btn-default" ng-click="cancel()">Cancel</button>
+    <button class="btn btn-primary" ng-disabled="resetPasswordForm.$pristine || resetPasswordForm.$invalid" ng-click="reset(userData.email)">Reset</button>
+</div>

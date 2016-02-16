@@ -26,6 +26,7 @@ import org.apache.wicket.ajax.json.JSONException;
 import org.apache.wicket.ajax.json.JSONObject;
 
 import com.comcast.cdn.traffic_control.traffic_monitor.config.Cache;
+import com.comcast.cdn.traffic_control.traffic_monitor.health.Event.EventType;
 import com.comcast.cdn.traffic_control.traffic_monitor.util.Updatable;
 
 public class HealthDeterminer {
@@ -162,15 +163,19 @@ public class HealthDeterminer {
 		final String error = getErrorString(cache, state);
 		state.putDataPoint(STATUS, status);
 		state.putDataPoint(ERROR_STRING, error);
-		final boolean isHealthy = (error==null);
-		state.setAvailable(getIsAvailable(cache, isHealthy), error);
+		final boolean isHealthy = (error == null);
+		final EventType type = EventType.CACHE_STATE_CHANGE;
+		type.setType(cache.getType());
+		state.setAvailable(type, getIsAvailable(cache, isHealthy), error);
 	}
 
 	public void setIsAvailable(final Cache cache, final String e, final CacheState state) {
 		final String status = cache.getStatus();
 		state.putDataPoint(STATUS, status);
 		state.putDataPoint(ERROR_STRING, e);
-		state.setAvailable(getIsAvailable(cache, false), e);
+		final EventType type = EventType.CACHE_STATE_CHANGE;
+		type.setType(cache.getType());
+		state.setAvailable(type, getIsAvailable(cache, false), e);
 	}
 
 	private boolean shouldClearData(final String status) {
@@ -293,34 +298,41 @@ public class HealthDeterminer {
 	}
 
 
-	public JSONObject getJSONStats(final Cache c, final boolean peerOptimistic, final boolean raw) throws JSONException {
-		final JSONObject cj = new JSONObject();
-		final boolean isAvailableKnown = c.isAvailableKnown();
-		final boolean isAvailable = c.isAvailable();
+	public JSONObject getJSONStats(final Cache cache, final boolean peerOptimistic, final boolean raw) throws JSONException {
+		final JSONObject statsJson = new JSONObject();
+		final boolean isAvailableKnown = cache.isAvailableKnown();
+		final boolean isAvailable = cache.isAvailable();
 
-		if (!raw && peerOptimistic && PeerState.isCacheAvailableOnAnyPeer(c)) {
-			cj.put(IS_AVAILABLE_KEY, getIsAvailable(c, true)); // ensure status overrides peer
-			return cj;
+		if (!raw && peerOptimistic && PeerState.isCacheAvailableOnAnyPeer(cache)) {
+			statsJson.put(IS_AVAILABLE_KEY, getIsAvailable(cache, true)); // ensure status overrides peer
+			return statsJson;
 		}
 
 		if (isAvailableKnown) {
-			cj.put(IS_AVAILABLE_KEY, isAvailable);
+			statsJson.put(IS_AVAILABLE_KEY, isAvailable);
 		} else {
-			cj.put(IS_AVAILABLE_KEY, "unknown");
+			statsJson.put(IS_AVAILABLE_KEY, "unknown");
 		}
 
 		if (raw) {
-			String error = c.getState().getLastValue(ERROR_STRING);
+
+			String error = null;
+			String status = cache.getStatus();
+
+			if (cache.getState() != null) {
+				error = cache.getState().getLastValue(ERROR_STRING);
+				status = cache.getState().getLastValue(STATUS);
+			}
 
 			if (error == null) {
 				error = NO_ERROR_FOUND;
 			}
 
-			cj.put(ERROR_STRING, error);
-			cj.put(STATUS, c.getState().getLastValue(STATUS));
+			statsJson.put(ERROR_STRING, error);
+			statsJson.put(STATUS, status);
 		}
 
-		return cj;
+		return statsJson;
 	}
 
 	public int getConnectionTimeout(final Cache cache, final int d) {
@@ -337,23 +349,26 @@ public class HealthDeterminer {
 		return deliveryServices.optJSONObject(id);
 	}
 	public static void setIsAvailable(final DsState dsState, final JSONObject dsControls) {
-		if(dsControls == null) {
+		final EventType type = EventType.DELIVERY_SERVICE_STATE_CHANGE;
+
+		if (dsControls == null) {
 			dsState.putDataPoint(STATUS, "ONLINE");
-			dsState.setAvailable(getIsAvailable("ONLINE", true), null);
+			dsState.setAvailable(type, getIsAvailable("ONLINE", true), null);
 			return;
 		}
+
 		// first check ONLINEness
 		final String status = dsControls.optString(STATUS);
 		final String error = getErrorString(dsControls, dsState);
 		dsState.putDataPoint(STATUS, status);
 		dsState.putDataPoint(ERROR_STRING, error);
-		final boolean isHealthy = (error==null);
-		dsState.setAvailable(getIsAvailable(status, isHealthy), error);
+		final boolean isHealthy = (error == null);
+		dsState.setAvailable(EventType.DELIVERY_SERVICE_STATE_CHANGE, getIsAvailable(status, isHealthy), error);
 	}
 	private static String getErrorString(final JSONObject dsControls, final DsState dsState) {
 		return mapControlsToError(dsControls, dsState, "");
 	}
-	public static boolean setIsAvailable(final DsState dsState, final EmbeddedStati loc, final JSONObject dsControls) {
+	public static boolean setIsLocationAvailable(final DsState dsState, final EmbeddedStati loc, final JSONObject dsControls) {
 		boolean isAvailable = true;
 		String error = null;
 		if(dsControls != null) {

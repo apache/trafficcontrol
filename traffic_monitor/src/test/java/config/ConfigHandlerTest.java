@@ -25,13 +25,11 @@ import static org.powermock.api.mockito.PowerMockito.whenNew;
 @RunWith(PowerMockRunner.class)
 public class ConfigHandlerTest {
 	static File mockConfigFile = mock(File.class);
-	static File mockDbDirectory = mock(File.class);
 	static ConfigHandler configHandler;
 
 	@BeforeClass
 	public static void beforeClass() throws Exception {
 		whenNew(File.class).withArguments("/opt/traffic_monitor/conf/traffic_monitor_config.js").thenReturn(mockConfigFile);
-		whenNew(File.class).withArguments("/opt/traffic_monitor/db/").thenReturn(mockDbDirectory);
 		configHandler = ConfigHandler.getInstance();
 	}
 
@@ -78,10 +76,7 @@ public class ConfigHandlerTest {
 	}
 
 	@Test
-	public void itReportsTheDatabaseDirectoryExists() {
-		assertThat(configHandler.getDbDir(), nullValue());
-
-		when(mockDbDirectory.exists()).thenReturn(true);
-		assertThat(configHandler.getDbDir(), equalTo("/opt/traffic_monitor/db/"));
+	public void itReturnsCorrectPathToDbFile() {
+		assertThat(configHandler.getDbFile("health-config.json").toString(), equalTo("/opt/traffic_monitor/db/health-config.json"));
 	}
 }

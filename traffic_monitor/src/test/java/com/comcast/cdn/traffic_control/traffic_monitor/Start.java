@@ -16,6 +16,8 @@
 
 package com.comcast.cdn.traffic_control.traffic_monitor;
 
+import java.util.Properties;
+
 import org.apache.wicket.util.time.Duration;
 import org.eclipse.jetty.http.ssl.SslContextFactory;
 import org.eclipse.jetty.server.Server;
@@ -24,8 +26,12 @@ import org.eclipse.jetty.server.ssl.SslSocketConnector;
 import org.eclipse.jetty.util.resource.Resource;
 import org.eclipse.jetty.webapp.WebAppContext;
 
+import com.comcast.cdn.traffic_control.traffic_monitor.config.ConfigHandler;
+
 public class Start {
     public static void main(String[] args) throws Exception {
+        System.getProperties().setProperty(ConfigHandler.CONFIG_PROPERTY, "target/test-classes/conf/traffic_monitor_config.js");
+        System.getProperties().setProperty(ConfigHandler.DB_PROPERTY, "target/test-classes/db/");
         int timeout = (int) Duration.ONE_HOUR.getMilliseconds();
 
         Server server = new Server();

@@ -34,16 +34,15 @@ public class CacheStats extends JsonPage {
 	 */
 	@Override
 	public JSONObject getJson(final PageParameters pp) throws JSONException {
-		String str = pp.get("hc").toString();
-		int hc = 0;
-		try {
-			hc = Integer.parseInt(str);
-		} catch(Exception e) {hc = 0;}
 		String[] stats = null;
-		str = pp.get("stats").toString();
-		if(str != null) {
+		final String str = pp.get("stats").toString();
+		final int hc = pp.get("hc").toInt(0);
+
+		if (str != null) {
 			stats = str.split(",");
 		}
+
+		final String type = pp.get("type").toString();
 		final boolean wildcard = pp.get("wildcard").toBoolean(false);
 		final boolean hidden = pp.get("hidden").toBoolean(false);
 		final String host = pp.get(0).toString();
@@ -51,20 +50,24 @@ public class CacheStats extends JsonPage {
 		o.put("date", new Date().toString());
 		o.put("pp", pp);
 		final JSONObject servers = new JSONObject();
-		if(host != null && !host.equals("")) {
-			if(cacheStateRegistry.has(host)) {
-				servers.put(host,cacheStateRegistry.get(host).getStatsJson(hc, stats, wildcard, hidden));
+
+		if (host != null && !host.equals("")) {
+			if (cacheStateRegistry.has(host)) {
+				servers.put(host, cacheStateRegistry.get(host).getStatsJson(hc, stats, wildcard, hidden));
 			} else {
-				o.put("error", "Hostname not found: "+host);
+				o.put("error", "Hostname not found: " + host);
 			}
 		} else {
 			for (CacheState cacheState : cacheStateRegistry.getAll()) {
-				servers.put(cacheState.getId(),cacheState.getStatsJson(hc, stats, wildcard, hidden));
+				if (type == null || type.equals(cacheState.getCache().getType())) {
+					servers.put(cacheState.getId(), cacheState.getStatsJson(hc, stats, wildcard, hidden));
+				}
 			}
 		}
+
 		o.put("caches", servers);
+
 		return o;
 	}
 
 }
-

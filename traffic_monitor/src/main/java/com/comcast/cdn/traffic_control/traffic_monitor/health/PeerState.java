@@ -27,6 +27,7 @@ import org.apache.log4j.Logger;
 
 import com.comcast.cdn.traffic_control.traffic_monitor.config.Cache;
 import com.comcast.cdn.traffic_control.traffic_monitor.config.Peer;
+import com.comcast.cdn.traffic_control.traffic_monitor.health.Event.EventType;
 
 public class PeerState extends AbstractState {
 	private static final Logger LOGGER = Logger.getLogger(PeerState.class);
@@ -176,6 +177,8 @@ public class PeerState extends AbstractState {
 
 	public static void logOverride(final Cache c) {
 		final Boolean state = overrideMap.get(c.getFqdn());
+		final EventType type = EventType.CACHE_STATE_CHANGE;
+		type.setType(c.getType());
 
 		if (PeerState.hasOnlinePeers()) {
 			final List<Peer> onlineList = PeerState.getCacheAvailableOnPeers(c);
@@ -184,7 +187,7 @@ public class PeerState extends AbstractState {
 				if (state == null || !state.booleanValue()) {
 					final StringBuffer msg = new StringBuffer("Health protocol override condition detected; healthy on (at least) ");
 					msg.append(Arrays.toString(onlineList.toArray()).replaceAll("\\[|\\]", ""));
-					Event.logStateChange(c.getHostname(), true, msg.toString());
+					Event.logStateChange(c.getHostname(), type, true, msg.toString());
 					overrideMap.put(c.getFqdn(), true);
 				}
 			} else if (onlineList.isEmpty()) {
@@ -199,13 +202,13 @@ public class PeerState extends AbstractState {
 						msg.append("; local state unknown");
 					}
 
-					Event.logStateChange(c.getHostname(), c.isAvailable(), msg.toString());
+					Event.logStateChange(c.getHostname(), type, c.isAvailable(), msg.toString());
 					overrideMap.put(c.getFqdn(), false);
 				}
 			}
 		} else if (state != null && state.booleanValue()) {
 			final StringBuffer msg = new StringBuffer("Health protocol override condition irrelevant; no peers online");
-			Event.logStateChange(c.getHostname(), c.isAvailable(), msg.toString());
+			Event.logStateChange(c.getHostname(), type, c.isAvailable(), msg.toString());
 			overrideMap.put(c.getFqdn(), false);
 		}
 	}
@@ -215,7 +218,9 @@ public class PeerState extends AbstractState {
 			final Boolean state = overrideMap.get(c.getFqdn());
 
 			if (state.booleanValue()) {
-				Event.logStateChange(c.getHostname(), true, "Health protocol override condition cleared; healthy locally");
+				final EventType type = EventType.CACHE_STATE_CHANGE;
+				type.setType(c.getType());
+				Event.logStateChange(c.getHostname(), type, true, "Health protocol override condition cleared; healthy locally");
 			}
 
 			overrideMap.remove(c.getFqdn());
@@ -242,7 +247,7 @@ public class PeerState extends AbstractState {
 				sb.append(reason);
 			}
 
-			Event.logStateChange(peer.getHostname(), reachable, sb.toString());
+			Event.logStateChange(peer.getHostname(), EventType.PEER_STATE_CHANGE, reachable, sb.toString());
 		}
 
 		this.reachable = reachable;

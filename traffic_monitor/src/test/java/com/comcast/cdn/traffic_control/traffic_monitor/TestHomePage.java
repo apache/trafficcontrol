@@ -32,6 +32,10 @@ import static org.powermock.api.mockito.PowerMockito.mock;
 import static org.powermock.api.mockito.PowerMockito.mockStatic;
 import static org.powermock.api.mockito.PowerMockito.when;
 
+import java.io.File;
+
+import static org.mockito.Matchers.anyString;
+
 @PrepareForTest({ConfigHandler.class, CacheWatcher.class, SSLContext.class})
 @RunWith(PowerMockRunner.class)
 public class TestHomePage {
@@ -56,6 +60,7 @@ public class TestHomePage {
 
 		when(configHandler.getConfig()).thenReturn(monitorConfig);
 		when(configHandler.configFileExists()).thenReturn(true);
+		when(configHandler.getDbFile(anyString())).thenReturn(mock(File.class));
 
 		mockStatic(ConfigHandler.class);
 		when(ConfigHandler.getInstance()).thenReturn(configHandler);
