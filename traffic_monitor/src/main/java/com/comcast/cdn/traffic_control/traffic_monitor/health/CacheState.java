@@ -43,7 +43,9 @@ public class CacheState extends AbstractState {
 	public void setError(final String error) {
 		putDataPoint(STATUS, cache.getStatus());
 		putDataPoint(ERROR_STRING, error);
-		setAvailable(getIsAvailable(false), error);
+		final Event.EventType type = Event.EventType.CACHE_STATE_CHANGE;
+		type.setType(cache.getType());
+		setAvailable(type, getIsAvailable(false), error);
 	}
 
 	public boolean getIsAvailable(final boolean isHealthy) {
