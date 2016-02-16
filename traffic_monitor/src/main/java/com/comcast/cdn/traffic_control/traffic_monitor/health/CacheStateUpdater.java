@@ -48,7 +48,15 @@ public class CacheStateUpdater extends AsyncCompletionHandler<Object> {
 			return code;
 		}
 
-		state.putDataPoints(getStatisticsMap(response.getResponseBody()));
+		final Map<String, String> statisticsMap = new HashMap<String, String>();
+
+		final JSONObject json = new JSONObject(response.getResponseBody());
+		JSONObject ats = json.has("global") ? json.optJSONObject("global") : json.optJSONObject("ats");
+
+		statisticsMap.putAll(jsonToPrefixedMap(ats, "ats."));
+		statisticsMap.putAll(jsonToPrefixedMap(json.optJSONObject("system"), "system."));
+
+		state.putDataPoints(statisticsMap);
 		state.putDataPoint("stateUrl", state.getCache().getStatisticsUrl());
 
 		synchronized (state.getCache()) {
@@ -75,18 +83,6 @@ public class CacheStateUpdater extends AsyncCompletionHandler<Object> {
 		} catch (Exception e2) {
 			LOGGER.warn(e2, e2);
 		}
-	}
-
-	public Map<String, String> getStatisticsMap(final String jsonStr) throws JSONException {
-		final Map<String, String> map = new HashMap<String, String>();
-
-		final JSONObject json = new JSONObject(jsonStr);
-		JSONObject ats = json.has("global") ? json.optJSONObject("global") : json.optJSONObject("ats");
-		map.putAll(jsonToPrefixedMap(ats, "ats."));
-
-		map.putAll(jsonToPrefixedMap(json.optJSONObject("system"), "system."));
-
-		return map;
 	}
 
 	private Map<String, String> jsonToPrefixedMap(JSONObject json, final String prefix) {
