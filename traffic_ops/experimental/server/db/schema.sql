@@ -14,6 +14,13 @@ SET client_min_messages = warning;
 SET row_security = off;
 
 --
+-- Roles
+--
+
+CREATE ROLE touser;
+ALTER ROLE touser WITH NOSUPERUSER INHERIT NOCREATEROLE NOCREATEDB LOGIN NOREPLICATION NOBYPASSRLS;
+
+--
 -- Name: traffic_ops; Type: DATABASE; Schema: -; Owner: touser
 --
 
