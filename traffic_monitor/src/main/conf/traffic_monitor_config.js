@@ -1,7 +1,6 @@
 {
 	"traffic_monitor_config": {
 		"health.polling.interval": "5000",
-		"tm.crConfig.polling.url": "https://${tmHostname}/CRConfig-Snapshots/${cdnName}/CRConfig.xml",
 		"tm.polling.interval": "10000",
 		"tm.hostname": "",
 		"tm.healthParams.polling.url": "https://${tmHostname}/health/${cdnName}",
