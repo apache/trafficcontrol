@@ -90,7 +90,7 @@ trafficOps.factory('authInterceptor', function ($q, $location, $timeout, message
             // 401, 403, 404 and 5xx errors handled globally; all others handled in fault handler
             if (rejection.status === 401) {
                 userModel.resetUser();
-                if (url == '/') {
+                if (url == '/' || $location.search().redirect) {
                     messageModel.setMessages(alerts, false);
                 } else {
                     $timeout(function () {
