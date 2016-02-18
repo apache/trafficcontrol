@@ -18,9 +18,14 @@ $fa-font-path: "../assets/fonts/";
 @import "../modules/public/login/login";
 
 // private
+
 // users
 @import "../modules/private/user/user";
 @import "../modules/private/user/edit/user.edit";
+
+// configure
+@import "../modules/private/configure/configure";
+@import "../modules/private/configure/deliveryServices/configure.deliveryServices";
 
 // dashboards
 @import "../modules/private/dashboards/dashboards";
@@ -62,6 +67,19 @@ body.nav-sm .container.body .main-content {
 .container {
   width: 100%;
   padding: 0
+}
+
+.column-title {
+  a {
+    color: white;
+  }
+}
+
+.pagination {
+  display: inline-block;
+  padding-left: 0;
+  margin: 0;
+  border-radius: 4px;
 }
 
 .border-blue {
@@ -966,6 +984,7 @@ table.jambo_table tbody tr.selected td {
 .dataTables_info {
   width: 60%;
   float: left;
+  margin-bottom: 20px;
 }
 
 .dataTables_paginate {
@@ -1071,25 +1090,25 @@ table.display td.center {
   text-align: center;
 }
 
-.sorting_asc {
-  background: url('../images/sort_asc.png') no-repeat center right;
-}
-
-.sorting_desc {
-  background: url('../images/sort_desc.png') no-repeat center right;
-}
-
-.sorting {
-  background: url('../images/sort_both.png') no-repeat center right;
-}
-
-.sorting_asc_disabled {
-  background: url('../images/sort_asc_disabled.png') no-repeat center right;
-}
-
-.sorting_desc_disabled {
-  background: url('../images/sort_desc_disabled.png') no-repeat center right;
-}
+//.sorting_asc {
+//  background: url('../assets/images/sort_asc.png') no-repeat center left;
+//}
+//
+//.sorting_desc {
+//  background: url('../assets/images/sort_desc.png') no-repeat center left;
+//}
+//
+//.sorting {
+//  background: url('../assets/images/sort_both.png') no-repeat center left;
+//}
+//
+//.sorting_asc_disabled {
+//  background: url('../assets/images/sort_asc_disabled.png') no-repeat center left;
+//}
+//
+//.sorting_desc_disabled {
+//  background: url('../assets/images/sort_desc_disabled.png') no-repeat center left;
+//}
 
 table.display thead th:active,
 table.display thead td:active {

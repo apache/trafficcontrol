@@ -31,6 +31,10 @@ var trafficOps = angular.module('trafficOps', [
         require('./modules/private/user').name,
         require('./modules/private/user/edit').name,
 
+        // configure
+        require('./modules/private/configure').name,
+        require('./modules/private/configure/deliveryServices').name,
+
         // dashboards
         require('./modules/private/dashboards').name,
         require('./modules/private/dashboards/one').name,
@@ -51,6 +55,9 @@ var trafficOps = angular.module('trafficOps', [
 
         // common services
         require('./common/service/application').name,
+
+        //filters
+        require('./common/filters').name
 
     ], App)
 
