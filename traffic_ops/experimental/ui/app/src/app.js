@@ -31,6 +31,10 @@ var trafficOps = angular.module('trafficOps', [
         require('./modules/private/user').name,
         require('./modules/private/user/edit').name,
 
+        // configure
+        require('./modules/private/configure').name,
+        require('./modules/private/configure/deliveryServices').name,
+
         // dashboards
         require('./modules/private/dashboards').name,
         require('./modules/private/dashboards/one').name,
@@ -51,6 +55,9 @@ var trafficOps = angular.module('trafficOps', [
 
         // common services
         require('./common/service/application').name,
+
+        //filters
+        require('./common/filters').name
 
     ], App)
 
@@ -83,7 +90,7 @@ trafficOps.factory('authInterceptor', function ($q, $location, $timeout, message
             // 401, 403, 404 and 5xx errors handled globally; all others handled in fault handler
             if (rejection.status === 401) {
                 userModel.resetUser();
-                if (url == '/') {
+                if (url == '/' || $location.search().redirect) {
                     messageModel.setMessages(alerts, false);
                 } else {
                     $timeout(function () {
