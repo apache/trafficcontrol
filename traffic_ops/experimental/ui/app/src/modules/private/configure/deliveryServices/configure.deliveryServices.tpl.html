@@ -29,18 +29,72 @@
         <table class="table table-striped responsive-utilities jambo_table bulk_action">
             <thead>
                 <tr class="headings">
-                    <th class="column-title" ng-show="false"><a ng-click="predicate = 'tenantName'; reverse = !reverse">Tenant <i class="fa fa-caret-up fa-fw" ng-show="predicate == 'tenantName' && !reverse"></i><i class="fa fa-caret-down fa-fw" ng-show="predicate == 'tenantName' && reverse"></i></a></th>
-                    <th class="column-title"><a ng-click="predicate = 'displayName'; reverse = !reverse">Delivery Service <i class="fa fa-caret-up fa-fw" ng-show="predicate == 'displayName' && !reverse"></i><i class="fa fa-caret-down fa-fw" ng-show="predicate == 'displayName' && reverse"></i></a></th>
-                    <th class="column-title"><a ng-click="predicate = 'xmlId'; reverse = !reverse">XML ID <i class="fa fa-caret-up fa-fw" ng-show="predicate == 'xmlId' && !reverse"></i><i class="fa fa-caret-down fa-fw" ng-show="predicate == 'xmlId' && reverse"></i></a></th>
-                    <th class="column-title"><a ng-click="predicate = 'orgServerFqdn'; reverse = !reverse">Origin Server <i class="fa fa-caret-up fa-fw" ng-show="predicate == 'orgServerFqdn' && !reverse"></i><i class="fa fa-caret-down fa-fw" ng-show="predicate == 'orgServerFqdn' && reverse"></i></a></th>
+                    <th class="column-title">
+                        <a ng-click="predicate = 'xmlId'; reverse = !reverse">
+                            ID <i class="fa fa-caret-up fa-fw" ng-show="predicate == 'xmlId' && !reverse"></i><i class="fa fa-caret-down fa-fw" ng-show="predicate == 'xmlId' && reverse"></i>
+                        </a>
+                    </th>
+                    <th class="column-title">
+                        <a ng-click="predicate = 'type'; reverse = !reverse">
+                            Type <i class="fa fa-caret-up fa-fw" ng-show="predicate == 'type' && !reverse"></i><i class="fa fa-caret-down fa-fw" ng-show="predicate == 'type' && reverse"></i>
+                        </a>
+                    </th>
+                    <th class="column-title">
+                        <a ng-click="predicate = 'protocol'; reverse = !reverse">
+                            Protocol <i class="fa fa-caret-up fa-fw" ng-show="predicate == 'protocol' && !reverse"></i><i class="fa fa-caret-down fa-fw" ng-show="predicate == 'protocol' && reverse"></i>
+                        </a>
+                    </th>
+                    <th class="column-title">
+                        <a ng-click="predicate = 'orgServerFqdn'; reverse = !reverse">
+                            Origin Server <i class="fa fa-caret-up fa-fw" ng-show="predicate == 'orgServerFqdn' && !reverse"></i><i class="fa fa-caret-down fa-fw" ng-show="predicate == 'orgServerFqdn' && reverse"></i>
+                        </a>
+                    </th>
+                    <th class="column-title">
+                        <a ng-click="predicate = 'profileName'; reverse = !reverse">
+                            Profile <i class="fa fa-caret-up fa-fw" ng-show="predicate == 'profileName' && !reverse"></i><i class="fa fa-caret-down fa-fw" ng-show="predicate == 'profileName' && reverse"></i>
+                        </a>
+                    </th>
+                    <th class="column-title">
+                        <a ng-click="predicate = 'ccrDnsTtl'; reverse = !reverse">
+                            TTL <i class="fa fa-caret-up fa-fw" ng-show="predicate == 'ccrDnsTtl' && !reverse"></i><i class="fa fa-caret-down fa-fw" ng-show="predicate == 'ccrDnsTtl' && reverse"></i>
+                        </a>
+                    </th>
+                    <th class="column-title">
+                        <a ng-click="predicate = 'dscp'; reverse = !reverse">
+                            DSCP <i class="fa fa-caret-up fa-fw" ng-show="predicate == 'dscp' && !reverse"></i><i class="fa fa-caret-down fa-fw" ng-show="predicate == 'dscp' && reverse"></i>
+                        </a>
+                    </th>
+                    <th class="column-title">
+                        <a ng-click="predicate = 'dscp'; reverse = !reverse">
+                            GEO Limit <i class="fa fa-caret-up fa-fw" ng-show="predicate == 'geoLimit' && !reverse"></i><i class="fa fa-caret-down fa-fw" ng-show="predicate == 'geoLimit' && reverse"></i>
+                        </a>
+                    </th>
+                    <th class="column-title">
+                        <a ng-click="predicate = 'qstringIgnore'; reverse = !reverse">
+                            Query String Handling <i class="fa fa-caret-up fa-fw" ng-show="predicate == 'qstringIgnore' && !reverse"></i><i class="fa fa-caret-down fa-fw" ng-show="predicate == 'qstringIgnore' && reverse"></i>
+                        </a>
+                    </th>
+                    <th class="column-title">
+                        <a ng-click="predicate = 'rangeRequestHandling'; reverse = !reverse">
+                            Range Request Handling <i class="fa fa-caret-up fa-fw" ng-show="predicate == 'rangeRequestHandling' && !reverse"></i><i class="fa fa-caret-down fa-fw" ng-show="predicate == 'rangeRequestHandling' && reverse"></i>
+                        </a>
+                    </th>
                 </tr>
             </thead>
             <tbody>
                 <tr class="pointer" ng-class="{'even': $index % 2 == 0}" ng-class="{'odd': $index % 2 != 0}" ng-repeat="deliveryService in deliveryServicesModel.deliveryServices | orderBy:predicate:reverse | filter:search:strict | offsetFilter:(currentPage-1)*dsPerPage | limitTo:dsPerPage">
-                    <td ng-show="false">{{deliveryService.tenantName}}</td>
-                    <td>{{deliveryService.displayName}}</td>
-                    <td>{{deliveryService.xmlId}}</td>
+                    <td>
+                        <i class="fa fa-check fa-fw" ng-show="deliveryService.active"></i> <i class="fa fa-times fa-fw" ng-show="!deliveryService.active"></i>{{deliveryService.xmlId}} <span ng-show="deliveryService.signed">[ signed ]</span>
+                    </td>
+                    <td>{{deliveryService.type}} <span ng-show="deliveryService.ipv6RoutingEnabled">| IPv6 </span></td>
+                    <td>{{deliveryService.protocol}}</td>
                     <td>{{deliveryService.orgServerFqdn}}</td>
+                    <td>{{deliveryService.profileName}}</td>
+                    <td>{{deliveryService.ccrDnsTtl}}</td>
+                    <td>{{deliveryService.dscp}}</td>
+                    <td>{{deliveryService.geoLimit}}</td>
+                    <td>{{deliveryService.qstringIgnore}}</td>
+                    <td>{{deliveryService.rangeRequestHandling}}</td>
                 </tr>
                 <tr class="odd" ng-show="(deliveryServicesModel.deliveryServices | filter:search:strict).length == 0">
                     <td valign="top" colspan="3" class="dataTables_empty">No matching records found</td>

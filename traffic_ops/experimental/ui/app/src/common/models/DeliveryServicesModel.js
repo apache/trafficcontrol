@@ -1,4 +1,4 @@
-var DeliveryServicesModel = function($location, $log) {
+var DeliveryServicesModel = function() {
 
     var model = this;
 
@@ -23,6 +23,7 @@ var DeliveryServicesModel = function($location, $log) {
     this.setDeliveryServices = function(deliveryServicesData) {
         this.deliveryServices = deliveryServicesData;
 
+        // the api currently doesn't support tenants but will
         var fakeTenants = [];
         fakeTenants[0] = 'Apache';
         fakeTenants[1] = 'FooBar Inc.';
@@ -58,5 +59,5 @@ var DeliveryServicesModel = function($location, $log) {
 
 };
 
-DeliveryServicesModel.$inject = ['$location', '$log'];
+DeliveryServicesModel.$inject = [];
 module.exports = DeliveryServicesModel;

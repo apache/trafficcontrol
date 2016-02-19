@@ -8,7 +8,7 @@ var ConfigureDeliveryServicesController = function($scope, $interval, deliverySe
 
     $scope.deliveryServicesModel = deliveryServicesModel;
 
-    $scope.predicate = 'displayName';
+    $scope.predicate = 'xmlId';
     $scope.reverse = false;
 
     $scope.query = {
@@ -26,9 +26,8 @@ var ConfigureDeliveryServicesController = function($scope, $interval, deliverySe
     $scope.search = function(ds) {
         var query = $scope.query.text.toLowerCase(),
             xmlId = ds.xmlId.toLowerCase(),
-            displayName = ds.displayName.toLowerCase(),
             orgServerFqdn = ds.orgServerFqdn.toLowerCase(),
-            isSubstring = (displayName.indexOf(query) !== -1) || (xmlId.indexOf(query) !== -1) || (orgServerFqdn.indexOf(query) !== -1);
+            isSubstring = (xmlId.indexOf(query) !== -1) || (orgServerFqdn.indexOf(query) !== -1);
 
         return isSubstring;
     };
