@@ -1,7 +1,6 @@
 
 var myip = "127.0.0.1";
 var myport = 80;
-var traffic_ops_url = "https://yourtrafficopsinstance.com";
 var config_url = "https://traffic-ops.com/CRConfig-Snapshots/cdn-name/CRConfig.json";
 
 // first argument to follow node ats_sim.js
