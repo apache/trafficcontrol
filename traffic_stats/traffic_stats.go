@@ -481,8 +481,10 @@ func calcMetrics(cdnName string, url string, cacheMap map[string]traffic_ops.Ser
 
 	if strings.Contains(url, "CacheStats") {
 		err = calcCacheValues(trafMonData, cdnName, sampleTime, cacheMap, config)
+		errHndlr(err, ERROR)
 	} else if strings.Contains(url, "DsStats") {
 		err = calcDsValues(trafMonData, cdnName, sampleTime, config)
+		errHndlr(err, ERROR)
 	} else {
 		log.Warn("Don't know what to do with ", url)
 	}
@@ -533,7 +535,9 @@ func calcDsValues(rascalData []byte, cdnName string, sampleTime int64, config St
 
 	var jData DsStatsJSON
 	err := json.Unmarshal(rascalData, &jData)
-	errHndlr(err, ERROR)
+	if err != nil {
+		return fmt.Errorf("could not unmarshall deliveryservice stats JSON - %v", err)
+	}
 
 	statCount := 0
 	bps, _ := influx.NewBatchPoints(influx.BatchPointsConfig{
@@ -635,7 +639,9 @@ func calcCacheValues(trafmonData []byte, cdnName string, sampleTime int64, cache
 	}
 	var jData CacheStatsJSON
 	err := json.Unmarshal(trafmonData, &jData)
-	errHndlr(err, ERROR)
+	if err != nil {
+		return fmt.Errorf("could not unmarshall cache stats JSON - %v", err)
+	}
 
 	statCount := 0
 	bps, err := influx.NewBatchPoints(influx.BatchPointsConfig{
