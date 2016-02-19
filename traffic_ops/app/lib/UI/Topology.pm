@@ -88,10 +88,8 @@ sub gen_crconfig_json {
 			push @profile_caches, @{$r};
 		}
 		else {
-			if ( $cachetype eq 'CCR' ) {
-				$cachetype = 'Traffic Router';
-			}
-			my $e = Mojo::Exception->throw( "No $cachetype profiles found for CDN: " . $cdn_name );
+			my $t = ( $cachetype eq 'CCR' ) ? 'Traffic Router' : $cachetype;
+			my $e = Mojo::Exception->throw( "No $t profiles found for CDN: " . $cdn_name );
 		}
 	}
 	my %condition = (
