@@ -16,95 +16,84 @@
 
 package com.comcast.cdn.traffic_control.traffic_router.core.loc;
 
-import static org.junit.Assert.assertEquals;
-
-import java.io.IOException;
-
-import org.jmock.Expectations;
-import org.jmock.Mockery;
-import org.jmock.integration.junit4.JMock;
-import org.jmock.integration.junit4.JUnit4Mockery;
-import org.jmock.lib.legacy.ClassImposteriser;
+import com.maxmind.geoip2.DatabaseReader;
+import com.maxmind.geoip2.model.CityResponse;
+import com.maxmind.geoip2.record.Location;
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.powermock.api.mockito.PowerMockito;
+import org.powermock.core.classloader.annotations.PrepareForTest;
+import org.powermock.modules.junit4.PowerMockRunner;
 
-import com.comcast.cdn.traffic_control.traffic_router.core.loc.MaxmindGeolocationService;
-import com.maxmind.geoip2.DatabaseReader;
+import java.io.File;
+import java.net.InetAddress;
 
-@RunWith(JMock.class)
+import static org.hamcrest.CoreMatchers.equalTo;
+import static org.hamcrest.CoreMatchers.notNullValue;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.core.IsNull.nullValue;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
+import static org.powermock.api.mockito.PowerMockito.whenNew;
+
+@RunWith(PowerMockRunner.class)
 public class MaxmindGeolocationServiceTest {
-	private static final String DATABASE_URL = "database url";
 
-	private final Mockery context = new JUnit4Mockery() {
-		{
-			setImposteriser(ClassImposteriser.INSTANCE);
-		}
-	};
-
-	private TestService service;
-	private DatabaseReader databaseReader;
+	private MaxmindGeolocationService service;
 
 	@Before
-	public void setUp() throws Exception {
-		databaseReader = context.mock(DatabaseReader.class);
-
-		service = new TestService();
-		service.setDatabaseName(DATABASE_URL);
+	public void before() throws Exception {
+		service = new MaxmindGeolocationService();
 		service.init();
 	}
 
 	@Test
-	public void testDestroy() throws IOException {
-		context.checking(new Expectations() {
-			{
-				oneOf(databaseReader).close();
-			}
-		});
-		service.destroy();
-		assertEquals(1, service.numCalls);
+	public void itReturnsNullWhenDatabaseNotLoaded() throws Exception {
+		assertThat(service.isInitialized(), equalTo(false));
+		assertThat(service.location("192.168.99.100"), nullValue());
 	}
-
-//	@Test
-//	public void testLocationFound() throws Exception {
-//		final String ip = "10.0.0.1";
-//
-//		final Location loc = new Location();
-//		loc.latitude = 10f;
-//		loc.longitude = 10f;
-//
-//		context.checking(new Expectations() {
-//			{
-//				oneOf(lookupService).getLocation(ip);
-//				will(returnValue(loc));
-//			}
-//		});
-//		final Geolocation actual = service.location(ip);
-//		assertEquals(loc.latitude, actual.getLatitude(), 0.01);
-//		assertEquals(loc.longitude, actual.getLongitude(), 0.01);
-//	}
 
 	@Test
-	public void testReloadDatabase() throws Exception {
-		context.checking(new Expectations() {
-			{
-				oneOf(databaseReader).close();
-			}
-		});
+	public void itReturnsNullWhenDatabaseDoesNotExist() throws Exception {
+		service.verifyDatabase(mock(File.class));
+		assertThat(service.isInitialized(), equalTo(false));
+		assertThat(service.location("192.168.99.100"), nullValue());
 		service.reloadDatabase();
-		assertEquals(2, service.numCalls);
+		assertThat(service.isInitialized(), equalTo(false));
+		assertThat(service.location("192.168.99.100"), nullValue());
 	}
 
-	private class TestService extends MaxmindGeolocationService {
+	@PrepareForTest({MaxmindGeolocationService.class, DatabaseReader.Builder.class, Location.class, CityResponse.class})
+	@Test
+	public void itReturnsALocationWhenTheDatabaseIsLoaded() throws Exception {
+		File databaseFile = mock(File.class);
+		when(databaseFile.exists()).thenReturn(true);
 
-		private int numCalls = 0;
+		Location location = PowerMockito.mock(Location.class);
+		when(location.getLatitude()).thenReturn(40.0);
+		when(location.getLongitude()).thenReturn(-105.0);
 
-		@Override
-		protected DatabaseReader createDatabaseReader() throws IOException {
-			numCalls++;
-			return databaseReader;
-		}
+		CityResponse cityResponse = PowerMockito.mock(CityResponse.class);
+		when(cityResponse.getLocation()).thenReturn(location);
 
+		DatabaseReader databaseReader = mock(DatabaseReader.class);
+		when(databaseReader.city(InetAddress.getByName("192.168.99.100"))).thenReturn(cityResponse);
+
+		DatabaseReader.Builder builder = mock(DatabaseReader.Builder.class);
+		when(builder.build()).thenReturn(databaseReader);
+
+		whenNew(DatabaseReader.Builder.class).withArguments(databaseFile).thenReturn(builder);
+		service.verifyDatabase(databaseFile);
+
+		assertThat(service.isInitialized(), equalTo(true));
+
+		assertThat(service.location("192.168.99.100"), notNullValue());
 	}
 
+	@After
+	public void after() {
+		service.destroy();
+	}
 }
