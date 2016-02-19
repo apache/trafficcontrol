@@ -1,32 +1,40 @@
 
-var config_url = 'http://<TRAFFIC_MONITOR-FQDN>/publish/CrConfig?json';
-var health_url = 'https://<TRAFFIC_OPS-FQDN>/health/c7';
+var myip = "127.0.0.1";
 var myport = 80;
-var myip = "<TM-FQDN>";
-var tld = "." + "<CDN-DOMAIN_NAME>";
-var errorRateDenominator = 0;
+var config_url = "https://traffic-ops.com/CRConfig-Snapshots/cdn-name/CRConfig.json";
 
 // first argument to follow node ats_sim.js
 if (process.argv[2]) {
 	config_url = process.argv[2];
 }
 
+// second argument to follow node ats_sim.js
+if (process.argv[3]) {
+	myport = process.argv[3];
+}
+
+var errorRateDenominator = 0;
 var debug = 0;
-console.log("Debug = " + debug);
 
-//https://${tmHostname}/CRConfig-Snapshots/${cdnName}/CRConfig.json
-console.log("point traffic_monitor::tm.crConfig.json.polling.url to: " + config_url)
+// https://${tmHostname}/CRConfig-Snapshots/${cdnName}/CRConfig.json
+if (debug) console.log("point traffic_monitor::tm.crConfig.json.polling.url to: " + config_url);
 
-var starttime = new Date().getTime();
-console.log(starttime)
+var date = new Date();
+var starttime = date.getTime();
 var timeseed = 1383769987010;
 
-var http = require('http');
+console.log("Started " + date);
+
+var protocol = (/^https/.test(config_url) == true ? "https" : "http");
+var client_http = require(protocol);
 var cr_config = '';
+var tld = '';
 var Url = require('url');
 var stats = new Object();
 
-http.get(config_url, function(res) {
+process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0";
+
+client_http.get(config_url, function(res) {
 	var body = '';
 
 	res.on('data', function(chunk) {
@@ -34,56 +42,65 @@ http.get(config_url, function(res) {
 	});
 
 	res.on('end', function() {
-		cr_config = JSON.parse(body)
-		console.log("Got response: ", cr_config.monitors);
+		cr_config = JSON.parse(body);
+		tld = cr_config.config['domain_name'];
+		console.log("CDN TLD: " + tld);
+
 		for(var cid in cr_config.contentServers) {
 			if(cid.indexOf("atsec-sim")!=-1) {
 				cr_config.contentServers[cid].queryIp = myip;
 				cr_config.contentServers[cid].port = myport;
 			}
 		}
+
 		cr_config
 	});
 }).on('error', function(e) {
 	console.log("Got error: ", e);
 });
 
+var http = require('http');
+
 http.createServer(function (request, response) {
-	if(request.url == "/favicon.ico") {
+	if (request.url == "/favicon.ico") {
 		response.writeHead(404);
 		response.end();
 		return;
 	}
+
 	// https://${tmHostname}/CRConfig-Snapshots/${cdnName}/CRConfig.json
-	if(request.url.indexOf("/CRConfig.json") != -1) {
+	if (request.url.indexOf("/CRConfig.json") != -1) {
 		console.log("Delivering CRConfig.json");
 		response.end(JSON.stringify(cr_config, null, 4));
 		return;
 	}
-	if(errorRateDenominator && rand(errorRateDenominator)==1) {
+
+	if (errorRateDenominator && rand(errorRateDenominator) == 1) {
 		response.writeHead(404);
 		response.end();
 		return;
 	}
+
 	var objToJson = { };
 	objToJson.cr_config = cr_config;
 	var str = JSON.stringify(getData(request));
 	response.writeHead(200, {'Content-Type': 'application/json'});
 	response.end(str);
 }).listen(myport);
-console.log('Server running');
 
+console.log("HTTP Listener started on port " + myport);
 
 var util = require('util');
 var crypto = require('crypto')
 var shasum = crypto.createHash('sha1');
 
 function rand(n) {
-	return Math.floor((Math.random()*n)+1);
+	return Math.floor((Math.random() * n) + 1);
 }
+
 Number.prototype.zeroPad = function(numZeros) {
 	var n = Math.abs(this);
-	var zeros = Math.max(0, numZeros - n.toString().length );
+	var zeros = Math.max(0, numZeros - n.toString().length);
 	var zeroString = Math.pow(10,zeros).toString().substr(1);
 	if( this < 0 ) {
 		zeroString = '-' + zeroString;
@@ -96,9 +113,14 @@ function getData(request) {
 	var url_parts = Url.parse(request.url, true);
 	var query_params = url_parts.query;
 
+	if (!request.headers.host) {
+		return;
+	}
+
 	if (debug) console.log(request.url);
 	if (debug) console.log(query_params);
 	if (debug) console.log(query_params.a);
+
 	var ret = {};
 	var d = new Date();
 	var n = d.getTime();
@@ -125,53 +147,55 @@ function getData(request) {
 
 	var hit_fresh = unixtime / 2;
 	var hit_fresh_process = hit_fresh;
-	var hit_revalidated = (int10/2) + unixtime + int1;
-	var miss_cold = (int10/2) + unixtime + int3;
-	var miss_not_cacheable = (int7/3) + unixtime + int1;
-	var miss_changed = (unixtime/10000000) + int1;
+	var hit_revalidated = (int10 / 2) + unixtime + int1;
+	var miss_cold = (int10 / 2) + unixtime + int3;
+	var miss_not_cacheable = (int7 / 3) + unixtime + int1;
+	var miss_changed = (unixtime / 10000000) + int1;
 	var miss_client_no_cache = 0;
-	var aborts = (unixtime/10000000) + int2*2;
+	var aborts = (unixtime / 10000000) + int2 * 2;
 	var possible_aborts = 0; 
-	var connect_failed = (unixtime/1000000) + int2*4 + int1*2;
-	var other = ((unixtime/1000000) + int3)/100;
+	var connect_failed = (unixtime / 1000000) + int2 * 4 + int1 * 2;
+	var other = ((unixtime / 1000000) + int3) / 100;
 	var unclassified = 0; 
-	var write_bytes = unixtime + int4*int5;
-	var current_client_connections = int5*Math.random(); 
-	var bytes_used = write_bytes/20 + int2*int5;
+	var write_bytes = unixtime + int4 * int5;
+	var current_client_connections = Math.round(int5 * Math.random()); 
+	var bytes_used = write_bytes / 20 + int2 * int5;
 	var bytes_total = bytes_used + int10;
 	var v1_bytes_used = bytes_used; 
 	var v1_bytes_total = bytes_total;
-	var load_avg_1 = (30*Math.random()).toFixed(2);
+	var load_avg_1 = (8 * Math.random()).toFixed(2);
 	var load_avg_5 = (load_avg_1 / 2).toFixed(2);
 	var load_avg_15 = (load_avg_1 / 3).toFixed(2);
-	var running_procs = (15*rand(int1));
-	var total_procs = 2*running_procs+(int1+2)*2;
+	var running_procs = (15 * rand(int1));
+	var total_procs = 2 * running_procs + (int1 + 2) * 2;
 	var last_proc_id = int5;
-	var proc_loadavg = util.format("%d %d %d %d/%d %d",
-			load_avg_1, load_avg_5, load_avg_15, running_procs, total_procs, last_proc_id);
-	
-	var if_rbytes = basetime * 500;// + (time*rand(10));
-	
-	var if_rpackets = if_rbytes/875;
-	var if_rmcast = if_rpackets/int4;
-	var if_tbytes = if_rbytes/3;
-	var if_tpackets = if_tbytes/1500;
-	var proc_net_dev = 'bond0';//query_params['inf.name'];
-	proc_net_dev += util.format(":%d %d 0 0 0 0 0 %d %d %d 0 0 0 0 0 0", 
-			if_rbytes.toFixed(0), if_rpackets.toFixed(0), if_rmcast.toFixed(0), if_tbytes.toFixed(0), if_tpackets.toFixed(0));
+	var proc_loadavg = util.format("%d %d %d %d/%d %d", load_avg_1, load_avg_5, load_avg_15, running_procs, total_procs, last_proc_id);
+	var if_rbytes = basetime * 500;
+	var if_rpackets = if_rbytes / 875;
+	var if_rmcast = if_rpackets / int4;
+	var if_tbytes = if_rbytes / 3;
+	var if_tpackets = if_tbytes / 1500;
+	var proc_net_dev = 'bond0';
+
+	if (query_params['inf.name']) {
+		proc_net_dev = query_params['inf.name'];
+	}
+
+	proc_net_dev += util.format(":%d %d 0 0 0 0 0 %d %d %d 0 0 0 0 0 0", if_rbytes.toFixed(0), if_rpackets.toFixed(0), if_rmcast.toFixed(0), if_tbytes.toFixed(0), if_tpackets.toFixed(0));
 	var ds_bytes = {};
 	var ds_bytes_in = {};
 	var ds_200s = {};
 	var ds_400s = {};
 	var ds_500s = {};
+
 	for (var i=1; i<=10; i++) {
 		var rand1 = rand(int1); 
-		ds_bytes[i] = if_tbytes/10;
-		ds_bytes_in[i] = if_rbytes/10;
-		var tps = basetime/10000;//ds_bytes[i]/900000;
-		ds_200s[i] = tps*0.95;
-		ds_400s[i] = tps*0.04;
-		ds_500s[i] = tps*0.01;
+		ds_bytes[i] = if_tbytes / 10;
+		ds_bytes_in[i] = if_rbytes / 10;
+		var tps = basetime / 10000;
+		ds_200s[i] = tps * 0.95;
+		ds_400s[i] = tps * 0.04;
+		ds_500s[i] = tps * 0.01;
 	}
 
 	if (query_params.ds && query_params.p && query_params.v && query_params.m) {
@@ -190,7 +214,6 @@ function getData(request) {
 //	#proc.net.dev: "bond0:181566812618839 43321349767 0 0 0 0 0 4710035 517574148613675 34658736727 0 0 0 0 0 0"
 
 	ret.ats = {};
-//	if (exists $query_params{'application'} ) {
 	ret.ats["proxy.process.http.transaction_counts.hit_fresh"] = hit_fresh;
 	ret.ats["proxy.process.http.transaction_counts.hit_fresh.process"] = hit_fresh_process;
 	ret.ats["proxy.process.http.transaction_counts.hit_revalidated"] = hit_revalidated;
@@ -285,7 +308,7 @@ function getData(request) {
 		}
 	}
 
-	ret.ats["server"] = "3.3.0-dev";
+	ret.ats["server"] = "5.3.2-dev";
 
 	ret.system = {};
 	ret.system["inf.name"] = query_params["inf.name"];
