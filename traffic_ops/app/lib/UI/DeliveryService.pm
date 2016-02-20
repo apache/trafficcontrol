@@ -307,7 +307,7 @@ sub check_deliveryservice_input {
 
 	# TODO:  what restrictions on display_name?
 
-	my $typename = $self->db->resultset('Type')->search( { id => $self->param('ds.type') } )->get_column('name')->single();
+	my $typename = $self->param('ds.type.name');
 	if ( $typename eq 'ANY_MAP' ) {
 		return $self->valid;    # Anything goes for the ANY_MAP, but ds.type is only set on create
 	}
@@ -691,7 +691,6 @@ sub delete_cfg_file {
 sub update {
 	my $self = shift;
 	my $id   = $self->param('id');
-
 	if ( !&is_oper($self) ) {
 		my $err = "You do not have enough privileges to modify this.";
 		$self->flash( message => $err );
@@ -712,7 +711,7 @@ sub update {
 			org_server_fqdn        => $self->paramAsScalar('ds.org_server_fqdn'),
 			multi_site_origin      => $self->paramAsScalar('ds.multi_site_origin'),
 			ccr_dns_ttl            => $self->paramAsScalar('ds.ccr_dns_ttl'),
-			type                   => $self->typeid(),
+			type                   => $self->paramAsScalar('ds.type.id'),
 			cdn_id                 => $self->paramAsScalar('ds.cdn_id'),
 			profile                => $self->paramAsScalar('ds.profile'),
 			global_max_mbps        => $self->hr_string_to_mbps( $self->paramAsScalar( 'ds.global_max_mbps', 0 ) ),
@@ -739,7 +738,7 @@ sub update {
 			initial_dispersion => $self->paramAsScalar( 'ds.initial_dispersion', 1 ),
 		);
 
-		if ( $self->paramAsScalar('ds.type') == &type_id( $self, "DNS" ) ) {
+		if ( $self->paramAsScalar('ds.type.name') eq "DNS" ) {
 			$hash{dns_bypass_ip}    = $self->paramAsScalar('ds.dns_bypass_ip');
 			$hash{dns_bypass_ip6}   = $self->paramAsScalar('ds.dns_bypass_ip6');
 			$hash{dns_bypass_cname} = $self->paramAsScalar('ds.dns_bypass_cname');
