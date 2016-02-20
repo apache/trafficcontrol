@@ -16,15 +16,14 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
 	<modelVersion>4.0.0</modelVersion>
-	<artifactId>traffic_router_core</artifactId>
-	<packaging>war</packaging>
-	<name>traffic_router_core</name>
-
 	<parent>
 		<groupId>com.comcast.cdn.traffic_control.traffic_router</groupId>
 		<artifactId>traffic_router</artifactId>
-		<version>${env.TRAFFIC_CONTROL_VERSION}</version>
+		<version>1.5.0</version>
 	</parent>
+
+	<artifactId>traffic_router_core</artifactId>
+	<packaging>war</packaging>
 
 	<scm>
 		<connection>scm:git:file://</connection>
@@ -80,28 +79,6 @@
 			</testResource>
 		</testResources>
 		<plugins>
-			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-enforcer-plugin</artifactId>
-				<version>1.4.1</version>
-				<executions>
-					<execution>
-						<phase>validate</phase>
-						<id>enforce-environment-variable-is-set</id>
-						<goals>
-							<goal>enforce</goal>
-						</goals>
-						<configuration>
-							<rules>
-								<requireEnvironmentVariable>
-									<variableName>TRAFFIC_CONTROL_VERSION</variableName>
-								</requireEnvironmentVariable>
-							</rules>
-							<fail>true</fail>
-						</configuration>
-					</execution>
-				</executions>
-			</plugin>
 			<plugin>
 				<artifactId>maven-pmd-plugin</artifactId>
 				<version>2.5</version>
@@ -239,7 +216,7 @@
 		<dependency>
 			<groupId>com.comcast.cdn.traffic_control.traffic_router</groupId>
 			<artifactId>traffic_router_connector</artifactId>
-			<version>1.0.0</version>
+			<version>${project.parent.version}</version>
 		</dependency>
 
 		<dependency>

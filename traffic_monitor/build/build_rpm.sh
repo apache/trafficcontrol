@@ -37,6 +37,7 @@ function buildRpmTrafficMonitor () {
 
 	cd "$TM_DIR" || { echo "Could not cd to $TM_DIR: $?"; exit 1; }
 	export TRAFFIC_CONTROL_VERSION="$TC_VERSION"
+    mvn -versions:set -DnewVersion=$TRAFFIC_CONTROL_VERSION
 	export GIT_REV_COUNT=$(getRevCount)
 	mvn clean package || { echo "RPM BUILD FAILED: $?"; exit 1; }
 
@@ -53,13 +54,6 @@ function buildRpmTrafficMonitor () {
 	mkdir -p "$DIST" || { echo "Could not create $DIST: $?"; exit 1; }
 
 	cp "$rpm" "$DIST/." || { echo "Could not copy $RPM to $DIST: $?"; exit 1; }
-
-	# TODO: build src rpm separately -- mvn rpm plugin does not do src rpms
-	#cd "RPMBUILD" && \
-	#	rpmbuild -bs --define "_topdir $(pwd)" \
-        #                 --define "traffic_control_version $TC_VERSION" \
-        #                 --define "build_number $BUILD_NUMBER" -ba SPECS/traffic_monitor.spec
-	#cp "$RPMBUILD"/SRPMS/*/*.rpm "$DIST/." || { echo "Could not copy source rpm to $DIST: $?"; exit 1; }
 }
 
 # ---------------------------------------

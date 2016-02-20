@@ -5,7 +5,7 @@
     <parent>
         <groupId>com.comcast.cdn.traffic_control.traffic_router</groupId>
         <artifactId>traffic_router</artifactId>
-	<version>${env.TRAFFIC_CONTROL_VERSION}</version>
+	<version>9.8.7</version>
     </parent>
 
     <artifactId>traffic_router_test_server</artifactId>
@@ -15,12 +15,12 @@
         <dependency>
             <groupId>com.comcast.cdn.traffic_control.traffic_router</groupId>
             <artifactId>traffic_router_core</artifactId>
-            <version>${parent.version}</version>
+            <version>${project.parent.version}</version>
         </dependency>
         <dependency>
             <groupId>com.comcast.cdn.traffic_control.traffic_router</groupId>
             <artifactId>traffic_router_api</artifactId>
-            <version>1.0.0</version>
+            <version>${project.parent.version}</version>
         </dependency>
         <dependency>
             <groupId>org.eclipse.jetty.aggregate</groupId>
