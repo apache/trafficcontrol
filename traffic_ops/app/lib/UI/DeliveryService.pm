@@ -289,6 +289,18 @@ sub delete {
 	return $self->redirect_to('/close_fancybox.html');
 }
 
+sub typeid {
+	my $self = shift;
+	print STDOUT "typeid: " . Dumper( { map { $_ => $self->param($_) } grep /ds.type/, $self->param() } ) . "\n";
+	return $self->param('ds.type.id') // $self->param('ds.type');
+}
+
+sub typename {
+	my $self = shift;
+	print STDOUT "typename: " . Dumper( { map { $_ => $self->param($_) } grep /ds.type/, $self->param() } ) . "\n";
+	return $self->param('type.name') // $self->db->resultset('Type')->search( { id => $self->typeid() } )->get_column('name')->single();
+}
+
 sub check_deliveryservice_input {
 	my $self = shift;
 
@@ -298,7 +310,7 @@ sub check_deliveryservice_input {
 
 	# TODO:  what restrictions on display_name?
 
-	my $typename = $self->param('ds.type.name');
+	my $typename = $self->typename();
 	if ( $typename eq 'ANY_MAP' ) {
 		return $self->valid;    # Anything goes for the ANY_MAP, but ds.type is only set on create
 	}
@@ -730,7 +742,8 @@ sub update {
 			initial_dispersion => $self->paramAsScalar( 'ds.initial_dispersion', 1 ),
 		);
 
-		if ( $self->paramAsScalar('ds.type.name') eq "DNS" ) {
+		my $typename = $self->typename();
+		if ( $typename eq "DNS" ) {
 			$hash{dns_bypass_ip}    = $self->paramAsScalar('ds.dns_bypass_ip');
 			$hash{dns_bypass_ip6}   = $self->paramAsScalar('ds.dns_bypass_ip6');
 			$hash{dns_bypass_cname} = $self->paramAsScalar('ds.dns_bypass_cname');
