@@ -307,7 +307,7 @@ sub check_deliveryservice_input {
 
 	# TODO:  what restrictions on display_name?
 
-	my $typename = $self->param('ds.type.name');
+	my $typename = $self->typename();
 	if ( $typename eq 'ANY_MAP' ) {
 		return $self->valid;    # Anything goes for the ANY_MAP, but ds.type is only set on create
 	}
@@ -738,7 +738,8 @@ sub update {
 			initial_dispersion => $self->paramAsScalar( 'ds.initial_dispersion', 1 ),
 		);
 
-		if ( $self->paramAsScalar('ds.type.name') eq "DNS" ) {
+		my $typename = $self->typename();
+		if ( $typename eq "DNS" ) {
 			$hash{dns_bypass_ip}    = $self->paramAsScalar('ds.dns_bypass_ip');
 			$hash{dns_bypass_ip6}   = $self->paramAsScalar('ds.dns_bypass_ip6');
 			$hash{dns_bypass_cname} = $self->paramAsScalar('ds.dns_bypass_cname');
