@@ -6,7 +6,7 @@ module.exports = angular.module('trafficOps.private.configure.deliveryServices',
                 url: '/delivery-services',
                 views: {
                     configureContent: {
-                        templateUrl: 'modules/private/configure/deliveryServices/configure.deliveryServices.tpl.html',
+                        templateUrl: 'modules/private/configure/deliveryServices/deliveryServices.tpl.html',
                         controller: 'DeliveryServicesController'
                     }
                 },
