@@ -3,7 +3,7 @@ module.exports = angular.module('trafficOps.private.monitor.dashboards', [])
     .config(function($stateProvider, $urlRouterProvider) {
         $stateProvider
             .state('trafficOps.private.monitor.dashboards', {
-                url: 'dashboards',
+                url: '/dashboards',
                 abstract: true,
                 views: {
                     monitorContent: {

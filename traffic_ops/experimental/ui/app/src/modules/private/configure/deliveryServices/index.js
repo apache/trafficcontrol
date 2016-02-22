@@ -3,7 +3,7 @@ module.exports = angular.module('trafficOps.private.configure.deliveryServices',
     .config(function($stateProvider, $urlRouterProvider) {
         $stateProvider
             .state('trafficOps.private.configure.deliveryServices', {
-                url: 'delivery-services',
+                url: '/delivery-services',
                 views: {
                     configureContent: {
                         templateUrl: 'modules/private/configure/deliveryServices/configure.deliveryServices.tpl.html',

@@ -11,7 +11,7 @@ var AuthService = function($http, $state, $location, $q, deliveryServicesModel, 
                     $location.search('redirect', null); // remove the redirect query param
                     $location.url(redirect);
                 } else {
-                    $location.url('/dashboards/one');
+                    $location.url('/monitor/dashboards/one');
                 }
                 return result;
             })
