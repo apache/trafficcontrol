@@ -26,6 +26,10 @@ import com.maxmind.geoip2.DatabaseReader;
 import com.maxmind.geoip2.exception.AddressNotFoundException;
 import com.maxmind.geoip2.model.CityResponse;
 
+import com.comcast.cdn.traffic_control.traffic_router.geolocation.Geolocation;
+import com.comcast.cdn.traffic_control.traffic_router.geolocation.GeolocationException;
+import com.comcast.cdn.traffic_control.traffic_router.geolocation.GeolocationService;
+
 public class MaxmindGeolocationService implements GeolocationService {
 	private static final Logger LOGGER = Logger.getLogger(MaxmindGeolocationService.class);
 	private boolean initialized = false;
@@ -50,7 +54,7 @@ public class MaxmindGeolocationService implements GeolocationService {
 
 		final CityResponse response = getCityResponse(ip.split("/")[0]);
 
-		return (isResponseValid(response)) ? new Geolocation(response) : null;
+		return (isResponseValid(response)) ? createGeolocation(response) : null;
 	}
 
 	private boolean isResponseValid(final CityResponse response) {
@@ -106,5 +110,26 @@ public class MaxmindGeolocationService implements GeolocationService {
 		} catch (IOException ex) {
 			LOGGER.warn("Caught exception while trying to close geolocation database reader: " + ex.getMessage(), ex);
 		}
+	}
+
+	public Geolocation createGeolocation(final CityResponse response) {
+		final double latitude = response.getLocation().getLatitude();
+		final double longitude = response.getLocation().getLongitude();
+
+		final Geolocation geolocation = new Geolocation(latitude, longitude);
+		if (response.getPostal() != null) {
+			geolocation.setPostalCode(response.getPostal().getCode());
+		}
+
+		if (response.getCity() != null) {
+			geolocation.setCity(response.getCity().getName());
+		}
+
+		if (response.getCountry() != null) {
+			geolocation.setCountryCode(response.getCountry().getIsoCode());
+			geolocation.setCountryName(response.getCountry().getName());
+		}
+
+		return geolocation;
 	}
 }

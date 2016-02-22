@@ -16,6 +16,7 @@
 
 package com.comcast.cdn.traffic_control.traffic_router.core.loc;
 
+import com.comcast.cdn.traffic_control.traffic_router.geolocation.GeolocationException;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;

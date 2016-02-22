@@ -37,13 +37,11 @@ import com.comcast.cdn.traffic_control.traffic_router.core.cache.CacheLocation;
 import com.comcast.cdn.traffic_control.traffic_router.core.cache.CacheRegister;
 import com.comcast.cdn.traffic_control.traffic_router.core.ds.DeliveryService;
 import com.comcast.cdn.traffic_control.traffic_router.core.ds.Dispersion;
-import com.comcast.cdn.traffic_control.traffic_router.core.loc.Geolocation;
-import com.comcast.cdn.traffic_control.traffic_router.core.loc.GeolocationException;
-import com.comcast.cdn.traffic_control.traffic_router.core.loc.GeolocationService;
+import com.comcast.cdn.traffic_control.traffic_router.geolocation.Geolocation;
+import com.comcast.cdn.traffic_control.traffic_router.geolocation.GeolocationException;
+import com.comcast.cdn.traffic_control.traffic_router.geolocation.GeolocationService;
 import com.comcast.cdn.traffic_control.traffic_router.core.request.HTTPRequest;
-import com.comcast.cdn.traffic_control.traffic_router.core.router.TrafficRouter;
 import com.comcast.cdn.traffic_control.traffic_router.core.util.TrafficOpsUtils;
-import com.comcast.cdn.traffic_control.traffic_router.core.router.StatTracker;
 import com.comcast.cdn.traffic_control.traffic_router.core.router.StatTracker.Track;
 
 public class StatelessTrafficRouterPerformanceTest  extends TrafficRouter {
