@@ -11,8 +11,8 @@ module.exports = angular.module('trafficOps.private.administer.users', [])
                     }
                 },
                 resolve: {
-                    users: function() {
-                        return [];
+                    users: function(userService) {
+                        return userService.getUsers(false);
                     }
                 }
             })

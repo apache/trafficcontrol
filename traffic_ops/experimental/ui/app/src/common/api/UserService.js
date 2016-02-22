@@ -51,6 +51,20 @@ var UserService = function($http, $state, $q, $location, authService, userModel,
         return deferred.promise;
     };
 
+    this.getUsers = function(ignoreLoadingBar) {
+        var deferred = $q.defer();
+
+        $http.get(ENV.apiEndpoint['1.2'] + "users.json", { ignoreLoadingBar: ignoreLoadingBar })
+            .success(function(result) {
+                deferred.resolve(result);
+            })
+            .error(function(fault) {
+                deferred.reject(fault);
+            });
+
+        return deferred.promise;
+    };
+
 };
 
 UserService.$inject = ['$http', '$state', '$q', '$location', 'authService', 'userModel', 'messageModel', 'ENV'];
