@@ -57,8 +57,6 @@ function buildRpmTrafficRouter () {
 	installDnsSec
 
 	cd "$TR_DIR" || { echo "Could not cd to $TR_DIR: $?"; exit 1; }
-	export TRAFFIC_CONTROL_VERSION="$TC_VERSION"
-	mvn -versions:set -DnewVersion=$TRAFFIC_CONTROL_VERSION
 	export GIT_REV_COUNT=$(getRevCount)
 	mvn -Dmaven.test.skip=true -DminimumTPS=1 clean package ||  \
 		{ echo "RPM BUILD FAILED: $?"; exit 1; }
@@ -108,6 +106,7 @@ function checkEnvironment() {
 	echo "TC_VERSION: $TC_VERSION"
 	echo "RPM: $RPM"
 	echo "--------------------------------------------------"
+    export TRAFFIC_CONTROL_VERSION="$TC_VERSION"
 }
 
 # ---------------------------------------
@@ -115,15 +114,16 @@ function initBuildArea() {
 	echo "Initializing the build area."
 	mkdir -p "$RPMBUILD"/{SPECS,SOURCES,RPMS,SRPMS,BUILD,BUILDROOT} || { echo "Could not create $RPMBUILD: $?"; exit 1; }
 
-	tr_dest=$(createSourceDir traffic_monitor)
+	tr_dest=$(createSourceDir traffic_router)
 
-	# TODO: what can be cut out here?
+	export MVN_CMD="mvn versions:set -DnewVersion=$TRAFFIC_CONTROL_VERSION"
+	echo $MVN_CMD
+	$MVN_CMD
 	cp -r "$TR_DIR"/{api,build,connector,core} "$tr_dest"/. || { echo "Could not copy to $tr_dest: $?"; exit 1; }
 	cp  "$TR_DIR"/pom.xml "$tr_dest" || { echo "Could not copy to $tr_dest: $?"; exit 1; }
-	cp -r "$tr_dest"/* "$BLDPATH"
 
 	# tar/gzip the source
-	tar -czvf "$tr_dest".tgz -C "$RPMBUILD/SOURCES" $(basename $tr_dest) || { echo "Could not create tar archive $tr_dest: $?"; exit 1; }
+	tar -czf "$tr_dest".tgz -C "$RPMBUILD/SOURCES" $(basename $tr_dest) || { echo "Could not create tar archive $tr_dest: $?"; exit 1; }
 
 	echo "The build area has been initialized."
 }
