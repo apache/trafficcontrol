@@ -27,11 +27,14 @@ $fa-font-path: "../assets/fonts/";
 @import "../modules/private/configure/configure";
 @import "../modules/private/configure/deliveryServices/configure.deliveryServices";
 
+// monitor
+@import "../modules/private/monitor/monitor";
+
 // dashboards
-@import "../modules/private/dashboards/dashboards";
-@import "../modules/private/dashboards/one/dashboards.one";
-@import "../modules/private/dashboards/two/dashboards.two";
-@import "../modules/private/dashboards/three/dashboards.three";
+@import "../modules/private/monitor/dashboards/dashboards";
+@import "../modules/private/monitor/dashboards/one/dashboards.one";
+@import "../modules/private/monitor/dashboards/two/dashboards.two";
+@import "../modules/private/monitor/dashboards/three/dashboards.three";
 
 [ng-click] {
   cursor: pointer;

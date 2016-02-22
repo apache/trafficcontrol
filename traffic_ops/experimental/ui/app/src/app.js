@@ -35,11 +35,14 @@ var trafficOps = angular.module('trafficOps', [
         require('./modules/private/configure').name,
         require('./modules/private/configure/deliveryServices').name,
 
+        // monitor
+        require('./modules/private/monitor').name,
+
         // dashboards
-        require('./modules/private/dashboards').name,
-        require('./modules/private/dashboards/one').name,
-        require('./modules/private/dashboards/two').name,
-        require('./modules/private/dashboards/three').name,
+        require('./modules/private/monitor/dashboards').name,
+        require('./modules/private/monitor/dashboards/one').name,
+        require('./modules/private/monitor/dashboards/two').name,
+        require('./modules/private/monitor/dashboards/three').name,
 
         // common modules
         require('./common/modules/dialog/confirm').name,

@@ -1,12 +1,12 @@
-module.exports = angular.module('trafficOps.private.dashboards.two', [])
+module.exports = angular.module('trafficOps.private.monitor.dashboards.two', [])
     .controller('DashboardsTwoController', require('./DashboardsTwoController'))
     .config(function($stateProvider, $urlRouterProvider) {
         $stateProvider
-            .state('trafficOps.private.dashboards.two', {
+            .state('trafficOps.private.monitor.dashboards.two', {
                 url: '/two',
                 views: {
                     dashboardsContent: {
-                        templateUrl: 'modules/private/dashboards/two/dashboards.two.tpl.html',
+                        templateUrl: 'modules/private/monitor/dashboards/two/dashboards.two.tpl.html',
                         controller: 'DashboardsTwoController'
                     }
                 }
