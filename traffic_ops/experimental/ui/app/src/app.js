@@ -39,6 +39,7 @@ var trafficOps = angular.module('trafficOps', [
         require('./modules/private/configure').name,
         require('./modules/private/configure/deliveryServices').name,
         require('./modules/private/configure/deliveryServices/list').name,
+        require('./modules/private/configure/deliveryServices/edit').name,
 
         // monitor
         require('./modules/private/monitor').name,

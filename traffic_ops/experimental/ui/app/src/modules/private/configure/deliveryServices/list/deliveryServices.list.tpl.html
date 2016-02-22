@@ -84,7 +84,7 @@
             <tbody>
             <tr class="pointer" ng-class="{'even': $index % 2 == 0}" ng-class="{'odd': $index % 2 != 0}" ng-repeat="deliveryService in deliveryServicesModel.deliveryServices | orderBy:predicate:reverse | filter:search:strict | offsetFilter:(currentPage-1)*dsPerPage | limitTo:dsPerPage">
                 <td>
-                    <i class="fa fa-check fa-fw" ng-show="deliveryService.active"></i> <i class="fa fa-times fa-fw" ng-show="!deliveryService.active"></i>{{deliveryService.xmlId}} <span ng-show="deliveryService.signed">[ signed ]</span>
+                    <i class="fa fa-check fa-fw" ng-show="deliveryService.active"></i> <i class="fa fa-times fa-fw" ng-show="!deliveryService.active"></i><a ui-sref="trafficOps.private.configure.deliveryServices.edit({dsId:deliveryService.id})">{{deliveryService.xmlId}}</a> <span ng-show="deliveryService.signed">[ signed ]</span>
                 </td>
                 <td>{{deliveryService.type}} <span ng-show="deliveryService.ipv6RoutingEnabled">| IPv6 </span></td>
                 <td>{{deliveryService.protocol}}</td>

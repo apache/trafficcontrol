@@ -1,4 +1,4 @@
-var DeliveryServicesModel = function() {
+var DeliveryServicesModel = function($log) {
 
     var model = this;
 
@@ -13,7 +13,7 @@ var DeliveryServicesModel = function() {
     this.showTenant = true;
 
     this.getDeliveryService = function(dsId) {
-        return _.find(model.deliveryServices, function(ds){ return ds.id === dsId });
+        return _.find(model.deliveryServices, function(ds){ return ds.xmlId === dsId });
     };
 
     this.getDeliveryServiceByTenant = function(tenantId) {
@@ -59,5 +59,5 @@ var DeliveryServicesModel = function() {
 
 };
 
-DeliveryServicesModel.$inject = [];
+DeliveryServicesModel.$inject = ['$log'];
 module.exports = DeliveryServicesModel;

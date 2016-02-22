@@ -1,4 +1,10 @@
-var ConfigureController = function() {};
+var ConfigureController = function($scope, $location) {
 
-ConfigureController.$inject = [];
+    $scope.navigateToPath = function(path) {
+        $location.url(path);
+    };
+
+};
+
+ConfigureController.$inject = ['$scope', '$location'];
 module.exports = ConfigureController;

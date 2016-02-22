@@ -1,4 +1,4 @@
-var DeliveryServiceService = function($http, deliveryServicesModel, ENV) {
+var DeliveryServiceService = function($http, $log, deliveryServicesModel, ENV) {
 
     this.getDeliveryServices = function(ignoreLoadingBar) {
         var promise = $http.get(ENV.apiEndpoint['1.2'] + "deliveryservices.json", { ignoreLoadingBar: ignoreLoadingBar })
@@ -12,7 +12,19 @@ var DeliveryServiceService = function($http, deliveryServicesModel, ENV) {
         return promise;
     };
 
+    this.getDeliveryService = function(dsId, ignoreLoadingBar) {
+        var promise = $http.get(ENV.apiEndpoint['1.2'] + "deliveryservices/" + dsId + ".json", { ignoreLoadingBar: ignoreLoadingBar })
+            .success(function(result) {
+                return result;
+            })
+            .error(function(fault) {
+            });
+
+        return promise;
+    };
+
+
 };
 
-DeliveryServiceService.$inject = ['$http', 'deliveryServicesModel', 'ENV'];
+DeliveryServiceService.$inject = ['$http', '$log', 'deliveryServicesModel', 'ENV'];
 module.exports = DeliveryServiceService;
