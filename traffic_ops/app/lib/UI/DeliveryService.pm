@@ -711,7 +711,7 @@ sub update {
 			org_server_fqdn        => $self->paramAsScalar('ds.org_server_fqdn'),
 			multi_site_origin      => $self->paramAsScalar('ds.multi_site_origin'),
 			ccr_dns_ttl            => $self->paramAsScalar('ds.ccr_dns_ttl'),
-			type                   => $self->paramAsScalar('ds.type.id'),
+			type                   => $self->typeid(),
 			cdn_id                 => $self->paramAsScalar('ds.cdn_id'),
 			profile                => $self->paramAsScalar('ds.profile'),
 			global_max_mbps        => $self->hr_string_to_mbps( $self->paramAsScalar( 'ds.global_max_mbps', 0 ) ),
