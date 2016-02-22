@@ -1,4 +1,4 @@
-var ConfigureDeliveryServicesController = function($scope, $interval, deliveryServiceService, deliveryServicesModel) {
+var DeliveryServicesController = function($scope, $interval, deliveryServiceService, deliveryServicesModel) {
 
     var refreshInterval;
 
@@ -45,5 +45,5 @@ var ConfigureDeliveryServicesController = function($scope, $interval, deliverySe
 
 };
 
-ConfigureDeliveryServicesController.$inject = ['$scope', '$interval', 'deliveryServiceService', 'deliveryServicesModel'];
-module.exports = ConfigureDeliveryServicesController;
+DeliveryServicesController.$inject = ['$scope', '$interval', 'deliveryServiceService', 'deliveryServicesModel'];
+module.exports = DeliveryServicesController;

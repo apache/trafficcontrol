@@ -1,5 +1,5 @@
 module.exports = angular.module('trafficOps.private.configure.deliveryServices', [])
-    .controller('ConfigureDeliveryServicesController', require('./ConfigureDeliveryServicesController'))
+    .controller('DeliveryServicesController', require('./DeliveryServicesController'))
     .config(function($stateProvider, $urlRouterProvider) {
         $stateProvider
             .state('trafficOps.private.configure.deliveryServices', {
@@ -7,11 +7,11 @@ module.exports = angular.module('trafficOps.private.configure.deliveryServices',
                 views: {
                     configureContent: {
                         templateUrl: 'modules/private/configure/deliveryServices/configure.deliveryServices.tpl.html',
-                        controller: 'ConfigureDeliveryServicesController'
+                        controller: 'DeliveryServicesController'
                     }
                 },
                 resolve: {
-                    deliveryServices: function(user, deliveryServiceService, deliveryServicesModel) {
+                    deliveryServices: function(user, deliveryServiceService) {
                         return deliveryServiceService.getDeliveryServices(false);
                     }
                 }
