@@ -29,7 +29,7 @@
     <div class="sidebar-footer hidden-small">
         <a title="Logout" ng-show="user.loaded" ng-click="logout()" uib-popover="Logout" popover-trigger="mouseenter"><i class="fa fa-sign-out"></i></a>
         <a title="Login" ng-show="!user.loaded" ui-sref="trafficOps.public.login" uib-popover="Login" popover-trigger="mouseenter"><i class="fa fa-sign-in"></i></a>
-        <a title="Settings" uib-popover="Settings" popover-trigger="mouseenter"><i class="fa fa-cog"></i></a>
+        <a title="User Profile" ui-sref="trafficOps.private.user.edit" uib-popover="User Profile" popover-trigger="mouseenter"><i class="fa fa-user"></i></a>
         <a title="Release Info" ng-click="releaseVersion()" uib-popover="Release Info" popover-trigger="mouseenter"><i class="fa fa-info"></i></a>
         <a title="Popout" uib-popover="Popout" popover-trigger="mouseenter"><i class="fa fa-external-link"></i></a>
     </div>
