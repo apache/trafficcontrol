@@ -7,6 +7,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
+import org.powermock.reflect.Whitebox;
 
 import java.security.AccessControlException;
 import java.security.Permission;
@@ -55,8 +56,11 @@ public class MonitorApplicationTest {
 		mockStatic(ConfigHandler.class);
 		when(ConfigHandler.getInstance()).thenReturn(configHandler);
 
+		MonitorApplication monitorApplication = new MonitorApplication();
+		Whitebox.setInternalState(monitorApplication, "settingsAccessible", true);
+
 		try {
-			new MonitorApplication().init();
+			monitorApplication.init();
 			fail("Init did not do SystemExit");
 		} catch (AccessControlException e) {
 			assertThat(e.getMessage(), equalTo("Boom"));

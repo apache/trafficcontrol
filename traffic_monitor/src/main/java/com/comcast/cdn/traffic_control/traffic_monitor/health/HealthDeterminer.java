@@ -296,16 +296,7 @@ public class HealthDeterminer {
 		}
 		return currBW;
 	}
-	public static String getStatusUrl(final Cache cache) {
-		final String fqdn = cache.getFqdn();
-		final String infname = cache.getInterfaceName();
-		final JSONObject jo = cache.getControls();
-		if(jo == null) { return null; }
-		//		health.polling.url: "http://${hostname}/_astats?application=&inf.name=${interface_name}"
-		final String stateUrl = jo.optString("health.polling.url");
-		if(stateUrl == null) { return null; }
-		return stateUrl.replace("${hostname}", fqdn).replace("${interface_name}", infname);
-	}
+
 
 	public JSONObject getJSONStats(final Cache cache, final boolean peerOptimistic, final boolean raw) throws JSONException {
 		final JSONObject statsJson = new JSONObject();
