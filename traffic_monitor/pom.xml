@@ -3,18 +3,17 @@
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
 
 	<modelVersion>4.0.0</modelVersion>
+
 	<groupId>com.comcast.cdn.traffic_control</groupId>
+	<artifactId>traffic_monitor</artifactId>
+	<version>1.5.0</version>
 	<packaging>war</packaging>
-	<version>${env.TRAFFIC_CONTROL_VERSION}</version>
-	<name>traffic_monitor</name>
-	<description></description>
 
 	<scm>
 		<connection>scm:git:file://</connection>
 		<developerConnection>scm:git:file://</developerConnection>
 	</scm>
 
-	<!-- <organization> <name>company name</name> <url>company url</url> </organization> -->
 	<properties>
 		<deploy.dir>/opt/traffic_monitor</deploy.dir>
 		<wicket.version>6.0.0</wicket.version>
@@ -22,17 +21,11 @@
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 	</properties>
 	<dependencies>
-		<!-- WICKET DEPENDENCIES -->
 		<dependency>
 			<groupId>org.apache.wicket</groupId>
 			<artifactId>wicket-core</artifactId>
 			<version>${wicket.version}</version>
 		</dependency>
-		<!-- OPTIONAL DEPENDENCY <dependency> <groupId>org.apache.wicket</groupId> 
-			<artifactId>wicket-extensions</artifactId> <version>${wicket.version}</version> 
-			</dependency> -->
-
-		<!-- LOGGING DEPENDENCIES - LOG4J -->
 		<dependency>
 			<groupId>org.slf4j</groupId>
 			<artifactId>slf4j-log4j12</artifactId>
@@ -280,21 +273,6 @@
 				<version>1.4.1</version>
 				<executions>
 					<execution>
-						<phase>validate</phase>
-						<id>enforce-environment-variable-is-set0</id>
-						<goals>
-							<goal>enforce</goal>
-						</goals>
-						<configuration>
-							<rules>
-								<requireEnvironmentVariable>
-									<variableName>TRAFFIC_CONTROL_VERSION</variableName>
-								</requireEnvironmentVariable>
-							</rules>
-							<fail>true</fail>
-						</configuration>
-					</execution>
-					<execution>
 						<phase>package</phase>
 						<id>enforce-environment-variable-is-set</id>
 						<goals>
@@ -517,5 +495,4 @@
 			</snapshots>
 		</repository>
 	</repositories>
-	<artifactId>traffic_monitor</artifactId>
 </project>
