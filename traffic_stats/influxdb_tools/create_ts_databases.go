@@ -22,28 +22,27 @@ package main
 import (
 	"flag"
 	"fmt"
-	influx "github.com/influxdb/influxdb/client"
-	"net/url"
+
+	influx "github.com/influxdata/influxdb/client/v2"
 )
 
 func main() {
 
-	influxUrl := flag.String("url", "http://localhost:8086", "The influxdb url and port")
+	influxURL := flag.String("url", "http://localhost:8086", "The influxdb url and port")
 	replication := flag.String("replication", "3", "The number of nodes in the cluster")
 	flag.Parse()
-	fmt.Printf("creating datbases for influxUrl: %v with a replication of %v\n", *influxUrl, *replication)
-	iu, _ := url.Parse(*influxUrl)
-	client, err := influx.NewClient(influx.Config{
-		URL: *iu,
+	fmt.Printf("creating datbases for influxUrl: %v with a replication of %v\n", *influxURL, *replication)
+	client, err := influx.NewHTTPClient(influx.HTTPConfig{
+		Addr: *influxURL,
 	})
 	if err != nil {
 		fmt.Printf("Error creating influx client: %v", err)
 		panic("could not create influx client")
 	}
 
-	createCacheStats(*client, replication)
-	createDailyStats(*client, replication)
-	createDeliveryServiceStats(*client, replication)
+	createCacheStats(client, replication)
+	createDailyStats(client, replication)
+	createDeliveryServiceStats(client, replication)
 
 }
 
@@ -67,10 +66,11 @@ func createCacheStats(client influx.Client, replication *string) {
 	createRetentionPolicy(client, db, "daily", "26h", replication, true)
 	createRetentionPolicy(client, db, "monthly", "30d", replication, false)
 	createRetentionPolicy(client, db, "indefinite", "INF", replication, false)
-	createContinuousQuery(client, "bandwidth_hostname_1min", "CREATE CONTINUOUS QUERY bandwidth_hostname_1min ON cache_stats BEGIN SELECT mean(value) AS \"value\" INTO \"cache_stats\".\"monthly\".\"bandwidth.hostname.1min\" FROM \"cache_stats\".\"daily\".bandwidth GROUP BY time(1m), hostname, cdn END")
-	createContinuousQuery(client, "connections_hostname_1min", "CREATE CONTINUOUS QUERY connections_hostname_1min ON cache_stats BEGIN SELECT mean(value) AS \"value\" INTO \"cache_stats\".\"monthly\".\"connections.hostname.1min\" FROM \"cache_stats\".\"daily\".\"ats.proxy.process.http.current_client_connections\" GROUP BY time(1m), hostname, cdn END")
-	createContinuousQuery(client, "bandwidth_cdn_1min", "CREATE CONTINUOUS QUERY bandwidth_cdn_1min ON cache_stats BEGIN SELECT sum(value) AS \"value\" INTO \"cache_stats\".\"monthly\".\"bandwidth.cdn.1min\" FROM \"cache_stats\".\"monthly\".\"bandwidth.hostname.1min\" GROUP BY time(1m), cdn END")
-	createContinuousQuery(client, "connections_cdn_1min", "CREATE CONTINUOUS QUERY connections_cdn_1min ON cache_stats BEGIN SELECT sum(value) AS \"value\" INTO \"cache_stats\".\"monthly\".\"connections.cdn.1min\" FROM \"cache_stats\".\"monthly\".\"connections.hostname.1min\" GROUP BY time(1m), cdn END")
+	createContinuousQuery(client, "bandwidth_1min", "CREATE CONTINUOUS QUERY bandwidth_1min ON cache_stats BEGIN SELECT mean(value) AS \"value\" INTO \"cache_stats\".\"monthly\".\"bandwidth.1min\" FROM \"cache_stats\".\"daily\".bandwidth GROUP BY time(1m), * END")
+	createContinuousQuery(client, "connections_1min", "CREATE CONTINUOUS QUERY connections_1min ON cache_stats BEGIN SELECT mean(value) AS \"value\" INTO \"cache_stats\".\"monthly\".\"connections.1min\" FROM \"cache_stats\".\"daily\".\"ats.proxy.process.http.current_client_connections\" GROUP BY time(1m), * END")
+	createContinuousQuery(client, "bandwidth_cdn_1min", "CREATE CONTINUOUS QUERY bandwidth_cdn_1min ON cache_stats BEGIN SELECT sum(value) AS \"value\" INTO \"cache_stats\".\"monthly\".\"bandwidth.cdn.1min\" FROM \"cache_stats\".\"monthly\".\"bandwidth.1min\" GROUP BY time(1m), cdn END")
+	createContinuousQuery(client, "connections_cdn_1min", "CREATE CONTINUOUS QUERY connections_cdn_1min ON cache_stats BEGIN SELECT sum(value) AS \"value\" INTO \"cache_stats\".\"monthly\".\"connections.cdn.1min\" FROM \"cache_stats\".\"monthly\".\"connections.1min\" GROUP BY time(1m), cdn END")
+
 }
 
 func createDeliveryServiceStats(client influx.Client, replication *string) {

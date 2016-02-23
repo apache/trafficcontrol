@@ -28,18 +28,29 @@ import com.comcast.cdn.traffic_control.traffic_monitor.health.PeerState;
 public class Peer implements Serializable {
 	private static final long serialVersionUID = 1L;
 	final private String hostname;
+	final private Map<String, String> headerMap = new HashMap<String, String>();
+	final private String fqdn;
+	final private String ip;
+	final private String status;
+	final private String location;
+	final private int port;
+
 	private PeerState state;
 	private String error;
-	final private JSONObject json;
-	final private Map<String, String> headerMap = new HashMap<String, String>();
 
-	public Peer(final String id, final JSONObject o) throws JSONException {
-		this.json = o;
-		this.hostname = id;
+	public Peer(final String hostname, final JSONObject json) throws JSONException {
+		this.hostname = hostname;
 
-		if (json.has("fqdn")) {
-			headerMap.put("Host", json.getString("fqdn") + ":" + getPortString());
+		fqdn = json.optString("fqdn");
+		port = (json.optInt("port") == 0) ? 80 : json.optInt("port");
+
+		if (fqdn != null && !fqdn.isEmpty()) {
+			headerMap.put("Host", fqdn + ":" + getPortString());
 		}
+
+		ip = json.optString("ip");
+		status = json.optString("status");
+		location = json.optString("location");
 	}
 
 	public String getHostname() {
@@ -66,37 +77,23 @@ public class Peer implements Serializable {
 		this.error = error;
 	}
 
-	public String getProfile() {
-		return json.optString("profile");
-	}
-
 	public String getFqdn() {
-		return json.optString("fqdn");
+		return fqdn;
 	}
 
 	public String getIpAddress() {
-		return json.optString("ip");
+		return ip;
 	}
 
 	public String getStatus() {
-		return json.optString("status");
+		return status;
 	}
 
 	public String getLocation() {
-		return json.optString("location");
-	}
-
-	public String getIp6Address() {
-		return json.optString("ip6");
+		return location;
 	}
 
 	final public int getPort() {
-		final int port = json.optInt("port");
-
-		if (port == 0) {
-			return(80);
-		}
-
 		return port;
 	}
 

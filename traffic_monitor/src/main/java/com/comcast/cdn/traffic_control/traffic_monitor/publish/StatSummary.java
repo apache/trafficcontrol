@@ -17,16 +17,16 @@
 package com.comcast.cdn.traffic_control.traffic_monitor.publish;
 
 import java.util.Date;
-import java.util.List;
 
+import com.comcast.cdn.traffic_control.traffic_monitor.health.CacheState;
+import com.comcast.cdn.traffic_control.traffic_monitor.health.CacheStateRegistry;
 import org.apache.wicket.ajax.json.JSONException;
 import org.apache.wicket.ajax.json.JSONObject;
 import org.apache.wicket.request.mapper.parameter.PageParameters;
 
-import com.comcast.cdn.traffic_control.traffic_monitor.health.CacheState;
-
 public class StatSummary extends JsonPage {
 	private static final long serialVersionUID = 1L;
+	private final CacheStateRegistry cacheStateRegistry = CacheStateRegistry.getInstance();
 
 	/**
 	 * Send out the json!!!!
@@ -47,18 +47,18 @@ public class StatSummary extends JsonPage {
 		o.put("date", new Date().toString());
 		o.put("pp", pp);
 		final JSONObject servers = new JSONObject();
-		final List<CacheState> caches = CacheState.getCacheStates();
 		if(host != null && !host.equals("")) {
-			if(CacheState.has(host)) {
-				servers.put(host,CacheState.getState(host).getSummary(startTime, endTime, stats, wildcard, hidden));
+			if(cacheStateRegistry.has(host)) {
+				servers.put(host,cacheStateRegistry.get(host).getSummary(startTime, endTime, stats, wildcard, hidden));
 			} else {
 				o.put("error", "Hostname not found: "+host);
 			}
 		} else {
-			for(CacheState s : caches) {
-				servers.put(s.getId(),s.getSummary(startTime, endTime, stats, wildcard, hidden));
+			for (CacheState cacheState : cacheStateRegistry.getAll()) {
+				servers.put(cacheState.getId(),cacheState.getSummary(startTime, endTime, stats, wildcard, hidden));
 			}
 		}
+
 		o.put("caches", servers);
 		return o;
 	}

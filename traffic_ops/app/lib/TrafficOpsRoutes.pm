@@ -475,7 +475,7 @@ sub api_routes {
 		->to( 'DeliveryService#state', namespace => $namespace );
 
 	# -- DELIVERY SERVICE: Request
-	$r->post( "/api/$version/deliveryservices/request")->over( authenticated => 1 )->to( 'DeliveryService#request', namespace => $namespace );
+	$r->post("/api/$version/deliveryservices/request")->over( authenticated => 1 )->to( 'DeliveryService#request', namespace => $namespace );
 
 	## -- DELIVERY SERVICE: SSL Keys
 	## Support for SSL private keys, certs, and csrs
@@ -502,6 +502,10 @@ sub api_routes {
 		->to( 'KeysUrlSig#generate', namespace => 'API::DeliveryService' );
 	$r->get( "/api/$version/deliveryservices/xmlId/:xmlId/urlkeys" => [ format => [qw(json)] ] )->over( authenticated => 1 )
 		->to( 'KeysUrlSig#view_by_xmlid', namespace => 'API::DeliveryService' );
+
+	# -- DELIVERY SERVICE REGEXES
+	$r->get( "/api/$version/deliveryservices_regexes" => [ format => [qw(json)] ] )->over( authenticated => 1 )
+		->to( 'DeliveryServiceRegexes#index', namespace => $namespace );
 
 	#       ->over( authenticated => 1 )->to( 'DeliveryService#get_summary', namespace => $namespace );
 	# -- DELIVERY SERVICE SERVER - #NEW
@@ -778,10 +782,8 @@ sub traffic_stats_routes {
 	$r->get( "/api/$version/deliveryservice_stats" => [ format => [qw(json)] ] )->over( authenticated => 1 )
 		->to( 'DeliveryServiceStats#index', namespace => $namespace );
 	$r->get( "/api/$version/cache_stats" => [ format => [qw(json)] ] )->over( authenticated => 1 )->to( 'CacheStats#index', namespace => $namespace );
-	$r->get( "internal/api/$version/current_bandwidth"   => [ format => [qw(json)] ] )->to( 'CacheStats#current_bandwidth',   namespace => $namespace );
-	$r->get( "internal/api/$version/current_connections" => [ format => [qw(json)] ] )->to( 'CacheStats#current_connections', namespace => $namespace );
-	$r->get( "internal/api/$version/current_capacity"    => [ format => [qw(json)] ] )->to( 'CacheStats#current_capacity',    namespace => $namespace );
 	$r->get( "internal/api/$version/daily_summary"       => [ format => [qw(json)] ] )->to( 'CacheStats#daily_summary',       namespace => $namespace );
+	$r->get( "internal/api/$version/current_stats"       => [ format => [qw(json)] ] )->to( 'CacheStats#current_stats',    namespace => $namespace );
 }
 
 sub catch_all {

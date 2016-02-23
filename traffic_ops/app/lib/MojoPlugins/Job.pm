@@ -95,8 +95,7 @@ sub register {
 				{
 					'me.cdn_id' => $cdn_id,
 					-and        => { status => { 'not in' => \@offstates } }
-				},
-				{ prefetch => [ 'cdn', 'profile' ] }
+				}
 			);
 			my $result = $update_server_bit_rs->update( { upd_pending => 1 } );
 			&log( $self, "Set upd_pending = 1 for all applicable caches", "OPER" );

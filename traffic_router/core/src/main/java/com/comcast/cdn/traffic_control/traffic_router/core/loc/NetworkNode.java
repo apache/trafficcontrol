@@ -245,7 +245,7 @@ public class NetworkNode implements Comparable<NetworkNode> {
         }
     }
 
-    private static class SuperNode extends NetworkNode {
+    public static class SuperNode extends NetworkNode {
         private Map<NetworkNode, NetworkNode> children6;
 
         public SuperNode() throws NetworkNodeException {

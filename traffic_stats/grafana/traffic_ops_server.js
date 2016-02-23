@@ -118,7 +118,7 @@ dashboard.title = which;
             {
               "measurement": "bandwidth",
               "tags": {},
-              "query": "SELECT sum(value)*1000/6 FROM \"bandwidth\" WHERE hostname='" + which + "'  and $timeFilter GROUP BY time(60s)",
+              "query": "SELECT mean(value)*1000 FROM \"monthly\".\"bandwidth.1min\" WHERE hostname='" + which + "'  and $timeFilter GROUP BY time(60s)",
               "rawQuery": true
             }
           ],
@@ -190,7 +190,7 @@ dashboard.title = which;
             {
               "measurement": "bandwidth",
               "tags": {},
-              "query": "SELECT sum(value)*1000/6 FROM \"ats.proxy.process.http.current_client_connections\" WHERE hostname='" + which + "'  and $timeFilter GROUP BY time(60s)",
+              "query": "SELECT mean(value)*1000 FROM \"monthly\".\"connections.1min\" WHERE hostname='" + which + "'  and $timeFilter GROUP BY time(60s)",
               "rawQuery": true
             }
           ],

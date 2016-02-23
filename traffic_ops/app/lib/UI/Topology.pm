@@ -280,7 +280,7 @@ sub gen_crconfig_json {
 	my $regexps;
 	my $rs_ds = $self->db->resultset('Deliveryservice')->search(
 		{
-			'me.profile' => { -in => @{ $profile_cache->{'CCR'} } },
+			'me.profile' => { -in => \@{ $profile_cache->{'CCR'} } },
 			'active'     => 1
 		},
 		{ prefetch => [ 'deliveryservice_servers', 'deliveryservice_regexes', 'type' ] }
@@ -453,6 +453,8 @@ sub gen_crconfig_json {
 				$data_obj->{'deliveryServices'}->{ $row->xml_id }->{'bypassDestination'}->{'HTTP'}->{'fqdn'} = $fqdn;
 				$data_obj->{'deliveryServices'}->{ $row->xml_id }->{'bypassDestination'}->{'HTTP'}->{'port'} = $port;
 			}
+
+			$data_obj->{'deliveryServices'}->{ $row->xml_id }->{'regionalGeoBlocking'} = $row->regional_geo_blocking ? 'true' : 'false';
 		}
 
 		if ( defined( $row->tr_response_headers )
@@ -735,6 +737,9 @@ sub stringify_ds {
 	}
 	if ( defined( $ds->{'initial_dispersion'} ) ) {
 		$string .= "|initial_dispersion: " . $ds->{'initial_dispersion'};
+	}
+	if ( defined( $ds->{'regionalGeoBlocking'} ) ) {
+		$string .= "|Regional_Geoblocking:" . $ds->{'regionalGeoBlocking'};
 	}
 	$string .= "|<br>&emsp;DNS TTLs: A:" . $ds->{'ttls'}->{'A'} . " AAAA:" . $ds->{'ttls'}->{'AAAA'} . "|";
 	foreach my $dns ( @{ $ds->{'staticDnsEntries'} } ) {

@@ -16,7 +16,6 @@
 
 package com.comcast.cdn.traffic_control.traffic_monitor.wicket.behaviors;
 
-import org.apache.log4j.Logger;
 import org.apache.wicket.Component;
 import org.apache.wicket.behavior.AttributeAppender;
 import org.apache.wicket.markup.MarkupNotFoundException;
@@ -24,25 +23,29 @@ import org.apache.wicket.model.IModel;
 import org.apache.wicket.util.value.ValueMap;
 
 public class UpdatingAttributeAppender extends AttributeAppender {
-	private static final Logger LOGGER = Logger.getLogger(UpdatingAttributeAppender.class);
 	private static final long serialVersionUID = 1L;
+
 	public UpdatingAttributeAppender(final String attribute, final IModel<?> replaceModel, final String s) {
 		super(attribute, replaceModel, s);
 	}
+
 	public IModel<?> getModel() {
 		return super.getReplaceModel();
 	}
-	public String getAttributeValue(final Component c) {
+
+	public String getAttributeValue(final Component component) {
 		String value = null;
+
 		try {
-			final ValueMap atts = c.getMarkupAttributes();
+			final ValueMap atts = component.getMarkupAttributes();
 			value = toStringOrNull(atts.get(getAttribute()));
 		} catch (MarkupNotFoundException e) {
-			LOGGER.debug(e,e);
+			// Ignore
 		}
-		final String newValue = newValue(value, toStringOrNull(getReplaceModel().getObject()));
-		return newValue;
+
+		return newValue(value, toStringOrNull(getReplaceModel().getObject()));
 	}
+
 	private String toStringOrNull(final Object replacementValue) {
 		return (replacementValue != null) ? replacementValue.toString() : null;
 	}

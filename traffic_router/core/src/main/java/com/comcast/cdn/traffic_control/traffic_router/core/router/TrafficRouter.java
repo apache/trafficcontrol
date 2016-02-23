@@ -55,6 +55,7 @@ import com.comcast.cdn.traffic_control.traffic_router.core.loc.GeolocationExcept
 import com.comcast.cdn.traffic_control.traffic_router.core.loc.GeolocationService;
 import com.comcast.cdn.traffic_control.traffic_router.core.loc.NetworkNode;
 import com.comcast.cdn.traffic_control.traffic_router.core.loc.NetworkNodeException;
+import com.comcast.cdn.traffic_control.traffic_router.core.loc.RegionalGeo;
 import com.comcast.cdn.traffic_control.traffic_router.core.request.DNSRequest;
 import com.comcast.cdn.traffic_control.traffic_router.core.request.HTTPRequest;
 import com.comcast.cdn.traffic_control.traffic_router.core.request.Request;
@@ -78,6 +79,7 @@ public class TrafficRouter {
 
 	private final Random random = new Random(System.nanoTime());
 	private Set<String> requestHeaders = new HashSet<String>();
+	private static final Geolocation GEO_ZERO_ZERO = new Geolocation(0,0);
 
 	public TrafficRouter(final CacheRegister cr, 
 			final GeolocationService geolocationService, 
@@ -199,6 +201,9 @@ public class TrafficRouter {
 			final List<Cache> caches = selectCache(location, ds);
 			if (caches != null) {
 				track.setResultLocation(location.getGeolocation());
+				if (track.getResultLocation().equals(GEO_ZERO_ZERO)) {
+					LOGGER.error("Location " + location.getId() + " has Geolocation " + location.getGeolocation());
+				}
 				return caches;
 			}
 			locationsTested++;
@@ -232,7 +237,7 @@ public class TrafficRouter {
 		Geolocation clientLocation = null;
 
 		try {
-			clientLocation = getClientLocation(request, deliveryService, cacheLocation);
+			clientLocation = getClientLocation(request, deliveryService, cacheLocation, track);
 		} catch (GeolocationException e) {
 			LOGGER.warn("Failed looking up Client GeoLocation: " + e.getMessage());
 		}
@@ -350,13 +355,29 @@ public class TrafficRouter {
 		return addresses;
 	}
 
-	public Geolocation getClientLocation(final Request request, final DeliveryService ds, final CacheLocation cacheLocation) throws GeolocationException {
+	public Geolocation getClientGeolocation(final Request request, final Track track) throws GeolocationException {
+		Geolocation clientGeolocation = null;
+
+		if (track.isClientGeolocationQueried()) {
+			clientGeolocation = track.getClientGeolocation();
+			LOGGER.debug("RegionalGeo: get cached geo, " + clientGeolocation);
+		} else {
+			clientGeolocation = getLocation(request.getClientIP());
+			track.setClientGeolocation(clientGeolocation);
+			track.setClientGeolocationQueried(true);
+			LOGGER.debug("RegionalGeo: get geo from db, " + clientGeolocation);
+		}
+
+		return clientGeolocation;
+	}
+
+	public Geolocation getClientLocation(final Request request, final DeliveryService ds, final CacheLocation cacheLocation, final Track track) throws GeolocationException {
 		Geolocation clientLocation;
 		if (cacheLocation != null) {
 			clientLocation = cacheLocation.getGeolocation();
 		} else {
-			clientLocation = getLocation(request.getClientIP());
-			clientLocation = ds.supportLocation(clientLocation, request.getType());
+			final Geolocation clientGeolocation = getClientGeolocation(request, track);
+			clientLocation = ds.supportLocation(clientGeolocation, request.getType());
 		}
 		return clientLocation;
 	}
@@ -410,8 +431,12 @@ public class TrafficRouter {
 		final Dispersion dispersion = ds.getDispersion();
 		final Cache cache = dispersion.getCache(consistentHash(caches, request.getPath()));
 
-		routeResult.setUrl(new URL(ds.createURIString(request, cache)));
+		if (ds.isRegionalGeoEnabled()) {
+			RegionalGeo.enforce(this, request, ds, cache, routeResult, track);
+			return routeResult;
+		}
 
+		routeResult.setUrl(new URL(ds.createURIString(request, cache)));
 		return routeResult;
 	}
 

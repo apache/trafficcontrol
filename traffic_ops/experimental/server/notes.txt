@@ -1,0 +1,20 @@
+http://www.restapitutorial.com/httpstatuscodes.html
+ - Should we be returning 201 created with a Location: on successful post? more things like that? 
+ - should we limit the ats files to know ats hosts and CRConfig to known CRConfig users, etc?
+ - parameter.value and phys_location.* need manual intervetion (null.String) - run these fixes in postgres:
+
+	 update parameter set value='' where value is NULL;
+	 update phys_location set address='' where address is NULL;
+	 update phys_location set state='' where state is NULL;
+	 update phys_location set city='' where city is NULL;
+	 update phys_location set zip='' where zip is NULL;
+ 
+ - maybe it is better to just pass (w http.ResponseWriter, r *http.Request) to the actions, and have the action funcs write to w without returning?
+
+ - conventions for view names, (tablenames, columns, fk refs, )
+ - review tables parameter/profile, type, job, servercheck, to_extension
+
+ - pass encoder which has the write
+ - pass db, not db.GlobalDB
+ 
+ - 
