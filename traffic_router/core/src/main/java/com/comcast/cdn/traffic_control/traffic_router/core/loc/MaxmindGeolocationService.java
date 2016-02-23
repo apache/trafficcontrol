@@ -39,7 +39,7 @@ public class MaxmindGeolocationService implements GeolocationService {
 	private DatabaseReader databaseReader;
 	private File databaseFile;
 
-	private CityResponse getCityResponse(final String address) throws GeolocationException {
+	private CityResponse getCityResponse(final DatabaseReader databaseReader, final String address) throws GeolocationException {
 		try {
 			return databaseReader.city(InetAddress.getByName(address));
 		} catch (AddressNotFoundException e) {
@@ -55,7 +55,7 @@ public class MaxmindGeolocationService implements GeolocationService {
 			return null;
 		}
 
-		final CityResponse response = getCityResponse(ip.split("/")[0]);
+		final CityResponse response = getCityResponse(databaseReader, ip.split("/")[0]);
 
 		return (isResponseValid(response)) ? createGeolocation(response) : null;
 	}
@@ -79,17 +79,34 @@ public class MaxmindGeolocationService implements GeolocationService {
 	@Override
 	public void verifyDatabase(final File databaseFile) throws IOException {
 		databaseReader = createDatabaseReader(databaseFile);
+	}
+
+	@Override
+	public void setDatabaseFile(final File databaseFile) {
 		this.databaseFile = databaseFile;
 	}
 
+	@SuppressWarnings("PMD.AvoidUsingHardCodedIP")
 	private DatabaseReader createDatabaseReader(final File databaseFile) throws IOException {
 		if (!databaseFile.exists()) {
 			LOGGER.warn(databaseFile + " does not exist yet!");
 			return null;
 		}
 
+		if (databaseFile.isDirectory()) {
+			LOGGER.error(databaseFile + " is a directory, need a file");
+			return null;
+		}
+
 		LOGGER.info("Loading MaxMind db: " + databaseFile);
+
 		final DatabaseReader reader = new DatabaseReader.Builder(databaseFile).build();
+		try {
+			getCityResponse(reader, "127.0.0.1");
+		} catch (Exception e) {
+			LOGGER.error(databaseFile.getAbsolutePath() + " is not a valid Maxmind data file");
+			return null;
+		}
 		initialized = true;
 		return reader;
 	}

@@ -30,7 +30,9 @@ public class MaxmindGeoIP2Test {
 	@Before
 	public void setUp() throws Exception {
 		maxmindGeolocationService = new MaxmindGeolocationService();
-		maxmindGeolocationService.verifyDatabase(new File(mmdb));
+		File databaseFile = new File(mmdb);
+		maxmindGeolocationService.verifyDatabase(databaseFile);
+		maxmindGeolocationService.setDatabaseFile(databaseFile);
 	}
 
 	@Test

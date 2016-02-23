@@ -29,25 +29,26 @@ public class GeolocationDatabaseUpdater extends AbstractServiceUpdater {
 	public GeolocationDatabaseUpdater() {
 	}
 
-	private GeolocationService geoLocation;
+	private GeolocationService geolocationService;
 	public void setGeoLocation(final GeolocationService geoLocation) {
-		this.geoLocation = geoLocation;
+		this.geolocationService = geoLocation;
 	}
 
 	public void verifyDatabase(final File dbFile) throws IOException {
-		geoLocation.verifyDatabase(dbFile);
+		geolocationService.verifyDatabase(dbFile);
 	}
 	public boolean loadDatabase() throws IOException {
 		LOGGER.info("Reloading location database.");
-		geoLocation.reloadDatabase();
+		geolocationService.setDatabaseFile(new File(databaseLocation));
+		geolocationService.reloadDatabase();
 		LOGGER.info("Successfully reloaded location database.");
 		return true;
 	}
 
 	@Override
 	public boolean isLoaded() {
-		if (geoLocation != null) {
-			return geoLocation.isInitialized();
+		if (geolocationService != null) {
+			return geolocationService.isInitialized();
 		}
 
 		return loaded;
