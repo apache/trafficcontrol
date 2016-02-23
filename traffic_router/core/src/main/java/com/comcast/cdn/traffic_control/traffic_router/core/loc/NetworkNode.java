@@ -70,7 +70,6 @@ public class NetworkNode implements Comparable<NetworkNode> {
             final JSONObject coverageZones = json.getJSONObject("coverageZones");
 
             final SuperNode root = new SuperNode();
-            instance = root;
 
             for (String loc : JSONObject.getNames(coverageZones)) {
                 final JSONObject locData = coverageZones.getJSONObject(loc);
@@ -107,6 +106,8 @@ public class NetworkNode implements Comparable<NetworkNode> {
                     LOGGER.warn("An exception was caught while accessing the network key of " + loc + " in the incoming coverage zone file: " + ex.getMessage());
                 }
             }
+
+            instance = root;
 
             return root;
         } catch (JSONException e) {
