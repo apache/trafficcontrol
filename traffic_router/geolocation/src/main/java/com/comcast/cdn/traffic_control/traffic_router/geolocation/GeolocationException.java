@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.comcast.cdn.traffic_control.traffic_router.core.loc;
+package com.comcast.cdn.traffic_control.traffic_router.geolocation;
 
 public class GeolocationException extends Exception {
 

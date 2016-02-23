@@ -22,13 +22,10 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 import org.springframework.context.ApplicationContext;
 
-import static org.junit.Assert.assertNotNull;
+import org.junit.Assert;
 
 import com.comcast.cdn.traffic_control.traffic_router.core.TestBase;
-import com.comcast.cdn.traffic_control.traffic_router.core.loc.Geolocation;
-import com.comcast.cdn.traffic_control.traffic_router.core.loc.GeolocationDatabaseUpdater;
-import com.comcast.cdn.traffic_control.traffic_router.core.loc.MaxmindGeolocationService;
-import com.comcast.cdn.traffic_control.traffic_router.core.loc.NetworkUpdater;
+import com.comcast.cdn.traffic_control.traffic_router.geolocation.Geolocation;
 
 public class GeoTest {
 	private static final Logger LOGGER = Logger.getLogger(GeoTest.class);
@@ -72,7 +69,7 @@ public class GeoTest {
 			};
 			for(int i = 0; i < testips.length; i++) {
 				Geolocation location = geolocationService.location(testips[i][0]);
-				assertNotNull(location);
+				Assert.assertNotNull(location);
 				String loc = location.toString();
 				LOGGER.info(String.format("result for ip=%s: %s\n",testips[i], loc));
 			}

@@ -19,7 +19,7 @@ package com.comcast.cdn.traffic_control.traffic_router.core.router;
 import java.util.Comparator;
 
 import com.comcast.cdn.traffic_control.traffic_router.core.cache.CacheLocation;
-import com.comcast.cdn.traffic_control.traffic_router.core.loc.Geolocation;
+import com.comcast.cdn.traffic_control.traffic_router.geolocation.Geolocation;
 
 /**
  * 

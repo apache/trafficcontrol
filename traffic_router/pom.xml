@@ -28,6 +28,7 @@
 		<module>core</module>
 		<module>api</module>
 		<module>build</module>
+		<module>geolocation</module>
 		<!--uncomment this to run testServer, will cause TR build to fail-->
 		<!--<module>testServer</module>-->
 	</modules>

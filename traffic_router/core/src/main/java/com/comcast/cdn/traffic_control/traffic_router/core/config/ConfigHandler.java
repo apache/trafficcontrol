@@ -26,7 +26,12 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
 
-import com.comcast.cdn.traffic_control.traffic_router.core.loc.*;
+import com.comcast.cdn.traffic_control.traffic_router.core.loc.FederationsWatcher;
+import com.comcast.cdn.traffic_control.traffic_router.core.loc.GeolocationDatabaseUpdater;
+import com.comcast.cdn.traffic_control.traffic_router.core.loc.NetworkNode;
+import com.comcast.cdn.traffic_control.traffic_router.core.loc.NetworkUpdater;
+import com.comcast.cdn.traffic_control.traffic_router.core.loc.RegionalGeoUpdater;
+
 import org.apache.log4j.Logger;
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -44,6 +49,8 @@ import com.comcast.cdn.traffic_control.traffic_router.core.monitor.TrafficMonito
 import com.comcast.cdn.traffic_control.traffic_router.core.router.TrafficRouterManager;
 import com.comcast.cdn.traffic_control.traffic_router.core.util.TrafficOpsUtils;
 import com.comcast.cdn.traffic_control.traffic_router.core.router.StatTracker;
+import com.comcast.cdn.traffic_control.traffic_router.geolocation.Geolocation;
+
 
 public class ConfigHandler {
 	private static final Logger LOGGER = Logger.getLogger(ConfigHandler.class);

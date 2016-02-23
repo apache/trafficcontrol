@@ -16,6 +16,8 @@
 
 package com.comcast.cdn.traffic_control.traffic_router.core.loc;
 
+import com.comcast.cdn.traffic_control.traffic_router.geolocation.GeolocationService;
+
 import java.io.File;
 import java.io.IOException;
 
