@@ -391,7 +391,6 @@ static void appendSystemState(stats_state *my_state) {
 
 static void json_out_stats(stats_state *my_state) {
 	const char *version;
-        int i;
 	TSDebug(PLUGIN_TAG, "recordTypes: '0x%x'", my_state->recordTypes);
 	APPEND("{ \"ats\": {\n");
         TSRecordDump(my_state->recordTypes, json_out_stat, my_state);
@@ -529,26 +528,6 @@ static int astats_origin(TSCont cont, TSEvent event, void *edata) {
 	return 0;
 }
 
-static int check_ts_version() {
-	const char *ts_version = TSTrafficServerVersionGet();
-	int result = 0;
-
-	if (ts_version) {
-		int major_ts_version = 0;
-		int minor_ts_version = 0;
-		int patch_ts_version = 0;
-
-		if (sscanf(ts_version, "%d.%d.%d", &major_ts_version, &minor_ts_version, &patch_ts_version) != 3)
-			return 0;
-
-		/* Need at least TS 2.0 */
-		if (major_ts_version >= 2)
-			result = 1;
-	}
-
-	return result;
-}
-
 void TSPluginInit(int argc, const char *argv[]) {
 	TSPluginRegistrationInfo info;
 	TSCont main_cont, config_cont;
@@ -559,12 +538,8 @@ void TSPluginInit(int argc, const char *argv[]) {
 	info.support_email = "justin@fp-x.com";
 	astatsLoad = time(NULL);
 
-	if (TSPluginRegister(TS_SDK_VERSION_2_0, &info) != TS_SUCCESS)
-		TSError("Plugin registration failed. \n");
-
-	if (!check_ts_version()) {
-		TSError("Plugin requires Traffic Server 2.0 or later\n");
-		return;
+	if (TSPluginRegister(&info) != TS_SUCCESS) {
+        TSError("Plugin registration failed. \n");
 	}
 
 	config_holder = new_config_holder(argc > 1 ? argv[1] : NULL);
