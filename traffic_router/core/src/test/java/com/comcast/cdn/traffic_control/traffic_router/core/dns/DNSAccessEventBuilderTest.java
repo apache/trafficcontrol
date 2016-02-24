@@ -1,6 +1,6 @@
 package com.comcast.cdn.traffic_control.traffic_router.core.dns;
 
-import com.comcast.cdn.traffic_control.traffic_router.core.loc.Geolocation;
+import com.comcast.cdn.traffic_control.traffic_router.geolocation.Geolocation;
 import com.comcast.cdn.traffic_control.traffic_router.core.router.StatTracker.Track.ResultType;
 import com.comcast.cdn.traffic_control.traffic_router.core.router.StatTracker.Track.ResultDetails;
 import org.junit.Before;

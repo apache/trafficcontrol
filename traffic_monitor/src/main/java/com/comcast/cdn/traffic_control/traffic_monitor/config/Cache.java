@@ -92,31 +92,11 @@ public class Cache implements java.io.Serializable {
 	}
 
 	public boolean isAvailableKnown() {
-		if (state == null) {
-			return false;
-		}
-
-		final String v = state.getLastValue("isAvailable");
-
-		if (v == null) {
-			return false;
-		}
-
-		return true;
+		return state != null && state.hasValue("isAvailable");
 	}
 
 	public boolean isAvailable() {
-		if (state == null) {
-			return true;
-		}
-
-		final String v = state.getLastValue("isAvailable");
-
-		if (v == null) {
-			return true;
-		}
-
-		return Boolean.parseBoolean(v);
+		return !isAvailableKnown() || Boolean.parseBoolean(state.getLastValue("isAvailable"));
 	}
 
 	public String getQueryIp() {
@@ -188,7 +168,7 @@ public class Cache implements java.io.Serializable {
 	}
 
 	public List<String> getDeliveryServiceIds() {
-		return new ArrayList(Arrays.asList(JSONObject.getNames(getDeliveryServices())));
+		return Arrays.asList(JSONObject.getNames(getDeliveryServices()));
 	}
 
 	public List<String> getFqdns(final String deliveryServiceId) throws JSONException {
@@ -214,5 +194,21 @@ public class Cache implements java.io.Serializable {
 		fqdns.add(deliveryServices.optString(deliveryServiceId));
 
 		return fqdns;
+	}
+
+	public String getStatisticsUrl() {
+		final JSONObject controls = getControls();
+
+		if (controls == null) {
+			return null;
+		}
+
+		final String statisticsUrl = controls.optString("health.polling.url");
+
+		if (statisticsUrl == null) {
+			return null;
+		}
+
+		return statisticsUrl.replace("${hostname}", getFqdn()).replace("${interface_name}", getInterfaceName());
 	}
 }

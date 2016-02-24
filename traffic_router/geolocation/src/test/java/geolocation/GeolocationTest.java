@@ -14,14 +14,14 @@
  * limitations under the License.
  */
 
-package com.comcast.cdn.traffic_control.traffic_router.core.loc;
+package geolocation;
 
-import static org.junit.Assert.assertEquals;
+import org.junit.Assert;
 
 import org.junit.Before;
 import org.junit.Test;
 
-import com.comcast.cdn.traffic_control.traffic_router.core.loc.Geolocation;
+import com.comcast.cdn.traffic_control.traffic_router.geolocation.Geolocation;
 
 public class GeolocationTest {
 
@@ -35,7 +35,7 @@ public class GeolocationTest {
         final Geolocation l2 = new Geolocation(.5f, .5f);
         final double expected = 78.6;
         final double actual = l1.getDistanceFrom(l2);
-        assertEquals(expected, actual, 0.1);
+        Assert.assertEquals(expected, actual, 0.1);
     }
 
     @Test
@@ -44,7 +44,7 @@ public class GeolocationTest {
         final Geolocation l2 = new Geolocation(-1f, 0f);
         final double expected = 222.4;
         final double actual = l1.getDistanceFrom(l2);
-        assertEquals(expected, actual, 0.1);
+        Assert.assertEquals(expected, actual, 0.1);
     }
 
     @Test
@@ -53,7 +53,7 @@ public class GeolocationTest {
         final Geolocation l2 = new Geolocation(0f, -179f);
         final double expected = 222.4;
         final double actual = l1.getDistanceFrom(l2);
-        assertEquals(expected, actual, 0.1);
+        Assert.assertEquals(expected, actual, 0.1);
     }
 
     @Test
@@ -62,7 +62,7 @@ public class GeolocationTest {
         final Geolocation l2 = null;
         final double expected = Double.POSITIVE_INFINITY;
         final double actual = l1.getDistanceFrom(l2);
-        assertEquals(expected, actual, 0.1);
+        Assert.assertEquals(expected, actual, 0.1);
     }
 
     @Test
@@ -71,7 +71,7 @@ public class GeolocationTest {
         final Geolocation l2 = new Geolocation(0f, -1f);
         final double expected = 222.4;
         final double actual = l1.getDistanceFrom(l2);
-        assertEquals(expected, actual, 0.1);
+        Assert.assertEquals(expected, actual, 0.1);
     }
 
 }

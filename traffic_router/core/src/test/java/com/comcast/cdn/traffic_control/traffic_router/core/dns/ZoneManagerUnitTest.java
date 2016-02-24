@@ -1,7 +1,6 @@
 package com.comcast.cdn.traffic_control.traffic_router.core.dns;
 
 import com.comcast.cdn.traffic_control.traffic_router.core.cache.CacheRegister;
-import com.comcast.cdn.traffic_control.traffic_router.core.loc.Geolocation;
 import com.comcast.cdn.traffic_control.traffic_router.core.router.StatTracker;
 import com.comcast.cdn.traffic_control.traffic_router.core.router.StatTracker.Track.ResultType;
 import com.comcast.cdn.traffic_control.traffic_router.core.util.TrafficOpsUtils;

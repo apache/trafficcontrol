@@ -14,27 +14,23 @@
  * limitations under the License.
  */
 
-package com.comcast.cdn.traffic_control.traffic_router.core.loc;
+package com.comcast.cdn.traffic_control.traffic_router.geolocation;
 
 import java.util.HashMap;
 import java.util.Map;
 
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
-import com.maxmind.geoip2.model.CityResponse;
+
 
 public class Geolocation {
 	private static final double MEAN_EARTH_RADIUS = 6371.0f;
 
 	private final double latitude;
 	private final double longitude;
-
 	private String postalCode;
-
 	private String city;
-
 	private String countryCode;
-
 	private String countryName;
 
 	/**
@@ -50,28 +46,6 @@ public class Geolocation {
 		this.longitude = longitude;
 	}
 
-	public Geolocation(final CityResponse response) {
-		// we will check getLocation from caller because these fields are final
-		this.latitude = response.getLocation().getLatitude();
-		this.longitude = response.getLocation().getLongitude();
-
-		if (response.getPostal() != null) {
-			this.postalCode = response.getPostal().getCode();
-		}
-
-		if (response.getCity() != null) {
-			this.city = response.getCity().getName();
-		}
-
-		if (response.getCountry() != null) {
-			this.countryCode = response.getCountry().getIsoCode();
-			this.countryName = response.getCountry().getName();
-		}
-	}
-
-	public String getPostalCode() {
-		return postalCode;
-	}
 
 	public Map<String,String> getProperties() {
 		final Map<String,String> map = new HashMap<String,String>();
@@ -84,25 +58,10 @@ public class Geolocation {
 		return map;
 	}
 
-	@Override
-	public boolean equals(final Object obj) {
-		if (this == obj) {
-			return true;
-		} else if (obj instanceof Geolocation) {
-			final Geolocation rhs = (Geolocation) obj;
-			return new EqualsBuilder()
-					.append(getLatitude(), rhs.getLatitude())
-					.append(getLongitude(), rhs.getLongitude())
-					.isEquals();
-		} else {
-			return false;
-		}
-	}
-
 	/**
 	 * Returns the great circle distance in kilometers between this {@link Geolocation} and the
 	 * specified location
-	 * 
+	 *
 	 * @param other
 	 * @return the great circle distance in km
 	 */
@@ -120,6 +79,22 @@ public class Geolocation {
 		}
 	}
 
+	@Override
+	public boolean equals(final Object obj) {
+		if (this == obj) {
+			return true;
+		} else if (obj instanceof Geolocation) {
+			final Geolocation rhs = (Geolocation) obj;
+			return new EqualsBuilder()
+					.append(getLatitude(), rhs.getLatitude())
+					.append(getLongitude(), rhs.getLongitude())
+					.isEquals();
+		} else {
+			return false;
+		}
+	}
+
+
 	/**
 	 * Retrieves the latitude in decimal degrees
 	 * 
@@ -136,6 +111,39 @@ public class Geolocation {
 	 */
 	public double getLongitude() {
 		return longitude;
+	}
+
+	public String getPostalCode() {
+		return postalCode;
+	}
+
+
+	public void setPostalCode(String postalCode) {
+		this.postalCode = postalCode;
+	}
+
+	public String getCity() {
+		return city;
+	}
+
+	public void setCity(String city) {
+		this.city = city;
+	}
+
+	public String getCountryCode() {
+		return countryCode;
+	}
+
+	public void setCountryCode(String countryCode) {
+		this.countryCode = countryCode;
+	}
+
+	public String getCountryName() {
+		return countryName;
+	}
+
+	public void setCountryName(String countryName) {
+		this.countryName = countryName;
 	}
 
 	@Override

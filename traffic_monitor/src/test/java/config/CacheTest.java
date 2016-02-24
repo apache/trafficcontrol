@@ -131,9 +131,9 @@ public class CacheTest {
 
 		cache.setCacheState(cacheState);
 		assertThat(cache.isAvailableKnown(), equalTo(false));
-		verify(cacheState).getLastValue("isAvailable");
+		verify(cacheState).hasValue("isAvailable");
 
-		doReturn("").when(cacheState).getLastValue("isAvailable");
+		doReturn(true).when(cacheState).hasValue("isAvailable");
 		assertThat(cache.isAvailableKnown(), equalTo(true));
 	}
 
@@ -144,8 +144,9 @@ public class CacheTest {
 
 		cache.setCacheState(cacheState);
 		assertThat(cache.isAvailable(), equalTo(true));
-		verify(cacheState).getLastValue("isAvailable");
+		verify(cacheState).hasValue("isAvailable");
 
+		doReturn(true).when(cacheState).hasValue("isAvailable");
 		doReturn("").when(cacheState).getLastValue("isAvailable");
 		assertThat(cache.isAvailable(), equalTo(false));
 

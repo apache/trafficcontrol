@@ -30,7 +30,7 @@ import org.json.JSONObject;
 import com.comcast.cdn.traffic_control.traffic_router.core.TrafficRouterException;
 import com.comcast.cdn.traffic_control.traffic_router.core.cache.CacheRegister;
 import com.comcast.cdn.traffic_control.traffic_router.core.dns.NameServer;
-import com.comcast.cdn.traffic_control.traffic_router.core.loc.GeolocationService;
+import com.comcast.cdn.traffic_control.traffic_router.geolocation.GeolocationService;
 import com.comcast.cdn.traffic_control.traffic_router.core.util.TrafficOpsUtils;
 
 public class TrafficRouterManager {

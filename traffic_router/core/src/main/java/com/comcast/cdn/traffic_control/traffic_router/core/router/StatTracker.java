@@ -20,7 +20,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import com.comcast.cdn.traffic_control.traffic_router.core.loc.Geolocation;
+import com.comcast.cdn.traffic_control.traffic_router.geolocation.Geolocation;
 import com.comcast.cdn.traffic_control.traffic_router.core.loc.RegionalGeoResult;
 
 import com.comcast.cdn.traffic_control.traffic_router.core.cache.CacheRegister;

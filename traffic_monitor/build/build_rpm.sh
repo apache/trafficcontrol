@@ -53,13 +53,6 @@ function buildRpmTrafficMonitor () {
 	mkdir -p "$DIST" || { echo "Could not create $DIST: $?"; exit 1; }
 
 	cp "$rpm" "$DIST/." || { echo "Could not copy $RPM to $DIST: $?"; exit 1; }
-
-	# TODO: build src rpm separately -- mvn rpm plugin does not do src rpms
-	#cd "RPMBUILD" && \
-	#	rpmbuild -bs --define "_topdir $(pwd)" \
-        #                 --define "traffic_control_version $TC_VERSION" \
-        #                 --define "build_number $BUILD_NUMBER" -ba SPECS/traffic_monitor.spec
-	#cp "$RPMBUILD"/SRPMS/*/*.rpm "$DIST/." || { echo "Could not copy source rpm to $DIST: $?"; exit 1; }
 }
 
 # ---------------------------------------
@@ -69,10 +62,14 @@ function initBuildArea() {
 
 	tm_dest=$(createSourceDir traffic_monitor)
 
+	export TRAFFIC_CONTROL_VERSION="$TC_VERSION"
+    export MVN_CMD="mvn versions:set -DnewVersion=$TRAFFIC_CONTROL_VERSION"
+    echo $MVN_CMD
+    $MVN_CMD
 	cp -r "$TM_DIR"/{build,etc,src} "$tm_dest"/. || { echo "Could not copy to $tm_dest: $?"; exit 1; }
 	cp  "$TM_DIR"/pom.xml "$tm_dest" || { echo "Could not copy to $tm_dest: $?"; exit 1; }
 
-	tar -czvf "$tm_dest.tgz" -C "$RPMBUILD"/SOURCES $(basename "$tm_dest") || { echo "Could not create tar archive $tm_dest.tgz: $?"; exit 1; }
+	tar -czf "$tm_dest.tgz" -C "$RPMBUILD"/SOURCES $(basename "$tm_dest") || { echo "Could not create tar archive $tm_dest.tgz: $?"; exit 1; }
 
 	echo "The build area has been initialized."
 }

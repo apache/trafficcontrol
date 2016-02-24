@@ -35,7 +35,7 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.web.context.support.WebApplicationContextUtils;
 
 import com.comcast.cdn.traffic_control.traffic_router.core.ds.DeliveryService;
-import com.comcast.cdn.traffic_control.traffic_router.core.loc.GeolocationException;
+import com.comcast.cdn.traffic_control.traffic_router.geolocation.GeolocationException;
 import com.comcast.cdn.traffic_control.traffic_router.core.request.HTTPRequest;
 import com.comcast.cdn.traffic_control.traffic_router.core.router.TrafficRouter;
 import com.comcast.cdn.traffic_control.traffic_router.core.router.TrafficRouterManager;
