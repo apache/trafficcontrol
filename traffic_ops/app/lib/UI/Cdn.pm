@@ -610,13 +610,16 @@ sub auser {
 	while ( my $row = $rs->next ) {
 
 		my @line = [
-			$row->id,           $row->username, $row->role->name, $row->full_name,  $row->company,  $row->email,
-			$row->phone_number, $row->uid,      $row->gid,        \1,               \$row->new_user, $row->last_updated
+			$row->id,           $row->username, $row->role->name, $row->full_name, $row->public_ssh_key, $row->company, $row->email,
+			$row->phone_number, $row->uid,      $row->gid,        \1,              \$row->new_user, $row->last_updated
 		];
+
 		push( @{ $data{'aaData'} }, @line );
 	}
 	$self->render( json => \%data );
 }
+
+
 
 sub afederation {
 	my $self = shift;
@@ -643,13 +646,13 @@ sub afederation {
 				$user = $u->tm_user;
 			}
 
-			my $full_name = "";
-			my $username  = "";
-			my $company   = "";
+			my $full_name      = "";
+			my $username       = "";
+			my $company        = "";
 			if ( defined($user) ) {
-				$full_name = $user->full_name;
-				$username  = $user->username;
-				$company   = $user->company;
+				$full_name      = $user->full_name;
+				$username       = $user->username;
+				$company        = $user->company;
 			}
 			@line = [ $f->id, $f->cname, $xml_id, $f->description, $f->ttl, $full_name, $username, $company ];
 			push( @{ $data{'aaData'} }, @line );

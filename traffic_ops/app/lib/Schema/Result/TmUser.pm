@@ -35,6 +35,12 @@ __PACKAGE__->table("tm_user");
   is_nullable: 1
   size: 128
 
+=head2 public_ssh_key
+
+  data_type: 'varchar'
+  is_nullable: 1
+  size: 2048
+
 =head2 role
 
   data_type: 'integer'
@@ -156,6 +162,8 @@ __PACKAGE__->add_columns(
   { data_type => "integer", is_auto_increment => 1, is_nullable => 0 },
   "username",
   { data_type => "varchar", is_nullable => 1, size => 128 },
+  "public_ssh_key",
+  { data_type => "varchar", is_nullable => 1, size => 2048 },
   "role",
   { data_type => "integer", is_foreign_key => 1, is_nullable => 1 },
   "uid",
@@ -327,8 +335,8 @@ __PACKAGE__->belongs_to(
 );
 
 
-# Created by DBIx::Class::Schema::Loader v0.07043 @ 2016-01-22 09:54:38
-# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:xNit7GTzW6J0f2fXJ5GlxQ
+# Created by DBIx::Class::Schema::Loader v0.07043 @ 2016-02-22 13:13:36
+# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:j4nYjjnStUYvhKi7zNh4bw
 
 
 # You can replace this text with custom code or comments, and it will be preserved on regeneration

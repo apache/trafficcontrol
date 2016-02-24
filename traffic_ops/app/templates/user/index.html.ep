@@ -113,6 +113,7 @@ $(function () {
 							<td>Username</td>
 							<td>Role</td>
 							<td>Full Name</td>
+              <td style="width: 10%;">Public SSH Key</td>
 							<td>Company</td>
 							<td>Email</td>
 							<td>Phone No</td>

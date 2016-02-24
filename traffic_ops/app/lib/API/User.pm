@@ -33,8 +33,8 @@ use UI::ConfigFiles;
 use UI::Tools;
 
 sub login {
-	my $self    = shift;
-	my $options = shift;
+	my $self     = shift;
+	my $options  = shift;
 
 	my $u     = $self->req->json->{u};
 	my $p     = $self->req->json->{p};
@@ -63,15 +63,26 @@ sub token_login {
 sub index {
 	my $self = shift;
 	my @data;
+	my $username = $self->param('username');
+
 	my $orderby = "username";
 	$orderby = $self->param('orderby') if ( defined $self->param('orderby') );
-	my $dbh = $self->db->resultset("TmUser")->search( undef, { prefetch => [ { 'role' => undef } ], order_by => 'me.' . $orderby } );
+
+	my $dbh;
+	if ( defined $username ) {
+		$dbh = $self->db->resultset("TmUser")->search( { username => $username }, { prefetch => [ { 'role' => undef } ], order_by => 'me.' . $orderby } );
+	}
+	else {
+		$dbh = $self->db->resultset("TmUser")->search( undef, { prefetch => [ { 'role' => undef } ], order_by => 'me.' . $orderby } );
+	}
+
 	while ( my $row = $dbh->next ) {
 		push(
 			@data, {
 				"id"              => $row->id,
 				"username"        => $row->username,
-				"role"            => $row->role->id,
+				"public_ssh_key"  => $row->public_ssh_key,
+ 				"role"            => $row->role->id,
 				"uid"             => $row->uid,
 				"gid"             => $row->gid,
 				"rolename"        => $row->role->name,
@@ -152,6 +163,7 @@ sub current {
 			@data, {
 				"id"              => "0",
 				"username"        => $current_username,
+				"public_ssh_key"  => "",
 				"role"            => $role,
 				"uid"             => "0",
 				"gid"             => "0",
@@ -179,6 +191,7 @@ sub current {
 				@data, {
 					"id"              => $row->id,
 					"username"        => $row->username,
+					"public_ssh_key"  => $row->public_ssh_key,
 					"role"            => $row->role->id,
 					"uid"             => $row->uid,
 					"gid"             => $row->gid,
@@ -248,6 +261,9 @@ sub update_current {
 		if ( defined( $user->{"username"} ) ) {
 			$db_user->{"username"} = $user->{"username"};
 		}
+		if ( defined( $user->{"public_ssh_key"} ) ) {
+			$db_user->{"public_ssh_key"} = $user->{"public_ssh_key"};
+		}
 		if ( &is_admin($self) && defined( $user->{"role"} ) ) {
 			$db_user->{"role"} = $user->{"role"};
 		}
@@ -304,7 +320,7 @@ sub is_valid {
 
 	my $rules = {
 		fields => [
-			qw/fullName username email role uid gid localPasswd confirmLocalPasswd company newUser addressLine1 addressLine2 city stateOrProvince phoneNumber postalCode country/
+			qw/fullName username public_ssh_key email role uid gid localPasswd confirmLocalPasswd company newUser addressLine1 addressLine2 city stateOrProvince phoneNumber postalCode country/
 		],
 
 		# Checks to perform on all fields
