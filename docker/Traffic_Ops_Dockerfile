@@ -1,0 +1,93 @@
+############################################################
+# Dockerfile to build Traffic Ops 1.4 container images
+# Based on CentOS 6.6
+############################################################
+
+# Example Build and Run:
+# docker network create cdnet
+# docker build --file Traffic_Ops_Dockerfile --rm --tag traffic_ops:1.4 .
+# docker run --name my-traffic-ops-mysql --hostname my-traffic-ops-mysql --net cdnet --env MYSQL_ROOT_PASSWORD=secretrootpass --detach mysql:5.5
+# docker run --name my-traffic-ops --hostname my-traffic-ops --net cdnet --publish 443:443 --env MYSQL_IP=my-traffic-ops-mysql --env MYSQL_PORT=3306 --env MYSQL_ROOT_PASS=secretrootpass --env MYSQL_TRAFFIC_OPS_PASS=supersecretpassword --env ADMIN_USER=superroot --env ADMIN_PASS=supersecreterpassward --env CERT_COUNTRY=US --env CERT_STATE=Colorado --env CERT_CITY=Denver --env CERT_COMPANY=NotComcast --env TRAFFIC_VAULT_PASS=marginallylesssecret --env DOMAIN=cdnet --detach traffic_ops:1.4
+
+FROM centos:6.6
+MAINTAINER Robert Butts
+
+# install dependencies
+# \todo change postinstall to take a file or something, so expect isn't necessary
+RUN yum install -y tar gcc-c++ perl cpan openssl-devel mysql-devel expect
+
+# configure CPAN
+RUN (echo y;echo o conf prerequisites_policy follow;echo o conf urllist push http://cpan.yimg.com/;echo o conf urllist push ftp://cpan.cs.utah.edu/CPAN/;echo o conf urllist push ftp://cpan.cs.utah.edu/CPAN/;echo o conf urllist push ftp://mirrors.syringanetworks.net/CPAN/;echo o conf commit;echo install YAML;echo install IPC::Cmd;echo install HTTP::Tiny;echo install CPAN;echo reload cpan)|cpan
+
+# install Carton
+RUN cpan Carton
+
+# install Traffic Ops
+RUN curl -O http://traffic-control-cdn.net/downloads/1.4.0/RELEASE-1.4.0-RC10/traffic_ops-1.4.0-2426.2876438a.x86_64.rpm
+RUN yum install -y traffic_ops-1.4.0-2426.2876438a.x86_64.rpm
+
+# install Traffic Ops Perl dependencies via Carton
+RUN cd /opt/traffic_ops/app && carton
+
+# remove alpixel from web_deps, because the URL doesn't exist anymore
+# \todo remove after alpixel is removed from web_deps.txt in the rpm
+RUN awk '!((NR==37)||(NR==38))' < /opt/traffic_ops/install/bin/web_deps.txt > /opt/traffic_ops/install/bin/web_deps_temp.txt && mv -f /opt/traffic_ops/install/bin/web_deps_temp.txt /opt/traffic_ops/install/bin/web_deps.txt
+
+# Fix admin.pl having localhost hard-coded
+# \todo fix source
+RUN sed -i -- 's/system("mysql $db_name/system("mysql -h $host_ip -P $host_port $db_name/g' /opt/traffic_ops/app/db/admin.pl
+RUN sed -i -- 's/my $host_ip/$host_ip/g' /opt/traffic_ops/app/db/admin.pl
+RUN sed -i -- 's/my $host_port/$host_port/g' /opt/traffic_ops/app/db/admin.pl
+RUN sed -i -- 's/my \$db_password = '\'''\'';/my \$db_password = '\'''\'';\nmy \$host_ip = '\'''\'';\nmy \$host_port = '\'''\'';/g' /opt/traffic_ops/app/db/admin.pl
+
+RUN sed -i -- "s/my $response_body;/my $response_body;\nopen(my $response_body_file, '>', \$response_body);/g" /opt/traffic_ops/install/lib/WebDep.pm
+RUN sed -i -- "s/$curl->setopt( CURLOPT_WRITEDATA,      \$response_body );/$curl->setopt( CURLOPT_WRITEDATA,      $response_body_file );/g" /opt/traffic_ops/install/lib/WebDep.pm
+
+# \todo remove when download_web_deps is fixed. Curl appears to be missing ciphers (SSL error 35)
+RUN sed -i -- 's#https://code.jquery.com#http://code.jquery.com#g' /opt/traffic_ops/install/bin/web_deps.txt
+
+RUN export PERL5LIB=/opt/traffic_ops/app/local/lib/perl5/:/opt/traffic_ops/install/lib/ \
+&& export TERM=xterm \
+&& export USER=root \
+&& yes | /opt/traffic_ops/install/bin/build_trafficops_perl_library -i
+
+RUN export PERL5LIB=/opt/traffic_ops/app/local/lib/perl5/:/opt/traffic_ops/install/lib/ \
+&& export TERM=xterm \
+&& export USER=root \
+&& /opt/traffic_ops/install/bin/download_web_deps -i; exit 0
+
+RUN cd /opt/traffic_ops/app/public/js && curl -O http://code.jquery.com/jquery-1.11.2.min.js
+RUN cd /opt/traffic_ops/app/public/js && curl -O http://code.jquery.com/ui/1.11.2/jquery-ui.min.js
+RUN cp /opt/traffic_ops/app/public/css/jMenu.jquery.css /opt/traffic_ops/app/public/css/jmenu.css
+RUN cp /opt/traffic_ops/app/public/js/jMenu.jquery.js /opt/traffic_ops/app/public/js/jMenu.jquery.min.js
+
+RUN mv /opt/traffic_ops/app/db/migrations/20151207000000_unique_email.sql /opt/traffic_ops/app/db/migrations/20151207000001_unique_email.sql
+
+		# \todo this works around #1016. Remove when #1016 is in the RPM (1.4.0 RC1?)
+RUN sed -i -- "s#/opt/rascal/conf#/opt/traffic_monitor/conf#g" /opt/traffic_ops/install/data/profiles/profile.traffic_monitor.traffic_ops
+		# \todo remove if/when Traffic Control Dockerfiles are changed to use HTTPS
+RUN sed -i -- "s#https://${tmHostname}#http://${tmHostname}#g" /opt/traffic_ops/install/data/profiles/profile.traffic_monitor.traffic_ops
+RUN sed -i -- "s#https://${toHostname}#http://${toHostname}#g" /opt/traffic_ops/install/data/profiles/profile.traffic_router.traffic_ops
+
+RUN sed -i -- 's#],#,{"config_file":"CRConfig.json","name":"api.auth.url","value":"http://${toHostname}/api/1.1/user/login"}],#g' /opt/traffic_ops/install/data/profiles/profile.traffic_router.traffic_ops
+
+RUN sed -i -- 's/"value": "cdn1.kabletown.net"/"value": "cdnet"/g' /opt/traffic_ops/install/data/profiles/profile.trafficserver_edge.traffic_ops
+RUN sed -i -- 's/"value": "cdn1.kabletown.net"/"value": "cdnet"/g' /opt/traffic_ops/install/data/profiles/profile.trafficserver_mid.traffic_ops
+
+RUN sed -i -- 's/"value": "b,c,d,e,f,g,h,i,j,k,l,m,n,o,p,q,r,s,t,u,v,w,x,y"/"value": "0"/g' /opt/traffic_ops/install/data/profiles/profile.trafficserver_edge.traffic_ops
+		# sed -i -- 's#"value": "/dev/sd"#"value": "/dev/ram"#g' /opt/traffic_ops/install/data/profiles/profile.trafficserver_edge.traffic_ops
+
+RUN sed -i -- 's/"value": "b,c,d,e,f,g,h,i,j,k,l,m,n,o,p,q,r,s,t,u,v,w,x,y"/"value": "0"/g' /opt/traffic_ops/install/data/profiles/profile.trafficserver_mid.traffic_ops
+		# sed -i -- 's#"value": "/dev/sd"#"value": "/dev/ram"#g' /opt/traffic_ops/install/data/profiles/profile.trafficserver_mid.traffic_ops
+
+		# sed -i -- 's/"value": "0,1,2,3,4,5,6,7"/"value": "0"/g' /opt/traffic_ops/install/data/profiles/profile.trafficserver_edge.traffic_ops
+		# sed -i -- 's/"value": "0,1,2,3,4,5,6,7"/"value": "0"/g' /opt/traffic_ops/install/data/profiles/profile.trafficserver_mid.traffic_ops
+
+RUN echo "{\"user\": \"riakuser\",\"password\": \"$TRAFFIC_VAULT_PASS\"}" > /opt/traffic_ops/app/conf/production/riak.conf
+
+EXPOSE 443
+WORKDIR /opt/traffic_ops/app
+ENV MOJO_MODE production
+ADD profile.origin.traffic_ops /
+ADD Traffic_Ops_Dockerfile_run.sh /
+ENTRYPOINT /Traffic_Ops_Dockerfile_run.sh
