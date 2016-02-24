@@ -1,49 +1,15 @@
-var DeliveryServicesController = function($scope, $interval, deliveryServiceService, deliveryServicesModel) {
+var DeliveryServicesController = function($scope, deliveryServicesModel) {
 
-    var refreshInterval;
-
-    var refreshDeliveryServices = function() {
-        deliveryServiceService.getDeliveryServices(true);
-    };
-
-    $scope.deliveryServicesModel = deliveryServicesModel;
-
-    $scope.predicate = 'xmlId';
-    $scope.reverse = false;
-
-    $scope.query = {
-        text: ''
-    };
-
-    // pagination
-    $scope.currentPage = 1;
-    $scope.dsPerPage = $scope.deliveryServicesModel.deliveryServices.length;
-
-    $scope.show = function(count) {
-        $scope.dsPerPage = count;
-    };
-
-    $scope.search = function(ds) {
-        var query = $scope.query.text.toLowerCase(),
-            xmlId = ds.xmlId.toLowerCase(),
-            orgServerFqdn = ds.orgServerFqdn.toLowerCase(),
-            isSubstring = (xmlId.indexOf(query) !== -1) || (orgServerFqdn.indexOf(query) !== -1);
-
-        return isSubstring;
-    };
+    $scope.deliveryServices = deliveryServicesModel.deliveryServices;
 
     angular.element(document).ready(function () {
-        refreshInterval = $interval(function() { refreshDeliveryServices() }, 1 * 60 * 1000); // every 1 min delivery services will refresh
-    });
-
-    $scope.$on("$destroy", function() {
-        if (angular.isDefined(refreshInterval)) {
-            $interval.cancel(refreshInterval);
-            refreshInterval = undefined;
-        }
+        $('#deliveryServicesTable').dataTable({
+            "aLengthMenu": [[25, 50, 100, -1], [25, 50, 100, "All"]],
+            "iDisplayLength": -1
+        });
     });
 
 };
 
-DeliveryServicesController.$inject = ['$scope', '$interval', 'deliveryServiceService', 'deliveryServicesModel'];
+DeliveryServicesController.$inject = ['$scope', 'deliveryServicesModel'];
 module.exports = DeliveryServicesController;
