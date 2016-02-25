@@ -56,3 +56,55 @@ Regions
     }
 
 |
+
+**POST /api/1.2/divisions/:division_name/regions**
+  Create Region
+
+  Authentication Required: Yes
+
+  Role(s) Required: admin or oper
+
+  division_name - The name of division to create new region into.
+
+  **Request Properties**
+
+  +-------------------+----------+------------------------------------------+
+  | Parameter         | Required | Description                              |
+  +===================+==========+==========================================+
+  | ``name``          | yes      | The name of the region                   |
+  +-------------------+----------+------------------------------------------+
+
+  **Request Example** ::
+
+    {
+        "name": "myregion1",
+    }
+
+|
+
+  **Response Properties**
+
+  +-------------------+--------+-------------------------------------------+
+  | Parameter         | Type   | Description                               |
+  +===================+========+===========================================+
+  | ``name``          | string | name of region created                    |
+  +-------------------+--------+-------------------------------------------+
+  | ``id``            | string | id of region created                      |
+  +-------------------+--------+-------------------------------------------+
+  | ``division_name`` | string | the division name the region belongs to.  |
+  +-------------------+--------+-------------------------------------------+
+  | ``division_id``   | string | the id of division the region belongs to. |
+  +-------------------+--------+-------------------------------------------+
+
+  **Response Example** ::
+
+    {
+      "response": {
+        'division_name': 'mydivision1',
+        'divsion_id': '4',
+        'name': 'myregion1',
+        'id': '19'
+       }
+    }
+
+|

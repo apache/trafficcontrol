@@ -59,6 +59,93 @@ sub index_trimmed {
 	$self->render( json => \@data );
 }
 
+sub create {
+	my $self = shift;
+	my $params = $self->req->json;
+	if ( !defined($params) ) {
+		return $self->alert("parameters must Json format,  please check!");
+	}
+
+    if ( !&is_oper($self) ) {
+        return $self->alert( { Error => " - You must be an admin or oper to perform this operation!" } );
+    }
+
+	my $name = $params->{name};
+	if ( !defined($name) ) {
+		return $self->alert("profile 'name' is not given.");
+	}
+	if ( $name eq "" ) {
+		return $self->alert("profile 'name' can't be null.");
+	}
+	my $description = $params->{description};
+	if ( !defined($description) ) {
+		return $self->alert("profile 'description' is not given.");
+	}
+	if ( $description eq "" ) {
+		return $self->alert("profile 'description' can't be null.");
+	}
+
+	my $existing_profile = $self->db->resultset('Profile')->search( { name        => $name } )->get_column('name')->single();
+	if ( $existing_profile && $name eq $existing_profile ) {
+		return $self->alert("profile with name $name already exists.");
+	}
+
+	my $insert = $self->db->resultset('Profile')->create(
+		{
+			name        => $name,
+			description => $description,
+		}
+	);
+	$insert->insert();
+	my $new_id = $insert->id;
+
+	my $response;
+	$response->{id} = $new_id;
+	$response->{name} = $name;
+	$response->{description} = $description;
+	return $self->success($response);
+}
+
+sub copy {
+	my $self = shift;
+
+    if ( !&is_oper($self) ) {
+        return $self->alert( { Error => " - You must be an admin or oper to perform this operation!" } );
+    }
+
+	my $name = $self->param('profile_name');
+	my $profile_copy_from_name = $self->param('profile_copy_from');
+
+	my $profile_id = $self->db->resultset('Profile')->search( { name => $name } )->get_column('id')->single();
+	if ( ! defined($profile_id) ) {
+		return $self->alert("profile $name does not exist.");
+	}
+	my $profile_copy_from_id;
+	$profile_copy_from_id = $self->db->resultset('Profile')->search( { name => $profile_copy_from_name } )->get_column('id')->single();
+	if ( !$profile_copy_from_id ) {
+		return $self->alert("profile_copy_from $profile_copy_from_name doesn't exist.");
+	}
+
+	my $rs_param =
+		$self->db->resultset('ProfileParameter')->search( { profile => $profile_copy_from_id }, { prefetch => [ { profile => undef }, { parameter => undef } ] } );
+	while ( my $row = $rs_param->next ) {
+		my $insert = $self->db->resultset('ProfileParameter')->create(
+			{
+				profile   => $profile_id,
+				parameter => $row->parameter->id,
+			}
+		);
+		$insert->insert();
+	}
+
+	my $response;
+	$response->{id} = $profile_id;
+	$response->{name} = $name;
+	$response->{profile_copy_from} = $profile_copy_from_name;
+	$response->{id_copy_from} = $profile_copy_from_id;
+	return $self->success($response);
+}
+
 sub availableprofile {
 	my $self = shift;
 	my @data;

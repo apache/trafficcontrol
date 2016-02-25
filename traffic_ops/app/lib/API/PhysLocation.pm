@@ -21,6 +21,8 @@ use UI::Utils;
 
 use Mojo::Base 'Mojolicious::Controller';
 use Data::Dumper;
+use JSON;
+use MojoPlugins::Response;
 
 my $finfo = __FILE__ . ":";
 
@@ -69,6 +71,81 @@ sub index_trimmed {
 		);
 	}
 	$self->success( \@data );
+}
+
+sub create{
+    my $self = shift;
+    my $region_name = $self->param('region_name');
+    my $params = $self->req->json;
+    if (!defined($params)) {
+        return $self->alert("parameters must Json format,  please check!");
+    }
+    if ( !&is_oper($self) ) {
+        return $self->alert("You must be an ADMIN or OPER to perform this operation!");
+    }
+
+    my $existing_physlocation = $self->db->resultset('PhysLocation')->search( { name => $params->{name} } )->get_column('name')->single();
+    if (defined($existing_physlocation)){
+        return $self->alert("physical locatiion[". $params->{name} . "] is already exist.");
+    }
+    $existing_physlocation = $self->db->resultset('PhysLocation')->search( { name => $params->{short_name} } )->get_column('name')->single();
+    if (defined($existing_physlocation)){
+        return $self->alert("physical locatiion with short_name[". $params->{short_name} . "] is already exist.");
+    }
+    my $region_id = $self->db->resultset('Region')->search( { name => $region_name } )->get_column('id')->single();
+    if (!defined($region_id)) {
+        return $self->alert("region[". $region_name . "] is not exist.");
+    }
+
+    my $insert = $self->db->resultset('PhysLocation')->create(
+        {
+            name     => $params->{name},
+            short_name     => $params->{short_name},
+            region     => $region_id,
+            address     => $self->undef_to_default($params->{address}, ""),
+            city     => $self->undef_to_default($params->{city}, ""),
+            state     => $self->undef_to_default($params->{state}, ""),
+            zip     => $self->undef_to_default($params->{zip}, ""),
+            phone     => $self->undef_to_default($params->{phone}, ""),
+            poc     => $self->undef_to_default($params->{poc}, ""),
+            email     => $self->undef_to_default($params->{email}, ""),
+            comments  => $self->undef_to_default($params->{comments}, ""),
+        } );
+    $insert->insert();
+
+    my $response;
+    my $rs = $self->db->resultset('PhysLocation')->find( { id => $insert->id } );
+    if (defined($rs)) {
+        $response->{id}     = $rs->id;
+        $response->{name}   = $rs->name;
+        $response->{short_name}   = $rs->short_name;
+        $response->{region_name}   = $region_name;
+        $response->{region_id}   = $rs->region->id;
+        $response->{address}   = $rs->address;
+        $response->{city}   = $rs->city;
+        $response->{state}   = $rs->state;
+        $response->{zip}   = $rs->zip;
+        $response->{phone}   = $rs->phone;
+        $response->{poc}   = $rs->poc;
+        $response->{email}   = $rs->email;
+        $response->{comments}   = $rs->comments;
+        return $self->success($response);
+    }
+    return $self->alert("create region ". $params->{name}." failed.");
+}
+
+sub undef_to_default {
+    my $self    = shift;
+    my $v       = shift;
+    my $default = shift;
+
+    if ( !defined($default) ) {
+        return $v;
+    }
+    if ( !defined($v) ) {
+        return $default;
+    }
+    return $v;
 }
 
 1;

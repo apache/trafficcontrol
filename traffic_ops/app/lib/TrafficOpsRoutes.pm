@@ -45,7 +45,8 @@ sub define {
 
 	# Traffic Stats Extension
 	$self->traffic_stats_routes( $r, $version );
-	$self->catch_all( $r, $namespace );
+
+    $self->catch_all( $r, $namespace );
 }
 
 sub ui_routes {
@@ -648,6 +649,17 @@ sub api_routes {
 
 	$r->get( "/api/$version/stats_summary" => [ format => [qw(json)] ] )->over( authenticated => 1 )->to( 'StatsSummary#index', namespace => $namespace );
 	$r->post("/api/$version/stats_summary/create")->over( authenticated => 1 )->to( 'StatsSummary#create', namespace => $namespace );
+
+    $r->post( "/api/$version/profiles" )->over( authenticated => 1 )->to( 'Profile#create', namespace => $namespace );
+    $r->post( "/api/$version/profiles/name/:profile_name/copy/:profile_copy_from" )->over( authenticated => 1 )->to( 'Profile#copy', namespace => $namespace );
+    $r->post("/api/$version/divisions")->over( authenticated => 1 )->to( 'Division#create', namespace => $namespace );
+    $r->post("/api/$version/divisions/:division_name/regions")->over( authenticated => 1 )->to( 'Region#create', namespace => $namespace );
+    $r->post("/api/$version/regions/:region_name/phys_locations")->over( authenticated => 1 )->to( 'PhysLocation#create', namespace => $namespace );
+	$r->post("/api/$version/servers")->over( authenticated => 1 )->to( 'Server#create',   namespace => $namespace );
+	$r->put("/api/$version/servers/:id")->over( authenticated => 1 )->to( 'Server#update',   namespace => $namespace );
+    $r->post("/api/$version/cachegroups")->over( authenticated => 1 )->to( 'Cachegroup#create', namespace => $namespace );
+    $r->post("/api/$version/deliveryservices/xmlId/:xml_id/servers")->over( authenticated => 1 )->to( 'DeliveryService#assign_servers', namespace => $namespace );
+    $r->put("/api/$version/snapshot/:cdn_name")->over( authenticated => 1 )->to( 'Topology#SnapshotCRConfig', namespace => $namespace );
 
 	# -- Ping - health check for CodeBig
 	$r->get(
