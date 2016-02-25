@@ -19,9 +19,10 @@ var logStream = fs.createWriteStream(config.log.stream, { flags: 'a' });
 
 var app = express();
 
+// proxy api calls to the api.url
 app.use(modRewrite([
-        '^/api/(.*?)\\?(.*)$ ' + config.api.url + '$1?$2&api_key=' + config.api.key + ' [P]',
-        '^/api/(.*)$ ' + config.api.url + '$1?api_key=' + config.api.key + ' [P]'
+        '^/api/(.*?)\\?(.*)$ ' + config.api.url + '$1?$2&api_key=' + config.api.key + ' [P]', // match /api/v2/foos?active=true and replace with api.url/api/v2/foos?active=true&api_key=api.key
+        '^/api/(.*)$ ' + config.api.url + '$1?api_key=' + config.api.key + ' [P]' // match /api/v2/foos and replace with api.url/api/v2/foos?api_key=api.key
 ]));
 app.use(express.static(config.files.static));
 app.use(morgan('combined', {
