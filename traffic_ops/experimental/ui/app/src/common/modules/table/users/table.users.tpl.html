@@ -1,0 +1,23 @@
+<div class="page-title">
+    <div class="title_left">
+        <h3>Users</h3>
+    </div>
+</div>
+<table id="usersTable" class="table responsive-utilities jambo_table">
+    <thead>
+    <tr class="headings">
+        <th>Full Name</th>
+        <th>Username</th>
+        <th>Email</th>
+        <th>Role</th>
+    </tr>
+    </thead>
+    <tbody>
+    <tr ng-repeat="user in users">
+        <td>{{user.fullName}}</td>
+        <td>{{user.username}}</td>
+        <td>{{user.email}}</td>
+        <td>{{user.rolename}}</td>
+    </tr>
+    </tbody>
+</table>

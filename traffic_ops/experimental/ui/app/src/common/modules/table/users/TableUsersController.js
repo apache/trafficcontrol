@@ -1,4 +1,4 @@
-var UsersController = function(users, $scope) {
+var TableUsersController = function(users, $scope) {
 
     $scope.users = users;
 
@@ -11,5 +11,5 @@ var UsersController = function(users, $scope) {
 
 };
 
-UsersController.$inject = ['users', '$scope'];
-module.exports = UsersController;
+TableUsersController.$inject = ['users', '$scope'];
+module.exports = TableUsersController;

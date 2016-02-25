@@ -13,6 +13,8 @@ $fa-font-path: "../assets/fonts/";
 @import "../common/modules/message/message";
 @import "../common/modules/navigation/navigation";
 @import "../common/modules/release/release";
+@import "../common/modules/table/deliveryServices/table.deliveryServices";
+@import "../common/modules/table/users/table.users";
 
 // public
 @import "../modules/public/login/login";
@@ -25,12 +27,10 @@ $fa-font-path: "../assets/fonts/";
 
 // administer
 @import "../modules/private/administer/administer";
-@import "../modules/private/administer/users/users";
 
 // configure
 @import "../modules/private/configure/configure";
 @import "../modules/private/configure/deliveryServices/deliveryServices";
-@import "../modules/private/configure/deliveryServices/list/deliveryServices.list";
 @import "../modules/private/configure/deliveryServices/edit/deliveryServices.edit";
 
 // monitor

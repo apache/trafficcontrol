@@ -1,4 +1,4 @@
-var DeliveryServicesController = function($scope, deliveryServicesModel) {
+var TableDeliveryServicesController = function($scope, deliveryServicesModel) {
 
     $scope.deliveryServices = deliveryServicesModel.deliveryServices;
 
@@ -11,5 +11,5 @@ var DeliveryServicesController = function($scope, deliveryServicesModel) {
 
 };
 
-DeliveryServicesController.$inject = ['$scope', 'deliveryServicesModel'];
-module.exports = DeliveryServicesController;
+TableDeliveryServicesController.$inject = ['$scope', 'deliveryServicesModel'];
+module.exports = TableDeliveryServicesController;
