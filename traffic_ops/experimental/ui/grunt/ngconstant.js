@@ -10,7 +10,8 @@ module.exports = {
             ENV: {
                 apiEndpoint: {
                     '1.1': '/api/1.1/',
-                    '1.2': '/api/1.2/'
+                    '1.2': '/api/1.2/',
+                    '2.0': '/api/2.0/'
                 }
             }
         }
@@ -20,7 +21,8 @@ module.exports = {
             ENV: {
                 apiEndpoint: {
                     '1.1': '/api/1.1/',
-                    '1.2': '/api/1.2/'
+                    '1.2': '/api/1.2/',
+                    '2.0': '/api/2.0/'
                 }
             }
         }
