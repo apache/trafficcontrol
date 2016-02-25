@@ -14,13 +14,6 @@ SET client_min_messages = warning;
 SET row_security = off;
 
 --
--- Roles
---
-
-CREATE ROLE touser;
-ALTER ROLE touser WITH NOSUPERUSER INHERIT NOCREATEROLE NOCREATEDB LOGIN NOREPLICATION NOBYPASSRLS;
-
---
 -- Name: traffic_ops; Type: DATABASE; Schema: -; Owner: touser
 --
 
@@ -73,6 +66,20 @@ CREATE TABLE asns (
 ALTER TABLE asns OWNER TO touser;
 
 --
+-- Name: asns_v; Type: VIEW; Schema: public; Owner: touser
+--
+
+CREATE VIEW asns_v AS
+ SELECT asns.asn,
+    asns.cachegroup,
+    asns.created_at,
+    pg_xact_commit_timestamp(asns.xmin) AS last_updated
+   FROM asns;
+
+
+ALTER TABLE asns_v OWNER TO touser;
+
+--
 -- Name: cachegroups; Type: TABLE; Schema: public; Owner: touser
 --
 
@@ -88,72 +95,6 @@ CREATE TABLE cachegroups (
 
 
 ALTER TABLE cachegroups OWNER TO touser;
-
---
--- Name: api_asns; Type: VIEW; Schema: public; Owner: touser
---
-
-CREATE VIEW api_asns AS
- SELECT pg_xact_commit_timestamp(a.xmin) AS last_updated,
-    a.asn,
-    c.name AS cachegroup
-   FROM asns a,
-    cachegroups c
-  WHERE (a.cachegroup = c.name);
-
-
-ALTER TABLE api_asns OWNER TO touser;
-
---
--- Name: profiles; Type: TABLE; Schema: public; Owner: touser
---
-
-CREATE TABLE profiles (
-    name text NOT NULL,
-    description text,
-    created_at timestamp without time zone DEFAULT now() NOT NULL
-);
-
-
-ALTER TABLE profiles OWNER TO touser;
-
---
--- Name: api_profiles; Type: VIEW; Schema: public; Owner: touser
---
-
-CREATE VIEW api_profiles AS
- SELECT pg_xact_commit_timestamp(profiles.xmin) AS last_updated,
-    profiles.name,
-    profiles.description
-   FROM profiles;
-
-
-ALTER TABLE api_profiles OWNER TO touser;
-
---
--- Name: regions; Type: TABLE; Schema: public; Owner: touser
---
-
-CREATE TABLE regions (
-    name text NOT NULL,
-    division text NOT NULL,
-    created_at timestamp without time zone DEFAULT now() NOT NULL
-);
-
-
-ALTER TABLE regions OWNER TO touser;
-
---
--- Name: api_regions; Type: VIEW; Schema: public; Owner: touser
---
-
-CREATE VIEW api_regions AS
- SELECT regions.name,
-    regions.division
-   FROM regions;
-
-
-ALTER TABLE api_regions OWNER TO touser;
 
 --
 -- Name: cachegroups_parameters; Type: TABLE; Schema: public; Owner: touser
@@ -211,6 +152,19 @@ CREATE TABLE parameters (
 ALTER TABLE parameters OWNER TO touser;
 
 --
+-- Name: profiles; Type: TABLE; Schema: public; Owner: touser
+--
+
+CREATE TABLE profiles (
+    name text NOT NULL,
+    description text,
+    created_at timestamp without time zone DEFAULT now() NOT NULL
+);
+
+
+ALTER TABLE profiles OWNER TO touser;
+
+--
 -- Name: profiles_parameters; Type: TABLE; Schema: public; Owner: touser
 --
 
@@ -262,93 +216,55 @@ CREATE TABLE servers (
 ALTER TABLE servers OWNER TO touser;
 
 --
--- Name: statuses; Type: TABLE; Schema: public; Owner: touser
+-- Name: content_routers_v; Type: VIEW; Schema: public; Owner: touser
 --
 
-CREATE TABLE statuses (
-    name text NOT NULL,
-    description text,
-    created_at timestamp without time zone DEFAULT now() NOT NULL
-);
-
-
-ALTER TABLE statuses OWNER TO touser;
-
---
--- Name: types; Type: TABLE; Schema: public; Owner: touser
---
-
-CREATE TABLE types (
-    name text NOT NULL,
-    description text,
-    use_in_table text,
-    created_at timestamp without time zone DEFAULT now() NOT NULL
-);
-
-
-ALTER TABLE types OWNER TO touser;
-
---
--- Name: content_routers; Type: VIEW; Schema: public; Owner: touser
---
-
-CREATE VIEW content_routers AS
+CREATE VIEW content_routers_v AS
  SELECT servers.ip_address AS ip,
     servers.ip6_address AS ip6,
-    profiles.name AS profile,
-    cachegroups.name AS location,
-    statuses.name AS status,
+    servers.profile,
+    servers.cachegroup AS location,
+    servers.status,
     servers.tcp_port AS port,
     servers.host_name,
     concat(servers.host_name, '.', servers.domain_name) AS fqdn,
     parameters.value AS apiport,
-    cdns.name AS cdnname
-   FROM (((((((servers
+    servers.cdn
+   FROM (((servers
      JOIN profiles ON ((profiles.name = servers.profile)))
      JOIN profiles_parameters ON ((profiles_parameters.profile = profiles.name)))
      JOIN parameters ON ((parameters.id = profiles_parameters.parameter_id)))
-     JOIN cachegroups ON ((cachegroups.name = servers.cachegroup)))
-     JOIN statuses ON ((statuses.name = servers.status)))
-     JOIN cdns ON ((cdns.name = servers.cdn)))
-     JOIN types ON ((types.name = servers.type)))
-  WHERE ((types.name = 'CCR'::text) AND (parameters.name = 'api.port'::text));
+  WHERE ((servers.type = 'CCR'::text) AND (parameters.name = 'api.port'::text));
 
 
-ALTER TABLE content_routers OWNER TO touser;
+ALTER TABLE content_routers_v OWNER TO touser;
 
 --
--- Name: content_servers; Type: VIEW; Schema: public; Owner: touser
+-- Name: content_servers_v; Type: VIEW; Schema: public; Owner: touser
 --
 
-CREATE VIEW content_servers AS
+CREATE VIEW content_servers_v AS
  SELECT DISTINCT servers.host_name,
-    profiles.name AS profile,
-    types.name AS type,
-    cachegroups.name AS location,
+    servers.profile,
+    servers.type,
+    servers.cachegroup AS location,
     servers.ip_address AS ip,
-    cdns.name AS cdn,
-    statuses.name AS status,
-    cachegroups.name AS cache_group,
+    servers.cdn,
+    servers.status,
+    servers.cachegroup AS cache_group,
     servers.ip6_address AS ip6,
     servers.tcp_port AS port,
     concat(servers.host_name, '.', servers.domain_name) AS fqdn,
     servers.interface_name,
     parameters.value AS hash_count
-   FROM (((((((servers
+   FROM (((servers
      JOIN profiles ON ((profiles.name = servers.profile)))
      JOIN profiles_parameters ON ((profiles_parameters.profile = profiles.name)))
      JOIN parameters ON ((parameters.id = profiles_parameters.parameter_id)))
-     JOIN cachegroups ON ((cachegroups.name = servers.cachegroup)))
-     JOIN types ON ((types.name = servers.type)))
-     JOIN statuses ON ((statuses.name = servers.status)))
-     JOIN cdns ON (((cdns.name = servers.cdn) AND (parameters.name = 'weight'::text) AND (servers.status IN ( SELECT statuses_1.name
-           FROM statuses statuses_1
-          WHERE ((statuses_1.name = 'REPORTED'::text) OR (statuses_1.name = 'ONLINE'::text)))) AND (servers.type = ( SELECT types_1.name
-           FROM types types_1
-          WHERE (types_1.name = 'EDGE'::text))))));
+  WHERE ((parameters.name = 'weight'::text) AND (servers.status = ANY (ARRAY['REPORTED'::text, 'ONLINE'::text])) AND (servers.type = 'EDGE'::text));
 
 
-ALTER TABLE content_servers OWNER TO touser;
+ALTER TABLE content_servers_v OWNER TO touser;
 
 --
 -- Name: deliveryservices; Type: TABLE; Schema: public; Owner: touser
@@ -457,24 +373,23 @@ CREATE TABLE regexes (
 ALTER TABLE regexes OWNER TO touser;
 
 --
--- Name: cr_deliveryservice_server; Type: VIEW; Schema: public; Owner: touser
+-- Name: cr_deliveryservice_server_v; Type: VIEW; Schema: public; Owner: touser
 --
 
-CREATE VIEW cr_deliveryservice_server AS
+CREATE VIEW cr_deliveryservice_server_v AS
  SELECT DISTINCT regexes.pattern,
     deliveryservices.name,
-    cdns.name AS cdn,
+    servers.cdn,
     servers.host_name AS server_name
-   FROM (((((deliveryservices
+   FROM ((((deliveryservices
      JOIN deliveryservices_regexes ON ((deliveryservices_regexes.deliveryservice = deliveryservices.name)))
      JOIN regexes ON ((regexes.id = deliveryservices_regexes.regex_id)))
      JOIN deliveryservices_servers ON ((deliveryservices.name = (deliveryservices_servers.deliveryservice)::text)))
      JOIN servers ON ((servers.host_name = deliveryservices_servers.server)))
-     JOIN cdns ON ((cdns.name = servers.cdn)))
   WHERE (deliveryservices.type <> 'ANY_MAP'::text);
 
 
-ALTER TABLE cr_deliveryservice_server OWNER TO touser;
+ALTER TABLE cr_deliveryservice_server_v OWNER TO touser;
 
 --
 -- Name: staticdnsentries_id_seq; Type: SEQUENCE; Schema: public; Owner: touser
@@ -510,10 +425,24 @@ CREATE TABLE staticdnsentries (
 ALTER TABLE staticdnsentries OWNER TO touser;
 
 --
--- Name: crconfig_ds_data; Type: VIEW; Schema: public; Owner: touser
+-- Name: types; Type: TABLE; Schema: public; Owner: touser
 --
 
-CREATE VIEW crconfig_ds_data AS
+CREATE TABLE types (
+    name text NOT NULL,
+    description text,
+    use_in_table text,
+    created_at timestamp without time zone DEFAULT now() NOT NULL
+);
+
+
+ALTER TABLE types OWNER TO touser;
+
+--
+-- Name: crconfig_ds_data_v; Type: VIEW; Schema: public; Owner: touser
+--
+
+CREATE VIEW crconfig_ds_data_v AS
  SELECT deliveryservices.name,
     deliveryservices.profile,
     deliveryservices.ccr_dns_ttl,
@@ -522,7 +451,7 @@ CREATE VIEW crconfig_ds_data AS
     deliveryservices.max_dns_answers,
     deliveryservices.miss_lat,
     deliveryservices.miss_long,
-    protocoltypes.name AS protocol,
+    deliveryservices.protocol,
     deliveryservices.ipv6_routing_enabled,
     deliveryservices.tr_request_headers,
     deliveryservices.tr_response_headers,
@@ -532,7 +461,7 @@ CREATE VIEW crconfig_ds_data AS
     deliveryservices.dns_bypass_ip6,
     deliveryservices.dns_bypass_ttl,
     deliveryservices.geo_limit,
-    cdns.name AS cdn,
+    deliveryservices.cdn,
     regexes.pattern AS match_pattern,
     regextypes.name AS match_type,
     deliveryservices_regexes.set_number,
@@ -540,38 +469,35 @@ CREATE VIEW crconfig_ds_data AS
     staticdnsentries.rdata AS sdns_address,
     staticdnsentries.ttl AS sdns_ttl,
     sdnstypes.name AS sdns_type
-   FROM (((((((deliveryservices
-     JOIN cdns ON ((cdns.name = deliveryservices.cdn)))
+   FROM (((((deliveryservices
      LEFT JOIN staticdnsentries ON ((deliveryservices.name = staticdnsentries.deliveryservice)))
      JOIN deliveryservices_regexes ON ((deliveryservices_regexes.deliveryservice = deliveryservices.name)))
      JOIN regexes ON ((regexes.id = deliveryservices_regexes.regex_id)))
-     JOIN types protocoltypes ON ((protocoltypes.name = deliveryservices.type)))
      JOIN types regextypes ON ((regextypes.name = regexes.type)))
      LEFT JOIN types sdnstypes ON ((sdnstypes.name = (staticdnsentries.type)::text)));
 
 
-ALTER TABLE crconfig_ds_data OWNER TO touser;
+ALTER TABLE crconfig_ds_data_v OWNER TO touser;
 
 --
--- Name: crconfig_params; Type: VIEW; Schema: public; Owner: touser
+-- Name: crconfig_params_v; Type: VIEW; Schema: public; Owner: touser
 --
 
-CREATE VIEW crconfig_params AS
- SELECT DISTINCT cdns.name AS cdn_name,
+CREATE VIEW crconfig_params_v AS
+ SELECT DISTINCT servers.cdn,
     servers.profile,
     servers.type AS stype,
     parameters.name AS pname,
     parameters.config_file AS cfile,
     parameters.value AS pvalue
-   FROM ((((servers
-     JOIN cdns ON ((cdns.name = servers.cdn)))
+   FROM (((servers
      JOIN profiles ON ((profiles.name = servers.profile)))
      JOIN profiles_parameters ON ((profiles_parameters.profile = servers.profile)))
      JOIN parameters ON ((parameters.id = profiles_parameters.parameter_id)))
   WHERE ((servers.type = ANY (ARRAY['EDGE'::text, 'MID'::text, 'CCR'::text])) AND (parameters.config_file = 'CRConfig.json'::text));
 
 
-ALTER TABLE crconfig_params OWNER TO touser;
+ALTER TABLE crconfig_params_v OWNER TO touser;
 
 --
 -- Name: deliveryservices_users; Type: TABLE; Schema: public; Owner: touser
@@ -774,10 +700,10 @@ CREATE TABLE log (
 ALTER TABLE log OWNER TO touser;
 
 --
--- Name: monitors; Type: VIEW; Schema: public; Owner: touser
+-- Name: monitors_v; Type: VIEW; Schema: public; Owner: touser
 --
 
-CREATE VIEW monitors AS
+CREATE VIEW monitors_v AS
  SELECT servers.ip_address AS ip,
     servers.ip6_address AS ip6,
     servers.profile,
@@ -791,7 +717,7 @@ CREATE VIEW monitors AS
   WHERE (servers.type = 'RASCAL'::text);
 
 
-ALTER TABLE monitors OWNER TO touser;
+ALTER TABLE monitors_v OWNER TO touser;
 
 --
 -- Name: phys_locations; Type: TABLE; Schema: public; Owner: touser
@@ -814,6 +740,47 @@ CREATE TABLE phys_locations (
 
 
 ALTER TABLE phys_locations OWNER TO touser;
+
+--
+-- Name: profiles_v; Type: VIEW; Schema: public; Owner: touser
+--
+
+CREATE VIEW profiles_v AS
+ SELECT profiles.name,
+    profiles.description,
+    profiles.created_at,
+    pg_xact_commit_timestamp(profiles.xmin) AS last_updated
+   FROM profiles;
+
+
+ALTER TABLE profiles_v OWNER TO touser;
+
+--
+-- Name: regions; Type: TABLE; Schema: public; Owner: touser
+--
+
+CREATE TABLE regions (
+    name text NOT NULL,
+    division text NOT NULL,
+    created_at timestamp without time zone DEFAULT now() NOT NULL
+);
+
+
+ALTER TABLE regions OWNER TO touser;
+
+--
+-- Name: regions_v; Type: VIEW; Schema: public; Owner: touser
+--
+
+CREATE VIEW regions_v AS
+ SELECT regions.name,
+    regions.division,
+    regions.created_at,
+    pg_xact_commit_timestamp(regions.xmin) AS last_updated
+   FROM regions;
+
+
+ALTER TABLE regions_v OWNER TO touser;
 
 --
 -- Name: roles; Type: TABLE; Schema: public; Owner: touser
@@ -843,6 +810,19 @@ CREATE TABLE stats_summary (
 
 
 ALTER TABLE stats_summary OWNER TO touser;
+
+--
+-- Name: statuses; Type: TABLE; Schema: public; Owner: touser
+--
+
+CREATE TABLE statuses (
+    name text NOT NULL,
+    description text,
+    created_at timestamp without time zone DEFAULT now() NOT NULL
+);
+
+
+ALTER TABLE statuses OWNER TO touser;
 
 --
 -- Name: users; Type: TABLE; Schema: public; Owner: touser
