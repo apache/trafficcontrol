@@ -85,7 +85,7 @@ ALTER TABLE asns_v OWNER TO touser;
 
 CREATE TABLE cachegroups (
     name text NOT NULL,
-    short_name text NOT NULL,
+    description text NOT NULL,
     latitude numeric,
     longitude numeric,
     parent_cachegroup text,
@@ -272,8 +272,12 @@ ALTER TABLE content_servers_v OWNER TO touser;
 
 CREATE TABLE deliveryservices (
     name text NOT NULL,
+    display_name text NOT NULL,
+    description text NOT NULL,
+    cdn text NOT NULL,
+    domain text NOT NULL,
     active boolean NOT NULL,
-    dscp integer NOT NULL,
+    dscp smallint NOT NULL,
     signed boolean NOT NULL,
     qstring_ignore boolean NOT NULL,
     geo_limit boolean NOT NULL,
@@ -284,13 +288,9 @@ CREATE TABLE deliveryservices (
     org_server_fqdn text,
     type text NOT NULL,
     profile text NOT NULL,
-    cdn text,
-    ccr_dns_ttl integer,
+    dns_ttl integer,
     global_max_mbps integer,
     global_max_tps integer,
-    long_desc text,
-    long_desc_1 text,
-    long_desc_2 text,
     max_dns_answers integer DEFAULT 0,
     info_url text,
     miss_lat numeric,
@@ -307,7 +307,6 @@ CREATE TABLE deliveryservices (
     cacheurl text,
     remap_text text,
     multi_site_origin boolean,
-    display_name text NOT NULL,
     tr_response_headers text,
     initial_dispersion integer DEFAULT 1 NOT NULL,
     dns_bypass_cname text,
@@ -445,7 +444,7 @@ ALTER TABLE types OWNER TO touser;
 CREATE VIEW crconfig_ds_data_v AS
  SELECT deliveryservices.name,
     deliveryservices.profile,
-    deliveryservices.ccr_dns_ttl,
+    deliveryservices.dns_ttl,
     deliveryservices.global_max_mbps,
     deliveryservices.global_max_tps,
     deliveryservices.max_dns_answers,
@@ -523,6 +522,20 @@ CREATE TABLE divisions (
 
 
 ALTER TABLE divisions OWNER TO touser;
+
+--
+-- Name: domains; Type: TABLE; Schema: public; Owner: touser
+--
+
+CREATE TABLE domains (
+    name text NOT NULL,
+    cdn text NOT NULL,
+    dnssec boolean NOT NULL,
+    created_at timestamp without time zone DEFAULT now() NOT NULL
+);
+
+
+ALTER TABLE domains OWNER TO touser;
 
 --
 -- Name: extensions; Type: TABLE; Schema: public; Owner: touser
@@ -913,6 +926,14 @@ ALTER TABLE ONLY divisions
 
 
 --
+-- Name: domains_pkey; Type: CONSTRAINT; Schema: public; Owner: touser
+--
+
+ALTER TABLE ONLY domains
+    ADD CONSTRAINT domains_pkey PRIMARY KEY (name);
+
+
+--
 -- Name: federation_resolvers_id_pkey; Type: CONSTRAINT; Schema: public; Owner: touser
 --
 
@@ -961,10 +982,26 @@ ALTER TABLE ONLY goose_db_version
 
 
 --
+-- Name: parameters_id_pkey; Type: CONSTRAINT; Schema: public; Owner: touser
+--
+
+ALTER TABLE ONLY parameters
+    ADD CONSTRAINT parameters_id_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: types_name_pkey; Type: CONSTRAINT; Schema: public; Owner: touser
+--
+
+ALTER TABLE ONLY types
+    ADD CONSTRAINT types_name_pkey PRIMARY KEY (name);
+
+
+--
 -- Name: cachegroups_short_name; Type: INDEX; Schema: public; Owner: touser
 --
 
-CREATE UNIQUE INDEX cachegroups_short_name ON cachegroups USING btree (short_name);
+CREATE UNIQUE INDEX cachegroups_short_name ON cachegroups USING btree (description);
 
 
 --
@@ -972,6 +1009,61 @@ CREATE UNIQUE INDEX cachegroups_short_name ON cachegroups USING btree (short_nam
 --
 
 CREATE UNIQUE INDEX federation_resolvers_ip_address ON federation_resolvers USING btree (ip_address);
+
+
+--
+-- Name: parameters_name_config_file_value_idx; Type: INDEX; Schema: public; Owner: touser
+--
+
+CREATE UNIQUE INDEX parameters_name_config_file_value_idx ON parameters USING btree (name, config_file, value);
+
+
+--
+-- Name: asns_cchegroup_cachegroups_name_fkey; Type: FK CONSTRAINT; Schema: public; Owner: touser
+--
+
+ALTER TABLE ONLY asns
+    ADD CONSTRAINT asns_cchegroup_cachegroups_name_fkey FOREIGN KEY (cachegroup) REFERENCES cachegroups(name);
+
+
+--
+-- Name: cachegroups_parameters_cachegroup_cachegroups_name_fkey; Type: FK CONSTRAINT; Schema: public; Owner: touser
+--
+
+ALTER TABLE ONLY cachegroups_parameters
+    ADD CONSTRAINT cachegroups_parameters_cachegroup_cachegroups_name_fkey FOREIGN KEY (cachegroup) REFERENCES cachegroups(name);
+
+
+--
+-- Name: cachegroups_parameters_parameter_id_parameters_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: touser
+--
+
+ALTER TABLE ONLY cachegroups_parameters
+    ADD CONSTRAINT cachegroups_parameters_parameter_id_parameters_id_fkey FOREIGN KEY (parameter_id) REFERENCES parameters(id);
+
+
+--
+-- Name: cachegroups_parent_cachegroup_cachegroups_name_fkey; Type: FK CONSTRAINT; Schema: public; Owner: touser
+--
+
+ALTER TABLE ONLY cachegroups
+    ADD CONSTRAINT cachegroups_parent_cachegroup_cachegroups_name_fkey FOREIGN KEY (parent_cachegroup) REFERENCES cachegroups(name);
+
+
+--
+-- Name: cachegroups_type_types_name_fkey; Type: FK CONSTRAINT; Schema: public; Owner: touser
+--
+
+ALTER TABLE ONLY cachegroups
+    ADD CONSTRAINT cachegroups_type_types_name_fkey FOREIGN KEY (type) REFERENCES types(name);
+
+
+--
+-- Name: domains_cdn_fkey; Type: FK CONSTRAINT; Schema: public; Owner: touser
+--
+
+ALTER TABLE ONLY domains
+    ADD CONSTRAINT domains_cdn_fkey FOREIGN KEY (cdn) REFERENCES cdns(name);
 
 
 --
