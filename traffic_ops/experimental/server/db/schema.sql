@@ -115,7 +115,6 @@ ALTER TABLE cachegroups_parameters OWNER TO touser;
 
 CREATE TABLE cdns (
     name text NOT NULL,
-    dnssec_enabled boolean DEFAULT false,
     created_at timestamp without time zone DEFAULT now() NOT NULL
 );
 
@@ -157,7 +156,7 @@ ALTER TABLE parameters OWNER TO touser;
 
 CREATE TABLE profiles (
     name text NOT NULL,
-    description text,
+    description text NOT NULL,
     created_at timestamp without time zone DEFAULT now() NOT NULL
 );
 
@@ -990,6 +989,14 @@ ALTER TABLE ONLY parameters
 
 
 --
+-- Name: profiles_name_pkey; Type: CONSTRAINT; Schema: public; Owner: touser
+--
+
+ALTER TABLE ONLY profiles
+    ADD CONSTRAINT profiles_name_pkey PRIMARY KEY (name);
+
+
+--
 -- Name: types_name_pkey; Type: CONSTRAINT; Schema: public; Owner: touser
 --
 
@@ -1056,6 +1063,38 @@ ALTER TABLE ONLY cachegroups
 
 ALTER TABLE ONLY cachegroups
     ADD CONSTRAINT cachegroups_type_types_name_fkey FOREIGN KEY (type) REFERENCES types(name);
+
+
+--
+-- Name: deliveryservices_cdn_cdns_name_fkey; Type: FK CONSTRAINT; Schema: public; Owner: touser
+--
+
+ALTER TABLE ONLY deliveryservices
+    ADD CONSTRAINT deliveryservices_cdn_cdns_name_fkey FOREIGN KEY (cdn) REFERENCES cdns(name);
+
+
+--
+-- Name: deliveryservices_domain_domains_name_fkey; Type: FK CONSTRAINT; Schema: public; Owner: touser
+--
+
+ALTER TABLE ONLY deliveryservices
+    ADD CONSTRAINT deliveryservices_domain_domains_name_fkey FOREIGN KEY (domain) REFERENCES domains(name);
+
+
+--
+-- Name: deliveryservices_profile_profiles_name_fkey; Type: FK CONSTRAINT; Schema: public; Owner: touser
+--
+
+ALTER TABLE ONLY deliveryservices
+    ADD CONSTRAINT deliveryservices_profile_profiles_name_fkey FOREIGN KEY (profile) REFERENCES profiles(name);
+
+
+--
+-- Name: deliveryservices_type_types_name_fkey; Type: FK CONSTRAINT; Schema: public; Owner: touser
+--
+
+ALTER TABLE ONLY deliveryservices
+    ADD CONSTRAINT deliveryservices_type_types_name_fkey FOREIGN KEY (type) REFERENCES types(name);
 
 
 --
