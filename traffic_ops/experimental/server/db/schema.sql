@@ -2,8 +2,8 @@
 -- PostgreSQL database dump
 --
 
--- Dumped from database version 9.5.0
--- Dumped by pg_dump version 9.5.0
+-- Dumped from database version 9.5.1
+-- Dumped by pg_dump version 9.5.1
 
 SET statement_timeout = 0;
 SET lock_timeout = 0;
@@ -12,13 +12,6 @@ SET standard_conforming_strings = on;
 SET check_function_bodies = false;
 SET client_min_messages = warning;
 SET row_security = off;
-
---
--- Roles
---
-
-CREATE ROLE touser;
-ALTER ROLE touser WITH NOSUPERUSER INHERIT NOCREATEROLE NOCREATEDB LOGIN NOREPLICATION NOBYPASSRLS;
 
 --
 -- Name: traffic_ops; Type: DATABASE; Schema: -; Owner: touser
@@ -55,209 +48,78 @@ COMMENT ON EXTENSION plpgsql IS 'PL/pgSQL procedural language';
 
 SET search_path = public, pg_catalog;
 
---
--- Name: asn_id_seq; Type: SEQUENCE; Schema: public; Owner: touser
---
-
-CREATE SEQUENCE asn_id_seq
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
-
-
-ALTER TABLE asn_id_seq OWNER TO touser;
-
 SET default_tablespace = '';
 
 SET default_with_oids = false;
 
 --
--- Name: asn; Type: TABLE; Schema: public; Owner: touser
+-- Name: asns; Type: TABLE; Schema: public; Owner: touser
 --
 
-CREATE TABLE asn (
-    id integer DEFAULT nextval('asn_id_seq'::regclass) NOT NULL,
+CREATE TABLE asns (
     asn integer NOT NULL,
-    cachegroup integer DEFAULT 0 NOT NULL,
-    last_updated timestamp without time zone DEFAULT now()
+    cachegroup text NOT NULL,
+    created_at timestamp without time zone DEFAULT now() NOT NULL
 );
 
 
-ALTER TABLE asn OWNER TO touser;
+ALTER TABLE asns OWNER TO touser;
 
 --
--- Name: cachegroup_id_seq; Type: SEQUENCE; Schema: public; Owner: touser
+-- Name: asns_v; Type: VIEW; Schema: public; Owner: touser
 --
 
-CREATE SEQUENCE cachegroup_id_seq
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
+CREATE VIEW asns_v AS
+ SELECT asns.asn,
+    asns.cachegroup,
+    asns.created_at,
+    pg_xact_commit_timestamp(asns.xmin) AS last_updated
+   FROM asns;
 
 
-ALTER TABLE cachegroup_id_seq OWNER TO touser;
+ALTER TABLE asns_v OWNER TO touser;
 
 --
--- Name: cachegroup; Type: TABLE; Schema: public; Owner: touser
+-- Name: cachegroups; Type: TABLE; Schema: public; Owner: touser
 --
 
-CREATE TABLE cachegroup (
-    id integer DEFAULT nextval('cachegroup_id_seq'::regclass) NOT NULL,
-    name character varying(45) NOT NULL,
-    short_name character varying(255) NOT NULL,
-    latitude double precision,
-    longitude double precision,
-    parent_cachegroup_id integer,
-    type integer NOT NULL,
-    last_updated timestamp without time zone DEFAULT now()
+CREATE TABLE cachegroups (
+    name text NOT NULL,
+    description text NOT NULL,
+    latitude numeric,
+    longitude numeric,
+    parent_cachegroup text,
+    type text NOT NULL,
+    created_at timestamp without time zone DEFAULT now() NOT NULL
 );
 
 
-ALTER TABLE cachegroup OWNER TO touser;
+ALTER TABLE cachegroups OWNER TO touser;
 
 --
--- Name: api_asns; Type: VIEW; Schema: public; Owner: touser
+-- Name: cachegroups_parameters; Type: TABLE; Schema: public; Owner: touser
 --
 
-CREATE VIEW api_asns AS
- SELECT a.last_updated AS "lastUpdated",
-    a.id,
-    a.asn,
-    c.name AS cachegroup
-   FROM asn a,
-    cachegroup c
-  WHERE (a.id = c.id);
-
-
-ALTER TABLE api_asns OWNER TO touser;
-
---
--- Name: profile_id_seq; Type: SEQUENCE; Schema: public; Owner: touser
---
-
-CREATE SEQUENCE profile_id_seq
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
-
-
-ALTER TABLE profile_id_seq OWNER TO touser;
-
---
--- Name: profile; Type: TABLE; Schema: public; Owner: touser
---
-
-CREATE TABLE profile (
-    id integer DEFAULT nextval('profile_id_seq'::regclass) NOT NULL,
-    name character varying(45) NOT NULL,
-    description character varying(256),
-    last_updated timestamp without time zone DEFAULT now()
+CREATE TABLE cachegroups_parameters (
+    cachegroup text NOT NULL,
+    parameter_id bigint NOT NULL,
+    created_at timestamp without time zone DEFAULT now() NOT NULL
 );
 
 
-ALTER TABLE profile OWNER TO touser;
+ALTER TABLE cachegroups_parameters OWNER TO touser;
 
 --
--- Name: api_profiles; Type: VIEW; Schema: public; Owner: touser
+-- Name: cdns; Type: TABLE; Schema: public; Owner: touser
 --
 
-CREATE VIEW api_profiles AS
- SELECT profile.last_updated AS "lastUpdated",
-    profile.name,
-    profile.id,
-    profile.description
-   FROM profile;
-
-
-ALTER TABLE api_profiles OWNER TO touser;
-
---
--- Name: region_id_seq; Type: SEQUENCE; Schema: public; Owner: touser
---
-
-CREATE SEQUENCE region_id_seq
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
-
-
-ALTER TABLE region_id_seq OWNER TO touser;
-
---
--- Name: region; Type: TABLE; Schema: public; Owner: touser
---
-
-CREATE TABLE region (
-    id integer DEFAULT nextval('region_id_seq'::regclass) NOT NULL,
-    name character varying(45) NOT NULL,
-    division integer NOT NULL,
-    last_updated timestamp without time zone DEFAULT now()
+CREATE TABLE cdns (
+    name text NOT NULL,
+    created_at timestamp without time zone DEFAULT now() NOT NULL
 );
 
 
-ALTER TABLE region OWNER TO touser;
-
---
--- Name: api_region; Type: VIEW; Schema: public; Owner: touser
---
-
-CREATE VIEW api_region AS
- SELECT region.id,
-    region.name,
-    region.division AS division_id
-   FROM region;
-
-
-ALTER TABLE api_region OWNER TO touser;
-
---
--- Name: cachegroup_parameter; Type: TABLE; Schema: public; Owner: touser
---
-
-CREATE TABLE cachegroup_parameter (
-    cachegroup integer DEFAULT 0 NOT NULL,
-    parameter integer NOT NULL,
-    last_updated timestamp without time zone DEFAULT now()
-);
-
-
-ALTER TABLE cachegroup_parameter OWNER TO touser;
-
---
--- Name: cdn_id_seq; Type: SEQUENCE; Schema: public; Owner: touser
---
-
-CREATE SEQUENCE cdn_id_seq
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
-
-
-ALTER TABLE cdn_id_seq OWNER TO touser;
-
---
--- Name: cdn; Type: TABLE; Schema: public; Owner: touser
---
-
-CREATE TABLE cdn (
-    id integer DEFAULT nextval('cdn_id_seq'::regclass) NOT NULL,
-    name character varying(127),
-    last_updated timestamp without time zone DEFAULT now() NOT NULL,
-    dnssec_enabled smallint DEFAULT 0
-);
-
-
-ALTER TABLE cdn OWNER TO touser;
+ALTER TABLE cdns OWNER TO touser;
 
 --
 -- Name: parameter_id_seq; Type: SEQUENCE; Schema: public; Owner: touser
@@ -274,306 +136,217 @@ CREATE SEQUENCE parameter_id_seq
 ALTER TABLE parameter_id_seq OWNER TO touser;
 
 --
--- Name: parameter; Type: TABLE; Schema: public; Owner: touser
+-- Name: parameters; Type: TABLE; Schema: public; Owner: touser
 --
 
-CREATE TABLE parameter (
-    id integer DEFAULT nextval('parameter_id_seq'::regclass) NOT NULL,
-    name character varying(1024) NOT NULL,
-    config_file character varying(45) NOT NULL,
-    value character varying(1024) NOT NULL,
-    last_updated timestamp without time zone DEFAULT now()
+CREATE TABLE parameters (
+    id bigint DEFAULT nextval('parameter_id_seq'::regclass) NOT NULL,
+    name text NOT NULL,
+    config_file text NOT NULL,
+    value text NOT NULL,
+    created_at timestamp without time zone DEFAULT now() NOT NULL
 );
 
 
-ALTER TABLE parameter OWNER TO touser;
+ALTER TABLE parameters OWNER TO touser;
 
 --
--- Name: profile_parameter; Type: TABLE; Schema: public; Owner: touser
+-- Name: profiles; Type: TABLE; Schema: public; Owner: touser
 --
 
-CREATE TABLE profile_parameter (
-    profile integer NOT NULL,
-    parameter integer NOT NULL,
-    last_updated timestamp without time zone DEFAULT now()
+CREATE TABLE profiles (
+    name text NOT NULL,
+    description text NOT NULL,
+    created_at timestamp without time zone DEFAULT now() NOT NULL
 );
 
 
-ALTER TABLE profile_parameter OWNER TO touser;
+ALTER TABLE profiles OWNER TO touser;
 
 --
--- Name: server_id_seq; Type: SEQUENCE; Schema: public; Owner: touser
+-- Name: profiles_parameters; Type: TABLE; Schema: public; Owner: touser
 --
 
-CREATE SEQUENCE server_id_seq
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
+CREATE TABLE profiles_parameters (
+    profile text NOT NULL,
+    parameter_id bigint NOT NULL,
+    created_at timestamp without time zone DEFAULT now() NOT NULL
+);
 
 
-ALTER TABLE server_id_seq OWNER TO touser;
+ALTER TABLE profiles_parameters OWNER TO touser;
 
 --
--- Name: server; Type: TABLE; Schema: public; Owner: touser
+-- Name: servers; Type: TABLE; Schema: public; Owner: touser
 --
 
-CREATE TABLE server (
-    id integer DEFAULT nextval('server_id_seq'::regclass) NOT NULL,
-    host_name character varying(45) NOT NULL,
-    domain_name character varying(45) NOT NULL,
-    tcp_port bigint,
-    xmpp_id character varying(256),
-    xmpp_passwd character varying(45),
-    interface_name character varying(45) NOT NULL,
-    ip_address character varying(45) NOT NULL,
-    ip_netmask character varying(45) NOT NULL,
-    ip_gateway character varying(45) NOT NULL,
-    ip6_address character varying(50),
-    ip6_gateway character varying(50),
+CREATE TABLE servers (
+    host_name text NOT NULL,
+    domain_name text NOT NULL,
+    tcp_port integer,
+    xmpp_id text,
+    xmpp_passwd text,
+    interface_name text NOT NULL,
+    ip_address inet,
+    ip_gateway inet,
+    ip6_address inet,
+    ip6_gateway inet,
     interface_mtu integer DEFAULT 9000 NOT NULL,
-    phys_location integer NOT NULL,
-    rack character varying(64),
-    cachegroup integer DEFAULT 0 NOT NULL,
-    type integer NOT NULL,
-    status integer NOT NULL,
+    phys_location text NOT NULL,
+    rack text,
+    cachegroup text NOT NULL,
+    type text NOT NULL,
+    status text NOT NULL,
     upd_pending boolean DEFAULT false NOT NULL,
-    profile integer NOT NULL,
-    cdn_id integer,
-    mgmt_ip_address character varying(45),
-    mgmt_ip_netmask character varying(45),
-    mgmt_ip_gateway character varying(45),
-    ilo_ip_address character varying(45),
-    ilo_ip_netmask character varying(45),
-    ilo_ip_gateway character varying(45),
-    ilo_username character varying(45),
-    ilo_password character varying(45),
-    router_host_name character varying(256),
-    router_port_name character varying(256),
-    last_updated timestamp without time zone DEFAULT now()
+    profile text NOT NULL,
+    cdn text NOT NULL,
+    mgmt_ip_address inet,
+    mgmt_ip_gateway inet,
+    ilo_ip_address inet,
+    ilo_ip_gateway inet,
+    ilo_username text,
+    ilo_password text,
+    router_host_name text,
+    router_port_name text,
+    created_at timestamp without time zone DEFAULT now() NOT NULL
 );
 
 
-ALTER TABLE server OWNER TO touser;
+ALTER TABLE servers OWNER TO touser;
 
 --
--- Name: status_id_seq; Type: SEQUENCE; Schema: public; Owner: touser
+-- Name: content_routers_v; Type: VIEW; Schema: public; Owner: touser
 --
 
-CREATE SEQUENCE status_id_seq
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
+CREATE VIEW content_routers_v AS
+ SELECT servers.ip_address AS ip,
+    servers.ip6_address AS ip6,
+    servers.profile,
+    servers.cachegroup AS location,
+    servers.status,
+    servers.tcp_port AS port,
+    servers.host_name,
+    concat(servers.host_name, '.', servers.domain_name) AS fqdn,
+    parameters.value AS apiport,
+    servers.cdn
+   FROM (((servers
+     JOIN profiles ON ((profiles.name = servers.profile)))
+     JOIN profiles_parameters ON ((profiles_parameters.profile = profiles.name)))
+     JOIN parameters ON ((parameters.id = profiles_parameters.parameter_id)))
+  WHERE ((servers.type = 'CCR'::text) AND (parameters.name = 'api.port'::text));
 
 
-ALTER TABLE status_id_seq OWNER TO touser;
-
---
--- Name: status; Type: TABLE; Schema: public; Owner: touser
---
-
-CREATE TABLE status (
-    id integer DEFAULT nextval('status_id_seq'::regclass) NOT NULL,
-    name character varying(45) NOT NULL,
-    description character varying(256),
-    last_updated timestamp without time zone DEFAULT now()
-);
-
-
-ALTER TABLE status OWNER TO touser;
+ALTER TABLE content_routers_v OWNER TO touser;
 
 --
--- Name: type_id_seq; Type: SEQUENCE; Schema: public; Owner: touser
+-- Name: content_servers_v; Type: VIEW; Schema: public; Owner: touser
 --
 
-CREATE SEQUENCE type_id_seq
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
+CREATE VIEW content_servers_v AS
+ SELECT DISTINCT servers.host_name,
+    servers.profile,
+    servers.type,
+    servers.cachegroup AS location,
+    servers.ip_address AS ip,
+    servers.cdn,
+    servers.status,
+    servers.cachegroup AS cache_group,
+    servers.ip6_address AS ip6,
+    servers.tcp_port AS port,
+    concat(servers.host_name, '.', servers.domain_name) AS fqdn,
+    servers.interface_name,
+    parameters.value AS hash_count
+   FROM (((servers
+     JOIN profiles ON ((profiles.name = servers.profile)))
+     JOIN profiles_parameters ON ((profiles_parameters.profile = profiles.name)))
+     JOIN parameters ON ((parameters.id = profiles_parameters.parameter_id)))
+  WHERE ((parameters.name = 'weight'::text) AND (servers.status = ANY (ARRAY['REPORTED'::text, 'ONLINE'::text])) AND (servers.type = 'EDGE'::text));
 
 
-ALTER TABLE type_id_seq OWNER TO touser;
-
---
--- Name: type; Type: TABLE; Schema: public; Owner: touser
---
-
-CREATE TABLE type (
-    id integer DEFAULT nextval('type_id_seq'::regclass) NOT NULL,
-    name character varying(45) NOT NULL,
-    description character varying(256),
-    use_in_table character varying(45),
-    last_updated timestamp without time zone DEFAULT now()
-);
-
-
-ALTER TABLE type OWNER TO touser;
+ALTER TABLE content_servers_v OWNER TO touser;
 
 --
--- Name: content_routers; Type: VIEW; Schema: public; Owner: touser
+-- Name: deliveryservices; Type: TABLE; Schema: public; Owner: touser
 --
 
-CREATE VIEW content_routers AS
- SELECT server.ip_address AS ip,
-    server.ip6_address AS ip6,
-    profile.name AS profile,
-    cachegroup.name AS location,
-    status.name AS status,
-    server.tcp_port AS port,
-    server.host_name,
-    concat(server.host_name, '.', server.domain_name) AS fqdn,
-    parameter.value AS apiport,
-    cdn.name AS cdnname
-   FROM (((((((server
-     JOIN profile ON ((profile.id = server.profile)))
-     JOIN profile_parameter ON ((profile_parameter.profile = profile.id)))
-     JOIN parameter ON ((parameter.id = profile_parameter.parameter)))
-     JOIN cachegroup ON ((cachegroup.id = server.cachegroup)))
-     JOIN status ON ((status.id = server.status)))
-     JOIN cdn ON ((cdn.id = server.cdn_id)))
-     JOIN type ON ((type.id = server.type)))
-  WHERE (((type.name)::text = 'CCR'::text) AND ((parameter.name)::text = 'api.port'::text));
-
-
-ALTER TABLE content_routers OWNER TO touser;
-
---
--- Name: content_servers; Type: VIEW; Schema: public; Owner: touser
---
-
-CREATE VIEW content_servers AS
- SELECT DISTINCT server.host_name,
-    profile.name AS profile,
-    type.name AS type,
-    cachegroup.name AS location_id,
-    server.ip_address AS ip,
-    cdn.name AS cdnname,
-    status.name AS status,
-    cachegroup.name AS cache_group,
-    server.ip6_address AS ip6,
-    server.tcp_port AS port,
-    concat(server.host_name, '.', server.domain_name) AS fqdn,
-    server.interface_name,
-    parameter.value AS hash_count
-   FROM (((((((server
-     JOIN profile ON ((profile.id = server.profile)))
-     JOIN profile_parameter ON ((profile_parameter.profile = profile.id)))
-     JOIN parameter ON ((parameter.id = profile_parameter.parameter)))
-     JOIN cachegroup ON ((cachegroup.id = server.cachegroup)))
-     JOIN type ON ((type.id = server.type)))
-     JOIN status ON ((status.id = server.status)))
-     JOIN cdn ON (((cdn.id = server.cdn_id) AND ((parameter.name)::text = 'weight'::text) AND (server.status IN ( SELECT status_1.id
-           FROM status status_1
-          WHERE (((status_1.name)::text = 'REPORTED'::text) OR ((status_1.name)::text = 'ONLINE'::text)))) AND (server.type = ( SELECT type_1.id
-           FROM type type_1
-          WHERE ((type_1.name)::text = 'EDGE'::text))))));
-
-
-ALTER TABLE content_servers OWNER TO touser;
-
---
--- Name: deliveryservice_id_seq; Type: SEQUENCE; Schema: public; Owner: touser
---
-
-CREATE SEQUENCE deliveryservice_id_seq
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
-
-
-ALTER TABLE deliveryservice_id_seq OWNER TO touser;
-
---
--- Name: deliveryservice; Type: TABLE; Schema: public; Owner: touser
---
-
-CREATE TABLE deliveryservice (
-    id integer DEFAULT nextval('deliveryservice_id_seq'::regclass) NOT NULL,
-    xml_id character varying(48) NOT NULL,
-    active smallint NOT NULL,
-    dscp integer NOT NULL,
-    signed boolean,
-    qstring_ignore boolean,
-    geo_limit boolean DEFAULT false,
-    http_bypass_fqdn character varying(255),
-    dns_bypass_ip character varying(45),
-    dns_bypass_ip6 character varying(45),
+CREATE TABLE deliveryservices (
+    name text NOT NULL,
+    display_name text NOT NULL,
+    description text NOT NULL,
+    cdn text NOT NULL,
+    domain text NOT NULL,
+    active boolean NOT NULL,
+    dscp smallint NOT NULL,
+    signed boolean NOT NULL,
+    qstring_ignore boolean NOT NULL,
+    geo_limit boolean NOT NULL,
+    http_bypass_fqdn text,
+    dns_bypass_ip inet,
+    dns_bypass_ip6 inet,
     dns_bypass_ttl integer,
-    org_server_fqdn character varying(255),
-    type integer NOT NULL,
-    profile integer NOT NULL,
-    cdn_id integer,
-    ccr_dns_ttl integer,
+    org_server_fqdn text,
+    type text NOT NULL,
+    profile text NOT NULL,
+    dns_ttl integer,
     global_max_mbps integer,
     global_max_tps integer,
-    long_desc character varying(1024),
-    long_desc_1 character varying(1024),
-    long_desc_2 character varying(1024),
     max_dns_answers integer DEFAULT 0,
-    info_url character varying(255),
-    miss_lat double precision,
-    miss_long double precision,
-    check_path character varying(255),
-    last_updated timestamp without time zone DEFAULT now(),
+    info_url text,
+    miss_lat numeric,
+    miss_long numeric,
+    check_path text,
     protocol smallint DEFAULT 0,
-    ssl_key_version integer DEFAULT 0,
-    ipv6_routing_enabled smallint,
+    ssl_key_version bigint DEFAULT 0,
+    ipv6_routing_enabled boolean NOT NULL,
     range_request_handling smallint DEFAULT 0,
-    edge_header_rewrite character varying(2048),
-    origin_shield character varying(1024),
-    mid_header_rewrite character varying(2048),
-    regex_remap character varying(1024),
-    cacheurl character varying(1024),
-    remap_text character varying(2048),
+    edge_header_rewrite text,
+    origin_shield text,
+    mid_header_rewrite text,
+    regex_remap text,
+    cacheurl text,
+    remap_text text,
     multi_site_origin boolean,
-    display_name character varying(48) NOT NULL,
-    tr_response_headers character varying(1024),
-    initial_dispersion integer DEFAULT 1,
-    dns_bypass_cname character varying(255),
-    tr_request_headers character varying(1024)
+    tr_response_headers text,
+    initial_dispersion integer DEFAULT 1 NOT NULL,
+    dns_bypass_cname text,
+    tr_request_headers text,
+    created_at timestamp without time zone DEFAULT now() NOT NULL
 );
 
 
-ALTER TABLE deliveryservice OWNER TO touser;
+ALTER TABLE deliveryservices OWNER TO touser;
 
 --
--- Name: deliveryservice_regex; Type: TABLE; Schema: public; Owner: touser
+-- Name: deliveryservices_regexes; Type: TABLE; Schema: public; Owner: touser
 --
 
-CREATE TABLE deliveryservice_regex (
-    deliveryservice integer NOT NULL,
-    regex integer NOT NULL,
+CREATE TABLE deliveryservices_regexes (
+    deliveryservice text NOT NULL,
+    regex_id bigint NOT NULL,
     set_number integer DEFAULT 0
 );
 
 
-ALTER TABLE deliveryservice_regex OWNER TO touser;
+ALTER TABLE deliveryservices_regexes OWNER TO touser;
 
 --
--- Name: deliveryservice_server; Type: TABLE; Schema: public; Owner: touser
+-- Name: deliveryservices_servers; Type: TABLE; Schema: public; Owner: touser
 --
 
-CREATE TABLE deliveryservice_server (
-    deliveryservice integer NOT NULL,
-    server integer NOT NULL,
-    last_updated timestamp without time zone DEFAULT now()
+CREATE TABLE deliveryservices_servers (
+    deliveryservice name NOT NULL,
+    server text NOT NULL,
+    created_at timestamp without time zone DEFAULT now() NOT NULL
 );
 
 
-ALTER TABLE deliveryservice_server OWNER TO touser;
+ALTER TABLE deliveryservices_servers OWNER TO touser;
 
 --
--- Name: regex_id_seq; Type: SEQUENCE; Schema: public; Owner: touser
+-- Name: regexes_id_seq; Type: SEQUENCE; Schema: public; Owner: touser
 --
 
-CREATE SEQUENCE regex_id_seq
+CREATE SEQUENCE regexes_id_seq
     START WITH 1
     INCREMENT BY 1
     NO MINVALUE
@@ -581,51 +354,46 @@ CREATE SEQUENCE regex_id_seq
     CACHE 1;
 
 
-ALTER TABLE regex_id_seq OWNER TO touser;
+ALTER TABLE regexes_id_seq OWNER TO touser;
 
 --
--- Name: regex; Type: TABLE; Schema: public; Owner: touser
+-- Name: regexes; Type: TABLE; Schema: public; Owner: touser
 --
 
-CREATE TABLE regex (
-    id integer DEFAULT nextval('regex_id_seq'::regclass) NOT NULL,
-    pattern character varying(255) DEFAULT ''::character varying NOT NULL,
-    type integer NOT NULL,
-    last_updated timestamp without time zone DEFAULT now()
+CREATE TABLE regexes (
+    id bigint DEFAULT nextval('regexes_id_seq'::regclass) NOT NULL,
+    pattern text NOT NULL,
+    type text NOT NULL,
+    created_at timestamp without time zone DEFAULT now() NOT NULL
 );
 
 
-ALTER TABLE regex OWNER TO touser;
+ALTER TABLE regexes OWNER TO touser;
 
 --
--- Name: cr_deliveryservice_server; Type: VIEW; Schema: public; Owner: touser
+-- Name: cr_deliveryservice_server_v; Type: VIEW; Schema: public; Owner: touser
 --
 
-CREATE VIEW cr_deliveryservice_server AS
- SELECT DISTINCT regex.pattern,
-    deliveryservice.xml_id,
-    deliveryservice.id AS ds_id,
-    server.id AS srv_id,
-    cdn.name AS cdnname,
-    server.host_name AS server_name
-   FROM (((((deliveryservice
-     JOIN deliveryservice_regex ON ((deliveryservice_regex.deliveryservice = deliveryservice.id)))
-     JOIN regex ON ((regex.id = deliveryservice_regex.regex)))
-     JOIN deliveryservice_server ON ((deliveryservice.id = deliveryservice_server.deliveryservice)))
-     JOIN server ON ((server.id = deliveryservice_server.server)))
-     JOIN cdn ON ((cdn.id = server.cdn_id)))
-  WHERE (deliveryservice.type <> ( SELECT type.id
-           FROM type
-          WHERE ((type.name)::text = 'ANY_MAP'::text)));
+CREATE VIEW cr_deliveryservice_server_v AS
+ SELECT DISTINCT regexes.pattern,
+    deliveryservices.name,
+    servers.cdn,
+    servers.host_name AS server_name
+   FROM ((((deliveryservices
+     JOIN deliveryservices_regexes ON ((deliveryservices_regexes.deliveryservice = deliveryservices.name)))
+     JOIN regexes ON ((regexes.id = deliveryservices_regexes.regex_id)))
+     JOIN deliveryservices_servers ON ((deliveryservices.name = (deliveryservices_servers.deliveryservice)::text)))
+     JOIN servers ON ((servers.host_name = deliveryservices_servers.server)))
+  WHERE (deliveryservices.type <> 'ANY_MAP'::text);
 
 
-ALTER TABLE cr_deliveryservice_server OWNER TO touser;
+ALTER TABLE cr_deliveryservice_server_v OWNER TO touser;
 
 --
--- Name: staticdnsentry_id_seq; Type: SEQUENCE; Schema: public; Owner: touser
+-- Name: staticdnsentries_id_seq; Type: SEQUENCE; Schema: public; Owner: touser
 --
 
-CREATE SEQUENCE staticdnsentry_id_seq
+CREATE SEQUENCE staticdnsentries_id_seq
     START WITH 1
     INCREMENT BY 1
     NO MINVALUE
@@ -633,151 +401,166 @@ CREATE SEQUENCE staticdnsentry_id_seq
     CACHE 1;
 
 
-ALTER TABLE staticdnsentry_id_seq OWNER TO touser;
+ALTER TABLE staticdnsentries_id_seq OWNER TO touser;
 
 --
--- Name: staticdnsentry; Type: TABLE; Schema: public; Owner: touser
+-- Name: staticdnsentries; Type: TABLE; Schema: public; Owner: touser
 --
 
-CREATE TABLE staticdnsentry (
-    id integer DEFAULT nextval('staticdnsentry_id_seq'::regclass) NOT NULL,
-    host character varying(45) NOT NULL,
-    address character varying(45) NOT NULL,
-    type integer NOT NULL,
-    ttl integer DEFAULT 3600 NOT NULL,
-    deliveryservice integer NOT NULL,
-    cachegroup integer,
-    last_updated timestamp without time zone DEFAULT now()
+CREATE TABLE staticdnsentries (
+    id integer DEFAULT nextval('staticdnsentries_id_seq'::regclass) NOT NULL,
+    name character varying(63) NOT NULL,
+    type character varying(2) NOT NULL,
+    class character varying(2) NOT NULL,
+    ttl bigint DEFAULT 3600 NOT NULL,
+    rdata character varying(255) NOT NULL,
+    deliveryservice text NOT NULL,
+    cachegroup text,
+    created_at timestamp without time zone DEFAULT now() NOT NULL
 );
 
 
-ALTER TABLE staticdnsentry OWNER TO touser;
+ALTER TABLE staticdnsentries OWNER TO touser;
 
 --
--- Name: crconfig_ds_data; Type: VIEW; Schema: public; Owner: touser
+-- Name: types; Type: TABLE; Schema: public; Owner: touser
 --
 
-CREATE VIEW crconfig_ds_data AS
- SELECT deliveryservice.xml_id,
-    deliveryservice.profile,
-    deliveryservice.ccr_dns_ttl,
-    deliveryservice.global_max_mbps,
-    deliveryservice.global_max_tps,
-    deliveryservice.max_dns_answers,
-    deliveryservice.miss_lat,
-    deliveryservice.miss_long,
-    protocoltype.name AS protocol,
-    deliveryservice.ipv6_routing_enabled,
-    deliveryservice.tr_request_headers,
-    deliveryservice.tr_response_headers,
-    deliveryservice.initial_dispersion,
-    deliveryservice.dns_bypass_cname,
-    deliveryservice.dns_bypass_ip,
-    deliveryservice.dns_bypass_ip6,
-    deliveryservice.dns_bypass_ttl,
-    deliveryservice.geo_limit,
-    cdn.name AS cdn_name,
-    regex.pattern AS match_pattern,
-    regextype.name AS match_type,
-    deliveryservice_regex.set_number,
-    staticdnsentry.host AS sdns_host,
-    staticdnsentry.address AS sdns_address,
-    staticdnsentry.ttl AS sdns_ttl,
-    sdnstype.name AS sdns_type
-   FROM (((((((deliveryservice
-     JOIN cdn ON ((cdn.id = deliveryservice.cdn_id)))
-     LEFT JOIN staticdnsentry ON ((deliveryservice.id = staticdnsentry.deliveryservice)))
-     JOIN deliveryservice_regex ON ((deliveryservice_regex.deliveryservice = deliveryservice.id)))
-     JOIN regex ON ((regex.id = deliveryservice_regex.regex)))
-     JOIN type protocoltype ON ((protocoltype.id = deliveryservice.type)))
-     JOIN type regextype ON ((regextype.id = regex.type)))
-     LEFT JOIN type sdnstype ON ((sdnstype.id = staticdnsentry.type)));
-
-
-ALTER TABLE crconfig_ds_data OWNER TO touser;
-
---
--- Name: crconfig_params; Type: VIEW; Schema: public; Owner: touser
---
-
-CREATE VIEW crconfig_params AS
- SELECT DISTINCT cdn.name AS cdn_name,
-    cdn.id AS cdn_id,
-    server.profile AS profile_id,
-    server.type AS stype,
-    parameter.name AS pname,
-    parameter.config_file AS cfile,
-    parameter.value AS pvalue
-   FROM ((((server
-     JOIN cdn ON ((cdn.id = server.cdn_id)))
-     JOIN profile ON ((profile.id = server.profile)))
-     JOIN profile_parameter ON ((profile_parameter.profile = server.profile)))
-     JOIN parameter ON ((parameter.id = profile_parameter.parameter)))
-  WHERE ((server.type IN ( SELECT type.id
-           FROM type
-          WHERE ((type.name)::text = ANY ((ARRAY['EDGE'::character varying, 'MID'::character varying, 'CCR'::character varying])::text[])))) AND ((parameter.config_file)::text = 'CRConfig.json'::text));
-
-
-ALTER TABLE crconfig_params OWNER TO touser;
-
---
--- Name: deliveryservice_tmuser; Type: TABLE; Schema: public; Owner: touser
---
-
-CREATE TABLE deliveryservice_tmuser (
-    deliveryservice integer NOT NULL,
-    tm_user_id integer NOT NULL,
-    last_updated timestamp without time zone DEFAULT now()
+CREATE TABLE types (
+    name text NOT NULL,
+    description text,
+    use_in_table text,
+    created_at timestamp without time zone DEFAULT now() NOT NULL
 );
 
 
-ALTER TABLE deliveryservice_tmuser OWNER TO touser;
+ALTER TABLE types OWNER TO touser;
 
 --
--- Name: division_id_seq; Type: SEQUENCE; Schema: public; Owner: touser
+-- Name: crconfig_ds_data_v; Type: VIEW; Schema: public; Owner: touser
 --
 
-CREATE SEQUENCE division_id_seq
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
+CREATE VIEW crconfig_ds_data_v AS
+ SELECT deliveryservices.name,
+    deliveryservices.profile,
+    deliveryservices.dns_ttl,
+    deliveryservices.global_max_mbps,
+    deliveryservices.global_max_tps,
+    deliveryservices.max_dns_answers,
+    deliveryservices.miss_lat,
+    deliveryservices.miss_long,
+    deliveryservices.protocol,
+    deliveryservices.ipv6_routing_enabled,
+    deliveryservices.tr_request_headers,
+    deliveryservices.tr_response_headers,
+    deliveryservices.initial_dispersion,
+    deliveryservices.dns_bypass_cname,
+    deliveryservices.dns_bypass_ip,
+    deliveryservices.dns_bypass_ip6,
+    deliveryservices.dns_bypass_ttl,
+    deliveryservices.geo_limit,
+    deliveryservices.cdn,
+    regexes.pattern AS match_pattern,
+    regextypes.name AS match_type,
+    deliveryservices_regexes.set_number,
+    staticdnsentries.name AS sdns_host,
+    staticdnsentries.rdata AS sdns_address,
+    staticdnsentries.ttl AS sdns_ttl,
+    sdnstypes.name AS sdns_type
+   FROM (((((deliveryservices
+     LEFT JOIN staticdnsentries ON ((deliveryservices.name = staticdnsentries.deliveryservice)))
+     JOIN deliveryservices_regexes ON ((deliveryservices_regexes.deliveryservice = deliveryservices.name)))
+     JOIN regexes ON ((regexes.id = deliveryservices_regexes.regex_id)))
+     JOIN types regextypes ON ((regextypes.name = regexes.type)))
+     LEFT JOIN types sdnstypes ON ((sdnstypes.name = (staticdnsentries.type)::text)));
 
 
-ALTER TABLE division_id_seq OWNER TO touser;
+ALTER TABLE crconfig_ds_data_v OWNER TO touser;
 
 --
--- Name: division; Type: TABLE; Schema: public; Owner: touser
+-- Name: crconfig_params_v; Type: VIEW; Schema: public; Owner: touser
 --
 
-CREATE TABLE division (
-    id integer DEFAULT nextval('division_id_seq'::regclass) NOT NULL,
-    name character varying(45) NOT NULL,
-    last_updated timestamp without time zone DEFAULT now()
+CREATE VIEW crconfig_params_v AS
+ SELECT DISTINCT servers.cdn,
+    servers.profile,
+    servers.type AS stype,
+    parameters.name AS pname,
+    parameters.config_file AS cfile,
+    parameters.value AS pvalue
+   FROM (((servers
+     JOIN profiles ON ((profiles.name = servers.profile)))
+     JOIN profiles_parameters ON ((profiles_parameters.profile = servers.profile)))
+     JOIN parameters ON ((parameters.id = profiles_parameters.parameter_id)))
+  WHERE ((servers.type = ANY (ARRAY['EDGE'::text, 'MID'::text, 'CCR'::text])) AND (parameters.config_file = 'CRConfig.json'::text));
+
+
+ALTER TABLE crconfig_params_v OWNER TO touser;
+
+--
+-- Name: deliveryservices_users; Type: TABLE; Schema: public; Owner: touser
+--
+
+CREATE TABLE deliveryservices_users (
+    deliveryservice text NOT NULL,
+    username text NOT NULL,
+    created_at timestamp without time zone DEFAULT now() NOT NULL
 );
 
 
-ALTER TABLE division OWNER TO touser;
+ALTER TABLE deliveryservices_users OWNER TO touser;
 
 --
--- Name: divisions; Type: VIEW; Schema: public; Owner: touser
+-- Name: divisions; Type: TABLE; Schema: public; Owner: touser
 --
 
-CREATE VIEW divisions AS
- SELECT division.id,
-    division.name,
-    division.last_updated
-   FROM division;
+CREATE TABLE divisions (
+    name text NOT NULL,
+    created_at timestamp without time zone DEFAULT now() NOT NULL
+);
 
 
 ALTER TABLE divisions OWNER TO touser;
 
 --
--- Name: federation_id_seq; Type: SEQUENCE; Schema: public; Owner: touser
+-- Name: domains; Type: TABLE; Schema: public; Owner: touser
 --
 
-CREATE SEQUENCE federation_id_seq
+CREATE TABLE domains (
+    name text NOT NULL,
+    cdn text NOT NULL,
+    dnssec boolean NOT NULL,
+    created_at timestamp without time zone DEFAULT now() NOT NULL
+);
+
+
+ALTER TABLE domains OWNER TO touser;
+
+--
+-- Name: extensions; Type: TABLE; Schema: public; Owner: touser
+--
+
+CREATE TABLE extensions (
+    name text NOT NULL,
+    short_name text,
+    description text,
+    version text NOT NULL,
+    info_url text NOT NULL,
+    script_file text NOT NULL,
+    active boolean NOT NULL,
+    additional_config_json text,
+    type text NOT NULL,
+    created_at timestamp without time zone DEFAULT now() NOT NULL
+);
+
+
+ALTER TABLE extensions OWNER TO touser;
+
+--
+-- Name: federation_resolvers_id_seq; Type: SEQUENCE; Schema: public; Owner: touser
+--
+
+CREATE SEQUENCE federation_resolvers_id_seq
     START WITH 1
     INCREMENT BY 1
     NO MINVALUE
@@ -785,90 +568,90 @@ CREATE SEQUENCE federation_id_seq
     CACHE 1;
 
 
-ALTER TABLE federation_id_seq OWNER TO touser;
+ALTER TABLE federation_resolvers_id_seq OWNER TO touser;
 
 --
--- Name: federation; Type: TABLE; Schema: public; Owner: touser
+-- Name: federation_resolvers; Type: TABLE; Schema: public; Owner: touser
 --
 
-CREATE TABLE federation (
-    id integer DEFAULT nextval('federation_id_seq'::regclass) NOT NULL,
-    cname character varying(1024) NOT NULL,
-    description character varying(1024),
+CREATE TABLE federation_resolvers (
+    id bigint DEFAULT nextval('federation_resolvers_id_seq'::regclass) NOT NULL,
+    ip_address inet NOT NULL,
+    type text NOT NULL,
+    created_at timestamp without time zone DEFAULT now() NOT NULL
+);
+
+
+ALTER TABLE federation_resolvers OWNER TO touser;
+
+--
+-- Name: federation_users; Type: TABLE; Schema: public; Owner: touser
+--
+
+CREATE TABLE federation_users (
+    federation_id bigint NOT NULL,
+    username text NOT NULL,
+    role text NOT NULL,
+    created_at timestamp without time zone DEFAULT now() NOT NULL
+);
+
+
+ALTER TABLE federation_users OWNER TO touser;
+
+--
+-- Name: federations_id_seq; Type: SEQUENCE; Schema: public; Owner: touser
+--
+
+CREATE SEQUENCE federations_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER TABLE federations_id_seq OWNER TO touser;
+
+--
+-- Name: federations; Type: TABLE; Schema: public; Owner: touser
+--
+
+CREATE TABLE federations (
+    id bigint DEFAULT nextval('federations_id_seq'::regclass) NOT NULL,
+    cname text NOT NULL,
+    description text,
     ttl integer NOT NULL,
-    last_updated timestamp without time zone DEFAULT now()
+    created_at timestamp without time zone DEFAULT now() NOT NULL
 );
 
 
-ALTER TABLE federation OWNER TO touser;
+ALTER TABLE federations OWNER TO touser;
 
 --
--- Name: federation_deliveryservice; Type: TABLE; Schema: public; Owner: touser
+-- Name: federations_deliveryservices; Type: TABLE; Schema: public; Owner: touser
 --
 
-CREATE TABLE federation_deliveryservice (
-    federation integer NOT NULL,
-    deliveryservice integer NOT NULL,
-    last_updated timestamp without time zone DEFAULT now()
+CREATE TABLE federations_deliveryservices (
+    federation_id bigint NOT NULL,
+    deliveryservice text NOT NULL,
+    created_at timestamp without time zone DEFAULT now() NOT NULL
 );
 
 
-ALTER TABLE federation_deliveryservice OWNER TO touser;
+ALTER TABLE federations_deliveryservices OWNER TO touser;
 
 --
--- Name: federation_federation_resolver; Type: TABLE; Schema: public; Owner: touser
+-- Name: federations_federation_resolvers; Type: TABLE; Schema: public; Owner: touser
 --
 
-CREATE TABLE federation_federation_resolver (
-    federation integer NOT NULL,
+CREATE TABLE federations_federation_resolvers (
+    federation_id bigint NOT NULL,
     federation_resolver integer NOT NULL,
-    last_updated timestamp without time zone DEFAULT now()
+    created_at timestamp without time zone DEFAULT now() NOT NULL
 );
 
 
-ALTER TABLE federation_federation_resolver OWNER TO touser;
-
---
--- Name: federation_resolver_id_seq; Type: SEQUENCE; Schema: public; Owner: touser
---
-
-CREATE SEQUENCE federation_resolver_id_seq
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
-
-
-ALTER TABLE federation_resolver_id_seq OWNER TO touser;
-
---
--- Name: federation_resolver; Type: TABLE; Schema: public; Owner: touser
---
-
-CREATE TABLE federation_resolver (
-    id integer DEFAULT nextval('federation_resolver_id_seq'::regclass) NOT NULL,
-    ip_address character varying(50) NOT NULL,
-    type integer NOT NULL,
-    last_updated timestamp without time zone DEFAULT now()
-);
-
-
-ALTER TABLE federation_resolver OWNER TO touser;
-
---
--- Name: federation_tmuser; Type: TABLE; Schema: public; Owner: touser
---
-
-CREATE TABLE federation_tmuser (
-    federation integer NOT NULL,
-    tm_user integer NOT NULL,
-    role integer NOT NULL,
-    last_updated timestamp without time zone DEFAULT now()
-);
-
-
-ALTER TABLE federation_tmuser OWNER TO touser;
+ALTER TABLE federations_federation_resolvers OWNER TO touser;
 
 --
 -- Name: goose_db_version_id_seq; Type: SEQUENCE; Schema: public; Owner: touser
@@ -899,160 +682,6 @@ CREATE TABLE goose_db_version (
 ALTER TABLE goose_db_version OWNER TO touser;
 
 --
--- Name: hwinfo_id_seq; Type: SEQUENCE; Schema: public; Owner: touser
---
-
-CREATE SEQUENCE hwinfo_id_seq
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
-
-
-ALTER TABLE hwinfo_id_seq OWNER TO touser;
-
---
--- Name: hwinfo; Type: TABLE; Schema: public; Owner: touser
---
-
-CREATE TABLE hwinfo (
-    id integer DEFAULT nextval('hwinfo_id_seq'::regclass) NOT NULL,
-    serverid integer NOT NULL,
-    description character varying(256) NOT NULL,
-    val character varying(256) NOT NULL,
-    last_updated timestamp without time zone DEFAULT now()
-);
-
-
-ALTER TABLE hwinfo OWNER TO touser;
-
---
--- Name: job_id_seq; Type: SEQUENCE; Schema: public; Owner: touser
---
-
-CREATE SEQUENCE job_id_seq
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
-
-
-ALTER TABLE job_id_seq OWNER TO touser;
-
---
--- Name: job; Type: TABLE; Schema: public; Owner: touser
---
-
-CREATE TABLE job (
-    id integer DEFAULT nextval('job_id_seq'::regclass) NOT NULL,
-    agent integer,
-    object_type character varying(48),
-    object_name character varying(256),
-    keyword character varying(48) NOT NULL,
-    parameters character varying(256),
-    asset_url character varying(512) NOT NULL,
-    asset_type character varying(48) NOT NULL,
-    status integer NOT NULL,
-    start_time timestamp without time zone NOT NULL,
-    entered_time timestamp without time zone NOT NULL,
-    job_user integer NOT NULL,
-    last_updated timestamp without time zone DEFAULT now(),
-    job_deliveryservice integer
-);
-
-
-ALTER TABLE job OWNER TO touser;
-
---
--- Name: job_agent_id_seq; Type: SEQUENCE; Schema: public; Owner: touser
---
-
-CREATE SEQUENCE job_agent_id_seq
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
-
-
-ALTER TABLE job_agent_id_seq OWNER TO touser;
-
---
--- Name: job_agent; Type: TABLE; Schema: public; Owner: touser
---
-
-CREATE TABLE job_agent (
-    id integer DEFAULT nextval('job_agent_id_seq'::regclass) NOT NULL,
-    name character varying(128),
-    description character varying(512),
-    active integer DEFAULT 0 NOT NULL,
-    last_updated timestamp without time zone DEFAULT now()
-);
-
-
-ALTER TABLE job_agent OWNER TO touser;
-
---
--- Name: job_result_id_seq; Type: SEQUENCE; Schema: public; Owner: touser
---
-
-CREATE SEQUENCE job_result_id_seq
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
-
-
-ALTER TABLE job_result_id_seq OWNER TO touser;
-
---
--- Name: job_result; Type: TABLE; Schema: public; Owner: touser
---
-
-CREATE TABLE job_result (
-    id integer DEFAULT nextval('job_result_id_seq'::regclass) NOT NULL,
-    job integer NOT NULL,
-    agent integer NOT NULL,
-    result character varying(48) NOT NULL,
-    description character varying(512),
-    last_updated timestamp without time zone DEFAULT now()
-);
-
-
-ALTER TABLE job_result OWNER TO touser;
-
---
--- Name: job_status_id_seq; Type: SEQUENCE; Schema: public; Owner: touser
---
-
-CREATE SEQUENCE job_status_id_seq
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
-
-
-ALTER TABLE job_status_id_seq OWNER TO touser;
-
---
--- Name: job_status; Type: TABLE; Schema: public; Owner: touser
---
-
-CREATE TABLE job_status (
-    id integer DEFAULT nextval('job_status_id_seq'::regclass) NOT NULL,
-    name character varying(48),
-    description character varying(256),
-    last_updated timestamp without time zone DEFAULT now()
-);
-
-
-ALTER TABLE job_status OWNER TO touser;
-
---
 -- Name: log_id_seq; Type: SEQUENCE; Schema: public; Owner: touser
 --
 
@@ -1072,387 +701,275 @@ ALTER TABLE log_id_seq OWNER TO touser;
 
 CREATE TABLE log (
     id integer DEFAULT nextval('log_id_seq'::regclass) NOT NULL,
-    level character varying(45),
-    message character varying(1024) NOT NULL,
-    tm_user integer NOT NULL,
-    ticketnum character varying(64),
-    last_updated timestamp without time zone DEFAULT now()
+    level text,
+    message text NOT NULL,
+    username text NOT NULL,
+    ticketnum text,
+    created_at timestamp without time zone DEFAULT now() NOT NULL
 );
 
 
 ALTER TABLE log OWNER TO touser;
 
 --
--- Name: monitors; Type: VIEW; Schema: public; Owner: touser
+-- Name: monitors_v; Type: VIEW; Schema: public; Owner: touser
 --
 
-CREATE VIEW monitors AS
- SELECT server.ip_address AS ip,
-    server.ip6_address AS ip6,
-    profile.name AS profile,
-    cachegroup.name AS location,
-    status.name AS status,
-    server.tcp_port AS port,
-    concat(server.host_name, '.', server.domain_name) AS fqdn,
-    cdn.name AS cdnname,
-    server.host_name
-   FROM (((((server
-     JOIN profile ON ((profile.id = server.profile)))
-     JOIN cachegroup ON ((cachegroup.id = server.cachegroup)))
-     JOIN status ON ((status.id = server.status)))
-     JOIN cdn ON ((cdn.id = server.cdn_id)))
-     JOIN type ON ((type.id = server.type)))
-  WHERE ((type.name)::text = 'RASCAL'::text);
+CREATE VIEW monitors_v AS
+ SELECT servers.ip_address AS ip,
+    servers.ip6_address AS ip6,
+    servers.profile,
+    servers.cachegroup AS location,
+    servers.status,
+    servers.tcp_port AS port,
+    concat(servers.host_name, '.', servers.domain_name) AS fqdn,
+    servers.cdn,
+    servers.host_name
+   FROM servers
+  WHERE (servers.type = 'RASCAL'::text);
 
 
-ALTER TABLE monitors OWNER TO touser;
+ALTER TABLE monitors_v OWNER TO touser;
 
 --
--- Name: phys_location_id_seq; Type: SEQUENCE; Schema: public; Owner: touser
+-- Name: phys_locations; Type: TABLE; Schema: public; Owner: touser
 --
 
-CREATE SEQUENCE phys_location_id_seq
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
-
-
-ALTER TABLE phys_location_id_seq OWNER TO touser;
-
---
--- Name: phys_location; Type: TABLE; Schema: public; Owner: touser
---
-
-CREATE TABLE phys_location (
-    id integer DEFAULT nextval('phys_location_id_seq'::regclass) NOT NULL,
-    name character varying(45) NOT NULL,
-    short_name character varying(12) NOT NULL,
-    address character varying(128) NOT NULL,
-    city character varying(128) NOT NULL,
-    state character varying(2) NOT NULL,
-    zip character varying(5) NOT NULL,
-    poc character varying(128),
-    phone character varying(45),
-    email character varying(128),
-    comments character varying(256),
-    region integer NOT NULL,
-    last_updated timestamp without time zone DEFAULT now()
+CREATE TABLE phys_locations (
+    name text NOT NULL,
+    short_name text NOT NULL,
+    address text NOT NULL,
+    city text NOT NULL,
+    state text NOT NULL,
+    zip text NOT NULL,
+    poc text,
+    phone text,
+    email text,
+    comments text,
+    region text NOT NULL,
+    created_at timestamp without time zone DEFAULT now() NOT NULL
 );
 
 
-ALTER TABLE phys_location OWNER TO touser;
+ALTER TABLE phys_locations OWNER TO touser;
 
 --
--- Name: role_id_seq; Type: SEQUENCE; Schema: public; Owner: touser
+-- Name: profiles_v; Type: VIEW; Schema: public; Owner: touser
 --
 
-CREATE SEQUENCE role_id_seq
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
+CREATE VIEW profiles_v AS
+ SELECT profiles.name,
+    profiles.description,
+    profiles.created_at,
+    pg_xact_commit_timestamp(profiles.xmin) AS last_updated
+   FROM profiles;
 
 
-ALTER TABLE role_id_seq OWNER TO touser;
+ALTER TABLE profiles_v OWNER TO touser;
 
 --
--- Name: role; Type: TABLE; Schema: public; Owner: touser
+-- Name: regions; Type: TABLE; Schema: public; Owner: touser
 --
 
-CREATE TABLE role (
-    id integer DEFAULT nextval('role_id_seq'::regclass) NOT NULL,
-    name character varying(45) NOT NULL,
-    description character varying(128),
+CREATE TABLE regions (
+    name text NOT NULL,
+    division text NOT NULL,
+    created_at timestamp without time zone DEFAULT now() NOT NULL
+);
+
+
+ALTER TABLE regions OWNER TO touser;
+
+--
+-- Name: regions_v; Type: VIEW; Schema: public; Owner: touser
+--
+
+CREATE VIEW regions_v AS
+ SELECT regions.name,
+    regions.division,
+    regions.created_at,
+    pg_xact_commit_timestamp(regions.xmin) AS last_updated
+   FROM regions;
+
+
+ALTER TABLE regions_v OWNER TO touser;
+
+--
+-- Name: roles; Type: TABLE; Schema: public; Owner: touser
+--
+
+CREATE TABLE roles (
+    name text NOT NULL,
+    description text,
     priv_level integer NOT NULL
 );
 
 
-ALTER TABLE role OWNER TO touser;
-
---
--- Name: servercheck_id_seq; Type: SEQUENCE; Schema: public; Owner: touser
---
-
-CREATE SEQUENCE servercheck_id_seq
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
-
-
-ALTER TABLE servercheck_id_seq OWNER TO touser;
-
---
--- Name: servercheck; Type: TABLE; Schema: public; Owner: touser
---
-
-CREATE TABLE servercheck (
-    id integer DEFAULT nextval('servercheck_id_seq'::regclass) NOT NULL,
-    server integer NOT NULL,
-    aa integer,
-    ab integer,
-    ac integer,
-    ad integer,
-    ae integer,
-    af integer,
-    ag integer,
-    ah integer,
-    ai integer,
-    aj integer,
-    ak integer,
-    al integer,
-    am integer,
-    an integer,
-    ao integer,
-    ap integer,
-    aq integer,
-    ar integer,
-    "as" integer,
-    at integer,
-    au integer,
-    av integer,
-    aw integer,
-    ax integer,
-    ay integer,
-    az integer,
-    ba integer,
-    bb integer,
-    bc integer,
-    bd integer,
-    be integer,
-    last_updated timestamp without time zone DEFAULT now()
-);
-
-
-ALTER TABLE servercheck OWNER TO touser;
-
---
--- Name: stats_summary_id_seq; Type: SEQUENCE; Schema: public; Owner: touser
---
-
-CREATE SEQUENCE stats_summary_id_seq
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
-
-
-ALTER TABLE stats_summary_id_seq OWNER TO touser;
+ALTER TABLE roles OWNER TO touser;
 
 --
 -- Name: stats_summary; Type: TABLE; Schema: public; Owner: touser
 --
 
 CREATE TABLE stats_summary (
-    id integer DEFAULT nextval('stats_summary_id_seq'::regclass) NOT NULL,
-    cdn_name character varying(255) DEFAULT 'all'::character varying NOT NULL,
-    deliveryservice_name character varying(255) NOT NULL,
-    stat_name character varying(255) NOT NULL,
-    stat_value real NOT NULL,
-    summary_time timestamp without time zone DEFAULT now() NOT NULL,
-    stat_date date
+    cdn_name text NOT NULL,
+    deliveryservice text NOT NULL,
+    stat_name text NOT NULL,
+    stat_value numeric NOT NULL,
+    stat_date date NOT NULL,
+    created_at timestamp without time zone DEFAULT now() NOT NULL
 );
 
 
 ALTER TABLE stats_summary OWNER TO touser;
 
 --
--- Name: tm_user_id_seq; Type: SEQUENCE; Schema: public; Owner: touser
+-- Name: statuses; Type: TABLE; Schema: public; Owner: touser
 --
 
-CREATE SEQUENCE tm_user_id_seq
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
-
-
-ALTER TABLE tm_user_id_seq OWNER TO touser;
-
---
--- Name: tm_user; Type: TABLE; Schema: public; Owner: touser
---
-
-CREATE TABLE tm_user (
-    id integer DEFAULT nextval('tm_user_id_seq'::regclass) NOT NULL,
-    username character varying(128),
-    role integer,
-    uid integer,
-    gid integer,
-    local_passwd character varying(40),
-    confirm_local_passwd character varying(40),
-    last_updated timestamp without time zone DEFAULT now(),
-    company character varying(256),
-    email character varying(128),
-    full_name character varying(256),
-    new_user boolean DEFAULT true NOT NULL,
-    address_line1 character varying(256),
-    address_line2 character varying(256),
-    city character varying(128),
-    state_or_province character varying(128),
-    phone_number character varying(25),
-    postal_code character varying(11),
-    country character varying(256),
-    local_user boolean DEFAULT false NOT NULL,
-    token character varying(50),
-    registration_sent timestamp without time zone DEFAULT '1970-01-01 00:00:00'::timestamp without time zone NOT NULL
+CREATE TABLE statuses (
+    name text NOT NULL,
+    description text,
+    created_at timestamp without time zone DEFAULT now() NOT NULL
 );
 
 
-ALTER TABLE tm_user OWNER TO touser;
+ALTER TABLE statuses OWNER TO touser;
 
 --
--- Name: to_extension_id_seq; Type: SEQUENCE; Schema: public; Owner: touser
+-- Name: users; Type: TABLE; Schema: public; Owner: touser
 --
 
-CREATE SEQUENCE to_extension_id_seq
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
-
-
-ALTER TABLE to_extension_id_seq OWNER TO touser;
-
---
--- Name: to_extension; Type: TABLE; Schema: public; Owner: touser
---
-
-CREATE TABLE to_extension (
-    id integer DEFAULT nextval('to_extension_id_seq'::regclass) NOT NULL,
-    name character varying(45) NOT NULL,
-    version character varying(45) NOT NULL,
-    info_url character varying(45) NOT NULL,
-    script_file character varying(45) NOT NULL,
-    isactive boolean NOT NULL,
-    additional_config_json character varying(4096),
-    description character varying(4096),
-    servercheck_short_name character varying(8),
-    servercheck_column_name character varying(10),
-    type integer NOT NULL,
-    last_updated timestamp without time zone DEFAULT now() NOT NULL
+CREATE TABLE users (
+    username text NOT NULL,
+    role text,
+    email text,
+    full_name text,
+    ssh_pub_key text,
+    created_at timestamp without time zone DEFAULT now() NOT NULL
 );
 
 
-ALTER TABLE to_extension OWNER TO touser;
+ALTER TABLE users OWNER TO touser;
 
 --
--- Name: asn_id_cachegroup_pkey; Type: CONSTRAINT; Schema: public; Owner: touser
+-- Name: asns_asn_pkey; Type: CONSTRAINT; Schema: public; Owner: touser
 --
 
-ALTER TABLE ONLY asn
-    ADD CONSTRAINT asn_id_cachegroup_pkey PRIMARY KEY (id, cachegroup);
-
-
---
--- Name: cachegroup_id_type_pkey; Type: CONSTRAINT; Schema: public; Owner: touser
---
-
-ALTER TABLE ONLY cachegroup
-    ADD CONSTRAINT cachegroup_id_type_pkey PRIMARY KEY (id, type);
+ALTER TABLE ONLY asns
+    ADD CONSTRAINT asns_asn_pkey PRIMARY KEY (asn);
 
 
 --
--- Name: cachegroup_parameter_cachegroup_parameter_pkey; Type: CONSTRAINT; Schema: public; Owner: touser
+-- Name: cachegroup_name_pkey; Type: CONSTRAINT; Schema: public; Owner: touser
 --
 
-ALTER TABLE ONLY cachegroup_parameter
-    ADD CONSTRAINT cachegroup_parameter_cachegroup_parameter_pkey PRIMARY KEY (cachegroup, parameter);
-
-
---
--- Name: cdn_id_pkey; Type: CONSTRAINT; Schema: public; Owner: touser
---
-
-ALTER TABLE ONLY cdn
-    ADD CONSTRAINT cdn_id_pkey PRIMARY KEY (id);
+ALTER TABLE ONLY cachegroups
+    ADD CONSTRAINT cachegroup_name_pkey PRIMARY KEY (name);
 
 
 --
--- Name: deliveryservice_id_type_pkey; Type: CONSTRAINT; Schema: public; Owner: touser
+-- Name: cachegroups_parameters_cachegroup_parameter_id_pkey; Type: CONSTRAINT; Schema: public; Owner: touser
 --
 
-ALTER TABLE ONLY deliveryservice
-    ADD CONSTRAINT deliveryservice_id_type_pkey PRIMARY KEY (id, type);
-
-
---
--- Name: deliveryservice_regex_deliveryservice_regex_pkey; Type: CONSTRAINT; Schema: public; Owner: touser
---
-
-ALTER TABLE ONLY deliveryservice_regex
-    ADD CONSTRAINT deliveryservice_regex_deliveryservice_regex_pkey PRIMARY KEY (deliveryservice, regex);
+ALTER TABLE ONLY cachegroups_parameters
+    ADD CONSTRAINT cachegroups_parameters_cachegroup_parameter_id_pkey PRIMARY KEY (cachegroup, parameter_id);
 
 
 --
--- Name: deliveryservice_server_deliveryservice_server_pkey; Type: CONSTRAINT; Schema: public; Owner: touser
+-- Name: cdns_name_pkey; Type: CONSTRAINT; Schema: public; Owner: touser
 --
 
-ALTER TABLE ONLY deliveryservice_server
-    ADD CONSTRAINT deliveryservice_server_deliveryservice_server_pkey PRIMARY KEY (deliveryservice, server);
-
-
---
--- Name: deliveryservice_tmuser_deliveryservice_tm_user_id_pkey; Type: CONSTRAINT; Schema: public; Owner: touser
---
-
-ALTER TABLE ONLY deliveryservice_tmuser
-    ADD CONSTRAINT deliveryservice_tmuser_deliveryservice_tm_user_id_pkey PRIMARY KEY (deliveryservice, tm_user_id);
+ALTER TABLE ONLY cdns
+    ADD CONSTRAINT cdns_name_pkey PRIMARY KEY (name);
 
 
 --
--- Name: division_id_pkey; Type: CONSTRAINT; Schema: public; Owner: touser
+-- Name: deliveryservices_name_pkey; Type: CONSTRAINT; Schema: public; Owner: touser
 --
 
-ALTER TABLE ONLY division
-    ADD CONSTRAINT division_id_pkey PRIMARY KEY (id);
-
-
---
--- Name: federation_deliveryservice_federation_deliveryservice_pkey; Type: CONSTRAINT; Schema: public; Owner: touser
---
-
-ALTER TABLE ONLY federation_deliveryservice
-    ADD CONSTRAINT federation_deliveryservice_federation_deliveryservice_pkey PRIMARY KEY (federation, deliveryservice);
+ALTER TABLE ONLY deliveryservices
+    ADD CONSTRAINT deliveryservices_name_pkey PRIMARY KEY (name);
 
 
 --
--- Name: federation_federation_resolver_federation_federation_resolver_p; Type: CONSTRAINT; Schema: public; Owner: touser
+-- Name: deliveryservices_regexes_deliveryservice_regex_id_pkey; Type: CONSTRAINT; Schema: public; Owner: touser
 --
 
-ALTER TABLE ONLY federation_federation_resolver
-    ADD CONSTRAINT federation_federation_resolver_federation_federation_resolver_p PRIMARY KEY (federation, federation_resolver);
-
-
---
--- Name: federation_id_pkey; Type: CONSTRAINT; Schema: public; Owner: touser
---
-
-ALTER TABLE ONLY federation
-    ADD CONSTRAINT federation_id_pkey PRIMARY KEY (id);
+ALTER TABLE ONLY deliveryservices_regexes
+    ADD CONSTRAINT deliveryservices_regexes_deliveryservice_regex_id_pkey PRIMARY KEY (deliveryservice, regex_id);
 
 
 --
--- Name: federation_resolver_id_pkey; Type: CONSTRAINT; Schema: public; Owner: touser
+-- Name: deliveryservices_servers_deliveryservice_server_pkey; Type: CONSTRAINT; Schema: public; Owner: touser
 --
 
-ALTER TABLE ONLY federation_resolver
-    ADD CONSTRAINT federation_resolver_id_pkey PRIMARY KEY (id);
+ALTER TABLE ONLY deliveryservices_servers
+    ADD CONSTRAINT deliveryservices_servers_deliveryservice_server_pkey PRIMARY KEY (deliveryservice, server);
 
 
 --
--- Name: federation_tmuser_federation_tm_user_pkey; Type: CONSTRAINT; Schema: public; Owner: touser
+-- Name: deliveryservices_users_deliveryservice_username_pkey; Type: CONSTRAINT; Schema: public; Owner: touser
 --
 
-ALTER TABLE ONLY federation_tmuser
-    ADD CONSTRAINT federation_tmuser_federation_tm_user_pkey PRIMARY KEY (federation, tm_user);
+ALTER TABLE ONLY deliveryservices_users
+    ADD CONSTRAINT deliveryservices_users_deliveryservice_username_pkey PRIMARY KEY (deliveryservice, username);
+
+
+--
+-- Name: divisions_name_pkey; Type: CONSTRAINT; Schema: public; Owner: touser
+--
+
+ALTER TABLE ONLY divisions
+    ADD CONSTRAINT divisions_name_pkey PRIMARY KEY (name);
+
+
+--
+-- Name: domains_pkey; Type: CONSTRAINT; Schema: public; Owner: touser
+--
+
+ALTER TABLE ONLY domains
+    ADD CONSTRAINT domains_pkey PRIMARY KEY (name);
+
+
+--
+-- Name: federation_resolvers_id_pkey; Type: CONSTRAINT; Schema: public; Owner: touser
+--
+
+ALTER TABLE ONLY federation_resolvers
+    ADD CONSTRAINT federation_resolvers_id_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: federation_users_federation_username_pkey; Type: CONSTRAINT; Schema: public; Owner: touser
+--
+
+ALTER TABLE ONLY federation_users
+    ADD CONSTRAINT federation_users_federation_username_pkey PRIMARY KEY (federation_id, username);
+
+
+--
+-- Name: federations_deliveryservices_federation_id_deliveryservice_pkey; Type: CONSTRAINT; Schema: public; Owner: touser
+--
+
+ALTER TABLE ONLY federations_deliveryservices
+    ADD CONSTRAINT federations_deliveryservices_federation_id_deliveryservice_pkey PRIMARY KEY (federation_id, deliveryservice);
+
+
+--
+-- Name: federations_federation_resolvers_federation_id_federation_resol; Type: CONSTRAINT; Schema: public; Owner: touser
+--
+
+ALTER TABLE ONLY federations_federation_resolvers
+    ADD CONSTRAINT federations_federation_resolvers_federation_id_federation_resol PRIMARY KEY (federation_id, federation_resolver);
+
+
+--
+-- Name: federations_id_pkey; Type: CONSTRAINT; Schema: public; Owner: touser
+--
+
+ALTER TABLE ONLY federations
+    ADD CONSTRAINT federations_id_pkey PRIMARY KEY (id);
 
 
 --
@@ -1464,230 +981,128 @@ ALTER TABLE ONLY goose_db_version
 
 
 --
--- Name: hwinfo_id_pkey; Type: CONSTRAINT; Schema: public; Owner: touser
+-- Name: parameters_id_pkey; Type: CONSTRAINT; Schema: public; Owner: touser
 --
 
-ALTER TABLE ONLY hwinfo
-    ADD CONSTRAINT hwinfo_id_pkey PRIMARY KEY (id);
-
-
---
--- Name: job_id_pkey; Type: CONSTRAINT; Schema: public; Owner: touser
---
-
-ALTER TABLE ONLY job
-    ADD CONSTRAINT job_id_pkey PRIMARY KEY (id);
+ALTER TABLE ONLY parameters
+    ADD CONSTRAINT parameters_id_pkey PRIMARY KEY (id);
 
 
 --
--- Name: asn_cachegroup; Type: INDEX; Schema: public; Owner: touser
+-- Name: profiles_name_pkey; Type: CONSTRAINT; Schema: public; Owner: touser
 --
 
-CREATE INDEX asn_cachegroup ON asn USING btree (cachegroup);
-
-
---
--- Name: asn_id; Type: INDEX; Schema: public; Owner: touser
---
-
-CREATE UNIQUE INDEX asn_id ON asn USING btree (id);
+ALTER TABLE ONLY profiles
+    ADD CONSTRAINT profiles_name_pkey PRIMARY KEY (name);
 
 
 --
--- Name: cachegroup_id; Type: INDEX; Schema: public; Owner: touser
+-- Name: types_name_pkey; Type: CONSTRAINT; Schema: public; Owner: touser
 --
 
-CREATE UNIQUE INDEX cachegroup_id ON cachegroup USING btree (id);
-
-
---
--- Name: cachegroup_name; Type: INDEX; Schema: public; Owner: touser
---
-
-CREATE UNIQUE INDEX cachegroup_name ON cachegroup USING btree (name);
+ALTER TABLE ONLY types
+    ADD CONSTRAINT types_name_pkey PRIMARY KEY (name);
 
 
 --
--- Name: cachegroup_parameter_parameter; Type: INDEX; Schema: public; Owner: touser
+-- Name: cachegroups_short_name; Type: INDEX; Schema: public; Owner: touser
 --
 
-CREATE INDEX cachegroup_parameter_parameter ON cachegroup_parameter USING btree (parameter);
-
-
---
--- Name: cachegroup_parent_cachegroup_id; Type: INDEX; Schema: public; Owner: touser
---
-
-CREATE INDEX cachegroup_parent_cachegroup_id ON cachegroup USING btree (parent_cachegroup_id);
+CREATE UNIQUE INDEX cachegroups_short_name ON cachegroups USING btree (description);
 
 
 --
--- Name: cachegroup_short_name; Type: INDEX; Schema: public; Owner: touser
+-- Name: federation_resolvers_ip_address; Type: INDEX; Schema: public; Owner: touser
 --
 
-CREATE UNIQUE INDEX cachegroup_short_name ON cachegroup USING btree (short_name);
-
-
---
--- Name: cachegroup_type; Type: INDEX; Schema: public; Owner: touser
---
-
-CREATE INDEX cachegroup_type ON cachegroup USING btree (type);
+CREATE UNIQUE INDEX federation_resolvers_ip_address ON federation_resolvers USING btree (ip_address);
 
 
 --
--- Name: cdn_name; Type: INDEX; Schema: public; Owner: touser
+-- Name: parameters_name_config_file_value_idx; Type: INDEX; Schema: public; Owner: touser
 --
 
-CREATE UNIQUE INDEX cdn_name ON cdn USING btree (name);
-
-
---
--- Name: deliveryservice_cdn_id; Type: INDEX; Schema: public; Owner: touser
---
-
-CREATE INDEX deliveryservice_cdn_id ON deliveryservice USING btree (cdn_id);
+CREATE UNIQUE INDEX parameters_name_config_file_value_idx ON parameters USING btree (name, config_file, value);
 
 
 --
--- Name: deliveryservice_id; Type: INDEX; Schema: public; Owner: touser
+-- Name: asns_cchegroup_cachegroups_name_fkey; Type: FK CONSTRAINT; Schema: public; Owner: touser
 --
 
-CREATE UNIQUE INDEX deliveryservice_id ON deliveryservice USING btree (id);
-
-
---
--- Name: deliveryservice_profile; Type: INDEX; Schema: public; Owner: touser
---
-
-CREATE INDEX deliveryservice_profile ON deliveryservice USING btree (profile);
+ALTER TABLE ONLY asns
+    ADD CONSTRAINT asns_cchegroup_cachegroups_name_fkey FOREIGN KEY (cachegroup) REFERENCES cachegroups(name);
 
 
 --
--- Name: deliveryservice_regex_regex; Type: INDEX; Schema: public; Owner: touser
+-- Name: cachegroups_parameters_cachegroup_cachegroups_name_fkey; Type: FK CONSTRAINT; Schema: public; Owner: touser
 --
 
-CREATE INDEX deliveryservice_regex_regex ON deliveryservice_regex USING btree (regex);
-
-
---
--- Name: deliveryservice_server_server; Type: INDEX; Schema: public; Owner: touser
---
-
-CREATE INDEX deliveryservice_server_server ON deliveryservice_server USING btree (server);
+ALTER TABLE ONLY cachegroups_parameters
+    ADD CONSTRAINT cachegroups_parameters_cachegroup_cachegroups_name_fkey FOREIGN KEY (cachegroup) REFERENCES cachegroups(name);
 
 
 --
--- Name: deliveryservice_tmuser_tm_user_id; Type: INDEX; Schema: public; Owner: touser
+-- Name: cachegroups_parameters_parameter_id_parameters_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: touser
 --
 
-CREATE INDEX deliveryservice_tmuser_tm_user_id ON deliveryservice_tmuser USING btree (tm_user_id);
-
-
---
--- Name: deliveryservice_type; Type: INDEX; Schema: public; Owner: touser
---
-
-CREATE INDEX deliveryservice_type ON deliveryservice USING btree (type);
+ALTER TABLE ONLY cachegroups_parameters
+    ADD CONSTRAINT cachegroups_parameters_parameter_id_parameters_id_fkey FOREIGN KEY (parameter_id) REFERENCES parameters(id);
 
 
 --
--- Name: deliveryservice_xml_id; Type: INDEX; Schema: public; Owner: touser
+-- Name: cachegroups_parent_cachegroup_cachegroups_name_fkey; Type: FK CONSTRAINT; Schema: public; Owner: touser
 --
 
-CREATE UNIQUE INDEX deliveryservice_xml_id ON deliveryservice USING btree (xml_id);
-
-
---
--- Name: division_name; Type: INDEX; Schema: public; Owner: touser
---
-
-CREATE UNIQUE INDEX division_name ON division USING btree (name);
+ALTER TABLE ONLY cachegroups
+    ADD CONSTRAINT cachegroups_parent_cachegroup_cachegroups_name_fkey FOREIGN KEY (parent_cachegroup) REFERENCES cachegroups(name);
 
 
 --
--- Name: federation_deliveryservice_deliveryservice; Type: INDEX; Schema: public; Owner: touser
+-- Name: cachegroups_type_types_name_fkey; Type: FK CONSTRAINT; Schema: public; Owner: touser
 --
 
-CREATE INDEX federation_deliveryservice_deliveryservice ON federation_deliveryservice USING btree (deliveryservice);
-
-
---
--- Name: federation_federation_resolver_federation; Type: INDEX; Schema: public; Owner: touser
---
-
-CREATE INDEX federation_federation_resolver_federation ON federation_federation_resolver USING btree (federation);
+ALTER TABLE ONLY cachegroups
+    ADD CONSTRAINT cachegroups_type_types_name_fkey FOREIGN KEY (type) REFERENCES types(name);
 
 
 --
--- Name: federation_federation_resolver_federation_resolver; Type: INDEX; Schema: public; Owner: touser
+-- Name: deliveryservices_cdn_cdns_name_fkey; Type: FK CONSTRAINT; Schema: public; Owner: touser
 --
 
-CREATE INDEX federation_federation_resolver_federation_resolver ON federation_federation_resolver USING btree (federation_resolver);
-
-
---
--- Name: federation_resolver_ip_address; Type: INDEX; Schema: public; Owner: touser
---
-
-CREATE UNIQUE INDEX federation_resolver_ip_address ON federation_resolver USING btree (ip_address);
+ALTER TABLE ONLY deliveryservices
+    ADD CONSTRAINT deliveryservices_cdn_cdns_name_fkey FOREIGN KEY (cdn) REFERENCES cdns(name);
 
 
 --
--- Name: federation_resolver_type; Type: INDEX; Schema: public; Owner: touser
+-- Name: deliveryservices_domain_domains_name_fkey; Type: FK CONSTRAINT; Schema: public; Owner: touser
 --
 
-CREATE INDEX federation_resolver_type ON federation_resolver USING btree (type);
-
-
---
--- Name: federation_tmuser_federation; Type: INDEX; Schema: public; Owner: touser
---
-
-CREATE INDEX federation_tmuser_federation ON federation_tmuser USING btree (federation);
+ALTER TABLE ONLY deliveryservices
+    ADD CONSTRAINT deliveryservices_domain_domains_name_fkey FOREIGN KEY (domain) REFERENCES domains(name);
 
 
 --
--- Name: federation_tmuser_role; Type: INDEX; Schema: public; Owner: touser
+-- Name: deliveryservices_profile_profiles_name_fkey; Type: FK CONSTRAINT; Schema: public; Owner: touser
 --
 
-CREATE INDEX federation_tmuser_role ON federation_tmuser USING btree (role);
-
-
---
--- Name: federation_tmuser_tm_user; Type: INDEX; Schema: public; Owner: touser
---
-
-CREATE INDEX federation_tmuser_tm_user ON federation_tmuser USING btree (tm_user);
+ALTER TABLE ONLY deliveryservices
+    ADD CONSTRAINT deliveryservices_profile_profiles_name_fkey FOREIGN KEY (profile) REFERENCES profiles(name);
 
 
 --
--- Name: goose_db_version_id; Type: INDEX; Schema: public; Owner: touser
+-- Name: deliveryservices_type_types_name_fkey; Type: FK CONSTRAINT; Schema: public; Owner: touser
 --
 
-CREATE UNIQUE INDEX goose_db_version_id ON goose_db_version USING btree (id);
-
-
---
--- Name: hwinfo_serverid; Type: INDEX; Schema: public; Owner: touser
---
-
-CREATE INDEX hwinfo_serverid ON hwinfo USING btree (serverid);
+ALTER TABLE ONLY deliveryservices
+    ADD CONSTRAINT deliveryservices_type_types_name_fkey FOREIGN KEY (type) REFERENCES types(name);
 
 
 --
--- Name: hwinfo_serverid_description; Type: INDEX; Schema: public; Owner: touser
+-- Name: domains_cdn_fkey; Type: FK CONSTRAINT; Schema: public; Owner: touser
 --
 
-CREATE UNIQUE INDEX hwinfo_serverid_description ON hwinfo USING btree (serverid, description);
-
-
---
--- Name: divisionfk; Type: FK CONSTRAINT; Schema: public; Owner: touser
---
-
-ALTER TABLE ONLY region
-    ADD CONSTRAINT divisionfk FOREIGN KEY (division) REFERENCES division(id);
+ALTER TABLE ONLY domains
+    ADD CONSTRAINT domains_cdn_fkey FOREIGN KEY (cdn) REFERENCES cdns(name);
 
 
 --
