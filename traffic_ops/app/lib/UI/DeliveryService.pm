@@ -727,7 +727,6 @@ sub update {
 			active                 => $self->paramAsScalar('ds.active'),
 			protocol               => $self->paramAsScalar('ds.protocol'),
 			ipv6_routing_enabled   => $self->paramAsScalar('ds.ipv6_routing_enabled'),
-			regional_geo_blocking  => $self->paramAsScalar('ds.regional_geo_blocking'),
 			range_request_handling => $self->paramAsScalar('ds.range_request_handling'),
 			edge_header_rewrite    => $self->paramAsScalar( 'ds.edge_header_rewrite', undef ),
 			mid_header_rewrite     => $self->paramAsScalar( 'ds.mid_header_rewrite', undef ),
