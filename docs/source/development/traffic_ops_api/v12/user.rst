@@ -32,12 +32,13 @@ Users
 
   Role(s) Required: None
 
-  **Request Route Parameters**
+  **Request Query Parameters**
 
   +-----------------+----------+---------------------------------------------------+
   | Name            | Required | Description                                       |
   +=================+==========+===================================================+
   | username        | no       | The user you want to retrieve information for.    |
+  +-----------------+----------+---------------------------------------------------+
 
   **Response Properties**
 
