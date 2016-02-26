@@ -82,7 +82,7 @@ sub index {
 				"id"              => $row->id,
 				"username"        => $row->username,
 				"public_ssh_key"  => $row->public_ssh_key,
- 				"role"            => $row->role->id,
+				"role"            => $row->role->id,
 				"uid"             => $row->uid,
 				"gid"             => $row->gid,
 				"rolename"        => $row->role->name,

@@ -50,6 +50,7 @@ ok $t->post_ok(
 	=> form => {
 		'tm_user.full_name'            => 'fullname',
 		'tm_user.username'             => 'testcase',
+		'tm_user.public_ssh_key'			 => 'ssh-key',
 		'tm_user.phone_number'         => 'phone_number',
 		'tm_user.email'                => 'email@email.com',
 		'tm_user.local_passwd'         => 'password',
@@ -57,8 +58,7 @@ ok $t->post_ok(
 		'tm_user.role'                 => 4,
 		'tm_user.company'              => 'ABC Company',
 	}
-	)->status_is(302)->or( sub { diag $t->tx->res->content->asset->{content}; } ),
-	'Can a user be created?';
+)->status_is(302)->or( sub { diag $t->tx->res->content->asset->{content}; } ), 'Can a user be created?';
 
 ok $t->get_ok('/datauser')->status_is(200)->json_is( '/0/username', 'admin' )->json_is( '/0/role', 4 ), 'Does the admin username exist?';
 
