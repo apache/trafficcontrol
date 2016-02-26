@@ -46,7 +46,7 @@ public interface GeolocationService {
      * @throws IOException
      *             if the database is not valid.
      */
-    void verifyDatabase(File dbFile) throws IOException;
+    boolean verifyDatabase(File dbFile) throws IOException;
 
     /**
      * Exposes whether this GeolocationService has loaded

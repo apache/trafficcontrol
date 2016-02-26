@@ -121,7 +121,11 @@ public abstract class AbstractServiceUpdater {
 				}
 
 				if ((!isLoaded() || isModified) && newDB != null && newDB.exists()) {
-					verifyDatabase(newDB);
+					if (!verifyDatabase(newDB)) {
+						LOGGER.warn(newDB.getAbsolutePath() + " from " + getDataBaseURL() + " is invalid!");
+						return false;
+					}
+
 					final boolean isDifferent = copyDatabaseIfDifferent(existingDB, newDB);
 
 					if (!isLoaded() || isDifferent) {
@@ -145,7 +149,9 @@ public abstract class AbstractServiceUpdater {
 		return false;
 	}
 
-	abstract public void verifyDatabase(final File dbFile) throws IOException;
+	public boolean verifyDatabase(final File dbFile) throws IOException {
+		return true;
+	}
 	abstract public boolean loadDatabase() throws IOException, JSONException;
 
 	public void setDatabaseLocation(final String databaseLocation) {

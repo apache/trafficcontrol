@@ -77,8 +77,9 @@ public class MaxmindGeolocationService implements GeolocationService {
 	}
 
 	@Override
-	public void verifyDatabase(final File databaseFile) throws IOException {
-		databaseReader = createDatabaseReader(databaseFile);
+	public boolean verifyDatabase(final File databaseFile) throws IOException {
+		return createDatabaseReader(databaseFile) != null;
+
 	}
 
 	@Override
@@ -100,15 +101,16 @@ public class MaxmindGeolocationService implements GeolocationService {
 
 		LOGGER.info("Loading MaxMind db: " + databaseFile);
 
-		final DatabaseReader reader = new DatabaseReader.Builder(databaseFile).build();
 		try {
+			final DatabaseReader reader = new DatabaseReader.Builder(databaseFile).build();
 			getCityResponse(reader, "127.0.0.1");
+			initialized = true;
+			return reader;
 		} catch (Exception e) {
-			LOGGER.error(databaseFile.getAbsolutePath() + " is not a valid Maxmind data file");
+			LOGGER.error(databaseFile.getAbsolutePath() + " is not a valid Maxmind data file.  " + e.getMessage());
 			return null;
 		}
-		initialized = true;
-		return reader;
+
 	}
 
 	@Override

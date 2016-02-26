@@ -34,9 +34,11 @@ public class GeolocationDatabaseUpdater extends AbstractServiceUpdater {
 		this.geolocationService = geoLocation;
 	}
 
-	public void verifyDatabase(final File dbFile) throws IOException {
-		geolocationService.verifyDatabase(dbFile);
+	@Override
+	public boolean verifyDatabase(final File dbFile) throws IOException {
+		return geolocationService.verifyDatabase(dbFile);
 	}
+
 	public boolean loadDatabase() throws IOException {
 		LOGGER.info("Reloading location database.");
 		geolocationService.setDatabaseFile(new File(databaseLocation));
