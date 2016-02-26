@@ -38,6 +38,14 @@
    </div>
 
    <div class="block">
+        <% unless(field('tm_user.public_ssh_key')->valid) { %>
+          <span class="field-with-error"><%= field('tm_user.public_ssh_key')->error %></span>
+        <% } %>
+        %= label_for 'public_ssh_key' => 'Public SSH Key', class => 'label'
+        %= field('tm_user.public_ssh_key')->textarea(class => 'textarea')
+   </div>
+
+   <div class="block">
         <% unless(field('tm_user.local_passwd')->valid) { %>
           <span class="field-with-error"><%= field('tm_user.local_passwd')->error %></span>
             <% } %>

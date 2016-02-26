@@ -55,17 +55,18 @@ sub read {
 	while ( my $row = $dbh->next ) {
 		push(
 			@data, {
-				"id"           => $row->id,
-				"username"     => $row->username,
-				"full_name"    => $row->full_name,
-				"company"      => $row->company,
-				"role"         => $row->role->id,
-				"uid"          => 0,
-				"gid"          => 0,
-				"email"        => $row->email,
-				"new_user"     => $row->new_user,
-				"rolename"     => $row->role->name,
-				"phone_number" => $row->phone_number,
+				"id"              => $row->id,
+				"username"        => $row->username,
+				"public_ssh_key"  => $row->public_ssh_key,
+				"full_name"       => $row->full_name,
+				"company"         => $row->company,
+				"role"            => $row->role->id,
+				"uid"             => 0,
+				"gid"             => 0,
+				"email"           => $row->email,
+				"new_user"        => $row->new_user,
+				"rolename"        => $row->role->name,
+				"phone_number"    => $row->phone_number,
 			}
 		);
 	}
@@ -179,6 +180,7 @@ sub update {
 	if ( $self->is_valid("edit") ) {
 		my $dbh = $self->db->resultset('TmUser')->find( { id => $tm_user_id } );
 		$dbh->username( $self->param('tm_user.username') );
+		$dbh->public_ssh_key( $self->param('tm_user.public_ssh_key') );
 		$dbh->full_name( $self->param('tm_user.full_name') );
 		$dbh->role( $self->param('tm_user.role') );
 		$dbh->uid(0);
@@ -287,6 +289,7 @@ sub create_user {
 		{
 			full_name            => $self->param('tm_user.full_name'),
 			username             => $self->param('tm_user.username'),
+			public_ssh_key       => $self->param('tm_user.public_ssh_key'),
 			phone_number         => $self->param('tm_user.phone_number'),
 			email                => $self->param('tm_user.email'),
 			local_passwd         => sha1_hex( $self->param('tm_user.local_passwd') ),

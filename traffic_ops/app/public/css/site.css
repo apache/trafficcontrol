@@ -144,6 +144,13 @@ div.block .input{
   margin-left:4px;
   float:left;
 }
+div.block .textarea{
+  margin-left:4px;
+  margin-bottom:4px;
+  float:left;
+  width:483px;
+  height:100px;
+}
 .main { margin-top:10px;}
 .popup { padding-left: 10px; height: 650px; width: 900px; margin-top:10px;}
 .send_registration_popup { height: 140px; width: 300px;}
