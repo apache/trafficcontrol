@@ -34,6 +34,7 @@ var trafficOps = angular.module('trafficOps', [
         // administer
         require('./modules/private/administer').name,
         require('./modules/private/administer/users').name,
+        require('./modules/private/administer/user').name,
 
         // configure
         require('./modules/private/configure').name,
@@ -53,6 +54,7 @@ var trafficOps = angular.module('trafficOps', [
         // common modules
         require('./common/modules/dialog/confirm').name,
         require('./common/modules/dialog/reset').name,
+        require('./common/modules/form/user').name,
         require('./common/modules/header').name,
         require('./common/modules/message').name,
         require('./common/modules/navigation').name,

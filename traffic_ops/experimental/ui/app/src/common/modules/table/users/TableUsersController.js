@@ -1,6 +1,10 @@
-var TableUsersController = function(users, $scope) {
+var TableUsersController = function(users, $scope, $location) {
 
     $scope.users = users;
+
+    $scope.editUser = function(id) {
+        $location.url('/administer/users/' + id);
+    };
 
     angular.element(document).ready(function () {
         $('#usersTable').dataTable({
@@ -11,5 +15,5 @@ var TableUsersController = function(users, $scope) {
 
 };
 
-TableUsersController.$inject = ['users', '$scope'];
+TableUsersController.$inject = ['users', '$scope', '$location'];
 module.exports = TableUsersController;

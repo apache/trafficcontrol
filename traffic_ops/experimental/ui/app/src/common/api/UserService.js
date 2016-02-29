@@ -65,6 +65,38 @@ var UserService = function($http, $state, $q, $location, authService, userModel,
         return deferred.promise;
     };
 
+    this.getUser = function(userId, ignoreLoadingBar) {
+        var deferred = $q.defer();
+
+        $http.get(ENV.apiEndpoint['1.2'] + "users/" + userId, { ignoreLoadingBar: ignoreLoadingBar })
+            .success(function(result) {
+                deferred.resolve(result);
+            })
+            .error(function(fault) {
+                deferred.reject(fault);
+            });
+
+        return deferred.promise;
+    };
+
+    this.updateUser = function(user) {
+        var deferred = $q.defer();
+        $http.put(ENV.apiEndpoint['1.2'] + "users/" + user.id, { user: user })
+            .success(function(result) {
+                messageModel.setMessages(result.alerts, false);
+                deferred.resolve(result);
+            })
+            .error(function(fault) {
+                if (angular.isDefined(fault.alerts)) {
+                    messageModel.setMessages(fault.alerts, false);
+                }
+                deferred.reject();
+            });
+
+        return deferred.promise;
+    };
+
+
 };
 
 UserService.$inject = ['$http', '$state', '$q', '$location', 'authService', 'userModel', 'messageModel', 'ENV'];
