@@ -1,6 +1,6 @@
-var TableDeliveryServicesController = function($scope, deliveryServicesModel) {
+var TableDeliveryServicesController = function(deliveryServices, $scope) {
 
-    $scope.deliveryServices = deliveryServicesModel.deliveryServices;
+    $scope.deliveryServices = deliveryServices;
 
     angular.element(document).ready(function () {
         $('#deliveryServicesTable').dataTable({
@@ -11,5 +11,5 @@ var TableDeliveryServicesController = function($scope, deliveryServicesModel) {
 
 };
 
-TableDeliveryServicesController.$inject = ['$scope', 'deliveryServicesModel'];
+TableDeliveryServicesController.$inject = ['deliveryServices', '$scope'];
 module.exports = TableDeliveryServicesController;

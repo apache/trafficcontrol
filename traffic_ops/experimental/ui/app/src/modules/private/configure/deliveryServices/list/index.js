@@ -8,7 +8,7 @@ module.exports = angular.module('trafficOps.private.configure.deliveryServices.l
                         templateUrl: 'common/modules/table/deliveryServices/table.deliveryServices.tpl.html',
                         controller: 'TableDeliveryServicesController',
                         resolve: {
-                            deliveryServices: function(user, deliveryServiceService) {
+                            deliveryServices: function(deliveryServiceService) {
                                 return deliveryServiceService.getDeliveryServices(false);
                             }
                         }
