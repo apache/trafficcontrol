@@ -30,6 +30,7 @@ use Digest::SHA1 qw(sha1_hex);
 use Data::Dumper;
 use File::Temp;
 use WWW::Curl::Easy;
+use LWP::UserAgent;
 
 my $database_conf     = "/opt/traffic_ops/app/conf/production/database.conf";
 my $ldap_conf         = "/opt/traffic_ops/app/conf/ldap.conf";
@@ -610,8 +611,76 @@ execCommand("/sbin/service traffic_ops start");
 print "\nWaiting for Traffic Ops to start.\n\n";
 sleep(5);
 
-replace_profile_templates();
-import_profiles();
+sub profiles_exist {
+		while ( length $tmAdminUser == 0 ) {
+				$tmAdminUser =
+						InstallUtils::promptUser("Administration username for Traffic Ops");
+		}
+		while ( $tmAdminPw eq "" ) {
+				$tmAdminPw =
+						InstallUtils::promptUser( "Password for the admin user $tmAdminUser",
+																			"", 1 );
+		}
+		while ( !defined $parameters->{'tm.url'}
+						|| length $parameters->{'tm.url'} == 0 )
+		{
+				$parameters->{'tm.url'} =
+						InstallUtils::promptUser( "Traffic Ops url", "https://localhost" );
+		}
+
+		my $uri      = $parameters->{'tm.url'};
+		my $toCookie = get_traffic_ops_cookie( $parameters->{'tm.url'},
+																					 $tmAdminUser, $tmAdminPw );
+
+		my $profileEndpoint = "/api/1.2/profiles.json";
+
+		my $ua = LWP::UserAgent->new;
+		$ua->ssl_opts( verify_hostname => 0, SSL_verify_mode => 0x00 );
+		my $req = HTTP::Request->new( GET => $uri . $profileEndpoint );
+		$req->header( 'Cookie' => "mojolicious=" . $toCookie );
+		my $resp = $ua->request($req);
+
+		if ( !$resp->is_success ) {
+				print "Error checking if profiles exist: $resp->code $resp->message\n";
+				return 1;    # return true, so we don't attempt to create profiles
+		}
+		my $message = $resp->decoded_content;
+
+		my $profiles = JSON->new->utf8->decode($message);
+		if (   ( !defined $profiles->{"response"} )
+					 || ( ref $profiles->{"response"} ne 'ARRAY' ) )
+		{
+				print "Error checking if profiles exist: invalid JSON: $message\n";
+				return 1;    # return true, so we don't attempt to create profiles
+		}
+
+		my $num_profiles = scalar( @{ $profiles->{"response"} } );
+		print "Existing Profile Count: $num_profiles\n";
+
+		my %initial_profiles = (
+				"INFLUXDB"      => 1,
+				"RIAK_ALL"      => 1,
+				"TRAFFIC_STATS" => 1
+				);
+
+		my $profiles_response = $profiles->{"response"};
+		foreach my $profile (@$profiles_response) {
+				if ( !exists $initial_profiles{ $profile->{"name"} } ) {
+						print "Found existing profile (" . $profile->{"name"} . ")\n";
+						return 1;
+				}
+		}
+		return 0;
+}
+
+if ( !profiles_exist() ) {
+		print "Creating default profiles...\n";
+		replace_profile_templates();
+		import_profiles();
+}
+else {
+		print "Not creating default profiles.\n";
+}
 
 #print "\nRunning smoke tests.\n\n";
 #$rc = execCommand ("/opt/traffic_ops/install/bin/systemtest", "localhost", $user{username}, $tmAdminPw, "0");
