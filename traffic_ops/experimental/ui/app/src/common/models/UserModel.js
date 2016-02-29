@@ -1,4 +1,4 @@
-var UserModel = function($rootScope, messageModel) {
+var UserModel = function($rootScope, $window, messageModel) {
 
     var user = {};
     user.loaded = false;
@@ -17,6 +17,8 @@ var UserModel = function($rootScope, messageModel) {
     };
 
     this.resetUser = function() {
+        $window.sessionStorage.removeItem('token');
+
         user = {};
         user.loaded = false;
         this.user = user;
@@ -25,5 +27,5 @@ var UserModel = function($rootScope, messageModel) {
 
 };
 
-UserModel.$inject = ['$rootScope', 'messageModel'];
+UserModel.$inject = ['$rootScope', '$window', 'messageModel'];
 module.exports = UserModel;

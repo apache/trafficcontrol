@@ -91,8 +91,15 @@ var trafficOps = angular.module('trafficOps', [
         })
     ;
 
-trafficOps.factory('authInterceptor', function ($q, $location, $timeout, messageModel, userModel) {
+trafficOps.factory('authInterceptor', function ($q, $window, $location, $timeout, messageModel, userModel) {
     return {
+        request: function (config) {
+            config.headers = config.headers || {};
+            if ($window.sessionStorage.token) {
+                config.headers.Authorization = $window.sessionStorage.token;
+            }
+            return config;
+        },
         responseError: function (rejection) {
             var url = $location.url(),
                 alerts = [];
