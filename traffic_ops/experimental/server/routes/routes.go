@@ -37,13 +37,21 @@ const apiPath = "/api/2.0/"
 // This function returns an http.Handler to be used in http.ListenAndServe().
 func CreateRouter(db *sqlx.DB) http.Handler {
 	router := mux.NewRouter().StrictSlash(true)
-	router.HandleFunc("/login", auth.GetLoginFunc(db)).Methods("POST")
+	router.HandleFunc("/login", wrapHeaders(auth.GetLoginFunc(db), []api.ApiMethod{api.POST})).Methods("POST")
 	router.HandleFunc(apiPath+"{table}", auth.Use(optionsHandler, auth.DONTRequireLogin)).Methods("OPTIONS")
 	router.HandleFunc(apiPath+"{table}/{id}", auth.Use(optionsHandler, auth.DONTRequireLogin)).Methods("OPTIONS")
 	router.HandleFunc("/config/cr/{cdn}/CRConfig.json", auth.Use(getHandleCRConfigFunc(db), auth.RequireLogin))
 	router.HandleFunc("/config/csconfig/{hostname}", auth.Use(getHandleCSConfigFunc(db), auth.RequireLogin))
 	addApiHandlers(router, db)
 	return auth.Use(router.ServeHTTP, auth.GetContext)
+}
+
+// wrapHeaders wraps an http.HandlerFunc to call setHeaders with the given methods.
+func wrapHeaders(f http.HandlerFunc, methods api.ApiMethods) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		setHeaders(w, methods)
+		f(w, r)
+	}
 }
 
 // setHeaders writes the universal headers needed by all routes,
@@ -107,6 +115,7 @@ func addApiHandlers(router *mux.Router, db *sqlx.DB) {
 // returning the encoded CRConfig data for the requested CDN.
 func getHandleCRConfigFunc(db *sqlx.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		setHeaders(w, []api.ApiMethod{api.GET})
 		vars := mux.Vars(r)
 		cdn := vars["cdn"]
 		resp, _ := crconfig.GetCRConfig(cdn, db)
@@ -119,6 +128,7 @@ func getHandleCRConfigFunc(db *sqlx.DB) http.HandlerFunc {
 // returning the encoded CSConfig data for the requested host.
 func getHandleCSConfigFunc(db *sqlx.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		setHeaders(w, []api.ApiMethod{api.GET})
 		vars := mux.Vars(r)
 		hostName := vars["hostname"]
 		resp, _ := csconfig.GetCSConfig(hostName, db)
