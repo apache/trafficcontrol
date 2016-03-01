@@ -56,7 +56,7 @@ public abstract class AbstractServiceUpdater {
 	protected boolean loaded = false;
 	protected ScheduledFuture<?> scheduledService;
 	private TrafficRouterManager trafficRouterManager;
-	protected boolean uncompressDataFile;
+	protected boolean untarDataFile;
 
 	public void destroy() {
 		executorService.shutdownNow();
@@ -316,7 +316,7 @@ public abstract class AbstractServiceUpdater {
 			return existingDb;
 		}
 
-		if (!uncompressDataFile && sourceCompressed) {
+		if (!untarDataFile && sourceCompressed) {
 			in = new GZIPInputStream(in);
 		}
 
@@ -327,11 +327,11 @@ public abstract class AbstractServiceUpdater {
 		IOUtils.closeQuietly(in);
 		IOUtils.closeQuietly(out);
 
-		if (!uncompressDataFile) {
+		if (!untarDataFile) {
 			return outputFile;
 		}
 
-		return uncompressTarGZ(outputFile);
+		return untarFile(outputFile);
 	}
 
 	private boolean useModifiedTimestamp(final File existingDb) {
@@ -339,8 +339,8 @@ public abstract class AbstractServiceUpdater {
 				&& (!existingDb.isDirectory() || existingDb.listFiles().length > 0);
 	}
 
-	protected File uncompressTarGZ(final File tarFile) throws IOException {
-		LOGGER.info("Uncompressing file " + tarFile.getAbsolutePath());
+	protected File untarFile(final File tarFile) throws IOException {
+		LOGGER.info("Untarring file " + tarFile.getAbsolutePath());
 		final String destFolder = tarFile.getParentFile() + File.separator + "location_db";
 		final File dest = new File(destFolder);
 
@@ -394,12 +394,12 @@ public abstract class AbstractServiceUpdater {
 		this.trafficRouterManager = trafficRouterManager;
 	}
 
-	public boolean isUncompressDataFile() {
-		return uncompressDataFile;
+	public boolean isUntarDataFile() {
+		return untarDataFile;
 	}
 
-	public void setUncompressDataFile(final boolean uncompressDataFile) {
-		this.uncompressDataFile = uncompressDataFile;
+	public void setUntarDataFile(final boolean untarDataFile) {
+		this.untarDataFile = untarDataFile;
 	}
 
 }

@@ -104,7 +104,7 @@
 		init-method="init">
 		<property name="databaseLocation" value="$[cache.geolocation.database]" />
 		<property name="pollingInterval" value="$[cache.geolocation.database.refresh.period]" />
-		<property name="uncompressDataFile" value="$[cache.geolocation.database.compressed]"/>
+		<property name="untarDataFile" value="$[cache.geolocation.database.tarred]"/>
 		<property name="geoLocation" ref="GeolocationService" />
 		<property name="executorService" ref="ScheduledExecutorService" />
 		<property name="trafficRouterManager" ref="trafficRouterManager" />
