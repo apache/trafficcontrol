@@ -1,0 +1,17 @@
+<div class="page-title">
+    <div class="title_left">
+        <h3>Tenants</h3>
+    </div>
+</div>
+<table id="tenantsTable" class="table responsive-utilities jambo_table">
+    <thead>
+        <tr class="headings">
+            <th>id</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr ng-repeat="tenant in tenants">
+            <td>{{tenant.id}}</td>
+        </tr>
+    </tbody>
+</table>
