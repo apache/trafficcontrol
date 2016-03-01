@@ -32,7 +32,6 @@ public class GeoTest {
 
 	private GeolocationDatabaseUpdater geolocationDatabaseUpdater;
 	private MaxmindGeolocationService geolocationService;
-	private NetworkUpdater networkUpdater;
 	private static ApplicationContext context;
 
 	@BeforeClass
@@ -47,18 +46,13 @@ public class GeoTest {
 	@Before
 	public void setUp() throws Exception {
 		geolocationDatabaseUpdater = (GeolocationDatabaseUpdater) context.getBean("geolocationDatabaseUpdater");
-		networkUpdater = (NetworkUpdater) context.getBean("networkUpdater");
 		geolocationService = (MaxmindGeolocationService) context.getBean("GeolocationService");
-
-		while (!networkUpdater.isLoaded()) {
-			LOGGER.info("Waiting for a valid location database before proceeding");
-			Thread.sleep(1000);
-		}
 
 		while (!geolocationDatabaseUpdater.isLoaded()) {
 			LOGGER.info("Waiting for a valid Maxmind database before proceeding");
 			Thread.sleep(1000);
 		}
+
 	}
 
 	@Test

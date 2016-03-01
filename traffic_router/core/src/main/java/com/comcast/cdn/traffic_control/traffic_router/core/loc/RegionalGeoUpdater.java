@@ -31,9 +31,6 @@ public class RegionalGeoUpdater extends AbstractServiceUpdater {
         tmpSuffix = ".json";
     }
 
-    public void verifyDatabase(final File dbFile) throws IOException {
-    }
-
     public boolean loadDatabase() throws IOException {
         final File existingDB = new File(databaseLocation);
         RegionalGeo.parseConfigFile(existingDB);

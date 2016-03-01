@@ -85,7 +85,8 @@ public class MaxmindGeolocationServiceTest {
 		when(builder.build()).thenReturn(databaseReader);
 
 		whenNew(DatabaseReader.Builder.class).withArguments(databaseFile).thenReturn(builder);
-		service.verifyDatabase(databaseFile);
+		service.setDatabaseFile(databaseFile);
+		service.reloadDatabase();
 
 		assertThat(service.isInitialized(), equalTo(true));
 
