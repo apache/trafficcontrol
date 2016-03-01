@@ -39,6 +39,7 @@ $fa-font-path: "../assets/fonts/";
 
 // configure
 @import "../modules/private/configure/configure";
+@import "../modules/private/configure/cacheGroups/cacheGroups";
 @import "../modules/private/configure/deliveryServices/deliveryServices";
 @import "../modules/private/configure/deliveryServices/edit/deliveryServices.edit";
 @import "../modules/private/configure/servers/servers";

@@ -38,6 +38,8 @@ var trafficOps = angular.module('trafficOps', [
 
         // configure
         require('./modules/private/configure').name,
+        require('./modules/private/configure/cacheGroups').name,
+        require('./modules/private/configure/cacheGroups/list').name,
         require('./modules/private/configure/deliveryServices').name,
         require('./modules/private/configure/deliveryServices/list').name,
         require('./modules/private/configure/deliveryServices/edit').name,

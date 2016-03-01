@@ -15,6 +15,7 @@
                 </li>
                 <li class="side-menu-category"><a href="javascript:void(0);"><i class="fa fa-cog"></i> Configure <span class="fa fa-chevron-down"></span></a>
                     <ul class="nav child_menu" style="display: none">
+                        <li class="side-menu-category-item" ng-class="{'current-page': isState('trafficOps.private.configure.cacheGroups.list')}"><a ng-click="navigateToPath('/configure/cache-groups')">Cache Groups</a></li>
                         <li class="side-menu-category-item" ng-class="{'current-page': isState('trafficOps.private.configure.deliveryServices.list')}"><a ng-click="navigateToPath('/configure/delivery-services')">Delivery Services</a></li>
                         <li class="side-menu-category-item" ng-class="{'current-page': isState('trafficOps.private.configure.servers.list')}"><a ng-click="navigateToPath('/configure/servers')">Servers</a></li>
                     </ul>
