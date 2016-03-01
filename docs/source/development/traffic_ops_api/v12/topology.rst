@@ -17,12 +17,12 @@
 .. _to-api-v12-topology:
 
 Snapshot CRConfig
-=======
+=================
 
 .. _to-api-v12-topology-route:
 
 /api/1.2/snapshot/{:cdn_name}
-++++++++++++++++
++++++++++++++++++++++++++++++
 
 **PUT /api/1.2/snapshot/{:cdn_name}**
 
@@ -30,8 +30,13 @@ Snapshot CRConfig
 
   Role(s) Required: admin or oper
 
+  **Request Route Parameters**
 
-  {:cdn_name} -- name of the cdn to snapshot configure
+  +----------+----------+-------------------------------------------+
+  | Name     | Required | Description                               |
+  +==========+==========+===========================================+
+  | cdn_name | yes      | The name of the cdn to snapshot configure |
+  +----------+----------+-------------------------------------------+
 
   **Response Properties**
 

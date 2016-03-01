@@ -98,7 +98,7 @@ Profiles
 	+-----------------------+--------+----------------------------------------------------+
 	|    Parameter          |  Type  |                    Description                     |
 	+=======================+========+====================================================+
-	| ``name``              | string | The name of the new profile copy to                |
+	| ``name``              | string | The name of the new profile                        |
 	+-----------------------+--------+----------------------------------------------------+
 	| ``description``       | string | new profile description                            |
 	+-----------------------+--------+----------------------------------------------------+
@@ -145,7 +145,16 @@ Profiles
 
 	Role(s) Required: admin or oper
 
-	No Request Properties
+	**Request Route Parameters**
+   
+	+-----------------------+----------+-------------------------------+
+	| Name                  | Required | Description                   |
+	+=======================+==========+===============================+
+	| ``profile_name``      | yes      | The name of profile to copy   |
+	+-----------------------+----------+-------------------------------+
+	| ``profile_copy_from`` | yes      | The name of profile copy from |
+	+-----------------------+----------+-------------------------------+
+
 
 	**Response Properties**
 

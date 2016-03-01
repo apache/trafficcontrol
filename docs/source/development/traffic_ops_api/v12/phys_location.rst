@@ -135,6 +135,14 @@ Physical Location
 
   region_name: the name of the region to create physical location into.
 
+  **Request Route Parameters**
+
+  +-----------------+----------+-----------------------------------+
+  | Name            | Required | Description                       |
+  +=================+==========+===================================+
+  | ``region_name`` | yes      | The name of the physical location |
+  +-----------------+----------+-----------------------------------+
+
   **Request Properties**
   
   +-----------------+----------+---------------------------------------------------+

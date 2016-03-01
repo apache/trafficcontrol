@@ -1067,7 +1067,12 @@ SSL Keys
 
   Role(s) Required:  admin or oper
 
-  :mxl_id is the xml_id of the deliveryservice.
+  **Request Route Parameters**
+  +--------+----------+-----------------------------------+
+  | Name   | Required | Description                       |
+  +========+==========+===================================+
+  | xml_id | yes      | the xml_id of the deliveryservice |
+  +--------+----------+-----------------------------------+
 
   **Request Properties**
 

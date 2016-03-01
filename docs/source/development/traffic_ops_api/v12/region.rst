@@ -66,6 +66,14 @@ Regions
 
   division_name - The name of division to create new region into.
 
+  ** Request Route Parameters**
+
+  +-------------------+----------+------------------------------------------------+
+  | Name              | Required | Description                                    |
+  +===================+==========+================================================+
+  | ``division_name`` | yes      | The name of division will create new region in |
+  +-------------------+----------+------------------------------------------------+
+
   **Request Properties**
 
   +-------------------+----------+------------------------------------------+

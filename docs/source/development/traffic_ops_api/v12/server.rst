@@ -449,7 +449,7 @@ Server
 
   Role(s) Required: admin or oper
 
-  **Request Route Parameters**
+  **Request Properties**
 
   +------------------+----------+------------------------------------------------+
   | Name             | Required | Description                                    |
@@ -644,6 +644,14 @@ Server
   Role(s) Required: admin or oper
 
   **Request Route Parameters**
+
+  +------+----------+-------------------------------+
+  | Name | Required | Description                   |
+  +======+==========+===============================+
+  | id   | yes      | The id of the server to edit. |
+  +------+----------+-------------------------------+
+
+  **Request Route Properties**
 
   +------------------+----------+------------------------------------------------+
   | Name             | Required | Description                                    |
