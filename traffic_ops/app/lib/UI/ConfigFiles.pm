@@ -1348,6 +1348,7 @@ sub to_ext_dot_config {
 		eval "use $package;";
 
 		# And call it - the below calls the subroutine in the var $subroutine.
+		no strict 'refs';
 		$text .= $subroutine->( $self, $id, $file );
 
 		# $text .= &{ \&{$subroutine} }( $self, $id, $file );
