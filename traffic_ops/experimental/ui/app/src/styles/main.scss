@@ -14,6 +14,9 @@ $fa-font-path: "../assets/fonts/";
 @import "../common/modules/message/message";
 @import "../common/modules/navigation/navigation";
 @import "../common/modules/release/release";
+
+// tables
+@import "../common/modules/table/cacheGroups/table.cacheGroups";
 @import "../common/modules/table/deliveryServices/table.deliveryServices";
 @import "../common/modules/table/users/table.users";
 

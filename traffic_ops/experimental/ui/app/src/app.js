@@ -59,6 +59,9 @@ var trafficOps = angular.module('trafficOps', [
         require('./common/modules/message').name,
         require('./common/modules/navigation').name,
         require('./common/modules/release').name,
+
+        // tables
+        require('./common/modules/table/cacheGroups').name,
         require('./common/modules/table/deliveryServices').name,
         require('./common/modules/table/users').name,
 
