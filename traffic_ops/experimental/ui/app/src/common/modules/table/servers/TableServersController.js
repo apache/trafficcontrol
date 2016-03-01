@@ -11,5 +11,5 @@ var TableServersController = function(servers, $scope) {
 
 };
 
-TableServersController.$inject = ['divisions', '$scope'];
+TableServersController.$inject = ['servers', '$scope'];
 module.exports = TableServersController;
