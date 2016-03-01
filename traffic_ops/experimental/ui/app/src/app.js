@@ -63,6 +63,7 @@ var trafficOps = angular.module('trafficOps', [
         // tables
         require('./common/modules/table/cacheGroups').name,
         require('./common/modules/table/deliveryServices').name,
+        require('./common/modules/table/divisions').name,
         require('./common/modules/table/users').name,
 
         // common models
