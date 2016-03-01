@@ -8,8 +8,8 @@ module.exports = angular.module('trafficOps.private.administer.users', [])
                         templateUrl: 'common/modules/table/users/table.users.tpl.html',
                         controller: 'TableUsersController',
                         resolve: {
-                            users: function(userService) {
-                                return userService.getUsers(false);
+                            users: function(userService, ENV) {
+                                return userService.getUsers(ENV.apiEndpoint['get_users']);
                             }
                         }
                     }

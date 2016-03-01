@@ -1,5 +1,5 @@
 module.exports = angular.module('trafficOps.private.administer.user', [])
-    .config(function($stateProvider, $urlRouterProvider) {
+    .config(function($stateProvider, $urlRouterProvider, ENV) {
         $stateProvider
             .state('trafficOps.private.administer.user', {
                 url: '/users/{userId}',
@@ -9,7 +9,7 @@ module.exports = angular.module('trafficOps.private.administer.user', [])
                         controller: 'FormUserController',
                         resolve: {
                             foo: function($stateParams, userService) {
-                                return userService.getUser($stateParams.userId, false);
+                                return userService.getUser($stateParams.userId);
                             }
                         }
                     }

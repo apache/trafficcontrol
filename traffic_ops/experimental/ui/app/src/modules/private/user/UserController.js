@@ -1,8 +1,7 @@
-var UserController = function($scope, $state, $uibModal, $timeout, userService, authService, userModel) {
+var UserController = function($scope, $state, $uibModal, $timeout, userService, authService, userModel, ENV) {
 
     var updateUser = function(user, options) {
-        user.token = null; // this will null out any token the user may have had
-        userService.updateCurrentUser(user)
+        userService.updateCurrentUser(ENV.apiEndpoint['update_current_user'], user)
             .then(function() {
                 if (options.signout) {
                     authService.logout();
@@ -57,5 +56,5 @@ var UserController = function($scope, $state, $uibModal, $timeout, userService, 
 
 };
 
-UserController.$inject = ['$scope', '$state', '$uibModal', '$timeout', 'userService', 'authService', 'userModel'];
+UserController.$inject = ['$scope', '$state', '$uibModal', '$timeout', 'userService', 'authService', 'userModel', 'ENV'];
 module.exports = UserController;
