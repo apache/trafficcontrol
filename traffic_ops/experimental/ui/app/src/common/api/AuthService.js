@@ -1,11 +1,10 @@
-var AuthService = function($http, $state, $window, $location, $q, httpService, userModel, messageModel, ENV) {
+var AuthService = function($http, $state, $location, $q, httpService, userModel, messageModel, ENV) {
 
     this.login = function(username, password) {
         userModel.resetUser();
         return httpService.post(ENV.apiEndpoint['login'], { u: username, p: password })
             .then(
                 function(result) {
-                $window.sessionStorage.token = data.Token;
                     var redirect = decodeURIComponent($location.search().redirect);
                     if (redirect !== 'undefined') {
                         $location.search('redirect', null); // remove the redirect query param
@@ -52,5 +51,5 @@ var AuthService = function($http, $state, $window, $location, $q, httpService, u
 
 };
 
-AuthService.$inject = ['$http', '$state', '$window', '$location', '$q', 'httpService', 'userModel', 'messageModel', 'ENV'];
+AuthService.$inject = ['$http', '$state', '$location', '$q', 'httpService', 'userModel', 'messageModel', 'ENV'];
 module.exports = AuthService;
