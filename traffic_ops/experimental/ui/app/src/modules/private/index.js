@@ -26,7 +26,7 @@ module.exports = angular.module('trafficOps.private', [])
                         if (userModel.user.loaded) {
                             return userModel.user;
                         } else {
-                            return userService.getCurrentUser(ENV.apiEndpoint['get_current_user']);
+                            return userService.getCurrentUser(ENV.apiEndpoint['base_url'] + 'tm_user/' + userModel.userId);
                         }
                     }
                 }

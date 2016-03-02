@@ -1,31 +1,36 @@
-var UserModel = function($rootScope, $window, messageModel) {
+var UserModel = function($rootScope, $window, jwtHelper) {
 
-    var user = {};
-    user.loaded = false;
-    this.user = user;
+    this.userId = 0;
+
+    this.user = {
+        loaded: false
+    };
+
+    var removeToken = function() {
+        $window.sessionStorage.removeItem('token');
+    };
+
+    this.setToken = function(token) {
+        $window.sessionStorage.token = token;
+        this.userId = jwtHelper.decodeToken(token)['userid'];
+    };
 
     this.setUser = function(userData) {
-        user.loaded = true;
-        user = angular.extend(user, userData);
-        if (user.newUser) {
-            user.username = ''; // new users were given a temp username that needs to be ditched
-        }
-        if (!user.localUser) {
-            messageModel.setMessages([ { level: 'success', text: 'Logged in as LDAP user.' } ], false);
-        }
-        $rootScope.$broadcast('userModel::userUpdated', user);
+        this.user.loaded = true;
+        this.user = angular.extend(this.user, userData);
+        $rootScope.$broadcast('userModel::userUpdated', this.user);
     };
 
     this.resetUser = function() {
-        $window.sessionStorage.removeItem('token');
-
-        user = {};
-        user.loaded = false;
-        this.user = user;
-        $rootScope.$broadcast('userModel::userUpdated', user);
+        removeToken();
+        this.userId = 0;
+        this.user = {
+            loaded: false
+        };
+        $rootScope.$broadcast('userModel::userUpdated', this.user);
     };
 
 };
 
-UserModel.$inject = ['$rootScope', '$window', 'messageModel'];
+UserModel.$inject = ['$rootScope', '$window', 'jwtHelper'];
 module.exports = UserModel;
