@@ -37,11 +37,12 @@ const apiPath = "/api/2.0/"
 // This function returns an http.Handler to be used in http.ListenAndServe().
 func CreateRouter(db *sqlx.DB) http.Handler {
 	router := mux.NewRouter().StrictSlash(true)
-	router.HandleFunc("/login", wrapHeaders(auth.GetLoginFunc(db), []api.ApiMethod{api.POST})).Methods("POST", "OPTIONS")
+	router.HandleFunc(apiPath+"login", wrapHeaders(auth.GetLoginOptionsFunc(), []api.ApiMethod{api.OPTIONS, api.POST})).Methods("OPTIONS")
+	router.HandleFunc(apiPath+"login", wrapHeaders(auth.GetLoginFunc(db), []api.ApiMethod{api.OPTIONS, api.POST})).Methods("POST")
 	router.HandleFunc(apiPath+"{table}", auth.Use(optionsHandler, auth.DONTRequireLogin)).Methods("OPTIONS")
 	router.HandleFunc(apiPath+"{table}/{id}", auth.Use(optionsHandler, auth.DONTRequireLogin)).Methods("OPTIONS")
-	router.HandleFunc("/config/cr/{cdn}/CRConfig.json", auth.Use(getHandleCRConfigFunc(db), auth.RequireLogin))
-	router.HandleFunc("/config/csconfig/{hostname}", auth.Use(getHandleCSConfigFunc(db), auth.RequireLogin))
+	router.HandleFunc(apiPath+"config/cr/{cdn}/CRConfig.json", auth.Use(getHandleCRConfigFunc(db), auth.RequireLogin))
+	router.HandleFunc(apiPath+"config/csconfig/{hostname}", auth.Use(getHandleCSConfigFunc(db), auth.RequireLogin))
 	addApiHandlers(router, db)
 	return auth.Use(router.ServeHTTP, auth.GetContext)
 }
