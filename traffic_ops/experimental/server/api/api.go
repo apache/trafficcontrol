@@ -27,6 +27,7 @@ const (
 	POST
 	PUT
 	DELETE
+	OPTIONS
 )
 
 const API_PATH = "/api/2.0/"
@@ -41,6 +42,8 @@ func (m ApiMethod) String() string {
 		return "PUT"
 	case DELETE:
 		return "DELETE"
+	case OPTIONS:
+		return "OPTIONS"
 	}
 	return "INVALID"
 }
