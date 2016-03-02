@@ -3,7 +3,7 @@ var UserService = function($http, $state, $q, $location, authService, httpServic
     this.getCurrentUser = function(endpoint) {
         return httpService.get(endpoint)
             .then(function(result) {
-                userModel.setUser(result.response);
+                userModel.setUser(result.response[0]);
             });
     };
 
