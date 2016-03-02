@@ -29,14 +29,14 @@ public interface GeolocationService {
      * @throws GeolocationException
      *             if the IP Address cannot be located.
      */
-    public Geolocation location(String ip) throws GeolocationException;
+    Geolocation location(String ip) throws GeolocationException;
 
     /**
      * Forces a reload of the geolocation database.
      * 
      * @throws IOException
      */
-    public void reloadDatabase() throws IOException;
+    void reloadDatabase() throws IOException;
 
     /**
      * Verifies the specified database is valid.
@@ -46,12 +46,15 @@ public interface GeolocationService {
      * @throws IOException
      *             if the database is not valid.
      */
-    public void verifyDatabase(File dbFile) throws IOException;
+    boolean verifyDatabase(File dbFile) throws IOException;
 
     /**
      * Exposes whether this GeolocationService has loaded
      * 
      * @return whether this GeolocationService has loaded
      */
-    public boolean isInitialized();
+    boolean isInitialized();
+
+    void setDatabaseFile(final File databaseFile);
+
 }

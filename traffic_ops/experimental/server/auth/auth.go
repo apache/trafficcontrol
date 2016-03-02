@@ -88,7 +88,15 @@ func GetContext(handler http.Handler) http.HandlerFunc {
 	}
 }
 
-// Login attempts to login the user given a request. Only works for local passwd at this time
+// GetLoginOptionsFunc returns a func which handles the OPTIONS request for the login endpoint.
+func GetLoginOptionsFunc() http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusOK)
+	}
+}
+
+// GetLoginFunc returns a func which attempts to login the user given a request.
+// Only works for local password at this time.
 func GetLoginFunc(db *sqlx.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		username := ""

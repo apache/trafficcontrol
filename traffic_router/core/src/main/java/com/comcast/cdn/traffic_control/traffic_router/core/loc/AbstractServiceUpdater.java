@@ -16,6 +16,8 @@
 
 package com.comcast.cdn.traffic_control.traffic_router.core.loc;
 
+import java.io.BufferedInputStream;
+import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -24,17 +26,25 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.nio.file.Files;
+import java.nio.file.StandardCopyOption;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.zip.GZIPInputStream;
 
+import org.apache.commons.compress.archivers.tar.TarArchiveEntry;
+import org.apache.commons.compress.archivers.tar.TarArchiveInputStream;
+import org.apache.commons.compress.compressors.gzip.GzipCompressorInputStream;
 import org.apache.commons.io.IOUtils;
 import org.apache.log4j.Logger;
 import org.apache.wicket.ajax.json.JSONException;
 
 import com.comcast.cdn.traffic_control.traffic_router.core.router.TrafficRouterManager;
+
+import static org.apache.commons.codec.digest.DigestUtils.md5Hex;
 
 public abstract class AbstractServiceUpdater {
 	private static final Logger LOGGER = Logger.getLogger(AbstractServiceUpdater.class);
@@ -46,6 +56,7 @@ public abstract class AbstractServiceUpdater {
 	protected boolean loaded = false;
 	protected ScheduledFuture<?> scheduledService;
 	private TrafficRouterManager trafficRouterManager;
+	protected boolean untarDataFile;
 
 	public void destroy() {
 		executorService.shutdownNow();
@@ -53,7 +64,7 @@ public abstract class AbstractServiceUpdater {
 
 	/**
 	 * Gets dataBaseURL.
-	 * 
+	 *
 	 * @return the dataBaseURL
 	 */
 	public String getDataBaseURL() {
@@ -62,7 +73,7 @@ public abstract class AbstractServiceUpdater {
 
 	/**
 	 * Gets pollingInterval.
-	 * 
+	 *
 	 * @return the pollingInterval
 	 */
 	public long getPollingInterval() {
@@ -110,7 +121,11 @@ public abstract class AbstractServiceUpdater {
 				}
 
 				if ((!isLoaded() || isModified) && newDB != null && newDB.exists()) {
-					verifyDatabase(newDB);
+					if (!verifyDatabase(newDB)) {
+						LOGGER.warn(newDB.getAbsolutePath() + " from " + getDataBaseURL() + " is invalid!");
+						return false;
+					}
+
 					final boolean isDifferent = copyDatabaseIfDifferent(existingDB, newDB);
 
 					if (!isLoaded() || isDifferent) {
@@ -134,7 +149,9 @@ public abstract class AbstractServiceUpdater {
 		return false;
 	}
 
-	abstract public void verifyDatabase(final File dbFile) throws IOException;
+	public boolean verifyDatabase(final File dbFile) throws IOException {
+		return true;
+	}
 	abstract public boolean loadDatabase() throws IOException, JSONException;
 
 	public void setDatabaseLocation(final String databaseLocation) {
@@ -161,7 +178,7 @@ public abstract class AbstractServiceUpdater {
 
 	/**
 	 * Sets executorService.
-	 * 
+	 *
 	 * @param executorService
 	 *            the executorService to set
 	 */
@@ -171,7 +188,7 @@ public abstract class AbstractServiceUpdater {
 
 	/**
 	 * Sets pollingInterval.
-	 * 
+	 *
 	 * @param pollingInterval
 	 *            the pollingInterval to set
 	 */
@@ -182,51 +199,113 @@ public abstract class AbstractServiceUpdater {
 	boolean filesEqual(final File a, final File b) throws IOException {
 		if(!a.exists() && !b.exists()) { return true; }
 		if(!a.exists() || !b.exists()) { return false; }
-		if(a.length() != b.length()) { return false; }
-		FileInputStream fis = new FileInputStream(a);
-		final String md5a = org.apache.commons.codec.digest.DigestUtils.md5Hex(fis);
-		fis.close();
-		fis = new FileInputStream(b);
-		final String md5b = org.apache.commons.codec.digest.DigestUtils.md5Hex(fis);
-		fis.close();
-		if(md5a.equals(md5b)) { return true; }
-		return false;
+		if (a.isDirectory() && b.isDirectory()) {
+			return compareDirectories(a, b);
+		}
+		return compareFiles(a, b);
 	}
-	protected boolean copyDatabaseIfDifferent(final File existingDB, final File newDB) throws IOException {
-		if (!filesEqual(existingDB, newDB)) {
 
-			if (existingDB != null && existingDB.exists()) {
-				existingDB.setReadable(true, true);
-				existingDB.setWritable(true, false);
-				existingDB.delete();
-			}
+	private boolean compareDirectories(final File a, final File b) throws IOException {
+		final File[] aFileList = a.listFiles();
+		final File[] bFileList = b.listFiles();
 
-			newDB.setReadable(true, true);
-			newDB.setWritable(true, false);
-			final boolean renamed = newDB.renameTo(existingDB);
+		if (aFileList.length != bFileList.length) {
+			return false;
+		}
 
-			if (renamed) {
-				LOGGER.info("Successfully updated location database " + existingDB);
-				return true;
-			} else {
-				LOGGER.fatal("Unable to rename " + newDB + " to " + existingDB + "; current working directory is " + System.getProperty("user.dir"));
+		Arrays.sort(aFileList);
+		Arrays.sort(bFileList);
+
+		for (int i = 0; i < aFileList.length; i++) {
+			if (aFileList[i].length() != bFileList[i].length()) {
 				return false;
 			}
-		} else {
+		}
+
+		return true;
+	}
+
+	private boolean compareFiles(final File a, final File b) throws IOException {
+		if (a.length() != b.length()) {
+			return false;
+		}
+
+		FileInputStream fis = new FileInputStream(a);
+		final String md5a = md5Hex(fis);
+		fis.close();
+		fis = new FileInputStream(b);
+		final String md5b = md5Hex(fis);
+		fis.close();
+
+		if (md5a.equals(md5b)) {
+			return true;
+		}
+
+		return false;
+	}
+
+	protected boolean copyDatabaseIfDifferent(final File existingDB, final File newDB) throws IOException {
+		if (filesEqual(existingDB, newDB)) {
 			LOGGER.info("Location database unchanged.");
 			return false;
 		}
+
+		if (existingDB.isDirectory() && newDB.isDirectory()) {
+			moveDirectory(existingDB, newDB);
+			LOGGER.info("Successfully updated location database " + existingDB);
+			return true;
+		}
+
+		if (existingDB != null && existingDB.exists()) {
+			existingDB.setReadable(true, true);
+			existingDB.setWritable(true, false);
+
+			if (existingDB.isDirectory()) {
+				for (File file : existingDB.listFiles()) {
+					file.delete();
+				}
+				LOGGER.debug("Successfully deleted location database under: " + existingDB);
+			} else {
+				existingDB.delete();
+			}
+		}
+
+		newDB.setReadable(true, true);
+		newDB.setWritable(true, false);
+		final boolean renamed = newDB.renameTo(existingDB);
+
+		if (!renamed) {
+			LOGGER.fatal("Unable to rename " + newDB + " to " + existingDB + "; current working directory is " + System.getProperty("user.dir"));
+			return false;
+		}
+
+		LOGGER.info("Successfully updated location database " + existingDB);
+		return true;
+	}
+
+	private void moveDirectory(final File existingDB, final File newDB) throws IOException {
+		LOGGER.info("Moving Location database from: " + newDB + ", to: " + existingDB);
+
+		for (File file : existingDB.listFiles()) {
+			file.setReadable(true, true);
+			file.setWritable(true, false);
+			file.delete();
+		}
+
+		existingDB.delete();
+		Files.move(newDB.toPath(), existingDB.toPath(), StandardCopyOption.ATOMIC_MOVE);
 	}
 
 	protected boolean sourceCompressed = true;
 	protected String tmpPrefix = "loc";
 	protected String tmpSuffix = ".dat";
+
 	protected File downloadDatabase(final String url, final File existingDb) throws IOException {
 		LOGGER.info("[" + getClass().getSimpleName() + "] Downloading database: " + url);
 		final URL dbURL = new URL(url);
 		final HttpURLConnection conn = (HttpURLConnection) dbURL.openConnection();
 
-		if (existingDb != null && existingDb.exists() && existingDb.lastModified() > 0) {
+		if (useModifiedTimestamp(existingDb)) {
 			conn.setIfModifiedSince(existingDb.lastModified());
 		}
 
@@ -237,7 +316,7 @@ public abstract class AbstractServiceUpdater {
 			return existingDb;
 		}
 
-		if (sourceCompressed) {
+		if (!untarDataFile && sourceCompressed) {
 			in = new GZIPInputStream(in);
 		}
 
@@ -248,7 +327,52 @@ public abstract class AbstractServiceUpdater {
 		IOUtils.closeQuietly(in);
 		IOUtils.closeQuietly(out);
 
-		return outputFile;
+		if (!untarDataFile) {
+			return outputFile;
+		}
+
+		return untarFile(outputFile);
+	}
+
+	private boolean useModifiedTimestamp(final File existingDb) {
+		return existingDb != null && existingDb.exists() && existingDb.lastModified() > 0
+				&& (!existingDb.isDirectory() || existingDb.listFiles().length > 0);
+	}
+
+	protected File untarFile(final File tarFile) throws IOException {
+		LOGGER.info("Untarring file " + tarFile.getAbsolutePath());
+		final String destFolder = tarFile.getParentFile() + File.separator + "location_db";
+		final File dest = new File(destFolder);
+
+		dest.mkdir();
+
+		final TarArchiveInputStream tarIn = new TarArchiveInputStream(new GzipCompressorInputStream(new BufferedInputStream(new FileInputStream(tarFile))));
+		TarArchiveEntry tarEntry = tarIn.getNextTarEntry();
+		while (tarEntry != null) {
+			final File destPath = new File(dest, tarEntry.getName());
+
+			if (tarEntry.isDirectory()) {
+				destPath.mkdirs();
+			} else {
+				destPath.createNewFile();
+				final byte[] buffer = new byte[1024];
+				final BufferedOutputStream bout = new BufferedOutputStream(new FileOutputStream(destPath));
+				int bytesRead = tarIn.read(buffer);
+
+				while ( bytesRead  != -1) {
+					bout.write(buffer, 0, bytesRead);
+					bytesRead = tarIn.read(buffer);
+				}
+
+				bout.close();
+			}
+
+			tarEntry = tarIn.getNextTarEntry();
+		}
+
+		tarIn.close();
+		tarFile.delete();
+		return dest;
 	}
 
 	protected boolean needsUpdating(final File existingDB) {
@@ -269,4 +393,13 @@ public abstract class AbstractServiceUpdater {
 	public void setTrafficRouterManager(final TrafficRouterManager trafficRouterManager) {
 		this.trafficRouterManager = trafficRouterManager;
 	}
+
+	public boolean isUntarDataFile() {
+		return untarDataFile;
+	}
+
+	public void setUntarDataFile(final boolean untarDataFile) {
+		this.untarDataFile = untarDataFile;
+	}
+
 }

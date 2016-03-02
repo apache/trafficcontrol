@@ -29,9 +29,6 @@ public class NetworkUpdater extends AbstractServiceUpdater {
 		tmpSuffix = ".json";
 	}
 
-	public void verifyDatabase(final File dbFile) throws IOException {
-	}
-
 	public boolean loadDatabase() throws IOException, JSONException {
 		final File existingDB = new File(databaseLocation);
 		NetworkNode.generateTree(existingDB);

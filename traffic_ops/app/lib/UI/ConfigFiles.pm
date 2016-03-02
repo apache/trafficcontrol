@@ -1072,6 +1072,7 @@ sub parent_dot_config {
 
 		foreach my $remap ( @{ $data->{dslist} } ) {
 			my $org = $remap->{org};
+			next if !defined $org || $org eq "";
 			next if $done{$org};
 			if ( $remap->{type} eq "HTTP_NO_CACHE" || $remap->{type} eq "HTTP_LIVE" || $remap->{type} eq "DNS_LIVE" ) {
 				my $org_fqdn = $remap->{org};
@@ -1348,6 +1349,7 @@ sub to_ext_dot_config {
 		eval "use $package;";
 
 		# And call it - the below calls the subroutine in the var $subroutine.
+		no strict 'refs';
 		$text .= $subroutine->( $self, $id, $file );
 
 		# $text .= &{ \&{$subroutine} }( $self, $id, $file );
