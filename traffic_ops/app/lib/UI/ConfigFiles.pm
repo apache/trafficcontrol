@@ -1028,6 +1028,7 @@ sub parent_dot_config {
 
 		foreach my $remap ( @{ $data->{dslist} } ) {
 			my $org = $remap->{org};
+			next if !defined $org || $org eq "";
 			next if $done{$org};
 			if ( $remap->{type} eq "HTTP_NO_CACHE" || $remap->{type} eq "HTTP_LIVE" || $remap->{type} eq "DNS_LIVE" ) {
 				my $org_fqdn = $remap->{org};
