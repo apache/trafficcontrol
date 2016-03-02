@@ -30,7 +30,6 @@ use Common::ReturnCodes qw(SUCCESS ERROR);
 use JSON;
 use MojoPlugins::Response;
 use UI::DeliveryService;
-use UI::Topology;
 
 sub delivery_services {
 	my $self         = shift;
@@ -389,7 +388,7 @@ sub is_deliveryservice_request_valid {
 }
 
 sub assign_servers {
-	my $self   = shift;
+    my $self   = shift;
     my $ds_xml_Id = $self->param('xml_id');
 	my $params = $self->req->json;
 

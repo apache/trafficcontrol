@@ -60,11 +60,11 @@ sub index_trimmed {
 }
 
 sub create {
-	my $self = shift;
-	my $params = $self->req->json;
-	if ( !defined($params) ) {
-		return $self->alert("parameters must Json format,  please check!");
-	}
+    my $self = shift;
+    my $params = $self->req->json;
+    if ( !defined($params) ) {
+        return $self->alert("parameters must Json format,  please check!");
+    }
 
     if ( !&is_oper($self) ) {
         return $self->alert( { Error => " - You must be an admin or oper to perform this operation!" } );

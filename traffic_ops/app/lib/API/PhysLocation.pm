@@ -139,13 +139,7 @@ sub undef_to_default {
     my $v       = shift;
     my $default = shift;
 
-    if ( !defined($default) ) {
-        return $v;
-    }
-    if ( !defined($v) ) {
-        return $default;
-    }
-    return $v;
+    return $v || $default;
 }
 
 1;

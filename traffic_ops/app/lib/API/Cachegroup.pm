@@ -27,7 +27,6 @@ use Mojo::Base 'Mojolicious::Controller';
 use Data::Dumper;
 use JSON;
 use MojoPlugins::Response;
-use UI::Cachegroup;
 
 # Read
 sub index {
@@ -147,6 +146,20 @@ sub available_for_parameter {
 	$self->success( \@data );
 }
 
+sub get_cachegroups {
+    my $self = shift;
+    my %data;
+    my %cachegroups;
+    my %short_names;
+    my $rs = $self->db->resultset('Cachegroup');
+    while ( my $cachegroup = $rs->next ) {
+        $cachegroups{ $cachegroup->name }       = $cachegroup->id;
+        $short_names{ $cachegroup->short_name } = $cachegroup->id;
+    }
+    %data = ( cachegroups => \%cachegroups, short_names => \%short_names );
+    return \%data;
+}
+
 sub create{
     my $self = shift;
     my $params = $self->req->json;
@@ -158,7 +171,7 @@ sub create{
         return $self->alert("You must be an ADMIN or OPER to perform this operation!");
     }
 
-    my $cachegroups = &UI::Cachegroup::get_cachegroups($self);
+    my $cachegroups = $self->get_cachegroups();
     my $name    = $params->{name};
     my $short_name    = $params->{short_name};
     my $parent_cachegroup = $params->{parent_cachegroup};

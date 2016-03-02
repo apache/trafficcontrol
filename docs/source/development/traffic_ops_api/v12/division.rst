@@ -17,12 +17,12 @@
 .. _to-api-v12-division:
 
 Divisions
-=======
+=========
 
 .. _to-api-v12-division-route:
 
 /api/1.2/divisions
-++++++++++++++++
+++++++++++++++++++
 
 **POST /api/1.2/divisions**
   Create division
