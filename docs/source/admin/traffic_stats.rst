@@ -110,6 +110,7 @@ Configuration
 	::
 
 				ProxyPass /dashboard http://localhost:3000/dashboard
+				ProxyPass /dashboard-solo http://localhost:3000/dashboard-solo
 				ProxyPass /css http://localhost:3000/css
 				ProxyPass /app http://localhost:3000/app
 				ProxyPass /api http://localhost:3000/api
