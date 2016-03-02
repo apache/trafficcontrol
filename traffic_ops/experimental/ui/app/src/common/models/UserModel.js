@@ -1,6 +1,6 @@
 var UserModel = function($rootScope, $window, jwtHelper) {
 
-    this.userId = 0;
+    this.userId = jwtHelper.decodeToken($window.sessionStorage.token)['userid'] || 0;
 
     this.user = {
         loaded: false
