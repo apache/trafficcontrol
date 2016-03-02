@@ -280,7 +280,7 @@ public class ZoneManager extends Resolver {
 				final boolean writeZone = (cacheType == ZoneCacheType.STATIC) ? true : false;
 
 				public Zone load(final ZoneKey zoneKey) throws IOException, GeneralSecurityException {
-					LOGGER.info("loading " + cacheType +  " " + zoneKey.getClass().getSimpleName() + " " + zoneKey.getName());
+					LOGGER.debug("loading " + cacheType +  " " + zoneKey.getClass().getSimpleName() + " " + zoneKey.getName());
 					return loadZone(zoneKey, writeZone);
 				}
 
@@ -447,13 +447,17 @@ public class ZoneManager extends Resolver {
 
 								final Set<List<InetRecord>> pset = new HashSet<List<InetRecord>>();
 
-								while (pset.size() < p && pset.size() < primerLimit) {
+								for (int i = 0; i < primerLimit; i++) {
 									final List<InetRecord> records = tr.inetRecordsFromCaches(ds, caches, request);
 
 									if (!pset.contains(records)) {
 										fillDynamicZone(dzc, zone, edgeName, records, signatureManager.isDnssecEnabled());
 										pset.add(records);
 										LOGGER.debug("Primed " + ds.getId() + " @ " + cacheLocation.getId() + "; permutation " + pset.size() + "/" + p);
+									}
+
+									if (pset.size() == p) {
+										break;
 									}
 								}
 							}
