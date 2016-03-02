@@ -146,21 +146,22 @@ sub teardown_cachegroup {
 	my $self   = shift;
 	my $schema = shift;
 
-	my $cachegroups = $schema->resultset("Cachegroup");
-	while ( $cachegroups ne 0 ) {
+	my $cachegroups;
+	do {
+		$cachegroups = $schema->resultset("Cachegroup");
 		while ( my $row = $cachegroups->next ) {
-			if ( $schema->resultset("Cachegroup")->count({parent_cachegroup_id => $row->id}) ne 0 ) {
+			if ( $schema->resultset("Cachegroup")->count({parent_cachegroup_id => $row->id}) > 0 ) {
 				next;
 			}
 
-			if ( $schema->resultset("Cachegroup")->count({secondary_parent_cachegroup_id => $row->id}) ne 0 ) {
+			if ( $schema->resultset("Cachegroup")->count({secondary_parent_cachegroup_id => $row->id}) > 0 ) {
 				next;
 			}
 
 			$row->delete();
 		}
-		$cachegroups = $schema->resultset("Cachegroup");
-	}
+
+	} while ( $cachegroups->count() > 0 );
 }
 
 1;
