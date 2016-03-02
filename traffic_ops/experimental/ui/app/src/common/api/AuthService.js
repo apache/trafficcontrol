@@ -22,32 +22,12 @@ var AuthService = function($http, $state, $window, $location, $q, httpService, u
 
     this.logout = function() {
         userModel.resetUser();
-        return httpService.post(ENV.apiEndpoint['logout'])
-            .then(
-                function(result) {
-                    if ($state.current.name == 'trafficOps.public.login') {
-                        messageModel.setMessages(result.alerts, false);
-                    } else {
-                        messageModel.setMessages(result.alerts, true);
-                        $state.go('trafficOps.public.login');
-                    }
-                },
-                function(fault) {
-                    // do nothing
-                }
-            );
+        $state.go('trafficOps.public.login');
+        // Todo: api endpoint not implemented yet
     };
 
     this.resetPassword = function(email) {
-        return httpService.post(ENV.apiEndpoint['reset_password'], { email: email })
-            .then(
-                function(result) {
-                    messageModel.setMessages(result.alerts, false);
-                },
-                function(fault) {
-                    messageModel.setMessages(fault.alerts, false);
-                }
-            );
+        // Todo: api endpoint not implemented yet
     };
 
 };
