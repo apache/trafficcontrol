@@ -12,6 +12,9 @@ require('angular-sanitize');
 require('angular-ui-router');
 require('statehelper');
 
+// angular jwt
+require('angular-jwt');
+
 // angular loading bar
 require('loading-bar');
 
