@@ -8,8 +8,8 @@ module.exports = angular.module('trafficOps.private.configure.cacheGroups.list',
                         templateUrl: 'common/modules/table/cacheGroups/table.cacheGroups.tpl.html',
                         controller: 'TableCacheGroupsController',
                         resolve: {
-                            cacheGroups: function() {
-                                return [ { id: 'cacheGroup-1' } ];
+                            cacheGroups: function(cacheGroupService, ENV) {
+                                return cacheGroupService.getCacheGroups(ENV.api['base_url'] + 'cachegroup');
                             }
                         }
                     }

@@ -6,12 +6,14 @@
 <table id="regionsTable" class="table responsive-utilities jambo_table">
     <thead>
         <tr class="headings">
-            <th>id</th>
+            <th>name</th>
+            <th>division</th>
         </tr>
     </thead>
     <tbody>
         <tr ng-repeat="region in regions">
-            <td>{{region.id}}</td>
+            <td>{{region.name}}</td>
+            <td>{{region._links.division.id}}</td>
         </tr>
     </tbody>
 </table>

@@ -6,12 +6,20 @@
 <table id="cacheGroupsTable" class="table responsive-utilities jambo_table">
     <thead>
         <tr class="headings">
-            <th>id</th>
+            <th>name</th>
+            <th>shortName</th>
+            <th>type</th>
+            <th>latitude</th>
+            <th>longitude</th>
         </tr>
     </thead>
     <tbody>
         <tr ng-repeat="cacheGroup in cacheGroups">
-            <td>{{cacheGroup.id}}</td>
+            <td>{{cacheGroup.name}}</td>
+            <td>{{cacheGroup.shortName}}</td>
+            <td>{{cacheGroup._links.type.id}}</td>
+            <td>{{cacheGroup.latitude}}</td>
+            <td>{{cacheGroup.longitude}}</td>
         </tr>
     </tbody>
 </table>

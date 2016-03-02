@@ -8,8 +8,8 @@ module.exports = angular.module('trafficOps.private.configure.divisions.list', [
                         templateUrl: 'common/modules/table/divisions/table.divisions.tpl.html',
                         controller: 'TableDivisionsController',
                         resolve: {
-                            divisions: function() {
-                                return [ { id: 'division-1' } ];
+                            divisions: function(divisionService, ENV) {
+                                return divisionService.getDivisions(ENV.api['base_url'] + 'division');
                             }
                         }
                     }

@@ -1,6 +1,6 @@
 var TableDivisionsController = function(divisions, $scope) {
 
-    $scope.divisions = divisions;
+    $scope.divisions = divisions.response;
 
     angular.element(document).ready(function () {
         $('#divisionsTable').dataTable({

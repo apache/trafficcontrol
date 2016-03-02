@@ -1,19 +1,8 @@
-var DeliveryServiceService = function($http, $q, ENV) {
+var DeliveryServiceService = function($http, $q, httpService, ENV) {
 
-    this.getDeliveryServices = function(ignoreLoadingBar) {
-        var deferred = $q.defer();
-
-        $http.get(ENV.api['base_url'] + "deliveryservice", { ignoreLoadingBar: ignoreLoadingBar })
-            .success(function(result) {
-                deferred.resolve(result.response);
-            })
-            .error(function(fault) {
-                deferred.reject(fault);
-            });
-
-        return deferred.promise;
+    this.getDeliveryServices = function(endpoint) {
+        return httpService.get(endpoint);
     };
-
 
     this.getDeliveryService = function(dsId, ignoreLoadingBar) {
         var promise = $http.get(ENV.api['base_url'] + "deliveryservice/" + dsId, { ignoreLoadingBar: ignoreLoadingBar })
@@ -26,8 +15,7 @@ var DeliveryServiceService = function($http, $q, ENV) {
         return promise;
     };
 
-
 };
 
-DeliveryServiceService.$inject = ['$http', '$q', 'ENV'];
+DeliveryServiceService.$inject = ['$http', '$q', 'httpService', 'ENV'];
 module.exports = DeliveryServiceService;

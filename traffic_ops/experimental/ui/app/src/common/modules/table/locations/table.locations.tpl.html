@@ -6,12 +6,22 @@
 <table id="locationsTable" class="table responsive-utilities jambo_table">
     <thead>
         <tr class="headings">
-            <th>id</th>
+            <th>name</th>
+            <th>shortName</th>
+            <th>address</th>
+            <th>city</th>
+            <th>state</th>
+            <th>region</th>
         </tr>
     </thead>
     <tbody>
         <tr ng-repeat="location in locations">
-            <td>{{location.id}}</td>
+            <td>{{location.name}}</td>
+            <td>{{location.shortName}}</td>
+            <td>{{location.address}}</td>
+            <td>{{location.city}}</td>
+            <td>{{location.state}}</td>
+            <td>{{location._links.region.id}}</td>
         </tr>
     </tbody>
 </table>

@@ -1,6 +1,6 @@
 var TableCacheGroupsController = function(cacheGroups, $scope) {
 
-    $scope.cacheGroups = cacheGroups;
+    $scope.cacheGroups = cacheGroups.response;
 
     angular.element(document).ready(function () {
         $('#cacheGroupsTable').dataTable({

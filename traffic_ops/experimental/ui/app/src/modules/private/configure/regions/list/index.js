@@ -8,8 +8,8 @@ module.exports = angular.module('trafficOps.private.configure.regions.list', [])
                         templateUrl: 'common/modules/table/regions/table.regions.tpl.html',
                         controller: 'TableRegionsController',
                         resolve: {
-                            regions: function() {
-                                return [ { id: 'region-1' } ];
+                            regions: function(regionService, ENV) {
+                                return regionService.getRegions(ENV.api['base_url'] + 'region');
                             }
                         }
                     }

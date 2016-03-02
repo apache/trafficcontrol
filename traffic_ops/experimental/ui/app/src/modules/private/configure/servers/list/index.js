@@ -8,8 +8,8 @@ module.exports = angular.module('trafficOps.private.configure.servers.list', [])
                         templateUrl: 'common/modules/table/servers/table.servers.tpl.html',
                         controller: 'TableServersController',
                         resolve: {
-                            servers: function() {
-                                return [ { id: 'server-1' } ];
+                            servers: function(serverService, ENV) {
+                                return serverService.getServers(ENV.api['base_url'] + 'server');
                             }
                         }
                     }
