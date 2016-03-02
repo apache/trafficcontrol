@@ -37,7 +37,7 @@ const apiPath = "/api/2.0/"
 // This function returns an http.Handler to be used in http.ListenAndServe().
 func CreateRouter(db *sqlx.DB) http.Handler {
 	router := mux.NewRouter().StrictSlash(true)
-	router.HandleFunc("/login", wrapHeaders(auth.GetLoginFunc(db), []api.ApiMethod{api.POST})).Methods("POST")
+	router.HandleFunc("/login", wrapHeaders(auth.GetLoginFunc(db), []api.ApiMethod{api.POST})).Methods("POST", "OPTIONS")
 	router.HandleFunc(apiPath+"{table}", auth.Use(optionsHandler, auth.DONTRequireLogin)).Methods("OPTIONS")
 	router.HandleFunc(apiPath+"{table}/{id}", auth.Use(optionsHandler, auth.DONTRequireLogin)).Methods("OPTIONS")
 	router.HandleFunc("/config/cr/{cdn}/CRConfig.json", auth.Use(getHandleCRConfigFunc(db), auth.RequireLogin))

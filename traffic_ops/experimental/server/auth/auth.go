@@ -91,6 +91,10 @@ func GetContext(handler http.Handler) http.HandlerFunc {
 // Login attempts to login the user given a request. Only works for local passwd at this time
 func GetLoginFunc(db *sqlx.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		if r.Method == "OPTIONS" {
+			w.WriteHeader(http.StatusOK)
+			return
+		}
 		username := ""
 		password := ""
 		body, err := ioutil.ReadAll(r.Body)
