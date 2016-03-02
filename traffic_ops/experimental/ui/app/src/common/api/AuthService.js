@@ -2,7 +2,7 @@ var AuthService = function($http, $state, $location, $q, jwtHelper, httpService,
 
     this.login = function(username, password) {
         userModel.resetUser();
-        return httpService.post(ENV.apiEndpoint['base_url'] + 'login', { u: username, p: password })
+        return httpService.post(ENV.api['base_url'] + 'login', { u: username, p: password })
             .then(
                 function(result) {
                     userModel.setToken(result.Token);

@@ -3,7 +3,7 @@ var DeliveryServiceService = function($http, $q, ENV) {
     this.getDeliveryServices = function(ignoreLoadingBar) {
         var deferred = $q.defer();
 
-        $http.get(ENV.apiEndpoint['1.2'] + "deliveryservices.json", { ignoreLoadingBar: ignoreLoadingBar })
+        $http.get(ENV.api['base_url'] + "deliveryservice", { ignoreLoadingBar: ignoreLoadingBar })
             .success(function(result) {
                 deferred.resolve(result.response);
             })
@@ -16,7 +16,7 @@ var DeliveryServiceService = function($http, $q, ENV) {
 
 
     this.getDeliveryService = function(dsId, ignoreLoadingBar) {
-        var promise = $http.get(ENV.apiEndpoint['1.2'] + "deliveryservices/" + dsId + ".json", { ignoreLoadingBar: ignoreLoadingBar })
+        var promise = $http.get(ENV.api['base_url'] + "deliveryservice/" + dsId, { ignoreLoadingBar: ignoreLoadingBar })
             .success(function(result) {
                 return result;
             })
