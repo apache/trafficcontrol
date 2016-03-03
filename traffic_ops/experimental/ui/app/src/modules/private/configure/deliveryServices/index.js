@@ -1,21 +1,16 @@
 module.exports = angular.module('trafficOps.private.configure.deliveryServices', [])
-    .controller('ConfigureDeliveryServicesController', require('./ConfigureDeliveryServicesController'))
+    .controller('DeliveryServicesController', require('./DeliveryServicesController'))
     .config(function($stateProvider, $urlRouterProvider) {
         $stateProvider
             .state('trafficOps.private.configure.deliveryServices', {
-                url: 'delivery-services',
+                url: '/delivery-services',
+                abstract: true,
                 views: {
                     configureContent: {
-                        templateUrl: 'modules/private/configure/deliveryServices/configure.deliveryServices.tpl.html',
-                        controller: 'ConfigureDeliveryServicesController'
-                    }
-                },
-                resolve: {
-                    deliveryServices: function(user, deliveryServiceService, deliveryServicesModel) {
-                        return deliveryServiceService.getDeliveryServices(false);
+                        templateUrl: 'modules/private/configure/deliveryServices/deliveryServices.tpl.html',
+                        controller: 'DeliveryServicesController'
                     }
                 }
-
             })
         ;
         $urlRouterProvider.otherwise('/');

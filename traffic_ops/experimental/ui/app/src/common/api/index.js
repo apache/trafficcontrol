@@ -1,6 +1,13 @@
 module.exports = angular.module('trafficOps.api', [])
     .service('authService', require('./AuthService'))
+    .service('cacheGroupService', require('./CacheGroupService'))
     .service('deliveryServiceService', require('./DeliveryServiceService'))
+    .service('divisionService', require('./DivisionService'))
+    .service('httpService', require('./HttpService'))
+    .service('locationService', require('./LocationService'))
+    .service('regionService', require('./RegionService'))
+    .service('serverService', require('./ServerService'))
+    .service('tenantService', require('./TenantService'))
     .service('trafficOpsService', require('./TrafficOpsService'))
     .service('userService', require('./UserService'))
 ;

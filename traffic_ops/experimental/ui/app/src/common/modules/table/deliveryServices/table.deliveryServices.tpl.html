@@ -1,0 +1,43 @@
+<div class="page-title">
+    <div class="title_left">
+        <h3>Delivery Services</h3>
+    </div>
+</div>
+<table id="deliveryServicesTable" class="table responsive-utilities jambo_table">
+    <thead>
+        <tr class="headings">
+            <th>xmlId</th>
+            <th>orgServerFqdn</th>
+            <th>cdn</th>
+            <th>profile</th>
+            <th>ccrDnsTtl</th>
+            <th>active</th>
+            <th>type</th>
+            <th>dscp</th>
+            <th>signed</th>
+            <th>qstringIgnore</th>
+            <th>geoLimit</th>
+            <th>protocol</th>
+            <th>ipv6RoutingEnabled</th>
+            <th>rangeRequestHandling</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr ng-repeat="deliveryService in deliveryServices">
+            <td>{{deliveryService.xmlId}}</td>
+            <td>{{deliveryService.orgServerFqdn}}</td>
+            <td>{{deliveryService._links.cdn.id}}</td>
+            <td>{{deliveryService._links.profile.id}}</td>
+            <td>{{deliveryService.ccrDnsTtl}}</td>
+            <td>{{deliveryService.active}}</td>
+            <td>{{deliveryService._links.type.id}}</td>
+            <td>{{deliveryService.dscp}}</td>
+            <td>{{deliveryService.signed}}</td>
+            <td>{{deliveryService.qstringIgnore}}</td>
+            <td>{{deliveryService.geoLimit}}</td>
+            <td>{{deliveryService.protocol}}</td>
+            <td>{{deliveryService.ipv6RoutingEnabled}}</td>
+            <td>{{deliveryService.rangeRequestHandling}}</td>
+        </tr>
+    </tbody>
+</table>

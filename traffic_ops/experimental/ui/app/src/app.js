@@ -18,6 +18,7 @@ var trafficOps = angular.module('trafficOps', [
         'ui.bootstrap',
         'app.templates',
         'ui.router.stateHelper',
+        'angular-jwt',
         'angular-loading-bar',
 
         // public modules
@@ -31,23 +32,54 @@ var trafficOps = angular.module('trafficOps', [
         require('./modules/private/user').name,
         require('./modules/private/user/edit').name,
 
+        // administer
+        require('./modules/private/administer').name,
+        require('./modules/private/administer/users').name,
+        require('./modules/private/administer/user').name,
+
         // configure
         require('./modules/private/configure').name,
+        require('./modules/private/configure/cacheGroups').name,
+        require('./modules/private/configure/cacheGroups/list').name,
         require('./modules/private/configure/deliveryServices').name,
+        require('./modules/private/configure/deliveryServices/list').name,
+        require('./modules/private/configure/deliveryServices/edit').name,
+        require('./modules/private/configure/divisions').name,
+        require('./modules/private/configure/divisions/list').name,
+        require('./modules/private/configure/locations').name,
+        require('./modules/private/configure/locations/list').name,
+        require('./modules/private/configure/servers').name,
+        require('./modules/private/configure/servers/list').name,
+        require('./modules/private/configure/regions').name,
+        require('./modules/private/configure/regions/list').name,
+
+        // monitor
+        require('./modules/private/monitor').name,
 
         // dashboards
-        require('./modules/private/dashboards').name,
-        require('./modules/private/dashboards/one').name,
-        require('./modules/private/dashboards/two').name,
-        require('./modules/private/dashboards/three').name,
+        require('./modules/private/monitor/dashboards').name,
+        require('./modules/private/monitor/dashboards/one').name,
+        require('./modules/private/monitor/dashboards/two').name,
+        require('./modules/private/monitor/dashboards/three').name,
 
         // common modules
         require('./common/modules/dialog/confirm').name,
         require('./common/modules/dialog/reset').name,
+        require('./common/modules/form/user').name,
         require('./common/modules/header').name,
         require('./common/modules/message').name,
         require('./common/modules/navigation').name,
         require('./common/modules/release').name,
+
+        // tables
+        require('./common/modules/table/cacheGroups').name,
+        require('./common/modules/table/deliveryServices').name,
+        require('./common/modules/table/divisions').name,
+        require('./common/modules/table/locations').name,
+        require('./common/modules/table/regions').name,
+        require('./common/modules/table/servers').name,
+        require('./common/modules/table/tenants').name,
+        require('./common/modules/table/users').name,
 
         // common models
         require('./common/models').name,
@@ -78,8 +110,15 @@ var trafficOps = angular.module('trafficOps', [
         })
     ;
 
-trafficOps.factory('authInterceptor', function ($q, $location, $timeout, messageModel, userModel) {
+trafficOps.factory('authInterceptor', function ($q, $window, $location, $timeout, messageModel, userModel) {
     return {
+        request: function (config) {
+            config.headers = config.headers || {};
+            if ($window.sessionStorage.token) {
+                config.headers.Authorization = $window.sessionStorage.token;
+            }
+            return config;
+        },
         responseError: function (rejection) {
             var url = $location.url(),
                 alerts = [];

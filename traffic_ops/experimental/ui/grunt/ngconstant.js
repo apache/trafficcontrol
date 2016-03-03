@@ -8,9 +8,8 @@ module.exports = {
     dev: {
         constants: {
             ENV: {
-                apiEndpoint: {
-                    '1.1': '/api/1.1/',
-                    '1.2': '/api/1.2/'
+                api: {
+                    "base_url": "/api/2.0/"
                 }
             }
         }
@@ -18,9 +17,8 @@ module.exports = {
     prod: {
         constants: {
             ENV: {
-                apiEndpoint: {
-                    '1.1': '/api/1.1/',
-                    '1.2': '/api/1.2/'
+                api: {
+                    "base_url": "/api/2.0/"
                 }
             }
         }

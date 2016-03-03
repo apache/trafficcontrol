@@ -1,4 +1,4 @@
-var LoginController = function($scope, $log, $uibModal, authService, userService) {
+var LoginController = function($scope, $log, $uibModal, authService) {
 
     $scope.credentials = {
         username: '',
@@ -17,7 +17,7 @@ var LoginController = function($scope, $log, $uibModal, authService, userService
         });
 
         modalInstance.result.then(function(email) {
-            userService.resetPassword(email);
+            authService.resetPassword(email);
         }, function () {
         });
     };
@@ -26,5 +26,5 @@ var LoginController = function($scope, $log, $uibModal, authService, userService
     init();
 };
 
-LoginController.$inject = ['$scope', '$log', '$uibModal', 'authService', 'userService'];
+LoginController.$inject = ['$scope', '$log', '$uibModal', 'authService'];
 module.exports = LoginController;

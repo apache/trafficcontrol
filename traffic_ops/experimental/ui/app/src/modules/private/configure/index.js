@@ -3,7 +3,7 @@ module.exports = angular.module('trafficOps.private.configure', [])
     .config(function($stateProvider, $urlRouterProvider) {
         $stateProvider
             .state('trafficOps.private.configure', {
-                url: '',
+                url: 'configure',
                 abstract: true,
                 views: {
                     privateContent: {

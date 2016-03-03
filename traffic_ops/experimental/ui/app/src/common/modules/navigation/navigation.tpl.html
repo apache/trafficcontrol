@@ -8,19 +8,24 @@
             <ul class="nav side-menu">
                 <li class="side-menu-category"><a href="javascript:void(0);"><i class="fa fa-bar-chart"></i> Monitor <span class="fa fa-chevron-down"></span></a>
                     <ul class="nav child_menu" style="display: none">
-                        <li class="side-menu-category-item" ng-class="{'current-page': isState('trafficOps.private.dashboards.one')}"><a ng-click="navigateToPath('/dashboards/one')">Dashboard 1</a></li>
-                        <li class="side-menu-category-item" ng-class="{'current-page': isState('trafficOps.private.dashboards.two')}"><a ng-click="navigateToPath('/dashboards/two')">Dashboard 2</a></li>
-                        <li class="side-menu-category-item" ng-class="{'current-page': isState('trafficOps.private.dashboards.three')}"><a ng-click="navigateToPath('/dashboards/three')">Dashboard 3</a></li>
+                        <li class="side-menu-category-item" ng-class="{'current-page': isState('trafficOps.private.monitor.dashboards.one')}"><a ng-click="navigateToPath('/monitor/dashboards/one')">Dashboard 1</a></li>
+                        <li class="side-menu-category-item" ng-class="{'current-page': isState('trafficOps.private.monitor.dashboards.two')}"><a ng-click="navigateToPath('/monitor/dashboards/two')">Dashboard 2</a></li>
+                        <li class="side-menu-category-item" ng-class="{'current-page': isState('trafficOps.private.monitor.dashboards.three')}"><a ng-click="navigateToPath('/monitor/dashboards/three')">Dashboard 3</a></li>
                     </ul>
                 </li>
-                <li class="side-menu-category"><a href="javascript:void(0);"><i class="fa fa-bar-chart"></i> Configure <span class="fa fa-chevron-down"></span></a>
+                <li class="side-menu-category"><a href="javascript:void(0);"><i class="fa fa-cog"></i> Configure <span class="fa fa-chevron-down"></span></a>
                     <ul class="nav child_menu" style="display: none">
-                        <li class="side-menu-category-item" ng-class="{'current-page': isState('trafficOps.private.configure.deliveryServices')}"><a ng-click="navigateToPath('/delivery-services')">Delivery Services</a></li>
+                        <li class="side-menu-category-item" ng-class="{'current-page': isState('trafficOps.private.configure.cacheGroups.list')}"><a ng-click="navigateToPath('/configure/cache-groups')">Cache Groups</a></li>
+                        <li class="side-menu-category-item" ng-class="{'current-page': isState('trafficOps.private.configure.deliveryServices.list')}"><a ng-click="navigateToPath('/configure/delivery-services')">Delivery Services</a></li>
+                        <li class="side-menu-category-item" ng-class="{'current-page': isState('trafficOps.private.configure.divisions.list')}"><a ng-click="navigateToPath('/configure/divisions')">Divisions</a></li>
+                        <li class="side-menu-category-item" ng-class="{'current-page': isState('trafficOps.private.configure.locations.list')}"><a ng-click="navigateToPath('/configure/locations')">Locations</a></li>
+                        <li class="side-menu-category-item" ng-class="{'current-page': isState('trafficOps.private.configure.regions.list')}"><a ng-click="navigateToPath('/configure/regions')">Regions</a></li>
+                        <li class="side-menu-category-item" ng-class="{'current-page': isState('trafficOps.private.configure.servers.list')}"><a ng-click="navigateToPath('/configure/servers')">Servers</a></li>
                     </ul>
                 </li>
-                <li class="side-menu-category"><a href="javascript:void(0);"><i class="fa fa-cog"></i> Settings <span class="fa fa-chevron-down"></span></a>
+                <li class="side-menu-category"><a href="javascript:void(0);"><i class="fa fa-wrench"></i> Administer <span class="fa fa-chevron-down"></span></a>
                     <ul class="nav child_menu" style="display: none">
-                        <li class="side-menu-category-item" ng-class="{'current-page': isState('trafficOps.private.user.edit')}"><a ng-click="navigateToPath('/user')">User Profile</a></li>
+                        <li class="side-menu-category-item" ng-class="{'current-page': isState('trafficOps.private.administer.users')}"><a ng-click="navigateToPath('/administer/users')">Users</a></li>
                     </ul>
                 </li>
             </ul>
@@ -29,7 +34,7 @@
     <div class="sidebar-footer hidden-small">
         <a title="Logout" ng-show="user.loaded" ng-click="logout()" uib-popover="Logout" popover-trigger="mouseenter"><i class="fa fa-sign-out"></i></a>
         <a title="Login" ng-show="!user.loaded" ui-sref="trafficOps.public.login" uib-popover="Login" popover-trigger="mouseenter"><i class="fa fa-sign-in"></i></a>
-        <a title="Settings" uib-popover="Settings" popover-trigger="mouseenter"><i class="fa fa-cog"></i></a>
+        <a title="User Profile" ui-sref="trafficOps.private.user.edit" uib-popover="User Profile" popover-trigger="mouseenter"><i class="fa fa-user"></i></a>
         <a title="Release Info" ng-click="releaseVersion()" uib-popover="Release Info" popover-trigger="mouseenter"><i class="fa fa-info"></i></a>
         <a title="Popout" uib-popover="Popout" popover-trigger="mouseenter"><i class="fa fa-external-link"></i></a>
     </div>

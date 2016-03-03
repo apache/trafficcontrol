@@ -1,49 +1,36 @@
-var AuthService = function($http, $state, $location, $q, deliveryServicesModel, userModel, messageModel, ENV) {
+var AuthService = function($http, $state, $location, $q, jwtHelper, httpService, userModel, messageModel, ENV) {
 
     this.login = function(username, password) {
         userModel.resetUser();
-        deliveryServicesModel.resetDeliveryServices();
-        var promise = $http.post(
-                ENV.apiEndpoint['1.2'] + "user/login", { u: username, p: password })
-            .success(function(result) {
-                var redirect = decodeURIComponent($location.search().redirect);
-                if (redirect !== 'undefined') {
-                    $location.search('redirect', null); // remove the redirect query param
-                    $location.url(redirect);
-                } else {
-                    $location.url('/dashboards/one');
+        return httpService.post(ENV.api['base_url'] + 'login', { u: username, p: password })
+            .then(
+                function(result) {
+                    userModel.setToken(result.Token);
+                    var redirect = decodeURIComponent($location.search().redirect);
+                    if (redirect !== 'undefined') {
+                        $location.search('redirect', null); // remove the redirect query param
+                        $location.url(redirect);
+                    } else {
+                        $location.url('/monitor/dashboards/one');
+                    }
+                },
+                function(fault) {
+                    // do nothing
                 }
-                return result;
-            })
-            .error(function(fault) {
-                return fault;
-            });
-
-        return promise;
+            );
     };
 
     this.logout = function() {
         userModel.resetUser();
-        deliveryServicesModel.resetDeliveryServices();
-        var promise = $http.post(
-                ENV.apiEndpoint['1.2'] + "user/logout")
-            .success(function(result) {
-                if ($state.current.name == 'trafficOps.public.login') {
-                    messageModel.setMessages(result.alerts, false);
-                } else {
-                    messageModel.setMessages(result.alerts, true);
-                    $state.go('trafficOps.public.login');
-                }
-                return result;
-            })
-            .error(function(fault) {
-                return fault;
-            });
+        $state.go('trafficOps.public.login');
+        // Todo: api endpoint not implemented yet
+    };
 
-        return promise;
+    this.resetPassword = function(email) {
+        // Todo: api endpoint not implemented yet
     };
 
 };
 
-AuthService.$inject = ['$http', '$state', '$location', '$q', 'deliveryServicesModel', 'userModel', 'messageModel', 'ENV'];
+AuthService.$inject = ['$http', '$state', '$location', '$q', 'jwtHelper', 'httpService', 'userModel', 'messageModel', 'ENV'];
 module.exports = AuthService;

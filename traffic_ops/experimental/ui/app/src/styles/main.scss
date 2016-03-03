@@ -9,29 +9,52 @@ $fa-font-path: "../assets/fonts/";
 // common
 @import "../common/modules/dialog/confirm/dialog.confirm";
 @import "../common/modules/dialog/reset/dialog.reset";
+@import "../common/modules/form/user/form.user";
 @import "../common/modules/header/header";
 @import "../common/modules/message/message";
 @import "../common/modules/navigation/navigation";
 @import "../common/modules/release/release";
+
+// tables
+@import "../common/modules/table/cacheGroups/table.cacheGroups";
+@import "../common/modules/table/deliveryServices/table.deliveryServices";
+@import "../common/modules/table/divisions/table.divisions";
+@import "../common/modules/table/locations/table.locations";
+@import "../common/modules/table/regions/table.regions";
+@import "../common/modules/table/servers/table.servers";
+@import "../common/modules/table/tenants/table.tenants";
+@import "../common/modules/table/users/table.users";
 
 // public
 @import "../modules/public/login/login";
 
 // private
 
-// users
+// user
 @import "../modules/private/user/user";
 @import "../modules/private/user/edit/user.edit";
 
+// administer
+@import "../modules/private/administer/administer";
+
 // configure
 @import "../modules/private/configure/configure";
-@import "../modules/private/configure/deliveryServices/configure.deliveryServices";
+@import "../modules/private/configure/cacheGroups/cacheGroups";
+@import "../modules/private/configure/deliveryServices/deliveryServices";
+@import "../modules/private/configure/deliveryServices/edit/deliveryServices.edit";
+@import "../modules/private/configure/divisions/divisions";
+@import "../modules/private/configure/locations/locations";
+@import "../modules/private/configure/regions/regions";
+@import "../modules/private/configure/servers/servers";
+
+// monitor
+@import "../modules/private/monitor/monitor";
 
 // dashboards
-@import "../modules/private/dashboards/dashboards";
-@import "../modules/private/dashboards/one/dashboards.one";
-@import "../modules/private/dashboards/two/dashboards.two";
-@import "../modules/private/dashboards/three/dashboards.three";
+@import "../modules/private/monitor/dashboards/dashboards";
+@import "../modules/private/monitor/dashboards/one/dashboards.one";
+@import "../modules/private/monitor/dashboards/two/dashboards.two";
+@import "../modules/private/monitor/dashboards/three/dashboards.three";
 
 [ng-click] {
   cursor: pointer;
