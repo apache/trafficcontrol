@@ -1,57 +1,39 @@
-#### Traffic Ops UI 2.0 Experimental
+#### Traffic Ops UI 2.0
 
-##### Prerequisites
+An AngularJS client served from a lightweight Node.js web server. TO UI 2.0 was designed to consume the TO 2.0 RESTful API.
 
-###### Ruby and Compass installed
+##### Installation
 
--- ruby -v (brew install ruby)
+1. Install prerequisite software
 
--- compass -v (gem install compass)
+* brew install ruby
+* gem install compass
+* brew install node
+* npm install -g bower
+* npm install -g grunt-cli
 
-###### Node, Grunt and Bower installed
+2. Navigate to UI root
 
--- node -v (brew install node)
+* cd ./
 
--- grunt --version (npm install -g grunt-cli)
+3. Load app dependencies
 
--- bower -v (npm install -g bower)
+* npm install
 
-##### Install
+4. Load client-side dependencies
 
-You'll need to install the node modules defined in ./package.json for the build process so:
+* bower install
 
-cd ./
+5. Package, deploy and start Node.js server
 
-npm install
+* grunt (for dev mode)
+* grunt dist (for prod mode)
 
-You'll need to install the components required for the app to run (i.e. angular.js) defined in bower.json so:
+6. Head over to localhost:8080
 
-cd ./
+##### Notes
 
-bower install
-
-Finally, create the build artifacts and start up an Express server for traffic ops to run on localhost:8080:
-
-cd ./
-
-grunt
-
-go to localhost:8080
-
-Once you do all this you'll end up with these directories (none of which are stored in the code repository):
-
-./node_modules
-
-./app/bower_components
-
-./app/dist
-
-API destination is found in:
-
-./conf/config.js
-
-##### Source files
-
-Source files are found in:
-
-./app/src
+* API destination is defined in ./conf/config.js (make sure this points to the TO 2.0 API)
+* Node.js server configuration is found in ./server/server.js
+* Source files are found in ./app/src
+* Build artifacts are found in ./app/dist
