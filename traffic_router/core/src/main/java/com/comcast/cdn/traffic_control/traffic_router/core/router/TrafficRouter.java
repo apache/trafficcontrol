@@ -31,6 +31,8 @@ import java.util.Random;
 import java.util.Set;
 import java.util.SortedMap;
 import java.util.TreeMap;
+import java.io.PrintWriter;
+import java.io.StringWriter;
 
 import org.apache.commons.pool.ObjectPool;
 import org.apache.log4j.Logger;
@@ -223,8 +225,13 @@ public class TrafficRouter {
 		}
 
 		if (ds.isCoverageZoneOnly()) {
-			track.setResult(ResultType.MISS);
-			track.setResultDetails(ResultDetails.DS_CZ_ONLY);
+			if (ds.getGeoRedirectUrl() != null) {
+				//use the NGB redirect
+				caches = enforceGeoRedirect(track, ds, request, null);
+			} else {
+				track.setResult(ResultType.MISS);
+				track.setResultDetails(ResultDetails.DS_CZ_ONLY);
+			}
 		} else {
 			caches = selectCachesByGeo(request, ds, cacheLocation, track);
 		}
@@ -243,8 +250,16 @@ public class TrafficRouter {
 		}
 
 		if (clientLocation == null) {
-			track.setResultDetails(ResultDetails.DS_CLIENT_GEO_UNSUPPORTED);
-			return null;
+			if (deliveryService.getGeoRedirectUrl() != null) {
+				//will use the NGB redirect
+				LOGGER.debug(String
+						.format("client is blocked by geolimit, use the NGB redirect url: %s",
+							deliveryService.getGeoRedirectUrl()));
+				return enforceGeoRedirect(track, deliveryService, request, track.getClientGeolocation());
+			} else {
+				track.setResultDetails(ResultDetails.DS_CLIENT_GEO_UNSUPPORTED);
+				return null;
+			}
 		}
 
 		final List<Cache> caches = getCachesByGeo(request, deliveryService, clientLocation, track);
@@ -424,6 +439,13 @@ public class TrafficRouter {
 		final List<Cache> caches = selectCache(request, ds, track);
 
 		if (caches == null) {
+			if (track.getResult() == ResultType.GEO_REDIRECT) {
+				routeResult.setUrl(new URL(ds.getGeoRedirectUrl()));
+				LOGGER.debug(String.format("NGB redirect to url: %s for request: %s", ds.getGeoRedirectUrl()
+						, request.getRequestedUrl()));
+				return routeResult;
+			}
+
 			routeResult.setUrl(ds.getFailureHttpResponse(request, track));
 			return routeResult;
 		}
@@ -655,5 +677,60 @@ public class TrafficRouter {
 
 	public boolean isConsistentDNSRouting() {
 		return consistentDNSRouting;
+	}
+
+	private List<Cache> enforceGeoRedirect(final Track track, final DeliveryService ds,
+			final Request request, final Geolocation queriedClientLocation) {
+
+		final String urlType = ds.getGeoRedirectUrlType();
+		track.setResult(ResultType.GEO_REDIRECT);
+		try {
+			if ("NOT_DS_URL".equals(urlType)) {
+				//redirect url not belongs to this DS, just redirect it
+				LOGGER.debug("geo redirect url not belongs to ds: " + ds.getGeoRedirectUrl());
+				return null;
+			} else if ("DS_URL".equals(urlType)) {
+				Geolocation clientLocation = queriedClientLocation;
+
+				//redirect url belongs to this DS, will try return the caches
+				if (clientLocation == null) {
+					LOGGER.debug("clientLocation null, try to query it");
+					clientLocation = getLocation(request.getClientIP());
+
+					if (clientLocation == null) { clientLocation = ds.getMissLocation(); }
+
+					if (clientLocation == null) {
+						LOGGER.error("cannot find a geo location for the client: " + request.getClientIP());
+						// particular error was logged in ds.supportLocation
+						track.setResult(ResultType.MISS);
+						track.setResultDetails(ResultDetails.DS_CLIENT_GEO_UNSUPPORTED);
+						return null;
+					}
+				}
+
+				final List<Cache> caches = getCachesByGeo(request, ds, clientLocation, track);
+				if (caches == null) {
+					LOGGER.warn(String.format(
+								"No Cache found by Geo in NGB redirect"));
+					track.setResult(ResultType.MISS);
+					track.setResultDetails(ResultDetails.GEO_NO_CACHE_FOUND);
+					return null;
+				}
+				return caches;
+			} else {
+				LOGGER.error("invalid geo redirect url type");
+				track.setResult(ResultType.MISS);
+				track.setResultDetails(ResultDetails.GEO_NO_CACHE_FOUND);
+				return null;
+			}
+		} catch (Exception e) {
+			LOGGER.error("caught Exception when enforceGeoRedirect: " + e);
+			final StringWriter sw = new StringWriter();
+			final PrintWriter pw = new PrintWriter(sw);
+			e.printStackTrace(pw);
+			LOGGER.error(sw.toString());
+			track.setResult(ResultType.ERROR);
+			return null;
+		}
 	}
 }

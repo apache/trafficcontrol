@@ -18,6 +18,7 @@ package com.comcast.cdn.traffic_control.traffic_router.core.config;
 
 import java.io.IOException;
 import java.net.UnknownHostException;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -25,6 +26,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
+import java.util.Iterator;
+import java.io.PrintWriter;
+import java.io.StringWriter;
 
 import com.comcast.cdn.traffic_control.traffic_router.core.loc.FederationsWatcher;
 import com.comcast.cdn.traffic_control.traffic_router.core.loc.GeolocationDatabaseUpdater;
@@ -50,6 +54,7 @@ import com.comcast.cdn.traffic_control.traffic_router.core.router.TrafficRouterM
 import com.comcast.cdn.traffic_control.traffic_router.core.util.TrafficOpsUtils;
 import com.comcast.cdn.traffic_control.traffic_router.core.router.StatTracker;
 import com.comcast.cdn.traffic_control.traffic_router.geolocation.Geolocation;
+import com.comcast.cdn.traffic_control.traffic_router.core.request.HTTPRequest;
 
 
 public class ConfigHandler {
@@ -325,6 +330,61 @@ public class ConfigHandler {
 		cacheRegister.setDeliveryServiceMap(dsMap);
 		cacheRegister.setDnsDeliveryServiceMatchers(dnsServiceMatchers);
 		cacheRegister.setHttpDeliveryServiceMatchers(httpServiceMatchers);
+		initGeoFailedRedirect(dsMap, cacheRegister);
+	}
+
+	private void initGeoFailedRedirect(final Map<String, DeliveryService> dsMap, final CacheRegister cacheRegister) {
+		final Iterator<String> itr = dsMap.keySet().iterator();
+		while (itr.hasNext()) {
+			final DeliveryService ds = dsMap.get(itr.next());
+			String type = "INVALID_URL";
+			//check if it's relative path or not
+			final String rurl = ds.getGeoRedirectUrl();
+			if (rurl == null) { continue; }
+
+			try {
+				final int idx = rurl.indexOf("://");
+
+				if (idx < 0) {
+					//this is a relative url, belongs to this ds
+					type = "DS_URL";
+				} else {
+					//this is a url with protocol, must check further
+					//first, parse the url, if url invalid it will throw Exception
+					final URL url = new URL(rurl);
+
+					//make a fake HTTPRequest for the redirect url
+					final HTTPRequest req = new HTTPRequest();
+
+					req.setPath(url.getPath());
+					req.setQueryString(url.getQuery());
+					req.setHostname(url.getHost());
+					req.setRequestedUrl(rurl);
+
+					ds.setGeoRedirectFile(url.getFile());
+					//try select the ds by the redirect fake HTTPRequest
+					final DeliveryService rds = cacheRegister.getDeliveryService(req, true);
+					if (rds == null) {
+						LOGGER.debug("No DeliveryService found for: "
+								+ rurl);
+						//the redirect url not belongs to any ds
+						type = "NOT_DS_URL";
+					} else {
+						//check if it's the same ds
+						if (rds.getId() == ds.getId()) { type = "DS_URL"; }
+						else { type = "NOT_DS_URL"; }
+					}
+				}
+
+				ds.setGeoRedirectUrlType(type);
+			} catch (Exception e) {
+				LOGGER.error("fatal error, failed to init NGB redirect with Exception: " + e);
+				final StringWriter sw = new StringWriter();
+				final PrintWriter pw = new PrintWriter(sw);
+				e.printStackTrace(pw);
+				LOGGER.error(sw.toString());
+			}
+		}
 	}
 
 	/**
