@@ -16,7 +16,6 @@ var trafficOps = angular.module('trafficOps', [
         'ui.router',
         'ui.bootstrap',
         'app.templates',
-        'ui.router.stateHelper',
         'angular-jwt',
         'angular-loading-bar',
 
