@@ -135,22 +135,6 @@ $t->get_ok("/api/1.2/federations.json")->status_is(200)->or( sub { diag $t->tx->
 	->json_is( "/response/0/deliveryService", "test-ds1" )->json_is( "/response/0/mappings/0/cname", "cname1." )
 	->json_is( "/response/0/mappings/0/ttl", "86400" )->json_is( "/response/0/mappings/0/resolve4/0", "127.1.1.1/32" );
 
-$t->post_ok(
-	"/api/1.2/federations",
-	json => {
-		federations => [
-			{
-				deliveryService => "test-ds1",
-				mappings        => { resolve4 => ["127.1.1.1/99"] }
-			}
-		]
-	}
-	)->status_is(400)->or(
-	sub {
-		print STDOUT $t->tx->res->content->asset->{content};
-		diag $t->tx->res->content->asset->{content};
-	}
-	)->json_is( "/alerts/0/level/", "error" );
 ####### Update API ######################################################################
 $t->put_ok(
 	"/api/1.2/federations",
