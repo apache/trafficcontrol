@@ -5,7 +5,6 @@
 // angular and angular helpers
 require('angular');
 require('angular-animate');
-require('angular-cookies');
 require('angular-resource');
 require('angular-route');
 require('angular-sanitize');

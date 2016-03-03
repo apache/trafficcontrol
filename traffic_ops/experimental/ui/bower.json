@@ -5,7 +5,6 @@
     "dependencies": {
         "angular": "~1.4.0",
         "angular-animate": "~1.4.0",
-        "angular-cookies": "~1.4.0",
         "angular-resource": "~1.4.0",
         "angular-route": "~1.4.0",
         "angular-sanitize": "~1.4.0",
