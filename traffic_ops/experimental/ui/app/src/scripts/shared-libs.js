@@ -5,12 +5,10 @@
 // angular and angular helpers
 require('angular');
 require('angular-animate');
-require('angular-cookies');
 require('angular-resource');
 require('angular-route');
 require('angular-sanitize');
 require('angular-ui-router');
-require('statehelper');
 
 // angular jwt
 require('angular-jwt');
@@ -24,12 +22,7 @@ require('ui-bootstrap-tpls');
 
 // jquery
 require('jquery');
-require('jquery-ui');
 
 // misc
 require('es5-shim');
 require('json3');
-
-
-
-

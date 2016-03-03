@@ -13,18 +13,15 @@ module.exports = {
                                 'angular-animate/angular-animate.min.js',
                                 'angular-bootstrap/ui-bootstrap.min.js',
                                 'angular-bootstrap/ui-bootstrap-tpls.min.js',
-                                'angular-cookies/angular-cookies.min.js',
                                 'angular-jwt/dist/angular-jwt.min.js',
                                 'angular-loading-bar/build/loading-bar.min.js',
                                 'angular-resource/angular-resource.min.js',
                                 'angular-route/angular-route.min.js',
                                 'angular-sanitize/angular-sanitize.min.js',
                                 'angular-ui-router/release/angular-ui-router.min.js',
-                                'angular-ui-router.stateHelper/statehelper.min.js',
                                 'bootstrap-sass-official/assets/javascripts/bootstrap.min.js',
                                 'es5-shim/es5-shim.min.js',
                                 'jquery/jquery.min.js',
-                                'jquery-ui/ui/minified/jquery-ui.min.js',
                                 'json3/lib/json3.min.js'
                             ]
                     }
@@ -46,18 +43,15 @@ module.exports = {
                                 'angular-animate/angular-animate.js',
                                 'angular-bootstrap/ui-bootstrap.js',
                                 'angular-bootstrap/ui-bootstrap-tpls.js',
-                                'angular-cookies/angular-cookies.js',
                                 'angular-jwt/dist/angular-jwt.js',
                                 'angular-loading-bar/build/loading-bar.js',
                                 'angular-resource/angular-resource.js',
                                 'angular-route/angular-route.js',
                                 'angular-sanitize/angular-sanitize.js',
                                 'angular-ui-router/release/angular-ui-router.js',
-                                'angular-ui-router.stateHelper/statehelper.js',
                                 'bootstrap-sass-official/assets/javascripts/bootstrap.js',
                                 'es5-shim/es5-shim.js',
                                 'jquery/jquery.js',
-                                'jquery-ui/ui/jquery-ui.js',
                                 'json3/lib/json3.js'
                             ]
                     }

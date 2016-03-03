@@ -10,14 +10,12 @@ App.$inject = ['$urlRouterProvider'];
 var trafficOps = angular.module('trafficOps', [
         'config',
         'ngAnimate',
-        'ngCookies',
         'ngResource',
         'ngSanitize',
         'ngRoute',
         'ui.router',
         'ui.bootstrap',
         'app.templates',
-        'ui.router.stateHelper',
         'angular-jwt',
         'angular-loading-bar',
 
