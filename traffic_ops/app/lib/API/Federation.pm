@@ -399,15 +399,15 @@ sub add_federation_resolver {
 	foreach my $r ( @{$resolvers} ) {
 		for my $ip ($r) {
 			my $invalid_ip = $ip;
-			$ip = Net::CIDR::cidrvalidate($ip);
-			if ( !defined $ip ) {
+			my $cidr       = Net::CIDR::range2cidr($ip);
+			if ( !defined $cidr ) {
 				$response = "[ $invalid_ip ] is not a valid ip address.";
 				return ( ERROR, $response, @resolver_ips );
 			}
 
 			my $resolver = $self->db->resultset('FederationResolver')->find_or_create(
 				{
-					ip_address => $ip,
+					ip_address => $cidr,
 					type       => $self->db->resultset('Type')->search( { name => $type_name } )->get_column('id')->single()
 				}
 			);
