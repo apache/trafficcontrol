@@ -3,7 +3,6 @@ var TableUsersController = function(users, $scope, $location) {
     $scope.users = users.response;
 
     $scope.editUser = function(id) {
-        console.log('/administer/users/' + id);
         $location.url('/administer/users/' + id);
     };
 
