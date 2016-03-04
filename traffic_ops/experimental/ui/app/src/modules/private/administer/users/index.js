@@ -1,17 +1,14 @@
 module.exports = angular.module('trafficOps.private.administer.users', [])
+    .controller('UsersController', require('./UsersController'))
     .config(function($stateProvider, $urlRouterProvider) {
         $stateProvider
             .state('trafficOps.private.administer.users', {
                 url: '/users',
+                abstract: true,
                 views: {
                     administerContent: {
-                        templateUrl: 'common/modules/table/users/table.users.tpl.html',
-                        controller: 'TableUsersController',
-                        resolve: {
-                            users: function(userService, ENV) {
-                                return userService.getUsers(ENV.api['base_url'] + 'tm_user');
-                            }
-                        }
+                        templateUrl: 'modules/private/administer/users/users.tpl.html',
+                        controller: 'UsersController'
                     }
                 }
             })

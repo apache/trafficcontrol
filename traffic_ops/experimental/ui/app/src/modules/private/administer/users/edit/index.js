@@ -1,14 +1,14 @@
-module.exports = angular.module('trafficOps.private.administer.user', [])
-    .config(function($stateProvider, $urlRouterProvider, ENV) {
+module.exports = angular.module('trafficOps.private.administer.users.edit', [])
+    .config(function($stateProvider, $urlRouterProvider) {
         $stateProvider
-            .state('trafficOps.private.administer.user', {
-                url: '/users/{userId}',
+            .state('trafficOps.private.administer.users.edit', {
+                url: '/{userId}',
                 views: {
                     administerContent: {
                         templateUrl: 'common/modules/form/user/form.user.tpl.html',
                         controller: 'FormUserController',
                         resolve: {
-                            foo: function($stateParams, userService) {
+                            user: function($stateParams, userService) {
                                 return userService.getUser($stateParams.userId);
                             }
                         }

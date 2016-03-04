@@ -33,7 +33,8 @@ var trafficOps = angular.module('trafficOps', [
         // administer
         require('./modules/private/administer').name,
         require('./modules/private/administer/users').name,
-        require('./modules/private/administer/user').name,
+        require('./modules/private/administer/users/edit').name,
+        require('./modules/private/administer/users/list').name,
 
         // configure
         require('./modules/private/configure').name,
