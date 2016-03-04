@@ -3,7 +3,7 @@ module.exports = {
     port: 8080,
     proxyPort: 8009,
     api: {
-        url: 'http://localhost:3000/api/2.0/',
+        base_url: 'http://localhost:3000',
         key: ''
     },
     files: {

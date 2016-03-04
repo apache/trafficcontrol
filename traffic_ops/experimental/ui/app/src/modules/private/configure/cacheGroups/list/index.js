@@ -9,7 +9,7 @@ module.exports = angular.module('trafficOps.private.configure.cacheGroups.list',
                         controller: 'TableCacheGroupsController',
                         resolve: {
                             cacheGroups: function(cacheGroupService, ENV) {
-                                return cacheGroupService.getCacheGroups(ENV.api['base_url'] + 'cachegroup');
+                                return cacheGroupService.getCacheGroups(ENV.api['root'] + 'cachegroup');
                             }
                         }
                     }

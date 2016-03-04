@@ -9,7 +9,7 @@ module.exports = {
         constants: {
             ENV: {
                 api: {
-                    "base_url": "/api/" // this is only used to identify api calls. See conf/config.js to define api location.
+                    "root": "/api/2.0/" // api base_url is defined in server.js
                 }
             }
         }
@@ -18,7 +18,7 @@ module.exports = {
         constants: {
             ENV: {
                 api: {
-                    "base_url": "/api/" // this is only used to identify api calls. See conf/config.js to define api location.
+                    "root": "/api/2.0/" // api base_url is defined in server.js
                 }
             }
         }

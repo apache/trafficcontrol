@@ -5,7 +5,7 @@ var DeliveryServiceService = function($http, $q, httpService, ENV) {
     };
 
     this.getDeliveryService = function(dsId, ignoreLoadingBar) {
-        var promise = $http.get(ENV.api['base_url'] + "deliveryservice/" + dsId, { ignoreLoadingBar: ignoreLoadingBar })
+        var promise = $http.get(ENV.api['root'] + "deliveryservice/" + dsId, { ignoreLoadingBar: ignoreLoadingBar })
             .success(function(result) {
                 return result;
             })

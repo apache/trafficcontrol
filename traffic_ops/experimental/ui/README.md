@@ -27,7 +27,7 @@ An AngularJS client served from a lightweight Node.js web server. TO UI 2.0 was 
 1. Configure the Node.js web server to proxy api requests to the API URL
 
     - vim ./conf/config.js
-    - set api.url to http://place-where-api-exists.com/api/{version}/ or leave default value
+    - set api.base_url to http://api-domain.com or leave default value
     
 ##### Run
 
@@ -35,7 +35,7 @@ An AngularJS client served from a lightweight Node.js web server. TO UI 2.0 was 
 
     - grunt
 
-2. Head over to localhost:8080
+2. Head over to http://localhost:8080
 
 ##### Notes
 
