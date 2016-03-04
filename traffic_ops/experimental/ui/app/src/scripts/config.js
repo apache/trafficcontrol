@@ -2,6 +2,6 @@
 
  angular.module('config', [])
 
-.constant('ENV', {api:{base_url:'/api/2.0/'}})
+.constant('ENV', {api:{base_url:'/api/'}})
 
 ;
