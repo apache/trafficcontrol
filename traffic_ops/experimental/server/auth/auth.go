@@ -126,12 +126,19 @@ func GetLoginFunc(db *sqlx.DB) http.HandlerFunc {
 
 		encBytes := sha1.Sum([]byte(password))
 		encString := hex.EncodeToString(encBytes[:])
-		if err != nil || u.LocalPasswd.String != encString {
+		if err != nil {
 			ctx.Set(r, "user", nil)
-			log.Println("Invalid passwd")
+			log.Println("Invalid password")
 			http.Error(w, "Invalid password: "+err.Error(), http.StatusUnauthorized)
 			return
 		}
+		if u.LocalPasswd.String != encString {
+			ctx.Set(r, "user", nil)
+			log.Println("Invalid password")
+			http.Error(w, "Invalid password", http.StatusUnauthorized)
+			return
+		}
+
 		// Create the token
 		token := jwt.New(jwt.SigningMethodHS256)
 		// Set some claims
