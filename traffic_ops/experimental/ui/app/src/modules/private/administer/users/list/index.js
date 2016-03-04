@@ -9,7 +9,7 @@ module.exports = angular.module('trafficOps.private.administer.users.list', [])
                         controller: 'TableUsersController',
                         resolve: {
                             users: function(userService, ENV) {
-                                return userService.getUsers(ENV.api['base_url'] + 'tm_user');
+                                return userService.getUsers(ENV.api['root'] + 'tm_user');
                             }
                         }
                     }

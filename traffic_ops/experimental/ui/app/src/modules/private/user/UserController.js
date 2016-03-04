@@ -1,7 +1,7 @@
 var UserController = function($scope, $state, $uibModal, $timeout, userService, authService, userModel, ENV) {
 
     var updateUser = function(user, options) {
-        userService.updateCurrentUser(ENV.api['base_url'] + 'tm_user/' + userModel.userId, user)
+        userService.updateCurrentUser(ENV.api['root'] + 'tm_user/' + userModel.userId, user)
             .then(function() {
                 if (options.signout) {
                     authService.logout();

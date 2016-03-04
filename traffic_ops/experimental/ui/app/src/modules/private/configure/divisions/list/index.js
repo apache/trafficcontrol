@@ -9,7 +9,7 @@ module.exports = angular.module('trafficOps.private.configure.divisions.list', [
                         controller: 'TableDivisionsController',
                         resolve: {
                             divisions: function(divisionService, ENV) {
-                                return divisionService.getDivisions(ENV.api['base_url'] + 'division');
+                                return divisionService.getDivisions(ENV.api['root'] + 'division');
                             }
                         }
                     }

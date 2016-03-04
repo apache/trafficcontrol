@@ -9,7 +9,7 @@ module.exports = angular.module('trafficOps.private.configure.deliveryServices.l
                         controller: 'TableDeliveryServicesController',
                         resolve: {
                             deliveryServices: function(deliveryServiceService, ENV) {
-                                return deliveryServiceService.getDeliveryServices(ENV.api['base_url'] + 'deliveryservice');
+                                return deliveryServiceService.getDeliveryServices(ENV.api['root'] + 'deliveryservice');
                             }
                         }
                     }

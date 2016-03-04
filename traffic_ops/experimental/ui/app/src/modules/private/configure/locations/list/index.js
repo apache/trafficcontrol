@@ -9,7 +9,7 @@ module.exports = angular.module('trafficOps.private.configure.locations.list', [
                         controller: 'TableLocationsController',
                         resolve: {
                             locations: function(locationService, ENV) {
-                                return locationService.getLocations(ENV.api['base_url'] + 'phys_location');
+                                return locationService.getLocations(ENV.api['root'] + 'phys_location');
                             }
                         }
                     }

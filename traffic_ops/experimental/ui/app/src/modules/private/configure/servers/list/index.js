@@ -9,7 +9,7 @@ module.exports = angular.module('trafficOps.private.configure.servers.list', [])
                         controller: 'TableServersController',
                         resolve: {
                             servers: function(serverService, ENV) {
-                                return serverService.getServers(ENV.api['base_url'] + 'server');
+                                return serverService.getServers(ENV.api['root'] + 'server');
                             }
                         }
                     }

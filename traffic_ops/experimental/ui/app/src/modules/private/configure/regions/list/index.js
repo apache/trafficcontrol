@@ -9,7 +9,7 @@ module.exports = angular.module('trafficOps.private.configure.regions.list', [])
                         controller: 'TableRegionsController',
                         resolve: {
                             regions: function(regionService, ENV) {
-                                return regionService.getRegions(ENV.api['base_url'] + 'region');
+                                return regionService.getRegions(ENV.api['root'] + 'region');
                             }
                         }
                     }
