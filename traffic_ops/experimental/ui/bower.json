@@ -8,7 +8,7 @@
         "angular-resource": "1.5.0",
         "angular-route": "1.5.0",
         "angular-sanitize": "1.5.0",
-        "angular-bootstrap": "0.14.0",
+        "angular-bootstrap": "0.14.3",
         "angular-loading-bar": "0.8.0",
         "angular-ui-router": "0.2.18",
         "angular-jwt": "0.0.9",
