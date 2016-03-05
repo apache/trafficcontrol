@@ -1,48 +1,6 @@
 //  Started with https://github.com/nf/webfront/blob/master/main.go
 // by Andrew Gerrand <adg@golang.org>
 
-/*
-Copyright 2011 Google Inc.
-
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-     http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
-*/
-
-/*
-webfront is an HTTP server and reverse proxy.
-
-It reads a JSON-formatted rule file like this:
-
-	[
-		{"Host": "example.com", "Serve": "/var/www"},
-		{"Host": "example.org", "Forward": "localhost:8080"}
-	]
-
-For all requests to the host example.com (or any name ending in
-".example.com") it serves files from the /var/www directory.
-
-For requests to example.org, it forwards the request to the HTTP
-server listening on localhost port 8080.
-
-Usage of webfront:
-  -http=":80": HTTP listen address
-  -https="": HTTPS listen address (leave empty to disable)
-  -https_cert="": HTTPS certificate file
-  -https_key="": HTTPS key file
-  -poll=10s: file poll interval
-  -rules="": rule definition file
-
-webfront was written by Andrew Gerrand <adg@golang.org>
-*/
 package main
 
 import (
@@ -50,18 +8,17 @@ import (
 	"encoding/json"
 	"flag"
 	"log"
-	"net"
+	// "net"
 	"net/http"
 	"net/http/httputil"
 	"os"
-	"strconv"
+	// "strconv"
 	"strings"
 	"sync"
 	"time"
 )
 
 var (
-	httpAddr     = flag.String("http", ":80", "HTTP listen address")
 	httpsAddr    = flag.String("https", "", "HTTPS listen address (leave empty to disable)")
 	certFile     = flag.String("https_cert", "", "HTTPS certificate file")
 	keyFile      = flag.String("https_key", "", "HTTPS key file")
@@ -75,40 +32,14 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	// overrided the default so we can use self-signed certs on our microservices
+
+	// override the default so we can use self-signed certs on our microservices
 	http.DefaultTransport.(*http.Transport).TLSClientConfig = &tls.Config{InsecureSkipVerify: true}
-	httpFD, _ := strconv.Atoi(os.Getenv("RUNSIT_PORTFD_http"))
-	httpsFD, _ := strconv.Atoi(os.Getenv("RUNSIT_PORTFD_https"))
-	if httpsFD >= 3 || *httpsAddr != "" {
-		cert, err := tls.LoadX509KeyPair(*certFile, *keyFile)
-		if err != nil {
-			log.Fatal(err)
-		}
-		c := &tls.Config{Certificates: []tls.Certificate{cert}}
-		l := tls.NewListener(listen(httpsFD, *httpsAddr), c)
-		go func() {
-			log.Fatal(http.Serve(l, s))
-		}()
-	}
-	log.Fatal(http.Serve(listen(httpFD, *httpAddr), s))
+
+	http.ListenAndServeTLS(*httpsAddr, *certFile, *keyFile, s)
 }
 
-func listen(fd int, addr string) net.Listener {
-	var l net.Listener
-	var err error
-	if fd >= 3 {
-		l, err = net.FileListener(os.NewFile(uintptr(fd), "http"))
-	} else {
-		l, err = net.Listen("tcp", addr)
-	}
-	if err != nil {
-		log.Fatal(err)
-	}
-	return l
-}
-
-// Server implements an http.Handler that acts as either a reverse proxy or
-// a simple file server, as determined by a rule set.
+// Server implements an http.Handler that acts asither a reverse proxy
 type Server struct {
 	mu    sync.RWMutex // guards the fields below
 	last  time.Time
@@ -158,8 +89,9 @@ func (s *Server) handler(req *http.Request) http.Handler {
 		h = h[:i]
 	}
 	for _, r := range s.rules {
-		log.Println(p, "==", r.Path)
+		// log.Println(p, "==", r.Path)
 		if strings.HasPrefix(p, r.Path) {
+			// Todo JvD Auth check goes here??
 			return r.handler
 		}
 	}
@@ -229,7 +161,6 @@ func makeHandler(r *Rule) http.Handler {
 				req.URL.Scheme = "https"
 				req.URL.Host = h
 				req.URL.Path = "/boo1" // TODO JvD - regex to change path here
-				// Todo JvD Auth check goes here??
 			},
 		}
 	}
