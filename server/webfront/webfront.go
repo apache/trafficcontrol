@@ -75,6 +75,8 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
+	// overrided the default so we can use self-signed certs on our microservices
+	http.DefaultTransport.(*http.Transport).TLSClientConfig = &tls.Config{InsecureSkipVerify: true}
 	httpFD, _ := strconv.Atoi(os.Getenv("RUNSIT_PORTFD_http"))
 	httpsFD, _ := strconv.Atoi(os.Getenv("RUNSIT_PORTFD_https"))
 	if httpsFD >= 3 || *httpsAddr != "" {
@@ -116,8 +118,9 @@ type Server struct {
 // Rule represents a rule in a configuration file.
 type Rule struct {
 	Host    string // to match against request Host header
-	Forward string // non-empty if reverse proxy
-	Serve   string // non-empty if file server
+	Path    string // to match against a path (start)
+	Forward string // reverse proxy map-to
+	// Serve   string // non-empty if file server
 
 	handler http.Handler
 }
@@ -149,15 +152,18 @@ func (s *Server) handler(req *http.Request) http.Handler {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
 	h := req.Host
+	p := req.URL.Path
 	// Some clients include a port in the request host; strip it.
 	if i := strings.Index(h, ":"); i >= 0 {
 		h = h[:i]
 	}
 	for _, r := range s.rules {
-		if h == r.Host || strings.HasSuffix(h, "."+r.Host) {
+		log.Println(p, "==", r.Path)
+		if strings.HasPrefix(p, r.Path) {
 			return r.handler
 		}
 	}
+	log.Println("returning nil")
 	return nil
 }
 
@@ -220,13 +226,12 @@ func makeHandler(r *Rule) http.Handler {
 	if h := r.Forward; h != "" {
 		return &httputil.ReverseProxy{
 			Director: func(req *http.Request) {
-				req.URL.Scheme = "http"
+				req.URL.Scheme = "https"
 				req.URL.Host = h
+				req.URL.Path = "/boo1" // TODO JvD - regex to change path here
+				// Todo JvD Auth check goes here??
 			},
 		}
-	}
-	if d := r.Serve; d != "" {
-		return http.FileServer(http.Dir(d))
 	}
 	return nil
 }
