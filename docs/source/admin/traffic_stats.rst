@@ -110,6 +110,7 @@ Configuration
 	::
 
 				ProxyPass /dashboard http://localhost:3000/dashboard
+				ProxyPass /dashboard-solo http://localhost:3000/dashboard-solo
 				ProxyPass /css http://localhost:3000/css
 				ProxyPass /app http://localhost:3000/app
 				ProxyPass /api http://localhost:3000/api
@@ -157,13 +158,13 @@ Configuration
 	+---------------------------+------------------------------------------------------------------------------------------------+
 	| server_graph_url          | https://<grafanaHost>/dashboard/script/traffic_ops_server.js?which=                            |
 	+---------------------------+------------------------------------------------------------------------------------------------+
-	| visual_status_panel_1     | https://<grafanaHost>/dashboard/solo/db/cdn-stats?panelId=2&fullscreen&from=now-24h&to=now-60s |
+	| visual_status_panel_1     | https://<grafanaHost>/dashboard-solo/db/cdn-stats?panelId=2&fullscreen&from=now-24h&to=now-60s |
 	+---------------------------+------------------------------------------------------------------------------------------------+
-	| visual_status_panel_2     | https://<grafanaHost>/dashboard/solo/db/cdn-stats?panelId=1&fullscreen&from=now-24h&to=now-60s |
+	| visual_status_panel_2     | https://<grafanaHost>/dashboard-solo/db/cdn-stats?panelId=1&fullscreen&from=now-24h&to=now-60s |
 	+---------------------------+------------------------------------------------------------------------------------------------+
-	| daily_bw_url              | https://<grafanaHost>/dashboard/solo/db/daily-summary?panelId=1&fullscreen&from=now-3y&to=now  |
+	| daily_bw_url              | https://<grafanaHost>/dashboard-solo/db/daily-summary?panelId=1&fullscreen&from=now-3y&to=now  |
 	+---------------------------+------------------------------------------------------------------------------------------------+
-	| daily_served_url          | https://<grafanaHost>/dashboard/solo/db/daily-summary?panelId=2&fullscreen&from=now-3y&to=now  |
+	| daily_served_url          | https://<grafanaHost>/dashboard-solo/db/daily-summary?panelId=2&fullscreen&from=now-3y&to=now  |
 	+---------------------------+------------------------------------------------------------------------------------------------+
 
 InfluxDb Tools

@@ -55,6 +55,8 @@ if(!_.isUndefined(ARGS.which)) {
 
 // Set a title
 dashboard.title = which;
+//set refresh interval
+dashboard.refresh = "30s";
 
 {
     dashboard.rows.push( {
@@ -269,11 +271,11 @@ dashboard.title = which;
           "renderer": "flot",
           "seriesOverrides": [],
           "span": 12,
-          "stack": false,
+          "stack": true,
           "steppedLine": false,
           "targets": [
             {
-              "query": "SELECT mean(value)*1000 FROM \"monthly\".\"kbps.ds.1min\" WHERE deliveryservice='" + which + "' and cachegroup != 'total' and $timeFilter GROUP BY time(60s), cachegroup",
+              "query": "SELECT mean(value)*1000 FROM \"monthly\".\"kbps.cg.1min\" WHERE deliveryservice='" + which + "' and cachegroup != 'total' and $timeFilter GROUP BY time(60s), cachegroup",
               "rawQuery": true,
               "alias": "$tag_cachegroup"
             }
@@ -282,19 +284,19 @@ dashboard.title = which;
           "timeShift": null,
           "title": "bandwidth by cachegroup",
           "tooltip": {
-            "shared": false,
-            "value_type": "cumulative"
+            "shared": true,
+            "value_type": "individual"
           },
           "type": "graph",
           "x-axis": true,
           "y-axis": true,
           "y_formats": [
-            "bps",
-            "short"
+            "bps"
           ]
         }
       ],
       "title": "bwByCg"
-  )};
+  }
+  );
 }
 return dashboard;

@@ -56,6 +56,8 @@ if(!_.isUndefined(ARGS.which)) {
 
 // Set a title
 dashboard.title = which;
+//set refresh interval
+dashboard.refresh = "30s";
 
 {
   dashboard.rows.push( {
@@ -108,7 +110,7 @@ dashboard.title = which;
           "nullPointMode": "connected",
           "steppedLine": false,
           "tooltip": {
-            "value_type": "cumulative",
+            "value_type": "individual",
             "shared": true
           },
           "timeFrom": null,

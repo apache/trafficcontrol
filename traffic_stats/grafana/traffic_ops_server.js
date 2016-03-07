@@ -55,6 +55,8 @@ if(!_.isUndefined(ARGS.which)) {
 
 // Set a title
 dashboard.title = which;
+//set refresh interval
+dashboard.refresh = "30s";
 
 
 {
@@ -140,13 +142,12 @@ dashboard.title = which;
           "span": 12,
           "editable": true,
           "type": "graph",
-          "id": 1,
+          "id": 2,
           "datasource": "cache_stats",
           "renderer": "flot",
           "x-axis": true,
           "y-axis": true,
           "y_formats": [
-            "bps",
             "short"
           ],
           "grid": {
