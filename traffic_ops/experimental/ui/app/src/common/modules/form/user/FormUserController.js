@@ -11,6 +11,14 @@ var FormUserController = function(user, $scope, $timeout, userService) {
     };
     $scope.resetUser();
 
+    $scope.hasError = function(input) {
+        return !input.$focused && input.$dirty && input.$invalid;
+    };
+
+    $scope.hasPropertyError = function(input, property) {
+        return !input.$focused && input.$dirty && input.$error[property];
+    };
+
 };
 
 FormUserController.$inject = ['user', '$scope', '$timeout', 'userService'];

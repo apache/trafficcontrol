@@ -84,6 +84,9 @@ var trafficOps = angular.module('trafficOps', [
         require('./common/models').name,
         require('./common/api').name,
 
+        // common directives
+        require('./common/directives/match').name,
+
         // common services
         require('./common/service/application').name,
 
