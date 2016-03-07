@@ -162,7 +162,8 @@ Git Repo       : $git_remote_url
 Version        : $version
 Branch         : $new_branch
 Next Tag       : $release_no
-Git Hash       : $git_short_hash
+Git Short Hash : $git_short_hash
+Next Version   : $next_version
 INFO
 
 	if ( $release_no !~ /RC/ ) {
