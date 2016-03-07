@@ -44,7 +44,7 @@ my %definition_for = (
 			postal_code          => '80122',
 			country              => 'United States',
 			token                => '',
-			registration_sent    => '0000-00-00 00:00:00',
+			registration_sent    => '1999-01-01 00:00:00',
 		},
 	},
 	portal => {
@@ -68,7 +68,7 @@ my %definition_for = (
 			postal_code          => '80122',
 			country              => 'United States',
 			token                => '',
-			registration_sent    => '0000-00-00 00:00:00',
+			registration_sent    => '1999-01-01 00:00:00',
 		},
 	},
 	codebig => {
@@ -92,7 +92,7 @@ my %definition_for = (
 			postal_code          => '80124',
 			country              => 'United States',
 			token                => '',
-			registration_sent    => '0000-00-00 00:00:00',
+			registration_sent    => '1999-01-01 00:00:00',
 		},
 	},
 	migrations => {
@@ -116,7 +116,7 @@ my %definition_for = (
 			postal_code          => '80122',
 			country              => 'United States',
 			token                => '',
-			registration_sent    => '0000-00-00 00:00:00',
+			registration_sent    => '1999-01-01 00:00:00',
 		},
 	},
 	federation => {
@@ -140,7 +140,7 @@ my %definition_for = (
 			postal_code          => '80123',
 			country              => 'United States',
 			token                => '',
-			registration_sent    => '0000-00-00 00:00:00',
+			registration_sent    => '1999-01-01 00:00:00',
 		},
 	},
 );

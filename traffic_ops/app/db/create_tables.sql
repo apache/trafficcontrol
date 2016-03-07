@@ -617,7 +617,7 @@ CREATE TABLE `tm_user` (
   `country` varchar(256) DEFAULT NULL,
   `local_user` tinyint(1) NOT NULL DEFAULT '0',
   `token` varchar(50) DEFAULT NULL,
-  `registration_sent` timestamp NOT NULL DEFAULT '0000-00-00 00:00:00',
+  `registration_sent` timestamp NOT NULL DEFAULT '1999-01-01 00:00:00',
   PRIMARY KEY (`id`),
   UNIQUE KEY `username_UNIQUE` (`username`),
   KEY `fk_user_1` (`role`),
