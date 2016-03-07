@@ -1,7 +1,11 @@
-var FormUserController = function(user, $scope, $timeout, userService) {
+var FormUserController = function(user, $scope, $timeout, userService, ENV) {
 
-    $scope.updateUser = function(user) {
-        userService.updateCurrentUser(user);
+    var updateUser = function(user) {
+        userService.updateUser(ENV.api['root'] + 'tm_user/' + user.id, user);
+    };
+
+    $scope.confirmUpdate = function(user, usernameField) {
+        updateUser(user);
     };
 
     $scope.resetUser = function() {
@@ -21,5 +25,5 @@ var FormUserController = function(user, $scope, $timeout, userService) {
 
 };
 
-FormUserController.$inject = ['user', '$scope', '$timeout', 'userService'];
+FormUserController.$inject = ['user', '$scope', '$timeout', 'userService', 'ENV'];
 module.exports = FormUserController;

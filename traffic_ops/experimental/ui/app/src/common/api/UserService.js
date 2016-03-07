@@ -8,7 +8,7 @@ var UserService = function($http, $state, $q, $location, authService, httpServic
     };
 
     this.updateCurrentUser = function(endpoint, user) {
-        return httpService.post(endpoint, { user: user })
+        return httpService.put(endpoint, { user: user })
             .then(
                 function(result) {
                     userModel.setUser(user);
@@ -30,7 +30,7 @@ var UserService = function($http, $state, $q, $location, authService, httpServic
     };
 
     this.updateUser = function(endpoint, user) {
-        return httpService.post(endpoint, { user: user })
+        return httpService.put(endpoint, { user: user })
             .then(
                 function(result) {
                     messageModel.setMessages(result.alerts, false);
