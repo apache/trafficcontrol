@@ -20,11 +20,20 @@ General
 Who is using Traffic Control?
 =============================
 	`Comcast Cable <http://www.comcast.com/>`_
-		Comcast is the original developer or Traffic Control and is using it for all it's video delivery to so-called 'second screen applications' (PCs, tablets, phones), but also for delivering images and software to it's X1 platform, and other applications. The Traffic Control CDN at Comcast serves more than a peta byte of content a day.
+		Comcast is the original developer or Traffic Control and is using it for all it's video delivery to so-called 'second screen applications' (PCs, tablets, phones), but also for delivering images and software to it's X1 platform, and other applications. The Traffic Control CDN at Comcast serves more than 4 peta bytes of content a day.
 
 	`Cox Communications <http://www.cox.com/>`_
-		.
+		
+	`Cisco <http://www.cisco.com/>`_
+		Cisco has a product called `Open Media Distribution <http://www.cisco.com/c/en/us/products/video/open-media-distribution/index.html>`_ that is based on Traffic Control. 
 
+	`Concurrent <https://www.ccur.com/>`_ 
+		Concurrent has a product that uses Traffic Control, see their `github page <https://github.com/concurrentlabs/laguna>`_ for more info.
+
+How do I get help with Traffic Control?
+=======================================
+	Hop on to our Slack Channel by registering `here <https://traffic-control-cdn.slack.com/signup>`_, or send a question to our google forum `here <https://groups.google.com/forum/#!forum/traffic_control>`_.
+	
 What is Rascal?
 ===============
 	Rascal was the original name for Traffic Monitor. You will sometimes still see this name in the source, or in older documents.
@@ -39,4 +48,4 @@ What is Twelve Monkeys?
 
 What license is Traffic Control released under?
 ===============================================
-	See the `LICENSE file<https://github.com/Comcast/traffic_control/blob/master/LICENSE>`_
+	See the `LICENSE file <https://github.com/Comcast/traffic_control/blob/master/LICENSE>`_
