@@ -1,0 +1,18 @@
+{
+    "parameters": [
+        {
+            "config_file": "CRConfig.json",
+            "name": "domain_name",
+            "value": "{{.Domain}}"
+        },
+        {
+            "config_file": "parent.config",
+            "name": "weight",
+            "value": "1.0"
+        }
+    ],
+    "profile": {
+        "description": "Multi site origin profile 1",
+        "name": "ORG1_CDN1"
+    }
+}
