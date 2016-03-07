@@ -6,7 +6,7 @@ module.exports = angular.module('trafficOps.private.user.edit', [])
                 url: '',
                 views: {
                     userContent: {
-                        templateUrl: 'modules/private/user/edit/user.edit.tpl.html',
+                        templateUrl: 'common/modules/form/user/form.user.tpl.html',
                         controller: 'UserEditController'
                     }
                 }
@@ -14,3 +14,4 @@ module.exports = angular.module('trafficOps.private.user.edit', [])
         ;
         $urlRouterProvider.otherwise('/');
     });
+
