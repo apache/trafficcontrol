@@ -4,12 +4,12 @@ module.exports = angular.module('trafficOps.private.administer.users.edit', [])
             .state('trafficOps.private.administer.users.edit', {
                 url: '/{userId}',
                 views: {
-                    administerContent: {
+                    usersContent: {
                         templateUrl: 'common/modules/form/user/form.user.tpl.html',
                         controller: 'FormUserController',
                         resolve: {
-                            user: function($stateParams, userService) {
-                                return userService.getUser($stateParams.userId);
+                            user: function($stateParams, userService, ENV) {
+                                return userService.getUser(ENV.api['root'] + 'tm_user/' + $stateParams.userId);
                             }
                         }
                     }
