@@ -20,6 +20,9 @@ require('loading-bar');
 require('ui-bootstrap');
 require('ui-bootstrap-tpls');
 
+// restangular
+require('restangular');
+
 // jquery
 require('jquery');
 

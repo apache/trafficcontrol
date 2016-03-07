@@ -15,6 +15,7 @@ var trafficOps = angular.module('trafficOps', [
         'ngRoute',
         'ui.router',
         'ui.bootstrap',
+        'restangular',
         'app.templates',
         'angular-jwt',
         'angular-loading-bar',
@@ -95,7 +96,17 @@ var trafficOps = angular.module('trafficOps', [
 
     ], App)
 
-        .config(function($stateProvider, $logProvider, $controllerProvider) {
+        .config(function($stateProvider, $logProvider, $controllerProvider, RestangularProvider, ENV) {
+
+            RestangularProvider.setBaseUrl(ENV.api['root']);
+
+            RestangularProvider.setResponseInterceptor(function(data, operation, what) {
+                if (operation == 'getList') {
+                    return data.response;
+                }
+                return data.response[0];
+            });
+
             $controllerProvider.allowGlobals();
             $logProvider.debugEnabled(true);
             $stateProvider

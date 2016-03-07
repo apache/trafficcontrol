@@ -16,6 +16,7 @@
         "es5-shim": "4.5.6",
         "font-awesome": "4.5.0",
         "jquery": "2.0.0",
-        "json3": "3.3.2"
+        "json3": "3.3.2",
+        "restangular": "1.5.2"
     }
 }
