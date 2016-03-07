@@ -19,3 +19,4 @@ Development
 
 How can I become involved?
 ==========================
+	See our `CONTRIBUTING <https://github.com/Comcast/traffic_control/blob/master/CONTRIBUTING.md>`_ page.
