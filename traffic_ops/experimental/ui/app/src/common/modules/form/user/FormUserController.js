@@ -1,19 +1,14 @@
-var FormUserController = function(user, $scope, $timeout, userService, ENV) {
+var FormUserController = function(user, $scope, userService) {
 
     var updateUser = function(user) {
-        userService.updateUser(ENV.api['root'] + 'tm_user/' + user.id, user);
+        userService.updateUser(user);
     };
+
+    $scope.userData = user;
 
     $scope.confirmUpdate = function(user, usernameField) {
         updateUser(user);
     };
-
-    $scope.resetUser = function() {
-        $timeout(function() {
-            $scope.userData = angular.copy(user.response[0]);
-        });
-    };
-    $scope.resetUser();
 
     $scope.hasError = function(input) {
         return !input.$focused && input.$dirty && input.$invalid;
@@ -25,5 +20,5 @@ var FormUserController = function(user, $scope, $timeout, userService, ENV) {
 
 };
 
-FormUserController.$inject = ['user', '$scope', '$timeout', 'userService', 'ENV'];
+FormUserController.$inject = ['user', '$scope', 'userService'];
 module.exports = FormUserController;
