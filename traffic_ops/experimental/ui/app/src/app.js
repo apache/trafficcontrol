@@ -101,10 +101,14 @@ var trafficOps = angular.module('trafficOps', [
             RestangularProvider.setBaseUrl(ENV.api['root']);
 
             RestangularProvider.setResponseInterceptor(function(data, operation, what) {
-                if (operation == 'getList') {
-                    return data.response;
+                if (angular.isDefined(data.response)) { // todo: this should not be needed. need better solution.
+                    if (operation == 'getList') {
+                        return data.response;
+                    }
+                    return data.response[0];
+                } else {
+                    return data;
                 }
-                return data.response[0];
             });
 
             $controllerProvider.allowGlobals();
