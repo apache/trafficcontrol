@@ -23,29 +23,63 @@
 	<import resource="classpath:/applicationProperties.xml" />
 
 	<context:component-scan base-package="${geoservice.package:com.comcast.cdn.traffic_control.traffic_router.core.loc}" />
+
+	<bean id="deployDir" class="java.io.File">
+		<constructor-arg>
+			<value>$[deploy.dir:/opt/traffic_router]</value>
+		</constructor-arg>
+	</bean>
+
+	<bean id="databasesDir" class="java.io.File">
+		<constructor-arg>
+			<ref bean="deployDir"/>
+		</constructor-arg>
+		<constructor-arg>
+			<value>db</value>
+		</constructor-arg>
+	</bean>
+
+	<bean id="propertiesDir" class="java.io.File">
+		<constructor-arg>
+			<ref bean="deployDir"/>
+		</constructor-arg>
+		<constructor-arg>
+			<value>conf</value>
+		</constructor-arg>
+	</bean>
+
+	<bean id="autoZonesDir" class="java.io.File">
+		<constructor-arg>
+			<ref bean="deployDir"/>
+		</constructor-arg>
+		<constructor-arg>
+			<value>$[dns.zones.dir:/var/auto-zones]</value>
+		</constructor-arg>
+	</bean>
+
 	<bean id="statTracker" class="com.comcast.cdn.traffic_control.traffic_router.core.router.StatTracker">
-		<property name="dnsRoutingName" value="$[dns.routing.name]" />
-		<property name="httpRoutingName" value="$[http.routing.name]" />
+		<property name="dnsRoutingName" value="$[dns.routing.name:edge]" />
+		<property name="httpRoutingName" value="$[http.routing.name:tr]" />
 	</bean>
 
 	<bean name="staticZoneManagerZoneDirectoryInitializer" class="org.springframework.beans.factory.config.MethodInvokingFactoryBean">
 		<property name="staticMethod" value="com.comcast.cdn.traffic_control.traffic_router.core.dns.ZoneManager.setZoneDirectory"/>
 		<property name="arguments">
-			<list><value>$[dns.zones.dir]</value></list>
+			<list><ref bean="autoZonesDir"/></list>
 		</property>
 	</bean>
 
 	<bean name="staticZoneManagerHttpRoutingNameInitializer" class="org.springframework.beans.factory.config.MethodInvokingFactoryBean">
 		<property name="staticMethod" value="com.comcast.cdn.traffic_control.traffic_router.core.dns.ZoneManager.setHttpRoutingName"/>
 		<property name="arguments">
-			<list><value>$[http.routing.name]</value></list>
+			<list><value>$[http.routing.name:tr]</value></list>
 		</property>
 	</bean>
 
 	<bean name="staticZoneManagerDnsRoutingNameInitializer" class="org.springframework.beans.factory.config.MethodInvokingFactoryBean">
 		<property name="staticMethod" value="com.comcast.cdn.traffic_control.traffic_router.core.dns.ZoneManager.setDnsRoutingName"/>
 		<property name="arguments">
-			<list><value>$[dns.routing.name]</value></list>
+			<list><value>$[dns.routing.name:edge]</value></list>
 		</property>
 	</bean>
 
@@ -77,8 +111,8 @@
 
 	<bean id="federationsWatcher" class="com.comcast.cdn.traffic_control.traffic_router.core.loc.FederationsWatcher" init-method="init">
 		<property name="executorService" ref="ScheduledExecutorService" />
-		<property name="databaseLocation" value="$[cache.federations.database]" />
-		<property name="pollingInterval" value="$[cache.federations.database.refresh.period]" />
+		<property name="databaseLocation" value="$[cache.federations.database:federations.json]" />
+		<property name="pollingInterval" value="$[cache.federations.database.refresh.period:300000]" />
 		<property name="trafficOpsUtils" ref="trafficOpsUtils" />
 		<property name="trafficRouterManager" ref="trafficRouterManager" />
 		<property name="federationRegistry" ref="federationsRegistry" />
@@ -100,11 +134,11 @@
 		<property name="password" value="$[traffic_ops.password]" />
 	</bean>
 
-	<bean id="geolocationDatabaseUpdater" class="com.comcast.cdn.traffic_control.traffic_router.core.loc.GeolocationDatabaseUpdater"
-		init-method="init">
-		<property name="databaseLocation" value="$[cache.geolocation.database]" />
-		<property name="pollingInterval" value="$[cache.geolocation.database.refresh.period]" />
-		<property name="untarDataFile" value="$[cache.geolocation.database.tarred]"/>
+	<bean id="geolocationDatabaseUpdater" class="com.comcast.cdn.traffic_control.traffic_router.core.loc.GeolocationDatabaseUpdater" init-method="init">
+		<property name="databasesDirectoryPath" ref="databasesDir"/>
+		<property name="databaseLocation" value="$[cache.geolocation.database:GeoLite2-City.mmdb]" />
+		<property name="pollingInterval" value="$[cache.geolocation.database.refresh.period:86400000]" />
+		<property name="untarDataFile" value="$[cache.geolocation.database.tarred:false]"/>
 		<property name="geoLocation" ref="GeolocationService" />
 		<property name="executorService" ref="ScheduledExecutorService" />
 		<property name="trafficRouterManager" ref="trafficRouterManager" />
@@ -113,16 +147,16 @@
 	<bean id="networkUpdater" class="com.comcast.cdn.traffic_control.traffic_router.core.loc.NetworkUpdater"
 		init-method="init">
 		<property name="executorService" ref="ScheduledExecutorService" />
-		<property name="databaseLocation" value="$[cache.czmap.database]" />
-		<property name="pollingInterval" value="$[cache.czmap.database.refresh.period]" />
+		<property name="databaseLocation" value="$[cache.czmap.database:czmap.json]" />
+		<property name="pollingInterval" value="$[cache.czmap.database.refresh.period:10800000]" />
 		<property name="trafficRouterManager" ref="trafficRouterManager" />
 	</bean>
 
 	<bean id="regionalGeoUpdater" class="com.comcast.cdn.traffic_control.traffic_router.core.loc.RegionalGeoUpdater"
 		init-method="init">
 		<property name="executorService" ref="ScheduledExecutorService" />
-		<property name="databaseLocation" value="$[cache.regionalgeo.database]" />
-		<property name="pollingInterval" value="$[cache.regionalgeo.database.refresh.period]" />
+		<property name="databaseLocation" value="$[cache.regionalgeo.database:regional_geoblock.json]" />
+		<property name="pollingInterval" value="$[cache.regionalgeo.database.refresh.period:10800000]" />
 		<property name="trafficRouterManager" ref="trafficRouterManager" />
 	</bean>
 
@@ -134,12 +168,14 @@
 		<property name="configUrl" value="http://[host]/publish/CrConfig?json" />
 		<property name="configHandler" ref="ConfigHandler" />
 		<property name="monitorHosts" value="$[traffic_monitor.bootstrap.hosts]" />
-		<property name="monitorProperties" value="$[traffic_monitor.properties]" />
-		<property name="statusFile" value="$[cache.health.json]" />
-		<property name="statusRefreshPeriod" value="$[cache.health.json.refresh.period]" />
-		<property name="configFile" value="$[cache.config.json]" />
-		<property name="configRefreshPeriod" value="$[cache.config.json.refresh.period]" />
+		<property name="monitorProperties" value="$[traffic_monitor.properties:traffic_monitor.properties]" />
+		<property name="statusFile" value="$[cache.health.json:health.json]" />
+		<property name="statusRefreshPeriod" value="$[cache.health.json.refresh.period:1000]" />
+		<property name="configFile" value="$[cache.config.json:cr-config.json]" />
+		<property name="configRefreshPeriod" value="$[cache.config.json.refresh.period:60000]" />
 		<property name="trafficRouterManager" ref="trafficRouterManager" />
+		<property name="databasesDirectory" ref="databasesDir" />
+		<property name="propertiesDirectory" ref="propertiesDir" />
 	</bean>
 
 	<bean id="federationExporter" class="com.comcast.cdn.traffic_control.traffic_router.core.util.FederationExporter">
@@ -198,12 +234,12 @@
 
 	<bean id="RequestHandlerExecutorService" class="java.util.concurrent.Executors"
 		factory-method="newFixedThreadPool">
-		<constructor-arg index="0" value="$[dns.max-threads]" />
+		<constructor-arg index="0" value="$[dns.max-threads:1000]" />
 	</bean>
 
 	<bean id="ServerSocket" class="java.net.ServerSocket">
-		<constructor-arg index="0" value="$[dns.tcp.port]" />
-		<constructor-arg index="1" value="$[dns.tcp.backlog]" />
+		<constructor-arg index="0" value="$[dns.tcp.port:53]" />
+		<constructor-arg index="1" value="$[dns.tcp.backlog:0]" />
 	</bean>
 
 	<bean id="TCP" class="com.comcast.cdn.traffic_control.traffic_router.core.dns.protocol.TCP">
@@ -213,7 +249,7 @@
 	</bean>
 
 	<bean id="DatagramSocket" class="java.net.DatagramSocket">
-		<constructor-arg index="0" value="$[dns.udp.port]" />
+		<constructor-arg index="0" value="$[dns.udp.port:53]" />
 	</bean>
 
 	<bean id="UDP" class="com.comcast.cdn.traffic_control.traffic_router.core.dns.protocol.UDP">

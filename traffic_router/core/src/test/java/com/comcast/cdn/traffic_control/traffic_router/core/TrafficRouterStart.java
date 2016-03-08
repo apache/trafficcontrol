@@ -16,17 +16,40 @@
 
 package com.comcast.cdn.traffic_control.traffic_router.core;
 
+import org.apache.commons.logging.Log;
+import org.apache.log4j.ConsoleAppender;
+import org.apache.log4j.Level;
+import org.apache.log4j.LogManager;
+import org.apache.log4j.Logger;
+import org.apache.log4j.PatternLayout;
+import org.apache.log4j.Priority;
 import org.apache.log4j.PropertyConfigurator;
 import org.apache.wicket.util.time.Duration;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.bio.SocketConnector;
 import org.eclipse.jetty.webapp.WebAppContext;
 
+import java.io.File;
+import java.util.Enumeration;
+
 public class TrafficRouterStart {
-//	private static final Logger LOGGER = Logger.getLogger(TrafficRouterStart.class);
+	private static final Logger LOGGER = Logger.getLogger(TrafficRouterStart.class);
 
 	public static void main(String[] args) throws Exception {
-		PropertyConfigurator.configure("src/test/resources/log4j.properties");
+		System.setProperty("deploy.dir", "src/test");
+
+		File webAppDirectory = new File("src/main/webapp");
+		if (!webAppDirectory.exists()) {
+			LOGGER.fatal(webAppDirectory.getAbsolutePath() + " does not exist, are you running TrafficRouterStart from the correct directory?");
+			System.exit(1);
+		}
+
+		LogManager.getLogger("org.eclipse.jetty").setLevel(Level.WARN);
+		LogManager.getLogger("org.springframework").setLevel(Level.WARN);
+
+		ConsoleAppender consoleAppender = new ConsoleAppender(new PatternLayout("%d{ISO8601} [%-5p] %c{4}: %m%n"));
+		LogManager.getRootLogger().addAppender(consoleAppender);
+		LogManager.getRootLogger().setLevel(Level.INFO);
 
 		int timeout = (int) Duration.ONE_HOUR.getMilliseconds();
 
@@ -39,43 +62,10 @@ public class TrafficRouterStart {
 		connector.setPort(8081);
 		server.addConnector(connector);
 
-		// check if a keystore for a SSL certificate is available, and
-		// if so, start a SSL connector on port 8443. By default, the
-		// quickstart comes with a Apache Wicket Quickstart Certificate
-		// that expires about half way september 2021. Do not use this
-		// certificate anywhere important as the passwords are available
-		// in the source.
-
-		//        Resource keystore = Resource.newClassPathResource("/keystore");
-		//        if (keystore != null && keystore.exists()) {
-		//            connector.setConfidentialPort(8443);
-		//
-		//            SslContextFactory factory = new SslContextFactory();
-		//            factory.setKeyStoreResource(keystore);
-		//            factory.setKeyStorePassword("wicket");
-		//            factory.setTrustStoreResource(keystore);
-		//            factory.setKeyManagerPassword("wicket");
-		//            SslSocketConnector sslConnector = new SslSocketConnector(factory);
-		//            sslConnector.setMaxIdleTime(timeout);
-		//            sslConnector.setPort(8443);
-		//            sslConnector.setAcceptors(4);
-		//            server.addConnector(sslConnector);
-		//
-		//            System.out.println("SSL access to the quickstart has been enabled on port 8443");
-		//            System.out.println("You can access the application using SSL on https://localhost:8443");
-		//            System.out.println();
-		//        }
-
 		WebAppContext bb = new WebAppContext();
 		bb.setServer(server);
 		bb.setContextPath("/");
 		bb.setWar("src/main/webapp");
-
-		// START JMX SERVER
-		// MBeanServer mBeanServer = ManagementFactory.getPlatformMBeanServer();
-		// MBeanContainer mBeanContainer = new MBeanContainer(mBeanServer);
-		// server.getContainer().addEventListener(mBeanContainer);
-		// mBeanContainer.start();
 
 		server.setHandler(bb);
 

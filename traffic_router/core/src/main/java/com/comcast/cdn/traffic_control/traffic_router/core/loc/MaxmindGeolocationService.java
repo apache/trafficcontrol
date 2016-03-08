@@ -94,7 +94,7 @@ public class MaxmindGeolocationService implements GeolocationService {
 	@SuppressWarnings("PMD.AvoidUsingHardCodedIP")
 	private DatabaseReader createDatabaseReader(final File databaseFile) throws IOException {
 		if (!databaseFile.exists()) {
-			LOGGER.warn(databaseFile + " does not exist yet!");
+			LOGGER.warn(databaseFile.getAbsolutePath() + " does not exist yet!");
 			return null;
 		}
 
@@ -103,7 +103,7 @@ public class MaxmindGeolocationService implements GeolocationService {
 			return null;
 		}
 
-		LOGGER.info("Loading MaxMind db: " + databaseFile);
+		LOGGER.info("Loading MaxMind db: " + databaseFile.getAbsolutePath());
 
 		try {
 			final DatabaseReader reader = new DatabaseReader.Builder(databaseFile).build();

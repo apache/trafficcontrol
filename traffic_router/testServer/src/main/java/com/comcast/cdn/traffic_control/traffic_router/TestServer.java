@@ -1,6 +1,9 @@
 package com.comcast.cdn.traffic_control.traffic_router;
 
-import org.apache.log4j.PropertyConfigurator;
+import org.apache.log4j.ConsoleAppender;
+import org.apache.log4j.LogManager;
+import org.apache.log4j.PatternLayout;
+import org.apache.log4j.Priority;
 import org.eclipse.jetty.jmx.MBeanContainer;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.bio.SocketConnector;
@@ -8,13 +11,19 @@ import org.eclipse.jetty.server.handler.HandlerCollection;
 import org.eclipse.jetty.webapp.WebAppContext;
 
 import javax.management.MBeanServer;
+import java.io.File;
 import java.lang.management.ManagementFactory;
 
 public class TestServer
 {
     public static void main(String[] args) throws Exception
     {
-        PropertyConfigurator.configure("testServer/src/test/resources/log4j.properties");
+        System.setProperty("deploy.dir", "core/src/test");
+
+        PatternLayout patternLayout = new PatternLayout("%-5p %d{ISO8601} %c: %m%n");
+        ConsoleAppender consoleAppender = new ConsoleAppender(patternLayout);
+        consoleAppender.setThreshold(Priority.INFO);
+        LogManager.getRootLogger().addAppender(consoleAppender);
 
         Server server = new Server();
         SocketConnector connector = new SocketConnector();

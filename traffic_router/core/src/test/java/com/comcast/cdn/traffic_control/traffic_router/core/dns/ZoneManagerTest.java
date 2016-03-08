@@ -16,6 +16,9 @@
 
 package com.comcast.cdn.traffic_control.traffic_router.core.dns;
 
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.collection.IsCollectionContaining.hasItem;
+import static org.hamcrest.collection.IsIterableContainingInOrder.contains;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
@@ -73,7 +76,8 @@ public class ZoneManagerTest {
 	public void setUp() throws Exception {
 		trafficRouterManager = (TrafficRouterManager) context.getBean("trafficRouterManager");
 		defaultDnsRoutingName = (String) context.getBean("staticZoneManagerDnsRoutingNameInitializer");
-		final File file = new File(getClass().getClassLoader().getResource("czmap.json").toURI());
+		File databasesDirectory = (File) context.getBean("databasesDir");
+		final File file = new File(databasesDirectory, "czmap.json");
 		final JSONObject json = new JSONObject(new JSONTokener(new FileReader(file)));
 		final JSONObject coverageZones = json.getJSONObject("coverageZones");
 
@@ -144,6 +148,7 @@ public class ZoneManagerTest {
 						assertEquals(missCount, cacheStats.missCount()); // should always be a cache hit so these should remain the same
 
 						if (!zones.isEmpty()) {
+							assertThat(zones, hasItem(zone));
 							assertTrue(zones.contains(zone));
 						}
 					}

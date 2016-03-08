@@ -93,9 +93,7 @@ public class PeriodicResourceUpdater {
 		}
 	}
 
-	public PeriodicResourceUpdater(final AbstractUpdatable listener,
-			final ResourceUrl urls, final String location, 
-			final int interval, final boolean pauseTilLoaded) {
+	public PeriodicResourceUpdater(final AbstractUpdatable listener, final ResourceUrl urls, final String location, final int interval, final boolean pauseTilLoaded) {
 		this.listener = listener;
 		this.urls = urls;
 		databaseLocation = location;

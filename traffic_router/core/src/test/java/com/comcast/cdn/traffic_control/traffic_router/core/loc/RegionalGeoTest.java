@@ -37,7 +37,7 @@ import com.comcast.cdn.traffic_control.traffic_router.core.loc.RegionalGeoResult
 public class RegionalGeoTest {
     @Before
     public void setUp() throws Exception {
-        final File dbFile = new File(getClass().getClassLoader().getResource("regional_geoblock.json").toURI());
+        final File dbFile = new File("src/test/db/regional_geoblock.json");
         RegionalGeo.parseConfigFile(dbFile);
     }
 

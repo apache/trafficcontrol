@@ -51,7 +51,7 @@ public class DnsNameGenerator {
         InputStream input = null;
 
         try {
-            input = new FileInputStream("src/test/resources/dns.properties");
+            input = new FileInputStream("src/test/conf/dns.properties");
             Properties prop = new Properties();
             prop.load(input);
             return prop.getProperty("dns.routing.name");

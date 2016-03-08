@@ -46,7 +46,7 @@ public class NetworkNodeTest {
 
 	@Before
 	public void setUp() throws Exception {
-		final File file = new File(getClass().getClassLoader().getResource("czmap.json").toURI());
+		final File file = new File("src/test/db", "czmap.json");
 		root = NetworkNode.generateTree(file);
 
 		final JSONObject json = new JSONObject(new JSONTokener(new FileReader(file)));

@@ -16,6 +16,7 @@
 
 package com.comcast.cdn.traffic_control.traffic_router.core.monitor;
 
+import java.io.File;
 import java.io.IOException;
 import java.net.URL;
 import java.net.URLConnection;
@@ -70,6 +71,8 @@ public class TrafficMonitorWatcher  {
 
 	private PeriodicResourceUpdater crUpdater;
 	private PeriodicResourceUpdater stateUpdater;
+	private File propertiesDirectory;
+	private File databasesDirectory;
 
 	public AbstractUpdatable stateHandler = new AbstractUpdatable() {
 		public String toString() {return "status listener";}
@@ -143,10 +146,10 @@ public class TrafficMonitorWatcher  {
 			}
 		};
 
-		crUpdater = new PeriodicResourceUpdater(crHandler, new MyResourceUrl(configUrl), configFile, configRefreshPeriod, true);
+		crUpdater = new PeriodicResourceUpdater(crHandler, new MyResourceUrl(configUrl), new File(databasesDirectory, configFile).getAbsolutePath(), configRefreshPeriod, true);
 		crUpdater.init();
 
-		stateUpdater = new PeriodicResourceUpdater(stateHandler, new MyResourceUrl(stateUrl), statusFile, statusRefreshPeriod, true);
+		stateUpdater = new PeriodicResourceUpdater(stateHandler, new MyResourceUrl(stateUrl), new File(databasesDirectory, statusFile).getAbsolutePath(), statusRefreshPeriod, true);
 		stateUpdater.init();
 	}
 	class MyResourceUrl implements ResourceUrl{
@@ -261,7 +264,7 @@ public class TrafficMonitorWatcher  {
 		lastHostAttempt = now;
 
 		try {
-			final URL resourceUrl = new URL(monitorProperties);
+			final URL resourceUrl = new URL("file://" + new File(propertiesDirectory, monitorProperties).getAbsolutePath());
 			final URLConnection c = resourceUrl.openConnection();
 			final Properties props = new Properties();
 			props.load(c.getInputStream());
@@ -304,15 +307,6 @@ public class TrafficMonitorWatcher  {
 		}
 	}
 
-	public static void main(final String[] args) {
-		final TrafficMonitorWatcher rw = new TrafficMonitorWatcher();
-		rw.setMonitorProperties("file:src/test/resources/traffic_monitor.properties");
-		rw.setStateUrl("http://[host]/publish/CrStates");
-		rw.setConfigUrl("http://[host]/publish/CrConfig?json");
-		rw.getHosts();
-//		rw.init();
-	}
-
 	public static boolean isBootstrapped() {
 		return bootstrapped;
 	}
@@ -339,5 +333,21 @@ public class TrafficMonitorWatcher  {
 			setBootstrapped(true);
 			setHosts(onlineMonitors.toArray(new String[onlineMonitors.size()]));
 		}
+	}
+
+	public File getPropertiesDirectory() {
+		return propertiesDirectory;
+	}
+
+	public void setPropertiesDirectory(final File propertiesDirectory) {
+		this.propertiesDirectory = propertiesDirectory;
+	}
+
+	public File getDatabasesDirectory() {
+		return databasesDirectory;
+	}
+
+	public void setDatabasesDirectory(final File databasesDirectory) {
+		this.databasesDirectory = databasesDirectory;
 	}
 }

@@ -57,6 +57,7 @@ public abstract class AbstractServiceUpdater {
 	protected ScheduledFuture<?> scheduledService;
 	private TrafficRouterManager trafficRouterManager;
 	protected boolean untarDataFile;
+	protected File databasesDirectoryPath;
 
 	public void destroy() {
 		executorService.shutdownNow();
@@ -96,7 +97,7 @@ public abstract class AbstractServiceUpdater {
 
 	@SuppressWarnings("PMD.CyclomaticComplexity")
 	public boolean updateDatabase() {
-		final File existingDB = new File(databaseLocation);
+		final File existingDB = new File(databasesDirectoryPath, databaseLocation);
 		File newDB = null;
 		try {
 			if (!isLoaded() || needsUpdating(existingDB)) {
@@ -252,7 +253,6 @@ public abstract class AbstractServiceUpdater {
 
 		if (existingDB.isDirectory() && newDB.isDirectory()) {
 			moveDirectory(existingDB, newDB);
-			LOGGER.info("Successfully updated location database " + existingDB);
 			return true;
 		}
 
@@ -275,7 +275,7 @@ public abstract class AbstractServiceUpdater {
 		final boolean renamed = newDB.renameTo(existingDB);
 
 		if (!renamed) {
-			LOGGER.fatal("Unable to rename " + newDB + " to " + existingDB + "; current working directory is " + System.getProperty("user.dir"));
+			LOGGER.fatal("Unable to rename " + newDB + " to " + existingDB.getAbsolutePath() + "; current working directory is " + System.getProperty("user.dir"));
 			return false;
 		}
 
@@ -301,7 +301,7 @@ public abstract class AbstractServiceUpdater {
 	protected String tmpSuffix = ".dat";
 
 	protected File downloadDatabase(final String url, final File existingDb) throws IOException {
-		LOGGER.info("[" + getClass().getSimpleName() + "] Downloading database: " + url);
+		LOGGER.warn("[" + getClass().getSimpleName() + "] Downloading database: " + url);
 		final URL dbURL = new URL(url);
 		final HttpURLConnection conn = (HttpURLConnection) dbURL.openConnection();
 
@@ -317,6 +317,7 @@ public abstract class AbstractServiceUpdater {
 		}
 
 		if (!untarDataFile && sourceCompressed) {
+			LOGGER.warn("Using gzip input stream for " + url);
 			in = new GZIPInputStream(in);
 		}
 
@@ -402,4 +403,11 @@ public abstract class AbstractServiceUpdater {
 		this.untarDataFile = untarDataFile;
 	}
 
+	public File getDatabasesDirectoryPath() {
+		return databasesDirectoryPath;
+	}
+
+	public void setDatabasesDirectoryPath(final File databasesDirectoryPath) {
+		this.databasesDirectoryPath = databasesDirectoryPath;
+	}
 }

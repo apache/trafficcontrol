@@ -19,18 +19,18 @@
 	xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-3.0.xsd"
 	default-init-method="init" default-destroy-method="destroy">
 
-	<bean
-		class="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer">
+	<bean class="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer">
 		<property name="placeholderPrefix" value="$[" />
 		<property name="placeholderSuffix" value="]" />
+		<property name="ignoreResourceNotFound" value="true"/>
 		<property name="ignoreUnresolvablePlaceholders" value="true" />
 		<property name="locations">
 			<list>
-				<value>file:/opt/traffic_router/conf/cache.properties</value>
-				<value>file:/opt/traffic_router/conf/traffic_monitor.properties</value>
-				<value>file:/opt/traffic_router/conf/traffic_ops.properties</value>
-				<value>file:/opt/traffic_router/conf/dns.properties</value>
-				<value>file:/opt/traffic_router/conf/http.properties</value>
+				<value>file:${deploy.dir:/opt/traffic_router}/conf/cache.properties</value>
+				<value>file:${deploy.dir:/opt/traffic_router}/conf/traffic_monitor.properties</value>
+				<value>file:${deploy.dir:/opt/traffic_router}/conf/traffic_ops.properties</value>
+				<value>file:${deploy.dir:/opt/traffic_router}/conf/dns.properties</value>
+				<value>file:${deploy.dir:/opt/traffic_router}/conf/http.properties</value>
 			</list>
 		</property>
 	</bean>
