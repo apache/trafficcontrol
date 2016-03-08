@@ -1,4 +1,4 @@
 <div id="userContainer">
-    <div class="alert alert-warning" ng-show="userData.loaded && !userData.localUser">LDAP user profiles cannot be modified.</div>
+    <div class="alert alert-warning" ng-show="userLoaded && !userData.localUser">LDAP user profiles cannot be modified.</div>
     <div ui-view="userContent"></div>
 </div>

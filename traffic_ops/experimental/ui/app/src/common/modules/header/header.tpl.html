@@ -3,7 +3,7 @@
         <div class="nav toggle">
             <a id="menu_toggle"><i class="fa fa-bars"></i></a>
         </div>
-        <ul class="nav navbar-nav navbar-right" ng-show="user.loaded">
+        <ul class="nav navbar-nav navbar-right" ng-show="userLoaded">
             <li>
                 <div class="btn-group" uib-dropdown is-open="userMenu.isopen">
                     <button id="userButton" type="button" class="btn btn-link" uib-dropdown-toggle>
@@ -11,8 +11,8 @@
                     </button>
                     <ul class="uib-dropdown-menu dropdown-usermenu animated fadeInDown" role="menu" aria-labelledby="userMenu-button">
                         <li ng-show="user.localUser"><a ui-sref="trafficOps.private.user.edit">Manage User Profile</a></li>
-                        <li ng-show="!user.loaded"><a ui-sref="trafficOps.public.login">Login</a></li>
-                        <li ng-show="user.loaded"><a ng-click="logout()">Logout</a></li>
+                        <li ng-show="!userLoaded"><a ui-sref="trafficOps.public.login">Login</a></li>
+                        <li ng-show="userLoaded"><a ng-click="logout()">Logout</a></li>
                     </ul>
                 </div>
             </li>

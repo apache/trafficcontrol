@@ -22,11 +22,11 @@ module.exports = angular.module('trafficOps.private', [])
                     }
                 },
                 resolve: {
-                    currentUser: function($state, userService, userModel, ENV) {
-                        if (userModel.user.loaded) {
+                    currentUser: function($state, userService, userModel) {
+                        if (userModel.loaded) {
                             return userModel.user;
                         } else {
-                            return userService.getCurrentUser(ENV.api['root'] + 'tm_user/' + userModel.userId);
+                            return userService.getCurrentUser();
                         }
                     }
                 }
