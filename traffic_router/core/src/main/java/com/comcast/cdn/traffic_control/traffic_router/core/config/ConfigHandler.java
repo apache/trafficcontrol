@@ -337,7 +337,6 @@ public class ConfigHandler {
 		final Iterator<String> itr = dsMap.keySet().iterator();
 		while (itr.hasNext()) {
 			final DeliveryService ds = dsMap.get(itr.next());
-			String type = "INVALID_URL";
 			//check if it's relative path or not
 			final String rurl = ds.getGeoRedirectUrl();
 			if (rurl == null) { continue; }
@@ -347,36 +346,31 @@ public class ConfigHandler {
 
 				if (idx < 0) {
 					//this is a relative url, belongs to this ds
-					type = "DS_URL";
-				} else {
-					//this is a url with protocol, must check further
-					//first, parse the url, if url invalid it will throw Exception
-					final URL url = new URL(rurl);
+					ds.setGeoRedirectUrlType("DS_URL");
+					continue;
+				}
+				//this is a url with protocol, must check further
+				//first, parse the url, if url invalid it will throw Exception
+				final URL url = new URL(rurl);
 
-					//make a fake HTTPRequest for the redirect url
-					final HTTPRequest req = new HTTPRequest();
+				//make a fake HTTPRequest for the redirect url
+				final HTTPRequest req = new HTTPRequest();
 
-					req.setPath(url.getPath());
-					req.setQueryString(url.getQuery());
-					req.setHostname(url.getHost());
-					req.setRequestedUrl(rurl);
+				req.setPath(url.getPath());
+				req.setQueryString(url.getQuery());
+				req.setHostname(url.getHost());
+				req.setRequestedUrl(rurl);
 
-					ds.setGeoRedirectFile(url.getFile());
-					//try select the ds by the redirect fake HTTPRequest
-					final DeliveryService rds = cacheRegister.getDeliveryService(req, true);
-					if (rds == null) {
-						LOGGER.debug("No DeliveryService found for: "
-								+ rurl);
-						//the redirect url not belongs to any ds
-						type = "NOT_DS_URL";
-					} else {
-						//check if it's the same ds
-						if (rds.getId() == ds.getId()) { type = "DS_URL"; }
-						else { type = "NOT_DS_URL"; }
-					}
+				ds.setGeoRedirectFile(url.getFile());
+				//try select the ds by the redirect fake HTTPRequest
+				final DeliveryService rds = cacheRegister.getDeliveryService(req, true);
+				if (rds == null || rds.getId() != ds.getId()) {
+					//the redirect url not belongs to this ds
+					ds.setGeoRedirectUrlType("NOT_DS_URL");
+					continue;
 				}
 
-				ds.setGeoRedirectUrlType(type);
+				ds.setGeoRedirectUrlType("DS_URL");
 			} catch (Exception e) {
 				LOGGER.error("fatal error, failed to init NGB redirect with Exception: " + e);
 				final StringWriter sw = new StringWriter();
