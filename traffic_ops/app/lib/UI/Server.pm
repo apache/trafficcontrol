@@ -375,10 +375,13 @@ sub check_server_input {
 	if ( defined( $paramHashRef->{'ip6_address'} )
 		&& $paramHashRef->{'ip6_address'} ne "" )
 	{
-		if (   !&is_ip6address( $paramHashRef->{'ip6_address'} )
-			|| !&is_ip6address( $paramHashRef->{'ip6_gateway'} ) )
+		if ( !&is_ip6address( $paramHashRef->{'ip6_address'} ) )
 		{
-			$err .= $paramHashRef->{'ip6_address'} . " is not a valid IPv6 address " . $sep;
+			$err .= "Address " . $paramHashRef->{'ip6_address'} . " is not a valid IPv6 address " . $sep;
+		}
+		if ( !&is_ip6address( $paramHashRef->{'ip6_gateway'} ) )
+		{
+			$err .= "Gateway " . $paramHashRef->{'ip6_gateway'} . " is not a valid IPv6 address " . $sep;
 		}
 		if ( !&in_same_net( $paramHashRef->{'ip6_address'}, $paramHashRef->{'ip6_gateway'} ) ) {
 			$err .= $paramHashRef->{'ip6_address'} . " and " . $paramHashRef->{'ip6_gateway'} . " are not in same network" . $sep;
@@ -443,72 +446,37 @@ sub update {
 		my $org_server = $self->db->resultset('Server')->search( { 'me.id' => $id }, { prefetch => 'cdn' } )->single();
 		my $update     = $self->db->resultset('Server')->search( { 'me.id' => $id }, { prefetch => 'cdn' } )->single();
 
-		if ( defined( $paramHashRef->{'ip6_address'} )
-			&& $paramHashRef->{'ip6_address'} ne "" )
-		{
-			$update->update(
-				{
-					host_name        => $paramHashRef->{'host_name'},
-					domain_name      => $paramHashRef->{'domain_name'},
-					tcp_port         => $paramHashRef->{'tcp_port'},
-					interface_name   => $paramHashRef->{'interface_name'},
-					ip_address       => $paramHashRef->{'ip_address'},
-					ip_netmask       => $paramHashRef->{'ip_netmask'},
-					ip_gateway       => $paramHashRef->{'ip_gateway'},
-					ip6_address      => $paramHashRef->{'ip6_address'},
-					ip6_gateway      => $paramHashRef->{'ip6_gateway'},
-					interface_mtu    => $paramHashRef->{'interface_mtu'},
-					cdn_id           => $paramHashRef->{'cdn'},
-					cachegroup       => $paramHashRef->{'cachegroup'},
-					phys_location    => $paramHashRef->{'phys_location'},
-					rack             => $paramHashRef->{'rack'},
-					type             => $paramHashRef->{'type'},
-					status           => $paramHashRef->{'status'},
-					profile          => $paramHashRef->{'profile'},
-					mgmt_ip_address  => $paramHashRef->{'mgmt_ip_address'},
-					mgmt_ip_netmask  => $paramHashRef->{'mgmt_ip_netmask'},
-					mgmt_ip_gateway  => $paramHashRef->{'mgmt_ip_gateway'},
-					ilo_ip_address   => $paramHashRef->{'ilo_ip_address'},
-					ilo_ip_netmask   => $paramHashRef->{'ilo_ip_netmask'},
-					ilo_ip_gateway   => $paramHashRef->{'ilo_ip_gateway'},
-					ilo_username     => $paramHashRef->{'ilo_username'},
-					ilo_password     => $paramHashRef->{'ilo_password'},
-					router_host_name => $paramHashRef->{'router_host_name'},
-					router_port_name => $paramHashRef->{'router_port_name'},
-				}
-			);
-		}
-		else {    # drop the ip6 stuff; it's not always mandatory
-			$update->update(
-				{
-					host_name        => $paramHashRef->{'host_name'},
-					domain_name      => $paramHashRef->{'domain_name'},
-					tcp_port         => $paramHashRef->{'tcp_port'},
-					interface_name   => $paramHashRef->{'interface_name'},
-					ip_address       => $paramHashRef->{'ip_address'},
-					ip_netmask       => $paramHashRef->{'ip_netmask'},
-					ip_gateway       => $paramHashRef->{'ip_gateway'},
-					interface_mtu    => $paramHashRef->{'interface_mtu'},
-					cdn_id           => $paramHashRef->{'cdn'},
-					cachegroup       => $paramHashRef->{'cachegroup'},
-					phys_location    => $paramHashRef->{'phys_location'},
-					rack             => $paramHashRef->{'rack'},
-					type             => $paramHashRef->{'type'},
-					status           => $paramHashRef->{'status'},
-					profile          => $paramHashRef->{'profile'},
-					mgmt_ip_address  => $paramHashRef->{'mgmt_ip_address'},
-					mgmt_ip_netmask  => $paramHashRef->{'mgmt_ip_netmask'},
-					mgmt_ip_gateway  => $paramHashRef->{'mgmt_ip_gateway'},
-					ilo_ip_address   => $paramHashRef->{'ilo_ip_address'},
-					ilo_ip_netmask   => $paramHashRef->{'ilo_ip_netmask'},
-					ilo_ip_gateway   => $paramHashRef->{'ilo_ip_gateway'},
-					ilo_username     => $paramHashRef->{'ilo_username'},
-					ilo_password     => $paramHashRef->{'ilo_password'},
-					router_host_name => $paramHashRef->{'router_host_name'},
-					router_port_name => $paramHashRef->{'router_port_name'},
-				}
-			);
-		}
+		$update->update(
+			{
+				host_name        => $paramHashRef->{'host_name'},
+				domain_name      => $paramHashRef->{'domain_name'},
+				tcp_port         => $paramHashRef->{'tcp_port'},
+				interface_name   => $paramHashRef->{'interface_name'},
+				ip_address       => $paramHashRef->{'ip_address'},
+				ip_netmask       => $paramHashRef->{'ip_netmask'},
+				ip_gateway       => $paramHashRef->{'ip_gateway'},
+				ip6_address      => $paramHashRef->{'ip6_address'},
+				ip6_gateway      => $paramHashRef->{'ip6_gateway'},
+				interface_mtu    => $paramHashRef->{'interface_mtu'},
+				cdn_id           => $paramHashRef->{'cdn'},
+				cachegroup       => $paramHashRef->{'cachegroup'},
+				phys_location    => $paramHashRef->{'phys_location'},
+				rack             => $paramHashRef->{'rack'},
+				type             => $paramHashRef->{'type'},
+				status           => $paramHashRef->{'status'},
+				profile          => $paramHashRef->{'profile'},
+				mgmt_ip_address  => $paramHashRef->{'mgmt_ip_address'},
+				mgmt_ip_netmask  => $paramHashRef->{'mgmt_ip_netmask'},
+				mgmt_ip_gateway  => $paramHashRef->{'mgmt_ip_gateway'},
+				ilo_ip_address   => $paramHashRef->{'ilo_ip_address'},
+				ilo_ip_netmask   => $paramHashRef->{'ilo_ip_netmask'},
+				ilo_ip_gateway   => $paramHashRef->{'ilo_ip_gateway'},
+				ilo_username     => $paramHashRef->{'ilo_username'},
+				ilo_password     => $paramHashRef->{'ilo_password'},
+				router_host_name => $paramHashRef->{'router_host_name'},
+				router_port_name => $paramHashRef->{'router_port_name'},
+			}
+		);
 		$update->update();
 
 		if ( $org_server->profile->id != $update->profile->id ) {
