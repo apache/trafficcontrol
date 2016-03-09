@@ -12,7 +12,7 @@ module.exports = angular.module('trafficOps.private.configure.deliveryServices.e
                 },
                 resolve: {
                     deliveryService: function($stateParams, deliveryServiceService) {
-                        return deliveryServiceService.getDeliveryService($stateParams.dsId, false);
+                        return deliveryServiceService.getDeliveryService($stateParams.dsId);
                     }
                 }
             })

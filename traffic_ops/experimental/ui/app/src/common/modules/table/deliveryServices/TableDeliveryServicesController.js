@@ -1,6 +1,6 @@
 var TableDeliveryServicesController = function(deliveryServices, $scope) {
 
-    $scope.deliveryServices = deliveryServices.response;
+    $scope.deliveryServices = deliveryServices;
 
     angular.element(document).ready(function () {
         $('#deliveryServicesTable').dataTable({

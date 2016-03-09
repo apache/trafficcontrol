@@ -35,7 +35,7 @@ var UserService = function(Restangular, userModel, messageModel) {
                     messageModel.setMessages([ { level: 'success', text: 'User updated' } ], false);
                 },
                 function() {
-                    messageModel.setMessages([ { level: 'error', text: 'User updated failed' } ], false);
+                    messageModel.setMessages([ { level: 'error', text: 'User update failed' } ], false);
                 }
             );
     };

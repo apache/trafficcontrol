@@ -1,6 +1,6 @@
 var TableServersController = function(servers, $scope) {
 
-    $scope.servers = servers.response;
+    $scope.servers = servers;
 
     angular.element(document).ready(function () {
         $('#serversTable').dataTable({

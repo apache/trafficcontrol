@@ -1,6 +1,6 @@
 var TableRegionsController = function(regions, $scope) {
 
-    $scope.regions = regions.response;
+    $scope.regions = regions;
 
     angular.element(document).ready(function () {
         $('#regionsTable').dataTable({

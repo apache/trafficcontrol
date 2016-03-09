@@ -1,6 +1,6 @@
 var TableLocationsController = function(locations, $scope) {
 
-    $scope.locations = locations.response;
+    $scope.locations = locations;
 
     angular.element(document).ready(function () {
         $('#locationsTable').dataTable({
