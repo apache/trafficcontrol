@@ -27,10 +27,7 @@
 		<module>connector</module>
 		<module>core</module>
 		<module>api</module>
-		<module>build</module>
 		<module>geolocation</module>
-		<!--uncomment this to run testServer, will cause TR build to fail-->
-		<!--<module>testServer</module>-->
 	</modules>
 
 	<properties>
@@ -70,4 +67,19 @@
 			</plugin>
 		</plugins>
 	</build>
+
+	<profiles>
+		<profile>
+			<id>rpm-build</id>
+			<modules>
+				<module>build</module>
+			</modules>
+		</profile>
+		<profile>
+			<id>testServer</id>
+			<modules>
+				<module>testServer</module>
+			</modules>
+		</profile>
+	</profiles>
 </project>
