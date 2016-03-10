@@ -65,11 +65,20 @@ var trafficOps = angular.module('trafficOps', [
         // common modules
         require('./common/modules/dialog/confirm').name,
         require('./common/modules/dialog/reset').name,
-        require('./common/modules/form/user').name,
         require('./common/modules/header').name,
         require('./common/modules/message').name,
         require('./common/modules/navigation').name,
         require('./common/modules/release').name,
+
+        // forms
+        require('./common/modules/form/cacheGroup').name,
+        require('./common/modules/form/deliveryService').name,
+        require('./common/modules/form/division').name,
+        require('./common/modules/form/location').name,
+        require('./common/modules/form/region').name,
+        require('./common/modules/form/server').name,
+        require('./common/modules/form/tenant').name,
+        require('./common/modules/form/user').name,
 
         // tables
         require('./common/modules/table/cacheGroups').name,

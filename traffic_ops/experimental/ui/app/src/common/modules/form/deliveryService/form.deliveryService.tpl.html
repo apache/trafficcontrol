@@ -1,0 +1,36 @@
+<div class="row">
+    <div class="col-sm-8 col-md-8">
+        <h3>Edit Delivery Service</h3>
+    </div>
+    <div class="col-sm-4 col-md-4">
+        <button type="button" class="btn action-btn" ng-disabled="deliveryServiceForm.$pristine || deliveryServiceForm.$invalid" ng-click="alert('implement update button')">Update</button>
+    </div>
+</div>
+<hr>
+<form class="register-form col-sm-8 col-md-8" name="deliveryServiceForm" role="form" novalidate>
+    <fieldset>
+        <legend>Delivery Service Details</legend>
+        <div class="row">
+            <div class="col-sm-6 col-md-6">
+                <div class="form-group" ng-class="{'has-error': hasError(deliveryServiceForm.id), 'has-feedback': hasError(deliveryServiceForm.id)}">
+                    <label class="control-label" for="id">ID
+                        <small ng-show="hasPropertyError(deliveryServiceForm.id, 'required')">[ Required ]</small>
+                        <small ng-show="hasPropertyError(deliveryServiceForm.id, 'maxlength')">[ Too Long ]</small>
+                    </label>
+                    <input id="id" name="id" type="text" class="form-control" ng-model="deliveryService.id" ng-maxlength="256" autofocus required>
+                    <span ng-show="hasError(deliveryServiceForm.id)" class="form-control-feedback"><i class="fa fa-times"></i></span>
+                </div>
+            </div>
+            <div class="col-sm-6 col-md-6">
+                <div class="form-group" ng-class="{'has-error': hasError(deliveryServiceForm.name), 'has-feedback': hasError(deliveryServiceForm.name)}">
+                    <label class="control-label" for="name">Name
+                        <small ng-show="hasPropertyError(deliveryServiceForm.name, 'required')">[ Required ]</small>
+                        <small ng-show="hasPropertyError(deliveryServiceForm.name, 'maxlength')">[ Too Long ]</small>
+                    </label>
+                    <input id="name" name="name" type="text" class="form-control" ng-model="deliveryService.name" ng-maxlength="256" autofocus required>
+                    <span ng-show="hasError(deliveryServiceForm.name)" class="form-control-feedback"><i class="fa fa-times"></i></span>
+                </div>
+            </div>
+        </div>
+    </fieldset>
+</form>
