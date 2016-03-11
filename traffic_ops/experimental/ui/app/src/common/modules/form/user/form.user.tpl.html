@@ -4,7 +4,6 @@
     </div>
     <div class="col-sm-4 col-md-4">
         <button type="button" class="btn action-btn" ng-disabled="userForm.$pristine || userForm.$invalid" ng-click="confirmUpdate(userData, userForm.username)">Update</button>
-        <button type="button" class="btn btn-link"  ng-click="resetUser()">Reset</button>
     </div>
 </div>
 <hr>
@@ -27,7 +26,7 @@
                     <label class="control-label" for="role">Role
                         <small ng-show="hasPropertyError(userForm.role, 'maxlength')">[ Too Long ]</small>
                     </label>
-                    <input id="role" name="role" type="text" class="form-control" ng-model="userData.rolename" ng-maxlength="256">
+                    <input id="role" name="role" type="text" class="form-control" ng-model="userData._links.role.id" ng-maxlength="256">
                     <span ng-show="hasError(userForm.role)" class="form-control-feedback"><i class="fa fa-times"></i></span>
                 </div>
             </div>

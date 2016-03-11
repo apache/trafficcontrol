@@ -4,7 +4,7 @@ module.exports = angular.module('trafficOps.private.administer.users.edit', [])
             .state('trafficOps.private.administer.users.edit', {
                 url: '/{userId}',
                 views: {
-                    administerContent: {
+                    usersContent: {
                         templateUrl: 'common/modules/form/user/form.user.tpl.html',
                         controller: 'FormUserController',
                         resolve: {

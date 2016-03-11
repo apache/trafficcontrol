@@ -1,21 +1,26 @@
-var DeliveryServiceService = function($http, $q, httpService, ENV) {
+var DeliveryServiceService = function(Restangular, messageModel) {
 
-    this.getDeliveryServices = function(endpoint) {
-        return httpService.get(endpoint);
+    this.getDeliveryServices = function() {
+        return Restangular.all('deliveryservice').getList();
     };
 
-    this.getDeliveryService = function(dsId, ignoreLoadingBar) {
-        var promise = $http.get(ENV.api['root'] + "deliveryservice/" + dsId, { ignoreLoadingBar: ignoreLoadingBar })
-            .success(function(result) {
-                return result;
-            })
-            .error(function(fault) {
-            });
+    this.getDeliveryService = function(id) {
+        return Restangular.one("cachegroup", id).get();
+    };
 
-        return promise;
+    this.updateDeliveryService = function(deliveryService) {
+        return deliveryService.put()
+            .then(
+                function() {
+                    messageModel.setMessages([ { level: 'success', text: 'Delivery service updated' } ], false);
+                },
+                function() {
+                    messageModel.setMessages([ { level: 'error', text: 'Delivery service update failed' } ], false);
+                }
+            );
     };
 
 };
 
-DeliveryServiceService.$inject = ['$http', '$q', 'httpService', 'ENV'];
+DeliveryServiceService.$inject = ['Restangular', 'messageModel'];
 module.exports = DeliveryServiceService;

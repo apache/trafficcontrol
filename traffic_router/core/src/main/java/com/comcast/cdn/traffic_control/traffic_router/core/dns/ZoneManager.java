@@ -247,9 +247,14 @@ public class ZoneManager extends Resolver {
 
 	private static void writeZone(final Zone zone) throws IOException {
 		synchronized(LOGGER) {
+			final File zoneDirectory = new File(getZoneDirectory());
+
+			if (!zoneDirectory.exists() && !zoneDirectory.mkdirs()) {
+				LOGGER.error(zoneDirectory.getAbsolutePath() + " directory does not exist and cannot be created!");
+			}
+
 			final File zoneFile = new File(getZoneDirectory(), zone.getOrigin().toString());
 			LOGGER.info("writing: " + zoneFile.getAbsolutePath());
-
 			final FileWriter w = new FileWriter(zoneFile);
 			IOUtils.write(zone.toMasterFile(), w);
 			w.flush();

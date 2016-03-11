@@ -1,14 +1,26 @@
-var CacheGroupService = function(httpService) {
+var CacheGroupService = function(Restangular, messageModel) {
 
-    this.getCacheGroups = function(endpoint) {
-        return httpService.get(endpoint);
+    this.getCacheGroups = function() {
+        return Restangular.all('cachegroup').getList();
     };
 
-    this.getCacheGroup = function(endpoint) {
-        return httpService.get(endpoint);
+    this.getCacheGroup = function(id) {
+        return Restangular.one("cachegroup", id).get();
+    };
+
+    this.updateCacheGroup = function(cacheGroup) {
+        return cacheGroup.put()
+            .then(
+                function() {
+                    messageModel.setMessages([ { level: 'success', text: 'Cache group updated' } ], false);
+                },
+                function() {
+                    messageModel.setMessages([ { level: 'error', text: 'Cache group update failed' } ], false);
+                }
+            );
     };
 
 };
 
-CacheGroupService.$inject = ['httpService'];
+CacheGroupService.$inject = ['Restangular', 'messageModel'];
 module.exports = CacheGroupService;

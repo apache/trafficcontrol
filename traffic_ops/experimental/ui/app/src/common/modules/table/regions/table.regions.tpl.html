@@ -11,7 +11,7 @@
         </tr>
     </thead>
     <tbody>
-        <tr ng-repeat="region in regions">
+        <tr ng-dblclick="editRegion(region.id)" ng-repeat="region in regions">
             <td>{{region.name}}</td>
             <td>{{region._links.division.id}}</td>
         </tr>

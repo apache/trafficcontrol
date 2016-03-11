@@ -15,6 +15,7 @@ var trafficOps = angular.module('trafficOps', [
         'ngRoute',
         'ui.router',
         'ui.bootstrap',
+        'restangular',
         'app.templates',
         'angular-jwt',
         'angular-loading-bar',
@@ -26,7 +27,7 @@ var trafficOps = angular.module('trafficOps', [
         // private modules
         require('./modules/private').name,
 
-        // users
+        // current user
         require('./modules/private/user').name,
         require('./modules/private/user/edit').name,
 
@@ -39,17 +40,22 @@ var trafficOps = angular.module('trafficOps', [
         // configure
         require('./modules/private/configure').name,
         require('./modules/private/configure/cacheGroups').name,
+        require('./modules/private/configure/cacheGroups/edit').name,
         require('./modules/private/configure/cacheGroups/list').name,
         require('./modules/private/configure/deliveryServices').name,
-        require('./modules/private/configure/deliveryServices/list').name,
         require('./modules/private/configure/deliveryServices/edit').name,
+        require('./modules/private/configure/deliveryServices/list').name,
         require('./modules/private/configure/divisions').name,
+        require('./modules/private/configure/divisions/edit').name,
         require('./modules/private/configure/divisions/list').name,
         require('./modules/private/configure/locations').name,
+        require('./modules/private/configure/locations/edit').name,
         require('./modules/private/configure/locations/list').name,
         require('./modules/private/configure/servers').name,
+        require('./modules/private/configure/servers/edit').name,
         require('./modules/private/configure/servers/list').name,
         require('./modules/private/configure/regions').name,
+        require('./modules/private/configure/regions/edit').name,
         require('./modules/private/configure/regions/list').name,
 
         // monitor
@@ -64,11 +70,20 @@ var trafficOps = angular.module('trafficOps', [
         // common modules
         require('./common/modules/dialog/confirm').name,
         require('./common/modules/dialog/reset').name,
-        require('./common/modules/form/user').name,
         require('./common/modules/header').name,
         require('./common/modules/message').name,
         require('./common/modules/navigation').name,
         require('./common/modules/release').name,
+
+        // forms
+        require('./common/modules/form/cacheGroup').name,
+        require('./common/modules/form/deliveryService').name,
+        require('./common/modules/form/division').name,
+        require('./common/modules/form/location').name,
+        require('./common/modules/form/region').name,
+        require('./common/modules/form/server').name,
+        require('./common/modules/form/tenant').name,
+        require('./common/modules/form/user').name,
 
         // tables
         require('./common/modules/table/cacheGroups').name,
@@ -80,19 +95,36 @@ var trafficOps = angular.module('trafficOps', [
         require('./common/modules/table/tenants').name,
         require('./common/modules/table/users').name,
 
-        // common models
+        // models
         require('./common/models').name,
         require('./common/api').name,
 
-        // common services
+        // directives
+        require('./common/directives/match').name,
+
+        // services
         require('./common/service/application').name,
 
-        //filters
+        // filters
         require('./common/filters').name
 
     ], App)
 
-        .config(function($stateProvider, $logProvider, $controllerProvider) {
+        .config(function($stateProvider, $logProvider, $controllerProvider, RestangularProvider, ENV) {
+
+            RestangularProvider.setBaseUrl(ENV.api['root']);
+
+            RestangularProvider.setResponseInterceptor(function(data, operation, what) {
+                if (angular.isDefined(data.response)) { // todo: this should not be needed. need better solution.
+                    if (operation == 'getList') {
+                        return data.response;
+                    }
+                    return data.response[0];
+                } else {
+                    return data;
+                }
+            });
+
             $controllerProvider.allowGlobals();
             $logProvider.debugEnabled(true);
             $stateProvider

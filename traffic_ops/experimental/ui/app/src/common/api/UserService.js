@@ -1,47 +1,46 @@
-var UserService = function($http, $state, $q, $location, authService, httpService, userModel, messageModel) {
+var UserService = function(Restangular, userModel, messageModel) {
 
-    this.getCurrentUser = function(endpoint) {
-        return httpService.get(endpoint)
-            .then(function(result) {
-                userModel.setUser(result.response[0]);
+    this.getCurrentUser = function() {
+        return Restangular.one("tm_user", userModel.userId).get()
+            .then(function(user) {
+                userModel.setUser(user);
             });
     };
 
-    this.updateCurrentUser = function(endpoint, user) {
-        return httpService.post(endpoint, { user: user })
+    this.updateCurrentUser = function(user) {
+        return user.put()
             .then(
-                function(result) {
+                function() {
                     userModel.setUser(user);
-                    messageModel.setMessages(result.alerts, false);
+                    messageModel.setMessages([ { level: 'success', text: 'User updated' } ], false);
                 },
-                function(fault) {
-                    messageModel.setMessages(fault.alerts, false);
+                function() {
+                    messageModel.setMessages([ { level: 'error', text: 'User updated failed' } ], false);
                 }
             );
     };
 
-    this.getUsers = function(endpoint) {
-        return httpService.get(endpoint);
+    this.getUsers = function() {
+        return Restangular.all('tm_user').getList();
     };
 
-
-    this.getUser = function(endpoint) {
-        return httpService.get(endpoint);
+    this.getUser = function(id) {
+        return Restangular.one("tm_user", id).get();
     };
 
-    this.updateUser = function(endpoint, user) {
-        return httpService.post(endpoint, { user: user })
+    this.updateUser = function(user) {
+        return user.put()
             .then(
-                function(result) {
-                    messageModel.setMessages(result.alerts, false);
+                function() {
+                    messageModel.setMessages([ { level: 'success', text: 'User updated' } ], false);
                 },
-                function(fault) {
-                    messageModel.setMessages(fault.alerts, false);
+                function() {
+                    messageModel.setMessages([ { level: 'error', text: 'User update failed' } ], false);
                 }
             );
     };
 
 };
 
-UserService.$inject = ['$http', '$state', '$q', '$location', 'authService', 'httpService', 'userModel', 'messageModel'];
+UserService.$inject = ['Restangular', 'userModel', 'messageModel'];
 module.exports = UserService;

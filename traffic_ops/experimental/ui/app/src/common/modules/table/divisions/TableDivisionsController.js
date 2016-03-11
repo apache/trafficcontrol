@@ -1,6 +1,10 @@
-var TableDivisionsController = function(divisions, $scope) {
+var TableDivisionsController = function(divisions, $scope, $location) {
 
-    $scope.divisions = divisions.response;
+    $scope.divisions = divisions;
+
+    $scope.editDivision = function(id) {
+        $location.path($location.path() + id);
+    };
 
     angular.element(document).ready(function () {
         $('#divisionsTable').dataTable({
@@ -11,5 +15,5 @@ var TableDivisionsController = function(divisions, $scope) {
 
 };
 
-TableDivisionsController.$inject = ['divisions', '$scope'];
+TableDivisionsController.$inject = ['divisions', '$scope', '$location'];
 module.exports = TableDivisionsController;

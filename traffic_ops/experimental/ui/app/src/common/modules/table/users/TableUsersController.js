@@ -1,9 +1,9 @@
 var TableUsersController = function(users, $scope, $location) {
 
-    $scope.users = users.response;
+    $scope.users = users;
 
     $scope.editUser = function(id) {
-        $location.url('/administer/users/' + id);
+        $location.path($location.path() + id);
     };
 
     angular.element(document).ready(function () {

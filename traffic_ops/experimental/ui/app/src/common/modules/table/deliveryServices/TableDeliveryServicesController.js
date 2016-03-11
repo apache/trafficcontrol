@@ -1,6 +1,10 @@
-var TableDeliveryServicesController = function(deliveryServices, $scope) {
+var TableDeliveryServicesController = function(deliveryServices, $scope, $location) {
 
-    $scope.deliveryServices = deliveryServices.response;
+    $scope.deliveryServices = deliveryServices;
+
+    $scope.editDeliveryService = function(id) {
+        $location.path($location.path() + id);
+    };
 
     angular.element(document).ready(function () {
         $('#deliveryServicesTable').dataTable({
@@ -11,5 +15,5 @@ var TableDeliveryServicesController = function(deliveryServices, $scope) {
 
 };
 
-TableDeliveryServicesController.$inject = ['deliveryServices', '$scope'];
+TableDeliveryServicesController.$inject = ['deliveryServices', '$scope', '$location'];
 module.exports = TableDeliveryServicesController;

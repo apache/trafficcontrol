@@ -2,6 +2,8 @@ var HeaderController = function($rootScope, $scope, $log, $state, $anchorScroll,
 
     $scope.isCollapsed = true;
 
+    $scope.userLoaded = userModel.loaded;
+
     /* we don't want real time changes to the user showing up. we want the ability to revert changes
     if necessary. thus, we will only update this on save. see userModel::userUpdated event below.
      */

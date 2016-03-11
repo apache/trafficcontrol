@@ -50,7 +50,7 @@ public class CacheWatcher {
 	private static final CacheDataModel totalMem = new CacheDataModel("Total Memory (MB)");
 	private static final CacheDataModel maxMemory = new CacheDataModel("Max Memory (MB)");
 	final MonitorConfig config = ConfigHandler.getInstance().getConfig();
-	private final Map<Cache, CacheStateUpdater> cacheUpdaterMap = new HashMap<Cache, CacheStateUpdater>();
+	private final Map<String, CacheStateUpdater> cacheUpdaterMap = new HashMap<String, CacheStateUpdater>();
 
 	boolean isActive = true;
 
@@ -118,13 +118,13 @@ public class CacheWatcher {
 				state.putDataPoint("_queryUrl_", cache.getStatisticsUrl());
 				state.setHistoryTime(cache.getHistoryTime());
 
-				if (!cacheUpdaterMap.containsKey(cache)) {
-					cacheUpdaterMap.put(cache, new CacheStateUpdater(state, errorCount));
+				if (!cacheUpdaterMap.containsKey(cache.getStatisticsUrl())) {
+					cacheUpdaterMap.put(cache.getStatisticsUrl(), new CacheStateUpdater(state, errorCount));
 				}
 
 				final long requestTimeout = System.currentTimeMillis() + myHealthDeterminer.getConnectionTimeout(cache, 2000);
 
-				final CacheStateUpdater updater = cacheUpdaterMap.get(cache).update(myHealthDeterminer,failCount, requestTimeout);
+				final CacheStateUpdater updater = cacheUpdaterMap.get(cache.getStatisticsUrl()).update(myHealthDeterminer,failCount, requestTimeout);
 				cacheStatisticsClient.fetchCacheStatistics(cache, updater);
 
 				cacheStates.add(state);
