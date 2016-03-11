@@ -583,7 +583,6 @@ API 1.1 Reference
   traffic_ops_api/v11/parameter
   traffic_ops_api/v11/phys_location
   traffic_ops_api/v11/profile
-  traffic_ops_api/v11/redis
   traffic_ops_api/v11/region
   traffic_ops_api/v11/role
   traffic_ops_api/v11/server

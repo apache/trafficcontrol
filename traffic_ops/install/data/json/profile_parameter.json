@@ -327,21 +327,9 @@
 {"profile":"EDGE1_CDN_520","parameter":"path","config_file":"astats.config","value":"_astats"}
 {"profile":"EDGE1_CDN_520","parameter":"CONFIG proxy.config.cache.http.compatibility.4-2-0-fixup","config_file":"records.config","value":"INT 0"}
 {"profile":"EDGE1_CDN_520","parameter":"algorithm","config_file":"parent.config","value":"consistent_hash"}
-{"profile":"REDIS_ALL","parameter":"DsStats","config_file":"redis.config","value":"kbps"}
-{"profile":"REDIS_ALL","parameter":"DsStats","config_file":"redis.config","value":"tps_2xx"}
-{"profile":"REDIS_ALL","parameter":"DsStats","config_file":"redis.config","value":"status_3xx"}
-{"profile":"REDIS_ALL","parameter":"DsStats","config_file":"redis.config","value":"status_4xx"}
-{"profile":"REDIS_ALL","parameter":"DsStats","config_file":"redis.config","value":"status_5xx"}
-{"profile":"REDIS_ALL","parameter":"CacheStats","config_file":"redis.config","value":"bandwidth"}
-{"profile":"REDIS_ALL","parameter":"CacheStats","config_file":"redis.config","value":"maxKbps"}
-{"profile":"REDIS_ALL","parameter":"CacheStats","config_file":"redis.config","value":"ats.proxy.process.http.current_client_connections"}
 {"profile":"EDGE1_CDN_520","parameter":"maxRevalDurationDays","config_file":"regex_revalidate.config","value":"90"}
 {"profile":"GLOBAL","parameter":"tm.instance_name","config_file":"global","value":"kabletown CDN"}
 {"profile":"EDGE1_CDN_520","parameter":"CONFIG proxy.config.cache.ram_cache_cutoff","config_file":"records.config","value":"INT 268435456"}
-{"profile":"REDIS_ALL","parameter":"DsStats","config_file":"redis.config","value":"tps_3xx"}
-{"profile":"REDIS_ALL","parameter":"DsStats","config_file":"redis.config","value":"tps_4xx"}
-{"profile":"REDIS_ALL","parameter":"DsStats","config_file":"redis.config","value":"tps_5xx"}
-{"profile":"REDIS_ALL","parameter":"DsStats","config_file":"redis.config","value":"tps_total"}
 {"profile":"EDGE1_CDN_520","parameter":"CONFIG proxy.config.ssl.server.cipher_suite","config_file":"records.config","value":"STRING ECDHE-RSA-AES128-GCM-SHA256:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-RSA-AES128-SHA256:ECDHE-RSA-AES256-SHA384:AES128-GCM-SHA256:AES256-GCM-SHA384:ECDHE-RSA-RC4-SHA:ECDHE-RSA-AES128-SHA:ECDHE-RSA-AES256-SHA:RC4-SHA:RC4-MD5:AES128-SHA:AES256-SHA:DES-CBC3-SHA!SRP:!DSS:!PSK:!aNULL:!eNULL:!SSLv2"}
 {"profile":"EDGE1_CDN_520","parameter":"CONFIG proxy.config.ssl.server.honor_cipher_order","config_file":"records.config","value":"INT 1"}
 {"profile":"EDGE1_CDN_520","parameter":"CONFIG proxy.config.ssl.server.cert.path","config_file":"records.config","value":"STRING etc/trafficserver/ssl"}

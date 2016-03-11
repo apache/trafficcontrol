@@ -188,7 +188,7 @@ Server
         },
         {
           "count": 0,
-          "type": "REDIS"
+          "type": "INFLUXDB"
         },
         {
           "count": 4,
