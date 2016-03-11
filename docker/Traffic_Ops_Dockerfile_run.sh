@@ -19,18 +19,9 @@
 # DOMAIN
 
 start() {
-		# cd /opt/traffic_ops/app
-		# exec bin/start.pl
 		service traffic_ops start
 		exec tail -f /var/log/traffic_ops/traffic_ops.log
 }
-
-# expect -exact "Hit ENTER to continue:  "\n\
-# sleep 0.5\n\
-# send -- "\\r"\n\
-# expect -exact "Is this ok \[y/N\]:"\n\
-# sleep 0.5\n\
-# send -- "y\\r"\n\
 
 init() {
 		mysql -h $MYSQL_IP -P $MYSQL_PORT -u root -p$MYSQL_ROOT_PASS -e "GRANT ALL ON * . * TO 'traffic_ops'@'localhost' IDENTIFIED BY '$MYSQL_TRAFFIC_OPS_PASS';"
@@ -186,15 +177,12 @@ sleep 0.5\n\
 send -- "\\r"\n\
 expect -exact "Shutdown Traffic Ops \[y/n\] \[n\]:  "\n\
 sleep 0.5\n\
-send -- "y\\r"\
+send -- "n\\r"\
 ' > postinstall.exp
 
 		export TERM=xterm && export USER=root && expect postinstall.exp
 
-		cd /opt/traffic_ops/app && bin/start.pl &
-		sleep 10
-
-		TRAFFIC_OPS_URI="http://localhost:3000"
+		TRAFFIC_OPS_URI="https://localhost"
 
 		TMP_TO_COOKIE="$(curl -v -s -k -X POST --data '{ "u":"'"$ADMIN_USER"'", "p":"'"$ADMIN_PASS"'" }' $TRAFFIC_OPS_URI/api/1.2/user/login 2>&1 | grep 'Set-Cookie' | sed -e 's/.*mojolicious=\(.*\); expires.*/\1/')"
 		echo "Got cookie: $TMP_TO_COOKIE"
@@ -202,17 +190,6 @@ send -- "y\\r"\
 		TMP_DOMAIN=$DOMAIN
 		sed -i -- "s/{{.Domain}}/$TMP_DOMAIN/g" /profile.origin.traffic_ops
 		echo "Got domain: $TMP_DOMAIN"
-
-		# curl -s -k -X GET -H "Cookie: mojolicious=$TMP_TO_COOKIE" $TRAFFIC_OPS_URI/api/1.2/profiles.json | python -c 'import json,sys;obj=json.load(sys.stdin);match=[x["id"] for x in obj["response"]]; cstr= "\n".join(match); print cstr' | xargs -I {} curl -s -k -X GET -H "Cookie: mojolicious=$TMP_TO_COOKIE" $TRAFFIC_OPS_URI/profile/{}/delete
-
-		# curl -v -k -X POST -H "Cookie: mojolicious=$TMP_TO_COOKIE" -F "filename=profile.global.traffic_ops" -F "profile_to_import=@/profile.global.traffic_ops" $TRAFFIC_OPS_URI/profile/doImport
-		# curl -v -k -X POST -H "Cookie: mojolicious=$TMP_TO_COOKIE" -F "filename=profile.trafficserver_edge.traffic_ops" -F "profile_to_import=@/profile.trafficserver_edge.traffic_ops" $TRAFFIC_OPS_URI/profile/doImport
-		# curl -v -k -X POST -H "Cookie: mojolicious=$TMP_TO_COOKIE" -F "filename=profile.trafficserver_mid.traffic_ops" -F "profile_to_import=@/profile.trafficserver_mid.traffic_ops" $TRAFFIC_OPS_URI/profile/doImport
-		# curl -v -k -X POST -H "Cookie: mojolicious=$TMP_TO_COOKIE" -F "filename=profile.traffic_monitor.traffic_ops" -F "profile_to_import=@/profile.traffic_monitor.traffic_ops" $TRAFFIC_OPS_URI/profile/doImport
-		# curl -v -k -X POST -H "Cookie: mojolicious=$TMP_TO_COOKIE" -F "filename=profile.traffic_router.traffic_ops" -F "profile_to_import=@/profile.traffic_router.traffic_ops" $TRAFFIC_OPS_URI/profile/doImport
-		# curl -v -k -X POST -H "Cookie: mojolicious=$TMP_TO_COOKIE" -F "filename=profile.influx.traffic_ops" -F "profile_to_import=@/profile.influx.traffic_ops" $TRAFFIC_OPS_URI/profile/doImport
-		# curl -v -k -X POST -H "Cookie: mojolicious=$TMP_TO_COOKIE" -F "filename=profile.traffic_vault.traffic_ops" -F "profile_to_import=@/profile.traffic_vault.traffic_ops" $TRAFFIC_OPS_URI/profile/doImport
-		# curl -v -k -X POST -H "Cookie: mojolicious=$TMP_TO_COOKIE" -F "filename=profile.traffic_stats.traffic_ops" -F "profile_to_import=@/profile.traffic_stats.traffic_ops" $TRAFFIC_OPS_URI/profile/doImport
 
 		echo "Importing origin"
 		curl -v -k -X POST -H "Cookie: mojolicious=$TMP_TO_COOKIE" -F "filename=profile.origin.traffic_ops" -F "profile_to_import=@/profile.origin.traffic_ops" $TRAFFIC_OPS_URI/profile/doImport
@@ -229,7 +206,7 @@ send -- "y\\r"\
 		echo "Got cachegroup type ID: $TMP_CACHEGROUP_TYPE"
 
 		curl -v -k -X POST -H "Cookie: mojolicious=$TMP_TO_COOKIE" --data-urlencode "cg_data.name=mid-east" --data-urlencode "cg_data.short_name=east" --data-urlencode "cg_data.latitude=0" --data-urlencode "cg_data.longitude=0" --data-urlencode "cg_data.parent_cachegroup_id=-1" --data-urlencode "cg_data.type=$TMP_CACHEGROUP_TYPE" $TRAFFIC_OPS_URI/cachegroup/create
-		TMP_CACHEGROUP_ID="$(curl -s -k -X GET -H "Cookie: mojolicious=$TMP_TO_COOKIE" $TRAFFIC_OPS_URI/api/1.2/cachegroups.json | python -c 'import json,sys;obj=json.load(sys.stdin);match=[x["id"] for x in obj["response"] if x["name"]=="mid-east"]; print match[0]')"		
+		TMP_CACHEGROUP_ID="$(curl -s -k -X GET -H "Cookie: mojolicious=$TMP_TO_COOKIE" $TRAFFIC_OPS_URI/api/1.2/cachegroups.json | python -c 'import json,sys;obj=json.load(sys.stdin);match=[x["id"] for x in obj["response"] if x["name"]=="mid-east"]; print match[0]')"
 		echo "Got cachegroup ID: $TMP_CACHEGROUP_ID"
 
 		TMP_CACHEGROUP_EDGE_TYPE="$(curl -s -k -X GET -H "Cookie: mojolicious=$TMP_TO_COOKIE" $TRAFFIC_OPS_URI/api/1.2/types.json | python -c 'import json,sys;obj=json.load(sys.stdin);match=[x["id"] for x in obj["response"] if x["name"]=="EDGE_LOC"]; print match[0]')"
@@ -240,15 +217,6 @@ send -- "y\\r"\
 		echo "Got cachegroup edge ID: $TMP_CACHEGROUP_EDGE_ID"
 
 		curl -v -k -X POST -H "Cookie: mojolicious=$TMP_TO_COOKIE" --data-urlencode "location.name=plocation-nyc-1" --data-urlencode "location.short_name=nyc" --data-urlencode "location.address=1 Main Street" --data-urlencode "location.city=nyc" --data-urlencode "location.state=NY" --data-urlencode "location.zip=12345" --data-urlencode "location.poc=" --data-urlencode "location.phone=" --data-urlencode "location.email=no@no.no" --data-urlencode "location.comments=" --data-urlencode "location.region=$TMP_REGION_ID" $TRAFFIC_OPS_URI/phys_location/create
-
-		# Yes, this is terribly hackish. Perl doesn't seem to stop cleanly
-		ps -A | grep perl | grep -ohE "^\s+([0-9]+)" | grep -ohE "[0-9]+" | xargs -I {} kill {}
-		sleep 10
-
-		# Speaking of hackish...
-		# This is necessary, so Dockerfile run scripts can get the ID of the parameter they create, to add it to a profile.
-		# \todo make PR to add ID to parameters API endpoint
-		sed -i -- 's/"name"        => $row->parameter->name,/"name"        => $row->parameter->name,\n"id"        => $row->parameter->id,/g' /opt/traffic_ops/app/lib/API/Parameter.pm
 
 		echo "INITIALIZED=1" >> /etc/environment
 }
