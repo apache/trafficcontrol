@@ -16,6 +16,7 @@
 start() {
 	service influxdb start
 	service traffic_stats start
+	service grafana-server start
 	touch /opt/traffic_stats/var/log/traffic_stats/traffic_stats.log
 	exec tail -f /opt/traffic_stats/var/log/traffic_stats/traffic_stats.log
 }
@@ -28,7 +29,7 @@ init() {
 	TMP_DOMAIN=$DOMAIN
 	TMP_GATEWAY=$GATEWAY
 
-	TMP_CACHEGROUP_ID="$(curl -s -k -X GET -H "Cookie: mojolicious=$TMP_TO_COOKIE" $TRAFFIC_OPS_URI/api/1.2/cachegroups.json | python -c 'import json,sys;obj=json.load(sys.stdin);match=[x["id"] for x in obj["response"] if x["name"]=="mid-east"]; print match[0]')"		
+	TMP_CACHEGROUP_ID="$(curl -s -k -X GET -H "Cookie: mojolicious=$TMP_TO_COOKIE" $TRAFFIC_OPS_URI/api/1.2/cachegroups.json | python -c 'import json,sys;obj=json.load(sys.stdin);match=[x["id"] for x in obj["response"] if x["name"]=="mid-east"]; print match[0]')"
 	echo "Got cachegroup ID: $TMP_CACHEGROUP_ID"
 
 	TMP_SERVER_TYPE_ID="$(curl -s -k -X GET -H "Cookie: mojolicious=$TMP_TO_COOKIE" $TRAFFIC_OPS_URI/api/1.2/types.json | python -c 'import json,sys;obj=json.load(sys.stdin);match=[x["id"] for x in obj["response"] if x["name"]=="INFLUXDB"]; print match[0]')"
@@ -67,11 +68,30 @@ init() {
 	influx -execute 'create database daily_stats'
 	influx -execute 'create retention policy daily on cache_stats duration 26h replication 3 DEFAULT'
 	influx -execute 'create retention policy daily on deliveryservice_stats duration 26h replication 3 DEFAULT'
-	influx -execute 'create retention policy daily_stats on daily_stats duration INF replication 3 DEFAULT'
+	influx -execute 'create retention policy monthly on cache_stats duration 30d replication 3 DEFAULT'
+	influx -execute 'create retention policy monthly on deliveryservice_stats duration 30d replication 3 DEFAULT'
+	influx -execute 'create retention policy indefinite on daily_stats duration INF replication 3 DEFAULT'
 
-	sed -i -- 's/https-enabled = false/https-enabled = true/g' /etc/influxdb/influxdb.conf
+	influx --execute 'CREATE CONTINUOUS QUERY bandwidth_1min ON cache_stats BEGIN SELECT mean(value) AS "value" INTO "cache_stats"."monthly"."bandwidth.1min" FROM "cache_stats"."daily".bandwidth GROUP BY time(1m), * END'
+	influx --execute 'CREATE CONTINUOUS QUERY connections_1min ON cache_stats BEGIN SELECT mean(value) AS "value" INTO "cache_stats"."monthly"."connections.1min" FROM "cache_stats"."daily"."ats.proxy.process.http.current_client_connections" GROUP BY time(1m), * END'
+	influx --execute 'CREATE CONTINUOUS QUERY bandwidth_cdn_1min ON cache_stats BEGIN SELECT sum(value) AS "value" INTO "cache_stats"."monthly"."bandwidth.cdn.1min" FROM "cache_stats"."monthly"."bandwidth.1min" GROUP BY time(1m), cdn END'
+	influx --execute 'CREATE CONTINUOUS QUERY connections_cdn_1min ON cache_stats BEGIN SELECT sum(value) AS "value" INTO "cache_stats"."monthly"."connections.cdn.1min" FROM "cache_stats"."monthly"."connections.1min" GROUP BY time(1m), cdn END'
+
+	influx --execute 'CREATE CONTINUOUS QUERY tps_2xx_ds_1min ON deliveryservice_stats BEGIN SELECT mean(value) AS "value" INTO "deliveryservice_stats"."monthly"."tps_2xx.ds.1min" FROM "deliveryservice_stats"."daily".tps_2xx WHERE cachegroup = '"'total'"' GROUP BY time(1m), * END'
+	influx --execute 'CREATE CONTINUOUS QUERY tps_3xx_ds_1min ON deliveryservice_stats BEGIN SELECT mean(value) AS "value" INTO "deliveryservice_stats"."monthly"."tps_3xx.ds.1min" FROM "deliveryservice_stats"."daily".tps_3xx WHERE cachegroup = '"'total'"' GROUP BY time(1m), * END'
+	influx --execute 'CREATE CONTINUOUS QUERY tps_4xx_ds_1min ON deliveryservice_stats BEGIN SELECT mean(value) AS "value" INTO "deliveryservice_stats"."monthly"."tps_4xx.ds.1min" FROM "deliveryservice_stats"."daily".tps_4xx WHERE cachegroup = '"'total'"' GROUP BY time(1m), * END'
+	influx --execute 'CREATE CONTINUOUS QUERY tps_5xx_ds_1min ON deliveryservice_stats BEGIN SELECT mean(value) AS "value" INTO "deliveryservice_stats"."monthly"."tps_5xx.ds.1min" FROM "deliveryservice_stats"."daily".tps_5xx WHERE cachegroup = '"'total'"' GROUP BY time(1m), * END'
+	influx --execute 'CREATE CONTINUOUS QUERY tps_total_ds_1min ON deliveryservice_stats BEGIN SELECT mean(value) AS "value" INTO "deliveryservice_stats"."monthly"."tps_total.ds.1min" FROM "deliveryservice_stats"."daily".tps_total WHERE cachegroup = '"'total'"' GROUP BY time(1m), * END'
+	influx --execute 'CREATE CONTINUOUS QUERY kbps_ds_1min ON deliveryservice_stats BEGIN SELECT mean(value) AS "value" INTO "deliveryservice_stats"."monthly"."kbps.ds.1min" FROM "deliveryservice_stats"."daily".kbps WHERE cachegroup = '"'total'"' GROUP BY time(1m), * END'
+	influx --execute 'CREATE CONTINUOUS QUERY kbps_cg_1min ON deliveryservice_stats BEGIN SELECT mean(value) AS "value" INTO "deliveryservice_stats"."monthly"."kbps.cg.1min" FROM "deliveryservice_stats"."daily".kbps WHERE cachegroup != '"'total'"' GROUP BY time(1m), * END'
+	influx --execute 'CREATE CONTINUOUS QUERY max_kbps_ds_1day ON deliveryservice_stats BEGIN SELECT max(value) AS "value" INTO "deliveryservice_stats"."indefinite"."max.kbps.ds.1day" FROM "deliveryservice_stats"."monthly"."kbps.ds.1min" GROUP BY time(1d), deliveryservice, cdn END'
 
 	service influxdb stop
+
+	sed -i -- 's/;protocol = http/protocol = https/g' /etc/grafana/grafana.ini
+	sed -i -- 's#;cert_file =#cert_file = /etc/ssl/influxdb.crt#g' /etc/grafana/grafana.ini
+	sed -i -- 's#;cert_key =#cert_key = /etc/ssl/influxdb.key#g' /etc/grafana/grafana.ini
+	sed -i -n '1h;1!H;${g;s/access\n;enabled = false/access\nenabled = true/;p;}' /etc/grafana/grafana.ini
 
 	echo "INITIALIZED=1" >> /etc/environment
 }

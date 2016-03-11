@@ -23,6 +23,11 @@ RUN sed -i -- 's/## ssl.certfile = $(platform_etc_dir)\/cert.pem/ssl.certfile = 
 RUN sed -i -- 's/## ssl.keyfile = $(platform_etc_dir)\/key.pem/ssl.keyfile = \/etc\/riak\/certs\/server.key/g' /etc/riak/riak.conf
 RUN sed -i -- 's/## ssl.cacertfile = $(platform_etc_dir)\/cacertfile.pem/ssl.cacertfile = \/etc\/riak\/certs\/ca-bundle.crt/g' /etc/riak/riak.conf
 
+RUN sed -i -- "s/nodename = riak@127.0.0.1/nodename = riak@0.0.0.0/g" /etc/riak/riak.conf
+RUN sed -i -- "s/listener.http.internal = 127.0.0.1:8098/listener.http.internal = 0.0.0.0:8098/g" /etc/riak/riak.conf
+RUN sed -i -- "s/listener.protobuf.internal = 127.0.0.1:8087/listener.protobuf.internal = 0.0.0.0:8087/g" /etc/riak/riak.conf
+RUN sed -i -- "s/## listener.https.internal = 127.0.0.1:8098/listener.https.internal = 0.0.0.0:8088/g" /etc/riak/riak.conf
+
 RUN mkdir /etc/riak/certs
 
 RUN echo "tls_protocols.tlsv1 = on" >> /etc/riak/riak.conf 

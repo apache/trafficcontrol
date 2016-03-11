@@ -8,9 +8,17 @@
 # TRAFFIC_OPS_URI
 # TRAFFIC_OPS_USER
 # TRAFFIC_OPS_PASS
+# IP
+# DOMAIN
+# GATEWAY
+# KAFKA_URI
 
 start() {
+	chown ats:ats /dev/ram0
+	chown ats:ats /dev/ram1
+
 	/opt/trafficserver/bin/trafficserver start
+	service hekad start
 	exec tail -f /opt/trafficserver/var/log/trafficserver/traffic_server.stderr
 }
 
@@ -70,8 +78,7 @@ init() {
 	# \todo remove when TO/ort is changed from 1%
 	sed -i -- "s/size=1%/size=50%/g" /opt/trafficserver/etc/trafficserver/volume.config
 
-	chown ats:ats /dev/ram0
-	chown ats:ats /dev/ram1
+	sed -i -- "s/{{.KafkaUri}}/$KAFKA_URI/g" /etc/hekad/heka.toml
 
 	echo "INITIALIZED=1" >> /etc/environment
 }
