@@ -72,6 +72,20 @@ init() {
 	influx -execute 'create retention policy monthly on deliveryservice_stats duration 30d replication 3 DEFAULT'
 	influx -execute 'create retention policy indefinite on daily_stats duration INF replication 3 DEFAULT'
 
+	influx --execute 'CREATE CONTINUOUS QUERY bandwidth_1min ON cache_stats BEGIN SELECT mean(value) AS "value" INTO "cache_stats"."monthly"."bandwidth.1min" FROM "cache_stats"."daily".bandwidth GROUP BY time(1m), * END'
+	influx --execute 'CREATE CONTINUOUS QUERY connections_1min ON cache_stats BEGIN SELECT mean(value) AS "value" INTO "cache_stats"."monthly"."connections.1min" FROM "cache_stats"."daily"."ats.proxy.process.http.current_client_connections" GROUP BY time(1m), * END'
+	influx --execute 'CREATE CONTINUOUS QUERY bandwidth_cdn_1min ON cache_stats BEGIN SELECT sum(value) AS "value" INTO "cache_stats"."monthly"."bandwidth.cdn.1min" FROM "cache_stats"."monthly"."bandwidth.1min" GROUP BY time(1m), cdn END'
+	influx --execute 'CREATE CONTINUOUS QUERY connections_cdn_1min ON cache_stats BEGIN SELECT sum(value) AS "value" INTO "cache_stats"."monthly"."connections.cdn.1min" FROM "cache_stats"."monthly"."connections.1min" GROUP BY time(1m), cdn END'
+
+	influx --execute 'CREATE CONTINUOUS QUERY tps_2xx_ds_1min ON deliveryservice_stats BEGIN SELECT mean(value) AS "value" INTO "deliveryservice_stats"."monthly"."tps_2xx.ds.1min" FROM "deliveryservice_stats"."daily".tps_2xx WHERE cachegroup = '"'total'"' GROUP BY time(1m), * END'
+	influx --execute 'CREATE CONTINUOUS QUERY tps_3xx_ds_1min ON deliveryservice_stats BEGIN SELECT mean(value) AS "value" INTO "deliveryservice_stats"."monthly"."tps_3xx.ds.1min" FROM "deliveryservice_stats"."daily".tps_3xx WHERE cachegroup = '"'total'"' GROUP BY time(1m), * END'
+	influx --execute 'CREATE CONTINUOUS QUERY tps_4xx_ds_1min ON deliveryservice_stats BEGIN SELECT mean(value) AS "value" INTO "deliveryservice_stats"."monthly"."tps_4xx.ds.1min" FROM "deliveryservice_stats"."daily".tps_4xx WHERE cachegroup = '"'total'"' GROUP BY time(1m), * END'
+	influx --execute 'CREATE CONTINUOUS QUERY tps_5xx_ds_1min ON deliveryservice_stats BEGIN SELECT mean(value) AS "value" INTO "deliveryservice_stats"."monthly"."tps_5xx.ds.1min" FROM "deliveryservice_stats"."daily".tps_5xx WHERE cachegroup = '"'total'"' GROUP BY time(1m), * END'
+	influx --execute 'CREATE CONTINUOUS QUERY tps_total_ds_1min ON deliveryservice_stats BEGIN SELECT mean(value) AS "value" INTO "deliveryservice_stats"."monthly"."tps_total.ds.1min" FROM "deliveryservice_stats"."daily".tps_total WHERE cachegroup = '"'total'"' GROUP BY time(1m), * END'
+	influx --execute 'CREATE CONTINUOUS QUERY kbps_ds_1min ON deliveryservice_stats BEGIN SELECT mean(value) AS "value" INTO "deliveryservice_stats"."monthly"."kbps.ds.1min" FROM "deliveryservice_stats"."daily".kbps WHERE cachegroup = '"'total'"' GROUP BY time(1m), * END'
+	influx --execute 'CREATE CONTINUOUS QUERY kbps_cg_1min ON deliveryservice_stats BEGIN SELECT mean(value) AS "value" INTO "deliveryservice_stats"."monthly"."kbps.cg.1min" FROM "deliveryservice_stats"."daily".kbps WHERE cachegroup != '"'total'"' GROUP BY time(1m), * END'
+	influx --execute 'CREATE CONTINUOUS QUERY max_kbps_ds_1day ON deliveryservice_stats BEGIN SELECT max(value) AS "value" INTO "deliveryservice_stats"."indefinite"."max.kbps.ds.1day" FROM "deliveryservice_stats"."monthly"."kbps.ds.1min" GROUP BY time(1d), deliveryservice, cdn END'
+
 	service influxdb stop
 
 	sed -i -- 's/;protocol = http/protocol = https/g' /etc/grafana/grafana.ini
