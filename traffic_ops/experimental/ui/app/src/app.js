@@ -27,7 +27,7 @@ var trafficOps = angular.module('trafficOps', [
         // private modules
         require('./modules/private').name,
 
-        // users
+        // current user
         require('./modules/private/user').name,
         require('./modules/private/user/edit').name,
 
@@ -40,17 +40,22 @@ var trafficOps = angular.module('trafficOps', [
         // configure
         require('./modules/private/configure').name,
         require('./modules/private/configure/cacheGroups').name,
+        require('./modules/private/configure/cacheGroups/edit').name,
         require('./modules/private/configure/cacheGroups/list').name,
         require('./modules/private/configure/deliveryServices').name,
-        require('./modules/private/configure/deliveryServices/list').name,
         require('./modules/private/configure/deliveryServices/edit').name,
+        require('./modules/private/configure/deliveryServices/list').name,
         require('./modules/private/configure/divisions').name,
+        require('./modules/private/configure/divisions/edit').name,
         require('./modules/private/configure/divisions/list').name,
         require('./modules/private/configure/locations').name,
+        require('./modules/private/configure/locations/edit').name,
         require('./modules/private/configure/locations/list').name,
         require('./modules/private/configure/servers').name,
+        require('./modules/private/configure/servers/edit').name,
         require('./modules/private/configure/servers/list').name,
         require('./modules/private/configure/regions').name,
+        require('./modules/private/configure/regions/edit').name,
         require('./modules/private/configure/regions/list').name,
 
         // monitor
@@ -90,17 +95,17 @@ var trafficOps = angular.module('trafficOps', [
         require('./common/modules/table/tenants').name,
         require('./common/modules/table/users').name,
 
-        // common models
+        // models
         require('./common/models').name,
         require('./common/api').name,
 
-        // common directives
+        // directives
         require('./common/directives/match').name,
 
-        // common services
+        // services
         require('./common/service/application').name,
 
-        //filters
+        // filters
         require('./common/filters').name
 
     ], App)

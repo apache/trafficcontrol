@@ -1,6 +1,10 @@
-var TableCacheGroupsController = function(cacheGroups, $scope) {
+var TableCacheGroupsController = function(cacheGroups, $scope, $location) {
 
     $scope.cacheGroups = cacheGroups;
+
+    $scope.editCacheGroup = function(id) {
+        $location.path($location.path() + id);
+    };
 
     angular.element(document).ready(function () {
         $('#cacheGroupsTable').dataTable({
@@ -11,5 +15,5 @@ var TableCacheGroupsController = function(cacheGroups, $scope) {
 
 };
 
-TableCacheGroupsController.$inject = ['cacheGroups', '$scope'];
+TableCacheGroupsController.$inject = ['cacheGroups', '$scope', '$location'];
 module.exports = TableCacheGroupsController;

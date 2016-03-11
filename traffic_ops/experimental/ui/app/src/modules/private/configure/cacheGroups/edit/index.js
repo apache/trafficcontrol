@@ -5,11 +5,11 @@ module.exports = angular.module('trafficOps.private.configure.cacheGroups.edit',
                 url: '/{cacheGroupId}',
                 views: {
                     cacheGroupsContent: {
-                        templateUrl: 'common/modules/table/cacheGroups/table.cacheGroups.tpl.html',
-                        controller: 'TableCacheGroupsController',
+                        templateUrl: 'common/modules/form/cacheGroup/form.cacheGroup.tpl.html',
+                        controller: 'FormCacheGroupController',
                         resolve: {
-                            cacheGroups: function(cacheGroupService) {
-                                return cacheGroupService.getCacheGroups();
+                            cacheGroup: function($stateParams, cacheGroupService) {
+                                return cacheGroupService.getCacheGroup($stateParams.cacheGroupId);
                             }
                         }
                     }
