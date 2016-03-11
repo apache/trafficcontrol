@@ -10,6 +10,7 @@ Sorted alphabetically
 * **[Jackie Heitzer](https://github.com/jheitz200)**
 * **[Jan van Doorn](https://github.com/knutsel)**
 * **[Jeff Elsloo](https://github.com/elsloo)**
+* **[Jeremy Mitchell](https://github.com/mitchell852)**
 * **[John Benton](https://github.com/evergreentech)**
 * **[John Rushford](https://github.com/jrushf1239k)**
 * **[Justin Laue](https://github.com/fp-x)**
