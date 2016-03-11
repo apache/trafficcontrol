@@ -53,6 +53,8 @@ my $db_protocol;
 my $db_name     = 'to_development';
 my $db_username = 'to_user';
 my $db_password = '';
+my $host_ip     = '';
+my $host_port   = '';
 GetOptions( "env=s" => \$environment );
 $ENV{'MOJO_MODE'} = $environment;
 my $dbh = Schema->database_handle;
@@ -154,9 +156,9 @@ sub parse_dbconf_yml_mysql_driver {
 	my @options = split( ':', $db_connection_string );
 	$db_protocol = $options[0];
 
-	my $host_ip      = $options[1];
+	$host_ip         = $options[1];
 	my @port_options = split( '\*', $options[2] );
-	my $host_port    = $port_options[0];
+	$host_port       = $port_options[0];
 
 	my $rest_of_options = $port_options[1];
 	my @db_options = split( '/', $rest_of_options );
@@ -173,12 +175,12 @@ sub migrate {
 
 sub seed {
 	print "Seeding database...\n";
-	system("mysql $db_name -u$db_username -p$db_password < db/seeds.sql");
+	system("mysql -h $host_ip -P $host_port $db_name -u$db_username -p$db_password < db/seeds.sql");
 }
 
 sub load_schema {
 	print "Creating database tables...\n";
-	system("mysql $db_name -u$db_username -p$db_password < db/create_tables.sql");
+	system("mysql -h $host_ip -P $host_port $db_name -u$db_username -p$db_password < db/create_tables.sql");
 }
 
 sub drop {
