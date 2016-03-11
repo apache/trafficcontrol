@@ -37,12 +37,7 @@ init() {
 	echo "Got Domain: $TMP_DOMAIN"
 	echo "Got Gateway: $TMP_GATEWAY"
 
-	sed -i -- "s/nodename = riak@127.0.0.1/nodename = riak@$TMP_IP/g" /etc/riak/riak.conf
-	sed -i -- "s/listener.http.internal = 127.0.0.1:8098/listener.http.internal = $TMP_IP:8098/g" /etc/riak/riak.conf
-	sed -i -- "s/listener.protobuf.internal = 127.0.0.1:8087/listener.protobuf.internal = $TMP_IP:8087/g" /etc/riak/riak.conf
-	sed -i -- "s/## listener.https.internal = 127.0.0.1:8098/listener.https.internal = $TMP_IP:8088/g" /etc/riak/riak.conf
-
-	TMP_CACHEGROUP_ID="$(curl -s -k -X GET -H "Cookie: mojolicious=$TMP_TO_COOKIE" $TRAFFIC_OPS_URI/api/1.2/cachegroups.json | python -c 'import json,sys;obj=json.load(sys.stdin);match=[x["id"] for x in obj["response"] if x["name"]=="mid-east"]; print match[0]')"		
+	TMP_CACHEGROUP_ID="$(curl -s -k -X GET -H "Cookie: mojolicious=$TMP_TO_COOKIE" $TRAFFIC_OPS_URI/api/1.2/cachegroups.json | python -c 'import json,sys;obj=json.load(sys.stdin);match=[x["id"] for x in obj["response"] if x["name"]=="mid-east"]; print match[0]')"
 	echo "Got cachegroup ID: $TMP_CACHEGROUP_ID"
 
 	TMP_SERVER_TYPE_ID="$(curl -s -k -X GET -H "Cookie: mojolicious=$TMP_TO_COOKIE" $TRAFFIC_OPS_URI/api/1.2/types.json | python -c 'import json,sys;obj=json.load(sys.stdin);match=[x["id"] for x in obj["response"] if x["name"]=="RIAK"]; print match[0]')"
@@ -56,7 +51,7 @@ init() {
 
 	TMP_CDN_ID="$(curl -s -k -X GET -H "Cookie: mojolicious=$TMP_TO_COOKIE" $TRAFFIC_OPS_URI/api/1.2/cdns.json | python -c 'import json,sys;obj=json.load(sys.stdin);match=[x["id"] for x in obj["response"] if x["name"]=="cdn"]; print match[0]')"
 	echo "Got cdn ID: $TMP_CDN_ID"
-	
+
 	curl -v -k -X POST -H "Cookie: mojolicious=$TMP_TO_COOKIE" --data-urlencode "host_name=$HOSTNAME" --data-urlencode "domain_name=$TMP_DOMAIN" --data-urlencode "interface_name=eth0" --data-urlencode "ip_address=$TMP_IP" --data-urlencode "ip_netmask=255.255.0.0" --data-urlencode "ip_gateway=$TMP_GATEWAY" --data-urlencode "interface_mtu=9000" --data-urlencode "cdn=$TMP_CDN_ID" --data-urlencode "cachegroup=$TMP_CACHEGROUP_ID" --data-urlencode "phys_location=$TMP_PHYS_LOCATION_ID" --data-urlencode "type=$TMP_SERVER_TYPE_ID" --data-urlencode "profile=$TMP_SERVER_PROFILE_ID" --data-urlencode "tcp_port=8088" $TRAFFIC_OPS_URI/server/create
 
 	TMP_SERVER_ID="$(curl -s -k -X GET -H "Cookie: mojolicious=$TMP_TO_COOKIE" $TRAFFIC_OPS_URI/api/1.2/servers.json | python -c 'import json,sys;obj=json.load(sys.stdin);match=[x["id"] for x in obj["response"] if x["hostName"]=="'"$HOSTNAME"'"]; print match[0]')"
