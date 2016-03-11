@@ -12,3 +12,4 @@
 /core/src/test/db/cr-config.json
 /core/src/test/db/health.json
 /core/src/test/db
+**/traffic_monitor.properties

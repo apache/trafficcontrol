@@ -23,6 +23,8 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.StringReader;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.nio.channels.FileLock;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -163,8 +165,11 @@ public class PeriodicResourceUpdater {
 		final File existingDB = new File(databaseLocation);
 		try {
 			if (!hasBeenLoaded || needsUpdating(existingDB)) {
-				asyncHttpClient.executeRequest(getRequest(urls.nextUrl()), new UpdateHandler()); // AsyncHandlers are NOT thread safe; one instance per request
-				return true;
+				final Request request = getRequest(urls.nextUrl());
+				if (request != null) {
+					asyncHttpClient.executeRequest(request, new UpdateHandler()); // AsyncHandlers are NOT thread safe; one instance per request
+					return true;
+				}
 			} else {
 				LOGGER.info("Database " + existingDB.getAbsolutePath() + " does not require updating.");
 			}
@@ -283,6 +288,12 @@ public class PeriodicResourceUpdater {
 	};
 
 	private Request getRequest(final String url) {
-		return asyncHttpClient.prepareGet(url).build();
+		try {
+			new URI(url);
+			return asyncHttpClient.prepareGet(url).build();
+		} catch (URISyntaxException e) {
+			LOGGER.fatal("Cannot update database from Bad URI - " + url);
+			return null;
+		}
 	}
 }

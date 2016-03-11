@@ -55,7 +55,11 @@ The following are requirements to ensure an accurate set up:
 Configuring Traffic Router
 ==========================
 
-By default, Traffic Router installs all configuration files under ``/opt/traffic_router/conf``. For the most part, the configuration files and parameters that follow are used to get Traffic Router online and communicating with various Traffic Control components. Once Traffic Router is successfully communicating with Traffic Control, configuration is mostly performed in Traffic Ops, and is distributed throughout Traffic Control via the CRConfig snapshot process. See :ref:`rl-snapshot-crconfig` for more information. Please see the parameter documentation for Traffic Router in the Using Traffic Ops guide documented under :ref:`rl-ccr-profile` for parameters that influence the behavior of Traffic Router via the CRConfig.
+.. Note:: Starting with Traffic Router 1.5, many of the configuration files under ``/opt/traffic_router/conf`` are only needed to override the default configuration values for Traffic Router. Most of the given default values will work well for any CDN. Critical values that must be changed are hostnames and credentials for communicating with other Traffic Control components such as Traffic Ops and Traffic Monitor.
+
+.. Note:: Pre-existing installations having configuration files in ``/opt/traffic_router/conf`` will still be used and honored for Traffic Router 1.5 and onward.
+
+For the most part, the configuration files and parameters that follow are used to get Traffic Router online and communicating with various Traffic Control components. Once Traffic Router is successfully communicating with Traffic Control, configuration is mostly performed in Traffic Ops, and is distributed throughout Traffic Control via the CRConfig snapshot process. See :ref:`rl-snapshot-crconfig` for more information. Please see the parameter documentation for Traffic Router in the Using Traffic Ops guide documented under :ref:`rl-ccr-profile` for parameters that influence the behavior of Traffic Router via the CRConfig.
 
 .. _rl-tr-config-files:
 

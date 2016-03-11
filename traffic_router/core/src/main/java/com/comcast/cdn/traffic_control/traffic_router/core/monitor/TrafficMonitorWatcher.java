@@ -17,9 +17,8 @@
 package com.comcast.cdn.traffic_control.traffic_router.core.monitor;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
-import java.net.URL;
-import java.net.URLConnection;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -253,7 +252,7 @@ public class TrafficMonitorWatcher  {
 		return hosts;
 	}
 
-	@SuppressWarnings("PMD.CyclomaticComplexity")
+	@SuppressWarnings({"PMD.CyclomaticComplexity", "PMD.NPathComplexity"})
 	public void processConfig() {
 		final long now = System.currentTimeMillis();
 
@@ -264,10 +263,15 @@ public class TrafficMonitorWatcher  {
 		lastHostAttempt = now;
 
 		try {
-			final URL resourceUrl = new URL("file://" + new File(propertiesDirectory, monitorProperties).getAbsolutePath());
-			final URLConnection c = resourceUrl.openConnection();
+			String hostList = System.getenv("TRAFFIC_MONITOR_HOSTS");
+
+			final File trafficMonitorConfigFile = new File(propertiesDirectory, monitorProperties);
 			final Properties props = new Properties();
-			props.load(c.getInputStream());
+
+			if (trafficMonitorConfigFile.exists()) {
+				LOGGER.info("Loading properties from " + trafficMonitorConfigFile.getAbsolutePath());
+				props.load(new FileInputStream(trafficMonitorConfigFile));
+			}
 
 			final boolean localConfig = Boolean.parseBoolean(props.getProperty("traffic_monitor.bootstrap.local", "false"));
 
@@ -277,9 +281,20 @@ public class TrafficMonitorWatcher  {
 			}
 
 			if (localConfig || !isBootstrapped()) {
-				final String hostList = props.getProperty("traffic_monitor.bootstrap.hosts");
-				final String[] newHosts = hostList.split(";");
-				setHosts(newHosts);
+				if (hostList == null || hostList.isEmpty()) {
+					hostList = props.getProperty("traffic_monitor.bootstrap.hosts");
+				}
+
+				if (hostList == null || hostList.isEmpty()) {
+					if (!trafficMonitorConfigFile.exists()) {
+						LOGGER.fatal("Missing environment variable 'TRAFFIC_MONITOR_HOSTS'");
+					} else {
+						LOGGER.error("Cannot determine Traffic Monitor hosts from property 'traffic_monitor.bootstrap.hosts' in config file " + trafficMonitorConfigFile.getAbsolutePath());
+					}
+				} else {
+					setHosts(hostList.contains(";") ? hostList.split(";") : new String[]{hostList});
+				}
+
 			} else if (!isLocalConfig() && isBootstrapped()) {
 				synchronized(monitorSync) {
 					if (!onlineMonitors.isEmpty()) {

@@ -71,6 +71,11 @@
 	<profiles>
 		<profile>
 			<id>rpm-build</id>
+			<activation>
+				<os>
+					<name>linux</name>
+				</os>
+			</activation>
 			<modules>
 				<module>build</module>
 			</modules>
