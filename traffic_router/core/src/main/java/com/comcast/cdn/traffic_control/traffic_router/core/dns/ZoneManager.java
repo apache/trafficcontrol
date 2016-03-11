@@ -250,6 +250,12 @@ public class ZoneManager extends Resolver {
 
 	private static void writeZone(final Zone zone) throws IOException {
 		synchronized(LOGGER) {
+			final File zoneDirectory = new File(getZoneDirectory());
+
+			if (!zoneDirectory.exists() && !zoneDirectory.mkdirs()) {
+				LOGGER.error(zoneDirectory.getAbsolutePath() + " directory does not exist and cannot be created!");
+			}
+
 			final String fileName = getZoneDirectory() + "/" + zone.getOrigin().toString();
 			LOGGER.info("writing: " + fileName);
 			final String file = zone.toMasterFile();
