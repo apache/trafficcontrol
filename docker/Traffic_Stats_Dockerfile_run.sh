@@ -16,6 +16,7 @@
 start() {
 	service influxdb start
 	service traffic_stats start
+	service grafana-server start
 	touch /opt/traffic_stats/var/log/traffic_stats/traffic_stats.log
 	exec tail -f /opt/traffic_stats/var/log/traffic_stats/traffic_stats.log
 }
@@ -28,7 +29,7 @@ init() {
 	TMP_DOMAIN=$DOMAIN
 	TMP_GATEWAY=$GATEWAY
 
-	TMP_CACHEGROUP_ID="$(curl -s -k -X GET -H "Cookie: mojolicious=$TMP_TO_COOKIE" $TRAFFIC_OPS_URI/api/1.2/cachegroups.json | python -c 'import json,sys;obj=json.load(sys.stdin);match=[x["id"] for x in obj["response"] if x["name"]=="mid-east"]; print match[0]')"		
+	TMP_CACHEGROUP_ID="$(curl -s -k -X GET -H "Cookie: mojolicious=$TMP_TO_COOKIE" $TRAFFIC_OPS_URI/api/1.2/cachegroups.json | python -c 'import json,sys;obj=json.load(sys.stdin);match=[x["id"] for x in obj["response"] if x["name"]=="mid-east"]; print match[0]')"
 	echo "Got cachegroup ID: $TMP_CACHEGROUP_ID"
 
 	TMP_SERVER_TYPE_ID="$(curl -s -k -X GET -H "Cookie: mojolicious=$TMP_TO_COOKIE" $TRAFFIC_OPS_URI/api/1.2/types.json | python -c 'import json,sys;obj=json.load(sys.stdin);match=[x["id"] for x in obj["response"] if x["name"]=="INFLUXDB"]; print match[0]')"
@@ -69,9 +70,12 @@ init() {
 	influx -execute 'create retention policy daily on deliveryservice_stats duration 26h replication 3 DEFAULT'
 	influx -execute 'create retention policy daily_stats on daily_stats duration INF replication 3 DEFAULT'
 
-	sed -i -- 's/https-enabled = false/https-enabled = true/g' /etc/influxdb/influxdb.conf
-
 	service influxdb stop
+
+	sed -i -- 's/;protocol = http/protocol = https/g' /etc/grafana/grafana.ini
+	sed -i -- 's#;cert_file =#cert_file = /etc/ssl/influxdb.crt#g' /etc/grafana/grafana.ini
+	sed -i -- 's#;cert_key =#cert_key = /etc/ssl/influxdb.key#g' /etc/grafana/grafana.ini
+	sed -i -n '1h;1!H;${g;s/access\n;enabled = false/access\nenabled = true/;p;}' /etc/grafana/grafana.ini
 
 	echo "INITIALIZED=1" >> /etc/environment
 }
