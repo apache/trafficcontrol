@@ -27,7 +27,7 @@ my %definition_for = (
 '16' => { new => 'Type', => using => { id => '22', last_updated => '2015-12-10 15:43:45', name => 'AAAA_RECORD', use_in_table => 'staticdnsentry', description => 'Static DNS AAAA entry', }, }, 
 '17' => { new => 'Type', => using => { description => 'Static DNS CNAME entry', id => '23', last_updated => '2015-12-10 15:43:45', name => 'CNAME_RECORD', use_in_table => 'staticdnsentry', }, }, 
 '18' => { new => 'Type', => using => { last_updated => '2015-12-10 15:43:45', name => 'HTTP_LIVE_NATNL', use_in_table => 'deliveryservice', description => 'HTTP Content routing, RAM cache, National', id => '24', }, }, 
-'19' => { new => 'Type', => using => { use_in_table => 'server', description => 'Redis stats gateway', id => '25', last_updated => '2015-12-10 15:43:45', name => 'REDIS', }, }, 
+'19' => { new => 'Type', => using => { use_in_table => 'server', description => 'traffic stats server', id => '25', last_updated => '2015-12-10 15:43:45', name => 'TRAFFIC_STATS', }, }, 
 '20' => { new => 'Type', => using => { description => 'DNS Content routing, RAM cache, National', id => '26', last_updated => '2015-12-10 15:43:45', name => 'DNS_LIVE_NATNL', use_in_table => 'deliveryservice', }, }, 
 '21' => { new => 'Type', => using => { description => 'DNS Content routing, RAM cache, Lo
 cal', id => '27', last_updated => '2015-12-10 15:43:45', name => 'DNS_LIVE', use_in_table => 'deliveryservice', }, }, 

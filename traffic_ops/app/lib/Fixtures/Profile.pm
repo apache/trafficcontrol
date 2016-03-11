@@ -43,14 +43,6 @@ my %definition_for = (
 			description => 'ccr description',
 		},
 	},
-	REDIS1 => {
-		new   => 'Profile',
-		using => {
-			id          => 4,
-			name        => 'REDIS1',
-			description => 'redis description',
-		},
-	},
 	RIAK1 => {
 		new   => 'Profile',
 		using => {

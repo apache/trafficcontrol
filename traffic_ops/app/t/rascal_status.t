@@ -25,8 +25,6 @@ use Data::Dumper;
 use warnings 'all';
 use Schema;
 use Test::TestHelper;
-use Test::Mock::Redis;
-use Common::RedisFactory;
 use HTTP::Response;
 use JSON;
 
@@ -37,11 +35,6 @@ BEGIN { $ENV{MOJO_MODE} = "test" }
 my $schema = Schema->connect_to_database;
 my $dbh    = Schema->database_handle;
 my $t      = Test::Mojo->new('TrafficOps');
-
-my $rm = Common::RedisFactory->new( $t, "redis01.kabletown.net:6379" );
-my $redis = $rm->connection();
-$redis->set( which => 'one' );
-$redis->set( what  => 'name' );
 
 no warnings 'once';
 

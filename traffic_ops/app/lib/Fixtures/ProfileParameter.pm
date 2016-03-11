@@ -41,13 +41,6 @@ my %definition_for = (
             parameter => 3,
         },
     },
-    domain_name4 => {
-        new   => 'ProfileParameter',
-        using => {
-            profile   => 4,
-            parameter => 3,
-        },
-    },
     domain_name5 => {
         new   => 'ProfileParameter',
         using => {

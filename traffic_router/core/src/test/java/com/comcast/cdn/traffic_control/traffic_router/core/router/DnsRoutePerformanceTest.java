@@ -30,6 +30,7 @@ import org.json.JSONArray;
 import org.json.JSONObject;
 import org.json.JSONTokener;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.powermock.core.classloader.annotations.PrepareForTest;
@@ -134,6 +135,7 @@ public class DnsRoutePerformanceTest {
         }
     }
 
+    @Ignore
     @Test
     public void itSupportsMinimalDNSRouteRequestTPS() throws Exception {
         Track track = StatTracker.getTrack();

@@ -59,7 +59,6 @@ setInterval('getDailySummary()', 300000);
 
 </script>
 <style>
-/*TODO:  Put style into site.css once Redis graphs are removed.*/
 .graph_panel {width: 65%; float: left; border:solid 1px grey;}
 .statistics_section { float:left; width:35%; color:white; font-size:150%; height:400px; width:305px; background-color:#1f1f1f; margin-right:5px; border:solid 1px grey; }
 .stat_label{padding-top: 3px}
