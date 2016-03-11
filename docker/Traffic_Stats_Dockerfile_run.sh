@@ -68,7 +68,9 @@ init() {
 	influx -execute 'create database daily_stats'
 	influx -execute 'create retention policy daily on cache_stats duration 26h replication 3 DEFAULT'
 	influx -execute 'create retention policy daily on deliveryservice_stats duration 26h replication 3 DEFAULT'
-	influx -execute 'create retention policy daily_stats on daily_stats duration INF replication 3 DEFAULT'
+	influx -execute 'create retention policy monthly on cache_stats duration 30d replication 3 DEFAULT'
+	influx -execute 'create retention policy monthly on deliveryservice_stats duration 30d replication 3 DEFAULT'
+	influx -execute 'create retention policy indefinite on daily_stats duration INF replication 3 DEFAULT'
 
 	service influxdb stop
 
