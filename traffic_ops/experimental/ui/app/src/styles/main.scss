@@ -32,7 +32,6 @@ $fa-font-path: "../assets/fonts";
 
 // user
 @import "../modules/private/user/user";
-@import "../modules/private/user/edit/user.edit";
 
 // administer
 @import "../modules/private/administer/administer";
@@ -42,7 +41,6 @@ $fa-font-path: "../assets/fonts";
 @import "../modules/private/configure/configure";
 @import "../modules/private/configure/cacheGroups/cacheGroups";
 @import "../modules/private/configure/deliveryServices/deliveryServices";
-@import "../modules/private/configure/deliveryServices/edit/deliveryServices.edit";
 @import "../modules/private/configure/divisions/divisions";
 @import "../modules/private/configure/locations/locations";
 @import "../modules/private/configure/regions/regions";

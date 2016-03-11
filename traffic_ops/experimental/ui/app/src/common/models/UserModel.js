@@ -1,10 +1,10 @@
 var UserModel = function($rootScope, $window, jwtHelper) {
 
+    this.loaded = false;
+
     this.userId = angular.isDefined($window.sessionStorage.token) ? jwtHelper.decodeToken($window.sessionStorage.token)['userid'] : 0;
 
-    this.user = {
-        loaded: false
-    };
+    this.user = {};
 
     var removeToken = function() {
         $window.sessionStorage.removeItem('token');
@@ -16,17 +16,16 @@ var UserModel = function($rootScope, $window, jwtHelper) {
     };
 
     this.setUser = function(userData) {
-        this.user.loaded = true;
-        this.user = angular.extend(this.user, userData);
+        this.loaded = true;
+        this.user = userData;
         $rootScope.$broadcast('userModel::userUpdated', this.user);
     };
 
     this.resetUser = function() {
         removeToken();
+        this.loaded = false;
         this.userId = 0;
-        this.user = {
-            loaded: false
-        };
+        this.user = {};
         $rootScope.$broadcast('userModel::userUpdated', this.user);
     };
 

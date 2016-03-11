@@ -1,13 +1,15 @@
-var UserController = function($scope, $state, $uibModal, $timeout, userService, authService, userModel, ENV) {
+var UserController = function($scope, $state, $uibModal, userService, authService, userModel) {
 
     var updateUser = function(user, options) {
-        userService.updateCurrentUser(ENV.api['root'] + 'tm_user/' + userModel.userId, user)
+        userService.updateCurrentUser(user)
             .then(function() {
                 if (options.signout) {
                     authService.logout();
                 }
             });
     };
+
+    $scope.userData = userModel.user;
 
     $scope.confirmUpdate = function(user, usernameField) {
         if (usernameField.$dirty) {
@@ -28,7 +30,7 @@ var UserController = function($scope, $state, $uibModal, $timeout, userService, 
             modalInstance.result.then(function() {
                 updateUser(user, { signout : true });
             }, function () {
-                $log.debug('Update user cancelled...');
+                // do nothing
             });
         } else {
             updateUser(user, { signout : false });
@@ -43,18 +45,7 @@ var UserController = function($scope, $state, $uibModal, $timeout, userService, 
         return !input.$focused && input.$dirty && input.$error[property];
     };
 
-    $scope.resetUser = function() {
-        $timeout(function() {
-            $scope.userData = angular.copy(userModel.user);
-        });
-    };
-    $scope.resetUser();
-
-    $scope.$on('userModel::userUpdated', function() {
-        $scope.resetUser();
-    });
-
 };
 
-UserController.$inject = ['$scope', '$state', '$uibModal', '$timeout', 'userService', 'authService', 'userModel', 'ENV'];
+UserController.$inject = ['$scope', '$state', '$uibModal', 'userService', 'authService', 'userModel'];
 module.exports = UserController;

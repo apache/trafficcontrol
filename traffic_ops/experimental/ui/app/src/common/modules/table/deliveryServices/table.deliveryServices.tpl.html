@@ -23,7 +23,7 @@
         </tr>
     </thead>
     <tbody>
-        <tr ng-repeat="deliveryService in deliveryServices">
+        <tr ng-dblclick="editDeliveryService(deliveryService.id)" ng-repeat="deliveryService in deliveryServices">
             <td>{{deliveryService.xmlId}}</td>
             <td>{{deliveryService.orgServerFqdn}}</td>
             <td>{{deliveryService._links.cdn.id}}</td>

@@ -1,5 +1,7 @@
 var NavigationController = function($scope, $log, $state, $location, $timeout, $uibModal, authService, trafficOpsService, userModel) {
 
+    $scope.userLoaded = userModel.loaded;
+
     $scope.user = userModel.user;
 
     $scope.monitor = {

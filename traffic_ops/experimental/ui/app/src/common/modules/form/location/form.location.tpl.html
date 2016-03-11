@@ -1,0 +1,36 @@
+<div class="row">
+    <div class="col-sm-8 col-md-8">
+        <h3>Edit Location</h3>
+    </div>
+    <div class="col-sm-4 col-md-4">
+        <button type="button" class="btn action-btn" ng-disabled="locationForm.$pristine || locationForm.$invalid" ng-click="alert('implement update button')">Update</button>
+    </div>
+</div>
+<hr>
+<form class="register-form col-sm-8 col-md-8" name="locationForm" role="form" novalidate>
+    <fieldset>
+        <legend>Location Details</legend>
+        <div class="row">
+            <div class="col-sm-6 col-md-6">
+                <div class="form-group" ng-class="{'has-error': hasError(locationForm.id), 'has-feedback': hasError(locationForm.id)}">
+                    <label class="control-label" for="id">ID
+                        <small ng-show="hasPropertyError(locationForm.id, 'required')">[ Required ]</small>
+                        <small ng-show="hasPropertyError(locationForm.id, 'maxlength')">[ Too Long ]</small>
+                    </label>
+                    <input id="id" name="id" type="text" class="form-control" ng-model="location.id" ng-maxlength="256" autofocus required>
+                    <span ng-show="hasError(locationForm.id)" class="form-control-feedback"><i class="fa fa-times"></i></span>
+                </div>
+            </div>
+            <div class="col-sm-6 col-md-6">
+                <div class="form-group" ng-class="{'has-error': hasError(locationForm.name), 'has-feedback': hasError(locationForm.name)}">
+                    <label class="control-label" for="name">Name
+                        <small ng-show="hasPropertyError(locationForm.name, 'required')">[ Required ]</small>
+                        <small ng-show="hasPropertyError(locationForm.name, 'maxlength')">[ Too Long ]</small>
+                    </label>
+                    <input id="name" name="name" type="text" class="form-control" ng-model="location.name" ng-maxlength="256" autofocus required>
+                    <span ng-show="hasError(locationForm.name)" class="form-control-feedback"><i class="fa fa-times"></i></span>
+                </div>
+            </div>
+        </div>
+    </fieldset>
+</form>

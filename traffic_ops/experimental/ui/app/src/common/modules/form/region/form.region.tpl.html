@@ -1,0 +1,36 @@
+<div class="row">
+    <div class="col-sm-8 col-md-8">
+        <h3>Edit Region</h3>
+    </div>
+    <div class="col-sm-4 col-md-4">
+        <button type="button" class="btn action-btn" ng-disabled="regionForm.$pristine || regionForm.$invalid" ng-click="alert('implement update button')">Update</button>
+    </div>
+</div>
+<hr>
+<form class="register-form col-sm-8 col-md-8" name="regionForm" role="form" novalidate>
+    <fieldset>
+        <legend>Region Details</legend>
+        <div class="row">
+            <div class="col-sm-6 col-md-6">
+                <div class="form-group" ng-class="{'has-error': hasError(regionForm.id), 'has-feedback': hasError(regionForm.id)}">
+                    <label class="control-label" for="id">ID
+                        <small ng-show="hasPropertyError(regionForm.id, 'required')">[ Required ]</small>
+                        <small ng-show="hasPropertyError(regionForm.id, 'maxlength')">[ Too Long ]</small>
+                    </label>
+                    <input id="id" name="id" type="text" class="form-control" ng-model="region.id" ng-maxlength="256" autofocus required>
+                    <span ng-show="hasError(regionForm.id)" class="form-control-feedback"><i class="fa fa-times"></i></span>
+                </div>
+            </div>
+            <div class="col-sm-6 col-md-6">
+                <div class="form-group" ng-class="{'has-error': hasError(regionForm.name), 'has-feedback': hasError(regionForm.name)}">
+                    <label class="control-label" for="name">Name
+                        <small ng-show="hasPropertyError(regionForm.name, 'required')">[ Required ]</small>
+                        <small ng-show="hasPropertyError(regionForm.name, 'maxlength')">[ Too Long ]</small>
+                    </label>
+                    <input id="name" name="name" type="text" class="form-control" ng-model="region.name" ng-maxlength="256" autofocus required>
+                    <span ng-show="hasError(regionForm.name)" class="form-control-feedback"><i class="fa fa-times"></i></span>
+                </div>
+            </div>
+        </div>
+    </fieldset>
+</form>
