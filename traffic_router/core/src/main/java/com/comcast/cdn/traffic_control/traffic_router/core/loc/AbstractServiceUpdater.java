@@ -50,14 +50,14 @@ public abstract class AbstractServiceUpdater {
 	private static final Logger LOGGER = Logger.getLogger(AbstractServiceUpdater.class);
 
 	protected String dataBaseURL;
-	protected String databaseLocation;
+	protected String databaseName;
 	protected ScheduledExecutorService executorService;
 	private long pollingInterval;
 	protected boolean loaded = false;
 	protected ScheduledFuture<?> scheduledService;
 	private TrafficRouterManager trafficRouterManager;
 	protected boolean untarDataFile;
-	protected File databasesDirectoryPath;
+	protected File databasesDirectory;
 
 	public void destroy() {
 		executorService.shutdownNow();
@@ -97,7 +97,11 @@ public abstract class AbstractServiceUpdater {
 
 	@SuppressWarnings("PMD.CyclomaticComplexity")
 	public boolean updateDatabase() {
-		final File existingDB = new File(databasesDirectoryPath, databaseLocation);
+		if (!databasesDirectory.exists() && !databasesDirectory.mkdirs()) {
+			LOGGER.error(databasesDirectory.getAbsolutePath() + " does not exist and cannot be created!");
+		}
+
+		final File existingDB = new File(databasesDirectory, databaseName);
 		File newDB = null;
 		try {
 			if (!isLoaded() || needsUpdating(existingDB)) {
@@ -155,8 +159,8 @@ public abstract class AbstractServiceUpdater {
 	}
 	abstract public boolean loadDatabase() throws IOException, JSONException;
 
-	public void setDatabaseLocation(final String databaseLocation) {
-		this.databaseLocation = databaseLocation;
+	public void setDatabaseName(final String databaseName) {
+		this.databaseName = databaseName;
 	}
 
 	public void setDataBaseURL(final String url, final long refresh) {
@@ -301,7 +305,7 @@ public abstract class AbstractServiceUpdater {
 	protected String tmpSuffix = ".dat";
 
 	protected File downloadDatabase(final String url, final File existingDb) throws IOException {
-		LOGGER.warn("[" + getClass().getSimpleName() + "] Downloading database: " + url);
+		LOGGER.info("[" + getClass().getSimpleName() + "] Downloading database: " + url);
 		final URL dbURL = new URL(url);
 		final HttpURLConnection conn = (HttpURLConnection) dbURL.openConnection();
 
@@ -317,7 +321,6 @@ public abstract class AbstractServiceUpdater {
 		}
 
 		if (!untarDataFile && sourceCompressed) {
-			LOGGER.warn("Using gzip input stream for " + url);
 			in = new GZIPInputStream(in);
 		}
 
@@ -403,11 +406,11 @@ public abstract class AbstractServiceUpdater {
 		this.untarDataFile = untarDataFile;
 	}
 
-	public File getDatabasesDirectoryPath() {
-		return databasesDirectoryPath;
+	public File getDatabasesDirectory() {
+		return databasesDirectory;
 	}
 
-	public void setDatabasesDirectoryPath(final File databasesDirectoryPath) {
-		this.databasesDirectoryPath = databasesDirectoryPath;
+	public void setDatabasesDirectory(final File databasesDirectory) {
+		this.databasesDirectory = databasesDirectory;
 	}
 }

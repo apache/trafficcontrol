@@ -203,7 +203,6 @@
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-surefire-plugin</artifactId>
 				<configuration>
-					<argLine>-DnnTPS=12000</argLine>
 					<systemPropertyVariables>
 						<log4j.configuration>file:src/test/resources/log4j.maven.properties</log4j.configuration>
 					</systemPropertyVariables>
@@ -214,7 +213,7 @@
 				<artifactId>maven-failsafe-plugin</artifactId>
 				<version>2.19</version>
 				<configuration>
-					<argLine>-DminimumTPS=140</argLine>
+					<argLine>-DnnTPS=12000 -DminimumTPS=140</argLine>
 				</configuration>
 				<executions>
 					<execution>
@@ -223,7 +222,9 @@
 							<goal>verify</goal>
 						</goals>
 						<configuration>
-							<redirectTestOutputToFile>true</redirectTestOutputToFile>
+							<systemPropertyVariables>
+								<log4j.configuration>file:src/test/resources/log4j.maven.properties</log4j.configuration>
+							</systemPropertyVariables>
 							<groups>com.comcast.cdn.traffic_control.traffic_router.core.util.IntegrationTest</groups>
 							<includes>
 								<include>**/*.java</include>

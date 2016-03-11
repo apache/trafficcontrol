@@ -111,7 +111,8 @@
 
 	<bean id="federationsWatcher" class="com.comcast.cdn.traffic_control.traffic_router.core.loc.FederationsWatcher" init-method="init">
 		<property name="executorService" ref="ScheduledExecutorService" />
-		<property name="databaseLocation" value="$[cache.federations.database:federations.json]" />
+		<property name="databasesDirectory" ref="databasesDir" />
+		<property name="databaseName" value="$[cache.federations.database:federations.json]" />
 		<property name="pollingInterval" value="$[cache.federations.database.refresh.period:300000]" />
 		<property name="trafficOpsUtils" ref="trafficOpsUtils" />
 		<property name="trafficRouterManager" ref="trafficRouterManager" />
@@ -135,8 +136,8 @@
 	</bean>
 
 	<bean id="geolocationDatabaseUpdater" class="com.comcast.cdn.traffic_control.traffic_router.core.loc.GeolocationDatabaseUpdater" init-method="init">
-		<property name="databasesDirectoryPath" ref="databasesDir"/>
-		<property name="databaseLocation" value="$[cache.geolocation.database:GeoLite2-City.mmdb]" />
+		<property name="databasesDirectory" ref="databasesDir"/>
+		<property name="databaseName" value="$[cache.geolocation.database:GeoLite2-City.mmdb]" />
 		<property name="pollingInterval" value="$[cache.geolocation.database.refresh.period:86400000]" />
 		<property name="untarDataFile" value="$[cache.geolocation.database.tarred:false]"/>
 		<property name="geoLocation" ref="GeolocationService" />
@@ -147,7 +148,8 @@
 	<bean id="networkUpdater" class="com.comcast.cdn.traffic_control.traffic_router.core.loc.NetworkUpdater"
 		init-method="init">
 		<property name="executorService" ref="ScheduledExecutorService" />
-		<property name="databaseLocation" value="$[cache.czmap.database:czmap.json]" />
+		<property name="databasesDirectory" ref="databasesDir" />
+		<property name="databaseName" value="$[cache.czmap.database:czmap.json]" />
 		<property name="pollingInterval" value="$[cache.czmap.database.refresh.period:10800000]" />
 		<property name="trafficRouterManager" ref="trafficRouterManager" />
 	</bean>
@@ -155,7 +157,8 @@
 	<bean id="regionalGeoUpdater" class="com.comcast.cdn.traffic_control.traffic_router.core.loc.RegionalGeoUpdater"
 		init-method="init">
 		<property name="executorService" ref="ScheduledExecutorService" />
-		<property name="databaseLocation" value="$[cache.regionalgeo.database:regional_geoblock.json]" />
+		<property name="databasesDirectory" ref="databasesDir" />
+		<property name="databaseName" value="$[cache.regionalgeo.database:regional_geoblock.json]" />
 		<property name="pollingInterval" value="$[cache.regionalgeo.database.refresh.period:10800000]" />
 		<property name="trafficRouterManager" ref="trafficRouterManager" />
 	</bean>

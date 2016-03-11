@@ -37,7 +37,7 @@ public class GeolocationDatabaseUpdater extends AbstractServiceUpdater {
 	}
 
 	public boolean loadDatabase() throws IOException {
-		geolocationService.setDatabaseFile(new File(databasesDirectoryPath, databaseLocation));
+		geolocationService.setDatabaseFile(new File(databasesDirectory, databaseName));
 		geolocationService.reloadDatabase();
 		return true;
 	}

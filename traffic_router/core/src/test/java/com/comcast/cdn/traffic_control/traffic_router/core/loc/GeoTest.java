@@ -20,7 +20,6 @@ import com.comcast.cdn.traffic_control.traffic_router.core.util.IntegrationTest;
 import org.apache.log4j.Logger;
 import org.junit.Before;
 import org.junit.BeforeClass;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.springframework.context.ApplicationContext;
