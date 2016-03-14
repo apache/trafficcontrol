@@ -1,16 +1,12 @@
-var FormRegionController = function(region, $scope, regionService) {
+var FormRegionController = function(region, $scope, formUtils, regionService) {
 
     $scope.region = region;
 
-    $scope.hasError = function(input) {
-        return !input.$focused && input.$dirty && input.$invalid;
-    };
+    $scope.hasError = formUtils.hasError;
 
-    $scope.hasPropertyError = function(input, property) {
-        return !input.$focused && input.$dirty && input.$error[property];
-    };
+    $scope.hasPropertyError = formUtils.hasPropertyError;
 
 };
 
-FormRegionController.$inject = ['region', '$scope', 'regionService'];
+FormRegionController.$inject = ['region', '$scope', 'formUtils', 'regionService'];
 module.exports = FormRegionController;

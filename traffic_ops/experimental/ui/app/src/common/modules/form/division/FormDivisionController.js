@@ -1,4 +1,4 @@
-var FormDivisionController = function(division, $scope, locationUtils, divisionService) {
+var FormDivisionController = function(division, $scope, formUtils, locationUtils, divisionService) {
 
     $scope.divisionOriginal = division;
 
@@ -10,15 +10,11 @@ var FormDivisionController = function(division, $scope, locationUtils, divisionS
 
     $scope.navigateToPath = locationUtils.navigateToPath;
 
-    $scope.hasError = function(input) {
-        return !input.$focused && input.$dirty && input.$invalid;
-    };
+    $scope.hasError = formUtils.hasError;
 
-    $scope.hasPropertyError = function(input, property) {
-        return !input.$focused && input.$dirty && input.$error[property];
-    };
+    $scope.hasPropertyError = formUtils.hasPropertyError;
 
 };
 
-FormDivisionController.$inject = ['division', '$scope', 'locationUtils', 'divisionService'];
+FormDivisionController.$inject = ['division', '$scope', 'formUtils', 'locationUtils', 'divisionService'];
 module.exports = FormDivisionController;

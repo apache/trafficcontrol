@@ -1,16 +1,12 @@
-var FormDeliveryServiceController = function(deliveryService, $scope, deliveryServiceService) {
+var FormDeliveryServiceController = function(deliveryService, $scope, formUtils, deliveryServiceService) {
 
     $scope.deliveryService = deliveryService;
 
-    $scope.hasError = function(input) {
-        return !input.$focused && input.$dirty && input.$invalid;
-    };
+    $scope.hasError = formUtils.hasError;
 
-    $scope.hasPropertyError = function(input, property) {
-        return !input.$focused && input.$dirty && input.$error[property];
-    };
+    $scope.hasPropertyError = formUtils.hasPropertyError;
 
 };
 
-FormDeliveryServiceController.$inject = ['deliveryService', '$scope', 'deliveryServiceService'];
+FormDeliveryServiceController.$inject = ['deliveryService', '$scope', 'formUtils', 'deliveryServiceService'];
 module.exports = FormDeliveryServiceController;

@@ -1,4 +1,4 @@
-var FormUserController = function(user, $scope, userService) {
+var FormUserController = function(user, $scope, formUtils, userService) {
 
     var updateUser = function(user) {
         userService.updateUser(user);
@@ -10,15 +10,11 @@ var FormUserController = function(user, $scope, userService) {
         updateUser(user);
     };
 
-    $scope.hasError = function(input) {
-        return !input.$focused && input.$dirty && input.$invalid;
-    };
+    $scope.hasError = formUtils.hasError;
 
-    $scope.hasPropertyError = function(input, property) {
-        return !input.$focused && input.$dirty && input.$error[property];
-    };
+    $scope.hasPropertyError = formUtils.hasPropertyError;
 
 };
 
-FormUserController.$inject = ['user', '$scope', 'userService'];
+FormUserController.$inject = ['user', '$scope', 'formUtils', 'userService'];
 module.exports = FormUserController;

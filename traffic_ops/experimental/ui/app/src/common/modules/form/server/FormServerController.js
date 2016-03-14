@@ -1,16 +1,12 @@
-var FormServerController = function(server, $scope, serverService) {
+var FormServerController = function(server, $scope, formUtils, serverService) {
 
     $scope.server = server;
 
-    $scope.hasError = function(input) {
-        return !input.$focused && input.$dirty && input.$invalid;
-    };
+    $scope.hasError = formUtils.hasError;
 
-    $scope.hasPropertyError = function(input, property) {
-        return !input.$focused && input.$dirty && input.$error[property];
-    };
+    $scope.hasPropertyError = formUtils.hasPropertyError;
 
 };
 
-FormServerController.$inject = ['server', '$scope', 'serverService'];
+FormServerController.$inject = ['server', '$scope', 'formUtils', 'serverService'];
 module.exports = FormServerController;

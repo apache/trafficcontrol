@@ -1,16 +1,12 @@
-var FormLocationController = function(location, $scope, locationService) {
+var FormLocationController = function(location, $scope, formUtils, locationService) {
 
     $scope.location = location;
 
-    $scope.hasError = function(input) {
-        return !input.$focused && input.$dirty && input.$invalid;
-    };
+    $scope.hasError = formUtils.hasError;
 
-    $scope.hasPropertyError = function(input, property) {
-        return !input.$focused && input.$dirty && input.$error[property];
-    };
+    $scope.hasPropertyError = formUtils.hasPropertyError;
 
 };
 
-FormLocationController.$inject = ['location', '$scope', 'locationService'];
+FormLocationController.$inject = ['location', '$scope', 'formUtils', 'locationService'];
 module.exports = FormLocationController;

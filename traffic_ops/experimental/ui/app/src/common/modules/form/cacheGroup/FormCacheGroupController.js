@@ -1,16 +1,12 @@
-var FormCacheGroupController = function(cacheGroup, $scope, cacheGroupService) {
+var FormCacheGroupController = function(cacheGroup, $scope, formUtils, cacheGroupService) {
 
     $scope.cacheGroup = cacheGroup;
 
-    $scope.hasError = function(input) {
-        return !input.$focused && input.$dirty && input.$invalid;
-    };
+    $scope.hasError = formUtils.hasError;
 
-    $scope.hasPropertyError = function(input, property) {
-        return !input.$focused && input.$dirty && input.$error[property];
-    };
+    $scope.hasPropertyError = formUtils.hasPropertyError;
 
 };
 
-FormCacheGroupController.$inject = ['cacheGroup', '$scope', 'cacheGroupService'];
+FormCacheGroupController.$inject = ['cacheGroup', '$scope', 'formUtils', 'cacheGroupService'];
 module.exports = FormCacheGroupController;
