@@ -269,7 +269,13 @@ public class ZoneManager extends Resolver {
 	}
 
 	private static LoadingCache<ZoneKey, Zone> createZoneCache(final ZoneCacheType cacheType, final CacheBuilderSpec spec) {
-		return CacheBuilder.from(spec).recordStats().build(
+		final RemovalListener<ZoneKey, Zone> removalListener = new RemovalListener<ZoneKey, Zone>() {
+			public void onRemoval(final RemovalNotification<ZoneKey, Zone> removal) {
+				LOGGER.debug(cacheType + " " + removal.getKey().getClass().getSimpleName() + " " + removal.getKey().getName() + " evicted from cache: " + removal.getCause());
+			}
+		};
+
+		return CacheBuilder.from(spec).recordStats().removalListener(removalListener).build(
 			new CacheLoader<ZoneKey, Zone>() {
 				final boolean writeZone = (cacheType == ZoneCacheType.STATIC) ? true : false;
 
