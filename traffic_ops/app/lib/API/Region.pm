@@ -47,7 +47,7 @@ sub create{
     my $division_name = $self->param('division_name');
     my $params = $self->req->json;
     if (!defined($params)) {
-        return $self->alert("parameters must Json format,  please check!"); 
+        return $self->alert("parameters must be in JSON format,  please check!"); 
     }
     if ( !&is_oper($self) ) {
         return $self->alert("You must be an ADMIN or OPER to perform this operation!");
@@ -55,12 +55,12 @@ sub create{
 
     my $existing_region = $self->db->resultset('Region')->search( { name => $params->{name} } )->get_column('name')->single();
     if (defined($existing_region)) {
-        return $self->alert("region[". $params->{name} . "] is already exist."); 
+        return $self->alert("region[". $params->{name} . "] already exists."); 
     }
 
     my $divsion_id = $self->db->resultset('Division')->search( { name => $division_name } )->get_column('id')->single();
     if (!defined($divsion_id)) {
-        return $self->alert("division[". $division_name . "] is not exist."); 
+        return $self->alert("division[". $division_name . "] does not exist."); 
     }
 
     my $insert = $self->db->resultset('Region')->create(

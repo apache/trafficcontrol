@@ -63,7 +63,7 @@ sub create {
     my $self = shift;
     my $params = $self->req->json;
     if ( !defined($params) ) {
-        return $self->alert("parameters must Json format,  please check!");
+        return $self->alert("parameters must be in JSON format,  please check!");
     }
 
     if ( !&is_oper($self) ) {

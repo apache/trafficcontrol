@@ -164,7 +164,7 @@ sub create{
     my $self = shift;
     my $params = $self->req->json;
     if (!defined($params)) {
-        return $self->alert("parameters must Json format,  please check!"); 
+        return $self->alert("parameters must be in JSON format,  please check!"); 
     }
 
     if ( !&is_oper($self) ) {
@@ -180,13 +180,13 @@ sub create{
     my $type_id = $self->get_typeId($type_name);
 
     if (!defined($type_id)) {
-        return $self->alert("type_name[". $type_name . "] is not a validate cachegroup type"); 
+        return $self->alert("Type ". $type_name . " is not a valid Cache Group type"); 
     }
     if (exists $cachegroups->{'cachegroups'}->{$name}) {
-        return $self->internal_server_error("cache_group_name[".$name."] is already exist.");
+        return $self->internal_server_error("cache_group_name[".$name."] already exists.");
     }
     if (exists $cachegroups->{'short_names'}->{$short_name}) {
-        return $self->internal_server_error("cache_group_shortname[".$short_name."] is already exist.");
+        return $self->internal_server_error("cache_group_shortname[".$short_name."] already exists.");
     }
 
     my $parent_cachegroup_id = $cachegroups->{'cachegroups'}->{$parent_cachegroup};

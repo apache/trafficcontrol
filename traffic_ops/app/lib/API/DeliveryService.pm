@@ -393,14 +393,14 @@ sub assign_servers {
 	my $params = $self->req->json;
 
 	if ( !defined($params) ) {
-		return $self->alert("parameters are json format, please check!");
+		return $self->alert("parameters are JSON format, please check!");
 	}
 	if ( !&is_oper($self) ) {
 		return $self->alert("You must be an ADMIN or OPER to perform this operation!");
 	}
 
 	if ( !exists( $params->{server_names} ) ) {
-		return $self->alert("Parameter 'server_names' is required JSON.");
+		return $self->alert("Parameter 'server_names' is required.");
 	}
 
 	my $dsid = $self->db->resultset('Deliveryservice')->search( { xml_id => $ds_xml_Id } )->get_column('id')->single();

@@ -454,8 +454,8 @@ sub get_server_by_id {
         $row = $self->db->resultset('Server')->find( { id => $id } );
     };
     if ($@) {
-        $self->app->log->error( "Fail to get server id = $id: $@" );
-        return (undef, "Fail to get server id = $id: $@")
+        $self->app->log->error( "Failed to get server id = $id: $@" );
+        return (undef, "Failed to get server id = $id: $@")
     }
     my $data = {
         "id"             => $row->id,
@@ -551,9 +551,9 @@ sub create {
             ); 
         };
         if ($@) {
-            $self->app->log->error( "Fail to create server: $@" );
+            $self->app->log->error( "Failed to create server: $@" );
             return $self->alert(
-                { Error => "Fail to create server: $@" }
+                { Error => "Failed to create server: $@" }
             );
         }
     }
@@ -591,9 +591,9 @@ sub create {
             );
         };
         if ($@) {
-            $self->app->log->error( "Fail to create server: $@" );
+            $self->app->log->error( "Failed to create server: $@" );
             return $self->alert(
-                { Error => "Fail to create server: $@" }
+                { Error => "Failed to create server: $@" }
             );
         }
     }
@@ -640,7 +640,7 @@ sub update {
     my $org_server = $self->db->resultset('Server')->find( { id => $id } );
     if( !defined($org_server) ) {
         return $self->alert(
-            { Error => "Fail to find server id = $id" }
+            { Error => "Failed to find server id = $id" }
         );
     }
     my $update     = $self->db->resultset('Server')->find( { id => $id } );
@@ -678,9 +678,9 @@ sub update {
         ); 
     };
     if ($@) {
-        $self->app->log->error( "Fail to update server id = $id: $@" );
+        $self->app->log->error( "Failed to update server id = $id: $@" );
         return $self->alert(
-            { Error => "Fail to update server: $@" }
+            { Error => "Failed to update server: $@" }
         );
     }
     $update->update();

@@ -78,7 +78,7 @@ sub create{
     my $region_name = $self->param('region_name');
     my $params = $self->req->json;
     if (!defined($params)) {
-        return $self->alert("parameters must Json format,  please check!");
+        return $self->alert("parameters must be in JSON format,  please check!");
     }
     if ( !&is_oper($self) ) {
         return $self->alert("You must be an ADMIN or OPER to perform this operation!");
@@ -86,15 +86,15 @@ sub create{
 
     my $existing_physlocation = $self->db->resultset('PhysLocation')->search( { name => $params->{name} } )->get_column('name')->single();
     if (defined($existing_physlocation)){
-        return $self->alert("physical locatiion[". $params->{name} . "] is already exist.");
+        return $self->alert("physical location[". $params->{name} . "] already exists.");
     }
     $existing_physlocation = $self->db->resultset('PhysLocation')->search( { name => $params->{short_name} } )->get_column('name')->single();
     if (defined($existing_physlocation)){
-        return $self->alert("physical locatiion with short_name[". $params->{short_name} . "] is already exist.");
+        return $self->alert("physical location with short_name[". $params->{short_name} . "] already exists.");
     }
     my $region_id = $self->db->resultset('Region')->search( { name => $region_name } )->get_column('id')->single();
     if (!defined($region_id)) {
-        return $self->alert("region[". $region_name . "] is not exist.");
+        return $self->alert("region[". $region_name . "] does not exist.");
     }
 
     my $insert = $self->db->resultset('PhysLocation')->create(
