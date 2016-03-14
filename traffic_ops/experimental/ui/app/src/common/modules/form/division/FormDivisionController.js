@@ -1,6 +1,14 @@
-var FormDivisionController = function(division, $scope, divisionService) {
+var FormDivisionController = function(division, $scope, locationUtils, divisionService) {
 
-    $scope.division = division;
+    $scope.divisionOriginal = division;
+
+    $scope.division = angular.copy(division);
+
+    $scope.update = function(division) {
+        alert('implement update');
+    };
+
+    $scope.navigateToPath = locationUtils.navigateToPath;
 
     $scope.hasError = function(input) {
         return !input.$focused && input.$dirty && input.$invalid;
@@ -12,5 +20,5 @@ var FormDivisionController = function(division, $scope, divisionService) {
 
 };
 
-FormDivisionController.$inject = ['division', '$scope', 'divisionService'];
+FormDivisionController.$inject = ['division', '$scope', 'locationUtils', 'divisionService'];
 module.exports = FormDivisionController;
