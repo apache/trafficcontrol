@@ -100,7 +100,7 @@ public class DnsRoutePerformanceTest {
 
         trafficRouter = spy(trafficRouter);
 
-        doCallRealMethod().when(trafficRouter).getCoverageZoneCache(anyString());
+        doCallRealMethod().when(trafficRouter).getCoverageZoneCache(anyString(), any(DeliveryService.class));
 
         doCallRealMethod().when(trafficRouter).selectCache(any(Request.class), any(DeliveryService.class), any(Track.class));
         doCallRealMethod().when(trafficRouter, "selectCache", any(CacheLocation.class), any(DeliveryService.class));
@@ -167,10 +167,10 @@ public class DnsRoutePerformanceTest {
         System.out.println("TPS was " + tps + " for routing dns request with hostname " + names);
 
         for (ResultType resultType : ResultType.values()) {
-            if (resultType != ResultType.CZ && resultType != ResultType.GEO) {
-                assertThat(stats.get(resultType), equalTo(0));
-            } else {
+            if (resultType == ResultType.CZ) {
                 assertThat(stats.get(resultType), greaterThan(0));
+            } else {
+                assertThat(stats.get(resultType), equalTo(0));
             }
         }
 
