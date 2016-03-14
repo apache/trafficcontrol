@@ -3,7 +3,7 @@ var TableUsersController = function(users, $scope, $location) {
     $scope.users = users;
 
     $scope.editUser = function(id) {
-        $location.path($location.path() + id);
+        $location.path($location.path() + '/' + id);
     };
 
     angular.element(document).ready(function () {

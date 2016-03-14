@@ -3,7 +3,7 @@ var TableDeliveryServicesController = function(deliveryServices, $scope, $locati
     $scope.deliveryServices = deliveryServices;
 
     $scope.editDeliveryService = function(id) {
-        $location.path($location.path() + id);
+        $location.path($location.path() + '/' + id);
     };
 
     angular.element(document).ready(function () {

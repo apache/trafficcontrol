@@ -22,13 +22,13 @@
                 </div>
             </div>
             <div class="col-sm-6 col-md-6">
-                <div class="form-group" ng-class="{'has-error': hasError(serverForm.name), 'has-feedback': hasError(serverForm.name)}">
-                    <label class="control-label" for="name">Name
-                        <small ng-show="hasPropertyError(serverForm.name, 'required')">[ Required ]</small>
-                        <small ng-show="hasPropertyError(serverForm.name, 'maxlength')">[ Too Long ]</small>
+                <div class="form-group" ng-class="{'has-error': hasError(serverForm.hostName), 'has-feedback': hasError(serverForm.hostName)}">
+                    <label class="control-label" for="hostName">Host
+                        <small ng-show="hasPropertyError(serverForm.hostName, 'required')">[ Required ]</small>
+                        <small ng-show="hasPropertyError(serverForm.hostName, 'maxlength')">[ Too Long ]</small>
                     </label>
-                    <input id="name" name="name" type="text" class="form-control" ng-model="server.name" ng-maxlength="256" autofocus required>
-                    <span ng-show="hasError(serverForm.name)" class="form-control-feedback"><i class="fa fa-times"></i></span>
+                    <input id="hostName" name="hostName" type="text" class="form-control" ng-model="server.hostName" ng-maxlength="256" autofocus required>
+                    <span ng-show="hasError(serverForm.hostName)" class="form-control-feedback"><i class="fa fa-times"></i></span>
                 </div>
             </div>
         </div>

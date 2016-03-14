@@ -4,7 +4,7 @@ module.exports = angular.module('trafficOps.private.configure.locations.edit', [
             .state('trafficOps.private.configure.locations.edit', {
                 url: '/{locationId}',
                 views: {
-                    locationContent: {
+                    locationsContent: {
                         templateUrl: 'common/modules/form/location/form.location.tpl.html',
                         controller: 'FormLocationController',
                         resolve: {

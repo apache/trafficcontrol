@@ -3,7 +3,7 @@ var TableLocationsController = function(locations, $scope, $location) {
     $scope.locations = locations;
 
     $scope.editLocation = function(id) {
-        $location.path($location.path() + id);
+        $location.path($location.path() + '/' + id);
     };
 
     angular.element(document).ready(function () {

@@ -3,7 +3,7 @@ var TableDivisionsController = function(divisions, $scope, $location) {
     $scope.divisions = divisions;
 
     $scope.editDivision = function(id) {
-        $location.path($location.path() + id);
+        $location.path($location.path() + '/' + id);
     };
 
     angular.element(document).ready(function () {

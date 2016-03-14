@@ -5,7 +5,7 @@ var DeliveryServiceService = function(Restangular, messageModel) {
     };
 
     this.getDeliveryService = function(id) {
-        return Restangular.one("cachegroup", id).get();
+        return Restangular.one("deliveryservice", id).get();
     };
 
     this.updateDeliveryService = function(deliveryService) {

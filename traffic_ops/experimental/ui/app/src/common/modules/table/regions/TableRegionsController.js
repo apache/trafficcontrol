@@ -3,7 +3,7 @@ var TableRegionsController = function(regions, $scope, $location) {
     $scope.regions = regions;
 
     $scope.editRegion = function(id) {
-        $location.path($location.path() + id);
+        $location.path($location.path() + '/' + id);
     };
 
     angular.element(document).ready(function () {
