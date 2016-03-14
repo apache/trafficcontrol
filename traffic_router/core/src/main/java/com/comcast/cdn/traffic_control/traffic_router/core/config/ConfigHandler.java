@@ -418,8 +418,10 @@ public class ConfigHandler {
 
 	private void parseRegionalGeoConfig(final JSONObject config) {
 		final String url = config.optString("regional_geoblock.polling.url", null);
+
 		if (url == null) {
-			LOGGER.info("regional_geoblock.polling.url not configured");
+			LOGGER.info("regional_geoblock.polling.url not configured; stopping service updater");
+			getRegionalGeoUpdater().stopServiceUpdater();
 			return;
 		}
 
