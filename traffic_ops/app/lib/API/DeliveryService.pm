@@ -28,17 +28,6 @@ use Validate::Tiny ':all';
 use Data::Dumper;
 use Common::ReturnCodes qw(SUCCESS ERROR);
 
-my $valid_server_types = {
-	edge => "EDGE",
-	mid  => "MID",
-};
-
-# this structure maps the above types to the allowed metrics below
-my $valid_metric_types = {
-	origin_tps => "mid",
-	ooff       => "mid",
-};
-
 sub delivery_services {
 	my $self         = shift;
 	my $id           = $self->param('id');

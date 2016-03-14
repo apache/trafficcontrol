@@ -43,8 +43,8 @@ sub cpdss_iframe {
 			$valid_profiles->{$row} = 1;
 		}
 
-		my $etypeid = &type_id( $self, 'EDGE' );
-		my $rs = $self->db->resultset('Server')->search( { type => $etypeid }, { prefetch => 'profile', order_by => 'host_name' } );
+		my @etypeids = &type_ids( $self, 'EDGE%' );
+		my $rs = $self->db->resultset('Server')->search( { type => { -in => \@etypeids } }, { prefetch => 'profile', order_by => 'host_name' } );
 		my @from_server_list;
 		while ( my $row = $rs->next ) {
 			if ( $row->id == $srvr_id ) {
@@ -100,10 +100,11 @@ sub edit {
 
 	$ds = $self->db->resultset('Deliveryservice')->search( { id => $id } )->single();
 
-	my $etypeid = &type_id( $self, 'EDGE', );
-	my $otypeid = &type_id( $self, 'ORG', );
+	my @types;
+	push(@types, &type_ids( $self, 'EDGE%' ) );
+	push(@types, &type_id( $self, 'ORG' ) );
 	my $rs      = $self->db->resultset('Server')
-		->search( { -or => [ { 'me.type' => $etypeid }, { 'me.type' => $otypeid } ] }, { prefetch => [ 'cachegroup', 'type', 'profile', 'status' ], } );
+		->search( { "me.type" => { -in => \@types } }, { prefetch => [ 'cachegroup', 'type', 'profile', 'status' ], } );
 	while ( my $row = $rs->next ) {
 
 		# skip profiles that are not associated with the cdn this ds is in
@@ -207,11 +208,7 @@ sub clone_server {
 
 sub assign_servers {
 	my $self = shift;
-
 	my $dsid     = $self->param('id');
-	my $serverid = $self->param('serverid_100');
-
-	print "serverid = $serverid\n";
 
 	my @server_ids;
 	foreach my $param ( $self->param ) {

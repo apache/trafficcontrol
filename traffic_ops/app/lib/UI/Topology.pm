@@ -82,16 +82,29 @@ sub gen_crconfig_json {
 
 	my %param_cache;
 	my @profile_caches;
-	for my $cachetype (qw/CCR EDGE MID/) {
-		my $r = $profile_cache->{$cachetype};
-		if ( defined($r) && scalar @{$r} != 0 ) {
-			push @profile_caches, @{$r};
+
+	# key is the expression used in the regex below, value is the human readable string
+	my $types = {
+		"CCR" => "Traffic Router",
+		"^EDGE" => "EDGE",
+		"^MID" => "MID",
+	};
+
+	for my $cachetype ( keys %{ $types } ) {
+		my $found = 0;
+
+		for my $this_type ( keys %{ $profile_cache } ) {
+			if ( $this_type =~ m/$cachetype/ && scalar( @{ $profile_cache->{$this_type} } ) > 0 ) {
+				push @profile_caches, @{$profile_cache->{$this_type}};
+				$found = 1;
+			}
 		}
-		else {
-			my $t = ( $cachetype eq 'CCR' ) ? 'Traffic Router' : $cachetype;
-			my $e = Mojo::Exception->throw( "No $t profiles found for CDN: " . $cdn_name );
+
+		if ( !$found ) {
+			my $e = Mojo::Exception->throw( "No " . $types->{$cachetype} . " profiles found for CDN: " . $cdn_name );
 		}
 	}
+
 	my %condition = (
 		-and => [
 			profile                 => { -in => \@profile_caches, },
@@ -166,7 +179,7 @@ sub gen_crconfig_json {
 
 	my %cache_tracker;
 	my $rs_caches = $self->db->resultset('Server')->search(
-		{ 'type.name' => { -in => [ 'EDGE', 'MID', 'CCR', 'RASCAL', 'TR', 'TM' ] }, 'me.cdn_id' => $cdn_id },
+		{ 'type.name' => [ { -like => 'EDGE%' }, { -like => 'MID%' }, { -like => 'CCR' }, { -like => 'RASCAL' }, { -like => 'TR' }, { -like => 'TM' } ], 'me.cdn_id' => $cdn_id },
 		{
 			prefetch => [ 'type',      'status',      'cachegroup', 'profile' ],
 			columns  => [ 'host_name', 'domain_name', 'tcp_port',   'interface_name', 'ip_address', 'ip6_address', 'id', 'xmpp_id' ]
@@ -210,9 +223,9 @@ sub gen_crconfig_json {
 			$data_obj->{'contentRouters'}->{ $row->host_name }->{'ip6'}      = ( $row->ip6_address || "" );
 			$data_obj->{'contentRouters'}->{ $row->host_name }->{'profile'}  = $row->profile->name;
 		}
-		elsif ( $row->type->name eq "EDGE" || $row->type->name eq "MID" ) {
+		elsif ( $row->type->name =~ m/^EDGE/ || $row->type->name =~ m/^MID/ ) {
 
-			if ( $row->type->name eq "EDGE" ) {
+			if ( $row->type->name =~ m/^EDGE/ ) {
 				$data_obj->{'edgeLocations'}->{ $row->cachegroup->name }->{'latitude'}  = $row->cachegroup->latitude + 0;
 				$data_obj->{'edgeLocations'}->{ $row->cachegroup->name }->{'longitude'} = $row->cachegroup->longitude + 0;
 			}

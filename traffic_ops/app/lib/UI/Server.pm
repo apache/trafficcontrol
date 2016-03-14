@@ -222,12 +222,12 @@ sub edge_ds_status {
 
 	my %servers_in_cg = ();
 	my %servers_in_ds = ();
-	my $etype         = &type_id( $self, 'EDGE' );
+	my @etypes        = &type_ids( $self, 'EDGE%' );
 	my $rs_servers_cg = $self->db->resultset('Server')->search(
 		{
 			cachegroup => $cachegroup_id,
 			profile    => $profile_id,
-			type       => $etype
+			type       => { -in => \@etypes }
 		}
 	);
 
@@ -532,8 +532,10 @@ sub update {
 		if ( $org_server->type->id != $update->type->id ) {
 
 			# server type changed:  servercheck entry required for EDGE and MID, but not others. Add or remove servercheck entry accordingly
-			my %need_servercheck =
-				map { &type_id( $self, $_ ) => 1 } qw{ EDGE MID };
+			my @types;
+			push(@types, &type_ids( $self, 'EDGE%' ));
+			push(@types, &type_ids( $self, 'MID%' ));
+			my %need_servercheck = map { $_ => 1 } @types;
 			my $newtype_id = $update->type->id;
 			my $servercheck =
 				$self->db->resultset('Servercheck')->search( { server => $id } );
@@ -727,8 +729,8 @@ sub create {
 		}
 		$insert->insert();
 		$new_id = $insert->id;
-		if (   $paramHashRef->{'type'} == &type_id( $self, "EDGE" )
-			|| $paramHashRef->{'type'} == &type_id( $self, "MID" ) )
+		if ( scalar(grep { $paramHashRef->{'type'} eq $_ } &type_ids( $self, 'EDGE%' ))
+			|| scalar(grep { $paramHashRef->{'type'} eq $_ } &type_ids( $self, 'MID%' )) )
 		{
 			$insert = $self->db->resultset('Servercheck')->create( { server => $new_id, } );
 			$insert->insert();
@@ -864,7 +866,7 @@ sub readupdate {
 			$self->db->resultset("Server")->search( { host_name => $host_name } );
 		my $count = $rs_servers->count();
 		if ( $count > 0 ) {
-			if ( $rs_servers->single->type->name eq "EDGE" ) {
+			if ( $rs_servers->single->type->name =~ m/^EDGE/ ) {
 				my $parent_cg =
 					$self->db->resultset('Cachegroup')->search( { id => $rs_servers->single->cachegroup->id } )->get_column('parent_cachegroup_id')->single;
 				my $rs_parents = $self->db->resultset('Server')->search( { cachegroup => $parent_cg } );

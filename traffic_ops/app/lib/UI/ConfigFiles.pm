@@ -192,7 +192,7 @@ sub ds_data {
 
 	my @server_ids = ();
 	my $rs;
-	if ( $server->type->name eq "MID" ) {
+	if ( $server->type->name =~ m/^MID/ ) {
 
 		# the mids will do all deliveryservices in this CDN
 		my $domain = $self->profile_param_value( $server->profile->id, 'CRConfig.json', 'domain_name', '' );
@@ -350,7 +350,7 @@ sub parent_data {
 	my @parent_cachegroup_ids;
 	my @secondary_parent_cachegroup_ids;
 	my $org_loc_type_id = &type_id( $self, "ORG_LOC" );
-	if ( $server->type->name eq 'MID' ) {
+	if ( $server->type->name =~ m/^MID/ ) {
 
 		# multisite origins take all the org groups in to account
 		@parent_cachegroup_ids = $self->db->resultset('Cachegroup')->search( { type => $org_loc_type_id } )->get_column('id')->all();
@@ -419,7 +419,7 @@ sub cachegroup_profiles {
 
 	while ( my $row = $rs_parent->next ) {
 
-		next unless ( $row->type->name eq 'ORG' || $row->type->name eq 'EDGE' || $row->type->name eq 'MID' );
+		next unless ( $row->type->name eq 'ORG' || $row->type->name =~ m/^EDGE/ || $row->type->name =~ m/^MID/ );
 		if ( $row->type->name eq 'ORG' ) {
 			my $rs_ds = $self->db->resultset('DeliveryserviceServer')->search( { server => $row->id }, { prefetch => ['deliveryservice'] } );
 			while ( my $ds_row = $rs_ds->next ) {
@@ -477,7 +477,8 @@ sub ip_allow_data {
 			$i++;
 		}
 	}
-	if ( $server->type->name eq 'MID' ) {
+
+	if ( $server->type->name =~ m/^MID/ ) {
 		my @edge_locs = $self->db->resultset('Cachegroup')->search( { parent_cachegroup_id => $server->cachegroup->id } )->get_column('id')->all();
 		my %allow_locs;
 		foreach my $loc (@edge_locs) {
@@ -487,16 +488,31 @@ sub ip_allow_data {
 		# get all the EDGE and RASCAL nets
 		my @allowed_netaddrips;
 		my @allowed_ipv6_netaddrips;
-		my $etype = &type_id( $self, "EDGE" );
-		my $rtype = &type_id( $self, "RASCAL" );
-		my $rs_allowed = $self->db->resultset('Server')->search( { -or => [ 'me.type' => $etype, 'me.type' => $rtype ] }, { prefetch => [ 'type', 'cachegroup' ] } );
+		my @types;
+		push(@types, &type_ids( $self, 'EDGE%', 'server' ));
+		push(@types, &type_id( $self, 'RASCAL' ));
+		my $rs_allowed = $self->db->resultset('Server')->search( { 'me.type' => { -in => \@types } }, { prefetch => [ 'type', 'cachegroup' ] } );
+
 		while ( my $allow_row = $rs_allowed->next ) {
-			if ( $allow_row->type->id == $rtype
+			if ( scalar(grep { $_ eq $allow_row->type->id } @types)
 				|| ( defined( $allow_locs{ $allow_row->cachegroup->id } ) && $allow_locs{ $allow_row->cachegroup->id } == 1 ) )
 			{
-				push( @allowed_netaddrips, NetAddr::IP->new( $allow_row->ip_address, $allow_row->ip_netmask ) );
+				my $ipv4 = NetAddr::IP->new( $allow_row->ip_address, $allow_row->ip_netmask );
+
+				if ( defined( $ipv4 ) ) {
+					push( @allowed_netaddrips, $ipv4 );
+				} else {
+					$self->app->log->error($allow_row->host_name . " has an invalid IPv4 address; excluding from ip_allow data for " . $server->host_name);
+				}
+
 				if ( defined $allow_row->ip6_address ) {
-					push( @allowed_ipv6_netaddrips, NetAddr::IP->new( $allow_row->ip6_address ) );
+					my $ipv6 = NetAddr::IP->new( $allow_row->ip6_address );
+
+					if ( defined ( $ipv6 ) ) {
+						push( @allowed_ipv6_netaddrips, NetAddr::IP->new( $allow_row->ip6_address ) );
+					} else {
+						$self->app->log->error($allow_row->host_name . " has an invalid IPv6 address; excluding from ip_allow data for " . $server->host_name);
+					}
 				}
 			}
 		}
@@ -764,8 +780,8 @@ sub hosting_dot_config {
 		$text .= "# 12M NOTE: volume " . $data->{Disk_Volume} . " is the Disk volume\n";
 		my %listed = ();
 		foreach my $remap ( @{ $data->{dslist} } ) {
-			if (   ( ( $remap->{type} =~ /_LIVE$/ || $remap->{type} =~ /_LIVE_NATNL$/ ) && $server->type->name eq 'EDGE' )
-				|| ( $remap->{type} =~ /_LIVE_NATNL$/ && $server->type->name eq 'MID' ) )
+			if (   ( ( $remap->{type} =~ /_LIVE$/ || $remap->{type} =~ /_LIVE_NATNL$/ ) && $server->type->name =~ m/^EDGE/ )
+				|| ( $remap->{type} =~ /_LIVE_NATNL$/ && $server->type->name =~ m/^MID/ ) )
 			{
 				if ( defined( $listed{ $remap->{org} } ) ) { next; }
 				my $org_fqdn = $remap->{org};
@@ -896,7 +912,7 @@ sub remap_dot_config {
 		$data = $self->ds_data($server);
 	}
 
-	if ( $server->type->name eq 'MID' ) {
+	if ( $server->type->name =~ m/^MID/ ) {
 		my %mid_remap;
 		foreach my $remap ( @{ $data->{dslist} } ) {
 
@@ -1036,7 +1052,7 @@ sub parent_dot_config {
 
 	# Origin Shield or Multi Site Origin
 	#$self->app->log->debug( "id = $id and server_type = $server_type,  hostname = " . $server->{host_name} );
-	if ( $server_type eq 'MID' ) {
+	if ( $server_type =~ m/^MID/ ) {
 		foreach my $ds ( @{ $data->{dslist} } ) {
 			my $xml_id            = $ds->{ds_xml_id};
 			my $os                = $ds->{origin_shield};

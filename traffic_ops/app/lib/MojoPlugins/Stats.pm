@@ -66,7 +66,7 @@ sub register {
 						{
 							next;
 						}
-						elsif ( $rascal_data->{$cdn_name}->{config}->{contentServers}->{$cache}->{type} ne "EDGE" ) {
+						elsif ( $rascal_data->{$cdn_name}->{config}->{contentServers}->{$cache}->{type} !~ m/^EDGE/ ) {
 							next;
 						}
 

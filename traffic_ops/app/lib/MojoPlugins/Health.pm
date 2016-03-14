@@ -170,7 +170,7 @@ sub register {
 
 						my $status = $cache_config->{status};
 
-						if ( $cache_config->{type} ne "EDGE" ) {
+						if ( $cache_config->{type} !~ m/^EDGE/ ) {
 							next;
 						}
 

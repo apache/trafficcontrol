@@ -110,7 +110,7 @@ my $select         = $jconf->{select};
 my $check_name     = &trim($jconf->{check_name});
 
 foreach my $server ( @{$jdataserver} ) {
-	if ( $server->{type} eq 'EDGE' || $server->{type} eq 'MID' ) {
+	if ( $server->{type} =~ m/^EDGE/ || $server->{type} =~ m/^MID/ ) {
       my $srv_nm = $server->{hostName}.".".$server->{domainName};
       my $srv_status = &trim($server->{status});
 		my $ip = undef;

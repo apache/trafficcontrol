@@ -42,7 +42,7 @@ use constant ADMIN      => 30;
 
 our %EXPORT_TAGS = (
 	'all' => [
-		qw(trim_whitespace is_admin is_oper is_ldap is_privileged log is_ipaddress is_ip6address is_netmask in_same_net is_hostname admin_status_id type_id
+		qw(trim_whitespace is_admin is_oper is_ldap is_privileged log is_ipaddress is_ip6address is_netmask in_same_net is_hostname admin_status_id type_id type_ids
 			profile_id profile_ids tm_version tm_url name_version_string is_regexp stash_role navbarpage rascal_hosts_by_cdn)
 	]
 );
@@ -112,6 +112,18 @@ sub type_id() {
 	my $type_string = shift;
 
 	return $self->db->resultset('Type')->search( { name => $type_string } )->get_column('id')->single();
+}
+
+sub type_ids() {
+	my $self        = shift;
+	my $type_string = shift;
+	my $table       = shift;
+
+	if (defined($table) && $table ne "") {
+		return $self->db->resultset('Type')->search( { name => { -like => $type_string }, use_in_table => $table } )->get_column('id')->all();
+	}
+
+	return $self->db->resultset('Type')->search( { name => { -like => $type_string } } )->get_column('id')->all();
 }
 
 sub profile_id() {

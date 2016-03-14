@@ -158,7 +158,7 @@ sub get_servers_by_dsid {
 
 		my @types_no_mid = qw( HTTP_NO_CACHE HTTP_LIVE DNS_LIVE );    # currently these are the ds types that bypass the mids
 		if ( !grep { $_ eq $ds->type->name } @types_no_mid ) {
-			push( @criteria, { 'type.name' => "MID", 'me.cdn_id' => $ds->cdn_id } );
+			push( @criteria, { 'type.name' => { -like => 'MID%' }, 'me.cdn_id' => $ds->cdn_id } );
 		}
 
 		$servers = $self->db->resultset('Server')->search(
