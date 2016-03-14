@@ -313,3 +313,30 @@ Sample Message
 |      |                                                                     | NXDOMAIN (the domain/name requested does not exist) |
 +------+---------------------------------------------------------------------+-----------------------------------------------------+
 
+.. _rl-tr-ngb:
+
+GeoLimit Failure Redirect feature
+======
+
+Overview
+--------
+This feature is also called 'National GeoBlock' feature which is short for 'NGB' feature. In this section, the acronym 'NGB' will be used for this feature.
+
+In the past, if the Geolimit check fails (for example, the client ip is not in the 'US' region but the geolimit is set to 'CZF + US'), the router will return 503 response; but with this feature, when the check fails, it will return 302 if the redirect url is set in the delivery service.
+
+The Geolimit check failure has such scenarios:
+1) When the GeoLimit is set to 'CZF + only', if the client ip is not in the the CZ file, the check fails
+2) When the GeoLimit is set to any region, like 'CZF + US', if the client ip is not in such region, and the client ip is not in the CZ file, the check fails
+
+
+Configuration
+--------
+To enable the NGB feature, the DS must be configured with the proper redirect url. And the setting lays at 'Delivery Services'->Edit->'GeoLimit Redirect URL'. If no url is put in this field, the feature is disabled.
+
+The url has 3 kinds of formats, which have different meanings:
+1. URL without domain
+   If no domain is in the url (like 'vod/dance.mp4'), the router will try to find a proper cache server within the delivery service and return the redirect url with the format like 'http://<cache server name>.<delivery service's FQDN>/<configured relative path>'
+2. URL with domain that matches with the delivery service
+   The URL has domain and the domain matches with the delivery service. For this URL, the router will also try to find a proper cache server within the delivery service and return the same format url as point 1.
+3. URL with domain that doesn't match with the delivery service
+   The URL has domain but the domain doesn't match with the delivery service. For this URL, the router will return the configured url directly to the client.
