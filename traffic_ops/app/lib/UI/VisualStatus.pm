@@ -59,36 +59,6 @@ sub graphs {
 }
 
 
-sub graphs_redis {
-	my $self = shift;
-
-	my $match_string = $self->param('matchstring');
-
-	my @cdn_names;
-	my $ds_capacity = 0;
-	my ( $ds_name, $loc_name, $host_name ) = split( /:/, $match_string );
-	if ( $host_name ne 'all' ) {    # we want a specific host, it has to be in only one CDN
-		my $server = $self->db->resultset('Server')->search( { host_name => $host_name }, { prefetch => 'cdn' } )->single();
-		push( @cdn_names, $server->cdn->name );
-	}
-	elsif ( $ds_name ne 'all' ) {    # we want a specific DS, it has to be in only one CDN
-		my $ds = $self->db->resultset('Deliveryservice')->search( { xml_id => $ds_name }, { prefetch => 'cdn' } )->single();
-		push( @cdn_names, $ds->cdn->name );
-		$ds_capacity = $ds->global_max_mbps / 1000;    # everything is in kbps in the stats
-	}
-	else {                                             # we want all the CDNs with edges
-		@cdn_names = $self->db->resultset('Server')->search({ 'type.name' => 'EDGE' }, { prefetch => [ 'cdn', 'type' ], group_by => 'cdn.name' } )->get_column('cdn.name')->all();
-	}
-	$self->stash(
-		cdn_names   => \@cdn_names,
-		graph_page  => 1,
-		matchstring => $match_string,
-		ds_capacity => $ds_capacity,
-	);
-
-	&navbarpage($self);
-}
-
 sub daily_summary {
 	my $self = shift;
 

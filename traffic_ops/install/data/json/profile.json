@@ -1,6 +1,5 @@
 {"name":"CCR_CDN","description":"Kabletown Content Router for cdn1"}
 {"name":"RASCAL_CDN","description":"Traffic Monitor profile for cdn1"}
-{"name":"REDIS_ALL","description":"Redis profile for all CDNs"}
 {"name":"HOSTMON","description":"Hostmon pipe host "}
 {"name":"EDGE1_CDN_520","description":"Dell R720xd, Edge, CDN, ATS v5.2.0"}
 {"name":"RIAK_ALL","description":"Riak profile for all CDNs"}

@@ -24,7 +24,7 @@ my %definition_for = (
 '13' => { new => 'Profile', => using => { description => 'Dell R720xd, Edge, CDN1 CDN, ATS v4.2.1, Consistent Parent', id => '27', last_updated => '2015-12-10 15:43:48', name => 'EDGE1_CDN1_421', }, }, 
 '14' => { new => 'Profile', => using => { description => 'Dell R720xd, Mid, CDN2 CDN, ATS v4.2.1', id => '30', last_updated => '2015-12-10 15:43:48', name => 'MID1_CDN2_421', }, }, 
 '15' => { new => 'Profile', => using => { name => 'MID1_CDN1_421', description => 'Dell R720xd, Mid, CDN1 CDN, ATS v4.2.1', id => '31', last_updated => '2015-12-10 15:43:48', }, }, 
-'16' => { new => 'Profile', => using => { id => '34', last_updated => '2015-12-10 15:43:48', name => 'TRSTATS_ALL', description => 'TRSTATS (Redis) profile for all CDNs', }, }, 
+'16' => { new => 'Profile', => using => { id => '34', last_updated => '2015-12-10 15:43:48', name => 'TRAFFIC_STATS', description => 'Traffic Stats profile for all CDNs', }, }, 
 '17' => { new => 'Profile', => using => { description => 'HP DL380, Edge, CDN2 CDN, ATS v4.2.1, Consistent Parent', id => '37', last_updated => '2015-12-10 15:43:48', name => 'EDGE2_CDN2_421', }, }, 
 '18' => { new => 'Profile', => using => { description => 'Dell r720xd, Edge, CDN1 CDN, ATS v4.2.1, SSL enabled', id => '45', last_updated => '2015-12-10 15:43:48', name => 'EDGE1_CDN1_421_SSL', }, }, 
 '19' => { new => 'Profile', => using => { description => 'Riak profile for all CDNs', id => '47', last_updated => '2015-12-10 15:43:48', name => 'RIAK_ALL', }, }, 

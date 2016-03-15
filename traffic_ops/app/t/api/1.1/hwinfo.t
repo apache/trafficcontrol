@@ -27,7 +27,6 @@ use Fixtures::Hwinfo;
 #no_transactions=>0 ==> delete fixtures after every execution
 
 BEGIN { $ENV{MOJO_MODE} = "test" }
-
 my $t      = Test::Mojo->new('TrafficOps');
 my $dbh    = Schema->database_handle;
 my $schema = Schema->connect_to_database;

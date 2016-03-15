@@ -299,7 +299,6 @@ sub ui_routes {
 	# -- Server
 	$r->post('/server/:name/status/:state')->over( authenticated => 1 )->to( 'Server#rest_update_server_status', namespace => $namespace );
 	$r->get('/server/:name/status')->over( authenticated => 1 )->to( 'Server#get_server_status', namespace => $namespace );
-	$r->get('/server/:key/key')->over( authenticated => 1 )->to( 'Server#get_redis_key', namespace => $namespace );
 	$r->get('/servers')->over( authenticated => 1 )->to( 'Server#index', namespace => $namespace );
 	$r->get('/server/add')->over( authenticated => 1 )->to( 'Server#add', namespace => $namespace );
 	$r->post('/server/:id/update')->over( authenticated => 1 )->to( 'Server#update', namespace => $namespace );
@@ -362,22 +361,11 @@ sub ui_routes {
 
 	# -- Visualstatus
 	$r->get('/visualstatus/:matchstring')->over( authenticated => 1 )->to( 'VisualStatus#graphs', namespace => $namespace );
-	$r->get('/visualstatus_redis/:matchstring')->over( authenticated => 1 )->to( 'VisualStatus#graphs_redis', namespace => $namespace );
-	$r->get('/redis/#match/:start/:end/:interval')->over( authenticated => 1 )->to( 'Redis#stats', namespace => 'UI' );
 	$r->get('/dailysummary')->over( authenticated => 1 )->to( 'VisualStatus#daily_summary', namespace => $namespace );
 
 	# deprecated - see: /api/$version/servers.json and /api/1.1/servers/hostname/:host_name/details.json
 	# duplicate route
 	$r->get('/healthdataserver')->to( 'Server#index_response', namespace => $namespace );
-
-	# deprecated - see: /api/$version/traffic_monitor/stats.json
-	# $r->get('/rascalstatus/getstats')->over( authenticated => 1 )->to( 'RascalStatus#get_host_stats', namespace => $namespace );
-
-	# deprecated - see: /api/$version/redis/info/#shortname
-	$r->get('/redis/info/#shortname')->over( authenticated => 1 )->to( 'Redis#info', namespace => $namespace );
-
-	# deprecated - see: /api/$version/redis/match/#match/start_date/:start
-	$r->get('/redis/#match/:start_date/:end_date/:interval')->over( authenticated => 1 )->to( 'Redis#stats', namespace => $namespace );
 
 	# select * from table where id=ID;
 	$r->get('/server_by_id/:id')->over( authenticated => 1 )->to( 'Server#server_by_id', namespace => $namespace );

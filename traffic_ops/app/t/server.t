@@ -190,13 +190,6 @@ sub upd_and_del() {
 	}
 }
 
-my $rm = Common::RedisFactory->new( $t, "redis01.kabletown.net:6379" );
-my $redis = $rm->connection();
-$redis->set( key1 => 'value1' );
-
-ok $t->get_ok('/server/redis01/status')->json_is( '/status', 'ONLINE' )->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } );
-ok $t->get_ok('/server/key1/key')->json_is( '/value', 'value1' )->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } );
-
 ok $t->get_ok('/logout')->status_is(302)->or( sub { diag $t->tx->res->content->asset->{content}; } );
 $dbh->disconnect();
 done_testing();

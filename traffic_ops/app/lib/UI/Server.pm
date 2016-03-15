@@ -849,16 +849,6 @@ sub get_server_status {
 	$self->render( json => $response );
 }
 
-sub get_redis_key {
-	my $self     = shift;
-	my $key      = $self->param("key");
-	my $redis    = $self->redis_connect();
-	my $value    = $redis->get($key);
-	my $response = { value => $value };
-
-	$self->render( json => $response );
-}
-
 sub readupdate {
 	my $self = shift;
 	my @data;

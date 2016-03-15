@@ -260,8 +260,6 @@ These are the types of servers that can be managed in Traffic Ops:
 +---------------+---------------------------------------------+
 | RASCAL        | Rascal health polling & reporting           |
 +---------------+---------------------------------------------+
-| REDIS         | Redis stats gateway (will be obsolete soon) |
-+---------------+---------------------------------------------+
 | TOOLS_SERVER  | Ops hosts for managment                     |
 +---------------+---------------------------------------------+
 | RIAK          | Riak keystore                               |

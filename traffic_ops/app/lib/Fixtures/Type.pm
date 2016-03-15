@@ -182,15 +182,6 @@ my %definition_for = (
 			use_in_table => 'deliveryservice',
 		}
 	},
-	REDIS => {
-		new   => 'Type',
-		using => {
-			id           => 25,
-			name         => 'REDIS',
-			description  => 'Redis stats gateway',
-			use_in_table => 'server',
-		}
-	},
 	DNS_LIVE_NATNL => {
 		new   => 'Type',
 		using => {
