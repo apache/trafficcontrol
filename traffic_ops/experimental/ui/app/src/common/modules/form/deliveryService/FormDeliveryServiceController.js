@@ -1,4 +1,11 @@
-var FormDeliveryServiceController = function(deliveryService, $scope, formUtils, locationUtils, deliveryServiceService) {
+var FormDeliveryServiceController = function(deliveryService, $scope, $uibModal, formUtils, locationUtils, deliveryServiceService) {
+
+    var deleteDeliveryService = function(ds) {
+        deliveryServiceService.deleteDeliveryService(ds.id)
+            .then(function() {
+                locationUtils.navigateToPath('/configure/delivery-services');
+            });
+    };
 
     $scope.deliveryServiceOriginal = deliveryService;
 
@@ -57,6 +64,28 @@ var FormDeliveryServiceController = function(deliveryService, $scope, formUtils,
         alert('implement update');
     };
 
+    $scope.confirmDelete = function(ds) {
+        var params = {
+            title: 'Confirm Delete',
+            message: 'This action CANNOT be undone. This will permanently delete ' + ds.displayName + '. Are you sure you want to delete ' + ds.displayName + '?'
+        };
+        var modalInstance = $uibModal.open({
+            templateUrl: 'common/modules/dialog/confirm/dialog.confirm.tpl.html',
+            controller: 'DialogConfirmController',
+            size: 'md',
+            resolve: {
+                params: function () {
+                    return params;
+                }
+            }
+        });
+        modalInstance.result.then(function() {
+            deleteDeliveryService(ds);
+        }, function () {
+            // do nothing
+        });
+    };
+
     $scope.navigateToPath = locationUtils.navigateToPath;
 
     $scope.hasError = formUtils.hasError;
@@ -65,5 +94,5 @@ var FormDeliveryServiceController = function(deliveryService, $scope, formUtils,
 
 };
 
-FormDeliveryServiceController.$inject = ['deliveryService', '$scope', 'formUtils', 'locationUtils', 'deliveryServiceService'];
+FormDeliveryServiceController.$inject = ['deliveryService', '$scope', '$uibModal', 'formUtils', 'locationUtils', 'deliveryServiceService'];
 module.exports = FormDeliveryServiceController;

@@ -1,15 +1,46 @@
-var FormUserController = function(user, $scope, formUtils, locationUtils, userService) {
+var FormUserController = function(user, showDelete, $scope, $uibModal, formUtils, locationUtils, userService) {
 
     var updateUser = function(user) {
         userService.updateUser(user);
+    };
+
+    var deleteUser = function(user) {
+        userService.deleteUser(user.id)
+            .then(function() {
+                locationUtils.navigateToPath('/administer/users');
+            });
     };
 
     $scope.userOriginal = angular.copy(user);
 
     $scope.user = user;
 
+    $scope.showDelete = showDelete;
+
     $scope.confirmUpdate = function(user, usernameField) {
         updateUser(user);
+    };
+
+    $scope.confirmDelete = function(user) {
+        var params = {
+            title: 'Confirm Delete',
+            message: 'This action CANNOT be undone. This will permanently delete ' + user.username + '. Are you sure you want to delete ' + user.username + '?'
+        };
+        var modalInstance = $uibModal.open({
+            templateUrl: 'common/modules/dialog/confirm/dialog.confirm.tpl.html',
+            controller: 'DialogConfirmController',
+            size: 'md',
+            resolve: {
+                params: function () {
+                    return params;
+                }
+            }
+        });
+        modalInstance.result.then(function() {
+            deleteUser(user);
+        }, function () {
+            // do nothing
+        });
     };
 
     $scope.navigateToPath = locationUtils.navigateToPath;
@@ -20,5 +51,5 @@ var FormUserController = function(user, $scope, formUtils, locationUtils, userSe
 
 };
 
-FormUserController.$inject = ['user', '$scope', 'formUtils', 'locationUtils', 'userService'];
+FormUserController.$inject = ['user', 'showDelete', '$scope', '$uibModal', 'formUtils', 'locationUtils', 'userService'];
 module.exports = FormUserController;

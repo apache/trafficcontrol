@@ -20,6 +20,18 @@ var DeliveryServiceService = function(Restangular, messageModel) {
             );
     };
 
+    this.deleteDeliveryService = function(id) {
+        return Restangular.one("deliveryservice", id).remove()
+            .then(
+                function() {
+                    messageModel.setMessages([ { level: 'success', text: 'Delivery service deleted' } ], true);
+                },
+                function() {
+                    messageModel.setMessages([ { level: 'error', text: 'Delivery service delete failed' } ], false);
+                }
+            );
+    };
+
 };
 
 DeliveryServiceService.$inject = ['Restangular', 'messageModel'];

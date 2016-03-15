@@ -20,6 +20,18 @@ var DivisionService = function(Restangular, messageModel) {
             );
     };
 
+    this.deleteDivision = function(id) {
+        return Restangular.one("division", id).remove()
+            .then(
+                function() {
+                    messageModel.setMessages([ { level: 'success', text: 'Division deleted' } ], true);
+                },
+                function() {
+                    messageModel.setMessages([ { level: 'error', text: 'Division delete failed' } ], false);
+                }
+            );
+    };
+
 };
 
 DivisionService.$inject = ['Restangular', 'messageModel'];

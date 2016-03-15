@@ -29,11 +29,9 @@
                     <span ng-show="hasError(serverForm[embed.name])" class="form-control-feedback"><i class="fa fa-times"></i></span>
                 </div>
             </div>
-            <div class="ln_solid"></div>
-            <div class="form-group">
-                <div class="col-md-9 col-sm-9 col-xs-12 col-md-offset-2">
-                    <button type="button" class="btn btn-primary" ng-disabled="serverForm.$pristine || serverForm.$invalid" ng-click="update(server)">Update</button>
-                </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-danger" ng-click="confirmDelete(server)">Delete</button>
+                <button type="button" class="btn btn-primary" ng-disabled="serverForm.$pristine || serverForm.$invalid" ng-click="update(server)">Update</button>
             </div>
         </form>
     </div>

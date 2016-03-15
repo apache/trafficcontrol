@@ -1,4 +1,11 @@
-var FormLocationController = function(location, $scope, formUtils, locationUtils, locationService) {
+var FormLocationController = function(location, $scope, $uibModal, formUtils, locationUtils, locationService) {
+
+    var deleteLocation = function(location) {
+        locationService.deleteLocation(location.id)
+            .then(function() {
+                locationUtils.navigateToPath('/configure/locations');
+            });
+    };
 
     $scope.locationOriginal = location;
 
@@ -21,6 +28,28 @@ var FormLocationController = function(location, $scope, formUtils, locationUtils
         alert('implement update');
     };
 
+    $scope.confirmDelete = function(location) {
+        var params = {
+            title: 'Confirm Delete',
+            message: 'This action CANNOT be undone. This will permanently delete ' + location.name + '. Are you sure you want to delete ' + location.name + '?'
+        };
+        var modalInstance = $uibModal.open({
+            templateUrl: 'common/modules/dialog/confirm/dialog.confirm.tpl.html',
+            controller: 'DialogConfirmController',
+            size: 'md',
+            resolve: {
+                params: function () {
+                    return params;
+                }
+            }
+        });
+        modalInstance.result.then(function() {
+            deleteLocation(location);
+        }, function () {
+            // do nothing
+        });
+    };
+
     $scope.navigateToPath = locationUtils.navigateToPath;
 
     $scope.hasError = formUtils.hasError;
@@ -29,5 +58,5 @@ var FormLocationController = function(location, $scope, formUtils, locationUtils
 
 };
 
-FormLocationController.$inject = ['location', '$scope', 'formUtils', 'locationUtils', 'locationService'];
+FormLocationController.$inject = ['location', '$scope', '$uibModal', 'formUtils', 'locationUtils', 'locationService'];
 module.exports = FormLocationController;

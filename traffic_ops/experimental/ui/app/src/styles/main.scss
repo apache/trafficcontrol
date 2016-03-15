@@ -109,6 +109,10 @@ body.nav-sm .container.body .main-content {
   border-radius: 4px;
 }
 
+.modal-footer .btn + .btn {
+  margin-bottom: 6px;
+}
+
 .border-blue {
   border-color: #3498DB !important;
 }

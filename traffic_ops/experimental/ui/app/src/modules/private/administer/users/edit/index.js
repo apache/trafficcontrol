@@ -10,6 +10,9 @@ module.exports = angular.module('trafficOps.private.administer.users.edit', [])
                         resolve: {
                             user: function($stateParams, userService) {
                                 return userService.getUser($stateParams.userId);
+                            },
+                            showDelete: function() {
+                                return true;
                             }
                         }
                     }
