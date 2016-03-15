@@ -1,19 +1,28 @@
-<div class="page-title">
-    <div class="title_left">
-        <h3>Regions</h3>
+<div class="x_panel">
+    <div class="x_title">
+        <ol class="breadcrumb">
+            <li class="active">Regions</li>
+        </ol>
+        <div class="clearfix"></div>
+    </div>
+    <div class="x_content">
+        <br>
+        <table id="regionsTable" class="table responsive-utilities jambo_table">
+            <thead>
+            <tr class="headings">
+                <th>name</th>
+                <th>division</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr ng-click="editRegion(region.id)" ng-repeat="region in regions">
+                <td>{{region.name}}</td>
+                <td>{{region._links.division.id}}</td>
+            </tr>
+            </tbody>
+        </table>
     </div>
 </div>
-<table id="regionsTable" class="table responsive-utilities jambo_table">
-    <thead>
-        <tr class="headings">
-            <th>name</th>
-            <th>division</th>
-        </tr>
-    </thead>
-    <tbody>
-        <tr ng-click="editRegion(region.id)" ng-repeat="region in regions">
-            <td>{{region.name}}</td>
-            <td>{{region._links.division.id}}</td>
-        </tr>
-    </tbody>
-</table>
+
+
+

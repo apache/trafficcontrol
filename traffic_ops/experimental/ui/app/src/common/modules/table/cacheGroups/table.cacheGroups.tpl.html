@@ -1,25 +1,31 @@
-<div class="page-title">
-    <div class="title_left">
-        <h3>Cache Groups</h3>
+<div class="x_panel">
+    <div class="x_title">
+        <ol class="breadcrumb">
+            <li class="active">Cache Groups</li>
+        </ol>
+        <div class="clearfix"></div>
+    </div>
+    <div class="x_content">
+        <br>
+        <table id="cacheGroupsTable" class="table responsive-utilities jambo_table">
+            <thead>
+            <tr class="headings">
+                <th>name</th>
+                <th>shortName</th>
+                <th>type</th>
+                <th>latitude</th>
+                <th>longitude</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr ng-click="editCacheGroup(cacheGroup.id)" ng-repeat="cacheGroup in cacheGroups">
+                <td>{{cacheGroup.name}}</td>
+                <td>{{cacheGroup.shortName}}</td>
+                <td>{{cacheGroup._links.type.id}}</td>
+                <td>{{cacheGroup.latitude}}</td>
+                <td>{{cacheGroup.longitude}}</td>
+            </tr>
+            </tbody>
+        </table>
     </div>
 </div>
-<table id="cacheGroupsTable" class="table responsive-utilities jambo_table">
-    <thead>
-        <tr class="headings">
-            <th>name</th>
-            <th>shortName</th>
-            <th>type</th>
-            <th>latitude</th>
-            <th>longitude</th>
-        </tr>
-    </thead>
-    <tbody>
-        <tr ng-click="editCacheGroup(cacheGroup.id)" ng-repeat="cacheGroup in cacheGroups">
-            <td>{{cacheGroup.name}}</td>
-            <td>{{cacheGroup.shortName}}</td>
-            <td>{{cacheGroup._links.type.id}}</td>
-            <td>{{cacheGroup.latitude}}</td>
-            <td>{{cacheGroup.longitude}}</td>
-        </tr>
-    </tbody>
-</table>
