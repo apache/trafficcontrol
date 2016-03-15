@@ -54,6 +54,12 @@ public class DeliveryService {
 	private final JSONObject ttls;
 	private final boolean coverageZoneOnly;
 	private final JSONArray geoEnabled;
+	private final String geoRedirectUrl;
+	//store the url file path info
+	private String geoRedirectFile;
+	//check if the geoRedirectUrl belongs to this DeliveryService, avoid calculating this for multiple times
+	//"INVALID_URL" for init status, "DS_URL" means that the request url belongs to this DeliveryService, "NOT_DS_URL" means that the request url doesn't belong to this DeliveryService
+	private String geoRedirectUrlType;
 	private final JSONArray staticDnsEntries;
 	private final JSONArray domains;
 	private final JSONObject bypassDestination;
@@ -78,6 +84,11 @@ public class DeliveryService {
 		}
 		this.coverageZoneOnly = dsJo.getBoolean("coverageZoneOnly");
 		this.geoEnabled = dsJo.optJSONArray("geoEnabled");
+		String rurl = dsJo.optString("geoLimitRedirectURL", null);
+		if (rurl != null && rurl.isEmpty()) { rurl = null; }
+		this.geoRedirectUrl = rurl;
+		this.geoRedirectUrlType = "INVALID_URL";
+		this.geoRedirectFile = this.geoRedirectUrl;
 		this.staticDnsEntries = dsJo.optJSONArray("staticDnsEntries");
 		this.bypassDestination = dsJo.optJSONObject("bypassDestination");
 		this.domains = dsJo.optJSONArray("domains");
@@ -113,6 +124,10 @@ public class DeliveryService {
 	@Override
 	public String toString() {
 		return "DeliveryService [id=" + id + "]";
+	}
+
+	public Geolocation getMissLocation() {
+		return missLocation;
 	}
 
 	public Geolocation supportLocation(final Geolocation clientLocation, final String requestType) {
@@ -442,6 +457,26 @@ public class DeliveryService {
 
 	public Dispersion getDispersion() {
 		return dispersion;
+	}
+
+	public String getGeoRedirectUrl() {
+		return geoRedirectUrl;
+	}
+
+	public String getGeoRedirectUrlType() {
+		return this.geoRedirectUrlType;
+	}
+
+	public void setGeoRedirectUrlType(final String type) {
+		this.geoRedirectUrlType = type;
+	}
+
+	public String getGeoRedirectFile() {
+		return this.geoRedirectFile;
+	}
+
+	public void setGeoRedirectFile(final String filePath) {
+		this.geoRedirectFile = filePath;
 	}
 
 	public boolean isIp6RoutingEnabled() {

@@ -55,7 +55,10 @@ public class RequestMatcher implements Comparable<RequestMatcher> {
 
 		final HTTPRequest httpRequest = (HTTPRequest) request;
 		if (type == Type.HEADER) {
-			return httpRequest.getHeaders().get(requestHeader);
+		   if (httpRequest.getHeaders() != null) {
+			   return httpRequest.getHeaders().get(requestHeader);
+		   }
+		   return null;
 		}
 
 		if (type == Type.PATH) {
