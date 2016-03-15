@@ -14,7 +14,7 @@
         </tr>
     </thead>
     <tbody>
-        <tr ng-dblclick="editCacheGroup(cacheGroup.id)" ng-repeat="cacheGroup in cacheGroups">
+        <tr ng-click="editCacheGroup(cacheGroup.id)" ng-repeat="cacheGroup in cacheGroups">
             <td>{{cacheGroup.name}}</td>
             <td>{{cacheGroup.shortName}}</td>
             <td>{{cacheGroup._links.type.id}}</td>

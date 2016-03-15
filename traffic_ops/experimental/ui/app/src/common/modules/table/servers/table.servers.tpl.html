@@ -21,7 +21,7 @@
         </tr>
     </thead>
     <tbody>
-        <tr ng-dblclick="editServer(server.id)" ng-repeat="server in servers">
+        <tr ng-click="editServer(server.id)" ng-repeat="server in servers">
             <td>{{server.id}}</td>
             <td>{{server.hostName}}</td>
             <td>{{server.domainName}}</td>

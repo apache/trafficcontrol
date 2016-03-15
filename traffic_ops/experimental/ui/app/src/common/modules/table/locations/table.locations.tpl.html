@@ -15,7 +15,7 @@
         </tr>
     </thead>
     <tbody>
-        <tr ng-dblclick="editLocation(location.id)" ng-repeat="location in locations">
+        <tr ng-click="editLocation(location.id)" ng-repeat="location in locations">
             <td>{{location.name}}</td>
             <td>{{location.shortName}}</td>
             <td>{{location.address}}</td>
