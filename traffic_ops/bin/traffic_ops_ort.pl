@@ -23,9 +23,14 @@ use File::Path;
 use Fcntl qw(:flock);
 use MIME::Base64;
 use Data::Dumper;
+use LWP qw(get);
+use LWP::ConnCache qw(new);
+use LWP::UserAgent;
+use LWP::Protocol::https;
+use Crypt::SSLeay;
 
 $| = 1;
-my $script_version = "0.55b";
+my $script_version = "0.56a";
 my $date           = `/bin/date`;
 chomp($date);
 print "$date\nVersion of this script: $script_version\n";
@@ -116,21 +121,31 @@ my $CFG_FILE_CHANGED           = 2;
 my $CFG_FILE_PREREQ_FAILED     = 3;
 my $CFG_FILE_ALREADY_PROCESSED = 4;
 
+#### LWP globals
+@LWP::Protocol::http::EXTRA_SOCK_OPTS = ( SendTE => 0, KeepAlive => 1, PeerHTTPVersion => "1.1" );
+my $lwp_conn       = LWP::UserAgent->new(); 
+$lwp_conn->conn_cache( LWP::ConnCache->new() );
+print Dumper $lwp_conn;
+
 my $unixtime       = time();
 my $hostname_short = `/bin/hostname -s`;
 chomp($hostname_short);
 my $domainname = &set_domainname();
+$hostname_short = "odol-atsec-den-01";
 
 my $TMP_BASE  = "/tmp/ort";
 my $cookie    = &get_cookie( $traffic_ops_host, $TM_LOGIN );
+
 my $CURL_OPTS = "-w %{response_code} -k -L -s -S --connect-timeout 5 --retry 5 --retry-delay 5 --basic";
 if ($cookie) {
 	$CURL_OPTS = "-H 'Cookie:" . $cookie . "' " . $CURL_OPTS;
 }
 ( $log_level >> $DEBUG ) && print "DEBUG CURL_OPTS: $CURL_OPTS.\n";
+
 # add any special yum options for your environment here; this variable is used with all yum commands
 my $YUM_OPTS = "";
 ( $log_level >> $DEBUG ) && print "DEBUG YUM_OPTS: $YUM_OPTS.\n";
+
 my $TS_HOME      = "/opt/trafficserver";
 my $TRAFFIC_LINE = $TS_HOME . "/bin/traffic_line";
 
@@ -265,7 +280,7 @@ sub process_cfg_file {
 
 	&smart_mkdir($config_dir);
 
-	$result = &curl_me($url) if ( !defined($result) && defined($url) );
+	$result = &lwp_get($url) if ( !defined($result) && defined($url) );
 
 	return $CFG_FILE_NOT_PROCESSED if ( !&validate_result( \$url, \$result ) );
 
@@ -565,10 +580,10 @@ sub check_syncds_state {
 	( $log_level >> $DEBUG ) && print "DEBUG Checking syncds state.\n";
 	if ( $script_mode == $SYNCDS || $script_mode == $BADASS || $script_mode == $REPORT ) {
 		## The herd is about to get /update/<hostname>
-		&sleep_rand(5);
+		&sleep_rand(10);
 
 		my $url     = "$traffic_ops_host\/update/$hostname_short";
-		my $upd_ref = &curl_me($url);
+		my $upd_ref = &lwp_get($url);
 		if ( $upd_ref =~ m/^\d{3}$/ ) {
 			( $log_level >> $ERROR ) && print "ERROR Update URL: $url returned $upd_ref. Exiting, not sure what else to do.\n";
 			exit 1;
@@ -611,7 +626,7 @@ sub check_syncds_state {
 						sleep 1;
 					}
 					( $log_level >> $WARN ) && print "\n";
-					$upd_ref = &curl_me($url);
+					$upd_ref = &lwp_get($url);
 					if ( $upd_ref =~ m/^\d{3}$/ ) {
 						( $log_level >> $ERROR ) && print "ERROR Update URL: $url returned $upd_ref. Exiting, not sure what else to do.\n";
 						exit 1;
@@ -649,7 +664,7 @@ sub check_syncds_state {
 			( $log_level >> $DEBUG ) && print "DEBUG Traffic Ops is signaling that no update is waiting to be applied.\n";
 		}
 
-		my $stj = &curl_me("$traffic_ops_host\/datastatus");
+		my $stj = &lwp_get("$traffic_ops_host\/datastatus");
 		if ( $stj =~ m/^\d{3}$/ ) {
 			( $log_level >> $ERROR ) && print "Statuses URL: $url returned $stj! Skipping creation of status file.\n";
 		}
@@ -921,8 +936,8 @@ sub check_plugins {
 			( my @parts ) = split( /\@plugin\=/, $liner );
 			foreach my $i ( 1..$#parts ) {
 				( my $plugin_name, my $plugin_config_file ) = split( /\@pparam\=/, $parts[$i] );
-				($plugin_config_file) = split( /\s+/, $plugin_config_file);
 				if (defined( $plugin_config_file ) ) {
+					($plugin_config_file) = split( /\s+/, $plugin_config_file);
 					( my @parts ) = split( /\//, $plugin_config_file );
 					$plugin_config_file = $parts[$#parts];
 					$plugin_config_file =~ s/\s+//g;
@@ -1038,6 +1053,37 @@ sub check_this_plugin {
 	else {
 		return ($PLUGIN_NO);
 	}
+}
+
+sub lwp_get {
+	my $url           = shift;
+	my $retry_counter = 5;
+
+	my %headers = ( 'Cookie' => $cookie );
+
+	my $response;
+	my $response_content;
+	
+	while( $retry_counter >= 0 ) {
+		
+		$response = $lwp_conn->get($url, %headers);
+		$response_content = $response->content; 
+		$response_content =~ s/(\r|\c|\f|\t|\n)/ /g;
+
+		if ( &check_lwp_response_code($response, $ERROR) ) {
+			( $log_level >> $ERROR ) && print "ERROR result for $url is: ..." . $response->content . "...\n";
+			&sleep_rand(6);
+			$retry_counter--;
+		}
+		else {
+			( $log_level >> $DEBUG ) && print "DEBUG result for $url is: ..." . $response->content . "...\n";
+			last;
+		}
+		
+	}
+	
+	return $response_content;
+
 }
 
 sub curl_me {
@@ -1189,21 +1235,49 @@ sub check_output {
 }
 
 sub get_cookie {
-	my $tm_host  = shift;
-	my $tm_login = shift;
-	my ( $u, $p ) = split( /:/, $tm_login );
+	my $to_host     = shift;
+	my $to_login    = shift;
+	my ( $u, $p ) = split( /:/, $to_login );
 
-	my $cmd = "curl -vLks -X POST -d 'u=" . $u . "' -d 'p=" . $p . "' " . $tm_host . "/login -o /dev/null 2>&1 | grep Set-Cookie | awk '{print \$3}'";
-	( $log_level >> $DEBUG ) && print "DEBUG Getting cookie with $cmd.\n";
-	my $cookie = `$cmd`;
-	chomp $cookie;
-	$cookie =~ s/;$//;
+	my $url = $to_host . "/login";
+	my $response = $lwp_conn->post( $url, [ 'u' => $u, 'p' => $p ] );
+	print Dumper $response; 
+
+	&check_lwp_response_code($response, $FATAL);
+
+	my $cookie;
+	if ( $response->header('Set-Cookie') ) {
+		($cookie) = split(/\;/, $response->header('Set-Cookie'));
+	}
+	
 	if ( $cookie =~ m/mojolicious/ ) {
 		( $log_level >> $DEBUG ) && print "DEBUG Cookie is $cookie.\n";
 		return $cookie;
 	}
 	else {
-		( $log_level >> $ERROR ) && print "ERROR Cookie not found from Traffic Ops!\n";
+		( $log_level >> $FATAL ) && print "FATAL mojolicious cookie not found from Traffic Ops!\n";
+		exit 1;
+	}
+}
+
+sub check_lwp_response_code {
+	my $lwp_response  = shift;
+	my $panic_level   = shift;
+	my $log_level_str = &log_level_to_string($panic_level);
+	my $url           = $lwp_response->request->uri;
+
+	if ( !defined($lwp_response->code()) ) {
+		( $log_level >> $panic_level ) && print $log_level_str . " $url failed!\n"; 
+		exit 1 if ($log_level_str eq 'FATAL');
+		return 1;
+	}
+	elsif ( $lwp_response->code() >= 400 ) {
+		( $log_level >> $panic_level ) && print $log_level_str . " $url returned HTTP " . $lwp_response->code() . "!\n"; 
+		exit 1 if ($log_level_str eq 'FATAL');
+		return 1;
+	}
+	else {	
+		( $log_level >> $DEBUG ) && print "DEBUG $url returned HTTP " . $lwp_response->code() . ".\n"; 
 		return 0;
 	}
 }
@@ -2346,6 +2420,17 @@ sub adv_processing_ssl {
 
 	}
 	return 0;
+}
+
+sub log_level_to_string {
+	return "ALL"   if ( $_[0] == 7 );
+	return "TRACE" if ( $_[0] == 6 );
+	return "DEBUG" if ( $_[0] == 5 );
+	return "INFO"  if ( $_[0] == 4 );
+	return "WARN"  if ( $_[0] == 3 );
+	return "ERROR" if ( $_[0] == 2 );
+	return "FATAL" if ( $_[0] == 1 );
+	return "NONE"  if ( $_[0] == 0 );
 }
 
 {
