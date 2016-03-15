@@ -1,7 +1,5 @@
 var UserEditController = function($scope) {
 
-    $scope.title = 'Edit User Profile';
-
 };
 
 UserEditController.$inject = ['$scope'];

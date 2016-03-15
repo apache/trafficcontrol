@@ -4,6 +4,11 @@ var FormDivisionController = function(division, $scope, formUtils, locationUtils
 
     $scope.division = angular.copy(division);
 
+    $scope.props = [
+        { name: 'id', required: true, readonly: true },
+        { name: 'name', required: true, maxLength: 45 }
+    ];
+
     $scope.update = function(division) {
         alert('implement update');
     };
