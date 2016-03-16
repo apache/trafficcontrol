@@ -61,6 +61,7 @@ type StartupConfig struct {
 	ToURL                       string                  `json:"toUrl"`
 	InfluxUser                  string                  `json:"influxUser"`
 	InfluxPassword              string                  `json:"influxPassword"`
+	InfluxProtocol              string                  `json:"influxProtocol"`
 	PollingInterval             int                     `json:"pollingInterval"`
 	DailySummaryPollingInterval int                     `json:"dailySummaryPollingInterval"`
 	PublishingInterval          int                     `json:"publishingInterval"`
@@ -227,6 +228,9 @@ func loadStartupConfig(configFile string, oldConfig StartupConfig) (StartupConfi
 	}
 	if config.MaxPublishSize == 0 {
 		config.MaxPublishSize = defaultMaxPublishSize
+	}
+	if config.InfluxProtocol == "" {
+		config.InfluxProtocol = "http"
 	}
 
 	logger, err := log.LoggerFromConfigAsFile(config.SeelogConfig)
@@ -720,18 +724,32 @@ func influxConnect(config StartupConfig, runningConfig RunningConfig) (influx.Cl
 	var hosts []*InfluxDBProps
 	for _, InfluxHost := range runningConfig.InfluxDBs {
 		if InfluxHost.InfluxClient == nil {
-			conf := influx.HTTPConfig{
-				Addr:     fmt.Sprintf("http://%s:%d", InfluxHost.Fqdn, InfluxHost.Port),
-				Username: config.InfluxUser,
-				Password: config.InfluxPassword,
+			if config.InfluxProtocol == "udp" {
+				conf := influx.UDPConfig{
+					Addr: fmt.Sprintf("%s:%d", InfluxHost.Fqdn, InfluxHost.Port),
+				}
+				con, err := influx.NewUDPClient(conf)
+				if err != nil {
+					errHndlr(err, ERROR)
+					continue
+				}
+				InfluxHost.InfluxClient = con
+
+			} else {
+				conf := influx.HTTPConfig{
+					Addr:     fmt.Sprintf("%s://%s:%d", config.InfluxProtocol, InfluxHost.Fqdn, InfluxHost.Port),
+					Username: config.InfluxUser,
+					Password: config.InfluxPassword,
+				}
+				con, err := influx.NewHTTPClient(conf)
+				if err != nil {
+					errHndlr(err, ERROR)
+					continue
+				}
+				InfluxHost.InfluxClient = con
 			}
-			con, err := influx.NewHTTPClient(conf)
-			if err != nil {
-				errHndlr(err, ERROR)
-				continue
-			}
-			InfluxHost.InfluxClient = con
 		}
+
 		hosts = append(hosts, InfluxHost)
 	}
 
@@ -740,17 +758,19 @@ func influxConnect(config StartupConfig, runningConfig RunningConfig) (influx.Cl
 		host := hosts[n]
 		hosts = append(hosts[:n], hosts[n+1:]...)
 		con := host.InfluxClient
-		q := influx.Query{
-			Command:  "show databases",
-			Database: "",
+		//client currently does not support udp queries
+		if config.InfluxProtocol != "udp" {
+			q := influx.Query{
+				Command:  "show databases",
+				Database: "",
+			}
+			_, err := con.Query(q)
+			if err != nil {
+				errHndlr(err, ERROR)
+				host.InfluxClient = nil
+				continue
+			}
 		}
-		_, err := con.Query(q)
-		if err != nil {
-			errHndlr(err, ERROR)
-			host.InfluxClient = nil
-			continue
-		}
-
 		return con, nil
 	}
 
