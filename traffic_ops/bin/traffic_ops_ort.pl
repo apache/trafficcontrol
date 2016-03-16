@@ -545,9 +545,10 @@ sub send_update_to_trops {
 	my $url    = "$traffic_ops_host\/update/$hostname_short";
 	( $log_level >> $DEBUG ) && print "DEBUG Setting update flag in Traffic Ops to $status.\n";
 
-        my $response = $lwp_conn->post( $url, [ 'updated' => $status ] );
+	my %headers = ( 'Cookie' => $cookie );
+	my $response = $lwp_conn->post( $url, [ 'updated' => $status ], %headers );
 
-        &check_lwp_response_code($response, $ERROR);
+	&check_lwp_response_code($response, $ERROR);
 
 	( $log_level >> $DEBUG ) && print "DEBUG Response from Traffic Ops is: " . $response->content() . ".\n";
 }
@@ -1051,7 +1052,7 @@ sub lwp_get {
 	my $response;
 	my $response_content;
 	
-	while( $retry_counter >= 0 ) {
+	while( $retry_counter > 0 ) {
 		
 		$response = $lwp_conn->get($url, %headers);
 		$response_content = $response->content; 
@@ -1060,6 +1061,11 @@ sub lwp_get {
 			( $log_level >> $ERROR ) && print "ERROR result for $url is: ..." . $response->content . "...\n";
 			&sleep_rand(6);
 			$retry_counter--;
+		}
+		# https://github.com/Comcast/traffic_control/issues/1168
+		elsif ( $url =~ m/url\_sig\_(.*)\.config$/ && $response->content =~ m/No RIAK servers are set to ONLINE/ ) {
+			( $log_level >> $FATAL ) && print "FATAL result for $url is: ..." . $response->content . "...\n";
+			exit 1;
 		}
 		else {
 			( $log_level >> $DEBUG ) && print "DEBUG result for $url is: ..." . $response->content . "...\n";
@@ -2393,6 +2399,7 @@ sub setup_lwp {
 	
 	# don't set a limit to the # of connections that are cached
 	$browser->conn_cache->total_capacity(undef);
+	$browser->timeout(5);
 
 	return $browser;
 }
