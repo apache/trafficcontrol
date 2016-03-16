@@ -3,7 +3,7 @@ var TableTenantsController = function(tenants, $scope, $location) {
     $scope.tenants = tenants;
 
     $scope.editTenant = function(id) {
-        $location.path($location.path() + id);
+        $location.path($location.path() + '/' + id);
     };
 
     angular.element(document).ready(function () {

@@ -1,17 +1,28 @@
-<div class="page-title">
-    <div class="title_left">
-        <h3>Tenants</h3>
+<div class="x_panel">
+    <div class="x_title">
+        <ol class="breadcrumb">
+            <li class="active">Tenants</li>
+        </ol>
+        <div class="clearfix"></div>
+    </div>
+    <div class="x_content">
+        <br>
+        <table id="tenantsTable" class="table responsive-utilities jambo_table">
+            <thead>
+            <tr class="headings">
+                <th>id</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr ng-click="editTenant(tenant.id)" ng-repeat="tenant in tenants">
+                <td>{{tenant.id}}</td>
+            </tr>
+            </tbody>
+        </table>
     </div>
 </div>
-<table id="tenantsTable" class="table responsive-utilities jambo_table">
-    <thead>
-        <tr class="headings">
-            <th>id</th>
-        </tr>
-    </thead>
-    <tbody>
-        <tr ng-dblclick="editTenant(tenant.id)" ng-repeat="tenant in tenants">
-            <td>{{tenant.id}}</td>
-        </tr>
-    </tbody>
-</table>
+
+
+
+
+

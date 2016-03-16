@@ -20,6 +20,18 @@ var LocationService = function(Restangular, messageModel) {
             );
     };
 
+    this.deleteLocation = function(id) {
+        return Restangular.one("phys_location", id).remove()
+            .then(
+                function() {
+                    messageModel.setMessages([ { level: 'success', text: 'Location deleted' } ], true);
+                },
+                function() {
+                    messageModel.setMessages([ { level: 'error', text: 'Location delete failed' } ], false);
+                }
+            );
+    };
+
 };
 
 LocationService.$inject = ['Restangular', 'messageModel'];

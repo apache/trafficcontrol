@@ -1,39 +1,49 @@
-<div class="page-title">
-    <div class="title_left">
-        <h3>Servers</h3>
+<div class="x_panel">
+    <div class="x_title">
+        <ol class="breadcrumb">
+            <li class="active">Servers</li>
+        </ol>
+        <div class="clearfix"></div>
+    </div>
+    <div class="x_content">
+        <br>
+        <table id="serversTable" class="table responsive-utilities jambo_table">
+            <thead>
+            <tr class="headings">
+                <th>id</th>
+                <th>hostName</th>
+                <th>domainName</th>
+                <th>cdn</th>
+                <th>cachegroup</th>
+                <th>location</th>
+                <th>ipAddress</th>
+                <th>ip6Address</th>
+                <th>status</th>
+                <th>profile</th>
+                <th>iloIpAddress</th>
+                <th>iloIpGateway</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr ng-click="editServer(server.id)" ng-repeat="server in servers">
+                <td>{{server.id}}</td>
+                <td>{{server.hostName}}</td>
+                <td>{{server.domainName}}</td>
+                <td>{{server._links.cdn.id}}</td>
+                <td>{{server._links.cachegroup.id}}</td>
+                <td>{{server._links.phys_location.id}}</td>
+                <td>{{server.ipAddress}}</td>
+                <td>{{server.ip6Address}}</td>
+                <td>{{server._links.status.id}}</td>
+                <td>{{server._links.profile.id}}</td>
+                <td>{{server.iloIpAddress}}</td>
+                <td>{{server.iloIpGateway}}</td>
+            </tr>
+            </tbody>
+        </table>
     </div>
 </div>
-<table id="serversTable" class="table responsive-utilities jambo_table">
-    <thead>
-        <tr class="headings">
-            <th>id</th>
-            <th>hostName</th>
-            <th>domainName</th>
-            <th>cdn</th>
-            <th>cachegroup</th>
-            <th>location</th>
-            <th>ipAddress</th>
-            <th>ip6Address</th>
-            <th>status</th>
-            <th>profile</th>
-            <th>iloIpAddress</th>
-            <th>iloIpGateway</th>
-        </tr>
-    </thead>
-    <tbody>
-        <tr ng-dblclick="editServer(server.id)" ng-repeat="server in servers">
-            <td>{{server.id}}</td>
-            <td>{{server.hostName}}</td>
-            <td>{{server.domainName}}</td>
-            <td>{{server._links.cdn.id}}</td>
-            <td>{{server._links.cachegroup.id}}</td>
-            <td>{{server._links.phys_location.id}}</td>
-            <td>{{server.ipAddress}}</td>
-            <td>{{server.ip6Address}}</td>
-            <td>{{server._links.status.id}}</td>
-            <td>{{server._links.profile.id}}</td>
-            <td>{{server.iloIpAddress}}</td>
-            <td>{{server.iloIpGateway}}</td>
-        </tr>
-    </tbody>
-</table>
+
+
+
+

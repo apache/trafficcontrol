@@ -40,6 +40,18 @@ var UserService = function(Restangular, userModel, messageModel) {
             );
     };
 
+    this.deleteUser = function(id) {
+        return Restangular.one("tm_user", id).remove()
+            .then(
+                function() {
+                    messageModel.setMessages([ { level: 'success', text: 'User deleted' } ], true);
+                },
+                function() {
+                    messageModel.setMessages([ { level: 'error', text: 'User delete failed' } ], false);
+                }
+            );
+    };
+
 };
 
 UserService.$inject = ['Restangular', 'userModel', 'messageModel'];

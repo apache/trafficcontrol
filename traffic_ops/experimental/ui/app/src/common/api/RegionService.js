@@ -20,6 +20,18 @@ var RegionService = function(Restangular, messageModel) {
             );
     };
 
+    this.deleteRegion = function(id) {
+        return Restangular.one("region", id).remove()
+            .then(
+                function() {
+                    messageModel.setMessages([ { level: 'success', text: 'Region deleted' } ], true);
+                },
+                function() {
+                    messageModel.setMessages([ { level: 'error', text: 'Region delete failed' } ], false);
+                }
+            );
+    };
+
 };
 
 RegionService.$inject = ['Restangular', 'messageModel'];

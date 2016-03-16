@@ -1,27 +1,35 @@
-<div class="page-title">
-    <div class="title_left">
-        <h3>Locations</h3>
+<div class="x_panel">
+    <div class="x_title">
+        <ol class="breadcrumb">
+            <li class="active">Locations</li>
+        </ol>
+        <div class="clearfix"></div>
+    </div>
+    <div class="x_content">
+        <br>
+        <table id="locationsTable" class="table responsive-utilities jambo_table">
+            <thead>
+            <tr class="headings">
+                <th>name</th>
+                <th>shortName</th>
+                <th>address</th>
+                <th>city</th>
+                <th>state</th>
+                <th>region</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr ng-click="editLocation(location.id)" ng-repeat="location in locations">
+                <td>{{location.name}}</td>
+                <td>{{location.shortName}}</td>
+                <td>{{location.address}}</td>
+                <td>{{location.city}}</td>
+                <td>{{location.state}}</td>
+                <td>{{location._links.region.id}}</td>
+            </tr>
+            </tbody>
+        </table>
     </div>
 </div>
-<table id="locationsTable" class="table responsive-utilities jambo_table">
-    <thead>
-        <tr class="headings">
-            <th>name</th>
-            <th>shortName</th>
-            <th>address</th>
-            <th>city</th>
-            <th>state</th>
-            <th>region</th>
-        </tr>
-    </thead>
-    <tbody>
-        <tr ng-dblclick="editLocation(location.id)" ng-repeat="location in locations">
-            <td>{{location.name}}</td>
-            <td>{{location.shortName}}</td>
-            <td>{{location.address}}</td>
-            <td>{{location.city}}</td>
-            <td>{{location.state}}</td>
-            <td>{{location._links.region.id}}</td>
-        </tr>
-    </tbody>
-</table>
+
+

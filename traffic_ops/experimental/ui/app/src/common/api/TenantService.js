@@ -20,6 +20,18 @@ var TenantService = function(Restangular, messageModel) {
             );
     };
 
+    this.deleteTenant = function(id) {
+        return Restangular.one("tenant", id).remove()
+            .then(
+                function() {
+                    messageModel.setMessages([ { level: 'success', text: 'Tenant deleted' } ], true);
+                },
+                function() {
+                    messageModel.setMessages([ { level: 'error', text: 'Tenant delete failed' } ], false);
+                }
+            );
+    };
+
 };
 
 TenantService.$inject = ['Restangular', 'messageModel'];

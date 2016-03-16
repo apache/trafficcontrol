@@ -1,24 +1,55 @@
-var FormUserController = function(user, $scope, userService) {
+var FormUserController = function(user, showDelete, $scope, $uibModal, formUtils, locationUtils, userService) {
 
     var updateUser = function(user) {
         userService.updateUser(user);
     };
 
-    $scope.userData = user;
+    var deleteUser = function(user) {
+        userService.deleteUser(user.id)
+            .then(function() {
+                locationUtils.navigateToPath('/administer/users');
+            });
+    };
+
+    $scope.userOriginal = angular.copy(user);
+
+    $scope.user = user;
+
+    $scope.showDelete = showDelete;
 
     $scope.confirmUpdate = function(user, usernameField) {
         updateUser(user);
     };
 
-    $scope.hasError = function(input) {
-        return !input.$focused && input.$dirty && input.$invalid;
+    $scope.confirmDelete = function(user) {
+        var params = {
+            title: 'Confirm Delete',
+            message: 'This action CANNOT be undone. This will permanently delete ' + user.username + '. Are you sure you want to delete ' + user.username + '?'
+        };
+        var modalInstance = $uibModal.open({
+            templateUrl: 'common/modules/dialog/confirm/dialog.confirm.tpl.html',
+            controller: 'DialogConfirmController',
+            size: 'md',
+            resolve: {
+                params: function () {
+                    return params;
+                }
+            }
+        });
+        modalInstance.result.then(function() {
+            deleteUser(user);
+        }, function () {
+            // do nothing
+        });
     };
 
-    $scope.hasPropertyError = function(input, property) {
-        return !input.$focused && input.$dirty && input.$error[property];
-    };
+    $scope.navigateToPath = locationUtils.navigateToPath;
+
+    $scope.hasError = formUtils.hasError;
+
+    $scope.hasPropertyError = formUtils.hasPropertyError;
 
 };
 
-FormUserController.$inject = ['user', '$scope', 'userService'];
+FormUserController.$inject = ['user', 'showDelete', '$scope', '$uibModal', 'formUtils', 'locationUtils', 'userService'];
 module.exports = FormUserController;

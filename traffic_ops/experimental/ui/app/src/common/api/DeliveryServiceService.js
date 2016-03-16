@@ -5,7 +5,7 @@ var DeliveryServiceService = function(Restangular, messageModel) {
     };
 
     this.getDeliveryService = function(id) {
-        return Restangular.one("cachegroup", id).get();
+        return Restangular.one("deliveryservice", id).get();
     };
 
     this.updateDeliveryService = function(deliveryService) {
@@ -16,6 +16,18 @@ var DeliveryServiceService = function(Restangular, messageModel) {
                 },
                 function() {
                     messageModel.setMessages([ { level: 'error', text: 'Delivery service update failed' } ], false);
+                }
+            );
+    };
+
+    this.deleteDeliveryService = function(id) {
+        return Restangular.one("deliveryservice", id).remove()
+            .then(
+                function() {
+                    messageModel.setMessages([ { level: 'success', text: 'Delivery service deleted' } ], true);
+                },
+                function() {
+                    messageModel.setMessages([ { level: 'error', text: 'Delivery service delete failed' } ], false);
                 }
             );
     };

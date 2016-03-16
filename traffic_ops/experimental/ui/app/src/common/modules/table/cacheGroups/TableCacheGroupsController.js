@@ -3,7 +3,7 @@ var TableCacheGroupsController = function(cacheGroups, $scope, $location) {
     $scope.cacheGroups = cacheGroups;
 
     $scope.editCacheGroup = function(id) {
-        $location.path($location.path() + id);
+        $location.path($location.path() + '/' + id);
     };
 
     angular.element(document).ready(function () {

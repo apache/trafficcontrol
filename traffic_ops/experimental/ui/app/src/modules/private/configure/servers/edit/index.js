@@ -5,7 +5,7 @@ module.exports = angular.module('trafficOps.private.configure.servers.edit', [])
                 url: '/{serverId}',
                 views: {
                     serversContent: {
-                        templateUrl: 'common/modules/form/servers/form.server.tpl.html',
+                        templateUrl: 'common/modules/form/server/form.server.tpl.html',
                         controller: 'FormServerController',
                         resolve: {
                             server: function($stateParams, serverService) {

@@ -20,6 +20,18 @@ var ServerService = function(Restangular, messageModel) {
             );
     };
 
+    this.deleteServer = function(id) {
+        return Restangular.one("server", id).remove()
+            .then(
+                function() {
+                    messageModel.setMessages([ { level: 'success', text: 'Server deleted' } ], true);
+                },
+                function() {
+                    messageModel.setMessages([ { level: 'error', text: 'Server delete failed' } ], false);
+                }
+            );
+    };
+
 };
 
 ServerService.$inject = ['Restangular', 'messageModel'];

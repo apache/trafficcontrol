@@ -20,6 +20,18 @@ var CacheGroupService = function(Restangular, messageModel) {
             );
     };
 
+    this.deleteCacheGroup = function(id) {
+        return Restangular.one("cachegroup", id).remove()
+            .then(
+                function() {
+                    messageModel.setMessages([ { level: 'success', text: 'Cache group deleted' } ], true);
+                },
+                function() {
+                    messageModel.setMessages([ { level: 'error', text: 'Cache group delete failed' } ], false);
+                }
+            );
+    };
+
 };
 
 CacheGroupService.$inject = ['Restangular', 'messageModel'];

@@ -1,36 +1,38 @@
-<div class="row">
-    <div class="col-sm-8 col-md-8">
-        <h3>Edit Server</h3>
+<div class="x_panel">
+    <div class="x_title">
+        <ol class="breadcrumb">
+            <li><a ng-click="navigateToPath('/configure/servers')">Servers</a></li>
+            <li class="active">{{serverOriginal.hostName}}</li>
+        </ol>
+        <div class="clearfix"></div>
     </div>
-    <div class="col-sm-4 col-md-4">
-        <button type="button" class="btn action-btn" ng-disabled="serverForm.$pristine || serverForm.$invalid" ng-click="alert('implement update button')">Update</button>
+    <div class="x_content">
+        <br>
+        <form name="serverForm" class="form-horizontal form-label-left" novalidate>
+            <div class="form-group" ng-class="{'has-error': hasError(serverForm[prop.name]), 'has-feedback': hasError(serverForm[prop.name])}" ng-repeat="prop in props">
+                <label class="control-label col-md-2 col-sm-2 col-xs-12">{{prop.name}} <span ng-show="prop.required">*</span></label>
+                <div class="col-md-10 col-sm-10 col-xs-12">
+                    <input id="{{prop.name}}" name="{{prop.name}}" type="text" class="form-control" ng-model="server[prop.name]" ng-readonly="prop.readonly" ng-required="prop.required" ng-maxlength="prop.maxLength" ng-pattern="prop.pattern" autofocus>
+                    <small class="input-error" ng-show="hasPropertyError(serverForm[prop.name], 'required')">Required</small>
+                    <small class="input-error" ng-show="hasPropertyError(serverForm[prop.name], 'maxlength')">Too Long</small>
+                    <small class="input-error" ng-show="hasPropertyError(serverForm[prop.name], 'pattern')">{{prop.invalidMsg}}</small>
+                    <span ng-show="hasError(serverForm[prop.name])" class="form-control-feedback"><i class="fa fa-times"></i></span>
+                </div>
+            </div>
+            <div class="form-group" ng-class="{'has-error': hasError(serverForm[embed.name]), 'has-feedback': hasError(serverForm[embed.name])}" ng-repeat="embed in embeds">
+                <label class="control-label col-md-2 col-sm-2 col-xs-12">{{embed.name}} <span ng-show="embed.required">*</span></label>
+                <div class="col-md-10 col-sm-10 col-xs-12">
+                    <input id="{{embed.name}}" name="{{embed.name}}" type="text" class="form-control" ng-model="server['_links'][embed.name].id" ng-required="embed.required" ng-maxlength="embed.maxLength" ng-pattern="embed.pattern" autofocus>
+                    <small class="input-error" ng-show="hasPropertyError(serverForm[embed.name], 'required')">Required</small>
+                    <small class="input-error" ng-show="hasPropertyError(serverForm[embed.name], 'maxlength')">Too Long</small>
+                    <small class="input-error" ng-show="hasPropertyError(serverForm[embed.name], 'pattern')">{{embed.invalidMsg}}</small>
+                    <span ng-show="hasError(serverForm[embed.name])" class="form-control-feedback"><i class="fa fa-times"></i></span>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-danger" ng-click="confirmDelete(server)">Delete</button>
+                <button type="button" class="btn btn-primary" ng-disabled="serverForm.$pristine || serverForm.$invalid" ng-click="update(server)">Update</button>
+            </div>
+        </form>
     </div>
 </div>
-<hr>
-<form class="register-form col-sm-8 col-md-8" name="serverForm" role="form" novalidate>
-    <fieldset>
-        <legend>Server Details</legend>
-        <div class="row">
-            <div class="col-sm-6 col-md-6">
-                <div class="form-group" ng-class="{'has-error': hasError(serverForm.id), 'has-feedback': hasError(serverForm.id)}">
-                    <label class="control-label" for="id">ID
-                        <small ng-show="hasPropertyError(serverForm.id, 'required')">[ Required ]</small>
-                        <small ng-show="hasPropertyError(serverForm.id, 'maxlength')">[ Too Long ]</small>
-                    </label>
-                    <input id="id" name="id" type="text" class="form-control" ng-model="server.id" ng-maxlength="256" autofocus required>
-                    <span ng-show="hasError(serverForm.id)" class="form-control-feedback"><i class="fa fa-times"></i></span>
-                </div>
-            </div>
-            <div class="col-sm-6 col-md-6">
-                <div class="form-group" ng-class="{'has-error': hasError(serverForm.name), 'has-feedback': hasError(serverForm.name)}">
-                    <label class="control-label" for="name">Name
-                        <small ng-show="hasPropertyError(serverForm.name, 'required')">[ Required ]</small>
-                        <small ng-show="hasPropertyError(serverForm.name, 'maxlength')">[ Too Long ]</small>
-                    </label>
-                    <input id="name" name="name" type="text" class="form-control" ng-model="server.name" ng-maxlength="256" autofocus required>
-                    <span ng-show="hasError(serverForm.name)" class="form-control-feedback"><i class="fa fa-times"></i></span>
-                </div>
-            </div>
-        </div>
-    </fieldset>
-</form>

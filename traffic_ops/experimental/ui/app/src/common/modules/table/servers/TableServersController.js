@@ -3,7 +3,7 @@ var TableServersController = function(servers, $scope, $location) {
     $scope.servers = servers;
 
     $scope.editServer = function(id) {
-        $location.path($location.path() + id);
+        $location.path($location.path() + '/' + id);
     };
 
     angular.element(document).ready(function () {

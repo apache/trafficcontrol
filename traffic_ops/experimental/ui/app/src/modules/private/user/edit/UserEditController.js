@@ -1,8 +1,8 @@
-var UserEditController = function($scope) {
+var UserEditController = function(showDelete, $scope) {
 
-    $scope.title = 'Edit User Profile';
+    $scope.showDelete = showDelete;
 
 };
 
-UserEditController.$inject = ['$scope'];
+UserEditController.$inject = ['showDelete', '$scope'];
 module.exports = UserEditController;

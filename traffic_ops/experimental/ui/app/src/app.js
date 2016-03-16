@@ -104,6 +104,7 @@ var trafficOps = angular.module('trafficOps', [
 
         // services
         require('./common/service/application').name,
+        require('./common/service/utils').name,
 
         // filters
         require('./common/filters').name

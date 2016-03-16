@@ -1,4 +1,4 @@
-var UserController = function($scope, $state, $uibModal, userService, authService, userModel) {
+var UserController = function($scope, $state, $uibModal, formUtils, locationUtils, userService, authService, userModel) {
 
     var updateUser = function(user, options) {
         userService.updateCurrentUser(user)
@@ -9,7 +9,9 @@ var UserController = function($scope, $state, $uibModal, userService, authServic
             });
     };
 
-    $scope.userData = userModel.user;
+    $scope.userOriginal = angular.copy(userModel.user);
+
+    $scope.user = userModel.user;
 
     $scope.confirmUpdate = function(user, usernameField) {
         if (usernameField.$dirty) {
@@ -37,15 +39,13 @@ var UserController = function($scope, $state, $uibModal, userService, authServic
         }
     };
 
-    $scope.hasError = function(input) {
-        return !input.$focused && input.$dirty && input.$invalid;
-    };
+    $scope.navigateToPath = locationUtils.navigateToPath;
 
-    $scope.hasPropertyError = function(input, property) {
-        return !input.$focused && input.$dirty && input.$error[property];
-    };
+    $scope.hasError = formUtils.hasError;
+
+    $scope.hasPropertyError = formUtils.hasPropertyError;
 
 };
 
-UserController.$inject = ['$scope', '$state', '$uibModal', 'userService', 'authService', 'userModel'];
+UserController.$inject = ['$scope', '$state', '$uibModal', 'formUtils', 'locationUtils', 'userService', 'authService', 'userModel'];
 module.exports = UserController;

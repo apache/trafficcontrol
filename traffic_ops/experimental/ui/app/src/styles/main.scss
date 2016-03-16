@@ -97,11 +97,20 @@ body.nav-sm .container.body .main-content {
   }
 }
 
+.input-error {
+  color: #a94442;
+  font-weight: bold;
+}
+
 .pagination {
   display: inline-block;
   padding-left: 0;
   margin: 0;
   border-radius: 4px;
+}
+
+.modal-footer .btn + .btn {
+  margin-bottom: 6px;
 }
 
 .border-blue {
@@ -646,6 +655,15 @@ h2 {
   border-bottom: 2px solid #E6E9ED;
   padding: 1px 5px 6px;
   margin-bottom: 10px;
+
+  .breadcrumb {
+    padding: 8px 15px 4px 0;
+    margin-bottom: 0;
+    list-style: none;
+    background-color: white;
+    border-radius: 0;
+    font-size: 18px;
+  }
 }
 
 .x_title .filter {
@@ -2037,7 +2055,7 @@ legend {
 }
 
 .form-control-feedback {
-  margin-top: 8px;
+  margin-top: 4px;
   height: 23px;
   color: #bbb;
   line-height: 24px;
