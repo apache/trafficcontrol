@@ -30,10 +30,9 @@ use LWP::Protocol::https;
 use Crypt::SSLeay;
 
 $| = 1;
-my $script_version = "0.56a";
 my $date           = `/bin/date`;
 chomp($date);
-print "$date\nVersion of this script: $script_version\n";
+print "$date\n";
 
 if ( $#ARGV < 1 ) {
 	&usage();
@@ -122,29 +121,17 @@ my $CFG_FILE_PREREQ_FAILED     = 3;
 my $CFG_FILE_ALREADY_PROCESSED = 4;
 
 #### LWP globals
-#$LWP::ConnCache::DEBUG = 1;
-#@LWP::Protocol::http::EXTRA_SOCK_OPTS = ( SendTE => 0, KeepAlive => 1, PeerHTTPVersion => "1.1" );
-my $lwp_conn                          = LWP::UserAgent->new();
-my $lwp_connection_cache = $lwp_conn->conn_cache(LWP::ConnCache->new());
-$lwp_conn->conn_cache->total_capacity( [10] );
- #$lwp_connection_cache->deposit("https", 0, $sock);
- #$sock = $cache->withdraw($type, $key);
+@LWP::Protocol::http::EXTRA_SOCK_OPTS = ( SendTE => 0, KeepAlive => 1, PeerHTTPVersion => "1.1" );
+my $lwp_conn                   = &setup_lwp(); 
 
 my $unixtime       = time();
 my $hostname_short = `/bin/hostname -s`;
 chomp($hostname_short);
 my $domainname = &set_domainname();
-$hostname_short = "odol-atsec-den-01";
-$lwp_conn->agent($hostname_short);
+$lwp_conn->agent("$hostname_short-$unixtime");
 
 my $TMP_BASE  = "/tmp/ort";
 my $cookie    = &get_cookie( $traffic_ops_host, $TM_LOGIN );
-
-my $CURL_OPTS = "-w %{response_code} -k -L -s -S --connect-timeout 5 --retry 5 --retry-delay 5 --basic";
-if ($cookie) {
-	$CURL_OPTS = "-H 'Cookie:" . $cookie . "' " . $CURL_OPTS;
-}
-( $log_level >> $DEBUG ) && print "DEBUG CURL_OPTS: $CURL_OPTS.\n";
 
 # add any special yum options for your environment here; this variable is used with all yum commands
 my $YUM_OPTS = "";
@@ -559,15 +546,12 @@ sub send_update_to_trops {
 	my $status = shift;
 	my $url    = "$traffic_ops_host\/update/$hostname_short";
 	( $log_level >> $DEBUG ) && print "DEBUG Setting update flag in Traffic Ops to $status.\n";
-	my $cmd = undef;
-	if ($cookie) {
-		$cmd = "/usr/bin/curl -k -L -s -H 'Cookie: $cookie' -X POST -d 'updated=$status' --basic $url 2>&1";
-	}
-	else {
-		$cmd = "/usr/bin/curl -k -L -s -X POST -d 'updated=$status' --basic $url 2>&1";
-	}
-	my $result = `$cmd`;
-	( $log_level >> $DEBUG ) && print "DEBUG Response from Traffic Ops is: $result.\n";
+
+        my $response = $lwp_conn->post( $url, [ 'updated' => $status ] );
+
+        &check_lwp_response_code($response, $ERROR);
+
+	( $log_level >> $DEBUG ) && print "DEBUG Response from Traffic Ops is: " . $response->content() . ".\n";
 }
 
 sub get_print_current_client_connections {
@@ -1063,6 +1047,7 @@ sub lwp_get {
 	my $url           = shift;
 	my $retry_counter = 5;
 
+	( $log_level >> $DEBUG ) && print "DEBUG Total connections in LWP cache: " . $lwp_conn->conn_cache->get_connections("https") . "\n";
 	my %headers = ( 'Cookie' => $cookie );
 
 	my $response;
@@ -1071,11 +1056,7 @@ sub lwp_get {
 	while( $retry_counter >= 0 ) {
 		
 		$response = $lwp_conn->get($url, %headers);
-#print Dumper $lwp_conn; 
-#	print Dumper $response; 
-		print "total connections currently: " . $lwp_conn->conn_cache->get_connections("https") . "\n";
 		$response_content = $response->content; 
-		$response_content =~ s/(\r|\c|\f|\t|\n)/ /g;
 
 		if ( &check_lwp_response_code($response, $ERROR) || &check_lwp_response_content_length($response) ) {
 			( $log_level >> $ERROR ) && print "ERROR result for $url is: ..." . $response->content . "...\n";
@@ -1088,58 +1069,26 @@ sub lwp_get {
 		}
 		
 	}
+
+	&check_lwp_response_code($response, $FATAL) if ( $retry_counter == 0 );
 	
+	&eval_json($response) if ( $url =~ m/\.json$/ );
+
 	return $response_content;
 
 }
 
-sub curl_me {
-	my $url           = shift;
-	my $retry_counter = 5;
-	my $result        = `/usr/bin/curl $CURL_OPTS $url 2>&1`;
-	( $log_level >> $TRACE ) && print "TRACE result for $url is: ...$result....\n";
-
-	while ( $result =~ m/^curl\: \(\d+\)/ && $retry_counter > 0 ) {
-		$result =~ s/(\r|\c|\f|\t|\n)/ /g;
-		( $log_level >> $ERROR ) && print "ERROR Error receiving $url from Traffic Ops: $result\n";
-		$retry_counter--;
-		sleep 5;
-		$result = `/usr/bin/curl $CURL_OPTS $url 2>&1`;
-	}
-	if ( $result =~ m/^curl\: \(\d+\)/ && $retry_counter == 0 ) {
-		( $log_level >> $FATAL ) && print "FATAL $url returned in error from Traffic Ops five times!\n";
+sub eval_json {
+	my $lwp_response = shift;
+	eval {
+		decode_json($lwp_response->content());
+		1;
+	} or do {
+		my $error = $@;
+		( $log_level >> $FATAL ) && print "FATAL " . $lwp_response->request->uri . " did not return valid JSON: " . $lwp_response->content() . " | Error: $error\n";
 		exit 1;
 	}
-	else {
-		( $log_level >> $INFO ) && print "INFO Success receiving $url from Traffic Ops.\n";
-	}
 
-	my (@chars) = split( //, $result );
-	my $response_code = pop(@chars) . pop(@chars) . pop(@chars);
-	$response_code = reverse($response_code);
-	( $log_level >> $DEBUG ) && print "DEBUG Received $response_code for $url from Traffic Ops.\n";
-	if ( $response_code >= 400 ) {
-		( $log_level >> $ERROR ) && print "ERROR Received error code $response_code for $url from Traffic Ops!\n";
-		return $response_code;
-	}
-	for ( 0 .. 2 ) { chop($result) }
-
-	if ( $url =~ m/\.json$/ ) {
-		eval {
-			decode_json($result);
-			1;
-		} or do {
-			my $error = $@;
-			( $log_level >> $FATAL ) && print "FATAL $url did not return valid JSON: $result | error: $error\n";
-			exit 1;
-			}
-	}
-	my $size = length($result);
-	if ( $size == 0 ) {
-		( $log_level >> $FATAL ) && print "FATAL URL: $url returned empty!! Bailing!\n";
-		exit 1;
-	}
-	return $result;
 }
 
 sub replace_cfg_file {
@@ -2020,7 +1969,7 @@ sub validate_result {
 	my $result = ${ $_[1] };
 
 	if ( $result =~ m/^\d{3}$/ ) {
-		( $log_level >> $ERROR ) && print "ERROR Result from curling $url is HTTP $result!\n";
+		( $log_level >> $ERROR ) && print "ERROR Result from getting $url is HTTP $result!\n";
 		return 0;
 	}
 
@@ -2438,6 +2387,16 @@ sub adv_processing_ssl {
 
 	}
 	return 0;
+}
+
+sub setup_lwp {
+	my $browser = LWP::UserAgent->new();
+	my $lwp_cc = $browser->conn_cache(LWP::ConnCache->new());
+	
+	# don't set a limit to the # of connections that are cached
+	$browser->conn_cache->total_capacity(undef);
+
+	return $browser;
 }
 
 sub log_level_to_string {
