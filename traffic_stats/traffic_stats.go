@@ -329,7 +329,9 @@ func calcDailySummary(now time.Time, config StartupConfig, runningConfig Running
 			statsSummary.StatName = "daily_bytesserved"
 			statsSummary.StatValue = strconv.FormatFloat(bytesServedTb, 'f', 2, 64)
 			go writeSummaryStats(config, statsSummary)
-
+			fields = map[string]interface{}{
+				"value": bytesServedTb,
+			}
 			pt, err = influx.NewPoint(
 				statsSummary.StatName,
 				tags,
