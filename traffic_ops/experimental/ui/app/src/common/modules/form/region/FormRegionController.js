@@ -3,7 +3,7 @@ var FormRegionController = function(region, $scope, $uibModal, $anchorScroll, fo
     var deleteRegion = function(region) {
         regionService.deleteRegion(region.id)
             .then(function() {
-                locationUtils.navigateToPath('/configure/regions');
+                locationUtils.navigateToPath('/admin/regions');
             });
     };
 

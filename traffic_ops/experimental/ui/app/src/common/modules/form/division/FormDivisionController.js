@@ -3,7 +3,7 @@ var FormDivisionController = function(division, $scope, $uibModal, $anchorScroll
     var deleteDivision = function(division) {
         divisionService.deleteDivision(division.id)
             .then(function() {
-                locationUtils.navigateToPath('/configure/divisions');
+                locationUtils.navigateToPath('/admin/divisions');
             });
     };
 

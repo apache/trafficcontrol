@@ -1,13 +1,13 @@
-module.exports = angular.module('trafficOps.private.configure.divisions', [])
+module.exports = angular.module('trafficOps.private.admin.divisions', [])
     .controller('DivisionsController', require('./DivisionsController'))
     .config(function($stateProvider, $urlRouterProvider) {
         $stateProvider
-            .state('trafficOps.private.configure.divisions', {
+            .state('trafficOps.private.admin.divisions', {
                 url: '/divisions',
                 abstract: true,
                 views: {
-                    configureContent: {
-                        templateUrl: 'modules/private/configure/divisions/divisions.tpl.html',
+                    adminContent: {
+                        templateUrl: 'modules/private/admin/divisions/divisions.tpl.html',
                         controller: 'DivisionsController'
                     }
                 }

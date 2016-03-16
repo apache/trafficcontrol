@@ -1,7 +1,7 @@
-module.exports = angular.module('trafficOps.private.configure.regions.list', [])
+module.exports = angular.module('trafficOps.private.admin.regions.list', [])
     .config(function($stateProvider, $urlRouterProvider) {
         $stateProvider
-            .state('trafficOps.private.configure.regions.list', {
+            .state('trafficOps.private.admin.regions.list', {
                 url: '',
                 views: {
                     regionsContent: {

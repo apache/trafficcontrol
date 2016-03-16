@@ -1,7 +1,7 @@
-module.exports = angular.module('trafficOps.private.configure.divisions.list', [])
+module.exports = angular.module('trafficOps.private.admin.divisions.list', [])
     .config(function($stateProvider, $urlRouterProvider) {
         $stateProvider
-            .state('trafficOps.private.configure.divisions.list', {
+            .state('trafficOps.private.admin.divisions.list', {
                 url: '',
                 views: {
                     divisionsContent: {

@@ -35,15 +35,15 @@ $fa-font-path: "../assets/fonts";
 
 // admin
 @import "../modules/private/admin/admin";
+@import "../modules/private/admin/divisions/divisions";
+@import "../modules/private/admin/locations/locations";
+@import "../modules/private/admin/regions/regions";
 @import "../modules/private/admin/users/users";
 
 // configure
 @import "../modules/private/configure/configure";
 @import "../modules/private/configure/cacheGroups/cacheGroups";
 @import "../modules/private/configure/deliveryServices/deliveryServices";
-@import "../modules/private/configure/divisions/divisions";
-@import "../modules/private/configure/locations/locations";
-@import "../modules/private/configure/regions/regions";
 @import "../modules/private/configure/servers/servers";
 
 // monitor

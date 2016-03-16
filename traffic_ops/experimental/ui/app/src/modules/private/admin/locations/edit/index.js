@@ -1,7 +1,7 @@
-module.exports = angular.module('trafficOps.private.configure.locations.edit', [])
+module.exports = angular.module('trafficOps.private.admin.locations.edit', [])
     .config(function($stateProvider, $urlRouterProvider) {
         $stateProvider
-            .state('trafficOps.private.configure.locations.edit', {
+            .state('trafficOps.private.admin.locations.edit', {
                 url: '/{locationId}',
                 views: {
                     locationsContent: {

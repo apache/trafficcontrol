@@ -3,7 +3,7 @@ var FormLocationController = function(location, $scope, $uibModal, $anchorScroll
     var deleteLocation = function(location) {
         locationService.deleteLocation(location.id)
             .then(function() {
-                locationUtils.navigateToPath('/configure/locations');
+                locationUtils.navigateToPath('/admin/locations');
             });
     };
 
