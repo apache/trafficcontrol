@@ -1,0 +1,11 @@
+{
+  "name": "camera_feed",
+  "version": "0.0.1",
+  "description": "CameraFeed microservice code",
+  "main": "CameraFeed.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Michael Albers",
+  "license": "ISC"
+}
