@@ -20,6 +20,12 @@
                 </div>
             </div>
             <div class="form-group">
+                <label class="control-label col-md-2 col-sm-2 col-xs-12">CDN *</label>
+                <div class="col-md-10 col-sm-10 col-xs-12">
+                    <select id="cdn" name="cdn" class="form-control" ng-model="server._links.cdn.id" ng-options="cdn.id as cdn.name for cdn in cdns"></select>
+                </div>
+            </div>
+            <div class="form-group">
                 <label class="control-label col-md-2 col-sm-2 col-xs-12">location *</label>
                 <div class="col-md-10 col-sm-10 col-xs-12">
                     <select id="location" name="location" class="form-control" ng-model="server._links.phys_location.id" ng-options="location.id as location.name for location in locations"></select>

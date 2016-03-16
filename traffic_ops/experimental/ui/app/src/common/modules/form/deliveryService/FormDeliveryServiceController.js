@@ -1,4 +1,4 @@
-var FormDeliveryServiceController = function(deliveryService, $scope, $uibModal, $anchorScroll, formUtils, locationUtils, deliveryServiceService, typeService) {
+var FormDeliveryServiceController = function(deliveryService, $scope, $uibModal, $anchorScroll, formUtils, locationUtils, cdnService, deliveryServiceService, typeService) {
 
     var deleteDeliveryService = function(ds) {
         deliveryServiceService.deleteDeliveryService(ds.id)
@@ -11,6 +11,13 @@ var FormDeliveryServiceController = function(deliveryService, $scope, $uibModal,
         typeService.getTypes()
             .then(function(result) {
                 $scope.types = result;
+            });
+    };
+
+    var getCDNs = function() {
+        cdnService.getCDNs()
+            .then(function(result) {
+                $scope.cdns = result;
             });
     };
 
@@ -60,8 +67,7 @@ var FormDeliveryServiceController = function(deliveryService, $scope, $uibModal,
     ];
 
     $scope.embeds = [
-        { name: 'profile', required: true, maxLength: 11 },
-        { name: 'cdn', required: true, maxLength: 11 }
+        { name: 'profile', required: true, maxLength: 11 }
     ];
 
     $scope.update = function(deliveryService) {
@@ -102,10 +108,11 @@ var FormDeliveryServiceController = function(deliveryService, $scope, $uibModal,
 
     var init = function () {
         getTypes();
+        getCDNs();
     };
     init();
 
 };
 
-FormDeliveryServiceController.$inject = ['deliveryService', '$scope', '$uibModal', '$anchorScroll', 'formUtils', 'locationUtils', 'deliveryServiceService', 'typeService'];
+FormDeliveryServiceController.$inject = ['deliveryService', '$scope', '$uibModal', '$anchorScroll', 'formUtils', 'locationUtils', 'cdnService', 'deliveryServiceService', 'typeService'];
 module.exports = FormDeliveryServiceController;
