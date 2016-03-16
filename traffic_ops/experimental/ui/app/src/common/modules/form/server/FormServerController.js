@@ -1,4 +1,4 @@
-var FormServerController = function(server, $scope, $uibModal, $anchorScroll, formUtils, locationUtils, cacheGroupService, locationService, serverService) {
+var FormServerController = function(server, $scope, $uibModal, $anchorScroll, formUtils, locationUtils, cacheGroupService, locationService, serverService, typeService) {
 
     var deleteServer = function(server) {
         serverService.deleteServer(server.id)
@@ -18,6 +18,13 @@ var FormServerController = function(server, $scope, $uibModal, $anchorScroll, fo
         cacheGroupService.getCacheGroups()
             .then(function(result) {
                 $scope.cacheGroups = result;
+            });
+    };
+
+    var getTypes = function() {
+        typeService.getTypes()
+            .then(function(result) {
+                $scope.types = result;
             });
     };
 
@@ -53,7 +60,6 @@ var FormServerController = function(server, $scope, $uibModal, $anchorScroll, fo
     ];
 
     $scope.embeds = [
-        { name: 'type', required: true, maxLength: 11 },
         { name: 'status', required: true, maxLength: 11 },
         { name: 'profile', required: true, maxLength: 11 },
         { name: 'cdn', required: true, maxLength: 11 }
@@ -98,10 +104,11 @@ var FormServerController = function(server, $scope, $uibModal, $anchorScroll, fo
     var init = function () {
         getLocations();
         getCacheGroups();
+        getTypes();
     };
     init();
 
 };
 
-FormServerController.$inject = ['server', '$scope', '$uibModal', '$anchorScroll', 'formUtils', 'locationUtils', 'cacheGroupService', 'locationService', 'serverService'];
+FormServerController.$inject = ['server', '$scope', '$uibModal', '$anchorScroll', 'formUtils', 'locationUtils', 'cacheGroupService', 'locationService', 'serverService', 'typeService'];
 module.exports = FormServerController;

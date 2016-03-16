@@ -31,6 +31,12 @@
                     <select id="cachegroup" name="cachegroup" class="form-control" ng-model="server._links.cachegroup.id" ng-options="cachegroup.id as cachegroup.name for cachegroup in cacheGroups"></select>
                 </div>
             </div>
+            <div class="form-group">
+                <label class="control-label col-md-2 col-sm-2 col-xs-12">Type *</label>
+                <div class="col-md-10 col-sm-10 col-xs-12">
+                    <select id="type" name="type" class="form-control" ng-model="server._links.type.id" ng-options="type.id as type.name for type in types"></select>
+                </div>
+            </div>
             <!-- todo: need to create selects for these -->
             <div class="form-group" style="color: red;" ng-class="{'has-error': hasError(serverForm[embed.name]), 'has-feedback': hasError(serverForm[embed.name])}" ng-repeat="embed in embeds">
                 <label class="control-label col-md-2 col-sm-2 col-xs-12">{{embed.name}} <span ng-show="embed.required">*</span></label>

@@ -1,4 +1,4 @@
-var FormCacheGroupController = function(cacheGroup, $scope, $uibModal, $anchorScroll, formUtils, locationUtils, cacheGroupService) {
+var FormCacheGroupController = function(cacheGroup, $scope, $uibModal, $anchorScroll, formUtils, locationUtils, cacheGroupService, typeService) {
 
     var deleteCacheGroup = function(cacheGroup) {
         cacheGroupService.deleteCacheGroup(cacheGroup.id)
@@ -14,6 +14,13 @@ var FormCacheGroupController = function(cacheGroup, $scope, $uibModal, $anchorSc
             });
     };
 
+    var getTypes = function() {
+        typeService.getTypes()
+            .then(function(result) {
+                $scope.types = result;
+            });
+    };
+
     $scope.cacheGroupCopy = angular.copy(cacheGroup);
 
     $scope.cacheGroup = cacheGroup;
@@ -24,10 +31,6 @@ var FormCacheGroupController = function(cacheGroup, $scope, $uibModal, $anchorSc
         { name: 'shortName', required: true, maxLength: 255 },
         { name: 'latitude', required: false, pattern: new RegExp('^[-+]?[0-9]*\.?[0-9]+$'), invalidMsg: 'Invalid coordinate' },
         { name: 'longitude', required: false, pattern: new RegExp('^[-+]?[0-9]*\.?[0-9]+$'), invalidMsg: 'Invalid coordinate' }
-    ];
-
-    $scope.embeds = [
-        { name: 'type', required: true, maxLength: 11 }
     ];
 
     $scope.update = function(cacheGroup) {
@@ -68,10 +71,11 @@ var FormCacheGroupController = function(cacheGroup, $scope, $uibModal, $anchorSc
 
     var init = function () {
         getCacheGroups();
+        getTypes();
     };
     init();
 
 };
 
-FormCacheGroupController.$inject = ['cacheGroup', '$scope', '$uibModal', '$anchorScroll', 'formUtils', 'locationUtils', 'cacheGroupService'];
+FormCacheGroupController.$inject = ['cacheGroup', '$scope', '$uibModal', '$anchorScroll', 'formUtils', 'locationUtils', 'cacheGroupService', 'typeService'];
 module.exports = FormCacheGroupController;

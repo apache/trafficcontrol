@@ -8,6 +8,7 @@ module.exports = angular.module('trafficOps.api', [])
     .service('regionService', require('./RegionService'))
     .service('serverService', require('./ServerService'))
     .service('tenantService', require('./TenantService'))
+    .service('typeService', require('./TypeService'))
     .service('trafficOpsService', require('./TrafficOpsService'))
     .service('userService', require('./UserService'))
 ;
