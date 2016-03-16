@@ -1199,7 +1199,6 @@ sub get_cookie {
 	my $to_login    = shift;
 	my ( $u, $p ) = split( /:/, $to_login );
 	my %headers;
-	$headers{'Mark'} = 'Keep-Alive';
 
 	my $url = $to_host . "/login";
 	my $response = $lwp_conn->post( $url, [ 'u' => $u, 'p' => $p ], %headers );
