@@ -22,8 +22,6 @@ use File::Basename;
 use File::Path;
 use Fcntl qw(:flock);
 use MIME::Base64;
-use Data::Dumper;
-use LWP::Debug;
 use LWP::ConnCache;
 use LWP::UserAgent;
 use LWP::Protocol::https;
