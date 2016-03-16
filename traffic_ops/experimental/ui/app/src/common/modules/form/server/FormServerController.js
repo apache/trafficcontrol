@@ -1,4 +1,4 @@
-var FormServerController = function(server, $scope, $uibModal, $anchorScroll, formUtils, locationUtils, cacheGroupService, cdnService, locationService, serverService, statusService, typeService) {
+var FormServerController = function(server, $scope, $uibModal, $anchorScroll, formUtils, locationUtils, cacheGroupService, cdnService, locationService, profileService, serverService, statusService, typeService) {
 
     var deleteServer = function(server) {
         serverService.deleteServer(server.id)
@@ -42,6 +42,13 @@ var FormServerController = function(server, $scope, $uibModal, $anchorScroll, fo
             });
     };
 
+    var getProfiles = function() {
+        profileService.getProfiles()
+            .then(function(result) {
+                $scope.profiles = result;
+            });
+    };
+
     $scope.serverCopy = angular.copy(server);
 
     $scope.server = server;
@@ -71,10 +78,6 @@ var FormServerController = function(server, $scope, $uibModal, $anchorScroll, fo
         { name: 'iloPassword', required: false, maxLength: 45 },
         { name: 'routerHostName', required: false, maxLength: 256 },
         { name: 'routerPortName', required: false, maxLength: 256 }
-    ];
-
-    $scope.embeds = [
-        { name: 'profile', required: true, maxLength: 11 }
     ];
 
     $scope.update = function(server) {
@@ -119,10 +122,11 @@ var FormServerController = function(server, $scope, $uibModal, $anchorScroll, fo
         getTypes();
         getCDNs();
         getStatuses();
+        getProfiles();
     };
     init();
 
 };
 
-FormServerController.$inject = ['server', '$scope', '$uibModal', '$anchorScroll', 'formUtils', 'locationUtils', 'cacheGroupService', 'cdnService', 'locationService', 'serverService', 'statusService', 'typeService'];
+FormServerController.$inject = ['server', '$scope', '$uibModal', '$anchorScroll', 'formUtils', 'locationUtils', 'cacheGroupService', 'cdnService', 'locationService', 'profileService', 'serverService', 'statusService', 'typeService'];
 module.exports = FormServerController;

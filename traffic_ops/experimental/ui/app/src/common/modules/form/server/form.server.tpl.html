@@ -49,15 +49,10 @@
                     <select id="status" name="status" class="form-control" ng-model="server._links.status.id" ng-options="status.id as status.name for status in statuses"></select>
                 </div>
             </div>
-            <!-- todo: need to create selects for these -->
-            <div class="form-group" style="color: red;" ng-class="{'has-error': hasError(serverForm[embed.name]), 'has-feedback': hasError(serverForm[embed.name])}" ng-repeat="embed in embeds">
-                <label class="control-label col-md-2 col-sm-2 col-xs-12">{{embed.name}} <span ng-show="embed.required">*</span></label>
+            <div class="form-group">
+                <label class="control-label col-md-2 col-sm-2 col-xs-12">Profile *</label>
                 <div class="col-md-10 col-sm-10 col-xs-12">
-                    <input id="{{embed.name}}" name="{{embed.name}}" type="text" class="form-control" ng-model="server['_links'][embed.name].id" ng-required="embed.required" ng-maxlength="embed.maxLength" ng-pattern="embed.pattern" autofocus>
-                    <small class="input-error" ng-show="hasPropertyError(serverForm[embed.name], 'required')">Required</small>
-                    <small class="input-error" ng-show="hasPropertyError(serverForm[embed.name], 'maxlength')">Too Long</small>
-                    <small class="input-error" ng-show="hasPropertyError(serverForm[embed.name], 'pattern')">{{embed.invalidMsg}}</small>
-                    <span ng-show="hasError(serverForm[embed.name])" class="form-control-feedback"><i class="fa fa-times"></i></span>
+                    <select id="profile" name="profile" class="form-control" ng-model="server._links.profile.id" ng-options="profile.id as profile.name for profile in profiles"></select>
                 </div>
             </div>
             <div class="modal-footer">
