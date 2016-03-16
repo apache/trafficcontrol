@@ -23,8 +23,8 @@ use File::Path;
 use Fcntl qw(:flock);
 use MIME::Base64;
 use Data::Dumper;
-use LWP qw(get);
-use LWP::ConnCache qw(new);
+use LWP::Debug;
+use LWP::ConnCache;
 use LWP::UserAgent;
 use LWP::Protocol::https;
 use Crypt::SSLeay;
@@ -122,16 +122,20 @@ my $CFG_FILE_PREREQ_FAILED     = 3;
 my $CFG_FILE_ALREADY_PROCESSED = 4;
 
 #### LWP globals
-@LWP::Protocol::http::EXTRA_SOCK_OPTS = ( SendTE => 0, KeepAlive => 1, PeerHTTPVersion => "1.1" );
-my $lwp_conn       = LWP::UserAgent->new(); 
-$lwp_conn->conn_cache( LWP::ConnCache->new() );
-print Dumper $lwp_conn;
+#$LWP::ConnCache::DEBUG = 1;
+#@LWP::Protocol::http::EXTRA_SOCK_OPTS = ( SendTE => 0, KeepAlive => 1, PeerHTTPVersion => "1.1" );
+my $lwp_conn                          = LWP::UserAgent->new();
+my $lwp_connection_cache = $lwp_conn->conn_cache(LWP::ConnCache->new());
+$lwp_conn->conn_cache->total_capacity( [10] );
+ #$lwp_connection_cache->deposit("https", 0, $sock);
+ #$sock = $cache->withdraw($type, $key);
 
 my $unixtime       = time();
 my $hostname_short = `/bin/hostname -s`;
 chomp($hostname_short);
 my $domainname = &set_domainname();
 $hostname_short = "odol-atsec-den-01";
+$lwp_conn->agent($hostname_short);
 
 my $TMP_BASE  = "/tmp/ort";
 my $cookie    = &get_cookie( $traffic_ops_host, $TM_LOGIN );
@@ -1067,10 +1071,13 @@ sub lwp_get {
 	while( $retry_counter >= 0 ) {
 		
 		$response = $lwp_conn->get($url, %headers);
+#print Dumper $lwp_conn; 
+#	print Dumper $response; 
+		print "total connections currently: " . $lwp_conn->conn_cache->get_connections("https") . "\n";
 		$response_content = $response->content; 
 		$response_content =~ s/(\r|\c|\f|\t|\n)/ /g;
 
-		if ( &check_lwp_response_code($response, $ERROR) ) {
+		if ( &check_lwp_response_code($response, $ERROR) || &check_lwp_response_content_length($response) ) {
 			( $log_level >> $ERROR ) && print "ERROR result for $url is: ..." . $response->content . "...\n";
 			&sleep_rand(6);
 			$retry_counter--;
@@ -1238,10 +1245,11 @@ sub get_cookie {
 	my $to_host     = shift;
 	my $to_login    = shift;
 	my ( $u, $p ) = split( /:/, $to_login );
+	my %headers;
+	$headers{'Mark'} = 'Keep-Alive';
 
 	my $url = $to_host . "/login";
-	my $response = $lwp_conn->post( $url, [ 'u' => $u, 'p' => $p ] );
-	print Dumper $response; 
+	my $response = $lwp_conn->post( $url, [ 'u' => $u, 'p' => $p ], %headers );
 
 	&check_lwp_response_code($response, $FATAL);
 
@@ -1280,6 +1288,26 @@ sub check_lwp_response_code {
 		( $log_level >> $DEBUG ) && print "DEBUG $url returned HTTP " . $lwp_response->code() . ".\n"; 
 		return 0;
 	}
+}
+
+sub check_lwp_response_content_length {
+	my $lwp_response = shift;
+	my $url           = $lwp_response->request->uri;
+
+	if ( !defined($lwp_response->header('Content-Length')) ) {
+		( $log_level >> $ERROR ) && print "ERROR $url did not return a Content-Length header!\n"; 
+		exit;
+		return 1;
+	}
+	elsif ( $lwp_response->header('Content-Length') != length($lwp_response->content()) ) {
+		( $log_level >> $ERROR ) && print "ERROR $url returned a Content-Length of " . $lwp_response->header('Content-Length') . ", however actual content length is " . length($lwp_response->content()) . "!\n"; 
+		return 1;
+	}
+	else {	
+		( $log_level >> $DEBUG ) && print "DEBUG $url returned a Content-Length of " . $lwp_response->header('Content-Length') . ", and actual content length is " . length($lwp_response->content()). "\n"; 
+		return 0;
+	}
+
 }
 
 sub check_script_mode {
@@ -1352,12 +1380,7 @@ sub get_cfg_file_list {
 	my $cdn_name;
 	my $url = "$tm_host/ort/$host_name/ort1";
 
-	my $result = &curl_me($url);
-
-	if ( $result =~ m/^\d{3}$/ ) {
-		( $log_level >> $FATAL ) && print "FATAL ORT URL: $url returned $result. Cannot continue; bailing.\n";
-		exit 1;
-	}
+	my $result = &lwp_get($url);
 
 	my $ort_ref = decode_json($result);
 	$profile_name = $ort_ref->{'profile'}->{'name'};
@@ -1385,12 +1408,7 @@ sub get_header_comment {
 	my $toolname;
 
 	my $url    = "$to_host/api/1.1/system/info.json";
-	my $result = &curl_me($url);
-
-	if ( $result =~ m/^\d{3}$/ ) {
-		( $log_level >> $ERROR ) && print "ERROR System Info URL: $url returned $result.\n";
-		return "";
-	}
+	my $result = &lwp_get($url);
 
 	my $result_ref = decode_json($result);
 	if ( defined( $result_ref->{'response'}->{'parameters'}->{'tm.toolname'} ) ) {
@@ -1557,7 +1575,7 @@ sub process_packages {
 
 	my $proceed = 0;
 	my $url     = "$tm_host/ort/$host_name/packages";
-	my $result  = &curl_me($url);
+	my $result  = &lwp_get($url);
 
 	if ( defined($result) && $result ne "" && $result !~ m/^(\d){3}$/ ) {
 		my %package_map;
@@ -1780,7 +1798,7 @@ sub process_chkconfig {
 
 	my $proceed = 0;
 	my $url     = "$tm_host/ort/$host_name/chkconfig";
-	my $result  = &curl_me($url);
+	my $result  = &lwp_get($url);
 
 	if ( defined($result) && $result ne "" && $result !~ m/^\d{3}$/ ) {
 		my @chkconfig_list = @{ decode_json($result) };
@@ -2386,7 +2404,7 @@ sub adv_processing_ssl {
 
 		my $url = $traffic_ops_host . "/api/1.1/deliveryservices/hostname/" . $remap . "/sslkeys.json";
 
-		my $result = &curl_me($url);
+		my $result = &lwp_get($url);
 		if ( $result =~ m/^\d{3}$/ ) {
 			if ( $script_mode == $REPORT ) {
 				( $log_level >> $ERROR ) && print "ERROR SSL URL: $url returned $result.\n";
