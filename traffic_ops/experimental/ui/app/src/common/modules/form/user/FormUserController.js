@@ -7,7 +7,7 @@ var FormUserController = function(user, showDelete, $scope, $uibModal, formUtils
     var deleteUser = function(user) {
         userService.deleteUser(user.id)
             .then(function() {
-                locationUtils.navigateToPath('/administer/users');
+                locationUtils.navigateToPath('/admin/users');
             });
     };
 

@@ -1,7 +1,7 @@
-module.exports = angular.module('trafficOps.private.administer.users.list', [])
+module.exports = angular.module('trafficOps.private.admin.users.list', [])
     .config(function($stateProvider, $urlRouterProvider) {
         $stateProvider
-            .state('trafficOps.private.administer.users.list', {
+            .state('trafficOps.private.admin.users.list', {
                 url: '',
                 views: {
                     usersContent: {
