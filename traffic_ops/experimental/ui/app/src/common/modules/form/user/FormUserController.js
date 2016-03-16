@@ -1,4 +1,4 @@
-var FormUserController = function(user, showDelete, $scope, $uibModal, formUtils, locationUtils, roleService, userService) {
+var FormUserController = function(user, showDelete, $scope, $uibModal, formUtils, stringUtils, locationUtils, roleService, userService) {
 
     var updateUser = function(user) {
         userService.updateUser(user);
@@ -23,6 +23,8 @@ var FormUserController = function(user, showDelete, $scope, $uibModal, formUtils
     $scope.user = user;
 
     $scope.showDelete = showDelete;
+
+    $scope.labelize = stringUtils.labelize;
 
     $scope.confirmUpdate = function(user, usernameField) {
         updateUser(user);
@@ -63,5 +65,5 @@ var FormUserController = function(user, showDelete, $scope, $uibModal, formUtils
 
 };
 
-FormUserController.$inject = ['user', 'showDelete', '$scope', '$uibModal', 'formUtils', 'locationUtils', 'roleService', 'userService'];
+FormUserController.$inject = ['user', 'showDelete', '$scope', '$uibModal', 'formUtils', 'stringUtils', 'locationUtils', 'roleService', 'userService'];
 module.exports = FormUserController;

@@ -1,4 +1,4 @@
-var FormServerController = function(server, $scope, $uibModal, $anchorScroll, formUtils, locationUtils, cacheGroupService, cdnService, locationService, profileService, serverService, statusService, typeService) {
+var FormServerController = function(server, $scope, $uibModal, $anchorScroll, formUtils, stringUtils, locationUtils, cacheGroupService, cdnService, locationService, profileService, serverService, statusService, typeService) {
 
     var deleteServer = function(server) {
         serverService.deleteServer(server.id)
@@ -80,6 +80,8 @@ var FormServerController = function(server, $scope, $uibModal, $anchorScroll, fo
         { name: 'routerPortName', type: 'text', required: false, maxLength: 256 }
     ];
 
+    $scope.labelize = stringUtils.labelize;
+
     $scope.update = function(server) {
         serverService.updateServer(server).
             then(function() {
@@ -128,5 +130,5 @@ var FormServerController = function(server, $scope, $uibModal, $anchorScroll, fo
 
 };
 
-FormServerController.$inject = ['server', '$scope', '$uibModal', '$anchorScroll', 'formUtils', 'locationUtils', 'cacheGroupService', 'cdnService', 'locationService', 'profileService', 'serverService', 'statusService', 'typeService'];
+FormServerController.$inject = ['server', '$scope', '$uibModal', '$anchorScroll', 'formUtils', 'stringUtils', 'locationUtils', 'cacheGroupService', 'cdnService', 'locationService', 'profileService', 'serverService', 'statusService', 'typeService'];
 module.exports = FormServerController;

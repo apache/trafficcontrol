@@ -1,4 +1,4 @@
-var FormDivisionController = function(division, $scope, $uibModal, $anchorScroll, formUtils, locationUtils, divisionService) {
+var FormDivisionController = function(division, $scope, $uibModal, $anchorScroll, formUtils, stringUtils, locationUtils, divisionService) {
 
     var deleteDivision = function(division) {
         divisionService.deleteDivision(division.id)
@@ -15,6 +15,8 @@ var FormDivisionController = function(division, $scope, $uibModal, $anchorScroll
         { name: 'id', type: 'number', required: true, readonly: true },
         { name: 'name', type: 'text', required: true, maxLength: 45 }
     ];
+
+    $scope.labelize = stringUtils.labelize;
 
     $scope.update = function(division) {
         divisionService.updateDivision(division).
@@ -54,5 +56,5 @@ var FormDivisionController = function(division, $scope, $uibModal, $anchorScroll
 
 };
 
-FormDivisionController.$inject = ['division', '$scope', '$uibModal', '$anchorScroll', 'formUtils', 'locationUtils', 'divisionService'];
+FormDivisionController.$inject = ['division', '$scope', '$uibModal', '$anchorScroll', 'formUtils', 'stringUtils', 'locationUtils', 'divisionService'];
 module.exports = FormDivisionController;

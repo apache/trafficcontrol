@@ -1,4 +1,4 @@
-var FormTenantController = function(tenant, $scope, $uibModal, formUtils, locationUtils, tenantService) {
+var FormTenantController = function(tenant, $scope, $uibModal, formUtils, stringUtils, locationUtils, tenantService) {
 
     var deleteTenant = function(tenant) {
         tenantService.deleteTenant(tenant.id)
@@ -15,6 +15,8 @@ var FormTenantController = function(tenant, $scope, $uibModal, formUtils, locati
         { name: 'id', type: 'number', required: true, readonly: true },
         { name: 'name', type: 'text', required: true, maxLength: 45 }
     ];
+
+    $scope.labelize = stringUtils.labelize;
 
     $scope.update = function(tenant) {
         alert('implement update');
@@ -50,5 +52,5 @@ var FormTenantController = function(tenant, $scope, $uibModal, formUtils, locati
 
 };
 
-FormTenantController.$inject = ['tenant', '$scope', '$uibModal', 'formUtils', 'locationUtils', 'tenantService'];
+FormTenantController.$inject = ['tenant', '$scope', '$uibModal', 'formUtils', 'stringUtils', 'locationUtils', 'tenantService'];
 module.exports = FormTenantController;

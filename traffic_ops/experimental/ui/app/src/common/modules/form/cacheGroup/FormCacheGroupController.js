@@ -1,4 +1,4 @@
-var FormCacheGroupController = function(cacheGroup, $scope, $uibModal, $anchorScroll, formUtils, locationUtils, cacheGroupService, typeService) {
+var FormCacheGroupController = function(cacheGroup, $scope, $uibModal, $anchorScroll, formUtils, stringUtils, locationUtils, cacheGroupService, typeService) {
 
     var deleteCacheGroup = function(cacheGroup) {
         cacheGroupService.deleteCacheGroup(cacheGroup.id)
@@ -32,6 +32,8 @@ var FormCacheGroupController = function(cacheGroup, $scope, $uibModal, $anchorSc
         { name: 'latitude', type: 'number', required: false, pattern: new RegExp('^[-+]?[0-9]*\.?[0-9]+$'), invalidMsg: 'Invalid coordinate' },
         { name: 'longitude', type: 'number', required: false, pattern: new RegExp('^[-+]?[0-9]*\.?[0-9]+$'), invalidMsg: 'Invalid coordinate' }
     ];
+
+    $scope.labelize = stringUtils.labelize;
 
     $scope.update = function(cacheGroup) {
         cacheGroupService.updateCacheGroup(cacheGroup).
@@ -77,5 +79,5 @@ var FormCacheGroupController = function(cacheGroup, $scope, $uibModal, $anchorSc
 
 };
 
-FormCacheGroupController.$inject = ['cacheGroup', '$scope', '$uibModal', '$anchorScroll', 'formUtils', 'locationUtils', 'cacheGroupService', 'typeService'];
+FormCacheGroupController.$inject = ['cacheGroup', '$scope', '$uibModal', '$anchorScroll', 'formUtils', 'stringUtils', 'locationUtils', 'cacheGroupService', 'typeService'];
 module.exports = FormCacheGroupController;

@@ -1,4 +1,4 @@
-var FormLocationController = function(location, $scope, $uibModal, $anchorScroll, formUtils, locationUtils, locationService, regionService) {
+var FormLocationController = function(location, $scope, $uibModal, $anchorScroll, formUtils, stringUtils, locationUtils, locationService, regionService) {
 
     var deleteLocation = function(location) {
         locationService.deleteLocation(location.id)
@@ -30,6 +30,8 @@ var FormLocationController = function(location, $scope, $uibModal, $anchorScroll
         { name: 'phone', type: 'text', required: false, maxLength: 45 },
         { name: 'email', type: 'text', required: false, maxLength: 128 }
     ];
+
+    $scope.labelize = stringUtils.labelize;
 
     $scope.update = function(location) {
         locationService.updateLocation(location).
@@ -74,5 +76,5 @@ var FormLocationController = function(location, $scope, $uibModal, $anchorScroll
 
 };
 
-FormLocationController.$inject = ['location', '$scope', '$uibModal', '$anchorScroll', 'formUtils', 'locationUtils', 'locationService', 'regionService'];
+FormLocationController.$inject = ['location', '$scope', '$uibModal', '$anchorScroll', 'formUtils', 'stringUtils', 'locationUtils', 'locationService', 'regionService'];
 module.exports = FormLocationController;

@@ -1,4 +1,4 @@
-var FormRegionController = function(region, $scope, $uibModal, $anchorScroll, formUtils, locationUtils, divisionService, regionService) {
+var FormRegionController = function(region, $scope, $uibModal, $anchorScroll, formUtils, stringUtils, locationUtils, divisionService, regionService) {
 
     var deleteRegion = function(region) {
         regionService.deleteRegion(region.id)
@@ -22,6 +22,8 @@ var FormRegionController = function(region, $scope, $uibModal, $anchorScroll, fo
         { name: 'id', type: 'number', required: true, readonly: true },
         { name: 'name', type: 'text', required: true, maxLength: 45 }
     ];
+
+    $scope.labelize = stringUtils.labelize;
 
     $scope.update = function(region) {
         regionService.updateRegion(region).
@@ -66,5 +68,5 @@ var FormRegionController = function(region, $scope, $uibModal, $anchorScroll, fo
 
 };
 
-FormRegionController.$inject = ['region', '$scope', '$uibModal', '$anchorScroll', 'formUtils', 'locationUtils', 'divisionService', 'regionService'];
+FormRegionController.$inject = ['region', '$scope', '$uibModal', '$anchorScroll', 'formUtils', 'stringUtils', 'locationUtils', 'divisionService', 'regionService'];
 module.exports = FormRegionController;
