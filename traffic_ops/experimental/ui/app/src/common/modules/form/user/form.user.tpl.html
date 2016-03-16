@@ -19,13 +19,11 @@
                     <span ng-show="hasError(userForm.fullName)" class="form-control-feedback"><i class="fa fa-times"></i></span>
                 </div>
             </div>
-            <div class="form-group" ng-class="{'has-error': hasError(userForm.role), 'has-feedback': hasError(userForm.role)}">
-                <label class="control-label col-md-2 col-sm-2 col-xs-12">role *</label>
+
+            <div class="form-group">
+                <label class="control-label col-md-2 col-sm-2 col-xs-12">Role *</label>
                 <div class="col-md-10 col-sm-10 col-xs-12">
-                    <input id="role" name="role" type="text" class="form-control" ng-model="user._links.role.id" ng-required="true" ng-maxlength="11" autofocus>
-                    <small class="input-error" ng-show="hasPropertyError(userForm.role, 'required')">Required</small>
-                    <small class="input-error" ng-show="hasPropertyError(userForm.role, 'maxlength')">Too Long</small>
-                    <span ng-show="hasError(userForm.role)" class="form-control-feedback"><i class="fa fa-times"></i></span>
+                    <select id="role" name="role" class="form-control" ng-model="user._links.role.id" ng-options="role.id as role.name for role in roles"></select>
                 </div>
             </div>
             <div class="form-group" ng-class="{'has-error': hasError(userForm.email), 'has-feedback': hasError(userForm.email)}">
@@ -65,7 +63,7 @@
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-danger" ng-show="showDelete" ng-click="confirmDelete(user)">Delete</button>
-                <button type="button" class="btn btn-primary" ng-disabled="userForm.$pristine || userForm.$invalid" ng-click="update(user)">Update</button>
+                <button type="button" class="btn btn-primary" ng-disabled="userForm.$pristine || userForm.$invalid" ng-click="confirmUpdate(user, userForm.username)">Update</button>
             </div>
         </form>
     </div>

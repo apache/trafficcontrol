@@ -1,4 +1,4 @@
-var FormUserController = function(user, showDelete, $scope, $uibModal, formUtils, locationUtils, userService) {
+var FormUserController = function(user, showDelete, $scope, $uibModal, formUtils, locationUtils, roleService, userService) {
 
     var updateUser = function(user) {
         userService.updateUser(user);
@@ -8,6 +8,13 @@ var FormUserController = function(user, showDelete, $scope, $uibModal, formUtils
         userService.deleteUser(user.id)
             .then(function() {
                 locationUtils.navigateToPath('/admin/users');
+            });
+    };
+
+    var getRoles = function() {
+        roleService.getRoles()
+            .then(function(result) {
+                $scope.roles = result;
             });
     };
 
@@ -49,7 +56,12 @@ var FormUserController = function(user, showDelete, $scope, $uibModal, formUtils
 
     $scope.hasPropertyError = formUtils.hasPropertyError;
 
+    var init = function () {
+        getRoles();
+    };
+    init();
+
 };
 
-FormUserController.$inject = ['user', 'showDelete', '$scope', '$uibModal', 'formUtils', 'locationUtils', 'userService'];
+FormUserController.$inject = ['user', 'showDelete', '$scope', '$uibModal', 'formUtils', 'locationUtils', 'roleService', 'userService'];
 module.exports = FormUserController;

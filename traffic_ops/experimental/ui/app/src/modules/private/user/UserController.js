@@ -1,4 +1,4 @@
-var UserController = function($scope, $state, $uibModal, formUtils, locationUtils, userService, authService, userModel) {
+var UserController = function($scope, $state, $uibModal, formUtils, locationUtils, userService, authService, roleService, userModel) {
 
     var updateUser = function(user, options) {
         userService.updateCurrentUser(user)
@@ -6,6 +6,13 @@ var UserController = function($scope, $state, $uibModal, formUtils, locationUtil
                 if (options.signout) {
                     authService.logout();
                 }
+            });
+    };
+
+    var getRoles = function() {
+        roleService.getRoles()
+            .then(function(result) {
+                $scope.roles = result;
             });
     };
 
@@ -45,7 +52,12 @@ var UserController = function($scope, $state, $uibModal, formUtils, locationUtil
 
     $scope.hasPropertyError = formUtils.hasPropertyError;
 
+    var init = function () {
+        getRoles();
+    };
+    init();
+
 };
 
-UserController.$inject = ['$scope', '$state', '$uibModal', 'formUtils', 'locationUtils', 'userService', 'authService', 'userModel'];
+UserController.$inject = ['$scope', '$state', '$uibModal', 'formUtils', 'locationUtils', 'userService', 'authService', 'roleService', 'userModel'];
 module.exports = UserController;
