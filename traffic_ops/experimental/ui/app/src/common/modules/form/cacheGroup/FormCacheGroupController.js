@@ -7,13 +7,27 @@ var FormCacheGroupController = function(cacheGroup, $scope, $uibModal, formUtils
             });
     };
 
+    var getCacheGroups = function() {
+        cacheGroupService.getCacheGroups()
+            .then(function(result) {
+                $scope.cacheGroups = result;
+            });
+    };
+
     $scope.cacheGroupOriginal = cacheGroup;
 
     $scope.cacheGroup = angular.copy(cacheGroup);
 
     $scope.props = [
         { name: 'id', required: true, readonly: true },
-        { name: 'name', required: true, maxLength: 45 }
+        { name: 'name', required: true, maxLength: 45 },
+        { name: 'shortName', required: true, maxLength: 255 },
+        { name: 'latitude', required: false, pattern: new RegExp('^[-+]?[0-9]*\.?[0-9]+$'), invalidMsg: 'Invalid coordinate' },
+        { name: 'longitude', required: false, pattern: new RegExp('^[-+]?[0-9]*\.?[0-9]+$'), invalidMsg: 'Invalid coordinate' }
+    ];
+
+    $scope.embeds = [
+        { name: 'type', required: true, maxLength: 11 }
     ];
 
     $scope.update = function(cacheGroup) {
@@ -47,6 +61,11 @@ var FormCacheGroupController = function(cacheGroup, $scope, $uibModal, formUtils
     $scope.hasError = formUtils.hasError;
 
     $scope.hasPropertyError = formUtils.hasPropertyError;
+
+    var init = function () {
+        getCacheGroups();
+    };
+    init();
 
 };
 
