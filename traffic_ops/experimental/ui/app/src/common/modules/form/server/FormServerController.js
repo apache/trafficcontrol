@@ -1,4 +1,4 @@
-var FormServerController = function(server, $scope, $uibModal, formUtils, locationUtils, serverService) {
+var FormServerController = function(server, $scope, $uibModal, $anchorScroll, formUtils, locationUtils, cacheGroupService, locationService, serverService) {
 
     var deleteServer = function(server) {
         serverService.deleteServer(server.id)
@@ -7,9 +7,23 @@ var FormServerController = function(server, $scope, $uibModal, formUtils, locati
             });
     };
 
-    $scope.serverOriginal = server;
+    var getLocations = function() {
+        locationService.getLocations()
+            .then(function(result) {
+                $scope.locations = result;
+            });
+    };
 
-    $scope.server = angular.copy(server);
+    var getCacheGroups = function() {
+        cacheGroupService.getCacheGroups()
+            .then(function(result) {
+                $scope.cacheGroups = result;
+            });
+    };
+
+    $scope.serverCopy = angular.copy(server);
+
+    $scope.server = server;
 
     $scope.props = [
         { name: 'id', required: true, readonly: true },
@@ -39,8 +53,6 @@ var FormServerController = function(server, $scope, $uibModal, formUtils, locati
     ];
 
     $scope.embeds = [
-        { name: 'phys_location', required: true, maxLength: 11 },
-        { name: 'cachegroup', required: true, maxLength: 11 },
         { name: 'type', required: true, maxLength: 11 },
         { name: 'status', required: true, maxLength: 11 },
         { name: 'profile', required: true, maxLength: 11 },
@@ -48,7 +60,11 @@ var FormServerController = function(server, $scope, $uibModal, formUtils, locati
     ];
 
     $scope.update = function(server) {
-        alert('implement update');
+        serverService.updateServer(server).
+            then(function() {
+                $scope.serverCopy = angular.copy(server);
+                $anchorScroll(); // scrolls window to top
+            });
     };
 
     $scope.confirmDelete = function(server) {
@@ -79,7 +95,13 @@ var FormServerController = function(server, $scope, $uibModal, formUtils, locati
 
     $scope.hasPropertyError = formUtils.hasPropertyError;
 
+    var init = function () {
+        getLocations();
+        getCacheGroups();
+    };
+    init();
+
 };
 
-FormServerController.$inject = ['server', '$scope', '$uibModal', 'formUtils', 'locationUtils', 'serverService'];
+FormServerController.$inject = ['server', '$scope', '$uibModal', '$anchorScroll', 'formUtils', 'locationUtils', 'cacheGroupService', 'locationService', 'serverService'];
 module.exports = FormServerController;

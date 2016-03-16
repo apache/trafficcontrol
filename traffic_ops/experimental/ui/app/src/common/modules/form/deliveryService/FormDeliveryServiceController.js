@@ -1,4 +1,4 @@
-var FormDeliveryServiceController = function(deliveryService, $scope, $uibModal, formUtils, locationUtils, deliveryServiceService) {
+var FormDeliveryServiceController = function(deliveryService, $scope, $uibModal, $anchorScroll, formUtils, locationUtils, deliveryServiceService) {
 
     var deleteDeliveryService = function(ds) {
         deliveryServiceService.deleteDeliveryService(ds.id)
@@ -7,16 +7,15 @@ var FormDeliveryServiceController = function(deliveryService, $scope, $uibModal,
             });
     };
 
-    $scope.deliveryServiceOriginal = deliveryService;
+    $scope.deliveryServiceCopy = angular.copy(deliveryService);
 
-    $scope.deliveryService = angular.copy(deliveryService);
+    $scope.deliveryService = deliveryService;
 
     $scope.props = [
         { name: 'id', required: true, readonly: true },
         { name: 'displayName', required: true, maxLength: 48 },
         { name: 'xmlId', required: true, maxLength: 48 },
         { name: 'active', required: true, maxLength: 1 },
-        { name: 'dcsp', required: true, maxLength: 11 },
         { name: 'signed', required: true, maxLength: 1 },
         { name: 'qstringIgnore', required: true, maxLength: 1 },
         { name: 'geoLimit', required: true, maxLength: 1 },
@@ -50,8 +49,7 @@ var FormDeliveryServiceController = function(deliveryService, $scope, $uibModal,
         { name: 'trResponseHeaders', required: false, maxLength: 1024 },
         { name: 'initialDispersion', required: false, maxLength: 11 },
         { name: 'dnsBypassCname', required: false, maxLength: 255 },
-        { name: 'trRequestHeaders', required: false, maxLength: 1024 },
-        { name: 'regionalGeoBlocking', required: true, maxLength: 1 }
+        { name: 'trRequestHeaders', required: false, maxLength: 1024 }
     ];
 
     $scope.embeds = [
@@ -61,7 +59,11 @@ var FormDeliveryServiceController = function(deliveryService, $scope, $uibModal,
     ];
 
     $scope.update = function(deliveryService) {
-        alert('implement update');
+        deliveryServiceService.updateDeliveryService(deliveryService).
+            then(function() {
+                $scope.deliveryServiceCopy = angular.copy(deliveryService);
+                $anchorScroll(); // scrolls window to top
+            });
     };
 
     $scope.confirmDelete = function(ds) {
@@ -94,5 +96,5 @@ var FormDeliveryServiceController = function(deliveryService, $scope, $uibModal,
 
 };
 
-FormDeliveryServiceController.$inject = ['deliveryService', '$scope', '$uibModal', 'formUtils', 'locationUtils', 'deliveryServiceService'];
+FormDeliveryServiceController.$inject = ['deliveryService', '$scope', '$uibModal', '$anchorScroll', 'formUtils', 'locationUtils', 'deliveryServiceService'];
 module.exports = FormDeliveryServiceController;

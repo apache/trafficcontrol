@@ -1,4 +1,4 @@
-var FormCacheGroupController = function(cacheGroup, $scope, $uibModal, formUtils, locationUtils, cacheGroupService) {
+var FormCacheGroupController = function(cacheGroup, $scope, $uibModal, $anchorScroll, formUtils, locationUtils, cacheGroupService) {
 
     var deleteCacheGroup = function(cacheGroup) {
         cacheGroupService.deleteCacheGroup(cacheGroup.id)
@@ -14,9 +14,9 @@ var FormCacheGroupController = function(cacheGroup, $scope, $uibModal, formUtils
             });
     };
 
-    $scope.cacheGroupOriginal = cacheGroup;
+    $scope.cacheGroupCopy = angular.copy(cacheGroup);
 
-    $scope.cacheGroup = angular.copy(cacheGroup);
+    $scope.cacheGroup = cacheGroup;
 
     $scope.props = [
         { name: 'id', required: true, readonly: true },
@@ -31,7 +31,11 @@ var FormCacheGroupController = function(cacheGroup, $scope, $uibModal, formUtils
     ];
 
     $scope.update = function(cacheGroup) {
-        alert('implement update');
+        cacheGroupService.updateCacheGroup(cacheGroup).
+            then(function() {
+                $scope.cacheGroupCopy = angular.copy(cacheGroup);
+                $anchorScroll(); // scrolls window to top
+            });
     };
 
     $scope.confirmDelete = function(cacheGroup) {
@@ -69,5 +73,5 @@ var FormCacheGroupController = function(cacheGroup, $scope, $uibModal, formUtils
 
 };
 
-FormCacheGroupController.$inject = ['cacheGroup', '$scope', '$uibModal', 'formUtils', 'locationUtils', 'cacheGroupService'];
+FormCacheGroupController.$inject = ['cacheGroup', '$scope', '$uibModal', '$anchorScroll', 'formUtils', 'locationUtils', 'cacheGroupService'];
 module.exports = FormCacheGroupController;

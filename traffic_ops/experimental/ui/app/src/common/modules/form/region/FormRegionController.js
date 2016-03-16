@@ -1,4 +1,4 @@
-var FormRegionController = function(region, $scope, $uibModal, formUtils, locationUtils, regionService) {
+var FormRegionController = function(region, $scope, $uibModal, $anchorScroll, formUtils, locationUtils, divisionService, regionService) {
 
     var deleteRegion = function(region) {
         regionService.deleteRegion(region.id)
@@ -7,9 +7,16 @@ var FormRegionController = function(region, $scope, $uibModal, formUtils, locati
             });
     };
 
-    $scope.regionOriginal = region;
+    var getDivisions = function() {
+        divisionService.getDivisions()
+            .then(function(result) {
+                $scope.divisions = result;
+            });
+    };
 
-    $scope.region = angular.copy(region);
+    $scope.regionCopy = angular.copy(region);
+
+    $scope.region = region;
 
     $scope.props = [
         { name: 'id', required: true, readonly: true },
@@ -17,7 +24,11 @@ var FormRegionController = function(region, $scope, $uibModal, formUtils, locati
     ];
 
     $scope.update = function(region) {
-        alert('implement update');
+        regionService.updateRegion(region).
+            then(function() {
+                $scope.regionCopy = angular.copy(region);
+                $anchorScroll(); // scrolls window to top
+            });
     };
 
     $scope.confirmDelete = function(region) {
@@ -48,7 +59,12 @@ var FormRegionController = function(region, $scope, $uibModal, formUtils, locati
 
     $scope.hasPropertyError = formUtils.hasPropertyError;
 
+    var init = function () {
+        getDivisions();
+    };
+    init();
+
 };
 
-FormRegionController.$inject = ['region', '$scope', '$uibModal', 'formUtils', 'locationUtils', 'regionService'];
+FormRegionController.$inject = ['region', '$scope', '$uibModal', '$anchorScroll', 'formUtils', 'locationUtils', 'divisionService', 'regionService'];
 module.exports = FormRegionController;

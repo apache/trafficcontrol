@@ -2,7 +2,7 @@
     <div class="x_title">
         <ol class="breadcrumb">
             <li><a ng-click="navigateToPath('/configure/locations')">Locations</a></li>
-            <li class="active">{{locationOriginal.name}}</li>
+            <li class="active">{{locationCopy.name}}</li>
         </ol>
         <div class="clearfix"></div>
     </div>
@@ -18,13 +18,10 @@
                     <span ng-show="hasError(locationForm[prop.name])" class="form-control-feedback"><i class="fa fa-times"></i></span>
                 </div>
             </div>
-            <div class="form-group" ng-class="{'has-error': hasError(locationForm.region), 'has-feedback': hasError(locationForm.region)}">
+            <div class="form-group">
                 <label class="control-label col-md-2 col-sm-2 col-xs-12">region *</label>
                 <div class="col-md-10 col-sm-10 col-xs-12">
-                    <input id="region" name="region" type="text" class="form-control" ng-model="location._links.region.id" ng-required="true" ng-maxlength="11" autofocus>
-                    <small class="input-error" ng-show="hasPropertyError(locationForm.region, 'required')">Required</small>
-                    <small class="input-error" ng-show="hasPropertyError(locationForm.region, 'maxlength')">Too Long</small>
-                    <span ng-show="hasError(locationForm.region)" class="form-control-feedback"><i class="fa fa-times"></i></span>
+                    <select id="region" name="region" class="form-control" ng-model="location._links.region.id" ng-options="region.id as region.name for region in regions"></select>
                 </div>
             </div>
             <div class="form-group">

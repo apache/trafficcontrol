@@ -1,4 +1,4 @@
-var FormDivisionController = function(division, $scope, $uibModal, formUtils, locationUtils, divisionService) {
+var FormDivisionController = function(division, $scope, $uibModal, $anchorScroll, formUtils, locationUtils, divisionService) {
 
     var deleteDivision = function(division) {
         divisionService.deleteDivision(division.id)
@@ -7,9 +7,9 @@ var FormDivisionController = function(division, $scope, $uibModal, formUtils, lo
             });
     };
 
-    $scope.divisionOriginal = division;
+    $scope.divisionCopy = angular.copy(division);
 
-    $scope.division = angular.copy(division);
+    $scope.division = division;
 
     $scope.props = [
         { name: 'id', required: true, readonly: true },
@@ -17,7 +17,11 @@ var FormDivisionController = function(division, $scope, $uibModal, formUtils, lo
     ];
 
     $scope.update = function(division) {
-        alert('implement update');
+        divisionService.updateDivision(division).
+            then(function() {
+                $scope.divisionCopy = angular.copy(division);
+                $anchorScroll(); // scrolls window to top
+            });
     };
 
     $scope.confirmDelete = function(division) {
@@ -50,5 +54,5 @@ var FormDivisionController = function(division, $scope, $uibModal, formUtils, lo
 
 };
 
-FormDivisionController.$inject = ['division', '$scope', '$uibModal', 'formUtils', 'locationUtils', 'divisionService'];
+FormDivisionController.$inject = ['division', '$scope', '$uibModal', '$anchorScroll', 'formUtils', 'locationUtils', 'divisionService'];
 module.exports = FormDivisionController;

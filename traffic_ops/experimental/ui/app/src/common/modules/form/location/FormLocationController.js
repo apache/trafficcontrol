@@ -1,4 +1,4 @@
-var FormLocationController = function(location, $scope, $uibModal, formUtils, locationUtils, locationService) {
+var FormLocationController = function(location, $scope, $uibModal, $anchorScroll, formUtils, locationUtils, locationService, regionService) {
 
     var deleteLocation = function(location) {
         locationService.deleteLocation(location.id)
@@ -7,9 +7,16 @@ var FormLocationController = function(location, $scope, $uibModal, formUtils, lo
             });
     };
 
-    $scope.locationOriginal = location;
+    var getRegions = function() {
+        regionService.getRegions()
+            .then(function(result) {
+                $scope.regions = result;
+            });
+    };
 
-    $scope.location = angular.copy(location);
+    $scope.locationCopy = angular.copy(location);
+
+    $scope.location = location;
 
     $scope.props = [
         { name: 'id', required: true, readonly: true },
@@ -25,7 +32,11 @@ var FormLocationController = function(location, $scope, $uibModal, formUtils, lo
     ];
 
     $scope.update = function(location) {
-        alert('implement update');
+        locationService.updateLocation(location).
+            then(function() {
+                $scope.locationCopy = angular.copy(location);
+                $anchorScroll(); // scrolls window to top
+            });
     };
 
     $scope.confirmDelete = function(location) {
@@ -56,7 +67,12 @@ var FormLocationController = function(location, $scope, $uibModal, formUtils, lo
 
     $scope.hasPropertyError = formUtils.hasPropertyError;
 
+    var init = function () {
+        getRegions();
+    };
+    init();
+
 };
 
-FormLocationController.$inject = ['location', '$scope', '$uibModal', 'formUtils', 'locationUtils', 'locationService'];
+FormLocationController.$inject = ['location', '$scope', '$uibModal', '$anchorScroll', 'formUtils', 'locationUtils', 'locationService', 'regionService'];
 module.exports = FormLocationController;
