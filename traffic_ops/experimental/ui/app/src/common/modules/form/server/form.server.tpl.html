@@ -26,13 +26,13 @@
                 </div>
             </div>
             <div class="form-group">
-                <label class="control-label col-md-2 col-sm-2 col-xs-12">location *</label>
+                <label class="control-label col-md-2 col-sm-2 col-xs-12">Location *</label>
                 <div class="col-md-10 col-sm-10 col-xs-12">
                     <select id="location" name="location" class="form-control" ng-model="server._links.phys_location.id" ng-options="location.id as location.name for location in locations"></select>
                 </div>
             </div>
             <div class="form-group">
-                <label class="control-label col-md-2 col-sm-2 col-xs-12">cachegroup *</label>
+                <label class="control-label col-md-2 col-sm-2 col-xs-12">Cache Group *</label>
                 <div class="col-md-10 col-sm-10 col-xs-12">
                     <select id="cachegroup" name="cachegroup" class="form-control" ng-model="server._links.cachegroup.id" ng-options="cachegroup.id as cachegroup.name for cachegroup in cacheGroups"></select>
                 </div>
@@ -41,6 +41,12 @@
                 <label class="control-label col-md-2 col-sm-2 col-xs-12">Type *</label>
                 <div class="col-md-10 col-sm-10 col-xs-12">
                     <select id="type" name="type" class="form-control" ng-model="server._links.type.id" ng-options="type.id as type.name for type in types"></select>
+                </div>
+            </div>
+            <div class="form-group">
+                <label class="control-label col-md-2 col-sm-2 col-xs-12">Status *</label>
+                <div class="col-md-10 col-sm-10 col-xs-12">
+                    <select id="status" name="status" class="form-control" ng-model="server._links.status.id" ng-options="status.id as status.name for status in statuses"></select>
                 </div>
             </div>
             <!-- todo: need to create selects for these -->
