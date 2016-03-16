@@ -12,7 +12,7 @@
             <div class="form-group" ng-class="{'has-error': hasError(serverForm[prop.name]), 'has-feedback': hasError(serverForm[prop.name])}" ng-repeat="prop in props">
                 <label class="control-label col-md-2 col-sm-2 col-xs-12">{{prop.name}} <span ng-show="prop.required">*</span></label>
                 <div class="col-md-10 col-sm-10 col-xs-12">
-                    <input id="{{prop.name}}" name="{{prop.name}}" type="text" class="form-control" ng-model="server[prop.name]" ng-readonly="prop.readonly" ng-required="prop.required" ng-maxlength="prop.maxLength" ng-pattern="prop.pattern" autofocus>
+                    <input id="{{prop.name}}" name="{{prop.name}}" type="{{prop.type}}" class="form-control" ng-model="server[prop.name]" ng-readonly="prop.readonly" ng-required="prop.required" ng-maxlength="prop.maxLength" ng-pattern="prop.pattern" autofocus>
                     <small class="input-error" ng-show="hasPropertyError(serverForm[prop.name], 'required')">Required</small>
                     <small class="input-error" ng-show="hasPropertyError(serverForm[prop.name], 'maxlength')">Too Long</small>
                     <small class="input-error" ng-show="hasPropertyError(serverForm[prop.name], 'pattern')">{{prop.invalidMsg}}</small>

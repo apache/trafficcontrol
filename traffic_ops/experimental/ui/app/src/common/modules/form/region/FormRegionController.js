@@ -19,8 +19,8 @@ var FormRegionController = function(region, $scope, $uibModal, $anchorScroll, fo
     $scope.region = region;
 
     $scope.props = [
-        { name: 'id', required: true, readonly: true },
-        { name: 'name', required: true, maxLength: 45 }
+        { name: 'id', type: 'number', required: true, readonly: true },
+        { name: 'name', type: 'text', required: true, maxLength: 45 }
     ];
 
     $scope.update = function(region) {

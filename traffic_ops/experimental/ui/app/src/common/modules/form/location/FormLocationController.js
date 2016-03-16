@@ -19,16 +19,16 @@ var FormLocationController = function(location, $scope, $uibModal, $anchorScroll
     $scope.location = location;
 
     $scope.props = [
-        { name: 'id', required: true, readonly: true },
-        { name: 'name', required: true, maxLength: 45 },
-        { name: 'shortName', required: true, maxLength: 12 },
-        { name: 'address', required: true, maxLength: 128 },
-        { name: 'city', required: true, maxLength: 128 },
-        { name: 'state', required: true, maxLength: 2 },
-        { name: 'zip', required: true, maxLength: 5 },
-        { name: 'poc', required: false, maxLength: 128 },
-        { name: 'phone', required: false, maxLength: 45 },
-        { name: 'email', required: false, maxLength: 128 }
+        { name: 'id', type: 'number', required: true, readonly: true },
+        { name: 'name', type: 'text', required: true, maxLength: 45 },
+        { name: 'shortName', type: 'text', required: true, maxLength: 12 },
+        { name: 'address', type: 'text', required: true, maxLength: 128 },
+        { name: 'city', type: 'text', required: true, maxLength: 128 },
+        { name: 'state', type: 'text', required: true, maxLength: 2 },
+        { name: 'zip', type: 'text', required: true, maxLength: 5 },
+        { name: 'poc', type: 'text', required: false, maxLength: 128 },
+        { name: 'phone', type: 'text', required: false, maxLength: 45 },
+        { name: 'email', type: 'text', required: false, maxLength: 128 }
     ];
 
     $scope.update = function(location) {

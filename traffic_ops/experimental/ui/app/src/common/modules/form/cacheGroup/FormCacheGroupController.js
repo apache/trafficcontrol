@@ -26,11 +26,11 @@ var FormCacheGroupController = function(cacheGroup, $scope, $uibModal, $anchorSc
     $scope.cacheGroup = cacheGroup;
 
     $scope.props = [
-        { name: 'id', required: true, readonly: true },
-        { name: 'name', required: true, maxLength: 45 },
-        { name: 'shortName', required: true, maxLength: 255 },
-        { name: 'latitude', required: false, pattern: new RegExp('^[-+]?[0-9]*\.?[0-9]+$'), invalidMsg: 'Invalid coordinate' },
-        { name: 'longitude', required: false, pattern: new RegExp('^[-+]?[0-9]*\.?[0-9]+$'), invalidMsg: 'Invalid coordinate' }
+        { name: 'id', type: 'number', required: true, readonly: true },
+        { name: 'name', type: 'text', required: true, maxLength: 45 },
+        { name: 'shortName', type: 'text', required: true, maxLength: 255 },
+        { name: 'latitude', type: 'number', required: false, pattern: new RegExp('^[-+]?[0-9]*\.?[0-9]+$'), invalidMsg: 'Invalid coordinate' },
+        { name: 'longitude', type: 'number', required: false, pattern: new RegExp('^[-+]?[0-9]*\.?[0-9]+$'), invalidMsg: 'Invalid coordinate' }
     ];
 
     $scope.update = function(cacheGroup) {

@@ -12,8 +12,8 @@ var FormDivisionController = function(division, $scope, $uibModal, $anchorScroll
     $scope.division = division;
 
     $scope.props = [
-        { name: 'id', required: true, readonly: true },
-        { name: 'name', required: true, maxLength: 45 }
+        { name: 'id', type: 'number', required: true, readonly: true },
+        { name: 'name', type: 'text', required: true, maxLength: 45 }
     ];
 
     $scope.update = function(division) {
