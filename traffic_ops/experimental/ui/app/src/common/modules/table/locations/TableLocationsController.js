@@ -3,7 +3,7 @@ var TableLocationsController = function(locations, $scope, locationUtils) {
     $scope.locations = locations;
 
     $scope.editLocation = function(id) {
-        locationUtils.navigateToPath('/admin/locations/edit/' + id)
+        locationUtils.navigateToPath('/admin/locations/' + id + '/edit')
     };
 
     $scope.createLocation = function() {

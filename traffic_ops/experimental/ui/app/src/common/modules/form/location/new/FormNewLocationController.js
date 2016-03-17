@@ -4,7 +4,6 @@ var FormNewLocationController = function(location, $scope, $controller, location
     angular.extend(this, $controller('FormLocationController', { location: location, $scope: $scope }));
 
     $scope.locationName = 'New';
-//    debugger;
 
     $scope.settings = {
         showDelete: false,
@@ -14,7 +13,7 @@ var FormNewLocationController = function(location, $scope, $controller, location
     $scope.save = function(location) {
         locationService.createLocation(location).
             then(function() {
-                locationUtils.navigateToPath('/admin/locations')
+                locationUtils.navigateToPath('/admin/locations');
             });
     };
 

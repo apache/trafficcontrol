@@ -2,7 +2,6 @@ var FormEditLocationController = function(location, $scope, $controller, $uibMod
 
     // extends the FormLocationController to inherit common methods
     angular.extend(this, $controller('FormLocationController', { location: location, $scope: $scope }));
-//    debugger;
 
     var deleteLocation = function(location) {
         locationService.deleteLocation(location.id)
