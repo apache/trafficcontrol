@@ -47,17 +47,32 @@ sub init {
 }
 
 sub init_hostname {
-	my $hostname_short = `/bin/hostname -s`; chomp($hostname_short);
-	my $hostname = `cat /etc/sysconfig/network | grep HOSTNAME`; chomp($hostname);
-	$hostname =~ s/HOSTNAME\=//g;
-	my $domainname;
-	(my @parts) = split (/\./, $hostname);
-	for (my $i=1;$i<scalar(@parts);$i++) {
-		$domainname .= $parts[$i] . ".";	
-	}
-	$domainname =~ s/\.$//g;
-	$global->{'host_name'} = $hostname_short;
-	$global->{'domain_name'} = $domainname;
+    my $fqdn;
+    my $cfg = "/etc/sysconfig/network";
+
+    open(IN, "< $cfg") || die("$cfg: $!");
+
+    while (<IN>) {
+        chomp($_);
+        if ($_ =~ m/^HOSTNAME=(.*)$/) {
+            $fqdn = $1;
+        }
+    }
+
+    close(IN);
+
+    if (!defined($fqdn) || $fqdn eq "") {
+        die("FATAL: Unable to find HOSTNAME in $cfg");
+    }
+
+    my ($hostname, $domainname) = split(/\./, $fqdn, 2);
+
+    if (!defined($hostname) || !defined($domainname)) {
+        die("FATAL: Unable to determine host and domain name; please ensure the FQDN for this machine is specified in HOSTNAME in $cfg.");
+    }
+
+    $global->{'host_name'} = $hostname;
+    $global->{'domain_name'} = $domainname;
 }
 
 sub init_time {
@@ -282,7 +297,14 @@ sub check_update_needed {
 
 sub read_disk_monitor_cfg {
 	my $disk_fname = $global->{'location'}->{'traffic_monitor_config'} . "/traffic_monitor_config.js";
-	open my $fh, '<', $disk_fname || print "ERROR Can't open $disk_fname\n";
+
+	if (! -f $disk_fname) {
+		print "WARN: $disk_fname does not exist\n";
+		$global->{'disk'}->{'traffic_monitor_config'} = undef;
+		return();
+	}
+
+	open my $fh, '<', $disk_fname || die("FATAL: Can't open $disk_fname: $!");
 	local $/ = undef;
 	my $disk_cfg = <$fh>;
 	close ($fh);
