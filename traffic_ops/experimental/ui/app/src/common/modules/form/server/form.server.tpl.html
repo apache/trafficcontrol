@@ -19,40 +19,58 @@
                     <span ng-show="hasError(serverForm[prop.name])" class="form-control-feedback"><i class="fa fa-times"></i></span>
                 </div>
             </div>
-            <div class="form-group">
+            <div class="form-group" ng-class="{'has-error': hasError(serverForm.cdn), 'has-feedback': hasError(serverForm.cdn)}">
                 <label class="control-label col-md-2 col-sm-2 col-xs-12">CDN *</label>
                 <div class="col-md-10 col-sm-10 col-xs-12">
-                    <select id="cdn" name="cdn" class="form-control" ng-model="server._links.cdn.id" ng-options="cdn.id as cdn.name for cdn in cdns"></select>
+                    <select id="cdn" name="cdn" class="form-control" ng-model="server._links.cdn.id" ng-options="cdn.id as cdn.name for cdn in cdns" required>
+                        <option value="">Select...</option>
+                    </select>
+                    <small class="input-error" ng-show="hasPropertyError(serverForm.cdn, 'required')">Required</small>
                 </div>
             </div>
-            <div class="form-group">
+            <div class="form-group" ng-class="{'has-error': hasError(serverForm.location), 'has-feedback': hasError(serverForm.location)}">
                 <label class="control-label col-md-2 col-sm-2 col-xs-12">Location *</label>
                 <div class="col-md-10 col-sm-10 col-xs-12">
-                    <select id="location" name="location" class="form-control" ng-model="server._links.phys_location.id" ng-options="location.id as location.name for location in locations"></select>
+                    <select id="location" name="location" class="form-control" ng-model="server._links.phys_location.id" ng-options="location.id as location.name for location in locations" required>
+                        <option value="">Select...</option>
+                    </select>
+                    <small class="input-error" ng-show="hasPropertyError(serverForm.location, 'required')">Required</small>
                 </div>
             </div>
-            <div class="form-group">
+            <div class="form-group" ng-class="{'has-error': hasError(serverForm.cachegroup), 'has-feedback': hasError(serverForm.cachegroup)}">
                 <label class="control-label col-md-2 col-sm-2 col-xs-12">Cache Group *</label>
                 <div class="col-md-10 col-sm-10 col-xs-12">
-                    <select id="cachegroup" name="cachegroup" class="form-control" ng-model="server._links.cachegroup.id" ng-options="cachegroup.id as cachegroup.name for cachegroup in cacheGroups"></select>
+                    <select id="cachegroup" name="cachegroup" class="form-control" ng-model="server._links.cachegroup.id" ng-options="cachegroup.id as cachegroup.name for cachegroup in cacheGroups" required>
+                        <option value="">Select...</option>
+                    </select>
+                    <small class="input-error" ng-show="hasPropertyError(serverForm.cachegroup, 'required')">Required</small>
                 </div>
             </div>
-            <div class="form-group">
+            <div class="form-group" ng-class="{'has-error': hasError(serverForm.type), 'has-feedback': hasError(serverForm.type)}">
                 <label class="control-label col-md-2 col-sm-2 col-xs-12">Type *</label>
                 <div class="col-md-10 col-sm-10 col-xs-12">
-                    <select id="type" name="type" class="form-control" ng-model="server._links.type.id" ng-options="type.id as type.name for type in types"></select>
+                    <select id="type" name="type" class="form-control" ng-model="server._links.type.id" ng-options="type.id as type.name for type in types" required>
+                        <option value="">Select...</option>
+                    </select>
+                    <small class="input-error" ng-show="hasPropertyError(serverForm.type, 'required')">Required</small>
                 </div>
             </div>
-            <div class="form-group">
+            <div class="form-group" ng-class="{'has-error': hasError(serverForm.status), 'has-feedback': hasError(serverForm.status)}">
                 <label class="control-label col-md-2 col-sm-2 col-xs-12">Status *</label>
                 <div class="col-md-10 col-sm-10 col-xs-12">
-                    <select id="status" name="status" class="form-control" ng-model="server._links.status.id" ng-options="status.id as status.name for status in statuses"></select>
+                    <select id="status" name="status" class="form-control" ng-model="server._links.status.id" ng-options="status.id as status.name for status in statuses" required>
+                        <option value="">Select...</option>
+                    </select>
+                    <small class="input-error" ng-show="hasPropertyError(serverForm.status, 'required')">Required</small>
                 </div>
             </div>
-            <div class="form-group">
+            <div class="form-group" ng-class="{'has-error': hasError(serverForm.profile), 'has-feedback': hasError(serverForm.profile)}">
                 <label class="control-label col-md-2 col-sm-2 col-xs-12">Profile *</label>
                 <div class="col-md-10 col-sm-10 col-xs-12">
-                    <select id="profile" name="profile" class="form-control" ng-model="server._links.profile.id" ng-options="profile.id as profile.name for profile in profiles"></select>
+                    <select id="profile" name="profile" class="form-control" ng-model="server._links.profile.id" ng-options="profile.id as profile.name for profile in profiles" required>
+                        <option value="">Select...</option>
+                    </select>
+                    <small class="input-error" ng-show="hasPropertyError(serverForm.profile, 'required')">Required</small>
                 </div>
             </div>
             <div class="modal-footer">

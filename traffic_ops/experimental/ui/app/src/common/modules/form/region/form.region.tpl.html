@@ -18,10 +18,13 @@
                     <span ng-show="hasError(regionForm[prop.name])" class="form-control-feedback"><i class="fa fa-times"></i></span>
                 </div>
             </div>
-            <div class="form-group">
+            <div class="form-group" ng-class="{'has-error': hasError(regionForm.division), 'has-feedback': hasError(regionForm.division)}">
                 <label class="control-label col-md-2 col-sm-2 col-xs-12">Division *</label>
                 <div class="col-md-10 col-sm-10 col-xs-12">
-                    <select id="division" name="division" class="form-control" ng-model="region._links.division.id" ng-options="division.id as division.name for division in divisions"></select>
+                    <select id="division" name="division" class="form-control" ng-model="region._links.division.id" ng-options="division.id as division.name for division in divisions" required>
+                        <option value="">Select...</option>
+                    </select>
+                    <small class="input-error" ng-show="hasPropertyError(regionForm.division, 'required')">Required</small>
                 </div>
             </div>
             <div class="modal-footer">
