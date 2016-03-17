@@ -733,8 +733,8 @@ sub stringify_ds {
 			$string .= "|responseHeader:$header:" . $ds->{'responseHeaders'}->{$header};
 		}
 	}
-	if ( defined( $ds->{'initial_dispersion'} ) ) {
-		$string .= "|initial_dispersion: " . $ds->{'initial_dispersion'};
+	if ( defined( $ds->{'dispersion'} ) ) {
+		$string .= "|dispersion: limit=" . $ds->{'dispersion'}->{'limit'} . ", shuffled=" . $ds->{'dispersion'}->{'shuffled'};
 	}
 	if ( defined( $ds->{'regionalGeoBlocking'} ) ) {
 		$string .= "|Regional_Geoblocking:" . $ds->{'regionalGeoBlocking'};
