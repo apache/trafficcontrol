@@ -2,7 +2,7 @@
     <div class="x_title">
         <ol class="breadcrumb">
             <li><a ng-click="navigateToPath('/admin/locations')">Locations</a></li>
-            <li class="active">{{locationCopy.name}}</li>
+            <li class="active">{{locationName}}</li>
         </ol>
         <div class="clearfix"></div>
     </div>
@@ -31,8 +31,8 @@
                 </div>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-danger" ng-click="confirmDelete(location)">Delete</button>
-                <button type="button" class="btn btn-primary" ng-disabled="locationForm.$pristine || locationForm.$invalid" ng-click="update(location)">Update</button>
+                <button type="button" class="btn btn-danger" ng-show="settings.showDelete" ng-click="confirmDelete(location)">Delete</button>
+                <button type="button" class="btn btn-primary" ng-disabled="locationForm.$pristine || locationForm.$invalid" ng-click="save(location)">{{settings.saveLabel}}</button>
             </div>
         </form>
     </div>

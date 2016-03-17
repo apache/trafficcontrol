@@ -8,6 +8,18 @@ var LocationService = function(Restangular, messageModel) {
         return Restangular.one("phys_location", id).get();
     };
 
+    this.createLocation = function(location) {
+        return Restangular.service('phys_location').post(location)
+            .then(
+                function() {
+                    messageModel.setMessages([ { level: 'success', text: 'Location created' } ], true);
+                },
+                function() {
+                    messageModel.setMessages([ { level: 'error', text: 'Location create failed' } ], false);
+                }
+            );
+    };
+
     this.updateLocation = function(location) {
         return location.put()
             .then(

@@ -1,15 +1,15 @@
-module.exports = angular.module('trafficOps.private.admin.locations.edit', [])
+module.exports = angular.module('trafficOps.private.admin.locations.new', [])
     .config(function($stateProvider, $urlRouterProvider) {
         $stateProvider
-            .state('trafficOps.private.admin.locations.edit', {
-                url: '/edit/{locationId}',
+            .state('trafficOps.private.admin.locations.new', {
+                url: '/new',
                 views: {
                     locationsContent: {
                         templateUrl: 'common/modules/form/location/form.location.tpl.html',
-                        controller: 'FormEditLocationController',
+                        controller: 'FormNewLocationController',
                         resolve: {
-                            location: function($stateParams, locationService) {
-                                return locationService.getLocation($stateParams.locationId);
+                            location: function() {
+                                return {};
                             }
                         }
                     }

@@ -1,11 +1,4 @@
-var FormLocationController = function(location, $scope, $uibModal, $anchorScroll, formUtils, stringUtils, locationUtils, locationService, regionService) {
-
-    var deleteLocation = function(location) {
-        locationService.deleteLocation(location.id)
-            .then(function() {
-                locationUtils.navigateToPath('/admin/locations');
-            });
-    };
+var FormLocationController = function(location, $scope, formUtils, stringUtils, locationUtils, regionService) {
 
     var getRegions = function() {
         regionService.getRegions()
@@ -14,12 +7,9 @@ var FormLocationController = function(location, $scope, $uibModal, $anchorScroll
             });
     };
 
-    $scope.locationCopy = angular.copy(location);
-
     $scope.location = location;
 
     $scope.props = [
-        { name: 'id', type: 'number', required: true, readonly: true },
         { name: 'name', type: 'text', required: true, maxLength: 45 },
         { name: 'shortName', type: 'text', required: true, maxLength: 12 },
         { name: 'address', type: 'text', required: true, maxLength: 128 },
@@ -32,36 +22,6 @@ var FormLocationController = function(location, $scope, $uibModal, $anchorScroll
     ];
 
     $scope.labelize = stringUtils.labelize;
-
-    $scope.update = function(location) {
-        locationService.updateLocation(location).
-            then(function() {
-                $scope.locationCopy = angular.copy(location);
-                $anchorScroll(); // scrolls window to top
-            });
-    };
-
-    $scope.confirmDelete = function(location) {
-        var params = {
-            title: 'Confirm Delete',
-            message: 'This action CANNOT be undone. This will permanently delete ' + location.name + '. Are you sure you want to delete ' + location.name + '?'
-        };
-        var modalInstance = $uibModal.open({
-            templateUrl: 'common/modules/dialog/confirm/dialog.confirm.tpl.html',
-            controller: 'DialogConfirmController',
-            size: 'md',
-            resolve: {
-                params: function () {
-                    return params;
-                }
-            }
-        });
-        modalInstance.result.then(function() {
-            deleteLocation(location);
-        }, function () {
-            // do nothing
-        });
-    };
 
     $scope.navigateToPath = locationUtils.navigateToPath;
 
@@ -76,5 +36,5 @@ var FormLocationController = function(location, $scope, $uibModal, $anchorScroll
 
 };
 
-FormLocationController.$inject = ['location', '$scope', '$uibModal', '$anchorScroll', 'formUtils', 'stringUtils', 'locationUtils', 'locationService', 'regionService'];
+FormLocationController.$inject = ['location', '$scope', 'formUtils', 'stringUtils', 'locationUtils', 'regionService'];
 module.exports = FormLocationController;
