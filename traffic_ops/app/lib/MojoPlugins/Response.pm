@@ -126,19 +126,6 @@ sub register {
 		}
 	);
 
-	# Alerts (500)
-	$app->renderer->add_helper(
-		internal_server_error => sub {
-			my $self   = shift || confess("Call on an instance of MojoPlugins::Response");
-			my $alerts = shift || confess("Please supply the alerts hash");
-
-			my $builder ||= MojoPlugins::Response::Builder->new( $self, @_ );
-			my @alerts_response = $builder->build_alerts($alerts);
-
-			return $self->render( $STATUS_KEY => 500, $JSON_KEY => { $ALERTS_KEY => \@alerts_response } );
-		}
-	);
-
 	# Unauthorized (401)
 	$app->renderer->add_helper(
 		unauthorized => sub {
