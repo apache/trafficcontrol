@@ -22,9 +22,7 @@ use File::Basename;
 use File::Path;
 use Fcntl qw(:flock);
 use MIME::Base64;
-use LWP::ConnCache;
 use LWP::UserAgent;
-use LWP::Protocol::https;
 use Crypt::SSLeay;
 
 $| = 1;
@@ -119,7 +117,6 @@ my $CFG_FILE_PREREQ_FAILED     = 3;
 my $CFG_FILE_ALREADY_PROCESSED = 4;
 
 #### LWP globals
-@LWP::Protocol::http::EXTRA_SOCK_OPTS = ( SendTE => 0, KeepAlive => 1, PeerHTTPVersion => "1.1" );
 my $lwp_conn                   = &setup_lwp(); 
 
 my $unixtime       = time();
@@ -2393,11 +2390,9 @@ sub adv_processing_ssl {
 }
 
 sub setup_lwp {
-	my $browser = LWP::UserAgent->new();
+	my $browser = LWP::UserAgent->new( keep_alive => 100, ssl_opts => { verify_hostname => 0, SSL_verify_mode => 0x00 } );
+
 	my $lwp_cc = $browser->conn_cache(LWP::ConnCache->new());
-	
-	# don't set a limit to the # of connections that are cached
-	$browser->conn_cache->total_capacity(undef);
 	$browser->timeout(5);
 
 	return $browser;
