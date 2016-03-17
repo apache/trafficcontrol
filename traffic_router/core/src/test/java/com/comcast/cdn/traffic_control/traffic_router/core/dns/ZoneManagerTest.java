@@ -16,6 +16,8 @@
 
 package com.comcast.cdn.traffic_control.traffic_router.core.dns;
 
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.collection.IsCollectionContaining.hasItem;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
@@ -30,13 +32,14 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import org.apache.log4j.Logger;
+import com.comcast.cdn.traffic_control.traffic_router.core.util.IntegrationTest;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.json.JSONTokener;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.springframework.context.ApplicationContext;
 import org.xbill.DNS.Name;
 import org.xbill.DNS.TextParseException;
@@ -53,11 +56,10 @@ import com.comcast.cdn.traffic_control.traffic_router.core.router.TrafficRouterM
 import com.google.common.cache.CacheStats;
 import com.google.common.net.InetAddresses;
 
+@Category(IntegrationTest.class)
 public class ZoneManagerTest {
-	private static final Logger LOGGER = Logger.getLogger(ZoneManagerTest.class);
 	private static ApplicationContext context;
 	private TrafficRouterManager trafficRouterManager;
-	private String defaultDnsRoutingName;
 	private Map<String, InetAddress> netMap = new HashMap<String, InetAddress>();
 
 	@BeforeClass
@@ -72,8 +74,8 @@ public class ZoneManagerTest {
 	@Before
 	public void setUp() throws Exception {
 		trafficRouterManager = (TrafficRouterManager) context.getBean("trafficRouterManager");
-		defaultDnsRoutingName = (String) context.getBean("staticZoneManagerDnsRoutingNameInitializer");
-		final File file = new File(getClass().getClassLoader().getResource("czmap.json").toURI());
+		File databasesDirectory = (File) context.getBean("databasesDir");
+		final File file = new File(databasesDirectory, "czmap.json");
 		final JSONObject json = new JSONObject(new JSONTokener(new FileReader(file)));
 		final JSONObject coverageZones = json.getJSONObject("coverageZones");
 
@@ -144,6 +146,7 @@ public class ZoneManagerTest {
 						assertEquals(missCount, cacheStats.missCount()); // should always be a cache hit so these should remain the same
 
 						if (!zones.isEmpty()) {
+							assertThat(zones, hasItem(zone));
 							assertTrue(zones.contains(zone));
 						}
 					}

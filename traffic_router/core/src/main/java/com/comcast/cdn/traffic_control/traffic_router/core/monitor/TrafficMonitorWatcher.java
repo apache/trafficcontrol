@@ -16,9 +16,9 @@
 
 package com.comcast.cdn.traffic_control.traffic_router.core.monitor;
 
+import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
-import java.net.URL;
-import java.net.URLConnection;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -70,6 +70,8 @@ public class TrafficMonitorWatcher  {
 
 	private PeriodicResourceUpdater crUpdater;
 	private PeriodicResourceUpdater stateUpdater;
+	private File propertiesDirectory;
+	private File databasesDirectory;
 
 	public AbstractUpdatable stateHandler = new AbstractUpdatable() {
 		public String toString() {return "status listener";}
@@ -143,10 +145,10 @@ public class TrafficMonitorWatcher  {
 			}
 		};
 
-		crUpdater = new PeriodicResourceUpdater(crHandler, new MyResourceUrl(configUrl), configFile, configRefreshPeriod, true);
+		crUpdater = new PeriodicResourceUpdater(crHandler, new MyResourceUrl(configUrl), new File(databasesDirectory, configFile).getAbsolutePath(), configRefreshPeriod, true);
 		crUpdater.init();
 
-		stateUpdater = new PeriodicResourceUpdater(stateHandler, new MyResourceUrl(stateUrl), statusFile, statusRefreshPeriod, true);
+		stateUpdater = new PeriodicResourceUpdater(stateHandler, new MyResourceUrl(stateUrl), new File(databasesDirectory, statusFile).getAbsolutePath(), statusRefreshPeriod, true);
 		stateUpdater.init();
 	}
 	class MyResourceUrl implements ResourceUrl{
@@ -250,7 +252,7 @@ public class TrafficMonitorWatcher  {
 		return hosts;
 	}
 
-	@SuppressWarnings("PMD.CyclomaticComplexity")
+	@SuppressWarnings({"PMD.CyclomaticComplexity", "PMD.NPathComplexity"})
 	public void processConfig() {
 		final long now = System.currentTimeMillis();
 
@@ -261,10 +263,15 @@ public class TrafficMonitorWatcher  {
 		lastHostAttempt = now;
 
 		try {
-			final URL resourceUrl = new URL(monitorProperties);
-			final URLConnection c = resourceUrl.openConnection();
+			String hostList = System.getenv("TRAFFIC_MONITOR_HOSTS");
+
+			final File trafficMonitorConfigFile = new File(propertiesDirectory, monitorProperties);
 			final Properties props = new Properties();
-			props.load(c.getInputStream());
+
+			if (trafficMonitorConfigFile.exists()) {
+				LOGGER.info("Loading properties from " + trafficMonitorConfigFile.getAbsolutePath());
+				props.load(new FileInputStream(trafficMonitorConfigFile));
+			}
 
 			final boolean localConfig = Boolean.parseBoolean(props.getProperty("traffic_monitor.bootstrap.local", "false"));
 
@@ -274,9 +281,20 @@ public class TrafficMonitorWatcher  {
 			}
 
 			if (localConfig || !isBootstrapped()) {
-				final String hostList = props.getProperty("traffic_monitor.bootstrap.hosts");
-				final String[] newHosts = hostList.split(";");
-				setHosts(newHosts);
+				if (hostList == null || hostList.isEmpty()) {
+					hostList = props.getProperty("traffic_monitor.bootstrap.hosts");
+				}
+
+				if (hostList == null || hostList.isEmpty()) {
+					if (!trafficMonitorConfigFile.exists()) {
+						LOGGER.fatal("Missing environment variable 'TRAFFIC_MONITOR_HOSTS'");
+					} else {
+						LOGGER.error("Cannot determine Traffic Monitor hosts from property 'traffic_monitor.bootstrap.hosts' in config file " + trafficMonitorConfigFile.getAbsolutePath());
+					}
+				} else {
+					setHosts(hostList.contains(";") ? hostList.split(";") : new String[]{hostList});
+				}
+
 			} else if (!isLocalConfig() && isBootstrapped()) {
 				synchronized(monitorSync) {
 					if (!onlineMonitors.isEmpty()) {
@@ -302,15 +320,6 @@ public class TrafficMonitorWatcher  {
 		if (hosts==null) {
 			hosts = monitorHosts.split(";");
 		}
-	}
-
-	public static void main(final String[] args) {
-		final TrafficMonitorWatcher rw = new TrafficMonitorWatcher();
-		rw.setMonitorProperties("file:src/test/resources/traffic_monitor.properties");
-		rw.setStateUrl("http://[host]/publish/CrStates");
-		rw.setConfigUrl("http://[host]/publish/CrConfig?json");
-		rw.getHosts();
-//		rw.init();
 	}
 
 	public static boolean isBootstrapped() {
@@ -339,5 +348,21 @@ public class TrafficMonitorWatcher  {
 			setBootstrapped(true);
 			setHosts(onlineMonitors.toArray(new String[onlineMonitors.size()]));
 		}
+	}
+
+	public File getPropertiesDirectory() {
+		return propertiesDirectory;
+	}
+
+	public void setPropertiesDirectory(final File propertiesDirectory) {
+		this.propertiesDirectory = propertiesDirectory;
+	}
+
+	public File getDatabasesDirectory() {
+		return databasesDirectory;
+	}
+
+	public void setDatabasesDirectory(final File databasesDirectory) {
+		this.databasesDirectory = databasesDirectory;
 	}
 }

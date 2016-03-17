@@ -38,6 +38,7 @@ import org.junit.Before;
 import org.junit.Test;
 
 import com.google.common.net.InetAddresses;
+import org.junit.experimental.categories.Category;
 
 public class NetworkNodeTest {
 	private static final Logger LOGGER = Logger.getLogger(NetworkNodeTest.class);

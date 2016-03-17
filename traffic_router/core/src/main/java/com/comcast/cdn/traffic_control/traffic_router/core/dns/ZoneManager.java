@@ -76,8 +76,6 @@ import com.google.common.cache.CacheBuilderSpec;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.CacheStats;
 import com.google.common.cache.LoadingCache;
-import com.google.common.cache.RemovalListener;
-import com.google.common.cache.RemovalNotification;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListenableFutureTask;
 
@@ -94,7 +92,7 @@ public class ZoneManager extends Resolver {
 	private static final int DEFAULT_PRIMER_LIMIT = 500;
 	private final StatTracker statTracker;
 
-	private static String zoneDirectory;
+	private static File zoneDirectory;
 	private static SignatureManager signatureManager;
 
 	private static Name topLevelDomain;
@@ -230,37 +228,33 @@ public class ZoneManager extends Resolver {
 
 	private static void initZoneDirectory() {
 		synchronized(LOGGER) {
-			final File zoneDir = new File(getZoneDirectory());
-			if (zoneDir.exists()) {
-				for (final String entry : zoneDir.list()) {
-					final File zone = new File(zoneDir.getPath(), entry);
+			if (zoneDirectory.exists()) {
+				for (final String entry : zoneDirectory.list()) {
+					final File zone = new File(zoneDirectory.getPath(), entry);
 					zone.delete();
 				}
 
-				final boolean deleted = zoneDir.delete();
+				final boolean deleted = zoneDirectory.delete();
 
 				if (!deleted) {
-					LOGGER.warn("Unable to delete " + zoneDir);
+					LOGGER.warn("Unable to delete " + zoneDirectory);
 				}
 			}
 
-			zoneDir.mkdir();
+			zoneDirectory.mkdir();
 		}
 	}
 
 	private static void writeZone(final Zone zone) throws IOException {
 		synchronized(LOGGER) {
-			final File zoneDirectory = new File(getZoneDirectory());
-
 			if (!zoneDirectory.exists() && !zoneDirectory.mkdirs()) {
 				LOGGER.error(zoneDirectory.getAbsolutePath() + " directory does not exist and cannot be created!");
 			}
 
-			final String fileName = getZoneDirectory() + "/" + zone.getOrigin().toString();
-			LOGGER.info("writing: " + fileName);
-			final String file = zone.toMasterFile();
-			final FileWriter w = new FileWriter(fileName);
-			IOUtils.write(file, w);
+			final File zoneFile = new File(getZoneDirectory(), zone.getOrigin().toString());
+			LOGGER.info("writing: " + zoneFile.getAbsolutePath());
+			final FileWriter w = new FileWriter(zoneFile);
+			IOUtils.write(zone.toMasterFile(), w);
 			w.flush();
 			w.close();
 		}
@@ -275,13 +269,7 @@ public class ZoneManager extends Resolver {
 	}
 
 	private static LoadingCache<ZoneKey, Zone> createZoneCache(final ZoneCacheType cacheType, final CacheBuilderSpec spec) {
-		final RemovalListener<ZoneKey, Zone> removalListener = new RemovalListener<ZoneKey, Zone>() {
-			public void onRemoval(final RemovalNotification<ZoneKey, Zone> removal) {
-				LOGGER.info(cacheType + " " + removal.getKey().getClass().getSimpleName() + " " + removal.getKey().getName() + " evicted from cache: " + removal.getCause());
-			}
-		};
-
-		return CacheBuilder.from(spec).recordStats().removalListener(removalListener).build(
+		return CacheBuilder.from(spec).recordStats().build(
 			new CacheLoader<ZoneKey, Zone>() {
 				final boolean writeZone = (cacheType == ZoneCacheType.STATIC) ? true : false;
 
@@ -904,11 +892,11 @@ public class ZoneManager extends Resolver {
 		return zone;
 	}
 
-	public static String getZoneDirectory() {
+	public static File getZoneDirectory() {
 		return zoneDirectory;
 	}
 
-	public static void setZoneDirectory(final String zoneDirectory) {
+	public static void setZoneDirectory(final File zoneDirectory) {
 		ZoneManager.zoneDirectory = zoneDirectory;
 	}
 

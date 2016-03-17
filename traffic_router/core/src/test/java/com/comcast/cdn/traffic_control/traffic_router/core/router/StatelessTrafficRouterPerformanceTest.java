@@ -25,9 +25,11 @@ import java.util.Map;
 import java.util.Random;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import com.comcast.cdn.traffic_control.traffic_router.core.util.IntegrationTest;
 import org.apache.commons.pool.ObjectPool;
 import org.json.JSONException;
 import org.junit.Before;
+import org.junit.experimental.categories.Category;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.support.ClassPathXmlApplicationContext;
 
@@ -44,6 +46,7 @@ import com.comcast.cdn.traffic_control.traffic_router.core.request.HTTPRequest;
 import com.comcast.cdn.traffic_control.traffic_router.core.util.TrafficOpsUtils;
 import com.comcast.cdn.traffic_control.traffic_router.core.router.StatTracker.Track;
 
+@Category(IntegrationTest.class)
 public class StatelessTrafficRouterPerformanceTest  extends TrafficRouter {
 
 

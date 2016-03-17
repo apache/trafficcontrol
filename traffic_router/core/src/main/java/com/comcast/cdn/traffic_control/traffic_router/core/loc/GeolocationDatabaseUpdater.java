@@ -21,10 +21,7 @@ import com.comcast.cdn.traffic_control.traffic_router.geolocation.GeolocationSer
 import java.io.File;
 import java.io.IOException;
 
-import org.apache.log4j.Logger;
-
 public class GeolocationDatabaseUpdater extends AbstractServiceUpdater {
-	private static final Logger LOGGER = Logger.getLogger(GeolocationDatabaseUpdater.class);
 
 	public GeolocationDatabaseUpdater() {
 	}
@@ -40,10 +37,8 @@ public class GeolocationDatabaseUpdater extends AbstractServiceUpdater {
 	}
 
 	public boolean loadDatabase() throws IOException {
-		LOGGER.info("Reloading location database.");
-		geolocationService.setDatabaseFile(new File(databaseLocation));
+		geolocationService.setDatabaseFile(new File(databasesDirectory, databaseName));
 		geolocationService.reloadDatabase();
-		LOGGER.info("Successfully reloaded location database.");
 		return true;
 	}
 

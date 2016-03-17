@@ -22,6 +22,7 @@ import org.springframework.context.support.FileSystemXmlApplicationContext;
 public class TestBase {
 	static private ApplicationContext context;
 	public static ApplicationContext getContext() {
+		System.setProperty("deploy.dir", "src/test");
 		if(context!=null) return context;
 		return context = new FileSystemXmlApplicationContext("src/main/webapp/WEB-INF/applicationContext.xml");
 	}

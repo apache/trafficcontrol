@@ -50,13 +50,14 @@ public abstract class AbstractServiceUpdater {
 	private static final Logger LOGGER = Logger.getLogger(AbstractServiceUpdater.class);
 
 	protected String dataBaseURL;
-	protected String databaseLocation;
+	protected String databaseName;
 	protected ScheduledExecutorService executorService;
 	private long pollingInterval;
 	protected boolean loaded = false;
 	protected ScheduledFuture<?> scheduledService;
 	private TrafficRouterManager trafficRouterManager;
 	protected boolean untarDataFile;
+	protected File databasesDirectory;
 
 	public void destroy() {
 		executorService.shutdownNow();
@@ -96,7 +97,11 @@ public abstract class AbstractServiceUpdater {
 
 	@SuppressWarnings("PMD.CyclomaticComplexity")
 	public boolean updateDatabase() {
-		final File existingDB = new File(databaseLocation);
+		if (!databasesDirectory.exists() && !databasesDirectory.mkdirs()) {
+			LOGGER.error(databasesDirectory.getAbsolutePath() + " does not exist and cannot be created!");
+		}
+
+		final File existingDB = new File(databasesDirectory, databaseName);
 		File newDB = null;
 		try {
 			if (!isLoaded() || needsUpdating(existingDB)) {
@@ -154,8 +159,8 @@ public abstract class AbstractServiceUpdater {
 	}
 	abstract public boolean loadDatabase() throws IOException, JSONException;
 
-	public void setDatabaseLocation(final String databaseLocation) {
-		this.databaseLocation = databaseLocation;
+	public void setDatabaseName(final String databaseName) {
+		this.databaseName = databaseName;
 	}
 
 	public void setDataBaseURL(final String url, final long refresh) {
@@ -252,7 +257,6 @@ public abstract class AbstractServiceUpdater {
 
 		if (existingDB.isDirectory() && newDB.isDirectory()) {
 			moveDirectory(existingDB, newDB);
-			LOGGER.info("Successfully updated location database " + existingDB);
 			return true;
 		}
 
@@ -275,7 +279,7 @@ public abstract class AbstractServiceUpdater {
 		final boolean renamed = newDB.renameTo(existingDB);
 
 		if (!renamed) {
-			LOGGER.fatal("Unable to rename " + newDB + " to " + existingDB + "; current working directory is " + System.getProperty("user.dir"));
+			LOGGER.fatal("Unable to rename " + newDB + " to " + existingDB.getAbsolutePath() + "; current working directory is " + System.getProperty("user.dir"));
 			return false;
 		}
 
@@ -402,4 +406,11 @@ public abstract class AbstractServiceUpdater {
 		this.untarDataFile = untarDataFile;
 	}
 
+	public File getDatabasesDirectory() {
+		return databasesDirectory;
+	}
+
+	public void setDatabasesDirectory(final File databasesDirectory) {
+		this.databasesDirectory = databasesDirectory;
+	}
 }

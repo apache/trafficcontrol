@@ -23,6 +23,7 @@ import java.util.Map;
 import java.util.Random;
 import java.util.Set;
 
+import com.comcast.cdn.traffic_control.traffic_router.core.util.IntegrationTest;
 import com.comcast.cdn.traffic_control.traffic_router.geolocation.Geolocation;
 import com.comcast.cdn.traffic_control.traffic_router.geolocation.GeolocationService;
 import org.apache.commons.pool.impl.GenericObjectPool;
@@ -31,6 +32,7 @@ import org.json.JSONObject;
 import org.json.JSONTokener;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
@@ -49,6 +51,7 @@ import com.comcast.cdn.traffic_control.traffic_router.core.router.StatTracker.Tr
 import com.comcast.cdn.traffic_control.traffic_router.core.util.TrafficOpsUtils;
 import com.google.common.net.InetAddresses;
 
+@Category(IntegrationTest.class)
 @RunWith(PowerMockRunner.class)
 @PrepareForTest(TrafficRouter.class)
 public class DnsRoutePerformanceTest {
