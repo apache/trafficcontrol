@@ -307,7 +307,7 @@ sub check_deliveryservice_input {
 
 	# TODO:  what restrictions on display_name?
 
-	my $typename = $self->db->resultset('Type')->search( { id => $self->param('ds.type') } )->get_column('name')->single();
+	my $typename = $self->typename();
 	if ( $typename eq 'ANY_MAP' ) {
 		return $self->valid;    # Anything goes for the ANY_MAP, but ds.type is only set on create
 	}
@@ -691,7 +691,6 @@ sub delete_cfg_file {
 sub update {
 	my $self = shift;
 	my $id   = $self->param('id');
-
 	if ( !&is_oper($self) ) {
 		my $err = "You do not have enough privileges to modify this.";
 		$self->flash( message => $err );
@@ -739,7 +738,8 @@ sub update {
 			initial_dispersion => $self->paramAsScalar( 'ds.initial_dispersion', 1 ),
 		);
 
-		if ( $self->paramAsScalar('ds.type') == &type_id( $self, "DNS" ) ) {
+		my $typename = $self->typename();
+		if ( $typename eq "DNS" ) {
 			$hash{dns_bypass_ip}    = $self->paramAsScalar('ds.dns_bypass_ip');
 			$hash{dns_bypass_ip6}   = $self->paramAsScalar('ds.dns_bypass_ip6');
 			$hash{dns_bypass_cname} = $self->paramAsScalar('ds.dns_bypass_cname');
