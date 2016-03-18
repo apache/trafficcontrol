@@ -1,11 +1,4 @@
-var FormServerController = function(server, $scope, $uibModal, $anchorScroll, formUtils, stringUtils, locationUtils, cacheGroupService, cdnService, locationService, profileService, serverService, statusService, typeService) {
-
-    var deleteServer = function(server) {
-        serverService.deleteServer(server.id)
-            .then(function() {
-                locationUtils.navigateToPath('/configure/servers');
-            });
-    };
+var FormServerController = function(server, $scope, formUtils, stringUtils, locationUtils, cacheGroupService, cdnService, locationService, profileService, statusService, typeService) {
 
     var getLocations = function() {
         locationService.getLocations()
@@ -49,12 +42,9 @@ var FormServerController = function(server, $scope, $uibModal, $anchorScroll, fo
             });
     };
 
-    $scope.serverCopy = angular.copy(server);
-
     $scope.server = server;
 
     $scope.props = [
-        { name: 'id', type: 'number', required: true, readonly: true },
         { name: 'hostName', type: 'text', required: true, maxLength: 45 },
         { name: 'domainName', type: 'text', required: true, maxLength: 45 },
         { name: 'tcpPort', type: 'number', required: false, maxLength: 10 },
@@ -82,36 +72,6 @@ var FormServerController = function(server, $scope, $uibModal, $anchorScroll, fo
 
     $scope.labelize = stringUtils.labelize;
 
-    $scope.update = function(server) {
-        serverService.updateServer(server).
-            then(function() {
-                $scope.serverCopy = angular.copy(server);
-                $anchorScroll(); // scrolls window to top
-            });
-    };
-
-    $scope.confirmDelete = function(server) {
-        var params = {
-            title: 'Confirm Delete',
-            message: 'This action CANNOT be undone. This will permanently delete ' + server.hostName + '. Are you sure you want to delete ' + server.hostName + '?'
-        };
-        var modalInstance = $uibModal.open({
-            templateUrl: 'common/modules/dialog/confirm/dialog.confirm.tpl.html',
-            controller: 'DialogConfirmController',
-            size: 'md',
-            resolve: {
-                params: function () {
-                    return params;
-                }
-            }
-        });
-        modalInstance.result.then(function() {
-            deleteServer(server);
-        }, function () {
-            // do nothing
-        });
-    };
-
     $scope.navigateToPath = locationUtils.navigateToPath;
 
     $scope.hasError = formUtils.hasError;
@@ -130,5 +90,5 @@ var FormServerController = function(server, $scope, $uibModal, $anchorScroll, fo
 
 };
 
-FormServerController.$inject = ['server', '$scope', '$uibModal', '$anchorScroll', 'formUtils', 'stringUtils', 'locationUtils', 'cacheGroupService', 'cdnService', 'locationService', 'profileService', 'serverService', 'statusService', 'typeService'];
+FormServerController.$inject = ['server', '$scope', 'formUtils', 'stringUtils', 'locationUtils', 'cacheGroupService', 'cdnService', 'locationService', 'profileService', 'statusService', 'typeService'];
 module.exports = FormServerController;

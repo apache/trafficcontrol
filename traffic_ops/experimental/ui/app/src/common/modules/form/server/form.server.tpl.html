@@ -2,7 +2,7 @@
     <div class="x_title">
         <ol class="breadcrumb">
             <li><a ng-click="navigateToPath('/configure/servers')">Servers</a></li>
-            <li class="active">{{serverCopy.hostName}}</li>
+            <li class="active">{{serverName}}</li>
         </ol>
         <div class="clearfix"></div>
     </div>
@@ -74,8 +74,8 @@
                 </div>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-danger" ng-click="confirmDelete(server)">Delete</button>
-                <button type="button" class="btn btn-primary" ng-disabled="serverForm.$pristine || serverForm.$invalid" ng-click="update(server)">Update</button>
+                <button type="button" class="btn btn-danger" ng-show="settings.showDelete" ng-click="confirmDelete(server)">Delete</button>
+                <button type="button" class="btn btn-primary" ng-disabled="serverForm.$pristine || serverForm.$invalid" ng-click="save(server)">{{settings.saveLabel}}</button>
             </div>
         </form>
     </div>

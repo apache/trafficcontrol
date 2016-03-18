@@ -3,7 +3,7 @@
     <div class="x_title">
         <ol class="breadcrumb">
             <li><a ng-click="navigateToPath('/admin/users')">Users</a></li>
-            <li class="active">{{userOriginal.username}}</li>
+            <li class="active">{{userName}}</li>
         </ol>
         <div class="clearfix"></div>
     </div>
@@ -65,8 +65,8 @@
                 </div>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-danger" ng-show="showDelete" ng-click="confirmDelete(user)">Delete</button>
-                <button type="button" class="btn btn-primary" ng-disabled="userForm.$pristine || userForm.$invalid" ng-click="confirmUpdate(user, userForm.username)">Update</button>
+                <button type="button" class="btn btn-danger" ng-show="settings.showDelete" ng-click="confirmDelete(user)">Delete</button>
+                <button type="button" class="btn btn-primary" ng-disabled="userForm.$pristine || userForm.$invalid" ng-click="confirmSave(user, userForm.username)">{{settings.saveLabel}}</button>
             </div>
         </form>
     </div>

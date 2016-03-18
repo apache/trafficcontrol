@@ -1,48 +1,12 @@
-var FormTenantController = function(tenant, $scope, $uibModal, formUtils, stringUtils, locationUtils, tenantService) {
-
-    var deleteTenant = function(tenant) {
-        tenantService.deleteTenant(tenant.id)
-            .then(function() {
-                locationUtils.navigateToPath('/configure/tenants');
-            });
-    };
-
-    $scope.tenantOriginal = tenant;
+var FormTenantController = function(tenant, $scope, formUtils, stringUtils, locationUtils) {
 
     $scope.tenant = angular.copy(tenant);
 
     $scope.props = [
-        { name: 'id', type: 'number', required: true, readonly: true },
         { name: 'name', type: 'text', required: true, maxLength: 45 }
     ];
 
     $scope.labelize = stringUtils.labelize;
-
-    $scope.update = function(tenant) {
-        alert('implement update');
-    };
-
-    $scope.confirmDelete = function(tenant) {
-        var params = {
-            title: 'Confirm Delete',
-            message: 'This action CANNOT be undone. This will permanently delete ' + tenant.name + '. Are you sure you want to delete ' + tenant.name + '?'
-        };
-        var modalInstance = $uibModal.open({
-            templateUrl: 'common/modules/dialog/confirm/dialog.confirm.tpl.html',
-            controller: 'DialogConfirmController',
-            size: 'md',
-            resolve: {
-                params: function () {
-                    return params;
-                }
-            }
-        });
-        modalInstance.result.then(function() {
-            deleteTenant(tenant);
-        }, function () {
-            // do nothing
-        });
-    };
 
     $scope.navigateToPath = locationUtils.navigateToPath;
 
@@ -52,5 +16,5 @@ var FormTenantController = function(tenant, $scope, $uibModal, formUtils, string
 
 };
 
-FormTenantController.$inject = ['tenant', '$scope', '$uibModal', 'formUtils', 'stringUtils', 'locationUtils', 'tenantService'];
+FormTenantController.$inject = ['tenant', '$scope', 'formUtils', 'stringUtils', 'locationUtils'];
 module.exports = FormTenantController;

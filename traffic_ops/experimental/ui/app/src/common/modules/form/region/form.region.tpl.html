@@ -2,7 +2,7 @@
     <div class="x_title">
         <ol class="breadcrumb">
             <li><a ng-click="navigateToPath('/admin/regions')">Regions</a></li>
-            <li class="active">{{regionCopy.name}}</li>
+            <li class="active">{{regionName}}</li>
         </ol>
         <div class="clearfix"></div>
     </div>
@@ -28,8 +28,8 @@
                 </div>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-danger" ng-click="confirmDelete(region)">Delete</button>
-                <button type="button" class="btn btn-primary" ng-disabled="regionForm.$pristine || regionForm.$invalid" ng-click="update(region)">Update</button>
+                <button type="button" class="btn btn-danger" ng-show="settings.showDelete" ng-click="confirmDelete(region)">Delete</button>
+                <button type="button" class="btn btn-primary" ng-disabled="regionForm.$pristine || regionForm.$invalid" ng-click="save(region)">{{settings.saveLabel}}</button>
             </div>
         </form>
     </div>

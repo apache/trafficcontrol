@@ -1,9 +1,13 @@
-var TableDivisionsController = function(divisions, $scope, $location) {
+var TableDivisionsController = function(divisions, $scope, locationUtils) {
 
     $scope.divisions = divisions;
 
     $scope.editDivision = function(id) {
-        $location.path($location.path() + '/' + id);
+        locationUtils.navigateToPath('/admin/divisions/' + id + '/edit');
+    };
+
+    $scope.createDivision = function() {
+        locationUtils.navigateToPath('/admin/divisions/new');
     };
 
     angular.element(document).ready(function () {
@@ -15,5 +19,5 @@ var TableDivisionsController = function(divisions, $scope, $location) {
 
 };
 
-TableDivisionsController.$inject = ['divisions', '$scope', '$location'];
+TableDivisionsController.$inject = ['divisions', '$scope', 'locationUtils'];
 module.exports = TableDivisionsController;

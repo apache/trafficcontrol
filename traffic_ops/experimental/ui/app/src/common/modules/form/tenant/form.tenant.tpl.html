@@ -2,7 +2,7 @@
     <div class="x_title">
         <ol class="breadcrumb">
             <li><a ng-click="navigateToPath('/configure/tenants')">Tenants</a></li>
-            <li class="active">{{tenantOriginal.name}}</li>
+            <li class="active">{{tenantName}}</li>
         </ol>
         <div class="clearfix"></div>
     </div>
@@ -19,8 +19,8 @@
                 </div>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-danger" ng-click="confirmDelete(tenant)">Delete</button>
-                <button type="button" class="btn btn-primary" ng-disabled="tenantForm.$pristine || tenantForm.$invalid" ng-click="update(tenant)">Update</button>
+                <button type="button" class="btn btn-danger" ng-show="settings.showDelete" ng-click="confirmDelete(tenant)">Delete</button>
+                <button type="button" class="btn btn-primary" ng-disabled="tenantForm.$pristine || tenantForm.$invalid" ng-click="save(tenant)">{{settings.saveLabel}}</button>
             </div>
         </form>
     </div>

@@ -1,9 +1,13 @@
-var TableCacheGroupsController = function(cacheGroups, $scope, $location) {
+var TableCacheGroupsController = function(cacheGroups, $scope, locationUtils) {
 
     $scope.cacheGroups = cacheGroups;
 
     $scope.editCacheGroup = function(id) {
-        $location.path($location.path() + '/' + id);
+        locationUtils.navigateToPath('/configure/cache-groups/' + id + '/edit');
+    };
+
+    $scope.createCacheGroup = function() {
+        locationUtils.navigateToPath('/configure/cache-groups/new');
     };
 
     angular.element(document).ready(function () {
@@ -15,5 +19,5 @@ var TableCacheGroupsController = function(cacheGroups, $scope, $location) {
 
 };
 
-TableCacheGroupsController.$inject = ['cacheGroups', '$scope', '$location'];
+TableCacheGroupsController.$inject = ['cacheGroups', '$scope', 'locationUtils'];
 module.exports = TableCacheGroupsController;

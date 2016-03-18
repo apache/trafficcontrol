@@ -16,11 +16,11 @@ var UserController = function($scope, $state, $uibModal, formUtils, locationUtil
             });
     };
 
-    $scope.userOriginal = angular.copy(userModel.user);
+    $scope.userName = angular.copy(userModel.user.username);
 
     $scope.user = userModel.user;
 
-    $scope.confirmUpdate = function(user, usernameField) {
+    $scope.confirmSave = function(user, usernameField) {
         if (usernameField.$dirty) {
             var params = {
                 title: 'Reauthentication Required',

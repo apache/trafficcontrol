@@ -1,9 +1,13 @@
-var TableServersController = function(servers, $scope, $location) {
+var TableServersController = function(servers, $scope, locationUtils) {
 
     $scope.servers = servers;
 
     $scope.editServer = function(id) {
-        $location.path($location.path() + '/' + id);
+        locationUtils.navigateToPath('/configure/servers/' + id + '/edit');
+    };
+
+    $scope.createServer = function() {
+        locationUtils.navigateToPath('/configure/servers/new');
     };
 
     angular.element(document).ready(function () {
@@ -15,5 +19,5 @@ var TableServersController = function(servers, $scope, $location) {
 
 };
 
-TableServersController.$inject = ['servers', '$scope', '$location'];
+TableServersController.$inject = ['servers', '$scope', 'locationUtils'];
 module.exports = TableServersController;

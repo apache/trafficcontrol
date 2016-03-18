@@ -1,11 +1,4 @@
-var FormDeliveryServiceController = function(deliveryService, $scope, $uibModal, $anchorScroll, formUtils, stringUtils, locationUtils, cdnService, deliveryServiceService, profileService, typeService) {
-
-    var deleteDeliveryService = function(ds) {
-        deliveryServiceService.deleteDeliveryService(ds.id)
-            .then(function() {
-                locationUtils.navigateToPath('/configure/delivery-services');
-            });
-    };
+var FormDeliveryServiceController = function(deliveryService, $scope, formUtils, stringUtils, locationUtils, cdnService, profileService, typeService) {
 
     var getTypes = function() {
         typeService.getTypes()
@@ -28,12 +21,9 @@ var FormDeliveryServiceController = function(deliveryService, $scope, $uibModal,
             });
     };
 
-    $scope.deliveryServiceCopy = angular.copy(deliveryService);
-
     $scope.deliveryService = deliveryService;
 
     $scope.props = [
-        { name: 'id', type: 'number', required: true, readonly: true },
         { name: 'displayName', type: 'text', required: true, maxLength: 48 },
         { name: 'xmlId', type: 'text', required: true, maxLength: 48 },
         { name: 'active', type: 'number', required: true, maxLength: 1 },
@@ -75,36 +65,6 @@ var FormDeliveryServiceController = function(deliveryService, $scope, $uibModal,
 
     $scope.labelize = stringUtils.labelize;
 
-    $scope.update = function(deliveryService) {
-        deliveryServiceService.updateDeliveryService(deliveryService).
-            then(function() {
-                $scope.deliveryServiceCopy = angular.copy(deliveryService);
-                $anchorScroll(); // scrolls window to top
-            });
-    };
-
-    $scope.confirmDelete = function(ds) {
-        var params = {
-            title: 'Confirm Delete',
-            message: 'This action CANNOT be undone. This will permanently delete ' + ds.displayName + '. Are you sure you want to delete ' + ds.displayName + '?'
-        };
-        var modalInstance = $uibModal.open({
-            templateUrl: 'common/modules/dialog/confirm/dialog.confirm.tpl.html',
-            controller: 'DialogConfirmController',
-            size: 'md',
-            resolve: {
-                params: function () {
-                    return params;
-                }
-            }
-        });
-        modalInstance.result.then(function() {
-            deleteDeliveryService(ds);
-        }, function () {
-            // do nothing
-        });
-    };
-
     $scope.navigateToPath = locationUtils.navigateToPath;
 
     $scope.hasError = formUtils.hasError;
@@ -120,5 +80,5 @@ var FormDeliveryServiceController = function(deliveryService, $scope, $uibModal,
 
 };
 
-FormDeliveryServiceController.$inject = ['deliveryService', '$scope', '$uibModal', '$anchorScroll', 'formUtils', 'stringUtils', 'locationUtils', 'cdnService', 'deliveryServiceService', 'profileService', 'typeService'];
+FormDeliveryServiceController.$inject = ['deliveryService', '$scope', 'formUtils', 'stringUtils', 'locationUtils', 'cdnService', 'profileService', 'typeService'];
 module.exports = FormDeliveryServiceController;

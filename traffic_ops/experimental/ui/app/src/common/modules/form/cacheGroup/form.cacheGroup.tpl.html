@@ -2,7 +2,7 @@
     <div class="x_title">
         <ol class="breadcrumb">
             <li><a ng-click="navigateToPath('/configure/cache-groups')">Cache Groups</a></li>
-            <li class="active">{{cacheGroupCopy.name}}</li>
+            <li class="active">{{cacheGroupName}}</li>
         </ol>
         <div class="clearfix"></div>
     </div>
@@ -46,8 +46,8 @@
                 </div>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-danger" ng-click="confirmDelete(cacheGroup)">Delete</button>
-                <button type="button" class="btn btn-primary" ng-disabled="cacheGroupForm.$pristine || cacheGroupForm.$invalid" ng-click="update(cacheGroup)">Update</button>
+                <button type="button" class="btn btn-danger" ng-show="settings.showDelete" ng-click="confirmDelete(cacheGroup)">Delete</button>
+                <button type="button" class="btn btn-primary" ng-disabled="cacheGroupForm.$pristine || cacheGroupForm.$invalid" ng-click="save(cacheGroup)">{{settings.saveLabel}}</button>
             </div>
         </form>
     </div>

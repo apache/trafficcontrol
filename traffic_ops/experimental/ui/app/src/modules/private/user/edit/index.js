@@ -7,12 +7,7 @@ module.exports = angular.module('trafficOps.private.user.edit', [])
                 views: {
                     userContent: {
                         templateUrl: 'common/modules/form/user/form.user.tpl.html',
-                        controller: 'UserEditController',
-                        resolve: {
-                            showDelete: function() {
-                                return false;
-                            }
-                        }
+                        controller: 'UserEditController'
                     }
                 }
             })

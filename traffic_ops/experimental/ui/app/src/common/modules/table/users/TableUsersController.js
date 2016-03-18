@@ -1,9 +1,13 @@
-var TableUsersController = function(users, $scope, $location) {
+var TableUsersController = function(users, $scope, locationUtils) {
 
     $scope.users = users;
 
     $scope.editUser = function(id) {
-        $location.path($location.path() + '/' + id);
+        locationUtils.navigateToPath('/admin/users/' + id + '/edit');
+    };
+
+    $scope.createUser = function() {
+        locationUtils.navigateToPath('/admin/users/new');
     };
 
     angular.element(document).ready(function () {
@@ -15,5 +19,5 @@ var TableUsersController = function(users, $scope, $location) {
 
 };
 
-TableUsersController.$inject = ['users', '$scope', '$location'];
+TableUsersController.$inject = ['users', '$scope', 'locationUtils'];
 module.exports = TableUsersController;
