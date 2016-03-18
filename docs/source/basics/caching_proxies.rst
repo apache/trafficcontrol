@@ -41,9 +41,12 @@ types of proxies in use on the Internet today which are described below.
   it retrieves content from the origin server, acting on behalf of that origin server. The client requests a URL that has 
   a hostname which resolves to the reverse proxy's IP address and, in compliance 
   with the HTTP 1.1 specification, the client sends a ``Host:`` header to the reverse 
-  proxy including the hostname in the URL. The proxy looks up the hostname in a 
-  list of mappings to find the origin hostname; if the origin hostname is not found in the list, the proxy connects to the 
-  origin host and requests the path of the original URL.  The proxy then stores the URL in cache and serves the contents to the client. When there are subsequent requests for 
+  proxy that matches the hostname in the URL. 
+  The proxy looks up this hostname in a 
+  list of mappings to find the origin hostname; if the hostname of the Host header is not found in the list, 
+  the proxy will send an error (``404 Not Found``) to the client. 
+  If the hostname is found, the proxy checks the cache, and when the content is not present, connects to the 
+  origin the requested ``Host:`` maps to and requests the path of the original URL.  The proxy then stores the URL in cache and serves the contents to the client. When there are subsequent requests for 
   the same URL, a caching proxy serves the content out of cache thereby reducing 
   latency and network traffic.
 
