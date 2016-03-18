@@ -50,10 +50,7 @@
 
 	<bean id="autoZonesDir" class="java.io.File">
 		<constructor-arg>
-			<ref bean="deployDir"/>
-		</constructor-arg>
-		<constructor-arg>
-			<value>$[dns.zones.dir:/var/auto-zones]</value>
+			<value>$[dns.zones.dir:/opt/traffic_router/var/auto-zones]</value>
 		</constructor-arg>
 	</bean>
 

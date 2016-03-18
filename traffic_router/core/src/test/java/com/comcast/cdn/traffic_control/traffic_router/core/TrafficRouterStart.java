@@ -33,6 +33,8 @@ public class TrafficRouterStart {
 
 	public static void main(String[] args) throws Exception {
 		System.setProperty("deploy.dir", "src/test");
+		System.setProperty("dns.zones.dir", "src/test/var/auto-zones");
+
 		LogManager.getLogger("org.eclipse.jetty").setLevel(Level.WARN);
 		LogManager.getLogger("org.springframework").setLevel(Level.WARN);
 
