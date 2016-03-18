@@ -151,8 +151,8 @@ The client is given the URL ``http://www-origin-cache.cdn.com/foo/bar/fun.html``
   A forward proxy acts on behalf of the client. The origin server is mostly 
   unaware of the proxy, the client requests the proxy to retrieve content from a 
   particular origin server. All MID caches in a Traffic Control based CDN are 
-  forward proxies. In a forward proxy scenario, the client configuration is with 
-  the proxy's IP address and port. The client always connects to the forward 
+  forward proxies. In a forward proxy scenario, the client is explicitely configured  to use the
+  the proxy's IP address and port as a forward proxy. The client always connects to the forward 
   proxy for content. The content provider does not have to change the URL the 
   client obtains, and is unaware of the proxy in the middle. 
 
