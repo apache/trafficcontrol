@@ -2,8 +2,8 @@
 <div class="x_panel">
     <div class="x_title">
         <ol class="breadcrumb">
-            <li><a ng-click="navigateToPath('/administer/users')">Users</a></li>
-            <li class="active">{{userOriginal.username}}</li>
+            <li><a ng-click="navigateToPath('/admin/users')">Users</a></li>
+            <li class="active">{{userName}}</li>
         </ol>
         <div class="clearfix"></div>
     </div>
@@ -11,7 +11,7 @@
         <br>
         <form name="userForm" class="form-horizontal form-label-left" novalidate>
             <div class="form-group" ng-class="{'has-error': hasError(userForm.fullName), 'has-feedback': hasError(userForm.fullName)}">
-                <label class="control-label col-md-2 col-sm-2 col-xs-12">fullName *</label>
+                <label class="control-label col-md-2 col-sm-2 col-xs-12">Full Name *</label>
                 <div class="col-md-10 col-sm-10 col-xs-12">
                     <input id="fullName" name="fullName" type="text" class="form-control" ng-model="user.fullName" ng-required="true" ng-maxlength="256" autofocus>
                     <small class="input-error" ng-show="hasPropertyError(userForm.fullName, 'required')">Required</small>
@@ -19,17 +19,18 @@
                     <span ng-show="hasError(userForm.fullName)" class="form-control-feedback"><i class="fa fa-times"></i></span>
                 </div>
             </div>
+
             <div class="form-group" ng-class="{'has-error': hasError(userForm.role), 'has-feedback': hasError(userForm.role)}">
-                <label class="control-label col-md-2 col-sm-2 col-xs-12">role *</label>
+                <label class="control-label col-md-2 col-sm-2 col-xs-12">Role *</label>
                 <div class="col-md-10 col-sm-10 col-xs-12">
-                    <input id="role" name="role" type="text" class="form-control" ng-model="user._links.role.id" ng-required="true" ng-maxlength="11" autofocus>
+                    <select id="role" name="role" class="form-control" ng-model="user._links.role.id" ng-options="role.id as role.name for role in roles" required>
+                        <option value="">Select...</option>
+                    </select>
                     <small class="input-error" ng-show="hasPropertyError(userForm.role, 'required')">Required</small>
-                    <small class="input-error" ng-show="hasPropertyError(userForm.role, 'maxlength')">Too Long</small>
-                    <span ng-show="hasError(userForm.role)" class="form-control-feedback"><i class="fa fa-times"></i></span>
                 </div>
             </div>
             <div class="form-group" ng-class="{'has-error': hasError(userForm.email), 'has-feedback': hasError(userForm.email)}">
-                <label class="control-label col-md-2 col-sm-2 col-xs-12">email *</label>
+                <label class="control-label col-md-2 col-sm-2 col-xs-12">Email *</label>
                 <div class="col-md-10 col-sm-10 col-xs-12">
                     <input id="email" name="email" type="text" class="form-control" ng-model="user.email" ng-required="true" ng-maxlength="128" autofocus>
                     <small class="input-error" ng-show="hasPropertyError(userForm.email, 'required')">Required</small>
@@ -38,7 +39,7 @@
                 </div>
             </div>
             <div class="form-group" ng-class="{'has-error': hasError(userForm.username), 'has-feedback': hasError(userForm.username)}">
-                <label class="control-label col-md-2 col-sm-2 col-xs-12">username *</label>
+                <label class="control-label col-md-2 col-sm-2 col-xs-12">Username *</label>
                 <div class="col-md-10 col-sm-10 col-xs-12">
                     <input id="username" name="username" type="text" class="form-control" ng-model="user.username" ng-required="true" ng-maxlength="128" autofocus>
                     <small class="input-error" ng-show="hasPropertyError(userForm.username, 'required')">Required</small>
@@ -47,7 +48,7 @@
                 </div>
             </div>
             <div class="form-group" ng-class="{'has-error': hasError(userForm.password), 'has-feedback': hasError(userForm.password)}">
-                <label class="control-label col-md-2 col-sm-2 col-xs-12">password *</label>
+                <label class="control-label col-md-2 col-sm-2 col-xs-12">Password *</label>
                 <div class="col-md-10 col-sm-10 col-xs-12">
                     <input id="password" name="password" type="password" class="form-control" ng-model="user.localPasswd" ng-required="true" ng-maxlength="40" ng-minlength="6" autofocus>
                     <small class="input-error" ng-show="hasPropertyError(userForm.password, 'required')">Required</small>
@@ -56,7 +57,7 @@
                 </div>
             </div>
             <div class="form-group" ng-class="{'has-error': hasError(userForm.confirmPassword), 'has-feedback': hasError(userForm.confirmPassword)}">
-                <label class="control-label col-md-2 col-sm-2 col-xs-12">confirmPassword *</label>
+                <label class="control-label col-md-2 col-sm-2 col-xs-12">Confirm Password *</label>
                 <div class="col-md-10 col-sm-10 col-xs-12">
                     <input id="confirmPassword" name="confirmPassword" type="password" class="form-control" ng-model="user.confirmLocalPasswd" match="user.localPasswd">
                     <small class="input-error" ng-show="hasPropertyError(userForm.confirmPassword, 'match')">[ Doesn't Match ]</small>
@@ -64,8 +65,8 @@
                 </div>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-danger" ng-show="showDelete" ng-click="confirmDelete(user)">Delete</button>
-                <button type="button" class="btn btn-primary" ng-disabled="userForm.$pristine || userForm.$invalid" ng-click="update(user)">Update</button>
+                <button type="button" class="btn btn-danger" ng-show="settings.showDelete" ng-click="confirmDelete(user)">Delete</button>
+                <button type="button" class="btn btn-primary" ng-disabled="userForm.$pristine || userForm.$invalid" ng-click="confirmSave(user, userForm.username)">{{settings.saveLabel}}</button>
             </div>
         </form>
     </div>

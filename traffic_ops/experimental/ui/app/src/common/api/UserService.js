@@ -28,6 +28,18 @@ var UserService = function(Restangular, userModel, messageModel) {
         return Restangular.one("tm_user", id).get();
     };
 
+    this.createUser = function(user) {
+        return Restangular.service('tm_user').post(user)
+            .then(
+                function() {
+                    messageModel.setMessages([ { level: 'success', text: 'User created' } ], true);
+                },
+                function() {
+                    messageModel.setMessages([ { level: 'error', text: 'User create failed' } ], false);
+                }
+            );
+    };
+
     this.updateUser = function(user) {
         return user.put()
             .then(

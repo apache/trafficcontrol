@@ -1,8 +1,11 @@
-var UserEditController = function(showDelete, $scope) {
+var UserEditController = function($scope) {
 
-    $scope.showDelete = showDelete;
+    $scope.settings = {
+        showDelete: false,
+        saveLabel: 'Update'
+    };
 
 };
 
-UserEditController.$inject = ['showDelete', '$scope'];
+UserEditController.$inject = ['$scope'];
 module.exports = UserEditController;

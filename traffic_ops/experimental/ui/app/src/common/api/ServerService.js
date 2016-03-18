@@ -8,6 +8,18 @@ var ServerService = function(Restangular, messageModel) {
         return Restangular.one("server", id).get();
     };
 
+    this.createServer = function(server) {
+        return Restangular.service('server').post(server)
+            .then(
+            function() {
+                messageModel.setMessages([ { level: 'success', text: 'Server created' } ], true);
+            },
+            function() {
+                messageModel.setMessages([ { level: 'error', text: 'Server create failed' } ], false);
+            }
+        );
+    };
+
     this.updateServer = function(server) {
         return server.put()
             .then(

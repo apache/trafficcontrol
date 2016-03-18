@@ -8,6 +8,18 @@ var DivisionService = function(Restangular, messageModel) {
         return Restangular.one("division", id).get();
     };
 
+    this.createDivision = function(division) {
+        return Restangular.service('division').post(division)
+            .then(
+                function() {
+                    messageModel.setMessages([ { level: 'success', text: 'Division created' } ], true);
+                },
+                function() {
+                    messageModel.setMessages([ { level: 'error', text: 'Division create failed' } ], false);
+                }
+            );
+    };
+
     this.updateDivision = function(division) {
         return division.put()
             .then(

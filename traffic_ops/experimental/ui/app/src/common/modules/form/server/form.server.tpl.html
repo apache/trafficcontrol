@@ -2,7 +2,7 @@
     <div class="x_title">
         <ol class="breadcrumb">
             <li><a ng-click="navigateToPath('/configure/servers')">Servers</a></li>
-            <li class="active">{{serverOriginal.hostName}}</li>
+            <li class="active">{{serverName}}</li>
         </ol>
         <div class="clearfix"></div>
     </div>
@@ -10,28 +10,72 @@
         <br>
         <form name="serverForm" class="form-horizontal form-label-left" novalidate>
             <div class="form-group" ng-class="{'has-error': hasError(serverForm[prop.name]), 'has-feedback': hasError(serverForm[prop.name])}" ng-repeat="prop in props">
-                <label class="control-label col-md-2 col-sm-2 col-xs-12">{{prop.name}} <span ng-show="prop.required">*</span></label>
+                <label class="control-label col-md-2 col-sm-2 col-xs-12">{{labelize(prop.name)}} <span ng-show="prop.required">*</span></label>
                 <div class="col-md-10 col-sm-10 col-xs-12">
-                    <input id="{{prop.name}}" name="{{prop.name}}" type="text" class="form-control" ng-model="server[prop.name]" ng-readonly="prop.readonly" ng-required="prop.required" ng-maxlength="prop.maxLength" ng-pattern="prop.pattern" autofocus>
+                    <input id="{{prop.name}}" name="{{prop.name}}" type="{{prop.type}}" class="form-control" ng-model="server[prop.name]" ng-readonly="prop.readonly" ng-required="prop.required" ng-maxlength="prop.maxLength" ng-pattern="prop.pattern" autofocus>
                     <small class="input-error" ng-show="hasPropertyError(serverForm[prop.name], 'required')">Required</small>
                     <small class="input-error" ng-show="hasPropertyError(serverForm[prop.name], 'maxlength')">Too Long</small>
                     <small class="input-error" ng-show="hasPropertyError(serverForm[prop.name], 'pattern')">{{prop.invalidMsg}}</small>
                     <span ng-show="hasError(serverForm[prop.name])" class="form-control-feedback"><i class="fa fa-times"></i></span>
                 </div>
             </div>
-            <div class="form-group" ng-class="{'has-error': hasError(serverForm[embed.name]), 'has-feedback': hasError(serverForm[embed.name])}" ng-repeat="embed in embeds">
-                <label class="control-label col-md-2 col-sm-2 col-xs-12">{{embed.name}} <span ng-show="embed.required">*</span></label>
+            <div class="form-group" ng-class="{'has-error': hasError(serverForm.cdn), 'has-feedback': hasError(serverForm.cdn)}">
+                <label class="control-label col-md-2 col-sm-2 col-xs-12">CDN *</label>
                 <div class="col-md-10 col-sm-10 col-xs-12">
-                    <input id="{{embed.name}}" name="{{embed.name}}" type="text" class="form-control" ng-model="server['_links'][embed.name].id" ng-required="embed.required" ng-maxlength="embed.maxLength" ng-pattern="embed.pattern" autofocus>
-                    <small class="input-error" ng-show="hasPropertyError(serverForm[embed.name], 'required')">Required</small>
-                    <small class="input-error" ng-show="hasPropertyError(serverForm[embed.name], 'maxlength')">Too Long</small>
-                    <small class="input-error" ng-show="hasPropertyError(serverForm[embed.name], 'pattern')">{{embed.invalidMsg}}</small>
-                    <span ng-show="hasError(serverForm[embed.name])" class="form-control-feedback"><i class="fa fa-times"></i></span>
+                    <select id="cdn" name="cdn" class="form-control" ng-model="server._links.cdn.id" ng-options="cdn.id as cdn.name for cdn in cdns" required>
+                        <option value="">Select...</option>
+                    </select>
+                    <small class="input-error" ng-show="hasPropertyError(serverForm.cdn, 'required')">Required</small>
+                </div>
+            </div>
+            <div class="form-group" ng-class="{'has-error': hasError(serverForm.location), 'has-feedback': hasError(serverForm.location)}">
+                <label class="control-label col-md-2 col-sm-2 col-xs-12">Location *</label>
+                <div class="col-md-10 col-sm-10 col-xs-12">
+                    <select id="location" name="location" class="form-control" ng-model="server._links.phys_location.id" ng-options="location.id as location.name for location in locations" required>
+                        <option value="">Select...</option>
+                    </select>
+                    <small class="input-error" ng-show="hasPropertyError(serverForm.location, 'required')">Required</small>
+                </div>
+            </div>
+            <div class="form-group" ng-class="{'has-error': hasError(serverForm.cachegroup), 'has-feedback': hasError(serverForm.cachegroup)}">
+                <label class="control-label col-md-2 col-sm-2 col-xs-12">Cache Group *</label>
+                <div class="col-md-10 col-sm-10 col-xs-12">
+                    <select id="cachegroup" name="cachegroup" class="form-control" ng-model="server._links.cachegroup.id" ng-options="cachegroup.id as cachegroup.name for cachegroup in cacheGroups" required>
+                        <option value="">Select...</option>
+                    </select>
+                    <small class="input-error" ng-show="hasPropertyError(serverForm.cachegroup, 'required')">Required</small>
+                </div>
+            </div>
+            <div class="form-group" ng-class="{'has-error': hasError(serverForm.type), 'has-feedback': hasError(serverForm.type)}">
+                <label class="control-label col-md-2 col-sm-2 col-xs-12">Type *</label>
+                <div class="col-md-10 col-sm-10 col-xs-12">
+                    <select id="type" name="type" class="form-control" ng-model="server._links.type.id" ng-options="type.id as type.name for type in types" required>
+                        <option value="">Select...</option>
+                    </select>
+                    <small class="input-error" ng-show="hasPropertyError(serverForm.type, 'required')">Required</small>
+                </div>
+            </div>
+            <div class="form-group" ng-class="{'has-error': hasError(serverForm.status), 'has-feedback': hasError(serverForm.status)}">
+                <label class="control-label col-md-2 col-sm-2 col-xs-12">Status *</label>
+                <div class="col-md-10 col-sm-10 col-xs-12">
+                    <select id="status" name="status" class="form-control" ng-model="server._links.status.id" ng-options="status.id as status.name for status in statuses" required>
+                        <option value="">Select...</option>
+                    </select>
+                    <small class="input-error" ng-show="hasPropertyError(serverForm.status, 'required')">Required</small>
+                </div>
+            </div>
+            <div class="form-group" ng-class="{'has-error': hasError(serverForm.profile), 'has-feedback': hasError(serverForm.profile)}">
+                <label class="control-label col-md-2 col-sm-2 col-xs-12">Profile *</label>
+                <div class="col-md-10 col-sm-10 col-xs-12">
+                    <select id="profile" name="profile" class="form-control" ng-model="server._links.profile.id" ng-options="profile.id as profile.name for profile in profiles" required>
+                        <option value="">Select...</option>
+                    </select>
+                    <small class="input-error" ng-show="hasPropertyError(serverForm.profile, 'required')">Required</small>
                 </div>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-danger" ng-click="confirmDelete(server)">Delete</button>
-                <button type="button" class="btn btn-primary" ng-disabled="serverForm.$pristine || serverForm.$invalid" ng-click="update(server)">Update</button>
+                <button type="button" class="btn btn-danger" ng-show="settings.showDelete" ng-click="confirmDelete(server)">Delete</button>
+                <button type="button" class="btn btn-primary" ng-disabled="serverForm.$pristine || serverForm.$invalid" ng-click="save(server)">{{settings.saveLabel}}</button>
             </div>
         </form>
     </div>

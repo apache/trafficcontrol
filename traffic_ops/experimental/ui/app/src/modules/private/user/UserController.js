@@ -1,4 +1,4 @@
-var UserController = function($scope, $state, $uibModal, formUtils, locationUtils, userService, authService, userModel) {
+var UserController = function($scope, $state, $uibModal, formUtils, locationUtils, userService, authService, roleService, userModel) {
 
     var updateUser = function(user, options) {
         userService.updateCurrentUser(user)
@@ -9,11 +9,18 @@ var UserController = function($scope, $state, $uibModal, formUtils, locationUtil
             });
     };
 
-    $scope.userOriginal = angular.copy(userModel.user);
+    var getRoles = function() {
+        roleService.getRoles()
+            .then(function(result) {
+                $scope.roles = result;
+            });
+    };
+
+    $scope.userName = angular.copy(userModel.user.username);
 
     $scope.user = userModel.user;
 
-    $scope.confirmUpdate = function(user, usernameField) {
+    $scope.confirmSave = function(user, usernameField) {
         if (usernameField.$dirty) {
             var params = {
                 title: 'Reauthentication Required',
@@ -45,7 +52,12 @@ var UserController = function($scope, $state, $uibModal, formUtils, locationUtil
 
     $scope.hasPropertyError = formUtils.hasPropertyError;
 
+    var init = function () {
+        getRoles();
+    };
+    init();
+
 };
 
-UserController.$inject = ['$scope', '$state', '$uibModal', 'formUtils', 'locationUtils', 'userService', 'authService', 'userModel'];
+UserController.$inject = ['$scope', '$state', '$uibModal', 'formUtils', 'locationUtils', 'userService', 'authService', 'roleService', 'userModel'];
 module.exports = UserController;

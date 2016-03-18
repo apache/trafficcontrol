@@ -1,9 +1,13 @@
-var TableDeliveryServicesController = function(deliveryServices, $scope, $location) {
+var TableDeliveryServicesController = function(deliveryServices, $scope, locationUtils) {
 
     $scope.deliveryServices = deliveryServices;
 
     $scope.editDeliveryService = function(id) {
-        $location.path($location.path() + '/' + id);
+        locationUtils.navigateToPath('/configure/delivery-services/' + id + '/edit');
+    };
+
+    $scope.createDeliveryService = function() {
+        locationUtils.navigateToPath('/configure/delivery-services/new');
     };
 
     angular.element(document).ready(function () {
@@ -15,5 +19,5 @@ var TableDeliveryServicesController = function(deliveryServices, $scope, $locati
 
 };
 
-TableDeliveryServicesController.$inject = ['deliveryServices', '$scope', '$location'];
+TableDeliveryServicesController.$inject = ['deliveryServices', '$scope', 'locationUtils'];
 module.exports = TableDeliveryServicesController;

@@ -8,6 +8,18 @@ var CacheGroupService = function(Restangular, messageModel) {
         return Restangular.one("cachegroup", id).get();
     };
 
+    this.createCacheGroup = function(cacheGroup) {
+        return Restangular.service('cachegroup').post(cacheGroup)
+            .then(
+                function() {
+                    messageModel.setMessages([ { level: 'success', text: 'CacheGroup created' } ], true);
+                },
+                function() {
+                    messageModel.setMessages([ { level: 'error', text: 'CacheGroup create failed' } ], false);
+                }
+            );
+    };
+
     this.updateCacheGroup = function(cacheGroup) {
         return cacheGroup.put()
             .then(

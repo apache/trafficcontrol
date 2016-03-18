@@ -2,7 +2,7 @@
     <div class="x_title">
         <ol class="breadcrumb">
             <li><a ng-click="navigateToPath('/configure/delivery-services')">Delivery Services</a></li>
-            <li class="active">{{deliveryServiceOriginal.displayName}}</li>
+            <li class="active">{{deliveryServiceName}}</li>
         </ol>
         <div class="clearfix"></div>
     </div>
@@ -10,28 +10,45 @@
         <br>
         <form name="deliveryServiceForm" class="form-horizontal form-label-left" novalidate>
             <div class="form-group" ng-class="{'has-error': hasError(deliveryServiceForm[prop.name]), 'has-feedback': hasError(deliveryServiceForm[prop.name])}" ng-repeat="prop in props">
-                <label class="control-label col-md-2 col-sm-2 col-xs-12">{{prop.name}} <span ng-show="prop.required">*</span></label>
+                <label class="control-label col-md-2 col-sm-2 col-xs-12">{{labelize(prop.name)}} <span ng-show="prop.required">*</span></label>
                 <div class="col-md-10 col-sm-10 col-xs-12">
-                    <input id="{{prop.name}}" name="{{prop.name}}" type="text" class="form-control" ng-model="deliveryService[prop.name]" ng-readonly="prop.readonly" ng-required="prop.required" ng-maxlength="prop.maxLength" ng-pattern="prop.pattern" autofocus>
+                    <input id="{{prop.name}}" name="{{prop.name}}" type="{{prop.type}}" class="form-control" ng-model="deliveryService[prop.name]" ng-readonly="prop.readonly" ng-required="prop.required" ng-maxlength="prop.maxLength" ng-pattern="prop.pattern" autofocus>
                     <small class="input-error" ng-show="hasPropertyError(deliveryServiceForm[prop.name], 'required')">Required</small>
                     <small class="input-error" ng-show="hasPropertyError(deliveryServiceForm[prop.name], 'maxlength')">Too Long</small>
                     <small class="input-error" ng-show="hasPropertyError(deliveryServiceForm[prop.name], 'pattern')">{{prop.invalidMsg}}</small>
                     <span ng-show="hasError(deliveryServiceForm[prop.name])" class="form-control-feedback"><i class="fa fa-times"></i></span>
                 </div>
             </div>
-            <div class="form-group" ng-class="{'has-error': hasError(deliveryServiceForm[embed.name]), 'has-feedback': hasError(deliveryServiceForm[embed.name])}" ng-repeat="embed in embeds">
-                <label class="control-label col-md-2 col-sm-2 col-xs-12">{{embed.name}} <span ng-show="embed.required">*</span></label>
+            <div class="form-group" ng-class="{'has-error': hasError(deliveryServiceForm.type), 'has-feedback': hasError(deliveryServiceForm.type)}">
+                <label class="control-label col-md-2 col-sm-2 col-xs-12">Type *</label>
                 <div class="col-md-10 col-sm-10 col-xs-12">
-                    <input id="{{embed.name}}" name="{{embed.name}}" type="text" class="form-control" ng-model="deliveryService['_links'][embed.name].id" ng-required="embed.required" ng-maxlength="embed.maxLength" ng-pattern="embed.pattern" autofocus>
-                    <small class="input-error" ng-show="hasPropertyError(deliveryServiceForm[embed.name], 'required')">Required</small>
-                    <small class="input-error" ng-show="hasPropertyError(deliveryServiceForm[embed.name], 'maxlength')">Too Long</small>
-                    <small class="input-error" ng-show="hasPropertyError(deliveryServiceForm[embed.name], 'pattern')">{{embed.invalidMsg}}</small>
-                    <span ng-show="hasError(deliveryServiceForm[embed.name])" class="form-control-feedback"><i class="fa fa-times"></i></span>
+                    <select id="type" name="type" class="form-control" ng-model="deliveryService._links.type.id" ng-options="type.id as type.name for type in types" required>
+                        <option value="">Select...</option>
+                    </select>
+                    <small class="input-error" ng-show="hasPropertyError(deliveryServiceForm.type, 'required')">Required</small>
+                </div>
+            </div>
+            <div class="form-group" ng-class="{'has-error': hasError(deliveryServiceForm.cdn), 'has-feedback': hasError(deliveryServiceForm.cdn)}">
+                <label class="control-label col-md-2 col-sm-2 col-xs-12">CDN *</label>
+                <div class="col-md-10 col-sm-10 col-xs-12">
+                    <select id="cdn" name="cdn" class="form-control" ng-model="deliveryService._links.cdn.id" ng-options="cdn.id as cdn.name for cdn in cdns" required>
+                        <option value="">Select...</option>
+                    </select>
+                    <small class="input-error" ng-show="hasPropertyError(deliveryServiceForm.cdn, 'required')">Required</small>
+                </div>
+            </div>
+            <div class="form-group" ng-class="{'has-error': hasError(deliveryServiceForm.profile), 'has-feedback': hasError(deliveryServiceForm.profile)}">
+                <label class="control-label col-md-2 col-sm-2 col-xs-12">Profile *</label>
+                <div class="col-md-10 col-sm-10 col-xs-12">
+                    <select id="profile" name="profile" class="form-control" ng-model="deliveryService._links.profile.id" ng-options="profile.id as profile.name for profile in profiles" required>
+                        <option value="">Select...</option>
+                    </select>
+                    <small class="input-error" ng-show="hasPropertyError(deliveryServiceForm.profile, 'required')">Required</small>
                 </div>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-danger" ng-click="confirmDelete(deliveryService)">Delete</button>
-                <button type="button" class="btn btn-primary" ng-disabled="deliveryServiceForm.$pristine || deliveryServiceForm.$invalid" ng-click="update(deliveryService)">Update</button>
+                <button type="button" class="btn btn-danger" ng-show="settings.showDelete" ng-click="confirmDelete(deliveryService)">Delete</button>
+                <button type="button" class="btn btn-primary" ng-disabled="deliveryServiceForm.$pristine || deliveryServiceForm.$invalid" ng-click="save(deliveryService)">{{settings.saveLabel}}</button>
             </div>
         </form>
     </div>

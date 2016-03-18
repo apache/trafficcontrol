@@ -8,6 +8,18 @@ var TenantService = function(Restangular, messageModel) {
         return Restangular.one("tenant", id).get();
     };
 
+    this.createTenant = function(tenant) {
+        return Restangular.service('tenant').post(tenant)
+            .then(
+            function() {
+                messageModel.setMessages([ { level: 'success', text: 'Tenant created' } ], true);
+            },
+            function() {
+                messageModel.setMessages([ { level: 'error', text: 'Tenant create failed' } ], false);
+            }
+        );
+    };
+
     this.updateTenant = function(tenant) {
         return tenant.put()
             .then(

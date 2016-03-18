@@ -1,9 +1,13 @@
-var TableTenantsController = function(tenants, $scope, $location) {
+var TableTenantsController = function(tenants, $scope, locationUtils) {
 
     $scope.tenants = tenants;
 
     $scope.editTenant = function(id) {
-        $location.path($location.path() + '/' + id);
+        locationUtils.navigateToPath('/admin/tenants/' + id + '/edit');
+    };
+
+    $scope.createTenant = function() {
+        locationUtils.navigateToPath('/admin/tenants/new');
     };
 
     angular.element(document).ready(function () {
@@ -15,5 +19,5 @@ var TableTenantsController = function(tenants, $scope, $location) {
 
 };
 
-TableTenantsController.$inject = ['tenants', '$scope', '$location'];
+TableTenantsController.$inject = ['tenants', '$scope', 'locationUtils'];
 module.exports = TableTenantsController;

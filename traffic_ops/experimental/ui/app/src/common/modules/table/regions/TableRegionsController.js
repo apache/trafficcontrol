@@ -1,9 +1,13 @@
-var TableRegionsController = function(regions, $scope, $location) {
+var TableRegionsController = function(regions, $scope, locationUtils) {
 
     $scope.regions = regions;
 
     $scope.editRegion = function(id) {
-        $location.path($location.path() + '/' + id);
+        locationUtils.navigateToPath('/admin/regions/' + id + '/edit');
+    };
+
+    $scope.createRegion = function() {
+        locationUtils.navigateToPath('/admin/regions/new');
     };
 
     angular.element(document).ready(function () {
@@ -15,5 +19,5 @@ var TableRegionsController = function(regions, $scope, $location) {
 
 };
 
-TableRegionsController.$inject = ['regions', '$scope', '$location'];
+TableRegionsController.$inject = ['regions', '$scope', 'locationUtils'];
 module.exports = TableRegionsController;

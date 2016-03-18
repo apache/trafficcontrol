@@ -1,8 +1,8 @@
 <div class="x_panel">
     <div class="x_title">
         <ol class="breadcrumb">
-            <li><a ng-click="navigateToPath('/configure/regions')">Regions</a></li>
-            <li class="active">{{regionOriginal.name}}</li>
+            <li><a ng-click="navigateToPath('/admin/regions')">Regions</a></li>
+            <li class="active">{{regionName}}</li>
         </ol>
         <div class="clearfix"></div>
     </div>
@@ -10,26 +10,26 @@
         <br>
         <form name="regionForm" class="form-horizontal form-label-left" novalidate>
             <div class="form-group" ng-class="{'has-error': hasError(regionForm[prop.name]), 'has-feedback': hasError(regionForm[prop.name])}" ng-repeat="prop in props">
-                <label class="control-label col-md-2 col-sm-2 col-xs-12">{{prop.name}} <span ng-show="prop.required">*</span></label>
+                <label class="control-label col-md-2 col-sm-2 col-xs-12">{{labelize(prop.name)}} <span ng-show="prop.required">*</span></label>
                 <div class="col-md-10 col-sm-10 col-xs-12">
-                    <input id="{{prop.name}}" name="{{prop.name}}" type="text" class="form-control" ng-model="region[prop.name]" ng-readonly="prop.readonly" ng-required="prop.required" ng-maxlength="prop.maxLength" autofocus>
+                    <input id="{{prop.name}}" name="{{prop.name}}" type="{{prop.type}}" class="form-control" ng-model="region[prop.name]" ng-readonly="prop.readonly" ng-required="prop.required" ng-maxlength="prop.maxLength" autofocus>
                     <small class="input-error" ng-show="hasPropertyError(regionForm[prop.name], 'required')">Required</small>
                     <small class="input-error" ng-show="hasPropertyError(regionForm[prop.name], 'maxlength')">Too Long</small>
                     <span ng-show="hasError(regionForm[prop.name])" class="form-control-feedback"><i class="fa fa-times"></i></span>
                 </div>
             </div>
             <div class="form-group" ng-class="{'has-error': hasError(regionForm.division), 'has-feedback': hasError(regionForm.division)}">
-                <label class="control-label col-md-2 col-sm-2 col-xs-12">division *</label>
+                <label class="control-label col-md-2 col-sm-2 col-xs-12">Division *</label>
                 <div class="col-md-10 col-sm-10 col-xs-12">
-                    <input id="division" name="division" type="text" class="form-control" ng-model="region._links.division.id" ng-required="true" ng-maxlength="11" autofocus>
+                    <select id="division" name="division" class="form-control" ng-model="region._links.division.id" ng-options="division.id as division.name for division in divisions" required>
+                        <option value="">Select...</option>
+                    </select>
                     <small class="input-error" ng-show="hasPropertyError(regionForm.division, 'required')">Required</small>
-                    <small class="input-error" ng-show="hasPropertyError(regionForm.division, 'maxlength')">Too Long</small>
-                    <span ng-show="hasError(regionForm.division)" class="form-control-feedback"><i class="fa fa-times"></i></span>
                 </div>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-danger" ng-click="confirmDelete(region)">Delete</button>
-                <button type="button" class="btn btn-primary" ng-disabled="regionForm.$pristine || regionForm.$invalid" ng-click="update(region)">Update</button>
+                <button type="button" class="btn btn-danger" ng-show="settings.showDelete" ng-click="confirmDelete(region)">Delete</button>
+                <button type="button" class="btn btn-primary" ng-disabled="regionForm.$pristine || regionForm.$invalid" ng-click="save(region)">{{settings.saveLabel}}</button>
             </div>
         </form>
     </div>

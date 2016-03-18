@@ -33,17 +33,18 @@ $fa-font-path: "../assets/fonts";
 // user
 @import "../modules/private/user/user";
 
-// administer
-@import "../modules/private/administer/administer";
-@import "../modules/private/administer/users/users";
+// admin
+@import "../modules/private/admin/admin";
+@import "../modules/private/admin/divisions/divisions";
+@import "../modules/private/admin/locations/locations";
+@import "../modules/private/admin/regions/regions";
+@import "../modules/private/admin/tenants/tenants";
+@import "../modules/private/admin/users/users";
 
 // configure
 @import "../modules/private/configure/configure";
 @import "../modules/private/configure/cacheGroups/cacheGroups";
 @import "../modules/private/configure/deliveryServices/deliveryServices";
-@import "../modules/private/configure/divisions/divisions";
-@import "../modules/private/configure/locations/locations";
-@import "../modules/private/configure/regions/regions";
 @import "../modules/private/configure/servers/servers";
 
 // monitor
@@ -662,7 +663,11 @@ h2 {
     list-style: none;
     background-color: white;
     border-radius: 0;
-    font-size: 18px;
+    font-size: 24px;
+  }
+
+  button {
+    margin: 8px 6px 4px 0;
   }
 }
 

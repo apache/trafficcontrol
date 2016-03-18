@@ -8,6 +8,18 @@ var RegionService = function(Restangular, messageModel) {
         return Restangular.one("region", id).get();
     };
 
+    this.createRegion = function(region) {
+        return Restangular.service('region').post(region)
+            .then(
+            function() {
+                messageModel.setMessages([ { level: 'success', text: 'Region created' } ], true);
+            },
+            function() {
+                messageModel.setMessages([ { level: 'error', text: 'Region create failed' } ], false);
+            }
+        );
+    };
+
     this.updateRegion = function(region) {
         return region.put()
             .then(
