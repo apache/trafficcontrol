@@ -91,6 +91,9 @@ sub genfiles {
 			$text = &take_and_bake( $self, $id, $org_name );
 		}
 	}
+	if ($text =~ /^Error/) {
+		$self->internal_server_error( { Error => $text } );
+	}
 
 	if ( $file ne "all" ) {
 		$self->res->headers->content_type("application/download");
