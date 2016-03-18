@@ -27,7 +27,7 @@ Source0:	traffic_ops_ort-%{version}.tgz
 URL:		https://github.com/Comcast/traffic_control/
 Vendor:		Comcast
 Packager:	daniel_kirkwood at Cable dot Comcast dot com
-Requires:	perl-JSON
+Requires:	perl-JSON, perl-libwww-perl, perl-Crypt-SSLeay
 
 
 %description
