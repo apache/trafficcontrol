@@ -19,6 +19,7 @@ public class TestServer
     public static void main(String[] args) throws Exception
     {
         System.setProperty("deploy.dir", "core/src/test");
+        System.setProperty("dns.zones.dir", "core/src/test/var/auto-zones");
 
         PatternLayout patternLayout = new PatternLayout("%-5p %d{ISO8601} %c: %m%n");
         ConsoleAppender consoleAppender = new ConsoleAppender(patternLayout);

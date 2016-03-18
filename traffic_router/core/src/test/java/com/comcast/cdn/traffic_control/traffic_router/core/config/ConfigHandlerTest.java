@@ -85,6 +85,7 @@ public class ConfigHandlerTest {
         DeliveryService ds = mock(DeliveryService.class);
         when(ds.getId()).thenReturn(dsId);
         when(ds.getGeoRedirectUrl()).thenReturn(redirectUrl);
+
         doAnswer(new Answer<Void>() {
             public Void answer(InvocationOnMock invocation) {
                 Object[] args = invocation.getArguments();
