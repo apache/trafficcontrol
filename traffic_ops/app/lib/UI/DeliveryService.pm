@@ -64,7 +64,8 @@ sub edit {
 		fbox_layout  => 1,
 		regexp_set   => $regexp_set,
 		example_urls => \@example_urls,
-		mode         => 'edit'            #for form generation
+		hidden       => {}, # for form validation purposes
+		mode         => 'edit' # for form generation
 	);
 }
 
@@ -329,28 +330,32 @@ sub check_deliveryservice_input {
 	)->get_column('value')->single();
 
 	my $match_one = 0;
-	my %dbl_check = ();
+	my $dbl_check = {};
+
 	foreach my $param ( $self->param ) {
 		if ( $param =~ /^re_type_(.*)/ ) {
-			my $check_string = $self->param($param) . "|" . $self->param( 're_order_' . $1 );
-			if ( defined( $dbl_check{$check_string} ) ) {
-				$self->field('ds.regex')->is_equal( "", "Duplicate type/order combination is not allowed." );
+			my $field = "re_order";
+			my $this_field = $field . '_' . $1;
+			my $order = $self->param( $this_field );
+
+			if ( defined( $dbl_check->{$field}->{$order} ) ) {
+				$self->field('hidden.regex')->is_equal( "", "Duplicate type/order combination is not allowed." );
 			}
 			else {
-				$dbl_check{$check_string} = 1;
+				$dbl_check->{$field}->{$order} = $order;
 			}
 			if ( !( $self->param($param) eq 'HOST_REGEXP' || $self->param($param) eq 'PATH_REGEXP' || $self->param($param) eq 'HEADER_REGEXP' ) ) {
-				$self->field('ds.regex')->is_equal( "", $self->param($param) . " is not a valid regexp type" );
+				$self->field('hidden.regex')->is_equal( "", $self->param($param) . " is not a valid regexp type" );
 			}
 		}
 		elsif ( $param =~ /^re_re_/ ) {
 			if ( $self->param($param) eq "" ) {
-				$self->field('ds.regex')->is_equal( "", "Regular expression cannot be empty." );
+				$self->field('hidden.regex')->is_equal( "", "Regular expression cannot be empty." );
 			}
 			else {
 				my $err .= $self->check_regexp( $self->param($param) );
 				if ( defined($err) && $err ne "" ) {
-					$self->field('ds.regex')->is_equal( "", $err );
+					$self->field('hidden.regex')->is_equal( "", $err );
 				}
 			}
 
@@ -381,7 +386,7 @@ sub check_deliveryservice_input {
 							next;
 						}
 						if ( $existing_re eq $new_re ) {
-							$self->field('ds.regex')
+							$self->field('hidden.regex')
 								->is_equal( "", "There already is a HOST_REGEXP (" . $existing_re . ") that maches " . $new_re . "; No can do." );
 							last;
 						}
@@ -391,7 +396,7 @@ sub check_deliveryservice_input {
 		}
 		elsif ( $param =~ /^re_order_.*(\d+)/ ) {
 			if ( $self->param($param) !~ /^\d+$/ ) {
-				$self->field('ds.regex')->is_equal( "", $self->param($param) . " is not a valid order number." );
+				$self->field('hidden.regex')->is_equal( "", $self->param($param) . " is not a valid order number." );
 			}
 		}
 		if ( $self->param($param) eq 'HOST_REGEXP' ) {
@@ -412,7 +417,7 @@ sub check_deliveryservice_input {
 		}
 	}
 	if ( !$match_one ) {
-		$self->field('ds.regex')->is_equal( "", "A minimum of one host regexp with order 0 is needed per delivery service." );
+		$self->field('hidden.regex')->is_equal( "", "A minimum of one host regexp with order 0 is needed per delivery service." );
 	}
 	if ( $self->param('ds.dscp') !~ /^\d+$/ ) {
 		$self->field('ds.dscp')->is_equal( "", $self->param('ds.dscp') . " is not a valid dscp value." );
@@ -856,6 +861,7 @@ sub update {
 			static_count => $static_count,
 			regexp_set   => $regexp_set,
 			example_urls => \@example_urls,
+			hidden       => {}, # for form validation purposes
 			mode         => "edit",
 		);
 		$self->render('delivery_service/edit');
@@ -1035,6 +1041,7 @@ sub create {
 			selected_type    => $selected_type,
 			selected_profile => $selected_profile,
 			selected_cdn     => $selected_cdn,
+			hidden           => {}, # for form validation purposes
 			mode             => "add",
 		);
 		$self->render('delivery_service/add');
@@ -1132,7 +1139,8 @@ sub add {
 		selected_type    => "",
 		selected_profile => "",
 		selected_cdn     => "",
-		mode             => 'add'    #for form generation
+		hidden           => {}, # for form validation purposes
+		mode             => 'add' # for form generation
 	);
 	my @params = $self->param;
 	foreach my $field (@params) {
