@@ -96,14 +96,15 @@ if ( defined($argument) ) {
 	if ( $argument eq 'cut' ) {
 		fetch_branch();
 		my $prompt = "Continue with creating the RELEASE?";
-		if ( prompt_yn($prompt) ) {
+		print "branch_exists #-> (" . $branch_exists . ")\n";
 
-			print "branch_exists #-> (" . $branch_exists . ")\n";
+		if ( prompt_yn($prompt) ) {
 
 			# Only tag the release
 			if ($branch_exists) {
 				add_official_remote();
 				tag_and_push();
+				publish_version_file($version);
 			}
 			else {
 				add_official_remote();
@@ -255,8 +256,22 @@ sub add_official_remote {
 
 sub cut_new_release {
 
-	update_version_file($next_version);
-	my $cmd = "git commit -m 'Incrementing VERSION file' VERSION";
+	publish_version_file($next_version);
+
+	print "Creating new branch\n";
+	my $cmd = "git checkout -b " . $new_branch;
+	my $rc  = run_command($cmd);
+	if ( $rc > 0 ) {
+		print "Failed to checkout new branch" . $cmd . "\n";
+	}
+
+}
+
+sub publish_version_file {
+
+	my $version_no = shift;
+	update_version_file($version_no);
+	my $cmd = "git commit -m 'RELEASE: Syncing VERSION file' VERSION";
 	$rc = run_command($cmd);
 	if ( $rc > 0 ) {
 		print "Failed to run:" . $cmd . "\n";
@@ -267,13 +282,6 @@ sub cut_new_release {
 	$rc  = run_command($cmd);
 	if ( $rc > 0 ) {
 		print "Failed to push official to master" . $cmd . "\n";
-	}
-
-	print "Creating new branch\n";
-	$cmd = "git checkout -b " . $new_branch;
-	$rc  = run_command($cmd);
-	if ( $rc > 0 ) {
-		print "Failed to checkout new branch" . $cmd . "\n";
 	}
 
 }
@@ -315,7 +323,7 @@ sub cleanup_release {
 	}
 
 	update_version_file($version);
-	$cmd = "git commit -m 'Decrementing VERSION file' VERSION";
+	$cmd = "git commit -m 'RELEASE: Decrementing VERSION file' VERSION";
 	$rc  = run_command($cmd);
 	if ( $rc > 0 ) {
 		print "Failed to run:" . $cmd . "\n";
