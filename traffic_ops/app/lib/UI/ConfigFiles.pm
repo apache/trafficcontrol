@@ -1002,16 +1002,16 @@ sub parent_dot_config {
 				$text .= "dest_domain=$org_fqdn parent=$os $algorithm go_direct=true\n";
 			}
 			elsif ($multi_site_origin) {
-				$text .= "dest_domain=$org_fqdn parent=\"";
+				$text .= "dest_domain=$org_fqdn \"";
 				my $pinfo = $self->parent_data($server);
 
-				#print Dumper($pinfo);
 				my @parent_info;
 				foreach my $parent ( @{ $pinfo->{$org_fqdn} } ) {
 					push @parent_info, format_parent_info($parent);
 				}
 
-				$text .= "\" round_robin=consistent_hash go_direct=false parent_is_proxy=false\n";
+				my $parents = 'parent="' . join( '', @parent_info ) . '"';
+				$text .= "$parents round_robin=consistent_hash go_direct=false parent_is_proxy=false\n";
 			}
 		}
 
