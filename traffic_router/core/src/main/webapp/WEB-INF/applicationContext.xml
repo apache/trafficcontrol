@@ -22,7 +22,7 @@
 
 	<import resource="classpath:/applicationProperties.xml" />
 
-	<context:component-scan base-package="${geoservice.package:com.comcast.cdn.traffic_control.traffic_router.core.loc}" />
+	<context:component-scan base-package="com.comcast.cdn" />
 
 	<bean id="deployDir" class="java.io.File">
 		<constructor-arg>
@@ -95,13 +95,13 @@
 	</bean>
 
 	<bean id="trafficRouterManager" class="com.comcast.cdn.traffic_control.traffic_router.core.router.TrafficRouterManager">
-		<property name="geolocationService" ref="GeolocationService" />
-		<property name="geolocationService6" ref="GeolocationService" />
 		<property name="hashFunctionPool" ref="HashFunctionObjectPool" />
 		<property name="statTracker" ref="statTracker" />
 		<property name="nameServer" ref="NameServer" />
 		<property name="trafficOpsUtils" ref="trafficOpsUtils" />
 		<property name="federationRegistry" ref="federationsRegistry" />
+		<property name="geolocationService" ref="maxmindGeolocationService" />
+		<property name="geolocationService6" ref="maxmindGeolocationService" />
 	</bean>
 
 	<bean id="federationsRegistry" class="com.comcast.cdn.traffic_control.traffic_router.core.loc.FederationRegistry"/>
@@ -132,14 +132,15 @@
 		<property name="password" value="$[traffic_ops.password]" />
 	</bean>
 
+	<bean id="maxmindGeolocationService" class="com.comcast.cdn.traffic_control.traffic_router.core.loc.MaxmindGeolocationService"/>
+	
 	<bean id="geolocationDatabaseUpdater" class="com.comcast.cdn.traffic_control.traffic_router.core.loc.GeolocationDatabaseUpdater" init-method="init">
 		<property name="databasesDirectory" ref="databasesDir"/>
 		<property name="databaseName" value="$[cache.geolocation.database:GeoLite2-City.mmdb]" />
 		<property name="pollingInterval" value="$[cache.geolocation.database.refresh.period:86400000]" />
-		<property name="untarDataFile" value="$[cache.geolocation.database.tarred:false]"/>
-		<property name="geoLocation" ref="GeolocationService" />
 		<property name="executorService" ref="ScheduledExecutorService" />
 		<property name="trafficRouterManager" ref="trafficRouterManager" />
+		<property name="maxMindGeolocationService" ref="maxmindGeolocationService" />
 	</bean>
 
 	<bean id="networkUpdater" class="com.comcast.cdn.traffic_control.traffic_router.core.loc.NetworkUpdater"

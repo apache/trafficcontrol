@@ -34,7 +34,7 @@ public class GeoTest {
 	private static final Logger LOGGER = Logger.getLogger(GeoTest.class);
 
 	private GeolocationDatabaseUpdater geolocationDatabaseUpdater;
-	private MaxmindGeolocationService geolocationService;
+	private MaxmindGeolocationService maxmindGeolocationService;
 	private static ApplicationContext context;
 
 	@BeforeClass
@@ -49,7 +49,7 @@ public class GeoTest {
 	@Before
 	public void setUp() throws Exception {
 		geolocationDatabaseUpdater = (GeolocationDatabaseUpdater) context.getBean("geolocationDatabaseUpdater");
-		geolocationService = (MaxmindGeolocationService) context.getBean("GeolocationService");
+		maxmindGeolocationService = (MaxmindGeolocationService) context.getBean("maxmindGeolocationService");
 
 		while (!geolocationDatabaseUpdater.isLoaded()) {
 			LOGGER.info("Waiting for a valid Maxmind database before proceeding");
@@ -65,7 +65,7 @@ public class GeoTest {
 					{"40.40.40.40","cache-group-1"}
 			};
 			for(int i = 0; i < testips.length; i++) {
-				Geolocation location = geolocationService.location(testips[i][0]);
+				Geolocation location = maxmindGeolocationService.location(testips[i][0]);
 				Assert.assertNotNull(location);
 				String loc = location.toString();
 				LOGGER.info(String.format("result for ip=%s: %s\n",testips[i], loc));

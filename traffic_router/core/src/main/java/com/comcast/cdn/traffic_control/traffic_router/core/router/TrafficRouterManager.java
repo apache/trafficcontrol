@@ -32,8 +32,11 @@ import com.comcast.cdn.traffic_control.traffic_router.core.cache.CacheRegister;
 import com.comcast.cdn.traffic_control.traffic_router.core.dns.NameServer;
 import com.comcast.cdn.traffic_control.traffic_router.geolocation.GeolocationService;
 import com.comcast.cdn.traffic_control.traffic_router.core.util.TrafficOpsUtils;
+import org.springframework.beans.BeansException;
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.ApplicationContextAware;
 
-public class TrafficRouterManager {
+public class TrafficRouterManager implements ApplicationContextAware {
 	private static final Logger LOGGER = Logger.getLogger(TrafficRouterManager.class);
 
 	private JSONObject state;
@@ -46,6 +49,7 @@ public class TrafficRouterManager {
 	private NameServer nameServer;
 	private TrafficOpsUtils trafficOpsUtils;
 	private FederationRegistry federationRegistry;
+	private ApplicationContext applicationContext;
 
 	public NameServer getNameServer() {
 		return nameServer;
@@ -65,16 +69,20 @@ public class TrafficRouterManager {
 
 	public boolean setState(final JSONObject jsonObject) throws UnknownHostException {
 		trackEvent("lastCacheStateCheck");
-		if(jsonObject == null) {
+
+		if (jsonObject == null) {
 			return false;
 		}
+
 		trackEvent("lastCacheStateChange");
+
 		synchronized(this) {
 			this.state = jsonObject;
-			if(trafficRouter != null) {
+
+			if (trafficRouter != null) {
 				trafficRouter.setState(state);
-				return true;
 			}
+
 			return true;
 		}
 	}
@@ -85,38 +93,41 @@ public class TrafficRouterManager {
 
 	public void setCacheRegister(final CacheRegister cacheRegister) throws IOException, JSONException, TrafficRouterException {
 		trackEvent("lastConfigCheck");
-		if(cacheRegister == null) {
+
+		if (cacheRegister == null) {
 			return;
 		}
 
-		final TrafficRouter tr = new TrafficRouter(cacheRegister, 
-				geolocationService, 
-				geolocationService6, 
-				hashFunctionPool, 
-				statTracker,
-				trafficOpsUtils,
-				federationRegistry);
+		final TrafficRouter tr = new TrafficRouter(cacheRegister, geolocationService, geolocationService6, hashFunctionPool, statTracker, trafficOpsUtils, federationRegistry);
+
 		synchronized(this) {
-			if(state != null) {
+			if (state != null) {
 				try {
 					tr.setState(state);
 				} catch (UnknownHostException e) {
 					LOGGER.warn(e,e);
 				}
 			}
+
 			this.trafficRouter = tr;
+			this.trafficRouter.setApplicationContext(applicationContext);
 		}
+
 		trackEvent("lastConfigChange");
 	}
+
 	public void setGeolocationService(final GeolocationService geolocationService) {
 		this.geolocationService = geolocationService;
 	}
+
 	public void setGeolocationService6(final GeolocationService geolocationService) {
 		this.geolocationService6 = geolocationService;
 	}
+
 	public void setHashFunctionPool(final ObjectPool hashFunctionPool) {
 		this.hashFunctionPool = hashFunctionPool;
 	}
+
 	public void setStatTracker(final StatTracker statTracker) {
 		this.statTracker = statTracker;
 	}
@@ -127,5 +138,10 @@ public class TrafficRouterManager {
 
 	public void setFederationRegistry(final FederationRegistry federationRegistry) {
 		this.federationRegistry = federationRegistry;
+	}
+
+	@Override
+	public void setApplicationContext(final ApplicationContext applicationContext) throws BeansException {
+		this.applicationContext = applicationContext;
 	}
 }

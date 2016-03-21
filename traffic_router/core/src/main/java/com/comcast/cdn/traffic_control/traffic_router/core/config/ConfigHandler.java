@@ -400,7 +400,12 @@ public class ConfigHandler {
 			config.getString(pollingUrlKey),
 			config.optLong("geolocation.polling.interval")
 		);
+
+		if (config.has("neustar.polling.url")) {
+			System.setProperty("neustar.polling.url", config.getString("neustar.polling.url"));
+		}
 	}
+
 	/**
 	 * Parses the ConverageZoneNetwork database configuration and updates the database if the URL has
 	 * changed.
