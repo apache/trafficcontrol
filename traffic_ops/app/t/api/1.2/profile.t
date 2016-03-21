@@ -46,12 +46,12 @@ ok $t->post_ok('/api/1.2/profiles' => {Accept => 'application/json'} => json => 
 	->json_is( "/response/description" => "CCR_CREATE description" )
 		, 'Does the profile details return?';
 
-ok $t->post_ok('/api/1.2/profiles/name/CCR_CREATE/copy/CCR1' => {Accept => 'application/json'}) ->status_is(200)
+ok $t->post_ok('/api/1.2/profiles/name/CCR_COPY/copy/CCR1' => {Accept => 'application/json'}) ->status_is(200)
 	->or( sub { diag $t->tx->res->content->asset->{content}; } )
-	->json_is( "/response/name" => "CCR_CREATE" )
+	->json_is( "/response/name" => "CCR_COPY" )
 		, 'Does the profile details return?';
 
-ok $t->post_ok('/api/1.2/profiles/name/CCR_COPY/copy/CCR1' => {Accept => 'application/json'})->status_is(400);
+ok $t->post_ok('/api/1.2/profiles/name/CCR_CREATE/copy/CCR1' => {Accept => 'application/json'})->status_is(400);
 ok $t->post_ok('/api/1.2/profiles/name/CCR_NEW/copy/not_exist' => {Accept => 'application/json'})->status_is(400);
 
 ok $t->post_ok('/api/1.2/profiles' => {Accept => 'application/json'} => json => {

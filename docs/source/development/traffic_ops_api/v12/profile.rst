@@ -139,7 +139,7 @@ Profiles
 |
 
 **POST /api/1.2/profiles/name/:profile_name/copy/:profile_copy_from**
-    Copy profile to an exist profile. 
+    Copy profile to a new profile. The new profile name must not exist. 
 
 	Authentication Required: Yes
 
@@ -169,6 +169,8 @@ Profiles
 	+-----------------------+--------+----------------------------------------------------+
 	| ``id_copy_from``      | string | The id of profile to copy                          |
 	+-----------------------+--------+----------------------------------------------------+
+	| ``description``       | string | new profile's description (copied)                 |
+	+-----------------------+--------+----------------------------------------------------+
 
   **Response Example** ::
 
@@ -178,6 +180,7 @@ Profiles
             "id": "66",
             "name": "CCR_COPY",
             "profile_copy_from": "CCR1",
+            "description": "CCR_COPY description",
             "id_copy_from": "3"
         }
      ]
