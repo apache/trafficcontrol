@@ -672,7 +672,7 @@ sub profiles_exist {
 		foreach my $profile (@$profiles_response) {
 				if ( !exists $initial_profiles{ $profile->{"name"} } ) {
 						print "Found existing profile (" . $profile->{"name"} . ")\n";
-						open( my $reconfigure_defaults_file, '>>', $reconfigure_defaults ) or die("Failed to open() $reconfigure_defaults: $!");
+						open( my $reconfigure_defaults_file, '>', $reconfigure_defaults ) or die("Failed to open() $reconfigure_defaults: $!");
 						close( $reconfigure_defaults_file );
 						return 1;
 				}
