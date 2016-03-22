@@ -485,7 +485,7 @@ sub ip_allow_data {
 		my @allowed_ipv6_netaddrips;
 		my $etype = &type_id( $self, "EDGE" );
 		my $rtype = &type_id( $self, "RASCAL" );
-		my $rs_allowed = $self->db->resultset('Server')->search( { -or => [ type => $etype, type => $rtype ] } );
+		my $rs_allowed = $self->db->resultset('Server')->search( { -or => [ 'me.type' => $etype, 'me.type' => $rtype ] }, { prefetch => [ 'type', 'cachegroup' ] } );
 		while ( my $allow_row = $rs_allowed->next ) {
 			if ( $allow_row->type->id == $rtype
 				|| ( defined( $allow_locs{ $allow_row->cachegroup->id } ) && $allow_locs{ $allow_row->cachegroup->id } == 1 ) )
