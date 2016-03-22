@@ -322,7 +322,13 @@ sub setup_mojo_plugins {
 		}
 	}
 
-	$self->plugin( AccessLog => { log => "$logging_root_dir/access.log" } );
+	$self->plugin(
+		AccessLog => {
+			log => "$logging_root_dir/access.log",
+			format => '%h %l %u %t "%r" %>s %b %D "%{User-Agent}i"'
+		}
+	);
+
 	$self->plugin('ParamExpand', max_array => 256);
 
 	#FormFields
