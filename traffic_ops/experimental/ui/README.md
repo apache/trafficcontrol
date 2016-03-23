@@ -4,11 +4,10 @@ An AngularJS client served from a lightweight Node.js web server. TO UI 2.0 was 
 
 ##### Installation
 
-1. Install prerequisite software
+1. Install prerequisite software (OS X)
 
-    - brew install ruby
-    - gem install compass
     - brew install node
+    - npm install -g compass
     - npm install -g bower
     - npm install -g grunt-cli
     
