@@ -19,6 +19,7 @@ package UI::Cdn;
 #
 
 use UI::Utils;
+use UI::Parameter;
 use Mojo::Base 'Mojolicious::Controller';
 use Data::Dumper;
 use UI::ConfigFiles;
@@ -275,7 +276,13 @@ sub aparameter {
             }
         );
         while ( my $row = $rs->next ) {
-            my @line = [ $row->id, "NONE", $row->name, $row->config_file, $row->value, "profile" ];
+            my $secure = "no";
+            if ( $row->secure == 1 ) {
+                $secure = "yes";
+            }
+            my $value = $row->value;
+            &UI::Parameter::conceal_secure_parameter_value( $self, $row->secure, \$value );
+            my @line = [ $row->id, "NONE", $row->name, $row->config_file, $value, $secure, "profile" ];
             push( @{ $data{'aaData'} }, @line );
         }
         $rs = undef;
@@ -290,7 +297,13 @@ sub aparameter {
 
     if ( defined($rs) ) {
         while ( my $row = $rs->next ) {
-            my @line = [ $row->parameter->id, $row->profile->name, $row->parameter->name, $row->parameter->config_file, $row->parameter->value, "profile" ];
+            my $secure = "no";
+            if ( $row->parameter->secure == 1 ) {
+                $secure = "yes";
+            }
+            my $value = $row->parameter->value;
+            &UI::Parameter::conceal_secure_parameter_value( $self, $row->parameter->secure, \$value );
+            my @line = [ $row->parameter->id, $row->profile->name, $row->parameter->name, $row->parameter->config_file, $value, $secure, "profile" ];
             push( @{ $data{'aaData'} }, @line );
         }
     }

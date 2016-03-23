@@ -54,6 +54,12 @@ __PACKAGE__->table("parameter");
   default_value: current_timestamp
   is_nullable: 1
 
+=head2 secure
+
+  data_type: 'tinyint'
+  default_value: 0
+  is_nullable: 0
+
 =cut
 
 __PACKAGE__->add_columns(
@@ -72,6 +78,8 @@ __PACKAGE__->add_columns(
     default_value => \"current_timestamp",
     is_nullable => 1,
   },
+  "secure",
+  { data_type => "tinyint", default_value => 0, is_nullable => 0 },
 );
 
 =head1 PRIMARY KEY
@@ -119,8 +127,8 @@ __PACKAGE__->has_many(
 );
 
 
-# Created by DBIx::Class::Schema::Loader v0.07043 @ 2015-05-21 13:27:11
-# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:m98iBHVoH0/v32vOHGZcxA
+# Created by DBIx::Class::Schema::Loader v0.07045 @ 2016-03-15 23:28:01
+# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:aTrkVhWmNRR9aZ9VqhH1Pg
 
 
 # You can replace this text with custom code or comments, and it will be preserved on regeneration
