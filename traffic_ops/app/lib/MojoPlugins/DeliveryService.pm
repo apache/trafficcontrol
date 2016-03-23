@@ -37,7 +37,7 @@ sub register {
 			my $default = shift;
 
 			my $v = $self->param($p);
-			if ( $v eq '' ) {
+			if ( !defined $v || $v eq '' ) {
 				$v = $default;
 			}
 			return scalar($v);
