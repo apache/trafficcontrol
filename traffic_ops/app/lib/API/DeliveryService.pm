@@ -81,6 +81,7 @@ sub delivery_services {
 					"signed"               => \$row->signed,
 					"qstringIgnore"        => $row->qstring_ignore,
 					"geoLimit"             => $row->geo_limit,
+					"geoProvider"          => $row->geo_provider,
 					"httpBypassFqdn"       => $row->http_bypass_fqdn,
 					"dnsBypassIp"          => $row->dns_bypass_ip,
 					"dnsBypassIp6"         => $row->dns_bypass_ip6,
@@ -122,7 +123,7 @@ sub delivery_services {
 		}
 	}
 
-	return defined($forbidden) ? $self->forbidden() : $self->success(\@data);
+	return defined($forbidden) ? $self->forbidden() : $self->success( \@data );
 }
 
 sub get_delivery_services {
@@ -156,7 +157,7 @@ sub get_delivery_service_by_id {
 	my $forbidden;
 	if ( &is_privileged($self) ) {
 		my @ds_ids =
-		$rs = $self->db->resultset('Deliveryservice')
+			$rs = $self->db->resultset('Deliveryservice')
 			->search( { 'me.id' => $id }, { prefetch => [ 'cdn', 'deliveryservice_regexes' ], order_by => 'xml_id' } );
 	}
 	elsif ( $self->is_delivery_service_assigned($id) ) {
@@ -164,7 +165,8 @@ sub get_delivery_service_by_id {
 		$tm_user_id = $tm_user->id;
 
 		my @ds_ids =
-			$self->db->resultset('DeliveryserviceTmuser')->search( { tm_user_id => $tm_user_id, deliveryservice => $id } )->get_column('deliveryservice')->all();
+			$self->db->resultset('DeliveryserviceTmuser')->search( { tm_user_id => $tm_user_id, deliveryservice => $id } )->get_column('deliveryservice')
+			->all();
 		$rs =
 			$self->db->resultset('Deliveryservice')
 			->search( { 'me.id' => { -in => \@ds_ids } }, { prefetch => [ 'cdn', 'deliveryservice_regexes' ], order_by => 'xml_id' } );
@@ -175,7 +177,6 @@ sub get_delivery_service_by_id {
 
 	return ( $forbidden, $rs, $tm_user_id );
 }
-
 
 sub routing {
 	my $self = shift;
@@ -341,9 +342,9 @@ sub state {
 }
 
 sub request {
-	my $self      = shift;
-	my $email_to  = $self->req->json->{emailTo};
-	my $details = $self->req->json->{details};
+	my $self     = shift;
+	my $email_to = $self->req->json->{emailTo};
+	my $details  = $self->req->json->{details};
 
 	my $is_email_valid = Email::Valid->address($email_to);
 
@@ -364,7 +365,7 @@ sub request {
 }
 
 sub is_deliveryservice_request_valid {
-	my $self      = shift;
+	my $self    = shift;
 	my $details = shift;
 
 	my $rules = {
