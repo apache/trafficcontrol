@@ -176,6 +176,21 @@
 			<% } %>
 		<% } %>
 	</div><br>
+	<div class="block" id="geo_provider_row">
+		<% unless (field('ds.geo_provider')->valid) { %>
+			<span class="field-with-error"><%= field('ds.geo_provider')->error %></span>
+		<% } %>
+		%= label_for 'geo_provider' => 'Geolocation provider?', class => 'label'
+		<% if ($priv_level >= 20) { %>
+		%= field('ds.geo_provider')->select([["Maxmind (Default)" => 0], ["Neustar" => 1]]);
+		<% } else { %>
+			<% if ($ds->geo_provider == 0) { %>
+				%= field('ds.geo_provider')->text(class => 'field', value =>  'Maxmind (Default)', readonly => 'readonly');
+			<% } else { %>
+                %= field('ds.geo_provider')->text(class => 'field', value =>  'Neustar', readonly => 'readonly');
+			<% } %>
+		<% } %>
+	</div><br>
 	<div class="block" id='http_bypass_fqdn_row'>
 		<% unless (field('ds.http_bypass_fqdn')->valid) { %>
 			<span class="field-with-error"><%= field('ds.http_bypass_fqdn')->error %></span>
