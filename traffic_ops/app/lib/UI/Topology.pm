@@ -701,6 +701,9 @@ sub stringify_ds {
 	if ( defined( $ds->{'dispersion'} ) ) {
 		$string .= "|dispersion: limit=" . $ds->{'dispersion'}->{'limit'} . ", shuffled=" . $ds->{'dispersion'}->{'shuffled'};
 	}
+	if ( defined( $ds->{'geoLocationProvider'} ) ) {
+		$string .= "|GeoLocation_Provider:" . $ds->{'geoLocationProvider'};
+	}
 	if ( defined( $ds->{'regionalGeoBlocking'} ) ) {
 		$string .= "|Regional_Geoblocking:" . $ds->{'regionalGeoBlocking'};
 	}
