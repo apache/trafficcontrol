@@ -1,0 +1,25 @@
+<div class="x_panel">
+    <div class="x_title">
+        <ol class="breadcrumb pull-left">
+            <li class="active">Statuses</li>
+        </ol>
+        <button class="btn btn-primary pull-right" ng-click="createStatus()">New</button>
+        <div class="clearfix"></div>
+    </div>
+    <div class="x_content">
+        <br>
+        <table id="statusesTable" class="table responsive-utilities jambo_table">
+            <thead>
+            <tr class="headings">
+                <th>name</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr ng-click="editStatus(status.id)" ng-repeat="status in statuses">
+                <td>{{status.name}}</td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
