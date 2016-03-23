@@ -1049,7 +1049,7 @@ sub parent_dot_config {
 				$text .= "dest_domain=$org_fqdn parent=$os $algorithm go_direct=true\n";
 			}
 			elsif ($multi_site_origin) {
-				$text .= "dest_domain=$org_fqdn \"";
+				$text .= "dest_domain=$org_fqdn ";
 				my $pinfo = $self->parent_data($server);
 
 				my @parent_info;
