@@ -33,6 +33,10 @@ var trafficOps = angular.module('trafficOps', [
 
         // admin
         require('./modules/private/admin').name,
+        require('./modules/private/admin/cdns').name,
+        require('./modules/private/admin/cdns/edit').name,
+        require('./modules/private/admin/cdns/list').name,
+        require('./modules/private/admin/cdns/new').name,
         require('./modules/private/admin/divisions').name,
         require('./modules/private/admin/divisions/edit').name,
         require('./modules/private/admin/divisions/list').name,
@@ -90,6 +94,9 @@ var trafficOps = angular.module('trafficOps', [
         require('./common/modules/form/cacheGroup').name,
         require('./common/modules/form/cacheGroup/edit').name,
         require('./common/modules/form/cacheGroup/new').name,
+        require('./common/modules/form/cdn').name,
+        require('./common/modules/form/cdn/edit').name,
+        require('./common/modules/form/cdn/new').name,
         require('./common/modules/form/deliveryService').name,
         require('./common/modules/form/deliveryService/edit').name,
         require('./common/modules/form/deliveryService/new').name,
@@ -114,6 +121,7 @@ var trafficOps = angular.module('trafficOps', [
 
         // tables
         require('./common/modules/table/cacheGroups').name,
+        require('./common/modules/table/cdns').name,
         require('./common/modules/table/deliveryServices').name,
         require('./common/modules/table/divisions').name,
         require('./common/modules/table/locations').name,
