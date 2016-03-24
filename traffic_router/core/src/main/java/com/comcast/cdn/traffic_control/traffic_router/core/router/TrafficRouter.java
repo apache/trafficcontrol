@@ -462,7 +462,6 @@ public class TrafficRouter {
 		return routeResult;
 	}
 
-	@SuppressWarnings({"PMD.CyclomaticComplexity", "PMD.NPathComplexity"})
 	protected CacheLocation getCoverageZoneCache(final String ip, final DeliveryService ds) {
 		NetworkNode nn = null;
 		try {
@@ -487,9 +486,9 @@ public class TrafficRouter {
 		}
 
 		// find CacheLocation
-		final Collection<CacheLocation> caches = getCacheRegister().getCacheLocations();
+		final Collection<CacheLocation> cacheLocations = getCacheRegister().getCacheLocations();
 
-		for (final CacheLocation cl2 : caches) {
+		for (final CacheLocation cl2 : cacheLocations) {
 			if (cl2.getId().equals(locId)) {
 				nn.setCacheLocation(cl2);
 				return cl2;
@@ -500,17 +499,11 @@ public class TrafficRouter {
 		 * We had a hit in the CZF but the name does not match a known cache location.
 		 * Check whether the CZF entry has a geolocation and use it if so.
 		 */
-		if (nn.getGeolocation() != null) {
-			final List<CacheLocation> cacheLocations = orderCacheLocations(caches, ds, nn.getGeolocation());
-
-			for (CacheLocation cacheLocation : cacheLocations) {
-				if (cacheLocation.getCaches() != null && !cacheLocation.getCaches().isEmpty()) {
-					return cacheLocation;
-				}
-			}
+		if (nn.getGeolocation() == null) {
+			return null;
 		}
 
-		return null;
+		return getClosestCacheLocation(cacheLocations, ds, nn.getGeolocation());
 	}
 
 	/**
@@ -648,6 +641,18 @@ public class TrafficRouter {
 		Collections.sort(locations, new CacheLocationComparator(clientLocation));
 
 		return locations;
+	}
+
+	private CacheLocation getClosestCacheLocation(final Collection<CacheLocation> cacheLocations, final DeliveryService ds, final Geolocation clientLocation) {
+		final List<CacheLocation> orderedLocations = orderCacheLocations(cacheLocations, ds, clientLocation);
+
+		for (CacheLocation cacheLocation : orderedLocations) {
+			if (!cacheLocation.getCaches().isEmpty()) {
+				return cacheLocation;
+			}
+		}
+
+		return null;
 	}
 
 	/**
