@@ -230,7 +230,11 @@ sub ds_data {
 				$re =~ s/\\//g;
 				$re =~ s/\.\*//g;
 				my $hname = $ds_type =~ /^DNS/ ? "edge" : "ccr";
-				my $map_from = "http://" . $hname . $re . $ds_domain . "/";
+				my $portstr = "";
+				if ( $hname eq "ccr" && $server->tcp_port > 0 && $server->tcp_port != 80 ) {
+					$portstr = ":" . $server->tcp_port;
+				}
+				my $map_from = "http://" . $hname . $re . $ds_domain . $portstr . "/";
 				if ( $protocol == 0 ) {
 					$dsinfo->{dslist}->[$j]->{"remap_line"}->{$map_from} = $map_to;
 				}
