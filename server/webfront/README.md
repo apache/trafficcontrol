@@ -1,3 +1,25 @@
+This application - webfront is a reverse proxy written in go that can front any number of microservices. It uses a rules file to map from requested host/path to microservice host/port/path.  Example rule file:
+
+   ```
+   [
+		{"Host": "local.com", "Path" : "/8001", "Forward": "localhost:8001"},
+		{"Host": "local.com", "Path" : "/8002", "Forward": "localhost:8002"},
+		{"Host": "local.com", "Path" : "/8003", "Forward": "localhost:8003"},
+		{"Host": "local.com", "Path" : "/8004", "Forward": "localhost:8004"},
+		{"Host": "local.com", "Path" : "/8005", "Forward": "localhost:8005"},
+		{"Host": "local.com", "Path" : "/8006", "Forward": "localhost:8006"},
+		{"Host": "local.com", "Path" : "/8007", "Forward": "localhost:8007"}
+	]
+	```
+
+No restart is needed to re-read the rule file and apply; within 60 seconds of a change in the file, it will pick up the new mappings.
+
+* To run
+
+   ``go run webfront.go -rules=rules.json -https=:9000 -https_cert=server.pem -https_key=server.key``` 
+
+   (or compile a binary, and run that)
+   
 * To get a token:
 
    ``curl --insecure -Lkvs --header "Content-Type:application/json" -XPOST https://localhost:9000/login -d'{"username":"jvd", "password":"tootoo"}'``

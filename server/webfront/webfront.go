@@ -63,19 +63,9 @@ type Rule struct {
 	Host    string // to match against request Host header
 	Path    string // to match against a path (start)
 	Forward string // reverse proxy map-to
-	// Serve   string // non-empty if file server
 
 	handler http.Handler
 }
-
-// func UnauthorizedResponse(w http.ResponseWriter) {
-// 	resp := &http.Response{}
-// 	resp.StatusCode = http.StatusUnauthorized
-// 	http.Handler.ServeHTTP(w)
-// }
-
-// to get a token:
-//  curl --header "Content-Type:application/json" -XPOST http://host:port/login -d'{"u":"yourusername", "p":"yourpassword}'
 
 func validateToken(tokenString string) (*jwt.Token, error) {
 
@@ -111,7 +101,6 @@ func NewServer(file string, poll time.Duration) (*Server, error) {
 // request with the Rule's handler.
 func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	if r.URL.Path == "/login" {
-		log.Println("/login.... Do some smarts")
 		username := ""
 		password := ""
 		body, err := ioutil.ReadAll(r.Body)
@@ -130,6 +119,9 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		}
 		username = lj.User
 		password = lj.Password
+
+		// TODO JvD - check username / password against Database here!
+
 		token := jwt.New(jwt.SigningMethodHS256)
 		token.Claims["User"] = username
 		token.Claims["Password"] = password
@@ -148,13 +140,14 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		w.Write(js)
 		return
 	}
-	// TODO JvD ^^ move into own function
 	token, err := validateToken(r.Header.Get("Authorization"))
 	if err != nil {
 		log.Println("No valid token found!")
 		w.WriteHeader(http.StatusForbidden)
 		return
 	}
+	// TODO JvD ^^ move into own function
+
 	log.Println("Token:", token.Claims["userid"])
 
 	if h := s.handler(r); h != nil {
