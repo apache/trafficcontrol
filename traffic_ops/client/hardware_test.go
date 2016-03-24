@@ -39,16 +39,16 @@ func TestHardware(t *testing.T) {
 			t.Fatal("hardware result does not contain 'ID'")
 		}
 		if len(hardware.HostName) == 0 {
-			t.Error("hostname is null for hardware: " + name)
+			t.Errorf("hostname is null for hardware: %s", name)
 		}
 		if len(hardware.LastUpdated) == 0 {
-			t.Error("LastUpdated is null for hardware: " + name)
+			t.Errorf("LastUpdated is null for hardware: %s", name)
 		}
 		if len(hardware.Value) == 0 {
-			t.Error("Value is null for hardware: " + name)
+			t.Errorf("Value is null for hardware: %s", name)
 		}
 		if len(hardware.Description) == 0 {
-			t.Error("Description is null for hardware: " + name)
+			t.Errorf("Description is null for hardware: %s", name)
 		}
 	}
 }

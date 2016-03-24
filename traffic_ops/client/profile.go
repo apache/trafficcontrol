@@ -18,19 +18,20 @@ package client
 
 import "encoding/json"
 
+// ProfileResponse ...
 type ProfileResponse struct {
 	Version  string    `json:"version"`
 	Response []Profile `json:"response"`
 }
 
+// Profile ...
 type Profile struct {
 	Name        string `json:"name"`
 	Description string `json:"description"`
 	LastUpdated string `json:"lastUpdated"`
 }
 
-// Profiles
-// Get an array of Profiles
+// Profiles gets an array of Profiles
 func (to *Session) Profiles() ([]Profile, error) {
 	body, err := to.getBytes("/api/1.1/profiles.json")
 	if err != nil {

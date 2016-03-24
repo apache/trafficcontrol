@@ -23,16 +23,16 @@ type hardwareResponse struct {
 	Response []Hardware `json:"response"`
 }
 
+// Hardware ...
 type Hardware struct {
-	Id          string `json:"serverId"`
+	ID          string `json:"serverId"`
 	HostName    string `json:"serverHostName"`
 	LastUpdated string `json:"lastUpdated"`
 	Value       string `json:"val"`
 	Description string `json:"description"`
 }
 
-// Hardware
-// Get an array of Hardware
+// Hardware gets an array of Hardware
 func (to *Session) Hardware() ([]Hardware, error) {
 	body, err := to.getBytes("/api/1.1/hwinfo.json")
 	if err != nil {

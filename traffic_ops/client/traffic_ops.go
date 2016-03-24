@@ -18,32 +18,34 @@ package client
 
 import (
 	"bytes"
-	"golang.org/x/net/publicsuffix"
 	"crypto/tls"
 	"encoding/json"
-	"errors"
 	"fmt"
-	log "github.com/cihub/seelog"
 	"io/ioutil"
 	"net/http"
 	"net/http/cookiejar"
 	"time"
+
+	log "github.com/cihub/seelog"
+	"golang.org/x/net/publicsuffix"
 )
 
+// Session ...
 type Session struct {
 	UserName  string
 	Password  string
-	Url       string
+	URL       string
 	UserAgent *http.Client
 	Cache     map[string]cacheentry
 }
 
-// {"alerts":[{"level":"success","text":"Successfully logged in."}],"version":"1.1"}
+// Result {"alerts":[{"level":"success","text":"Successfully logged in."}],"version":"1.1"}
 type Result struct {
 	Alerts  []Alert
 	Version string `json:"version"`
 }
 
+// Alert ...
 type Alert struct {
 	Level string `json:"level"`
 	Text  string `json:"text"`
@@ -54,6 +56,7 @@ type cacheentry struct {
 	bytes   []byte
 }
 
+// Credentials ..
 type Credentials struct {
 	Username string `json:"u"`
 	Password string `json:"p"`
@@ -97,7 +100,7 @@ func (to *Session) getBytesWithTTL(path string, ttl int64) ([]byte, error) {
 // returns the raw body
 func (to *Session) getBytes(path string) ([]byte, error) {
 	var body []byte
-	resp, err := to.UserAgent.Get(to.Url + path)
+	resp, err := to.UserAgent.Get(fmt.Sprintf("%s%s", to.URL, path))
 	if err != nil {
 		log.Info(err)
 		return body, err
@@ -110,8 +113,9 @@ func (to *Session) getBytes(path string) ([]byte, error) {
 	return body, err
 }
 
-func (to *Session) postJson(path string, body []byte) (*http.Response, error) {
-	req, err := http.NewRequest("POST", to.Url+path, bytes.NewBuffer(body))
+func (to *Session) postJSON(path string, body []byte) (*http.Response, error) {
+	url := fmt.Sprintf("%s%s", to.URL, path)
+	req, err := http.NewRequest("POST", url, bytes.NewBuffer(body))
 	req.Header.Set("Content-Type", "application/json")
 
 	resp, err := to.UserAgent.Do(req)
@@ -120,7 +124,7 @@ func (to *Session) postJson(path string, body []byte) (*http.Response, error) {
 		return nil, err
 	}
 	defer resp.Body.Close()
-	// resp, err := to.UserAgent.Post(to.Url+path, "application/json", body)
+	// resp, err := to.UserAgent.Post(fmt.Sprintf("%s%s", to.URL, path), "application/json", body)
 	// if err != nil {
 	// 	log.Error(err)
 	// }
@@ -139,7 +143,7 @@ func (to *Session) getText(path string) (string, error) {
 // automatically. Start with
 // to := traffic_ops.Login("user", "passwd", true)
 // subsequent calls like to.GetData("datadeliveryservice") will be authenticated.
-func Login(toUrl string, toUser string, toPasswd string, insecure bool) (*Session, error) {
+func Login(toURL string, toUser string, toPasswd string, insecure bool) (*Session, error) {
 	var to Session
 
 	options := cookiejar.Options{
@@ -167,7 +171,8 @@ func Login(toUrl string, toUser string, toPasswd string, insecure bool) (*Sessio
 		return &to, err
 	}
 
-	resp, err := to.UserAgent.Post(toUrl+"/api/1.1/user/login", "application/json", bytes.NewReader(jcreds))
+	url := fmt.Sprintf("%s/api/1.1/user/login", toURL)
+	resp, err := to.UserAgent.Post(url, "application/json", bytes.NewReader(jcreds))
 	if err != nil {
 		log.Info(err)
 		return &to, err
@@ -186,7 +191,7 @@ func Login(toUrl string, toUser string, toPasswd string, insecure bool) (*Sessio
 		return &to, err
 	}
 
-	to.Url = toUrl
+	to.URL = toURL
 
 	success := false
 
@@ -199,12 +204,12 @@ func Login(toUrl string, toUser string, toPasswd string, insecure bool) (*Sessio
 
 	if !success {
 		fmt.Println("NO SUCCESS")
-		err := errors.New("Login failed, result string: " + fmt.Sprintf("%+v", result))
+		err := fmt.Errorf("Login failed, result string: %+v", result)
 		return &to, err
 	}
 
 	to.Cache = make(map[string]cacheentry)
 
-	log.Info("logged into " + toUrl + "!")
+	log.Infof("logged into %s!", toURL)
 	return &to, err
 }

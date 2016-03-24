@@ -15,16 +15,17 @@ package client
 
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
 	"strconv"
 )
 
+// StatsSummaryResponse ...
 type StatsSummaryResponse struct {
 	Version  string         `json:"version"`
 	Response []StatsSummary `json:"response"`
 }
 
+// StatsSummary ...
 type StatsSummary struct {
 	CdnName         string `json:"cdnName"`
 	DeliveryService string `json:"deliveryServiceName"`
@@ -34,6 +35,7 @@ type StatsSummary struct {
 	StatDate        string `json:"statDate"`
 }
 
+// LastUpdated ...
 type LastUpdated struct {
 	Version  string `json:"version"`
 	Response struct {
@@ -41,30 +43,31 @@ type LastUpdated struct {
 	} `json:"response"`
 }
 
+// SummaryStats ...
 func (to *Session) SummaryStats(cdn string, deliveryService string, statName string) ([]StatsSummary, error) {
 	var queryParams []string
 	if len(cdn) > 0 {
-		queryParams = append(queryParams, "cdnName="+cdn)
+		queryParams = append(queryParams, fmt.Sprintf("cdnName=%s", cdn))
 	}
 	if len(deliveryService) > 0 {
-		queryParams = append(queryParams, "deliveryServiceName="+deliveryService)
+		queryParams = append(queryParams, fmt.Sprintf("deliveryServiceName=%s", deliveryService))
 	}
 	if len(statName) > 0 {
-		queryParams = append(queryParams, "statName="+statName)
+		queryParams = append(queryParams, fmt.Sprintf("statName=%s", statName))
 	}
-	queryUrl := "/api/1.2/stats_summary.json"
+	queryURL := "/api/1.2/stats_summary.json"
 	queryParamString := "?"
 	if len(queryParams) > 0 {
 		for i, param := range queryParams {
 			if i == 0 {
 				queryParamString += param
 			} else {
-				queryParamString += "&" + param
+				queryParamString += fmt.Sprintf("&%s", param)
 			}
 		}
-		queryUrl += queryParamString
+		queryURL += queryParamString
 	}
-	body, err := to.getBytes(queryUrl)
+	body, err := to.getBytes(queryURL)
 	if err != nil {
 		return nil, err
 	}
@@ -72,12 +75,13 @@ func (to *Session) SummaryStats(cdn string, deliveryService string, statName str
 	return ssList.Response, err
 }
 
+// SummaryStatsLastUpdated ...
 func (to *Session) SummaryStatsLastUpdated(statName string) (string, error) {
-	queryUrl := "/api/1.2/stats_summary.json?lastSummaryDate=true"
+	queryURL := "/api/1.2/stats_summary.json?lastSummaryDate=true"
 	if len(statName) > 0 {
-		queryUrl += "?statName=" + statName
+		queryURL += fmt.Sprintf("?statName=%s", statName)
 	}
-	body, err := to.getBytes(queryUrl)
+	body, err := to.getBytes(queryURL)
 	if err != nil {
 		return "", err
 	}
@@ -89,22 +93,22 @@ func (to *Session) SummaryStatsLastUpdated(statName string) (string, error) {
 	}
 	if len(data.Response.SummaryTime) > 0 {
 		return data.Response.SummaryTime, nil
-	} else {
-		return "1970-01-01 00:00:00", nil
 	}
+	return "1970-01-01 00:00:00", nil
 }
 
+// AddSummaryStats ...
 func (to *Session) AddSummaryStats(statsSummary StatsSummary) error {
 	reqBody, err := json.Marshal(statsSummary)
 	if err != nil {
 		return err
 	}
-	response, err := to.postJson("/api/1.2/stats_summary/create", reqBody)
+	response, err := to.postJSON("/api/1.2/stats_summary/create", reqBody)
 	if err != nil {
 		return err
 	}
 	if response.StatusCode != 200 {
-		err := errors.New("Response code = " + strconv.Itoa(response.StatusCode) + "and Status = " + response.Status)
+		err := fmt.Errorf("Response code = %s and Status = %s", strconv.Itoa(response.StatusCode), response.Status)
 		return err
 	}
 	return nil

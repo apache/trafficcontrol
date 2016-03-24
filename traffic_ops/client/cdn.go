@@ -21,18 +21,19 @@ import (
 	"fmt"
 )
 
+// CDNResponse ...
 type CDNResponse struct {
 	Version  string `json:"version"`
 	Response []CDN  `json:"response"`
 }
 
+// CDN ...
 type CDN struct {
 	Name        string `json:"name"`
 	LastUpdated string `json:"lastUpdated"`
 }
 
-// CDNs
-// Get an array of CDNs
+// Cdns gets an array of CDNs
 func (to *Session) Cdns() ([]CDN, error) {
 	body, err := to.getBytes("/api/1.2/cdns.json")
 	if err != nil {
@@ -46,9 +47,10 @@ func (to *Session) Cdns() ([]CDN, error) {
 	return cdn.Response, err
 }
 
-// Get an array of CDNs
+// CdnName gets an array of CDNs
 func (to *Session) CdnName(name string) ([]CDN, error) {
-	body, err := to.getBytes(fmt.Sprintf("/api/1.2/cdns/name/%s.json", name))
+	url := fmt.Sprintf("/api/1.2/cdns/name/%s.json", name)
+	body, err := to.getBytes(url)
 	if err != nil {
 		return nil, err
 	}

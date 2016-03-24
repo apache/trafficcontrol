@@ -1,22 +1,25 @@
 /*
-     Copyright 2015 Comcast Cable Communications Management, LLC
+   Copyright 2015 Comcast Cable Communications Management, LLC
 
-     Licensed under the Apache License, Version 2.0 (the "License");
-     you may not use this file except in compliance with the License.
-     You may obtain a copy of the License at
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
 
-     http://www.apache.org/licenses/LICENSE-2.0
+   http://www.apache.org/licenses/LICENSE-2.0
 
-     Unless required by applicable law or agreed to in writing, software
-     distributed under the License is distributed on an "AS IS" BASIS,
-     WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-     See the License for the specific language governing permissions and
-     limitations under the License.
- */
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+*/
 
 package client
 
-import "encoding/json"
+import (
+	"encoding/json"
+	"fmt"
+)
 
 // TrafficRouterConfig is the json unmarshalled without any changes
 // note all structs are local to this file _except_ the TrafficRouterConfig struct.
@@ -32,16 +35,16 @@ type TrafficRouterConfig struct {
 
 type trafficServer struct {
 	Profile          string              `json:"profile"`
-	Ip               string              `json:"ip"`
+	IP               string              `json:"ip"`
 	Status           string              `json:"status"`
 	CacheGroup       string              `json:"cacheGroup"`
-	Ip6              string              `json:"ip6"`
+	IP6              string              `json:"ip6"`
 	Port             int                 `json:"port"`
 	HostName         string              `json:"hostName"`
 	Fqdn             string              `json:"fqdn"`
 	InterfaceName    string              `json:"interfaceName"`
 	Type             string              `json:"type"`
-	HashId           string              `json:"hashId"`
+	HashID           string              `json:"hashId"`
 	DeliveryServices []tsdeliveryService `json:"deliveryServices,omitempty"` // the deliveryServices key does not exist on mids
 }
 
@@ -52,8 +55,8 @@ type tsdeliveryService struct {
 
 type trafficMonitor struct {
 	Port     int    `json:"port"`
-	Ip6      string `json:"ip6"`
-	Ip       string `json:"ip"`
+	IP6      string `json:"ip6"`
+	IP       string `json:"ip"`
 	HostName string `json:"hostName"`
 	Fqdn     string `json:"fqdn"`
 	Profile  string `json:"profile"`
@@ -63,13 +66,13 @@ type trafficMonitor struct {
 
 type trafficRouter struct {
 	Port     int    `json:"port"`
-	Ip6      string `json:"ip6"`
-	Ip       string `json:"ip"`
+	IP6      string `json:"ip6"`
+	IP       string `json:"ip"`
 	Fqdn     string `json:"fqdn"`
 	Profile  string `json:"profile"`
 	Location string `json:"location"`
 	Status   string `json:"status"`
-	ApiPort  int    `json:"apiPort"`
+	APIPort  int    `json:"apiPort"`
 }
 
 // !!! Note the lowercase!!! this is local to this file, there's a CacheGroup definition in cachegroup.go!
@@ -85,14 +88,14 @@ type coordinates struct {
 
 // TODO JvD: move to deliveryservice.go ??
 type deliveryService struct {
-	XmlId             string            `json:"xmlId"`
-	missLocation      missLocation      `json:"missLocation"`
+	XMLID             string            `json:"xmlId"`
+	MissLocation      missLocation      `json:"missLocation"`
 	CoverageZoneOnly  bool              `json:"coverageZoneOnly"`
 	MatchSets         []matchSet        `json:"matchSets"`
-	Ttl               int               `json:"ttl"`
-	Ttls              ttls              `json:"ttls"`
+	TTL               int               `json:"ttl"`
+	TTLs              ttls              `json:"ttls"`
 	BypassDestination bypassDestination `json:"bypassDestination"`
-	StatcDnsEntries   []staticDns       `json:"statitDnsEntries"`
+	StatcDNSEntries   []staticDNS       `json:"statitDnsEntries"`
 	Soa               soa               `json:"soa"`
 }
 
@@ -124,21 +127,22 @@ type ttls struct {
 	AaaaRecord int `json:"AAAA"`
 }
 
-type staticDns struct {
+type staticDNS struct {
 	Value string `json:"value"`
-	Ttl   int    `json:"ttl"`
+	TTL   int    `json:"ttl"`
 	Name  string `json:"name"`
 	Type  string `json:"type"`
 }
 
 type soa struct {
 	Admin   string `json:"admin"`
-	retry   int    `json:"retry"`
-	minimum int    `json:"minimum"`
-	refresh int    `json:"refresh"`
-	expire  int    `json:"expire"`
+	Retry   int    `json:"retry"`
+	Minimum int    `json:"minimum"`
+	Refresh int    `json:"refresh"`
+	Expire  int    `json:"expire"`
 }
 
+// TrafficRouterConfigMap ...
 type TrafficRouterConfigMap struct {
 	TrafficServer   map[string]trafficServer
 	TrafficMonitor  map[string]trafficMonitor
@@ -149,19 +153,21 @@ type TrafficRouterConfigMap struct {
 	Stat            map[string]interface{}
 }
 
-// get a  bunch of maps
+// TrafficRouterConfigMap gets a bunch of maps
 func (to *Session) TrafficRouterConfigMap(cdn string) (TrafficRouterConfigMap, error) {
 	trConfig, err := to.TrafficRouterConfig(cdn)
 	trConfigMap := trTransformToMap(trConfig)
 	return trConfigMap, err
 }
 
+// TrafficRouterConfigRaw ...
 func (to *Session) TrafficRouterConfigRaw(cdn string) ([]byte, error) {
-	body, err := to.getBytesWithTTL("/api/1.1/configs/routing/"+cdn+".json", tmPollingInterval)
+	url := fmt.Sprintf("/api/1.1/configs/routing/%s.json", cdn)
+	body, err := to.getBytesWithTTL(url, tmPollingInterval)
 	return body, err
 }
 
-// get the json arrays
+// TrafficRouterConfig gets the json arrays
 func (to *Session) TrafficRouterConfig(cdn string) (TrafficRouterConfig, error) {
 	body, err := to.TrafficRouterConfigRaw(cdn)
 	trConfig, err := trUnmarshall(body)
@@ -201,7 +207,7 @@ func trTransformToMap(trConfig TrafficRouterConfig) TrafficRouterConfigMap {
 		trConfigMap.CacheGroup[trCacheGroup.Name] = trCacheGroup
 	}
 	for _, trDeliveryService := range trConfig.DeliveryServices {
-		trConfigMap.DeliveryService[trDeliveryService.XmlId] = trDeliveryService
+		trConfigMap.DeliveryService[trDeliveryService.XMLID] = trDeliveryService
 	}
 	for trSettingKey, trSettingVal := range trConfig.Config {
 		trConfigMap.Config[trSettingKey] = trSettingVal

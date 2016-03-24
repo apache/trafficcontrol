@@ -23,11 +23,13 @@ import (
 	"strings"
 )
 
+// TmConfigResponse ...
 type TmConfigResponse struct {
 	Version  string               `json:"version"`
 	Response TrafficMonitorConfig `json:"response"`
 }
 
+// TrafficMonitorConfig ...
 type TrafficMonitorConfig struct {
 	TrafficServers   []trafficServer                 `json:"trafficServers"`
 	CacheGroups      []cacheGroup                    `json:"cacheGroups"`
@@ -37,6 +39,7 @@ type TrafficMonitorConfig struct {
 	Profiles         []profile                       `json:"profiles"`
 }
 
+// TrafficMonitorConfigMap ...
 type TrafficMonitorConfigMap struct {
 	TrafficServer   map[string]trafficServer
 	CacheGroup      map[string]cacheGroup
@@ -47,7 +50,7 @@ type TrafficMonitorConfigMap struct {
 }
 
 type trafficMonitorDeliveryService struct {
-	XmlId              string `json:"xmlId"`
+	XMLID              string `json:"xmlId"`
 	TotalTpsThreshold  int64  `json:"TotalTpsThreshold"`
 	Status             string `json:"status"`
 	TotalKbpsThreshold int64  `json:"TotalKbpsThreshold"`
@@ -61,7 +64,7 @@ type profile struct {
 
 type parameters struct {
 	HealthConnectionTimeout                 int     `json:"health.connection.timeout"`
-	HealthPollingUrl                        string  `json:"health.polling.url"`
+	HealthPollingURL                        string  `json:"health.polling.url"`
 	HealthThresholdQueryTime                int     `json:"health.threshold.queryTime"`
 	HistoryCount                            int     `json:"history.count"`
 	HealthThresholdAvailableBandwidthInKbps string  `json:"health.threshold.availableBandwidthInKbps"`
@@ -69,14 +72,17 @@ type parameters struct {
 	MinFreeKbps                             int64
 }
 
+// TrafficMonitorConfigMap ...
 func (to *Session) TrafficMonitorConfigMap(cdn string) (TrafficMonitorConfigMap, error) {
 	trafficMonitorConfig, err := to.TrafficMonitorConfig(cdn)
 	trafficMonitorConfigMap := trafficMonitorTransformToMap(trafficMonitorConfig)
 	return trafficMonitorConfigMap, err
 }
 
+// TrafficMonitorConfig ...
 func (to *Session) TrafficMonitorConfig(cdn string) (TrafficMonitorConfig, error) {
-	body, err := to.getBytes("/api/1.2/cdns/" + cdn + "/configs/monitoring.json")
+	url := fmt.Sprintf("/api/1.2/cdns/%s/configs/monitoring.json", cdn)
+	body, err := to.getBytes(url)
 	trafficMonitorConfig, err := trafficMonitorConfigUnmarshall(body)
 	return trafficMonitorConfig, err
 }
@@ -110,7 +116,7 @@ func trafficMonitorTransformToMap(trafficMonitorConfig TrafficMonitorConfig) Tra
 		trafficMonitorConfigMap.TrafficMonitor[trafficMonitor.HostName] = trafficMonitor
 	}
 	for _, deliveryService := range trafficMonitorConfig.DeliveryServices {
-		trafficMonitorConfigMap.DeliveryService[deliveryService.XmlId] = deliveryService
+		trafficMonitorConfigMap.DeliveryService[deliveryService.XMLID] = deliveryService
 	}
 	for _, profile := range trafficMonitorConfig.Profiles {
 		bwThresholdString := profile.Parameters.HealthThresholdAvailableBandwidthInKbps
