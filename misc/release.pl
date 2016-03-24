@@ -103,8 +103,8 @@ if ( defined($argument) ) {
 			print "branch_exists #-> (" . $branch_exists . ")\n";
 			if ($branch_exists) {
 				add_official_remote();
-				tag_and_push();
 				publish_version_file( $new_branch, $version );
+				tag_and_push();
 			}
 			else {
 				add_official_remote();

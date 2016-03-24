@@ -153,8 +153,7 @@ public class StatelessTrafficRouterPerformanceTest  extends TrafficRouter {
 
 		final String zoneId = null; // getZoneManager().getZone(request.getRequestedUrl());
 		Geolocation clientLocation = getGeolocationService().location(request.getClientIP());
-		final List<CacheLocation> cacheLocations = orderCacheLocations(request,
-				getCacheRegister().getCacheLocations(zoneId), ds, clientLocation);
+		final List<CacheLocation> cacheLocations = orderCacheLocations(getCacheRegister().getCacheLocations(zoneId), ds, clientLocation);
 		for (final CacheLocation location : cacheLocations) {
 			if (LOGGER.isDebugEnabled()) {
 				LOGGER.debug("Trying location: " + location.getId());
