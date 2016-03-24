@@ -64,8 +64,8 @@ sub edit {
 		fbox_layout  => 1,
 		regexp_set   => $regexp_set,
 		example_urls => \@example_urls,
-		hidden       => {}, # for form validation purposes
-		mode         => 'edit' # for form generation
+		hidden       => {},               # for form validation purposes
+		mode         => 'edit'            # for form generation
 	);
 }
 
@@ -226,6 +226,7 @@ sub read {
 				"signed"                 => \$row->signed,
 				"qstring_ignore"         => $row->qstring_ignore,
 				"geo_limit"              => $row->geo_limit,
+				"geo_provider"           => $row->geo_provider,
 				"http_bypass_fqdn"       => $row->http_bypass_fqdn,
 				"dns_bypass_ip"          => $row->dns_bypass_ip,
 				"dns_bypass_ip6"         => $row->dns_bypass_ip6,
@@ -334,9 +335,9 @@ sub check_deliveryservice_input {
 
 	foreach my $param ( $self->param ) {
 		if ( $param =~ /^re_type_(.*)/ ) {
-			my $field = "re_order";
+			my $field      = "re_order";
 			my $this_field = $field . '_' . $1;
-			my $order = $self->param( $this_field );
+			my $order      = $self->param($this_field);
 
 			if ( defined( $dbl_check->{$field}->{$order} ) ) {
 				$self->field('hidden.regex')->is_equal( "", "Duplicate type/order combination is not allowed." );
@@ -714,6 +715,7 @@ sub update {
 			signed                 => $self->paramAsScalar('ds.signed'),
 			qstring_ignore         => $self->paramAsScalar('ds.qstring_ignore'),
 			geo_limit              => $self->paramAsScalar('ds.geo_limit'),
+			geo_provider           => $self->paramAsScalar('ds.geo_provider'),
 			org_server_fqdn        => $self->paramAsScalar('ds.org_server_fqdn'),
 			multi_site_origin      => $self->paramAsScalar('ds.multi_site_origin'),
 			ccr_dns_ttl            => $self->paramAsScalar('ds.ccr_dns_ttl'),
@@ -861,7 +863,7 @@ sub update {
 			static_count => $static_count,
 			regexp_set   => $regexp_set,
 			example_urls => \@example_urls,
-			hidden       => {}, # for form validation purposes
+			hidden       => {},               # for form validation purposes
 			mode         => "edit",
 		);
 		$self->render('delivery_service/edit');
@@ -914,6 +916,7 @@ sub create {
 				signed                 => $self->paramAsScalar('ds.signed'),
 				qstring_ignore         => $self->paramAsScalar('ds.qstring_ignore'),
 				geo_limit              => $self->paramAsScalar('ds.geo_limit'),
+				geo_provider           => $self->paramAsScalar('ds.geo_provider'),
 				http_bypass_fqdn       => $self->paramAsScalar('ds.http_bypass_fqdn'),
 				dns_bypass_ip          => $self->paramAsScalar('ds.dns_bypass_ip'),
 				dns_bypass_ip6         => $self->paramAsScalar('ds.dns_bypass_ip6'),
@@ -1041,7 +1044,7 @@ sub create {
 			selected_type    => $selected_type,
 			selected_profile => $selected_profile,
 			selected_cdn     => $selected_cdn,
-			hidden           => {}, # for form validation purposes
+			hidden           => {},                  # for form validation purposes
 			mode             => "add",
 		);
 		$self->render('delivery_service/add');
@@ -1139,8 +1142,8 @@ sub add {
 		selected_type    => "",
 		selected_profile => "",
 		selected_cdn     => "",
-		hidden           => {}, # for form validation purposes
-		mode             => 'add' # for form generation
+		hidden           => {},      # for form validation purposes
+		mode             => 'add'    # for form generation
 	);
 	my @params = $self->param;
 	foreach my $field (@params) {
