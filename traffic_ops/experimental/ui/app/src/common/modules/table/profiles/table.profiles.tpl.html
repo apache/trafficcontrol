@@ -1,0 +1,27 @@
+<div class="x_panel">
+    <div class="x_title">
+        <ol class="breadcrumb pull-left">
+            <li class="active">Profiles</li>
+        </ol>
+        <button class="btn btn-primary pull-right" ng-click="createProfile()">New</button>
+        <div class="clearfix"></div>
+    </div>
+    <div class="x_content">
+        <br>
+        <table id="profilesTable" class="table responsive-utilities jambo_table">
+            <thead>
+            <tr class="headings">
+                <th>name</th>
+                <th>description</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr ng-click="editProfile(profile.id)" ng-repeat="profile in profiles">
+                <td>{{profile.name}}</td>
+                <td>{{profile.description}}</td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
