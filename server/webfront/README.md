@@ -30,6 +30,7 @@
 {"Token":"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJQYXNzd29yZCI6InRvb3RvbyIsIlVzZXIiOiIiLCJleHAiOjE0NTg5NDg2MTl9.quCwZ5vghVBucxMxQ4fSfD84yw_yPEp9qLGGQNcHNUk"}[jvd@laika webfront (master *=)]$
    ```
  * To use a token: 
+ 
    ``curl --insecure -H'Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJQYXNzd29yZCI6InRvb3RvbyIsIlVzZXIiOiIiLCJleHAiOjE0NTg5NDg2MTl9.quCwZ5vghVBucxMxQ4fSfD84yw_yPEp9qLGGQNcHNUk' -Lkvs  https://localhost:9000/8003/r``
 
    Example:
