@@ -57,6 +57,10 @@ var trafficOps = angular.module('trafficOps', [
         require('./modules/private/admin/tenants/edit').name,
         require('./modules/private/admin/tenants/list').name,
         require('./modules/private/admin/tenants/new').name,
+        require('./modules/private/admin/types').name,
+        require('./modules/private/admin/types/edit').name,
+        require('./modules/private/admin/types/list').name,
+        require('./modules/private/admin/types/new').name,
         require('./modules/private/admin/users').name,
         require('./modules/private/admin/users/edit').name,
         require('./modules/private/admin/users/list').name,
@@ -122,6 +126,9 @@ var trafficOps = angular.module('trafficOps', [
         require('./common/modules/form/tenant').name,
         require('./common/modules/form/tenant/edit').name,
         require('./common/modules/form/tenant/new').name,
+        require('./common/modules/form/type').name,
+        require('./common/modules/form/type/edit').name,
+        require('./common/modules/form/type/new').name,
         require('./common/modules/form/user').name,
         require('./common/modules/form/user/edit').name,
         require('./common/modules/form/user/new').name,
@@ -136,6 +143,7 @@ var trafficOps = angular.module('trafficOps', [
         require('./common/modules/table/servers').name,
         require('./common/modules/table/servers').name,
         require('./common/modules/table/statuses').name,
+        require('./common/modules/table/types').name,
         require('./common/modules/table/users').name,
 
         // models

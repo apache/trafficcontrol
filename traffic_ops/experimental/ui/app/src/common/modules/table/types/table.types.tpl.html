@@ -1,0 +1,29 @@
+<div class="x_panel">
+    <div class="x_title">
+        <ol class="breadcrumb pull-left">
+            <li class="active">Types</li>
+        </ol>
+        <button class="btn btn-primary pull-right" ng-click="createType()">New</button>
+        <div class="clearfix"></div>
+    </div>
+    <div class="x_content">
+        <br>
+        <table id="typesTable" class="table responsive-utilities jambo_table">
+            <thead>
+                <tr class="headings">
+                    <th>name</th>
+                    <th>useInTable</th>
+                    <th>description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr ng-click="editType(type.id)" ng-repeat="type in types">
+                    <td>{{type.name}}</td>
+                    <td>{{type.useInTable}}</td>
+                    <td>{{type.description}}</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
