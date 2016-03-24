@@ -154,31 +154,45 @@ type TrafficRouterConfigMap struct {
 }
 
 // TrafficRouterConfigMap gets a bunch of maps
-func (to *Session) TrafficRouterConfigMap(cdn string) (TrafficRouterConfigMap, error) {
+func (to *Session) TrafficRouterConfigMap(cdn string) (*TrafficRouterConfigMap, error) {
 	trConfig, err := to.TrafficRouterConfig(cdn)
-	trConfigMap := trTransformToMap(trConfig)
-	return trConfigMap, err
+	if err != nil {
+		return nil, err
+	}
+	trConfigMap := trTransformToMap(*trConfig)
+	return &trConfigMap, nil
 }
 
 // TrafficRouterConfigRaw ...
 func (to *Session) TrafficRouterConfigRaw(cdn string) ([]byte, error) {
 	url := fmt.Sprintf("/api/1.1/configs/routing/%s.json", cdn)
 	body, err := to.getBytesWithTTL(url, tmPollingInterval)
-	return body, err
+	if err != nil {
+		return nil, err
+	}
+	return body, nil
 }
 
 // TrafficRouterConfig gets the json arrays
-func (to *Session) TrafficRouterConfig(cdn string) (TrafficRouterConfig, error) {
+func (to *Session) TrafficRouterConfig(cdn string) (*TrafficRouterConfig, error) {
 	body, err := to.TrafficRouterConfigRaw(cdn)
+	if err != nil {
+		return nil, err
+	}
 	trConfig, err := trUnmarshall(body)
-	return trConfig, err
+	if err != nil {
+		return nil, err
+	}
+	return trConfig, nil
 }
 
 // in a seperate function for unit testing with files
-func trUnmarshall(body []byte) (TrafficRouterConfig, error) {
+func trUnmarshall(body []byte) (*TrafficRouterConfig, error) {
 	var trConfig TrafficRouterConfig
-	err := json.Unmarshal(body, &trConfig)
-	return trConfig, err
+	if err := json.Unmarshal(body, &trConfig); err != nil {
+		return nil, err
+	}
+	return &trConfig, nil
 }
 
 func trTransformToMap(trConfig TrafficRouterConfig) TrafficRouterConfigMap {

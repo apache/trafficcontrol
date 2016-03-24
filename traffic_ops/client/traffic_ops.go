@@ -56,7 +56,7 @@ type cacheentry struct {
 	bytes   []byte
 }
 
-// Credentials ..
+// Credentials contains Traffic Ops login credentials
 type Credentials struct {
 	Username string `json:"u"`
 	Password string `json:"p"`
@@ -88,39 +88,43 @@ func (to *Session) getBytesWithTTL(path string, ttl int64) ([]byte, error) {
 
 	if getFresh {
 		body, err = to.getBytes(path)
+		if err != nil {
+			return nil, err
+		}
+
 		var newEntry cacheentry
 		newEntry.Entered = time.Now().Unix()
 		newEntry.bytes = body
 		to.Cache[path] = newEntry
 	}
-	return body, err
+	return body, nil
 }
 
 // GetBytes - get []bytes array for a certain path on the to session.
 // returns the raw body
 func (to *Session) getBytes(path string) ([]byte, error) {
-	var body []byte
 	resp, err := to.UserAgent.Get(fmt.Sprintf("%s%s", to.URL, path))
 	if err != nil {
-		log.Info(err)
-		return body, err
+		return nil, err
 	}
 
-	body, err = ioutil.ReadAll(resp.Body)
+	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		log.Info(err)
+		return nil, err
 	}
-	return body, err
+	return body, nil
 }
 
 func (to *Session) postJSON(path string, body []byte) (*http.Response, error) {
 	url := fmt.Sprintf("%s%s", to.URL, path)
 	req, err := http.NewRequest("POST", url, bytes.NewBuffer(body))
+	if err != nil {
+		return nil, err
+	}
 	req.Header.Set("Content-Type", "application/json")
 
 	resp, err := to.UserAgent.Do(req)
 	if err != nil {
-		log.Error(err)
 		return nil, err
 	}
 	defer resp.Body.Close()
@@ -128,15 +132,17 @@ func (to *Session) postJSON(path string, body []byte) (*http.Response, error) {
 	// if err != nil {
 	// 	log.Error(err)
 	// }
-	return resp, err
+	return resp, nil
 }
 
 // getText
 // HTTP GET the path, return the response as a string.
 func (to *Session) getText(path string) (string, error) {
-
 	body, err := to.getBytes(path)
-	return string(body), err
+	if err != nil {
+		return "", err
+	}
+	return string(body), nil
 }
 
 // Login to traffic_ops, the response should set the cookie for this session
@@ -149,14 +155,16 @@ func Login(toURL string, toUser string, toPasswd string, insecure bool) (*Sessio
 	options := cookiejar.Options{
 		PublicSuffixList: publicsuffix.List,
 	}
-	jar, _ := cookiejar.New(&options)
-	tr := &http.Transport{
-		TLSClientConfig: &tls.Config{InsecureSkipVerify: insecure},
+	jar, err := cookiejar.New(&options)
+	if err != nil {
+		return nil, err
 	}
 
 	to.UserAgent = &http.Client{
-		Transport: tr,
-		Jar:       jar,
+		Transport: &http.Transport{
+			TLSClientConfig: &tls.Config{InsecureSkipVerify: insecure},
+		},
+		Jar: jar,
 	}
 
 	credentials := Credentials{
@@ -165,34 +173,27 @@ func Login(toURL string, toUser string, toPasswd string, insecure bool) (*Sessio
 	}
 
 	jcreds, err := json.Marshal(credentials)
-
 	if err != nil {
-		log.Info(err)
-		return &to, err
+		return nil, err
 	}
 
 	url := fmt.Sprintf("%s/api/1.1/user/login", toURL)
 	resp, err := to.UserAgent.Post(url, "application/json", bytes.NewReader(jcreds))
 	if err != nil {
-		log.Info(err)
-		return &to, err
+		return nil, err
 	}
 
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		log.Info(err)
-		return &to, err
+		return nil, err
 	}
 
 	var result Result
-	err = json.Unmarshal(body, &result)
-	if err != nil {
-		log.Info(err)
-		return &to, err
+	if err = json.Unmarshal(body, &result); err != nil {
+		return nil, err
 	}
 
 	to.URL = toURL
-
 	success := false
 
 	for _, alert := range result.Alerts {
@@ -205,11 +206,11 @@ func Login(toURL string, toUser string, toPasswd string, insecure bool) (*Sessio
 	if !success {
 		fmt.Println("NO SUCCESS")
 		err := fmt.Errorf("Login failed, result string: %+v", result)
-		return &to, err
+		return nil, err
 	}
 
 	to.Cache = make(map[string]cacheentry)
 
 	log.Infof("logged into %s!", toURL)
-	return &to, err
+	return &to, nil
 }

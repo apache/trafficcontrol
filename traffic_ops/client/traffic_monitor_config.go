@@ -73,24 +73,32 @@ type parameters struct {
 }
 
 // TrafficMonitorConfigMap ...
-func (to *Session) TrafficMonitorConfigMap(cdn string) (TrafficMonitorConfigMap, error) {
+func (to *Session) TrafficMonitorConfigMap(cdn string) (*TrafficMonitorConfigMap, error) {
 	trafficMonitorConfig, err := to.TrafficMonitorConfig(cdn)
-	trafficMonitorConfigMap := trafficMonitorTransformToMap(trafficMonitorConfig)
-	return trafficMonitorConfigMap, err
+	if err != nil {
+		return nil, err
+	}
+	trafficMonitorConfigMap := trafficMonitorTransformToMap(*trafficMonitorConfig)
+	return &trafficMonitorConfigMap, nil
 }
 
 // TrafficMonitorConfig ...
-func (to *Session) TrafficMonitorConfig(cdn string) (TrafficMonitorConfig, error) {
+func (to *Session) TrafficMonitorConfig(cdn string) (*TrafficMonitorConfig, error) {
 	url := fmt.Sprintf("/api/1.2/cdns/%s/configs/monitoring.json", cdn)
 	body, err := to.getBytes(url)
+	if err != nil {
+		return nil, err
+	}
 	trafficMonitorConfig, err := trafficMonitorConfigUnmarshall(body)
-	return trafficMonitorConfig, err
+	return trafficMonitorConfig, nil
 }
 
-func trafficMonitorConfigUnmarshall(body []byte) (TrafficMonitorConfig, error) {
+func trafficMonitorConfigUnmarshall(body []byte) (*TrafficMonitorConfig, error) {
 	var tmConfigResponse TmConfigResponse
-	err := json.Unmarshal(body, &tmConfigResponse)
-	return tmConfigResponse.Response, err
+	if err := json.Unmarshal(body, &tmConfigResponse); err != nil {
+		return nil, err
+	}
+	return &tmConfigResponse.Response, nil
 }
 
 func trafficMonitorTransformToMap(trafficMonitorConfig TrafficMonitorConfig) TrafficMonitorConfigMap {

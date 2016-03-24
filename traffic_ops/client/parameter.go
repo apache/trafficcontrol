@@ -43,11 +43,16 @@ func (to *Session) Parameters(profileName string) ([]Parameter, error) {
 		return nil, err
 	}
 	paramList, err := paramUnmarshall(body)
-	return paramList.Response, err
+	if err != nil {
+		return nil, err
+	}
+	return paramList.Response, nil
 }
 
-func paramUnmarshall(body []byte) (ParamResponse, error) {
+func paramUnmarshall(body []byte) (*ParamResponse, error) {
 	var data ParamResponse
-	err := json.Unmarshal(body, &data)
-	return data, err
+	if err := json.Unmarshal(body, &data); err != nil {
+		return nil, err
+	}
+	return &data, nil
 }

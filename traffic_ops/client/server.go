@@ -64,19 +64,24 @@ type Server struct {
 }
 
 // Servers gets an array of servers
-func (to *Session) Servers() ([]Server, error) {
+func (to *Session) Servers() (*[]Server, error) {
 	body, err := to.getBytes("/api/1.1/servers.json")
 	if err != nil {
 		return nil, err
 	}
 	serverList, err := serverUnmarshall(body)
-	return serverList.Response, err
+	if err != nil {
+		return nil, err
+	}
+	return &serverList.Response, nil
 }
 
-func serverUnmarshall(body []byte) (ServerResponse, error) {
+func serverUnmarshall(body []byte) (*ServerResponse, error) {
 	var data ServerResponse
-	err := json.Unmarshal(body, &data)
-	return data, err
+	if err := json.Unmarshal(body, &data); err != nil {
+		return nil, err
+	}
+	return &data, nil
 }
 
 // ServersFqdn returns a the full domain name for the server short name passed in.
@@ -86,7 +91,7 @@ func (to *Session) ServersFqdn(n string) (string, error) {
 	if err != nil {
 		return "Error", err
 	}
-	for _, server := range servers {
+	for _, server := range *servers {
 		if server.HostName == n {
 			fdn = fmt.Sprintf("%s.%s", server.HostName, server.DomainName)
 		}
@@ -105,7 +110,7 @@ func (to *Session) ServersShortNameSearch(shortname string) ([]string, error) {
 		serverlst = append(serverlst, "N/A")
 		return serverlst, err
 	}
-	for _, server := range servers {
+	for _, server := range *servers {
 		if strings.Contains(server.HostName, shortname) {
 			serverlst = append(serverlst, server.HostName)
 		}

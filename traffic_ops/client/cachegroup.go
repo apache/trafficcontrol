@@ -45,11 +45,16 @@ func (to *Session) CacheGroups() ([]CacheGroup, error) {
 		return nil, err
 	}
 	cgList, err := cgUnmarshall(body)
-	return cgList.Response, err
+	if err != nil {
+		return nil, err
+	}
+	return cgList.Response, nil
 }
 
-func cgUnmarshall(body []byte) (CacheGroupResponse, error) {
+func cgUnmarshall(body []byte) (*CacheGroupResponse, error) {
 	var data CacheGroupResponse
-	err := json.Unmarshal(body, &data)
-	return data, err
+	if err := json.Unmarshal(body, &data); err != nil {
+		return nil, err
+	}
+	return &data, nil
 }

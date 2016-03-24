@@ -22,5 +22,8 @@ import "fmt"
 func (to *Session) CRConfigRaw(cdn string) ([]byte, error) {
 	url := fmt.Sprintf("/CRConfig-Snapshots/%s/CRConfig.json", cdn)
 	body, err := to.getBytesWithTTL(url, tmPollingInterval)
-	return body, err
+	if err != nil {
+		return nil, err
+	}
+	return body, nil
 }

@@ -44,7 +44,7 @@ func (to *Session) Cdns() ([]CDN, error) {
 	if err := json.Unmarshal(body, &cdn); err != nil {
 		return nil, err
 	}
-	return cdn.Response, err
+	return cdn.Response, nil
 }
 
 // CdnName gets an array of CDNs
@@ -59,5 +59,5 @@ func (to *Session) CdnName(name string) ([]CDN, error) {
 	if err := json.Unmarshal(body, &cdn); err != nil {
 		return nil, err
 	}
-	return cdn.Response, err
+	return cdn.Response, nil
 }

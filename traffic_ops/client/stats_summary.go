@@ -44,7 +44,7 @@ type LastUpdated struct {
 }
 
 // SummaryStats ...
-func (to *Session) SummaryStats(cdn string, deliveryService string, statName string) ([]StatsSummary, error) {
+func (to *Session) SummaryStats(cdn string, deliveryService string, statName string) (*[]StatsSummary, error) {
 	var queryParams []string
 	if len(cdn) > 0 {
 		queryParams = append(queryParams, fmt.Sprintf("cdnName=%s", cdn))
@@ -72,7 +72,10 @@ func (to *Session) SummaryStats(cdn string, deliveryService string, statName str
 		return nil, err
 	}
 	ssList, err := ssUnmarshall(body)
-	return ssList.Response, err
+	if err != nil {
+		return nil, err
+	}
+	return &ssList.Response, nil
 }
 
 // SummaryStatsLastUpdated ...
@@ -114,8 +117,10 @@ func (to *Session) AddSummaryStats(statsSummary StatsSummary) error {
 	return nil
 }
 
-func ssUnmarshall(body []byte) (StatsSummaryResponse, error) {
+func ssUnmarshall(body []byte) (*StatsSummaryResponse, error) {
 	var data StatsSummaryResponse
-	err := json.Unmarshal(body, &data)
-	return data, err
+	if err := json.Unmarshal(body, &data); err != nil {
+		return nil, err
+	}
+	return &data, nil
 }
