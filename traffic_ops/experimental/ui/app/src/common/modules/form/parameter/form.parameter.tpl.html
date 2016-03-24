@@ -1,0 +1,27 @@
+<div class="x_panel">
+    <div class="x_title">
+        <ol class="breadcrumb">
+            <li><a ng-click="navigateToPath('/admin/parameters')">Parameters</a></li>
+            <li class="active">{{parameterName}}</li>
+        </ol>
+        <div class="clearfix"></div>
+    </div>
+    <div class="x_content">
+        <br>
+        <form name="parameterForm" class="form-horizontal form-label-left" novalidate>
+            <div class="form-group" ng-class="{'has-error': hasError(parameterForm[prop.name]), 'has-feedback': hasError(parameterForm[prop.name])}" ng-repeat="prop in props">
+                <label class="control-label col-md-2 col-sm-2 col-xs-12">{{labelize(prop.name)}} <span ng-show="prop.required">*</span></label>
+                <div class="col-md-10 col-sm-10 col-xs-12">
+                    <input id="{{prop.name}}" name="{{prop.name}}" type="{{prop.type}}" class="form-control" ng-model="parameter[prop.name]" ng-readonly="prop.readonly" ng-required="prop.required" ng-maxlength="prop.maxLength" autofocus>
+                    <small class="input-error" ng-show="hasPropertyError(parameterForm[prop.name], 'required')">Required</small>
+                    <small class="input-error" ng-show="hasPropertyError(parameterForm[prop.name], 'maxlength')">Too Long</small>
+                    <span ng-show="hasError(parameterForm[prop.name])" class="form-control-feedback"><i class="fa fa-times"></i></span>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-danger" ng-show="settings.showDelete" ng-click="confirmDelete(parameter)">Delete</button>
+                <button type="button" class="btn btn-primary" ng-disabled="parameterForm.$pristine || parameterForm.$invalid" ng-click="save(parameter)">{{settings.saveLabel}}</button>
+            </div>
+        </form>
+    </div>
+</div>

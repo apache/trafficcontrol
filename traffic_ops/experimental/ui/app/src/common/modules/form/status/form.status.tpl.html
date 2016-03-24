@@ -1,0 +1,33 @@
+<div class="x_panel">
+    <div class="x_title">
+        <ol class="breadcrumb">
+            <li><a ng-click="navigateToPath('/admin/statuses')">Statuses</a></li>
+            <li class="active">{{statusName}}</li>
+        </ol>
+        <div class="clearfix"></div>
+    </div>
+    <div class="x_content">
+        <br>
+        <form name="statusForm" class="form-horizontal form-label-left" novalidate>
+            <div class="form-group" ng-class="{'has-error': hasError(statusForm[prop.name]), 'has-feedback': hasError(statusForm[prop.name])}" ng-repeat="prop in props">
+                <label class="control-label col-md-2 col-sm-2 col-xs-12">{{labelize(prop.name)}} <span ng-show="prop.required">*</span></label>
+                <div class="col-md-10 col-sm-10 col-xs-12">
+                    <input id="{{prop.name}}" name="{{prop.name}}" type="{{prop.type}}" class="form-control" ng-model="status[prop.name]" ng-readonly="prop.readonly" ng-required="prop.required" ng-maxlength="prop.maxLength" autofocus>
+                    <small class="input-error" ng-show="hasPropertyError(statusForm[prop.name], 'required')">Required</small>
+                    <small class="input-error" ng-show="hasPropertyError(statusForm[prop.name], 'maxlength')">Too Long</small>
+                    <span ng-show="hasError(statusForm[prop.name])" class="form-control-feedback"><i class="fa fa-times"></i></span>
+                </div>
+            </div>
+            <div class="form-group">
+                <label class="control-label col-md-2 col-sm-2 col-xs-12">Description</label>
+                <div class="col-md-10 col-sm-10 col-xs-12">
+                    <textarea id="description" name="description" rows="3" cols="17" class="form-control" ng-model="status.description" maxlength="256"></textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-danger" ng-show="settings.showDelete" ng-click="confirmDelete(status)">Delete</button>
+                <button type="button" class="btn btn-primary" ng-disabled="statusForm.$pristine || statusForm.$invalid" ng-click="save(status)">{{settings.saveLabel}}</button>
+            </div>
+        </form>
+    </div>
+</div>
