@@ -104,6 +104,7 @@ var trafficOps = angular.module('trafficOps', [
 
         // common modules
         require('./common/modules/dialog/confirm').name,
+        require('./common/modules/dialog/delete').name,
         require('./common/modules/dialog/reset').name,
         require('./common/modules/header').name,
         require('./common/modules/message').name,

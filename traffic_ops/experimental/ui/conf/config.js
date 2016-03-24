@@ -3,7 +3,7 @@ module.exports = {
     port: 8080,
     proxyPort: 8009,
     api: {
-        base_url: 'http://localhost:3000',
+        base_url: 'http://ipcdn-cache-12.cdnlab.comcast.net:8080',
         key: ''
     },
     files: {
