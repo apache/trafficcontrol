@@ -182,7 +182,7 @@ public class DnsRoutePerformanceTest {
                 trafficRouter.route(dnsRequest, track);
 
                 if (coverageZoneRouted.contains(cacheGroup)) {
-                    assertThat(track.getResult(), equalTo(ResultType.CZ));
+                    assertThat("DNS Request for " + dnsRequest.getHostname() + " " + dnsRequest.getType() + ", client ip " + clientIP + " not found in coverage zone even though " + cacheGroup + " is in coverageZoneRouted data" ,track.getResult(), equalTo(ResultType.CZ));
                 } else {
                     assertThat(track.getResult(), equalTo(ResultType.GEO));
                 }

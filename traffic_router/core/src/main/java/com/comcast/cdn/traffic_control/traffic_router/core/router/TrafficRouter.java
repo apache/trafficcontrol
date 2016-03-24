@@ -34,6 +34,7 @@ import java.util.TreeMap;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 
+import com.comcast.cdn.traffic_control.traffic_router.core.loc.MaxmindGeolocationService;
 import org.apache.commons.pool.ObjectPool;
 import org.apache.log4j.Logger;
 import org.json.JSONException;
@@ -185,22 +186,37 @@ public class TrafficRouter {
 		return clientIP.contains(":") ? geolocationService6.location(clientIP) : geolocationService.location(clientIP);
 	}
 
-	public Geolocation getLocation(final String clientIP, final DeliveryService deliveryService) throws GeolocationException {
-		final String geolocationProvider = deliveryService.getGeolocationProvider();
-
+	private GeolocationService getGeolocationService(final String geolocationProvider, final String deliveryServiceId) {
 		if (applicationContext == null) {
 			LOGGER.error("ApplicationContext not set unable to use custom geolocation service providers");
+			return null;
 		}
 
-		if (geolocationProvider != null && !geolocationProvider.isEmpty() && applicationContext != null) {
-			try {
-				return ((GeolocationService) applicationContext.getBean(geolocationProvider)).location(clientIP);
-			} catch (BeansException e) {
-				LOGGER.error("Failed getting providing class '" + geolocationProvider + "' for geolocation for delivery service " + deliveryService.getId() + " falling back to maxmind");
+		if (geolocationProvider == null || geolocationProvider.isEmpty()) {
+			return null;
+		}
+
+		try {
+			return (GeolocationService) applicationContext.getBean(geolocationProvider);
+		} catch (Exception e) {
+			StringBuilder error = new StringBuilder("Failed getting providing class '" + geolocationProvider + "' for geolocation");
+			if (deliveryServiceId != null && !deliveryServiceId.isEmpty()) {
+				error = error.append(" for delivery service " + deliveryServiceId);
 			}
+			error = error.append(" falling back to " + MaxmindGeolocationService.class.getSimpleName());
+			LOGGER.error(error);
 		}
 
-		return getLocation(clientIP);
+		return null;
+	}
+
+	public Geolocation getLocation(final String clientIP, final String geolocationProvider, final String deliveryServiceId) throws GeolocationException {
+		final GeolocationService customGeolocationService = getGeolocationService(geolocationProvider, deliveryServiceId);
+		return customGeolocationService != null ? customGeolocationService.location(clientIP) : getLocation(clientIP);
+	}
+
+	public Geolocation getLocation(final String clientIP, final DeliveryService deliveryService) throws GeolocationException {
+		return getLocation(clientIP, deliveryService.getGeolocationProvider(), deliveryService.getId());
 	}
 
 	/**

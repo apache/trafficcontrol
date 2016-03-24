@@ -92,7 +92,7 @@ public class DataExporter {
 		return globals;
 	}
 
-	public Map<String, Object> getCachesByIp(final String ip) {
+	public Map<String, Object> getCachesByIp(final String ip, final String geolocationProvider) {
 
 		final Map<String, Object> map = new HashMap<String, Object>();
 		map.put("requestIp", ip);
@@ -106,7 +106,7 @@ public class DataExporter {
 		}
 
 		try {
-			final Geolocation gl = trafficRouterManager.getTrafficRouter().getLocation(ip);
+			final Geolocation gl = trafficRouterManager.getTrafficRouter().getLocation(ip, geolocationProvider, "");
 
 			if (gl != null) {
 				map.put("locationByGeo", gl.getProperties());
@@ -133,7 +133,6 @@ public class DataExporter {
 
 		return map;
 	}
-
 
 	private CacheLocation getLocationFromCzm(final String ip) {
 		NetworkNode nn = null;

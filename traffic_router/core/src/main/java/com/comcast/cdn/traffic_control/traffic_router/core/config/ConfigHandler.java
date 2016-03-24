@@ -404,6 +404,10 @@ public class ConfigHandler {
 		if (config.has("neustar.polling.url")) {
 			System.setProperty("neustar.polling.url", config.getString("neustar.polling.url"));
 		}
+
+		if (config.has("neustar.polling.interval")) {
+			System.setProperty("neustar.polling.interval", config.getString("neustar.polling.interval"));
+		}
 	}
 
 	/**

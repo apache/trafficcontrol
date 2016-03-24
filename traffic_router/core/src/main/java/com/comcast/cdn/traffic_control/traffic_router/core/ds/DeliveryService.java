@@ -113,6 +113,11 @@ public class DeliveryService {
 		setRequestHeaders(dsJo.optJSONArray("requestHeaders"));
 		this.regionalGeoEnabled = dsJo.optBoolean("regionalGeoBlocking", false);
 		geolocationProvider = dsJo.optString("geolocationProvider");
+		if (geolocationProvider != null && !geolocationProvider.isEmpty()) {
+			LOGGER.info("DeliveryService '" + id + "' has configured geolocation provider '" + geolocationProvider + "'");
+		} else {
+			LOGGER.info("DeliveryService '" + id + "' will use default geolocation provider Maxmind");
+		}
 	}
 
 	public String getId() {

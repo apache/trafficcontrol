@@ -140,7 +140,7 @@
 		<property name="pollingInterval" value="$[cache.geolocation.database.refresh.period:86400000]" />
 		<property name="executorService" ref="ScheduledExecutorService" />
 		<property name="trafficRouterManager" ref="trafficRouterManager" />
-		<property name="maxMindGeolocationService" ref="maxmindGeolocationService" />
+		<property name="maxmindGeolocationService" ref="maxmindGeolocationService" />
 	</bean>
 
 	<bean id="networkUpdater" class="com.comcast.cdn.traffic_control.traffic_router.core.loc.NetworkUpdater"

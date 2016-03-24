@@ -20,29 +20,29 @@ import java.io.File;
 import java.io.IOException;
 
 public class GeolocationDatabaseUpdater extends AbstractServiceUpdater {
-	private MaxmindGeolocationService maxMindGeolocationService;
+	private MaxmindGeolocationService maxmindGeolocationService;
 
 	@Override
 	public boolean verifyDatabase(final File dbFile) throws IOException {
-		return maxMindGeolocationService.verifyDatabase(dbFile);
+		return maxmindGeolocationService.verifyDatabase(dbFile);
 	}
 
 	public boolean loadDatabase() throws IOException {
-		maxMindGeolocationService.setDatabaseFile(new File(databasesDirectory, databaseName));
-		maxMindGeolocationService.reloadDatabase();
+		maxmindGeolocationService.setDatabaseFile(new File(databasesDirectory, databaseName));
+		maxmindGeolocationService.reloadDatabase();
 		return true;
 	}
 
 	@Override
 	public boolean isLoaded() {
-		if (maxMindGeolocationService != null) {
-			return maxMindGeolocationService.isInitialized();
+		if (maxmindGeolocationService != null) {
+			return maxmindGeolocationService.isInitialized();
 		}
 
 		return loaded;
 	}
 
-	public void setMaxMindGeolocationService(final MaxmindGeolocationService maxMindGeolocationService) {
-		this.maxMindGeolocationService = maxMindGeolocationService;
+	public void setMaxmindGeolocationService(final MaxmindGeolocationService maxmindGeolocationService) {
+		this.maxmindGeolocationService = maxmindGeolocationService;
 	}
 }
