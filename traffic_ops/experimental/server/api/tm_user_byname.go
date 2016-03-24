@@ -21,7 +21,7 @@ import (
 	"errors"
 	"gopkg.in/guregu/null.v3"
 	"log"
-	"github.com/jmoiron/sqlx"		
+	"github.com/jmoiron/sqlx"
 )
 
 // This is not in the tm_user.go file because that gets (re) generated still
@@ -55,8 +55,7 @@ func GetTmUserByName(username string, db *sqlx.DB) (TmUser, error) {
 		return TmUser{}, err
 	}
 	if len(ret) != 1 {
-		err = errors.New("Username " + username + " is not unique!")
-		return TmUser{}, err
+		return TmUser{}, errors.New("Username " + username + " is not unique!")
 	}
 
 	return ret[0], err

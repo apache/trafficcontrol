@@ -24,17 +24,18 @@ import (
 )
 
 func GetServerByName(serverName string, db *sqlx.DB) (Server, error) {
-
 	ret := []Server{}
 	arg := Server{HostName: serverName}
 	nstmt, err := db.PrepareNamed(`select * from server where host_name=:host_name`)
 	err = nstmt.Select(&ret, arg)
 	if err != nil {
 		log.Println(err)
+		return Server{}, err
 	}
+	defer nstmt.Close()
+
 	if len(ret) != 1 {
-		err = errors.New("Host name " + serverName + " is not unique!")
+		return Server{}, errors.New("Host name " + serverName + " is not unique!")
 	}
-	nstmt.Close()
 	return ret[0], err
 }

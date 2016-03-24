@@ -119,9 +119,15 @@ func getHandleCRConfigFunc(db *sqlx.DB) http.HandlerFunc {
 		setHeaders(w, []api.ApiMethod{api.GET})
 		vars := mux.Vars(r)
 		cdn := vars["cdn"]
-		resp, _ := crconfig.GetCRConfig(cdn, db)
+		resp, err := crconfig.GetCRConfig(cdn, db)
 		enc := json.NewEncoder(w)
-		enc.Encode(resp)
+		if err != nil {
+			enc.Encode(struct {
+				Error string `json:"error"`
+			}{Error: err.Error()})
+		} else {
+			enc.Encode(resp)
+		}
 	}
 }
 
@@ -132,8 +138,14 @@ func getHandleCSConfigFunc(db *sqlx.DB) http.HandlerFunc {
 		setHeaders(w, []api.ApiMethod{api.GET})
 		vars := mux.Vars(r)
 		hostName := vars["hostname"]
-		resp, _ := csconfig.GetCSConfig(hostName, db)
+		resp, err := csconfig.GetCSConfig(hostName, db)
 		enc := json.NewEncoder(w)
-		enc.Encode(resp)
+		if err != nil {
+			enc.Encode(struct {
+				Error string `json:"error"`
+			}{Error: err.Error()})
+		} else {
+			enc.Encode(resp)
+		}
 	}
 }

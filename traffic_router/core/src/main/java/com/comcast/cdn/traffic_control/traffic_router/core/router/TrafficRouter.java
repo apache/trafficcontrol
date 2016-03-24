@@ -216,7 +216,7 @@ public class TrafficRouter {
 		int locationsTested = 0;
 
 		final int locationLimit = ds.getLocationLimit();
-		final List<CacheLocation> cacheLocations = orderCacheLocations(request, getCacheRegister().getCacheLocations(null), ds, clientLocation);
+		final List<CacheLocation> cacheLocations = orderCacheLocations(getCacheRegister().getCacheLocations(null), ds, clientLocation);
 
 		for (final CacheLocation location : cacheLocations) {
 			final List<Cache> caches = selectCache(location, ds);
@@ -236,7 +236,7 @@ public class TrafficRouter {
 		return null;
 	}
 	protected List<Cache> selectCache(final Request request, final DeliveryService ds, final Track track) throws GeolocationException {
-		final CacheLocation cacheLocation = getCoverageZoneCache(request.getClientIP());
+		final CacheLocation cacheLocation = getCoverageZoneCache(request.getClientIP(), ds);
 		List<Cache> caches = selectCachesByCZ(ds, cacheLocation, track);
 
 		if (caches != null) {
@@ -309,7 +309,7 @@ public class TrafficRouter {
 			return result;
 		}
 
-		final CacheLocation cacheLocation = getCoverageZoneCache(request.getClientIP());
+		final CacheLocation cacheLocation = getCoverageZoneCache(request.getClientIP(), ds);
 		List<Cache> caches = selectCachesByCZ(ds, cacheLocation, track);
 
 		if (caches != null) {
@@ -475,37 +475,48 @@ public class TrafficRouter {
 		return routeResult;
 	}
 
-	protected CacheLocation getCoverageZoneCache(final String ip) {
+	protected CacheLocation getCoverageZoneCache(final String ip, final DeliveryService ds) {
 		NetworkNode nn = null;
 		try {
 			nn = NetworkNode.getInstance().getNetwork(ip);
 		} catch (NetworkNodeException e) {
 			LOGGER.warn(e);
 		}
+
 		if (nn == null) {
 			return null;
 		}
 
 		final String locId = nn.getLoc();
 		final CacheLocation cl = nn.getCacheLocation();
-		if(cl != null) {
+
+		if (cl != null) {
 			return cl;
 		}
-		if(locId == null) {
+
+		if (locId == null) {
 			return null;
 		}
 
-			// find CacheLocation
-		final Collection<CacheLocation> caches = getCacheRegister()
-				.getCacheLocations();
-		for (final CacheLocation cl2 : caches) {
+		// find CacheLocation
+		final Collection<CacheLocation> cacheLocations = getCacheRegister().getCacheLocations();
+
+		for (final CacheLocation cl2 : cacheLocations) {
 			if (cl2.getId().equals(locId)) {
 				nn.setCacheLocation(cl2);
 				return cl2;
 			}
 		}
 
-		return null;
+		/*
+		 * We had a hit in the CZF but the name does not match a known cache location.
+		 * Check whether the CZF entry has a geolocation and use it if so.
+		 */
+		if (nn.getGeolocation() == null) {
+			return null;
+		}
+
+		return getClosestCacheLocation(cacheLocations, ds, nn.getGeolocation());
 	}
 
 	/**
@@ -626,18 +637,16 @@ public class TrafficRouter {
 	 * If the client's location could not be determined, then the list is
 	 * unsorted.
 	 * 
-	 * @param request
-	 *            the client's request
 	 * @param cacheLocations
 	 *            the collection of CacheLocations to order
 	 * @param ds
 	 * @return the ordered list of locations
 	 */
-	public List<CacheLocation> orderCacheLocations(final Request request, final Collection<CacheLocation> cacheLocations, final DeliveryService ds, final Geolocation clientLocation) {
+	public List<CacheLocation> orderCacheLocations(final Collection<CacheLocation> cacheLocations, final DeliveryService ds, final Geolocation clientLocation) {
 		final List<CacheLocation> locations = new ArrayList<CacheLocation>();
 
-		for(final CacheLocation cl : cacheLocations) {
-			if(ds.isLocationAvailable(cl)) {
+		for (final CacheLocation cl : cacheLocations) {
+			if (ds.isLocationAvailable(cl)) {
 				locations.add(cl);
 			}
 		}
@@ -645,6 +654,18 @@ public class TrafficRouter {
 		Collections.sort(locations, new CacheLocationComparator(clientLocation));
 
 		return locations;
+	}
+
+	private CacheLocation getClosestCacheLocation(final Collection<CacheLocation> cacheLocations, final DeliveryService ds, final Geolocation clientLocation) {
+		final List<CacheLocation> orderedLocations = orderCacheLocations(cacheLocations, ds, clientLocation);
+
+		for (CacheLocation cacheLocation : orderedLocations) {
+			if (!cacheLocation.getCaches().isEmpty()) {
+				return cacheLocation;
+			}
+		}
+
+		return null;
 	}
 
 	/**

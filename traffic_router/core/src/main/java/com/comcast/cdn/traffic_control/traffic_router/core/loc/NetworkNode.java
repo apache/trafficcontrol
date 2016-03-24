@@ -27,6 +27,8 @@ import java.util.Map;
 import java.util.TreeMap;
 
 import com.comcast.cdn.traffic_control.traffic_router.core.util.CidrAddress;
+import com.comcast.cdn.traffic_control.traffic_router.geolocation.Geolocation;
+
 import org.apache.log4j.Logger;
 import org.apache.wicket.ajax.json.JSONArray;
 import org.apache.wicket.ajax.json.JSONException;
@@ -44,6 +46,7 @@ public class NetworkNode implements Comparable<NetworkNode> {
     private CidrAddress cidrAddress;
     private String loc;
     private CacheLocation cacheLocation = null;
+    private Geolocation geolocation = null;
     protected Map<NetworkNode,NetworkNode> children;
 
     public static NetworkNode getInstance() {
@@ -73,6 +76,14 @@ public class NetworkNode implements Comparable<NetworkNode> {
 
             for (String loc : JSONObject.getNames(coverageZones)) {
                 final JSONObject locData = coverageZones.getJSONObject(loc);
+                final JSONObject coordinates = locData.optJSONObject("coordinates");
+                Geolocation geolocation = null;
+
+                if (coordinates != null && coordinates.has("latitude") && coordinates.has("longitude")) {
+                    final double latitude = coordinates.optDouble("latitude");
+                    final double longitude = coordinates.optDouble("longitude");
+                    geolocation = new Geolocation(latitude, longitude);
+                }
 
                 try {
                     final JSONArray network6 = locData.getJSONArray("network6");
@@ -81,7 +92,7 @@ public class NetworkNode implements Comparable<NetworkNode> {
                         final String ip = network6.getString(i);
 
                         try {
-                            root.add6(new NetworkNode(ip, loc));
+                            root.add6(new NetworkNode(ip, loc, geolocation));
                         } catch (NetworkNodeException ex) {
                             LOGGER.error(ex, ex);
                         }
@@ -97,7 +108,7 @@ public class NetworkNode implements Comparable<NetworkNode> {
                         final String ip = network.getString(i);
 
                         try {
-                            root.add(new NetworkNode(ip, loc));
+                            root.add(new NetworkNode(ip, loc, geolocation));
                         } catch (NetworkNodeException ex) {
                             LOGGER.error(ex, ex);
                         }
@@ -124,7 +135,12 @@ public class NetworkNode implements Comparable<NetworkNode> {
     }
 
     public NetworkNode(final String str, final String loc) throws NetworkNodeException {
+        this(str, loc, null);
+    }
+
+    public NetworkNode(final String str, final String loc, final Geolocation geolocation) throws NetworkNodeException {
         this.loc = loc;
+        this.geolocation = geolocation;
         cidrAddress = CidrAddress.fromString(str);
     }
 
@@ -198,8 +214,8 @@ public class NetworkNode implements Comparable<NetworkNode> {
         return loc;
     }
 
-    public void setLoc(final String loc) {
-        this.loc = loc;
+    public Geolocation getGeolocation() {
+        return geolocation;
     }
 
     public CacheLocation getCacheLocation() {
