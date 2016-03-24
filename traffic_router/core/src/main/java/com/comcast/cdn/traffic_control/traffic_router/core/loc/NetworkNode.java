@@ -131,7 +131,7 @@ public class NetworkNode implements Comparable<NetworkNode> {
     }
 
     public NetworkNode(final String str) throws NetworkNodeException {
-        this(str, null, null);
+        this(str, null);
     }
 
     public NetworkNode(final String str, final String loc) throws NetworkNodeException {
