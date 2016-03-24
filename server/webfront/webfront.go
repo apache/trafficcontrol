@@ -4,19 +4,31 @@
 package main
 
 import (
+	// "crypto/sha1"
 	"crypto/tls"
+	// "encoding/hex"
 	"encoding/json"
 	"flag"
+	"fmt"
+	jwt "github.com/dgrijalva/jwt-go"
+	"io/ioutil"
 	"log"
-	// "net"
 	"net/http"
 	"net/http/httputil"
 	"os"
-	// "strconv"
 	"strings"
 	"sync"
 	"time"
 )
+
+type TokenResponse struct {
+	Token string
+}
+
+type loginJson struct {
+	User     string `json:"user"`
+	Password string `json:"password"`
+}
 
 var (
 	httpsAddr    = flag.String("https", "", "HTTPS listen address (leave empty to disable)")
@@ -34,12 +46,12 @@ func main() {
 	}
 
 	// override the default so we can use self-signed certs on our microservices
+	// and use a self-signed cert in this server
 	http.DefaultTransport.(*http.Transport).TLSClientConfig = &tls.Config{InsecureSkipVerify: true}
-
 	http.ListenAndServeTLS(*httpsAddr, *certFile, *keyFile, s)
 }
 
-// Server implements an http.Handler that acts asither a reverse proxy
+// Server implements an http.Handler that acts as a reverse proxy
 type Server struct {
 	mu    sync.RWMutex // guards the fields below
 	last  time.Time
@@ -56,6 +68,34 @@ type Rule struct {
 	handler http.Handler
 }
 
+// func UnauthorizedResponse(w http.ResponseWriter) {
+// 	resp := &http.Response{}
+// 	resp.StatusCode = http.StatusUnauthorized
+// 	http.Handler.ServeHTTP(w)
+// }
+
+// to get a token:
+//  curl --header "Content-Type:application/json" -XPOST http://host:port/login -d'{"u":"yourusername", "p":"yourpassword}'
+
+func validateToken(tokenString string) (*jwt.Token, error) {
+
+	tokenString = strings.Replace(tokenString, "Bearer ", "", 1)
+	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
+		// Don't forget to validate the alg is what you expect:
+		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+			return nil, fmt.Errorf("Unexpected signing method: %v", token.Header["alg"])
+		}
+		return []byte("CAmeRAFiveSevenNineNine"), nil
+	})
+
+	if err == nil && token.Valid {
+		log.Println("TOKEN IS GOOD -- user:", token.Claims["userid"], " role:", token.Claims["role"])
+	} else {
+		log.Println("TOKEN IS BAD", err)
+	}
+	return token, err
+}
+
 // NewServer constructs a Server that reads rules from file with a period
 // specified by poll.
 func NewServer(file string, poll time.Duration) (*Server, error) {
@@ -70,11 +110,64 @@ func NewServer(file string, poll time.Duration) (*Server, error) {
 // ServeHTTP matches the Request with a Rule and, if found, serves the
 // request with the Rule's handler.
 func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	if r.URL.Path == "/login" {
+		log.Println("/login.... Do some smarts")
+		username := ""
+		password := ""
+		body, err := ioutil.ReadAll(r.Body)
+		if err != nil {
+			log.Println("Error reading body: ", err.Error())
+			http.Error(w, "Error reading body: "+err.Error(), http.StatusBadRequest)
+			return
+		}
+		var lj loginJson
+		log.Println(body)
+		err = json.Unmarshal(body, &lj)
+		if err != nil {
+			log.Println("Error unmarshalling JSON: ", err.Error())
+			http.Error(w, "Invalid JSON: "+err.Error(), http.StatusBadRequest)
+			return
+		}
+		username = lj.User
+		password = lj.Password
+		token := jwt.New(jwt.SigningMethodHS256)
+		token.Claims["User"] = username
+		token.Claims["Password"] = password
+		token.Claims["exp"] = time.Now().Add(time.Hour * 24).Unix()
+		tokenString, err := token.SignedString([]byte("CAmeRAFiveSevenNineNine"))
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		js, err := json.Marshal(TokenResponse{Token: tokenString})
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		w.Header().Set("Content-Type", "application/json")
+		w.Write(js)
+		return
+	}
+	// TODO JvD ^^ move into own function
+	token, err := validateToken(r.Header.Get("Authorization"))
+	if err != nil {
+		log.Println("No valid token found!")
+		w.WriteHeader(http.StatusForbidden)
+		return
+	}
+	log.Println("Token:", token.Claims["userid"])
+
 	if h := s.handler(r); h != nil {
 		h.ServeHTTP(w, r)
 		return
 	}
 	http.Error(w, "Not found.", http.StatusNotFound)
+}
+
+func rejectNoToken(handler http.Handler) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusForbidden)
+	}
 }
 
 // handler returns the appropriate Handler for the given Request,
@@ -91,7 +184,6 @@ func (s *Server) handler(req *http.Request) http.Handler {
 	for _, r := range s.rules {
 		// log.Println(p, "==", r.Path)
 		if strings.HasPrefix(p, r.Path) {
-			// Todo JvD Auth check goes here??
 			return r.handler
 		}
 	}
