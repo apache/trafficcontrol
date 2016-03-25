@@ -65,23 +65,18 @@ type Server struct {
 
 // Servers gets an array of servers
 func (to *Session) Servers() (*[]Server, error) {
-	body, err := to.getBytes("/api/1.1/servers.json")
+	url := "/api/1.1/servers.json"
+	resp, err := to.request(url, nil)
 	if err != nil {
 		return nil, err
 	}
-	serverList, err := serverUnmarshall(body)
-	if err != nil {
-		return nil, err
-	}
-	return &serverList.Response, nil
-}
+	defer resp.Body.Close()
 
-func serverUnmarshall(body []byte) (*ServerResponse, error) {
 	var data ServerResponse
-	if err := json.Unmarshal(body, &data); err != nil {
+	if err := json.NewDecoder(resp.Body).Decode(&data); err != nil {
 		return nil, err
 	}
-	return &data, nil
+	return &data.Response, nil
 }
 
 // ServersFqdn returns a the full domain name for the server short name passed in.
@@ -91,6 +86,7 @@ func (to *Session) ServersFqdn(n string) (string, error) {
 	if err != nil {
 		return "Error", err
 	}
+
 	for _, server := range *servers {
 		if server.HostName == n {
 			fdn = fmt.Sprintf("%s.%s", server.HostName, server.DomainName)

@@ -36,23 +36,18 @@ type Parameter struct {
 }
 
 // Parameters gets an array of parameter structs for the profile given
-func (to *Session) Parameters(profileName string) ([]Parameter, error) {
+func (to *Session) Parameters(profileName string) (*[]Parameter, error) {
 	url := fmt.Sprintf("/api/1.1/parameters/profile/%s.json", profileName)
-	body, err := to.getBytes(url)
+	resp, err := to.request(url, nil)
 	if err != nil {
 		return nil, err
 	}
-	paramList, err := paramUnmarshall(body)
-	if err != nil {
-		return nil, err
-	}
-	return paramList.Response, nil
-}
+	defer resp.Body.Close()
 
-func paramUnmarshall(body []byte) (*ParamResponse, error) {
 	var data ParamResponse
-	if err := json.Unmarshal(body, &data); err != nil {
+	if err := json.NewDecoder(resp.Body).Decode(&data); err != nil {
 		return nil, err
 	}
-	return &data, nil
+
+	return &data.Response, nil
 }

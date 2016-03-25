@@ -34,30 +34,33 @@ type CDN struct {
 }
 
 // Cdns gets an array of CDNs
-func (to *Session) Cdns() ([]CDN, error) {
-	body, err := to.getBytes("/api/1.2/cdns.json")
+func (to *Session) Cdns() (*[]CDN, error) {
+	url := "/api/1.2/cdns.json"
+	resp, err := to.request(url, nil)
 	if err != nil {
 		return nil, err
 	}
+	defer resp.Body.Close()
 
-	var cdn CDNResponse
-	if err := json.Unmarshal(body, &cdn); err != nil {
+	var data CDNResponse
+	if err := json.NewDecoder(resp.Body).Decode(&data); err != nil {
 		return nil, err
 	}
-	return cdn.Response, nil
+	return &data.Response, nil
 }
 
 // CdnName gets an array of CDNs
-func (to *Session) CdnName(name string) ([]CDN, error) {
+func (to *Session) CdnName(name string) (*[]CDN, error) {
 	url := fmt.Sprintf("/api/1.2/cdns/name/%s.json", name)
-	body, err := to.getBytes(url)
+	resp, err := to.request(url, nil)
 	if err != nil {
 		return nil, err
 	}
+	defer resp.Body.Close()
 
-	var cdn CDNResponse
-	if err := json.Unmarshal(body, &cdn); err != nil {
+	var data CDNResponse
+	if err := json.NewDecoder(resp.Body).Decode(&data); err != nil {
 		return nil, err
 	}
-	return cdn.Response, nil
+	return &data.Response, nil
 }

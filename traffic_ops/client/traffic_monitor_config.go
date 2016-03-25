@@ -31,7 +31,7 @@ type TmConfigResponse struct {
 
 // TrafficMonitorConfig ...
 type TrafficMonitorConfig struct {
-	TrafficServers   []trafficServer                 `json:"trafficServers"`
+	TrafficServers   []TrafficServer                 `json:"trafficServers"`
 	CacheGroups      []cacheGroup                    `json:"cacheGroups"`
 	Config           map[string]interface{}          `json:"config"`
 	TrafficMonitors  []trafficMonitor                `json:"trafficMonitors"`
@@ -41,7 +41,7 @@ type TrafficMonitorConfig struct {
 
 // TrafficMonitorConfigMap ...
 type TrafficMonitorConfigMap struct {
-	TrafficServer   map[string]trafficServer
+	TrafficServer   map[string]TrafficServer
 	CacheGroup      map[string]cacheGroup
 	Config          map[string]interface{}
 	TrafficMonitor  map[string]trafficMonitor
@@ -85,26 +85,24 @@ func (to *Session) TrafficMonitorConfigMap(cdn string) (*TrafficMonitorConfigMap
 // TrafficMonitorConfig ...
 func (to *Session) TrafficMonitorConfig(cdn string) (*TrafficMonitorConfig, error) {
 	url := fmt.Sprintf("/api/1.2/cdns/%s/configs/monitoring.json", cdn)
-	body, err := to.getBytes(url)
+	resp, err := to.request(url, nil)
 	if err != nil {
 		return nil, err
 	}
-	trafficMonitorConfig, err := trafficMonitorConfigUnmarshall(body)
-	return trafficMonitorConfig, nil
-}
+	defer resp.Body.Close()
 
-func trafficMonitorConfigUnmarshall(body []byte) (*TrafficMonitorConfig, error) {
-	var tmConfigResponse TmConfigResponse
-	if err := json.Unmarshal(body, &tmConfigResponse); err != nil {
+	var data TmConfigResponse
+	if err := json.NewDecoder(resp.Body).Decode(&data); err != nil {
 		return nil, err
 	}
-	return &tmConfigResponse.Response, nil
+
+	return &data.Response, nil
 }
 
 func trafficMonitorTransformToMap(trafficMonitorConfig TrafficMonitorConfig) TrafficMonitorConfigMap {
 	var trafficMonitorConfigMap TrafficMonitorConfigMap
 
-	trafficMonitorConfigMap.TrafficServer = make(map[string]trafficServer)
+	trafficMonitorConfigMap.TrafficServer = make(map[string]TrafficServer)
 	trafficMonitorConfigMap.CacheGroup = make(map[string]cacheGroup)
 	trafficMonitorConfigMap.Config = make(map[string]interface{})
 	trafficMonitorConfigMap.TrafficMonitor = make(map[string]trafficMonitor)

@@ -67,37 +67,43 @@ func (to *Session) SummaryStats(cdn string, deliveryService string, statName str
 		}
 		queryURL += queryParamString
 	}
-	body, err := to.getBytes(queryURL)
+
+	resp, err := to.request(queryURL, nil)
 	if err != nil {
 		return nil, err
 	}
-	ssList, err := ssUnmarshall(body)
-	if err != nil {
+	defer resp.Body.Close()
+
+	var data StatsSummaryResponse
+	if err := json.NewDecoder(resp.Body).Decode(&data); err != nil {
 		return nil, err
 	}
-	return &ssList.Response, nil
+	return &data.Response, nil
 }
 
 // SummaryStatsLastUpdated ...
-func (to *Session) SummaryStatsLastUpdated(statName string) (string, error) {
+func (to *Session) SummaryStatsLastUpdated(statName string) (*string, error) {
 	queryURL := "/api/1.2/stats_summary.json?lastSummaryDate=true"
 	if len(statName) > 0 {
 		queryURL += fmt.Sprintf("?statName=%s", statName)
 	}
-	body, err := to.getBytes(queryURL)
+
+	resp, err := to.request(queryURL, nil)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
+	defer resp.Body.Close()
+
 	var data LastUpdated
-	err = json.Unmarshal(body, &data)
-	if err != nil {
-		fmt.Printf("err is %v\n", err)
-		return "", err
+	if err := json.NewDecoder(resp.Body).Decode(&data); err != nil {
+		return nil, err
 	}
+
 	if len(data.Response.SummaryTime) > 0 {
-		return data.Response.SummaryTime, nil
+		return &data.Response.SummaryTime, nil
 	}
-	return "1970-01-01 00:00:00", nil
+	t := "1970-01-01 00:00:00"
+	return &t, nil
 }
 
 // AddSummaryStats ...
@@ -106,21 +112,15 @@ func (to *Session) AddSummaryStats(statsSummary StatsSummary) error {
 	if err != nil {
 		return err
 	}
-	response, err := to.postJSON("/api/1.2/stats_summary/create", reqBody)
+
+	url := "/api/1.2/stats_summary/create"
+	resp, err := to.request(url, reqBody)
 	if err != nil {
 		return err
 	}
-	if response.StatusCode != 200 {
-		err := fmt.Errorf("Response code = %s and Status = %s", strconv.Itoa(response.StatusCode), response.Status)
+	if resp.StatusCode != 200 {
+		err := fmt.Errorf("Response code = %s and Status = %s", strconv.Itoa(resp.StatusCode), resp.Status)
 		return err
 	}
 	return nil
-}
-
-func ssUnmarshall(body []byte) (*StatsSummaryResponse, error) {
-	var data StatsSummaryResponse
-	if err := json.Unmarshal(body, &data); err != nil {
-		return nil, err
-	}
-	return &data, nil
 }

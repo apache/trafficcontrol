@@ -17,24 +17,26 @@
 package client
 
 import (
+	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"os"
 	"testing"
 )
 
 func TestHardware(t *testing.T) {
 	fmt.Println("Running Hardware Tests")
-	text, err := ioutil.ReadFile("testdata/hardware.json")
+	text, err := os.Open("testdata/hardware.json")
 	if err != nil {
 		t.Skip("Skipping parameters test, no hardware.json found.")
 	}
 
-	hardwareList, err := hardwareUnmarshall(text)
-	if err != nil {
+	var data hardwareResponse
+	if err := json.NewDecoder(text).Decode(&data); err != nil {
 		t.Fatal(err)
 	}
-	for _, hardware := range hardwareList.Response {
-		name := hardware.Id
+
+	for _, hardware := range data.Response {
+		name := hardware.ID
 		if len(name) == 0 {
 			t.Fatal("hardware result does not contain 'ID'")
 		}

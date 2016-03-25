@@ -49,7 +49,7 @@ func TestTRConfig(t *testing.T) {
 
 		t.Log(len(trConfig.TrafficServers), "TrafficServers found")
 		for _, tServer := range trConfig.TrafficServers {
-			t.Logf("  %v -> %v (%v remaps)", tServer.HostName, tServer.Ip, len(tServer.DeliveryServices))
+			t.Logf("  %v -> %v (%v remaps)", tServer.HostName, tServer.IP, len(tServer.DeliveryServices))
 		}
 
 		t.Log(len(trConfig.CacheGroups), "CacheGroups found")
@@ -59,12 +59,12 @@ func TestTRConfig(t *testing.T) {
 
 		t.Log(len(trConfig.TrafficMonitors), "TrafficMonitors found")
 		for _, tMon := range trConfig.TrafficMonitors {
-			t.Logf("  %v -> %v", tMon.HostName, tMon.Ip)
+			t.Logf("  %v -> %v", tMon.HostName, tMon.IP)
 		}
 
 		t.Log(len(trConfig.DeliveryServices), "DeliveryServices found")
 		for _, tDeliveryService := range trConfig.DeliveryServices {
-			t.Logf("  %v -> %v MatchSets", tDeliveryService.XmlId, len(tDeliveryService.MatchSets))
+			t.Logf("  %v -> %v MatchSets", tDeliveryService.XMLID, len(tDeliveryService.MatchSets))
 		}
 
 		t.Log(len(trConfig.Config), "Config settings  found")
@@ -72,11 +72,11 @@ func TestTRConfig(t *testing.T) {
 			t.Logf("  %v -> %v", cKey, cVal)
 		}
 
-		trConfigMap := trTransformToMap(trConfig)
+		trConfigMap := trTransformToMap(*trConfig)
 
 		t.Log(len(trConfigMap.TrafficServer), "TrafficServers found in Map")
 		for tServerName, tServer := range trConfigMap.TrafficServer {
-			t.Logf("   Map: %v -> %v (%v remaps)", tServerName, tServer.Ip, len(tServer.DeliveryServices))
+			t.Logf("   Map: %v -> %v (%v remaps)", tServerName, tServer.IP, len(tServer.DeliveryServices))
 		}
 
 		t.Log(len(trConfigMap.CacheGroup), "CacheGroups found in Map")
@@ -86,12 +86,12 @@ func TestTRConfig(t *testing.T) {
 
 		t.Log(len(trConfigMap.TrafficMonitor), "TrafficMonitors found in Map")
 		for _, tMon := range trConfigMap.TrafficMonitor {
-			t.Logf("  %v -> %v", tMon.HostName, tMon.Ip)
+			t.Logf("  %v -> %v", tMon.HostName, tMon.IP)
 		}
 
 		t.Log(len(trConfigMap.DeliveryService), "DeliveryServices found in Map")
 		for _, tDeliveryService := range trConfigMap.DeliveryService {
-			t.Logf("  %v -> %v MatchSets", tDeliveryService.XmlId, len(tDeliveryService.MatchSets))
+			t.Logf("  %v -> %v MatchSets", tDeliveryService.XMLID, len(tDeliveryService.MatchSets))
 		}
 
 		t.Log(len(trConfigMap.Config), "Config settings  found in Map")

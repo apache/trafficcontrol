@@ -33,22 +33,16 @@ type Profile struct {
 
 // Profiles gets an array of Profiles
 func (to *Session) Profiles() (*[]Profile, error) {
-	body, err := to.getBytes("/api/1.1/profiles.json")
+	url := "/api/1.1/profiles.json"
+	resp, err := to.request(url, nil)
 	if err != nil {
 		return nil, err
 	}
-	profileList, err := profileUnmarshall(body)
-	if err != nil {
-		return nil, err
-	}
-	return &profileList.Response, nil
-}
-
-func profileUnmarshall(body []byte) (*ProfileResponse, error) {
+	defer resp.Body.Close()
 
 	var data ProfileResponse
-	if err := json.Unmarshal(body, &data); err != nil {
+	if err := json.NewDecoder(resp.Body).Decode(&data); err != nil {
 		return nil, err
 	}
-	return &data, nil
+	return &data.Response, nil
 }

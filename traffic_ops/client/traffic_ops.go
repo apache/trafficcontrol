@@ -26,7 +26,7 @@ import (
 	"net/http/cookiejar"
 	"time"
 
-	log "github.com/cihub/seelog"
+	"github.com/prometheus/log"
 	"golang.org/x/net/publicsuffix"
 )
 
@@ -36,7 +36,7 @@ type Session struct {
 	Password  string
 	URL       string
 	UserAgent *http.Client
-	Cache     map[string]cacheentry
+	Cache     map[string]cacheEntry
 }
 
 // Result {"alerts":[{"level":"success","text":"Successfully logged in."}],"version":"1.1"}
@@ -51,7 +51,7 @@ type Alert struct {
 	Text  string `json:"text"`
 }
 
-type cacheentry struct {
+type cacheEntry struct {
 	Entered int64
 	bytes   []byte
 }
@@ -65,7 +65,108 @@ type Credentials struct {
 // TODO JvD
 const tmPollingInterval = 60
 
-// GetBytesWithTTL - get the path, and cache in the session
+// loginCreds gathers login credentials for Traffic Ops.
+func loginCreds(toUser string, toPasswd string) ([]byte, error) {
+	credentials := Credentials{
+		Username: toUser,
+		Password: toPasswd,
+	}
+
+	js, err := json.Marshal(credentials)
+	if err != nil {
+		err := fmt.Errorf("Error creating login json: %v", err)
+		return nil, err
+	}
+	return js, nil
+}
+
+// Login to traffic_ops, the response should set the cookie for this session
+// automatically. Start with
+//     to := traffic_ops.Login("user", "passwd", true)
+// subsequent calls like to.GetData("datadeliveryservice") will be authenticated.
+func Login(toURL string, toUser string, toPasswd string, insecure bool) (*Session, error) {
+	credentials, err := loginCreds(toUser, toPasswd)
+	if err != nil {
+		return nil, err
+	}
+
+	options := cookiejar.Options{
+		PublicSuffixList: publicsuffix.List,
+	}
+
+	jar, err := cookiejar.New(&options)
+	if err != nil {
+		return nil, err
+	}
+
+	to := Session{
+		UserAgent: &http.Client{
+			Transport: &http.Transport{
+				TLSClientConfig: &tls.Config{InsecureSkipVerify: insecure},
+			},
+			Jar: jar,
+		},
+		URL: toURL,
+	}
+
+	uri := "/api/1.1/user/login"
+	resp, err := to.request(uri, credentials)
+	if err != nil {
+		return nil, err
+	}
+
+	var result Result
+	if err = json.NewDecoder(resp.Body).Decode(&result); err != nil {
+		return nil, err
+	}
+
+	success := false
+	for _, alert := range result.Alerts {
+		if alert.Level == "success" && alert.Text == "Successfully logged in." {
+			success = true
+			break
+		}
+	}
+
+	if !success {
+		fmt.Println("NO SUCCESS")
+		err := fmt.Errorf("Login failed, result string: %+v", result)
+		return nil, err
+	}
+
+	log.Infof("logged into %s!", toURL)
+	return &to, nil
+}
+
+// request performs the actual HTTP request to Traffic Ops
+func (to *Session) request(path string, body []byte) (*http.Response, error) {
+	url := fmt.Sprintf("%s%s", to.URL, path)
+
+	var req *http.Request
+	var err error
+
+	if body != nil {
+		req, err = http.NewRequest("POST", url, bytes.NewBuffer(body))
+		if err != nil {
+			return nil, err
+		}
+		req.Header.Set("Content-Type", "application/json")
+	} else {
+		req, err = http.NewRequest("GET", url, nil)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	resp, err := to.UserAgent.Do(req)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+	return resp, nil
+}
+
+// getBytesWithTTL - get the path, and cache in the session
 // return from cache is found and the ttl isn't expired, otherwise get it and
 // store it in cache
 func (to *Session) getBytesWithTTL(path string, ttl int64) ([]byte, error) {
@@ -92,7 +193,7 @@ func (to *Session) getBytesWithTTL(path string, ttl int64) ([]byte, error) {
 			return nil, err
 		}
 
-		var newEntry cacheentry
+		var newEntry cacheEntry
 		newEntry.Entered = time.Now().Unix()
 		newEntry.bytes = body
 		to.Cache[path] = newEntry
@@ -103,7 +204,7 @@ func (to *Session) getBytesWithTTL(path string, ttl int64) ([]byte, error) {
 // GetBytes - get []bytes array for a certain path on the to session.
 // returns the raw body
 func (to *Session) getBytes(path string) ([]byte, error) {
-	resp, err := to.UserAgent.Get(fmt.Sprintf("%s%s", to.URL, path))
+	resp, err := to.request(path, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -113,104 +214,4 @@ func (to *Session) getBytes(path string) ([]byte, error) {
 		return nil, err
 	}
 	return body, nil
-}
-
-func (to *Session) postJSON(path string, body []byte) (*http.Response, error) {
-	url := fmt.Sprintf("%s%s", to.URL, path)
-	req, err := http.NewRequest("POST", url, bytes.NewBuffer(body))
-	if err != nil {
-		return nil, err
-	}
-	req.Header.Set("Content-Type", "application/json")
-
-	resp, err := to.UserAgent.Do(req)
-	if err != nil {
-		return nil, err
-	}
-	defer resp.Body.Close()
-	// resp, err := to.UserAgent.Post(fmt.Sprintf("%s%s", to.URL, path), "application/json", body)
-	// if err != nil {
-	// 	log.Error(err)
-	// }
-	return resp, nil
-}
-
-// getText
-// HTTP GET the path, return the response as a string.
-func (to *Session) getText(path string) (string, error) {
-	body, err := to.getBytes(path)
-	if err != nil {
-		return "", err
-	}
-	return string(body), nil
-}
-
-// Login to traffic_ops, the response should set the cookie for this session
-// automatically. Start with
-// to := traffic_ops.Login("user", "passwd", true)
-// subsequent calls like to.GetData("datadeliveryservice") will be authenticated.
-func Login(toURL string, toUser string, toPasswd string, insecure bool) (*Session, error) {
-	var to Session
-
-	options := cookiejar.Options{
-		PublicSuffixList: publicsuffix.List,
-	}
-	jar, err := cookiejar.New(&options)
-	if err != nil {
-		return nil, err
-	}
-
-	to.UserAgent = &http.Client{
-		Transport: &http.Transport{
-			TLSClientConfig: &tls.Config{InsecureSkipVerify: insecure},
-		},
-		Jar: jar,
-	}
-
-	credentials := Credentials{
-		Username: toUser,
-		Password: toPasswd,
-	}
-
-	jcreds, err := json.Marshal(credentials)
-	if err != nil {
-		return nil, err
-	}
-
-	url := fmt.Sprintf("%s/api/1.1/user/login", toURL)
-	resp, err := to.UserAgent.Post(url, "application/json", bytes.NewReader(jcreds))
-	if err != nil {
-		return nil, err
-	}
-
-	body, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		return nil, err
-	}
-
-	var result Result
-	if err = json.Unmarshal(body, &result); err != nil {
-		return nil, err
-	}
-
-	to.URL = toURL
-	success := false
-
-	for _, alert := range result.Alerts {
-		if alert.Level == "success" && alert.Text == "Successfully logged in." {
-			success = true
-			break
-		}
-	}
-
-	if !success {
-		fmt.Println("NO SUCCESS")
-		err := fmt.Errorf("Login failed, result string: %+v", result)
-		return nil, err
-	}
-
-	to.Cache = make(map[string]cacheentry)
-
-	log.Infof("logged into %s!", toURL)
-	return &to, nil
 }

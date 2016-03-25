@@ -16,9 +16,7 @@
 
 package client
 
-import (
-	"encoding/json"
-)
+import "encoding/json"
 
 // CacheGroupResponse ...
 type CacheGroupResponse struct {
@@ -26,7 +24,7 @@ type CacheGroupResponse struct {
 	Response []CacheGroup `json:"response"`
 }
 
-// CacheGroup ...
+// CacheGroup contains all values associated with a Cachegroup.
 type CacheGroup struct {
 	Name        string  `json:"name"`
 	ShortName   string  `json:"shortName"`
@@ -39,22 +37,18 @@ type CacheGroup struct {
 
 // CacheGroups gets the CacheGroups in an array of CacheGroup structs
 // (note CacheGroup used to be called location)
-func (to *Session) CacheGroups() ([]CacheGroup, error) {
-	body, err := to.getBytes("/api/1.1/cachegroups.json")
+func (to *Session) CacheGroups() (*[]CacheGroup, error) {
+	url := "/api/1.1/cachegroups.json"
+	resp, err := to.request(url, nil)
 	if err != nil {
 		return nil, err
 	}
-	cgList, err := cgUnmarshall(body)
-	if err != nil {
-		return nil, err
-	}
-	return cgList.Response, nil
-}
+	defer resp.Body.Close()
 
-func cgUnmarshall(body []byte) (*CacheGroupResponse, error) {
 	var data CacheGroupResponse
-	if err := json.Unmarshal(body, &data); err != nil {
+	if err := json.NewDecoder(resp.Body).Decode(&data); err != nil {
 		return nil, err
 	}
-	return &data, nil
+
+	return &data.Response, nil
 }

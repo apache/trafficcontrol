@@ -17,22 +17,25 @@
 package client
 
 import (
+	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"os"
 	"testing"
 )
 
 func TestStatsSummary(t *testing.T) {
 	fmt.Println("Running StatsSummary Tests")
-	text, err := ioutil.ReadFile("testdata/stats_summary.json")
+	text, err := os.Open("testdata/stats_summary.json")
 	if err != nil {
 		t.Skip("Skipping stats_summary test, no stats_summary.json found.")
 	}
-	statsSummaryList, err := ssUnmarshall(text)
-	if err != nil {
+
+	var data StatsSummaryResponse
+	if err := json.NewDecoder(text).Decode(&data); err != nil {
 		t.Fatal(err)
 	}
-	for _, summaryStat := range statsSummaryList.Response {
+
+	for _, summaryStat := range data.Response {
 		statName := summaryStat.StatName
 		if len(statName) == 0 {
 			t.Fatal("statSummary result does not contain 'StatName'")

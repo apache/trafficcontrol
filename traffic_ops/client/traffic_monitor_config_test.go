@@ -17,7 +17,9 @@
 package client
 
 import (
+	"encoding/json"
 	"fmt"
+	"os"
 	// "os"
 	"io/ioutil"
 	"strings"
@@ -34,21 +36,22 @@ func TestTrafficMonitorConfig(t *testing.T) {
 			t.Logf("Skipping test for %v, doesn't end in TrafficMonitorConfig.json, or is unreadable.", f.Name())
 			continue
 		}
-		text, err := ioutil.ReadFile(fmt.Sprintf("./testdata/%s", f.Name()))
+		text, err := os.Open(fmt.Sprintf("./testdata/%s", f.Name()))
 		if err != nil {
 			t.Logf("Skipping test for %v: %v", f.Name(), err.Error())
 			continue
 		}
 		fmt.Printf("Testing %v...\n", f.Name())
 
-		trafficMonitorConfig, err := trafficMonitorConfigUnmarshall(text)
-		if err != nil {
+		var data TmConfigResponse
+		if err := json.NewDecoder(text).Decode(&data); err != nil {
 			t.Fatal(err)
 		}
+		trafficMonitorConfig := data.Response
 
 		t.Log(len(trafficMonitorConfig.TrafficServers), "TrafficServers found")
 		for _, trafficServer := range trafficMonitorConfig.TrafficServers {
-			t.Logf(" Traffic Server | FQDN: %65v | IP: %15v |", trafficServer.Fqdn, trafficServer.Ip)
+			t.Logf(" Traffic Server | FQDN: %65v | IP: %15v |", trafficServer.Fqdn, trafficServer.IP)
 		}
 
 		t.Log(len(trafficMonitorConfig.CacheGroups), "CacheGroups found")
@@ -58,12 +61,12 @@ func TestTrafficMonitorConfig(t *testing.T) {
 
 		t.Log(len(trafficMonitorConfig.TrafficMonitors), "TrafficMonitors found")
 		for _, trafficMonitor := range trafficMonitorConfig.TrafficMonitors {
-			t.Logf(" Traffic Monitor | HostName: %30v | IP: %15v |", trafficMonitor.HostName, trafficMonitor.Ip)
+			t.Logf(" Traffic Monitor | HostName: %30v | IP: %15v |", trafficMonitor.HostName, trafficMonitor.IP)
 		}
 
 		t.Log(len(trafficMonitorConfig.DeliveryServices), "DeliveryServices found")
 		for _, deliveryService := range trafficMonitorConfig.DeliveryServices {
-			t.Logf(" Delivery Service | xmlId: %20v | totalTpsThreshold: %10v | totalKbpsThreshold: %10v | status: %10v |", deliveryService.XmlId, deliveryService.TotalTpsThreshold, deliveryService.TotalKbpsThreshold, deliveryService.Status)
+			t.Logf(" Delivery Service | xmlId: %20v | totalTpsThreshold: %10v | totalKbpsThreshold: %10v | status: %10v |", deliveryService.XMLID, deliveryService.TotalTpsThreshold, deliveryService.TotalKbpsThreshold, deliveryService.Status)
 		}
 
 		t.Log(len(trafficMonitorConfig.Config), "Config settings found")
@@ -75,14 +78,14 @@ func TestTrafficMonitorConfig(t *testing.T) {
 		for _, profile := range trafficMonitorConfig.Profiles {
 			t.Logf("Profile   | Name: %10v | Type: %30v | ", profile.Name, profile.Type)
 			pp := profile.Parameters
-			t.Logf("Profile Parameters | Timeout: %10v |  Polling URL: %10v, Avail BW: %10v | Load Avg: %10v, Query Time: %10v | History Count: %10v | Min Free KBps: %10v", pp.HealthConnectionTimeout, pp.HealthPollingUrl, pp.HealthThresholdAvailableBandwidthInKbps, pp.HealthThresholdLoadAvg, pp.HealthThresholdQueryTime, pp.HistoryCount, pp.MinFreeKbps)
+			t.Logf("Profile Parameters | Timeout: %10v |  Polling URL: %10v, Avail BW: %10v | Load Avg: %10v, Query Time: %10v | History Count: %10v | Min Free KBps: %10v", pp.HealthConnectionTimeout, pp.HealthPollingURL, pp.HealthThresholdAvailableBandwidthInKbps, pp.HealthThresholdLoadAvg, pp.HealthThresholdQueryTime, pp.HistoryCount, pp.MinFreeKbps)
 		}
 
 		trafficMonitorConfigMap := trafficMonitorTransformToMap(trafficMonitorConfig)
 
 		t.Log(len(trafficMonitorConfigMap.TrafficServer), "TrafficServers foundn in map")
 		for _, trafficServer := range trafficMonitorConfigMap.TrafficServer {
-			t.Logf(" Traffic Server | FQDN: %65v | IP: %15v |", trafficServer.Fqdn, trafficServer.Ip)
+			t.Logf(" Traffic Server | FQDN: %65v | IP: %15v |", trafficServer.Fqdn, trafficServer.IP)
 		}
 
 		t.Log(len(trafficMonitorConfigMap.CacheGroup), "CacheGroups found in map")
@@ -92,12 +95,12 @@ func TestTrafficMonitorConfig(t *testing.T) {
 
 		t.Log(len(trafficMonitorConfigMap.TrafficMonitor), "TrafficMonitors found in map")
 		for _, trafficMonitor := range trafficMonitorConfigMap.TrafficMonitor {
-			t.Logf(" Traffic Monitor | HostName: %30v | IP: %15v |", trafficMonitor.HostName, trafficMonitor.Ip)
+			t.Logf(" Traffic Monitor | HostName: %30v | IP: %15v |", trafficMonitor.HostName, trafficMonitor.IP)
 		}
 
 		t.Log(len(trafficMonitorConfigMap.DeliveryService), "DeliveryServices found in map")
 		for _, deliveryService := range trafficMonitorConfigMap.DeliveryService {
-			t.Logf(" Delivery Service | xmlId: %20v | totalTpsThreshold: %10v | totalKbpsThreshold: %10v | status: %10v |", deliveryService.XmlId, deliveryService.TotalTpsThreshold, deliveryService.TotalKbpsThreshold, deliveryService.Status)
+			t.Logf(" Delivery Service | xmlId: %20v | totalTpsThreshold: %10v | totalKbpsThreshold: %10v | status: %10v |", deliveryService.XMLID, deliveryService.TotalTpsThreshold, deliveryService.TotalKbpsThreshold, deliveryService.Status)
 		}
 
 		t.Log(len(trafficMonitorConfigMap.Config), "Config settings found in map")
@@ -109,7 +112,7 @@ func TestTrafficMonitorConfig(t *testing.T) {
 		for _, profile := range trafficMonitorConfigMap.Profile {
 			t.Logf(" Profile   | Name: %10v | Type: %30v |", profile.Name, profile.Type)
 			pp := profile.Parameters
-			t.Logf("Profile Parameters | Timeout: %10v |  Polling URL: %10v, Avail BW: %10v | Load Avg: %10v, Query Time: %10v | History Count: %10v | Min Free KBps: %10v", pp.HealthConnectionTimeout, pp.HealthPollingUrl, pp.HealthThresholdAvailableBandwidthInKbps, pp.HealthThresholdLoadAvg, pp.HealthThresholdQueryTime, pp.HistoryCount, pp.MinFreeKbps)
+			t.Logf("Profile Parameters | Timeout: %10v |  Polling URL: %10v, Avail BW: %10v | Load Avg: %10v, Query Time: %10v | History Count: %10v | Min Free KBps: %10v", pp.HealthConnectionTimeout, pp.HealthPollingURL, pp.HealthThresholdAvailableBandwidthInKbps, pp.HealthThresholdLoadAvg, pp.HealthThresholdQueryTime, pp.HistoryCount, pp.MinFreeKbps)
 		}
 
 	}

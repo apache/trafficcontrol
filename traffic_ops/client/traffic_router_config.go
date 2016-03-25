@@ -24,7 +24,7 @@ import (
 // TrafficRouterConfig is the json unmarshalled without any changes
 // note all structs are local to this file _except_ the TrafficRouterConfig struct.
 type TrafficRouterConfig struct {
-	TrafficServers   []trafficServer        `json:"trafficServers"`
+	TrafficServers   []TrafficServer        `json:"trafficServers"`
 	TrafficMonitors  []trafficMonitor       `json:"trafficMonitors"`
 	TrafficRouters   []trafficRouter        `json:"trafficRouters"`
 	CacheGroups      []cacheGroup           `json:"cacheGroups"`
@@ -33,7 +33,8 @@ type TrafficRouterConfig struct {
 	Config           map[string]interface{} `json:"config"`
 }
 
-type trafficServer struct {
+// TrafficServer ...
+type TrafficServer struct {
 	Profile          string              `json:"profile"`
 	IP               string              `json:"ip"`
 	Status           string              `json:"status"`
@@ -144,7 +145,7 @@ type soa struct {
 
 // TrafficRouterConfigMap ...
 type TrafficRouterConfigMap struct {
-	TrafficServer   map[string]trafficServer
+	TrafficServer   map[string]TrafficServer
 	TrafficMonitor  map[string]trafficMonitor
 	TrafficRouter   map[string]trafficRouter
 	CacheGroup      map[string]cacheGroup
@@ -197,7 +198,7 @@ func trUnmarshall(body []byte) (*TrafficRouterConfig, error) {
 
 func trTransformToMap(trConfig TrafficRouterConfig) TrafficRouterConfigMap {
 	var trConfigMap TrafficRouterConfigMap
-	trConfigMap.TrafficServer = make(map[string]trafficServer)
+	trConfigMap.TrafficServer = make(map[string]TrafficServer)
 	trConfigMap.TrafficMonitor = make(map[string]trafficMonitor)
 	trConfigMap.TrafficRouter = make(map[string]trafficRouter)
 	trConfigMap.CacheGroup = make(map[string]cacheGroup)

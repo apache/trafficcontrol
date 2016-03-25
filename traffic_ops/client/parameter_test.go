@@ -17,23 +17,25 @@
 package client
 
 import (
+	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"os"
 	"testing"
 )
 
 func TestParameter(t *testing.T) {
 	fmt.Println("Running Parameter Tests")
-	text, err := ioutil.ReadFile("testdata/parameters.json")
+	text, err := os.Open("testdata/parameters.json")
 	if err != nil {
 		t.Skip("Skipping parameters test, no parameters.json found.")
 	}
 
-	parameterList, err := paramUnmarshall(text)
-	if err != nil {
+	var data ParamResponse
+	if err := json.NewDecoder(text).Decode(&data); err != nil {
 		t.Fatal(err)
 	}
-	for _, parameter := range parameterList.Response {
+
+	for _, parameter := range data.Response {
 		name := parameter.Name
 		if len(name) == 0 {
 			t.Fatal("param result does not contain 'Name'")

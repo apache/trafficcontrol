@@ -17,23 +17,25 @@
 package client
 
 import (
+	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"os"
 	"testing"
 )
 
 func TestProfile(t *testing.T) {
 	fmt.Println("Running Profile Tests")
-	text, err := ioutil.ReadFile("testdata/profiles.json")
+	text, err := os.Open("testdata/profiles.json")
 	if err != nil {
 		t.Skip("Skipping parameters test, no profiles.json found.")
 	}
 
-	profileList, err := profileUnmarshall(text)
-	if err != nil {
+	var data ProfileResponse
+	if err := json.NewDecoder(text).Decode(&data); err != nil {
 		t.Fatal(err)
 	}
-	for _, profile := range profileList.Response {
+
+	for _, profile := range data.Response {
 		name := profile.Name
 		if len(name) == 0 {
 			t.Fatal("Profile result does not contain 'Name'")

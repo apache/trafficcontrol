@@ -34,22 +34,17 @@ type Hardware struct {
 
 // Hardware gets an array of Hardware
 func (to *Session) Hardware() (*[]Hardware, error) {
-	body, err := to.getBytes("/api/1.1/hwinfo.json")
+	url := "/api/1.1/hwinfo.json"
+	resp, err := to.request(url, nil)
 	if err != nil {
 		return nil, err
 	}
-	hardwareList, err := hardwareUnmarshall(body)
-	if err != nil {
-		return nil, err
-	}
-	return &hardwareList.Response, nil
-}
-
-func hardwareUnmarshall(body []byte) (*hardwareResponse, error) {
+	defer resp.Body.Close()
 
 	var data hardwareResponse
-	if err := json.Unmarshal(body, &data); err != nil {
+	if err := json.NewDecoder(resp.Body).Decode(&data); err != nil {
 		return nil, err
 	}
-	return &data, nil
+
+	return &data.Response, nil
 }

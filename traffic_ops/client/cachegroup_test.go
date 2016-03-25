@@ -17,25 +17,28 @@
 package client
 
 import (
+	"encoding/json"
 	"fmt"
+	"os"
 	// "os"
-	"io/ioutil"
+
 	"math"
 	"testing"
 )
 
 func TestCacheGroup(t *testing.T) {
 	fmt.Println("Running CacheGroup Tests")
-	text, err := ioutil.ReadFile("testdata/cachegroup.json")
+	text, err := os.Open("testdata/cachegroup.json")
 	if err != nil {
 		t.Skip("Skipping cachegroup test, no cachegroup.json found.")
 	}
 
-	cacheGroupList, err := cgUnmarshall(text)
-	if err != nil {
+	var data CacheGroupResponse
+	if err := json.NewDecoder(text).Decode(&data); err != nil {
 		t.Fatal(err)
 	}
-	for _, cacheGroup := range cacheGroupList.Response {
+
+	for _, cacheGroup := range data.Response {
 		cgName := cacheGroup.Name
 		if len(cgName) == 0 {
 			t.Fatal("cachegroup result does not contain 'Name'")
@@ -56,7 +59,7 @@ func TestCacheGroup(t *testing.T) {
 			t.Errorf("ShortName is null for cachegroup: %s", cgName)
 		}
 		if len(cacheGroup.Type) == 0 {
-			t.Errorr("Type is null for cachegroup: %s", cgName)
+			t.Errorf("Type is null for cachegroup: %s", cgName)
 		}
 	}
 }
