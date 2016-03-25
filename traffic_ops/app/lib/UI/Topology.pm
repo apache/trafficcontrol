@@ -373,11 +373,10 @@ sub gen_crconfig_json {
 
 		my $geo_provider = $row->geo_provider;
 		if ( $geo_provider == 1 ) {
-			$data_obj->{'deliveryServices'}->{ $row->xml_id }->{'geoLocationProvider'} = 'neustarGeoLocationService';
+			$data_obj->{'deliveryServices'}->{ $row->xml_id }->{'geolocationProvider'} = 'neustarGeolocationService';
 		}
 		else {
-
-			# default provider used (MaxMind), but not needed in CRConfig
+			$data_obj->{'deliveryServices'}->{ $row->xml_id }->{'geolocationProvider'} = 'maxmindGeolocationService';
 		}
 
 		if ( $protocol =~ m/DNS/ ) {
