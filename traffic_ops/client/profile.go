@@ -32,8 +32,8 @@ type Profile struct {
 }
 
 // Profiles gets an array of Profiles
-func (to *Session) Profiles() (*[]Profile, error) {
-	url := "/api/1.1/profiles.json"
+func (to *Session) Profiles() ([]Profile, error) {
+	url := "/api/1.2/profiles.json"
 	resp, err := to.request(url, nil)
 	if err != nil {
 		return nil, err
@@ -44,5 +44,5 @@ func (to *Session) Profiles() (*[]Profile, error) {
 	if err := json.NewDecoder(resp.Body).Decode(&data); err != nil {
 		return nil, err
 	}
-	return &data.Response, nil
+	return data.Response, nil
 }

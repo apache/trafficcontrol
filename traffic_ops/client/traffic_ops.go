@@ -106,14 +106,17 @@ func Login(toURL string, toUser string, toPasswd string, insecure bool) (*Sessio
 			},
 			Jar: jar,
 		},
-		URL: toURL,
+		URL:      toURL,
+		UserName: toUser,
+		Password: toPasswd,
 	}
 
-	uri := "/api/1.1/user/login"
+	uri := "/api/1.2/user/login"
 	resp, err := to.request(uri, credentials)
 	if err != nil {
 		return nil, err
 	}
+	defer resp.Body.Close()
 
 	var result Result
 	if err = json.NewDecoder(resp.Body).Decode(&result); err != nil {
@@ -162,7 +165,6 @@ func (to *Session) request(path string, body []byte) (*http.Response, error) {
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
 	return resp, nil
 }
 

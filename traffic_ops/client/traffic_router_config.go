@@ -166,7 +166,7 @@ func (to *Session) TrafficRouterConfigMap(cdn string) (*TrafficRouterConfigMap, 
 
 // TrafficRouterConfigRaw ...
 func (to *Session) TrafficRouterConfigRaw(cdn string) ([]byte, error) {
-	url := fmt.Sprintf("/api/1.1/configs/routing/%s.json", cdn)
+	url := fmt.Sprintf("/api/1.2/configs/routing/%s.json", cdn)
 	body, err := to.getBytesWithTTL(url, tmPollingInterval)
 	if err != nil {
 		return nil, err

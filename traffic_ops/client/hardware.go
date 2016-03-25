@@ -33,8 +33,8 @@ type Hardware struct {
 }
 
 // Hardware gets an array of Hardware
-func (to *Session) Hardware() (*[]Hardware, error) {
-	url := "/api/1.1/hwinfo.json"
+func (to *Session) Hardware() ([]Hardware, error) {
+	url := "/api/1.2/hwinfo.json"
 	resp, err := to.request(url, nil)
 	if err != nil {
 		return nil, err
@@ -46,5 +46,5 @@ func (to *Session) Hardware() (*[]Hardware, error) {
 		return nil, err
 	}
 
-	return &data.Response, nil
+	return data.Response, nil
 }

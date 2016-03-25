@@ -37,8 +37,8 @@ type CacheGroup struct {
 
 // CacheGroups gets the CacheGroups in an array of CacheGroup structs
 // (note CacheGroup used to be called location)
-func (to *Session) CacheGroups() (*[]CacheGroup, error) {
-	url := "/api/1.1/cachegroups.json"
+func (to *Session) CacheGroups() ([]CacheGroup, error) {
+	url := "/api/1.2/cachegroups.json"
 	resp, err := to.request(url, nil)
 	if err != nil {
 		return nil, err
@@ -50,5 +50,5 @@ func (to *Session) CacheGroups() (*[]CacheGroup, error) {
 		return nil, err
 	}
 
-	return &data.Response, nil
+	return data.Response, nil
 }
