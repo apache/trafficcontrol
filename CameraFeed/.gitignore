@@ -1,1 +1,5 @@
 *~
+*.o
+
+# Executable from src directory
+AmcrestIPM-721S_StreamReader

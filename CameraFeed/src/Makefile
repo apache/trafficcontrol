@@ -3,6 +3,7 @@ SRCS := CommandLine.cpp \
         CurlInit.cpp \
         GetVideo.cpp \
         JPEGFileWriter.cpp \
+        JPEGMongoDBWriter.cpp \
         main.cpp
 
 EXE := AmcrestIPM-721S_StreamReader
@@ -10,16 +11,18 @@ EXE := AmcrestIPM-721S_StreamReader
 MAKEFLAGS := --no-print-directory
 DEPEND_FILE := .dependlist
 
-# TODO: need to install libcurl4-gnutls-dev package
 CURL_C_FLAGS := $(shell curl-config --cflags)
 CURL_LD_FLAGS := $(shell curl-config --libs)
 
+MONGO_C_FLAGS := $(shell pkg-config --cflags libmongocxx)
+MONGO_LD_FLAGS := $(shell pkg-config --libs libmongocxx)
+
 CC := g++
-CFLAGS := --std=c++11 -g -Wall $(CURL_C_FLAGS) $(INC_DIRS)
+CFLAGS := --std=c++11 -g -Wall $(CURL_C_FLAGS) $(MONGO_C_FLAGS) $(INC_DIRS)
 
 LD := g++
 LDFLAGS :=
-LIBS := $(CURL_LD_FLAGS)
+LIBS := $(CURL_LD_FLAGS) $(MONGO_LD_FLAGS)
 
 OBJS := $(SRCS:%.cpp=%.o)
 

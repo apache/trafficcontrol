@@ -138,6 +138,7 @@ size_t GetVideo::writeCallback(char *ptr, size_t size, size_t nmemb)
     }
     else if (ReadState::JPEG == myReadState)
     {
+      // TODO: passes non-jpeg data to callback when using debug
       auto remainingBytes = nmemb - ii;
       if (remainingBytes > myJPEGSize)
       {
@@ -149,7 +150,15 @@ size_t GetVideo::writeCallback(char *ptr, size_t size, size_t nmemb)
       ii += remainingBytes;
       if (myJPEGSize == 0)
       {
-        myJPEGHandler.handleJPEG(myJPEGData.get(), myJPEGBytesSaved);
+        try
+        {
+          myJPEGHandler.handleJPEG(myJPEGData.get(), myJPEGBytesSaved);
+        }
+        catch (const std::exception &exception)
+        {
+          std::cerr << exception.what() << std::endl;
+          return size + 1; // Signal to curl that something went amiss.
+        }
         myReadState = ReadState::Trailer;
       }
     }
