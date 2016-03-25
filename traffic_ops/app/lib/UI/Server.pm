@@ -372,8 +372,10 @@ sub check_server_input {
 		$err .= $paramHashRef->{'ip_address'} . " and " . $paramHashRef->{'ip_gateway'} . " are not in same network" . $sep;
 	}
 
-	if ( defined( $paramHashRef->{'ip6_address'} )
-		&& $paramHashRef->{'ip6_address'} ne "" )
+	if ( ( defined( $paramHashRef->{'ip6_address'} )
+		&& $paramHashRef->{'ip6_address'} ne "" ) ||
+		( defined( $paramHashRef->{'ip6_gateway'} )
+		&& $paramHashRef->{'ip6_gateway'} ne "" ) )
 	{
 		if ( !&is_ip6address( $paramHashRef->{'ip6_address'} ) )
 		{
