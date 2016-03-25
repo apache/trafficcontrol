@@ -11,14 +11,12 @@
         <table id="asnsTable" class="table responsive-utilities jambo_table">
             <thead>
             <tr class="headings">
-                <th>id</th>
                 <th>asn</th>
                 <th>cachegroup</th>
             </tr>
             </thead>
             <tbody>
             <tr ng-click="editASN(asn.id)" ng-repeat="asn in asns">
-                <td>{{asn.id}}</td>
                 <td>{{asn.asn}}</td>
                 <td>{{asn._links.cachegroup.id}}</td>
             </tr>

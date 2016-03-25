@@ -3,8 +3,7 @@ var FormCDNController = function(cdn, $scope, formUtils, stringUtils, locationUt
     $scope.cdn = cdn;
 
     $scope.props = [
-        { name: 'name', type: 'text', required: true, maxLength: 45 },
-        { name: 'dnssecEnabled', type: 'number', required: true, maxLength: 1 }
+        { name: 'name', type: 'text', required: true, maxLength: 45 }
     ];
 
     $scope.labelize = stringUtils.labelize;
