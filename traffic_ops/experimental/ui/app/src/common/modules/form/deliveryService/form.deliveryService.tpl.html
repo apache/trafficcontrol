@@ -37,15 +37,6 @@
                     <small class="input-error" ng-show="hasPropertyError(deliveryServiceForm.signed, 'required')">Required</small>
                 </div>
             </div>
-            <div class="form-group" ng-class="{'has-error': hasError(deliveryServiceForm.qstringIgnore), 'has-feedback': hasError(deliveryServiceForm.qstringIgnore)}">
-                <label class="control-label col-md-2 col-sm-2 col-xs-12">Query String Ignore *</label>
-                <div class="col-md-10 col-sm-10 col-xs-12">
-                    <select id="qstringIgnore" name="qstringIgnore" class="form-control" ng-model="deliveryService.qstringIgnore" ng-options="qstringIgnore.id as qstringIgnore.name for qstringIgnore in [ { id: 0, name: 'false' }, { id: 1, name: 'true' } ]" required>
-                        <option value="">Select...</option>
-                    </select>
-                    <small class="input-error" ng-show="hasPropertyError(deliveryServiceForm.qstringIgnore, 'required')">Required</small>
-                </div>
-            </div>
             <div class="form-group" ng-class="{'has-error': hasError(deliveryServiceForm.geoLimit), 'has-feedback': hasError(deliveryServiceForm.geoLimit)}">
                 <label class="control-label col-md-2 col-sm-2 col-xs-12">Geo Limit *</label>
                 <div class="col-md-10 col-sm-10 col-xs-12">
