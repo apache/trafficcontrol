@@ -31,12 +31,12 @@ var FormEditUserController = function(user, $scope, $controller, $uibModal, $anc
 
     $scope.confirmDelete = function(user) {
         var params = {
-            title: 'Confirm Delete',
-            message: 'This action CANNOT be undone. This will permanently delete ' + user.username + '. Are you sure you want to delete ' + user.username + '?'
+            title: 'Delete User: ' + user.username,
+            key: user.username
         };
         var modalInstance = $uibModal.open({
-            templateUrl: 'common/modules/dialog/confirm/dialog.confirm.tpl.html',
-            controller: 'DialogConfirmController',
+            templateUrl: 'common/modules/dialog/delete/dialog.delete.tpl.html',
+            controller: 'DialogDeleteController',
             size: 'md',
             resolve: {
                 params: function () {

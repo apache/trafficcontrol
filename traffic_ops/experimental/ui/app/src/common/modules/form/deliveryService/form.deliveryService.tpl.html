@@ -19,6 +19,59 @@
                     <span ng-show="hasError(deliveryServiceForm[prop.name])" class="form-control-feedback"><i class="fa fa-times"></i></span>
                 </div>
             </div>
+            <div class="form-group" ng-class="{'has-error': hasError(deliveryServiceForm.active), 'has-feedback': hasError(deliveryServiceForm.active)}">
+                <label class="control-label col-md-2 col-sm-2 col-xs-12">Active *</label>
+                <div class="col-md-10 col-sm-10 col-xs-12">
+                    <select id="active" name="active" class="form-control" ng-model="deliveryService.active" ng-options="active.id as active.name for active in [ { id: 0, name: 'false' }, { id: 1, name: 'true' } ]" required>
+                        <option value="">Select...</option>
+                    </select>
+                    <small class="input-error" ng-show="hasPropertyError(deliveryServiceForm.active, 'required')">Required</small>
+                </div>
+            </div>
+            <div class="form-group" ng-class="{'has-error': hasError(deliveryServiceForm.signed), 'has-feedback': hasError(deliveryServiceForm.signed)}">
+                <label class="control-label col-md-2 col-sm-2 col-xs-12">Signed *</label>
+                <div class="col-md-10 col-sm-10 col-xs-12">
+                    <select id="signed" name="signed" class="form-control" ng-model="deliveryService.signed" ng-options="signed.id as signed.name for signed in [ { id: 0, name: 'false' }, { id: 1, name: 'true' } ]" required>
+                        <option value="">Select...</option>
+                    </select>
+                    <small class="input-error" ng-show="hasPropertyError(deliveryServiceForm.signed, 'required')">Required</small>
+                </div>
+            </div>
+            <div class="form-group" ng-class="{'has-error': hasError(deliveryServiceForm.qstringIgnore), 'has-feedback': hasError(deliveryServiceForm.qstringIgnore)}">
+                <label class="control-label col-md-2 col-sm-2 col-xs-12">Query String Ignore *</label>
+                <div class="col-md-10 col-sm-10 col-xs-12">
+                    <select id="qstringIgnore" name="qstringIgnore" class="form-control" ng-model="deliveryService.qstringIgnore" ng-options="qstringIgnore.id as qstringIgnore.name for qstringIgnore in [ { id: 0, name: 'false' }, { id: 1, name: 'true' } ]" required>
+                        <option value="">Select...</option>
+                    </select>
+                    <small class="input-error" ng-show="hasPropertyError(deliveryServiceForm.qstringIgnore, 'required')">Required</small>
+                </div>
+            </div>
+            <div class="form-group" ng-class="{'has-error': hasError(deliveryServiceForm.geoLimit), 'has-feedback': hasError(deliveryServiceForm.geoLimit)}">
+                <label class="control-label col-md-2 col-sm-2 col-xs-12">Geo Limit *</label>
+                <div class="col-md-10 col-sm-10 col-xs-12">
+                    <select id="geoLimit" name="geoLimit" class="form-control" ng-model="deliveryService.geoLimit" ng-options="geoLimit.id as geoLimit.name for geoLimit in [ { id: 0, name: 'false' }, { id: 1, name: 'true' } ]" required>
+                        <option value="">Select...</option>
+                    </select>
+                    <small class="input-error" ng-show="hasPropertyError(deliveryServiceForm.geoLimit, 'required')">Required</small>
+                </div>
+            </div>
+            <div class="form-group" ng-class="{'has-error': hasError(deliveryServiceForm.ipv6RoutingEnabled), 'has-feedback': hasError(deliveryServiceForm.ipv6RoutingEnabled)}">
+                <label class="control-label col-md-2 col-sm-2 col-xs-12">IPv6 Routing Enabled *</label>
+                <div class="col-md-10 col-sm-10 col-xs-12">
+                    <select id="ipv6RoutingEnabled" name="ipv6RoutingEnabled" class="form-control" ng-model="deliveryService.ipv6RoutingEnabled" ng-options="ipv6RoutingEnabled.id as ipv6RoutingEnabled.name for ipv6RoutingEnabled in [ { id: 0, name: 'false' }, { id: 1, name: 'true' } ]" required>
+                        <option value="">Select...</option>
+                    </select>
+                    <small class="input-error" ng-show="hasPropertyError(deliveryServiceForm.ipv6RoutingEnabled, 'required')">Required</small>
+                </div>
+            </div>
+            <div class="form-group">
+                <label class="control-label col-md-2 col-sm-2 col-xs-12">Multi-Site Origin</label>
+                <div class="col-md-10 col-sm-10 col-xs-12">
+                    <select id="multiSiteOrigin" name="multiSiteOrigin" class="form-control" ng-model="deliveryService.multiSiteOrigin" ng-options="multiSiteOrigin.id as multiSiteOrigin.name for multiSiteOrigin in [ { id: 0, name: 'false' }, { id: 1, name: 'true' } ]">
+                        <option value="">Select...</option>
+                    </select>
+                </div>
+            </div>
             <div class="form-group" ng-class="{'has-error': hasError(deliveryServiceForm.type), 'has-feedback': hasError(deliveryServiceForm.type)}">
                 <label class="control-label col-md-2 col-sm-2 col-xs-12">Type *</label>
                 <div class="col-md-10 col-sm-10 col-xs-12">
