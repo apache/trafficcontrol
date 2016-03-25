@@ -14,21 +14,21 @@
    limitations under the License.
 */
 
-package client
+package fixtures
 
-import (
-	"fmt"
+import "github.com/jheitz200/traffic_control/traffic_ops/client"
 
-	"github.com/cihub/seelog"
-)
-
-// CRConfigRaw ...
-func (to *Session) CRConfigRaw(cdn string) ([]byte, error) {
-	url := fmt.Sprintf("/CRConfig-Snapshots/%s/CRConfig.json", cdn)
-	body, err := to.getBytesWithTTL(url, tmPollingInterval)
-	if err != nil {
-		seelog.Error(err)
-		return nil, err
+// Users returns a default UserResponse to be used for testing.
+func Users() *client.UserResponse {
+	return &client.UserResponse{
+		Response: []client.User{
+			client.User{
+				Username:     "bsmith",
+				PublicSSHKey: "some-ssh-key",
+				Role:         "3",
+				Email:        "bobsmith@email.com",
+				FullName:     "Bob Smith",
+			},
+		},
 	}
-	return body, nil
 }

@@ -26,7 +26,7 @@ import (
 	"net/http/cookiejar"
 	"time"
 
-	"github.com/prometheus/log"
+	"github.com/cihub/seelog"
 	"golang.org/x/net/publicsuffix"
 )
 
@@ -36,10 +36,22 @@ type Session struct {
 	Password  string
 	URL       string
 	UserAgent *http.Client
-	Cache     map[string]cacheEntry
+	Cache     map[string]CacheEntry
 }
 
-// Result {"alerts":[{"level":"success","text":"Successfully logged in."}],"version":"1.1"}
+// HTTPError is returned on Update Session failure.
+type HTTPError struct {
+	HTTPStatusCode int
+	HTTPStatus     string
+	URL            string
+}
+
+// Error implements the error interface for our customer error type.
+func (e *HTTPError) Error() string {
+	return fmt.Sprintf("%s[%d] - Error requesting Traffic Ops %s", e.HTTPStatus, e.HTTPStatusCode, e.URL)
+}
+
+// Result {"response":[{"level":"success","text":"Successfully logged in."}],"version":"1.1"}
 type Result struct {
 	Alerts  []Alert
 	Version string `json:"version"`
@@ -51,9 +63,10 @@ type Alert struct {
 	Text  string `json:"text"`
 }
 
-type cacheEntry struct {
+// CacheEntry ...
+type CacheEntry struct {
 	Entered int64
-	bytes   []byte
+	Bytes   []byte
 }
 
 // Credentials contains Traffic Ops login credentials
@@ -64,6 +77,17 @@ type Credentials struct {
 
 // TODO JvD
 const tmPollingInterval = 60
+
+func init() {
+	seelogConfig := "conf/seelog.xml"
+	logger, err := seelog.LoggerFromConfigAsFile(seelogConfig)
+	if err != nil {
+		err := fmt.Errorf("Error creating Logger from seelog file: %s", seelogConfig)
+		seelog.Error(err)
+	}
+	defer seelog.Flush()
+	seelog.ReplaceLogger(logger)
+}
 
 // loginCreds gathers login credentials for Traffic Ops.
 func loginCreds(toUser string, toPasswd string) ([]byte, error) {
@@ -87,6 +111,7 @@ func loginCreds(toUser string, toPasswd string) ([]byte, error) {
 func Login(toURL string, toUser string, toPasswd string, insecure bool) (*Session, error) {
 	credentials, err := loginCreds(toUser, toPasswd)
 	if err != nil {
+		seelog.Error(err)
 		return nil, err
 	}
 
@@ -96,6 +121,7 @@ func Login(toURL string, toUser string, toPasswd string, insecure bool) (*Sessio
 
 	jar, err := cookiejar.New(&options)
 	if err != nil {
+		seelog.Error(err)
 		return nil, err
 	}
 
@@ -109,17 +135,20 @@ func Login(toURL string, toUser string, toPasswd string, insecure bool) (*Sessio
 		URL:      toURL,
 		UserName: toUser,
 		Password: toPasswd,
+		Cache:    make(map[string]CacheEntry),
 	}
 
-	uri := "/api/1.2/user/login"
-	resp, err := to.request(uri, credentials)
+	path := "/api/1.2/user/login"
+	resp, err := to.request(path, credentials)
 	if err != nil {
+		seelog.Error(err)
 		return nil, err
 	}
 	defer resp.Body.Close()
 
 	var result Result
-	if err = json.NewDecoder(resp.Body).Decode(&result); err != nil {
+	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
+		seelog.Error(err)
 		return nil, err
 	}
 
@@ -132,12 +161,12 @@ func Login(toURL string, toUser string, toPasswd string, insecure bool) (*Sessio
 	}
 
 	if !success {
-		fmt.Println("NO SUCCESS")
 		err := fmt.Errorf("Login failed, result string: %+v", result)
+		seelog.Error(err)
 		return nil, err
 	}
 
-	log.Infof("logged into %s!", toURL)
+	seelog.Debugf("logged into %s!", toURL)
 	return &to, nil
 }
 
@@ -165,6 +194,17 @@ func (to *Session) request(path string, body []byte) (*http.Response, error) {
 	if err != nil {
 		return nil, err
 	}
+
+	if resp.StatusCode != http.StatusOK {
+		e := HTTPError{
+			HTTPStatus:     resp.Status,
+			HTTPStatusCode: resp.StatusCode,
+			URL:            url,
+		}
+		return nil, &e
+	}
+
+	seelog.Infof("request %s, StatusCode[%d]", url, resp.StatusCode)
 	return resp, nil
 }
 
@@ -172,20 +212,20 @@ func (to *Session) request(path string, body []byte) (*http.Response, error) {
 // return from cache is found and the ttl isn't expired, otherwise get it and
 // store it in cache
 func (to *Session) getBytesWithTTL(path string, ttl int64) ([]byte, error) {
-
 	var body []byte
 	var err error
 	getFresh := false
 	if cacheEntry, ok := to.Cache[path]; ok {
 		if cacheEntry.Entered > time.Now().Unix()-ttl {
-			fmt.Println("Cache HIT for", path)
-			body = cacheEntry.bytes
+			seelog.Debugf("Cache HIT for %s%s", to.URL, path)
+			body = cacheEntry.Bytes
 		} else {
-			fmt.Println("Cache HIT but EXPIRED for", path)
+			seelog.Debugf("Cache HIT but EXPIRED for %s%s", to.URL, path)
 			getFresh = true
 		}
 	} else {
-		fmt.Println("Cache MISS for", path)
+		to.Cache = make(map[string]CacheEntry)
+		seelog.Debugf("Cache MISS for %s%s", to.URL, path)
 		getFresh = true
 	}
 
@@ -195,11 +235,13 @@ func (to *Session) getBytesWithTTL(path string, ttl int64) ([]byte, error) {
 			return nil, err
 		}
 
-		var newEntry cacheEntry
-		newEntry.Entered = time.Now().Unix()
-		newEntry.bytes = body
+		newEntry := CacheEntry{
+			Entered: time.Now().Unix(),
+			Bytes:   body,
+		}
 		to.Cache[path] = newEntry
 	}
+
 	return body, nil
 }
 
@@ -210,10 +252,12 @@ func (to *Session) getBytes(path string) ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
+	defer resp.Body.Close()
 
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
 		return nil, err
 	}
+
 	return body, nil
 }

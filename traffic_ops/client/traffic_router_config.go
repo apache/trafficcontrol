@@ -19,18 +19,37 @@ package client
 import (
 	"encoding/json"
 	"fmt"
+
+	"github.com/cihub/seelog"
 )
+
+// TRConfigResponse ...
+type TRConfigResponse struct {
+	Version  string              `json:"version"`
+	Response TrafficRouterConfig `json:"response"`
+}
 
 // TrafficRouterConfig is the json unmarshalled without any changes
 // note all structs are local to this file _except_ the TrafficRouterConfig struct.
 type TrafficRouterConfig struct {
-	TrafficServers   []TrafficServer        `json:"trafficServers"`
-	TrafficMonitors  []trafficMonitor       `json:"trafficMonitors"`
-	TrafficRouters   []trafficRouter        `json:"trafficRouters"`
-	CacheGroups      []cacheGroup           `json:"cacheGroups"`
-	DeliveryServices []deliveryService      `json:"deliveryServices"`
-	Stats            map[string]interface{} `json:"stats"`
-	Config           map[string]interface{} `json:"config"`
+	TrafficServers   []TrafficServer        `json:"trafficServers,omitempty"`
+	TrafficMonitors  []TrafficMonitor       `json:"trafficMonitors,omitempty"`
+	TrafficRouters   []TrafficRouter        `json:"trafficRouters,omitempty"`
+	CacheGroups      []TMCacheGroup         `json:"cacheGroups,omitempty"`
+	DeliveryServices []TRDeliveryService    `json:"deliveryServices,omitempty"`
+	Stats            map[string]interface{} `json:"stats,omitempty"`
+	Config           map[string]interface{} `json:"config,omitempty"`
+}
+
+// TrafficRouterConfigMap ...
+type TrafficRouterConfigMap struct {
+	TrafficServer   map[string]TrafficServer
+	TrafficMonitor  map[string]TrafficMonitor
+	TrafficRouter   map[string]TrafficRouter
+	CacheGroup      map[string]TMCacheGroup
+	DeliveryService map[string]TRDeliveryService
+	Config          map[string]interface{}
+	Stat            map[string]interface{}
 }
 
 // TrafficServer ...
@@ -42,7 +61,7 @@ type TrafficServer struct {
 	IP6              string              `json:"ip6"`
 	Port             int                 `json:"port"`
 	HostName         string              `json:"hostName"`
-	Fqdn             string              `json:"fqdn"`
+	FQDN             string              `json:"fqdn"`
 	InterfaceName    string              `json:"interfaceName"`
 	Type             string              `json:"type"`
 	HashID           string              `json:"hashId"`
@@ -54,88 +73,89 @@ type tsdeliveryService struct {
 	Remaps []string `json:"remaps"`
 }
 
-type trafficMonitor struct {
+// TrafficRouter ...
+type TrafficRouter struct {
 	Port     int    `json:"port"`
 	IP6      string `json:"ip6"`
 	IP       string `json:"ip"`
-	HostName string `json:"hostName"`
-	Fqdn     string `json:"fqdn"`
-	Profile  string `json:"profile"`
-	Location string `json:"location"`
-	Status   string `json:"status"`
-}
-
-type trafficRouter struct {
-	Port     int    `json:"port"`
-	IP6      string `json:"ip6"`
-	IP       string `json:"ip"`
-	Fqdn     string `json:"fqdn"`
+	FQDN     string `json:"fqdn"`
 	Profile  string `json:"profile"`
 	Location string `json:"location"`
 	Status   string `json:"status"`
 	APIPort  int    `json:"apiPort"`
 }
 
+// TMCacheGroup ...
 // !!! Note the lowercase!!! this is local to this file, there's a CacheGroup definition in cachegroup.go!
-type cacheGroup struct {
+type TMCacheGroup struct {
 	Name        string      `json:"name"`
-	Coordinates coordinates `json:"coordinates"`
+	Coordinates Coordinates `json:"coordinates"`
 }
 
-type coordinates struct {
+// Coordinates ...
+type Coordinates struct {
 	Latitude  float64 `json:"latitude"`
 	Longitude float64 `json:"longitude"`
 }
 
+// TRDeliveryService ...
 // TODO JvD: move to deliveryservice.go ??
-type deliveryService struct {
+type TRDeliveryService struct {
 	XMLID             string            `json:"xmlId"`
-	MissLocation      missLocation      `json:"missLocation"`
+	Domains           []string          `json:"domains"`
+	MissLocation      MissLocation      `json:"missCoordinates"`
 	CoverageZoneOnly  bool              `json:"coverageZoneOnly"`
-	MatchSets         []matchSet        `json:"matchSets"`
+	MatchSets         []MatchSet        `json:"matchSets"`
 	TTL               int               `json:"ttl"`
-	TTLs              ttls              `json:"ttls"`
-	BypassDestination bypassDestination `json:"bypassDestination"`
-	StatcDNSEntries   []staticDNS       `json:"statitDnsEntries"`
-	Soa               soa               `json:"soa"`
+	TTLs              TTLS              `json:"ttls"`
+	BypassDestination BypassDestination `json:"bypassDestination"`
+	StatcDNSEntries   []StaticDNS       `json:"statitDnsEntries"`
+	Soa               SOA               `json:"soa"`
 }
 
-type missLocation struct {
-	Latitude  float64 `json:"lat"`
-	Longitude float64 `json:"long"`
+// MissLocation ...
+type MissLocation struct {
+	Latitude  float64 `json:"latitude"`
+	Longitude float64 `json:"longitudef"`
 }
 
-type matchSet struct {
+// MatchSet ...
+type MatchSet struct {
 	Protocol  string      `json:"protocol"`
-	MatchList []matchList `json:"matchList"`
+	MatchList []MatchList `json:"matchList"`
 }
 
-type matchList struct {
+// MatchList ...
+type MatchList struct {
 	Regex     string `json:"regex"`
 	MatchType string `json:"matchType"`
 }
 
-type bypassDestination struct {
-	Fqdn string `json:"fqdn"`
+// BypassDestination ...
+type BypassDestination struct {
+	FQDN string `json:"fqdn"`
 	Type string `json:"type"`
 	Port int    `json:"Port"`
 }
 
-type ttls struct {
+// TTLS ...
+type TTLS struct {
 	Arecord    int `json:"A"`
 	SoaRecord  int `json:"SOA"`
 	NsRecord   int `json:"NS"`
 	AaaaRecord int `json:"AAAA"`
 }
 
-type staticDNS struct {
+// StaticDNS ...
+type StaticDNS struct {
 	Value string `json:"value"`
 	TTL   int    `json:"ttl"`
 	Name  string `json:"name"`
 	Type  string `json:"type"`
 }
 
-type soa struct {
+// SOA ...
+type SOA struct {
 	Admin   string `json:"admin"`
 	Retry   int    `json:"retry"`
 	Minimum int    `json:"minimum"`
@@ -143,92 +163,69 @@ type soa struct {
 	Expire  int    `json:"expire"`
 }
 
-// TrafficRouterConfigMap ...
-type TrafficRouterConfigMap struct {
-	TrafficServer   map[string]TrafficServer
-	TrafficMonitor  map[string]trafficMonitor
-	TrafficRouter   map[string]trafficRouter
-	CacheGroup      map[string]cacheGroup
-	DeliveryService map[string]deliveryService
-	Config          map[string]interface{}
-	Stat            map[string]interface{}
-}
-
 // TrafficRouterConfigMap gets a bunch of maps
 func (to *Session) TrafficRouterConfigMap(cdn string) (*TrafficRouterConfigMap, error) {
 	trConfig, err := to.TrafficRouterConfig(cdn)
 	if err != nil {
+		seelog.Error(err)
 		return nil, err
 	}
-	trConfigMap := trTransformToMap(*trConfig)
-	return &trConfigMap, nil
-}
 
-// TrafficRouterConfigRaw ...
-func (to *Session) TrafficRouterConfigRaw(cdn string) ([]byte, error) {
-	url := fmt.Sprintf("/api/1.2/configs/routing/%s.json", cdn)
-	body, err := to.getBytesWithTTL(url, tmPollingInterval)
-	if err != nil {
-		return nil, err
-	}
-	return body, nil
+	trConfigMap := TRTransformToMap(*trConfig)
+	return &trConfigMap, nil
 }
 
 // TrafficRouterConfig gets the json arrays
 func (to *Session) TrafficRouterConfig(cdn string) (*TrafficRouterConfig, error) {
-	body, err := to.TrafficRouterConfigRaw(cdn)
+	url := fmt.Sprintf("/api/1.2/cdns/%s/configs/routing.json", cdn)
+	body, err := to.getBytesWithTTL(url, tmPollingInterval)
 	if err != nil {
+		seelog.Error(err)
 		return nil, err
 	}
-	trConfig, err := trUnmarshall(body)
-	if err != nil {
+
+	var data TRConfigResponse
+	if err := json.Unmarshal(body, &data); err != nil {
+		seelog.Error(err)
 		return nil, err
 	}
-	return trConfig, nil
+	return &data.Response, nil
 }
 
-// in a seperate function for unit testing with files
-func trUnmarshall(body []byte) (*TrafficRouterConfig, error) {
-	var trConfig TrafficRouterConfig
-	if err := json.Unmarshal(body, &trConfig); err != nil {
-		return nil, err
-	}
-	return &trConfig, nil
-}
-
-func trTransformToMap(trConfig TrafficRouterConfig) TrafficRouterConfigMap {
-	var trConfigMap TrafficRouterConfigMap
-	trConfigMap.TrafficServer = make(map[string]TrafficServer)
-	trConfigMap.TrafficMonitor = make(map[string]trafficMonitor)
-	trConfigMap.TrafficRouter = make(map[string]trafficRouter)
-	trConfigMap.CacheGroup = make(map[string]cacheGroup)
-	trConfigMap.DeliveryService = make(map[string]deliveryService)
-	trConfigMap.Config = make(map[string]interface{})
-	trConfigMap.Stat = make(map[string]interface{})
+// TRTransformToMap ...
+func TRTransformToMap(trConfig TrafficRouterConfig) TrafficRouterConfigMap {
+	var tr TrafficRouterConfigMap
+	tr.TrafficServer = make(map[string]TrafficServer)
+	tr.TrafficMonitor = make(map[string]TrafficMonitor)
+	tr.TrafficRouter = make(map[string]TrafficRouter)
+	tr.CacheGroup = make(map[string]TMCacheGroup)
+	tr.DeliveryService = make(map[string]TRDeliveryService)
+	tr.Config = make(map[string]interface{})
+	tr.Stat = make(map[string]interface{})
 
 	for _, trServer := range trConfig.TrafficServers {
-		trConfigMap.TrafficServer[trServer.HostName] = trServer
+		tr.TrafficServer[trServer.HostName] = trServer
 	}
 	for _, trMonitor := range trConfig.TrafficMonitors {
-		trConfigMap.TrafficMonitor[trMonitor.HostName] = trMonitor
+		tr.TrafficMonitor[trMonitor.HostName] = trMonitor
 	}
 	for _, trServer := range trConfig.TrafficServers {
-		trConfigMap.TrafficServer[trServer.HostName] = trServer
+		tr.TrafficServer[trServer.HostName] = trServer
 	}
 	for _, trRouter := range trConfig.TrafficRouters {
-		trConfigMap.TrafficRouter[trRouter.Fqdn] = trRouter
+		tr.TrafficRouter[trRouter.FQDN] = trRouter
 	}
 	for _, trCacheGroup := range trConfig.CacheGroups {
-		trConfigMap.CacheGroup[trCacheGroup.Name] = trCacheGroup
+		tr.CacheGroup[trCacheGroup.Name] = trCacheGroup
 	}
 	for _, trDeliveryService := range trConfig.DeliveryServices {
-		trConfigMap.DeliveryService[trDeliveryService.XMLID] = trDeliveryService
+		tr.DeliveryService[trDeliveryService.XMLID] = trDeliveryService
 	}
 	for trSettingKey, trSettingVal := range trConfig.Config {
-		trConfigMap.Config[trSettingKey] = trSettingVal
+		tr.Config[trSettingKey] = trSettingVal
 	}
 	for trStatKey, trStatVal := range trConfig.Stats {
-		trConfigMap.Stat[trStatKey] = trStatVal
+		tr.Stat[trStatKey] = trStatVal
 	}
-	return trConfigMap
+	return tr
 }

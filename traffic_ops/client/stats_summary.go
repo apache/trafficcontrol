@@ -17,6 +17,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"strconv"
+
+	"github.com/cihub/seelog"
 )
 
 // StatsSummaryResponse ...
@@ -27,7 +29,7 @@ type StatsSummaryResponse struct {
 
 // StatsSummary ...
 type StatsSummary struct {
-	CdnName         string `json:"cdnName"`
+	CDNName         string `json:"cdnName"`
 	DeliveryService string `json:"deliveryServiceName"`
 	StatName        string `json:"statName"`
 	StatValue       string `json:"statValue"`
@@ -44,7 +46,7 @@ type LastUpdated struct {
 }
 
 // SummaryStats ...
-func (to *Session) SummaryStats(cdn string, deliveryService string, statName string) (*[]StatsSummary, error) {
+func (to *Session) SummaryStats(cdn string, deliveryService string, statName string) ([]StatsSummary, error) {
 	var queryParams []string
 	if len(cdn) > 0 {
 		queryParams = append(queryParams, fmt.Sprintf("cdnName=%s", cdn))
@@ -70,15 +72,18 @@ func (to *Session) SummaryStats(cdn string, deliveryService string, statName str
 
 	resp, err := to.request(queryURL, nil)
 	if err != nil {
+		seelog.Error(err)
 		return nil, err
 	}
 	defer resp.Body.Close()
 
 	var data StatsSummaryResponse
 	if err := json.NewDecoder(resp.Body).Decode(&data); err != nil {
+		seelog.Error(err)
 		return nil, err
 	}
-	return &data.Response, nil
+
+	return data.Response, nil
 }
 
 // SummaryStatsLastUpdated ...
@@ -90,12 +95,14 @@ func (to *Session) SummaryStatsLastUpdated(statName string) (*string, error) {
 
 	resp, err := to.request(queryURL, nil)
 	if err != nil {
+		seelog.Error(err)
 		return nil, err
 	}
 	defer resp.Body.Close()
 
 	var data LastUpdated
 	if err := json.NewDecoder(resp.Body).Decode(&data); err != nil {
+		seelog.Error(err)
 		return nil, err
 	}
 
@@ -110,12 +117,14 @@ func (to *Session) SummaryStatsLastUpdated(statName string) (*string, error) {
 func (to *Session) AddSummaryStats(statsSummary StatsSummary) error {
 	reqBody, err := json.Marshal(statsSummary)
 	if err != nil {
+		seelog.Error(err)
 		return err
 	}
 
 	url := "/api/1.2/stats_summary/create"
 	resp, err := to.request(url, reqBody)
 	if err != nil {
+		seelog.Error(err)
 		return err
 	}
 	if resp.StatusCode != 200 {

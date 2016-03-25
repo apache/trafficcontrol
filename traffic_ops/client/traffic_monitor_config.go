@@ -21,48 +21,65 @@ import (
 	"fmt"
 	"strconv"
 	"strings"
+
+	"github.com/cihub/seelog"
 )
 
-// TmConfigResponse ...
-type TmConfigResponse struct {
+// TMConfigResponse ...
+type TMConfigResponse struct {
 	Version  string               `json:"version"`
 	Response TrafficMonitorConfig `json:"response"`
 }
 
 // TrafficMonitorConfig ...
 type TrafficMonitorConfig struct {
-	TrafficServers   []TrafficServer                 `json:"trafficServers"`
-	CacheGroups      []cacheGroup                    `json:"cacheGroups"`
-	Config           map[string]interface{}          `json:"config"`
-	TrafficMonitors  []trafficMonitor                `json:"trafficMonitors"`
-	DeliveryServices []trafficMonitorDeliveryService `json:"deliveryServices"`
-	Profiles         []profile                       `json:"profiles"`
+	TrafficServers   []TrafficServer        `json:"trafficServers,omitempty"`
+	CacheGroups      []TMCacheGroup         `json:"cacheGroups,omitempty"`
+	Config           map[string]interface{} `json:"config,omitempty"`
+	TrafficMonitors  []TrafficMonitor       `json:"trafficMonitors,omitempty"`
+	DeliveryServices []TMDeliveryService    `json:"deliveryServices,omitempty"`
+	Profiles         []TMProfile            `json:"profiles,omitempty"`
 }
 
 // TrafficMonitorConfigMap ...
 type TrafficMonitorConfigMap struct {
 	TrafficServer   map[string]TrafficServer
-	CacheGroup      map[string]cacheGroup
+	CacheGroup      map[string]TMCacheGroup
 	Config          map[string]interface{}
-	TrafficMonitor  map[string]trafficMonitor
-	DeliveryService map[string]trafficMonitorDeliveryService
-	Profile         map[string]profile
+	TrafficMonitor  map[string]TrafficMonitor
+	DeliveryService map[string]TMDeliveryService
+	Profile         map[string]TMProfile
 }
 
-type trafficMonitorDeliveryService struct {
+// TrafficMonitor ...
+type TrafficMonitor struct {
+	Port     int    `json:"port"`
+	IP6      string `json:"ip6"`
+	IP       string `json:"ip"`
+	HostName string `json:"hostName"`
+	FQDN     string `json:"fqdn"`
+	Profile  string `json:"profile"`
+	Location string `json:"location"`
+	Status   string `json:"status"`
+}
+
+// TMDeliveryService ...
+type TMDeliveryService struct {
 	XMLID              string `json:"xmlId"`
-	TotalTpsThreshold  int64  `json:"TotalTpsThreshold"`
+	TotalTPSThreshold  int64  `json:"TotalTpsThreshold"`
 	Status             string `json:"status"`
 	TotalKbpsThreshold int64  `json:"TotalKbpsThreshold"`
 }
 
-type profile struct {
-	Parameters parameters `json:"parameters"`
-	Name       string     `json:"name"`
-	Type       string     `json:"type"`
+// TMProfile ...
+type TMProfile struct {
+	Parameters TMParameters `json:"parameters"`
+	Name       string       `json:"name"`
+	Type       string       `json:"type"`
 }
 
-type parameters struct {
+// TMParameters ...
+type TMParameters struct {
 	HealthConnectionTimeout                 int     `json:"health.connection.timeout"`
 	HealthPollingURL                        string  `json:"health.polling.url"`
 	HealthThresholdQueryTime                int     `json:"health.threshold.queryTime"`
@@ -74,12 +91,17 @@ type parameters struct {
 
 // TrafficMonitorConfigMap ...
 func (to *Session) TrafficMonitorConfigMap(cdn string) (*TrafficMonitorConfigMap, error) {
-	trafficMonitorConfig, err := to.TrafficMonitorConfig(cdn)
+	tmConfig, err := to.TrafficMonitorConfig(cdn)
 	if err != nil {
+		seelog.Error(err)
 		return nil, err
 	}
-	trafficMonitorConfigMap := trafficMonitorTransformToMap(*trafficMonitorConfig)
-	return &trafficMonitorConfigMap, nil
+	tmConfigMap, err := trafficMonitorTransformToMap(tmConfig)
+	if err != nil {
+		seelog.Error(err)
+		return nil, err
+	}
+	return tmConfigMap, nil
 }
 
 // TrafficMonitorConfig ...
@@ -87,54 +109,61 @@ func (to *Session) TrafficMonitorConfig(cdn string) (*TrafficMonitorConfig, erro
 	url := fmt.Sprintf("/api/1.2/cdns/%s/configs/monitoring.json", cdn)
 	resp, err := to.request(url, nil)
 	if err != nil {
+		seelog.Error(err)
 		return nil, err
 	}
 	defer resp.Body.Close()
 
-	var data TmConfigResponse
+	var data TMConfigResponse
 	if err := json.NewDecoder(resp.Body).Decode(&data); err != nil {
+		seelog.Error(err)
 		return nil, err
 	}
 
 	return &data.Response, nil
 }
 
-func trafficMonitorTransformToMap(trafficMonitorConfig TrafficMonitorConfig) TrafficMonitorConfigMap {
-	var trafficMonitorConfigMap TrafficMonitorConfigMap
+func trafficMonitorTransformToMap(tmConfig *TrafficMonitorConfig) (*TrafficMonitorConfigMap, error) {
+	var tm TrafficMonitorConfigMap
 
-	trafficMonitorConfigMap.TrafficServer = make(map[string]TrafficServer)
-	trafficMonitorConfigMap.CacheGroup = make(map[string]cacheGroup)
-	trafficMonitorConfigMap.Config = make(map[string]interface{})
-	trafficMonitorConfigMap.TrafficMonitor = make(map[string]trafficMonitor)
-	trafficMonitorConfigMap.DeliveryService = make(map[string]trafficMonitorDeliveryService)
-	trafficMonitorConfigMap.Profile = make(map[string]profile)
+	tm.TrafficServer = make(map[string]TrafficServer)
+	tm.CacheGroup = make(map[string]TMCacheGroup)
+	tm.Config = make(map[string]interface{})
+	tm.TrafficMonitor = make(map[string]TrafficMonitor)
+	tm.DeliveryService = make(map[string]TMDeliveryService)
+	tm.Profile = make(map[string]TMProfile)
 
-	for _, trafficServer := range trafficMonitorConfig.TrafficServers {
-		trafficMonitorConfigMap.TrafficServer[trafficServer.HostName] = trafficServer
+	for _, trafficServer := range tmConfig.TrafficServers {
+		tm.TrafficServer[trafficServer.HostName] = trafficServer
 	}
-	for _, cacheGroup := range trafficMonitorConfig.CacheGroups {
-		trafficMonitorConfigMap.CacheGroup[cacheGroup.Name] = cacheGroup
+
+	for _, cacheGroup := range tmConfig.CacheGroups {
+		tm.CacheGroup[cacheGroup.Name] = cacheGroup
 	}
-	for parameterKey, parameterVal := range trafficMonitorConfig.Config {
-		trafficMonitorConfigMap.Config[parameterKey] = parameterVal
+
+	for parameterKey, parameterVal := range tmConfig.Config {
+		tm.Config[parameterKey] = parameterVal
 	}
-	for _, trafficMonitor := range trafficMonitorConfig.TrafficMonitors {
-		trafficMonitorConfigMap.TrafficMonitor[trafficMonitor.HostName] = trafficMonitor
+
+	for _, trafficMonitor := range tmConfig.TrafficMonitors {
+		tm.TrafficMonitor[trafficMonitor.HostName] = trafficMonitor
 	}
-	for _, deliveryService := range trafficMonitorConfig.DeliveryServices {
-		trafficMonitorConfigMap.DeliveryService[deliveryService.XMLID] = deliveryService
+
+	for _, deliveryService := range tmConfig.DeliveryServices {
+		tm.DeliveryService[deliveryService.XMLID] = deliveryService
 	}
-	for _, profile := range trafficMonitorConfig.Profiles {
+
+	for _, profile := range tmConfig.Profiles {
 		bwThresholdString := profile.Parameters.HealthThresholdAvailableBandwidthInKbps
 		if strings.HasPrefix(bwThresholdString, ">") {
 			var err error
 			profile.Parameters.MinFreeKbps, err = strconv.ParseInt(bwThresholdString[1:len(bwThresholdString)], 10, 64)
 			if err != nil {
-				fmt.Println("ERROR:", err)
+				return nil, err
 			}
 		}
-		trafficMonitorConfigMap.Profile[profile.Name] = profile
+		tm.Profile[profile.Name] = profile
 	}
 
-	return trafficMonitorConfigMap
+	return &tm, nil
 }

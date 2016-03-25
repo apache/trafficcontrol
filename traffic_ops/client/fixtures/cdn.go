@@ -14,21 +14,18 @@
    limitations under the License.
 */
 
-package client
+package fixtures
 
-import (
-	"fmt"
+import "github.com/jheitz200/ansible/traffic_ops/client"
 
-	"github.com/cihub/seelog"
-)
-
-// CRConfigRaw ...
-func (to *Session) CRConfigRaw(cdn string) ([]byte, error) {
-	url := fmt.Sprintf("/CRConfig-Snapshots/%s/CRConfig.json", cdn)
-	body, err := to.getBytesWithTTL(url, tmPollingInterval)
-	if err != nil {
-		seelog.Error(err)
-		return nil, err
+// CDNs returns a default CDNResponse to be used for testing.
+func CDNs() *client.CDNResponse {
+	return &client.CDNResponse{
+		Response: []client.CDN{
+			client.CDN{
+				Name:        "CDN-1",
+				LastUpdated: "2016-03-22 17:00:30",
+			},
+		},
 	}
-	return body, nil
 }

@@ -14,21 +14,21 @@
    limitations under the License.
 */
 
-package client
+package fixtures
 
-import (
-	"fmt"
+import "github.com/jheitz200/traffic_control/traffic_ops/client"
 
-	"github.com/cihub/seelog"
-)
-
-// CRConfigRaw ...
-func (to *Session) CRConfigRaw(cdn string) ([]byte, error) {
-	url := fmt.Sprintf("/CRConfig-Snapshots/%s/CRConfig.json", cdn)
-	body, err := to.getBytesWithTTL(url, tmPollingInterval)
-	if err != nil {
-		seelog.Error(err)
-		return nil, err
+// StatsSummary returns a default StatsSummaryResponse to be used for testing.
+func StatsSummary() *client.StatsSummaryResponse {
+	return &client.StatsSummaryResponse{
+		Response: []client.StatsSummary{
+			client.StatsSummary{
+				SummaryTime:     "2015-05-14 14:39:47",
+				DeliveryService: "test-ds1",
+				StatName:        "test-stat",
+				StatValue:       "3.1415",
+				CDNName:         "test-cdn",
+			},
+		},
 	}
-	return body, nil
 }

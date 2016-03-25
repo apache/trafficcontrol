@@ -16,7 +16,11 @@
 
 package client
 
-import "encoding/json"
+import (
+	"encoding/json"
+
+	"github.com/prometheus/log"
+)
 
 // CacheGroupResponse ...
 type CacheGroupResponse struct {
@@ -24,7 +28,7 @@ type CacheGroupResponse struct {
 	Response []CacheGroup `json:"response"`
 }
 
-// CacheGroup contains all values associated with a Cachegroup.
+// CacheGroup contains information about a given Cachegroup in Traffic Ops.
 type CacheGroup struct {
 	Name        string  `json:"name"`
 	ShortName   string  `json:"shortName"`
@@ -41,12 +45,14 @@ func (to *Session) CacheGroups() ([]CacheGroup, error) {
 	url := "/api/1.2/cachegroups.json"
 	resp, err := to.request(url, nil)
 	if err != nil {
+		log.Error(err)
 		return nil, err
 	}
 	defer resp.Body.Close()
 
 	var data CacheGroupResponse
 	if err := json.NewDecoder(resp.Body).Decode(&data); err != nil {
+		log.Error(err)
 		return nil, err
 	}
 

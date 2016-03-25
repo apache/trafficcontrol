@@ -19,6 +19,8 @@ package client
 import (
 	"encoding/json"
 	"fmt"
+
+	"github.com/cihub/seelog"
 )
 
 // CDNResponse ...
@@ -33,34 +35,39 @@ type CDN struct {
 	LastUpdated string `json:"lastUpdated"`
 }
 
-// Cdns gets an array of CDNs
-func (to *Session) Cdns() (*[]CDN, error) {
+// CDNs gets an array of CDNs
+func (to *Session) CDNs() ([]CDN, error) {
 	url := "/api/1.2/cdns.json"
 	resp, err := to.request(url, nil)
 	if err != nil {
+		seelog.Error(err)
 		return nil, err
 	}
 	defer resp.Body.Close()
 
 	var data CDNResponse
 	if err := json.NewDecoder(resp.Body).Decode(&data); err != nil {
+		seelog.Error(err)
 		return nil, err
 	}
-	return &data.Response, nil
+	return data.Response, nil
 }
 
-// CdnName gets an array of CDNs
-func (to *Session) CdnName(name string) (*[]CDN, error) {
+// CDNName gets an array of CDNs
+func (to *Session) CDNName(name string) ([]CDN, error) {
 	url := fmt.Sprintf("/api/1.2/cdns/name/%s.json", name)
 	resp, err := to.request(url, nil)
 	if err != nil {
+		seelog.Error(err)
 		return nil, err
 	}
 	defer resp.Body.Close()
 
 	var data CDNResponse
 	if err := json.NewDecoder(resp.Body).Decode(&data); err != nil {
+		seelog.Error(err)
 		return nil, err
 	}
-	return &data.Response, nil
+
+	return data.Response, nil
 }

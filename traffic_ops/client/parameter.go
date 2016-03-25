@@ -19,6 +19,8 @@ package client
 import (
 	"encoding/json"
 	"fmt"
+
+	"github.com/cihub/seelog"
 )
 
 // ParamResponse ...
@@ -40,12 +42,14 @@ func (to *Session) Parameters(profileName string) ([]Parameter, error) {
 	url := fmt.Sprintf("/api/1.2/parameters/profile/%s.json", profileName)
 	resp, err := to.request(url, nil)
 	if err != nil {
+		seelog.Error(err)
 		return nil, err
 	}
 	defer resp.Body.Close()
 
 	var data ParamResponse
 	if err := json.NewDecoder(resp.Body).Decode(&data); err != nil {
+		seelog.Error(err)
 		return nil, err
 	}
 

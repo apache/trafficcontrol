@@ -19,7 +19,10 @@ package client
 import (
 	"encoding/json"
 	"fmt"
+	"net/url"
 	"strings"
+
+	"github.com/cihub/seelog"
 )
 
 // ServerResponse ...
@@ -30,29 +33,30 @@ type ServerResponse struct {
 
 // Server ...
 type Server struct {
-	DomainName     string `json:"domainName"`
-	HostName       string `json:"hostName"`
-	ID             string `json:"id"`
-	IloIPAddress   string `json:"iloIpAddress"`
-	IloIPGateway   string `json:"iloIpGateway"`
-	IloIPNetmask   string `json:"iloIpNetmask"`
-	IloPassword    string `json:"iloPassword"`
-	IloUsername    string `json:"iloUsername"`
-	InterfaceMtu   string `json:"interfaceMtu"`
-	InterfaceName  string `json:"interfaceName"`
-	IP6Address     string `json:"ip6Address"`
-	IP6Gateway     string `json:"ip6Gateway"`
-	IPAddress      string `json:"ipAddress"`
-	IPGateway      string `json:"ipGateway"`
-	IPNetoask      string `json:"ipNetoask"`
+	DomainName    string `json:"domainName"`
+	HostName      string `json:"hostName"`
+	ID            string `json:"id"`
+	IloIPAddress  string `json:"iloIpAddress"`
+	IloIPGateway  string `json:"iloIpGateway"`
+	IloIPNetmask  string `json:"iloIpNetmask"`
+	IloPassword   string `json:"iloPassword"`
+	IloUsername   string `json:"iloUsername"`
+	InterfaceMtu  string `json:"interfaceMtu"`
+	InterfaceName string `json:"interfaceName"`
+	IP6Address    string `json:"ip6Address"`
+	IP6Gateway    string `json:"ip6Gateway"`
+	IPAddress     string `json:"ipAddress"`
+	IPGateway     string `json:"ipGateway"`
+	IPNetmask     string `json:"ipNetmask"`
+
 	LastUpdated    string `json:"lastUpdated"`
-	Location       string `json:"cachegroup"`
+	Cachegroup     string `json:"cachegroup"`
 	MgmtIPAddress  string `json:"mgmtIpAddress"`
 	MgmtIPGateway  string `json:"mgmtIpGateway"`
-	MgmtIPNetoask  string `json:"mgmtIpNetmask"`
+	MgmtIPNetmask  string `json:"mgmtIpNetmask"`
 	PhysLocation   string `json:"physLocation"`
 	Profile        string `json:"profile"`
-	CdnName        string `json:"cdnName"`
+	CDNName        string `json:"cdnName"`
 	Rack           string `json:"rack"`
 	RouterHostName string `json:"routerHostName"`
 	RouterPortName string `json:"routerPortName"`
@@ -64,19 +68,41 @@ type Server struct {
 }
 
 // Servers gets an array of servers
-func (to *Session) Servers() (*[]Server, error) {
-	url := "/api/1.1/servers.json"
+func (to *Session) Servers() ([]Server, error) {
+	url := "/api/1.2/servers.json"
 	resp, err := to.request(url, nil)
 	if err != nil {
+		seelog.Error(err)
 		return nil, err
 	}
 	defer resp.Body.Close()
 
 	var data ServerResponse
 	if err := json.NewDecoder(resp.Body).Decode(&data); err != nil {
+		seelog.Error(err)
 		return nil, err
 	}
-	return &data.Response, nil
+
+	return data.Response, nil
+}
+
+// ServersByType gets an array of serves of a specified type.
+func (to *Session) ServersByType(qparams url.Values) ([]Server, error) {
+	url := fmt.Sprintf("/api/1.2/servers.json?%s", qparams.Encode())
+	resp, err := to.request(url, nil)
+	if err != nil {
+		seelog.Error(err)
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	var data ServerResponse
+	if err := json.NewDecoder(resp.Body).Decode(&data); err != nil {
+		seelog.Error(err)
+		return nil, err
+	}
+
+	return data.Response, nil
 }
 
 // ServersFqdn returns a the full domain name for the server short name passed in.
@@ -84,10 +110,11 @@ func (to *Session) ServersFqdn(n string) (string, error) {
 	fdn := ""
 	servers, err := to.Servers()
 	if err != nil {
+		seelog.Error(err)
 		return "Error", err
 	}
 
-	for _, server := range *servers {
+	for _, server := range servers {
 		if server.HostName == n {
 			fdn = fmt.Sprintf("%s.%s", server.HostName, server.DomainName)
 		}
@@ -103,10 +130,11 @@ func (to *Session) ServersShortNameSearch(shortname string) ([]string, error) {
 	var serverlst []string
 	servers, err := to.Servers()
 	if err != nil {
+		seelog.Error(err)
 		serverlst = append(serverlst, "N/A")
 		return serverlst, err
 	}
-	for _, server := range *servers {
+	for _, server := range servers {
 		if strings.Contains(server.HostName, shortname) {
 			serverlst = append(serverlst, server.HostName)
 		}
