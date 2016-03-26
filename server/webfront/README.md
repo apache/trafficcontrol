@@ -16,7 +16,7 @@ No restart is needed to re-read the rule file and apply; within 60 seconds of a 
 
 * To run
 
-   	go run webfront.go -rules=rules.json -https=:9000 -https_cert=server.pem -https_key=server.key 
+	go run webfront.go -rules=rules.json -https=:9000 -https_cert=server.pem -https_key=server.key 
 
 (or compile a binary, and run that)
 
