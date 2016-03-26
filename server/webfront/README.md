@@ -14,13 +14,13 @@ This application - webfront is a reverse proxy written in go that can front any 
 
 No restart is needed to re-read the rule file and apply; within 60 seconds of a change in the file, it will pick up the new mappings.
 
-* To run
+To run
 
 	go run webfront.go -rules=rules.json -https=:9000 -https_cert=server.pem -https_key=server.key 
 
 (or compile a binary, and run that)
 
-* To get a token:
+To get a token:
 
 	curl --insecure -Lkvs --header "Content-Type:application/json" -XPOST https://localhost:9000/login -d'{"username":"jvd", "password":"tootoo"}'
    
