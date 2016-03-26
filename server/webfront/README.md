@@ -19,7 +19,7 @@ No restart is needed to re-read the rule file and apply; within 60 seconds of a 
    ``go run webfront.go -rules=rules.json -https=:9000 -https_cert=server.pem -https_key=server.key``` 
 
    (or compile a binary, and run that)
-   
+
 * To get a token:
 
    ``curl --insecure -Lkvs --header "Content-Type:application/json" -XPOST https://localhost:9000/login -d'{"username":"jvd", "password":"tootoo"}'``
@@ -29,36 +29,36 @@ No restart is needed to re-read the rule file and apply; within 60 seconds of a 
    ``{"Token":"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJQYXNzd29yZCI6InRvb3RvbyIsIlVzZXIiOiIiLCJleHAiOjE0NTg5NDg2MTl9.quCwZ5vghVBucxMxQ4fSfD84yw_yPEp9qLGGQNcHNUk"}``
    
    Example:
-   ```
-[jvd@laika webfront (master *=)]$ curl --insecure -Lkvs --header "Content-Type:application/json" -XPOST https://localhost:9000/login -d'{"username":"jvd", "password":"tootoo"}'
-*   Trying ::1...
-* Connected to localhost (::1) port 9000 (#0)
-* TLS 1.2 connection using TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256
-* Server certificate: CU
-> POST /login HTTP/1.1
-> Host: localhost:9000
-> User-Agent: curl/7.43.0
-> Accept: */*
-> Content-Type:application/json
-> Content-Length: 39
->
-* upload completely sent off: 39 out of 39 bytes
-< HTTP/1.1 200 OK
-< Content-Type: application/json
-< Date: Thu, 24 Mar 2016 23:30:19 GMT
-< Content-Length: 157
-<
-* Connection #0 to host localhost left intact
-{"Token":"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJQYXNzd29yZCI6InRvb3RvbyIsIlVzZXIiOiIiLCJleHAiOjE0NTg5NDg2MTl9.quCwZ5vghVBucxMxQ4fSfD84yw_yPEp9qLGGQNcHNUk"}[jvd@laika webfront (master *=)]$
-   ```
+   ``
+	[jvd@laika webfront (master *=)]$ curl --insecure -Lkvs --header "Content-Type:application/json" -XPOST https://localhost:9000/login -d'{"username":"jvd", "password":"tootoo"}'
+	*   Trying ::1...
+	* Connected to localhost (::1) port 9000 (#0)
+	* TLS 1.2 connection using TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256
+	* Server certificate: CU
+	> POST /login HTTP/1.1
+	> Host: localhost:9000
+	> User-Agent: curl/7.43.0
+	> Accept: */*
+	> Content-Type:application/json
+	> Content-Length: 39
+	>
+	* upload completely sent off: 39 out of 39 bytes
+	< HTTP/1.1 200 OK
+	< Content-Type: application/json
+	< Date: Thu, 24 Mar 2016 23:30:19 GMT
+	< Content-Length: 157
+	<
+	* Connection #0 to host localhost left intact
+	{"Token":"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJQYXNzd29yZCI6InRvb3RvbyIsIlVzZXIiOiIiLCJleHAiOjE0NTg5NDg2MTl9.quCwZ5vghVBucxMxQ4fSfD84yw_yPEp9qLGGQNcHNUk"}[jvd@laika webfront (master *=)]$
+   ``
  * To use a token: 
 
    ``curl --insecure -H'Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJQYXNzd29yZCI6InRvb3RvbyIsIlVzZXIiOiIiLCJleHAiOjE0NTg5NDg2MTl9.quCwZ5vghVBucxMxQ4fSfD84yw_yPEp9qLGGQNcHNUk' -Lkvs  https://localhost:9000/8003/r``
 
    Example:
 
-   ```
-   [jvd@laika webfront (master *%=)]$ curl --insecure -H'Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJQYXNzd29yZCI6InRvb3RvbyIsIlVzZXIiOiIiLCJleHAiOjE0NTg5NDg2MTl9.quCwZ5vghVBucxMxQ4fSfD84yw_yPEp9qLGGQNcHNUk' -Lkvs  https://localhost:9000/8003/r
+   ``
+    [jvd@laika webfront (master *%=)]$ curl --insecure -H'Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJQYXNzd29yZCI6InRvb3RvbyIsIlVzZXIiOiIiLCJleHAiOjE0NTg5NDg2MTl9.quCwZ5vghVBucxMxQ4fSfD84yw_yPEp9qLGGQNcHNUk' -Lkvs  https://localhost:9000/8003/r
 	*   Trying ::1...
 	* Connected to localhost (::1) port 9000 (#0)
 	* TLS 1.2 connection using TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256
@@ -95,4 +95,4 @@ No restart is needed to re-read the rule file and apply; within 60 seconds of a 
 	<
 	* Connection #0 to host localhost left intact
 	[jvd@laika webfront (master=)]$
-```
+    ``

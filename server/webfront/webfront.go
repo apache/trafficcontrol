@@ -25,6 +25,22 @@ type TokenResponse struct {
 	Token string
 }
 
+// Server implements an http.Handler that acts as a reverse proxy
+type Server struct {
+	mu    sync.RWMutex // guards the fields below
+	last  time.Time
+	rules []*Rule
+}
+
+// Rule represents a rule in a configuration file.
+type Rule struct {
+	Host    string // to match against request Host header
+	Path    string // to match against a path (start)
+	Forward string // reverse proxy map-to
+
+	handler http.Handler
+}
+
 type loginJson struct {
 	User     string `json:"user"`
 	Password string `json:"password"`
@@ -49,22 +65,6 @@ func main() {
 	// and use a self-signed cert in this server
 	http.DefaultTransport.(*http.Transport).TLSClientConfig = &tls.Config{InsecureSkipVerify: true}
 	http.ListenAndServeTLS(*httpsAddr, *certFile, *keyFile, s)
-}
-
-// Server implements an http.Handler that acts as a reverse proxy
-type Server struct {
-	mu    sync.RWMutex // guards the fields below
-	last  time.Time
-	rules []*Rule
-}
-
-// Rule represents a rule in a configuration file.
-type Rule struct {
-	Host    string // to match against request Host header
-	Path    string // to match against a path (start)
-	Forward string // reverse proxy map-to
-
-	handler http.Handler
 }
 
 func validateToken(tokenString string) (*jwt.Token, error) {
