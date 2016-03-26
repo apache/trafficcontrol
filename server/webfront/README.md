@@ -1,6 +1,6 @@
 This application - webfront is a reverse proxy written in go that can front any number of microservices. It uses a rules file to map from requested host/path to microservice host/port/path.  Example rule file:
 
-   ``
+   
    [
 		{"Host": "local.com", "Path" : "/8001", "Forward": "localhost:8001"},
 		{"Host": "local.com", "Path" : "/8002", "Forward": "localhost:8002"},
@@ -10,26 +10,26 @@ This application - webfront is a reverse proxy written in go that can front any 
 		{"Host": "local.com", "Path" : "/8006", "Forward": "localhost:8006"},
 		{"Host": "local.com", "Path" : "/8007", "Forward": "localhost:8007"}
 	]
-	``
+
 
 No restart is needed to re-read the rule file and apply; within 60 seconds of a change in the file, it will pick up the new mappings.
 
 * To run
 
-   ``go run webfront.go -rules=rules.json -https=:9000 -https_cert=server.pem -https_key=server.key``` 
+   go run webfront.go -rules=rules.json -https=:9000 -https_cert=server.pem -https_key=server.key 
 
    (or compile a binary, and run that)
 
 * To get a token:
 
-   ``curl --insecure -Lkvs --header "Content-Type:application/json" -XPOST https://localhost:9000/login -d'{"username":"jvd", "password":"tootoo"}'``
+   curl --insecure -Lkvs --header "Content-Type:application/json" -XPOST https://localhost:9000/login -d'{"username":"jvd", "password":"tootoo"}'
    
-   in my case that returned: 
+in my case that returned: 
 
-   ``{"Token":"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJQYXNzd29yZCI6InRvb3RvbyIsIlVzZXIiOiIiLCJleHAiOjE0NTg5NDg2MTl9.quCwZ5vghVBucxMxQ4fSfD84yw_yPEp9qLGGQNcHNUk"}``
+   {"Token":"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJQYXNzd29yZCI6InRvb3RvbyIsIlVzZXIiOiIiLCJleHAiOjE0NTg5NDg2MTl9.quCwZ5vghVBucxMxQ4fSfD84yw_yPEp9qLGGQNcHNUk"}``
    
-   Example:
-   ``
+ Example:
+  
 	[jvd@laika webfront (master *=)]$ curl --insecure -Lkvs --header "Content-Type:application/json" -XPOST https://localhost:9000/login -d'{"username":"jvd", "password":"tootoo"}'
 	*   Trying ::1...
 	* Connected to localhost (::1) port 9000 (#0)
@@ -50,14 +50,14 @@ No restart is needed to re-read the rule file and apply; within 60 seconds of a 
 	<
 	* Connection #0 to host localhost left intact
 	{"Token":"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJQYXNzd29yZCI6InRvb3RvbyIsIlVzZXIiOiIiLCJleHAiOjE0NTg5NDg2MTl9.quCwZ5vghVBucxMxQ4fSfD84yw_yPEp9qLGGQNcHNUk"}[jvd@laika webfront (master *=)]$
-   ``
+ 
  * To use a token: 
 
-   ``curl --insecure -H'Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJQYXNzd29yZCI6InRvb3RvbyIsIlVzZXIiOiIiLCJleHAiOjE0NTg5NDg2MTl9.quCwZ5vghVBucxMxQ4fSfD84yw_yPEp9qLGGQNcHNUk' -Lkvs  https://localhost:9000/8003/r``
+   curl --insecure -H'Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJQYXNzd29yZCI6InRvb3RvbyIsIlVzZXIiOiIiLCJleHAiOjE0NTg5NDg2MTl9.quCwZ5vghVBucxMxQ4fSfD84yw_yPEp9qLGGQNcHNUk' -Lkvs  https://localhost:9000/8003/r
 
-   Example:
+Example:
 
-   ``
+   
     [jvd@laika webfront (master *%=)]$ curl --insecure -H'Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJQYXNzd29yZCI6InRvb3RvbyIsIlVzZXIiOiIiLCJleHAiOjE0NTg5NDg2MTl9.quCwZ5vghVBucxMxQ4fSfD84yw_yPEp9qLGGQNcHNUk' -Lkvs  https://localhost:9000/8003/r
 	*   Trying ::1...
 	* Connected to localhost (::1) port 9000 (#0)
@@ -95,4 +95,4 @@ No restart is needed to re-read the rule file and apply; within 60 seconds of a 
 	<
 	* Connection #0 to host localhost left intact
 	[jvd@laika webfront (master=)]$
-    ``
+  
