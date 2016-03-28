@@ -495,6 +495,10 @@ sub api_routes {
 	$r->get( "/api/$version/deliveryservices_regexes" => [ format => [qw(json)] ] )->over( authenticated => 1 )
 		->to( 'DeliveryServiceRegexes#index', namespace => $namespace );
 
+	# -- DELIVERY SERVICE MATCHES
+	$r->get( "/api/$version/deliveryservices_matches" => [ format => [qw(json)] ] )->over( authenticated => 1 )
+		->to( 'DeliveryServiceMatches#index', namespace => $namespace );
+
 	#       ->over( authenticated => 1 )->to( 'DeliveryService#get_summary', namespace => $namespace );
 	# -- DELIVERY SERVICE SERVER - #NEW
 	# Supports ?orderby=key
@@ -770,8 +774,8 @@ sub traffic_stats_routes {
 	$r->get( "/api/$version/deliveryservice_stats" => [ format => [qw(json)] ] )->over( authenticated => 1 )
 		->to( 'DeliveryServiceStats#index', namespace => $namespace );
 	$r->get( "/api/$version/cache_stats" => [ format => [qw(json)] ] )->over( authenticated => 1 )->to( 'CacheStats#index', namespace => $namespace );
-	$r->get( "internal/api/$version/daily_summary"       => [ format => [qw(json)] ] )->to( 'CacheStats#daily_summary',       namespace => $namespace );
-	$r->get( "internal/api/$version/current_stats"       => [ format => [qw(json)] ] )->to( 'CacheStats#current_stats',    namespace => $namespace );
+	$r->get( "internal/api/$version/daily_summary" => [ format => [qw(json)] ] )->to( 'CacheStats#daily_summary', namespace => $namespace );
+	$r->get( "internal/api/$version/current_stats" => [ format => [qw(json)] ] )->to( 'CacheStats#current_stats', namespace => $namespace );
 }
 
 sub catch_all {
