@@ -161,7 +161,7 @@ fi
 %attr(755, traffic_stats, traffic_stats) /opt/traffic_stats/bin/*
 %attr(755, traffic_stats, traffic_stats) /etc/init.d/traffic_stats
 %attr(644, traffic_stats, traffic_stats) /usr/share/grafana/public/dashboards/*
-%attr(644, traffic_stats, traffic_stats) /opt/traffic_stats/influxdb_tools/*
+%attr(755, traffic_stats, traffic_stats) /opt/traffic_stats/influxdb_tools/*
 
 %preun
 # args for hooks: http://www.ibm.com/developerworks/library/l-rpm2/
