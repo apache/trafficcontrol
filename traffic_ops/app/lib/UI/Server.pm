@@ -222,7 +222,7 @@ sub edge_ds_status {
 
 	my %servers_in_cg = ();
 	my %servers_in_ds = ();
-	my @etypes        = &type_ids( $self, 'EDGE%' );
+	my @etypes        = &type_ids( $self, 'EDGE%', 'server' );
 	my $rs_servers_cg = $self->db->resultset('Server')->search(
 		{
 			cachegroup => $cachegroup_id,
@@ -533,8 +533,8 @@ sub update {
 
 			# server type changed:  servercheck entry required for EDGE and MID, but not others. Add or remove servercheck entry accordingly
 			my @types;
-			push(@types, &type_ids( $self, 'EDGE%' ));
-			push(@types, &type_ids( $self, 'MID%' ));
+			push(@types, &type_ids( $self, 'EDGE%', 'server' ));
+			push(@types, &type_ids( $self, 'MID%', 'server' ));
 			my %need_servercheck = map { $_ => 1 } @types;
 			my $newtype_id = $update->type->id;
 			my $servercheck =
@@ -729,8 +729,8 @@ sub create {
 		}
 		$insert->insert();
 		$new_id = $insert->id;
-		if ( scalar(grep { $paramHashRef->{'type'} eq $_ } &type_ids( $self, 'EDGE%' ))
-			|| scalar(grep { $paramHashRef->{'type'} eq $_ } &type_ids( $self, 'MID%' )) )
+		if ( scalar(grep { $paramHashRef->{'type'} eq $_ } &type_ids( $self, 'EDGE%', 'server' ))
+			|| scalar(grep { $paramHashRef->{'type'} eq $_ } &type_ids( $self, 'MID%', 'server' )) )
 		{
 			$insert = $self->db->resultset('Servercheck')->create( { server => $new_id, } );
 			$insert->insert();

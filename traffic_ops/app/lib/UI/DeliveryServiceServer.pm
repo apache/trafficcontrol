@@ -43,7 +43,7 @@ sub cpdss_iframe {
 			$valid_profiles->{$row} = 1;
 		}
 
-		my @etypeids = &type_ids( $self, 'EDGE%' );
+		my @etypeids = &type_ids( $self, 'EDGE%', 'server' );
 		my $rs = $self->db->resultset('Server')->search( { type => { -in => \@etypeids } }, { prefetch => 'profile', order_by => 'host_name' } );
 		my @from_server_list;
 		while ( my $row = $rs->next ) {
@@ -101,7 +101,7 @@ sub edit {
 	$ds = $self->db->resultset('Deliveryservice')->search( { id => $id } )->single();
 
 	my @types;
-	push(@types, &type_ids( $self, 'EDGE%' ) );
+	push(@types, &type_ids( $self, 'EDGE%', 'server' ) );
 	push(@types, &type_id( $self, 'ORG' ) );
 	my $rs      = $self->db->resultset('Server')
 		->search( { "me.type" => { -in => \@types } }, { prefetch => [ 'cachegroup', 'type', 'profile', 'status' ], } );
