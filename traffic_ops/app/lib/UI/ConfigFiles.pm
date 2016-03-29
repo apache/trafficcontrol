@@ -490,11 +490,12 @@ sub ip_allow_data {
 		my @allowed_ipv6_netaddrips;
 		my @types;
 		push(@types, &type_ids( $self, 'EDGE%', 'server' ));
-		push(@types, &type_id( $self, 'RASCAL' ));
+		my $rtype = &type_id( $self, 'RASCAL' );
+		push(@types, $rtype);
 		my $rs_allowed = $self->db->resultset('Server')->search( { 'me.type' => { -in => \@types } }, { prefetch => [ 'type', 'cachegroup' ] } );
 
 		while ( my $allow_row = $rs_allowed->next ) {
-			if ( scalar(grep { $_ eq $allow_row->type->id } @types)
+			if ( $allow_row->type->id == $rtype
 				|| ( defined( $allow_locs{ $allow_row->cachegroup->id } ) && $allow_locs{ $allow_row->cachegroup->id } == 1 ) )
 			{
 				my $ipv4 = NetAddr::IP->new( $allow_row->ip_address, $allow_row->ip_netmask );
@@ -545,7 +546,17 @@ sub ip_allow_data {
 		}
 
 		# allow RFC 1918 server space - TODO JvD: parameterize
+		$ipallow->[$i]->{src_ip} = '10.0.0.0-10.255.255.255';
+		$ipallow->[$i]->{action} = 'ip_allow';
+		$ipallow->[$i]->{method} = "ALL";
+		$i++;
+
 		$ipallow->[$i]->{src_ip} = '172.16.0.0-172.31.255.255';
+		$ipallow->[$i]->{action} = 'ip_allow';
+		$ipallow->[$i]->{method} = "ALL";
+		$i++;
+
+		$ipallow->[$i]->{src_ip} = '192.168.0.0-192.168.255.255';
 		$ipallow->[$i]->{action} = 'ip_allow';
 		$ipallow->[$i]->{method} = "ALL";
 		$i++;
