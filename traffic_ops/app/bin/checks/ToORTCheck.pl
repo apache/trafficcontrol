@@ -115,7 +115,7 @@ foreach my $p (@{$glbl_prms}) {
 }
 
 foreach my $server ( @{$jdataserver} ) {
-	if ( $server->{type} eq 'EDGE' || $server->{type} eq 'MID' ) {
+	if ( $server->{type} =~ m/^EDGE/ || $server->{type} =~ m/^MID/ ) {
 		&ort_check( $server->{ipAddress}, $server->{hostName}, $server->{id},
                   $server->{domainName}, $server->{status} );
 	}

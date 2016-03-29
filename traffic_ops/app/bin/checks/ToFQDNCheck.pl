@@ -97,7 +97,7 @@ my $ext = Extensions::Helper->new( { base_url => $b_url, token => '91504CE6-8E4A
 my $jdataserver    = $ext->get(Extensions::Helper::SERVERLIST_PATH);
 my $chck_nm     = $jconf->{check_name};
 foreach my $server ( @{$jdataserver} ) {
-	if ( $server->{type} eq 'EDGE' || $server->{type} eq 'MID' ) {
+	if ( $server->{type} =~ m/^EDGE/ || $server->{type} =~ m/^MID/ ) {
       my $status = 1;
       my $srv_nm = $server->{hostName}.".".$server->{domainName};
       my $srv_ip = $server->{ipAddress};

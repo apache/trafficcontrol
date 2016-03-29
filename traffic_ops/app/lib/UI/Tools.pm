@@ -63,8 +63,8 @@ sub snapshot_crconfig {
 	my $self = shift;
 	&navbarpage($self);
 
-	my @cdn_names = $self->db->resultset('Server')->search({ 'type.name' => 'EDGE' }, { prefetch => [ 'cdn', 'type' ], group_by => 'cdn.name' } )->get_column('cdn.name')->all();
-	
+	my @cdn_names = $self->db->resultset('Server')->search({ 'type.name' => { -like => 'EDGE%' } }, { prefetch => [ 'cdn', 'type' ], group_by => 'cdn.name' } )->get_column('cdn.name')->all();
+
 	$self->stash( cdn_names => \@cdn_names );
 }
 
@@ -111,7 +111,7 @@ sub queue_updates {
 	my $self = shift;
 	&stash_role($self);
 
-	my @cdns = $self->db->resultset('Server')->search({ 'type.name' => ['EDGE', 'MID'] }, { prefetch => [ 'cdn', 'type' ], group_by => 'cdn.name' } )->get_column('cdn.name')->all();
+	my @cdns = $self->db->resultset('Server')->search({ 'type.name' => [ { -like => 'EDGE%' }, { -like => 'MID%'} ] }, { prefetch => [ 'cdn', 'type' ], group_by => 'cdn.name' } )->get_column('cdn.name')->all();
 	$self->stash( cdns => \@cdns );
 
 	my @cachegroups = $self->db->resultset('Cachegroup')->search(undef, { order_by => "name" })->get_column('name')->all;

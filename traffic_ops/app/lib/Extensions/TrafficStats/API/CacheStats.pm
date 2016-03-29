@@ -195,7 +195,7 @@ sub daily_summary {
 	my @max_gbps;
 	my @pb_served;
 	#get cdns
-	my @cdn_names = $self->db->resultset('Server')->search({ 'type.name' => 'EDGE' }, { prefetch => [ 'cdn', 'type' ], group_by => 'cdn.name' } )->get_column('cdn.name')->all();
+	my @cdn_names = $self->db->resultset('Server')->search({ 'type.name' => { -like => 'EDGE%' } }, { prefetch => [ 'cdn', 'type' ], group_by => 'cdn.name' } )->get_column('cdn.name')->all();
 	foreach my $cdn (@cdn_names) {
 		my $bytes_served;
 		my $max;

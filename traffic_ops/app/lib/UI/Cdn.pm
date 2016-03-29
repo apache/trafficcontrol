@@ -337,7 +337,7 @@ sub aserver {
             my $aux_url = "";
             my $img     = "";
 
-            if ( $row->type->name eq "MID" || $row->type->name eq "EDGE" ) {
+            if ( $row->type->name =~ m/^MID/ || $row->type->name =~ m/^EDGE/ ) {
                 $aux_url = $srvg_url . $row->host_name;
                 $img     = "graph.png";
             }
