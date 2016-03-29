@@ -19,6 +19,11 @@
         </dependency>
         <dependency>
             <groupId>com.comcast.cdn.traffic_control.traffic_router</groupId>
+            <artifactId>traffic_router_config</artifactId>
+            <version>${project.parent.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.comcast.cdn.traffic_control.traffic_router</groupId>
             <artifactId>traffic_router_api</artifactId>
             <version>${project.parent.version}</version>
         </dependency>

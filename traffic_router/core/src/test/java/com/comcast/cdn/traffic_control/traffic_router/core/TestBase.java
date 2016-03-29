@@ -16,16 +16,26 @@
 
 package com.comcast.cdn.traffic_control.traffic_router.core;
 
+import org.apache.log4j.Logger;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.support.FileSystemXmlApplicationContext;
 
 public class TestBase {
-	static private ApplicationContext context;
+	private static final Logger LOGGER = Logger.getLogger(TestBase.class);
+	private static ApplicationContext context;
+
 	public static ApplicationContext getContext() {
 		System.setProperty("deploy.dir", "src/test");
 		System.setProperty("dns.zones.dir", "src/test/var/auto-zones");
-		if(context!=null) return context;
-		return context = new FileSystemXmlApplicationContext("src/main/webapp/WEB-INF/applicationContext.xml");
+
+		if (context != null) {
+			return context;
+		}
+
+		LOGGER.warn("Initializing context before running integration tests");
+		context = new FileSystemXmlApplicationContext("src/main/webapp/WEB-INF/applicationContext.xml");
+		LOGGER.warn("Context initialized integration tests will now start running");
+		return context;
 	}
 
 }

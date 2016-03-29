@@ -61,7 +61,7 @@ public class DnsRoutePerformanceTest {
     private Map<String, Set<String>> hostMap = new HashMap<String, Set<String>>();
     private Set<String> coverageZoneRouted = new HashSet<String>();
 
-    long minimumTPS = Long.parseLong(System.getProperty("minimumTPS"));
+    long minimumTPS = Long.parseLong(System.getProperty("minimumTPS", "140"));
     private List<String> names;
 
     @Before

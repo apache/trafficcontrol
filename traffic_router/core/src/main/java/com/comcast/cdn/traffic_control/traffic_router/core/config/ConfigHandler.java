@@ -131,6 +131,7 @@ public class ConfigHandler {
 
 				trafficRouterManager.setCacheRegister(cacheRegister);
 				trafficRouterManager.getTrafficRouter().setRequestHeaders(parseRequestHeaders(config.optJSONArray("requestHeaders")));
+				trafficRouterManager.getTrafficRouter().configurationChanged();
 				setLastSnapshotTimestamp(sts);
 			} catch (ParseException e) {
 				LOGGER.error(e, e);

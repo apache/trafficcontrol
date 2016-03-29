@@ -51,6 +51,8 @@ public class GeoTest {
 		geolocationDatabaseUpdater = (GeolocationDatabaseUpdater) context.getBean("geolocationDatabaseUpdater");
 		maxmindGeolocationService = (MaxmindGeolocationService) context.getBean("maxmindGeolocationService");
 
+		geolocationDatabaseUpdater.loadDatabase();
+
 		while (!geolocationDatabaseUpdater.isLoaded()) {
 			LOGGER.info("Waiting for a valid Maxmind database before proceeding");
 			Thread.sleep(1000);

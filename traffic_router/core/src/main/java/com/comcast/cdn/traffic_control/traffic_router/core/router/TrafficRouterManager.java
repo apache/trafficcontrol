@@ -32,11 +32,11 @@ import com.comcast.cdn.traffic_control.traffic_router.core.cache.CacheRegister;
 import com.comcast.cdn.traffic_control.traffic_router.core.dns.NameServer;
 import com.comcast.cdn.traffic_control.traffic_router.geolocation.GeolocationService;
 import com.comcast.cdn.traffic_control.traffic_router.core.util.TrafficOpsUtils;
-import org.springframework.beans.BeansException;
 import org.springframework.context.ApplicationContext;
-import org.springframework.context.ApplicationContextAware;
+import org.springframework.context.ApplicationListener;
+import org.springframework.context.event.ContextRefreshedEvent;
 
-public class TrafficRouterManager implements ApplicationContextAware {
+public class TrafficRouterManager implements ApplicationListener<ContextRefreshedEvent> {
 	private static final Logger LOGGER = Logger.getLogger(TrafficRouterManager.class);
 
 	private JSONObject state;
@@ -110,7 +110,9 @@ public class TrafficRouterManager implements ApplicationContextAware {
 			}
 
 			this.trafficRouter = tr;
-			this.trafficRouter.setApplicationContext(applicationContext);
+			if (applicationContext != null) {
+				this.trafficRouter.setApplicationContext(applicationContext);
+			}
 		}
 
 		trackEvent("lastConfigChange");
@@ -141,7 +143,9 @@ public class TrafficRouterManager implements ApplicationContextAware {
 	}
 
 	@Override
-	public void setApplicationContext(final ApplicationContext applicationContext) throws BeansException {
-		this.applicationContext = applicationContext;
+	public void onApplicationEvent(final ContextRefreshedEvent event) {
+		applicationContext = event.getApplicationContext();
+		trafficRouter.setApplicationContext(applicationContext);
+		trafficRouter.configurationChanged();
 	}
 }

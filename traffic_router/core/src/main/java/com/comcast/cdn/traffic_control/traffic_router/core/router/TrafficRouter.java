@@ -34,6 +34,7 @@ import java.util.TreeMap;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 
+import com.comcast.cdn.traffic_control.traffic_router.configuration.ConfigurationListener;
 import com.comcast.cdn.traffic_control.traffic_router.core.loc.MaxmindGeolocationService;
 import org.apache.commons.pool.ObjectPool;
 import org.apache.log4j.Logger;
@@ -786,5 +787,17 @@ public class TrafficRouter {
 
 	public void setApplicationContext(final ApplicationContext applicationContext) throws BeansException {
 		this.applicationContext = applicationContext;
+	}
+
+	public void configurationChanged() {
+		if (applicationContext == null) {
+			LOGGER.warn("Application Context not yet ready, skipping calling listeners of configuration change");
+			return;
+		}
+
+		final Map<String, ConfigurationListener> configurationListenerMap = applicationContext.getBeansOfType(ConfigurationListener.class);
+		for (ConfigurationListener configurationListener : configurationListenerMap.values()) {
+			configurationListener.configurationChanged();
+		}
 	}
 }

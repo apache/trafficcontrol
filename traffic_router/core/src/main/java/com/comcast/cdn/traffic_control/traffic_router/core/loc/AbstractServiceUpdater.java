@@ -84,9 +84,9 @@ public abstract class AbstractServiceUpdater {
 	};
 
 	public void init() {
-		final long pi = getPollingInterval();
-		LOGGER.info("[" + getClass().getSimpleName() + "] Starting schedule with interval: " + pi + " : " + TimeUnit.MILLISECONDS);
-		scheduledService = executorService.scheduleWithFixedDelay(updater, pi, pi, TimeUnit.MILLISECONDS);
+		final long pollingInterval = getPollingInterval();
+		LOGGER.info("[" + getClass().getSimpleName() + "] Starting schedule with interval: " + pollingInterval + " : " + TimeUnit.MILLISECONDS);
+		scheduledService = executorService.scheduleWithFixedDelay(updater, pollingInterval, pollingInterval, TimeUnit.MILLISECONDS);
 	}
 
 	@SuppressWarnings("PMD.CyclomaticComplexity")
@@ -250,13 +250,13 @@ public abstract class AbstractServiceUpdater {
 
 	protected boolean copyDatabaseIfDifferent(final File existingDB, final File newDB) throws IOException {
 		if (filesEqual(existingDB, newDB)) {
-			LOGGER.info("[" + getClass().getSimpleName() + "] Location database unchanged.");
+			LOGGER.info("[" + getClass().getSimpleName() + "] database unchanged.");
 			return false;
 		}
 
 		if (existingDB.isDirectory() && newDB.isDirectory()) {
 			moveDirectory(existingDB, newDB);
-			LOGGER.info("[" + getClass().getSimpleName() + "] Successfully updated location database " + existingDB);
+			LOGGER.info("[" + getClass().getSimpleName() + "] Successfully updated database " + existingDB);
 			return true;
 		}
 
@@ -268,7 +268,7 @@ public abstract class AbstractServiceUpdater {
 				for (File file : existingDB.listFiles()) {
 					file.delete();
 				}
-				LOGGER.debug("[" + getClass().getSimpleName() + "] Successfully deleted location database under: " + existingDB);
+				LOGGER.debug("[" + getClass().getSimpleName() + "] Successfully deleted database under: " + existingDB);
 			} else {
 				existingDB.delete();
 			}
@@ -283,7 +283,7 @@ public abstract class AbstractServiceUpdater {
 			return false;
 		}
 
-		LOGGER.info("[" + getClass().getSimpleName() + "] Successfully updated location database " + existingDB);
+		LOGGER.info("[" + getClass().getSimpleName() + "] Successfully updated database " + existingDB);
 		return true;
 	}
 
