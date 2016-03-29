@@ -71,6 +71,41 @@ ok $t->post_ok('/api/1.2/cachegroups' => {Accept => 'application/json'} => json 
     ->json_is( "/response/secondary_parent_cachegroup" => "mid-northeast-group")
             , 'Does the cache group details return?';
 
+ok $t->post_ok('/api/1.2/cachegroups' => {Accept => 'application/json'} => json => {
+        "name" => "cache_group_edge1",
+        "short_name" => "cg_edge1",
+        "latitude" => "123",
+        "longitude" => "456",
+        "parent_cachegroup" => "",
+        "secondary_parent_cachegroup" => "",
+        "type_name" => "EDGE_LOC" })->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } )
+	->json_is( "/response/name" => "cache_group_edge1" )
+    ->json_is( "/response/short_name" => "cg_edge1")
+    ->json_is( "/response/latitude" => "123")
+    ->json_is( "/response/longitude" => "456")
+    ->json_is( "/response/parent_cachegroup" => "")
+    ->json_is( "/response/secondary_parent_cachegroup" => "")
+            , 'Does the cache group details return?';
+
+ok $t->post_ok('/api/1.2/cachegroups' => {Accept => 'application/json'} => json => {
+        "name" => "cache_group_edge2",
+        "short_name" => "cg_edge2",
+        "latitude" => "123",
+        "longitude" => "456",
+        "parent_cachegroup" => "notexist",
+        "secondary_parent_cachegroup" => "",
+        "type_name" => "EDGE_LOC" })->status_is(400)->or( sub { diag $t->tx->res->content->asset->{content}; } )
+            , 'Does the cache group details return?';
+
+ok $t->post_ok('/api/1.2/cachegroups' => {Accept => 'application/json'} => json => {
+        "name" => "cache_group_edge3",
+        "short_name" => "cg_edge3",
+        "latitude" => "123",
+        "longitude" => "456",
+        "secondary_parent_cachegroup" => "notexist",
+        "type_name" => "EDGE_LOC" })->status_is(400)->or( sub { diag $t->tx->res->content->asset->{content}; } )
+            , 'Does the cache group details return?';
+
 ok $t->post_ok('/api/1.2/servers' => {Accept => 'application/json'} => json => {
         "host_name" => "tc1_ats2",
         "domain_name" => "my.cisco.com",

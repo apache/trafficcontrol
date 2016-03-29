@@ -190,7 +190,14 @@ sub create{
     }
 
     my $parent_cachegroup_id = $cachegroups->{'cachegroups'}->{$parent_cachegroup};
+    $self->app->log->debug("parent_cachegroup[". $parent_cachegroup . "]");
+    if ( $parent_cachegroup ne ""  && !defined($parent_cachegroup_id) ) {
+        return $self->alert("parent_cachegroup ". $parent_cachegroup . " does not exist."); 
+    }
     my $secondary_parent_cachegroup_id = $cachegroups->{'cachegroups'}->{$secondary_parent_cachegroup};
+    if ( $secondary_parent_cachegroup ne ""  && !defined($secondary_parent_cachegroup_id) ) {
+        return $self->alert("secondary_parent_cachegroup ". $secondary_parent_cachegroup . " does not exist."); 
+    }
     my $insert = $self->db->resultset('Cachegroup')->create(
         {
             name        => $name,
