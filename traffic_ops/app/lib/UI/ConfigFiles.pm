@@ -546,7 +546,17 @@ sub ip_allow_data {
 		}
 
 		# allow RFC 1918 server space - TODO JvD: parameterize
+		$ipallow->[$i]->{src_ip} = '10.0.0.0-10.255.255.255';
+		$ipallow->[$i]->{action} = 'ip_allow';
+		$ipallow->[$i]->{method} = "ALL";
+		$i++;
+
 		$ipallow->[$i]->{src_ip} = '172.16.0.0-172.31.255.255';
+		$ipallow->[$i]->{action} = 'ip_allow';
+		$ipallow->[$i]->{method} = "ALL";
+		$i++;
+
+		$ipallow->[$i]->{src_ip} = '192.168.0.0-192.168.255.255';
 		$ipallow->[$i]->{action} = 'ip_allow';
 		$ipallow->[$i]->{method} = "ALL";
 		$i++;
