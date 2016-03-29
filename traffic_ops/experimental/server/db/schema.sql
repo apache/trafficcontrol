@@ -69,7 +69,7 @@ ALTER TABLE asns OWNER TO touser;
 -- Name: asns_v; Type: VIEW; Schema: public; Owner: touser
 --
 
-CREATE VIEW asns_v AS
+CREATE VIEW asns AS
  SELECT asns.asn,
     asns.cachegroup,
     asns.created_at,
@@ -77,7 +77,7 @@ CREATE VIEW asns_v AS
    FROM asns;
 
 
-ALTER TABLE asns_v OWNER TO touser;
+ALTER TABLE asns OWNER TO touser;
 
 --
 -- Name: cachegroups; Type: TABLE; Schema: public; Owner: touser
@@ -218,7 +218,7 @@ ALTER TABLE servers OWNER TO touser;
 -- Name: content_routers_v; Type: VIEW; Schema: public; Owner: touser
 --
 
-CREATE VIEW content_routers_v AS
+CREATE VIEW content_routers AS
  SELECT servers.ip_address AS ip,
     servers.ip6_address AS ip6,
     servers.profile,
@@ -236,13 +236,13 @@ CREATE VIEW content_routers_v AS
   WHERE ((servers.type = 'CCR'::text) AND (parameters.name = 'api.port'::text));
 
 
-ALTER TABLE content_routers_v OWNER TO touser;
+ALTER TABLE content_routers OWNER TO touser;
 
 --
 -- Name: content_servers_v; Type: VIEW; Schema: public; Owner: touser
 --
 
-CREATE VIEW content_servers_v AS
+CREATE VIEW content_servers AS
  SELECT DISTINCT servers.host_name,
     servers.profile,
     servers.type,
@@ -263,7 +263,7 @@ CREATE VIEW content_servers_v AS
   WHERE ((parameters.name = 'weight'::text) AND (servers.status = ANY (ARRAY['REPORTED'::text, 'ONLINE'::text])) AND (servers.type = 'EDGE'::text));
 
 
-ALTER TABLE content_servers_v OWNER TO touser;
+ALTER TABLE content_servers OWNER TO touser;
 
 --
 -- Name: deliveryservices; Type: TABLE; Schema: public; Owner: touser
@@ -374,7 +374,7 @@ ALTER TABLE regexes OWNER TO touser;
 -- Name: cr_deliveryservice_server_v; Type: VIEW; Schema: public; Owner: touser
 --
 
-CREATE VIEW cr_deliveryservice_server_v AS
+CREATE VIEW cr_deliveryservice_server AS
  SELECT DISTINCT regexes.pattern,
     deliveryservices.name,
     servers.cdn,
@@ -387,7 +387,7 @@ CREATE VIEW cr_deliveryservice_server_v AS
   WHERE (deliveryservices.type <> 'ANY_MAP'::text);
 
 
-ALTER TABLE cr_deliveryservice_server_v OWNER TO touser;
+ALTER TABLE cr_deliveryservice_server OWNER TO touser;
 
 --
 -- Name: staticdnsentries_id_seq; Type: SEQUENCE; Schema: public; Owner: touser
@@ -440,7 +440,7 @@ ALTER TABLE types OWNER TO touser;
 -- Name: crconfig_ds_data_v; Type: VIEW; Schema: public; Owner: touser
 --
 
-CREATE VIEW crconfig_ds_data_v AS
+CREATE VIEW crconfig_ds_data AS
  SELECT deliveryservices.name,
     deliveryservices.profile,
     deliveryservices.dns_ttl,
@@ -475,13 +475,13 @@ CREATE VIEW crconfig_ds_data_v AS
      LEFT JOIN types sdnstypes ON ((sdnstypes.name = (staticdnsentries.type)::text)));
 
 
-ALTER TABLE crconfig_ds_data_v OWNER TO touser;
+ALTER TABLE crconfig_ds_data OWNER TO touser;
 
 --
 -- Name: crconfig_params_v; Type: VIEW; Schema: public; Owner: touser
 --
 
-CREATE VIEW crconfig_params_v AS
+CREATE VIEW crconfig_params AS
  SELECT DISTINCT servers.cdn,
     servers.profile,
     servers.type AS stype,
@@ -495,7 +495,7 @@ CREATE VIEW crconfig_params_v AS
   WHERE ((servers.type = ANY (ARRAY['EDGE'::text, 'MID'::text, 'CCR'::text])) AND (parameters.config_file = 'CRConfig.json'::text));
 
 
-ALTER TABLE crconfig_params_v OWNER TO touser;
+ALTER TABLE crconfig_params OWNER TO touser;
 
 --
 -- Name: deliveryservices_users; Type: TABLE; Schema: public; Owner: touser
@@ -715,7 +715,7 @@ ALTER TABLE log OWNER TO touser;
 -- Name: monitors_v; Type: VIEW; Schema: public; Owner: touser
 --
 
-CREATE VIEW monitors_v AS
+CREATE VIEW monitors AS
  SELECT servers.ip_address AS ip,
     servers.ip6_address AS ip6,
     servers.profile,
@@ -729,7 +729,7 @@ CREATE VIEW monitors_v AS
   WHERE (servers.type = 'RASCAL'::text);
 
 
-ALTER TABLE monitors_v OWNER TO touser;
+ALTER TABLE monitors OWNER TO touser;
 
 --
 -- Name: phys_locations; Type: TABLE; Schema: public; Owner: touser
@@ -757,7 +757,7 @@ ALTER TABLE phys_locations OWNER TO touser;
 -- Name: profiles_v; Type: VIEW; Schema: public; Owner: touser
 --
 
-CREATE VIEW profiles_v AS
+CREATE VIEW profiles AS
  SELECT profiles.name,
     profiles.description,
     profiles.created_at,
@@ -765,7 +765,7 @@ CREATE VIEW profiles_v AS
    FROM profiles;
 
 
-ALTER TABLE profiles_v OWNER TO touser;
+ALTER TABLE profiles OWNER TO touser;
 
 --
 -- Name: regions; Type: TABLE; Schema: public; Owner: touser
@@ -784,7 +784,7 @@ ALTER TABLE regions OWNER TO touser;
 -- Name: regions_v; Type: VIEW; Schema: public; Owner: touser
 --
 
-CREATE VIEW regions_v AS
+CREATE VIEW regions AS
  SELECT regions.name,
     regions.division,
     regions.created_at,
@@ -792,7 +792,7 @@ CREATE VIEW regions_v AS
    FROM regions;
 
 
-ALTER TABLE regions_v OWNER TO touser;
+ALTER TABLE regions OWNER TO touser;
 
 --
 -- Name: roles; Type: TABLE; Schema: public; Owner: touser
@@ -1104,6 +1104,13 @@ ALTER TABLE ONLY deliveryservices
 ALTER TABLE ONLY domains
     ADD CONSTRAINT domains_cdn_fkey FOREIGN KEY (cdn) REFERENCES cdns(name);
 
+CREATE TABLE crconfig_snapshots (
+    cdn text NOT NULL REFERENCES cdns (name),
+    snapshot text NOT NULL,
+    created_at timestamp without time zone DEFAULT now() NOT NULL,
+    PRIMARY KEY (cdn, created_at)
+);
+ALTER TABLE crconfig_snapshots OWNER TO touser;
 
 --
 -- Name: public; Type: ACL; Schema: -; Owner: postgres
@@ -1113,7 +1120,6 @@ REVOKE ALL ON SCHEMA public FROM PUBLIC;
 REVOKE ALL ON SCHEMA public FROM postgres;
 GRANT ALL ON SCHEMA public TO postgres;
 GRANT ALL ON SCHEMA public TO PUBLIC;
-
 
 --
 -- PostgreSQL database dump complete

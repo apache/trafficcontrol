@@ -142,6 +142,7 @@ func ApiHandlers() map[string]ApiHandlerFuncMap {
 		"to_extension/{id}":      ApiHandlerFuncMap{GET: idWrap(getToExtensionById), PUT: idBodyWrap(putToExtension), DELETE: idWrap(delToExtension)},
 		"type":                   ApiHandlerFuncMap{GET: emptyWrap(getTypes), POST: bodyWrap(postType)},
 		"type/{id}":              ApiHandlerFuncMap{GET: idWrap(getTypeById), PUT: idBodyWrap(putType), DELETE: idWrap(delType)},
+		"snapshot/crconfig/{name}": ApiHandlerFuncMap{GET: nameWrap(snapshotCrconfig)},
 	}
 }
 
@@ -149,6 +150,8 @@ type EmptyHandlerFunc func(db *sqlx.DB) (interface{}, error)
 type IntHandlerFunc func(id int, db *sqlx.DB) (interface{}, error)
 type BodyHandlerFunc func(payload []byte, db *sqlx.DB) (interface{}, error)
 type IntBodyHandlerFunc func(id int, payload []byte, db *sqlx.DB) (interface{}, error)
+type StringHandlerFunc func(name string, db *sqlx.DB) (interface{}, error)
+type StringBodyHandlerFunc func(name string, payload []byte, db *sqlx.DB) (interface{}, error)
 
 func idBodyWrap(f IntBodyHandlerFunc) ApiHandlerFunc {
 	return func(pathParams map[string]string, payload []byte, db *sqlx.DB) (interface{}, error) {
@@ -172,6 +175,22 @@ func bodyWrap(f BodyHandlerFunc) ApiHandlerFunc {
 	return func(pathParams map[string]string, payload []byte, db *sqlx.DB) (interface{}, error) {
 		return f(payload, db)
 	}
+}
+
+func nameBodyWrap(f StringBodyHandlerFunc) ApiHandlerFunc {
+	return func(pathParams map[string]string, payload []byte, db *sqlx.DB) (interface{}, error) {
+		if name, ok := pathParams["name"]; !ok {
+			return nil, errors.New("Name missing")
+		} else {
+			return f(name, payload, db)
+		}
+	}
+}
+
+func nameWrap(f StringHandlerFunc) ApiHandlerFunc {
+	return nameBodyWrap(func(name string, payload []byte, db *sqlx.DB) (interface{}, error) {
+		return f(name, db)
+	})
 }
 
 func emptyWrap(f EmptyHandlerFunc) ApiHandlerFunc {

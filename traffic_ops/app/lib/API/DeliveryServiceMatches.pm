@@ -1,4 +1,4 @@
-package API::DeliveryServiceRegexes;
+package API::DeliveryServiceMatches;
 #
 # Copyright 2015 Comcast Cable Communications Management, LLC
 #
@@ -25,40 +25,51 @@ use Data::Dumper;
 use Common::ReturnCodes qw(SUCCESS ERROR);
 
 sub index {
-	my $self = shift;
+	my $self   = shift;
+	my $format = $self->param("format");
 
 	my $rs;
 	if ( &is_privileged($self) ) {
 		$rs = $self->db->resultset('Deliveryservice')->search( undef, { prefetch => [ 'cdn', 'deliveryservice_regexes' ], order_by => 'xml_id' } );
 
-		my @regexes;
+		my @matches;
 		while ( my $row = $rs->next ) {
 			my $cdn_name = defined( $row->cdn_id ) ? $row->cdn->name : "";
 			my $xml_id   = defined( $row->xml_id ) ? $row->xml_id    : "";
 
-			my $re_rs = $row->deliveryservice_regexes;
+			my $regexes = $row->deliveryservice_regexes;
 
-			my @matchlist;
-			while ( my $re_row = $re_rs->next ) {
-				push(
-					@matchlist, {
-						type      => $re_row->regex->type->name,
-						pattern   => $re_row->regex->pattern,
-						setNumber => $re_row->set_number,
-					}
-				);
+			my @match_patterns;
+			while ( my $r = $regexes->next ) {
+				my $match_pattern = $self->convert_regex_to_match_pattern( $r->regex->pattern );
+				push( @match_patterns, $match_pattern );
 			}
 			my $delivery_service->{dsName} = $xml_id;
-			$delivery_service->{regexes} = \@matchlist;
-			push( @regexes, $delivery_service );
+			$delivery_service->{patterns} = \@match_patterns;
+			push( @matches, $delivery_service );
 		}
 
-		return $self->success( \@regexes );
+		if ( $format =~ /file/ ) {
+			return $self->render( json => \@matches );
+		}
+		else {
+			return $self->success( \@matches );
+		}
 	}
 	else {
 		return $self->forbidden();
 	}
 
+}
+
+sub convert_regex_to_match_pattern {
+	my $self  = shift;
+	my $regex = shift;
+
+	my $match_pattern = $regex;
+	$match_pattern =~ s/\\//g;
+	$match_pattern =~ s/\.\*//g;
+	return $match_pattern;
 }
 
 1;

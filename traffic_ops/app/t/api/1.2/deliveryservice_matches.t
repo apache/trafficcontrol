@@ -41,10 +41,13 @@ Test::TestHelper->load_core_data($schema);
 ok $t->post_ok( '/api/1.1/user/login', json => { u => Test::TestHelper::ADMIN_USER, p => Test::TestHelper::ADMIN_USER_PASSWORD } )->status_is(200),
 	'Log into the admin user?';
 
-ok $t->get_ok("/api/1.2/deliveryservices_regexes.json")->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } )
-	->json_has( '/response', 'has a response' )->json_is( '/response/0/dsName', 'test-ds1' )->json_has( '/response/0/regexes/0/type', 'has a regex type' )
-	->json_has( '/response/0/regexes/0/type', 'test-ds1' )->json_is( '/response/1/dsName', 'test-ds2' )
-	->json_has( '/response/1/regexes', 'has a second regex' )->json_has( '/response/1/regexes/0/type', 'has a second regex type' ), 'Query regexes';
+ok $t->get_ok("/api/1.2/deliveryservices_matches.json")->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } )
+	->json_has( '/response', 'has a response' )->json_is( '/response/0/dsName', 'test-ds1' )->json_has( '/response/0/patterns', 'has a first match' )
+	->json_is( '/response/1/dsName', 'test-ds2' )->json_has( '/response/1/patterns', 'has a second match' ), 'Query matches';
+
+ok $t->get_ok("/api/1.2/deliveryservices_matches.json?format=file")->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } )
+	->json_hasnt( '/response', 'should not have a response' )->json_is( '/0/dsName', 'test-ds1' )->json_has( '/0/patterns', 'has a first match' )
+	->json_is( '/1/dsName', 'test-ds2' )->json_has( '/1/patterns', 'has a second match' ), 'Query matches';
 
 ok $t->get_ok('/logout')->status_is(302)->or( sub { diag $t->tx->res->content->asset->{content}; } );
 
@@ -53,7 +56,7 @@ ok $t->post_ok( '/api/1.1/user/login', json => { u => Test::TestHelper::PORTAL_U
 	'Log into the portal user?';
 
 # Verify Permissions
-ok $t->get_ok("/api/1.2/deliveryservices_regexes.json")->status_is(403)->or( sub { diag $t->tx->res->content->asset->{content}; } );
+ok $t->get_ok("/api/1.2/deliveryservices_matches.json")->status_is(403)->or( sub { diag $t->tx->res->content->asset->{content}; } );
 
 ok $t->get_ok('/logout')->status_is(302)->or( sub { diag $t->tx->res->content->asset->{content}; } );
 

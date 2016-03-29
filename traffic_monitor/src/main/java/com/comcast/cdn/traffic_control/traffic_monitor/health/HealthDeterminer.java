@@ -104,20 +104,6 @@ public class HealthDeterminer {
 		if(!set.has(profile)) { return null; }
 		return set.optJSONObject(profile);
 	}
-	public static boolean shouldFetchStats(final Cache cache) {
-		try {
-			switch(AdminStatus.valueOf(cache.getStatus())) {
-			case ONLINE: return false;
-			case ADMIN_DOWN: return true;
-			case OFFLINE: return false;
-			case REPORTED: return true;
-			case STANDBY: return true; // TODO: get infrequently... cache.getState().getLastCheck;
-			default: return true;
-			}
-		} catch(IllegalArgumentException e) {
-			return false;
-		}
-	}
 
 	public String getIp(final Cache c) {
 		final CacheState state = c.getState();

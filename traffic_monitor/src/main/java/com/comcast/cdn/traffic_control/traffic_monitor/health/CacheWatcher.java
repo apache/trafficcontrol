@@ -107,6 +107,8 @@ public class CacheWatcher {
 
 				final CacheState state = cacheStateRegistry.update(cache);
 
+				cacheStates.add(state);
+
 				if (!shouldFetchStats(cache)) {
 					cache.setState(state, myHealthDeterminer);
 					continue;
@@ -127,9 +129,9 @@ public class CacheWatcher {
 				final CacheStateUpdater updater = cacheUpdaterMap.get(cache.getStatisticsUrl()).update(myHealthDeterminer,failCount, requestTimeout);
 				cacheStatisticsClient.fetchCacheStatistics(cache, updater);
 
-				cacheStates.add(state);
 				cacheTimePad();
 			}
+
 			return cacheStates;
 		}
 
@@ -243,8 +245,8 @@ public class CacheWatcher {
 		return itercount.getRawValue();
 	}
 
-	private boolean shouldFetchStats(final Cache cache) {
+	public boolean shouldFetchStats(final Cache cache) {
 		HealthDeterminer.AdminStatus adminStatus = HealthDeterminer.AdminStatus.valueOf(cache.getStatus());
-		return (adminStatus != OFFLINE || adminStatus == ONLINE);
+		return (adminStatus != OFFLINE && adminStatus != ONLINE);
 	}
 }
