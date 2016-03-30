@@ -55,10 +55,16 @@ func main() {
 	targetURL := flag.String("targetUrl", "http://server2.kabletown.net:8086", "The influxdb url and port")
 	database := flag.String("database", "all", "Sync a specific database")
 	days := flag.Int("days", 0, "Number of days in the past to sync (today - x days), 0 is all")
+	sourceUser := flag.String("sourceUser", "", "The source influxdb username")
+	sourcePass := flag.String("sourcePass", "", "The source influxdb password")
+	targetUser := flag.String("targetUser", "", "The target influxdb username")
+	targetPass := flag.String("targetPass", "", "The target influxdb password")
 	flag.Parse()
 	fmt.Printf("syncing %v to %v for %v database(s) for the past %v day(s)\n", *sourceURL, *targetURL, *database, *days)
 	sourceClient, err := influx.NewHTTPClient(influx.HTTPConfig{
-		Addr: *sourceURL,
+		Addr:     *sourceURL,
+		Username: *sourceUser,
+		Password: *sourcePass,
 	})
 	if err != nil {
 		fmt.Printf("Error creating influx sourceClient: %v\n", err)
@@ -70,7 +76,9 @@ func main() {
 		os.Exit(1)
 	}
 	targetClient, err := influx.NewHTTPClient(influx.HTTPConfig{
-		Addr: *targetURL,
+		Addr:     *targetURL,
+		Username: *targetUser,
+		Password: *targetPass,
 	})
 	if err != nil {
 		fmt.Printf("Error creating influx targetClient: %v\n", err)
