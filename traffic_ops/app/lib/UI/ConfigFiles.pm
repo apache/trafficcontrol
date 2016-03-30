@@ -926,7 +926,9 @@ sub remap_dot_config {
 	if ( $server->type->name =~ m/^MID/ ) {
 		my %mid_remap;
 		foreach my $remap ( @{ $data->{dslist} } ) {
-
+			if ( $remap->{type} =~ /LIVE/ && $remap->{type} !~ /NATNL/ ) {
+				next;    # Live local delivery services skip mids
+			}
 			if ( defined( $mid_remap{ $remap->{org} } ) ) {
 				next;    # skip remap rules from extra HOST_REGEXP entries
 			}
