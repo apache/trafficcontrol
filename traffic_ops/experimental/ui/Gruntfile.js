@@ -21,7 +21,8 @@ module.exports = function (grunt) {
 
     // dist task - when you type 'grunt dist' <-- builds minified app for distribution and generates node dependencies all wrapped up nicely in a /dist folder
     grunt.registerTask('dist', [
-        'build'
+        'build',
+        'install-dependencies'
     ]);
 
     // build tasks
