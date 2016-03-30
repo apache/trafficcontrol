@@ -22,6 +22,7 @@ package main
 import (
 	"flag"
 	"fmt"
+	"os"
 
 	influx "github.com/influxdata/influxdb/client/v2"
 )
@@ -38,6 +39,11 @@ func main() {
 	if err != nil {
 		fmt.Printf("Error creating influx client: %v", err)
 		panic("could not create influx client")
+	}
+	_, _, err = client.Ping(10)
+	if err != nil {
+		fmt.Printf("Error creating influx client: %v", err)
+		os.Exit(1)
 	}
 
 	createCacheStats(client, replication)

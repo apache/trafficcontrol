@@ -64,9 +64,19 @@ func main() {
 		fmt.Printf("Error creating influx sourceClient: %v\n", err)
 		os.Exit(1)
 	}
+	_, _, err = sourceClient.Ping(10)
+	if err != nil {
+		fmt.Printf("Error creating influx sourceClient: %v\n", err)
+		os.Exit(1)
+	}
 	targetClient, err := influx.NewHTTPClient(influx.HTTPConfig{
 		Addr: *targetURL,
 	})
+	if err != nil {
+		fmt.Printf("Error creating influx targetClient: %v\n", err)
+		os.Exit(1)
+	}
+	_, _, err = targetClient.Ping(10)
 	if err != nil {
 		fmt.Printf("Error creating influx targetClient: %v\n", err)
 		os.Exit(1)
