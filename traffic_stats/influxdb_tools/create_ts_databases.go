@@ -37,12 +37,12 @@ func main() {
 		Addr: *influxURL,
 	})
 	if err != nil {
-		fmt.Printf("Error creating influx client: %v", err)
+		fmt.Printf("Error creating influx client: %v\n", err)
 		panic("could not create influx client")
 	}
 	_, _, err = client.Ping(10)
 	if err != nil {
-		fmt.Printf("Error creating influx client: %v", err)
+		fmt.Printf("Error creating influx client: %v\n", err)
 		os.Exit(1)
 	}
 
