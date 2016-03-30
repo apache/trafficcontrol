@@ -39,7 +39,7 @@ Test::TestHelper->load_core_data($schema);
 ok $t->post_ok( '/login', => form => { u => Test::TestHelper::ADMIN_USER, p => Test::TestHelper::ADMIN_USER_PASSWORD } )->status_is(302)
 	->or( sub { diag $t->tx->res->content->asset->{content}; } ), 'Should login?';
 
-ok $t->post_ok('/api/1.2/deliveryservices/xmlId/test-ds1/servers' => {Accept => 'application/json'} => json => {
+ok $t->post_ok('/api/1.2/deliveryservices/test-ds1/servers' => {Accept => 'application/json'} => json => {
         "server_names" => [
              "atlanta-edge-01",
              "atlanta-edge-02"

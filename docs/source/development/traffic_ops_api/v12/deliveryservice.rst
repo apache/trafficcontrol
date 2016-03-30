@@ -1059,7 +1059,7 @@ SSL Keys
 
 |
 
-**POST /api/1.2/deliveryservices/xmlId/:xml_id/servers**
+**POST /api/1.2/deliveryservices/:xml_id/servers**
 
   Assign caches to a delivery service.
 
