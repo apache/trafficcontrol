@@ -20,13 +20,14 @@ import (
 	"net/http"
 	"testing"
 
+	"github.com/Comcast/test_helper"
 	"github.com/jheitz200/traffic_control/traffic_ops/client"
 	"github.com/jheitz200/traffic_control/traffic_ops/client/fixtures"
 )
 
 func TestUsers(t *testing.T) {
 	resp := fixtures.Users()
-	server := validServer(resp)
+	server := test.ValidHTTPServer(resp)
 	defer server.Close()
 
 	var httpClient http.Client
@@ -35,50 +36,50 @@ func TestUsers(t *testing.T) {
 		UserAgent: &httpClient,
 	}
 
-	Context(t, "Given the need to test a successful Traffic Ops request for Users")
+	test.Context(t, "Given the need to test a successful Traffic Ops request for Users")
 
 	users, err := to.Users()
 	if err != nil {
-		Error(t, "Should be able to make a request to Traffic Ops")
+		test.Error(t, "Should be able to make a request to Traffic Ops")
 	} else {
-		Success(t, "Should be able to make a request to Traffic Ops")
+		test.Success(t, "Should be able to make a request to Traffic Ops")
 	}
 
 	for _, u := range users {
 		if u.FullName != "Bob Smith" {
-			Error(t, "Should get back \"Bob Smith\" for \"FullName\", got %s", u.FullName)
+			test.Error(t, "Should get back \"Bob Smith\" for \"FullName\", got %s", u.FullName)
 		} else {
-			Success(t, "Should get back \"Bob Smith\" for \"FullName\"")
+			test.Success(t, "Should get back \"Bob Smith\" for \"FullName\"")
 		}
 
 		if u.PublicSSHKey != "some-ssh-key" {
-			Error(t, "Should get back \"some-ssh-key\" for \"PublicSSHKey\", got %s", u.PublicSSHKey)
+			test.Error(t, "Should get back \"some-ssh-key\" for \"PublicSSHKey\", got %s", u.PublicSSHKey)
 		} else {
-			Success(t, "Should get back \"some-ssh-key\" for \"PublicSSHKey\"")
+			test.Success(t, "Should get back \"some-ssh-key\" for \"PublicSSHKey\"")
 		}
 
 		if u.Role != "3" {
-			Error(t, "Should get back \"3\" for \"Role\", got %s", u.Role)
+			test.Error(t, "Should get back \"3\" for \"Role\", got %s", u.Role)
 		} else {
-			Success(t, "Should get back \"3\" for \"Role\"")
+			test.Success(t, "Should get back \"3\" for \"Role\"")
 		}
 
 		if u.Email != "bobsmith@email.com" {
-			Error(t, "Should get back \"bobsmith@email.com\" for \"Email\", got %s", u.Email)
+			test.Error(t, "Should get back \"bobsmith@email.com\" for \"Email\", got %s", u.Email)
 		} else {
-			Success(t, "Should get back \"bobsmith@email.com\" for \"Email\"")
+			test.Success(t, "Should get back \"bobsmith@email.com\" for \"Email\"")
 		}
 
 		if u.Username != "bsmith" {
-			Error(t, "Should get back \"bsmith\" for \"Username\", got %s", u.Username)
+			test.Error(t, "Should get back \"bsmith\" for \"Username\", got %s", u.Username)
 		} else {
-			Success(t, "Should get back \"bsmith\" for \"Username\"")
+			test.Success(t, "Should get back \"bsmith\" for \"Username\"")
 		}
 	}
 }
 
 func TestUsersUnauthorized(t *testing.T) {
-	server := invalidServer(http.StatusUnauthorized)
+	server := test.InvalidHTTPServer(http.StatusUnauthorized)
 	defer server.Close()
 
 	var httpClient http.Client
@@ -87,12 +88,12 @@ func TestUsersUnauthorized(t *testing.T) {
 		UserAgent: &httpClient,
 	}
 
-	Context(t, "Given the need to test a failed Traffic Ops request for Users")
+	test.Context(t, "Given the need to test a failed Traffic Ops request for Users")
 
 	_, err := to.Users()
 	if err == nil {
-		Error(t, "Should not be able to make a request to Traffic Ops")
+		test.Error(t, "Should not be able to make a request to Traffic Ops")
 	} else {
-		Success(t, "Should not be able to make a request to Traffic Ops")
+		test.Success(t, "Should not be able to make a request to Traffic Ops")
 	}
 }

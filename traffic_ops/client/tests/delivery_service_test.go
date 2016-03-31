@@ -20,13 +20,14 @@ import (
 	"net/http"
 	"testing"
 
+	"github.com/Comcast/test_helper"
 	"github.com/jheitz200/traffic_control/traffic_ops/client"
 	"github.com/jheitz200/traffic_control/traffic_ops/client/fixtures"
 )
 
 func TestDeliveryServices(t *testing.T) {
 	resp := fixtures.DeliveryServices()
-	server := validServer(resp)
+	server := test.ValidHTTPServer(resp)
 	defer server.Close()
 
 	var httpClient http.Client
@@ -35,38 +36,38 @@ func TestDeliveryServices(t *testing.T) {
 		UserAgent: &httpClient,
 	}
 
-	Context(t, "Given the need to test a successful Traffic Ops request for DeliveryServices")
+	test.Context(t, "Given the need to test a successful Traffic Ops request for DeliveryServices")
 
 	ds, err := to.DeliveryServices()
 	if err != nil {
-		Error(t, "Should be able to make a request to Traffic Ops")
+		test.Error(t, "Should be able to make a request to Traffic Ops")
 	} else {
-		Success(t, "Should be able to make a request to Traffic Ops")
+		test.Success(t, "Should be able to make a request to Traffic Ops")
 	}
 
 	if len(ds) != 1 {
-		Error(t, "Should get back \"1\" DeliveryService, got: %d", len(ds))
+		test.Error(t, "Should get back \"1\" DeliveryService, got: %d", len(ds))
 	} else {
-		Success(t, "Should get back \"1\" DeliveryService")
+		test.Success(t, "Should get back \"1\" DeliveryService")
 	}
 
 	for _, s := range ds {
 		if s.XMLID != "ds-test" {
-			Error(t, "Should get back \"ds-test\" for \"XMLID\", got: %s", s.XMLID)
+			test.Error(t, "Should get back \"ds-test\" for \"XMLID\", got: %s", s.XMLID)
 		} else {
-			Success(t, "Should get back \"ds-test\" for \"XMLID\"")
+			test.Success(t, "Should get back \"ds-test\" for \"XMLID\"")
 		}
 
 		if s.MissLong != "-99.123456" {
-			Error(t, "Should get back \"-99.123456\" for \"MissLong\", got: %s", s.MissLong)
+			test.Error(t, "Should get back \"-99.123456\" for \"MissLong\", got: %s", s.MissLong)
 		} else {
-			Success(t, "Should get back \"-99.123456\" for \"MissLong\"")
+			test.Success(t, "Should get back \"-99.123456\" for \"MissLong\"")
 		}
 	}
 }
 
 func TestDeliveryServicesUnauthorized(t *testing.T) {
-	server := invalidServer(http.StatusUnauthorized)
+	server := test.InvalidHTTPServer(http.StatusUnauthorized)
 	defer server.Close()
 
 	var httpClient http.Client
@@ -75,12 +76,12 @@ func TestDeliveryServicesUnauthorized(t *testing.T) {
 		UserAgent: &httpClient,
 	}
 
-	Context(t, "Given the need to test a failed Traffic Ops request for DeliveryServices")
+	test.Context(t, "Given the need to test a failed Traffic Ops request for DeliveryServices")
 
 	_, err := to.DeliveryServices()
 	if err == nil {
-		Error(t, "Should not be able to make a request to Traffic Ops")
+		test.Error(t, "Should not be able to make a request to Traffic Ops")
 	} else {
-		Success(t, "Should not be able to make a request to Traffic Ops")
+		test.Success(t, "Should not be able to make a request to Traffic Ops")
 	}
 }

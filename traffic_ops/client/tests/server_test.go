@@ -21,13 +21,14 @@ import (
 	"net/url"
 	"testing"
 
+	"github.com/Comcast/test_helper"
 	"github.com/jheitz200/traffic_control/traffic_ops/client"
 	"github.com/jheitz200/traffic_control/traffic_ops/client/fixtures"
 )
 
 func TestServer(t *testing.T) {
 	resp := fixtures.Servers()
-	server := validServer(resp)
+	server := test.ValidHTTPServer(resp)
 	defer server.Close()
 
 	var httpClient http.Client
@@ -36,42 +37,42 @@ func TestServer(t *testing.T) {
 		UserAgent: &httpClient,
 	}
 
-	Context(t, "Given the need to test a successful Traffic Ops request for Servers")
+	test.Context(t, "Given the need to test a successful Traffic Ops request for Servers")
 
 	servers, err := to.Servers()
 	if err != nil {
-		Error(t, "Should be able to make a request to Traffic Ops")
+		test.Error(t, "Should be able to make a request to Traffic Ops")
 	} else {
-		Success(t, "Should be able to make a request to Traffic Ops")
+		test.Success(t, "Should be able to make a request to Traffic Ops")
 	}
 
 	if len(servers) != 3 {
-		Error(t, "Should get back \"3\" Server, got: %d", len(servers))
+		test.Error(t, "Should get back \"3\" Server, got: %d", len(servers))
 	} else {
-		Success(t, "Should get back \"3\" Server")
+		test.Success(t, "Should get back \"3\" Server")
 	}
 
 	if servers[0].HostName != "edge-alb-01" {
-		Error(t, "Should get \"edge-alb-01\" for \"HostName\", got: %s", servers[0].HostName)
+		test.Error(t, "Should get \"edge-alb-01\" for \"HostName\", got: %s", servers[0].HostName)
 	} else {
-		Success(t, "Should get \"edge-alb-01\" for \"HostName\"")
+		test.Success(t, "Should get \"edge-alb-01\" for \"HostName\"")
 	}
 
 	if servers[0].DomainName != "albuquerque.nm.albuq.kabletown.com" {
-		Error(t, "Should get \"albuquerque.nm.albuq.kabletown.com\" for \"DomainName\", got: %s", servers[0].DomainName)
+		test.Error(t, "Should get \"albuquerque.nm.albuq.kabletown.com\" for \"DomainName\", got: %s", servers[0].DomainName)
 	} else {
-		Success(t, "Should get \"albuquerque.nm.albuq.kabletown.com\" for \"DomainName\"")
+		test.Success(t, "Should get \"albuquerque.nm.albuq.kabletown.com\" for \"DomainName\"")
 	}
 
 	if servers[0].Type != "EDGE" {
-		Error(t, "Should get \"EDGE\" for \"Type\", got: %s", servers[0].Type)
+		test.Error(t, "Should get \"EDGE\" for \"Type\", got: %s", servers[0].Type)
 	} else {
-		Success(t, "Should get \"EDGE\" for \"Type\"")
+		test.Success(t, "Should get \"EDGE\" for \"Type\"")
 	}
 }
 
 func TestServersUnauthorized(t *testing.T) {
-	server := invalidServer(http.StatusUnauthorized)
+	server := test.InvalidHTTPServer(http.StatusUnauthorized)
 	defer server.Close()
 
 	var httpClient http.Client
@@ -80,19 +81,19 @@ func TestServersUnauthorized(t *testing.T) {
 		UserAgent: &httpClient,
 	}
 
-	Context(t, "Given the need to test a failed Traffic Ops request for Servers")
+	test.Context(t, "Given the need to test a failed Traffic Ops request for Servers")
 
 	_, err := to.Servers()
 	if err == nil {
-		Error(t, "Should not be able to make a request to Traffic Ops")
+		test.Error(t, "Should not be able to make a request to Traffic Ops")
 	} else {
-		Success(t, "Should not be able to make a request to Traffic Ops")
+		test.Success(t, "Should not be able to make a request to Traffic Ops")
 	}
 }
 
 func TestServerFQDN(t *testing.T) {
 	resp := fixtures.Servers()
-	server := validServer(resp)
+	server := test.ValidHTTPServer(resp)
 	defer server.Close()
 
 	var httpClient http.Client
@@ -102,25 +103,25 @@ func TestServerFQDN(t *testing.T) {
 	}
 
 	shortName := "edge-alb-01"
-	Context(t, "Given the need to test a successful Traffic Ops request for the FQDN of Server: \"%s\"", shortName)
+	test.Context(t, "Given the need to test a successful Traffic Ops request for the FQDN of Server: \"%s\"", shortName)
 
 	s, err := to.ServersFqdn("edge-alb-01")
 	if err != nil {
-		Error(t, "Should be able to make a request to Traffic Ops")
+		test.Error(t, "Should be able to make a request to Traffic Ops")
 	} else {
-		Success(t, "Should be able to make a request to Traffic Ops")
+		test.Success(t, "Should be able to make a request to Traffic Ops")
 	}
 
 	if s != "edge-alb-01.albuquerque.nm.albuq.kabletown.com" {
-		Error(t, "Should get back \"edge-alb-01.albuquerque.nm.albuq.kabletown.com\", got: %s", s)
+		test.Error(t, "Should get back \"edge-alb-01.albuquerque.nm.albuq.kabletown.com\", got: %s", s)
 	} else {
-		Success(t, "Should get back \"edge-alb-01.albuquerque.nm.albuq.kabletown.com\"")
+		test.Success(t, "Should get back \"edge-alb-01.albuquerque.nm.albuq.kabletown.com\"")
 	}
 }
 
 func TestServerFQDNError(t *testing.T) {
 	var resp client.ServerResponse
-	server := validServer(resp)
+	server := test.ValidHTTPServer(resp)
 	defer server.Close()
 
 	var httpClient http.Client
@@ -130,18 +131,18 @@ func TestServerFQDNError(t *testing.T) {
 	}
 
 	shortName := "edge-alb-01"
-	Context(t, "Given the need to test a failed Traffic Ops request for the FQDN of Server: \"%s\"", shortName)
+	test.Context(t, "Given the need to test a failed Traffic Ops request for the FQDN of Server: \"%s\"", shortName)
 
 	_, err := to.ServersFqdn(shortName)
 	if err == nil {
-		Error(t, "Should not be able to make a request to Traffic Ops")
+		test.Error(t, "Should not be able to make a request to Traffic Ops")
 	} else {
-		Success(t, "Should not be able to make a request to Traffic Ops")
+		test.Success(t, "Should not be able to make a request to Traffic Ops")
 	}
 }
 
 func TestServerFQDNUnauthorized(t *testing.T) {
-	server := invalidServer(http.StatusUnauthorized)
+	server := test.InvalidHTTPServer(http.StatusUnauthorized)
 	defer server.Close()
 
 	var httpClient http.Client
@@ -151,19 +152,19 @@ func TestServerFQDNUnauthorized(t *testing.T) {
 	}
 
 	shortName := "edge-alb-01"
-	Context(t, "Given the need to test a failed Traffic Ops request for the FQDN of Server: \"%s\"", shortName)
+	test.Context(t, "Given the need to test a failed Traffic Ops request for the FQDN of Server: \"%s\"", shortName)
 
 	_, err := to.ServersFqdn(shortName)
 	if err == nil {
-		Error(t, "Should not be able to make a request to Traffic Ops")
+		test.Error(t, "Should not be able to make a request to Traffic Ops")
 	} else {
-		Success(t, "Should not be able to make a request to Traffic Ops")
+		test.Success(t, "Should not be able to make a request to Traffic Ops")
 	}
 }
 
 func TestServerShortName(t *testing.T) {
 	resp := fixtures.Servers()
-	server := validServer(resp)
+	server := test.ValidHTTPServer(resp)
 	defer server.Close()
 
 	var httpClient http.Client
@@ -173,31 +174,31 @@ func TestServerShortName(t *testing.T) {
 	}
 
 	pattern := "edge"
-	Context(t, "Given the need to test a successful Traffic Ops request for servers that match Short Name: \"%s\"", pattern)
+	test.Context(t, "Given the need to test a successful Traffic Ops request for servers that match Short Name: \"%s\"", pattern)
 
 	servers, err := to.ServersShortNameSearch(pattern)
 	if err != nil {
-		Error(t, "Should be able to make a request to Traffic Ops")
+		test.Error(t, "Should be able to make a request to Traffic Ops")
 	} else {
-		Success(t, "Should be able to make a request to Traffic Ops")
+		test.Success(t, "Should be able to make a request to Traffic Ops")
 	}
 
 	if servers[0] != "edge-alb-01" {
-		Error(t, "Should get back \"edge-alb-01\", got: %s", servers[0])
+		test.Error(t, "Should get back \"edge-alb-01\", got: %s", servers[0])
 	} else {
-		Success(t, "Should get back \"edge-alb-01\"")
+		test.Success(t, "Should get back \"edge-alb-01\"")
 	}
 
 	if servers[1] != "edge-alb-02" {
-		Error(t, "Should get back \"edge-alb-02\", got: %s", servers[1])
+		test.Error(t, "Should get back \"edge-alb-02\", got: %s", servers[1])
 	} else {
-		Success(t, "Should get back \"edge-alb-02\"")
+		test.Success(t, "Should get back \"edge-alb-02\"")
 	}
 }
 
 func TestServerShortNameError(t *testing.T) {
 	var resp client.ServerResponse
-	server := validServer(resp)
+	server := test.ValidHTTPServer(resp)
 	defer server.Close()
 
 	var httpClient http.Client
@@ -207,18 +208,18 @@ func TestServerShortNameError(t *testing.T) {
 	}
 
 	pattern := "edge"
-	Context(t, "Given the need to test a failed Traffic Ops request for servers that match Short Name: \"%s\"", pattern)
+	test.Context(t, "Given the need to test a failed Traffic Ops request for servers that match Short Name: \"%s\"", pattern)
 
 	_, err := to.ServersShortNameSearch(pattern)
 	if err == nil {
-		Error(t, "Should not be able to make a request to Traffic Ops")
+		test.Error(t, "Should not be able to make a request to Traffic Ops")
 	} else {
-		Success(t, "Should not be able to make a request to Traffic Ops")
+		test.Success(t, "Should not be able to make a request to Traffic Ops")
 	}
 }
 
 func TestServerShortNameUnauthorized(t *testing.T) {
-	server := invalidServer(http.StatusUnauthorized)
+	server := test.InvalidHTTPServer(http.StatusUnauthorized)
 	defer server.Close()
 
 	var httpClient http.Client
@@ -228,19 +229,19 @@ func TestServerShortNameUnauthorized(t *testing.T) {
 	}
 
 	pattern := "edge"
-	Context(t, "Given the need to test a failed Traffic Ops request for servers that match Short Name: \"%s\"", pattern)
+	test.Context(t, "Given the need to test a failed Traffic Ops request for servers that match Short Name: \"%s\"", pattern)
 
 	_, err := to.ServersShortNameSearch(pattern)
 	if err == nil {
-		Error(t, "Should not be able to make a request to Traffic Ops")
+		test.Error(t, "Should not be able to make a request to Traffic Ops")
 	} else {
-		Success(t, "Should not be able to make a request to Traffic Ops")
+		test.Success(t, "Should not be able to make a request to Traffic Ops")
 	}
 }
 
 func TestServerByType(t *testing.T) {
 	resp := fixtures.LogstashServers()
-	server := validServer(resp)
+	server := test.ValidHTTPServer(resp)
 	defer server.Close()
 
 	var httpClient http.Client
@@ -249,45 +250,45 @@ func TestServerByType(t *testing.T) {
 		UserAgent: &httpClient,
 	}
 
-	Context(t, "Given the need to test a successful Traffic Ops request for \"Logstash\" Servers")
+	test.Context(t, "Given the need to test a successful Traffic Ops request for \"Logstash\" Servers")
 
 	params := make(url.Values)
 	params.Add("type", "Logstash")
 
 	servers, err := to.ServersByType(params)
 	if err != nil {
-		Error(t, "Should be able to make a request to Traffic Ops")
+		test.Error(t, "Should be able to make a request to Traffic Ops")
 	} else {
-		Success(t, "Should be able to make a request to Traffic Ops")
+		test.Success(t, "Should be able to make a request to Traffic Ops")
 	}
 
 	if len(servers) != 2 {
-		Error(t, "Should get back \"2\" Server, got: %d", len(servers))
+		test.Error(t, "Should get back \"2\" Server, got: %d", len(servers))
 	} else {
-		Success(t, "Should get back \"2\" Server")
+		test.Success(t, "Should get back \"2\" Server")
 	}
 
 	if servers[0].HostName != "logstash-01" {
-		Error(t, "Should get \"logstash-01\" for \"HostName\", got: %s", servers[0].HostName)
+		test.Error(t, "Should get \"logstash-01\" for \"HostName\", got: %s", servers[0].HostName)
 	} else {
-		Success(t, "Should get \"logstash-01\" for \"HostName\"")
+		test.Success(t, "Should get \"logstash-01\" for \"HostName\"")
 	}
 
 	if servers[0].DomainName != "albuquerque.nm.albuq.kabletown.com" {
-		Error(t, "Should get \"albuquerque.nm.albuq.kabletown.com\" for \"DomainName\", got: %s", servers[0].DomainName)
+		test.Error(t, "Should get \"albuquerque.nm.albuq.kabletown.com\" for \"DomainName\", got: %s", servers[0].DomainName)
 	} else {
-		Success(t, "Should get \"albuquerque.nm.albuq.kabletown.com\" for \"DomainName\"")
+		test.Success(t, "Should get \"albuquerque.nm.albuq.kabletown.com\" for \"DomainName\"")
 	}
 
 	if servers[0].Type != "LOGSTASH" {
-		Error(t, "Should get \"LOGSTASH\" for \"Type\", got: %s", servers[0].Type)
+		test.Error(t, "Should get \"LOGSTASH\" for \"Type\", got: %s", servers[0].Type)
 	} else {
-		Success(t, "Should get \"LOGSTASH\" for \"Type\"")
+		test.Success(t, "Should get \"LOGSTASH\" for \"Type\"")
 	}
 }
 
 func TestServerByTypeUnauthorized(t *testing.T) {
-	server := invalidServer(http.StatusUnauthorized)
+	server := test.InvalidHTTPServer(http.StatusUnauthorized)
 	defer server.Close()
 
 	var httpClient http.Client
@@ -296,15 +297,15 @@ func TestServerByTypeUnauthorized(t *testing.T) {
 		UserAgent: &httpClient,
 	}
 
-	Context(t, "Given the need to test a failed Traffic Ops request for \"Logstash\" servers")
+	test.Context(t, "Given the need to test a failed Traffic Ops request for \"Logstash\" servers")
 
 	params := make(url.Values)
 	params.Add("type", "Logstash")
 
 	_, err := to.ServersByType(params)
 	if err == nil {
-		Error(t, "Should not be able to make a request to Traffic Ops")
+		test.Error(t, "Should not be able to make a request to Traffic Ops")
 	} else {
-		Success(t, "Should not be able to make a request to Traffic Ops")
+		test.Success(t, "Should not be able to make a request to Traffic Ops")
 	}
 }

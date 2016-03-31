@@ -17,60 +17,14 @@
 package test
 
 import (
-	"encoding/json"
 	"net/http"
-	"net/http/httptest"
 	"testing"
 
+	"github.com/Comcast/test_helper"
 	"github.com/jheitz200/traffic_control/traffic_ops/client"
 )
 
 func TestLogin(t *testing.T) {
-	server := validTOServer()
-
-	Context(t, "Given the need to test a successful login to Traffic Ops")
-
-	session, err := client.Login(server.URL, "test", "password", true)
-	if err != nil {
-		Error(t, "Should be able to login")
-	} else {
-		Success(t, "Should be able to login")
-	}
-
-	if session.UserName != "test" {
-		Error(t, "Should get back \"test\" for \"UserName\", got %s", session.UserName)
-	} else {
-		Success(t, "Should get back \"test\" for \"UserName\"")
-	}
-
-	if session.Password != "password" {
-		Error(t, "Should get back \"password\" for \"Password\", got %s", session.Password)
-	} else {
-		Success(t, "Should get back \"password\" for \"Password\"")
-	}
-
-	if session.URL != server.URL {
-		Error(t, "Should get back \"%s\" for \"URL\", got %s", server.URL, session.URL)
-	} else {
-		Success(t, "Should get back \"%s\" for \"URL\"", server.URL)
-	}
-}
-
-func TestLoginUnauthorized(t *testing.T) {
-	server := invalidServer(http.StatusUnauthorized)
-	defer server.Close()
-
-	Context(t, "Given the need to test an unsuccessful login to Traffic Ops")
-
-	_, err := client.Login(server.URL, "test", "password", true)
-	if err == nil {
-		Error(t, "Should not be able to login")
-	} else {
-		Success(t, "Should not be able to login")
-	}
-}
-
-func validTOServer() *httptest.Server {
 	resp := client.Result{
 		Alerts: []client.Alert{
 			client.Alert{
@@ -80,10 +34,46 @@ func validTOServer() *httptest.Server {
 		},
 	}
 
-	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		w.WriteHeader(http.StatusOK)
-		w.Header().Set("Content-Type", "application/json")
-		json.NewEncoder(w).Encode(resp)
-	}))
-	return server
+	server := test.ValidHTTPServer(resp)
+
+	test.Context(t, "Given the need to test a successful login to Traffic Ops")
+
+	session, err := client.Login(server.URL, "test", "password", true)
+	if err != nil {
+		test.Error(t, "Should be able to login")
+	} else {
+		test.Success(t, "Should be able to login")
+	}
+
+	if session.UserName != "test" {
+		test.Error(t, "Should get back \"test\" for \"UserName\", got %s", session.UserName)
+	} else {
+		test.Success(t, "Should get back \"test\" for \"UserName\"")
+	}
+
+	if session.Password != "password" {
+		test.Error(t, "Should get back \"password\" for \"Password\", got %s", session.Password)
+	} else {
+		test.Success(t, "Should get back \"password\" for \"Password\"")
+	}
+
+	if session.URL != server.URL {
+		test.Error(t, "Should get back \"%s\" for \"URL\", got %s", server.URL, session.URL)
+	} else {
+		test.Success(t, "Should get back \"%s\" for \"URL\"", server.URL)
+	}
+}
+
+func TestLoginUnauthorized(t *testing.T) {
+	server := test.InvalidHTTPServer(http.StatusUnauthorized)
+	defer server.Close()
+
+	test.Context(t, "Given the need to test an unsuccessful login to Traffic Ops")
+
+	_, err := client.Login(server.URL, "test", "password", true)
+	if err == nil {
+		test.Error(t, "Should not be able to login")
+	} else {
+		test.Success(t, "Should not be able to login")
+	}
 }

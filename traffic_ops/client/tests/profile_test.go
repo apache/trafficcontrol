@@ -18,16 +18,16 @@ package test
 
 import (
 	"net/http"
-	"net/http/httptest"
 	"testing"
 
+	"github.com/Comcast/test_helper"
 	"github.com/jheitz200/traffic_control/traffic_ops/client"
 	"github.com/jheitz200/traffic_control/traffic_ops/client/fixtures"
 )
 
 func TestProfile(t *testing.T) {
 	resp := fixtures.Profiles()
-	server := validServer(resp)
+	server := test.ValidHTTPServer(resp)
 	defer server.Close()
 
 	var httpClient http.Client
@@ -36,38 +36,38 @@ func TestProfile(t *testing.T) {
 		UserAgent: &httpClient,
 	}
 
-	Context(t, "Given the need to test a successful Traffic Ops request for Profiles")
+	test.Context(t, "Given the need to test a successful Traffic Ops request for Profiles")
 
 	profiles, err := to.Profiles()
 	if err != nil {
-		Error(t, "Should be able to make a request to Traffic Ops")
+		test.Error(t, "Should be able to make a request to Traffic Ops")
 	} else {
-		Success(t, "Should be able to make a request to Traffic Ops")
+		test.Success(t, "Should be able to make a request to Traffic Ops")
 	}
 
 	if len(profiles) != 1 {
-		Error(t, "Should get back \"1\" Profile, got: %d", len(profiles))
+		test.Error(t, "Should get back \"1\" Profile, got: %d", len(profiles))
 	} else {
-		Success(t, "Should get back \"1\" Profile")
+		test.Success(t, "Should get back \"1\" Profile")
 	}
 
 	for _, p := range profiles {
 		if p.Name != "TR_CDN2" {
-			Error(t, "Should get back \"TR_CDN2\" for \"Name\", got: %s", p.Name)
+			test.Error(t, "Should get back \"TR_CDN2\" for \"Name\", got: %s", p.Name)
 		} else {
-			Success(t, "Should get back \"TR_CDN2\" for \"Name\"")
+			test.Success(t, "Should get back \"TR_CDN2\" for \"Name\"")
 		}
 
 		if p.Description != "kabletown Content Router" {
-			Error(t, "Should get back \"kabletown Content Router\" for \"Description\", got: %s", p.Description)
+			test.Error(t, "Should get back \"kabletown Content Router\" for \"Description\", got: %s", p.Description)
 		} else {
-			Success(t, "Should get back \"kabletown Content Router\" for \"Description\"")
+			test.Success(t, "Should get back \"kabletown Content Router\" for \"Description\"")
 		}
 	}
 }
 
 func TestProfilesUnauthorized(t *testing.T) {
-	server := invalidProfilesServer(http.StatusUnauthorized)
+	server := test.InvalidHTTPServer(http.StatusUnauthorized)
 	defer server.Close()
 
 	var httpClient http.Client
@@ -76,20 +76,12 @@ func TestProfilesUnauthorized(t *testing.T) {
 		UserAgent: &httpClient,
 	}
 
-	Context(t, "Given the need to test a failed Traffic Ops request for Profiles")
+	test.Context(t, "Given the need to test a failed Traffic Ops request for Profiles")
 
 	_, err := to.Profiles()
 	if err == nil {
-		Error(t, "Should not be able to make a request to Traffic Ops")
+		test.Error(t, "Should not be able to make a request to Traffic Ops")
 	} else {
-		Success(t, "Should not be able to make a request to Traffic Ops")
+		test.Success(t, "Should not be able to make a request to Traffic Ops")
 	}
-}
-
-func invalidProfilesServer(statusCode int) *httptest.Server {
-	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		w.WriteHeader(statusCode)
-		w.Header().Set("Content-Type", "application/json")
-	}))
-	return server
 }

@@ -18,16 +18,16 @@ package test
 
 import (
 	"net/http"
-	"net/http/httptest"
 	"testing"
 
+	"github.com/Comcast/test_helper"
 	"github.com/jheitz200/traffic_control/traffic_ops/client"
 	"github.com/jheitz200/traffic_control/traffic_ops/client/fixtures"
 )
 
 func TestHardware(t *testing.T) {
 	resp := fixtures.Hardware()
-	server := validServer(resp)
+	server := test.ValidHTTPServer(resp)
 	defer server.Close()
 
 	var httpClient http.Client
@@ -36,44 +36,44 @@ func TestHardware(t *testing.T) {
 		UserAgent: &httpClient,
 	}
 
-	Context(t, "Given the need to test a successful Traffic Ops request for Hardware")
+	test.Context(t, "Given the need to test a successful Traffic Ops request for Hardware")
 
 	hardware, err := to.Hardware()
 	if err != nil {
-		Error(t, "Should be able to make a request to Traffic Ops")
+		test.Error(t, "Should be able to make a request to Traffic Ops")
 	} else {
-		Success(t, "Should be able to make a request to Traffic Ops")
+		test.Success(t, "Should be able to make a request to Traffic Ops")
 	}
 
 	if len(hardware) != 1 {
-		Error(t, "Should get back \"1\" Hardware, got: %d", len(hardware))
+		test.Error(t, "Should get back \"1\" Hardware, got: %d", len(hardware))
 	} else {
-		Success(t, "Should get back \"1\" Hardware")
+		test.Success(t, "Should get back \"1\" Hardware")
 	}
 
 	for _, h := range hardware {
 		if h.HostName != "odol-atsmid-cen-09" {
-			Error(t, "Should get back \"odol-atsmid-cen-09\" for \"Hostname\", got: %s", h.HostName)
+			test.Error(t, "Should get back \"odol-atsmid-cen-09\" for \"Hostname\", got: %s", h.HostName)
 		} else {
-			Success(t, "Should get back \"odol-atsmid-cen-09\" for \"Hostname\"")
+			test.Success(t, "Should get back \"odol-atsmid-cen-09\" for \"Hostname\"")
 		}
 
 		if h.Value != "1.00" {
-			Error(t, "Should get back \"1.00\" for \"Value\", got: %s", h.Value)
+			test.Error(t, "Should get back \"1.00\" for \"Value\", got: %s", h.Value)
 		} else {
-			Success(t, "Should get back \"1.00\" for \"Value\"")
+			test.Success(t, "Should get back \"1.00\" for \"Value\"")
 		}
 
 		if h.Description != "BACKPLANE FIRMWARE" {
-			Error(t, "Should get back \"BACKPLANE FIRMWARE\" for \"Description\", got: %s", h.Description)
+			test.Error(t, "Should get back \"BACKPLANE FIRMWARE\" for \"Description\", got: %s", h.Description)
 		} else {
-			Success(t, "Should get back \"BACKPLANE FIRMWARE\" for \"Description\"")
+			test.Success(t, "Should get back \"BACKPLANE FIRMWARE\" for \"Description\"")
 		}
 	}
 }
 
 func TestHardwareUnauthorized(t *testing.T) {
-	server := invalidHardwareServer(http.StatusUnauthorized)
+	server := test.InvalidHTTPServer(http.StatusUnauthorized)
 	defer server.Close()
 
 	var httpClient http.Client
@@ -82,20 +82,12 @@ func TestHardwareUnauthorized(t *testing.T) {
 		UserAgent: &httpClient,
 	}
 
-	Context(t, "Given the need to test a failed Traffic Ops request for Hardware")
+	test.Context(t, "Given the need to test a failed Traffic Ops request for Hardware")
 
 	_, err := to.Hardware()
 	if err == nil {
-		Error(t, "Should not be able to make a request to Traffic Ops")
+		test.Error(t, "Should not be able to make a request to Traffic Ops")
 	} else {
-		Success(t, "Should not be able to make a request to Traffic Ops")
+		test.Success(t, "Should not be able to make a request to Traffic Ops")
 	}
-}
-
-func invalidHardwareServer(statusCode int) *httptest.Server {
-	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		w.WriteHeader(statusCode)
-		w.Header().Set("Content-Type", "application/json")
-	}))
-	return server
 }

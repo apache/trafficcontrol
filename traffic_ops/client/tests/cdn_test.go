@@ -20,13 +20,14 @@ import (
 	"net/http"
 	"testing"
 
+	"github.com/Comcast/test_helper"
 	"github.com/jheitz200/traffic_control/traffic_ops/client"
 	"github.com/jheitz200/traffic_control/traffic_ops/client/fixtures"
 )
 
 func TestCDNs(t *testing.T) {
 	resp := fixtures.CDNs()
-	server := validServer(resp)
+	server := test.ValidHTTPServer(resp)
 	defer server.Close()
 
 	var httpClient http.Client
@@ -35,32 +36,32 @@ func TestCDNs(t *testing.T) {
 		UserAgent: &httpClient,
 	}
 
-	Context(t, "Given the need to test a successful Traffic Ops request for CDNs")
+	test.Context(t, "Given the need to test a successful Traffic Ops request for CDNs")
 
 	cdns, err := to.CDNs()
 	if err != nil {
-		Error(t, "Should be able to make a request to Traffic Ops")
+		test.Error(t, "Should be able to make a request to Traffic Ops")
 	} else {
-		Success(t, "Should be able to make a request to Traffic Ops")
+		test.Success(t, "Should be able to make a request to Traffic Ops")
 	}
 
 	for _, cdn := range cdns {
 		if cdn.Name != "CDN-1" {
-			Error(t, "Should get back \"CDN-1\" for \"name\", got %s", cdn.Name)
+			test.Error(t, "Should get back \"CDN-1\" for \"name\", got %s", cdn.Name)
 		} else {
-			Success(t, "Should get back \"CDN-1\" for \"name\"")
+			test.Success(t, "Should get back \"CDN-1\" for \"name\"")
 		}
 
 		if cdn.LastUpdated != "2016-03-22 17:00:30" {
-			Error(t, "Should get back \"2016-03-22 17:00:30\" for \"LastUpdated\", got %s", cdn.LastUpdated)
+			test.Error(t, "Should get back \"2016-03-22 17:00:30\" for \"LastUpdated\", got %s", cdn.LastUpdated)
 		} else {
-			Success(t, "Should get back \"2016-03-22 17:00:30\" for \"LastUpdated\"")
+			test.Success(t, "Should get back \"2016-03-22 17:00:30\" for \"LastUpdated\"")
 		}
 	}
 }
 
 func TestCDNsUnauthorized(t *testing.T) {
-	server := invalidServer(http.StatusUnauthorized)
+	server := test.InvalidHTTPServer(http.StatusUnauthorized)
 	defer server.Close()
 
 	var httpClient http.Client
@@ -69,19 +70,19 @@ func TestCDNsUnauthorized(t *testing.T) {
 		UserAgent: &httpClient,
 	}
 
-	Context(t, "Given the need to test a failed Traffic Ops request for CDNs")
+	test.Context(t, "Given the need to test a failed Traffic Ops request for CDNs")
 
 	_, err := to.CDNs()
 	if err == nil {
-		Error(t, "Should not be able to make a request to Traffic Ops")
+		test.Error(t, "Should not be able to make a request to Traffic Ops")
 	} else {
-		Success(t, "Should not be able to make a request to Traffic Ops")
+		test.Success(t, "Should not be able to make a request to Traffic Ops")
 	}
 }
 
 func TestCDNName(t *testing.T) {
 	resp := fixtures.CDNs()
-	server := validServer(resp)
+	server := test.ValidHTTPServer(resp)
 	defer server.Close()
 
 	var httpClient http.Client
@@ -91,32 +92,32 @@ func TestCDNName(t *testing.T) {
 	}
 
 	cdn := "CDN-1"
-	Context(t, "Given the need to test a successful Traffic Ops request for CDN: \"%s\"", cdn)
+	test.Context(t, "Given the need to test a successful Traffic Ops request for CDN: \"%s\"", cdn)
 
 	cdns, err := to.CDNName(cdn)
 	if err != nil {
-		Error(t, "Should be able to make a request to Traffic Ops")
+		test.Error(t, "Should be able to make a request to Traffic Ops")
 	} else {
-		Success(t, "Should be able to make a request to Traffic Ops")
+		test.Success(t, "Should be able to make a request to Traffic Ops")
 	}
 
 	for _, cdn := range cdns {
 		if cdn.Name != "CDN-1" {
-			Error(t, "Should get back \"CDN-1\" for \"name\", got %s", cdn.Name)
+			test.Error(t, "Should get back \"CDN-1\" for \"name\", got %s", cdn.Name)
 		} else {
-			Success(t, "Should get back \"CDN-1\" for \"name\"")
+			test.Success(t, "Should get back \"CDN-1\" for \"name\"")
 		}
 
 		if cdn.LastUpdated != "2016-03-22 17:00:30" {
-			Error(t, "Should get back \"2016-03-22 17:00:30\" for \"LastUpdated\", got %s", cdn.LastUpdated)
+			test.Error(t, "Should get back \"2016-03-22 17:00:30\" for \"LastUpdated\", got %s", cdn.LastUpdated)
 		} else {
-			Success(t, "Should get back \"2016-03-22 17:00:30\" for \"LastUpdated\"")
+			test.Success(t, "Should get back \"2016-03-22 17:00:30\" for \"LastUpdated\"")
 		}
 	}
 }
 
 func TestCDNNameUnauthorized(t *testing.T) {
-	server := invalidServer(http.StatusUnauthorized)
+	server := test.InvalidHTTPServer(http.StatusUnauthorized)
 	defer server.Close()
 
 	var httpClient http.Client
@@ -126,12 +127,12 @@ func TestCDNNameUnauthorized(t *testing.T) {
 	}
 
 	cdn := "CDN-1"
-	Context(t, "Given the need to test a failed Traffic Ops request for CDN: \"%s\"", cdn)
+	test.Context(t, "Given the need to test a failed Traffic Ops request for CDN: \"%s\"", cdn)
 
 	_, err := to.CDNName(cdn)
 	if err == nil {
-		Error(t, "Should not be able to make a request to Traffic Ops")
+		test.Error(t, "Should not be able to make a request to Traffic Ops")
 	} else {
-		Success(t, "Should not be able to make a request to Traffic Ops")
+		test.Success(t, "Should not be able to make a request to Traffic Ops")
 	}
 }

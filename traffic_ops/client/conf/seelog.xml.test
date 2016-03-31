@@ -1,6 +1,6 @@
 <seelog>
   <outputs formatid="main">
-    <file path="../logs/client_test.log" />
+    <file path="logs/test.log" />
   </outputs>
 
   <formats>

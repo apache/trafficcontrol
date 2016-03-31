@@ -1,6 +1,6 @@
 <seelog>
   <outputs formatid="main">
-    <file path="/opt/ansible_client/var/log/ansible_client.log" />
+    <file path="/var/log/traffic_ops/client.log" />
   </outputs>
 
   <formats>
