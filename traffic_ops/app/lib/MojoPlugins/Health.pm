@@ -60,7 +60,7 @@ sub register {
 				}
 				elsif ( $row->type->name =~ m/^EDGE/ || $row->type->name =~ m/^MID/ ) {
 					push( @cache_profiles, $row->profile->name );
-					$profile_to_type->{$row->profile->name} = $row->type->name;
+					$profile_to_type->{$row->profile->name}->{$row->type->name} = $row->type->name;
 				}
 			}
 			my %condition = ( 'parameter.config_file' => 'rascal-config.txt', 'profile.name' => $rascal_profile );
@@ -74,7 +74,9 @@ sub register {
 			$rs_pp = $self->db->resultset('ProfileParameter')->search( \%condition, { prefetch => [ { 'parameter' => undef }, { 'profile' => undef } ] } );
 			while ( my $row = $rs_pp->next ) {
 				if ( exists($profile_to_type->{$row->profile->name}) ) {
-					$data_obj->{'profiles'}->{$profile_to_type->{$row->profile->name}}->{ $row->profile->name }->{ $row->parameter->name } = $row->parameter->value;
+					for my $profile_type ( keys(%{$profile_to_type->{$row->profile->name}}) ) {
+						$data_obj->{'profiles'}->{$profile_type}->{ $row->profile->name }->{ $row->parameter->name } = $row->parameter->value;
+					}
 				}
 			}
 			foreach my $ccr_profile (@ccr_profiles) {
