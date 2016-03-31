@@ -4,6 +4,7 @@ package com.comcast.cdn.traffic_control.traffic_router.core.router;
 import com.comcast.cdn.traffic_control.traffic_router.core.cache.Cache;
 import com.comcast.cdn.traffic_control.traffic_router.core.cache.CacheLocation;
 import com.comcast.cdn.traffic_control.traffic_router.core.cache.CacheRegister;
+import com.comcast.cdn.traffic_control.traffic_router.core.config.ParseException;
 import com.comcast.cdn.traffic_control.traffic_router.core.ds.DeliveryService;
 import com.comcast.cdn.traffic_control.traffic_router.core.ds.DeliveryServiceMatcher;
 import org.json.JSONArray;
@@ -19,7 +20,7 @@ import java.util.TreeSet;
 
 public class CacheRegisterBuilder {
 
-    public static void parseCacheConfig(final JSONObject contentServers, final CacheRegister cacheRegister) throws JSONException {
+    public static void parseCacheConfig(final JSONObject contentServers, final CacheRegister cacheRegister) throws JSONException, ParseException {
         final Map<String,Cache> map = new HashMap<String,Cache>();
         final Map<String, List<String>> statMap = new HashMap<String, List<String>>();
         for (final String node : JSONObject.getNames(contentServers)) {

@@ -194,7 +194,7 @@ public class ConfigHandler {
 	 * @throws JSONException 
 	 */
 	@SuppressWarnings({"PMD.CyclomaticComplexity", "PMD.AvoidDeeplyNestedIfStmts"})
-	private void parseCacheConfig(final JSONObject contentServers, final CacheRegister cacheRegister) throws JSONException {
+	private void parseCacheConfig(final JSONObject contentServers, final CacheRegister cacheRegister) throws JSONException, ParseException {
 		final Map<String,Cache> map = new HashMap<String,Cache>();
 		final Map<String, List<String>> statMap = new HashMap<String, List<String>>();
 		for (final String node : JSONObject.getNames(contentServers)) {

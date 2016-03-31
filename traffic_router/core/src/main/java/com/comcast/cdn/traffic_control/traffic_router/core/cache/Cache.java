@@ -32,6 +32,7 @@ import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.apache.log4j.Logger;
 import org.json.JSONObject;
 
+import com.comcast.cdn.traffic_control.traffic_router.core.config.ParseException;
 import com.comcast.cdn.traffic_control.traffic_router.core.hash.HashFunction;
 import com.comcast.cdn.traffic_control.traffic_router.core.hash.MD5HashFunction;
 
@@ -231,7 +232,11 @@ public class Cache implements Comparable<Cache> {
 		private final String deliveryServiceId;
 		private final String fqdn;
 
-		public DeliveryServiceReference(final String deliveryServiceId, final String fqdn) {
+		public DeliveryServiceReference(final String deliveryServiceId, final String fqdn) throws ParseException {
+			if (fqdn.split("\\.", 2).length != 2) {
+				throw new ParseException("Invalid FQDN (" + fqdn + ") on delivery service " + deliveryServiceId + "; please verify the HOST regex(es) in Traffic Ops");
+			}
+
 			this.deliveryServiceId = deliveryServiceId;
 			this.fqdn = fqdn;
 		}
