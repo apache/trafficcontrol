@@ -27,8 +27,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
 import java.util.Iterator;
-import java.io.PrintWriter;
-import java.io.StringWriter;
 
 import com.comcast.cdn.traffic_control.traffic_router.core.loc.FederationsWatcher;
 import com.comcast.cdn.traffic_control.traffic_router.core.loc.GeolocationDatabaseUpdater;
