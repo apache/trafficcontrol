@@ -13,35 +13,37 @@
 
     <dependencies>
         <dependency>
+            <groupId>org.eclipse.jetty.aggregate</groupId>
+            <artifactId>jetty-all-server</artifactId>
+            <version>${jetty.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>log4j</groupId>
+            <artifactId>log4j</artifactId>
+            <version>${log4j.version}</version>
+        </dependency>
+        <dependency>
             <groupId>com.comcast.cdn.traffic_control.traffic_router</groupId>
             <artifactId>traffic_router_core</artifactId>
             <version>${project.parent.version}</version>
         </dependency>
         <dependency>
             <groupId>com.comcast.cdn.traffic_control.traffic_router</groupId>
-            <artifactId>traffic_router_config</artifactId>
-            <version>${project.parent.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>com.comcast.cdn.traffic_control.traffic_router</groupId>
             <artifactId>traffic_router_api</artifactId>
-            <version>${project.parent.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.eclipse.jetty.aggregate</groupId>
-            <artifactId>jetty-all-server</artifactId>
-            <version>${jetty.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.springframework</groupId>
-            <artifactId>spring-webmvc</artifactId>
-            <version>${spring.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.slf4j</groupId>
-            <artifactId>slf4j-log4j12</artifactId>
-            <version>1.7.12</version>
+            <version>1.5.0</version>
         </dependency>
     </dependencies>
 
+    <profiles>
+        <profile>
+            <id>neustar</id>
+            <dependencies>
+                <dependency>
+                    <groupId>com.comcast.cdn.traffic_control.traffic_router</groupId>
+                    <artifactId>traffic_router_neustar</artifactId>
+                    <version>${project.parent.version}</version>
+                </dependency>
+            </dependencies>
+        </profile>
+    </profiles>
 </project>
