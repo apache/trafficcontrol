@@ -1,6 +1,5 @@
 package com.comcast.cdn.traffic_control.traffic_router.core.config;
 
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -50,7 +49,6 @@ public class ConfigHandlerTest {
         doAnswer(new Answer<Void>() {
             public Void answer(InvocationOnMock invocation) {
                 Object[] args = invocation.getArguments();
-                System.out.println("called with arguments: " + Arrays.toString(args));
                 typeUrl[0] = (String)(args[0]);
                 return null;
             }
@@ -58,7 +56,6 @@ public class ConfigHandlerTest {
         doAnswer(new Answer<Void>() {
             public Void answer(InvocationOnMock invocation) {
                 Object[] args = invocation.getArguments();
-                System.out.println("called with arguments: " + Arrays.toString(args));
                 urlType[0] = (String)args[0];
                 return null;
             }
@@ -89,7 +86,6 @@ public class ConfigHandlerTest {
         doAnswer(new Answer<Void>() {
             public Void answer(InvocationOnMock invocation) {
                 Object[] args = invocation.getArguments();
-                System.out.println("called with arguments: " + Arrays.toString(args));
                 typeUrl[0] = (String)(args[0]);
                 return null;
             }
@@ -97,7 +93,6 @@ public class ConfigHandlerTest {
         doAnswer(new Answer<Void>() {
             public Void answer(InvocationOnMock invocation) {
                 Object[] args = invocation.getArguments();
-                System.out.println("called with arguments: " + Arrays.toString(args));
                 urlType[0] = (String)args[0];
                 return null;
             }
@@ -128,7 +123,6 @@ public class ConfigHandlerTest {
         doAnswer(new Answer<Void>() {
             public Void answer(InvocationOnMock invocation) {
                 Object[] args = invocation.getArguments();
-                System.out.println("called with arguments: " + Arrays.toString(args));
                 typeUrl[0] = (String)(args[0]);
                 return null;
             }
@@ -136,7 +130,6 @@ public class ConfigHandlerTest {
         doAnswer(new Answer<Void>() {
             public Void answer(InvocationOnMock invocation) {
                 Object[] args = invocation.getArguments();
-                System.out.println("called with arguments: " + Arrays.toString(args));
                 urlType[0] = (String)args[0];
                 return null;
             }
@@ -170,7 +163,6 @@ public class ConfigHandlerTest {
         doAnswer(new Answer<Void>() {
             public Void answer(InvocationOnMock invocation) {
                 Object[] args = invocation.getArguments();
-                System.out.println("called with arguments: " + Arrays.toString(args));
                 typeUrl[0] = (String)(args[0]);
                 return null;
             }
@@ -178,7 +170,6 @@ public class ConfigHandlerTest {
         doAnswer(new Answer<Void>() {
             public Void answer(InvocationOnMock invocation) {
                 Object[] args = invocation.getArguments();
-                System.out.println("called with arguments: " + Arrays.toString(args));
                 urlType[0] = (String)args[0];
                 return null;
             }
@@ -213,7 +204,6 @@ public class ConfigHandlerTest {
         doAnswer(new Answer<Void>() {
             public Void answer(InvocationOnMock invocation) {
                 Object[] args = invocation.getArguments();
-                System.out.println("called with arguments: " + Arrays.toString(args));
                 typeUrl[0] = (String)(args[0]);
                 return null;
             }
@@ -221,7 +211,6 @@ public class ConfigHandlerTest {
         doAnswer(new Answer<Void>() {
             public Void answer(InvocationOnMock invocation) {
                 Object[] args = invocation.getArguments();
-                System.out.println("called with arguments: " + Arrays.toString(args));
                 urlType[0] = (String)args[0];
                 return null;
             }
