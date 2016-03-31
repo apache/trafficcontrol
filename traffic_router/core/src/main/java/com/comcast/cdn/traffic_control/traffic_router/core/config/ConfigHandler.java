@@ -372,11 +372,7 @@ public class ConfigHandler {
 
 				ds.setGeoRedirectUrlType("DS_URL");
 			} catch (Exception e) {
-				LOGGER.error("fatal error, failed to init NGB redirect with Exception: " + e);
-				final StringWriter sw = new StringWriter();
-				final PrintWriter pw = new PrintWriter(sw);
-				e.printStackTrace(pw);
-				LOGGER.error(sw.toString());
+				LOGGER.error("fatal error, failed to init NGB redirect with Exception: " + e.getMessage());
 			}
 		}
 	}
