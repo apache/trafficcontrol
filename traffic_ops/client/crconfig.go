@@ -16,18 +16,13 @@
 
 package client
 
-import (
-	"fmt"
-
-	"github.com/cihub/seelog"
-)
+import "fmt"
 
 // CRConfigRaw ...
 func (to *Session) CRConfigRaw(cdn string) ([]byte, error) {
 	url := fmt.Sprintf("/CRConfig-Snapshots/%s/CRConfig.json", cdn)
 	body, err := to.getBytesWithTTL(url, tmPollingInterval)
 	if err != nil {
-		seelog.Error(err)
 		return nil, err
 	}
 	return body, nil

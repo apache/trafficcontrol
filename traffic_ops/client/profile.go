@@ -16,11 +16,7 @@
 
 package client
 
-import (
-	"encoding/json"
-
-	"github.com/cihub/seelog"
-)
+import "encoding/json"
 
 // ProfileResponse ...
 type ProfileResponse struct {
@@ -40,14 +36,12 @@ func (to *Session) Profiles() ([]Profile, error) {
 	url := "/api/1.2/profiles.json"
 	resp, err := to.request(url, nil)
 	if err != nil {
-		seelog.Error(err)
 		return nil, err
 	}
 	defer resp.Body.Close()
 
 	var data ProfileResponse
 	if err := json.NewDecoder(resp.Body).Decode(&data); err != nil {
-		seelog.Error(err)
 		return nil, err
 	}
 

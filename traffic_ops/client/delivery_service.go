@@ -16,11 +16,7 @@
 
 package client
 
-import (
-	"encoding/json"
-
-	"github.com/cihub/seelog"
-)
+import "encoding/json"
 
 // DeliveryServiceResponse ...
 type DeliveryServiceResponse struct {
@@ -80,14 +76,12 @@ func (to *Session) DeliveryServices() ([]DeliveryService, error) {
 	url := "/api/1.2/deliveryservices.json"
 	resp, err := to.request(url, nil)
 	if err != nil {
-		seelog.Error(err)
 		return nil, err
 	}
 	defer resp.Body.Close()
 
 	var data DeliveryServiceResponse
 	if err := json.NewDecoder(resp.Body).Decode(&data); err != nil {
-		seelog.Error(err)
 		return nil, err
 	}
 

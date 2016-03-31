@@ -16,11 +16,7 @@
 
 package client
 
-import (
-	"encoding/json"
-
-	"github.com/prometheus/log"
-)
+import "encoding/json"
 
 // CacheGroupResponse ...
 type CacheGroupResponse struct {
@@ -45,14 +41,12 @@ func (to *Session) CacheGroups() ([]CacheGroup, error) {
 	url := "/api/1.2/cachegroups.json"
 	resp, err := to.request(url, nil)
 	if err != nil {
-		log.Error(err)
 		return nil, err
 	}
 	defer resp.Body.Close()
 
 	var data CacheGroupResponse
 	if err := json.NewDecoder(resp.Body).Decode(&data); err != nil {
-		log.Error(err)
 		return nil, err
 	}
 

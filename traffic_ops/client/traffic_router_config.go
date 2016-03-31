@@ -19,8 +19,6 @@ package client
 import (
 	"encoding/json"
 	"fmt"
-
-	"github.com/cihub/seelog"
 )
 
 // TRConfigResponse ...
@@ -167,7 +165,6 @@ type SOA struct {
 func (to *Session) TrafficRouterConfigMap(cdn string) (*TrafficRouterConfigMap, error) {
 	trConfig, err := to.TrafficRouterConfig(cdn)
 	if err != nil {
-		seelog.Error(err)
 		return nil, err
 	}
 
@@ -180,13 +177,11 @@ func (to *Session) TrafficRouterConfig(cdn string) (*TrafficRouterConfig, error)
 	url := fmt.Sprintf("/api/1.2/cdns/%s/configs/routing.json", cdn)
 	body, err := to.getBytesWithTTL(url, tmPollingInterval)
 	if err != nil {
-		seelog.Error(err)
 		return nil, err
 	}
 
 	var data TRConfigResponse
 	if err := json.Unmarshal(body, &data); err != nil {
-		seelog.Error(err)
 		return nil, err
 	}
 	return &data.Response, nil

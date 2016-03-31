@@ -27,6 +27,7 @@ import (
 	"time"
 
 	"github.com/cihub/seelog"
+	"github.com/prometheus/log"
 	"golang.org/x/net/publicsuffix"
 )
 
@@ -83,7 +84,7 @@ func init() {
 	logger, err := seelog.LoggerFromConfigAsFile(seelogConfig)
 	if err != nil {
 		err := fmt.Errorf("Error creating Logger from seelog file: %s", seelogConfig)
-		seelog.Error(err)
+		log.Error(err)
 	}
 	defer seelog.Flush()
 	seelog.ReplaceLogger(logger)
@@ -111,7 +112,6 @@ func loginCreds(toUser string, toPasswd string) ([]byte, error) {
 func Login(toURL string, toUser string, toPasswd string, insecure bool) (*Session, error) {
 	credentials, err := loginCreds(toUser, toPasswd)
 	if err != nil {
-		seelog.Error(err)
 		return nil, err
 	}
 
@@ -121,7 +121,6 @@ func Login(toURL string, toUser string, toPasswd string, insecure bool) (*Sessio
 
 	jar, err := cookiejar.New(&options)
 	if err != nil {
-		seelog.Error(err)
 		return nil, err
 	}
 
@@ -141,14 +140,12 @@ func Login(toURL string, toUser string, toPasswd string, insecure bool) (*Sessio
 	path := "/api/1.2/user/login"
 	resp, err := to.request(path, credentials)
 	if err != nil {
-		seelog.Error(err)
 		return nil, err
 	}
 	defer resp.Body.Close()
 
 	var result Result
 	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
-		seelog.Error(err)
 		return nil, err
 	}
 
@@ -162,7 +159,6 @@ func Login(toURL string, toUser string, toPasswd string, insecure bool) (*Sessio
 
 	if !success {
 		err := fmt.Errorf("Login failed, result string: %+v", result)
-		seelog.Error(err)
 		return nil, err
 	}
 

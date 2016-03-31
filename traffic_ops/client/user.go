@@ -16,11 +16,7 @@
 
 package client
 
-import (
-	"encoding/json"
-
-	"github.com/cihub/seelog"
-)
+import "encoding/json"
 
 // UserResponse ...
 type UserResponse struct {
@@ -47,13 +43,11 @@ func (to *Session) Users() ([]User, error) {
 	url := "/api/1.2/users.json"
 	resp, err := to.request(url, nil)
 	if err != nil {
-		seelog.Error(err)
 		return nil, err
 	}
 
 	var data UserResponse
 	if err := json.NewDecoder(resp.Body).Decode(&data); err != nil {
-		seelog.Error(err)
 		return nil, err
 	}
 

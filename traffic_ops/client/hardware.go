@@ -16,11 +16,7 @@
 
 package client
 
-import (
-	"encoding/json"
-
-	"github.com/cihub/seelog"
-)
+import "encoding/json"
 
 // HardwareResponse ...
 type HardwareResponse struct {
@@ -42,14 +38,12 @@ func (to *Session) Hardware() ([]Hardware, error) {
 	url := "/api/1.2/hwinfo.json"
 	resp, err := to.request(url, nil)
 	if err != nil {
-		seelog.Error(err)
 		return nil, err
 	}
 	defer resp.Body.Close()
 
 	var data HardwareResponse
 	if err := json.NewDecoder(resp.Body).Decode(&data); err != nil {
-		seelog.Error(err)
 		return nil, err
 	}
 

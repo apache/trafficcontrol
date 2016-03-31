@@ -21,8 +21,6 @@ import (
 	"fmt"
 	"strconv"
 	"strings"
-
-	"github.com/cihub/seelog"
 )
 
 // TMConfigResponse ...
@@ -93,12 +91,10 @@ type TMParameters struct {
 func (to *Session) TrafficMonitorConfigMap(cdn string) (*TrafficMonitorConfigMap, error) {
 	tmConfig, err := to.TrafficMonitorConfig(cdn)
 	if err != nil {
-		seelog.Error(err)
 		return nil, err
 	}
 	tmConfigMap, err := trafficMonitorTransformToMap(tmConfig)
 	if err != nil {
-		seelog.Error(err)
 		return nil, err
 	}
 	return tmConfigMap, nil
@@ -109,14 +105,12 @@ func (to *Session) TrafficMonitorConfig(cdn string) (*TrafficMonitorConfig, erro
 	url := fmt.Sprintf("/api/1.2/cdns/%s/configs/monitoring.json", cdn)
 	resp, err := to.request(url, nil)
 	if err != nil {
-		seelog.Error(err)
 		return nil, err
 	}
 	defer resp.Body.Close()
 
 	var data TMConfigResponse
 	if err := json.NewDecoder(resp.Body).Decode(&data); err != nil {
-		seelog.Error(err)
 		return nil, err
 	}
 

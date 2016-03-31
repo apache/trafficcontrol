@@ -21,8 +21,6 @@ import (
 	"fmt"
 	"net/url"
 	"strings"
-
-	"github.com/cihub/seelog"
 )
 
 // ServerResponse ...
@@ -72,14 +70,12 @@ func (to *Session) Servers() ([]Server, error) {
 	url := "/api/1.2/servers.json"
 	resp, err := to.request(url, nil)
 	if err != nil {
-		seelog.Error(err)
 		return nil, err
 	}
 	defer resp.Body.Close()
 
 	var data ServerResponse
 	if err := json.NewDecoder(resp.Body).Decode(&data); err != nil {
-		seelog.Error(err)
 		return nil, err
 	}
 
@@ -91,14 +87,12 @@ func (to *Session) ServersByType(qparams url.Values) ([]Server, error) {
 	url := fmt.Sprintf("/api/1.2/servers.json?%s", qparams.Encode())
 	resp, err := to.request(url, nil)
 	if err != nil {
-		seelog.Error(err)
 		return nil, err
 	}
 	defer resp.Body.Close()
 
 	var data ServerResponse
 	if err := json.NewDecoder(resp.Body).Decode(&data); err != nil {
-		seelog.Error(err)
 		return nil, err
 	}
 
@@ -110,7 +104,6 @@ func (to *Session) ServersFqdn(n string) (string, error) {
 	fdn := ""
 	servers, err := to.Servers()
 	if err != nil {
-		seelog.Error(err)
 		return "Error", err
 	}
 
@@ -130,7 +123,6 @@ func (to *Session) ServersShortNameSearch(shortname string) ([]string, error) {
 	var serverlst []string
 	servers, err := to.Servers()
 	if err != nil {
-		seelog.Error(err)
 		serverlst = append(serverlst, "N/A")
 		return serverlst, err
 	}
