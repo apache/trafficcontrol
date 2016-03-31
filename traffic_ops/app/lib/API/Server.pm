@@ -765,4 +765,24 @@ sub update {
     $self->success($data);
 }
 
+sub delete {
+    my ($params, $data, $err) = (undef, undef, undef);
+    my $self = shift;
+
+    if ( !&is_oper($self) ) {
+        return $self->alert("You must be an ADMIN or OPER to perform this operation!");
+    }
+
+    my $id   = $self->param('id');
+    my $delete = $self->db->resultset('Server')->search( { id => $id } );
+    my $host_name = $delete->get_column('host_name')->single();
+    $delete->delete();
+    $delete = $self->db->resultset('Servercheck')->search( { server => $id } );
+    $delete->delete();
+
+    &log( $self, "Delete server with id:" . $id . " named " . $host_name, "UICHANGE" );
+
+    return $self->success("SUCCESS");
+}
+
 1;
