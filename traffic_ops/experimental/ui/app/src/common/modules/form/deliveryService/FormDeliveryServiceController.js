@@ -26,6 +26,7 @@ var FormDeliveryServiceController = function(deliveryService, $scope, formUtils,
     $scope.props = [
         { name: 'displayName', type: 'text', required: true, maxLength: 48 },
         { name: 'xmlId', type: 'text', required: true, maxLength: 48 },
+        { name: 'dscp', type: 'number', required: true, maxLength: 11 },
         { name: 'qstringIgnore', type: 'number', required: true, maxLength: 1 },
         { name: 'httpBypassFqdn', type: 'text', required: false, maxLength: 255 },
         { name: 'dnsBypassIp', type: 'text', required: false, maxLength: 45 },
