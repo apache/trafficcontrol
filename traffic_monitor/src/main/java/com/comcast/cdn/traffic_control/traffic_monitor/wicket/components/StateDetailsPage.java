@@ -13,9 +13,9 @@ import org.apache.wicket.util.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
 
-public class StateDetailsPage extends MonitorPage {
+public abstract class StateDetailsPage extends MonitorPage {
 
-	public StateDetailsPage(final String id, final String label, final StateRegistry registry) {
+	public StateDetailsPage(final String id, final String label) {
 		final Behavior updater = new MultiUpdatingTimerBehavior(Duration.seconds(1));
 		final Label wicketLabel = new Label(label, id);
 		wicketLabel.add(updater);
@@ -23,11 +23,11 @@ public class StateDetailsPage extends MonitorPage {
 
 		final List<StatisticModel> statisticModels = new ArrayList<StatisticModel>();
 
-		for (String key : registry.get(id).getStatisticsKeys()) {
+		for (String key : getStateRegistry().get(id).getStatisticsKeys()) {
 			statisticModels.add(new StatisticModel(key) {
 				@Override
 				public String getObject() {
-					return (registry.has(id)) ? registry.get(id, getKey()) : "";
+					return (getStateRegistry().has(id)) ? getStateRegistry().get(id, getKey()) : "";
 				}
 			});
 		}
@@ -50,4 +50,6 @@ public class StateDetailsPage extends MonitorPage {
 
 		add(statesListView);
 	}
+
+	protected abstract StateRegistry getStateRegistry();
 }
