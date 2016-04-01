@@ -16,7 +16,8 @@ module.exports = function (grunt) {
     // dev task - when you type 'grunt dev' <-- builds unminified app and starts express server
     grunt.registerTask('dev', [
         'build-dev',
-        'express:dev'
+        'express:dev',
+        'watch'
     ]);
 
     // dist task - when you type 'grunt dist' <-- builds minified app for distribution and generates node dependencies all wrapped up nicely in a /dist folder
