@@ -114,7 +114,12 @@ ok $t->put_ok('/api/1.2/servers/' . $svr_id  => {Accept => 'application/json'} =
     ->json_is( "/response/profile" => "EDGE1")
             , 'Does the server details return?';
 
-ok $t->delete_ok('/api/1.2/servers/' . $svr_id)->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } );
+ok $t->delete_ok('/api/1.2/servers/' . $svr_id)
+    ->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } )
+    ->json_is( "/alerts/0/level", "success" )
+    ->json_is( "/alerts/0/text", "Server was deleted." )
+            , "Is the server id valid?";
+
 ok $t->put_ok('/api/1.2/servers/' . $svr_id  => {Accept => 'application/json'} => json => {
         "host_name" => "tc1_ats1",
         "domain_name" => "northbound.com",

@@ -797,10 +797,29 @@ Server
   | id   | yes      | The id of the server to delete. |
   +------+----------+---------------------------------+
   
+  **Response Properties**
+
+  +-------------+--------+----------------------------------+
+  |  Parameter  |  Type  |           Description            |
+  +=============+========+==================================+
+  | ``alerts``  | array  | A collection of alert messages.  |
+  +-------------+--------+----------------------------------+
+  | ``>level``  | string | Success, info, warning or error. |
+  +-------------+--------+----------------------------------+
+  | ``>text``   | string | Alert message.                   |
+  +-------------+--------+----------------------------------+
+  | ``version`` | string |                                  |
+  +-------------+--------+----------------------------------+
+
   **Response Example** ::
 
     {
-        "response": "SUCCESS"
+          "alerts": [
+                    {
+                            "level": "success",
+                            "text": "Server was deleted."
+                    }
+            ],
     }
 
 |

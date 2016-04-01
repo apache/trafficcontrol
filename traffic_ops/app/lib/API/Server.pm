@@ -782,7 +782,7 @@ sub delete {
 
     &log( $self, "Delete server with id:" . $id . " named " . $host_name, "UICHANGE" );
 
-    return $self->success("SUCCESS");
+    return $self->success_message("Server was deleted.");
 }
 
 1;
