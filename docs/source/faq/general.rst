@@ -33,7 +33,7 @@ Who is using Traffic Control?
 
 How do I get help with Traffic Control?
 =======================================
-	Hop on to our Slack Channel by registering `here <https://traffic-control-cdn.slack.com/signup>`_, or send a question to our google forum `here <https://groups.google.com/forum/#!forum/traffic_control>`_.
+	Hop on to our Slack Channel by filling out the form `here <https://goo.gl/Suzakj>`_, or send a question to our google forum `here <https://groups.google.com/forum/#!forum/traffic_control>`_.
 	
 What is Rascal?
 ===============
