@@ -129,6 +129,7 @@ public class ConfigHandler {
 
 				trafficRouterManager.setCacheRegister(cacheRegister);
 				trafficRouterManager.getTrafficRouter().setRequestHeaders(parseRequestHeaders(config.optJSONArray("requestHeaders")));
+				trafficRouterManager.getTrafficRouter().configurationChanged();
 				setLastSnapshotTimestamp(sts);
 			} catch (ParseException e) {
 				LOGGER.error(e, e);
@@ -394,7 +395,16 @@ public class ConfigHandler {
 			config.getString(pollingUrlKey),
 			config.optLong("geolocation.polling.interval")
 		);
+
+		if (config.has("neustar.polling.url")) {
+			System.setProperty("neustar.polling.url", config.getString("neustar.polling.url"));
+		}
+
+		if (config.has("neustar.polling.interval")) {
+			System.setProperty("neustar.polling.interval", config.getString("neustar.polling.interval"));
+		}
 	}
+
 	/**
 	 * Parses the ConverageZoneNetwork database configuration and updates the database if the URL has
 	 * changed.

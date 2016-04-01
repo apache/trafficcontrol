@@ -16,8 +16,6 @@
 
 package com.comcast.cdn.traffic_control.traffic_router.core.loc;
 
-import java.io.BufferedInputStream;
-import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -35,9 +33,6 @@ import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.zip.GZIPInputStream;
 
-import org.apache.commons.compress.archivers.tar.TarArchiveEntry;
-import org.apache.commons.compress.archivers.tar.TarArchiveInputStream;
-import org.apache.commons.compress.compressors.gzip.GzipCompressorInputStream;
 import org.apache.commons.io.IOUtils;
 import org.apache.log4j.Logger;
 import org.apache.wicket.ajax.json.JSONException;
@@ -56,7 +51,6 @@ public abstract class AbstractServiceUpdater {
 	protected boolean loaded = false;
 	protected ScheduledFuture<?> scheduledService;
 	private TrafficRouterManager trafficRouterManager;
-	protected boolean untarDataFile;
 	protected File databasesDirectory;
 
 	public void destroy() {
@@ -90,9 +84,9 @@ public abstract class AbstractServiceUpdater {
 	};
 
 	public void init() {
-		final long pi = getPollingInterval();
-		LOGGER.info("[" + getClass().getSimpleName() + "] Starting schedule with interval: " + pi + " : " + TimeUnit.MILLISECONDS);
-		scheduledService = executorService.scheduleWithFixedDelay(updater, pi, pi, TimeUnit.MILLISECONDS);
+		final long pollingInterval = getPollingInterval();
+		LOGGER.info("[" + getClass().getSimpleName() + "] Starting schedule with interval: " + pollingInterval + " : " + TimeUnit.MILLISECONDS);
+		scheduledService = executorService.scheduleWithFixedDelay(updater, pollingInterval, pollingInterval, TimeUnit.MILLISECONDS);
 	}
 
 	@SuppressWarnings("PMD.CyclomaticComplexity")
@@ -256,13 +250,13 @@ public abstract class AbstractServiceUpdater {
 
 	protected boolean copyDatabaseIfDifferent(final File existingDB, final File newDB) throws IOException {
 		if (filesEqual(existingDB, newDB)) {
-			LOGGER.info("[" + getClass().getSimpleName() + "] Location database unchanged.");
+			LOGGER.info("[" + getClass().getSimpleName() + "] database unchanged.");
 			return false;
 		}
 
 		if (existingDB.isDirectory() && newDB.isDirectory()) {
 			moveDirectory(existingDB, newDB);
-			LOGGER.info("[" + getClass().getSimpleName() + "] Successfully updated location database " + existingDB);
+			LOGGER.info("[" + getClass().getSimpleName() + "] Successfully updated database " + existingDB);
 			return true;
 		}
 
@@ -274,7 +268,7 @@ public abstract class AbstractServiceUpdater {
 				for (File file : existingDB.listFiles()) {
 					file.delete();
 				}
-				LOGGER.debug("[" + getClass().getSimpleName() + "] Successfully deleted location database under: " + existingDB);
+				LOGGER.debug("[" + getClass().getSimpleName() + "] Successfully deleted database under: " + existingDB);
 			} else {
 				existingDB.delete();
 			}
@@ -289,7 +283,7 @@ public abstract class AbstractServiceUpdater {
 			return false;
 		}
 
-		LOGGER.info("[" + getClass().getSimpleName() + "] Successfully updated location database " + existingDB);
+		LOGGER.info("[" + getClass().getSimpleName() + "] Successfully updated database " + existingDB);
 		return true;
 	}
 
@@ -326,7 +320,7 @@ public abstract class AbstractServiceUpdater {
 			return existingDb;
 		}
 
-		if (!untarDataFile && sourceCompressed) {
+		if (sourceCompressed) {
 			in = new GZIPInputStream(in);
 		}
 
@@ -337,52 +331,12 @@ public abstract class AbstractServiceUpdater {
 		IOUtils.closeQuietly(in);
 		IOUtils.closeQuietly(out);
 
-		if (!untarDataFile) {
-			return outputFile;
-		}
-
-		return untarFile(outputFile);
+		return outputFile;
 	}
 
 	private boolean useModifiedTimestamp(final File existingDb) {
 		return existingDb != null && existingDb.exists() && existingDb.lastModified() > 0
 				&& (!existingDb.isDirectory() || existingDb.listFiles().length > 0);
-	}
-
-	protected File untarFile(final File tarFile) throws IOException {
-		LOGGER.info("[" + getClass().getSimpleName() + "] Untarring file " + tarFile.getAbsolutePath());
-		final String destFolder = tarFile.getParentFile() + File.separator + "location_db";
-		final File dest = new File(destFolder);
-
-		dest.mkdir();
-
-		final TarArchiveInputStream tarIn = new TarArchiveInputStream(new GzipCompressorInputStream(new BufferedInputStream(new FileInputStream(tarFile))));
-		TarArchiveEntry tarEntry = tarIn.getNextTarEntry();
-		while (tarEntry != null) {
-			final File destPath = new File(dest, tarEntry.getName());
-
-			if (tarEntry.isDirectory()) {
-				destPath.mkdirs();
-			} else {
-				destPath.createNewFile();
-				final byte[] buffer = new byte[1024];
-				final BufferedOutputStream bout = new BufferedOutputStream(new FileOutputStream(destPath));
-				int bytesRead = tarIn.read(buffer);
-
-				while ( bytesRead  != -1) {
-					bout.write(buffer, 0, bytesRead);
-					bytesRead = tarIn.read(buffer);
-				}
-
-				bout.close();
-			}
-
-			tarEntry = tarIn.getNextTarEntry();
-		}
-
-		tarIn.close();
-		tarFile.delete();
-		return dest;
 	}
 
 	protected boolean needsUpdating(final File existingDB) {
@@ -402,14 +356,6 @@ public abstract class AbstractServiceUpdater {
 
 	public void setTrafficRouterManager(final TrafficRouterManager trafficRouterManager) {
 		this.trafficRouterManager = trafficRouterManager;
-	}
-
-	public boolean isUntarDataFile() {
-		return untarDataFile;
-	}
-
-	public void setUntarDataFile(final boolean untarDataFile) {
-		this.untarDataFile = untarDataFile;
 	}
 
 	public File getDatabasesDirectory() {

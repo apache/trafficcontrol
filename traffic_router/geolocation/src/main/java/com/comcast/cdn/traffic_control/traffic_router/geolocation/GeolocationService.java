@@ -55,6 +55,5 @@ public interface GeolocationService {
      */
     boolean isInitialized();
 
-    void setDatabaseFile(final File databaseFile);
-
+    void setDatabaseFile(File databaseFile);
 }

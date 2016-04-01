@@ -74,6 +74,7 @@ public class ZoneManagerTest {
 	@Before
 	public void setUp() throws Exception {
 		trafficRouterManager = (TrafficRouterManager) context.getBean("trafficRouterManager");
+		trafficRouterManager.getTrafficRouter().setApplicationContext(context);
 		File databasesDirectory = (File) context.getBean("databasesDir");
 		final File file = new File(databasesDirectory, "czmap.json");
 		final JSONObject json = new JSONObject(new JSONTokener(new FileReader(file)));
