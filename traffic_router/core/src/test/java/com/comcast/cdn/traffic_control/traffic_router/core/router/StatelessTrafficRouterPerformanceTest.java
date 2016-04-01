@@ -151,7 +151,7 @@ public class StatelessTrafficRouterPerformanceTest  extends TrafficRouter {
 		}
 		LOGGER.warn("No Cache found in CoverageZoneMap for HTTPRequest.getClientIP: "+ip);
 
-		final String zoneId = null; // getZoneManager().getZone(request.getRequestedUrl());
+		final String zoneId = null;
 		Geolocation clientLocation = getGeolocationService().location(request.getClientIP());
 		final List<CacheLocation> cacheLocations = orderCacheLocations(getCacheRegister().getCacheLocations(zoneId), ds, clientLocation);
 		for (final CacheLocation location : cacheLocations) {

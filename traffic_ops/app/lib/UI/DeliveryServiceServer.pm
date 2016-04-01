@@ -31,34 +31,19 @@ sub cpdss_iframe {
 	if ( $mode eq "view" ) {
 		my $server = $self->db->resultset('Server')->search( { 'me.id' => $srvr_id } )->single();
 
-		my $valid_profiles;
-		my $psas = $self->db->resultset('Server')->search(
-			{ cdn_id => $server->cdn_id },
-			{
-				select   => 'profile',
-				distinct => 1
-			}
-		)->get_column('profile');
-		while ( my $row = $psas->next ) {
-			$valid_profiles->{$row} = 1;
-		}
-
-		my $etypeid = &type_id( $self, 'EDGE' );
-		my $rs = $self->db->resultset('Server')->search( { type => $etypeid }, { prefetch => 'profile', order_by => 'host_name' } );
+		my @etypeids = &type_ids( $self, 'EDGE%', 'server' );
+		my $rs = $self->db->resultset('Server')->search( { type => { -in => \@etypeids }, cdn_id => $server->cdn_id }, { prefetch => 'profile', order_by => 'host_name' } );
 		my @from_server_list;
 		while ( my $row = $rs->next ) {
 			if ( $row->id == $srvr_id ) {
 				next;
 			}
-			if ( $valid_profiles->{ $row->profile->id } ) {
-
-				# servers in same cachegroup go at the top
-				if ( $row->cachegroup->id == $server->cachegroup->id ) {
-					unshift( @from_server_list, $row );
-				}
-				else {
-					push( @from_server_list, $row );
-				}
+			# servers in same cachegroup go at the top
+			if ( $row->cachegroup->id == $server->cachegroup->id ) {
+				unshift( @from_server_list, $row );
+			}
+			else {
+				push( @from_server_list, $row );
 			}
 		}
 
@@ -100,10 +85,11 @@ sub edit {
 
 	$ds = $self->db->resultset('Deliveryservice')->search( { id => $id } )->single();
 
-	my $etypeid = &type_id( $self, 'EDGE', );
-	my $otypeid = &type_id( $self, 'ORG', );
+	my @types;
+	push(@types, &type_ids( $self, 'EDGE%', 'server' ) );
+	push(@types, &type_id( $self, 'ORG' ) );
 	my $rs      = $self->db->resultset('Server')
-		->search( { -or => [ { 'me.type' => $etypeid }, { 'me.type' => $otypeid } ] }, { prefetch => [ 'cachegroup', 'type', 'profile', 'status' ], } );
+		->search( { "me.type" => { -in => \@types } }, { prefetch => [ 'cachegroup', 'type', 'profile', 'status' ], } );
 	while ( my $row = $rs->next ) {
 
 		# skip profiles that are not associated with the cdn this ds is in
@@ -207,11 +193,7 @@ sub clone_server {
 
 sub assign_servers {
 	my $self = shift;
-
 	my $dsid     = $self->param('id');
-	my $serverid = $self->param('serverid_100');
-
-	print "serverid = $serverid\n";
 
 	my @server_ids;
 	foreach my $param ( $self->param ) {

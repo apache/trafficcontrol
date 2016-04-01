@@ -95,7 +95,7 @@ public class NetworkNodeTest {
 	public void testNetworkNodePerformance() {
 		final int iterations = 100000;
 		final long startTime = System.currentTimeMillis();
-		final long nnTPS = Long.parseLong(System.getProperty("nnTPS"));
+		final long nnTPS = Long.parseLong(System.getProperty("nnTPS", "12000"));
 
 		for (int i = 0; i < iterations; i++) {
 			for (final String location : netMap.keySet()) {

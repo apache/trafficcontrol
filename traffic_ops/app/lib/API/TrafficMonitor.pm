@@ -41,7 +41,8 @@ sub get_host_stats {
 	my $master_i = 1;
 
 	my %rascal_host = ();
-	my @cdns = $self->db->resultset('Server')->search({ 'type.name' => 'EDGE' }, { prefetch => [ 'cdn', 'type' ], group_by => 'cdn.name' } )->get_column('cdn.name')->all();
+
+	my @cdns = $self->db->resultset('Server')->search({ 'type.name' => { -like => 'EDGE%' } }, { prefetch => [ 'cdn', 'type' ], group_by => 'cdn.name' } )->get_column('cdn.name')->all();
 
 	foreach my $cdn_name (@cdns) {
 		$rascal_host{$cdn_name} = $self->get_traffic_monitor_connection( { cdn => $cdn_name } );
@@ -89,7 +90,7 @@ sub get_dataserver {
 	for my $i ( @{$data} ) {
 		my $profile = $i->{'profile'};
 		my $cdn     = undef;
-		if ( defined($profile) && ( $profile =~ m/EDGE/ || $profile =~ m/MID/ ) ) {
+		if ( defined($profile) && ( $profile =~ m/^EDGE/ || $profile =~ m/^MID/ ) ) {
 
 			$self->app->log->trace( "get_data_server cache: " . $i->{'host_name'} );
 			$big_obj->{'caches'}->{ $i->{'host_name'} }->{'cachegroup'}   = $i->{'cachegroup'};
@@ -143,7 +144,7 @@ sub collect_stats {
 	my $bigstats_hashref = $rascal->get_cache_stats($args);
 
 	foreach my $server ( sort keys %{ $bigstats_hashref->{'caches'} } ) {
-		if ( !defined( $big_obj->{'caches'}->{$server}->{'profile'} ) || $big_obj->{'caches'}->{$server}->{'profile'} =~ m/MID/ ) { next; }
+		if ( !defined( $big_obj->{'caches'}->{$server}->{'profile'} ) || $big_obj->{'caches'}->{$server}->{'profile'} =~ m/^MID/ ) { next; }
 		my $server_obj = $bigstats_hashref->{'caches'}->{$server};
 		if ( exists( $server_obj->{'bandwidth'} ) ) {
 			$self->app->log->trace("Processing server: $server");

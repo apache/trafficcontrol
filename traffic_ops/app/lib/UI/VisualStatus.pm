@@ -38,7 +38,7 @@ sub graphs {
 		push( @cdn_names, $ds->cdn->name );
 	}
 	else {                                             # we want all the CDNs with edges
-		@cdn_names = $self->db->resultset('Server')->search({ 'type.name' => 'EDGE' }, { prefetch => [ 'cdn', 'type' ], group_by => 'cdn.name' } )->get_column('cdn.name')->all();
+		@cdn_names = $self->db->resultset('Server')->search({ 'type.name' => { -like => 'EDGE%' } }, { prefetch => [ 'cdn', 'type' ], group_by => 'cdn.name' } )->get_column('cdn.name')->all();
 	}
 
 	my $pparam =
@@ -71,7 +71,7 @@ sub daily_summary {
 		->search( { -and => [ 'parameter.name' => 'daily_served_url', 'profile.name' => 'GLOBAL' ] }, { prefetch => [ 'parameter', 'profile' ] } )->single();
 	my $served_url = defined($pparam) ? $pparam->parameter->value : undef;
 
-	my @cdn_names = $self->db->resultset('Server')->search({ 'type.name' => 'EDGE' }, { prefetch => [ 'cdn', 'type' ], group_by => 'cdn.name' } )->get_column('cdn.name')->all();
+	my @cdn_names = $self->db->resultset('Server')->search({ 'type.name' => { -like => 'EDGE%' } }, { prefetch => [ 'cdn', 'type' ], group_by => 'cdn.name' } )->get_column('cdn.name')->all();
 
 	$self->stash(
 		daily_bw_url => $bw_url,

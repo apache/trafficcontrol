@@ -16,39 +16,33 @@
 
 package com.comcast.cdn.traffic_control.traffic_router.core.loc;
 
-import com.comcast.cdn.traffic_control.traffic_router.geolocation.GeolocationService;
-
 import java.io.File;
 import java.io.IOException;
 
 public class GeolocationDatabaseUpdater extends AbstractServiceUpdater {
-
-	public GeolocationDatabaseUpdater() {
-	}
-
-	private GeolocationService geolocationService;
-	public void setGeoLocation(final GeolocationService geoLocation) {
-		this.geolocationService = geoLocation;
-	}
+	private MaxmindGeolocationService maxmindGeolocationService;
 
 	@Override
 	public boolean verifyDatabase(final File dbFile) throws IOException {
-		return geolocationService.verifyDatabase(dbFile);
+		return maxmindGeolocationService.verifyDatabase(dbFile);
 	}
 
 	public boolean loadDatabase() throws IOException {
-		geolocationService.setDatabaseFile(new File(databasesDirectory, databaseName));
-		geolocationService.reloadDatabase();
+		maxmindGeolocationService.setDatabaseFile(new File(databasesDirectory, databaseName));
+		maxmindGeolocationService.reloadDatabase();
 		return true;
 	}
 
 	@Override
 	public boolean isLoaded() {
-		if (geolocationService != null) {
-			return geolocationService.isInitialized();
+		if (maxmindGeolocationService != null) {
+			return maxmindGeolocationService.isInitialized();
 		}
 
 		return loaded;
 	}
 
+	public void setMaxmindGeolocationService(final MaxmindGeolocationService maxmindGeolocationService) {
+		this.maxmindGeolocationService = maxmindGeolocationService;
+	}
 }

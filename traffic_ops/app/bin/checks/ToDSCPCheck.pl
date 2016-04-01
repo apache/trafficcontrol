@@ -131,7 +131,7 @@ foreach my $ds ( @{$jdeliveryservices} ) {
 my %domain_name_for_profile = ();
 my $jdataserver = $ext->get( Extensions::Helper::SERVERLIST_PATH );
 foreach my $server ( @{$jdataserver} ) {
-   next unless $server->{type} eq 'EDGE';    # We know this is DSCP, so we know we want edges only
+   next unless $server->{type} =~ m/^EDGE/;    # We know this is DSCP, so we know we want edges only
    my $ip         = trim($server->{ipAddress});
    my $ip6        = trim($server->{ip6Address});
    my $host_name  = trim($server->{hostName});

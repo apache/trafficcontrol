@@ -294,17 +294,17 @@ $(function () {
 
 % if ($priv_level >= 20 ) {
 <button class="button" onclick="deleteFunction()">Delete</button>
-% if ($server_data->type->name eq 'EDGE') {
+% if ($server_data->type->name =~ m/^EDGE/) {
 <button class="button" onclick="cloneDsAssignments()">Clone DS assignments</button>
 % }
 % }
 
-% if ($server_data->type->name eq 'EDGE' || $server_data->type->name eq 'MID') {
+% if ($server_data->type->name =~ m/^EDGE/ || $server_data->type->name =~ m/^MID/) {
 <button class="button" id="downloadCfgButton" onclick="downloadconfigsFunction()">Get Config Files</button>
 % }
 
 % if ($priv_level >= 20) {
-% if ($server_data->type->name eq 'EDGE' || $server_data->type->name eq 'MID') {
+% if ($server_data->type->name =~ m/^EDGE/ || $server_data->type->name =~ m/^MID/) {
 <button class="button" id="qUpdateButton" onclick="queueupdate()">Queue Update</button>
 <button class="button" id="dqUpdateButton" onclick="unqueueupdate()">Unqueue Update</button>
 % }
@@ -326,12 +326,12 @@ var online_status = 'ONLINE';
 var queue_updates = false;
 var last_part = "?";
 
-% if ($server_data->type->name eq 'MID') {
+% if ($server_data->type->name =~ m/^MID/) {
   queue_updates = true;
   last_part = " *AND* queue updates on all edges?"
 % } 
 
-% if ( $server_data->type->name eq 'EDGE' ) {
+% if ( $server_data->type->name =~ m/^EDGE/ || $server_data->type->name =~ m/^MID/ ) {
   online_status = 'REPORTED';
   offline_status = 'ADMIN_DOWN';
 % }
@@ -357,7 +357,7 @@ function online_confirm() {
 </script>
 % } # if ($priv_level >= 20) {
 
-% if ($server_data->type->name eq 'EDGE') {
+% if ($server_data->type->name =~ m/^EDGE/) {
 <h2>Member of Delivery Services:</h2>
     <table width=100% id='deliveryserviceTable'>
 % my $i = 0;
@@ -371,7 +371,7 @@ function online_confirm() {
 % } # for my $id (sort {$a <=> $b} (keys %{$delivery_services})) {
 </tr>
 </table>
-% }  # if ($server_data->type->name eq 'EDGE') {
+% }
 </div>
 </div>
 </div>

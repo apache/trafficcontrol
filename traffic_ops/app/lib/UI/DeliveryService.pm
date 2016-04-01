@@ -556,11 +556,11 @@ sub header_rewrite {
 		my $cdn_name = undef;
 		my @servers = $self->db->resultset('DeliveryserviceServer')->search( { deliveryservice => $ds_id } )->get_column('server')->all();
 		if ( $tier eq "mid" ) {
-			my $mtype_id = &type_id( $self, 'MID' );
+			my @mtype_ids = &type_ids( $self, 'MID%', 'server' );
 			my $param = $self->db->resultset('Deliveryservice')->search( { 'me.profile' => $ds_profile }, { prefetch => 'cdn' } );
 			$cdn_name = $param->next->cdn->name;
 
-			@servers = $self->db->resultset('Server')->search( { type => $mtype_id } )->get_column('id')->all();
+			@servers = $self->db->resultset('Server')->search( { type => { -in => \@mtype_ids } } )->get_column('id')->all();
 		}
 		my @profiles = $self->db->resultset('Server')->search( { id => { -in => \@servers } } )->get_column('profile')->all();
 		foreach my $profile_id (@profiles) {
