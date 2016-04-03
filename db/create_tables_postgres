@@ -1,0 +1,172 @@
+--
+-- PostgreSQL database dump
+--
+
+-- Dumped from database version 9.4.5
+-- Dumped by pg_dump version 9.4.6
+-- Started on 2016-04-03 13:50:42 MDT
+
+SET statement_timeout = 0;
+SET lock_timeout = 0;
+SET client_encoding = 'UTF8';
+SET standard_conforming_strings = on;
+SET check_function_bodies = false;
+SET client_min_messages = warning;
+
+DROP DATABASE camera;
+--
+-- TOC entry 2871 (class 1262 OID 16396)
+-- Name: camera; Type: DATABASE; Schema: -; Owner: root
+--
+
+CREATE DATABASE camera WITH TEMPLATE = template0 ENCODING = 'UTF8' LC_COLLATE = 'en_US.UTF-8' LC_CTYPE = 'en_US.UTF-8';
+
+
+ALTER DATABASE camera OWNER TO root;
+
+\connect camera
+
+SET statement_timeout = 0;
+SET lock_timeout = 0;
+SET client_encoding = 'UTF8';
+SET standard_conforming_strings = on;
+SET check_function_bodies = false;
+SET client_min_messages = warning;
+
+--
+-- TOC entry 7 (class 2615 OID 2200)
+-- Name: public; Type: SCHEMA; Schema: -; Owner: root
+--
+
+CREATE SCHEMA public;
+
+
+ALTER SCHEMA public OWNER TO root;
+
+--
+-- TOC entry 2872 (class 0 OID 0)
+-- Dependencies: 7
+-- Name: SCHEMA public; Type: COMMENT; Schema: -; Owner: root
+--
+
+COMMENT ON SCHEMA public IS 'standard public schema';
+
+
+--
+-- TOC entry 1 (class 3079 OID 12723)
+-- Name: plpgsql; Type: EXTENSION; Schema: -; Owner: 
+--
+
+CREATE EXTENSION IF NOT EXISTS plpgsql WITH SCHEMA pg_catalog;
+
+
+--
+-- TOC entry 2874 (class 0 OID 0)
+-- Dependencies: 1
+-- Name: EXTENSION plpgsql; Type: COMMENT; Schema: -; Owner: 
+--
+
+COMMENT ON EXTENSION plpgsql IS 'PL/pgSQL procedural language';
+
+
+SET search_path = public, pg_catalog;
+
+SET default_tablespace = '';
+
+SET default_with_oids = false;
+
+--
+-- TOC entry 174 (class 1259 OID 16405)
+-- Name: cameras; Type: TABLE; Schema: public; Owner: root; Tablespace: 
+--
+
+CREATE TABLE cameras (
+    uuid text NOT NULL,
+    type text,
+    connect_string text,
+    owner text NOT NULL
+);
+
+
+ALTER TABLE cameras OWNER TO root;
+
+--
+-- TOC entry 173 (class 1259 OID 16397)
+-- Name: users; Type: TABLE; Schema: public; Owner: root; Tablespace: 
+--
+
+CREATE TABLE users (
+    username text NOT NULL,
+    first_name text NOT NULL,
+    last_name text NOT NULL,
+    password text NOT NULL
+);
+
+
+ALTER TABLE users OWNER TO root;
+
+--
+-- TOC entry 2866 (class 0 OID 16405)
+-- Dependencies: 174
+-- Data for Name: cameras; Type: TABLE DATA; Schema: public; Owner: root
+--
+
+COPY cameras (uuid, type, connect_string, owner) FROM stdin;
+\.
+
+
+--
+-- TOC entry 2865 (class 0 OID 16397)
+-- Dependencies: 173
+-- Data for Name: users; Type: TABLE DATA; Schema: public; Owner: root
+--
+
+COPY users (username, first_name, last_name, password) FROM stdin;
+\.
+
+
+--
+-- TOC entry 2752 (class 2606 OID 16404)
+-- Name: username; Type: CONSTRAINT; Schema: public; Owner: root; Tablespace: 
+--
+
+ALTER TABLE ONLY users
+    ADD CONSTRAINT username PRIMARY KEY (username);
+
+
+--
+-- TOC entry 2754 (class 2606 OID 16412)
+-- Name: uuid; Type: CONSTRAINT; Schema: public; Owner: root; Tablespace: 
+--
+
+ALTER TABLE ONLY cameras
+    ADD CONSTRAINT uuid PRIMARY KEY (uuid);
+
+
+--
+-- TOC entry 2755 (class 2606 OID 16413)
+-- Name: owner_fk; Type: FK CONSTRAINT; Schema: public; Owner: root
+--
+
+ALTER TABLE ONLY cameras
+    ADD CONSTRAINT owner_fk FOREIGN KEY (owner) REFERENCES users(username);
+
+
+--
+-- TOC entry 2873 (class 0 OID 0)
+-- Dependencies: 7
+-- Name: public; Type: ACL; Schema: -; Owner: root
+--
+
+REVOKE ALL ON SCHEMA public FROM PUBLIC;
+REVOKE ALL ON SCHEMA public FROM root;
+GRANT ALL ON SCHEMA public TO root;
+GRANT ALL ON SCHEMA public TO PUBLIC;
+
+
+-- Completed on 2016-04-03 13:50:47 MDT
+
+--
+-- PostgreSQL database dump complete
+--
+
