@@ -222,12 +222,12 @@ sub edge_ds_status {
 
 	my %servers_in_cg = ();
 	my %servers_in_ds = ();
-	my $etype         = &type_id( $self, 'EDGE' );
+	my @etypes        = &type_ids( $self, 'EDGE%', 'server' );
 	my $rs_servers_cg = $self->db->resultset('Server')->search(
 		{
 			cachegroup => $cachegroup_id,
 			profile    => $profile_id,
-			type       => $etype
+			type       => { -in => \@etypes }
 		}
 	);
 
@@ -372,13 +372,18 @@ sub check_server_input {
 		$err .= $paramHashRef->{'ip_address'} . " and " . $paramHashRef->{'ip_gateway'} . " are not in same network" . $sep;
 	}
 
-	if ( defined( $paramHashRef->{'ip6_address'} )
-		&& $paramHashRef->{'ip6_address'} ne "" )
+	if ( ( defined( $paramHashRef->{'ip6_address'} )
+		&& $paramHashRef->{'ip6_address'} ne "" ) ||
+		( defined( $paramHashRef->{'ip6_gateway'} )
+		&& $paramHashRef->{'ip6_gateway'} ne "" ) )
 	{
-		if (   !&is_ip6address( $paramHashRef->{'ip6_address'} )
-			|| !&is_ip6address( $paramHashRef->{'ip6_gateway'} ) )
+		if ( !&is_ip6address( $paramHashRef->{'ip6_address'} ) )
 		{
-			$err .= $paramHashRef->{'ip6_address'} . " is not a valid IPv6 address " . $sep;
+			$err .= "Address " . $paramHashRef->{'ip6_address'} . " is not a valid IPv6 address " . $sep;
+		}
+		if ( !&is_ip6address( $paramHashRef->{'ip6_gateway'} ) )
+		{
+			$err .= "Gateway " . $paramHashRef->{'ip6_gateway'} . " is not a valid IPv6 address " . $sep;
 		}
 		if ( !&in_same_net( $paramHashRef->{'ip6_address'}, $paramHashRef->{'ip6_gateway'} ) ) {
 			$err .= $paramHashRef->{'ip6_address'} . " and " . $paramHashRef->{'ip6_gateway'} . " are not in same network" . $sep;
@@ -443,72 +448,37 @@ sub update {
 		my $org_server = $self->db->resultset('Server')->search( { 'me.id' => $id }, { prefetch => 'cdn' } )->single();
 		my $update     = $self->db->resultset('Server')->search( { 'me.id' => $id }, { prefetch => 'cdn' } )->single();
 
-		if ( defined( $paramHashRef->{'ip6_address'} )
-			&& $paramHashRef->{'ip6_address'} ne "" )
-		{
-			$update->update(
-				{
-					host_name        => $paramHashRef->{'host_name'},
-					domain_name      => $paramHashRef->{'domain_name'},
-					tcp_port         => $paramHashRef->{'tcp_port'},
-					interface_name   => $paramHashRef->{'interface_name'},
-					ip_address       => $paramHashRef->{'ip_address'},
-					ip_netmask       => $paramHashRef->{'ip_netmask'},
-					ip_gateway       => $paramHashRef->{'ip_gateway'},
-					ip6_address      => $paramHashRef->{'ip6_address'},
-					ip6_gateway      => $paramHashRef->{'ip6_gateway'},
-					interface_mtu    => $paramHashRef->{'interface_mtu'},
-					cdn_id           => $paramHashRef->{'cdn'},
-					cachegroup       => $paramHashRef->{'cachegroup'},
-					phys_location    => $paramHashRef->{'phys_location'},
-					rack             => $paramHashRef->{'rack'},
-					type             => $paramHashRef->{'type'},
-					status           => $paramHashRef->{'status'},
-					profile          => $paramHashRef->{'profile'},
-					mgmt_ip_address  => $paramHashRef->{'mgmt_ip_address'},
-					mgmt_ip_netmask  => $paramHashRef->{'mgmt_ip_netmask'},
-					mgmt_ip_gateway  => $paramHashRef->{'mgmt_ip_gateway'},
-					ilo_ip_address   => $paramHashRef->{'ilo_ip_address'},
-					ilo_ip_netmask   => $paramHashRef->{'ilo_ip_netmask'},
-					ilo_ip_gateway   => $paramHashRef->{'ilo_ip_gateway'},
-					ilo_username     => $paramHashRef->{'ilo_username'},
-					ilo_password     => $paramHashRef->{'ilo_password'},
-					router_host_name => $paramHashRef->{'router_host_name'},
-					router_port_name => $paramHashRef->{'router_port_name'},
-				}
-			);
-		}
-		else {    # drop the ip6 stuff; it's not always mandatory
-			$update->update(
-				{
-					host_name        => $paramHashRef->{'host_name'},
-					domain_name      => $paramHashRef->{'domain_name'},
-					tcp_port         => $paramHashRef->{'tcp_port'},
-					interface_name   => $paramHashRef->{'interface_name'},
-					ip_address       => $paramHashRef->{'ip_address'},
-					ip_netmask       => $paramHashRef->{'ip_netmask'},
-					ip_gateway       => $paramHashRef->{'ip_gateway'},
-					interface_mtu    => $paramHashRef->{'interface_mtu'},
-					cdn_id           => $paramHashRef->{'cdn'},
-					cachegroup       => $paramHashRef->{'cachegroup'},
-					phys_location    => $paramHashRef->{'phys_location'},
-					rack             => $paramHashRef->{'rack'},
-					type             => $paramHashRef->{'type'},
-					status           => $paramHashRef->{'status'},
-					profile          => $paramHashRef->{'profile'},
-					mgmt_ip_address  => $paramHashRef->{'mgmt_ip_address'},
-					mgmt_ip_netmask  => $paramHashRef->{'mgmt_ip_netmask'},
-					mgmt_ip_gateway  => $paramHashRef->{'mgmt_ip_gateway'},
-					ilo_ip_address   => $paramHashRef->{'ilo_ip_address'},
-					ilo_ip_netmask   => $paramHashRef->{'ilo_ip_netmask'},
-					ilo_ip_gateway   => $paramHashRef->{'ilo_ip_gateway'},
-					ilo_username     => $paramHashRef->{'ilo_username'},
-					ilo_password     => $paramHashRef->{'ilo_password'},
-					router_host_name => $paramHashRef->{'router_host_name'},
-					router_port_name => $paramHashRef->{'router_port_name'},
-				}
-			);
-		}
+		$update->update(
+			{
+				host_name        => $paramHashRef->{'host_name'},
+				domain_name      => $paramHashRef->{'domain_name'},
+				tcp_port         => $paramHashRef->{'tcp_port'},
+				interface_name   => $paramHashRef->{'interface_name'},
+				ip_address       => $paramHashRef->{'ip_address'},
+				ip_netmask       => $paramHashRef->{'ip_netmask'},
+				ip_gateway       => $paramHashRef->{'ip_gateway'},
+				ip6_address      => $paramHashRef->{'ip6_address'},
+				ip6_gateway      => $paramHashRef->{'ip6_gateway'},
+				interface_mtu    => $paramHashRef->{'interface_mtu'},
+				cdn_id           => $paramHashRef->{'cdn'},
+				cachegroup       => $paramHashRef->{'cachegroup'},
+				phys_location    => $paramHashRef->{'phys_location'},
+				rack             => $paramHashRef->{'rack'},
+				type             => $paramHashRef->{'type'},
+				status           => $paramHashRef->{'status'},
+				profile          => $paramHashRef->{'profile'},
+				mgmt_ip_address  => $paramHashRef->{'mgmt_ip_address'},
+				mgmt_ip_netmask  => $paramHashRef->{'mgmt_ip_netmask'},
+				mgmt_ip_gateway  => $paramHashRef->{'mgmt_ip_gateway'},
+				ilo_ip_address   => $paramHashRef->{'ilo_ip_address'},
+				ilo_ip_netmask   => $paramHashRef->{'ilo_ip_netmask'},
+				ilo_ip_gateway   => $paramHashRef->{'ilo_ip_gateway'},
+				ilo_username     => $paramHashRef->{'ilo_username'},
+				ilo_password     => $paramHashRef->{'ilo_password'},
+				router_host_name => $paramHashRef->{'router_host_name'},
+				router_port_name => $paramHashRef->{'router_port_name'},
+			}
+		);
 		$update->update();
 
 		if ( $org_server->profile->id != $update->profile->id ) {
@@ -532,8 +502,10 @@ sub update {
 		if ( $org_server->type->id != $update->type->id ) {
 
 			# server type changed:  servercheck entry required for EDGE and MID, but not others. Add or remove servercheck entry accordingly
-			my %need_servercheck =
-				map { &type_id( $self, $_ ) => 1 } qw{ EDGE MID };
+			my @types;
+			push(@types, &type_ids( $self, 'EDGE%', 'server' ));
+			push(@types, &type_ids( $self, 'MID%', 'server' ));
+			my %need_servercheck = map { $_ => 1 } @types;
 			my $newtype_id = $update->type->id;
 			my $servercheck =
 				$self->db->resultset('Servercheck')->search( { server => $id } );
@@ -727,8 +699,8 @@ sub create {
 		}
 		$insert->insert();
 		$new_id = $insert->id;
-		if (   $paramHashRef->{'type'} == &type_id( $self, "EDGE" )
-			|| $paramHashRef->{'type'} == &type_id( $self, "MID" ) )
+		if ( scalar(grep { $paramHashRef->{'type'} eq $_ } &type_ids( $self, 'EDGE%', 'server' ))
+			|| scalar(grep { $paramHashRef->{'type'} eq $_ } &type_ids( $self, 'MID%', 'server' )) )
 		{
 			$insert = $self->db->resultset('Servercheck')->create( { server => $new_id, } );
 			$insert->insert();
@@ -864,7 +836,7 @@ sub readupdate {
 			$self->db->resultset("Server")->search( { host_name => $host_name } );
 		my $count = $rs_servers->count();
 		if ( $count > 0 ) {
-			if ( $rs_servers->single->type->name eq "EDGE" ) {
+			if ( $rs_servers->single->type->name =~ m/^EDGE/ ) {
 				my $parent_cg =
 					$self->db->resultset('Cachegroup')->search( { id => $rs_servers->single->cachegroup->id } )->get_column('parent_cachegroup_id')->single;
 				my $rs_parents = $self->db->resultset('Server')->search( { cachegroup => $parent_cg } );

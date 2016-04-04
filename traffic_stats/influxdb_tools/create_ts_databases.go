@@ -22,6 +22,7 @@ package main
 import (
 	"flag"
 	"fmt"
+	"os"
 
 	influx "github.com/influxdata/influxdb/client/v2"
 )
@@ -30,14 +31,23 @@ func main() {
 
 	influxURL := flag.String("url", "http://localhost:8086", "The influxdb url and port")
 	replication := flag.String("replication", "3", "The number of nodes in the cluster")
+	user := flag.String("user", "", "The influxdb username used to create DBs")
+	password := flag.String("password", "", "The influxdb password used to create DBs")
 	flag.Parse()
-	fmt.Printf("creating datbases for influxUrl: %v with a replication of %v\n", *influxURL, *replication)
+	fmt.Printf("creating datbases for influxUrl: %v with a replication of %v using user %s\n", *influxURL, *replication, *user)
 	client, err := influx.NewHTTPClient(influx.HTTPConfig{
-		Addr: *influxURL,
+		Addr:     *influxURL,
+		Username: *user,
+		Password: *password,
 	})
 	if err != nil {
-		fmt.Printf("Error creating influx client: %v", err)
-		panic("could not create influx client")
+		fmt.Printf("Error creating influx client: %v\n", err)
+		os.Exit(1)
+	}
+	_, _, err = client.Ping(10)
+	if err != nil {
+		fmt.Printf("Error creating influx client: %v\n", err)
+		os.Exit(1)
 	}
 
 	createCacheStats(client, replication)

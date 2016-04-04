@@ -122,6 +122,7 @@ my $lwp_conn                   = &setup_lwp();
 my $unixtime       = time();
 my $hostname_short = `/bin/hostname -s`;
 chomp($hostname_short);
+
 my $domainname = &set_domainname();
 $lwp_conn->agent("$hostname_short-$unixtime");
 
@@ -198,7 +199,7 @@ foreach my $file ( keys ( %{$cfg_file_tracker} ) ) {
 			last;
 		}
 	}
-} 
+}
 
 if ( ($installed_new_ssl_keys) && !$cfg_file_tracker->{'ssl_multicert.config'}->{'change_applied'} ) {
 	my $return = &touch_file('ssl_multicert.config');
@@ -261,7 +262,7 @@ sub process_cfg_file {
 	( $log_level >> $INFO ) && print "\nINFO: ======== Start processing config file: $cfg_file ========\n";
 
 	my $config_dir = $cfg_file_tracker->{$cfg_file}->{'location'};
-	
+
 	$url = &set_url($cfg_file);
 
 	&smart_mkdir($config_dir);
@@ -926,8 +927,11 @@ sub check_plugins {
 					$plugin_config_file = $parts[$#parts];
 					$plugin_config_file =~ s/\s+//g;
 					if ( !exists($cfg_file_tracker->{$plugin_config_file}->{'remap_plugin_config_file'}) ) {
-						$cfg_file_tracker->{$plugin_config_file}->{'remap_plugin_config_file'} = 1; 
+						$cfg_file_tracker->{$plugin_config_file}->{'remap_plugin_config_file'} = 1;
 					}
+				}
+				else {
+					($plugin_name) = split(/\s/, $plugin_name);
 				}
 				$plugin_name =~ s/\s//g;
 				( $log_level >> $DEBUG ) && print "DEBUG Found plugin $plugin_name in $cfg_file.\n";

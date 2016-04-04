@@ -1058,3 +1058,59 @@ SSL Keys
     }
 
 |
+
+**POST /api/1.2/deliveryservices/:xml_id/servers**
+
+  Assign caches to a delivery service.
+
+  Authentication Required: Yes
+
+  Role(s) Required:  admin or oper
+
+  **Request Route Parameters**
+  +--------+----------+-----------------------------------+
+  | Name   | Required | Description                       |
+  +========+==========+===================================+
+  | xml_id | yes      | the xml_id of the deliveryservice |
+  +--------+----------+-----------------------------------+
+
+  **Request Properties**
+
+  +--------------+----------+-------------------------------------------------------------------------------------------------------------+
+  | Parameter    | Required | Description                                                                                                 |
+  +==============+==========+=============================================================================================================+
+  | server_names | yes      | array of hostname of cache servers to assign to this deliveryservice, for example: [ "server1", "server2" ] |
+  +--------------+----------+-------------------------------------------------------------------------------------------------------------+
+
+  **Request Example** ::
+
+    {
+        "server_names": [
+            "tc1_ats1"
+        ]
+    }
+
+  **Response Properties**
+
+  +--------------+--------+-------------------------------------------------------------------------------------------------------------+
+  | Parameter    | Type   | Description                                                                                                 |
+  +==============+========+=============================================================================================================+
+  | xml_id       | string | Unique string that describes this delivery service.                                                         |
+  +--------------+--------+-------------------------------------------------------------------------------------------------------------+
+  | server_names | string | array of hostname of cache servers to assign to this deliveryservice, for example: [ "server1", "server2" ] |
+  +--------------+--------+-------------------------------------------------------------------------------------------------------------+
+
+
+   **Response Example** ::
+
+    {
+        "response":{
+            "server_names":[
+                "tc1_ats1"
+            ],
+            "xml_id":"my_ds_1"
+        }
+    }
+
+|
+

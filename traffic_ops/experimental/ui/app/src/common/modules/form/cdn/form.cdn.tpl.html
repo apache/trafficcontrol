@@ -1,0 +1,36 @@
+<div class="x_panel">
+    <div class="x_title">
+        <ol class="breadcrumb">
+            <li><a ng-click="navigateToPath('/admin/cdns')">CDNs</a></li>
+            <li class="active">{{cdnName}}</li>
+        </ol>
+        <div class="clearfix"></div>
+    </div>
+    <div class="x_content">
+        <br>
+        <form name="cdnForm" class="form-horizontal form-label-left" novalidate>
+            <div class="form-group" ng-class="{'has-error': hasError(cdnForm[prop.name]), 'has-feedback': hasError(cdnForm[prop.name])}" ng-repeat="prop in props">
+                <label class="control-label col-md-2 col-sm-2 col-xs-12">{{labelize(prop.name)}} <span ng-show="prop.required">*</span></label>
+                <div class="col-md-10 col-sm-10 col-xs-12">
+                    <input id="{{prop.name}}" name="{{prop.name}}" type="{{prop.type}}" class="form-control" ng-model="cdn[prop.name]" ng-readonly="prop.readonly" ng-required="prop.required" ng-maxlength="prop.maxLength" autofocus>
+                    <small class="input-error" ng-show="hasPropertyError(cdnForm[prop.name], 'required')">Required</small>
+                    <small class="input-error" ng-show="hasPropertyError(cdnForm[prop.name], 'maxlength')">Too Long</small>
+                    <span ng-show="hasError(cdnForm[prop.name])" class="form-control-feedback"><i class="fa fa-times"></i></span>
+                </div>
+            </div>
+            <div class="form-group" ng-class="{'has-error': hasError(cdnForm.dnssecEnabled), 'has-feedback': hasError(cdnForm.dnssecEnabled)}">
+                <label class="control-label col-md-2 col-sm-2 col-xs-12">DNSSEC Enabled *</label>
+                <div class="col-md-10 col-sm-10 col-xs-12">
+                    <select id="dnssecEnabled" name="dnssecEnabled" class="form-control" ng-model="cdn.dnssecEnabled" ng-options="dnssecEnabled.id as dnssecEnabled.name for dnssecEnabled in [ { id: 0, name: 'false' }, { id: 1, name: 'true' } ]" required>
+                        <option value="">Select...</option>
+                    </select>
+                    <small class="input-error" ng-show="hasPropertyError(cdnForm.dnssecEnabled, 'required')">Required</small>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-danger" ng-show="settings.showDelete" ng-click="confirmDelete(cdn)">Delete</button>
+                <button type="button" class="btn btn-primary" ng-disabled="cdnForm.$pristine || cdnForm.$invalid" ng-click="save(cdn)">{{settings.saveLabel}}</button>
+            </div>
+        </form>
+    </div>
+</div>

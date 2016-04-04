@@ -8,6 +8,18 @@ var CDNService = function(Restangular, messageModel) {
         return Restangular.one("cdn", id).get();
     };
 
+    this.createCDN = function(cdn) {
+        return Restangular.service('cdn').post(cdn)
+            .then(
+                function() {
+                    messageModel.setMessages([ { level: 'success', text: 'CDN created' } ], true);
+                },
+                function() {
+                    messageModel.setMessages([ { level: 'error', text: 'CDN create failed' } ], false);
+                }
+            );
+    };
+
     this.updateCDN = function(cdn) {
         return cdn.put()
             .then(

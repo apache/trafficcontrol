@@ -33,7 +33,7 @@ Installation
 
 	**As of Traffic Stats 1.4.0, InfluxDb 0.9.6 or higher is required.  For InfluxDb versions less than 0.9.6 use Traffic Stats 1.3.0**
 
-	In order to store traffic stats data you will need to install InfluxDB.  It is recommended InfluxDB be installed in a 3 server cluster; VMs are acceptable. The documentation for installing InfluxDB can be found on the InfluxDB `website <https://influxdb.com/docs/v0.9/introduction/installation.html>`_.
+	In order to store traffic stats data you will need to install InfluxDB.  It is recommended InfluxDB be installed in a 3 server cluster; VMs are acceptable. The documentation for installing InfluxDB can be found on the InfluxDB `website <https://docs.influxdata.com/influxdb/latest/introduction/installation/>`_.
 
 
 **Installing Grafana:**
@@ -63,7 +63,7 @@ Configuration
 
 **Configuring InfluxDB:**
 
-	It is HIGHLY recommended that InfluxDB be configured for clustering.  Documentation on clustering configuration can be found on the clustering page of the `InfluxDB Website <https://docs.influxdata.com/influxdb/v0.9/guides/clustering/>`_.
+	It is HIGHLY recommended that InfluxDB be configured for clustering.  Documentation on clustering configuration can be found on the clustering page of the `InfluxDB Website <https://docs.influxdata.com/influxdb/latest/clustering/>`_.
 
 	Once InfluxDB is installed and clustering is configured, Databases and Retention Policies need to be created.  Traffic Stats writes to three different databases: cache_stats, deliveryservice_stats, and daily_stats.  More information about the databases and what data is stored in each can be found on the `overview <../overview/traffic_stats.html>`_ page.
 
@@ -174,33 +174,29 @@ Under the Traffic Stats source directory there is a directory called influxdb_to
 They are specific for traffic stats and are not meant to be generic to influxdb.  Below is an brief description of each script along with how to use it.
 
 **create_ts_databases**
-	This script creates all `databases <https://influxdb.com/docs/v0.9/concepts/glossary.html#database>`_, `retention policies <https://influxdb.com/docs/v0.9/concepts/glossary.html#retention-policy-rp>`_, and `continuous queries <https://influxdb.com/docs/v0.9/concepts/glossary.html#continuous-query-cq>`_ required by traffic stats.
+	This script creates all `databases <https://docs.influxdata.com/influxdb/latest/concepts/key_concepts/#database>`_, `retention policies <https://docs.influxdata.com/influxdb/latest/concepts/key_concepts/#retention-policy>`_, and `continuous queries <https://docs.influxdata.com/influxdb/v0.11/query_language/continuous_queries/>`_ required by traffic stats.
 
 	**How to use create_ts_databases:**
 	
 	Pre-Requisites: 
 
 		1. Go 1.4 or later
-		2. Influxdb 0.9.4 or later
-		3. configured $GOPATH (e.g. export GOPATH=~/go)
+		2. configured $GOPATH (e.g. export GOPATH=~/go)
 
 	Using create_ts_databases.go
 
-		1. Install InfluxDb Client (0.9.4 version):
-			- go get github.com/influxdata/influxdb
-			- cd $GOPATH/src/github.com/influxdata/influxdb
-			- git checkout 0.9.4
-			- go install
+		1. go get github.com/influxdata/influxdb
 
-		2. Build it:
-			- go build create_ts_databases.go
-
+		2. go build create_ts_databases.go
+			
 		3. Run it:
-			- ./create_ts_databases
+			- ./create_ts_databases -help
 			- optional flags:
 				- influxUrl -  The influxdb url and port
 				- replication -  The number of nodes in the cluster
-			- example: ./create_ts_databases -influxUrl=localhost:8086 -replication=3
+				- user - The user to use
+				- password - The password to use
+			- example: ./create_ts_databases -influxUrl=localhost:8086 -replication=3 -user=joe -password=mysecret
 
 **sync_ts_databases**
 	This script is used to sync one influxdb environment to another.  Only data from continuous queries is synced as it is downsampled data and much smaller in size than syncing raw data.  Possible use cases are syncing from Production to Development or Syncing a new cluster once brought online.
@@ -210,26 +206,25 @@ They are specific for traffic stats and are not meant to be generic to influxdb.
 	Pre-Requisites: 
 
 		1. Go 1.4 or later
-		2. Influxdb 0.9.4 or later
-		3. configured $GOPATH (e.g. export GOPATH=~/go)
+		2. configured $GOPATH (e.g. export GOPATH=~/go)
 
 	Using sync_ts_databases.go:
 		
-		1. Install InfluxDb Client (0.9.4 version)
-			- go get github.com/influxdata/influxdb
-			- cd $GOPATH/src/github.com/influxdata/influxdb
-			- git checkout 0.9.4
-			- go install
+		1. go get github.com/influxdata/influxdb
 
-		2. Build it
-			- go build sync_ts_databases.go
+		2. go build sync_ts_databases.go
 
 		3. Run it 
+			- ./sync_ts_databases -help
 			- required flags:
 				- sourceUrl - The URL of the source database 
 				- targetUrl - The URL of the target database
 			-optional flags:
 				- database - The database to sync (default = sync all databases)
 				- days - Days in the past to sync (default = sync all data)
-			- example: ./sync_ts_databases -sourceUrl=http://influxdb-production-01.kabletown.net:8086 -targetUrl=http://influxdb-dev-01.kabletown.net:8086 -database=cache_stats -days=7
+				- sourceUser - The user of the source database
+				- sourcePass - The password for the source database
+				- targetUser - The user of the target database
+				- targetPass - The password for the target database
+			- example: ./sync_ts_databases -sourceUrl=http://influxdb-production-01.kabletown.net:8086 -targetUrl=http://influxdb-dev-01.kabletown.net:8086 -database=cache_stats -days=7 -sourceUser=joe sourcePass=mysecret
 

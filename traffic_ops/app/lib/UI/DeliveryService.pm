@@ -531,6 +531,12 @@ sub header_rewrite {
 	my $ds_name    = shift;
 	my $hdr_rw     = shift;
 	my $tier       = shift;
+	my $type       = shift;
+
+	if ( $tier eq 'mid' && $type =~ /LIVE/ && $type !~ /NATNL/ ) {
+		# live local delivery services don't get remap rules
+		return;
+	}
 
 	if ( defined($hdr_rw) && $hdr_rw ne "" ) {
 		my $fname = "hdr_rw_" . $ds_name . ".config";
@@ -556,11 +562,11 @@ sub header_rewrite {
 		my $cdn_name = undef;
 		my @servers = $self->db->resultset('DeliveryserviceServer')->search( { deliveryservice => $ds_id } )->get_column('server')->all();
 		if ( $tier eq "mid" ) {
-			my $mtype_id = &type_id( $self, 'MID' );
+			my @mtype_ids = &type_ids( $self, 'MID%', 'server' );
 			my $param = $self->db->resultset('Deliveryservice')->search( { 'me.profile' => $ds_profile }, { prefetch => 'cdn' } );
 			$cdn_name = $param->next->cdn->name;
 
-			@servers = $self->db->resultset('Server')->search( { type => $mtype_id } )->get_column('id')->all();
+			@servers = $self->db->resultset('Server')->search( { type => { -in => \@mtype_ids } } )->get_column('id')->all();
 		}
 		my @profiles = $self->db->resultset('Server')->search( { id => { -in => \@servers } } )->get_column('profile')->all();
 		foreach my $profile_id (@profiles) {
@@ -837,8 +843,9 @@ sub update {
 			}
 		}
 
-		$self->header_rewrite( $self->param('id'), $self->param('ds.profile'), $self->param('ds.xml_id'), $self->param('ds.edge_header_rewrite'), "edge" );
-		$self->header_rewrite( $self->param('id'), $self->param('ds.profile'), $self->param('ds.xml_id'), $self->param('ds.mid_header_rewrite'),  "mid" );
+		my $type = $self->db->resultset('Type')->search( { id => $self->paramAsScalar('ds.type') } )->get_column('name')->single();
+		$self->header_rewrite( $self->param('id'), $self->param('ds.profile'), $self->param('ds.xml_id'), $self->param('ds.edge_header_rewrite'), "edge", $type );
+		$self->header_rewrite( $self->param('id'), $self->param('ds.profile'), $self->param('ds.xml_id'), $self->param('ds.mid_header_rewrite'),  "mid", $type );
 		$self->regex_remap( $self->param('id'), $self->param('ds.profile'), $self->param('ds.xml_id'), $self->param('ds.regex_remap') );
 		$self->cacheurl( $self->param('id'), $self->param('ds.profile'), $self->param('ds.xml_id'), $self->param('ds.cacheurl') );
 
@@ -1017,8 +1024,9 @@ sub create {
 			$de_re_insert->insert();
 		}
 
-		$self->header_rewrite( $new_id, $self->param('ds.profile'), $self->param('ds.xml_id'), $self->param('ds.edge_header_rewrite'), "edge" );
-		$self->header_rewrite( $new_id, $self->param('ds.profile'), $self->param('ds.xml_id'), $self->param('ds.mid_header_rewrite'),  "mid" );
+		my $type = $self->db->resultset('Type')->search( { id => $self->paramAsScalar('ds.type') } )->get_column('name')->single();
+		$self->header_rewrite( $new_id, $self->param('ds.profile'), $self->param('ds.xml_id'), $self->param('ds.edge_header_rewrite'), "edge", $type );
+		$self->header_rewrite( $new_id, $self->param('ds.profile'), $self->param('ds.xml_id'), $self->param('ds.mid_header_rewrite'),  "mid", $type );
 		$self->regex_remap( $self->param('ds.profile'), $self->param('ds.xml_id'), $self->param('ds.regex_remap') );
 		$self->cacheurl( $new_id, $self->param('ds.profile'), $self->param('ds.xml_id'), $self->param('ds.cacheurl') );
 

@@ -17,6 +17,7 @@
 package com.comcast.cdn.traffic_control.traffic_monitor.wicket.components;
 
 import com.comcast.cdn.traffic_control.traffic_monitor.health.CacheStateRegistry;
+import com.comcast.cdn.traffic_control.traffic_monitor.health.StateRegistry;
 import org.apache.wicket.request.mapper.parameter.PageParameters;
 
 public class CacheDetailsPage extends StateDetailsPage {
@@ -27,6 +28,11 @@ public class CacheDetailsPage extends StateDetailsPage {
 	}
 
 	public CacheDetailsPage(final String hostnameStr) {
-		super(hostnameStr, "hostname", CacheStateRegistry.getInstance());
+		super(hostnameStr, "hostname");
+	}
+
+	@Override
+	protected StateRegistry getStateRegistry() {
+		return CacheStateRegistry.getInstance();
 	}
 }

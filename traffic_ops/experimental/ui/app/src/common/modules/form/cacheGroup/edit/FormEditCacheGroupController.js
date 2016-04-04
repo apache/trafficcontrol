@@ -6,7 +6,7 @@ var FormEditCacheGroupController = function(cacheGroup, $scope, $controller, $ui
     var deleteCacheGroup = function(cacheGroup) {
         cacheGroupService.deleteCacheGroup(cacheGroup.id)
             .then(function() {
-                locationUtils.navigateToPath('/admin/cache-groups');
+                locationUtils.navigateToPath('/configure/cache-groups');
             });
     };
 
@@ -27,12 +27,12 @@ var FormEditCacheGroupController = function(cacheGroup, $scope, $controller, $ui
 
     $scope.confirmDelete = function(cacheGroup) {
         var params = {
-            title: 'Confirm Delete',
-            message: 'This action CANNOT be undone. This will permanently delete ' + cacheGroup.name + '. Are you sure you want to delete ' + cacheGroup.name + '?'
+            title: 'Delete Cache Group: ' + cacheGroup.name,
+            key: cacheGroup.name
         };
         var modalInstance = $uibModal.open({
-            templateUrl: 'common/modules/dialog/confirm/dialog.confirm.tpl.html',
-            controller: 'DialogConfirmController',
+            templateUrl: 'common/modules/dialog/delete/dialog.delete.tpl.html',
+            controller: 'DialogDeleteController',
             size: 'md',
             resolve: {
                 params: function () {

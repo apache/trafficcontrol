@@ -50,6 +50,7 @@ import com.comcast.cdn.traffic_control.traffic_router.core.router.StatTracker.Tr
 import com.comcast.cdn.traffic_control.traffic_router.core.router.StatTracker.Track.ResultType;
 import com.comcast.cdn.traffic_control.traffic_router.core.util.TrafficOpsUtils;
 import com.google.common.net.InetAddresses;
+import org.springframework.context.ApplicationContext;
 
 @Category(IntegrationTest.class)
 @RunWith(PowerMockRunner.class)
@@ -60,7 +61,7 @@ public class DnsRoutePerformanceTest {
     private Map<String, Set<String>> hostMap = new HashMap<String, Set<String>>();
     private Set<String> coverageZoneRouted = new HashSet<String>();
 
-    long minimumTPS = Long.parseLong(System.getProperty("minimumTPS"));
+    long minimumTPS = Long.parseLong(System.getProperty("minimumTPS", "140"));
     private List<String> names;
 
     @Before
@@ -98,6 +99,8 @@ public class DnsRoutePerformanceTest {
 
         trafficRouter = new TrafficRouter(cacheRegister, mock(GeolocationService.class), mock(GeolocationService.class),
             pool, mock(StatTracker.class), mock(TrafficOpsUtils.class), mock(FederationRegistry.class));
+
+        trafficRouter.setApplicationContext(mock(ApplicationContext.class));
 
         trafficRouter = spy(trafficRouter);
 
@@ -179,7 +182,7 @@ public class DnsRoutePerformanceTest {
                 trafficRouter.route(dnsRequest, track);
 
                 if (coverageZoneRouted.contains(cacheGroup)) {
-                    assertThat(track.getResult(), equalTo(ResultType.CZ));
+                    assertThat("DNS Request for " + dnsRequest.getHostname() + " " + dnsRequest.getType() + ", client ip " + clientIP + " not found in coverage zone even though " + cacheGroup + " is in coverageZoneRouted data" ,track.getResult(), equalTo(ResultType.CZ));
                 } else {
                     assertThat(track.getResult(), equalTo(ResultType.GEO));
                 }

@@ -3,18 +3,14 @@ package com.comcast.cdn.traffic_control.traffic_router.core.util;
 import com.comcast.cdn.traffic_control.traffic_router.core.loc.Federation;
 import com.comcast.cdn.traffic_control.traffic_router.core.loc.FederationMapping;
 import com.comcast.cdn.traffic_control.traffic_router.core.loc.FederationRegistry;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-@Component
 public class FederationExporter {
 
-	@Autowired
 	private FederationRegistry federationRegistry;
 
 	public List<Object> getMatchingFederations(final CidrAddress cidrAddress) {

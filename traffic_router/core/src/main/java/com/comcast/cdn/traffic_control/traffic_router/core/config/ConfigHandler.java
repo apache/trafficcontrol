@@ -27,8 +27,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
 import java.util.Iterator;
-import java.io.PrintWriter;
-import java.io.StringWriter;
 
 import com.comcast.cdn.traffic_control.traffic_router.core.loc.FederationsWatcher;
 import com.comcast.cdn.traffic_control.traffic_router.core.loc.GeolocationDatabaseUpdater;
@@ -131,6 +129,7 @@ public class ConfigHandler {
 
 				trafficRouterManager.setCacheRegister(cacheRegister);
 				trafficRouterManager.getTrafficRouter().setRequestHeaders(parseRequestHeaders(config.optJSONArray("requestHeaders")));
+				trafficRouterManager.getTrafficRouter().configurationChanged();
 				setLastSnapshotTimestamp(sts);
 			} catch (ParseException e) {
 				LOGGER.error(e, e);
@@ -196,7 +195,7 @@ public class ConfigHandler {
 	 * @throws JSONException 
 	 */
 	@SuppressWarnings({"PMD.CyclomaticComplexity", "PMD.AvoidDeeplyNestedIfStmts"})
-	private void parseCacheConfig(final JSONObject contentServers, final CacheRegister cacheRegister) throws JSONException {
+	private void parseCacheConfig(final JSONObject contentServers, final CacheRegister cacheRegister) throws JSONException, ParseException {
 		final Map<String,Cache> map = new HashMap<String,Cache>();
 		final Map<String, List<String>> statMap = new HashMap<String, List<String>>();
 		for (final String node : JSONObject.getNames(contentServers)) {
@@ -372,11 +371,7 @@ public class ConfigHandler {
 
 				ds.setGeoRedirectUrlType("DS_URL");
 			} catch (Exception e) {
-				LOGGER.error("fatal error, failed to init NGB redirect with Exception: " + e);
-				final StringWriter sw = new StringWriter();
-				final PrintWriter pw = new PrintWriter(sw);
-				e.printStackTrace(pw);
-				LOGGER.error(sw.toString());
+				LOGGER.error("fatal error, failed to init NGB redirect with Exception: " + e.getMessage());
 			}
 		}
 	}
@@ -400,7 +395,16 @@ public class ConfigHandler {
 			config.getString(pollingUrlKey),
 			config.optLong("geolocation.polling.interval")
 		);
+
+		if (config.has("neustar.polling.url")) {
+			System.setProperty("neustar.polling.url", config.getString("neustar.polling.url"));
+		}
+
+		if (config.has("neustar.polling.interval")) {
+			System.setProperty("neustar.polling.interval", config.getString("neustar.polling.interval"));
+		}
 	}
+
 	/**
 	 * Parses the ConverageZoneNetwork database configuration and updates the database if the URL has
 	 * changed.

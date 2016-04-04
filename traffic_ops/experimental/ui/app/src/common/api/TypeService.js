@@ -8,6 +8,18 @@ var TypeService = function(Restangular, messageModel) {
         return Restangular.one("type", id).get();
     };
 
+    this.createType = function(type) {
+        return Restangular.service('type').post(type)
+            .then(
+                function() {
+                    messageModel.setMessages([ { level: 'success', text: 'Type created' } ], true);
+                },
+                function() {
+                    messageModel.setMessages([ { level: 'error', text: 'Type create failed' } ], false);
+                }
+            );
+    };
+
     this.updateType = function(type) {
         return type.put()
             .then(

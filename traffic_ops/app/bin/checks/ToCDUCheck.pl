@@ -77,7 +77,7 @@ my $ua = LWP::UserAgent->new;
 $ua->timeout(3);
 
 foreach my $server ( @{$jdataserver} ) {
-	if ( $server->{type} eq 'EDGE' || $server->{type} eq 'MID' ) {    # We know this is "CHR, so we know what we want
+	if ( $server->{type} =~ m/^EDGE/ || $server->{type} =~ m/^MID/ ) {    # We know this is "CHR, so we know what we want
 		my $ip        = $server->{ipAddress};
 		my $host_name = $server->{hostName};
 		my $interface = $server->{interfaceName};

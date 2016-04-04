@@ -131,7 +131,7 @@ sub get_traffic_monitor_config {
 		if ( $row->profile->name =~ m/^EDGE/ ) {
 			$type = "EDGE";
 		}
-		elsif ( $row->profile->name =~ m/MID/ ) {
+		elsif ( $row->profile->name =~ m/^MID/ ) {
 			$type = "MID";
 		}
 		$profile_tracker->{ $row->profile->name }->{'type'} = $type;
@@ -164,7 +164,7 @@ sub get_traffic_monitor_config {
 		# MAT: Do we move this to the DB? Rascal needs to know if it should monitor a DS or not, and the status=REPORTED is what we do for caches.
 		$delivery_service->{'xmlId'}              = $row->xml_id;
 		$delivery_service->{'status'}             = "REPORTED";
-		$delivery_service->{'totalKbpsThreshold'} = $row->global_max_mbps * 1000;
+		$delivery_service->{'totalKbpsThreshold'} = (defined($row->global_max_mbps) && $row->global_max_mbps > 0) ? ($row->global_max_mbps * 1000) : 0;
 		$delivery_service->{'totalTpsThreshold'}  = int( $row->global_max_tps || 0 );
 		push( @{ $data_obj->{'deliveryServices'} }, $delivery_service );
 	}
@@ -189,7 +189,7 @@ sub get_traffic_monitor_config {
 			push( @{ $data_obj->{'trafficMonitors'} }, $traffic_monitor );
 
 		}
-		elsif ( $row->type->name eq "EDGE" || $row->type->name eq "MID" ) {
+		elsif ( $row->type->name =~ m/^EDGE/ || $row->type->name =~ m/^MID/ ) {
 			my $traffic_server;
 			$traffic_server->{'cachegroup'}    = $row->cachegroup->name;
 			$traffic_server->{'hostName'}      = $row->host_name;
@@ -493,7 +493,7 @@ sub gen_traffic_router_config {
 			$traffic_router->{'profile'}  = $row->profile->name;
 			push( @{ $data_obj->{'trafficRouters'} }, $traffic_router );
 		}
-		elsif ( $row->type->name eq "EDGE" || $row->type->name eq "MID" ) {
+		elsif ( $row->type->name =~ m/^EDGE/ || $row->type->name =~ m/^MID/ ) {
 			if ( !exists $cache_tracker{ $row->id } ) {
 				$cache_tracker{ $row->id } = $row->host_name;
 			}
