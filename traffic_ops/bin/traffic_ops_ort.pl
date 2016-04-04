@@ -122,6 +122,7 @@ my $lwp_conn                   = &setup_lwp();
 my $unixtime       = time();
 my $hostname_short = `/bin/hostname -s`;
 chomp($hostname_short);
+
 my $domainname = &set_domainname();
 $lwp_conn->agent("$hostname_short-$unixtime");
 
@@ -928,6 +929,9 @@ sub check_plugins {
 					if ( !exists($cfg_file_tracker->{$plugin_config_file}->{'remap_plugin_config_file'}) ) {
 						$cfg_file_tracker->{$plugin_config_file}->{'remap_plugin_config_file'} = 1;
 					}
+				}
+				else {
+					($plugin_name) = split(/\s/, $plugin_name);
 				}
 				$plugin_name =~ s/\s//g;
 				( $log_level >> $DEBUG ) && print "DEBUG Found plugin $plugin_name in $cfg_file.\n";
