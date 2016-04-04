@@ -764,11 +764,7 @@ func influxConnect(config StartupConfig, runningConfig RunningConfig) (influx.Cl
 		con := host.InfluxClient
 		//client currently does not support udp queries
 		if config.InfluxProtocol != "udp" {
-			q := influx.Query{
-				Command:  "show databases",
-				Database: "",
-			}
-			_, err := con.Query(q)
+			_, _, err := con.Ping(10)
 			if err != nil {
 				errHndlr(err, ERROR)
 				host.InfluxClient = nil
