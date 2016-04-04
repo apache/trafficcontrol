@@ -11,6 +11,7 @@ Sorted alphabetically
 * **[Jan van Doorn](https://github.com/knutsel)**
 * **[Jeff Elsloo](https://github.com/elsloo)**
 * **[Jeremy Mitchell](https://github.com/mitchell852)**
+* **[Joe Pappano](https://github.com/jpappa200)**
 * **[John Benton](https://github.com/evergreentech)**
 * **[John Rushford](https://github.com/jrushf1239k)**
 * **[Justin Laue](https://github.com/fp-x)**
@@ -21,5 +22,6 @@ Sorted alphabetically
 * **[Rob Butts](https://github.com/robert-butts)**
 * **[Stayman Hou](https://github.com/Vuuo)**
 * **[Steve Malenfant] (https://github.com/smalenfant)**
+* **[Trevor Ackerman] (https://github.com/trevorackerman)**
 * **[York Ma] (https://github.com/yorma)**
 
