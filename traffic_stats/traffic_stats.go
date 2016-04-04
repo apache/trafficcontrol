@@ -555,7 +555,9 @@ func calcDsValues(rascalData []byte, cdnName string, sampleTime int64, config St
 		for dsMetric, dsMetricData := range dsData {
 			//create dataKey (influxDb series)
 			var cachegroup, statName string
-			if strings.Contains(dsMetric, "total.") {
+			if strings.Contains(dsMetric, "type.") {
+				continue
+			} else if strings.Contains(dsMetric, "total.") {
 				s := strings.Split(dsMetric, ".")
 				cachegroup, statName = s[0], s[1]
 			} else {
@@ -762,11 +764,7 @@ func influxConnect(config StartupConfig, runningConfig RunningConfig) (influx.Cl
 		con := host.InfluxClient
 		//client currently does not support udp queries
 		if config.InfluxProtocol != "udp" {
-			q := influx.Query{
-				Command:  "show databases",
-				Database: "",
-			}
-			_, err := con.Query(q)
+			_, _, err := con.Ping(10)
 			if err != nil {
 				errHndlr(err, ERROR)
 				host.InfluxClient = nil
