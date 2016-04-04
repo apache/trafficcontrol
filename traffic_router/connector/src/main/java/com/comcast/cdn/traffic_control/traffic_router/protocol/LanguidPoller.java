@@ -14,42 +14,49 @@
  * limitations under the License.
  */
 
-package com.comcast.cdn.traffic_control.traffic_router.connector;
+package com.comcast.cdn.traffic_control.traffic_router.protocol;
 
 import java.lang.management.ManagementFactory;
 
 import javax.management.MBeanServer;
 import javax.management.ObjectName;
 
-public class StateThread extends Thread {
-	protected static org.apache.juli.logging.Log log = org.apache.juli.logging.LogFactory.getLog(StateThread.class);
-	final private Connector connector;
+public class LanguidPoller extends Thread {
+	protected static org.apache.juli.logging.Log log = org.apache.juli.logging.LogFactory.getLog(LanguidPoller.class);
+	final private LanguidProtocol languidProtocol;
 
-	public StateThread(final Connector connector) {
-		this.connector = connector;
+	public LanguidPoller(final LanguidProtocol languidProtocol) {
+		this.languidProtocol = languidProtocol;
 	}
 
 	@Override
 	public void run() {
-		log.info("Waiting for state from mbean path " + connector.getMbeanPath());
+		log.info("Waiting for state from mbean path " + languidProtocol.getMbeanPath());
 
+		boolean firstTime = true;
 		while (true) {
 			try {
 				final MBeanServer mbs = ManagementFactory.getPlatformMBeanServer();
-				final ObjectName languidState = new ObjectName(connector.getMbeanPath());
-				final Object readyValue = mbs.getAttribute(languidState, connector.getReadyAttribute());
-				final Object portValue = mbs.getAttribute(languidState, connector.getPortAttribute());
+				// See src/main/opt/conf/server.xml
+				// This is calling traffic-router:name=languidState
+				final ObjectName languidState = new ObjectName(languidProtocol.getMbeanPath());
+				final Object readyValue = mbs.getAttribute(languidState, languidProtocol.getReadyAttribute());
+				final Object portValue = mbs.getAttribute(languidState, languidProtocol.getPortAttribute());
 				final boolean ready = Boolean.parseBoolean(readyValue.toString());
 				final int port = Integer.parseInt(portValue.toString());
 
+				if (firstTime) {
+					log.info("Waiting for ready state from Traffic Router before accepting connections on port " + port);
+				}
+				
 				if (ready) {
 					if (port > 0) {
-						connector.setPort(port);
+						languidProtocol.setPort(port);
 					}
 
-					log.info("Traffic Router published the ready state; calling init() on our reference to Connector with a listen port of " + connector.getPort());
-					connector.setReady(true);
-					connector.init();
+					log.info("Traffic Router published the ready state; calling init() on our reference to Connector with a listen port of " + languidProtocol.getPort());
+					languidProtocol.setReady(true);
+					languidProtocol.init();
 					break;
 				}
 			} catch (Exception ex) {
@@ -62,6 +69,7 @@ public class StateThread extends Thread {
 			} catch (InterruptedException ex) {
 				log.fatal(ex);
 			}
+			firstTime = false;
 		}
 	}
 }

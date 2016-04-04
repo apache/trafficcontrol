@@ -24,25 +24,26 @@ import org.apache.log4j.PatternLayout;
 public class TrafficRouterStart {
 
 	public static void main(String[] args) throws Exception {
-		System.setProperty("deploy.dir", "src/test");
-		System.setProperty("dns.zones.dir", "src/test/var/auto-zones");
+		System.setProperty("deploy.dir", "core/src/test");
+		System.setProperty("dns.zones.dir", "core/src/test/var/auto-zones");
 
 		System.setProperty("dns.tcp.port", "1053");
 		System.setProperty("dns.udp.port", "1053");
 
-		LogManager.getLogger("org.eclipse.jetty").setLevel(Level.WARN);
 		LogManager.getLogger("org.springframework").setLevel(Level.WARN);
 
 		ConsoleAppender consoleAppender = new ConsoleAppender(new PatternLayout("%d{ISO8601} [%-5p] %c{4}: %m%n"));
 		LogManager.getRootLogger().addAppender(consoleAppender);
 		LogManager.getRootLogger().setLevel(Level.INFO);
 
-		EmbeddedTrafficRouter embeddedTrafficRouter = new EmbeddedTrafficRouter("core/src/main");
-		System.out.println(">>>>>>>>>>>>>>>> Starting Traffic Router in Embedded Tomcat");
-		embeddedTrafficRouter.start();
+		System.out.println("[" + System.currentTimeMillis() + "] >>>>>>>>>>>>>>>> Embedded Tomcat loading Traffic Router");
+		CatalinaTrafficRouter catalinaTrafficRouter = new CatalinaTrafficRouter("core/src/main/opt/tomcat/conf/server.xml", "core/src/main/webapp");
+		System.out.println("[" + System.currentTimeMillis() + "] >>>>>>>>>>>>>>>> Starting Traffic Router");
+		catalinaTrafficRouter.start();
+		System.out.println("[" + System.currentTimeMillis() + "] >>>>>>>>>>>>>>>> Traffic Router started, press <ENTER> to stop");
 
 		System.in.read();
-		System.out.println(">>>>>>>>>>>>>>>> Stopping Traffic Router");
-		embeddedTrafficRouter.stop();
+		System.out.println("[" + System.currentTimeMillis() + "] >>>>>>>>>>>>>>>> Stopping Traffic Router");
+		catalinaTrafficRouter.stop();
 	}
 }

@@ -151,26 +151,6 @@
 				</configuration>
 			</plugin>
 			<plugin>
-				<groupId>org.mortbay.jetty</groupId>
-				<artifactId>jetty-maven-plugin</artifactId>
-				<version>${jetty.version}</version>
-				<configuration>
-					<connectors>
-						<connector implementation="org.eclipse.jetty.server.nio.SelectChannelConnector">
-							<port>8080</port>
-							<maxIdleTime>3600000</maxIdleTime>
-						</connector>
-						<connector implementation="org.eclipse.jetty.server.ssl.SslSocketConnector">
-							<port>8443</port>
-							<maxIdleTime>3600000</maxIdleTime>
-							<keystore>${project.build.directory}/test-classes/keystore</keystore>
-							<password>wicket</password>
-							<keyPassword>wicket</keyPassword>
-						</connector>
-					</connectors>
-				</configuration>
-			</plugin>
-			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-eclipse-plugin</artifactId>
 				<version>2.9</version>
@@ -237,12 +217,9 @@
 							<goal>verify</goal>
 						</goals>
 						<configuration>
-							<systemPropertyVariables>
-								<log4j.configuration>file:src/test/resources/log4j.maven.properties</log4j.configuration>
-							</systemPropertyVariables>
 							<groups>com.comcast.cdn.traffic_control.traffic_router.core.util.ExternalTest</groups>
 							<includes>
-								<include>**/*.java</include>
+								<include>**/*Suite.java</include>
 							</includes>
 						</configuration>
 					</execution>
@@ -264,6 +241,13 @@
 			<groupId>com.comcast.cdn.traffic_control.traffic_router</groupId>
 			<artifactId>traffic_router_config</artifactId>
 			<version>${project.parent.version}</version>
+		</dependency>
+
+		<dependency>
+			<groupId>com.comcast.cdn.traffic_control.traffic_router</groupId>
+			<artifactId>traffic_router_connector</artifactId>
+			<version>${project.parent.version}</version>
+			<scope>test</scope>
 		</dependency>
 
 		<dependency>
@@ -360,10 +344,10 @@
 
 		<dependency>
 			<groupId>org.springframework</groupId>
-			<artifactId>spring-web</artifactId>
+			<artifactId>spring-webmvc</artifactId>
 			<version>${spring.version}</version>
-			<scope>compile</scope>
 		</dependency>
+
 		<dependency>
 			<groupId>org.springframework</groupId>
 			<artifactId>spring-context</artifactId>
@@ -384,13 +368,6 @@
 			<version>${wicket.version}</version>
 		</dependency>
 
-		<!-- JETTY DEPENDENCIES FOR TESTING -->
-		<dependency>
-			<groupId>org.eclipse.jetty.aggregate</groupId>
-			<artifactId>jetty-all-server</artifactId>
-			<version>${jetty.version}</version>
-			<scope>provided</scope>
-		</dependency>
 		<dependency>
 			<groupId>com.googlecode.java-ipv6</groupId>
 			<artifactId>java-ipv6</artifactId>

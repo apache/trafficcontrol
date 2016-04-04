@@ -44,6 +44,11 @@ public class RouterFilter extends OncePerRequestFilter {
 	public void doFilterInternal(final HttpServletRequest request, final HttpServletResponse response, final FilterChain chain) throws IOException, ServletException {
 		final Date requestDate = new Date();
 
+		if (request.getLocalPort() == 3333) {
+			chain.doFilter(request, response);
+			return;
+		}
+
 		if (staticContentWhiteList.contains(request.getRequestURI())) {
 			chain.doFilter(request, response);
 

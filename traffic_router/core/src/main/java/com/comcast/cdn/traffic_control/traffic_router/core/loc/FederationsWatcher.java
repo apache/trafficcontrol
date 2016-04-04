@@ -88,8 +88,6 @@ public class FederationsWatcher extends AbstractServiceUpdater {
         final String json = new String(jsonData);
 
         federationRegistry.setFederations(new FederationsBuilder().fromJSON(json));
-
-        setLoaded(true);
         return true;
     }
 

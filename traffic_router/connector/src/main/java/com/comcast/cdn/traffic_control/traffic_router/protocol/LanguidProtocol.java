@@ -14,25 +14,24 @@
  * limitations under the License.
  */
 
-package com.comcast.cdn.traffic_control.traffic_router.connector;
+package com.comcast.cdn.traffic_control.traffic_router.protocol;
 
 import org.apache.coyote.http11.Http11Protocol;
 
-public class Connector extends Http11Protocol {
-	protected static org.apache.juli.logging.Log log = org.apache.juli.logging.LogFactory.getLog(Connector.class);
+public class LanguidProtocol extends Http11Protocol {
+	protected static org.apache.juli.logging.Log log = org.apache.juli.logging.LogFactory.getLog(LanguidProtocol.class);
 	private boolean ready = false;
 	private boolean initialized = false;
 	private String mbeanPath;
 	private String readyAttribute;
 	private String portAttribute;
 
-	@SuppressWarnings("PMD")
 	@Override
+	@SuppressWarnings("PMD.SignatureDeclareThrowsException")
 	public void init() throws Exception {
 		if (!isReady()) {
 			log.info("Init called; creating thread to monitor the state of Traffic Router");
-			StateThread st = new StateThread(this);
-			st.start();
+			new LanguidPoller(this).start();
 		} else {
 			log.info("Traffic Router is ready; calling super.init()");
 			super.init();
@@ -40,8 +39,8 @@ public class Connector extends Http11Protocol {
 		}
 	}
 
-	@SuppressWarnings("PMD")
 	@Override
+	@SuppressWarnings("PMD.SignatureDeclareThrowsException")
 	public void start() throws Exception {
 		log.info("Start called; waiting for initialization to occur");
 

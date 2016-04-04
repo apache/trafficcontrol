@@ -145,7 +145,9 @@ public class TrafficRouterManager implements ApplicationListener<ContextRefreshe
 	@Override
 	public void onApplicationEvent(final ContextRefreshedEvent event) {
 		applicationContext = event.getApplicationContext();
-		trafficRouter.setApplicationContext(applicationContext);
-		trafficRouter.configurationChanged();
+		if (trafficRouter != null) {
+			trafficRouter.setApplicationContext(applicationContext);
+			trafficRouter.configurationChanged();
+		}
 	}
 }

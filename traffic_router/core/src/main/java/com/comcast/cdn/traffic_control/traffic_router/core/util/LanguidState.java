@@ -33,40 +33,44 @@ public class LanguidState {
 	private int port = 0;
 	private int apiPort = 0;
 
-	@SuppressWarnings("PMD.AvoidDeeplyNestedIfStmts")
 	public void init() {
-		if (trafficRouterManager != null && trafficRouterManager.getTrafficRouter() != null) {
-			final TrafficRouter tr = trafficRouterManager.getTrafficRouter();
-
-			if (tr.getCacheRegister() != null) {
-				final CacheRegister r = tr.getCacheRegister();
-				final JSONObject routers = r.getTrafficRouters();
-
-				try {
-					final String hostname = InetAddress.getLocalHost().getHostName().replaceAll("\\..*", "");
-
-					for (String key : JSONObject.getNames(routers)) {
-						final JSONObject rj = routers.optJSONObject(key);
-
-						if (hostname.equalsIgnoreCase(key)) { // this is us
-							if (rj.has("port")) {
-								this.setPort(rj.optInt("port"));
-							}
-
-							if (rj.has("api.port")) {
-								this.setApiPort(rj.optInt("api.port"));
-							}
-
-							break;
-						}
-					}
-				} catch (UnknownHostException e) {
-					LOGGER.error(e, e);
-				}
-			}
+		if (trafficRouterManager == null || trafficRouterManager.getTrafficRouter() == null) {
+			setReady(true);
+			return;
 		}
 
-		LOGGER.debug("Setting ready to true");
+		final TrafficRouter tr = trafficRouterManager.getTrafficRouter();
+
+		if (tr.getCacheRegister() == null) {
+			setReady(true);
+			return;
+		}
+
+		final CacheRegister cacheRegister = tr.getCacheRegister();
+		final JSONObject routers = cacheRegister.getTrafficRouters();
+
+		try {
+			final String hostname = InetAddress.getLocalHost().getHostName().replaceAll("\\..*", "");
+
+			for (String key : JSONObject.getNames(routers)) {
+				final JSONObject routerJson = routers.optJSONObject(key);
+
+				if (hostname.equalsIgnoreCase(key)) { // this is us
+					if (routerJson.has("port")) {
+						this.setPort(routerJson.optInt("port"));
+					}
+
+					if (routerJson.has("api.port")) {
+						this.setApiPort(routerJson.optInt("api.port"));
+					}
+
+					break;
+				}
+			}
+		} catch (UnknownHostException e) {
+			LOGGER.error(e, e);
+		}
+
 		this.setReady(true);
 	}
 

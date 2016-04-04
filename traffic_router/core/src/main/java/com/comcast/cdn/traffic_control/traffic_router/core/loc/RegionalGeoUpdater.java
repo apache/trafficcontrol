@@ -34,7 +34,6 @@ public class RegionalGeoUpdater extends AbstractServiceUpdater {
     public boolean loadDatabase() throws IOException {
         final File existingDB = new File(databasesDirectory, databaseName);
         RegionalGeo.parseConfigFile(existingDB);
-        setLoaded(true);
         return true;
     }
 }

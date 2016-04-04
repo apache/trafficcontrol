@@ -144,8 +144,7 @@
 		<property name="maxmindGeolocationService" ref="maxmindGeolocationService" />
 	</bean>
 
-	<bean id="networkUpdater" class="com.comcast.cdn.traffic_control.traffic_router.core.loc.NetworkUpdater"
-		init-method="init">
+	<bean id="networkUpdater" class="com.comcast.cdn.traffic_control.traffic_router.core.loc.NetworkUpdater" init-method="init">
 		<property name="executorService" ref="ScheduledExecutorService" />
 		<property name="databasesDirectory" ref="databasesDir" />
 		<property name="databaseName" value="$[cache.czmap.database:czmap.json]" />

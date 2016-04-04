@@ -22,15 +22,5 @@
 
     <context:annotation-config />
     <mvc:annotation-driven />
-    <context:component-scan base-package="com.comcast.cdn.traffic_control.traffic_router.api" />
-
-    <bean id="handlerMapping" class="org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerMapping">
-        <property name="interceptors">
-            <list>
-                <ref bean="responseCachingInterceptor" />
-            </list>
-        </property>
-    </bean>
-    <bean id="responseCachingInterceptor" class="com.comcast.cdn.traffic_control.traffic_router.api.util.ResponseCachingInterceptor" />
-    <bean id="viewResolver" class="org.springframework.web.servlet.view.XmlViewResolver" />
+    <context:component-scan base-package="com.comcast.cdn.traffic_control.traffic_router" />
 </beans>

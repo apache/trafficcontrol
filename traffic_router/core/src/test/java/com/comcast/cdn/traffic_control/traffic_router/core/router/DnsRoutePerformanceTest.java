@@ -22,7 +22,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.Random;
 import java.util.Set;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
 
+import com.comcast.cdn.traffic_control.traffic_router.core.loc.NetworkUpdater;
 import com.comcast.cdn.traffic_control.traffic_router.core.util.IntegrationTest;
 import com.comcast.cdn.traffic_control.traffic_router.geolocation.Geolocation;
 import com.comcast.cdn.traffic_control.traffic_router.geolocation.GeolocationService;
@@ -72,23 +75,36 @@ public class DnsRoutePerformanceTest {
         JSONObject healthObject = new JSONObject(healthTokener);
 
         JSONTokener jsonTokener = new JSONTokener(new FileReader("src/test/db/cr-config.json"));
-        JSONObject configJson = new JSONObject(jsonTokener);
-        JSONObject locationsJo = configJson.getJSONObject("edgeLocations");
+        JSONObject crConfigJson = new JSONObject(jsonTokener);
+        JSONObject locationsJo = crConfigJson.getJSONObject("edgeLocations");
         final Set<CacheLocation> locations = new HashSet<CacheLocation>(locationsJo.length());
         for (final String loc : JSONObject.getNames(locationsJo)) {
             final JSONObject jo = locationsJo.getJSONObject(loc);
             locations.add(new CacheLocation(loc, jo.optString("zoneId"), new Geolocation(jo.getDouble("latitude"), jo.getDouble("longitude"))));
         }
 
-        names = new DnsNameGenerator().getNames(configJson.getJSONObject("deliveryServices"), configJson.getJSONObject("config"));
+        names = new DnsNameGenerator().getNames(crConfigJson.getJSONObject("deliveryServices"), crConfigJson.getJSONObject("config"));
 
-        cacheRegister.setConfig(configJson);
-        CacheRegisterBuilder.parseDeliveryServiceConfig(configJson.getJSONObject("deliveryServices"), cacheRegister);
+        cacheRegister.setConfig(crConfigJson);
+        CacheRegisterBuilder.parseDeliveryServiceConfig(crConfigJson.getJSONObject("deliveryServices"), cacheRegister);
 
         cacheRegister.setConfiguredLocations(locations);
-        CacheRegisterBuilder.parseCacheConfig(configJson.getJSONObject("contentServers"), cacheRegister);
+        CacheRegisterBuilder.parseCacheConfig(crConfigJson.getJSONObject("contentServers"), cacheRegister);
 
-        NetworkNode.generateTree(new File("src/test/db/czmap.json"));
+        NetworkUpdater networkUpdater = new NetworkUpdater();
+        networkUpdater.setDatabasesDirectory(new File("src/test/db"));
+        networkUpdater.setDatabaseName("czmap.json");
+        networkUpdater.setExecutorService(Executors.newSingleThreadScheduledExecutor());
+        networkUpdater.setTrafficRouterManager(mock(TrafficRouterManager.class));
+        JSONObject configJson = crConfigJson.getJSONObject("config");
+        networkUpdater.setDataBaseURL(configJson.getString("coveragezone.polling.url"), configJson.getLong("coveragezone.polling.interval"));
+
+        File coverageZoneFile = new File("src/test/db/czmap.json");
+        while (!coverageZoneFile.exists()) {
+            Thread.sleep(500);
+        }
+
+        NetworkNode.generateTree(coverageZoneFile);
 
         ZoneManager zoneManager = mock(ZoneManager.class);
 
