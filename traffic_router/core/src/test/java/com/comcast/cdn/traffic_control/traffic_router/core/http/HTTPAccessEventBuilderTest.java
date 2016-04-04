@@ -157,7 +157,7 @@ public class HTTPAccessEventBuilderTest {
 
     @Test
     public void itUsesXMmClientIpHeaderForChi() throws Exception {
-        when(request.getHeader(TRServlet.X_MM_CLIENT_IP)).thenReturn("192.168.100.100");
+        when(request.getHeader(RouterFilter.X_MM_CLIENT_IP)).thenReturn("192.168.100.100");
 
         HTTPAccessRecord httpAccessRecord = new HTTPAccessRecord.Builder(new Date(144140678000L), request).build();
         String httpAccessEvent = HTTPAccessEventBuilder.create(httpAccessRecord);
@@ -178,7 +178,7 @@ public class HTTPAccessEventBuilderTest {
     @Test
     public void itUsesXMmClientIpHeaderOverFakeIpParameterForChi() throws Exception {
         when(request.getParameter("fakeClientIpAddress")).thenReturn("192.168.123.123");
-        when(request.getHeader(TRServlet.X_MM_CLIENT_IP)).thenReturn("192.168.100.100");
+        when(request.getHeader(RouterFilter.X_MM_CLIENT_IP)).thenReturn("192.168.100.100");
 
         HTTPAccessRecord httpAccessRecord = new HTTPAccessRecord.Builder(new Date(144140678000L), request).build();
         String httpAccessEvent = HTTPAccessEventBuilder.create(httpAccessRecord);

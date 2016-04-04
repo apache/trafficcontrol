@@ -88,8 +88,8 @@ public class HTTPAccessEventBuilder {
         }
 
 
-        final String xMmClientIpHeader = httpServletRequest.getHeader(TRServlet.X_MM_CLIENT_IP);
-        final String fakeIpParameter = httpServletRequest.getParameter(TRServlet.FAKE_IP);
+        final String xMmClientIpHeader = httpServletRequest.getHeader(RouterFilter.X_MM_CLIENT_IP);
+        final String fakeIpParameter = httpServletRequest.getParameter(RouterFilter.FAKE_IP);
 
         if (xMmClientIpHeader != null) {
             chi = xMmClientIpHeader;

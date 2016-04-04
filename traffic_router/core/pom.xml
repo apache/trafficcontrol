@@ -207,7 +207,7 @@
 					<systemPropertyVariables>
 						<log4j.configuration>file:src/test/resources/log4j.maven.properties</log4j.configuration>
 					</systemPropertyVariables>
-					<excludedGroups>com.comcast.cdn.traffic_control.traffic_router.core.util.IntegrationTest</excludedGroups>
+					<excludedGroups>com.comcast.cdn.traffic_control.traffic_router.core.util.IntegrationTest,com.comcast.cdn.traffic_control.traffic_router.core.util.ExternalTest</excludedGroups>
 				</configuration>
 			</plugin>
 			<plugin>
@@ -215,6 +215,7 @@
 				<version>2.19</version>
 				<executions>
 					<execution>
+						<id>integration</id>
 						<goals>
 							<goal>integration-test</goal>
 							<goal>verify</goal>
@@ -224,6 +225,22 @@
 								<log4j.configuration>file:src/test/resources/log4j.maven.properties</log4j.configuration>
 							</systemPropertyVariables>
 							<groups>com.comcast.cdn.traffic_control.traffic_router.core.util.IntegrationTest</groups>
+							<includes>
+								<include>**/*.java</include>
+							</includes>
+						</configuration>
+					</execution>
+					<execution>
+						<id>external</id>
+						<goals>
+							<goal>integration-test</goal>
+							<goal>verify</goal>
+						</goals>
+						<configuration>
+							<systemPropertyVariables>
+								<log4j.configuration>file:src/test/resources/log4j.maven.properties</log4j.configuration>
+							</systemPropertyVariables>
+							<groups>com.comcast.cdn.traffic_control.traffic_router.core.util.ExternalTest</groups>
 							<includes>
 								<include>**/*.java</include>
 							</includes>
@@ -395,6 +412,32 @@
 				</exclusion>
 			</exclusions>
 		</dependency>
+
+		<dependency>
+			<groupId>org.apache.httpcomponents</groupId>
+			<artifactId>httpclient</artifactId>
+			<version>4.5.1</version>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.tomcat</groupId>
+			<artifactId>catalina</artifactId>
+			<version>6.0.33</version>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.tomcat</groupId>
+			<artifactId>coyote</artifactId>
+			<version>6.0.33</version>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.springframework</groupId>
+			<artifactId>spring-test</artifactId>
+			<version>${spring.version}</version>
+			<scope>test</scope>
+		</dependency>
+
 	</dependencies>
 
 	<profiles>

@@ -17,7 +17,8 @@
 <beans xmlns="http://www.springframework.org/schema/beans"
 	   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	   xmlns:context="http://www.springframework.org/schema/context"
-	   xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-3.0.xsd http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context.xsd"
+	   xmlns:util="http://www.springframework.org/schema/util"
+	   xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-3.0.xsd http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context.xsd http://www.springframework.org/schema/util http://www.springframework.org/schema/util/spring-util.xsd"
 	   default-init-method="init" default-destroy-method="destroy">
 
 	<import resource="classpath:/applicationProperties.xml" />
@@ -274,7 +275,14 @@
 		</property>
 	</bean>
 
-    <bean name="staticContentAccessFilter" class="com.comcast.cdn.traffic_control.traffic_router.core.request.StaticContentAccessFilter">
-        <property name="doNotLog" value="$[http.access.static.content.donotlog]" />
-    </bean>
+	<util:list id="staticContentWhiteList" value-type="java.lang.String">
+		<value>/crossdomain.xml</value>
+		<value>/clientaccesspolicy.xml</value>
+		<value>/index.html</value>
+	</util:list>
+
+	<bean name="routerFilter" class="com.comcast.cdn.traffic_control.traffic_router.core.http.RouterFilter">
+		<property name="doNotLog" value="$[http.access.static.content.donotlog]" />
+		<property name="staticContentWhiteList" ref="staticContentWhiteList" />
+	</bean>
 </beans>

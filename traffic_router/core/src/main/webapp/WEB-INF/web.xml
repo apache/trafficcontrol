@@ -26,47 +26,22 @@
         <listener-class>org.springframework.web.context.ContextLoaderListener</listener-class>
     </listener>
 
-    <servlet>
-        <servlet-name>traffic_router</servlet-name>
-        <servlet-class>com.comcast.cdn.traffic_control.traffic_router.core.http.TRServlet</servlet-class>
-        <load-on-startup>1</load-on-startup>
-    </servlet>
-
     <filter>
-        <filter-name>requestFilter</filter-name>
+        <filter-name>routerFilter</filter-name>
         <filter-class>org.springframework.web.filter.DelegatingFilterProxy</filter-class>
         <init-param>
             <param-name>targetBeanName</param-name>
-            <param-value>staticContentAccessFilter</param-value>
+            <param-value>routerFilter</param-value>
         </init-param>
     </filter>
 
     <filter-mapping>
-        <filter-name>requestFilter</filter-name>
-        <url-pattern>/crossdomain.xml</url-pattern>
-        <url-pattern>/clientaccesspolicy.xml</url-pattern>
-        <url-pattern>/index.html</url-pattern>
+        <filter-name>routerFilter</filter-name>
+        <url-pattern>/*</url-pattern>
     </filter-mapping>
 
     <servlet-mapping>
         <servlet-name>default</servlet-name>
-        <url-pattern>/index.html</url-pattern>
-    </servlet-mapping>
-    <servlet-mapping>
-        <servlet-name>default</servlet-name>
-        <url-pattern>/clientaccesspolicy.xml</url-pattern>
-    </servlet-mapping>
-    <servlet-mapping>
-        <servlet-name>default</servlet-name>
-        <url-pattern>/crossdomain.xml</url-pattern>
-    </servlet-mapping>
-    <servlet-mapping>
-        <servlet-name>traffic_router</servlet-name>
-        <url-pattern>/route/*</url-pattern>
-    </servlet-mapping>
-    <servlet-mapping>
-        <servlet-name>traffic_router</servlet-name>
         <url-pattern>/*</url-pattern>
     </servlet-mapping>
-
 </web-app>
