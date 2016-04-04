@@ -24,3 +24,5 @@ accounts-password
 ian:accounts-ui-bootstrap-3
 check
 audit-argument-checks
+http
+autopublish

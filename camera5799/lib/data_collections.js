@@ -1,0 +1,1 @@
+AvailableCameras = new Mongo.Collection('availableCameras');

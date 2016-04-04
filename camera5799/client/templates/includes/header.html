@@ -11,20 +11,22 @@
     </div>
     <div class="collapse navbar-collapse" id="navigation">
       <ul class="nav navbar-nav">
-        {{#if currentUser}}
-            <li class="{{activeRouteClass 'addCamera'}}">
-                <a href="{{pathFor 'addCamera'}}">Add Camera</a>
-            </li>
-            <li class="{{activeRouteClass 'browseVideos'}}">
-                <a href="{{pathFor 'browseVideos'}}">Videos</a>
-            </li>
-            <li class="{{activeRouteClass 'browseCameras'}}">
-                <a href="{{pathFor 'browseCameras'}}">Cameras</a>
-            </li>
-        {{/if}}
-      </ul>
-      <ul class="nav navbar-nav navbar-right">
-        {{> loginButtons}}
+        {{#with login_response}}
+            {{#if token}}
+                <li class="{{activeRouteClass 'browseCameras'}}">
+                    <a href="{{pathFor 'browseCameras'}}">Cameras</a>
+                </li>
+                <li class="{{activeRouteClass 'browseVideos'}}">
+                    <a href="{{pathFor 'browseVideos'}}">Videos</a>
+                </li>
+                <li class="{{activeRouteClass 'addCamera'}}">
+                    <a href="{{pathFor 'addCamera'}}">Add Camera</a>
+                </li>
+                <li>
+                    <a href="#" id="logout_button" style="color:red;">Logout</a>
+                </li>
+            {{/if}}
+        {{/with}}
       </ul>
     </div>
   </nav>
