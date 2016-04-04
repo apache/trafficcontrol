@@ -7,5 +7,5 @@
 # See "go help packages" for more info.
 #
 PKGS="github.com/Comcast/traffic_control/traffic_ops/client/ \
-github.com/jheitz200/traffic_control/traffic_ops/client/tests/... \
-github.com/jheitz200/traffic_control/traffic_ops/client/fixtures/..."
+github.com/Comcast/traffic_control/traffic_ops/client/tests/... \
+github.com/Comcast/traffic_control/traffic_ops/client/fixtures/..."

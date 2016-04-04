@@ -16,7 +16,7 @@
 
 package fixtures
 
-import "github.com/jheitz200/traffic_control/traffic_ops/client"
+import "github.com/Comcast/traffic_control/traffic_ops/client"
 
 // Profiles returns a default ProfileResponse to be used for testing.
 func Profiles() *client.ProfileResponse {

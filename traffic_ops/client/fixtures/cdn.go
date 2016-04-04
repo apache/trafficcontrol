@@ -16,7 +16,7 @@
 
 package fixtures
 
-import "github.com/jheitz200/ansible/traffic_ops/client"
+import "github.com/Comcast/traffic_control/traffic_ops/client"
 
 // CDNs returns a default CDNResponse to be used for testing.
 func CDNs() *client.CDNResponse {

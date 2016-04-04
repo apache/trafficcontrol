@@ -16,7 +16,7 @@
 
 package fixtures
 
-import "github.com/jheitz200/traffic_control/traffic_ops/client"
+import "github.com/Comcast/traffic_control/traffic_ops/client"
 
 // Hardware returns a default HardwareResponse to be used for testing.
 func Hardware() *client.HardwareResponse {

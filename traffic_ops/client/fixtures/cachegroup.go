@@ -16,7 +16,7 @@
 
 package fixtures
 
-import "github.com/jheitz200/ansible/traffic_ops/client"
+import "github.com/Comcast/traffic_control/traffic_ops/client"
 
 // Cachegroups returns a default CacheGroupResponse to be used for testing.
 func Cachegroups() *client.CacheGroupResponse {
