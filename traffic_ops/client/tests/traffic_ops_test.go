@@ -20,7 +20,7 @@ import (
 	"net/http"
 	"testing"
 
-	"github.com/Comcast/test_helper"
+	"github.com/jheitz200/test_helper"
 	"github.com/jheitz200/traffic_control/traffic_ops/client"
 )
 
@@ -34,46 +34,46 @@ func TestLogin(t *testing.T) {
 		},
 	}
 
-	server := test.ValidHTTPServer(resp)
+	server := testHelper.ValidHTTPServer(resp)
 
-	test.Context(t, "Given the need to test a successful login to Traffic Ops")
+	testHelper.Context(t, "Given the need to test a successful login to Traffic Ops")
 
 	session, err := client.Login(server.URL, "test", "password", true)
 	if err != nil {
-		test.Error(t, "Should be able to login")
+		testHelper.Error(t, "Should be able to login")
 	} else {
-		test.Success(t, "Should be able to login")
+		testHelper.Success(t, "Should be able to login")
 	}
 
 	if session.UserName != "test" {
-		test.Error(t, "Should get back \"test\" for \"UserName\", got %s", session.UserName)
+		testHelper.Error(t, "Should get back \"test\" for \"UserName\", got %s", session.UserName)
 	} else {
-		test.Success(t, "Should get back \"test\" for \"UserName\"")
+		testHelper.Success(t, "Should get back \"test\" for \"UserName\"")
 	}
 
 	if session.Password != "password" {
-		test.Error(t, "Should get back \"password\" for \"Password\", got %s", session.Password)
+		testHelper.Error(t, "Should get back \"password\" for \"Password\", got %s", session.Password)
 	} else {
-		test.Success(t, "Should get back \"password\" for \"Password\"")
+		testHelper.Success(t, "Should get back \"password\" for \"Password\"")
 	}
 
 	if session.URL != server.URL {
-		test.Error(t, "Should get back \"%s\" for \"URL\", got %s", server.URL, session.URL)
+		testHelper.Error(t, "Should get back \"%s\" for \"URL\", got %s", server.URL, session.URL)
 	} else {
-		test.Success(t, "Should get back \"%s\" for \"URL\"", server.URL)
+		testHelper.Success(t, "Should get back \"%s\" for \"URL\"", server.URL)
 	}
 }
 
 func TestLoginUnauthorized(t *testing.T) {
-	server := test.InvalidHTTPServer(http.StatusUnauthorized)
+	server := testHelper.InvalidHTTPServer(http.StatusUnauthorized)
 	defer server.Close()
 
-	test.Context(t, "Given the need to test an unsuccessful login to Traffic Ops")
+	testHelper.Context(t, "Given the need to test an unsuccessful login to Traffic Ops")
 
 	_, err := client.Login(server.URL, "test", "password", true)
 	if err == nil {
-		test.Error(t, "Should not be able to login")
+		testHelper.Error(t, "Should not be able to login")
 	} else {
-		test.Success(t, "Should not be able to login")
+		testHelper.Success(t, "Should not be able to login")
 	}
 }

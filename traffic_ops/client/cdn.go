@@ -37,7 +37,7 @@ type CDN struct {
 func (to *Session) CDNs() ([]CDN, error) {
 	url := "/api/1.2/cdns.json"
 	resp, err := to.request(url, nil)
-	    if err != nil {
+	if err != nil {
 		return nil, err
 	}
 	defer resp.Body.Close()

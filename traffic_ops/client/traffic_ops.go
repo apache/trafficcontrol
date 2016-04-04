@@ -27,7 +27,6 @@ import (
 	"time"
 
 	"github.com/cihub/seelog"
-	"github.com/prometheus/log"
 	"golang.org/x/net/publicsuffix"
 )
 
@@ -78,17 +77,6 @@ type Credentials struct {
 
 // TODO JvD
 const tmPollingInterval = 60
-
-func init() {
-	seelogConfig := "conf/seelog.xml"
-	logger, err := seelog.LoggerFromConfigAsFile(seelogConfig)
-	if err != nil {
-		err := fmt.Errorf("Error creating Logger from seelog file: %s", seelogConfig)
-		log.Error(err)
-	}
-	defer seelog.Flush()
-	seelog.ReplaceLogger(logger)
-}
 
 // loginCreds gathers login credentials for Traffic Ops.
 func loginCreds(toUser string, toPasswd string) ([]byte, error) {
@@ -162,7 +150,7 @@ func Login(toURL string, toUser string, toPasswd string, insecure bool) (*Sessio
 		return nil, err
 	}
 
-	seelog.Debugf("logged into %s!", toURL)
+	seelog.Debugf("logged into Traffic Ops: %s", toURL)
 	return &to, nil
 }
 

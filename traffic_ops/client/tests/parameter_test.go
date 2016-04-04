@@ -20,14 +20,14 @@ import (
 	"net/http"
 	"testing"
 
-	"github.com/Comcast/test_helper"
+	"github.com/jheitz200/test_helper"
 	"github.com/jheitz200/traffic_control/traffic_ops/client"
 	"github.com/jheitz200/traffic_control/traffic_ops/client/fixtures"
 )
 
 func TestParameters(t *testing.T) {
 	resp := fixtures.Parameters()
-	server := test.ValidHTTPServer(resp)
+	server := testHelper.ValidHTTPServer(resp)
 	defer server.Close()
 
 	var httpClient http.Client
@@ -36,44 +36,44 @@ func TestParameters(t *testing.T) {
 		UserAgent: &httpClient,
 	}
 
-	test.Context(t, "Given the need to test a successful Traffic Ops request for Parameters")
+	testHelper.Context(t, "Given the need to test a successful Traffic Ops request for Parameters")
 
 	parameters, err := to.Parameters("test")
 	if err != nil {
-		test.Error(t, "Should be able to make a request to Traffic Ops")
+		testHelper.Error(t, "Should be able to make a request to Traffic Ops")
 	} else {
-		test.Success(t, "Should be able to make a request to Traffic Ops")
+		testHelper.Success(t, "Should be able to make a request to Traffic Ops")
 	}
 
 	if len(parameters) != 1 {
-		test.Error(t, "Should get back \"1\" Parameter, got: %d", len(parameters))
+		testHelper.Error(t, "Should get back \"1\" Parameter, got: %d", len(parameters))
 	} else {
-		test.Success(t, "Should get back \"1\" Parameter")
+		testHelper.Success(t, "Should get back \"1\" Parameter")
 	}
 
 	for _, param := range parameters {
 		if param.Name != "location" {
-			test.Error(t, "Should get back \"location\" for \"Name\", got: %s", param.Name)
+			testHelper.Error(t, "Should get back \"location\" for \"Name\", got: %s", param.Name)
 		} else {
-			test.Success(t, "Should get back \"location\" for \"Name\"")
+			testHelper.Success(t, "Should get back \"location\" for \"Name\"")
 		}
 
 		if param.Value != "/foo/trafficserver/" {
-			test.Error(t, "Should get back \"/foo/trafficserver/\" for \"Value\", got: %s", param.Value)
+			testHelper.Error(t, "Should get back \"/foo/trafficserver/\" for \"Value\", got: %s", param.Value)
 		} else {
-			test.Success(t, "Should get back \"/foo/trafficserver/\" for \"Value\"")
+			testHelper.Success(t, "Should get back \"/foo/trafficserver/\" for \"Value\"")
 		}
 
 		if param.ConfigFile != "parent.config" {
-			test.Error(t, "Should get back \"parent.config\" for \"ConfigFile\", got: %s", param.ConfigFile)
+			testHelper.Error(t, "Should get back \"parent.config\" for \"ConfigFile\", got: %s", param.ConfigFile)
 		} else {
-			test.Success(t, "Should get back \"parent.config\" for \"ConfigFile\"")
+			testHelper.Success(t, "Should get back \"parent.config\" for \"ConfigFile\"")
 		}
 	}
 }
 
 func TestParametersUnauthorized(t *testing.T) {
-	server := test.InvalidHTTPServer(http.StatusUnauthorized)
+	server := testHelper.InvalidHTTPServer(http.StatusUnauthorized)
 	defer server.Close()
 
 	var httpClient http.Client
@@ -82,12 +82,12 @@ func TestParametersUnauthorized(t *testing.T) {
 		UserAgent: &httpClient,
 	}
 
-	test.Context(t, "Given the need to test a failed Traffic Ops request for Parameters")
+	testHelper.Context(t, "Given the need to test a failed Traffic Ops request for Parameters")
 
 	_, err := to.Parameters("test")
 	if err == nil {
-		test.Error(t, "Should not be able to make a request to Traffic Ops")
+		testHelper.Error(t, "Should not be able to make a request to Traffic Ops")
 	} else {
-		test.Success(t, "Should not be able to make a request to Traffic Ops")
+		testHelper.Success(t, "Should not be able to make a request to Traffic Ops")
 	}
 }

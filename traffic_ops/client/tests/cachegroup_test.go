@@ -20,14 +20,14 @@ import (
 	"net/http"
 	"testing"
 
-	"github.com/Comcast/test_helper"
+	"github.com/jheitz200/test_helper"
 	"github.com/jheitz200/traffic_control/traffic_ops/client"
 	"github.com/jheitz200/traffic_control/traffic_ops/client/fixtures"
 )
 
 func TestCacheGroup(t *testing.T) {
 	resp := fixtures.Cachegroups()
-	server := test.ValidHTTPServer(resp)
+	server := testHelper.ValidHTTPServer(resp)
 	defer server.Close()
 
 	var httpClient http.Client
@@ -36,50 +36,50 @@ func TestCacheGroup(t *testing.T) {
 		UserAgent: &httpClient,
 	}
 
-	test.Context(t, "Given the need to test a successful Traffic Ops request for CacheGroups")
+	testHelper.Context(t, "Given the need to test a successful Traffic Ops request for CacheGroups")
 
 	cacheGroups, err := to.CacheGroups()
 	if err != nil {
-		test.Error(t, "Should be able to make a request to Traffic Ops")
+		testHelper.Error(t, "Should be able to make a request to Traffic Ops")
 	} else {
-		test.Success(t, "Should be able to make a request to Traffic Ops")
+		testHelper.Success(t, "Should be able to make a request to Traffic Ops")
 	}
 
 	if len(cacheGroups) != 1 {
-		test.Error(t, "Should get back \"1\" CacheGroups, got: %d", len(cacheGroups))
+		testHelper.Error(t, "Should get back \"1\" CacheGroups, got: %d", len(cacheGroups))
 	} else {
-		test.Success(t, "Should get back \"1\" CacheGroups")
+		testHelper.Success(t, "Should get back \"1\" CacheGroups")
 	}
 
 	for _, cacheGroup := range cacheGroups {
 		if cacheGroup.Name == "" {
-			test.Error(t, "Should get back \"edge-philadelphia\" for \"Name\", got: %s", cacheGroup.Name)
+			testHelper.Error(t, "Should get back \"edge-philadelphia\" for \"Name\", got: %s", cacheGroup.Name)
 		} else {
-			test.Success(t, "Should get back \"edge-philadelphia\" for \"Name\"")
+			testHelper.Success(t, "Should get back \"edge-philadelphia\" for \"Name\"")
 		}
 
 		if cacheGroup.Longitude != 5 {
-			test.Error(t, "Should get back \"5\" for \"Longitude\", got: %v", cacheGroup.Longitude)
+			testHelper.Error(t, "Should get back \"5\" for \"Longitude\", got: %v", cacheGroup.Longitude)
 		} else {
-			test.Success(t, "Should get back \"5\" for \"Longitude\"")
+			testHelper.Success(t, "Should get back \"5\" for \"Longitude\"")
 		}
 
 		if cacheGroup.Latitude != 55 {
-			test.Error(t, "Should get back \"55\" for \"Latitude\", got: %v", cacheGroup.Latitude)
+			testHelper.Error(t, "Should get back \"55\" for \"Latitude\", got: %v", cacheGroup.Latitude)
 		} else {
-			test.Success(t, "Should get back \"55\" for \"Latitude\"")
+			testHelper.Success(t, "Should get back \"55\" for \"Latitude\"")
 		}
 
 		if cacheGroup.ParentName != "mid-northeast" {
-			test.Error(t, "Should get back \"mid-northeast\" for \"ParentName\", got: %s", cacheGroup.ParentName)
+			testHelper.Error(t, "Should get back \"mid-northeast\" for \"ParentName\", got: %s", cacheGroup.ParentName)
 		} else {
-			test.Success(t, "Should get back \"mid-northeast\" for \"ParentName\"")
+			testHelper.Success(t, "Should get back \"mid-northeast\" for \"ParentName\"")
 		}
 	}
 }
 
 func TestCacheGroupsUnauthorized(t *testing.T) {
-	server := test.InvalidHTTPServer(http.StatusUnauthorized)
+	server := testHelper.InvalidHTTPServer(http.StatusUnauthorized)
 	defer server.Close()
 
 	var httpClient http.Client
@@ -88,12 +88,12 @@ func TestCacheGroupsUnauthorized(t *testing.T) {
 		UserAgent: &httpClient,
 	}
 
-	test.Context(t, "Given the need to test a failed Traffic Ops request for CacheGroups")
+	testHelper.Context(t, "Given the need to test a failed Traffic Ops request for CacheGroups")
 
 	_, err := to.CacheGroups()
 	if err == nil {
-		test.Error(t, "Should not be able to make a request to Traffic Ops")
+		testHelper.Error(t, "Should not be able to make a request to Traffic Ops")
 	} else {
-		test.Success(t, "Should not be able to make a request to Traffic Ops")
+		testHelper.Success(t, "Should not be able to make a request to Traffic Ops")
 	}
 }
