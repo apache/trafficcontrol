@@ -26,33 +26,30 @@ import (
 	"time"
 )
 
-type Log struct {
-	Id        int64       `db:"id" json:"id"`
-	Level     null.String `db:"level" json:"level"`
-	Message   string      `db:"message" json:"message"`
-	Username  string      `db:"username" json:"username"`
-	Ticketnum null.String `db:"ticketnum" json:"ticketnum"`
-	CreatedAt time.Time   `db:"created_at" json:"createdAt"`
-	Links     LogLinks    `json:"_links" db:-`
+type Statuses struct {
+	Name        string        `db:"name" json:"name"`
+	Description null.String   `db:"description" json:"description"`
+	CreatedAt   time.Time     `db:"created_at" json:"createdAt"`
+	Links       StatusesLinks `json:"_links" db:-`
 }
 
-type LogLinks struct {
+type StatusesLinks struct {
 	Self string `db:"self" json:"_self"`
 }
 
-// @Title getLogById
-// @Description retrieves the log information for a certain id
+// @Title getStatusesById
+// @Description retrieves the statuses information for a certain id
 // @Accept  application/json
 // @Param   id              path    int     false        "The row id"
-// @Success 200 {array}    Log
+// @Success 200 {array}    Statuses
 // @Resource /api/2.0
-// @Router /api/2.0/log/{id} [get]
-func getLogById(id int64, db *sqlx.DB) (interface{}, error) {
-	ret := []Log{}
-	arg := Log{}
-	arg.Id = id
-	queryStr := "select *, concat('" + API_PATH + "log/', id) as self "
-	queryStr += " from log where id=:id"
+// @Router /api/2.0/statuses/{id} [get]
+func getStatusesById(id string, db *sqlx.DB) (interface{}, error) {
+	ret := []Statuses{}
+	arg := Statuses{}
+	arg.Name = id
+	queryStr := "select *, concat('" + API_PATH + "statuses/', name) as self "
+	queryStr += " from statuses where name=:name"
 	nstmt, err := db.PrepareNamed(queryStr)
 	err = nstmt.Select(&ret, arg)
 	if err != nil {
@@ -63,16 +60,16 @@ func getLogById(id int64, db *sqlx.DB) (interface{}, error) {
 	return ret, nil
 }
 
-// @Title getLogs
-// @Description retrieves the log
+// @Title getStatusess
+// @Description retrieves the statuses
 // @Accept  application/json
-// @Success 200 {array}    Log
+// @Success 200 {array}    Statuses
 // @Resource /api/2.0
-// @Router /api/2.0/log [get]
-func getLogs(db *sqlx.DB) (interface{}, error) {
-	ret := []Log{}
-	queryStr := "select *, concat('" + API_PATH + "log/', id) as self "
-	queryStr += " from log"
+// @Router /api/2.0/statuses [get]
+func getStatusess(db *sqlx.DB) (interface{}, error) {
+	ret := []Statuses{}
+	queryStr := "select *, concat('" + API_PATH + "statuses/', name) as self "
+	queryStr += " from statuses"
 	err := db.Select(&ret, queryStr)
 	if err != nil {
 		log.Println(err)
@@ -81,31 +78,27 @@ func getLogs(db *sqlx.DB) (interface{}, error) {
 	return ret, nil
 }
 
-// @Title postLog
-// @Description enter a new log
+// @Title postStatuses
+// @Description enter a new statuses
 // @Accept  application/json
-// @Param                 Body body     Log   true "Log object that should be added to the table"
+// @Param                 Body body     Statuses   true "Statuses object that should be added to the table"
 // @Success 200 {object}    output_format.ApiWrapper
 // @Resource /api/2.0
-// @Router /api/2.0/log [post]
-func postLog(payload []byte, db *sqlx.DB) (interface{}, error) {
-	var v Log
+// @Router /api/2.0/statuses [post]
+func postStatuses(payload []byte, db *sqlx.DB) (interface{}, error) {
+	var v Statuses
 	err := json.Unmarshal(payload, &v)
 	if err != nil {
 		log.Println(err)
 		return nil, err
 	}
-	sqlString := "INSERT INTO log("
-	sqlString += "level"
-	sqlString += ",message"
-	sqlString += ",username"
-	sqlString += ",ticketnum"
+	sqlString := "INSERT INTO statuses("
+	sqlString += "name"
+	sqlString += ",description"
 	sqlString += ",created_at"
 	sqlString += ") VALUES ("
-	sqlString += ":level"
-	sqlString += ",:message"
-	sqlString += ",:username"
-	sqlString += ",:ticketnum"
+	sqlString += ":name"
+	sqlString += ",:description"
 	sqlString += ",:created_at"
 	sqlString += ")"
 	result, err := db.NamedExec(sqlString, v)
@@ -116,29 +109,27 @@ func postLog(payload []byte, db *sqlx.DB) (interface{}, error) {
 	return result, err
 }
 
-// @Title putLog
-// @Description modify an existing logentry
+// @Title putStatuses
+// @Description modify an existing statusesentry
 // @Accept  application/json
 // @Param   id              path    int     true        "The row id"
-// @Param                 Body body     Log   true "Log object that should be added to the table"
+// @Param                 Body body     Statuses   true "Statuses object that should be added to the table"
 // @Success 200 {object}    output_format.ApiWrapper
 // @Resource /api/2.0
-// @Router /api/2.0/log/{id}  [put]
-func putLog(id int64, payload []byte, db *sqlx.DB) (interface{}, error) {
-	var v Log
+// @Router /api/2.0/statuses/{id}  [put]
+func putStatuses(id string, payload []byte, db *sqlx.DB) (interface{}, error) {
+	var v Statuses
 	err := json.Unmarshal(payload, &v)
-	v.Id = id // overwrite the id in the payload
+	v.Name = id // overwrite the id in the payload
 	if err != nil {
 		log.Println(err)
 		return nil, err
 	}
-	sqlString := "UPDATE log SET "
-	sqlString += "level = :level"
-	sqlString += ",message = :message"
-	sqlString += ",username = :username"
-	sqlString += ",ticketnum = :ticketnum"
+	sqlString := "UPDATE statuses SET "
+	sqlString += "name = :name"
+	sqlString += ",description = :description"
 	sqlString += ",created_at = :created_at"
-	sqlString += " WHERE id=:id"
+	sqlString += " WHERE name=:name"
 	result, err := db.NamedExec(sqlString, v)
 	if err != nil {
 		log.Println(err)
@@ -147,17 +138,17 @@ func putLog(id int64, payload []byte, db *sqlx.DB) (interface{}, error) {
 	return result, err
 }
 
-// @Title delLogById
-// @Description deletes log information for a certain id
+// @Title delStatusesById
+// @Description deletes statuses information for a certain id
 // @Accept  application/json
 // @Param   id              path    int     false        "The row id"
-// @Success 200 {array}    Log
+// @Success 200 {array}    Statuses
 // @Resource /api/2.0
-// @Router /api/2.0/log/{id} [delete]
-func delLog(id int64, db *sqlx.DB) (interface{}, error) {
-	arg := Log{}
-	arg.Id = id
-	result, err := db.NamedExec("DELETE FROM log WHERE id=:id", arg)
+// @Router /api/2.0/statuses/{id} [delete]
+func delStatuses(id string, db *sqlx.DB) (interface{}, error) {
+	arg := Statuses{}
+	arg.Name = id
+	result, err := db.NamedExec("DELETE FROM statuses WHERE name=:id", arg)
 	if err != nil {
 		log.Println(err)
 		return nil, err

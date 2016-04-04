@@ -21,38 +21,36 @@ import (
 	"encoding/json"
 	_ "github.com/Comcast/traffic_control/traffic_ops/experimental/server/output_format" // needed for swagger
 	"github.com/jmoiron/sqlx"
-	null "gopkg.in/guregu/null.v3"
 	"log"
 	"time"
 )
 
-type Log struct {
-	Id        int64       `db:"id" json:"id"`
-	Level     null.String `db:"level" json:"level"`
-	Message   string      `db:"message" json:"message"`
-	Username  string      `db:"username" json:"username"`
-	Ticketnum null.String `db:"ticketnum" json:"ticketnum"`
-	CreatedAt time.Time   `db:"created_at" json:"createdAt"`
-	Links     LogLinks    `json:"_links" db:-`
+type Regexes struct {
+	Id        int64        `db:"id" json:"id"`
+	Pattern   string       `db:"pattern" json:"pattern"`
+	CreatedAt time.Time    `db:"created_at" json:"createdAt"`
+	Links     RegexesLinks `json:"_links" db:-`
 }
 
-type LogLinks struct {
-	Self string `db:"self" json:"_self"`
+type RegexesLinks struct {
+	Self             string           `db:"self" json:"_self"`
+	RegexesTypesLink RegexesTypesLink `json:"regexes_types" db:-`
 }
 
-// @Title getLogById
-// @Description retrieves the log information for a certain id
+// @Title getRegexesById
+// @Description retrieves the regexes information for a certain id
 // @Accept  application/json
 // @Param   id              path    int     false        "The row id"
-// @Success 200 {array}    Log
+// @Success 200 {array}    Regexes
 // @Resource /api/2.0
-// @Router /api/2.0/log/{id} [get]
-func getLogById(id int64, db *sqlx.DB) (interface{}, error) {
-	ret := []Log{}
-	arg := Log{}
+// @Router /api/2.0/regexes/{id} [get]
+func getRegexesById(id int64, db *sqlx.DB) (interface{}, error) {
+	ret := []Regexes{}
+	arg := Regexes{}
 	arg.Id = id
-	queryStr := "select *, concat('" + API_PATH + "log/', id) as self "
-	queryStr += " from log where id=:id"
+	queryStr := "select *, concat('" + API_PATH + "regexes/', id) as self "
+	queryStr += ", concat('" + API_PATH + "regexes_types/', type) as regexes_types_name_ref"
+	queryStr += " from regexes where id=:id"
 	nstmt, err := db.PrepareNamed(queryStr)
 	err = nstmt.Select(&ret, arg)
 	if err != nil {
@@ -63,16 +61,17 @@ func getLogById(id int64, db *sqlx.DB) (interface{}, error) {
 	return ret, nil
 }
 
-// @Title getLogs
-// @Description retrieves the log
+// @Title getRegexess
+// @Description retrieves the regexes
 // @Accept  application/json
-// @Success 200 {array}    Log
+// @Success 200 {array}    Regexes
 // @Resource /api/2.0
-// @Router /api/2.0/log [get]
-func getLogs(db *sqlx.DB) (interface{}, error) {
-	ret := []Log{}
-	queryStr := "select *, concat('" + API_PATH + "log/', id) as self "
-	queryStr += " from log"
+// @Router /api/2.0/regexes [get]
+func getRegexess(db *sqlx.DB) (interface{}, error) {
+	ret := []Regexes{}
+	queryStr := "select *, concat('" + API_PATH + "regexes/', id) as self "
+	queryStr += ", concat('" + API_PATH + "regexes_types/', type) as regexes_types_name_ref"
+	queryStr += " from regexes"
 	err := db.Select(&ret, queryStr)
 	if err != nil {
 		log.Println(err)
@@ -81,31 +80,27 @@ func getLogs(db *sqlx.DB) (interface{}, error) {
 	return ret, nil
 }
 
-// @Title postLog
-// @Description enter a new log
+// @Title postRegexes
+// @Description enter a new regexes
 // @Accept  application/json
-// @Param                 Body body     Log   true "Log object that should be added to the table"
+// @Param                 Body body     Regexes   true "Regexes object that should be added to the table"
 // @Success 200 {object}    output_format.ApiWrapper
 // @Resource /api/2.0
-// @Router /api/2.0/log [post]
-func postLog(payload []byte, db *sqlx.DB) (interface{}, error) {
-	var v Log
+// @Router /api/2.0/regexes [post]
+func postRegexes(payload []byte, db *sqlx.DB) (interface{}, error) {
+	var v Regexes
 	err := json.Unmarshal(payload, &v)
 	if err != nil {
 		log.Println(err)
 		return nil, err
 	}
-	sqlString := "INSERT INTO log("
-	sqlString += "level"
-	sqlString += ",message"
-	sqlString += ",username"
-	sqlString += ",ticketnum"
+	sqlString := "INSERT INTO regexes("
+	sqlString += "pattern"
+	sqlString += ",type"
 	sqlString += ",created_at"
 	sqlString += ") VALUES ("
-	sqlString += ":level"
-	sqlString += ",:message"
-	sqlString += ",:username"
-	sqlString += ",:ticketnum"
+	sqlString += ":pattern"
+	sqlString += ",:type"
 	sqlString += ",:created_at"
 	sqlString += ")"
 	result, err := db.NamedExec(sqlString, v)
@@ -116,27 +111,25 @@ func postLog(payload []byte, db *sqlx.DB) (interface{}, error) {
 	return result, err
 }
 
-// @Title putLog
-// @Description modify an existing logentry
+// @Title putRegexes
+// @Description modify an existing regexesentry
 // @Accept  application/json
 // @Param   id              path    int     true        "The row id"
-// @Param                 Body body     Log   true "Log object that should be added to the table"
+// @Param                 Body body     Regexes   true "Regexes object that should be added to the table"
 // @Success 200 {object}    output_format.ApiWrapper
 // @Resource /api/2.0
-// @Router /api/2.0/log/{id}  [put]
-func putLog(id int64, payload []byte, db *sqlx.DB) (interface{}, error) {
-	var v Log
+// @Router /api/2.0/regexes/{id}  [put]
+func putRegexes(id int64, payload []byte, db *sqlx.DB) (interface{}, error) {
+	var v Regexes
 	err := json.Unmarshal(payload, &v)
 	v.Id = id // overwrite the id in the payload
 	if err != nil {
 		log.Println(err)
 		return nil, err
 	}
-	sqlString := "UPDATE log SET "
-	sqlString += "level = :level"
-	sqlString += ",message = :message"
-	sqlString += ",username = :username"
-	sqlString += ",ticketnum = :ticketnum"
+	sqlString := "UPDATE regexes SET "
+	sqlString += "pattern = :pattern"
+	sqlString += ",type = :type"
 	sqlString += ",created_at = :created_at"
 	sqlString += " WHERE id=:id"
 	result, err := db.NamedExec(sqlString, v)
@@ -147,17 +140,17 @@ func putLog(id int64, payload []byte, db *sqlx.DB) (interface{}, error) {
 	return result, err
 }
 
-// @Title delLogById
-// @Description deletes log information for a certain id
+// @Title delRegexesById
+// @Description deletes regexes information for a certain id
 // @Accept  application/json
 // @Param   id              path    int     false        "The row id"
-// @Success 200 {array}    Log
+// @Success 200 {array}    Regexes
 // @Resource /api/2.0
-// @Router /api/2.0/log/{id} [delete]
-func delLog(id int64, db *sqlx.DB) (interface{}, error) {
-	arg := Log{}
+// @Router /api/2.0/regexes/{id} [delete]
+func delRegexes(id int64, db *sqlx.DB) (interface{}, error) {
+	arg := Regexes{}
 	arg.Id = id
-	result, err := db.NamedExec("DELETE FROM log WHERE id=:id", arg)
+	result, err := db.NamedExec("DELETE FROM regexes WHERE id=:id", arg)
 	if err != nil {
 		log.Println(err)
 		return nil, err
