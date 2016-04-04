@@ -555,7 +555,9 @@ func calcDsValues(rascalData []byte, cdnName string, sampleTime int64, config St
 		for dsMetric, dsMetricData := range dsData {
 			//create dataKey (influxDb series)
 			var cachegroup, statName string
-			if strings.Contains(dsMetric, "total.") {
+			if strings.Contains(dsMetric, "type.") {
+				continue
+			} else if strings.Contains(dsMetric, "total.") {
 				s := strings.Split(dsMetric, ".")
 				cachegroup, statName = s[0], s[1]
 			} else {
