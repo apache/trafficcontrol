@@ -1058,7 +1058,7 @@ sub lwp_get {
 		$response = $lwp_conn->get($url, %headers);
 		$response_content = $response->content; 
 
-		if ( &check_lwp_response_code($response, $ERROR) || &check_lwp_response_content_length($response) ) {
+		if ( &check_lwp_response_code($response, $ERROR) || &check_lwp_response_content_length($response, $ERROR) ) {
 			( $log_level >> $ERROR ) && print "ERROR result for $url is: ..." . $response->content . "...\n";
 			&sleep_rand(6);
 			$retry_counter--;
@@ -1075,7 +1075,7 @@ sub lwp_get {
 		
 	}
 
-	&check_lwp_response_code($response, $FATAL) if ( $retry_counter == 0 );
+	( &check_lwp_response_code($response, $FATAL) || &check_lwp_response_content_length($response, $FATAL) ) if ( $retry_counter == 0 );
 	
 	&eval_json($response) if ( $url =~ m/\.json$/ );
 
@@ -1244,16 +1244,19 @@ sub check_lwp_response_code {
 }
 
 sub check_lwp_response_content_length {
-	my $lwp_response = shift;
+	my $lwp_response  = shift;
+	my $panic_level   = shift;
+	my $log_level_str = &log_level_to_string($panic_level);
 	my $url           = $lwp_response->request->uri;
 
 	if ( !defined($lwp_response->header('Content-Length')) ) {
-		( $log_level >> $ERROR ) && print "ERROR $url did not return a Content-Length header!\n"; 
+		( $log_level >> $panic_level ) && print $log_level_str . " $url did not return a Content-Length header!\n"; 
 		exit;
 		return 1;
 	}
 	elsif ( $lwp_response->header('Content-Length') != length($lwp_response->content()) ) {
-		( $log_level >> $ERROR ) && print "ERROR $url returned a Content-Length of " . $lwp_response->header('Content-Length') . ", however actual content length is " . length($lwp_response->content()) . "!\n"; 
+		( $log_level >> $panic_level ) && print $log_level_str . "$url returned a Content-Length of " . $lwp_response->header('Content-Length') . ", however actual content length is " . length($lwp_response->content()) . "!\n"; 
+		exit 1 if ($log_level_str eq 'FATAL');
 		return 1;
 	}
 	else {	
