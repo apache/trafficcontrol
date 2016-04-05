@@ -847,22 +847,30 @@ sub storage_dot_config {
             $assigned_volume
         );
     }
+
+	# Default to 2 here
+	$assigned_volume = 2;
+
     if ( defined( $data->{RAM_Drive_Prefix} ) ) {
         if ( defined($data->{RAM_Volume} ) ) {
             $assigned_volume = $data->{RAM_Volume};
         }
         $text .= storage_dot_config_volume_text(
             $data->{RAM_Drive_Prefix}, $data->{RAM_Drive_Letters},
-            $data->{RAM_Volume}
+            $assigned_volume
         );
     }
+
+	# ...and default to 3 here
+	$assigned_volume = 3;
+
     if ( defined( $data->{SSD_Drive_Prefix} ) ) {
         if ( defined($data->{SSD_Volume} ) ) {
             $assigned_volume = $data->{SSD_Volume};
         }
         $text .= storage_dot_config_volume_text(
             $data->{SSD_Drive_Prefix}, $data->{SSD_Drive_Letters},
-            $data->{SSD_Volume}
+            $assigned_volume
         );
     }
     return $text;
