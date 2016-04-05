@@ -848,10 +848,9 @@ sub storage_dot_config {
         );
     }
 
-	# Default to 2 here
-	$assigned_volume = 2;
-
     if ( defined( $data->{RAM_Drive_Prefix} ) ) {
+		++$assigned_volume;
+
         if ( defined($data->{RAM_Volume} ) ) {
             $assigned_volume = $data->{RAM_Volume};
         }
@@ -861,10 +860,10 @@ sub storage_dot_config {
         );
     }
 
-	# ...and default to 3 here
-	$assigned_volume = 3;
 
     if ( defined( $data->{SSD_Drive_Prefix} ) ) {
+		++$assigned_volume;
+
         if ( defined($data->{SSD_Volume} ) ) {
             $assigned_volume = $data->{SSD_Volume};
         }
