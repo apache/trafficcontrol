@@ -183,7 +183,7 @@ func RequireLogin(handler http.Handler) http.HandlerFunc {
 			log.Println("userId:", user, " userRole:", role)
 			handler.ServeHTTP(w, r)
 		} else {
-			w.WriteHeader(http.StatusForbidden)
+			w.WriteHeader(http.StatusUnauthorized)
 		}
 	}
 }
