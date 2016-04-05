@@ -815,15 +815,12 @@ sub storage_dot_config_volume_text {
     my $prefix               = shift;
     my $letters              = shift;
     my $volume               = shift;
-    my $has_multiple_volumes = shift;
 
     my $text = "";
     my @postfix = split( /,/, $letters );
     foreach my $l ( sort @postfix ) {
         $text .= $prefix . $l;
-        if ($has_multiple_volumes) {
-            $text .= " volume=" . $volume;
-        }
+        $text .= " volume=" . $volume;
         $text .= "\n";
     }
     return $text;
@@ -838,24 +835,41 @@ sub storage_dot_config {
     my $text   = $self->header_comment( $server->host_name );
     my $data   = $self->param_data( $server, $file );
 
-    my $has_multiple_volumes = get_num_volumes($data) > 1;
+    # always default to volume one and let DB params override
+    my $assigned_volume = 1;
 
     if ( defined( $data->{Drive_Prefix} ) ) {
+        if ( defined($data->{Disk_Volume} ) ) {
+            $assigned_volume = $data->{Disk_Volume};
+        }
         $text .= storage_dot_config_volume_text(
             $data->{Drive_Prefix}, $data->{Drive_Letters},
-            $data->{Disk_Volume},  $has_multiple_volumes
+            $assigned_volume
         );
     }
+
     if ( defined( $data->{RAM_Drive_Prefix} ) ) {
+		++$assigned_volume;
+
+        if ( defined($data->{RAM_Volume} ) ) {
+            $assigned_volume = $data->{RAM_Volume};
+        }
         $text .= storage_dot_config_volume_text(
             $data->{RAM_Drive_Prefix}, $data->{RAM_Drive_Letters},
-            $data->{RAM_Volume},       $has_multiple_volumes
+            $assigned_volume
         );
     }
+
+
     if ( defined( $data->{SSD_Drive_Prefix} ) ) {
+		++$assigned_volume;
+
+        if ( defined($data->{SSD_Volume} ) ) {
+            $assigned_volume = $data->{SSD_Volume};
+        }
         $text .= storage_dot_config_volume_text(
             $data->{SSD_Drive_Prefix}, $data->{SSD_Drive_Letters},
-            $data->{SSD_Volume},       $has_multiple_volumes
+            $assigned_volume
         );
     }
     return $text;
