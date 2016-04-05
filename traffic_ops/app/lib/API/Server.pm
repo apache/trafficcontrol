@@ -770,7 +770,7 @@ sub delete {
     my $self = shift;
 
     if ( !&is_oper($self) ) {
-        return $self->alert("You must be an ADMIN or OPER to perform this operation!");
+        return $self->forbidden();
     }
 
     my $id   = $self->param('id');
