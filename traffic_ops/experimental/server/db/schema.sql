@@ -79,6 +79,14 @@ CREATE VIEW asns AS
 
 ALTER TABLE asns OWNER TO touser;
 
+
+CREATE TABLE cachegroups_types (
+    name text PRIMARY KEY,
+    description text NOT NULL,
+    created_at timestamp without time zone DEFAULT now() NOT NULL
+);
+ALTER TABLE cachegroups_types OWNER TO touser;
+
 --
 -- Name: cachegroups; Type: TABLE; Schema: public; Owner: touser
 --
@@ -89,7 +97,7 @@ CREATE TABLE cachegroups (
     latitude numeric,
     longitude numeric,
     parent_cachegroup text,
-    type text NOT NULL,
+    type text NOT NULL REFERENCES cachegroups_types (name),
     created_at timestamp without time zone DEFAULT now() NOT NULL
 );
 
@@ -176,6 +184,14 @@ CREATE TABLE profiles_parameters (
 
 ALTER TABLE profiles_parameters OWNER TO touser;
 
+
+CREATE TABLE servers_types (
+    name text PRIMARY KEY,
+    description text NOT NULL,
+    created_at timestamp without time zone DEFAULT now() NOT NULL
+);
+ALTER TABLE servers_types OWNER TO touser;
+
 --
 -- Name: servers; Type: TABLE; Schema: public; Owner: touser
 --
@@ -195,7 +211,7 @@ CREATE TABLE servers (
     phys_location text NOT NULL,
     rack text,
     cachegroup text NOT NULL,
-    type text NOT NULL,
+    type text NOT NULL REFERENCES servers_types (name),
     status text NOT NULL,
     upd_pending boolean DEFAULT false NOT NULL,
     profile text NOT NULL,
@@ -265,6 +281,14 @@ CREATE VIEW content_servers AS
 
 ALTER TABLE content_servers OWNER TO touser;
 
+
+CREATE TABLE deliveryservices_types (
+    name text PRIMARY KEY,
+    description text NOT NULL,
+    created_at timestamp without time zone DEFAULT now() NOT NULL
+);
+ALTER TABLE deliveryservices_types OWNER TO touser;
+
 --
 -- Name: deliveryservices; Type: TABLE; Schema: public; Owner: touser
 --
@@ -285,7 +309,7 @@ CREATE TABLE deliveryservices (
     dns_bypass_ip6 inet,
     dns_bypass_ttl integer,
     org_server_fqdn text,
-    type text NOT NULL,
+    type text NOT NULL REFERENCES deliveryservices_types (name),
     profile text NOT NULL,
     dns_ttl integer,
     global_max_mbps integer,
@@ -356,6 +380,14 @@ CREATE SEQUENCE regexes_id_seq
 
 ALTER TABLE regexes_id_seq OWNER TO touser;
 
+
+CREATE TABLE regexes_types (
+    name text PRIMARY KEY,
+    description text NOT NULL,
+    created_at timestamp without time zone DEFAULT now() NOT NULL
+);
+ALTER TABLE regexes_types OWNER TO touser;
+
 --
 -- Name: regexes; Type: TABLE; Schema: public; Owner: touser
 --
@@ -363,7 +395,7 @@ ALTER TABLE regexes_id_seq OWNER TO touser;
 CREATE TABLE regexes (
     id bigint DEFAULT nextval('regexes_id_seq'::regclass) NOT NULL,
     pattern text NOT NULL,
-    type text NOT NULL,
+    type text NOT NULL REFERENCES regexes_types (name),
     created_at timestamp without time zone DEFAULT now() NOT NULL
 );
 
@@ -403,6 +435,14 @@ CREATE SEQUENCE staticdnsentries_id_seq
 
 ALTER TABLE staticdnsentries_id_seq OWNER TO touser;
 
+
+CREATE TABLE staticdnsentries_types (
+    name text PRIMARY KEY,
+    description text NOT NULL,
+    created_at timestamp without time zone DEFAULT now() NOT NULL
+);
+ALTER TABLE staticdnsentries_types OWNER TO touser;
+
 --
 -- Name: staticdnsentries; Type: TABLE; Schema: public; Owner: touser
 --
@@ -410,7 +450,7 @@ ALTER TABLE staticdnsentries_id_seq OWNER TO touser;
 CREATE TABLE staticdnsentries (
     id integer DEFAULT nextval('staticdnsentries_id_seq'::regclass) NOT NULL,
     name character varying(63) NOT NULL,
-    type character varying(2) NOT NULL,
+    type text NOT NULL REFERENCES staticdnsentries_types (name),
     class character varying(2) NOT NULL,
     ttl bigint DEFAULT 3600 NOT NULL,
     rdata character varying(255) NOT NULL,
@@ -422,19 +462,6 @@ CREATE TABLE staticdnsentries (
 
 ALTER TABLE staticdnsentries OWNER TO touser;
 
---
--- Name: types; Type: TABLE; Schema: public; Owner: touser
---
-
-CREATE TABLE types (
-    name text NOT NULL,
-    description text,
-    use_in_table text,
-    created_at timestamp without time zone DEFAULT now() NOT NULL
-);
-
-
-ALTER TABLE types OWNER TO touser;
 
 --
 -- Name: crconfig_ds_data_v; Type: VIEW; Schema: public; Owner: touser
@@ -471,8 +498,8 @@ CREATE VIEW crconfig_ds_data AS
      LEFT JOIN staticdnsentries ON ((deliveryservices.name = staticdnsentries.deliveryservice)))
      JOIN deliveryservices_regexes ON ((deliveryservices_regexes.deliveryservice = deliveryservices.name)))
      JOIN regexes ON ((regexes.id = deliveryservices_regexes.regex_id)))
-     JOIN types regextypes ON ((regextypes.name = regexes.type)))
-     LEFT JOIN types sdnstypes ON ((sdnstypes.name = (staticdnsentries.type)::text)));
+     JOIN regexes_types regextypes ON ((regextypes.name = regexes.type)))
+     LEFT JOIN staticdnsentries_types sdnstypes ON ((sdnstypes.name = (staticdnsentries.type)::text)));
 
 
 ALTER TABLE crconfig_ds_data OWNER TO touser;
@@ -536,6 +563,14 @@ CREATE TABLE domains (
 
 ALTER TABLE domains OWNER TO touser;
 
+
+CREATE TABLE extensions_types (
+    name text PRIMARY KEY,
+    description text NOT NULL,
+    created_at timestamp without time zone DEFAULT now() NOT NULL
+);
+ALTER TABLE extensions_types OWNER TO touser;
+
 --
 -- Name: extensions; Type: TABLE; Schema: public; Owner: touser
 --
@@ -549,7 +584,7 @@ CREATE TABLE extensions (
     script_file text NOT NULL,
     active boolean NOT NULL,
     additional_config_json text,
-    type text NOT NULL,
+    type text NOT NULL REFERENCES extensions_types (name),
     created_at timestamp without time zone DEFAULT now() NOT NULL
 );
 
@@ -995,15 +1030,6 @@ ALTER TABLE ONLY parameters
 ALTER TABLE ONLY profiles
     ADD CONSTRAINT profiles_name_pkey PRIMARY KEY (name);
 
-
---
--- Name: types_name_pkey; Type: CONSTRAINT; Schema: public; Owner: touser
---
-
-ALTER TABLE ONLY types
-    ADD CONSTRAINT types_name_pkey PRIMARY KEY (name);
-
-
 --
 -- Name: cachegroups_short_name; Type: INDEX; Schema: public; Owner: touser
 --
@@ -1056,15 +1082,6 @@ ALTER TABLE ONLY cachegroups_parameters
 ALTER TABLE ONLY cachegroups
     ADD CONSTRAINT cachegroups_parent_cachegroup_cachegroups_name_fkey FOREIGN KEY (parent_cachegroup) REFERENCES cachegroups(name);
 
-
---
--- Name: cachegroups_type_types_name_fkey; Type: FK CONSTRAINT; Schema: public; Owner: touser
---
-
-ALTER TABLE ONLY cachegroups
-    ADD CONSTRAINT cachegroups_type_types_name_fkey FOREIGN KEY (type) REFERENCES types(name);
-
-
 --
 -- Name: deliveryservices_cdn_cdns_name_fkey; Type: FK CONSTRAINT; Schema: public; Owner: touser
 --
@@ -1087,15 +1104,6 @@ ALTER TABLE ONLY deliveryservices
 
 ALTER TABLE ONLY deliveryservices
     ADD CONSTRAINT deliveryservices_profile_profiles_name_fkey FOREIGN KEY (profile) REFERENCES profiles(name);
-
-
---
--- Name: deliveryservices_type_types_name_fkey; Type: FK CONSTRAINT; Schema: public; Owner: touser
---
-
-ALTER TABLE ONLY deliveryservices
-    ADD CONSTRAINT deliveryservices_type_types_name_fkey FOREIGN KEY (type) REFERENCES types(name);
-
 
 --
 -- Name: domains_cdn_fkey; Type: FK CONSTRAINT; Schema: public; Owner: touser
