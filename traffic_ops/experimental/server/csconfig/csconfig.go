@@ -15,6 +15,7 @@
 package csconfig
 
 import (
+	"fmt"
 	"github.com/Comcast/traffic_control/traffic_ops/experimental/server/api"
 	"github.com/jmoiron/sqlx"
 	"gopkg.in/guregu/null.v3"
@@ -36,7 +37,7 @@ type CsconfigParam struct {
 	Name       string `db:"name" json:"name"`
 	Value      string `db:"value" json:"value"`
 	ConfigFile string `db:"config_file" json:"configFile"`
-	Profile    int64  `db:"profile" json:"profile"`
+	Profile    string `db:"profile" json:"profile"`
 }
 
 // create or replace view csconfig_remap as
@@ -102,7 +103,7 @@ type CsConfig struct {
 	Params []CsconfigParam `json:"allParams"`
 }
 
-func getCSConfigParams(profile int64, db *sqlx.DB) ([]CsconfigParam, error) {
+func getCSConfigParams(profile string, db *sqlx.DB) ([]CsconfigParam, error) {
 	ret := []CsconfigParam{}
 	arg := CsconfigParam{Profile: profile}
 	nstmt, err := db.PrepareNamed(`select * from csconfig_params where profile=:profile`)
@@ -115,10 +116,11 @@ func getCSConfigParams(profile int64, db *sqlx.DB) ([]CsconfigParam, error) {
 	return ret, nil
 }
 
-func getCSConfigRemap(serverId int64, db *sqlx.DB) ([]CsconfigRemap, error) {
+// \todo add port (Servers PK is a compound key, host_name and port
+func getCSConfigRemap(serverName string, db *sqlx.DB) ([]CsconfigRemap, error) {
 	ret := []CsconfigRemap{}
-	arg := api.Server{Id: serverId}
-	nstmt, err := db.PrepareNamed(`select * from csconfig_remap where server_id=:id`)
+	arg := api.Servers{HostName: serverName}
+	nstmt, err := db.PrepareNamed(`select * from csconfig_remap where host_name=:host_name`)
 	err = nstmt.Select(&ret, arg)
 	if err != nil {
 		log.Println(err)
@@ -132,19 +134,25 @@ func GetCSConfig(hostName string, db *sqlx.DB) (interface{}, error) {
 
 	// stats, err := statsSection(cdnName)
 
-	server, err := api.GetServerByName(hostName, db)
+	serverInterface, err := api.GetServersById(hostName, db)
+	if err != nil {
+		log.Println(err)
+		return nil, err
+	}
+	server, ok := serverInterface.(api.Servers)
+	if !ok {
+		err = fmt.Errorf("GetServersById returned a non-server")
+		log.Println(err)
+		return nil, err
+	}
+
+	params, err := getCSConfigParams(server.Links.ProfilesLink.ID, db)
 	if err != nil {
 		log.Println(err)
 		return nil, err
 	}
 
-	params, err := getCSConfigParams(server.Links.ProfileLink.ID, db)
-	if err != nil {
-		log.Println(err)
-		return nil, err
-	}
-
-	remaps, err := getCSConfigRemap(server.Id, db)
+	remaps, err := getCSConfigRemap(server.HostName, db) // TODO(take port, part of PK)
 	if err != nil {
 		log.Println(err)
 		return nil, err

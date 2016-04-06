@@ -21,38 +21,35 @@ import (
 	"encoding/json"
 	_ "github.com/Comcast/traffic_control/traffic_ops/experimental/server/output_format" // needed for swagger
 	"github.com/jmoiron/sqlx"
-	null "gopkg.in/guregu/null.v3"
 	"log"
 	"time"
 )
 
-type Log struct {
-	Id        int64       `db:"id" json:"id"`
-	Level     null.String `db:"level" json:"level"`
-	Message   string      `db:"message" json:"message"`
-	Username  string      `db:"username" json:"username"`
-	Ticketnum null.String `db:"ticketnum" json:"ticketnum"`
-	CreatedAt time.Time   `db:"created_at" json:"createdAt"`
-	Links     LogLinks    `json:"_links" db:-`
+type Asns struct {
+	Asn       int64     `db:"asn" json:"asn"`
+	CreatedAt time.Time `db:"created_at" json:"createdAt"`
+	Links     AsnsLinks `json:"_links" db:-`
 }
 
-type LogLinks struct {
-	Self string `db:"self" json:"_self"`
+type AsnsLinks struct {
+	Self            string          `db:"self" json:"_self"`
+	CachegroupsLink CachegroupsLink `json:"cachegroups" db:-`
 }
 
-// @Title getLogById
-// @Description retrieves the log information for a certain id
+// @Title getAsnsById
+// @Description retrieves the asns information for a certain id
 // @Accept  application/json
 // @Param   id              path    int     false        "The row id"
-// @Success 200 {array}    Log
+// @Success 200 {array}    Asns
 // @Resource /api/2.0
-// @Router /api/2.0/log/{id} [get]
-func getLogById(id int64, db *sqlx.DB) (interface{}, error) {
-	ret := []Log{}
-	arg := Log{}
-	arg.Id = id
-	queryStr := "select *, concat('" + API_PATH + "log/', id) as self "
-	queryStr += " from log where id=:id"
+// @Router /api/2.0/asns/{id} [get]
+func getAsnsById(id int64, db *sqlx.DB) (interface{}, error) {
+	ret := []Asns{}
+	arg := Asns{}
+	arg.Asn = id
+	queryStr := "select *, concat('" + API_PATH + "asns/', asn) as self "
+	queryStr += ", concat('" + API_PATH + "cachegroups/', cachegroups) as cachegroups_name_ref"
+	queryStr += " from asns where asn=:asn"
 	nstmt, err := db.PrepareNamed(queryStr)
 	err = nstmt.Select(&ret, arg)
 	if err != nil {
@@ -63,16 +60,17 @@ func getLogById(id int64, db *sqlx.DB) (interface{}, error) {
 	return ret, nil
 }
 
-// @Title getLogs
-// @Description retrieves the log
+// @Title getAsnss
+// @Description retrieves the asns
 // @Accept  application/json
-// @Success 200 {array}    Log
+// @Success 200 {array}    Asns
 // @Resource /api/2.0
-// @Router /api/2.0/log [get]
-func getLogs(db *sqlx.DB) (interface{}, error) {
-	ret := []Log{}
-	queryStr := "select *, concat('" + API_PATH + "log/', id) as self "
-	queryStr += " from log"
+// @Router /api/2.0/asns [get]
+func getAsnss(db *sqlx.DB) (interface{}, error) {
+	ret := []Asns{}
+	queryStr := "select *, concat('" + API_PATH + "asns/', asn) as self "
+	queryStr += ", concat('" + API_PATH + "cachegroups/', cachegroups) as cachegroups_name_ref"
+	queryStr += " from asns"
 	err := db.Select(&ret, queryStr)
 	if err != nil {
 		log.Println(err)
@@ -81,31 +79,27 @@ func getLogs(db *sqlx.DB) (interface{}, error) {
 	return ret, nil
 }
 
-// @Title postLog
-// @Description enter a new log
+// @Title postAsns
+// @Description enter a new asns
 // @Accept  application/json
-// @Param                 Body body     Log   true "Log object that should be added to the table"
+// @Param                 Body body     Asns   true "Asns object that should be added to the table"
 // @Success 200 {object}    output_format.ApiWrapper
 // @Resource /api/2.0
-// @Router /api/2.0/log [post]
-func postLog(payload []byte, db *sqlx.DB) (interface{}, error) {
-	var v Log
+// @Router /api/2.0/asns [post]
+func postAsns(payload []byte, db *sqlx.DB) (interface{}, error) {
+	var v Asns
 	err := json.Unmarshal(payload, &v)
 	if err != nil {
 		log.Println(err)
 		return nil, err
 	}
-	sqlString := "INSERT INTO log("
-	sqlString += "level"
-	sqlString += ",message"
-	sqlString += ",username"
-	sqlString += ",ticketnum"
+	sqlString := "INSERT INTO asns("
+	sqlString += "asn"
+	sqlString += ",cachegroups"
 	sqlString += ",created_at"
 	sqlString += ") VALUES ("
-	sqlString += ":level"
-	sqlString += ",:message"
-	sqlString += ",:username"
-	sqlString += ",:ticketnum"
+	sqlString += ":asn"
+	sqlString += ",:cachegroups"
 	sqlString += ",:created_at"
 	sqlString += ")"
 	result, err := db.NamedExec(sqlString, v)
@@ -116,29 +110,27 @@ func postLog(payload []byte, db *sqlx.DB) (interface{}, error) {
 	return result, err
 }
 
-// @Title putLog
-// @Description modify an existing logentry
+// @Title putAsns
+// @Description modify an existing asnsentry
 // @Accept  application/json
 // @Param   id              path    int     true        "The row id"
-// @Param                 Body body     Log   true "Log object that should be added to the table"
+// @Param                 Body body     Asns   true "Asns object that should be added to the table"
 // @Success 200 {object}    output_format.ApiWrapper
 // @Resource /api/2.0
-// @Router /api/2.0/log/{id}  [put]
-func putLog(id int64, payload []byte, db *sqlx.DB) (interface{}, error) {
-	var v Log
+// @Router /api/2.0/asns/{id}  [put]
+func putAsns(id int64, payload []byte, db *sqlx.DB) (interface{}, error) {
+	var v Asns
 	err := json.Unmarshal(payload, &v)
-	v.Id = id // overwrite the id in the payload
+	v.Asn = id // overwrite the id in the payload
 	if err != nil {
 		log.Println(err)
 		return nil, err
 	}
-	sqlString := "UPDATE log SET "
-	sqlString += "level = :level"
-	sqlString += ",message = :message"
-	sqlString += ",username = :username"
-	sqlString += ",ticketnum = :ticketnum"
+	sqlString := "UPDATE asns SET "
+	sqlString += "asn = :asn"
+	sqlString += ",cachegroups = :cachegroups"
 	sqlString += ",created_at = :created_at"
-	sqlString += " WHERE id=:id"
+	sqlString += " WHERE asn=:asn"
 	result, err := db.NamedExec(sqlString, v)
 	if err != nil {
 		log.Println(err)
@@ -147,17 +139,17 @@ func putLog(id int64, payload []byte, db *sqlx.DB) (interface{}, error) {
 	return result, err
 }
 
-// @Title delLogById
-// @Description deletes log information for a certain id
+// @Title delAsnsById
+// @Description deletes asns information for a certain id
 // @Accept  application/json
 // @Param   id              path    int     false        "The row id"
-// @Success 200 {array}    Log
+// @Success 200 {array}    Asns
 // @Resource /api/2.0
-// @Router /api/2.0/log/{id} [delete]
-func delLog(id int64, db *sqlx.DB) (interface{}, error) {
-	arg := Log{}
-	arg.Id = id
-	result, err := db.NamedExec("DELETE FROM log WHERE id=:id", arg)
+// @Router /api/2.0/asns/{id} [delete]
+func delAsns(id int64, db *sqlx.DB) (interface{}, error) {
+	arg := Asns{}
+	arg.Asn = id
+	result, err := db.NamedExec("DELETE FROM asns WHERE asn=:id", arg)
 	if err != nil {
 		log.Println(err)
 		return nil, err

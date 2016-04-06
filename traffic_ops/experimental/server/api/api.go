@@ -75,99 +75,99 @@ func (handlerMap ApiHandlerFuncMap) Methods() ApiMethods {
 
 func ApiHandlers() map[string]ApiHandlerFuncMap {
 	return map[string]ApiHandlerFuncMap{
-		"cdn":                                 ApiHandlerFuncMap{GET: emptyWrap(getCdns), POST: bodyWrap(postCdn)},
-		"cdn/{id}":                            ApiHandlerFuncMap{GET: idWrap(getCdnById), PUT: idBodyWrap(putCdn), DELETE: idWrap(delCdn)},
-		"asn":                                 ApiHandlerFuncMap{GET: emptyWrap(getAsns), POST: bodyWrap(postAsn)},
-		"asn/{id}":                            ApiHandlerFuncMap{GET: idWrap(getAsnById), PUT: idBodyWrap(putAsn), DELETE: idWrap(delAsn)},
-		"cachegroup":                          ApiHandlerFuncMap{GET: emptyWrap(getCachegroups), POST: bodyWrap(postCachegroup)},
-		"cachegroup/{id}":                     ApiHandlerFuncMap{GET: idWrap(getCachegroupById), PUT: idBodyWrap(putCachegroup), DELETE: idWrap(delCachegroup)},
-		"cachegroup_parameter":                ApiHandlerFuncMap{GET: emptyWrap(getCachegroupParameters), POST: bodyWrap(postCachegroupParameter)},
-		"cachegroup_parameter/{id}":           ApiHandlerFuncMap{GET: idWrap(getCachegroupParameterById), PUT: idBodyWrap(putCachegroupParameter), DELETE: idWrap(delCachegroupParameter)},
-		"deliveryservice":                     ApiHandlerFuncMap{GET: emptyWrap(getDeliveryservices), POST: bodyWrap(postDeliveryservice)},
-		"deliveryservice/{id}":                ApiHandlerFuncMap{GET: idWrap(getDeliveryserviceById), PUT: idBodyWrap(putDeliveryservice), DELETE: idWrap(delDeliveryservice)},
-		"deliveryserviceRegex/{id}":           ApiHandlerFuncMap{GET: idWrap(getDeliveryserviceRegexById), PUT: idBodyWrap(putDeliveryserviceRegex), DELETE: idWrap(delDeliveryserviceRegex)},
-		"deliveryservice_regex":               ApiHandlerFuncMap{GET: emptyWrap(getDeliveryserviceRegexs), POST: bodyWrap(postDeliveryserviceRegex)},
-		"deliveryservice_regex/{id}":          ApiHandlerFuncMap{GET: idWrap(getDeliveryserviceRegexById), PUT: idBodyWrap(putDeliveryserviceRegex), DELETE: idWrap(delDeliveryserviceRegex)},
-		"deliveryservice_server":              ApiHandlerFuncMap{GET: emptyWrap(getDeliveryserviceServers), POST: bodyWrap(postDeliveryserviceServer)},
-		"deliveryservice_server/{id}":         ApiHandlerFuncMap{GET: idWrap(getDeliveryserviceServerById), PUT: idBodyWrap(putDeliveryserviceServer), DELETE: idWrap(delDeliveryserviceServer)},
-		"deliveryservice_tmuser":              ApiHandlerFuncMap{GET: emptyWrap(getDeliveryserviceTmusers), POST: bodyWrap(postDeliveryserviceTmuser)},
-		"deliveryservice_tmuser/{id}":         ApiHandlerFuncMap{GET: idWrap(getDeliveryserviceTmuserById), PUT: idBodyWrap(putDeliveryserviceTmuser), DELETE: idWrap(delDeliveryserviceTmuser)},
-		"division":                            ApiHandlerFuncMap{GET: emptyWrap(getDivisions), POST: bodyWrap(postDivision)},
-		"division/{id}":                       ApiHandlerFuncMap{GET: idWrap(getDivisionById), PUT: idBodyWrap(putDivision), DELETE: idWrap(delDivision)},
-		"federation":                          ApiHandlerFuncMap{GET: emptyWrap(getFederations), POST: bodyWrap(postFederation)},
-		"federation/{id}":                     ApiHandlerFuncMap{GET: idWrap(getFederationById), PUT: idBodyWrap(putFederation), DELETE: idWrap(delFederation)},
-		"federation_deliveryservice":          ApiHandlerFuncMap{GET: emptyWrap(getFederationDeliveryservices), POST: bodyWrap(postFederationDeliveryservice)},
-		"federation_deliveryservice/{id}":     ApiHandlerFuncMap{GET: idWrap(getFederationDeliveryserviceById), PUT: idBodyWrap(putFederationDeliveryservice), DELETE: idWrap(delFederationDeliveryservice)},
-		"federation_federation_resolver":      ApiHandlerFuncMap{GET: emptyWrap(getFederationFederationResolvers), POST: bodyWrap(postFederationFederationResolver)},
-		"federation_federation_resolver/{id}": ApiHandlerFuncMap{GET: idWrap(getFederationFederationResolverById), PUT: idBodyWrap(putFederationFederationResolver), DELETE: idWrap(delFederationFederationResolver)},
-		"federation_resolver":                 ApiHandlerFuncMap{GET: emptyWrap(getFederationResolvers), POST: bodyWrap(postFederationResolver)},
-		"federation_resolver/{id}":            ApiHandlerFuncMap{GET: idWrap(getFederationResolverById), PUT: idBodyWrap(putFederationResolver), DELETE: idWrap(delFederationResolver)},
-		"federation_tmuser":                   ApiHandlerFuncMap{GET: emptyWrap(getFederationTmusers), POST: bodyWrap(postFederationTmuser)},
-		"federation_tmuser/{id}":              ApiHandlerFuncMap{GET: idWrap(getFederationTmuserById), PUT: idBodyWrap(putFederationTmuser), DELETE: idWrap(delFederationTmuser)},
-		"job":                    ApiHandlerFuncMap{GET: emptyWrap(getJobs), POST: bodyWrap(postJob)},
-		"job/{id}":               ApiHandlerFuncMap{GET: idWrap(getJobById), PUT: idBodyWrap(putJob), DELETE: idWrap(delJob)},
-		"job_result":             ApiHandlerFuncMap{GET: emptyWrap(getJobResults), POST: bodyWrap(postJobResult)},
-		"job_result/{id}":        ApiHandlerFuncMap{GET: idWrap(getJobResultById), PUT: idBodyWrap(putJobResult), DELETE: idWrap(delJobResult)},
-		"job_status":             ApiHandlerFuncMap{GET: emptyWrap(getJobStatuss), POST: bodyWrap(postJobStatus)},
-		"job_status/{id}":        ApiHandlerFuncMap{GET: idWrap(getJobStatusById), PUT: idBodyWrap(putJobStatus), DELETE: idWrap(delJobStatus)},
-		"log":                    ApiHandlerFuncMap{GET: emptyWrap(getLogs), POST: bodyWrap(postLog)},
-		"log/{id}":               ApiHandlerFuncMap{GET: idWrap(getLogById), PUT: idBodyWrap(putLog), DELETE: idWrap(delLog)},
-		"parameter":              ApiHandlerFuncMap{GET: emptyWrap(getParameters), POST: bodyWrap(postParameter)},
-		"parameter/{id}":         ApiHandlerFuncMap{GET: idWrap(getParameterById), PUT: idBodyWrap(putParameter), DELETE: idWrap(delParameter)},
-		"phys_location":          ApiHandlerFuncMap{GET: emptyWrap(getPhysLocations), POST: bodyWrap(postPhysLocation)},
-		"phys_location/{id}":     ApiHandlerFuncMap{GET: idWrap(getPhysLocationById), PUT: idBodyWrap(putPhysLocation), DELETE: idWrap(delPhysLocation)},
-		"profile":                ApiHandlerFuncMap{GET: emptyWrap(getProfiles), POST: bodyWrap(postProfile)},
-		"profile/{id}":           ApiHandlerFuncMap{GET: idWrap(getProfileById), PUT: idBodyWrap(putProfile), DELETE: idWrap(delProfile)},
-		"profile_parameter":      ApiHandlerFuncMap{GET: emptyWrap(getProfileParameters), POST: bodyWrap(postProfileParameter)},
-		"profile_parameter/{id}": ApiHandlerFuncMap{GET: idWrap(getProfileParameterById), PUT: idBodyWrap(putProfileParameter), DELETE: idWrap(delProfileParameter)},
-		"regex":                  ApiHandlerFuncMap{GET: emptyWrap(getRegexs), POST: bodyWrap(postRegex)},
-		"regex/{id}":             ApiHandlerFuncMap{GET: idWrap(getRegexById), PUT: idBodyWrap(putRegex), DELETE: idWrap(delRegex)},
-		"region":                 ApiHandlerFuncMap{GET: emptyWrap(getRegions), POST: bodyWrap(postRegion)},
-		"region/{id}":            ApiHandlerFuncMap{GET: idWrap(getRegionById), PUT: idBodyWrap(putRegion), DELETE: idWrap(delRegion)},
-		"role":                   ApiHandlerFuncMap{GET: emptyWrap(getRoles), POST: bodyWrap(postRole)},
-		"role/{id}":              ApiHandlerFuncMap{GET: idWrap(getRoleById), PUT: idBodyWrap(putRole), DELETE: idWrap(delRole)},
-		"server":                 ApiHandlerFuncMap{GET: emptyWrap(getServers), POST: bodyWrap(postServer)},
-		"server/{id}":            ApiHandlerFuncMap{GET: idWrap(getServerById), PUT: idBodyWrap(putServer), DELETE: idWrap(delServer)},
-		"servercheck":            ApiHandlerFuncMap{GET: emptyWrap(getServerchecks), POST: bodyWrap(postServercheck)},
-		"servercheck/{id}":       ApiHandlerFuncMap{GET: idWrap(getServercheckById), PUT: idBodyWrap(putServercheck), DELETE: idWrap(delServercheck)},
-		"staticdnsentry":         ApiHandlerFuncMap{GET: emptyWrap(getStaticdnsentrys), POST: bodyWrap(postStaticdnsentry)},
-		"staticdnsentry/{id}":    ApiHandlerFuncMap{GET: idWrap(getStaticdnsentryById), PUT: idBodyWrap(putStaticdnsentry), DELETE: idWrap(delStaticdnsentry)},
-		"stats_summary":          ApiHandlerFuncMap{GET: emptyWrap(getStatsSummarys), POST: bodyWrap(postStatsSummary)},
-		"stats_summary/{id}":     ApiHandlerFuncMap{GET: idWrap(getStatsSummaryById), PUT: idBodyWrap(putStatsSummary), DELETE: idWrap(delStatsSummary)},
-		"status":                 ApiHandlerFuncMap{GET: emptyWrap(getStatuss), POST: bodyWrap(postStatus)},
-		"status/{id}":            ApiHandlerFuncMap{GET: idWrap(getStatusById), PUT: idBodyWrap(putStatus), DELETE: idWrap(delStatus)},
-		"tm_user":                ApiHandlerFuncMap{GET: emptyWrap(getTmUsers), POST: bodyWrap(postTmUser)},
-		"tm_user/{id}":           ApiHandlerFuncMap{GET: idWrap(getTmUserById), PUT: idBodyWrap(putTmUser), DELETE: idWrap(delTmUser)},
-		"to_extension":           ApiHandlerFuncMap{GET: emptyWrap(getToExtensions), POST: bodyWrap(postToExtension)},
-		"to_extension/{id}":      ApiHandlerFuncMap{GET: idWrap(getToExtensionById), PUT: idBodyWrap(putToExtension), DELETE: idWrap(delToExtension)},
-		"type":                   ApiHandlerFuncMap{GET: emptyWrap(getTypes), POST: bodyWrap(postType)},
-		"type/{id}":              ApiHandlerFuncMap{GET: idWrap(getTypeById), PUT: idBodyWrap(putType), DELETE: idWrap(delType)},
-		"snapshot/crconfig/{name}": ApiHandlerFuncMap{GET: nameWrap(snapshotCrconfig)},
+		"cdn":                                  ApiHandlerFuncMap{GET: emptyWrap(getCdnss), POST: bodyWrap(postCdns)},
+		"cdn/{key}":                            ApiHandlerFuncMap{GET: stringWrap(getCdnsById), PUT: stringBodyWrap(putCdns), DELETE: stringWrap(delCdns)},
+		"asn":                                  ApiHandlerFuncMap{GET: emptyWrap(getAsnss), POST: bodyWrap(postAsns)},
+		"asn/{key}":                            ApiHandlerFuncMap{GET: int64Wrap(getAsnsById), PUT: int64BodyWrap(putAsns), DELETE: int64Wrap(delAsns)},
+		"cachegroup":                           ApiHandlerFuncMap{GET: emptyWrap(getCachegroupss), POST: bodyWrap(postCachegroups)},
+		"cachegroup/{key}":                     ApiHandlerFuncMap{GET: stringWrap(getCachegroupsById), PUT: stringBodyWrap(putCachegroups), DELETE: stringWrap(delCachegroups)},
+		"cachegroup_parameter":                 ApiHandlerFuncMap{GET: emptyWrap(getCachegroupsParameterss), POST: bodyWrap(postCachegroupsParameters)},
+		"cachegroup_parameter/{key}":           ApiHandlerFuncMap{GET: stringWrap(getCachegroupsParametersById), PUT: stringBodyWrap(putCachegroupsParameters), DELETE: stringWrap(delCachegroupsParameters)},
+		"deliveryservice":                      ApiHandlerFuncMap{GET: emptyWrap(getDeliveryservicess), POST: bodyWrap(postDeliveryservices)},
+		"deliveryservice/{key}":                ApiHandlerFuncMap{GET: stringWrap(getDeliveryservicesById), PUT: stringBodyWrap(putDeliveryservices), DELETE: stringWrap(delDeliveryservices)},
+		"deliveryserviceRegex/{key}":           ApiHandlerFuncMap{GET: stringWrap(getDeliveryservicesRegexesById), PUT: stringBodyWrap(putDeliveryservicesRegexes), DELETE: stringWrap(delDeliveryservicesRegexes)},
+		"deliveryservice_regex":                ApiHandlerFuncMap{GET: emptyWrap(getDeliveryservicesRegexess), POST: bodyWrap(postDeliveryservicesRegexes)},
+		"deliveryservice_regex/{key}":          ApiHandlerFuncMap{GET: stringWrap(getDeliveryservicesRegexesById), PUT: stringBodyWrap(putDeliveryservicesRegexes), DELETE: stringWrap(delDeliveryservicesRegexes)},
+		"deliveryservice_server":               ApiHandlerFuncMap{GET: emptyWrap(getDeliveryservicesServerss), POST: bodyWrap(postDeliveryservicesServers)},
+		"deliveryservice_server/{key}":         ApiHandlerFuncMap{GET: stringWrap(getDeliveryservicesServersById), PUT: stringBodyWrap(putDeliveryservicesServers), DELETE: stringWrap(delDeliveryservicesServers)},
+		"deliveryservice_tmuser":               ApiHandlerFuncMap{GET: emptyWrap(getDeliveryservicesUserss), POST: bodyWrap(postDeliveryservicesUsers)},
+		"deliveryservice_tmuser/{key}":         ApiHandlerFuncMap{GET: stringWrap(getDeliveryservicesUsersById), PUT: stringBodyWrap(putDeliveryservicesUsers), DELETE: stringWrap(delDeliveryservicesUsers)},
+		"division":                             ApiHandlerFuncMap{GET: emptyWrap(getDivisionss), POST: bodyWrap(postDivisions)},
+		"division/{key}":                       ApiHandlerFuncMap{GET: stringWrap(getDivisionsById), PUT: stringBodyWrap(putDivisions), DELETE: stringWrap(delDivisions)},
+		"federation":                           ApiHandlerFuncMap{GET: emptyWrap(getFederationss), POST: bodyWrap(postFederations)},
+		"federation/{key}":                     ApiHandlerFuncMap{GET: int64Wrap(getFederationsById), PUT: int64BodyWrap(putFederations), DELETE: int64Wrap(delFederations)},
+		"federation_deliveryservice":           ApiHandlerFuncMap{GET: emptyWrap(getFederationsDeliveryservicess), POST: bodyWrap(postFederationsDeliveryservices)},
+		"federation_deliveryservice/{key}":     ApiHandlerFuncMap{GET: int64Wrap(getFederationsDeliveryservicesById), PUT: int64BodyWrap(putFederationsDeliveryservices), DELETE: int64Wrap(delFederationsDeliveryservices)},
+		"federation_federation_resolver":       ApiHandlerFuncMap{GET: emptyWrap(getFederationsFederationResolverss), POST: bodyWrap(postFederationsFederationResolvers)},
+		"federation_federation_resolver/{key}": ApiHandlerFuncMap{GET: int64Wrap(getFederationsFederationResolversById), PUT: int64BodyWrap(putFederationsFederationResolvers), DELETE: int64Wrap(delFederationsFederationResolvers)},
+		"federation_resolver":                  ApiHandlerFuncMap{GET: emptyWrap(getFederationResolverss), POST: bodyWrap(postFederationResolvers)},
+		"federation_resolver/{key}":            ApiHandlerFuncMap{GET: int64Wrap(getFederationResolversById), PUT: int64BodyWrap(putFederationResolvers), DELETE: int64Wrap(delFederationResolvers)},
+		"federation_tmuser":                    ApiHandlerFuncMap{GET: emptyWrap(getFederationUserss), POST: bodyWrap(postFederationUsers)},
+		"federation_tmuser/{key}":              ApiHandlerFuncMap{GET: int64Wrap(getFederationUsersById), PUT: int64BodyWrap(putFederationUsers), DELETE: int64Wrap(delFederationUsers)},
+		// "job":                    ApiHandlerFuncMap{GET: emptyWrap(getJobss), POST: bodyWrap(postJobs)},
+		// "job/{key}":               ApiHandlerFuncMap{GET: int64Wrap(getJobsById), PUT: int64BodyWrap(putJobs), DELETE: int64Wrap(delJobs)},
+		// "job_result":             ApiHandlerFuncMap{GET: emptyWrap(getJobResultss), POST: bodyWrap(postJobResults)},
+		// "job_result/{key}":        ApiHandlerFuncMap{GET: int64Wrap(getJobResultsById), PUT: int64BodyWrap(putJobResults), DELETE: int64Wrap(delJobResults)},
+		// "job_status":             ApiHandlerFuncMap{GET: emptyWrap(getJobStatusess), POST: bodyWrap(postJobStatuses)},
+		// "job_status/{key}":        ApiHandlerFuncMap{GET: int64Wrap(getJobStatusesById), PUT: int64BodyWrap(putJobStatuses), DELETE: int64Wrap(delJobStatuses)},
+		// "log":                    ApiHandlerFuncMap{GET: emptyWrap(getLogss), POST: bodyWrap(postLogs)},
+		// "log/{key}":               ApiHandlerFuncMap{GET: int64Wrap(getLogsById), PUT: int64BodyWrap(putLogs), DELETE: int64Wrap(delLogs)},
+		"parameter":               ApiHandlerFuncMap{GET: emptyWrap(getParameterss), POST: bodyWrap(postParameters)},
+		"parameter/{key}":         ApiHandlerFuncMap{GET: int64Wrap(getParametersById), PUT: int64BodyWrap(putParameters), DELETE: int64Wrap(delParameters)},
+		"phys_location":           ApiHandlerFuncMap{GET: emptyWrap(getPhysLocationss), POST: bodyWrap(postPhysLocations)},
+		"phys_location/{key}":     ApiHandlerFuncMap{GET: stringWrap(getPhysLocationsById), PUT: stringBodyWrap(putPhysLocations), DELETE: stringWrap(delPhysLocations)},
+		"profile":                 ApiHandlerFuncMap{GET: emptyWrap(getProfiless), POST: bodyWrap(postProfiles)},
+		"profile/{key}":           ApiHandlerFuncMap{GET: stringWrap(getProfilesById), PUT: stringBodyWrap(putProfiles), DELETE: stringWrap(delProfiles)},
+		"profile_parameter":       ApiHandlerFuncMap{GET: emptyWrap(getProfilesParameterss), POST: bodyWrap(postProfilesParameters)},
+		"profile_parameter/{key}": ApiHandlerFuncMap{GET: stringWrap(getProfilesParametersById), PUT: stringBodyWrap(putProfilesParameters), DELETE: stringWrap(delProfilesParameters)},
+		"regex":                   ApiHandlerFuncMap{GET: emptyWrap(getRegexess), POST: bodyWrap(postRegexes)},
+		"regex/{key}":             ApiHandlerFuncMap{GET: int64Wrap(getRegexesById), PUT: int64BodyWrap(putRegexes), DELETE: int64Wrap(delRegexes)},
+		"region":                  ApiHandlerFuncMap{GET: emptyWrap(getRegionss), POST: bodyWrap(postRegions)},
+		"region/{key}":            ApiHandlerFuncMap{GET: stringWrap(getRegionsById), PUT: stringBodyWrap(putRegions), DELETE: stringWrap(delRegions)},
+		"role":                    ApiHandlerFuncMap{GET: emptyWrap(getRoless), POST: bodyWrap(postRoles)},
+		"role/{key}":              ApiHandlerFuncMap{GET: stringWrap(getRolesById), PUT: stringBodyWrap(putRoles), DELETE: stringWrap(delRoles)},
+		"server":                  ApiHandlerFuncMap{GET: emptyWrap(getServerss), POST: bodyWrap(postServers)},
+		"server/{key}":            ApiHandlerFuncMap{GET: stringWrap(GetServersById), PUT: stringBodyWrap(putServers), DELETE: stringWrap(delServers)},
+		// "servercheck":            ApiHandlerFuncMap{GET: emptyWrap(getServercheckss), POST: bodyWrap(postServerchecks)},
+		// "servercheck/{key}":       ApiHandlerFuncMap{GET: int64Wrap(getServerchecksById), PUT: int64BodyWrap(putServerchecks), DELETE: int64Wrap(delServerchecks)},
+		"staticdnsentry":       ApiHandlerFuncMap{GET: emptyWrap(getStaticdnsentriess), POST: bodyWrap(postStaticdnsentries)},
+		"staticdnsentry/{key}": ApiHandlerFuncMap{GET: int64Wrap(getStaticdnsentriesById), PUT: int64BodyWrap(putStaticdnsentries), DELETE: int64Wrap(delStaticdnsentries)},
+		"stats_summary":        ApiHandlerFuncMap{GET: emptyWrap(getStatsSummarys), POST: bodyWrap(postStatsSummary)},
+		"stats_summary/{key}":  ApiHandlerFuncMap{GET: stringWrap(getStatsSummaryById), PUT: stringBodyWrap(putStatsSummary), DELETE: stringWrap(delStatsSummary)},
+		"status":               ApiHandlerFuncMap{GET: emptyWrap(getStatusess), POST: bodyWrap(postStatuses)},
+		"status/{key}":         ApiHandlerFuncMap{GET: stringWrap(getStatusesById), PUT: stringBodyWrap(putStatuses), DELETE: stringWrap(delStatuses)},
+		"user":                 ApiHandlerFuncMap{GET: emptyWrap(getUserss), POST: bodyWrap(postUsers)},
+		"user/{key}":           ApiHandlerFuncMap{GET: stringWrap(GetUsersById), PUT: stringBodyWrap(putUsers), DELETE: stringWrap(delUsers)},
+		"extension":            ApiHandlerFuncMap{GET: emptyWrap(getExtensionss), POST: bodyWrap(postExtensions)},
+		"extension/{key}":      ApiHandlerFuncMap{GET: stringWrap(getExtensionsById), PUT: stringBodyWrap(putExtensions), DELETE: stringWrap(delExtensions)},
+		// "type":                   ApiHandlerFuncMap{GET: emptyWrap(getTypess), POST: bodyWrap(postTypes)},
+		// "type/{key}":              ApiHandlerFuncMap{GET: int64Wrap(getTypesById), PUT: int64BodyWrap(putTypes), DELETE: int64Wrap(delTypes)},
+		//		"snapshot/crconfig/{key}": ApiHandlerFuncMap{GET: stringWrap(snapshotCrconfigs)},
 	}
 }
 
 type EmptyHandlerFunc func(db *sqlx.DB) (interface{}, error)
-type IntHandlerFunc func(id int, db *sqlx.DB) (interface{}, error)
+type Int64HandlerFunc func(key int64, db *sqlx.DB) (interface{}, error)
 type BodyHandlerFunc func(payload []byte, db *sqlx.DB) (interface{}, error)
-type IntBodyHandlerFunc func(id int, payload []byte, db *sqlx.DB) (interface{}, error)
-type StringHandlerFunc func(name string, db *sqlx.DB) (interface{}, error)
-type StringBodyHandlerFunc func(name string, payload []byte, db *sqlx.DB) (interface{}, error)
+type Int64BodyHandlerFunc func(key int64, payload []byte, db *sqlx.DB) (interface{}, error)
+type StringHandlerFunc func(key string, db *sqlx.DB) (interface{}, error)
+type StringBodyHandlerFunc func(key string, payload []byte, db *sqlx.DB) (interface{}, error)
 
-func idBodyWrap(f IntBodyHandlerFunc) ApiHandlerFunc {
+func int64BodyWrap(f Int64BodyHandlerFunc) ApiHandlerFunc {
 	return func(pathParams map[string]string, payload []byte, db *sqlx.DB) (interface{}, error) {
-		if strid, ok := pathParams["id"]; !ok {
-			return nil, errors.New("Id missing")
-		} else if id, err := strconv.Atoi(strid); err != nil {
-			return nil, errors.New("Id is not an integer: " + strid)
+		if strKey, ok := pathParams["key"]; !ok {
+			return nil, errors.New("int64 key missing")
+		} else if key, err := strconv.Atoi(strKey); err != nil {
+			return nil, errors.New("key is not an int64: " + strKey)
 		} else {
-			return f(id, payload, db)
+			return f(int64(key), payload, db)
 		}
 	}
 }
 
-func idWrap(f IntHandlerFunc) ApiHandlerFunc {
-	return idBodyWrap(func(id int, payload []byte, db *sqlx.DB) (interface{}, error) {
-		return f(id, db)
+func int64Wrap(f Int64HandlerFunc) ApiHandlerFunc {
+	return int64BodyWrap(func(key int64, payload []byte, db *sqlx.DB) (interface{}, error) {
+		return f(key, db)
 	})
 }
 
@@ -177,19 +177,19 @@ func bodyWrap(f BodyHandlerFunc) ApiHandlerFunc {
 	}
 }
 
-func nameBodyWrap(f StringBodyHandlerFunc) ApiHandlerFunc {
+func stringBodyWrap(f StringBodyHandlerFunc) ApiHandlerFunc {
 	return func(pathParams map[string]string, payload []byte, db *sqlx.DB) (interface{}, error) {
-		if name, ok := pathParams["name"]; !ok {
-			return nil, errors.New("Name missing")
+		if key, ok := pathParams["key"]; !ok {
+			return nil, errors.New("string key missing")
 		} else {
-			return f(name, payload, db)
+			return f(key, payload, db)
 		}
 	}
 }
 
-func nameWrap(f StringHandlerFunc) ApiHandlerFunc {
-	return nameBodyWrap(func(name string, payload []byte, db *sqlx.DB) (interface{}, error) {
-		return f(name, db)
+func stringWrap(f StringHandlerFunc) ApiHandlerFunc {
+	return stringBodyWrap(func(key string, payload []byte, db *sqlx.DB) (interface{}, error) {
+		return f(key, db)
 	})
 }
 

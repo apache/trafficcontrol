@@ -20,6 +20,7 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"github.com/gedex/inflector"
 	_ "github.com/go-sql-driver/mysql"
 	_ "github.com/lib/pq"
 	"log"
@@ -72,6 +73,7 @@ type ColumnSchema struct {
 	ColumnKey              string
 	ColumnForeignTable     string
 	ColumForeignColumn     string
+	PrimaryKey             bool
 }
 
 type FKSchema struct {
@@ -82,18 +84,18 @@ type FKSchema struct {
 	ForeignColumnName string
 }
 
-func idCol(schemas []ColumnSchema, table string) string {
+// \todo fix for compound keys
+func primaryKey(schemas []ColumnSchema, table string) ColumnSchema {
 	for _, cs := range schemas {
-		if cs.TableName == table { // the first one, it's ordered
-			if cs.ColumnName == "id" {
-				return cs.ColumnName
-			} else {
-				return "Links." + formatName(cs.ColumnName) + "Link.ID"
-			}
-
+		if cs.TableName != table || !cs.PrimaryKey {
+			continue
 		}
+		return cs
 	}
-	return ""
+
+	//	return "Links." + formatName(cs.ColumnName) + "Link.ID"
+	log.Fatal("Table " + table + " without primary key")
+	panic("Table " + table + " without primary key")
 }
 
 func writeFile(schemas []ColumnSchema, table string) (int, error) {
@@ -177,10 +179,16 @@ func updString(schemas []ColumnSchema, table string, prefix string, varName stri
 }
 
 func genUpdateVarLines(schemas []ColumnSchema, table string, whereCol string) string {
+	idColumnSchema := primaryKey(schemas, table)
+
 	out := "sqlString := \"UPDATE " + table + " SET \"\n"
 	out += updString(schemas, table, "", "sqlString")
-	out += "sqlString += \" WHERE " + whereCol + "=:" + whereCol + "\"\n"
 
+	if idColumnSchema.ColumForeignColumn == "" {
+		out += "sqlString += \" WHERE " + whereCol + "=:" + whereCol + "\"\n"
+	} else {
+		out += "sqlString += \" WHERE " + whereCol + "=:Links." + formatName(idColumnSchema.ColumnForeignTable) + "Link.ID\"\n"
+	}
 	return out
 }
 
@@ -244,7 +252,12 @@ func hasLastUpdated(schemas []ColumnSchema, table string) bool {
 // }
 
 func handleString(schemas []ColumnSchema, table string) string {
-	idColumn := idCol(schemas, table)
+	idColumnSchema := primaryKey(schemas, table)
+	idColumn := idColumnSchema.ColumnName
+	idColumnType, _, err := goType(&idColumnSchema)
+	if err != nil {
+		log.Fatal(err)
+	}
 	updateLastUpdated := hasLastUpdated(schemas, table)
 
 	out := ""
@@ -255,18 +268,26 @@ func handleString(schemas []ColumnSchema, table string) string {
 	out += "// @Success 200 {array}    " + formatName(table) + "\n"
 	out += "// @Resource /api/2.0\n"
 	out += "// @Router /api/2.0/" + table + "/{id} [get]\n"
-	out += "func get" + formatName(table) + "ById(id int, db *sqlx.DB) (interface{}, error) {\n"
+	out += "func get" + formatName(table) + "ById(id " + idColumnType + ", db *sqlx.DB) (interface{}, error) {\n"
 	out += "    ret := []" + formatName(table) + "{}\n"
 	out += "    arg := " + formatName(table) + "{}\n"
-	out += "    arg." + formatName(idColumn) + "= int64(id)\n"
-	out += "    queryStr := \"select *, concat('\" + API_PATH + \"" + table + "/', id) as self \"\n"
+	if idColumnSchema.ColumForeignColumn == "" {
+		out += "    arg." + formatName(idColumn) + "= id\n"
+	} else {
+		out += "    arg.Links." + formatName(idColumnSchema.ColumnForeignTable) + "Link.ID = id\n"
+	}
+	out += "    queryStr := \"select *, concat('\" + API_PATH + \"" + table + "/', " + idColumn + ") as self \"\n"
 	for _, col := range schemas {
 		if col.TableName == table && col.ColumnForeignTable != "" {
 			out += "queryStr += \", concat('\" + API_PATH + \"" + col.ColumnForeignTable + "/', " + col.ColumnName + ") as "
 			out += col.ColumnForeignTable + "_" + col.ColumForeignColumn + "_ref\"\n"
 		}
 	}
-	out += "queryStr += \" from " + table + " where " + idColumn + "=:" + idColumn + "\"\n"
+	if idColumnSchema.ColumForeignColumn == "" {
+		out += "queryStr += \" from " + table + " where " + idColumn + "=:" + idColumn + "\"\n"
+	} else {
+		out += "queryStr += \" from " + table + " where " + idColumn + "=:Links." + formatName(idColumnSchema.ColumnForeignTable) + "Link.ID\"\n"
+	}
 	out += "    nstmt, err := db.PrepareNamed(queryStr)\n"
 	out += "    err = nstmt.Select(&ret, arg)\n"
 	out += "	if err != nil {\n"
@@ -285,7 +306,7 @@ func handleString(schemas []ColumnSchema, table string) string {
 	out += "// @Router /api/2.0/" + table + " [get]\n"
 	out += "func get" + formatName(table) + "s(db *sqlx.DB) (interface{}, error) {\n"
 	out += "    ret := []" + formatName(table) + "{}\n"
-	out += "    queryStr := \"select *, concat('\" + API_PATH + \"" + table + "/', id) as self \"\n"
+	out += "    queryStr := \"select *, concat('\" + API_PATH + \"" + table + "/', " + idColumn + ") as self \"\n"
 	for _, col := range schemas {
 		if col.TableName == table && col.ColumnForeignTable != "" {
 			out += "queryStr += \", concat('\" + API_PATH + \"" + col.ColumnForeignTable + "/', " + col.ColumnName + ") as "
@@ -332,10 +353,14 @@ func handleString(schemas []ColumnSchema, table string) string {
 	out += "// @Success 200 {object}    output_format.ApiWrapper\n"
 	out += "// @Resource /api/2.0\n"
 	out += "// @Router /api/2.0/" + table + "/{id}  [put]\n"
-	out += "func put" + formatName(table) + "(id int, payload []byte, db *sqlx.DB) (interface{}, error) {\n"
+	out += "func put" + formatName(table) + "(id " + idColumnType + ", payload []byte, db *sqlx.DB) (interface{}, error) {\n"
 	out += "    var v " + formatName(table) + "\n"
 	out += "    err := json.Unmarshal(payload, &v)\n"
-	out += "    v." + formatName(idColumn) + "= int64(id) // overwrite the id in the payload\n"
+	if idColumnSchema.ColumForeignColumn == "" {
+		out += "    v." + formatName(idColumn) + "= id // overwrite the id in the payload\n"
+	} else {
+		out += "    v.Links." + formatName(idColumnSchema.ColumnForeignTable) + "Link.ID = id // overwrite the id in the payload\n"
+	}
 	out += "    if err != nil {\n"
 	out += "    	log.Println(err)\n"
 	out += "    	return nil, err\n"
@@ -359,10 +384,19 @@ func handleString(schemas []ColumnSchema, table string) string {
 	out += "// @Success 200 {array}    " + formatName(table) + "\n"
 	out += "// @Resource /api/2.0\n"
 	out += "// @Router /api/2.0/" + table + "/{id} [delete]\n"
-	out += "func del" + formatName(table) + "(id int, db *sqlx.DB) (interface{}, error) {\n"
+	out += "func del" + formatName(table) + "(id " + idColumnType + ", db *sqlx.DB) (interface{}, error) {\n"
 	out += "    arg := " + formatName(table) + "{}\n"
-	out += "    arg." + formatName(idColumn) + "= int64(id)\n"
-	out += "    result, err := db.NamedExec(\"DELETE FROM " + table + " WHERE id=:id\", arg)\n"
+	// TODO(this is duplicate from `get`. Abstract?
+	if idColumnSchema.ColumForeignColumn == "" {
+		out += "    arg." + formatName(idColumn) + "= id\n"
+	} else {
+		out += "    arg.Links." + formatName(idColumnSchema.ColumnForeignTable) + "Link.ID = id\n"
+	}
+	if idColumnSchema.ColumForeignColumn == "" {
+		out += "    result, err := db.NamedExec(\"DELETE FROM " + table + " WHERE " + idColumn + "=:id\", arg)\n"
+	} else {
+		out += "    result, err := db.NamedExec(\"DELETE FROM " + table + " WHERE " + idColumn + "=:Links." + formatName(idColumnSchema.ColumnForeignTable) + "Link.ID\", arg)\n"
+	}
 	out += "    if err != nil {\n"
 	out += "    	log.Println(err)\n"
 	out += "    	return nil, err\n"
@@ -373,6 +407,11 @@ func handleString(schemas []ColumnSchema, table string) string {
 }
 
 func structString(schemas []ColumnSchema, table string) string {
+	idColumnSchema := primaryKey(schemas, table)
+	idColumnType, _, err := goType(&idColumnSchema)
+	if err != nil {
+		log.Fatal(err)
+	}
 
 	out := "type " + formatName(table) + " struct{\n"
 	linkMap := make(map[string]int)
@@ -393,7 +432,7 @@ func structString(schemas []ColumnSchema, table string) string {
 			} else {
 				// fmt.Println(cs, ">"+cs.ColumForeignColumn+"<")
 				// out = out + "\t" + formatName(cs.ColumnName) + " >>>> " + goType
-				linkMap[cs.ColumnName] = i
+				linkMap[cs.ColumnForeignTable] = i
 			}
 		}
 	}
@@ -415,7 +454,7 @@ func structString(schemas []ColumnSchema, table string) string {
 	for index, cs := range schemas {
 		if cs.ColumnForeignTable == table {
 			out += "type " + formatName(table) + "Link struct { \n"
-			out += "\tID  int64  `db:\"" + table + "\" json:\"" + schemas[index].ColumForeignColumn + "\"`\n"
+			out += "\tID  " + idColumnType + " `db:\"" + inflector.Singularize(table) + "\" json:\"" + schemas[index].ColumForeignColumn + "\"`\n"
 			out += "\tRef string `db:\"" + schemas[index].ColumnForeignTable + "_" + schemas[index].ColumForeignColumn + "_ref\" json:\"_ref\"`\n"
 			out += "}\n\n"
 			break
@@ -551,6 +590,28 @@ func getSchema() ([]ColumnSchema, []string) {
 				}
 			}
 		}
+
+		q = `select tc.table_name, ccu.column_name from information_schema.table_constraints as tc join information_schema.constraint_column_usage as ccu on ccu.constraint_name = tc.constraint_name where constraint_type = 'PRIMARY KEY';`
+		rows, err = conn.Query(q)
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		for rows.Next() {
+			var table string
+			var column string
+			err := rows.Scan(&table, &column)
+			if err != nil {
+				log.Fatal(err)
+			}
+
+			for i, _ := range columns {
+				if columns[i].ColumnName != column || columns[i].TableName != table {
+					continue
+				}
+				columns[i].PrimaryKey = true
+			}
+		}
 	}
 	return columns, tables
 }
@@ -580,7 +641,7 @@ func goType(col *ColumnSchema) (string, string, error) {
 	}
 	var gt string = ""
 	switch col.DataType {
-	case "char", "varchar", "enum", "text", "longtext", "mediumtext", "tinytext", "character varying":
+	case "char", "varchar", "enum", "text", "longtext", "mediumtext", "tinytext", "character varying", "inet":
 		if col.IsNullable == "YES" {
 			gt = "null.String"
 		} else {

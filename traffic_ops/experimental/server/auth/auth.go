@@ -39,8 +39,8 @@ type loginJson struct {
 }
 
 type SessionUser struct {
-	UserId int64
-	Role   int64
+	User string
+	Role int64
 }
 
 type TokenResponse struct {
@@ -117,10 +117,14 @@ func GetLoginFunc(db *sqlx.DB) http.HandlerFunc {
 		}
 		username = lj.U
 		password = lj.P
-		u := api.TmUser{}
-		u, err = api.GetTmUserByName(username, db)
+		userInterface, err := api.GetUsersById(username, db)
 		if err != nil {
 			http.Error(w, "Invalid user: "+err.Error(), http.StatusUnauthorized)
+			return
+		}
+		u, ok := userInterface.(api.Users)
+		if !ok {
+			http.Error(w, "Error GetUsersById returned a non-user.", http.StatusInternalServerError)
 			return
 		}
 
@@ -132,7 +136,7 @@ func GetLoginFunc(db *sqlx.DB) http.HandlerFunc {
 			http.Error(w, "Invalid password: "+err.Error(), http.StatusUnauthorized)
 			return
 		}
-		if u.LocalPasswd.String != encString {
+		if u.LocalPassword.String != encString {
 			ctx.Set(r, "user", nil)
 			log.Println("Invalid password")
 			http.Error(w, "Invalid password", http.StatusUnauthorized)
@@ -142,8 +146,8 @@ func GetLoginFunc(db *sqlx.DB) http.HandlerFunc {
 		// Create the token
 		token := jwt.New(jwt.SigningMethodHS256)
 		// Set some claims
-		token.Claims["userid"] = u.Id
-		token.Claims["role"] = u.Links.RoleLink.ID
+		token.Claims["userid"] = u.Username
+		token.Claims["role"] = u.Links.RolesLink.ID
 		token.Claims["exp"] = time.Now().Add(time.Hour * 72).Unix()
 		// Sign and get the complete encoded token as a string
 		tokenString, err := token.SignedString([]byte("mySigningKey")) // TODO JvD
