@@ -43,7 +43,7 @@ type AsnsLinks struct {
 // @Success 200 {array}    Asns
 // @Resource /api/2.0
 // @Router /api/2.0/asns/{id} [get]
-func getAsnsById(asn int64, db *sqlx.DB) (interface{}, error) {
+func getAsn(asn int64, db *sqlx.DB) (interface{}, error) {
 	ret := []Asns{}
 	arg := Asns{}
 	arg.Asn = asn
@@ -66,7 +66,7 @@ func getAsnsById(asn int64, db *sqlx.DB) (interface{}, error) {
 // @Success 200 {array}    Asns
 // @Resource /api/2.0
 // @Router /api/2.0/asns [get]
-func getAsnss(db *sqlx.DB) (interface{}, error) {
+func getAsns(db *sqlx.DB) (interface{}, error) {
 	ret := []Asns{}
 	queryStr := "select *, concat('" + API_PATH + "asns/', asn) as self"
 	queryStr += ", concat('" + API_PATH + "cachegroups/', cachegroups) as cachegroups_name_ref"
@@ -86,7 +86,7 @@ func getAsnss(db *sqlx.DB) (interface{}, error) {
 // @Success 200 {object}    output_format.ApiWrapper
 // @Resource /api/2.0
 // @Router /api/2.0/asns [post]
-func postAsns(payload []byte, db *sqlx.DB) (interface{}, error) {
+func postAsn(payload []byte, db *sqlx.DB) (interface{}, error) {
 	var v Asns
 	err := json.Unmarshal(payload, &v)
 	if err != nil {
@@ -118,7 +118,7 @@ func postAsns(payload []byte, db *sqlx.DB) (interface{}, error) {
 // @Success 200 {object}    output_format.ApiWrapper
 // @Resource /api/2.0
 // @Router /api/2.0/asns/{id}  [put]
-func putAsns(asn int64, payload []byte, db *sqlx.DB) (interface{}, error) {
+func putAsn(asn int64, payload []byte, db *sqlx.DB) (interface{}, error) {
 	var arg Asns
 	err := json.Unmarshal(payload, &arg)
 	arg.Asn = asn
@@ -146,7 +146,7 @@ func putAsns(asn int64, payload []byte, db *sqlx.DB) (interface{}, error) {
 // @Success 200 {array}    Asns
 // @Resource /api/2.0
 // @Router /api/2.0/asns/{id} [delete]
-func delAsns(asn int64, db *sqlx.DB) (interface{}, error) {
+func delAsn(asn int64, db *sqlx.DB) (interface{}, error) {
 	arg := Asns{}
 	arg.Asn = asn
 	result, err := db.NamedExec("DELETE FROM asns WHERE asn=:asn", arg)

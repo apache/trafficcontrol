@@ -327,14 +327,6 @@ func setFkHALQueryStr(schemas []ColumnSchema, table string) string {
 
 func handleString(schemas []ColumnSchema, table string) string {
 	pk := primaryKey(schemas, table)
-
-	// idColumnSchema := primaryKey(schemas, table)
-	// idColumn := idColumnSchema.ColumnName
-	// idColumnType, _, err := goType(&idColumnSchema)
-	// if err != nil {
-	// 	log.Fatal(err)
-	// }
-
 	updateLastUpdated := hasLastUpdated(schemas, table)
 
 	out := ""
@@ -345,8 +337,7 @@ func handleString(schemas []ColumnSchema, table string) string {
 	out += "// @Success 200 {array}    " + formatName(table) + "\n"
 	out += "// @Resource /api/2.0\n"
 	out += "// @Router /api/2.0/" + table + "/{id} [get]\n"
-
-	out += "func get" + formatName(table) + "ById(" + getPkGoFuncParamString(pk) + ", db *sqlx.DB) (interface{}, error) {\n"
+	out += "func get" + inflector.Singularize(formatName(table)) + "(" + getPkGoFuncParamString(pk) + ", db *sqlx.DB) (interface{}, error) {\n"
 	out += "    ret := []" + formatName(table) + "{}\n"
 	out += "    arg := " + formatName(table) + "{}\n"
 	out += setStructPkFields(pk)
@@ -369,7 +360,7 @@ func handleString(schemas []ColumnSchema, table string) string {
 	out += "// @Success 200 {array}    " + formatName(table) + "\n"
 	out += "// @Resource /api/2.0\n"
 	out += "// @Router /api/2.0/" + table + " [get]\n"
-	out += "func get" + formatName(table) + "s(db *sqlx.DB) (interface{}, error) {\n"
+	out += "func get" + inflector.Pluralize(formatName(table)) + "(db *sqlx.DB) (interface{}, error) {\n"
 	out += "    ret := []" + formatName(table) + "{}\n"
 	out += "    queryStr := \"select *, " + selfQueryStr(pk, table) + "\"\n"
 	out += setFkHALQueryStr(schemas, table)
@@ -389,7 +380,7 @@ func handleString(schemas []ColumnSchema, table string) string {
 	out += "// @Success 200 {object}    output_format.ApiWrapper\n"
 	out += "// @Resource /api/2.0\n"
 	out += "// @Router /api/2.0/" + table + " [post]\n"
-	out += "func post" + formatName(table) + "(payload []byte, db *sqlx.DB) (interface{}, error) {\n"
+	out += "func post" + inflector.Singularize(formatName(table)) + "(payload []byte, db *sqlx.DB) (interface{}, error) {\n"
 	out += "	var v " + formatName(table) + "\n"
 	out += "	err := json.Unmarshal(payload, &v)\n"
 	out += "	if err != nil {\n"
@@ -413,7 +404,7 @@ func handleString(schemas []ColumnSchema, table string) string {
 	out += "// @Success 200 {object}    output_format.ApiWrapper\n"
 	out += "// @Resource /api/2.0\n"
 	out += "// @Router /api/2.0/" + table + "/{id}  [put]\n"
-	out += "func put" + formatName(table) + "(" + getPkGoFuncParamString(pk) + ", payload []byte, db *sqlx.DB) (interface{}, error) {\n"
+	out += "func put" + inflector.Singularize(formatName(table)) + "(" + getPkGoFuncParamString(pk) + ", payload []byte, db *sqlx.DB) (interface{}, error) {\n"
 	out += "    var arg " + formatName(table) + "\n"
 	out += "    err := json.Unmarshal(payload, &arg)\n"
 	out += setStructPkFields(pk)
@@ -440,7 +431,7 @@ func handleString(schemas []ColumnSchema, table string) string {
 	out += "// @Success 200 {array}    " + formatName(table) + "\n"
 	out += "// @Resource /api/2.0\n"
 	out += "// @Router /api/2.0/" + table + "/{id} [delete]\n"
-	out += "func del" + formatName(table) + "(" + getPkGoFuncParamString(pk) + ", db *sqlx.DB) (interface{}, error) {\n"
+	out += "func del" + inflector.Singularize(formatName(table)) + "(" + getPkGoFuncParamString(pk) + ", db *sqlx.DB) (interface{}, error) {\n"
 	out += "    arg := " + formatName(table) + "{}\n"
 	out += setStructPkFields(pk)
 	out += "    result, err := db.NamedExec(\"DELETE FROM " + table + " " + pkWhereStr(pk) + "\", arg)\n"

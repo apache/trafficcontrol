@@ -83,7 +83,7 @@ type ParametersLink struct {
 // @Success 200 {array}    Parameters
 // @Resource /api/2.0
 // @Router /api/2.0/parameters/{id} [get]
-func getParametersById(id int64, db *sqlx.DB) (interface{}, error) {
+func getParameter(id int64, db *sqlx.DB) (interface{}, error) {
 	ret := []Parameters{}
 	arg := Parameters{}
 	arg.Id = id
@@ -105,7 +105,7 @@ func getParametersById(id int64, db *sqlx.DB) (interface{}, error) {
 // @Success 200 {array}    Parameters
 // @Resource /api/2.0
 // @Router /api/2.0/parameters [get]
-func getParameterss(db *sqlx.DB) (interface{}, error) {
+func getParameters(db *sqlx.DB) (interface{}, error) {
 	ret := []Parameters{}
 	queryStr := "select *, concat('" + API_PATH + "parameters/', id) as self"
 	queryStr += " from parameters"
@@ -124,7 +124,7 @@ func getParameterss(db *sqlx.DB) (interface{}, error) {
 // @Success 200 {object}    output_format.ApiWrapper
 // @Resource /api/2.0
 // @Router /api/2.0/parameters [post]
-func postParameters(payload []byte, db *sqlx.DB) (interface{}, error) {
+func postParameter(payload []byte, db *sqlx.DB) (interface{}, error) {
 	var v Parameters
 	err := json.Unmarshal(payload, &v)
 	if err != nil {
@@ -222,7 +222,7 @@ func postParameters(payload []byte, db *sqlx.DB) (interface{}, error) {
 // @Success 200 {object}    output_format.ApiWrapper
 // @Resource /api/2.0
 // @Router /api/2.0/parameters/{id}  [put]
-func putParameters(id int64, payload []byte, db *sqlx.DB) (interface{}, error) {
+func putParameter(id int64, payload []byte, db *sqlx.DB) (interface{}, error) {
 	var arg Parameters
 	err := json.Unmarshal(payload, &arg)
 	arg.Id = id
@@ -283,7 +283,7 @@ func putParameters(id int64, payload []byte, db *sqlx.DB) (interface{}, error) {
 // @Success 200 {array}    Parameters
 // @Resource /api/2.0
 // @Router /api/2.0/parameters/{id} [delete]
-func delParameters(id int64, db *sqlx.DB) (interface{}, error) {
+func delParameter(id int64, db *sqlx.DB) (interface{}, error) {
 	arg := Parameters{}
 	arg.Id = id
 	result, err := db.NamedExec("DELETE FROM parameters WHERE id=:id", arg)

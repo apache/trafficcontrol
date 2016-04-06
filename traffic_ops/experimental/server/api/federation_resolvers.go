@@ -44,7 +44,7 @@ type FederationResolversLinks struct {
 // @Success 200 {array}    FederationResolvers
 // @Resource /api/2.0
 // @Router /api/2.0/federation_resolvers/{id} [get]
-func getFederationResolversById(id int64, db *sqlx.DB) (interface{}, error) {
+func getFederationResolver(id int64, db *sqlx.DB) (interface{}, error) {
 	ret := []FederationResolvers{}
 	arg := FederationResolvers{}
 	arg.Id = id
@@ -66,7 +66,7 @@ func getFederationResolversById(id int64, db *sqlx.DB) (interface{}, error) {
 // @Success 200 {array}    FederationResolvers
 // @Resource /api/2.0
 // @Router /api/2.0/federation_resolvers [get]
-func getFederationResolverss(db *sqlx.DB) (interface{}, error) {
+func getFederationResolvers(db *sqlx.DB) (interface{}, error) {
 	ret := []FederationResolvers{}
 	queryStr := "select *, concat('" + API_PATH + "federation_resolvers/', id) as self"
 	queryStr += " from federation_resolvers"
@@ -85,7 +85,7 @@ func getFederationResolverss(db *sqlx.DB) (interface{}, error) {
 // @Success 200 {object}    output_format.ApiWrapper
 // @Resource /api/2.0
 // @Router /api/2.0/federation_resolvers [post]
-func postFederationResolvers(payload []byte, db *sqlx.DB) (interface{}, error) {
+func postFederationResolver(payload []byte, db *sqlx.DB) (interface{}, error) {
 	var v FederationResolvers
 	err := json.Unmarshal(payload, &v)
 	if err != nil {
@@ -117,7 +117,7 @@ func postFederationResolvers(payload []byte, db *sqlx.DB) (interface{}, error) {
 // @Success 200 {object}    output_format.ApiWrapper
 // @Resource /api/2.0
 // @Router /api/2.0/federation_resolvers/{id}  [put]
-func putFederationResolvers(id int64, payload []byte, db *sqlx.DB) (interface{}, error) {
+func putFederationResolver(id int64, payload []byte, db *sqlx.DB) (interface{}, error) {
 	var arg FederationResolvers
 	err := json.Unmarshal(payload, &arg)
 	arg.Id = id
@@ -145,7 +145,7 @@ func putFederationResolvers(id int64, payload []byte, db *sqlx.DB) (interface{},
 // @Success 200 {array}    FederationResolvers
 // @Resource /api/2.0
 // @Router /api/2.0/federation_resolvers/{id} [delete]
-func delFederationResolvers(id int64, db *sqlx.DB) (interface{}, error) {
+func delFederationResolver(id int64, db *sqlx.DB) (interface{}, error) {
 	arg := FederationResolvers{}
 	arg.Id = id
 	result, err := db.NamedExec("DELETE FROM federation_resolvers WHERE id=:id", arg)

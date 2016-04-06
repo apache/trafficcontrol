@@ -48,7 +48,7 @@ type StaticdnsentriesTypesLink struct {
 // @Success 200 {array}    StaticdnsentriesTypes
 // @Resource /api/2.0
 // @Router /api/2.0/staticdnsentries_types/{id} [get]
-func getStaticdnsentriesTypesById(name string, db *sqlx.DB) (interface{}, error) {
+func getStaticdnsentriesType(name string, db *sqlx.DB) (interface{}, error) {
 	ret := []StaticdnsentriesTypes{}
 	arg := StaticdnsentriesTypes{}
 	arg.Name = name
@@ -70,7 +70,7 @@ func getStaticdnsentriesTypesById(name string, db *sqlx.DB) (interface{}, error)
 // @Success 200 {array}    StaticdnsentriesTypes
 // @Resource /api/2.0
 // @Router /api/2.0/staticdnsentries_types [get]
-func getStaticdnsentriesTypess(db *sqlx.DB) (interface{}, error) {
+func getStaticdnsentriesTypes(db *sqlx.DB) (interface{}, error) {
 	ret := []StaticdnsentriesTypes{}
 	queryStr := "select *, concat('" + API_PATH + "staticdnsentries_types/', name) as self"
 	queryStr += " from staticdnsentries_types"
@@ -89,7 +89,7 @@ func getStaticdnsentriesTypess(db *sqlx.DB) (interface{}, error) {
 // @Success 200 {object}    output_format.ApiWrapper
 // @Resource /api/2.0
 // @Router /api/2.0/staticdnsentries_types [post]
-func postStaticdnsentriesTypes(payload []byte, db *sqlx.DB) (interface{}, error) {
+func postStaticdnsentriesType(payload []byte, db *sqlx.DB) (interface{}, error) {
 	var v StaticdnsentriesTypes
 	err := json.Unmarshal(payload, &v)
 	if err != nil {
@@ -121,7 +121,7 @@ func postStaticdnsentriesTypes(payload []byte, db *sqlx.DB) (interface{}, error)
 // @Success 200 {object}    output_format.ApiWrapper
 // @Resource /api/2.0
 // @Router /api/2.0/staticdnsentries_types/{id}  [put]
-func putStaticdnsentriesTypes(name string, payload []byte, db *sqlx.DB) (interface{}, error) {
+func putStaticdnsentriesType(name string, payload []byte, db *sqlx.DB) (interface{}, error) {
 	var arg StaticdnsentriesTypes
 	err := json.Unmarshal(payload, &arg)
 	arg.Name = name
@@ -149,7 +149,7 @@ func putStaticdnsentriesTypes(name string, payload []byte, db *sqlx.DB) (interfa
 // @Success 200 {array}    StaticdnsentriesTypes
 // @Resource /api/2.0
 // @Router /api/2.0/staticdnsentries_types/{id} [delete]
-func delStaticdnsentriesTypes(name string, db *sqlx.DB) (interface{}, error) {
+func delStaticdnsentriesType(name string, db *sqlx.DB) (interface{}, error) {
 	arg := StaticdnsentriesTypes{}
 	arg.Name = name
 	result, err := db.NamedExec("DELETE FROM staticdnsentries_types WHERE name=:name", arg)

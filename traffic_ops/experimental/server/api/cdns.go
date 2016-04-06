@@ -47,7 +47,7 @@ type CdnsLink struct {
 // @Success 200 {array}    Cdns
 // @Resource /api/2.0
 // @Router /api/2.0/cdns/{id} [get]
-func getCdnsById(name string, db *sqlx.DB) (interface{}, error) {
+func getCdn(name string, db *sqlx.DB) (interface{}, error) {
 	ret := []Cdns{}
 	arg := Cdns{}
 	arg.Name = name
@@ -69,7 +69,7 @@ func getCdnsById(name string, db *sqlx.DB) (interface{}, error) {
 // @Success 200 {array}    Cdns
 // @Resource /api/2.0
 // @Router /api/2.0/cdns [get]
-func getCdnss(db *sqlx.DB) (interface{}, error) {
+func getCdns(db *sqlx.DB) (interface{}, error) {
 	ret := []Cdns{}
 	queryStr := "select *, concat('" + API_PATH + "cdns/', name) as self"
 	queryStr += " from cdns"
@@ -88,7 +88,7 @@ func getCdnss(db *sqlx.DB) (interface{}, error) {
 // @Success 200 {object}    output_format.ApiWrapper
 // @Resource /api/2.0
 // @Router /api/2.0/cdns [post]
-func postCdns(payload []byte, db *sqlx.DB) (interface{}, error) {
+func postCdn(payload []byte, db *sqlx.DB) (interface{}, error) {
 	var v Cdns
 	err := json.Unmarshal(payload, &v)
 	if err != nil {
@@ -118,7 +118,7 @@ func postCdns(payload []byte, db *sqlx.DB) (interface{}, error) {
 // @Success 200 {object}    output_format.ApiWrapper
 // @Resource /api/2.0
 // @Router /api/2.0/cdns/{id}  [put]
-func putCdns(name string, payload []byte, db *sqlx.DB) (interface{}, error) {
+func putCdn(name string, payload []byte, db *sqlx.DB) (interface{}, error) {
 	var arg Cdns
 	err := json.Unmarshal(payload, &arg)
 	arg.Name = name
@@ -145,7 +145,7 @@ func putCdns(name string, payload []byte, db *sqlx.DB) (interface{}, error) {
 // @Success 200 {array}    Cdns
 // @Resource /api/2.0
 // @Router /api/2.0/cdns/{id} [delete]
-func delCdns(name string, db *sqlx.DB) (interface{}, error) {
+func delCdn(name string, db *sqlx.DB) (interface{}, error) {
 	arg := Cdns{}
 	arg.Name = name
 	result, err := db.NamedExec("DELETE FROM cdns WHERE name=:name", arg)

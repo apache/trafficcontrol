@@ -47,7 +47,7 @@ type LogLinks struct {
 // @Success 200 {array}    Log
 // @Resource /api/2.0
 // @Router /api/2.0/log/{id} [get]
-func getLogById(id int64, db *sqlx.DB) (interface{}, error) {
+func getLog(id int64, db *sqlx.DB) (interface{}, error) {
 	ret := []Log{}
 	arg := Log{}
 	arg.Id = id

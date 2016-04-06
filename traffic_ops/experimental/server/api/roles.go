@@ -48,7 +48,7 @@ type RolesLink struct {
 // @Success 200 {array}    Roles
 // @Resource /api/2.0
 // @Router /api/2.0/roles/{id} [get]
-func getRolesById(name string, db *sqlx.DB) (interface{}, error) {
+func getRole(name string, db *sqlx.DB) (interface{}, error) {
 	ret := []Roles{}
 	arg := Roles{}
 	arg.Name = name
@@ -70,7 +70,7 @@ func getRolesById(name string, db *sqlx.DB) (interface{}, error) {
 // @Success 200 {array}    Roles
 // @Resource /api/2.0
 // @Router /api/2.0/roles [get]
-func getRoless(db *sqlx.DB) (interface{}, error) {
+func getRoles(db *sqlx.DB) (interface{}, error) {
 	ret := []Roles{}
 	queryStr := "select *, concat('" + API_PATH + "roles/', name) as self"
 	queryStr += " from roles"
@@ -89,7 +89,7 @@ func getRoless(db *sqlx.DB) (interface{}, error) {
 // @Success 200 {object}    output_format.ApiWrapper
 // @Resource /api/2.0
 // @Router /api/2.0/roles [post]
-func postRoles(payload []byte, db *sqlx.DB) (interface{}, error) {
+func postRole(payload []byte, db *sqlx.DB) (interface{}, error) {
 	var v Roles
 	err := json.Unmarshal(payload, &v)
 	if err != nil {
@@ -121,7 +121,7 @@ func postRoles(payload []byte, db *sqlx.DB) (interface{}, error) {
 // @Success 200 {object}    output_format.ApiWrapper
 // @Resource /api/2.0
 // @Router /api/2.0/roles/{id}  [put]
-func putRoles(name string, payload []byte, db *sqlx.DB) (interface{}, error) {
+func putRole(name string, payload []byte, db *sqlx.DB) (interface{}, error) {
 	var arg Roles
 	err := json.Unmarshal(payload, &arg)
 	arg.Name = name
@@ -149,7 +149,7 @@ func putRoles(name string, payload []byte, db *sqlx.DB) (interface{}, error) {
 // @Success 200 {array}    Roles
 // @Resource /api/2.0
 // @Router /api/2.0/roles/{id} [delete]
-func delRoles(name string, db *sqlx.DB) (interface{}, error) {
+func delRole(name string, db *sqlx.DB) (interface{}, error) {
 	arg := Roles{}
 	arg.Name = name
 	result, err := db.NamedExec("DELETE FROM roles WHERE name=:name", arg)

@@ -69,7 +69,7 @@ type ServersLinks struct {
 // @Success 200 {array}    Servers
 // @Resource /api/2.0
 // @Router /api/2.0/servers/{id} [get]
-func GetServersById(hostName string, tcpPort int64, db *sqlx.DB) (interface{}, error) {
+func GetServer(hostName string, tcpPort int64, db *sqlx.DB) (interface{}, error) {
 	ret := []Servers{}
 	arg := Servers{}
 	arg.HostName = hostName
@@ -94,7 +94,7 @@ func GetServersById(hostName string, tcpPort int64, db *sqlx.DB) (interface{}, e
 // @Success 200 {array}    Servers
 // @Resource /api/2.0
 // @Router /api/2.0/servers [get]
-func getServerss(db *sqlx.DB) (interface{}, error) {
+func getServers(db *sqlx.DB) (interface{}, error) {
 	ret := []Servers{}
 	queryStr := "select *, concat('" + API_PATH + "servers', '/host_name/', host_name, '/tcp_port/', tcp_port) as self"
 	queryStr += ", concat('" + API_PATH + "servers_types/', type) as servers_types_name_ref"
@@ -115,7 +115,7 @@ func getServerss(db *sqlx.DB) (interface{}, error) {
 // @Success 200 {object}    output_format.ApiWrapper
 // @Resource /api/2.0
 // @Router /api/2.0/servers [post]
-func postServers(payload []byte, db *sqlx.DB) (interface{}, error) {
+func postServer(payload []byte, db *sqlx.DB) (interface{}, error) {
 	var v Servers
 	err := json.Unmarshal(payload, &v)
 	if err != nil {
@@ -197,7 +197,7 @@ func postServers(payload []byte, db *sqlx.DB) (interface{}, error) {
 // @Success 200 {object}    output_format.ApiWrapper
 // @Resource /api/2.0
 // @Router /api/2.0/servers/{id}  [put]
-func putServers(hostName string, tcpPort int64, payload []byte, db *sqlx.DB) (interface{}, error) {
+func putServer(hostName string, tcpPort int64, payload []byte, db *sqlx.DB) (interface{}, error) {
 	var arg Servers
 	err := json.Unmarshal(payload, &arg)
 	arg.HostName = hostName
@@ -251,7 +251,7 @@ func putServers(hostName string, tcpPort int64, payload []byte, db *sqlx.DB) (in
 // @Success 200 {array}    Servers
 // @Resource /api/2.0
 // @Router /api/2.0/servers/{id} [delete]
-func delServers(hostName string, tcpPort int64, db *sqlx.DB) (interface{}, error) {
+func delServer(hostName string, tcpPort int64, db *sqlx.DB) (interface{}, error) {
 	arg := Servers{}
 	arg.HostName = hostName
 	arg.TcpPort = tcpPort

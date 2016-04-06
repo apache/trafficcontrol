@@ -48,7 +48,7 @@ type DeliveryservicesTypesLink struct {
 // @Success 200 {array}    DeliveryservicesTypes
 // @Resource /api/2.0
 // @Router /api/2.0/deliveryservices_types/{id} [get]
-func getDeliveryservicesTypesById(name string, db *sqlx.DB) (interface{}, error) {
+func getDeliveryservicesType(name string, db *sqlx.DB) (interface{}, error) {
 	ret := []DeliveryservicesTypes{}
 	arg := DeliveryservicesTypes{}
 	arg.Name = name
@@ -70,7 +70,7 @@ func getDeliveryservicesTypesById(name string, db *sqlx.DB) (interface{}, error)
 // @Success 200 {array}    DeliveryservicesTypes
 // @Resource /api/2.0
 // @Router /api/2.0/deliveryservices_types [get]
-func getDeliveryservicesTypess(db *sqlx.DB) (interface{}, error) {
+func getDeliveryservicesTypes(db *sqlx.DB) (interface{}, error) {
 	ret := []DeliveryservicesTypes{}
 	queryStr := "select *, concat('" + API_PATH + "deliveryservices_types/', name) as self"
 	queryStr += " from deliveryservices_types"
@@ -89,7 +89,7 @@ func getDeliveryservicesTypess(db *sqlx.DB) (interface{}, error) {
 // @Success 200 {object}    output_format.ApiWrapper
 // @Resource /api/2.0
 // @Router /api/2.0/deliveryservices_types [post]
-func postDeliveryservicesTypes(payload []byte, db *sqlx.DB) (interface{}, error) {
+func postDeliveryservicesType(payload []byte, db *sqlx.DB) (interface{}, error) {
 	var v DeliveryservicesTypes
 	err := json.Unmarshal(payload, &v)
 	if err != nil {
@@ -121,7 +121,7 @@ func postDeliveryservicesTypes(payload []byte, db *sqlx.DB) (interface{}, error)
 // @Success 200 {object}    output_format.ApiWrapper
 // @Resource /api/2.0
 // @Router /api/2.0/deliveryservices_types/{id}  [put]
-func putDeliveryservicesTypes(name string, payload []byte, db *sqlx.DB) (interface{}, error) {
+func putDeliveryservicesType(name string, payload []byte, db *sqlx.DB) (interface{}, error) {
 	var arg DeliveryservicesTypes
 	err := json.Unmarshal(payload, &arg)
 	arg.Name = name
@@ -149,7 +149,7 @@ func putDeliveryservicesTypes(name string, payload []byte, db *sqlx.DB) (interfa
 // @Success 200 {array}    DeliveryservicesTypes
 // @Resource /api/2.0
 // @Router /api/2.0/deliveryservices_types/{id} [delete]
-func delDeliveryservicesTypes(name string, db *sqlx.DB) (interface{}, error) {
+func delDeliveryservicesType(name string, db *sqlx.DB) (interface{}, error) {
 	arg := DeliveryservicesTypes{}
 	arg.Name = name
 	result, err := db.NamedExec("DELETE FROM deliveryservices_types WHERE name=:name", arg)

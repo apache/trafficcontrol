@@ -44,7 +44,7 @@ type FederationUsersLinks struct {
 // @Success 200 {array}    FederationUsers
 // @Resource /api/2.0
 // @Router /api/2.0/federation_users/{id} [get]
-func getFederationUsersById(federationId int64, username string, db *sqlx.DB) (interface{}, error) {
+func getFederationUser(federationId int64, username string, db *sqlx.DB) (interface{}, error) {
 	ret := []FederationUsers{}
 	arg := FederationUsers{}
 	arg.FederationId = federationId
@@ -67,7 +67,7 @@ func getFederationUsersById(federationId int64, username string, db *sqlx.DB) (i
 // @Success 200 {array}    FederationUsers
 // @Resource /api/2.0
 // @Router /api/2.0/federation_users [get]
-func getFederationUserss(db *sqlx.DB) (interface{}, error) {
+func getFederationUsers(db *sqlx.DB) (interface{}, error) {
 	ret := []FederationUsers{}
 	queryStr := "select *, concat('" + API_PATH + "federation_users', '/federation_id/', federation_id, '/username/', username) as self"
 	queryStr += " from federation_users"
@@ -86,7 +86,7 @@ func getFederationUserss(db *sqlx.DB) (interface{}, error) {
 // @Success 200 {object}    output_format.ApiWrapper
 // @Resource /api/2.0
 // @Router /api/2.0/federation_users [post]
-func postFederationUsers(payload []byte, db *sqlx.DB) (interface{}, error) {
+func postFederationUser(payload []byte, db *sqlx.DB) (interface{}, error) {
 	var v FederationUsers
 	err := json.Unmarshal(payload, &v)
 	if err != nil {
@@ -120,7 +120,7 @@ func postFederationUsers(payload []byte, db *sqlx.DB) (interface{}, error) {
 // @Success 200 {object}    output_format.ApiWrapper
 // @Resource /api/2.0
 // @Router /api/2.0/federation_users/{id}  [put]
-func putFederationUsers(federationId int64, username string, payload []byte, db *sqlx.DB) (interface{}, error) {
+func putFederationUser(federationId int64, username string, payload []byte, db *sqlx.DB) (interface{}, error) {
 	var arg FederationUsers
 	err := json.Unmarshal(payload, &arg)
 	arg.FederationId = federationId
@@ -150,7 +150,7 @@ func putFederationUsers(federationId int64, username string, payload []byte, db 
 // @Success 200 {array}    FederationUsers
 // @Resource /api/2.0
 // @Router /api/2.0/federation_users/{id} [delete]
-func delFederationUsers(federationId int64, username string, db *sqlx.DB) (interface{}, error) {
+func delFederationUser(federationId int64, username string, db *sqlx.DB) (interface{}, error) {
 	arg := FederationUsers{}
 	arg.FederationId = federationId
 	arg.Username = username

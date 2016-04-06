@@ -43,7 +43,7 @@ type DeliveryservicesServersLinks struct {
 // @Success 200 {array}    DeliveryservicesServers
 // @Resource /api/2.0
 // @Router /api/2.0/deliveryservices_servers/{id} [get]
-func getDeliveryservicesServersById(deliveryservice string, server string, db *sqlx.DB) (interface{}, error) {
+func getDeliveryservicesServer(deliveryservice string, server string, db *sqlx.DB) (interface{}, error) {
 	ret := []DeliveryservicesServers{}
 	arg := DeliveryservicesServers{}
 	arg.Deliveryservice = deliveryservice
@@ -66,7 +66,7 @@ func getDeliveryservicesServersById(deliveryservice string, server string, db *s
 // @Success 200 {array}    DeliveryservicesServers
 // @Resource /api/2.0
 // @Router /api/2.0/deliveryservices_servers [get]
-func getDeliveryservicesServerss(db *sqlx.DB) (interface{}, error) {
+func getDeliveryservicesServers(db *sqlx.DB) (interface{}, error) {
 	ret := []DeliveryservicesServers{}
 	queryStr := "select *, concat('" + API_PATH + "deliveryservices_servers', '/deliveryservice/', deliveryservice, '/server/', server) as self"
 	queryStr += " from deliveryservices_servers"
@@ -85,7 +85,7 @@ func getDeliveryservicesServerss(db *sqlx.DB) (interface{}, error) {
 // @Success 200 {object}    output_format.ApiWrapper
 // @Resource /api/2.0
 // @Router /api/2.0/deliveryservices_servers [post]
-func postDeliveryservicesServers(payload []byte, db *sqlx.DB) (interface{}, error) {
+func postDeliveryservicesServer(payload []byte, db *sqlx.DB) (interface{}, error) {
 	var v DeliveryservicesServers
 	err := json.Unmarshal(payload, &v)
 	if err != nil {
@@ -117,7 +117,7 @@ func postDeliveryservicesServers(payload []byte, db *sqlx.DB) (interface{}, erro
 // @Success 200 {object}    output_format.ApiWrapper
 // @Resource /api/2.0
 // @Router /api/2.0/deliveryservices_servers/{id}  [put]
-func putDeliveryservicesServers(deliveryservice string, server string, payload []byte, db *sqlx.DB) (interface{}, error) {
+func putDeliveryservicesServer(deliveryservice string, server string, payload []byte, db *sqlx.DB) (interface{}, error) {
 	var arg DeliveryservicesServers
 	err := json.Unmarshal(payload, &arg)
 	arg.Deliveryservice = deliveryservice
@@ -146,7 +146,7 @@ func putDeliveryservicesServers(deliveryservice string, server string, payload [
 // @Success 200 {array}    DeliveryservicesServers
 // @Resource /api/2.0
 // @Router /api/2.0/deliveryservices_servers/{id} [delete]
-func delDeliveryservicesServers(deliveryservice string, server string, db *sqlx.DB) (interface{}, error) {
+func delDeliveryservicesServer(deliveryservice string, server string, db *sqlx.DB) (interface{}, error) {
 	arg := DeliveryservicesServers{}
 	arg.Deliveryservice = deliveryservice
 	arg.Server = server

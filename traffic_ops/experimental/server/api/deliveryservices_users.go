@@ -43,7 +43,7 @@ type DeliveryservicesUsersLinks struct {
 // @Success 200 {array}    DeliveryservicesUsers
 // @Resource /api/2.0
 // @Router /api/2.0/deliveryservices_users/{id} [get]
-func getDeliveryservicesUsersById(deliveryservice string, username string, db *sqlx.DB) (interface{}, error) {
+func getDeliveryservicesUser(deliveryservice string, username string, db *sqlx.DB) (interface{}, error) {
 	ret := []DeliveryservicesUsers{}
 	arg := DeliveryservicesUsers{}
 	arg.Deliveryservice = deliveryservice
@@ -66,7 +66,7 @@ func getDeliveryservicesUsersById(deliveryservice string, username string, db *s
 // @Success 200 {array}    DeliveryservicesUsers
 // @Resource /api/2.0
 // @Router /api/2.0/deliveryservices_users [get]
-func getDeliveryservicesUserss(db *sqlx.DB) (interface{}, error) {
+func getDeliveryservicesUsers(db *sqlx.DB) (interface{}, error) {
 	ret := []DeliveryservicesUsers{}
 	queryStr := "select *, concat('" + API_PATH + "deliveryservices_users', '/deliveryservice/', deliveryservice, '/username/', username) as self"
 	queryStr += " from deliveryservices_users"
@@ -85,7 +85,7 @@ func getDeliveryservicesUserss(db *sqlx.DB) (interface{}, error) {
 // @Success 200 {object}    output_format.ApiWrapper
 // @Resource /api/2.0
 // @Router /api/2.0/deliveryservices_users [post]
-func postDeliveryservicesUsers(payload []byte, db *sqlx.DB) (interface{}, error) {
+func postDeliveryservicesUser(payload []byte, db *sqlx.DB) (interface{}, error) {
 	var v DeliveryservicesUsers
 	err := json.Unmarshal(payload, &v)
 	if err != nil {
@@ -117,7 +117,7 @@ func postDeliveryservicesUsers(payload []byte, db *sqlx.DB) (interface{}, error)
 // @Success 200 {object}    output_format.ApiWrapper
 // @Resource /api/2.0
 // @Router /api/2.0/deliveryservices_users/{id}  [put]
-func putDeliveryservicesUsers(deliveryservice string, username string, payload []byte, db *sqlx.DB) (interface{}, error) {
+func putDeliveryservicesUser(deliveryservice string, username string, payload []byte, db *sqlx.DB) (interface{}, error) {
 	var arg DeliveryservicesUsers
 	err := json.Unmarshal(payload, &arg)
 	arg.Deliveryservice = deliveryservice
@@ -146,7 +146,7 @@ func putDeliveryservicesUsers(deliveryservice string, username string, payload [
 // @Success 200 {array}    DeliveryservicesUsers
 // @Resource /api/2.0
 // @Router /api/2.0/deliveryservices_users/{id} [delete]
-func delDeliveryservicesUsers(deliveryservice string, username string, db *sqlx.DB) (interface{}, error) {
+func delDeliveryservicesUser(deliveryservice string, username string, db *sqlx.DB) (interface{}, error) {
 	arg := DeliveryservicesUsers{}
 	arg.Deliveryservice = deliveryservice
 	arg.Username = username

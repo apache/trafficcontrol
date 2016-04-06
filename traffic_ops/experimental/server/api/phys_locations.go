@@ -53,7 +53,7 @@ type PhysLocationsLinks struct {
 // @Success 200 {array}    PhysLocations
 // @Resource /api/2.0
 // @Router /api/2.0/phys_locations/{id} [get]
-func getPhysLocationsById(name string, db *sqlx.DB) (interface{}, error) {
+func getPhysLocation(name string, db *sqlx.DB) (interface{}, error) {
 	ret := []PhysLocations{}
 	arg := PhysLocations{}
 	arg.Name = name
@@ -75,7 +75,7 @@ func getPhysLocationsById(name string, db *sqlx.DB) (interface{}, error) {
 // @Success 200 {array}    PhysLocations
 // @Resource /api/2.0
 // @Router /api/2.0/phys_locations [get]
-func getPhysLocationss(db *sqlx.DB) (interface{}, error) {
+func getPhysLocations(db *sqlx.DB) (interface{}, error) {
 	ret := []PhysLocations{}
 	queryStr := "select *, concat('" + API_PATH + "phys_locations/', name) as self"
 	queryStr += " from phys_locations"
@@ -94,7 +94,7 @@ func getPhysLocationss(db *sqlx.DB) (interface{}, error) {
 // @Success 200 {object}    output_format.ApiWrapper
 // @Resource /api/2.0
 // @Router /api/2.0/phys_locations [post]
-func postPhysLocations(payload []byte, db *sqlx.DB) (interface{}, error) {
+func postPhysLocation(payload []byte, db *sqlx.DB) (interface{}, error) {
 	var v PhysLocations
 	err := json.Unmarshal(payload, &v)
 	if err != nil {
@@ -144,7 +144,7 @@ func postPhysLocations(payload []byte, db *sqlx.DB) (interface{}, error) {
 // @Success 200 {object}    output_format.ApiWrapper
 // @Resource /api/2.0
 // @Router /api/2.0/phys_locations/{id}  [put]
-func putPhysLocations(name string, payload []byte, db *sqlx.DB) (interface{}, error) {
+func putPhysLocation(name string, payload []byte, db *sqlx.DB) (interface{}, error) {
 	var arg PhysLocations
 	err := json.Unmarshal(payload, &arg)
 	arg.Name = name
@@ -181,7 +181,7 @@ func putPhysLocations(name string, payload []byte, db *sqlx.DB) (interface{}, er
 // @Success 200 {array}    PhysLocations
 // @Resource /api/2.0
 // @Router /api/2.0/phys_locations/{id} [delete]
-func delPhysLocations(name string, db *sqlx.DB) (interface{}, error) {
+func delPhysLocation(name string, db *sqlx.DB) (interface{}, error) {
 	arg := PhysLocations{}
 	arg.Name = name
 	result, err := db.NamedExec("DELETE FROM phys_locations WHERE name=:name", arg)

@@ -43,7 +43,7 @@ type FederationsDeliveryservicesLinks struct {
 // @Success 200 {array}    FederationsDeliveryservices
 // @Resource /api/2.0
 // @Router /api/2.0/federations_deliveryservices/{id} [get]
-func getFederationsDeliveryservicesById(federationId int64, deliveryservice string, db *sqlx.DB) (interface{}, error) {
+func getFederationsDeliveryservice(federationId int64, deliveryservice string, db *sqlx.DB) (interface{}, error) {
 	ret := []FederationsDeliveryservices{}
 	arg := FederationsDeliveryservices{}
 	arg.FederationId = federationId
@@ -66,7 +66,7 @@ func getFederationsDeliveryservicesById(federationId int64, deliveryservice stri
 // @Success 200 {array}    FederationsDeliveryservices
 // @Resource /api/2.0
 // @Router /api/2.0/federations_deliveryservices [get]
-func getFederationsDeliveryservicess(db *sqlx.DB) (interface{}, error) {
+func getFederationsDeliveryservices(db *sqlx.DB) (interface{}, error) {
 	ret := []FederationsDeliveryservices{}
 	queryStr := "select *, concat('" + API_PATH + "federations_deliveryservices', '/federation_id/', federation_id, '/deliveryservice/', deliveryservice) as self"
 	queryStr += " from federations_deliveryservices"
@@ -85,7 +85,7 @@ func getFederationsDeliveryservicess(db *sqlx.DB) (interface{}, error) {
 // @Success 200 {object}    output_format.ApiWrapper
 // @Resource /api/2.0
 // @Router /api/2.0/federations_deliveryservices [post]
-func postFederationsDeliveryservices(payload []byte, db *sqlx.DB) (interface{}, error) {
+func postFederationsDeliveryservice(payload []byte, db *sqlx.DB) (interface{}, error) {
 	var v FederationsDeliveryservices
 	err := json.Unmarshal(payload, &v)
 	if err != nil {
@@ -117,7 +117,7 @@ func postFederationsDeliveryservices(payload []byte, db *sqlx.DB) (interface{}, 
 // @Success 200 {object}    output_format.ApiWrapper
 // @Resource /api/2.0
 // @Router /api/2.0/federations_deliveryservices/{id}  [put]
-func putFederationsDeliveryservices(federationId int64, deliveryservice string, payload []byte, db *sqlx.DB) (interface{}, error) {
+func putFederationsDeliveryservice(federationId int64, deliveryservice string, payload []byte, db *sqlx.DB) (interface{}, error) {
 	var arg FederationsDeliveryservices
 	err := json.Unmarshal(payload, &arg)
 	arg.FederationId = federationId
@@ -146,7 +146,7 @@ func putFederationsDeliveryservices(federationId int64, deliveryservice string, 
 // @Success 200 {array}    FederationsDeliveryservices
 // @Resource /api/2.0
 // @Router /api/2.0/federations_deliveryservices/{id} [delete]
-func delFederationsDeliveryservices(federationId int64, deliveryservice string, db *sqlx.DB) (interface{}, error) {
+func delFederationsDeliveryservice(federationId int64, deliveryservice string, db *sqlx.DB) (interface{}, error) {
 	arg := FederationsDeliveryservices{}
 	arg.FederationId = federationId
 	arg.Deliveryservice = deliveryservice

@@ -48,7 +48,7 @@ type ProfilesLink struct {
 // @Success 200 {array}    Profiles
 // @Resource /api/2.0
 // @Router /api/2.0/profiles/{id} [get]
-func getProfilesById(name string, db *sqlx.DB) (interface{}, error) {
+func getProfile(name string, db *sqlx.DB) (interface{}, error) {
 	ret := []Profiles{}
 	arg := Profiles{}
 	arg.Name = name
@@ -70,7 +70,7 @@ func getProfilesById(name string, db *sqlx.DB) (interface{}, error) {
 // @Success 200 {array}    Profiles
 // @Resource /api/2.0
 // @Router /api/2.0/profiles [get]
-func getProfiless(db *sqlx.DB) (interface{}, error) {
+func getProfiles(db *sqlx.DB) (interface{}, error) {
 	ret := []Profiles{}
 	queryStr := "select *, concat('" + API_PATH + "profiles/', name) as self"
 	queryStr += " from profiles"
@@ -89,7 +89,7 @@ func getProfiless(db *sqlx.DB) (interface{}, error) {
 // @Success 200 {object}    output_format.ApiWrapper
 // @Resource /api/2.0
 // @Router /api/2.0/profiles [post]
-func postProfiles(payload []byte, db *sqlx.DB) (interface{}, error) {
+func postProfile(payload []byte, db *sqlx.DB) (interface{}, error) {
 	var v Profiles
 	err := json.Unmarshal(payload, &v)
 	if err != nil {
@@ -121,7 +121,7 @@ func postProfiles(payload []byte, db *sqlx.DB) (interface{}, error) {
 // @Success 200 {object}    output_format.ApiWrapper
 // @Resource /api/2.0
 // @Router /api/2.0/profiles/{id}  [put]
-func putProfiles(name string, payload []byte, db *sqlx.DB) (interface{}, error) {
+func putProfile(name string, payload []byte, db *sqlx.DB) (interface{}, error) {
 	var arg Profiles
 	err := json.Unmarshal(payload, &arg)
 	arg.Name = name
@@ -149,7 +149,7 @@ func putProfiles(name string, payload []byte, db *sqlx.DB) (interface{}, error) 
 // @Success 200 {array}    Profiles
 // @Resource /api/2.0
 // @Router /api/2.0/profiles/{id} [delete]
-func delProfiles(name string, db *sqlx.DB) (interface{}, error) {
+func delProfile(name string, db *sqlx.DB) (interface{}, error) {
 	arg := Profiles{}
 	arg.Name = name
 	result, err := db.NamedExec("DELETE FROM profiles WHERE name=:name", arg)

@@ -48,7 +48,7 @@ type CachegroupsTypesLink struct {
 // @Success 200 {array}    CachegroupsTypes
 // @Resource /api/2.0
 // @Router /api/2.0/cachegroups_types/{id} [get]
-func getCachegroupsTypesById(name string, db *sqlx.DB) (interface{}, error) {
+func getCachegroupsType(name string, db *sqlx.DB) (interface{}, error) {
 	ret := []CachegroupsTypes{}
 	arg := CachegroupsTypes{}
 	arg.Name = name
@@ -70,7 +70,7 @@ func getCachegroupsTypesById(name string, db *sqlx.DB) (interface{}, error) {
 // @Success 200 {array}    CachegroupsTypes
 // @Resource /api/2.0
 // @Router /api/2.0/cachegroups_types [get]
-func getCachegroupsTypess(db *sqlx.DB) (interface{}, error) {
+func getCachegroupsTypes(db *sqlx.DB) (interface{}, error) {
 	ret := []CachegroupsTypes{}
 	queryStr := "select *, concat('" + API_PATH + "cachegroups_types/', name) as self"
 	queryStr += " from cachegroups_types"
@@ -89,7 +89,7 @@ func getCachegroupsTypess(db *sqlx.DB) (interface{}, error) {
 // @Success 200 {object}    output_format.ApiWrapper
 // @Resource /api/2.0
 // @Router /api/2.0/cachegroups_types [post]
-func postCachegroupsTypes(payload []byte, db *sqlx.DB) (interface{}, error) {
+func postCachegroupsType(payload []byte, db *sqlx.DB) (interface{}, error) {
 	var v CachegroupsTypes
 	err := json.Unmarshal(payload, &v)
 	if err != nil {
@@ -121,7 +121,7 @@ func postCachegroupsTypes(payload []byte, db *sqlx.DB) (interface{}, error) {
 // @Success 200 {object}    output_format.ApiWrapper
 // @Resource /api/2.0
 // @Router /api/2.0/cachegroups_types/{id}  [put]
-func putCachegroupsTypes(name string, payload []byte, db *sqlx.DB) (interface{}, error) {
+func putCachegroupsType(name string, payload []byte, db *sqlx.DB) (interface{}, error) {
 	var arg CachegroupsTypes
 	err := json.Unmarshal(payload, &arg)
 	arg.Name = name
@@ -149,7 +149,7 @@ func putCachegroupsTypes(name string, payload []byte, db *sqlx.DB) (interface{},
 // @Success 200 {array}    CachegroupsTypes
 // @Resource /api/2.0
 // @Router /api/2.0/cachegroups_types/{id} [delete]
-func delCachegroupsTypes(name string, db *sqlx.DB) (interface{}, error) {
+func delCachegroupsType(name string, db *sqlx.DB) (interface{}, error) {
 	arg := CachegroupsTypes{}
 	arg.Name = name
 	result, err := db.NamedExec("DELETE FROM cachegroups_types WHERE name=:name", arg)
