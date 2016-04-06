@@ -44,7 +44,7 @@ type RegexesLinks struct {
 // @Success 200 {array}    Regexes
 // @Resource /api/2.0
 // @Router /api/2.0/regexes/{id} [get]
-func getRegexesById(id int64, db *sqlx.DB) (interface{}, error) {
+func getRegex(id int64, db *sqlx.DB) (interface{}, error) {
 	ret := []Regexes{}
 	arg := Regexes{}
 	arg.Id = id
@@ -67,7 +67,7 @@ func getRegexesById(id int64, db *sqlx.DB) (interface{}, error) {
 // @Success 200 {array}    Regexes
 // @Resource /api/2.0
 // @Router /api/2.0/regexes [get]
-func getRegexess(db *sqlx.DB) (interface{}, error) {
+func getRegexes(db *sqlx.DB) (interface{}, error) {
 	ret := []Regexes{}
 	queryStr := "select *, concat('" + API_PATH + "regexes/', id) as self"
 	queryStr += ", concat('" + API_PATH + "regexes_types/', type) as regexes_types_name_ref"
@@ -87,7 +87,7 @@ func getRegexess(db *sqlx.DB) (interface{}, error) {
 // @Success 200 {object}    output_format.ApiWrapper
 // @Resource /api/2.0
 // @Router /api/2.0/regexes [post]
-func postRegexes(payload []byte, db *sqlx.DB) (interface{}, error) {
+func postRegex(payload []byte, db *sqlx.DB) (interface{}, error) {
 	var v Regexes
 	err := json.Unmarshal(payload, &v)
 	if err != nil {
@@ -119,7 +119,7 @@ func postRegexes(payload []byte, db *sqlx.DB) (interface{}, error) {
 // @Success 200 {object}    output_format.ApiWrapper
 // @Resource /api/2.0
 // @Router /api/2.0/regexes/{id}  [put]
-func putRegexes(id int64, payload []byte, db *sqlx.DB) (interface{}, error) {
+func putRegex(id int64, payload []byte, db *sqlx.DB) (interface{}, error) {
 	var arg Regexes
 	err := json.Unmarshal(payload, &arg)
 	arg.Id = id
@@ -147,7 +147,7 @@ func putRegexes(id int64, payload []byte, db *sqlx.DB) (interface{}, error) {
 // @Success 200 {array}    Regexes
 // @Resource /api/2.0
 // @Router /api/2.0/regexes/{id} [delete]
-func delRegexes(id int64, db *sqlx.DB) (interface{}, error) {
+func delRegex(id int64, db *sqlx.DB) (interface{}, error) {
 	arg := Regexes{}
 	arg.Id = id
 	result, err := db.NamedExec("DELETE FROM regexes WHERE id=:id", arg)

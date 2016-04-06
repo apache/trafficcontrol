@@ -43,7 +43,7 @@ type FederationsFederationResolversLinks struct {
 // @Success 200 {array}    FederationsFederationResolvers
 // @Resource /api/2.0
 // @Router /api/2.0/federations_federation_resolvers/{id} [get]
-func getFederationsFederationResolversById(federationId int64, federationResolver int64, db *sqlx.DB) (interface{}, error) {
+func getFederationsFederationResolver(federationId int64, federationResolver int64, db *sqlx.DB) (interface{}, error) {
 	ret := []FederationsFederationResolvers{}
 	arg := FederationsFederationResolvers{}
 	arg.FederationId = federationId
@@ -66,7 +66,7 @@ func getFederationsFederationResolversById(federationId int64, federationResolve
 // @Success 200 {array}    FederationsFederationResolvers
 // @Resource /api/2.0
 // @Router /api/2.0/federations_federation_resolvers [get]
-func getFederationsFederationResolverss(db *sqlx.DB) (interface{}, error) {
+func getFederationsFederationResolvers(db *sqlx.DB) (interface{}, error) {
 	ret := []FederationsFederationResolvers{}
 	queryStr := "select *, concat('" + API_PATH + "federations_federation_resolvers', '/federation_id/', federation_id, '/federation_resolver/', federation_resolver) as self"
 	queryStr += " from federations_federation_resolvers"
@@ -85,7 +85,7 @@ func getFederationsFederationResolverss(db *sqlx.DB) (interface{}, error) {
 // @Success 200 {object}    output_format.ApiWrapper
 // @Resource /api/2.0
 // @Router /api/2.0/federations_federation_resolvers [post]
-func postFederationsFederationResolvers(payload []byte, db *sqlx.DB) (interface{}, error) {
+func postFederationsFederationResolver(payload []byte, db *sqlx.DB) (interface{}, error) {
 	var v FederationsFederationResolvers
 	err := json.Unmarshal(payload, &v)
 	if err != nil {
@@ -117,7 +117,7 @@ func postFederationsFederationResolvers(payload []byte, db *sqlx.DB) (interface{
 // @Success 200 {object}    output_format.ApiWrapper
 // @Resource /api/2.0
 // @Router /api/2.0/federations_federation_resolvers/{id}  [put]
-func putFederationsFederationResolvers(federationId int64, federationResolver int64, payload []byte, db *sqlx.DB) (interface{}, error) {
+func putFederationsFederationResolver(federationId int64, federationResolver int64, payload []byte, db *sqlx.DB) (interface{}, error) {
 	var arg FederationsFederationResolvers
 	err := json.Unmarshal(payload, &arg)
 	arg.FederationId = federationId
@@ -146,7 +146,7 @@ func putFederationsFederationResolvers(federationId int64, federationResolver in
 // @Success 200 {array}    FederationsFederationResolvers
 // @Resource /api/2.0
 // @Router /api/2.0/federations_federation_resolvers/{id} [delete]
-func delFederationsFederationResolvers(federationId int64, federationResolver int64, db *sqlx.DB) (interface{}, error) {
+func delFederationsFederationResolver(federationId int64, federationResolver int64, db *sqlx.DB) (interface{}, error) {
 	arg := FederationsFederationResolvers{}
 	arg.FederationId = federationId
 	arg.FederationResolver = federationResolver

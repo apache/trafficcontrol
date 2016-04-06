@@ -44,7 +44,7 @@ type StatusesLinks struct {
 // @Success 200 {array}    Statuses
 // @Resource /api/2.0
 // @Router /api/2.0/statuses/{id} [get]
-func getStatusesById(name string, db *sqlx.DB) (interface{}, error) {
+func getStatus(name string, db *sqlx.DB) (interface{}, error) {
 	ret := []Statuses{}
 	arg := Statuses{}
 	arg.Name = name
@@ -66,7 +66,7 @@ func getStatusesById(name string, db *sqlx.DB) (interface{}, error) {
 // @Success 200 {array}    Statuses
 // @Resource /api/2.0
 // @Router /api/2.0/statuses [get]
-func getStatusess(db *sqlx.DB) (interface{}, error) {
+func getStatuses(db *sqlx.DB) (interface{}, error) {
 	ret := []Statuses{}
 	queryStr := "select *, concat('" + API_PATH + "statuses/', name) as self"
 	queryStr += " from statuses"
@@ -85,7 +85,7 @@ func getStatusess(db *sqlx.DB) (interface{}, error) {
 // @Success 200 {object}    output_format.ApiWrapper
 // @Resource /api/2.0
 // @Router /api/2.0/statuses [post]
-func postStatuses(payload []byte, db *sqlx.DB) (interface{}, error) {
+func postStatus(payload []byte, db *sqlx.DB) (interface{}, error) {
 	var v Statuses
 	err := json.Unmarshal(payload, &v)
 	if err != nil {
@@ -117,7 +117,7 @@ func postStatuses(payload []byte, db *sqlx.DB) (interface{}, error) {
 // @Success 200 {object}    output_format.ApiWrapper
 // @Resource /api/2.0
 // @Router /api/2.0/statuses/{id}  [put]
-func putStatuses(name string, payload []byte, db *sqlx.DB) (interface{}, error) {
+func putStatus(name string, payload []byte, db *sqlx.DB) (interface{}, error) {
 	var arg Statuses
 	err := json.Unmarshal(payload, &arg)
 	arg.Name = name
@@ -145,7 +145,7 @@ func putStatuses(name string, payload []byte, db *sqlx.DB) (interface{}, error) 
 // @Success 200 {array}    Statuses
 // @Resource /api/2.0
 // @Router /api/2.0/statuses/{id} [delete]
-func delStatuses(name string, db *sqlx.DB) (interface{}, error) {
+func delStatus(name string, db *sqlx.DB) (interface{}, error) {
 	arg := Statuses{}
 	arg.Name = name
 	result, err := db.NamedExec("DELETE FROM statuses WHERE name=:name", arg)

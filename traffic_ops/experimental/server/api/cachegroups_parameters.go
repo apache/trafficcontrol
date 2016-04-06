@@ -43,7 +43,7 @@ type CachegroupsParametersLinks struct {
 // @Success 200 {array}    CachegroupsParameters
 // @Resource /api/2.0
 // @Router /api/2.0/cachegroups_parameters/{id} [get]
-func getCachegroupsParametersById(cachegroup string, parameterId int64, db *sqlx.DB) (interface{}, error) {
+func getCachegroupsParameter(cachegroup string, parameterId int64, db *sqlx.DB) (interface{}, error) {
 	ret := []CachegroupsParameters{}
 	arg := CachegroupsParameters{}
 	arg.Links.CachegroupsLink.ID = cachegroup
@@ -68,7 +68,7 @@ func getCachegroupsParametersById(cachegroup string, parameterId int64, db *sqlx
 // @Success 200 {array}    CachegroupsParameters
 // @Resource /api/2.0
 // @Router /api/2.0/cachegroups_parameters [get]
-func getCachegroupsParameterss(db *sqlx.DB) (interface{}, error) {
+func getCachegroupsParameters(db *sqlx.DB) (interface{}, error) {
 	ret := []CachegroupsParameters{}
 	queryStr := "select *, concat('" + API_PATH + "cachegroups_parameters', '/cachegroup/', cachegroup, '/parameter_id/', parameter_id) as self"
 	queryStr += ", concat('" + API_PATH + "cachegroups/', cachegroup) as cachegroups_name_ref"
@@ -89,7 +89,7 @@ func getCachegroupsParameterss(db *sqlx.DB) (interface{}, error) {
 // @Success 200 {object}    output_format.ApiWrapper
 // @Resource /api/2.0
 // @Router /api/2.0/cachegroups_parameters [post]
-func postCachegroupsParameters(payload []byte, db *sqlx.DB) (interface{}, error) {
+func postCachegroupsParameter(payload []byte, db *sqlx.DB) (interface{}, error) {
 	var v CachegroupsParameters
 	err := json.Unmarshal(payload, &v)
 	if err != nil {
@@ -121,7 +121,7 @@ func postCachegroupsParameters(payload []byte, db *sqlx.DB) (interface{}, error)
 // @Success 200 {object}    output_format.ApiWrapper
 // @Resource /api/2.0
 // @Router /api/2.0/cachegroups_parameters/{id}  [put]
-func putCachegroupsParameters(cachegroup string, parameterId int64, payload []byte, db *sqlx.DB) (interface{}, error) {
+func putCachegroupsParameter(cachegroup string, parameterId int64, payload []byte, db *sqlx.DB) (interface{}, error) {
 	var arg CachegroupsParameters
 	err := json.Unmarshal(payload, &arg)
 	arg.Links.CachegroupsLink.ID = cachegroup
@@ -150,7 +150,7 @@ func putCachegroupsParameters(cachegroup string, parameterId int64, payload []by
 // @Success 200 {array}    CachegroupsParameters
 // @Resource /api/2.0
 // @Router /api/2.0/cachegroups_parameters/{id} [delete]
-func delCachegroupsParameters(cachegroup string, parameterId int64, db *sqlx.DB) (interface{}, error) {
+func delCachegroupsParameter(cachegroup string, parameterId int64, db *sqlx.DB) (interface{}, error) {
 	arg := CachegroupsParameters{}
 	arg.Links.CachegroupsLink.ID = cachegroup
 	arg.Links.ParametersLink.ID = parameterId

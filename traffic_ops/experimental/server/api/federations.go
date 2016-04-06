@@ -46,7 +46,7 @@ type FederationsLinks struct {
 // @Success 200 {array}    Federations
 // @Resource /api/2.0
 // @Router /api/2.0/federations/{id} [get]
-func getFederationsById(id int64, db *sqlx.DB) (interface{}, error) {
+func getFederation(id int64, db *sqlx.DB) (interface{}, error) {
 	ret := []Federations{}
 	arg := Federations{}
 	arg.Id = id
@@ -68,7 +68,7 @@ func getFederationsById(id int64, db *sqlx.DB) (interface{}, error) {
 // @Success 200 {array}    Federations
 // @Resource /api/2.0
 // @Router /api/2.0/federations [get]
-func getFederationss(db *sqlx.DB) (interface{}, error) {
+func getFederations(db *sqlx.DB) (interface{}, error) {
 	ret := []Federations{}
 	queryStr := "select *, concat('" + API_PATH + "federations/', id) as self"
 	queryStr += " from federations"
@@ -87,7 +87,7 @@ func getFederationss(db *sqlx.DB) (interface{}, error) {
 // @Success 200 {object}    output_format.ApiWrapper
 // @Resource /api/2.0
 // @Router /api/2.0/federations [post]
-func postFederations(payload []byte, db *sqlx.DB) (interface{}, error) {
+func postFederation(payload []byte, db *sqlx.DB) (interface{}, error) {
 	var v Federations
 	err := json.Unmarshal(payload, &v)
 	if err != nil {
@@ -121,7 +121,7 @@ func postFederations(payload []byte, db *sqlx.DB) (interface{}, error) {
 // @Success 200 {object}    output_format.ApiWrapper
 // @Resource /api/2.0
 // @Router /api/2.0/federations/{id}  [put]
-func putFederations(id int64, payload []byte, db *sqlx.DB) (interface{}, error) {
+func putFederation(id int64, payload []byte, db *sqlx.DB) (interface{}, error) {
 	var arg Federations
 	err := json.Unmarshal(payload, &arg)
 	arg.Id = id
@@ -150,7 +150,7 @@ func putFederations(id int64, payload []byte, db *sqlx.DB) (interface{}, error) 
 // @Success 200 {array}    Federations
 // @Resource /api/2.0
 // @Router /api/2.0/federations/{id} [delete]
-func delFederations(id int64, db *sqlx.DB) (interface{}, error) {
+func delFederation(id int64, db *sqlx.DB) (interface{}, error) {
 	arg := Federations{}
 	arg.Id = id
 	result, err := db.NamedExec("DELETE FROM federations WHERE id=:id", arg)

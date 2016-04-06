@@ -48,7 +48,7 @@ type ServersTypesLink struct {
 // @Success 200 {array}    ServersTypes
 // @Resource /api/2.0
 // @Router /api/2.0/servers_types/{id} [get]
-func getServersTypesById(name string, db *sqlx.DB) (interface{}, error) {
+func getServersType(name string, db *sqlx.DB) (interface{}, error) {
 	ret := []ServersTypes{}
 	arg := ServersTypes{}
 	arg.Name = name
@@ -70,7 +70,7 @@ func getServersTypesById(name string, db *sqlx.DB) (interface{}, error) {
 // @Success 200 {array}    ServersTypes
 // @Resource /api/2.0
 // @Router /api/2.0/servers_types [get]
-func getServersTypess(db *sqlx.DB) (interface{}, error) {
+func getServersTypes(db *sqlx.DB) (interface{}, error) {
 	ret := []ServersTypes{}
 	queryStr := "select *, concat('" + API_PATH + "servers_types/', name) as self"
 	queryStr += " from servers_types"
@@ -89,7 +89,7 @@ func getServersTypess(db *sqlx.DB) (interface{}, error) {
 // @Success 200 {object}    output_format.ApiWrapper
 // @Resource /api/2.0
 // @Router /api/2.0/servers_types [post]
-func postServersTypes(payload []byte, db *sqlx.DB) (interface{}, error) {
+func postServersType(payload []byte, db *sqlx.DB) (interface{}, error) {
 	var v ServersTypes
 	err := json.Unmarshal(payload, &v)
 	if err != nil {
@@ -121,7 +121,7 @@ func postServersTypes(payload []byte, db *sqlx.DB) (interface{}, error) {
 // @Success 200 {object}    output_format.ApiWrapper
 // @Resource /api/2.0
 // @Router /api/2.0/servers_types/{id}  [put]
-func putServersTypes(name string, payload []byte, db *sqlx.DB) (interface{}, error) {
+func putServersType(name string, payload []byte, db *sqlx.DB) (interface{}, error) {
 	var arg ServersTypes
 	err := json.Unmarshal(payload, &arg)
 	arg.Name = name
@@ -149,7 +149,7 @@ func putServersTypes(name string, payload []byte, db *sqlx.DB) (interface{}, err
 // @Success 200 {array}    ServersTypes
 // @Resource /api/2.0
 // @Router /api/2.0/servers_types/{id} [delete]
-func delServersTypes(name string, db *sqlx.DB) (interface{}, error) {
+func delServersType(name string, db *sqlx.DB) (interface{}, error) {
 	arg := ServersTypes{}
 	arg.Name = name
 	result, err := db.NamedExec("DELETE FROM servers_types WHERE name=:name", arg)

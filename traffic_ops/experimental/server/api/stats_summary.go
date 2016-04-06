@@ -46,7 +46,7 @@ type StatsSummaryLinks struct {
 // @Success 200 {array}    StatsSummary
 // @Resource /api/2.0
 // @Router /api/2.0/stats_summary/{id} [get]
-func getStatsSummaryById(cdnName string, deliveryservice string, statName string, statDate time.Time, db *sqlx.DB) (interface{}, error) {
+func getStatsSummary(cdnName string, deliveryservice string, statName string, statDate time.Time, db *sqlx.DB) (interface{}, error) {
 	ret := []StatsSummary{}
 	arg := StatsSummary{}
 	arg.CdnName = cdnName
@@ -71,7 +71,7 @@ func getStatsSummaryById(cdnName string, deliveryservice string, statName string
 // @Success 200 {array}    StatsSummary
 // @Resource /api/2.0
 // @Router /api/2.0/stats_summary [get]
-func getStatsSummarys(db *sqlx.DB) (interface{}, error) {
+func getStatsSummaries(db *sqlx.DB) (interface{}, error) {
 	ret := []StatsSummary{}
 	queryStr := "select *, concat('" + API_PATH + "stats_summary', '/cdn_name/', cdn_name, '/deliveryservice/', deliveryservice, '/stat_name/', stat_name, '/stat_date/', stat_date) as self"
 	queryStr += " from stats_summary"

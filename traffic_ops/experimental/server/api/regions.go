@@ -43,7 +43,7 @@ type RegionsLinks struct {
 // @Success 200 {array}    Regions
 // @Resource /api/2.0
 // @Router /api/2.0/regions/{id} [get]
-func getRegionsById(name string, db *sqlx.DB) (interface{}, error) {
+func getRegion(name string, db *sqlx.DB) (interface{}, error) {
 	ret := []Regions{}
 	arg := Regions{}
 	arg.Name = name
@@ -65,7 +65,7 @@ func getRegionsById(name string, db *sqlx.DB) (interface{}, error) {
 // @Success 200 {array}    Regions
 // @Resource /api/2.0
 // @Router /api/2.0/regions [get]
-func getRegionss(db *sqlx.DB) (interface{}, error) {
+func getRegions(db *sqlx.DB) (interface{}, error) {
 	ret := []Regions{}
 	queryStr := "select *, concat('" + API_PATH + "regions/', name) as self"
 	queryStr += " from regions"
@@ -84,7 +84,7 @@ func getRegionss(db *sqlx.DB) (interface{}, error) {
 // @Success 200 {object}    output_format.ApiWrapper
 // @Resource /api/2.0
 // @Router /api/2.0/regions [post]
-func postRegions(payload []byte, db *sqlx.DB) (interface{}, error) {
+func postRegion(payload []byte, db *sqlx.DB) (interface{}, error) {
 	var v Regions
 	err := json.Unmarshal(payload, &v)
 	if err != nil {
@@ -116,7 +116,7 @@ func postRegions(payload []byte, db *sqlx.DB) (interface{}, error) {
 // @Success 200 {object}    output_format.ApiWrapper
 // @Resource /api/2.0
 // @Router /api/2.0/regions/{id}  [put]
-func putRegions(name string, payload []byte, db *sqlx.DB) (interface{}, error) {
+func putRegion(name string, payload []byte, db *sqlx.DB) (interface{}, error) {
 	var arg Regions
 	err := json.Unmarshal(payload, &arg)
 	arg.Name = name
@@ -144,7 +144,7 @@ func putRegions(name string, payload []byte, db *sqlx.DB) (interface{}, error) {
 // @Success 200 {array}    Regions
 // @Resource /api/2.0
 // @Router /api/2.0/regions/{id} [delete]
-func delRegions(name string, db *sqlx.DB) (interface{}, error) {
+func delRegion(name string, db *sqlx.DB) (interface{}, error) {
 	arg := Regions{}
 	arg.Name = name
 	result, err := db.NamedExec("DELETE FROM regions WHERE name=:name", arg)

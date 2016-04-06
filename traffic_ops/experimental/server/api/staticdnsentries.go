@@ -50,7 +50,7 @@ type StaticdnsentriesLinks struct {
 // @Success 200 {array}    Staticdnsentries
 // @Resource /api/2.0
 // @Router /api/2.0/staticdnsentries/{id} [get]
-func getStaticdnsentriesById(id int64, db *sqlx.DB) (interface{}, error) {
+func getStaticdnsentry(id int64, db *sqlx.DB) (interface{}, error) {
 	ret := []Staticdnsentries{}
 	arg := Staticdnsentries{}
 	arg.Id = id
@@ -73,7 +73,7 @@ func getStaticdnsentriesById(id int64, db *sqlx.DB) (interface{}, error) {
 // @Success 200 {array}    Staticdnsentries
 // @Resource /api/2.0
 // @Router /api/2.0/staticdnsentries [get]
-func getStaticdnsentriess(db *sqlx.DB) (interface{}, error) {
+func getStaticdnsentries(db *sqlx.DB) (interface{}, error) {
 	ret := []Staticdnsentries{}
 	queryStr := "select *, concat('" + API_PATH + "staticdnsentries/', id) as self"
 	queryStr += ", concat('" + API_PATH + "staticdnsentries_types/', type) as staticdnsentries_types_name_ref"
@@ -93,7 +93,7 @@ func getStaticdnsentriess(db *sqlx.DB) (interface{}, error) {
 // @Success 200 {object}    output_format.ApiWrapper
 // @Resource /api/2.0
 // @Router /api/2.0/staticdnsentries [post]
-func postStaticdnsentries(payload []byte, db *sqlx.DB) (interface{}, error) {
+func postStaticdnsentry(payload []byte, db *sqlx.DB) (interface{}, error) {
 	var v Staticdnsentries
 	err := json.Unmarshal(payload, &v)
 	if err != nil {
@@ -135,7 +135,7 @@ func postStaticdnsentries(payload []byte, db *sqlx.DB) (interface{}, error) {
 // @Success 200 {object}    output_format.ApiWrapper
 // @Resource /api/2.0
 // @Router /api/2.0/staticdnsentries/{id}  [put]
-func putStaticdnsentries(id int64, payload []byte, db *sqlx.DB) (interface{}, error) {
+func putStaticdnsentry(id int64, payload []byte, db *sqlx.DB) (interface{}, error) {
 	var arg Staticdnsentries
 	err := json.Unmarshal(payload, &arg)
 	arg.Id = id
@@ -168,7 +168,7 @@ func putStaticdnsentries(id int64, payload []byte, db *sqlx.DB) (interface{}, er
 // @Success 200 {array}    Staticdnsentries
 // @Resource /api/2.0
 // @Router /api/2.0/staticdnsentries/{id} [delete]
-func delStaticdnsentries(id int64, db *sqlx.DB) (interface{}, error) {
+func delStaticdnsentry(id int64, db *sqlx.DB) (interface{}, error) {
 	arg := Staticdnsentries{}
 	arg.Id = id
 	result, err := db.NamedExec("DELETE FROM staticdnsentries WHERE id=:id", arg)

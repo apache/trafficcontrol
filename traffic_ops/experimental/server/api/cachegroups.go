@@ -53,7 +53,7 @@ type CachegroupsLink struct {
 // @Success 200 {array}    Cachegroups
 // @Resource /api/2.0
 // @Router /api/2.0/cachegroups/{id} [get]
-func getCachegroupsById(name string, db *sqlx.DB) (interface{}, error) {
+func getCachegroup(name string, db *sqlx.DB) (interface{}, error) {
 	ret := []Cachegroups{}
 	arg := Cachegroups{}
 	arg.Name = name
@@ -77,7 +77,7 @@ func getCachegroupsById(name string, db *sqlx.DB) (interface{}, error) {
 // @Success 200 {array}    Cachegroups
 // @Resource /api/2.0
 // @Router /api/2.0/cachegroups [get]
-func getCachegroupss(db *sqlx.DB) (interface{}, error) {
+func getCachegroups(db *sqlx.DB) (interface{}, error) {
 	ret := []Cachegroups{}
 	queryStr := "select *, concat('" + API_PATH + "cachegroups/', name) as self"
 	queryStr += ", concat('" + API_PATH + "cachegroups/', parent_cachegroup) as cachegroups_name_ref"
@@ -98,7 +98,7 @@ func getCachegroupss(db *sqlx.DB) (interface{}, error) {
 // @Success 200 {object}    output_format.ApiWrapper
 // @Resource /api/2.0
 // @Router /api/2.0/cachegroups [post]
-func postCachegroups(payload []byte, db *sqlx.DB) (interface{}, error) {
+func postCachegroup(payload []byte, db *sqlx.DB) (interface{}, error) {
 	var v Cachegroups
 	err := json.Unmarshal(payload, &v)
 	if err != nil {
@@ -138,7 +138,7 @@ func postCachegroups(payload []byte, db *sqlx.DB) (interface{}, error) {
 // @Success 200 {object}    output_format.ApiWrapper
 // @Resource /api/2.0
 // @Router /api/2.0/cachegroups/{id}  [put]
-func putCachegroups(name string, payload []byte, db *sqlx.DB) (interface{}, error) {
+func putCachegroup(name string, payload []byte, db *sqlx.DB) (interface{}, error) {
 	var arg Cachegroups
 	err := json.Unmarshal(payload, &arg)
 	arg.Name = name
@@ -170,7 +170,7 @@ func putCachegroups(name string, payload []byte, db *sqlx.DB) (interface{}, erro
 // @Success 200 {array}    Cachegroups
 // @Resource /api/2.0
 // @Router /api/2.0/cachegroups/{id} [delete]
-func delCachegroups(name string, db *sqlx.DB) (interface{}, error) {
+func delCachegroup(name string, db *sqlx.DB) (interface{}, error) {
 	arg := Cachegroups{}
 	arg.Name = name
 	result, err := db.NamedExec("DELETE FROM cachegroups WHERE name=:name", arg)

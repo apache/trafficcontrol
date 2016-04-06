@@ -43,7 +43,7 @@ type ProfilesParametersLinks struct {
 // @Success 200 {array}    ProfilesParameters
 // @Resource /api/2.0
 // @Router /api/2.0/profiles_parameters/{id} [get]
-func getProfilesParametersById(profile string, parameterId int64, db *sqlx.DB) (interface{}, error) {
+func getProfilesParameter(profile string, parameterId int64, db *sqlx.DB) (interface{}, error) {
 	ret := []ProfilesParameters{}
 	arg := ProfilesParameters{}
 	arg.Profile = profile
@@ -66,7 +66,7 @@ func getProfilesParametersById(profile string, parameterId int64, db *sqlx.DB) (
 // @Success 200 {array}    ProfilesParameters
 // @Resource /api/2.0
 // @Router /api/2.0/profiles_parameters [get]
-func getProfilesParameterss(db *sqlx.DB) (interface{}, error) {
+func getProfilesParameters(db *sqlx.DB) (interface{}, error) {
 	ret := []ProfilesParameters{}
 	queryStr := "select *, concat('" + API_PATH + "profiles_parameters', '/profile/', profile, '/parameter_id/', parameter_id) as self"
 	queryStr += " from profiles_parameters"
@@ -85,7 +85,7 @@ func getProfilesParameterss(db *sqlx.DB) (interface{}, error) {
 // @Success 200 {object}    output_format.ApiWrapper
 // @Resource /api/2.0
 // @Router /api/2.0/profiles_parameters [post]
-func postProfilesParameters(payload []byte, db *sqlx.DB) (interface{}, error) {
+func postProfilesParameter(payload []byte, db *sqlx.DB) (interface{}, error) {
 	var v ProfilesParameters
 	err := json.Unmarshal(payload, &v)
 	if err != nil {
@@ -117,7 +117,7 @@ func postProfilesParameters(payload []byte, db *sqlx.DB) (interface{}, error) {
 // @Success 200 {object}    output_format.ApiWrapper
 // @Resource /api/2.0
 // @Router /api/2.0/profiles_parameters/{id}  [put]
-func putProfilesParameters(profile string, parameterId int64, payload []byte, db *sqlx.DB) (interface{}, error) {
+func putProfilesParameter(profile string, parameterId int64, payload []byte, db *sqlx.DB) (interface{}, error) {
 	var arg ProfilesParameters
 	err := json.Unmarshal(payload, &arg)
 	arg.Profile = profile
@@ -146,7 +146,7 @@ func putProfilesParameters(profile string, parameterId int64, payload []byte, db
 // @Success 200 {array}    ProfilesParameters
 // @Resource /api/2.0
 // @Router /api/2.0/profiles_parameters/{id} [delete]
-func delProfilesParameters(profile string, parameterId int64, db *sqlx.DB) (interface{}, error) {
+func delProfilesParameter(profile string, parameterId int64, db *sqlx.DB) (interface{}, error) {
 	arg := ProfilesParameters{}
 	arg.Profile = profile
 	arg.ParameterId = parameterId

@@ -82,7 +82,7 @@ type DeliveryservicesLinks struct {
 // @Success 200 {array}    Deliveryservices
 // @Resource /api/2.0
 // @Router /api/2.0/deliveryservices/{id} [get]
-func getDeliveryservicesById(name string, db *sqlx.DB) (interface{}, error) {
+func getDeliveryservice(name string, db *sqlx.DB) (interface{}, error) {
 	ret := []Deliveryservices{}
 	arg := Deliveryservices{}
 	arg.Name = name
@@ -108,7 +108,7 @@ func getDeliveryservicesById(name string, db *sqlx.DB) (interface{}, error) {
 // @Success 200 {array}    Deliveryservices
 // @Resource /api/2.0
 // @Router /api/2.0/deliveryservices [get]
-func getDeliveryservicess(db *sqlx.DB) (interface{}, error) {
+func getDeliveryservices(db *sqlx.DB) (interface{}, error) {
 	ret := []Deliveryservices{}
 	queryStr := "select *, concat('" + API_PATH + "deliveryservices/', name) as self"
 	queryStr += ", concat('" + API_PATH + "cdns/', cdn) as cdns_name_ref"
@@ -131,7 +131,7 @@ func getDeliveryservicess(db *sqlx.DB) (interface{}, error) {
 // @Success 200 {object}    output_format.ApiWrapper
 // @Resource /api/2.0
 // @Router /api/2.0/deliveryservices [post]
-func postDeliveryservices(payload []byte, db *sqlx.DB) (interface{}, error) {
+func postDeliveryservice(payload []byte, db *sqlx.DB) (interface{}, error) {
 	var v Deliveryservices
 	err := json.Unmarshal(payload, &v)
 	if err != nil {
@@ -239,7 +239,7 @@ func postDeliveryservices(payload []byte, db *sqlx.DB) (interface{}, error) {
 // @Success 200 {object}    output_format.ApiWrapper
 // @Resource /api/2.0
 // @Router /api/2.0/deliveryservices/{id}  [put]
-func putDeliveryservices(name string, payload []byte, db *sqlx.DB) (interface{}, error) {
+func putDeliveryservice(name string, payload []byte, db *sqlx.DB) (interface{}, error) {
 	var arg Deliveryservices
 	err := json.Unmarshal(payload, &arg)
 	arg.Name = name
@@ -305,7 +305,7 @@ func putDeliveryservices(name string, payload []byte, db *sqlx.DB) (interface{},
 // @Success 200 {array}    Deliveryservices
 // @Resource /api/2.0
 // @Router /api/2.0/deliveryservices/{id} [delete]
-func delDeliveryservices(name string, db *sqlx.DB) (interface{}, error) {
+func delDeliveryservice(name string, db *sqlx.DB) (interface{}, error) {
 	arg := Deliveryservices{}
 	arg.Name = name
 	result, err := db.NamedExec("DELETE FROM deliveryservices WHERE name=:name", arg)

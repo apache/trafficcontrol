@@ -48,7 +48,7 @@ type ExtensionsTypesLink struct {
 // @Success 200 {array}    ExtensionsTypes
 // @Resource /api/2.0
 // @Router /api/2.0/extensions_types/{id} [get]
-func getExtensionsTypesById(name string, db *sqlx.DB) (interface{}, error) {
+func getExtensionsType(name string, db *sqlx.DB) (interface{}, error) {
 	ret := []ExtensionsTypes{}
 	arg := ExtensionsTypes{}
 	arg.Name = name
@@ -70,7 +70,7 @@ func getExtensionsTypesById(name string, db *sqlx.DB) (interface{}, error) {
 // @Success 200 {array}    ExtensionsTypes
 // @Resource /api/2.0
 // @Router /api/2.0/extensions_types [get]
-func getExtensionsTypess(db *sqlx.DB) (interface{}, error) {
+func getExtensionsTypes(db *sqlx.DB) (interface{}, error) {
 	ret := []ExtensionsTypes{}
 	queryStr := "select *, concat('" + API_PATH + "extensions_types/', name) as self"
 	queryStr += " from extensions_types"
@@ -89,7 +89,7 @@ func getExtensionsTypess(db *sqlx.DB) (interface{}, error) {
 // @Success 200 {object}    output_format.ApiWrapper
 // @Resource /api/2.0
 // @Router /api/2.0/extensions_types [post]
-func postExtensionsTypes(payload []byte, db *sqlx.DB) (interface{}, error) {
+func postExtensionsType(payload []byte, db *sqlx.DB) (interface{}, error) {
 	var v ExtensionsTypes
 	err := json.Unmarshal(payload, &v)
 	if err != nil {
@@ -121,7 +121,7 @@ func postExtensionsTypes(payload []byte, db *sqlx.DB) (interface{}, error) {
 // @Success 200 {object}    output_format.ApiWrapper
 // @Resource /api/2.0
 // @Router /api/2.0/extensions_types/{id}  [put]
-func putExtensionsTypes(name string, payload []byte, db *sqlx.DB) (interface{}, error) {
+func putExtensionsType(name string, payload []byte, db *sqlx.DB) (interface{}, error) {
 	var arg ExtensionsTypes
 	err := json.Unmarshal(payload, &arg)
 	arg.Name = name
@@ -149,7 +149,7 @@ func putExtensionsTypes(name string, payload []byte, db *sqlx.DB) (interface{}, 
 // @Success 200 {array}    ExtensionsTypes
 // @Resource /api/2.0
 // @Router /api/2.0/extensions_types/{id} [delete]
-func delExtensionsTypes(name string, db *sqlx.DB) (interface{}, error) {
+func delExtensionsType(name string, db *sqlx.DB) (interface{}, error) {
 	arg := ExtensionsTypes{}
 	arg.Name = name
 	result, err := db.NamedExec("DELETE FROM extensions_types WHERE name=:name", arg)

@@ -77,7 +77,7 @@ type DomainsLink struct {
 // @Success 200 {array}    Domains
 // @Resource /api/2.0
 // @Router /api/2.0/domains/{id} [get]
-func getDomainsById(name string, db *sqlx.DB) (interface{}, error) {
+func getDomain(name string, db *sqlx.DB) (interface{}, error) {
 	ret := []Domains{}
 	arg := Domains{}
 	arg.Name = name
@@ -100,7 +100,7 @@ func getDomainsById(name string, db *sqlx.DB) (interface{}, error) {
 // @Success 200 {array}    Domains
 // @Resource /api/2.0
 // @Router /api/2.0/domains [get]
-func getDomainss(db *sqlx.DB) (interface{}, error) {
+func getDomains(db *sqlx.DB) (interface{}, error) {
 	ret := []Domains{}
 	queryStr := "select *, concat('" + API_PATH + "domains/', name) as self"
 	queryStr += ", concat('" + API_PATH + "cdns/', cdn) as cdns_name_ref"
@@ -120,7 +120,7 @@ func getDomainss(db *sqlx.DB) (interface{}, error) {
 // @Success 200 {object}    output_format.ApiWrapper
 // @Resource /api/2.0
 // @Router /api/2.0/domains [post]
-func postDomains(payload []byte, db *sqlx.DB) (interface{}, error) {
+func postDomain(payload []byte, db *sqlx.DB) (interface{}, error) {
 	var v Domains
 	err := json.Unmarshal(payload, &v)
 	if err != nil {
@@ -208,7 +208,7 @@ func postDomains(payload []byte, db *sqlx.DB) (interface{}, error) {
 // @Success 200 {object}    output_format.ApiWrapper
 // @Resource /api/2.0
 // @Router /api/2.0/domains/{id}  [put]
-func putDomains(name string, payload []byte, db *sqlx.DB) (interface{}, error) {
+func putDomain(name string, payload []byte, db *sqlx.DB) (interface{}, error) {
 	var arg Domains
 	err := json.Unmarshal(payload, &arg)
 	arg.Name = name
@@ -264,7 +264,7 @@ func putDomains(name string, payload []byte, db *sqlx.DB) (interface{}, error) {
 // @Success 200 {array}    Domains
 // @Resource /api/2.0
 // @Router /api/2.0/domains/{id} [delete]
-func delDomains(name string, db *sqlx.DB) (interface{}, error) {
+func delDomain(name string, db *sqlx.DB) (interface{}, error) {
 	arg := Domains{}
 	arg.Name = name
 	result, err := db.NamedExec("DELETE FROM domains WHERE name=:name", arg)

@@ -48,7 +48,7 @@ type RegexesTypesLink struct {
 // @Success 200 {array}    RegexesTypes
 // @Resource /api/2.0
 // @Router /api/2.0/regexes_types/{id} [get]
-func getRegexesTypesById(name string, db *sqlx.DB) (interface{}, error) {
+func getRegexesType(name string, db *sqlx.DB) (interface{}, error) {
 	ret := []RegexesTypes{}
 	arg := RegexesTypes{}
 	arg.Name = name
@@ -70,7 +70,7 @@ func getRegexesTypesById(name string, db *sqlx.DB) (interface{}, error) {
 // @Success 200 {array}    RegexesTypes
 // @Resource /api/2.0
 // @Router /api/2.0/regexes_types [get]
-func getRegexesTypess(db *sqlx.DB) (interface{}, error) {
+func getRegexesTypes(db *sqlx.DB) (interface{}, error) {
 	ret := []RegexesTypes{}
 	queryStr := "select *, concat('" + API_PATH + "regexes_types/', name) as self"
 	queryStr += " from regexes_types"
@@ -89,7 +89,7 @@ func getRegexesTypess(db *sqlx.DB) (interface{}, error) {
 // @Success 200 {object}    output_format.ApiWrapper
 // @Resource /api/2.0
 // @Router /api/2.0/regexes_types [post]
-func postRegexesTypes(payload []byte, db *sqlx.DB) (interface{}, error) {
+func postRegexesType(payload []byte, db *sqlx.DB) (interface{}, error) {
 	var v RegexesTypes
 	err := json.Unmarshal(payload, &v)
 	if err != nil {
@@ -121,7 +121,7 @@ func postRegexesTypes(payload []byte, db *sqlx.DB) (interface{}, error) {
 // @Success 200 {object}    output_format.ApiWrapper
 // @Resource /api/2.0
 // @Router /api/2.0/regexes_types/{id}  [put]
-func putRegexesTypes(name string, payload []byte, db *sqlx.DB) (interface{}, error) {
+func putRegexesType(name string, payload []byte, db *sqlx.DB) (interface{}, error) {
 	var arg RegexesTypes
 	err := json.Unmarshal(payload, &arg)
 	arg.Name = name
@@ -149,7 +149,7 @@ func putRegexesTypes(name string, payload []byte, db *sqlx.DB) (interface{}, err
 // @Success 200 {array}    RegexesTypes
 // @Resource /api/2.0
 // @Router /api/2.0/regexes_types/{id} [delete]
-func delRegexesTypes(name string, db *sqlx.DB) (interface{}, error) {
+func delRegexesType(name string, db *sqlx.DB) (interface{}, error) {
 	arg := RegexesTypes{}
 	arg.Name = name
 	result, err := db.NamedExec("DELETE FROM regexes_types WHERE name=:name", arg)

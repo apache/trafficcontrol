@@ -43,7 +43,7 @@ type DeliveryservicesRegexesLinks struct {
 // @Success 200 {array}    DeliveryservicesRegexes
 // @Resource /api/2.0
 // @Router /api/2.0/deliveryservices_regexes/{id} [get]
-func getDeliveryservicesRegexesById(deliveryservice string, regexId int64, db *sqlx.DB) (interface{}, error) {
+func getDeliveryservicesRegex(deliveryservice string, regexId int64, db *sqlx.DB) (interface{}, error) {
 	ret := []DeliveryservicesRegexes{}
 	arg := DeliveryservicesRegexes{}
 	arg.Deliveryservice = deliveryservice
@@ -66,7 +66,7 @@ func getDeliveryservicesRegexesById(deliveryservice string, regexId int64, db *s
 // @Success 200 {array}    DeliveryservicesRegexes
 // @Resource /api/2.0
 // @Router /api/2.0/deliveryservices_regexes [get]
-func getDeliveryservicesRegexess(db *sqlx.DB) (interface{}, error) {
+func getDeliveryservicesRegexes(db *sqlx.DB) (interface{}, error) {
 	ret := []DeliveryservicesRegexes{}
 	queryStr := "select *, concat('" + API_PATH + "deliveryservices_regexes', '/deliveryservice/', deliveryservice, '/regex_id/', regex_id) as self"
 	queryStr += " from deliveryservices_regexes"
@@ -85,7 +85,7 @@ func getDeliveryservicesRegexess(db *sqlx.DB) (interface{}, error) {
 // @Success 200 {object}    output_format.ApiWrapper
 // @Resource /api/2.0
 // @Router /api/2.0/deliveryservices_regexes [post]
-func postDeliveryservicesRegexes(payload []byte, db *sqlx.DB) (interface{}, error) {
+func postDeliveryservicesRegex(payload []byte, db *sqlx.DB) (interface{}, error) {
 	var v DeliveryservicesRegexes
 	err := json.Unmarshal(payload, &v)
 	if err != nil {
@@ -117,7 +117,7 @@ func postDeliveryservicesRegexes(payload []byte, db *sqlx.DB) (interface{}, erro
 // @Success 200 {object}    output_format.ApiWrapper
 // @Resource /api/2.0
 // @Router /api/2.0/deliveryservices_regexes/{id}  [put]
-func putDeliveryservicesRegexes(deliveryservice string, regexId int64, payload []byte, db *sqlx.DB) (interface{}, error) {
+func putDeliveryservicesRegex(deliveryservice string, regexId int64, payload []byte, db *sqlx.DB) (interface{}, error) {
 	var arg DeliveryservicesRegexes
 	err := json.Unmarshal(payload, &arg)
 	arg.Deliveryservice = deliveryservice
@@ -146,7 +146,7 @@ func putDeliveryservicesRegexes(deliveryservice string, regexId int64, payload [
 // @Success 200 {array}    DeliveryservicesRegexes
 // @Resource /api/2.0
 // @Router /api/2.0/deliveryservices_regexes/{id} [delete]
-func delDeliveryservicesRegexes(deliveryservice string, regexId int64, db *sqlx.DB) (interface{}, error) {
+func delDeliveryservicesRegex(deliveryservice string, regexId int64, db *sqlx.DB) (interface{}, error) {
 	arg := DeliveryservicesRegexes{}
 	arg.Deliveryservice = deliveryservice
 	arg.RegexId = regexId

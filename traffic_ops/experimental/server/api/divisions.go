@@ -42,7 +42,7 @@ type DivisionsLinks struct {
 // @Success 200 {array}    Divisions
 // @Resource /api/2.0
 // @Router /api/2.0/divisions/{id} [get]
-func getDivisionsById(name string, db *sqlx.DB) (interface{}, error) {
+func getDivision(name string, db *sqlx.DB) (interface{}, error) {
 	ret := []Divisions{}
 	arg := Divisions{}
 	arg.Name = name
@@ -64,7 +64,7 @@ func getDivisionsById(name string, db *sqlx.DB) (interface{}, error) {
 // @Success 200 {array}    Divisions
 // @Resource /api/2.0
 // @Router /api/2.0/divisions [get]
-func getDivisionss(db *sqlx.DB) (interface{}, error) {
+func getDivisions(db *sqlx.DB) (interface{}, error) {
 	ret := []Divisions{}
 	queryStr := "select *, concat('" + API_PATH + "divisions/', name) as self"
 	queryStr += " from divisions"
@@ -83,7 +83,7 @@ func getDivisionss(db *sqlx.DB) (interface{}, error) {
 // @Success 200 {object}    output_format.ApiWrapper
 // @Resource /api/2.0
 // @Router /api/2.0/divisions [post]
-func postDivisions(payload []byte, db *sqlx.DB) (interface{}, error) {
+func postDivision(payload []byte, db *sqlx.DB) (interface{}, error) {
 	var v Divisions
 	err := json.Unmarshal(payload, &v)
 	if err != nil {
@@ -113,7 +113,7 @@ func postDivisions(payload []byte, db *sqlx.DB) (interface{}, error) {
 // @Success 200 {object}    output_format.ApiWrapper
 // @Resource /api/2.0
 // @Router /api/2.0/divisions/{id}  [put]
-func putDivisions(name string, payload []byte, db *sqlx.DB) (interface{}, error) {
+func putDivision(name string, payload []byte, db *sqlx.DB) (interface{}, error) {
 	var arg Divisions
 	err := json.Unmarshal(payload, &arg)
 	arg.Name = name
@@ -140,7 +140,7 @@ func putDivisions(name string, payload []byte, db *sqlx.DB) (interface{}, error)
 // @Success 200 {array}    Divisions
 // @Resource /api/2.0
 // @Router /api/2.0/divisions/{id} [delete]
-func delDivisions(name string, db *sqlx.DB) (interface{}, error) {
+func delDivision(name string, db *sqlx.DB) (interface{}, error) {
 	arg := Divisions{}
 	arg.Name = name
 	result, err := db.NamedExec("DELETE FROM divisions WHERE name=:name", arg)

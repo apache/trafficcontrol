@@ -48,7 +48,7 @@ type UsersLinks struct {
 // @Success 200 {array}    Users
 // @Resource /api/2.0
 // @Router /api/2.0/users/{id} [get]
-func GetUsersById(username string, db *sqlx.DB) (interface{}, error) {
+func GetUser(username string, db *sqlx.DB) (interface{}, error) {
 	ret := []Users{}
 	arg := Users{}
 	arg.Username = username
@@ -71,7 +71,7 @@ func GetUsersById(username string, db *sqlx.DB) (interface{}, error) {
 // @Success 200 {array}    Users
 // @Resource /api/2.0
 // @Router /api/2.0/users [get]
-func getUserss(db *sqlx.DB) (interface{}, error) {
+func getUsers(db *sqlx.DB) (interface{}, error) {
 	ret := []Users{}
 	queryStr := "select *, concat('" + API_PATH + "users/', username) as self"
 	queryStr += ", concat('" + API_PATH + "roles/', role) as roles_name_ref"
@@ -91,7 +91,7 @@ func getUserss(db *sqlx.DB) (interface{}, error) {
 // @Success 200 {object}    output_format.ApiWrapper
 // @Resource /api/2.0
 // @Router /api/2.0/users [post]
-func postUsers(payload []byte, db *sqlx.DB) (interface{}, error) {
+func postUser(payload []byte, db *sqlx.DB) (interface{}, error) {
 	var v Users
 	err := json.Unmarshal(payload, &v)
 	if err != nil {
@@ -131,7 +131,7 @@ func postUsers(payload []byte, db *sqlx.DB) (interface{}, error) {
 // @Success 200 {object}    output_format.ApiWrapper
 // @Resource /api/2.0
 // @Router /api/2.0/users/{id}  [put]
-func putUsers(username string, payload []byte, db *sqlx.DB) (interface{}, error) {
+func putUser(username string, payload []byte, db *sqlx.DB) (interface{}, error) {
 	var arg Users
 	err := json.Unmarshal(payload, &arg)
 	arg.Username = username
@@ -163,7 +163,7 @@ func putUsers(username string, payload []byte, db *sqlx.DB) (interface{}, error)
 // @Success 200 {array}    Users
 // @Resource /api/2.0
 // @Router /api/2.0/users/{id} [delete]
-func delUsers(username string, db *sqlx.DB) (interface{}, error) {
+func delUser(username string, db *sqlx.DB) (interface{}, error) {
 	arg := Users{}
 	arg.Username = username
 	result, err := db.NamedExec("DELETE FROM users WHERE username=:username", arg)

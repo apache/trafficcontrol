@@ -134,14 +134,14 @@ func GetCSConfig(hostName string, port int64, db *sqlx.DB) (interface{}, error) 
 
 	// stats, err := statsSection(cdnName)
 
-	serverInterface, err := api.GetServersById(hostName, port, db)
+	serverInterface, err := api.GetServer(hostName, port, db)
 	if err != nil {
 		log.Println(err)
 		return nil, err
 	}
 	server, ok := serverInterface.(api.Servers)
 	if !ok {
-		err = fmt.Errorf("GetServersById returned a non-server")
+		err = fmt.Errorf("GetServer returned a non-server")
 		log.Println(err)
 		return nil, err
 	}

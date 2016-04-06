@@ -117,14 +117,14 @@ func GetLoginFunc(db *sqlx.DB) http.HandlerFunc {
 		}
 		username = lj.U
 		password = lj.P
-		userInterface, err := api.GetUsersById(username, db)
+		userInterface, err := api.GetUser(username, db)
 		if err != nil {
 			http.Error(w, "Invalid user: "+err.Error(), http.StatusUnauthorized)
 			return
 		}
 		u, ok := userInterface.(api.Users)
 		if !ok {
-			http.Error(w, "Error GetUsersById returned a non-user.", http.StatusInternalServerError)
+			http.Error(w, "Error GetUser returned a non-user.", http.StatusInternalServerError)
 			return
 		}
 

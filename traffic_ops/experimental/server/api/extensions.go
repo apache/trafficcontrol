@@ -51,7 +51,7 @@ type ExtensionsLinks struct {
 // @Success 200 {array}    Extensions
 // @Resource /api/2.0
 // @Router /api/2.0/extensions/{id} [get]
-func getExtensionsById(name string, db *sqlx.DB) (interface{}, error) {
+func getExtension(name string, db *sqlx.DB) (interface{}, error) {
 	ret := []Extensions{}
 	arg := Extensions{}
 	arg.Name = name
@@ -74,7 +74,7 @@ func getExtensionsById(name string, db *sqlx.DB) (interface{}, error) {
 // @Success 200 {array}    Extensions
 // @Resource /api/2.0
 // @Router /api/2.0/extensions [get]
-func getExtensionss(db *sqlx.DB) (interface{}, error) {
+func getExtensions(db *sqlx.DB) (interface{}, error) {
 	ret := []Extensions{}
 	queryStr := "select *, concat('" + API_PATH + "extensions/', name) as self"
 	queryStr += ", concat('" + API_PATH + "extensions_types/', type) as extensions_types_name_ref"
@@ -94,7 +94,7 @@ func getExtensionss(db *sqlx.DB) (interface{}, error) {
 // @Success 200 {object}    output_format.ApiWrapper
 // @Resource /api/2.0
 // @Router /api/2.0/extensions [post]
-func postExtensions(payload []byte, db *sqlx.DB) (interface{}, error) {
+func postExtension(payload []byte, db *sqlx.DB) (interface{}, error) {
 	var v Extensions
 	err := json.Unmarshal(payload, &v)
 	if err != nil {
@@ -140,7 +140,7 @@ func postExtensions(payload []byte, db *sqlx.DB) (interface{}, error) {
 // @Success 200 {object}    output_format.ApiWrapper
 // @Resource /api/2.0
 // @Router /api/2.0/extensions/{id}  [put]
-func putExtensions(name string, payload []byte, db *sqlx.DB) (interface{}, error) {
+func putExtension(name string, payload []byte, db *sqlx.DB) (interface{}, error) {
 	var arg Extensions
 	err := json.Unmarshal(payload, &arg)
 	arg.Name = name
@@ -175,7 +175,7 @@ func putExtensions(name string, payload []byte, db *sqlx.DB) (interface{}, error
 // @Success 200 {array}    Extensions
 // @Resource /api/2.0
 // @Router /api/2.0/extensions/{id} [delete]
-func delExtensions(name string, db *sqlx.DB) (interface{}, error) {
+func delExtension(name string, db *sqlx.DB) (interface{}, error) {
 	arg := Extensions{}
 	arg.Name = name
 	result, err := db.NamedExec("DELETE FROM extensions WHERE name=:name", arg)
