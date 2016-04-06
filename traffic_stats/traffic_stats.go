@@ -553,17 +553,24 @@ func calcDsValues(rascalData []byte, cdnName string, sampleTime int64, config St
 	})
 	for dsName, dsData := range jData.DeliveryService {
 		for dsMetric, dsMetricData := range dsData {
-			//create dataKey (influxDb series)
 			var cachegroup, statName string
+			tags := map[string]string{
+				"deliveryservice": dsName,
+				"cdn":             cdnName,
+			}
+
+			s := strings.Split(dsMetric, ".")
 			if strings.Contains(dsMetric, "type.") {
-				continue
+				cachegroup = "all"
+				statName = s[2]
+				tags["type"] = s[1]
 			} else if strings.Contains(dsMetric, "total.") {
-				s := strings.Split(dsMetric, ".")
 				cachegroup, statName = s[0], s[1]
 			} else {
-				s := strings.Split(dsMetric, ".")
 				cachegroup, statName = s[1], s[2]
 			}
+
+			tags["cachegroup"] = cachegroup
 
 			//convert stat time to epoch
 			statTime := strconv.Itoa(dsMetricData[0].Time)
@@ -579,12 +586,6 @@ func calcDsValues(rascalData []byte, cdnName string, sampleTime int64, config St
 			if err != nil {
 				statFloatValue = 0.0
 			}
-			tags := map[string]string{
-				"deliveryservice": dsName,
-				"cdn":             cdnName,
-				"cachegroup":      cachegroup,
-			}
-
 			fields := map[string]interface{}{
 				"value": statFloatValue,
 			}
