@@ -43,12 +43,12 @@ type RegionsLinks struct {
 // @Success 200 {array}    Regions
 // @Resource /api/2.0
 // @Router /api/2.0/regions/{id} [get]
-func getRegionsById(id string, db *sqlx.DB) (interface{}, error) {
+func getRegionsById(name string, db *sqlx.DB) (interface{}, error) {
 	ret := []Regions{}
 	arg := Regions{}
-	arg.Name = id
-	queryStr := "select *, concat('" + API_PATH + "regions/', name) as self "
-	queryStr += " from regions where name=:name"
+	arg.Name = name
+	queryStr := "select *, concat('" + API_PATH + "regions/', name) as self"
+	queryStr += " from regions WHERE name=:name"
 	nstmt, err := db.PrepareNamed(queryStr)
 	err = nstmt.Select(&ret, arg)
 	if err != nil {
@@ -67,7 +67,7 @@ func getRegionsById(id string, db *sqlx.DB) (interface{}, error) {
 // @Router /api/2.0/regions [get]
 func getRegionss(db *sqlx.DB) (interface{}, error) {
 	ret := []Regions{}
-	queryStr := "select *, concat('" + API_PATH + "regions/', name) as self "
+	queryStr := "select *, concat('" + API_PATH + "regions/', name) as self"
 	queryStr += " from regions"
 	err := db.Select(&ret, queryStr)
 	if err != nil {
@@ -116,10 +116,10 @@ func postRegions(payload []byte, db *sqlx.DB) (interface{}, error) {
 // @Success 200 {object}    output_format.ApiWrapper
 // @Resource /api/2.0
 // @Router /api/2.0/regions/{id}  [put]
-func putRegions(id string, payload []byte, db *sqlx.DB) (interface{}, error) {
-	var v Regions
-	err := json.Unmarshal(payload, &v)
-	v.Name = id // overwrite the id in the payload
+func putRegions(name string, payload []byte, db *sqlx.DB) (interface{}, error) {
+	var arg Regions
+	err := json.Unmarshal(payload, &arg)
+	arg.Name = name
 	if err != nil {
 		log.Println(err)
 		return nil, err
@@ -129,7 +129,7 @@ func putRegions(id string, payload []byte, db *sqlx.DB) (interface{}, error) {
 	sqlString += ",division = :division"
 	sqlString += ",created_at = :created_at"
 	sqlString += " WHERE name=:name"
-	result, err := db.NamedExec(sqlString, v)
+	result, err := db.NamedExec(sqlString, arg)
 	if err != nil {
 		log.Println(err)
 		return nil, err
@@ -144,10 +144,10 @@ func putRegions(id string, payload []byte, db *sqlx.DB) (interface{}, error) {
 // @Success 200 {array}    Regions
 // @Resource /api/2.0
 // @Router /api/2.0/regions/{id} [delete]
-func delRegions(id string, db *sqlx.DB) (interface{}, error) {
+func delRegions(name string, db *sqlx.DB) (interface{}, error) {
 	arg := Regions{}
-	arg.Name = id
-	result, err := db.NamedExec("DELETE FROM regions WHERE name=:id", arg)
+	arg.Name = name
+	result, err := db.NamedExec("DELETE FROM regions WHERE name=:name", arg)
 	if err != nil {
 		log.Println(err)
 		return nil, err

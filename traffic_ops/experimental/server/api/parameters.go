@@ -87,8 +87,8 @@ func getParametersById(id int64, db *sqlx.DB) (interface{}, error) {
 	ret := []Parameters{}
 	arg := Parameters{}
 	arg.Id = id
-	queryStr := "select *, concat('" + API_PATH + "parameters/', id) as self "
-	queryStr += " from parameters where id=:id"
+	queryStr := "select *, concat('" + API_PATH + "parameters/', id) as self"
+	queryStr += " from parameters WHERE id=:id"
 	nstmt, err := db.PrepareNamed(queryStr)
 	err = nstmt.Select(&ret, arg)
 	if err != nil {
@@ -107,7 +107,7 @@ func getParametersById(id int64, db *sqlx.DB) (interface{}, error) {
 // @Router /api/2.0/parameters [get]
 func getParameterss(db *sqlx.DB) (interface{}, error) {
 	ret := []Parameters{}
-	queryStr := "select *, concat('" + API_PATH + "parameters/', id) as self "
+	queryStr := "select *, concat('" + API_PATH + "parameters/', id) as self"
 	queryStr += " from parameters"
 	err := db.Select(&ret, queryStr)
 	if err != nil {
@@ -223,9 +223,9 @@ func postParameters(payload []byte, db *sqlx.DB) (interface{}, error) {
 // @Resource /api/2.0
 // @Router /api/2.0/parameters/{id}  [put]
 func putParameters(id int64, payload []byte, db *sqlx.DB) (interface{}, error) {
-	var v Parameters
-	err := json.Unmarshal(payload, &v)
-	v.Id = id // overwrite the id in the payload
+	var arg Parameters
+	err := json.Unmarshal(payload, &arg)
+	arg.Id = id
 	if err != nil {
 		log.Println(err)
 		return nil, err
@@ -268,7 +268,7 @@ func putParameters(id int64, payload []byte, db *sqlx.DB) (interface{}, error) {
 	sqlString += ",dtd_identifier = :dtd_identifier"
 	sqlString += ",parameter_default = :parameter_default"
 	sqlString += " WHERE id=:id"
-	result, err := db.NamedExec(sqlString, v)
+	result, err := db.NamedExec(sqlString, arg)
 	if err != nil {
 		log.Println(err)
 		return nil, err

@@ -77,13 +77,13 @@ type DomainsLink struct {
 // @Success 200 {array}    Domains
 // @Resource /api/2.0
 // @Router /api/2.0/domains/{id} [get]
-func getDomainsById(id string, db *sqlx.DB) (interface{}, error) {
+func getDomainsById(name string, db *sqlx.DB) (interface{}, error) {
 	ret := []Domains{}
 	arg := Domains{}
-	arg.Name = id
-	queryStr := "select *, concat('" + API_PATH + "domains/', name) as self "
+	arg.Name = name
+	queryStr := "select *, concat('" + API_PATH + "domains/', name) as self"
 	queryStr += ", concat('" + API_PATH + "cdns/', cdn) as cdns_name_ref"
-	queryStr += " from domains where name=:name"
+	queryStr += " from domains WHERE name=:name"
 	nstmt, err := db.PrepareNamed(queryStr)
 	err = nstmt.Select(&ret, arg)
 	if err != nil {
@@ -102,7 +102,7 @@ func getDomainsById(id string, db *sqlx.DB) (interface{}, error) {
 // @Router /api/2.0/domains [get]
 func getDomainss(db *sqlx.DB) (interface{}, error) {
 	ret := []Domains{}
-	queryStr := "select *, concat('" + API_PATH + "domains/', name) as self "
+	queryStr := "select *, concat('" + API_PATH + "domains/', name) as self"
 	queryStr += ", concat('" + API_PATH + "cdns/', cdn) as cdns_name_ref"
 	queryStr += " from domains"
 	err := db.Select(&ret, queryStr)
@@ -208,10 +208,10 @@ func postDomains(payload []byte, db *sqlx.DB) (interface{}, error) {
 // @Success 200 {object}    output_format.ApiWrapper
 // @Resource /api/2.0
 // @Router /api/2.0/domains/{id}  [put]
-func putDomains(id string, payload []byte, db *sqlx.DB) (interface{}, error) {
-	var v Domains
-	err := json.Unmarshal(payload, &v)
-	v.Name = id // overwrite the id in the payload
+func putDomains(name string, payload []byte, db *sqlx.DB) (interface{}, error) {
+	var arg Domains
+	err := json.Unmarshal(payload, &arg)
+	arg.Name = name
 	if err != nil {
 		log.Println(err)
 		return nil, err
@@ -249,7 +249,7 @@ func putDomains(id string, payload []byte, db *sqlx.DB) (interface{}, error) {
 	sqlString += ",maximum_cardinality = :maximum_cardinality"
 	sqlString += ",dtd_identifier = :dtd_identifier"
 	sqlString += " WHERE name=:name"
-	result, err := db.NamedExec(sqlString, v)
+	result, err := db.NamedExec(sqlString, arg)
 	if err != nil {
 		log.Println(err)
 		return nil, err
@@ -264,10 +264,10 @@ func putDomains(id string, payload []byte, db *sqlx.DB) (interface{}, error) {
 // @Success 200 {array}    Domains
 // @Resource /api/2.0
 // @Router /api/2.0/domains/{id} [delete]
-func delDomains(id string, db *sqlx.DB) (interface{}, error) {
+func delDomains(name string, db *sqlx.DB) (interface{}, error) {
 	arg := Domains{}
-	arg.Name = id
-	result, err := db.NamedExec("DELETE FROM domains WHERE name=:id", arg)
+	arg.Name = name
+	result, err := db.NamedExec("DELETE FROM domains WHERE name=:name", arg)
 	if err != nil {
 		log.Println(err)
 		return nil, err

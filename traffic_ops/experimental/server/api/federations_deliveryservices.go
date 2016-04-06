@@ -43,12 +43,13 @@ type FederationsDeliveryservicesLinks struct {
 // @Success 200 {array}    FederationsDeliveryservices
 // @Resource /api/2.0
 // @Router /api/2.0/federations_deliveryservices/{id} [get]
-func getFederationsDeliveryservicesById(id int64, db *sqlx.DB) (interface{}, error) {
+func getFederationsDeliveryservicesById(federationId int64, deliveryservice string, db *sqlx.DB) (interface{}, error) {
 	ret := []FederationsDeliveryservices{}
 	arg := FederationsDeliveryservices{}
-	arg.FederationId = id
-	queryStr := "select *, concat('" + API_PATH + "federations_deliveryservices/', federation_id) as self "
-	queryStr += " from federations_deliveryservices where federation_id=:federation_id"
+	arg.FederationId = federationId
+	arg.Deliveryservice = deliveryservice
+	queryStr := "select *, concat('" + API_PATH + "federations_deliveryservices', '/federation_id/', federation_id, '/deliveryservice/', deliveryservice) as self"
+	queryStr += " from federations_deliveryservices WHERE federation_id=:federation_id AND deliveryservice=:deliveryservice"
 	nstmt, err := db.PrepareNamed(queryStr)
 	err = nstmt.Select(&ret, arg)
 	if err != nil {
@@ -67,7 +68,7 @@ func getFederationsDeliveryservicesById(id int64, db *sqlx.DB) (interface{}, err
 // @Router /api/2.0/federations_deliveryservices [get]
 func getFederationsDeliveryservicess(db *sqlx.DB) (interface{}, error) {
 	ret := []FederationsDeliveryservices{}
-	queryStr := "select *, concat('" + API_PATH + "federations_deliveryservices/', federation_id) as self "
+	queryStr := "select *, concat('" + API_PATH + "federations_deliveryservices', '/federation_id/', federation_id, '/deliveryservice/', deliveryservice) as self"
 	queryStr += " from federations_deliveryservices"
 	err := db.Select(&ret, queryStr)
 	if err != nil {
@@ -116,10 +117,11 @@ func postFederationsDeliveryservices(payload []byte, db *sqlx.DB) (interface{}, 
 // @Success 200 {object}    output_format.ApiWrapper
 // @Resource /api/2.0
 // @Router /api/2.0/federations_deliveryservices/{id}  [put]
-func putFederationsDeliveryservices(id int64, payload []byte, db *sqlx.DB) (interface{}, error) {
-	var v FederationsDeliveryservices
-	err := json.Unmarshal(payload, &v)
-	v.FederationId = id // overwrite the id in the payload
+func putFederationsDeliveryservices(federationId int64, deliveryservice string, payload []byte, db *sqlx.DB) (interface{}, error) {
+	var arg FederationsDeliveryservices
+	err := json.Unmarshal(payload, &arg)
+	arg.FederationId = federationId
+	arg.Deliveryservice = deliveryservice
 	if err != nil {
 		log.Println(err)
 		return nil, err
@@ -128,8 +130,8 @@ func putFederationsDeliveryservices(id int64, payload []byte, db *sqlx.DB) (inte
 	sqlString += "federation_id = :federation_id"
 	sqlString += ",deliveryservice = :deliveryservice"
 	sqlString += ",created_at = :created_at"
-	sqlString += " WHERE federation_id=:federation_id"
-	result, err := db.NamedExec(sqlString, v)
+	sqlString += " WHERE federation_id=:federation_id AND deliveryservice=:deliveryservice"
+	result, err := db.NamedExec(sqlString, arg)
 	if err != nil {
 		log.Println(err)
 		return nil, err
@@ -144,10 +146,11 @@ func putFederationsDeliveryservices(id int64, payload []byte, db *sqlx.DB) (inte
 // @Success 200 {array}    FederationsDeliveryservices
 // @Resource /api/2.0
 // @Router /api/2.0/federations_deliveryservices/{id} [delete]
-func delFederationsDeliveryservices(id int64, db *sqlx.DB) (interface{}, error) {
+func delFederationsDeliveryservices(federationId int64, deliveryservice string, db *sqlx.DB) (interface{}, error) {
 	arg := FederationsDeliveryservices{}
-	arg.FederationId = id
-	result, err := db.NamedExec("DELETE FROM federations_deliveryservices WHERE federation_id=:id", arg)
+	arg.FederationId = federationId
+	arg.Deliveryservice = deliveryservice
+	result, err := db.NamedExec("DELETE FROM federations_deliveryservices WHERE federation_id=:federation_id AND deliveryservice=:deliveryservice", arg)
 	if err != nil {
 		log.Println(err)
 		return nil, err

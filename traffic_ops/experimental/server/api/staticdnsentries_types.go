@@ -48,12 +48,12 @@ type StaticdnsentriesTypesLink struct {
 // @Success 200 {array}    StaticdnsentriesTypes
 // @Resource /api/2.0
 // @Router /api/2.0/staticdnsentries_types/{id} [get]
-func getStaticdnsentriesTypesById(id string, db *sqlx.DB) (interface{}, error) {
+func getStaticdnsentriesTypesById(name string, db *sqlx.DB) (interface{}, error) {
 	ret := []StaticdnsentriesTypes{}
 	arg := StaticdnsentriesTypes{}
-	arg.Name = id
-	queryStr := "select *, concat('" + API_PATH + "staticdnsentries_types/', name) as self "
-	queryStr += " from staticdnsentries_types where name=:name"
+	arg.Name = name
+	queryStr := "select *, concat('" + API_PATH + "staticdnsentries_types/', name) as self"
+	queryStr += " from staticdnsentries_types WHERE name=:name"
 	nstmt, err := db.PrepareNamed(queryStr)
 	err = nstmt.Select(&ret, arg)
 	if err != nil {
@@ -72,7 +72,7 @@ func getStaticdnsentriesTypesById(id string, db *sqlx.DB) (interface{}, error) {
 // @Router /api/2.0/staticdnsentries_types [get]
 func getStaticdnsentriesTypess(db *sqlx.DB) (interface{}, error) {
 	ret := []StaticdnsentriesTypes{}
-	queryStr := "select *, concat('" + API_PATH + "staticdnsentries_types/', name) as self "
+	queryStr := "select *, concat('" + API_PATH + "staticdnsentries_types/', name) as self"
 	queryStr += " from staticdnsentries_types"
 	err := db.Select(&ret, queryStr)
 	if err != nil {
@@ -121,10 +121,10 @@ func postStaticdnsentriesTypes(payload []byte, db *sqlx.DB) (interface{}, error)
 // @Success 200 {object}    output_format.ApiWrapper
 // @Resource /api/2.0
 // @Router /api/2.0/staticdnsentries_types/{id}  [put]
-func putStaticdnsentriesTypes(id string, payload []byte, db *sqlx.DB) (interface{}, error) {
-	var v StaticdnsentriesTypes
-	err := json.Unmarshal(payload, &v)
-	v.Name = id // overwrite the id in the payload
+func putStaticdnsentriesTypes(name string, payload []byte, db *sqlx.DB) (interface{}, error) {
+	var arg StaticdnsentriesTypes
+	err := json.Unmarshal(payload, &arg)
+	arg.Name = name
 	if err != nil {
 		log.Println(err)
 		return nil, err
@@ -134,7 +134,7 @@ func putStaticdnsentriesTypes(id string, payload []byte, db *sqlx.DB) (interface
 	sqlString += ",description = :description"
 	sqlString += ",created_at = :created_at"
 	sqlString += " WHERE name=:name"
-	result, err := db.NamedExec(sqlString, v)
+	result, err := db.NamedExec(sqlString, arg)
 	if err != nil {
 		log.Println(err)
 		return nil, err
@@ -149,10 +149,10 @@ func putStaticdnsentriesTypes(id string, payload []byte, db *sqlx.DB) (interface
 // @Success 200 {array}    StaticdnsentriesTypes
 // @Resource /api/2.0
 // @Router /api/2.0/staticdnsentries_types/{id} [delete]
-func delStaticdnsentriesTypes(id string, db *sqlx.DB) (interface{}, error) {
+func delStaticdnsentriesTypes(name string, db *sqlx.DB) (interface{}, error) {
 	arg := StaticdnsentriesTypes{}
-	arg.Name = id
-	result, err := db.NamedExec("DELETE FROM staticdnsentries_types WHERE name=:id", arg)
+	arg.Name = name
+	result, err := db.NamedExec("DELETE FROM staticdnsentries_types WHERE name=:name", arg)
 	if err != nil {
 		log.Println(err)
 		return nil, err

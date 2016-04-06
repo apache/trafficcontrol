@@ -69,10 +69,10 @@ type Deliveryservices struct {
 
 type DeliveryservicesLinks struct {
 	Self                      string                    `db:"self" json:"_self"`
+	CdnsLink                  CdnsLink                  `json:"cdns" db:-`
 	DomainsLink               DomainsLink               `json:"domains" db:-`
 	DeliveryservicesTypesLink DeliveryservicesTypesLink `json:"deliveryservices_types" db:-`
 	ProfilesLink              ProfilesLink              `json:"profiles" db:-`
-	CdnsLink                  CdnsLink                  `json:"cdns" db:-`
 }
 
 // @Title getDeliveryservicesById
@@ -82,16 +82,16 @@ type DeliveryservicesLinks struct {
 // @Success 200 {array}    Deliveryservices
 // @Resource /api/2.0
 // @Router /api/2.0/deliveryservices/{id} [get]
-func getDeliveryservicesById(id string, db *sqlx.DB) (interface{}, error) {
+func getDeliveryservicesById(name string, db *sqlx.DB) (interface{}, error) {
 	ret := []Deliveryservices{}
 	arg := Deliveryservices{}
-	arg.Name = id
-	queryStr := "select *, concat('" + API_PATH + "deliveryservices/', name) as self "
+	arg.Name = name
+	queryStr := "select *, concat('" + API_PATH + "deliveryservices/', name) as self"
 	queryStr += ", concat('" + API_PATH + "cdns/', cdn) as cdns_name_ref"
 	queryStr += ", concat('" + API_PATH + "domains/', domain) as domains_name_ref"
 	queryStr += ", concat('" + API_PATH + "deliveryservices_types/', type) as deliveryservices_types_name_ref"
 	queryStr += ", concat('" + API_PATH + "profiles/', profile) as profiles_name_ref"
-	queryStr += " from deliveryservices where name=:name"
+	queryStr += " from deliveryservices WHERE name=:name"
 	nstmt, err := db.PrepareNamed(queryStr)
 	err = nstmt.Select(&ret, arg)
 	if err != nil {
@@ -110,7 +110,7 @@ func getDeliveryservicesById(id string, db *sqlx.DB) (interface{}, error) {
 // @Router /api/2.0/deliveryservices [get]
 func getDeliveryservicess(db *sqlx.DB) (interface{}, error) {
 	ret := []Deliveryservices{}
-	queryStr := "select *, concat('" + API_PATH + "deliveryservices/', name) as self "
+	queryStr := "select *, concat('" + API_PATH + "deliveryservices/', name) as self"
 	queryStr += ", concat('" + API_PATH + "cdns/', cdn) as cdns_name_ref"
 	queryStr += ", concat('" + API_PATH + "domains/', domain) as domains_name_ref"
 	queryStr += ", concat('" + API_PATH + "deliveryservices_types/', type) as deliveryservices_types_name_ref"
@@ -239,10 +239,10 @@ func postDeliveryservices(payload []byte, db *sqlx.DB) (interface{}, error) {
 // @Success 200 {object}    output_format.ApiWrapper
 // @Resource /api/2.0
 // @Router /api/2.0/deliveryservices/{id}  [put]
-func putDeliveryservices(id string, payload []byte, db *sqlx.DB) (interface{}, error) {
-	var v Deliveryservices
-	err := json.Unmarshal(payload, &v)
-	v.Name = id // overwrite the id in the payload
+func putDeliveryservices(name string, payload []byte, db *sqlx.DB) (interface{}, error) {
+	var arg Deliveryservices
+	err := json.Unmarshal(payload, &arg)
+	arg.Name = name
 	if err != nil {
 		log.Println(err)
 		return nil, err
@@ -290,7 +290,7 @@ func putDeliveryservices(id string, payload []byte, db *sqlx.DB) (interface{}, e
 	sqlString += ",tr_request_headers = :tr_request_headers"
 	sqlString += ",created_at = :created_at"
 	sqlString += " WHERE name=:name"
-	result, err := db.NamedExec(sqlString, v)
+	result, err := db.NamedExec(sqlString, arg)
 	if err != nil {
 		log.Println(err)
 		return nil, err
@@ -305,10 +305,10 @@ func putDeliveryservices(id string, payload []byte, db *sqlx.DB) (interface{}, e
 // @Success 200 {array}    Deliveryservices
 // @Resource /api/2.0
 // @Router /api/2.0/deliveryservices/{id} [delete]
-func delDeliveryservices(id string, db *sqlx.DB) (interface{}, error) {
+func delDeliveryservices(name string, db *sqlx.DB) (interface{}, error) {
 	arg := Deliveryservices{}
-	arg.Name = id
-	result, err := db.NamedExec("DELETE FROM deliveryservices WHERE name=:id", arg)
+	arg.Name = name
+	result, err := db.NamedExec("DELETE FROM deliveryservices WHERE name=:name", arg)
 	if err != nil {
 		log.Println(err)
 		return nil, err

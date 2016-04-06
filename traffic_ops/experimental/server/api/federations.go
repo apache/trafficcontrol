@@ -50,8 +50,8 @@ func getFederationsById(id int64, db *sqlx.DB) (interface{}, error) {
 	ret := []Federations{}
 	arg := Federations{}
 	arg.Id = id
-	queryStr := "select *, concat('" + API_PATH + "federations/', id) as self "
-	queryStr += " from federations where id=:id"
+	queryStr := "select *, concat('" + API_PATH + "federations/', id) as self"
+	queryStr += " from federations WHERE id=:id"
 	nstmt, err := db.PrepareNamed(queryStr)
 	err = nstmt.Select(&ret, arg)
 	if err != nil {
@@ -70,7 +70,7 @@ func getFederationsById(id int64, db *sqlx.DB) (interface{}, error) {
 // @Router /api/2.0/federations [get]
 func getFederationss(db *sqlx.DB) (interface{}, error) {
 	ret := []Federations{}
-	queryStr := "select *, concat('" + API_PATH + "federations/', id) as self "
+	queryStr := "select *, concat('" + API_PATH + "federations/', id) as self"
 	queryStr += " from federations"
 	err := db.Select(&ret, queryStr)
 	if err != nil {
@@ -122,9 +122,9 @@ func postFederations(payload []byte, db *sqlx.DB) (interface{}, error) {
 // @Resource /api/2.0
 // @Router /api/2.0/federations/{id}  [put]
 func putFederations(id int64, payload []byte, db *sqlx.DB) (interface{}, error) {
-	var v Federations
-	err := json.Unmarshal(payload, &v)
-	v.Id = id // overwrite the id in the payload
+	var arg Federations
+	err := json.Unmarshal(payload, &arg)
+	arg.Id = id
 	if err != nil {
 		log.Println(err)
 		return nil, err
@@ -135,7 +135,7 @@ func putFederations(id int64, payload []byte, db *sqlx.DB) (interface{}, error) 
 	sqlString += ",ttl = :ttl"
 	sqlString += ",created_at = :created_at"
 	sqlString += " WHERE id=:id"
-	result, err := db.NamedExec(sqlString, v)
+	result, err := db.NamedExec(sqlString, arg)
 	if err != nil {
 		log.Println(err)
 		return nil, err

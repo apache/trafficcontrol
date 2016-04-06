@@ -48,12 +48,12 @@ type ProfilesLink struct {
 // @Success 200 {array}    Profiles
 // @Resource /api/2.0
 // @Router /api/2.0/profiles/{id} [get]
-func getProfilesById(id string, db *sqlx.DB) (interface{}, error) {
+func getProfilesById(name string, db *sqlx.DB) (interface{}, error) {
 	ret := []Profiles{}
 	arg := Profiles{}
-	arg.Name = id
-	queryStr := "select *, concat('" + API_PATH + "profiles/', name) as self "
-	queryStr += " from profiles where name=:name"
+	arg.Name = name
+	queryStr := "select *, concat('" + API_PATH + "profiles/', name) as self"
+	queryStr += " from profiles WHERE name=:name"
 	nstmt, err := db.PrepareNamed(queryStr)
 	err = nstmt.Select(&ret, arg)
 	if err != nil {
@@ -72,7 +72,7 @@ func getProfilesById(id string, db *sqlx.DB) (interface{}, error) {
 // @Router /api/2.0/profiles [get]
 func getProfiless(db *sqlx.DB) (interface{}, error) {
 	ret := []Profiles{}
-	queryStr := "select *, concat('" + API_PATH + "profiles/', name) as self "
+	queryStr := "select *, concat('" + API_PATH + "profiles/', name) as self"
 	queryStr += " from profiles"
 	err := db.Select(&ret, queryStr)
 	if err != nil {
@@ -121,10 +121,10 @@ func postProfiles(payload []byte, db *sqlx.DB) (interface{}, error) {
 // @Success 200 {object}    output_format.ApiWrapper
 // @Resource /api/2.0
 // @Router /api/2.0/profiles/{id}  [put]
-func putProfiles(id string, payload []byte, db *sqlx.DB) (interface{}, error) {
-	var v Profiles
-	err := json.Unmarshal(payload, &v)
-	v.Name = id // overwrite the id in the payload
+func putProfiles(name string, payload []byte, db *sqlx.DB) (interface{}, error) {
+	var arg Profiles
+	err := json.Unmarshal(payload, &arg)
+	arg.Name = name
 	if err != nil {
 		log.Println(err)
 		return nil, err
@@ -134,7 +134,7 @@ func putProfiles(id string, payload []byte, db *sqlx.DB) (interface{}, error) {
 	sqlString += ",description = :description"
 	sqlString += ",created_at = :created_at"
 	sqlString += " WHERE name=:name"
-	result, err := db.NamedExec(sqlString, v)
+	result, err := db.NamedExec(sqlString, arg)
 	if err != nil {
 		log.Println(err)
 		return nil, err
@@ -149,10 +149,10 @@ func putProfiles(id string, payload []byte, db *sqlx.DB) (interface{}, error) {
 // @Success 200 {array}    Profiles
 // @Resource /api/2.0
 // @Router /api/2.0/profiles/{id} [delete]
-func delProfiles(id string, db *sqlx.DB) (interface{}, error) {
+func delProfiles(name string, db *sqlx.DB) (interface{}, error) {
 	arg := Profiles{}
-	arg.Name = id
-	result, err := db.NamedExec("DELETE FROM profiles WHERE name=:id", arg)
+	arg.Name = name
+	result, err := db.NamedExec("DELETE FROM profiles WHERE name=:name", arg)
 	if err != nil {
 		log.Println(err)
 		return nil, err

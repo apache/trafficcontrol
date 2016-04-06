@@ -22,13 +22,14 @@ import (
 	"github.com/Comcast/traffic_control/traffic_ops/experimental/server/csconfig"
 	output "github.com/Comcast/traffic_control/traffic_ops/experimental/server/output_format"
 
-	"fmt"
 	"encoding/json"
+	"fmt"
 	"github.com/gorilla/mux"
 	"github.com/jmoiron/sqlx"
 	"io/ioutil"
 	"log"
 	"net/http"
+	"strconv"
 )
 
 const apiPath = "/api/2.0/"
@@ -42,7 +43,7 @@ func CreateRouter(db *sqlx.DB) http.Handler {
 	router.HandleFunc(apiPath+"{table}", auth.Use(optionsHandler, auth.DONTRequireLogin)).Methods("OPTIONS")
 	router.HandleFunc(apiPath+"{table}/{id}", auth.Use(optionsHandler, auth.DONTRequireLogin)).Methods("OPTIONS")
 	router.HandleFunc(apiPath+"config/cr/{cdn}/CRConfig.json", auth.Use(getHandleCRConfigFunc(db), auth.RequireLogin))
-	router.HandleFunc(apiPath+"config/csconfig/{hostname}", auth.Use(getHandleCSConfigFunc(db), auth.RequireLogin))
+	router.HandleFunc(apiPath+"config/csconfig/hostname/{hostname}/port/{port}", auth.Use(getHandleCSConfigFunc(db), auth.RequireLogin))
 	addApiHandlers(router, db)
 	return auth.Use(router.ServeHTTP, auth.GetContext)
 }
@@ -156,10 +157,19 @@ func getHandleCRConfigFunc(db *sqlx.DB) http.HandlerFunc {
 func getHandleCSConfigFunc(db *sqlx.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		setHeaders(w, []api.ApiMethod{api.GET})
+		enc := json.NewEncoder(w)
 		vars := mux.Vars(r)
 		hostName := vars["hostname"]
-		resp, err := csconfig.GetCSConfig(hostName, db)
-		enc := json.NewEncoder(w)
+		portStr := vars["port"]
+		port, err := strconv.Atoi(portStr)
+		if err != nil {
+			enc.Encode(struct {
+				Error string `json:"error"`
+			}{Error: err.Error()})
+			return
+		}
+
+		resp, err := csconfig.GetCSConfig(hostName, int64(port), db)
 		if err != nil {
 			enc.Encode(struct {
 				Error string `json:"error"`

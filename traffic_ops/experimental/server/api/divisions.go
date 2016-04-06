@@ -42,12 +42,12 @@ type DivisionsLinks struct {
 // @Success 200 {array}    Divisions
 // @Resource /api/2.0
 // @Router /api/2.0/divisions/{id} [get]
-func getDivisionsById(id string, db *sqlx.DB) (interface{}, error) {
+func getDivisionsById(name string, db *sqlx.DB) (interface{}, error) {
 	ret := []Divisions{}
 	arg := Divisions{}
-	arg.Name = id
-	queryStr := "select *, concat('" + API_PATH + "divisions/', name) as self "
-	queryStr += " from divisions where name=:name"
+	arg.Name = name
+	queryStr := "select *, concat('" + API_PATH + "divisions/', name) as self"
+	queryStr += " from divisions WHERE name=:name"
 	nstmt, err := db.PrepareNamed(queryStr)
 	err = nstmt.Select(&ret, arg)
 	if err != nil {
@@ -66,7 +66,7 @@ func getDivisionsById(id string, db *sqlx.DB) (interface{}, error) {
 // @Router /api/2.0/divisions [get]
 func getDivisionss(db *sqlx.DB) (interface{}, error) {
 	ret := []Divisions{}
-	queryStr := "select *, concat('" + API_PATH + "divisions/', name) as self "
+	queryStr := "select *, concat('" + API_PATH + "divisions/', name) as self"
 	queryStr += " from divisions"
 	err := db.Select(&ret, queryStr)
 	if err != nil {
@@ -113,10 +113,10 @@ func postDivisions(payload []byte, db *sqlx.DB) (interface{}, error) {
 // @Success 200 {object}    output_format.ApiWrapper
 // @Resource /api/2.0
 // @Router /api/2.0/divisions/{id}  [put]
-func putDivisions(id string, payload []byte, db *sqlx.DB) (interface{}, error) {
-	var v Divisions
-	err := json.Unmarshal(payload, &v)
-	v.Name = id // overwrite the id in the payload
+func putDivisions(name string, payload []byte, db *sqlx.DB) (interface{}, error) {
+	var arg Divisions
+	err := json.Unmarshal(payload, &arg)
+	arg.Name = name
 	if err != nil {
 		log.Println(err)
 		return nil, err
@@ -125,7 +125,7 @@ func putDivisions(id string, payload []byte, db *sqlx.DB) (interface{}, error) {
 	sqlString += "name = :name"
 	sqlString += ",created_at = :created_at"
 	sqlString += " WHERE name=:name"
-	result, err := db.NamedExec(sqlString, v)
+	result, err := db.NamedExec(sqlString, arg)
 	if err != nil {
 		log.Println(err)
 		return nil, err
@@ -140,10 +140,10 @@ func putDivisions(id string, payload []byte, db *sqlx.DB) (interface{}, error) {
 // @Success 200 {array}    Divisions
 // @Resource /api/2.0
 // @Router /api/2.0/divisions/{id} [delete]
-func delDivisions(id string, db *sqlx.DB) (interface{}, error) {
+func delDivisions(name string, db *sqlx.DB) (interface{}, error) {
 	arg := Divisions{}
-	arg.Name = id
-	result, err := db.NamedExec("DELETE FROM divisions WHERE name=:id", arg)
+	arg.Name = name
+	result, err := db.NamedExec("DELETE FROM divisions WHERE name=:name", arg)
 	if err != nil {
 		log.Println(err)
 		return nil, err

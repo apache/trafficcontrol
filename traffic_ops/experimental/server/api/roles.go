@@ -48,12 +48,12 @@ type RolesLink struct {
 // @Success 200 {array}    Roles
 // @Resource /api/2.0
 // @Router /api/2.0/roles/{id} [get]
-func getRolesById(id string, db *sqlx.DB) (interface{}, error) {
+func getRolesById(name string, db *sqlx.DB) (interface{}, error) {
 	ret := []Roles{}
 	arg := Roles{}
-	arg.Name = id
-	queryStr := "select *, concat('" + API_PATH + "roles/', name) as self "
-	queryStr += " from roles where name=:name"
+	arg.Name = name
+	queryStr := "select *, concat('" + API_PATH + "roles/', name) as self"
+	queryStr += " from roles WHERE name=:name"
 	nstmt, err := db.PrepareNamed(queryStr)
 	err = nstmt.Select(&ret, arg)
 	if err != nil {
@@ -72,7 +72,7 @@ func getRolesById(id string, db *sqlx.DB) (interface{}, error) {
 // @Router /api/2.0/roles [get]
 func getRoless(db *sqlx.DB) (interface{}, error) {
 	ret := []Roles{}
-	queryStr := "select *, concat('" + API_PATH + "roles/', name) as self "
+	queryStr := "select *, concat('" + API_PATH + "roles/', name) as self"
 	queryStr += " from roles"
 	err := db.Select(&ret, queryStr)
 	if err != nil {
@@ -121,10 +121,10 @@ func postRoles(payload []byte, db *sqlx.DB) (interface{}, error) {
 // @Success 200 {object}    output_format.ApiWrapper
 // @Resource /api/2.0
 // @Router /api/2.0/roles/{id}  [put]
-func putRoles(id string, payload []byte, db *sqlx.DB) (interface{}, error) {
-	var v Roles
-	err := json.Unmarshal(payload, &v)
-	v.Name = id // overwrite the id in the payload
+func putRoles(name string, payload []byte, db *sqlx.DB) (interface{}, error) {
+	var arg Roles
+	err := json.Unmarshal(payload, &arg)
+	arg.Name = name
 	if err != nil {
 		log.Println(err)
 		return nil, err
@@ -134,7 +134,7 @@ func putRoles(id string, payload []byte, db *sqlx.DB) (interface{}, error) {
 	sqlString += ",description = :description"
 	sqlString += ",priv_level = :priv_level"
 	sqlString += " WHERE name=:name"
-	result, err := db.NamedExec(sqlString, v)
+	result, err := db.NamedExec(sqlString, arg)
 	if err != nil {
 		log.Println(err)
 		return nil, err
@@ -149,10 +149,10 @@ func putRoles(id string, payload []byte, db *sqlx.DB) (interface{}, error) {
 // @Success 200 {array}    Roles
 // @Resource /api/2.0
 // @Router /api/2.0/roles/{id} [delete]
-func delRoles(id string, db *sqlx.DB) (interface{}, error) {
+func delRoles(name string, db *sqlx.DB) (interface{}, error) {
 	arg := Roles{}
-	arg.Name = id
-	result, err := db.NamedExec("DELETE FROM roles WHERE name=:id", arg)
+	arg.Name = name
+	result, err := db.NamedExec("DELETE FROM roles WHERE name=:name", arg)
 	if err != nil {
 		log.Println(err)
 		return nil, err

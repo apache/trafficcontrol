@@ -43,14 +43,15 @@ type CachegroupsParametersLinks struct {
 // @Success 200 {array}    CachegroupsParameters
 // @Resource /api/2.0
 // @Router /api/2.0/cachegroups_parameters/{id} [get]
-func getCachegroupsParametersById(id string, db *sqlx.DB) (interface{}, error) {
+func getCachegroupsParametersById(cachegroup string, parameterId int64, db *sqlx.DB) (interface{}, error) {
 	ret := []CachegroupsParameters{}
 	arg := CachegroupsParameters{}
-	arg.Links.CachegroupsLink.ID = id
-	queryStr := "select *, concat('" + API_PATH + "cachegroups_parameters/', cachegroup) as self "
+	arg.Links.CachegroupsLink.ID = cachegroup
+	arg.Links.ParametersLink.ID = parameterId
+	queryStr := "select *, concat('" + API_PATH + "cachegroups_parameters', '/cachegroup/', cachegroup, '/parameter_id/', parameter_id) as self"
 	queryStr += ", concat('" + API_PATH + "cachegroups/', cachegroup) as cachegroups_name_ref"
 	queryStr += ", concat('" + API_PATH + "parameters/', parameter_id) as parameters_id_ref"
-	queryStr += " from cachegroups_parameters where cachegroup=:Links.CachegroupsLink.ID"
+	queryStr += " from cachegroups_parameters WHERE cachegroup=:Links.CachegroupsLink.ID AND parameter_id=:Links.ParametersLink.ID"
 	nstmt, err := db.PrepareNamed(queryStr)
 	err = nstmt.Select(&ret, arg)
 	if err != nil {
@@ -69,7 +70,7 @@ func getCachegroupsParametersById(id string, db *sqlx.DB) (interface{}, error) {
 // @Router /api/2.0/cachegroups_parameters [get]
 func getCachegroupsParameterss(db *sqlx.DB) (interface{}, error) {
 	ret := []CachegroupsParameters{}
-	queryStr := "select *, concat('" + API_PATH + "cachegroups_parameters/', cachegroup) as self "
+	queryStr := "select *, concat('" + API_PATH + "cachegroups_parameters', '/cachegroup/', cachegroup, '/parameter_id/', parameter_id) as self"
 	queryStr += ", concat('" + API_PATH + "cachegroups/', cachegroup) as cachegroups_name_ref"
 	queryStr += ", concat('" + API_PATH + "parameters/', parameter_id) as parameters_id_ref"
 	queryStr += " from cachegroups_parameters"
@@ -120,10 +121,11 @@ func postCachegroupsParameters(payload []byte, db *sqlx.DB) (interface{}, error)
 // @Success 200 {object}    output_format.ApiWrapper
 // @Resource /api/2.0
 // @Router /api/2.0/cachegroups_parameters/{id}  [put]
-func putCachegroupsParameters(id string, payload []byte, db *sqlx.DB) (interface{}, error) {
-	var v CachegroupsParameters
-	err := json.Unmarshal(payload, &v)
-	v.Links.CachegroupsLink.ID = id // overwrite the id in the payload
+func putCachegroupsParameters(cachegroup string, parameterId int64, payload []byte, db *sqlx.DB) (interface{}, error) {
+	var arg CachegroupsParameters
+	err := json.Unmarshal(payload, &arg)
+	arg.Links.CachegroupsLink.ID = cachegroup
+	arg.Links.ParametersLink.ID = parameterId
 	if err != nil {
 		log.Println(err)
 		return nil, err
@@ -132,8 +134,8 @@ func putCachegroupsParameters(id string, payload []byte, db *sqlx.DB) (interface
 	sqlString += "cachegroup = :cachegroup"
 	sqlString += ",parameter_id = :parameter_id"
 	sqlString += ",created_at = :created_at"
-	sqlString += " WHERE cachegroup=:Links.CachegroupsLink.ID"
-	result, err := db.NamedExec(sqlString, v)
+	sqlString += " WHERE cachegroup=:Links.CachegroupsLink.ID AND parameter_id=:Links.ParametersLink.ID"
+	result, err := db.NamedExec(sqlString, arg)
 	if err != nil {
 		log.Println(err)
 		return nil, err
@@ -148,10 +150,11 @@ func putCachegroupsParameters(id string, payload []byte, db *sqlx.DB) (interface
 // @Success 200 {array}    CachegroupsParameters
 // @Resource /api/2.0
 // @Router /api/2.0/cachegroups_parameters/{id} [delete]
-func delCachegroupsParameters(id string, db *sqlx.DB) (interface{}, error) {
+func delCachegroupsParameters(cachegroup string, parameterId int64, db *sqlx.DB) (interface{}, error) {
 	arg := CachegroupsParameters{}
-	arg.Links.CachegroupsLink.ID = id
-	result, err := db.NamedExec("DELETE FROM cachegroups_parameters WHERE cachegroup=:Links.CachegroupsLink.ID", arg)
+	arg.Links.CachegroupsLink.ID = cachegroup
+	arg.Links.ParametersLink.ID = parameterId
+	result, err := db.NamedExec("DELETE FROM cachegroups_parameters WHERE cachegroup=:Links.CachegroupsLink.ID AND parameter_id=:Links.ParametersLink.ID", arg)
 	if err != nil {
 		log.Println(err)
 		return nil, err

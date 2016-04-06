@@ -48,12 +48,12 @@ type RegexesTypesLink struct {
 // @Success 200 {array}    RegexesTypes
 // @Resource /api/2.0
 // @Router /api/2.0/regexes_types/{id} [get]
-func getRegexesTypesById(id string, db *sqlx.DB) (interface{}, error) {
+func getRegexesTypesById(name string, db *sqlx.DB) (interface{}, error) {
 	ret := []RegexesTypes{}
 	arg := RegexesTypes{}
-	arg.Name = id
-	queryStr := "select *, concat('" + API_PATH + "regexes_types/', name) as self "
-	queryStr += " from regexes_types where name=:name"
+	arg.Name = name
+	queryStr := "select *, concat('" + API_PATH + "regexes_types/', name) as self"
+	queryStr += " from regexes_types WHERE name=:name"
 	nstmt, err := db.PrepareNamed(queryStr)
 	err = nstmt.Select(&ret, arg)
 	if err != nil {
@@ -72,7 +72,7 @@ func getRegexesTypesById(id string, db *sqlx.DB) (interface{}, error) {
 // @Router /api/2.0/regexes_types [get]
 func getRegexesTypess(db *sqlx.DB) (interface{}, error) {
 	ret := []RegexesTypes{}
-	queryStr := "select *, concat('" + API_PATH + "regexes_types/', name) as self "
+	queryStr := "select *, concat('" + API_PATH + "regexes_types/', name) as self"
 	queryStr += " from regexes_types"
 	err := db.Select(&ret, queryStr)
 	if err != nil {
@@ -121,10 +121,10 @@ func postRegexesTypes(payload []byte, db *sqlx.DB) (interface{}, error) {
 // @Success 200 {object}    output_format.ApiWrapper
 // @Resource /api/2.0
 // @Router /api/2.0/regexes_types/{id}  [put]
-func putRegexesTypes(id string, payload []byte, db *sqlx.DB) (interface{}, error) {
-	var v RegexesTypes
-	err := json.Unmarshal(payload, &v)
-	v.Name = id // overwrite the id in the payload
+func putRegexesTypes(name string, payload []byte, db *sqlx.DB) (interface{}, error) {
+	var arg RegexesTypes
+	err := json.Unmarshal(payload, &arg)
+	arg.Name = name
 	if err != nil {
 		log.Println(err)
 		return nil, err
@@ -134,7 +134,7 @@ func putRegexesTypes(id string, payload []byte, db *sqlx.DB) (interface{}, error
 	sqlString += ",description = :description"
 	sqlString += ",created_at = :created_at"
 	sqlString += " WHERE name=:name"
-	result, err := db.NamedExec(sqlString, v)
+	result, err := db.NamedExec(sqlString, arg)
 	if err != nil {
 		log.Println(err)
 		return nil, err
@@ -149,10 +149,10 @@ func putRegexesTypes(id string, payload []byte, db *sqlx.DB) (interface{}, error
 // @Success 200 {array}    RegexesTypes
 // @Resource /api/2.0
 // @Router /api/2.0/regexes_types/{id} [delete]
-func delRegexesTypes(id string, db *sqlx.DB) (interface{}, error) {
+func delRegexesTypes(name string, db *sqlx.DB) (interface{}, error) {
 	arg := RegexesTypes{}
-	arg.Name = id
-	result, err := db.NamedExec("DELETE FROM regexes_types WHERE name=:id", arg)
+	arg.Name = name
+	result, err := db.NamedExec("DELETE FROM regexes_types WHERE name=:name", arg)
 	if err != nil {
 		log.Println(err)
 		return nil, err
