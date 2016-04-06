@@ -43,12 +43,13 @@ type FederationsFederationResolversLinks struct {
 // @Success 200 {array}    FederationsFederationResolvers
 // @Resource /api/2.0
 // @Router /api/2.0/federations_federation_resolvers/{id} [get]
-func getFederationsFederationResolversById(id int64, db *sqlx.DB) (interface{}, error) {
+func getFederationsFederationResolversById(federationId int64, federationResolver int64, db *sqlx.DB) (interface{}, error) {
 	ret := []FederationsFederationResolvers{}
 	arg := FederationsFederationResolvers{}
-	arg.FederationId = id
-	queryStr := "select *, concat('" + API_PATH + "federations_federation_resolvers/', federation_id) as self "
-	queryStr += " from federations_federation_resolvers where federation_id=:federation_id"
+	arg.FederationId = federationId
+	arg.FederationResolver = federationResolver
+	queryStr := "select *, concat('" + API_PATH + "federations_federation_resolvers', '/federation_id/', federation_id, '/federation_resolver/', federation_resolver) as self"
+	queryStr += " from federations_federation_resolvers WHERE federation_id=:federation_id AND federation_resolver=:federation_resolver"
 	nstmt, err := db.PrepareNamed(queryStr)
 	err = nstmt.Select(&ret, arg)
 	if err != nil {
@@ -67,7 +68,7 @@ func getFederationsFederationResolversById(id int64, db *sqlx.DB) (interface{}, 
 // @Router /api/2.0/federations_federation_resolvers [get]
 func getFederationsFederationResolverss(db *sqlx.DB) (interface{}, error) {
 	ret := []FederationsFederationResolvers{}
-	queryStr := "select *, concat('" + API_PATH + "federations_federation_resolvers/', federation_id) as self "
+	queryStr := "select *, concat('" + API_PATH + "federations_federation_resolvers', '/federation_id/', federation_id, '/federation_resolver/', federation_resolver) as self"
 	queryStr += " from federations_federation_resolvers"
 	err := db.Select(&ret, queryStr)
 	if err != nil {
@@ -116,10 +117,11 @@ func postFederationsFederationResolvers(payload []byte, db *sqlx.DB) (interface{
 // @Success 200 {object}    output_format.ApiWrapper
 // @Resource /api/2.0
 // @Router /api/2.0/federations_federation_resolvers/{id}  [put]
-func putFederationsFederationResolvers(id int64, payload []byte, db *sqlx.DB) (interface{}, error) {
-	var v FederationsFederationResolvers
-	err := json.Unmarshal(payload, &v)
-	v.FederationId = id // overwrite the id in the payload
+func putFederationsFederationResolvers(federationId int64, federationResolver int64, payload []byte, db *sqlx.DB) (interface{}, error) {
+	var arg FederationsFederationResolvers
+	err := json.Unmarshal(payload, &arg)
+	arg.FederationId = federationId
+	arg.FederationResolver = federationResolver
 	if err != nil {
 		log.Println(err)
 		return nil, err
@@ -128,8 +130,8 @@ func putFederationsFederationResolvers(id int64, payload []byte, db *sqlx.DB) (i
 	sqlString += "federation_id = :federation_id"
 	sqlString += ",federation_resolver = :federation_resolver"
 	sqlString += ",created_at = :created_at"
-	sqlString += " WHERE federation_id=:federation_id"
-	result, err := db.NamedExec(sqlString, v)
+	sqlString += " WHERE federation_id=:federation_id AND federation_resolver=:federation_resolver"
+	result, err := db.NamedExec(sqlString, arg)
 	if err != nil {
 		log.Println(err)
 		return nil, err
@@ -144,10 +146,11 @@ func putFederationsFederationResolvers(id int64, payload []byte, db *sqlx.DB) (i
 // @Success 200 {array}    FederationsFederationResolvers
 // @Resource /api/2.0
 // @Router /api/2.0/federations_federation_resolvers/{id} [delete]
-func delFederationsFederationResolvers(id int64, db *sqlx.DB) (interface{}, error) {
+func delFederationsFederationResolvers(federationId int64, federationResolver int64, db *sqlx.DB) (interface{}, error) {
 	arg := FederationsFederationResolvers{}
-	arg.FederationId = id
-	result, err := db.NamedExec("DELETE FROM federations_federation_resolvers WHERE federation_id=:id", arg)
+	arg.FederationId = federationId
+	arg.FederationResolver = federationResolver
+	result, err := db.NamedExec("DELETE FROM federations_federation_resolvers WHERE federation_id=:federation_id AND federation_resolver=:federation_resolver", arg)
 	if err != nil {
 		log.Println(err)
 		return nil, err

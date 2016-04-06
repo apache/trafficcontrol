@@ -51,8 +51,8 @@ func getLogById(id int64, db *sqlx.DB) (interface{}, error) {
 	ret := []Log{}
 	arg := Log{}
 	arg.Id = id
-	queryStr := "select *, concat('" + API_PATH + "log/', id) as self "
-	queryStr += " from log where id=:id"
+	queryStr := "select *, concat('" + API_PATH + "log/', id) as self"
+	queryStr += " from log WHERE id=:id"
 	nstmt, err := db.PrepareNamed(queryStr)
 	err = nstmt.Select(&ret, arg)
 	if err != nil {
@@ -71,7 +71,7 @@ func getLogById(id int64, db *sqlx.DB) (interface{}, error) {
 // @Router /api/2.0/log [get]
 func getLogs(db *sqlx.DB) (interface{}, error) {
 	ret := []Log{}
-	queryStr := "select *, concat('" + API_PATH + "log/', id) as self "
+	queryStr := "select *, concat('" + API_PATH + "log/', id) as self"
 	queryStr += " from log"
 	err := db.Select(&ret, queryStr)
 	if err != nil {
@@ -125,9 +125,9 @@ func postLog(payload []byte, db *sqlx.DB) (interface{}, error) {
 // @Resource /api/2.0
 // @Router /api/2.0/log/{id}  [put]
 func putLog(id int64, payload []byte, db *sqlx.DB) (interface{}, error) {
-	var v Log
-	err := json.Unmarshal(payload, &v)
-	v.Id = id // overwrite the id in the payload
+	var arg Log
+	err := json.Unmarshal(payload, &arg)
+	arg.Id = id
 	if err != nil {
 		log.Println(err)
 		return nil, err
@@ -139,7 +139,7 @@ func putLog(id int64, payload []byte, db *sqlx.DB) (interface{}, error) {
 	sqlString += ",ticketnum = :ticketnum"
 	sqlString += ",created_at = :created_at"
 	sqlString += " WHERE id=:id"
-	result, err := db.NamedExec(sqlString, v)
+	result, err := db.NamedExec(sqlString, arg)
 	if err != nil {
 		log.Println(err)
 		return nil, err

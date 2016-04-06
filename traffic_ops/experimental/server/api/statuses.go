@@ -44,12 +44,12 @@ type StatusesLinks struct {
 // @Success 200 {array}    Statuses
 // @Resource /api/2.0
 // @Router /api/2.0/statuses/{id} [get]
-func getStatusesById(id string, db *sqlx.DB) (interface{}, error) {
+func getStatusesById(name string, db *sqlx.DB) (interface{}, error) {
 	ret := []Statuses{}
 	arg := Statuses{}
-	arg.Name = id
-	queryStr := "select *, concat('" + API_PATH + "statuses/', name) as self "
-	queryStr += " from statuses where name=:name"
+	arg.Name = name
+	queryStr := "select *, concat('" + API_PATH + "statuses/', name) as self"
+	queryStr += " from statuses WHERE name=:name"
 	nstmt, err := db.PrepareNamed(queryStr)
 	err = nstmt.Select(&ret, arg)
 	if err != nil {
@@ -68,7 +68,7 @@ func getStatusesById(id string, db *sqlx.DB) (interface{}, error) {
 // @Router /api/2.0/statuses [get]
 func getStatusess(db *sqlx.DB) (interface{}, error) {
 	ret := []Statuses{}
-	queryStr := "select *, concat('" + API_PATH + "statuses/', name) as self "
+	queryStr := "select *, concat('" + API_PATH + "statuses/', name) as self"
 	queryStr += " from statuses"
 	err := db.Select(&ret, queryStr)
 	if err != nil {
@@ -117,10 +117,10 @@ func postStatuses(payload []byte, db *sqlx.DB) (interface{}, error) {
 // @Success 200 {object}    output_format.ApiWrapper
 // @Resource /api/2.0
 // @Router /api/2.0/statuses/{id}  [put]
-func putStatuses(id string, payload []byte, db *sqlx.DB) (interface{}, error) {
-	var v Statuses
-	err := json.Unmarshal(payload, &v)
-	v.Name = id // overwrite the id in the payload
+func putStatuses(name string, payload []byte, db *sqlx.DB) (interface{}, error) {
+	var arg Statuses
+	err := json.Unmarshal(payload, &arg)
+	arg.Name = name
 	if err != nil {
 		log.Println(err)
 		return nil, err
@@ -130,7 +130,7 @@ func putStatuses(id string, payload []byte, db *sqlx.DB) (interface{}, error) {
 	sqlString += ",description = :description"
 	sqlString += ",created_at = :created_at"
 	sqlString += " WHERE name=:name"
-	result, err := db.NamedExec(sqlString, v)
+	result, err := db.NamedExec(sqlString, arg)
 	if err != nil {
 		log.Println(err)
 		return nil, err
@@ -145,10 +145,10 @@ func putStatuses(id string, payload []byte, db *sqlx.DB) (interface{}, error) {
 // @Success 200 {array}    Statuses
 // @Resource /api/2.0
 // @Router /api/2.0/statuses/{id} [delete]
-func delStatuses(id string, db *sqlx.DB) (interface{}, error) {
+func delStatuses(name string, db *sqlx.DB) (interface{}, error) {
 	arg := Statuses{}
-	arg.Name = id
-	result, err := db.NamedExec("DELETE FROM statuses WHERE name=:id", arg)
+	arg.Name = name
+	result, err := db.NamedExec("DELETE FROM statuses WHERE name=:name", arg)
 	if err != nil {
 		log.Println(err)
 		return nil, err

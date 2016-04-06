@@ -43,13 +43,13 @@ type AsnsLinks struct {
 // @Success 200 {array}    Asns
 // @Resource /api/2.0
 // @Router /api/2.0/asns/{id} [get]
-func getAsnsById(id int64, db *sqlx.DB) (interface{}, error) {
+func getAsnsById(asn int64, db *sqlx.DB) (interface{}, error) {
 	ret := []Asns{}
 	arg := Asns{}
-	arg.Asn = id
-	queryStr := "select *, concat('" + API_PATH + "asns/', asn) as self "
+	arg.Asn = asn
+	queryStr := "select *, concat('" + API_PATH + "asns/', asn) as self"
 	queryStr += ", concat('" + API_PATH + "cachegroups/', cachegroups) as cachegroups_name_ref"
-	queryStr += " from asns where asn=:asn"
+	queryStr += " from asns WHERE asn=:asn"
 	nstmt, err := db.PrepareNamed(queryStr)
 	err = nstmt.Select(&ret, arg)
 	if err != nil {
@@ -68,7 +68,7 @@ func getAsnsById(id int64, db *sqlx.DB) (interface{}, error) {
 // @Router /api/2.0/asns [get]
 func getAsnss(db *sqlx.DB) (interface{}, error) {
 	ret := []Asns{}
-	queryStr := "select *, concat('" + API_PATH + "asns/', asn) as self "
+	queryStr := "select *, concat('" + API_PATH + "asns/', asn) as self"
 	queryStr += ", concat('" + API_PATH + "cachegroups/', cachegroups) as cachegroups_name_ref"
 	queryStr += " from asns"
 	err := db.Select(&ret, queryStr)
@@ -118,10 +118,10 @@ func postAsns(payload []byte, db *sqlx.DB) (interface{}, error) {
 // @Success 200 {object}    output_format.ApiWrapper
 // @Resource /api/2.0
 // @Router /api/2.0/asns/{id}  [put]
-func putAsns(id int64, payload []byte, db *sqlx.DB) (interface{}, error) {
-	var v Asns
-	err := json.Unmarshal(payload, &v)
-	v.Asn = id // overwrite the id in the payload
+func putAsns(asn int64, payload []byte, db *sqlx.DB) (interface{}, error) {
+	var arg Asns
+	err := json.Unmarshal(payload, &arg)
+	arg.Asn = asn
 	if err != nil {
 		log.Println(err)
 		return nil, err
@@ -131,7 +131,7 @@ func putAsns(id int64, payload []byte, db *sqlx.DB) (interface{}, error) {
 	sqlString += ",cachegroups = :cachegroups"
 	sqlString += ",created_at = :created_at"
 	sqlString += " WHERE asn=:asn"
-	result, err := db.NamedExec(sqlString, v)
+	result, err := db.NamedExec(sqlString, arg)
 	if err != nil {
 		log.Println(err)
 		return nil, err
@@ -146,10 +146,10 @@ func putAsns(id int64, payload []byte, db *sqlx.DB) (interface{}, error) {
 // @Success 200 {array}    Asns
 // @Resource /api/2.0
 // @Router /api/2.0/asns/{id} [delete]
-func delAsns(id int64, db *sqlx.DB) (interface{}, error) {
+func delAsns(asn int64, db *sqlx.DB) (interface{}, error) {
 	arg := Asns{}
-	arg.Asn = id
-	result, err := db.NamedExec("DELETE FROM asns WHERE asn=:id", arg)
+	arg.Asn = asn
+	result, err := db.NamedExec("DELETE FROM asns WHERE asn=:asn", arg)
 	if err != nil {
 		log.Println(err)
 		return nil, err

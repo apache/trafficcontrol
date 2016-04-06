@@ -53,12 +53,12 @@ type PhysLocationsLinks struct {
 // @Success 200 {array}    PhysLocations
 // @Resource /api/2.0
 // @Router /api/2.0/phys_locations/{id} [get]
-func getPhysLocationsById(id string, db *sqlx.DB) (interface{}, error) {
+func getPhysLocationsById(name string, db *sqlx.DB) (interface{}, error) {
 	ret := []PhysLocations{}
 	arg := PhysLocations{}
-	arg.Name = id
-	queryStr := "select *, concat('" + API_PATH + "phys_locations/', name) as self "
-	queryStr += " from phys_locations where name=:name"
+	arg.Name = name
+	queryStr := "select *, concat('" + API_PATH + "phys_locations/', name) as self"
+	queryStr += " from phys_locations WHERE name=:name"
 	nstmt, err := db.PrepareNamed(queryStr)
 	err = nstmt.Select(&ret, arg)
 	if err != nil {
@@ -77,7 +77,7 @@ func getPhysLocationsById(id string, db *sqlx.DB) (interface{}, error) {
 // @Router /api/2.0/phys_locations [get]
 func getPhysLocationss(db *sqlx.DB) (interface{}, error) {
 	ret := []PhysLocations{}
-	queryStr := "select *, concat('" + API_PATH + "phys_locations/', name) as self "
+	queryStr := "select *, concat('" + API_PATH + "phys_locations/', name) as self"
 	queryStr += " from phys_locations"
 	err := db.Select(&ret, queryStr)
 	if err != nil {
@@ -144,10 +144,10 @@ func postPhysLocations(payload []byte, db *sqlx.DB) (interface{}, error) {
 // @Success 200 {object}    output_format.ApiWrapper
 // @Resource /api/2.0
 // @Router /api/2.0/phys_locations/{id}  [put]
-func putPhysLocations(id string, payload []byte, db *sqlx.DB) (interface{}, error) {
-	var v PhysLocations
-	err := json.Unmarshal(payload, &v)
-	v.Name = id // overwrite the id in the payload
+func putPhysLocations(name string, payload []byte, db *sqlx.DB) (interface{}, error) {
+	var arg PhysLocations
+	err := json.Unmarshal(payload, &arg)
+	arg.Name = name
 	if err != nil {
 		log.Println(err)
 		return nil, err
@@ -166,7 +166,7 @@ func putPhysLocations(id string, payload []byte, db *sqlx.DB) (interface{}, erro
 	sqlString += ",region = :region"
 	sqlString += ",created_at = :created_at"
 	sqlString += " WHERE name=:name"
-	result, err := db.NamedExec(sqlString, v)
+	result, err := db.NamedExec(sqlString, arg)
 	if err != nil {
 		log.Println(err)
 		return nil, err
@@ -181,10 +181,10 @@ func putPhysLocations(id string, payload []byte, db *sqlx.DB) (interface{}, erro
 // @Success 200 {array}    PhysLocations
 // @Resource /api/2.0
 // @Router /api/2.0/phys_locations/{id} [delete]
-func delPhysLocations(id string, db *sqlx.DB) (interface{}, error) {
+func delPhysLocations(name string, db *sqlx.DB) (interface{}, error) {
 	arg := PhysLocations{}
-	arg.Name = id
-	result, err := db.NamedExec("DELETE FROM phys_locations WHERE name=:id", arg)
+	arg.Name = name
+	result, err := db.NamedExec("DELETE FROM phys_locations WHERE name=:name", arg)
 	if err != nil {
 		log.Println(err)
 		return nil, err

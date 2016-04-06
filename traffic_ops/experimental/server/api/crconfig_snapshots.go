@@ -43,13 +43,14 @@ type CrconfigSnapshotsLinks struct {
 // @Success 200 {array}    CrconfigSnapshots
 // @Resource /api/2.0
 // @Router /api/2.0/crconfig_snapshots/{id} [get]
-func getCrconfigSnapshotsById(id string, db *sqlx.DB) (interface{}, error) {
+func getCrconfigSnapshotsById(cdn string, createdAt time.Time, db *sqlx.DB) (interface{}, error) {
 	ret := []CrconfigSnapshots{}
 	arg := CrconfigSnapshots{}
-	arg.Links.CdnsLink.ID = id
-	queryStr := "select *, concat('" + API_PATH + "crconfig_snapshots/', cdn) as self "
+	arg.Links.CdnsLink.ID = cdn
+	arg.CreatedAt = createdAt
+	queryStr := "select *, concat('" + API_PATH + "crconfig_snapshots', '/cdn/', cdn, '/created_at/', created_at) as self"
 	queryStr += ", concat('" + API_PATH + "cdns/', cdn) as cdns_name_ref"
-	queryStr += " from crconfig_snapshots where cdn=:Links.CdnsLink.ID"
+	queryStr += " from crconfig_snapshots WHERE cdn=:Links.CdnsLink.ID AND created_at=:created_at"
 	nstmt, err := db.PrepareNamed(queryStr)
 	err = nstmt.Select(&ret, arg)
 	if err != nil {
@@ -68,7 +69,7 @@ func getCrconfigSnapshotsById(id string, db *sqlx.DB) (interface{}, error) {
 // @Router /api/2.0/crconfig_snapshots [get]
 func getCrconfigSnapshotss(db *sqlx.DB) (interface{}, error) {
 	ret := []CrconfigSnapshots{}
-	queryStr := "select *, concat('" + API_PATH + "crconfig_snapshots/', cdn) as self "
+	queryStr := "select *, concat('" + API_PATH + "crconfig_snapshots', '/cdn/', cdn, '/created_at/', created_at) as self"
 	queryStr += ", concat('" + API_PATH + "cdns/', cdn) as cdns_name_ref"
 	queryStr += " from crconfig_snapshots"
 	err := db.Select(&ret, queryStr)
@@ -118,10 +119,11 @@ func postCrconfigSnapshots(payload []byte, db *sqlx.DB) (interface{}, error) {
 // @Success 200 {object}    output_format.ApiWrapper
 // @Resource /api/2.0
 // @Router /api/2.0/crconfig_snapshots/{id}  [put]
-func putCrconfigSnapshots(id string, payload []byte, db *sqlx.DB) (interface{}, error) {
-	var v CrconfigSnapshots
-	err := json.Unmarshal(payload, &v)
-	v.Links.CdnsLink.ID = id // overwrite the id in the payload
+func putCrconfigSnapshots(cdn string, createdAt time.Time, payload []byte, db *sqlx.DB) (interface{}, error) {
+	var arg CrconfigSnapshots
+	err := json.Unmarshal(payload, &arg)
+	arg.Links.CdnsLink.ID = cdn
+	arg.CreatedAt = createdAt
 	if err != nil {
 		log.Println(err)
 		return nil, err
@@ -130,8 +132,8 @@ func putCrconfigSnapshots(id string, payload []byte, db *sqlx.DB) (interface{}, 
 	sqlString += "cdn = :cdn"
 	sqlString += ",snapshot = :snapshot"
 	sqlString += ",created_at = :created_at"
-	sqlString += " WHERE cdn=:Links.CdnsLink.ID"
-	result, err := db.NamedExec(sqlString, v)
+	sqlString += " WHERE cdn=:Links.CdnsLink.ID AND created_at=:created_at"
+	result, err := db.NamedExec(sqlString, arg)
 	if err != nil {
 		log.Println(err)
 		return nil, err
@@ -146,10 +148,11 @@ func putCrconfigSnapshots(id string, payload []byte, db *sqlx.DB) (interface{}, 
 // @Success 200 {array}    CrconfigSnapshots
 // @Resource /api/2.0
 // @Router /api/2.0/crconfig_snapshots/{id} [delete]
-func delCrconfigSnapshots(id string, db *sqlx.DB) (interface{}, error) {
+func delCrconfigSnapshots(cdn string, createdAt time.Time, db *sqlx.DB) (interface{}, error) {
 	arg := CrconfigSnapshots{}
-	arg.Links.CdnsLink.ID = id
-	result, err := db.NamedExec("DELETE FROM crconfig_snapshots WHERE cdn=:Links.CdnsLink.ID", arg)
+	arg.Links.CdnsLink.ID = cdn
+	arg.CreatedAt = createdAt
+	result, err := db.NamedExec("DELETE FROM crconfig_snapshots WHERE cdn=:Links.CdnsLink.ID AND created_at=:created_at", arg)
 	if err != nil {
 		log.Println(err)
 		return nil, err

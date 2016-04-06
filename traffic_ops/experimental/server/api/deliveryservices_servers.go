@@ -43,12 +43,13 @@ type DeliveryservicesServersLinks struct {
 // @Success 200 {array}    DeliveryservicesServers
 // @Resource /api/2.0
 // @Router /api/2.0/deliveryservices_servers/{id} [get]
-func getDeliveryservicesServersById(id string, db *sqlx.DB) (interface{}, error) {
+func getDeliveryservicesServersById(deliveryservice string, server string, db *sqlx.DB) (interface{}, error) {
 	ret := []DeliveryservicesServers{}
 	arg := DeliveryservicesServers{}
-	arg.Deliveryservice = id
-	queryStr := "select *, concat('" + API_PATH + "deliveryservices_servers/', deliveryservice) as self "
-	queryStr += " from deliveryservices_servers where deliveryservice=:deliveryservice"
+	arg.Deliveryservice = deliveryservice
+	arg.Server = server
+	queryStr := "select *, concat('" + API_PATH + "deliveryservices_servers', '/deliveryservice/', deliveryservice, '/server/', server) as self"
+	queryStr += " from deliveryservices_servers WHERE deliveryservice=:deliveryservice AND server=:server"
 	nstmt, err := db.PrepareNamed(queryStr)
 	err = nstmt.Select(&ret, arg)
 	if err != nil {
@@ -67,7 +68,7 @@ func getDeliveryservicesServersById(id string, db *sqlx.DB) (interface{}, error)
 // @Router /api/2.0/deliveryservices_servers [get]
 func getDeliveryservicesServerss(db *sqlx.DB) (interface{}, error) {
 	ret := []DeliveryservicesServers{}
-	queryStr := "select *, concat('" + API_PATH + "deliveryservices_servers/', deliveryservice) as self "
+	queryStr := "select *, concat('" + API_PATH + "deliveryservices_servers', '/deliveryservice/', deliveryservice, '/server/', server) as self"
 	queryStr += " from deliveryservices_servers"
 	err := db.Select(&ret, queryStr)
 	if err != nil {
@@ -116,10 +117,11 @@ func postDeliveryservicesServers(payload []byte, db *sqlx.DB) (interface{}, erro
 // @Success 200 {object}    output_format.ApiWrapper
 // @Resource /api/2.0
 // @Router /api/2.0/deliveryservices_servers/{id}  [put]
-func putDeliveryservicesServers(id string, payload []byte, db *sqlx.DB) (interface{}, error) {
-	var v DeliveryservicesServers
-	err := json.Unmarshal(payload, &v)
-	v.Deliveryservice = id // overwrite the id in the payload
+func putDeliveryservicesServers(deliveryservice string, server string, payload []byte, db *sqlx.DB) (interface{}, error) {
+	var arg DeliveryservicesServers
+	err := json.Unmarshal(payload, &arg)
+	arg.Deliveryservice = deliveryservice
+	arg.Server = server
 	if err != nil {
 		log.Println(err)
 		return nil, err
@@ -128,8 +130,8 @@ func putDeliveryservicesServers(id string, payload []byte, db *sqlx.DB) (interfa
 	sqlString += "deliveryservice = :deliveryservice"
 	sqlString += ",server = :server"
 	sqlString += ",created_at = :created_at"
-	sqlString += " WHERE deliveryservice=:deliveryservice"
-	result, err := db.NamedExec(sqlString, v)
+	sqlString += " WHERE deliveryservice=:deliveryservice AND server=:server"
+	result, err := db.NamedExec(sqlString, arg)
 	if err != nil {
 		log.Println(err)
 		return nil, err
@@ -144,10 +146,11 @@ func putDeliveryservicesServers(id string, payload []byte, db *sqlx.DB) (interfa
 // @Success 200 {array}    DeliveryservicesServers
 // @Resource /api/2.0
 // @Router /api/2.0/deliveryservices_servers/{id} [delete]
-func delDeliveryservicesServers(id string, db *sqlx.DB) (interface{}, error) {
+func delDeliveryservicesServers(deliveryservice string, server string, db *sqlx.DB) (interface{}, error) {
 	arg := DeliveryservicesServers{}
-	arg.Deliveryservice = id
-	result, err := db.NamedExec("DELETE FROM deliveryservices_servers WHERE deliveryservice=:id", arg)
+	arg.Deliveryservice = deliveryservice
+	arg.Server = server
+	result, err := db.NamedExec("DELETE FROM deliveryservices_servers WHERE deliveryservice=:deliveryservice AND server=:server", arg)
 	if err != nil {
 		log.Println(err)
 		return nil, err

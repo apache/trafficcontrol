@@ -43,12 +43,13 @@ type ProfilesParametersLinks struct {
 // @Success 200 {array}    ProfilesParameters
 // @Resource /api/2.0
 // @Router /api/2.0/profiles_parameters/{id} [get]
-func getProfilesParametersById(id string, db *sqlx.DB) (interface{}, error) {
+func getProfilesParametersById(profile string, parameterId int64, db *sqlx.DB) (interface{}, error) {
 	ret := []ProfilesParameters{}
 	arg := ProfilesParameters{}
-	arg.Profile = id
-	queryStr := "select *, concat('" + API_PATH + "profiles_parameters/', profile) as self "
-	queryStr += " from profiles_parameters where profile=:profile"
+	arg.Profile = profile
+	arg.ParameterId = parameterId
+	queryStr := "select *, concat('" + API_PATH + "profiles_parameters', '/profile/', profile, '/parameter_id/', parameter_id) as self"
+	queryStr += " from profiles_parameters WHERE profile=:profile AND parameter_id=:parameter_id"
 	nstmt, err := db.PrepareNamed(queryStr)
 	err = nstmt.Select(&ret, arg)
 	if err != nil {
@@ -67,7 +68,7 @@ func getProfilesParametersById(id string, db *sqlx.DB) (interface{}, error) {
 // @Router /api/2.0/profiles_parameters [get]
 func getProfilesParameterss(db *sqlx.DB) (interface{}, error) {
 	ret := []ProfilesParameters{}
-	queryStr := "select *, concat('" + API_PATH + "profiles_parameters/', profile) as self "
+	queryStr := "select *, concat('" + API_PATH + "profiles_parameters', '/profile/', profile, '/parameter_id/', parameter_id) as self"
 	queryStr += " from profiles_parameters"
 	err := db.Select(&ret, queryStr)
 	if err != nil {
@@ -116,10 +117,11 @@ func postProfilesParameters(payload []byte, db *sqlx.DB) (interface{}, error) {
 // @Success 200 {object}    output_format.ApiWrapper
 // @Resource /api/2.0
 // @Router /api/2.0/profiles_parameters/{id}  [put]
-func putProfilesParameters(id string, payload []byte, db *sqlx.DB) (interface{}, error) {
-	var v ProfilesParameters
-	err := json.Unmarshal(payload, &v)
-	v.Profile = id // overwrite the id in the payload
+func putProfilesParameters(profile string, parameterId int64, payload []byte, db *sqlx.DB) (interface{}, error) {
+	var arg ProfilesParameters
+	err := json.Unmarshal(payload, &arg)
+	arg.Profile = profile
+	arg.ParameterId = parameterId
 	if err != nil {
 		log.Println(err)
 		return nil, err
@@ -128,8 +130,8 @@ func putProfilesParameters(id string, payload []byte, db *sqlx.DB) (interface{},
 	sqlString += "profile = :profile"
 	sqlString += ",parameter_id = :parameter_id"
 	sqlString += ",created_at = :created_at"
-	sqlString += " WHERE profile=:profile"
-	result, err := db.NamedExec(sqlString, v)
+	sqlString += " WHERE profile=:profile AND parameter_id=:parameter_id"
+	result, err := db.NamedExec(sqlString, arg)
 	if err != nil {
 		log.Println(err)
 		return nil, err
@@ -144,10 +146,11 @@ func putProfilesParameters(id string, payload []byte, db *sqlx.DB) (interface{},
 // @Success 200 {array}    ProfilesParameters
 // @Resource /api/2.0
 // @Router /api/2.0/profiles_parameters/{id} [delete]
-func delProfilesParameters(id string, db *sqlx.DB) (interface{}, error) {
+func delProfilesParameters(profile string, parameterId int64, db *sqlx.DB) (interface{}, error) {
 	arg := ProfilesParameters{}
-	arg.Profile = id
-	result, err := db.NamedExec("DELETE FROM profiles_parameters WHERE profile=:id", arg)
+	arg.Profile = profile
+	arg.ParameterId = parameterId
+	result, err := db.NamedExec("DELETE FROM profiles_parameters WHERE profile=:profile AND parameter_id=:parameter_id", arg)
 	if err != nil {
 		log.Println(err)
 		return nil, err

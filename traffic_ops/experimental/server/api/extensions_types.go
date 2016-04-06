@@ -48,12 +48,12 @@ type ExtensionsTypesLink struct {
 // @Success 200 {array}    ExtensionsTypes
 // @Resource /api/2.0
 // @Router /api/2.0/extensions_types/{id} [get]
-func getExtensionsTypesById(id string, db *sqlx.DB) (interface{}, error) {
+func getExtensionsTypesById(name string, db *sqlx.DB) (interface{}, error) {
 	ret := []ExtensionsTypes{}
 	arg := ExtensionsTypes{}
-	arg.Name = id
-	queryStr := "select *, concat('" + API_PATH + "extensions_types/', name) as self "
-	queryStr += " from extensions_types where name=:name"
+	arg.Name = name
+	queryStr := "select *, concat('" + API_PATH + "extensions_types/', name) as self"
+	queryStr += " from extensions_types WHERE name=:name"
 	nstmt, err := db.PrepareNamed(queryStr)
 	err = nstmt.Select(&ret, arg)
 	if err != nil {
@@ -72,7 +72,7 @@ func getExtensionsTypesById(id string, db *sqlx.DB) (interface{}, error) {
 // @Router /api/2.0/extensions_types [get]
 func getExtensionsTypess(db *sqlx.DB) (interface{}, error) {
 	ret := []ExtensionsTypes{}
-	queryStr := "select *, concat('" + API_PATH + "extensions_types/', name) as self "
+	queryStr := "select *, concat('" + API_PATH + "extensions_types/', name) as self"
 	queryStr += " from extensions_types"
 	err := db.Select(&ret, queryStr)
 	if err != nil {
@@ -121,10 +121,10 @@ func postExtensionsTypes(payload []byte, db *sqlx.DB) (interface{}, error) {
 // @Success 200 {object}    output_format.ApiWrapper
 // @Resource /api/2.0
 // @Router /api/2.0/extensions_types/{id}  [put]
-func putExtensionsTypes(id string, payload []byte, db *sqlx.DB) (interface{}, error) {
-	var v ExtensionsTypes
-	err := json.Unmarshal(payload, &v)
-	v.Name = id // overwrite the id in the payload
+func putExtensionsTypes(name string, payload []byte, db *sqlx.DB) (interface{}, error) {
+	var arg ExtensionsTypes
+	err := json.Unmarshal(payload, &arg)
+	arg.Name = name
 	if err != nil {
 		log.Println(err)
 		return nil, err
@@ -134,7 +134,7 @@ func putExtensionsTypes(id string, payload []byte, db *sqlx.DB) (interface{}, er
 	sqlString += ",description = :description"
 	sqlString += ",created_at = :created_at"
 	sqlString += " WHERE name=:name"
-	result, err := db.NamedExec(sqlString, v)
+	result, err := db.NamedExec(sqlString, arg)
 	if err != nil {
 		log.Println(err)
 		return nil, err
@@ -149,10 +149,10 @@ func putExtensionsTypes(id string, payload []byte, db *sqlx.DB) (interface{}, er
 // @Success 200 {array}    ExtensionsTypes
 // @Resource /api/2.0
 // @Router /api/2.0/extensions_types/{id} [delete]
-func delExtensionsTypes(id string, db *sqlx.DB) (interface{}, error) {
+func delExtensionsTypes(name string, db *sqlx.DB) (interface{}, error) {
 	arg := ExtensionsTypes{}
-	arg.Name = id
-	result, err := db.NamedExec("DELETE FROM extensions_types WHERE name=:id", arg)
+	arg.Name = name
+	result, err := db.NamedExec("DELETE FROM extensions_types WHERE name=:name", arg)
 	if err != nil {
 		log.Println(err)
 		return nil, err

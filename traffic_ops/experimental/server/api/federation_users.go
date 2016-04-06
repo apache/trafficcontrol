@@ -44,12 +44,13 @@ type FederationUsersLinks struct {
 // @Success 200 {array}    FederationUsers
 // @Resource /api/2.0
 // @Router /api/2.0/federation_users/{id} [get]
-func getFederationUsersById(id int64, db *sqlx.DB) (interface{}, error) {
+func getFederationUsersById(federationId int64, username string, db *sqlx.DB) (interface{}, error) {
 	ret := []FederationUsers{}
 	arg := FederationUsers{}
-	arg.FederationId = id
-	queryStr := "select *, concat('" + API_PATH + "federation_users/', federation_id) as self "
-	queryStr += " from federation_users where federation_id=:federation_id"
+	arg.FederationId = federationId
+	arg.Username = username
+	queryStr := "select *, concat('" + API_PATH + "federation_users', '/federation_id/', federation_id, '/username/', username) as self"
+	queryStr += " from federation_users WHERE federation_id=:federation_id AND username=:username"
 	nstmt, err := db.PrepareNamed(queryStr)
 	err = nstmt.Select(&ret, arg)
 	if err != nil {
@@ -68,7 +69,7 @@ func getFederationUsersById(id int64, db *sqlx.DB) (interface{}, error) {
 // @Router /api/2.0/federation_users [get]
 func getFederationUserss(db *sqlx.DB) (interface{}, error) {
 	ret := []FederationUsers{}
-	queryStr := "select *, concat('" + API_PATH + "federation_users/', federation_id) as self "
+	queryStr := "select *, concat('" + API_PATH + "federation_users', '/federation_id/', federation_id, '/username/', username) as self"
 	queryStr += " from federation_users"
 	err := db.Select(&ret, queryStr)
 	if err != nil {
@@ -119,10 +120,11 @@ func postFederationUsers(payload []byte, db *sqlx.DB) (interface{}, error) {
 // @Success 200 {object}    output_format.ApiWrapper
 // @Resource /api/2.0
 // @Router /api/2.0/federation_users/{id}  [put]
-func putFederationUsers(id int64, payload []byte, db *sqlx.DB) (interface{}, error) {
-	var v FederationUsers
-	err := json.Unmarshal(payload, &v)
-	v.FederationId = id // overwrite the id in the payload
+func putFederationUsers(federationId int64, username string, payload []byte, db *sqlx.DB) (interface{}, error) {
+	var arg FederationUsers
+	err := json.Unmarshal(payload, &arg)
+	arg.FederationId = federationId
+	arg.Username = username
 	if err != nil {
 		log.Println(err)
 		return nil, err
@@ -132,8 +134,8 @@ func putFederationUsers(id int64, payload []byte, db *sqlx.DB) (interface{}, err
 	sqlString += ",username = :username"
 	sqlString += ",role = :role"
 	sqlString += ",created_at = :created_at"
-	sqlString += " WHERE federation_id=:federation_id"
-	result, err := db.NamedExec(sqlString, v)
+	sqlString += " WHERE federation_id=:federation_id AND username=:username"
+	result, err := db.NamedExec(sqlString, arg)
 	if err != nil {
 		log.Println(err)
 		return nil, err
@@ -148,10 +150,11 @@ func putFederationUsers(id int64, payload []byte, db *sqlx.DB) (interface{}, err
 // @Success 200 {array}    FederationUsers
 // @Resource /api/2.0
 // @Router /api/2.0/federation_users/{id} [delete]
-func delFederationUsers(id int64, db *sqlx.DB) (interface{}, error) {
+func delFederationUsers(federationId int64, username string, db *sqlx.DB) (interface{}, error) {
 	arg := FederationUsers{}
-	arg.FederationId = id
-	result, err := db.NamedExec("DELETE FROM federation_users WHERE federation_id=:id", arg)
+	arg.FederationId = federationId
+	arg.Username = username
+	result, err := db.NamedExec("DELETE FROM federation_users WHERE federation_id=:federation_id AND username=:username", arg)
 	if err != nil {
 		log.Println(err)
 		return nil, err

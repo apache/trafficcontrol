@@ -53,14 +53,14 @@ type CachegroupsLink struct {
 // @Success 200 {array}    Cachegroups
 // @Resource /api/2.0
 // @Router /api/2.0/cachegroups/{id} [get]
-func getCachegroupsById(id string, db *sqlx.DB) (interface{}, error) {
+func getCachegroupsById(name string, db *sqlx.DB) (interface{}, error) {
 	ret := []Cachegroups{}
 	arg := Cachegroups{}
-	arg.Name = id
-	queryStr := "select *, concat('" + API_PATH + "cachegroups/', name) as self "
+	arg.Name = name
+	queryStr := "select *, concat('" + API_PATH + "cachegroups/', name) as self"
 	queryStr += ", concat('" + API_PATH + "cachegroups/', parent_cachegroup) as cachegroups_name_ref"
 	queryStr += ", concat('" + API_PATH + "cachegroups_types/', type) as cachegroups_types_name_ref"
-	queryStr += " from cachegroups where name=:name"
+	queryStr += " from cachegroups WHERE name=:name"
 	nstmt, err := db.PrepareNamed(queryStr)
 	err = nstmt.Select(&ret, arg)
 	if err != nil {
@@ -79,7 +79,7 @@ func getCachegroupsById(id string, db *sqlx.DB) (interface{}, error) {
 // @Router /api/2.0/cachegroups [get]
 func getCachegroupss(db *sqlx.DB) (interface{}, error) {
 	ret := []Cachegroups{}
-	queryStr := "select *, concat('" + API_PATH + "cachegroups/', name) as self "
+	queryStr := "select *, concat('" + API_PATH + "cachegroups/', name) as self"
 	queryStr += ", concat('" + API_PATH + "cachegroups/', parent_cachegroup) as cachegroups_name_ref"
 	queryStr += ", concat('" + API_PATH + "cachegroups_types/', type) as cachegroups_types_name_ref"
 	queryStr += " from cachegroups"
@@ -138,10 +138,10 @@ func postCachegroups(payload []byte, db *sqlx.DB) (interface{}, error) {
 // @Success 200 {object}    output_format.ApiWrapper
 // @Resource /api/2.0
 // @Router /api/2.0/cachegroups/{id}  [put]
-func putCachegroups(id string, payload []byte, db *sqlx.DB) (interface{}, error) {
-	var v Cachegroups
-	err := json.Unmarshal(payload, &v)
-	v.Name = id // overwrite the id in the payload
+func putCachegroups(name string, payload []byte, db *sqlx.DB) (interface{}, error) {
+	var arg Cachegroups
+	err := json.Unmarshal(payload, &arg)
+	arg.Name = name
 	if err != nil {
 		log.Println(err)
 		return nil, err
@@ -155,7 +155,7 @@ func putCachegroups(id string, payload []byte, db *sqlx.DB) (interface{}, error)
 	sqlString += ",type = :type"
 	sqlString += ",created_at = :created_at"
 	sqlString += " WHERE name=:name"
-	result, err := db.NamedExec(sqlString, v)
+	result, err := db.NamedExec(sqlString, arg)
 	if err != nil {
 		log.Println(err)
 		return nil, err
@@ -170,10 +170,10 @@ func putCachegroups(id string, payload []byte, db *sqlx.DB) (interface{}, error)
 // @Success 200 {array}    Cachegroups
 // @Resource /api/2.0
 // @Router /api/2.0/cachegroups/{id} [delete]
-func delCachegroups(id string, db *sqlx.DB) (interface{}, error) {
+func delCachegroups(name string, db *sqlx.DB) (interface{}, error) {
 	arg := Cachegroups{}
-	arg.Name = id
-	result, err := db.NamedExec("DELETE FROM cachegroups WHERE name=:id", arg)
+	arg.Name = name
+	result, err := db.NamedExec("DELETE FROM cachegroups WHERE name=:name", arg)
 	if err != nil {
 		log.Println(err)
 		return nil, err

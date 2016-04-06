@@ -130,11 +130,11 @@ func getCSConfigRemap(serverName string, db *sqlx.DB) ([]CsconfigRemap, error) {
 	return ret, nil
 }
 
-func GetCSConfig(hostName string, db *sqlx.DB) (interface{}, error) {
+func GetCSConfig(hostName string, port int64, db *sqlx.DB) (interface{}, error) {
 
 	// stats, err := statsSection(cdnName)
 
-	serverInterface, err := api.GetServersById(hostName, db)
+	serverInterface, err := api.GetServersById(hostName, port, db)
 	if err != nil {
 		log.Println(err)
 		return nil, err

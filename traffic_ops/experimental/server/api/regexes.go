@@ -48,9 +48,9 @@ func getRegexesById(id int64, db *sqlx.DB) (interface{}, error) {
 	ret := []Regexes{}
 	arg := Regexes{}
 	arg.Id = id
-	queryStr := "select *, concat('" + API_PATH + "regexes/', id) as self "
+	queryStr := "select *, concat('" + API_PATH + "regexes/', id) as self"
 	queryStr += ", concat('" + API_PATH + "regexes_types/', type) as regexes_types_name_ref"
-	queryStr += " from regexes where id=:id"
+	queryStr += " from regexes WHERE id=:id"
 	nstmt, err := db.PrepareNamed(queryStr)
 	err = nstmt.Select(&ret, arg)
 	if err != nil {
@@ -69,7 +69,7 @@ func getRegexesById(id int64, db *sqlx.DB) (interface{}, error) {
 // @Router /api/2.0/regexes [get]
 func getRegexess(db *sqlx.DB) (interface{}, error) {
 	ret := []Regexes{}
-	queryStr := "select *, concat('" + API_PATH + "regexes/', id) as self "
+	queryStr := "select *, concat('" + API_PATH + "regexes/', id) as self"
 	queryStr += ", concat('" + API_PATH + "regexes_types/', type) as regexes_types_name_ref"
 	queryStr += " from regexes"
 	err := db.Select(&ret, queryStr)
@@ -120,9 +120,9 @@ func postRegexes(payload []byte, db *sqlx.DB) (interface{}, error) {
 // @Resource /api/2.0
 // @Router /api/2.0/regexes/{id}  [put]
 func putRegexes(id int64, payload []byte, db *sqlx.DB) (interface{}, error) {
-	var v Regexes
-	err := json.Unmarshal(payload, &v)
-	v.Id = id // overwrite the id in the payload
+	var arg Regexes
+	err := json.Unmarshal(payload, &arg)
+	arg.Id = id
 	if err != nil {
 		log.Println(err)
 		return nil, err
@@ -132,7 +132,7 @@ func putRegexes(id int64, payload []byte, db *sqlx.DB) (interface{}, error) {
 	sqlString += ",type = :type"
 	sqlString += ",created_at = :created_at"
 	sqlString += " WHERE id=:id"
-	result, err := db.NamedExec(sqlString, v)
+	result, err := db.NamedExec(sqlString, arg)
 	if err != nil {
 		log.Println(err)
 		return nil, err

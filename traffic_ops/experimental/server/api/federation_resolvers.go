@@ -48,8 +48,8 @@ func getFederationResolversById(id int64, db *sqlx.DB) (interface{}, error) {
 	ret := []FederationResolvers{}
 	arg := FederationResolvers{}
 	arg.Id = id
-	queryStr := "select *, concat('" + API_PATH + "federation_resolvers/', id) as self "
-	queryStr += " from federation_resolvers where id=:id"
+	queryStr := "select *, concat('" + API_PATH + "federation_resolvers/', id) as self"
+	queryStr += " from federation_resolvers WHERE id=:id"
 	nstmt, err := db.PrepareNamed(queryStr)
 	err = nstmt.Select(&ret, arg)
 	if err != nil {
@@ -68,7 +68,7 @@ func getFederationResolversById(id int64, db *sqlx.DB) (interface{}, error) {
 // @Router /api/2.0/federation_resolvers [get]
 func getFederationResolverss(db *sqlx.DB) (interface{}, error) {
 	ret := []FederationResolvers{}
-	queryStr := "select *, concat('" + API_PATH + "federation_resolvers/', id) as self "
+	queryStr := "select *, concat('" + API_PATH + "federation_resolvers/', id) as self"
 	queryStr += " from federation_resolvers"
 	err := db.Select(&ret, queryStr)
 	if err != nil {
@@ -118,9 +118,9 @@ func postFederationResolvers(payload []byte, db *sqlx.DB) (interface{}, error) {
 // @Resource /api/2.0
 // @Router /api/2.0/federation_resolvers/{id}  [put]
 func putFederationResolvers(id int64, payload []byte, db *sqlx.DB) (interface{}, error) {
-	var v FederationResolvers
-	err := json.Unmarshal(payload, &v)
-	v.Id = id // overwrite the id in the payload
+	var arg FederationResolvers
+	err := json.Unmarshal(payload, &arg)
+	arg.Id = id
 	if err != nil {
 		log.Println(err)
 		return nil, err
@@ -130,7 +130,7 @@ func putFederationResolvers(id int64, payload []byte, db *sqlx.DB) (interface{},
 	sqlString += ",type = :type"
 	sqlString += ",created_at = :created_at"
 	sqlString += " WHERE id=:id"
-	result, err := db.NamedExec(sqlString, v)
+	result, err := db.NamedExec(sqlString, arg)
 	if err != nil {
 		log.Println(err)
 		return nil, err

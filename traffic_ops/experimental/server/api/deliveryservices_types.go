@@ -48,12 +48,12 @@ type DeliveryservicesTypesLink struct {
 // @Success 200 {array}    DeliveryservicesTypes
 // @Resource /api/2.0
 // @Router /api/2.0/deliveryservices_types/{id} [get]
-func getDeliveryservicesTypesById(id string, db *sqlx.DB) (interface{}, error) {
+func getDeliveryservicesTypesById(name string, db *sqlx.DB) (interface{}, error) {
 	ret := []DeliveryservicesTypes{}
 	arg := DeliveryservicesTypes{}
-	arg.Name = id
-	queryStr := "select *, concat('" + API_PATH + "deliveryservices_types/', name) as self "
-	queryStr += " from deliveryservices_types where name=:name"
+	arg.Name = name
+	queryStr := "select *, concat('" + API_PATH + "deliveryservices_types/', name) as self"
+	queryStr += " from deliveryservices_types WHERE name=:name"
 	nstmt, err := db.PrepareNamed(queryStr)
 	err = nstmt.Select(&ret, arg)
 	if err != nil {
@@ -72,7 +72,7 @@ func getDeliveryservicesTypesById(id string, db *sqlx.DB) (interface{}, error) {
 // @Router /api/2.0/deliveryservices_types [get]
 func getDeliveryservicesTypess(db *sqlx.DB) (interface{}, error) {
 	ret := []DeliveryservicesTypes{}
-	queryStr := "select *, concat('" + API_PATH + "deliveryservices_types/', name) as self "
+	queryStr := "select *, concat('" + API_PATH + "deliveryservices_types/', name) as self"
 	queryStr += " from deliveryservices_types"
 	err := db.Select(&ret, queryStr)
 	if err != nil {
@@ -121,10 +121,10 @@ func postDeliveryservicesTypes(payload []byte, db *sqlx.DB) (interface{}, error)
 // @Success 200 {object}    output_format.ApiWrapper
 // @Resource /api/2.0
 // @Router /api/2.0/deliveryservices_types/{id}  [put]
-func putDeliveryservicesTypes(id string, payload []byte, db *sqlx.DB) (interface{}, error) {
-	var v DeliveryservicesTypes
-	err := json.Unmarshal(payload, &v)
-	v.Name = id // overwrite the id in the payload
+func putDeliveryservicesTypes(name string, payload []byte, db *sqlx.DB) (interface{}, error) {
+	var arg DeliveryservicesTypes
+	err := json.Unmarshal(payload, &arg)
+	arg.Name = name
 	if err != nil {
 		log.Println(err)
 		return nil, err
@@ -134,7 +134,7 @@ func putDeliveryservicesTypes(id string, payload []byte, db *sqlx.DB) (interface
 	sqlString += ",description = :description"
 	sqlString += ",created_at = :created_at"
 	sqlString += " WHERE name=:name"
-	result, err := db.NamedExec(sqlString, v)
+	result, err := db.NamedExec(sqlString, arg)
 	if err != nil {
 		log.Println(err)
 		return nil, err
@@ -149,10 +149,10 @@ func putDeliveryservicesTypes(id string, payload []byte, db *sqlx.DB) (interface
 // @Success 200 {array}    DeliveryservicesTypes
 // @Resource /api/2.0
 // @Router /api/2.0/deliveryservices_types/{id} [delete]
-func delDeliveryservicesTypes(id string, db *sqlx.DB) (interface{}, error) {
+func delDeliveryservicesTypes(name string, db *sqlx.DB) (interface{}, error) {
 	arg := DeliveryservicesTypes{}
-	arg.Name = id
-	result, err := db.NamedExec("DELETE FROM deliveryservices_types WHERE name=:id", arg)
+	arg.Name = name
+	result, err := db.NamedExec("DELETE FROM deliveryservices_types WHERE name=:name", arg)
 	if err != nil {
 		log.Println(err)
 		return nil, err

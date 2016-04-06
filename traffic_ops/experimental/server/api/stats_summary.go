@@ -46,12 +46,15 @@ type StatsSummaryLinks struct {
 // @Success 200 {array}    StatsSummary
 // @Resource /api/2.0
 // @Router /api/2.0/stats_summary/{id} [get]
-func getStatsSummaryById(id string, db *sqlx.DB) (interface{}, error) {
+func getStatsSummaryById(cdnName string, deliveryservice string, statName string, statDate time.Time, db *sqlx.DB) (interface{}, error) {
 	ret := []StatsSummary{}
 	arg := StatsSummary{}
-	arg.CdnName = id
-	queryStr := "select *, concat('" + API_PATH + "stats_summary/', cdn_name) as self "
-	queryStr += " from stats_summary where cdn_name=:cdn_name"
+	arg.CdnName = cdnName
+	arg.Deliveryservice = deliveryservice
+	arg.StatName = statName
+	arg.StatDate = statDate
+	queryStr := "select *, concat('" + API_PATH + "stats_summary', '/cdn_name/', cdn_name, '/deliveryservice/', deliveryservice, '/stat_name/', stat_name, '/stat_date/', stat_date) as self"
+	queryStr += " from stats_summary WHERE cdn_name=:cdn_name AND deliveryservice=:deliveryservice AND stat_name=:stat_name AND stat_date=:stat_date"
 	nstmt, err := db.PrepareNamed(queryStr)
 	err = nstmt.Select(&ret, arg)
 	if err != nil {
@@ -70,7 +73,7 @@ func getStatsSummaryById(id string, db *sqlx.DB) (interface{}, error) {
 // @Router /api/2.0/stats_summary [get]
 func getStatsSummarys(db *sqlx.DB) (interface{}, error) {
 	ret := []StatsSummary{}
-	queryStr := "select *, concat('" + API_PATH + "stats_summary/', cdn_name) as self "
+	queryStr := "select *, concat('" + API_PATH + "stats_summary', '/cdn_name/', cdn_name, '/deliveryservice/', deliveryservice, '/stat_name/', stat_name, '/stat_date/', stat_date) as self"
 	queryStr += " from stats_summary"
 	err := db.Select(&ret, queryStr)
 	if err != nil {
@@ -125,10 +128,13 @@ func postStatsSummary(payload []byte, db *sqlx.DB) (interface{}, error) {
 // @Success 200 {object}    output_format.ApiWrapper
 // @Resource /api/2.0
 // @Router /api/2.0/stats_summary/{id}  [put]
-func putStatsSummary(id string, payload []byte, db *sqlx.DB) (interface{}, error) {
-	var v StatsSummary
-	err := json.Unmarshal(payload, &v)
-	v.CdnName = id // overwrite the id in the payload
+func putStatsSummary(cdnName string, deliveryservice string, statName string, statDate time.Time, payload []byte, db *sqlx.DB) (interface{}, error) {
+	var arg StatsSummary
+	err := json.Unmarshal(payload, &arg)
+	arg.CdnName = cdnName
+	arg.Deliveryservice = deliveryservice
+	arg.StatName = statName
+	arg.StatDate = statDate
 	if err != nil {
 		log.Println(err)
 		return nil, err
@@ -140,8 +146,8 @@ func putStatsSummary(id string, payload []byte, db *sqlx.DB) (interface{}, error
 	sqlString += ",stat_value = :stat_value"
 	sqlString += ",stat_date = :stat_date"
 	sqlString += ",created_at = :created_at"
-	sqlString += " WHERE cdn_name=:cdn_name"
-	result, err := db.NamedExec(sqlString, v)
+	sqlString += " WHERE cdn_name=:cdn_name AND deliveryservice=:deliveryservice AND stat_name=:stat_name AND stat_date=:stat_date"
+	result, err := db.NamedExec(sqlString, arg)
 	if err != nil {
 		log.Println(err)
 		return nil, err
@@ -156,10 +162,13 @@ func putStatsSummary(id string, payload []byte, db *sqlx.DB) (interface{}, error
 // @Success 200 {array}    StatsSummary
 // @Resource /api/2.0
 // @Router /api/2.0/stats_summary/{id} [delete]
-func delStatsSummary(id string, db *sqlx.DB) (interface{}, error) {
+func delStatsSummary(cdnName string, deliveryservice string, statName string, statDate time.Time, db *sqlx.DB) (interface{}, error) {
 	arg := StatsSummary{}
-	arg.CdnName = id
-	result, err := db.NamedExec("DELETE FROM stats_summary WHERE cdn_name=:id", arg)
+	arg.CdnName = cdnName
+	arg.Deliveryservice = deliveryservice
+	arg.StatName = statName
+	arg.StatDate = statDate
+	result, err := db.NamedExec("DELETE FROM stats_summary WHERE cdn_name=:cdn_name AND deliveryservice=:deliveryservice AND stat_name=:stat_name AND stat_date=:stat_date", arg)
 	if err != nil {
 		log.Println(err)
 		return nil, err

@@ -69,14 +69,15 @@ type ServersLinks struct {
 // @Success 200 {array}    Servers
 // @Resource /api/2.0
 // @Router /api/2.0/servers/{id} [get]
-func GetServersById(id string, db *sqlx.DB) (interface{}, error) {
+func GetServersById(hostName string, tcpPort int64, db *sqlx.DB) (interface{}, error) {
 	ret := []Servers{}
 	arg := Servers{}
-	arg.HostName = id
-	queryStr := "select *, concat('" + API_PATH + "servers/', host_name) as self "
+	arg.HostName = hostName
+	arg.TcpPort = tcpPort
+	queryStr := "select *, concat('" + API_PATH + "servers', '/host_name/', host_name, '/tcp_port/', tcp_port) as self"
 	queryStr += ", concat('" + API_PATH + "servers_types/', type) as servers_types_name_ref"
 	queryStr += ", concat('" + API_PATH + "profiles/', profile) as profiles_name_ref"
-	queryStr += " from servers where host_name=:host_name"
+	queryStr += " from servers WHERE host_name=:host_name AND tcp_port=:tcp_port"
 	nstmt, err := db.PrepareNamed(queryStr)
 	err = nstmt.Select(&ret, arg)
 	if err != nil {
@@ -95,7 +96,7 @@ func GetServersById(id string, db *sqlx.DB) (interface{}, error) {
 // @Router /api/2.0/servers [get]
 func getServerss(db *sqlx.DB) (interface{}, error) {
 	ret := []Servers{}
-	queryStr := "select *, concat('" + API_PATH + "servers/', host_name) as self "
+	queryStr := "select *, concat('" + API_PATH + "servers', '/host_name/', host_name, '/tcp_port/', tcp_port) as self"
 	queryStr += ", concat('" + API_PATH + "servers_types/', type) as servers_types_name_ref"
 	queryStr += ", concat('" + API_PATH + "profiles/', profile) as profiles_name_ref"
 	queryStr += " from servers"
@@ -196,10 +197,11 @@ func postServers(payload []byte, db *sqlx.DB) (interface{}, error) {
 // @Success 200 {object}    output_format.ApiWrapper
 // @Resource /api/2.0
 // @Router /api/2.0/servers/{id}  [put]
-func putServers(id string, payload []byte, db *sqlx.DB) (interface{}, error) {
-	var v Servers
-	err := json.Unmarshal(payload, &v)
-	v.HostName = id // overwrite the id in the payload
+func putServers(hostName string, tcpPort int64, payload []byte, db *sqlx.DB) (interface{}, error) {
+	var arg Servers
+	err := json.Unmarshal(payload, &arg)
+	arg.HostName = hostName
+	arg.TcpPort = tcpPort
 	if err != nil {
 		log.Println(err)
 		return nil, err
@@ -233,8 +235,8 @@ func putServers(id string, payload []byte, db *sqlx.DB) (interface{}, error) {
 	sqlString += ",router_host_name = :router_host_name"
 	sqlString += ",router_port_name = :router_port_name"
 	sqlString += ",created_at = :created_at"
-	sqlString += " WHERE host_name=:host_name"
-	result, err := db.NamedExec(sqlString, v)
+	sqlString += " WHERE host_name=:host_name AND tcp_port=:tcp_port"
+	result, err := db.NamedExec(sqlString, arg)
 	if err != nil {
 		log.Println(err)
 		return nil, err
@@ -249,10 +251,11 @@ func putServers(id string, payload []byte, db *sqlx.DB) (interface{}, error) {
 // @Success 200 {array}    Servers
 // @Resource /api/2.0
 // @Router /api/2.0/servers/{id} [delete]
-func delServers(id string, db *sqlx.DB) (interface{}, error) {
+func delServers(hostName string, tcpPort int64, db *sqlx.DB) (interface{}, error) {
 	arg := Servers{}
-	arg.HostName = id
-	result, err := db.NamedExec("DELETE FROM servers WHERE host_name=:id", arg)
+	arg.HostName = hostName
+	arg.TcpPort = tcpPort
+	result, err := db.NamedExec("DELETE FROM servers WHERE host_name=:host_name AND tcp_port=:tcp_port", arg)
 	if err != nil {
 		log.Println(err)
 		return nil, err

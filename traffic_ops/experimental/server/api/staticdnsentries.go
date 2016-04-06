@@ -54,9 +54,9 @@ func getStaticdnsentriesById(id int64, db *sqlx.DB) (interface{}, error) {
 	ret := []Staticdnsentries{}
 	arg := Staticdnsentries{}
 	arg.Id = id
-	queryStr := "select *, concat('" + API_PATH + "staticdnsentries/', id) as self "
+	queryStr := "select *, concat('" + API_PATH + "staticdnsentries/', id) as self"
 	queryStr += ", concat('" + API_PATH + "staticdnsentries_types/', type) as staticdnsentries_types_name_ref"
-	queryStr += " from staticdnsentries where id=:id"
+	queryStr += " from staticdnsentries WHERE id=:id"
 	nstmt, err := db.PrepareNamed(queryStr)
 	err = nstmt.Select(&ret, arg)
 	if err != nil {
@@ -75,7 +75,7 @@ func getStaticdnsentriesById(id int64, db *sqlx.DB) (interface{}, error) {
 // @Router /api/2.0/staticdnsentries [get]
 func getStaticdnsentriess(db *sqlx.DB) (interface{}, error) {
 	ret := []Staticdnsentries{}
-	queryStr := "select *, concat('" + API_PATH + "staticdnsentries/', id) as self "
+	queryStr := "select *, concat('" + API_PATH + "staticdnsentries/', id) as self"
 	queryStr += ", concat('" + API_PATH + "staticdnsentries_types/', type) as staticdnsentries_types_name_ref"
 	queryStr += " from staticdnsentries"
 	err := db.Select(&ret, queryStr)
@@ -136,9 +136,9 @@ func postStaticdnsentries(payload []byte, db *sqlx.DB) (interface{}, error) {
 // @Resource /api/2.0
 // @Router /api/2.0/staticdnsentries/{id}  [put]
 func putStaticdnsentries(id int64, payload []byte, db *sqlx.DB) (interface{}, error) {
-	var v Staticdnsentries
-	err := json.Unmarshal(payload, &v)
-	v.Id = id // overwrite the id in the payload
+	var arg Staticdnsentries
+	err := json.Unmarshal(payload, &arg)
+	arg.Id = id
 	if err != nil {
 		log.Println(err)
 		return nil, err
@@ -153,7 +153,7 @@ func putStaticdnsentries(id int64, payload []byte, db *sqlx.DB) (interface{}, er
 	sqlString += ",cachegroup = :cachegroup"
 	sqlString += ",created_at = :created_at"
 	sqlString += " WHERE id=:id"
-	result, err := db.NamedExec(sqlString, v)
+	result, err := db.NamedExec(sqlString, arg)
 	if err != nil {
 		log.Println(err)
 		return nil, err

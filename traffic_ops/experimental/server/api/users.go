@@ -48,13 +48,13 @@ type UsersLinks struct {
 // @Success 200 {array}    Users
 // @Resource /api/2.0
 // @Router /api/2.0/users/{id} [get]
-func GetUsersById(id string, db *sqlx.DB) (interface{}, error) {
+func GetUsersById(username string, db *sqlx.DB) (interface{}, error) {
 	ret := []Users{}
 	arg := Users{}
-	arg.Username = id
-	queryStr := "select *, concat('" + API_PATH + "users/', username) as self "
+	arg.Username = username
+	queryStr := "select *, concat('" + API_PATH + "users/', username) as self"
 	queryStr += ", concat('" + API_PATH + "roles/', role) as roles_name_ref"
-	queryStr += " from users where username=:username"
+	queryStr += " from users WHERE username=:username"
 	nstmt, err := db.PrepareNamed(queryStr)
 	err = nstmt.Select(&ret, arg)
 	if err != nil {
@@ -73,7 +73,7 @@ func GetUsersById(id string, db *sqlx.DB) (interface{}, error) {
 // @Router /api/2.0/users [get]
 func getUserss(db *sqlx.DB) (interface{}, error) {
 	ret := []Users{}
-	queryStr := "select *, concat('" + API_PATH + "users/', username) as self "
+	queryStr := "select *, concat('" + API_PATH + "users/', username) as self"
 	queryStr += ", concat('" + API_PATH + "roles/', role) as roles_name_ref"
 	queryStr += " from users"
 	err := db.Select(&ret, queryStr)
@@ -131,10 +131,10 @@ func postUsers(payload []byte, db *sqlx.DB) (interface{}, error) {
 // @Success 200 {object}    output_format.ApiWrapper
 // @Resource /api/2.0
 // @Router /api/2.0/users/{id}  [put]
-func putUsers(id string, payload []byte, db *sqlx.DB) (interface{}, error) {
-	var v Users
-	err := json.Unmarshal(payload, &v)
-	v.Username = id // overwrite the id in the payload
+func putUsers(username string, payload []byte, db *sqlx.DB) (interface{}, error) {
+	var arg Users
+	err := json.Unmarshal(payload, &arg)
+	arg.Username = username
 	if err != nil {
 		log.Println(err)
 		return nil, err
@@ -148,7 +148,7 @@ func putUsers(id string, payload []byte, db *sqlx.DB) (interface{}, error) {
 	sqlString += ",local_password = :local_password"
 	sqlString += ",created_at = :created_at"
 	sqlString += " WHERE username=:username"
-	result, err := db.NamedExec(sqlString, v)
+	result, err := db.NamedExec(sqlString, arg)
 	if err != nil {
 		log.Println(err)
 		return nil, err
@@ -163,10 +163,10 @@ func putUsers(id string, payload []byte, db *sqlx.DB) (interface{}, error) {
 // @Success 200 {array}    Users
 // @Resource /api/2.0
 // @Router /api/2.0/users/{id} [delete]
-func delUsers(id string, db *sqlx.DB) (interface{}, error) {
+func delUsers(username string, db *sqlx.DB) (interface{}, error) {
 	arg := Users{}
-	arg.Username = id
-	result, err := db.NamedExec("DELETE FROM users WHERE username=:id", arg)
+	arg.Username = username
+	result, err := db.NamedExec("DELETE FROM users WHERE username=:username", arg)
 	if err != nil {
 		log.Println(err)
 		return nil, err

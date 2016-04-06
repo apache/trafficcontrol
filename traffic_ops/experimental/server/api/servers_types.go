@@ -37,7 +37,7 @@ type ServersTypesLinks struct {
 }
 
 type ServersTypesLink struct {
-	ID  string `db:"servers_type" json:"name"`
+	ID  string `db:"type" json:"type"`
 	Ref string `db:"servers_types_name_ref" json:"_ref"`
 }
 
@@ -48,12 +48,12 @@ type ServersTypesLink struct {
 // @Success 200 {array}    ServersTypes
 // @Resource /api/2.0
 // @Router /api/2.0/servers_types/{id} [get]
-func getServersTypesById(id string, db *sqlx.DB) (interface{}, error) {
+func getServersTypesById(name string, db *sqlx.DB) (interface{}, error) {
 	ret := []ServersTypes{}
 	arg := ServersTypes{}
-	arg.Name = id
-	queryStr := "select *, concat('" + API_PATH + "servers_types/', name) as self "
-	queryStr += " from servers_types where name=:name"
+	arg.Name = name
+	queryStr := "select *, concat('" + API_PATH + "servers_types/', name) as self"
+	queryStr += " from servers_types WHERE name=:name"
 	nstmt, err := db.PrepareNamed(queryStr)
 	err = nstmt.Select(&ret, arg)
 	if err != nil {
@@ -72,7 +72,7 @@ func getServersTypesById(id string, db *sqlx.DB) (interface{}, error) {
 // @Router /api/2.0/servers_types [get]
 func getServersTypess(db *sqlx.DB) (interface{}, error) {
 	ret := []ServersTypes{}
-	queryStr := "select *, concat('" + API_PATH + "servers_types/', name) as self "
+	queryStr := "select *, concat('" + API_PATH + "servers_types/', name) as self"
 	queryStr += " from servers_types"
 	err := db.Select(&ret, queryStr)
 	if err != nil {
@@ -121,10 +121,10 @@ func postServersTypes(payload []byte, db *sqlx.DB) (interface{}, error) {
 // @Success 200 {object}    output_format.ApiWrapper
 // @Resource /api/2.0
 // @Router /api/2.0/servers_types/{id}  [put]
-func putServersTypes(id string, payload []byte, db *sqlx.DB) (interface{}, error) {
-	var v ServersTypes
-	err := json.Unmarshal(payload, &v)
-	v.Name = id // overwrite the id in the payload
+func putServersTypes(name string, payload []byte, db *sqlx.DB) (interface{}, error) {
+	var arg ServersTypes
+	err := json.Unmarshal(payload, &arg)
+	arg.Name = name
 	if err != nil {
 		log.Println(err)
 		return nil, err
@@ -134,7 +134,7 @@ func putServersTypes(id string, payload []byte, db *sqlx.DB) (interface{}, error
 	sqlString += ",description = :description"
 	sqlString += ",created_at = :created_at"
 	sqlString += " WHERE name=:name"
-	result, err := db.NamedExec(sqlString, v)
+	result, err := db.NamedExec(sqlString, arg)
 	if err != nil {
 		log.Println(err)
 		return nil, err
@@ -149,10 +149,10 @@ func putServersTypes(id string, payload []byte, db *sqlx.DB) (interface{}, error
 // @Success 200 {array}    ServersTypes
 // @Resource /api/2.0
 // @Router /api/2.0/servers_types/{id} [delete]
-func delServersTypes(id string, db *sqlx.DB) (interface{}, error) {
+func delServersTypes(name string, db *sqlx.DB) (interface{}, error) {
 	arg := ServersTypes{}
-	arg.Name = id
-	result, err := db.NamedExec("DELETE FROM servers_types WHERE name=:id", arg)
+	arg.Name = name
+	result, err := db.NamedExec("DELETE FROM servers_types WHERE name=:name", arg)
 	if err != nil {
 		log.Println(err)
 		return nil, err
