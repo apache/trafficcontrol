@@ -1103,6 +1103,8 @@ sub parent_dot_config {
 				foreach my $parent ( @{ $pinfo->{$org_fqdn} } ) {
 					push @parent_info, format_parent_info($parent);
 				}
+				my %seen;
+				@parent_info = grep { !$seen{$_}++ } @parent_info;
 
 				my $parents = 'parent="' . join( '', @parent_info ) . '"';
 				$text .= "$parents round_robin=consistent_hash go_direct=false parent_is_proxy=false\n";
@@ -1147,9 +1149,13 @@ sub parent_dot_config {
 						push @secondary_parent_info, $ptxt;
 					}
 				}
+				my %seen;
+				@parent_info = grep { !$seen{$_}++ } @parent_info;
 				my $parents = 'parent="' . join( '', @parent_info ) . '"';
 				my $secparents = '';
 				if ( scalar @secondary_parent_info > 0 ) {
+					my %seen;
+					@secondary_parent_info = grep { !$seen{$_}++ } @secondary_parent_info;
 					$secparents = 'secondary_parent="' . join( '', @secondary_parent_info ) . '"';
 				}
 				my $round_robin = 'round_robin=consistent_hash';
@@ -1161,19 +1167,26 @@ sub parent_dot_config {
 
 		my $pselect_alg = $self->profile_param_value( $server->profile->id, 'parent.config', 'algorithm', undef );
 		if ( defined($pselect_alg) && $pselect_alg eq 'consistent_hash' ) {
-
-			$text .= "dest_domain=. parent=\"";
+			my @parent_info;
 			foreach my $parent ( @{ $pinfo->{"all_parents"} } ) {
-				$text .= $parent->{"host_name"} . "." . $parent->{"domain_name"} . ":" . $parent->{"port"} . "|" . $parent->{"weight"} . ";";
+				push @parent_info, $parent->{"host_name"} . "." . $parent->{"domain_name"} . ":" . $parent->{"port"} . "|" . $parent->{"weight"} . ";";
 			}
-			$text .= "\" round_robin=consistent_hash go_direct=false";
+			my %seen;
+			@parent_info = grep { !$seen{$_}++ } @parent_info;
+			$text .= "dest_domain=.";
+			$text .= " parent=\"" . join( '', @parent_info ) . "\"";
+			$text .= " round_robin=consistent_hash go_direct=false";
 		}
 		else {    # default to old situation.
-			$text .= "dest_domain=. parent=\"";
+			$text .= "dest_domain=.";
+			my @parent_info;
 			foreach my $parent ( @{ $pinfo->{"all_parents"} } ) {
-				$text .= $parent->{"host_name"} . "." . $parent->{"domain_name"} . ":" . $parent->{"port"} . ";";
+				push @parent_info, $parent->{"host_name"} . "." . $parent->{"domain_name"} . ":" . $parent->{"port"} . ";";
 			}
-			$text .= "\" round_robin=urlhash go_direct=false";
+			my %seen;
+			@parent_info = grep { !$seen{$_}++ } @parent_info;
+			$text .= " parent=\"" . join( '', @parent_info ) . "\"";
+			$text .= " round_robin=urlhash go_direct=false";
 		}
 
 		my $qstring = $self->profile_param_value( $server->profile->id, 'parent.config', 'qstring', undef );
