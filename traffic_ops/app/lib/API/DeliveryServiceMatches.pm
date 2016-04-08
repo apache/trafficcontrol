@@ -69,6 +69,7 @@ sub index {
 
 				# Check if there are any match_patterns or that there is a Delivery Service regex has '\.*' in it.
 				if (@match_patterns) {
+					my $xml_id_underscores = $xml_id =~ s/[-]/_/g;
 					my $delivery_service->{dsName} = $xml_id;
 					$delivery_service->{patterns} = \@match_patterns;
 					push( @matches, $delivery_service );
