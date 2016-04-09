@@ -55,6 +55,7 @@ var (
 )
 
 func main() {
+	log.Println("Starting webfront...")
 	flag.Parse()
 	s, err := NewServer(*ruleFile, *pollInterval)
 	if err != nil {
