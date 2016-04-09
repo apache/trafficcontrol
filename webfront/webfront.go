@@ -11,7 +11,6 @@ import (
 	"flag"
 	"fmt"
 	jwt "github.com/dgrijalva/jwt-go"
-	"io/ioutil"
 	"log"
 	"net/http"
 	"net/http/httputil"
@@ -20,10 +19,6 @@ import (
 	"sync"
 	"time"
 )
-
-type TokenResponse struct {
-	Token string
-}
 
 // Server implements an http.Handler that acts as a reverse proxy
 type Server struct {
@@ -37,6 +32,7 @@ type Rule struct {
 	Host    string // to match against request Host header
 	Path    string // to match against a path (start)
 	Forward string // reverse proxy map-to
+	Secure  bool   // protect with jwt?
 
 	handler http.Handler
 }
@@ -99,57 +95,27 @@ func NewServer(file string, poll time.Duration) (*Server, error) {
 }
 
 // ServeHTTP matches the Request with a Rule and, if found, serves the
-// request with the Rule's handler.
+// request with the Rule's handler. If the rule's secure field is true, it will
+// only allow access if the request has a valid JWT bearer token.
 func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	if r.URL.Path == "/login" {
-		username := ""
-		password := ""
-		body, err := ioutil.ReadAll(r.Body)
-		if err != nil {
-			log.Println("Error reading body: ", err.Error())
-			http.Error(w, "Error reading body: "+err.Error(), http.StatusBadRequest)
-			return
-		}
-		var lj loginJson
-		log.Println(body)
-		err = json.Unmarshal(body, &lj)
-		if err != nil {
-			log.Println("Error unmarshalling JSON: ", err.Error())
-			http.Error(w, "Invalid JSON: "+err.Error(), http.StatusBadRequest)
-			return
-		}
-		username = lj.User
-		password = lj.Password
 
-		// TODO JvD - check username / password against Database here!
-
-		token := jwt.New(jwt.SigningMethodHS256)
-		token.Claims["User"] = username
-		token.Claims["Password"] = password
-		token.Claims["exp"] = time.Now().Add(time.Hour * 24).Unix()
-		tokenString, err := token.SignedString([]byte("CAmeRAFiveSevenNineNine"))
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
-		}
-		js, err := json.Marshal(TokenResponse{Token: tokenString})
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
-		}
-		w.Header().Set("Content-Type", "application/json")
-		w.Write(js)
-		return
-	}
+	var isSecure = true
 	token, err := validateToken(r.Header.Get("Authorization"))
 	if err != nil {
-		log.Println("No valid token found!")
-		w.WriteHeader(http.StatusForbidden)
-		return
+		if s.isSecure(r) {
+			log.Println("No valid token found!")
+			w.WriteHeader(http.StatusForbidden)
+			return
+		} else {
+			isSecure = false
+		}
 	}
-	// TODO JvD ^^ move into own function
 
-	log.Println("Token:", token.Claims["userid"])
+	if isSecure {
+		log.Println(r.URL.Path, "identified user:", token.Claims["userid"])
+	} else {
+		log.Println(r.URL.Path, "is not secured, giving access")
+	}
 
 	if h := s.handler(r); h != nil {
 		h.ServeHTTP(w, r)
@@ -162,6 +128,26 @@ func rejectNoToken(handler http.Handler) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusForbidden)
 	}
+}
+
+// isSecure returns the true if this path should be protected by a jwt
+func (s *Server) isSecure(req *http.Request) bool {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+	h := req.Host
+	p := req.URL.Path
+	// Some clients include a port in the request host; strip it.
+	if i := strings.Index(h, ":"); i >= 0 {
+		h = h[:i]
+	}
+	for _, r := range s.rules {
+		// log.Println(p, "==", r.Path)
+		if strings.HasPrefix(p, r.Path) {
+			return r.Secure
+		}
+	}
+	log.Println("returning hard false")
+	return true
 }
 
 // handler returns the appropriate Handler for the given Request,
@@ -246,7 +232,7 @@ func makeHandler(r *Rule) http.Handler {
 			Director: func(req *http.Request) {
 				req.URL.Scheme = "https"
 				req.URL.Host = h
-				req.URL.Path = "/boo1" // TODO JvD - regex to change path here
+				// req.URL.Path = "/boo1" // TODO JvD - regex to change path here
 			},
 		}
 	}
