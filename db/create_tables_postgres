@@ -163,6 +163,9 @@ REVOKE ALL ON SCHEMA public FROM root;
 GRANT ALL ON SCHEMA public TO root;
 GRANT ALL ON SCHEMA public TO PUBLIC;
 
+GRANT ALL ON TABLE users TO camuser;
+GRANT ALL ON TABLE cameras TO camuser;
+
 
 -- Completed on 2016-04-03 13:50:47 MDT
 

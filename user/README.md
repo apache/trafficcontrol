@@ -5,6 +5,16 @@
   ```
   curl -Lkvs -X POST --header 'Content-Type: application/json' --header 'Accept: application/json' 'http://localhost:8080/' -d'{"username":"jvd", "firstName":"vandoorn", "password": "secret"}'
   ```
+
+  example JSON payload: 
+
+  ```
+  {
+    "username": "jvd",
+    "firstName": "vandoorn",
+    "password": "secret"
+  }
+  ```
   
 * `GET /{id}`
 

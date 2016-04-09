@@ -70,9 +70,6 @@ func main() {
 		return
 	}
 
-	// gob.Register(auth.SessionUser{}) // this is needed to pass the SessionUser struct around in the gorilla session.
-
-	log.Println(config.DbUser, config.DbPassword, config.DbName, config.DbServer, config.DbPort)
 	db, err = InitializeDatabase(config.DbUser, config.DbPassword, config.DbName, config.DbServer, config.DbPort)
 	if err != nil {
 		log.Println("Error initializing database:", err)
@@ -82,7 +79,6 @@ func main() {
 	var Logger = log.New(os.Stdout, " ", log.Ldate|log.Ltime|log.Lshortfile)
 	Logger.Printf("Starting server on port " + config.ListenerPort + "...")
 
-	// err = http.ListenAndServe(":"+config.ListenerPort, handlers.CombinedLoggingHandler(os.Stdout, routes.CreateRouter(dbb)))
 	http.HandleFunc("/", handler)
 	http.ListenAndServe(":8080", nil)
 
@@ -102,11 +98,23 @@ func InitializeDatabase(username, password, dbname, server string, port uint) (*
 	return db, nil
 }
 
+func retErr(w http.ResponseWriter, status int) {
+	w.WriteHeader(status)
+}
+
 func handler(w http.ResponseWriter, r *http.Request) {
 
+	log.Println(r.Method, r.URL.Scheme, r.Host, r.URL.RequestURI())
 	if r.Method == "GET" {
 		if r.URL.Path == "/" {
-			// TODO return list
+			userlist := []User{}
+			err := db.Select(&userlist, "SELECT * FROM users")
+			if err != nil {
+				log.Println(err)
+			}
+			w.Header().Set("Content-Type", "application/json")
+			enc := json.NewEncoder(w)
+			enc.Encode(userlist)
 		} else {
 			username := strings.Replace(r.URL.Path, "/", "", 1)
 			userlist := []User{}
@@ -116,10 +124,16 @@ func handler(w http.ResponseWriter, r *http.Request) {
 			err = stmt.Select(&userlist, argument)
 			if err != nil {
 				log.Println(err)
+				retErr(w, http.StatusInternalServerError)
+				return
+			}
+			if len(userlist) == 0 {
+				retErr(w, http.StatusNotFound)
+				return
 			}
 			w.Header().Set("Content-Type", "application/json")
 			enc := json.NewEncoder(w)
-			enc.Encode(userlist)
+			enc.Encode(userlist[0])
 		}
 	} else if r.Method == "POST" {
 		var u User
@@ -130,18 +144,53 @@ func handler(w http.ResponseWriter, r *http.Request) {
 		err = json.Unmarshal(body, &u)
 		if err != nil {
 			log.Println(err)
-			// TODO return error.
+			retErr(w, http.StatusInternalServerError)
+			return
 		}
+		// TODO encrypt passwd before storing.
 		sqlString := "INSERT INTO users (username, last_name, first_name, password) VALUES (:username, :last_name, :first_name, :password)"
 		result, err := db.NamedExec(sqlString, u)
 		if err != nil {
 			log.Println(err)
-			// TODO return error.
+			retErr(w, http.StatusInternalServerError)
+			return
 		}
-		fmt.Fprintf(w, "Done! (%s)", result)
+		rows, _ := result.RowsAffected()
+		fmt.Fprintf(w, "Done! (%s Rows Affected)", rows)
 	} else if r.Method == "PUT" {
-
+		var u User
+		body, err := ioutil.ReadAll(r.Body)
+		if err != nil {
+			log.Println(err)
+		}
+		err = json.Unmarshal(body, &u)
+		if err != nil {
+			log.Println(err)
+			retErr(w, http.StatusInternalServerError)
+			return
+		}
+		u.Username = strings.Replace(r.URL.Path, "/", "", 1) // overwrite the username in the json, the path gets checked.
+		// TODO encrypt passwd before storing.
+		sqlString := "UPDATE users SET last_name=:last_name, first_name=:first_name, password=:password WHERE username=:username"
+		result, err := db.NamedExec(sqlString, u)
+		if err != nil {
+			log.Println(err)
+			retErr(w, http.StatusInternalServerError)
+			return
+		}
+		rows, _ := result.RowsAffected()
+		fmt.Fprintf(w, "Done! (%s Rows Affected)", rows)
 	} else if r.Method == "DELETE" {
-
+		argument := User{}
+		argument.Username = strings.Replace(r.URL.Path, "/", "", 1)
+		result, err := db.NamedExec("DELETE FROM users WHERE username=:username", argument)
+		if err != nil {
+			log.Println(err)
+			retErr(w, http.StatusInternalServerError)
+			return
+		}
+		rows, _ := result.RowsAffected()
+		fmt.Fprintf(w, "Done! (%s Rows Affected)", rows)
 	}
+	retErr(w, http.StatusNotFound)
 }
