@@ -1,12 +1,10 @@
 package main
 
 import (
-	// "encoding/gob"
 	"encoding/json"
 	"fmt"
 	"github.com/jmoiron/sqlx"
 	_ "github.com/lib/pq"
-	// null "gopkg.in/guregu/null.v3"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -33,6 +31,7 @@ type User struct {
 }
 
 var db *sqlx.DB // global and simple
+var Logger *log.Logger
 
 func printUsage() {
 	exampleConfig := `{
@@ -43,10 +42,10 @@ func printUsage() {
 	"dbPort":5432,
 	"listenerPort":"8080"
 }`
-	log.Println("Usage: " + path.Base(os.Args[0]) + " configfile")
-	log.Println("")
-	log.Println("Example config file:")
-	log.Println(exampleConfig)
+	Logger.Println("Usage: " + path.Base(os.Args[0]) + " configfile")
+	Logger.Println("")
+	Logger.Println("Example config file:")
+	Logger.Println(exampleConfig)
 }
 
 func main() {
@@ -55,33 +54,36 @@ func main() {
 		return
 	}
 
-	log.SetOutput(os.Stdout)
+	Logger = log.New(os.Stdout, " ", log.Ldate|log.Ltime|log.Lshortfile)
 
 	file, err := os.Open(os.Args[1])
 	if err != nil {
-		log.Println("Error opening config file:", err)
+		Logger.Println("Error opening config file:", err)
 		return
 	}
 	decoder := json.NewDecoder(file)
 	config := Config{}
 	err = decoder.Decode(&config)
 	if err != nil {
-		log.Println("Error reading config file:", err)
+		Logger.Println("Error reading config file:", err)
 		return
 	}
 
 	db, err = InitializeDatabase(config.DbUser, config.DbPassword, config.DbName, config.DbServer, config.DbPort)
 	if err != nil {
-		log.Println("Error initializing database:", err)
+		Logger.Println("Error initializing database:", err)
 		return
 	}
 
-	var Logger = log.New(os.Stdout, " ", log.Ldate|log.Ltime|log.Lshortfile)
-	Logger.Printf("Starting server on port " + config.ListenerPort + "...")
-
 	http.HandleFunc("/", handler)
-	log.Fatal(http.ListenAndServeTLS(":"+config.ListenerPort, "server.pem", "server.key", nil))
-
+	if _, err := os.Stat("server.pem"); os.IsNotExist(err) {
+		Logger.Fatal("server.pem file not found")
+	}
+	if _, err := os.Stat("server.key"); os.IsNotExist(err) {
+		Logger.Fatal("server.key file not found")
+	}
+	Logger.Printf("Starting server on port " + config.ListenerPort + "...")
+	Logger.Fatal(http.ListenAndServeTLS(":"+config.ListenerPort, "server.pem", "server.key", nil))
 }
 
 func InitializeDatabase(username, password, dbname, server string, port uint) (*sqlx.DB, error) {
@@ -101,13 +103,13 @@ func retErr(w http.ResponseWriter, status int) {
 
 func handler(w http.ResponseWriter, r *http.Request) {
 
-	log.Println(r.Method, r.URL.Scheme, r.Host, r.URL.RequestURI())
+	Logger.Println(r.Method, r.URL.Scheme, r.Host, r.URL.RequestURI())
 	if r.Method == "GET" {
 		if r.URL.Path == "/users" {
 			userlist := []User{}
 			err := db.Select(&userlist, "SELECT * FROM users")
 			if err != nil {
-				log.Println(err)
+				Logger.Println(err)
 			}
 			w.Header().Set("Content-Type", "application/json")
 			enc := json.NewEncoder(w)
@@ -120,7 +122,7 @@ func handler(w http.ResponseWriter, r *http.Request) {
 			stmt, err := db.PrepareNamed("SELECT * FROM users WHERE username=:username")
 			err = stmt.Select(&userlist, argument)
 			if err != nil {
-				log.Println(err)
+				Logger.Println(err)
 				retErr(w, http.StatusInternalServerError)
 				return
 			}
@@ -136,11 +138,11 @@ func handler(w http.ResponseWriter, r *http.Request) {
 		var u User
 		body, err := ioutil.ReadAll(r.Body)
 		if err != nil {
-			log.Println(err)
+			Logger.Println(err)
 		}
 		err = json.Unmarshal(body, &u)
 		if err != nil {
-			log.Println(err)
+			Logger.Println(err)
 			retErr(w, http.StatusInternalServerError)
 			return
 		}
@@ -148,7 +150,7 @@ func handler(w http.ResponseWriter, r *http.Request) {
 		sqlString := "INSERT INTO users (username, last_name, first_name, password) VALUES (:username, :last_name, :first_name, :password)"
 		result, err := db.NamedExec(sqlString, u)
 		if err != nil {
-			log.Println(err)
+			Logger.Println(err)
 			retErr(w, http.StatusInternalServerError)
 			return
 		}
@@ -158,21 +160,21 @@ func handler(w http.ResponseWriter, r *http.Request) {
 		var u User
 		body, err := ioutil.ReadAll(r.Body)
 		if err != nil {
-			log.Println(err)
+			Logger.Println(err)
 		}
 		err = json.Unmarshal(body, &u)
 		if err != nil {
-			log.Println(err)
+			Logger.Println(err)
 			retErr(w, http.StatusInternalServerError)
 			return
 		}
 		u.Username = strings.Replace(r.URL.Path, "/users/", "", 1) // overwrite the username in the json, the path gets checked.
 		// TODO encrypt passwd before storing.
 		sqlString := "UPDATE users SET last_name=:last_name, first_name=:first_name, password=:password WHERE username=:username"
-		log.Println(sqlString)
+		Logger.Println(sqlString)
 		result, err := db.NamedExec(sqlString, u)
 		if err != nil {
-			log.Println(err)
+			Logger.Println(err)
 			retErr(w, http.StatusInternalServerError)
 			return
 		}
@@ -183,12 +185,13 @@ func handler(w http.ResponseWriter, r *http.Request) {
 		argument.Username = strings.Replace(r.URL.Path, "/users/", "", 1)
 		result, err := db.NamedExec("DELETE FROM users WHERE username=:username", argument)
 		if err != nil {
-			log.Println(err)
+			Logger.Println(err)
 			retErr(w, http.StatusInternalServerError)
 			return
 		}
 		rows, _ := result.RowsAffected()
 		fmt.Fprintf(w, "Done! (%s Rows Affected)", rows)
+	} else {
+		http.Error(w, r.Method+" "+r.URL.Path+" not valid for this microservice", http.StatusNotFound)
 	}
-	retErr(w, http.StatusNotFound)
 }

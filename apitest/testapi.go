@@ -7,7 +7,6 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
-	// "strings"
 )
 
 const LOGIN string = "/login"

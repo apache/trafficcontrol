@@ -1,19 +1,16 @@
 package main
 
 import (
-	// "encoding/gob"
 	"encoding/json"
 	"fmt"
+	jwt "github.com/dgrijalva/jwt-go"
 	"github.com/jmoiron/sqlx"
 	_ "github.com/lib/pq"
-	// null "gopkg.in/guregu/null.v3"
-	jwt "github.com/dgrijalva/jwt-go"
 	"io/ioutil"
 	"log"
 	"net/http"
 	"os"
 	"path"
-	// "strings"
 	"time"
 )
 
@@ -49,11 +46,13 @@ func printUsage() {
 	"dbPort":5432,
 	"listenerPort":"8080"
 }`
-	log.Println("Usage: " + path.Base(os.Args[0]) + " configfile")
-	log.Println("")
-	log.Println("Example config file:")
-	log.Println(exampleConfig)
+	Logger.Println("Usage: " + path.Base(os.Args[0]) + " configfile")
+	Logger.Println("")
+	Logger.Println("Example config file:")
+	Logger.Println(exampleConfig)
 }
+
+var Logger *log.Logger
 
 func main() {
 	if len(os.Args) < 2 {
@@ -61,53 +60,38 @@ func main() {
 		return
 	}
 
-	log.SetOutput(os.Stdout)
+	// log.SetOutput(os.Stdout)
+	Logger = log.New(os.Stdout, " ", log.Ldate|log.Ltime|log.Lshortfile)
 
 	file, err := os.Open(os.Args[1])
 	if err != nil {
-		log.Println("Error opening config file:", err)
+		Logger.Println("Error opening config file:", err)
 		return
 	}
 	decoder := json.NewDecoder(file)
 	config := Config{}
 	err = decoder.Decode(&config)
 	if err != nil {
-		log.Println("Error reading config file:", err)
+		Logger.Println("Error reading config file:", err)
 		return
 	}
 
 	db, err = InitializeDatabase(config.DbUser, config.DbPassword, config.DbName, config.DbServer, config.DbPort)
 	if err != nil {
-		log.Println("Error initializing database:", err)
+		Logger.Println("Error initializing database:", err)
 		return
 	}
 
-	var Logger = log.New(os.Stdout, " ", log.Ldate|log.Ltime|log.Lshortfile)
-	Logger.Printf("Starting server on port " + config.ListenerPort + "...")
-
 	http.HandleFunc("/", handler)
-	// http.ListenAndServe(":8080", nil)
-	log.Fatal(http.ListenAndServeTLS(":"+config.ListenerPort, "server.pem", "server.key", nil))
+	if _, err := os.Stat("server.pem"); os.IsNotExist(err) {
+		Logger.Fatal("server.pem file not found")
+	}
+	if _, err := os.Stat("server.key"); os.IsNotExist(err) {
+		Logger.Fatal("server.key file not found")
+	}
+	Logger.Printf("Starting server on port " + config.ListenerPort + "...")
+	Logger.Fatal(http.ListenAndServeTLS(":"+config.ListenerPort, "server.pem", "server.key", nil))
 }
-
-// func validateToken(tokenString string) (*jwt.Token, error) {
-
-// 	tokenString = strings.Replace(tokenString, "Bearer ", "", 1)
-// 	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
-// 		// Don't forget to validate the alg is what you expect:
-// 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
-// 			return nil, fmt.Errorf("Unexpected signing method: %v", token.Header["alg"])
-// 		}
-// 		return []byte("CAmeRAFiveSevenNineNine"), nil
-// 	})
-
-// 	if err == nil && token.Valid {
-// 		log.Println("TOKEN IS GOOD -- user:", token.Claims["userid"], " role:", token.Claims["role"])
-// 	} else {
-// 		log.Println("TOKEN IS BAD", err)
-// 	}
-// 	return token, err
-// }
 
 func InitializeDatabase(username, password, dbname, server string, port uint) (*sqlx.DB, error) {
 	connString := fmt.Sprintf("host=%s dbname=%s user=%s password=%s sslmode=disable", server, dbname, username, password)
@@ -120,43 +104,33 @@ func InitializeDatabase(username, password, dbname, server string, port uint) (*
 	return db, nil
 }
 
-func retErr(w http.ResponseWriter, status int) {
-	w.WriteHeader(status)
-}
-
 func handler(w http.ResponseWriter, r *http.Request) {
 
-	log.Println(r.Method, r.URL.Scheme, r.Host, r.URL.RequestURI())
+	Logger.Println(r.Method, r.URL.Scheme, r.Host, r.URL.RequestURI())
 	if r.Method == "POST" {
 		var u User
 		userlist := []User{}
-		// username := ""
-		// password := ""
 		body, err := ioutil.ReadAll(r.Body)
-		log.Println(string(body))
 		if err != nil {
-			log.Println("Error reading body: ", err.Error())
+			Logger.Println("Error reading body: ", err.Error())
 			http.Error(w, "Error reading body: "+err.Error(), http.StatusBadRequest)
 			return
 		}
 		err = json.Unmarshal(body, &u)
 		if err != nil {
-			log.Println("Error unmarshalling JSON: ", err.Error())
+			Logger.Println("Error unmarshalling JSON: ", err.Error())
 			http.Error(w, "Invalid JSON: "+err.Error(), http.StatusBadRequest)
 			return
 		}
-		// username = u.Username
-		// password = u.Password
-
 		stmt, err := db.PrepareNamed("SELECT * FROM users WHERE username=:username")
 		err = stmt.Select(&userlist, u)
 		if err != nil {
-			log.Println(err)
-			retErr(w, http.StatusInternalServerError)
+			Logger.Println(err.Error())
+			http.Error(w, "Database error: "+err.Error(), http.StatusInternalServerError)
 			return
 		}
 		if len(userlist) == 0 || userlist[0].Password != u.Password {
-			retErr(w, http.StatusUnauthorized)
+			http.Error(w, "Invalid username/password ", http.StatusUnauthorized)
 			return
 		}
 
@@ -165,16 +139,20 @@ func handler(w http.ResponseWriter, r *http.Request) {
 		token.Claims["exp"] = time.Now().Add(time.Hour * 24).Unix()
 		tokenString, err := token.SignedString([]byte("CAmeRAFiveSevenNineNine"))
 		if err != nil {
+			Logger.Println(err.Error())
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
 		js, err := json.Marshal(TokenResponse{Token: tokenString})
 		if err != nil {
+			Logger.Println(err.Error())
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
+		// w.WriteHeader(http.StatusOK)
 		w.Header().Set("Content-Type", "application/json")
 		w.Write(js)
+		return
 	}
-	retErr(w, http.StatusNotFound)
+	http.Error(w, r.Method+" "+r.URL.Path+" not valid for this microservice", http.StatusNotFound)
 }

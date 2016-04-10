@@ -4,9 +4,7 @@
 package main
 
 import (
-	// "crypto/sha1"
 	"crypto/tls"
-	// "encoding/hex"
 	"encoding/json"
 	"flag"
 	"fmt"
@@ -43,9 +41,7 @@ type loginJson struct {
 }
 
 var (
-	httpsAddr    = flag.String("https", "", "HTTPS listen address (leave empty to disable)")
-	certFile     = flag.String("https_cert", "", "HTTPS certificate file")
-	keyFile      = flag.String("https_key", "", "HTTPS key file")
+	httpsAddr    = flag.String("https", "", "HTTPS listen address")
 	ruleFile     = flag.String("rules", "", "rule definition file")
 	pollInterval = flag.Duration("poll", time.Second*10, "file poll interval")
 )
@@ -61,25 +57,24 @@ func main() {
 	// override the default so we can use self-signed certs on our microservices
 	// and use a self-signed cert in this server
 	http.DefaultTransport.(*http.Transport).TLSClientConfig = &tls.Config{InsecureSkipVerify: true}
-	http.ListenAndServeTLS(*httpsAddr, *certFile, *keyFile, s)
+	if _, err := os.Stat("server.pem"); os.IsNotExist(err) {
+		log.Fatal("server.pem file not found")
+	}
+	if _, err := os.Stat("server.key"); os.IsNotExist(err) {
+		log.Fatal("server.key file not found")
+	}
+	http.ListenAndServeTLS(*httpsAddr, "server.pem", "server.key", s)
 }
 
 func validateToken(tokenString string) (*jwt.Token, error) {
 
 	tokenString = strings.Replace(tokenString, "Bearer ", "", 1)
 	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
-		// Don't forget to validate the alg is what you expect:
 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
 			return nil, fmt.Errorf("Unexpected signing method: %v", token.Header["alg"])
 		}
 		return []byte("CAmeRAFiveSevenNineNine"), nil
 	})
-
-	if err == nil && token.Valid {
-		log.Println("Token is good -- user:", token.Claims["User"], token.Claims)
-	} else {
-		log.Println("Token is bad", err)
-	}
 	return token, err
 }
 
@@ -98,12 +93,12 @@ func NewServer(file string, poll time.Duration) (*Server, error) {
 // request with the Rule's handler. If the rule's secure field is true, it will
 // only allow access if the request has a valid JWT bearer token.
 func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-
+	// assume the token is required, most used code path, only check to see if path is open when fails.
 	var isSecure = true
 	token, err := validateToken(r.Header.Get("Authorization"))
 	if err != nil {
 		if s.isSecure(r) {
-			log.Println("No valid token found!")
+			log.Println(r.URL.Path + ": valid token required, but none found!")
 			w.WriteHeader(http.StatusForbidden)
 			return
 		} else {
@@ -112,15 +107,16 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if isSecure {
-		log.Println(r.URL.Path, "identified user:", token.Claims["userid"])
+		log.Println(r.Method+" "+r.URL.Path+": valid token found, identified user:", token.Claims["User"])
 	} else {
-		log.Println(r.URL.Path, "is not secured, giving access")
+		log.Println(r.Method + " " + r.URL.Path + ": no token required")
 	}
 
 	if h := s.handler(r); h != nil {
 		h.ServeHTTP(w, r)
 		return
 	}
+	log.Println(r.Method + " " + r.URL.Path + ": no mapping in rules file!")
 	http.Error(w, "Not found.", http.StatusNotFound)
 }
 
