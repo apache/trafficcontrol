@@ -76,9 +76,9 @@ func validateToken(tokenString string) (*jwt.Token, error) {
 	})
 
 	if err == nil && token.Valid {
-		log.Println("TOKEN IS GOOD -- user:", token.Claims["userid"], " role:", token.Claims["role"])
+		log.Println("Token is good -- user:", token.Claims["User"], token.Claims)
 	} else {
-		log.Println("TOKEN IS BAD", err)
+		log.Println("Token is bad", err)
 	}
 	return token, err
 }

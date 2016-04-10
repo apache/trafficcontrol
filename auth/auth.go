@@ -13,7 +13,7 @@ import (
 	"net/http"
 	"os"
 	"path"
-	"strings"
+	// "strings"
 	"time"
 )
 
@@ -87,30 +87,27 @@ func main() {
 
 	http.HandleFunc("/", handler)
 	// http.ListenAndServe(":8080", nil)
-	http.ListenAndServeTLS(":8080", "server.pem", "server.key", nil)
-
-	if err != nil {
-		log.Println(err)
-	}
+	log.Fatal(http.ListenAndServeTLS(":"+config.ListenerPort, "server.pem", "server.key", nil))
 }
-func validateToken(tokenString string) (*jwt.Token, error) {
 
-	tokenString = strings.Replace(tokenString, "Bearer ", "", 1)
-	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
-		// Don't forget to validate the alg is what you expect:
-		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
-			return nil, fmt.Errorf("Unexpected signing method: %v", token.Header["alg"])
-		}
-		return []byte("CAmeRAFiveSevenNineNine"), nil
-	})
+// func validateToken(tokenString string) (*jwt.Token, error) {
 
-	if err == nil && token.Valid {
-		log.Println("TOKEN IS GOOD -- user:", token.Claims["userid"], " role:", token.Claims["role"])
-	} else {
-		log.Println("TOKEN IS BAD", err)
-	}
-	return token, err
-}
+// 	tokenString = strings.Replace(tokenString, "Bearer ", "", 1)
+// 	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
+// 		// Don't forget to validate the alg is what you expect:
+// 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+// 			return nil, fmt.Errorf("Unexpected signing method: %v", token.Header["alg"])
+// 		}
+// 		return []byte("CAmeRAFiveSevenNineNine"), nil
+// 	})
+
+// 	if err == nil && token.Valid {
+// 		log.Println("TOKEN IS GOOD -- user:", token.Claims["userid"], " role:", token.Claims["role"])
+// 	} else {
+// 		log.Println("TOKEN IS BAD", err)
+// 	}
+// 	return token, err
+// }
 
 func InitializeDatabase(username, password, dbname, server string, port uint) (*sqlx.DB, error) {
 	connString := fmt.Sprintf("host=%s dbname=%s user=%s password=%s sslmode=disable", server, dbname, username, password)
@@ -133,24 +130,23 @@ func handler(w http.ResponseWriter, r *http.Request) {
 	if r.Method == "POST" {
 		var u User
 		userlist := []User{}
-		username := ""
-		password := ""
+		// username := ""
+		// password := ""
 		body, err := ioutil.ReadAll(r.Body)
+		log.Println(string(body))
 		if err != nil {
 			log.Println("Error reading body: ", err.Error())
 			http.Error(w, "Error reading body: "+err.Error(), http.StatusBadRequest)
 			return
 		}
-		// var lj loginJson
-		// log.Println(body)
 		err = json.Unmarshal(body, &u)
 		if err != nil {
 			log.Println("Error unmarshalling JSON: ", err.Error())
 			http.Error(w, "Invalid JSON: "+err.Error(), http.StatusBadRequest)
 			return
 		}
-		// username = lj.User
-		// password = lj.Password
+		// username = u.Username
+		// password = u.Password
 
 		stmt, err := db.PrepareNamed("SELECT * FROM users WHERE username=:username")
 		err = stmt.Select(&userlist, u)
@@ -165,8 +161,7 @@ func handler(w http.ResponseWriter, r *http.Request) {
 		}
 
 		token := jwt.New(jwt.SigningMethodHS256)
-		token.Claims["User"] = username
-		token.Claims["Password"] = password
+		token.Claims["User"] = u.Username
 		token.Claims["exp"] = time.Now().Add(time.Hour * 24).Unix()
 		tokenString, err := token.SignedString([]byte("CAmeRAFiveSevenNineNine"))
 		if err != nil {
@@ -180,19 +175,6 @@ func handler(w http.ResponseWriter, r *http.Request) {
 		}
 		w.Header().Set("Content-Type", "application/json")
 		w.Write(js)
-		// var u User
-		// userlist := []User{}
-		// body, err := ioutil.ReadAll(r.Body)
-		// if err != nil {
-		// 	log.Println(err)
-		// }
-		// err = json.Unmarshal(body, &u)
-		// if err != nil {
-		// 	log.Println(err)
-		// 	retErr(w, http.StatusInternalServerError)
-		// 	return
-		// }
-
 	}
 	retErr(w, http.StatusNotFound)
 }

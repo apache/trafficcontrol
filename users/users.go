@@ -80,11 +80,8 @@ func main() {
 	Logger.Printf("Starting server on port " + config.ListenerPort + "...")
 
 	http.HandleFunc("/", handler)
-	http.ListenAndServe(":8080", nil)
+	log.Fatal(http.ListenAndServeTLS(":"+config.ListenerPort, "server.pem", "server.key", nil))
 
-	if err != nil {
-		log.Println(err)
-	}
 }
 
 func InitializeDatabase(username, password, dbname, server string, port uint) (*sqlx.DB, error) {
@@ -106,7 +103,7 @@ func handler(w http.ResponseWriter, r *http.Request) {
 
 	log.Println(r.Method, r.URL.Scheme, r.Host, r.URL.RequestURI())
 	if r.Method == "GET" {
-		if r.URL.Path == "/" {
+		if r.URL.Path == "/users" {
 			userlist := []User{}
 			err := db.Select(&userlist, "SELECT * FROM users")
 			if err != nil {
@@ -116,7 +113,7 @@ func handler(w http.ResponseWriter, r *http.Request) {
 			enc := json.NewEncoder(w)
 			enc.Encode(userlist)
 		} else {
-			username := strings.Replace(r.URL.Path, "/", "", 1)
+			username := strings.Replace(r.URL.Path, "/users/", "", 1)
 			userlist := []User{}
 			argument := User{}
 			argument.Username = username
@@ -169,9 +166,10 @@ func handler(w http.ResponseWriter, r *http.Request) {
 			retErr(w, http.StatusInternalServerError)
 			return
 		}
-		u.Username = strings.Replace(r.URL.Path, "/", "", 1) // overwrite the username in the json, the path gets checked.
+		u.Username = strings.Replace(r.URL.Path, "/users/", "", 1) // overwrite the username in the json, the path gets checked.
 		// TODO encrypt passwd before storing.
 		sqlString := "UPDATE users SET last_name=:last_name, first_name=:first_name, password=:password WHERE username=:username"
+		log.Println(sqlString)
 		result, err := db.NamedExec(sqlString, u)
 		if err != nil {
 			log.Println(err)
@@ -182,7 +180,7 @@ func handler(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprintf(w, "Done! (%s Rows Affected)", rows)
 	} else if r.Method == "DELETE" {
 		argument := User{}
-		argument.Username = strings.Replace(r.URL.Path, "/", "", 1)
+		argument.Username = strings.Replace(r.URL.Path, "/users/", "", 1)
 		result, err := db.NamedExec("DELETE FROM users WHERE username=:username", argument)
 		if err != nil {
 			log.Println(err)
