@@ -1,3 +1,4 @@
+#include <chrono>
 #include <iostream>
 #include <stdexcept>
 #include <string>
@@ -14,6 +15,7 @@
 JPEGMongoDBWriter::JPEGMongoDBWriter(const std::string &theURI, int theDebug) :
   myInstance{},
   myClient{mongocxx::uri{theURI}},
+  // Database: CSCI5799, Collection: CameraFeed 
   myCollection{myClient["CSCI5799"]["CameraFeed"]},
   myDebug(theDebug)
 {
@@ -36,20 +38,14 @@ void JPEGMongoDBWriter::handleJPEG(const char *theJPEG, size_t theSize)
   doc.append(bsoncxx::builder::basic::kvp("camera_id",
                                           "Camera123"));
 
-  struct timeval currentTime;
-  gettimeofday(&currentTime, 0);
+  std::chrono::milliseconds ms =
+    std::chrono::duration_cast<std::chrono::milliseconds>(
+      std::chrono::system_clock::now().time_since_epoch());
 
-  doc.append(bsoncxx::builder::basic::kvp("unix_time",
-                 [&](bsoncxx::builder::basic::sub_document subdoc)
-                 {
-                   subdoc.append(
-                     bsoncxx::builder::basic::kvp(
-                       "seconds", bsoncxx::types::b_int64{currentTime.tv_sec}));
-                   subdoc.append(
-                     bsoncxx::builder::basic::kvp(
-                       "microseconds",
-                       bsoncxx::types::b_int64{currentTime.tv_usec}));
-                 }));
+  // The RetrieveVideo microservice works much better with raw milliseconds
+  // since epoch (usual 1970 date).
+  doc.append(bsoncxx::builder::basic::kvp(
+               "msSinceEpoch", bsoncxx::types::b_int64{ms.count()}));
 
   doc.append(bsoncxx::builder::basic::kvp(
                "jpeg",
