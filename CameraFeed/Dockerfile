@@ -43,7 +43,7 @@ RUN make && make install
 #    Custom Code
 ##############################
 
-# Brind in CameraFeed source
+# Bring in CameraFeed source
 RUN mkdir /usr/src/CameraFeed
 WORKDIR /usr/src/CameraFeed
 # Manual copy, excludes Dockerfile, emacs tmp files

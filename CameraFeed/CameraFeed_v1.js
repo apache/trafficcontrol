@@ -5,8 +5,7 @@
 
 "use strict";
 
-// Model URI:
-// https://localhost:8080/CameraFeed/v1?action=[start|stop]&camera_id=[id]
+// API defined in REAME.txt
 
 var path = require('path');
 var CameraFeedError = require('./CameraFeedError.js');
@@ -103,7 +102,7 @@ function executeStart(cameraId) {
   // TODO:
   // - check if camera already streaming
   //   if so, success
-  //   if not, spawn child process to retrieve feed (C++, libcurl)
+  //   if not, spawn child process to retrieve feed
   //           update DB to say feed is started
   //    (need to errors from child process)
 }
