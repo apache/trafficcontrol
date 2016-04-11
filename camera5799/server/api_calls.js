@@ -28,6 +28,7 @@ Meteor.methods({
                             myFuture.return(tokenValue);
                         }
                     }
+                    console.log("bif pipma ==> ", result.content);
                 } else {
                     console.log("error ===> ", error.toString());
                     myFuture.throw(error);
@@ -47,9 +48,7 @@ Meteor.methods({
             function (error, result) {
                 //result.statuscode
                 if (!error) {
-                    console.log("11getCameras result content..." + result.content);
-                    AvailableCameras.insert({cameraName: "livingroom", date: "jan 1st 2016"});
-                    console.log("the count is ", AvailableCameras.find().count());
+                    console.log("getcameras server, response ", result.content);
                     myFuture.return(result.content);
                 } else {
                     console.log("error ===> ", error.toString());

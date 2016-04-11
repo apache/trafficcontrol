@@ -1,13 +1,12 @@
 <template name="browseCameras">
 
-    <div class="list-group">
+    <div class="page list-group">
         <span class="list-group-item active">
             Registered Cameras
         </span>
         {{#each availableCameras}}
             <a href="/cameraDetail" class="list-group-item">{{cameraName}}</a>
         {{/each}}
-        <a href="/cameraDetail" class="list-group-item">Living room camera</a>
         <a href="/cameraDetail" class="list-group-item">Work camera</a>
     </div>
 

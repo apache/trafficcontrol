@@ -18,8 +18,8 @@ Template.browseCameras.onCreated(function() {
         if (err) {
             console.log('getCameras error... ', err.message);
         } else {
-            
-            console.log("gerCameras response... ", res.content);
+            AvailableCameras.insert({cameraName: "livingroom", date: "jan 1st 2016"});
+            console.log("getCameras response from client... ", res.content);
         }
         return res;
 

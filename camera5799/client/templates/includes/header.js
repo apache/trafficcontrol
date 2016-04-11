@@ -21,6 +21,16 @@ Template.header.events({
     e.preventDefault();
     localStorage.removeItem('login_response');
     Session.set('login_response', null);
+
+    // remove all of the client collections on logout
+    var globalObject=Meteor.isClient?window:global;
+    for(var property in globalObject){
+      var object=globalObject[property];
+      if(object instanceof Meteor.Collection){
+        object.remove({});
+      }
+    }
+
     Router.go('homePage');
   }
 });
