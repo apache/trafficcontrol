@@ -6,7 +6,7 @@ Template.browseCameras.helpers({
 });
 
 Template.browseCameras.onCreated(function() {
-   alert("on created method fired!");
+    //alert("on created method fired!");
 
     var login_data = Session.get('login_response');
     var token = null;

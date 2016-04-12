@@ -19,7 +19,7 @@ Meteor.methods({
             {data: {"username": username, "password": password}},
             function (error, result) {
                 if (!error) {
-                    var tokenValue = null;
+                    /*var tokenValue = null;
                     if (result.hasOwnProperty('content')) {
                         tokenValue = result.content;
                         tokenValue = JSON.parse(tokenValue);
@@ -27,7 +27,8 @@ Meteor.methods({
                             tokenValue = tokenValue.Token;
                             myFuture.return(tokenValue);
                         }
-                    }
+                    }*/
+                    myFuture.return(result);
                     console.log("bif pipma ==> ", result.content);
                 } else {
                     console.log("error ===> ", error.toString());

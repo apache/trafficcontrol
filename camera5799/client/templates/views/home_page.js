@@ -17,16 +17,23 @@ Template.homePage.events({
        Meteor.call('loginCall', username, password, function(err, res) {
            console.log("client response... ", res);
           if (err) {
-              console.log("error from client");
-              localStorage.setItem('login_response', JSON.stringify({error: err}));
+              alert(err.message);
           } else {
-              console.log("the response from client! ", res);
-              localStorage.setItem('login_response', JSON.stringify({token: res, username: username}));
+              if (res.statusCode == 200) {
+                  if (res.hasOwnProperty('data')) {
+                      var theData = res.data;
+                      if (theData.hasOwnProperty('Token')) {
+                          localStorage.setItem('login_response', JSON.stringify({token: theData.Token, username: username}));
+                          Session.set('login_response', JSON.parse(localStorage.getItem('login_response')));
+                          Router.go('browseCameras');
+                      }
+                  }
+              }
+              else {
+                  alert(res.content);
+              }
           }
-           Session.set('login_response', JSON.parse(localStorage.getItem('login_response')));
-           Router.go('browseCameras');
            return res;
-
        });
    }
 });
