@@ -21,9 +21,9 @@ import (
 	"net/url"
 	"testing"
 
-	"github.com/jheitz200/test_helper"
 	"github.com/Comcast/traffic_control/traffic_ops/client"
 	"github.com/Comcast/traffic_control/traffic_ops/client/fixtures"
+	"github.com/jheitz200/test_helper"
 )
 
 func TestServer(t *testing.T) {

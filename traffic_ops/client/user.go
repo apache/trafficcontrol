@@ -27,14 +27,14 @@ type UserResponse struct {
 // User contains information about a given user in Traffic Ops.
 type User struct {
 	Username     string `json:"username"`
-	PublicSSHKey string `json:"public_ssh_key"`
+	PublicSSHKey string `json:"publicSshKey"`
 	Role         string `json:"role"`
 	UID          string `json:"uid"`
 	GID          string `json:"gid"`
 	Company      string `json:"company"`
 	Email        string `json:"email"`
-	FullName     string `json:"full_name"`
-	NewUser      bool   `json:"new_user"`
+	FullName     string `json:"fullName"`
+	NewUser      bool   `json:"newUser"`
 	LastUpdated  string `json:"lastUpdated"`
 }
 
@@ -47,7 +47,7 @@ func (to *Session) Users() ([]User, error) {
 	}
 
 	var data UserResponse
-	if err := json.NewDecoder(resp.Body).Decode(&data); err != nil {
+	if err := json.NewDecoder(resp.Body).Decode(&data.Response); err != nil {
 		return nil, err
 	}
 

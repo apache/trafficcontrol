@@ -20,8 +20,8 @@ import (
 	"net/http"
 	"testing"
 
-	"github.com/jheitz200/test_helper"
 	"github.com/Comcast/traffic_control/traffic_ops/client"
+	"github.com/jheitz200/test_helper"
 )
 
 func TestLogin(t *testing.T) {
