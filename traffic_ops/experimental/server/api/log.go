@@ -27,17 +27,17 @@ import (
 )
 
 type Log struct {
-	Id          int64       `db:"id" json:"id"`
-	Level       null.String `db:"level" json:"level"`
-	Message     string      `db:"message" json:"message"`
-	Ticketnum   null.String `db:"ticketnum" json:"ticketnum"`
-	LastUpdated time.Time   `db:"last_updated" json:"lastUpdated"`
-	Links       LogLinks    `json:"_links" db:-`
+	Id        int64       `db:"id" json:"id"`
+	Level     null.String `db:"level" json:"level"`
+	Message   string      `db:"message" json:"message"`
+	Username  string      `db:"username" json:"username"`
+	Ticketnum null.String `db:"ticketnum" json:"ticketnum"`
+	CreatedAt time.Time   `db:"created_at" json:"createdAt"`
+	Links     LogLinks    `json:"_links" db:-`
 }
 
 type LogLinks struct {
-	Self       string     `db:"self" json:"_self"`
-	TmUserLink TmUserLink `json:"tm_user" db:-`
+	Self string `db:"self" json:"_self"`
 }
 
 // @Title getLogById
@@ -47,13 +47,12 @@ type LogLinks struct {
 // @Success 200 {array}    Log
 // @Resource /api/2.0
 // @Router /api/2.0/log/{id} [get]
-func getLogById(id int, db *sqlx.DB) (interface{}, error) {
+func getLog(id int64, db *sqlx.DB) (interface{}, error) {
 	ret := []Log{}
 	arg := Log{}
-	arg.Id = int64(id)
-	queryStr := "select *, concat('" + API_PATH + "log/', id) as self "
-	queryStr += ", concat('" + API_PATH + "tm_user/', tm_user) as tm_user_id_ref"
-	queryStr += " from log where id=:id"
+	arg.Id = id
+	queryStr := "select *, concat('" + API_PATH + "log/', id) as self"
+	queryStr += " from log WHERE id=:id"
 	nstmt, err := db.PrepareNamed(queryStr)
 	err = nstmt.Select(&ret, arg)
 	if err != nil {
@@ -72,8 +71,7 @@ func getLogById(id int, db *sqlx.DB) (interface{}, error) {
 // @Router /api/2.0/log [get]
 func getLogs(db *sqlx.DB) (interface{}, error) {
 	ret := []Log{}
-	queryStr := "select *, concat('" + API_PATH + "log/', id) as self "
-	queryStr += ", concat('" + API_PATH + "tm_user/', tm_user) as tm_user_id_ref"
+	queryStr := "select *, concat('" + API_PATH + "log/', id) as self"
 	queryStr += " from log"
 	err := db.Select(&ret, queryStr)
 	if err != nil {
@@ -100,13 +98,15 @@ func postLog(payload []byte, db *sqlx.DB) (interface{}, error) {
 	sqlString := "INSERT INTO log("
 	sqlString += "level"
 	sqlString += ",message"
-	sqlString += ",tm_user"
+	sqlString += ",username"
 	sqlString += ",ticketnum"
+	sqlString += ",created_at"
 	sqlString += ") VALUES ("
 	sqlString += ":level"
 	sqlString += ",:message"
-	sqlString += ",:tm_user"
+	sqlString += ",:username"
 	sqlString += ",:ticketnum"
+	sqlString += ",:created_at"
 	sqlString += ")"
 	result, err := db.NamedExec(sqlString, v)
 	if err != nil {
@@ -124,23 +124,22 @@ func postLog(payload []byte, db *sqlx.DB) (interface{}, error) {
 // @Success 200 {object}    output_format.ApiWrapper
 // @Resource /api/2.0
 // @Router /api/2.0/log/{id}  [put]
-func putLog(id int, payload []byte, db *sqlx.DB) (interface{}, error) {
-	var v Log
-	err := json.Unmarshal(payload, &v)
-	v.Id = int64(id) // overwrite the id in the payload
+func putLog(id int64, payload []byte, db *sqlx.DB) (interface{}, error) {
+	var arg Log
+	err := json.Unmarshal(payload, &arg)
+	arg.Id = id
 	if err != nil {
 		log.Println(err)
 		return nil, err
 	}
-	v.LastUpdated = time.Now()
 	sqlString := "UPDATE log SET "
 	sqlString += "level = :level"
 	sqlString += ",message = :message"
-	sqlString += ",tm_user = :tm_user"
+	sqlString += ",username = :username"
 	sqlString += ",ticketnum = :ticketnum"
-	sqlString += ",last_updated = :last_updated"
+	sqlString += ",created_at = :created_at"
 	sqlString += " WHERE id=:id"
-	result, err := db.NamedExec(sqlString, v)
+	result, err := db.NamedExec(sqlString, arg)
 	if err != nil {
 		log.Println(err)
 		return nil, err
@@ -155,9 +154,9 @@ func putLog(id int, payload []byte, db *sqlx.DB) (interface{}, error) {
 // @Success 200 {array}    Log
 // @Resource /api/2.0
 // @Router /api/2.0/log/{id} [delete]
-func delLog(id int, db *sqlx.DB) (interface{}, error) {
+func delLog(id int64, db *sqlx.DB) (interface{}, error) {
 	arg := Log{}
-	arg.Id = int64(id)
+	arg.Id = id
 	result, err := db.NamedExec("DELETE FROM log WHERE id=:id", arg)
 	if err != nil {
 		log.Println(err)

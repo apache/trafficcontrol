@@ -46,7 +46,7 @@ public class DataImporter {
 		}
 
 		try {
-			return mbeanServer.invoke(objectName, operation, (Object[]) parameters, signature);
+			return mbeanServer.invoke(objectName, operation, parameters, signature);
 		} catch (Exception ex) {
 			throw new DataImporterException(ex);
 		}

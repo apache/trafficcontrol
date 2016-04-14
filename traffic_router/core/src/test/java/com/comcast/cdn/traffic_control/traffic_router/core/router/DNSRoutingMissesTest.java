@@ -144,7 +144,7 @@ public class DNSRoutingMissesTest {
         when(deliveryService.isCoverageZoneOnly()).thenReturn(false);
 
         doReturn(deliveryService).when(trafficRouter).selectDeliveryService(request, false);
-        doReturn(cacheLocation).when(trafficRouter).getCoverageZoneCache("192.168.34.56");
+        doReturn(cacheLocation).when(trafficRouter).getCoverageZoneCache("192.168.34.56", deliveryService);
         doReturn(cacheRegister).when(trafficRouter).getCacheRegister();
 
         trafficRouter.route(request, track);

@@ -8,6 +8,18 @@ var StatusService = function(Restangular, messageModel) {
         return Restangular.one("status", id).get();
     };
 
+    this.createStatus = function(status) {
+        return Restangular.service('status').post(status)
+            .then(
+                function() {
+                    messageModel.setMessages([ { level: 'success', text: 'Status created' } ], true);
+                },
+                function() {
+                    messageModel.setMessages([ { level: 'error', text: 'Status create failed' } ], false);
+                }
+            );
+    };
+
     this.updateStatus = function(status) {
         return status.put()
             .then(

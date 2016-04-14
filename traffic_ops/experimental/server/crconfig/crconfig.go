@@ -15,13 +15,14 @@
 package crconfig
 
 import (
+	"fmt"
+	"github.com/jmoiron/sqlx"
 	"gopkg.in/guregu/null.v3"
 	"log"
 	"reflect"
 	"strconv"
 	"strings"
 	"time"
-	"github.com/jmoiron/sqlx"	
 )
 
 // Note: a lot of these structs are generated from the DB. No need to type them all out, there's tools for that.
@@ -50,7 +51,7 @@ type ContentRouter struct {
 	Port     int64  `db:"port" json:"port"`
 	Fqdn     string `db:"fqdn" json:"fqdn"`
 	HostName string `db:"host_name" json:"hostName,omitempty"`
-	Cdnname  string `db:"cdnname" json:"cdnname"`
+	Cdnname  string `db:"cdn" json:"cdn"`
 }
 
 // use this view (pq)
@@ -74,7 +75,7 @@ type Monitor struct {
 	Port     int64       `db:"port" json:"port"`
 	Fqdn     string      `db:"fqdn" json:"fqdn"`
 	HostName string      `db:"host_name" json:"hostName,omitempty"`
-	Cdnname  string      `db:"cdnname" json:"cdnname"`
+	Cdnname  string      `db:"cdn" json:"cdn"`
 }
 
 type EdgeLocation struct {
@@ -96,9 +97,8 @@ type EdgeLocation struct {
 // where server.type in (select id from type where name in ('EDGE', 'MID', 'CCR'))
 // and parameter.config_file = 'CRConfig.json';
 type CRConfigParam struct {
-	CdnName        string `db:"cdn_name"`
-	CdnId          int64  `db:"cdn_id"`
-	ProfileId      int64  `db:"profile_id"`
+	CdnName        string `db:"cdn"`
+	Profile        string `db:"profile"`
 	ServerType     int64  `db:"stype"`
 	ParameterName  string `db:"pname"`
 	ConfigFile     string `db:"cfile"`
@@ -190,9 +190,9 @@ type CrDeliveryService struct {
 // left outer join type as sdnstype on sdnstype.id = staticdnsentry.type;
 
 type CrconfigDsData struct {
-	XmlId              string      `db:"xml_id" json:"xmlId"`
+	Name               string      `db:"name" json:"name"`
 	Profile            int64       `db:"profile" json:"profile"`
-	CcrDnsTtl          null.Int    `db:"ccr_dns_ttl" json:"ccrDnsTtl"`
+	DnsTtl             null.Int    `db:"dns_ttl" json:"dnsTtl"`
 	GlobalMaxMbps      null.Int    `db:"global_max_mbps" json:"globalMaxMbps"`
 	GlobalMaxTps       null.Int    `db:"global_max_tps" json:"globalMaxTps"`
 	MaxDnsAnswers      null.Int    `db:"max_dns_answers" json:"maxDnsAnswers"`
@@ -208,7 +208,7 @@ type CrconfigDsData struct {
 	DnsBypassIp6       null.String `db:"dns_bypass_ip6" json:"dnsBypassIp6"`
 	DnsBypassTtl       null.Int    `db:"dns_bypass_ttl" json:"dnsBypassTtl"`
 	GeoLimit           int64       `db:"geo_limit" json:"geoLimit"`
-	CdnName            null.String `db:"cdn_name" json:"cdnName"`
+	CdnName            null.String `db:"cdn" json:"cdn"`
 	MatchPattern       string      `db:"match_pattern" json:"matchPattern"`
 	MatchType          string      `db:"match_type" json:"matchType"`
 	SetNumber          int64       `db:"set_number" json:"setNumber"`
@@ -239,7 +239,7 @@ type CrContentServer struct {
 	HostName      string      `db:"host_name" json:"hostName"`
 	Profile       string      `db:"profile" json:"profile"`
 	Type          string      `db:"type" json:"type"`
-	LocationId    string      `db:"location_id" json:"locationId"`
+	Location      string      `db:"location" json:"location"`
 	Ip            string      `db:"ip" json:"ip"`
 	Status        string      `db:"status" json:"status"`
 	CacheGroup    string      `db:"cache_group" json:"cacheGroup"`
@@ -248,7 +248,7 @@ type CrContentServer struct {
 	Fqdn          string      `db:"fqdn" json:"fqdn"`
 	InterfaceName string      `db:"interface_name" json:"interfaceName"`
 	HashCount     string      `db:"hash_count" json:"hashCount"`
-	CdnName       null.String `db:"cdnname" json:"cdnName"`
+	CdnName       null.String `db:"cdn" json:"cdn"`
 }
 
 type ContentServerDomainList []string
@@ -282,16 +282,16 @@ type ContentServer struct {
 // where deliveryservice.type != (select id from type where name='ANY_MAP');
 type CrDeliveryserviceServer struct {
 	Pattern    string      `db:"pattern" json:"pattern"`
-	XmlId      string      `db:"xml_id" json:"xmlId"`
+	Name       string      `db:"name" json:"name"`
 	DsId       int64       `db:"ds_id" json:"id"`
 	SrvId      int64       `db:"srv_id" json:"srvId"`
 	ServerName string      `db:"server_name" json:"servername"`
-	Cdnname    null.String `db:"cdnname" json:"cdnname"`
+	Cdnname    null.String `db:"cdn" json:"cdn"`
 	DsType     string      `db:"ds_type" json:"dsType"`
 }
 
 type Stats struct {
-	CDNName   string `json:"CDN_name"`
+	CDNName   string `json:"cdn"`
 	Date      int    `json:"date"`
 	TmHost    string `json:"tm_host"`
 	TmPath    string `json:"tm_path"`
@@ -321,7 +321,7 @@ func boolString(in interface{}) string {
 }
 
 func contentRoutersSection(cdnName string, db *sqlx.DB) (map[string]ContentRouter, error) {
-	crQuery := "select * from content_routers where cdnname='" + cdnName + "'"
+	crQuery := "select * from content_routers where cdn='" + cdnName + "'"
 	crs := []ContentRouter{}
 	err := db.Select(&crs, crQuery)
 	if err != nil {
@@ -338,8 +338,8 @@ func contentRoutersSection(cdnName string, db *sqlx.DB) (map[string]ContentRoute
 	return retMap, nil
 }
 
-func monitorSecttion(cdnName string, db *sqlx.DB) (map[string]Monitor, error) {
-	mQuery := "select * from monitors where cdnname='" + cdnName + "'"
+func monitorSection(cdnName string, db *sqlx.DB) (map[string]Monitor, error) {
+	mQuery := "select * from monitors where cdn='" + cdnName + "'"
 	ms := []Monitor{}
 	err := db.Select(&ms, mQuery)
 	if err != nil {
@@ -375,11 +375,12 @@ func edgeLocationSection(cdnName string, db *sqlx.DB) (map[string]EdgeLocation, 
 }
 
 func configSection(cdnName string, db *sqlx.DB) (Config, map[string]string, error) {
-	pQuery := "select * from crconfig_params where cdn_name='" + cdnName + "'"
+	pQuery := "select * from crconfig_params where cdn='" + cdnName + "'"
 	params := []CRConfigParam{}
 	err := db.Select(&params, pQuery)
 	if err != nil {
 		log.Println(err)
+		err = fmt.Errorf("configSection error selecting params: %v", err)
 		return Config{}, nil, err
 	}
 
@@ -436,7 +437,7 @@ func genRespHeaderList(inString string) map[string]string {
 }
 
 func deliveryServicesSection(cdnName string, pmap map[string]string, db *sqlx.DB) (map[string]CrDeliveryService, error) {
-	dQuery := "select * from crconfig_ds_data where cdn_name='" + cdnName + "'"
+	dQuery := "select * from crconfig_ds_data where cdn='" + cdnName + "'"
 	ds := []CrconfigDsData{}
 	err := db.Select(&ds, dQuery)
 	if err != nil {
@@ -456,8 +457,8 @@ func deliveryServicesSection(cdnName string, pmap map[string]string, db *sqlx.DB
 		} else if deliveryService.GeoLimit == 3 {
 			GeoMap["countryCode"] = "CA"
 		}
-		if _, ok := dsMap[deliveryService.XmlId]; !ok { // there are multiple rows for each DS, only create the struct once
-			dsMap[deliveryService.XmlId] = CrDeliveryService{
+		if _, ok := dsMap[deliveryService.Name]; !ok { // there are multiple rows for each DS, only create the struct once
+			dsMap[deliveryService.Name] = CrDeliveryService{
 				CoverageZoneOnly:     CzfOnly,
 				IP6RoutingEnabled:    boolString(deliveryService.Ipv6RoutingEnabled),
 				MaxDNSIpsForLocation: deliveryService.MaxDnsAnswers,
@@ -472,7 +473,7 @@ func deliveryServicesSection(cdnName string, pmap map[string]string, db *sqlx.DB
 					Refresh: pmap["tld.soa.refresh"],
 					Retry:   pmap["tld.soa.retry"],
 				},
-				TTL: deliveryService.CcrDnsTtl,
+				TTL: deliveryService.DnsTtl,
 				Ttls: Ttls{
 					A:      pmap["tld.ttls.A"],
 					AAAA:   pmap["tld.ttls.AAAA"],
@@ -490,7 +491,7 @@ func deliveryServicesSection(cdnName string, pmap map[string]string, db *sqlx.DB
 				GeoEnabled: GeoMap,
 			}
 		}
-		dService := dsMap[deliveryService.XmlId]
+		dService := dsMap[deliveryService.Name]
 		if deliveryService.MatchType == "HOST_REGEXP" && deliveryService.SetNumber == 0 { // TODO JvD: why / how is this an array?
 			// if dService.Domains == nil {
 			// 	dService.Domains = make([]string, 0, 0)
@@ -534,17 +535,18 @@ func deliveryServicesSection(cdnName string, pmap map[string]string, db *sqlx.DB
 			}
 			dService.StaticDnsEntries = append(dService.StaticDnsEntries, SdnsEntry)
 		}
-		dsMap[deliveryService.XmlId] = dService
+		dsMap[deliveryService.Name] = dService
 	}
 	return dsMap, nil
 }
 
 func contentServersSection(cdnName string, ccrDomain string, db *sqlx.DB) (map[string]ContentServer, error) {
-	csQuery := "select * from content_servers where cdnname='" + cdnName + "'"
+	csQuery := "select * from content_servers where cdn='" + cdnName + "'"
 	cServers := []CrContentServer{}
 	err := db.Select(&cServers, csQuery)
 	if err != nil {
 		log.Println(err)
+		err = fmt.Errorf("contentServersSection error selecting content_servers: %v", err)
 		return nil, err
 	}
 	dsServerQuery := "select * from cr_deliveryservice_server"
@@ -552,6 +554,7 @@ func contentServersSection(cdnName string, ccrDomain string, db *sqlx.DB) (map[s
 	err = db.Select(&dsServers, dsServerQuery)
 	if err != nil {
 		log.Println("ERROR: >> ", err)
+		err = fmt.Errorf("contentServersSection error selecting cr_deliveryservice_server: %v", err)
 		return nil, err
 	}
 	dsMap := make(map[string]ContentServerDsMap)
@@ -559,8 +562,8 @@ func contentServersSection(cdnName string, ccrDomain string, db *sqlx.DB) (map[s
 		if dsMap[row.ServerName] == nil {
 			dsMap[row.ServerName] = make(ContentServerDsMap)
 		}
-		// if dsMap[row.ServerName][row.XmlId] == nil {
-		// 	dsMap[row.ServerName][row.XmlId] = make(ContentServerDomainList, 0, 10)
+		// if dsMap[row.ServerName][row.Name] == nil {
+		// 	dsMap[row.ServerName][row.Name] = make(ContentServerDomainList, 0, 10)
 		// }
 		pattern := row.Pattern
 		if strings.HasSuffix(pattern, "\\..*") {
@@ -572,7 +575,7 @@ func contentServersSection(cdnName string, ccrDomain string, db *sqlx.DB) (map[s
 				pattern = "edge." + pattern + "." + ccrDomain
 			}
 		}
-		dsMap[row.ServerName][row.XmlId] = append(dsMap[row.ServerName][row.XmlId], pattern)
+		dsMap[row.ServerName][row.Name] = append(dsMap[row.ServerName][row.Name], pattern)
 	}
 
 	retMap := make(map[string]ContentServer)
@@ -612,15 +615,45 @@ func statsSection(cdnName string) (Stats, error) {
 
 func GetCRConfig(cdnName string, db *sqlx.DB) (interface{}, error) {
 	crs, err := contentRoutersSection(cdnName, db)
-	ms, err := monitorSecttion(cdnName, db)
-	edges, err := edgeLocationSection(cdnName, db)
-	cfg, pmap, err := configSection(cdnName, db)
-	dsMap, err := deliveryServicesSection(cdnName, pmap, db)
-	cServermap, err := contentServersSection(cdnName, pmap["domain_name"], db)
-	stats, err := statsSection(cdnName)
-
 	if err != nil {
 		log.Println(err)
+		err = fmt.Errorf("GetCRConfig error getting contentRoutersSection: %v", err)
+		return nil, err
+	}
+	ms, err := monitorSection(cdnName, db)
+	if err != nil {
+		log.Println(err)
+		err = fmt.Errorf("GetCRConfig error getting monitorSection: %v", err)
+		return nil, err
+	}
+	edges, err := edgeLocationSection(cdnName, db)
+	if err != nil {
+		log.Println(err)
+		err = fmt.Errorf("GetCRConfig error getting edgeLocationSection: %v", err)
+		return nil, err
+	}
+	cfg, pmap, err := configSection(cdnName, db)
+	if err != nil {
+		log.Println(err)
+		err = fmt.Errorf("GetCRConfig error getting configSection: %v", err)
+		return nil, err
+	}
+	dsMap, err := deliveryServicesSection(cdnName, pmap, db)
+	if err != nil {
+		log.Println(err)
+		err = fmt.Errorf("GetCRConfig error getting deliveryServicesSection: %v", err)
+		return nil, err
+	}
+	cServermap, err := contentServersSection(cdnName, pmap["domain_name"], db)
+	if err != nil {
+		log.Println(err)
+		err = fmt.Errorf("GetCRConfig error getting contentServersSection: %v", err)
+		return nil, err
+	}
+	stats, err := statsSection(cdnName)
+	if err != nil {
+		log.Println(err)
+		err = fmt.Errorf("GetCRConfig error getting statsSection: %v", err)
 		return nil, err
 	}
 

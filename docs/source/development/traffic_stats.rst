@@ -28,7 +28,7 @@ To work on Traffic Stats you need a \*nix (MacOS and Linux are most commonly use
 	* `Go 1.5.x or above <https://golang.org/doc/install>`_
 	* Access to a working instance of Traffic Ops
 	* Access to a working instance of Traffic Monitor
-	* `InfluxDb version 0.9.3 or greater <https://influxdb.com/download/index.html>`_
+	* `InfluxDb version 0.10.0 or greater <https://influxdb.com/download/index.html>`_
 
 Traffic Stats Project Tree Overview
 =====================================

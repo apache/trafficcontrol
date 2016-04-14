@@ -325,9 +325,18 @@
             	% }
 			<hr>
 			<h2 style="color:white;">Regular expressions for this delivery service:</h2> 
-			 <% if ($priv_level >= 20) { %>
+			<% if ($priv_level >= 20) { %>
 			<div id ="select_re"></div><br>
 			<% } %>
+			<!--DN: hidden field for validation of regexp table.
+				Cause I didnt re-factor the table to use FormFields. (yet?)-->
+			<div class="block">
+				%= label_for 'regex' => '', class => 'label'
+				%= field('hidden.regex')->hidden(class => 'field', id => 'hidden.regex', name => 'regex', value => '_____');
+				<% unless (field('hidden.regex')->valid) { %>
+				<span class="field-with-error"><%= field('hidden.regex')->error %></span>
+				<% } %>
+			</div>
 			<table id="regexp_table" width=100% cellpadding="10">
 				<tbody id="regexp_table_body">
 				%foreach my $re ( @{ $regexp_set } ) {

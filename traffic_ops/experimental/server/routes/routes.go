@@ -19,16 +19,17 @@ package routes
 import (
 	"github.com/Comcast/traffic_control/traffic_ops/experimental/server/api"
 	"github.com/Comcast/traffic_control/traffic_ops/experimental/server/auth"
-	"github.com/Comcast/traffic_control/traffic_ops/experimental/server/crconfig"
 	"github.com/Comcast/traffic_control/traffic_ops/experimental/server/csconfig"
 	output "github.com/Comcast/traffic_control/traffic_ops/experimental/server/output_format"
 
 	"encoding/json"
+	"fmt"
 	"github.com/gorilla/mux"
 	"github.com/jmoiron/sqlx"
 	"io/ioutil"
 	"log"
 	"net/http"
+	"strconv"
 )
 
 const apiPath = "/api/2.0/"
@@ -42,7 +43,7 @@ func CreateRouter(db *sqlx.DB) http.Handler {
 	router.HandleFunc(apiPath+"{table}", auth.Use(optionsHandler, auth.DONTRequireLogin)).Methods("OPTIONS")
 	router.HandleFunc(apiPath+"{table}/{id}", auth.Use(optionsHandler, auth.DONTRequireLogin)).Methods("OPTIONS")
 	router.HandleFunc(apiPath+"config/cr/{cdn}/CRConfig.json", auth.Use(getHandleCRConfigFunc(db), auth.RequireLogin))
-	router.HandleFunc(apiPath+"config/csconfig/{hostname}", auth.Use(getHandleCSConfigFunc(db), auth.RequireLogin))
+	router.HandleFunc(apiPath+"config/csconfig/hostname/{hostname}/port/{port}", auth.Use(getHandleCSConfigFunc(db), auth.RequireLogin))
 	addApiHandlers(router, db)
 	return auth.Use(router.ServeHTTP, auth.GetContext)
 }
@@ -112,6 +113,25 @@ func addApiHandlers(router *mux.Router, db *sqlx.DB) {
 	}
 }
 
+func getCrconfigSnapshot(cdn string, db *sqlx.DB) (string, error) {
+	queryStr := `select snapshot from crconfig_snapshots where cdn = $1 and created_at = (select max(created_at) created_at from crconfig_snapshots where cdn = $1);`
+	rows, err := db.Query(queryStr, cdn)
+	if err != nil {
+		return "", fmt.Errorf("getCrconfigSnapshot query error: %v", err)
+	}
+	defer rows.Close()
+
+	if !rows.Next() {
+		return "", fmt.Errorf("No Snapshot Found")
+	}
+
+	var snapshot string
+	if err := rows.Scan(&snapshot); err != nil {
+		return "", fmt.Errorf("getCrconfigSnapshot row error: %v", err)
+	}
+	return snapshot, rows.Err()
+}
+
 // getHandleCRConfigFunc returns a func which handles requests to the CRConfig endpoint,
 // returning the encoded CRConfig data for the requested CDN.
 func getHandleCRConfigFunc(db *sqlx.DB) http.HandlerFunc {
@@ -119,9 +139,16 @@ func getHandleCRConfigFunc(db *sqlx.DB) http.HandlerFunc {
 		setHeaders(w, []api.ApiMethod{api.GET})
 		vars := mux.Vars(r)
 		cdn := vars["cdn"]
-		resp, _ := crconfig.GetCRConfig(cdn, db)
-		enc := json.NewEncoder(w)
-		enc.Encode(resp)
+
+		snapshot, err := getCrconfigSnapshot(cdn, db)
+		if err != nil {
+			log.Println(err)
+			json.NewEncoder(w).Encode(struct {
+				Error string `json:"error"`
+			}{Error: err.Error()})
+			return
+		}
+		w.Write([]byte(snapshot))
 	}
 }
 
@@ -130,10 +157,25 @@ func getHandleCRConfigFunc(db *sqlx.DB) http.HandlerFunc {
 func getHandleCSConfigFunc(db *sqlx.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		setHeaders(w, []api.ApiMethod{api.GET})
+		enc := json.NewEncoder(w)
 		vars := mux.Vars(r)
 		hostName := vars["hostname"]
-		resp, _ := csconfig.GetCSConfig(hostName, db)
-		enc := json.NewEncoder(w)
-		enc.Encode(resp)
+		portStr := vars["port"]
+		port, err := strconv.Atoi(portStr)
+		if err != nil {
+			enc.Encode(struct {
+				Error string `json:"error"`
+			}{Error: err.Error()})
+			return
+		}
+
+		resp, err := csconfig.GetCSConfig(hostName, int64(port), db)
+		if err != nil {
+			enc.Encode(struct {
+				Error string `json:"error"`
+			}{Error: err.Error()})
+		} else {
+			enc.Encode(resp)
+		}
 	}
 }

@@ -82,21 +82,32 @@ sub gen_crconfig_json {
 
 	my %param_cache;
 	my @profile_caches;
-	for my $cachetype (qw/CCR EDGE MID/) {
-		my $r = $profile_cache->{$cachetype};
-		if ( defined($r) && scalar @{$r} != 0 ) {
-			push @profile_caches, @{$r};
+
+	# key is the expression used in the regex below, value is the human readable string
+	my $types = {
+		"CCR" => "Traffic Router",
+		"^EDGE" => "EDGE",
+		"^MID" => "MID",
+	};
+
+	for my $cachetype ( keys %{ $types } ) {
+		my $found = 0;
+
+		for my $this_type ( keys %{ $profile_cache } ) {
+			if ( $this_type =~ m/$cachetype/ && scalar( @{ $profile_cache->{$this_type} } ) > 0 ) {
+				push @profile_caches, @{$profile_cache->{$this_type}};
+				$found = 1;
+			}
 		}
-		else {
-			my $t = ( $cachetype eq 'CCR' ) ? 'Traffic Router' : $cachetype;
-			my $e = Mojo::Exception->throw( "No $t profiles found for CDN: " . $cdn_name );
+
+		if ( !$found ) {
+			my $e = Mojo::Exception->throw( "No " . $types->{$cachetype} . " profiles found for CDN: " . $cdn_name );
 		}
 	}
+
 	my %condition = (
 		-and => [
-			profile => {
-				-in => \@profile_caches,
-			},
+			profile                 => { -in => \@profile_caches, },
 			'parameter.config_file' => 'CRConfig.json'
 		]
 	);
@@ -143,8 +154,7 @@ sub gen_crconfig_json {
 			my $param = $row->parameter->name;
 			$param =~ s/tld\.//;
 			( my $top_key, my $second_key ) = split( /\./, $param );
-			$data_obj->{'config'}->{$top_key}->{$second_key} =
-				$row->parameter->value;
+			$data_obj->{'config'}->{$top_key}->{$second_key} = $row->parameter->value;
 		}
 		elsif ( $row->parameter->name eq 'LogRequestHeaders' ) {
 			my $headers;
@@ -169,7 +179,7 @@ sub gen_crconfig_json {
 
 	my %cache_tracker;
 	my $rs_caches = $self->db->resultset('Server')->search(
-		{ 'type.name' => { -in => [ 'EDGE', 'MID', 'CCR', 'RASCAL', 'TR', 'TM' ] }, 'me.cdn_id' => $cdn_id },
+		{ 'type.name' => [ { -like => 'EDGE%' }, { -like => 'MID%' }, { -like => 'CCR' }, { -like => 'RASCAL' }, { -like => 'TR' }, { -like => 'TM' } ], 'me.cdn_id' => $cdn_id },
 		{
 			prefetch => [ 'type',      'status',      'cachegroup', 'profile' ],
 			columns  => [ 'host_name', 'domain_name', 'tcp_port',   'interface_name', 'ip_address', 'ip6_address', 'id', 'xmpp_id' ]
@@ -184,20 +194,13 @@ sub gen_crconfig_json {
 			|| $row->status->name eq 'ADMIN_DOWN' );
 
 		if ( $row->type->name eq "RASCAL" ) {
-			$data_obj->{'monitors'}->{ $row->host_name }->{'fqdn'} =
-				$row->host_name . "." . $row->domain_name;
-			$data_obj->{'monitors'}->{ $row->host_name }->{'status'} =
-				$row->status->name;
-			$data_obj->{'monitors'}->{ $row->host_name }->{'location'} =
-				$row->cachegroup->name;
-			$data_obj->{'monitors'}->{ $row->host_name }->{'port'} =
-				$row->tcp_port;
-			$data_obj->{'monitors'}->{ $row->host_name }->{'ip'} =
-				$row->ip_address;
-			$data_obj->{'monitors'}->{ $row->host_name }->{'ip6'} =
-				( $row->ip6_address || "" );
-			$data_obj->{'monitors'}->{ $row->host_name }->{'profile'} =
-				$row->profile->name;
+			$data_obj->{'monitors'}->{ $row->host_name }->{'fqdn'}     = $row->host_name . "." . $row->domain_name;
+			$data_obj->{'monitors'}->{ $row->host_name }->{'status'}   = $row->status->name;
+			$data_obj->{'monitors'}->{ $row->host_name }->{'location'} = $row->cachegroup->name;
+			$data_obj->{'monitors'}->{ $row->host_name }->{'port'}     = $row->tcp_port;
+			$data_obj->{'monitors'}->{ $row->host_name }->{'ip'}       = $row->ip_address;
+			$data_obj->{'monitors'}->{ $row->host_name }->{'ip6'}      = ( $row->ip6_address || "" );
+			$data_obj->{'monitors'}->{ $row->host_name }->{'profile'}  = $row->profile->name;
 
 		}
 		elsif ( $row->type->name eq "CCR" ) {
@@ -209,29 +212,20 @@ sub gen_crconfig_json {
 				{ join => 'profile_parameters' }
 			);
 			my $r = $rs_param->single;
-			my $port =
-				( defined($r) && defined( $r->value ) ) ? $r->value : 80;
+			my $port = ( defined($r) && defined( $r->value ) ) ? $r->value : 80;
 
-			$data_obj->{'contentRouters'}->{ $row->host_name }->{'fqdn'} =
-				$row->host_name . "." . $row->domain_name;
-			$data_obj->{'contentRouters'}->{ $row->host_name }->{'status'} =
-				$row->status->name;
-			$data_obj->{'contentRouters'}->{ $row->host_name }->{'location'} =
-				$row->cachegroup->name;
-			$data_obj->{'contentRouters'}->{ $row->host_name }->{'port'} =
-				$row->tcp_port;
-			$data_obj->{'contentRouters'}->{ $row->host_name }->{'api.port'} =
-				$port;
-			$data_obj->{'contentRouters'}->{ $row->host_name }->{'ip'} =
-				$row->ip_address;
-			$data_obj->{'contentRouters'}->{ $row->host_name }->{'ip6'} =
-				( $row->ip6_address || "" );
-			$data_obj->{'contentRouters'}->{ $row->host_name }->{'profile'} =
-				$row->profile->name;
+			$data_obj->{'contentRouters'}->{ $row->host_name }->{'fqdn'}     = $row->host_name . "." . $row->domain_name;
+			$data_obj->{'contentRouters'}->{ $row->host_name }->{'status'}   = $row->status->name;
+			$data_obj->{'contentRouters'}->{ $row->host_name }->{'location'} = $row->cachegroup->name;
+			$data_obj->{'contentRouters'}->{ $row->host_name }->{'port'}     = $row->tcp_port;
+			$data_obj->{'contentRouters'}->{ $row->host_name }->{'api.port'} = $port;
+			$data_obj->{'contentRouters'}->{ $row->host_name }->{'ip'}       = $row->ip_address;
+			$data_obj->{'contentRouters'}->{ $row->host_name }->{'ip6'}      = ( $row->ip6_address || "" );
+			$data_obj->{'contentRouters'}->{ $row->host_name }->{'profile'}  = $row->profile->name;
 		}
-		elsif ( $row->type->name eq "EDGE" || $row->type->name eq "MID" ) {
+		elsif ( $row->type->name =~ m/^EDGE/ || $row->type->name =~ m/^MID/ ) {
 
-			if ( $row->type->name eq "EDGE" ) {
+			if ( $row->type->name =~ m/^EDGE/ ) {
 				$data_obj->{'edgeLocations'}->{ $row->cachegroup->name }->{'latitude'}  = $row->cachegroup->latitude + 0;
 				$data_obj->{'edgeLocations'}->{ $row->cachegroup->name }->{'longitude'} = $row->cachegroup->longitude + 0;
 			}
@@ -250,29 +244,18 @@ sub gen_crconfig_json {
 				? $param_cache{$pid}->{'weightMultiplier'}
 				: 1000;
 
-			$data_obj->{'contentServers'}->{ $row->host_name }->{'locationId'} =
-				$row->cachegroup->name;
-			$data_obj->{'contentServers'}->{ $row->host_name }->{'cacheGroup'} =
-				$row->cachegroup->name;
-			$data_obj->{'contentServers'}->{ $row->host_name }->{'fqdn'} =
-				$row->host_name . "." . $row->domain_name;
-			$data_obj->{'contentServers'}->{ $row->host_name }->{'port'} =
-				$row->tcp_port;
+			$data_obj->{'contentServers'}->{ $row->host_name }->{'locationId'}    = $row->cachegroup->name;
+			$data_obj->{'contentServers'}->{ $row->host_name }->{'cacheGroup'}    = $row->cachegroup->name;
+			$data_obj->{'contentServers'}->{ $row->host_name }->{'fqdn'}          = $row->host_name . "." . $row->domain_name;
+			$data_obj->{'contentServers'}->{ $row->host_name }->{'port'}          = $row->tcp_port;
 			$data_obj->{'contentServers'}->{ $row->host_name }->{'interfaceName'} = $row->interface_name;
-			$data_obj->{'contentServers'}->{ $row->host_name }->{'status'} =
-				$row->status->name;
-			$data_obj->{'contentServers'}->{ $row->host_name }->{'ip'} =
-				$row->ip_address;
-			$data_obj->{'contentServers'}->{ $row->host_name }->{'ip6'} =
-				( $row->ip6_address || "" );
-			$data_obj->{'contentServers'}->{ $row->host_name }->{'profile'} =
-				$row->profile->name;
-			$data_obj->{'contentServers'}->{ $row->host_name }->{'type'} =
-				$row->type->name;
-			$data_obj->{'contentServers'}->{ $row->host_name }->{'hashId'} =
-				$row->xmpp_id;
-			$data_obj->{'contentServers'}->{ $row->host_name }->{'hashCount'} =
-				int( $weight * $weight_multiplier );
+			$data_obj->{'contentServers'}->{ $row->host_name }->{'status'}        = $row->status->name;
+			$data_obj->{'contentServers'}->{ $row->host_name }->{'ip'}            = $row->ip_address;
+			$data_obj->{'contentServers'}->{ $row->host_name }->{'ip6'}           = ( $row->ip6_address || "" );
+			$data_obj->{'contentServers'}->{ $row->host_name }->{'profile'}       = $row->profile->name;
+			$data_obj->{'contentServers'}->{ $row->host_name }->{'type'}          = $row->type->name;
+			$data_obj->{'contentServers'}->{ $row->host_name }->{'hashId'}        = $row->xmpp_id;
+			$data_obj->{'contentServers'}->{ $row->host_name }->{'hashCount'}     = int( $weight * $weight_multiplier );
 		}
 	}
 	my $regexps;
@@ -351,8 +334,7 @@ sub gen_crconfig_json {
 			#MAT: Have to do this dedup because @server_subrows contains duplicates (* the # of host regexes)
 			my %server_subrow_dedup;
 			foreach my $subrow (@server_subrows) {
-				$server_subrow_dedup{ $subrow->{'_column_data'}->{'server'} } =
-					$subrow->{'_column_data'}->{'deliveryservice'};
+				$server_subrow_dedup{ $subrow->{'_column_data'}->{'server'} } = $subrow->{'_column_data'}->{'deliveryservice'};
 			}
 			foreach my $server ( keys %server_subrow_dedup ) {
 
@@ -378,8 +360,7 @@ sub gen_crconfig_json {
 			}
 		}
 
-		$data_obj->{'deliveryServices'}->{ $row->xml_id }->{'ttl'} =
-			$row->ccr_dns_ttl;
+		$data_obj->{'deliveryServices'}->{ $row->xml_id }->{'ttl'} = $row->ccr_dns_ttl;
 		if ( $protocol ne 'DNS' ) {
 			$data_obj->{'deliveryServices'}->{ $row->xml_id }->{'dispersion'} = {
 				limit    => int( $row->initial_dispersion ),
@@ -393,16 +374,22 @@ sub gen_crconfig_json {
 		}
 		elsif ( $geo_limit == 2 ) {
 			$data_obj->{'deliveryServices'}->{ $row->xml_id }->{'coverageZoneOnly'} = 'false';
-			$data_obj->{'deliveryServices'}->{ $row->xml_id }->{'geoEnabled'} =
-				[ { 'countryCode' => 'US' } ];
+			$data_obj->{'deliveryServices'}->{ $row->xml_id }->{'geoEnabled'} = [ { 'countryCode' => 'US' } ];
 		}
 		elsif ( $geo_limit == 3 ) {
 			$data_obj->{'deliveryServices'}->{ $row->xml_id }->{'coverageZoneOnly'} = 'false';
-			$data_obj->{'deliveryServices'}->{ $row->xml_id }->{'geoEnabled'} =
-				[ { 'countryCode' => 'CA' } ];
+			$data_obj->{'deliveryServices'}->{ $row->xml_id }->{'geoEnabled'} = [ { 'countryCode' => 'CA' } ];
 		}
 		else {
 			$data_obj->{'deliveryServices'}->{ $row->xml_id }->{'coverageZoneOnly'} = 'false';
+		}
+
+		my $geo_provider = $row->geo_provider;
+		if ( $geo_provider == 1 ) {
+			$data_obj->{'deliveryServices'}->{ $row->xml_id }->{'geolocationProvider'} = 'neustarGeolocationService';
+		}
+		else {
+			$data_obj->{'deliveryServices'}->{ $row->xml_id }->{'geolocationProvider'} = 'maxmindGeolocationService';
 		}
 
 		if ( $protocol =~ m/DNS/ ) {
@@ -492,13 +479,10 @@ sub gen_crconfig_json {
 			'SOA'  => $tld_ttls_soa
 		};
 		$data_obj->{'deliveryServices'}->{ $row->xml_id }->{'soa'}->{'minimum'} = $cdn_soa_minimum;
-		$data_obj->{'deliveryServices'}->{ $row->xml_id }->{'soa'}->{'expire'} =
-			$cdn_soa_expire;
-		$data_obj->{'deliveryServices'}->{ $row->xml_id }->{'soa'}->{'retry'} =
-			$cdn_soa_retry;
+		$data_obj->{'deliveryServices'}->{ $row->xml_id }->{'soa'}->{'expire'}  = $cdn_soa_expire;
+		$data_obj->{'deliveryServices'}->{ $row->xml_id }->{'soa'}->{'retry'}   = $cdn_soa_retry;
 		$data_obj->{'deliveryServices'}->{ $row->xml_id }->{'soa'}->{'refresh'} = $cdn_soa_refresh;
-		$data_obj->{'deliveryServices'}->{ $row->xml_id }->{'soa'}->{'admin'} =
-			$cdn_soa_admin;
+		$data_obj->{'deliveryServices'}->{ $row->xml_id }->{'soa'}->{'admin'}   = $cdn_soa_admin;
 		$data_obj->{'deliveryServices'}->{ $row->xml_id }->{'ip6RoutingEnabled'} = $row->ipv6_routing_enabled ? 'true' : 'false';
 
 	}
@@ -641,8 +625,7 @@ sub crconfig_strings {
 	my @ccr_strings;
 
 	foreach my $ds ( sort keys %{ $config_json->{'deliveryServices'} } ) {
-		my $return =
-			&stringify_ds( $config_json->{'deliveryServices'}->{$ds} );
+		my $return = &stringify_ds( $config_json->{'deliveryServices'}->{$ds} );
 		push( @ds_strings, "|DS:$ds$return" );
 	}
 	foreach my $cachegroup ( sort keys %{ $config_json->{'edgeLocations'} } ) {
@@ -660,8 +643,7 @@ sub crconfig_strings {
 		if ( $cfg eq 'ttls' || $cfg eq 'soa' ) {
 			$string = "|param:$cfg";
 			foreach my $key ( sort keys %{ $config_json->{'config'}->{$cfg} } ) {
-				$string
-					.= "|$key:" . $config_json->{'config'}->{$cfg}->{$key};
+				$string .= "|$key:" . $config_json->{'config'}->{$cfg}->{$key};
 			}
 		}
 		else {
@@ -670,13 +652,11 @@ sub crconfig_strings {
 		push( @config_strings, $string );
 	}
 	foreach my $rascal ( sort keys %{ $config_json->{'monitors'} } ) {
-		my $return =
-			&stringify_rascal( $config_json->{'monitors'}->{$rascal} );
+		my $return = &stringify_rascal( $config_json->{'monitors'}->{$rascal} );
 		push( @rascal_strings, $return );
 	}
 	foreach my $ccr ( sort keys %{ $config_json->{'contentRouters'} } ) {
-		my $return =
-			&stringify_ccr( $config_json->{'contentRouters'}->{$ccr} );
+		my $return = &stringify_ccr( $config_json->{'contentRouters'}->{$ccr} );
 		push( @ccr_strings, $return );
 	}
 
@@ -707,19 +687,16 @@ sub stringify_ds {
 			$string .= " -ip:" . $ds->{'bypassDestination'}->{'DNS'}->{'ip'};
 		}
 		if ( defined( $ds->{'bypassDestination'}->{'DNS'}->{'ip6'} ) ) {
-			$string
-				.= " -ip6:" . $ds->{'bypassDestination'}->{'DNS'}->{'ip6'};
+			$string .= " -ip6:" . $ds->{'bypassDestination'}->{'DNS'}->{'ip6'};
 		}
 		if ( defined( $ds->{'bypassDestination'}->{'DNS'}->{'cname'} ) ) {
 			$string .= " -cname:" . $ds->{'bypassDestination'}->{'DNS'}->{'cname'};
 		}
 		if ( defined( $ds->{'bypassDestination'}->{'DNS'}->{'ttl'} ) ) {
-			$string
-				.= " -ttl:" . $ds->{'bypassDestination'}->{'DNS'}->{'ttl'};
+			$string .= " -ttl:" . $ds->{'bypassDestination'}->{'DNS'}->{'ttl'};
 		}
 		if ( defined( $ds->{'bypassDestination'}->{'HTTP'}->{'fqdn'} ) ) {
-			$string
-				.= " -fqdn:" . $ds->{'bypassDestination'}->{'HTTP'}->{'fqdn'};
+			$string .= " -fqdn:" . $ds->{'bypassDestination'}->{'HTTP'}->{'fqdn'};
 		}
 	}
 	if ( defined( $ds->{'ip6RoutingEnabled'} ) ) {
@@ -735,6 +712,9 @@ sub stringify_ds {
 	}
 	if ( defined( $ds->{'dispersion'} ) ) {
 		$string .= "|dispersion: limit=" . $ds->{'dispersion'}->{'limit'} . ", shuffled=" . $ds->{'dispersion'}->{'shuffled'};
+	}
+	if ( defined( $ds->{'geoLocationProvider'} ) ) {
+		$string .= "|GeoLocation_Provider:" . $ds->{'geoLocationProvider'};
 	}
 	if ( defined( $ds->{'regionalGeoBlocking'} ) ) {
 		$string .= "|Regional_Geoblocking:" . $ds->{'regionalGeoBlocking'};

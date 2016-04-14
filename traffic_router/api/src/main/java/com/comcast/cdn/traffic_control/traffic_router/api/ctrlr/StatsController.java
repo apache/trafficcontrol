@@ -23,6 +23,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.ModelAndView;
 
 import com.comcast.cdn.traffic_control.traffic_router.api.util.APIAccessRecord;
@@ -62,12 +63,13 @@ public class StatsController {
 	}
 
 	@RequestMapping(value = "/ip/{ip:.+}", method = RequestMethod.GET)
-	public ModelAndView getCaches(final HttpServletRequest request, @PathVariable("ip") final String ip) {
+	public ModelAndView getCaches(final HttpServletRequest request, @PathVariable("ip") final String ip,
+          @RequestParam(name = "geolocationProvider", required = false, defaultValue = "maxmindGeolocationService") final String geolocationProvider) {
 		final ModelAndView result = new ModelAndView(VIEW_NAME);
 
 		try {
 			final DataImporter di = new DataImporter("traffic-router:name=dataExporter");
-			result.addObject("result", di.invokeOperation("getCachesByIp", ip));
+			result.addObject("result", di.invokeOperation("getCachesByIp", ip, geolocationProvider));
 		} catch (DataImporterException ex) {
 			LOGGER.error(ex, ex);
 			result.addObject("error", ex);

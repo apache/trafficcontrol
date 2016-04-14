@@ -8,6 +8,18 @@ var ProfileService = function(Restangular, messageModel) {
         return Restangular.one("profile", id).get();
     };
 
+    this.createProfile = function(profile) {
+        return Restangular.service('profile').post(profile)
+            .then(
+            function() {
+                messageModel.setMessages([ { level: 'success', text: 'Profile created' } ], true);
+            },
+            function() {
+                messageModel.setMessages([ { level: 'error', text: 'Profile create failed' } ], false);
+            }
+        );
+    };
+
     this.updateProfile = function(profile) {
         return profile.put()
             .then(

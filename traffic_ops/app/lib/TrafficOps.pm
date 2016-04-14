@@ -48,6 +48,7 @@ use Env qw(PERL5LIB);
 use Utils::Helper::TrafficOpsRoutesLoader;
 use File::Path qw(make_path);
 use IO::Compress::Gzip 'gzip';
+use IO::Socket::SSL;
 
 use Utils::Helper::Version;
 
@@ -182,6 +183,9 @@ sub startup {
 	# Router
 	my $rh = new Utils::Helper::TrafficOpsRoutesLoader($r);
 	$rh->load();
+
+	##help relieve issues with riak
+	IO::Socket::SSL::set_default_session_cache(IO::Socket::SSL::Session_Cache->new( 1024 ));
 
 }
 
@@ -322,7 +326,13 @@ sub setup_mojo_plugins {
 		}
 	}
 
-	$self->plugin( AccessLog => { log => "$logging_root_dir/access.log" } );
+	$self->plugin(
+		AccessLog => {
+			log => "$logging_root_dir/access.log",
+			format => '%h %l %u %t "%r" %>s %b %D "%{User-Agent}i"'
+		}
+	);
+
 	$self->plugin('ParamExpand', max_array => 256);
 
 	#FormFields

@@ -45,7 +45,8 @@ sub define {
 
 	# Traffic Stats Extension
 	$self->traffic_stats_routes( $r, $version );
-	$self->catch_all( $r, $namespace );
+
+    $self->catch_all( $r, $namespace );
 }
 
 sub ui_routes {
@@ -495,6 +496,10 @@ sub api_routes {
 	$r->get( "/api/$version/deliveryservices_regexes" => [ format => [qw(json)] ] )->over( authenticated => 1 )
 		->to( 'DeliveryServiceRegexes#index', namespace => $namespace );
 
+	# -- DELIVERY SERVICE MATCHES
+	$r->get( "/api/$version/deliveryservices_matches" => [ format => [qw(json)] ] )->over( authenticated => 1 )
+		->to( 'DeliveryServiceMatches#index', namespace => $namespace );
+
 	#       ->over( authenticated => 1 )->to( 'DeliveryService#get_summary', namespace => $namespace );
 	# -- DELIVERY SERVICE SERVER - #NEW
 	# Supports ?orderby=key
@@ -645,6 +650,17 @@ sub api_routes {
 	$r->get( "/api/$version/stats_summary" => [ format => [qw(json)] ] )->over( authenticated => 1 )->to( 'StatsSummary#index', namespace => $namespace );
 	$r->post("/api/$version/stats_summary/create")->over( authenticated => 1 )->to( 'StatsSummary#create', namespace => $namespace );
 
+    $r->post( "/api/$version/profiles" )->over( authenticated => 1 )->to( 'Profile#create', namespace => $namespace );
+    $r->post( "/api/$version/profiles/name/:profile_name/copy/:profile_copy_from" )->over( authenticated => 1 )->to( 'Profile#copy', namespace => $namespace );
+    $r->post("/api/$version/divisions")->over( authenticated => 1 )->to( 'Division#create', namespace => $namespace );
+    $r->post("/api/$version/divisions/:division_name/regions")->over( authenticated => 1 )->to( 'Region#create', namespace => $namespace );
+    $r->post("/api/$version/regions/:region_name/phys_locations")->over( authenticated => 1 )->to( 'PhysLocation#create', namespace => $namespace );
+	$r->post("/api/$version/servers")->over( authenticated => 1 )->to( 'Server#create',   namespace => $namespace );
+	$r->put("/api/$version/servers/:id")->over( authenticated => 1 )->to( 'Server#update',   namespace => $namespace );
+    $r->post("/api/$version/cachegroups")->over( authenticated => 1 )->to( 'Cachegroup#create', namespace => $namespace );
+    $r->post("/api/$version/deliveryservices/:xml_id/servers")->over( authenticated => 1 )->to( 'DeliveryService#assign_servers', namespace => $namespace );
+    $r->put("/api/$version/snapshot/:cdn_name")->over( authenticated => 1 )->to( 'Topology#SnapshotCRConfig', namespace => $namespace );
+
 	# -- Ping - health check for CodeBig
 	$r->get(
 		"/api/$version/ping" => sub {
@@ -770,8 +786,8 @@ sub traffic_stats_routes {
 	$r->get( "/api/$version/deliveryservice_stats" => [ format => [qw(json)] ] )->over( authenticated => 1 )
 		->to( 'DeliveryServiceStats#index', namespace => $namespace );
 	$r->get( "/api/$version/cache_stats" => [ format => [qw(json)] ] )->over( authenticated => 1 )->to( 'CacheStats#index', namespace => $namespace );
-	$r->get( "internal/api/$version/daily_summary"       => [ format => [qw(json)] ] )->to( 'CacheStats#daily_summary',       namespace => $namespace );
-	$r->get( "internal/api/$version/current_stats"       => [ format => [qw(json)] ] )->to( 'CacheStats#current_stats',    namespace => $namespace );
+	$r->get( "internal/api/$version/daily_summary" => [ format => [qw(json)] ] )->to( 'CacheStats#daily_summary', namespace => $namespace );
+	$r->get( "internal/api/$version/current_stats" => [ format => [qw(json)] ] )->to( 'CacheStats#current_stats', namespace => $namespace );
 }
 
 sub catch_all {

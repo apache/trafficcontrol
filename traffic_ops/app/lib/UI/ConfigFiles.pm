@@ -192,7 +192,7 @@ sub ds_data {
 
 	my @server_ids = ();
 	my $rs;
-	if ( $server->type->name eq "MID" ) {
+	if ( $server->type->name =~ m/^MID/ ) {
 
 		# the mids will do all deliveryservices in this CDN
 		my $domain = $self->profile_param_value( $server->profile->id, 'CRConfig.json', 'domain_name', '' );
@@ -230,7 +230,11 @@ sub ds_data {
 				$re =~ s/\\//g;
 				$re =~ s/\.\*//g;
 				my $hname = $ds_type =~ /^DNS/ ? "edge" : "ccr";
-				my $map_from = "http://" . $hname . $re . $ds_domain . "/";
+				my $portstr = "";
+				if ( $hname eq "ccr" && $server->tcp_port > 0 && $server->tcp_port != 80 ) {
+					$portstr = ":" . $server->tcp_port;
+				}
+				my $map_from = "http://" . $hname . $re . $ds_domain . $portstr . "/";
 				if ( $protocol == 0 ) {
 					$dsinfo->{dslist}->[$j]->{"remap_line"}->{$map_from} = $map_to;
 				}
@@ -346,7 +350,7 @@ sub parent_data {
 	my @parent_cachegroup_ids;
 	my @secondary_parent_cachegroup_ids;
 	my $org_loc_type_id = &type_id( $self, "ORG_LOC" );
-	if ( $server->type->name eq 'MID' ) {
+	if ( $server->type->name =~ m/^MID/ ) {
 
 		# multisite origins take all the org groups in to account
 		@parent_cachegroup_ids = $self->db->resultset('Cachegroup')->search( { type => $org_loc_type_id } )->get_column('id')->all();
@@ -415,7 +419,7 @@ sub cachegroup_profiles {
 
 	while ( my $row = $rs_parent->next ) {
 
-		next unless ( $row->type->name eq 'ORG' || $row->type->name eq 'EDGE' || $row->type->name eq 'MID' );
+		next unless ( $row->type->name eq 'ORG' || $row->type->name =~ m/^EDGE/ || $row->type->name =~ m/^MID/ );
 		if ( $row->type->name eq 'ORG' ) {
 			my $rs_ds = $self->db->resultset('DeliveryserviceServer')->search( { server => $row->id }, { prefetch => ['deliveryservice'] } );
 			while ( my $ds_row = $rs_ds->next ) {
@@ -473,7 +477,8 @@ sub ip_allow_data {
 			$i++;
 		}
 	}
-	if ( $server->type->name eq 'MID' ) {
+
+	if ( $server->type->name =~ m/^MID/ ) {
 		my @edge_locs = $self->db->resultset('Cachegroup')->search( { parent_cachegroup_id => $server->cachegroup->id } )->get_column('id')->all();
 		my %allow_locs;
 		foreach my $loc (@edge_locs) {
@@ -483,16 +488,32 @@ sub ip_allow_data {
 		# get all the EDGE and RASCAL nets
 		my @allowed_netaddrips;
 		my @allowed_ipv6_netaddrips;
-		my $etype = &type_id( $self, "EDGE" );
-		my $rtype = &type_id( $self, "RASCAL" );
-		my $rs_allowed = $self->db->resultset('Server')->search( { -or => [ type => $etype, type => $rtype ] } );
+		my @types;
+		push(@types, &type_ids( $self, 'EDGE%', 'server' ));
+		my $rtype = &type_id( $self, 'RASCAL' );
+		push(@types, $rtype);
+		my $rs_allowed = $self->db->resultset('Server')->search( { 'me.type' => { -in => \@types } }, { prefetch => [ 'type', 'cachegroup' ] } );
+
 		while ( my $allow_row = $rs_allowed->next ) {
 			if ( $allow_row->type->id == $rtype
 				|| ( defined( $allow_locs{ $allow_row->cachegroup->id } ) && $allow_locs{ $allow_row->cachegroup->id } == 1 ) )
 			{
-				push( @allowed_netaddrips, NetAddr::IP->new( $allow_row->ip_address, $allow_row->ip_netmask ) );
+				my $ipv4 = NetAddr::IP->new( $allow_row->ip_address, $allow_row->ip_netmask );
+
+				if ( defined( $ipv4 ) ) {
+					push( @allowed_netaddrips, $ipv4 );
+				} else {
+					$self->app->log->error($allow_row->host_name . " has an invalid IPv4 address; excluding from ip_allow data for " . $server->host_name);
+				}
+
 				if ( defined $allow_row->ip6_address ) {
-					push( @allowed_ipv6_netaddrips, NetAddr::IP->new( $allow_row->ip6_address ) );
+					my $ipv6 = NetAddr::IP->new( $allow_row->ip6_address );
+
+					if ( defined ( $ipv6 ) ) {
+						push( @allowed_ipv6_netaddrips, NetAddr::IP->new( $allow_row->ip6_address ) );
+					} else {
+						$self->app->log->error($allow_row->host_name . " has an invalid IPv6 address; excluding from ip_allow data for " . $server->host_name);
+					}
 				}
 			}
 		}
@@ -525,7 +546,17 @@ sub ip_allow_data {
 		}
 
 		# allow RFC 1918 server space - TODO JvD: parameterize
+		$ipallow->[$i]->{src_ip} = '10.0.0.0-10.255.255.255';
+		$ipallow->[$i]->{action} = 'ip_allow';
+		$ipallow->[$i]->{method} = "ALL";
+		$i++;
+
 		$ipallow->[$i]->{src_ip} = '172.16.0.0-172.31.255.255';
+		$ipallow->[$i]->{action} = 'ip_allow';
+		$ipallow->[$i]->{method} = "ALL";
+		$i++;
+
+		$ipallow->[$i]->{src_ip} = '192.168.0.0-192.168.255.255';
 		$ipallow->[$i]->{action} = 'ip_allow';
 		$ipallow->[$i]->{method} = "ALL";
 		$i++;
@@ -760,8 +791,8 @@ sub hosting_dot_config {
 		$text .= "# 12M NOTE: volume " . $data->{Disk_Volume} . " is the Disk volume\n";
 		my %listed = ();
 		foreach my $remap ( @{ $data->{dslist} } ) {
-			if (   ( ( $remap->{type} =~ /_LIVE$/ || $remap->{type} =~ /_LIVE_NATNL$/ ) && $server->type->name eq 'EDGE' )
-				|| ( $remap->{type} =~ /_LIVE_NATNL$/ && $server->type->name eq 'MID' ) )
+			if (   ( ( $remap->{type} =~ /_LIVE$/ || $remap->{type} =~ /_LIVE_NATNL$/ ) && $server->type->name =~ m/^EDGE/ )
+				|| ( $remap->{type} =~ /_LIVE_NATNL$/ && $server->type->name =~ m/^MID/ ) )
 			{
 				if ( defined( $listed{ $remap->{org} } ) ) { next; }
 				my $org_fqdn = $remap->{org};
@@ -784,15 +815,12 @@ sub storage_dot_config_volume_text {
     my $prefix               = shift;
     my $letters              = shift;
     my $volume               = shift;
-    my $has_multiple_volumes = shift;
 
     my $text = "";
     my @postfix = split( /,/, $letters );
     foreach my $l ( sort @postfix ) {
         $text .= $prefix . $l;
-        if ($has_multiple_volumes) {
-            $text .= " volume=" . $volume;
-        }
+        $text .= " volume=" . $volume;
         $text .= "\n";
     }
     return $text;
@@ -807,24 +835,41 @@ sub storage_dot_config {
     my $text   = $self->header_comment( $server->host_name );
     my $data   = $self->param_data( $server, $file );
 
-    my $has_multiple_volumes = get_num_volumes($data) > 1;
+    # always default to volume one and let DB params override
+    my $assigned_volume = 1;
 
     if ( defined( $data->{Drive_Prefix} ) ) {
+        if ( defined($data->{Disk_Volume} ) ) {
+            $assigned_volume = $data->{Disk_Volume};
+        }
         $text .= storage_dot_config_volume_text(
             $data->{Drive_Prefix}, $data->{Drive_Letters},
-            $data->{Disk_Volume},  $has_multiple_volumes
+            $assigned_volume
         );
     }
+
     if ( defined( $data->{RAM_Drive_Prefix} ) ) {
+		++$assigned_volume;
+
+        if ( defined($data->{RAM_Volume} ) ) {
+            $assigned_volume = $data->{RAM_Volume};
+        }
         $text .= storage_dot_config_volume_text(
             $data->{RAM_Drive_Prefix}, $data->{RAM_Drive_Letters},
-            $data->{RAM_Volume},       $has_multiple_volumes
+            $assigned_volume
         );
     }
+
+
     if ( defined( $data->{SSD_Drive_Prefix} ) ) {
+		++$assigned_volume;
+
+        if ( defined($data->{SSD_Volume} ) ) {
+            $assigned_volume = $data->{SSD_Volume};
+        }
         $text .= storage_dot_config_volume_text(
             $data->{SSD_Drive_Prefix}, $data->{SSD_Drive_Letters},
-            $data->{SSD_Volume},       $has_multiple_volumes
+            $assigned_volume
         );
     }
     return $text;
@@ -892,10 +937,12 @@ sub remap_dot_config {
 		$data = $self->ds_data($server);
 	}
 
-	if ( $server->type->name eq 'MID' ) {
+	if ( $server->type->name =~ m/^MID/ ) {
 		my %mid_remap;
 		foreach my $remap ( @{ $data->{dslist} } ) {
-
+			if ( $remap->{type} =~ /LIVE/ && $remap->{type} !~ /NATNL/ ) {
+				next;    # Live local delivery services skip mids
+			}
 			if ( defined( $mid_remap{ $remap->{org} } ) ) {
 				next;    # skip remap rules from extra HOST_REGEXP entries
 			}
@@ -1032,7 +1079,7 @@ sub parent_dot_config {
 
 	# Origin Shield or Multi Site Origin
 	#$self->app->log->debug( "id = $id and server_type = $server_type,  hostname = " . $server->{host_name} );
-	if ( $server_type eq 'MID' ) {
+	if ( $server_type =~ m/^MID/ ) {
 		foreach my $ds ( @{ $data->{dslist} } ) {
 			my $xml_id            = $ds->{ds_xml_id};
 			my $os                = $ds->{origin_shield};
@@ -1049,13 +1096,15 @@ sub parent_dot_config {
 				$text .= "dest_domain=$org_fqdn parent=$os $algorithm go_direct=true\n";
 			}
 			elsif ($multi_site_origin) {
-				$text .= "dest_domain=$org_fqdn \"";
+				$text .= "dest_domain=$org_fqdn ";
 				my $pinfo = $self->parent_data($server);
 
 				my @parent_info;
 				foreach my $parent ( @{ $pinfo->{$org_fqdn} } ) {
 					push @parent_info, format_parent_info($parent);
 				}
+				my %seen;
+				@parent_info = grep { !$seen{$_}++ } @parent_info;
 
 				my $parents = 'parent="' . join( '', @parent_info ) . '"';
 				$text .= "$parents round_robin=consistent_hash go_direct=false parent_is_proxy=false\n";
@@ -1100,9 +1149,13 @@ sub parent_dot_config {
 						push @secondary_parent_info, $ptxt;
 					}
 				}
+				my %seen;
+				@parent_info = grep { !$seen{$_}++ } @parent_info;
 				my $parents = 'parent="' . join( '', @parent_info ) . '"';
 				my $secparents = '';
 				if ( scalar @secondary_parent_info > 0 ) {
+					my %seen;
+					@secondary_parent_info = grep { !$seen{$_}++ } @secondary_parent_info;
 					$secparents = 'secondary_parent="' . join( '', @secondary_parent_info ) . '"';
 				}
 				my $round_robin = 'round_robin=consistent_hash';
@@ -1114,19 +1167,26 @@ sub parent_dot_config {
 
 		my $pselect_alg = $self->profile_param_value( $server->profile->id, 'parent.config', 'algorithm', undef );
 		if ( defined($pselect_alg) && $pselect_alg eq 'consistent_hash' ) {
-
-			$text .= "dest_domain=. parent=\"";
+			my @parent_info;
 			foreach my $parent ( @{ $pinfo->{"all_parents"} } ) {
-				$text .= $parent->{"host_name"} . "." . $parent->{"domain_name"} . ":" . $parent->{"port"} . "|" . $parent->{"weight"} . ";";
+				push @parent_info, $parent->{"host_name"} . "." . $parent->{"domain_name"} . ":" . $parent->{"port"} . "|" . $parent->{"weight"} . ";";
 			}
-			$text .= "\" round_robin=consistent_hash go_direct=false";
+			my %seen;
+			@parent_info = grep { !$seen{$_}++ } @parent_info;
+			$text .= "dest_domain=.";
+			$text .= " parent=\"" . join( '', @parent_info ) . "\"";
+			$text .= " round_robin=consistent_hash go_direct=false";
 		}
 		else {    # default to old situation.
-			$text .= "dest_domain=. parent=\"";
+			$text .= "dest_domain=.";
+			my @parent_info;
 			foreach my $parent ( @{ $pinfo->{"all_parents"} } ) {
-				$text .= $parent->{"host_name"} . "." . $parent->{"domain_name"} . ":" . $parent->{"port"} . ";";
+				push @parent_info, $parent->{"host_name"} . "." . $parent->{"domain_name"} . ":" . $parent->{"port"} . ";";
 			}
-			$text .= "\" round_robin=urlhash go_direct=false";
+			my %seen;
+			@parent_info = grep { !$seen{$_}++ } @parent_info;
+			$text .= " parent=\"" . join( '', @parent_info ) . "\"";
+			$text .= " round_robin=urlhash go_direct=false";
 		}
 
 		my $qstring = $self->profile_param_value( $server->profile->id, 'parent.config', 'qstring', undef );

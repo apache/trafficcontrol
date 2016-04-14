@@ -34,10 +34,14 @@ import java.util.TreeMap;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 
+import com.comcast.cdn.traffic_control.traffic_router.configuration.ConfigurationListener;
+import com.comcast.cdn.traffic_control.traffic_router.core.loc.MaxmindGeolocationService;
 import org.apache.commons.pool.ObjectPool;
 import org.apache.log4j.Logger;
 import org.json.JSONException;
 import org.json.JSONObject;
+import org.springframework.beans.BeansException;
+import org.springframework.context.ApplicationContext;
 import org.xbill.DNS.Name;
 import org.xbill.DNS.Zone;
 
@@ -82,6 +86,7 @@ public class TrafficRouter {
 	private final Random random = new Random(System.nanoTime());
 	private Set<String> requestHeaders = new HashSet<String>();
 	private static final Geolocation GEO_ZERO_ZERO = new Geolocation(0,0);
+	private ApplicationContext applicationContext;
 
 	public TrafficRouter(final CacheRegister cr, 
 			final GeolocationService geolocationService, 
@@ -177,11 +182,42 @@ public class TrafficRouter {
 	public GeolocationService getGeolocationService() {
 		return geolocationService;
 	}
+
 	public Geolocation getLocation(final String clientIP) throws GeolocationException {
-		if(clientIP.contains(":")) {
-			return geolocationService6.location(clientIP);
+		return clientIP.contains(":") ? geolocationService6.location(clientIP) : geolocationService.location(clientIP);
+	}
+
+	private GeolocationService getGeolocationService(final String geolocationProvider, final String deliveryServiceId) {
+		if (applicationContext == null) {
+			LOGGER.error("ApplicationContext not set unable to use custom geolocation service providers");
+			return null;
 		}
-		return geolocationService.location(clientIP);
+
+		if (geolocationProvider == null || geolocationProvider.isEmpty()) {
+			return null;
+		}
+
+		try {
+			return (GeolocationService) applicationContext.getBean(geolocationProvider);
+		} catch (Exception e) {
+			StringBuilder error = new StringBuilder("Failed getting providing class '" + geolocationProvider + "' for geolocation");
+			if (deliveryServiceId != null && !deliveryServiceId.isEmpty()) {
+				error = error.append(" for delivery service " + deliveryServiceId);
+			}
+			error = error.append(" falling back to " + MaxmindGeolocationService.class.getSimpleName());
+			LOGGER.error(error);
+		}
+
+		return null;
+	}
+
+	public Geolocation getLocation(final String clientIP, final String geolocationProvider, final String deliveryServiceId) throws GeolocationException {
+		final GeolocationService customGeolocationService = getGeolocationService(geolocationProvider, deliveryServiceId);
+		return customGeolocationService != null ? customGeolocationService.location(clientIP) : getLocation(clientIP);
+	}
+
+	public Geolocation getLocation(final String clientIP, final DeliveryService deliveryService) throws GeolocationException {
+		return getLocation(clientIP, deliveryService.getGeolocationProvider(), deliveryService.getId());
 	}
 
 	/**
@@ -197,7 +233,7 @@ public class TrafficRouter {
 		int locationsTested = 0;
 
 		final int locationLimit = ds.getLocationLimit();
-		final List<CacheLocation> cacheLocations = orderCacheLocations(request, getCacheRegister().getCacheLocations(null), ds, clientLocation);
+		final List<CacheLocation> cacheLocations = orderCacheLocations(getCacheRegister().getCacheLocations(null), ds, clientLocation);
 
 		for (final CacheLocation location : cacheLocations) {
 			final List<Cache> caches = selectCache(location, ds);
@@ -217,7 +253,7 @@ public class TrafficRouter {
 		return null;
 	}
 	protected List<Cache> selectCache(final Request request, final DeliveryService ds, final Track track) throws GeolocationException {
-		final CacheLocation cacheLocation = getCoverageZoneCache(request.getClientIP());
+		final CacheLocation cacheLocation = getCoverageZoneCache(request.getClientIP(), ds);
 		List<Cache> caches = selectCachesByCZ(ds, cacheLocation, track);
 
 		if (caches != null) {
@@ -290,7 +326,7 @@ public class TrafficRouter {
 			return result;
 		}
 
-		final CacheLocation cacheLocation = getCoverageZoneCache(request.getClientIP());
+		final CacheLocation cacheLocation = getCoverageZoneCache(request.getClientIP(), ds);
 		List<Cache> caches = selectCachesByCZ(ds, cacheLocation, track);
 
 		if (caches != null) {
@@ -370,31 +406,25 @@ public class TrafficRouter {
 		return addresses;
 	}
 
-	public Geolocation getClientGeolocation(final Request request, final Track track) throws GeolocationException {
-		Geolocation clientGeolocation = null;
-
+	public Geolocation getClientGeolocation(final Request request, final Track track, final DeliveryService deliveryService) throws GeolocationException {
 		if (track.isClientGeolocationQueried()) {
-			clientGeolocation = track.getClientGeolocation();
-			LOGGER.debug("RegionalGeo: get cached geo, " + clientGeolocation);
-		} else {
-			clientGeolocation = getLocation(request.getClientIP());
-			track.setClientGeolocation(clientGeolocation);
-			track.setClientGeolocationQueried(true);
-			LOGGER.debug("RegionalGeo: get geo from db, " + clientGeolocation);
+			return track.getClientGeolocation();
 		}
+
+		final Geolocation clientGeolocation = getLocation(request.getClientIP(), deliveryService);
+		track.setClientGeolocation(clientGeolocation);
+		track.setClientGeolocationQueried(true);
 
 		return clientGeolocation;
 	}
 
 	public Geolocation getClientLocation(final Request request, final DeliveryService ds, final CacheLocation cacheLocation, final Track track) throws GeolocationException {
-		Geolocation clientLocation;
 		if (cacheLocation != null) {
-			clientLocation = cacheLocation.getGeolocation();
-		} else {
-			final Geolocation clientGeolocation = getClientGeolocation(request, track);
-			clientLocation = ds.supportLocation(clientGeolocation, request.getType());
+			return cacheLocation.getGeolocation();
 		}
-		return clientLocation;
+
+		final Geolocation clientGeolocation = getClientGeolocation(request, track, ds);
+		return ds.supportLocation(clientGeolocation, request.getType());
 	}
 
 	public List<Cache> selectCachesByCZ(final DeliveryService ds, final CacheLocation cacheLocation) {
@@ -462,37 +492,48 @@ public class TrafficRouter {
 		return routeResult;
 	}
 
-	protected CacheLocation getCoverageZoneCache(final String ip) {
+	protected CacheLocation getCoverageZoneCache(final String ip, final DeliveryService ds) {
 		NetworkNode nn = null;
 		try {
 			nn = NetworkNode.getInstance().getNetwork(ip);
 		} catch (NetworkNodeException e) {
 			LOGGER.warn(e);
 		}
+
 		if (nn == null) {
 			return null;
 		}
 
 		final String locId = nn.getLoc();
 		final CacheLocation cl = nn.getCacheLocation();
-		if(cl != null) {
+
+		if (cl != null) {
 			return cl;
 		}
-		if(locId == null) {
+
+		if (locId == null) {
 			return null;
 		}
 
-			// find CacheLocation
-		final Collection<CacheLocation> caches = getCacheRegister()
-				.getCacheLocations();
-		for (final CacheLocation cl2 : caches) {
+		// find CacheLocation
+		final Collection<CacheLocation> cacheLocations = getCacheRegister().getCacheLocations();
+
+		for (final CacheLocation cl2 : cacheLocations) {
 			if (cl2.getId().equals(locId)) {
 				nn.setCacheLocation(cl2);
 				return cl2;
 			}
 		}
 
-		return null;
+		/*
+		 * We had a hit in the CZF but the name does not match a known cache location.
+		 * Check whether the CZF entry has a geolocation and use it if so.
+		 */
+		if (nn.getGeolocation() == null) {
+			return null;
+		}
+
+		return getClosestCacheLocation(cacheLocations, ds, nn.getGeolocation());
 	}
 
 	/**
@@ -613,18 +654,16 @@ public class TrafficRouter {
 	 * If the client's location could not be determined, then the list is
 	 * unsorted.
 	 * 
-	 * @param request
-	 *            the client's request
 	 * @param cacheLocations
 	 *            the collection of CacheLocations to order
 	 * @param ds
 	 * @return the ordered list of locations
 	 */
-	public List<CacheLocation> orderCacheLocations(final Request request, final Collection<CacheLocation> cacheLocations, final DeliveryService ds, final Geolocation clientLocation) {
+	public List<CacheLocation> orderCacheLocations(final Collection<CacheLocation> cacheLocations, final DeliveryService ds, final Geolocation clientLocation) {
 		final List<CacheLocation> locations = new ArrayList<CacheLocation>();
 
-		for(final CacheLocation cl : cacheLocations) {
-			if(ds.isLocationAvailable(cl)) {
+		for (final CacheLocation cl : cacheLocations) {
+			if (ds.isLocationAvailable(cl)) {
 				locations.add(cl);
 			}
 		}
@@ -632,6 +671,18 @@ public class TrafficRouter {
 		Collections.sort(locations, new CacheLocationComparator(clientLocation));
 
 		return locations;
+	}
+
+	private CacheLocation getClosestCacheLocation(final Collection<CacheLocation> cacheLocations, final DeliveryService ds, final Geolocation clientLocation) {
+		final List<CacheLocation> orderedLocations = orderCacheLocations(cacheLocations, ds, clientLocation);
+
+		for (CacheLocation cacheLocation : orderedLocations) {
+			if (!cacheLocation.getCaches().isEmpty()) {
+				return cacheLocation;
+			}
+		}
+
+		return null;
 	}
 
 	/**
@@ -695,7 +746,7 @@ public class TrafficRouter {
 				//redirect url belongs to this DS, will try return the caches
 				if (clientLocation == null) {
 					LOGGER.debug("clientLocation null, try to query it");
-					clientLocation = getLocation(request.getClientIP());
+					clientLocation = getLocation(request.getClientIP(), ds);
 
 					if (clientLocation == null) { clientLocation = ds.getMissLocation(); }
 
@@ -731,6 +782,22 @@ public class TrafficRouter {
 			LOGGER.error(sw.toString());
 			track.setResult(ResultType.ERROR);
 			return null;
+		}
+	}
+
+	public void setApplicationContext(final ApplicationContext applicationContext) throws BeansException {
+		this.applicationContext = applicationContext;
+	}
+
+	public void configurationChanged() {
+		if (applicationContext == null) {
+			LOGGER.warn("Application Context not yet ready, skipping calling listeners of configuration change");
+			return;
+		}
+
+		final Map<String, ConfigurationListener> configurationListenerMap = applicationContext.getBeansOfType(ConfigurationListener.class);
+		for (ConfigurationListener configurationListener : configurationListenerMap.values()) {
+			configurationListener.configurationChanged();
 		}
 	}
 }

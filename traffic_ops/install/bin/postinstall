@@ -42,6 +42,7 @@ my $profile_dir       = "/opt/traffic_ops/install/data/profiles/";
 my %dbdriver          = ( mysql => "mymysql", );
 
 my $reconfigure = "/opt/traffic_ops/.reconfigure";
+my $reconfigure_defaults = "/opt/traffic_ops/.reconfigure_defaults";
 my $tmAdminUser = "";
 my $tmAdminPw = "";
 my $parameters;
@@ -612,6 +613,10 @@ print "\nWaiting for Traffic Ops to start.\n\n";
 sleep(5);
 
 sub profiles_exist {
+		if ( -f $reconfigure_defaults ) {
+				return 1;
+		}
+
 		while ( length $tmAdminUser == 0 ) {
 				$tmAdminUser =
 						InstallUtils::promptUser("Administration username for Traffic Ops");
@@ -667,6 +672,8 @@ sub profiles_exist {
 		foreach my $profile (@$profiles_response) {
 				if ( !exists $initial_profiles{ $profile->{"name"} } ) {
 						print "Found existing profile (" . $profile->{"name"} . ")\n";
+						open( my $reconfigure_defaults_file, '>', $reconfigure_defaults ) or die("Failed to open() $reconfigure_defaults: $!");
+						close( $reconfigure_defaults_file );
 						return 1;
 				}
 		}
@@ -677,6 +684,7 @@ if ( !profiles_exist() ) {
 		print "Creating default profiles...\n";
 		replace_profile_templates();
 		import_profiles();
+		profiles_exist(); # call again to create $reconfigure_defaults file if import was successful
 }
 else {
 		print "Not creating default profiles.\n";
@@ -684,6 +692,11 @@ else {
 
 #print "\nRunning smoke tests.\n\n";
 #$rc = execCommand ("/opt/traffic_ops/install/bin/systemtest", "localhost", $user{username}, $tmAdminPw, "0");
+
+my $ans = promptUser( "\nInstall Cron entry to clean install .iso files older than 7 days? [y/n]", "n" );
+if ($ans eq "y" || $ans eq "Y") {
+    execCommand( "/bin/echo \"00 04 * * * root /bin/find /opt/traffic_ops/app/public/iso/*.iso -mtime +7 -exec /bin/rm {} \;\" > /etc/cron.d/trafops_clean_isos" );
+}
 
 my $ans = promptUser( "\nShutdown Traffic Ops [y/n]", "n" );
 if ( $ans eq "y" ) {

@@ -22,7 +22,7 @@ CREATE DATABASE traffic_ops WITH TEMPLATE = template0 ENCODING = 'UTF8' LC_COLLA
 
 ALTER DATABASE traffic_ops OWNER TO touser;
 
-\connect traffic_ops
+\connect traffic_ops_debug
 
 SET statement_timeout = 0;
 SET lock_timeout = 0;
@@ -69,7 +69,7 @@ ALTER TABLE asns OWNER TO touser;
 -- Name: asns_v; Type: VIEW; Schema: public; Owner: touser
 --
 
-CREATE VIEW asns_v AS
+CREATE VIEW asns AS
  SELECT asns.asn,
     asns.cachegroup,
     asns.created_at,
@@ -77,7 +77,15 @@ CREATE VIEW asns_v AS
    FROM asns;
 
 
-ALTER TABLE asns_v OWNER TO touser;
+ALTER TABLE asns OWNER TO touser;
+
+
+CREATE TABLE cachegroups_types (
+    name text PRIMARY KEY,
+    description text NOT NULL,
+    created_at timestamp without time zone DEFAULT now() NOT NULL
+);
+ALTER TABLE cachegroups_types OWNER TO touser;
 
 --
 -- Name: cachegroups; Type: TABLE; Schema: public; Owner: touser
@@ -89,7 +97,7 @@ CREATE TABLE cachegroups (
     latitude numeric,
     longitude numeric,
     parent_cachegroup text,
-    type text NOT NULL,
+    type text NOT NULL REFERENCES cachegroups_types (name),
     created_at timestamp without time zone DEFAULT now() NOT NULL
 );
 
@@ -173,8 +181,17 @@ CREATE TABLE profiles_parameters (
     created_at timestamp without time zone DEFAULT now() NOT NULL
 );
 
-
 ALTER TABLE profiles_parameters OWNER TO touser;
+
+ALTER TABLE ONLY profiles_parameters
+    ADD CONSTRAINT profiles_parameters_profile_parameter_id_pkey PRIMARY KEY (profile, parameter_id);
+
+CREATE TABLE servers_types (
+    name text PRIMARY KEY,
+    description text NOT NULL,
+    created_at timestamp without time zone DEFAULT now() NOT NULL
+);
+ALTER TABLE servers_types OWNER TO touser;
 
 --
 -- Name: servers; Type: TABLE; Schema: public; Owner: touser
@@ -195,7 +212,7 @@ CREATE TABLE servers (
     phys_location text NOT NULL,
     rack text,
     cachegroup text NOT NULL,
-    type text NOT NULL,
+    type text NOT NULL REFERENCES servers_types (name),
     status text NOT NULL,
     upd_pending boolean DEFAULT false NOT NULL,
     profile text NOT NULL,
@@ -214,11 +231,17 @@ CREATE TABLE servers (
 
 ALTER TABLE servers OWNER TO touser;
 
+ALTER TABLE ONLY servers
+    ADD CONSTRAINT servers_host_name_tcp_port_pkey PRIMARY KEY (host_name, tcp_port);
+
+ALTER TABLE ONLY servers
+    ADD CONSTRAINT servers_profile_profiles_name_fkey FOREIGN KEY (profile) REFERENCES profiles(name);
+
 --
 -- Name: content_routers_v; Type: VIEW; Schema: public; Owner: touser
 --
 
-CREATE VIEW content_routers_v AS
+CREATE VIEW content_routers AS
  SELECT servers.ip_address AS ip,
     servers.ip6_address AS ip6,
     servers.profile,
@@ -236,13 +259,13 @@ CREATE VIEW content_routers_v AS
   WHERE ((servers.type = 'CCR'::text) AND (parameters.name = 'api.port'::text));
 
 
-ALTER TABLE content_routers_v OWNER TO touser;
+ALTER TABLE content_routers OWNER TO touser;
 
 --
 -- Name: content_servers_v; Type: VIEW; Schema: public; Owner: touser
 --
 
-CREATE VIEW content_servers_v AS
+CREATE VIEW content_servers AS
  SELECT DISTINCT servers.host_name,
     servers.profile,
     servers.type,
@@ -263,7 +286,15 @@ CREATE VIEW content_servers_v AS
   WHERE ((parameters.name = 'weight'::text) AND (servers.status = ANY (ARRAY['REPORTED'::text, 'ONLINE'::text])) AND (servers.type = 'EDGE'::text));
 
 
-ALTER TABLE content_servers_v OWNER TO touser;
+ALTER TABLE content_servers OWNER TO touser;
+
+
+CREATE TABLE deliveryservices_types (
+    name text PRIMARY KEY,
+    description text NOT NULL,
+    created_at timestamp without time zone DEFAULT now() NOT NULL
+);
+ALTER TABLE deliveryservices_types OWNER TO touser;
 
 --
 -- Name: deliveryservices; Type: TABLE; Schema: public; Owner: touser
@@ -285,7 +316,7 @@ CREATE TABLE deliveryservices (
     dns_bypass_ip6 inet,
     dns_bypass_ttl integer,
     org_server_fqdn text,
-    type text NOT NULL,
+    type text NOT NULL REFERENCES deliveryservices_types (name),
     profile text NOT NULL,
     dns_ttl integer,
     global_max_mbps integer,
@@ -315,6 +346,9 @@ CREATE TABLE deliveryservices (
 
 
 ALTER TABLE deliveryservices OWNER TO touser;
+
+ALTER TABLE ONLY deliveryservices
+    ADD CONSTRAINT deliveryservices_name_pkey PRIMARY KEY (name);
 
 --
 -- Name: deliveryservices_regexes; Type: TABLE; Schema: public; Owner: touser
@@ -356,6 +390,14 @@ CREATE SEQUENCE regexes_id_seq
 
 ALTER TABLE regexes_id_seq OWNER TO touser;
 
+
+CREATE TABLE regexes_types (
+    name text PRIMARY KEY,
+    description text NOT NULL,
+    created_at timestamp without time zone DEFAULT now() NOT NULL
+);
+ALTER TABLE regexes_types OWNER TO touser;
+
 --
 -- Name: regexes; Type: TABLE; Schema: public; Owner: touser
 --
@@ -363,18 +405,21 @@ ALTER TABLE regexes_id_seq OWNER TO touser;
 CREATE TABLE regexes (
     id bigint DEFAULT nextval('regexes_id_seq'::regclass) NOT NULL,
     pattern text NOT NULL,
-    type text NOT NULL,
+    type text NOT NULL REFERENCES regexes_types (name),
     created_at timestamp without time zone DEFAULT now() NOT NULL
 );
 
 
 ALTER TABLE regexes OWNER TO touser;
 
+ALTER TABLE ONLY regexes
+    ADD CONSTRAINT regexes_id_pkey PRIMARY KEY (id);
+
 --
 -- Name: cr_deliveryservice_server_v; Type: VIEW; Schema: public; Owner: touser
 --
 
-CREATE VIEW cr_deliveryservice_server_v AS
+CREATE VIEW cr_deliveryservice_server AS
  SELECT DISTINCT regexes.pattern,
     deliveryservices.name,
     servers.cdn,
@@ -387,7 +432,7 @@ CREATE VIEW cr_deliveryservice_server_v AS
   WHERE (deliveryservices.type <> 'ANY_MAP'::text);
 
 
-ALTER TABLE cr_deliveryservice_server_v OWNER TO touser;
+ALTER TABLE cr_deliveryservice_server OWNER TO touser;
 
 --
 -- Name: staticdnsentries_id_seq; Type: SEQUENCE; Schema: public; Owner: touser
@@ -403,6 +448,14 @@ CREATE SEQUENCE staticdnsentries_id_seq
 
 ALTER TABLE staticdnsentries_id_seq OWNER TO touser;
 
+
+CREATE TABLE staticdnsentries_types (
+    name text PRIMARY KEY,
+    description text NOT NULL,
+    created_at timestamp without time zone DEFAULT now() NOT NULL
+);
+ALTER TABLE staticdnsentries_types OWNER TO touser;
+
 --
 -- Name: staticdnsentries; Type: TABLE; Schema: public; Owner: touser
 --
@@ -410,7 +463,7 @@ ALTER TABLE staticdnsentries_id_seq OWNER TO touser;
 CREATE TABLE staticdnsentries (
     id integer DEFAULT nextval('staticdnsentries_id_seq'::regclass) NOT NULL,
     name character varying(63) NOT NULL,
-    type character varying(2) NOT NULL,
+    type text NOT NULL REFERENCES staticdnsentries_types (name),
     class character varying(2) NOT NULL,
     ttl bigint DEFAULT 3600 NOT NULL,
     rdata character varying(255) NOT NULL,
@@ -422,25 +475,14 @@ CREATE TABLE staticdnsentries (
 
 ALTER TABLE staticdnsentries OWNER TO touser;
 
---
--- Name: types; Type: TABLE; Schema: public; Owner: touser
---
-
-CREATE TABLE types (
-    name text NOT NULL,
-    description text,
-    use_in_table text,
-    created_at timestamp without time zone DEFAULT now() NOT NULL
-);
-
-
-ALTER TABLE types OWNER TO touser;
+ALTER TABLE ONLY staticdnsentries
+    ADD CONSTRAINT staticdnsentries_id_pkey PRIMARY KEY (id);
 
 --
 -- Name: crconfig_ds_data_v; Type: VIEW; Schema: public; Owner: touser
 --
 
-CREATE VIEW crconfig_ds_data_v AS
+CREATE VIEW crconfig_ds_data AS
  SELECT deliveryservices.name,
     deliveryservices.profile,
     deliveryservices.dns_ttl,
@@ -471,17 +513,17 @@ CREATE VIEW crconfig_ds_data_v AS
      LEFT JOIN staticdnsentries ON ((deliveryservices.name = staticdnsentries.deliveryservice)))
      JOIN deliveryservices_regexes ON ((deliveryservices_regexes.deliveryservice = deliveryservices.name)))
      JOIN regexes ON ((regexes.id = deliveryservices_regexes.regex_id)))
-     JOIN types regextypes ON ((regextypes.name = regexes.type)))
-     LEFT JOIN types sdnstypes ON ((sdnstypes.name = (staticdnsentries.type)::text)));
+     JOIN regexes_types regextypes ON ((regextypes.name = regexes.type)))
+     LEFT JOIN staticdnsentries_types sdnstypes ON ((sdnstypes.name = (staticdnsentries.type)::text)));
 
 
-ALTER TABLE crconfig_ds_data_v OWNER TO touser;
+ALTER TABLE crconfig_ds_data OWNER TO touser;
 
 --
 -- Name: crconfig_params_v; Type: VIEW; Schema: public; Owner: touser
 --
 
-CREATE VIEW crconfig_params_v AS
+CREATE VIEW crconfig_params AS
  SELECT DISTINCT servers.cdn,
     servers.profile,
     servers.type AS stype,
@@ -495,7 +537,7 @@ CREATE VIEW crconfig_params_v AS
   WHERE ((servers.type = ANY (ARRAY['EDGE'::text, 'MID'::text, 'CCR'::text])) AND (parameters.config_file = 'CRConfig.json'::text));
 
 
-ALTER TABLE crconfig_params_v OWNER TO touser;
+ALTER TABLE crconfig_params OWNER TO touser;
 
 --
 -- Name: deliveryservices_users; Type: TABLE; Schema: public; Owner: touser
@@ -536,6 +578,14 @@ CREATE TABLE domains (
 
 ALTER TABLE domains OWNER TO touser;
 
+
+CREATE TABLE extensions_types (
+    name text PRIMARY KEY,
+    description text NOT NULL,
+    created_at timestamp without time zone DEFAULT now() NOT NULL
+);
+ALTER TABLE extensions_types OWNER TO touser;
+
 --
 -- Name: extensions; Type: TABLE; Schema: public; Owner: touser
 --
@@ -549,12 +599,15 @@ CREATE TABLE extensions (
     script_file text NOT NULL,
     active boolean NOT NULL,
     additional_config_json text,
-    type text NOT NULL,
+    type text NOT NULL REFERENCES extensions_types (name),
     created_at timestamp without time zone DEFAULT now() NOT NULL
 );
 
 
 ALTER TABLE extensions OWNER TO touser;
+
+ALTER TABLE ONLY extensions
+    ADD CONSTRAINT extensions_name_pkey PRIMARY KEY (name);
 
 --
 -- Name: federation_resolvers_id_seq; Type: SEQUENCE; Schema: public; Owner: touser
@@ -711,11 +764,14 @@ CREATE TABLE log (
 
 ALTER TABLE log OWNER TO touser;
 
+ALTER TABLE ONLY log
+    ADD CONSTRAINT log_id_pkey PRIMARY KEY (id);
+
 --
 -- Name: monitors_v; Type: VIEW; Schema: public; Owner: touser
 --
 
-CREATE VIEW monitors_v AS
+CREATE VIEW monitors AS
  SELECT servers.ip_address AS ip,
     servers.ip6_address AS ip6,
     servers.profile,
@@ -729,7 +785,7 @@ CREATE VIEW monitors_v AS
   WHERE (servers.type = 'RASCAL'::text);
 
 
-ALTER TABLE monitors_v OWNER TO touser;
+ALTER TABLE monitors OWNER TO touser;
 
 --
 -- Name: phys_locations; Type: TABLE; Schema: public; Owner: touser
@@ -753,11 +809,14 @@ CREATE TABLE phys_locations (
 
 ALTER TABLE phys_locations OWNER TO touser;
 
+ALTER TABLE ONLY phys_locations
+    ADD CONSTRAINT phys_locations_name_pkey PRIMARY KEY (name);
+
 --
 -- Name: profiles_v; Type: VIEW; Schema: public; Owner: touser
 --
 
-CREATE VIEW profiles_v AS
+CREATE VIEW profiles AS
  SELECT profiles.name,
     profiles.description,
     profiles.created_at,
@@ -765,7 +824,7 @@ CREATE VIEW profiles_v AS
    FROM profiles;
 
 
-ALTER TABLE profiles_v OWNER TO touser;
+ALTER TABLE profiles OWNER TO touser;
 
 --
 -- Name: regions; Type: TABLE; Schema: public; Owner: touser
@@ -780,11 +839,14 @@ CREATE TABLE regions (
 
 ALTER TABLE regions OWNER TO touser;
 
+ALTER TABLE ONLY regions
+    ADD CONSTRAINT regions_name_pkey PRIMARY KEY (name);
+
 --
 -- Name: regions_v; Type: VIEW; Schema: public; Owner: touser
 --
 
-CREATE VIEW regions_v AS
+CREATE VIEW regions AS
  SELECT regions.name,
     regions.division,
     regions.created_at,
@@ -792,7 +854,7 @@ CREATE VIEW regions_v AS
    FROM regions;
 
 
-ALTER TABLE regions_v OWNER TO touser;
+ALTER TABLE regions OWNER TO touser;
 
 --
 -- Name: roles; Type: TABLE; Schema: public; Owner: touser
@@ -806,6 +868,9 @@ CREATE TABLE roles (
 
 
 ALTER TABLE roles OWNER TO touser;
+
+ALTER TABLE ONLY roles
+    ADD CONSTRAINT roles_name_pkey PRIMARY KEY (name);
 
 --
 -- Name: stats_summary; Type: TABLE; Schema: public; Owner: touser
@@ -823,6 +888,9 @@ CREATE TABLE stats_summary (
 
 ALTER TABLE stats_summary OWNER TO touser;
 
+ALTER TABLE ONLY stats_summary
+    ADD CONSTRAINT stats_summary_cdn_name_deliveryservice_stat_name_stat_date_pkey PRIMARY KEY (cdn_name, deliveryservice, stat_name, stat_date);
+
 --
 -- Name: statuses; Type: TABLE; Schema: public; Owner: touser
 --
@@ -836,6 +904,9 @@ CREATE TABLE statuses (
 
 ALTER TABLE statuses OWNER TO touser;
 
+ALTER TABLE ONLY statuses
+    ADD CONSTRAINT statuses_name_pkey PRIMARY KEY (name);
+
 --
 -- Name: users; Type: TABLE; Schema: public; Owner: touser
 --
@@ -846,11 +917,18 @@ CREATE TABLE users (
     email text,
     full_name text,
     ssh_pub_key text,
+    local_password text,
     created_at timestamp without time zone DEFAULT now() NOT NULL
 );
 
 
 ALTER TABLE users OWNER TO touser;
+
+ALTER TABLE ONLY users
+    ADD CONSTRAINT users_username_pkey PRIMARY KEY (username);
+
+ALTER TABLE ONLY users
+    ADD CONSTRAINT users_role_roles_name_fkey FOREIGN KEY (role) REFERENCES roles(name);
 
 --
 -- Name: asns_asn_pkey; Type: CONSTRAINT; Schema: public; Owner: touser
@@ -995,15 +1073,6 @@ ALTER TABLE ONLY parameters
 ALTER TABLE ONLY profiles
     ADD CONSTRAINT profiles_name_pkey PRIMARY KEY (name);
 
-
---
--- Name: types_name_pkey; Type: CONSTRAINT; Schema: public; Owner: touser
---
-
-ALTER TABLE ONLY types
-    ADD CONSTRAINT types_name_pkey PRIMARY KEY (name);
-
-
 --
 -- Name: cachegroups_short_name; Type: INDEX; Schema: public; Owner: touser
 --
@@ -1032,7 +1101,6 @@ CREATE UNIQUE INDEX parameters_name_config_file_value_idx ON parameters USING bt
 ALTER TABLE ONLY asns
     ADD CONSTRAINT asns_cchegroup_cachegroups_name_fkey FOREIGN KEY (cachegroup) REFERENCES cachegroups(name);
 
-
 --
 -- Name: cachegroups_parameters_cachegroup_cachegroups_name_fkey; Type: FK CONSTRAINT; Schema: public; Owner: touser
 --
@@ -1055,15 +1123,6 @@ ALTER TABLE ONLY cachegroups_parameters
 
 ALTER TABLE ONLY cachegroups
     ADD CONSTRAINT cachegroups_parent_cachegroup_cachegroups_name_fkey FOREIGN KEY (parent_cachegroup) REFERENCES cachegroups(name);
-
-
---
--- Name: cachegroups_type_types_name_fkey; Type: FK CONSTRAINT; Schema: public; Owner: touser
---
-
-ALTER TABLE ONLY cachegroups
-    ADD CONSTRAINT cachegroups_type_types_name_fkey FOREIGN KEY (type) REFERENCES types(name);
-
 
 --
 -- Name: deliveryservices_cdn_cdns_name_fkey; Type: FK CONSTRAINT; Schema: public; Owner: touser
@@ -1088,15 +1147,6 @@ ALTER TABLE ONLY deliveryservices
 ALTER TABLE ONLY deliveryservices
     ADD CONSTRAINT deliveryservices_profile_profiles_name_fkey FOREIGN KEY (profile) REFERENCES profiles(name);
 
-
---
--- Name: deliveryservices_type_types_name_fkey; Type: FK CONSTRAINT; Schema: public; Owner: touser
---
-
-ALTER TABLE ONLY deliveryservices
-    ADD CONSTRAINT deliveryservices_type_types_name_fkey FOREIGN KEY (type) REFERENCES types(name);
-
-
 --
 -- Name: domains_cdn_fkey; Type: FK CONSTRAINT; Schema: public; Owner: touser
 --
@@ -1104,6 +1154,22 @@ ALTER TABLE ONLY deliveryservices
 ALTER TABLE ONLY domains
     ADD CONSTRAINT domains_cdn_fkey FOREIGN KEY (cdn) REFERENCES cdns(name);
 
+CREATE TABLE crconfig_snapshots (
+    cdn text NOT NULL REFERENCES cdns (name),
+    snapshot text NOT NULL,
+    created_at timestamp without time zone DEFAULT now() NOT NULL,
+    PRIMARY KEY (cdn, created_at)
+);
+ALTER TABLE crconfig_snapshots OWNER TO touser;
+
+-- \todo add port to deliveryservices_servers and join on it. Because server's PK is a compound key, host_name and port.
+CREATE OR REPLACE VIEW csconfig_remap as
+select deliveryservices.*, regexes.pattern as r_pattern, servers.host_name as server_name
+from servers
+join deliveryservices_servers on deliveryservices_servers.server = servers.host_name
+join deliveryservices on deliveryservices.name = deliveryservices_servers.deliveryservice
+join deliveryservices_regexes on deliveryservices_regexes.deliveryservice = deliveryservices.name
+join regexes on regexes.id = deliveryservices_regexes.regex_id;
 
 --
 -- Name: public; Type: ACL; Schema: -; Owner: postgres
@@ -1113,7 +1179,6 @@ REVOKE ALL ON SCHEMA public FROM PUBLIC;
 REVOKE ALL ON SCHEMA public FROM postgres;
 GRANT ALL ON SCHEMA public TO postgres;
 GRANT ALL ON SCHEMA public TO PUBLIC;
-
 
 --
 -- PostgreSQL database dump complete

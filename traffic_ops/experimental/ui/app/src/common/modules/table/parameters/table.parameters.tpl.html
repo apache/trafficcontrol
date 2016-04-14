@@ -1,0 +1,31 @@
+<div class="x_panel">
+    <div class="x_title">
+        <ol class="breadcrumb pull-left">
+            <li class="active">Parameters</li>
+        </ol>
+        <button class="btn btn-primary pull-right" ng-click="createParameter()">New</button>
+        <div class="clearfix"></div>
+    </div>
+    <div class="x_content">
+        <br>
+        <table id="parametersTable" class="table responsive-utilities jambo_table">
+            <thead>
+                <tr class="headings">
+                    <th>id</th>
+                    <th>name</th>
+                    <th>configFile</th>
+                    <th>value</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr ng-click="editParameter(parameter.id)" ng-repeat="parameter in parameters">
+                    <td>{{parameter.id}}</td>
+                    <td>{{parameter.name}}</td>
+                    <td>{{parameter.configFile}}</td>
+                    <td>{{parameter.value}}</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+

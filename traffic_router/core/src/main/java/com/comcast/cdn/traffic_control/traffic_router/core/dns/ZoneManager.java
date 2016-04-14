@@ -76,6 +76,8 @@ import com.google.common.cache.CacheBuilderSpec;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.CacheStats;
 import com.google.common.cache.LoadingCache;
+import com.google.common.cache.RemovalListener;
+import com.google.common.cache.RemovalNotification;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListenableFutureTask;
 
@@ -269,7 +271,13 @@ public class ZoneManager extends Resolver {
 	}
 
 	private static LoadingCache<ZoneKey, Zone> createZoneCache(final ZoneCacheType cacheType, final CacheBuilderSpec spec) {
-		return CacheBuilder.from(spec).recordStats().build(
+		final RemovalListener<ZoneKey, Zone> removalListener = new RemovalListener<ZoneKey, Zone>() {
+			public void onRemoval(final RemovalNotification<ZoneKey, Zone> removal) {
+				LOGGER.debug(cacheType + " " + removal.getKey().getClass().getSimpleName() + " " + removal.getKey().getName() + " evicted from cache: " + removal.getCause());
+			}
+		};
+
+		return CacheBuilder.from(spec).recordStats().removalListener(removalListener).build(
 			new CacheLoader<ZoneKey, Zone>() {
 				final boolean writeZone = (cacheType == ZoneCacheType.STATIC) ? true : false;
 

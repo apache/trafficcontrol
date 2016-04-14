@@ -64,7 +64,8 @@ sub edit {
 		fbox_layout  => 1,
 		regexp_set   => $regexp_set,
 		example_urls => \@example_urls,
-		mode         => 'edit'            #for form generation
+		hidden       => {},               # for form validation purposes
+		mode         => 'edit'            # for form generation
 	);
 }
 
@@ -225,6 +226,7 @@ sub read {
 				"signed"                 => \$row->signed,
 				"qstring_ignore"         => $row->qstring_ignore,
 				"geo_limit"              => $row->geo_limit,
+				"geo_provider"           => $row->geo_provider,
 				"http_bypass_fqdn"       => $row->http_bypass_fqdn,
 				"dns_bypass_ip"          => $row->dns_bypass_ip,
 				"dns_bypass_ip6"         => $row->dns_bypass_ip6,
@@ -329,28 +331,32 @@ sub check_deliveryservice_input {
 	)->get_column('value')->single();
 
 	my $match_one = 0;
-	my %dbl_check = ();
+	my $dbl_check = {};
+
 	foreach my $param ( $self->param ) {
 		if ( $param =~ /^re_type_(.*)/ ) {
-			my $check_string = $self->param($param) . "|" . $self->param( 're_order_' . $1 );
-			if ( defined( $dbl_check{$check_string} ) ) {
-				$self->field('ds.regex')->is_equal( "", "Duplicate type/order combination is not allowed." );
+			my $field      = "re_order";
+			my $this_field = $field . '_' . $1;
+			my $order      = $self->param($this_field);
+
+			if ( defined( $dbl_check->{$field}->{$order} ) ) {
+				$self->field('hidden.regex')->is_equal( "", "Duplicate type/order combination is not allowed." );
 			}
 			else {
-				$dbl_check{$check_string} = 1;
+				$dbl_check->{$field}->{$order} = $order;
 			}
 			if ( !( $self->param($param) eq 'HOST_REGEXP' || $self->param($param) eq 'PATH_REGEXP' || $self->param($param) eq 'HEADER_REGEXP' ) ) {
-				$self->field('ds.regex')->is_equal( "", $self->param($param) . " is not a valid regexp type" );
+				$self->field('hidden.regex')->is_equal( "", $self->param($param) . " is not a valid regexp type" );
 			}
 		}
 		elsif ( $param =~ /^re_re_/ ) {
 			if ( $self->param($param) eq "" ) {
-				$self->field('ds.regex')->is_equal( "", "Regular expression cannot be empty." );
+				$self->field('hidden.regex')->is_equal( "", "Regular expression cannot be empty." );
 			}
 			else {
 				my $err .= $self->check_regexp( $self->param($param) );
 				if ( defined($err) && $err ne "" ) {
-					$self->field('ds.regex')->is_equal( "", $err );
+					$self->field('hidden.regex')->is_equal( "", $err );
 				}
 			}
 
@@ -381,7 +387,7 @@ sub check_deliveryservice_input {
 							next;
 						}
 						if ( $existing_re eq $new_re ) {
-							$self->field('ds.regex')
+							$self->field('hidden.regex')
 								->is_equal( "", "There already is a HOST_REGEXP (" . $existing_re . ") that maches " . $new_re . "; No can do." );
 							last;
 						}
@@ -391,7 +397,7 @@ sub check_deliveryservice_input {
 		}
 		elsif ( $param =~ /^re_order_.*(\d+)/ ) {
 			if ( $self->param($param) !~ /^\d+$/ ) {
-				$self->field('ds.regex')->is_equal( "", $self->param($param) . " is not a valid order number." );
+				$self->field('hidden.regex')->is_equal( "", $self->param($param) . " is not a valid order number." );
 			}
 		}
 		if ( $self->param($param) eq 'HOST_REGEXP' ) {
@@ -412,7 +418,7 @@ sub check_deliveryservice_input {
 		}
 	}
 	if ( !$match_one ) {
-		$self->field('ds.regex')->is_equal( "", "A minimum of one host regexp with order 0 is needed per delivery service." );
+		$self->field('hidden.regex')->is_equal( "", "A minimum of one host regexp with order 0 is needed per delivery service." );
 	}
 	if ( $self->param('ds.dscp') !~ /^\d+$/ ) {
 		$self->field('ds.dscp')->is_equal( "", $self->param('ds.dscp') . " is not a valid dscp value." );
@@ -525,6 +531,12 @@ sub header_rewrite {
 	my $ds_name    = shift;
 	my $hdr_rw     = shift;
 	my $tier       = shift;
+	my $type       = shift;
+
+	if ( $tier eq 'mid' && $type =~ /LIVE/ && $type !~ /NATNL/ ) {
+		# live local delivery services don't get remap rules
+		return;
+	}
 
 	if ( defined($hdr_rw) && $hdr_rw ne "" ) {
 		my $fname = "hdr_rw_" . $ds_name . ".config";
@@ -550,11 +562,11 @@ sub header_rewrite {
 		my $cdn_name = undef;
 		my @servers = $self->db->resultset('DeliveryserviceServer')->search( { deliveryservice => $ds_id } )->get_column('server')->all();
 		if ( $tier eq "mid" ) {
-			my $mtype_id = &type_id( $self, 'MID' );
+			my @mtype_ids = &type_ids( $self, 'MID%', 'server' );
 			my $param = $self->db->resultset('Deliveryservice')->search( { 'me.profile' => $ds_profile }, { prefetch => 'cdn' } );
 			$cdn_name = $param->next->cdn->name;
 
-			@servers = $self->db->resultset('Server')->search( { type => $mtype_id } )->get_column('id')->all();
+			@servers = $self->db->resultset('Server')->search( { type => { -in => \@mtype_ids } } )->get_column('id')->all();
 		}
 		my @profiles = $self->db->resultset('Server')->search( { id => { -in => \@servers } } )->get_column('profile')->all();
 		foreach my $profile_id (@profiles) {
@@ -709,6 +721,7 @@ sub update {
 			signed                 => $self->paramAsScalar('ds.signed'),
 			qstring_ignore         => $self->paramAsScalar('ds.qstring_ignore'),
 			geo_limit              => $self->paramAsScalar('ds.geo_limit'),
+			geo_provider           => $self->paramAsScalar('ds.geo_provider'),
 			org_server_fqdn        => $self->paramAsScalar('ds.org_server_fqdn'),
 			multi_site_origin      => $self->paramAsScalar('ds.multi_site_origin'),
 			ccr_dns_ttl            => $self->paramAsScalar('ds.ccr_dns_ttl'),
@@ -830,8 +843,9 @@ sub update {
 			}
 		}
 
-		$self->header_rewrite( $self->param('id'), $self->param('ds.profile'), $self->param('ds.xml_id'), $self->param('ds.edge_header_rewrite'), "edge" );
-		$self->header_rewrite( $self->param('id'), $self->param('ds.profile'), $self->param('ds.xml_id'), $self->param('ds.mid_header_rewrite'),  "mid" );
+		my $type = $self->db->resultset('Type')->search( { id => $self->paramAsScalar('ds.type') } )->get_column('name')->single();
+		$self->header_rewrite( $self->param('id'), $self->param('ds.profile'), $self->param('ds.xml_id'), $self->param('ds.edge_header_rewrite'), "edge", $type );
+		$self->header_rewrite( $self->param('id'), $self->param('ds.profile'), $self->param('ds.xml_id'), $self->param('ds.mid_header_rewrite'),  "mid", $type );
 		$self->regex_remap( $self->param('id'), $self->param('ds.profile'), $self->param('ds.xml_id'), $self->param('ds.regex_remap') );
 		$self->cacheurl( $self->param('id'), $self->param('ds.profile'), $self->param('ds.xml_id'), $self->param('ds.cacheurl') );
 
@@ -856,6 +870,7 @@ sub update {
 			static_count => $static_count,
 			regexp_set   => $regexp_set,
 			example_urls => \@example_urls,
+			hidden       => {},               # for form validation purposes
 			mode         => "edit",
 		);
 		$self->render('delivery_service/edit');
@@ -908,6 +923,7 @@ sub create {
 				signed                 => $self->paramAsScalar('ds.signed'),
 				qstring_ignore         => $self->paramAsScalar('ds.qstring_ignore'),
 				geo_limit              => $self->paramAsScalar('ds.geo_limit'),
+				geo_provider           => $self->paramAsScalar('ds.geo_provider'),
 				http_bypass_fqdn       => $self->paramAsScalar('ds.http_bypass_fqdn'),
 				dns_bypass_ip          => $self->paramAsScalar('ds.dns_bypass_ip'),
 				dns_bypass_ip6         => $self->paramAsScalar('ds.dns_bypass_ip6'),
@@ -1008,8 +1024,9 @@ sub create {
 			$de_re_insert->insert();
 		}
 
-		$self->header_rewrite( $new_id, $self->param('ds.profile'), $self->param('ds.xml_id'), $self->param('ds.edge_header_rewrite'), "edge" );
-		$self->header_rewrite( $new_id, $self->param('ds.profile'), $self->param('ds.xml_id'), $self->param('ds.mid_header_rewrite'),  "mid" );
+		my $type = $self->db->resultset('Type')->search( { id => $self->paramAsScalar('ds.type') } )->get_column('name')->single();
+		$self->header_rewrite( $new_id, $self->param('ds.profile'), $self->param('ds.xml_id'), $self->param('ds.edge_header_rewrite'), "edge", $type );
+		$self->header_rewrite( $new_id, $self->param('ds.profile'), $self->param('ds.xml_id'), $self->param('ds.mid_header_rewrite'),  "mid", $type );
 		$self->regex_remap( $self->param('ds.profile'), $self->param('ds.xml_id'), $self->param('ds.regex_remap') );
 		$self->cacheurl( $new_id, $self->param('ds.profile'), $self->param('ds.xml_id'), $self->param('ds.cacheurl') );
 
@@ -1035,6 +1052,7 @@ sub create {
 			selected_type    => $selected_type,
 			selected_profile => $selected_profile,
 			selected_cdn     => $selected_cdn,
+			hidden           => {},                  # for form validation purposes
 			mode             => "add",
 		);
 		$self->render('delivery_service/add');
@@ -1132,7 +1150,8 @@ sub add {
 		selected_type    => "",
 		selected_profile => "",
 		selected_cdn     => "",
-		mode             => 'add'    #for form generation
+		hidden           => {},      # for form validation purposes
+		mode             => 'add'    # for form generation
 	);
 	my @params = $self->param;
 	foreach my $field (@params) {

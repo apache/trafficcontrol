@@ -17,7 +17,7 @@ If you've never made a pull request, it's super-easy. Github has a great tutoria
 
 Guidelines
 ----------
-Following the project conventions will make the pull request process go faster and smoother.
+Following the project conventions will make the pull request process go faster and smoother. If making changes to the Traffic Ops API, please consult the [Traffic Ops API Guidelines](https://github.com/Comcast/traffic_control/wiki/Traffic-Ops-API-Guidelines-v1.x).
 
 #### Create an issue
 
