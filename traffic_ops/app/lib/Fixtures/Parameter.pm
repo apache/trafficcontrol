@@ -552,6 +552,15 @@ my %definition_for = (
 			value       => 'INT 33554432',
 		},
 	},
+	'regex_revalidate.config_snapshot_dir' => {
+		new   => 'Parameter',
+		using => {
+			id          => 62,
+			name        => 'snapshot_dir',
+			config_file => 'regex_revalidate.config',
+			value       => 'public/Trafficserver-Snapshots/',
+		},
+	},
 );
 
 sub get_definition {
