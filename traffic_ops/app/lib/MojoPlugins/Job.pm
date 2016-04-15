@@ -23,10 +23,10 @@ use POSIX qw(strftime);
 use UI::Utils;
 use File::Path qw(make_path);
 
-use constant PENDING   => 1;
-use constant PROGRESS  => 2;
-use constant COMPLETED => 3;
-use constant CANCELLED => 4;
+use constant PENDING      => 1;
+use constant PROGRESS     => 2;
+use constant COMPLETED    => 3;
+use constant CANCELLED    => 4;
 use constant REGEX_CONFIG => 'regex_revalidate.config';
 
 sub register {
@@ -44,12 +44,13 @@ sub register {
 			my %cdn_domain;
 			my $snapshot_rs =
 				$self->db->resultset('Parameter')->search( { name => "snapshot_dir" }, { config_file => REGEX_CONFIG } )->single();
-			if (!defined $snapshot_rs) {
-				Mojo::Exception->throw("snapshot_dir parameter for config_file " . REGEX_CONFIG . " not found");
+			if ( !defined $snapshot_rs ) {
+				Mojo::Exception->throw( "snapshot_dir parameter for config_file " . REGEX_CONFIG . " not found" );
 				return;
 			}
-	  		my $snapshot_dir = $snapshot_rs->value;
+			my $snapshot_dir = $snapshot_rs->value;
 
+			# generate regex_revalidate.config for one server for each cdn
 			while ( my $row = $rs->next ) {
 				my $cdn_name = $row->cdn->name;
 				if ( defined( $cdn_domain{$cdn_name} ) ) {
