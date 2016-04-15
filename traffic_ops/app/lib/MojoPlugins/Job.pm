@@ -34,9 +34,15 @@ sub register {
 
 	$app->renderer->add_helper(
 		snapshot_regex_revalidate => sub {
-			my $self = shift;
+			my $self     = shift;
+			my $cdn_name = shift;
+			my $row = $self->db->resultset('Server')
+				->search( { 'status.name' => 'REPORTED', 'cdn.name' => $cdn_name }, { prefetch => [qw{ cdn status }], rows => 1 } )->single;
+			if ( !defined $row ) {
 
-			my $rs = $self->db->resultset('Server')->search( { 'status.name' => 'REPORTED' }, { prefetch => [qw{ cdn status }] } );
+				# no REPORTED servers in this CDN
+				return;
+			}
 
 			my $m_scheme = $self->req->url->base->scheme;
 			my $m_host   = $self->req->url->base->host;
@@ -50,36 +56,25 @@ sub register {
 			}
 			my $snapshot_dir = $snapshot_rs->value;
 
-			# generate regex_revalidate.config for one server for each cdn
-			while ( my $row = $rs->next ) {
-				my $cdn_name = $row->cdn->name;
-				if ( defined( $cdn_domain{$cdn_name} ) ) {
-
-					# only need one per cdn
-					next;
-				}
-				$cdn_domain{$cdn_name} = 1;
-				my $text = UI::ConfigFiles::regex_revalidate_dot_config( $self, $row->id, REGEX_CONFIG );
-
-				my $dir = $snapshot_dir . $cdn_name;
-				if ( !-d $dir ) {
-					my $err;
-					make_path( $dir, { error => \$err } );
-					if ( defined $err && scalar @$err ) {
-						for my $diag (@$err) {
-							my ( $file, $msg ) = %$diag;
-							Mojo::Exception->throw("$msg when creating $dir");
-						}
+			my $text = UI::ConfigFiles::regex_revalidate_dot_config( $self, $row->id, REGEX_CONFIG );
+			my $dir = $snapshot_dir . $cdn_name;
+			if ( !-d $dir ) {
+				my $err;
+				make_path( $dir, { error => \$err } );
+				if ( defined $err && scalar @$err ) {
+					for my $diag (@$err) {
+						my ( $file, $msg ) = %$diag;
+						Mojo::Exception->throw("$msg when creating $dir");
 					}
 				}
-				my $config_file = $dir . "/" . REGEX_CONFIG;
-				open my $fh, '>', $config_file;
-				if ( $! && $! !~ m/Inappropriate ioctl for device/ ) {
-					my $e = Mojo::Exception->throw("$! when opening $config_file");
-				}
-				print $fh $text;
-				close($fh);
 			}
+			my $config_file = $dir . "/" . REGEX_CONFIG;
+			open my $fh, '>', $config_file;
+			if ( $! && $! !~ m/Inappropriate ioctl for device/ ) {
+				my $e = Mojo::Exception->throw("$! when opening $config_file");
+			}
+			print $fh $text;
+			close($fh);
 		}
 	);
 
@@ -236,7 +231,10 @@ sub register {
 			my $new_record = $insert->insert();
 
 			&log( $self, "Created new Purge Job " . $ds_id . " forced new " . REGEX_CONFIG . " snapshot", "APICHANGE" );
-			$self->snapshot_regex_revalidate();
+
+			my $rs = $self->db->resultset('Deliveryservice')->search( { 'me.id' => $ds_id }, { prefetch => 'cdn' } )->single;
+			my $cdn_name = $rs->cdn->name;
+			$self->snapshot_regex_revalidate($cdn_name);
 			$self->set_update_server_bits($ds_id);
 			return $new_record->id;
 		}
