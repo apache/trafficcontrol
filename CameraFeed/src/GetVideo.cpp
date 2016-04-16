@@ -51,7 +51,6 @@ void GetVideo::setEasyOptions()
   if (myDebug)
   {
     curl_easy_setopt(myEasyHandle, CURLOPT_VERBOSE, 1L);
-    curl_easy_setopt(myEasyHandle, CURLOPT_HEADER, 1L);
   }
 
   curl_easy_setopt(myEasyHandle, CURLOPT_URL, myURI.c_str());
@@ -105,7 +104,7 @@ size_t GetVideo::writeCallback(char *ptr, size_t size, size_t nmemb)
       {
         myLineTerm = 0;
 
-        if (myDebug)
+        if (myDebug >= 2)
         {
           std::cerr << "Header line:" << myHeaderData.str() << std::endl;
         }
@@ -125,7 +124,7 @@ size_t GetVideo::writeCallback(char *ptr, size_t size, size_t nmemb)
             myJPEGSize = std::stoi(contentLengthMatch[1]);
             myJPEGData.reset(new char[myJPEGSize]);
             myJPEGBytesSaved = 0;
-            if (myDebug)
+            if (myDebug >= 2)
             {
               std::cerr << "jpg size: " << myJPEGSize << std::endl;
             }
@@ -138,7 +137,6 @@ size_t GetVideo::writeCallback(char *ptr, size_t size, size_t nmemb)
     }
     else if (ReadState::JPEG == myReadState)
     {
-      // TODO: passes non-jpeg data to callback when using debug
       auto remainingBytes = nmemb - ii;
       if (remainingBytes > myJPEGSize)
       {

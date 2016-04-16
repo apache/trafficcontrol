@@ -1,5 +1,6 @@
 *~
 *.o
+node_modules
 
 # Executable from src directory
 AmcrestIPM-721S_StreamReader
