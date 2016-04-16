@@ -220,7 +220,9 @@ func main() {
 		TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
 	}
 	client := &http.Client{Transport: tr}
-	urlStart = "https://localhost:9000"
+	// urlStart = "https://localhost:9000"
+	urlStart = "https://ec2-52-37-126-44.us-west-2.compute.amazonaws.com:9000"
+	log.Println("API Server: " + urlStart)
 	login(client)
 	log.Println("Token:" + tokenStr)
 	log.Print("EXPECT 200 OK")
