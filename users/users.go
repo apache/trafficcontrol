@@ -30,6 +30,12 @@ type User struct {
 	Password  string `db:"password" json:"Password"`
 }
 
+type Response struct {
+	Status   string `json:"Status"`
+	Message  string `json:"Message,omitempty"`
+	UserData []User `json:"UserData,omitempty"`
+}
+
 var db *sqlx.DB // global and simple
 var Logger *log.Logger
 
@@ -104,19 +110,16 @@ func retErr(w http.ResponseWriter, status int) {
 func handler(w http.ResponseWriter, r *http.Request) {
 
 	Logger.Println(r.Method, r.URL.Scheme, r.Host, r.URL.RequestURI())
+	msg := "None"
+	userlist := []User{}
 	if r.Method == "GET" {
-		if r.URL.Path == "/users" {
-			userlist := []User{}
+		if r.URL.Path == "/users" || r.URL.Path == "/users/" {
 			err := db.Select(&userlist, "SELECT * FROM users")
 			if err != nil {
 				Logger.Println(err)
 			}
-			w.Header().Set("Content-Type", "application/json")
-			enc := json.NewEncoder(w)
-			enc.Encode(userlist)
 		} else {
 			username := strings.Replace(r.URL.Path, "/users/", "", 1)
-			userlist := []User{}
 			argument := User{}
 			argument.Username = username
 			stmt, err := db.PrepareNamed("SELECT * FROM users WHERE username=:username")
@@ -130,9 +133,6 @@ func handler(w http.ResponseWriter, r *http.Request) {
 				retErr(w, http.StatusNotFound)
 				return
 			}
-			w.Header().Set("Content-Type", "application/json")
-			enc := json.NewEncoder(w)
-			enc.Encode(userlist[0])
 		}
 	} else if r.Method == "POST" {
 		var u User
@@ -148,14 +148,13 @@ func handler(w http.ResponseWriter, r *http.Request) {
 		}
 		// TODO encrypt passwd before storing.
 		sqlString := "INSERT INTO users (username, last_name, first_name, password) VALUES (:username, :last_name, :first_name, :password)"
-		result, err := db.NamedExec(sqlString, u)
+		_, err = db.NamedExec(sqlString, u)
 		if err != nil {
 			Logger.Println(err)
 			retErr(w, http.StatusInternalServerError)
 			return
 		}
-		rows, _ := result.RowsAffected()
-		fmt.Fprintf(w, "Done! (%s Rows Affected)", rows)
+		msg = "User successully created"
 	} else if r.Method == "PUT" {
 		var u User
 		body, err := ioutil.ReadAll(r.Body)
@@ -172,26 +171,33 @@ func handler(w http.ResponseWriter, r *http.Request) {
 		// TODO encrypt passwd before storing.
 		sqlString := "UPDATE users SET last_name=:last_name, first_name=:first_name, password=:password WHERE username=:username"
 		Logger.Println(sqlString)
-		result, err := db.NamedExec(sqlString, u)
+		_, err = db.NamedExec(sqlString, u)
 		if err != nil {
 			Logger.Println(err)
 			retErr(w, http.StatusInternalServerError)
 			return
 		}
-		rows, _ := result.RowsAffected()
-		fmt.Fprintf(w, "Done! (%s Rows Affected)", rows)
+		msg = "User successfully updated"
 	} else if r.Method == "DELETE" {
 		argument := User{}
 		argument.Username = strings.Replace(r.URL.Path, "/users/", "", 1)
-		result, err := db.NamedExec("DELETE FROM users WHERE username=:username", argument)
+		_, err := db.NamedExec("DELETE FROM users WHERE username=:username", argument)
 		if err != nil {
 			Logger.Println(err)
 			retErr(w, http.StatusInternalServerError)
 			return
 		}
-		rows, _ := result.RowsAffected()
-		fmt.Fprintf(w, "Done! (%s Rows Affected)", rows)
+		msg = "User successfully deleted"
 	} else {
 		http.Error(w, r.Method+" "+r.URL.Path+" not valid for this microservice", http.StatusNotFound)
 	}
+	resp := &Response{}
+	if len(userlist) == 0 {
+		resp = &Response{Status: "Success", Message: msg}
+	} else {
+		resp = &Response{Status: "Success", UserData: userlist}
+	}
+	w.Header().Set("Content-Type", "application/json")
+	enc := json.NewEncoder(w)
+	enc.Encode(resp)
 }

@@ -10,7 +10,7 @@ import (
 )
 
 const LOGIN string = "/login"
-const USERS string = "/users/"
+const UsERS string = "/users/"
 
 type TokenResponse struct {
 	Token string
@@ -25,7 +25,7 @@ func login(client *http.Client) {
 	req.Header.Set("Content-Type", "application/json")
 	resp, err := client.Do(req)
 	if err != nil {
-		panic(err)
+		log.Fatal(err)
 	}
 	defer resp.Body.Close()
 	body, _ := ioutil.ReadAll(resp.Body)
@@ -38,15 +38,15 @@ func login(client *http.Client) {
 	tokenStr = "Bearer " + tokenResp.Token
 }
 
-func createUSer(client *http.Client) {
+func createUser(client *http.Client) {
 	var jsonStr = []byte(`{"username":"jvdtest123", "password": "secret"}`)
-	req, err := http.NewRequest("POST", urlStart+USERS, bytes.NewBuffer(jsonStr))
+	req, err := http.NewRequest("POST", urlStart+UsERS, bytes.NewBuffer(jsonStr))
 	req.Header.Set("Authorization", tokenStr)
 	req.Header.Set("Content-Type", "application/json")
 
 	resp, err := client.Do(req)
 	if err != nil {
-		panic(err)
+		log.Fatal(err)
 	}
 	defer resp.Body.Close()
 	body, _ := ioutil.ReadAll(resp.Body)
@@ -54,17 +54,17 @@ func createUSer(client *http.Client) {
 		log.Println(err)
 		return
 	}
-	log.Println("Creating user", resp.StatusCode, resp.Status, string(body))
+	log.Print("Creating user ", resp.StatusCode, " ", resp.Status, " ", string(body))
 }
 
-func editUSer(client *http.Client, userName string) {
+func editUser(client *http.Client, userName string) {
 	var jsonStr = []byte(`{"password": "secret1212changed"}`)
-	req, err := http.NewRequest("PUT", urlStart+USERS+userName, bytes.NewBuffer(jsonStr))
+	req, err := http.NewRequest("PUT", urlStart+UsERS+userName, bytes.NewBuffer(jsonStr))
 	req.Header.Set("Authorization", tokenStr)
 	req.Header.Set("Content-Type", "application/json")
 	resp, err := client.Do(req)
 	if err != nil {
-		panic(err)
+		log.Fatal(err)
 	}
 	defer resp.Body.Close()
 	body, _ := ioutil.ReadAll(resp.Body)
@@ -72,16 +72,16 @@ func editUSer(client *http.Client, userName string) {
 		log.Println(err)
 		return
 	}
-	log.Println("Editing user", resp.StatusCode, resp.Status, string(body))
+	log.Print("Editing user ", resp.StatusCode, " ", resp.Status, " ", string(body))
 }
 
-func deleteUSer(client *http.Client, userName string) {
-	req, err := http.NewRequest("DELETE", urlStart+USERS+userName, nil)
+func deleteUser(client *http.Client, userName string) {
+	req, err := http.NewRequest("DELETE", urlStart+UsERS+userName, nil)
 	req.Header.Set("Authorization", tokenStr)
 	req.Header.Set("Content-Type", "application/json")
 	resp, err := client.Do(req)
 	if err != nil {
-		panic(err)
+		log.Fatal(err)
 	}
 	defer resp.Body.Close()
 	body, _ := ioutil.ReadAll(resp.Body)
@@ -89,7 +89,41 @@ func deleteUSer(client *http.Client, userName string) {
 		log.Println(err)
 		return
 	}
-	log.Println("Deleting user", resp.StatusCode, resp.Status, string(body))
+	log.Print("Deleting user ", resp.StatusCode, " ", resp.Status, " ", string(body))
+}
+
+func getUser(client *http.Client, userName string) {
+	req, err := http.NewRequest("GET", urlStart+UsERS+userName, nil)
+	req.Header.Set("Authorization", tokenStr)
+	req.Header.Set("Content-Type", "application/json")
+	resp, err := client.Do(req)
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer resp.Body.Close()
+	body, _ := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		log.Println(err)
+		return
+	}
+	log.Print("Get user ", resp.StatusCode, " ", resp.Status, " ", string(body))
+}
+
+func getUsers(client *http.Client) {
+	req, err := http.NewRequest("GET", urlStart+UsERS, nil)
+	req.Header.Set("Authorization", tokenStr)
+	req.Header.Set("Content-Type", "application/json")
+	resp, err := client.Do(req)
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer resp.Body.Close()
+	body, _ := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		log.Println(err)
+		return
+	}
+	log.Print("Get all users ", resp.StatusCode, " ", resp.Status, " ", string(body))
 }
 
 func main() {
@@ -101,13 +135,17 @@ func main() {
 	login(client)
 	log.Println("Token:" + tokenStr)
 	log.Print("EXPECT 200 OK")
-	createUSer(client)
+	createUser(client)
 	log.Print("EXPECT ERROR:")
-	createUSer(client)
+	createUser(client)
 	log.Print("EXPECT 200 OK")
-	editUSer(client, "jvdtest123")
+	editUser(client, "jvdtest123")
+	log.Print("EXPECT 200 OK (multiple items)")
+	getUsers(client)
+	log.Print("EXPECT 200 OK")
+	getUser(client, "jvdtest123")
 	log.Print("EXPECT 0 ROWS:")
-	editUSer(client, "notthere")
+	editUser(client, "notthere")
 	log.Print("EXPECT 200 OK")
-	deleteUSer(client, "jvdtest123")
+	deleteUser(client, "jvdtest123")
 }
