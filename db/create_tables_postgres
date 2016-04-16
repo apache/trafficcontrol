@@ -3,8 +3,9 @@
 --
 
 -- Dumped from database version 9.4.5
--- Dumped by pg_dump version 9.4.6
--- Started on 2016-04-03 13:50:42 MDT
+-- Dumped by pg_dump version 9.5.0
+
+-- Started on 2016-04-16 11:49:44 MDT
 
 SET statement_timeout = 0;
 SET lock_timeout = 0;
@@ -12,10 +13,11 @@ SET client_encoding = 'UTF8';
 SET standard_conforming_strings = on;
 SET check_function_bodies = false;
 SET client_min_messages = warning;
+SET row_security = off;
 
 DROP DATABASE camera;
 --
--- TOC entry 2871 (class 1262 OID 16396)
+-- TOC entry 2869 (class 1262 OID 16396)
 -- Name: camera; Type: DATABASE; Schema: -; Owner: root
 --
 
@@ -32,9 +34,10 @@ SET client_encoding = 'UTF8';
 SET standard_conforming_strings = on;
 SET check_function_bodies = false;
 SET client_min_messages = warning;
+SET row_security = off;
 
 --
--- TOC entry 7 (class 2615 OID 2200)
+-- TOC entry 6 (class 2615 OID 2200)
 -- Name: public; Type: SCHEMA; Schema: -; Owner: root
 --
 
@@ -44,8 +47,8 @@ CREATE SCHEMA public;
 ALTER SCHEMA public OWNER TO root;
 
 --
--- TOC entry 2872 (class 0 OID 0)
--- Dependencies: 7
+-- TOC entry 2870 (class 0 OID 0)
+-- Dependencies: 6
 -- Name: SCHEMA public; Type: COMMENT; Schema: -; Owner: root
 --
 
@@ -53,7 +56,7 @@ COMMENT ON SCHEMA public IS 'standard public schema';
 
 
 --
--- TOC entry 1 (class 3079 OID 12723)
+-- TOC entry 174 (class 3079 OID 12723)
 -- Name: plpgsql; Type: EXTENSION; Schema: -; Owner: 
 --
 
@@ -61,8 +64,8 @@ CREATE EXTENSION IF NOT EXISTS plpgsql WITH SCHEMA pg_catalog;
 
 
 --
--- TOC entry 2874 (class 0 OID 0)
--- Dependencies: 1
+-- TOC entry 2872 (class 0 OID 0)
+-- Dependencies: 174
 -- Name: EXTENSION plpgsql; Type: COMMENT; Schema: -; Owner: 
 --
 
@@ -76,23 +79,26 @@ SET default_tablespace = '';
 SET default_with_oids = false;
 
 --
--- TOC entry 174 (class 1259 OID 16405)
--- Name: cameras; Type: TABLE; Schema: public; Owner: root; Tablespace: 
+-- TOC entry 173 (class 1259 OID 16405)
+-- Name: cameras; Type: TABLE; Schema: public; Owner: root
 --
 
 CREATE TABLE cameras (
     uuid text NOT NULL,
     type text,
-    connect_string text,
-    owner text NOT NULL
+    url text NOT NULL,
+    owner text NOT NULL,
+    name text NOT NULL,
+    username text,
+    password text
 );
 
 
 ALTER TABLE cameras OWNER TO root;
 
 --
--- TOC entry 173 (class 1259 OID 16397)
--- Name: users; Type: TABLE; Schema: public; Owner: root; Tablespace: 
+-- TOC entry 172 (class 1259 OID 16397)
+-- Name: users; Type: TABLE; Schema: public; Owner: root
 --
 
 CREATE TABLE users (
@@ -106,28 +112,8 @@ CREATE TABLE users (
 ALTER TABLE users OWNER TO root;
 
 --
--- TOC entry 2866 (class 0 OID 16405)
--- Dependencies: 174
--- Data for Name: cameras; Type: TABLE DATA; Schema: public; Owner: root
---
-
-COPY cameras (uuid, type, connect_string, owner) FROM stdin;
-\.
-
-
---
--- TOC entry 2865 (class 0 OID 16397)
--- Dependencies: 173
--- Data for Name: users; Type: TABLE DATA; Schema: public; Owner: root
---
-
-COPY users (username, first_name, last_name, password) FROM stdin;
-\.
-
-
---
 -- TOC entry 2752 (class 2606 OID 16404)
--- Name: username; Type: CONSTRAINT; Schema: public; Owner: root; Tablespace: 
+-- Name: username; Type: CONSTRAINT; Schema: public; Owner: root
 --
 
 ALTER TABLE ONLY users
@@ -136,7 +122,7 @@ ALTER TABLE ONLY users
 
 --
 -- TOC entry 2754 (class 2606 OID 16412)
--- Name: uuid; Type: CONSTRAINT; Schema: public; Owner: root; Tablespace: 
+-- Name: uuid; Type: CONSTRAINT; Schema: public; Owner: root
 --
 
 ALTER TABLE ONLY cameras
@@ -153,8 +139,8 @@ ALTER TABLE ONLY cameras
 
 
 --
--- TOC entry 2873 (class 0 OID 0)
--- Dependencies: 7
+-- TOC entry 2871 (class 0 OID 0)
+-- Dependencies: 6
 -- Name: public; Type: ACL; Schema: -; Owner: root
 --
 
@@ -163,11 +149,32 @@ REVOKE ALL ON SCHEMA public FROM root;
 GRANT ALL ON SCHEMA public TO root;
 GRANT ALL ON SCHEMA public TO PUBLIC;
 
-GRANT ALL ON TABLE users TO camuser;
+
+--
+-- TOC entry 2873 (class 0 OID 0)
+-- Dependencies: 173
+-- Name: cameras; Type: ACL; Schema: public; Owner: root
+--
+
+REVOKE ALL ON TABLE cameras FROM PUBLIC;
+REVOKE ALL ON TABLE cameras FROM root;
+GRANT ALL ON TABLE cameras TO root;
 GRANT ALL ON TABLE cameras TO camuser;
 
 
--- Completed on 2016-04-03 13:50:47 MDT
+--
+-- TOC entry 2874 (class 0 OID 0)
+-- Dependencies: 172
+-- Name: users; Type: ACL; Schema: public; Owner: root
+--
+
+REVOKE ALL ON TABLE users FROM PUBLIC;
+REVOKE ALL ON TABLE users FROM root;
+GRANT ALL ON TABLE users TO root;
+GRANT ALL ON TABLE users TO camuser;
+
+
+-- Completed on 2016-04-16 11:49:49 MDT
 
 --
 -- PostgreSQL database dump complete
