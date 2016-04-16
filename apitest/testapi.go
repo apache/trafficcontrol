@@ -10,7 +10,7 @@ import (
 )
 
 const LOGIN string = "/login"
-const UsERS string = "/users/"
+const USERS string = "/users/"
 
 type TokenResponse struct {
 	Token string
@@ -40,7 +40,7 @@ func login(client *http.Client) {
 
 func createUser(client *http.Client) {
 	var jsonStr = []byte(`{"username":"jvdtest123", "password": "secret"}`)
-	req, err := http.NewRequest("POST", urlStart+UsERS, bytes.NewBuffer(jsonStr))
+	req, err := http.NewRequest("POST", urlStart+USERS, bytes.NewBuffer(jsonStr))
 	req.Header.Set("Authorization", tokenStr)
 	req.Header.Set("Content-Type", "application/json")
 
@@ -59,7 +59,7 @@ func createUser(client *http.Client) {
 
 func editUser(client *http.Client, userName string) {
 	var jsonStr = []byte(`{"password": "secret1212changed"}`)
-	req, err := http.NewRequest("PUT", urlStart+UsERS+userName, bytes.NewBuffer(jsonStr))
+	req, err := http.NewRequest("PUT", urlStart+USERS+userName, bytes.NewBuffer(jsonStr))
 	req.Header.Set("Authorization", tokenStr)
 	req.Header.Set("Content-Type", "application/json")
 	resp, err := client.Do(req)
@@ -76,7 +76,7 @@ func editUser(client *http.Client, userName string) {
 }
 
 func deleteUser(client *http.Client, userName string) {
-	req, err := http.NewRequest("DELETE", urlStart+UsERS+userName, nil)
+	req, err := http.NewRequest("DELETE", urlStart+USERS+userName, nil)
 	req.Header.Set("Authorization", tokenStr)
 	req.Header.Set("Content-Type", "application/json")
 	resp, err := client.Do(req)
@@ -93,7 +93,7 @@ func deleteUser(client *http.Client, userName string) {
 }
 
 func getUser(client *http.Client, userName string) {
-	req, err := http.NewRequest("GET", urlStart+UsERS+userName, nil)
+	req, err := http.NewRequest("GET", urlStart+USERS+userName, nil)
 	req.Header.Set("Authorization", tokenStr)
 	req.Header.Set("Content-Type", "application/json")
 	resp, err := client.Do(req)
@@ -110,7 +110,7 @@ func getUser(client *http.Client, userName string) {
 }
 
 func getUsers(client *http.Client) {
-	req, err := http.NewRequest("GET", urlStart+UsERS, nil)
+	req, err := http.NewRequest("GET", urlStart+USERS, nil)
 	req.Header.Set("Authorization", tokenStr)
 	req.Header.Set("Content-Type", "application/json")
 	resp, err := client.Do(req)
