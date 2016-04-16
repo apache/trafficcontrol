@@ -10,9 +10,6 @@ var url = require("url");
 const fs = require('fs');
 var CameraFeedError = require('./CameraFeedError.js');
 
-// Model URI:
-// https://localhost:8080/v1?<some parameters>
-
 /** Debug flag for development*/
 var debugFlag = true;
 

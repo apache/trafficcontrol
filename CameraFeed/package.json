@@ -6,6 +6,7 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
+  "scripts": {"start": "node CameraFeed.js"},
   "author": "Michael Albers",
   "license": "ISC"
 }

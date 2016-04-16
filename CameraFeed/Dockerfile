@@ -48,7 +48,6 @@ RUN mkdir /usr/src/CameraFeed
 WORKDIR /usr/src/CameraFeed
 # Manual copy, excludes Dockerfile, emacs tmp files
 COPY *js ./
-COPY keys ./
 COPY src src/
 COPY *json ./
 
@@ -57,3 +56,7 @@ RUN npm install
 # Build C++ code
 WORKDIR src
 RUN make
+
+# Start service
+EXPOSE 8080
+CMD ["npm", "start"]
