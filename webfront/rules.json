@@ -1,7 +1,7 @@
 	[
 		{"Host": "local.com", "Path" : "/login", "Forward": "localhost:8080", "secure": false},
 		{"Host": "local.com", "Path" : "/users", "Forward": "localhost:8081", "secure": true},
-		{"Host": "local.com", "Path" : "/cameras", "Forward": "localhost:8081", "secure": true},
+		{"Host": "local.com", "Path" : "/cameras", "Forward": "localhost:8082", "secure": true},
 		{"Host": "local.com", "Path" : "/8003", "Forward": "localhost:8003", "secure": true},
 		{"Host": "local.com", "Path" : "/8004", "Forward": "localhost:8004", "secure": true},
 		{"Host": "local.com", "Path" : "/8005", "Forward": "localhost:8005", "secure": true},

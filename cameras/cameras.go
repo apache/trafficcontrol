@@ -115,6 +115,16 @@ func handler(w http.ResponseWriter, r *http.Request) {
 	Logger.Println(r.Method, r.URL.Scheme, r.Host, r.URL.RequestURI())
 	msg := "None"
 	cameralist := []Camera{}
+	re := regexp.MustCompile("[^/]+")
+	params := re.FindAllString(r.URL.Path, -1)
+	owner := "NotFound"
+	name := "--NotFound--"
+	if len(params) == 3 {
+		owner = params[1]
+		name = params[2]
+	} else if len(params) == 2 {
+		owner = params[1]
+	}
 	if r.Method == "GET" {
 		if r.URL.Path == "/cameras" || r.URL.Path == "/cameras/" {
 			err := db.Select(&cameralist, "SELECT * FROM cameras")
@@ -122,12 +132,12 @@ func handler(w http.ResponseWriter, r *http.Request) {
 				Logger.Println(err)
 			}
 		} else {
-			re := regexp.MustCompile("[0-9]+")
-			params := re.FindAllString(r.URL.Path, -1)
-			argument := Camera{Owner: params[0], Name: params[1]}
-			// argument.name = params[1]
-			// argument.Owner = params[0]
-			stmt, err := db.PrepareNamed("SELECT * FROM cameras WHERE owner=:Owner and name=:Name")
+			sqlStr := "SELECT * FROM cameras WHERE owner=:owner and name=:name"
+			if name == "--NotFound--" {
+				sqlStr = "SELECT * FROM cameras WHERE owner=:owner"
+			}
+			argument := Camera{Owner: owner, Name: name}
+			stmt, err := db.PrepareNamed(sqlStr)
 			err = stmt.Select(&cameralist, argument)
 			if err != nil {
 				Logger.Println(err)
@@ -174,14 +184,14 @@ func handler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		// overwrite the fields in the payload - the path gets checked.
-		re := regexp.MustCompile("[0-9]+")
-		params := re.FindAllString(r.URL.Path, -1)
-		c.Owner = params[0]
-		c.Name = params[1]
+		// re := regexp.MustCompile("[^/]+")
+		// params := re.FindAllString(r.URL.Path, -1)
+		c.Owner = owner
+		c.Name = name
 		// TODO encrypt passwd before storing.
 		sqlString := "UPDATE cameras SET type=:type, url=:url, location=:location, username=:username, password=:password " +
 			"WHERE owner=:owner AND name=:name"
-		Logger.Println(sqlString)
+		Logger.Println(sqlString, c)
 		_, err = db.NamedExec(sqlString, c)
 		if err != nil {
 			Logger.Println(err)
@@ -191,10 +201,10 @@ func handler(w http.ResponseWriter, r *http.Request) {
 		msg = "Camera successfully updated"
 	} else if r.Method == "DELETE" {
 		argument := Camera{}
-		re := regexp.MustCompile("[0-9]+")
-		params := re.FindAllString(r.URL.Path, -1)
-		argument.Owner = params[0]
-		argument.Name = params[1]
+		// re := regexp.MustCompile("[0-9]+")
+		// params := re.FindAllString(r.URL.Path, -1)
+		argument.Owner = owner
+		argument.Name = name
 		_, err := db.NamedExec("DELETE FROM cameras WHERE name=:name and owner=:owner", argument)
 		if err != nil {
 			Logger.Println(err)
