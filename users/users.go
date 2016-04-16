@@ -27,7 +27,7 @@ type User struct {
 	Username  string `db:"username" json:"username"`
 	FirstName string `db:"first_name" json:"firstName"`
 	LastName  string `db:"last_name" json:"lastName"`
-	Password  string `db:"password" json:"Password"`
+	Password  string `db:"password" json:"password"`
 }
 
 type Response struct {
