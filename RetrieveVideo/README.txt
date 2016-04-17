@@ -7,6 +7,9 @@ Description
 This microservice pulls recorded video and serves it to the user as a single
 MP4 file.
 
+Set the 'DEBUG' environment variable to any non-empty value for debugging
+information.
+
 API
 ===
 /video?[args...]

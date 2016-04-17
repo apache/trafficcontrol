@@ -5,120 +5,186 @@
 
 "use strict";
 
-var http = require("http");
-var url = require("url");
-const fs = require('fs');
-var CameraFeedError = require('./CameraFeedError.js');
-
-// Model URI:
-// https://localhost:8080/v1?<some parameters>
-
-/** Debug flag for development*/
-var debugFlag = true;
+var express = require('express');
+var app = express();
+var https = require('https');
+var fs = require('fs');
+var spawn = require('child_process').spawn;
 
 /** HTTP server listen port */
 const PORT = 8080;
 
-/** Name of the server for HTTP header */
-const SERVER = "CameraFeed/0.1"
+/** Map used to determine if a user's camera is recording or not. */
+var recordingMap = new Object();
 
-/*
- * API versions
- */
-var CameraFeed_v1 = require('./CameraFeed_v1.js');
-var apiMap = {
-  'v1' : CameraFeed_v1
+/** Debug flag for development*/
+const debugFlag = process.env.DEBUG;
+
+var debug = function(debugString) {
+  if (debugFlag) {
+    console.log(debugString);
+  }
 };
 
-/*
- * Given the pathname of a URI (i.e., /v1) returns the API version.
- *
- * @param path URI pathname
- * @return API version string
- * @throws CameraFeedError on invalid pathname
- */
-var getVersion = function(path) {
-  var paths = path.split("/");
-  if (paths.length != 2)
-  {
-    var returnJSON = CameraFeedError.buildJSON(
-      CameraFeedError.InvalidPath,
-      'Resource path did not contain correct number of parts. ' +
-	'Must be /<version>');
-    throw new CameraFeedError.CameraFeedError(
-      "Invalid Resource", 400, returnJSON);
-  }
+// Generic entry point for all requests.
+app.use(function(req, res, next) {
+  debug("---New CameraFeed request---");
+  next();
+});
 
-  var apiVersion = paths[1];
-  return apiVersion;
-}
+var actionChecker = function(req, res, next) {
+  debug("  Checking action...");
+  var action = req.query.action;
+  if (action) {
+    if (action.toUpperCase() == "START" ||
+	action.toUpperCase() == "STOP") {
+      next();
+    }
+    else {
+      next({code: 400, message: "Invalid 'action' parameter, " +
+	    "must be either 'start' or 'stop'."});
+    }
+  }
+  else {
+    next({code: 400, message: "Missing required 'action' parameter."});
+  }
+};
 
 /**
- * Request event handler for HttpServer object.
- * See https://nodejs.org/api/http.html#http_event_request
+ * Verifies the existence of camera_id parameter.
  */
-var requestHandler = function(request, response)
-{
-  var parsedURL = url.parse(request.url, true);
+var cameraIdChecker = function(req, res, next) {
+  debug("  Checking camera_id parameter...");
+  if (req.query.camera_id) {
+    next();
+  }
+  else
+  {
+    next({code: 400, message: "Missing required 'camera_id' parameter."});
+  }
+};
 
-  if (debugFlag) {
-    console.log("===Request===");
-    console.log("Date: " + new Date().toJSON());
-    console.log("URL: " + parsedURL.pathname);
-    console.log("Method: " + request.method); // GET, POST, etc.
-    console.log("Headers: " + JSON.stringify(request.headers));
-    console.log("Query: " + JSON.stringify(parsedURL.query));
-    console.log("===END===");
+const user = "user"; // TODO: need real user name
+
+/**
+ * Starts recording the feed from the camera.
+ */
+var startRecord = function(req, res, next) {
+  debug("  Starting recording executable...");
+  if (! recordingMap[user]) {
+    recordingMap[user] = new Object();
   }
 
-  try
-  {
-    var apiVersion = getVersion(parsedURL.pathname);
-
-    if (debugFlag) {
-      console.log("--Client requested API version: " + apiVersion);
-    }
-
-    if (apiMap[apiVersion])
-    {
-      apiMap[apiVersion].setDebug(debugFlag);
-      apiMap[apiVersion].processRequest(parsedURL.query, response);
-    }
-    else
-    {
-      var returnJSON = CameraFeedError.buildJSON(
-	CameraFeedError.InvalidPath,
-	'Invalid API version requested: ' + apiVersion + '. Must be one of: ' +
-	  Object.keys(apiMap));
-      throw new CameraFeedError.CameraFeedError(
-	"Invalid API version", 400, returnJSON);
-    }
+  if (recordingMap[user][req.query.camera_id]) {
+    // TODO: already recording should this be a success or failure?
+    debug("    Already recording!");
   }
-  catch (e)
-  {
-    // This helps in development when some other exception besides CameraFeedError
-    // might be getting thrown.
+  else {
+    // TODO: need actual username/password
+    var args = ["--username=microservice",
+		"--password=abc123"];
+    // The camera recording exe spits out tons of debug
     if (debugFlag) {
-      console.log("------------------");
-      console.log("Debug output for exception thrown during request");
-      console.log("Name: " + e.name);
-      console.log("Stack:");
-      console.log(e.stack);
-      console.log("------------------");
+      var debugArg = "--debug";
+      if (/^\d+$/.test(debugFlag)) {
+      	debugArg += "=" + debugFlag;
+      }
+      args.push(debugArg);
     }
+    // TODO: need real IP/port
+    args.push("192.168.0.9:32768");
 
-    response.writeHead(e.getHttpCode(), {
-      'Content-Type': 'application/JSON',
-      'Server': SERVER
+    var options = {
+    };
+
+    debug("    " + args);
+
+    var child = spawn("src/AmcrestIPM-721S_StreamReader", args, options);
+    recordingMap[user][req.query.camera_id] = child;
+
+    child.on('error', function(err) {
+      console.log("Error with process: " + err);
     });
-    response.write(JSON.stringify(e.getJSON()));
+
+    child.on('exit', function(code, signal) {
+      // In real application this would send an email to the user to
+      // notify them something went wrong or restart the application.
+      // Not here since this is just a toy.
+      debug("   Process exited with code " + code + ", by signal " + signal);
+      recordingMap[user][req.query.camera_id] = null;
+    });
+
+    child.stdout.on('data', function(data) {
+      debug("" + data);
+    });
+
+    child.stderr.on('data', function(data) {
+      debug("" + data);
+    });
   }
-  response.end();
-}
 
-if (debugFlag) {
-  console.log(new Date().toJSON());
-  console.log("Starting CameraFeed microservice...");
-}
+  res.status(200).send("Recording started.");
+};
 
-http.createServer(requestHandler).listen(PORT);
+/**
+ * Stops recording the feed from the camera.
+ */
+var stopRecord = function(req, res, next) {
+  debug("  Stoping recording executable...");
+  if (! recordingMap[user]) {
+    recordingMap[user] = new Object();
+  }
+
+  if (recordingMap[user][req.query.camera_id]) {
+    recordingMap[user][req.query.camera_id].kill('SIGTERM');
+    recordingMap[user][req.query.camera_id] = null;
+  }
+  else {
+    // TODO: not recording: success or failure?
+    debug("    Already not recording!");
+  }
+  res.status(200).send("Recording stopped.");
+};
+
+const v1 = "/v1";
+
+// Start record
+app.post(v1,
+	 actionChecker,
+	 cameraIdChecker,
+	 startRecord);
+
+// Stop record
+app.delete(v1,
+	   actionChecker,
+	   cameraIdChecker,
+	   stopRecord);
+
+/**
+ * Error handler (has to be last).
+ */
+var errorHandler = function(err, req, res, next) {
+  var code = 500;
+  var message = "Unhandled error.";
+  if (typeof err == "object") {
+    if (err["code"]) {
+      code = err["code"];
+    }
+    if (err["message"]) {
+      message = err["message"];
+    }
+  }
+  else {
+    message = err;
+  }
+  res.status(code).send(message);
+};
+
+app.use(errorHandler);
+
+const options = {
+  key: fs.readFileSync('certs/key.pem'),
+  cert: fs.readFileSync('certs/cert.pem')
+};
+
+https.createServer(options, app).listen(PORT);
