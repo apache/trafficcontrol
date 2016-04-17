@@ -10,7 +10,6 @@ import (
 	"net/http"
 	"os"
 	"path"
-	"strings"
 )
 
 // Config holds the configuration of the server.
@@ -111,30 +110,7 @@ func handler(w http.ResponseWriter, r *http.Request) {
 
 	Logger.Println(r.Method, r.URL.Scheme, r.Host, r.URL.RequestURI())
 	msg := "None"
-	userlist := []User{}
-	if r.Method == "GET" {
-		if r.URL.Path == "/users" || r.URL.Path == "/users/" {
-			err := db.Select(&userlist, "SELECT * FROM users")
-			if err != nil {
-				Logger.Println(err)
-			}
-		} else {
-			username := strings.Replace(r.URL.Path, "/users/", "", 1)
-			argument := User{}
-			argument.Username = username
-			stmt, err := db.PrepareNamed("SELECT * FROM users WHERE username=:username")
-			err = stmt.Select(&userlist, argument)
-			if err != nil {
-				Logger.Println(err)
-				retErr(w, http.StatusInternalServerError)
-				return
-			}
-			if len(userlist) == 0 {
-				retErr(w, http.StatusNotFound)
-				return
-			}
-		}
-	} else if r.Method == "PUT" {
+	if r.Method == "POST" {
 		var u User
 		body, err := ioutil.ReadAll(r.Body)
 		if err != nil {
@@ -146,36 +122,20 @@ func handler(w http.ResponseWriter, r *http.Request) {
 			retErr(w, http.StatusInternalServerError)
 			return
 		}
-		u.Username = strings.Replace(r.URL.Path, "/users/", "", 1) // overwrite the username in the json, the path gets checked.
 		// TODO encrypt passwd before storing.
-		sqlString := "UPDATE users SET last_name=:last_name, first_name=:first_name, password=:password WHERE username=:username"
-		Logger.Println(sqlString)
+		sqlString := "INSERT INTO users (username, last_name, first_name, password) VALUES (:username, :last_name, :first_name, :password)"
 		_, err = db.NamedExec(sqlString, u)
 		if err != nil {
 			Logger.Println(err)
 			retErr(w, http.StatusInternalServerError)
 			return
 		}
-		msg = "User successfully updated"
-	} else if r.Method == "DELETE" {
-		argument := User{}
-		argument.Username = strings.Replace(r.URL.Path, "/users/", "", 1)
-		_, err := db.NamedExec("DELETE FROM users WHERE username=:username", argument)
-		if err != nil {
-			Logger.Println(err)
-			retErr(w, http.StatusInternalServerError)
-			return
-		}
-		msg = "User successfully deleted"
+		msg = "User successully created"
 	} else {
 		http.Error(w, r.Method+" "+r.URL.Path+" not valid for this microservice", http.StatusNotFound)
 	}
 	resp := &Response{}
-	if len(userlist) == 0 {
-		resp = &Response{Status: "Success", Message: msg}
-	} else {
-		resp = &Response{Status: "Success", UserData: userlist}
-	}
+	resp = &Response{Status: "Success", Message: msg}
 	w.Header().Set("Content-Type", "application/json")
 	enc := json.NewEncoder(w)
 	enc.Encode(resp)

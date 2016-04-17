@@ -11,6 +11,7 @@ import (
 
 const LOGIN string = "/login"
 const USERS string = "/users/"
+const REGISTER string = "/register/"
 const CAMERAS string = "/cameras"
 
 type TokenResponse struct {
@@ -21,7 +22,7 @@ var tokenStr string
 var urlStart string
 
 func login(client *http.Client) {
-	var jsonStr = []byte(`{"username":"jvd", "password": "secret"}`)
+	var jsonStr = []byte(`{"username":"jvdtest123", "password": "secret"}`)
 	req, err := http.NewRequest("POST", urlStart+LOGIN, bytes.NewBuffer(jsonStr))
 	req.Header.Set("Content-Type", "application/json")
 	resp, err := client.Do(req)
@@ -41,7 +42,7 @@ func login(client *http.Client) {
 
 func createUser(client *http.Client) {
 	var jsonStr = []byte(`{"username":"jvdtest123", "password": "secret"}`)
-	req, err := http.NewRequest("POST", urlStart+USERS, bytes.NewBuffer(jsonStr))
+	req, err := http.NewRequest("POST", urlStart+REGISTER, bytes.NewBuffer(jsonStr))
 	req.Header.Set("Authorization", tokenStr)
 	req.Header.Set("Content-Type", "application/json")
 
@@ -220,13 +221,14 @@ func main() {
 		TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
 	}
 	client := &http.Client{Transport: tr}
-	// urlStart = "https://localhost:9000"
-	urlStart = "https://ec2-52-37-126-44.us-west-2.compute.amazonaws.com:9000"
+	urlStart = "https://localhost:9000"
+	// urlStart = "https://ec2-52-37-126-44.us-west-2.compute.amazonaws.com:9000"
 	log.Println("API Server: " + urlStart)
-	login(client)
-	log.Println("Token:" + tokenStr)
 	log.Print("EXPECT 200 OK")
 	createUser(client)
+
+	login(client)
+	log.Println("Token:" + tokenStr)
 	log.Print("EXPECT ERROR:")
 	createUser(client)
 	log.Print("EXPECT 200 OK")
