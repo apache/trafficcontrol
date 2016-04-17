@@ -1,6 +1,7 @@
 *~
 *.o
 node_modules
+npm-debug.log
 
 # Executable from src directory
 AmcrestIPM-721S_StreamReader

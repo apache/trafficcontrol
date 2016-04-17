@@ -1,8 +1,15 @@
+/*
+ * @author Michael Albers
+ * For CSCI 5799
+ */
+
 'use strict';
 
 var express = require('express');
 var app = express();
 var http = require('http');
+var https = require('https');
+var fs = require('fs');
 
 const PORT = 8080;
 
@@ -34,7 +41,8 @@ var actionChecker = function(req, res, next) {
       next();
     }
     else {
-      next({code: 400, message: "Invalid 'action' parameter, must be either 'start' or 'stop'."});
+      next({code: 400, message: "Invalid 'action' parameter, must be " +
+	    "either 'start' or 'stop'."});
     }
   }
   else {
@@ -53,8 +61,10 @@ var directionChecker = function(req, res, next) {
 	direction.toUpperCase() == "DOWN" ||
 	direction.toUpperCase() == "LEFT" ||
 	direction.toUpperCase() == "RIGHT") {
-      // Camera only accepts direction with upper-cased first letter (like proper noun)
-      req.query.direction = direction.charAt(0).toUpperCase() + direction.slice(1);
+      // Camera only accepts direction with upper-cased first letter (like
+      // proper noun)
+      req.query.direction = direction.charAt(0).toUpperCase() +
+	direction.slice(1);
       next();
     }
     else {
@@ -191,6 +201,9 @@ var errorHandler = function(err, req, res, next) {
 
 app.use(errorHandler);
 
-app.listen(PORT, function () {
-  debug('CameraControl listening on port ' + PORT + '!');
-});
+const options = {
+  key: fs.readFileSync('certs/key.pem'),
+  cert: fs.readFileSync('certs/cert.pem')
+};
+
+https.createServer(options, app).listen(PORT);

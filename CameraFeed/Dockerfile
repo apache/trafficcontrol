@@ -49,6 +49,7 @@ WORKDIR /usr/src/CameraFeed
 # Manual copy, excludes Dockerfile, emacs tmp files
 COPY *js ./
 COPY src src/
+COPY certs ./certs
 COPY *json ./
 
 RUN npm install
@@ -58,5 +59,7 @@ WORKDIR src
 RUN make
 
 # Start service
+WORKDIR ..
+ENV LD_LIBRARY_PATH=/usr/lib:/usr/local/lib
 EXPOSE 8080
 CMD ["npm", "start"]

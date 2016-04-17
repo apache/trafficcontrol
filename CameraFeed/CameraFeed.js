@@ -7,6 +7,8 @@
 
 var express = require('express');
 var app = express();
+var https = require('https');
+var fs = require('fs');
 var spawn = require('child_process').spawn;
 
 /** HTTP server listen port */
@@ -95,7 +97,7 @@ var startRecord = function(req, res, next) {
     var options = {
     };
 
-    console.log("    " + args);
+    debug("    " + args);
 
     var child = spawn("src/AmcrestIPM-721S_StreamReader", args, options);
     recordingMap[user][req.query.camera_id] = child;
@@ -180,6 +182,9 @@ var errorHandler = function(err, req, res, next) {
 
 app.use(errorHandler);
 
-app.listen(PORT, function () {
-  debug('CameraFeed listening on port ' + PORT + '!');
-});
+const options = {
+  key: fs.readFileSync('certs/key.pem'),
+  cert: fs.readFileSync('certs/cert.pem')
+};
+
+https.createServer(options, app).listen(PORT);

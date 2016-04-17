@@ -1,0 +1,14 @@
+{
+  "name": "live_stream",
+  "version": "1.0.0",
+  "description": "Returns a URL for live stream from the camera",
+  "main": "LiveStream.js",
+  "scripts": {
+    "start": "node LiveStream.js"
+  },
+  "author": "Michael Albers",
+  "license": "ISC",
+  "dependencies": {
+    "express": "^4.13.4"
+  }
+}

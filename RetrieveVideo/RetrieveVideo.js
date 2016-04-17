@@ -1,7 +1,12 @@
+/*
+ * @author Michael Albers
+ * For CSCI 5799
+ */
 'use strict';
 
 var express = require('express');
 var app = express();
+var https = require('https');
 var mongoClient = require('mongodb').MongoClient;
 var sprintf = require('sprintf-js');
 var avconv = require('avconv');
@@ -171,6 +176,23 @@ var mpeg4Builder = function(req, res, next) {
 };
 
 /**
+ * Cleans up the temporary files/directory used to create the video.
+ */
+var cleanup = function(req) {
+  if (req.filelist) {
+    for (var ii = 0; ii < req.fileList.length; ++ii) {
+      fs.unlinkSync(req.fileList[ii]);
+    }
+  }
+  if (req.tmpFile) {
+    fs.unlinkSync(req.tmpFile);
+  }
+  if (req.tmpDir) {
+    fs.rmdirSync(req.tmpDir);
+  }
+};
+
+/**
  * Ships the MP4 to the caller and on completion removes temporary files.
  */
 var downloadVideo = function (req, res) {
@@ -182,11 +204,7 @@ var downloadVideo = function (req, res) {
     else {
       debug("  Video downloaded...");
     }
-    for (var ii = 0; ii < req.fileList.length; ++ii) {
-      fs.unlinkSync(req.fileList[ii]);
-    }
-    fs.unlinkSync(req.tmpFile);
-    fs.rmdirSync(req.tmpDir);
+    cleanup(req);
   });
 };
 
@@ -215,10 +233,14 @@ var errorHandler = function(err, req, res, next) {
     message = err;
   }
   res.status(code).send(message);
+  cleanup(req);
 };
 
 app.use(errorHandler);
 
-app.listen(PORT, function () {
-  debug('RetrieveVideo listening on port ' + PORT + '!');
-});
+const options = {
+  key: fs.readFileSync('certs/key.pem'),
+  cert: fs.readFileSync('certs/cert.pem')
+};
+
+https.createServer(options, app).listen(PORT);
