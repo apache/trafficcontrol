@@ -1,0 +1,34 @@
+# CameraControl Microservice
+
+## Description
+
+This microservice sends PTZ (pan/tilt/zoom) commands to the camera. Camera movements are started or stopped. They are not performed in discrete motions. Sending a start command will cause the camera to move in that direction until a stop command is sent.
+
+Set the 'DEBUG' environment variable to any non-empty value for debugging
+information.
+
+## Connection
+HTTPS on port 8080.
+
+## API
+    /ptz/v1?[args...]
+
+## API Versions
+### Version 1
+    POST /ptz/v1?action=[start,stop]&direction=[Up,Down,Left,Right]&velocity[1-8]&camera_id=[camera id]
+
+#### Parameters
+* **action**     starts or stops the camera moving
+* **direction**  direction in which the camera is to move
+* **velocity**   how quickly the camera should move
+* **camera_id**  which camera to move
+
+On stop commands, direction and velocity are required, and must be valid values, but are ultimately ignored. They do not have to correspond to the values from the start command.
+
+#### Response
+On success, HTTP response with or without any information in the body. On error, HTTP response with error message in the body.
+
+#### Example
+
+    POST /ptz/v1?action=start&direction=Up&velocity=5&camera_id=12345
+	POST /ptz/v1?action=stop&direction=Up&velocity=5&camera_id=12345
