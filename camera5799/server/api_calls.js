@@ -31,10 +31,33 @@ Meteor.methods({
                     myFuture.return(result);
                     console.log("bif pipma ==> ", result.content);
                 } else {
-                    console.log("error ===> ", error.toString());
-                    myFuture.throw(error);
+                    console.log("error2 ===> ", error.toString());
+                    myFuture.return(error.response);
+                    //myFuture.throw(error);
             }
         });
+        return myFuture.wait();
+    },
+
+    'registerUser': function (username, firstName, lastName, password) {
+        // Construct the API URL
+        var myFuture = new Future();
+        check(username, String);
+        check(password, String);
+        check(firstName, String);
+        check(lastName, String);
+        var apiUrl = 'https://ec2-52-37-126-44.us-west-2.compute.amazonaws.com:9000/users';
+
+        HTTP.call("POST", apiUrl,
+            {data: {"username": username, "password": password, "lastName": lastName, "firstName": firstName}},
+            function (error, result) {
+                if (!error) {
+                    myFuture.return(result);
+                } else {
+                    myFuture.return(error.response);
+                    //myFuture.throw(error);
+                }
+            });
         return myFuture.wait();
     },
 

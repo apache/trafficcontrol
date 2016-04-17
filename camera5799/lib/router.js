@@ -8,18 +8,25 @@ Router.route('/', {
   name: 'homePage'
 });
 
-Router.route('/addCamera', {
+Router.route('/addCamera/', {
   name: 'addCamera'
 });
 
-Router.route('/browseVideos', {
+Router.route('/browseVideos/', {
   name: 'browseVideos'
 });
 
-Router.route('/browseCameras', {
+Router.route('/browseCameras/', {
   name: 'browseCameras'
 });
 
-Router.route('/cameraDetail', {
-  name: 'cameraDetail'
+Router.route('/cameraDetail/:cameraName/:cameraId', {
+  name: 'cameraDetail',
+  data: function() {
+    console.log("please..." + this.params.cameraName);
+    return {
+      cameraId: this.params.cameraId,
+      cameraName: this.params.cameraName
+    };
+  }
 });

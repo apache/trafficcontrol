@@ -1,8 +1,14 @@
 Template.browseCameras.helpers({
      availableCameras: function() {
          //AvailableCameras.insert({cameraName: "livingroom", date: "jan 1st 2016"});
-         return AvailableCameras.find();
-    }
+         //return AvailableCameras.find();
+         var a = [ {cameraName: "living room", cameraId: 123},
+                   {cameraName: "family room", cameraId: 456},
+                   {cameraName: "back yard", cameraId: 789},
+                   {cameraName: "front yard", cameraId: 974}
+         ];
+         return a;
+     }
 });
 
 Template.browseCameras.onCreated(function() {
