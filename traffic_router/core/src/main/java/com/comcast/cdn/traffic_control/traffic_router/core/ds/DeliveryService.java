@@ -225,7 +225,7 @@ public class DeliveryService {
 		if (port != STANDARD_HTTP_PORT) {
 			uri.append(":").append(port);
 		}
-		uri.append(request.getPath());
+		uri.append(request.getUri());
 		boolean queryAppended = false;
 		if (request.getQueryString() != null && appendQueryString()) {
 			uri.append("?").append(request.getQueryString());
