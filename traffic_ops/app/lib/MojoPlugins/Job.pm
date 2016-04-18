@@ -21,54 +21,61 @@ use Carp qw(cluck confess);
 use Data::Dumper;
 use POSIX qw(strftime);
 use UI::Utils;
+use File::Path qw(make_path);
 
-use constant PENDING   => 1;
-use constant PROGRESS  => 2;
-use constant COMPLETED => 3;
-use constant CANCELLED => 4;
+use constant PENDING      => 1;
+use constant PROGRESS     => 2;
+use constant COMPLETED    => 3;
+use constant CANCELLED    => 4;
+use constant REGEX_CONFIG => 'regex_revalidate.config';
 
 sub register {
 	my ( $self, $app, $conf ) = @_;
 
 	$app->renderer->add_helper(
 		snapshot_regex_revalidate => sub {
-			my $self = shift;
-
-			my $rs =
+			my $self     = shift;
+			my $cdn_name = shift;
+			my $row =
 				$self->db->resultset('Server')
-				->search( undef,
-				{ prefetch => [ { 'cdn' => undef }, { 'cachegroup' => undef }, { 'type' => undef }, { 'profile' => undef }, { 'status' => undef } ], } );
+				->search( { 'status.name' => 'REPORTED', 'cdn.name' => $cdn_name }, { prefetch => [qw{ cdn status }], rows => 1 } )->first;
+			if ( !defined $row ) {
 
-			my $m_scheme         = $self->req->url->base->scheme;
-			my $m_host           = $self->req->url->base->host;
-			my $m_port           = $self->req->url->base->port;
-			my $re_reval_cfg_url = $m_scheme . "://" . $m_host . ":" . $m_port . "/genfiles/view/__SVR__/regex_revalidate.config";
-			my %cdn_domain;
-
-			while ( my $row = $rs->next ) {
-				next unless $row->status->name eq 'REPORTED';
-
-				my $cdn_name = $row->cdn->name;
-				if ( defined( $cdn_domain{$cdn_name} ) ) {
-					next;
-				}
-				$cdn_domain{$cdn_name} = 1;
-				my $text = UI::ConfigFiles::regex_revalidate_dot_config( $self, $row->id, "regex_revalidate.config" );
-
-				my $snapshot_rs =
-					$self->db->resultset('Parameter')->search( { name => "snapshot_dir" }, { config_file => "regex_revalidate.config" } )->single();
-				my $dir = $snapshot_rs->value . $cdn_name;
-				if ( !-d $dir ) {
-					`mkdir -p $dir`;
-				}
-				my $config_file = $dir . "/regex_revalidate.config";
-				open my $fh, '>', $config_file;
-				if ( $! && $! !~ m/Inappropriate ioctl for device/ ) {
-					my $e = Mojo::Exception->throw("$! when opening $config_file");
-				}
-				print $fh $text;
-				close($fh);
+				# no REPORTED servers in this CDN
+				return;
 			}
+
+			my $m_scheme = $self->req->url->base->scheme;
+			my $m_host   = $self->req->url->base->host;
+			my $m_port   = $self->req->url->base->port;
+			my %cdn_domain;
+			my $snapshot_rs = $self->db->resultset('Parameter')->search( { name => 'snapshot_dir', config_file => REGEX_CONFIG } )->first();
+
+			if ( !defined $snapshot_rs ) {
+				Mojo::Exception->throw( "snapshot_dir parameter for config_file " . REGEX_CONFIG . " not found" );
+				return;
+			}
+			my $snapshot_dir = $snapshot_rs->value;
+
+			my $text = UI::ConfigFiles::regex_revalidate_dot_config( $self, $row->id, REGEX_CONFIG );
+			my $dir = $snapshot_dir . $cdn_name;
+			if ( !-d $dir ) {
+				my $err;
+				make_path( $dir, { error => \$err } );
+				if ( defined $err && scalar @$err ) {
+					for my $diag (@$err) {
+						my ( $file, $msg ) = %$diag;
+						Mojo::Exception->throw("$msg when creating $dir");
+					}
+				}
+			}
+			my $config_file = $dir . "/" . REGEX_CONFIG;
+			open my $fh, '>', $config_file;
+			if ( $! && $! !~ m/Inappropriate ioctl for device/ ) {
+				my $e = Mojo::Exception->throw("$! when opening $config_file");
+			}
+			print $fh $text;
+			close($fh);
 		}
 	);
 
@@ -199,7 +206,6 @@ sub register {
 			}
 			my $start_time_gmt = strftime( "%Y-%m-%d %H:%M:%S", gmtime($start_time) );
 			my $entered_time   = strftime( "%Y-%m-%d %H:%M:%S", gmtime() );
-
 			my $org_server_fqdn = $self->db->resultset("Deliveryservice")->search( { id => $ds_id } )->get_column('org_server_fqdn')->single();
 
 			my $tm_user_id = $self->db->resultset('TmUser')->search( { username => $self->current_user()->{username} } )->get_column('id')->single();
@@ -224,8 +230,11 @@ sub register {
 
 			my $new_record = $insert->insert();
 
-			&log( $self, "Created new Purge Job " . $ds_id . " forced new regex_revalidate.config snapshot", "APICHANGE" );
-			$self->snapshot_regex_revalidate();
+			&log( $self, "Created new Purge Job " . $ds_id . " forced new " . REGEX_CONFIG . " snapshot", "APICHANGE" );
+
+			my $rs = $self->db->resultset('Deliveryservice')->search( { 'me.id' => $ds_id }, { prefetch => 'cdn' } )->single;
+			my $cdn_name = $rs->cdn->name;
+			$self->snapshot_regex_revalidate($cdn_name);
 			$self->set_update_server_bits($ds_id);
 			return $new_record->id;
 		}
