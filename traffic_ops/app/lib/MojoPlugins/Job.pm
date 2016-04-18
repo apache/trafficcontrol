@@ -36,8 +36,9 @@ sub register {
 		snapshot_regex_revalidate => sub {
 			my $self     = shift;
 			my $cdn_name = shift;
-			my $row = $self->db->resultset('Server')
-				->search( { 'status.name' => 'REPORTED', 'cdn.name' => $cdn_name }, { prefetch => [qw{ cdn status }], rows => 1 } )->single;
+			my $row =
+				$self->db->resultset('Server')
+				->search( { 'status.name' => 'REPORTED', 'cdn.name' => $cdn_name }, { prefetch => [qw{ cdn status }], rows => 1 } )->first;
 			if ( !defined $row ) {
 
 				# no REPORTED servers in this CDN
@@ -48,8 +49,8 @@ sub register {
 			my $m_host   = $self->req->url->base->host;
 			my $m_port   = $self->req->url->base->port;
 			my %cdn_domain;
-			my $snapshot_rs =
-				$self->db->resultset('Parameter')->search( { name => "snapshot_dir" }, { config_file => REGEX_CONFIG } )->single();
+			my $snapshot_rs = $self->db->resultset('Parameter')->search( { name => 'snapshot_dir', config_file => REGEX_CONFIG } )->first();
+
 			if ( !defined $snapshot_rs ) {
 				Mojo::Exception->throw( "snapshot_dir parameter for config_file " . REGEX_CONFIG . " not found" );
 				return;
@@ -205,7 +206,6 @@ sub register {
 			}
 			my $start_time_gmt = strftime( "%Y-%m-%d %H:%M:%S", gmtime($start_time) );
 			my $entered_time   = strftime( "%Y-%m-%d %H:%M:%S", gmtime() );
-
 			my $org_server_fqdn = $self->db->resultset("Deliveryservice")->search( { id => $ds_id } )->get_column('org_server_fqdn')->single();
 
 			my $tm_user_id = $self->db->resultset('TmUser')->search( { username => $self->current_user()->{username} } )->get_column('id')->single();
