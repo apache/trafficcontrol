@@ -46,7 +46,7 @@ Meteor.methods({
         check(password, String);
         check(firstName, String);
         check(lastName, String);
-        var apiUrl = 'https://ec2-52-37-126-44.us-west-2.compute.amazonaws.com:9000/users';
+        var apiUrl = 'https://ec2-52-37-126-44.us-west-2.compute.amazonaws.com:9000/register';
 
         HTTP.call("POST", apiUrl,
             {data: {"username": username, "password": password, "lastName": lastName, "firstName": firstName}},
@@ -98,7 +98,39 @@ Meteor.methods({
 
     },
 
-    'registerCamera': function (token) {
+    'registerCamera': function (token, username, registerObj) {
 
+        console.log("registercamera token: " + token);
+        console.log("registercamera username: " + username);
+        console.log("registercamera registerObj: " + JSON.stringify(registerObj));
+        // check that the object we received is correct
+        check( registerObj, {
+            name: String,
+            location: String,
+            URL: String,
+            username: String,
+            password: String
+        });
+        check(username, String);
+        check(token, String);
+
+        // Construct the API URL
+        var myFuture = new Future();
+
+        var apiUrl = 'https://ec2-52-37-126-44.us-west-2.compute.amazonaws.com:9000/cameras/' + username;
+
+        HTTP.call("POST", apiUrl,
+            { data: registerObj,
+              headers: { 'Authorization': token }
+            },
+            function (error, result) {
+                if (!error) {
+                    myFuture.return(result);
+                } else {
+                    myFuture.return(error.response);
+                    //myFuture.throw(error);
+                }
+            });
+        return myFuture.wait();
     }
 });

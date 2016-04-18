@@ -6,16 +6,29 @@
             <h3 class="panel-title" style="color:white;"><i class="fa fa-tasks"></i>Register Wifi Camera</h3>
         </div>
         <div class="panel-body">
-            <form class="margin-bottom-40" role="form">
+            <form id="form-register-camera" class="margin-bottom-40" role="form">
                 <div class="form-group">
-                    <label for="cameraname">Camera name</label>
-                    <input type="text" class="form-control" id="cameraname" placeholder="Enter camera name">
+                    <label for="cameraname">Name</label>
+                    <input type="text" class="form-control" id="register-cameraname" placeholder="Enter camera name">
+                </div>
+                <div class="form-group">
+                    <label for="cameraurl">Location</label>
+                    <input type="text" class="form-control" id="register-cameralocation" placeholder="Enter camera location">
                 </div>
                 <div class="form-group">
                     <label for="cameraurl">URL</label>
-                    <input type="text" class="form-control" id="cameralurl" placeholder="Enter camera address">
+                    <input type="text" class="form-control" id="register-cameraurl" placeholder="Enter camera url">
                 </div>
-                <button type="submit" class="btn btn-lg btn-primary">Submit</button>
+                <div class="form-group">
+                    <label for="cameraurl">Camera username</label>
+                    <input type="text" class="form-control" id="register-camerausername" placeholder="Enter camera username">
+                </div>
+                <div class="form-group">
+                    <label for="cameraurl">Camera password</label>
+                    <input type="text" class="form-control" id="register-camerapassword" placeholder="Enter camera password">
+                </div>
+                <a class="btn btn-success" href="#" id="btn-register-camera">Submit</a>
+                <!--<button type="submit" class="btn btn-lg btn-primary">Submit</button>-->
             </form>
         </div>
     </div>

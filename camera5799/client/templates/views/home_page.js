@@ -1,4 +1,4 @@
-var homeCallbackFuncs = {
+var homePageCalls = {
 
     login: function (username, password) {
         Meteor.call('loginCall', username, password, function(err, res) {
@@ -69,7 +69,7 @@ Template.homePage.events({
 
        var username = tpl.find('input#login-username').value;
        var password = tpl.find('input#login-password').value;
-       homeCallbackFuncs.login(username, password);
+       homePageCalls.login(username, password);
     },
 
     'click #btn-signup': function (evt, tpl) {
@@ -80,7 +80,7 @@ Template.homePage.events({
         var password = tpl.find('input#register-password').value;
 
         if (username && firstName && lastName && password) {
-            homeCallbackFuncs.register(username, firstName, lastName, password);
+            homePageCalls.register(username, firstName, lastName, password);
         }
         else {
             alert("Please fill all fields");
