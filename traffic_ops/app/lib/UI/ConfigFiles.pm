@@ -1230,9 +1230,9 @@ sub regex_revalidate_dot_config {
 	my %regex_time;
 	##DN- even though we made these params, the front-end is still hard-coded to validate ttl between 48 - 672...
 	my $max_hours =
-		$self->db->resultset('Parameter')->search( { name => "ttl_max_hours" }, { config_file => "regex_revalidate.config" } )->get_column('value')->single;
+		$self->db->resultset('Parameter')->search( { name => "ttl_max_hours" }, { config_file => "regex_revalidate.config" } )->get_column('value')->first;
 	my $min_hours =
-		$self->db->resultset('Parameter')->search( { name => "ttl_min_hours" }, { config_file => "regex_revalidate.config" } )->get_column('value')->single;
+		$self->db->resultset('Parameter')->search( { name => "ttl_min_hours" }, { config_file => "regex_revalidate.config" } )->get_column('value')->first;
 
 	my $rs = $self->db->resultset('Job')->search( { start_time => \$interval }, { prefetch => 'job_deliveryservice' } );
 	while ( my $row = $rs->next ) {
