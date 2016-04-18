@@ -32,24 +32,6 @@ app.use(function(req, res, next) {
   next();
 });
 
-var actionChecker = function(req, res, next) {
-  debug("  Checking action...");
-  var action = req.query.action;
-  if (action) {
-    if (action.toUpperCase() == "START" ||
-	action.toUpperCase() == "STOP") {
-      next();
-    }
-    else {
-      next({code: 400, message: "Invalid 'action' parameter, " +
-	    "must be either 'start' or 'stop'."});
-    }
-  }
-  else {
-    next({code: 400, message: "Missing required 'action' parameter."});
-  }
-};
-
 /**
  * Verifies the existence of camera_id parameter.
  */
@@ -76,7 +58,6 @@ var startRecord = function(req, res, next) {
   }
 
   if (recordingMap[user][req.query.camera_id]) {
-    // TODO: already recording should this be a success or failure?
     debug("    Already recording!");
   }
   else {
@@ -140,23 +121,20 @@ var stopRecord = function(req, res, next) {
     recordingMap[user][req.query.camera_id] = null;
   }
   else {
-    // TODO: not recording: success or failure?
     debug("    Already not recording!");
   }
   res.status(200).send("Recording stopped.");
 };
 
-const v1 = "/v1";
+const v1 = "/CameraFeed/v1";
 
 // Start record
 app.post(v1,
-	 actionChecker,
 	 cameraIdChecker,
 	 startRecord);
 
 // Stop record
 app.delete(v1,
-	   actionChecker,
 	   cameraIdChecker,
 	   stopRecord);
 
