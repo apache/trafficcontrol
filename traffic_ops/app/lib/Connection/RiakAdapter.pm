@@ -26,6 +26,7 @@ use Mojo::UserAgent;
 use JSON;
 use IO::Socket::SSL qw();
 use File::Slurp;
+use TrafficOps;
 
 # This Perl Module was needed to better support SSL for the 'Vault'
 use LWP::UserAgent qw();
@@ -53,6 +54,7 @@ sub new {
 	$ua = LWP::UserAgent->new();
 	$ua->timeout(20);
 	$ua->ssl_opts( verify_hostname => 0, SSL_verify_mode => 0x00 );
+	$ua->conn_cache($TrafficOps::conn_cache);
 
 	return $self;
 }
