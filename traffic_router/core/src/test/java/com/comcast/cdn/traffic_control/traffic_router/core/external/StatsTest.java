@@ -80,7 +80,7 @@ public class StatsTest {
 
 	@Test
 	public void itGetsLocationsByIp() throws Exception {
-		HttpGet httpGet = new HttpGet("http://localhost:3333/crs/stats/ip/113.203.235.227");
+		HttpGet httpGet = new HttpGet("http://localhost:3333/crs/stats/ip/8.8.8.8");
 
 		CloseableHttpResponse response = null;
 		
@@ -90,7 +90,7 @@ public class StatsTest {
 
 			Map<String, Object> data = new ObjectMapper().readValue(actual, new TypeReference<HashMap<String, Object>>() { });
 
-			assertThat((String) data.get("requestIp"), equalTo("113.203.235.227"));
+			assertThat((String) data.get("requestIp"), equalTo("8.8.8.8"));
 			assertThat((String) data.get("locationByFederation"), equalTo("not found"));
 			assertThat((String) data.get("locationByCoverageZone"), equalTo("not found"));
 

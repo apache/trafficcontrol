@@ -1,6 +1,9 @@
 package com.comcast.cdn.traffic_control.traffic_router.core.external;
 
 import com.comcast.cdn.traffic_control.traffic_router.core.util.ExternalTest;
+import com.fasterxml.jackson.core.JsonFactory;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.catalina.LifecycleException;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpGet;
@@ -14,7 +17,9 @@ import org.junit.experimental.categories.Category;
 
 import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.core.AnyOf.anyOf;
 import static org.hamcrest.core.IsEqual.equalTo;
+import static org.hamcrest.core.IsNot.not;
 
 @Category(ExternalTest.class)
 public class LocationsTest {
@@ -39,30 +44,10 @@ public class LocationsTest {
 			response = closeableHttpClient.execute(httpGet);
 			assertThat(response.getStatusLine().getStatusCode(), equalTo(200));
 
-			String expected = "{" +
-				"\"locations\":[" +
-					"\"us-bb-central\"," +
-					"\"us-bb-east\"," +
-					"\"us-bb-west\"," +
-					"\"us-ca-sanjose\"," +
-					"\"us-co-denver\"," +
-					"\"us-de-newcastle\"," +
-					"\"us-fl-sarasota\"," +
-					"\"us-ga-atlanta\"," +
-					"\"us-il-chicago\"," +
-					"\"us-ma-woburn\"," +
-					"\"us-md-baltimore\"," +
-					"\"us-mi-grand_rapids\"," +
-					"\"us-mn-roseville\"," +
-					"\"us-nj-plainfield\"," +
-					"\"us-pa-pittsburgh\"," +
-					"\"us-tx-houston\"," +
-					"\"us-va-richmond\"," +
-					"\"us-wa-seattle\"" +
-				"]" +
-			"}";
+			ObjectMapper objectMapper = new ObjectMapper(new JsonFactory());
+			JsonNode jsonNode = objectMapper.readTree(EntityUtils.toString(response.getEntity()));
+			assertThat(jsonNode.get("locations").isArray(), equalTo(true));
 
-			assertThat(EntityUtils.toString(response.getEntity()), equalTo(expected));
 		} finally {
 			if (response != null) response.close();
 		}
@@ -76,21 +61,26 @@ public class LocationsTest {
 		try {
 			response = closeableHttpClient.execute(httpGet);
 			
-			String expected = "{" +
-				"\"cacheId\":\"odol-atsec-sim-030\"," +
-				"\"fqdn\":\"odol-atsec-sim-030.jenkins-sim.cdnlab.comcast.net\"," +
-				"\"ipAddresses\":[\"192.168.8.32\",\"2001:558:fee8:168:c:0:0:1e\"]," +
-				"\"port\":0," +
-				"\"adminStatus\":null," +
-				"\"lastUpdateHealthy\":false," +
-				"\"lastUpdateTime\":0," +
-				"\"connections\":0," +
-				"\"currentBW\":0," +
-				"\"availBW\":0," +
-				"\"cacheOnline\":true" +
-				"}";
-			
-			assertThat(EntityUtils.toString(response.getEntity()), containsString(expected));
+			ObjectMapper objectMapper = new ObjectMapper(new JsonFactory());
+			JsonNode jsonNode = objectMapper.readTree(EntityUtils.toString(response.getEntity()));
+			String locationName = jsonNode.get("locations").fieldNames().next();
+			JsonNode cacheNode = jsonNode.get("locations").get(locationName).get(0);
+
+			assertThat(cacheNode.get("cacheId").asText(), not(equalTo("")));
+			assertThat(cacheNode.get("fqdn").asText(), not(equalTo("")));
+
+			assertThat(cacheNode.get("ipAddresses").isArray(), equalTo(true));
+			assertThat(cacheNode.has("adminStatus"), equalTo(true));
+
+			assertThat(cacheNode.get("port").asInt(-123456), not(equalTo(-123456)));
+			assertThat(cacheNode.get("lastUpdateTime").asInt(-123456), not(equalTo(-123456)));
+			assertThat(cacheNode.get("connections").asInt(-123456), not(equalTo(-123456)));
+			assertThat(cacheNode.get("currentBW").asInt(-123456), not(equalTo(-123456)));
+			assertThat(cacheNode.get("availBW").asInt(-123456), not(equalTo(-123456)));
+
+			assertThat(cacheNode.get("cacheOnline").asText(), anyOf(equalTo("true"), equalTo("false")) );
+			assertThat(cacheNode.get("lastUpdateHealthy").asText(), anyOf(equalTo("true"), equalTo("false")) );
+
 		} finally {
 			if (response != null) response.close();
 		}
@@ -98,27 +88,40 @@ public class LocationsTest {
 
 	@Test
 	public void itGetsCachesForALocation() throws Exception {
-		HttpGet httpGet = new HttpGet("http://localhost:3333/crs/locations/us-co-denver/caches");
+		HttpGet httpGet = new HttpGet("http://localhost:3333/crs/locations");
 
 		CloseableHttpResponse response = null;
 		try {
 			response = closeableHttpClient.execute(httpGet);
 
-			String expected = "{" +
-				"\"cacheId\":\"odol-atsec-sim-119\"," +
-				"\"fqdn\":\"odol-atsec-sim-119.jenkins-sim.cdnlab.comcast.net\"," +
-				"\"ipAddresses\":[\"192.168.8.121\",\"2001:558:fee8:168:c:0:0:77\"]," +
-				"\"port\":0," +
-				"\"adminStatus\":null," +
-				"\"lastUpdateHealthy\":false," +
-				"\"lastUpdateTime\":0," +
-				"\"connections\":0," +
-				"\"currentBW\":0," +
-				"\"availBW\":0," +
-				"\"cacheOnline\":true" +
-			"}";
+			ObjectMapper objectMapper = new ObjectMapper(new JsonFactory());
+			JsonNode jsonNode = objectMapper.readTree(EntityUtils.toString(response.getEntity()));
 
-			assertThat(EntityUtils.toString(response.getEntity()), containsString(expected));
+			String location = jsonNode.get("locations").get(0).asText();
+
+			httpGet = new HttpGet("http://localhost:3333/crs/locations/" + location + "/caches");
+
+			response = closeableHttpClient.execute(httpGet);
+
+			jsonNode = objectMapper.readTree(EntityUtils.toString(response.getEntity()));
+
+			assertThat(jsonNode.get("caches").isArray(), equalTo(true));
+			JsonNode cacheNode = jsonNode.get("caches").get(0);
+
+			assertThat(cacheNode.get("cacheId").asText(), not(equalTo("")));
+			assertThat(cacheNode.get("fqdn").asText(), not(equalTo("")));
+
+			assertThat(cacheNode.get("ipAddresses").isArray(), equalTo(true));
+			assertThat(cacheNode.has("adminStatus"), equalTo(true));
+
+			assertThat(cacheNode.get("port").asInt(-123456), not(equalTo(-123456)));
+			assertThat(cacheNode.get("lastUpdateTime").asInt(-123456), not(equalTo(-123456)));
+			assertThat(cacheNode.get("connections").asInt(-123456), not(equalTo(-123456)));
+			assertThat(cacheNode.get("currentBW").asInt(-123456), not(equalTo(-123456)));
+			assertThat(cacheNode.get("availBW").asInt(-123456), not(equalTo(-123456)));
+
+			assertThat(cacheNode.get("cacheOnline").asText(), anyOf(equalTo("true"), equalTo("false")) );
+			assertThat(cacheNode.get("lastUpdateHealthy").asText(), anyOf(equalTo("true"), equalTo("false")) );
 
 		} finally {
 			if (response != null) response.close();

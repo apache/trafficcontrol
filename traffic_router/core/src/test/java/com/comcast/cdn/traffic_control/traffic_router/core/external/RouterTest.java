@@ -1,6 +1,9 @@
 package com.comcast.cdn.traffic_control.traffic_router.core.external;
 
 import com.comcast.cdn.traffic_control.traffic_router.core.util.ExternalTest;
+import com.fasterxml.jackson.core.JsonFactory;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.catalina.LifecycleException;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpGet;
@@ -12,18 +15,43 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
+import java.io.File;
 import java.io.IOException;
+import java.util.Iterator;
 
 import static org.hamcrest.CoreMatchers.containsString;
+import static org.hamcrest.CoreMatchers.nullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.IsEqual.equalTo;
+import static org.hamcrest.core.IsNot.not;
 
 @Category(ExternalTest.class)
 public class RouterTest {
 	private CloseableHttpClient httpClient;
+	private String deliveryServiceId;
 
 	@Before
 	public void before() throws IOException, InterruptedException, LifecycleException {
+		ObjectMapper objectMapper = new ObjectMapper(new JsonFactory());
+
+		System.out.println(System.getProperty("user.dir"));
+		JsonNode jsonNode = objectMapper.readTree(new File("src/test/db/cr-config.json"));
+
+		deliveryServiceId = null;
+
+		Iterator<String> deliveryServices = jsonNode.get("deliveryServices").fieldNames();
+		while (deliveryServices.hasNext()) {
+			String dsId = deliveryServices.next();
+			Iterator<JsonNode> matchsets = jsonNode.get("deliveryServices").get(dsId).get("matchsets").iterator();
+			while (matchsets.hasNext() && deliveryServiceId == null) {
+				if ("HTTP".equals(matchsets.next().get("protocol").asText())) {
+					deliveryServiceId = dsId;
+				}
+			}
+		}
+
+		assertThat(deliveryServiceId, not(nullValue()));
+
 		httpClient = HttpClientBuilder.create().disableRedirectHandling().build();
 	}
 
@@ -53,8 +81,8 @@ public class RouterTest {
 		// until we get a 302 to determine that all the application context is finished before
 		// starting tests
 
-		HttpGet httpGet = new HttpGet("http://localhost:8888/stuff?fakeClientIpAddress=113.203.235.227");
-		httpGet.addHeader("Host", "foo.omg-04.bar");
+		HttpGet httpGet = new HttpGet("http://localhost:8888/stuff?fakeClientIpAddress=12.34.56.78");
+		httpGet.addHeader("Host", "foo." + deliveryServiceId + ".bar");
 		CloseableHttpResponse response = null;
 
 		int triesLeft = 60;
@@ -78,7 +106,7 @@ public class RouterTest {
 
 	@Test
 	public void itRejectsInvalidRequests() throws IOException {
-		HttpGet httpGet = new HttpGet("http://localhost:8888/stuff?fakeClientIpAddress=113.203.235.227");
+		HttpGet httpGet = new HttpGet("http://localhost:8888/stuff?fakeClientIpAddress=12.34.56.78");
 		httpGet.addHeader("Host", "foo.invalid-delivery-service-id.bar");
 		CloseableHttpResponse response = null;
 
