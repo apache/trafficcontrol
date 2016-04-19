@@ -553,15 +553,24 @@ func calcDsValues(rascalData []byte, cdnName string, sampleTime int64, config St
 	})
 	for dsName, dsData := range jData.DeliveryService {
 		for dsMetric, dsMetricData := range dsData {
-			//create dataKey (influxDb series)
 			var cachegroup, statName string
-			if strings.Contains(dsMetric, "total.") {
-				s := strings.Split(dsMetric, ".")
+			tags := map[string]string{
+				"deliveryservice": dsName,
+				"cdn":             cdnName,
+			}
+
+			s := strings.Split(dsMetric, ".")
+			if strings.Contains(dsMetric, "type.") {
+				cachegroup = "all"
+				statName = s[2]
+				tags["type"] = s[1]
+			} else if strings.Contains(dsMetric, "total.") {
 				cachegroup, statName = s[0], s[1]
 			} else {
-				s := strings.Split(dsMetric, ".")
 				cachegroup, statName = s[1], s[2]
 			}
+
+			tags["cachegroup"] = cachegroup
 
 			//convert stat time to epoch
 			statTime := strconv.Itoa(dsMetricData[0].Time)
@@ -577,12 +586,6 @@ func calcDsValues(rascalData []byte, cdnName string, sampleTime int64, config St
 			if err != nil {
 				statFloatValue = 0.0
 			}
-			tags := map[string]string{
-				"deliveryservice": dsName,
-				"cdn":             cdnName,
-				"cachegroup":      cachegroup,
-			}
-
 			fields := map[string]interface{}{
 				"value": statFloatValue,
 			}
@@ -762,11 +765,7 @@ func influxConnect(config StartupConfig, runningConfig RunningConfig) (influx.Cl
 		con := host.InfluxClient
 		//client currently does not support udp queries
 		if config.InfluxProtocol != "udp" {
-			q := influx.Query{
-				Command:  "show databases",
-				Database: "",
-			}
-			_, err := con.Query(q)
+			_, _, err := con.Ping(10)
 			if err != nil {
 				errHndlr(err, ERROR)
 				host.InfluxClient = nil

@@ -1,0 +1,21 @@
+{
+    "name": "trafficOps",
+    "version": "2.0.0",
+    "description": "Traffic Ops UI",
+    "repository": {
+        "type": "git",
+        "url": "git@github.com:Comcast/traffic_control.git"
+    },
+    "dependencies": {
+        "forever": "0.15.1",
+        "errorhandler": "1.4.3",
+        "connect-modrewrite": "0.8.5",
+        "connect-timeout": "1.7.0",
+        "ssl-root-cas": "1.1.10",
+        "express": "4.13.4",
+        "requirejs": "2.1.22"
+    },
+    "engines": {
+        "node": ">=0.12.0"
+    }
+}

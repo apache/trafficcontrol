@@ -26,14 +26,13 @@ import (
 )
 
 type StatsSummary struct {
-	Id                  int64             `db:"id" json:"id"`
-	CdnName             string            `db:"cdn_name" json:"cdnName"`
-	DeliveryserviceName string            `db:"deliveryservice_name" json:"deliveryserviceName"`
-	StatName            string            `db:"stat_name" json:"statName"`
-	StatValue           float64           `db:"stat_value" json:"statValue"`
-	SummaryTime         time.Time         `db:"summary_time" json:"summaryTime"`
-	StatDate            time.Time         `db:"stat_date" json:"statDate"`
-	Links               StatsSummaryLinks `json:"_links" db:-`
+	CdnName         string            `db:"cdn_name" json:"cdnName"`
+	Deliveryservice string            `db:"deliveryservice" json:"deliveryservice"`
+	StatName        string            `db:"stat_name" json:"statName"`
+	StatValue       int64             `db:"stat_value" json:"statValue"`
+	StatDate        time.Time         `db:"stat_date" json:"statDate"`
+	CreatedAt       time.Time         `db:"created_at" json:"createdAt"`
+	Links           StatsSummaryLinks `json:"_links" db:-`
 }
 
 type StatsSummaryLinks struct {
@@ -47,12 +46,15 @@ type StatsSummaryLinks struct {
 // @Success 200 {array}    StatsSummary
 // @Resource /api/2.0
 // @Router /api/2.0/stats_summary/{id} [get]
-func getStatsSummaryById(id int, db *sqlx.DB) (interface{}, error) {
+func getStatsSummary(cdnName string, deliveryservice string, statName string, statDate time.Time, db *sqlx.DB) (interface{}, error) {
 	ret := []StatsSummary{}
 	arg := StatsSummary{}
-	arg.Id = int64(id)
-	queryStr := "select *, concat('" + API_PATH + "stats_summary/', id) as self "
-	queryStr += " from stats_summary where id=:id"
+	arg.CdnName = cdnName
+	arg.Deliveryservice = deliveryservice
+	arg.StatName = statName
+	arg.StatDate = statDate
+	queryStr := "select *, concat('" + API_PATH + "stats_summary', '/cdn_name/', cdn_name, '/deliveryservice/', deliveryservice, '/stat_name/', stat_name, '/stat_date/', stat_date) as self"
+	queryStr += " from stats_summary WHERE cdn_name=:cdn_name AND deliveryservice=:deliveryservice AND stat_name=:stat_name AND stat_date=:stat_date"
 	nstmt, err := db.PrepareNamed(queryStr)
 	err = nstmt.Select(&ret, arg)
 	if err != nil {
@@ -69,9 +71,9 @@ func getStatsSummaryById(id int, db *sqlx.DB) (interface{}, error) {
 // @Success 200 {array}    StatsSummary
 // @Resource /api/2.0
 // @Router /api/2.0/stats_summary [get]
-func getStatsSummarys(db *sqlx.DB) (interface{}, error) {
+func getStatsSummaries(db *sqlx.DB) (interface{}, error) {
 	ret := []StatsSummary{}
-	queryStr := "select *, concat('" + API_PATH + "stats_summary/', id) as self "
+	queryStr := "select *, concat('" + API_PATH + "stats_summary', '/cdn_name/', cdn_name, '/deliveryservice/', deliveryservice, '/stat_name/', stat_name, '/stat_date/', stat_date) as self"
 	queryStr += " from stats_summary"
 	err := db.Select(&ret, queryStr)
 	if err != nil {
@@ -97,18 +99,18 @@ func postStatsSummary(payload []byte, db *sqlx.DB) (interface{}, error) {
 	}
 	sqlString := "INSERT INTO stats_summary("
 	sqlString += "cdn_name"
-	sqlString += ",deliveryservice_name"
+	sqlString += ",deliveryservice"
 	sqlString += ",stat_name"
 	sqlString += ",stat_value"
-	sqlString += ",summary_time"
 	sqlString += ",stat_date"
+	sqlString += ",created_at"
 	sqlString += ") VALUES ("
 	sqlString += ":cdn_name"
-	sqlString += ",:deliveryservice_name"
+	sqlString += ",:deliveryservice"
 	sqlString += ",:stat_name"
 	sqlString += ",:stat_value"
-	sqlString += ",:summary_time"
 	sqlString += ",:stat_date"
+	sqlString += ",:created_at"
 	sqlString += ")"
 	result, err := db.NamedExec(sqlString, v)
 	if err != nil {
@@ -126,23 +128,26 @@ func postStatsSummary(payload []byte, db *sqlx.DB) (interface{}, error) {
 // @Success 200 {object}    output_format.ApiWrapper
 // @Resource /api/2.0
 // @Router /api/2.0/stats_summary/{id}  [put]
-func putStatsSummary(id int, payload []byte, db *sqlx.DB) (interface{}, error) {
-	var v StatsSummary
-	err := json.Unmarshal(payload, &v)
-	v.Id = int64(id) // overwrite the id in the payload
+func putStatsSummary(cdnName string, deliveryservice string, statName string, statDate time.Time, payload []byte, db *sqlx.DB) (interface{}, error) {
+	var arg StatsSummary
+	err := json.Unmarshal(payload, &arg)
+	arg.CdnName = cdnName
+	arg.Deliveryservice = deliveryservice
+	arg.StatName = statName
+	arg.StatDate = statDate
 	if err != nil {
 		log.Println(err)
 		return nil, err
 	}
 	sqlString := "UPDATE stats_summary SET "
 	sqlString += "cdn_name = :cdn_name"
-	sqlString += ",deliveryservice_name = :deliveryservice_name"
+	sqlString += ",deliveryservice = :deliveryservice"
 	sqlString += ",stat_name = :stat_name"
 	sqlString += ",stat_value = :stat_value"
-	sqlString += ",summary_time = :summary_time"
 	sqlString += ",stat_date = :stat_date"
-	sqlString += " WHERE id=:id"
-	result, err := db.NamedExec(sqlString, v)
+	sqlString += ",created_at = :created_at"
+	sqlString += " WHERE cdn_name=:cdn_name AND deliveryservice=:deliveryservice AND stat_name=:stat_name AND stat_date=:stat_date"
+	result, err := db.NamedExec(sqlString, arg)
 	if err != nil {
 		log.Println(err)
 		return nil, err
@@ -157,10 +162,13 @@ func putStatsSummary(id int, payload []byte, db *sqlx.DB) (interface{}, error) {
 // @Success 200 {array}    StatsSummary
 // @Resource /api/2.0
 // @Router /api/2.0/stats_summary/{id} [delete]
-func delStatsSummary(id int, db *sqlx.DB) (interface{}, error) {
+func delStatsSummary(cdnName string, deliveryservice string, statName string, statDate time.Time, db *sqlx.DB) (interface{}, error) {
 	arg := StatsSummary{}
-	arg.Id = int64(id)
-	result, err := db.NamedExec("DELETE FROM stats_summary WHERE id=:id", arg)
+	arg.CdnName = cdnName
+	arg.Deliveryservice = deliveryservice
+	arg.StatName = statName
+	arg.StatDate = statDate
+	result, err := db.NamedExec("DELETE FROM stats_summary WHERE cdn_name=:cdn_name AND deliveryservice=:deliveryservice AND stat_name=:stat_name AND stat_date=:stat_date", arg)
 	if err != nil {
 		log.Println(err)
 		return nil, err

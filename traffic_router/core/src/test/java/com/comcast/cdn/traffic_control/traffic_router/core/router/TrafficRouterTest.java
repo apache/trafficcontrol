@@ -141,4 +141,28 @@ public class TrafficRouterTest {
         assertThat(track.getResult(), equalTo(Track.ResultType.GEO));
         assertThat(track.getResultLocation(), equalTo(new Geolocation(50, 50)));
     }
+
+    @Test
+    public void itRetainsPathElementsInURI() throws Exception {
+        Cache cache = mock(Cache.class);
+        when(cache.getFqdn()).thenReturn("atscache-01.kabletown.net");
+        when(cache.getPort()).thenReturn(80);
+
+        when(deliveryService.createURIString(any(HTTPRequest.class), any(Cache.class))).thenCallRealMethod();
+
+        HTTPRequest httpRequest = new HTTPRequest();
+        httpRequest.setClientIP("192.168.10.11");
+        httpRequest.setHostname("tr.ds.kabletown.net");
+        httpRequest.setPath("/782-93d215fcd88b/6b6ce2889-ae4c20a1584.ism/manifest(format=m3u8-aapl).m3u8");
+        httpRequest.setUri("/782-93d215fcd88b/6b6ce2889-ae4c20a1584.ism;urlsig=O0U9MTQ1Ojhx74tjchm8yzfdanshdafHMNhv8vNA/manifest(format=m3u8-aapl).m3u8");
+
+        StringBuilder dest = new StringBuilder();
+        dest.append("http://");
+        dest.append(cache.getFqdn().split("\\.", 2)[0]);
+        dest.append(".");
+        dest.append(httpRequest.getHostname().split("\\.", 2)[1]);
+        dest.append(httpRequest.getUri());
+
+        assertThat(deliveryService.createURIString(httpRequest, cache), equalTo(dest.toString()));
+    }
 }
