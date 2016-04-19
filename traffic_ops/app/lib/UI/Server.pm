@@ -457,7 +457,7 @@ sub update {
 				ip_address       => $paramHashRef->{'ip_address'},
 				ip_netmask       => $paramHashRef->{'ip_netmask'},
 				ip_gateway       => $paramHashRef->{'ip_gateway'},
-				ip6_address      => $paramHashRef->{'ip6_address'},
+				ip6_address      => $self->paramAsScalar('ip6_address', undef),
 				ip6_gateway      => $paramHashRef->{'ip6_gateway'},
 				interface_mtu    => $paramHashRef->{'interface_mtu'},
 				cdn_id           => $paramHashRef->{'cdn'},
