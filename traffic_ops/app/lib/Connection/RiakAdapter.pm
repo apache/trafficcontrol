@@ -54,7 +54,7 @@ sub new {
 	$ua = LWP::UserAgent->new();
 	$ua->timeout(20);
 	$ua->ssl_opts( verify_hostname => 0, SSL_verify_mode => 0x00 );
-	$ua->conn_cache($conn_cache);
+	$ua->conn_cache($TrafficOps::conn_cache);
 
 	return $self;
 }
