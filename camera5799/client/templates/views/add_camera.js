@@ -2,8 +2,6 @@ var addCameraCalls = {
 
     registerCamera: function(registerObj) {
         Meteor.call('registerCamera', Utilities.getUserToken(), Utilities.getUsername(), registerObj, function(err, res) {
-            console.log("client response res... ", res);
-            console.log("client response err... ", err);
             if (err) {
                 alert(JSON.stringify(err.content));
             } else {
@@ -41,7 +39,7 @@ Template.addCamera.events({
             var dataObj = {
                 name: cameraName,
                 location: cameraLocation,
-                URL: cameraURL,
+                url: cameraURL,
                 username: cameraUsername,
                 password: cameraPassword
             };

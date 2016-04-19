@@ -2,8 +2,6 @@ var homePageCalls = {
 
     login: function (username, password) {
         Meteor.call('loginCall', username, password, function(err, res) {
-            console.log("client response res... ", res);
-            console.log("client response err... ", err);
             if (err) {
                 alert(JSON.stringify(err.content));
             } else {
@@ -27,8 +25,6 @@ var homePageCalls = {
 
     register: function (username, firstName, lastName, password) {
         Meteor.call('registerUser', username, firstName, lastName, password, function(err, res) {
-            console.log("client response res... ", res);
-            console.log("client response err... ", err);
             if (err) {
                 alert("Error trying to register... " + JSON.stringify(err));
             } else {

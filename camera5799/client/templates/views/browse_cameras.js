@@ -1,13 +1,6 @@
 Template.browseCameras.helpers({
      availableCameras: function() {
-         //AvailableCameras.insert({cameraName: "livingroom", date: "jan 1st 2016"});
-         //return AvailableCameras.find();
-         var a = [ {cameraName: "living room", cameraId: 123},
-                   {cameraName: "family room", cameraId: 456},
-                   {cameraName: "back yard", cameraId: 789},
-                   {cameraName: "front yard", cameraId: 974}
-         ];
-         return a;
+         return AvailableCameras.find();
      }
 });
 
@@ -22,13 +15,21 @@ Template.browseCameras.onCreated(function() {
 
     Meteor.call('getCameras', token, function(err, res) {
         if (err) {
-            console.log('getCameras error... ', err.message);
+            alert("Error... " + JSON.stringify(err));
         } else {
-            AvailableCameras.insert({cameraName: "livingroom", date: "jan 1st 2016"});
-            console.log("getCameras response from client... ", res.content);
+            if (res.statusCode == 200) {
+                if (res.hasOwnProperty('content')) {
+                    res = JSON.parse(res.content);
+                    if (res.hasOwnProperty('CameraData')) {
+                        AvailableCameras.remove({});
+                        for (var i = 0; i < res.CameraData.length; i++) {
+                            AvailableCameras.insert(res.CameraData[i]);
+                        }
+                    }
+                }
+            }
         }
         return res;
-
     });
 
 });

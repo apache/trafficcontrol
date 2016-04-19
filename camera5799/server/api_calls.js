@@ -29,9 +29,7 @@ Meteor.methods({
                         }
                     }*/
                     myFuture.return(result);
-                    console.log("bif pipma ==> ", result.content);
                 } else {
-                    console.log("error2 ===> ", error.toString());
                     myFuture.return(error.response);
                     //myFuture.throw(error);
             }
@@ -65,17 +63,15 @@ Meteor.methods({
         var myFuture = new Future();
         check(token, String);
         token = 'Bearer ' + token;
-        var apiURL = "https://ec2-52-37-126-44.us-west-2.compute.amazonaws.com:9000/8001/r";
+        // TODO: add /username when it's implemented
+        var apiURL = "https://ec2-52-37-126-44.us-west-2.compute.amazonaws.com:9000/cameras/";
 
-        HTTP.call("POST", apiURL,
+        HTTP.call("GET", apiURL,
             { headers: { 'Authorization': token} },
             function (error, result) {
-                //result.statuscode
                 if (!error) {
-                    console.log("getcameras server, response ", result.content);
-                    myFuture.return(result.content);
+                    myFuture.return(result);
                 } else {
-                    console.log("error ===> ", error.toString());
                     myFuture.throw(error);
                 }
             });
@@ -98,16 +94,46 @@ Meteor.methods({
 
     },
 
+    'editCameraInformation': function (token, username, cameraObj) {
+
+        // check that the object we received is correct
+        check( cameraObj, {
+            name: String,
+            location: String,
+            url: String,
+            username: String,
+            password: String
+        });
+        check(username, String);
+        check(token, String);
+
+        // Construct the API URL
+        var myFuture = new Future();
+
+        var apiUrl = 'https://ec2-52-37-126-44.us-west-2.compute.amazonaws.com:9000/cameras/' + username + "/" + cameraObj.name;
+
+        HTTP.call("PUT", apiUrl,
+            { data: registerObj,
+                headers: { 'Authorization': token, 'Content-Type': 'application/json' }
+            },
+            function (error, result) {
+                if (!error) {
+                    myFuture.return(result);
+                } else {
+                    myFuture.return(error.response);
+                    //myFuture.throw(error);
+                }
+            });
+        return myFuture.wait();
+    },
+
     'registerCamera': function (token, username, registerObj) {
 
-        console.log("registercamera token: " + token);
-        console.log("registercamera username: " + username);
-        console.log("registercamera registerObj: " + JSON.stringify(registerObj));
         // check that the object we received is correct
         check( registerObj, {
             name: String,
             location: String,
-            URL: String,
+            url: String,
             username: String,
             password: String
         });
@@ -121,7 +147,7 @@ Meteor.methods({
 
         HTTP.call("POST", apiUrl,
             { data: registerObj,
-              headers: { 'Authorization': token }
+              headers: { 'Authorization': token, 'Content-Type': 'application/json' }
             },
             function (error, result) {
                 if (!error) {

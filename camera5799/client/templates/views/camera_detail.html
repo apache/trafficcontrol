@@ -1,17 +1,19 @@
 <template name="cameraDetail">
 
     <div class="page panel panel-default">
-        <div class="panel-heading">{{cameraName}} Camera ({{cameraId}})</div>
+        <div class="panel-heading clearfix">Camera: {{name}}<a href="{{ pathFor 'editCamera' }}" class="btn btn-warning" style="float:right;">Edit</a></div>
         <div class="panel-body">
                 <div class="col-md-6">
-                    <iframe width="420" height="315" src="https://www.youtube.com/embed/MsklOepMz5A" frameborder="0" allowfullscreen></iframe>
+                    <video width="100%" src="http://v2v.cc/~j/theora_testsuite/320x240.ogg" controls>
+                        Your browser does not support the <code>video</code> element.
+                    </video>
                     <div class="span">
                         <p><button class="btn btn-success btn-block">Record</button></p>
                     </div>
                 </div>
                 <div class="col-md-6">
                     <!-- Main component for a primary marketing message or call to action -->
-                    <div class="jumbotron">
+                    <div class="jumbotron" style="padding-top: 1em;">
                         <h3>Controls</h3>
                         <div class="span">
                             <p><button class="btn btn-primary btn-block">Up</button></p>

@@ -5,7 +5,7 @@
             Registered Cameras
         </span>
         {{#each availableCameras}}
-            <a href="{{pathFor 'cameraDetail'}}" class="list-group-item">{{cameraName}}</a>
+            <a href="{{ pathFor 'cameraDetail' }}" class="list-group-item">{{name}}</a>
         {{/each}}
         <a href="/cameraDetail" class="list-group-item">Work camera</a>
     </div>

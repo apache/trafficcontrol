@@ -20,13 +20,20 @@ Router.route('/browseCameras/', {
   name: 'browseCameras'
 });
 
-Router.route('/cameraDetail/:cameraName/:cameraId', {
+Router.route('/editCamera/:name', {
+  name: 'editCamera',
+  data: function () {
+    return {
+      cameraToEdit: AvailableCameras.findOne({name: this.params.name})
+    };
+  }
+});
+
+Router.route('/cameraDetail/:name', {
   name: 'cameraDetail',
   data: function() {
-    console.log("please..." + this.params.cameraName);
     return {
-      cameraId: this.params.cameraId,
-      cameraName: this.params.cameraName
+      name: this.params.name
     };
   }
 });
