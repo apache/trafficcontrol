@@ -93,6 +93,7 @@ public class TRServlet extends HttpServlet {
 		req.setQueryString(request.getQueryString());
 		req.setHostname(request.getServerName());
 		req.setRequestedUrl(request.getRequestURL().toString());
+		req.setUri(request.getRequestURI());
 
 		final StatTracker.Track track = StatTracker.getTrack();
 		final String xmm = request.getHeader(X_MM_CLIENT_IP);

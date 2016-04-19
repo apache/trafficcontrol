@@ -25,6 +25,7 @@ public class HTTPRequest extends Request {
 
     private String requestedUrl;
     private String path;
+    private String uri;
     private String queryString;
     private Map<String, String> headers;
 
@@ -39,6 +40,7 @@ public class HTTPRequest extends Request {
                     .append(getHeaders(), rhs.getHeaders())
                     .append(getPath(), rhs.getPath())
                     .append(getQueryString(), rhs.getQueryString())
+                    .append(getUri(), rhs.getUri())
                     .isEquals();
         } else {
             return false;
@@ -74,6 +76,7 @@ public class HTTPRequest extends Request {
                 .append(getHeaders())
                 .append(getPath())
                 .append(getQueryString())
+                .append(getUri())
                 .toHashCode();
     }
 
@@ -103,5 +106,13 @@ public class HTTPRequest extends Request {
     @Override
     public String getType() {
         return "http";
+    }
+
+    public String getUri() {
+        return uri;
+    }
+
+    public void setUri(final String uri) {
+       this.uri = uri;
     }
 }
