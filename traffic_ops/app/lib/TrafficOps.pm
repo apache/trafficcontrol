@@ -27,7 +27,6 @@ use Schema;
 use Data::Dumper;
 use Digest::SHA1 qw(sha1_hex);
 use JSON;
-use LWP::ConnCache;
 use Cwd;
 
 use Mojolicious::Plugins;
@@ -59,7 +58,6 @@ my $app_root_dir;
 my $mode;
 my $config;
 
-my $conn_cache;   # Connection Pool
 local $/;    #Enable 'slurp' mode
 
 has schema => sub { return Schema->connect_to_database };
@@ -189,7 +187,6 @@ sub startup {
 	##help relieve issues with riak
 	IO::Socket::SSL::set_default_session_cache(IO::Socket::SSL::Session_Cache->new( 4096 ));
 
-	$conn_cache = LWP::ConnCache->new( { total_capacity => 4096 } );
 }
 
 sub setup_logging {
