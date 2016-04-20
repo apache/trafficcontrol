@@ -14,16 +14,19 @@
    limitations under the License.
 */
 
-package client
+package fixtures
 
-import "fmt"
+import "github.com/Comcast/traffic_control/traffic_ops/client"
 
-// CRConfigRaw ...
-func (to *Session) CRConfigRaw(cdn string) ([]byte, error) {
-	url := fmt.Sprintf("/CRConfig-Snapshots/%s/CRConfig.json", cdn)
-	body, err := to.getBytesWithTTL(url, tmPollingInterval)
-	if err != nil {
-		return nil, err
+// Profiles returns a default ProfileResponse to be used for testing.
+func Profiles() *client.ProfileResponse {
+	return &client.ProfileResponse{
+		Response: []client.Profile{
+			client.Profile{
+				Name:        "TR_CDN2",
+				Description: "kabletown Content Router",
+				LastUpdated: "2012-10-08 13:34:45",
+			},
+		},
 	}
-	return body, nil
 }

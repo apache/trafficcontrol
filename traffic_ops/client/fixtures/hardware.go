@@ -14,16 +14,21 @@
    limitations under the License.
 */
 
-package client
+package fixtures
 
-import "fmt"
+import "github.com/Comcast/traffic_control/traffic_ops/client"
 
-// CRConfigRaw ...
-func (to *Session) CRConfigRaw(cdn string) ([]byte, error) {
-	url := fmt.Sprintf("/CRConfig-Snapshots/%s/CRConfig.json", cdn)
-	body, err := to.getBytesWithTTL(url, tmPollingInterval)
-	if err != nil {
-		return nil, err
+// Hardware returns a default HardwareResponse to be used for testing.
+func Hardware() *client.HardwareResponse {
+	return &client.HardwareResponse{
+		Response: []client.Hardware{
+			client.Hardware{
+				ID:          "18",
+				HostName:    "odol-atsmid-cen-09",
+				LastUpdated: "2015-07-16 09:04:20",
+				Value:       "1.00",
+				Description: "BACKPLANE FIRMWARE",
+			},
+		},
 	}
-	return body, nil
 }

@@ -18,32 +18,36 @@ package client
 
 import "encoding/json"
 
-// HardwareResponse ...
-type HardwareResponse struct {
-	Version  string     `json:"version"`
-	Response []Hardware `json:"response"`
+// UserResponse ...
+type UserResponse struct {
+	Version  string `json:"version"`
+	Response []User `json:"response"`
 }
 
-// Hardware ...
-type Hardware struct {
-	ID          string `json:"serverId"`
-	HostName    string `json:"serverHostName"`
-	LastUpdated string `json:"lastUpdated"`
-	Value       string `json:"val"`
-	Description string `json:"description"`
+// User contains information about a given user in Traffic Ops.
+type User struct {
+	Username     string `json:"username"`
+	PublicSSHKey string `json:"publicSshKey"`
+	Role         string `json:"role"`
+	UID          string `json:"uid"`
+	GID          string `json:"gid"`
+	Company      string `json:"company"`
+	Email        string `json:"email"`
+	FullName     string `json:"fullName"`
+	NewUser      bool   `json:"newUser"`
+	LastUpdated  string `json:"lastUpdated"`
 }
 
-// Hardware gets an array of Hardware
-func (to *Session) Hardware() ([]Hardware, error) {
-	url := "/api/1.2/hwinfo.json"
+// Users gets an array of Users.
+func (to *Session) Users() ([]User, error) {
+	url := "/api/1.2/users.json"
 	resp, err := to.request(url, nil)
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
 
-	var data HardwareResponse
-	if err := json.NewDecoder(resp.Body).Decode(&data); err != nil {
+	var data UserResponse
+	if err := json.NewDecoder(resp.Body).Decode(&data.Response); err != nil {
 		return nil, err
 	}
 

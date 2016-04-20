@@ -14,16 +14,20 @@
    limitations under the License.
 */
 
-package client
+package fixtures
 
-import "fmt"
+import "github.com/Comcast/traffic_control/traffic_ops/client"
 
-// CRConfigRaw ...
-func (to *Session) CRConfigRaw(cdn string) ([]byte, error) {
-	url := fmt.Sprintf("/CRConfig-Snapshots/%s/CRConfig.json", cdn)
-	body, err := to.getBytesWithTTL(url, tmPollingInterval)
-	if err != nil {
-		return nil, err
+// Parameters returns a default ParamResponse to be used for testing.
+func Parameters() *client.ParamResponse {
+	return &client.ParamResponse{
+		Response: []client.Parameter{
+			client.Parameter{
+				Name:        "location",
+				Value:       "/foo/trafficserver/",
+				ConfigFile:  "parent.config",
+				LastUpdated: "2012-09-17 15:41:22",
+			},
+		},
 	}
-	return body, nil
 }
