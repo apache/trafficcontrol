@@ -74,7 +74,7 @@ func TrafficRouterConfig() *client.TRConfigResponse {
 				"trafficOpsHost":    "127.0.0.1:3000",
 				"trafficOpsPath":    "/api/1.2/cdns/title-vi/configs/routing.json",
 				"trafficOpsVersion": "__VERSION__",
-				"trafficOpsUser":    "jheitz200",
+				"trafficOpsUser":    "bob",
 			},
 			TrafficRouters: []client.TrafficRouter{
 				client.TrafficRouter{

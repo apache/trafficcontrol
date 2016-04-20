@@ -83,7 +83,7 @@ func (to *Session) SummaryStats(cdn string, deliveryService string, statName str
 }
 
 // SummaryStatsLastUpdated ...
-func (to *Session) SummaryStatsLastUpdated(statName string) (*string, error) {
+func (to *Session) SummaryStatsLastUpdated(statName string) (string, error) {
 	queryURL := "/api/1.2/stats_summary.json?lastSummaryDate=true"
 	if len(statName) > 0 {
 		queryURL += fmt.Sprintf("?statName=%s", statName)
@@ -91,20 +91,20 @@ func (to *Session) SummaryStatsLastUpdated(statName string) (*string, error) {
 
 	resp, err := to.request(queryURL, nil)
 	if err != nil {
-		return nil, err
+		return "", err
 	}
 	defer resp.Body.Close()
 
 	var data LastUpdated
 	if err := json.NewDecoder(resp.Body).Decode(&data); err != nil {
-		return nil, err
+		return "", err
 	}
 
 	if len(data.Response.SummaryTime) > 0 {
-		return &data.Response.SummaryTime, nil
+		return data.Response.SummaryTime, nil
 	}
 	t := "1970-01-01 00:00:00"
-	return &t, nil
+	return t, nil
 }
 
 // AddSummaryStats ...
