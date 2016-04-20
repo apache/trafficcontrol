@@ -301,7 +301,7 @@ func calcDailySummary(now time.Time, config StartupConfig, runningConfig Running
 
 			//write daily_maxgbps in traffic_ops
 			var statsSummary traffic_ops.StatsSummary
-			statsSummary.CdnName = cdn
+			statsSummary.CDNName = cdn
 			statsSummary.DeliveryService = "all"
 			statsSummary.StatName = "daily_maxgbps"
 			statsSummary.StatValue = strconv.FormatFloat(maxGbps, 'f', 2, 64)
@@ -311,7 +311,7 @@ func calcDailySummary(now time.Time, config StartupConfig, runningConfig Running
 
 			tags := map[string]string{
 				"deliveryservice": statsSummary.DeliveryService,
-				"cdn":             statsSummary.CdnName,
+				"cdn":             statsSummary.CDNName,
 			}
 
 			fields := map[string]interface{}{
@@ -407,7 +407,7 @@ func getToData(config StartupConfig, init bool, configChan chan RunningConfig) {
 		runningConfig.CacheMap[server.HostName] = server
 		if server.Type == "INFLUXDB" && server.Status == "ONLINE" {
 			fqdn := server.HostName + "." + server.DomainName
-			port, err := strconv.ParseInt(server.TcpPort, 10, 32)
+			port, err := strconv.ParseInt(server.TCPPort, 10, 32)
 			if err != nil {
 				port = 8086 //default port
 			}
@@ -444,8 +444,13 @@ func getToData(config StartupConfig, init bool, configChan chan RunningConfig) {
 
 	runningConfig.HealthUrls = make(map[string]map[string]string)
 	for _, server := range servers {
+		if server.Type == "RASCAL" && server.Status != config.StatusToMon {
+			log.Debugf("Skipping %s%s.  Looking for status %s but got status %s", server.HostName, server.DomainName, config.StatusToMon, server.Status)
+			continue
+		}
+
 		if server.Type == "RASCAL" && server.Status == config.StatusToMon {
-			cdnName := server.CdnName
+			cdnName := server.CDNName
 			if cdnName == "" {
 				log.Error("Unable to find CDN name for " + server.HostName + ".. skipping")
 				continue
@@ -454,9 +459,9 @@ func getToData(config StartupConfig, init bool, configChan chan RunningConfig) {
 			if runningConfig.HealthUrls[cdnName] == nil {
 				runningConfig.HealthUrls[cdnName] = make(map[string]string)
 			}
-			url := "http://" + server.IpAddress + cacheStatPath
+			url := "http://" + server.IPAddress + cacheStatPath
 			runningConfig.HealthUrls[cdnName]["CacheStats"] = url
-			url = "http://" + server.IpAddress + dsStatPath
+			url = "http://" + server.IPAddress + dsStatPath
 			runningConfig.HealthUrls[cdnName]["DsStats"] = url
 		}
 	}
@@ -684,7 +689,7 @@ func calcCacheValues(trafmonData []byte, cdnName string, sampleTime int64, cache
 				statFloatValue = 0.00
 			}
 			tags := map[string]string{
-				"cachegroup": cache.Location,
+				"cachegroup": cache.Cachegroup,
 				"hostname":   cacheName,
 				"cdn":        cdnName,
 				"type":       cache.Type,
