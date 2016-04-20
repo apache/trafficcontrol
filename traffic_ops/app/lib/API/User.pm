@@ -81,7 +81,7 @@ sub index {
 			@data, {
 				"id"              => $row->id,
 				"username"        => $row->username,
-				"public_ssh_key"  => $row->public_ssh_key,
+				"publicSshKey"    => $row->public_ssh_key,
 				"role"            => $row->role->id,
 				"uid"             => $row->uid,
 				"gid"             => $row->gid,
@@ -163,7 +163,7 @@ sub current {
 			@data, {
 				"id"              => "0",
 				"username"        => $current_username,
-				"public_ssh_key"  => "",
+				"publicSshKey"  => "",
 				"role"            => $role,
 				"uid"             => "0",
 				"gid"             => "0",
@@ -191,7 +191,7 @@ sub current {
 				@data, {
 					"id"              => $row->id,
 					"username"        => $row->username,
-					"public_ssh_key"  => $row->public_ssh_key,
+					"publicSshKey"    => $row->public_ssh_key,
 					"role"            => $row->role->id,
 					"uid"             => $row->uid,
 					"gid"             => $row->gid,
