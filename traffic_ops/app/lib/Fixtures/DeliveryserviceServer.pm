@@ -26,6 +26,13 @@ my %definition_for = (
 			server          => 1,
 		},
 	},
+	test_ds1_server_edge13 => {
+		new   => 'DeliveryserviceServer',
+		using => {
+			deliveryservice => 1,
+			server          => 13,
+		},
+	},
 	test_ds1_server_mid1 => {
 		new   => 'DeliveryserviceServer',
 		using => {
