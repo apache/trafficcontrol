@@ -13,6 +13,7 @@ import (
 	"net/http"
 	"net/http/httputil"
 	"os"
+	"regexp"
 	"strings"
 	"sync"
 	"time"
@@ -93,23 +94,41 @@ func NewServer(file string, poll time.Duration) (*Server, error) {
 // request with the Rule's handler. If the rule's secure field is true, it will
 // only allow access if the request has a valid JWT bearer token.
 func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	// assume the token is required, most used code path, only check to see if path is open when fails.
-	var isSecure = true
+	isSecure := s.isSecure(r)
+	tokenValid := false
 	token, err := validateToken(r.Header.Get("Authorization"))
-	if err != nil {
-		if s.isSecure(r) {
-			log.Println(r.URL.Path + ": valid token required, but none found!")
-			w.WriteHeader(http.StatusForbidden)
-			return
-		} else {
-			isSecure = false
-		}
+	if err == nil {
+		tokenValid = true
+	} else {
+		log.Println("Token Error:", err.Error())
 	}
 
 	if isSecure {
-		log.Println(r.Method+" "+r.URL.Path+": valid token found, identified user:", token.Claims["User"])
+		if !tokenValid {
+			log.Println(r.URL.Path + ": valid token required, but none found!")
+			w.WriteHeader(http.StatusForbidden)
+			return
+		}
+		tokenUser := token.Claims["User"]
+
+		re := regexp.MustCompile("[^/]+")
+		params := re.FindAllString(r.URL.Path, -1)
+		// log.Println(">>>", r.URL.Path, " >>> ", len(params))
+		if len(params) < 2 {
+			log.Println("Invalid path: ", r.URL.Path)
+			// TODO add root user exemption here.
+			http.Error(w, "Invalid request - user not found.", http.StatusBadRequest)
+			return
+		}
+		pathUser := params[1]
+		if pathUser != tokenUser {
+			log.Println(r.Method+" "+r.URL.Path+": valid token found, identified user:", tokenUser, " != ", pathUser, " - deny")
+			http.Error(w, "Not Authorized", http.StatusUnauthorized)
+			return
+		}
+		log.Println(r.Method+" "+r.URL.Path+": valid token found, identified user:", token.Claims["User"], " matches path - allow")
 	} else {
-		log.Println(r.Method + " " + r.URL.Path + ": no token required")
+		log.Println(r.Method + " " + r.URL.Path + ": no token required - allow")
 	}
 
 	if h := s.handler(r); h != nil {
