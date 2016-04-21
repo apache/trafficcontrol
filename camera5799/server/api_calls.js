@@ -95,7 +95,6 @@ Meteor.methods({
     },
 
     'editCameraInformation': function (token, username, cameraObj) {
-
         // check that the object we received is correct
         check( cameraObj, {
             name: String,
@@ -113,7 +112,7 @@ Meteor.methods({
         var apiUrl = 'https://ec2-52-37-126-44.us-west-2.compute.amazonaws.com:9000/cameras/' + username + "/" + cameraObj.name;
 
         HTTP.call("PUT", apiUrl,
-            { data: registerObj,
+            { data: cameraObj,
                 headers: { 'Authorization': token, 'Content-Type': 'application/json' }
             },
             function (error, result) {
