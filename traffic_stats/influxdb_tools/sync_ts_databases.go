@@ -233,6 +233,12 @@ func syncCacheStat(sourceClient influx.Client, targetClient influx.Client, statN
 		}
 		statTime, _ := time.Parse(time.RFC3339, ss.t)
 		tags := map[string]string{"cdn": ss.cdn}
+		if  ss.hostname != "" {
+			tags["hostname"] = ss.hostname
+		}
+		if ss.cacheType!= "" {
+			tags["type"] = ss.cacheType
+		}
 		fields := map[string]interface{}{
 			"value": ss.value,
 		}
