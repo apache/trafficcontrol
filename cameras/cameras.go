@@ -119,6 +119,7 @@ func handler(w http.ResponseWriter, r *http.Request) {
 	params := re.FindAllString(r.URL.Path, -1)
 	owner := "NotFound"
 	name := "--NotFound--"
+	// log.Println(r.URL.Path, " ", params, " ", len(params))
 	if len(params) == 3 {
 		owner = params[1]
 		name = params[2]
@@ -137,6 +138,7 @@ func handler(w http.ResponseWriter, r *http.Request) {
 				sqlStr = "SELECT * FROM cameras WHERE owner=:owner"
 			}
 			argument := Camera{Owner: owner, Name: name}
+			// log.Println(sqlStr, argument)
 			stmt, err := db.PrepareNamed(sqlStr)
 			err = stmt.Select(&cameralist, argument)
 			if err != nil {
@@ -148,6 +150,7 @@ func handler(w http.ResponseWriter, r *http.Request) {
 				retErr(w, http.StatusNotFound)
 				return
 			}
+			// log.Println(cameralist)
 		}
 	} else if r.Method == "POST" {
 		var c Camera
@@ -161,6 +164,8 @@ func handler(w http.ResponseWriter, r *http.Request) {
 			retErr(w, http.StatusInternalServerError)
 			return
 		}
+		// overwrite the fields in the payload - the path gets checked.
+		c.Owner = owner
 		// TODO encrypt passwd before storing.
 		sqlString := "INSERT INTO cameras (name, owner, type, url, location, username, password) " +
 			" VALUES (:name, :owner, :type, :url, :location, :username, :password)"
@@ -184,8 +189,6 @@ func handler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		// overwrite the fields in the payload - the path gets checked.
-		// re := regexp.MustCompile("[^/]+")
-		// params := re.FindAllString(r.URL.Path, -1)
 		c.Owner = owner
 		c.Name = name
 		// TODO encrypt passwd before storing.
@@ -201,8 +204,6 @@ func handler(w http.ResponseWriter, r *http.Request) {
 		msg = "Camera successfully updated"
 	} else if r.Method == "DELETE" {
 		argument := Camera{}
-		// re := regexp.MustCompile("[0-9]+")
-		// params := re.FindAllString(r.URL.Path, -1)
 		argument.Owner = owner
 		argument.Name = name
 		_, err := db.NamedExec("DELETE FROM cameras WHERE name=:name and owner=:owner", argument)
@@ -221,6 +222,7 @@ func handler(w http.ResponseWriter, r *http.Request) {
 	} else {
 		resp = &Response{Status: "Success", CameraData: cameralist}
 	}
+	log.Println(resp)
 	w.Header().Set("Content-Type", "application/json")
 	enc := json.NewEncoder(w)
 	enc.Encode(resp)
