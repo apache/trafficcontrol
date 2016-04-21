@@ -4,26 +4,31 @@ var editCameraCalls = {
         var userName = Utilities.getUsername();
         var token = Utilities.getUserToken();
 
-        // Meteor.call('editCameraInformation', token, userName, editCameraObj, function(err, res) {
-        //     if (err) {
-        //         alert(JSON.stringify(err.content));
-        //     } else {
-        //         if (res.statusCode == 200) {
-        //             if (res.hasOwnProperty('data')) {
-        //                 var theData = res.data;
-        //                 if (theData.hasOwnProperty('Token')) {
-        //                     localStorage.setItem('login_response', JSON.stringify({token: theData.Token, username: username}));
-        //                     Session.set('login_response', JSON.parse(localStorage.getItem('login_response')));
-        //                     Router.go('browseCameras');
-        //                 }
-        //             }
-        //         }
-        //         else {
-        //             alert(JSON.stringify(res.content));
-        //         }
-        //     }
-        //     return res;
-        // });
+        Meteor.call('editCameraInformation', token, userName, editCameraObj, function(err, res) {
+            if (err) {
+                if (err.hasOwnProperty('content')) {
+                    alert(JSON.stringify(err.content));
+                }
+                else {
+                    alert(err);
+                }
+            }
+            else {
+                if (res.statusCode == 200) {
+                    if (res.hasOwnProperty('content')) {
+                        res = JSON.parse(res.content);
+                        if (res.hasOwnProperty('Status') && res.Status == "Success") {
+                            if (res.hasOwnProperty('Message')) { alert(res.Message); }
+                            Router.go('browseCameras');
+                        }
+                    }
+                }
+                else {
+                    alert(JSON.stringify(res.content));
+                }
+            }
+            return res;
+        });
     }
 };
 
@@ -44,8 +49,9 @@ Template.editCamera.events({
                 username: cameraUsername,
                 password: cameraPassword
             };
-            // TODO: add call here
-        } else {
+            editCameraCalls.editCamera(cameraObj);
+        }
+        else {
             alert("All fields are required!");
         }
     }

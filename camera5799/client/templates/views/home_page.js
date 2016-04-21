@@ -33,7 +33,7 @@ var homePageCalls = {
                         var theData = JSON.parse(res.content);
                         if (theData.hasOwnProperty('Message')) {
                             alert(theData.Message);
-                            homeCallbackFuncs.login(username, password);
+                            homePageCalls.login(username, password);
                         }
                     }
                 }
