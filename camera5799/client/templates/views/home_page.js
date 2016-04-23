@@ -1,14 +1,22 @@
 var homePageCalls = {
 
     login: function (username, password) {
+
+        var titleAlert = 'Error';
+        var messageAlert = null;
+        var typeAlert = 'error';
+        var showAlert = true;
+
         Meteor.call('loginCall', username, password, function(err, res) {
             if (err) {
-                alert(JSON.stringify(err.content));
+                messageAlert = JSON.stringify(err);
             } else {
+                messageAlert = JSON.stringify(res);
                 if (res.statusCode == 200) {
                     if (res.hasOwnProperty('data')) {
                         var theData = res.data;
                         if (theData.hasOwnProperty('Token')) {
+                            showAlert = false;
                             localStorage.setItem('login_response', JSON.stringify({token: theData.Token, username: username}));
                             Session.set('login_response', JSON.parse(localStorage.getItem('login_response')));
                             homePageCalls.userData();
@@ -16,32 +24,36 @@ var homePageCalls = {
                         }
                     }
                 }
-                else {
-                    alert(JSON.stringify(res.content));
-                }
             }
+            if (showAlert) { swal(titleAlert, messageAlert, typeAlert); }
             return res;
         });
     },
 
     register: function (username, firstName, lastName, password) {
+
+        var titleAlert = 'Error';
+        var messageAlert = null;
+        var typeAlert = 'error';
+
         Meteor.call('registerUser', username, firstName, lastName, password, function(err, res) {
             if (err) {
-                alert("Error trying to register... " + JSON.stringify(err));
+                messageAlert = JSON.stringify(err);
             } else {
+                messageAlert = JSON.stringify(res);
                 if (res.statusCode == 200) {
                     if (res.hasOwnProperty('content')) {
-                        var theData = JSON.parse(res.content);
-                        if (theData.hasOwnProperty('Message')) {
-                            alert(theData.Message);
+                        res = JSON.parse(res.content);
+                        if (res.hasOwnProperty('Message')) {
+                            titleAlert = 'Success'
+                            messageAlert = res.Message;
+                            typeAlert = 'success';
                             homePageCalls.login(username, password);
                         }
                     }
                 }
-                else {
-                    alert("Status code: " + res.statusCode + ", Response: " + JSON.stringify(res));
-                }
             }
+            swal(titleAlert, messageAlert, typeAlert);
             return res;
         });
     },
@@ -107,7 +119,7 @@ Template.homePage.events({
             homePageCalls.register(username, firstName, lastName, password);
         }
         else {
-            alert("Please fill all fields");
+            swal('All fields required', 'Please fill all form fields', 'info');
         }
     }
 });

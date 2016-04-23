@@ -1,32 +1,35 @@
 var editCameraCalls = {
 
     editCamera: function (editCameraObj, currentCameraName) {
+
         var userName = Utilities.getUsername();
         var token = Utilities.getUserToken();
 
+        var titleAlert = 'Error';
+        var messageAlert = null;
+        var typeAlert = 'error';
+
         Meteor.call('editCameraInformation', token, userName, currentCameraName, editCameraObj, function(err, res) {
             if (err) {
-                if (err.hasOwnProperty('content')) {
-                    alert(JSON.stringify(err.content));
-                }
-                else {
-                    alert(err);
-                }
+                messageAlert = JSON.stringify(err);
             }
             else {
+                messageAlert = JSON.stringify(res);
                 if (res.statusCode == 200) {
                     if (res.hasOwnProperty('content')) {
                         res = JSON.parse(res.content);
                         if (res.hasOwnProperty('Status') && res.Status == "Success") {
-                            if (res.hasOwnProperty('Message')) { alert(res.Message); }
-                            Router.go('browseCameras');
+                            if (res.hasOwnProperty('Message')) {
+                                titleAlert = 'Success';
+                                messageAlert = res.Message;
+                                typeAlert = 'success';
+                                Router.go('browseCameras');
+                            }
                         }
                     }
                 }
-                else {
-                    alert(JSON.stringify(res.content));
-                }
             }
+            swal(titleAlert, messageAlert, typeAlert);
             return res;
         });
     },
@@ -37,21 +40,15 @@ var editCameraCalls = {
 
         //alert text
         var messageAlert = null;
-        var titleAlert = null;
-        var typeAlert = null;
+        var titleAlert = 'Error';
+        var typeAlert = 'error';
 
         Meteor.call('deleteCamera', token, userName, currentCameraName, function(err, res) {
             if (err) {
-                titleAlert = 'Something went wrong!';
-                typeAlert = 'error';
-                if (err.hasOwnProperty('content')) {
-                    messageAlert = JSON.stringify(err.content);
-                }
-                else {
-                    messageAlert = JSON.stringify(err);
-                }
+                messageAlert = JSON.stringify(err);
             }
             else {
+                messageAlert = JSON.stringify(res);
                 if (res.statusCode == 200) {
                     typeAlert = 'success';
                     titleAlert = 'Deleted';
@@ -59,15 +56,13 @@ var editCameraCalls = {
                         res = JSON.parse(res.content);
                         if (res.hasOwnProperty('Status') && res.Status == "Success") {
                             if (res.hasOwnProperty('Message')) {
+                                typeAlert = 'success';
+                                titleAlert = 'Success';
                                 messageAlert = res.Message;
+                                Router.go('browseCameras');
                             }
-                            Router.go('browseCameras');
                         }
                     }
-                }
-                else {
-                    typeAlert = 'error';
-                    messageAlert = JSON.stringify(res);
                 }
             }
             swal(titleAlert, messageAlert, typeAlert);
@@ -97,7 +92,7 @@ Template.editCamera.events({
             editCameraCalls.editCamera(cameraObj, currentCameraName);
         }
         else {
-            alert("All fields are required!");
+            swal('All fields required', 'Please fill all form fields', 'info');
         }
     },
 

@@ -1,24 +1,30 @@
 var addCameraCalls = {
 
     registerCamera: function(registerObj) {
+
+        var titleAlert = 'Error';
+        var messageAlert = null;
+        var typeAlert = 'error';
+
         Meteor.call('registerCamera', Utilities.getUserToken(), Utilities.getUsername(), registerObj, function(err, res) {
             if (err) {
-                alert(JSON.stringify(err.content));
+                messageAlert = JSON.stringify(err);
             } else {
+                messageAlert = JSON.stringify(res);
                 if (res.statusCode == 200) {
                     if (res.hasOwnProperty('content')) {
                         res = JSON.parse(res.content);
                         if (res.hasOwnProperty('Message')) {
-                            res = res.Message;
-                            alert(res);
                             Utilities.clearForm('form-register-camera');
+                            titleAlert = 'Success';
+                            messageAlert = res.Message;
+                            typeAlert = 'success';
+                            Router.go('browseCameras');
                         }
                     }
                 }
-                else {
-                    alert(JSON.stringify(res.content));
-                }
             }
+            swal(titleAlert, messageAlert, typeAlert);
             return res;
         });
     }
@@ -46,7 +52,7 @@ Template.addCamera.events({
             addCameraCalls.registerCamera(dataObj);
         }
         else {
-            alert("Please fill all fields");
+            swal('All fields required', 'Please fill all form fields', 'info');
         }
     }
 });

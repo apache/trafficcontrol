@@ -1,19 +1,26 @@
 var editUserPageCalls = {
     
     editUser: function (userObj) {
+
         var username = Utilities.getUsername();
         var token = Utilities.getUserToken();
 
+        var titleAlert = 'Error';
+        var messageAlert = null;
+        var typeAlert = 'error';
+
         Meteor.call('editUserInfo', username, token, userObj, function(err, res) {
             if (err) {
-                alert(JSON.stringify(err));
+                messageAlert = JSON.stringify(err);
             } else {
-                alert(JSON.stringify(res));
+                messageAlert = JSON.stringify(res);
                 if (res.statusCode == 200) {
                     if (res.hasOwnProperty('content')) {
                         res = JSON.parse(res.content);
                         if (res.hasOwnProperty('Status')) {
-                            alert(res.Message);
+                            titleAlert = 'Success';
+                            messageAlert = res.Message;
+                            typeAlert = 'success';
                             UserData.remove({});
                             userObj.username = username;
                             UserData.insert(userObj);
@@ -21,28 +28,33 @@ var editUserPageCalls = {
                         }
                     }
                 }
-                else {
-                    alert(JSON.stringify(res.content));
-                }
             }
+            swal(titleAlert, messageAlert, typeAlert);
             return res;
         });
     },
 
     deleteUser: function () {
+
         var username = Utilities.getUsername();
         var token = Utilities.getUserToken();
 
+        var titleAlert = 'Error';
+        var messageAlert = null;
+        var typeAlert = 'error';
+
         Meteor.call('deleteUser', username, token, function(err, res) {
             if (err) {
-                alert(JSON.stringify(err));
+                messageAlert = JSON.stringify(err);
             } else {
-                alert(JSON.stringify(res));
+                messageAlert = JSON.stringify(res);
                 if (res.statusCode == 200) {
                     if (res.hasOwnProperty('content')) {
                         res = JSON.parse(res.content);
                         if (res.hasOwnProperty('Status')) {
-                            alert(res.Message);
+                            titleAlert = 'Success';
+                            messageAlert = res.Message;
+                            typeAlert = 'success';
                             localStorage.removeItem('login_response');
                             Session.set('login_response', null);
                             // remove all of the client collections on logout
@@ -57,9 +69,7 @@ var editUserPageCalls = {
                         }
                     }
                 }
-                else {
-                    alert(JSON.stringify(res.content));
-                }
+                swal(titleAlert, messageAlert, typeAlert);
             }
             return res;
         });
