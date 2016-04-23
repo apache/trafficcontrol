@@ -11,9 +11,11 @@ var http = require('http');
 var https = require('https');
 var fs = require('fs');
 
-const PORT = 8080;
-
+/** Debug flag for development*/
 const debugFlag = process.env.DEBUG;
+
+/** HTTP server listen port */
+const PORT = debugFlag ? 8080 : 443;
 
 var debug = function(debugString) {
   if (debugFlag) {
@@ -100,20 +102,6 @@ var velocityChecker = function(req, res, next) {
 };
 
 /**
- * Verifies the existence of camera_id parameter.
- */
-var cameraIdChecker = function(req, res, next) {
-  debug("  Checking camera_id parameter...");
-  if (req.query.camera_id) {
-    next();
-  }
-  else
-  {
-    next({code: 400, message: "Missing required 'camera_id' parameter."});
-  }
-};
-
-/**
  * Builds and sends final control command to the camers.
  */
 var sendCommand = function(req, res, next) {
@@ -171,11 +159,10 @@ var finishRequest = function(req, res) {
   res.status(200).send("PTZ Done!");
 };
 
-app.post("/ptz/v1",
+app.post("/control/:user/:cameraId",
 	 actionChecker,
 	 directionChecker,
 	 velocityChecker,
-	 cameraIdChecker,
 	 sendCommand,
 	 finishRequest);
 

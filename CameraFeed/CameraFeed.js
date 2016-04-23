@@ -11,14 +11,14 @@ var https = require('https');
 var fs = require('fs');
 var spawn = require('child_process').spawn;
 
-/** HTTP server listen port */
-const PORT = 8080;
-
 /** Map used to determine if a user's camera is recording or not. */
 var recordingMap = new Object();
 
 /** Debug flag for development*/
 const debugFlag = process.env.DEBUG;
+
+/** HTTP server listen port */
+const PORT = debugFlag ? 8080 : 443;
 
 var debug = function(debugString) {
   if (debugFlag) {
@@ -33,37 +33,29 @@ app.use(function(req, res, next) {
 });
 
 /**
- * Verifies the existence of camera_id parameter.
- */
-var cameraIdChecker = function(req, res, next) {
-  debug("  Checking camera_id parameter...");
-  if (req.query.camera_id) {
-    next();
-  }
-  else
-  {
-    next({code: 400, message: "Missing required 'camera_id' parameter."});
-  }
-};
-
-const user = "user"; // TODO: need real user name
-
-/**
  * Starts recording the feed from the camera.
  */
 var startRecord = function(req, res, next) {
   debug("  Starting recording executable...");
+
+  var user = req.params.user;
+  var cameraId = req.params.cameraId;
+  debug("    User: " + user + ", Camera: " + cameraId);
+
   if (! recordingMap[user]) {
     recordingMap[user] = new Object();
   }
 
-  if (recordingMap[user][req.query.camera_id]) {
+  if (recordingMap[user][cameraId]) {
     debug("    Already recording!");
   }
   else {
     // TODO: need actual username/password
     var args = ["--username=microservice",
-		"--password=abc123"];
+		"--password=abc123",
+		"--user=" + user,
+		"--camera=" + cameraId,
+		"--mongo=localhost:27017:"];
     // The camera recording exe spits out tons of debug
     if (debugFlag) {
       var debugArg = "--debug";
@@ -81,7 +73,7 @@ var startRecord = function(req, res, next) {
     debug("    " + args);
 
     var child = spawn("src/AmcrestIPM-721S_StreamReader", args, options);
-    recordingMap[user][req.query.camera_id] = child;
+    recordingMap[user][cameraId] = child;
 
     child.on('error', function(err) {
       console.log("Error with process: " + err);
@@ -92,7 +84,7 @@ var startRecord = function(req, res, next) {
       // notify them something went wrong or restart the application.
       // Not here since this is just a toy.
       debug("   Process exited with code " + code + ", by signal " + signal);
-      recordingMap[user][req.query.camera_id] = null;
+      recordingMap[user][cameraId] = null;
     });
 
     child.stdout.on('data', function(data) {
@@ -112,13 +104,18 @@ var startRecord = function(req, res, next) {
  */
 var stopRecord = function(req, res, next) {
   debug("  Stoping recording executable...");
+
+  var user = req.params.user;
+  var cameraId = req.params.cameraId;
+  debug("    User: " + user + ", Camera: " + cameraId);
+
   if (! recordingMap[user]) {
     recordingMap[user] = new Object();
   }
 
-  if (recordingMap[user][req.query.camera_id]) {
-    recordingMap[user][req.query.camera_id].kill('SIGTERM');
-    recordingMap[user][req.query.camera_id] = null;
+  if (recordingMap[user][cameraId]) {
+    recordingMap[user][cameraId].kill('SIGTERM');
+    recordingMap[user][cameraId] = null;
   }
   else {
     debug("    Already not recording!");
@@ -126,16 +123,14 @@ var stopRecord = function(req, res, next) {
   res.status(200).send("Recording stopped.");
 };
 
-const v1 = "/CameraFeed/v1";
+const service = "/feed/:user/:cameraId";
 
 // Start record
-app.post(v1,
-	 cameraIdChecker,
+app.post(service,
 	 startRecord);
 
 // Stop record
-app.delete(v1,
-	   cameraIdChecker,
+app.delete(service,
 	   stopRecord);
 
 /**

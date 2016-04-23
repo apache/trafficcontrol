@@ -8,20 +8,23 @@ Set the 'DEBUG' environment variable to any non-empty value for debugging
 information.
 
 ## Connection
-HTTPS on port 8080.
+HTTPS on port 443, 8080 when in debug mode (gets around having to run it as root to open 443).
 
 ## API
-    /ptz/v1?[args...]
+    /control
 
 ## API Versions
 ### Version 1
-    POST /ptz/v1?action=[start,stop]&direction=[Up,Down,Left,Right]&velocity[1-8]&camera_id=[camera id]
+    POST /control/{user}/{camera}?action=[start,stop]&direction=[Up,Down,Left,Right]&velocity[1-8]
+
+#### Arguments
+* **user** name of the user making the request
+* **camera** identifer of the user's camera
 
 #### Parameters
 * **action**     starts or stops the camera moving
 * **direction**  direction in which the camera is to move
 * **velocity**   how quickly the camera should move
-* **camera_id**  which camera to move
 
 On stop commands, direction and velocity are required, and must be valid values, but are ultimately ignored. They do not have to correspond to the values from the start command.
 
@@ -30,5 +33,5 @@ On success, HTTP response with or without any information in the body. On error,
 
 #### Example
 
-    POST /ptz/v1?action=start&direction=Up&velocity=5&camera_id=12345
-	POST /ptz/v1?action=stop&direction=Up&velocity=5&camera_id=12345
+    POST /control/rhonda/LivingRoom?action=start&direction=Up&velocity=5
+	POST /control/user123/1?action=stop&direction=Up&velocity=5

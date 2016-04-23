@@ -14,8 +14,9 @@ int main(int argc, char **argv)
   {
     CommandLine commandLine(argc, argv);
     //    JPEGFileWriter jpegWriter("/tmp/jpegs", "");
-    // TODO: need actual MongoDB URI
-    JPEGMongoDBWriter jpegWriter("mongodb://localhost:27017",
+    JPEGMongoDBWriter jpegWriter(commandLine.getMongoLocation(),
+                                 commandLine.getUser(),
+                                 commandLine.getCamera(),
                                  commandLine.getDebug());
     GetVideo getVideo(commandLine.getURI(), commandLine.getUserName(),
                       commandLine.getPassword(), jpegWriter,
