@@ -14,7 +14,8 @@ class JPEGMongoDBWriter : public JPEGHandler
   
   JPEGMongoDBWriter() = delete;
 
-  JPEGMongoDBWriter(const std::string &theURI, int theDebug);
+  JPEGMongoDBWriter(const std::string &theLocation, const std::string &theUser,
+                    const std::string &theCamera, int theDebug);
 
   ~JPEGMongoDBWriter() = default;
 
@@ -22,9 +23,11 @@ class JPEGMongoDBWriter : public JPEGHandler
 
   private:
 
+  const std::string myCamera;
   mongocxx::instance myInstance;
   mongocxx::client myClient;
   mongocxx::collection myCollection;
   const int myDebug;
+  const std::string myUser;
 };
 

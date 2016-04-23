@@ -2,6 +2,7 @@
  * @author Michael Albers
  * For CSCI 5799
  */
+
 'use strict';
 
 var express = require('express');
@@ -12,9 +13,11 @@ var sprintf = require('sprintf-js');
 var avconv = require('avconv');
 const fs = require('fs');
 
-const PORT = 8080;
-
+/** Debug flag for development*/
 const debugFlag = process.env.DEBUG;
+
+/** HTTP server listen port */
+const PORT = debugFlag ? 8080 : 443;
 
 var debug = function(debugString) {
   if (debugFlag) {
@@ -63,26 +66,17 @@ var dateConvert = function(req, res, next) {
 };
 
 /**
- * Verifies the existence of camera_id parameter.
- */
-var cameraIdChecker = function(req, res, next) {
-  debug("  Checking camera_id parameter...");
-  if (req.query.camera_id) {
-    next();
-  }
-  else
-  {
-    next({code: 400, message: "Missing required 'camera_id' parameter."});
-  }
-};
-
-/**
- * Pulls the JPEG data from the MongoDB and writes them to a temporary directory.
+ * Pulls the JPEG data from the MongoDB and writes them to a temporary
+ * directory.
  */
 var jpegRetriever = function(req, res, next) {
   debug("  Retrieving video...");
-  var user = "dummyUser"; // TODO: need user
-  var template = "/tmp/RetrieveVideo_" + req.query.camera_id + '_' + user;
+
+  var user = req.params.user;
+  var cameraId = req.params.cameraId;
+  debug("    User: " + user + ", Camera: " + cameraId);
+
+  var template = "/tmp/RetrieveVideo_" + cameraId + '_' + user;
   req.tmpDir = fs.mkdtempSync(template);
   req.fileList = new Array();
 
@@ -100,7 +94,7 @@ var jpegRetriever = function(req, res, next) {
       // https://docs.mongodb.org/manual/reference/operator/query
       var query = {
 	"user": user,
-	"camera_id": req.query.camera_id,
+	"camera_id": cameraId,
 	$and : [
 	  { $and: [ {"msSinceEpoch": {$gte: req.query.start}},
 		    {"msSinceEpoch": {$lte: req.query.stop}} ] } ]
@@ -179,7 +173,7 @@ var mpeg4Builder = function(req, res, next) {
  * Cleans up the temporary files/directory used to create the video.
  */
 var cleanup = function(req) {
-  if (req.filelist) {
+  if (req.fileList) {
     for (var ii = 0; ii < req.fileList.length; ++ii) {
       fs.unlinkSync(req.fileList[ii]);
     }
@@ -208,9 +202,8 @@ var downloadVideo = function (req, res) {
   });
 };
 
-app.get('/video/v1',
+app.get('/video/:user/:cameraId',
 	dateConvert,
-	cameraIdChecker,
 	jpegRetriever,
 	mpeg4Builder,
 	downloadVideo);

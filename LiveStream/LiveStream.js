@@ -10,11 +10,11 @@ var app = express();
 var https = require('https');
 var fs = require('fs');
 
-/** HTTP server listen port */
-const PORT = 8080;
-
 /** Debug flag for development*/
 const debugFlag = process.env.DEBUG;
+
+/** HTTP server listen port */
+const PORT = debugFlag ? 8080 : 443;
 
 var debug = function(debugString) {
   if (debugFlag) {
@@ -28,29 +28,17 @@ app.use(function(req, res, next) {
   next();
 });
 
-/**
- * Verifies the existence of camera_id parameter.
- */
-var cameraIdChecker = function(req, res, next) {
-  debug("  Checking camera_id parameter...");
-  if (req.query.camera_id) {
-    next();
-  }
-  else
-  {
-    next({code: 400, message: "Missing required 'camera_id' parameter."});
-  }
-};
-
 var returnURL = function(req, res, next) {
   debug("  Returning URL...");
+  var user = req.params.user;
+  var cameraId = req.params.cameraId;
+  debug("  User: " + user + ", Camera: " + cameraId);
   // TODO: need real IP/port
   var url = "192.168.0.1:32768/cgi-bin/mjpg/video.cgi?channel=0&subtype=1";
   res.status(200).send(url);
 };
 
-app.get("/LiveStream/v1",
-	cameraIdChecker,
+app.get("/livestream/:user/:cameraId",
 	returnURL);
 
 /**

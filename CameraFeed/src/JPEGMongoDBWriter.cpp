@@ -12,12 +12,17 @@
 
 #include "JPEGMongoDBWriter.h"
 
-JPEGMongoDBWriter::JPEGMongoDBWriter(const std::string &theURI, int theDebug) :
+JPEGMongoDBWriter::JPEGMongoDBWriter(const std::string &theLocation,
+                                     const std::string &theUser,
+                                     const std::string &theCamera,
+                                     int theDebug) :
+  myCamera{theCamera},
   myInstance{},
-  myClient{mongocxx::uri{theURI}},
+  myClient{mongocxx::uri{"mongodb://" + theLocation}},
   // Database: CSCI5799, Collection: CameraFeed 
   myCollection{myClient["CSCI5799"]["CameraFeed"]},
-  myDebug(theDebug)
+  myDebug(theDebug),
+  myUser{theUser}
 {
 }
 
@@ -31,21 +36,18 @@ void JPEGMongoDBWriter::handleJPEG(const char *theJPEG, size_t theSize)
   // > db.CameraFeed.deleteMany({}) # delete all documents in collection
 
   auto doc = bsoncxx::builder::basic::document{};
-  // TODO: need username
-  doc.append(bsoncxx::builder::basic::kvp("user",
-                                          "dummyUser"));
-  // TODO: need camera id
-  doc.append(bsoncxx::builder::basic::kvp("camera_id",
-                                          "Camera123"));
 
-  std::chrono::milliseconds ms =
+  doc.append(bsoncxx::builder::basic::kvp("user", myUser));
+  doc.append(bsoncxx::builder::basic::kvp("camera_id", myCamera));
+
+  int64_t ms =
     std::chrono::duration_cast<std::chrono::milliseconds>(
-      std::chrono::system_clock::now().time_since_epoch());
+      std::chrono::system_clock::now().time_since_epoch()).count();
 
   // The RetrieveVideo microservice works much better with raw milliseconds
   // since epoch (usual 1970 date).
   doc.append(bsoncxx::builder::basic::kvp(
-               "msSinceEpoch", bsoncxx::types::b_int64{ms.count()}));
+               "msSinceEpoch", bsoncxx::types::b_int64{ms}));
 
   doc.append(bsoncxx::builder::basic::kvp(
                "jpeg",

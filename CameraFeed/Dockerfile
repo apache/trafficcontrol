@@ -1,6 +1,6 @@
 # Docker file for CameraFeed microservice
 
-FROM debian
+FROM debian:8.4
 
 # Need to run this to see what's in the various sources (need this to get
 # curl).
