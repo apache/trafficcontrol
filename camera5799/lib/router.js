@@ -37,3 +37,12 @@ Router.route('/cameraDetail/:name', {
     };
   }
 });
+
+Router.route('/editUser/:username', {
+  name: 'editUser',
+  data:function() {
+    return {
+      userData: UserData.findOne()
+    }
+  }
+});

@@ -27,3 +27,4 @@ audit-argument-checks
 http
 autopublish
 browser-policy
+kit:sweetalert

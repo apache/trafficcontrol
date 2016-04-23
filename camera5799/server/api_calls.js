@@ -7,6 +7,80 @@ Future = Npm.require('fibers/future');
 
 Meteor.methods({
 
+    'userInfo': function(username, token) {
+
+        var myFuture = new Future();
+        check(username, String);
+        check(token, String);
+        token = 'Bearer ' + token;
+        var apiUrl = 'https://ec2-52-37-126-44.us-west-2.compute.amazonaws.com:9000/users/' + username;
+        var response = null;
+        // query the API
+        //var response = HTTP.get(apiUrl).data;
+        HTTP.call("GET", apiUrl,
+            { headers: { 'Authorization': token} },
+            function (error, result) {
+                if (!error) {
+                    myFuture.return(result);
+                } else {
+                    myFuture.return(error.response);
+                    //myFuture.throw(error);
+                }
+            });
+        return myFuture.wait();
+    },
+
+    'editUserInfo': function(username, token, userObj) {
+
+        var myFuture = new Future();
+        check(username, String);
+        check(token, String);
+        check(userObj, {
+            firstName: String,
+            lastName: String,
+            password: String
+        });
+        token = 'Bearer ' + token;
+        var apiUrl = 'https://ec2-52-37-126-44.us-west-2.compute.amazonaws.com:9000/users/' + username;
+        var response = null;
+        // query the API
+        //var response = HTTP.get(apiUrl).data;
+        HTTP.call("PUT", apiUrl,
+            { data: userObj, headers: { 'Authorization': token} },
+            function (error, result) {
+                if (!error) {
+                    myFuture.return(result);
+                } else {
+                    myFuture.return(error.response);
+                    //myFuture.throw(error);
+                }
+            });
+        return myFuture.wait();
+    },
+
+    'deleteUser': function(username, token) {
+
+        var myFuture = new Future();
+        check(username, String);
+        check(token, String);
+        token = 'Bearer ' + token;
+        var apiUrl = 'https://ec2-52-37-126-44.us-west-2.compute.amazonaws.com:9000/users/' + username;
+        var response = null;
+        // query the API
+        //var response = HTTP.get(apiUrl).data;
+        HTTP.call("DELETE", apiUrl,
+            { headers: { 'Authorization': token } },
+            function (error, result) {
+                if (!error) {
+                    myFuture.return(result);
+                } else {
+                    myFuture.return(error.response);
+                    //myFuture.throw(error);
+                }
+            });
+        return myFuture.wait();
+    },
+
     // The method expects a valid IPv4 address
     'loginCall': function (username, password) {
         // Construct the API URL
@@ -97,7 +171,32 @@ Meteor.methods({
 
     },
 
-    'editCameraInformation': function (token, username, cameraObj) {
+    'deleteCamera': function(token, username, cameraName) {
+        check(username, String);
+        check(token, String);
+        check(cameraName, String);
+
+        // Construct the API URL
+        var myFuture = new Future();
+
+        var apiUrl = 'https://ec2-52-37-126-44.us-west-2.compute.amazonaws.com:9000/cameras/' + username + "/" + cameraName;
+        HTTP.call("DELETE", apiUrl,
+            {
+                headers: { 'Authorization': token }
+            },
+            function (error, result) {
+                if (!error) {
+                    console.log("result... " + JSON.stringify(result));
+                    myFuture.return(result);
+                } else {
+                    myFuture.return(error.response);
+                    //myFuture.throw(error);
+                }
+            });
+        return myFuture.wait();
+    },
+
+    'editCameraInformation': function (token, username, cameraName, cameraObj) {
         // check that the object we received is correct
         check( cameraObj, {
             name: String,
@@ -108,18 +207,20 @@ Meteor.methods({
         });
         check(username, String);
         check(token, String);
+        check(cameraName, String);
 
         // Construct the API URL
         var myFuture = new Future();
 
-        var apiUrl = 'https://ec2-52-37-126-44.us-west-2.compute.amazonaws.com:9000/cameras/' + username + "/" + cameraObj.name;
-
+        var apiUrl = 'https://ec2-52-37-126-44.us-west-2.compute.amazonaws.com:9000/cameras/' + username + "/" + cameraName;
+        console.log("camera name... " + cameraName);
         HTTP.call("PUT", apiUrl,
             { data: cameraObj,
                 headers: { 'Authorization': token, 'Content-Type': 'application/json' }
             },
             function (error, result) {
                 if (!error) {
+                    console.log("result... " + JSON.stringify(result));
                     myFuture.return(result);
                 } else {
                     myFuture.return(error.response);

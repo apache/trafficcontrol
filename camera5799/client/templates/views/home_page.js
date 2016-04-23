@@ -11,6 +11,7 @@ var homePageCalls = {
                         if (theData.hasOwnProperty('Token')) {
                             localStorage.setItem('login_response', JSON.stringify({token: theData.Token, username: username}));
                             Session.set('login_response', JSON.parse(localStorage.getItem('login_response')));
+                            homePageCalls.userData();
                             Router.go('browseCameras');
                         }
                     }
@@ -43,6 +44,33 @@ var homePageCalls = {
             }
             return res;
         });
+    },
+
+    userData: function() {
+        if (Utilities.getUsername() && Utilities.getUserToken()) {
+            Meteor.call('userInfo', Utilities.getUsername(), Utilities.getUserToken(), function(err, res) {
+                if (err) {
+                    swal('Error', JSON.stringify(err), 'warning');
+                } else {
+                    if (res.statusCode == 200) {
+                        if (res.hasOwnProperty('content')) {
+                            res = JSON.parse(res.content);
+                            if (res.hasOwnProperty('UserData')) {
+                                res = res.UserData[0];
+                                UserData.insert(res);
+                            }
+
+                        }
+                    }
+                    else {
+                        swal('Error', JSON.stringify(res.content), 'warning');
+                    }
+                }
+                return res;
+            });
+        } else {
+            swal('Error', 'Error trying to get user info, please logout and login again', 'warning');
+        }
     }
 
 };
