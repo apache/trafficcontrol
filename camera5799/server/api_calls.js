@@ -1,6 +1,8 @@
 // needed for self signed certificate
 // link... https://github.com/meteor/meteor/issues/2866
 process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
+// needed to make mobile build work
+BrowserPolicy.content.allowOriginForAll("http://meteor.local");
 Future = Npm.require('fibers/future');
 
 Meteor.methods({
@@ -59,12 +61,13 @@ Meteor.methods({
         return myFuture.wait();
     },
 
-    'getCameras': function (token) {
+    'getCameras': function (token, username) {
         var myFuture = new Future();
         check(token, String);
+        check(username, String);
         token = 'Bearer ' + token;
         // TODO: add /username when it's implemented
-        var apiURL = "https://ec2-52-37-126-44.us-west-2.compute.amazonaws.com:9000/cameras/";
+        var apiURL = "https://ec2-52-37-126-44.us-west-2.compute.amazonaws.com:9000/cameras/" + username;
 
         HTTP.call("GET", apiURL,
             { headers: { 'Authorization': token} },

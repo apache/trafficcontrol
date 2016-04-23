@@ -7,13 +7,10 @@ Template.browseCameras.helpers({
 Template.browseCameras.onCreated(function() {
     //alert("on created method fired!");
 
-    var login_data = Session.get('login_response');
-    var token = null;
-    if (login_data.hasOwnProperty('token')) {
-        token = login_data.token;
-    }
+    var username = Utilities.getUsername();
+    var token = Utilities.getUserToken();
 
-    Meteor.call('getCameras', token, function(err, res) {
+    Meteor.call('getCameras', token, username, function(err, res) {
         if (err) {
             alert("Error... " + JSON.stringify(err));
         } else {
