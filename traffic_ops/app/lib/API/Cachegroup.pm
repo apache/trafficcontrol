@@ -240,5 +240,62 @@ sub get_typeId {
     }
     return($type_id);
 }
+sub postupdatequeue {
+	my $self       = shift;
+    my $params = $self->req->json;
+	if ( !&is_oper($self) ) {
+        return $self->forbidden();
+    }
+
+	my $name;
+    my $id   = $self->param('id');
+    $name = $self->db->resultset('Cachegroup')->search( { id => $id } )->get_column('name')->single();
+    
+    if (! defined($name)) {
+        return $self->alert("cachegroup id[".$id."] does not exist.");
+    }
+
+    my $cdn = $params->{cdn};
+	my $cdn_id = $self->db->resultset('Cdn')->search( { name => $cdn })->get_column('id')->single();
+    if( !defined($cdn_id) ) {
+        return $self->alert("cdn " . $cdn . " does not exist.");
+    }
+
+	my @profiles;
+	@profiles = $self->db->resultset('Server')->search(
+				{ 'cdn.name' => $cdn },
+				{
+					prefetch => 'cdn',
+					select   => 'me.profile',
+					distinct => 1
+				}
+			)->get_column('profile')->all();
+	my $update = $self->db->resultset('Server')->search(
+			{
+				-and => [
+					cachegroup => $id ,
+					profile    => { -in => \@profiles }
+				]
+			}
+		);
+
+    my $response;
+    my $setqueue = $params->{queueUpdate};
+    my @svrs = ();
+	if ( $update->count() > 0 ) {
+        $update->update( { upd_pending => $setqueue } );
+        my @row = $update->get_column('host_name')->all();
+        foreach my $svr ( @row ){
+			push( @svrs, $svr);
+        }
+    }
+
+    $response->{serverNames} = \@svrs;
+    $response->{queueUpdate}  = $setqueue;
+    $response->{cdn}  = $cdn;
+    $response->{cachegroupName}  = $name;
+    $response->{cachegroupId} = $id;
+    return $self->success($response);
+}
 
 1;
