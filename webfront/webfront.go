@@ -122,13 +122,17 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		}
 		pathUser := params[1]
 		if pathUser != tokenUser {
-			log.Println(r.Method+" "+r.URL.Path+": valid token found, identified user:", tokenUser, " != ", pathUser, " - deny")
-			http.Error(w, "Not Authorized", http.StatusUnauthorized)
-			return
+			if tokenUser != "root" {
+				log.Println(r.Method+" "+r.URL.RequestURI()+": valid token found, identified user:", tokenUser, " != ", pathUser, " - deny")
+				http.Error(w, "Not Authorized", http.StatusUnauthorized)
+				return
+			} else {
+				log.Println(r.Method+" "+r.URL.RequestURI()+": valid token found, identified user:", tokenUser, " - allow")
+			}
 		}
-		log.Println(r.Method+" "+r.URL.Path+": valid token found, identified user:", token.Claims["User"], " matches path - allow")
+		log.Println(r.Method+" "+r.URL.RequestURI()+": valid token found, identified user:", token.Claims["User"], " matches path - allow")
 	} else {
-		log.Println(r.Method + " " + r.URL.Path + ": no token required - allow")
+		log.Println(r.Method + " " + r.URL.RequestURI() + ": no token required - allow")
 	}
 
 	if h := s.handler(r); h != nil {
