@@ -3,6 +3,7 @@
 process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
 // needed to make mobile build work
 BrowserPolicy.content.allowOriginForAll("http://meteor.local");
+BrowserPolicy.content.allowOriginForAll("*");
 Future = Npm.require('fibers/future');
 
 Meteor.methods({
