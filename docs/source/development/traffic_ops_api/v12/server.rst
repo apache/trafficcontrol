@@ -780,3 +780,49 @@ Server
   +------------------+--------+------------------------------------------------+
   
 |
+
+**POST /api/1.2/servers/{:id}/queueupdate**
+
+  Set server queue update flag value.
+
+  Authentication Required: Yes
+
+  Role(s) Required: admin or oper
+
+  **Request Route Parameters**
+
+  +-----------+----------+------------------+
+  | Name      | Required | Description      |
+  +===========+==========+==================+
+  | id        | yes      | the server id.   |
+  +-----------+----------+------------------+
+
+  **Request Route Properties**
+
+  +--------------+---------+-----------------------------------------------+
+  | Name         | Type    | Description                                   |
+  +==============+=========+===============================================+
+  | queueUpdate  | integer | The value of queue update flag to set. 0 or 1 |
+  +--------------+---------+-----------------------------------------------+
+
+  **Response Properties**
+
+  +--------------+---------+-----------------------------------------------+
+  | Name         | Type    | Description                                   |
+  +==============+=========+===============================================+
+  | queueUpdate  | integer | The value of queue update flag to set. 0 or 1 |
+  +--------------+---------+-----------------------------------------------+
+  | serverId     | integer | server id                                     |
+  +--------------+---------+-----------------------------------------------+
+
+  **Response Example** ::
+
+    {
+      "response": {
+          "serverId": "1",
+          "queueUpdate": "1" 
+      }
+    }
+
+|
+

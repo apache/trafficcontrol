@@ -764,4 +764,26 @@ sub update {
     $self->success($data);
 }
 
+sub postupdatequeue {
+	my $self       = shift;
+    my $params = $self->req->json;
+    my $id   = $self->param('id');
+	if ( !&is_oper($self) ) {
+        return $self->forbidden();
+    }
+
+    my $update = $self->db->resultset('Server')->find( { id => $id } );
+    if( !defined($update) ) {
+        return $self->alert("Failed to find server id = $id");
+    }
+
+    my $setqueue = $params->{queueUpdate};
+	$update->update( { upd_pending => $setqueue } );
+
+    my $response;
+    $response->{serverId}  = $id;
+    $response->{queueUpdate}  = $setqueue;
+    return $self->success($response);
+}
+
 1;
