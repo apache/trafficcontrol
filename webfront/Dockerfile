@@ -21,5 +21,5 @@ RUN export GOBIN=$GOPATH/bin && go install webfront.go
 EXPOSE 9000
 
 # Run the outyet command by default when the container starts.
-ENTRYPOINT /go/bin/webfront -rules=rules.json -https=:9000 -https_cert=server.pem -https_key=server.key
+ENTRYPOINT /go/bin/webfront webfront.go
 

@@ -6,13 +6,13 @@ package main
 import (
 	"crypto/tls"
 	"encoding/json"
-	"flag"
 	"fmt"
 	jwt "github.com/dgrijalva/jwt-go"
 	"log"
 	"net/http"
 	"net/http/httputil"
 	"os"
+	"path"
 	"regexp"
 	"strings"
 	"sync"
@@ -41,30 +41,63 @@ type loginJson struct {
 	Password string `json:"password"`
 }
 
-var (
-	httpsAddr    = flag.String("https", "", "HTTPS listen address")
-	ruleFile     = flag.String("rules", "", "rule definition file")
-	pollInterval = flag.Duration("poll", time.Second*10, "file poll interval")
-)
+// Config holds the configuration of the server.
+type Config struct {
+	HTTPSAddr    string `json:"httpsAddr"`
+	RuleFile     string `json:"ruleFile"`
+	PollInterval int    `json:"pollInterval"`
+}
+
+var Logger *log.Logger
+
+func printUsage() {
+	exampleConfig := `{
+	"httpsAddr": ":9000",
+	"ruleFile": "rules.json",
+	"pollInterval": 60
+}`
+	Logger.Println("Usage: " + path.Base(os.Args[0]) + " configfile")
+	Logger.Println("")
+	Logger.Println("Example config file:")
+	Logger.Println(exampleConfig)
+}
 
 func main() {
-	log.Println("Starting webfront...")
-	flag.Parse()
-	s, err := NewServer(*ruleFile, *pollInterval)
+	if len(os.Args) < 2 {
+		printUsage()
+		return
+	}
+
+	Logger = log.New(os.Stdout, " ", log.Ldate|log.Ltime|log.Lshortfile)
+
+	file, err := os.Open(os.Args[1])
 	if err != nil {
-		log.Fatal(err)
+		Logger.Println("Error opening config file:", err)
+		return
+	}
+	decoder := json.NewDecoder(file)
+	config := Config{}
+	err = decoder.Decode(&config)
+	if err != nil {
+		Logger.Println("Error reading config file:", err)
+		return
+	}
+	Logger.Println("Starting webfront...")
+	s, err := NewServer(config.RuleFile, time.Duration(config.PollInterval)*time.Second)
+	if err != nil {
+		Logger.Fatal(err)
 	}
 
 	// override the default so we can use self-signed certs on our microservices
 	// and use a self-signed cert in this server
 	http.DefaultTransport.(*http.Transport).TLSClientConfig = &tls.Config{InsecureSkipVerify: true}
 	if _, err := os.Stat("server.pem"); os.IsNotExist(err) {
-		log.Fatal("server.pem file not found")
+		Logger.Fatal("server.pem file not found")
 	}
 	if _, err := os.Stat("server.key"); os.IsNotExist(err) {
-		log.Fatal("server.key file not found")
+		Logger.Fatal("server.key file not found")
 	}
-	http.ListenAndServeTLS(*httpsAddr, "server.pem", "server.key", s)
+	http.ListenAndServeTLS(config.HTTPSAddr, "server.pem", "server.key", s)
 }
 
 func validateToken(tokenString string) (*jwt.Token, error) {
@@ -100,12 +133,12 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	if err == nil {
 		tokenValid = true
 	} else {
-		log.Println("Token Error:", err.Error())
+		Logger.Println("Token Error:", err.Error())
 	}
 
 	if isSecure {
 		if !tokenValid {
-			log.Println(r.URL.Path + ": valid token required, but none found!")
+			Logger.Println(r.URL.Path + ": valid token required, but none found!")
 			w.WriteHeader(http.StatusForbidden)
 			return
 		}
@@ -113,29 +146,33 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 		re := regexp.MustCompile("[^/]+")
 		params := re.FindAllString(r.URL.Path, -1)
-		// log.Println(">>>", r.URL.Path, " >>> ", len(params))
+		// Logger.Println(">>>", r.URL.Path, " >>> ", len(params))
 		if len(params) < 2 {
-			log.Println("Invalid path: ", r.URL.Path)
+			Logger.Println("Invalid path: ", r.URL.Path)
 			// TODO add root user exemption here.
 			http.Error(w, "Invalid request - user not found.", http.StatusBadRequest)
 			return
 		}
 		pathUser := params[1]
 		if pathUser != tokenUser {
-			log.Println(r.Method+" "+r.URL.Path+": valid token found, identified user:", tokenUser, " != ", pathUser, " - deny")
-			http.Error(w, "Not Authorized", http.StatusUnauthorized)
-			return
+			if tokenUser != "root" {
+				Logger.Println(r.Method+" "+r.URL.RequestURI()+": valid token found, identified user:", tokenUser, " != ", pathUser, " - deny")
+				http.Error(w, "Not Authorized", http.StatusUnauthorized)
+				return
+			} else {
+				Logger.Println(r.Method+" "+r.URL.RequestURI()+": valid token found, identified user:", tokenUser, " - allow")
+			}
 		}
-		log.Println(r.Method+" "+r.URL.Path+": valid token found, identified user:", token.Claims["User"], " matches path - allow")
+		Logger.Println(r.Method+" "+r.URL.RequestURI()+": valid token found, identified user:", token.Claims["User"], " matches path - allow")
 	} else {
-		log.Println(r.Method + " " + r.URL.Path + ": no token required - allow")
+		Logger.Println(r.Method + " " + r.URL.RequestURI() + ": no token required - allow")
 	}
 
 	if h := s.handler(r); h != nil {
 		h.ServeHTTP(w, r)
 		return
 	}
-	log.Println(r.Method + " " + r.URL.Path + ": no mapping in rules file!")
+	Logger.Println(r.Method + " " + r.URL.Path + ": no mapping in rules file!")
 	http.Error(w, "Not found.", http.StatusNotFound)
 }
 
@@ -156,12 +193,12 @@ func (s *Server) isSecure(req *http.Request) bool {
 		h = h[:i]
 	}
 	for _, r := range s.rules {
-		// log.Println(p, "==", r.Path)
+		// Logger.Println(p, "==", r.Path)
 		if strings.HasPrefix(p, r.Path) {
 			return r.Secure
 		}
 	}
-	log.Println("returning hard false")
+	Logger.Println("returning hard false")
 	return true
 }
 
@@ -177,12 +214,12 @@ func (s *Server) handler(req *http.Request) http.Handler {
 		h = h[:i]
 	}
 	for _, r := range s.rules {
-		// log.Println(p, "==", r.Path)
+		// Logger.Println(p, "==", r.Path)
 		if strings.HasPrefix(p, r.Path) {
 			return r.handler
 		}
 	}
-	log.Println("returning nil")
+	Logger.Println("returning nil")
 	return nil
 }
 
@@ -190,8 +227,9 @@ func (s *Server) handler(req *http.Request) http.Handler {
 // set if the file has been modified.
 func (s *Server) refreshRules(file string, poll time.Duration) {
 	for {
+		// Logger.Println("loading file")
 		if err := s.loadRules(file); err != nil {
-			log.Println(err)
+			Logger.Println(file, ":", err)
 		}
 		time.Sleep(poll)
 	}
@@ -234,7 +272,7 @@ func parseRules(file string) ([]*Rule, error) {
 	for _, r := range rules {
 		r.handler = makeHandler(r)
 		if r.handler == nil {
-			log.Printf("bad rule: %#v", r)
+			Logger.Printf("bad rule: %#v", r)
 		}
 	}
 	return rules, nil

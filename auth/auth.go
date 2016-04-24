@@ -111,6 +111,7 @@ func handler(w http.ResponseWriter, r *http.Request) {
 		var u User
 		userlist := []User{}
 		body, err := ioutil.ReadAll(r.Body)
+		log.Println(string(body))
 		if err != nil {
 			Logger.Println("Error reading body: ", err.Error())
 			http.Error(w, "Error reading body: "+err.Error(), http.StatusBadRequest)
