@@ -777,12 +777,24 @@ sub postupdatequeue {
         return $self->alert("Failed to find server id = $id");
     }
 
-    my $setqueue = $params->{queueUpdate};
+    my $setqueue = $params->{action};
+	if ( !defined($setqueue)) {
+        return $self->alert("action needed, should be queue or dequeue.");
+    }
+	if ( $setqueue eq "queue") {
+		$setqueue = 1
+	} else {
+		if ($setqueue eq "dequeue") {
+			$setqueue = 0
+		} else {
+			return $self->alert("action should be queue or dequeue.");
+		}
+	}
 	$update->update( { upd_pending => $setqueue } );
 
     my $response;
     $response->{serverId}  = $id;
-    $response->{queueUpdate}  = $setqueue;
+    $response->{udpPending}  = $setqueue;
     return $self->success($response);
 }
 

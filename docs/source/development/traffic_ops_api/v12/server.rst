@@ -781,7 +781,7 @@ Server
   
 |
 
-**POST /api/1.2/servers/{:id}/queueupdate**
+**POST /api/1.2/servers/{:id}/queue_update**
 
   Set server queue update flag value.
 
@@ -797,12 +797,12 @@ Server
   | id        | yes      | the server id.   |
   +-----------+----------+------------------+
 
-  **Request Route Properties**
+  **Request Properties**
 
   +--------------+---------+-----------------------------------------------+
   | Name         | Type    | Description                                   |
   +==============+=========+===============================================+
-  | queueUpdate  | integer | The value of queue update flag to set. 0 or 1 |
+  | action       | string  | queue or dequeue the udp_pending              |
   +--------------+---------+-----------------------------------------------+
 
   **Response Properties**
@@ -810,7 +810,7 @@ Server
   +--------------+---------+-----------------------------------------------+
   | Name         | Type    | Description                                   |
   +==============+=========+===============================================+
-  | queueUpdate  | integer | The value of queue update flag to set. 0 or 1 |
+  | udpPending   | integer | The value of udp_pending flag to set. 0 or 1  |
   +--------------+---------+-----------------------------------------------+
   | serverId     | integer | server id                                     |
   +--------------+---------+-----------------------------------------------+
@@ -820,7 +820,7 @@ Server
     {
       "response": {
           "serverId": "1",
-          "queueUpdate": "1" 
+          "udpPending": "1" 
       }
     }
 

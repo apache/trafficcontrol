@@ -261,6 +261,20 @@ sub postupdatequeue {
         return $self->alert("cdn " . $cdn . " does not exist.");
     }
 
+    my $setqueue = $params->{action};
+	if ( !defined($setqueue)) {
+        return $self->alert("action needed, should be queue or dequeue.");
+    }
+	if ( $setqueue eq "queue") {
+		$setqueue = 1
+	} else {
+		if ($setqueue eq "dequeue") {
+			$setqueue = 0
+		} else {
+			return $self->alert("action should be queue or dequeue.");
+		}
+	}
+
 	my @profiles;
 	@profiles = $self->db->resultset('Server')->search(
 				{ 'cdn.name' => $cdn },
@@ -280,7 +294,6 @@ sub postupdatequeue {
 		);
 
     my $response;
-    my $setqueue = $params->{queueUpdate};
     my @svrs = ();
 	if ( $update->count() > 0 ) {
         $update->update( { upd_pending => $setqueue } );
@@ -291,7 +304,7 @@ sub postupdatequeue {
     }
 
     $response->{serverNames} = \@svrs;
-    $response->{queueUpdate}  = $setqueue;
+    $response->{udpPending}  = $setqueue;
     $response->{cdn}  = $cdn;
     $response->{cachegroupName}  = $name;
     $response->{cachegroupId} = $id;

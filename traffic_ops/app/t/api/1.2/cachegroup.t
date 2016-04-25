@@ -124,33 +124,33 @@ ok $t->post_ok('/api/1.2/servers' => {Accept => 'application/json'} => json => {
             , 'Does the server details return?';
 
 my $necg_id = &get_cg_id('mid-northeast-group');
-ok $t->post_ok('/api/1.2/cachegroups/'. $necg_id .'/queueupdate' =>  {Accept => 'application/json'} =>json => {
-        'queueUpdate' => '1',
+ok $t->post_ok('/api/1.2/cachegroups/'. $necg_id .'/queue_update' =>  {Accept => 'application/json'} =>json => {
+        'action' => 'queue',
         'cdn' => 'cdn1'})
     ->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } )
-    ->json_is( "/response/queueUpdate" => "1")
+    ->json_is( "/response/udpPending" => "1")
     ->json_is( "/response/cdn" => "cdn1")
     ->json_is( "/response/cachegroupName" => "mid-northeast-group")
-            , 'Does the queueupdate api return?';
+            , 'Does the queue_update api return?';
 
-ok $t->post_ok('/api/1.2/cachegroups/'. $necg_id .'/queueupdate' =>  {Accept => 'application/json'} =>json => {
-        'queueUpdate' => '0',
+ok $t->post_ok('/api/1.2/cachegroups/'. $necg_id .'/queue_update' =>  {Accept => 'application/json'} =>json => {
+        'action' => 'dequeue',
         'cdn' => 'cdn1'})
     ->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } )
-    ->json_is( "/response/queueUpdate" => "0")
+    ->json_is( "/response/udpPending" => "0")
     ->json_is( "/response/cachegroupName" => "mid-northeast-group")
-            , 'Does the queueupdate api return?';
+            , 'Does the queue_update api return?';
 
-ok $t->post_ok('/api/1.2/cachegroups/'. $necg_id .'/queueupdate' =>  {Accept => 'application/json'} =>json => {
-        'queueUpdate' => '1',
+ok $t->post_ok('/api/1.2/cachegroups/'. $necg_id .'/queue_update' =>  {Accept => 'application/json'} =>json => {
+        'action' => 'queue',
         'cdn' => 'cdn'})
     ->status_is(400)->or( sub { diag $t->tx->res->content->asset->{content}; } )
             , 'Does the queueupdate api return?';
-ok $t->post_ok('/api/1.2/cachegroups/9999/queueupdate' =>  {Accept => 'application/json'} =>json => {
-        'queueUpdate' => '1',
+ok $t->post_ok('/api/1.2/cachegroups/9999/queue_update' =>  {Accept => 'application/json'} =>json => {
+        'action' => 'queue',
         'cdn' => 'cdn1'})
     ->status_is(400)->or( sub { diag $t->tx->res->content->asset->{content}; } )
-            , 'Does the queueupdate api return?';
+            , 'Does the queue_update api return?';
 
 ok $t->get_ok('/logout')->status_is(302)->or( sub { diag $t->tx->res->content->asset->{content}; } );
 $dbh->disconnect();

@@ -333,7 +333,7 @@ Cache Group
    
 |
 
-**POST /api/1.2/cachegroups/{:id}/queueupdate**
+**POST /api/1.2/cachegroups/{:id}/queue_update**
 
   Set server queue update flag value for all servers in the cachegroup and cdn.
 
@@ -349,12 +349,12 @@ Cache Group
   | id              | yes      | the cachegroup id.   |
   +-----------------+----------+----------------------+
 
-  **Request Route Properties**
+  **Request Properties**
 
   +--------------+---------+-----------------------------------------------+
   | Name         | Type    | Description                                   |
   +==============+=========+===============================================+
-  | queueUpdate  | integer | The value of queue update flag to set. 0 or 1 |
+  | action       | string  | queue or dequeue                              |
   +--------------+---------+-----------------------------------------------+
   | cdn          | string  | cdn name                                      |
   +--------------+---------+-----------------------------------------------+
@@ -364,7 +364,7 @@ Cache Group
   +-----------------+---------+----------------------------------------------------+
   | Name            | Type    | Description                                        |
   +=================+=========+====================================================+
-  | queueUpdate     | integer | The value of queue update flag to set. 0 or 1      |
+  | updPending      | integer | The value to set udp_pending flag to, 0 or 1       |
   +-----------------+---------+----------------------------------------------------+
   | cachegroupId    | integer | cachegroup id                                      |
   +-----------------+---------+----------------------------------------------------+
@@ -380,7 +380,7 @@ Cache Group
     {
       "response": {
             "cachegroupName": "us-il-chicago",
-            "queueUpdate": "1",
+            "udpPending": "1",
             "serverNames":   [
                 "atsec-chi-00",
                 "atsec-chi-01",

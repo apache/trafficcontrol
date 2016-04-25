@@ -115,17 +115,17 @@ ok $t->put_ok('/api/1.2/servers/' . $svr_id  => {Accept => 'application/json'} =
             , 'Does the server details return?';
 
 my $svr_id1 = &get_svr_id('tc1_ats3');
-ok $t->post_ok('/api/1.2/servers/'. $svr_id1 . '/queueupdate' =>  {Accept => 'application/json'} =>json => {
-        'queueUpdate' => '1' })
+ok $t->post_ok('/api/1.2/servers/'. $svr_id1 . '/queue_update' =>  {Accept => 'application/json'} =>json => {
+        'action' => 'queue' })
     ->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } )
-    ->json_is( "/response/queueUpdate" => "1")
+    ->json_is( "/response/udpPending" => "1")
     ->json_is( "/response/serverId" => "".$svr_id1)
-            , 'Does the queueupdate api return?';
+            , 'Does the queue_update api return?';
 
-ok $t->post_ok('/api/1.2/servers/9999/queueupdate' =>  {Accept => 'application/json'} =>json => {
-        'queueUpdate' => '1' })
+ok $t->post_ok('/api/1.2/servers/9999/queue_update' =>  {Accept => 'application/json'} =>json => {
+        'action' => 'queue' })
     ->status_is(400)->or( sub { diag $t->tx->res->content->asset->{content}; } )
-            , 'Does the queueupdate api return?';
+            , 'Does the queue_update api return?';
 
 
 ok $t->get_ok('/logout')->status_is(302)->or( sub { diag $t->tx->res->content->asset->{content}; } );
