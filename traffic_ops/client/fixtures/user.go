@@ -26,6 +26,7 @@ func Users() *client.UserResponse {
 				Username:     "bsmith",
 				PublicSSHKey: "some-ssh-key",
 				Role:         "3",
+				RoleName:     "operations",
 				Email:        "bobsmith@email.com",
 				FullName:     "Bob Smith",
 			},
