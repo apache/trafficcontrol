@@ -55,6 +55,7 @@ public class CatalinaTrafficRouter {
 			if (connector.getPort() == 80) {
 				connector.setPort(8888);
 			}
+			System.out.println("[" + System.currentTimeMillis() + "] >>>>>>>>>>>>>>>> Traffic Router listening on port " + connector.getPort());
 		}
 
 		StandardHost standardHost = (StandardHost) trafficRouterService.getContainer().findChild("localhost");

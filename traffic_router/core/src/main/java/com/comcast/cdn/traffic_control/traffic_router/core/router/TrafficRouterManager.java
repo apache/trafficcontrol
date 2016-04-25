@@ -39,6 +39,8 @@ import org.springframework.context.event.ContextRefreshedEvent;
 public class TrafficRouterManager implements ApplicationListener<ContextRefreshedEvent> {
 	private static final Logger LOGGER = Logger.getLogger(TrafficRouterManager.class);
 
+	public static final int DEFAULT_API_PORT = 3333;
+
 	private JSONObject state;
 	private TrafficRouter trafficRouter;
 	private GeolocationService geolocationService;
@@ -50,6 +52,7 @@ public class TrafficRouterManager implements ApplicationListener<ContextRefreshe
 	private TrafficOpsUtils trafficOpsUtils;
 	private FederationRegistry federationRegistry;
 	private ApplicationContext applicationContext;
+	private int apiPort = DEFAULT_API_PORT;
 
 	public NameServer getNameServer() {
 		return nameServer;
@@ -149,5 +152,13 @@ public class TrafficRouterManager implements ApplicationListener<ContextRefreshe
 			trafficRouter.setApplicationContext(applicationContext);
 			trafficRouter.configurationChanged();
 		}
+	}
+
+	public void setApiPort(final int apiPort) {
+		this.apiPort = apiPort;
+	}
+
+	public int getApiPort() {
+		return apiPort;
 	}
 }

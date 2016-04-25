@@ -22,7 +22,6 @@ import java.net.UnknownHostException;
 import org.apache.log4j.Logger;
 import org.json.JSONObject;
 
-import com.comcast.cdn.traffic_control.traffic_router.core.cache.CacheRegister;
 import com.comcast.cdn.traffic_control.traffic_router.core.router.TrafficRouter;
 import com.comcast.cdn.traffic_control.traffic_router.core.router.TrafficRouterManager;
 
@@ -35,43 +34,44 @@ public class LanguidState {
 
 	public void init() {
 		if (trafficRouterManager == null || trafficRouterManager.getTrafficRouter() == null) {
-			setReady(true);
 			return;
 		}
 
 		final TrafficRouter tr = trafficRouterManager.getTrafficRouter();
 
 		if (tr.getCacheRegister() == null) {
-			setReady(true);
 			return;
 		}
 
-		final CacheRegister cacheRegister = tr.getCacheRegister();
-		final JSONObject routers = cacheRegister.getTrafficRouters();
+		final String hostname;
 
 		try {
-			final String hostname = InetAddress.getLocalHost().getHostName().replaceAll("\\..*", "");
-
-			for (String key : JSONObject.getNames(routers)) {
-				final JSONObject routerJson = routers.optJSONObject(key);
-
-				if (hostname.equalsIgnoreCase(key)) { // this is us
-					if (routerJson.has("port")) {
-						this.setPort(routerJson.optInt("port"));
-					}
-
-					if (routerJson.has("api.port")) {
-						this.setApiPort(routerJson.optInt("api.port"));
-					}
-
-					break;
-				}
-			}
+			hostname = InetAddress.getLocalHost().getHostName().replaceAll("\\..*", "");
 		} catch (UnknownHostException e) {
-			LOGGER.error(e, e);
+			LOGGER.error("Cannot lookup hostname of this traffic router!: " + e.getMessage());
+			return;
 		}
 
-		this.setReady(true);
+		final JSONObject routers = tr.getCacheRegister().getTrafficRouters();
+
+		for (String key : JSONObject.getNames(routers)) {
+			final JSONObject routerJson = routers.optJSONObject(key);
+
+			if (hostname.equalsIgnoreCase(key)) { // this is us
+				if (routerJson.has("port")) {
+					setPort(routerJson.optInt("port"));
+				}
+
+				if (routerJson.has("api.port")) {
+					setApiPort(routerJson.optInt("api.port"));
+					trafficRouterManager.setApiPort(apiPort);
+				}
+
+				break;
+			}
+		}
+
+		setReady(true);
 	}
 
 	public boolean isReady() {

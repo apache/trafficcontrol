@@ -101,22 +101,25 @@ public class RouterTest {
 		httpGet.addHeader("Host", "foo." + deliveryServiceId + ".bar");
 		CloseableHttpResponse response = null;
 
-		int triesLeft = 60;
+		try {
+			response = httpClient.execute(httpGet);
+			assertThat(response.getStatusLine().getStatusCode(), equalTo(302));
+		} finally {
+			if (response != null) response.close();
+		}
+	}
 
-		while (triesLeft > 0) {
-			triesLeft--;
-			try {
-				response = httpClient.execute(httpGet);
+	@Test
+	public void itDoesRoutingThroughPathsStartingWithCrs() throws Exception {
+		HttpGet httpGet = new HttpGet("http://localhost:8888/crs/stats?fakeClientIpAddress=12.34.56.78");
+		httpGet.addHeader("Host", "foo." + deliveryServiceId + ".bar");
+		CloseableHttpResponse response = null;
 
-				if (response.getStatusLine().getStatusCode() != 302) {
-					Thread.sleep(500);
-					continue;
-				}
-
-				triesLeft = 0;
-			} finally {
-				if (response != null) response.close();
-			}
+		try {
+			response = httpClient.execute(httpGet);
+			assertThat(response.getStatusLine().getStatusCode(), equalTo(302));
+		} finally {
+			if (response != null) response.close();
 		}
 	}
 

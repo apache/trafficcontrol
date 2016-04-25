@@ -60,7 +60,7 @@ public class RouterFilter extends OncePerRequestFilter {
 	public void doFilterInternal(final HttpServletRequest request, final HttpServletResponse response, final FilterChain chain) throws IOException, ServletException {
 		final Date requestDate = new Date();
 
-		if (request.getLocalPort() == 3333) {
+		if (request.getLocalPort() == trafficRouterManager.getApiPort()) {
 			chain.doFilter(request, response);
 			return;
 		}

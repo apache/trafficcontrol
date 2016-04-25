@@ -93,6 +93,7 @@ public abstract class AbstractServiceUpdater {
 	public boolean updateDatabase() {
 		if (!databasesDirectory.exists() && !databasesDirectory.mkdirs()) {
 			LOGGER.error(databasesDirectory.getAbsolutePath() + " does not exist and cannot be created!");
+			return false;
 		}
 
 		if (!isLoaded()) {
