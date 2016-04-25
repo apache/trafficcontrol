@@ -27,7 +27,7 @@ import (
 
 func TestUsers(t *testing.T) {
 	resp := fixtures.Users()
-	server := testHelper.ValidHTTPServer(resp)
+	server := testHelper.ValidHTTPServer(resp.Response)
 	defer server.Close()
 
 	var httpClient http.Client

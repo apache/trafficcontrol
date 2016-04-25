@@ -26,16 +26,17 @@ type UserResponse struct {
 
 // User contains information about a given user in Traffic Ops.
 type User struct {
-	Username     string `json:"username"`
-	PublicSSHKey string `json:"publicSshKey"`
-	Role         string `json:"role"`
-	UID          string `json:"uid"`
-	GID          string `json:"gid"`
-	Company      string `json:"company"`
-	Email        string `json:"email"`
-	FullName     string `json:"fullName"`
-	NewUser      bool   `json:"newUser"`
-	LastUpdated  string `json:"lastUpdated"`
+	Username     string `json:"username,omitempty"`
+	PublicSSHKey string `json:"publicSshKey,omitempty"`
+	Role         string `json:"role,omitempty"`
+	RoleName     string `json:"rolename,omitempty"`
+	UID          string `json:"uid,omitempty"`
+	GID          string `json:"gid,omitempty"`
+	Company      string `json:"company,omitempty"`
+	Email        string `json:"email,omitempty"`
+	FullName     string `json:"fullName,omitempty"`
+	NewUser      bool   `json:"newUser,omitempty"`
+	LastUpdated  string `json:"lastUpdated,omitempty"`
 }
 
 // Users gets an array of Users.
