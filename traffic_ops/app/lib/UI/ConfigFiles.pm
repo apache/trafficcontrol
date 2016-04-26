@@ -257,10 +257,17 @@ sub ds_data {
 				if ( $protocol == 0 ) {
 					$dsinfo->{dslist}->[$j]->{"remap_line"}->{$map_from} = $map_to;
 				}
+				elsif ( $protocol == 1 ) {
+					$map_from = "https://" . $host_re . "/";
+					$dsinfo->{dslist}->[$j]->{"remap_line"}->{$map_from} = $map_to;
+				}
 				elsif ( $protocol == 2 ) {
 
-					#add with http
+					#add the first with http
 					$dsinfo->{dslist}->[$j]->{"remap_line"}->{$map_from} = $map_to;
+					#add the second with https
+					my $map_from2 = "https://" . $host_re . "/";
+					$dsinfo->{dslist}->[$j]->{"remap_line2"}->{$map_from2} = $map_to;
 				}
 			}
 		}
