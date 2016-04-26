@@ -50,14 +50,6 @@ ok $t->get_ok('/api/1.2/servers/details.json')->status_is(400)->or( sub { diag $
 ok $t->get_ok('/api/1.2/servers/details.json?orderby=hostName')->status_is(400)->or( sub { diag $t->tx->res->content->asset->{content}; } ),
 	'Does the orderby work?';
 
-ok $t->get_ok('/logout')->status_is(302)->or( sub { diag $t->tx->res->content->asset->{content}; } );
-
-
-
-
-ok $t->post_ok( '/login', => form => { u => Test::TestHelper::ADMIN_USER, p => Test::TestHelper::ADMIN_USER_PASSWORD } )->status_is(302)
-  ->or( sub { diag $t->tx->res->content->asset->{content}; } ), 'Should login?';
-
 ok $t->get_ok('/api/1.2/servers.json?type=mid')->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } )
   ->json_is( "/response/0/hostName", "atlanta-mid-01" )
   ->json_is( "/response/0/domainName", "ga.atlanta.kabletown.net" )
