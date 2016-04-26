@@ -186,10 +186,6 @@ sub ds_data {
 	$dsinfo->{host_name}   = $server->host_name;
 	$dsinfo->{domain_name} = $server->domain_name;
 
-	my $storage_data = $self->param_data( $server, "storage.config" );
-	$dsinfo->{RAM_Volume}  = $storage_data->{RAM_Volume};
-	$dsinfo->{Disk_Volume} = $storage_data->{Disk_Volume};
-
 	my @server_ids = ();
 	my $rs;
 	if ( $server->type->name =~ m/^MID/ ) {
@@ -768,15 +764,19 @@ sub volume_dot_config {
 
 	my $num_volumes = get_num_volumes($data);
 
+	my $next_volume = 1;
 	$text .= "# 12M NOTE: This is running with forced volumes - the size is irrelevant\n";
 	if ( defined( $data->{Drive_Prefix} ) ) {
-		$text .= volume_dot_config_volume_text( $data->{Disk_Volume}, $num_volumes );
+		$text .= volume_dot_config_volume_text( $next_volume, $num_volumes );
+		$next_volume++;
 	}
 	if ( defined( $data->{RAM_Drive_Prefix} ) ) {
-		$text .= volume_dot_config_volume_text( $data->{RAM_Volume}, $num_volumes );
+		$text .= volume_dot_config_volume_text( $next_volume, $num_volumes );
+		$next_volume++;
 	}
 	if ( defined( $data->{SSD_Drive_Prefix} ) ) {
-		$text .= volume_dot_config_volume_text( $data->{SSD_Volume}, $num_volumes );
+		$text .= volume_dot_config_volume_text( $next_volume, $num_volumes );
+		$next_volume++;
 	}
 	return $text;
 }
@@ -788,14 +788,22 @@ sub hosting_dot_config {
 	my $data = shift;
 
 	my $server = $self->server_data($id);
+	my $storage_data   = $self->param_data( $server, "storage.config" );
 	my $text   = $self->header_comment( $server->host_name );
 	if ( !defined($data) ) {
 		$data = $self->ds_data($server);
 	}
 
-	if ( defined( $data->{RAM_Volume} ) ) {
-		$text .= "# 12M NOTE: volume " . $data->{RAM_Volume} . " is the RAM volume\n";
-		$text .= "# 12M NOTE: volume " . $data->{Disk_Volume} . " is the Disk volume\n";
+	if ( defined( $storage_data->{RAM_Drive_Prefix} ) ) {
+		my $next_volume = 1;
+		if ( defined( $storage_data->{Drive_Prefix} ) ) {
+			my $disk_volume = $next_volume;
+			$text .= "# 12M NOTE: volume " . $disk_volume . " is the Disk volume\n";
+			$next_volume++;
+		}
+		my $ram_volume = $next_volume;
+		$text .= "# 12M NOTE: volume " . $ram_volume . " is the RAM volume\n";
+
 		my %listed = ();
 		foreach my $remap ( @{ $data->{dslist} } ) {
 			if (   ( ( $remap->{type} =~ /_LIVE$/ || $remap->{type} =~ /_LIVE_NATNL$/ ) && $server->type->name =~ m/^EDGE/ )
@@ -804,16 +812,13 @@ sub hosting_dot_config {
 				if ( defined( $listed{ $remap->{org} } ) ) { next; }
 				my $org_fqdn = $remap->{org};
 				$org_fqdn =~ s/https?:\/\///;
-				$text .= "hostname=" . $org_fqdn . " volume=" . $data->{RAM_Volume} . "\n";
+				$text .= "hostname=" . $org_fqdn . " volume=" . $ram_volume . "\n";
 				$listed{ $remap->{org} } = 1;
 			}
 		}
 	}
-	my $dvolno = 1;
-	if ( defined( $data->{Disk_Volume} ) ) {
-		$dvolno = $data->{Disk_Volume};
-	}
-	$text .= "hostname=*   volume=" . $dvolno . "\n";
+	my $disk_volume = 1; # note this will actually be the RAM (RAM_Drive_Prefix) volume if there is no Drive_Prefix parameter.
+	$text .= "hostname=*   volume=" . $disk_volume . "\n";
 
 	return $text;
 }
@@ -842,32 +847,20 @@ sub storage_dot_config {
 	my $text   = $self->header_comment( $server->host_name );
 	my $data   = $self->param_data( $server, $file );
 
-	# always default to volume one and let DB params override
-	my $assigned_volume = 1;
-
+	my $next_volume = 1;
 	if ( defined( $data->{Drive_Prefix} ) ) {
-		if ( defined( $data->{Disk_Volume} ) ) {
-			$assigned_volume = $data->{Disk_Volume};
-		}
-		$text .= storage_dot_config_volume_text( $data->{Drive_Prefix}, $data->{Drive_Letters}, $assigned_volume );
+		$text .= storage_dot_config_volume_text( $data->{Drive_Prefix}, $data->{Drive_Letters}, $next_volume );
+		$next_volume++;
 	}
 
 	if ( defined( $data->{RAM_Drive_Prefix} ) ) {
-		++$assigned_volume;
-
-		if ( defined( $data->{RAM_Volume} ) ) {
-			$assigned_volume = $data->{RAM_Volume};
-		}
-		$text .= storage_dot_config_volume_text( $data->{RAM_Drive_Prefix}, $data->{RAM_Drive_Letters}, $assigned_volume );
+		$text .= storage_dot_config_volume_text( $data->{RAM_Drive_Prefix}, $data->{RAM_Drive_Letters}, $next_volume );
+		$next_volume++;
 	}
 
 	if ( defined( $data->{SSD_Drive_Prefix} ) ) {
-		++$assigned_volume;
-
-		if ( defined( $data->{SSD_Volume} ) ) {
-			$assigned_volume = $data->{SSD_Volume};
-		}
-		$text .= storage_dot_config_volume_text( $data->{SSD_Drive_Prefix}, $data->{SSD_Drive_Letters}, $assigned_volume );
+		$text .= storage_dot_config_volume_text( $data->{SSD_Drive_Prefix}, $data->{SSD_Drive_Letters}, $next_volume );
+		$next_volume++;
 	}
 	return $text;
 }
