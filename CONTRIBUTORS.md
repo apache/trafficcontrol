@@ -3,6 +3,7 @@ Sorted alphabetically
 * **[Crystal Qian](https://github.com/cjqian)**
 * **[Dan Kirkwood](https://github.com/dangogh)**
 * **[David Neuman](https://github.com/dneuman64)**
+* **[Derek Gelinas](https://github.com/dg4prez)**
 * **[Dewayne Richardson](https://github.com/dewrich)**
 * **[Eric Friedrich](https://github.com/limited)**
 * **[Hank Beatty](https://github.com/hbeatty)**
