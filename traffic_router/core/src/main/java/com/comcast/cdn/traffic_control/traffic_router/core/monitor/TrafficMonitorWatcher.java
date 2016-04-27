@@ -40,9 +40,12 @@ import com.comcast.cdn.traffic_control.traffic_router.core.router.TrafficRouterM
 import com.comcast.cdn.traffic_control.traffic_router.core.util.AbstractUpdatable;
 import com.comcast.cdn.traffic_control.traffic_router.core.util.PeriodicResourceUpdater;
 import com.comcast.cdn.traffic_control.traffic_router.core.util.ResourceUrl;
+import org.springframework.context.ApplicationListener;
+import org.springframework.context.event.ApplicationContextEvent;
+import org.springframework.context.event.ContextClosedEvent;
 
 @SuppressWarnings("PMD.TooManyFields")
-public class TrafficMonitorWatcher  {
+public class TrafficMonitorWatcher implements ApplicationListener<ApplicationContextEvent> {
 	private static final Logger LOGGER = Logger.getLogger(TrafficMonitorWatcher.class);
 
 	private String stateUrl;
@@ -151,6 +154,15 @@ public class TrafficMonitorWatcher  {
 		stateUpdater = new PeriodicResourceUpdater(stateHandler, new MyResourceUrl(stateUrl), new File(databasesDirectory, statusFile).getAbsolutePath(), statusRefreshPeriod, true);
 		stateUpdater.init();
 	}
+
+	@Override
+	public void onApplicationEvent(final ApplicationContextEvent event) {
+		if (event instanceof ContextClosedEvent) {
+			crUpdater.destroy();
+			stateUpdater.destroy();
+		}
+	}
+
 	class MyResourceUrl implements ResourceUrl{
 		private final String urlTemplate;
 		private int i = 0;

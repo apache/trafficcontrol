@@ -84,7 +84,7 @@
 					<archive>
 						<manifest>
 							<addClasspath>true</addClasspath>
-							<mainClass>com.comcast.cdn.traffic_control.traffic_router.connector.Connector</mainClass>
+							<mainClass>com.comcast.cdn.traffic_control.traffic_router.protocol.LanguidProtocol</mainClass>
 						</manifest>
 					</archive>
 				</configuration>

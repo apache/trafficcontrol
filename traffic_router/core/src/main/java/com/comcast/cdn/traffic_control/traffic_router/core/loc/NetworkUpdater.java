@@ -31,8 +31,12 @@ public class NetworkUpdater extends AbstractServiceUpdater {
 
 	public boolean loadDatabase() throws IOException, JSONException {
 		final File existingDB = new File(databasesDirectory, databaseName);
+
+		if (!existingDB.exists() || !existingDB.canRead()) {
+			return false;
+		}
+
 		NetworkNode.generateTree(existingDB);
-		setLoaded(true);
 		return true;
 	}
 }
