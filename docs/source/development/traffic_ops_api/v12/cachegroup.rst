@@ -335,7 +335,7 @@ Cache Group
 
 **POST /api/1.2/cachegroups/{:id}/queue_update**
 
-  Set server queue update flag value for all servers in the cachegroup and cdn.
+  Queue or dequeue updates for all servers assigned to a cache group limited to a specific CDN.
 
   Authentication Required: Yes
 
@@ -364,7 +364,7 @@ Cache Group
   +-----------------+---------+----------------------------------------------------+
   | Name            | Type    | Description                                        |
   +=================+=========+====================================================+
-  | updPending      | integer | The value to set udp_pending flag to, 0 or 1       |
+  | action          | string  | The action processed, queue or dequeue.            |
   +-----------------+---------+----------------------------------------------------+
   | cachegroupId    | integer | cachegroup id                                      |
   +-----------------+---------+----------------------------------------------------+
@@ -380,7 +380,7 @@ Cache Group
     {
       "response": {
             "cachegroupName": "us-il-chicago",
-            "udpPending": "1",
+            "action": "queue",
             "serverNames":   [
                 "atsec-chi-00",
                 "atsec-chi-01",

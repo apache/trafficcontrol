@@ -118,7 +118,7 @@ my $svr_id1 = &get_svr_id('tc1_ats3');
 ok $t->post_ok('/api/1.2/servers/'. $svr_id1 . '/queue_update' =>  {Accept => 'application/json'} =>json => {
         'action' => 'queue' })
     ->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } )
-    ->json_is( "/response/udpPending" => "1")
+    ->json_is( "/response/action" => "queue")
     ->json_is( "/response/serverId" => "".$svr_id1)
             , 'Does the queue_update api return?';
 

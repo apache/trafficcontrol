@@ -765,10 +765,10 @@ sub update {
 }
 
 sub postupdatequeue {
-	my $self       = shift;
+    my $self       = shift;
     my $params = $self->req->json;
     my $id   = $self->param('id');
-	if ( !&is_oper($self) ) {
+    if ( !&is_oper($self) ) {
         return $self->forbidden();
     }
 
@@ -778,23 +778,21 @@ sub postupdatequeue {
     }
 
     my $setqueue = $params->{action};
-	if ( !defined($setqueue)) {
+    if ( !defined($setqueue)) {
         return $self->alert("action needed, should be queue or dequeue.");
     }
-	if ( $setqueue eq "queue") {
-		$setqueue = 1
-	} else {
-		if ($setqueue eq "dequeue") {
-			$setqueue = 0
-		} else {
-			return $self->alert("action should be queue or dequeue.");
-		}
-	}
-	$update->update( { upd_pending => $setqueue } );
+    if ( $setqueue eq "queue") {
+        $setqueue = 1
+    } elsif ($setqueue eq "dequeue") {
+        $setqueue = 0
+    } else {
+        return $self->alert("action should be queue or dequeue.");
+    }
+    $update->update( { upd_pending => $setqueue } );
 
     my $response;
     $response->{serverId}  = $id;
-    $response->{udpPending}  = $setqueue;
+    $response->{action}  = ($setqueue == 1)?"queue":"dequeue";
     return $self->success($response);
 }
 

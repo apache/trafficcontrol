@@ -128,7 +128,7 @@ ok $t->post_ok('/api/1.2/cachegroups/'. $necg_id .'/queue_update' =>  {Accept =>
         'action' => 'queue',
         'cdn' => 'cdn1'})
     ->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } )
-    ->json_is( "/response/udpPending" => "1")
+    ->json_is( "/response/action" => "queue")
     ->json_is( "/response/cdn" => "cdn1")
     ->json_is( "/response/cachegroupName" => "mid-northeast-group")
             , 'Does the queue_update api return?';
@@ -137,7 +137,7 @@ ok $t->post_ok('/api/1.2/cachegroups/'. $necg_id .'/queue_update' =>  {Accept =>
         'action' => 'dequeue',
         'cdn' => 'cdn1'})
     ->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } )
-    ->json_is( "/response/udpPending" => "0")
+    ->json_is( "/response/action" => "dequeue")
     ->json_is( "/response/cachegroupName" => "mid-northeast-group")
             , 'Does the queue_update api return?';
 

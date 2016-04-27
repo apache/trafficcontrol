@@ -783,7 +783,7 @@ Server
 
 **POST /api/1.2/servers/{:id}/queue_update**
 
-  Set server queue update flag value.
+  Queue or dequeue updates for a specific server.
 
   Authentication Required: Yes
 
@@ -810,7 +810,7 @@ Server
   +--------------+---------+-----------------------------------------------+
   | Name         | Type    | Description                                   |
   +==============+=========+===============================================+
-  | udpPending   | integer | The value of udp_pending flag to set. 0 or 1  |
+  | action       | string  | The action processed, queue or dequeue.       |
   +--------------+---------+-----------------------------------------------+
   | serverId     | integer | server id                                     |
   +--------------+---------+-----------------------------------------------+
@@ -820,7 +820,7 @@ Server
     {
       "response": {
           "serverId": "1",
-          "udpPending": "1" 
+          "action": "queue" 
       }
     }
 
