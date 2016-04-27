@@ -185,7 +185,7 @@ sub startup {
 	$rh->load();
 
 	##help relieve issues with riak
-	IO::Socket::SSL::set_default_session_cache(IO::Socket::SSL::Session_Cache->new( 1024 ));
+	IO::Socket::SSL::set_default_session_cache(IO::Socket::SSL::Session_Cache->new( 4096 ));
 
 }
 

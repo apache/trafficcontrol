@@ -1,0 +1,28 @@
+#!/bin/sh
+#
+# Base pre-commit hook. Place this file in ".git/hooks/pre-commit" to activate.
+# All executables in the misc/pre-commit-hooks directory will be run, stopping after first failure.
+
+# Fix for SourceTree, which (unless launched from terminal) does not have correct $PATH.
+# Check that go is in $PATH, if not, load the ~/.bash_profile which will hopefully update
+# $PATH to the proper value.
+command -v go >/dev/null 2>&1
+if [ $? -ne 0 ]; then
+  source ~/.bash_profile
+fi
+
+__DIR__="$(cd "$(dirname "${0}")"; echo $(pwd))"
+HOOKS="$__DIR__/../../misc/git/pre-commit-hooks/*"
+
+for hook in $HOOKS
+do
+  if [[ -x "$hook" ]]
+  then
+    $hook
+    if [ $? != 0 ]; then
+      exit 1
+    fi
+  fi
+done
+
+exit 0
