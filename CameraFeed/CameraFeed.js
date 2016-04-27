@@ -26,6 +26,10 @@ var debug = function(debugString) {
   }
 };
 
+// Read in Mongo DB information
+const mongo = JSON.parse(fs.readFileSync('mongo.json', 'utf8'));
+debug("Mongo: " + JSON.stringify(mongo));
+
 // Generic entry point for all requests.
 app.use(function(req, res, next) {
   debug("---New CameraFeed request---");
@@ -50,12 +54,13 @@ var startRecord = function(req, res, next) {
     debug("    Already recording!");
   }
   else {
+    var mongoArg = "--mongo=" + mongo.host + ":" + mongo.port;
     // TODO: need actual username/password
     var args = ["--username=microservice",
 		"--password=abc123",
 		"--user=" + user,
 		"--camera=" + cameraId,
-		"--mongo=localhost:27017:"];
+		mongoArg];
     // The camera recording exe spits out tons of debug
     if (debugFlag) {
       var debugArg = "--debug";

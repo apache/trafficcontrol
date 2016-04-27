@@ -25,6 +25,10 @@ var debug = function(debugString) {
   }
 };
 
+// Read in Mongo DB information
+const mongo = JSON.parse(fs.readFileSync('mongo.json', 'utf8'));
+debug("Mongo: " + JSON.stringify(mongo));
+
 /**
  * Entry point for all requests
  */
@@ -80,8 +84,7 @@ var jpegRetriever = function(req, res, next) {
   req.tmpDir = fs.mkdtempSync(template);
   req.fileList = new Array();
 
-  // TODO: need actual host/port
-  var url = "mongodb://localhost:27017/CSCI5799";
+  var url = "mongodb://" + mongo.host + ":" + mongo.port + "/CSCI5799";
 
   mongoClient.connect(url, function(err, db) {
     if (err) {
