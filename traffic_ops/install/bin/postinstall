@@ -614,6 +614,7 @@ sleep(5);
 
 sub profiles_exist {
 		if ( -f $reconfigure_defaults ) {
+				print "Default profiles were previously created. Remove " . $reconfigure_defaults . " to create again.\n";
 				return 1;
 		}
 
@@ -646,7 +647,7 @@ sub profiles_exist {
 		my $resp = $ua->request($req);
 
 		if ( !$resp->is_success ) {
-				print "Error checking if profiles exist: $resp->code $resp->message\n";
+				print "Error checking if profiles exist: " . $resp->status_line . "\n";
 				return 1;    # return true, so we don't attempt to create profiles
 		}
 		my $message = $resp->decoded_content;
