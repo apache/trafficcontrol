@@ -1293,7 +1293,7 @@
         {
             "config_file": "logs_xml.config",
             "name": "LogFormat.Format",
-            "value": "%<cqtq> chi=%<chi> phn=%<phn> shn=%<shn> url=%<cquuc> cqhm=%<cqhm> cqhv=%<cqhv> pssc=%<pssc> ttms=%<ttms> b=%<pscl> sssc=%<sssc> sscl=%<sscl> cfsc=%<cfsc> pfsc=%<pfsc> crc=%<crc> phr=%<phr> uas=\"%<{User-Agent}cqh>\" xmt=\"%<{X-MoneyTrace}cqh>\" "
+            "value": "%<cqtq> chi=%<chi> phn=%<phn> php=%<php> shn=%<shn> url=%<cquuc> cqhm=%<cqhm> cqhv=%<cqhv> pssc=%<pssc> ttms=%<ttms> b=%<pscl> sssc=%<sssc> sscl=%<sscl> cfsc=%<cfsc> pfsc=%<pfsc> crc=%<crc> phr=%<phr> pqsn=%<pqsn> uas=\"%<{User-Agent}cqh>\" xmt=\"%<{X-MoneyTrace}cqh>\" "
         },
         {
             "config_file": "logs_xml.config",
@@ -1571,11 +1571,6 @@
             "value": "1.0"
         },
         {
-            "config_file": "package",
-            "name": "trafficserver",
-            "value": "5.3.2-599.089d585.el6.x86_64"
-        },
-        {
             "config_file": "parent.config",
             "name": "weight",
             "value": "1.0"
@@ -1584,6 +1579,11 @@
             "config_file": "traffic_ops_ort_syncds.cron",
             "name": "cron_ort_syncds_cdn",
             "value": "{{.CronOrtSyncds}}"
+        },
+        {
+            "config_file": "package",
+            "name": "trafficserver",
+            "value": "5.3.2-733.dc054b0.el6.x86_64"
         }
     ],
     "profile": {
