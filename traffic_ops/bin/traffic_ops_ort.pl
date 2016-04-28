@@ -24,11 +24,18 @@ use Fcntl qw(:flock);
 use MIME::Base64;
 use LWP::UserAgent;
 use Crypt::SSLeay;
+use Getopt::Long;
 
 $| = 1;
 my $date           = `/bin/date`;
 chomp($date);
 print "$date\n";
+
+my $dispersion = 300;
+my $retries = 5;
+
+GetOptions( "dispersion=i" => \$dispersion, # dispersion (in seconds)
+            "retries=i"    => \$retries );
 
 if ( $#ARGV < 1 ) {
 	&usage();
@@ -565,7 +572,7 @@ sub check_syncds_state {
 	( $log_level >> $DEBUG ) && print "DEBUG Checking syncds state.\n";
 	if ( $script_mode == $SYNCDS || $script_mode == $BADASS || $script_mode == $REPORT ) {
 		## The herd is about to get /update/<hostname>
-		&sleep_rand(10);
+		( $dispersion > 0 ) && &sleep_rand($dispersion);
 
 		my $url     = "$traffic_ops_host\/update/$hostname_short";
 		my $upd_ref = &lwp_get($url);
@@ -605,11 +612,14 @@ sub check_syncds_state {
 			if ( $parent_pending == 1 ) {
 				( $log_level >> $ERROR ) && print "ERROR Traffic Ops is signaling that my parents need an update.\n";
 				if ( $script_mode == $SYNCDS ) {
-					( $log_level >> $WARN ) && print "WARN In syncds mode, sleeping for 60s to see if the update my parents need is cleared.\n";
-					for ( my $i = 60; $i > 0; $i-- ) {
-						( $log_level >> $WARN ) && print ".";
-						sleep 1;
+					if ( $dispersion > 0 ) {
+						( $log_level >> $WARN ) && print "WARN In syncds mode, sleeping for " . $dispersion . "s to see if the update my parents need is cleared.\n";
+						for ( my $i = $dispersion; $i > 0; $i-- ) {
+							( $log_level >> $WARN ) && print ".";
+							sleep 1;
+						}
 					}
+
 					( $log_level >> $WARN ) && print "\n";
 					$upd_ref = &lwp_get($url);
 					if ( $upd_ref =~ m/^\d{3}$/ ) {
@@ -628,17 +638,11 @@ sub check_syncds_state {
 					}
 					else {
 						( $log_level >> $DEBUG ) && print "DEBUG The update on my parents cleared; continuing.\n";
-						## At least a portion of the herd is about to check in with Traffic Ops, so need to space things out a bit.
-						#&sleep_rand(5);
 					}
 				}
 			}
 			else {
 				( $log_level >> $DEBUG ) && print "DEBUG Traffic Ops is signaling that my parents do not need an update.\n";
-				if ( $script_mode == $SYNCDS ) {
-					## The herd is about to check in with Traffic Ops, need to space things out a bit.
-					&sleep_rand(15);
-				}
 			}
 		}
 		elsif ( $script_mode == $SYNCDS && $upd_pending != 1 ) {
@@ -1045,7 +1049,7 @@ sub check_this_plugin {
 
 sub lwp_get {
 	my $url           = shift;
-	my $retry_counter = 5;
+	my $retry_counter = $retries;
 
 	( $log_level >> $DEBUG ) && print "DEBUG Total connections in LWP cache: " . $lwp_conn->conn_cache->get_connections("https") . "\n";
 	my %headers = ( 'Cookie' => $cookie );
@@ -1060,7 +1064,7 @@ sub lwp_get {
 
 		if ( &check_lwp_response_code($response, $ERROR) || &check_lwp_response_content_length($response, $ERROR) ) {
 			( $log_level >> $ERROR ) && print "ERROR result for $url is: ..." . $response->content . "...\n";
-			&sleep_rand(6);
+			sleep 2**( $retries - $retry_counter );
 			$retry_counter--;
 		}
 		# https://github.com/Comcast/traffic_control/issues/1168
