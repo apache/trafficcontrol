@@ -93,14 +93,16 @@ public class FederationsWatcher extends AbstractServiceUpdater {
 
     @Override
     public boolean loadDatabase() throws IOException, org.apache.wicket.ajax.json.JSONException {
-        final File existingDB = new File(databasesDirectory, databaseName);
+        final File existingDB = databasesDirectory.resolve(databaseName).toFile();
 
         if (!existingDB.exists() || !existingDB.canRead()) {
             return false;
         }
 
         final char[] jsonData = new char[(int) existingDB.length()];
-        new FileReader(existingDB).read(jsonData);
+        final FileReader reader = new FileReader(existingDB);
+        reader.read(jsonData);
+        reader.close();
         final String json = new String(jsonData);
 
         federationRegistry.setFederations(new FederationsBuilder().fromJSON(json));

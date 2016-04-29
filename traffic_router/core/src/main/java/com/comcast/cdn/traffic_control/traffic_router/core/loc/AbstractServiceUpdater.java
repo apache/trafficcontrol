@@ -25,6 +25,7 @@ import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 import java.util.Arrays;
 import java.util.Date;
@@ -51,7 +52,7 @@ public abstract class AbstractServiceUpdater {
 	protected boolean loaded = false;
 	protected ScheduledFuture<?> scheduledService;
 	private TrafficRouterManager trafficRouterManager;
-	protected File databasesDirectory;
+	protected Path databasesDirectory;
 
 	public void destroy() {
 		executorService.shutdownNow();
@@ -91,8 +92,13 @@ public abstract class AbstractServiceUpdater {
 
 	@SuppressWarnings({"PMD.CyclomaticComplexity", "PMD.NPathComplexity"})
 	public boolean updateDatabase() {
-		if (!databasesDirectory.exists() && !databasesDirectory.mkdirs()) {
-			LOGGER.error(databasesDirectory.getAbsolutePath() + " does not exist and cannot be created!");
+		try {
+			if (!Files.exists(databasesDirectory)) {
+				Files.createDirectories(databasesDirectory);
+			}
+
+		} catch (IOException ex) {
+			LOGGER.error(databasesDirectory.toString() + " does not exist and cannot be created!");
 			return false;
 		}
 
@@ -105,7 +111,7 @@ public abstract class AbstractServiceUpdater {
 			}
 		}
 
-		final File existingDB = new File(databasesDirectory, databaseName);
+		final File existingDB = databasesDirectory.resolve(databaseName).toFile();
 		File newDB;
 		if (!needsUpdating(existingDB)) {
 			LOGGER.info("[" + getClass().getSimpleName() + "] Location database does not require updating.");
@@ -365,11 +371,11 @@ public abstract class AbstractServiceUpdater {
 		this.trafficRouterManager = trafficRouterManager;
 	}
 
-	public File getDatabasesDirectory() {
+	public Path getDatabasesDirectory() {
 		return databasesDirectory;
 	}
 
-	public void setDatabasesDirectory(final File databasesDirectory) {
+	public void setDatabasesDirectory(final Path databasesDirectory) {
 		this.databasesDirectory = databasesDirectory;
 	}
 }
