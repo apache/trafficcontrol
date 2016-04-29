@@ -77,7 +77,7 @@ public class FederationsWatcher extends AbstractServiceUpdater {
 
     @Override
     public boolean loadDatabase() throws IOException, org.apache.wicket.ajax.json.JSONException {
-        final File existingDB = new File(databasesDirectory, databaseName);
+        final File existingDB = databasesDirectory.resolve(databaseName).toFile();
 
         if (!existingDB.exists() || !existingDB.canRead()) {
             return false;

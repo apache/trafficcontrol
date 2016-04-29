@@ -16,24 +16,31 @@
 
 package com.comcast.cdn.traffic_control.traffic_router.core;
 
-import org.apache.commons.logging.Log;
+import java.io.File;
+
 import org.apache.log4j.ConsoleAppender;
 import org.apache.log4j.Level;
 import org.apache.log4j.LogManager;
-import org.apache.log4j.Logger;
 import org.apache.log4j.PatternLayout;
 import org.apache.wicket.util.time.Duration;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.bio.SocketConnector;
 import org.eclipse.jetty.webapp.WebAppContext;
 
-import java.io.File;
-
 public class TrafficRouterStart {
 
 	public static void main(String[] args) throws Exception {
-		System.setProperty("deploy.dir", "src/test");
-		System.setProperty("dns.zones.dir", "src/test/var/auto-zones");
+		String prefix = System.getProperty("user.dir");
+
+		if (!prefix.endsWith("/core")) {
+			prefix += "/core";
+		}
+
+		System.setProperty("deploy.dir", prefix + "/src/test");
+		System.setProperty("dns.zones.dir", prefix + "/src/test/var/auto-zones");
+
+		System.setProperty("dns.tcp.port", "1053");
+		System.setProperty("dns.udp.port", "1053");
 
 		LogManager.getLogger("org.eclipse.jetty").setLevel(Level.WARN);
 		LogManager.getLogger("org.springframework").setLevel(Level.WARN);
