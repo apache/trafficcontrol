@@ -101,8 +101,13 @@ public class FederationsWatcher extends AbstractServiceUpdater {
 
         final char[] jsonData = new char[(int) existingDB.length()];
         final FileReader reader = new FileReader(existingDB);
-        reader.read(jsonData);
-        reader.close();
+
+        try {
+            reader.read(jsonData);
+        } finally {
+            reader.close();
+        }
+
         final String json = new String(jsonData);
 
         federationRegistry.setFederations(new FederationsBuilder().fromJSON(json));
