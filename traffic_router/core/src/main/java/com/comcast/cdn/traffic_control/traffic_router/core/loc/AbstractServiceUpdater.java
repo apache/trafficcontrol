@@ -89,63 +89,70 @@ public abstract class AbstractServiceUpdater {
 		scheduledService = executorService.scheduleWithFixedDelay(updater, pollingInterval, pollingInterval, TimeUnit.MILLISECONDS);
 	}
 
-	@SuppressWarnings("PMD.CyclomaticComplexity")
+	@SuppressWarnings({"PMD.CyclomaticComplexity", "PMD.NPathComplexity"})
 	public boolean updateDatabase() {
 		if (!databasesDirectory.exists() && !databasesDirectory.mkdirs()) {
 			LOGGER.error(databasesDirectory.getAbsolutePath() + " does not exist and cannot be created!");
+			return false;
+		}
+
+		if (!isLoaded()) {
+			try {
+				setLoaded(loadDatabase());
+			} catch (Exception e) {
+				LOGGER.error("Failed to load existing database! " + e.getMessage());
+				return false;
+			}
 		}
 
 		final File existingDB = new File(databasesDirectory, databaseName);
-		File newDB = null;
-		try {
-			if (!isLoaded() || needsUpdating(existingDB)) {
-				boolean isModified = true;
-
-				try {
-					newDB = downloadDatabase(getDataBaseURL(), existingDB);
-					trafficRouterManager.trackEvent("last" + getClass().getSimpleName() + "Check");
-
-					// if the remote db's timestamp is less than or equal to ours, the above returns existingDB
-					if (newDB == existingDB) {
-						isModified = false;
-					}
-				} catch (Exception e) {
-					LOGGER.fatal("[" + getClass().getSimpleName() + "] Caught exception while attempting to download: " + getDataBaseURL(), e);
-
-					if (!isLoaded()) {
-						newDB = existingDB;
-					} else {
-						throw e;
-					}
-				}
-
-				if ((!isLoaded() || isModified) && newDB != null && newDB.exists()) {
-					if (!verifyDatabase(newDB)) {
-						LOGGER.warn("[" + getClass().getSimpleName() + "] " + newDB.getAbsolutePath() + " from " + getDataBaseURL() + " is invalid!");
-						return false;
-					}
-
-					final boolean isDifferent = copyDatabaseIfDifferent(existingDB, newDB);
-
-					if (!isLoaded() || isDifferent) {
-						loadDatabase();
-						setLoaded(true);
-						trafficRouterManager.trackEvent("last" + getClass().getSimpleName() + "Update");
-					} else if (isLoaded() && !isDifferent) {
-						newDB.delete();
-					}
-
-					return true;
-				} else {
-					return false;
-				}
-			} else {
-				LOGGER.info("[" + getClass().getSimpleName() + "] Location database does not require updating.");
-			}
-		} catch (final Exception e) {
-			LOGGER.error("[" + getClass().getSimpleName() + "] " + e.getMessage(), e);
+		File newDB;
+		if (!needsUpdating(existingDB)) {
+			LOGGER.info("[" + getClass().getSimpleName() + "] Location database does not require updating.");
+			return false;
 		}
-		return false;
+
+		boolean isModified = true;
+
+		try {
+			newDB = downloadDatabase(getDataBaseURL(), existingDB);
+			trafficRouterManager.trackEvent("last" + getClass().getSimpleName() + "Check");
+
+			// if the remote db's timestamp is less than or equal to ours, the above returns existingDB
+			if (newDB == existingDB) {
+				isModified = false;
+			}
+		} catch (Exception e) {
+			LOGGER.fatal("[" + getClass().getSimpleName() + "] Caught exception while attempting to download: " + getDataBaseURL(), e);
+			return false;
+		}
+
+		if (!isModified || newDB == null || !newDB.exists()) {
+			return false;
+		}
+
+		try {
+			if (!verifyDatabase(newDB)) {
+				LOGGER.warn("[" + getClass().getSimpleName() + "] " + newDB.getAbsolutePath() + " from " + getDataBaseURL() + " is invalid!");
+				return false;
+			}
+		} catch (Exception e) {
+			LOGGER.error("[" + getClass().getSimpleName() + "] Failed verifying database " + newDB.getAbsolutePath() + " : " + e.getMessage());
+			return false;
+		}
+
+		try {
+			if (copyDatabaseIfDifferent(existingDB, newDB)) {
+				setLoaded(loadDatabase());
+				trafficRouterManager.trackEvent("last" + getClass().getSimpleName() + "Update");
+			} else {
+				newDB.delete();
+			}
+		} catch (Exception e) {
+			LOGGER.error("[" + getClass().getSimpleName() + "] Failed copying and loading new database " + newDB.getAbsolutePath() + " : " + e.getMessage());
+		}
+
+		return true;
 	}
 
 	public boolean verifyDatabase(final File dbFile) throws IOException {

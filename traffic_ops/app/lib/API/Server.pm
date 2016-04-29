@@ -621,7 +621,6 @@ sub create {
 sub update {
     my ($params, $data, $err) = (undef, undef, undef);
     my $self = shift;
-
     my $json = $self->req->json;
     if ( !&is_oper($self) ) {
         return $self->alert("You must be an ADMIN or OPER to perform this operation!");
@@ -654,7 +653,7 @@ sub update {
                 ip_address       => defined($params->{'ip_address'}) ? $params->{'ip_address'} : $update->ip_address,
                 ip_netmask       => defined($params->{'ip_netmask'}) ? $params->{'ip_netmask'} : $update->ip_netmask,
                 ip_gateway       => defined($params->{'ip_gateway'}) ? $params->{'ip_gateway'} : $update->ip_gateway,
-                ip6_address      => defined($params->{'ip6_address'}) ? $params->{'ip6_address'} : $update->ip6_address,
+                ip6_address      => defined($params->{'ip6_address'}) && $params->{'ip6_address'} != "" ? $params->{'ip6_address'} : $update->ip6_address,
                 ip6_gateway      => defined($params->{'ip6_gateway'}) ? $params->{'ip6_gateway'} : $update->ip6_gateway,
                 interface_mtu    => defined($params->{'interface_mtu'}) ? $params->{'interface_mtu'} : $update->interface_mtu,
                 cachegroup       => defined($params->{'cachegroup'}) ? $params->{'cachegroup'} : $update->cachegroup->id,

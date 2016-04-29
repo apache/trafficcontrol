@@ -16,66 +16,34 @@
 
 package com.comcast.cdn.traffic_control.traffic_router.core;
 
-import org.apache.commons.logging.Log;
 import org.apache.log4j.ConsoleAppender;
 import org.apache.log4j.Level;
 import org.apache.log4j.LogManager;
-import org.apache.log4j.Logger;
 import org.apache.log4j.PatternLayout;
-import org.apache.wicket.util.time.Duration;
-import org.eclipse.jetty.server.Server;
-import org.eclipse.jetty.server.bio.SocketConnector;
-import org.eclipse.jetty.webapp.WebAppContext;
-
-import java.io.File;
 
 public class TrafficRouterStart {
 
 	public static void main(String[] args) throws Exception {
-		System.setProperty("deploy.dir", "src/test");
-		System.setProperty("dns.zones.dir", "src/test/var/auto-zones");
+		System.setProperty("deploy.dir", "core/src/test");
+		System.setProperty("dns.zones.dir", "core/src/test/var/auto-zones");
 
-		LogManager.getLogger("org.eclipse.jetty").setLevel(Level.WARN);
+		System.setProperty("dns.tcp.port", "1053");
+		System.setProperty("dns.udp.port", "1053");
+
 		LogManager.getLogger("org.springframework").setLevel(Level.WARN);
 
 		ConsoleAppender consoleAppender = new ConsoleAppender(new PatternLayout("%d{ISO8601} [%-5p] %c{4}: %m%n"));
 		LogManager.getRootLogger().addAppender(consoleAppender);
 		LogManager.getRootLogger().setLevel(Level.INFO);
 
-		File webAppDirectory = new File("src/main/webapp");
-		if (!webAppDirectory.exists()) {
-			LogManager.getRootLogger().fatal(webAppDirectory.getAbsolutePath() + " does not exist, are you running TrafficRouterStart from the correct directory?");
-			System.exit(1);
-		}
+		System.out.println("[" + System.currentTimeMillis() + "] >>>>>>>>>>>>>>>> Embedded Tomcat loading Traffic Router");
+		CatalinaTrafficRouter catalinaTrafficRouter = new CatalinaTrafficRouter("core/src/main/opt/tomcat/conf/server.xml", "core/src/main/webapp");
+		System.out.println("[" + System.currentTimeMillis() + "] >>>>>>>>>>>>>>>> Starting Traffic Router");
+		catalinaTrafficRouter.start();
+		System.out.println("[" + System.currentTimeMillis() + "] >>>>>>>>>>>>>>>> Traffic Router started, press <ENTER> to stop");
 
-		int timeout = (int) Duration.ONE_HOUR.getMilliseconds();
-
-		Server server = new Server();
-		SocketConnector connector = new SocketConnector();
-
-		// Set some timeout options to make debugging easier.
-		connector.setMaxIdleTime(timeout);
-		connector.setSoLingerTime(-1);
-		connector.setPort(8081);
-		server.addConnector(connector);
-
-		WebAppContext bb = new WebAppContext();
-		bb.setServer(server);
-		bb.setContextPath("/");
-		bb.setWar("src/main/webapp");
-
-		server.setHandler(bb);
-
-		try {
-			System.out.println(">>> STARTING EMBEDDED JETTY SERVER, PRESS ANY KEY TO STOP");
-			server.start();
-			System.in.read();
-			System.out.println(">>> STOPPING EMBEDDED JETTY SERVER");
-			server.stop();
-			server.join();
-		} catch (Exception e) {
-			e.printStackTrace();
-			System.exit(1);
-		}
+		System.in.read();
+		System.out.println("[" + System.currentTimeMillis() + "] >>>>>>>>>>>>>>>> Stopping Traffic Router");
+		catalinaTrafficRouter.stop();
 	}
 }

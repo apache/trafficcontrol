@@ -91,7 +91,7 @@ sub genfiles {
 			$text = &take_and_bake( $self, $id, $org_name );
 		}
 	}
-	if ($text =~ /^Error/) {
+	if ( $text =~ /^Error/ ) {
 		$self->internal_server_error( { Error => $text } );
 	}
 
@@ -186,10 +186,6 @@ sub ds_data {
 	$dsinfo->{host_name}   = $server->host_name;
 	$dsinfo->{domain_name} = $server->domain_name;
 
-	my $storage_data = $self->param_data( $server, "storage.config" );
-	$dsinfo->{RAM_Volume}  = $storage_data->{RAM_Volume};
-	$dsinfo->{Disk_Volume} = $storage_data->{Disk_Volume};
-
 	my @server_ids = ();
 	my $rs;
 	if ( $server->type->name =~ m/^MID/ ) {
@@ -257,10 +253,17 @@ sub ds_data {
 				if ( $protocol == 0 ) {
 					$dsinfo->{dslist}->[$j]->{"remap_line"}->{$map_from} = $map_to;
 				}
+				elsif ( $protocol == 1 ) {
+					$map_from = "https://" . $host_re . "/";
+					$dsinfo->{dslist}->[$j]->{"remap_line"}->{$map_from} = $map_to;
+				}
 				elsif ( $protocol == 2 ) {
 
-					#add with http
+					#add the first with http
 					$dsinfo->{dslist}->[$j]->{"remap_line"}->{$map_from} = $map_to;
+					#add the second with https
+					my $map_from2 = "https://" . $host_re . "/";
+					$dsinfo->{dslist}->[$j]->{"remap_line2"}->{$map_from2} = $map_to;
 				}
 			}
 		}
@@ -358,7 +361,8 @@ sub parent_data {
 	else {
 		@parent_cachegroup_ids =
 			grep {defined} $self->db->resultset('Cachegroup')->search( { id => $server->cachegroup->id } )->get_column('parent_cachegroup_id')->all();
-		@secondary_parent_cachegroup_ids = grep {defined}
+		@secondary_parent_cachegroup_ids =
+			grep {defined}
 			$self->db->resultset('Cachegroup')->search( { id => $server->cachegroup->id } )->get_column('secondary_parent_cachegroup_id')->all();
 	}
 
@@ -489,9 +493,9 @@ sub ip_allow_data {
 		my @allowed_netaddrips;
 		my @allowed_ipv6_netaddrips;
 		my @types;
-		push(@types, &type_ids( $self, 'EDGE%', 'server' ));
+		push( @types, &type_ids( $self, 'EDGE%', 'server' ) );
 		my $rtype = &type_id( $self, 'RASCAL' );
-		push(@types, $rtype);
+		push( @types, $rtype );
 		my $rs_allowed = $self->db->resultset('Server')->search( { 'me.type' => { -in => \@types } }, { prefetch => [ 'type', 'cachegroup' ] } );
 
 		while ( my $allow_row = $rs_allowed->next ) {
@@ -500,19 +504,23 @@ sub ip_allow_data {
 			{
 				my $ipv4 = NetAddr::IP->new( $allow_row->ip_address, $allow_row->ip_netmask );
 
-				if ( defined( $ipv4 ) ) {
+				if ( defined($ipv4) ) {
 					push( @allowed_netaddrips, $ipv4 );
-				} else {
-					$self->app->log->error($allow_row->host_name . " has an invalid IPv4 address; excluding from ip_allow data for " . $server->host_name);
+				}
+				else {
+					$self->app->log->error(
+						$allow_row->host_name . " has an invalid IPv4 address; excluding from ip_allow data for " . $server->host_name );
 				}
 
 				if ( defined $allow_row->ip6_address ) {
 					my $ipv6 = NetAddr::IP->new( $allow_row->ip6_address );
 
-					if ( defined ( $ipv6 ) ) {
+					if ( defined($ipv6) ) {
 						push( @allowed_ipv6_netaddrips, NetAddr::IP->new( $allow_row->ip6_address ) );
-					} else {
-						$self->app->log->error($allow_row->host_name . " has an invalid IPv6 address; excluding from ip_allow data for " . $server->host_name);
+					}
+					else {
+						$self->app->log->error(
+							$allow_row->host_name . " has an invalid IPv6 address; excluding from ip_allow data for " . $server->host_name );
 					}
 				}
 			}
@@ -726,53 +734,52 @@ sub generic_config {
 }
 
 sub get_num_volumes {
-    my $data = shift;
+	my $data = shift;
 
-    my $num            = 0;
-    my @drive_prefixes = qw( Drive_Prefix SSD_Drive_Prefix RAM_Drive_Prefix);
-    foreach my $pre (@drive_prefixes) {
-        if ( exists $data->{$pre} ) {
-            $num++;
-        }
-    }
-    return $num;
+	my $num            = 0;
+	my @drive_prefixes = qw( Drive_Prefix SSD_Drive_Prefix RAM_Drive_Prefix);
+	foreach my $pre (@drive_prefixes) {
+		if ( exists $data->{$pre} ) {
+			$num++;
+		}
+	}
+	return $num;
 }
 
 sub volume_dot_config_volume_text {
-    my $volume      = shift;
-    my $num_volumes = shift;
-    my $size        = int( 100 / $num_volumes );
-    return "volume=$volume scheme=http size=$size%\n";
+	my $volume      = shift;
+	my $num_volumes = shift;
+	my $size        = int( 100 / $num_volumes );
+	return "volume=$volume scheme=http size=$size%\n";
 }
 
 sub volume_dot_config {
-    my $self = shift;
-    my $id   = shift;
-    my $file = shift;
+	my $self = shift;
+	my $id   = shift;
+	my $file = shift;
 
-    my $server = $self->server_data($id);
-    my $data   = $self->param_data( $server, "storage.config" );
-    my $text   = $self->header_comment( $server->host_name );
+	my $server = $self->server_data($id);
+	my $data   = $self->param_data( $server, "storage.config" );
+	my $text   = $self->header_comment( $server->host_name );
 
-    my $num_volumes = get_num_volumes($data);
+	my $num_volumes = get_num_volumes($data);
 
-    $text .=
-"# 12M NOTE: This is running with forced volumes - the size is irrelevant\n";
-    if ( defined( $data->{Drive_Prefix} ) ) {
-        $text .=
-          volume_dot_config_volume_text( $data->{Disk_Volume}, $num_volumes );
-    }
-    if ( defined( $data->{RAM_Drive_Prefix} ) ) {
-        $text .=
-          volume_dot_config_volume_text( $data->{RAM_Volume}, $num_volumes );
-    }
-    if ( defined( $data->{SSD_Drive_Prefix} ) ) {
-        $text .=
-          volume_dot_config_volume_text( $data->{SSD_Volume}, $num_volumes );
-    }
-    return $text;
+	my $next_volume = 1;
+	$text .= "# 12M NOTE: This is running with forced volumes - the size is irrelevant\n";
+	if ( defined( $data->{Drive_Prefix} ) ) {
+		$text .= volume_dot_config_volume_text( $next_volume, $num_volumes );
+		$next_volume++;
+	}
+	if ( defined( $data->{RAM_Drive_Prefix} ) ) {
+		$text .= volume_dot_config_volume_text( $next_volume, $num_volumes );
+		$next_volume++;
+	}
+	if ( defined( $data->{SSD_Drive_Prefix} ) ) {
+		$text .= volume_dot_config_volume_text( $next_volume, $num_volumes );
+		$next_volume++;
+	}
+	return $text;
 }
-
 
 sub hosting_dot_config {
 	my $self = shift;
@@ -781,14 +788,22 @@ sub hosting_dot_config {
 	my $data = shift;
 
 	my $server = $self->server_data($id);
+	my $storage_data   = $self->param_data( $server, "storage.config" );
 	my $text   = $self->header_comment( $server->host_name );
 	if ( !defined($data) ) {
 		$data = $self->ds_data($server);
 	}
 
-	if ( defined( $data->{RAM_Volume} ) ) {
-		$text .= "# 12M NOTE: volume " . $data->{RAM_Volume} . " is the RAM volume\n";
-		$text .= "# 12M NOTE: volume " . $data->{Disk_Volume} . " is the Disk volume\n";
+	if ( defined( $storage_data->{RAM_Drive_Prefix} ) ) {
+		my $next_volume = 1;
+		if ( defined( $storage_data->{Drive_Prefix} ) ) {
+			my $disk_volume = $next_volume;
+			$text .= "# 12M NOTE: volume " . $disk_volume . " is the Disk volume\n";
+			$next_volume++;
+		}
+		my $ram_volume = $next_volume;
+		$text .= "# 12M NOTE: volume " . $ram_volume . " is the RAM volume\n";
+
 		my %listed = ();
 		foreach my $remap ( @{ $data->{dslist} } ) {
 			if (   ( ( $remap->{type} =~ /_LIVE$/ || $remap->{type} =~ /_LIVE_NATNL$/ ) && $server->type->name =~ m/^EDGE/ )
@@ -797,82 +812,57 @@ sub hosting_dot_config {
 				if ( defined( $listed{ $remap->{org} } ) ) { next; }
 				my $org_fqdn = $remap->{org};
 				$org_fqdn =~ s/https?:\/\///;
-				$text .= "hostname=" . $org_fqdn . " volume=" . $data->{RAM_Volume} . "\n";
+				$text .= "hostname=" . $org_fqdn . " volume=" . $ram_volume . "\n";
 				$listed{ $remap->{org} } = 1;
 			}
 		}
 	}
-	my $dvolno = 1;
-	if ( defined( $data->{Disk_Volume} ) ) {
-		$dvolno = $data->{Disk_Volume};
-	}
-	$text .= "hostname=*   volume=" . $dvolno . "\n";
+	my $disk_volume = 1; # note this will actually be the RAM (RAM_Drive_Prefix) volume if there is no Drive_Prefix parameter.
+	$text .= "hostname=*   volume=" . $disk_volume . "\n";
 
 	return $text;
 }
 
 sub storage_dot_config_volume_text {
-    my $prefix               = shift;
-    my $letters              = shift;
-    my $volume               = shift;
+	my $prefix  = shift;
+	my $letters = shift;
+	my $volume  = shift;
 
-    my $text = "";
-    my @postfix = split( /,/, $letters );
-    foreach my $l ( sort @postfix ) {
-        $text .= $prefix . $l;
-        $text .= " volume=" . $volume;
-        $text .= "\n";
-    }
-    return $text;
+	my $text = "";
+	my @postfix = split( /,/, $letters );
+	foreach my $l ( sort @postfix ) {
+		$text .= $prefix . $l;
+		$text .= " volume=" . $volume;
+		$text .= "\n";
+	}
+	return $text;
 }
 
 sub storage_dot_config {
-    my $self = shift;
-    my $id   = shift;
-    my $file = shift;
+	my $self = shift;
+	my $id   = shift;
+	my $file = shift;
 
-    my $server = $self->server_data($id);
-    my $text   = $self->header_comment( $server->host_name );
-    my $data   = $self->param_data( $server, $file );
+	my $server = $self->server_data($id);
+	my $text   = $self->header_comment( $server->host_name );
+	my $data   = $self->param_data( $server, $file );
 
-    # always default to volume one and let DB params override
-    my $assigned_volume = 1;
+	my $next_volume = 1;
+	if ( defined( $data->{Drive_Prefix} ) ) {
+		$text .= storage_dot_config_volume_text( $data->{Drive_Prefix}, $data->{Drive_Letters}, $next_volume );
+		$next_volume++;
+	}
 
-    if ( defined( $data->{Drive_Prefix} ) ) {
-        if ( defined($data->{Disk_Volume} ) ) {
-            $assigned_volume = $data->{Disk_Volume};
-        }
-        $text .= storage_dot_config_volume_text(
-            $data->{Drive_Prefix}, $data->{Drive_Letters},
-            $assigned_volume
-        );
-    }
+	if ( defined( $data->{RAM_Drive_Prefix} ) ) {
+		$text .= storage_dot_config_volume_text( $data->{RAM_Drive_Prefix}, $data->{RAM_Drive_Letters}, $next_volume );
+		$next_volume++;
+	}
 
-    if ( defined( $data->{RAM_Drive_Prefix} ) ) {
-		++$assigned_volume;
-
-        if ( defined($data->{RAM_Volume} ) ) {
-            $assigned_volume = $data->{RAM_Volume};
-        }
-        $text .= storage_dot_config_volume_text(
-            $data->{RAM_Drive_Prefix}, $data->{RAM_Drive_Letters},
-            $assigned_volume
-        );
-    }
-
-
-    if ( defined( $data->{SSD_Drive_Prefix} ) ) {
-		++$assigned_volume;
-
-        if ( defined($data->{SSD_Volume} ) ) {
-            $assigned_volume = $data->{SSD_Volume};
-        }
-        $text .= storage_dot_config_volume_text(
-            $data->{SSD_Drive_Prefix}, $data->{SSD_Drive_Letters},
-            $assigned_volume
-        );
-    }
-    return $text;
+	if ( defined( $data->{SSD_Drive_Prefix} ) ) {
+		$text .= storage_dot_config_volume_text( $data->{SSD_Drive_Prefix}, $data->{SSD_Drive_Letters}, $next_volume );
+		$next_volume++;
+	}
+	return $text;
 }
 
 sub ats_dot_rules {
@@ -1240,16 +1230,15 @@ sub regex_revalidate_dot_config {
 	my %regex_time;
 	##DN- even though we made these params, the front-end is still hard-coded to validate ttl between 48 - 672...
 	my $max_hours =
-		$self->db->resultset('Parameter')->search( { name => "ttl_max_hours" }, { config_file => "regex_revalidate.config" } )->get_column('value')->single;
+		$self->db->resultset('Parameter')->search( { name => "ttl_max_hours" }, { config_file => "regex_revalidate.config" } )->get_column('value')->first;
 	my $min_hours =
-		$self->db->resultset('Parameter')->search( { name => "ttl_min_hours" }, { config_file => "regex_revalidate.config" } )->get_column('value')->single;
+		$self->db->resultset('Parameter')->search( { name => "ttl_min_hours" }, { config_file => "regex_revalidate.config" } )->get_column('value')->first;
 
-	my $rs = $self->db->resultset('Job')->search( { start_time => \$interval } );
+	my $rs = $self->db->resultset('Job')->search( { start_time => \$interval }, { prefetch => 'job_deliveryservice' } );
 	while ( my $row = $rs->next ) {
 		next unless defined( $row->job_deliveryservice );
 
 		# Purges are CDN - wide, and the job entry has the ds id in it.
-		my $job_cdn = $self->db->resultset('Cdn')->search( { id => $row->job_deliveryservice->cdn_id } )->single();
 		my $parameters = $row->parameters;
 		my $ttl;
 		if ( $row->keyword eq "PURGE" && ( defined($parameters) && $parameters =~ /TTL:(\d+)h/ ) ) {
@@ -1278,7 +1267,8 @@ sub regex_revalidate_dot_config {
 		}
 		my $asset_url = $row->asset_url;
 
-		if ( $server->cdn_id == $job_cdn->id ) {
+		my $job_cdn_id = $row->job_deliveryservice->cdn_id;
+		if ( $server->cdn_id == $job_cdn_id ) {
 
 			# if there are multipe with same re, pick the longes lasting.
 			if ( !defined( $regex_time{ $row->asset_url } )

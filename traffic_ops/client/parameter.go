@@ -1,28 +1,33 @@
 /*
-     Copyright 2015 Comcast Cable Communications Management, LLC
+   Copyright 2015 Comcast Cable Communications Management, LLC
 
-     Licensed under the Apache License, Version 2.0 (the "License");
-     you may not use this file except in compliance with the License.
-     You may obtain a copy of the License at
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
 
-     http://www.apache.org/licenses/LICENSE-2.0
+   http://www.apache.org/licenses/LICENSE-2.0
 
-     Unless required by applicable law or agreed to in writing, software
-     distributed under the License is distributed on an "AS IS" BASIS,
-     WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-     See the License for the specific language governing permissions and
-     limitations under the License.
- */
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+*/
 
 package client
 
-import "encoding/json"
+import (
+	"encoding/json"
+	"fmt"
+)
 
+// ParamResponse ...
 type ParamResponse struct {
 	Version  string      `json:"version"`
 	Response []Parameter `json:"response"`
 }
 
+// Parameter ...
 type Parameter struct {
 	Name        string `json:"name"`
 	ConfigFile  string `json:"configFile"`
@@ -30,20 +35,19 @@ type Parameter struct {
 	LastUpdated string `json:"lastUpdated"`
 }
 
-// Parameters
-// Get an array of parameter structs for the profile given
+// Parameters gets an array of parameter structs for the profile given
 func (to *Session) Parameters(profileName string) ([]Parameter, error) {
-	body, err := to.getBytes("/api/1.1/parameters/profile/" + profileName + ".json")
+	url := fmt.Sprintf("/api/1.2/parameters/profile/%s.json", profileName)
+	resp, err := to.request(url, nil)
 	if err != nil {
 		return nil, err
 	}
-	paramList, err := paramUnmarshall(body)
-	return paramList.Response, err
-}
-
-func paramUnmarshall(body []byte) (ParamResponse, error) {
+	defer resp.Body.Close()
 
 	var data ParamResponse
-	err := json.Unmarshal(body, &data)
-	return data, err
+	if err := json.NewDecoder(resp.Body).Decode(&data); err != nil {
+		return nil, err
+	}
+
+	return data.Response, nil
 }

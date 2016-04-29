@@ -50,8 +50,7 @@ public class CacheWatcher {
 	private static final CacheDataModel totalMem = new CacheDataModel("Total Memory (MB)");
 	private static final CacheDataModel maxMemory = new CacheDataModel("Max Memory (MB)");
 	final MonitorConfig config = ConfigHandler.getInstance().getConfig();
-	private final Map<String, CacheStateUpdater> cacheUpdaterMap = new HashMap<String, CacheStateUpdater>();
-
+	private final List<CacheStateUpdater> cacheStateUpdaters = new ArrayList<CacheStateUpdater>();
 	boolean isActive = true;
 
 	private FetchService mainThread;
@@ -120,14 +119,11 @@ public class CacheWatcher {
 				state.putDataPoint("_queryUrl_", cache.getStatisticsUrl());
 				state.setHistoryTime(cache.getHistoryTime());
 
-				if (!cacheUpdaterMap.containsKey(cache.getStatisticsUrl())) {
-					cacheUpdaterMap.put(cache.getStatisticsUrl(), new CacheStateUpdater(state, errorCount));
-				}
-
 				final long requestTimeout = System.currentTimeMillis() + myHealthDeterminer.getConnectionTimeout(cache, 2000);
 
-				final CacheStateUpdater updater = cacheUpdaterMap.get(cache.getStatisticsUrl()).update(myHealthDeterminer,failCount, requestTimeout);
-				cacheStatisticsClient.fetchCacheStatistics(cache, updater);
+				final CacheStateUpdater cacheStateUpdater = new CacheStateUpdater(state, errorCount).update(myHealthDeterminer, failCount, requestTimeout);
+				cacheStateUpdaters.add(cacheStateUpdater);
+				cacheStatisticsClient.fetchCacheStatistics(cache, cacheStateUpdater);
 
 				cacheTimePad();
 			}
@@ -179,11 +175,12 @@ public class CacheWatcher {
 					while (waitForFinish) {
 						waitForFinish = false;
 
-						for (CacheStateUpdater updater : cacheUpdaterMap.values()) {
+						for (CacheStateUpdater updater : cacheStateUpdaters) {
 							waitForFinish |= !updater.completeFetchStatistics(cancelCount);
 						}
 					}
 
+					cacheStateUpdaters.clear();
 					cacheStateRegistry.removeAllBut(states);
 					final long completedTime = System.currentTimeMillis();
 

@@ -22,7 +22,6 @@ import java.net.UnknownHostException;
 import org.apache.log4j.Logger;
 import org.json.JSONObject;
 
-import com.comcast.cdn.traffic_control.traffic_router.core.cache.CacheRegister;
 import com.comcast.cdn.traffic_control.traffic_router.core.router.TrafficRouter;
 import com.comcast.cdn.traffic_control.traffic_router.core.router.TrafficRouterManager;
 
@@ -33,41 +32,46 @@ public class LanguidState {
 	private int port = 0;
 	private int apiPort = 0;
 
-	@SuppressWarnings("PMD.AvoidDeeplyNestedIfStmts")
 	public void init() {
-		if (trafficRouterManager != null && trafficRouterManager.getTrafficRouter() != null) {
-			final TrafficRouter tr = trafficRouterManager.getTrafficRouter();
+		if (trafficRouterManager == null || trafficRouterManager.getTrafficRouter() == null) {
+			return;
+		}
 
-			if (tr.getCacheRegister() != null) {
-				final CacheRegister r = tr.getCacheRegister();
-				final JSONObject routers = r.getTrafficRouters();
+		final TrafficRouter tr = trafficRouterManager.getTrafficRouter();
 
-				try {
-					final String hostname = InetAddress.getLocalHost().getHostName().replaceAll("\\..*", "");
+		if (tr.getCacheRegister() == null) {
+			return;
+		}
 
-					for (String key : JSONObject.getNames(routers)) {
-						final JSONObject rj = routers.optJSONObject(key);
+		final String hostname;
 
-						if (hostname.equalsIgnoreCase(key)) { // this is us
-							if (rj.has("port")) {
-								this.setPort(rj.optInt("port"));
-							}
+		try {
+			hostname = InetAddress.getLocalHost().getHostName().replaceAll("\\..*", "");
+		} catch (UnknownHostException e) {
+			LOGGER.error("Cannot lookup hostname of this traffic router!: " + e.getMessage());
+			return;
+		}
 
-							if (rj.has("api.port")) {
-								this.setApiPort(rj.optInt("api.port"));
-							}
+		final JSONObject routers = tr.getCacheRegister().getTrafficRouters();
 
-							break;
-						}
-					}
-				} catch (UnknownHostException e) {
-					LOGGER.error(e, e);
+		for (String key : JSONObject.getNames(routers)) {
+			final JSONObject routerJson = routers.optJSONObject(key);
+
+			if (hostname.equalsIgnoreCase(key)) { // this is us
+				if (routerJson.has("port")) {
+					setPort(routerJson.optInt("port"));
 				}
+
+				if (routerJson.has("api.port")) {
+					setApiPort(routerJson.optInt("api.port"));
+					trafficRouterManager.setApiPort(apiPort);
+				}
+
+				break;
 			}
 		}
 
-		LOGGER.debug("Setting ready to true");
-		this.setReady(true);
+		setReady(true);
 	}
 
 	public boolean isReady() {

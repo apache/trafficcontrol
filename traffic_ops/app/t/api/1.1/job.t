@@ -25,9 +25,12 @@ use warnings;
 use Schema;
 use Test::TestHelper;
 use Fixtures::DeliveryserviceTmuser;
+use Fixtures::DeliveryserviceServer;
 use Fixtures::JobAgent;
 use Fixtures::JobStatus;
 use Fixtures::Job;
+use Fixtures::Parameter;
+use Fixtures::Server;
 use POSIX qw(strftime);
 
 BEGIN { $ENV{MOJO_MODE} = "test" }
