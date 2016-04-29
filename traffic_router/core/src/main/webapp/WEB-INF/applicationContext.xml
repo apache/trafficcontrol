@@ -24,28 +24,18 @@
 
 	<context:component-scan base-package="com.comcast.cdn" />
 
-	<bean id="deployDir" class="java.io.File">
+	<bean id="databasesDir" class="java.nio.file.Paths" factory-method="get">
 		<constructor-arg>
-			<value>$[deploy.dir:/opt/traffic_router]</value>
+			<value>$[deploy.dir:/opt/traffic_router]/db</value>
 		</constructor-arg>
+		<constructor-arg><array /></constructor-arg>
 	</bean>
 
-	<bean id="databasesDir" class="java.io.File">
+	<bean id="propertiesDir" class="java.nio.file.Paths" factory-method="get">
 		<constructor-arg>
-			<ref bean="deployDir"/>
+			<value>$[deploy.dir:/opt/traffic_router]/conf</value>
 		</constructor-arg>
-		<constructor-arg>
-			<value>db</value>
-		</constructor-arg>
-	</bean>
-
-	<bean id="propertiesDir" class="java.io.File">
-		<constructor-arg>
-			<ref bean="deployDir"/>
-		</constructor-arg>
-		<constructor-arg>
-			<value>conf</value>
-		</constructor-arg>
+		<constructor-arg><array /></constructor-arg>
 	</bean>
 
 	<bean id="autoZonesDir" class="java.io.File">
@@ -169,7 +159,7 @@
 		<property name="configUrl" value="http://[host]/publish/CrConfig?json" />
 		<property name="configHandler" ref="ConfigHandler" />
 		<property name="monitorHosts" value="$[traffic_monitor.bootstrap.hosts]" />
-		<property name="monitorProperties" value="$[traffic_monitor.properties:traffic_monitor.properties]" />
+		<property name="monitorProperties" value="$[traffic_monitor.properties]" />
 		<property name="statusFile" value="$[cache.health.json:health.json]" />
 		<property name="statusRefreshPeriod" value="$[cache.health.json.refresh.period:1000]" />
 		<property name="configFile" value="$[cache.config.json:cr-config.json]" />

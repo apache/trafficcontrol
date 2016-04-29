@@ -90,7 +90,7 @@
 							<goal>check</goal>
 						</goals>
 						<configuration>
-							<targetJdk>1.6</targetJdk>
+							<targetJdk>1.7</targetJdk>
 							<verbose>true</verbose>
 							<failurePriority>5</failurePriority>
 							<rulesets>
@@ -100,7 +100,7 @@
 					</execution>
 				</executions>
 				<configuration>
-					<targetJdk>1.6</targetJdk>
+					<targetJdk>1.7</targetJdk>
 					<verbose>true</verbose>
 					<failurePriority>5</failurePriority>
 					<rulesets>
@@ -143,8 +143,8 @@
 				<artifactId>maven-compiler-plugin</artifactId>
 				<version>2.5.1</version>
 				<configuration>
-					<source>1.6</source>
-					<target>1.6</target>
+					<source>1.7</source>
+					<target>1.7</target>
 					<encoding>UTF-8</encoding>
 					<showWarnings>true</showWarnings>
 					<showDeprecation>true</showDeprecation>
@@ -204,6 +204,7 @@
 				<artifactId>maven-surefire-plugin</artifactId>
 				<version>2.19.1</version>
 				<configuration>
+					<argLine>-XX:-UseSplitVerifier</argLine>
 					<systemPropertyVariables>
 						<log4j.configuration>file:src/test/resources/log4j.maven.properties</log4j.configuration>
 					</systemPropertyVariables>

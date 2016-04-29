@@ -26,6 +26,7 @@ import java.io.File;
 import java.io.FileReader;
 import java.math.BigInteger;
 import java.net.InetAddress;
+import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -75,8 +76,8 @@ public class ZoneManagerTest {
 	public void setUp() throws Exception {
 		trafficRouterManager = (TrafficRouterManager) context.getBean("trafficRouterManager");
 		trafficRouterManager.getTrafficRouter().setApplicationContext(context);
-		File databasesDirectory = (File) context.getBean("databasesDir");
-		final File file = new File(databasesDirectory, "czmap.json");
+		Path databasesDirectory = (Path) context.getBean("databasesDir");
+		final File file = databasesDirectory.resolve("czmap.json").toFile();
 		final JSONObject json = new JSONObject(new JSONTokener(new FileReader(file)));
 		final JSONObject coverageZones = json.getJSONObject("coverageZones");
 
