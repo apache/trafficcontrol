@@ -204,6 +204,7 @@
 				<artifactId>maven-surefire-plugin</artifactId>
 				<version>2.19.1</version>
 				<configuration>
+					<argLine>-XX:-UseSplitVerifier</argLine>
 					<systemPropertyVariables>
 						<log4j.configuration>file:src/test/resources/log4j.maven.properties</log4j.configuration>
 					</systemPropertyVariables>
