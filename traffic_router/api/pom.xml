@@ -52,7 +52,7 @@
 							<goal>check</goal>
 						</goals>
 						<configuration>
-							<targetJdk>1.6</targetJdk>
+							<targetJdk>1.7</targetJdk>
 							<verbose>true</verbose>
 							<failurePriority>2</failurePriority>
 							<rulesets>
@@ -62,7 +62,7 @@
 					</execution>
 				</executions>
 				<configuration>
-					<targetJdk>1.6</targetJdk>
+					<targetJdk>1.7</targetJdk>
 					<verbose>true</verbose>
 					<failurePriority>2</failurePriority>
 					<rulesets>

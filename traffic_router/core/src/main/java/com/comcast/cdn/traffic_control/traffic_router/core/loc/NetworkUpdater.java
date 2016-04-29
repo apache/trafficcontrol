@@ -30,7 +30,7 @@ public class NetworkUpdater extends AbstractServiceUpdater {
 	}
 
 	public boolean loadDatabase() throws IOException, JSONException {
-		final File existingDB = new File(databasesDirectory, databaseName);
+		final File existingDB = databasesDirectory.resolve(databaseName).toFile();
 
 		if (!existingDB.exists() || !existingDB.canRead()) {
 			return false;

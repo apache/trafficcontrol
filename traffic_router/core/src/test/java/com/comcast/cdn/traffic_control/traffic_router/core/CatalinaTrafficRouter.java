@@ -22,19 +22,15 @@ import org.apache.catalina.core.StandardContext;
 import org.apache.catalina.core.StandardHost;
 import org.apache.catalina.core.StandardService;
 import org.apache.catalina.startup.Catalina;
-import org.apache.juli.logging.LogFactory;
-
 import java.util.logging.Level;
 
 public class CatalinaTrafficRouter {
 	Catalina catalina;
 
 	public CatalinaTrafficRouter(String serverXmlPath, String appBase) {
-
 		java.util.logging.Logger logger = java.util.logging.Logger.getLogger("");
-
 		java.util.logging.Handler[] handlers = logger.getHandlers();
-		for(java.util.logging.Handler handler : handlers) {
+		for (java.util.logging.Handler handler : handlers) {
 			handler.setLevel(Level.SEVERE);
 		}
 
@@ -50,7 +46,7 @@ public class CatalinaTrafficRouter {
 		// Override the port and app base property of server.xml
 		StandardService trafficRouterService = (StandardService) catalina.getServer().findService("traffic_router_core");
 
-		Connector[] connectors =trafficRouterService.findConnectors();
+		Connector[] connectors = trafficRouterService.findConnectors();
 		for (Connector connector : connectors) {
 			if (connector.getPort() == 80) {
 				connector.setPort(8888);

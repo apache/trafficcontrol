@@ -50,7 +50,6 @@ public class RouterTest {
 	public void before() throws IOException, InterruptedException, LifecycleException {
 		ObjectMapper objectMapper = new ObjectMapper(new JsonFactory());
 
-		System.out.println(System.getProperty("user.dir"));
 		JsonNode jsonNode = objectMapper.readTree(new File("src/test/db/cr-config.json"));
 
 		deliveryServiceId = null;
