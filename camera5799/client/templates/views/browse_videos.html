@@ -4,10 +4,11 @@
         <span class="list-group-item active">
             Browse Videos
         </span>
-        <a href="#" class="list-group-item">Jan 1st 2016</a>
-        <a href="#" class="list-group-item">Feb 23rd 2016</a>
-        <a href="#" class="list-group-item">Feb 28th 2016</a>
-        <a href="#" class="list-group-item">March 2nd 2016</a>
+
+        {{#each availableVideos}}
+            <a href="#" data-video-url="{{url}}" class="list-group-item video-link">{{name}}</a>
+        {{/each}}
+
     </div>
 
 </template>

@@ -156,8 +156,23 @@ Meteor.methods({
         return myFuture.wait();
     },
 
-    'getVideos': function (token) {
+    'getVideos': function (token, username) {
+        var myFuture = new Future();
+        check(token, String);
+        check(username, String);
+        token = 'Bearer ' + token;
+        var apiURL = "https://ec2-52-37-126-44.us-west-2.compute.amazonaws.com:9000/videos/" + username;
 
+        HTTP.call("GET", apiURL,
+            { headers: { 'Authorization': token} },
+            function (error, result) {
+                if (!error) {
+                    myFuture.return(result);
+                } else {
+                    myFuture.throw(error);
+                }
+            });
+        return myFuture.wait();
     },
 
     'getLiveFeed': function (token) {

@@ -4,10 +4,14 @@
         <span class="list-group-item active">
             Registered Cameras
         </span>
-        {{#each availableCameras}}
-            <a href="{{ pathFor 'cameraDetail' }}" class="list-group-item">{{name}}</a>
-        {{/each}}
-        <a href="/cameraDetail" class="list-group-item">Work camera</a>
+        {{#if availableCameras}}
+            {{#each availableCameras}}
+                <a href="{{ pathFor 'cameraDetail' }}" class="list-group-item">{{name}}</a>
+            {{/each}}
+        {{else}}
+            <p> No Cameras registered</p>
+        {{/if}}
+
     </div>
 
 </template>
