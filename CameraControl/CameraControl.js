@@ -23,6 +23,10 @@ var debug = function(debugString) {
   }
 };
 
+// Read in /cameras service information
+const cameras = JSON.parse(fs.readFileSync('cameras.json', 'utf8'));
+debug("Cameras: " + JSON.stringify(cameras));
+
 // Generic entry point for all requests.
 app.use(function(req, res, next) {
   debug("---New PTZ request---");
@@ -102,14 +106,54 @@ var velocityChecker = function(req, res, next) {
 };
 
 /**
+ * Retrieves camera URL/user/password information.
+ */
+var cameraData = function(req, res, next) {
+  debug("  Getting Camera data...");
+  var user = req.params.user;
+  var cameraId = req.params.cameraId;
+
+  var path = "https://" + cameras.host + ":" + cameras.port + "/cameras/" +
+    user + "/" + cameraId;
+  // http://stackoverflow.com/questions/10888610/ignore-invalid-self-signed-ssl-certificate-in-node-js-with-https-request
+  // "Cheap and insecure"
+  process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0";
+
+  https.get(path, (cameraRes) => {
+    var body = "";
+
+    cameraRes.on('data', function(chunk) {
+      body += chunk;
+    });
+
+    cameraRes.on('end', function() {
+      var cameraData = JSON.parse(body);
+      debug(cameraData);
+      if (cameraData.Status && cameraData.Status.toUpperCase() == "SUCCESS") {
+	req.CameraURL = cameraData.CameraData[0].url;
+	req.CameraUser = cameraData.CameraData[0].username;
+ 	req.CameraPassword = cameraData.CameraData[0].password;
+	next();
+      }
+      else {
+	next({code: 400, message: "No such camera."});
+      }
+    });
+  }).on('error', (e) => {
+    next({code: 500, message: "Error getting camera info: " + e});
+  });
+};
+
+/**
  * Builds and sends final control command to the camers.
  */
 var sendCommand = function(req, res, next) {
   debug("  Building command for camera...");
-  var hostName = '192.168.0.9';
-  var portNum = 32768;
+
+  var hostName = req.CameraURL;
+  var portNum = 32768; // TODO: not on camera info
   var path = "/cgi-bin/ptz.cgi?"
-  var userPassword = "microservice:abc123";
+  var userPassword = req.CameraUser + ":" + req.CameraPassword;
 
   path += "action=" + req.query.action;
   path += "&channel=0";
@@ -125,6 +169,8 @@ var sendCommand = function(req, res, next) {
     auth: userPassword,
     path: path
   };
+
+  debug(options);
 
   var req = http.request(options, function(res) {
     debug("  Sending command to camera...");
@@ -163,6 +209,7 @@ app.post("/control/:user/:cameraId",
 	 actionChecker,
 	 directionChecker,
 	 velocityChecker,
+	 cameraData,
 	 sendCommand,
 	 finishRequest);
 

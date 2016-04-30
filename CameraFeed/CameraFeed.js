@@ -30,11 +30,54 @@ var debug = function(debugString) {
 const mongo = JSON.parse(fs.readFileSync('mongo.json', 'utf8'));
 debug("Mongo: " + JSON.stringify(mongo));
 
+// Read in /cameras service information
+const cameras = JSON.parse(fs.readFileSync('cameras.json', 'utf8'));
+debug("Cameras: " + JSON.stringify(cameras));
+
 // Generic entry point for all requests.
 app.use(function(req, res, next) {
   debug("---New CameraFeed request---");
   next();
 });
+
+/**
+ * Retrieves camera URL/user/password information.
+ */
+var cameraData = function(req, res, next) {
+  debug("  Getting Camera data...");
+  var user = req.params.user;
+  var cameraId = req.params.cameraId;
+
+  var path = "https://" + cameras.host + ":" + cameras.port + "/cameras/" +
+    user + "/" + cameraId;
+  // http://stackoverflow.com/questions/10888610/ignore-invalid-self-signed-ssl-certificate-in-node-js-with-https-request
+  // "Cheap and insecure"
+  process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0";
+
+  https.get(path, (cameraRes) => {
+    var body = "";
+
+    cameraRes.on('data', function(chunk) {
+      body += chunk;
+    });
+
+    cameraRes.on('end', function() {
+      var cameraData = JSON.parse(body);
+      debug(cameraData);
+      if (cameraData.Status && cameraData.Status.toUpperCase() == "SUCCESS") {
+	req.CameraURL = cameraData.CameraData[0].url;
+	req.CameraUser = cameraData.CameraData[0].username;
+ 	req.CameraPassword = cameraData.CameraData[0].password;
+	next();
+      }
+      else {
+	next({code: 400, message: "No such camera."});
+      }
+    });
+  }).on('error', (e) => {
+    next({code: 500, message: "Error getting camera info: " + e});
+  });
+};
 
 /**
  * Starts recording the feed from the camera.
@@ -55,9 +98,9 @@ var startRecord = function(req, res, next) {
   }
   else {
     var mongoArg = "--mongo=" + mongo.host + ":" + mongo.port;
-    // TODO: need actual username/password
-    var args = ["--username=microservice",
-		"--password=abc123",
+
+    var args = ["--username=" + req.CameraUser,
+		"--password=" + req.CameraPassword,
 		"--user=" + user,
 		"--camera=" + cameraId,
 		mongoArg];
@@ -69,8 +112,9 @@ var startRecord = function(req, res, next) {
       }
       args.push(debugArg);
     }
-    // TODO: need real IP/port
-    args.push("192.168.0.9:32768");
+
+    // TODO: will neeed port number too
+    args.push(req.CameraURL);
 
     var options = {
     };
@@ -132,10 +176,12 @@ const service = "/feed/:user/:cameraId";
 
 // Start record
 app.post(service,
+	 cameraData,
 	 startRecord);
 
 // Stop record
 app.delete(service,
+	   cameraData,
 	   stopRecord);
 
 /**
