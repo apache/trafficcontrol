@@ -17,35 +17,26 @@
 <beans xmlns="http://www.springframework.org/schema/beans"
 	   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	   xmlns:context="http://www.springframework.org/schema/context"
-	   xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-3.0.xsd http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context.xsd"
+	   xmlns:util="http://www.springframework.org/schema/util"
+	   xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-3.0.xsd http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context.xsd http://www.springframework.org/schema/util http://www.springframework.org/schema/util/spring-util.xsd"
 	   default-init-method="init" default-destroy-method="destroy">
 
 	<import resource="classpath:/applicationProperties.xml" />
 
 	<context:component-scan base-package="com.comcast.cdn" />
 
-	<bean id="deployDir" class="java.io.File">
+	<bean id="databasesDir" class="java.nio.file.Paths" factory-method="get">
 		<constructor-arg>
-			<value>$[deploy.dir:/opt/traffic_router]</value>
+			<value>$[deploy.dir:/opt/traffic_router]/db</value>
 		</constructor-arg>
+		<constructor-arg><array /></constructor-arg>
 	</bean>
 
-	<bean id="databasesDir" class="java.io.File">
+	<bean id="propertiesDir" class="java.nio.file.Paths" factory-method="get">
 		<constructor-arg>
-			<ref bean="deployDir"/>
+			<value>$[deploy.dir:/opt/traffic_router]/conf</value>
 		</constructor-arg>
-		<constructor-arg>
-			<value>db</value>
-		</constructor-arg>
-	</bean>
-
-	<bean id="propertiesDir" class="java.io.File">
-		<constructor-arg>
-			<ref bean="deployDir"/>
-		</constructor-arg>
-		<constructor-arg>
-			<value>conf</value>
-		</constructor-arg>
+		<constructor-arg><array /></constructor-arg>
 	</bean>
 
 	<bean id="autoZonesDir" class="java.io.File">
@@ -143,8 +134,7 @@
 		<property name="maxmindGeolocationService" ref="maxmindGeolocationService" />
 	</bean>
 
-	<bean id="networkUpdater" class="com.comcast.cdn.traffic_control.traffic_router.core.loc.NetworkUpdater"
-		init-method="init">
+	<bean id="networkUpdater" class="com.comcast.cdn.traffic_control.traffic_router.core.loc.NetworkUpdater" init-method="init">
 		<property name="executorService" ref="ScheduledExecutorService" />
 		<property name="databasesDirectory" ref="databasesDir" />
 		<property name="databaseName" value="$[cache.czmap.database:czmap.json]" />
@@ -169,7 +159,7 @@
 		<property name="configUrl" value="http://[host]/publish/CrConfig?json" />
 		<property name="configHandler" ref="ConfigHandler" />
 		<property name="monitorHosts" value="$[traffic_monitor.bootstrap.hosts]" />
-		<property name="monitorProperties" value="$[traffic_monitor.properties:traffic_monitor.properties]" />
+		<property name="monitorProperties" value="$[traffic_monitor.properties]" />
 		<property name="statusFile" value="$[cache.health.json:health.json]" />
 		<property name="statusRefreshPeriod" value="$[cache.health.json.refresh.period:1000]" />
 		<property name="configFile" value="$[cache.config.json:cr-config.json]" />
@@ -274,7 +264,14 @@
 		</property>
 	</bean>
 
-    <bean name="staticContentAccessFilter" class="com.comcast.cdn.traffic_control.traffic_router.core.request.StaticContentAccessFilter">
-        <property name="doNotLog" value="$[http.access.static.content.donotlog]" />
-    </bean>
+	<util:list id="staticContentWhiteList" value-type="java.lang.String">
+		<value>/crossdomain.xml</value>
+		<value>/clientaccesspolicy.xml</value>
+		<value>/index.html</value>
+	</util:list>
+
+	<bean name="routerFilter" class="com.comcast.cdn.traffic_control.traffic_router.core.http.RouterFilter">
+		<property name="doNotLog" value="$[http.access.static.content.donotlog]" />
+		<property name="staticContentWhiteList" ref="staticContentWhiteList" />
+	</bean>
 </beans>

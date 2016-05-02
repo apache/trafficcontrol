@@ -1,0 +1,24 @@
+#!/bin/sh
+
+# git golint pre-commit hook
+#
+# Runs golint
+
+# Executes tests on the non-external packages (ie packages from github)
+__DIR__="$(cd "$(dirname "${0}")"; echo $(pwd))"
+source "$__DIR__/pkgs"
+
+lints=""
+for pkg in $PKGS
+do
+  lints="$lints$(golint $pkg 2>&1)"
+done
+
+[ -z "$lints" ] && exit 0
+
+# There are golint errors. Print them and fail.
+
+echo >&2 "'golint' errors. Please fix the following:"
+echo >&2 "$lints"
+
+exit 1

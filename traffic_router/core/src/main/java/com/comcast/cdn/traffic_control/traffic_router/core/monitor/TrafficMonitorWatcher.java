@@ -19,16 +19,13 @@ package com.comcast.cdn.traffic_control.traffic_router.core.monitor;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.net.URI;
 import java.net.UnknownHostException;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Properties;
-
-
-
-
-
 
 import org.apache.log4j.Logger;
 import org.json.JSONException;
@@ -40,9 +37,12 @@ import com.comcast.cdn.traffic_control.traffic_router.core.router.TrafficRouterM
 import com.comcast.cdn.traffic_control.traffic_router.core.util.AbstractUpdatable;
 import com.comcast.cdn.traffic_control.traffic_router.core.util.PeriodicResourceUpdater;
 import com.comcast.cdn.traffic_control.traffic_router.core.util.ResourceUrl;
+import org.springframework.context.ApplicationListener;
+import org.springframework.context.event.ApplicationContextEvent;
+import org.springframework.context.event.ContextClosedEvent;
 
 @SuppressWarnings("PMD.TooManyFields")
-public class TrafficMonitorWatcher  {
+public class TrafficMonitorWatcher implements ApplicationListener<ApplicationContextEvent> {
 	private static final Logger LOGGER = Logger.getLogger(TrafficMonitorWatcher.class);
 
 	private String stateUrl;
@@ -70,8 +70,8 @@ public class TrafficMonitorWatcher  {
 
 	private PeriodicResourceUpdater crUpdater;
 	private PeriodicResourceUpdater stateUpdater;
-	private File propertiesDirectory;
-	private File databasesDirectory;
+	private Path propertiesDirectory;
+	private Path databasesDirectory;
 
 	public AbstractUpdatable stateHandler = new AbstractUpdatable() {
 		public String toString() {return "status listener";}
@@ -145,12 +145,21 @@ public class TrafficMonitorWatcher  {
 			}
 		};
 
-		crUpdater = new PeriodicResourceUpdater(crHandler, new MyResourceUrl(configUrl), new File(databasesDirectory, configFile).getAbsolutePath(), configRefreshPeriod, true);
+		crUpdater = new PeriodicResourceUpdater(crHandler, new MyResourceUrl(configUrl), databasesDirectory.resolve(configFile).toString(), configRefreshPeriod, true);
 		crUpdater.init();
 
-		stateUpdater = new PeriodicResourceUpdater(stateHandler, new MyResourceUrl(stateUrl), new File(databasesDirectory, statusFile).getAbsolutePath(), statusRefreshPeriod, true);
+		stateUpdater = new PeriodicResourceUpdater(stateHandler, new MyResourceUrl(stateUrl), databasesDirectory.resolve(statusFile).toString(), statusRefreshPeriod, true);
 		stateUpdater.init();
 	}
+
+	@Override
+	public void onApplicationEvent(final ApplicationContextEvent event) {
+		if (event instanceof ContextClosedEvent) {
+			crUpdater.destroy();
+			stateUpdater.destroy();
+		}
+	}
+
 	class MyResourceUrl implements ResourceUrl{
 		private final String urlTemplate;
 		private int i = 0;
@@ -265,10 +274,18 @@ public class TrafficMonitorWatcher  {
 		try {
 			String hostList = System.getenv("TRAFFIC_MONITOR_HOSTS");
 
-			final File trafficMonitorConfigFile = new File(propertiesDirectory, monitorProperties);
+			File trafficMonitorConfigFile;
+
+			if (monitorProperties.matches("^\\w+:.*")) {
+				trafficMonitorConfigFile = new File(new URI(monitorProperties));
+			} else {
+				LOGGER.debug(monitorProperties + " is not a valid URI; trying String constructor");
+				trafficMonitorConfigFile = new File(monitorProperties);
+			}
+
 			final Properties props = new Properties();
 
-			if (trafficMonitorConfigFile.exists()) {
+			if (trafficMonitorConfigFile != null && trafficMonitorConfigFile.exists()) {
 				LOGGER.info("Loading properties from " + trafficMonitorConfigFile.getAbsolutePath());
 				props.load(new FileInputStream(trafficMonitorConfigFile));
 			}
@@ -287,7 +304,7 @@ public class TrafficMonitorWatcher  {
 
 				if (hostList == null || hostList.isEmpty()) {
 					if (!trafficMonitorConfigFile.exists()) {
-						LOGGER.fatal("Missing environment variable 'TRAFFIC_MONITOR_HOSTS'");
+						LOGGER.fatal(trafficMonitorConfigFile.getAbsolutePath() + " does not exist and the environment variable 'TRAFFIC_MONITOR_HOSTS' was not found");
 					} else {
 						LOGGER.error("Cannot determine Traffic Monitor hosts from property 'traffic_monitor.bootstrap.hosts' in config file " + trafficMonitorConfigFile.getAbsolutePath());
 					}
@@ -350,19 +367,19 @@ public class TrafficMonitorWatcher  {
 		}
 	}
 
-	public File getPropertiesDirectory() {
+	public Path getPropertiesDirectory() {
 		return propertiesDirectory;
 	}
 
-	public void setPropertiesDirectory(final File propertiesDirectory) {
+	public void setPropertiesDirectory(final Path propertiesDirectory) {
 		this.propertiesDirectory = propertiesDirectory;
 	}
 
-	public File getDatabasesDirectory() {
+	public Path getDatabasesDirectory() {
 		return databasesDirectory;
 	}
 
-	public void setDatabasesDirectory(final File databasesDirectory) {
+	public void setDatabasesDirectory(final Path databasesDirectory) {
 		this.databasesDirectory = databasesDirectory;
 	}
 }

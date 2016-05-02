@@ -1,3 +1,19 @@
+/*
+ * Copyright 2015 Comcast Cable Communications Management, LLC
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package com.comcast.cdn.traffic_control.traffic_router.core.loc;
 
 import com.comcast.cdn.traffic_control.traffic_router.core.util.ProtectedFetcher;
@@ -77,19 +93,24 @@ public class FederationsWatcher extends AbstractServiceUpdater {
 
     @Override
     public boolean loadDatabase() throws IOException, org.apache.wicket.ajax.json.JSONException {
-        final File existingDB = new File(databasesDirectory, databaseName);
+        final File existingDB = databasesDirectory.resolve(databaseName).toFile();
 
         if (!existingDB.exists() || !existingDB.canRead()) {
             return false;
         }
 
         final char[] jsonData = new char[(int) existingDB.length()];
-        new FileReader(existingDB).read(jsonData);
+        final FileReader reader = new FileReader(existingDB);
+
+        try {
+            reader.read(jsonData);
+        } finally {
+            reader.close();
+        }
+
         final String json = new String(jsonData);
 
         federationRegistry.setFederations(new FederationsBuilder().fromJSON(json));
-
-        setLoaded(true);
         return true;
     }
 

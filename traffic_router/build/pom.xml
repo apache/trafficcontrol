@@ -23,7 +23,7 @@
 	<parent>
 		<groupId>com.comcast.cdn.traffic_control.traffic_router</groupId>
 		<artifactId>traffic_router</artifactId>
-		<version>1.5.0</version>
+		<version>1.6.0</version>
 	</parent>
 
 	<scm>
@@ -31,38 +31,24 @@
 		<developerConnection>scm:git:file://</developerConnection>
 	</scm>
 
+	<dependencies>
+		<!-- RPM plugin will not package artifacts without these defined dependencies -->
+		<dependency>
+			<groupId>com.comcast.cdn.traffic_control.traffic_router</groupId>
+			<artifactId>traffic_router_connector</artifactId>
+			<version>${project.parent.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>com.comcast.cdn.traffic_control.traffic_router</groupId>
+			<artifactId>traffic_router_core</artifactId>
+			<version>${project.parent.version}</version>
+			<type>war</type>
+		</dependency>
+	</dependencies>
+
 	<build>
 		<plugins>
-			<plugin>
-				<artifactId>maven-pmd-plugin</artifactId>
-				<version>2.5</version>
-				<executions>
-					<execution>
-						<id>PMD</id>
-						<phase>verify</phase>
-						<goals>
-							<goal>check</goal>
-						</goals>
-						<configuration>
-							<targetJdk>1.6</targetJdk>
-							<verbose>true</verbose>
-							<failurePriority>2</failurePriority>
-							<rulesets>
-								<ruleset>build/pmd/ruleset.xml</ruleset>
-							</rulesets>
-						</configuration>
-					</execution>
-				</executions>
-				<configuration>
-					<targetJdk>1.6</targetJdk>
-					<verbose>true</verbose>
-					<failurePriority>2</failurePriority>
-					<rulesets>
-						<ruleset>build/pmd/ruleset.xml</ruleset>
-					</rulesets>
-				</configuration>
-			</plugin>
-			<plugin>
+ 			<plugin>
 				<groupId>org.codehaus.mojo</groupId>
 				<artifactId>buildnumber-maven-plugin</artifactId>
 				<version>1.2</version>
@@ -81,46 +67,6 @@
 					<timestampFormat>
 						{0,date,yyyy-MM-dd}
 					</timestampFormat>
-				</configuration>
-			</plugin>
-			<plugin>
-				<groupId>org.codehaus.mojo</groupId>
-				<artifactId>tomcat-maven-plugin</artifactId>
-				<version>1.1</version>
-				<configuration>
-				</configuration>
-			</plugin>
-			<plugin>
-				<inherited>true</inherited>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-compiler-plugin</artifactId>
-				<version>2.5.1</version>
-				<configuration>
-					<source>1.6</source>
-					<target>1.6</target>
-					<encoding>UTF-8</encoding>
-					<showWarnings>true</showWarnings>
-					<showDeprecation>true</showDeprecation>
-				</configuration>
-			</plugin>
-			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-jar-plugin</artifactId>
-				<version>2.3.1</version>
-				<configuration>
-					<archive>
-						<manifest>
-							<addDefaultImplementationEntries>
-								true
-							</addDefaultImplementationEntries>
-						</manifest>
-						<manifestEntries>
-							<GroupId>${project.groupId}</GroupId>
-							<ArtifactId>${project.artifactId}</ArtifactId>
-							<Version>${project.version}</Version>
-							<SCM-Revision>${buildNumber}</SCM-Revision>
-						</manifestEntries>
-					</archive>
 				</configuration>
 			</plugin>
 			<plugin>
@@ -219,6 +165,9 @@
 									<groupname>root</groupname>
 									<dependency>
 										<stripVersion>true</stripVersion>
+										<excludes>
+											<exclude>com.comcast.cdn.traffic_control.traffic_router:traffic_router_core</exclude>
+										</excludes>
 									</dependency>
 								</mapping>
 								<mapping>
@@ -243,23 +192,8 @@
 										<stripVersion>true</stripVersion>
 										<includes>
 											<include>com.comcast.cdn.traffic_control.traffic_router:traffic_router_core</include>
-											<include>com.comcast.cdn.traffic_control.traffic_router:traffic_router_api</include>
 										</includes>
 									</dependency>
-								</mapping>
-								<mapping>
-									<directory>${deploy.dir}/webapps/core</directory>
-									<directoryIncluded>false</directoryIncluded>
-									<filemode>755</filemode>
-									<username>root</username>
-									<groupname>root</groupname>
-								</mapping>
-								<mapping>
-									<directory>${deploy.dir}/webapps/api</directory>
-									<directoryIncluded>false</directoryIncluded>
-									<filemode>755</filemode>
-									<username>root</username>
-									<groupname>root</groupname>
 								</mapping>
 								<mapping>
 									<directory>/opt/tomcat/conf</directory>
@@ -283,7 +217,7 @@
 								</mapping>
 							</mappings>
 							<requires>
-								<require>jdk</require>
+								<require>jdk >= 1.7.0</require>
 							</requires>
 
 							<preinstallScriptlet>
@@ -301,121 +235,4 @@
 			</build>
 		</profile>
 	</profiles>
-
-	<dependencies>
-		<dependency>
-			<groupId>com.comcast.cdn.traffic_control.traffic_router</groupId>
-			<artifactId>traffic_router_connector</artifactId>
-			<version>${project.parent.version}</version>
-		</dependency>
-		<dependency>
-			<groupId>com.comcast.cdn.traffic_control.traffic_router</groupId>
-			<artifactId>traffic_router_core</artifactId>
-			<version>${project.parent.version}</version>
-			<type>war</type>
-		</dependency>
-		<dependency>
-			<groupId>com.comcast.cdn.traffic_control.traffic_router</groupId>
-			<artifactId>traffic_router_api</artifactId>
-			<version>${project.parent.version}</version>
-			<type>war</type>
-		</dependency>
-
-		<dependency>
-			<groupId>org.apache.commons</groupId>
-			<artifactId>commons-lang3</artifactId>
-			<version>3.0.1</version>
-		</dependency>
-		<dependency>
-			<groupId>commons-io</groupId>
-			<artifactId>commons-io</artifactId>
-			<version>2.0.1</version>
-		</dependency>
-		<dependency>
-			<groupId>commons-pool</groupId>
-			<artifactId>commons-pool</artifactId>
-			<version>1.5.6</version>
-		</dependency>
-
-        <dependency>
-            <groupId>log4j</groupId>
-            <artifactId>log4j</artifactId>
-            <version>1.2.17</version>
-        </dependency>
-
-		<dependency>
-			<groupId>junit</groupId>
-			<artifactId>junit</artifactId>
-			<version>4.8.2</version>
-			<scope>test</scope>
-		</dependency>
-		<dependency>
-			<groupId>org.jmock</groupId>
-			<artifactId>jmock-junit4</artifactId>
-			<version>2.5.1</version>
-			<scope>test</scope>
-		</dependency>
-		<dependency>
-			<groupId>org.jmock</groupId>
-			<artifactId>jmock-legacy</artifactId>
-			<version>2.5.1</version>
-			<scope>test</scope>
-		</dependency>
-		<dependency>
-			<groupId>commons-codec</groupId>
-			<artifactId>commons-codec</artifactId>
-			<version>1.6</version>
-		</dependency>
-		<dependency>
-			<groupId>org.json</groupId>
-			<artifactId>json</artifactId>
-			<version>20090211</version>
-		</dependency>
-
-		<dependency>
-			<groupId>dnsjava</groupId>
-			<artifactId>dnsjava</artifactId>
-			<version>2.1.7</version>
-		</dependency>
-
-		<dependency>
-			<groupId>javax.servlet</groupId>
-			<artifactId>servlet-api</artifactId>
-			<version>2.5</version>
-			<scope>provided</scope>
-		</dependency>
-
-		<!-- WICKET DEPENDENCIES -->
-		<dependency>
-			<groupId>org.apache.wicket</groupId>
-			<artifactId>wicket-core</artifactId>
-			<version>${wicket.version}</version>
-		</dependency>
-		<!-- OPTIONAL DEPENDENCY <dependency> <groupId>org.apache.wicket</groupId> 
-			<artifactId>wicket-extensions</artifactId> <version>${wicket.version}</version> 
-			</dependency> -->
-		<dependency>
-			<groupId>org.apache.wicket</groupId>
-			<artifactId>wicket-datetime</artifactId>
-			<version>${wicket.version}</version>
-		</dependency>
-
-		<!-- JETTY DEPENDENCIES FOR TESTING -->
-		<dependency>
-			<groupId>org.eclipse.jetty.aggregate</groupId>
-			<artifactId>jetty-all-server</artifactId>
-			<version>${jetty.version}</version>
-			<scope>provided</scope>
-		</dependency>
-		<dependency>
-			<groupId>com.googlecode.java-ipv6</groupId>
-			<artifactId>java-ipv6</artifactId>
-			<version>0.9</version>
-		</dependency>
-		<dependency>
-			<groupId>com.ning</groupId>
-			<artifactId>async-http-client</artifactId>
-			<version>1.7.17</version>
-		</dependency>
-	</dependencies>
 </project>
