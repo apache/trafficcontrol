@@ -150,7 +150,7 @@ func syncDsDb(ch chan string, sourceClient influx.Client, targetClient influx.Cl
 	stats := [...]string{
 		"kbps.ds.1min",
 		"max.kbps.ds.1day",
-		"tps.ds.1min",
+		"kbps.cg.1min",
 		"tps_2xx.ds.1min",
 		"tps_3xx.ds.1min",
 		"tps_4xx.ds.1min",
