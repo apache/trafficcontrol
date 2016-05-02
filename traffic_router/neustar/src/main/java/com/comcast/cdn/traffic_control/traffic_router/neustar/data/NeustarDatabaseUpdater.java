@@ -28,6 +28,8 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.zip.GZIPInputStream;
@@ -45,9 +47,6 @@ public class NeustarDatabaseUpdater {
 	private File neustarDatabaseDirectory;
 
 	@Autowired
-	private File neustarTempDatabaseDirectory;
-
-	@Autowired
 	private File neustarOldDatabaseDirectory;
 
 	@Autowired
@@ -62,21 +61,20 @@ public class NeustarDatabaseUpdater {
 		this.httpClient = httpClient;
 	}
 
-	public File extractRemoteContent(InputStream inputStream) {
-		if (!neustarTempDatabaseDirectory.exists() && !neustarTempDatabaseDirectory.mkdirs()) {
-			LOGGER.error("Cannot save remote content from " + neustarDataUrl + " to disk: " + neustarTempDatabaseDirectory.getAbsolutePath() + " does not exist and cannot be created");
-			return null;
-		}
-
-		return tarExtractor.extractTgzTo(neustarTempDatabaseDirectory, inputStream);
+	private File createTmpDir(File directory) throws IOException {
+		return Files.createTempDirectory(directory.toPath(), null).toFile();
 	}
 
-	public boolean verifyNewDatabase() {
+	public File extractRemoteContent(InputStream inputStream) throws IOException {
+		return tarExtractor.extractTgzTo(createTmpDir(neustarDatabaseDirectory), inputStream);
+	}
+
+	public boolean verifyNewDatabase(File directory) {
 		try {
-			new GPDatabaseReader.Builder(neustarTempDatabaseDirectory).build();
+			new GPDatabaseReader.Builder(directory).build();
 			return true;
 		} catch (Exception e) {
-			LOGGER.error("Database Directory " + neustarTempDatabaseDirectory + " is not a valid Neustar database. " + e.getMessage());
+			LOGGER.error("Database Directory " + directory + " is not a valid Neustar database. " + e.getMessage());
 			return false;
 		}
 	}
@@ -123,8 +121,11 @@ public class NeustarDatabaseUpdater {
 			return false;
 		}
 
+		File tmpDir = null;
 		try {
-			tarExtractor.extractTo(neustarTempDatabaseDirectory, new GZIPInputStream(response.getEntity().getContent()));
+
+			tmpDir = createTmpDir(neustarDatabaseDirectory);
+			tarExtractor.extractTo(tmpDir, new GZIPInputStream(response.getEntity().getContent()));
 		} catch (IOException e) {
 			LOGGER.error("Failed to decompress remote content from " + neustarDataUrl + " : " + e.getMessage());
 			return false;
@@ -137,12 +138,22 @@ public class NeustarDatabaseUpdater {
 			httpClient.close();
 		}
 
-		if (!verifyNewDatabase()) {
-			filesMover.purgeDirectory(neustarTempDatabaseDirectory);
+		if (!verifyNewDatabase(tmpDir)) {
+			filesMover.purgeDirectory(tmpDir);
 			return false;
 		}
 
-		return filesMover.updateCurrent(neustarDatabaseDirectory, neustarTempDatabaseDirectory, neustarOldDatabaseDirectory);
+		LOGGER.info("Replacing files in " + neustarDatabaseDirectory.getAbsolutePath() + " with those in " + tmpDir.getAbsolutePath());
+		if (!filesMover.updateCurrent(neustarDatabaseDirectory, tmpDir, neustarOldDatabaseDirectory)) {
+			LOGGER.warn("Failed replacing files, not purging " + tmpDir.getAbsolutePath());
+			return false;
+		}
+
+		if (filesMover.purgeDirectory(tmpDir)) {
+			tmpDir.delete();
+		}
+		
+		return true;
 	}
 
 	public Date getDatabaseBuildDate() {

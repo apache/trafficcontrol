@@ -22,5 +22,5 @@
 
     <context:annotation-config />
     <mvc:annotation-driven />
-    <context:component-scan base-package="com.comcast.cdn.traffic_control.traffic_router" />
+    <context:component-scan base-package="com.comcast.cdn.traffic_control.traffic_router.api" />
 </beans>
