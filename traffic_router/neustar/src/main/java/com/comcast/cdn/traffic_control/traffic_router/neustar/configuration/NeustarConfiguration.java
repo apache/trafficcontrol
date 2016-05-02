@@ -14,6 +14,7 @@ import org.springframework.context.annotation.PropertySource;
 import org.springframework.core.env.Environment;
 
 import java.io.File;
+import java.nio.file.Path;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 
@@ -25,7 +26,7 @@ public class NeustarConfiguration {
 	private Environment environment;
 
 	@Autowired
-	private File databasesDir;
+	private Path databasesDir;
 
 	NeustarDatabaseUpdater neustarDatabaseUpdater;
 	NeustarGeolocationService neustarGeolocationService;
@@ -44,7 +45,7 @@ public class NeustarConfiguration {
 	@Bean
 	public File neustarDatabaseDirectory() {
 		if (neustarDatabaseDirectory == null) {
-			neustarDatabaseDirectory = checkDirectory(new File(databasesDir, environment.getProperty("neustar.subdirectory", "neustar")));
+			neustarDatabaseDirectory = checkDirectory(databasesDir.resolve(environment.getProperty("neustar.subdirectory", "neustar")).toFile());
 		}
 
 		return neustarDatabaseDirectory;
