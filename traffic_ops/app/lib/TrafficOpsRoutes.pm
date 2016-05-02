@@ -496,7 +496,7 @@ sub api_routes {
 		->to( 'DeliveryServiceRegexes#index', namespace => $namespace );
 
 	# -- DELIVERY SERVICE MATCHES
-	$r->get( "/api/$version/deliveryservices_matches" => [ format => [qw(json)] ] )->over( authenticated => 1 )
+	$r->get( "/api/$version/deliveryservice_matches" => [ format => [qw(json)] ] )->over( authenticated => 1 )
 		->to( 'DeliveryServiceMatches#index', namespace => $namespace );
 
 	#       ->over( authenticated => 1 )->to( 'DeliveryService#get_summary', namespace => $namespace );
