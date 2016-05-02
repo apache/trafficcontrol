@@ -1,0 +1,19 @@
+############################################################
+# Dockerfile to build Traffic Ops PostgREST container images
+# Based on Ubuntu 15.10
+############################################################
+
+# Example Build and Run:
+# docker build --file Postgrest_Dockerfile --rm --tag traffic_ops_postgrest:0.1 .
+# docker run --add-host="localhost:10.0.2.2" -p 9001:9001 --name my-postgrest --hostname my-postgrest --env USER=admin --env PASS=mypass --env URI=example.net:5432 --env DATABASE=mydb --detach traffic_ops_postgrest:0.1
+
+# Based on Ubuntu because PostgREST binaries have issues on CentOS and would require building from source.
+FROM ubuntu:15.10
+MAINTAINER Robert Butts
+
+RUN apt-get install -y curl tar xz-utils postgresql-client
+RUN curl -LO https://github.com/begriffs/postgrest/releases/download/v0.3.1.1/postgrest-0.3.1.1-ubuntu.tar.xz
+RUN tar xf postgrest-0.3.1.1-ubuntu.tar.xz
+
+EXPOSE 9001
+ENTRYPOINT

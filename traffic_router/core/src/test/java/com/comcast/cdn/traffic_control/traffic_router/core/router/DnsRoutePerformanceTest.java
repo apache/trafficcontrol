@@ -1,3 +1,19 @@
+/*
+ * Copyright 2015 Comcast Cable Communications Management, LLC
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package com.comcast.cdn.traffic_control.traffic_router.core.router;
 
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -15,6 +31,7 @@ import static org.powermock.api.mockito.PowerMockito.whenNew;
 import java.io.File;
 import java.io.FileReader;
 import java.net.InetAddress;
+import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -22,10 +39,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Random;
 import java.util.Set;
+import java.util.concurrent.Executors;
 
-import com.comcast.cdn.traffic_control.traffic_router.core.util.IntegrationTest;
-import com.comcast.cdn.traffic_control.traffic_router.geolocation.Geolocation;
-import com.comcast.cdn.traffic_control.traffic_router.geolocation.GeolocationService;
 import org.apache.commons.pool.impl.GenericObjectPool;
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -36,6 +51,7 @@ import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
+import org.springframework.context.ApplicationContext;
 
 import com.comcast.cdn.traffic_control.traffic_router.core.cache.CacheLocation;
 import com.comcast.cdn.traffic_control.traffic_router.core.cache.CacheRegister;
@@ -44,13 +60,16 @@ import com.comcast.cdn.traffic_control.traffic_router.core.ds.DeliveryService;
 import com.comcast.cdn.traffic_control.traffic_router.core.hash.MD5HashFunctionPoolableObjectFactory;
 import com.comcast.cdn.traffic_control.traffic_router.core.loc.FederationRegistry;
 import com.comcast.cdn.traffic_control.traffic_router.core.loc.NetworkNode;
+import com.comcast.cdn.traffic_control.traffic_router.core.loc.NetworkUpdater;
 import com.comcast.cdn.traffic_control.traffic_router.core.request.DNSRequest;
 import com.comcast.cdn.traffic_control.traffic_router.core.request.Request;
 import com.comcast.cdn.traffic_control.traffic_router.core.router.StatTracker.Track;
 import com.comcast.cdn.traffic_control.traffic_router.core.router.StatTracker.Track.ResultType;
+import com.comcast.cdn.traffic_control.traffic_router.core.util.IntegrationTest;
 import com.comcast.cdn.traffic_control.traffic_router.core.util.TrafficOpsUtils;
+import com.comcast.cdn.traffic_control.traffic_router.geolocation.Geolocation;
+import com.comcast.cdn.traffic_control.traffic_router.geolocation.GeolocationService;
 import com.google.common.net.InetAddresses;
-import org.springframework.context.ApplicationContext;
 
 @Category(IntegrationTest.class)
 @RunWith(PowerMockRunner.class)
@@ -72,23 +91,36 @@ public class DnsRoutePerformanceTest {
         JSONObject healthObject = new JSONObject(healthTokener);
 
         JSONTokener jsonTokener = new JSONTokener(new FileReader("src/test/db/cr-config.json"));
-        JSONObject configJson = new JSONObject(jsonTokener);
-        JSONObject locationsJo = configJson.getJSONObject("edgeLocations");
+        JSONObject crConfigJson = new JSONObject(jsonTokener);
+        JSONObject locationsJo = crConfigJson.getJSONObject("edgeLocations");
         final Set<CacheLocation> locations = new HashSet<CacheLocation>(locationsJo.length());
         for (final String loc : JSONObject.getNames(locationsJo)) {
             final JSONObject jo = locationsJo.getJSONObject(loc);
             locations.add(new CacheLocation(loc, jo.optString("zoneId"), new Geolocation(jo.getDouble("latitude"), jo.getDouble("longitude"))));
         }
 
-        names = new DnsNameGenerator().getNames(configJson.getJSONObject("deliveryServices"), configJson.getJSONObject("config"));
+        names = new DnsNameGenerator().getNames(crConfigJson.getJSONObject("deliveryServices"), crConfigJson.getJSONObject("config"));
 
-        cacheRegister.setConfig(configJson);
-        CacheRegisterBuilder.parseDeliveryServiceConfig(configJson.getJSONObject("deliveryServices"), cacheRegister);
+        cacheRegister.setConfig(crConfigJson);
+        CacheRegisterBuilder.parseDeliveryServiceConfig(crConfigJson.getJSONObject("deliveryServices"), cacheRegister);
 
         cacheRegister.setConfiguredLocations(locations);
-        CacheRegisterBuilder.parseCacheConfig(configJson.getJSONObject("contentServers"), cacheRegister);
+        CacheRegisterBuilder.parseCacheConfig(crConfigJson.getJSONObject("contentServers"), cacheRegister);
 
-        NetworkNode.generateTree(new File("src/test/db/czmap.json"));
+        NetworkUpdater networkUpdater = new NetworkUpdater();
+        networkUpdater.setDatabasesDirectory(Paths.get("src/test/db"));
+        networkUpdater.setDatabaseName("czmap.json");
+        networkUpdater.setExecutorService(Executors.newSingleThreadScheduledExecutor());
+        networkUpdater.setTrafficRouterManager(mock(TrafficRouterManager.class));
+        JSONObject configJson = crConfigJson.getJSONObject("config");
+        networkUpdater.setDataBaseURL(configJson.getString("coveragezone.polling.url"), configJson.getLong("coveragezone.polling.interval"));
+
+        File coverageZoneFile = new File("src/test/db/czmap.json");
+        while (!coverageZoneFile.exists()) {
+            Thread.sleep(500);
+        }
+
+        NetworkNode.generateTree(coverageZoneFile);
 
         ZoneManager zoneManager = mock(ZoneManager.class);
 
@@ -119,6 +151,7 @@ public class DnsRoutePerformanceTest {
         JSONObject coverageZones = coverageZoneMap.getJSONObject("coverageZones");
 
         Iterator iterator = coverageZones.keys();
+        Map<String, Integer> seen = new HashMap<String, Integer>();
 
         while (iterator.hasNext()) {
             String coverageZoneName = (String) iterator.next();
@@ -134,7 +167,14 @@ public class DnsRoutePerformanceTest {
                 String network = networks.getString(i).split("/")[0];
                 InetAddress ip = InetAddresses.forString(network);
                 ip = InetAddresses.increment(ip);
-                hosts.add(InetAddresses.toAddrString(ip));
+                String ipstr = InetAddresses.toAddrString(ip);
+                hosts.add(ipstr);
+
+                if (seen.containsKey(ipstr)) {
+                    seen.put(ipstr, seen.get(ipstr)+1);
+                } else {
+                    seen.put(ipstr, 1);
+                }
             }
 
             final CacheLocation location = cacheRegister.getCacheLocation(coverageZoneName);
@@ -144,6 +184,16 @@ public class DnsRoutePerformanceTest {
             }
 
             hostMap.put(coverageZoneName, hosts);
+        }
+
+        // remove any dups that will cause a GEO result
+        for (String ip : seen.keySet()) {
+            if (seen.get(ip) > 1) {
+                for (String coverageZoneName : hostMap.keySet()) {
+                    Set<String> ips = hostMap.get(coverageZoneName);
+                    ips.remove(ip);
+                }
+            }
         }
     }
 

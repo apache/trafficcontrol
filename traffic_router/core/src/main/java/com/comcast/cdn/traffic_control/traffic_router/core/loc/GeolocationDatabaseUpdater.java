@@ -28,7 +28,7 @@ public class GeolocationDatabaseUpdater extends AbstractServiceUpdater {
 	}
 
 	public boolean loadDatabase() throws IOException {
-		maxmindGeolocationService.setDatabaseFile(new File(databasesDirectory, databaseName));
+		maxmindGeolocationService.setDatabaseFile(databasesDirectory.resolve(databaseName).toFile());
 		maxmindGeolocationService.reloadDatabase();
 		return true;
 	}
