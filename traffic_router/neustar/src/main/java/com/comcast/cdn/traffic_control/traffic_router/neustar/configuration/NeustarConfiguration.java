@@ -32,7 +32,6 @@ public class NeustarConfiguration {
 	NeustarGeolocationService neustarGeolocationService;
 
 	private File neustarDatabaseDirectory;
-	private File neustarTempDatabaseDirectory;
 	private File neustarOldDatabaseDirectory;
 
 	private File checkDirectory(File directory) {
@@ -49,15 +48,6 @@ public class NeustarConfiguration {
 		}
 
 		return neustarDatabaseDirectory;
-	}
-
-	@Bean
-	public File neustarTempDatabaseDirectory() {
-		if (neustarTempDatabaseDirectory == null) {
-			neustarTempDatabaseDirectory = checkDirectory(new File(neustarDatabaseDirectory(), "/tmp"));
-		}
-
-		return neustarTempDatabaseDirectory;
 	}
 
 	@Bean

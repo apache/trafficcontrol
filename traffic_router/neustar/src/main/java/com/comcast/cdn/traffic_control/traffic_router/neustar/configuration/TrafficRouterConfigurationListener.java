@@ -24,10 +24,11 @@ public class TrafficRouterConfigurationListener implements ConfigurationListener
 
 	private ScheduledFuture<?> scheduledFuture;
 
-	@PostConstruct
 	@Override
 	public void configurationChanged() {
+		boolean restarting = false;
 		if (scheduledFuture != null) {
+			restarting = true;
 			scheduledFuture.cancel(true);
 
 			while (!scheduledFuture.isDone()) {
@@ -41,6 +42,8 @@ public class TrafficRouterConfigurationListener implements ConfigurationListener
 
 		Long fixedRate = environment.getProperty("neustar.polling.interval", Long.class, 86400000L);
 		scheduledFuture = scheduledExecutorService.scheduleAtFixedRate(serviceRefresher, 0L, fixedRate, TimeUnit.MILLISECONDS);
-		logger.warn("Restarting Neustar remote database refresher at rate " + fixedRate + " msec");
+
+		String prefix = restarting ? "Restarting" : "Starting";
+		logger.warn(prefix + " Neustar remote database refresher at rate " + fixedRate + " msec");
 	}
 }
