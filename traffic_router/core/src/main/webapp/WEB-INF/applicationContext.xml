@@ -22,7 +22,9 @@
 
 	<import resource="classpath:/applicationProperties.xml" />
 
-	<context:component-scan base-package="com.comcast.cdn" />
+	<context:component-scan base-package="com.comcast.cdn.traffic_control.traffic_router" >
+		<context:exclude-filter type="regex" expression="com\.comcast\.cdn\.traffic_control\.traffic_router\.api.*"/>
+	</context:component-scan>
 
 	<bean id="databasesDir" class="java.nio.file.Paths" factory-method="get">
 		<constructor-arg>
