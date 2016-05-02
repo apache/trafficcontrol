@@ -24,6 +24,8 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.zip.GZIPInputStream;
 
 public class TarExtractor {
@@ -48,8 +50,9 @@ public class TarExtractor {
 				}
 
 				File file = new File(directory, tarArchiveEntry.getName());
-				if (!file.createNewFile()) {
-					LOGGER.warn("Failed to extract file to " + file.getAbsolutePath());
+				LOGGER.info("Extracting Tarfile entry " + tarArchiveEntry.getName() + " to temporary location " + file.getAbsolutePath());
+				if (!file.exists() && !file.createNewFile()) {
+					LOGGER.warn("Failed to extract file to " + file.getAbsolutePath() + ", cannot create file, check permissions of " + directory.getAbsolutePath());
 					continue;
 				}
 

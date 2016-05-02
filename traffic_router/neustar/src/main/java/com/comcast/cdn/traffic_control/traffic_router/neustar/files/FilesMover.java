@@ -16,6 +16,8 @@
 
 package com.comcast.cdn.traffic_control.traffic_router.neustar.files;
 
+import org.apache.log4j.Logger;
+
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.FileVisitResult;
@@ -27,6 +29,7 @@ import java.nio.file.StandardCopyOption;
 import java.nio.file.attribute.BasicFileAttributes;
 
 public class FilesMover {
+	private static final Logger LOGGER = Logger.getLogger(FilesMover.class);
 
 	public boolean purgeDirectory(File directory) {
 		try {
@@ -40,6 +43,7 @@ public class FilesMover {
 
 			return true;
 		} catch (IOException e) {
+			LOGGER.error("Failed purging directory " + directory.getAbsolutePath() + ": " + e.getMessage());
 			return false;
 		}
 	}
