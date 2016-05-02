@@ -11,6 +11,8 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import org.springframework.test.context.support.AnnotationConfigContextLoader;
 
 import java.io.File;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -37,8 +39,8 @@ public class PeriodicUpdateConfigurationTest {
 	@Configuration
 	static class TestConfiguration {
 		@Bean
-		public File databasesDir() {
-			return new File("/opt/traffic_router/db");
+		public Path databasesDir() {
+			return Paths.get("/opt/traffic_router/db");
 		}
 	}
 }
