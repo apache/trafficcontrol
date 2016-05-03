@@ -38,7 +38,7 @@ Configure Multi Site Origin
 	:scale: 100%
 	:align: center
 
-4) assign the org servers to the delivery service that will have the multi site feature
+4) Assign the org servers to the delivery service that will have the multi site feature:
 
 .. image:: 066CEF4F-C1A3-4A89-8B52-4F72B0531367.png
 	:scale: 100%
@@ -46,19 +46,40 @@ Configure Multi Site Origin
 
 5) Check the multi-site check box in the delivery service screen and make sure that Content Routing Type is set to HTTP_LIVE_NATL:
 
-.. image:: 71DA92BB-8E1E-4921-BC95-574E659812FF.png
+.. image:: mso-enable.png
 	:scale: 100%
 	:align: center
 
-6) assign the parent.config location parameter to the MID profile
+.. Note:: In order to enable MID caches to differentiate delivery services with different MSO algorithms while performing parent failover, it requires that “Origin Server Base URL” (OFQDN) for each MSO enabled delivery service is unique unless the following exceptions:
+       1) If there are multiple CDNs created on the same Traffic Ops, delivery services across different CDNs may have the same OFQDN configured.
+       2) If several delivery services in the same CDN have the same MSO algorithm configured, they may share the same OFQDN.
+
+6) Select an option from the "Multi Site Origin Algorithm" drop-down list. Currently two MSO algorithms are supported:
+
++------------------+--------------------------------------------------------------------------------------------------------------------+
+|     Option       |                                                            Description                                             |
++==================+====================================================================================================================+
+| Consistent hash  | Origin server selection is based on the consistent hash of requested URLs.                                         |
++------------------+--------------------------------------------------------------------------------------------------------------------+
+| Primary/back     | Round robin selection does not occur. The first origin server is selected unless it fails.                         |
+|                  | If the first fails, the second and other following origin servers will be tried by order.                          |
++------------------+--------------------------------------------------------------------------------------------------------------------+
+
+7) Optionally, if "Primary/backup" is selected for "Multi Site Origin Algorithm", a new parameter “rank” should be configured for each origin server profile. Origin servers with lower values of rank have higher ranking in the origin server list on MID caches, e.g. OS with rank of "2" precedes OS with the rank of "5". For any OS, if rank value is not defined in its profile, its rank value will default to “1”.
+
+.. image:: mso-rank.png
+	:scale: 60%
+	:align: center
+
+8) Assign the parent.config location parameter to the MID profile:
 
 .. image:: D22DCAA3-18CC-48F4-965B-5312993F9820.png
 	:scale: 100%
 	:align: center
 
 
-7) Configure the mid hdr_rewrite on the delivery service, example: ::
+9) Configure the mid hdr_rewrite on the delivery service, example: ::
 
 	cond %{REMAP_PSEUDO_HOOK} __RETURN__ set-config proxy.config.http.parent_origin.dead_server_retry_enabled 1 __RETURN__ set-config proxy.config.http.parent_origin.simple_retry_enabled 1 __RETURN__ set-config proxy.config.http.parent_origin.simple_retry_response_codes "400,404,412" __RETURN__ set-config proxy.config.http.parent_origin.dead_server_retry_response_codes "502,503" __RETURN__ set-config proxy.config.http.connect_attempts_timeout 2 __RETURN__ set-config proxy.config.http.connect_attempts_max_retries 2 __RETURN__ set-config proxy.config.http.connect_attempts_max_retries_dead_server 1 __RETURN__ set-config proxy.config.http.transaction_active_timeout_in 5 [L] __RETURN__
 
-8) Turn on parent_proxy_routing in the MID profile.
+10) Turn on parent_proxy_routing in the MID profile.

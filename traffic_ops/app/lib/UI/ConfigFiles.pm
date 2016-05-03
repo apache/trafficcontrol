@@ -217,6 +217,7 @@ sub ds_data {
 		my $cacheurl               = $row->cacheurl;
 		my $remap_text             = $row->remap_text;
 		my $multi_site_origin      = $row->multi_site_origin;
+		my $multi_site_origin_algorithm      = $row->multi_site_origin_algorithm;
 
 		if ( $re_type eq 'HOST_REGEXP' ) {
 			my $host_re = $row->pattern;
@@ -282,6 +283,7 @@ sub ds_data {
 		$dsinfo->{dslist}->[$j]->{"cacheurl"}               = $cacheurl;
 		$dsinfo->{dslist}->[$j]->{"remap_text"}             = $remap_text;
 		$dsinfo->{dslist}->[$j]->{"multi_site_origin"}      = $multi_site_origin;
+		$dsinfo->{dslist}->[$j]->{"multi_site_origin_algorithm"}      = $multi_site_origin_algorithm;
 
 		if ( defined($edge_header_rewrite) ) {
 			my $fname = "hdr_rw_" . $ds_xml_id . ".config";
@@ -346,6 +348,12 @@ sub profile_param_value {
 	return ( defined $param ? $param->parameter->value : $default );
 }
 
+sub by_parent_rank {
+	my ( $arank ) = $a->{"rank"};
+	my ( $brank ) = $b->{"rank"};
+	( $arank || 1 ) <=> ( $brank || 1 );
+}
+
 sub parent_data {
 	my $self   = shift;
 	my $server = shift;
@@ -382,6 +390,7 @@ sub parent_data {
 			my $weight         = $profile_cache{$pid}->{weight};
 			my $port           = $profile_cache{$pid}->{port};
 			my $use_ip_address = $profile_cache{$pid}->{use_ip_address};
+			my $rank           = $profile_cache{$pid}->{rank};
 			my $parent         = $server->cachegroup->parent_cachegroup_id // -1;
 			my $secondary      = $server->cachegroup->secondary_parent_cachegroup_id // -1;
 			if ( defined($ds_domain) && defined($server_domain) && $ds_domain eq $server_domain ) {
@@ -391,6 +400,7 @@ sub parent_data {
 					domain_name    => $row->domain_name,
 					weight         => $weight,
 					use_ip_address => $use_ip_address,
+					rank           => $rank,
 					ip_address     => $row->ip_address,
 					parent         => ( $parent == $row->cachegroup->id ) ? 1 : 0,
 					secondary      => ( $secondary == $row->cachegroup->id ) ? 1 : 0,
@@ -446,6 +456,7 @@ sub cachegroup_profiles {
 				weight         => $self->profile_param_value( $pid, 'parent.config', 'weight',         '0.999' ),
 				port           => $self->profile_param_value( $pid, 'parent.config', 'port',           undef ),
 				use_ip_address => $self->profile_param_value( $pid, 'parent.config', 'use_ip_address', 0 ),
+				rank           => $self->profile_param_value( $pid, 'parent.config', 'rank',           1 ),
 			};
 		}
 	}
@@ -1074,6 +1085,7 @@ sub parent_dot_config {
 			my $xml_id            = $ds->{ds_xml_id};
 			my $os                = $ds->{origin_shield};
 			my $multi_site_origin = defined( $ds->{multi_site_origin} ) ? $ds->{multi_site_origin} : 0;
+			my $multi_site_origin_algorithm = defined( $ds->{multi_site_origin_algorithm} ) ? $ds->{multi_site_origin_algorithm} : 0;
 
 			my $org_fqdn = $ds->{org};
 			$org_fqdn =~ s/https?:\/\///;
@@ -1089,15 +1101,31 @@ sub parent_dot_config {
 				$text .= "dest_domain=$org_fqdn ";
 				my $pinfo = $self->parent_data($server);
 
+				my @ranked_parents = ();
+				if ( exists($pinfo->{$org_fqdn}) ) {
+					@ranked_parents = sort by_parent_rank @{ $pinfo->{$org_fqdn} };
+				}
+
 				my @parent_info;
-				foreach my $parent ( @{ $pinfo->{$org_fqdn} } ) {
+				foreach my $parent ( @ranked_parents ) {
 					push @parent_info, format_parent_info($parent);
 				}
 				my %seen;
 				@parent_info = grep { !$seen{$_}++ } @parent_info;
 
 				my $parents = 'parent="' . join( '', @parent_info ) . '"';
-				$text .= "$parents round_robin=consistent_hash go_direct=false parent_is_proxy=false\n";
+
+				my $mso_algorithm = "";
+				if ( $multi_site_origin_algorithm == 0 ) {
+					$mso_algorithm = "consistent_hash";
+				}
+				elsif ( $multi_site_origin_algorithm == 1 ) {
+					$mso_algorithm = "false";
+				}
+				else {
+					$mso_algorithm = "consistent_hash";
+				}
+				$text .= "$parents round_robin=$mso_algorithm go_direct=false parent_is_proxy=false\n";
 			}
 		}
 

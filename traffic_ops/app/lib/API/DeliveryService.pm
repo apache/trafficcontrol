@@ -81,6 +81,7 @@ sub delivery_services {
 					"dnsBypassTtl"         => $row->dns_bypass_ttl,
 					"orgServerFqdn"        => $row->org_server_fqdn,
 					"multiSiteOrigin"      => $row->multi_site_origin,
+					"multiSiteOriginAlgorithm"      => $row->multi_site_origin_algorithm,
 					"ccrDnsTtl"            => $row->ccr_dns_ttl,
 					"type"                 => $row->type->name,
 					"profileName"          => $row->profile->name,

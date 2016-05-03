@@ -341,6 +341,21 @@
 			<% } %>
 		<% } %>
 	</div><br>
+	<div class="block" id="multi_site_origin_algorithm_row">
+		<% unless (field('ds.multi_site_origin_algorithm')->valid) { %>
+			<span class="field-with-error"><%= field('ds.multi_site_origin_algorithm')->error %></span>
+		<% } %>
+		%= label_for 'multi_site_origin_algorithm' => 'Multi Site Origin Algorithm', class => 'label'
+		<% if ($priv_level >= 20) { %>
+		%= field('ds.multi_site_origin_algorithm')->select([['Consistent hash' => 0], ['Primary/backup' => 1]]);
+		<% } else { %>
+			<% if ($ds->multi_site_origin_algorithm == 1) { %>
+				%= field('ds.multi_site_origin_algorithm')->text(class => 'field', value =>  'Primary/backup', readonly => 'readonly');
+			<% } else { %>
+                %= field('ds.multi_site_origin_algorithm')->text(class => 'field', value =>  'Consistent hash', readonly => 'readonly');
+			<% } %>
+		<% } %>
+	</div><br>
 	<div class="block" id="profile_row">
 		<% unless (field('ds.profile')->valid) { %>
 			<span class="field-with-error"><%= field('ds.profile')->error %></span>

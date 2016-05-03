@@ -135,6 +135,7 @@
             $('#ds_regexp_table').hide(speed);
             $('#tr_response_headers').hide(speed);
             $('#multi_site_origin_row').hide(speed);
+            $('#multi_site_origin_algorithm_row').hide(speed);
             $('#initial_dispersion_row').hide(speed);
 		}
 		// 
