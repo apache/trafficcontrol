@@ -50,11 +50,12 @@ Configure Multi Site Origin
 	:scale: 100%
 	:align: center
 
-.. Note:: In order to enable MID caches to differentiate delivery services with different MSO algorithms while performing parent failover, it requires that “Origin Server Base URL” (OFQDN) for each MSO enabled delivery service is unique unless the following exceptions:
+.. Note:: “Origin Server Base URL” uniqueness: In order to enable MID caches to distinguish delivery services by different MSO algorithms while performing parent failover, it requires that “Origin Server Base URL” (OFQDN) for each MSO enabled delivery service is unique unless the exceptions listed afterwards. This means that the OFQDN of a MSO enabled delivery service should be different with the OFQDNs of any other delivery service, regardless of whether they are MSO enabled or not. The exceptions are: 
        1) If there are multiple CDNs created on the same Traffic Ops, delivery services across different CDNs may have the same OFQDN configured.
        2) If several delivery services in the same CDN have the same MSO algorithm configured, they may share the same OFQDN.
+       3) If delivery services are assigned with different MID cache groups respectively, they can share the same OFQDN.
 
-6) Select an option from the "Multi Site Origin Algorithm" drop-down list. Currently two MSO algorithms are supported:
+6) Select an option from the "Multi Site Origin Algorithm" drop-down list. Four MSO algorithms are supported:
 
 +------------------+--------------------------------------------------------------------------------------------------------------------+
 |     Option       |                                                            Description                                             |
@@ -63,6 +64,12 @@ Configure Multi Site Origin
 +------------------+--------------------------------------------------------------------------------------------------------------------+
 | Primary/back     | Round robin selection does not occur. The first origin server is selected unless it fails.                         |
 |                  | If the first fails, the second and other following origin servers will be tried by order.                          |
++------------------+--------------------------------------------------------------------------------------------------------------------+
+| Strict           | MID caches serve requests strictly in turn. For example: origin server 1 serves the first request,                 |
+| round-robin      | origin server 2 serves the second request, and so on.                                                              |
++------------------+--------------------------------------------------------------------------------------------------------------------+
+| IP based         | MID cache goes through the origin server list in a round robin-based on the IP address of EDGE cache.              |
+| round-robin      |                                                                                                                    |
 +------------------+--------------------------------------------------------------------------------------------------------------------+
 
 7) Optionally, if "Primary/backup" is selected for "Multi Site Origin Algorithm", a new parameter “rank” should be configured for each origin server profile. Origin servers with lower values of rank have higher ranking in the origin server list on MID caches, e.g. OS with rank of "2" precedes OS with the rank of "5". For any OS, if rank value is not defined in its profile, its rank value will default to “1”.
