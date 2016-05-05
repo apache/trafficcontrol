@@ -38,7 +38,7 @@ Template.browseCameras.onCreated(function() {
                 }
             }
         }
-        if (showAlert) { swal(titleAlert, messageAlert, typeAlert); }
+        if (showAlert && res) { swal(titleAlert, messageAlert, typeAlert); }
         return res;
     });
 
