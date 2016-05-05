@@ -67,7 +67,7 @@ oldpwd=$(pwd)
   cd "$godir" && \
   cp -r "$TC_DIR"/traffic_stats/* . && \
   go get -d -v && \
-  go_get_version "$oldpwd"/src/github.com/influxdata/influxdb && \
+  go_get_version "$oldpwd"/src/github.com/influxdata/influxdb v0.11.1 && \
   go install -v \
 ) || { echo "Could not build go program at $(pwd): $!"; exit 1; }
 
