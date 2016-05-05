@@ -1,3 +1,8 @@
+/**
+ * @author Ramiro Arenivar
+ * For CSCI 5799
+ */
+
 Template.browseCameras.helpers({
      availableCameras: function() {
          return AvailableCameras.find();

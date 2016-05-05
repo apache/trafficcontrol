@@ -1,3 +1,8 @@
+/**
+ * @author Ramiro Arenivar
+ * For CSCI 5799
+ */
+
 var editUserPageCalls = {
     
     editUser: function (userObj) {

@@ -1,3 +1,8 @@
+# @author Ramiro Arenivar
+# For CSCI 5799
+
+# Image for creating container for front and back end of webservice
+
 FROM ubuntu:latest
 MAINTAINER ramiro@rarenivar.com
 

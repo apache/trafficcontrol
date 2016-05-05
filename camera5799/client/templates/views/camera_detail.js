@@ -1,6 +1,8 @@
 /**
- * Created by arenivar on 4/16/16.
+ * @author Ramiro Arenivar
+ * For CSCI 5799
  */
+
 Template.cameraDetail.helpers({
    cameraId: function() {
        return this.cameraId;

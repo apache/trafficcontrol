@@ -1,3 +1,8 @@
+/**
+ * @author Ramiro Arenivar
+ * For CSCI 5799
+ */
+
 Template.browseVideos.helpers({
     availableVideos: function() {
         return AvailableVideos.find();

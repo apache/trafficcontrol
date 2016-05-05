@@ -1,3 +1,8 @@
+/**
+ * @author Ramiro Arenivar
+ * For CSCI 5799
+ */
+
 Template.layout.onRendered(function() {
   this.find('#main')._uihooks = {
     insertElement: function(node, next) {

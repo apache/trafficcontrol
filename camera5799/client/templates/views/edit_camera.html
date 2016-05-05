@@ -1,3 +1,6 @@
+<!-- @author Ramiro Arenivar -->
+<!-- For CSCI 5799 -->
+
 <template name="editCamera">
     {{#with cameraToEdit}}
     <!-- Basic Form -->
@@ -8,10 +11,7 @@
         <div class="panel-body">
             <form id="form-edit-camera" class="margin-bottom-40" role="form">
                 <input type="hidden" id="edit-cameraname-current" value="{{name}}">
-                <div class="form-group">
-                    <label for="edit-cameraname">Name</label>
-                    <input type="text" class="form-control" id="edit-cameraname" value="{{name}}">
-                </div>
+                <input type="hidden" class="form-control" id="edit-cameraname" value="{{name}}">
                 <div class="form-group">
                     <label for="edit-cameralocation">Location</label>
                     <input type="text" class="form-control" id="edit-cameralocation" value="{{location}}">

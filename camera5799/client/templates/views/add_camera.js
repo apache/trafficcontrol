@@ -1,3 +1,8 @@
+/**
+ * @author Ramiro Arenivar
+ * For CSCI 5799
+ */
+
 var addCameraCalls = {
 
     registerCamera: function(registerObj) {

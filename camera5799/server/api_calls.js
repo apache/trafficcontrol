@@ -1,3 +1,8 @@
+/**
+ * @author Ramiro Arenivar
+ * For CSCI 5799
+ */
+
 // needed for self signed certificate
 // link... https://github.com/meteor/meteor/issues/2866
 process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';

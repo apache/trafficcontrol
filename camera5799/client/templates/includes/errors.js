@@ -1,3 +1,8 @@
+/**
+ * @author Ramiro Arenivar
+ * For CSCI 5799
+ */
+
 Template.errors.helpers({
   errors: function() {
     return Errors.find();

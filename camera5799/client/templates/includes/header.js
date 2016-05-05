@@ -1,3 +1,8 @@
+/**
+ * @author Ramiro Arenivar
+ * For CSCI 5799
+ */
+
 Template.header.helpers({
   
   activeRouteClass: function(/* route names */) {
