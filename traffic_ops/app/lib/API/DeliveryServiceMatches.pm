@@ -43,9 +43,11 @@ sub index {
 
 				# Attach the remap_text host for Teak
 				my $remap_text = $row->remap_text;
-				print "remap_text #-> (" . $remap_text . ")\n";
+
+				#print "remap_text #-> (" . $remap_text . ")\n";
 				if ( defined($remap_text) ) {
-					$self->app->log->debug( "remap_text #-> " . Dumper($remap_text) );
+
+					#$self->app->log->debug( "remap_text #-> " . Dumper($remap_text) );
 					my ($remap_text_match) = $remap_text =~ /regex_map http:\/\/(.*?[-])(.*)/;
 					push( @match_patterns, $remap_text_match );
 				}
@@ -65,7 +67,7 @@ sub index {
 
 				}
 
-				print "match_patterns #-> (" . Dumper(@match_patterns) . ")\n";
+				#print "match_patterns #-> (" . Dumper(@match_patterns) . ")\n";
 
 				# Check if there are any match_patterns or that there is a Delivery Service regex has '\.*' in it.
 				if (@match_patterns) {
