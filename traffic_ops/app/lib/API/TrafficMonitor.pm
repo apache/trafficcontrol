@@ -21,7 +21,6 @@ use UI::Utils;
 use Mojo::Base 'Mojolicious::Controller';
 use UI::Server;
 use Utils::Rascal;
-use Data::Dumper;
 
 use constant {
 	I_INDEX       => 0,
