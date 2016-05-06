@@ -140,7 +140,7 @@ sub collect_stats {
 		return;
 	}
 
-	my $args = { hc => 1, stats => "ats\.proxy\.process\.http\.current\_client\_connections\,bandwidth\,queryTime,error\-string" };
+	my $args = { hc => 1, stats => "ats\.proxy\.process\.http\.current\_client\_connections\,bandwidth" };
 	my $bigstats_hashref = $rascal->get_cache_stats($args);
 
 	foreach my $server ( sort keys %{ $bigstats_hashref->{'caches'} } ) {
@@ -155,7 +155,6 @@ sub collect_stats {
 			$big_obj->{'caches'}->{$server}->{'mbps_out'} = $server_obj->{'bandwidth'}->[0]->{'value'};
 			$big_obj->{'caches'}->{$server}->{'connections'} =
 				$server_obj->{'ats.proxy.process.http.current_client_connections'}->[0]->{'value'};
-			$big_obj->{'caches'}->{$server}->{'query_time'} = $server_obj->{'queryTime'}->[0]->{'value'};
 
 			$aadata_ref->{'aaData'}->[ ${$master_i} ]->[I_INDEX]       = ${$master_i};
 			$aadata_ref->{'aaData'}->[ ${$master_i} ]->[I_PROFILE]     = "$big_obj->{'caches'}->{$server}->{'profile'}";
@@ -179,8 +178,8 @@ sub add_em_up {
 	my $all_bw     = 0;
 	my $all_conns  = 0;
 	foreach my $cachegroup ( sort keys %{ $big_obj->{'cachegroups'} } ) {
-		$self->app->log->trace("Processing cachegroup: $cachegroup");
 		if ( $cachegroup =~ m/mid/ ) { next; }
+		$self->app->log->trace("Processing cachegroup: $cachegroup");
 		my $total_bw    = 0;
 		my $total_conns = 0;
 		foreach my $cache ( @{ $big_obj->{'cachegroups'}->{$cachegroup}->{'caches'} } ) {
@@ -188,6 +187,7 @@ sub add_em_up {
 			if ( exists( $big_obj->{'caches'}->{$cache}->{'mbps_out'} ) ) {
 				$total_bw += &int_or_zero( $big_obj->{'caches'}->{$cache}->{'mbps_out'} );
 			}
+
 			if ( exists( $big_obj->{'caches'}->{$cache}->{'connections'} ) ) {
 				$total_conns += &int_or_zero( $big_obj->{'caches'}->{$cache}->{'connections'} );
 			}
