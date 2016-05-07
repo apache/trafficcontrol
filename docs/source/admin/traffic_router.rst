@@ -164,6 +164,7 @@ Sample Message
 
 Items within brackets below are detailed under the HTTP and DNS sections
 ::
+
   144140678.000 qtype=DNS chi=192.168.10.11 ttms=789 [Fields Specific to the DNS request] rtype=CZ rloc="40.252611,58.439389" rdtl=- rerr="-" [Fields Specific to the DNS result]
   144140678.000 qtype=HTTP chi=192.168.10.11 ttms=789 [Fields Specific to the HTTP request] rtype=GEO rloc="40.252611,58.439389" rdtl=- rerr="-" [Fields Specific to the HTTP result]
 
@@ -248,6 +249,7 @@ HTTP Specifics
 
 Sample Message
 ::
+
   1452197640.936 qtype=HTTP chi=69.241.53.218 url="http://ccr.mm-test.jenkins.cdnlab.comcast.net/some/asset.m3u8" cqhm=GET cqhv=HTTP/1.1 rtype=GEO rloc="40.252611,58.439389" rdtl=- rerr="-" pssc=302 ttms=0 rurl="http://odol-atsec-sim-114.mm-test.jenkins.cdnlab.comcast.net:8090/some/asset.m3u8" rh="Accept: */*" rh="myheader: asdasdasdasfasg"
 
 **Request Fields**
@@ -279,6 +281,7 @@ DNS Specifics
 
 Sample Message
 ::
+
   144140678.000 qtype=DNS chi=192.168.10.11 ttms=123 xn=65535 fqdn=www.example.com. type=A class=IN ttl=12345 rcode=NOERROR rtype=CZ rloc="40.252611,58.439389" rdtl=- rerr="-" ans="192.168.1.2 192.168.3.4 0:0:0:0:0:ffff:c0a8:102 0:0:0:0:0:ffff:c0a8:304"
 
 **Request Fields**
@@ -320,7 +323,7 @@ Sample Message
 .. _rl-tr-ngb:
 
 GeoLimit Failure Redirect feature
-======
+=================================
 
 Overview
 --------
@@ -334,13 +337,13 @@ The Geolimit check failure has such scenarios:
 
 
 Configuration
---------
+-------------
 To enable the NGB feature, the DS must be configured with the proper redirect url. And the setting lays at 'Delivery Services'->Edit->'GeoLimit Redirect URL'. If no url is put in this field, the feature is disabled.
 
-The url has 3 kinds of formats, which have different meanings:
-1. URL without domain
-   If no domain is in the url (like 'vod/dance.mp4'), the router will try to find a proper cache server within the delivery service and return the redirect url with the format like 'http://<cache server name>.<delivery service's FQDN>/<configured relative path>'
-2. URL with domain that matches with the delivery service
-   The URL has domain and the domain matches with the delivery service. For this URL, the router will also try to find a proper cache server within the delivery service and return the same format url as point 1.
-3. URL with domain that doesn't match with the delivery service
-   The URL has domain but the domain doesn't match with the delivery service. For this URL, the router will return the configured url directly to the client.
+The URL has 3 kinds of formats, which have different meanings:
+
+1. URL with no domain. If no domain is in the URL (like 'vod/dance.mp4'), the router will try to find a proper cache server within the delivery service and return the redirect url with the format like 'http://<cache server name>.<delivery service's FQDN>/<configured relative path>'
+
+2. URL with domain that matches with the delivery service. For this URL, the router will also try to find a proper cache server within the delivery service and return the same format url as point 1.
+
+3. URL with domain that doesn't match with the delivery service. For this URL, the router will return the configured url directly to the client.

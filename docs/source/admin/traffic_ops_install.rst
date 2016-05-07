@@ -75,6 +75,7 @@ Navigating the Install
 To begin the install:
 
 1. Install Traffic Ops: 
+
   Download the traffic_ops rpm package from http://traffic-control-cdn.net/downloads/index.html
   
   ``sudo rpm -ivh traffic_ops-1.*.*-****.x86_64.rpm``

@@ -486,6 +486,7 @@ Topology
   **Response Example** ::
 
     TBD
+
 |
 
 **GET /api/1.1/cdns/:name/configs/monitoring.json**
@@ -623,6 +624,7 @@ Topology
   ::
 
     TBD
+
 |
 
 **GET /api/1.1/cdns/:name/configs/routing.json**

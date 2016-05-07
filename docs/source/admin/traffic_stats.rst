@@ -219,6 +219,7 @@ They are specific for traffic stats and are not meant to be generic to influxdb.
 			- required flags:
 				- sourceUrl - The URL of the source database 
 				- targetUrl - The URL of the target database
+
 			-optional flags:
 				- database - The database to sync (default = sync all databases)
 				- days - Days in the past to sync (default = sync all data)
@@ -226,5 +227,6 @@ They are specific for traffic stats and are not meant to be generic to influxdb.
 				- sourcePass - The password for the source database
 				- targetUser - The user of the target database
 				- targetPass - The password for the target database
+
 			- example: ./sync_ts_databases -sourceUrl=http://influxdb-production-01.kabletown.net:8086 -targetUrl=http://influxdb-dev-01.kabletown.net:8086 -database=cache_stats -days=7 -sourceUser=joe sourcePass=mysecret
 
