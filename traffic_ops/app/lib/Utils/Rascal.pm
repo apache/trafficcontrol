@@ -251,7 +251,7 @@ sub get_cache_stats {
 	}
 
 	my $response = $self->ua->get($url)->res;
-	my $content  = $response->content->asset->{'content'};
+	my $content  = $response->content->asset->slurp;
 	return Utils::Helper::ResponseHelper->handle_response( $response, $content );
 
 }
@@ -262,7 +262,7 @@ sub get_cache_stats_by_host {
 	my $url  = $self->get_url("/publish/CacheStats/$host/?hc=1");
 	my $result   = $self->ua->get($url)->res->content->asset->{'content'};
 	my $response = $self->ua->get($url)->res;
-	my $content  = $response->content->asset->{'content'};
+	my $content  = $response->content->asset->slurp;
 	return Utils::Helper::ResponseHelper->handle_response( $response, $content );
 }
 

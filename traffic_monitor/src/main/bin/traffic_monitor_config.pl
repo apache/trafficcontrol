@@ -47,32 +47,14 @@ sub init {
 }
 
 sub init_hostname {
-    my $fqdn;
-    my $cfg = "/etc/sysconfig/network";
-
-    open(IN, "< $cfg") || die("$cfg: $!");
-
-    while (<IN>) {
-        chomp($_);
-        if ($_ =~ m/^HOSTNAME=(.*)$/) {
-            $fqdn = $1;
+        my $fqdn = `/bin/hostname -f`; chomp($fqdn);
+        my ($hostname, $domainname) = split(/\./, $fqdn, 2);
+        if (!defined($hostname) || !defined($domainname)) {
+                die("FATAL: Unable to determine host and domain name; please ensure this machine properly configured with FQDN.");
         }
-    }
 
-    close(IN);
-
-    if (!defined($fqdn) || $fqdn eq "") {
-        die("FATAL: Unable to find HOSTNAME in $cfg");
-    }
-
-    my ($hostname, $domainname) = split(/\./, $fqdn, 2);
-
-    if (!defined($hostname) || !defined($domainname)) {
-        die("FATAL: Unable to determine host and domain name; please ensure the FQDN for this machine is specified in HOSTNAME in $cfg.");
-    }
-
-    $global->{'host_name'} = $hostname;
-    $global->{'domain_name'} = $domainname;
+        $global->{'host_name'} = $hostname;
+        $global->{'domain_name'} = $domainname;
 }
 
 sub init_time {

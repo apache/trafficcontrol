@@ -40,15 +40,11 @@ public class PeriodicUpdateConfigurationTest {
 	File neustarDatabaseDirectory;
 
 	@Autowired
-	File neustarTempDatabaseDirectory;
-
-	@Autowired
 	File neustarOldDatabaseDirectory;
 
 	@Test
 	public void itUsesCorrectDirectoriesForDataDownload() {
 		assertThat(neustarDatabaseDirectory.getAbsolutePath(), equalTo("/opt/traffic_router/db/neustar"));
-		assertThat(neustarTempDatabaseDirectory.getAbsolutePath(), equalTo("/opt/traffic_router/db/neustar/tmp"));
 		assertThat(neustarOldDatabaseDirectory.getAbsolutePath(), equalTo("/opt/traffic_router/db/neustar/old"));
 	}
 
