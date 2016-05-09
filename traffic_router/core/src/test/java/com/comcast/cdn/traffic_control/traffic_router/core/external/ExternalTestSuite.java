@@ -29,20 +29,98 @@ import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
 import org.junit.runners.Suite;
 
+import java.io.File;
+import java.io.IOException;
+import java.lang.reflect.Field;
+import java.nio.file.FileVisitResult;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.SimpleFileVisitor;
+import java.nio.file.attribute.BasicFileAttributes;
+import java.util.HashMap;
+import java.util.Map;
+
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.equalTo;
 import static org.springframework.util.SocketUtils.findAvailableTcpPort;
 import static org.springframework.util.SocketUtils.findAvailableUdpPort;
 
 @Category(ExternalTest.class)
 @RunWith(Suite.class)
-@Suite.SuiteClasses({LocationsTest.class, RouterTest.class, StatsTest.class, ZonesTest.class})
+@Suite.SuiteClasses({
+	SteeringTest.class,
+	ConsistentHashTest.class,
+	CoverageZoneTest.class,
+	DeliveryServicesTest.class,
+	LocationsTest.class,
+	RouterTest.class,
+	StatsTest.class,
+	ZonesTest.class
+})
 public class ExternalTestSuite {
+	public static final String TRAFFIC_MONITOR_BOOTSTRAP_LOCAL = "TRAFFIC_MONITOR_BOOTSTRAP_LOCAL";
+	public static final String TRAFFIC_MONITOR_HOSTS = "TRAFFIC_MONITOR_HOSTS";
+	public static final String FAKE_SERVER = "localhost:8889;";
 	private static CatalinaTrafficRouter catalinaTrafficRouter;
+	private static HttpDataServer httpDataServer;
+	private static File tmpDeployDir;
+
+	@SuppressWarnings("unchecked")
+	public static void addToEnv(Map<String, String> envVars) throws Exception {
+		Map<String, String> envMap = System.getenv();
+		Class<?> clazz = envMap.getClass();
+		Field m = clazz.getDeclaredField("m");
+		m.setAccessible(true);
+
+		Map<String, String> mutableEnvMap = (Map<String, String>) m.get(envMap);
+		mutableEnvMap.putAll(envVars);
+	}
+
+	public static void setupFakeServers() throws Exception {
+		// Set up a local server that can hand out
+		// cr-config and cr-states (i.e. fake traffic monitor endpoints)
+		// czmap
+		// federations
+		// steering
+		// fake setting a cookie
+
+		Map<String, String> additionalEnvironment = new HashMap<>();
+
+		additionalEnvironment.put(TRAFFIC_MONITOR_BOOTSTRAP_LOCAL, "true");
+		additionalEnvironment.put(TRAFFIC_MONITOR_HOSTS, FAKE_SERVER);
+
+		if (System.getenv(TRAFFIC_MONITOR_HOSTS) != null) {
+			System.out.println("External Test Suite overriding env var [" + TRAFFIC_MONITOR_HOSTS + "] to " + FAKE_SERVER);
+		}
+
+		if (System.getenv(TRAFFIC_MONITOR_BOOTSTRAP_LOCAL) != null) {
+			System.out.println("External Test Suite overriding env var [" + TRAFFIC_MONITOR_BOOTSTRAP_LOCAL + "] to true");
+		}
+
+		addToEnv(additionalEnvironment);
+
+		assertThat(System.getenv(TRAFFIC_MONITOR_BOOTSTRAP_LOCAL), equalTo("true"));
+		assertThat(System.getenv(TRAFFIC_MONITOR_HOSTS), equalTo(FAKE_SERVER));
+
+		httpDataServer = new HttpDataServer();
+		httpDataServer.start(8889);
+	}
 
 	@BeforeClass
 	public static void beforeClass() throws Exception {
-		System.setProperty("deploy.dir", "src/test");
+		setupFakeServers();
+
+		tmpDeployDir = Files.createTempDirectory("ext-test-").toFile();
+		System.out.println();
+		System.out.println(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>");
+		System.out.println(">>>>>>>> Going to use tmp directory '" + tmpDeployDir + "' as traffic router deploy directory");
+		System.out.println(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>");
+		System.out.println();
+		System.setProperty("deploy.dir", tmpDeployDir.getAbsolutePath());
 		System.setProperty("dns.zones.dir", "src/test/var/auto-zones");
 
+		System.setProperty("cache.health.json.refresh.period", "10000");
+		System.setProperty("cache.config.json.refresh.period", "10000");
 		System.setProperty("dns.tcp.port", "" + findAvailableTcpPort());
 		System.setProperty("dns.udp.port", "" + findAvailableUdpPort());
 
@@ -58,7 +136,23 @@ public class ExternalTestSuite {
 	}
 
 	@AfterClass
-	public static void afterClass() throws LifecycleException {
+	public static void afterClass() throws LifecycleException, IOException {
 		catalinaTrafficRouter.stop();
+		httpDataServer.stop();
+		tmpDeployDir.deleteOnExit();
+
+		Files.walkFileTree(tmpDeployDir.toPath(), new SimpleFileVisitor<Path>() {
+			@Override
+			public FileVisitResult visitFile(Path path, BasicFileAttributes attrs) {
+				path.toFile().delete();
+				return FileVisitResult.CONTINUE;
+			}
+
+			@Override
+			public FileVisitResult postVisitDirectory(Path path, IOException e) {
+				path.toFile().delete();
+				return FileVisitResult.CONTINUE;
+			}
+		});
 	}
 }

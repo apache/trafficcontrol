@@ -86,7 +86,8 @@ public abstract class AbstractServiceUpdater {
 
 	public void init() {
 		final long pollingInterval = getPollingInterval();
-		LOGGER.info("[" + getClass().getSimpleName() + "] Starting schedule with interval: " + pollingInterval + " : " + TimeUnit.MILLISECONDS);
+		final Date nextFetchDate = new Date(System.currentTimeMillis() + pollingInterval);
+		LOGGER.info("[" + getClass().getSimpleName() + "] Fetching external resource " + dataBaseURL + " at interval: " + pollingInterval + " : " + TimeUnit.MILLISECONDS + " next update occurrs at " + nextFetchDate);
 		scheduledService = executorService.scheduleWithFixedDelay(updater, pollingInterval, pollingInterval, TimeUnit.MILLISECONDS);
 	}
 
@@ -191,6 +192,10 @@ public abstract class AbstractServiceUpdater {
 			this.setLoaded(false);
 			new Thread(updater).start();
 		}
+	}
+
+	public void setDatabaseUrl(final String url) {
+		this.dataBaseURL = url;
 	}
 
 	/**

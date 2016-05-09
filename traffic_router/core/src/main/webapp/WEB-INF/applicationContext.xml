@@ -73,28 +73,14 @@
 		</property>
 	</bean>
 
-	<bean id="HashFunctionFactory"
-		class="com.comcast.cdn.traffic_control.traffic_router.core.hash.MD5HashFunctionPoolableObjectFactory" />
-
-	<bean id="HashFunctionObjectPool" class="org.apache.commons.pool.impl.GenericObjectPool"
-		destroy-method="close">
-		<constructor-arg ref="HashFunctionFactory" />
-		<property name="maxActive" value="-1" />
-		<property name="minIdle" value="100" />
-		<property name="maxIdle" value="1000" />
-		<property name="timeBetweenEvictionRunsMillis" value="1000" />
-		<property name="softMinEvictableIdleTimeMillis" value="1000" />
-		<property name="numTestsPerEvictionRun" value="100" />
-	</bean>
-
 	<bean id="trafficRouterManager" class="com.comcast.cdn.traffic_control.traffic_router.core.router.TrafficRouterManager">
-		<property name="hashFunctionPool" ref="HashFunctionObjectPool" />
 		<property name="statTracker" ref="statTracker" />
 		<property name="nameServer" ref="NameServer" />
 		<property name="trafficOpsUtils" ref="trafficOpsUtils" />
 		<property name="federationRegistry" ref="federationsRegistry" />
 		<property name="geolocationService" ref="maxmindGeolocationService" />
 		<property name="geolocationService6" ref="maxmindGeolocationService" />
+		<property name="steeringRegistry" ref="steeringRegistry" />
 	</bean>
 
 	<bean id="federationsRegistry" class="com.comcast.cdn.traffic_control.traffic_router.core.loc.FederationRegistry"/>
@@ -109,6 +95,18 @@
 		<property name="federationRegistry" ref="federationsRegistry" />
 	</bean>
 
+	<bean id="steeringRegistry" class="com.comcast.cdn.traffic_control.traffic_router.core.ds.SteeringRegistry"/>
+
+	<bean id="steeringWatcher" class="com.comcast.cdn.traffic_control.traffic_router.core.ds.SteeringWatcher">
+		<property name="executorService" ref="ScheduledExecutorService" />
+		<property name="databasesDirectory" ref="databasesDir" />
+		<property name="databaseName" value="$[cache.steering.database:steering.json]" />
+		<property name="pollingInterval" value="$[cache.steering.database.refresh.period:86400000]" />
+		<property name="trafficOpsUtils" ref="trafficOpsUtils" />
+		<property name="trafficRouterManager" ref="trafficRouterManager" />
+		<property name="steeringRegistry" ref="steeringRegistry" />
+	</bean>
+
 	<bean id="ConfigHandler" class="com.comcast.cdn.traffic_control.traffic_router.core.config.ConfigHandler">
 		<property name="trafficRouterManager" ref="trafficRouterManager" />
 		<property name="geolocationDatabaseUpdater" ref="geolocationDatabaseUpdater" />
@@ -118,6 +116,7 @@
 		<property name="configDir" value="/opt/traffic_router/conf" />
 		<property name="federationsWatcher" ref="federationsWatcher" />
 		<property name="trafficOpsUtils" ref="trafficOpsUtils" />
+		<property name="steeringWatcher" ref="steeringWatcher" />
 	</bean>
 
 	<bean id="trafficOpsUtils" class="com.comcast.cdn.traffic_control.traffic_router.core.util.TrafficOpsUtils">

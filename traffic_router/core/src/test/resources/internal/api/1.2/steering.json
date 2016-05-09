@@ -1,31 +1,32 @@
 {
   "response": [
     {
-      "id": "mm-test",
-      "inclusionPath": "some-regex for a path",
-      "inclusionId": "real-ds-2",
-      "steeredDeliveryServices": [
+      "deliveryService": "mm-test",
+      "targets": [
         {
-          "id": "ds-05",
-          "weight": 1000
+          "deliveryService": "ds-05",
+          "weight": "1000",
+          "filters": [ ".*/force-to-five/.*", ".*/andnowforsomethingcompletelydifferent/.*"]
         },
         {
-          "id": "ds-08",
-          "weight": 9000
+          "deliveryService": "ds-08",
+          "weight": "9000",
+          "filters": [ ".*/force-to-eight/.*"]
         }
       ]
     },
     {
-      "id": "test",
-      "inclusionId": "real-ds-2",
-      "steeredDeliveryServices": [
+      "deliveryService": "test",
+      "targets": [
         {
-          "id": "ds-04",
-          "weight": 45000
+          "deliveryService": "ds-03",
+          "weight": "60000",
+          "filters": [ ]
         },
         {
-          "id": "ds-03",
-          "weight": 60000
+          "deliveryService": "ds-04",
+          "weight": "45000",
+          "filters": [ ]
         }
       ]
     }

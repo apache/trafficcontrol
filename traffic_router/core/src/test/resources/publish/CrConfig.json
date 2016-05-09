@@ -3883,8 +3883,8 @@
       "Accept",
       "Date"
     ],
-    "geolocation.polling.url": "https://tm.comcast.net/MaxMind/auto/GeoIP2-City.mmdb.gz",
     "jenkins.dnssec.inception": "1429649333",
+    "geolocation.polling.url": "http://localhost:8889/geo/GeoLite2-City.mmdb.gz",
     "geolocation.polling.interval": "86400000",
     "ttls": {
       "AAAA": "3600",

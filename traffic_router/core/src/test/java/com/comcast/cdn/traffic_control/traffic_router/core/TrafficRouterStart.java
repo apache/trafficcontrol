@@ -30,8 +30,8 @@ public class TrafficRouterStart {
 			prefix += "/core";
 		}
 
-		System.setProperty("deploy.dir", prefix + "/src/test");
 		System.setProperty("dns.zones.dir", prefix + "/src/test/var/auto-zones");
+		System.setProperty("deploy.dir", prefix + "/src/test");
 
 		System.setProperty("dns.tcp.port", "1053");
 		System.setProperty("dns.udp.port", "1053");

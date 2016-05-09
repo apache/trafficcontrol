@@ -16,18 +16,77 @@
 
 package com.comcast.cdn.traffic_control.traffic_router.core.request;
 
+import java.net.URL;
+import java.util.Enumeration;
+import java.util.HashMap;
 import java.util.Map;
 
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 
+import javax.servlet.http.HttpServletRequest;
+
 public class HTTPRequest extends Request {
+    public static final String X_MM_CLIENT_IP = "X-MM-Client-IP";
+    public static final String FAKE_IP = "fakeClientIpAddress";
 
     private String requestedUrl;
     private String path;
     private String uri;
     private String queryString;
     private Map<String, String> headers;
+
+    public HTTPRequest() { }
+
+    @SuppressWarnings("PMD.ConstructorCallsOverridableMethod")
+    public HTTPRequest(final HttpServletRequest request) {
+        applyRequest(request);
+    }
+
+    @SuppressWarnings("PMD.ConstructorCallsOverridableMethod")
+    public HTTPRequest(final HttpServletRequest request, final URL url) {
+        applyRequest(request);
+        applyUrl(url);
+    }
+
+    @SuppressWarnings("PMD.ConstructorCallsOverridableMethod")
+    public HTTPRequest(final URL url) {
+        applyUrl(url);
+    }
+
+    public void applyRequest(final HttpServletRequest request) {
+        setClientIP(request.getRemoteAddr());
+        setPath(request.getPathInfo());
+        setQueryString(request.getQueryString());
+        setHostname(request.getServerName());
+        setRequestedUrl(request.getRequestURL().toString());
+        setUri(request.getRequestURI());
+
+        final String xmm = request.getHeader(X_MM_CLIENT_IP);
+        final String fip = request.getParameter(FAKE_IP);
+
+        if (xmm != null) {
+            setClientIP(xmm);
+        } else if (fip != null) {
+            setClientIP(fip);
+        }
+
+        final Map<String, String> headers = new HashMap<String, String>();
+        final Enumeration<?> headerNames = request.getHeaderNames();
+        while (headerNames.hasMoreElements()) {
+            final String name = (String) headerNames.nextElement();
+            final String value = request.getHeader(name);
+            headers.put(name, value);
+        }
+        setHeaders(headers);
+    }
+
+    public void applyUrl(final URL url) {
+        setPath(url.getPath());
+        setQueryString(url.getQuery());
+        setHostname(url.getHost());
+        setRequestedUrl(url.toString());
+    }
 
     @Override
     public boolean equals(final Object obj) {
