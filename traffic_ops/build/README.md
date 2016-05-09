@@ -27,4 +27,4 @@ $ cd /vagrant/traffic_control/traffic_ops/build
 $ ./build_rpm.sh
 ```
 Notes:  
-This is known to work with CentOS 6.7 as the Vagrant environment.
+This is known to work with CentOS 6.6 as the Vagrant environment.
