@@ -21,6 +21,7 @@ Sorted alphabetically
 * **[Petro, Christopher C.](https://github.com/petrocc)**
 * **[Phil Sorber](https://github.com/PSUdaemon)**
 * **[Rob Butts](https://github.com/robert-butts)**
+* **[Scott Radvan](https://github.com/sradvan)**
 * **[Stayman Hou](https://github.com/Vuuo)**
 * **[Steve Malenfant] (https://github.com/smalenfant)**
 * **[Trevor Ackerman] (https://github.com/trevorackerman)**
