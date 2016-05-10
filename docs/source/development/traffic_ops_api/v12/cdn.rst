@@ -485,6 +485,7 @@ Topology
   **Response Example** ::
 
     TBD
+
 |
 
 **GET /api/1.2/cdns/:name/configs/monitoring.json**
@@ -622,6 +623,7 @@ Topology
   ::
 
     TBD
+
 |
 
 **GET /api/1.2/cdns/:name/configs/routing.json**
@@ -831,7 +833,9 @@ Topology
 
 **Response Example**
 ::
+
   TBD
+
 |
 
  
@@ -885,7 +889,7 @@ DNSSEC Keys
   +-------------------------------+--------+---------------------------------------------------------------+
   | ``ksk>>dsRecord>>digestType`` | string | Cryptographic hash algorithm used to create the Digest value. |
   +-------------------------------+--------+---------------------------------------------------------------+
-  | ``ksk>>dsRecord>>digest       | string | A cryptographic hash value of the referenced DNSKEY-record.   |
+  | ``ksk>>dsRecord>>digest``     | string | A cryptographic hash value of the referenced DNSKEY-record.   |
   +-------------------------------+--------+---------------------------------------------------------------+
 
   **Response Example** ::
@@ -965,9 +969,11 @@ DNSSEC Keys
 
   **Response Example**
   ::
+
     {  
       "response": "Successfully deleted dnssec keys for <cdn>"
     }
+
 |
   
 **POST /api/1.2/deliveryservices/dnsseckeys/generate**
