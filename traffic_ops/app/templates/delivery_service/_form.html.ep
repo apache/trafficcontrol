@@ -163,17 +163,26 @@
 		<% } %>
 		%= label_for 'geo_limit' => 'Geo Limit?', class => 'label'
 		<% if ($priv_level >= 20) { %>
-		%= field('ds.geo_limit')->select([[None => 0], ["CZF only" => 1], ["CZF + US" => 2], ["CZF + CA" => 3]]);
+			%= field('ds.geo_limit')->select([[None => 0], ["CZF only" => 1], ["CZF + Country Code(s)" => 2]]);
 		<% } else { %>
 			<% if ($ds->geo_limit == 0) { %>
 				%= field('ds.geo_limit')->text(class => 'field', value =>  'None', readonly => 'readonly');
 			<% } elsif($ds->geo_limit == 1) { %>
 				%= field('ds.geo_limit')->text(class => 'field', value =>  'CZF only', readonly => 'readonly');
 			<% } elsif($ds->geo_limit == 2) { %>
-                %= field('ds.geo_limit')->text(class => 'field', value =>  'CZF + US', readonly => 'readonly');
-			<% } else { %>
-                %= field('ds.geo_limit')->text(class => 'field', value =>  'CZF + CA', readonly => 'readonly');
+				%= field('ds.geo_limit')->text(class => 'field', value =>  'CZF + Country Codes', readonly => 'readonly');
 			<% } %>
+		<% } %>
+	</div><br>
+	<div class="block" id="geo_limit_countries_row">
+		<% unless (field('ds.geo_limit_countries')->valid) { %>
+			<span class="field-with-error"><%= field('ds.geo_limit_countries')->error %></span>
+		<% } %>
+		%= label_for 'geo_limit_countries' => 'Geo Limit Country Codes', class => 'label'
+		<% if ($priv_level >= 20) { %>
+		%= field('ds.geo_limit_countries')->text(class => 'field', id => 'geo_limit_countries', name => 'ds.geo_limit_countries');
+		<% } else { %>
+		%= field('ds.geo_limit_countries')->text(class => 'field', readonly => 'readonly');
 		<% } %>
 	</div><br>
 	<div class="block" id="geo_provider_row">

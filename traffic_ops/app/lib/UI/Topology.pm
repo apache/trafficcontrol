@@ -369,19 +369,17 @@ sub gen_crconfig_json {
 		}
 
 		my $geo_limit = $row->geo_limit;
-		if ( $geo_limit == 1 ) {
-			$data_obj->{'deliveryServices'}->{ $row->xml_id }->{'coverageZoneOnly'} = 'true';
-		}
-		elsif ( $geo_limit == 2 ) {
-			$data_obj->{'deliveryServices'}->{ $row->xml_id }->{'coverageZoneOnly'} = 'false';
-			$data_obj->{'deliveryServices'}->{ $row->xml_id }->{'geoEnabled'} = [ { 'countryCode' => 'US' } ];
-		}
-		elsif ( $geo_limit == 3 ) {
-			$data_obj->{'deliveryServices'}->{ $row->xml_id }->{'coverageZoneOnly'} = 'false';
-			$data_obj->{'deliveryServices'}->{ $row->xml_id }->{'geoEnabled'} = [ { 'countryCode' => 'CA' } ];
-		}
-		else {
-			$data_obj->{'deliveryServices'}->{ $row->xml_id }->{'coverageZoneOnly'} = 'false';
+		if ( $geo_limit == 0 ) {
+				$data_obj->{'deliveryServices'}->{ $row->xml_id }->{'coverageZoneOnly'} = 'false';
+		} elsif ( $geo_limit == 1 ) {
+				$data_obj->{'deliveryServices'}->{ $row->xml_id }->{'coverageZoneOnly'} = 'true';
+		} else {
+				$data_obj->{'deliveryServices'}->{ $row->xml_id }->{'coverageZoneOnly'} = 'false';
+				my $geoEnabled = [];
+				foreach my $code (split(",", $row->geo_limit_countries)) {
+						push(@$geoEnabled, { 'countryCode' => $code });
+				}
+				$data_obj->{'deliveryServices'}->{ $row->xml_id }->{'geoEnabled'} = $geoEnabled;
 		}
 
 		my $geo_provider = $row->geo_provider;
