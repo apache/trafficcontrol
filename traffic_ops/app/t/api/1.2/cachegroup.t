@@ -42,15 +42,15 @@ ok $t->post_ok( '/login', => form => { u => Test::TestHelper::ADMIN_USER, p => T
 ok $t->post_ok('/api/1.2/cachegroups' => {Accept => 'application/json'} => json => {
         "name" => "cache_group_mid",
         "short_name" => "cg_mid",
-        "latitude" => "123",
-        "longitude" => "456",
+        "latitude" => "12",
+        "longitude" => "56",
         "parent_cachegroup" => "",
         "secondary_parent_cachegroup" => "",
         "type_name" => "MID_LOC" })->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } )
 	->json_is( "/response/name" => "cache_group_mid" )
     ->json_is( "/response/short_name" => "cg_mid")
-    ->json_is( "/response/latitude" => "123")
-    ->json_is( "/response/longitude" => "456")
+    ->json_is( "/response/latitude" => "12")
+    ->json_is( "/response/longitude" => "56")
     ->json_is( "/response/parent_cachegroup" => "")
     ->json_is( "/response/secondary_parent_cachegroup" => "")
             , 'Does the cache group details return?';
@@ -58,15 +58,15 @@ ok $t->post_ok('/api/1.2/cachegroups' => {Accept => 'application/json'} => json 
 ok $t->post_ok('/api/1.2/cachegroups' => {Accept => 'application/json'} => json => {
         "name" => "cache_group_edge",
         "short_name" => "cg_edge",
-        "latitude" => "123",
-        "longitude" => "456",
+        "latitude" => "12",
+        "longitude" => "56",
         "parent_cachegroup" => "cache_group_mid",
         "secondary_parent_cachegroup" => "mid-northeast-group",
         "type_name" => "EDGE_LOC" })->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } )
 	->json_is( "/response/name" => "cache_group_edge" )
     ->json_is( "/response/short_name" => "cg_edge")
-    ->json_is( "/response/latitude" => "123")
-    ->json_is( "/response/longitude" => "456")
+    ->json_is( "/response/latitude" => "12")
+    ->json_is( "/response/longitude" => "56")
     ->json_is( "/response/parent_cachegroup" => "cache_group_mid")
     ->json_is( "/response/secondary_parent_cachegroup" => "mid-northeast-group")
             , 'Does the cache group details return?';
@@ -123,6 +123,46 @@ ok $t->post_ok('/api/1.2/servers' => {Accept => 'application/json'} => json => {
     ->json_is( "/response/hostName" => "tc1_ats2")
             , 'Does the server details return?';
 
+my $necg_id = &get_cg_id('mid-northeast-group');
+ok $t->post_ok('/api/1.2/cachegroups/'. $necg_id .'/queue_update' =>  {Accept => 'application/json'} =>json => {
+        'action' => 'queue',
+        'cdn' => 'cdn1'})
+    ->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } )
+    ->json_is( "/response/action" => "queue")
+    ->json_is( "/response/cdn" => "cdn1")
+    ->json_is( "/response/cachegroupName" => "mid-northeast-group")
+            , 'Does the queue_update api return?';
+
+ok $t->post_ok('/api/1.2/cachegroups/'. $necg_id .'/queue_update' =>  {Accept => 'application/json'} =>json => {
+        'action' => 'dequeue',
+        'cdn' => 'cdn1'})
+    ->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } )
+    ->json_is( "/response/action" => "dequeue")
+    ->json_is( "/response/cachegroupName" => "mid-northeast-group")
+            , 'Does the queue_update api return?';
+
+ok $t->post_ok('/api/1.2/cachegroups/'. $necg_id .'/queue_update' =>  {Accept => 'application/json'} =>json => {
+        'action' => 'queue',
+        'cdn' => 'cdn'})
+    ->status_is(400)->or( sub { diag $t->tx->res->content->asset->{content}; } )
+            , 'Does the queueupdate api return?';
+ok $t->post_ok('/api/1.2/cachegroups/9999/queue_update' =>  {Accept => 'application/json'} =>json => {
+        'action' => 'queue',
+        'cdn' => 'cdn1'})
+    ->status_is(400)->or( sub { diag $t->tx->res->content->asset->{content}; } )
+            , 'Does the queue_update api return?';
+
 ok $t->get_ok('/logout')->status_is(302)->or( sub { diag $t->tx->res->content->asset->{content}; } );
 $dbh->disconnect();
 done_testing();
+
+sub get_cg_id {
+    my $cg_name = shift;
+    my $q      = "select id from cachegroup where name = \'$cg_name\'";
+    my $get_cg = $dbh->prepare($q);
+    $get_cg->execute();
+    my $p = $get_cg->fetchall_arrayref( {} );
+    $get_cg->finish();
+    my $id = $p->[0]->{id};
+    return $id;
+}

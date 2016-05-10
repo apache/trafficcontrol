@@ -780,3 +780,49 @@ Server
   +------------------+--------+------------------------------------------------+
   
 |
+
+**POST /api/1.2/servers/{:id}/queue_update**
+
+  Queue or dequeue updates for a specific server.
+
+  Authentication Required: Yes
+
+  Role(s) Required: admin or oper
+
+  **Request Route Parameters**
+
+  +-----------+----------+------------------+
+  | Name      | Required | Description      |
+  +===========+==========+==================+
+  | id        | yes      | the server id.   |
+  +-----------+----------+------------------+
+
+  **Request Properties**
+
+  +--------------+---------+-----------------------------------------------+
+  | Name         | Type    | Description                                   |
+  +==============+=========+===============================================+
+  | action       | string  | queue or dequeue                              |
+  +--------------+---------+-----------------------------------------------+
+
+  **Response Properties**
+
+  +--------------+---------+-----------------------------------------------+
+  | Name         | Type    | Description                                   |
+  +==============+=========+===============================================+
+  | action       | string  | The action processed, queue or dequeue.       |
+  +--------------+---------+-----------------------------------------------+
+  | serverId     | integer | server id                                     |
+  +--------------+---------+-----------------------------------------------+
+
+  **Response Example** ::
+
+    {
+      "response": {
+          "serverId": "1",
+          "action": "queue" 
+      }
+    }
+
+|
+
