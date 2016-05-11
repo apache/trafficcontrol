@@ -16,7 +16,7 @@
 
 -- +goose Up
 -- SQL in section 'Up' is executed when this migration is applied
-alter table deliveryservice add column geo_limit_countries varchar(750); -- 250 country codes * (2 letters plus a comma)
+alter table deliveryservice add column geo_limit_countries varchar(750);
 update deliveryservice set geo_limit_countries = "US" where geo_limit = 2;
 update deliveryservice set geo_limit_countries = "CA" where geo_limit = 3;
 update deliveryservice set geo_limit = 2 where geo_limit = 3;
