@@ -408,7 +408,7 @@ sub writeSecret {
 	# rename temp file to cdn.conf and set ownership/permissions same as backup
 	my @stats = stat($backup_name);
 	my ( $uid, $gid, $perm ) = @stats[ 4, 5, 2 ];
-	move( "$tmpfile", $cdn_conf ) or die("move(): $!");
+	move( $tmpfile, $cdn_conf ) or die("move(): $!");
 
 	chown $uid, $gid, $cdn_conf;
 	chmod $perm, $cdn_conf;
@@ -694,16 +694,19 @@ else {
 
 #print "\nRunning smoke tests.\n\n";
 #$rc = execCommand ("/opt/traffic_ops/install/bin/systemtest", "localhost", $user{username}, $tmAdminPw, "0");
-
-my $ans = promptUser( "\nInstall Cron entry to clean install .iso files older than 7 days? [y/n]", "n" );
-if ($ans eq "y" || $ans eq "Y") {
-    execCommand( "/bin/echo \"00 04 * * * root /bin/find /opt/traffic_ops/app/public/iso/*.iso -mtime +7 -exec /bin/rm {} \; > /dev/null 2>&1 \" > /etc/cron.d/trafops_clean_isos" );
+{
+		my $ans = promptUser( "\nInstall Cron entry to clean install .iso files older than 7 days? [y/n]", "n" );
+		if ($ans eq "y" || $ans eq "Y") {
+				execCommand( "/bin/echo \"00 04 * * * root /bin/find /opt/traffic_ops/app/public/iso/*.iso -mtime +7 -exec /bin/rm {} \; > /dev/null 2>&1 \" > /etc/cron.d/trafops_clean_isos" );
+		}
 }
 
-my $ans = promptUser( "\nShutdown Traffic Ops [y/n]", "n" );
-if ( $ans eq "y" ) {
-	print "\nShutting down Traffic Ops.\n\n";
-	execCommand( "/sbin/service", "traffic_ops", "stop" );
+{
+		my $ans = promptUser( "\nShutdown Traffic Ops [y/n]", "n" );
+		if ( $ans eq "y" ) {
+				print "\nShutting down Traffic Ops.\n\n";
+				execCommand( "/sbin/service", "traffic_ops", "stop" );
+		}
 }
 
 print "\nTo start Traffic Ops:  service traffic_ops start\n";
