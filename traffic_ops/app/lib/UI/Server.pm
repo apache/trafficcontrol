@@ -925,6 +925,7 @@ sub postupdatequeue {
 	my $host       = $self->param("id");
 	my $cdn        = $self->param("cdn");
 	my $cachegroup = $self->param("cachegroup");
+	my $wording = ($setqueue == 1) ? "Queue Updates" : "Unqueue Updates";
 
 	if ( !&is_admin($self) && !&is_oper($self) ) {
 		$self->flash( alertmsg => "No can do. Get more privs." );
@@ -933,15 +934,21 @@ sub postupdatequeue {
 
 	if ( defined($host) ) {
 		my $update;
+		my $message;
+
 		if ( $host eq "all" ) {
 			$update = $self->db->resultset('Server')->search(undef);
+			$message = "all servers";
 		}
 		else {
-			$update =
-				$self->db->resultset('Server')->search( { id => $host, } );
+			my $server = $self->db->resultset('Server')->search( { id => $host, } )->single();
+			my @edge_cache_groups = $self->db->resultset('Cachegroup')->search( { parent_cachegroup_id => $server->cachegroup->id } )->all();
+			my @cg_ids = map { $_->id } @edge_cache_groups;
+			$update = $self->db->resultset('Server')->search( { cachegroup => { -in => \@cg_ids } } );
+			$message = "children of " . $server->host_name . " in the following cachegroups: " . join(", ", map { $_->name } @edge_cache_groups);
 		}
 		$update->update( { upd_pending => $setqueue } );
-		&log( $self, "Flip Update bit (Queue Updates) for server(s):" . $host, "OPER" );
+		&log( $self, "Flip Update bit ($wording) for " . $message, "OPER" );
 	}
 	elsif ( defined($cdn) && defined($cachegroup) ) {
 		my @profiles;
@@ -977,8 +984,8 @@ sub postupdatequeue {
 
 		if ( $update->count() > 0 ) {
 			$update->update( { upd_pending => $setqueue } );
-			$self->app->log->debug("Flip Update bit (Queue Updates) for servers in CDN: $cdn, Cachegroup: $cachegroup");
-			&log( $self, "Flip Update bit (Queue Updates) for servers in CDN:" . $cdn . " cachegroup:" . $cachegroup, "OPER" );
+			$self->app->log->debug("Flip Update bit ($wording) for servers in CDN: $cdn, Cachegroup: $cachegroup");
+			&log( $self, "Flip Update bit ($wording) for servers in CDN:" . $cdn . " cachegroup:" . $cachegroup, "OPER" );
 		}
 		else {
 			$self->app->log->debug("No Queue Updates for servers in CDN: $cdn, Cachegroup: $cachegroup");
