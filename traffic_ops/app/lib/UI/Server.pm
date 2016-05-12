@@ -944,7 +944,7 @@ sub postupdatequeue {
 			my $server = $self->db->resultset('Server')->search( { id => $host, } )->single();
 			my @edge_cache_groups = $self->db->resultset('Cachegroup')->search( { parent_cachegroup_id => $server->cachegroup->id } )->all();
 			my @cg_ids = map { $_->id } @edge_cache_groups;
-			$update = $self->db->resultset('Server')->search( { cachegroup => { -in => \@cg_ids } } );
+			$update = $self->db->resultset('Server')->search( { cachegroup => { -in => \@cg_ids }, cdn_id => $server->cdn_id } );
 			$message = "children of " . $server->host_name . " in the following cachegroups: " . join(", ", map { $_->name } @edge_cache_groups);
 		}
 		$update->update( { upd_pending => $setqueue } );
