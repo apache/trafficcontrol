@@ -674,7 +674,10 @@ sub stringify_ds {
 	}
 	$string .= "|<br>&emsp;CZF Only:" . $ds->{'coverageZoneOnly'};
 	if ( defined( $ds->{'geoEnabled'} ) ) {
-		$string .= "|Geo Limit: true; Country: " . $ds->{'geoEnabled'}->[0]->{'countryCode'};
+		$string .= "|Geo Limit: true; Countries: ";
+		foreach my $country ( @{ $ds->{'geoEnabled'} } ) {
+			$string .= $country->{'countryCode'} . " ";
+		}
 	}
 	if ( defined( $ds->{'missLocation'} ) ) {
 		$string .= "|GeoMiss: " . $ds->{'missLocation'}->{'lat'} . "," . $ds->{'missLocation'}->{'long'};
