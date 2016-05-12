@@ -120,6 +120,9 @@ ok $t->delete_ok('/api/1.2/servers/' . $svr_id)
     ->json_is( "/alerts/0/text", "Server was deleted." )
             , "Is the server id valid?";
 
+ok $t->delete_ok('/api/1.2/servers/' . $svr_id)
+    ->status_is(404)->or( sub { diag $t->tx->res->content->asset->{content}; } );
+
 ok $t->put_ok('/api/1.2/servers/' . $svr_id  => {Accept => 'application/json'} => json => {
         "host_name" => "tc1_ats1",
         "domain_name" => "northbound.com",

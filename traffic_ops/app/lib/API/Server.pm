@@ -607,7 +607,7 @@ sub create {
     }
 
     # if the insert has failed, we don't even get here, we go to the exception page.
-    &log( $self, "Create server with hostname:" . $json->{'host_name'}, "UICHANGE" );
+    &log( $self, "Create server with hostname:" . $json->{'host_name'}, "APICHANGE" );
 
     ($data, $err) = $self->get_server_by_id($new_id);
     if( defined($err) ) {
@@ -708,12 +708,12 @@ sub update {
         if ( $upd_cdn_name ne $org_cdn_name ) {
             my $delete = $self->db->resultset('DeliveryserviceServer')->search( { server => $id } );
             $delete->delete();
-            &log( $self, $update->host_name . " profile change assigns server to new CDN - deleting all DS assignments", "UICHANGE" );
+            &log( $self, $update->host_name . " profile change assigns server to new CDN - deleting all DS assignments", "APICHANGE" );
         }
         if ( $org_server->type->id != $update->type->id ) {
             my $delete = $self->db->resultset('DeliveryserviceServer')->search( { server => $id } );
             $delete->delete();
-            &log( $self, $update->host_name . " profile change changes cache type - deleting all DS assignments", "UICHANGE" );
+            &log( $self, $update->host_name . " profile change changes cache type - deleting all DS assignments", "APICHANGE" );
         }
     }
 
@@ -727,14 +727,14 @@ sub update {
 
             # servercheck entry found but not needed -- delete it
             $servercheck->delete();
-            &log( $self, $update->host_name . " cache type change - deleting servercheck", "UICHANGE" );
+            &log( $self, $update->host_name . " cache type change - deleting servercheck", "APICHANGE" );
         }
         elsif ( $servercheck == 0 && $need_servercheck{$newtype_id} ) {
 
             # servercheck entry not found but needed -- insert it
             $servercheck = $self->db->resultset('Servercheck')->create( { server => $id } );
             $servercheck->insert();
-            &log( $self, $update->host_name . " cache type changed - adding servercheck", "UICHANGE" );
+            &log( $self, $update->host_name . " cache type changed - adding servercheck", "APICHANGE" );
         }
     }
 
@@ -754,7 +754,7 @@ sub update {
     }
 
     # if the update has failed, we don't even get here, we go to the exception page.
-    &log( $self, $lstring, "UICHANGE" );
+    &log( $self, $lstring, "APICHANGE" );
 
     ($data, $err) = $self->get_server_by_id($id);
     if( defined($err) ) {
@@ -774,13 +774,17 @@ sub delete {
     }
 
     my $id   = $self->param('id');
+    my $server = $self->db->resultset('Server')->find( { id => $id } );
+    if ( !defined($server) ) {
+        return $self->not_found();
+    }
     my $delete = $self->db->resultset('Server')->search( { id => $id } );
     my $host_name = $delete->get_column('host_name')->single();
     $delete->delete();
     $delete = $self->db->resultset('Servercheck')->search( { server => $id } );
     $delete->delete();
 
-    &log( $self, "Delete server with id:" . $id . " named " . $host_name, "UICHANGE" );
+    &log( $self, "Delete server with id:" . $id . " named " . $host_name, "APICHANGE" );
 
     return $self->success_message("Server was deleted.");
 }
