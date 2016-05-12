@@ -408,7 +408,7 @@ sub aphys_location {
 sub adeliveryservice {
     my $self       = shift;
     my %data       = ( "aaData" => undef );
-    my %geo_limits = ( 0 => "none", 1 => "CZF", 2 => "CZF + US", 3 => "CZF + CA" );
+    my %geo_limits = ( 0 => "none", 1 => "CZF", 2 => "CZF + Countries" );
     my %protocol   = ( 0 => "http", 1 => "https", 2 => "http/https" );
 
     my $rs = $self->db->resultset('Deliveryservice')->search(
