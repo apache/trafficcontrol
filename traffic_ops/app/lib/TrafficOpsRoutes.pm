@@ -673,6 +673,8 @@ sub api_routes {
 		}
 	);
 
+	# -- Steering
+	$r->get("/internal/api/$version/steering" => [format => [qw(json)] ] )->over( authenticated => 1)->to('Steering#index', namespace => 'API::DeliveryService' );
 }
 
 sub api_1_0_routes {
@@ -773,7 +775,6 @@ sub api_1_0_routes {
 	$r->get('/datatype')->over( authenticated => 1 )->to( 'Types#readtype', namespace => $namespace );
 	$r->get('/datatypetrimmed')->over( authenticated => 1 )->to( 'Types#readtypetrimmed', namespace => $namespace );
 	$r->get('/datatype/orderby/:orderby')->over( authenticated => 1 )->to( 'Types#readtype', namespace => $namespace );
-
 }
 
 sub traffic_stats_routes {

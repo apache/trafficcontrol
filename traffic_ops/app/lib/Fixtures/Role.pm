@@ -83,6 +83,15 @@ my %definition_for = (
 			priv_level  => 2,
 		},
 	},
+	steering => {
+		new   => 'Role',
+		using => {
+			id          => 8,
+			name        => 'steering',
+			description => 'Role for Steering Delivery Service',
+			priv_level  => 11,
+		},
+	},
 );
 
 sub get_definition {
