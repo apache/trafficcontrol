@@ -68,7 +68,7 @@ The user must have the following for a successful install:
 
 .. Note:: The above versions are known to work on CentOS 6.5. Higher versions may work.
 
-.. Note:: Although Traffic Ops supports both MySQL and Postgres as a database, support for MySQL is more mature and better tested. It is best to use MySQL when first getting started, and the rest of this quide assumes MySQL as the database.
+.. Note:: Although Traffic Ops supports both MySQL and Postgres as a database, support for MySQL is more mature and better tested. It is best to use MySQL when first getting started, and the rest of this guide assumes MySQL as the database.
 
 Navigating the Install
 -----------------------
