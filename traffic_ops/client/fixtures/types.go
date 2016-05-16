@@ -16,7 +16,7 @@
 
 package fixtures
 
-import "github.com/jheitz200/traffic_control/traffic_ops/client"
+import "github.com/Comcast/traffic_control/traffic_ops/client"
 
 // Types returns a default TypeResponse to be used for testing.
 func Types() *client.TypeResponse {

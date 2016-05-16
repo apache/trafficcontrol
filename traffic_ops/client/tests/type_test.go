@@ -20,9 +20,9 @@ import (
 	"net/http"
 	"testing"
 
+	"github.com/Comcast/traffic_control/traffic_ops/client"
+	"github.com/Comcast/traffic_control/traffic_ops/client/fixtures"
 	"github.com/jheitz200/test_helper"
-	"github.com/jheitz200/traffic_control/traffic_ops/client"
-	"github.com/jheitz200/traffic_control/traffic_ops/client/fixtures"
 )
 
 func TestTypes(t *testing.T) {
