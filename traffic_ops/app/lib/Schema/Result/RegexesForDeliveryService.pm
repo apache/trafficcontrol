@@ -54,6 +54,8 @@ FROM
     type ON regex.type = type.id
 WHERE
     deliveryservice.id = ?
+AND
+    type.name != 'STEERING_REGEXP'
 ORDER BY type , deliveryservice_regex.set_number
 "
 );
