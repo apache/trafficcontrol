@@ -89,6 +89,73 @@ ok $t->get_ok("/internal/api/1.2/steering.json")->status_is(200)
     ->json_is("/response/1/targets/1/weight", 999)
     ->json_is("/response/1/targets/1/filters/0", ".*/go-to-four/.*");
 
+ok $t->post_ok("/internal/api/1.2/steering",
+        json => {
+            "stuff" => "junk",
+        }
+    )->status_is(400)
+        ->or(sub {diag $t->tx->res->headers->to_string();});
+
+ok $t->post_ok("/internal/api/1.2/steering",
+        json => {
+            "deliveryService" => "steering-ds1"
+        }
+    )->status_is(400)
+        ->or(sub {diag $t->tx->res->headers->to_string();});
+
+ok $t->post_ok("/internal/api/1.2/steering",
+        json => {
+            "deliveryService" => "steering-ds1",
+            "targets" => "stuff"
+        }
+    )->status_is(400)
+        ->or(sub {diag $t->tx->res->headers->to_string();});
+
+ok $t->post_ok("/internal/api/1.2/steering",
+        json => {
+            "deliveryService" => "steering-ds1",
+            "targets" => [
+                {"deliveryService" => "example"},
+                {"woops" => "example"},
+            ]
+        }
+    )->status_is(400)
+        ->or(sub {diag $t->tx->res->headers->to_string();});
+
+ok $t->post_ok("/internal/api/1.2/steering",
+        json => {
+            "deliveryService" => "nonexistent-ds",
+            "targets" => [
+                {"deliveryService" => "target-ds1"},
+                {"deliveryService" => "target-ds3"}
+            ]
+        }
+    )->status_is(409)
+        ->or(sub {diag $t->tx->res->headers->to_string();});
+
+ok $t->post_ok("/internal/api/1.2/steering",
+        json => {
+            "deliveryService" => "steering-ds1",
+            "targets" => [
+                {"deliveryService" => "nonexistent-ds1"},
+                {"deliveryService" => "target-ds3"}
+            ]
+        }
+    )->status_is(409)
+        ->or(sub {diag $t->tx->res->headers->to_string();});
+
+ok $t->post_ok("/internal/api/1.2/steering",
+        json => {
+            "deliveryService" => "new-steering-ds",
+            "targets" => [
+                {"deliveryService" => "target-ds1"},
+                {"deliveryService" => "target-ds3"}
+            ]
+        }
+    )->status_is(201)
+        ->header_is('Location', "/internal/api/1.2/steering/new-steering-ds.json")
+        ->or(sub {diag $t->tx->res->headers->to_string();});
+
 $t->post_ok("/api/1.2/user/logout")->status_is(200);
 
 
@@ -100,36 +167,12 @@ ok $t->post_ok( "/api/1.2/user/login", => json => { u => Test::TestHelper::STEER
 ok $t->get_ok("/internal/api/1.2/steering.json")->status_is(200)
     ->or( sub { diag $t->tx->res->headers->to_string(); } );
 
+ok $t->post_ok("/internal/api/1.2/steering", json => { "something" => "value" } )->status_is(401)
+        ->or(sub {diag $t->tx->res->headers->to_string();});
+
 $t->post_ok("/api/1.2/user/logout")->status_is(200);
 
-#$t->post_ok( "/login", => form => { u => Test::TestHelper::STEERING_USER_1, p => Test::TestHelper::STEERING_PASSWORD_1 } )
-#    ->status_is(302)
-#    ->header_is('Location', "/edge_health")
-#    ->or( sub { diag $t->tx->res->content->asset->{content}; } );
-#
 
-
-#ok $t->post_ok("/internal/api/1.2/steering",
-#        json => {
-#            "id" => "steering-ds-1",
-#            "steeredDeliveryServices" => [
-#                {"id" => "steering-target-1"},
-#                {"id" => "steering-target-2"}
-#            ]
-#        }
-#    )->status_is(401)
-#        ->or(sub {diag $t->tx->res->headers->to_string();});
-
-#    ->json_is( "/response/0/deliveryService", "test-steering-ds-1" )
-#    ->json_is( "/response/0/bypasses/0/filter", ".*/force-to-one/.*" )
-#    ->json_is( "/response/0/bypasses/0/destination", "test-ds1" )
-#    ->json_is( "/response/0/bypasses/1/filter", ".*/force-to-two/.*" )
-#    ->json_is( "/response/0/bypasses/1/destination", "test-ds2" )
-#    ->json_is( "/response/0/steeredDeliveryServices/0/id", "test-ds1" )
-#    ->json_is( "/response/0/steeredDeliveryServices/0/weight", "9000" )
-#    ->json_is( "/response/0/steeredDeliveryServices/1/id", "test-ds2" )
-#    ->json_is( "/response/0/steeredDeliveryServices/1/weight", "1000" );
-#
 ######## Steering User 2 ################################################################################
 #ok $t->post_ok( "/login", => form => { u => Test::TestHelper::STEERING_USER_2, p => Test::TestHelper::STEERING_PASSWORD_2 } )->status_is(302)
 #        ->or( sub { diag $t->tx->res->content->asset->{content}; } );

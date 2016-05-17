@@ -78,22 +78,59 @@ sub find_steering {
     return $response;
 }
 
-#sub add() {
-#    my $self = shift;
-#
-#
-#    if (!&is_admin($self)) {
-#        return $self->render(json => {"message" => "unauthorized"}, status => 401);
-#    }
-#
-#    my $xml_id = $self->req->json->{'id'};
-#    my $ds_count = $self->db->resultset('Deliveryservice')->count( { xml_id => $xml_id } )->get_column('id');
-#
-#    print STDERR "count found $ds_count\n";
-#
-#    my @steered_delivery_services = $self->req->json->{'steeredDeliveryServices'};
-#
-#    foreach (@steered_delivery_services)
-#}
+sub add() {
+    my $self = shift;
+
+    if (!&is_admin($self)) {
+        return $self->render(json => {"message" => "unauthorized"}, status => 401);
+    }
+
+    my $steering_xml_id = $self->req->json->{'deliveryService'};
+
+    if (!$steering_xml_id || !$self->req->json->{'targets'}) {
+        return $self->render(json => {"message" => "bad request"}, status => 400);
+    }
+
+    if (!(ref($self->req->json->{'targets'}) eq "ARRAY")) {
+        return $self->render(json => {"message" => "bad request"}, status => 400);
+    }
+
+    my $target_xml_ids = [];
+    foreach my $target (@{$self->req->json->{'targets'}}) {
+        if (!(ref($target) eq "HASH") || !$target->{'deliveryService'}) {
+            return $self->render(json => {"message" => "bad request"}, status => 400);
+        }
+        push(@{$target_xml_ids}, $target->{'deliveryService'});
+    }
+
+    my $ds = $self->db->resultset('Deliveryservice')->search( { xml_id => $steering_xml_id } )->get_column('id')->single();
+
+    if (!$ds) {
+        return $self->render(json => {}, status => 409);
+    }
+
+    my $rows = [];
+
+    foreach my $xml_id (@{$target_xml_ids}) {
+        my $target_ds = $self->db->resultset('Deliveryservice')->search({xml_id => $xml_id})->get_column('id')->single();
+
+        if (!$target_ds) {
+            return $self->render(json => {}, status => 409);
+        }
+
+        push(@{$rows}, [$ds, $target_ds])
+    }
+
+    my $transaction_guard = $self->db->txn_scope_guard;
+
+    for my $row (@{$rows}) {
+        $self->db->resultset('SteeringTarget')->create({deliveryservice => $row->[0], target => $row->[1], weight => 0});
+    }
+
+    $transaction_guard->commit;
+
+    $self->res->headers->header('Location', '/internal/api/1.2/steering/' . $steering_xml_id . ".json");
+    return $self->render(json => {}, status => 201);
+}
 
 1;

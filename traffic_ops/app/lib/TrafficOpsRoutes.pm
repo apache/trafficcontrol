@@ -675,6 +675,7 @@ sub api_routes {
 
 	# -- Steering
 	$r->get("/internal/api/$version/steering" => [format => [qw(json)] ] )->over( authenticated => 1)->to('Steering#index', namespace => 'API::DeliveryService' );
+	$r->post("/internal/api/$version/steering")->over( authenticated => 1 )->to( 'Steering#add', namespace => 'API::DeliveryService' );
 }
 
 sub api_1_0_routes {
