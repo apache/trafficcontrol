@@ -24,13 +24,9 @@ use Data::Dumper;
 sub index {
     my $self = shift;
 
-    if (&is_admin( $self )) {
+    if (&is_admin($self) || &is_steering($self)) {
         my $data = $self->find_steering();
         return $self->success($data);
-    }
-
-    if (&is_steering( $self )) {
-        return $self->success("Yo!");
     }
 
     return $self->render(json => {"message" => "unauthorized"}, status => 401);
@@ -38,11 +34,27 @@ sub index {
 
 sub find_steering {
     my $self = shift;
+    my $steering_filter  = $self->param('xml_id');
+
     my %steering;
 
     my $rs_data = $self->db->resultset('SteeringView')->search({}, {order_by => ['steering_xml_id', 'target_xml_id']});
 
     while ( my $row = $rs_data->next ) {
+        if ($steering_filter && $row->steering_xml_id ne $steering_filter) {
+            next;
+        }
+
+        if (!&is_admin($self)) {
+            my $name = $self->current_user()->{username};
+            my $user_id = $self->db->resultset('TmUser')->search( { username => $name}, {columns => 'id'} )->single->id;
+            my $dsu_row = $self->db->resultset('DeliveryserviceTmuser')->search({tm_user_id => $user_id, deliveryservice => $row->steering_id})->single;
+
+            if (!$dsu_row) {
+                next;
+            }
+        }
+
         my $target_id = $row->target_id;
         my $rs_filters = $self->db->resultset('RegexByDeliveryServiceList')->search({'ds_id' => $target_id });
 
@@ -68,6 +80,10 @@ sub find_steering {
             'weight' => $row->weight,
             'filters' => $filters,
         });
+    }
+
+    if ($steering_filter) {
+        return (values %steering)[0];
     }
 
     my $response = [];
