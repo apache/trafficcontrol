@@ -781,8 +781,6 @@ sub delete {
     my $delete = $self->db->resultset('Server')->search( { id => $id } );
     my $host_name = $delete->get_column('host_name')->single();
     $delete->delete();
-    $delete = $self->db->resultset('Servercheck')->search( { server => $id } );
-    $delete->delete();
 
     &log( $self, "Delete server with id:" . $id . " named " . $host_name, "APICHANGE" );
 
