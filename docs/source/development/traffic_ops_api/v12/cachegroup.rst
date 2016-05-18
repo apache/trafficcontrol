@@ -176,7 +176,7 @@ Cache Group
   +--------------------------+--------+-----------------------------------------+
   | ``>parameter``           | string |                                         |
   +--------------------------+--------+-----------------------------------------+
-  | ``>last_updated``        | string |                                         |
+  | ``>lastUpdated``         | string |                                         |
   +--------------------------+--------+-----------------------------------------+
   | ``>cachegroup``          | string |                                         |
   +--------------------------+--------+-----------------------------------------+
@@ -188,17 +188,17 @@ Cache Group
         "cachegroupParameters": [
            {
               "parameter": "379",
-              "last_updated": "2013-08-05 18:49:37",
+              "lastUpdated": "2013-08-05 18:49:37",
               "cachegroup": "us-ca-sanjose"
            },
            {
               "parameter": "380",
-              "last_updated": "2013-08-05 18:49:37",
+              "lastUpdated": "2013-08-05 18:49:37",
               "cachegroup": "us-ca-sanjose"
            },
            {
               "parameter": "379",
-              "last_updated": "2013-08-05 18:49:37",
+              "lastUpdated": "2013-08-05 18:49:37",
               "cachegroup": "us-ma-woburn"
            }
         ]
@@ -256,81 +256,221 @@ Cache Group
 
   Role(s) Required: admin or oper
 
-  **Request Route Parameters**
+  **Request Parameters**
 
   +---------------------------------+----------+-------------------------------------------------------------------+
   | Name                            | Required | Description                                                       |
   +=================================+==========+===================================================================+
   | ``name``                        | yes      | The name of the Cache Group entry                                 |
   +---------------------------------+----------+-------------------------------------------------------------------+
-  | ``short_name``                  | yes      | Abbreviation of the Cache Group Name                              |
+  | ``shortName``                   | yes      | Abbreviation of the Cache Group Name                              |
   +---------------------------------+----------+-------------------------------------------------------------------+
   | ``latitude``                    | yes      | Latitude for the Cache Group                                      |
   +---------------------------------+----------+-------------------------------------------------------------------+
   | ``longitude``                   | yes      | Longitude for the Cache Group                                     |
   +---------------------------------+----------+-------------------------------------------------------------------+
-  | ``parent_cachegroup``           | yes      | Name of Parent Cache Group entry.                                 |
+  | ``parentCachegroup``            | yes      | Name of Parent Cache Group entry.                                 |
   +---------------------------------+----------+-------------------------------------------------------------------+
-  | ``secondary_parent_cachegroup`` | yes      | Name of Secondary Parent Cache Group entry.                       |
+  | ``secondaryParentCachegroup``   | yes      | Name of Secondary Parent Cache Group entry.                       |
   +---------------------------------+----------+-------------------------------------------------------------------+
-  | ``type_name``                   | yes      | The type of Cache Group entry, "EDGE_LOC", "MID_LOC" or "ORG_LOC" |
+  | ``typeName``                    | yes      | The type of Cache Group entry, "EDGE_LOC", "MID_LOC" or "ORG_LOC" |
   +---------------------------------+----------+-------------------------------------------------------------------+
 
   **Request Example** ::
 
     {
         "name": "cache_group_edge",
-        "short_name": "cg_edge",
-        "latitude": "123",
-        "longitude": "456",
-        "parent_cachegroup": "cache_group_mid",
-        "type_name": "EDGE_LOC"
+        "shortName": "cg_edge",
+        "latitude": 12,
+        "longitude": 45,
+        "parentCachegroup": "cache_group_mid",
+        "typeName": "EDGE_LOC"
     }
 
   **Response Properties**
 
-  +------------------------------------+--------+----------------------------------------------------------------------------------------------+
-  | Parameter                          | Type   | Description                                                                                  |
-  +====================================+========+==============================================================================================+
-  | ``id``                             | string | The id of cache group                                                                        |
-  +------------------------------------+--------+----------------------------------------------------------------------------------------------+
-  | ``name``                           | string | The name of the Cache Group entry                                                            |
-  +------------------------------------+--------+----------------------------------------------------------------------------------------------+
-  | ``short_name``                     | string | Abbreviation of the Cache Group Name                                                         |
-  +------------------------------------+--------+----------------------------------------------------------------------------------------------+
-  | ``latitude``                       | string | Latitude for the Cache Group                                                                 |
-  +------------------------------------+--------+----------------------------------------------------------------------------------------------+
-  | ``longitude``                      | string | Longitude for the Cache Group                                                                |
-  +------------------------------------+--------+----------------------------------------------------------------------------------------------+
-  | ``parent_cachegroup``              | string | Name of Parent Cache Group entry.                                                            |
-  +------------------------------------+--------+----------------------------------------------------------------------------------------------+
-  | ``parent_cachegroup_id``           | string | id of Parent Cache Group entry.                                                              |
-  +------------------------------------+--------+----------------------------------------------------------------------------------------------+
-  | ``secondary_parent_cachegroup``    | string | Name of Secondary Parent Cache Group entry.                                                  |
-  +------------------------------------+--------+----------------------------------------------------------------------------------------------+
-  | ``secondary_parent_cachegroup_id`` | string | id of Secondary Parent Cache Group entry.                                                    |
-  +------------------------------------+--------+----------------------------------------------------------------------------------------------+
-  | ``type``                           | string | The id of the type of Cache Group entry, its name must be "EDGE_LOC", "MID_LOC" or "ORG_LOC" |
-  +------------------------------------+--------+----------------------------------------------------------------------------------------------+
+  +------------------------------------+--------+-------------------------------------------------------------------+
+  | Parameter                          | Type   | Description                                                       |
+  +====================================+========+===================================================================+
+  | ``id``                             | string | The id of cache group                                             |
+  +------------------------------------+--------+-------------------------------------------------------------------+
+  | ``name``                           | string | The name of the Cache Group entry                                 |
+  +------------------------------------+--------+-------------------------------------------------------------------+
+  | ``shortName``                      | string | Abbreviation of the Cache Group Name                              |
+  +------------------------------------+--------+-------------------------------------------------------------------+
+  | ``latitude``                       | string | Latitude for the Cache Group                                      |
+  +------------------------------------+--------+-------------------------------------------------------------------+
+  | ``longitude``                      | string | Longitude for the Cache Group                                     |
+  +------------------------------------+--------+-------------------------------------------------------------------+
+  | ``parentCachegroup``               | string | Name of Parent Cache Group entry.                                 |
+  +------------------------------------+--------+-------------------------------------------------------------------+
+  | ``parentCachegroupId``             | string | id of Parent Cache Group entry.                                   |
+  +------------------------------------+--------+-------------------------------------------------------------------+
+  | ``secondaryParentCachegroup``      | string | Name of Secondary Parent Cache Group entry.                       |
+  +------------------------------------+--------+-------------------------------------------------------------------+
+  | ``secondaryParentCachegroupId``    | string | id of Secondary Parent Cache Group entry.                         |
+  +------------------------------------+--------+-------------------------------------------------------------------+
+  | ``typeName``                       | string | The type of Cache Group entry, "EDGE_LOC", "MID_LOC" or "ORG_LOC" |
+  +------------------------------------+--------+-------------------------------------------------------------------+
+  | ``lastUpdated``                    | string | The Time / Date this entry was last updated                       |
+  +------------------------------------+--------+-------------------------------------------------------------------+
 
   **Response Example** ::
 
     {
         "response": {
-            'longitude' : '456',
-            'last_updated' : '2016-01-25 13:55:30',
-            'short_name' : 'cg_edge',
+            'longitude' : '45',
+            'lastUpdated' : '2016-01-25 13:55:30',
+            'shortName' : 'cg_edge',
             'name' : 'cache_group_edge',
-            'parent_cachegroup' : 'cache_group_mid',
-            'secondary_parent_cachegroup' : null,
-            'latitude' : '123',
-            'type' : '6',
+            'parentCachegroup' : 'cache_group_mid',
+            'secondaryParentCachegroup' : null,
+            'latitude' : '12',
+            'typeName' : 'EDGE_LOC',
             'id' : '104',
-            'parent_cachegroup_id' : '103',
-            'secondary_parent_cachegroup_id' : null
+            'parentCachegroupId' : '103',
+            'secondaryParentCachegroupId' : null
         }
     }
    
+|
+
+**PUT /api/1.2/cachegroups/{:id}**
+
+  Update cache group.
+
+  Authentication Required: Yes
+
+  Role(s) Required: admin or oper
+
+  **Request Route Parameters**
+
+  +------+----------+------------------------------------+
+  | Name | Required | Description                        |
+  +======+==========+====================================+
+  | id   | yes      | The id of the cache group to edit. |
+  +------+----------+------------------------------------+
+
+  **Request Parameters**
+
+  +---------------------------------+----------+-------------------------------------------------------------------+
+  | Name                            | Required | Description                                                       |
+  +=================================+==========+===================================================================+
+  | ``name``                        | no       | The name of the Cache Group entry                                 |
+  +---------------------------------+----------+-------------------------------------------------------------------+
+  | ``shortName``                   | no       | Abbreviation of the Cache Group Name                              |
+  +---------------------------------+----------+-------------------------------------------------------------------+
+  | ``latitude``                    | no       | Latitude for the Cache Group                                      |
+  +---------------------------------+----------+-------------------------------------------------------------------+
+  | ``longitude``                   | no       | Longitude for the Cache Group                                     |
+  +---------------------------------+----------+-------------------------------------------------------------------+
+  | ``parentCachegroup``            | no       | Name of Parent Cache Group entry.                                 |
+  +---------------------------------+----------+-------------------------------------------------------------------+
+  | ``secondaryParentCachegroup``   | no       | Name of Secondary Parent Cache Group entry.                       |
+  +---------------------------------+----------+-------------------------------------------------------------------+
+  | ``typeName``                    | no       | The type of Cache Group entry, "EDGE_LOC", "MID_LOC" or "ORG_LOC" |
+  +---------------------------------+----------+-------------------------------------------------------------------+
+
+  **Request Example** ::
+
+    {
+        "name": "cache_group_edge",
+        "shortName": "cg_edge",
+        "latitude": 12,
+        "longitude": 45,
+        "parentCachegroup": "cache_group_mid",
+        "typeName": "EDGE_LOC"
+    }
+
+  **Response Properties**
+
+  +------------------------------------+--------+-------------------------------------------------------------------+
+  | Parameter                          | Type   | Description                                                       |
+  +====================================+========+===================================================================+
+  | ``id``                             | string | The id of cache group                                             |
+  +------------------------------------+--------+-------------------------------------------------------------------+
+  | ``name``                           | string | The name of the Cache Group entry                                 |
+  +------------------------------------+--------+-------------------------------------------------------------------+
+  | ``shortName``                      | string | Abbreviation of the Cache Group Name                              |
+  +------------------------------------+--------+-------------------------------------------------------------------+
+  | ``latitude``                       | string | Latitude for the Cache Group                                      |
+  +------------------------------------+--------+-------------------------------------------------------------------+
+  | ``longitude``                      | string | Longitude for the Cache Group                                     |
+  +------------------------------------+--------+-------------------------------------------------------------------+
+  | ``parentCachegroup``               | string | Name of Parent Cache Group entry.                                 |
+  +------------------------------------+--------+-------------------------------------------------------------------+
+  | ``parentCachegroupId``             | string | id of Parent Cache Group entry.                                   |
+  +------------------------------------+--------+-------------------------------------------------------------------+
+  | ``secondaryParentCachegroup``      | string | Name of Secondary Parent Cache Group entry.                       |
+  +------------------------------------+--------+-------------------------------------------------------------------+
+  | ``secondaryParentCachegroupId``    | string | id of Secondary Parent Cache Group entry.                         |
+  +------------------------------------+--------+-------------------------------------------------------------------+
+  | ``typeName``                       | string | The type of Cache Group entry, "EDGE_LOC", "MID_LOC" or "ORG_LOC" |
+  +------------------------------------+--------+-------------------------------------------------------------------+
+  | ``lastUpdated``                    | string | The Time / Date this entry was last updated                       |
+  +------------------------------------+--------+-------------------------------------------------------------------+
+
+  **Response Example** ::
+
+    {
+        "response": {
+            'longitude' : '45',
+            'lastUpdated' : '2016-01-25 13:55:30',
+            'shortName' : 'cg_edge',
+            'name' : 'cache_group_edge',
+            'parentCachegroup' : 'cache_group_mid',
+            'secondaryParentCachegroup' : null,
+            'latitude' : '12',
+            'typeName' : 'EDGE_LOC',
+            'id' : '104',
+            'parentCachegroupId' : '103',
+            'secondaryParentCachegroupId' : null
+        }
+    }
+
+|
+
+**DELETE /api/1.2/cachegroups/{:id}**
+
+  Delete cache group. The request to delete a cache group, which has servers or child cache group, will be rejected.
+
+  Authentication Required: Yes
+
+  Role(s) Required: admin or oper
+
+  **Request Route Parameters**
+
+  +------+----------+--------------------------------------+
+  | Name | Required | Description                          |
+  +======+==========+======================================+
+  | id   | yes      | The id of the cache group to delete. |
+  +------+----------+--------------------------------------+
+  
+  **Response Properties**
+
+  +-------------+--------+----------------------------------+
+  |  Parameter  |  Type  |           Description            |
+  +=============+========+==================================+
+  | ``alerts``  | array  | A collection of alert messages.  |
+  +-------------+--------+----------------------------------+
+  | ``>level``  | string | Success, info, warning or error. |
+  +-------------+--------+----------------------------------+
+  | ``>text``   | string | Alert message.                   |
+  +-------------+--------+----------------------------------+
+  | ``version`` | string |                                  |
+  +-------------+--------+----------------------------------+
+
+  **Response Example** ::
+
+    {
+          "alerts": [
+                    {
+                            "level": "success",
+                            "text": "Cachegroup was deleted."
+                    }
+            ],
+    }
+
 |
 
 **POST /api/1.2/cachegroups/{:id}/queue_update**
@@ -393,4 +533,3 @@ Cache Group
     }
 
 |
-
