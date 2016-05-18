@@ -25,7 +25,7 @@ use namespace::autoclean;
 use Digest::SHA1 qw(sha1_hex);
 
 my %definition_for = (
-    r1 => {
+    target_filter_1 => {
         new => 'Regex',
         using => {
             id => 21001,
@@ -33,7 +33,7 @@ my %definition_for = (
             type => 987,
         },
     },
-    r2 => {
+    target_filter_1_2 => {
         new => 'Regex',
         using => {
             id => 21002,
@@ -41,7 +41,7 @@ my %definition_for = (
             type => 987,
         },
     },
-    r3 => {
+    target_filter_3 => {
         new => 'Regex',
         using => {
             id => 21003,
@@ -49,12 +49,68 @@ my %definition_for = (
             type => 987,
         },
     },
-    r4 => {
+    target_filter_4 => {
         new => 'Regex',
         using => {
             id => 21004,
             pattern => '.*/go-to-four/.*',
             type => 987,
+        },
+    },
+    hr_steering_1 => {
+        new => 'Regex',
+        using => {
+            id => 21101,
+            pattern => '.*\.steering-ds1\..*',
+            type => 19,
+        },
+    },
+    hr_steering_2 => {
+        new => 'Regex',
+        using => {
+            id => 21102,
+            pattern => '.*\.steering-ds2\..*',
+            type => 19,
+        },
+    },
+    hr_target_1 => {
+        new => 'Regex',
+        using => {
+            id => 22201,
+            pattern => '.*\.target-ds1\..*',
+            type => 19,
+        },
+    },
+    hr_target_2 => {
+        new => 'Regex',
+        using => {
+            id => 22202,
+            pattern => '.*\.target-ds2\..*',
+            type => 19,
+        },
+    },
+    hr_target_3 => {
+        new => 'Regex',
+        using => {
+            id => 22203,
+            pattern => '.*\.target-ds3\..*',
+            type => 19,
+        },
+    },
+    hr_target_4 => {
+        new => 'Regex',
+        using => {
+            id => 22204,
+            pattern => '.*\.target-ds4\..*',
+            type => 19,
+        },
+    },
+    hr_new_steering => {
+        new => 'Regex',
+        using => {
+            id => 21103,
+            pattern => '.*\.new-steering-ds\..*',
+            type => 19,
         },
     },
     steering_ds1 => {

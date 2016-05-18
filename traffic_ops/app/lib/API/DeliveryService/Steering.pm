@@ -61,8 +61,8 @@ sub find_steering {
         }
 
         my $target_id = $row->target_id;
-        my $rs_filters = $self->db->resultset('RegexByDeliveryServiceList')->search({'ds_id' => $target_id });
 
+        my $rs_filters = $self->db->resultset('RegexByDeliveryServiceList')->search({'ds_id' => $target_id, 'type' => "STEERING_REGEXP" });
         my $filters = [];
         while (my $r2 = $rs_filters->next) {
             push(@{$filters}, $r2->pattern);
@@ -189,16 +189,16 @@ sub update() {
         return $self->render(json => {"message" => "unauthorized"}, status => 401);
     }
 
-    my %valid_targets = {};
+    my $valid_targets = {};
 
     do {
-        $valid_targets{$row->target_xml_id} = $row->target_id;
+        $valid_targets->{$row->target_xml_id} = $row->target_id;
     } while ($row = $rs_data->next);
 
     my $req_targets = $self->req->json->{'targets'};
 
     foreach my $req_target (@{$req_targets}) {
-        if (!exists($valid_targets{$req_target->{'deliveryService'}})) {
+        if (!exists($valid_targets->{$req_target->{'deliveryService'}})) {
             return $self->render(json => {} , status => 409);
         }
     }
@@ -209,7 +209,7 @@ sub update() {
     my $transaction_guard = $self->db->txn_scope_guard;
 
     foreach my $req_target (@{$req_targets}) {
-        my $target_id = $valid_targets{$req_target->{'deliveryService'}};
+        my $target_id = $valid_targets->{$req_target->{'deliveryService'}};
 
         if ($req_target->{'weight'}) {
             my $steering_target_row = $self->db->resultset('SteeringTarget')->find({ deliveryservice => $steering_id, target => $target_id});
