@@ -191,8 +191,42 @@ ok $t->get_ok("/internal/api/1.2/steering.json")->status_is(200)
     ->json_hasnt("/response/1");
 
 ok $t->post_ok("/internal/api/1.2/steering", json => { "something" => "value" } )->status_is(401)
-        ->or(sub {diag $t->tx->res->headers->to_string();});
+    ->or(sub {diag $t->tx->res->headers->to_string();});
 
+ok $t->get_ok("/internal/api/1.2/steering/steering-ds2.json")->status_is(404)
+    ->or( sub { diag $t->tx->res->content->asset->{content}; } );
+
+ok $t->put_ok("/internal/api/1.2/steering/steering-ds2", json => {"any" => "thing"})->status_is(401)
+    ->or( sub { diag $t->tx->res->headers->to_string(); } );
+
+ok $t->put_ok("/internal/api/1.2/steering/steering-ds1",
+        json => {
+            "targets" => [
+                {
+                    "deliveryService" => "target-ds1",
+                    "weight" => 3333,
+                    "filters" => [ ".*/force-to-one/.*", ".*/andnowforsomethingcompletelydifferent/.*"],
+                },
+                {
+                    "deliveryService" => "target-ds2",
+                    "weight" => 2222,
+                    "filters" => [ ".*/always-two/.*" ],
+                }
+            ]
+        })
+    ->status_is(200)
+    ->or(sub { diag $t->tx->res->headers->to_string() });
+
+ok $t->get_ok("/internal/api/1.2/steering/steering-ds1.json")
+    ->status_is(200)->or(sub { diag $t->tx->res->headers->to_string(); })
+    ->json_is("/response/deliveryService", "steering-ds1")
+    ->json_is("/response/targets/0/deliveryService", "target-ds1")
+    ->json_is("/response/targets/0/weight", 3333)
+    ->json_is("/response/targets/0/filters/0", ".*/andnowforsomethingcompletelydifferent/.*")
+    ->json_is("/response/targets/0/filters/1", ".*/force-to-one/.*")
+    ->json_is("/response/targets/1/deliveryService", "target-ds2")
+    ->json_is("/response/targets/1/weight", 2222)
+    ->json_is("/response/targets/1/filters/0", ".*/always-two/.*" );
 
 $t->post_ok("/api/1.2/user/logout")->status_is(200);
 

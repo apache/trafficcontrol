@@ -26,6 +26,11 @@ sub index {
 
     if (&is_admin($self) || &is_steering($self)) {
         my $data = $self->find_steering();
+
+        if (!$data) {
+            return $self->render(json => {}, status => 404);
+        }
+
         return $self->success($data);
     }
 
@@ -83,7 +88,12 @@ sub find_steering {
     }
 
     if ($steering_filter) {
-        return (values %steering)[0];
+        my $steering_response = (values %steering)[0];
+        if (!$steering_response) {
+            return;
+        }
+
+        return $steering_response;
     }
 
     my $response = [];
@@ -147,6 +157,86 @@ sub add() {
 
     $self->res->headers->header('Location', '/internal/api/1.2/steering/' . $steering_xml_id . ".json");
     return $self->render(json => {}, status => 201);
+}
+
+sub update() {
+    my $self = shift;
+
+    if (!(&is_admin($self)) && !(&is_steering($self))) {
+        return $self->render(json => {"message" => "unauthorized"}, status => 401);
+    }
+
+    my $steering_xml_id  = $self->param('xml_id');
+
+    my $rs_data = $self->db->resultset('SteeringView')->search(
+        {'steering_xml_id' => $steering_xml_id},
+        {order_by => ['steering_xml_id', 'target_xml_id']});
+
+    my $row = $rs_data->next;
+
+    if (!$row) {
+        return $self->render(json => {}, status => 409)
+    }
+
+    my $steering_id = $row->steering_id;
+
+    my $name = $self->current_user()->{username};
+    my $user_id = $self->db->resultset('TmUser')->search( { username => $name}, {columns => 'id'} )->single->id;
+    my $dsu_row = $self->db->resultset('DeliveryserviceTmuser')->search(
+        {tm_user_id => $user_id, deliveryservice => $row->steering_id})->single;
+
+    if (!$dsu_row) {
+        return $self->render(json => {"message" => "unauthorized"}, status => 401);
+    }
+
+    my %valid_targets = {};
+
+    do {
+        $valid_targets{$row->target_xml_id} = $row->target_id;
+    } while ($row = $rs_data->next);
+
+    my $req_targets = $self->req->json->{'targets'};
+
+    foreach my $req_target (@{$req_targets}) {
+        if (!exists($valid_targets{$req_target->{'deliveryService'}})) {
+            return $self->render(json => {} , status => 409);
+        }
+    }
+
+    my $steering_regex_type = $self->db->resultset('Type')->find({name => "STEERING_REGEXP"})->id;
+
+    # Start Transaction
+    my $transaction_guard = $self->db->txn_scope_guard;
+
+    foreach my $req_target (@{$req_targets}) {
+        my $target_id = $valid_targets{$req_target->{'deliveryService'}};
+
+        if ($req_target->{'weight'}) {
+            my $steering_target_row = $self->db->resultset('SteeringTarget')->find({ deliveryservice => $steering_id, target => $target_id});
+            $steering_target_row->weight($req_target->{weight});
+            $steering_target_row->update;
+        }
+
+        if ($req_target->{'filters'}) {
+            # delete existing filters
+            my $dsr_rs =  $self->db->resultset('DeliveryserviceRegex')->search({deliveryservice => $target_id});
+
+            while (my $dsr_row = $dsr_rs->next) {
+                $self->db->resultset('Regex')->search({id => $dsr_row->regex->id, type => $steering_regex_type})->delete;
+            }
+
+            # add filters
+            foreach my $filter (@{$req_target->{filters}}) {
+                my $regex_row = $self->db->resultset('Regex')->create({pattern => $filter, type => $steering_regex_type});
+                $self->db->resultset('DeliveryserviceRegex')->create({deliveryservice => $target_id, regex => $regex_row->id})
+            }
+        }
+    }
+
+    # Commit and end transaction
+    $transaction_guard->commit;
+
+    return $self->success({message => "success"});
 }
 
 1;
