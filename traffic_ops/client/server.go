@@ -54,6 +54,7 @@ type Server struct {
 	MgmtIPNetmask  string `json:"mgmtIpNetmask"`
 	PhysLocation   string `json:"physLocation"`
 	Profile        string `json:"profile"`
+	ProfileDesc    string `json:"profileDesc"`
 	CDNName        string `json:"cdnName"`
 	Rack           string `json:"rack"`
 	RouterHostName string `json:"routerHostName"`

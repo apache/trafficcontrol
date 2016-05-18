@@ -657,7 +657,9 @@ sub api_routes {
     $r->post("/api/$version/regions/:region_name/phys_locations")->over( authenticated => 1 )->to( 'PhysLocation#create', namespace => $namespace );
 	$r->post("/api/$version/servers")->over( authenticated => 1 )->to( 'Server#create',   namespace => $namespace );
 	$r->put("/api/$version/servers/:id")->over( authenticated => 1 )->to( 'Server#update',   namespace => $namespace );
+	$r->post("/api/$version/servers/:id/queue_update")->over( authenticated => 1 )->to( 'Server#postupdatequeue',   namespace => $namespace );
     $r->post("/api/$version/cachegroups")->over( authenticated => 1 )->to( 'Cachegroup#create', namespace => $namespace );
+	$r->post("/api/$version/cachegroups/:id/queue_update")->over( authenticated => 1 )->to( 'Cachegroup#postupdatequeue',   namespace => $namespace );
     $r->post("/api/$version/deliveryservices/:xml_id/servers")->over( authenticated => 1 )->to( 'DeliveryService#assign_servers', namespace => $namespace );
     $r->put("/api/$version/snapshot/:cdn_name")->over( authenticated => 1 )->to( 'Topology#SnapshotCRConfig', namespace => $namespace );
 

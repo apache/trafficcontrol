@@ -62,6 +62,11 @@ __PACKAGE__->table("deliveryservice");
   default_value: 0
   is_nullable: 1
 
+=head2 geo_limit_countries
+
+  data_type: 'varchar'
+  is_nullable: 1
+
 =head2 geo_provider
 
   data_type: 'tinyint'
@@ -299,6 +304,8 @@ __PACKAGE__->add_columns(
 	{ data_type => "tinyint", is_nullable => 1 },
 	"geo_limit",
 	{ data_type => "tinyint", default_value => 0, is_nullable => 1 },
+	"geo_limit_countries",
+	{ data_type => "varchar", is_nullable => 1 },
 	"geo_provider",
 	{ data_type => "tinyint", default_value => 0, is_nullable => 0 },
 	"http_bypass_fqdn",

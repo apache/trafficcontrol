@@ -136,10 +136,13 @@ func syncCsDb(ch chan string, sourceClient influx.Client, targetClient influx.Cl
 		"connections.cdn.1min",
 		"bandwidth.1min",
 		"connections.1min",
+		"connections.cdn.type.1min",
+		"bandwidth.cdn.type.1min",
 	}
 	for _, statName := range stats {
 		fmt.Printf("Syncing %s database with %s \n", db, statName)
 		syncCacheStat(sourceClient, targetClient, statName, days)
+		fmt.Printf("Done syncing %s\n", statName)
 	}
 	ch <- fmt.Sprintf("Done syncing %s!\n", db)
 }
@@ -228,15 +231,15 @@ func syncCacheStat(sourceClient influx.Client, targetClient influx.Client, statN
 		ts := targetStats[ssKey]
 		ss := sourceStats[ssKey]
 		if ts.value > ss.value {
-			fmt.Printf("target value %v is at least equal to source value %v\n", ts.value, ss.value)
+			//fmt.Printf("target value %v is at least equal to source value %v\n", ts.value, ss.value)
 			continue //target value is bigger so leave it
 		}
 		statTime, _ := time.Parse(time.RFC3339, ss.t)
 		tags := map[string]string{"cdn": ss.cdn}
-		if  ss.hostname != "" {
+		if ss.hostname != "" {
 			tags["hostname"] = ss.hostname
 		}
-		if ss.cacheType!= "" {
+		if ss.cacheType != "" {
 			tags["type"] = ss.cacheType
 		}
 		fields := map[string]interface{}{
@@ -291,7 +294,7 @@ func syncDeliveryServiceStat(sourceClient influx.Client, targetClient influx.Cli
 		ts := targetStats[ssKey]
 		ss := sourceStats[ssKey]
 		if ts.value > ss.value {
-			fmt.Printf("target value %v is at least equal to source value %v\n", ts.value, ss.value)
+			//fmt.Printf("target value %v is at least equal to source value %v\n", ts.value, ss.value)
 			continue //target value is bigger so leave it
 		}
 		statTime, _ := time.Parse(time.RFC3339, ss.t)
@@ -349,7 +352,7 @@ func syncDailyStat(sourceClient influx.Client, targetClient influx.Client, statN
 		ts := targetStats[ssKey]
 		ss := sourceStats[ssKey]
 		if ts.value >= ss.value {
-			fmt.Printf("target value %v is at least equal to source value %v\n", ts.value, ss.value)
+			//fmt.Printf("target value %v is at least equal to source value %v\n", ts.value, ss.value)
 			continue //target value is bigger or equal so leave it
 		}
 		statTime, _ := time.Parse(time.RFC3339, ss.t)
