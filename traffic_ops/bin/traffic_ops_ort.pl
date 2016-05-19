@@ -737,7 +737,6 @@ sub process_config_files {
 				|| $file =~ m/url\_sig\_(.*)\.config$/
 				|| $file =~ m/hdr\_rw\_(.*)\.config$/
 				|| $file eq "regex_revalidate.config"
-				|| $file eq "ip_allow.config"
 				|| $file eq "astats.config"
 				|| $file =~ m/cacheurl\_(.*)\.config$/
 				|| $file =~ m/regex\_remap\_(.*)\.config$/

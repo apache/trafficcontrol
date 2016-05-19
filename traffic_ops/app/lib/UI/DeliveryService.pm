@@ -226,6 +226,7 @@ sub read {
 				"signed"                 => \$row->signed,
 				"qstring_ignore"         => $row->qstring_ignore,
 				"geo_limit"              => $row->geo_limit,
+				"geo_limit_countries"    => $row->geo_limit_countries,
 				"geo_provider"           => $row->geo_provider,
 				"http_bypass_fqdn"       => $row->http_bypass_fqdn,
 				"dns_bypass_ip"          => $row->dns_bypass_ip,
@@ -299,6 +300,13 @@ sub typeid {
 sub typename {
 	my $self = shift;
 	return $self->param('type.name') // $self->db->resultset('Type')->search( { id => $self->typeid() } )->get_column('name')->single();
+}
+
+sub sanitize_geo_limit_countries {
+	my $geo_limit_countries = shift;
+	$geo_limit_countries =~ s/\s+//g;
+	$geo_limit_countries = uc($geo_limit_countries);
+	return $geo_limit_countries
 }
 
 sub check_deliveryservice_input {
@@ -496,6 +504,17 @@ sub check_deliveryservice_input {
 		{
 			$self->field('ds.tr_request_headers')->is_equal( "", "TR Log Request Headers are only valid for HTTP (302) delivery services" );
 		}
+	}
+
+	my @valid_country_codes_list = qw/AF AX AL DZ AS AD AO AI AQ AG AR AM AW AU AT AZ BS BH BD BB BY BE BZ BJ BM BT BO BQ BA BW BV BR IO BN BG BF BI CV KH CM CA KY CF TD CL CN CX CC CO KM CG CD CK CR CI HR CU CW CY CZ DK DJ DM DO EC EG SV GQ ER EE ET FK FO FJ FI FR GF PF TF GA GM GE DE GH GI GR GL GD GP GU GT GG GN GW  Y HT HM VA HN HK HU IS IN ID IR IQ IE IM IL IT JM JP JE JO KZ KE KI KP KR KW KG LA LV LB LS LR LY LI LT LU MO MK MG MW MY MV ML MT MH MQ MR MU YT MX FM MD MC MN ME MS MA MZ MM NA NR NP NL NC NZ NI NE NG NU NF MP NO OM PK PW PS PA PG PY PE PH PN PL PT PR QA RE RO RU RW BL SH KN LC  F PM VC WS SM ST SA SN RS SC SL SG SX SK SI SB SO ZA GS SS ES LK SD SR SJ SZ SE CH SY TW TJ TZ TH TL TG TK TO TT TN TR TM TC TV UG UA AE GB US UM UY UZ VU VE VN VG VI WF EH YE ZM ZW/;
+	my %valid_country_codes;
+	@valid_country_codes{@valid_country_codes_list} = ();
+	my @geo_limit_country_codes = split(',', sanitize_geo_limit_countries($self->paramAsScalar('ds.geo_limit_countries')));
+	foreach my $country_code (@geo_limit_country_codes) {
+			if(!exists($valid_country_codes{$country_code})) {
+					$self->field('ds.geo_limit_countries')->is_equal( "", "Invalid Geo Limit Country Code. Geo limit country codes must be comma-separated ISO 3166 Alpha-2 codes." );
+					last;
+			}
 	}
 
 	#TODO:  Fix this to work the right way.
@@ -721,6 +740,7 @@ sub update {
 			signed                 => $self->paramAsScalar('ds.signed'),
 			qstring_ignore         => $self->paramAsScalar('ds.qstring_ignore'),
 			geo_limit              => $self->paramAsScalar('ds.geo_limit'),
+			geo_limit_countries    => sanitize_geo_limit_countries($self->paramAsScalar('ds.geo_limit_countries')),
 			geo_provider           => $self->paramAsScalar('ds.geo_provider'),
 			org_server_fqdn        => $self->paramAsScalar('ds.org_server_fqdn'),
 			multi_site_origin      => $self->paramAsScalar('ds.multi_site_origin'),
@@ -923,6 +943,7 @@ sub create {
 				signed                 => $self->paramAsScalar('ds.signed'),
 				qstring_ignore         => $self->paramAsScalar('ds.qstring_ignore'),
 				geo_limit              => $self->paramAsScalar('ds.geo_limit'),
+				geo_limit_countries    => sanitize_geo_limit_countries($self->paramAsScalar('ds.geo_limit_countries')),
 				geo_provider           => $self->paramAsScalar('ds.geo_provider'),
 				http_bypass_fqdn       => $self->paramAsScalar('ds.http_bypass_fqdn'),
 				dns_bypass_ip          => $self->paramAsScalar('ds.dns_bypass_ip'),

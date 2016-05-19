@@ -42,8 +42,8 @@ app.all ("/*", function (req, res, next) {
 });
 
 app.use(modRewrite([
-        '^/api/(.*?)\\?(.*)$ ' + config.api.base_url + '$1?$2&api_key=' + config.api.key + ' [P]',
-        '^/api/(.*)$ ' + config.api.base_url + '$1?api_key=' + config.api.key + ' [P]'
+        '^/api/(.*?)\\?(.*)$ ' + config.api.base_url + '/api/$1?$2&api_key=' + config.api.key + ' [P]', // match /api/{version}/foos?active=true and replace with api.base_url/api/{version}/foos?active=true&api_key=api.key
+        '^/api/(.*)$ ' + config.api.base_url + '/api/$1?api_key=' + config.api.key + ' [P]' // match /api/{version}/foos and replace with api.base_url/api/{version}/foos?api_key=api.key
 ]));
 app.use(express.static(config.files.static));
 app.use(morgan('combined', {

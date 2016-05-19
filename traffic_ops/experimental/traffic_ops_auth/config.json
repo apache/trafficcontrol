@@ -1,0 +1,11 @@
+{
+	"database_name": "",
+	"database_user": "",
+	"database_password": "",
+	"database_server": "",
+	"database_port": 5432,
+	"port": 9004,
+	"token_key": "",
+	"admin_user": "",
+	"admin_pass": ""
+}

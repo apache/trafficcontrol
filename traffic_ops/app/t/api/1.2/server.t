@@ -50,10 +50,17 @@ ok $t->get_ok('/api/1.2/servers/details.json')->status_is(400)->or( sub { diag $
 ok $t->get_ok('/api/1.2/servers/details.json?orderby=hostName')->status_is(400)->or( sub { diag $t->tx->res->content->asset->{content}; } ),
 	'Does the orderby work?';
 
-ok $t->get_ok('/api/1.2/servers.json?type=mid')->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } )
+ok $t->get_ok('/api/1.2/servers.json?type=MID')->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } )
   ->json_is( "/response/0/hostName", "atlanta-mid-01" )
   ->json_is( "/response/0/domainName", "ga.atlanta.kabletown.net" )
   ->json_is( "/response/0/type", "MID" )
+  ->or( sub { diag $t->tx->res->content->asset->{content}; } );
+
+ok $t->get_ok('/api/1.2/servers.json?type=MID&status=ONLINE')->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } )
+  ->json_is( "/response/0/hostName", "atlanta-mid-01" )
+  ->json_is( "/response/0/domainName", "ga.atlanta.kabletown.net" )
+  ->json_is( "/response/0/type", "MID" )
+  ->json_is( "/response/0/status", "ONLINE" )
   ->or( sub { diag $t->tx->res->content->asset->{content}; } );
 
 ok $t->get_ok('/logout')->status_is(302)->or( sub { diag $t->tx->res->content->asset->{content}; } );
