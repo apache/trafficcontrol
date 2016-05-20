@@ -28,9 +28,9 @@ CREATE TABLE `steering_target` (
   CONSTRAINT `fk_steering_target_target` FOREIGN KEY (`deliveryservice`) REFERENCES `deliveryservice` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 
-INSERT INTO role (name, description, priv_level) values ('steering', 'Role for Steering Delivery Services', 15);
-INSERT INTO type (name, description, use_in_table) values ('STEERING', 'Steering Delivery Service', 'deliveryservice');
-INSERT INTO type (name, description, use_in_table) values ('STEERING_REGEXP', 'Steering target filter regular expression', 'regex');
+INSERT IGNORE INTO role (name, description, priv_level) values ('steering', 'Role for Steering Delivery Services', 15);
+INSERT IGNORE INTO type (name, description, use_in_table) values ('STEERING', 'Steering Delivery Service', 'deliveryservice');
+INSERT IGNORE INTO type (name, description, use_in_table) values ('STEERING_REGEXP', 'Steering target filter regular expression', 'regex');
 
 -- +goose Down
 -- SQL section 'Down' is executed when this migration is rolled back
