@@ -3877,7 +3877,7 @@
     "federationmapping.polling.url": "http://${toHostname}/internal/api/1.2/federations.json",
     "federationmapping.polling.interval": "600000",
     "steeringmapping.polling.url": "http://${toHostname}/internal/api/1.2/steering.json",
-    "steeringmapping.polling.interval": "600000",
+    "steeringmapping.polling.interval": "15000",
     "weight": "1.0",
     "requestHeaders": [
       "Accept",

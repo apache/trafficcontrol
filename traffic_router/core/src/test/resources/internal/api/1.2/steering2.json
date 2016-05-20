@@ -5,11 +5,11 @@
       "targets": [
         {
           "deliveryService": "ds-05",
-          "weight": "1000"
+          "weight": "2000"
         },
         {
           "deliveryService": "ds-08",
-          "weight": "9000"
+          "weight": "8000"
         }
       ],
       "filters" :[

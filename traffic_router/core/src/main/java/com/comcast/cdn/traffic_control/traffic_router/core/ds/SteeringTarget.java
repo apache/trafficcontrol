@@ -19,18 +19,11 @@ package com.comcast.cdn.traffic_control.traffic_router.core.ds;
 import com.comcast.cdn.traffic_control.traffic_router.core.hash.DefaultHashable;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.regex.Pattern;
-
 public class SteeringTarget extends DefaultHashable {
 	@JsonProperty
 	private String deliveryService;
 	@JsonProperty
 	private int weight;
-	@JsonProperty
-	private List<String> filters = new ArrayList<String>();
-	final private List<Pattern> filterPatterns = new ArrayList<Pattern>();
 
 	public DefaultHashable generateHashes() {
 		return generateHashes(deliveryService, weight);
@@ -52,40 +45,16 @@ public class SteeringTarget extends DefaultHashable {
 		return weight;
 	}
 
-	public List<String> getFilters() {
-		return filters;
-	}
-
-	public void setFilters(final List<String> filters) {
-		this.filters = filters;
-		filterPatterns.clear();
-		for (String filter : filters) {
-			filterPatterns.add(Pattern.compile(filter));
-		}
-	}
-
-	public boolean hasMatchingFilter(final String path) {
-		for (Pattern filterPattern : filterPatterns) {
-			if (filterPattern.matcher(path).matches()) {
-				return true;
-			}
-		}
-
-		return false;
-	}
-
-	@SuppressWarnings("PMD")
 	@Override
+	@SuppressWarnings("PMD")
 	public boolean equals(Object o) {
 		if (this == o) return true;
 		if (o == null || getClass() != o.getClass()) return false;
 
-		SteeringTarget that = (SteeringTarget) o;
+		SteeringTarget target = (SteeringTarget) o;
 
-		if (weight != that.weight) return false;
-		if (deliveryService != null ? !deliveryService.equals(that.deliveryService) : that.deliveryService != null)
-			return false;
-		return filters != null ? filters.equals(that.filters) : that.filters == null;
+		if (weight != target.weight) return false;
+		return deliveryService != null ? deliveryService.equals(target.deliveryService) : target.deliveryService == null;
 
 	}
 
@@ -93,7 +62,6 @@ public class SteeringTarget extends DefaultHashable {
 	public int hashCode() {
 		int result = deliveryService != null ? deliveryService.hashCode() : 0;
 		result = 31 * result + weight;
-		result = 31 * result + (filters != null ? filters.hashCode() : 0);
 		return result;
 	}
 }

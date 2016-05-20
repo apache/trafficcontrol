@@ -79,8 +79,14 @@ public abstract class AbstractServiceUpdater {
 
 	final private Runnable updater = new Runnable() {
 		@Override
+		@SuppressWarnings("PMD.AvoidCatchingThrowable")
 		public void run() {
-			updateDatabase();
+			try {
+				updateDatabase();
+			} catch (Throwable t) {
+				// Catching Throwable prevents this Service Updater thread from silently dying
+				LOGGER.error( "[" + getClass().getSimpleName() +"] Failed updating database!", t);
+			}
 		}
 	};
 

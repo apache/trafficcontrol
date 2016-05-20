@@ -22,12 +22,16 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpGet;
+import org.apache.http.client.methods.HttpPost;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClientBuilder;
 import org.junit.Before;
+import org.junit.FixMethodOrder;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
+import org.junit.runners.MethodSorters;
 
+import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -37,7 +41,9 @@ import java.util.Map;
 import java.util.Random;
 
 import static org.hamcrest.Matchers.endsWith;
+import static org.hamcrest.Matchers.greaterThan;
 import static org.hamcrest.Matchers.isIn;
+import static org.hamcrest.Matchers.lessThan;
 import static org.hamcrest.Matchers.nullValue;
 import static org.hamcrest.core.IsEqual.equalTo;
 import static org.hamcrest.core.IsNot.not;
@@ -46,6 +52,7 @@ import static org.junit.Assert.assertThat;
 import static org.junit.Assert.fail;
 
 @Category(ExternalTest.class)
+@FixMethodOrder(MethodSorters.NAME_ASCENDING)
 public class SteeringTest {
 	String steeringDeliveryServiceId;
 	Map<String, String> targetDomains = new HashMap<String, String>();
@@ -53,36 +60,43 @@ public class SteeringTest {
 	CloseableHttpClient httpClient;
 	List<String> validLocations = new ArrayList<String>();
 
-	@Before
-	public void before() throws Exception {
+	JsonNode getJsonForResourcePath(String resourcePath) throws IOException {
 		ObjectMapper objectMapper = new ObjectMapper(new JsonFactory());
-
-		String resourcePath = "internal/api/1.2/steering.json";
 		InputStream inputStream = getClass().getClassLoader().getResourceAsStream(resourcePath);
 
 		if (inputStream == null) {
 			fail("Could not find file '" + resourcePath + "' needed for test from the current classpath as a resource!");
 		}
 
-		JsonNode steeringNode = objectMapper.readTree(inputStream).get("response").get(0);
+		return objectMapper.readTree(inputStream).get("response").get(0);
+	}
 
-		steeringDeliveryServiceId = steeringNode.get("deliveryService").asText();
+	public String setupSteering(Map<String, String> domains, Map<String, Integer> weights, String resourcePath) throws IOException {
+		domains.clear();
+		weights.clear();
+
+		JsonNode steeringNode = getJsonForResourcePath(resourcePath);
+
 		Iterator<JsonNode> steeredDeliveryServices = steeringNode.get("targets").iterator();
 		while (steeredDeliveryServices.hasNext()) {
 			JsonNode steeredDeliveryService = steeredDeliveryServices.next();
 			String targetId = steeredDeliveryService.get("deliveryService").asText();
 			Integer targetWeight = steeredDeliveryService.get("weight").asInt();
-			targetWeights.put(targetId, targetWeight);
-			targetDomains.put(targetId, "");
+			weights.put(targetId, targetWeight);
+			domains.put(targetId, "");
 		}
 
-		resourcePath = "publish/CrConfig.json";
-		inputStream = getClass().getClassLoader().getResourceAsStream(resourcePath);
+		return steeringNode.get("deliveryService").asText();
+	}
+
+	public void setupCrConfig() throws IOException {
+		String resourcePath = "publish/CrConfig.json";
+		InputStream inputStream = getClass().getClassLoader().getResourceAsStream(resourcePath);
 		if (inputStream == null) {
 			fail("Could not find file '" + resourcePath + "' needed for test from the current classpath as a resource!");
 		}
 
-		JsonNode jsonNode = objectMapper.readTree(inputStream);
+		JsonNode jsonNode = new ObjectMapper(new JsonFactory()).readTree(inputStream);
 
 		Iterator<String> deliveryServices = jsonNode.get("deliveryServices").fieldNames();
 		while (deliveryServices.hasNext()) {
@@ -114,6 +128,12 @@ public class SteeringTest {
 		}
 
 		assertThat(validLocations.isEmpty(), equalTo(false));
+	}
+
+	@Before
+	public void before() throws Exception {
+		steeringDeliveryServiceId = setupSteering(targetDomains, targetWeights, "internal/api/1.2/steering.json");
+		setupCrConfig();
 
 		httpClient = HttpClientBuilder.create().disableRedirectHandling().build();
 	}
@@ -203,6 +223,101 @@ public class SteeringTest {
 			int hits = results.get(id);
 			double hitRate = (double) hits / count;
 			assertThat(hitRate, closeTo(expectedHitRates.get(id), 0.009));
+		}
+	}
+
+	@Test
+	public void z_itemsMigrateFromSmallerToLargerBucket() throws Exception {
+		Map<String, String> domains = new HashMap<>();
+		Map<String, Integer> weights = new HashMap<>();
+
+		setupSteering(domains, weights, "internal/api/1.2/steering2.json");
+
+		List<String> randomPaths = new ArrayList<>();
+
+		for (int i = 0; i < 10000; i++) {
+			randomPaths.add(generateRandomPath());
+		}
+
+
+		String smallerTarget = null;
+		String largerTarget = null;
+		for (String target : weights.keySet()) {
+			if (smallerTarget == null && largerTarget == null) {
+				smallerTarget = target;
+				largerTarget = target;
+			}
+
+			if (weights.get(smallerTarget) > weights.get(target)) {
+				smallerTarget = target;
+			}
+
+			if (weights.get(largerTarget) < weights.get(target)) {
+				largerTarget = target;
+			}
+		}
+
+		Map<String, List<String>> hashedPaths = new HashMap<>();
+		hashedPaths.put(smallerTarget, new ArrayList<String>());
+		hashedPaths.put(largerTarget, new ArrayList<String>());
+
+		for (String path : randomPaths) {
+			HttpGet httpGet = new HttpGet("http://localhost:8888" + path + "?fakeClientIpAddress=12.34.56.78");
+			httpGet.addHeader("Host", "foo." + steeringDeliveryServiceId + ".bar");
+			CloseableHttpResponse response = null;
+
+			try {
+				response = httpClient.execute(httpGet);
+				assertThat("Did not get 302 for request '" + httpGet.getURI() + "'", response.getStatusLine().getStatusCode(), equalTo(302));
+				String location = response.getFirstHeader("Location").getValue();
+
+				for (String targetXmlId : hashedPaths.keySet()) {
+					if (location.contains(targetXmlId)) {
+						hashedPaths.get(targetXmlId).add(path);
+					}
+				}
+			} finally {
+				if (response != null) { response.close(); }
+			}
+		}
+
+		// Change the steering attributes
+		HttpPost httpPost = new HttpPost("http://localhost:8889/steering");
+		httpClient.execute(httpPost).close();
+
+		// steering is checked every 15 seconds by default.
+		Thread.sleep(30 * 1000);
+
+		Map<String, List<String>> rehashedPaths = new HashMap<>();
+		rehashedPaths.put(smallerTarget, new ArrayList<String>());
+		rehashedPaths.put(largerTarget, new ArrayList<String>());
+
+		for (String path : randomPaths) {
+			HttpGet httpGet = new HttpGet("http://localhost:8888" + path + "?fakeClientIpAddress=12.34.56.78");
+			httpGet.addHeader("Host", "foo." + steeringDeliveryServiceId + ".bar");
+			CloseableHttpResponse response = null;
+
+			try {
+				response = httpClient.execute(httpGet);
+				assertThat("Did not get 302 for request '" + httpGet.getURI() + "'", response.getStatusLine().getStatusCode(), equalTo(302));
+				String location = response.getFirstHeader("Location").getValue();
+
+				for (String targetXmlId : rehashedPaths.keySet()) {
+					if (location.contains(targetXmlId)) {
+						rehashedPaths.get(targetXmlId).add(path);
+					}
+				}
+			} finally {
+				if (response != null) { response.close(); }
+			}
+		}
+
+		assertThat(rehashedPaths.get(smallerTarget).size(), greaterThan(hashedPaths.get(smallerTarget).size()));
+		assertThat(rehashedPaths.get(largerTarget).size(), lessThan(hashedPaths.get(largerTarget).size()));
+
+		for (String path : hashedPaths.get(smallerTarget)) {
+			assertThat(rehashedPaths.get(smallerTarget).contains(path), equalTo(true));
+			assertThat(rehashedPaths.get(largerTarget).contains(path), equalTo(false));
 		}
 	}
 

@@ -60,7 +60,7 @@ public abstract class AbstractResourceWatcher extends AbstractServiceUpdater {
 		if (authUrl != null && credentials != null && watcherConfig.getUrl() != null && watcherConfig.getInterval() != -1L) {
 			configure(authUrl, credentials, watcherConfig.getUrl(), watcherConfig.getInterval(), timeout);
 		} else {
-			LOGGER.warn("Not updating configuration - did get following from cr-config url '" + watcherConfig.getInterval() + "' interval '" + watcherConfig.getInterval() + "' timeout '" + watcherConfig.getTimeout() + "'");
+			LOGGER.warn("Not updating configuration - did get following from cr-config url '" + watcherConfig.getUrl() + "' interval '" + watcherConfig.getInterval() + "' timeout '" + watcherConfig.getTimeout() + "'");
 		}
 	}
 

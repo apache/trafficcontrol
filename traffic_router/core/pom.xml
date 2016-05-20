@@ -177,9 +177,6 @@
 				<version>2.19.1</version>
 				<configuration>
 					<argLine>-XX:-UseSplitVerifier</argLine>
-					<systemPropertyVariables>
-						<log4j.configuration>file:src/test/resources/log4j.maven.properties</log4j.configuration>
-					</systemPropertyVariables>
 					<excludedGroups>com.comcast.cdn.traffic_control.traffic_router.core.util.IntegrationTest,com.comcast.cdn.traffic_control.traffic_router.core.util.ExternalTest</excludedGroups>
 				</configuration>
 			</plugin>
@@ -194,9 +191,6 @@
 							<goal>verify</goal>
 						</goals>
 						<configuration>
-							<systemPropertyVariables>
-								<log4j.configuration>file:src/test/resources/log4j.maven.properties</log4j.configuration>
-							</systemPropertyVariables>
 							<groups>com.comcast.cdn.traffic_control.traffic_router.core.util.IntegrationTest</groups>
 							<includes>
 								<include>**/*.java</include>
@@ -407,7 +401,11 @@
 			<version>${spring.version}</version>
 			<scope>test</scope>
 		</dependency>
-
+		<dependency>
+			<groupId>com.fasterxml.jackson.core</groupId>
+			<artifactId>jackson-databind</artifactId>
+			<version>2.4.3</version>
+		</dependency>
 	</dependencies>
 
 	<profiles>

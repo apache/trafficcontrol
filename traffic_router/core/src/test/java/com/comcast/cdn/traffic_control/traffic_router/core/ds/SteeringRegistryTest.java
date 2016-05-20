@@ -23,6 +23,7 @@ import java.util.Arrays;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.hamcrest.Matchers.equalTo;
+import static org.hamcrest.Matchers.nullValue;
 
 public class SteeringRegistryTest {
 	@Test
@@ -30,23 +31,22 @@ public class SteeringRegistryTest {
 
 		String json = "{ \"response\": [ " +
 			"{ \"deliveryService\":\"steering-1\"," +
-			"  \"targets\" : [" +
-			"        {" +
-			"            \"deliveryService\": \"ds-01\", \"weight\": 9876," +
-			"            \"filters\": [ \".*/force-to-one/.*\", \".*/also-this/.*\" ]" +
-			"        }," +
-			"        {\"deliveryService\": \"ds-02\", \"weight\": 12345, \"filters\": []}" +
-			"      ]" +
-			"}, " +
-			"{ \"deliveryService\":\"steering-2\"," +
-			"  \"targets\" : [" +
-			"        {" +
-			"            \"deliveryService\": \"ds-03\", \"weight\": 1117," +
-			"            \"filters\": [ \".*/three-for-me/.*\" ]" +
-			"        }," +
-			"        {\"deliveryService\": \"ds-02\", \"weight\": 556, \"filters\": []}" +
-			"      ]" +
-			"}" +
+				"  \"targets\" : [" +
+				"        {\"deliveryService\": \"ds-01\", \"weight\": 9876}," +
+				"        {\"deliveryService\": \"ds-02\", \"weight\": 12345}" +
+				"      ]," +
+				"  \"filters\" : [" +
+				"      { \"pattern\" : \".*/force-to-one/.*\", \"deliveryService\" : \"ds-01\" }," +
+				"      { \"pattern\" : \".*/also-this/.*\", \"deliveryService\" : \"ds-01\" }" +
+				"   ]"+
+				"}, " +
+				"{ \"deliveryService\":\"steering-2\"," +
+				"  \"targets\" : [" +
+				"        {\"deliveryService\": \"ds-03\", \"weight\": 1117}," +
+				"        {\"deliveryService\": \"ds-02\", \"weight\": 556}" +
+				"      ]" +
+				"}" +
+
 			"] }";
 
 		SteeringRegistry steeringRegistry = new SteeringRegistry();
@@ -57,7 +57,6 @@ public class SteeringRegistryTest {
 		SteeringTarget steeringTarget1 = new SteeringTarget();
 		steeringTarget1.setDeliveryService("ds-01");
 		steeringTarget1.setWeight(9876);
-		steeringTarget1.setFilters(Arrays.asList(".*/force-to-one/.*", ".*/also-this/.*"));
 
 		SteeringTarget steeringTarget2 = new SteeringTarget();
 		steeringTarget2.setDeliveryService("ds-02");
@@ -65,6 +64,15 @@ public class SteeringRegistryTest {
 
 		assertThat(steeringRegistry.get("steering-1").getTargets(), containsInAnyOrder(steeringTarget1, steeringTarget2));
 		assertThat(steeringRegistry.get("steering-2").getTargets().get(1).getDeliveryService(), equalTo("ds-02"));
-		assertThat(steeringRegistry.get("steering-2").getTargets().get(1).getFilters().isEmpty(), equalTo(true));
+
+		assertThat(steeringRegistry.get("steering-1").getFilters().get(0).getPattern(), equalTo(".*/force-to-one/.*"));
+		assertThat(steeringRegistry.get("steering-1").getFilters().get(0).getDeliveryService(), equalTo("ds-01"));
+		assertThat(steeringRegistry.get("steering-1").getFilters().get(1).getPattern(), equalTo(".*/also-this/.*"));
+		assertThat(steeringRegistry.get("steering-1").getFilters().get(1).getDeliveryService(), equalTo("ds-01"));
+
+		assertThat(steeringRegistry.get("steering-1").getBypassDestination("/stuff/force-to-one/more/stuff"), equalTo("ds-01"));
+		assertThat(steeringRegistry.get("steering-1").getBypassDestination("/should/not/match"), nullValue());
+
+		assertThat(steeringRegistry.get("steering-2").getFilters().isEmpty(), equalTo(true));
 	}
 }

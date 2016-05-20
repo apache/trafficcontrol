@@ -31,6 +31,7 @@ import java.net.URI;
 
 public class HttpDataServer implements HttpHandler {
 	private HttpServer httpServer;
+	private boolean receivedPost = false;
 
 	public void start(int port) throws IOException {
 		httpServer = HttpServer.create(new InetSocketAddress(InetAddress.getLoopbackAddress(), port),10);
@@ -48,6 +49,16 @@ public class HttpDataServer implements HttpHandler {
 		new Thread(new Runnable() {
 			@Override
 			public void run() {
+				if ("POST".equals(httpExchange.getRequestMethod()) && "/steering".equals(httpExchange.getRequestURI().getPath())) {
+					receivedPost = true;
+					try {
+						httpExchange.sendResponseHeaders(200,0);
+					} catch (IOException e) {
+						System.out.println(">>>>> failed acknowledging post");
+					}
+					return;
+				}
+
 				URI uri = httpExchange.getRequestURI();
 				String path = uri.getPath();
 
@@ -79,6 +90,11 @@ public class HttpDataServer implements HttpHandler {
 
 						return;
 					}
+				}
+
+				// Pretend that someone externally changed steering.json data
+				if (receivedPost && "internal/api/1.2/steering.json".equals(path)) {
+					path = "internal/api/1.2/steering2.json";
 				}
 
 				InputStream inputStream = getClass().getClassLoader().getResourceAsStream(path);

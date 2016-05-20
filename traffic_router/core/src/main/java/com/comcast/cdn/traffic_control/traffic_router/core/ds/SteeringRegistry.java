@@ -55,6 +55,11 @@ public class SteeringRegistry {
 
 		registry.clear();
 		registry.putAll(newSteerings);
+		for (Steering steering : steerings) {
+			for (SteeringTarget target : steering.getTargets()) {
+				LOGGER.info("Steering " + steering.getDeliveryService() + " target " + target.getDeliveryService() + " now has weight " + target.getWeight());
+			}
+		}
 	}
 
 	public boolean has(final String steeringId) {

@@ -18,13 +18,16 @@ package com.comcast.cdn.traffic_control.traffic_router.core.ds;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class Steering {
 	@JsonProperty
 	private String deliveryService;
 	@JsonProperty
-	private List<SteeringTarget> targets;
+	private List<SteeringTarget> targets = new ArrayList<SteeringTarget>();
+	@JsonProperty
+	private List<SteeringFilter> filters = new ArrayList<SteeringFilter>();
 
 	public List<SteeringTarget> getTargets() {
 		return targets;
@@ -42,14 +45,32 @@ public class Steering {
 		this.deliveryService = id;
 	}
 
+	public List<SteeringFilter> getFilters() {
+		return filters;
+	}
+
+	public void setFilters(final List<SteeringFilter> filters) {
+		this.filters = filters;
+	}
+
 	public String getBypassDestination(final String requestPath) {
-		for (SteeringTarget target : targets) {
-			if (target.hasMatchingFilter(requestPath)) {
-				return target.getDeliveryService();
+		for (SteeringFilter filter : filters) {
+			if (filter.matches(requestPath) && hasTarget(filter.getDeliveryService())) {
+				return filter.getDeliveryService();
 			}
 		}
 
 		return null;
+	}
+
+	private boolean hasTarget(final String deliveryService) {
+		for (SteeringTarget target : targets) {
+			if (deliveryService.equals(target.getDeliveryService())) {
+				return true;
+			}
+		}
+
+		return false;
 	}
 
 	@Override
@@ -62,7 +83,8 @@ public class Steering {
 
 		if (deliveryService != null ? !deliveryService.equals(steering.deliveryService) : steering.deliveryService != null)
 			return false;
-		return targets != null ? targets.equals(steering.targets) : steering.targets == null;
+		if (targets != null ? !targets.equals(steering.targets) : steering.targets != null) return false;
+		return filters != null ? filters.equals(steering.filters) : steering.filters == null;
 
 	}
 
@@ -71,6 +93,7 @@ public class Steering {
 	public int hashCode() {
 		int result = deliveryService != null ? deliveryService.hashCode() : 0;
 		result = 31 * result + (targets != null ? targets.hashCode() : 0);
+		result = 31 * result + (filters != null ? filters.hashCode() : 0);
 		return result;
 	}
 }
