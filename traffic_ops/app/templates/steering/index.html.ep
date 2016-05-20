@@ -85,7 +85,7 @@
 								<% } %>
 							<% } %>
 						</ul>
-					</div><br><br>
+					</div><br>
 					<div class="buttons-section" style="margin-bottom: 20px;">
 						<div style="margin-top: 25px; margin-left: 10px; position: relative; display: inline-block; float: left;">
 							<% if ($priv_level >= 20) { %>  <!-- operations and admins only!! -->

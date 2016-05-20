@@ -65,7 +65,7 @@ sub find_steering {
 
         my $rs_filters = $self->db->resultset('RegexByDeliveryServiceList')->search({'ds_id' => $target_id, 'type' => "STEERING_REGEXP" });
         while (my $r2 = $rs_filters->next) {
-            push(@$filters, {deliveryservice => $row->target_xml_id, pattern => $r2->pattern});
+            push(@$filters, {deliveryService => $row->target_xml_id, pattern => $r2->pattern});
         }
 
         if (! exists($steering{$row->steering_xml_id})) {

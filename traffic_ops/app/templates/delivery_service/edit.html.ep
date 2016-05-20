@@ -537,7 +537,6 @@ function setup_form(speed) {
 					<button class="button" id="delete-button" style="float:left;margin-left:5px; " onclick="deleteFunction()">Delete</button>
 					<button class="button" style="float:left;margin-left:5px; " onclick="openAssignment()" id="server_assignment_button">Server Assignments</button>
 					<button class="button" style="float:left;margin-left:5px; " onclick="openStaticDns()" id="static_dns_button">Static DNS</button>
-					<button class="button" style="float:left;margin-left:5px; " onclick="openSteering()" id="steering_button">Manage Steering Assignments</button>
 					<% if ($priv_level >= 30) { %>
 						  <button class="button" style="float:left;margin-left:5px; " onclick="addSslKeys()" id="addkeys">Manage SSL Keys</button>
 					<% } %>
@@ -552,6 +551,7 @@ function setup_form(speed) {
                           </div>
 					<% } %>
 <% } %>
+				<button class="button" style="float:left;margin-left:5px; " onclick="openSteering()" id="steering_button">Manage Steering Assignments</button>
 				<button id="close_button" class="button" style="float:left; margin-left: 300px">Close</button>
 			     </div>
 			 </div>
