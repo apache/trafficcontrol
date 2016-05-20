@@ -45,7 +45,7 @@
                 			<% if (defined($steering->{target_name_1})) { %>
                       			<option value="<%=$steering->{target_id_1}%>" selected><%=$steering->{target_name_1}%></option> 
                  			<% } %> 
-                			% foreach my $id ( sort keys %$ds_data ) {
+                			% foreach my $id (sort{$ds_data->{$a} cmp $ds_data->{$b}} keys %$ds_data) { 
                        			<option value="<%=$id%>"><%=$ds_data->{$id}%></option>
                 			% }
                       	</select>
@@ -69,7 +69,7 @@
                 			<% if (defined($steering->{target_name_2})) { %>
                       			<option value="<%=$steering->{target_id_2}%>" selected><%=$steering->{target_name_2}%></option> 
                  			<% } %> 
-                			% foreach my $id ( sort keys %$ds_data ) {
+                			% foreach my $id (sort{$ds_data->{$a} cmp $ds_data->{$b}} keys %$ds_data) {
                        			<option value="<%=$id%>"><%=$ds_data->{$id}%></option>
                 			% }
                       	</select>
@@ -96,7 +96,7 @@
 						<div style="margin-top: 25px; float:right; margin-right: 50px">
 							<button class="button" id="close_button">Close</button>
 						</div>
-	        		</div>				
+	        		</div>
 	         	</div>
 	    	</div>
 	</div>

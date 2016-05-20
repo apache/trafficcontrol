@@ -85,10 +85,13 @@ sub get_ds_name {
 sub get_deliveryservices {
 	my $self = shift;
 	my %ds_data;
-	my $rs = $self->db->resultset("Deliveryservice")->search( undef, { order_by => "xml_id" } );
+	my $rs = $self->db->resultset('Deliveryservice');
 	while ( my $row = $rs->next ) {
-		$ds_data{$row->id} = $row->xml_id;
+		if ($row->type->name =~ m/^HTTP/) {
+			$ds_data{$row->id} = $row->xml_id;
+		}
 	}
+
 	return \%ds_data
 }
 
@@ -111,7 +114,7 @@ sub update {
 		}
 
 		#add new entries
-		foreach my $target (keys $targets) {
+		foreach my $target (keys %$targets) {
 			my $insert = $self->db->resultset('SteeringTarget')->create( { 
 				deliveryservice => $ds_id,  
 				target => $target,

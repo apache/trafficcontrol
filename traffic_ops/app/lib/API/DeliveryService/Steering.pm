@@ -42,6 +42,7 @@ sub find_steering {
     my $steering_filter  = $self->param('xml_id');
 
     my %steering;
+    my $filters = [];
 
     my $rs_data = $self->db->resultset('SteeringView')->search({}, {order_by => ['steering_xml_id', 'target_xml_id']});
 
@@ -63,9 +64,8 @@ sub find_steering {
         my $target_id = $row->target_id;
 
         my $rs_filters = $self->db->resultset('RegexByDeliveryServiceList')->search({'ds_id' => $target_id, 'type' => "STEERING_REGEXP" });
-        my $filters = [];
         while (my $r2 = $rs_filters->next) {
-            push(@{$filters}, $r2->pattern);
+            push(@$filters, {deliveryservice => $row->target_xml_id, pattern => $r2->pattern});
         }
 
         if (! exists($steering{$row->steering_xml_id})) {
@@ -83,9 +83,11 @@ sub find_steering {
         push(@{$targets},{
             'deliveryService' => $row->target_xml_id,
             'weight' => $row->weight,
-            'filters' => $filters,
         });
-    }
+
+        $steering_entry->{"filters"} = $filters;
+
+        }
 
     if ($steering_filter) {
         my $steering_response = (values %steering)[0];
@@ -93,7 +95,7 @@ sub find_steering {
             return;
         }
 
-        return $steering_response;
+    return $steering_response;
     }
 
     my $response = [];

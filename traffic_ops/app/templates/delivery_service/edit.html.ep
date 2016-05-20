@@ -356,6 +356,7 @@ function setup_form(speed) {
             $('#static_dns_button').hide(speed);
             $('#server_assignment_button').hide(speed);
             $('#steering_button').show(speed);
+            $('#geo_limit_countries_row').hide(speed);
 		}
 		// 
 	}
