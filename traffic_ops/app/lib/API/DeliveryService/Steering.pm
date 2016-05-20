@@ -25,7 +25,7 @@ sub index {
     my $self = shift;
 
     if (&is_admin($self) || &is_steering($self)) {
-        my $data = $self->find_steering();
+        my $data = $self->find_steering($self->param('xml_id'));
 
         if (!$data) {
             return $self->render(json => {}, status => 404);
@@ -39,7 +39,7 @@ sub index {
 
 sub find_steering {
     my $self = shift;
-    my $steering_filter  = $self->param('xml_id');
+    my $steering_filter  = shift;;
 
     my %steering;
     my $filters = [];
@@ -131,7 +131,7 @@ sub add() {
         push(@{$target_xml_ids}, $target->{'deliveryService'});
     }
 
-    my $ds = $self->db->resultset('Deliveryservice')->search( { xml_id => $steering_xml_id } )->get_column('id')->single();
+    my $ds = $self->get_ds_id($steering_xml_id);
 
     if (!$ds) {
         return $self->render(json => {}, status => 409);
@@ -140,7 +140,7 @@ sub add() {
     my $rows = [];
 
     foreach my $xml_id (@{$target_xml_ids}) {
-        my $target_ds = $self->db->resultset('Deliveryservice')->search({xml_id => $xml_id})->get_column('id')->single();
+        my $target_ds = $self->get_ds_id($xml_id);
 
         if (!$target_ds) {
             return $self->render(json => {}, status => 409);
@@ -159,6 +159,13 @@ sub add() {
 
     $self->res->headers->header('Location', '/internal/api/1.2/steering/' . $steering_xml_id . ".json");
     return $self->render(json => {}, status => 201);
+}
+
+sub get_ds_id {
+    my $self = shift;
+    my $xml_id = shift;
+
+    return $self->db->resultset('Deliveryservice')->search( { xml_id => $xml_id } )->get_column('id')->single();
 }
 
 sub update() {
@@ -205,6 +212,8 @@ sub update() {
         }
     }
 
+    my $req_filters = $self->req->json->{'filters'};
+
     my $steering_regex_type = $self->db->resultset('Type')->find({name => "STEERING_REGEXP"})->id;
 
     # Start Transaction
@@ -219,18 +228,28 @@ sub update() {
             $steering_target_row->update;
         }
 
-        if ($req_target->{'filters'}) {
-            # delete existing filters
-            my $dsr_rs =  $self->db->resultset('DeliveryserviceRegex')->search({deliveryservice => $target_id});
+        if ($req_filters) {
+            #store ds names for deletes
+            my @ds_names;
+            foreach my $filter (@{$req_filters}) {
+                push @ds_names, $filter->{deliveryService};
+            }
 
-            while (my $dsr_row = $dsr_rs->next) {
-                $self->db->resultset('Regex')->search({id => $dsr_row->regex->id, type => $steering_regex_type})->delete;
+            # delete existing filters
+            foreach my $ds (@ds_names) {
+                my $ds_id = $self->get_ds_id($ds);
+                my $dsr_rs =  $self->db->resultset('DeliveryserviceRegex')->search({deliveryservice => $ds_id});
+
+                while (my $dsr_row = $dsr_rs->next) {
+                    $self->db->resultset('Regex')->search({id => $dsr_row->regex->id, type => $steering_regex_type})->delete;
+                }
             }
 
             # add filters
-            foreach my $filter (@{$req_target->{filters}}) {
-                my $regex_row = $self->db->resultset('Regex')->create({pattern => $filter, type => $steering_regex_type});
-                $self->db->resultset('DeliveryserviceRegex')->create({deliveryservice => $target_id, regex => $regex_row->id})
+            foreach my $filter (@{$req_filters}) {
+                my $ds_id = $self->get_ds_id($filter->{deliveryService});
+                my $regex_row = $self->db->resultset('Regex')->create({pattern => $filter->{pattern}, type => $steering_regex_type});
+                $self->db->resultset('DeliveryserviceRegex')->create({deliveryservice => $ds_id, regex => $regex_row->id})
             }
         }
     }
@@ -238,7 +257,7 @@ sub update() {
     # Commit and end transaction
     $transaction_guard->commit;
 
-    return $self->success({message => "success"});
+    return $self->success($self->find_steering($steering_xml_id));
 }
 
 1;
