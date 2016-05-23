@@ -67,7 +67,7 @@ $(function () {
               </div>
               <br> 
               <div class="block">
-                %= label_for 'time_to_live' => '* Time To Live (in hours)', class => 'label'
+                %= label_for 'job.ttl' => '* Time To Live (in hours)', class => 'label'
                 %= field('job.ttl')->text(class => 'field', required=> 'required', size => 25)
                 <% unless(field('job.ttl')->valid) { %>
                 <span class="field-with-error"><%= field('job.ttl')->error %></span>

@@ -208,8 +208,17 @@ sub newjob {
 
 sub is_valid_job {
 	my $self = shift;
-	$self->field('job.ttl')
-		->is_required->is_like( qr/\b(4[89]|[5-9][0-9]|[1-5][0-9]{2}|6[0-6][0-9]|67[0-2])\b/, "The ttl value should be between 48 and 672" );
+
+	# check if ttl is between min and max
+    my $min_hours =
+        $self->db->resultset('Parameter')->search( { name => "ttl_min_hours" }, { config_file => "regex_revalidate.config" } )->get_column('value')->first;
+    my $max_hours =
+        $self->db->resultset('Parameter')->search( { name => "ttl_max_hours" }, { config_file => "regex_revalidate.config" } )->get_column('value')->first;
+	my $ttl = $self->param('job.ttl');
+	if ( $ttl eq '' || $ttl < $min_hours || $ttl > $max_hours ) {
+		$self->field('job.ttl')->is_like( qr/^\//,, "Must be between " . $min_hours . " and " . $max_hours ); # hack: this will fail and trigger error message
+	}
+
 	$self->field('job.start_time')->is_required->is_like(
 		qr/^((((19|[2-9]\d)\d{2})[\/\.-](0[13578]|1[02])[\/\.-](0[1-9]|[12]\d|3[01])\s(0[0-9]|1[0-9]|2[0-3]):([0-5][0-9]):([0-5][0-9]))|(((19|[2-9]\d)\d{2})[\/\.-](0[13456789]|1[012])[\/\.-](0[1-9]|[12]\d|30)\s(0[0-9]|1[0-9]|2[0-3]):([0-5][0-9]):([0-5][0-9]))|(((19|[2-9]\d)\d{2})[\/\.-](02)[\/\.-](0[1-9]|1\d|2[0-8])\s(0[0-9]|1[0-9]|2[0-3]):([0-5][0-9]):([0-5][0-9]))|(((1[6-9]|[2-9]\d)(0[48]|[2468][048]|[13579][26])|((16|[2468][048]|[3579][26])00))[\/\.-](02)[\/\.-](29)\s(0[0-9]|1[0-9]|2[0-3]):([0-5][0-9]):([0-5][0-9])))$/,
 		"Not a valid dateTime!  Should be in the format of YYYY-MM-DD HH:MM:SS"
