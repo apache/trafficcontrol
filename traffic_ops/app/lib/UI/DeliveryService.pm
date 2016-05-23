@@ -287,6 +287,14 @@ sub delete {
 
 		my $delete_re = $self->db->resultset('Regex')->search( { id => { -in => \@regexp_id_list } } );
 		$delete_re->delete();
+
+                # Delete config file parameter
+                my @cfg_prefixes = ("hdr_rw_", "hdr_rw_mid_", "regex_remap_", "cacheurl_");
+                foreach my $cfg_prefix (@cfg_prefixes) {
+                        my $cfg_file = $cfg_prefix . $dsname . ".config";
+                        &delete_cfg_file($self, $cfg_file);
+                }
+
 		&log( $self, "Delete deliveryservice with id:" . $id . " and name " . $dsname, "UICHANGE" );
 	}
 	return $self->redirect_to('/close_fancybox.html');
