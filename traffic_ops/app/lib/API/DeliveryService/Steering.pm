@@ -42,7 +42,6 @@ sub find_steering {
     my $steering_filter  = shift;;
 
     my %steering;
-    my $filters = [];
 
     my $rs_data = $self->db->resultset('SteeringView')->search({}, {order_by => ['steering_xml_id', 'target_xml_id']});
 
@@ -63,6 +62,7 @@ sub find_steering {
 
         my $target_id = $row->target_id;
 
+        my $filters = [];
         my $rs_filters = $self->db->resultset('RegexByDeliveryServiceList')->search({'ds_id' => $target_id, 'type' => "STEERING_REGEXP" });
         while (my $r2 = $rs_filters->next) {
             push(@$filters, {deliveryService => $row->target_xml_id, pattern => $r2->pattern});
