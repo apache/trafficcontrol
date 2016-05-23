@@ -67,4 +67,111 @@ sub domains {
 	}
 	$self->success( \@data );
 }
+
+sub assign_ds {
+	my $self   = shift;
+	my $cg_id  = $self->param('id');
+	my $params = $self->req->json;
+
+	if ( !&is_oper($self) ) {
+		return $self->forbidden();
+	}
+
+	my $cachegroup = $self->db->resultset('Cachegroup')->search( { id => $cg_id } )->single();
+	if ( !defined($cachegroup) ) {
+		return $self->not_found();
+	}
+
+	if ( ($cachegroup->type->name ne "EDGE_LOC") and ($cachegroup->type->name ne "ORG_LOC") ) {
+		return $self->alert("cachegroup should be type EDGE_LOC or ORG_LOC.");
+	}
+
+	if ( !defined($params) ) {
+		return $self->alert("parameters should in json format.");
+	}
+
+	if ( !defined($params->{deliveryServices}) ) {
+		return $self->alert("parameter deliveryServices is must.");
+	}
+
+	if ( ref($params->{deliveryServices}) ne 'ARRAY' ) {
+		return $self->alert("parameter deliveryServices must be array.");
+	}
+
+	my $cdn = "";
+	my $servers = $self->db->resultset('Server')->search(
+		{
+			cachegroup => $cg_id,
+			'type.name' => { -in => ['EDGE', 'ORG'] }
+		},
+		{ prefetch => ['type'] }
+	);
+	while ( my $server = $servers->next ) {
+		if ($cdn eq "") {
+			$cdn = $server->cdn_id;
+		} elsif ($cdn ne $server->cdn_id) {
+			return $self->alert("servers do not belong to same cdn.");
+		}
+	}
+
+	my $deliveryservice_IDs = "";
+	foreach my $ds_id (@{ $params->{deliveryServices} }) {
+		my $ds = $self->db->resultset('Deliveryservice')->find( { id => $ds_id } );
+		if ( !defined($ds) ) {
+			return $self->alert("deliveryservice with id $ds_id does not existed");
+		}
+		if ($cdn eq "") {
+			$cdn = $ds->cdn_id;
+		} elsif ($cdn ne $ds->cdn_id) {
+			return $self->alert("servers/deliveryservices do not belong to same cdn.");
+		}
+		$deliveryservice_IDs = $deliveryservice_IDs . " " .  $ds_id;
+	}
+
+	$servers = $self->db->resultset('Server')->search(
+		{
+			cachegroup => $cg_id,
+			'type.name' => { -in => ['EDGE', 'ORG'] }
+		},
+		{ prefetch => ['type'] }
+	);
+
+	my @server_names = ();
+	while ( my $server = $servers->next ) {
+		push(@server_names, $server->host_name);
+		foreach my $ds_id (@{ $params->{deliveryServices} }) {
+			my $find = $self->db->resultset('DeliveryserviceServer')->find(
+				{
+					deliveryservice => $ds_id,
+					server          => $server->id
+				}
+			);
+
+			if (!defined($find)) {
+				my $insert = $self->db->resultset('DeliveryserviceServer')->create(
+					{
+						deliveryservice => $ds_id,
+						server          => $server->id
+					}
+				);
+				$insert->insert();
+
+				if ($server->type->name eq 'EDGE') {
+					my $ds = $self->db->resultset('Deliveryservice')->search( { id => $ds_id } )->single();
+					&UI::DeliveryService::header_rewrite( $self, $ds->id, $ds->profile, $ds->xml_id, $ds->edge_header_rewrite, "edge" );
+				}
+				$self->app->log->info("assign server " . $server->id . " to ds " . $ds_id);
+			}
+		}
+	}
+
+	&log( $self, "assign servers in cache group $cg_id to deliveryservices $deliveryservice_IDs", "APICHANGE" );
+
+	my $response;
+	$response->{id} = $cg_id;
+	$response->{serverNames} = \@server_names;
+	$response->{deliveryServices} = $params->{deliveryServices};
+	$self->success( $response );
+}
+
 1;

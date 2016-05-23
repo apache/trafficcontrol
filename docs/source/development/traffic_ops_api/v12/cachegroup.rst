@@ -394,3 +394,57 @@ Cache Group
 
 |
 
+**POST /api/1.2/cachegroups/{:id}/deliveryservices**
+
+  Assign deliveryservices for servers in cachegroup
+
+  Authentication Required: Yes
+
+  Role(s) Required: admin or oper
+
+  **Request Route Parameters**
+
+  +------------------+----------+--------------------------------------------------------+
+  |      Name        | Required |           Description                                  |
+  +==================+==========+========================================================+
+  |      id          |   yes    | The cachegroup id.                                     |
+  +------------------+----------+--------------------------------------------------------+
+  
+  **Request Properties**
+
+  +------------------+----------+--------------------------------------------------------+
+  |    Parameter     |   Type   |           Description                                  |
+  +==================+==========+========================================================+
+  | deliveryServices |  array   | The deliveryservice id array.                          |
+  +------------------+----------+--------------------------------------------------------+
+
+  **Request Example** ::
+
+    {
+        "deliveryServices": [ "234", "235" ]
+    }
+
+  **Response Properties**
+
+  +------------------+----------+--------------------------------------------------------+
+  |    Parameter     |   Type   |           Description                                  |
+  +==================+==========+========================================================+
+  |       id         |   int    | The cachegroup id.                                     |
+  +------------------+----------+--------------------------------------------------------+
+  |   serverNames    |  array   | The server name array in the cachegroup.               |
+  +------------------+----------+--------------------------------------------------------+
+  | deliveryServices |  array   | The deliveryservice id array.                          |
+  +------------------+----------+--------------------------------------------------------+
+
+  **Response Example** ::
+
+    {
+      "response": {
+          "id": "3",
+          "serverNames": [ "atlanta-edge-01", "atlanta-edge-07" ],
+          "deliveryServices": [ "234", "235" ]
+      }
+    }
+
+|
+
