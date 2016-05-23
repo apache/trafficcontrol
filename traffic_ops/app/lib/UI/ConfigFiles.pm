@@ -1228,7 +1228,6 @@ sub regex_revalidate_dot_config {
 	}
 
 	my %regex_time;
-	##DN- even though we made these params, the front-end is still hard-coded to validate ttl between 48 - 672...
 	my $max_hours =
 		$self->db->resultset('Parameter')->search( { name => "ttl_max_hours" }, { config_file => "regex_revalidate.config" } )->get_column('value')->first;
 	my $min_hours =
@@ -1243,9 +1242,12 @@ sub regex_revalidate_dot_config {
 		my $ttl;
 		if ( $row->keyword eq "PURGE" && ( defined($parameters) && $parameters =~ /TTL:(\d+)h/ ) ) {
 			$ttl = $1;
-			if ( $ttl > $min_hours || $ttl < $max_hours ) {
-				$ttl = $min_hours;
-			}
+			if ( $ttl < $min_hours  ) {
+                $ttl = $min_hours;
+            }
+            elsif ( $ttl > $max_hours ) {
+                $ttl = $max_hours;
+            }
 		}
 		else {
 			next;
