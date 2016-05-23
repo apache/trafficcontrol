@@ -36,11 +36,17 @@
 					<h1>Steering Information:</h1>
 	          		<form method="post" action="/ds/<%= $steering->{ds_id} %>/steering/update" id="steering_form">
 	            	<div class="block">
-	               		%= label_for 'ds_name' => 'DeliveryService Name:', class => 'label', style=>"width:150px;"
+	               		%= label_for 'steering.ds_name' => 'DeliveryService Name:', class => 'label', style=>"width:150px;"
 	               		%= field('steering.ds_name')->text(class => 'readonly_field', id => 'ds_name', name => 'steering.ds_name', readonly => 'readonly');
 	            	</div><br><br>
 					<div>
-	               		%= label_for 'target_name1' => 'Target Name:', class => 'label', style=>"width:150px;"
+						<% unless (field('steering.target_id_1')->valid) { %>
+							<span class="field-with-error"><%= field('steering.target_id_1')->error %></span><br>
+						<% } %>
+						<% unless (field('steering.target_weight_1')->valid) { %>
+							<span class="field-with-error"><%= field('steering.target_weight_1')->error %></span><br>
+						<% } %>
+	               		%= label_for 'steering.target_name_1' => 'Target Name:', class => 'label', style=>"width:150px;"
 						<select style="max-width:250px" name="steering.target_id_1">
                 			<% if (defined($steering->{target_name_1})) { %>
                       			<option value="<%=$steering->{target_id_1}%>" selected><%=$steering->{target_name_1}%></option> 
@@ -49,7 +55,7 @@
                        			<option value="<%=$id%>"><%=$ds_data->{$id}%></option>
                 			% }
                       	</select>
-						%= label_for 'target_weight_1' => 'Weight:', class => 'label', style=>"width:50px;margin-left: 25px;"
+						%= label_for 'steering.target_weight_1' => 'Weight:', class => 'label', style=>"width:50px;margin-left: 25px;"
 						%= field('steering.target_weight_1')->text( class => 'field', id => 'target_weight_1', name => 'steering.target_weight_1', style=>"width:50px;");
 	            	</div><br>
 	            	<div class="block">
@@ -64,7 +70,10 @@
 					</div><br><br>
 			    </div>
 					<div>
-						%= label_for 'target_name_2' => 'Target Name:', class => 'label', style=>"width:150px;"
+					<% unless (field('steering.target_weight_2')->valid) { %>
+							<span class="field-with-error"><%= field('steering.target_weight_2')->error %></span><br>
+						<% } %>
+						%= label_for 'steering.target_name_2' => 'Target Name:', class => 'label', style=>"width:150px;"
 						<select style="max-width:250px" name="steering.target_id_2">
                 			<% if (defined($steering->{target_name_2})) { %>
                       			<option value="<%=$steering->{target_id_2}%>" selected><%=$steering->{target_name_2}%></option> 
@@ -73,7 +82,7 @@
                        			<option value="<%=$id%>"><%=$ds_data->{$id}%></option>
                 			% }
                       	</select>
-						%= label_for 'target_weight_2' => 'Weight:', class => 'label', style=>"width:50px;margin-left: 25px;"
+						%= label_for 'steering.target_weight_2' => 'Weight:', class => 'label', style=>"width:50px;margin-left: 25px;"
 						%= field('steering.target_weight_2')->text( class => 'field', id => 'target_weight_2', name => 'steering.target_weight_2', style=>"width:50px;");
 					</div><br>
 					<div class="block">
