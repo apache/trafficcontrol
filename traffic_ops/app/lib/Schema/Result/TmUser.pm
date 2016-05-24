@@ -152,7 +152,7 @@ __PACKAGE__->table("tm_user");
 
   data_type: 'timestamp'
   datetime_undef_if_invalid: 1
-  default_value: '0000-00-00 00:00:00'
+  default_value: '1998-12-31 17:00:00'
   is_nullable: 0
 
 =cut
@@ -209,7 +209,7 @@ __PACKAGE__->add_columns(
   {
     data_type => "timestamp",
     datetime_undef_if_invalid => 1,
-    default_value => "0000-00-00 00:00:00",
+    default_value => "1998-12-31 17:00:00",
     is_nullable => 0,
   },
 );
@@ -334,9 +334,24 @@ __PACKAGE__->belongs_to(
   },
 );
 
+=head2 steering_tmusers
 
-# Created by DBIx::Class::Schema::Loader v0.07043 @ 2016-02-22 13:13:36
-# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:j4nYjjnStUYvhKi7zNh4bw
+Type: has_many
+
+Related object: L<Schema::Result::SteeringTmuser>
+
+=cut
+
+__PACKAGE__->has_many(
+  "steering_tmusers",
+  "Schema::Result::SteeringTmuser",
+  { "foreign.tm_user" => "self.id" },
+  { cascade_copy => 0, cascade_delete => 0 },
+);
+
+
+# Created by DBIx::Class::Schema::Loader v0.07043 @ 2016-05-11 12:44:18
+# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:rHN64cwaNqEj3Ko/kU7nCA
 
 
 # You can replace this text with custom code or comments, and it will be preserved on regeneration
