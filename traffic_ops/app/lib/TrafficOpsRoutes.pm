@@ -497,7 +497,7 @@ sub api_routes {
 		->to( 'DeliveryServiceRegexes#index', namespace => $namespace );
 
 	# -- DELIVERY SERVICE MATCHES
-	$r->get( "/api/$version/deliveryservices_matches" => [ format => [qw(json)] ] )->over( authenticated => 1 )
+	$r->get( "/api/$version/deliveryservice_matches" => [ format => [qw(json)] ] )->over( authenticated => 1 )
 		->to( 'DeliveryServiceMatches#index', namespace => $namespace );
 
 	#       ->over( authenticated => 1 )->to( 'DeliveryService#get_summary', namespace => $namespace );
@@ -657,7 +657,9 @@ sub api_routes {
     $r->post("/api/$version/regions/:region_name/phys_locations")->over( authenticated => 1 )->to( 'PhysLocation#create', namespace => $namespace );
 	$r->post("/api/$version/servers")->over( authenticated => 1 )->to( 'Server#create',   namespace => $namespace );
 	$r->put("/api/$version/servers/:id")->over( authenticated => 1 )->to( 'Server#update',   namespace => $namespace );
+	$r->post("/api/$version/servers/:id/queue_update")->over( authenticated => 1 )->to( 'Server#postupdatequeue',   namespace => $namespace );
     $r->post("/api/$version/cachegroups")->over( authenticated => 1 )->to( 'Cachegroup#create', namespace => $namespace );
+	$r->post("/api/$version/cachegroups/:id/queue_update")->over( authenticated => 1 )->to( 'Cachegroup#postupdatequeue',   namespace => $namespace );
     $r->post("/api/$version/deliveryservices")->over( authenticated => 1 )->to( 'DeliveryService#create', namespace => $namespace );
     $r->put("/api/$version/deliveryservices/:id")->over( authenticated => 1 )->to( 'DeliveryService#update', namespace => $namespace );
     $r->delete("/api/$version/deliveryservices/:id")->over( authenticated => 1 )->to( 'DeliveryService#delete', namespace => $namespace );
