@@ -84,7 +84,6 @@ sub delivery_services {
 					"signed"               => \$row->signed,
 					"qstringIgnore"        => $row->qstring_ignore,
 					"geoLimit"             => $row->geo_limit,
-					"geoLimitCountries"    => $row->geo_limit_countries,
 					"geoProvider"          => $row->geo_provider,
 					"httpBypassFqdn"       => $row->http_bypass_fqdn,
 					"dnsBypassIp"          => $row->dns_bypass_ip,
