@@ -304,6 +304,11 @@ sub typename {
 
 sub sanitize_geo_limit_countries {
 	my $geo_limit_countries = shift;
+
+	if (!defined($geo_limit_countries)) {
+		return "";
+	}
+
 	$geo_limit_countries =~ s/\s+//g;
 	$geo_limit_countries = uc($geo_limit_countries);
 	return $geo_limit_countries
@@ -729,6 +734,7 @@ sub update {
 		my $referer = $self->req->headers->header('referer');
 		return $self->redirect_to($referer);
 	}
+
 	if ( $self->check_deliveryservice_input() ) {
 
 		#print "global_max_mbps = " . $self->param('ds.global_max_mbps') . "\n";
