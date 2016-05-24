@@ -69,11 +69,12 @@ sub newjob {
 	if ( $self->is_valid_job() ) {
 		my $ds = $self->db->resultset("Deliveryservice")->search( { xml_id => $ds_xml_id }, { prefetch => [ 'type', 'profile', 'cdn' ] } )->single();
 		my $org_server_fqdn;
-		if ($ds->type->name eq 'ANY_MAP') {
+		if ( $ds->type->name eq 'ANY_MAP' ) {
 			$org_server_fqdn = $ds->remap_text;
-			$org_server_fqdn =~ s/^\S+\s+(\S+)\s+.*/$1/; # get the thing after (re)map
+			$org_server_fqdn =~ s/^\S+\s+(\S+)\s+.*/$1/;    # get the thing after (re)map
 			$org_server_fqdn =~ s/\/$//;
-		} else {
+		}
+		else {
 			$org_server_fqdn = $ds->org_server_fqdn;
 		}
 		my $ds_id = $ds->id;
@@ -136,9 +137,10 @@ sub newjob {
 
 		my $start_time_gmt = strftime( "%Y-%m-%d %H:%M:%S", gmtime($start_time) );
 		if ( !%err ) {
-			if ($regex =~ m/(^\/.+)/) {
-				$org_server_fqdn = $org_server_fqdn . "$regex"
-			} else {
+			if ( $regex =~ m/(^\/.+)/ ) {
+				$org_server_fqdn = $org_server_fqdn . "$regex";
+			}
+			else {
 				$org_server_fqdn = $org_server_fqdn . "/$regex";
 			}
 			my $insert = $self->db->resultset('Job')->create(
@@ -162,7 +164,8 @@ sub newjob {
 
 			&log( $self, "UI entry " . $response{job} . " forced new regex_revalidate.config snapshot", "UICHANGE" );
 			$self->snapshot_regex_revalidate();
-			my $ds_id = $self->db->resultset('Deliveryservice')->search( { xml_id => $ds_xml_id }, { prefetch => ['profile'] } )->get_column('id')->single();	
+			my $ds_id =
+				$self->db->resultset('Deliveryservice')->search( { xml_id => $ds_xml_id }, { prefetch => ['profile'] } )->get_column('id')->single();
 			$self->set_update_server_bits($ds_id);
 
 			if ( defined $response{"job"} ) {
@@ -210,13 +213,14 @@ sub is_valid_job {
 	my $self = shift;
 
 	# check if ttl is between min and max
-    my $min_hours =
-        $self->db->resultset('Parameter')->search( { name => "ttl_min_hours" }, { config_file => "regex_revalidate.config" } )->get_column('value')->first;
-    my $max_hours =
-        $self->db->resultset('Parameter')->search( { name => "ttl_max_hours" }, { config_file => "regex_revalidate.config" } )->get_column('value')->first;
+	my $min_hours =
+		$self->db->resultset('Parameter')->search( { name => "ttl_min_hours" }, { config_file => "regex_revalidate.config" } )->get_column('value')->first;
+	my $max_hours =
+		$self->db->resultset('Parameter')->search( { name => "ttl_max_hours" }, { config_file => "regex_revalidate.config" } )->get_column('value')->first;
 	my $ttl = $self->param('job.ttl');
 	if ( $ttl eq '' || $ttl < $min_hours || $ttl > $max_hours ) {
-		$self->field('job.ttl')->is_like( qr/^\//,, "Must be between " . $min_hours . " and " . $max_hours ); # hack: this will fail and trigger error message
+		$self->field('job.ttl')->is_like( qr/^\//,, "Must be between " . $min_hours . " and " . $max_hours )
+			;    # hack: this will fail and trigger error message
 	}
 
 	$self->field('job.start_time')->is_required->is_like(

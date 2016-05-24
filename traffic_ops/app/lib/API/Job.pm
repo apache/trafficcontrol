@@ -205,10 +205,10 @@ sub is_valid_date_format {
 sub is_ttl_in_range {
 	my $self  = shift;
 	my $value = shift;
-    my $min_hours =
-        $self->db->resultset('Parameter')->search( { name => "ttl_min_hours" }, { config_file => "regex_revalidate.config" } )->get_column('value')->first;
-    my $max_hours =
-        $self->db->resultset('Parameter')->search( { name => "ttl_max_hours" }, { config_file => "regex_revalidate.config" } )->get_column('value')->first;
+	my $min_hours =
+		$self->db->resultset('Parameter')->search( { name => "ttl_min_hours" }, { config_file => "regex_revalidate.config" } )->get_column('value')->first;
+	my $max_hours =
+		$self->db->resultset('Parameter')->search( { name => "ttl_max_hours" }, { config_file => "regex_revalidate.config" } )->get_column('value')->first;
 
 	if ( !defined $value or $value eq '' ) {
 		return undef;
