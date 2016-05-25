@@ -3907,8 +3907,7 @@
       "retry": "7200",
       "refresh": "28800"
     },
-    "coveragezone.polling.url": "http://localhost:8889/ipcdn/CZF/current/ipcdn_czf-current.json",
-    "neustar.polling.url": "http://ipcdn-tools-03.cdn.example.com/neustar/latest.tar.gz",
+    "coveragezone.polling.url": "http://localhost:8889/czf.json",
     "dnssec.enabled": "false",
     "api.auth.url": "http://${toHostname}/api/1.1/user/login"
   }

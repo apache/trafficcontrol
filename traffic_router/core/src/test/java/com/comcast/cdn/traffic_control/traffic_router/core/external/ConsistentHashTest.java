@@ -100,7 +100,7 @@ public class ConsistentHashTest {
 		assertThat(steeringDeliveryServiceId, not(nullValue()));
 		assertThat(steeredDeliveryServices.isEmpty(), equalTo(false));
 
-		resourcePath = "ipcdn/CZF/current/ipcdn_czf-current.json";
+		resourcePath = "czf.json";
 		inputStream = getClass().getClassLoader().getResourceAsStream(resourcePath);
 		if (inputStream == null) {
 			fail("Could not find file '" + resourcePath + "' needed for test from the current classpath as a resource!");

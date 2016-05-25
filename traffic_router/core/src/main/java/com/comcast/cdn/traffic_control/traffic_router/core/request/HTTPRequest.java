@@ -174,4 +174,12 @@ public class HTTPRequest extends Request {
     public void setUri(final String uri) {
        this.uri = uri;
     }
+
+    public String getHeaderValue(final String name) {
+        if (headers != null && headers.containsKey(name)) {
+            return headers.get(name);
+        }
+
+        return null;
+    }
 }

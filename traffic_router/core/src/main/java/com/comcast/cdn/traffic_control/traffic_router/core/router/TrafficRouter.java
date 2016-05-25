@@ -71,6 +71,7 @@ import com.comcast.cdn.traffic_control.traffic_router.core.router.StatTracker.Tr
 
 public class TrafficRouter {
 	public static final Logger LOGGER = Logger.getLogger(TrafficRouter.class);
+	public static final String XTC_STEERING_OPTION = "x-tc-steering-option";
 
 	private final CacheRegister cacheRegister;
 	private final ZoneManager zoneManager;
@@ -444,7 +445,8 @@ public class TrafficRouter {
 	public HTTPRouteResult route(final HTTPRequest request, final Track track) throws MalformedURLException, GeolocationException {
 		track.setRouteType(RouteType.HTTP, request.getHostname());
 
-		final DeliveryService deliveryService = consistentHashDeliveryService(cacheRegister.getDeliveryService(request, true), request.getPath());
+		final String xtcSteeringOption = request.getHeaderValue(XTC_STEERING_OPTION);
+		final DeliveryService deliveryService = consistentHashDeliveryService(cacheRegister.getDeliveryService(request, true), request.getPath(), xtcSteeringOption);
 
 		if (deliveryService == null) {
 			track.setResult(ResultType.DS_MISS);
@@ -576,10 +578,10 @@ public class TrafficRouter {
 	}
 
 	public DeliveryService consistentHashDeliveryService(final String deliveryServiceId, final String requestPath) {
-		return consistentHashDeliveryService(cacheRegister.getDeliveryService(deliveryServiceId), requestPath);
+		return consistentHashDeliveryService(cacheRegister.getDeliveryService(deliveryServiceId), requestPath, "");
 	}
 
-	public DeliveryService consistentHashDeliveryService(final DeliveryService deliveryService, final String requestPath) {
+	public DeliveryService consistentHashDeliveryService(final DeliveryService deliveryService, final String requestPath, final String xtcSteeringOption) {
 		if (deliveryService == null) {
 			return null;
 		}
@@ -589,6 +591,10 @@ public class TrafficRouter {
 		}
 
 		final Steering steering = steeringRegistry.get(deliveryService.getId());
+
+		if (xtcSteeringOption != null && !xtcSteeringOption.isEmpty()) {
+			return steering.hasTarget(xtcSteeringOption) ? cacheRegister.getDeliveryService(xtcSteeringOption) : null;
+		}
 
 		final String bypassDeliveryServiceId = steering.getBypassDestination(requestPath);
 		if (bypassDeliveryServiceId != null && !bypassDeliveryServiceId.isEmpty()) {

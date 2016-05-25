@@ -169,6 +169,38 @@ public class SteeringTest {
 	}
 
 	@Test
+	public void itUsesXtcSteeringOptionForOverride() throws Exception {
+		HttpGet httpGet = new HttpGet("http://localhost:8888/qwerytuiop/force-to-eight/asdfghjkl?fakeClientIpAddress=12.34.56.78");
+		httpGet.addHeader("Host", "foo.mm-test.thecdn.cdn.example.com");
+		httpGet.addHeader("X-TC-Steering-Option", "ds-05");
+
+		CloseableHttpResponse response = null;
+
+		try {
+			response = httpClient.execute(httpGet);
+			assertThat("Failed getting 302 for request " + httpGet.getFirstHeader("Host").getValue(), response.getStatusLine().getStatusCode(), equalTo(302));
+			assertThat(response.getFirstHeader("Location").getValue(), endsWith(".ds-05.thecdn.cdn.example.com:8090/qwerytuiop/force-to-eight/asdfghjkl?fakeClientIpAddress=12.34.56.78"));
+		} finally {
+			if (response != null) { response.close(); }
+		}
+	}
+
+	@Test
+	public void itReturns503ForBadDeliveryServiceInXtcSteeringOption() throws Exception {
+		HttpGet httpGet = new HttpGet("http://localhost:8888/qwerytuiop/asdfghjkl?fakeClientIpAddress=12.34.56.78");
+		httpGet.addHeader("Host", "foo.mm-test.thecdn.cdn.example.com");
+		httpGet.addHeader("X-TC-Steering-Option", "ds-02");
+		CloseableHttpResponse response = null;
+
+		try {
+			response = httpClient.execute(httpGet);
+			assertThat(response.getStatusLine().getStatusCode(), equalTo(503));
+		} finally {
+			if (response != null) { response.close(); }
+		}
+	}
+
+	@Test
 	public void itUsesWeightedDistributionForRequestPath() throws Exception {
 		int count = 0;
 		for (int weight : targetWeights.values()) {

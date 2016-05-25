@@ -63,7 +63,7 @@ public class Steering {
 		return null;
 	}
 
-	private boolean hasTarget(final String deliveryService) {
+	public boolean hasTarget(final String deliveryService) {
 		for (SteeringTarget target : targets) {
 			if (deliveryService.equals(target.getDeliveryService())) {
 				return true;
