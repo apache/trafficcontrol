@@ -265,9 +265,15 @@ sub update {
 		if ( $parent_cachegroup_id != -1 ) {
 			$update->parent_cachegroup_id( $self->param('cg_data.parent_cachegroup_id') );
 		}
+		else {
+			$update->parent_cachegroup_id( undef );
+		}
 		if ( $secondary_parent_cachegroup_id != -1 ) {
 			$update->secondary_parent_cachegroup_id( $self->param('cg_data.secondary_parent_cachegroup_id') );
 		}
+                else {
+                        $update->secondary_parent_cachegroup_id( undef );
+                }
 		$update->type( $self->param('cg_data.type') );
 		$update->update();
 
