@@ -19,23 +19,23 @@ package api
 
 import (
 	"errors"
-	"github.com/jmoiron/sqlx"	
+	"github.com/jmoiron/sqlx"
 	"log"
 )
 
-func GetServerByName(serverName string, db *sqlx.DB) (Server, error) {
-	ret := []Server{}
-	arg := Server{HostName: serverName}
+func GetServerByName(serverName string, db *sqlx.DB) (Servers, error) {
+	ret := []Servers{}
+	arg := Servers{HostName: serverName}
 	nstmt, err := db.PrepareNamed(`select * from server where host_name=:host_name`)
 	err = nstmt.Select(&ret, arg)
 	if err != nil {
 		log.Println(err)
-		return Server{}, err
+		return Servers{}, err
 	}
 	defer nstmt.Close()
 
 	if len(ret) != 1 {
-		return Server{}, errors.New("Host name " + serverName + " is not unique!")
+		return Servers{}, errors.New("Host name " + serverName + " is not unique!")
 	}
 	return ret[0], err
 }

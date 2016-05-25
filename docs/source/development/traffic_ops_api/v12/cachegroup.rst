@@ -332,3 +332,65 @@ Cache Group
     }
    
 |
+
+**POST /api/1.2/cachegroups/{:id}/queue_update**
+
+  Queue or dequeue updates for all servers assigned to a cache group limited to a specific CDN.
+
+  Authentication Required: Yes
+
+  Role(s) Required: admin or oper
+
+  **Request Route Parameters**
+
+  +-----------------+----------+----------------------+
+  | Name            | Required | Description          |
+  +=================+==========+======================+
+  | id              | yes      | the cachegroup id.   |
+  +-----------------+----------+----------------------+
+
+  **Request Properties**
+
+  +--------------+---------+-----------------------------------------------+
+  | Name         | Type    | Description                                   |
+  +==============+=========+===============================================+
+  | action       | string  | queue or dequeue                              |
+  +--------------+---------+-----------------------------------------------+
+  | cdn          | string  | cdn name                                      |
+  +--------------+---------+-----------------------------------------------+
+
+  **Response Properties**
+
+  +-----------------+---------+----------------------------------------------------+
+  | Name            | Type    | Description                                        |
+  +=================+=========+====================================================+
+  | action          | string  | The action processed, queue or dequeue.            |
+  +-----------------+---------+----------------------------------------------------+
+  | cachegroupId    | integer | cachegroup id                                      |
+  +-----------------+---------+----------------------------------------------------+
+  | cachegroupName  | string  | cachegroup name                                    |
+  +-----------------+---------+----------------------------------------------------+
+  | cdn             | string  | cdn name                                           |
+  +-----------------+---------+----------------------------------------------------+
+  | serverNames     | array   | servers name array in the cachegroup in cdn        |
+  +-----------------+---------+----------------------------------------------------+
+
+  **Response Example** ::
+
+    {
+      "response": {
+            "cachegroupName": "us-il-chicago",
+            "action": "queue",
+            "serverNames":   [
+                "atsec-chi-00",
+                "atsec-chi-01",
+                "atsec-chi-02",
+                "atsec-chi-03",
+            ],
+            "cachegroupId": "93",
+            "cdn": "cdn_number_1",
+        }
+    }
+
+|
+

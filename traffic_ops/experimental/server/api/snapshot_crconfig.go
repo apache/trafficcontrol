@@ -19,8 +19,8 @@ package api
 
 import (
 	"encoding/json"
-	_ "github.com/Comcast/traffic_control/traffic_ops/experimental/server/output_format" // needed for swagger
 	"github.com/Comcast/traffic_control/traffic_ops/experimental/server/crconfig"
+	_ "github.com/Comcast/traffic_control/traffic_ops/experimental/server/output_format" // needed for swagger
 	"github.com/jmoiron/sqlx"
 	"log"
 )

@@ -62,6 +62,11 @@ __PACKAGE__->table("deliveryservice");
   default_value: 0
   is_nullable: 1
 
+=head2 geo_limit_countries
+
+  data_type: 'varchar'
+  is_nullable: 1
+
 =head2 geo_provider
 
   data_type: 'tinyint'
@@ -299,6 +304,8 @@ __PACKAGE__->add_columns(
 	{ data_type => "tinyint", is_nullable => 1 },
 	"geo_limit",
 	{ data_type => "tinyint", default_value => 0, is_nullable => 1 },
+	"geo_limit_countries",
+	{ data_type => "varchar", is_nullable => 1 },
 	"geo_provider",
 	{ data_type => "tinyint", default_value => 0, is_nullable => 0 },
 	"http_bypass_fqdn",
@@ -524,6 +531,36 @@ __PACKAGE__->has_many(
 	{ cascade_copy              => 0, cascade_delete => 0 },
 );
 
+=head2 steering_target_deliveryservices
+
+Type: has_many
+
+Related object: L<Schema::Result::SteeringTarget>
+
+=cut
+
+__PACKAGE__->has_many(
+  "steering_target_deliveryservices",
+  "Schema::Result::SteeringTarget",
+  { "foreign.deliveryservice" => "self.id" },
+  { cascade_copy => 0, cascade_delete => 0 },
+);
+
+=head2 steering_target_deliveryservices_2s
+
+Type: has_many
+
+Related object: L<Schema::Result::SteeringTarget>
+
+=cut
+
+__PACKAGE__->has_many(
+  "steering_target_deliveryservices_2s",
+  "Schema::Result::SteeringTarget",
+  { "foreign.deliveryservice" => "self.id" },
+  { cascade_copy => 0, cascade_delete => 0 },
+);
+
 =head2 type
 
 Type: belongs_to
@@ -534,11 +571,8 @@ Related object: L<Schema::Result::Type>
 
 __PACKAGE__->belongs_to( "type", "Schema::Result::Type", { id => "type" }, { is_deferrable => 1, on_delete => "NO ACTION", on_update => "NO ACTION" }, );
 
-# Created by DBIx::Class::Schema::Loader v0.07042 @ 2015-11-10 11:16:40
-# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:2p4L0dAyERKNVw+WQu2mBw
-
-# Created by DBIx::Class::Schema::Loader v0.07043 @ 2015-10-05 11:50:01
-# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:AUTdFMjQ60ItRfFMfKsB1A
+# Created by DBIx::Class::Schema::Loader v0.07043 @ 2016-05-16 14:17:29
+# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:XpjAEB5/NeQ58vRUTWSG1w
 
 # You can replace this text with custom code or comments, and it will be preserved on regeneration
 1;

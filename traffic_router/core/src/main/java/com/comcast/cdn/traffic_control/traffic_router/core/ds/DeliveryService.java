@@ -73,6 +73,7 @@ public class DeliveryService {
 	private final Map<String, String> responseHeaders = new HashMap<String, String>();
 	private final Set<String> requestHeaders = new HashSet<String>();
 	private final boolean regionalGeoEnabled;
+	private final String geolocationProvider;
 
 	public DeliveryService(final String id, final JSONObject dsJo) throws JSONException {
 		this.id = id;
@@ -111,6 +112,12 @@ public class DeliveryService {
 		setResponseHeaders(dsJo.optJSONObject("responseHeaders"));
 		setRequestHeaders(dsJo.optJSONArray("requestHeaders"));
 		this.regionalGeoEnabled = dsJo.optBoolean("regionalGeoBlocking", false);
+		geolocationProvider = dsJo.optString("geolocationProvider");
+		if (geolocationProvider != null && !geolocationProvider.isEmpty()) {
+			LOGGER.info("DeliveryService '" + id + "' has configured geolocation provider '" + geolocationProvider + "'");
+		} else {
+			LOGGER.info("DeliveryService '" + id + "' will use default geolocation provider Maxmind");
+		}
 	}
 
 	public String getId() {
@@ -218,7 +225,7 @@ public class DeliveryService {
 		if (port != STANDARD_HTTP_PORT) {
 			uri.append(":").append(port);
 		}
-		uri.append(request.getPath());
+		uri.append(request.getUri());
 		boolean queryAppended = false;
 		if (request.getQueryString() != null && appendQueryString()) {
 			uri.append("?").append(request.getQueryString());
@@ -508,7 +515,12 @@ public class DeliveryService {
 			requestHeaders.add(jsonRequestHeaderNames.getString(i));
 		}
 	}
+
 	public boolean isRegionalGeoEnabled() {
 		return regionalGeoEnabled;
+	}
+
+	public String getGeolocationProvider() {
+		return geolocationProvider;
 	}
 }

@@ -5,7 +5,7 @@
 	<parent>
 		<artifactId>traffic_router</artifactId>
 		<groupId>com.comcast.cdn.traffic_control.traffic_router</groupId>
-		<version>1.5.0</version>
+		<version>1.6.0</version>
 	</parent>
 	<modelVersion>4.0.0</modelVersion>
 
@@ -14,12 +14,12 @@
 		<dependency>
 			<groupId>org.apache.commons</groupId>
 			<artifactId>commons-lang3</artifactId>
-			<version>3.3.2</version>
+			<version>${commons-lang3.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>junit</groupId>
 			<artifactId>junit</artifactId>
-			<version>4.8.2</version>
+			<version>${junit.version}</version>
 			<scope>test</scope>
 		</dependency>
 	</dependencies>

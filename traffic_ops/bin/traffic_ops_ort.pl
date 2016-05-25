@@ -24,11 +24,18 @@ use Fcntl qw(:flock);
 use MIME::Base64;
 use LWP::UserAgent;
 use Crypt::SSLeay;
+use Getopt::Long;
 
 $| = 1;
 my $date           = `/bin/date`;
 chomp($date);
 print "$date\n";
+
+my $dispersion = 300;
+my $retries = 5;
+
+GetOptions( "dispersion=i" => \$dispersion, # dispersion (in seconds)
+            "retries=i"    => \$retries );
 
 if ( $#ARGV < 1 ) {
 	&usage();
@@ -122,6 +129,7 @@ my $lwp_conn                   = &setup_lwp();
 my $unixtime       = time();
 my $hostname_short = `/bin/hostname -s`;
 chomp($hostname_short);
+
 my $domainname = &set_domainname();
 $lwp_conn->agent("$hostname_short-$unixtime");
 
@@ -564,7 +572,7 @@ sub check_syncds_state {
 	( $log_level >> $DEBUG ) && print "DEBUG Checking syncds state.\n";
 	if ( $script_mode == $SYNCDS || $script_mode == $BADASS || $script_mode == $REPORT ) {
 		## The herd is about to get /update/<hostname>
-		&sleep_rand(10);
+		( $dispersion > 0 ) && &sleep_rand($dispersion);
 
 		my $url     = "$traffic_ops_host\/update/$hostname_short";
 		my $upd_ref = &lwp_get($url);
@@ -604,11 +612,14 @@ sub check_syncds_state {
 			if ( $parent_pending == 1 ) {
 				( $log_level >> $ERROR ) && print "ERROR Traffic Ops is signaling that my parents need an update.\n";
 				if ( $script_mode == $SYNCDS ) {
-					( $log_level >> $WARN ) && print "WARN In syncds mode, sleeping for 60s to see if the update my parents need is cleared.\n";
-					for ( my $i = 60; $i > 0; $i-- ) {
-						( $log_level >> $WARN ) && print ".";
-						sleep 1;
+					if ( $dispersion > 0 ) {
+						( $log_level >> $WARN ) && print "WARN In syncds mode, sleeping for " . $dispersion . "s to see if the update my parents need is cleared.\n";
+						for ( my $i = $dispersion; $i > 0; $i-- ) {
+							( $log_level >> $WARN ) && print ".";
+							sleep 1;
+						}
 					}
+
 					( $log_level >> $WARN ) && print "\n";
 					$upd_ref = &lwp_get($url);
 					if ( $upd_ref =~ m/^\d{3}$/ ) {
@@ -627,17 +638,11 @@ sub check_syncds_state {
 					}
 					else {
 						( $log_level >> $DEBUG ) && print "DEBUG The update on my parents cleared; continuing.\n";
-						## At least a portion of the herd is about to check in with Traffic Ops, so need to space things out a bit.
-						#&sleep_rand(5);
 					}
 				}
 			}
 			else {
 				( $log_level >> $DEBUG ) && print "DEBUG Traffic Ops is signaling that my parents do not need an update.\n";
-				if ( $script_mode == $SYNCDS ) {
-					## The herd is about to check in with Traffic Ops, need to space things out a bit.
-					&sleep_rand(15);
-				}
 			}
 		}
 		elsif ( $script_mode == $SYNCDS && $upd_pending != 1 ) {
@@ -732,7 +737,6 @@ sub process_config_files {
 				|| $file =~ m/url\_sig\_(.*)\.config$/
 				|| $file =~ m/hdr\_rw\_(.*)\.config$/
 				|| $file eq "regex_revalidate.config"
-				|| $file eq "ip_allow.config"
 				|| $file eq "astats.config"
 				|| $file =~ m/cacheurl\_(.*)\.config$/
 				|| $file =~ m/regex\_remap\_(.*)\.config$/
@@ -929,6 +933,9 @@ sub check_plugins {
 						$cfg_file_tracker->{$plugin_config_file}->{'remap_plugin_config_file'} = 1;
 					}
 				}
+				else {
+					($plugin_name) = split(/\s/, $plugin_name);
+				}
 				$plugin_name =~ s/\s//g;
 				( $log_level >> $DEBUG ) && print "DEBUG Found plugin $plugin_name in $cfg_file.\n";
 				$return_code = &check_this_plugin($plugin_name);
@@ -1041,7 +1048,7 @@ sub check_this_plugin {
 
 sub lwp_get {
 	my $url           = shift;
-	my $retry_counter = 5;
+	my $retry_counter = $retries;
 
 	( $log_level >> $DEBUG ) && print "DEBUG Total connections in LWP cache: " . $lwp_conn->conn_cache->get_connections("https") . "\n";
 	my %headers = ( 'Cookie' => $cookie );
@@ -1054,9 +1061,9 @@ sub lwp_get {
 		$response = $lwp_conn->get($url, %headers);
 		$response_content = $response->content; 
 
-		if ( &check_lwp_response_code($response, $ERROR) || &check_lwp_response_content_length($response) ) {
+		if ( &check_lwp_response_code($response, $ERROR) || &check_lwp_response_content_length($response, $ERROR) ) {
 			( $log_level >> $ERROR ) && print "ERROR result for $url is: ..." . $response->content . "...\n";
-			&sleep_rand(6);
+			sleep 2**( $retries - $retry_counter );
 			$retry_counter--;
 		}
 		# https://github.com/Comcast/traffic_control/issues/1168
@@ -1071,7 +1078,7 @@ sub lwp_get {
 		
 	}
 
-	&check_lwp_response_code($response, $FATAL) if ( $retry_counter == 0 );
+	( &check_lwp_response_code($response, $FATAL) || &check_lwp_response_content_length($response, $FATAL) ) if ( $retry_counter == 0 );
 	
 	&eval_json($response) if ( $url =~ m/\.json$/ );
 
@@ -1240,16 +1247,19 @@ sub check_lwp_response_code {
 }
 
 sub check_lwp_response_content_length {
-	my $lwp_response = shift;
+	my $lwp_response  = shift;
+	my $panic_level   = shift;
+	my $log_level_str = &log_level_to_string($panic_level);
 	my $url           = $lwp_response->request->uri;
 
 	if ( !defined($lwp_response->header('Content-Length')) ) {
-		( $log_level >> $ERROR ) && print "ERROR $url did not return a Content-Length header!\n"; 
+		( $log_level >> $panic_level ) && print $log_level_str . " $url did not return a Content-Length header!\n"; 
 		exit;
 		return 1;
 	}
 	elsif ( $lwp_response->header('Content-Length') != length($lwp_response->content()) ) {
-		( $log_level >> $ERROR ) && print "ERROR $url returned a Content-Length of " . $lwp_response->header('Content-Length') . ", however actual content length is " . length($lwp_response->content()) . "!\n"; 
+		( $log_level >> $panic_level ) && print $log_level_str . " $url returned a Content-Length of " . $lwp_response->header('Content-Length') . ", however actual content length is " . length($lwp_response->content()) . "!\n"; 
+		exit 1 if ($log_level_str eq 'FATAL');
 		return 1;
 	}
 	else {	

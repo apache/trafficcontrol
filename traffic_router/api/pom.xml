@@ -20,18 +20,11 @@
 	<parent>
 		<groupId>com.comcast.cdn.traffic_control.traffic_router</groupId>
 		<artifactId>traffic_router</artifactId>
-		<version>1.5.0</version>
+		<version>1.6.0</version>
 	</parent>
 
 	<artifactId>traffic_router_api</artifactId>
 	<packaging>war</packaging>
-
-	<properties>
-		<deploy.dir>/opt/traffic_router</deploy.dir>
-		<wicket.version>6.0.0</wicket.version>
-		<jetty.version>7.6.3.v20120416</jetty.version>
-		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-	</properties>
 
 	<scm>
 		<connection>scm:git:file://</connection>
@@ -59,7 +52,7 @@
 							<goal>check</goal>
 						</goals>
 						<configuration>
-							<targetJdk>1.6</targetJdk>
+							<targetJdk>1.7</targetJdk>
 							<verbose>true</verbose>
 							<failurePriority>2</failurePriority>
 							<rulesets>
@@ -69,7 +62,7 @@
 					</execution>
 				</executions>
 				<configuration>
-					<targetJdk>1.6</targetJdk>
+					<targetJdk>1.7</targetJdk>
 					<verbose>true</verbose>
 					<failurePriority>2</failurePriority>
 					<rulesets>
@@ -84,65 +77,14 @@
 		<dependency>
 			<groupId>org.apache.commons</groupId>
 			<artifactId>commons-lang3</artifactId>
-			<version>3.0.1</version>
-		</dependency>
-
-		<dependency>
-			<groupId>commons-io</groupId>
-			<artifactId>commons-io</artifactId>
-			<version>2.0.1</version>
-		</dependency>
-
-		<dependency>
-			<groupId>commons-pool</groupId>
-			<artifactId>commons-pool</artifactId>
-			<version>1.5.6</version>
+			<version>${commons-lang3.version}</version>
 		</dependency>
 
         <dependency>
             <groupId>log4j</groupId>
             <artifactId>log4j</artifactId>
-            <version>1.2.17</version>
+            <version>${log4j.version}</version>
         </dependency>
-
-		<dependency>
-			<groupId>junit</groupId>
-			<artifactId>junit</artifactId>
-			<version>4.8.2</version>
-			<scope>test</scope>
-		</dependency>
-
-		<dependency>
-			<groupId>org.jmock</groupId>
-			<artifactId>jmock-junit4</artifactId>
-			<version>2.5.1</version>
-			<scope>test</scope>
-		</dependency>
-
-		<dependency>
-			<groupId>org.jmock</groupId>
-			<artifactId>jmock-legacy</artifactId>
-			<version>2.5.1</version>
-			<scope>test</scope>
-		</dependency>
-
-		<dependency>
-			<groupId>commons-codec</groupId>
-			<artifactId>commons-codec</artifactId>
-			<version>1.6</version>
-		</dependency>
-
-		<dependency>
-			<groupId>org.json</groupId>
-			<artifactId>json</artifactId>
-			<version>20090211</version>
-		</dependency>
-
-		<dependency>
-			<groupId>dnsjava</groupId>
-			<artifactId>dnsjava</artifactId>
-			<version>2.1.7</version>
-		</dependency>
 
 		<dependency>
 			<groupId>org.springframework</groupId>
@@ -157,43 +99,6 @@
 			<scope>provided</scope>
 		</dependency>
 
-		<dependency>
-			<groupId>org.apache.wicket</groupId>
-			<artifactId>wicket-core</artifactId>
-			<version>${wicket.version}</version>
-		</dependency>
-
-		<!-- OPTIONAL DEPENDENCY
-		<dependency> <groupId>org.apache.wicket</groupId> 
-			<artifactId>wicket-extensions</artifactId> <version>${wicket.version}</version> 
-		</dependency>
-		-->
-
-		<dependency>
-			<groupId>org.apache.wicket</groupId>
-			<artifactId>wicket-datetime</artifactId>
-			<version>${wicket.version}</version>
-		</dependency>
-
-		<!-- JETTY DEPENDENCIES FOR TESTING -->
-		<dependency>
-			<groupId>org.eclipse.jetty.aggregate</groupId>
-			<artifactId>jetty-all-server</artifactId>
-			<version>${jetty.version}</version>
-			<scope>provided</scope>
-		</dependency>
-
-		<dependency>
-			<groupId>com.googlecode.java-ipv6</groupId>
-			<artifactId>java-ipv6</artifactId>
-			<version>0.9</version>
-		</dependency>
-
-		<dependency>
-			<groupId>com.ning</groupId>
-			<artifactId>async-http-client</artifactId>
-			<version>1.7.24</version>
-		</dependency>
 		<dependency>
 			<groupId>com.fasterxml.jackson.core</groupId>
 			<artifactId>jackson-databind</artifactId>

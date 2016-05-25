@@ -30,10 +30,11 @@ import (
 )
 
 type cacheStats struct {
-	t        string //time
-	value    float64
-	cdn      string
-	hostname string
+	t         string //time
+	value     float64
+	cdn       string
+	hostname  string
+	cacheType string
 }
 type deliveryServiceStats struct {
 	t               string //time
@@ -133,10 +134,15 @@ func syncCsDb(ch chan string, sourceClient influx.Client, targetClient influx.Cl
 	stats := [...]string{
 		"bandwidth.cdn.1min",
 		"connections.cdn.1min",
+		"bandwidth.1min",
+		"connections.1min",
+		"connections.cdn.type.1min",
+		"bandwidth.cdn.type.1min",
 	}
 	for _, statName := range stats {
 		fmt.Printf("Syncing %s database with %s \n", db, statName)
 		syncCacheStat(sourceClient, targetClient, statName, days)
+		fmt.Printf("Done syncing %s\n", statName)
 	}
 	ch <- fmt.Sprintf("Done syncing %s!\n", db)
 }
@@ -147,7 +153,7 @@ func syncDsDb(ch chan string, sourceClient influx.Client, targetClient influx.Cl
 	stats := [...]string{
 		"kbps.ds.1min",
 		"max.kbps.ds.1day",
-		"tps.ds.1min",
+		"kbps.cg.1min",
 		"tps_2xx.ds.1min",
 		"tps_3xx.ds.1min",
 		"tps_4xx.ds.1min",
@@ -200,7 +206,7 @@ func syncCacheStat(sourceClient influx.Client, targetClient influx.Client, statN
 		RetentionPolicy: "monthly",
 	})
 
-	queryString := fmt.Sprintf("select time, cdn, hostname, value from \"monthly\".\"%s\"", statName)
+	queryString := fmt.Sprintf("select time, cdn, hostname, type, value from \"monthly\".\"%s\"", statName)
 	if days > 0 {
 		queryString += fmt.Sprintf(" where time > now() - %dd", days)
 	}
@@ -225,11 +231,17 @@ func syncCacheStat(sourceClient influx.Client, targetClient influx.Client, statN
 		ts := targetStats[ssKey]
 		ss := sourceStats[ssKey]
 		if ts.value > ss.value {
-			fmt.Printf("target value %v is at least equal to source value %v\n", ts.value, ss.value)
+			//fmt.Printf("target value %v is at least equal to source value %v\n", ts.value, ss.value)
 			continue //target value is bigger so leave it
 		}
 		statTime, _ := time.Parse(time.RFC3339, ss.t)
 		tags := map[string]string{"cdn": ss.cdn}
+		if ss.hostname != "" {
+			tags["hostname"] = ss.hostname
+		}
+		if ss.cacheType != "" {
+			tags["type"] = ss.cacheType
+		}
 		fields := map[string]interface{}{
 			"value": ss.value,
 		}
@@ -282,7 +294,7 @@ func syncDeliveryServiceStat(sourceClient influx.Client, targetClient influx.Cli
 		ts := targetStats[ssKey]
 		ss := sourceStats[ssKey]
 		if ts.value > ss.value {
-			fmt.Printf("target value %v is at least equal to source value %v\n", ts.value, ss.value)
+			//fmt.Printf("target value %v is at least equal to source value %v\n", ts.value, ss.value)
 			continue //target value is bigger so leave it
 		}
 		statTime, _ := time.Parse(time.RFC3339, ss.t)
@@ -340,7 +352,7 @@ func syncDailyStat(sourceClient influx.Client, targetClient influx.Client, statN
 		ts := targetStats[ssKey]
 		ss := sourceStats[ssKey]
 		if ts.value >= ss.value {
-			fmt.Printf("target value %v is at least equal to source value %v\n", ts.value, ss.value)
+			//fmt.Printf("target value %v is at least equal to source value %v\n", ts.value, ss.value)
 			continue //target value is bigger or equal so leave it
 		}
 		statTime, _ := time.Parse(time.RFC3339, ss.t)
@@ -375,8 +387,14 @@ func getCacheStats(res []influx.Result) map[string]cacheStats {
 				t := record[0].(string)
 				data.t = t
 				data.cdn = record[1].(string)
+				if record[2] != nil {
+					data.hostname = record[2].(string)
+				}
+				if record[3] != nil {
+					data.cacheType = record[3].(string)
+				}
 				var err error
-				data.value, err = record[3].(json.Number).Float64()
+				data.value, err = record[4].(json.Number).Float64()
 				if err != nil {
 					fmt.Printf("Couldn't parse value from record %v\n", record)
 					continue

@@ -22,16 +22,14 @@ if [ ! -e /opt/tomcat/lib/traffic_router_connector.jar ]; then
 	/bin/ln -s /opt/traffic_router/lib/traffic_router_connector.jar /opt/tomcat/lib/traffic_router_connector.jar
 fi
 
-for app in core api; do
-	if [ ! -d /opt/traffic_router/webapps/${app} ]; then
-		/bin/mkdir /opt/traffic_router/webapps/${app}
-	fi
+if [ ! -d /opt/traffic_router/webapps/core ]; then
+    /bin/mkdir /opt/traffic_router/webapps/core
+fi
 
-	if [ ! -e /opt/traffic_router/webapps/${app}/ROOT.war ]; then
-		#echo "Symlinking /opt/traffic_router/webapps/traffic_router_${app}.war to /opt/traffic_router/webapps/${app}/ROOT.war"
-		/bin/ln -s /opt/traffic_router/webapps/traffic_router_${app}.war /opt/traffic_router/webapps/${app}/ROOT.war
-	fi
-done
+if [ ! -e /opt/traffic_router/webapps/core/ROOT.war ]; then
+    #echo "Symlinking /opt/traffic_router/webapps/traffic_router_core.war to /opt/traffic_router/webapps/core/ROOT.war"
+    /bin/ln -s /opt/traffic_router/webapps/traffic_router_core.war /opt/traffic_router/webapps/core/ROOT.war
+fi
 
 if [ -f /opt/traffic_router/conf/*.crt ]; then
 	cd /opt/traffic_router/conf

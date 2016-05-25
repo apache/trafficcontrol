@@ -1,3 +1,19 @@
+/*
+ * Copyright 2015 Comcast Cable Communications Management, LLC
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package com.comcast.cdn.traffic_control.traffic_router.core.router;
 
 import com.comcast.cdn.traffic_control.traffic_router.core.cache.Cache;
@@ -140,5 +156,29 @@ public class TrafficRouterTest {
 
         assertThat(track.getResult(), equalTo(Track.ResultType.GEO));
         assertThat(track.getResultLocation(), equalTo(new Geolocation(50, 50)));
+    }
+
+    @Test
+    public void itRetainsPathElementsInURI() throws Exception {
+        Cache cache = mock(Cache.class);
+        when(cache.getFqdn()).thenReturn("atscache-01.kabletown.net");
+        when(cache.getPort()).thenReturn(80);
+
+        when(deliveryService.createURIString(any(HTTPRequest.class), any(Cache.class))).thenCallRealMethod();
+
+        HTTPRequest httpRequest = new HTTPRequest();
+        httpRequest.setClientIP("192.168.10.11");
+        httpRequest.setHostname("tr.ds.kabletown.net");
+        httpRequest.setPath("/782-93d215fcd88b/6b6ce2889-ae4c20a1584.ism/manifest(format=m3u8-aapl).m3u8");
+        httpRequest.setUri("/782-93d215fcd88b/6b6ce2889-ae4c20a1584.ism;urlsig=O0U9MTQ1Ojhx74tjchm8yzfdanshdafHMNhv8vNA/manifest(format=m3u8-aapl).m3u8");
+
+        StringBuilder dest = new StringBuilder();
+        dest.append("http://");
+        dest.append(cache.getFqdn().split("\\.", 2)[0]);
+        dest.append(".");
+        dest.append(httpRequest.getHostname().split("\\.", 2)[1]);
+        dest.append(httpRequest.getUri());
+
+        assertThat(deliveryService.createURIString(httpRequest, cache), equalTo(dest.toString()));
     }
 }

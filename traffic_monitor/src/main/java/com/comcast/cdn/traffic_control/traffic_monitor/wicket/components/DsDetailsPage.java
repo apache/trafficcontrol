@@ -17,6 +17,7 @@
 package com.comcast.cdn.traffic_control.traffic_monitor.wicket.components;
 
 import com.comcast.cdn.traffic_control.traffic_monitor.health.DeliveryServiceStateRegistry;
+import com.comcast.cdn.traffic_control.traffic_monitor.health.StateRegistry;
 import org.apache.wicket.request.mapper.parameter.PageParameters;
 
 public class DsDetailsPage extends StateDetailsPage {
@@ -27,6 +28,11 @@ public class DsDetailsPage extends StateDetailsPage {
 	}
 
 	public DsDetailsPage(final String idStr) {
-		super(idStr, "id", DeliveryServiceStateRegistry.getInstance());
+		super(idStr, "id");
+	}
+
+	@Override
+	protected StateRegistry getStateRegistry() {
+		return DeliveryServiceStateRegistry.getInstance();
 	}
 }

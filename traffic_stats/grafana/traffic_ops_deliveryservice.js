@@ -275,7 +275,7 @@ dashboard.refresh = "30s";
           "steppedLine": false,
           "targets": [
             {
-              "query": "SELECT mean(value)*1000 FROM \"monthly\".\"kbps.cg.1min\" WHERE deliveryservice='" + which + "' and cachegroup != 'total' and $timeFilter GROUP BY time(60s), cachegroup",
+              "query": "SELECT mean(value)*1000 FROM \"monthly\".\"kbps.cg.1min\" WHERE deliveryservice='" + which + "' and cachegroup != 'all' and $timeFilter GROUP BY time(60s), cachegroup",
               "rawQuery": true,
               "alias": "$tag_cachegroup"
             }

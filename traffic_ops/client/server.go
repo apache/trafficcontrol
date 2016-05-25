@@ -19,88 +19,107 @@ package client
 import (
 	"encoding/json"
 	"fmt"
+	"net/url"
 	"strings"
 )
 
+// ServerResponse ...
 type ServerResponse struct {
 	Version  string   `json:"version"`
 	Response []Server `json:"response"`
 }
 
+// Server ...
 type Server struct {
-	DomainName     string `json:"domainName"`
-	HostName       string `json:"hostName"`
-	Id             string `json:"id"`
-	IloIpAddress   string `json:"iloIpAddress"`
-	IloIpGateway   string `json:"iloIpGateway"`
-	IloIpNetmask   string `json:"iloIpNetmask"`
-	IloPassword    string `json:"iloPassword"`
-	IloUsername    string `json:"iloUsername"`
-	InterfaceMtu   string `json:"interfaceMtu"`
-	InterfaceName  string `json:"interfaceName"`
-	Ip6Address     string `json:"ip6Address"`
-	Ip6Gateway     string `json:"ip6Gateway"`
-	IpAddress      string `json:"ipAddress"`
-	IpGateway      string `json:"ipGateway"`
-	IpNetoask      string `json:"ipNetoask"`
+	DomainName    string `json:"domainName"`
+	HostName      string `json:"hostName"`
+	ID            string `json:"id"`
+	IloIPAddress  string `json:"iloIpAddress"`
+	IloIPGateway  string `json:"iloIpGateway"`
+	IloIPNetmask  string `json:"iloIpNetmask"`
+	IloPassword   string `json:"iloPassword"`
+	IloUsername   string `json:"iloUsername"`
+	InterfaceMtu  string `json:"interfaceMtu"`
+	InterfaceName string `json:"interfaceName"`
+	IP6Address    string `json:"ip6Address"`
+	IP6Gateway    string `json:"ip6Gateway"`
+	IPAddress     string `json:"ipAddress"`
+	IPGateway     string `json:"ipGateway"`
+	IPNetmask     string `json:"ipNetmask"`
+
 	LastUpdated    string `json:"lastUpdated"`
-	Location       string `json:"cachegroup"`
-	MgmtIpAddress  string `json:"mgmtIpAddress"`
-	MgmtIpGateway  string `json:"mgmtIpGateway"`
-	MgmtIpNetoask  string `json:"mgmtIpNetmask"`
+	Cachegroup     string `json:"cachegroup"`
+	MgmtIPAddress  string `json:"mgmtIpAddress"`
+	MgmtIPGateway  string `json:"mgmtIpGateway"`
+	MgmtIPNetmask  string `json:"mgmtIpNetmask"`
 	PhysLocation   string `json:"physLocation"`
 	Profile        string `json:"profile"`
-	CdnName        string `json:"cdnName"`
+	ProfileDesc    string `json:"profileDesc"`
+	CDNName        string `json:"cdnName"`
 	Rack           string `json:"rack"`
 	RouterHostName string `json:"routerHostName"`
 	RouterPortName string `json:"routerPortName"`
 	Status         string `json:"status"`
-	TcpPort        string `json:"tcpPort"`
+	TCPPort        string `json:"tcpPort"`
 	Type           string `json:"type"`
-	XmppId         string `json:"xmppId"`
-	XmppPasswd     string `json:"xmppPasswd"`
+	XMPPID         string `json:"xmppId"`
+	XMPPPasswd     string `json:"xmppPasswd"`
 }
 
-// Servers
-// Get an array of servers
+// Servers gets an array of servers
 func (to *Session) Servers() ([]Server, error) {
-	body, err := to.getBytes("/api/1.1/servers.json")
+	url := "/api/1.2/servers.json"
+	resp, err := to.request(url, nil)
 	if err != nil {
 		return nil, err
 	}
-	serverList, err := serverUnmarshall(body)
-	return serverList.Response, err
-}
+	defer resp.Body.Close()
 
-func serverUnmarshall(body []byte) (ServerResponse, error) {
 	var data ServerResponse
-	err := json.Unmarshal(body, &data)
-	return data, err
+	if err := json.NewDecoder(resp.Body).Decode(&data); err != nil {
+		return nil, err
+	}
+
+	return data.Response, nil
 }
 
-// ServersFqdn
-// Returns a the full domain name for the server short name passed in.
+// ServersByType gets an array of serves of a specified type.
+func (to *Session) ServersByType(qparams url.Values) ([]Server, error) {
+	url := fmt.Sprintf("/api/1.2/servers.json?%s", qparams.Encode())
+	resp, err := to.request(url, nil)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	var data ServerResponse
+	if err := json.NewDecoder(resp.Body).Decode(&data); err != nil {
+		return nil, err
+	}
+
+	return data.Response, nil
+}
+
+// ServersFqdn returns a the full domain name for the server short name passed in.
 func (to *Session) ServersFqdn(n string) (string, error) {
-	var fdn string
-	fdn = ""
+	fdn := ""
 	servers, err := to.Servers()
 	if err != nil {
 		return "Error", err
 	}
+
 	for _, server := range servers {
 		if server.HostName == n {
-			fdn = server.HostName + "." + server.DomainName
+			fdn = fmt.Sprintf("%s.%s", server.HostName, server.DomainName)
 		}
 	}
 	if fdn == "" {
 		return "Error", fmt.Errorf("No Server %s found", n)
-	} else {
-		return fdn, nil
 	}
+	return fdn, nil
 }
 
-// ShortNameSearch
-// Returns a slice of short server names that match a greedy match.
+// ServersShortNameSearch returns a slice of short server names that match a greedy match.
 func (to *Session) ServersShortNameSearch(shortname string) ([]string, error) {
 	var serverlst []string
 	servers, err := to.Servers()

@@ -16,8 +16,6 @@
 
 package com.comcast.cdn.traffic_control.traffic_router.core.loc;
 
-import java.io.BufferedInputStream;
-import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -27,6 +25,7 @@ import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 import java.util.Arrays;
 import java.util.Date;
@@ -35,9 +34,6 @@ import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.zip.GZIPInputStream;
 
-import org.apache.commons.compress.archivers.tar.TarArchiveEntry;
-import org.apache.commons.compress.archivers.tar.TarArchiveInputStream;
-import org.apache.commons.compress.compressors.gzip.GzipCompressorInputStream;
 import org.apache.commons.io.IOUtils;
 import org.apache.log4j.Logger;
 import org.apache.wicket.ajax.json.JSONException;
@@ -56,8 +52,7 @@ public abstract class AbstractServiceUpdater {
 	protected boolean loaded = false;
 	protected ScheduledFuture<?> scheduledService;
 	private TrafficRouterManager trafficRouterManager;
-	protected boolean untarDataFile;
-	protected File databasesDirectory;
+	protected Path databasesDirectory;
 
 	public void destroy() {
 		executorService.shutdownNow();
@@ -90,68 +85,80 @@ public abstract class AbstractServiceUpdater {
 	};
 
 	public void init() {
-		final long pi = getPollingInterval();
-		LOGGER.info("[" + getClass().getSimpleName() + "] Starting schedule with interval: " + pi + " : " + TimeUnit.MILLISECONDS);
-		scheduledService = executorService.scheduleWithFixedDelay(updater, pi, pi, TimeUnit.MILLISECONDS);
+		final long pollingInterval = getPollingInterval();
+		LOGGER.info("[" + getClass().getSimpleName() + "] Starting schedule with interval: " + pollingInterval + " : " + TimeUnit.MILLISECONDS);
+		scheduledService = executorService.scheduleWithFixedDelay(updater, pollingInterval, pollingInterval, TimeUnit.MILLISECONDS);
 	}
 
-	@SuppressWarnings("PMD.CyclomaticComplexity")
+	@SuppressWarnings({"PMD.CyclomaticComplexity", "PMD.NPathComplexity"})
 	public boolean updateDatabase() {
-		if (!databasesDirectory.exists() && !databasesDirectory.mkdirs()) {
-			LOGGER.error(databasesDirectory.getAbsolutePath() + " does not exist and cannot be created!");
-		}
-
-		final File existingDB = new File(databasesDirectory, databaseName);
-		File newDB = null;
 		try {
-			if (!isLoaded() || needsUpdating(existingDB)) {
-				boolean isModified = true;
-
-				try {
-					newDB = downloadDatabase(getDataBaseURL(), existingDB);
-					trafficRouterManager.trackEvent("last" + getClass().getSimpleName() + "Check");
-
-					// if the remote db's timestamp is less than or equal to ours, the above returns existingDB
-					if (newDB == existingDB) {
-						isModified = false;
-					}
-				} catch (Exception e) {
-					LOGGER.fatal("[" + getClass().getSimpleName() + "] Caught exception while attempting to download: " + getDataBaseURL(), e);
-
-					if (!isLoaded()) {
-						newDB = existingDB;
-					} else {
-						throw e;
-					}
-				}
-
-				if ((!isLoaded() || isModified) && newDB != null && newDB.exists()) {
-					if (!verifyDatabase(newDB)) {
-						LOGGER.warn("[" + getClass().getSimpleName() + "] " + newDB.getAbsolutePath() + " from " + getDataBaseURL() + " is invalid!");
-						return false;
-					}
-
-					final boolean isDifferent = copyDatabaseIfDifferent(existingDB, newDB);
-
-					if (!isLoaded() || isDifferent) {
-						loadDatabase();
-						setLoaded(true);
-						trafficRouterManager.trackEvent("last" + getClass().getSimpleName() + "Update");
-					} else if (isLoaded() && !isDifferent) {
-						newDB.delete();
-					}
-
-					return true;
-				} else {
-					return false;
-				}
-			} else {
-				LOGGER.info("[" + getClass().getSimpleName() + "] Location database does not require updating.");
+			if (!Files.exists(databasesDirectory)) {
+				Files.createDirectories(databasesDirectory);
 			}
-		} catch (final Exception e) {
-			LOGGER.error("[" + getClass().getSimpleName() + "] " + e.getMessage(), e);
+
+		} catch (IOException ex) {
+			LOGGER.error(databasesDirectory.toString() + " does not exist and cannot be created!");
+			return false;
 		}
-		return false;
+
+		if (!isLoaded()) {
+			try {
+				setLoaded(loadDatabase());
+			} catch (Exception e) {
+				LOGGER.error("Failed to load existing database! " + e.getMessage());
+				return false;
+			}
+		}
+
+		final File existingDB = databasesDirectory.resolve(databaseName).toFile();
+		File newDB;
+		if (!needsUpdating(existingDB)) {
+			LOGGER.info("[" + getClass().getSimpleName() + "] Location database does not require updating.");
+			return false;
+		}
+
+		boolean isModified = true;
+
+		try {
+			newDB = downloadDatabase(getDataBaseURL(), existingDB);
+			trafficRouterManager.trackEvent("last" + getClass().getSimpleName() + "Check");
+
+			// if the remote db's timestamp is less than or equal to ours, the above returns existingDB
+			if (newDB == existingDB) {
+				isModified = false;
+			}
+		} catch (Exception e) {
+			LOGGER.fatal("[" + getClass().getSimpleName() + "] Caught exception while attempting to download: " + getDataBaseURL(), e);
+			return false;
+		}
+
+		if (!isModified || newDB == null || !newDB.exists()) {
+			return false;
+		}
+
+		try {
+			if (!verifyDatabase(newDB)) {
+				LOGGER.warn("[" + getClass().getSimpleName() + "] " + newDB.getAbsolutePath() + " from " + getDataBaseURL() + " is invalid!");
+				return false;
+			}
+		} catch (Exception e) {
+			LOGGER.error("[" + getClass().getSimpleName() + "] Failed verifying database " + newDB.getAbsolutePath() + " : " + e.getMessage());
+			return false;
+		}
+
+		try {
+			if (copyDatabaseIfDifferent(existingDB, newDB)) {
+				setLoaded(loadDatabase());
+				trafficRouterManager.trackEvent("last" + getClass().getSimpleName() + "Update");
+			} else {
+				newDB.delete();
+			}
+		} catch (Exception e) {
+			LOGGER.error("[" + getClass().getSimpleName() + "] Failed copying and loading new database " + newDB.getAbsolutePath() + " : " + e.getMessage());
+		}
+
+		return true;
 	}
 
 	public boolean verifyDatabase(final File dbFile) throws IOException {
@@ -256,13 +263,13 @@ public abstract class AbstractServiceUpdater {
 
 	protected boolean copyDatabaseIfDifferent(final File existingDB, final File newDB) throws IOException {
 		if (filesEqual(existingDB, newDB)) {
-			LOGGER.info("[" + getClass().getSimpleName() + "] Location database unchanged.");
+			LOGGER.info("[" + getClass().getSimpleName() + "] database unchanged.");
 			return false;
 		}
 
 		if (existingDB.isDirectory() && newDB.isDirectory()) {
 			moveDirectory(existingDB, newDB);
-			LOGGER.info("[" + getClass().getSimpleName() + "] Successfully updated location database " + existingDB);
+			LOGGER.info("[" + getClass().getSimpleName() + "] Successfully updated database " + existingDB);
 			return true;
 		}
 
@@ -274,7 +281,7 @@ public abstract class AbstractServiceUpdater {
 				for (File file : existingDB.listFiles()) {
 					file.delete();
 				}
-				LOGGER.debug("[" + getClass().getSimpleName() + "] Successfully deleted location database under: " + existingDB);
+				LOGGER.debug("[" + getClass().getSimpleName() + "] Successfully deleted database under: " + existingDB);
 			} else {
 				existingDB.delete();
 			}
@@ -289,7 +296,7 @@ public abstract class AbstractServiceUpdater {
 			return false;
 		}
 
-		LOGGER.info("[" + getClass().getSimpleName() + "] Successfully updated location database " + existingDB);
+		LOGGER.info("[" + getClass().getSimpleName() + "] Successfully updated database " + existingDB);
 		return true;
 	}
 
@@ -326,7 +333,7 @@ public abstract class AbstractServiceUpdater {
 			return existingDb;
 		}
 
-		if (!untarDataFile && sourceCompressed) {
+		if (sourceCompressed) {
 			in = new GZIPInputStream(in);
 		}
 
@@ -337,52 +344,12 @@ public abstract class AbstractServiceUpdater {
 		IOUtils.closeQuietly(in);
 		IOUtils.closeQuietly(out);
 
-		if (!untarDataFile) {
-			return outputFile;
-		}
-
-		return untarFile(outputFile);
+		return outputFile;
 	}
 
 	private boolean useModifiedTimestamp(final File existingDb) {
 		return existingDb != null && existingDb.exists() && existingDb.lastModified() > 0
 				&& (!existingDb.isDirectory() || existingDb.listFiles().length > 0);
-	}
-
-	protected File untarFile(final File tarFile) throws IOException {
-		LOGGER.info("[" + getClass().getSimpleName() + "] Untarring file " + tarFile.getAbsolutePath());
-		final String destFolder = tarFile.getParentFile() + File.separator + "location_db";
-		final File dest = new File(destFolder);
-
-		dest.mkdir();
-
-		final TarArchiveInputStream tarIn = new TarArchiveInputStream(new GzipCompressorInputStream(new BufferedInputStream(new FileInputStream(tarFile))));
-		TarArchiveEntry tarEntry = tarIn.getNextTarEntry();
-		while (tarEntry != null) {
-			final File destPath = new File(dest, tarEntry.getName());
-
-			if (tarEntry.isDirectory()) {
-				destPath.mkdirs();
-			} else {
-				destPath.createNewFile();
-				final byte[] buffer = new byte[1024];
-				final BufferedOutputStream bout = new BufferedOutputStream(new FileOutputStream(destPath));
-				int bytesRead = tarIn.read(buffer);
-
-				while ( bytesRead  != -1) {
-					bout.write(buffer, 0, bytesRead);
-					bytesRead = tarIn.read(buffer);
-				}
-
-				bout.close();
-			}
-
-			tarEntry = tarIn.getNextTarEntry();
-		}
-
-		tarIn.close();
-		tarFile.delete();
-		return dest;
 	}
 
 	protected boolean needsUpdating(final File existingDB) {
@@ -404,19 +371,11 @@ public abstract class AbstractServiceUpdater {
 		this.trafficRouterManager = trafficRouterManager;
 	}
 
-	public boolean isUntarDataFile() {
-		return untarDataFile;
-	}
-
-	public void setUntarDataFile(final boolean untarDataFile) {
-		this.untarDataFile = untarDataFile;
-	}
-
-	public File getDatabasesDirectory() {
+	public Path getDatabasesDirectory() {
 		return databasesDirectory;
 	}
 
-	public void setDatabasesDirectory(final File databasesDirectory) {
+	public void setDatabasesDirectory(final Path databasesDirectory) {
 		this.databasesDirectory = databasesDirectory;
 	}
 }

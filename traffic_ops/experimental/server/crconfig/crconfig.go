@@ -16,13 +16,13 @@ package crconfig
 
 import (
 	"fmt"
+	"github.com/jmoiron/sqlx"
 	"gopkg.in/guregu/null.v3"
 	"log"
 	"reflect"
 	"strconv"
 	"strings"
 	"time"
-	"github.com/jmoiron/sqlx"
 )
 
 // Note: a lot of these structs are generated from the DB. No need to type them all out, there's tools for that.
@@ -239,7 +239,7 @@ type CrContentServer struct {
 	HostName      string      `db:"host_name" json:"hostName"`
 	Profile       string      `db:"profile" json:"profile"`
 	Type          string      `db:"type" json:"type"`
-	Location    string        `db:"location" json:"location"`
+	Location      string      `db:"location" json:"location"`
 	Ip            string      `db:"ip" json:"ip"`
 	Status        string      `db:"status" json:"status"`
 	CacheGroup    string      `db:"cache_group" json:"cacheGroup"`
@@ -282,7 +282,7 @@ type ContentServer struct {
 // where deliveryservice.type != (select id from type where name='ANY_MAP');
 type CrDeliveryserviceServer struct {
 	Pattern    string      `db:"pattern" json:"pattern"`
-	Name      string      `db:"name" json:"name"`
+	Name       string      `db:"name" json:"name"`
 	DsId       int64       `db:"ds_id" json:"id"`
 	SrvId      int64       `db:"srv_id" json:"srvId"`
 	ServerName string      `db:"server_name" json:"servername"`

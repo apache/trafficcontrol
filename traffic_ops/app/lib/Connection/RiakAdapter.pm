@@ -29,12 +29,14 @@ use File::Slurp;
 
 # This Perl Module was needed to better support SSL for the 'Vault'
 use LWP::UserAgent qw();
+use LWP::ConnCache;
 
 use constant RIAK_ROOT_URI => "riak";
 
 # The purpose of this class is to provide for an easy method
 # to 'mock' Riak calls.
 my $ua;
+my $conn_cache;
 my $riak_server;
 my $username;
 my $password;
@@ -53,6 +55,10 @@ sub new {
 	$ua = LWP::UserAgent->new();
 	$ua->timeout(20);
 	$ua->ssl_opts( verify_hostname => 0, SSL_verify_mode => 0x00 );
+	if (!defined $conn_cache) {
+	  $conn_cache = LWP::ConnCache->new( { total_capacity => 4096 } );
+	}
+	$ua->conn_cache($conn_cache);
 
 	return $self;
 }
