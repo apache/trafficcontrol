@@ -39,14 +39,14 @@ sub index {
 
 sub find_steering {
     my $self = shift;
-    my $steering_filter  = shift;;
+    my $steering_xml_id  = shift;
 
     my %steering;
 
     my $rs_data = $self->db->resultset('SteeringView')->search({}, {order_by => ['steering_xml_id', 'target_xml_id']});
 
     while ( my $row = $rs_data->next ) {
-        if ($steering_filter && $row->steering_xml_id ne $steering_filter) {
+        if ($steering_xml_id && $row->steering_xml_id ne $steering_xml_id) {
             next;
         }
 
@@ -62,17 +62,20 @@ sub find_steering {
 
         my $target_id = $row->target_id;
 
-        my $filters = [];
-        my $rs_filters = $self->db->resultset('RegexByDeliveryServiceList')->search({'ds_id' => $target_id, 'type' => "STEERING_REGEXP" });
-        while (my $r2 = $rs_filters->next) {
-            push(@$filters, {deliveryService => $row->target_xml_id, pattern => $r2->pattern});
-        }
-
         if (! exists($steering{$row->steering_xml_id})) {
             $steering{$row->steering_xml_id} = {"deliveryService" => $row->steering_xml_id};
         }
 
         my $steering_entry = $steering{$row->steering_xml_id};
+
+        if (! exists($steering_entry->{'filters'})) {
+            $steering_entry->{'filters'} = []
+        }
+
+        my $rs_filters = $self->db->resultset('RegexByDeliveryServiceList')->search({'ds_id' => $target_id, 'type' => "STEERING_REGEXP" }, {order_by =>'pattern'} );
+        while (my $r2 = $rs_filters->next) {
+            push(@{$steering_entry->{'filters'}}, {deliveryService => $row->target_xml_id, pattern => $r2->pattern});
+        }
 
         if (! exists($steering_entry->{"targets"})) {
             $steering_entry->{"targets"} = [];
@@ -85,17 +88,16 @@ sub find_steering {
             'weight' => $row->weight,
         });
 
-        $steering_entry->{"filters"} = $filters;
+    }
 
-        }
 
-    if ($steering_filter) {
+    if ($steering_xml_id) {
         my $steering_response = (values %steering)[0];
         if (!$steering_response) {
             return;
         }
 
-    return $steering_response;
+        return $steering_response;
     }
 
     my $response = [];
@@ -213,6 +215,12 @@ sub update() {
     }
 
     my $req_filters = $self->req->json->{'filters'};
+
+    foreach my $req_filter (@{$req_filters}) {
+        if (!exists($valid_targets->{$req_filter->{'deliveryService'}})) {
+            return $self->render(json => {}, status => 409);
+        }
+    }
 
     my $steering_regex_type = $self->db->resultset('Type')->find({name => "STEERING_REGEXP"})->id;
 
