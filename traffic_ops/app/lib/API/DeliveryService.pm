@@ -406,8 +406,8 @@ sub update_profileparameter {
 
 	&UI::DeliveryService::header_rewrite( $self, $ds_id, $profile_id, $params->{xmlId}, $params->{edgeHeaderRewrite}, "edge" );
 	&UI::DeliveryService::header_rewrite( $self, $ds_id, $profile_id, $params->{xmlId}, $params->{midHeaderRewrite},  "mid" );
-	&UI::DeliveryService::regex_remap( $self, $profile_id, $params->{xmlId}, $params->{regexRemap} );
-	&UI::DeliveryService::cacheurl( $self, $profile_id, $params->{xmlId}, $params->{cacheurl} );
+	&UI::DeliveryService::regex_remap( $self, $ds_id, $profile_id, $params->{xmlId}, $params->{regexRemap} );
+	&UI::DeliveryService::cacheurl( $self, $ds_id, $profile_id, $params->{xmlId}, $params->{cacheurl} );
 }
 
 sub create {
@@ -894,6 +894,12 @@ sub delete {
 	my $delete_re = $self->db->resultset('Regex')->search( { id => { -in => \@regexp_id_list } } );
 	$delete_re->delete();
 
+	my @cfg_prefixes = ("hdr_rw_", "hdr_rw_mid_", "regex_remap_", "cacheurl_");
+	foreach my $cfg_prefix (@cfg_prefixes) {
+		my $cfg_file = $cfg_prefix . $ds->xml_id . ".config";
+		&UI::DeliveryService::delete_cfg_file($self, $cfg_file);
+	}
+ 
 	&log( $self, "Delete deliveryservice with id: " . $id . " and name " . $dsname, " APICHANGE" );
 
 	return $self->success_message("Delivery service was deleted.");
