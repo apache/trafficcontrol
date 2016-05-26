@@ -33,9 +33,11 @@ print "$date\n";
 
 my $dispersion = 300;
 my $retries = 5;
+my $wait_for_parents = 1;
 
-GetOptions( "dispersion=i" => \$dispersion, # dispersion (in seconds)
-            "retries=i"    => \$retries );
+GetOptions( "dispersion=i"       => \$dispersion, # dispersion (in seconds)
+            "retries=i"          => \$retries,
+            "wait_for_parents=i" => \$wait_for_parents );
 
 if ( $#ARGV < 1 ) {
 	&usage();
@@ -239,7 +241,7 @@ if ( $script_mode != $REPORT ) {
 ####-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-####
 sub usage {
 	print "====-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-====\n";
-	print "Usage: ./traffic_ops_ort.pl <Mode> <Log_Level> <Traffic_Ops_URL> <Traffic_Ops_Login>\n";
+	print "Usage: ./traffic_ops_ort.pl <Mode> <Log_Level> <Traffic_Ops_URL> <Traffic_Ops_Login> [optional flags]\n";
 	print "\t<Mode> = interactive - asks questions during config process.\n";
 	print "\t<Mode> = report - prints config differences and exits.\n";
 	print "\t<Mode> = badass - attempts to fix all config differences that it can.\n";
@@ -250,6 +252,10 @@ sub usage {
 	print "\t<Traffic_Ops_URL> = URL to Traffic Ops host. Example: https://trafficops.company.net\n";
 	print "\n";
 	print "\t<Traffic_Ops_Login> => Example: 'username:password' \n";
+	print "\n\t[optional flags]:\n";
+	print "\t\tdispersion=<time>      => wait a random number between 0 and <time> before starting. Default = 300.\n";
+	print "\t\tretries=<number>       => retry connection to Traffic Ops URL <number> times. Default = 3.\n";
+	print "\t\twait_for_parents=<0|1> => do not update if parent_pending = 1 in the update json. Default = 1, wait for parents.\n"; 
 	print "====-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-====\n";
 	exit 1;
 }
@@ -609,7 +615,7 @@ sub check_syncds_state {
 					exit 1;
 				}
 			}
-			if ( $parent_pending == 1 ) {
+			if ( $parent_pending == 1 && $wait_for_parents == 1) {
 				( $log_level >> $ERROR ) && print "ERROR Traffic Ops is signaling that my parents need an update.\n";
 				if ( $script_mode == $SYNCDS ) {
 					if ( $dispersion > 0 ) {
@@ -642,7 +648,7 @@ sub check_syncds_state {
 				}
 			}
 			else {
-				( $log_level >> $DEBUG ) && print "DEBUG Traffic Ops is signaling that my parents do not need an update.\n";
+				( $log_level >> $DEBUG ) && print "DEBUG Traffic Ops is signaling that my parents do not need an update, or wait_for_parents == 0.\n";
 			}
 		}
 		elsif ( $script_mode == $SYNCDS && $upd_pending != 1 ) {
