@@ -43,9 +43,6 @@
 							<% unless (field('steering.target_id_1')->valid) { %>
 							<span class="field-with-error"><%= field('steering.target_id_1')->error %></span><br>
 							<% } %>
-							<% unless (field('steering.target_weight_1')->valid) { %>
-							<span class="field-with-error"><%= field('steering.target_weight_1')->error %></span><br>
-							<% } %>
 							%= label_for 'steering.target_name_1' => 'Target Name:', class => 'label', style=>"width:150px;"
 							<select style="max-width:250px" name="steering.target_id_1">
 								<% if (defined($steering->{target_name_1})) { %>
@@ -55,24 +52,9 @@
 								<option value="<%=$id%>"><%=$ds_data->{$id}%></option>
 								% }
 							</select>
-							%= label_for 'steering.target_weight_1' => 'Weight:', class => 'label', style=>"width:50px;margin-left: 25px;"
-							%= field('steering.target_weight_1')->text( class => 'field', id => 'target_weight_1', name => 'steering.target_weight_1', style=>"width:50px;");
 						</div><br>
-						<div class="block">
-							<h4>Steering Filters for <%=$steering->{target_name_1}%>:</h4>
-							<ul>
-								<% foreach my $target (@$target_filters{$steering->{target_id_1}}) { %>
-								<% foreach my $filter (@$target) { %>
-								<li style="list-style-type:none";><%= $filter %></li><br>
-								<% } %>
-								<% } %>
-							</ul>
-						</div><br><br>
 					</div>
 					<div>
-						<% unless (field('steering.target_weight_2')->valid) { %>
-						<span class="field-with-error"><%= field('steering.target_weight_2')->error %></span><br>
-						<% } %>
 						%= label_for 'steering.target_name_2' => 'Target Name:', class => 'label', style=>"width:150px;"
 						<select style="max-width:250px" name="steering.target_id_2">
 							<% if (defined($steering->{target_name_2})) { %>
@@ -82,18 +64,6 @@
 							<option value="<%=$id%>"><%=$ds_data->{$id}%></option>
 							% }
 						</select>
-						%= label_for 'steering.target_weight_2' => 'Weight:', class => 'label', style=>"width:50px;margin-left: 25px;"
-						%= field('steering.target_weight_2')->text( class => 'field', id => 'target_weight_2', name => 'steering.target_weight_2', style=>"width:50px;");
-					</div><br>
-					<div class="block">
-						<h4>Steering Filters for <%=$steering->{target_name_2}%>:</h4>
-						<ul>
-							<% foreach my $target (@$target_filters{$steering->{target_id_2}}) { %>
-							<% foreach my $filter (@$target) { %>
-							<li style="list-style-type:none";><%= $filter %></li><br>
-							<% } %>
-							<% } %>
-						</ul>
 					</div><br>
 					<div class="buttons-section" style="margin-bottom: 20px;">
 						<div style="margin-top: 25px; margin-left: 10px; position: relative; display: inline-block; float: left;">
