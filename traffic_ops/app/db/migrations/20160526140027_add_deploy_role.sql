@@ -5,4 +5,4 @@ insert into role (name, description, priv_level) select * from (select 'deploy',
 
 -- +goose Down
 -- SQL section 'Down' is executed when this migration is rolled back
-
+delete from role where name = 'deploy' and description = 'Deployment role' and priv_level = 15;
