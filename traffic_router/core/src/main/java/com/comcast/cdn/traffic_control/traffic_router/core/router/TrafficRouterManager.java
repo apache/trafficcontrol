@@ -21,8 +21,8 @@ import java.net.UnknownHostException;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
+import com.comcast.cdn.traffic_control.traffic_router.core.ds.SteeringRegistry;
 import com.comcast.cdn.traffic_control.traffic_router.core.loc.FederationRegistry;
-import org.apache.commons.pool.ObjectPool;
 import org.apache.log4j.Logger;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -45,12 +45,12 @@ public class TrafficRouterManager implements ApplicationListener<ContextRefreshe
 	private TrafficRouter trafficRouter;
 	private GeolocationService geolocationService;
 	private GeolocationService geolocationService6;
-	private ObjectPool hashFunctionPool;
 	private StatTracker statTracker;
 	private static final Map<String, Long> timeTracker = new ConcurrentHashMap<String, Long>();
 	private NameServer nameServer;
 	private TrafficOpsUtils trafficOpsUtils;
 	private FederationRegistry federationRegistry;
+	private SteeringRegistry steeringRegistry;
 	private ApplicationContext applicationContext;
 	private int apiPort = DEFAULT_API_PORT;
 
@@ -101,8 +101,8 @@ public class TrafficRouterManager implements ApplicationListener<ContextRefreshe
 			return;
 		}
 
-		final TrafficRouter tr = new TrafficRouter(cacheRegister, geolocationService, geolocationService6, hashFunctionPool, statTracker, trafficOpsUtils, federationRegistry);
-
+		final TrafficRouter tr = new TrafficRouter(cacheRegister, geolocationService, geolocationService6, statTracker, trafficOpsUtils, federationRegistry);
+		tr.setSteeringRegistry(steeringRegistry);
 		synchronized(this) {
 			if (state != null) {
 				try {
@@ -129,10 +129,6 @@ public class TrafficRouterManager implements ApplicationListener<ContextRefreshe
 		this.geolocationService6 = geolocationService;
 	}
 
-	public void setHashFunctionPool(final ObjectPool hashFunctionPool) {
-		this.hashFunctionPool = hashFunctionPool;
-	}
-
 	public void setStatTracker(final StatTracker statTracker) {
 		this.statTracker = statTracker;
 	}
@@ -143,6 +139,10 @@ public class TrafficRouterManager implements ApplicationListener<ContextRefreshe
 
 	public void setFederationRegistry(final FederationRegistry federationRegistry) {
 		this.federationRegistry = federationRegistry;
+	}
+
+	public void setSteeringRegistry(final SteeringRegistry steeringRegistry) {
+		this.steeringRegistry = steeringRegistry;
 	}
 
 	@Override

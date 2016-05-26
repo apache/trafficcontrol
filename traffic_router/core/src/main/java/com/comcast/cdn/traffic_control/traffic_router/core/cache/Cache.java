@@ -24,52 +24,30 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.SortedSet;
-import java.util.TreeSet;
 
+import com.comcast.cdn.traffic_control.traffic_router.core.hash.DefaultHashable;
+import com.comcast.cdn.traffic_control.traffic_router.core.hash.Hashable;
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.apache.log4j.Logger;
 import org.json.JSONObject;
 
 import com.comcast.cdn.traffic_control.traffic_router.core.config.ParseException;
-import com.comcast.cdn.traffic_control.traffic_router.core.hash.HashFunction;
-import com.comcast.cdn.traffic_control.traffic_router.core.hash.MD5HashFunction;
 
-public class Cache implements Comparable<Cache> {
+public class Cache implements Comparable<Cache>, Hashable<Cache> {
 	private static final Logger LOGGER = Logger.getLogger(Cache.class);
 	private static final int REPLICAS = 1000;
 
-	/*
-	 * Configuration Attributes
-	 */
 	private final String id;
 	private String fqdn;
 	private List<InetRecord> ipAddresses;
 	private int port;
 	private final Map<String, DeliveryServiceReference> deliveryServices = new HashMap<String, DeliveryServiceReference>();
-	private final List<Double> hashValues;
+	private final Hashable hashable = new DefaultHashable();
 
-	final private int replicas;
-
-	/**
-	 * Creates a new {@link Cache}.
-	 * 
-	 * @param id
-	 *            the id of the new cache
-	 * @param hashCount 
-	 */
 	public Cache(final String id, final String hashId, final int hashCount) {
 		this.id = id;
-
-		final SortedSet<Double> sorter = new TreeSet<Double>();
-		final HashFunction hash = new MD5HashFunction();
-		replicas = (hashCount==0)? REPLICAS : hashCount;
-		for (int i = 0; i < replicas; i++) {
-			sorter.add(hash.hash(hashId + "--" + i));
-			// hashValues.add(hash.hash(id + i));
-		}
-		hashValues = new ArrayList<Double>(sorter);
+		hashable.generateHashes(hashId, hashCount > 0 ? hashCount : REPLICAS);
 	}
 
 	@Override
@@ -97,44 +75,6 @@ public class Cache implements Comparable<Cache> {
 
 	public String getFqdn() {
 		return fqdn;
-	}
-
-	public List<Double> getHashValues() {
-		return hashValues;
-	}
-
-	public double getClosestHash(final double hash) {
-		// assume hashValues sorted
-		int hi = hashValues.size() -1;
-		int lo = 0;
-		int i = (hi-lo)/2;
-
-		// you can tell a match if it's closer to hash than it's neighbors 
-		for(int j = 0; j < replicas; j++) { // j is just for an escape hatch, should be found O(log(REPLICAS))
-			final int r = match(hashValues, i, hash);
-			if(r==0) {
-				return hashValues.get(i);
-			}
-			if(r < 0) {
-				hi = i-1;
-			} else {
-				lo = i+1;
-			}
-			i = (hi+lo)/2;
-		}
-		return 0;
-	}
-
-	private int match(final List<Double> a, final int i, final double hash) {
-		// you can tell a match if it's closer to hash than it's neighbors 
-		final double v = a.get(i).doubleValue();
-		if(i+1 < a.size() && Math.abs(hash - a.get(i+1).doubleValue() ) < Math.abs(hash-v)) {
-			return 1; // closer to hi neighbor
-		}
-		if(i-1 >= 0 && Math.abs(hash - a.get(i-1).doubleValue() ) < Math.abs(hash-v)) {
-			return -1; // closer to lo neighbor
-		}
-		return 0; // match!
 	}
 
 	public String getId() {
@@ -170,14 +110,6 @@ public class Cache implements Comparable<Cache> {
 		}
 		return ret;
 	}
-
-//	static Resolver resolver = new Resolver();
-//	private static Resolver getResolver() {
-//		return resolver;
-//	}
-//	public static void setResolver(final Resolver r) {
-//		resolver = r;
-//	}
 
 	public int getPort() {
 		return port;
@@ -216,13 +148,6 @@ public class Cache implements Comparable<Cache> {
 	public String toString() {
 		return "Cache [id=" + id + "] ";
 	}
-
-	/**
-	 * Status enumeration for administratively reported status.
-	 */
-//	public enum AdminStatus {
-//		ONLINE, OFFLINE, REPORTED, ADMIN_DOWN
-//	}
 
 	/**
 	 * Contains a reference to a DeliveryService ID and the FQDN that should be used if this Cache
@@ -295,5 +220,21 @@ public class Cache implements Comparable<Cache> {
 			isAvailable = state.optBoolean("isAvailable");
 		}
 		this.setIsAvailable(isAvailable);
+	}
+
+	@Override
+	public Hashable<Cache> generateHashes(final String hashId, final int hashCount) {
+		hashable.generateHashes(hashId, hashCount);
+		return this;
+	}
+
+	@Override
+	public double getClosestHash(final double hash) {
+		return hashable.getClosestHash(hash);
+	}
+
+	@Override
+	public List<Double> getHashValues() {
+		return hashable.getHashValues();
 	}
 }

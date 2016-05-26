@@ -28,8 +28,8 @@ public class CacheLocationComparatorTest {
     @Test
     public void testCompareBothLocEqual() {
         final CacheLocationComparator comparator = new CacheLocationComparator(new Geolocation(1f, 1f));
-        final CacheLocation loc1 = new CacheLocation("loc1", null, new Geolocation(0f, 0f));
-        final CacheLocation loc2 = new CacheLocation("loc2", null, new Geolocation(0f, 0f));
+        final CacheLocation loc1 = new CacheLocation("loc1", new Geolocation(0f, 0f));
+        final CacheLocation loc2 = new CacheLocation("loc2", new Geolocation(0f, 0f));
 
         assertEquals(0, comparator.compare(loc1, loc2));
         assertEquals(0, comparator.compare(loc2, loc1));
@@ -38,8 +38,8 @@ public class CacheLocationComparatorTest {
     @Test
     public void testCompareBothLocNull() {
         final CacheLocationComparator comparator = new CacheLocationComparator(new Geolocation(1f, 1f));
-        final CacheLocation loc1 = new CacheLocation("loc1", null, null);
-        final CacheLocation loc2 = new CacheLocation("loc2", null, null);
+        final CacheLocation loc1 = new CacheLocation("loc1", null);
+        final CacheLocation loc2 = new CacheLocation("loc2", null);
 
         assertEquals(0, comparator.compare(loc1, loc2));
         assertEquals(0, comparator.compare(loc2, loc1));
@@ -48,8 +48,8 @@ public class CacheLocationComparatorTest {
     @Test
     public void testCompareLocsDifferent() {
         final CacheLocationComparator comparator = new CacheLocationComparator(new Geolocation(1f, 1f));
-        final CacheLocation loc1 = new CacheLocation("loc1", null, new Geolocation(1f, 1f));
-        final CacheLocation loc2 = new CacheLocation("loc2", null, new Geolocation(0f, 0f));
+        final CacheLocation loc1 = new CacheLocation("loc1", new Geolocation(1f, 1f));
+        final CacheLocation loc2 = new CacheLocation("loc2", new Geolocation(0f, 0f));
 
         assertEquals(-1, comparator.compare(loc1, loc2));
         assertEquals(1, comparator.compare(loc2, loc1));
@@ -58,8 +58,8 @@ public class CacheLocationComparatorTest {
     @Test
     public void testCompareOneLocNull() {
         final CacheLocationComparator comparator = new CacheLocationComparator(new Geolocation(1f, 1f));
-        final CacheLocation loc1 = new CacheLocation("loc1", null, new Geolocation(0f, 0f));
-        final CacheLocation loc2 = new CacheLocation("loc2", null, null);
+        final CacheLocation loc1 = new CacheLocation("loc1", new Geolocation(0f, 0f));
+        final CacheLocation loc2 = new CacheLocation("loc2", null);
 
         assertEquals(-1, comparator.compare(loc1, loc2));
         assertEquals(1, comparator.compare(loc2, loc1));

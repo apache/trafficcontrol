@@ -47,16 +47,22 @@ public class LocationController {
 	@RequestMapping(value = "", method = RequestMethod.GET)
 	public @ResponseBody
 	Map<String,List<String>> getLocations() {
-		final Map locations = new HashMap();
+		final Map<String, List<String >> locations = new HashMap<String, List<String>>();
 		locations.put("locations", dataExporter.getLocations());
 		return locations;
 	}
 
 	@RequestMapping(value = "/caches", method = RequestMethod.GET)
 	public @ResponseBody
-	Map<String,List<CacheModel>> getCaches() {
-		final Map caches = new HashMap();
-		caches.put("locations", dataExporter.getCaches());
-		return caches;
+	Map<String,Map<String, List<CacheModel>>> getCaches() {
+		final Map<String, Map<String, List<CacheModel>>> map = new HashMap<String, Map<String, List<CacheModel>>>();
+		final Map<String, List<CacheModel>> innerMap = new HashMap<String, List<CacheModel>>();
+
+		for (String location : dataExporter.getLocations()) {
+			innerMap.put(location, dataExporter.getCaches(location));
+		}
+
+		map.put("locations", innerMap);
+		return map;
 	}
 }
