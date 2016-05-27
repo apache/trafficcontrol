@@ -517,7 +517,7 @@ sub api_routes {
 	# -- PARAMETER #NEW
 	# Supports ?orderby=key
 	$r->get( "/api/$version/parameters" => [ format => [qw(json)] ] )->over( authenticated => 1 )->to( 'Parameter#index', namespace => $namespace );
-	$r->get( "/api/$version/parameters/profile/:name" => [ format => [qw(json)] ] )->over( authenticated => 1 )
+	$r->get( "/api/$version/parameters/profile/#name" )->over( authenticated => 1 )
 		->to( 'Parameter#profile', namespace => $namespace );
 
 	# -- PHYS_LOCATION #NEW
