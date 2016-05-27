@@ -21,6 +21,7 @@ import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.catalina.LifecycleException;
+import org.apache.http.Header;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.impl.client.CloseableHttpClient;
@@ -31,41 +32,90 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
-import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
+import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.List;
 
 import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.CoreMatchers.nullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.isIn;
 import static org.hamcrest.core.IsEqual.equalTo;
 import static org.hamcrest.core.IsNot.not;
+import static org.junit.Assert.fail;
 
 @Category(ExternalTest.class)
 public class RouterTest {
 	private CloseableHttpClient httpClient;
 	private String deliveryServiceId;
+	private String deliveryServiceDomain;
+	private List<String> validLocations = new ArrayList<>();
 
 	@Before
 	public void before() throws IOException, InterruptedException, LifecycleException {
 		ObjectMapper objectMapper = new ObjectMapper(new JsonFactory());
 
-		JsonNode jsonNode = objectMapper.readTree(new File("src/test/db/cr-config.json"));
+		String resourcePath = "internal/api/1.2/steering.json";
+		InputStream inputStream = getClass().getClassLoader().getResourceAsStream(resourcePath);
+
+		if (inputStream == null) {
+			fail("Could not find file '" + resourcePath + "' needed for test from the current classpath as a resource!");
+		}
+
+		JsonNode steeringNode = objectMapper.readTree(inputStream).get("response").get(0);
+
+		String steeringDeliveryServiceId = steeringNode.get("deliveryService").asText();
+
+		resourcePath = "publish/CrConfig.json";
+		inputStream = getClass().getClassLoader().getResourceAsStream(resourcePath);
+		if (inputStream == null) {
+			fail("Could not find file '" + resourcePath + "' needed for test from the current classpath as a resource!");
+		}
+
+		JsonNode jsonNode = objectMapper.readTree(inputStream);
 
 		deliveryServiceId = null;
 
 		Iterator<String> deliveryServices = jsonNode.get("deliveryServices").fieldNames();
 		while (deliveryServices.hasNext()) {
 			String dsId = deliveryServices.next();
-			Iterator<JsonNode> matchsets = jsonNode.get("deliveryServices").get(dsId).get("matchsets").iterator();
+
+			if (dsId.equals(steeringDeliveryServiceId)) {
+				continue;
+			}
+
+			JsonNode deliveryServiceNode = jsonNode.get("deliveryServices").get(dsId);
+			Iterator<JsonNode> matchsets = deliveryServiceNode.get("matchsets").iterator();
 			while (matchsets.hasNext() && deliveryServiceId == null) {
 				if ("HTTP".equals(matchsets.next().get("protocol").asText())) {
 					deliveryServiceId = dsId;
 				}
+				deliveryServiceDomain = deliveryServiceNode.get("domains").get(0).asText();
 			}
 		}
 
 		assertThat(deliveryServiceId, not(nullValue()));
+		assertThat(deliveryServiceDomain, not(nullValue()));
+
+		Iterator<String> cacheIds = jsonNode.get("contentServers").fieldNames();
+		while (cacheIds.hasNext()) {
+			String cacheId = cacheIds.next();
+			JsonNode cacheNode = jsonNode.get("contentServers").get(cacheId);
+
+			if (!cacheNode.has("deliveryServices")) {
+				continue;
+			}
+
+			if (cacheNode.get("deliveryServices").has(deliveryServiceId)) {
+				int port = cacheNode.get("port").asInt();
+				String portText = (port == 80) ? "" : ":" + port;
+				validLocations.add("http://" + cacheId + "." + deliveryServiceDomain + portText + "/stuff?fakeClientIpAddress=12.34.56.78");
+			}
+		}
+
+		assertThat(validLocations.isEmpty(), equalTo(false));
 
 		httpClient = HttpClientBuilder.create().disableRedirectHandling().build();
 	}
@@ -90,19 +140,15 @@ public class RouterTest {
 
 	@Test
 	public void itRedirectsValidRequests() throws IOException, InterruptedException {
-		// Traffic Router will give us a 503 until it is ready to route
-		// It also gives us a 503 when we don't make a valid routing request
-		// The following request though *SHOULD* work so try and do this request multiple times
-		// until we get a 302 to determine that all the application context is finished before
-		// starting tests
-
 		HttpGet httpGet = new HttpGet("http://localhost:8888/stuff?fakeClientIpAddress=12.34.56.78");
-		httpGet.addHeader("Host", "foo." + deliveryServiceId + ".bar");
+		httpGet.addHeader("Host", "tr." + deliveryServiceId + ".bar");
 		CloseableHttpResponse response = null;
 
 		try {
 			response = httpClient.execute(httpGet);
 			assertThat(response.getStatusLine().getStatusCode(), equalTo(302));
+			Header header = response.getFirstHeader("Location");
+			assertThat(header.getValue(), isIn(validLocations));
 		} finally {
 			if (response != null) response.close();
 		}
@@ -117,6 +163,29 @@ public class RouterTest {
 		try {
 			response = httpClient.execute(httpGet);
 			assertThat(response.getStatusLine().getStatusCode(), equalTo(302));
+		} finally {
+			if (response != null) response.close();
+		}
+	}
+
+	@Test
+	public void itConsistentlyRedirectsValidRequests() throws IOException, InterruptedException {
+		HttpGet httpGet = new HttpGet("http://localhost:8888/stuff?fakeClientIpAddress=12.34.56.78");
+		httpGet.addHeader("Host", "tr." + deliveryServiceId + ".bar");
+		CloseableHttpResponse response = null;
+
+		try {
+			response = httpClient.execute(httpGet);
+			assertThat(response.getStatusLine().getStatusCode(), equalTo(302));
+			String location = response.getFirstHeader("Location").getValue();
+
+			response.close();
+
+			for (int i = 0; i < 100; i++) {
+				response = httpClient.execute(httpGet);
+				assertThat(response.getFirstHeader("Location").getValue(), equalTo(location));
+				response.close();
+			}
 		} finally {
 			if (response != null) response.close();
 		}

@@ -127,6 +127,22 @@ ok $t->post_ok('/api/1.2/servers/9999/queue_update' =>  {Accept => 'application/
     ->status_is(400)->or( sub { diag $t->tx->res->content->asset->{content}; } )
             , 'Does the queue_update api return?';
 
+ok $t->delete_ok('/api/1.2/servers/' . $svr_id)
+    ->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } )
+    ->json_is( "/alerts/0/level", "success" )
+    ->json_is( "/alerts/0/text", "Server was deleted." )
+            , "Is the server id valid?";
+
+ok $t->delete_ok('/api/1.2/servers/' . $svr_id)
+    ->status_is(404)->or( sub { diag $t->tx->res->content->asset->{content}; } );
+
+ok $t->put_ok('/api/1.2/servers/' . $svr_id  => {Accept => 'application/json'} => json => {
+        "host_name" => "tc1_ats1",
+        "domain_name" => "northbound.com",
+        "ip_address" => "10.74.27.185",
+        "phys_location" => "HotAtlanta" })
+    ->status_is(400)->or( sub { diag $t->tx->res->content->asset->{content}; } );
+
 
 ok $t->get_ok('/logout')->status_is(302)->or( sub { diag $t->tx->res->content->asset->{content}; } );
 $dbh->disconnect();

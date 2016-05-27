@@ -47,14 +47,13 @@ sub init {
 }
 
 sub init_hostname {
-        my $fqdn = `/bin/hostname -f`; chomp($fqdn);
-        my ($hostname, $domainname) = split(/\./, $fqdn, 2);
-        if (!defined($hostname) || !defined($domainname)) {
-                die("FATAL: Unable to determine host and domain name; please ensure this machine properly configured with FQDN.");
-        }
-
-        $global->{'host_name'} = $hostname;
-        $global->{'domain_name'} = $domainname;
+	my $fqdn = `/bin/hostname -f`; chomp($fqdn);
+	my ($hostname, undef) = split(/\./, $fqdn, 2);
+	if (!defined($hostname)) {
+		die("FATAL: Unable to determine host name; please ensure this machine properly configured with FQDN.");
+	}
+	$global->{'host_name'} = $hostname;
+	print "DEBUG: Found hostname: " . $hostname . "\n";
 }
 
 sub init_time {

@@ -22,6 +22,9 @@ import com.comcast.cdn.traffic_control.traffic_router.core.cache.CacheRegister;
 import com.comcast.cdn.traffic_control.traffic_router.core.cache.InetRecord;
 import com.comcast.cdn.traffic_control.traffic_router.core.ds.DeliveryService;
 import com.comcast.cdn.traffic_control.traffic_router.core.ds.Dispersion;
+import com.comcast.cdn.traffic_control.traffic_router.core.ds.SteeringRegistry;
+import com.comcast.cdn.traffic_control.traffic_router.core.hash.ConsistentHasher;
+import com.comcast.cdn.traffic_control.traffic_router.core.hash.MD5HashFunction;
 import com.comcast.cdn.traffic_control.traffic_router.core.loc.FederationRegistry;
 import com.comcast.cdn.traffic_control.traffic_router.geolocation.Geolocation;
 import com.comcast.cdn.traffic_control.traffic_router.core.request.DNSRequest;
@@ -36,7 +39,9 @@ import org.xbill.DNS.Type;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsInAnyOrder;
@@ -44,19 +49,25 @@ import static org.hamcrest.Matchers.equalTo;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyBoolean;
 import static org.mockito.Matchers.anyString;
+import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static org.powermock.reflect.Whitebox.setInternalState;
 
 public class TrafficRouterTest {
-
+    MD5HashFunction hashFunction;
+    ConsistentHasher consistentHasher;
     private TrafficRouter trafficRouter;
+
     private DeliveryService deliveryService;
     private FederationRegistry federationRegistry;
 
     @Before
     public void before() throws Exception {
+        hashFunction = new MD5HashFunction();
+        consistentHasher = new ConsistentHasher();
         deliveryService = mock(DeliveryService.class);
         when(deliveryService.isAvailable()).thenReturn(true);
         when(deliveryService.isCoverageZoneOnly()).thenReturn(false);
@@ -71,12 +82,23 @@ public class TrafficRouterTest {
         federationRegistry = mock(FederationRegistry.class);
         when(federationRegistry.findInetRecords(anyString(), any(CidrAddress.class))).thenReturn(inetRecords);
 
+        Whitebox.setInternalState(consistentHasher, "hashFunction", hashFunction);
+
         trafficRouter = mock(TrafficRouter.class);
-        Whitebox.setInternalState(trafficRouter, "federationRegistry", federationRegistry);
+
+        CacheRegister cacheRegister = mock(CacheRegister.class);
+        when(cacheRegister.getDeliveryService(any(HTTPRequest.class), eq(true))).thenReturn(deliveryService);
+
+        setInternalState(trafficRouter, "cacheRegister", cacheRegister);
+        setInternalState(trafficRouter, "federationRegistry", federationRegistry);
+        setInternalState(trafficRouter, "consistentHasher", consistentHasher);
+        setInternalState(trafficRouter, "steeringRegistry", mock(SteeringRegistry.class));
+
 
         when(trafficRouter.route(any(DNSRequest.class), any(Track.class))).thenCallRealMethod();
         when(trafficRouter.route(any(HTTPRequest.class), any(Track.class))).thenCallRealMethod();
         when(trafficRouter.selectDeliveryService(any(Request.class), anyBoolean())).thenReturn(deliveryService);
+        when(trafficRouter.consistentHashDeliveryService(any(DeliveryService.class), anyString(), anyString())).thenCallRealMethod();
     }
 
     @Test
@@ -101,6 +123,31 @@ public class TrafficRouterTest {
 
         Track track = spy(StatTracker.getTrack());
 
+        Cache cache = mock(Cache.class);
+        when(cache.hasDeliveryService(anyString())).thenReturn(true);
+        CacheLocation cacheLocation = new CacheLocation("", new Geolocation(50,50));
+
+        cacheLocation.addCache(cache);
+
+        Set<CacheLocation> cacheLocationCollection = new HashSet<CacheLocation>();
+        cacheLocationCollection.add(cacheLocation);
+
+        CacheRegister cacheRegister = mock(CacheRegister.class);
+        when(cacheRegister.getCacheLocations()).thenReturn(cacheLocationCollection);
+
+        when(deliveryService.filterAvailableLocations(any(Collection.class))).thenCallRealMethod();
+        when(deliveryService.isLocationAvailable(cacheLocation)).thenReturn(true);
+
+
+        List<Cache> caches = new ArrayList<Cache>();
+        caches.add(cache);
+        when(trafficRouter.selectCaches(any(Request.class), any(DeliveryService.class), any(Track.class))).thenReturn(caches);
+        when(trafficRouter.selectCachesByGeo(anyString(), any(DeliveryService.class), any(CacheLocation.class), any(Track.class))).thenCallRealMethod();
+        when(trafficRouter.getClientLocation(anyString(), any(DeliveryService.class), any(CacheLocation.class), any(Track.class))).thenReturn(new Geolocation(40, -100));
+        when(trafficRouter.getCachesByGeo(any(DeliveryService.class), any(Geolocation.class), any(Track.class))).thenCallRealMethod();
+        when(trafficRouter.getCacheRegister()).thenReturn(cacheRegister);
+        when(trafficRouter.orderCacheLocations(any(List.class), any(Geolocation.class))).thenCallRealMethod();
+
         HTTPRouteResult httpRouteResult = trafficRouter.route(httpRequest, track);
 
         assertThat(httpRouteResult.getUrl().toString(), equalTo("http://atscache.kabletown.net/index.html"));
@@ -110,32 +157,34 @@ public class TrafficRouterTest {
     public void itSetsResultToGeo() throws Exception {
         Cache cache = mock(Cache.class);
         when(cache.hasDeliveryService(anyString())).thenReturn(true);
-        CacheLocation cacheLocation = new CacheLocation("", "some-zone-id", new Geolocation(50,50));
+        CacheLocation cacheLocation = new CacheLocation("", new Geolocation(50,50));
 
         cacheLocation.addCache(cache);
 
-        Collection<CacheLocation> cacheLocationCollection = new ArrayList<CacheLocation>();
+        Set<CacheLocation> cacheLocationCollection = new HashSet<CacheLocation>();
         cacheLocationCollection.add(cacheLocation);
 
         CacheRegister cacheRegister = mock(CacheRegister.class);
-        when(cacheRegister.getCacheLocations(null)).thenReturn(cacheLocationCollection);
+        when(cacheRegister.getCacheLocations()).thenReturn(cacheLocationCollection);
 
         when(trafficRouter.getCacheRegister()).thenReturn(cacheRegister);
         when(deliveryService.isLocationAvailable(cacheLocation)).thenReturn(true);
+        when(deliveryService.filterAvailableLocations(any(Collection.class))).thenCallRealMethod();
 
-        when(trafficRouter.selectCache(any(Request.class), any(DeliveryService.class), any(Track.class))).thenCallRealMethod();
-        when(trafficRouter.selectCachesByGeo(any(Request.class), any(DeliveryService.class), any(CacheLocation.class), any(Track.class))).thenCallRealMethod();
+        when(trafficRouter.selectCaches(any(Request.class), any(DeliveryService.class), any(Track.class))).thenCallRealMethod();
+        when(trafficRouter.selectCachesByGeo(anyString(), any(DeliveryService.class), any(CacheLocation.class), any(Track.class))).thenCallRealMethod();
 
         Geolocation clientLocation = new Geolocation(40, -100);
-        when(trafficRouter.getClientLocation(any(Request.class), any(DeliveryService.class), any(CacheLocation.class), any(Track.class))).thenReturn(clientLocation);
+        when(trafficRouter.getClientLocation(anyString(), any(DeliveryService.class), any(CacheLocation.class), any(Track.class))).thenReturn(clientLocation);
 
-        when(trafficRouter.getCachesByGeo(any(Request.class), any(DeliveryService.class), any(Geolocation.class), any(Track.class))).thenCallRealMethod();
-        when(trafficRouter.orderCacheLocations(any(Collection.class), any(DeliveryService.class), any(Geolocation.class))).thenCallRealMethod();
+        when(trafficRouter.getCachesByGeo(any(DeliveryService.class), any(Geolocation.class), any(Track.class))).thenCallRealMethod();
+        when(trafficRouter.orderCacheLocations(any(List.class), any(Geolocation.class))).thenCallRealMethod();
         when(trafficRouter.getSupportingCaches(any(List.class), any(DeliveryService.class))).thenCallRealMethod();
 
         HTTPRequest httpRequest = new HTTPRequest();
         httpRequest.setClientIP("192.168.10.11");
         httpRequest.setHostname("ccr.example.com");
+        httpRequest.setPath("/some/path");
 
         Track track = spy(StatTracker.getTrack());
 
