@@ -16,7 +16,10 @@
 
 package client
 
-import "encoding/json"
+import (
+	"encoding/json"
+	"errors"
+)
 
 // TypeResponse ...
 type TypeResponse struct {
@@ -28,10 +31,17 @@ type TypeResponse struct {
 type Type struct {
 	Name        string `json:"name,omitempty"`
 	Description string `json:"description,omitempty"`
+	UseInTable  string `json:"useInTable,omitempt"`
 }
 
 // Types gets an array of Types.
-func (to *Session) Types() ([]Type, error) {
+// optional parameter: userInTable
+func (to *Session) Types(useInTable ...string) ([]Type, error) {
+
+	if len(useInTable) > 1 {
+		return nil, errors.New("Please pass in a single value for the 'useInTable' parameter")
+	}
+
 	url := "/api/1.2/types.json"
 	resp, err := to.request(url, nil)
 	if err != nil {
@@ -43,5 +53,16 @@ func (to *Session) Types() ([]Type, error) {
 		return nil, err
 	}
 
-	return data.Response, nil
+	var types []Type
+	for _, d := range data.Response {
+		if useInTable != nil {
+			if d.UseInTable == useInTable[0] {
+				types = append(types, d)
+			}
+		} else {
+			types = append(types, d)
+		}
+	}
+
+	return types, nil
 }
