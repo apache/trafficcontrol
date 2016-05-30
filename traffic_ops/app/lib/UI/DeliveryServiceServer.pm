@@ -180,6 +180,8 @@ sub clone_server {
 
 		my $ds = $self->db->resultset('Deliveryservice')->search( { id => $ds } )->single();
 		&UI::DeliveryService::header_rewrite( $self, $ds->id, $ds->profile, $ds->xml_id, $ds->edge_header_rewrite, "edge" );
+		&UI::DeliveryService::regex_remap( $self, $ds->id, $ds->profile, $ds->xml_id, $ds->regex_remap );
+	        &UI::DeliveryService::cacheurl( $self, $ds->id, $ds->profile, $ds->xml_id, $ds->cacheurl );
 
 	}
 
@@ -222,6 +224,8 @@ sub assign_servers {
 
 	my $ds = $self->db->resultset('Deliveryservice')->search( { id => $dsid } )->single();
 	&UI::DeliveryService::header_rewrite( $self, $ds->id, $ds->profile, $ds->xml_id, $ds->edge_header_rewrite, "edge" );
+        &UI::DeliveryService::regex_remap( $self, $ds->id, $ds->profile, $ds->xml_id, $ds->regex_remap );
+        &UI::DeliveryService::cacheurl( $self, $ds->id, $ds->profile, $ds->xml_id, $ds->cacheurl );
 
 	&log( $self, "Link deliveryservice " . $ds->xml_id . " to " . $numlinks . " servers", "UICHANGE" );
 

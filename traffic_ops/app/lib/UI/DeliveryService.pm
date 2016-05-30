@@ -1054,7 +1054,7 @@ sub create {
 		my $type = $self->db->resultset('Type')->search( { id => $self->paramAsScalar('ds.type') } )->get_column('name')->single();
 		$self->header_rewrite( $new_id, $self->param('ds.profile'), $self->param('ds.xml_id'), $self->param('ds.edge_header_rewrite'), "edge", $type );
 		$self->header_rewrite( $new_id, $self->param('ds.profile'), $self->param('ds.xml_id'), $self->param('ds.mid_header_rewrite'),  "mid", $type );
-		$self->regex_remap( $self->param('ds.profile'), $self->param('ds.xml_id'), $self->param('ds.regex_remap') );
+		$self->regex_remap( $new_id, $self->param('ds.profile'), $self->param('ds.xml_id'), $self->param('ds.regex_remap') );
 		$self->cacheurl( $new_id, $self->param('ds.profile'), $self->param('ds.xml_id'), $self->param('ds.cacheurl') );
 
 		##create dnssec keys for the new DS if DNSSEC is enabled for the CDN
