@@ -151,7 +151,7 @@ public class DeliveryServiceStateRegistry extends StateRegistry<DsState> {
 		return dsStati;
 	}
 
-	private long getLastGoodIndex(final Deque<DataPoint> dataPoints, final long targetIndex) {
+	public long getLastGoodIndex(final Deque<DataPoint> dataPoints, final long targetIndex) {
 		if (targetIndex < 0) {
 			return -1;
 		}
