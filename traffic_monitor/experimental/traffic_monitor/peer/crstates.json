@@ -1,0 +1,16 @@
+{
+  "caches": {
+    "ats-edge-cache-0": {"isAvailable": true},
+    "ats-edge-cache-1": {"isAvailable": false}
+  },
+  "deliveryServices": {
+    "delivery-service-0": {
+      "disabledLocations": [],
+      "isAvailable": true
+    },
+    "delivery-service-1": {
+      "disabledLocations": [],
+      "isAvailable": true
+    }
+  }
+}
