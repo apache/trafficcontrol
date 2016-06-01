@@ -228,9 +228,9 @@ func Start(opsConfigFile string) {
 					}
 				}
 
-				url := monitorConfig.Profile[srv.Profile].Parameters.HealthPollingUrl
+				url := monitorConfig.Profile[srv.Profile].Parameters.HealthPollingURL
 				r := strings.NewReplacer(
-					"${hostname}", srv.Fqdn,
+					"${hostname}", srv.FQDN,
 					"${interface_name}", srv.InterfaceName,
 					"application=system", "application=plugin.remap",
 					"application=", "application=plugin.remap",
@@ -247,7 +247,7 @@ func Start(opsConfigFile string) {
 					continue
 				}
 				// TODO: the URL should be config driven. -jse
-				url := fmt.Sprintf("http://%s:%d/publish/CrStates?raw", srv.Ip, srv.Port)
+				url := fmt.Sprintf("http://%s:%d/publish/CrStates?raw", srv.IP, srv.Port)
 				peerUrls[srv.HostName] = url
 			}
 

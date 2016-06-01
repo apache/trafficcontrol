@@ -63,7 +63,7 @@ func (p MonitorConfigPoller) Poll() {
 					fmt.Printf("MonitorConfigPoller Error: %s\n %v", err, monitorConfig)
 				} else {
 					//fmt.Printf("MonitorConfigPoller: fetched monitorConfig\n")
-					p.ConfigChannel <- monitorConfig
+					p.ConfigChannel <- *monitorConfig
 				}
 			} else {
 				fmt.Println("MonitorConfigPoller: skipping this iteration, Session is nil")
