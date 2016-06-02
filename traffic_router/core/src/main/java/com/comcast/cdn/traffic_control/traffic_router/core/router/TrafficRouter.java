@@ -518,14 +518,15 @@ public class TrafficRouter {
 
 		// find CacheLocation
 		cacheLocation = getCacheRegister().getCacheLocationById(networkNode.getLoc());
-		if (cacheLocation != null) {
+		final DeliveryService deliveryService = cacheRegister.getDeliveryService(deliveryServiceId);
+		if (cacheLocation != null && !getSupportingCaches(cacheLocation.getCaches(), deliveryService).isEmpty()) {
 			networkNode.setCacheLocation(cacheLocation);
 			return cacheLocation;
 		}
 
 		// We had a hit in the CZF but the name does not match a known cache location.
 		// Check whether the CZF entry has a geolocation and use it if so.
-		return getClosestCacheLocation(cacheRegister.filterAvailableLocations(deliveryServiceId), networkNode.getGeolocation());
+		return getClosestCacheLocation(cacheRegister.filterAvailableLocations(deliveryServiceId), networkNode.getGeolocation(), cacheRegister.getDeliveryService(deliveryServiceId));
 	}
 
 	protected CacheLocation getCoverageZoneCacheLocation(final String ip, final DeliveryService deliveryService) {
@@ -619,7 +620,7 @@ public class TrafficRouter {
 		return cacheLocations;
 	}
 
-	private CacheLocation getClosestCacheLocation(final List<CacheLocation> cacheLocations, final Geolocation clientLocation) {
+	private CacheLocation getClosestCacheLocation(final List<CacheLocation> cacheLocations, final Geolocation clientLocation, final DeliveryService deliveryService) {
 		if (clientLocation == null) {
 			return null;
 		}
@@ -627,7 +628,7 @@ public class TrafficRouter {
 		final List<CacheLocation> orderedLocations = orderCacheLocations(cacheLocations, clientLocation);
 
 		for (CacheLocation cacheLocation : orderedLocations) {
-			if (!cacheLocation.getCaches().isEmpty()) {
+			if (! getSupportingCaches(cacheLocation.getCaches(), deliveryService).isEmpty()) {
 				return cacheLocation;
 			}
 		}
