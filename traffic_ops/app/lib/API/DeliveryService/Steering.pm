@@ -200,6 +200,10 @@ sub update() {
         return $self->render(json => {"message" => "unauthorized"}, status => 401);
     }
 
+    if (!$self->req->json->{'targets'} ) {
+        return $self->render(json => {"message" => "please provide a valid json"}, status => 400);
+    }
+
     my $valid_targets = {};
 
     do {
@@ -217,6 +221,9 @@ sub update() {
     my $req_filters = $self->req->json->{'filters'};
 
     foreach my $req_filter (@{$req_filters}) {
+        if (!$req_filter->{'deliveryService'} || !$req_filter->{'pattern'}) {
+            return $self->render(json => {"message" => "please provide a valid json"}, status => 400);
+        }
         if (!exists($valid_targets->{$req_filter->{'deliveryService'}})) {
             return $self->render(json => {}, status => 409);
         }

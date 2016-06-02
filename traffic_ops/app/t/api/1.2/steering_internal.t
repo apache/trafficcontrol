@@ -301,9 +301,9 @@ ok $t->get_ok("/internal/api/1.2/steering/steering-ds1.json")
         ->json_is("/response/filters/2/pattern", ".*/always-two/.*" );
 
 #bad json
-# ok $t->put_ok("/internal/api/1.2/steering/steering-ds1",
-#     json => {"foo" => "bar"})
-#     ->status_is(400);
+ok $t->put_ok("/internal/api/1.2/steering/steering-ds1",
+    json => {"foo" => "bar"})
+    ->status_is(400);
 
 #remove filters for single DS
 ok $t->put_ok("/internal/api/1.2/steering/steering-ds1",
@@ -355,6 +355,58 @@ ok $t->put_ok("/internal/api/1.2/steering/steering-ds1",
     ->json_is("/response/targets/1/deliveryService", "target-ds2")
     ->json_is("/response/targets/1/weight", 4444)
     ->json_hasnt("/response/filters/0/pattern");
+
+#invalid json
+ok $t->put_ok("/internal/api/1.2/steering/steering-ds1",
+        json => {
+            "targets" => [
+                {
+                    "deliveryService" => "target-ds1",
+                    "weight" => 5555
+                },
+                {
+                    "deliveryService" => "target-ds2",
+                    "weight" => 4444
+                }
+            ],
+            "filters" => [
+            {
+                    "pattern" => ".*/force-to-one/.*"
+                }
+            ]
+        })
+    ->status_is(400);
+
+ok $t->put_ok("/internal/api/1.2/steering/steering-ds1",
+        json => {
+            "targets" => [
+                {
+                    "deliveryService" => "target-ds1",
+                    "weight" => 5555
+                },
+                {
+                    "deliveryService" => "target-ds2",
+                    "weight" => 4444
+                }
+            ],
+            "filters" => [
+            {
+                    "deliveryService" => "target-ds1"
+                }
+            ]
+        })
+    ->status_is(400);
+
+ok $t->put_ok("/internal/api/1.2/steering/steering-ds1",
+        json => {
+            "filters" => [
+            {
+                    "deliveryService" => "target-ds1",
+                    "pattern" => ".*/force-to-one/.*"
+                }
+            ]
+        })
+    ->status_is(400);
 
 
 $t->post_ok("/api/1.2/user/logout")->status_is(200);
