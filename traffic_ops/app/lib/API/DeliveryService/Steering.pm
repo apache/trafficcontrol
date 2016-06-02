@@ -201,7 +201,7 @@ sub update() {
     }
 
     if (!$self->req->json->{'targets'} ) {
-        return $self->render(json => {"message" => "please provide a valid json"}, status => 400);
+        return $self->render(json => {"message" => "please provide a valid json including targets"}, status => 400);
     }
 
     my $valid_targets = {};
@@ -213,6 +213,9 @@ sub update() {
     my $req_targets = $self->req->json->{'targets'};
 
     foreach my $req_target (@{$req_targets}) {
+        if (!$req_target->{'deliveryService'} || !$req_target->{'weight'}) {
+           return $self->render(json => {"message" => "please provide a valid json for targets"}, status => 400);
+        }
         if (!exists($valid_targets->{$req_target->{'deliveryService'}})) {
             return $self->render(json => {} , status => 409);
         }
@@ -222,7 +225,7 @@ sub update() {
 
     foreach my $req_filter (@{$req_filters}) {
         if (!$req_filter->{'deliveryService'} || !$req_filter->{'pattern'}) {
-            return $self->render(json => {"message" => "please provide a valid json"}, status => 400);
+            return $self->render(json => {"message" => "please provide a valid json for filters"}, status => 400);
         }
         if (!exists($valid_targets->{$req_filter->{'deliveryService'}})) {
             return $self->render(json => {}, status => 409);
