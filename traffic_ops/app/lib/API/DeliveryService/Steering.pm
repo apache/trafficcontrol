@@ -236,28 +236,20 @@ sub update() {
             $steering_target_row->update;
         }
 
-        if ($req_filters) {
-            #store ds names for deletes
-            my @ds_names;
-            foreach my $filter (@{$req_filters}) {
-                push @ds_names, $filter->{deliveryService};
-            }
-
+        if ($self->req->json->{'filters'}) {
             # delete existing filters
-            foreach my $ds (@ds_names) {
-                my $ds_id = $self->get_ds_id($ds);
-                my $dsr_rs =  $self->db->resultset('DeliveryserviceRegex')->search({deliveryservice => $ds_id});
+            my $dsr_rs =  $self->db->resultset('DeliveryserviceRegex')->search({deliveryservice => $target_id});
 
-                while (my $dsr_row = $dsr_rs->next) {
-                    $self->db->resultset('Regex')->search({id => $dsr_row->regex->id, type => $steering_regex_type})->delete;
-                }
+            while (my $dsr_row = $dsr_rs->next) {
+                $self->db->resultset('Regex')->search({id => $dsr_row->regex->id, type => $steering_regex_type})->delete;
             }
-
-            # add filters
+            # add filters for target
             foreach my $filter (@{$req_filters}) {
-                my $ds_id = $self->get_ds_id($filter->{deliveryService});
-                my $regex_row = $self->db->resultset('Regex')->create({pattern => $filter->{pattern}, type => $steering_regex_type});
-                $self->db->resultset('DeliveryserviceRegex')->create({deliveryservice => $ds_id, regex => $regex_row->id})
+                my $filter_ds = $self->get_ds_id($filter->{deliveryService});
+                if ($filter_ds eq $target_id) {
+                    my $regex_row = $self->db->resultset('Regex')->create({pattern => $filter->{pattern}, type => $steering_regex_type});
+                    $self->db->resultset('DeliveryserviceRegex')->create({deliveryservice => $target_id, regex => $regex_row->id})
+                }
             }
         }
     }
