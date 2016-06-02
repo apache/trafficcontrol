@@ -270,9 +270,9 @@ func Start(opsConfigFile string) {
 			}
 			health.GetVitals(&healthResult, &prevResult, &monitorConfig)
 			healthHistory[healthResult.Id] = pruneHistory(append(healthHistory[healthResult.Id], healthResult), defaultMaxHistory)
-			isAvailable := health.EvalCache(healthResult, &monitorConfig)
+			isAvailable, whyAvailable := health.EvalCache(healthResult, &monitorConfig)
 			if localStates.Caches[healthResult.Id].IsAvailable != isAvailable {
-				fmt.Println("Changing state for ", healthResult.Id, " was:", prevResult.Available, " is now:", isAvailable)
+				fmt.Println("Changing state for", healthResult.Id, "was:", prevResult.Available, "is now:", isAvailable, "because:", whyAvailable)
 			}
 			localStates.Caches[healthResult.Id] = peer.IsAvailable{IsAvailable: isAvailable}
 		case stats := <-cacheStatChannel:
