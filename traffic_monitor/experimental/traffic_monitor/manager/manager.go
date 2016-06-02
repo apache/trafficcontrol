@@ -272,7 +272,7 @@ func Start(opsConfigFile string) {
 			healthHistory[healthResult.Id] = pruneHistory(append(healthHistory[healthResult.Id], healthResult), defaultMaxHistory)
 			isAvailable, whyAvailable := health.EvalCache(healthResult, &monitorConfig)
 			if localStates.Caches[healthResult.Id].IsAvailable != isAvailable {
-				fmt.Println("Changing state for", healthResult.Id, "was:", prevResult.Available, "is now:", isAvailable, "because:", whyAvailable)
+				fmt.Println("Changing state for", healthResult.Id, " was:", prevResult.Available, " is now:", isAvailable, " because:", whyAvailable, " errors:", healthResult.Errors)
 			}
 			localStates.Caches[healthResult.Id] = peer.IsAvailable{IsAvailable: isAvailable}
 		case stats := <-cacheStatChannel:
