@@ -17,44 +17,25 @@
 package com.comcast.cdn.traffic_control.traffic_router.core.config;
 
 import com.comcast.cdn.traffic_control.traffic_router.core.util.TrafficOpsUtils;
-import org.apache.log4j.Logger;
 import org.json.JSONObject;
 
-import java.net.URL;
-
 public class WatcherConfig {
-	private static final Logger LOGGER = Logger.getLogger(WatcherConfig.class);
-	private final URL url;
+	private final String url;
 	private final long interval;
+	// this is an int instead of a long because of protected resource fetcher
 	private final int timeout;
 
 	public WatcherConfig(final String prefix, final JSONObject config, final TrafficOpsUtils trafficOpsUtils) {
-		// Make PMD happy by using temporary variable :(
-		URL u = null;
-		try{
-			u = new URL(trafficOpsUtils.getUrl(prefix + ".polling.url"));
-		} catch (Exception e) {
-			LOGGER.warn("Invalid Federation Polling URL, check the " + prefix + ".polling.url configuration: " + e.getMessage());
-		}
-
-		url = u;
-
+		url = trafficOpsUtils.getUrl(prefix + ".polling.url", "");
 		interval = config.optLong(prefix + ".polling.interval", -1L);
-		if (interval == -1L) {
-			LOGGER.warn("Failed getting valid value for " + prefix + ".polling.interval");
-		}
-
 		timeout = config.optInt(prefix + ".polling.timeout", -1);
-		if (timeout == -1) {
-			LOGGER.warn("Failed getting valid value for " + prefix + ".polling.timeout");
-		}
 	}
 
 	public long getInterval() {
 		return interval;
 	}
 
-	public URL getUrl() {
+	public String getUrl() {
 		return url;
 	}
 
