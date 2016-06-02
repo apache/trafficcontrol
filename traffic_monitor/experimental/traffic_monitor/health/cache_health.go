@@ -93,29 +93,21 @@ func GetVitals(newResult *cache.Result, prevResult *cache.Result, mc *traffic_op
 	// fmt.Println(newResult.Id, "BytesOut", newResult.Vitals.BytesOut, "BytesIn", newResult.Vitals.BytesIn, "Kbps", newResult.Vitals.KbpsOut, "max", newResult.Vitals.MaxKbpsOut)
 }
 
-func EvalCache(result cache.Result, mc *traffic_ops.TrafficMonitorConfigMap) bool {
-
+// EvalCache returns whether the given cache should be marked available, and a string describing why
+func EvalCache(result cache.Result, mc *traffic_ops.TrafficMonitorConfigMap) (bool, string) {
 	status := mc.TrafficServer[result.Id].Status
-	if status == "ADMIN_DOWN" {
-		return false
-	} else if status == "OFFLINE" {
-		return false
-	} else if status == "ONLINE" {
-		return true
+	switch {
+	case status == "ADMIN_DOWN":
+		return false, "set to ADMIN_DOWN"
+	case status == "OFFLINE":
+		return false, "set to OFFLINE"
+	case status == "ONLINE":
+		return true, "set to ONLINE"
+	case result.Vitals.LoadAvg > mc.Profile[mc.TrafficServer[result.Id].Profile].Parameters.HealthThresholdLoadAvg:
+		return false, fmt.Sprintf("load average %d exceeds threshold %d", mc.Profile[mc.TrafficServer[result.Id].Profile].Parameters.HealthThresholdLoadAvg, result.Vitals.LoadAvg)
+	case result.Vitals.MaxKbpsOut < result.Vitals.KbpsOut:
+		return false, fmt.Sprintf("%dkbps exceeds max %dkbps", result.Vitals.KbpsOut, result.Vitals.MaxKbpsOut)
+	default:
+		return result.Available, "reported"
 	}
-	isAvailable := result.Available
-
-	//fmt.Println("--", mc.TrafficServer[result.Id].Profile)
-	//fmt.Println("min: " , mc.Profile[mc.TrafficServer[result.Id].Profile].Parameters.MinFreeKbps)
-
-	if mc.Profile[mc.TrafficServer[result.Id].Profile].Parameters.HealthThresholdLoadAvg < result.Vitals.LoadAvg {
-		fmt.Println(result.Id, "- setting local status to bad due to load avg of ", result.Vitals.LoadAvg)
-		return false
-	}
-
-	if result.Vitals.MaxKbpsOut < result.Vitals.KbpsOut {
-		fmt.Println(result.Id, "- setting local status to bad due to too high KbpsOut max:", result.Vitals.MaxKbpsOut, "current:", result.Vitals.KbpsOut)
-		return false
-	}
-	return isAvailable
 }
