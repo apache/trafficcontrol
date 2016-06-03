@@ -34,7 +34,9 @@ public abstract class AbstractResourceWatcher extends AbstractServiceUpdater {
 	private String postData;
 	private ProtectedFetcher fetcher;
 	protected TrafficOpsUtils trafficOpsUtils;
+	private int timeout = 15000;
 
+	@SuppressWarnings("PMD")
 	public void configure(final JSONObject config) {
 		URL authUrl;
 		String credentials;
@@ -50,36 +52,35 @@ public abstract class AbstractResourceWatcher extends AbstractServiceUpdater {
 			credentials = this.postData;
 		}
 
+		if (authUrl == null || credentials == null) {
+			LOGGER.warn("[ " + getClass().getSimpleName() + " ] Invalid Traffic Ops authorization URL or credentials data, not updating configuration!");
+			return;
+		}
+
 		final WatcherConfig watcherConfig = new WatcherConfig(getWatcherConfigPrefix(), config, trafficOpsUtils);
+		final String resourceUrl = (watcherConfig.getUrl() != null && !watcherConfig.getUrl().isEmpty()) ? watcherConfig.getUrl() : getDataBaseURL();
 
-		int timeout =  watcherConfig.getTimeout();
-		if (timeout == -1) {
-			timeout = 15 * 1000;
-		}
+		final long pollingInterval = (watcherConfig.getInterval() > 0) ? watcherConfig.getInterval() : getPollingInterval();
+		final int configTimeout = (watcherConfig.getTimeout() > 0) ? watcherConfig.getTimeout() : this.timeout;
 
-		if (authUrl != null && credentials != null && watcherConfig.getUrl() != null && watcherConfig.getInterval() != -1L) {
-			configure(authUrl, credentials, watcherConfig.getUrl(), watcherConfig.getInterval(), timeout);
-		} else {
-			LOGGER.warn("Not updating configuration - did get following from cr-config url '" + watcherConfig.getUrl() + "' interval '" + watcherConfig.getInterval() + "' timeout '" + watcherConfig.getTimeout() + "'");
-		}
-	}
-
-
-	public void configure(final URL authorizationUrl, final String postData, final URL resourceUrl, final long pollingInterval, final int timeout) {
-		if (authorizationUrl.equals(this.authorizationUrl) && postData.equals(this.postData) &&
-			resourceUrl.toString().equals(dataBaseURL) && pollingInterval == getPollingInterval()) {
-			LOGGER.warn("Nothing changed in configuration");
+		if (authUrl.equals(this.authorizationUrl) &&
+			credentials.equals(this.postData) &&
+			resourceUrl.equals(dataBaseURL) &&
+			pollingInterval == getPollingInterval() &&
+			configTimeout == this.timeout) {
+			LOGGER.info("[ " + getClass().getName() + " ] Nothing changed in configuration");
 			return;
 		}
 
 		// avoid recreating the fetcher if possible
-		if (!authorizationUrl.equals(this.authorizationUrl) || !postData.equals(this.postData)) {
-			this.authorizationUrl = authorizationUrl;
-			this.postData = postData;
-			fetcher = new ProtectedFetcher(authorizationUrl.toString(), postData, timeout);
+		if (!authUrl.equals(this.authorizationUrl) || !credentials.equals(this.postData) || configTimeout != this.timeout) {
+			this.authorizationUrl = authUrl;
+			this.postData = credentials;
+			this.timeout = configTimeout;
+			fetcher = new ProtectedFetcher(authUrl.toString(), credentials, configTimeout);
 		}
 
-		setDataBaseURL(resourceUrl.toString(), pollingInterval);
+		setDataBaseURL(resourceUrl, pollingInterval);
 	}
 
 	protected boolean useData(final String data) {
@@ -114,11 +115,12 @@ public abstract class AbstractResourceWatcher extends AbstractServiceUpdater {
 		}
 
 		String jsonData = null;
+		final String interpolatedUrl = trafficOpsUtils.replaceTokens(url);
 		try {
-			jsonData = fetcher.fetchIfModifiedSince(url, existingDb.lastModified());
+			jsonData = fetcher.fetchIfModifiedSince(interpolatedUrl, existingDb.lastModified());
 		}
 		catch (IOException e) {
-			LOGGER.warn("Failed to fetch data from '" + url + "': " + e.getMessage());
+			LOGGER.warn("[ " + getClass().getSimpleName() + " ] Failed to fetch data from '" + interpolatedUrl + "': " + e.getMessage());
 		}
 
 		if (jsonData == null) {
@@ -135,7 +137,7 @@ public abstract class AbstractResourceWatcher extends AbstractServiceUpdater {
 			fw.close();
 		}
 		catch (IOException e) {
-			LOGGER.warn("Failed to create file from data received from '" + url + "'");
+			LOGGER.warn("Failed to create file from data received from '" + interpolatedUrl + "'");
 		}
 
 		return databaseFile;

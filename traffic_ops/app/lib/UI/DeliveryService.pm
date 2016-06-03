@@ -288,6 +288,14 @@ sub delete {
 
 		my $delete_re = $self->db->resultset('Regex')->search( { id => { -in => \@regexp_id_list } } );
 		$delete_re->delete();
+
+		# Delete config file parameter
+		my @cfg_prefixes = ( "hdr_rw_", "hdr_rw_mid_", "regex_remap_", "cacheurl_" );
+		foreach my $cfg_prefix (@cfg_prefixes) {
+			my $cfg_file = $cfg_prefix . $dsname . ".config";
+			&delete_cfg_file( $self, $cfg_file );
+		}
+
 		&log( $self, "Delete deliveryservice with id:" . $id . " and name " . $dsname, "UICHANGE" );
 	}
 	return $self->redirect_to('/close_fancybox.html');
@@ -1072,7 +1080,7 @@ sub create {
 		my $type = $self->db->resultset('Type')->search( { id => $self->paramAsScalar('ds.type') } )->get_column('name')->single();
 		$self->header_rewrite( $new_id, $self->param('ds.profile'), $self->param('ds.xml_id'), $self->param('ds.edge_header_rewrite'), "edge", $type );
 		$self->header_rewrite( $new_id, $self->param('ds.profile'), $self->param('ds.xml_id'), $self->param('ds.mid_header_rewrite'),  "mid",  $type );
-		$self->regex_remap( $self->param('ds.profile'), $self->param('ds.xml_id'), $self->param('ds.regex_remap') );
+		$self->regex_remap( $new_id, $self->param('ds.profile'), $self->param('ds.xml_id'), $self->param('ds.regex_remap') );
 		$self->cacheurl( $new_id, $self->param('ds.profile'), $self->param('ds.xml_id'), $self->param('ds.cacheurl') );
 
 		##create dnssec keys for the new DS if DNSSEC is enabled for the CDN

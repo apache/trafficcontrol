@@ -28,7 +28,7 @@ public class SteeringWatcher extends AbstractResourceWatcher {
 	private SteeringRegistry steeringRegistry;
 	private CacheRegister cacheRegister;
 
-	public static final String DEFAULT_STEERING_DATA_URL = "http://${toHostname}/internal/api/1.2/steering.json";
+	public static final String DEFAULT_STEERING_DATA_URL = "https://${toHostname}/internal/api/1.2/steering.json";
 
 	public SteeringWatcher() {
 		setDatabaseUrl(DEFAULT_STEERING_DATA_URL);
