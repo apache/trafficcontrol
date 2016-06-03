@@ -39,20 +39,24 @@ Test::TestHelper->load_core_data($schema);
 ok $t->post_ok( '/login', => form => { u => Test::TestHelper::ADMIN_USER, p => Test::TestHelper::ADMIN_USER_PASSWORD } )->status_is(302)
 	->or( sub { diag $t->tx->res->content->asset->{content}; } ), 'Should login?';
 
-ok $t->post_ok('/api/1.2/deliveryservices/test-ds1/servers' => {Accept => 'application/json'} => json => {
-        "server_names" => [
-             "atlanta-edge-01",
-             "atlanta-edge-02"
-        ]})
-     ->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } )
-    ->json_is( "/response/xml_id" => "test-ds1")
-     ->json_is( "/response/server_names/0" => "atlanta-edge-01")
-     ->json_is( "/response/server_names/1" => "atlanta-edge-02")
-            , 'Does the assigned servers return?';
+ok $t->post_ok(
+	'/api/1.2/deliveryservices/test-ds1/servers' => { Accept => 'application/json' } => json => {
+		"server_names" => [ "atlanta-edge-01", "atlanta-edge-02" ]
+	}
+	)->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } )->json_is( "/response/xml_id" => "test-ds1" )
+	->json_is( "/response/server_names/0" => "atlanta-edge-01" )->json_is( "/response/server_names/1" => "atlanta-edge-02" ),
+	'Does the assigned servers return?';
 
-ok $t->put_ok('/api/1.2/snapshot/cdn1') 
-     ->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } );
- 
+ok $t->get_ok("/api/1.2/deliveryservices.json")->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content} } )
+	->json_is( "/response/0/xmlId", "test-ds1" )->json_is( "/response/0/logsEnabled", 1 )->json_is( "/response/0/ipv6RoutingEnabled", 1 )
+	->json_is( "/response/1/xmlId", "test-ds2" );
+
+ok $t->get_ok("/api/1.2/deliveryservices.json?logsEnabled=true")->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content} } )
+	->json_is( "/response/0/xmlId", "test-ds1" )->json_is( "/response/0/logsEnabled", 1 )->json_is( "/response/0/ipv6RoutingEnabled", 1 )
+	->json_is( "/response/1/xmlId", "test-ds4" );
+
+ok $t->put_ok('/api/1.2/snapshot/cdn1')->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } );
+
 ok $t->get_ok('/logout')->status_is(302)->or( sub { diag $t->tx->res->content->asset->{content}; } );
 $dbh->disconnect();
 done_testing();
