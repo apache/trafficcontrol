@@ -17,7 +17,9 @@ package main;
 use Mojo::Base -strict;
 use Test::More;
 use Test::Mojo;
+use Data::Dumper;
 use DBI;
+use JSON;
 use strict;
 use warnings;
 no warnings 'once';
@@ -54,6 +56,17 @@ ok $t->get_ok("/api/1.2/deliveryservices.json")->status_is(200)->or( sub { diag 
 ok $t->get_ok("/api/1.2/deliveryservices.json?logsEnabled=true")->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content} } )
 	->json_is( "/response/0/xmlId", "test-ds1" )->json_is( "/response/0/logsEnabled", 1 )->json_is( "/response/0/ipv6RoutingEnabled", 1 )
 	->json_is( "/response/1/xmlId", "test-ds4" );
+
+# Count the 'response number'
+my $count_response = sub {
+	my ( $t, $count ) = @_;
+	my $json = decode_json( $t->tx->res->content->asset->slurp );
+	my $r    = $json->{response};
+	return $t->success( is( scalar(@$r), $count ) );
+};
+
+$t->get_ok('/api/1.2/deliveryservices.json?logsEnabled=true')->status_is(200)->$count_response(2)
+	->or( sub { diag $t->tx->res->content->asset->{content}; } );
 
 ok $t->put_ok('/api/1.2/snapshot/cdn1')->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } );
 
