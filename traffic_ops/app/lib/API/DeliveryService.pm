@@ -41,10 +41,10 @@ sub delivery_services {
 	my $tm_user_id;
 	my $forbidden;
 	if ( defined($id) || defined($logs_enabled) ) {
-		( $forbidden, $rs, $tm_user_id ) = $self->get_delivery_service_by_id( $current_user, $id, $logs_enabled );
+		( $forbidden, $rs, $tm_user_id ) = $self->get_delivery_service_params( $current_user, $id, $logs_enabled );
 	}
 	else {
-		( $rs, $tm_user_id ) = $self->get_delivery_services($current_user);
+		( $rs, $tm_user_id ) = $self->get_delivery_services_by_user($current_user);
 	}
 
 	my @data;
@@ -121,7 +121,7 @@ sub delivery_services {
 	return defined($forbidden) ? $self->forbidden() : $self->success( \@data );
 }
 
-sub get_delivery_services {
+sub get_delivery_services_by_user {
 	my $self         = shift;
 	my $current_user = shift;
 
@@ -142,7 +142,7 @@ sub get_delivery_services {
 	return ( $rs, $tm_user_id );
 }
 
-sub get_delivery_service_by_id {
+sub get_delivery_service_params {
 	my $self         = shift;
 	my $current_user = shift;
 	my $id           = shift;
