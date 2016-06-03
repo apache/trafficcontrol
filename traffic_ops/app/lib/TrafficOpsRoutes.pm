@@ -161,7 +161,7 @@ sub ui_routes {
 	# -- Keys - SSL Key management
 	$r->get('/ds/:id/urlsigkeys/add')->to( 'UrlSigKeys#add', namespace => $namespace );
 
-	# -- Steering DS assignment 
+	# -- Steering DS assignment
 	$r->get('/ds/:id/steering')->to( 'Steering#index', namespace => $namespace );
 	$r->post('/ds/:id/steering/update')->over( authenticated => 1 )->to( 'Steering#update', namespace => $namespace );
 
@@ -517,7 +517,7 @@ sub api_routes {
 	# -- PARAMETER #NEW
 	# Supports ?orderby=key
 	$r->get( "/api/$version/parameters" => [ format => [qw(json)] ] )->over( authenticated => 1 )->to( 'Parameter#index', namespace => $namespace );
-	$r->get( "/api/$version/parameters/profile/#name" )->over( authenticated => 1 )
+	$r->get( "/api/$version/parameters/profile/:name" => [ format => [qw(json)] ] )->over( authenticated => 1 )
 		->to( 'Parameter#profile', namespace => $namespace );
 
 	# -- PHYS_LOCATION #NEW

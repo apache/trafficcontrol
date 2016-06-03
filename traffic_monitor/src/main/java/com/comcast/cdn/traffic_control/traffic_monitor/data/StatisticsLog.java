@@ -193,9 +193,9 @@ public class StatisticsLog {
 	}
 
 	public void prepareForUpdate(final String stateId, final long historyTime) {
-		addNullDataForIndex(index);
 
-		synchronized(data) {
+		synchronized(times) {
+			addNullDataForIndex(index);
 			index++;
 			final long time = System.currentTimeMillis();
 			final long removeTime = time - historyTime;
@@ -216,15 +216,18 @@ public class StatisticsLog {
 			for (int i = 0; i < removeCount; i++) {
 				indexes.remove(0);
 			}
-		}
 
-		removeOldest(stateId);
+			removeOldest(stateId);
+		}
 	}
 
 	private void addNullDataForIndex(final long index) {
-		for(String key : data.keySet()) {
-			if (getLastDataPoint(key).getIndex() != index) {
-				putDataPoint(key, null);
+		synchronized (data) {
+			for(String key : data.keySet()) {
+				DataPoint lastDataPoint = getLastDataPoint(key);
+				if (lastDataPoint == null || lastDataPoint.getIndex() != index) {
+					putDataPoint(key, null);
+				}
 			}
 		}
 	}

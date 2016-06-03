@@ -48,7 +48,7 @@ sub writeCdn_conf {
 	my $cdn_conf = shift;
 
 	# listen param to be inserted
-	my $listen_str = "https://[::]:443?cert=${cert}&key=${key}&ca=${ca}&verify=0x00&ciphers=AES128-GCM-SHA256:RC4:HIGH:!MD5:!aNULL:!EDH:!ED";
+	my $listen_str = "https://[::]:443?cert=${cert}&key=${key}&ca=${ca}&verify=0x00&ciphers=AES128-GCM-SHA256:HIGH:!RC4:!MD5:!aNULL:!EDH:!ED";
 
 	# load as perl hash to find string to be replaced
 	my $cdnh = do $cdn_conf;
