@@ -88,21 +88,6 @@ __PACKAGE__->has_many(
   { cascade_copy => 0, cascade_delete => 0 },
 );
 
-=head2 steering_tmusers
-
-Type: has_many
-
-Related object: L<Schema::Result::SteeringTmuser>
-
-=cut
-
-__PACKAGE__->has_many(
-  "steering_tmusers",
-  "Schema::Result::SteeringTmuser",
-  { "foreign.role" => "self.id" },
-  { cascade_copy => 0, cascade_delete => 0 },
-);
-
 =head2 tm_users
 
 Type: has_many
@@ -119,8 +104,8 @@ __PACKAGE__->has_many(
 );
 
 
-# Created by DBIx::Class::Schema::Loader v0.07043 @ 2016-05-11 12:44:18
-# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:Xgy/xEdHgX8XLAca2lhneQ
+# Created by DBIx::Class::Schema::Loader v0.07042 @ 2016-06-03 08:58:13
+# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:eNrksFOoJ9HkhtHhBjrWpA
 
 
 # You can replace this text with custom code or comments, and it will be preserved on regeneration
