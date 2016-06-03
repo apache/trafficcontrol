@@ -586,7 +586,7 @@
 			<% } %>
 		<% } %>
 	</div>
-	<div class="block form-row" id="active_row">
+	<div class="block form-row" id="logs_enabled">
 		<% unless (field('ds.logs_enabled')->valid) { %>
 			<span class="field-with-error"><%= field('ds.logs_enabled')->error %></span>
 		<% } %>
