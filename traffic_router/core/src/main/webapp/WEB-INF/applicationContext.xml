@@ -101,7 +101,6 @@
 		<property name="executorService" ref="ScheduledExecutorService" />
 		<property name="databasesDirectory" ref="databasesDir" />
 		<property name="databaseName" value="$[cache.steering.database:steering.json]" />
-		<property name="pollingInterval" value="$[cache.steering.database.refresh.period:86400000]" />
 		<property name="trafficOpsUtils" ref="trafficOpsUtils" />
 		<property name="trafficRouterManager" ref="trafficRouterManager" />
 		<property name="steeringRegistry" ref="steeringRegistry" />
