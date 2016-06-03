@@ -150,7 +150,6 @@ sub get_delivery_service_by_id {
 
 	# Convert to 1 or 0
 	$logs_enabled = $logs_enabled ? 1 : 0;
-	$self->app->log->debug( "logs_enabled #-> " . Dumper($logs_enabled) );
 
 	my $tm_user_id;
 	my $rs;
