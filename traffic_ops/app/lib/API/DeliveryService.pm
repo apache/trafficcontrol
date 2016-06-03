@@ -111,6 +111,7 @@ sub delivery_services {
 					"remapText"            => $row->remap_text,
 					"initialDispersion"    => $row->initial_dispersion,
 					"exampleURLs"          => \@example_urls,
+					"logsEnabled"          => \$row->logs_enabled,
 				}
 			);
 		}
@@ -389,9 +390,9 @@ sub is_deliveryservice_request_valid {
 }
 
 sub assign_servers {
-    my $self   = shift;
-    my $ds_xml_Id = $self->param('xml_id');
-	my $params = $self->req->json;
+	my $self      = shift;
+	my $ds_xml_Id = $self->param('xml_id');
+	my $params    = $self->req->json;
 
 	if ( !defined($params) ) {
 		return $self->alert("parameters are JSON format, please check!");
