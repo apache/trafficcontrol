@@ -5,7 +5,9 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
+	"math"
 	"net/http"
+	"runtime"
 	"sort"
 	"strconv"
 	"strings"
@@ -33,10 +35,20 @@ const (
 //const maxHistory = (60 / pollingInterval) * 5
 const defaultMaxHistory = 5
 
+type StaticAppData struct {
+	StartTime      time.Time
+	GitRevision    string
+	FreeMemoryMB   uint64
+	Version        string
+	WorkingDir     string
+	Name           string
+	BuildTimestamp string
+}
+
 //
 // Kicks off the pollers and handlers
 //
-func Start(opsConfigFile string) {
+func Start(opsConfigFile string, staticAppData StaticAppData) {
 	var toSession *traffic_ops.Session
 
 	fetchSuccessCounter := gmx.NewCounter("fetchSuccess")
@@ -54,7 +66,9 @@ func Start(opsConfigFile string) {
 
 	cacheHealthConfigChannel := make(chan poller.HttpPollerConfig)
 	cacheHealthChannel := make(chan cache.Result)
+	cacheHealthTick := make(chan uint64)
 	cacheHealthPoller := poller.HttpPoller{
+		TickChan:      cacheHealthTick,
 		ConfigChannel: cacheHealthConfigChannel,
 		Config: poller.HttpPollerConfig{
 			Interval: defaultCacheHealthPollingInterval,
@@ -142,12 +156,19 @@ func Start(opsConfigFile string) {
 
 	var deliveryServiceServers map[string][]string
 
+	// TODO put stat data in a struct, for brevity
+	lastHealthEndTimes := map[string]time.Time{}
+	lastHealthDurations := map[string]time.Duration{}
+	fetchCount := uint64(0) // note this is the number of individual caches fetched from, not the number of times all the caches were polled.
+	healthIteration := uint64(0)
+	errorCount := uint64(0)
 	for {
 		select {
 		case req := <-dr:
+			defer close(req.C)
+
 			var body []byte
 			var err error
-
 			if req.T == http_server.TR_CONFIG && toSession != nil && opsConfig.CdnName != "" {
 				body, err = toSession.CRConfigRaw(opsConfig.CdnName)
 			} else if req.T == http_server.TR_STATE_DERIVED {
@@ -180,13 +201,17 @@ func Start(opsConfigFile string) {
 			} else if req.T == http_server.PEER_STATES {
 			} else if req.T == http_server.STAT_SUMMARY {
 			} else if req.T == http_server.STATS {
+				body, err = getStats(staticAppData, cacheHealthPoller.Config.Interval, lastHealthDurations, fetchCount, healthIteration, errorCount)
 			}
 
-			if err == nil {
-				req.C <- body
+			if err != nil {
+				// TODO send error to client
+				errorCount++
+				log.Printf("ERROR getting stats %v\n", err)
+				continue
 			}
 
-			close(req.C)
+			req.C <- body
 		case oc := <-opsConfigFileHandler.OpsConfigChannel:
 			var err error
 			opsConfig = oc
@@ -201,6 +226,7 @@ func Start(opsConfigFile string) {
 
 			toSession, err = traffic_ops.Login(opsConfig.Url, opsConfig.Username, opsConfig.Password, opsConfig.Insecure)
 			if err != nil {
+				errorCount++
 				log.Printf("MonitorConfigPoller: error instantiating Session with traffic_ops: %s\n", err)
 				continue
 			}
@@ -208,6 +234,7 @@ func Start(opsConfigFile string) {
 			monitorConfigPoller.SessionChannel <- toSession
 			deliveryServiceServers, err = getDeliveryServiceServers(toSession, opsConfig.CdnName)
 			if err != nil {
+				errorCount++
 				log.Printf("Error getting delivery service servers from Traffic Ops: %v\n", err)
 				continue
 			}
@@ -272,7 +299,10 @@ func Start(opsConfigFile string) {
 			}
 
 			addStateDeliveryServices(mc, localStates.Deliveryservice)
+		case i := <-cacheHealthTick:
+			healthIteration = i
 		case healthResult := <-cacheHealthChannel:
+			fetchCount++
 			var prevResult cache.Result
 			if len(healthHistory[healthResult.Id]) != 0 {
 				prevResult = healthHistory[healthResult.Id][len(healthHistory[healthResult.Id])-1].(cache.Result)
@@ -285,6 +315,17 @@ func Start(opsConfigFile string) {
 			}
 			localStates.Caches[healthResult.Id] = peer.IsAvailable{IsAvailable: isAvailable}
 			calculateDeliveryServiceState(deliveryServiceServers, localStates.Caches, localStates.Deliveryservice)
+
+			if lastHealthStart, ok := lastHealthEndTimes[healthResult.Id]; ok {
+				lastHealthDurations[healthResult.Id] = time.Since(lastHealthStart)
+			}
+			lastHealthEndTimes[healthResult.Id] = time.Now()
+
+			// if _, ok := queryIntervalStart[pollI]; !ok {
+			// 	log.Printf("ERROR poll start index not found")
+			// 	continue
+			// }
+			// lastQueryIntervalTime = time.Since(queryIntervalStart[pollI])
 		case stats := <-cacheStatChannel:
 			statHistory[stats.Id] = pruneHistory(append(statHistory[stats.Id], stats), defaultMaxHistory)
 		case crStatesResult := <-peerChannel:
@@ -292,6 +333,65 @@ func Start(opsConfigFile string) {
 			combinedStates = combineCrStates(peerStates, localStates)
 		}
 	}
+}
+
+type Stats struct {
+	MaxMemoryMB         uint64 `json:"Max Memory (MB)"`
+	GitRevision         string `json:"git-revision"`
+	ErrorCount          uint64 `json:"Error Count"`
+	Uptime              uint64 `json:"uptime"`
+	FreeMemoryMB        uint64 `json:"Free Memory (MB)"`
+	TotalMemoryMB       uint64 `json:"Total Memory (MB)"`
+	Version             string `json:"version"`
+	DeployDir           string `json:"deploy-dir"`
+	FetchCount          uint64 `json:"Fetch Count"`
+	QueryIntervalDelta  int    `json:"Query Interval Delta"`
+	IterationCount      uint64 `json:"Iteration Count"`
+	Name                string `json:"name"`
+	BuildTimestamp      string `json:"buildTimestamp"`
+	QueryIntervalTarget int    `json:"Query Interval Target"`
+	QueryIntervalActual int    `json:"Query Interval Actual"`
+	SlowestCache        string `json:"Slowest Cache"`
+	LastQueryInterval   int    `json:"Last Query Interval"`
+}
+
+func getLongestPoll(lastHealthTimes map[string]time.Duration) (string, time.Duration) {
+	var longestCache string
+	var longestTime time.Duration
+	for cache, time := range lastHealthTimes {
+		if time > longestTime {
+			longestTime = time
+			longestCache = cache
+		}
+	}
+	return longestCache, longestTime
+}
+
+func getStats(staticAppData StaticAppData, pollingInterval time.Duration, lastHealthTimes map[string]time.Duration, fetchCount uint64, healthIteration uint64, errorCount uint64) ([]byte, error) {
+	longestPollCache, longestPollTime := getLongestPoll(lastHealthTimes)
+	var memStats runtime.MemStats
+	runtime.ReadMemStats(&memStats)
+
+	var s Stats
+	s.MaxMemoryMB = memStats.TotalAlloc / (1024 * 1024)
+	s.GitRevision = staticAppData.GitRevision
+	s.ErrorCount = errorCount // TODO implement
+	s.Uptime = uint64(time.Since(staticAppData.StartTime) / time.Second)
+	s.FreeMemoryMB = staticAppData.FreeMemoryMB
+	s.TotalMemoryMB = memStats.Alloc / (1024 * 1024) // TODO rename to "used memory" if/when nothing is using the JSON entry
+	s.Version = staticAppData.Version
+	s.DeployDir = staticAppData.WorkingDir
+	s.FetchCount = fetchCount
+	s.SlowestCache = longestPollCache
+	s.IterationCount = healthIteration
+	s.Name = staticAppData.Name
+	s.BuildTimestamp = staticAppData.BuildTimestamp
+	s.QueryIntervalTarget = int(pollingInterval / time.Millisecond)
+	s.QueryIntervalActual = int(longestPollTime / time.Millisecond)
+	s.QueryIntervalDelta = s.QueryIntervalActual - s.QueryIntervalTarget
+	s.LastQueryInterval = int(math.Max(float64(s.QueryIntervalActual), float64(s.QueryIntervalTarget)))
+
+	return json.Marshal(s)
 }
 
 // TODO add disabledLocations

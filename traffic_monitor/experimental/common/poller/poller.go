@@ -22,6 +22,7 @@ type HttpPoller struct {
 	Config        HttpPollerConfig
 	ConfigChannel chan HttpPollerConfig
 	Fetcher       fetcher.Fetcher
+	TickChan      chan uint64
 }
 
 type HttpPollerConfig struct {
@@ -46,7 +47,6 @@ type MonitorConfigPoller struct {
 
 func (p MonitorConfigPoller) Poll() {
 	tick := time.NewTicker(p.Interval)
-
 	for {
 		select {
 		case opsConfig := <-p.OpsConfigChannel:
@@ -75,12 +75,17 @@ func (p MonitorConfigPoller) Poll() {
 func (p HttpPoller) Poll() {
 	tick := time.NewTicker(p.Config.Interval)
 	last_time := time.Now()
-
+	iterationCount := uint64(0)
 	for {
 		select {
 		case config := <-p.ConfigChannel:
 			p.Config = config // TODO: reset the ticker using the interval supplied in config. -jse
 		case curr_time := <-tick.C:
+			iterationCount++
+			if p.TickChan != nil {
+				p.TickChan <- iterationCount
+			}
+
 			if int64(curr_time.Sub(last_time)) > int64(float64(p.Config.Interval)*1.01) {
 				instr.TimerFail.Inc()
 				fmt.Println("Intended Duration:", p.Config.Interval, "Actual Duration", curr_time.Sub(last_time))
