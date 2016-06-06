@@ -41,7 +41,7 @@ sub index {
 		);
 	}
 
-	$self->success( \@data, undef, $limit, undef );
+	$self->success( \@data, undef, undef, $limit, undef );
 }
 
 sub data {

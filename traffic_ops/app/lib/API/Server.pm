@@ -385,7 +385,7 @@ sub details {
       push( @data, $serv );
     }
     my $size = @data;
-    $self->success( \@data, $orderby, $limit, $size );
+    $self->success( \@data, undef, $orderby, $limit, $size );
   }
   else {
     $self->success( [] );
