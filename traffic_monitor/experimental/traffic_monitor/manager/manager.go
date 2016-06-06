@@ -2,8 +2,11 @@ package manager
 
 import (
 	"crypto/tls"
+	"encoding/json"
 	"fmt"
+	"log"
 	"net/http"
+	"sort"
 	"strconv"
 	"strings"
 	"time"
@@ -133,9 +136,11 @@ func Start(opsConfigFile string) {
 
 	var opsConfig handler.OpsConfig
 	var monitorConfig traffic_ops.TrafficMonitorConfigMap
-	localStates := peer.Crstates{Caches: make(map[string]peer.IsAvailable)}    // this is the local state as discoverer by this traffic_monitor
-	peerStates := make(map[string]peer.Crstates)                               // each peer's last state is saved in this map
-	combinedStates := peer.Crstates{Caches: make(map[string]peer.IsAvailable)} // this is the result of combining the localStates and all the peerStates using the var ??
+	localStates := peer.Crstates{Caches: make(map[string]peer.IsAvailable), Deliveryservice: make(map[string]peer.Deliveryservice)}    // this is the local state as discoverer by this traffic_monitor
+	peerStates := make(map[string]peer.Crstates)                                                                                       // each peer's last state is saved in this map
+	combinedStates := peer.Crstates{Caches: make(map[string]peer.IsAvailable), Deliveryservice: make(map[string]peer.Deliveryservice)} // this is the result of combining the localStates and all the peerStates using the var ??
+
+	var deliveryServiceServers map[string][]string
 
 	for {
 		select {
@@ -195,12 +200,16 @@ func Start(opsConfigFile string) {
 			go http_server.Run(dr, listenAddress)
 
 			toSession, err = traffic_ops.Login(opsConfig.Url, opsConfig.Username, opsConfig.Password, opsConfig.Insecure)
-
 			if err != nil {
-				fmt.Printf("MonitorConfigPoller: error instantiating Session with traffic_ops: %s\n", err)
-			} else {
-				monitorConfigPoller.OpsConfigChannel <- opsConfig // this is needed for cdnName
-				monitorConfigPoller.SessionChannel <- toSession
+				log.Printf("MonitorConfigPoller: error instantiating Session with traffic_ops: %s\n", err)
+				continue
+			}
+			monitorConfigPoller.OpsConfigChannel <- opsConfig // this is needed for cdnName
+			monitorConfigPoller.SessionChannel <- toSession
+			deliveryServiceServers, err = getDeliveryServiceServers(toSession, opsConfig.CdnName)
+			if err != nil {
+				log.Printf("Error getting delivery service servers from Traffic Ops: %v\n", err)
+				continue
 			}
 		case mc := <-monitorConfigPoller.ConfigChannel:
 			monitorConfig = mc
@@ -216,16 +225,14 @@ func Start(opsConfigFile string) {
 				if srv.Status == "ONLINE" {
 					localStates.Caches[srv.HostName] = peer.IsAvailable{IsAvailable: true}
 					continue
-				} else if srv.Status == "OFFLINE" {
+				}
+				if srv.Status == "OFFLINE" {
 					localStates.Caches[srv.HostName] = peer.IsAvailable{IsAvailable: false}
 					continue
-				} else {
-					_, exists := localStates.Caches[srv.HostName]
-
-					// seed states with available = false until our polling cycle picks up a result
-					if !exists {
-						localStates.Caches[srv.HostName] = peer.IsAvailable{IsAvailable: false}
-					}
+				}
+				// seed states with available = false until our polling cycle picks up a result
+				if _, exists := localStates.Caches[srv.HostName]; !exists {
+					localStates.Caches[srv.HostName] = peer.IsAvailable{IsAvailable: false}
 				}
 
 				url := monitorConfig.Profile[srv.Profile].Parameters.HealthPollingURL
@@ -263,6 +270,8 @@ func Start(opsConfigFile string) {
 					delete(localStates.Caches, k)
 				}
 			}
+
+			addStateDeliveryServices(mc, localStates.Deliveryservice)
 		case healthResult := <-cacheHealthChannel:
 			var prevResult cache.Result
 			if len(healthHistory[healthResult.Id]) != 0 {
@@ -275,6 +284,7 @@ func Start(opsConfigFile string) {
 				fmt.Println("Changing state for", healthResult.Id, " was:", prevResult.Available, " is now:", isAvailable, " because:", whyAvailable, " errors:", healthResult.Errors)
 			}
 			localStates.Caches[healthResult.Id] = peer.IsAvailable{IsAvailable: isAvailable}
+			calculateDeliveryServiceState(deliveryServiceServers, localStates.Caches, localStates.Deliveryservice)
 		case stats := <-cacheStatChannel:
 			statHistory[stats.Id] = pruneHistory(append(statHistory[stats.Id], stats), defaultMaxHistory)
 		case crStatesResult := <-peerChannel:
@@ -284,10 +294,62 @@ func Start(opsConfigFile string) {
 	}
 }
 
+// TODO add disabledLocations
+func addStateDeliveryServices(mc traffic_ops.TrafficMonitorConfigMap, deliveryServices map[string]peer.Deliveryservice) {
+	for _, ds := range mc.DeliveryService {
+		// since caches default to unavailable, also default DS false
+		deliveryServices[ds.XMLID] = peer.Deliveryservice{}
+	}
+}
+
+// getDeliveryServiceServers returns a map[deliveryService][]server
+func getDeliveryServiceServers(to *traffic_ops.Session, cdn string) (map[string][]string, error) {
+	dsServers := map[string][]string{}
+
+	crcData, err := to.CRConfigRaw(cdn)
+	if err != nil {
+		return nil, err
+	}
+	type CrConfig struct {
+		ContentServers map[string]struct {
+			DeliveryServices map[string][]string `json:"deliveryServices"`
+		} `json:"contentServers"`
+	}
+	var crc CrConfig
+	if err := json.Unmarshal(crcData, &crc); err != nil {
+		return nil, err
+	}
+
+	for serverName, serverData := range crc.ContentServers {
+		for deliveryServiceName, _ := range serverData.DeliveryServices {
+			dsServers[deliveryServiceName] = append(dsServers[deliveryServiceName], serverName)
+		}
+	}
+	return dsServers, nil
+}
+
+// calculateDeliveryServiceState calculates the state of delivery services from the new cache state data `cacheState` and the CRConfig data `deliveryServiceServers` and puts the calculated state in the outparam `deliveryServiceStates`
+func calculateDeliveryServiceState(deliveryServiceServers map[string][]string, cacheState map[string]peer.IsAvailable, deliveryServiceStates map[string]peer.Deliveryservice) {
+	for deliveryServiceName, deliveryServiceState := range deliveryServiceStates {
+		if _, ok := deliveryServiceServers[deliveryServiceName]; !ok {
+			// log.Printf("ERROR CRConfig does not have delivery service %s, but traffic monitor poller does; skipping\n", deliveryServiceName)
+			continue
+		}
+		deliveryServiceState.IsAvailable = false
+		for _, server := range deliveryServiceServers[deliveryServiceName] {
+			if cacheState[server].IsAvailable {
+				deliveryServiceState.IsAvailable = true
+			} else {
+				deliveryServiceState.DisabledLocations = append(deliveryServiceState.DisabledLocations, server)
+			}
+		}
+		deliveryServiceStates[deliveryServiceName] = deliveryServiceState
+	}
+}
+
 // TODO JvD: add deliveryservice stuff
 func combineCrStates(peerStates map[string]peer.Crstates, localStates peer.Crstates) peer.Crstates {
-
-	combinedStates := peer.Crstates{Caches: make(map[string]peer.IsAvailable)}
+	combinedStates := peer.Crstates{Caches: make(map[string]peer.IsAvailable), Deliveryservice: make(map[string]peer.Deliveryservice)}
 	for cacheName, localCacheState := range localStates.Caches { // localStates gets pruned when servers are disabled, it's the source of truth
 		downVotes := 0 // TODO JvD: change to use parameter when deciding to be optimistic or pessimistic.
 		if localCacheState.IsAvailable {
@@ -312,7 +374,43 @@ func combineCrStates(peerStates map[string]peer.Crstates, localStates peer.Crsta
 		}
 	}
 
+	for deliveryServiceName, localDeliveryService := range localStates.Deliveryservice {
+		deliveryService := peer.Deliveryservice{}
+		if localDeliveryService.IsAvailable {
+			deliveryService.IsAvailable = true
+		}
+		deliveryService.DisabledLocations = localDeliveryService.DisabledLocations
+
+		for peerName, iPeerStates := range peerStates {
+			peerDeliveryService, ok := iPeerStates.Deliveryservice[deliveryServiceName]
+			if !ok {
+				log.Printf("WARN local delivery service %s not found in peer %s\n", deliveryServiceName, peerName)
+				continue
+			}
+			if peerDeliveryService.IsAvailable {
+				deliveryService.IsAvailable = true
+			}
+			deliveryService.DisabledLocations = intersection(deliveryService.DisabledLocations, peerDeliveryService.DisabledLocations)
+		}
+		combinedStates.Deliveryservice[deliveryServiceName] = deliveryService
+	}
+
 	return combinedStates
+}
+
+// intersection returns strings in both a and b.
+// Note this modifies a and b. Specifically, it sorts them. If that isn't acceptable, pass copies of your real data.
+func intersection(a []string, b []string) []string {
+	sort.Strings(a)
+	sort.Strings(b)
+	var c []string
+	for _, s := range a {
+		i := sort.SearchStrings(b, s)
+		if i < len(b) && b[i] == s {
+			c = append(c, s)
+		}
+	}
+	return c
 }
 
 func pruneHistory(history []interface{}, limit int) []interface{} {
