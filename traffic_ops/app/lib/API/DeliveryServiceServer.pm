@@ -171,7 +171,7 @@ sub assign_ds {
 	$response->{id} = $cg_id;
 	$response->{serverNames} = \@server_names;
 	$response->{deliveryServices} = $params->{deliveryServices};
-	$self->success( $response );
+	$self->success( $response, "Delivery services successfully assigned to all the servers of cache group $cg_id" );
 }
 
 1;
