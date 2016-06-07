@@ -80,7 +80,6 @@ public class MaxmindGeolocationService implements GeolocationService {
 	@Override
 	public boolean verifyDatabase(final File databaseFile) throws IOException {
 		return createDatabaseReader(databaseFile) != null;
-
 	}
 
 	@Override

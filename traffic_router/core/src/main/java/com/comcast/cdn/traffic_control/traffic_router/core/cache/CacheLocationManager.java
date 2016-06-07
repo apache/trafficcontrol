@@ -26,12 +26,12 @@ import java.util.Map;
 public interface CacheLocationManager {
 	/**
 	 * Gets the {@link CacheLocation} specified by the provided ID.
-	 * 
+	 *
 	 * @param id
 	 *            the ID for the desired <code>CacheLocation</code>
 	 * @return the <code>CacheLocation</code> or null if no location exists for the specified ID.
 	 */
-	public CacheLocation getCacheLocation(final String id);
+	CacheLocation getCacheLocation(final String id);
 
 	/**
 	 * Returns the configured {@link CacheLocation}s.
@@ -39,19 +39,8 @@ public interface CacheLocationManager {
 	 * @return the configured <code>CacheLocations</code> or an empty {@link Collection} if no
 	 *         locations are configured
 	 */
-	public Collection<CacheLocation> getCacheLocations();
+	Collection<CacheLocation> getCacheLocations();
 
-	/**
-	 * Returns the configured {@link CacheLocation}s for a specified zone.
-	 * 
-	 * @param zoneId
-	 *            the specified zone identifier
-	 * @return the configured <code>CacheLocations</code> for the specified zone or an empty
-	 *         {@link Collection} if no locations are configured for the zone
-	 */
-	public Collection<CacheLocation> getCacheLocations(String zoneId);
-
-
-	public void setCacheMap(Map<String,Cache> map);
-	public Map<String,Cache> getCacheMap();
+	void setCacheMap(Map<String,Cache> map);
+	Map<String,Cache> getCacheMap();
 }

@@ -41,7 +41,6 @@ import java.util.Random;
 import java.util.Set;
 import java.util.concurrent.Executors;
 
-import org.apache.commons.pool.impl.GenericObjectPool;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.json.JSONTokener;
@@ -57,7 +56,6 @@ import com.comcast.cdn.traffic_control.traffic_router.core.cache.CacheLocation;
 import com.comcast.cdn.traffic_control.traffic_router.core.cache.CacheRegister;
 import com.comcast.cdn.traffic_control.traffic_router.core.dns.ZoneManager;
 import com.comcast.cdn.traffic_control.traffic_router.core.ds.DeliveryService;
-import com.comcast.cdn.traffic_control.traffic_router.core.hash.MD5HashFunctionPoolableObjectFactory;
 import com.comcast.cdn.traffic_control.traffic_router.core.loc.FederationRegistry;
 import com.comcast.cdn.traffic_control.traffic_router.core.loc.NetworkNode;
 import com.comcast.cdn.traffic_control.traffic_router.core.loc.NetworkUpdater;
@@ -96,7 +94,7 @@ public class DnsRoutePerformanceTest {
         final Set<CacheLocation> locations = new HashSet<CacheLocation>(locationsJo.length());
         for (final String loc : JSONObject.getNames(locationsJo)) {
             final JSONObject jo = locationsJo.getJSONObject(loc);
-            locations.add(new CacheLocation(loc, jo.optString("zoneId"), new Geolocation(jo.getDouble("latitude"), jo.getDouble("longitude"))));
+            locations.add(new CacheLocation(loc, new Geolocation(jo.getDouble("latitude"), jo.getDouble("longitude"))));
         }
 
         names = new DnsNameGenerator().getNames(crConfigJson.getJSONObject("deliveryServices"), crConfigJson.getJSONObject("config"));
@@ -124,22 +122,20 @@ public class DnsRoutePerformanceTest {
 
         ZoneManager zoneManager = mock(ZoneManager.class);
 
-        MD5HashFunctionPoolableObjectFactory md5factory = new MD5HashFunctionPoolableObjectFactory();
-        GenericObjectPool pool = new GenericObjectPool(md5factory);
 
         whenNew(ZoneManager.class).withArguments(any(TrafficRouter.class), any(StatTracker.class), any(TrafficOpsUtils.class)).thenReturn(zoneManager);
 
         trafficRouter = new TrafficRouter(cacheRegister, mock(GeolocationService.class), mock(GeolocationService.class),
-            pool, mock(StatTracker.class), mock(TrafficOpsUtils.class), mock(FederationRegistry.class));
+            mock(StatTracker.class), mock(TrafficOpsUtils.class), mock(FederationRegistry.class));
 
         trafficRouter.setApplicationContext(mock(ApplicationContext.class));
 
         trafficRouter = spy(trafficRouter);
 
-        doCallRealMethod().when(trafficRouter).getCoverageZoneCache(anyString(), any(DeliveryService.class));
+        doCallRealMethod().when(trafficRouter).getCoverageZoneCacheLocation(anyString(), any(DeliveryService.class));
 
-        doCallRealMethod().when(trafficRouter).selectCache(any(Request.class), any(DeliveryService.class), any(Track.class));
-        doCallRealMethod().when(trafficRouter, "selectCache", any(CacheLocation.class), any(DeliveryService.class));
+        doCallRealMethod().when(trafficRouter).selectCaches(any(Request.class), any(DeliveryService.class), any(Track.class));
+        doCallRealMethod().when(trafficRouter, "selectCaches", any(CacheLocation.class), any(DeliveryService.class));
         doCallRealMethod().when(trafficRouter, "getSupportingCaches", any(List.class), any(DeliveryService.class));
         doCallRealMethod().when(trafficRouter).setState(any(JSONObject.class));
         doCallRealMethod().when(trafficRouter).selectDeliveryService(any(Request.class), anyBoolean());

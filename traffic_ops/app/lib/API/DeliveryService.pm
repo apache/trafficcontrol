@@ -34,16 +34,17 @@ use UI::DeliveryService;
 sub delivery_services {
 	my $self         = shift;
 	my $id           = $self->param('id');
+	my $logs_enabled = $self->param('logsEnabled');
 	my $current_user = $self->current_user()->{username};
 
 	my $rs;
 	my $tm_user_id;
 	my $forbidden;
-	if ( defined($id) ) {
-		( $forbidden, $rs, $tm_user_id ) = $self->get_delivery_service_by_id( $current_user, $id );
+	if ( defined($id) || defined($logs_enabled) ) {
+		( $forbidden, $rs, $tm_user_id ) = $self->get_delivery_service_params( $current_user, $id, $logs_enabled );
 	}
 	else {
-		( $rs, $tm_user_id ) = $self->get_delivery_services($current_user);
+		( $rs, $tm_user_id ) = $self->get_delivery_services_by_user($current_user);
 	}
 
 	my @data;
@@ -111,6 +112,7 @@ sub delivery_services {
 					"remapText"            => $row->remap_text,
 					"initialDispersion"    => $row->initial_dispersion,
 					"exampleURLs"          => \@example_urls,
+					"logsEnabled"          => \$row->logs_enabled,
 				}
 			);
 		}
@@ -119,7 +121,7 @@ sub delivery_services {
 	return defined($forbidden) ? $self->forbidden() : $self->success( \@data );
 }
 
-sub get_delivery_services {
+sub get_delivery_services_by_user {
 	my $self         = shift;
 	my $current_user = shift;
 
@@ -140,18 +142,28 @@ sub get_delivery_services {
 	return ( $rs, $tm_user_id );
 }
 
-sub get_delivery_service_by_id {
+sub get_delivery_service_params {
 	my $self         = shift;
 	my $current_user = shift;
 	my $id           = shift;
+	my $logs_enabled = shift;
+
+	# Convert to 1 or 0
+	$logs_enabled = $logs_enabled ? 1 : 0;
 
 	my $tm_user_id;
 	my $rs;
 	my $forbidden;
+	my $condition;
 	if ( &is_privileged($self) ) {
-		my @ds_ids =
-			$rs = $self->db->resultset('Deliveryservice')
-			->search( { 'me.id' => $id }, { prefetch => [ 'cdn', 'deliveryservice_regexes' ], order_by => 'xml_id' } );
+		if ( defined($id) ) {
+			$condition = ( { 'me.id' => $id } );
+		}
+		else {
+			$condition = ( { 'me.logs_enabled' => $logs_enabled } );
+		}
+		my @ds_ids = $rs =
+			$self->db->resultset('Deliveryservice')->search( $condition, { prefetch => [ 'cdn', 'deliveryservice_regexes' ], order_by => 'xml_id' } );
 	}
 	elsif ( $self->is_delivery_service_assigned($id) ) {
 		my $tm_user = $self->db->resultset('TmUser')->search( { username => $current_user } )->single();
@@ -389,9 +401,9 @@ sub is_deliveryservice_request_valid {
 }
 
 sub assign_servers {
-    my $self   = shift;
-    my $ds_xml_Id = $self->param('xml_id');
-	my $params = $self->req->json;
+	my $self      = shift;
+	my $ds_xml_Id = $self->param('xml_id');
+	my $params    = $self->req->json;
 
 	if ( !defined($params) ) {
 		return $self->alert("parameters are JSON format, please check!");

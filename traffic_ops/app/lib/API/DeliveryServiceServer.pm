@@ -41,7 +41,7 @@ sub index {
 			}
 		);
 	}
-	$self->success( \@data, $orderby, $limit, $page );
+	$self->success( \@data, undef, $orderby, $limit, $page );
 }
 
 sub domains {
