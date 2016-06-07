@@ -47,19 +47,21 @@ sub register {
 		success => sub {
 			my $self    = shift || confess("Call on an instance of MojoPlugins::Response");
 			my $body    = shift || confess("Please supply a response body hash.");
-			my $message = shift || "Success";
 
 			# optional args
+			my $message = shift;
 			my $orderby = shift;
 			my $limit   = shift;
 			my $size    = shift;
 			my $page    = shift;
 
 			my $response_body = {
-				$RESPONSE_KEY => $body,
-				$ALERTS_KEY   => [ { $LEVEL_KEY => $SUCCESS_LEVEL, $TEXT_KEY => $message } ]
+				$RESPONSE_KEY => $body
 			};
 
+			if ( defined($message) ) {
+				$response_body = merge( $response_body, { $ALERTS_KEY   => [ { $LEVEL_KEY => $SUCCESS_LEVEL, $TEXT_KEY => $message } ] } );
+			}
 			if ( defined($orderby) ) {
 				$response_body = merge( $response_body, { $ORDERBY_KEY => $orderby } );
 			}
