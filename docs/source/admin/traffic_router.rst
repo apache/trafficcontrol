@@ -1,18 +1,18 @@
-.. 
+..
 .. Copyright 2015 Comcast Cable Communications Management, LLC
-.. 
+..
 .. Licensed under the Apache License, Version 2.0 (the "License");
 .. you may not use this file except in compliance with the License.
 .. You may obtain a copy of the License at
-.. 
+..
 ..     http://www.apache.org/licenses/LICENSE-2.0
-.. 
+..
 .. Unless required by applicable law or agreed to in writing, software
 .. distributed under the License is distributed on an "AS IS" BASIS,
 .. WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 .. See the License for the specific language governing permissions and
 .. limitations under the License.
-.. 
+..
 
 *****************************
 Traffic Router Administration
@@ -43,7 +43,7 @@ The following are requirements to ensure an accurate set up:
 
 	# Frequency for reloading this file
 	# traffic_monitor.properties.reload.period=60000
-   
+
 
 6. Start Tomcat: ``sudo service tomcat start``, and test lookups with dig and curl against that server.
 7. Snapshot CRConfig; See :ref:`rl-snapshot-crconfig`
@@ -171,11 +171,11 @@ Items within brackets below are detailed under the HTTP and DNS sections
 .. Note:: The above message samples contain fields that are always present for every single access event to Traffic Router
 
 **Message Format**
-- Each event that is logged is a series of space separated key value pairs except for the first item. 
-- The first item is always the epoch in seconds with a decimal field precision of up to milliseconds 
-- Each key value pair is in the form of unquoted string, equals character, optionally quoted string 
-- Values that are quoted strings may contain space characters 
-- Values that are not quoted should not contains any space characters 
+- Each event that is logged is a series of space separated key value pairs except for the first item.
+- The first item is always the epoch in seconds with a decimal field precision of up to milliseconds
+- Each key value pair is in the form of unquoted string, equals character, optionally quoted string
+- Values that are quoted strings may contain space characters
+- Values that are not quoted should not contains any space characters
 
 .. Note:: Any value that is a single dash character or a dash character enclosed in quotes represents an empty value
 
@@ -347,3 +347,44 @@ The URL has 3 kinds of formats, which have different meanings:
 2. URL with domain that matches with the delivery service. For this URL, the router will also try to find a proper cache server within the delivery service and return the same format url as point 1.
 
 3. URL with domain that doesn't match with the delivery service. For this URL, the router will return the configured url directly to the client.
+
+.. _rl-tr-steering:
+Steering feature
+================
+
+Overview
+--------
+A Steering delivery service is a delivery service that is used to "steer" traffic to other delivery services. A Steering delivery service will have target delivery services configured for it with weights assigned to them.  Traffic Router uses the weights to make a consistent hash ring which it then uses to make sure that requests are routed to a target based on the configured weights.  This consistent hash ring is separate from the consistent hash ring used in cache selection.
+
+Special regular expressions called Filters can also be configured for target delivery services to pin traffic to a specific delivery service.  For example, if a filter called .*/news/.* for a target called target-ds-1 is created, any requests to traffic router with 'news' in them will be routed to target-ds-1.  This will happen regardless of the configured weights.
+
+A client can bypass the steering functionality by providing a header called X-TC-Steering-Option with the xml_id of the target delivery service to route to.  When Traffic Router receives this header it will route to the requested target delivery service regardless of weight configuration.
+
+Some other points of interest:
+- Steering is currently only available for HTTP delivery services that are a part of the same CDN.
+- A new role called STEERING has been added to the traffic ops database.  Only users with Admin or Steering privileges can modify steering assignments for a Delivery Service.
+- A new API has been created in Traffic Ops under /internal.  This API is used by a Steering user to add filters and modify assignments.  (Filters can only be added via the API).
+- Traffic Router uses the steering API in Traffic Ops to poll for steering assignments, the assignments are then used when routing traffic.
+
+A couple simple use cases for steering are:
+
+#. Migrating traffic from one delivery service to another over time.
+#. Trying out new functionality for a subset of traffic with an experimental delivery service.
+#. Load balancing between delivery services.
+
+
+
+Configuration
+-------------
+
+The following needs to be completed for Steering to work correctly:
+
+#. Two target delivery services are created in Traffic Ops.  They must both be HTTP delivery services part of the same CDN.
+#. A delivery service with type STEERING is created in Traffic Ops.
+#. Target delivery services are assigned to the steering delivery service using Traffic Ops.
+#. A user with the role of Steering is created.
+#. Using the API, the steering user assigns weights to the target delivery services.
+#. If desired, the steering user can create filters for the target delivery services.
+
+For more information see the `steering how-to guide <quick_howto/steering.html>`_.
+
