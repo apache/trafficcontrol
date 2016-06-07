@@ -52,12 +52,11 @@ public class DNSAccessEventBuilder {
             rloc = decimalFormat.format(resultLocation.getLatitude()) + "," + decimalFormat.format(resultLocation.getLongitude());
         }
 
-
         final String routingInfo = "rtype=" + rType + " rloc=\"" + rloc +  "\" rdtl=" + rdtl + " rerr=\"-\"";
         String answer = "ans=\"-\"";
 
         if (dnsAccessRecord.getDnsMessage() != null) {
-            answer = createAnswer(dnsAccessRecord.getDnsMessage());
+            answer = createTTLandAnswer(dnsAccessRecord.getDnsMessage());
         }
         return event + " " + routingInfo + " " + answer;
     }
@@ -74,7 +73,7 @@ public class DNSAccessEventBuilder {
         final StringBuilder stringBuilder = new StringBuilder(timeString).append(" qtype=DNS").append(" chi=").append(addressString).append(" ttms=").append(ttmsString);
 
         if (dnsAccessRecord.getDnsMessage() == null) {
-            return stringBuilder.append(" xn=- fqdn=- type=- class=- ttl=- rcode=-").toString();
+            return stringBuilder.append(" xn=- fqdn=- type=- class=- rcode=-").toString();
         }
 
         final String messageHeader = createDnsMessageHeader(dnsAccessRecord.getDnsMessage());
@@ -88,18 +87,21 @@ public class DNSAccessEventBuilder {
         return new StringBuilder(queryHeader).append(query).append(rcode).toString();
     }
 
-    private static String createAnswer(final Message dnsMessage) {
+    private static String createTTLandAnswer(final Message dnsMessage) {
         if (dnsMessage.getSectionArray(Section.ANSWER) == null || dnsMessage.getSectionArray(Section.ANSWER).length == 0) {
-            return "ans=\"-\"";
+            return "ttl=\"-\" ans=\"-\"";
         }
 
         final StringBuilder answerStringBuilder = new StringBuilder();
+        final StringBuilder ttlStringBuilder = new StringBuilder();
         for (final Record record : dnsMessage.getSectionArray(Section.ANSWER)) {
             final String s = record.rdataToString() + " ";
+            final String ttl = record.getTTL() + " ";
             answerStringBuilder.append(s);
+            ttlStringBuilder.append(ttl);
         }
 
-        return "ans=\"" + answerStringBuilder.toString().trim() + "\"";
+        return "ttl=\"" + ttlStringBuilder.toString().trim() + "\" ans=\"" + answerStringBuilder.toString().trim() + "\"";
     }
 
     public static String create(final DNSAccessRecord dnsAccessRecord, final WireParseException wireParseException) {
@@ -112,6 +114,7 @@ public class DNSAccessEventBuilder {
                 .append(" rerr=\"")
                 .append(rerr)
                 .append("\"")
+                .append(" ttl=\"-\"")
                 .append(" ans=\"-\"")
                 .toString();
     }
@@ -130,6 +133,7 @@ public class DNSAccessEventBuilder {
                 .append(" rerr=\"")
                 .append(rerr)
                 .append("\"")
+                .append(" ttl=\"-\"")
                 .append(" ans=\"-\"").toString();
     }
 
@@ -138,13 +142,11 @@ public class DNSAccessEventBuilder {
             final String qname = query.getName().toString();
             final String qtype = Type.string(query.getType());
             final String qclass = DClass.string(query.getDClass());
-            final long ttl = query.getTTL();
 
             return new StringBuilder()
                     .append("fqdn=").append(qname)
                     .append(" type=").append(qtype)
                     .append(" class=").append(qclass)
-                    .append(" ttl=").append(ttl)
                     .toString();
         }
         return "";
