@@ -97,7 +97,7 @@ sub create {
 		$response->{id}     = $rs->id;
 		$response->{name}   = $rs->name;
 		&log( $self, "create cdn " . $rs->name . ", id is " . $rs->id, "APICHANGE" );
-		return $self->success($response);
+		return $self->success($response, "cdn was created.");
 	}
 	return $self->alert("create cdn failed.");
 }
@@ -141,7 +141,7 @@ sub update {
 		$response->{id}     = $rs->id;
 		$response->{name}   = $rs->name;
 		&log( $self, "update cdn " . $rs->id . " with name " . $rs->name, "APICHANGE" );
-		return $self->success($response);
+		return $self->success($response, "cdn was updated.");
 	}
 	return $self->alert("update cdn failed.");
 }
