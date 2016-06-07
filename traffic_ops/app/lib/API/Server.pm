@@ -393,75 +393,214 @@ sub details {
 }
 
 sub check_server_params {
-  my $self        = shift;
-  my $json        = shift;
-  my $flag_create = shift;
-  my %params      = %{$json};
-  my $err         = undef;
+    my $self        = shift;
+    my $json        = shift;
+    my $update_base = shift;
+    my %params      = %{$json};
+    my $err         = undef;
 
-  if ( defined( $json->{'interface_mtu'} ) ) {
-    if ( $json->{'interface_mtu'} != '1500' && $json->{'interface_mtu'} != '9000' ) {
-      return ( \%params, "'interface_mtu' '$json->{'interface_mtu'}' not equal to 1500 or 9000!" );
+    if ( defined( $json->{'interface_mtu'} ) ) {
+        if ( $json->{'interface_mtu'} != '1500' && $json->{'interface_mtu'} != '9000' ) {
+            return ( \%params, "'interface_mtu' '$json->{'interface_mtu'}' not equal to 1500 or 9000!" );
+        }
     }
-  }
 
-  if ( defined( $json->{'tcp_port'} ) ) {
-    $params{'tcp_port'} = int( $json->{'tcp_port'} );
-  }
-  elsif ($flag_create) {
-    $params{'tcp_port'} = 80;
-  }
-
-  if ( defined( $json->{'cachegroup'} ) ) {
-    eval { $params{'cachegroup'} = $self->db->resultset('Cachegroup')->search( { name => $json->{'cachegroup'} } )->get_column('id')->single(); };
-    if ( $@ || ( !defined( $params{'cachegroup'} ) ) ) {
-      return ( \%params, "'cachegroup' $json->{'cachegroup'} not found!" );
+    if ( defined( $json->{'tcp_port'} ) ) {
+        $params{'tcp_port'} = int( $json->{'tcp_port'} );
     }
-  }
-  elsif ($flag_create) {
-    return ( \%params, "'cachegroup' not specified!" );
-  }
-
-  if ( defined( $json->{'cdn_name'} ) ) {
-    eval { $params{'cdn_id'} = $self->db->resultset('Cdn')->search( { name => $json->{'cdn_name'} } )->get_column('id')->single(); };
-  }
-  elsif ($flag_create) {
-    return ( \%params, "'cdn_name' not specified!" );
-  }
-
-  if ( defined( $json->{'type'} ) ) {
-    eval { $params{'type'} = &type_id( $self, $json->{'type'} ); };
-    if ( $@ || ( !defined( $params{'type'} ) ) ) {
-      return ( \%params, "'type' $json->{'type'} not found!" );
+    elsif (!defined($update_base)) {
+        $params{'tcp_port'} = 80;
     }
-  }
-  elsif ($flag_create) {
-    return ( \%params, "'type' not specified!" );
-  }
 
-  if ( defined( $json->{'profile'} ) ) {
-    eval { $params{'profile'} = &profile_id( $self, $json->{'profile'} ); };
-    if ( $@ || ( !defined( $params{'profile'} ) ) ) {
-      return ( \%params, "'profile' $json->{'profile'} not found!" );
+    if ( defined( $json->{'cachegroup'} ) ) {
+        eval { $params{'cachegroup'} = $self->db->resultset('Cachegroup')->search( { name => $json->{'cachegroup'} } )->get_column('id')->single(); };
+        if ( $@ || ( !defined( $params{'cachegroup'} ) ) ) {
+            return ( \%params, "'cachegroup' $json->{'cachegroup'} not found!" );
+        }
     }
-  }
-  elsif ($flag_create) {
-    return ( \%params, "'profile' not specified!" );
-  }
-
-  if ( defined( $json->{'phys_location'} ) ) {
-    eval {
-      $params{'phys_location'} = $self->db->resultset('PhysLocation')->search( { name => $json->{'phys_location'} } )->get_column('id')->single();
-    };
-    if ( $@ || ( !defined( $params{'phys_location'} ) ) ) {
-      return ( \%params, "'phys_location' $json->{'phys_location'} not found!" );
+    elsif (!defined($update_base)) {
+        return ( \%params, "'cachegroup' not specified!" );
     }
-  }
-  elsif ($flag_create) {
-    return ( \%params, "'phys_location' not specified!" );
-  }
 
-  return ( \%params, $err );
+    if ( defined( $json->{'cdn_name'} ) ) {
+        eval { $params{'cdn_id'} = $self->db->resultset('Cdn')->search( { name => $json->{'cdn_name'} } )->get_column('id')->single(); };
+    }
+    elsif (!defined($update_base)) {
+        return ( \%params, "'cdn_name' not specified!" );
+    }
+
+    if ( defined( $json->{'type'} ) ) {
+        eval { $params{'type'} = &type_id( $self, $json->{'type'} ); };
+        if ( $@ || ( !defined( $params{'type'} ) ) ) {
+            return ( \%params, "'type' $json->{'type'} not found!" );
+        }
+    }
+    elsif (!defined($update_base)) {
+        return ( \%params, "'type' not specified!" );
+    }
+
+    if ( defined( $json->{'profile'} ) ) {
+        eval { $params{'profile'} = &profile_id( $self, $json->{'profile'} ); };
+        if ( $@ || ( !defined( $params{'profile'} ) ) ) {
+            return ( \%params, "'profile' $json->{'profile'} not found!" );
+        }
+    }
+    elsif (!defined($update_base)) {
+        return ( \%params, "'profile' not specified!" );
+    }
+
+    if ( defined( $json->{'phys_location'} ) ) {
+        eval {
+            $params{'phys_location'} = $self->db->resultset('PhysLocation')->search( { name => $json->{'phys_location'} } )->get_column('id')->single();
+        };
+        if ( $@ || ( !defined( $params{'phys_location'} ) ) ) {
+            return ( \%params, "'phys_location' $json->{'phys_location'} not found!" );
+        }
+    }
+    elsif (!defined($update_base)) {
+        return ( \%params, "'phys_location' not specified!" );
+    }
+
+    # IP address checks
+    foreach my $ipstr (
+        $json->{'ip_address'},      $json->{'ip_netmask'},      $json->{'ip_gateway'},
+        $json->{'ilo_ip_address'},  $json->{'ilo_ip_netmask'},  $json->{'ilo_ip_gateway'},
+        $json->{'mgmt_ip_address'}, $json->{'mgmt_ip_netmask'}, $json->{'mgmt_ip_gateway'}
+    )
+    {
+        if ( !defined($ipstr) || $ipstr eq "" ) {
+            next;
+        }    # already checked for mandatory.
+        if ( !&is_ipaddress($ipstr) ) {
+            return ( \%params, $ipstr . " is not a valid IPv4 address or netmask" );
+        }
+    }
+
+    if ( defined( $json->{'ip_netmask'} ) && !&is_netmask( $json->{'ip_netmask'} ) ) {
+        return ( \%params, $json->{'ip_netmask'} . " is not a valid netmask" );
+    }
+    if ( defined( $json->{'ilo_ip_netmask'} ) && $json->{'ilo_ip_netmask'} ne ""
+        && !&is_netmask( $json->{'ilo_ip_netmask'} ) )
+    {
+        return ( \%params, $json->{'ilo_ip_netmask'} . " is not a valid netmask" );
+    }
+    if ( defined( $json->{'mgmt_ip_netmask'} ) &&  $json->{'mgmt_ip_netmask'} ne ""
+        && !&is_netmask( $json->{'mgmt_ip_netmask'} ) )
+    {
+        return ( \%params, $json->{'mgmt_ip_netmask'} . " is not a valid netmask" );
+    }
+    if ( defined( $json->{'ip6_address'} ) && $json->{'ip6_address'} ne "" 
+        && !&is_ip6address( $json->{'ip6_address'} ) )
+    {
+        return ( \%params, "Address " . $json->{'ip6_address'} . " is not a valid IPv6 address " );
+    }
+    if ( defined( $json->{'ip6_gateway'} ) && $json->{'ip6_gateway'} ne "" 
+        && !&is_ip6address( $json->{'ip6_gateway'} ) )
+    {
+        return ( \%params, "Address " . $json->{'ip6_address'} . " is not a valid IPv6 address " );
+    }
+
+    if ( (defined( $json->{'ip6_address'} ) && $json->{'ip6_address'} ne "" ) 
+        || (defined( $json->{'ip6_gateway'} ) && $json->{'ip6_gateway'} ne "" ) ) {
+        if ( defined( $update_base )) {
+            if ( !defined( $json->{'ip6_address'} ) ) {
+                $json->{'ip6_address'} = $update_base->{'ip6_address'}
+            }
+            if ( !defined( $json->{'ip6_gateway'} ) ) {
+                $json->{'ip6_gateway'} = $update_base->{'ip6_gateway'}
+            }
+        }
+        if ( !&in_same_net( $json->{'ip6_address'}, $json->{'ip6_gateway'} ) ) {
+            return ( \%params, $json->{'ip6_address'} . " and " . $json->{'ip6_gateway'} . " are not in same network" );
+        }
+    }
+
+    my $ipstr1;
+    my $ipstr2;
+    if ( (defined( $json->{'ip_address'} ) && $json->{'ip_address'} ne "" ) 
+        || (defined( $json->{'ip_netmask'} ) && $json->{'ip_netmask'} ne "" ) 
+        || (defined( $json->{'ip_gateway'} ) && $json->{'ip_gateway'} ne "" ) ) {
+    $self->app->log->error("update_base = " . $update_base);
+        if ( defined( $update_base ) ) {
+
+            if ( !defined( $json->{'ip_address'} ) ) {
+                $json->{'ip_address'} = $update_base->ip_address;
+            }
+            if ( !defined( $json->{'ip_netmask'} ) ) {
+                $json->{'ip_netmask'} = $update_base->ip_netmask;
+                $self->app->log->error("ip_netmask = " . $update_base->ip_netmask);
+            }
+            if ( !defined( $json->{'ip_gateway'} ) ) {
+                $json->{'ip_gateway'} = $update_base->ip_gateway;
+            }
+        }
+        if ( !defined( $json->{'ip_address'} ) ) {
+            return ( \%params, "ip_address is not found");
+        }
+        if ( !defined( $json->{'ip_netmask'} ) ) {
+            return ( \%params, "ip_netmask is not found");
+        }
+        if ( !defined( $json->{'ip_gateway'} ) ) {
+            return ( \%params, "ip_gateway is not found");
+        }
+        $ipstr1 = $json->{'ip_address'} . "/" . $json->{'ip_netmask'};
+        $ipstr2 = $json->{'ip_gateway'} . "/" . $json->{'ip_netmask'};
+        if ( !&in_same_net( $ipstr1, $ipstr2 ) ) {
+            return ( \%params, $json->{'ip_address'} . " and " . $json->{'ip_gateway'} . " are not in same network");
+        }
+    }
+
+    if ( (defined( $json->{'ilo_ip_address'} ) && $json->{'ilo_ip_address'} ne "" ) 
+        || (defined( $json->{'ilo_ip_netmask'} ) && $json->{'ilo_ip_netmask'} ne "" ) 
+        || (defined( $json->{'ilo_ip_gateway'} ) && $json->{'ilo_ip_gateway'} ne "" ) ) {
+        if ( defined( $update_base )) {
+            if ( !defined( $json->{'ilo_ip_address'} ) ) {
+                $json->{'ilo_ip_address'} = $update_base->ilo_ip_address
+            }
+            if ( !defined( $json->{'ilo_ip_netmask'} ) ) {
+                $json->{'ilo_ip_netmask'} = $update_base->ilo_ip_netmask
+            }
+            if ( !defined( $json->{'ilo_ip_gateway'} ) ) {
+                $json->{'ilo_ip_gateway'} = $update_base->ilo_ip_gateway
+            }
+        }
+        $ipstr1 = $json->{'ilo_ip_address'} . "/" . $json->{'ilo_ip_netmask'};
+        $ipstr2 = $json->{'ilo_ip_gateway'} . "/" . $json->{'ilo_ip_netmask'};
+        if ( $json->{'ilo_ip_gateway'} ne ""
+            && !&in_same_net( $ipstr1, $ipstr2 ) )
+        {
+            return ( \%params, $json->{'ilo_ip_address'} . " and " . $json->{'ilo_ip_gateway'} . " are not in same network" );
+        }
+    }
+
+    if ( (defined( $json->{'mgmt_ip_address'} ) && $json->{'mgmt_ip_address'} ne "" ) 
+        || (defined( $json->{'mgmt_ip_netmask'} ) && $json->{'mgmt_ip_netmask'} ne "" ) 
+        || (defined( $json->{'mgmt_ip_gateway'} ) && $json->{'mgmt_ip_gateway'} ne "" ) ) {
+        if ( defined( $update_base )) {
+            if ( !defined( $json->{'mgmt_ip_address'} ) ) {
+                $json->{'mgmt_ip_address'} = $update_base->mgmt_ip_address
+            }
+            if ( !defined( $json->{'mgmt_ip_netmask'} ) ) {
+                $json->{'mgmt_ip_netmask'} = $update_base->mgmt_ip_netmask
+            }
+            if ( !defined( $json->{'mgmt_ip_gateway'} ) ) {
+                $json->{'mgmt_ip_gateway'} = $update_base->mgmt_ip_gateway
+            }
+        }
+        $ipstr1 = $json->{'mgmt_ip_address'} . "/" . $json->{'mgmt_ip_netmask'};
+        $ipstr2 = $json->{'mgmt_ip_gateway'} . "/" . $json->{'mgmt_ip_netmask'};
+        if ( $json->{'mgmt_ip_gateway'} ne ""
+            && !&in_same_net( $ipstr1, $ipstr2 ) )
+        {
+            return ( \%params, $json->{'mgmt_ip_address'} . " and " . $json->{'mgmt_ip_gateway'} . " are not in same network" );
+        }
+    }
+
+    if ( defined( $json->{'tcp_port'} ) && $json->{'tcp_port'} !~ /\d+/ ) {
+        return ( \%params, $json->{'tcp_port'} . " is not a valid tcp port" );
+    }
+
+    return ( \%params, $err );
 }
 
 sub get_server_by_id {
@@ -521,7 +660,7 @@ sub create {
     return $self->alert("You must be an ADMIN or OPER to perform this operation!");
   }
 
-  ( $params, $err ) = $self->check_server_params( $json, 1 );
+  ( $params, $err ) = $self->check_server_params( $json, undef );
   if ( defined($err) ) {
     return $self->alert( { Error => $err } );
   }
@@ -640,16 +779,22 @@ sub update {
 
   my $id = $self->param('id');
 
-  ( $params, $err ) = $self->check_server_params( $json, 0 );
-  if ( defined($err) ) {
-    return $self->alert( { Error => $err } );
-  }
+  #( $params, $err ) = $self->check_server_params( $json, 0 );
+  #if ( defined($err) ) {
+  #  return $self->alert( { Error => $err } );
+  #}
 
   # get resultset for original and one to be updated.  Use to examine diffs to propagate the effects of the change.
   my $org_server = $self->db->resultset('Server')->find( { id => $id } );
   if ( !defined($org_server) ) {
     return $self->alert( { Error => "Failed to find server id = $id" } );
   }
+    $self->app->log->error("org_server----> ip_address=". $org_server->ip_address . " ip_netmask=". $org_server->ip_netmask. " ip_gateway=". $org_server->ip_gateway);
+  ( $params, $err ) = $self->check_server_params( $json, $org_server );
+  if ( defined($err) ) {
+    return $self->alert( { Error => $err } );
+  }
+
   my $update = $self->db->resultset('Server')->find( { id => $id } );
   eval {
     $update->update(

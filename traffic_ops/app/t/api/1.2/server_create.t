@@ -114,6 +114,19 @@ ok $t->put_ok('/api/1.2/servers/' . $svr_id  => {Accept => 'application/json'} =
     ->json_is( "/response/profile" => "EDGE1")
             , 'Does the server details return?';
 
+ok $t->put_ok('/api/1.2/servers/' . $svr_id  => {Accept => 'application/json'} => json => {
+        "ip_address" => "10.10.10.220",
+        "ip_gateway" => "111.222.111.1",
+        "ip_netmask" => "255.255.255.0" })
+    ->status_is(400)->or( sub { diag $t->tx->res->content->asset->{content}; } )
+            , 'Does the server details return?';
+
+ok $t->put_ok('/api/1.2/servers/' . $svr_id  => {Accept => 'application/json'} => json => {
+        "ip6_address" => "ee80::1",
+        "ip6_gateway" => "fe80::1" })
+    ->status_is(400)->or( sub { diag $t->tx->res->content->asset->{content}; } )
+            , 'Does the server details return?';
+
 my $svr_id1 = &get_svr_id('tc1_ats3');
 ok $t->post_ok('/api/1.2/servers/'. $svr_id1 . '/queue_update' =>  {Accept => 'application/json'} =>json => {
         'action' => 'queue' })
