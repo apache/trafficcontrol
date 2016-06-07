@@ -1,0 +1,8 @@
+{
+	"info": "This file contains the information for the test environment - URIs, logins, and passwords. Integration tests should read this file to figure out where and how to connect to services.",
+	"traffic_ops": {
+		"uri": "",
+		"user": "",
+		"pass": ""
+	}
+}

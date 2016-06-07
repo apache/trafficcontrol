@@ -127,7 +127,14 @@ body#log a#nav-l
     width:100%;
 }
 
-.field-with-error {color: red;}
+.field-with-error {
+    color: red;
+}
+
+div.form-row {
+    margin-bottom: 1em;
+}
+
 div.block{
   overflow:hidden;
   background-color:#222222;

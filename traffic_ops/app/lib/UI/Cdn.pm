@@ -408,7 +408,7 @@ sub aphys_location {
 sub adeliveryservice {
     my $self       = shift;
     my %data       = ( "aaData" => undef );
-    my %geo_limits = ( 0 => "none", 1 => "CZF", 2 => "CZF + US", 3 => "CZF + CA" );
+    my %geo_limits = ( 0 => "none", 1 => "CZF", 2 => "CZF + Countries" );
     my %protocol   = ( 0 => "http", 1 => "https", 2 => "http/https" );
 
     my $rs = $self->db->resultset('Deliveryservice')->search(
@@ -423,15 +423,18 @@ sub adeliveryservice {
     while ( my $row = $rs->next ) {
         my $cdn_name = defined( $row->cdn_id ) ? $row->cdn->name : "";
 
-        my @line = [
-            $row->id,                       $row->xml_id,                $row->org_server_fqdn,                "dummy",
+        # This will be undefined for 'Steering' delivery services
+        my $org_server_fqdn = defined($row->org_server_fqdn) ? $row->org_server_fqdn : "";
+
+        my $line = [
+            $row->id,                       $row->xml_id,                $org_server_fqdn,                "dummy",
             $cdn_name,                      $row->profile->name,         $row->ccr_dns_ttl,                    $yesno{ $row->active },
             $row->type->name,               $row->dscp,                  $yesno{ $row->signed },               $row->qstring_ignore,
             $geo_limits{ $row->geo_limit }, $protocol{ $row->protocol }, $yesno{ $row->ipv6_routing_enabled }, $row->range_request_handling,
             $row->http_bypass_fqdn,         $row->dns_bypass_ip,         $row->dns_bypass_ip6,                 $row->dns_bypass_ttl,
             $row->miss_lat,                 $row->miss_long,
         ];
-        push( @{ $data{'aaData'} }, @line );
+        push( @{ $data{'aaData'} }, $line );
     }
     $self->render( json => \%data );
 }

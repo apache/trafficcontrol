@@ -62,7 +62,7 @@
         var r=confirm("Are you sure?");
         if (r==true) {
               window.location = "/ds/<%= $id %>/delete";
-        } 
+        }
         parent.location.reload(true);
     }
 
@@ -124,6 +124,10 @@
 		$.fancybox({ type: 'iframe', href: "/staticdnsentry/<%= $ds->id %>/edit", padding: 0, autosize: true, fitToView: true, width: 700, minHeight: 500, modal:true});
 	}
 
+	function openSteering() {
+		$.fancybox({ type: 'iframe', href: "/ds/<%= $ds->id %>/steering", padding: 0, autosize: true, fitToView: true, width: 700, minHeight: 500, modal:true});
+	}
+
 	function addSslKeys() {
 		$.fancybox({ type: 'iframe', href: "/ds/<%= $ds->id %>/sslkeys/add", padding: 0, autosize: true, fitToView: true, width: 750, minHeight: 800, modal:true, helpers: {overlay:{locked:false}}});
 	}
@@ -136,7 +140,7 @@
 				if (data[idx].use_in_table == "deliveryservice") {
 					if (data[idx].id == "<%= $ds->type->id %>") {
 						$("#type").append("<option value=" + data[idx].id + " selected=\"selected\">" + data[idx].name + "</option>");
-					} 
+					}
 					// else {
 						// $("#type").append("<option value=" + data[idx].id + ">" + data[idx].name + "</option>");
 					// }
@@ -190,32 +194,171 @@
 		});
 
 	});
-	
-	function setup_form(speed) {
+
+function setup_form(speed) {
 		var type_selected = $('#type :selected').text();
 		if (type_selected.match(/^HTTP/)) {
+			$("#regexp_selector :nth-child(3)").removeAttr('disabled');
+			$("#regexp_selector :nth-child(4)").removeAttr('disabled');
 			$('#ccr_dns_ttl').val(3600);
-			$('#dns_bypass_ip_row').hide(speed);
-			$('#dns_bypass_ip6_row').hide(speed);
-			$('#dns_bypass_cname_row').hide(speed);
-			$('#dns_bypass_ttl_row').hide(speed);
-			$('#max_dns_answers_row').hide(speed);
-			$('#http_bypass_fqdn_row').show(speed);
-			$('#initial_dispersion_row').show(speed);
-			$('#regional_geo_blocking_row').show(speed);
+			$('#protocoli_row').show(speed);
+			$('#dscp_row').show(speed);
+            $('#signed_row').show(speed);
+            $('#qstring_ignore_row').show(speed);
+            $('#geo_limit_row').show(speed);
+            $('#http_bypass_fqdn_row').show(speed);
+            $('#ipv6_routing_enabled_row').show(speed);
+            $('#range_request_handlingi_row').show(speed);
+            $('#dns_bypass_ip_row').hide(speed);
+            $('#dns_bypass_ip6_row').hide(speed);
+            $('#regional_geo_blocking_row').show(speed);
+            $('#dns_bypass_cname_row').hide(speed);
+            $('#dns_bypass_ttl_row').show(speed);
+            $('#max_dns_answers_row').hide(speed);
+            $('#ccr_dns_ttl_row').hide(speed);
+            $('#org_server_fqdn_row').show(speed);
+            $('#global_max_mbps_row').show(speed);
+            $('#global_max_tps_row').show(speed);
+            $('#miss_lat_row').show(speed);
+            $('#miss_long_row').show(speed);
+            $('#edge_header_rewrite_row').show(speed);
+            $('#mid_header_rewrite_row').show(speed);
+            $('#regex_remap_row').show(speed);
+            $('#cacheurl_row').show(speed);
+            $('#origin_shield_row').show(speed);
+            $('#active_row').show(speed);
+            $('#ds_regexp_table').show(speed);
+            $('#tr_response_headers').show(speed);
+            $('#multi_site_origin_row').show(speed);
+            $('#initial_dispersion_row').show(speed);
+            $('#geo_provider_row').show(speed);
+            $('#tr_request_headers').show(speed);
+            $('#remap_text_row').show(speed);
+            $('#regional_geo_blocking_row').show(speed);
+            $('#regexp_add').show(speed);
+            $('#steering_button').hide(speed);
 		}
 		else if (type_selected.match(/^DNS/)) {
+			$("#regexp_selector :nth-child(3)").attr('disabled','disabled');
+			$("#regexp_selector :nth-child(4)").attr('disabled','disabled');
 			$('#ccr_dns_ttl').val(30);
-			$('#http_bypass_fqdn_row').hide(speed);
-			$('#initial_dispersion_row').hide(speed);
-			$('#dns_bypass_ip_row').show(speed);
-			$('#dns_bypass_ip6_row').show(speed);
-			$('#dns_bypass_cname_row').show(speed);
-			$('#dns_bypass_ttl_row').show(speed);
-			$('#max_dns_answers_row').show(speed);
+			$('#protocoli_row').show(speed);
+            $('#dscp_row').show(speed);
+            $('#signed_row').show(speed);
+            $('#qstring_ignore_row').show(speed);
+            $('#geo_limit_row').show(speed);
+            $('#http_bypass_fqdn_row').hide(speed);
+            $('#ipv6_routing_enabled_row').show(speed);
+            $('#range_request_handlingi_row').show(speed);
+            $('#dns_bypass_ip_row').show(speed);
+            $('#dns_bypass_ip6_row').show(speed);
 			$('#regional_geo_blocking_row').hide(speed);
+	    	$('#dns_bypass_cname_row').show(speed);
+            $('#dns_bypass_ttl_row').show(speed);
+            $('#max_dns_answers_row').show(speed);
+            $('#ccr_dns_ttl_row').hide(speed);
+            $('#org_server_fqdn_row').show(speed);
+            $('#global_max_mbps_row').show(speed);
+            $('#global_max_tps_row').show(speed);
+            $('#miss_lat_row').show(speed);
+            $('#miss_long_row').show(speed);
+            $('#edge_header_rewrite_row').show(speed);
+            $('#mid_header_rewrite_row').show(speed);
+            $('#regex_remap_row').show(speed);
+            $('#cacheurl_row').show(speed);
+            $('#origin_shield_row').show(speed);
+            $('#active_row').show(speed);
+            $('#ds_regexp_table').show(speed);
+            $('#tr_response_headers').show(speed);
+            $('#multi_site_origin_row').show(speed);
+            $('#initial_dispersion_row').hide(speed);
+            $('#geo_provider_row').show(speed);
+            $('#tr_request_headers').show(speed);
+            $('#remap_text_row').show(speed);
+            $('#regional_geo_blocking_row').show(speed);
+            $('#regexp_add').show(speed);
+            $('#steering_button').hide(speed);
 		}
-		// 
+		else if (type_selected.match(/^ANY_MAP$/)) {
+            $('#protocoli_row').hide(speed);
+            $('#dscp_row').hide(speed);
+            $('#signed_row').hide(speed);
+            $('#qstring_ignore_row').hide(speed);
+            $('#geo_limit_row').hide(speed);
+            $('#http_bypass_fqdn_row').hide(speed);
+            $('#ipv6_routing_enabled_row').hide(speed);
+            $('#range_request_handlingi_row').hide(speed);
+            $('#dns_bypass_ip_row').hide(speed);
+            $('#dns_bypass_ip6_row').hide(speed);
+			$('#regional_geo_blocking_row').show(speed);
+	    	$('#dns_bypass_cname_row').hide(speed);
+            $('#dns_bypass_ttl_row').hide(speed);
+            $('#max_dns_answers_row').hide(speed);
+            $('#ccr_dns_ttl_row').hide(speed);
+            $('#org_server_fqdn_row').hide(speed);
+            $('#global_max_mbps_row').hide(speed);
+            $('#global_max_tps_row').hide(speed);
+            $('#miss_lat_row').hide(speed);
+            $('#miss_long_row').hide(speed);
+            $('#edge_header_rewrite_row').hide(speed);
+            $('#mid_header_rewrite_row').hide(speed);
+            $('#regex_remap_row').hide(speed);
+            $('#cacheurl_row').hide(speed);
+            $('#origin_shield_row').hide(speed);
+            $('#active_row').show(speed);
+            $('#ds_regexp_table').show(speed);
+            $('#tr_response_headers').hide(speed);
+            $('#multi_site_origin_row').hide(speed);
+            $('#initial_dispersion_row').hide(speed);
+            $('#geo_provider_row').show(speed);
+            $('#tr_request_headers').show(speed);
+            $('#remap_text_row').show(speed);
+            $('#regional_geo_blocking_row').show(speed);
+            $('#regexp_add').show(speed);
+            $('#steering_button').hide(speed);
+		}
+		else if (type_selected.match(/^STEERING$/)) {
+            $('#protocoli_row').hide(speed);
+            $('#dscp_row').hide(speed);
+            $('#signed_row').hide(speed);
+            $('#qstring_ignore_row').hide(speed);
+            $('#geo_limit_row').hide(speed);
+            $('#http_bypass_fqdn_row').hide(speed);
+            $('#ipv6_routing_enabled_row').show(speed);
+            $('#range_request_handlingi_row').hide(speed);
+            $('#dns_bypass_ip_row').hide(speed);
+            $('#dns_bypass_ip6_row').hide(speed);
+			$('#regional_geo_blocking_row').show(speed);
+	    	$('#dns_bypass_cname_row').hide(speed);
+            $('#dns_bypass_ttl_row').hide(speed);
+            $('#max_dns_answers_row').hide(speed);
+            $('#ccr_dns_ttl_row').hide(speed);
+            $('#org_server_fqdn_row').hide(speed);
+            $('#global_max_mbps_row').hide(speed);
+            $('#global_max_tps_row').hide(speed);
+            $('#miss_lat_row').hide(speed);
+            $('#miss_long_row').hide(speed);
+            $('#edge_header_rewrite_row').hide(speed);
+            $('#mid_header_rewrite_row').hide(speed);
+            $('#regex_remap_row').hide(speed);
+            $('#cacheurl_row').hide(speed);
+            $('#origin_shield_row').hide(speed);
+            $('#active_row').show(speed);
+            $('#ds_regexp_table').show(speed);
+            $('#tr_response_headers').hide(speed);
+            $('#multi_site_origin_row').hide(speed);
+            $('#initial_dispersion_row').hide(speed);
+            $('#geo_provider_row').hide(speed);
+            $('#tr_request_headers').hide(speed);
+            $('#remap_text_row').hide(speed);
+            $('#regional_geo_blocking_row').hide(speed);
+            $('#regexp_add').hide(speed);
+            $('#static_dns_button').hide(speed);
+            $('#server_assignment_button').hide(speed);
+            $('#steering_button').show(speed);
+            $('#geo_limit_countries_row').hide(speed);
+		}
+		//
 	}
 
 	function add_regexp_line(re_type_str) {
@@ -231,10 +374,10 @@
 			if ($('#type :selected').text() == "DNS")
 				return;
 			typestr = "HEADER_REGEXP";
-		}	
+		}
 		$('#regexp_table_body').append(
 			"<tr>" +
-			"<td>Type:</td><td><input type=\"text\"  style=\"background-color: gray;\" size=18 id=\"re_type_new_" + row + 
+			"<td>Type:</td><td><input type=\"text\"  style=\"background-color: gray;\" size=18 id=\"re_type_new_" + row +
 				"\" name=\"re_type_new_" + row + "\" value=\"" + typestr + "\" readonly></input></td>" +
 			"<td>Order:</td><td><select name=\"re_order_new_" + row + "\">" +
 				"<option value=\"invalid\">-- select --</option>" +
@@ -250,8 +393,8 @@
 				"<option value=9>9</option>" +
 				"</select>" +
 			"</td>" +
-			"<td>Regular Expression:</td><td><input type=\"text\" size=40 id=\"re_re_new_" + row + "\" name=\"re_re_new_" + 
-				row + "\"></input></td>" + 
+			"<td>Regular Expression:</td><td><input type=\"text\" size=40 id=\"re_re_new_" + row + "\" name=\"re_re_new_" +
+				row + "\"></input></td>" +
 			"</tr>"
 		);
 
@@ -304,7 +447,7 @@
         <br>
 		<div>
 			<form method="POST" action="/ds/<%= $ds->id %>/update" id="editds_form">
-				%= include 'delivery_service/_form' 
+				%= include 'delivery_service/_form'
 				<div class="block" style="color:white">
                 	%= label_for 'last_updated' => 'Last Updated', class => 'label'
                 	%= field('ds.last_updated')
@@ -324,7 +467,7 @@
             	</div><br>
             	% }
 			<hr>
-			<h2 style="color:white;">Regular expressions for this delivery service:</h2> 
+			<h2 style="color:white;">Regular expressions for this delivery service:</h2>
 			<% if ($priv_level >= 20) { %>
 			<div id ="select_re"></div><br>
 			<% } %>
@@ -392,8 +535,8 @@
 				</div>
 				<div id="buttons-section" style="margin-top:5px;">
 					<button class="button" id="delete-button" style="float:left;margin-left:5px; " onclick="deleteFunction()">Delete</button>
-					<button class="button" style="float:left;margin-left:5px; " onclick="openAssignment()">Server Assignments</button>
-					<button class="button" style="float:left;margin-left:5px; " onclick="openStaticDns()">Static DNS</button>
+					<button class="button" style="float:left;margin-left:5px; " onclick="openAssignment()" id="server_assignment_button">Server Assignments</button>
+					<button class="button" style="float:left;margin-left:5px; " onclick="openStaticDns()" id="static_dns_button">Static DNS</button>
 					<% if ($priv_level >= 30) { %>
 						  <button class="button" style="float:left;margin-left:5px; " onclick="addSslKeys()" id="addkeys">Manage SSL Keys</button>
 					<% } %>
@@ -408,6 +551,7 @@
                           </div>
 					<% } %>
 <% } %>
+				<button class="button" style="float:left;margin-left:5px; " onclick="openSteering()" id="steering_button">Manage Steering Assignments</button>
 				<button id="close_button" class="button" style="float:left; margin-left: 300px">Close</button>
 			     </div>
 			 </div>

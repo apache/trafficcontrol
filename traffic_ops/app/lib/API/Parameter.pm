@@ -34,6 +34,7 @@ sub index {
 		push(
 			@data, {
 				"name"        => $row->parameter->name,
+				"id"          => $row->parameter->id,
 				"configFile"  => $row->parameter->config_file,
 				"value"       => $row->parameter->value,
 				"lastUpdated" => $row->parameter->last_updated,
@@ -53,6 +54,7 @@ sub profile {
 		push(
 			@data, {
 				"name"        => $row->parameter->name,
+				"id"          => $row->parameter->id,
 				"configFile"  => $row->parameter->config_file,
 				"value"       => $row->parameter->value,
 				"lastUpdated" => $row->parameter->last_updated,
