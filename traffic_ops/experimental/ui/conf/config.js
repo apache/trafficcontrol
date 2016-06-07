@@ -1,6 +1,6 @@
 module.exports = {
     timeout: '120s',
-    useSSL: false,
+    useSSL: false, // set to true if using ssl
     port: 8080,
     sslPort: 8443,
     proxyPort: 8009,

@@ -31,6 +31,7 @@ use Data::Dumper;
 use File::Temp;
 use WWW::Curl::Easy;
 use LWP::UserAgent;
+use File::Copy;
 
 my $database_conf     = "/opt/traffic_ops/app/conf/production/database.conf";
 my $ldap_conf         = "/opt/traffic_ops/app/conf/ldap.conf";
@@ -407,7 +408,7 @@ sub writeSecret {
 	# rename temp file to cdn.conf and set ownership/permissions same as backup
 	my @stats = stat($backup_name);
 	my ( $uid, $gid, $perm ) = @stats[ 4, 5, 2 ];
-	rename( "$tmpfile", $cdn_conf ) or die("rename(): $!");
+	move( "$tmpfile", $cdn_conf ) or die("move(): $!");
 
 	chown $uid, $gid, $cdn_conf;
 	chmod $perm, $cdn_conf;

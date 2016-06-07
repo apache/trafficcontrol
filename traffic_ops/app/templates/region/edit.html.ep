@@ -20,7 +20,7 @@
 function deletefunction() {
 	var r=confirm("are you sure?");
 	if (r==true) {
-		window.location = "/region/delete/<%= $id %>";
+		window.location = "/region/<%= $id %>/delete";
 		parent.location.reload (true);
 	}
 }

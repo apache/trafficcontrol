@@ -16,8 +16,6 @@
 
 package com.comcast.cdn.traffic_control.traffic_router.core.cache;
 
-import java.util.ArrayList;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -46,11 +44,6 @@ public class CacheRegister implements CacheLocationManager {
 		configuredLocations = new HashMap<String, CacheLocation>();
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see com.comcast.cdn.traffic_control.traffic_router.core.cache.CacheLocationManager#getCacheLocation(java.lang.String)
-	 */
 	@Override
 	public CacheLocation getCacheLocation(final String id) {
 		return configuredLocations.get(id);
@@ -63,23 +56,14 @@ public class CacheRegister implements CacheLocationManager {
 		return result;
 	}
 
-	@Override
-	@SuppressWarnings("PMD")
-	public Collection<CacheLocation> getCacheLocations(String zoneId) {
-		if(zoneId == null) { zoneId = ""; }
-		final List<CacheLocation> result = new ArrayList<CacheLocation>(configuredLocations.size());
-		for (final CacheLocation location : configuredLocations.values()) {
-			if (strsEqual(location.getZoneId(),zoneId)) {
-				result.add(location);
+	public CacheLocation getCacheLocationById(final String id) {
+		for (CacheLocation cacheLocation : configuredLocations.values()) {
+			if (id.equals(cacheLocation.getId())) {
+				return cacheLocation;
 			}
 		}
-		return result;
-	}
-	@SuppressWarnings("PMD")
-	private boolean strsEqual(String a, String b) {
-		if(a == null) { a = ""; }
-		if(b == null) { b = ""; }
-		return a.equals(b);
+
+		return null;
 	}
 
 	/**
@@ -140,6 +124,16 @@ public class CacheRegister implements CacheLocationManager {
 
 	public DeliveryService getDeliveryService(final String deliveryServiceId) {
 		return dsMap.get(deliveryServiceId);
+	}
+
+	public List<CacheLocation> filterAvailableLocations(final String deliveryServiceId) {
+		final DeliveryService deliveryService = dsMap.get(deliveryServiceId);
+
+		if (deliveryService == null) {
+			return null;
+		}
+
+		return deliveryService.filterAvailableLocations(getCacheLocations());
 	}
 
 	public void setDeliveryServiceMap(final Map<String, DeliveryService> dsMap) {

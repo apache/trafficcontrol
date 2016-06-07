@@ -79,14 +79,21 @@ public abstract class AbstractServiceUpdater {
 
 	final private Runnable updater = new Runnable() {
 		@Override
+		@SuppressWarnings("PMD.AvoidCatchingThrowable")
 		public void run() {
-			updateDatabase();
+			try {
+				updateDatabase();
+			} catch (Throwable t) {
+				// Catching Throwable prevents this Service Updater thread from silently dying
+				LOGGER.error( "[" + getClass().getSimpleName() +"] Failed updating database!", t);
+			}
 		}
 	};
 
 	public void init() {
 		final long pollingInterval = getPollingInterval();
-		LOGGER.info("[" + getClass().getSimpleName() + "] Starting schedule with interval: " + pollingInterval + " : " + TimeUnit.MILLISECONDS);
+		final Date nextFetchDate = new Date(System.currentTimeMillis() + pollingInterval);
+		LOGGER.info("[" + getClass().getSimpleName() + "] Fetching external resource " + dataBaseURL + " at interval: " + pollingInterval + " : " + TimeUnit.MILLISECONDS + " next update occurrs at " + nextFetchDate);
 		scheduledService = executorService.scheduleWithFixedDelay(updater, pollingInterval, pollingInterval, TimeUnit.MILLISECONDS);
 	}
 
@@ -191,6 +198,10 @@ public abstract class AbstractServiceUpdater {
 			this.setLoaded(false);
 			new Thread(updater).start();
 		}
+	}
+
+	public void setDatabaseUrl(final String url) {
+		this.dataBaseURL = url;
 	}
 
 	/**

@@ -161,6 +161,10 @@ sub ui_routes {
 	# -- Keys - SSL Key management
 	$r->get('/ds/:id/urlsigkeys/add')->to( 'UrlSigKeys#add', namespace => $namespace );
 
+	# -- Steering DS assignment
+	$r->get('/ds/:id/steering')->to( 'Steering#index', namespace => $namespace );
+	$r->post('/ds/:id/steering/update')->over( authenticated => 1 )->to( 'Steering#update', namespace => $namespace );
+
 	# JvD: ded route?? # $r->get('/ds_by_id/:id')->over( authenticated => 1 )->to('DeliveryService#ds_by_id', namespace => $namespace );
 	$r->get('/healthdatadeliveryservice')->to( 'DeliveryService#readdeliveryservice', namespace => $namespace );
 	$r->get('/delivery_services')->over( authenticated => 1 )->to( 'DeliveryService#index', namespace => $namespace );
@@ -660,6 +664,7 @@ sub api_routes {
     $r->post("/api/$version/regions/:region_name/phys_locations")->over( authenticated => 1 )->to( 'PhysLocation#create', namespace => $namespace );
 	$r->post("/api/$version/servers")->over( authenticated => 1 )->to( 'Server#create',   namespace => $namespace );
 	$r->put("/api/$version/servers/:id")->over( authenticated => 1 )->to( 'Server#update',   namespace => $namespace );
+	$r->delete("/api/$version/servers/:id")->over( authenticated => 1 )->to( 'Server#delete',   namespace => $namespace );
 	$r->post("/api/$version/servers/:id/queue_update")->over( authenticated => 1 )->to( 'Server#postupdatequeue',   namespace => $namespace );
     $r->post("/api/$version/cachegroups")->over( authenticated => 1 )->to( 'Cachegroup#create', namespace => $namespace );
 	$r->post("/api/$version/cachegroups/:id/queue_update")->over( authenticated => 1 )->to( 'Cachegroup#postupdatequeue',   namespace => $namespace );
@@ -678,6 +683,11 @@ sub api_routes {
 		}
 	);
 
+	# -- Steering
+	$r->get("/internal/api/$version/steering" => [format => [qw(json)] ] )->over( authenticated => 1)->to('Steering#index', namespace => 'API::DeliveryService' );
+	$r->get("/internal/api/$version/steering/:xml_id" => [format => [qw(json)] ] )->over( authenticated => 1)->to('Steering#index', namespace => 'API::DeliveryService' );
+	$r->post("/internal/api/$version/steering")->over( authenticated => 1 )->to( 'Steering#add', namespace => 'API::DeliveryService' );
+	$r->put("/internal/api/$version/steering/:xml_id")->over( authenticated => 1 )->to( 'Steering#update', namespace => 'API::DeliveryService' );
 }
 
 sub api_1_0_routes {
@@ -778,7 +788,6 @@ sub api_1_0_routes {
 	$r->get('/datatype')->over( authenticated => 1 )->to( 'Types#readtype', namespace => $namespace );
 	$r->get('/datatypetrimmed')->over( authenticated => 1 )->to( 'Types#readtypetrimmed', namespace => $namespace );
 	$r->get('/datatype/orderby/:orderby')->over( authenticated => 1 )->to( 'Types#readtype', namespace => $namespace );
-
 }
 
 sub traffic_stats_routes {

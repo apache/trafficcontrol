@@ -1,0 +1,34 @@
+{
+  "response": [
+    {
+      "deliveryService": "mm-test",
+      "targets": [
+        {
+          "deliveryService": "ds-05",
+          "weight": "1000"
+        },
+        {
+          "deliveryService": "ds-08",
+          "weight": "9000"
+        }
+      ],
+      "filters" :[
+        { "pattern" : ".*/force-to-five/.*", "deliveryService" : "ds-05"},
+        { "pattern" : ".*/force-to-eight/.*", "deliveryService" : "ds-08"}
+      ]
+    },
+    {
+      "deliveryService": "test",
+      "targets": [
+        {
+          "deliveryService": "ds-03",
+          "weight": "60000"
+        },
+        {
+          "deliveryService": "ds-04",
+          "weight": "45000"
+        }
+      ]
+    }
+  ]
+}

@@ -115,11 +115,11 @@ sub create {
 		if ($new_id) {
 			my $saved_job = $self->db->resultset("Job")->find( { id => $new_id } );
 			my $asset_url = $saved_job->asset_url;
-			&log( $self, "Created new purge job for asset_url " . $asset_url, "APICHANGE" );
-			return $self->success_message( "Successfully created purge job for: " . $asset_url . "(" . $saved_job->parameters . ")" );
+			&log( $self, "Invalidate content request submitted for " . $asset_url, "APICHANGE" );
+			return $self->success_message( "Invalidate content request submitted for: " . $asset_url . " (" . $saved_job->parameters . ")" );
 		}
 		else {
-			return $self->alert( { "Error creating PURGE job" . $ds_id } );
+			return $self->alert( { "Error creating invalidate content request" . $ds_id } );
 		}
 	}
 	else {
@@ -205,12 +205,17 @@ sub is_valid_date_format {
 sub is_ttl_in_range {
 	my $self  = shift;
 	my $value = shift;
+	my $min_hours =
+		$self->db->resultset('Parameter')->search( { name => "ttl_min_hours" }, { config_file => "regex_revalidate.config" } )->get_column('value')->first;
+	my $max_hours =
+		$self->db->resultset('Parameter')->search( { name => "ttl_max_hours" }, { config_file => "regex_revalidate.config" } )->get_column('value')->first;
+
 	if ( !defined $value or $value eq '' ) {
 		return undef;
 	}
 
-	if ( ( $value ne '' ) && ( $value !~ qr/\b(4[89]|[5-9][0-9]|[1-5][0-9]{2}|6[0-6][0-9]|67[0-2])\b/ ) ) {
-		return "should be between 48 and 672";
+	if ( ( $value ne '' ) && ( $value < $min_hours || $value > $max_hours ) ) {
+		return "should be between " . $min_hours . " and " . $max_hours;
 	}
 
 	return undef;
