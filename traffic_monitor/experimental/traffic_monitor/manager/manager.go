@@ -35,6 +35,8 @@ const (
 //const maxHistory = (60 / pollingInterval) * 5
 const defaultMaxHistory = 5
 
+const maxEvents = 200
+
 type StaticAppData struct {
 	StartTime      time.Time
 	GitRevision    string
@@ -154,7 +156,8 @@ func Start(opsConfigFile string, staticAppData StaticAppData) {
 	peerStates := make(map[string]peer.Crstates)                                                                                       // each peer's last state is saved in this map
 	combinedStates := peer.Crstates{Caches: make(map[string]peer.IsAvailable), Deliveryservice: make(map[string]peer.Deliveryservice)} // this is the result of combining the localStates and all the peerStates using the var ??
 
-	var deliveryServiceServers map[string][]string
+	deliveryServiceServers := map[string][]string{}
+	serverTypes := map[string]string{}
 
 	// TODO put stat data in a struct, for brevity
 	lastHealthEndTimes := map[string]time.Time{}
@@ -162,6 +165,8 @@ func Start(opsConfigFile string, staticAppData StaticAppData) {
 	fetchCount := uint64(0) // note this is the number of individual caches fetched from, not the number of times all the caches were polled.
 	healthIteration := uint64(0)
 	errorCount := uint64(0)
+	events := []Event{}
+	eventIndex := uint64(0)
 	for {
 		select {
 		case req := <-dr:
@@ -198,6 +203,7 @@ func Start(opsConfigFile string, staticAppData StaticAppData) {
 				body, err = cache.StatsMarshall(statHistory, hc)
 			} else if req.T == http_server.DS_STATS {
 			} else if req.T == http_server.EVENT_LOG {
+				body, err = json.Marshal(JSONEvents{Events: events})
 			} else if req.T == http_server.PEER_STATES {
 			} else if req.T == http_server.STAT_SUMMARY {
 			} else if req.T == http_server.STATS {
@@ -230,14 +236,24 @@ func Start(opsConfigFile string, staticAppData StaticAppData) {
 				log.Printf("MonitorConfigPoller: error instantiating Session with traffic_ops: %s\n", err)
 				continue
 			}
-			monitorConfigPoller.OpsConfigChannel <- opsConfig // this is needed for cdnName
-			monitorConfigPoller.SessionChannel <- toSession
+
 			deliveryServiceServers, err = getDeliveryServiceServers(toSession, opsConfig.CdnName)
 			if err != nil {
 				errorCount++
 				log.Printf("Error getting delivery service servers from Traffic Ops: %v\n", err)
 				continue
 			}
+
+			serverTypes, err = getServerTypes(toSession, opsConfig.CdnName)
+			if err != nil {
+				errorCount++
+				log.Printf("Error getting server types from Traffic Ops: %v\n", err)
+				continue
+			}
+
+			monitorConfigPoller.OpsConfigChannel <- opsConfig // this is needed for cdnName
+			monitorConfigPoller.SessionChannel <- toSession
+
 		case mc := <-monitorConfigPoller.ConfigChannel:
 			monitorConfig = mc
 
@@ -312,6 +328,20 @@ func Start(opsConfigFile string, staticAppData StaticAppData) {
 			isAvailable, whyAvailable := health.EvalCache(healthResult, &monitorConfig)
 			if localStates.Caches[healthResult.Id].IsAvailable != isAvailable {
 				fmt.Println("Changing state for", healthResult.Id, " was:", prevResult.Available, " is now:", isAvailable, " because:", whyAvailable, " errors:", healthResult.Errors)
+				e := Event{
+					Index:       eventIndex,
+					Time:        time.Now().Unix(),
+					Description: whyAvailable,
+					Name:        healthResult.Id,
+					Hostname:    healthResult.Id,
+					Type:        serverTypes[healthResult.Id],
+					Available:   isAvailable,
+				}
+				events = append([]Event{e}, events...)
+				if len(events) > maxEvents {
+					events = events[:maxEvents-1]
+				}
+				eventIndex++
 			}
 			localStates.Caches[healthResult.Id] = peer.IsAvailable{IsAvailable: isAvailable}
 			calculateDeliveryServiceState(deliveryServiceServers, localStates.Caches, localStates.Deliveryservice)
@@ -333,6 +363,20 @@ func Start(opsConfigFile string, staticAppData StaticAppData) {
 			combinedStates = combineCrStates(peerStates, localStates)
 		}
 	}
+}
+
+type JSONEvents struct {
+	Events []Event `json:"events"`
+}
+
+type Event struct {
+	Index       uint64 `json:"index"`
+	Time        int64  `json:"time"`
+	Description string `json:"description"`
+	Name        string `json:"name"`
+	Hostname    string `json:"hostname"`
+	Type        string `json:"type"`
+	Available   bool   `json:"isAvailable"`
 }
 
 type Stats struct {
@@ -392,6 +436,32 @@ func getStats(staticAppData StaticAppData, pollingInterval time.Duration, lastHe
 	s.LastQueryInterval = int(math.Max(float64(s.QueryIntervalActual), float64(s.QueryIntervalTarget)))
 
 	return json.Marshal(s)
+}
+
+func getServerTypes(to *traffic_ops.Session, cdn string) (map[string]string, error) {
+	// This is efficient (with getDeliveryServiceServers) because the traffic_ops client caches its result.
+	// Were that not the case, these functions could be refactored to only call traffic_ops.Session.CRConfigRaw() once.
+
+	crcData, err := to.CRConfigRaw(cdn)
+	if err != nil {
+		return nil, err
+	}
+
+	type CrConfig struct {
+		ContentServers map[string]struct {
+			Type string `json:"type"`
+		} `json:"contentServers"`
+	}
+	var crc CrConfig
+	if err := json.Unmarshal(crcData, &crc); err != nil {
+		return nil, err
+	}
+
+	serverTypes := map[string]string{}
+	for serverName, serverData := range crc.ContentServers {
+		serverTypes[serverName] = serverData.Type
+	}
+	return serverTypes, nil
 }
 
 // TODO add disabledLocations

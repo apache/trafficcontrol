@@ -83,7 +83,15 @@ func (p HttpPoller) Poll() {
 		case curr_time := <-tick.C:
 			iterationCount++
 			if p.TickChan != nil {
-				p.TickChan <- iterationCount
+			tickWrite:
+				for {
+					select {
+					case p.TickChan <- iterationCount:
+						break tickWrite
+					case config := <-p.ConfigChannel:
+						p.Config = config
+					}
+				}
 			}
 
 			if int64(curr_time.Sub(last_time)) > int64(float64(p.Config.Interval)*1.01) {
