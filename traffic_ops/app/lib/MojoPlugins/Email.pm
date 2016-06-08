@@ -39,7 +39,19 @@ sub register {
 			$self->stash( instance_name => $instance_name );
 
 			my $current_user = $self->db->resultset('TmUser')->search( { username => $self->current_user()->{username} } )->single();
-			$self->stash( current_user => $current_user );
+			if ($current_user) {
+                $self->stash( {
+                    username => $current_user->username,
+                    full_name => $current_user->full_name,
+                    email => $current_user->email,
+                } );
+			} else {
+                $self->stash( {
+                    username => $self->current_user()->{username},
+                    full_name => undef,
+                    email => undef,
+                } );
+			}
 
 			$self->stash( params => $details );
 
