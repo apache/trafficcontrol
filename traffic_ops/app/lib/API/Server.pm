@@ -779,11 +779,6 @@ sub update {
 
   my $id = $self->param('id');
 
-  #( $params, $err ) = $self->check_server_params( $json, 0 );
-  #if ( defined($err) ) {
-  #  return $self->alert( { Error => $err } );
-  #}
-
   # get resultset for original and one to be updated.  Use to examine diffs to propagate the effects of the change.
   my $org_server = $self->db->resultset('Server')->find( { id => $id } );
   if ( !defined($org_server) ) {
