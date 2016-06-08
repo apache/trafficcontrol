@@ -53,7 +53,7 @@ func (p MonitorConfigPoller) Poll() {
 			fmt.Println("MonitorConfigPoller: received new opsConfig: %v", opsConfig)
 			p.OpsConfig = opsConfig
 		case session := <-p.SessionChannel:
-			fmt.Println("MonitorConfigPoller: received new session: %v", session)
+			//			fmt.Println("MonitorConfigPoller: received new session: %v", session)
 			p.Session = session
 		case <-tick.C:
 			if p.Session != nil && p.OpsConfig.CdnName != "" {
