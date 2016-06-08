@@ -18,22 +18,35 @@ func writeResponse(w http.ResponseWriter, f Format, dr DataRequest) {
 	}
 }
 
+// Endpoints returns a map of HTTP paths to functions.
+// This is a function because Go doesn't have constant map literals.
+func Endpoints() map[string]http.HandlerFunc {
+	// note: with the trailing slash, any non-trailing slash requests will get a 301 redirect
+	return map[string]http.HandlerFunc{
+		"/": http.NotFound,
+		"/publish/CacheStats/": handleCacheStats,
+		"/publish/CrConfig":    handleCrConfig,
+		"/publish/CrStates":    handleCrStates,
+		"/publish/DsStats":     handleDsStats,
+		"/publish/EventLog":    handleEventLog,
+		"/publish/PeerStates":  handlePeerStates,
+		"/publish/StatSummary": handleStatSummary,
+		"/publish/Stats":       handleStats,
+		"/publish/ConfigDoc":   handleConfigDoc,
+	}
+}
+
+func RegisterEndpoints(sm *http.ServeMux) {
+	for path, f := range Endpoints() {
+		sm.HandleFunc(path, f)
+	}
+}
+
 func Run(c chan DataRequest, addr string) {
 	mgrReqChan = c
 
 	sm := http.NewServeMux()
-
-	// note: with the trailing slash, any non-trailing slash requests will get a 301 redirect
-	sm.HandleFunc("/", http.NotFound)
-	sm.HandleFunc("/publish/CacheStats/", handleCacheStats)
-	sm.HandleFunc("/publish/CrConfig", handleCrConfig)
-	sm.HandleFunc("/publish/CrStates", handleCrStates)
-	sm.HandleFunc("/publish/DsStats", handleDsStats)
-	sm.HandleFunc("/publish/EventLog", handleEventLog)
-	sm.HandleFunc("/publish/PeerStates", handlePeerStates)
-	sm.HandleFunc("/publish/StatSummary", handleStatSummary)
-	sm.HandleFunc("/publish/Stats", handleStats)
-	sm.HandleFunc("/publish/ConfigDoc", handleConfigDoc)
+	RegisterEndpoints(sm)
 
 	s := &http.Server{
 		Addr:           addr,
