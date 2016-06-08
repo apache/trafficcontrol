@@ -237,7 +237,12 @@ func Start(opsConfigFile string, staticAppData StaticAppData) {
 				listenAddress = opsConfig.HttpListener
 			}
 
-			go http_server.Run(dr, listenAddress)
+			err = http_server.Run(dr, listenAddress)
+			if err != nil {
+				errorCount++
+				log.Printf("MonitorConfigPoller: error creating HTTP server: %s\n", err)
+				continue
+			}
 
 			toSession, err = traffic_ops.Login(opsConfig.Url, opsConfig.Username, opsConfig.Password, opsConfig.Insecure)
 			if err != nil {
@@ -260,8 +265,11 @@ func Start(opsConfigFile string, staticAppData StaticAppData) {
 				continue
 			}
 
-			monitorConfigPoller.OpsConfigChannel <- opsConfig // this is needed for cdnName
-			monitorConfigPoller.SessionChannel <- toSession
+			// This must be in a goroutine, because the monitorConfigPoller tick sends to a channel this select listens for. Thus, if we block on sends to the monitorConfigPoller, we have a livelock race condition.
+			go func() {
+				monitorConfigPoller.OpsConfigChannel <- opsConfig // this is needed for cdnName
+				monitorConfigPoller.SessionChannel <- toSession
+			}()
 		case monitorConfig = <-monitorConfigPoller.ConfigChannel:
 			healthUrls := map[string]string{}
 			statUrls := map[string]string{}
