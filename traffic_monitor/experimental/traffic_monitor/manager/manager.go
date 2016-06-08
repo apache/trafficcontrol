@@ -174,49 +174,58 @@ func Start(opsConfigFile string, staticAppData StaticAppData) {
 
 			var body []byte
 			var err error
-			if req.T == http_server.TR_CONFIG && toSession != nil && opsConfig.CdnName != "" {
-				body, err = toSession.CRConfigRaw(opsConfig.CdnName)
-			} else if req.T == http_server.TR_STATE_DERIVED {
+
+			switch req.T {
+			case http_server.TR_CONFIG:
+				if toSession != nil && opsConfig.CdnName != "" {
+					body, err = toSession.CRConfigRaw(opsConfig.CdnName)
+				}
+			case http_server.TR_STATE_DERIVED:
 				body, err = peer.CrStatesMarshall(combinedStates)
-			} else if req.T == http_server.TR_STATE_SELF {
+			case http_server.TR_STATE_SELF:
 				body, err = peer.CrStatesMarshall(localStates)
-			} else if req.T == http_server.CACHE_STATS {
+			case http_server.CACHE_STATS:
 				// TODO: add support for ?hc=N query param, stats=, wildcard, individual caches
 				// add pp and date to the json:
 				/*
 					pp: "0=[my-ats-edge-cache-1], hc=[1]",
 					date: "Thu Oct 09 20:28:36 UTC 2014"
 				*/
-
 				params := req.Parameters
 				hc := 1
-				_, exists := params["hc"]
-
-				if exists {
+				if _, exists := params["hc"]; exists {
 					v, err := strconv.Atoi(params["hc"][0])
-
 					if err == nil {
 						hc = v
 					}
 				}
-
 				body, err = cache.StatsMarshall(statHistory, hc)
-			} else if req.T == http_server.DS_STATS {
-			} else if req.T == http_server.EVENT_LOG {
+			case http_server.DS_STATS:
+				body = []byte("TODO implement")
+			case http_server.EVENT_LOG:
 				body, err = json.Marshal(JSONEvents{Events: events})
-			} else if req.T == http_server.PEER_STATES {
-			} else if req.T == http_server.STAT_SUMMARY {
-			} else if req.T == http_server.STATS {
+			case http_server.PEER_STATES:
+				body = []byte("TODO implement")
+			case http_server.STAT_SUMMARY:
+				body = []byte("TODO implement")
+			case http_server.STATS:
 				body, err = getStats(staticAppData, cacheHealthPoller.Config.Interval, lastHealthDurations, fetchCount, healthIteration, errorCount)
+				if err != nil {
+					// TODO send error to client
+					errorCount++
+					log.Printf("ERROR getting stats %v\n", err)
+					continue
+				}
+			case http_server.CONFIG_DOC:
+				opsConfigCopy := opsConfig
+				// if the password is blank, leave it blank, so callers can see it's missing.
+				if opsConfigCopy.Password != "" {
+					opsConfigCopy.Password = "*****"
+				}
+				body, err = json.Marshal(opsConfigCopy)
+			default:
+				body = []byte("TODO error message")
 			}
-
-			if err != nil {
-				// TODO send error to client
-				errorCount++
-				log.Printf("ERROR getting stats %v\n", err)
-				continue
-			}
-
 			req.C <- body
 		case oc := <-opsConfigFileHandler.OpsConfigChannel:
 			var err error
@@ -253,14 +262,11 @@ func Start(opsConfigFile string, staticAppData StaticAppData) {
 
 			monitorConfigPoller.OpsConfigChannel <- opsConfig // this is needed for cdnName
 			monitorConfigPoller.SessionChannel <- toSession
-
-		case mc := <-monitorConfigPoller.ConfigChannel:
-			monitorConfig = mc
-
-			healthUrls := make(map[string]string)
-			statUrls := make(map[string]string)
-			peerUrls := make(map[string]string)
-			caches := make(map[string]string)
+		case monitorConfig = <-monitorConfigPoller.ConfigChannel:
+			healthUrls := map[string]string{}
+			statUrls := map[string]string{}
+			peerUrls := map[string]string{}
+			caches := map[string]string{}
 
 			for _, srv := range monitorConfig.TrafficServer {
 				caches[srv.HostName] = srv.Status
@@ -314,7 +320,7 @@ func Start(opsConfigFile string, staticAppData StaticAppData) {
 				}
 			}
 
-			addStateDeliveryServices(mc, localStates.Deliveryservice)
+			addStateDeliveryServices(monitorConfig, localStates.Deliveryservice)
 		case i := <-cacheHealthTick:
 			healthIteration = i
 		case healthResult := <-cacheHealthChannel:

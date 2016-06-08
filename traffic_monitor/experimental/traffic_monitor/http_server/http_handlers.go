@@ -17,6 +17,7 @@ const (
 	PEER_STATES
 	STAT_SUMMARY
 	STATS
+	CONFIG_DOC
 )
 
 type Format int
@@ -95,4 +96,8 @@ func handleStatSummary(w http.ResponseWriter, req *http.Request) {
 
 func handleStats(w http.ResponseWriter, req *http.Request) {
 	dataRequest(w, req, STATS, JSON)
+}
+
+func handleConfigDoc(w http.ResponseWriter, req *http.Request) {
+	dataRequest(w, req, CONFIG_DOC, JSON)
 }

@@ -33,6 +33,7 @@ func Run(c chan DataRequest, addr string) {
 	sm.HandleFunc("/publish/PeerStates", handlePeerStates)
 	sm.HandleFunc("/publish/StatSummary", handleStatSummary)
 	sm.HandleFunc("/publish/Stats", handleStats)
+	sm.HandleFunc("/publish/ConfigDoc", handleConfigDoc)
 
 	s := &http.Server{
 		Addr:           addr,
