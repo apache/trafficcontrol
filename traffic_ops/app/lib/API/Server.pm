@@ -784,7 +784,6 @@ sub update {
   if ( !defined($org_server) ) {
     return $self->alert( { Error => "Failed to find server id = $id" } );
   }
-    $self->app->log->error("org_server----> ip_address=". $org_server->ip_address . " ip_netmask=". $org_server->ip_netmask. " ip_gateway=". $org_server->ip_gateway);
   ( $params, $err ) = $self->check_server_params( $json, $org_server );
   if ( defined($err) ) {
     return $self->alert( { Error => $err } );
