@@ -62,15 +62,13 @@ public class DNSAccessEventBuilder {
     }
 
     private static String createEvent(final DNSAccessRecord dnsAccessRecord) {
-        final long finishEpochMillis = System.currentTimeMillis();
         final String timeString = String.format("%d.%03d", dnsAccessRecord.getQueryInstant() / 1000, dnsAccessRecord.getQueryInstant() % 1000);
 
-        final long ttms = finishEpochMillis - dnsAccessRecord.getQueryInstant();
-        final String ttmsString = Long.toString(ttms);
+        final double ttms = (System.nanoTime() - dnsAccessRecord.getRequestNanoTime()) / 1000000.0;
 
         final String addressString = dnsAccessRecord.getClient().getHostAddress();
 
-        final StringBuilder stringBuilder = new StringBuilder(timeString).append(" qtype=DNS").append(" chi=").append(addressString).append(" ttms=").append(ttmsString);
+        final StringBuilder stringBuilder = new StringBuilder(timeString).append(" qtype=DNS").append(" chi=").append(addressString).append(" ttms=").append(String.format("%.03f", ttms));
 
         if (dnsAccessRecord.getDnsMessage() == null) {
             return stringBuilder.append(" xn=- fqdn=- type=- class=- rcode=-").toString();
