@@ -91,7 +91,7 @@ sub index {
     }
   }
 
-  return defined($forbidden) ? $self->forbidden() : $self->success( \@data );
+  return defined($forbidden) ? $self->forbidden("Forbidden. Delivery service not assigned to user.") : $self->success( \@data );
 }
 
 sub get_servers {
@@ -911,7 +911,7 @@ sub delete {
     my $self = shift;
 
     if ( !&is_oper($self) ) {
-        return $self->forbidden();
+        return $self->forbidden("Forbidden. Insufficent permissions.");
     }
 
     my $id   = $self->param('id');
@@ -933,7 +933,7 @@ sub postupdatequeue {
     my $params = $self->req->json;
     my $id   = $self->param('id');
     if ( !&is_oper($self) ) {
-        return $self->forbidden();
+        return $self->forbidden("Forbidden. Insufficent permissions.");
     }
 
     my $update = $self->db->resultset('Server')->find( { id => $id } );

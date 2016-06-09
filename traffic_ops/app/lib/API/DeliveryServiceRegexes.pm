@@ -56,7 +56,7 @@ sub index {
 		return $self->success( \@regexes );
 	}
 	else {
-		return $self->forbidden();
+		return $self->forbidden("Forbidden. Insufficent privileges.");
 	}
 
 }
