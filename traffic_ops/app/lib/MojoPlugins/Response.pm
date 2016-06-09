@@ -169,8 +169,9 @@ sub register {
 	$app->renderer->add_helper(
 		forbidden => sub {
 			my $self = shift || confess("Call on an instance of MojoPlugins::Response");
+			my $message = shift || "Forbidden";
 
-			my $response_body = { $ALERTS_KEY => [ { $LEVEL_KEY => $ERROR_LEVEL, $TEXT_KEY => "Forbidden" } ] };
+			my $response_body = { $ALERTS_KEY => [ { $LEVEL_KEY => $ERROR_LEVEL, $TEXT_KEY => $message } ] };
 			return $self->render( $STATUS_KEY => 403, $JSON_KEY => $response_body );
 		}
 	);
