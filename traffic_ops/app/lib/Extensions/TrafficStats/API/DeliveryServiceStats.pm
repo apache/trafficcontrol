@@ -49,7 +49,7 @@ sub index {
 				}
 			}
 			else {
-				return $self->forbidden();
+				return $self->forbidden("Forbidden. Delivery service not assigned to user.");
 			}
 		}
 	}
