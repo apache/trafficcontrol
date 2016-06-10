@@ -259,7 +259,6 @@ public class TrafficMonitorWatcher implements ApplicationListener<ApplicationCon
 			if (monitorProperties.matches("^\\w+:.*")) {
 				trafficMonitorConfigFile = new File(new URI(monitorProperties));
 			} else {
-				LOGGER.debug(monitorProperties + " is not a valid URI; trying String constructor");
 				trafficMonitorConfigFile = new File(monitorProperties);
 			}
 

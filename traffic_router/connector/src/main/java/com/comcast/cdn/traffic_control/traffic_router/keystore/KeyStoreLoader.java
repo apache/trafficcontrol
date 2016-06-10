@@ -1,0 +1,58 @@
+package com.comcast.cdn.traffic_control.traffic_router.keystore;
+
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.security.KeyStore;
+
+public class KeyStoreLoader {
+	protected static org.apache.juli.logging.Log log = org.apache.juli.logging.LogFactory.getLog(KeyStoreLoader.class);
+
+	private final Path keyStorePath;
+	private final char[] keyPass;
+	public KeyStoreLoader(final String keyStore, final char[] keyPass) {
+		keyStorePath = Paths.get(keyStore);
+		this.keyPass = keyPass;
+	}
+
+	public KeyStore load() {
+		if (!Files.exists(keyStorePath)) {
+			return createKeyStore(keyStorePath, keyPass);
+		}
+
+		try (InputStream inputStream = Files.newInputStream(keyStorePath)) {
+			KeyStore keyStore = KeyStore.getInstance(KeyStore.getDefaultType());
+			keyStore.load(inputStream, keyPass);
+			return keyStore;
+		} catch (Exception e) {
+			log.error("Failed loading keystore from " + keyStorePath + " : " + e.getMessage());
+		}
+
+		return null;
+	}
+
+	public KeyStore createKeyStore(Path keyStorePath, char[] keyPass) {
+		if (!Files.exists(keyStorePath)) {
+			try {
+				keyStorePath = Files.createFile(keyStorePath);
+			} catch (IOException e) {
+				log.error("Failed to create keystore at path " + keyStorePath.toAbsolutePath());
+				return null;
+			}
+		}
+
+		try (OutputStream outputStream = Files.newOutputStream(keyStorePath)) {
+			final KeyStore keyStore = KeyStore.getInstance(KeyStore.getDefaultType());
+			keyStore.load(null, keyPass);
+			keyStore.store(outputStream, keyPass);
+			return keyStore;
+		} catch (Exception e) {
+			log.error("Failed initializing empty keystore at " + keyStorePath + " : " + e.getMessage());
+		}
+
+		return null;
+	}
+}

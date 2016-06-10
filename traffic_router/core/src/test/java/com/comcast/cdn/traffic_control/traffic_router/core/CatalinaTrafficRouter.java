@@ -31,7 +31,7 @@ public class CatalinaTrafficRouter {
 		java.util.logging.Logger logger = java.util.logging.Logger.getLogger("");
 		java.util.logging.Handler[] handlers = logger.getHandlers();
 		for (java.util.logging.Handler handler : handlers) {
-			handler.setLevel(Level.SEVERE);
+			handler.setLevel(Level.WARNING);
 		}
 
 		System.setProperty("dns.tcp.port", "1053");
@@ -51,7 +51,12 @@ public class CatalinaTrafficRouter {
 			if (connector.getPort() == 80) {
 				connector.setPort(8888);
 			}
-			System.out.println("[" + System.currentTimeMillis() + "] >>>>>>>>>>>>>>>> Traffic Router listening on port " + connector.getPort());
+
+			if (connector.getPort() == 443) {
+				connector.setPort(8443);
+			}
+			System.out.println("[" + System.currentTimeMillis() + "] >>>>>>>>>>>>>>>> Traffic Router listening on port " + connector.getPort() + " " + connector.getScheme());
+
 		}
 
 		StandardHost standardHost = (StandardHost) trafficRouterService.getContainer().findChild("localhost");

@@ -111,6 +111,7 @@ public class ExternalTestSuite {
 		setupFakeServers();
 
 		tmpDeployDir = Files.createTempDirectory("ext-test-").toFile();
+		new File(tmpDeployDir,"conf").mkdirs();
 		System.out.println();
 		System.out.println(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>");
 		System.out.println(">>>>>>>> Going to use tmp directory '" + tmpDeployDir + "' as traffic router deploy directory");
@@ -124,6 +125,7 @@ public class ExternalTestSuite {
 		System.setProperty("dns.tcp.port", "" + findAvailableTcpPort());
 		System.setProperty("dns.udp.port", "" + findAvailableUdpPort());
 
+		System.setProperty("traffic_monitor.properties", "src/test/conf/traffic_monitor.properties");
 		LogManager.getLogger("org.eclipse.jetty").setLevel(Level.WARN);
 		LogManager.getLogger("org.springframework").setLevel(Level.WARN);
 
