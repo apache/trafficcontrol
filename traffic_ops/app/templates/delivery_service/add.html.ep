@@ -196,6 +196,7 @@
             $('#dns_bypass_ip_row').hide(speed);
             $('#dns_bypass_ip6_row').hide(speed);
             $('#dns_bypass_cname_row').hide(speed);
+            $('#regional_geo_blocking_row').show(speed);
             $('#dns_bypass_ttl_row').hide(speed);
             $('#max_dns_answers_row').hide(speed);
             $('#ccr_dns_ttl_row').hide(speed);
