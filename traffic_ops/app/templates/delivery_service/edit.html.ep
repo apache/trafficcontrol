@@ -66,6 +66,20 @@
         parent.location.reload(true);
     }
 
+
+    function check_geolimit_redirect_url_row_showhide(http, speed) {
+        if (http) {
+            var gl_selected = $('#geo_limit_row :selected').text();
+            if (gl_selected.match(/^None/)) {
+                $('#geolimit_redirect_url_row').hide(speed);
+            } else {
+                $('#geolimit_redirect_url_row').show(speed);
+            }
+        } else {
+            $('#geolimit_redirect_url_row').hide(speed);
+        }
+    }
+
     function show_hide_bypass_rows(speed) {
         var type_selected = $('#type :selected').text();
         if (type_selected.match(/^HTTP/)) {
@@ -76,6 +90,7 @@
             $('#http_bypass_fqdn_row').show(speed);
             $('#initial_dispersion_row').show(speed);
 			$('#regional_geo_blocking_row').show(speed);
+	    check_geolimit_redirect_url_row_showhide(1, speed);
         }
         else if (type_selected.match(/^DNS/)) {
             $('#http_bypass_fqdn_row').hide(speed);
@@ -86,6 +101,7 @@
             $('#dns_bypass_ttl_row').show(speed);
             $('#max_dns_answers').show(speed);
 			$('#regional_geo_blocking_row').hide(speed);
+            $('#geolimit_redirect_url_row').hide(speed);
         }
     }
 
@@ -99,6 +115,7 @@
 		$('#http_bypass_fqdn_row').show(speed);
 		$('#initial_dispersion_row').show(speed);
 		$('#regional_geo_blocking_row').show(speed);
+		check_geolimit_redirect_url_row_showhide(1, speed);
 % }
 % elsif ($ds->type->name =~ m/DNS/) {
 		$('#http_bypass_fqdn_row').hide(speed);
@@ -109,6 +126,7 @@
 		$('#dns_bypass_ttl_row').show(speed);
 		$('#max_dns_answers_row').show(speed);
 		$('#regional_geo_blocking_row').hide(speed);
+		$('#geolimit_redirect_url_row').hide(speed);
 % }
 	}
 
@@ -177,6 +195,10 @@
 				show_hide_bypass_rows('slow');
 			});
 
+                $('#geo_limit_row').change(function() {
+                               show_hide_bypass_rows('slow');
+                        });
+
 		$('#select_re').html("<select id=\"regexp_selector\"> " +
 				"<option>Add a regex...</option> " +
 				"<option>Add Host Regexp</option> " +
@@ -234,9 +256,9 @@ function setup_form(speed) {
             $('#geo_provider_row').show(speed);
             $('#tr_request_headers').show(speed);
             $('#remap_text_row').show(speed);
-            $('#regional_geo_blocking_row').show(speed);
             $('#regexp_add').show(speed);
             $('#steering_button').hide(speed);
+	    check_geolimit_redirect_url_row_showhide(1, speed);
 		}
 		else if (type_selected.match(/^DNS/)) {
 			$("#regexp_selector :nth-child(3)").attr('disabled','disabled');
@@ -275,9 +297,9 @@ function setup_form(speed) {
             $('#geo_provider_row').show(speed);
             $('#tr_request_headers').show(speed);
             $('#remap_text_row').show(speed);
-            $('#regional_geo_blocking_row').show(speed);
             $('#regexp_add').show(speed);
             $('#steering_button').hide(speed);
+	    $('#geolimit_redirect_url_row').hide(speed);
 		}
 		else if (type_selected.match(/^ANY_MAP$/)) {
             $('#protocoli_row').hide(speed);

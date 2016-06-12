@@ -78,9 +78,26 @@
 			add_regexp_line($('#regexp_selector :selected').text());
 		})
 
+		$('#geo_limit_row').change(function() {
+			setup_form('slow');
+	        });
+
 		// one HOST_REGEXP is mandatory
 		add_regexp_line('Add Host Regexp');
 	});
+
+	function check_geolimit_redirect_url_row_showhide(http, speed) {
+		if (http) {
+			var gl_selected = $('#geo_limit_row :selected').text();
+			if (gl_selected.match(/^None/)) {
+				$('#geolimit_redirect_url_row').hide(speed);
+			} else {
+				$('#geolimit_redirect_url_row').show(speed);
+			}
+		} else {
+			$('#geolimit_redirect_url_row').hide(speed);
+		}
+	}
 
 	function setup_form(speed) {
 		var type_selected = $('#type :selected').text();
@@ -124,6 +141,7 @@
             $('#regional_geo_blocking_row').show(speed);
             $('#regexp_add').show(speed);
             $('#geo_limit_countries_row').show(speed);
+            check_geolimit_redirect_url_row_showhide(1, speed);
 		}
 		else if (type_selected.match(/^DNS/)) {
 			$("#regexp_selector :nth-child(3)").attr('disabled','disabled');
@@ -162,9 +180,9 @@
             $('#geo_provider_row').show(speed);
             $('#tr_request_headers').show(speed);
             $('#remap_text_row').show(speed);
-            $('#regional_geo_blocking_row').show(speed);
             $('#regexp_add').show(speed);
             $('#geo_limit_countries_row').show(speed);
+            $('#geolimit_redirect_url_row').hide(speed);
 		}
 		else if (type_selected.match(/^ANY_MAP$/)) {
             $('#protocoli_row').hide(speed);
@@ -177,8 +195,7 @@
             $('#range_request_handlingi_row').hide(speed);
             $('#dns_bypass_ip_row').hide(speed);
             $('#dns_bypass_ip6_row').hide(speed);
-			$('#regional_geo_blocking_row').show(speed);
-	    	$('#dns_bypass_cname_row').hide(speed);
+            $('#dns_bypass_cname_row').hide(speed);
             $('#dns_bypass_ttl_row').hide(speed);
             $('#max_dns_answers_row').hide(speed);
             $('#ccr_dns_ttl_row').hide(speed);
@@ -200,7 +217,6 @@
             $('#geo_provider_row').show(speed);
             $('#tr_request_headers').show(speed);
             $('#remap_text_row').show(speed);
-            $('#regional_geo_blocking_row').show(speed);
             $('#regexp_add').show(speed);
             $('#geo_limit_countries_row').show(speed);
 		}
@@ -241,6 +257,7 @@
             $('#regional_geo_blocking_row').hide(speed);
             $('#regexp_add').hide(speed);
             $('#geo_limit_countries_row').hide(speed);
+            check_geolimit_redirect_url_row_showhide(0, speed);
 		}
 		//
 	}
