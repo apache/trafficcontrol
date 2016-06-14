@@ -45,8 +45,8 @@ sub add {
 				country  => $keys->{country},
 				state    => $keys->{state},
 				city     => $keys->{city},
-				org      => $keys->{organization},
-				unit     => $keys->{businessUnit},
+				org      => $keys->{org},
+				unit     => $keys->{unit},
 				hostname => defined( $keys->{hostname} ) ? $keys->{hostname} : $self->get_hostname($ds_id, $data),
 				cdn => defined($keys->{cdn}) ? $keys->{cdn} : $data->cdn_name,
 				deliveryservice => defined($keys->{deliveryservice}) ? $keys->{deliveryservice} : $xml_id,
@@ -107,6 +107,7 @@ sub create {
 	my $hostname = $self->param('ssl.hostname');
 	my $version  = $self->param('ssl.version');
 	my $cdn  = $self->param('ssl.cdn');
+	my $deliveryservice = $self->param('ssl.deliveryservice');
 
 	# get ds info
 	my $xml_id = $self->param('xml_id');
@@ -127,7 +128,7 @@ sub create {
 			version => $version,
 			hostname => defined($hostname) ? $hostname : $self->get_hostname($id, $data),
 			cdn => defined($cdn) ? $cdn : $data->cdn->name,
-			deliveryservice => $xml_id
+			deliveryservice => defined($deliveryservice) ? $deliveryservice : $xml_id
 		};
 		if ( $action eq "add" ) {
 			$record->{certificate}->{crt} = $self->param('ssl.crt');
