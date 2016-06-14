@@ -47,7 +47,9 @@ sub add {
 				city     => $keys->{city},
 				org      => $keys->{organization},
 				unit     => $keys->{businessUnit},
-				hostname => $keys->{hostname},
+				hostname => defined( $keys->{hostname} ) ? $keys->{hostname} : $self->get_hostname($ds_id, $data),
+				cdn => defined($keys->{cdn}) ? $keys->{cdn} : $data->cdn_name,
+				deliveryservice => defined($keys->{deliveryservice}) ? $keys->{deliveryservice} : $xml_id,
 				csr		 => decode_base64($keys->{certificate}->{csr}),
 				crt		 => decode_base64($keys->{certificate}->{crt}),
 				priv_key => decode_base64($keys->{certificate}->{key}),
@@ -60,23 +62,13 @@ sub add {
 	else {
 		my $ssl_key_version = $data->ssl_key_version;
 		my $new_version     = $ssl_key_version + 1;
-		my $domain_name     = UI::DeliveryService::get_cdn_domain( $self, $ds_id );
-		my $ds_regexes      = UI::DeliveryService::get_regexp_set( $self, $ds_id );
-		my @example_urls    = UI::DeliveryService::get_example_urls( $self, $ds_id, $ds_regexes, $data, $domain_name, $data->protocol );
-
-		#if a DS is https only we want the first example_url
-		my $hostname = $example_urls[0];
-		#if a DS is http/https then we want the second one...see https://github.com/Comcast/traffic_control/issues/1268
-		if ($data->protocol == 2) {
-			$hostname = $example_urls[1];
-		}
-
-		$hostname =~ /(https?:\/\/)(.*)/;
 
 		$self->stash(
 			ssl => {
 				version  => $new_version,
-				hostname => $2,
+				hostname => $self->get_hostname($ds_id, $data),
+				cdn => $data->cdn->name,
+				deliveryservice => $xml_id
 			},
 			xml_id      => $xml_id,
 			fbox_layout => 1
@@ -84,9 +76,28 @@ sub add {
 	}
 }
 
+sub get_hostname {
+	my $self = shift;
+	my $ds_id = shift;
+	my $data = shift;
+
+	my $domain_name     = UI::DeliveryService::get_cdn_domain( $self, $ds_id );
+	my $ds_regexes      = UI::DeliveryService::get_regexp_set( $self, $ds_id );
+	my @example_urls    = UI::DeliveryService::get_example_urls( $self, $ds_id, $ds_regexes, $data, $domain_name, $data->protocol );
+
+	#if a DS is https only we want the first example_url
+	my $hostname = $example_urls[0];
+	#if a DS is http/https then we want the second one...see https://github.com/Comcast/traffic_control/issues/1268
+	if ($data->protocol == 2) {
+		$hostname = $example_urls[1];
+	}
+
+	$hostname =~ /(https?:\/\/)(.*)/;
+	return $2;
+}
+
 sub create {
 	my $self = shift;
-	##Check to see if we are adding existing keys or generating new ones.
 	my $action   = $self->param('ssl.action');
 	my $country  = $self->param('ssl.country');
 	my $state    = $self->param('ssl.state');
@@ -95,6 +106,7 @@ sub create {
 	my $unit     = $self->param('ssl.unit');
 	my $hostname = $self->param('ssl.hostname');
 	my $version  = $self->param('ssl.version');
+	my $cdn  = $self->param('ssl.cdn');
 
 	# get ds info
 	my $xml_id = $self->param('xml_id');
@@ -110,18 +122,28 @@ sub create {
 
 	if ( $self->is_valid() ) {
 		my $response_container;
+		my $record = {
+			key => $xml_id,
+			version => $version,
+			hostname => defined($hostname) ? $hostname : $self->get_hostname($id, $data),
+			cdn => defined($cdn) ? $cdn : $data->cdn->name,
+			deliveryservice => $xml_id
+		};
 		if ( $action eq "add" ) {
-
-			#add existing keys to keystore
-			my $csr      = $self->param('ssl.csr');
-			my $crt      = $self->param('ssl.crt');
-			my $priv_key = $self->param('ssl.priv_key');
-			$response_container = $self->add_ssl_keys_to_riak( $xml_id, $version, $crt, $csr, $priv_key );
+			$record->{certificate}->{crt} = $self->param('ssl.crt');
+			$record->{certificate}->{csr} = $self->param('ssl.csr');
+			$record->{certificate}->{key} = $self->param('ssl.priv_key');
+			$response_container = $self->add_ssl_keys_to_riak( $record );
 		}
 		else {
-			#generate keys
-			#add to keystore
-			$response_container = $self->generate_ssl_keys( $hostname, $country, $city, $state, $org, $unit, $version, $xml_id );
+			$record->{country} = $country;
+			$record->{city} = $city;
+			$record->{state} = $state;
+			$record->{org} = $org;
+			$record->{unit} = $unit;
+
+			$response_container = $self->generate_ssl_keys($record);
+
 		}
 
 		#update version in db
