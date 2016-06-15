@@ -390,6 +390,13 @@ sub gen_crconfig_json {
 			$data_obj->{'deliveryServices'}->{ $row->xml_id }->{'geolocationProvider'} = 'maxmindGeolocationService';
 		}
 
+		$data_obj->{'deliveryServices'}->{ $row->xml_id }->{'sslEnabled'} = 'false';
+		my $ds_protocol = $row->protocol;
+		if ($ds_protocol > 0) {
+			$data_obj->{'deliveryServices'}->{ $row->xml_id }->{'sslEnabled'} = 'true';
+		}
+
+
 		if ( $protocol =~ m/DNS/ ) {
 
 			#$data_obj->{'deliveryServices'}->{$row->xml_id}->{'matchsets'}->[0]->{'protocol'} = 'DNS';
