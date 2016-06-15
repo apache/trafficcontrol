@@ -1094,7 +1094,7 @@ sub refresh_keys {
 			}
 
 			my $response = $response_container->{"response"};
-			if (!$response->is_success()){ 
+			if (!$response->is_success()){
 				$error_message = "dnssec keys could not be stored for $cdn_name!  Response was: " . $response->content;
 				$self->app->log->warn($error_message);
 				next;
@@ -1210,6 +1210,38 @@ sub delete_dnssec_keys {
 			$self->alert( { Error => " - SSL keys for key type $key_type and key $key could not be deleted.  Response was" . $response->content } );
 		}
 	}
+}
+
+sub ssl_keys {
+	my $self       = shift;
+	if ( !&is_admin($self) ) {
+		return $self->alert({ Error => " - You must be an ADMIN to perform this operation!" });
+	}
+
+	my $cdn_name = $self->param('name');
+	my $keys;
+	my $response_container = $self->riak_search( "sslkeys", "q=cdn:$cdn_name&fq=_yz_rk:*latest" );
+	my $response = $response_container->{'response'};
+	if ( $response->is_success() ) {
+		my $content = decode_json($response->content)->{response}->{docs};
+		unless (scalar(@$content) > 0) {
+			return $self->render(json => {"message" => "No SSL certificates found for $cdn_name"}, status => 404);
+		}
+		foreach my $record (@$content) {
+			push(@$keys, {
+				deliveryservice => $record->{deliveryservice},
+				certificate => {
+					crt => $record->{'certificate.key'},
+					key => $record->{'certificate.key'},
+				}
+			});
+		}
+		return $self->success($keys);
+	}
+
+	return $self->alert(
+		{ Error => " - Could not retrive ssl records for $cdn_name!  Response was: " . $response->content }
+	);
 }
 
 sub tool_logout {
