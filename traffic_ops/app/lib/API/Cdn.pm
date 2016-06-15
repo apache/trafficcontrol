@@ -1095,7 +1095,7 @@ sub refresh_keys {
 
 			my $response = $response_container->{"response"};
 			if (!$response->is_success()){
-				$error_message = "dnssec keys could not be stored for $cdn_name!  Response was: " . $response->content;
+				$error_message = "DNSSEC keys could not be stored for $cdn_name!  Response was: " . $response->content;
 				$self->app->log->warn($error_message);
 				next;
 			}
@@ -1181,7 +1181,7 @@ sub dnssec_keys_generate {
 		my $response = $res->{response};
 		my $rc       = $response->{_rc};
 		if ( $rc eq "204" ) {
-			&log( $self, "Generated dnssec keys for CDN $key", "APICHANGE" );
+			&log( $self, "Generated DNSSEC keys for CDN $key", "APICHANGE" );
 			$self->success("Successfully created $key_type keys for $key");
 		}
 		else {
@@ -1203,7 +1203,7 @@ sub delete_dnssec_keys {
 		my $response_container = $self->riak_delete( $key_type, $key );
 		$response = $response_container->{"response"};
 		if ( $response->is_success() ) {
-			&log( $self, "Deleted dnssec keys for CDN $key", "UICHANGE" );
+			&log( $self, "Deleted DNSSEC keys for CDN $key", "UICHANGE" );
 			$self->success("Successfully deleted $key_type keys for $key");
 		}
 		else {
@@ -1220,6 +1220,7 @@ sub ssl_keys {
 
 	my $cdn_name = $self->param('name');
 	my $keys;
+	#get "latest" ssl records for all DSs in the CDN
 	my $response_container = $self->riak_search( "sslkeys", "q=cdn:$cdn_name&fq=_yz_rk:*latest" );
 	my $response = $response_container->{'response'};
 	if ( $response->is_success() ) {
@@ -1240,7 +1241,7 @@ sub ssl_keys {
 	}
 
 	return $self->alert(
-		{ Error => " - Could not retrive ssl records for $cdn_name!  Response was: " . $response->content }
+		{ Error => " - Could not retrieve SSL records for $cdn_name!  Response was: " . $response->content }
 	);
 }
 
