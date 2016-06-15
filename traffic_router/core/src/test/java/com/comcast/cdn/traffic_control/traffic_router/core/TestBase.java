@@ -20,6 +20,9 @@ import org.apache.log4j.Logger;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.support.FileSystemXmlApplicationContext;
 
+import static org.springframework.util.SocketUtils.findAvailableTcpPort;
+import static org.springframework.util.SocketUtils.findAvailableUdpPort;
+
 public class TestBase {
 	private static final Logger LOGGER = Logger.getLogger(TestBase.class);
 	private static ApplicationContext context;
@@ -27,6 +30,9 @@ public class TestBase {
 	public static ApplicationContext getContext() {
 		System.setProperty("deploy.dir", "src/test");
 		System.setProperty("dns.zones.dir", "src/test/var/auto-zones");
+
+		System.setProperty("dns.tcp.port", String.valueOf(findAvailableTcpPort()));
+		System.setProperty("dns.udp.port", String.valueOf(findAvailableUdpPort()));
 
 		if (context != null) {
 			return context;

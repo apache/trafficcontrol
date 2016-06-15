@@ -34,6 +34,16 @@
             "config_file": "CRConfig.json",
             "name": "geolocation6.polling.url",
             "value": "{{.Geolocation6PollingUrl}}"
+        },
+        {
+            "config_file": "global",
+            "name": "daily_served_url",
+            "value": "https://trafficstats.example.net/dashboard-solo/db/daily-summary?panelId=2&fullscreen&from=1349192564795&to=now"
+        },
+        {
+            "config_file": "global",
+            "name": "daily_bw_url",
+            "value": "https://trafficstats.example.net/dashboard-solo/db/daily-summary?panelId=1&fullscreen&from=1349192564795&to=now"
         }
     ],
     "profile": {

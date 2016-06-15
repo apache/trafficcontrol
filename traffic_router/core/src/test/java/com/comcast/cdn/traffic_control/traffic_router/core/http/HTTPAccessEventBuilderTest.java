@@ -1,5 +1,22 @@
+/*
+ * Copyright 2015 Comcast Cable Communications Management, LLC
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package com.comcast.cdn.traffic_control.traffic_router.core.http;
 
+import com.comcast.cdn.traffic_control.traffic_router.core.request.HTTPRequest;
 import com.comcast.cdn.traffic_control.traffic_router.geolocation.Geolocation;
 import com.comcast.cdn.traffic_control.traffic_router.core.router.StatTracker;
 import com.comcast.cdn.traffic_control.traffic_router.core.router.StatTracker.Track.ResultType;
@@ -157,7 +174,7 @@ public class HTTPAccessEventBuilderTest {
 
     @Test
     public void itUsesXMmClientIpHeaderForChi() throws Exception {
-        when(request.getHeader(TRServlet.X_MM_CLIENT_IP)).thenReturn("192.168.100.100");
+        when(request.getHeader(HTTPRequest.X_MM_CLIENT_IP)).thenReturn("192.168.100.100");
 
         HTTPAccessRecord httpAccessRecord = new HTTPAccessRecord.Builder(new Date(144140678000L), request).build();
         String httpAccessEvent = HTTPAccessEventBuilder.create(httpAccessRecord);
@@ -178,7 +195,7 @@ public class HTTPAccessEventBuilderTest {
     @Test
     public void itUsesXMmClientIpHeaderOverFakeIpParameterForChi() throws Exception {
         when(request.getParameter("fakeClientIpAddress")).thenReturn("192.168.123.123");
-        when(request.getHeader(TRServlet.X_MM_CLIENT_IP)).thenReturn("192.168.100.100");
+        when(request.getHeader(HTTPRequest.X_MM_CLIENT_IP)).thenReturn("192.168.100.100");
 
         HTTPAccessRecord httpAccessRecord = new HTTPAccessRecord.Builder(new Date(144140678000L), request).build();
         String httpAccessEvent = HTTPAccessEventBuilder.create(httpAccessRecord);

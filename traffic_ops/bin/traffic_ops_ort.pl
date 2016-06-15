@@ -24,11 +24,20 @@ use Fcntl qw(:flock);
 use MIME::Base64;
 use LWP::UserAgent;
 use Crypt::SSLeay;
+use Getopt::Long;
 
 $| = 1;
 my $date           = `/bin/date`;
 chomp($date);
 print "$date\n";
+
+my $dispersion = 300;
+my $retries = 5;
+my $wait_for_parents = 1;
+
+GetOptions( "dispersion=i"       => \$dispersion, # dispersion (in seconds)
+            "retries=i"          => \$retries,
+            "wait_for_parents=i" => \$wait_for_parents );
 
 if ( $#ARGV < 1 ) {
 	&usage();
@@ -90,6 +99,9 @@ my $WARN  = 3;
 my $ERROR = 2;
 my $FATAL = 1;
 my $NONE  = 0;
+
+my $RELEASE = &os_version();
+( $log_level >> $DEBUG ) && print "DEBUG OS release is $RELEASE.\n";
 
 my $script_mode = &check_script_mode();
 &check_run_user();
@@ -184,6 +196,7 @@ if ( $script_mode == $BADASS || $script_mode == $INTERACTIVE || $script_mode == 
 my $header_comment = &get_header_comment($traffic_ops_host);
 
 &process_packages( $hostname_short, $traffic_ops_host );
+
 &process_chkconfig( $hostname_short, $traffic_ops_host );
 
 #### First time
@@ -230,9 +243,15 @@ if ( $script_mode != $REPORT ) {
 ####-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-####
 #### Subroutines
 ####-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-####
+
+sub os_version {
+        my @release = split(/\./, `/bin/uname -r`);
+        return uc $release[3];
+}
+
 sub usage {
 	print "====-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-====\n";
-	print "Usage: ./traffic_ops_ort.pl <Mode> <Log_Level> <Traffic_Ops_URL> <Traffic_Ops_Login>\n";
+	print "Usage: ./traffic_ops_ort.pl <Mode> <Log_Level> <Traffic_Ops_URL> <Traffic_Ops_Login> [optional flags]\n";
 	print "\t<Mode> = interactive - asks questions during config process.\n";
 	print "\t<Mode> = report - prints config differences and exits.\n";
 	print "\t<Mode> = badass - attempts to fix all config differences that it can.\n";
@@ -243,6 +262,10 @@ sub usage {
 	print "\t<Traffic_Ops_URL> = URL to Traffic Ops host. Example: https://trafficops.company.net\n";
 	print "\n";
 	print "\t<Traffic_Ops_Login> => Example: 'username:password' \n";
+	print "\n\t[optional flags]:\n";
+	print "\t\tdispersion=<time>      => wait a random number between 0 and <time> before starting. Default = 300.\n";
+	print "\t\tretries=<number>       => retry connection to Traffic Ops URL <number> times. Default = 3.\n";
+	print "\t\twait_for_parents=<0|1> => do not update if parent_pending = 1 in the update json. Default = 1, wait for parents.\n"; 
 	print "====-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-====\n";
 	exit 1;
 }
@@ -313,9 +336,73 @@ sub process_cfg_file {
 	return $return_code;
 }
 
+sub systemd_service_set {
+	my $systemd_service = shift;
+	my $systemd_service_enable = shift;
+
+	my $command = "/bin/systemctl $systemd_service_enable $systemd_service";
+	`$command 2>/dev/null`;
+	if ($? == 0) {
+		return 1;
+	} else {
+		return 0;
+	}
+}
+
+sub systemd_service_chk {
+	my $service = shift;
+
+	my $status = "disabled";
+	open(FH, "/bin/systemctl list-unit-files ${service}.service|") or die ("/bin/systemctl: $!");
+	while(<FH>) {
+		chomp($_);
+		if ($_ =~ m/$service\.service\s(\w+)/) {
+			$status = $1;
+		}
+	}
+	close(FH);
+	return $status;
+}
+
+sub systemd_service_status {
+	my $pkg_name = shift;
+	my $running_string;
+	my $running = 0;
+	my $pid;
+	my $prog;
+
+	open(FH, "/bin/systemctl status $pkg_name|") or die ("/bin/systemctl $!");
+	while(<FH>) {
+		chomp ($_);
+		if ($_ =~ m/\s+Active:\s+active\s\(running\)/) {
+			$running = 1;
+		}
+		if ($_ =~ m/\s+Main\sPID:\s(\d+)\s+\((\w+)\)/) {
+			$pid = $1;
+			$prog = $2
+		}
+	}
+	close(FH);
+	if ($running) {
+		$running_string = "$prog (pid $pid) is running...";
+	} else {
+		$running_string = "$pkg_name is stopped";
+	}
+
+	return $running_string;
+}
+
 sub start_service {
 	my $pkg_name = shift;
-	( my $pkg_running ) = `/sbin/service $pkg_name status`;
+
+	( $log_level >> $ERROR ) && print "ERROR start_service called for $pkg_name.\n";
+
+	my $pkg_running;
+	if ($RELEASE eq "EL7") {
+		$pkg_running = &systemd_service_status($pkg_name);
+	} else {
+		$pkg_running  = `/sbin/service $pkg_name status`;
+	}
 	my $running_string = "";
 	if ( $pkg_name eq "trafficserver" ) {
 		$running_string = "traffic_cop";
@@ -332,11 +419,18 @@ sub start_service {
 			elsif ( $script_mode == $BADASS ) {
 				( $log_level >> $ERROR ) && print "ERROR $pkg_name needs started. Trying to do that now.\n";
 				my $pkg_start_output = `/sbin/service $pkg_name start`;
-				( my @output_lines ) = split( /\n/, $pkg_start_output );
 				my $pkg_started = 0;
-				foreach my $ol (@output_lines) {
-					if ( $ol =~ m/\[.*\]/ && $ol =~ m/OK/ ) {
+				if ($RELEASE eq "EL7") {
+					my $_st = &systemd_service_status($pkg_name);
+					if ($_st =~ m/\(pid\s+(\d+)\) is running.../) {
 						$pkg_started++;
+					}
+				} else {
+					( my @output_lines ) = split( /\n/, $pkg_start_output );
+					foreach my $ol (@output_lines) {
+						if ( $ol =~ m/\[.*\]/ && $ol =~ m/OK/ ) {
+							$pkg_started++;
+						}
 					}
 				}
 				if ($pkg_started) {
@@ -358,11 +452,18 @@ sub start_service {
 				if ( $select =~ m/Y/ ) {
 					( $log_level >> $ERROR ) && print "ERROR $pkg_name needs started. Trying to do that now.\n";
 					my $pkg_start_output = `/sbin/service $pkg_name start`;
-					( my @output_lines ) = split( /\n/, $pkg_start_output );
 					my $pkg_started = 0;
-					foreach my $ol (@output_lines) {
-						if ( $ol =~ m/\[.*\]/ && $ol =~ m/OK/ ) {
+					if ($RELEASE eq "EL7") {
+						my $_st = &systemd_service_status($pkg_name);
+						if ($_st =~ m/\(pid\s+(\d+)\) is running.../) {
 							$pkg_started++;
+						}
+					} else {
+						( my @output_lines ) = split( /\n/, $pkg_start_output );
+						foreach my $ol (@output_lines) {
+							if ( $ol =~ m/\[.*\]/ && $ol =~ m/OK/ ) {
+								$pkg_started++;
+							}
 						}
 					}
 					if ($pkg_started) {
@@ -378,7 +479,7 @@ sub start_service {
 			}
 		}
 		else {
-			( $log_level >> $DEBUG ) && print "DEBUG $pkg_name is running.\n";
+			( $log_level >> $ERROR ) && print "ERROR $pkg_name is running.\n";
 			$pkg_running = $ALREADY_RUNNING;
 		}
 	}
@@ -390,7 +491,13 @@ sub start_service {
 
 sub restart_service {
 	my $pkg_name = $_[0];
-	( my $pkg_running ) = `/sbin/service $pkg_name status`;
+
+	my $pkg_running;
+	if ($RELEASE eq "EL7") {
+		$pkg_running = &systemd_service_status($pkg_name);
+	} else {
+		$pkg_running  = `/sbin/service $pkg_name status`;
+	}
 	my $running_string = "";
 	if ( $pkg_name eq "trafficserver" ) {
 		$running_string = "traffic_cop";
@@ -565,7 +672,7 @@ sub check_syncds_state {
 	( $log_level >> $DEBUG ) && print "DEBUG Checking syncds state.\n";
 	if ( $script_mode == $SYNCDS || $script_mode == $BADASS || $script_mode == $REPORT ) {
 		## The herd is about to get /update/<hostname>
-		&sleep_rand(10);
+		( $dispersion > 0 ) && &sleep_rand($dispersion);
 
 		my $url     = "$traffic_ops_host\/update/$hostname_short";
 		my $upd_ref = &lwp_get($url);
@@ -602,14 +709,17 @@ sub check_syncds_state {
 					exit 1;
 				}
 			}
-			if ( $parent_pending == 1 ) {
+			if ( $parent_pending == 1 && $wait_for_parents == 1) {
 				( $log_level >> $ERROR ) && print "ERROR Traffic Ops is signaling that my parents need an update.\n";
 				if ( $script_mode == $SYNCDS ) {
-					( $log_level >> $WARN ) && print "WARN In syncds mode, sleeping for 60s to see if the update my parents need is cleared.\n";
-					for ( my $i = 60; $i > 0; $i-- ) {
-						( $log_level >> $WARN ) && print ".";
-						sleep 1;
+					if ( $dispersion > 0 ) {
+						( $log_level >> $WARN ) && print "WARN In syncds mode, sleeping for " . $dispersion . "s to see if the update my parents need is cleared.\n";
+						for ( my $i = $dispersion; $i > 0; $i-- ) {
+							( $log_level >> $WARN ) && print ".";
+							sleep 1;
+						}
 					}
+
 					( $log_level >> $WARN ) && print "\n";
 					$upd_ref = &lwp_get($url);
 					if ( $upd_ref =~ m/^\d{3}$/ ) {
@@ -628,17 +738,11 @@ sub check_syncds_state {
 					}
 					else {
 						( $log_level >> $DEBUG ) && print "DEBUG The update on my parents cleared; continuing.\n";
-						## At least a portion of the herd is about to check in with Traffic Ops, so need to space things out a bit.
-						#&sleep_rand(5);
 					}
 				}
 			}
 			else {
-				( $log_level >> $DEBUG ) && print "DEBUG Traffic Ops is signaling that my parents do not need an update.\n";
-				if ( $script_mode == $SYNCDS ) {
-					## The herd is about to check in with Traffic Ops, need to space things out a bit.
-					&sleep_rand(15);
-				}
+				( $log_level >> $DEBUG ) && print "DEBUG Traffic Ops is signaling that my parents do not need an update, or wait_for_parents == 0.\n";
 			}
 		}
 		elsif ( $script_mode == $SYNCDS && $upd_pending != 1 ) {
@@ -646,7 +750,7 @@ sub check_syncds_state {
 			exit 0;
 		}
 		else {
-			( $log_level >> $DEBUG ) && print "DEBUG Traffic Ops is signaling that no update is waiting to be applied.\n";
+			( $log_level >> $ERROR ) && print "ERROR Traffic Ops is signaling that no update is waiting to be applied.\n";
 		}
 
 		my $stj = &lwp_get("$traffic_ops_host\/datastatus");
@@ -733,7 +837,6 @@ sub process_config_files {
 				|| $file =~ m/url\_sig\_(.*)\.config$/
 				|| $file =~ m/hdr\_rw\_(.*)\.config$/
 				|| $file eq "regex_revalidate.config"
-				|| $file eq "ip_allow.config"
 				|| $file eq "astats.config"
 				|| $file =~ m/cacheurl\_(.*)\.config$/
 				|| $file =~ m/regex\_remap\_(.*)\.config$/
@@ -1045,7 +1148,7 @@ sub check_this_plugin {
 
 sub lwp_get {
 	my $url           = shift;
-	my $retry_counter = 5;
+	my $retry_counter = $retries;
 
 	( $log_level >> $DEBUG ) && print "DEBUG Total connections in LWP cache: " . $lwp_conn->conn_cache->get_connections("https") . "\n";
 	my %headers = ( 'Cookie' => $cookie );
@@ -1058,9 +1161,9 @@ sub lwp_get {
 		$response = $lwp_conn->get($url, %headers);
 		$response_content = $response->content; 
 
-		if ( &check_lwp_response_code($response, $ERROR) || &check_lwp_response_content_length($response) ) {
+		if ( &check_lwp_response_code($response, $ERROR) || &check_lwp_response_content_length($response, $ERROR) ) {
 			( $log_level >> $ERROR ) && print "ERROR result for $url is: ..." . $response->content . "...\n";
-			&sleep_rand(6);
+			sleep 2**( $retries - $retry_counter );
 			$retry_counter--;
 		}
 		# https://github.com/Comcast/traffic_control/issues/1168
@@ -1075,7 +1178,7 @@ sub lwp_get {
 		
 	}
 
-	&check_lwp_response_code($response, $FATAL) if ( $retry_counter == 0 );
+	( &check_lwp_response_code($response, $FATAL) || &check_lwp_response_content_length($response, $FATAL) ) if ( $retry_counter == 0 );
 	
 	&eval_json($response) if ( $url =~ m/\.json$/ );
 
@@ -1244,16 +1347,19 @@ sub check_lwp_response_code {
 }
 
 sub check_lwp_response_content_length {
-	my $lwp_response = shift;
+	my $lwp_response  = shift;
+	my $panic_level   = shift;
+	my $log_level_str = &log_level_to_string($panic_level);
 	my $url           = $lwp_response->request->uri;
 
 	if ( !defined($lwp_response->header('Content-Length')) ) {
-		( $log_level >> $ERROR ) && print "ERROR $url did not return a Content-Length header!\n"; 
+		( $log_level >> $panic_level ) && print $log_level_str . " $url did not return a Content-Length header!\n"; 
 		exit;
 		return 1;
 	}
 	elsif ( $lwp_response->header('Content-Length') != length($lwp_response->content()) ) {
-		( $log_level >> $ERROR ) && print "ERROR $url returned a Content-Length of " . $lwp_response->header('Content-Length') . ", however actual content length is " . length($lwp_response->content()) . "!\n"; 
+		( $log_level >> $panic_level ) && print $log_level_str . " $url returned a Content-Length of " . $lwp_response->header('Content-Length') . ", however actual content length is " . length($lwp_response->content()) . "!\n"; 
+		exit 1 if ($log_level_str eq 'FATAL');
 		return 1;
 	}
 	else {	
@@ -1313,7 +1419,15 @@ sub check_log_level {
 }
 
 sub set_domainname {
-	my $hostname = `cat /etc/sysconfig/network | grep HOSTNAME`;
+	my $hostname;
+	if ($RELEASE eq "EL7") {
+		$hostname = `cat /etc/hostname`;
+		chomp($hostname);
+	} else {
+		$hostname = `cat /etc/sysconfig/network | grep HOSTNAME`;
+		chomp($hostname);
+		$hostname =~ s/HOSTNAME\=//g;
+	}
 	chomp($hostname);
 	$hostname =~ s/HOSTNAME\=//g;
 	my $domainname;
@@ -1723,25 +1837,50 @@ sub chkconfig_matches {
 
 	( $log_level >> $TRACE ) && print "TRACE Checking whether ${service}'s chkconfig output matches $service_settings.\n";
 
-	my $command = "/sbin/chkconfig --list $service";
-	my $output  = `$command 2>&1`;
-	chomp($output);
+	# systemd check.
+	# This will work for now as  it trys to map from chkconfig run level settings to systemd enabled/disabled state.
+	# I think that a new generic endpoint should be added to traffic opts for chkconfig and systemd state settings and that functions
+	# here in the ort script should abstract the checking of chkconfig/systemd states with traffic ops.
+	if ($RELEASE eq "EL7") {
+		my $service_state = systemd_service_chk($service);
+		if ($service_state eq "enabled") {
+			if ($service_settings =~ m/on/) {
+				( $log_level >> $INFO ) && print "INFO chkconfig output for $service matches $service_settings.\n";
+				return 1;
+			} else {
+				( $log_level >> $ERROR ) && print "ERROR chkconfig output for $service does not match what we expect...\n";
+				return 0;
+			}
+		} else {
+			if ($service_settings =~ m/on/) {
+				( $log_level >> $ERROR ) && print "ERROR chkconfig output for $service does not match what we expect...\n";
+				return 0;
+			} else {
+				( $log_level >> $INFO ) && print "INFO chkconfig output for $service matches $service_settings.\n";
+				return 1;
+			}
+		}
+	} else {
+		my $command = "/sbin/chkconfig --list $service";
+		my $output  = `$command 2>&1`;
+		chomp($output);
 
-	if ( $? == 0 ) {
-		if ( $output =~ m/^$service\s+$service_settings$/ ) {
-			( $log_level >> $INFO ) && print "INFO chkconfig output for $service matches $service_settings.\n";
-			return (1);
+		if ( $? == 0 ) {
+			if ( $output =~ m/^$service\s+$service_settings$/ ) {
+				( $log_level >> $INFO ) && print "INFO chkconfig output for $service matches $service_settings.\n";
+				return (1);
+			}
+			else {
+				( $log_level >> $ERROR ) && print "ERROR chkconfig output for $service does not match what we expect...\n";
+				( $log_level >> $TRACE ) && print "TRACE $output != $service_settings.\n";
+				return (0);
+			}
 		}
 		else {
-			( $log_level >> $ERROR ) && print "ERROR chkconfig output for $service does not match what we expect...\n";
-			( $log_level >> $TRACE ) && print "TRACE $output != $service_settings.\n";
+			( $log_level >> $ERROR ) && print "ERROR $command returned non-zero ($?), output: $output.\n";
+
 			return (0);
 		}
-	}
-	else {
-		( $log_level >> $ERROR ) && print "ERROR $command returned non-zero ($?), output: $output.\n";
-
-		return (0);
 	}
 }
 
@@ -1772,35 +1911,48 @@ sub process_chkconfig {
 						}
 
 						if ($fixit) {
-							my (@levels) = split( /\s+/, $chkconfig->{"value"} );
+							#use systemd commands by mapping chkconfig runlrvrld to either enable or disable.
+							if ($RELEASE eq "EL7") {
+								my $systemd_service_enable = "disable";
+								if ($chkconfig->{"value"} =~ m/on/) {
+									$systemd_service_enable = "enable";
+								}
+								if (&systemd_service_set($chkconfig->{"name"}, $systemd_service_enable)) {
+									( $log_level >> $ERROR ) && print "ERROR $chkconfig->{name}: has been set to $systemd_service_enable\n";
+								} else {
+									( $log_level >> $ERROR ) && print "ERROR failed to set the systemd service for $chkconfig->{name} to $systemd_service_enable\n";
+								}
+							} else {
+								my (@levels) = split( /\s+/, $chkconfig->{"value"} );
 
-							if ( scalar(@levels) == 7 ) {
-								( $log_level >> $TRACE ) && print "TRACE $chkconfig->{name}: Split chkconfig into " . join( ", ", @levels ) . "\n";
+								if ( scalar(@levels) == 7 ) {
+									( $log_level >> $TRACE ) && print "TRACE $chkconfig->{name}: Split chkconfig into " . join( ", ", @levels ) . "\n";
 
-								for my $level (@levels) {
-									my ( $run_level, $setting ) = split( /:/, $level );
+									for my $level (@levels) {
+										my ( $run_level, $setting ) = split( /:/, $level );
 
-									if ( defined($run_level) && defined($setting) ) {
-										( $log_level >> $TRACE ) && print "TRACE $chkconfig->{name}: Setting run level $run_level to $setting\n";
+										if ( defined($run_level) && defined($setting) ) {
+											( $log_level >> $TRACE ) && print "TRACE $chkconfig->{name}: Setting run level $run_level to $setting\n";
 
-										if ( !set_chkconfig( $chkconfig->{"name"}, $run_level, $setting ) ) {
-											( $log_level >> $ERROR ) && print "ERROR $chkconfig->{name}: Unable to set run level $run_level to $setting!\n";
+											if ( !set_chkconfig( $chkconfig->{"name"}, $run_level, $setting ) ) {
+												( $log_level >> $ERROR ) && print "ERROR $chkconfig->{name}: Unable to set run level $run_level to $setting!\n";
+											}
+										}
+										else {
+											( $log_level >> $ERROR ) && print "ERROR $chkconfig->{name}: $level is not what we expected!\n";
 										}
 									}
+
+									if ( chkconfig_matches( $chkconfig->{"name"}, $chkconfig->{"value"} ) ) {
+										( $log_level >> $INFO ) && print "INFO Successfully set chkconfig for $chkconfig->{name}.\n";
+									}
 									else {
-										( $log_level >> $ERROR ) && print "ERROR $chkconfig->{name}: $level is not what we expected!\n";
+										( $log_level >> $ERROR ) && print "FATAL Unable to set chkconfig values for $chkconfig->{name}!\n";
 									}
 								}
-
-								if ( chkconfig_matches( $chkconfig->{"name"}, $chkconfig->{"value"} ) ) {
-									( $log_level >> $INFO ) && print "INFO Successfully set chkconfig for $chkconfig->{name}.\n";
-								}
 								else {
-									( $log_level >> $ERROR ) && print "FATAL Unable to set chkconfig values for $chkconfig->{name}!\n";
+									( $log_level >> $ERROR ) && print "ERROR $chkconfig->{name}: $chkconfig->{value} is not what we expected!\n";
 								}
-							}
-							else {
-								( $log_level >> $ERROR ) && print "ERROR $chkconfig->{name}: $chkconfig->{value} is not what we expected!\n";
 							}
 						}
 					}
@@ -2397,7 +2549,7 @@ sub setup_lwp {
 	my $browser = LWP::UserAgent->new( keep_alive => 100, ssl_opts => { verify_hostname => 0, SSL_verify_mode => 0x00 } );
 
 	my $lwp_cc = $browser->conn_cache(LWP::ConnCache->new());
-	$browser->timeout(5);
+	$browser->timeout(15);
 
 	return $browser;
 }

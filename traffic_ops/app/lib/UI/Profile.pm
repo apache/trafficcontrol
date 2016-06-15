@@ -140,6 +140,9 @@ sub check_profile_input {
 	#Check required fields
 	$self->field('profile.name')->is_required;
 	$self->field('profile.description')->is_required;
+
+	$self->field('profile.name')->is_like( qr/^\S+$/, "Profile name cannot contain space(s)." );
+
 	if ( $mode eq 'add' ) {
 
 		#Check for duplicate profile name and description for NEW

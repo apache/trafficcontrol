@@ -60,15 +60,15 @@ sub index_trimmed {
 }
 
 sub create {
-    my $self = shift;
-    my $params = $self->req->json;
-    if ( !defined($params) ) {
-        return $self->alert("parameters must be in JSON format,  please check!");
-    }
+  my $self = shift;
+  my $params = $self->req->json;
+  if ( !defined($params) ) {
+      return $self->alert("parameters must be in JSON format,  please check!");
+  }
 
-    if ( !&is_oper($self) ) {
-        return $self->alert( { Error => " - You must be an admin or oper to perform this operation!" } );
-    }
+  if ( !&is_oper($self) ) {
+      return $self->alert( { Error => " - You must be an admin or oper to perform this operation!" } );
+  }
 
 	my $name = $params->{name};
 	if ( !defined($name) ) {
@@ -77,6 +77,11 @@ sub create {
 	if ( $name eq "" ) {
 		return $self->alert("profile 'name' can't be null.");
 	}
+
+  if ( $name =~ /\s/ ) {
+    return $self->alert("Profile name cannot contain space(s).");
+  }
+
 	my $description = $params->{description};
 	if ( !defined($description) ) {
 		return $self->alert("profile 'description' is not given.");

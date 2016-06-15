@@ -33,7 +33,6 @@ import com.comcast.cdn.traffic_control.traffic_router.geolocation.Geolocation;
 public class CacheLocation {
 
 	private final String id;
-	private final String zoneId;
 	private final Geolocation geolocation;
 
 	private final Map<String, Cache> caches;
@@ -46,9 +45,8 @@ public class CacheLocation {
 	 * @param geolocation
 	 *            the coordinates of this location
 	 */
-	public CacheLocation(final String id, final String zoneId, final Geolocation geolocation) {
+	public CacheLocation(final String id, final Geolocation geolocation) {
 		this.id = id;
-		this.zoneId = zoneId;
 		this.geolocation = geolocation;
 		caches = new HashMap<String, Cache>();
 	}
@@ -63,11 +61,6 @@ public class CacheLocation {
 			caches.put(cache.getId(), cache);
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see java.lang.Object#equals(java.lang.Object)
-	 */
 	@Override
 	public boolean equals(final Object obj) {
 		if (this == obj) {
@@ -120,14 +113,6 @@ public class CacheLocation {
 		return id;
 	}
 
-	/**
-	 * Gets zoneId.
-	 * 
-	 * @return the zoneId
-	 */
-	public String getZoneId() {
-		return zoneId;
-	}
 
 	/**
 	 * Determines if the specified {@link Cache} exists at this location.
@@ -140,11 +125,6 @@ public class CacheLocation {
 		return caches.containsKey(id);
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see java.lang.Object#hashCode()
-	 */
 	@Override
 	public int hashCode() {
 		return new HashCodeBuilder(1, 31)

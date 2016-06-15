@@ -115,7 +115,7 @@ ok $t->post_ok( '/login', => form => { u => Test::TestHelper::CODEBIG_USER, p =>
 
 ok $t->get_ok(
 	'/api/1.2/deliveryservice_stats.json?deliveryServiceName=test-ds1&metricType=kbps&startDate=2015-05-06T20:00:00-06:00&endDate=2015-05-06T20:00:00-06:00&interval=60s'
-)->status_is(403)->json_is( "/alerts/0/text", 'Forbidden' )->or( sub { diag $t->tx->res->content->asset->{content}; } ), 'codebig user should not have any deliveryservices';
+)->status_is(403)->or( sub { diag $t->tx->res->content->asset->{content}; } ), 'codebig user should not have any deliveryservices';
 
 $dbh->disconnect();
 done_testing();

@@ -34,7 +34,7 @@ use Extensions::Helper;
 use Sys::Syslog qw(:standard :macros);
 use IO::Handle;
 
-my $VERSION = "0.03";
+my $VERSION = "0.04";
 
 STDOUT->autoflush(1);
 
@@ -122,19 +122,17 @@ foreach my $server ( @{$jdataserver} ) {
 	$server_assoc{ $server->{hostName} . "." . $server->{domainName} }->{id} = $server->{id};
 	$server_assoc{ $server->{hostName} . "." . $server->{domainName} }->{cmsStatus} = $server->{status};
 	if ( !defined( $cdn_name{ $server->{profile} } ) ) {
-		TRACE "Getting info for profile " . $server->{profile};
+		TRACE "Getting info for server profile " . $server->{profile} . " for server: " . $server->{hostName};
 		my $plist = $ext->get( Extensions::Helper::PARAMETER_PATH . '/profile/' . $server->{profile} . '.json' );
-		foreach my $param ( @{$plist} ) {
-			if ( $param->{name} eq 'CDN_name' ) {
-				$cdn_name{ $server->{profile} } = $param->{value};
-			}
-			elsif ( $param->{name} eq 'api.port' && $param->{configFile} eq 'server.xml' ) {
+      foreach my $param ( @{$plist} ) {
+			if ( $param->{name} eq 'api.port' && $param->{configFile} eq 'server.xml' ) {
 				$api_port_assoc{ $server->{profile} } = $param->{value};
 			}
 		}
 	}
-	$cdn_name{ $server->{hostName} . "." . $server->{domainName} } = $cdn_name{ $server->{profile} };
+	$cdn_name{ $server->{hostName} . "." . $server->{domainName} } = $server->{cdnName};
 	next unless ( $server->{type} eq 'CCR' );
+   DEBUG Dumper($server);
 
 	# next unless ( $server->{host_name} eq 'odol-ccr-chi-08');
 	my $new_ccr;
@@ -146,7 +144,7 @@ foreach my $server ( @{$jdataserver} ) {
 	$new_ccr->{profile}   = $server->{profile};
 	$new_ccr->{apiPort}   = $server->{apiPort};
 	$new_ccr->{apiPort}   = $api_port_assoc{ $server->{profile} };
-	$new_ccr->{cdnName}   = $cdn_name{ $server->{profile} };
+	$new_ccr->{cdnName}   = $server->{cdnName};
 	$ccr_assoc{$name}     = $new_ccr;
 	DEBUG "Adding CCR " . $new_ccr->{name};
 }

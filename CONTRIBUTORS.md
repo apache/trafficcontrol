@@ -3,6 +3,7 @@ Sorted alphabetically
 * **[Crystal Qian](https://github.com/cjqian)**
 * **[Dan Kirkwood](https://github.com/dangogh)**
 * **[David Neuman](https://github.com/dneuman64)**
+* **[Derek Gelinas](https://github.com/dg4prez)**
 * **[Dewayne Richardson](https://github.com/dewrich)**
 * **[Eric Friedrich](https://github.com/limited)**
 * **[Hank Beatty](https://github.com/hbeatty)**
@@ -20,6 +21,7 @@ Sorted alphabetically
 * **[Petro, Christopher C.](https://github.com/petrocc)**
 * **[Phil Sorber](https://github.com/PSUdaemon)**
 * **[Rob Butts](https://github.com/robert-butts)**
+* **[Scott Radvan](https://github.com/sradvan)**
 * **[Stayman Hou](https://github.com/Vuuo)**
 * **[Steve Malenfant] (https://github.com/smalenfant)**
 * **[Trevor Ackerman] (https://github.com/trevorackerman)**

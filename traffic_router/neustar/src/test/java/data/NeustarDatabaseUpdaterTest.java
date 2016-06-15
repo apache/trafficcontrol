@@ -1,3 +1,19 @@
+/*
+ * Copyright 2015 Comcast Cable Communications Management, LLC
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package data;
 
 import com.comcast.cdn.traffic_control.traffic_router.neustar.data.TarExtractor;
@@ -25,6 +41,8 @@ import org.powermock.modules.junit4.PowerMockRunner;
 
 import java.io.File;
 import java.io.InputStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.Date;
 import java.util.zip.GZIPInputStream;
 
@@ -32,20 +50,22 @@ import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.nullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyString;
+import static org.mockito.Matchers.eq;
+import static org.mockito.Matchers.isNull;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.mockito.MockitoAnnotations.initMocks;
+import static org.powermock.api.mockito.PowerMockito.mockStatic;
 import static org.powermock.api.mockito.PowerMockito.whenNew;
 
 @RunWith(PowerMockRunner.class)
 @PowerMockIgnore("javax.net.ssl.*")
+@PrepareForTest({NeustarDatabaseUpdater.class, Files.class})
 public class NeustarDatabaseUpdaterTest {
 	@Mock
 	File neustarDatabaseDirectory;
-
-	@Mock
-	File neustarTempDatabaseDirectory;
 
 	@Mock
 	File neustarOldDatabaseDirectory;
@@ -58,6 +78,7 @@ public class NeustarDatabaseUpdaterTest {
 
 	@InjectMocks
 	NeustarDatabaseUpdater neustarDatabaseUpdater;
+	private File mockTmpDir;
 
 	@BeforeClass
 	public static void beforeClass() {
@@ -67,17 +88,23 @@ public class NeustarDatabaseUpdaterTest {
 	}
 
 	@Before
-	public void before() {
+	public void before() throws Exception {
 		initMocks(this);
-
-		when(neustarTempDatabaseDirectory.isDirectory()).thenReturn(true);
-		when(neustarTempDatabaseDirectory.lastModified()).thenReturn(1425236082000L);
 
 		when(neustarOldDatabaseDirectory.isDirectory()).thenReturn(true);
 		when(neustarOldDatabaseDirectory.lastModified()).thenReturn(1425236082000L);
 
-		when(neustarDatabaseDirectory.listFiles()).thenReturn(new File[] {neustarOldDatabaseDirectory, neustarTempDatabaseDirectory});
-		when(neustarTempDatabaseDirectory.mkdirs()).thenReturn(true);
+		mockTmpDir = mock(File.class);
+		when(mockTmpDir.getName()).thenReturn("123-abc-tmp");
+		when(mockTmpDir.getParentFile()).thenReturn(neustarDatabaseDirectory);
+
+		when(neustarDatabaseDirectory.listFiles()).thenReturn(new File[] {neustarOldDatabaseDirectory, mockTmpDir});
+
+		Path path = mock(Path.class);
+		when(path.toFile()).thenReturn(mockTmpDir);
+
+		mockStatic(Files.class);
+		when(Files.createTempDirectory(any(Path.class), isNull(String.class))).thenReturn(path);
 	}
 
 	@Test
@@ -102,13 +129,13 @@ public class NeustarDatabaseUpdaterTest {
 		GZIPInputStream gzipInputStream = mock(GZIPInputStream.class);
 		whenNew(GZIPInputStream.class).withArguments(remoteInputStream).thenReturn(gzipInputStream);
 
-		whenNew(GPDatabaseReader.Builder.class).withArguments(neustarTempDatabaseDirectory).thenReturn(mock(GPDatabaseReader.Builder.class));
+		whenNew(GPDatabaseReader.Builder.class).withArguments(any(File.class)).thenReturn(mock(GPDatabaseReader.Builder.class));
 
 		neustarDatabaseUpdater.setHttpClient(httpClient);
 		neustarDatabaseUpdater.setNeustarDataUrl("http://example.com/neustardata.tgz");
 		neustarDatabaseUpdater.setNeustarPollingTimeout(100);
 
-		when(filesMover.updateCurrent(neustarDatabaseDirectory, neustarTempDatabaseDirectory, neustarOldDatabaseDirectory)).thenReturn(true);
+		when(filesMover.updateCurrent(eq(neustarDatabaseDirectory), any(File.class), eq(neustarOldDatabaseDirectory))).thenReturn(true);
 		assertThat(neustarDatabaseUpdater.update(), equalTo(true));
 		verify(httpClient).close();
 		verify(response).close();
@@ -118,9 +145,11 @@ public class NeustarDatabaseUpdaterTest {
 	public void itExtractsRemoteContentToNewDirectory() throws Exception {
 		InputStream remoteInputStream = mock(InputStream.class);
 
-		when(tarExtractor.extractTgzTo(neustarTempDatabaseDirectory, remoteInputStream)).thenReturn(neustarTempDatabaseDirectory);
+		when(tarExtractor.extractTgzTo(eq(mockTmpDir), eq(remoteInputStream))).thenReturn(mockTmpDir);
 
-		assertThat(neustarDatabaseUpdater.extractRemoteContent(remoteInputStream), equalTo(neustarTempDatabaseDirectory));
+		File file = neustarDatabaseUpdater.extractRemoteContent(remoteInputStream);
+
+		assertThat(file.getParentFile(), equalTo(neustarDatabaseDirectory));
 	}
 
 	@Test

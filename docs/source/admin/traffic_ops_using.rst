@@ -1,22 +1,22 @@
-.. 
+..
 .. Copyright 2015 Comcast Cable Communications Management, LLC
-.. 
+..
 .. Licensed under the Apache License, Version 2.0 (the "License");
 .. you may not use this file except in compliance with the License.
 .. You may obtain a copy of the License at
-.. 
+..
 ..     http://www.apache.org/licenses/LICENSE-2.0
-.. 
+..
 .. Unless required by applicable law or agreed to in writing, software
 .. distributed under the License is distributed on an "AS IS" BASIS,
 .. WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 .. See the License for the specific language governing permissions and
 .. limitations under the License.
-.. 
+..
 
 .. |graph| image:: ../../../traffic_ops/app/public/images/graph.png
 .. |info| image:: ../../../traffic_ops/app/public/images/info.png
-.. |checkmark| image:: ../../../traffic_ops/app/public/images/good.png 
+.. |checkmark| image:: ../../../traffic_ops/app/public/images/good.png
 .. |X| image:: ../../../traffic_ops/app/public/images/bad.png
 .. |clock| image:: ../../../traffic_ops/app/public/images/clock-black.png
 
@@ -31,7 +31,7 @@ The Traffic Ops Menu
 
 The following tabs are available in the menu at the top of the Traffic Ops user interface.
 
-.. index:: 
+.. index::
   Health Tab
 
 * **Health**
@@ -114,8 +114,8 @@ The following tabs are available in the menu at the top of the Traffic Ops user 
   +--------------------+-----------------------------------------------------------------------------------------------------------------------------------+
   | Manage DNSSEC keys | Manage DNSSEC Keys for a chosen CDN.                                                                                              |
   +--------------------+-----------------------------------------------------------------------------------------------------------------------------------+
-  
-  
+
+
 * **Misc**
 
   Miscellaneous editing options. Hover over this tab to get the following options:
@@ -182,8 +182,8 @@ The Health table is the default landing screen for Traffic Ops, it displays the 
 * **Profile**: the Profile of this server or ALL, meaning this row shows data for multiple servers, and the row shows the sum of all values.
 * **Host Name**: the host name of the server or ALL, meaning this row shows data for multiple servers, and the row shows the sum of all values.
 * **Edge Cache Group**: the edge cache group short name or ALL, meaning this row shows data for multiple servers, and the row shows the sum of all values.
-* **Healthy**: indicates if this cache is healthy according to the Health Protocol. A row with ALL in any of the columns will always show a |checkmark|, this column is valid only for individual EDGE caches. 
-* **Admin**: shows the administrative status of the server. 
+* **Healthy**: indicates if this cache is healthy according to the Health Protocol. A row with ALL in any of the columns will always show a |checkmark|, this column is valid only for individual EDGE caches.
+* **Admin**: shows the administrative status of the server.
 * **Connections**: the number of connections this cache (or group of caches) has open (``ats.proxy.process.http.current_client_connections`` from ATS).
 * **Mbps Out**: the bandwidth being served out if this cache (or group of caches)
 
@@ -226,7 +226,7 @@ The server checks page is inteded to give an overview of the Servers managed by 
 +------+-----------------------------------------------------------------------+
 | CDU  | Total Cache Disk Usage in percent.                                    |
 +------+-----------------------------------------------------------------------+
-| ORT  | Operational Readiness Test. Uses the ORT script on the edge and mid   | 
+| ORT  | Operational Readiness Test. Uses the ORT script on the edge and mid   |
 |      | servers to determine if the configuration in Traffic Ops matches the  |
 |      | configuration on the edge or mid. The user that this script runs as   |
 |      | must have an ssh key on the edge servers.                             |
@@ -240,7 +240,7 @@ Displays daily max gbps and bytes served for all CDNs.  In order for the graphs 
 
 Server
 ======
-This view shows a table of all the servers in Traffic Ops. The table columns show the most important details of the server. The **IPAddrr** column is clickable to launch an ``ssh://`` link to this server. The |graph| icon will link to a Traffic Stats graph of this server for caches, and the |info| will link to the server status pages for other server types. 
+This view shows a table of all the servers in Traffic Ops. The table columns show the most important details of the server. The **IPAddrr** column is clickable to launch an ``ssh://`` link to this server. The |graph| icon will link to a Traffic Stats graph of this server for caches, and the |info| will link to the server status pages for other server types.
 
 
 Server Types
@@ -392,35 +392,38 @@ The fields in the Delivery Service view are:
   Delivery Service Type
 
 .. _rl-ds-types:
- 
+
 Delivery Service Types
 ++++++++++++++++++++++
 One of the most important settings when creating the delivery service is the selection of the delivery service *type*. This type determines the routing method and the primary storage for the delivery service.
 
-+-----------------+----------------------------------------------------------------------------------------------------------------------------------------------------------------+
-|       Name      |                                                                          Description                                                                           |
-+=================+================================================================================================================================================================+
-| HTTP            | HTTP Content Routing  - The Traffic Router DNS auth server returns its own IP address on DNS queries, and the client gets redirected to a specific cache       |
-|                 | in the nearest cache group using HTTP 302.  Use this for long sessions like HLS/HDS/Smooth live streaming, where a longer setup time is not a.                 |
-|                 | problem.                                                                                                                                                       |
-+-----------------+----------------------------------------------------------------------------------------------------------------------------------------------------------------+
-| DNS             | DNS Content Routing - The Traffic Router DNS auth server returns an edge cache IP address to the client right away. The client will find the cache quickly     |
-|                 | but the Traffic Router can not route to a cache that already has this content in the cache group. Use this for smaller objects like web page images / objects. |
-+-----------------+----------------------------------------------------------------------------------------------------------------------------------------------------------------+
-| HTTP_NO_CACHE   | HTTP Content Routing, but the caches will not actually cache the content, they act as just proxies. The MID tier is bypassed.                                  |
-+-----------------+----------------------------------------------------------------------------------------------------------------------------------------------------------------+
-| HTTP_LIVE       | HTTP Content routing, but where for "standard" HTTP content routing the objects are stored on disk, for this delivery service type the objects are stored      |
-|                 | on the RAM disks. Use this for linear TV. The MID tier is bypassed for this type.                                                                              |
-+-----------------+----------------------------------------------------------------------------------------------------------------------------------------------------------------+
-| HTTP_LIVE_NATNL | HTTP Content routing, same as HTTP_LIVE, but the MID tier is NOT bypassed.                                                                                     |
-+-----------------+----------------------------------------------------------------------------------------------------------------------------------------------------------------+
-| DNS_LIVE_NATNL  | DNS Content routing, ut where for "standard" DNS content routing the objects are stored on disk, for this delivery service type the objects are stored         |
-|                 | on the RAM disks. Use this for linear TV. The MID tier is NOT bypassed for this type.                                                                          |
-+-----------------+----------------------------------------------------------------------------------------------------------------------------------------------------------------+
-| DNS_LIVE        | DNS Content routing, same as DNS_LIVE_NATIONAL, but the MID tier is bypassed.                                                                                  |
-+-----------------+----------------------------------------------------------------------------------------------------------------------------------------------------------------+
-| ANY_MAP         | ANY_MAP is not known to Traffic Router. For this deliveryservice, the "Raw remap text" field in the input form will be used as the remap line on the cache.    |
-+-----------------+----------------------------------------------------------------------------------------------------------------------------------------------------------------+
++-----------------+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+|       Name      |                                                                                                                                                         Description                                                                                                                                                          |
++=================+==============================================================================================================================================================================================================================================================================================================================+
+| HTTP            | HTTP Content Routing  - The Traffic Router DNS auth server returns its own IP address on DNS queries, and the client gets redirected to a specific cache                                                                                                                                                                     |
+|                 | in the nearest cache group using HTTP 302.  Use this for long sessions like HLS/HDS/Smooth live streaming, where a longer setup time is not a.                                                                                                                                                                               |
+|                 | problem.                                                                                                                                                                                                                                                                                                                     |
++-----------------+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| DNS             | DNS Content Routing - The Traffic Router DNS auth server returns an edge cache IP address to the client right away. The client will find the cache quickly                                                                                                                                                                   |
+|                 | but the Traffic Router can not route to a cache that already has this content in the cache group. Use this for smaller objects like web page images / objects.                                                                                                                                                               |
++-----------------+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| HTTP_NO_CACHE   | HTTP Content Routing, but the caches will not actually cache the content, they act as just proxies. The MID tier is bypassed.                                                                                                                                                                                                |
++-----------------+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| HTTP_LIVE       | HTTP Content routing, but where for "standard" HTTP content routing the objects are stored on disk, for this delivery service type the objects are stored                                                                                                                                                                    |
+|                 | on the RAM disks. Use this for linear TV. The MID tier is bypassed for this type.                                                                                                                                                                                                                                            |
++-----------------+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| HTTP_LIVE_NATNL | HTTP Content routing, same as HTTP_LIVE, but the MID tier is NOT bypassed.                                                                                                                                                                                                                                                   |
++-----------------+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| DNS_LIVE_NATNL  | DNS Content routing, ut where for "standard" DNS content routing the objects are stored on disk, for this delivery service type the objects are stored                                                                                                                                                                       |
+|                 | on the RAM disks. Use this for linear TV. The MID tier is NOT bypassed for this type.                                                                                                                                                                                                                                        |
++-----------------+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| DNS_LIVE        | DNS Content routing, same as DNS_LIVE_NATIONAL, but the MID tier is bypassed.                                                                                                                                                                                                                                                |
++-----------------+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| ANY_MAP         | ANY_MAP is not known to Traffic Router. For this deliveryservice, the "Raw remap text" field in the input form will be used as the remap line on the cache.                                                                                                                                                                  |
++-----------------+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| STEERING        | The Delivery Service will be used to route to other delivery services.  The target delivery services Traffic Router and the routing weights for those delivery services will be defined by an admin or steering user.  For more information see the `steering feature <traffic_router.html#steering-feature>`_ documentation |
++-----------------+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+
 
 .. Note:: Once created, the Traffic Ops user interface does not allow you to change the delivery service type; the drop down is greyed out. There are many things that can go wrong when changing the type, and it is safer to delete the delivery service, and recreate it.
 
@@ -428,7 +431,7 @@ Federations
 +++++++++++
   Federations allow for other (federated) CDNs (at a different ISP, MSO, etc) to add a list of resolvers and a CNAME to a delivery service Traffic Ops.  When a request is made from one of federated CDN's clients, Traffic Router will return the CNAME configured in the federation mapping.  This allows the federated CDN to serve the content without the content provider changing the URL, or having to manage multiple URLs.
 
-  Before adding a federation in the Traffic Ops UI, a user with the federations role needs to be created.  This user will be assigned to the federation and will be able to add resolvers to the federation via the Traffic Ops `Federation API <../development/traffic_ops_api/v12/federation.html>`_. 
+  Before adding a federation in the Traffic Ops UI, a user with the federations role needs to be created.  This user will be assigned to the federation and will be able to add resolvers to the federation via the Traffic Ops `Federation API <../development/traffic_ops_api/v12/federation.html>`_.
 
 .. index::
   Header Rewrite
@@ -464,18 +467,18 @@ Token based authentication or *signed URLs* is implemented using the Traffic Ser
 
 Client IP address
         The client IP address that this signature is valid for.
-        
+
         ``C=<client IP address>``
 
 Expiration
         The Expiration time (seconds since epoch) of this signature.
-        
+
         ``E=<expiration time in secs since unix epoch>``
 
 Algorithm
         The Algorithm used to create the signature. Only 1 (HMAC_SHA1)
         and 2 (HMAC_MD5) are supported at this time
-        
+
         ``A=<algorithm number>``
 
 Key index
@@ -483,7 +486,7 @@ Key index
         configuration file on the cache. The set of keys is a shared
         secret between the signing portal and the edge caches. There
         is one set of keys per reverse proxy domain (fqdn).
-        
+
         ``K=<key index used>``
 Parts
         Parts to use for the signature, always excluding the scheme
@@ -495,20 +498,20 @@ Parts
                 1: use fqdn and all of URl path
                 0110: use part1 and part 2 of path only
                 01: use everything except the fqdn
-        
+
         ``P=<parts string (0's and 1's>``
 
 Signature
         The signature over the parts + the query string up to and
         including "S=".
-        
+
         ``S=<signature>``
 
 .. seealso:: The url_sig `README <https://github.com/apache/trafficserver/blob/master/plugins/experimental/url_sig/README>`_.
 
 Generate URL Sig Keys
 ^^^^^^^^^^^^^^^^^^^^^
-To generate a set of random signed url keys for this delivery service and store them in Traffic Vault, click the **Generate URL Sig Keys** button at the bottom of the delivery service details screen. 
+To generate a set of random signed url keys for this delivery service and store them in Traffic Vault, click the **Generate URL Sig Keys** button at the bottom of the delivery service details screen.
 
 
 .. rl-parent-selection:
@@ -585,9 +588,9 @@ Parameters in the Mid (parent) profile that influence this feature:
 
 Multi Site Origin
 +++++++++++++++++
-.. Note:: The Multi Site Origin feature is based upon a feature n ATS that has yet to be submitted to Traffic Server upstream, until it is, set this to 0, or use the ATS rpm supplied on the traffic-control-cdn.net website. 
+.. Note:: The Multi Site Origin feature is based upon a feature n ATS that has yet to be submitted to Traffic Server upstream, until it is, set this to 0, or use the ATS rpm supplied on the traffic-control-cdn.net website.
 
-Normally, the mid servers are not aware of any redundancy at the origin layer. With Multi Site Origin enabled this changes - Traffic Server (and Traffic Ops) are now made aware of the fact there are multiple origins, and can be configured to do more advanced failover and loadbalancing actions. 
+Normally, the mid servers are not aware of any redundancy at the origin layer. With Multi Site Origin enabled this changes - Traffic Server (and Traffic Ops) are now made aware of the fact there are multiple origins, and can be configured to do more advanced failover and loadbalancing actions.
 
 With This feature enabled, origin servers (or origin server VIP names for a site) are going to be entered as servers in to the Traiffic Ops UI. Server type is With This feature enabled, origin servers (or origin server VIP names for a site) are going to be entered as servers in to the Traiffic Ops UI. Server type is ""
 
@@ -746,10 +749,10 @@ Example:
 
 Static DNS Entries
 ++++++++++++++++++
-Static DNS entries allow you to create other names *under* the delivery service domain. You can enter any valid hostname, and create a CNAME, A or AAAA record for it by clicking the **Static DNS** button at the bottom of the delivery service details screen. 
+Static DNS entries allow you to create other names *under* the delivery service domain. You can enter any valid hostname, and create a CNAME, A or AAAA record for it by clicking the **Static DNS** button at the bottom of the delivery service details screen.
 
 .. index::
-  Server Assignments 
+  Server Assignments
 
 .. _rl-assign-edges:
 
@@ -762,7 +765,7 @@ Click the **Server Assignments** button at the bottom of the screen to assign se
 
 The Coverage Zone File and ASN Table
 ++++++++++++++++++++++++++++++++++++
-The Coverage Zone File (CZF) should contain a cachegroup name to network prefix mapping in the form: :: 
+The Coverage Zone File (CZF) should contain a cachegroup name to network prefix mapping in the form: ::
 
   {
     "coverageZones": {
@@ -797,7 +800,7 @@ The script that generates the CZF file is not part of Traffic Control, since it 
 
 Parameters and Profiles
 =======================
-Parameters are shared between profiles if the set of ``{ name, config_file, value }`` is the same. To change a value in one profile but not in others, the parameter has to be removed from the profile you want to change it in, and a new parameter entry has to be created (**Add Parameter** button at the bottom of the Parameters view), and assigned to that profile. It is easy to create new profiles from the **Misc > Profiles** view - just use the **Add/Copy Profile** button at the bottom of the profile view to copy an existing profile to a new one. Profiles can be exported from one system and imported to another using the profile view as well. It makes no sense for a parameter to not be assigned to a single profile - in that case it really has no function. To find parameters like that use the **Parameters > Orphaned Parameters** view. It is easy to create orphaned parameters by removing all profiles, or not assigning a profile directly after creating the parameter. 
+Parameters are shared between profiles if the set of ``{ name, config_file, value }`` is the same. To change a value in one profile but not in others, the parameter has to be removed from the profile you want to change it in, and a new parameter entry has to be created (**Add Parameter** button at the bottom of the Parameters view), and assigned to that profile. It is easy to create new profiles from the **Misc > Profiles** view - just use the **Add/Copy Profile** button at the bottom of the profile view to copy an existing profile to a new one. Profiles can be exported from one system and imported to another using the profile view as well. It makes no sense for a parameter to not be assigned to a single profile - in that case it really has no function. To find parameters like that use the **Parameters > Orphaned Parameters** view. It is easy to create orphaned parameters by removing all profiles, or not assigning a profile directly after creating the parameter.
 
 .. seealso:: :ref:`rl-param-prof` in the *Configuring Traffic Ops* section.
 
@@ -806,7 +809,7 @@ Parameters are shared between profiles if the set of ``{ name, config_file, valu
 Tools
 =====
 
-.. index:: 
+.. index::
   ISO
   Generate ISO
 
@@ -815,7 +818,7 @@ Tools
 Generate ISO
 ++++++++++++
 
-Generate ISO is a tool for building custom ISOs for building caches on remote hosts. Currently it only supports Centos 6, but if you're brave and pure of heart you MIGHT be able to get it to work with other unix-like OS's. 
+Generate ISO is a tool for building custom ISOs for building caches on remote hosts. Currently it only supports Centos 6, but if you're brave and pure of heart you MIGHT be able to get it to work with other unix-like OS's.
 
 The interface is *mostly* self explainatory as it's got hints.
 
@@ -855,17 +858,17 @@ When you click the **Download ISO** button the folling occurs (all paths relativ
 #. Reads /etc/resolv.conf to get a list of nameservers. This is a rather ugly hack that is in place until we get a way of configuring it in the interface.
 #. Writes a file in the ks_scripts/state.out that contains directory from _osversions.cfg_ and the mkisofs string that we'll call later.
 #. Writes a file in the ks_scripts/network.cfg that is a bunch of key=value pairs that set up networking.
-#. Creates an MD5 hash of the password you specify and writes it to ks_scripts/password.cfg. Note that if you do not specify a password "Fred" is used. Also note that we have experienced some issues with webbrowsers autofilling that field. 
+#. Creates an MD5 hash of the password you specify and writes it to ks_scripts/password.cfg. Note that if you do not specify a password "Fred" is used. Also note that we have experienced some issues with webbrowsers autofilling that field.
 #. Writes out a disk configuration file to ks_scripts/disk.cfg.
 #. mkisofs is called against the directory configured in _osversions.cfg_ and an ISO is generated in memory and delivered to your webbrowser.
 
-You now have a customized ISO that can be used to install Red Hat and derivative Linux installations with some modifications to your ks.cfg file. 
+You now have a customized ISO that can be used to install Red Hat and derivative Linux installations with some modifications to your ks.cfg file.
 
 Kickstart/Anaconda will mount the ISO at /mnt/stage2 during the install process (at least with 6).
 
 You can directly include the password file anywhere in your ks.cfg file (usually in the top) by doing %include /mnt/stage2/ks_scripts/password.cfg
 
-What we currently do is have 2 scripts, one to do hard drive configuration and one to do network configuration. Both are relatively specific to the environment they were created in, and both are *probably* wrong for other organizations, however they are currently living in the "misc" directory as examples of how to do things. 
+What we currently do is have 2 scripts, one to do hard drive configuration and one to do network configuration. Both are relatively specific to the environment they were created in, and both are *probably* wrong for other organizations, however they are currently living in the "misc" directory as examples of how to do things.
 
 We trigger those in a %pre section in ks.cfg and they will write config files to /tmp. We will then include those files in the appropriate places using  %pre.
 
@@ -880,23 +883,23 @@ For example this is a section of our ks.cfg file: ::
 
 These two scripts will then run _before_ anaconda sets up it's internal structures, then a bit further up in the ks.cfg file (outside of the %pre %end block) we do an ::
 
-    %include /mnt/stage2/ks_scripts/password.cfg 
+    %include /mnt/stage2/ks_scripts/password.cfg
     ...
     %include /tmp/network_line
 
     %include /tmp/drive_config
     ...
 
-This snarfs up the contents and inlines them. 
+This snarfs up the contents and inlines them.
 
-If you only have one kind of hardware on your CDN it is probably best to just put the drive config right in the ks.cfg. 
+If you only have one kind of hardware on your CDN it is probably best to just put the drive config right in the ks.cfg.
 
 If you have simple networking needs (we use bonded interfaces in most, but not all locations and we have several types of hardware meaning different ethernet interface names at the OS level etc.) then something like this: ::
-  
+
   #!/bin/bash
   source /mnt/stage2/ks_scripts/network.cfg
   echo "network --bootproto=static --activate --ipv6=$IPV6ADDR --ip=$IPADDR --netmask=$NETMASK --gateway=$GATEWAY --ipv6gateway=$GATEWAY --nameserver=$NAMESERVER --mtu=$MTU --hostname=$HOSTNAME" >> /tmp/network.cfg
-  # Note that this is an example and may not work at all. 
+  # Note that this is an example and may not work at all.
 
 
 You could also put this in the %pre section. Lots of ways to solve it.
@@ -906,7 +909,7 @@ We have included the two scripts we use in the "misc" directory of the git repo:
 * kickstart_create_network_line.py
 * kickstart_drive_config.sh
 
-These scripts were written to support a very narrow set of expectations and environment and are almost certainly not suitable to just drop in, but they might provide a good starting point. 
+These scripts were written to support a very narrow set of expectations and environment and are almost certainly not suitable to just drop in, but they might provide a good starting point.
 
 .. _rl-queue-updates:
 
@@ -920,7 +923,7 @@ When changing delivery services special care has to be taken so that Traffic Rou
 
 Queue Updates
 ^^^^^^^^^^^^^
-Every 15 minutes the caches will run a *syncds* to get all changes needed from Traffic Ops. The files that will be updated by the syncds job are: 
+Every 15 minutes the caches will run a *syncds* to get all changes needed from Traffic Ops. The files that will be updated by the syncds job are:
 
 - records.config
 - remap.config
@@ -940,7 +943,7 @@ A cache will only get updated when the update flag is set for it. To set the upd
   #. Click the **Queue Updates** button.
   #. When the Queue Updates for this Server? (all) window opens, click **OK**.
 
-To schedule updates for just one cache, use the "Server Checks" page, and click the |checkmark| in the *UPD* column. The UPD column of Server Checks page will change show a |clock| when updates are pending for that cache. 
+To schedule updates for just one cache, use the "Server Checks" page, and click the |checkmark| in the *UPD* column. The UPD column of Server Checks page will change show a |clock| when updates are pending for that cache.
 
 
 .. index::
@@ -963,10 +966,10 @@ To create a new snapshot, use the *Tools > Snapshot CRConfig* menu:
      If you are not sure why you are getting this message, please do not proceed!
      To proceed writing the snapshot anyway click the 'Write CRConfig' button below.
 
-     If there is an older version of the CRConfig, a window will pop up showing the differences 
-     between the active CRConfig and the CRConfig about to be written. 
+     If there is an older version of the CRConfig, a window will pop up showing the differences
+     between the active CRConfig and the CRConfig about to be written.
 
-  #. Click **Write CRConfig**. 
+  #. Click **Write CRConfig**.
   #. When the This will push out a new CRConfig.json. Are you sure? window opens, click **OK**.
   #. The Successfully wrote CRConfig.json! window opens, click **OK**.
 
@@ -981,17 +984,17 @@ Invalidate Content
 ==================
 Invalidating content on the CDN is sometimes necessary when the origin was mis-configured and something is cached in the CDN  that needs to be removed. Given the size of a typical Traffic Control CDN and the amount of content that can be cached in it, removing the content from all the caches may take a long time. To speed up content invalidation, Traffic Ops will not try to remove the content from the caches, but it makes the content inaccessible using the *regex_revalidate* ATS plugin. This forces a *revalidation* of the content, rather than a new get.
 
-.. Note:: This method forces a HTTP *revalidation* of the content, and not a new *GET* - the origin needs to support revalidation according to the HTTP/1.1 specification, and send a ``200 OK`` or ``304 Not Modified`` as applicable. 
+.. Note:: This method forces a HTTP *revalidation* of the content, and not a new *GET* - the origin needs to support revalidation according to the HTTP/1.1 specification, and send a ``200 OK`` or ``304 Not Modified`` as applicable.
 
 To invalidate content:
 
   1. Click **Tools > Invalidate Content**
-  2. Fill out the form fields: 
+  2. Fill out the form fields:
 
     - Select the **Delivery Service**
-    - Enter the **Path Regex** - this should be a `PCRE <http://www.pcre.org/>`_ compatible regular expression for the path to match for forcing the revalidation. Be careful to only match on the content you need to remove - revalidation is an expensive operation for many origins, and a simple ``/.*`` can cause an overload condition of the origin. 
-    - Enter the **Time To Live** - this is how long the revalidation rule will be active for. It usually makes sense to make this the same as the ``Cache-Control`` header from the origin which sets the object time to live in cache (by ``max-age`` or ``Expires``). Entering a longer TTL here will make the caches do unnecessary work. 
-    - Enter the **Start Time** - this is the start time when the revalidation rule will be made active. It is pre-populated with the current time, leave as is to schedule ASAP. 
+    - Enter the **Path Regex** - this should be a `PCRE <http://www.pcre.org/>`_ compatible regular expression for the path to match for forcing the revalidation. Be careful to only match on the content you need to remove - revalidation is an expensive operation for many origins, and a simple ``/.*`` can cause an overload condition of the origin.
+    - Enter the **Time To Live** - this is how long the revalidation rule will be active for. It usually makes sense to make this the same as the ``Cache-Control`` header from the origin which sets the object time to live in cache (by ``max-age`` or ``Expires``). Entering a longer TTL here will make the caches do unnecessary work.
+    - Enter the **Start Time** - this is the start time when the revalidation rule will be made active. It is pre-populated with the current time, leave as is to schedule ASAP.
 
   3. Click the **Submit** button.
 
@@ -1001,11 +1004,11 @@ Manage DNSSEC Keys
 
 In order to support `DNSSEC <https://en.wikipedia.org/wiki/Domain_Name_System_Security_Extensions>`_ in Traffic Router, Traffic Ops provides some actions for managing DNSSEC keys for a CDN and associated Delivery Services.  DNSSEC Keys consist of a Key Signing Keys (KSK) which are used to sign other DNSKEY records as well as Zone Signing Keys (ZSK) which are used to sign other records.  DNSSEC Keys are stored in `Traffic Vault <../overview/traffic_vault.html>`_ and should only be accessible to Traffic Ops.  Other applications needing access to this data, such as Traffic Router, must use the Traffic Ops `DNSSEC APIs <../development/traffic_ops_api/v12/cdn.html#dnssec-keys>`_ to retrieve this information.
 
-To Manage DNSSEC Keys: 
+To Manage DNSSEC Keys:
   1. Click **Tools -> Manage DNSSEC Keys**
   2. Choose a CDN and click **Manage DNSSEC Keys**
 
-    - If keys have not yet been generated for a CDN, this screen will be mostly blank with just the **CDN** and **DNSSEC Active?** fields being populated. 
+    - If keys have not yet been generated for a CDN, this screen will be mostly blank with just the **CDN** and **DNSSEC Active?** fields being populated.
     - If keys have been generated for the CDN, the Manage DNSSEC Keys screen will show the TTL and Top Level Domain (TLD) KSK Expiration for the CDN as well as DS Record information which will need to be added to the parent zone of the TLD in order for DNSSEC to work.
 
 The Manage DNSSEC Keys screen also allows a user to perform the following actions:
@@ -1029,23 +1032,23 @@ Once these fields have been correctly entered, a user can click Generate Keys.  
 
 Regenerate KSK will create a new Key Signing Key for the CDN TLD. A new DS Record will also be generated and need to be put into the parent zone in order for DNSSEC to work correctly. The **Regenerate KSK** button is only available if keys have already been generated for a CDN.  The intent of the button is to provide a mechanism for generating a new KSK when a previous one expires or if necessary for other reasons such as a security breach.  When a user goes to generate a new KSK they are presented with a screen with the following options:
 
-  - **CDN:** This is not editable and displays the CDN for which keys will be generated  
+  - **CDN:** This is not editable and displays the CDN for which keys will be generated
   - **KSK Expiration (Days):**  Sets how long (in days) the Key Signing Key will be valid for the CDN and associated Delivery Services. The default is 365 days.
   - **Effective Date (GMT):** The time from which the new KSK and DS Record will be active.  Since generating a new KSK will generate a new DS Record that needs to be added to the parent zone, it is very important to make sure that an effective date is chosen that allows for time to get the DS Record into the parent zone.  Failure to get the new DS Record into the parent zone in time could result in DNSSEC errors when Traffic Router tries to sign responses.
 
 Once these fields have been correctly entered, a user can click Generate KSK.  The user will be presented with a confirmation screen to help them understand the impact of generating the KSK.  If a user confirms, the KSK will be generated and stored in Traffic Vault.
 
-Additionally, Traffic Ops also performs some systematic management of DNSSEC keys.  This management is necessary to help keep keys in sync for Delivery Services in a CDN as well as to make sure keys do not expire without human intervention. 
+Additionally, Traffic Ops also performs some systematic management of DNSSEC keys.  This management is necessary to help keep keys in sync for Delivery Services in a CDN as well as to make sure keys do not expire without human intervention.
 
 **Generation of keys for new Delivery Services**
-  
+
 If a new Delivery Service is created and added to a CDN that has DNSSEC enabled, Traffic Ops will create DNSSEC keys for the Delivery Service and store them in Traffic Vault.
 
-**Regeneration of expiring keys for a Delivery Service**  
+**Regeneration of expiring keys for a Delivery Service**
 
-Traffic Ops has a process, controlled by cron, to check for expired or expiring keys and re-generate them.  The process runs at 5 minute intervals to check and see if keys are expired or close to expiring (withing 10 minutes by default).  If keys are expired for a Delivery Service, traffic ops will regenerate new keys and store them in Traffic Vault.  This process is the same for the CDN TLD ZSK, however Traffic Ops will not re-generate the CDN TLD KSK systematically.  The reason is that when a KSK is regenerated for the CDN TLD then a new DS Record will also be created.  The new DS Record needs to be added to the parent zone before Traffic Router attempts to sign with the new KSK in order for DNSSEC to work correctly.  Therefore, management of the KSK needs to be a manual process. 
+Traffic Ops has a process, controlled by cron, to check for expired or expiring keys and re-generate them.  The process runs at 5 minute intervals to check and see if keys are expired or close to expiring (withing 10 minutes by default).  If keys are expired for a Delivery Service, traffic ops will regenerate new keys and store them in Traffic Vault.  This process is the same for the CDN TLD ZSK, however Traffic Ops will not re-generate the CDN TLD KSK systematically.  The reason is that when a KSK is regenerated for the CDN TLD then a new DS Record will also be created.  The new DS Record needs to be added to the parent zone before Traffic Router attempts to sign with the new KSK in order for DNSSEC to work correctly.  Therefore, management of the KSK needs to be a manual process.
 
 
-  
+
 
 
