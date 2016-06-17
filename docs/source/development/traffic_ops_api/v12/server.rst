@@ -651,7 +651,7 @@ Server
   | id   | yes      | The id of the server to edit. |
   +------+----------+-------------------------------+
 
-  **Request Route Properties**
+  **Request Properties**
 
   +------------------+----------+------------------------------------------------+
   | Name             | Required | Description                                    |
@@ -779,6 +779,49 @@ Server
   | router_port_name | string |                                                |
   +------------------+--------+------------------------------------------------+
   
+|
+
+**DELETE /api/1.2/servers/{:id}**
+
+  Allow user to delete server through api.
+
+  Authentication Required: Yes
+
+  Role(s) Required: admin or oper
+
+  **Request Route Parameters**
+
+  +------+----------+---------------------------------+
+  | Name | Required | Description                     |
+  +======+==========+=================================+
+  | id   | yes      | The id of the server to delete. |
+  +------+----------+---------------------------------+
+  
+  **Response Properties**
+
+  +-------------+--------+----------------------------------+
+  |  Parameter  |  Type  |           Description            |
+  +=============+========+==================================+
+  | ``alerts``  | array  | A collection of alert messages.  |
+  +-------------+--------+----------------------------------+
+  | ``>level``  | string | Success, info, warning or error. |
+  +-------------+--------+----------------------------------+
+  | ``>text``   | string | Alert message.                   |
+  +-------------+--------+----------------------------------+
+  | ``version`` | string |                                  |
+  +-------------+--------+----------------------------------+
+
+  **Response Example** ::
+
+    {
+          "alerts": [
+                    {
+                            "level": "success",
+                            "text": "Server was deleted."
+                    }
+            ],
+    }
+
 |
 
 **POST /api/1.2/servers/{:id}/queue_update**

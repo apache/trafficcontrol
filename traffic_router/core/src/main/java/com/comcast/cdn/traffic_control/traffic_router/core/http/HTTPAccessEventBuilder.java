@@ -16,6 +16,7 @@
 
 package com.comcast.cdn.traffic_control.traffic_router.core.http;
 
+import com.comcast.cdn.traffic_control.traffic_router.core.request.HTTPRequest;
 import com.comcast.cdn.traffic_control.traffic_router.geolocation.Geolocation;
 
 import javax.servlet.http.HttpServletRequest;
@@ -104,8 +105,8 @@ public class HTTPAccessEventBuilder {
         }
 
 
-        final String xMmClientIpHeader = httpServletRequest.getHeader(RouterFilter.X_MM_CLIENT_IP);
-        final String fakeIpParameter = httpServletRequest.getParameter(RouterFilter.FAKE_IP);
+        final String xMmClientIpHeader = httpServletRequest.getHeader(HTTPRequest.X_MM_CLIENT_IP);
+        final String fakeIpParameter = httpServletRequest.getParameter(HTTPRequest.FAKE_IP);
 
         if (xMmClientIpHeader != null) {
             chi = xMmClientIpHeader;

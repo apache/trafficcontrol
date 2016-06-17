@@ -281,6 +281,15 @@ my %definition_for = (
 			use_in_table => 'deliveryservice',
 		},
 	},
+	STEERING => {
+		new   => 'Type',
+		using => {
+			id           => 37,
+			name         => 'STEERING',
+			description  => 'Steering Delivery Service',
+			use_in_table => 'deliveryservice',
+		}
+	}
 );
 
 sub get_definition {

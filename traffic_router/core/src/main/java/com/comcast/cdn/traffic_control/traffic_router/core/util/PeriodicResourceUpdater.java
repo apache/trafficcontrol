@@ -76,23 +76,10 @@ public class PeriodicResourceUpdater {
 	public PeriodicResourceUpdater(final AbstractUpdatable listener, final String[] urla,
 			final String location, final int interval, final boolean pauseTilLoaded) {
 		this.listener = listener;
-		this.urls = new MyResourceUrl(urla);
+		this.urls = new DefaultResourceUrl(urla);
 		databaseLocation = location;
 		pollingInterval = interval;
 		this.pauseTilLoaded = pauseTilLoaded;
-	}
-	static class MyResourceUrl implements ResourceUrl{
-		private final String[] urla;
-		private int i = 0;
-		public MyResourceUrl(final String[] urla) {
-			this.urla = urla;
-		}
-		@Override
-		public String nextUrl() {
-			i++;
-			i %= urla.length;
-			return urla[i];
-		}
 	}
 
 	public PeriodicResourceUpdater(final AbstractUpdatable listener, final ResourceUrl urls, final String location, final int interval, final boolean pauseTilLoaded) {

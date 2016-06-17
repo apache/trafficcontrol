@@ -261,6 +261,7 @@ sub ds_data {
 
 					#add the first with http
 					$dsinfo->{dslist}->[$j]->{"remap_line"}->{$map_from} = $map_to;
+
 					#add the second with https
 					my $map_from2 = "https://" . $host_re . "/";
 					$dsinfo->{dslist}->[$j]->{"remap_line2"}->{$map_from2} = $map_to;
@@ -787,9 +788,9 @@ sub hosting_dot_config {
 	my $file = shift;
 	my $data = shift;
 
-	my $server = $self->server_data($id);
-	my $storage_data   = $self->param_data( $server, "storage.config" );
-	my $text   = $self->header_comment( $server->host_name );
+	my $server       = $self->server_data($id);
+	my $storage_data = $self->param_data( $server, "storage.config" );
+	my $text         = $self->header_comment( $server->host_name );
 	if ( !defined($data) ) {
 		$data = $self->ds_data($server);
 	}
@@ -817,7 +818,7 @@ sub hosting_dot_config {
 			}
 		}
 	}
-	my $disk_volume = 1; # note this will actually be the RAM (RAM_Drive_Prefix) volume if there is no Drive_Prefix parameter.
+	my $disk_volume = 1;    # note this will actually be the RAM (RAM_Drive_Prefix) volume if there is no Drive_Prefix parameter.
 	$text .= "hostname=*   volume=" . $disk_volume . "\n";
 
 	return $text;
@@ -1228,7 +1229,6 @@ sub regex_revalidate_dot_config {
 	}
 
 	my %regex_time;
-	##DN- even though we made these params, the front-end is still hard-coded to validate ttl between 48 - 672...
 	my $max_hours =
 		$self->db->resultset('Parameter')->search( { name => "ttl_max_hours" }, { config_file => "regex_revalidate.config" } )->get_column('value')->first;
 	my $min_hours =
@@ -1243,8 +1243,11 @@ sub regex_revalidate_dot_config {
 		my $ttl;
 		if ( $row->keyword eq "PURGE" && ( defined($parameters) && $parameters =~ /TTL:(\d+)h/ ) ) {
 			$ttl = $1;
-			if ( $ttl > $min_hours || $ttl < $max_hours ) {
+			if ( $ttl < $min_hours ) {
 				$ttl = $min_hours;
+			}
+			elsif ( $ttl > $max_hours ) {
+				$ttl = $max_hours;
 			}
 		}
 		else {

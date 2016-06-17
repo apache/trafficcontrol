@@ -219,6 +219,10 @@ $(function () {
 						<td class="editable" id="rack"><%= $server_data->rack %></td>
 					</tr>
 					<tr>
+						<td>Cloud ID</td>
+						<td class="editable" id="rack"><%= $server_data->guid %></td>
+					</tr>
+					<tr>
 						<td>Service Tag (as discovered)</td>
 						<td id="stag"><a href="/hardware/serverid/<%= $server_data->id %>" target="_parent"><%= $service_tag %></a></td>
 					</tr>

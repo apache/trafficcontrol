@@ -17,7 +17,7 @@
 <html lang="en">
 <head></head>
 <body>
-  	<section><%= $current_user->full_name %> [ <%= $current_user->email %> ] has requested a new delivery service for <%= $params->{customer} %>. The details are as follows:
+  	<section><%= $full_name ? $full_name . ' |' : '' %> <%= $username %> <%= $email ? '| ' . $email : '' %> has requested a new delivery service for <%= $params->{customer} %>. The details are as follows:
     <table>
         <tbody>
             <tr><th colspan="2"><h4>Service Description</h4></th></tr>

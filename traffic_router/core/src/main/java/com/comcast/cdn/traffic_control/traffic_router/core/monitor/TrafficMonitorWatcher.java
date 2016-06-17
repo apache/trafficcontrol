@@ -36,7 +36,6 @@ import com.comcast.cdn.traffic_control.traffic_router.core.config.ConfigHandler;
 import com.comcast.cdn.traffic_control.traffic_router.core.router.TrafficRouterManager;
 import com.comcast.cdn.traffic_control.traffic_router.core.util.AbstractUpdatable;
 import com.comcast.cdn.traffic_control.traffic_router.core.util.PeriodicResourceUpdater;
-import com.comcast.cdn.traffic_control.traffic_router.core.util.ResourceUrl;
 import org.springframework.context.ApplicationListener;
 import org.springframework.context.event.ApplicationContextEvent;
 import org.springframework.context.event.ContextClosedEvent;
@@ -145,10 +144,12 @@ public class TrafficMonitorWatcher implements ApplicationListener<ApplicationCon
 			}
 		};
 
-		crUpdater = new PeriodicResourceUpdater(crHandler, new MyResourceUrl(configUrl), databasesDirectory.resolve(configFile).toString(), configRefreshPeriod, true);
+		processConfig();
+
+		crUpdater = new PeriodicResourceUpdater(crHandler, new TrafficMonitorResourceUrl(this, configUrl), databasesDirectory.resolve(configFile).toString(), configRefreshPeriod, true);
 		crUpdater.init();
 
-		stateUpdater = new PeriodicResourceUpdater(stateHandler, new MyResourceUrl(stateUrl), databasesDirectory.resolve(statusFile).toString(), statusRefreshPeriod, true);
+		stateUpdater = new PeriodicResourceUpdater(stateHandler, new TrafficMonitorResourceUrl(this, stateUrl), databasesDirectory.resolve(statusFile).toString(), statusRefreshPeriod, true);
 		stateUpdater.init();
 	}
 
@@ -157,25 +158,6 @@ public class TrafficMonitorWatcher implements ApplicationListener<ApplicationCon
 		if (event instanceof ContextClosedEvent) {
 			crUpdater.destroy();
 			stateUpdater.destroy();
-		}
-	}
-
-	class MyResourceUrl implements ResourceUrl{
-		private final String urlTemplate;
-		private int i = 0;
-		public MyResourceUrl(final String urlTemplate) {
-			this.urlTemplate = urlTemplate;
-		}
-		@Override
-		public String nextUrl() {
-			final String[] hosts = getHosts();
-			if(hosts == null) {
-				return urlTemplate;
-			}
-			i %= hosts.length;
-			final String host = hosts[i];
-			i++;
-			return urlTemplate.replace("[host]", host);
 		}
 	}
 
@@ -262,7 +244,7 @@ public class TrafficMonitorWatcher implements ApplicationListener<ApplicationCon
 	}
 
 	@SuppressWarnings({"PMD.CyclomaticComplexity", "PMD.NPathComplexity"})
-	public void processConfig() {
+	private void processConfig() {
 		final long now = System.currentTimeMillis();
 
 		if (now < (lastHostAttempt+reloadPeriod)) {
@@ -272,8 +254,6 @@ public class TrafficMonitorWatcher implements ApplicationListener<ApplicationCon
 		lastHostAttempt = now;
 
 		try {
-			String hostList = System.getenv("TRAFFIC_MONITOR_HOSTS");
-
 			File trafficMonitorConfigFile;
 
 			if (monitorProperties.matches("^\\w+:.*")) {
@@ -285,12 +265,24 @@ public class TrafficMonitorWatcher implements ApplicationListener<ApplicationCon
 
 			final Properties props = new Properties();
 
-			if (trafficMonitorConfigFile != null && trafficMonitorConfigFile.exists()) {
+			if (trafficMonitorConfigFile.exists()) {
 				LOGGER.info("Loading properties from " + trafficMonitorConfigFile.getAbsolutePath());
 				props.load(new FileInputStream(trafficMonitorConfigFile));
+			} else {
+				LOGGER.warn("Cannot load traffic monitor properties file " + trafficMonitorConfigFile.getAbsolutePath() + " file not found!");
 			}
 
-			final boolean localConfig = Boolean.parseBoolean(props.getProperty("traffic_monitor.bootstrap.local", "false"));
+			boolean localConfig = Boolean.parseBoolean(props.getProperty("traffic_monitor.bootstrap.local", "false"));
+
+			String localEnvString = System.getenv("TRAFFIC_MONITOR_BOOTSTRAP_LOCAL");
+
+			if (localEnvString != null) {
+				localEnvString = localEnvString.toLowerCase();
+			}
+
+			if ("true".equals(localEnvString) || "false".equals(localEnvString)) {
+				localConfig = Boolean.parseBoolean(localEnvString);
+			}
 
 			if (localConfig != isLocalConfig()) {
 				LOGGER.info("traffic_monitor.bootstrap.local changed to: " + localConfig);
@@ -298,6 +290,12 @@ public class TrafficMonitorWatcher implements ApplicationListener<ApplicationCon
 			}
 
 			if (localConfig || !isBootstrapped()) {
+				String hostList = System.getenv("TRAFFIC_MONITOR_HOSTS");
+
+				if (hostList != null && !hostList.isEmpty()) {
+					LOGGER.warn("hostlist initialized to '" + hostList + "' from env var 'TRAFFIC_MONITOR_HOSTS");
+				}
+
 				if (hostList == null || hostList.isEmpty()) {
 					hostList = props.getProperty("traffic_monitor.bootstrap.hosts");
 				}
@@ -361,6 +359,10 @@ public class TrafficMonitorWatcher implements ApplicationListener<ApplicationCon
 
 	public static void setOnlineMonitors(final List<String> onlineMonitors) {
 		synchronized(monitorSync) {
+			if (isLocalConfig()) {
+				return;
+			}
+
 			TrafficMonitorWatcher.onlineMonitors = onlineMonitors;
 			setBootstrapped(true);
 			setHosts(onlineMonitors.toArray(new String[onlineMonitors.size()]));

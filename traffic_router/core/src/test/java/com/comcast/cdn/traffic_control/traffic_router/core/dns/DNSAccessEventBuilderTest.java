@@ -63,8 +63,8 @@ public class DNSAccessEventBuilderTest {
         DNSAccessRecord dnsAccessRecord = new DNSAccessRecord.Builder(144140678000L, client).build();
 
         String dnsAccessEvent = DNSAccessEventBuilder.create(dnsAccessRecord, new WireParseException("invalid record length"));
-        assertThat(dnsAccessEvent, equalTo("144140678.000 qtype=DNS chi=192.168.10.11 ttms=789 xn=- fqdn=- type=- class=- ttl=- rcode=-" +
-                " rtype=- rloc=\"-\" rdtl=- rerr=\"Bad Request:WireParseException:invalid record length\" ans=\"-\""));
+        assertThat(dnsAccessEvent, equalTo("144140678.000 qtype=DNS chi=192.168.10.11 ttms=789 xn=- fqdn=- type=- class=- rcode=-" +
+                " rtype=- rloc=\"-\" rdtl=- rerr=\"Bad Request:WireParseException:invalid record length\" ttl=\"-\" ans=\"-\""));
     }
 
     @Test
@@ -80,10 +80,13 @@ public class DNSAccessEventBuilderTest {
 
         final Record record1 = mock(Record.class);
         when(record1.rdataToString()).thenReturn("foo");
+        when(record1.getTTL()).thenReturn(1L);
         final Record record2 = mock(Record.class);
         when(record2.rdataToString()).thenReturn("bar");
+        when(record2.getTTL()).thenReturn(2L);
         final Record record3 = mock(Record.class);
         when(record3.rdataToString()).thenReturn("baz");
+        when(record3.getTTL()).thenReturn(3L);
 
         Record[] records = new Record[] {record1, record2, record3};
         when(response.getSectionArray(Section.ANSWER)).thenReturn(records);
@@ -97,15 +100,15 @@ public class DNSAccessEventBuilderTest {
         String dnsAccessEvent = DNSAccessEventBuilder.create(dnsAccessRecord);
 
         assertThat(dnsAccessEvent, equalTo("144140678.000 qtype=DNS chi=192.168.10.11 ttms=789" +
-                " xn=65535 fqdn=www.example.com. type=A class=IN ttl=12345" +
-                " rcode=NOERROR rtype=- rloc=\"-\" rdtl=- rerr=\"-\" ans=\"foo bar baz\""));
+                " xn=65535 fqdn=www.example.com. type=A class=IN" +
+                " rcode=NOERROR rtype=- rloc=\"-\" rdtl=- rerr=\"-\" ttl=\"1 2 3\" ans=\"foo bar baz\""));
 
 
         dnsAccessEvent = DNSAccessEventBuilder.create(dnsAccessRecord);
 
         assertThat(dnsAccessEvent, equalTo("144140678.000 qtype=DNS chi=192.168.10.11 ttms=0" +
-                " xn=65535 fqdn=www.example.com. type=A class=IN ttl=12345" +
-                " rcode=NOERROR rtype=- rloc=\"-\" rdtl=- rerr=\"-\" ans=\"foo bar baz\""));
+                " xn=65535 fqdn=www.example.com. type=A class=IN" +
+                " rcode=NOERROR rtype=- rloc=\"-\" rdtl=- rerr=\"-\" ttl=\"1 2 3\" ans=\"foo bar baz\""));
     }
 
     @Test
@@ -116,8 +119,8 @@ public class DNSAccessEventBuilderTest {
         DNSAccessRecord dnsAccessRecord = new DNSAccessRecord.Builder(144140678000L, client).dnsMessage(query).build();
         String dnsAccessEvent = DNSAccessEventBuilder.create(dnsAccessRecord, new RuntimeException("boom it failed"));
         assertThat(dnsAccessEvent, equalTo("144140678.000 qtype=DNS chi=192.168.10.11 ttms=789" +
-                " xn=65535 fqdn=www.example.com. type=A class=IN ttl=12345" +
-                " rcode=SERVFAIL rtype=- rloc=\"-\" rdtl=- rerr=\"Server Error:RuntimeException:boom it failed\" ans=\"-\""));
+                " xn=65535 fqdn=www.example.com. type=A class=IN" +
+                " rcode=SERVFAIL rtype=- rloc=\"-\" rdtl=- rerr=\"Server Error:RuntimeException:boom it failed\" ttl=\"-\" ans=\"-\""));
     }
 
     @Test
@@ -132,10 +135,13 @@ public class DNSAccessEventBuilderTest {
 
         final Record record1 = mock(Record.class);
         when(record1.rdataToString()).thenReturn("foo");
+        when(record1.getTTL()).thenReturn(1L);
         final Record record2 = mock(Record.class);
         when(record2.rdataToString()).thenReturn("bar");
+        when(record2.getTTL()).thenReturn(2L);
         final Record record3 = mock(Record.class);
         when(record3.rdataToString()).thenReturn("baz");
+        when(record3.getTTL()).thenReturn(3L);
 
         Record[] records = new Record[] {record1, record2, record3};
         when(response.getSectionArray(Section.ANSWER)).thenReturn(records);
@@ -154,21 +160,21 @@ public class DNSAccessEventBuilderTest {
         String dnsAccessEvent = DNSAccessEventBuilder.create(dnsAccessRecord);
 
         assertThat(dnsAccessEvent, equalTo("144140678.000 qtype=DNS chi=192.168.10.11 ttms=789" +
-                " xn=65535 fqdn=www.example.com. type=A class=IN ttl=12345" +
-                " rcode=NOERROR rtype=CZ rloc=\"39.75,-104.99\" rdtl=- rerr=\"-\" ans=\"foo bar baz\""));
+                " xn=65535 fqdn=www.example.com. type=A class=IN" +
+                " rcode=NOERROR rtype=CZ rloc=\"39.75,-104.99\" rdtl=- rerr=\"-\" ttl=\"1 2 3\" ans=\"foo bar baz\""));
 
         dnsAccessRecord = builder.resultType(ResultType.GEO).build();
         dnsAccessEvent = DNSAccessEventBuilder.create(dnsAccessRecord);
 
         assertThat(dnsAccessEvent, equalTo("144140678.000 qtype=DNS chi=192.168.10.11 ttms=0" +
-                " xn=65535 fqdn=www.example.com. type=A class=IN ttl=12345" +
-                " rcode=NOERROR rtype=GEO rloc=\"39.75,-104.99\" rdtl=- rerr=\"-\" ans=\"foo bar baz\""));
+                " xn=65535 fqdn=www.example.com. type=A class=IN" +
+                " rcode=NOERROR rtype=GEO rloc=\"39.75,-104.99\" rdtl=- rerr=\"-\" ttl=\"1 2 3\" ans=\"foo bar baz\""));
 
         dnsAccessRecord = builder.resultType(ResultType.MISS).resultDetails(ResultDetails.DS_NOT_FOUND).build();
         dnsAccessEvent = DNSAccessEventBuilder.create(dnsAccessRecord);
 
         assertThat(dnsAccessEvent, equalTo("144140678.000 qtype=DNS chi=192.168.10.11 ttms=0" +
-                " xn=65535 fqdn=www.example.com. type=A class=IN ttl=12345" +
-                " rcode=NOERROR rtype=MISS rloc=\"39.75,-104.99\" rdtl=DS_NOT_FOUND rerr=\"-\" ans=\"foo bar baz\""));
+                " xn=65535 fqdn=www.example.com. type=A class=IN" +
+                " rcode=NOERROR rtype=MISS rloc=\"39.75,-104.99\" rdtl=DS_NOT_FOUND rerr=\"-\" ttl=\"1 2 3\" ans=\"foo bar baz\""));
     }
 }

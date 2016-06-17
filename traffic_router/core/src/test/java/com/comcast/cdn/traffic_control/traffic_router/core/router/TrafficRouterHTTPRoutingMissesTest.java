@@ -16,6 +16,7 @@
 
 package com.comcast.cdn.traffic_control.traffic_router.core.router;
 
+import com.comcast.cdn.traffic_control.traffic_router.core.cache.CacheRegister;
 import com.comcast.cdn.traffic_control.traffic_router.core.request.HTTPRequest;
 import org.junit.Before;
 import org.junit.Test;
@@ -24,20 +25,24 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.powermock.api.mockito.PowerMockito.doCallRealMethod;
 import static org.powermock.api.mockito.PowerMockito.spy;
+import static org.powermock.reflect.Whitebox.setInternalState;
 
 public class TrafficRouterHTTPRoutingMissesTest {
     private HTTPRequest request;
     private TrafficRouter trafficRouter;
     private StatTracker.Track track;
+    private CacheRegister cacheRegister;
 
     @Before
     public void before() throws Exception {
         request = new HTTPRequest();
         request.setClientIP("192.168.34.56");
 
+        cacheRegister = mock(CacheRegister.class);
         trafficRouter = mock(TrafficRouter.class);
 
         track = spy(StatTracker.getTrack());
+        setInternalState(trafficRouter, "cacheRegister", cacheRegister);
         doCallRealMethod().when(trafficRouter).route(request, track);
     }
 

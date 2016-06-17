@@ -1,15 +1,23 @@
 package data;
 
+import com.comcast.cdn.traffic_control.traffic_monitor.data.DataPoint;
 import com.comcast.cdn.traffic_control.traffic_monitor.data.StatisticsLog;
+import com.comcast.cdn.traffic_control.traffic_monitor.health.DeliveryServiceStateRegistry;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
 
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Deque;
 import java.util.HashSet;
+import java.util.List;
+import java.util.concurrent.CyclicBarrier;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.contains;
 import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.nullValue;
@@ -169,5 +177,129 @@ public class StatisticsLogTest {
 		assertThat(statisticsLog.getValue("kbps", 3), equalTo("1234.5"));
 		assertThat(statisticsLog.getValue("kbps", 4), equalTo("1234.5"));
 		assertThat(statisticsLog.getValue("kbps", 5), nullValue());
+	}
+
+	@Test
+	public void itIsThreadSafe() throws Exception {
+		StatisticsLog statisticsLog = new StatisticsLog();
+
+		final CyclicBarrier cyclicBarrier = new CyclicBarrier(4);
+
+		Publisher publisher = new Publisher(statisticsLog, cyclicBarrier);
+		Prepper prepper = new Prepper(statisticsLog, cyclicBarrier);
+		TimeGetter timeGetter = new TimeGetter(statisticsLog, cyclicBarrier);
+
+		Thread publisherThread = new Thread(publisher);
+		Thread prepperThread = new Thread(prepper);
+		Thread getterThread = new Thread(timeGetter);
+
+		getterThread.start();
+		prepperThread.start();
+		publisherThread.start();
+
+		cyclicBarrier.await();
+		List<Integer> exceptions = new ArrayList<Integer>();
+		exceptions.add(timeGetter.exceptionCount.get());
+		exceptions.add(publisher.exceptionCount.get());
+		exceptions.add(prepper.exceptionCount.get());
+		assertThat(exceptions, contains(0, 0, 0));
+	}
+}
+
+class Publisher implements Runnable {
+	static String[] keys = new String[] {"one", "two", "three", "four", "five", "six", "seven"};
+	static String[] values = new String[] {"aardvark", "bear", "crocodile", "dog", "elephant", "fox", "gorilla"};
+	StatisticsLog statisticsLog;
+	CyclicBarrier cyclicBarrier;
+	AtomicInteger exceptionCount = new AtomicInteger(0);
+
+	public Publisher(StatisticsLog statisticsLog, CyclicBarrier cyclicBarrier) {
+		this.statisticsLog = statisticsLog;
+		this.cyclicBarrier = cyclicBarrier;
+	}
+
+	@Override
+	public void run() {
+		for (int i = 0; i < 20000; i++) {
+			try {
+				statisticsLog.putDataPoint(keys[i%keys.length], values[i%values.length]);
+			} catch (Throwable t) {
+				exceptionCount.incrementAndGet();
+			}
+		}
+		try {
+			cyclicBarrier.await();
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+	}
+}
+
+class Prepper implements Runnable {
+	StatisticsLog statisticsLog;
+	CyclicBarrier cyclicBarrier;
+	AtomicInteger exceptionCount = new AtomicInteger(0);
+
+	public Prepper(StatisticsLog statisticsLog, CyclicBarrier cyclicBarrier) {
+		this.statisticsLog = statisticsLog;
+		this.cyclicBarrier = cyclicBarrier;
+	}
+
+	@Override
+	public void run() {
+		for (int i = 0; i < 500; i++) {
+			try {
+				statisticsLog.prepareForUpdate("state id", 5*60*1000);
+			} catch (Throwable t) {
+				t.printStackTrace();
+				exceptionCount.incrementAndGet();
+			}
+		}
+
+		try {
+			cyclicBarrier.await();
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+	}
+}
+
+// This loosely mimics DeliveryServiceStateRegistry.createStati that is having concurrency problems
+class TimeGetter implements Runnable {
+	StatisticsLog statisticsLog;
+	CyclicBarrier cyclicBarrier;
+	AtomicInteger exceptionCount = new AtomicInteger(0);
+	DeliveryServiceStateRegistry deliveryServiceStateRegistry = DeliveryServiceStateRegistry.getInstance();
+
+	public TimeGetter(StatisticsLog statisticsLog, CyclicBarrier cyclicBarrier) {
+		this.statisticsLog = statisticsLog;
+		this.cyclicBarrier = cyclicBarrier;
+	}
+
+	@Override
+	public void run() {
+		for (int i = 0; i < 500; i++) {
+			try {
+				Deque<DataPoint> dataPoints = statisticsLog.get(Publisher.keys[i % Publisher.keys.length]);
+				if (dataPoints != null && !dataPoints.isEmpty()) {
+					long lastIndex = dataPoints.getLast().getIndex();
+					lastIndex = deliveryServiceStateRegistry.getLastGoodIndex(dataPoints, lastIndex);
+					if (lastIndex < 0) {
+						continue;
+					}
+
+					statisticsLog.getTime(lastIndex);
+
+				}
+			} catch (Throwable t) {
+				t.printStackTrace();
+				exceptionCount.incrementAndGet();
+			}
+		}
+		try {
+			cyclicBarrier.await();
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
 	}
 }

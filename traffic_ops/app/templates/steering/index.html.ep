@@ -1,0 +1,82 @@
+<!--
+     Copyright 2015 Comcast Cable Communications Management, LLC
+
+     Licensed under the Apache License, Version 2.0 (the "License");
+     you may not use this file except in compliance with the License.
+     You may obtain a copy of the License at
+
+     http://www.apache.org/licenses/LICENSE-2.0
+
+     Unless required by applicable law or agreed to in writing, software
+     distributed under the License is distributed on an "AS IS" BASIS,
+     WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+     See the License for the specific language governing permissions and
+     limitations under the License.
+ -->
+<head>
+	<script type="text/javascript" src="/js/application.js"></script>
+	% title 'Traffic Ops Configuration Tool -> Steering Assignments';
+	% if (defined (flash 'alertmsg')) {
+	<script>
+		var alertmsg = "<%= flash 'alertmsg' %>";
+		alertmsg = alertmsg.replace(/__NEWLINE__/g, "\n");
+		alert(alertmsg);
+	</script>
+	% }
+
+</head>
+<body id="steering">
+	<div id="accordion">
+		<div class="dialog_body">
+			<h3><a href="#">Steering Assignments</a></h3>
+			<div>
+				%= include 'common/_errors'
+				%= include 'common/_flash'
+				<div class="main">
+					<h1>Steering Information:</h1>
+					<form method="post" action="/ds/<%= $steering->{ds_id} %>/steering/update" id="steering_form">
+						<div class="block">
+							%= label_for 'steering.ds_name' => 'DeliveryService Name:', class => 'label', style=>"width:150px;"
+							%= field('steering.ds_name')->text(class => 'readonly_field', id => 'ds_name', name => 'steering.ds_name', readonly => 'readonly');
+						</div><br><br>
+						<div>
+							<% unless (field('steering.target_id_1')->valid) { %>
+							<span class="field-with-error"><%= field('steering.target_id_1')->error %></span><br>
+							<% } %>
+							%= label_for 'steering.target_name_1' => 'Target Name:', class => 'label', style=>"width:150px;"
+							<select style="max-width:250px" name="steering.target_id_1">
+								<% if (defined($steering->{target_name_1})) { %>
+								<option value="<%=$steering->{target_id_1}%>" selected><%=$steering->{target_name_1}%></option>
+								<% } %>
+								% foreach my $id (sort{$ds_data->{$a} cmp $ds_data->{$b}} keys %$ds_data) {
+								<option value="<%=$id%>"><%=$ds_data->{$id}%></option>
+								% }
+							</select>
+						</div><br>
+					</div>
+					<div>
+						%= label_for 'steering.target_name_2' => 'Target Name:', class => 'label', style=>"width:150px;"
+						<select style="max-width:250px" name="steering.target_id_2">
+							<% if (defined($steering->{target_name_2})) { %>
+							<option value="<%=$steering->{target_id_2}%>" selected><%=$steering->{target_name_2}%></option>
+							<% } %>
+							% foreach my $id (sort{$ds_data->{$a} cmp $ds_data->{$b}} keys %$ds_data) {
+							<option value="<%=$id%>"><%=$ds_data->{$id}%></option>
+							% }
+						</select>
+					</div><br>
+					<div class="buttons-section" style="margin-bottom: 20px;">
+						<div style="margin-top: 25px; margin-left: 10px; position: relative; display: inline-block; float: left;">
+							<% if ($priv_level >= 20) { %>  <!-- operations and admins only!! -->
+							<button class="button" id="submit_button">Save</button>
+							<% } %>
+						</div>
+					</form>
+					<div style="margin-top: 25px; float:right; margin-right: 50px">
+						<button class="button" id="close_button">Close</button>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+</body>
