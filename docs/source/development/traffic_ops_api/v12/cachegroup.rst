@@ -265,13 +265,13 @@ Cache Group
   +---------------------------------+----------+-------------------------------------------------------------------+
   | ``shortName``                   | yes      | Abbreviation of the Cache Group Name                              |
   +---------------------------------+----------+-------------------------------------------------------------------+
-  | ``latitude``                    | yes      | Latitude for the Cache Group                                      |
+  | ``latitude``                    | no       | Latitude for the Cache Group                                      |
   +---------------------------------+----------+-------------------------------------------------------------------+
-  | ``longitude``                   | yes      | Longitude for the Cache Group                                     |
+  | ``longitude``                   | no       | Longitude for the Cache Group                                     |
   +---------------------------------+----------+-------------------------------------------------------------------+
-  | ``parentCachegroup``            | yes      | Name of Parent Cache Group entry.                                 |
+  | ``parentCachegroup``            | no       | Name of Parent Cache Group entry.                                 |
   +---------------------------------+----------+-------------------------------------------------------------------+
-  | ``secondaryParentCachegroup``   | yes      | Name of Secondary Parent Cache Group entry.                       |
+  | ``secondaryParentCachegroup``   | no       | Name of Secondary Parent Cache Group entry.                       |
   +---------------------------------+----------+-------------------------------------------------------------------+
   | ``typeName``                    | yes      | The type of Cache Group entry, "EDGE_LOC", "MID_LOC" or "ORG_LOC" |
   +---------------------------------+----------+-------------------------------------------------------------------+
@@ -314,10 +314,22 @@ Cache Group
   +------------------------------------+--------+-------------------------------------------------------------------+
   | ``lastUpdated``                    | string | The Time / Date this entry was last updated                       |
   +------------------------------------+--------+-------------------------------------------------------------------+
+  | ``alerts``                         | array  | A collection of alert messages.                                   |
+  +------------------------------------+--------+-------------------------------------------------------------------+
+  | ``>level``                         | string | Success, info, warning or error.                                  |
+  +------------------------------------+--------+-------------------------------------------------------------------+
+  | ``>text``                          | string | Alert message.                                                    |
+  +------------------------------------+--------+-------------------------------------------------------------------+
 
   **Response Example** ::
 
     {
+        "alerts": [
+                  {
+                          "level": "success",
+                          "text": "Cachegroup successfully created: cache_group_edge"
+                  }
+          ],
         "response": {
             'longitude' : '45',
             'lastUpdated' : '2016-01-25 13:55:30',
@@ -409,10 +421,22 @@ Cache Group
   +------------------------------------+--------+-------------------------------------------------------------------+
   | ``lastUpdated``                    | string | The Time / Date this entry was last updated                       |
   +------------------------------------+--------+-------------------------------------------------------------------+
+  | ``alerts``                         | array  | A collection of alert messages.                                   |
+  +------------------------------------+--------+-------------------------------------------------------------------+
+  | ``>level``                         | string | Success, info, warning or error.                                  |
+  +------------------------------------+--------+-------------------------------------------------------------------+
+  | ``>text``                          | string | Alert message.                                                    |
+  +------------------------------------+--------+-------------------------------------------------------------------+
 
   **Response Example** ::
 
     {
+        "alerts": [
+                  {
+                          "level": "success",
+                          "text": "Cachegroup was updated: cache_group_edge"
+                  }
+          ],
         "response": {
             'longitude' : '45',
             'lastUpdated' : '2016-01-25 13:55:30',
@@ -457,8 +481,6 @@ Cache Group
   +-------------+--------+----------------------------------+
   | ``>text``   | string | Alert message.                   |
   +-------------+--------+----------------------------------+
-  | ``version`` | string |                                  |
-  +-------------+--------+----------------------------------+
 
   **Response Example** ::
 
@@ -466,7 +488,7 @@ Cache Group
           "alerts": [
                     {
                             "level": "success",
-                            "text": "Cachegroup was deleted."
+                            "text": "Cachegroup was deleted: cache_group_edge"
                     }
             ],
     }

@@ -210,18 +210,33 @@ sub get_cachegroup_by_id {
 sub isValidCachegroup {
     my $self = shift;
     my $params = shift;
+    my $isCreate = shift;
 
     if (!defined($params)) {
         return "parameters must be in JSON format,  please check!"; 
     }
 
-    if (defined($params->{'name'}) and !($params->{'name'} =~ /^[0-9a-zA-Z_\.\-]+$/)) {
+    if (!defined($params->{'name'})) {
+        if ($isCreate) {
+            return "parameter 'name' is required!";
+        }
+    } elsif (!($params->{'name'} =~ /^[0-9a-zA-Z_\.\-]+$/)) {
         return "Invalid name. Use alphanumeric . or _ .";
     }
-    if (defined($params->{'shortName'}) and !($params->{'shortName'} =~ /^[0-9a-zA-Z_\.\-]+$/)) {
+    if (!defined($params->{'shortName'})) {
+        if ($isCreate) {
+            return "parameter 'shortName' is required!";
+        }
+    }
+    elsif (!($params->{'shortName'} =~ /^[0-9a-zA-Z_\.\-]+$/)) {
         return "Invalid shortName. Use alphanumeric . or _ .";
     }
-    if (defined($params->{typeName})){
+    if (!defined($params->{typeName})){
+        if ($isCreate) {
+            return "parameter 'typeName' is required!";
+        }
+    }
+    else {
         my $typeName = $params->{typeName};
         my $type_id = $self->get_typeId($typeName);
         if (!defined($type_id)) {
@@ -255,7 +270,7 @@ sub create{
         return $self->forbidden();
     }
 
-    my $err = $self->isValidCachegroup($params);
+    my $err = $self->isValidCachegroup($params, 1);
     if (defined($err)) {
         return $self->alert($err);
     }
@@ -305,7 +320,7 @@ sub create{
             { Error => $err1 }
         );
     }
-    return $self->success($response);
+    return $self->success($response, "Cachegroup successfully created: " . $name);
 }
 
 sub update{
@@ -315,7 +330,7 @@ sub update{
         return $self->forbidden();
     }
 
-    my $err = $self->isValidCachegroup($params);
+    my $err = $self->isValidCachegroup($params, 0);
     if (defined($err)) {
         return $self->alert($err);
     }
@@ -385,7 +400,7 @@ sub update{
             { Error => $err1 }
         );
     }
-    return $self->success($response);
+    return $self->success($response, "Cachegroup was updated: " . $update->name);
 }
 
 sub delete{
@@ -421,7 +436,7 @@ sub delete{
 
     &log( $self, "Delete cachegroup " . $name, "APICHANGE" );
 
-    return $self->success_message("Cachegroup was deleted.");
+    return $self->success_message("Cachegroup was deleted: ". $name);
 }
 
 sub get_typeId {

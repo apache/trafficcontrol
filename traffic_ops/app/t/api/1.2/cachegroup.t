@@ -223,7 +223,7 @@ my $svr_id =&get_svr_id('edge_streamer_1');
 ok $t->delete_ok('/api/1.2/servers/' . $svr_id)->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } );
 ok $t->delete_ok('/api/1.2/cachegroups/' . $cg_id)->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } )
     ->json_is( "/alerts/0/level", "success" )
-    ->json_is( "/alerts/0/text", "Cachegroup was deleted." )
+    ->json_is( "/alerts/0/text", "Cachegroup was deleted: cache_group_edge_2" )
             , "Is the Cachegroup id valid?";
 ok $t->delete_ok('/api/1.2/cachegroups/' . $cg_id)->status_is(404)->or( sub { diag $t->tx->res->content->asset->{content}; } );
 ok $t->put_ok('/api/1.2/cachegroups/' . $cg_id => {Accept => 'application/json'} => json => {
