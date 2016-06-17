@@ -62,12 +62,8 @@ local $/;    #Enable 'slurp' mode
 
 has schema => sub { return Schema->connect_to_database };
 has watch  => sub { [qw(lib templates)] };
-has inactivity_timeout => sub {
-	$ENV{MOJO_INACTIVITY_TIMEOUT} // $config->{60};    # or undef for default
-};
 
 if ( !defined $ENV{MOJO_CONFIG} ) {
-
 	$ENV{MOJO_CONFIG} = find_conf_path('cdn.conf');
 	print( "Loading config from " . $ENV{MOJO_CONFIG} . "\n" );
 }
@@ -222,6 +218,11 @@ sub setup_mojo_plugins {
 
 	$self->helper( db => sub { $self->schema } );
 	$config = $self->plugin('Config');
+
+	if ( !defined $ENV{MOJO_INACTIVITY_TIMEOUT} ) {
+    	$ENV{MOJO_INACTIVITY_TIMEOUT} = $config->{inactivity_timeout} // 60;
+    	print( "Setting mojo inactivity timeout to " . $ENV{MOJO_INACTIVITY_TIMEOUT} . "\n" );
+    }
 
 	$self->plugin(
 		'authentication', {
