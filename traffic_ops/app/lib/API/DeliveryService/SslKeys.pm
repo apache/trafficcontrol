@@ -39,7 +39,7 @@ sub add {
 	my $deliveryservice = $self->req->json->{deliveryservice};
 
 	if ( !&is_admin($self) ) {
-		$self->alert( { Error => " - You must be an ADMIN to perform this operation!" } );
+		return $self->alert( { Error => " - You must be an ADMIN to perform this operation!" } );
 	}
 	my $record = {
 		key => $key,
@@ -82,7 +82,7 @@ sub generate {
 	my $tmp_location = "/var/tmp";
 
 	if ( !&is_admin($self) ) {
-		$self->alert( { Error => " - You must be an ADMIN to perform this operation!" } );
+		return $self->alert( { Error => " - You must be an ADMIN to perform this operation!" } );
 	}
 
 	#generate the cert:
@@ -115,7 +115,7 @@ sub view_by_xml_id {
 	my $key     = $self->param('xmlid');
 	my $version = $self->param('version');
 	if ( !&is_admin($self) ) {
-		$self->alert( { Error => " - You must be an ADMIN to perform this operation!" } );
+		return $self->alert( { Error => " - You must be an ADMIN to perform this operation!" } );
 	}
 	else {
 		if ( !$version ) {
@@ -199,7 +199,7 @@ sub delete {
 	my $response_container;
 	my $response;
 	if ( !&is_admin($self) ) {
-		$self->alert( { Error => " - You must be an ADMIN to perform this operation!" } );
+		return $self->alert( { Error => " - You must be an ADMIN to perform this operation!" } );
 	}
 	else {
 		if ($version) {

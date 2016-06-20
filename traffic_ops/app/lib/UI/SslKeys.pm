@@ -48,7 +48,7 @@ sub add {
 				org      => $keys->{org},
 				unit     => $keys->{unit},
 				hostname => defined( $keys->{hostname} ) ? $keys->{hostname} : $self->get_hostname($ds_id, $data),
-				cdn => defined($keys->{cdn}) ? $keys->{cdn} : $data->cdn_name,
+				cdn => defined($keys->{cdn}) ? $keys->{cdn} : $data->cdn->name,
 				deliveryservice => defined($keys->{deliveryservice}) ? $keys->{deliveryservice} : $xml_id,
 				csr		 => decode_base64($keys->{certificate}->{csr}),
 				crt		 => decode_base64($keys->{certificate}->{crt}),
@@ -86,14 +86,19 @@ sub get_hostname {
 	my @example_urls    = UI::DeliveryService::get_example_urls( $self, $ds_id, $ds_regexes, $data, $domain_name, $data->protocol );
 
 	#if a DS is https only we want the first example_url
-	my $hostname = $example_urls[0];
+	my $url = $example_urls[0];
 	#if a DS is http/https then we want the second one...see https://github.com/Comcast/traffic_control/issues/1268
 	if ($data->protocol == 2) {
-		$hostname = $example_urls[1];
+		$url = $example_urls[1];
 	}
-
-	$hostname =~ /(https?:\/\/)(.*)/;
-	return $2;
+	$url =~ s/(https?:\/\/)(.*)//g;
+	my $hostname = $2;
+	if ($data->type->name =~ m/^HTTP/) {
+		#remove routing name and replace with * for wildcard
+		my @split_hostname = split(/\./,$hostname);
+		$hostname = '*.' . join('.', splice(@split_hostname, 1));
+	}
+	return $hostname;
 }
 
 sub create {
@@ -208,11 +213,6 @@ sub is_valid {
 
 		if ( length($country) != 2 ) {
 			$self->field('ssl.country')->is_equal( "", "Country code must be 2 characters only!" );
-		}
-
-		#strip off http(s)://
-		if ( !&is_hostname($hostname) ) {
-			$self->field('ssl.hostname')->is_equal( "", "$hostname is not a valid hostname!" );
 		}
 
 		my $rs_ds =
