@@ -210,38 +210,35 @@ sub get_cachegroup_by_id {
 sub isValidCachegroup {
     my $self = shift;
     my $params = shift;
-    my $isCreate = shift;
+    my %errFields = ();
 
     if (!defined($params)) {
         return "parameters must be in JSON format,  please check!"; 
     }
 
     if (!defined($params->{'name'})) {
-        if ($isCreate) {
-            return "parameter 'name' is required!";
-        }
-    } elsif (!($params->{'name'} =~ /^[0-9a-zA-Z_\.\-]+$/)) {
-        return "Invalid name. Use alphanumeric . or _ .";
+        $errFields{'name'} = 'is required';
     }
     if (!defined($params->{'shortName'})) {
-        if ($isCreate) {
-            return "parameter 'shortName' is required!";
-        }
-    }
-    elsif (!($params->{'shortName'} =~ /^[0-9a-zA-Z_\.\-]+$/)) {
-        return "Invalid shortName. Use alphanumeric . or _ .";
+        $errFields{'shorName'} = 'is required';
     }
     if (!defined($params->{typeName})){
-        if ($isCreate) {
-            return "parameter 'typeName' is required!";
-        }
+        $errFields{'typeName'} = 'is required';
     }
-    else {
-        my $typeName = $params->{typeName};
-        my $type_id = $self->get_typeId($typeName);
-        if (!defined($type_id)) {
-            return "Type ". $typeName . " is not a valid Cache Group type"; 
-        }
+    if (%errFields) {
+        return \%errFields;
+    }
+
+    if (!($params->{'name'} =~ /^[0-9a-zA-Z_\.\-]+$/)) {
+        return "Invalid name. Use alphanumeric . or _ .";
+    }
+    if (!($params->{'shortName'} =~ /^[0-9a-zA-Z_\.\-]+$/)) {
+        return "Invalid shortName. Use alphanumeric . or _ .";
+    }
+    my $typeName = $params->{typeName};
+    my $type_id = $self->get_typeId($typeName);
+    if (!defined($type_id)) {
+        return "Type ". $typeName . " is not a valid Cache Group type"; 
     }
     if (defined($params->{'latitude'})) {
         if(!($params->{'latitude'} =~ /^[-]*[0-9]+[.]*[0-9]*/)) {
@@ -270,7 +267,7 @@ sub create{
         return $self->forbidden();
     }
 
-    my $err = $self->isValidCachegroup($params, 1);
+    my $err = $self->isValidCachegroup($params);
     if (defined($err)) {
         return $self->alert($err);
     }
@@ -330,7 +327,7 @@ sub update{
         return $self->forbidden();
     }
 
-    my $err = $self->isValidCachegroup($params, 0);
+    my $err = $self->isValidCachegroup($params);
     if (defined($err)) {
         return $self->alert($err);
     }

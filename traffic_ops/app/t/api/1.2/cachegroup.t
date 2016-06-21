@@ -172,7 +172,8 @@ ok $t->put_ok('/api/1.2/cachegroups/' . $cg_id => {Accept => 'application/json'}
         "name" => "cache_group_edge_2",
         "shortName" => "cg_edge_2",
         "parentCachegroup" => "",
-        "secondaryParentCachegroup" => ""})->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } )
+        "secondaryParentCachegroup" => "",
+        "typeName" => "EDGE_LOC" })->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } )
 	->json_is( "/response/name" => "cache_group_edge_2" )
     ->json_is( "/response/shortName" => "cg_edge_2")
     ->json_is( "/response/latitude" => "23")
@@ -182,14 +183,22 @@ ok $t->put_ok('/api/1.2/cachegroups/' . $cg_id => {Accept => 'application/json'}
             , 'Does the cache group details return?';
 
 ok $t->put_ok('/api/1.2/cachegroups/' . $cg_id => {Accept => 'application/json'} => json => {
-        "parentCachegroup" => "cache_group_mid"})->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } )
+        "name" => "cache_group_edge_2",
+        "shortName" => "cg_edge_2",
+        "parentCachegroup" => "cache_group_mid",
+        "typeName" => "EDGE_LOC"})->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } )
     ->json_is( "/response/parentCachegroup" => "cache_group_mid")
             , 'Does the cache group details return?';
 
 ok $t->put_ok('/api/1.2/cachegroups/' . $cg_id => {Accept => 'application/json'} => json => {
         "name" => "cache_group_edge_1",
+        "typeName" => "EDGE_LOC"})->status_is(400)->or( sub { diag $t->tx->res->content->asset->{content}; } );
+
+ok $t->put_ok('/api/1.2/cachegroups/' . $cg_id => {Accept => 'application/json'} => json => {
+        "name" => "cache_group_edge_1",
         "shortName" => "cg_edge_1",
-        "parentCachegroup" => "cache_group_edge_2"})->status_is(400)->or( sub { diag $t->tx->res->content->asset->{content}; } );
+        "parentCachegroup" => "cache_group_edge_2",
+        "typeName" => "EDGE_LOC"})->status_is(400)->or( sub { diag $t->tx->res->content->asset->{content}; } );
 
 ok $t->post_ok('/api/1.2/servers' => {Accept => 'application/json'} => json => {
         "host_name" => "edge_streamer_1",
@@ -228,7 +237,8 @@ ok $t->delete_ok('/api/1.2/cachegroups/' . $cg_id)->status_is(200)->or( sub { di
 ok $t->delete_ok('/api/1.2/cachegroups/' . $cg_id)->status_is(404)->or( sub { diag $t->tx->res->content->asset->{content}; } );
 ok $t->put_ok('/api/1.2/cachegroups/' . $cg_id => {Accept => 'application/json'} => json => {
         "name" => "cache_group_edge_1",
-        "shortName" => "cg_edge_1"})->status_is(404)->or( sub { diag $t->tx->res->content->asset->{content}; } );
+        "shortName" => "cg_edge_1",
+        "typeName" => "EDGE_LOC"})->status_is(404)->or( sub { diag $t->tx->res->content->asset->{content}; } );
 
 ok $t->get_ok('/logout')->status_is(302)->or( sub { diag $t->tx->res->content->asset->{content}; } );
 $dbh->disconnect();
