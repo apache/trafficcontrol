@@ -172,7 +172,7 @@ One time configuration:
 4. Associate the sslkeys index to the ssl bucket in Riak
 	* run the following curl command: ``curl -kvs -XPUT "https://admin:pass@riakserver:8088/buckets/ssl/props" -H'content-type:application/json' -d'{"props":{"search_index":"sslkeys"}}'``
 
-Riak Search (using Apache Solr) will now index all NEW records that are added to the ssl bucket.  The cdn, deliveryservice, and hostname fields are indexed and when a search is performed riak will return the indexed fields along with the crt and key values for a ssl record.  In order to add the indexed fields to current records and to get the current records added, a standalone script needs to be run.  The following explains how to run the script.
+Riak Search (using Apache Solr) will now index all NEW records that are added to the "ssl" bucket.  The cdn, deliveryservice, and hostname fields are indexed and when a search is performed riak will return the indexed fields along with the crt and key values for a ssl record.  In order to add the indexed fields to current records and to get the current records added, a standalone script needs to be run.  The following explains how to run the script.
 
 1. Get script from github either by cloning the project and going to `traffic_ops/app/script` or from `here <https://github.com/Comcast/traffic_control/blob/master/traffic_ops/app/script/update_riak_for_search.pl>`_
 2. Run the script by performing the following command ``./update_riak_for_search.pl -to_url=https://traffic-ops.kabletown.net -to_un=user -to_pw=password``
