@@ -12,12 +12,16 @@ Sorted alphabetically
 * **[Jan van Doorn (knutsel)](https://github.com/knutsel)**
 * **[Jeff Elsloo (elsloo)](https://github.com/elsloo)**
 * **[Jeremy Mitchell (mitchell852)](https://github.com/mitchell852)**
+* **[Jifeng Yang (jifyang)](https://github.com/jifyang)**
 * **[Joe Pappano (jpappa200)](https://github.com/jpappa200)**
 * **[John Benton (evergreentech)](https://github.com/evergreentech)**
 * **[John Rushford (jrushf1239k)](https://github.com/jrushf1239k)**
+* **[John Shen (weifensh)](https://github.com/weifensh)**
 * **[Justin Laue (fp-x)](https://github.com/fp-x)**
+* **[Kai Luo (kailuocisco)](https://github.com/kailuocisco)**
 * **[Lawrence Wickline (lwickline)](https://github.com/lwickline)**
 * **[Mark Torluemke (mtorluemke)](https://github.com/mtorluemke)**
+* **[Neil Hao (nbaoping)](https://github.com/nbaoping)**
 * **[Petro, Christopher C. (petrocc)](https://github.com/petrocc)**
 * **[Phil Sorber (PSUdaemon)](https://github.com/PSUdaemon)**
 * **[Rob Butts (robert-butts)](https://github.com/robert-butts)**
@@ -25,5 +29,7 @@ Sorted alphabetically
 * **[Stayman Hou (Vuuo)](https://github.com/Vuuo)**
 * **[Steve Malenfant (smalenfant)] (https://github.com/smalenfant)**
 * **[Trevor Ackerman (trevorackerman)] (https://github.com/trevorackerman)**
+* **[Xiaodong Zhang (xiaodzha)] (https://github.com/xiaodzha)**
 * **[York Ma (yorma)] (https://github.com/yorma)**
+* **[Zhilin Huang (zhilhuan)] (https://github.com/zhilhuan)**
 
