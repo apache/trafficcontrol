@@ -165,9 +165,9 @@ Profiles
 	+-----------------------+--------+----------------------------------------------------+
 	| ``name``              | string | The name of the new profile                        |
 	+-----------------------+--------+----------------------------------------------------+
-	| ``profile_copy_from`` | string | The name of profile to copy                        |
+	| ``profileCopyFrom``   | string | The name of profile to copy                        |
 	+-----------------------+--------+----------------------------------------------------+
-	| ``id_copy_from``      | string | The id of profile to copy                          |
+	| ``idCopyFrom``        | string | The id of profile to copy                          |
 	+-----------------------+--------+----------------------------------------------------+
 	| ``description``       | string | new profile's description (copied)                 |
 	+-----------------------+--------+----------------------------------------------------+
@@ -179,9 +179,9 @@ Profiles
         {
             "id": "66",
             "name": "CCR_COPY",
-            "profile_copy_from": "CCR1",
+            "profileCopyFrom": "CCR1",
             "description": "CCR_COPY description",
-            "id_copy_from": "3"
+            "idCopyFrom": "3"
         }
      ]
     }
