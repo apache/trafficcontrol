@@ -41,10 +41,10 @@ ok $t->post_ok( '/login', => form => { u => Test::TestHelper::ADMIN_USER, p => T
 
 ok $t->post_ok('/api/1.2/regions/Denver Region/phys_locations' => {Accept => 'application/json'} => json => {
         "name" => "physical location1" ,
-        "short_name" => "physloc1"})->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } )
+        "shortName" => "physloc1"})->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } )
 	->json_is( "/response/name" => "physical location1" )
-	->json_is( "/response/short_name" => "physloc1" )
-    ->json_is( "/response/region_name" => "Denver Region" )
+	->json_is( "/response/shortName" => "physloc1" )
+    ->json_is( "/response/regionName" => "Denver Region" )
             , 'Does the physical location details return?';
 ok $t->post_ok('/api/1.2/regions/non_region/phys_locations' => {Accept => 'application/json'} => json => {
         "name" => "physical location1",
