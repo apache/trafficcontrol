@@ -1107,6 +1107,9 @@ SSL Keys
   +------------------------+----------+---------------------------------------------------------------------------------------------------------+
   | geoLimitCountries      | no       | The geo limit countries.                                                                                |
   +------------------------+----------+---------------------------------------------------------------------------------------------------------+
+  | geoProvider            | no       | - 0: Maxmind(default)                                                                                   |
+  |                        |          | - 1: Neustar                                                                                            |
+  +------------------------+----------+---------------------------------------------------------------------------------------------------------+
   | globalMaxMbps          | no       | The maximum global bandwidth allowed on this deliveryservice. If exceeded, the traffic routes to the    |
   |                        |          | dnsByPassIp* for DNS deliveryservices and to the httpBypassFqdn for HTTP deliveryservices.              |
   +------------------------+----------+---------------------------------------------------------------------------------------------------------+
@@ -1188,6 +1191,9 @@ SSL Keys
   | originShield           | no       | Origin shield                                                                                           |
   +------------------------+----------+---------------------------------------------------------------------------------------------------------+
   | trRequestHeaders       | no       | Traffic router log request headers                                                                      |
+  +------------------------+----------+---------------------------------------------------------------------------------------------------------+
+  | logsEnabled            | no       | - 0: No                                                                                                 |
+  |                        |          | - 1: Yes                                                                                                |
   +------------------------+----------+---------------------------------------------------------------------------------------------------------+
 
 
@@ -1278,7 +1284,15 @@ SSL Keys
             "regionalGeoBlocking":0,
             "originShield":null,
             "trRequestHeaders":null,
+            "geoProvider":"0",
+            "logsEnabled":"0",
         }
+        "alerts":[
+            {
+                "level": "success",
+                "text": "Delivery service was created: 312"
+            }
+        ]
     }
 
 |
@@ -1338,6 +1352,9 @@ SSL Keys
   |                        |          | routing to the content by Traffic Router.                                                               |
   +------------------------+----------+---------------------------------------------------------------------------------------------------------+
   | geoLimitCountries      | no       | The geo limit countries.                                                                                |
+  +------------------------+----------+---------------------------------------------------------------------------------------------------------+
+  | geoProvider            | no       | - 0: Maxmind(default)                                                                                   |
+  |                        |          | - 1: Neustar                                                                                            |
   +------------------------+----------+---------------------------------------------------------------------------------------------------------+
   | globalMaxMbps          | no       | The maximum global bandwidth allowed on this deliveryservice. If exceeded, the traffic routes to the    |
   |                        |          | dnsByPassIp* for DNS deliveryservices and to the httpBypassFqdn for HTTP deliveryservices.              |
@@ -1420,6 +1437,9 @@ SSL Keys
   | originShield           | no       | Origin shield                                                                                           |
   +------------------------+----------+---------------------------------------------------------------------------------------------------------+
   | trRequestHeaders       | no       | Traffic router log request headers                                                                      |
+  +------------------------+----------+---------------------------------------------------------------------------------------------------------+
+  | logsEnabled            | no       | - 0: No                                                                                                 |
+  |                        |          | - 1: Yes                                                                                                |
   +------------------------+----------+---------------------------------------------------------------------------------------------------------+
 
 
@@ -1510,7 +1530,15 @@ SSL Keys
             "regionalGeoBlocking":0,
             "originShield":null,
             "trRequestHeaders":null,
+            "geoProvider":"0",
+            "logsEnabled":"0",
         }
+        "alerts":[
+            {
+                "level": "success",
+                "text": "Delivery service was updated: 312"
+            }
+        ]
     }
 
 |

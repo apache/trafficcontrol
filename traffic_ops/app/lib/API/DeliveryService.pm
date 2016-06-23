@@ -478,7 +478,7 @@ sub create {
 		&log( $self, "Create deliveryservice with xml_id: " . $params->{xmlId}, " APICHANGE" );
 
 		my $response = $self->get_response($new_id);
-		return $self->success($response);
+		return $self->success($response, "Delivery service was created: " . $new_id);
 	}
 
 	my $r = "Create Delivery Service fail, insert to database failed.";
@@ -678,6 +678,7 @@ sub new_value {
 			qstring_ignore         => $params->{qstringIgnore},
 			geo_limit              => $params->{geoLimit},
 			geo_limit_countries    => $params->{geoLimitCountries},
+			geo_provider           => $params->{geoProvider},
 			http_bypass_fqdn       => $params->{httpBypassFqdn},
 			dns_bypass_ip          => $params->{dnsBypassIp},
 			dns_bypass_ip6         => $params->{dnsBypassIp6},
@@ -714,6 +715,7 @@ sub new_value {
 			ssl_key_version        => $params->{sslKeyVersion},
 			tr_request_headers     => $params->{trRequestHeaders},
 			tr_response_headers    => $params->{trResponseHeaders},
+			logs_enabled           => $params->{logsEnabled},
 		};
 
 	return $value;
@@ -736,6 +738,7 @@ sub get_response {
 		$response->{qstringIgnore}          = $rs->qstring_ignore;
 		$response->{geoLimit}               = $rs->geo_limit;
 		$response->{geoLimitCountries}      = $rs->geo_limit_countries;
+		$response->{geoProvider}            = $rs->geo_provider;
 		$response->{httpBypassFqdn}         = $rs->http_bypass_fqdn;
 		$response->{dnsBypassIp}            = $rs->dns_bypass_ip;
 		$response->{dnsBypassIp6}           = $rs->dns_bypass_ip6;
@@ -772,6 +775,7 @@ sub get_response {
 		$response->{dnsBypassCname}         = $rs->dns_bypass_cname;
 		$response->{regionalGeoBlocking}    = $rs->regional_geo_blocking;
 		$response->{trRequestHeaders}       = $rs->tr_request_headers;
+		$response->{logsEnabled}            = $rs->logs_enabled;
 	}
 
 	my @pats = ();
@@ -882,7 +886,7 @@ sub update {
 	&log( $self, "Update deliveryservice with xml_id: " . $params->{xmlId}, " APICHANGE" );
 
 	my $response = $self->get_response($id);
-	return $self->success($response);
+	return $self->success($response, "Delivery service was updated: " . $id);
 }
 
 sub delete {
