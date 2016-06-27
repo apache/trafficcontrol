@@ -1,4 +1,5 @@
 package UI::Tools;
+
 #
 # Copyright 2015 Comcast Cable Communications Management, LLC
 #
@@ -29,7 +30,6 @@ use HTTP::Cookies;
 sub tools {
     my $self = shift;
 
-    print "hahy\n";
     &navbarpage($self);
     my %serverselect;
     my $rs_server = $self->db->resultset('Server')->search( undef, { columns => [qw/id host_name domain_name/], orderby => "host_name" } );
@@ -73,17 +73,24 @@ sub diff_crconfig_iframe {
     my $self = shift;
     &stash_role($self);
     my $cdn_name = $self->param('cdn_name');
-    my $json = UI::Topology::gen_crconfig_json( $self, $cdn_name );
+    my ( $json, $error ) = UI::Topology::gen_crconfig_json( $self, $cdn_name );
 
-    ( my $ds_text, my $loc_text, my $cs_text, my $csds_text, my $rascal_text, my $ccr_text, my $cfg_text ) =
-        UI::Topology::diff_crconfig_json( $self, $json, $cdn_name );
-    my @ds_text     = @$ds_text;
-    my @loc_text    = @$loc_text;
-    my @cs_text     = @$cs_text;
-    my @csds_text   = @$csds_text;
-    my @rascal_text = @$rascal_text;
-    my @ccr_text    = @$ccr_text;
-    my @cfg_text    = @$cfg_text;
+    my ( @ds_text, @loc_text, @cs_text, @csds_text, @rascal_text, @ccr_text, @cfg_text );
+    if ( defined $error ) {
+        $self->flash( alertmsg => $error );
+    }
+    else {
+
+        ( my $ds_text, my $loc_text, my $cs_text, my $csds_text, my $rascal_text, my $ccr_text, my $cfg_text ) =
+            UI::Topology::diff_crconfig_json( $self, $json, $cdn_name );
+        @ds_text     = @$ds_text;
+        @loc_text    = @$loc_text;
+        @cs_text     = @$cs_text;
+        @csds_text   = @$csds_text;
+        @rascal_text = @$rascal_text;
+        @ccr_text    = @$ccr_text;
+        @cfg_text    = @$cfg_text;
+    }
     $self->stash(
         ds_text     => \@ds_text,
         loc_text    => \@loc_text,
@@ -101,10 +108,15 @@ sub diff_crconfig_iframe {
 sub write_crconfig {
     my $self     = shift;
     my $cdn_name = $self->param('cdn_name');
-    my $json     = UI::Topology::gen_crconfig_json( $self, $cdn_name );
-    UI::Topology::write_crconfig_json( $self, $cdn_name, $json );
-    &log( $self, "Snapshot CRConfig created.", "OPER" );
-    $self->flash( alertmsg => "Successfully wrote CRConfig.json!" );
+    my ( $json, $error ) = UI::Topology::gen_crconfig_json( $self, $cdn_name );
+    if ( defined $error ) {
+        $self->flash( alertmsg => $error );
+    }
+    else {
+        UI::Topology::write_crconfig_json( $self, $cdn_name, $json );
+        &log( $self, "Snapshot CRConfig created.", "OPER" );
+        $self->flash( alertmsg => "Successfully wrote CRConfig.json!" );
+    }
     return $self->redirect_to('/utils/close_fancybox');
 }
 

@@ -121,42 +121,32 @@ sub gen_crconfig_json {
     }
     $data_obj->{'config'}->{'dnssec.enabled'} = $dnssec_enabled;
 
+    # These params should have consistent values across all profiles used by servers in this CDN:
+    my %requested_param_names = (
+        'domain_name'       => 1,
+        'tld.soa.admin'     => 1,
+        'tld.soa.expire'    => 1,
+        'tld.soa.minimum'   => 1,
+        'tld.soa.refresh'   => 1,
+        'tld.soa.retry'     => 1,
+        'tld.ttls.SOA'      => 1,
+        'tld.ttls.NS'       => 1,
+        'LogRequestHeaders' => 1,
+    );
+
+    # Gather profile/parameter/value for each profile used by servers in this CDN
     while ( my $row = $rs_pp->next ) {
+        my $param = $row->parameter->name;
 
-        $param_cache{ $row->profile->id }->{ $row->parameter->name } = $row->parameter->value;
+        # cache value of each profile/param for later.
+        $param_cache{ $row->profile->id }{$param} = $row->parameter->value;
 
-        if ( $row->parameter->name eq 'tld.soa.admin' ) {
-            $cdn_soa_admin = $row->parameter->value;
-        }
-        if ( $row->parameter->name eq 'tld.soa.expire' ) {
-            $cdn_soa_expire = $row->parameter->value;
-        }
-        if ( $row->parameter->name eq 'tld.soa.minimum' ) {
-            $cdn_soa_minimum = $row->parameter->value;
-        }
-        if ( $row->parameter->name eq 'tld.soa.refresh' ) {
-            $cdn_soa_refresh = $row->parameter->value;
-        }
-        if ( $row->parameter->name eq 'tld.soa.retry' ) {
-            $cdn_soa_retry = $row->parameter->value;
-        }
-        if ( $row->parameter->name eq 'tld.ttls.SOA' ) {
-            $tld_ttls_soa = $row->parameter->value;
-        }
-        if ( $row->parameter->name eq 'tld.ttls.NS' ) {
-            $tld_ttls_ns = $row->parameter->value;
-        }
-        if ( $row->parameter->name eq 'domain_name' ) {
-            $ccr_domain_name = $row->parameter->value;
-            $data_obj->{'config'}->{ $row->parameter->name } = $row->parameter->value;
-        }
-        elsif ( $row->parameter->name =~ m/^tld/ ) {
-            my $param = $row->parameter->name;
+        if ( $param =~ m/^tld/ ) {
             $param =~ s/tld\.//;
             ( my $top_key, my $second_key ) = split( /\./, $param );
             $data_obj->{'config'}->{$top_key}->{$second_key} = $row->parameter->value;
         }
-        elsif ( $row->parameter->name eq 'LogRequestHeaders' ) {
+        elsif ( $param eq 'LogRequestHeaders' ) {
             my $headers;
             foreach my $header ( split( /__RETURN__/, $row->parameter->value ) ) {
                 $header = &trim_spaces($header);
@@ -164,11 +154,26 @@ sub gen_crconfig_json {
             }
             $data_obj->{'config'}->{'requestHeaders'} = $headers;
         }
-        else {
-            $data_obj->{'config'}->{ $row->parameter->name } = $row->parameter->value;
+        elsif ( !exists $requested_param_names{$param} ) {
+            $data_obj->{'config'}->{$param} = $row->parameter->value;
         }
-
     }
+
+    my ( $param_values, $errors ) = extract_params( [ keys %requested_param_names ], \%param_cache );
+
+    if ( scalar @$errors != 0 ) {
+        my $msg = "Errors extracting profile parameters: " . join( '', @$errors );
+        return undef, $msg;
+    }
+
+    $ccr_domain_name = $param_values->{'domain_name'};
+    $cdn_soa_admin   = $param_values->{'tld.soa.admin'};
+    $cdn_soa_expire  = $param_values->{'tld.soa.expire'};
+    $cdn_soa_minimum = $param_values->{'tld.soa.minimum'};
+    $cdn_soa_refresh = $param_values->{'tld.soa.refresh'};
+    $cdn_soa_retry   = $param_values->{'tld.soa.retry'};
+    $tld_ttls_soa    = $param_values->{'tld.ttls.SOA'};
+    $tld_ttls_ns     = $param_values->{'tld.ttls.NS'};
 
     my $regex_tracker;
     my $rs_regexes = $self->db->resultset('Regex')->search( {}, { 'prefetch' => 'type' } );
@@ -848,6 +853,47 @@ sub compare_lists {
         push( @compare_text, "    " . $text . " is the same." );
     }
     return @compare_text;
+}
+
+sub extract_params {
+
+    # array of param names to look for
+    my $param_names = shift;
+
+    # hash of profile id/param name/param value pulled from db
+    my $param_cache = shift;
+
+    my %errors;
+    my %return_params;
+
+    # ensure each param has exactly one value
+    for my $param_name (@$param_names) {
+        my $param_val;
+        for my $profile_id ( keys %$param_cache ) {
+            if ( !exists $param_cache->{$profile_id}{$param_name} ) {
+                next;
+            }
+            my $new_val = $param_cache->{$profile_id}{$param_name};
+            if ( defined $param_val && $new_val ne $param_val ) {
+
+                # ERROR!!
+                push @{ $errors{$param_name} }, $param_val, $new_val;
+            }
+            $param_val = $new_val;
+        }
+        $return_params{$param_name} = $param_val;
+    }
+
+    # Create a single error message for each parameter with inconsistent values
+    my @errors;
+    for my $param_name ( keys %errors ) {
+
+        # filter out dups
+        my %seen;
+        my @values = grep { !$seen{$_}++ } @{ $errors{$param_name} };
+        push @errors, "Parameter $param_name has multiple values (", join( ', ', @values ) . ") from profiles associated with servers in this CDN. ";
+    }
+    return \%return_params, \@errors;
 }
 
 sub trim_spaces {
