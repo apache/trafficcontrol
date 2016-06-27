@@ -27,149 +27,154 @@ use POSIX;
 use HTTP::Cookies;
 
 sub tools {
-	my $self = shift;
+    my $self = shift;
 
-	print "hahy\n";
-	&navbarpage($self);
-	my %serverselect;
-	my $rs_server = $self->db->resultset('Server')->search(undef, { columns => [qw/id host_name domain_name/], orderby => "host_name" }
-	);
+    print "hahy\n";
+    &navbarpage($self);
+    my %serverselect;
+    my $rs_server = $self->db->resultset('Server')->search( undef, { columns => [qw/id host_name domain_name/], orderby => "host_name" } );
 
-	while ( my $row = $rs_server->next ) {
-		my $fqdn = $row->host_name . "." . $row->domain_name;
-		$serverselect{$fqdn} = $row->id;
-	}
+    while ( my $row = $rs_server->next ) {
+        my $fqdn = $row->host_name . "." . $row->domain_name;
+        $serverselect{$fqdn} = $row->id;
+    }
 
-	my %osversions = (
-		"CentOS 6.2 Network" => "centos62",
-		"CentOS 6.2 Full"    => "full-centos62",
-	);
+    my %osversions = (
+        "CentOS 6.2 Network" => "centos62",
+        "CentOS 6.2 Full"    => "full-centos62",
+    );
 
-	my $rs_param = $self->db->resultset('Cdn')->search( undef, { columns => 'name' } );
-	my @cdn_names;
-	while ( my $row = $rs_param->next ) {
-		push( @cdn_names, $row->name );
-	}
+    my $rs_param = $self->db->resultset('Cdn')->search( undef, { columns => 'name' } );
+    my @cdn_names;
+    while ( my $row = $rs_param->next ) {
+        push( @cdn_names, $row->name );
+    }
 
-	$self->stash(
-		serverselect => \%serverselect,
-		osversions   => \%osversions,
-		cdn_names    => \@cdn_names,
-	);
+    $self->stash(
+        serverselect => \%serverselect,
+        osversions   => \%osversions,
+        cdn_names    => \@cdn_names,
+    );
 
 }
 
 sub snapshot_crconfig {
-	my $self = shift;
-	&navbarpage($self);
+    my $self = shift;
+    &navbarpage($self);
 
-	my @cdn_names = $self->db->resultset('Server')->search({ 'type.name' => { -like => 'EDGE%' } }, { prefetch => [ 'cdn', 'type' ], group_by => 'cdn.name' } )->get_column('cdn.name')->all();
+    my @cdn_names =
+        $self->db->resultset('Server')->search( { 'type.name' => { -like => 'EDGE%' } }, { prefetch => [ 'cdn', 'type' ], group_by => 'cdn.name' } )
+        ->get_column('cdn.name')->all();
 
-	$self->stash( cdn_names => \@cdn_names );
+    $self->stash( cdn_names => \@cdn_names );
 }
 
 sub diff_crconfig_iframe {
-	my $self = shift;
-	&stash_role($self);
-	my $cdn_name = $self->param('cdn_name');
-	my $json = UI::Topology::gen_crconfig_json( $self, $cdn_name );
+    my $self = shift;
+    &stash_role($self);
+    my $cdn_name = $self->param('cdn_name');
+    my $json = UI::Topology::gen_crconfig_json( $self, $cdn_name );
 
-	( my $ds_text, my $loc_text, my $cs_text, my $csds_text, my $rascal_text, my $ccr_text, my $cfg_text ) =
-		UI::Topology::diff_crconfig_json( $self, $json, $cdn_name );
-	my @ds_text     = @$ds_text;
-	my @loc_text    = @$loc_text;
-	my @cs_text     = @$cs_text;
-	my @csds_text   = @$csds_text;
-	my @rascal_text = @$rascal_text;
-	my @ccr_text    = @$ccr_text;
-	my @cfg_text    = @$cfg_text;
-	$self->stash(
-		ds_text     => \@ds_text,
-		loc_text    => \@loc_text,
-		cs_text     => \@cs_text,
-		csds_text   => \@csds_text,
-		rascal_text => \@rascal_text,
-		ccr_text    => \@ccr_text,
-		cfg_text    => \@cfg_text,
-		cdn         => $cdn_name,
-		fbox_layout => 1,
-		crconfig_db => $json
-	);
+    ( my $ds_text, my $loc_text, my $cs_text, my $csds_text, my $rascal_text, my $ccr_text, my $cfg_text ) =
+        UI::Topology::diff_crconfig_json( $self, $json, $cdn_name );
+    my @ds_text     = @$ds_text;
+    my @loc_text    = @$loc_text;
+    my @cs_text     = @$cs_text;
+    my @csds_text   = @$csds_text;
+    my @rascal_text = @$rascal_text;
+    my @ccr_text    = @$ccr_text;
+    my @cfg_text    = @$cfg_text;
+    $self->stash(
+        ds_text     => \@ds_text,
+        loc_text    => \@loc_text,
+        cs_text     => \@cs_text,
+        csds_text   => \@csds_text,
+        rascal_text => \@rascal_text,
+        ccr_text    => \@ccr_text,
+        cfg_text    => \@cfg_text,
+        cdn         => $cdn_name,
+        fbox_layout => 1,
+        crconfig_db => $json
+    );
 }
 
 sub write_crconfig {
-	my $self     = shift;
-	my $cdn_name = $self->param('cdn_name');
-	my $json     = UI::Topology::gen_crconfig_json( $self, $cdn_name );
-	UI::Topology::write_crconfig_json( $self, $cdn_name, $json );
-	&log( $self, "Snapshot CRConfig created.", "OPER" );
-	$self->flash( alertmsg => "Successfully wrote CRConfig.json!" );
-	return $self->redirect_to('/utils/close_fancybox');
+    my $self     = shift;
+    my $cdn_name = $self->param('cdn_name');
+    my $json     = UI::Topology::gen_crconfig_json( $self, $cdn_name );
+    UI::Topology::write_crconfig_json( $self, $cdn_name, $json );
+    &log( $self, "Snapshot CRConfig created.", "OPER" );
+    $self->flash( alertmsg => "Successfully wrote CRConfig.json!" );
+    return $self->redirect_to('/utils/close_fancybox');
 }
 
 sub queue_updates {
-	my $self = shift;
-	&stash_role($self);
+    my $self = shift;
+    &stash_role($self);
 
-	my @cdns = $self->db->resultset('Server')->search({ 'type.name' => [ { -like => 'EDGE%' }, { -like => 'MID%'} ] }, { prefetch => [ 'cdn', 'type' ], group_by => 'cdn.name' } )->get_column('cdn.name')->all();
-	$self->stash( cdns => \@cdns );
+    my @cdns =
+        $self->db->resultset('Server')
+        ->search( { 'type.name' => [ { -like => 'EDGE%' }, { -like => 'MID%' } ] }, { prefetch => [ 'cdn', 'type' ], group_by => 'cdn.name' } )
+        ->get_column('cdn.name')->all();
+    $self->stash( cdns => \@cdns );
 
-	my @cachegroups = $self->db->resultset('Cachegroup')->search(undef, { order_by => "name" })->get_column('name')->all;
-	$self->stash( cachegroups => \@cachegroups );
+    my @cachegroups = $self->db->resultset('Cachegroup')->search( undef, { order_by => "name" } )->get_column('name')->all;
+    $self->stash( cachegroups => \@cachegroups );
 
-	&navbarpage($self);
+    &navbarpage($self);
 }
 
 sub db_dump {
-	my $self = shift;
+    my $self = shift;
 
-	my ( $sec, $min, $hour, $day, $month, $year ) = (localtime)[ 0, 1, 2, 3, 4, 5 ];
-	$month = sprintf '%02d', $month + 1;
-	$day   = sprintf '%02d', $day;
-	$hour  = sprintf '%02d', $hour;
-	$min   = sprintf '%02d', $min;
-	$sec   = sprintf '%02d', $sec;
-	$year += 1900;
-	my $host = `hostname`;
-	chomp($host);
-	my $extension = ".psql";
-	if ( $self->db->storage->isa("DBIx::Class::Storage::DBI::mysql") ) {
-		$extension = ".mysql";
-	}
-	my $filename = "to-backup-" . $host . "-" . $year . $month . $day . $hour . $min . $sec . $extension;
-	$self->stash( filename => $filename );
-	&stash_role($self);
-	&navbarpage($self);
+    my ( $sec, $min, $hour, $day, $month, $year ) = (localtime)[ 0, 1, 2, 3, 4, 5 ];
+    $month = sprintf '%02d', $month + 1;
+    $day   = sprintf '%02d', $day;
+    $hour  = sprintf '%02d', $hour;
+    $min   = sprintf '%02d', $min;
+    $sec   = sprintf '%02d', $sec;
+    $year += 1900;
+    my $host = `hostname`;
+    chomp($host);
+    my $extension = ".psql";
+
+    if ( $self->db->storage->isa("DBIx::Class::Storage::DBI::mysql") ) {
+        $extension = ".mysql";
+    }
+    my $filename = "to-backup-" . $host . "-" . $year . $month . $day . $hour . $min . $sec . $extension;
+    $self->stash( filename => $filename );
+    &stash_role($self);
+    &navbarpage($self);
 }
 
 sub invalidate_content {
-	my $self = shift;
-	&stash_role($self);
-	&navbarpage($self);
-	my $id         = $self->param('id');
-	my %ds         = get_delivery_services( $self, $id );
-	my $ttl        = 48;
-	my $start_time = strftime( "%Y-%m-%d %H:%M:%S\n", localtime(time) );
-	my $regex      = "/foo/.*";
-	$self->stash(
-		job => {
-			ttl        => $ttl,
-			start_time => $start_time,
-			regex      => $regex
-		},
-		ds          => \%ds,
-		selected_ds => 'default'
-	);
+    my $self = shift;
+    &stash_role($self);
+    &navbarpage($self);
+    my $id         = $self->param('id');
+    my %ds         = get_delivery_services( $self, $id );
+    my $ttl        = 48;
+    my $start_time = strftime( "%Y-%m-%d %H:%M:%S\n", localtime(time) );
+    my $regex      = "/foo/.*";
+    $self->stash(
+        job => {
+            ttl        => $ttl,
+            start_time => $start_time,
+            regex      => $regex
+        },
+        ds          => \%ds,
+        selected_ds => 'default'
+    );
 }
 
 sub get_delivery_services {
-	my $self = shift;
-	my $id   = $self->param('id');
-	my %delivery_services;
-	my $deliveryServicesRs = $self->db->resultset('Deliveryservice');
-	while ( my $deliveryService = $deliveryServicesRs->next ) {
-		$delivery_services{ $deliveryService->xml_id } = $deliveryService->xml_id;
-	}
-	return %delivery_services;
+    my $self = shift;
+    my $id   = $self->param('id');
+    my %delivery_services;
+    my $deliveryServicesRs = $self->db->resultset('Deliveryservice');
+    while ( my $deliveryService = $deliveryServicesRs->next ) {
+        $delivery_services{ $deliveryService->xml_id } = $deliveryService->xml_id;
+    }
+    return %delivery_services;
 }
 1;
