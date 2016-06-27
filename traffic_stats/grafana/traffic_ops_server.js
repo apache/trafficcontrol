@@ -191,7 +191,7 @@ dashboard.refresh = "30s";
             {
               "measurement": "bandwidth",
               "tags": {},
-              "query": "SELECT mean(value)*1000 FROM \"monthly\".\"connections.1min\" WHERE hostname='" + which + "'  and $timeFilter GROUP BY time(60s)",
+              "query": "SELECT mean(value) FROM \"monthly\".\"connections.1min\" WHERE hostname='" + which + "'  and $timeFilter GROUP BY time(60s)",
               "rawQuery": true
             }
           ],
