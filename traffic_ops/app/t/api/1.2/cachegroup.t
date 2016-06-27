@@ -107,16 +107,16 @@ ok $t->post_ok('/api/1.2/cachegroups' => {Accept => 'application/json'} => json 
             , 'Does the cache group details return?';
 
 ok $t->post_ok('/api/1.2/servers' => {Accept => 'application/json'} => json => {
-        "host_name" => "tc1_ats2",
-        "domain_name" => "my.cisco.com",
+        "hostName" => "tc1_ats2",
+        "domainName" => "my.cisco.com",
         "cachegroup" => "mid-northeast-group",
-        "cdn_name" => "cdn1",
-        "interface_name" => "eth0",
-        "ip_address" => "10.74.27.184",
-        "ip_netmask" => "255.255.255.0",
-        "ip_gateway" => "10.74.27.1",
-        "interface_mtu" => "1500",
-        "phys_location" => "HotAtlanta",
+        "cdnName" => "cdn1",
+        "interfaceName" => "eth0",
+        "ipAddress" => "10.74.27.184",
+        "ipNetmask" => "255.255.255.0",
+        "ipGateway" => "10.74.27.1",
+        "interfaceMtu" => "1500",
+        "physLocation" => "HotAtlanta",
         "type" => "MID",
         "profile" => "MID1" })
     ->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } )
@@ -201,16 +201,16 @@ ok $t->put_ok('/api/1.2/cachegroups/' . $cg_id => {Accept => 'application/json'}
         "typeName" => "EDGE_LOC"})->status_is(400)->or( sub { diag $t->tx->res->content->asset->{content}; } );
 
 ok $t->post_ok('/api/1.2/servers' => {Accept => 'application/json'} => json => {
-        "host_name" => "edge_streamer_1",
-        "domain_name" => "test.example.com",
+        "hostName" => "edge_streamer_1",
+        "domainName" => "test.example.com",
         "cachegroup" => "cache_group_edge_2",
-        "cdn_name" => "cdn1",
-        "interface_name" => "eth0",
-        "ip_address" => "192.168.100.2",
-        "ip_netmask" => "255.255.255.0",
-        "ip_gateway" => "192.168.100.1",
-        "interface_mtu" => "1500",
-        "phys_location" => "HotAtlanta",
+        "cdnName" => "cdn1",
+        "interfaceName" => "eth0",
+        "ipAddress" => "192.168.100.2",
+        "ipNetmask" => "255.255.255.0",
+        "ipGateway" => "192.168.100.1",
+        "interfaceMtu" => "1500",
+        "physLocation" => "HotAtlanta",
         "type" => "EDGE",
         "profile" => "EDGE1" })
     ->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } )
