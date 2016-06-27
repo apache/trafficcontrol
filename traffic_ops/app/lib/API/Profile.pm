@@ -170,8 +170,8 @@ sub copy {
     $response->{id} = $new_id;
     $response->{name} = $name;
     $response->{description} = $description;
-    $response->{profile_copy_from} = $profile_copy_from_name;
-    $response->{id_copy_from} = $profile_copy_from_id;
+    $response->{profileCopyFrom} = $profile_copy_from_name;
+    $response->{idCopyFrom} = $profile_copy_from_id;
     return $self->success($response);
 }
 

@@ -1068,6 +1068,7 @@ SSL Keys
   Role(s) Required:  admin or oper
 
   **Request Route Parameters**
+
   +--------+----------+-----------------------------------+
   | Name   | Required | Description                       |
   +========+==========+===================================+
@@ -1079,13 +1080,13 @@ SSL Keys
   +--------------+----------+-------------------------------------------------------------------------------------------------------------+
   | Parameter    | Required | Description                                                                                                 |
   +==============+==========+=============================================================================================================+
-  | server_names | yes      | array of hostname of cache servers to assign to this deliveryservice, for example: [ "server1", "server2" ] |
+  | serverNames  | yes      | array of hostname of cache servers to assign to this deliveryservice, for example: [ "server1", "server2" ] |
   +--------------+----------+-------------------------------------------------------------------------------------------------------------+
 
   **Request Example** ::
 
     {
-        "server_names": [
+        "serverNames": [
             "tc1_ats1"
         ]
     }
@@ -1097,7 +1098,7 @@ SSL Keys
   +==============+========+=============================================================================================================+
   | xml_id       | string | Unique string that describes this delivery service.                                                         |
   +--------------+--------+-------------------------------------------------------------------------------------------------------------+
-  | server_names | string | array of hostname of cache servers to assign to this deliveryservice, for example: [ "server1", "server2" ] |
+  | serverNames  | string | array of hostname of cache servers to assign to this deliveryservice, for example: [ "server1", "server2" ] |
   +--------------+--------+-------------------------------------------------------------------------------------------------------------+
 
 
@@ -1105,10 +1106,10 @@ SSL Keys
 
     {
         "response":{
-            "server_names":[
+            "serverNames":[
                 "tc1_ats1"
             ],
-            "xml_id":"my_ds_1"
+            "xmlId":"my_ds_1"
         }
     }
 
