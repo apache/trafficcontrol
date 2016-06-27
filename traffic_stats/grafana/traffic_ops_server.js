@@ -118,7 +118,7 @@ dashboard.refresh = "30s";
           "timeShift": null,
           "targets": [
             {
-              "measurement": "bandwidth",
+              "measurement": "bandwidth.1min",
               "tags": {},
               "query": "SELECT mean(value)*1000 FROM \"monthly\".\"bandwidth.1min\" WHERE hostname='" + which + "'  and $timeFilter GROUP BY time(60s)",
               "rawQuery": true
@@ -189,7 +189,7 @@ dashboard.refresh = "30s";
           "timeShift": null,
           "targets": [
             {
-              "measurement": "bandwidth",
+              "measurement": "connections.1min",
               "tags": {},
               "query": "SELECT mean(value) FROM \"monthly\".\"connections.1min\" WHERE hostname='" + which + "'  and $timeFilter GROUP BY time(60s)",
               "rawQuery": true
