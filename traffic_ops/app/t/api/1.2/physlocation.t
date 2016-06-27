@@ -48,7 +48,7 @@ ok $t->post_ok('/api/1.2/regions/Denver Region/phys_locations' => {Accept => 'ap
             , 'Does the physical location details return?';
 ok $t->post_ok('/api/1.2/regions/non_region/phys_locations' => {Accept => 'application/json'} => json => {
         "name" => "physical location1",
-        "short_name" => "mountain"})->status_is(400);
+        "shortName" => "mountain"})->status_is(400);
 
 ok $t->get_ok('/logout')->status_is(302)->or( sub { diag $t->tx->res->content->asset->{content}; } );
 $dbh->disconnect();
