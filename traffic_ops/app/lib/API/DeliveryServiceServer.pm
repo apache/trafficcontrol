@@ -68,7 +68,7 @@ sub domains {
 	$self->success( \@data );
 }
 
-sub assign_ds {
+sub assign_ds_to_cachegroup {
 	my $self   = shift;
 	my $cg_id  = $self->param('id');
 	my $params = $self->req->json;
@@ -159,6 +159,8 @@ sub assign_ds {
 				if ($server->type->name eq 'EDGE') {
 					my $ds = $self->db->resultset('Deliveryservice')->search( { id => $ds_id } )->single();
 					&UI::DeliveryService::header_rewrite( $self, $ds->id, $ds->profile, $ds->xml_id, $ds->edge_header_rewrite, "edge" );
+					&UI::DeliveryService::regex_remap( $self, $ds->id, $ds->profile, $ds->xml_id, $ds->regex_remap );
+					&UI::DeliveryService::cacheurl( $self, $ds->id, $ds->profile, $ds->xml_id, $ds->cacheurl );
 				}
 				$self->app->log->info("assign server " . $server->id . " to ds " . $ds_id);
 			}
