@@ -88,8 +88,8 @@ sub create {
 	my $value = {
 		name => $params->{name},
 	};
-  if ( defined($params->{dnssecEnabled}) ) {
-		$value->{dnssec_enabled} = $params->{dnssecEnabled}
+    if ( defined($params->{dnssecEnabled}) ) {
+	    $value->{dnssec_enabled} = $params->{dnssecEnabled}
 	}
 
 	my $insert = $self->db->resultset('Cdn')->create($value);
@@ -139,7 +139,7 @@ sub update {
 	my $value = {
 		name => $params->{name},
 	};
-  if ( defined($params->{dnssecEnabled}) ) {
+    if ( defined($params->{dnssecEnabled}) ) {
 		$value->{dnssec_enabled} = $params->{dnssecEnabled}
 	}
 	$cdn->update($value);
