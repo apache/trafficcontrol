@@ -88,7 +88,7 @@ sub create {
 	my $value = {
 		name => $params->{name},
 	};
-    if ( defined($params->{dnssecEnabled}) ) {
+    	if ( defined($params->{dnssecEnabled}) ) {
 	    $value->{dnssec_enabled} = $params->{dnssecEnabled}
 	}
 
@@ -139,7 +139,7 @@ sub update {
 	my $value = {
 		name => $params->{name},
 	};
-    if ( defined($params->{dnssecEnabled}) ) {
+    	if ( defined($params->{dnssecEnabled}) ) {
 		$value->{dnssec_enabled} = $params->{dnssecEnabled}
 	}
 	$cdn->update($value);
