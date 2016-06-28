@@ -87,8 +87,11 @@ sub create {
 
 	my $value = {
 		name => $params->{name},
-		dnssec_enabled => $params->{dnssecEnabled},
 	};
+  if ( defined($params->{dnssecEnabled}) ) {
+		$value->{dnssec_enabled} = $params->{dnssecEnabled}
+	}
+
 	my $insert = $self->db->resultset('Cdn')->create($value);
 	$insert->insert();
 
@@ -132,10 +135,13 @@ sub update {
 		return $self->alert("a cdn with name " . $params->{name} . " already exists." );
 	}
 
+
 	my $value = {
 		name => $params->{name},
-		dnssec_enabled => $params->{dnssecEnabled},
 	};
+  if ( defined($params->{dnssecEnabled}) ) {
+		$value->{dnssec_enabled} = $params->{dnssecEnabled}
+	}
 	$cdn->update($value);
 
 	my $rs = $self->db->resultset('Cdn')->find( { id => $id } );
