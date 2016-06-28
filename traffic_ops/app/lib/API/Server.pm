@@ -914,7 +914,8 @@ sub update {
 	# this just creates the log string for the log table / tab.
 	my $lstring = "Update server " . $update->host_name . " ";
 	foreach my $col ( keys %{ $org_server->{_column_data} } ) {
-        my $colParam = $col =~ s/_(\w)/\U$1/gr;
+        my $colParam = $col;
+        $colParam =~ s/_(\w)/\U$1/g;
 		if ( defined( $params->{$colParam} )
 			&& $params->{$colParam} ne ( $org_server->{_column_data}->{$col} // "" ) )
 		{
