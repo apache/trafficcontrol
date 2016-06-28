@@ -159,12 +159,15 @@ public class DNSKeyPairWrapper extends DnsKeyPair {
 	@Override
 	public String toString() {
 		final StringBuilder sb = new StringBuilder();
-		sb.append("name=" + name);
-		sb.append(" ttl=" + getTTL());
-		sb.append(" ksk=" + isKeySigningKey());
-		sb.append(" inception=\"" + getInception() + "\"");
-		sb.append(" effective=\"" + getEffective() + "\"");
-		sb.append(" expiration=\"" + getExpiration() + "\"");
+		sb.append("name=").append(name)
+			.append(" ttl=").append(getTTL())
+			.append(" ksk=").append(isKeySigningKey())
+			.append(" inception=\"");
+		sb.append(getInception());
+		sb.append("\" effective=\"");
+		sb.append(getEffective());
+		sb.append("\" expiration=\"");
+		sb.append(getExpiration()).append('"');
 
 		return sb.toString();
 	}

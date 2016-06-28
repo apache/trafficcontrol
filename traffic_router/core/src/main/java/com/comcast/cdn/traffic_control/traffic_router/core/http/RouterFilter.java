@@ -95,7 +95,7 @@ public class RouterFilter extends OncePerRequestFilter {
 				final URL location = routeResult.getUrl();
 				final Map<String, String> responseHeaders = deliveryService.getResponseHeaders();
 
-				for (String key : responseHeaders.keySet()) {
+				for (final String key : responseHeaders.keySet()) {
 					response.addHeader(key, responseHeaders.get(key));
 				}
 

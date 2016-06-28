@@ -53,7 +53,7 @@ public class HTTPAccessEventBuilder {
 
         final StringBuilder stringBuilder = new StringBuilder();
         boolean first = true;
-        for (Map.Entry<String, String> entry : requestHeaders.entrySet()) {
+        for (final Map.Entry<String, String> entry : requestHeaders.entrySet()) {
             if (entry.getValue() == null || entry.getValue().isEmpty()) {
                 continue;
             }
@@ -116,16 +116,15 @@ public class HTTPAccessEventBuilder {
         final String rgb = formatObject(httpAccessRecord.getRegionalGeoResult());
 
         final StringBuilder stringBuilder = new StringBuilder(timeString)
-            .append(" qtype=HTTP")
-            .append(" chi=" + chi)
-            .append(" url=\"" + url + "\"")
-            .append(" cqhm=" + cqhm)
-            .append(" cqhv=" + cqhv)
-            .append(" rtype=" + resultType)
-            .append(" rloc=\"" + rloc + "\"")
-            .append(" rdtl=" + resultDetails)
-            .append(" rerr=\"" + rerr + "\"")
-            .append(" rgb=\"" + rgb + "\"");
+            .append(" qtype=HTTP chi=").append(chi)
+            .append(" url=\"").append(url)
+            .append("\" cqhm=").append(cqhm)
+            .append(" cqhv=").append(cqhv)
+            .append(" rtype=").append(resultType)
+            .append(" rloc=\"").append(rloc)
+            .append("\" rdtl=").append(resultDetails)
+            .append(" rerr=\"").append(rerr)
+            .append("\" rgb=\"").append(rgb).append('"');
 
         if (httpAccessRecord.getResponseCode() != -1) {
             final String pssc = formatObject(httpAccessRecord.getResponseCode());

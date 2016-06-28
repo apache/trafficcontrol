@@ -119,7 +119,7 @@ public class RegionalGeoRule {
         sb.append(postalsType);
 
         sb.append(", postals ");
-        for (String s : postals) {
+        for (final String s : postals) {
             sb.append(s);
             sb.append(',');
         }
