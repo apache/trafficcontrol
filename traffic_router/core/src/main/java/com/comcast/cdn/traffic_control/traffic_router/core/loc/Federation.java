@@ -65,7 +65,7 @@ public class Federation implements Comparable<Federation> {
     }
 
     public boolean containsCidrAddress(final CidrAddress cidrAddress) {
-        for (FederationMapping federationMapping : federationMappings) {
+        for (final FederationMapping federationMapping : federationMappings) {
             if (federationMapping.containsCidrAddress(cidrAddress)) {
                 return true;
             }

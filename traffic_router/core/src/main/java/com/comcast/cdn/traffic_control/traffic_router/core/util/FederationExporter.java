@@ -32,10 +32,10 @@ public class FederationExporter {
 	public List<Object> getMatchingFederations(final CidrAddress cidrAddress) {
 		final List<Object> federationsList = new ArrayList<Object>();
 
-		for (Federation federation : federationRegistry.findFederations(cidrAddress)) {
+		for (final Federation federation : federationRegistry.findFederations(cidrAddress)) {
 			final List<Map<String, Object>> filteredFederationMappings = new ArrayList<Map<String, Object>>();
 
-			for (FederationMapping federationMapping : federation.getFederationMappings()) {
+			for (final FederationMapping federationMapping : federation.getFederationMappings()) {
 				filteredFederationMappings.add(getMappingProperties(cidrAddress, federationMapping));
 			}
 
@@ -68,7 +68,7 @@ public class FederationExporter {
 			return properties;
 		}
 
-		for (CidrAddress cidrAddress : cidrAddresses) {
+		for (final CidrAddress cidrAddress : cidrAddresses) {
 			addressStrings.add(cidrAddress.getAddressString());
 		}
 

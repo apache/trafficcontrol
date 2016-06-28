@@ -104,7 +104,7 @@ public class Fetcher {
 		http.setRequestMethod(method);
 		http.setAllowUserInteraction(true);
 
-		for (String key : requestProps.keySet()) {
+		for (final String key : requestProps.keySet()) {
 			http.addRequestProperty(key, requestProps.get(key));
 		}
 

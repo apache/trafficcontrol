@@ -45,7 +45,7 @@ public class SteeringWatcher extends AbstractResourceWatcher {
 			if (cacheRegister != null) {
 				final List<String> invalidOnes = new ArrayList<String>();
 
-				for (Steering steering : steeringRegistry.getAll()) {
+				for (final Steering steering : steeringRegistry.getAll()) {
 					if (cacheRegister.getDeliveryService(steering.getDeliveryService()) == null) {
 						LOGGER.warn("Steering data from " + dataBaseURL + " contains delivery service id reference '" + steering.getDeliveryService() + "' that's not in cr-config");
 						invalidOnes.add(steering.getDeliveryService());

@@ -217,7 +217,9 @@
 								</mapping>
 							</mappings>
 							<requires>
-								<require>jdk >= 1.7.0</require>
+								<require>jdk1.8.0_92</require>
+								<require>wget</require>
+								<require>tar</require>
 							</requires>
 
 							<preinstallScriptlet>

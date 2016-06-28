@@ -91,7 +91,7 @@ public class Cache implements Comparable<Cache>, Hashable<Cache> {
 		}
 		if(ipAddresses == null) { return null; }
 		final List<InetRecord> ret = new ArrayList<InetRecord>();
-		for(InetRecord ir : ipAddresses) {
+		for (final InetRecord ir : ipAddresses) {
 			if (ir.isInet6() && !ip6RoutingEnabled) {
 				continue;
 			}
@@ -123,7 +123,7 @@ public class Cache implements Comparable<Cache>, Hashable<Cache> {
 	}
 
 	public void setDeliveryServices(final Collection<DeliveryServiceReference> deliveryServices) {
-		for (DeliveryServiceReference deliveryServiceReference : deliveryServices) {
+		for (final DeliveryServiceReference deliveryServiceReference : deliveryServices) {
 			this.deliveryServices.put(deliveryServiceReference.getDeliveryServiceId(), deliveryServiceReference);
 		}
 	}

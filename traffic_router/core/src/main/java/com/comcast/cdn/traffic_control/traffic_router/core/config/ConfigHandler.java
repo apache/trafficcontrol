@@ -225,7 +225,7 @@ public class ConfigHandler {
 				if(jo.has("deliveryServices")) {
 					final List<DeliveryServiceReference> references = new ArrayList<Cache.DeliveryServiceReference>();
 					final JSONObject dsJos = jo.optJSONObject("deliveryServices");
-					for(String ds : JSONObject.getNames(dsJos)) {
+					for (final String ds : JSONObject.getNames(dsJos)) {
 						/* technically this could be more than just a string or array,
 						 * but, as we only have had those two types, let's not worry about the future
 						 */
@@ -297,7 +297,7 @@ public class ConfigHandler {
 		final TreeSet<DeliveryServiceMatcher> httpServiceMatchers = new TreeSet<DeliveryServiceMatcher>();
 		final Map<String,DeliveryService> dsMap = new HashMap<String,DeliveryService>();
 
-		for (String dsId : JSONObject.getNames(deliveryServices)) {
+		for (final String dsId : JSONObject.getNames(deliveryServices)) {
 			final JSONObject dsJo = deliveryServices.getJSONObject(dsId);
 			final JSONArray matchsets = dsJo.getJSONArray("matchsets");
 			final DeliveryService ds = new DeliveryService(dsId, dsJo);

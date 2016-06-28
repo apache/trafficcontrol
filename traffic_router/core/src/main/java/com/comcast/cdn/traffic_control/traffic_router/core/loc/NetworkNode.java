@@ -74,7 +74,7 @@ public class NetworkNode implements Comparable<NetworkNode> {
 
             final SuperNode root = new SuperNode();
 
-            for (String loc : JSONObject.getNames(coverageZones)) {
+            for (final String loc : JSONObject.getNames(coverageZones)) {
                 final JSONObject locData = coverageZones.getJSONObject(loc);
                 final JSONObject coordinates = locData.optJSONObject("coordinates");
                 Geolocation geolocation = null;
@@ -181,7 +181,7 @@ public class NetworkNode implements Comparable<NetworkNode> {
             return false;
         }
 
-        for (NetworkNode child : children.values()) {
+        for (final NetworkNode child : children.values()) {
             if (child.cidrAddress.equals(networkNode.cidrAddress)) {
                 return false;
             }
@@ -189,18 +189,18 @@ public class NetworkNode implements Comparable<NetworkNode> {
 
         final List<NetworkNode> movedChildren = new ArrayList<NetworkNode>();
 
-        for (NetworkNode child : children.values()) {
+        for (final NetworkNode child : children.values()) {
             if (networkNode.cidrAddress.includesAddress(child.cidrAddress)) {
                 movedChildren.add(child);
                 networkNode.add(child);
             }
         }
 
-        for (NetworkNode movedChild : movedChildren) {
+        for (final NetworkNode movedChild : movedChildren) {
             children.remove(movedChild);
         }
 
-        for (NetworkNode child : children.values()) {
+        for (final NetworkNode child : children.values()) {
             if (child.cidrAddress.includesAddress(networkNode.cidrAddress)) {
                 return child.add(networkNode);
             }
@@ -233,7 +233,7 @@ public class NetworkNode implements Comparable<NetworkNode> {
 
         int size = 1;
 
-        for(NetworkNode child : children.keySet()) {
+        for (final NetworkNode child : children.keySet()) {
             size += child.size();
         }
 
@@ -248,14 +248,14 @@ public class NetworkNode implements Comparable<NetworkNode> {
                 final SuperNode superNode = (SuperNode) this;
 
                 if (superNode.children6 != null) {
-                    for (NetworkNode child : superNode.children6.keySet()) {
+                    for (final NetworkNode child : superNode.children6.keySet()) {
                         child.clearCacheLocations();
                     }
                 }
             }
 
             if (children != null) {
-                for (NetworkNode child : children.keySet()) {
+                for (final NetworkNode child : children.keySet()) {
                     child.clearCacheLocations();
                 }
             }
