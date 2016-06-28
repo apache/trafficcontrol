@@ -40,16 +40,16 @@ ok $t->post_ok( '/login', => form => { u => Test::TestHelper::ADMIN_USER, p => T
 	->or( sub { diag $t->tx->res->content->asset->{content}; } ), 'Should login?';
 
 ok $t->post_ok('/api/1.2/servers' => {Accept => 'application/json'} => json => {
-        "host_name" => "tc1_ats2",
-        "domain_name" => "northbound.com",
+        "hostName" => "tc1_ats2",
+        "domainName" => "northbound.com",
         "cachegroup" => "mid-northeast-group",
-        "cdn_name" => "cdn1",
-        "interface_name" => "eth0",
-        "ip_address" => "10.74.27.184",
-        "ip_netmask" => "255.255.255.0",
-        "ip_gateway" => "10.74.27.1",
-        "interface_mtu" => "1500",
-        "phys_location" => "HotAtlanta",
+        "cdnName" => "cdn1",
+        "interfaceName" => "eth0",
+        "ipAddress" => "10.74.27.184",
+        "ipNetmask" => "255.255.255.0",
+        "ipGateway" => "10.74.27.1",
+        "interfaceMtu" => "1500",
+        "physLocation" => "HotAtlanta",
         "type" => "MID",
         "profile" => "MID1" })
     ->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } )
@@ -67,16 +67,16 @@ ok $t->post_ok('/api/1.2/servers' => {Accept => 'application/json'} => json => {
             , 'Does the server details return?';
 
 ok $t->post_ok('/api/1.2/servers' => {Accept => 'application/json'} => json => {
-        "host_name" => "tc1_ats1",
-        "domain_name" => "northbound.com",
+        "hostName" => "tc1_ats1",
+        "domainName" => "northbound.com",
         "cachegroup" => "edge_atl_group",
-        "cdn_name" => "cdn1",
-        "interface_name" => "eth0",
-        "ip_address" => "10.74.27.185",
-        "ip_netmask" => "255.255.255.0",
-        "ip_gateway" => "10.74.27.1",
-        "interface_mtu" => "1500",
-        "phys_location" => "HotAtlanta",
+        "cdnName" => "cdn1",
+        "interfaceName" => "eth0",
+        "ipAddress" => "10.74.27.185",
+        "ipNetmask" => "255.255.255.0",
+        "ipGateway" => "10.74.27.1",
+        "interfaceMtu" => "1500",
+        "physLocation" => "HotAtlanta",
         "type" => "EDGE",
         "profile" => "EDGE1" })
     ->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } )
@@ -96,10 +96,18 @@ ok $t->post_ok('/api/1.2/servers' => {Accept => 'application/json'} => json => {
 my $svr_id = &get_svr_id('tc1_ats1');
 
 ok $t->put_ok('/api/1.2/servers/' . $svr_id  => {Accept => 'application/json'} => json => {
-        "host_name" => "tc1_ats3",
-        "domain_name" => "northbound.com",
-        "ip_address" => "10.74.27.186",
-        "phys_location" => "Denver" })
+        "hostName" => "tc1_ats3",
+        "domainName" => "northbound.com",
+        "cachegroup" => "edge_atl_group",
+        "cdnName" => "cdn1",
+        "interfaceName" => "eth0",
+        "ipAddress" => "10.74.27.186",
+        "ipNetmask" => "255.255.255.0",
+        "ipGateway" => "10.74.27.1",
+        "interfaceMtu" => "1500",
+        "physLocation" => "Denver",
+        "type" => "EDGE",
+        "profile" => "EDGE1" })
     ->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } )
     ->json_is( "/response/hostName" => "tc1_ats3")
     ->json_is( "/response/domainName" => "northbound.com")
@@ -115,15 +123,15 @@ ok $t->put_ok('/api/1.2/servers/' . $svr_id  => {Accept => 'application/json'} =
             , 'Does the server details return?';
 
 ok $t->put_ok('/api/1.2/servers/' . $svr_id  => {Accept => 'application/json'} => json => {
-        "ip_address" => "10.10.10.220",
-        "ip_gateway" => "111.222.111.1",
-        "ip_netmask" => "255.255.255.0" })
+        "ipAddress" => "10.10.10.220",
+        "ipGateway" => "111.222.111.1",
+        "ipNetmask" => "255.255.255.0" })
     ->status_is(400)->or( sub { diag $t->tx->res->content->asset->{content}; } )
             , 'Does the server details return?';
 
 ok $t->put_ok('/api/1.2/servers/' . $svr_id  => {Accept => 'application/json'} => json => {
-        "ip6_address" => "ee80::1",
-        "ip6_gateway" => "fe80::1" })
+        "ip6Address" => "ee80::1",
+        "ip6Gateway" => "fe80::1" })
     ->status_is(400)->or( sub { diag $t->tx->res->content->asset->{content}; } )
             , 'Does the server details return?';
 
@@ -143,18 +151,18 @@ ok $t->post_ok('/api/1.2/servers/9999/queue_update' =>  {Accept => 'application/
 ok $t->delete_ok('/api/1.2/servers/' . $svr_id)
     ->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } )
     ->json_is( "/alerts/0/level", "success" )
-    ->json_is( "/alerts/0/text", "Server was deleted." )
+    ->json_is( "/alerts/0/text", "Server was deleted: tc1_ats3" )
             , "Is the server id valid?";
 
 ok $t->delete_ok('/api/1.2/servers/' . $svr_id)
     ->status_is(404)->or( sub { diag $t->tx->res->content->asset->{content}; } );
 
 ok $t->put_ok('/api/1.2/servers/' . $svr_id  => {Accept => 'application/json'} => json => {
-        "host_name" => "tc1_ats1",
-        "domain_name" => "northbound.com",
-        "ip_address" => "10.74.27.185",
-        "phys_location" => "HotAtlanta" })
-    ->status_is(400)->or( sub { diag $t->tx->res->content->asset->{content}; } );
+        "hostName" => "tc1_ats1",
+        "domainName" => "northbound.com",
+        "ipAddress" => "10.74.27.185",
+        "physLocation" => "HotAtlanta" })
+    ->status_is(404)->or( sub { diag $t->tx->res->content->asset->{content}; } );
 
 
 ok $t->get_ok('/logout')->status_is(302)->or( sub { diag $t->tx->res->content->asset->{content}; } );
