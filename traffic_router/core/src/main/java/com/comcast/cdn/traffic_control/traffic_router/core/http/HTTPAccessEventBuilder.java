@@ -22,7 +22,6 @@ import com.comcast.cdn.traffic_control.traffic_router.geolocation.Geolocation;
 import javax.servlet.http.HttpServletRequest;
 import java.math.RoundingMode;
 import java.text.DecimalFormat;
-import java.util.Date;
 import java.util.Map;
 
 public class HTTPAccessEventBuilder {
@@ -130,8 +129,8 @@ public class HTTPAccessEventBuilder {
 
         if (httpAccessRecord.getResponseCode() != -1) {
             final String pssc = formatObject(httpAccessRecord.getResponseCode());
-            final long ttms = new Date().getTime() - start;
-            stringBuilder.append(" pssc=").append(pssc).append(" ttms=").append(ttms);
+            final double ttms = (System.nanoTime() - httpAccessRecord.getRequestNanoTime()) / 1000000.0;
+            stringBuilder.append(" pssc=").append(pssc).append(" ttms=").append(String.format("%.03f",ttms));
         }
 
         final String respurl = " rurl=\"" + formatObject(httpAccessRecord.getResponseURL()) + "\" ";

@@ -245,7 +245,7 @@ sub postupdatequeue {
     my $self       = shift;
     my $params = $self->req->json;
     if ( !&is_oper($self) ) {
-        return $self->forbidden();
+        return $self->forbidden("Forbidden. Insufficent privileges.");
     }
 
     my $name;

@@ -88,7 +88,7 @@ sub index {
 		}
 	}
 	else {
-		return $self->forbidden();
+		return $self->forbidden("Forbidden. Insufficent privileges.");
 	}
 
 }
