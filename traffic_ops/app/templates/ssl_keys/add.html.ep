@@ -36,7 +36,8 @@
 			$('#sslkeysadd').hide();
 			$('#generate-section').show();
 			$(".error-section").show();
-			$(".flash-section").show()
+			$(".flash-section").show();
+			$("#generate-button").val('Generate Keys');
 		  }
 		  else if (action_selected.match(/^Paste/)) {
 			$('#sslkeysgenerate').hide();
