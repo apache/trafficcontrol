@@ -927,6 +927,7 @@ sub postupdate {
 sub postupdatequeue {
 	my $self       = shift;
 	my $setqueue   = $self->param("setqueue");
+	my $status     = $self->param("status");
 	my $host       = $self->param("id");
 	my $cdn        = $self->param("cdn");
 	my $cachegroup = $self->param("cachegroup");
@@ -945,12 +946,15 @@ sub postupdatequeue {
 			$update  = $self->db->resultset('Server')->search(undef);
 			$message = "all servers";
 		}
-		else {
+		elsif (defined($status)) {
 			my $server = $self->db->resultset('Server')->search( { id => $host, } )->single();
 			my @edge_cache_groups = $self->db->resultset('Cachegroup')->search( { parent_cachegroup_id => $server->cachegroup->id } )->all();
 			my @cg_ids = map { $_->id } @edge_cache_groups;
 			$update = $self->db->resultset('Server')->search( { cachegroup => { -in => \@cg_ids }, cdn_id => $server->cdn_id } );
 			$message = "children of " . $server->host_name . " in the following cachegroups: " . join( ", ", map { $_->name } @edge_cache_groups );
+		} else {
+			$update = $self->db->resultset('Server')->search( { id => $host } );
+			$message = $host;
 		}
 		$update->update( { upd_pending => $setqueue } );
 		&log( $self, "Flip Update bit ($wording) for " . $message, "OPER" );
@@ -958,7 +962,6 @@ sub postupdatequeue {
 	elsif ( defined($cdn) && defined($cachegroup) ) {
 		my @profiles;
 		if ( $cdn ne "all" ) {
-
 			@profiles = $self->db->resultset('Server')->search(
 				{ 'cdn.name' => $cdn },
 				{
@@ -997,7 +1000,7 @@ sub postupdatequeue {
 		}
 	}
 
-	#shouldn't we return something here?
+	return;
 }
 
 1;
