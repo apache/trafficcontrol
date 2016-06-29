@@ -38,15 +38,15 @@ Configure Multi Site Origin
 	:scale: 100%
 	:align: center
 
-4) Assign the org servers to the delivery service that will have the multi site feature:
+4) Check the multi-site check box in the delivery service screen and make sure that Content Routing Type is set to HTTP_LIVE_NATL:
 
-.. image:: 066CEF4F-C1A3-4A89-8B52-4F72B0531367.png
+.. image:: mso-enable.png
 	:scale: 100%
 	:align: center
 
-5) Check the multi-site check box in the delivery service screen and make sure that Content Routing Type is set to HTTP_LIVE_NATL:
+5) Assign the org servers to the delivery service that will have the multi site feature:
 
-.. image:: mso-enable.png
+.. image:: 066CEF4F-C1A3-4A89-8B52-4F72B0531367.png
 	:scale: 100%
 	:align: center
 
