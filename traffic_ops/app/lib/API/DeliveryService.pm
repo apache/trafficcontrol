@@ -475,6 +475,13 @@ sub create {
 		my $profile_id=$transformed_params->{ profile_id };
 		$self->update_profileparameter($new_id, $profile_id, $params);
 
+		my $cdn_rs = $self->db->resultset('Cdn')->search( { id => $transformed_params->{cdn_id} } )->single();
+		my $dnssec_enabled = $cdn_rs->dnssec_enabled;
+		if ( $dnssec_enabled == 1 ) {
+			$self->app->log->debug("dnssec is enabled, creating dnssec keys");
+			&UI::DeliveryService::create_dnssec_keys( $cdn_rs->name, $params->{xmlId}, $new_id );
+		}
+
 		&log( $self, "Create deliveryservice with xml_id: " . $params->{xmlId}, " APICHANGE" );
 
 		my $response = $self->get_response($new_id);
