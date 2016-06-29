@@ -347,6 +347,7 @@ The URL has 3 kinds of formats, which have different meanings:
 3. URL with domain that doesn't match with the delivery service. For this URL, the router will return the configured url directly to the client.
 
 .. _rl-tr-steering:
+
 Steering feature
 ================
 
