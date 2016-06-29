@@ -41,9 +41,7 @@ Why is my CRConfig.json rejected?
 		You will need at least one.
 
 	* Add Edge tier Cache Groups
-		You will need at least one. After creating the edge cache group, go to **Parameters > All Profiles**, type CDN_Name in the search box, and click "Edit" for any row of this parameter. Then in the Parameter detail view, click the **Add Cachegroup** button, select your newly created cachegroup, and click **Save**.
-
-	   add CDN_Name parameter
+		You will need at least one.
 
 	* Add Traffic Monitors
 		You will need to enter at least one Traffic Monitor - make sure to change the server status to *ONLINE*.

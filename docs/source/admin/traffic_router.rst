@@ -32,8 +32,6 @@ The following are requirements to ensure an accurate set up:
 
 1. If no suitable profile exists, create a new profile for Traffic Router.
 
-..  Note:: The ``CDN_name`` parameter with a config file name of ``rascal-config.txt`` must exist in the profile and the value should be the name of the CDN for which this Traffic Router will be authoritative. This same parameter will be mapped to all profiles that participate in this CDN (edges, mids, Traffic Monitors, etc). See :ref:`rl-param-prof` for more information.
-
 2. Enter the Traffic Router server into Traffic Ops, assign it to a Traffic Router profile, and ensure that its status is set to ``ONLINE``.
 3. Ensure the FQDN of the Traffic Monitor is resolvable in DNS. This FQDN must be resolvable by the clients expected to use this CDN.
 4. Install a traffic router: ``sudo yum install traffic_router``.
