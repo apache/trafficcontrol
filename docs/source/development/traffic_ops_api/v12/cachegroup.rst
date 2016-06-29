@@ -555,3 +555,73 @@ Cache Group
     }
 
 |
+
+**POST /api/1.2/cachegroups/{:id}/deliveryservices**
+
+  Assign deliveryservices for servers in cachegroup
+
+  Authentication Required: Yes
+
+  Role(s) Required: admin or oper
+
+  **Request Route Parameters**
+
+  +------------------+----------+------------------------------------------------------------------------------+
+  |      Name        | Required |           Description                                                        |
+  +==================+==========+==============================================================================+
+  |      id          |   yes    | The cachegroup id.                                                           |
+  +------------------+----------+------------------------------------------------------------------------------+
+  
+  **Request Properties**
+
+  +------------------+----------+------------------------------------------------------------------------------+
+  |    Parameter     |   Type   |           Description                                                        |
+  +==================+==========+==============================================================================+
+  | deliveryServices |  array   | The Ids of the delivery services to assign to each server in the cachegroup. |
+  +------------------+----------+------------------------------------------------------------------------------+
+
+  **Request Example** ::
+
+    {
+        "deliveryServices": [ 234, 235 ]
+    }
+
+  **Response Properties**
+
+  +--------------------+----------+--------------------------------------------------------+
+  |    Parameter       |   Type   |           Description                                  |
+  +====================+==========+========================================================+
+  | response           |   hash   | The details of the assignment, if success.             |
+  +--------------------+----------+--------------------------------------------------------+
+  |  >id               |   int    | The cachegroup id.                                     |
+  +--------------------+----------+--------------------------------------------------------+
+  |  >serverNames      |  array   | The server name array in the cachegroup.               |
+  +--------------------+----------+--------------------------------------------------------+
+  |  >deliveryServices |  array   | The deliveryservice id array.                          |
+  +--------------------+----------+--------------------------------------------------------+
+  | alerts             |  array   | A collection of alert messages.                        |
+  +--------------------+----------+--------------------------------------------------------+
+  |  >level            |  string  | Success, info, warning or error.                       |
+  +--------------------+----------+--------------------------------------------------------+
+  |  >text             |  string  | Alert message.                                         |
+  +--------------------+----------+--------------------------------------------------------+
+
+  **Response Example** ::
+
+    {
+      "response": {
+          "id": 3,
+          "serverNames": [ "atlanta-edge-01", "atlanta-edge-07" ],
+          "deliveryServices": [ 234, 235 ]
+      }
+      "alerts":
+      [
+          {
+              "level": "success",
+              "text": "Delivery services successfully assigned to all the servers of cache group 3."
+          }
+      ],
+    }
+
+|
+
