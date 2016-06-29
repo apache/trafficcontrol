@@ -51,6 +51,7 @@ go_get_version() {
    go get -v \
   )
 }
+
 # get traffic_ops client
 godir=src/github.com/Comcast/traffic_control/traffic_ops/client
 ( mkdir -p "$godir" && \
@@ -59,14 +60,24 @@ godir=src/github.com/Comcast/traffic_control/traffic_ops/client
   go get -v \
 ) || { echo "Could not build go program at $(pwd): $!"; exit 1; }
 
+#get traffic_stats client
 godir=src/github.com/Comcast/traffic_control/traffic_stats
 oldpwd=$(pwd)
 ( mkdir -p "$godir" && \
   cd "$godir" && \
   cp -r "$TC_DIR"/traffic_stats/* . && \
   go get -d -v && \
-  go_get_version "$oldpwd"/src/github.com/influxdata/influxdb && \
+  go_get_version "$oldpwd"/src/github.com/influxdata/influxdb v0.11.1 && \
   go install -v \
+) || { echo "Could not build go program at $(pwd): $!"; exit 1; }
+
+#build influxdb_tools
+godir=src/github.com/Comcast/traffic_control/traffic_stats/influxdb_tools
+( mkdir -p "$godir" && \
+  cd "$godir" && \
+  cp -r "$TC_DIR"/traffic_stats/influxdb_tools/* . && \
+  go build sync_ts_databases.go
+  go build create_ts_databases.go
 ) || { echo "Could not build go program at $(pwd): $!"; exit 1; }
 
 %install
@@ -74,6 +85,7 @@ mkdir -p "${RPM_BUILD_ROOT}"/opt/traffic_stats
 mkdir -p "${RPM_BUILD_ROOT}"/opt/traffic_stats/bin
 mkdir -p "${RPM_BUILD_ROOT}"/opt/traffic_stats/conf
 mkdir -p "${RPM_BUILD_ROOT}"/opt/traffic_stats/backup
+mkdir -p "${RPM_BUILD_ROOT}"/opt/traffic_stats/influxdb_tools
 mkdir -p "${RPM_BUILD_ROOT}"/opt/traffic_stats/var/run
 mkdir -p "${RPM_BUILD_ROOT}"/opt/traffic_stats/var/log/traffic_stats
 mkdir -p "${RPM_BUILD_ROOT}"/etc/init.d
@@ -87,6 +99,9 @@ cp "$src"/traffic_stats_seelog.xml "${RPM_BUILD_ROOT}"/opt/traffic_stats/conf/tr
 cp "$src"/traffic_stats.init       "${RPM_BUILD_ROOT}"/etc/init.d/traffic_stats
 cp "$src"/traffic_stats.logrotate  "${RPM_BUILD_ROOT}"/etc/logrotate.d/traffic_stats
 cp "$src"/grafana/*.js             "${RPM_BUILD_ROOT}"/usr/share/grafana/public/dashboards/
+cp "$src"/influxdb_tools/sync_ts_databases	"${RPM_BUILD_ROOT}"/opt/traffic_stats/influxdb_tools/
+cp "$src"/influxdb_tools/create_ts_databases	"${RPM_BUILD_ROOT}"/opt/traffic_stats/influxdb_tools/
+
 
 %pre
 /usr/bin/getent group traffic_stats >/dev/null
@@ -140,11 +155,13 @@ fi
 %dir /opt/traffic_stats/var/run
 %dir /opt/traffic_stats/var/log/traffic_stats
 %dir /usr/share/grafana/public/dashboards
+%dir /opt/traffic_stats/influxdb_tools
 
 %attr(600, traffic_stats, traffic_stats) /opt/traffic_stats/conf/*
 %attr(755, traffic_stats, traffic_stats) /opt/traffic_stats/bin/*
 %attr(755, traffic_stats, traffic_stats) /etc/init.d/traffic_stats
 %attr(644, traffic_stats, traffic_stats) /usr/share/grafana/public/dashboards/*
+%attr(755, traffic_stats, traffic_stats) /opt/traffic_stats/influxdb_tools/*
 
 %preun
 # args for hooks: http://www.ibm.com/developerworks/library/l-rpm2/

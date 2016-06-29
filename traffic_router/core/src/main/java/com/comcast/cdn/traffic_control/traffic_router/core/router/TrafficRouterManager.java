@@ -21,8 +21,8 @@ import java.net.UnknownHostException;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
+import com.comcast.cdn.traffic_control.traffic_router.core.ds.SteeringRegistry;
 import com.comcast.cdn.traffic_control.traffic_router.core.loc.FederationRegistry;
-import org.apache.commons.pool.ObjectPool;
 import org.apache.log4j.Logger;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -32,20 +32,27 @@ import com.comcast.cdn.traffic_control.traffic_router.core.cache.CacheRegister;
 import com.comcast.cdn.traffic_control.traffic_router.core.dns.NameServer;
 import com.comcast.cdn.traffic_control.traffic_router.geolocation.GeolocationService;
 import com.comcast.cdn.traffic_control.traffic_router.core.util.TrafficOpsUtils;
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.ApplicationListener;
+import org.springframework.context.event.ContextRefreshedEvent;
 
-public class TrafficRouterManager {
+public class TrafficRouterManager implements ApplicationListener<ContextRefreshedEvent> {
 	private static final Logger LOGGER = Logger.getLogger(TrafficRouterManager.class);
+
+	public static final int DEFAULT_API_PORT = 3333;
 
 	private JSONObject state;
 	private TrafficRouter trafficRouter;
 	private GeolocationService geolocationService;
 	private GeolocationService geolocationService6;
-	private ObjectPool hashFunctionPool;
 	private StatTracker statTracker;
 	private static final Map<String, Long> timeTracker = new ConcurrentHashMap<String, Long>();
 	private NameServer nameServer;
 	private TrafficOpsUtils trafficOpsUtils;
 	private FederationRegistry federationRegistry;
+	private SteeringRegistry steeringRegistry;
+	private ApplicationContext applicationContext;
+	private int apiPort = DEFAULT_API_PORT;
 
 	public NameServer getNameServer() {
 		return nameServer;
@@ -65,16 +72,20 @@ public class TrafficRouterManager {
 
 	public boolean setState(final JSONObject jsonObject) throws UnknownHostException {
 		trackEvent("lastCacheStateCheck");
-		if(jsonObject == null) {
+
+		if (jsonObject == null) {
 			return false;
 		}
+
 		trackEvent("lastCacheStateChange");
+
 		synchronized(this) {
 			this.state = jsonObject;
-			if(trafficRouter != null) {
+
+			if (trafficRouter != null) {
 				trafficRouter.setState(state);
-				return true;
 			}
+
 			return true;
 		}
 	}
@@ -85,38 +96,39 @@ public class TrafficRouterManager {
 
 	public void setCacheRegister(final CacheRegister cacheRegister) throws IOException, JSONException, TrafficRouterException {
 		trackEvent("lastConfigCheck");
-		if(cacheRegister == null) {
+
+		if (cacheRegister == null) {
 			return;
 		}
 
-		final TrafficRouter tr = new TrafficRouter(cacheRegister, 
-				geolocationService, 
-				geolocationService6, 
-				hashFunctionPool, 
-				statTracker,
-				trafficOpsUtils,
-				federationRegistry);
+		final TrafficRouter tr = new TrafficRouter(cacheRegister, geolocationService, geolocationService6, statTracker, trafficOpsUtils, federationRegistry);
+		tr.setSteeringRegistry(steeringRegistry);
 		synchronized(this) {
-			if(state != null) {
+			if (state != null) {
 				try {
 					tr.setState(state);
 				} catch (UnknownHostException e) {
 					LOGGER.warn(e,e);
 				}
 			}
+
 			this.trafficRouter = tr;
+			if (applicationContext != null) {
+				this.trafficRouter.setApplicationContext(applicationContext);
+			}
 		}
+
 		trackEvent("lastConfigChange");
 	}
+
 	public void setGeolocationService(final GeolocationService geolocationService) {
 		this.geolocationService = geolocationService;
 	}
+
 	public void setGeolocationService6(final GeolocationService geolocationService) {
 		this.geolocationService6 = geolocationService;
 	}
-	public void setHashFunctionPool(final ObjectPool hashFunctionPool) {
-		this.hashFunctionPool = hashFunctionPool;
-	}
+
 	public void setStatTracker(final StatTracker statTracker) {
 		this.statTracker = statTracker;
 	}
@@ -127,5 +139,26 @@ public class TrafficRouterManager {
 
 	public void setFederationRegistry(final FederationRegistry federationRegistry) {
 		this.federationRegistry = federationRegistry;
+	}
+
+	public void setSteeringRegistry(final SteeringRegistry steeringRegistry) {
+		this.steeringRegistry = steeringRegistry;
+	}
+
+	@Override
+	public void onApplicationEvent(final ContextRefreshedEvent event) {
+		applicationContext = event.getApplicationContext();
+		if (trafficRouter != null) {
+			trafficRouter.setApplicationContext(applicationContext);
+			trafficRouter.configurationChanged();
+		}
+	}
+
+	public void setApiPort(final int apiPort) {
+		this.apiPort = apiPort;
+	}
+
+	public int getApiPort() {
+		return apiPort;
 	}
 }

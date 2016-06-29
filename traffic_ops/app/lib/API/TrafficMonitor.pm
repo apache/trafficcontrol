@@ -41,7 +41,8 @@ sub get_host_stats {
 	my $master_i = 1;
 
 	my %rascal_host = ();
-	my @cdns = $self->db->resultset('Server')->search({ 'type.name' => 'EDGE' }, { prefetch => [ 'cdn', 'type' ], group_by => 'cdn.name' } )->get_column('cdn.name')->all();
+
+	my @cdns = $self->db->resultset('Server')->search({ 'type.name' => { -like => 'EDGE%' } }, { prefetch => [ 'cdn', 'type' ], group_by => 'cdn.name' } )->get_column('cdn.name')->all();
 
 	foreach my $cdn_name (@cdns) {
 		$rascal_host{$cdn_name} = $self->get_traffic_monitor_connection( { cdn => $cdn_name } );
@@ -89,7 +90,7 @@ sub get_dataserver {
 	for my $i ( @{$data} ) {
 		my $profile = $i->{'profile'};
 		my $cdn     = undef;
-		if ( defined($profile) && ( $profile =~ m/EDGE/ || $profile =~ m/MID/ ) ) {
+		if ( defined($profile) && ( $profile =~ m/^EDGE/ || $profile =~ m/^MID/ ) ) {
 
 			$self->app->log->trace( "get_data_server cache: " . $i->{'host_name'} );
 			$big_obj->{'caches'}->{ $i->{'host_name'} }->{'cachegroup'}   = $i->{'cachegroup'};
@@ -139,11 +140,11 @@ sub collect_stats {
 		return;
 	}
 
-	my $args = { hc => 1, stats => "ats\.proxy\.process\.http\.current\_client\_connections\,bandwidth\,queryTime,error\-string" };
+	my $args = { hc => 1, stats => "ats\.proxy\.process\.http\.current\_client\_connections\,bandwidth" };
 	my $bigstats_hashref = $rascal->get_cache_stats($args);
 
 	foreach my $server ( sort keys %{ $bigstats_hashref->{'caches'} } ) {
-		if ( !defined( $big_obj->{'caches'}->{$server}->{'profile'} ) || $big_obj->{'caches'}->{$server}->{'profile'} =~ m/MID/ ) { next; }
+		if ( !defined( $big_obj->{'caches'}->{$server}->{'profile'} ) || $big_obj->{'caches'}->{$server}->{'profile'} =~ m/^MID/ ) { next; }
 		my $server_obj = $bigstats_hashref->{'caches'}->{$server};
 		if ( exists( $server_obj->{'bandwidth'} ) ) {
 			$self->app->log->trace("Processing server: $server");
@@ -154,7 +155,6 @@ sub collect_stats {
 			$big_obj->{'caches'}->{$server}->{'mbps_out'} = $server_obj->{'bandwidth'}->[0]->{'value'};
 			$big_obj->{'caches'}->{$server}->{'connections'} =
 				$server_obj->{'ats.proxy.process.http.current_client_connections'}->[0]->{'value'};
-			$big_obj->{'caches'}->{$server}->{'query_time'} = $server_obj->{'queryTime'}->[0]->{'value'};
 
 			$aadata_ref->{'aaData'}->[ ${$master_i} ]->[I_INDEX]       = ${$master_i};
 			$aadata_ref->{'aaData'}->[ ${$master_i} ]->[I_PROFILE]     = "$big_obj->{'caches'}->{$server}->{'profile'}";
@@ -178,8 +178,8 @@ sub add_em_up {
 	my $all_bw     = 0;
 	my $all_conns  = 0;
 	foreach my $cachegroup ( sort keys %{ $big_obj->{'cachegroups'} } ) {
-		$self->app->log->trace("Processing cachegroup: $cachegroup");
 		if ( $cachegroup =~ m/mid/ ) { next; }
+		$self->app->log->trace("Processing cachegroup: $cachegroup");
 		my $total_bw    = 0;
 		my $total_conns = 0;
 		foreach my $cache ( @{ $big_obj->{'cachegroups'}->{$cachegroup}->{'caches'} } ) {
@@ -187,6 +187,7 @@ sub add_em_up {
 			if ( exists( $big_obj->{'caches'}->{$cache}->{'mbps_out'} ) ) {
 				$total_bw += &int_or_zero( $big_obj->{'caches'}->{$cache}->{'mbps_out'} );
 			}
+
 			if ( exists( $big_obj->{'caches'}->{$cache}->{'connections'} ) ) {
 				$total_conns += &int_or_zero( $big_obj->{'caches'}->{$cache}->{'connections'} );
 			}

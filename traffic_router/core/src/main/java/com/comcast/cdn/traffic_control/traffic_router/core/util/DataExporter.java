@@ -29,7 +29,6 @@ import java.util.Properties;
 import com.google.common.cache.CacheStats;
 import org.apache.log4j.Logger;
 import org.json.JSONObject;
-import org.springframework.beans.factory.annotation.Autowired;
 
 import com.comcast.cdn.traffic_control.traffic_router.core.cache.Cache;
 import com.comcast.cdn.traffic_control.traffic_router.core.cache.CacheLocation;
@@ -50,13 +49,10 @@ public class DataExporter {
 	private static final Logger LOGGER = Logger.getLogger(DataExporter.class);
 	private static final String NOT_FOUND_MESSAGE = "not found";
 
-	@Autowired
 	private TrafficRouterManager trafficRouterManager;
 
-	@Autowired
 	private StatTracker statTracker;
 
-	@Autowired
 	private FederationExporter federationExporter;
 
 	public void setTrafficRouterManager(final TrafficRouterManager trafficRouterManager) {
@@ -92,7 +88,7 @@ public class DataExporter {
 		return globals;
 	}
 
-	public Map<String, Object> getCachesByIp(final String ip) {
+	public Map<String, Object> getCachesByIp(final String ip, final String geolocationProvider) {
 
 		final Map<String, Object> map = new HashMap<String, Object>();
 		map.put("requestIp", ip);
@@ -106,7 +102,7 @@ public class DataExporter {
 		}
 
 		try {
-			final Geolocation gl = trafficRouterManager.getTrafficRouter().getLocation(ip);
+			final Geolocation gl = trafficRouterManager.getTrafficRouter().getLocation(ip, geolocationProvider, "");
 
 			if (gl != null) {
 				map.put("locationByGeo", gl.getProperties());
@@ -133,7 +129,6 @@ public class DataExporter {
 
 		return map;
 	}
-
 
 	private CacheLocation getLocationFromCzm(final String ip) {
 		NetworkNode nn = null;

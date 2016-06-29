@@ -1,0 +1,27 @@
+<div class="x_panel">
+    <div class="x_title">
+        <ol class="breadcrumb pull-left">
+            <li class="active">ASNs</li>
+        </ol>
+        <button class="btn btn-primary pull-right" ng-click="createASN()">New</button>
+        <div class="clearfix"></div>
+    </div>
+    <div class="x_content">
+        <br>
+        <table id="asnsTable" class="table responsive-utilities jambo_table">
+            <thead>
+            <tr class="headings">
+                <th>asn</th>
+                <th>cachegroup</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr ng-click="editASN(asn.id)" ng-repeat="asn in asns">
+                <td>{{asn.asn}}</td>
+                <td>{{asn._links.cachegroup.id}}</td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+

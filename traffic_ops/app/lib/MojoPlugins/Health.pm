@@ -39,10 +39,11 @@ sub register {
 			my @ccr_profiles;
 			my $ccr_profile_id;
 			my $data_obj;
+			my $profile_to_type;
 
 			my $rs_pp = $self->db->resultset('Server')->search(
 				{ 'cdn.name' => $cdn_name },
-				{   prefetch => ['cdn', 'profile'],
+				{   prefetch => ['cdn', 'profile', 'type'],
 					select   => 'me.profile',
 					distinct => 1
 				}
@@ -57,8 +58,9 @@ sub register {
 					# TODO MAT: support multiple CCR profiles
 					$ccr_profile_id = $row->profile->id;
 				}
-				elsif ( $row->profile->name =~ m/^EDGE/ || $row->profile->name =~ m/^MID/ ) {
+				elsif ( $row->type->name =~ m/^EDGE/ || $row->type->name =~ m/^MID/ ) {
 					push( @cache_profiles, $row->profile->name );
+					$profile_to_type->{$row->profile->name}->{$row->type->name} = $row->type->name;
 				}
 			}
 			my %condition = ( 'parameter.config_file' => 'rascal-config.txt', 'profile.name' => $rascal_profile );
@@ -71,11 +73,10 @@ sub register {
 			%condition = ( 'parameter.config_file' => 'rascal.properties', 'profile.name' => { -in => \@cache_profiles } );
 			$rs_pp = $self->db->resultset('ProfileParameter')->search( \%condition, { prefetch => [ { 'parameter' => undef }, { 'profile' => undef } ] } );
 			while ( my $row = $rs_pp->next ) {
-				if ( $row->profile->name =~ m/^EDGE/ ) {
-					$data_obj->{'profiles'}->{'EDGE'}->{ $row->profile->name }->{ $row->parameter->name } = $row->parameter->value;
-				}
-				elsif ( $row->profile->name =~ m/^MID/ ) {
-					$data_obj->{'profiles'}->{'MID'}->{ $row->profile->name }->{ $row->parameter->name } = $row->parameter->value;
+				if ( exists($profile_to_type->{$row->profile->name}) ) {
+					for my $profile_type ( keys(%{$profile_to_type->{$row->profile->name}}) ) {
+						$data_obj->{'profiles'}->{$profile_type}->{ $row->profile->name }->{ $row->parameter->name } = $row->parameter->value;
+					}
 				}
 			}
 			foreach my $ccr_profile (@ccr_profiles) {
@@ -170,7 +171,7 @@ sub register {
 
 						my $status = $cache_config->{status};
 
-						if ( $cache_config->{type} ne "EDGE" ) {
+						if ( $cache_config->{type} !~ m/^EDGE/ ) {
 							next;
 						}
 

@@ -275,6 +275,23 @@ __PACKAGE__->table("deliveryservice");
   data_type: 'tinyint'
   is_nullable: 0
 
+=head2 geo_provider
+
+  data_type: 'tinyint'
+  default_value: 0
+  is_nullable: 1
+
+=head2 geo_limit_countries
+
+  data_type: 'varchar'
+  is_nullable: 1
+  size: 750
+
+=head2 logs_enabled
+
+  data_type: 'tinyint'
+  is_nullable: 0
+
 =cut
 
 __PACKAGE__->add_columns(
@@ -370,6 +387,12 @@ __PACKAGE__->add_columns(
   "tr_request_headers",
   { data_type => "varchar", is_nullable => 1, size => 1024 },
   "regional_geo_blocking",
+  { data_type => "tinyint", is_nullable => 0 },
+  "geo_provider",
+  { data_type => "tinyint", default_value => 0, is_nullable => 1 },
+  "geo_limit_countries",
+  { data_type => "varchar", is_nullable => 1, size => 750 },
+  "logs_enabled",
   { data_type => "tinyint", is_nullable => 0 },
 );
 
@@ -535,6 +558,36 @@ __PACKAGE__->has_many(
   { cascade_copy => 0, cascade_delete => 0 },
 );
 
+=head2 steering_target_deliveryservices
+
+Type: has_many
+
+Related object: L<Schema::Result::SteeringTarget>
+
+=cut
+
+__PACKAGE__->has_many(
+  "steering_target_deliveryservices",
+  "Schema::Result::SteeringTarget",
+  { "foreign.deliveryservice" => "self.id" },
+  { cascade_copy => 0, cascade_delete => 0 },
+);
+
+=head2 steering_target_deliveryservices_2s
+
+Type: has_many
+
+Related object: L<Schema::Result::SteeringTarget>
+
+=cut
+
+__PACKAGE__->has_many(
+  "steering_target_deliveryservices_2s",
+  "Schema::Result::SteeringTarget",
+  { "foreign.deliveryservice" => "self.id" },
+  { cascade_copy => 0, cascade_delete => 0 },
+);
+
 =head2 type
 
 Type: belongs_to
@@ -551,11 +604,8 @@ __PACKAGE__->belongs_to(
 );
 
 
-# Created by DBIx::Class::Schema::Loader v0.07042 @ 2015-11-10 11:16:40
-# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:2p4L0dAyERKNVw+WQu2mBw
-
-# Created by DBIx::Class::Schema::Loader v0.07043 @ 2015-10-05 11:50:01
-# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:AUTdFMjQ60ItRfFMfKsB1A
+# Created by DBIx::Class::Schema::Loader v0.07042 @ 2016-06-03 08:58:13
+# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:k1aJ71tsV0AWeFF/OpHFUA
 
 # You can replace this text with custom code or comments, and it will be preserved on regeneration
 1;

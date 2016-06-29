@@ -18,31 +18,32 @@ package client
 
 import "encoding/json"
 
+// ProfileResponse ...
 type ProfileResponse struct {
 	Version  string    `json:"version"`
 	Response []Profile `json:"response"`
 }
 
+// Profile ...
 type Profile struct {
 	Name        string `json:"name"`
 	Description string `json:"description"`
 	LastUpdated string `json:"lastUpdated"`
 }
 
-// Profiles
-// Get an array of Profiles
+// Profiles gets an array of Profiles
 func (to *Session) Profiles() ([]Profile, error) {
-	body, err := to.getBytes("/api/1.1/profiles.json")
+	url := "/api/1.2/profiles.json"
+	resp, err := to.request(url, nil)
 	if err != nil {
 		return nil, err
 	}
-	profileList, err := profileUnmarshall(body)
-	return profileList.Response, err
-}
-
-func profileUnmarshall(body []byte) (ProfileResponse, error) {
+	defer resp.Body.Close()
 
 	var data ProfileResponse
-	err := json.Unmarshal(body, &data)
-	return data, err
+	if err := json.NewDecoder(resp.Body).Decode(&data); err != nil {
+		return nil, err
+	}
+
+	return data.Response, nil
 }

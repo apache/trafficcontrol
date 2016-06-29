@@ -30,10 +30,11 @@ import (
 )
 
 type cacheStats struct {
-	t        string //time
-	value    float64
-	cdn      string
-	hostname string
+	t         string //time
+	value     float64
+	cdn       string
+	hostname  string
+	cacheType string
 }
 type deliveryServiceStats struct {
 	t               string //time
@@ -49,26 +50,50 @@ type dailyStats struct {
 	value           float64
 }
 
+var errorMessage string
+
 func main() {
 
 	sourceURL := flag.String("sourceUrl", "http://server1.kabletown.net:8086", "The influxdb url and port")
 	targetURL := flag.String("targetUrl", "http://server2.kabletown.net:8086", "The influxdb url and port")
 	database := flag.String("database", "all", "Sync a specific database")
 	days := flag.Int("days", 0, "Number of days in the past to sync (today - x days), 0 is all")
+	sourceUser := flag.String("sourceUser", "", "The source influxdb username")
+	sourcePass := flag.String("sourcePass", "", "The source influxdb password")
+	targetUser := flag.String("targetUser", "", "The target influxdb username")
+	targetPass := flag.String("targetPass", "", "The target influxdb password")
 	flag.Parse()
 	fmt.Printf("syncing %v to %v for %v database(s) for the past %v day(s)\n", *sourceURL, *targetURL, *database, *days)
 	sourceClient, err := influx.NewHTTPClient(influx.HTTPConfig{
-		Addr: *sourceURL,
+		Addr:     *sourceURL,
+		Username: *sourceUser,
+		Password: *sourcePass,
 	})
 	if err != nil {
-		fmt.Printf("Error creating influx sourceClient: %v\n", err)
+		errorMessage = fmt.Sprintf("Error creating influx sourceClient: %v\n", err)
+		fmt.Println(errorMessage)
+		os.Exit(1)
+	}
+	_, _, err = sourceClient.Ping(10)
+	if err != nil {
+		errorMessage = fmt.Sprintf("Error creating influx sourceClient: %v\n", err)
+		fmt.Println(errorMessage)
 		os.Exit(1)
 	}
 	targetClient, err := influx.NewHTTPClient(influx.HTTPConfig{
-		Addr: *targetURL,
+		Addr:     *targetURL,
+		Username: *targetUser,
+		Password: *targetPass,
 	})
 	if err != nil {
-		fmt.Printf("Error creating influx targetClient: %v\n", err)
+		errorMessage = fmt.Sprintf("Error creating influx targetClient: %v\n", err)
+		fmt.Println(errorMessage)
+		os.Exit(1)
+	}
+	_, _, err = targetClient.Ping(10)
+	if err != nil {
+		errorMessage = fmt.Sprintf("Error creating influx targetClient: %v\n", err)
+		fmt.Println(errorMessage)
 		os.Exit(1)
 	}
 	chSize := 1
@@ -95,6 +120,11 @@ func main() {
 		fmt.Println(<-ch)
 	}
 
+	if errorMessage != "" {
+		fmt.Println(errorMessage)
+		return
+	}
+
 	fmt.Println("Traffic Stats has been synced!")
 }
 
@@ -104,10 +134,15 @@ func syncCsDb(ch chan string, sourceClient influx.Client, targetClient influx.Cl
 	stats := [...]string{
 		"bandwidth.cdn.1min",
 		"connections.cdn.1min",
+		"bandwidth.1min",
+		"connections.1min",
+		"connections.cdn.type.1min",
+		"bandwidth.cdn.type.1min",
 	}
 	for _, statName := range stats {
 		fmt.Printf("Syncing %s database with %s \n", db, statName)
 		syncCacheStat(sourceClient, targetClient, statName, days)
+		fmt.Printf("Done syncing %s\n", statName)
 	}
 	ch <- fmt.Sprintf("Done syncing %s!\n", db)
 }
@@ -118,7 +153,7 @@ func syncDsDb(ch chan string, sourceClient influx.Client, targetClient influx.Cl
 	stats := [...]string{
 		"kbps.ds.1min",
 		"max.kbps.ds.1day",
-		"tps.ds.1min",
+		"kbps.cg.1min",
 		"tps_2xx.ds.1min",
 		"tps_3xx.ds.1min",
 		"tps_4xx.ds.1min",
@@ -171,7 +206,7 @@ func syncCacheStat(sourceClient influx.Client, targetClient influx.Client, statN
 		RetentionPolicy: "monthly",
 	})
 
-	queryString := fmt.Sprintf("select time, cdn, hostname, value from \"monthly\".\"%s\"", statName)
+	queryString := fmt.Sprintf("select time, cdn, hostname, type, value from \"monthly\".\"%s\"", statName)
 	if days > 0 {
 		queryString += fmt.Sprintf(" where time > now() - %dd", days)
 	}
@@ -186,7 +221,8 @@ func syncCacheStat(sourceClient influx.Client, targetClient influx.Client, statN
 	//get values from target DB
 	targetRes, err := queryDB(targetClient, queryString, db)
 	if err != nil {
-		fmt.Printf("An error occured getting %s record from target db: %v\n", statName, err)
+		errorMessage = fmt.Sprintf("An error occured getting %s record from target db: %v\n", statName, err)
+		fmt.Println(errorMessage)
 		return
 	}
 	targetStats := getCacheStats(targetRes)
@@ -195,11 +231,17 @@ func syncCacheStat(sourceClient influx.Client, targetClient influx.Client, statN
 		ts := targetStats[ssKey]
 		ss := sourceStats[ssKey]
 		if ts.value > ss.value {
-			fmt.Printf("target value %v is at least equal to source value %v\n", ts.value, ss.value)
+			//fmt.Printf("target value %v is at least equal to source value %v\n", ts.value, ss.value)
 			continue //target value is bigger so leave it
 		}
 		statTime, _ := time.Parse(time.RFC3339, ss.t)
 		tags := map[string]string{"cdn": ss.cdn}
+		if ss.hostname != "" {
+			tags["hostname"] = ss.hostname
+		}
+		if ss.cacheType != "" {
+			tags["type"] = ss.cacheType
+		}
 		fields := map[string]interface{}{
 			"value": ss.value,
 		}
@@ -234,14 +276,16 @@ func syncDeliveryServiceStat(sourceClient influx.Client, targetClient influx.Cli
 	fmt.Println("queryString ", queryString)
 	res, err := queryDB(sourceClient, queryString, db)
 	if err != nil {
-		fmt.Printf("An error occured getting %s records from sourceDb: %v\n", statName, err)
+		errorMessage = fmt.Sprintf("An error occured getting %s records from sourceDb: %v\n", statName, err)
+		fmt.Println(errorMessage)
 		return
 	}
 	sourceStats := getDeliveryServiceStats(res)
 	// get value from target DB
 	targetRes, err := queryDB(targetClient, queryString, db)
 	if err != nil {
-		fmt.Printf("An error occured getting %s record from target db: %v\n", statName, err)
+		errorMessage = fmt.Sprintf("An error occured getting %s record from target db: %v\n", statName, err)
+		fmt.Println(errorMessage)
 		return
 	}
 	targetStats := getDeliveryServiceStats(targetRes)
@@ -250,7 +294,7 @@ func syncDeliveryServiceStat(sourceClient influx.Client, targetClient influx.Cli
 		ts := targetStats[ssKey]
 		ss := sourceStats[ssKey]
 		if ts.value > ss.value {
-			fmt.Printf("target value %v is at least equal to source value %v\n", ts.value, ss.value)
+			//fmt.Printf("target value %v is at least equal to source value %v\n", ts.value, ss.value)
 			continue //target value is bigger so leave it
 		}
 		statTime, _ := time.Parse(time.RFC3339, ss.t)
@@ -290,14 +334,16 @@ func syncDailyStat(sourceClient influx.Client, targetClient influx.Client, statN
 	}
 	res, err := queryDB(sourceClient, queryString, db)
 	if err != nil {
-		fmt.Printf("An error occured getting %s records from sourceDb: %v\n", statName, err)
+		errorMessage = fmt.Sprintf("An error occured getting %s records from sourceDb: %v\n", statName, err)
+		fmt.Println(errorMessage)
 		return
 	}
 	sourceStats := getDailyStats(res)
 	// get value from target DB
 	targetRes, err := queryDB(targetClient, queryString, db)
 	if err != nil {
-		fmt.Printf("An error occured getting %s record from target db: %v\n", statName, err)
+		errorMessage = fmt.Sprintf("An error occured getting %s record from target db: %v\n", statName, err)
+		fmt.Println(errorMessage)
 		return
 	}
 	targetStats := getDailyStats(targetRes)
@@ -306,7 +352,7 @@ func syncDailyStat(sourceClient influx.Client, targetClient influx.Client, statN
 		ts := targetStats[ssKey]
 		ss := sourceStats[ssKey]
 		if ts.value >= ss.value {
-			fmt.Printf("target value %v is at least equal to source value %v\n", ts.value, ss.value)
+			//fmt.Printf("target value %v is at least equal to source value %v\n", ts.value, ss.value)
 			continue //target value is bigger or equal so leave it
 		}
 		statTime, _ := time.Parse(time.RFC3339, ss.t)
@@ -341,8 +387,14 @@ func getCacheStats(res []influx.Result) map[string]cacheStats {
 				t := record[0].(string)
 				data.t = t
 				data.cdn = record[1].(string)
+				if record[2] != nil {
+					data.hostname = record[2].(string)
+				}
+				if record[3] != nil {
+					data.cacheType = record[3].(string)
+				}
 				var err error
-				data.value, err = record[3].(json.Number).Float64()
+				data.value, err = record[4].(json.Number).Float64()
 				if err != nil {
 					fmt.Printf("Couldn't parse value from record %v\n", record)
 					continue

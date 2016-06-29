@@ -64,8 +64,13 @@ sub add {
 		my $ds_regexes      = UI::DeliveryService::get_regexp_set( $self, $ds_id );
 		my @example_urls    = UI::DeliveryService::get_example_urls( $self, $ds_id, $ds_regexes, $data, $domain_name, $data->protocol );
 
-		#first one is the one we want
+		#if a DS is https only we want the first example_url
 		my $hostname = $example_urls[0];
+		#if a DS is http/https then we want the second one...see https://github.com/Comcast/traffic_control/issues/1268
+		if ($data->protocol == 2) {
+			$hostname = $example_urls[1];
+		}
+
 		$hostname =~ /(https?:\/\/)(.*)/;
 
 		$self->stash(
@@ -124,12 +129,13 @@ sub create {
 		$update->ssl_key_version($version);
 		$update->update();
 		my $response = $response_container->{"response"};
-		if ( $response->is_success ) {
+		if ( defined($response) && $response->is_success ) {
 			&log( $self, "Created ssl keys for Delivery Service $xml_id", "APICHANGE" );
 			$self->flash( message => "Successfully created ssl keys for: $xml_id" );
 		}
 		else {
-			$self->flash( { Error => " - SSL keys for '$xml_id' could not be created.  Response was" . $response->{_content} } );
+			$self->app->log->warn("SSL keys for '$xml_id' could not be created.  Response was " . $response_container->{_content});
+			$self->flash( alertmsg => "SSL keys for $xml_id could not be created.  Response was: " . $response_container->{_content}  );
 		}
 		return $self->redirect_to("/ds/$id/sslkeys/add");
 	}

@@ -9,7 +9,7 @@ Remember, it doesn't have to be perfect. If you want to help, hack it together a
 
 Contributor License Agreement
 -----------------------------
-First things first, we need you to sign the [Contributor License Agreement (CLA)](http://traffic-control-cdn.net/ComcastContributorLicenseAgreement_03-07-14.pdf) before we can accept your code. This protects us, you, and everyone else using and contributing to Traffic Control.
+First things first, we need you to sign the [Contributor License Agreement (CLA)](http://traffic-control-cdn.net/ComcastContributorLicenseAgreement_03-07-14.pdf) before we can accept your code. This protects us, you, and everyone else using and contributing to Traffic Control. Once you have signed the CLA and had your first pull request merged, your next pull request should include adding your name to the [list of contributors](https://github.com/Comcast/traffic_control/blob/master/CONTRIBUTORS.md).
 
 Making a pull request
 ---------------------
@@ -17,7 +17,7 @@ If you've never made a pull request, it's super-easy. Github has a great tutoria
 
 Guidelines
 ----------
-Following the project conventions will make the pull request process go faster and smoother.
+Following the project conventions will make the pull request process go faster and smoother. If making changes to the Traffic Ops API, please consult the [Traffic Ops API Guidelines](https://github.com/Comcast/traffic_control/wiki/Traffic-Ops-API-Guidelines-v1.x).
 
 #### Create an issue
 

@@ -27,12 +27,12 @@ var FormEditTenantController = function(tenant, $scope, $controller, $uibModal, 
 
     $scope.confirmDelete = function(tenant) {
         var params = {
-            title: 'Confirm Delete',
-            message: 'This action CANNOT be undone. This will permanently delete ' + tenant.name + '. Are you sure you want to delete ' + tenant.name + '?'
+            title: 'Delete Tenant: ' + tenant.name,
+            key: tenant.name
         };
         var modalInstance = $uibModal.open({
-            templateUrl: 'common/modules/dialog/confirm/dialog.confirm.tpl.html',
-            controller: 'DialogConfirmController',
+            templateUrl: 'common/modules/dialog/delete/dialog.delete.tpl.html',
+            controller: 'DialogDeleteController',
             size: 'md',
             resolve: {
                 params: function () {

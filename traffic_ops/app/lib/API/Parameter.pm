@@ -37,6 +37,7 @@ sub index {
 		push(
 			@data, {
 				"name"        => $row->parameter->name,
+				"id"          => $row->parameter->id,
 				"configFile"  => $row->parameter->config_file,
 				"value"       => $value,
 				"secure"      => $row->parameter->secure,
@@ -59,6 +60,7 @@ sub profile {
 		push(
 			@data, {
 				"name"        => $row->parameter->name,
+				"id"          => $row->parameter->id,
 				"configFile"  => $row->parameter->config_file,
 				"value"       => $value,
 				"secure"      => $row->parameter->secure,

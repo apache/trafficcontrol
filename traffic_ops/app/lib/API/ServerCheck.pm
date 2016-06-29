@@ -35,7 +35,8 @@ sub aadata {
 	my $table = $self->param('table');
 
 	# # and create the 'inside out' aadata table
-	my $rs_type = $self->db->resultset('Type')->search( { -or => [ name => 'EDGE', name => 'MID' ] } );
+	my %condition = ( 'name' => [ { -like => 'MID%' }, { -like => 'EDGE%' } ] );
+	my $rs_type = $self->db->resultset('Type')->search( \%condition );
 	my $rs =
 		$self->db->resultset('Server')
 		->search( { type => { -in => $rs_type->get_column('id')->as_query } }, { prefetch => [ 'servercheck', 'status', 'profile' ] } );

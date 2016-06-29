@@ -331,7 +331,7 @@ public final class RegionalGeo {
 
         Geolocation clientGeolocation = null;
         try {
-            clientGeolocation = trafficRouter.getClientGeolocation(request, track);
+            clientGeolocation = trafficRouter.getClientGeolocation(request.getClientIP(), track, deliveryService);
         } catch (GeolocationException e) {
             LOGGER.warn("RegionalGeo: failed looking up Client GeoLocation: " + e.getMessage());
         }

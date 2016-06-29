@@ -82,6 +82,187 @@ CDN
 
 |
 
+**POST /api/1.2/cdns**
+
+  Allows user to create a CDN.
+
+  Authentication Required: Yes
+
+  Role(s) Required:  admin or oper
+
+  **Request Parameters**
+
+  +-------------------+--------+-------------------------------------------------+
+  |    Parameter      |  Type  |                   Description                   |
+  +===================+========+=================================================+
+  | ``name``          | string | CDN name.                                       |
+  +-------------------+--------+-------------------------------------------------+
+  | ``dnssecEnabled`` |  int   | Whether dnssec is enabled.                      |
+  |                   |        | - 0: disabled                                   |
+  |                   |        | - 1: enabled                                    |
+  +-------------------+--------+-------------------------------------------------+
+
+  **Request Example** ::
+
+    {
+        "name": "cdn_test",
+        "dnssecEnabled": 0
+    }
+
+  **Response Properties**
+
+  +--------------------+--------+-------------------------------------------------+
+  |    Parameter       |  Type  |                   Description                   |
+  +====================+========+=================================================+
+  | ``response``       |  hash  | The details of the creation, if success.        |
+  +--------------------+--------+-------------------------------------------------+
+  | ``>name``          | string | CDN name.                                       |
+  +--------------------+--------+-------------------------------------------------+
+  | ``>id``            |  int   | CDN id.                                         |
+  +--------------------+--------+-------------------------------------------------+
+  | ``>dnssecEnabled`` | string | Whether dnssec is enabled.                      |
+  +--------------------+--------+-------------------------------------------------+
+  | ``alerts``         | array  | A collection of alert messages.                 |
+  +--------------------+--------+-------------------------------------------------+
+  | ``>level``         | string | Success, info, warning or error.                |
+  +--------------------+--------+-------------------------------------------------+
+  | ``>text``          | string | Alert message.                                  |
+  +--------------------+--------+-------------------------------------------------+
+
+
+  **Response Example** ::
+
+    {
+        "response":{
+            "name": "cdn_test",
+            "id": 3
+            "dnssecEnabled": 0
+        },
+        "alerts":[
+            {
+                "level": "success",
+                "text": "cdn was created."
+            }
+        ]
+    }
+
+|
+
+**PUT /api/1.2/cdns/{:id}**
+
+  Allows user to edit a CDN.
+
+  Authentication Required: Yes
+
+  Role(s) Required:  admin or oper
+
+  **Request Route Parameters**
+
+  +-------------------+----------+------------------------------------------------+
+  | Name              |   Type   |                 Description                    |
+  +===================+==========+================================================+
+  | ``id``            | int      | CDN id.                                        |
+  +-------------------+----------+------------------------------------------------+
+
+  **Request Properties**
+
+  +-------------------+--------+-------------------------------------------------+
+  |    Parameter      |  Type  |                   Description                   |
+  +===================+========+=================================================+
+  | ``name``          | string | CDN name.                                       |
+  +-------------------+--------+-------------------------------------------------+
+  | ``dnssecEnabled`` | int    | Whether dnssec is enabled.                      |
+  |                   |        | - 0: disabled                                   |
+  |                   |        | - 1: enabled                                    |
+  +-------------------+--------+-------------------------------------------------+
+
+
+  **Request Example** ::
+
+    {
+        "name": "cdn_test2",
+        "dnssecEnabled": 0
+    }
+
+  **Response Properties**
+
+  +--------------------+--------+-------------------------------------------------+
+  |    Parameter       |  Type  |                   Description                   |
+  +====================+========+=================================================+
+  | ``response``       |  hash  | The details of the update, if success.          |
+  +--------------------+--------+-------------------------------------------------+
+  | ``>name``          | string | CDN name.                                       |
+  +--------------------+--------+-------------------------------------------------+
+  | ``>id``            |  int   | CDN id.                                         |
+  +--------------------+--------+-------------------------------------------------+
+  | ``>dnssecEnabled`` | string | Whether dnssec is enabled.                      |
+  +--------------------+--------+-------------------------------------------------+
+  | ``alerts``         | array  | A collection of alert messages.                 |
+  +--------------------+--------+-------------------------------------------------+
+  | ``>level``         | string | Success, info, warning or error.                |
+  +--------------------+--------+-------------------------------------------------+
+  | ``>text``          | string | Alert message.                                  |
+  +--------------------+--------+-------------------------------------------------+
+
+  **Response Example** ::
+
+    {
+        "response":{
+            "name": "cdn_test2",
+            "id": 3
+            "dnssecEnabled": 0
+        },
+        "alerts":[
+            {
+                "level": "success",
+                "text": "cdn was updated."
+            }
+        ]
+    }
+
+|
+
+**DELETE /api/1.2/cdns/{:id}**
+
+  Allows user to delete a CDN.
+
+  Authentication Required: Yes
+
+  Role(s) Required:  admin or oper
+
+  **Request Route Parameters**
+
+  +-----------------+----------+------------------------------------------------+
+  | Name            | Required | Description                                    |
+  +=================+==========+================================================+
+  | ``id``          | yes      | CDN id.                                        |
+  +-----------------+----------+------------------------------------------------+
+
+  **Response Properties**
+
+  +-----------------+----------+------------------------------------------------+
+  |  Parameter      |  Type    |           Description                          |
+  +=================+==========+================================================+
+  |  ``alerts``     |  array   |  A collection of alert messages.               |
+  +-----------------+----------+------------------------------------------------+
+  |  ``>level``     |  string  |  success, info, warning or error.              |
+  +-----------------+----------+------------------------------------------------+
+  |  ``>text``      |  string  |  Alert message.                                |
+  +-----------------+----------+------------------------------------------------+
+
+  **Response Example** ::
+
+    {
+          "alerts": [
+                    {
+                            "level": "success",
+                            "text": "cdn was deleted."
+                    }
+            ],
+    }
+
+|
+
 Health
 ++++++
 
@@ -485,6 +666,7 @@ Topology
   **Response Example** ::
 
     TBD
+
 |
 
 **GET /api/1.2/cdns/:name/configs/monitoring.json**
@@ -622,6 +804,7 @@ Topology
   ::
 
     TBD
+
 |
 
 **GET /api/1.2/cdns/:name/configs/routing.json**
@@ -831,7 +1014,9 @@ Topology
 
 **Response Example**
 ::
+
   TBD
+
 |
 
  
@@ -885,7 +1070,7 @@ DNSSEC Keys
   +-------------------------------+--------+---------------------------------------------------------------+
   | ``ksk>>dsRecord>>digestType`` | string | Cryptographic hash algorithm used to create the Digest value. |
   +-------------------------------+--------+---------------------------------------------------------------+
-  | ``ksk>>dsRecord>>digest       | string | A cryptographic hash value of the referenced DNSKEY-record.   |
+  | ``ksk>>dsRecord>>digest``     | string | A cryptographic hash value of the referenced DNSKEY-record.   |
   +-------------------------------+--------+---------------------------------------------------------------+
 
   **Response Example** ::
@@ -965,9 +1150,11 @@ DNSSEC Keys
 
   **Response Example**
   ::
+
     {  
       "response": "Successfully deleted dnssec keys for <cdn>"
     }
+
 |
   
 **POST /api/1.2/deliveryservices/dnsseckeys/generate**

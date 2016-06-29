@@ -1,3 +1,19 @@
+/*
+ * Copyright 2015 Comcast Cable Communications Management, LLC
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package com.comcast.cdn.traffic_control.traffic_router.core.dns.protocol;
 
 import com.comcast.cdn.traffic_control.traffic_router.core.dns.DNSAccessEventBuilder;
@@ -24,7 +40,7 @@ import static org.powermock.api.mockito.PowerMockito.*;
 
 
 @RunWith(PowerMockRunner.class)
-@PrepareForTest({AbstractProtocolTest.FakeAbstractProtocol.class, Logger.class, DNSAccessEventBuilder.class, Header.class, NameServer.class})
+@PrepareForTest({AbstractProtocolTest.FakeAbstractProtocol.class, Logger.class, DNSAccessEventBuilder.class, Header.class, NameServer.class, DNSAccessRecord.class})
 public class AbstractProtocolTest {
     private static Logger accessLogger = mock(Logger.class);
     private NameServer nameServer;
@@ -40,6 +56,7 @@ public class AbstractProtocolTest {
 
         mockStatic(System.class);
         when(System.currentTimeMillis()).thenReturn(144140678000L).thenReturn(144140678345L);
+        when(System.nanoTime()).thenReturn(100000000L, 100000000L + 345123000L);
 
         mockStatic(Logger.class);
         when(Logger.getLogger("com.comcast.cdn.traffic_control.traffic_router.core.access")).thenReturn(accessLogger);
@@ -57,7 +74,7 @@ public class AbstractProtocolTest {
         header.setRcode(Rcode.NOERROR);
 
         Name name = Name.fromString("www.example.com.");
-        Record question = Record.newRecord(name, Type.A, DClass.IN, 12345L);
+        Record question = Record.newRecord(name, Type.A, DClass.IN, 0L);
         Message query = Message.newQuery(question);
 
         query.getHeader().getRcode();
@@ -68,7 +85,7 @@ public class AbstractProtocolTest {
 
         InetAddress resolvedAddress = Inet4Address.getByName("192.168.8.9");
 
-        Record answer = new ARecord(name, DClass.IN, 12345L, resolvedAddress);
+        Record answer = new ARecord(name, DClass.IN, 3600L, resolvedAddress);
         Record[] answers = new Record[] {answer};
 
         Message response = mock(Message.class);
@@ -84,7 +101,7 @@ public class AbstractProtocolTest {
 
         abstractProtocol.run();
 
-        verify(accessLogger).info("144140678.000 qtype=DNS chi=192.168.23.45 ttms=345 xn=65535 fqdn=www.example.com. type=A class=IN ttl=12345 rcode=NOERROR rtype=- rloc=\"-\" rdtl=- rerr=\"-\" ans=\"192.168.8.9\"");
+        verify(accessLogger).info("144140678.000 qtype=DNS chi=192.168.23.45 ttms=345.123 xn=65535 fqdn=www.example.com. type=A class=IN rcode=NOERROR rtype=- rloc=\"-\" rdtl=- rerr=\"-\" ttl=\"3600\" ans=\"192.168.8.9\"");
     }
 
     @Test
@@ -107,7 +124,7 @@ public class AbstractProtocolTest {
         abstractProtocol.setNameServer(nameServer);
         abstractProtocol.run();
 
-        verify(accessLogger).info("144140678.000 qtype=DNS chi=192.168.23.45 ttms=345 xn=65535 fqdn=John\\032Wayne. type=TYPE65530 class=CLASS43210 ttl=0 rcode=REFUSED rtype=- rloc=\"-\" rdtl=- rerr=\"-\" ans=\"-\"");
+        verify(accessLogger).info("144140678.000 qtype=DNS chi=192.168.23.45 ttms=345.123 xn=65535 fqdn=John\\032Wayne. type=TYPE65530 class=CLASS43210 rcode=REFUSED rtype=- rloc=\"-\" rdtl=- rerr=\"-\" ttl=\"-\" ans=\"-\"");
     }
 
     @Test
@@ -115,7 +132,7 @@ public class AbstractProtocolTest {
         FakeAbstractProtocol abstractProtocol = new FakeAbstractProtocol(client, new byte[] {1,2,3,4,5,6,7});
         abstractProtocol.setNameServer(nameServer);
         abstractProtocol.run();
-        verify(accessLogger).info("144140678.000 qtype=DNS chi=192.168.23.45 ttms=345 xn=- fqdn=- type=- class=- ttl=- rcode=- rtype=- rloc=\"-\" rdtl=- rerr=\"Bad Request:WireParseException:end of input\" ans=\"-\"");
+        verify(accessLogger).info("144140678.000 qtype=DNS chi=192.168.23.45 ttms=345.123 xn=- fqdn=- type=- class=- rcode=- rtype=- rloc=\"-\" rdtl=- rerr=\"Bad Request:WireParseException:end of input\" ttl=\"-\" ans=\"-\"");
     }
 
     @Test
@@ -138,7 +155,7 @@ public class AbstractProtocolTest {
         abstractProtocol.setNameServer(nameServer);
         abstractProtocol.run();
 
-        verify(accessLogger).info("144140678.000 qtype=DNS chi=192.168.23.45 ttms=345 xn=65535 fqdn=John\\032Wayne. type=TYPE65530 class=CLASS43210 ttl=0 rcode=SERVFAIL rtype=- rloc=\"-\" rdtl=- rerr=\"Server Error:RuntimeException:Aw snap!\" ans=\"-\"");
+        verify(accessLogger).info("144140678.000 qtype=DNS chi=192.168.23.45 ttms=345.123 xn=65535 fqdn=John\\032Wayne. type=TYPE65530 class=CLASS43210 rcode=SERVFAIL rtype=- rloc=\"-\" rdtl=- rerr=\"Server Error:RuntimeException:Aw snap!\" ttl=\"-\" ans=\"-\"");
 
     }
 

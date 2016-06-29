@@ -27,12 +27,12 @@ var FormEditDeliveryServiceController = function(deliveryService, $scope, $contr
 
     $scope.confirmDelete = function(deliveryService) {
         var params = {
-            title: 'Confirm Delete',
-            message: 'This action CANNOT be undone. This will permanently delete ' + deliveryService.displayName + '. Are you sure you want to delete ' + deliveryService.displayName + '?'
+            title: 'Delete Delivery Service: ' + deliveryService.displayName,
+            key: deliveryService.xmlId
         };
         var modalInstance = $uibModal.open({
-            templateUrl: 'common/modules/dialog/confirm/dialog.confirm.tpl.html',
-            controller: 'DialogConfirmController',
+            templateUrl: 'common/modules/dialog/delete/dialog.delete.tpl.html',
+            controller: 'DialogDeleteController',
             size: 'md',
             resolve: {
                 params: function () {

@@ -73,7 +73,7 @@ my $match       = $jconf->{match};
 my $check_name  = $jconf->{check_name};
 
 foreach my $server ( @{$jdataserver} ) {
-	if ( $server->{type} eq 'EDGE' || $server->{type} eq 'MID' ) {
+	if ( $server->{type} =~ m/^EDGE/ || $server->{type} =~ m/^MID/ ) {
 		my $ip = $server->{ipAddress};
 		my $pingable = &ping_check( $ip, 8972 );
 		DEBUG $check_name . " >> " . $server->{hostName} . " = " . $ip . " ---> " . $pingable . "\n";

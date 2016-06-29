@@ -71,7 +71,7 @@ my %definition_for = (
 			id           => 6,
 			name         => 'MID_LOC',
 			description  => 'Mid Cachegroup',
-			use_in_table => 'deliveryservice',
+			use_in_table => 'cachegroup',
 		},
 	},
 	DNS => {
@@ -272,7 +272,24 @@ my %definition_for = (
 			use_in_table => 'deliveryservice',
 		}
 	},
-
+	HTTP => {
+		new   => 'Type',
+		using => {
+			id           => 36,
+			name         => 'HTTP',
+			description  => 'HTTP Content routing cache ',
+			use_in_table => 'deliveryservice',
+		},
+	},
+	STEERING => {
+		new   => 'Type',
+		using => {
+			id           => 37,
+			name         => 'STEERING',
+			description  => 'Steering Delivery Service',
+			use_in_table => 'deliveryservice',
+		}
+	}
 );
 
 sub get_definition {

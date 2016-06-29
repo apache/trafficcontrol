@@ -25,14 +25,11 @@ import org.apache.log4j.Logger;
 import com.maxmind.geoip2.DatabaseReader;
 import com.maxmind.geoip2.exception.AddressNotFoundException;
 import com.maxmind.geoip2.model.CityResponse;
-import org.springframework.stereotype.Component;
 
 import com.comcast.cdn.traffic_control.traffic_router.geolocation.Geolocation;
 import com.comcast.cdn.traffic_control.traffic_router.geolocation.GeolocationException;
 import com.comcast.cdn.traffic_control.traffic_router.geolocation.GeolocationService;
 
-
-@Component("GeolocationService")
 public class MaxmindGeolocationService implements GeolocationService {
 	private static final Logger LOGGER = Logger.getLogger(MaxmindGeolocationService.class);
 	private boolean initialized = false;
@@ -83,7 +80,6 @@ public class MaxmindGeolocationService implements GeolocationService {
 	@Override
 	public boolean verifyDatabase(final File databaseFile) throws IOException {
 		return createDatabaseReader(databaseFile) != null;
-
 	}
 
 	@Override

@@ -21,12 +21,14 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 
 import org.apache.log4j.Logger;
+import org.springframework.stereotype.Component;
 
 /**
- * Implements the HashFunction interface for use with the Consistent Hash Algorithm using Java's
+ * For use with the Consistent Hash Algorithm using Java's
  * hashCode() method on a string value.
  */
-public class MD5HashFunction implements HashFunction {
+@Component
+public class MD5HashFunction {
     private static final Logger LOGGER = Logger.getLogger(MD5HashFunction.class);
 
     private MessageDigest md5;
@@ -39,14 +41,8 @@ public class MD5HashFunction implements HashFunction {
         }
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see com.comcast.cdn.traffic_control.traffic_router.core.hash.HashFunction#hash(java.lang.String)
-     */
-    @Override
     public double hash(final String value) {
-        final BigInteger bi = new BigInteger(1, md5.digest(value.getBytes()));
+        final BigInteger bi = new BigInteger(1, md5.digest(value != null ? value.getBytes() : "".getBytes()));
         return bi.doubleValue();
     }
 

@@ -1,3 +1,19 @@
+/*
+ * Copyright 2015 Comcast Cable Communications Management, LLC
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package com.comcast.cdn.traffic_control.traffic_router.core.router;
 
 import com.comcast.cdn.traffic_control.traffic_router.core.cache.CacheLocation;
@@ -48,7 +64,7 @@ public class DNSRoutingMissesTest {
         trafficRouter = mock(TrafficRouter.class);
         when(trafficRouter.getCacheRegister()).thenReturn(mock(CacheRegister.class));
         Whitebox.setInternalState(trafficRouter, "federationRegistry", federationRegistry);
-        when(trafficRouter.selectCachesByGeo(any(Request.class), any(DeliveryService.class), any(CacheLocation.class), any(Track.class))).thenCallRealMethod();
+        when(trafficRouter.selectCachesByGeo(anyString(), any(DeliveryService.class), any(CacheLocation.class), any(Track.class))).thenCallRealMethod();
 
         track = spy(StatTracker.getTrack());
         doCallRealMethod().when(trafficRouter).route(request, track);
@@ -134,7 +150,7 @@ public class DNSRoutingMissesTest {
 
     @Test
     public void itSetsDetailsWhenCacheNotFoundByGeolocation() throws Exception {
-        doCallRealMethod().when(trafficRouter).selectCachesByGeo(any(Request.class), any(DeliveryService.class), any(CacheLocation.class), any(Track.class));
+        doCallRealMethod().when(trafficRouter).selectCachesByGeo(anyString(), any(DeliveryService.class), any(CacheLocation.class), any(Track.class));
         CacheLocation cacheLocation = mock(CacheLocation.class);
         CacheRegister cacheRegister = mock(CacheRegister.class);
 
@@ -144,7 +160,7 @@ public class DNSRoutingMissesTest {
         when(deliveryService.isCoverageZoneOnly()).thenReturn(false);
 
         doReturn(deliveryService).when(trafficRouter).selectDeliveryService(request, false);
-        doReturn(cacheLocation).when(trafficRouter).getCoverageZoneCache("192.168.34.56");
+        doReturn(cacheLocation).when(trafficRouter).getCoverageZoneCacheLocation("192.168.34.56", deliveryService);
         doReturn(cacheRegister).when(trafficRouter).getCacheRegister();
 
         trafficRouter.route(request, track);

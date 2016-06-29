@@ -17,35 +17,28 @@
 <beans xmlns="http://www.springframework.org/schema/beans"
 	   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	   xmlns:context="http://www.springframework.org/schema/context"
-	   xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-3.0.xsd http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context.xsd"
+	   xmlns:util="http://www.springframework.org/schema/util"
+	   xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-3.0.xsd http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context.xsd http://www.springframework.org/schema/util http://www.springframework.org/schema/util/spring-util.xsd"
 	   default-init-method="init" default-destroy-method="destroy">
 
 	<import resource="classpath:/applicationProperties.xml" />
 
-	<context:component-scan base-package="${geoservice.package:com.comcast.cdn.traffic_control.traffic_router.core.loc}" />
+	<context:component-scan base-package="com.comcast.cdn.traffic_control.traffic_router" >
+		<context:exclude-filter type="regex" expression="com\.comcast\.cdn\.traffic_control\.traffic_router\.api.*"/>
+	</context:component-scan>
 
-	<bean id="deployDir" class="java.io.File">
+	<bean id="databasesDir" class="java.nio.file.Paths" factory-method="get">
 		<constructor-arg>
-			<value>$[deploy.dir:/opt/traffic_router]</value>
+			<value>$[deploy.dir:/opt/traffic_router]/db</value>
 		</constructor-arg>
+		<constructor-arg><array /></constructor-arg>
 	</bean>
 
-	<bean id="databasesDir" class="java.io.File">
+	<bean id="propertiesDir" class="java.nio.file.Paths" factory-method="get">
 		<constructor-arg>
-			<ref bean="deployDir"/>
+			<value>$[deploy.dir:/opt/traffic_router]/conf</value>
 		</constructor-arg>
-		<constructor-arg>
-			<value>db</value>
-		</constructor-arg>
-	</bean>
-
-	<bean id="propertiesDir" class="java.io.File">
-		<constructor-arg>
-			<ref bean="deployDir"/>
-		</constructor-arg>
-		<constructor-arg>
-			<value>conf</value>
-		</constructor-arg>
+		<constructor-arg><array /></constructor-arg>
 	</bean>
 
 	<bean id="autoZonesDir" class="java.io.File">
@@ -80,28 +73,14 @@
 		</property>
 	</bean>
 
-	<bean id="HashFunctionFactory"
-		class="com.comcast.cdn.traffic_control.traffic_router.core.hash.MD5HashFunctionPoolableObjectFactory" />
-
-	<bean id="HashFunctionObjectPool" class="org.apache.commons.pool.impl.GenericObjectPool"
-		destroy-method="close">
-		<constructor-arg ref="HashFunctionFactory" />
-		<property name="maxActive" value="-1" />
-		<property name="minIdle" value="100" />
-		<property name="maxIdle" value="1000" />
-		<property name="timeBetweenEvictionRunsMillis" value="1000" />
-		<property name="softMinEvictableIdleTimeMillis" value="1000" />
-		<property name="numTestsPerEvictionRun" value="100" />
-	</bean>
-
 	<bean id="trafficRouterManager" class="com.comcast.cdn.traffic_control.traffic_router.core.router.TrafficRouterManager">
-		<property name="geolocationService" ref="GeolocationService" />
-		<property name="geolocationService6" ref="GeolocationService" />
-		<property name="hashFunctionPool" ref="HashFunctionObjectPool" />
 		<property name="statTracker" ref="statTracker" />
 		<property name="nameServer" ref="NameServer" />
 		<property name="trafficOpsUtils" ref="trafficOpsUtils" />
 		<property name="federationRegistry" ref="federationsRegistry" />
+		<property name="geolocationService" ref="maxmindGeolocationService" />
+		<property name="geolocationService6" ref="maxmindGeolocationService" />
+		<property name="steeringRegistry" ref="steeringRegistry" />
 	</bean>
 
 	<bean id="federationsRegistry" class="com.comcast.cdn.traffic_control.traffic_router.core.loc.FederationRegistry"/>
@@ -116,6 +95,17 @@
 		<property name="federationRegistry" ref="federationsRegistry" />
 	</bean>
 
+	<bean id="steeringRegistry" class="com.comcast.cdn.traffic_control.traffic_router.core.ds.SteeringRegistry"/>
+
+	<bean id="steeringWatcher" class="com.comcast.cdn.traffic_control.traffic_router.core.ds.SteeringWatcher">
+		<property name="executorService" ref="ScheduledExecutorService" />
+		<property name="databasesDirectory" ref="databasesDir" />
+		<property name="databaseName" value="$[cache.steering.database:steering.json]" />
+		<property name="trafficOpsUtils" ref="trafficOpsUtils" />
+		<property name="trafficRouterManager" ref="trafficRouterManager" />
+		<property name="steeringRegistry" ref="steeringRegistry" />
+	</bean>
+
 	<bean id="ConfigHandler" class="com.comcast.cdn.traffic_control.traffic_router.core.config.ConfigHandler">
 		<property name="trafficRouterManager" ref="trafficRouterManager" />
 		<property name="geolocationDatabaseUpdater" ref="geolocationDatabaseUpdater" />
@@ -125,6 +115,7 @@
 		<property name="configDir" value="/opt/traffic_router/conf" />
 		<property name="federationsWatcher" ref="federationsWatcher" />
 		<property name="trafficOpsUtils" ref="trafficOpsUtils" />
+		<property name="steeringWatcher" ref="steeringWatcher" />
 	</bean>
 
 	<bean id="trafficOpsUtils" class="com.comcast.cdn.traffic_control.traffic_router.core.util.TrafficOpsUtils">
@@ -132,18 +123,18 @@
 		<property name="password" value="$[traffic_ops.password]" />
 	</bean>
 
+	<bean id="maxmindGeolocationService" class="com.comcast.cdn.traffic_control.traffic_router.core.loc.MaxmindGeolocationService"/>
+	
 	<bean id="geolocationDatabaseUpdater" class="com.comcast.cdn.traffic_control.traffic_router.core.loc.GeolocationDatabaseUpdater" init-method="init">
 		<property name="databasesDirectory" ref="databasesDir"/>
 		<property name="databaseName" value="$[cache.geolocation.database:GeoLite2-City.mmdb]" />
 		<property name="pollingInterval" value="$[cache.geolocation.database.refresh.period:86400000]" />
-		<property name="untarDataFile" value="$[cache.geolocation.database.tarred:false]"/>
-		<property name="geoLocation" ref="GeolocationService" />
 		<property name="executorService" ref="ScheduledExecutorService" />
 		<property name="trafficRouterManager" ref="trafficRouterManager" />
+		<property name="maxmindGeolocationService" ref="maxmindGeolocationService" />
 	</bean>
 
-	<bean id="networkUpdater" class="com.comcast.cdn.traffic_control.traffic_router.core.loc.NetworkUpdater"
-		init-method="init">
+	<bean id="networkUpdater" class="com.comcast.cdn.traffic_control.traffic_router.core.loc.NetworkUpdater" init-method="init">
 		<property name="executorService" ref="ScheduledExecutorService" />
 		<property name="databasesDirectory" ref="databasesDir" />
 		<property name="databaseName" value="$[cache.czmap.database:czmap.json]" />
@@ -168,7 +159,7 @@
 		<property name="configUrl" value="http://[host]/publish/CrConfig?json" />
 		<property name="configHandler" ref="ConfigHandler" />
 		<property name="monitorHosts" value="$[traffic_monitor.bootstrap.hosts]" />
-		<property name="monitorProperties" value="$[traffic_monitor.properties:traffic_monitor.properties]" />
+		<property name="monitorProperties" value="$[traffic_monitor.properties]" />
 		<property name="statusFile" value="$[cache.health.json:health.json]" />
 		<property name="statusRefreshPeriod" value="$[cache.health.json.refresh.period:1000]" />
 		<property name="configFile" value="$[cache.config.json:cr-config.json]" />
@@ -273,7 +264,14 @@
 		</property>
 	</bean>
 
-    <bean name="staticContentAccessFilter" class="com.comcast.cdn.traffic_control.traffic_router.core.request.StaticContentAccessFilter">
-        <property name="doNotLog" value="$[http.access.static.content.donotlog]" />
-    </bean>
+	<util:list id="staticContentWhiteList" value-type="java.lang.String">
+		<value>/crossdomain.xml</value>
+		<value>/clientaccesspolicy.xml</value>
+		<value>/index.html</value>
+	</util:list>
+
+	<bean name="routerFilter" class="com.comcast.cdn.traffic_control.traffic_router.core.http.RouterFilter">
+		<property name="doNotLog" value="$[http.access.static.content.donotlog]" />
+		<property name="staticContentWhiteList" ref="staticContentWhiteList" />
+	</bean>
 </beans>

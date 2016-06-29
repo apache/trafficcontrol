@@ -1,0 +1,15 @@
+############################################################
+# Dockerfile to build Traffic Ops ATS Config container images
+# Based on CentOS 6.6
+############################################################
+
+# Example Build and Run:
+# docker build --file Ats_Config_Dockerfile --rm --tag traffic_ops_ats_config:0.1 .
+# docker run --add-host="localhost:10.0.2.2" -p 9003:9003 --name my-ats-config --hostname my-ats-config --detach traffic_ops_ats_config:0.1
+
+FROM centos:6.6
+MAINTAINER Robert Butts
+
+ADD ats_config /
+ENTRYPOINT ./ats_config -uri http://c23-to-01.cdnlab.comcast.net:9002 -p 9003 -user foo -Pass bar
+EXPOSE 9003

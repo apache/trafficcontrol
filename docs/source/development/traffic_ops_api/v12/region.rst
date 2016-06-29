@@ -56,3 +56,63 @@ Regions
     }
 
 |
+
+**POST /api/1.2/divisions/:division_name/regions**
+  Create Region
+
+  Authentication Required: Yes
+
+  Role(s) Required: admin or oper
+
+  division_name - The name of division to create new region into.
+
+  ** Request Route Parameters**
+
+  +-------------------+----------+------------------------------------------------+
+  | Name              | Required | Description                                    |
+  +===================+==========+================================================+
+  | ``division_name`` | yes      | The name of division will create new region in |
+  +-------------------+----------+------------------------------------------------+
+
+  **Request Properties**
+
+  +-------------------+----------+------------------------------------------+
+  | Parameter         | Required | Description                              |
+  +===================+==========+==========================================+
+  | ``name``          | yes      | The name of the region                   |
+  +-------------------+----------+------------------------------------------+
+
+  **Request Example** ::
+
+    {
+        "name": "myregion1",
+    }
+
+|
+
+  **Response Properties**
+
+  +-------------------+--------+-------------------------------------------+
+  | Parameter         | Type   | Description                               |
+  +===================+========+===========================================+
+  | ``name``          | string | name of region created                    |
+  +-------------------+--------+-------------------------------------------+
+  | ``id``            | string | id of region created                      |
+  +-------------------+--------+-------------------------------------------+
+  | ``divisionName``  | string | the division name the region belongs to.  |
+  +-------------------+--------+-------------------------------------------+
+  | ``divisionId``    | string | the id of division the region belongs to. |
+  +-------------------+--------+-------------------------------------------+
+
+  **Response Example** ::
+
+    {
+      "response": {
+        'divisionName': 'mydivision1',
+        'divsionId': '4',
+        'name': 'myregion1',
+        'id': '19'
+       }
+    }
+
+|

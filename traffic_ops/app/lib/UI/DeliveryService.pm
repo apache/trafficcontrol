@@ -64,8 +64,8 @@ sub edit {
 		fbox_layout  => 1,
 		regexp_set   => $regexp_set,
 		example_urls => \@example_urls,
-		hidden       => {}, # for form validation purposes
-		mode         => 'edit' # for form generation
+		hidden       => {},               # for form validation purposes
+		mode         => 'edit'            # for form generation
 	);
 }
 
@@ -226,6 +226,8 @@ sub read {
 				"signed"                 => \$row->signed,
 				"qstring_ignore"         => $row->qstring_ignore,
 				"geo_limit"              => $row->geo_limit,
+				"geo_limit_countries"    => $row->geo_limit_countries,
+				"geo_provider"           => $row->geo_provider,
 				"http_bypass_fqdn"       => $row->http_bypass_fqdn,
 				"dns_bypass_ip"          => $row->dns_bypass_ip,
 				"dns_bypass_ip6"         => $row->dns_bypass_ip6,
@@ -262,6 +264,7 @@ sub read {
 				"remap_text"             => $row->remap_text,
 				"initial_dispersion"     => $row->initial_dispersion,
 				"regional_geo_blocking"  => $row->regional_geo_blocking,
+				"logs_enabled"           => \$row->logs_enabled,
 			}
 		);
 	}
@@ -285,6 +288,14 @@ sub delete {
 
 		my $delete_re = $self->db->resultset('Regex')->search( { id => { -in => \@regexp_id_list } } );
 		$delete_re->delete();
+
+		# Delete config file parameter
+		my @cfg_prefixes = ( "hdr_rw_", "hdr_rw_mid_", "regex_remap_", "cacheurl_" );
+		foreach my $cfg_prefix (@cfg_prefixes) {
+			my $cfg_file = $cfg_prefix . $dsname . ".config";
+			&delete_cfg_file( $self, $cfg_file );
+		}
+
 		&log( $self, "Delete deliveryservice with id:" . $id . " and name " . $dsname, "UICHANGE" );
 	}
 	return $self->redirect_to('/close_fancybox.html');
@@ -298,6 +309,18 @@ sub typeid {
 sub typename {
 	my $self = shift;
 	return $self->param('type.name') // $self->db->resultset('Type')->search( { id => $self->typeid() } )->get_column('name')->single();
+}
+
+sub sanitize_geo_limit_countries {
+	my $geo_limit_countries = shift;
+
+	if ( !defined($geo_limit_countries) ) {
+		return "";
+	}
+
+	$geo_limit_countries =~ s/\s+//g;
+	$geo_limit_countries = uc($geo_limit_countries);
+	return $geo_limit_countries;
 }
 
 sub check_deliveryservice_input {
@@ -334,9 +357,9 @@ sub check_deliveryservice_input {
 
 	foreach my $param ( $self->param ) {
 		if ( $param =~ /^re_type_(.*)/ ) {
-			my $field = "re_order";
+			my $field      = "re_order";
 			my $this_field = $field . '_' . $1;
-			my $order = $self->param( $this_field );
+			my $order      = $self->param($this_field);
 
 			if ( defined( $dbl_check->{$field}->{$order} ) ) {
 				$self->field('hidden.regex')->is_equal( "", "Duplicate type/order combination is not allowed." );
@@ -497,6 +520,19 @@ sub check_deliveryservice_input {
 		}
 	}
 
+	my @valid_country_codes_list =
+		qw/AF AX AL DZ AS AD AO AI AQ AG AR AM AW AU AT AZ BS BH BD BB BY BE BZ BJ BM BT BO BQ BA BW BV BR IO BN BG BF BI CV KH CM CA KY CF TD CL CN CX CC CO KM CG CD CK CR CI HR CU CW CY CZ DK DJ DM DO EC EG SV GQ ER EE ET FK FO FJ FI FR GF PF TF GA GM GE DE GH GI GR GL GD GP GU GT GG GN GW  Y HT HM VA HN HK HU IS IN ID IR IQ IE IM IL IT JM JP JE JO KZ KE KI KP KR KW KG LA LV LB LS LR LY LI LT LU MO MK MG MW MY MV ML MT MH MQ MR MU YT MX FM MD MC MN ME MS MA MZ MM NA NR NP NL NC NZ NI NE NG NU NF MP NO OM PK PW PS PA PG PY PE PH PN PL PT PR QA RE RO RU RW BL SH KN LC  F PM VC WS SM ST SA SN RS SC SL SG SX SK SI SB SO ZA GS SS ES LK SD SR SJ SZ SE CH SY TW TJ TZ TH TL TG TK TO TT TN TR TM TC TV UG UA AE GB US UM UY UZ VU VE VN VG VI WF EH YE ZM ZW/;
+	my %valid_country_codes;
+	@valid_country_codes{@valid_country_codes_list} = ();
+	my @geo_limit_country_codes = split( ',', sanitize_geo_limit_countries( $self->paramAsScalar('ds.geo_limit_countries') ) );
+	foreach my $country_code (@geo_limit_country_codes) {
+		if ( !exists( $valid_country_codes{$country_code} ) ) {
+			$self->field('ds.geo_limit_countries')
+				->is_equal( "", "Invalid Geo Limit Country Code. Geo limit country codes must be comma-separated ISO 3166 Alpha-2 codes." );
+			last;
+		}
+	}
+
 	#TODO:  Fix this to work the right way.
 	# if ( defined( $self->param('ds.edge_header_rewrite') ) ) {
 	# 	if ( $self->param('ds.edge_header_rewrite') ne "" && $self->param('ds.edge_header_rewrite') !~ /^(?:add|rm|set)-header .* \[L\]$/ ) {
@@ -530,6 +566,13 @@ sub header_rewrite {
 	my $ds_name    = shift;
 	my $hdr_rw     = shift;
 	my $tier       = shift;
+	my $type       = shift;
+
+	if ( $tier eq 'mid' && $type =~ /LIVE/ && $type !~ /NATNL/ ) {
+
+		# live local delivery services don't get remap rules
+		return;
+	}
 
 	if ( defined($hdr_rw) && $hdr_rw ne "" ) {
 		my $fname = "hdr_rw_" . $ds_name . ".config";
@@ -555,11 +598,11 @@ sub header_rewrite {
 		my $cdn_name = undef;
 		my @servers = $self->db->resultset('DeliveryserviceServer')->search( { deliveryservice => $ds_id } )->get_column('server')->all();
 		if ( $tier eq "mid" ) {
-			my $mtype_id = &type_id( $self, 'MID' );
+			my @mtype_ids = &type_ids( $self, 'MID%', 'server' );
 			my $param = $self->db->resultset('Deliveryservice')->search( { 'me.profile' => $ds_profile }, { prefetch => 'cdn' } );
 			$cdn_name = $param->next->cdn->name;
 
-			@servers = $self->db->resultset('Server')->search( { type => $mtype_id } )->get_column('id')->all();
+			@servers = $self->db->resultset('Server')->search( { type => { -in => \@mtype_ids } } )->get_column('id')->all();
 		}
 		my @profiles = $self->db->resultset('Server')->search( { id => { -in => \@servers } } )->get_column('profile')->all();
 		foreach my $profile_id (@profiles) {
@@ -703,6 +746,7 @@ sub update {
 		my $referer = $self->req->headers->header('referer');
 		return $self->redirect_to($referer);
 	}
+
 	if ( $self->check_deliveryservice_input() ) {
 
 		#print "global_max_mbps = " . $self->param('ds.global_max_mbps') . "\n";
@@ -714,6 +758,8 @@ sub update {
 			signed                 => $self->paramAsScalar('ds.signed'),
 			qstring_ignore         => $self->paramAsScalar('ds.qstring_ignore'),
 			geo_limit              => $self->paramAsScalar('ds.geo_limit'),
+			geo_limit_countries    => sanitize_geo_limit_countries( $self->paramAsScalar('ds.geo_limit_countries') ),
+			geo_provider           => $self->paramAsScalar('ds.geo_provider'),
 			org_server_fqdn        => $self->paramAsScalar('ds.org_server_fqdn'),
 			multi_site_origin      => $self->paramAsScalar('ds.multi_site_origin'),
 			ccr_dns_ttl            => $self->paramAsScalar('ds.ccr_dns_ttl'),
@@ -743,6 +789,7 @@ sub update {
 			cacheurl           => $self->paramAsScalar( 'ds.cacheurl',           undef ),
 			remap_text         => $self->paramAsScalar( 'ds.remap_text',         undef ),
 			initial_dispersion => $self->paramAsScalar( 'ds.initial_dispersion', 1 ),
+			logs_enabled       => $self->paramAsScalar('ds.logs_enabled'),
 		);
 
 		my $typename = $self->typename();
@@ -835,8 +882,21 @@ sub update {
 			}
 		}
 
-		$self->header_rewrite( $self->param('id'), $self->param('ds.profile'), $self->param('ds.xml_id'), $self->param('ds.edge_header_rewrite'), "edge" );
-		$self->header_rewrite( $self->param('id'), $self->param('ds.profile'), $self->param('ds.xml_id'), $self->param('ds.mid_header_rewrite'),  "mid" );
+		my $type = $self->db->resultset('Type')->search( { id => $self->paramAsScalar('ds.type') } )->get_column('name')->single();
+		$self->header_rewrite(
+			$self->param('id'),
+			$self->param('ds.profile'),
+			$self->param('ds.xml_id'),
+			$self->param('ds.edge_header_rewrite'),
+			"edge", $type
+		);
+		$self->header_rewrite(
+			$self->param('id'),
+			$self->param('ds.profile'),
+			$self->param('ds.xml_id'),
+			$self->param('ds.mid_header_rewrite'),
+			"mid", $type
+		);
 		$self->regex_remap( $self->param('id'), $self->param('ds.profile'), $self->param('ds.xml_id'), $self->param('ds.regex_remap') );
 		$self->cacheurl( $self->param('id'), $self->param('ds.profile'), $self->param('ds.xml_id'), $self->param('ds.cacheurl') );
 
@@ -861,7 +921,7 @@ sub update {
 			static_count => $static_count,
 			regexp_set   => $regexp_set,
 			example_urls => \@example_urls,
-			hidden       => {}, # for form validation purposes
+			hidden       => {},               # for form validation purposes
 			mode         => "edit",
 		);
 		$self->render('delivery_service/edit');
@@ -914,6 +974,8 @@ sub create {
 				signed                 => $self->paramAsScalar('ds.signed'),
 				qstring_ignore         => $self->paramAsScalar('ds.qstring_ignore'),
 				geo_limit              => $self->paramAsScalar('ds.geo_limit'),
+				geo_limit_countries    => sanitize_geo_limit_countries( $self->paramAsScalar('ds.geo_limit_countries') ),
+				geo_provider           => $self->paramAsScalar('ds.geo_provider'),
 				http_bypass_fqdn       => $self->paramAsScalar('ds.http_bypass_fqdn'),
 				dns_bypass_ip          => $self->paramAsScalar('ds.dns_bypass_ip'),
 				dns_bypass_ip6         => $self->paramAsScalar('ds.dns_bypass_ip6'),
@@ -947,6 +1009,7 @@ sub create {
 				cacheurl           => $self->paramAsScalar( 'ds.cacheurl',           undef ),
 				remap_text         => $self->paramAsScalar( 'ds.remap_text',         undef ),
 				initial_dispersion => $self->paramAsScalar( 'ds.initial_dispersion', 1 ),
+				logs_enabled       => $self->paramAsScalar('ds.logs_enabled'),
 			}
 		);
 		$insert->insert();
@@ -1014,9 +1077,10 @@ sub create {
 			$de_re_insert->insert();
 		}
 
-		$self->header_rewrite( $new_id, $self->param('ds.profile'), $self->param('ds.xml_id'), $self->param('ds.edge_header_rewrite'), "edge" );
-		$self->header_rewrite( $new_id, $self->param('ds.profile'), $self->param('ds.xml_id'), $self->param('ds.mid_header_rewrite'),  "mid" );
-		$self->regex_remap( $self->param('ds.profile'), $self->param('ds.xml_id'), $self->param('ds.regex_remap') );
+		my $type = $self->db->resultset('Type')->search( { id => $self->paramAsScalar('ds.type') } )->get_column('name')->single();
+		$self->header_rewrite( $new_id, $self->param('ds.profile'), $self->param('ds.xml_id'), $self->param('ds.edge_header_rewrite'), "edge", $type );
+		$self->header_rewrite( $new_id, $self->param('ds.profile'), $self->param('ds.xml_id'), $self->param('ds.mid_header_rewrite'),  "mid",  $type );
+		$self->regex_remap( $new_id, $self->param('ds.profile'), $self->param('ds.xml_id'), $self->param('ds.regex_remap') );
 		$self->cacheurl( $new_id, $self->param('ds.profile'), $self->param('ds.xml_id'), $self->param('ds.cacheurl') );
 
 		##create dnssec keys for the new DS if DNSSEC is enabled for the CDN
@@ -1041,7 +1105,7 @@ sub create {
 			selected_type    => $selected_type,
 			selected_profile => $selected_profile,
 			selected_cdn     => $selected_cdn,
-			hidden           => {}, # for form validation purposes
+			hidden           => {},                  # for form validation purposes
 			mode             => "add",
 		);
 		$self->render('delivery_service/add');
@@ -1139,8 +1203,8 @@ sub add {
 		selected_type    => "",
 		selected_profile => "",
 		selected_cdn     => "",
-		hidden           => {}, # for form validation purposes
-		mode             => 'add' # for form generation
+		hidden           => {},      # for form validation purposes
+		mode             => 'add'    # for form generation
 	);
 	my @params = $self->param;
 	foreach my $field (@params) {

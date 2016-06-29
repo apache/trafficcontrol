@@ -25,9 +25,12 @@ use warnings;
 use Schema;
 use Test::TestHelper;
 use Fixtures::DeliveryserviceTmuser;
+use Fixtures::DeliveryserviceServer;
 use Fixtures::JobAgent;
 use Fixtures::JobStatus;
 use Fixtures::Job;
+use Fixtures::Parameter;
+use Fixtures::Server;
 use POSIX qw(strftime);
 
 BEGIN { $ENV{MOJO_MODE} = "test" }
@@ -91,7 +94,7 @@ ok $t->post_ok(
 		ttl       => 40,
 		startTime => $now,
 	}
-	)->status_is(400)->json_is( '/alerts', [ { level => "error", text => "ttl should be between 48 and 672" } ] )
+	)->status_is(400)->json_is( '/alerts', [ { level => "error", text => "ttl should be between 48 and 768" } ] )
 	->or( sub { diag $t->tx->res->content->asset->{content}; } ),
 	'Will not create a purge job without the ttl in the proper low range?';
 
@@ -103,7 +106,7 @@ ok $t->post_ok(
 		ttl       => 1000,
 		startTime => $now,
 	}
-	)->status_is(400)->json_is( '/alerts', [ { level => "error", text => "ttl should be between 48 and 672" } ] )
+	)->status_is(400)->json_is( '/alerts', [ { level => "error", text => "ttl should be between 48 and 768" } ] )
 	->or( sub { diag $t->tx->res->content->asset->{content}; } ),
 	'Will not create a purge job without the ttl in the proper high range?';
 

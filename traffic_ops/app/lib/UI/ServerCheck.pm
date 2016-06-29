@@ -24,7 +24,7 @@ use Data::Dumper;
 sub server_check {
 	my $self = shift;
 
-	my @type_ids = $self->db->resultset('Type')->search( { name => { -like => 'CHECK_EXT%' } } )->get_column('id')->all();
+	my @type_ids = &type_ids( $self, 'CHECK_EXT%' );
 	my $rs_extensions =
 		$self->db->resultset('ToExtension')->search( { type => { -in => \@type_ids } }, { prefetch => ['type'], order_by => ["servercheck_column_name"] } );
 	my @extensions;

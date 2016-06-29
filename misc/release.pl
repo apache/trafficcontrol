@@ -96,15 +96,15 @@ if ( defined($argument) ) {
 	if ( $argument eq 'cut' ) {
 		fetch_branch();
 		my $prompt = "Continue with creating the RELEASE?";
-		print "branch_exists #-> (" . $branch_exists . ")\n";
 
 		if ( prompt_yn($prompt) ) {
 
 			# Only tag the release
+			print "branch_exists #-> (" . $branch_exists . ")\n";
 			if ($branch_exists) {
 				add_official_remote();
+				publish_version_file( $new_branch, $version );
 				tag_and_push();
-				publish_version_file($version);
 			}
 			else {
 				add_official_remote();
@@ -154,7 +154,6 @@ Version        : $version
 Branch         : $new_branch
 Tag            : $release_no
 Git Short Hash : $git_short_hash
-Next Version   : $next_version
 INFO
 
 	my $release_candidate_info = <<"INFO";
@@ -164,7 +163,6 @@ Version        : $version
 Branch         : $new_branch
 Next Tag       : $release_no
 Git Short Hash : $git_short_hash
-Next Version   : $next_version
 INFO
 
 	if ( $release_no !~ /RC/ ) {
@@ -256,7 +254,7 @@ sub add_official_remote {
 
 sub cut_new_release {
 
-	publish_version_file($next_version);
+	publish_version_file( "master", $next_version );
 
 	print "Creating new branch\n";
 	my $cmd = "git checkout -b " . $new_branch;
@@ -269,16 +267,22 @@ sub cut_new_release {
 
 sub publish_version_file {
 
-	my $version_no = shift;
-	update_version_file($version_no);
-	my $cmd = "git commit -m 'RELEASE: Syncing VERSION file' VERSION";
-	$rc = run_command($cmd);
+	my $branch  = shift;
+	my $version = shift;
+	my $cmd     = "git checkout " . $branch;
+	my $rc      = run_command($cmd);
+	if ( $rc > 0 ) {
+		print "Failed to checkout new branch" . $cmd . "\n";
+	}
+	update_version_file($version);
+	$cmd = "git commit -m 'RELEASE: Syncing VERSION file' VERSION";
+	$rc  = run_command($cmd);
 	if ( $rc > 0 ) {
 		print "Failed to run:" . $cmd . "\n";
 	}
 
 	print "Updating 'VERSION' file\n";
-	$cmd = "git push official master";
+	$cmd = "git push official " . $branch;
 	$rc  = run_command($cmd);
 	if ( $rc > 0 ) {
 		print "Failed to push official to master" . $cmd . "\n";
@@ -371,7 +375,7 @@ sub update_version_file {
 	}
 	else {
 		print "PRIOR version: " . $data . "\n";
-		print "NEXT  version: " . $version_no . "\n";
+		print "Version: " . $version_no . "\n";
 		open( $fh, '>', $version_file_name ) or die "Could not open file '$version_file_name' $!";
 		print $fh $version_no . "\n";
 		close $fh;

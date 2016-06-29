@@ -27,9 +27,8 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
 import java.util.Iterator;
-import java.io.PrintWriter;
-import java.io.StringWriter;
 
+import com.comcast.cdn.traffic_control.traffic_router.core.ds.SteeringWatcher;
 import com.comcast.cdn.traffic_control.traffic_router.core.loc.FederationsWatcher;
 import com.comcast.cdn.traffic_control.traffic_router.core.loc.GeolocationDatabaseUpdater;
 import com.comcast.cdn.traffic_control.traffic_router.core.loc.NetworkNode;
@@ -73,6 +72,7 @@ public class ConfigHandler {
 	private NetworkUpdater networkUpdater;
 	private FederationsWatcher federationsWatcher;
 	private RegionalGeoUpdater regionalGeoUpdater;
+	private SteeringWatcher steeringWatcher;
 
 	public String getConfigDir() {
 		return configDir;
@@ -128,9 +128,11 @@ public class ConfigHandler {
 				parseMonitorConfig(jo.getJSONObject("monitors"));
 				NetworkNode.getInstance().clearCacheLocations();
 				federationsWatcher.configure(config);
-
+				steeringWatcher.configure(config);
+				steeringWatcher.setCacheRegister(cacheRegister);
 				trafficRouterManager.setCacheRegister(cacheRegister);
 				trafficRouterManager.getTrafficRouter().setRequestHeaders(parseRequestHeaders(config.optJSONArray("requestHeaders")));
+				trafficRouterManager.getTrafficRouter().configurationChanged();
 				setLastSnapshotTimestamp(sts);
 			} catch (ParseException e) {
 				LOGGER.error(e, e);
@@ -196,7 +198,7 @@ public class ConfigHandler {
 	 * @throws JSONException 
 	 */
 	@SuppressWarnings({"PMD.CyclomaticComplexity", "PMD.AvoidDeeplyNestedIfStmts"})
-	private void parseCacheConfig(final JSONObject contentServers, final CacheRegister cacheRegister) throws JSONException {
+	private void parseCacheConfig(final JSONObject contentServers, final CacheRegister cacheRegister) throws JSONException, ParseException {
 		final Map<String,Cache> map = new HashMap<String,Cache>();
 		final Map<String, List<String>> statMap = new HashMap<String, List<String>>();
 		for (final String node : JSONObject.getNames(contentServers)) {
@@ -354,12 +356,7 @@ public class ConfigHandler {
 				final URL url = new URL(rurl);
 
 				//make a fake HTTPRequest for the redirect url
-				final HTTPRequest req = new HTTPRequest();
-
-				req.setPath(url.getPath());
-				req.setQueryString(url.getQuery());
-				req.setHostname(url.getHost());
-				req.setRequestedUrl(rurl);
+				final HTTPRequest req = new HTTPRequest(url);
 
 				ds.setGeoRedirectFile(url.getFile());
 				//try select the ds by the redirect fake HTTPRequest
@@ -372,11 +369,7 @@ public class ConfigHandler {
 
 				ds.setGeoRedirectUrlType("DS_URL");
 			} catch (Exception e) {
-				LOGGER.error("fatal error, failed to init NGB redirect with Exception: " + e);
-				final StringWriter sw = new StringWriter();
-				final PrintWriter pw = new PrintWriter(sw);
-				e.printStackTrace(pw);
-				LOGGER.error(sw.toString());
+				LOGGER.error("fatal error, failed to init NGB redirect with Exception: " + e.getMessage());
 			}
 		}
 	}
@@ -400,7 +393,16 @@ public class ConfigHandler {
 			config.getString(pollingUrlKey),
 			config.optLong("geolocation.polling.interval")
 		);
+
+		if (config.has("neustar.polling.url")) {
+			System.setProperty("neustar.polling.url", config.getString("neustar.polling.url"));
+		}
+
+		if (config.has("neustar.polling.interval")) {
+			System.setProperty("neustar.polling.interval", config.getString("neustar.polling.interval"));
+		}
 	}
+
 	/**
 	 * Parses the ConverageZoneNetwork database configuration and updates the database if the URL has
 	 * changed.
@@ -418,8 +420,10 @@ public class ConfigHandler {
 
 	private void parseRegionalGeoConfig(final JSONObject config) {
 		final String url = config.optString("regional_geoblock.polling.url", null);
+
 		if (url == null) {
-			LOGGER.info("regional_geoblock.polling.url not configured");
+			LOGGER.info("regional_geoblock.polling.url not configured; stopping service updater");
+			getRegionalGeoUpdater().stopServiceUpdater();
 			return;
 		}
 
@@ -442,8 +446,7 @@ public class ConfigHandler {
 		for (final String loc : JSONObject.getNames(locationsJo)) {
 			final JSONObject jo = locationsJo.getJSONObject(loc);
 			try {
-				locations.add(new CacheLocation(loc, jo.optString("zoneId"), 
-						new Geolocation(jo.getDouble("latitude"), jo.getDouble("longitude"))));
+				locations.add(new CacheLocation(loc, new Geolocation(jo.getDouble("latitude"), jo.getDouble("longitude"))));
 			} catch (JSONException e) {
 				LOGGER.warn(e,e);
 			}
@@ -533,5 +536,9 @@ public class ConfigHandler {
 		}
 
 		return headers;
+	}
+
+	public void setSteeringWatcher(final SteeringWatcher steeringWatcher) {
+		this.steeringWatcher = steeringWatcher;
 	}
 }

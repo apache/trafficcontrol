@@ -18,33 +18,34 @@ package client
 
 import "encoding/json"
 
-type hardwareResponse struct {
+// HardwareResponse ...
+type HardwareResponse struct {
 	Version  string     `json:"version"`
 	Response []Hardware `json:"response"`
 }
 
+// Hardware ...
 type Hardware struct {
-	Id          string `json:"serverId"`
+	ID          string `json:"serverId"`
 	HostName    string `json:"serverHostName"`
 	LastUpdated string `json:"lastUpdated"`
 	Value       string `json:"val"`
 	Description string `json:"description"`
 }
 
-// Hardware
-// Get an array of Hardware
+// Hardware gets an array of Hardware
 func (to *Session) Hardware() ([]Hardware, error) {
-	body, err := to.getBytes("/api/1.1/hwinfo.json")
+	url := "/api/1.2/hwinfo.json"
+	resp, err := to.request(url, nil)
 	if err != nil {
 		return nil, err
 	}
-	hardwareList, err := hardwareUnmarshall(body)
-	return hardwareList.Response, err
-}
+	defer resp.Body.Close()
 
-func hardwareUnmarshall(body []byte) (hardwareResponse, error) {
+	var data HardwareResponse
+	if err := json.NewDecoder(resp.Body).Decode(&data); err != nil {
+		return nil, err
+	}
 
-	var data hardwareResponse
-	err := json.Unmarshal(body, &data)
-	return data, err
+	return data.Response, nil
 }
