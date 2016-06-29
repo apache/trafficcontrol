@@ -74,6 +74,7 @@ sub server_by_id {
 			"id"             => $server_row->id,
 			"host_name"      => $server_row->host_name,
 			"domain_name"    => $server_row->domain_name,
+			"guid"           => $server_row->guid,
 			"tcp_port"       => $server_row->tcp_port,
 			"xmpp_id"        => $server_row->xmpp_id,
 			"xmpp_passwd"    => $server_row->xmpp_passwd,
@@ -132,6 +133,7 @@ sub getserverdata {
 				"cdn"              => $cdn_name,
 				"cachegroup"       => $row->cachegroup->name,
 				"phys_location"    => $row->phys_location->name,
+				"guid"             => $row->guid,
 				"rack"             => $row->rack,
 				"type"             => $row->type->name,
 				"status"           => $row->status->name,
@@ -187,6 +189,7 @@ sub serverdetail {
 			"cdn"              => $cdn_name,
 			"cachegroup"       => $row->cachegroup->name,
 			"phys_location"    => $row->phys_location->name,
+			"guid"             => $row->guid,
 			"rack"             => $row->rack,
 			"type"             => $row->type->name,
 			"status"           => $row->status->name,
@@ -372,17 +375,16 @@ sub check_server_input {
 		$err .= $paramHashRef->{'ip_address'} . " and " . $paramHashRef->{'ip_gateway'} . " are not in same network" . $sep;
 	}
 
-	if ( ( defined( $paramHashRef->{'ip6_address'} )
-		&& $paramHashRef->{'ip6_address'} ne "" ) ||
-		( defined( $paramHashRef->{'ip6_gateway'} )
-		&& $paramHashRef->{'ip6_gateway'} ne "" ) )
+	if (
+		( defined( $paramHashRef->{'ip6_address'} ) && $paramHashRef->{'ip6_address'} ne "" )
+		|| ( defined( $paramHashRef->{'ip6_gateway'} )
+			&& $paramHashRef->{'ip6_gateway'} ne "" )
+		)
 	{
-		if ( !&is_ip6address( $paramHashRef->{'ip6_address'} ) )
-		{
+		if ( !&is_ip6address( $paramHashRef->{'ip6_address'} ) ) {
 			$err .= "Address " . $paramHashRef->{'ip6_address'} . " is not a valid IPv6 address " . $sep;
 		}
-		if ( !&is_ip6address( $paramHashRef->{'ip6_gateway'} ) )
-		{
+		if ( !&is_ip6address( $paramHashRef->{'ip6_gateway'} ) ) {
 			$err .= "Gateway " . $paramHashRef->{'ip6_gateway'} . " is not a valid IPv6 address " . $sep;
 		}
 		if ( !&in_same_net( $paramHashRef->{'ip6_address'}, $paramHashRef->{'ip6_gateway'} ) ) {
@@ -457,12 +459,13 @@ sub update {
 				ip_address       => $paramHashRef->{'ip_address'},
 				ip_netmask       => $paramHashRef->{'ip_netmask'},
 				ip_gateway       => $paramHashRef->{'ip_gateway'},
-				ip6_address      => $self->paramAsScalar('ip6_address', undef),
+				ip6_address      => $self->paramAsScalar( 'ip6_address', undef ),
 				ip6_gateway      => $paramHashRef->{'ip6_gateway'},
 				interface_mtu    => $paramHashRef->{'interface_mtu'},
 				cdn_id           => $paramHashRef->{'cdn'},
 				cachegroup       => $paramHashRef->{'cachegroup'},
 				phys_location    => $paramHashRef->{'phys_location'},
+				guid             => $paramHashRef->{'guid'},
 				rack             => $paramHashRef->{'rack'},
 				type             => $paramHashRef->{'type'},
 				status           => $paramHashRef->{'status'},
@@ -503,8 +506,8 @@ sub update {
 
 			# server type changed:  servercheck entry required for EDGE and MID, but not others. Add or remove servercheck entry accordingly
 			my @types;
-			push(@types, &type_ids( $self, 'EDGE%', 'server' ));
-			push(@types, &type_ids( $self, 'MID%', 'server' ));
+			push( @types, &type_ids( $self, 'EDGE%', 'server' ) );
+			push( @types, &type_ids( $self, 'MID%',  'server' ) );
 			my %need_servercheck = map { $_ => 1 } @types;
 			my $newtype_id = $update->type->id;
 			my $servercheck =
@@ -596,7 +599,7 @@ sub cgi_params_to_param_hash_ref {
 	}
 	foreach my $optionalParam (
 		qw/ilo_ip_address ilo_ip_netmask ilo_ip_gateway mgmt_ip_address mgmt_ip_netmask mgmt_ip_gateway ip6_address ip6_gateway tcp_port
-		ilo_username ilo_password router_host_name router_port_name status rack id/
+		ilo_username ilo_password router_host_name router_port_name status rack guid id/
 		)
 	{
 		$paramHashRef->{$optionalParam} = $self->param($optionalParam);
@@ -647,6 +650,7 @@ sub create {
 					cdn_id           => $paramHashRef->{'cdn'},
 					cachegroup       => $paramHashRef->{'cachegroup'},
 					phys_location    => $paramHashRef->{'phys_location'},
+					guid             => $paramHashRef->{'guid'},
 					rack             => $paramHashRef->{'rack'},
 					type             => $paramHashRef->{'type'},
 					status           => &admin_status_id( $self, "OFFLINE" ),
@@ -680,6 +684,7 @@ sub create {
 					cdn_id           => $paramHashRef->{'cdn'},
 					cachegroup       => $paramHashRef->{'cachegroup'},
 					phys_location    => $paramHashRef->{'phys_location'},
+					guid             => $paramHashRef->{'guid'},
 					rack             => $paramHashRef->{'rack'},
 					type             => $paramHashRef->{'type'},
 					status           => &admin_status_id( $self, "OFFLINE" ),
@@ -699,8 +704,8 @@ sub create {
 		}
 		$insert->insert();
 		$new_id = $insert->id;
-		if ( scalar(grep { $paramHashRef->{'type'} eq $_ } &type_ids( $self, 'EDGE%', 'server' ))
-			|| scalar(grep { $paramHashRef->{'type'} eq $_ } &type_ids( $self, 'MID%', 'server' )) )
+		if (   scalar( grep { $paramHashRef->{'type'} eq $_ } &type_ids( $self, 'EDGE%', 'server' ) )
+			|| scalar( grep { $paramHashRef->{'type'} eq $_ } &type_ids( $self, 'MID%', 'server' ) ) )
 		{
 			$insert = $self->db->resultset('Servercheck')->create( { server => $new_id, } );
 			$insert->insert();
@@ -925,7 +930,7 @@ sub postupdatequeue {
 	my $host       = $self->param("id");
 	my $cdn        = $self->param("cdn");
 	my $cachegroup = $self->param("cachegroup");
-	my $wording = ($setqueue == 1) ? "Queue Updates" : "Unqueue Updates";
+	my $wording    = ( $setqueue == 1 ) ? "Queue Updates" : "Unqueue Updates";
 
 	if ( !&is_admin($self) && !&is_oper($self) ) {
 		$self->flash( alertmsg => "No can do. Get more privs." );
@@ -937,7 +942,7 @@ sub postupdatequeue {
 		my $message;
 
 		if ( $host eq "all" ) {
-			$update = $self->db->resultset('Server')->search(undef);
+			$update  = $self->db->resultset('Server')->search(undef);
 			$message = "all servers";
 		}
 		else {
@@ -945,7 +950,7 @@ sub postupdatequeue {
 			my @edge_cache_groups = $self->db->resultset('Cachegroup')->search( { parent_cachegroup_id => $server->cachegroup->id } )->all();
 			my @cg_ids = map { $_->id } @edge_cache_groups;
 			$update = $self->db->resultset('Server')->search( { cachegroup => { -in => \@cg_ids }, cdn_id => $server->cdn_id } );
-			$message = "children of " . $server->host_name . " in the following cachegroups: " . join(", ", map { $_->name } @edge_cache_groups);
+			$message = "children of " . $server->host_name . " in the following cachegroups: " . join( ", ", map { $_->name } @edge_cache_groups );
 		}
 		$update->update( { upd_pending => $setqueue } );
 		&log( $self, "Flip Update bit ($wording) for " . $message, "OPER" );

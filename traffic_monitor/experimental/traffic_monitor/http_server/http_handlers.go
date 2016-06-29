@@ -17,6 +17,7 @@ const (
 	PEER_STATES
 	STAT_SUMMARY
 	STATS
+	CONFIG_DOC
 )
 
 type Format int
@@ -50,7 +51,7 @@ func dataRequest(w http.ResponseWriter, req *http.Request, t Type, f Format) {
 	dr := DataRequest{
 		T:          t,
 		F:          f,
-		C:          make(chan []byte),
+		C:          make(chan []byte, 1), // must be buffered, so if this is killed, the writer doesn't block forever
 		Date:       time.UTC().Format(dateLayout),
 		Parameters: p,
 	}
@@ -95,4 +96,8 @@ func handleStatSummary(w http.ResponseWriter, req *http.Request) {
 
 func handleStats(w http.ResponseWriter, req *http.Request) {
 	dataRequest(w, req, STATS, JSON)
+}
+
+func handleConfigDoc(w http.ResponseWriter, req *http.Request) {
+	dataRequest(w, req, CONFIG_DOC, JSON)
 }

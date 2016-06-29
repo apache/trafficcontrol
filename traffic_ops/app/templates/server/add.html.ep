@@ -175,6 +175,10 @@ $(function(){
 					<td><input type="text" size=45 id="rack" name="rack" value="<%= stash 'rack' %>"></td>
 				</tr>
 				<tr>
+					<td>Cloud ID</td>
+					<td><input type="text" size=45 id="guid" name="guid" value="<%= stash 'rack' %>"></td>
+				</tr>
+				<tr>
 					<td>TCP Port</td>
 					<td><input type="text" size=45 id="tcp_port" name="tcp_port" value="<%= $default_tcp_port %>"></td>
 				</tr>

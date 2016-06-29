@@ -150,7 +150,7 @@ Physical Location
   +=================+==========+===================================================+
   | ``name``        | yes      | The name of the location                          |
   +-----------------+----------+---------------------------------------------------+
-  | ``short_name``  | yes      | The short name of the location                    |
+  | ``shortName``   | yes      | The short name of the location                    |
   +-----------------+----------+---------------------------------------------------+
   | ``address``     | yes      |                                                   |
   +-----------------+----------+---------------------------------------------------+
@@ -173,7 +173,7 @@ Physical Location
 
     {
         "name" : "my physical location1",
-        "short_name" : "myphylocation1",
+        "shortName" : "myphylocation1",
         "address" : "",
         "city" : "Shanghai",
         "state": "SH",
@@ -192,11 +192,11 @@ Physical Location
   +-----------------+--------+---------------------------------------------------+
   | ``name``        | string | The name of the location                          |
   +-----------------+--------+---------------------------------------------------+
-  | ``short_name``  | string | The short name of the location                    |
+  | ``shortName``   | string | The short name of the location                    |
   +-----------------+--------+---------------------------------------------------+
-  | ``region_name`` | string | The region name the physical location belongs to. |
+  | ``regionName``  | string | The region name the physical location belongs to. |
   +-----------------+--------+---------------------------------------------------+
-  | ``region_id``   | string |                                                   |
+  | ``regionId``    | string |                                                   |
   +-----------------+--------+---------------------------------------------------+
   | ``address``     | string |                                                   |
   +-----------------+--------+---------------------------------------------------+
@@ -219,8 +219,8 @@ Physical Location
 
     {
       "response": {
-        'short_name': 'myphylocati',
-        'region_name': 'myregion1',
+        'shortName': 'myphylocati',
+        'regionName': 'myregion1',
         'name': 'my physical location1',
         'poc': '',
         'phone': '',

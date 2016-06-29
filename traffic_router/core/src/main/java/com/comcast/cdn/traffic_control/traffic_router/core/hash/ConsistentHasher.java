@@ -38,7 +38,7 @@ public class ConsistentHasher {
 	public <T extends Hashable> List<T> selectHashables(final List<T> hashables, final int limit, final String s, final boolean shuffle) {
 		if (shuffle) {
 			Collections.shuffle(hashables);
-			return hashables.subList(0, limit);
+			return (limit <= hashables.size()) ? hashables.subList(0, limit) : hashables;
 		}
 
 		final SortedMap<Double, T> sortedHashables = sortHashables(hashables, s);

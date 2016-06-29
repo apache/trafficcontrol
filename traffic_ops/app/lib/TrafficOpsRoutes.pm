@@ -413,6 +413,9 @@ sub api_routes {
 	# -- CDN -- #NEW
 	$r->get( "/api/$version/cdns"            => [ format => [qw(json)] ] )->over( authenticated => 1 )->to( 'Cdn#index', namespace => $namespace );
 	$r->get( "/api/$version/cdns/name/:name" => [ format => [qw(json)] ] )->over( authenticated => 1 )->to( 'Cdn#name',  namespace => $namespace );
+	$r->post( "/api/$version/cdns" )->over( authenticated => 1 )->to( 'Cdn#create',  namespace => $namespace );
+	$r->put( "/api/$version/cdns/:id" )->over( authenticated => 1 )->to( 'Cdn#update',  namespace => $namespace );
+	$r->delete( "/api/$version/cdns/:id" )->over( authenticated => 1 )->to( 'Cdn#delete',  namespace => $namespace );
 
 	# -- CHANGE LOG - #NEW
 	$r->get( "/api/$version/logs"            => [ format => [qw(json)] ] )->over( authenticated => 1 )->to( 'ChangeLog#index', namespace => $namespace );
@@ -439,31 +442,25 @@ sub api_routes {
 		->to( 'Riak#get', namespace => $namespace );
 
 	# -- DELIVERY SERVICE
-	# USED TO BE - GET /api/$version/services
 	$r->get( "/api/$version/deliveryservices" => [ format => [qw(json)] ] )->over( authenticated => 1 )
 		->to( 'DeliveryService#delivery_services', namespace => $namespace );
 
-	# USED TO BE - GET /api/$version/services/:id
 	$r->get( "/api/$version/deliveryservices/:id" => [ format => [qw(json)] ] )->over( authenticated => 1 )
 		->to( 'DeliveryService#delivery_services', namespace => $namespace );
 
 	# -- DELIVERY SERVICE: Health
-	# USED TO BE - GET /api/$version/services/:id/health
 	$r->get( "/api/$version/deliveryservices/:id/health" => [ format => [qw(json)] ] )->over( authenticated => 1 )
 		->to( 'DeliveryService#health', namespace => $namespace );
 
 	# -- DELIVERY SERVICE: Capacity
-	# USED TO BE - GET /api/$version/services/:id/capacity
 	$r->get( "/api/$version/deliveryservices/:id/capacity" => [ format => [qw(json)] ] )->over( authenticated => 1 )
 		->to( 'DeliveryService#capacity', namespace => $namespace );
 
 	# -- DELIVERY SERVICE: Routing
-	# USED TO BE - GET /api/$version/services/:id/routing
 	$r->get( "/api/$version/deliveryservices/:id/routing" => [ format => [qw(json)] ] )->over( authenticated => 1 )
 		->to( 'DeliveryService#routing', namespace => $namespace );
 
 	# -- DELIVERY SERVICE: State
-	# USED TO BE - GET /api/$version/services/:id/state
 	$r->get( "/api/$version/deliveryservices/:id/state" => [ format => [qw(json)] ] )->over( authenticated => 1 )
 		->to( 'DeliveryService#state', namespace => $namespace );
 
@@ -579,20 +576,15 @@ sub api_routes {
 	$r->get("/api/$version/types/trimmed")->over( authenticated => 1 )->to( 'Types#index_trimmed', namespace => $namespace );
 
 	# -- CDN
-	# USED TO BE - Nothing, this is new
 	$r->get( "/api/$version/cdns/:name/health" => [ format => [qw(json)] ] )->over( authenticated => 1 )->to( 'Cdn#health', namespace => $namespace );
 
-	# USED TO BE - GET /api/$version/health.json
 	$r->get( "/api/$version/cdns/health" => [ format => [qw(json)] ] )->over( authenticated => 1 )->to( 'Cdn#health', namespace => $namespace );
 
-	# USED TO BE - GET /api/$version/capacity.json
 	$r->get( "/api/$version/cdns/capacity" => [ format => [qw(json)] ] )->over( authenticated => 1 )->to( 'Cdn#capacity', namespace => $namespace );
 
-	# USED TO BE - GET /api/$version/routing.json
 	$r->get( "/api/$version/cdns/routing" => [ format => [qw(json)] ] )->over( authenticated => 1 )->to( 'Cdn#routing', namespace => $namespace );
 
 	#WARNING: this is an intentionally "unauthenticated" route for the Portal Home Page.
-	# USED TO BE - GET /api/$version/metrics/g/:metric/:start/:end/s.json
 	$r->get( "/api/$version/cdns/metric_types/:metric_type/start_date/:start_date/end_date/:end_date" => [ format => [qw(json)] ] )
 		->to( 'Cdn#metrics', namespace => $namespace );
 
@@ -613,11 +605,9 @@ sub api_routes {
 	$r->get( "/internal/api/$version/cdns/dnsseckeys/refresh" => [ format => [qw(json)] ] )->to( 'Cdn#dnssec_keys_refresh', namespace => $namespace );
 
 	# -- CDN: Topology
-	# USED TO BE - GET /api/$version/configs/cdns
 	$r->get( "/api/$version/cdns/configs" => [ format => [qw(json)] ] )->via('GET')->over( authenticated => 1 )
 		->to( 'Cdn#get_cdns', namespace => $namespace );
 
-	# USED TO BE - GET /api/$version/configs/routing/:cdn_name
 	$r->get( "/api/$version/cdns/:name/configs/routing" => [ format => [qw(json)] ] )->via('GET')->over( authenticated => 1 )
 		->to( 'Cdn#configs_routing', namespace => $namespace );
 
@@ -632,20 +622,13 @@ sub api_routes {
 	$r->post("/api/$version/user/login/token")->to( 'User#token_login', namespace => $namespace );
 	$r->post("/api/$version/user/logout")->over( authenticated => 1 )->to( 'Cdn#tool_logout', namespace => $namespace );
 
-	# TO BE REFACTORED TO /api/$version/deliveryservices/:id/jobs/keyword/PURGE
-	# USED TO BE - GET /api/$version/user/jobs/purge.json
-
-	# USED TO BE - POST /api/$version/user/password/reset
 	$r->post("/api/$version/user/reset_password")->to( 'User#reset_password', namespace => $namespace );
 
-	# USED TO BE - GET /api/$version/user/profile.json
 	$r->get( "/api/$version/user/current" => [ format => [qw(json)] ] )->over( authenticated => 1 )->to( 'User#current', namespace => $namespace );
 
-	# USED TO BE - POST /api/$version/user/job/purge
 	$r->get( "/api/$version/user/current/jobs" => [ format => [qw(json)] ] )->over( authenticated => 1 )->to( 'Job#index', namespace => $namespace );
 	$r->post("/api/$version/user/current/jobs")->over( authenticated => 1 )->to( 'Job#create', namespace => $namespace );
 
-	# USED TO BE - POST /api/$version/user/profile.json
 	$r->post("/api/$version/user/current/update")->over( authenticated => 1 )->to( 'User#update_current', namespace => $namespace );
 
 	$r->get( "/api/$version/cdns/:name/configs/monitoring" => [ format => [qw(json)] ] )->via('GET')->over( authenticated => 1 )
@@ -664,6 +647,8 @@ sub api_routes {
 	$r->delete("/api/$version/servers/:id")->over( authenticated => 1 )->to( 'Server#delete',   namespace => $namespace );
 	$r->post("/api/$version/servers/:id/queue_update")->over( authenticated => 1 )->to( 'Server#postupdatequeue',   namespace => $namespace );
     $r->post("/api/$version/cachegroups")->over( authenticated => 1 )->to( 'Cachegroup#create', namespace => $namespace );
+    $r->put("/api/$version/cachegroups/:id")->over( authenticated => 1 )->to( 'Cachegroup#update', namespace => $namespace );
+    $r->delete("/api/$version/cachegroups/:id")->over( authenticated => 1 )->to( 'Cachegroup#delete', namespace => $namespace );
 	$r->post("/api/$version/cachegroups/:id/queue_update")->over( authenticated => 1 )->to( 'Cachegroup#postupdatequeue',   namespace => $namespace );
 	$r->post("/api/$version/cachegroups/:id/deliveryservices")->over( authenticated => 1 )->to( 'DeliveryServiceServer#assign_ds_to_cachegroup',   namespace => $namespace );
     $r->post("/api/$version/deliveryservices/:xml_id/servers")->over( authenticated => 1 )->to( 'DeliveryService#assign_servers', namespace => $namespace );

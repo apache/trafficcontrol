@@ -210,7 +210,7 @@ sub routing {
 			}
 		}
 		else {
-			$self->forbidden();
+			$self->forbidden("Forbidden. Delivery service not assigned to user.");
 		}
 	}
 	else {
@@ -232,7 +232,7 @@ sub capacity {
 			$self->get_cache_capacity( { delivery_service => $result->xml_id, cdn_name => $cdn_name } );
 		}
 		else {
-			$self->forbidden();
+			$self->forbidden("Forbidden. Delivery service not assigned to user.");
 		}
 	}
 	else {
@@ -252,7 +252,7 @@ sub health {
 			return ( $self->get_cache_health( { server_type => "caches", delivery_service => $result->xml_id, cdn_name => $cdn_name } ) );
 		}
 		else {
-			$self->forbidden();
+			$self->forbidden("Forbidden. Delivery service not assigned to user.");
 		}
 	}
 	else {
@@ -338,7 +338,7 @@ sub state {
 			$self->success($data);
 		}
 		else {
-			$self->forbidden();
+			$self->forbidden("Forbidden. Delivery service not assigned to user.");
 		}
 	}
 	else {
@@ -412,8 +412,8 @@ sub assign_servers {
 		return $self->alert("You must be an ADMIN or OPER to perform this operation!");
 	}
 
-	if ( !exists( $params->{server_names} ) ) {
-		return $self->alert("Parameter 'server_names' is required.");
+	if ( !exists( $params->{serverNames} ) ) {
+		return $self->alert("Parameter 'serverNames' is required.");
 	}
 
 	my $dsid = $self->db->resultset('Deliveryservice')->search( { xml_id => $ds_xml_Id } )->get_column('id')->single();
@@ -422,7 +422,7 @@ sub assign_servers {
 	}
 
 	my @server_ids;
-	my $svrs = $params->{server_names};
+	my $svrs = $params->{serverNames};
 	foreach my $svr (@$svrs) {
 		my $svr_id = $self->db->resultset('Server')->search( { host_name => $svr } )->get_column('id')->single();
 		if ( !defined($svr_id) ) {
@@ -450,8 +450,8 @@ sub assign_servers {
 	&UI::DeliveryService::header_rewrite( $self, $ds->id, $ds->profile, $ds->xml_id, $ds->edge_header_rewrite, "edge" );
 
 	my $response;
-	$response->{xml_id} = $ds->xml_id;
-	$response->{'server_names'} = \@$svrs;
+	$response->{xmlId} = $ds->xml_id;
+	$response->{'serverNames'} = \@$svrs;
 
 	return $self->success($response);
 }
