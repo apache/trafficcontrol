@@ -31,6 +31,17 @@ use JSON;
 use MojoPlugins::Response;
 use UI::DeliveryService;
 
+my $valid_server_types = {
+	edge => "EDGE",
+	mid  => "MID",
+};
+
+# this structure maps the above types to the allowed metrics below
+my $valid_metric_types = {
+	origin_tps => "mid",
+	ooff       => "mid",
+};
+
 sub delivery_services {
 	my $self         = shift;
 	my $id           = $self->param('id');
@@ -401,6 +412,106 @@ sub is_deliveryservice_request_valid {
 	}
 }
 
+sub update_profileparameter {
+	my $self   = shift;
+	my $ds_id = shift;
+	my $profile_id = shift;
+	my $params = shift;
+
+	&UI::DeliveryService::header_rewrite( $self, $ds_id, $profile_id, $params->{xmlId}, $params->{edgeHeaderRewrite}, "edge" );
+	&UI::DeliveryService::header_rewrite( $self, $ds_id, $profile_id, $params->{xmlId}, $params->{midHeaderRewrite},  "mid" );
+	&UI::DeliveryService::regex_remap( $self, $ds_id, $profile_id, $params->{xmlId}, $params->{regexRemap} );
+	&UI::DeliveryService::cacheurl( $self, $ds_id, $profile_id, $params->{xmlId}, $params->{cacheurl} );
+}
+
+sub create {
+	my $self   = shift;
+	my $params = $self->req->json;
+
+	if ( !&is_oper($self) ) {
+		return $self->forbidden();
+	}
+
+	my ($transformed_params, $err) = (undef, undef);
+	($transformed_params, $err) = $self->check_params($params);
+	if ( defined($err) ) {
+		return $self->alert($err);
+	}
+
+        my $existing = $self->db->resultset('Deliveryservice')->search( { xml_id => $params->{xmlId} } )->get_column('xml_id')->single();
+        if ( $existing ) {
+                $self->alert("a delivery service with xmlId " . $params->{xmlId} . " already exists." );
+        }
+
+	my $value=$self->new_value($params, $transformed_params);
+	my $insert = $self->db->resultset('Deliveryservice')->create($value);
+	$insert->insert();
+	my $new_id = $insert->id;
+
+	if ( $new_id > 0 ) {
+		my $patterns = $params->{matchList};
+		foreach my $re (@$patterns) {
+			my $type = $self->db->resultset('Type')->search( { name => $re->{type} } )->get_column('id')->single();
+			my $regexp = $re->{pattern};
+
+			my $insert = $self->db->resultset('Regex')->create(
+				{
+					pattern => $regexp,
+					type    => $type,
+				}
+			);
+			$insert->insert();
+			my $new_re_id = $insert->id;
+
+			my $de_re_insert = $self->db->resultset('DeliveryserviceRegex')->create(
+				{
+					regex           => $new_re_id,
+					deliveryservice => $new_id,
+					set_number      => defined($re->{setNumber}) ? $re->{setNumber} : 0,
+				}
+			);
+			$de_re_insert->insert();
+		}
+
+		my $profile_id=$transformed_params->{ profile_id };
+		$self->update_profileparameter($new_id, $profile_id, $params);
+
+		my $cdn_rs = $self->db->resultset('Cdn')->search( { id => $transformed_params->{cdn_id} } )->single();
+		my $dnssec_enabled = $cdn_rs->dnssec_enabled;
+		if ( $dnssec_enabled == 1 ) {
+			$self->app->log->debug("dnssec is enabled, creating dnssec keys");
+			&UI::DeliveryService::create_dnssec_keys( $self, $cdn_rs->name, $params->{xmlId}, $new_id );
+		}
+
+		&log( $self, "Create deliveryservice with xml_id: " . $params->{xmlId}, " APICHANGE" );
+
+		my $response = $self->get_response($new_id);
+		return $self->success($response, "Delivery service was created: " . $new_id);
+	}
+
+	my $r = "Create Delivery Service fail, insert to database failed.";
+	return $self->alert($r);
+}
+
+sub nodef_to_default {
+	my $self    = shift;
+	my $v       = shift;
+	my $default = shift;
+
+    return $v || $default;
+}
+
+sub get_types {
+	my $self         = shift;
+	my $use_in_table = shift;
+	my $types;
+	my $rs = $self->db->resultset('Type')->search( { use_in_table => $use_in_table } );
+	while ( my $row = $rs->next ) {
+		$types->{ $row->name } = $row->id;
+	}
+	return $types;
+}
+
 sub assign_servers {
 	my $self      = shift;
 	my $ds_xml_Id = $self->param('xml_id');
@@ -455,6 +566,384 @@ sub assign_servers {
 	$response->{'serverNames'} = \@$svrs;
 
 	return $self->success($response);
+}
+
+sub check_params {
+	my $self = shift;
+	my $params = shift;
+	my $transformed_params = undef;
+
+	if ( !defined($params) ) {
+		return (undef, "parameters should in json format, please check!");
+	}
+
+	if ( !defined($params->{xmlId}) ) {
+		return (undef, "parameter xmlId is must." );
+	}
+
+	if ( defined($params->{active}) ) {
+		if ( $params->{active} eq "true" ) {
+			$transformed_params->{active} = 1;
+		} elsif ( $params->{active} eq "false" ) {
+			$transformed_params->{active} = 0;
+		} else {
+			return (undef, "active must be true|false." );
+		}
+	} else {
+		return (undef, "parameter active is must." );
+	}
+
+	if ( defined($params->{type}) ) {
+		my $rs = $self->get_types("deliveryservice");
+		if ( !exists $rs->{ $params->{type} } ) {
+			return (undef, "type (" . $params->{type} . ") must be deliveryservice type." );
+		}
+		else {
+			$transformed_params->{type} = $rs->{ $params->{type} };
+		}
+	} else {
+		return (undef, "parameter type is must." );
+	}
+
+	if ( defined($params->{protocol}) ) {
+		if ( !( ( $params->{protocol} eq "0" ) || ( $params->{protocol} eq "1" ) || ( $params->{protocol} eq "2" ) ) ) {
+			return (undef, "protocol must be 0|1|2." );
+		}
+	} else {
+		return (undef, "parameter protocol is must." );
+	}
+
+	if ( defined($params->{profileName}) ) {
+		my $ccr_profiles;
+		my @ccrprofs = $self->db->resultset('Profile')->search( { name => { -like => 'CCR%' } } )->get_column('id')->all();
+		my $rs = $self->db->resultset('ProfileParameter')->search(
+				{ profile => { -in => \@ccrprofs }, 'parameter.name' => 'domain_name', 'parameter.config_file' => 'CRConfig.json' },
+				{ prefetch => [ 'parameter', 'profile' ] }
+		);
+		while ( my $row = $rs->next ) {
+			$ccr_profiles->{ $row->profile->name } = $row->profile->id;
+		}
+		if ( !exists $ccr_profiles->{ $params->{profileName} } ) {
+			return (undef, "profileName (" . $params->{profileName} . ") must be CCR profiles." );
+		}
+		else {
+			$transformed_params->{ profile_id } = $ccr_profiles->{ $params->{profileName} };
+		}
+	} else {
+		return (undef, "parameter profileName is must." );
+	}
+
+	if ( defined($params->{cdnName}) ) {
+		my $cdn_id = $self->db->resultset('Cdn')->search( { name => $params->{cdnName} } )->get_column('id')->single();
+		if ( !defined $cdn_id ) {
+			return (undef, "cdnName (" . $params->{cdnName} . ") does not exists." );
+		} else {
+			$transformed_params->{ cdn_id } = $cdn_id;
+		}
+	} else {
+		return (undef, "parameter cdnName is must." );
+	}
+
+	if ( defined($params->{matchList}) ) {
+		my $patterns     = $params->{matchList};
+		my $patterns_len = @$patterns;
+		if ( $patterns_len == 0 ) {
+			return (undef, "At least have 1 pattern in matchList.");
+		}
+	} else {
+		return (undef, "parameter matchList is must." );
+	}
+
+	if ( defined($params->{multiSiteOrigin}) ) {
+		if ( !( ( $params->{multiSiteOrigin} eq "0" ) || ( $params->{multiSiteOrigin} eq "1" ) ) ) {
+			return (undef, "multiSiteOrigin must be 0|1." );
+		}
+	} else {
+		return (undef, "parameter multiSiteOrigin is must." );
+	}
+
+	if ( !defined($params->{displayName}) ) {
+		return (undef, "parameter displayName is must." );
+	}
+
+	if ( defined($params->{orgServerFqdn}) ) {
+		if ( $params->{orgServerFqdn} !~ /^https?:\/\// ) {
+			return (undef, "orgServerFqdn must start with http(s)://" );
+		}
+	} else {
+		return (undef, "parameter orgServerFqdn is must." );
+	}
+
+	if ( defined($params->{logsEnabled}) ) {
+		if ( $params->{logsEnabled} eq "true" ) {
+			$transformed_params->{logsEnabled} = 1;
+		} elsif ( $params->{logsEnabled} eq "false" ) {
+			$transformed_params->{logsEnabled} = 0;
+		} else {
+			return (undef, "logsEnabled must be true|false." );
+		}
+	} else {
+		$transformed_params->{logsEnabled} = 0;
+	}
+
+	return ($transformed_params, undef);
+}
+
+sub new_value {
+	my $self = shift;
+	my $params = shift;
+	my $transformed_params = shift;
+
+	my $value = {
+			xml_id                 => $params->{xmlId},
+			display_name           => $params->{displayName},
+			dscp                   => $self->nodef_to_default( $params->{dscp} eq "", 0 ),
+			signed                 => $self->nodef_to_default( $params->{signed}, 0 ),
+			qstring_ignore         => $params->{qstringIgnore},
+			geo_limit              => $params->{geoLimit},
+			geo_limit_countries    => $params->{geoLimitCountries},
+			geo_provider           => $params->{geoProvider},
+			http_bypass_fqdn       => $params->{httpBypassFqdn},
+			dns_bypass_ip          => $params->{dnsBypassIp},
+			dns_bypass_ip6         => $params->{dnsBypassIp6},
+			dns_bypass_cname       => $params->{dnsBypassCname},
+			dns_bypass_ttl         => $params->{dnsBypassTtl},
+			org_server_fqdn        => $params->{orgServerFqdn},
+			multi_site_origin      => $params->{multiSiteOrigin},
+			ccr_dns_ttl            => $params->{ccrDnsTtl},
+			type                   => $transformed_params->{type},
+			profile                => $transformed_params->{profile_id},
+			cdn_id                 => $transformed_params->{cdn_id},
+			global_max_mbps        => $self->nodef_to_default( $params->{globalMaxMbps}, 0 ),
+			global_max_tps         => $self->nodef_to_default( $params->{globalMaxTps}, 0 ),
+			miss_lat               => $params->{missLat},
+			miss_long              => $params->{missLong},
+			long_desc              => $params->{longDesc},
+			long_desc_1            => $params->{longDesc1},
+			long_desc_2            => $params->{longDesc2},
+			max_dns_answers        => $self->nodef_to_default( $params->{maxDnsAnswers}, 0 ),
+			info_url               => $params->{infoUrl},
+			check_path             => $params->{checkPath},
+			active                 => $transformed_params->{active},
+			protocol               => $params->{protocol},
+			ipv6_routing_enabled   => $params->{ipv6RoutingEnabled},
+			range_request_handling => $params->{rangeRequestHandling},
+			edge_header_rewrite    => $params->{edgeHeaderRewrite},
+			mid_header_rewrite     => $params->{midHeaderRewrite},
+			regex_remap            => $params->{regexRemap},
+			origin_shield          => $params->{originShield},
+			cacheurl               => $params->{cacheurl},
+			remap_text             => $params->{remapText},
+			initial_dispersion     => $params->{initialDispersion},
+			regional_geo_blocking  => $self->nodef_to_default($params->{regionalGeoBlocking}, 0),
+			ssl_key_version        => $params->{sslKeyVersion},
+			tr_request_headers     => $params->{trRequestHeaders},
+			tr_response_headers    => $params->{trResponseHeaders},
+			logs_enabled           => $transformed_params->{logsEnabled},
+		};
+
+	return $value;
+}
+
+sub get_response {
+	my $self   = shift;
+	my $ds_id  = shift;
+
+	my $response;
+	my $rs = $self->db->resultset('Deliveryservice')->find( { id => $ds_id } );
+	if ( defined($rs) ) {
+		my $cdn_name = $self->db->resultset('Cdn')->search( { id => $rs->cdn_id } )->get_column('name')->single();
+
+		$response->{id}                     = $rs->id;
+		$response->{xmlId}                  = $rs->xml_id;
+		$response->{active}                 = $rs->active==1 ? "true" : "false";
+		$response->{dscp}                   = $rs->dscp;
+		$response->{signed}                 = $rs->signed;
+		$response->{qstringIgnore}          = $rs->qstring_ignore;
+		$response->{geoLimit}               = $rs->geo_limit;
+		$response->{geoLimitCountries}      = $rs->geo_limit_countries;
+		$response->{geoProvider}            = $rs->geo_provider;
+		$response->{httpBypassFqdn}         = $rs->http_bypass_fqdn;
+		$response->{dnsBypassIp}            = $rs->dns_bypass_ip;
+		$response->{dnsBypassIp6}           = $rs->dns_bypass_ip6;
+		$response->{dnsBypassTtl}           = $rs->dns_bypass_ttl;
+		$response->{orgServerFqdn}          = $rs->org_server_fqdn;
+		$response->{type}                   = $rs->type->name;
+		$response->{profileName}            = $rs->profile->name;
+		$response->{cdnName}                = $cdn_name;
+		$response->{ccrDnsTtl}              = $rs->ccr_dns_ttl;
+		$response->{globalMaxMbps}          = $rs->global_max_mbps;
+		$response->{globalMaxTps}           = $rs->global_max_tps;
+		$response->{longDesc}               = $rs->long_desc;
+		$response->{longDesc1}              = $rs->long_desc_1;
+		$response->{longDesc2}              = $rs->long_desc_2;
+		$response->{maxDnsAnswers}          = $rs->max_dns_answers;
+		$response->{infoUrl}                = $rs->info_url;
+		$response->{missLat}                = $rs->miss_lat;
+		$response->{missLong}               = $rs->miss_long;
+		$response->{checkPath}              = $rs->check_path;
+		$response->{protocol}               = $rs->protocol;
+		$response->{sslKeyVersion}          = $rs->ssl_key_version;
+		$response->{ipv6RoutingEnabled}     = $rs->ipv6_routing_enabled;
+		$response->{rangeRequestHandling}   = $rs->range_request_handling;
+		$response->{edgeHeaderRewrite}      = $rs->edge_header_rewrite;
+		$response->{originShield}           = $rs->origin_shield;
+		$response->{midHeaderRewrite}       = $rs->mid_header_rewrite;
+		$response->{regexRemap}             = $rs->regex_remap;
+		$response->{cacheurl}               = $rs->cacheurl;
+		$response->{remapText}              = $rs->remap_text;
+		$response->{multiSiteOrigin}        = $rs->multi_site_origin;
+		$response->{displayName}            = $rs->display_name;
+		$response->{trResponseHeaders}      = $rs->tr_response_headers;
+		$response->{initialDispersion}      = $rs->initial_dispersion;
+		$response->{dnsBypassCname}         = $rs->dns_bypass_cname;
+		$response->{regionalGeoBlocking}    = $rs->regional_geo_blocking;
+		$response->{trRequestHeaders}       = $rs->tr_request_headers;
+		$response->{logsEnabled}            = $rs->logs_enabled==1 ? "true" : "false";
+	}
+
+	my @pats = ();
+	$rs = $self->db->resultset('DeliveryserviceRegex')->search( { deliveryservice => $ds_id } );
+	while ( my $row = $rs->next ) {
+		push(
+			@pats, {
+				'pattern'   => $row->regex->pattern,
+				'type'      => $row->regex->type->name,
+				'setNumber' => $row->set_number,
+			}
+		);
+	}
+	$response->{matchList} = \@pats;
+
+	return $response;
+}
+
+sub update {
+	my $self   = shift;
+	my $id     = $self->param('id');
+	my $params = $self->req->json;
+
+	if ( !&is_oper($self) ) {
+		return $self->forbidden();
+	}
+
+	my $ds = $self->db->resultset('Deliveryservice')->find( { id => $id } );
+	if ( !defined($ds) ) {
+		return $self->not_found();
+	}
+
+	my ($transformed_params, $err) = (undef, undef);
+	($transformed_params, $err) = $self->check_params($params);
+	if ( defined($err) ) {
+		return $self->alert($err);
+	}
+
+	my $existing = $self->db->resultset('Deliveryservice')->search( { xml_id => $params->{xmlId} } )->get_column('xml_id')->single();
+	if ( $existing && $existing ne $ds->xml_id ) {
+		$self->alert("a delivery service with xmlId " . $params->{xmlId} . " already exists." );
+	}
+	if ( $transformed_params->{ type } != $ds->type->id ) {
+		return $self->alert("delivery service type can't be changed");
+	}
+
+	my $value=$self->new_value($params, $transformed_params);
+	$ds->update($value);
+
+	if ( defined($params->{matchList}) ) {
+		my $patterns     = $params->{matchList};
+		my $patterns_len = @$patterns;
+
+		my $rs = $self->db->resultset('RegexesForDeliveryService')->search( {}, { bind => [$id] } );
+		my $last_number = $rs->count;
+
+		my $row = $rs->next;
+		my $update_number;
+		my $re;
+		for ( $update_number=0; $update_number < $last_number && $update_number < $patterns_len; $update_number++ ) {
+			$re = @$patterns[$update_number];
+			my $type = $self->db->resultset('Type')->search( { name => $re->{type} } )->get_column('id')->single();
+			my $update = $self->db->resultset('Regex')->find( { id => $row->id } );
+			$update->update(
+				{
+					pattern => $re->{pattern},
+					type    => $type,
+				}
+			);
+			$update = $self->db->resultset('DeliveryserviceRegex')->find( { deliveryservice => $id, regex => $row->id } );
+			$update->update( { set_number => defined($re->{setNumber}) ? $re->{setNumber} : 0 } );
+			$row = $rs->next;
+		}
+
+		if ( $patterns_len > $last_number ) {
+			for ( ; $update_number < $patterns_len; $update_number++ ) {
+				$re = @$patterns[$update_number];
+				my $type = $self->db->resultset('Type')->search( { name => $re->{type} } )->get_column('id')->single();
+				my $insert = $self->db->resultset('Regex')->create(
+					{
+						pattern => $re->{pattern},
+						type    => $type,
+					}
+				);
+				$insert->insert();
+				my $new_re_id = $insert->id;
+				my $de_re_insert = $self->db->resultset('DeliveryserviceRegex')->create(
+					{
+						regex           => $new_re_id,
+						deliveryservice => $id,
+						set_number      => defined($re->{setNumber}) ? $re->{setNumber} : 0,
+					}
+				);
+				$de_re_insert->insert();
+			}
+		}
+
+		while ( $row ) {
+			my $delete_re = $self->db->resultset('Regex')->search( { id => $row->id } );
+			$delete_re->delete();
+			$row = $rs->next;
+		}
+	}
+
+	my $profile_id=$transformed_params->{ profile_id };
+	$self->update_profileparameter($id, $profile_id, $params);
+
+	&log( $self, "Update deliveryservice with xml_id: " . $params->{xmlId}, " APICHANGE" );
+
+	my $response = $self->get_response($id);
+	return $self->success($response, "Delivery service was updated: " . $id);
+}
+
+sub delete {
+	my $self   = shift;
+	my $id     = $self->param('id');
+
+	if ( !&is_oper($self) ) {
+		return $self->forbidden();
+	}
+
+	my $ds = $self->db->resultset('Deliveryservice')->find( { id => $id } );
+	if ( !defined($ds) ) {
+		return $self->not_found();
+	}
+
+	my @regexp_id_list = $self->db->resultset('DeliveryserviceRegex')->search( { deliveryservice => $id } )->get_column('regex')->all();
+
+	my $dsname = $self->db->resultset('Deliveryservice')->search( { id => $id } )->get_column('xml_id')->single();
+	my $delete = $self->db->resultset('Deliveryservice')->search( { id => $id } );
+	$delete->delete();
+
+	my $delete_re = $self->db->resultset('Regex')->search( { id => { -in => \@regexp_id_list } } );
+	$delete_re->delete();
+
+	my @cfg_prefixes = ("hdr_rw_", "hdr_rw_mid_", "regex_remap_", "cacheurl_");
+	foreach my $cfg_prefix (@cfg_prefixes) {
+		my $cfg_file = $cfg_prefix . $ds->xml_id . ".config";
+		&UI::DeliveryService::delete_cfg_file($self, $cfg_file);
+	}
+ 
+	&log( $self, "Delete deliveryservice with id: " . $id . " and name " . $dsname, " APICHANGE" );
+
+	return $self->success_message("Delivery service was deleted.");
 }
 
 1;
