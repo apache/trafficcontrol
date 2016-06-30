@@ -281,6 +281,11 @@ __PACKAGE__->table("deliveryservice");
   default_value: 0
   is_nullable: 1
 
+=head2 multi_site_origin_algorithm
+
+  data_type: 'tinyint'
+  is_nullable: 1
+
 =head2 geo_limit_countries
 
   data_type: 'varchar'
@@ -390,6 +395,8 @@ __PACKAGE__->add_columns(
   { data_type => "tinyint", is_nullable => 0 },
   "geo_provider",
   { data_type => "tinyint", default_value => 0, is_nullable => 1 },
+  "multi_site_origin_algorithm",
+  { data_type => "tinyint", is_nullable => 1 },
   "geo_limit_countries",
   { data_type => "varchar", is_nullable => 1, size => 750 },
   "logs_enabled",
