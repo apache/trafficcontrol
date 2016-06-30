@@ -124,10 +124,10 @@ ok $t->put_ok('/api/1.2/deliveryservices/' . $ds_id  => {Accept => 'application/
 
 ok $t->post_ok(
 	'/api/1.2/deliveryservices/test-ds1/servers' => { Accept => 'application/json' } => json => {
-		"server_names" => [ "atlanta-edge-01", "atlanta-edge-02" ]
+		"serverNames" => [ "atlanta-edge-01", "atlanta-edge-02" ]
 	}
-	)->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } )->json_is( "/response/xml_id" => "test-ds1" )
-	->json_is( "/response/server_names/0" => "atlanta-edge-01" )->json_is( "/response/server_names/1" => "atlanta-edge-02" ),
+	)->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } )->json_is( "/response/xmlId" => "test-ds1" )
+	->json_is( "/response/serverNames/0" => "atlanta-edge-01" )->json_is( "/response/serverNames/1" => "atlanta-edge-02" ),
 	'Does the assigned servers return?';
 
 ok $t->get_ok("/api/1.2/deliveryservices.json")->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content} } )

@@ -73,7 +73,7 @@ public class ConsistentHasherTest {
 		assertThat(results.get(1), anyOf(equalTo(hashable1), equalTo(hashable2), equalTo(hashable3)));
 
 		assertThat(consistentHasher.selectHashables(hashables, 2, "some-string", false), equalTo(results));
-
+		assertThat(consistentHasher.selectHashables(hashables, 2000000000, "some-string", true), equalTo(hashables));
 	}
 
 	@Test

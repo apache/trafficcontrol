@@ -39,7 +39,7 @@ __PACKAGE__->table("parameter");
 
   data_type: 'varchar'
   is_nullable: 0
-  size: 45
+  size: 256
 
 =head2 value
 
@@ -62,7 +62,7 @@ __PACKAGE__->add_columns(
   "name",
   { data_type => "varchar", is_nullable => 0, size => 1024 },
   "config_file",
-  { data_type => "varchar", is_nullable => 0, size => 45 },
+  { data_type => "varchar", is_nullable => 0, size => 256 },
   "value",
   { data_type => "varchar", is_nullable => 0, size => 1024 },
   "last_updated",
