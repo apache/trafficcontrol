@@ -48,7 +48,7 @@
         {
             "config_file": "rascal-config.txt",
             "name": "health.timepad",
-            "value": "5"
+            "value": "0"
         },
         {
             "config_file": "rascal-config.txt",
