@@ -200,24 +200,24 @@ sub ds_data {
 
 	my $j = 0;
 	while ( my $row = $rs->next ) {
-		my $org_server             = $row->org_server_fqdn;
-		my $dscp                   = $row->dscp;
-		my $re_type                = $row->re_type;
-		my $ds_type                = $row->ds_type;
-		my $signed                 = $row->signed;
-		my $qstring_ignore         = $row->qstring_ignore;
-		my $ds_xml_id              = $row->xml_id;
-		my $ds_domain              = $row->domain_name;
-		my $edge_header_rewrite    = $row->edge_header_rewrite;
-		my $mid_header_rewrite     = $row->mid_header_rewrite;
-		my $regex_remap            = $row->regex_remap;
-		my $protocol               = $row->protocol;
-		my $range_request_handling = $row->range_request_handling;
-		my $origin_shield          = $row->origin_shield;
-		my $cacheurl               = $row->cacheurl;
-		my $remap_text             = $row->remap_text;
-		my $multi_site_origin      = $row->multi_site_origin;
-		my $multi_site_origin_algorithm      = $row->multi_site_origin_algorithm;
+		my $org_server                  = $row->org_server_fqdn;
+		my $dscp                        = $row->dscp;
+		my $re_type                     = $row->re_type;
+		my $ds_type                     = $row->ds_type;
+		my $signed                      = $row->signed;
+		my $qstring_ignore              = $row->qstring_ignore;
+		my $ds_xml_id                   = $row->xml_id;
+		my $ds_domain                   = $row->domain_name;
+		my $edge_header_rewrite         = $row->edge_header_rewrite;
+		my $mid_header_rewrite          = $row->mid_header_rewrite;
+		my $regex_remap                 = $row->regex_remap;
+		my $protocol                    = $row->protocol;
+		my $range_request_handling      = $row->range_request_handling;
+		my $origin_shield               = $row->origin_shield;
+		my $cacheurl                    = $row->cacheurl;
+		my $remap_text                  = $row->remap_text;
+		my $multi_site_origin           = $row->multi_site_origin;
+		my $multi_site_origin_algorithm = $row->multi_site_origin_algorithm;
 
 		if ( $re_type eq 'HOST_REGEXP' ) {
 			my $host_re = $row->pattern;
@@ -269,22 +269,22 @@ sub ds_data {
 				}
 			}
 		}
-		$dsinfo->{dslist}->[$j]->{"dscp"}                   = $dscp;
-		$dsinfo->{dslist}->[$j]->{"org"}                    = $org_server;
-		$dsinfo->{dslist}->[$j]->{"type"}                   = $ds_type;
-		$dsinfo->{dslist}->[$j]->{"domain"}                 = $ds_domain;
-		$dsinfo->{dslist}->[$j]->{"signed"}                 = $signed;
-		$dsinfo->{dslist}->[$j]->{"qstring_ignore"}         = $qstring_ignore;
-		$dsinfo->{dslist}->[$j]->{"ds_xml_id"}              = $ds_xml_id;
-		$dsinfo->{dslist}->[$j]->{"edge_header_rewrite"}    = $edge_header_rewrite;
-		$dsinfo->{dslist}->[$j]->{"mid_header_rewrite"}     = $mid_header_rewrite;
-		$dsinfo->{dslist}->[$j]->{"regex_remap"}            = $regex_remap;
-		$dsinfo->{dslist}->[$j]->{"range_request_handling"} = $range_request_handling;
-		$dsinfo->{dslist}->[$j]->{"origin_shield"}          = $origin_shield;
-		$dsinfo->{dslist}->[$j]->{"cacheurl"}               = $cacheurl;
-		$dsinfo->{dslist}->[$j]->{"remap_text"}             = $remap_text;
-		$dsinfo->{dslist}->[$j]->{"multi_site_origin"}      = $multi_site_origin;
-		$dsinfo->{dslist}->[$j]->{"multi_site_origin_algorithm"}      = $multi_site_origin_algorithm;
+		$dsinfo->{dslist}->[$j]->{"dscp"}                        = $dscp;
+		$dsinfo->{dslist}->[$j]->{"org"}                         = $org_server;
+		$dsinfo->{dslist}->[$j]->{"type"}                        = $ds_type;
+		$dsinfo->{dslist}->[$j]->{"domain"}                      = $ds_domain;
+		$dsinfo->{dslist}->[$j]->{"signed"}                      = $signed;
+		$dsinfo->{dslist}->[$j]->{"qstring_ignore"}              = $qstring_ignore;
+		$dsinfo->{dslist}->[$j]->{"ds_xml_id"}                   = $ds_xml_id;
+		$dsinfo->{dslist}->[$j]->{"edge_header_rewrite"}         = $edge_header_rewrite;
+		$dsinfo->{dslist}->[$j]->{"mid_header_rewrite"}          = $mid_header_rewrite;
+		$dsinfo->{dslist}->[$j]->{"regex_remap"}                 = $regex_remap;
+		$dsinfo->{dslist}->[$j]->{"range_request_handling"}      = $range_request_handling;
+		$dsinfo->{dslist}->[$j]->{"origin_shield"}               = $origin_shield;
+		$dsinfo->{dslist}->[$j]->{"cacheurl"}                    = $cacheurl;
+		$dsinfo->{dslist}->[$j]->{"remap_text"}                  = $remap_text;
+		$dsinfo->{dslist}->[$j]->{"multi_site_origin"}           = $multi_site_origin;
+		$dsinfo->{dslist}->[$j]->{"multi_site_origin_algorithm"} = $multi_site_origin_algorithm;
 
 		if ( defined($edge_header_rewrite) ) {
 			my $fname = "hdr_rw_" . $ds_xml_id . ".config";
@@ -350,8 +350,8 @@ sub profile_param_value {
 }
 
 sub by_parent_rank {
-	my ( $arank ) = $a->{"rank"};
-	my ( $brank ) = $b->{"rank"};
+	my ($arank) = $a->{"rank"};
+	my ($brank) = $b->{"rank"};
 	( $arank || 1 ) <=> ( $brank || 1 );
 }
 
@@ -1083,9 +1083,9 @@ sub parent_dot_config {
 	#$self->app->log->debug( "id = $id and server_type = $server_type,  hostname = " . $server->{host_name} );
 	if ( $server_type =~ m/^MID/ ) {
 		foreach my $ds ( @{ $data->{dslist} } ) {
-			my $xml_id            = $ds->{ds_xml_id};
-			my $os                = $ds->{origin_shield};
-			my $multi_site_origin = defined( $ds->{multi_site_origin} ) ? $ds->{multi_site_origin} : 0;
+			my $xml_id                      = $ds->{ds_xml_id};
+			my $os                          = $ds->{origin_shield};
+			my $multi_site_origin           = defined( $ds->{multi_site_origin} ) ? $ds->{multi_site_origin} : 0;
 			my $multi_site_origin_algorithm = defined( $ds->{multi_site_origin_algorithm} ) ? $ds->{multi_site_origin_algorithm} : 0;
 
 			my $org_fqdn = $ds->{org};
@@ -1103,12 +1103,12 @@ sub parent_dot_config {
 				my $pinfo = $self->parent_data($server);
 
 				my @ranked_parents = ();
-				if ( exists($pinfo->{$org_fqdn}) ) {
+				if ( exists( $pinfo->{$org_fqdn} ) ) {
 					@ranked_parents = sort by_parent_rank @{ $pinfo->{$org_fqdn} };
 				}
 
 				my @parent_info;
-				foreach my $parent ( @ranked_parents ) {
+				foreach my $parent (@ranked_parents) {
 					push @parent_info, format_parent_info($parent);
 				}
 				my %seen;
