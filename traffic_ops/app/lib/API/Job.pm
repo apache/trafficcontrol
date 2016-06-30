@@ -205,7 +205,7 @@ sub is_valid_date_format {
 sub is_ttl_in_range {
 	my $self  = shift;
 	my $value = shift;
-	my $min_hours = l;
+	my $min_hours = 1;
 	my $max_days =
 		$self->db->resultset('Parameter')->search( { name => "maxRevalDurationDays" }, { config_file => "regex_revalidate.config" } )->get_column('value')->first;
 	my $max_hours = $max_days * 24;
