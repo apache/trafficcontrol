@@ -17,17 +17,17 @@ version: "1.0"
 name: dbconf.yml
 
 development:
-        driver: mymysql
-        open: tcp:127.0.0.1:3306*to_development/to_user/twelve
+        driver: Pg
+        open: tcp:127.0.0.1:5432*to_development/to_user/twelve
 
 test:
-        driver: mymysql
-        open: tcp:127.0.0.1:3306*to_test/to_user/twelve
+        driver: Pg
+        open: tcp:127.0.0.1:5432*to_test/to_user/twelve
 
 production:
-        driver: mymysql
-        open: tcp:127.0.0.1:3306*to_production/to_user/twelve
+        driver: Pg
+        open: tcp:127.0.0.1:5432*to_production/to_user/twelve
 
 integration:
-        driver: mymysql
-        open: tcp:127.0.0.1:3306*to_integration/to_user/twelve
+        driver: Pg
+        open: tcp:127.0.0.1:5432*to_integration/to_user/twelve
