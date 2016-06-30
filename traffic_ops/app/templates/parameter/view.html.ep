@@ -110,7 +110,9 @@ function deleteCachegroupAssignment(cachegroup) {
                 %= field('parameter.last_updated')
             </div><br>
 			    <br>
+                % if ( ($priv_level >= 30) || (field('parameter.secure') == 0) ) {
                 <button class="button" id="save_button">Save</button>
+                % }
 			</form>
 			<div id="assigned_profiles_div" style="display: none;">
                 % for my $id (sort {$a <=> $b} (keys %{$assigned_profiles})) {
@@ -167,7 +169,7 @@ function deleteCachegroupAssignment(cachegroup) {
         </div>
         <div >
             <br><hr><br>
-            % if ($priv_level >= 20) {
+            % if ( ($priv_level >= 30) || ( ($priv_level >= 20) && (field('parameter.secure') == 0) ) ) {
                 <button class="button" onclick="deleteFunction()">Delete Parameter</button>
             % }
             <button id="close_button" class="button" style="float:right; margin-right: 200px">Close</button>

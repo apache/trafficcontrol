@@ -62,12 +62,8 @@ local $/;    #Enable 'slurp' mode
 
 has schema => sub { return Schema->connect_to_database };
 has watch  => sub { [qw(lib templates)] };
-has inactivity_timeout => sub {
-	$ENV{MOJO_INACTIVITY_TIMEOUT} // $config->{60};    # or undef for default
-};
 
 if ( !defined $ENV{MOJO_CONFIG} ) {
-
 	$ENV{MOJO_CONFIG} = find_conf_path('cdn.conf');
 	print( "Loading config from " . $ENV{MOJO_CONFIG} . "\n" );
 }
@@ -185,7 +181,7 @@ sub startup {
 	$rh->load();
 
 	##help relieve issues with riak
-	IO::Socket::SSL::set_default_session_cache(IO::Socket::SSL::Session_Cache->new( 4096 ));
+	IO::Socket::SSL::set_default_session_cache( IO::Socket::SSL::Session_Cache->new(4096) );
 
 }
 
@@ -223,6 +219,11 @@ sub setup_mojo_plugins {
 	$self->helper( db => sub { $self->schema } );
 	$config = $self->plugin('Config');
 
+	if ( !defined $ENV{MOJO_INACTIVITY_TIMEOUT} ) {
+		$ENV{MOJO_INACTIVITY_TIMEOUT} = $config->{inactivity_timeout} // 60;
+		print( "Setting mojo inactivity timeout to " . $ENV{MOJO_INACTIVITY_TIMEOUT} . "\n" );
+	}
+
 	$self->plugin(
 		'authentication', {
 			autoload_user => 1,
@@ -233,8 +234,8 @@ sub setup_mojo_plugins {
 				my $role      = "read-only";
 				my $priv      = 10;
 				if ( defined($user_data) ) {
-					$role       = $user_data->role->name;
-					$priv       = $user_data->role->priv_level;
+					$role = $user_data->role->name;
+					$priv = $user_data->role->priv_level;
 				}
 
 				if ( $role eq 'disallowed' ) {
@@ -242,9 +243,9 @@ sub setup_mojo_plugins {
 				}
 
 				return {
-					'username'   => $username,
-					'role'       => $role,
-					'priv'       => $priv,
+					'username' => $username,
+					'role'     => $role,
+					'priv'     => $priv,
 				};
 			},
 			validate_user => sub {
@@ -328,12 +329,12 @@ sub setup_mojo_plugins {
 
 	$self->plugin(
 		AccessLog => {
-			log => "$logging_root_dir/access.log",
+			log    => "$logging_root_dir/access.log",
 			format => '%h %l %u %t "%r" %>s %b %D "%{User-Agent}i"'
 		}
 	);
 
-	$self->plugin('ParamExpand', max_array => 256);
+	$self->plugin( 'ParamExpand', max_array => 256 );
 
 	#FormFields
 	$self->plugin('FormFields');

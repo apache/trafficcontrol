@@ -39,6 +39,7 @@ sub register {
 			my $row =
 				$self->db->resultset('Server')
 				->search( { 'status.name' => 'REPORTED', 'cdn.name' => $cdn_name }, { prefetch => [qw{ cdn status }], rows => 1 } )->first;
+
 			if ( !defined $row ) {
 
 				# no REPORTED servers in this CDN
@@ -98,12 +99,26 @@ sub register {
 				push( @offstates, $pre_prod );
 			}
 
+			# Only queue updates for servers that have profiles with the regex_revalidate.config file location parameter.
+			# If that parameter is not there, other mechanisms (ansible? script?) must be used to copy the
+			# regex_revalidate.config to the caches.
+			my @profiles = $self->db->resultset('ProfileParameter')->search(
+				{
+					-and => [
+						'parameter.name'        => 'location',
+						'parameter.config_file' => 'regex_revalidate.config'
+					]
+				},
+				{ prefetch => [qw{ parameter profile }] }
+			)->get_column('profile')->all();
+
 			my $update_server_bit_rs = $self->db->resultset('Server')->search(
 				{
 					'me.cdn_id' => $cdn_id,
-					-and        => { status => { 'not in' => \@offstates } }
+					-and        => { status => { 'not in' => \@offstates }, profile => { 'in' => \@profiles } }
 				}
 			);
+
 			my $result = $update_server_bit_rs->update( { upd_pending => 1 } );
 			&log( $self, "Set upd_pending = 1 for all applicable caches", "OPER" );
 		}

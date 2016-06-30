@@ -39,14 +39,44 @@ Test::TestHelper->load_core_data($schema);
 ok $t->post_ok( '/login', => form => { u => Test::TestHelper::ADMIN_USER, p => Test::TestHelper::ADMIN_USER_PASSWORD } )->status_is(302)
 	->or( sub { diag $t->tx->res->content->asset->{content}; } ), 'Should login?';
 
-ok $t->post_ok('/api/1.2/divisions/mountain/regions' => {Accept => 'application/json'} => json => {
-        "name" => "region1"})->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } )
-	->json_is( "/response/name" => "region1" )
-	->json_is( "/response/divisionName" => "mountain" )
-            , 'Does the region details return?';
-ok $t->post_ok('/api/1.2/divisions/mountain/regions' => {Accept => 'application/json'} => json => {
-        "name" => "region1"})->status_is(400);
+ok $t->post_ok('/api/1.2/cdns' => {Accept => 'application/json'} => json => {
+        "name" => "cdn_test"
+        })
+    ->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } )
+    ->json_is( "/response/name" => "cdn_test" )
+    ->json_is( "/alerts/0/level" => "success" )
+    ->json_is( "/alerts/0/text" => "cdn was created." )
+            , 'Does the cdn details return?';
+
+my $cdn_id = &get_cdn_id('cdn_test');
+
+ok $t->put_ok('/api/1.2/cdns/' . $cdn_id  => {Accept => 'application/json'} => json => {
+        "name" => "cdn_test2"
+        })
+    ->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } )
+    ->json_is( "/response/name" => "cdn_test2" )
+    ->json_is( "/alerts/0/level" => "success" )
+    ->json_is( "/alerts/0/text" => "cdn was updated." )
+            , 'Does the cdn details return?';
+
+ok $t->delete_ok('/api/1.2/cdns/' . $cdn_id)->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } );
+
+ok $t->put_ok('/api/1.2/cdns/' . $cdn_id  => {Accept => 'application/json'} => json => {
+        "name" => "cdn_test3"
+        })
+    ->status_is(404)->or( sub { diag $t->tx->res->content->asset->{content}; } );
 
 ok $t->get_ok('/logout')->status_is(302)->or( sub { diag $t->tx->res->content->asset->{content}; } );
 $dbh->disconnect();
 done_testing();
+
+sub get_cdn_id {
+    my $name = shift;
+    my $q    = "select id from cdn where name = \'$name\'";
+    my $get_svr = $dbh->prepare($q);
+    $get_svr->execute();
+    my $p = $get_svr->fetchall_arrayref( {} );
+    $get_svr->finish();
+    my $id = $p->[0]->{id};
+    return $id;
+}

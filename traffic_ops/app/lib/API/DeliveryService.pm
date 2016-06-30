@@ -67,52 +67,53 @@ sub delivery_services {
 			my @example_urls = &UI::DeliveryService::get_example_urls( $self, $row->id, $regexp_set, $row, $cdn_domain, $row->protocol );
 			push(
 				@data, {
-					"id"                   => $row->id,
-					"xmlId"                => $row->xml_id,
-					"displayName"          => $row->display_name,
-					"dscp"                 => $row->dscp,
-					"signed"               => \$row->signed,
-					"qstringIgnore"        => $row->qstring_ignore,
-					"geoLimit"             => $row->geo_limit,
-					"geoLimitCountries"    => $row->geo_limit_countries,
-					"geoProvider"          => $row->geo_provider,
-					"httpBypassFqdn"       => $row->http_bypass_fqdn,
-					"dnsBypassIp"          => $row->dns_bypass_ip,
-					"dnsBypassIp6"         => $row->dns_bypass_ip6,
-					"dnsBypassCname"       => $row->dns_bypass_cname,
-					"dnsBypassTtl"         => $row->dns_bypass_ttl,
-					"orgServerFqdn"        => $row->org_server_fqdn,
-					"multiSiteOrigin"      => $row->multi_site_origin,
-					"ccrDnsTtl"            => $row->ccr_dns_ttl,
-					"type"                 => $row->type->name,
-					"profileName"          => $row->profile->name,
-					"profileDescription"   => $row->profile->description,
-					"cdnName"              => $cdn_name,
-					"globalMaxMbps"        => $row->global_max_mbps,
-					"globalMaxTps"         => $row->global_max_tps,
-					"headerRewrite"        => $row->edge_header_rewrite,
-					"edgeHeaderRewrite"    => $row->edge_header_rewrite,
-					"midHeaderRewrite"     => $row->mid_header_rewrite,
-					"trResponseHeaders"    => $row->tr_response_headers,
-					"regexRemap"           => $row->regex_remap,
-					"longDesc"             => $row->long_desc,
-					"longDesc1"            => $row->long_desc_1,
-					"longDesc2"            => $row->long_desc_2,
-					"maxDnsAnswers"        => $row->max_dns_answers,
-					"infoUrl"              => $row->info_url,
-					"missLat"              => $row->miss_lat,
-					"missLong"             => $row->miss_long,
-					"checkPath"            => $row->check_path,
-					"matchList"            => \@matchlist,
-					"active"               => \$row->active,
-					"protocol"             => $row->protocol,
-					"ipv6RoutingEnabled"   => \$row->ipv6_routing_enabled,
-					"rangeRequestHandling" => $row->range_request_handling,
-					"cacheurl"             => $row->cacheurl,
-					"remapText"            => $row->remap_text,
-					"initialDispersion"    => $row->initial_dispersion,
-					"exampleURLs"          => \@example_urls,
-					"logsEnabled"          => \$row->logs_enabled,
+					"id"                       => $row->id,
+					"xmlId"                    => $row->xml_id,
+					"displayName"              => $row->display_name,
+					"dscp"                     => $row->dscp,
+					"signed"                   => \$row->signed,
+					"qstringIgnore"            => $row->qstring_ignore,
+					"geoLimit"                 => $row->geo_limit,
+					"geoLimitCountries"        => $row->geo_limit_countries,
+					"geoProvider"              => $row->geo_provider,
+					"httpBypassFqdn"           => $row->http_bypass_fqdn,
+					"dnsBypassIp"              => $row->dns_bypass_ip,
+					"dnsBypassIp6"             => $row->dns_bypass_ip6,
+					"dnsBypassCname"           => $row->dns_bypass_cname,
+					"dnsBypassTtl"             => $row->dns_bypass_ttl,
+					"orgServerFqdn"            => $row->org_server_fqdn,
+					"multiSiteOrigin"          => $row->multi_site_origin,
+					"multiSiteOriginAlgorithm" => $row->multi_site_origin_algorithm,
+					"ccrDnsTtl"                => $row->ccr_dns_ttl,
+					"type"                     => $row->type->name,
+					"profileName"              => $row->profile->name,
+					"profileDescription"       => $row->profile->description,
+					"cdnName"                  => $cdn_name,
+					"globalMaxMbps"            => $row->global_max_mbps,
+					"globalMaxTps"             => $row->global_max_tps,
+					"headerRewrite"            => $row->edge_header_rewrite,
+					"edgeHeaderRewrite"        => $row->edge_header_rewrite,
+					"midHeaderRewrite"         => $row->mid_header_rewrite,
+					"trResponseHeaders"        => $row->tr_response_headers,
+					"regexRemap"               => $row->regex_remap,
+					"longDesc"                 => $row->long_desc,
+					"longDesc1"                => $row->long_desc_1,
+					"longDesc2"                => $row->long_desc_2,
+					"maxDnsAnswers"            => $row->max_dns_answers,
+					"infoUrl"                  => $row->info_url,
+					"missLat"                  => $row->miss_lat,
+					"missLong"                 => $row->miss_long,
+					"checkPath"                => $row->check_path,
+					"matchList"                => \@matchlist,
+					"active"                   => \$row->active,
+					"protocol"                 => $row->protocol,
+					"ipv6RoutingEnabled"       => \$row->ipv6_routing_enabled,
+					"rangeRequestHandling"     => $row->range_request_handling,
+					"cacheurl"                 => $row->cacheurl,
+					"remapText"                => $row->remap_text,
+					"initialDispersion"        => $row->initial_dispersion,
+					"exampleURLs"              => \@example_urls,
+					"logsEnabled"              => \$row->logs_enabled,
 				}
 			);
 		}
@@ -412,8 +413,8 @@ sub assign_servers {
 		return $self->alert("You must be an ADMIN or OPER to perform this operation!");
 	}
 
-	if ( !exists( $params->{server_names} ) ) {
-		return $self->alert("Parameter 'server_names' is required.");
+	if ( !exists( $params->{serverNames} ) ) {
+		return $self->alert("Parameter 'serverNames' is required.");
 	}
 
 	my $dsid = $self->db->resultset('Deliveryservice')->search( { xml_id => $ds_xml_Id } )->get_column('id')->single();
@@ -422,7 +423,7 @@ sub assign_servers {
 	}
 
 	my @server_ids;
-	my $svrs = $params->{server_names};
+	my $svrs = $params->{serverNames};
 	foreach my $svr (@$svrs) {
 		my $svr_id = $self->db->resultset('Server')->search( { host_name => $svr } )->get_column('id')->single();
 		if ( !defined($svr_id) ) {
@@ -450,8 +451,8 @@ sub assign_servers {
 	&UI::DeliveryService::header_rewrite( $self, $ds->id, $ds->profile, $ds->xml_id, $ds->edge_header_rewrite, "edge" );
 
 	my $response;
-	$response->{xml_id} = $ds->xml_id;
-	$response->{'server_names'} = \@$svrs;
+	$response->{xmlId} = $ds->xml_id;
+	$response->{'serverNames'} = \@$svrs;
 
 	return $self->success($response);
 }

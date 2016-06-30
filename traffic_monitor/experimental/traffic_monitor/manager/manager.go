@@ -17,6 +17,7 @@ import (
 	"github.com/Comcast/traffic_control/traffic_monitor/experimental/common/handler"
 	"github.com/Comcast/traffic_control/traffic_monitor/experimental/common/poller"
 	"github.com/Comcast/traffic_control/traffic_monitor/experimental/traffic_monitor/cache"
+	"github.com/Comcast/traffic_control/traffic_monitor/experimental/traffic_monitor/deliveryservicestats"
 	"github.com/Comcast/traffic_control/traffic_monitor/experimental/traffic_monitor/health"
 	"github.com/Comcast/traffic_control/traffic_monitor/experimental/traffic_monitor/http_server"
 	"github.com/Comcast/traffic_control/traffic_monitor/experimental/traffic_monitor/peer"
@@ -157,7 +158,11 @@ func Start(opsConfigFile string, staticAppData StaticAppData) {
 	combinedStates := peer.Crstates{Caches: make(map[string]peer.IsAvailable), Deliveryservice: make(map[string]peer.Deliveryservice)} // this is the result of combining the localStates and all the peerStates using the var ??
 
 	deliveryServiceServers := map[string][]string{}
-	serverTypes := map[string]string{}
+	serverDeliveryServices := map[string]string{}
+	serverTypes := map[string]deliveryservicestats.DsStatCacheType{}
+	deliveryServiceTypes := map[string]deliveryservicestats.DsStatType{}
+	deliveryServiceRegexes := map[string][]string{}
+	serverCachegroups := map[string]string{}
 
 	// TODO put stat data in a struct, for brevity
 	lastHealthEndTimes := map[string]time.Time{}
@@ -167,6 +172,9 @@ func Start(opsConfigFile string, staticAppData StaticAppData) {
 	errorCount := uint64(0)
 	events := []Event{}
 	eventIndex := uint64(0)
+	dsStats := deliveryservicestats.NewDsStats()
+	lastKbpsStats := deliveryservicestats.NewDsStatsLastKbps()
+
 	for {
 		select {
 		case req := <-dr:
@@ -201,7 +209,14 @@ func Start(opsConfigFile string, staticAppData StaticAppData) {
 				}
 				body, err = cache.StatsMarshall(statHistory, hc)
 			case http_server.DS_STATS:
-				body = []byte("TODO implement")
+				b, err := json.Marshal(deliveryservicestats.DsStatsJSON(dsStats))
+				if err != nil {
+					// TODO send error to client
+					errorCount++
+					log.Printf("ERROR getting ds stats %v\n", err)
+					continue
+				}
+				body = b
 			case http_server.EVENT_LOG:
 				body, err = json.Marshal(JSONEvents{Events: events})
 			case http_server.PEER_STATES:
@@ -251,10 +266,31 @@ func Start(opsConfigFile string, staticAppData StaticAppData) {
 				continue
 			}
 
-			deliveryServiceServers, err = getDeliveryServiceServers(toSession, opsConfig.CdnName)
+			deliveryServiceServers, serverDeliveryServices, err = getDeliveryServiceServers(toSession, opsConfig.CdnName)
 			if err != nil {
 				errorCount++
 				log.Printf("Error getting delivery service servers from Traffic Ops: %v\n", err)
+				continue
+			}
+
+			deliveryServiceTypes, err = getDeliveryServiceTypes(toSession, opsConfig.CdnName)
+			if err != nil {
+				errorCount++
+				log.Printf("Error getting delivery service types from Traffic Ops: %v\n", err)
+				continue
+			}
+
+			deliveryServiceRegexes, err = getDeliveryServiceRegexes(toSession, opsConfig.CdnName)
+			if err != nil {
+				errorCount++
+				log.Printf("Error getting delivery service regexes from Traffic Ops: %v\n", err)
+				continue
+			}
+
+			serverCachegroups, err = getServerCachegroups(toSession, opsConfig.CdnName)
+			if err != nil {
+				errorCount++
+				log.Printf("Error getting server cachegroups from Traffic Ops: %v\n", err)
 				continue
 			}
 
@@ -342,15 +378,7 @@ func Start(opsConfigFile string, staticAppData StaticAppData) {
 			isAvailable, whyAvailable := health.EvalCache(healthResult, &monitorConfig)
 			if localStates.Caches[healthResult.Id].IsAvailable != isAvailable {
 				fmt.Println("Changing state for", healthResult.Id, " was:", prevResult.Available, " is now:", isAvailable, " because:", whyAvailable, " errors:", healthResult.Errors)
-				e := Event{
-					Index:       eventIndex,
-					Time:        time.Now().Unix(),
-					Description: whyAvailable,
-					Name:        healthResult.Id,
-					Hostname:    healthResult.Id,
-					Type:        serverTypes[healthResult.Id],
-					Available:   isAvailable,
-				}
+				e := Event{Index: eventIndex, Time: time.Now().Unix(), Description: whyAvailable, Name: healthResult.Id, Hostname: healthResult.Id, Type: serverTypes[healthResult.Id].String(), Available: isAvailable}
 				events = append([]Event{e}, events...)
 				if len(events) > maxEvents {
 					events = events[:maxEvents-1]
@@ -360,10 +388,25 @@ func Start(opsConfigFile string, staticAppData StaticAppData) {
 			localStates.Caches[healthResult.Id] = peer.IsAvailable{IsAvailable: isAvailable}
 			calculateDeliveryServiceState(deliveryServiceServers, localStates.Caches, localStates.Deliveryservice)
 
+			// TODO determine if we should combineCrStates() here
+
+			var err error
+			dsStats, err = deliveryservicestats.CreateDsStats(statHistory, deliveryServiceServers, serverDeliveryServices, deliveryServiceTypes, deliveryServiceRegexes, serverCachegroups, serverTypes, combinedStates)
+			if err != nil {
+				errorCount++
+				log.Printf("ERROR getting deliveryservicestats: %v\n", err)
+			}
+
 			if lastHealthStart, ok := lastHealthEndTimes[healthResult.Id]; ok {
 				lastHealthDurations[healthResult.Id] = time.Since(lastHealthStart)
 			}
 			lastHealthEndTimes[healthResult.Id] = time.Now()
+
+			dsStats, lastKbpsStats, err = deliveryservicestats.AddKbps(dsStats, lastKbpsStats, lastHealthEndTimes[healthResult.Id])
+			if err != nil {
+				errorCount++
+				log.Printf("ERROR getting deliveryservicestats kbps: %v\n", err)
+			}
 
 			// if _, ok := queryIntervalStart[pollI]; !ok {
 			// 	log.Printf("ERROR poll start index not found")
@@ -452,15 +495,114 @@ func getStats(staticAppData StaticAppData, pollingInterval time.Duration, lastHe
 	return json.Marshal(s)
 }
 
-func getServerTypes(to *traffic_ops.Session, cdn string) (map[string]string, error) {
-	// This is efficient (with getDeliveryServiceServers) because the traffic_ops client caches its result.
-	// Were that not the case, these functions could be refactored to only call traffic_ops.Session.CRConfigRaw() once.
+// addStateDeliveryServices adds delivery services in `mc` as keys in `deliveryServices`, with empty Deliveryservice values.
+// TODO add disabledLocations
+func addStateDeliveryServices(mc traffic_ops.TrafficMonitorConfigMap, deliveryServices map[string]peer.Deliveryservice) {
+	for _, ds := range mc.DeliveryService {
+		// since caches default to unavailable, also default DS false
+		deliveryServices[ds.XMLID] = peer.Deliveryservice{}
+	}
+}
+
+// getDeliveryServiceServers gets the servers on each delivery services, for the given CDN, from Traffic Ops.
+// Returns a map[deliveryService][]server, and a map[server]deliveryService
+func getDeliveryServiceServers(to *traffic_ops.Session, cdn string) (map[string][]string, map[string]string, error) {
+	dsServers := map[string][]string{}
+	serverDs := map[string]string{}
+
+	crcData, err := to.CRConfigRaw(cdn)
+	if err != nil {
+		return nil, nil, err
+	}
+	type CrConfig struct {
+		ContentServers map[string]struct {
+			DeliveryServices map[string][]string `json:"deliveryServices"`
+		} `json:"contentServers"`
+	}
+	var crc CrConfig
+	if err := json.Unmarshal(crcData, &crc); err != nil {
+		return nil, nil, err
+	}
+
+	for serverName, serverData := range crc.ContentServers {
+		for deliveryServiceName, _ := range serverData.DeliveryServices {
+			dsServers[deliveryServiceName] = append(dsServers[deliveryServiceName], serverName)
+			serverDs[serverName] = deliveryServiceName
+		}
+	}
+	return dsServers, serverDs, nil
+}
+
+// getDeliveryServiceRegexes gets the regexes of each delivery service, for the given CDN, from Traffic Ops.
+// Returns a map[deliveryService][]regex.
+func getDeliveryServiceRegexes(to *traffic_ops.Session, cdn string) (map[string][]string, error) {
+	dsRegexes := map[string][]string{}
 
 	crcData, err := to.CRConfigRaw(cdn)
 	if err != nil {
 		return nil, err
 	}
+	type CrConfig struct {
+		DeliveryServices map[string]struct {
+			Matchsets []struct {
+				MatchList []struct {
+					Regex string `json:"regex"`
+				} `json:"matchlist"`
+			} `json:"matchsets"`
+		} `json:"deliveryServices"`
+	}
+	var crc CrConfig
+	if err := json.Unmarshal(crcData, &crc); err != nil {
+		return nil, err
+	}
 
+	for dsName, dsData := range crc.DeliveryServices {
+		if len(dsData.Matchsets) < 1 {
+			return nil, fmt.Errorf("CRConfig missing regex for '%s'", dsName)
+		}
+		for _, matchset := range dsData.Matchsets {
+			if len(matchset.MatchList) < 1 {
+				return nil, fmt.Errorf("CRConfig missing Regex for '%s'", dsName)
+			}
+			dsRegexes[dsName] = append(dsRegexes[dsName], matchset.MatchList[0].Regex)
+		}
+	}
+	return dsRegexes, nil
+}
+
+// getServerCachegroups gets the cachegroup of each ATS Edge+Mid Cache server, for the given CDN, from Traffic Ops.
+// Returns a map[server]cachegroup.
+func getServerCachegroups(to *traffic_ops.Session, cdn string) (map[string]string, error) {
+	serverCachegroups := map[string]string{}
+
+	crcData, err := to.CRConfigRaw(cdn)
+	if err != nil {
+		return nil, err
+	}
+	type CrConfig struct {
+		ContentServers map[string]struct {
+			CacheGroup string `json:"cacheGroup"`
+		} `json:"contentServers"`
+	}
+	var crc CrConfig
+	if err := json.Unmarshal(crcData, &crc); err != nil {
+		return nil, err
+	}
+
+	for server, serverData := range crc.ContentServers {
+		serverCachegroups[server] = serverData.CacheGroup
+	}
+	return serverCachegroups, nil
+}
+
+// getServerTypes gets the cache type of each ATS Edge+Mid Cache server, for the given CDN, from Traffic Ops.
+func getServerTypes(to *traffic_ops.Session, cdn string) (map[string]deliveryservicestats.DsStatCacheType, error) {
+	serverTypes := map[string]deliveryservicestats.DsStatCacheType{}
+
+	crcData, err := to.CRConfigRaw(cdn)
+	if err != nil {
+		return nil, err
+	}
 	type CrConfig struct {
 		ContentServers map[string]struct {
 			Type string `json:"type"`
@@ -471,45 +613,47 @@ func getServerTypes(to *traffic_ops.Session, cdn string) (map[string]string, err
 		return nil, err
 	}
 
-	serverTypes := map[string]string{}
-	for serverName, serverData := range crc.ContentServers {
-		serverTypes[serverName] = serverData.Type
+	for server, serverData := range crc.ContentServers {
+		t := deliveryservicestats.DsStatCacheTypeFromString(serverData.Type)
+		if t == deliveryservicestats.DsStatCacheTypeInvalid {
+			return nil, fmt.Errorf("getServerTypes CRConfig unknown type for '%s': '%s'", server, serverData.Type)
+		}
+		serverTypes[server] = t
 	}
 	return serverTypes, nil
 }
 
-// TODO add disabledLocations
-func addStateDeliveryServices(mc traffic_ops.TrafficMonitorConfigMap, deliveryServices map[string]peer.Deliveryservice) {
-	for _, ds := range mc.DeliveryService {
-		// since caches default to unavailable, also default DS false
-		deliveryServices[ds.XMLID] = peer.Deliveryservice{}
-	}
-}
-
-// getDeliveryServiceServers returns a map[deliveryService][]server
-func getDeliveryServiceServers(to *traffic_ops.Session, cdn string) (map[string][]string, error) {
-	dsServers := map[string][]string{}
+func getDeliveryServiceTypes(to *traffic_ops.Session, cdn string) (map[string]deliveryservicestats.DsStatType, error) {
+	dsTypes := map[string]deliveryservicestats.DsStatType{}
 
 	crcData, err := to.CRConfigRaw(cdn)
 	if err != nil {
 		return nil, err
 	}
 	type CrConfig struct {
-		ContentServers map[string]struct {
-			DeliveryServices map[string][]string `json:"deliveryServices"`
-		} `json:"contentServers"`
+		DeliveryServices map[string]struct {
+			Matchsets []struct {
+				Protocol string `json:"protocol"`
+			} `json:"matchsets"`
+		} `json:"deliveryServices"`
 	}
 	var crc CrConfig
 	if err := json.Unmarshal(crcData, &crc); err != nil {
-		return nil, err
+		return nil, fmt.Errorf("Error unmarshalling CRConfig: %v", err)
 	}
 
-	for serverName, serverData := range crc.ContentServers {
-		for deliveryServiceName, _ := range serverData.DeliveryServices {
-			dsServers[deliveryServiceName] = append(dsServers[deliveryServiceName], serverName)
+	for dsName, dsData := range crc.DeliveryServices {
+		if len(dsData.Matchsets) < 1 {
+			return nil, fmt.Errorf("CRConfig missing protocol for '%s'", dsName)
 		}
+		dsTypeStr := dsData.Matchsets[0].Protocol
+		dsType := deliveryservicestats.DsStatTypeFromString(dsTypeStr)
+		if dsType == deliveryservicestats.DsStatTypeInvalid {
+			return nil, fmt.Errorf("CRConfig unknowng protocol for '%s': '%s'", dsName, dsTypeStr)
+		}
+		dsTypes[dsName] = dsType
 	}
-	return dsServers, nil
+	return dsTypes, nil
 }
 
 // calculateDeliveryServiceState calculates the state of delivery services from the new cache state data `cacheState` and the CRConfig data `deliveryServiceServers` and puts the calculated state in the outparam `deliveryServiceStates`

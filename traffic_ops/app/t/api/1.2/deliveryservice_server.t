@@ -14,6 +14,9 @@ package main;
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
+#    ->json_is( "/response/hostname" => "http://10.75.168.91")
+#    ->json_is( "/response/ds_assigned/1" => "ds1")
+#            , 'Does the deliveryservice details return?';
 use Mojo::Base -strict;
 use Test::More;
 use Test::Mojo;
@@ -39,14 +42,27 @@ Test::TestHelper->load_core_data($schema);
 ok $t->post_ok( '/login', => form => { u => Test::TestHelper::ADMIN_USER, p => Test::TestHelper::ADMIN_USER_PASSWORD } )->status_is(302)
 	->or( sub { diag $t->tx->res->content->asset->{content}; } ), 'Should login?';
 
-ok $t->post_ok('/api/1.2/divisions/mountain/regions' => {Accept => 'application/json'} => json => {
-        "name" => "region1"})->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } )
-	->json_is( "/response/name" => "region1" )
-	->json_is( "/response/divisionName" => "mountain" )
-            , 'Does the region details return?';
-ok $t->post_ok('/api/1.2/divisions/mountain/regions' => {Accept => 'application/json'} => json => {
-        "name" => "region1"})->status_is(400);
+ok $t->post_ok('/api/1.2/cachegroups/3/deliveryservices' => {Accept => 'application/json'} => json => {
+        "deliveryServices" => [
+             1
+        ]})
+     ->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } )
+     ->json_is( "/response/id" => 3 )
+     ->json_is( "/response/deliveryServices/0" => 1 )
+     ->json_is( "/alerts/0/level" => "success" )
+     ->json_is( "/alerts/0/text" => "Delivery services successfully assigned to all the servers of cache group 3" )
+            , 'Does the delivery services assign details return?';
 
+ok $t->get_ok('/api/1.2/deliveryserviceserver.json')
+     ->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } )
+     ->json_is( "/response/0/deliveryService" => "1" )
+     ->json_is( "/response/0/server" => "1" )
+     ->json_is( "/response/1/deliveryService" => "1" )
+     ->json_is( "/response/1/server" => "2" )
+     ->json_is( "/response/2/deliveryService" => "1" )
+     ->json_is( "/response/2/server" => "7" )
+            , 'Does the delivery services servers details return?';
+ 
 ok $t->get_ok('/logout')->status_is(302)->or( sub { diag $t->tx->res->content->asset->{content}; } );
 $dbh->disconnect();
 done_testing();

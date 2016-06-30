@@ -99,17 +99,17 @@ Regions
   +-------------------+--------+-------------------------------------------+
   | ``id``            | string | id of region created                      |
   +-------------------+--------+-------------------------------------------+
-  | ``division_name`` | string | the division name the region belongs to.  |
+  | ``divisionName``  | string | the division name the region belongs to.  |
   +-------------------+--------+-------------------------------------------+
-  | ``division_id``   | string | the id of division the region belongs to. |
+  | ``divisionId``    | string | the id of division the region belongs to. |
   +-------------------+--------+-------------------------------------------+
 
   **Response Example** ::
 
     {
       "response": {
-        'division_name': 'mydivision1',
-        'divsion_id': '4',
+        'divisionName': 'mydivision1',
+        'divsionId': '4',
         'name': 'myregion1',
         'id': '19'
        }

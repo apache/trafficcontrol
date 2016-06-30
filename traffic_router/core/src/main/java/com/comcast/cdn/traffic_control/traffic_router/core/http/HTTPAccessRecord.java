@@ -35,6 +35,7 @@ import java.util.Map;
         "PMD.CyclomaticComplexity"})
 public class HTTPAccessRecord {
     private final Date requestDate;
+    private final long requestNanoTime;
     private final HttpServletRequest request;
     private final URL responseURL;
     private final int responseCode;
@@ -85,6 +86,10 @@ public class HTTPAccessRecord {
         return regionalGeoResult;
     }
 
+    public long getRequestNanoTime() {
+        return requestNanoTime;
+    }
+
     public static class Builder {
         private final Date requestDate;
         private final HttpServletRequest request;
@@ -96,10 +101,18 @@ public class HTTPAccessRecord {
         private Geolocation resultLocation;
         private Map<String, String> requestHeaders = new HashMap<String, String>();
         private RegionalGeoResult regionalGeoResult;
+        private final long requestNanoTime;
 
         public Builder(final Date requestDate, final HttpServletRequest request) {
             this.requestDate = requestDate;
             this.request = request;
+            this.requestNanoTime = System.nanoTime();
+        }
+
+        public Builder(final long requestNanoTime, final HttpServletRequest request) {
+            this.requestDate =new Date();
+            this.request = request;
+            this.requestNanoTime = requestNanoTime;
         }
 
         public Builder(final HTTPAccessRecord httpAccessRecord) {
@@ -107,6 +120,7 @@ public class HTTPAccessRecord {
             this.request = httpAccessRecord.request;
             this.responseURL = httpAccessRecord.responseURL;
             this.responseCode = httpAccessRecord.responseCode;
+            this.requestNanoTime = httpAccessRecord.requestNanoTime;
         }
 
         public Builder responseCode(final int responseCode) {
@@ -165,6 +179,7 @@ public class HTTPAccessRecord {
         resultLocation = builder.resultLocation;
         requestHeaders = builder.requestHeaders;
         regionalGeoResult = builder.regionalGeoResult;
+        requestNanoTime = builder.requestNanoTime;
     }
 
     @Override
@@ -174,25 +189,35 @@ public class HTTPAccessRecord {
 
         final HTTPAccessRecord that = (HTTPAccessRecord) o;
 
+        if (requestNanoTime != that.requestNanoTime) return false;
         if (responseCode != that.responseCode) return false;
         if (requestDate != null ? !requestDate.equals(that.requestDate) : that.requestDate != null) return false;
         if (request != null ? !request.equals(that.request) : that.request != null) return false;
         if (responseURL != null ? !responseURL.equals(that.responseURL) : that.responseURL != null) return false;
         if (resultType != that.resultType) return false;
         if (rerr != null ? !rerr.equals(that.rerr) : that.rerr != null) return false;
-        return resultDetails == that.resultDetails;
+        if (resultDetails != that.resultDetails) return false;
+        if (resultLocation != null ? !resultLocation.equals(that.resultLocation) : that.resultLocation != null)
+            return false;
+        if (requestHeaders != null ? !requestHeaders.equals(that.requestHeaders) : that.requestHeaders != null)
+            return false;
+        return regionalGeoResult != null ? regionalGeoResult.equals(that.regionalGeoResult) : that.regionalGeoResult == null;
 
     }
 
     @Override
     public int hashCode() {
         int result = requestDate != null ? requestDate.hashCode() : 0;
+        result = 31 * result + (int) (requestNanoTime ^ (requestNanoTime >>> 32));
         result = 31 * result + (request != null ? request.hashCode() : 0);
         result = 31 * result + (responseURL != null ? responseURL.hashCode() : 0);
         result = 31 * result + responseCode;
         result = 31 * result + (resultType != null ? resultType.hashCode() : 0);
         result = 31 * result + (rerr != null ? rerr.hashCode() : 0);
         result = 31 * result + (resultDetails != null ? resultDetails.hashCode() : 0);
+        result = 31 * result + (resultLocation != null ? resultLocation.hashCode() : 0);
+        result = 31 * result + (requestHeaders != null ? requestHeaders.hashCode() : 0);
+        result = 31 * result + (regionalGeoResult != null ? regionalGeoResult.hashCode() : 0);
         return result;
     }
 
@@ -207,6 +232,7 @@ public class HTTPAccessRecord {
                 ", rerr='" + rerr + '\'' +
                 ", resultDetails=" + resultDetails +
                 ", rgb=" + regionalGeoResult +
+                ", requestNanoTime=" + requestNanoTime +
                 '}';
     }
 }

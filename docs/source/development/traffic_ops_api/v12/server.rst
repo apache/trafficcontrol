@@ -454,76 +454,76 @@ Server
   +------------------+----------+------------------------------------------------+
   | Name             | Required | Description                                    |
   +==================+==========+================================================+
-  | host_name        | yes      | The host name part of the server.              |
+  | hostName         | yes      | The host name part of the server.              |
   +------------------+----------+------------------------------------------------+
-  | domain_name      | yes      | The domain name part of the FQDN of the cache. |
+  | domainName       | yes      | The domain name part of the FQDN of the cache. |
   +------------------+----------+------------------------------------------------+
   | cachegroup       | yes      | cache group name                               |
   +------------------+----------+------------------------------------------------+
-  | interface_name   | yes      |                                                |
+  | interfaceName    | yes      |                                                |
   +------------------+----------+------------------------------------------------+
-  | ip_address       | yes      |                                                |
+  | ipAddress        | yes      |                                                |
   +------------------+----------+------------------------------------------------+
-  | ip_netmask       | yes      |                                                |
+  | ipNetmask        | yes      |                                                |
   +------------------+----------+------------------------------------------------+
-  | ip_gateway       | yes      |                                                |
+  | ipGateway        | yes      |                                                |
   +------------------+----------+------------------------------------------------+
-  | interface_mtu    | yes      | 1500 or 9000                                   |
+  | interfaceMtu     | no       | 1500 or 9000                                   |
   +------------------+----------+------------------------------------------------+
-  | phys_location    | yes      |                                                |
+  | physLocation     | yes      |                                                |
   +------------------+----------+------------------------------------------------+
   | type             | yes      | server type                                    |
   +------------------+----------+------------------------------------------------+
   | profile          | yes      |                                                |
   +------------------+----------+------------------------------------------------+
-  | cdn_name         | yes      | cdn name the server belongs to                 |
+  | cdnName          | yes      | cdn name the server belongs to                 |
   +------------------+----------+------------------------------------------------+
-  | tcp_port         | no       |                                                |
+  | tcpPort          | no       |                                                |
   +------------------+----------+------------------------------------------------+
-  | xmpp_id          | no       |                                                |
+  | xmppId           | no       |                                                |
   +------------------+----------+------------------------------------------------+
-  | xmpp_passwd      | no       |                                                |
+  | xmppPasswd       | no       |                                                |
   +------------------+----------+------------------------------------------------+
-  | ip6_address      | no       |                                                |
+  | ip6Address       | no       |                                                |
   +------------------+----------+------------------------------------------------+
-  | ip6_gateway      | no       |                                                |
+  | ip6Gateway       | no       |                                                |
   +------------------+----------+------------------------------------------------+
   | rack             | no       |                                                |
   +------------------+----------+------------------------------------------------+
-  | mgmt_ip_address  | no       |                                                |
+  | mgmtIpAddress    | no       |                                                |
   +------------------+----------+------------------------------------------------+
-  | mgmt_ip_netmask  | no       |                                                |
+  | mgmtIpNetmask    | no       |                                                |
   +------------------+----------+------------------------------------------------+
-  | mgmt_ip_gateway  | no       |                                                |
+  | mgmtIpGateway    | no       |                                                |
   +------------------+----------+------------------------------------------------+
-  | ilo_ip_address   | no       |                                                |
+  | iloIpAddress     | no       |                                                |
   +------------------+----------+------------------------------------------------+
-  | ilo_ip_netmask   | no       |                                                |
+  | iloIpNetmask     | no       |                                                |
   +------------------+----------+------------------------------------------------+
-  | ilo_ip_gateway   | no       |                                                |
+  | iloIpGateway     | no       |                                                |
   +------------------+----------+------------------------------------------------+
-  | ilo_username     | no       |                                                |
+  | iloUsername      | no       |                                                |
   +------------------+----------+------------------------------------------------+
-  | ilo_password     | no       |                                                |
+  | iloPassword      | no       |                                                |
   +------------------+----------+------------------------------------------------+
-  | router_host_name | no       |                                                |
+  | routerHostName   | no       |                                                |
   +------------------+----------+------------------------------------------------+
-  | router_port_name | no       |                                                |
+  | routerPortName   | no       |                                                |
   +------------------+----------+------------------------------------------------+
 
   **Request Example** ::
 
     {
-        "host_name": "tc1_ats1",
-        "domain_name": "my.test.com",
+        "hostName": "tc1_ats1",
+        "domainName": "my.test.com",
         "cachegroup": "cache_group_edge",
-        "cdn_name": "cdn_number_1",
-        "interface_name": "eth0",
-        "ip_address": "10.74.27.188",
-        "ip_netmask": "255.255.255.0",
-        "ip_gateway": "10.74.27.1",
-        "interface_mtu": "1500",
-        "phys_location": "plocation-chi-1",
+        "cdnName": "cdn_number_1",
+        "interfaceName": "eth0",
+        "ipAddress": "10.74.27.188",
+        "ipNetmask": "255.255.255.0",
+        "ipGateway": "10.74.27.1",
+        "interfaceMtu": "1500",
+        "physLocation": "plocation-chi-1",
         "type": "EDGE",
         "profile": "EDGE1_CDN1_421"
     }
@@ -535,68 +535,67 @@ Server
   +------------------+--------+------------------------------------------------+
   | Name             | Type   | Description                                    |
   +==================+========+================================================+
-  | host_name        | string | The host name part of the server.              |
+  | hostName         | string | The host name part of the server.              |
   +------------------+--------+------------------------------------------------+
   | Name             | string | Description                                    |
   +------------------+--------+------------------------------------------------+
-  | domain_name      | string | The domain name part of the FQDN of the cache. |
+  | domainName       | string | The domain name part of the FQDN of the cache. |
   +------------------+--------+------------------------------------------------+
   | cachegroup       | string | cache group name                               |
   +------------------+--------+------------------------------------------------+
-  | interface_name   | string |                                                |
+  | interfaceName    | string |                                                |
   +------------------+--------+------------------------------------------------+
-  | ip_address       | string |                                                |
+  | ipAddress        | string |                                                |
   +------------------+--------+------------------------------------------------+
-  | ip_netmask       | string |                                                |
+  | ipNetmask        | string |                                                |
   +------------------+--------+------------------------------------------------+
-  | ip_gateway       | string |                                                |
+  | ipGateway        | string |                                                |
   +------------------+--------+------------------------------------------------+
-  | interface_mtu    | string | 1500 or 9000                                   |
+  | interfaceMtu     | string | 1500 or 9000                                   |
   +------------------+--------+------------------------------------------------+
-  | phys_location    | string |                                                |
+  | physLocation     | string |                                                |
   +------------------+--------+------------------------------------------------+
   | type             | string | server type                                    |
   +------------------+--------+------------------------------------------------+
   | profile          | string |                                                |
   +------------------+--------+------------------------------------------------+
-  | cdn_name         | string | cdn name the server belongs to                 |
+  | cdnName          | string | cdn name the server belongs to                 |
   +------------------+--------+------------------------------------------------+
-  | tcp_port         | string |                                                |
+  | tcpPort          | string |                                                |
   +------------------+--------+------------------------------------------------+
-  | xmpp_id          | string |                                                |
+  | xmppId           | string |                                                |
   +------------------+--------+------------------------------------------------+
-  | xmpp_passwd      | string |                                                |
+  | xmppPasswd       | string |                                                |
   +------------------+--------+------------------------------------------------+
-  | ip6_address      | string |                                                |
+  | ip6Address       | string |                                                |
   +------------------+--------+------------------------------------------------+
-  | ip6_gateway      | string |                                                |
+  | ip6Gateway       | string |                                                |
   +------------------+--------+------------------------------------------------+
   | rack             | string |                                                |
   +------------------+--------+------------------------------------------------+
-  | mgmt_ip_address  | string |                                                |
+  | mgmtIpAddress    | string |                                                |
   +------------------+--------+------------------------------------------------+
-  | mgmt_ip_netmask  | string |                                                |
+  | mgmtIpNetmask    | string |                                                |
   +------------------+--------+------------------------------------------------+
-  | mgmt_ip_gateway  | string |                                                |
+  | mgmtIpGateway    | string |                                                |
   +------------------+--------+------------------------------------------------+
-  | ilo_ip_address   | string |                                                |
+  | iloIpAddress     | string |                                                |
   +------------------+--------+------------------------------------------------+
-  | ilo_ip_netmask   | string |                                                |
+  | iloIpNetmask     | string |                                                |
   +------------------+--------+------------------------------------------------+
-  | ilo_ip_gateway   | string |                                                |
+  | iloIpGateway     | string |                                                |
   +------------------+--------+------------------------------------------------+
-  | ilo_username     | string |                                                |
+  | iloUsername      | string |                                                |
   +------------------+--------+------------------------------------------------+
-  | ilo_password     | string |                                                |
+  | iloPassword      | string |                                                |
   +------------------+--------+------------------------------------------------+
-  | router_host_name | string |                                                |
+  | routerHostName   | string |                                                |
   +------------------+--------+------------------------------------------------+
-  | router_port_name | string |                                                |
+  | routerPortName   | string |                                                |
   +------------------+--------+------------------------------------------------+
 
   **Response Example** ::
 
-    Response Example:
     {
         'response' : {
             'xmppPasswd' : '**********',
@@ -604,7 +603,7 @@ Server
             'iloUsername' : null,
             'status' : 'REPORTED',
             'ipAddress' : '10.74.27.188',
-            'cdn_id' : '1',
+            'cdnId' : '1',
             'physLocation' : 'plocation-chi-1',
             'cachegroup' : 'cache_group_edge',
             'interfaceName' : 'eth0',
@@ -656,62 +655,79 @@ Server
   +------------------+----------+------------------------------------------------+
   | Name             | Required | Description                                    |
   +==================+==========+================================================+
-  | host_name        | no       | The host name part of the server.              |
+  | hostName         | yes      | The host name part of the server.              |
   +------------------+----------+------------------------------------------------+
-  | domain_name      | no       | The domain name part of the FQDN of the cache. |
+  | domainName       | yes      | The domain name part of the FQDN of the cache. |
   +------------------+----------+------------------------------------------------+
-  | cachegroup       | no       | cache group name                               |
+  | cachegroup       | yes      | cache group name                               |
   +------------------+----------+------------------------------------------------+
-  | interface_name   | no       |                                                |
+  | interfaceName    | yes      |                                                |
   +------------------+----------+------------------------------------------------+
-  | ip_address       | no       |                                                |
+  | ipAddress        | yes      |                                                |
   +------------------+----------+------------------------------------------------+
-  | ip_netmask       | no       |                                                |
+  | ipNetmask        | yes      |                                                |
   +------------------+----------+------------------------------------------------+
-  | ip_gateway       | no       |                                                |
+  | ipGateway        | yes      |                                                |
   +------------------+----------+------------------------------------------------+
-  | interface_mtu    | no       | 1500 or 9000                                   |
+  | interfaceMtu     | no       | 1500 or 9000                                   |
   +------------------+----------+------------------------------------------------+
-  | phys_location    | no       |                                                |
+  | physLocation     | yes      |                                                |
   +------------------+----------+------------------------------------------------+
-  | type             | no       | server type                                    |
+  | type             | yes      | server type                                    |
   +------------------+----------+------------------------------------------------+
-  | profile          | no       |                                                |
+  | profile          | yes      |                                                |
   +------------------+----------+------------------------------------------------+
-  | cdn_name         | no       | cdn name the server belongs to                 |
+  | cdnName          | yes      | cdn name the server belongs to                 |
   +------------------+----------+------------------------------------------------+
-  | tcp_port         | no       |                                                |
+  | tcpPort          | no       |                                                |
   +------------------+----------+------------------------------------------------+
-  | xmpp_id          | no       |                                                |
+  | xmppId           | no       |                                                |
   +------------------+----------+------------------------------------------------+
-  | xmpp_passwd      | no       |                                                |
+  | xmppPasswd       | no       |                                                |
   +------------------+----------+------------------------------------------------+
-  | ip6_address      | no       |                                                |
+  | ip6Address       | no       |                                                |
   +------------------+----------+------------------------------------------------+
-  | ip6_gateway      | no       |                                                |
+  | ip6Gateway       | no       |                                                |
   +------------------+----------+------------------------------------------------+
   | rack             | no       |                                                |
   +------------------+----------+------------------------------------------------+
-  | mgmt_ip_address  | no       |                                                |
+  | mgmtIpAddress    | no       |                                                |
   +------------------+----------+------------------------------------------------+
-  | mgmt_ip_netmask  | no       |                                                |
+  | mgmtIpNetmask    | no       |                                                |
   +------------------+----------+------------------------------------------------+
-  | mgmt_ip_gateway  | no       |                                                |
+  | mgmtIpGateway    | no       |                                                |
   +------------------+----------+------------------------------------------------+
-  | ilo_ip_address   | no       |                                                |
+  | iloIpAddress     | no       |                                                |
   +------------------+----------+------------------------------------------------+
-  | ilo_ip_netmask   | no       |                                                |
+  | iloIpNetmask     | no       |                                                |
   +------------------+----------+------------------------------------------------+
-  | ilo_ip_gateway   | no       |                                                |
+  | iloIpGateway     | no       |                                                |
   +------------------+----------+------------------------------------------------+
-  | ilo_username     | no       |                                                |
+  | iloUsername      | no       |                                                |
   +------------------+----------+------------------------------------------------+
-  | ilo_password     | no       |                                                |
+  | iloPassword      | no       |                                                |
   +------------------+----------+------------------------------------------------+
-  | router_host_name | no       |                                                |
+  | routerHostName   | no       |                                                |
   +------------------+----------+------------------------------------------------+
-  | router_port_name | no       |                                                |
+  | routerPortName   | no       |                                                |
   +------------------+----------+------------------------------------------------+
+
+  **Request Example** ::
+
+    {
+        "hostName": "tc1_ats2",
+        "domainName": "my.test.com",
+        "cachegroup": "cache_group_edge",
+        "cdnName": "cdn_number_1",
+        "interfaceName": "eth0",
+        "ipAddress": "10.74.27.188",
+        "ipNetmask": "255.255.255.0",
+        "ipGateway": "10.74.27.1",
+        "interfaceMtu": "1500",
+        "physLocation": "plocation-chi-1",
+        "type": "EDGE",
+        "profile": "EDGE1_CDN1_421"
+    }
 
 |
 
@@ -720,65 +736,103 @@ Server
   +------------------+--------+------------------------------------------------+
   | Name             | Type   | Description                                    |
   +==================+========+================================================+
-  | host_name        | string | The host name part of the server.              |
+  | hostName         | string | The host name part of the server.              |
   +------------------+--------+------------------------------------------------+
   | Name             | string | Description                                    |
   +------------------+--------+------------------------------------------------+
-  | domain_name      | string | The domain name part of the FQDN of the cache. |
+  | domainName       | string | The domain name part of the FQDN of the cache. |
   +------------------+--------+------------------------------------------------+
   | cachegroup       | string | cache group name                               |
   +------------------+--------+------------------------------------------------+
-  | interface_name   | string |                                                |
+  | interfaceName    | string |                                                |
   +------------------+--------+------------------------------------------------+
-  | ip_address       | string |                                                |
+  | ipAddress        | string |                                                |
   +------------------+--------+------------------------------------------------+
-  | ip_netmask       | string |                                                |
+  | ipNetmask        | string |                                                |
   +------------------+--------+------------------------------------------------+
-  | ip_gateway       | string |                                                |
+  | ipGateway        | string |                                                |
   +------------------+--------+------------------------------------------------+
-  | interface_mtu    | string | 1500 or 9000                                   |
+  | interfaceMtu     | string | 1500 or 9000                                   |
   +------------------+--------+------------------------------------------------+
-  | phys_location    | string |                                                |
+  | physLocation     | string |                                                |
   +------------------+--------+------------------------------------------------+
   | type             | string | server type                                    |
   +------------------+--------+------------------------------------------------+
   | profile          | string |                                                |
   +------------------+--------+------------------------------------------------+
-  | cdn_name         | string | cdn name the server belongs to                 |
+  | cdnName          | string | cdn name the server belongs to                 |
   +------------------+--------+------------------------------------------------+
-  | tcp_port         | string |                                                |
+  | tcpPort          | string |                                                |
   +------------------+--------+------------------------------------------------+
-  | xmpp_id          | string |                                                |
+  | xmppId           | string |                                                |
   +------------------+--------+------------------------------------------------+
-  | xmpp_passwd      | string |                                                |
+  | xmppPasswd       | string |                                                |
   +------------------+--------+------------------------------------------------+
-  | ip6_address      | string |                                                |
+  | ip6Address       | string |                                                |
   +------------------+--------+------------------------------------------------+
-  | ip6_gateway      | string |                                                |
+  | ip6Gateway       | string |                                                |
   +------------------+--------+------------------------------------------------+
   | rack             | string |                                                |
   +------------------+--------+------------------------------------------------+
-  | mgmt_ip_address  | string |                                                |
+  | mgmtIpAddress    | string |                                                |
   +------------------+--------+------------------------------------------------+
-  | mgmt_ip_netmask  | string |                                                |
+  | mgmtIpNetmask    | string |                                                |
   +------------------+--------+------------------------------------------------+
-  | mgmt_ip_gateway  | string |                                                |
+  | mgmtIpGateway    | string |                                                |
   +------------------+--------+------------------------------------------------+
-  | ilo_ip_address   | string |                                                |
+  | iloIpAddress     | string |                                                |
   +------------------+--------+------------------------------------------------+
-  | ilo_ip_netmask   | string |                                                |
+  | iloIpNetmask     | string |                                                |
   +------------------+--------+------------------------------------------------+
-  | ilo_ip_gateway   | string |                                                |
+  | iloIpGateway     | string |                                                |
   +------------------+--------+------------------------------------------------+
-  | ilo_username     | string |                                                |
+  | iloUsername      | string |                                                |
   +------------------+--------+------------------------------------------------+
-  | ilo_password     | string |                                                |
+  | iloPassword      | string |                                                |
   +------------------+--------+------------------------------------------------+
-  | router_host_name | string |                                                |
+  | routerHostName   | string |                                                |
   +------------------+--------+------------------------------------------------+
-  | router_port_name | string |                                                |
+  | routerPortName   | string |                                                |
   +------------------+--------+------------------------------------------------+
   
+  **Response Example** ::
+
+    {
+        'response' : {
+            'xmppPasswd' : '**********',
+            'profile' : 'EDGE1_CDN1_421',
+            'iloUsername' : null,
+            'status' : 'REPORTED',
+            'ipAddress' : '10.74.27.188',
+            'cdnId' : '1',
+            'physLocation' : 'plocation-chi-1',
+            'cachegroup' : 'cache_group_edge',
+            'interfaceName' : 'eth0',
+            'ip6Gateway' : null,
+            'iloPassword' : null,
+            'id' : '1003',
+            'routerPortName' : null,
+            'lastUpdated' : '2016-01-25 14:16:16',
+            'ipNetmask' : '255.255.255.0',
+            'ipGateway' : '10.74.27.1',
+            'tcpPort' : '80',
+            'mgmtIpAddress' : null,
+            'ip6Address' : null,
+            'interfaceMtu' : '1500',
+            'iloIpGateway' : null,
+            'hostName' : 'tc1_ats2',
+            'xmppId' : 'tc1_ats1',
+            'rack' : null,
+            'mgmtIpNetmask' : null,
+            'iloIpAddress' : null,
+            'mgmtIpGateway' : null,
+            'type' : 'EDGE',
+            'domainName' : 'my.test.com',
+            'iloIpNetmask' : null,
+            'routerHostName' : null
+        }
+    }
+
 |
 
 **DELETE /api/1.2/servers/{:id}**
