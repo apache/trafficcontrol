@@ -152,7 +152,7 @@ func (d *DsStatHTTP) CommonData() *DsStatCommon {
 	return &d.Common
 }
 
-func NewDsStatHTTP() *DsStatHTTP {
+func newDsStatHTTP() *DsStatHTTP {
 	return &DsStatHTTP{CacheGroups: map[CacheGroupName]DsStatCacheStats{}, Type: map[DsStatCacheType]DsStatCacheStats{}, Common: DsStatCommon{CachesReporting: map[CacheName]bool{}}}
 }
 
@@ -168,7 +168,7 @@ func (d *DsStatDNS) CommonData() *DsStatCommon {
 	return &d.Common
 }
 
-func NewDsStatDNS() *DsStatDNS {
+func newDsStatDNS() *DsStatDNS {
 	return &DsStatDNS{Common: DsStatCommon{CachesReporting: map[CacheName]bool{}}}
 }
 
@@ -317,7 +317,7 @@ type DsStatLastKbps struct {
 	Total       LastKbpsData
 }
 
-func NewDsStatLastKbps() DsStatLastKbps {
+func newDsStatLastKbps() DsStatLastKbps {
 	return DsStatLastKbps{CacheGroups: map[CacheGroupName]LastKbpsData{}, Type: map[DsStatCacheType]LastKbpsData{}}
 }
 
@@ -327,27 +327,27 @@ type LastKbpsData struct {
 	Time  time.Time
 }
 
-// AddKbps adds Kbps fields to the newDsStats, based on the previous out_bytes in the oldDsStats, and the time difference.
+// addKbps adds Kbps fields to the NewDsStats, based on the previous out_bytes in the oldDsStats, and the time difference.
 //
 // Traffic Server only updates its data every N seconds. So, often we get a new DsStats with the same OutBytes as the previous one,
 // So, we must record the last changed value, and the time it changed. Then, if the new OutBytes is different from the previous,
 // we set the (new - old) / lastChangedTime as the KBPS, and update the recorded LastChangedTime and LastChangedValue
 //
-// This specifically returns the given dsStats and lastKbpsStats on error, so it's safe to do persistentDsStats, persistentLastKbpsStats, err = AddKbps(...)
-func AddKbps(dsStats DsStats, lastKbpsStats DsStatsLastKbps, dsStatsTime time.Time) (DsStats, DsStatsLastKbps, error) {
+// This specifically returns the given dsStats and lastKbpsStats on error, so it's safe to do persistentDsStats, persistentLastKbpsStats, err = addKbps(...)
+func addKbps(dsStats DsStats, lastKbpsStats DsStatsLastKbps, dsStatsTime time.Time) (DsStats, DsStatsLastKbps, error) {
 	for dsName, iStat := range dsStats.DeliveryService {
 		if _, ok := iStat.(*DsStatDNS); ok {
 			continue
 		}
 		if _, ok := iStat.(*DsStatHTTP); !ok {
-			fmt.Printf("WARNING: AddKbps got unknown stat type %T\n", iStat)
+			fmt.Printf("WARNING: addKbps got unknown stat type %T\n", iStat)
 			continue
 		}
 		stat := iStat.(*DsStatHTTP)
 
 		lastKbpsStat, lastKbpsStatExists := lastKbpsStats[dsName]
 		if !lastKbpsStatExists {
-			lastKbpsStat = NewDsStatLastKbps()
+			lastKbpsStat = newDsStatLastKbps()
 		}
 
 		for cgName, cacheStats := range stat.CacheGroups {
@@ -387,32 +387,32 @@ func AddKbps(dsStats DsStats, lastKbpsStats DsStatsLastKbps, dsStatsTime time.Ti
 	return dsStats, lastKbpsStats, nil
 }
 
-func CreateDsStats(statHistory map[string][]interface{}, dsServers map[string][]string, serverDs map[string]string, dsTypes map[string]DsStatType, dsRegexStrs map[string][]string, serverCachegroups map[string]string, serverTypes map[string]DsStatCacheType, crStates peer.Crstates) (DsStats, error) {
+func CreateDsStats(statHistory map[string][]interface{}, dsServers map[string][]string, serverDs map[string]string, dsTypes map[string]DsStatType, dsRegexStrs map[string][]string, serverCachegroups map[string]string, serverTypes map[string]DsStatCacheType, crStates peer.Crstates, lastKbpsStats DsStatsLastKbps, now time.Time) (DsStats, DsStatsLastKbps, error) {
 	dsStats := NewDsStats()
 
 	dsRegexes, err := CreateDsRegexes(dsRegexStrs)
 	if err != nil {
-		return DsStats{}, fmt.Errorf("error creating DsRegexes: %v", err)
+		return DsStats{}, lastKbpsStats, fmt.Errorf("error creating DsRegexes: %v", err)
 	}
 
 	for deliveryService, _ := range dsServers {
 		dsType, ok := dsTypes[deliveryService]
 		if !ok {
-			return DsStats{}, fmt.Errorf("deliveryservice %s missing type", deliveryService)
+			return DsStats{}, lastKbpsStats, fmt.Errorf("deliveryservice %s missing type", deliveryService)
 		}
 		if dsType == DsStatTypeHTTP {
-			dsStats.DeliveryService[DeliveryServiceName(deliveryService)] = NewDsStatHTTP()
+			dsStats.DeliveryService[DeliveryServiceName(deliveryService)] = newDsStatHTTP()
 		} else if dsType == DsStatTypeDNS {
-			dsStats.DeliveryService[DeliveryServiceName(deliveryService)] = NewDsStatDNS()
+			dsStats.DeliveryService[DeliveryServiceName(deliveryService)] = newDsStatDNS()
 		} else {
-			return DsStats{}, fmt.Errorf("unknown type for '%s': %v", deliveryService, dsType)
+			return DsStats{}, lastKbpsStats, fmt.Errorf("unknown type for '%s': %v", deliveryService, dsType)
 		}
 	}
 
 	dsStats = setStaticData(dsStats, dsServers)
 	dsStats, err = addAvailableData(dsStats, crStates, serverCachegroups, serverDs, serverTypes)
 	if err != nil {
-		return dsStats, fmt.Errorf("Error getting Cache availability data: %v", err)
+		return dsStats, lastKbpsStats, fmt.Errorf("Error getting Cache availability data: %v", err)
 	}
 
 	stats := dsStats.DeliveryService
@@ -449,7 +449,7 @@ func CreateDsStats(statHistory map[string][]interface{}, dsServers map[string][]
 		}
 	}
 	dsStats.DeliveryService = stats
-	return dsStats, nil
+	return addKbps(dsStats, lastKbpsStats, now)
 }
 
 var ErrNotProcessedStat = errors.New("This stat is not used.")
