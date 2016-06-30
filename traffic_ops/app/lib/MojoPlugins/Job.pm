@@ -100,15 +100,22 @@ sub register {
 			}
 
 			# Only queue updates for servers that have profiles with the regex_revalidate.config file location parameter.
-			# If that parameter is not there, other mechanisms (ansible? script?) must be used to copy the 
-			# regex_revalidate.config to the caches. 
-			my @profiles = $self->db->resultset('ProfileParameter')->search( { -and => [ 'parameter.name' => 'location', 
-				'parameter.config_file' => 'regex_revalidate.config' ] }, { prefetch => [ qw{ parameter profile } ] } )->get_column('profile')->all();
+			# If that parameter is not there, other mechanisms (ansible? script?) must be used to copy the
+			# regex_revalidate.config to the caches.
+			my @profiles = $self->db->resultset('ProfileParameter')->search(
+				{
+					-and => [
+						'parameter.name'        => 'location',
+						'parameter.config_file' => 'regex_revalidate.config'
+					]
+				},
+				{ prefetch => [qw{ parameter profile }] }
+			)->get_column('profile')->all();
 
 			my $update_server_bit_rs = $self->db->resultset('Server')->search(
 				{
 					'me.cdn_id' => $cdn_id,
-					-and        => { status => { 'not in' => \@offstates }, profile => {'in' => \@profiles} }
+					-and        => { status => { 'not in' => \@offstates }, profile => { 'in' => \@profiles } }
 				}
 			);
 
