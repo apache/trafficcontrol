@@ -75,8 +75,8 @@ sub create{
     if (defined($rs)) {
         $response->{id}     = $rs->id;
         $response->{name}   = $rs->name;
-        $response->{division_name}  = $division_name;
-        $response->{divsion_id}    = $rs->division->id;
+        $response->{divisionName}  = $division_name;
+        $response->{divsionId}    = $rs->division->id;
         return $self->success($response);
     }
     return $self->alert("create region ". $params->{name}." failed.");

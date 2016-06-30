@@ -88,9 +88,9 @@ sub create{
     if (defined($existing_physlocation)){
         return $self->alert("physical location[". $params->{name} . "] already exists.");
     }
-    $existing_physlocation = $self->db->resultset('PhysLocation')->search( { name => $params->{short_name} } )->get_column('name')->single();
+    $existing_physlocation = $self->db->resultset('PhysLocation')->search( { name => $params->{shortName} } )->get_column('name')->single();
     if (defined($existing_physlocation)){
-        return $self->alert("physical location with short_name[". $params->{short_name} . "] already exists.");
+        return $self->alert("physical location with shortName[". $params->{shortName} . "] already exists.");
     }
     my $region_id = $self->db->resultset('Region')->search( { name => $region_name } )->get_column('id')->single();
     if (!defined($region_id)) {
@@ -100,7 +100,7 @@ sub create{
     my $insert = $self->db->resultset('PhysLocation')->create(
         {
             name     => $params->{name},
-            short_name     => $params->{short_name},
+            short_name     => $params->{shortName},
             region     => $region_id,
             address     => $self->undef_to_default($params->{address}, ""),
             city     => $self->undef_to_default($params->{city}, ""),
@@ -118,9 +118,9 @@ sub create{
     if (defined($rs)) {
         $response->{id}     = $rs->id;
         $response->{name}   = $rs->name;
-        $response->{short_name}   = $rs->short_name;
-        $response->{region_name}   = $region_name;
-        $response->{region_id}   = $rs->region->id;
+        $response->{shortName}   = $rs->short_name;
+        $response->{regionName}   = $region_name;
+        $response->{regionId}   = $rs->region->id;
         $response->{address}   = $rs->address;
         $response->{city}   = $rs->city;
         $response->{state}   = $rs->state;
