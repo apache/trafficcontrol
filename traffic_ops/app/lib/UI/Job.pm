@@ -218,10 +218,10 @@ sub is_valid_job {
 	my $self = shift;
 
 	# check if ttl is between min and max
-	my $min_hours =
-		$self->db->resultset('Parameter')->search( { name => "ttl_min_hours" }, { config_file => "regex_revalidate.config" } )->get_column('value')->first;
-	my $max_hours =
-		$self->db->resultset('Parameter')->search( { name => "ttl_max_hours" }, { config_file => "regex_revalidate.config" } )->get_column('value')->first;
+	my $min_hours = 1;
+	my $max_days =
+		$self->db->resultset('Parameter')->search( { name => "maxRevalDurationDays" }, { config_file => "regex_revalidate.config" } )->get_column('value')->first;
+	my $max_hours = $max_days * 24;	
 	my $ttl = $self->param('job.ttl');
 	if ( $ttl eq '' || $ttl < $min_hours || $ttl > $max_hours ) {
 		$self->field('job.ttl')->is_like( qr/^\//,, "Must be between " . $min_hours . " and " . $max_hours )

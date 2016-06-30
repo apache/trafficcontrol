@@ -31,8 +31,7 @@ insert ignore into type (name, description, use_in_table) values ('STATISTIC_EXT
 insert ignore into type (name, description, use_in_table) values ('RESOLVE4', 'federation type resolve4', 'federation');
 insert ignore into type (name, description, use_in_table) values ('RESOLVE6', 'federation type resolve6', 'federation');
 insert ignore into parameter (name, config_file, value) values ('snapshot_dir', 'regex_revalidate.config','public/Trafficserver-Snapshots/');
-insert ignore into parameter (name, config_file, value) values ('ttl_max_hours', 'regex_revalidate.config', '672');
-insert ignore into parameter (name, config_file, value) values ('ttl_min_hours', 'regex_revalidate.config', '48');
+insert ignore into parameter (name, config_file, value) values ('maxRevalDurationDays', 'regex_revalidate.config', '90');
 
 -- some of the old ones do not get a new place, and there will be 'gaps' in the column usage.... New to_extension add will have to take care of that.
 insert ignore into to_extension (id, name, servercheck_short_name, servercheck_column_name, version, info_url, script_file, isactive, additional_config_json, type) 

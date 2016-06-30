@@ -1263,10 +1263,10 @@ sub regex_revalidate_dot_config {
 	}
 
 	my %regex_time;
-	my $max_hours =
+	my $max_days =
 		$self->db->resultset('Parameter')->search( { name => "ttl_max_hours" }, { config_file => "regex_revalidate.config" } )->get_column('value')->first;
-	my $min_hours =
-		$self->db->resultset('Parameter')->search( { name => "ttl_min_hours" }, { config_file => "regex_revalidate.config" } )->get_column('value')->first;
+	my $max_hours = $max_days * 24;
+	my $min_hours = 1;
 
 	my $rs = $self->db->resultset('Job')->search( { start_time => \$interval }, { prefetch => 'job_deliveryservice' } );
 	while ( my $row = $rs->next ) {
