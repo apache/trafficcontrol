@@ -390,8 +390,10 @@ func Start(opsConfigFile string, staticAppData StaticAppData) {
 
 			// TODO determine if we should combineCrStates() here
 
+			now := time.Now()
+
 			var err error
-			dsStats, err = deliveryservicestats.CreateDsStats(statHistory, deliveryServiceServers, serverDeliveryServices, deliveryServiceTypes, deliveryServiceRegexes, serverCachegroups, serverTypes, combinedStates)
+			dsStats, lastKbpsStats, err = deliveryservicestats.CreateDsStats(statHistory, deliveryServiceServers, serverDeliveryServices, deliveryServiceTypes, deliveryServiceRegexes, serverCachegroups, serverTypes, combinedStates, lastKbpsStats, now)
 			if err != nil {
 				errorCount++
 				log.Printf("ERROR getting deliveryservicestats: %v\n", err)
@@ -400,13 +402,7 @@ func Start(opsConfigFile string, staticAppData StaticAppData) {
 			if lastHealthStart, ok := lastHealthEndTimes[healthResult.Id]; ok {
 				lastHealthDurations[healthResult.Id] = time.Since(lastHealthStart)
 			}
-			lastHealthEndTimes[healthResult.Id] = time.Now()
-
-			dsStats, lastKbpsStats, err = deliveryservicestats.AddKbps(dsStats, lastKbpsStats, lastHealthEndTimes[healthResult.Id])
-			if err != nil {
-				errorCount++
-				log.Printf("ERROR getting deliveryservicestats kbps: %v\n", err)
-			}
+			lastHealthEndTimes[healthResult.Id] = now
 
 			// if _, ok := queryIntervalStart[pollI]; !ok {
 			// 	log.Printf("ERROR poll start index not found")
