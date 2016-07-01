@@ -33,14 +33,14 @@
 				<executions>
 					<execution>
 						<id>PMD</id>
-						<phase>verify</phase>
+						<phase>compile</phase>
 						<goals>
 							<goal>check</goal>
 						</goals>
 						<configuration>
 							<targetJdk>${java.version}</targetJdk>
 							<verbose>true</verbose>
-							<failurePriority>2</failurePriority>
+							<failurePriority>5</failurePriority>
 							<rulesets>
 								<ruleset>build/pmd/ruleset.xml</ruleset>
 							</rulesets>
@@ -50,7 +50,7 @@
 				<configuration>
 					<targetJdk>${java.version}</targetJdk>
 					<verbose>true</verbose>
-					<failurePriority>2</failurePriority>
+					<failurePriority>5</failurePriority>
 					<rulesets>
 						<ruleset>build/pmd/ruleset.xml</ruleset>
 					</rulesets>

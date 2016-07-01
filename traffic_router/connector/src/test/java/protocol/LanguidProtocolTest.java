@@ -22,7 +22,9 @@ public class LanguidProtocolTest {
 		mockStatic(KeyStoreHelper.class);
 		when(KeyStoreHelper.getInstance()).thenThrow(new RuntimeException("boom"));
 		try {
-			new LanguidProtocol().init();
+			LanguidProtocol languidProtocol = new LanguidProtocol();
+			languidProtocol.setSSLEnabled(true);
+			languidProtocol.init();
 			fail("KeyStoreHelper.getInstance() not called");
 		}catch (RuntimeException e) {
 			assertThat(e.getMessage(), equalTo("boom"));

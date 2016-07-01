@@ -9,10 +9,10 @@ import java.nio.file.Paths;
 import java.security.KeyStore;
 
 public class KeyStoreLoader {
-	protected static org.apache.juli.logging.Log log = org.apache.juli.logging.LogFactory.getLog(KeyStoreLoader.class);
-
+	private final static org.apache.juli.logging.Log log = org.apache.juli.logging.LogFactory.getLog(KeyStoreLoader.class);
 	private final Path keyStorePath;
 	private final char[] keyPass;
+
 	public KeyStoreLoader(final String keyStore, final char[] keyPass) {
 		keyStorePath = Paths.get(keyStore);
 		this.keyPass = keyPass;
@@ -23,8 +23,8 @@ public class KeyStoreLoader {
 			return createKeyStore(keyStorePath, keyPass);
 		}
 
-		try (InputStream inputStream = Files.newInputStream(keyStorePath)) {
-			KeyStore keyStore = KeyStore.getInstance(KeyStore.getDefaultType());
+		try (final InputStream inputStream = Files.newInputStream(keyStorePath)) {
+			final KeyStore keyStore = KeyStore.getInstance(KeyStore.getDefaultType());
 			keyStore.load(inputStream, keyPass);
 			return keyStore;
 		} catch (Exception e) {
@@ -34,23 +34,24 @@ public class KeyStoreLoader {
 		return null;
 	}
 
-	public KeyStore createKeyStore(Path keyStorePath, char[] keyPass) {
-		if (!Files.exists(keyStorePath)) {
+	public KeyStore createKeyStore(final Path path, final char[] keyPass) {
+		Path existingPath = path;
+		if (!Files.exists(existingPath)) {
 			try {
-				keyStorePath = Files.createFile(keyStorePath);
+				existingPath = Files.createFile(existingPath);
 			} catch (IOException e) {
-				log.error("Failed to create keystore at path " + keyStorePath.toAbsolutePath());
+				log.error("Failed to create keystore at path " + existingPath.toAbsolutePath());
 				return null;
 			}
 		}
 
-		try (OutputStream outputStream = Files.newOutputStream(keyStorePath)) {
+		try (final OutputStream outputStream = Files.newOutputStream(existingPath)) {
 			final KeyStore keyStore = KeyStore.getInstance(KeyStore.getDefaultType());
 			keyStore.load(null, keyPass);
 			keyStore.store(outputStream, keyPass);
 			return keyStore;
 		} catch (Exception e) {
-			log.error("Failed initializing empty keystore at " + keyStorePath + " : " + e.getMessage());
+			log.error("Failed initializing empty keystore at " + existingPath + " : " + e.getMessage());
 		}
 
 		return null;

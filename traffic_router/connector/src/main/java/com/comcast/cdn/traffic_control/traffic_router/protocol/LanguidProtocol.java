@@ -27,10 +27,17 @@ public class LanguidProtocol extends Http11Protocol {
 	private String readyAttribute;
 	private String portAttribute;
 
+	public LanguidProtocol() {
+		setSSLImplementation(RouterSslImplementation.class.getCanonicalName());
+	}
+
 	@Override
 	@SuppressWarnings("PMD.SignatureDeclareThrowsException")
 	public void init() throws Exception {
-		KeyStoreHelper.getInstance();
+		if (isSSLEnabled()) {
+			KeyStoreHelper.getInstance();
+		}
+
 		if (!isReady()) {
 			log.info("Init called; creating thread to monitor the state of Traffic Router");
 			new LanguidPoller(this).start();

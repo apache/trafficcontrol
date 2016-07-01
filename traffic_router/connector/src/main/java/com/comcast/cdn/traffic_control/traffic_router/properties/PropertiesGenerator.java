@@ -10,14 +10,14 @@ import java.nio.file.Paths;
 import java.util.Properties;
 
 public class PropertiesGenerator {
-	private static Log log = org.apache.juli.logging.LogFactory.getLog(PropertiesGenerator.class);
+	private final static Log log = org.apache.juli.logging.LogFactory.getLog(PropertiesGenerator.class);
 	private final String propertiesFilePath;
 
 	public PropertiesGenerator(final String propertiesFilePath) {
 		this.propertiesFilePath = propertiesFilePath;
 	}
 
-	public String getProperty(String propertyName, String defaultValue) {
+	public String getProperty(final String propertyName, final String defaultValue) {
 		final String value = loadFromPropertiesFile(propertyName);
 		if (!value.isEmpty()) {
 			return value;
@@ -26,18 +26,18 @@ public class PropertiesGenerator {
 		return storeDefaultToPropertiesFile(propertyName, defaultValue);
 	}
 
-	protected String loadFromPropertiesFile(String propertyName) {
-		Path path = Paths.get(propertiesFilePath);
+	protected String loadFromPropertiesFile(final String propertyName) {
+		final Path path = Paths.get(propertiesFilePath);
 
 		if (!Files.exists(path)) {
 			return "";
 		}
 
-		try (InputStream inputStream = Files.newInputStream(path)) {
+		try (final InputStream inputStream = Files.newInputStream(path)) {
 			final Properties properties = new Properties();
 			properties.load(inputStream);
 
-			String value = properties.getProperty(propertyName);
+			final String value = properties.getProperty(propertyName);
 
 			if (value != null) {
 				return value;
@@ -49,7 +49,7 @@ public class PropertiesGenerator {
 		return "";
 	}
 
-	protected String storeDefaultToPropertiesFile(String propertyName, String defaultValue) {
+	protected String storeDefaultToPropertiesFile(final String propertyName, final String defaultValue) {
 		Path path = Paths.get(propertiesFilePath);
 
 		if (!Files.exists(path)) {
@@ -61,7 +61,7 @@ public class PropertiesGenerator {
 			}
 		}
 
-		try (OutputStream out = Files.newOutputStream(path)) {
+		try (final OutputStream out = Files.newOutputStream(path)) {
 			final Properties properties = new Properties();
 			properties.setProperty(propertyName, defaultValue);
 			properties.store(out, null);
