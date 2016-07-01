@@ -1130,7 +1130,7 @@ SSL Keys
   +------------------------+----------+---------------------------------------------------------------------------------------------------------+
   | longDesc2              | no       | Description field 2.                                                                                    |
   +------------------------+----------+---------------------------------------------------------------------------------------------------------+
-  | MatchList              | yes      | Array of matchList hashes.                                                                              |
+  | matchList              | yes      | Array of matchList hashes.                                                                              |
   +------------------------+----------+---------------------------------------------------------------------------------------------------------+
   | >type                  | yes      | The type of MatchList (one of :ref:to-api-v12-types use_in_table='regex').                              |
   +------------------------+----------+---------------------------------------------------------------------------------------------------------+
@@ -1147,7 +1147,7 @@ SSL Keys
   +------------------------+----------+---------------------------------------------------------------------------------------------------------+
   | midHeaderRewrite       | no       | The MID header rewrite actions to perform.                                                              |
   +------------------------+----------+---------------------------------------------------------------------------------------------------------+
-  | multiSiteOrigin        | yes      | Is the Multi Site Origin feature enabled for this delivery service.                                     |
+  | multiSiteOrigin        | yes      | 1 if enabled, 0 if disabled.                                                                            |
   +------------------------+----------+---------------------------------------------------------------------------------------------------------+
   | orgServerFqdn          | yes      | The origin server base URL (FQDN when used in this instance, includes the                               |
   |                        |          | protocol (http:// or https://) for use in retrieving content from the origin server.                    |
@@ -1192,8 +1192,8 @@ SSL Keys
   +------------------------+----------+---------------------------------------------------------------------------------------------------------+
   | trRequestHeaders       | no       | Traffic router log request headers                                                                      |
   +------------------------+----------+---------------------------------------------------------------------------------------------------------+
-  | logsEnabled            | no       | - 0: No                                                                                                 |
-  |                        |          | - 1: Yes                                                                                                |
+  | logsEnabled            | no       | - false: No                                                                                                 |
+  |                        |          | - true: Yes                                                                                                |
   +------------------------+----------+---------------------------------------------------------------------------------------------------------+
 
 
@@ -1208,7 +1208,7 @@ SSL Keys
         "profileName": "CCR_CDN1",
         "type": "HTTP",
         "multiSiteOrigin": "0",
-        "active": "0",
+        "active": "false",
         "matchList": [
             {
                 "type":  "HOST_REGEXP",
@@ -1229,7 +1229,7 @@ SSL Keys
     {
         "response":{
             "xmlId":"my_ds_1",
-            "active":"0",
+            "active":"false",
             "protocol":"0",
             "missLong":null,
             "maxDnsAnswers":"0",
@@ -1285,7 +1285,7 @@ SSL Keys
             "originShield":null,
             "trRequestHeaders":null,
             "geoProvider":"0",
-            "logsEnabled":"0",
+            "logsEnabled":"false",
         }
         "alerts":[
             {
@@ -1376,7 +1376,7 @@ SSL Keys
   +------------------------+----------+---------------------------------------------------------------------------------------------------------+
   | longDesc2              | no       | Description field 2.                                                                                    |
   +------------------------+----------+---------------------------------------------------------------------------------------------------------+
-  | MatchList              | yes      | Array of matchList hashes.                                                                              |
+  | matchList              | yes      | Array of matchList hashes.                                                                              |
   +------------------------+----------+---------------------------------------------------------------------------------------------------------+
   | >type                  | yes      | The type of MatchList (one of :ref:to-api-v12-types use_in_table='regex').                              |
   +------------------------+----------+---------------------------------------------------------------------------------------------------------+
@@ -1393,7 +1393,7 @@ SSL Keys
   +------------------------+----------+---------------------------------------------------------------------------------------------------------+
   | midHeaderRewrite       | no       | The MID header rewrite actions to perform.                                                              |
   +------------------------+----------+---------------------------------------------------------------------------------------------------------+
-  | multiSiteOrigin        | yes      | Is the Multi Site Origin feature enabled for this delivery service.                                     |
+  | multiSiteOrigin        | yes      | 1 if enabled, 0 if disabled.                                                                            |
   +------------------------+----------+---------------------------------------------------------------------------------------------------------+
   | orgServerFqdn          | yes      | The origin server base URL (FQDN when used in this instance, includes the                               |
   |                        |          | protocol (http:// or https://) for use in retrieving content from the origin server.                    |
@@ -1438,8 +1438,8 @@ SSL Keys
   +------------------------+----------+---------------------------------------------------------------------------------------------------------+
   | trRequestHeaders       | no       | Traffic router log request headers                                                                      |
   +------------------------+----------+---------------------------------------------------------------------------------------------------------+
-  | logsEnabled            | no       | - 0: No                                                                                                 |
-  |                        |          | - 1: Yes                                                                                                |
+  | logsEnabled            | no       | - false: No                                                                                                 |
+  |                        |          | - true: Yes                                                                                                |
   +------------------------+----------+---------------------------------------------------------------------------------------------------------+
 
 
@@ -1454,7 +1454,7 @@ SSL Keys
         "profileName": "CCR_CDN1",
         "type": "HTTP",
         "multiSiteOrigin": "0",
-        "active": "1",
+        "active": "true",
         "matchList": [
             {
                 "type":  "HOST_REGEXP",
@@ -1475,7 +1475,7 @@ SSL Keys
     {
         "response":{
             "xmlId":"my_ds_2",
-            "active":"1",
+            "active":"true",
             "protocol":"0",
             "missLong":null,
             "maxDnsAnswers":"0",
@@ -1531,7 +1531,7 @@ SSL Keys
             "originShield":null,
             "trRequestHeaders":null,
             "geoProvider":"0",
-            "logsEnabled":"0",
+            "logsEnabled":"false",
         }
         "alerts":[
             {

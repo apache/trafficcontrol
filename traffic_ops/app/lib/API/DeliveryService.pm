@@ -479,7 +479,7 @@ sub create {
 		my $dnssec_enabled = $cdn_rs->dnssec_enabled;
 		if ( $dnssec_enabled == 1 ) {
 			$self->app->log->debug("dnssec is enabled, creating dnssec keys");
-			&UI::DeliveryService::create_dnssec_keys( $cdn_rs->name, $params->{xmlId}, $new_id );
+			&UI::DeliveryService::create_dnssec_keys( $self, $cdn_rs->name, $params->{xmlId}, $new_id );
 		}
 
 		&log( $self, "Create deliveryservice with xml_id: " . $params->{xmlId}, " APICHANGE" );
@@ -581,8 +581,12 @@ sub check_params {
 	}
 
 	if ( defined($params->{active}) ) {
-		if ( !( ( $params->{active} eq "0" ) || ( $params->{active} eq "1" ) ) ) {
-			return (undef, "active must be 0|1." );
+		if ( $params->{active} eq "true" ) {
+			$transformed_params->{active} = 1;
+		} elsif ( $params->{active} eq "false" ) {
+			$transformed_params->{active} = 0;
+		} else {
+			return (undef, "active must be true|false." );
 		}
 	} else {
 		return (undef, "parameter active is must." );
@@ -669,6 +673,18 @@ sub check_params {
 		return (undef, "parameter orgServerFqdn is must." );
 	}
 
+	if ( defined($params->{logsEnabled}) ) {
+		if ( $params->{logsEnabled} eq "true" ) {
+			$transformed_params->{logsEnabled} = 1;
+		} elsif ( $params->{logsEnabled} eq "false" ) {
+			$transformed_params->{logsEnabled} = 0;
+		} else {
+			return (undef, "logsEnabled must be true|false." );
+		}
+	} else {
+		$transformed_params->{logsEnabled} = 0;
+	}
+
 	return ($transformed_params, undef);
 }
 
@@ -707,7 +723,7 @@ sub new_value {
 			max_dns_answers        => $self->nodef_to_default( $params->{maxDnsAnswers}, 0 ),
 			info_url               => $params->{infoUrl},
 			check_path             => $params->{checkPath},
-			active                 => $self->nodef_to_default( $params->{active}, 1 ),
+			active                 => $transformed_params->{active},
 			protocol               => $params->{protocol},
 			ipv6_routing_enabled   => $params->{ipv6RoutingEnabled},
 			range_request_handling => $params->{rangeRequestHandling},
@@ -722,7 +738,7 @@ sub new_value {
 			ssl_key_version        => $params->{sslKeyVersion},
 			tr_request_headers     => $params->{trRequestHeaders},
 			tr_response_headers    => $params->{trResponseHeaders},
-			logs_enabled           => $params->{logsEnabled},
+			logs_enabled           => $transformed_params->{logsEnabled},
 		};
 
 	return $value;
@@ -739,7 +755,7 @@ sub get_response {
 
 		$response->{id}                     = $rs->id;
 		$response->{xmlId}                  = $rs->xml_id;
-		$response->{active}                 = $rs->active;
+		$response->{active}                 = $rs->active==1 ? "true" : "false";
 		$response->{dscp}                   = $rs->dscp;
 		$response->{signed}                 = $rs->signed;
 		$response->{qstringIgnore}          = $rs->qstring_ignore;
@@ -782,7 +798,7 @@ sub get_response {
 		$response->{dnsBypassCname}         = $rs->dns_bypass_cname;
 		$response->{regionalGeoBlocking}    = $rs->regional_geo_blocking;
 		$response->{trRequestHeaders}       = $rs->tr_request_headers;
-		$response->{logsEnabled}            = $rs->logs_enabled;
+		$response->{logsEnabled}            = $rs->logs_enabled==1 ? "true" : "false";
 	}
 
 	my @pats = ();

@@ -51,7 +51,7 @@ ok $t->post_ok('/api/1.2/deliveryservices' => {Accept => 'application/json'} => 
         "type" => "HTTP",
         "multiSiteOrigin" => "0",
         "regionalGeoBlocking" => "1",
-        "active" => "0",
+        "active" => "false",
         "matchList" => [
             {
                 "type" =>  "HOST_REGEXP",
@@ -71,8 +71,10 @@ ok $t->post_ok('/api/1.2/deliveryservices' => {Accept => 'application/json'} => 
     ->json_is( "/response/cdnName" => "cdn1")
     ->json_is( "/response/profileName" => "CCR1")
     ->json_is( "/response/protocol" => "1")
+    ->json_is( "/response/type" => "HTTP")
     ->json_is( "/response/multiSiteOrigin" => "0")
     ->json_is( "/response/regionalGeoBlocking" => "1")
+    ->json_is( "/response/active" => "false")
     ->json_is( "/response/matchList/0/type" => "HOST_REGEXP")
     ->json_is( "/response/matchList/0/setNumber" => "0")
     ->json_is( "/response/matchList/0/pattern" => ".*\\.ds_1\\..*")
@@ -93,7 +95,7 @@ ok $t->put_ok('/api/1.2/deliveryservices/' . $ds_id  => {Accept => 'application/
         "type" => "HTTP",
         "multiSiteOrigin" => "0",
         "regionalGeoBlocking" => "0",
-        "active" => "1",
+        "active" => "true",
         "matchList" => [
             {
                 "type" =>  "HOST_REGEXP",
@@ -108,8 +110,10 @@ ok $t->put_ok('/api/1.2/deliveryservices/' . $ds_id  => {Accept => 'application/
     ->json_is( "/response/cdnName" => "cdn1")
     ->json_is( "/response/profileName" => "CCR1")
     ->json_is( "/response/protocol" => "1")
+    ->json_is( "/response/type" => "HTTP")
     ->json_is( "/response/multiSiteOrigin" => "0")
     ->json_is( "/response/regionalGeoBlocking" => "0")
+    ->json_is( "/response/active" => "true")
     ->json_is( "/response/matchList/0/type" => "HOST_REGEXP")
     ->json_is( "/response/matchList/0/setNumber" => "0")
     ->json_is( "/response/matchList/0/pattern" => ".*\\.my_vod2\\..*")
