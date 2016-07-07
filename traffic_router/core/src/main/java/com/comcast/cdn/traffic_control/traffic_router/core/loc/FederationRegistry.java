@@ -56,7 +56,7 @@ public class FederationRegistry {
                 continue;
             }
 
-            for (CidrAddress resolverAddress : cidrAddresses) {
+            for (final CidrAddress resolverAddress : cidrAddresses) {
                 if (resolverAddress.equals(cidrAddress) || resolverAddress.includesAddress(cidrAddress)) {
                     return createInetRecords(federationMapping);
                 }
@@ -76,7 +76,7 @@ public class FederationRegistry {
 	public List<Federation> findFederations(final CidrAddress cidrAddress) {
 		final List<Federation> results = new ArrayList<Federation>();
 
-		for (Federation federation : federations) {
+		for (final Federation federation : federations) {
 			if (federation.containsCidrAddress(cidrAddress)) {
 				results.add(federation);
 			}

@@ -58,7 +58,7 @@ public class LocationController {
 		final Map<String, Map<String, List<CacheModel>>> map = new HashMap<String, Map<String, List<CacheModel>>>();
 		final Map<String, List<CacheModel>> innerMap = new HashMap<String, List<CacheModel>>();
 
-		for (String location : dataExporter.getLocations()) {
+		for (final String location : dataExporter.getLocations()) {
 			innerMap.put(location, dataExporter.getCaches(location));
 		}
 

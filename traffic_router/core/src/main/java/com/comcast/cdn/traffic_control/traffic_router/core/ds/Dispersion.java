@@ -84,7 +84,7 @@ public class Dispersion {
 
 		final List<Cache> cacheList = new ArrayList<Cache>();
 
-		for (Cache c : cacheMap.values()) {
+		for (final Cache c : cacheMap.values()) {
 			cacheList.add(c);
 
 			if (this.getLimit() != 0 && cacheList.size() == this.getLimit()) {

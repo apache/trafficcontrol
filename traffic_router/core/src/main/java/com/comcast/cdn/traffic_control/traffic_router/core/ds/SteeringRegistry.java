@@ -46,8 +46,8 @@ public class SteeringRegistry {
 		final List<Steering> steerings = m.values().iterator().next();
 		final Map<String, Steering> newSteerings = new HashMap<String, Steering>();
 
-		for (Steering steering : steerings) {
-			for (SteeringTarget steeringTarget : steering.getTargets()) {
+		for (final Steering steering : steerings) {
+			for (final SteeringTarget steeringTarget : steering.getTargets()) {
 				steeringTarget.generateHashes();
 			}
 			newSteerings.put(steering.getDeliveryService(), steering);
@@ -55,8 +55,8 @@ public class SteeringRegistry {
 
 		registry.clear();
 		registry.putAll(newSteerings);
-		for (Steering steering : steerings) {
-			for (SteeringTarget target : steering.getTargets()) {
+		for (final Steering steering : steerings) {
+			for (final SteeringTarget target : steering.getTargets()) {
 				LOGGER.info("Steering " + steering.getDeliveryService() + " target " + target.getDeliveryService() + " now has weight " + target.getWeight());
 			}
 		}
@@ -77,7 +77,7 @@ public class SteeringRegistry {
 	public Collection<Steering> removeAll(final List<String> steeringIds) {
 		final List<Steering> removedEntries = new ArrayList<Steering>();
 
-		for (String steeringId : steeringIds) {
+		for (final String steeringId : steeringIds) {
 			removedEntries.add(registry.remove(steeringId));
 		}
 

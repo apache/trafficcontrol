@@ -118,7 +118,7 @@ public class TrafficRouter {
 	public List<Cache> getSupportingCaches(final List<Cache> caches, final DeliveryService ds) {
 		final List<Cache> supportingCaches = new ArrayList<Cache>();
 
-		for (Cache cache : caches) {
+		for (final Cache cache : caches) {
 			if (!cache.hasDeliveryService(ds.getId())) {
 				continue;
 			}
@@ -627,7 +627,7 @@ public class TrafficRouter {
 
 		final List<CacheLocation> orderedLocations = orderCacheLocations(cacheLocations, clientLocation);
 
-		for (CacheLocation cacheLocation : orderedLocations) {
+		for (final CacheLocation cacheLocation : orderedLocations) {
 			if (! getSupportingCaches(cacheLocation.getCaches(), deliveryService).isEmpty()) {
 				return cacheLocation;
 			}
@@ -747,7 +747,7 @@ public class TrafficRouter {
 		}
 
 		final Map<String, ConfigurationListener> configurationListenerMap = applicationContext.getBeansOfType(ConfigurationListener.class);
-		for (ConfigurationListener configurationListener : configurationListenerMap.values()) {
+		for (final ConfigurationListener configurationListener : configurationListenerMap.values()) {
 			configurationListener.configurationChanged();
 		}
 	}

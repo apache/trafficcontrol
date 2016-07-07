@@ -280,7 +280,7 @@ public final class SignatureManager {
 
 		final List<DNSKeyPairWrapper> keys = new ArrayList<DNSKeyPairWrapper>();
 
-		for (DNSKeyPairWrapper kpw : keyPairs) {
+		for (final DNSKeyPairWrapper kpw : keyPairs) {
 			final DnsKeyPair kp = (DnsKeyPair) kpw;
 			final Name kn = kp.getDNSKEYRecord().getName();
 			final boolean isKsk = kpw.isKeySigningKey();
@@ -465,7 +465,7 @@ public final class SignatureManager {
 				// these records go into the CDN TLD, so don't use the DS' TTLs; use the CDN's.
 				final Long dsTtl = ZoneUtils.getLong(config.optJSONObject("ttls"), "DS", 60);
 
-				for (DnsKeyPair kp : kskPairs) {
+				for (final DnsKeyPair kp : kskPairs) {
 					final DSRecord dsRecord = SignUtils.calculateDSRecord(kp.getDNSKEYRecord(), DSRecord.SHA256_DIGEST_ID, dsTtl);
 					LOGGER.debug(name + ": adding DS record " + dsRecord);
 					records.add(dsRecord);
@@ -484,12 +484,12 @@ public final class SignatureManager {
 			final List<DNSKeyPairWrapper> zskPairs = getZSKPairs(name, maxTTL);
 
 			if (kskPairs != null && zskPairs != null && !kskPairs.isEmpty() && !zskPairs.isEmpty()) {
-				for (DnsKeyPair kp : kskPairs) {
+				for (final DnsKeyPair kp : kskPairs) {
 					LOGGER.debug(name + ": DNSKEY record " + kp.getDNSKEYRecord());
 					list.add(kp.getDNSKEYRecord());
 				}
 
-				for (DnsKeyPair kp : zskPairs) {
+				for (final DnsKeyPair kp : zskPairs) {
 					// TODO: make adding zsk to parent zone configurable?
 					LOGGER.debug(name + ": DNSKEY record " + kp.getDNSKEYRecord());
 					list.add(kp.getDNSKEYRecord());
