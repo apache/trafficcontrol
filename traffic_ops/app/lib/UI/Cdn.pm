@@ -26,6 +26,7 @@ use Date::Manip;
 use JSON;
 use Hash::Merge qw(merge);
 use String::CamelCase qw(decamelize);
+use DBI;
 
 # Yes or no
 my %yesno = ( 0 => "no", 1 => "yes", 2 => "no" );
@@ -548,9 +549,6 @@ sub alog {
     my %data = ( "aaData" => [] );
 
     my $interval = "> now() - interval '30 day'";    # postgres
-    if ( $self->db->storage->isa("DBIx::Class::Storage::DBI::mysql") ) {
-        $interval = "> now() - interval 30 day";
-    }
     my $rs = $self->db->resultset('Log')->search(
         { 'me.last_updated' => \$interval },
         {
