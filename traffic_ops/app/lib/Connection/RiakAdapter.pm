@@ -124,6 +124,16 @@ sub get {
 	return $ua->get($fqdn);
 }
 
+sub search {
+	my $self   = shift;
+	my $index = shift || confess("Supply a search index");
+	my $search_string    = shift || confess("Supply a search string");
+
+	my $key_uri = "/search/query/$index?wt=json&" . $search_string;
+	my $fqdn = $self->get_url($key_uri);
+	return $ua->get($fqdn);
+}
+
 #MOJOPlugins/Riak
 sub get_url {
 	my $self = shift;
