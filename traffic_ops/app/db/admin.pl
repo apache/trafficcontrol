@@ -147,10 +147,12 @@ sub migrate {
 }
 
 sub seed {
+	print "Seeding database.\n";
 	system("psql -h $host_ip -p $host_port -d $db_name -U $db_username -e < db/seeds.sql");
 }
 
 sub load_schema {
+	print "Creating database tables.\n";
 	system("psql -h $host_ip -p $host_port -d $db_name -U $db_username -e < db/create_tables.sql");
 }
 
