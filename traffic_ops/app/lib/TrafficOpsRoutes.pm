@@ -604,6 +604,10 @@ sub api_routes {
 	#checks expiration of keys and re-generates if necessary.  Used by Cron.
 	$r->get( "/internal/api/$version/cdns/dnsseckeys/refresh" => [ format => [qw(json)] ] )->to( 'Cdn#dnssec_keys_refresh', namespace => $namespace );
 
+	#-- CDN:  SSL Keys
+	$r->get( "/api/$version/cdns/name/:name/sslkeys" => [ format => [qw(json)] ] )->over( authenticated => 1 )
+		->to( 'Cdn#ssl_keys', namespace => $namespace );
+
 	# -- CDN: Topology
 	$r->get( "/api/$version/cdns/configs" => [ format => [qw(json)] ] )->via('GET')->over( authenticated => 1 )
 		->to( 'Cdn#get_cdns', namespace => $namespace );

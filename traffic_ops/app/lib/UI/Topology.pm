@@ -391,6 +391,12 @@ sub gen_crconfig_json {
             $data_obj->{'deliveryServices'}->{ $row->xml_id }->{'geoEnabled'} = $geoEnabled;
         }
 
+		$data_obj->{'deliveryServices'}->{ $row->xml_id }->{'sslEnabled'} = 'false';
+		my $ds_protocol = $row->protocol;
+		if ($ds_protocol > 0) {
+			$data_obj->{'deliveryServices'}->{ $row->xml_id }->{'sslEnabled'} = 'true';
+		}
+
         my $geo_provider = $row->geo_provider;
         if ( $geo_provider == 1 ) {
             $data_obj->{'deliveryServices'}->{ $row->xml_id }->{'geolocationProvider'} = 'neustarGeolocationService';

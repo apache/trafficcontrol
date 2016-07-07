@@ -1,22 +1,22 @@
-.. 
+..
 .. Copyright 2015 Comcast Cable Communications Management, LLC
-.. 
+..
 .. Licensed under the Apache License, Version 2.0 (the "License");
 .. you may not use this file except in compliance with the License.
 .. You may obtain a copy of the License at
-.. 
+..
 ..     http://www.apache.org/licenses/LICENSE-2.0
-.. 
+..
 .. Unless required by applicable law or agreed to in writing, software
 .. distributed under the License is distributed on an "AS IS" BASIS,
 .. WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 .. See the License for the specific language governing permissions and
 .. limitations under the License.
-.. 
+..
 
 .. _to-api-v12-cdn:
 
-CDN 
+CDN
 ===
 
 .. _to-api-v12-cdn-route:
@@ -640,7 +640,7 @@ Topology
   Retrieves CDN config information.
 
   Authentication Required: Yes
-  
+
   **Request Route Parameters**
 
   +--------------+----------+-----------------------+
@@ -1019,7 +1019,7 @@ Topology
 
 |
 
- 
+
 .. _to-api-v12-cdn-dnsseckeys:
 
 DNSSEC Keys
@@ -1028,8 +1028,6 @@ DNSSEC Keys
 **GET /api/1.2/cdns/name/:name/dnsseckeys.json**
 
   Gets a list of dnsseckeys for a CDN and all associated Delivery Services.
-  Before returning response to user, check to make sure keys aren't expired.  If they are expired, generate new ones.
-  Before returning response to user, make sure DNSSEC keys for all delivery services exist.  If they don't exist, create them.
 
   Authentication Required: Yes
 
@@ -1151,12 +1149,12 @@ DNSSEC Keys
   **Response Example**
   ::
 
-    {  
+    {
       "response": "Successfully deleted dnssec keys for <cdn>"
     }
 
 |
-  
+
 **POST /api/1.2/deliveryservices/dnsseckeys/generate**
 
   Generates ZSK and KSK keypairs for a CDN and all associated Delivery Services.
@@ -1204,7 +1202,64 @@ DNSSEC Keys
   **Response Example** ::
 
 
-    {  
+    {
       "response": "Successfully created dnssec keys for cdn1"
     }
 
+.. _to-api-v12-cdn-sslkeys:
+
+SSL Keys
++++++++++++
+
+**GET /api/1.2/cdns/name/:name/sslkeys.json**
+
+  Returns ssl certificates for all Delivery Services that are a part of the CDN.
+
+  Authentication Required: Yes
+
+  Role(s) Required: Admin
+
+  **Request Route Parameters**
+
+  +----------+----------+-------------+
+  |   Name   | Required | Description |
+  +==========+==========+=============+
+  | ``name`` | yes      |             |
+  +----------+----------+-------------+
+
+  **Response Properties**
+
+  +-------------------------------+--------+---------------------------------------------------------------+
+  |           Parameter           |  Type  |                          Description                          |
+  +===============================+========+===============================================================+
+  | ``deliveryservice``           | string | identifier for deliveryservice xml_id                         |
+  +-------------------------------+--------+---------------------------------------------------------------+
+  | ``certificate``                | array  | collection of certificate                                     |
+  +-------------------------------+--------+---------------------------------------------------------------+
+  | ``>>key``                     | string | base64 encoded private key for ssl certificate                |
+  +-------------------------------+--------+---------------------------------------------------------------+
+  | ``>>crt``                     | string | base64 encoded ssl certificate                                |
+  +-------------------------------+--------+---------------------------------------------------------------+
+
+
+  **Response Example** ::
+
+    {
+      "response": [
+        {
+          "deliveryservice": "ds1",
+          "certificate": {
+            "crt": "base64encodedcrt1",
+            "key": "base64encodedkey1"
+          }
+        },
+        {
+          "deliveryservice": "ds2",
+          "certificate": {
+            "crt": "base64encodedcrt2",
+            "key": "base64encodedkey2"
+          }
+        }
+      ]
+    }
+|
