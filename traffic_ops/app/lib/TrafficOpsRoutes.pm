@@ -413,6 +413,9 @@ sub api_routes {
 	# -- CDN -- #NEW
 	$r->get( "/api/$version/cdns"            => [ format => [qw(json)] ] )->over( authenticated => 1 )->to( 'Cdn#index', namespace => $namespace );
 	$r->get( "/api/$version/cdns/name/:name" => [ format => [qw(json)] ] )->over( authenticated => 1 )->to( 'Cdn#name',  namespace => $namespace );
+	$r->post( "/api/$version/cdns" )->over( authenticated => 1 )->to( 'Cdn#create',  namespace => $namespace );
+	$r->put( "/api/$version/cdns/:id" )->over( authenticated => 1 )->to( 'Cdn#update',  namespace => $namespace );
+	$r->delete( "/api/$version/cdns/:id" )->over( authenticated => 1 )->to( 'Cdn#delete',  namespace => $namespace );
 
 	# -- CHANGE LOG - #NEW
 	$r->get( "/api/$version/logs"            => [ format => [qw(json)] ] )->over( authenticated => 1 )->to( 'ChangeLog#index', namespace => $namespace );
@@ -644,7 +647,13 @@ sub api_routes {
 	$r->delete("/api/$version/servers/:id")->over( authenticated => 1 )->to( 'Server#delete',   namespace => $namespace );
 	$r->post("/api/$version/servers/:id/queue_update")->over( authenticated => 1 )->to( 'Server#postupdatequeue',   namespace => $namespace );
     $r->post("/api/$version/cachegroups")->over( authenticated => 1 )->to( 'Cachegroup#create', namespace => $namespace );
+    $r->put("/api/$version/cachegroups/:id")->over( authenticated => 1 )->to( 'Cachegroup#update', namespace => $namespace );
+    $r->delete("/api/$version/cachegroups/:id")->over( authenticated => 1 )->to( 'Cachegroup#delete', namespace => $namespace );
 	$r->post("/api/$version/cachegroups/:id/queue_update")->over( authenticated => 1 )->to( 'Cachegroup#postupdatequeue',   namespace => $namespace );
+	$r->post("/api/$version/cachegroups/:id/deliveryservices")->over( authenticated => 1 )->to( 'DeliveryServiceServer#assign_ds_to_cachegroup',   namespace => $namespace );
+    $r->post("/api/$version/deliveryservices")->over( authenticated => 1 )->to( 'DeliveryService#create', namespace => $namespace );
+    $r->put("/api/$version/deliveryservices/:id")->over( authenticated => 1 )->to( 'DeliveryService#update', namespace => $namespace );
+    $r->delete("/api/$version/deliveryservices/:id")->over( authenticated => 1 )->to( 'DeliveryService#delete', namespace => $namespace );
     $r->post("/api/$version/deliveryservices/:xml_id/servers")->over( authenticated => 1 )->to( 'DeliveryService#assign_servers', namespace => $namespace );
     $r->put("/api/$version/snapshot/:cdn_name")->over( authenticated => 1 )->to( 'Topology#SnapshotCRConfig', namespace => $namespace );
 

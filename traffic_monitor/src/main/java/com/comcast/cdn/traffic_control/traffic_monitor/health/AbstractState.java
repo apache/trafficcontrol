@@ -209,7 +209,7 @@ abstract public class AbstractState {
 				 * relies on a null DataPoint value.  Because the JSON library
 				 * discards a key with a null value, let's handle it here. -jse
 				 */
-				final String value = (dp.getValue() == null) ? "" : dp.getValue();
+				final String value = (dp.getValue() == null) ? "false" : dp.getValue();
 				o.put("value", value);
 				o.put("span", dp.getSpan());
 				o.put("time", statisticsLog.getTime(dp));

@@ -110,7 +110,7 @@ The following tabs are available in the menu at the top of the Traffic Ops user 
   +--------------------+-----------------------------------------------------------------------------------------------------------------------------------+
   | Snapshot CRConfig  | Send updates to the Traffic Monitor / Traffic Router servers.  See :ref:`rl-queue-updates`                                        |
   +--------------------+-----------------------------------------------------------------------------------------------------------------------------------+
-  | Invalidate Content | Invalidate or purge content from the CDN. See :ref:`rl-purge`                                                                     |
+  | Invalidate Content | Invalidate or purge content from all caches in the CDN. See :ref:`rl-purge`                                                       |
   +--------------------+-----------------------------------------------------------------------------------------------------------------------------------+
   | Manage DNSSEC keys | Manage DNSSEC Keys for a chosen CDN.                                                                                              |
   +--------------------+-----------------------------------------------------------------------------------------------------------------------------------+

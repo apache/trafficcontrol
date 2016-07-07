@@ -95,7 +95,7 @@ Below is a list of cache parameters that are likely to need changes from the def
 +--------------------------+-------------------+-------------------------------------------------------------------------------------------------------------------------+
 | Drive_Letters            | storage.config    | JvD/Jeff to supply blurb                                                                                                |
 +--------------------------+-------------------+-------------------------------------------------------------------------------------------------------------------------+
-| purge_allow_ip           | ip_allow.config   | The IP address that is allowed to "purge" content on the CDN through regex_revalidate                                   |
+| purge_allow_ip           | ip_allow.config   | The IP address range that is allowed to execute the PURGE method on the caches (not related to :ref:`rl-purge`)         |
 +--------------------------+-------------------+-------------------------------------------------------------------------------------------------------------------------+
 | health.threshold.loadavg | rascal.properties | The Unix load average at which Traffic Router will stop sending traffic to this cache                                   |
 +--------------------------+-------------------+-------------------------------------------------------------------------------------------------------------------------+
@@ -128,6 +128,24 @@ All servers also have to be part of a `cache group`. A cache group is a logical 
 
 
 
+Configuring Content Purge
+=========================
+Content purge using ATS is not simple; there is no file system to delete files/directories from, and in large caches it can be hard to delete a simple regular expression from the cache. This is why Traffic Control uses the `Regex Revalidate Plugin <https://docs.trafficserver.apache.org/en/latest/admin-guide/plugins/regex_revalidate.en.html>`_ to purge content from the system. We don't actually remove the content, we have a check that gets run before each request on each cache to see if this request matches a list of regular expressions, and if it does, we force a revalidation to the origin, making the original content inaccessible. The regex_revalidate plugin will monitor it's config file, and will pick up changes to it without a `traffic_line -x` signal to ATS. Changes to this file need to be distributed to the highest tier (MID) caches in the CDN before they are distributed to the lower tiers, to prevent filling the lower tiers with the content that should be purged from the higher tiers without hitting the origin. This is why the ort script (see :ref:`reference-traffic-ops-ort`) will by default push out config changes to MID first, confirm that they have all been updated, and then push out the changes to the lower tiers. In large CDNs, this can make the distribution and time to activation of the purge too long, and because of that there is the option to not distribute the `regex_revalidate.config` file using the ort script, but to do this using other means. By default, Traffic Ops will use ort to distribute the `regex_revalidate.config` file. 
+
+Content Purge is controlled by the following parameters in the profile of the cache:
+
++----------------------+-------------------------+--------------------------------------------------+---------------------------------------------------------------------------------------------------------------------------------------------------------+
+|         Name         |       Config file       |                   Description                    |                                                                         Details                                                                         |
++======================+=========================+==================================================+=========================================================================================================================================================+
+| location             | regex_revalidate.config | What location the file should be in on the cache | The presence of this parameter tells ort to distribute this file; delete this parameter from the profile if this file is distributed using other means. |
++----------------------+-------------------------+--------------------------------------------------+---------------------------------------------------------------------------------------------------------------------------------------------------------+
+| maxRevalDurationDays | regex_revalidate.config | The maximum time a purge can be active           | To prevent a build up of many checks before each request, this is longest time the system will allow                                                    |
++----------------------+-------------------------+--------------------------------------------------+---------------------------------------------------------------------------------------------------------------------------------------------------------+
+| regex_revalidate     | plugin.config           | The config to be used for regex_revalidate.      | `regex_revalidate <https://docs.trafficserver.apache.org/en/5.3.x/reference/plugins/regex_remap.en.html>`_                                              |
+|                      |                         | For example: --config regex_revalidate.config    |                                                                                                                                                         |
++----------------------+-------------------------+--------------------------------------------------+---------------------------------------------------------------------------------------------------------------------------------------------------------+
+
+Note that the TTL the adminstrator enters in the purge request should be longer than the TTL of the content to ensure the bad content will not be used. If the CDN is serving content of unknown, or unlimited TTL, the administrator should consider using `proxy-config-http-cache-guaranteed-min-lifetime <https://docs.trafficserver.apache.org/en/latest/admin-guide/files/records.config.en.html#proxy-config-http-cache-guaranteed-min-lifetime>`_ to limit the maximum time an object can be in the cache before it is considered stale, and set that to the same value as `maxRevalDurationDays` (Note that the former is in seconds and the latter is in days, so convert appropriately).
 
 
 

@@ -62,6 +62,131 @@ sub name {
 	$self->success( \@data );
 }
 
+
+sub create {
+	my $self   = shift;
+	my $params = $self->req->json;
+
+	if ( !&is_oper($self) ) {
+		return $self->forbidden();
+	}
+
+	if ( !defined($params) ) {
+		return $self->alert("parameters must be in JSON format.");
+	}
+
+	if ( !defined($params->{name}) ) {
+		return $self->alert("CDN 'name' is required.");
+	}
+
+	my $existing = $self->db->resultset('Cdn')->search( { name => $params->{name} } )->single();
+	if ( $existing ) {
+		$self->app->log->error( "a cdn with name '" . $params->{name} . "' already exists." );
+		return $self->alert("a cdn with name " . $params->{name} . " already exists." );
+	}
+
+	my $value = {
+		name => $params->{name},
+	};
+    	if ( defined($params->{dnssecEnabled}) ) {
+	    $value->{dnssec_enabled} = $params->{dnssecEnabled}
+	}
+
+	my $insert = $self->db->resultset('Cdn')->create($value);
+	$insert->insert();
+
+	my $rs = $self->db->resultset('Cdn')->find( { id => $insert->id } );
+	if ( defined($rs) ) {
+		my $response;
+		$response->{id} = $rs->id;
+		$response->{name} = $rs->name;
+		$response->{dnssecEnabled} = $rs->dnssec_enabled;
+		&log( $self, "Created CDN with id: " . $rs->id . " and name: " . $rs->name, "APICHANGE" );
+		return $self->success($response, "cdn was created.");
+	}
+	return $self->alert("create cdn failed.");
+}
+
+sub update {
+	my $self   = shift;
+	my $id     = $self->param('id');
+	my $params = $self->req->json;
+
+	if ( !&is_oper($self) ) {
+		return $self->forbidden();
+	}
+
+	my $cdn = $self->db->resultset('Cdn')->find( { id => $id } );
+	if ( !defined($cdn) ) {
+		return $self->not_found();
+	}
+
+	if ( !defined($params) ) {
+		return $self->alert("parameters must be in JSON format.");
+	}
+
+	if ( !defined($params->{name}) ) {
+		return $self->alert("CDN 'name' is required.");
+	}
+
+	my $existing = $self->db->resultset('Cdn')->search( { name => $params->{name} } )->single();
+	if ( $existing && $existing->id != $cdn->id ) {
+		$self->app->log->error( "a cdn with name '" . $params->{name} . "' already exists." );
+		return $self->alert("a cdn with name " . $params->{name} . " already exists." );
+	}
+
+
+	my $value = {
+		name => $params->{name},
+	};
+    	if ( defined($params->{dnssecEnabled}) ) {
+		$value->{dnssec_enabled} = $params->{dnssecEnabled}
+	}
+	$cdn->update($value);
+
+	my $rs = $self->db->resultset('Cdn')->find( { id => $id } );
+	if ( defined($rs) ) {
+		my $response;
+		$response->{id} = $rs->id;
+		$response->{name} = $rs->name;
+		$response->{dnssecEnabled} = $rs->dnssec_enabled;
+		&log( $self, "Updated CDN name '" . $rs->name . "' for id: " . $rs->id, "APICHANGE" );
+		return $self->success($response, "cdn was updated.");
+	}
+	return $self->alert("update cdn failed.");
+}
+
+sub delete {
+	my $self   = shift;
+	my $id     = $self->param('id');
+
+	if ( !&is_oper($self) ) {
+		return $self->forbidden();
+	}
+
+	my $cdn = $self->db->resultset('Cdn')->search( { id => $id } );
+	if ( !defined($cdn) ) {
+		return $self->not_found();
+	}
+
+	my $rs = $self->db->resultset('Server')->search( { cdn_id => $id } );
+	if ( $rs->count() > 0 ) {
+		$self->app->log->error( "Failed to delete cdn id = $id has servers" );
+		return $self->alert("Failed to delete cdn id = $id has servers");
+	}
+
+	$rs = $self->db->resultset('Deliveryservice')->search( { cdn_id => $id } );
+	if ( $rs->count() > 0 ) {
+		$self->app->log->error( "Failed to delete cdn id = $id has delivery services" );
+		return $self->alert("Failed to delete cdn id = $id has delivery services");
+	}
+
+	my $name = $cdn->get_column('name')->single();
+	$cdn->delete();
+	&log( $self, "Delete cdn " . $name, "APICHANGE" );
+	return $self->success_message("cdn was deleted.");
+}
+
 sub configs_monitoring {
 	my $self      = shift;
 	my $cdn_name  = $self->param('name');
