@@ -20,76 +20,102 @@ update serverstatus set last_recycle_date = NULL;
 
 -- migrate the current table
 alter table serverstatus 
-  CHANGE `ilo_pingable` `aa` INT(11)  NULL DEFAULT NULL,
-  CHANGE `teng_pingable` `ab` INT(11)  NULL DEFAULT NULL,
-  CHANGE `fqdn_pingable` `ac` INT(11) NULL DEFAULT NULL,
-  CHANGE `dscp` `ad` INT(11) NULL DEFAULT NULL,
-  CHANGE `firmware` `ae` INT(11) NULL DEFAULT NULL,
-  CHANGE `marvin` `af` INT(11) NULL DEFAULT NULL,
-  CHANGE `ping6` `ag` INT(11) NULL DEFAULT NULL,
-  CHANGE `upd_pending` `ah` INT(11) NULL DEFAULT NULL,
-  CHANGE `stats` `ai` INT(11) NULL DEFAULT NULL,
-  CHANGE `prox` `aj` INT(11) NULL DEFAULT NULL,
-  CHANGE `mtu` `ak` INT(11) NULL DEFAULT NULL,
-  CHANGE `ccr_online` `al` INT(11) NULL DEFAULT NULL,
-  CHANGE `rascal` `am` INT(11) NULL DEFAULT NULL,
-  CHANGE `chr` `an` INT(11) NULL DEFAULT NULL,
-  CHANGE `cdu` `ao` INT(11) NULL DEFAULT NULL,
-  CHANGE `ort_errors` `ap` INT(11) NULL DEFAULT NULL,
-  CHANGE `mbps_out` `aq` INT(11) NULL DEFAULT NULL,
-  CHANGE `clients_connected` `ar` INT(11) NULL DEFAULT NULL,
-  CHANGE `last_recycle_date` `as` INT(11) NULL DEFAULT NULL,
-  CHANGE `last_recycle_duration_hrs` `at` INT(11) NULL DEFAULT NULL;
+  ALTER COLUMN ilo_pingable TYPE integer,
+  ALTER COLUMN ilo_pingable DROP NOT NULL,
+  ALTER COLUMN ilo_pingable SET DEFAULT NULL,
+  RENAME COLUMN ilo_pingable TO aa,
 
-alter table serverstatus modify `server` INT(11) NOT NULL AFTER `id`;
-alter table serverstatus add column `au` INT(11) NULL DEFAULT NULL after `at`;
-alter table serverstatus add column `av` INT(11) NULL DEFAULT NULL after `au`;
-alter table serverstatus add column `aw` INT(11) NULL DEFAULT NULL after `av`;
-alter table serverstatus add column `ax` INT(11) NULL DEFAULT NULL after `aw`;
-alter table serverstatus add column `ay` INT(11) NULL DEFAULT NULL after `ax`;
-alter table serverstatus add column `az` INT(11) NULL DEFAULT NULL after `ay`;
-alter table serverstatus add column `ba` INT(11) NULL DEFAULT NULL after `az`;
-alter table serverstatus add column `bb` INT(11) NULL DEFAULT NULL after `ba`;
-alter table serverstatus add column `bc` INT(11) NULL DEFAULT NULL after `bb`;
-alter table serverstatus add column `bd` INT(11) NULL DEFAULT NULL after `bc`;
-alter table serverstatus add column `be` INT(11) NULL DEFAULT NULL after `bd`;
+  ALTER COLUMN teng_pingable TYPE integer,
+  ALTER COLUMN teng_pingable DROP NOT NULL,
+  ALTER COLUMN teng_pingable SET DEFAULT NULL,
+  RENAME COLUMN teng_pingable TO ab,
 
--- there shouldn't be any updates pending while doing the TM update, and upd_pending gets moved to the server table.
-alter table server add column `upd_pending` TINYINT(1) NOT NULL DEFAULT 0 after status; 
+  ALTER COLUMN fqdn_pingable TYPE integer,
+  ALTER COLUMN fqdn_pingable DROP NOT NULL,
+  ALTER COLUMN fqdn_pingable SET DEFAULT NULL,
+  RENAME COLUMN fqdn_pingable TO ab,
 
-rename table serverstatus to servercheck;
+  ALTER COLUMN dscp TYPE integer,
+  ALTER COLUMN dscp DROP NOT NULL,
+  ALTER COLUMN dscp SET DEFAULT NULL,
+  RENAME COLUMN dscp TO ad,
 
+  ALTER COLUMN firmware TYPE integer,
+  ALTER COLUMN firmware DROP NOT NULL,
+  ALTER COLUMN firmware SET DEFAULT NULL,
+  RENAME COLUMN firmware TO ae,
 
-CREATE TABLE IF NOT EXISTS `to_extension` (
-  `id` INT(11) NOT NULL AUTO_INCREMENT,
-  `name` VARCHAR(45) NOT NULL,
-  `version` VARCHAR(45) NOT NULL,
-  `info_url` VARCHAR(45) NOT NULL,
-  `script_file` VARCHAR(45) NOT NULL,
-  `isactive` TINYINT(1) NOT NULL,
-  `additional_config_json` VARCHAR(4096) NULL,
-  `description` VARCHAR(4096) NULL,
-  `servercheck_short_name` VARCHAR(8) NULL,
-  `servercheck_column_name` VARCHAR(10) NULL,
-  `type` INT(11) NOT NULL,
-  `last_updated` TIMESTAMP NOT NULL DEFAULT now(),
-  PRIMARY KEY (`id`),
-  UNIQUE INDEX `id_UNIQUE` (`id` ASC),
-  INDEX `fk_ext_type_idx` (`type` ASC),
-  CONSTRAINT `fk_ext_type`
-    FOREIGN KEY (`type`)
-    REFERENCES `type` (`id`)
-    ON DELETE NO ACTION
-    ON UPDATE NO ACTION)
-ENGINE = InnoDB 
-DEFAULT CHARACTER SET = latin1;
+  ALTER COLUMN marvin TYPE integer,
+  ALTER COLUMN marvin DROP NOT NULL,
+  ALTER COLUMN marvin SET DEFAULT NULL,
+  RENAME COLUMN marvin TO af,
 
+  ALTER COLUMN ping6 TYPE integer,
+  ALTER COLUMN ping6 DROP NOT NULL,
+  ALTER COLUMN ping6 SET DEFAULT NULL,
+  RENAME COLUMN ping6 TO ag,
 
--- +goose Down
--- SQL section 'Down' is executed when this migration is rolled back
+  ALTER COLUMN upd_pending TYPE integer,
+  ALTER COLUMN upd_pending DROP NOT NULL,
+  ALTER COLUMN upd_pending SET DEFAULT NULL,
+  RENAME COLUMN upd_pending TO ah,
 
--- drop table to_extension;
--- delete from type where name like ('%XTENSION');
--- delete from tm_user where username='extension';
--- drop table dynserverstatus;
--- drop table dynserverstatusentry;
+  ALTER COLUMN stats TYPE integer,
+  ALTER COLUMN stats DROP NOT NULL,
+  ALTER COLUMN stats SET DEFAULT NULL,
+  RENAME COLUMN stats TO ai,
+
+  ALTER COLUMN prox TYPE integer,
+  ALTER COLUMN prox DROP NOT NULL,
+  ALTER COLUMN prox SET DEFAULT NULL,
+  RENAME COLUMN prox TO aj,
+
+  ALTER COLUMN mtu TYPE integer,
+  ALTER COLUMN mtu DROP NOT NULL,
+  ALTER COLUMN mtu SET DEFAULT NULL,
+  RENAME COLUMN mtu TO ak,
+
+  ALTER COLUMN ccr_online TYPE integer,
+  ALTER COLUMN ccr_online DROP NOT NULL,
+  ALTER COLUMN ccr_online SET DEFAULT NULL,
+  RENAME COLUMN ccr_online TO al,
+
+  ALTER COLUMN rascal TYPE integer,
+  ALTER COLUMN rascal DROP NOT NULL,
+  ALTER COLUMN rascal SET DEFAULT NULL,
+  RENAME COLUMN rascal TO am,
+
+  ALTER COLUMN chr TYPE integer,
+  ALTER COLUMN chr DROP NOT NULL,
+  ALTER COLUMN chr SET DEFAULT NULL,
+  RENAME COLUMN chr TO an,
+
+  ALTER COLUMN cdu TYPE integer,
+  ALTER COLUMN cdu DROP NOT NULL,
+  ALTER COLUMN cdu SET DEFAULT NULL,
+  RENAME COLUMN cdu TO ao,
+
+  ALTER COLUMN ort_errors TYPE integer,
+  ALTER COLUMN ort_errors DROP NOT NULL,
+  ALTER COLUMN ort_errors SET DEFAULT NULL,
+  RENAME COLUMN ort_errors TO ap,
+
+  ALTER COLUMN mbps_out TYPE integer,
+  ALTER COLUMN mbps_out DROP NOT NULL,
+  ALTER COLUMN mbps_out SET DEFAULT NULL,
+  RENAME COLUMN mbps_out TO aq,
+
+  ALTER COLUMN clients_connected TYPE integer,
+  ALTER COLUMN clients_connected DROP NOT NULL,
+  ALTER COLUMN clients_connected SET DEFAULT NULL,
+  RENAME COLUMN clients_connected TO ar,
+
+  ALTER COLUMN last_recycle_date TYPE integer,
+  ALTER COLUMN last_recycle_date DROP NOT NULL,
+  ALTER COLUMN last_recycle_date SET DEFAULT NULL,
+  RENAME COLUMN last_recycle_date TO as,
+
+  ALTER COLUMN last_recycle_duration_hrs TYPE integer,
+  ALTER COLUMN last_recycle_duration_hrs DROP NOT NULL,
+  ALTER COLUMN last_recycle_duration_hrs SET DEFAULT NULL,
+  RENAME COLUMN last_recycle_duration_hrs TO at;
