@@ -37,33 +37,6 @@ my %definition_for = (
 			val         => '1.0.0.29',
 		},
 	},
-	hw3 => {
-		new   => 'Hwinfo',
-		using => {
-			id          => 3,
-			serverid    => 2,
-			description => 'ServiceTag',
-			val         => 'XXX',
-		},
-	},
-	hw4 => {
-		new   => 'Hwinfo',
-		using => {
-			id          => 4,
-			serverid    => 2,
-			description => 'Manufacturer',
-			val         => 'Dell Inc.',
-		},
-	},
-	hw5 => {
-		new   => 'Hwinfo',
-		using => {
-			id          => 5,
-			serverid    => 2,
-			description => 'Model',
-			val         => 'Beetle',
-		},
-	},
 );
 
 sub get_definition {

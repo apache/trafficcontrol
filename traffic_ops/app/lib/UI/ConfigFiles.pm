@@ -1295,9 +1295,6 @@ sub regex_revalidate_dot_config {
 		$self->db->resultset('Parameter')->search( { name => "maxRevalDurationDays" }, { config_file => "regex_revalidate.config" } )->get_column('value')
 		->single;
 	my $interval = "> now() - interval '$max_days day'";    # postgres
-	if ( $self->db->storage->isa("DBIx::Class::Storage::DBI::mysql") ) {
-		$interval = "> now() - interval $max_days day";
-	}
 
 	my %regex_time;
 	$max_days = $self->db->resultset('Parameter')->search( { name => "maxRevalDurationDays" }, { config_file => "regex_revalidate.config" } )->get_column('value')->first;
