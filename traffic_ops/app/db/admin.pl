@@ -26,6 +26,7 @@ use CPAN::Meta;
 use File::Find::Rule;
 
 use YAML;
+use YAML qw(LoadFile);
 # use DBIx::Class::Schema::Loader qw/make_schema_at/;
 
 my $usage = "\n"
@@ -119,30 +120,24 @@ else {
 exit(0);
 
 sub parse_dbconf_yml_pg_driver {
-	my $db_conf = LoadFile('dbconf.yml');
-	print Dumper($db_conf);
+	my $db_conf 			= LoadFile('db/dbconf.yml');
+	my $db_connection = $db_conf->{$environment};
+	$db_protocol 			= $db_connection->{driver};
+	my $open = $db_connection->{open};
 
-	# my ($db_conf) = @_;
+	# Goose requires the 'open' line in the dbconf file to be a scalar.
+	# example:
+	#		open: host=127.0.0.1 port=5432 user=to_user password=twelve dbname=to_development sslmode=disable
+	# We need access to these values for db connections so I am manipulating the 'open'
+	# line so that it can be loaded into a hash.
+	$open = join "\n", map { s/=/ : /; $_ } split " ", $open;
+	my $hash = Load $open;
 
-	# my @files = File::Find::Rule->file()->name('dbconf.yml')->in('.');
-	# my $meta  = Parse::CPAN::Meta->load_file( $files[0] );
-
-	# # PostgreSQL connection string parsing, if db changes added switch here
-	# # based on the driver: in dbconf.xml
-	# my $db_connection_string = $meta->{$environment}->{open};
-
-	# my @options = split( ':', $db_connection_string );
-	# $db_protocol = $options[0];
-
-	# $host_ip         = $options[1];
-	# my @port_options = split( '\*', $options[2] );
-	# $host_port       = $port_options[0];
-
-	# my $rest_of_options = $port_options[1];
-	# my @db_options = split( '/', $rest_of_options );
-	# $db_name     = $db_options[0];
-	# $db_username = $db_options[1];
-	# $db_password = $db_options[2];
+	$host_ip 					= $hash->{host};
+	$host_port 				= $hash->{port};
+	$db_name 					= $hash->{dbname};
+	$db_username 			= $hash->{user};
+	$db_password 			= $hash->{password};
 }
 
 sub migrate {
@@ -160,7 +155,6 @@ sub load_schema {
 }
 
 sub drop {
-	print "dropdb -h $host_ip -p $host_port -U $db_username -e --if-exists $db_name;";
 	system("dropdb -h $host_ip -p $host_port -U $db_username -e --if-exists $db_name;");
 }
 
