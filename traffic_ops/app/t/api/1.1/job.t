@@ -66,7 +66,7 @@ ok $t->post_ok( '/api/1.1/user/login', json => { u => Test::TestHelper::PORTAL_U
 
 ok $schema->resultset('Cdn')->find( { name => 'cdn1' } ), 'cdn1 parameter exists?';
 
-ok $schema->resultset('Profile')->find( { name => 'edge1' } ), 'Profile edge1 exists?';
+ok $schema->resultset('Profile')->find( { name => 'EDGE1' } ), 'Profile edge1 exists?';
 
 ok $schema->resultset('Deliveryservice')->find( { xml_id => 'test-ds1' } ), 'Deliveryservice test-ds1 exists?';
 

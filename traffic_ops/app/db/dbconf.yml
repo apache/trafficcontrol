@@ -17,17 +17,20 @@ version: "1.0"
 name: dbconf.yml
 
 development:
-        driver: Pg
-        open: tcp:127.0.0.1:5432*to_development/to_user/twelve
+        driver: postgres
+        user: to_user
+        open: user=to_user password=twelve dbname=to_development sslmode=disable
+        # open: postgresql://to_user:twelve@127.0.0.1:5432/to_development?sslmode=disable
+        # custom: tcp:127.0.0.1:5432*to_development/to_user/twelve
 
 test:
-        driver: Pg
+        driver: postgres
         open: tcp:127.0.0.1:5432*to_test/to_user/twelve
 
 production:
-        driver: Pg
+        driver: postgres
         open: tcp:127.0.0.1:5432*to_production/to_user/twelve
 
 integration:
-        driver: Pg
+        driver: postgres
         open: tcp:127.0.0.1:5432*to_integration/to_user/twelve

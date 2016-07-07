@@ -25,6 +25,7 @@ use Data::Dumper;
 use Mojo::UserAgent;
 use POSIX;
 use HTTP::Cookies;
+use DBI;
 
 sub tools {
     my $self = shift;

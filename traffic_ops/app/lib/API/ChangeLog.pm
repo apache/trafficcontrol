@@ -26,9 +26,6 @@ sub index {
 
 	my @data;
 	my $interval = "> now() - interval '" . $numdays . " day'";                  # postgres
-	if ( $self->db->storage->isa("DBIx::Class::Storage::DBI::mysql") ) {
-		$interval = "> now() - interval " . $numdays . " day";
-	}
 	my $rs = $self->db->resultset('Log')->search( { 'me.last_updated' => \$interval },
 		{ prefetch => [ { 'tm_user' => undef } ], order_by => { -desc => 'me.last_updated' }, rows => $rows } );
 	while ( my $row = $rs->next ) {
