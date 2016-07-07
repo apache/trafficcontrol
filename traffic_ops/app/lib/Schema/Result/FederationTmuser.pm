@@ -25,44 +25,44 @@ __PACKAGE__->table("federation_tmuser");
 
 =head2 federation
 
-  data_type: 'integer'
+  data_type: 'bigint'
   is_foreign_key: 1
   is_nullable: 0
 
 =head2 tm_user
 
-  data_type: 'integer'
+  data_type: 'bigint'
   is_foreign_key: 1
   is_nullable: 0
 
 =head2 role
 
-  data_type: 'integer'
+  data_type: 'bigint'
   is_foreign_key: 1
   is_nullable: 0
 
 =head2 last_updated
 
-  data_type: 'timestamp'
-  datetime_undef_if_invalid: 1
+  data_type: 'timestamp with time zone'
   default_value: current_timestamp
   is_nullable: 1
+  original: {default_value => \"now()"}
 
 =cut
 
 __PACKAGE__->add_columns(
   "federation",
-  { data_type => "integer", is_foreign_key => 1, is_nullable => 0 },
+  { data_type => "bigint", is_foreign_key => 1, is_nullable => 0 },
   "tm_user",
-  { data_type => "integer", is_foreign_key => 1, is_nullable => 0 },
+  { data_type => "bigint", is_foreign_key => 1, is_nullable => 0 },
   "role",
-  { data_type => "integer", is_foreign_key => 1, is_nullable => 0 },
+  { data_type => "bigint", is_foreign_key => 1, is_nullable => 0 },
   "last_updated",
   {
-    data_type => "timestamp",
-    datetime_undef_if_invalid => 1,
+    data_type     => "timestamp with time zone",
     default_value => \"current_timestamp",
-    is_nullable => 1,
+    is_nullable   => 1,
+    original      => { default_value => \"now()" },
   },
 );
 
@@ -94,7 +94,7 @@ __PACKAGE__->belongs_to(
   "federation",
   "Schema::Result::Federation",
   { id => "federation" },
-  { is_deferrable => 1, on_delete => "CASCADE", on_update => "CASCADE" },
+  { is_deferrable => 0, on_delete => "CASCADE", on_update => "CASCADE" },
 );
 
 =head2 role
@@ -109,7 +109,7 @@ __PACKAGE__->belongs_to(
   "role",
   "Schema::Result::Role",
   { id => "role" },
-  { is_deferrable => 1, on_delete => "CASCADE", on_update => "CASCADE" },
+  { is_deferrable => 0, on_delete => "CASCADE", on_update => "CASCADE" },
 );
 
 =head2 tm_user
@@ -124,12 +124,12 @@ __PACKAGE__->belongs_to(
   "tm_user",
   "Schema::Result::TmUser",
   { id => "tm_user" },
-  { is_deferrable => 1, on_delete => "CASCADE", on_update => "CASCADE" },
+  { is_deferrable => 0, on_delete => "CASCADE", on_update => "CASCADE" },
 );
 
 
-# Created by DBIx::Class::Schema::Loader v0.07042 @ 2015-10-01 14:21:23
-# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:GtS0uKLYINOgVL6K5muNag
+# Created by DBIx::Class::Schema::Loader v0.07043 @ 2016-07-05 09:49:28
+# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:NY0OvOo2mTn/3hYWgGkPdg
 
 
 # You can replace this text with custom code or comments, and it will be preserved on regeneration

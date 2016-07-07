@@ -25,253 +25,259 @@ __PACKAGE__->table("servercheck");
 
 =head2 id
 
-  data_type: 'integer'
+  data_type: 'bigint'
   is_auto_increment: 1
   is_nullable: 0
+  sequence: 'servercheck_id_seq'
 
 =head2 server
 
-  data_type: 'integer'
+  data_type: 'bigint'
   is_foreign_key: 1
   is_nullable: 0
 
 =head2 aa
 
-  data_type: 'integer'
+  data_type: 'bigint'
   is_nullable: 1
 
 =head2 ab
 
-  data_type: 'integer'
+  data_type: 'bigint'
   is_nullable: 1
 
 =head2 ac
 
-  data_type: 'integer'
+  data_type: 'bigint'
   is_nullable: 1
 
 =head2 ad
 
-  data_type: 'integer'
+  data_type: 'bigint'
   is_nullable: 1
 
 =head2 ae
 
-  data_type: 'integer'
+  data_type: 'bigint'
   is_nullable: 1
 
 =head2 af
 
-  data_type: 'integer'
+  data_type: 'bigint'
   is_nullable: 1
 
 =head2 ag
 
-  data_type: 'integer'
+  data_type: 'bigint'
   is_nullable: 1
 
 =head2 ah
 
-  data_type: 'integer'
+  data_type: 'bigint'
   is_nullable: 1
 
 =head2 ai
 
-  data_type: 'integer'
+  data_type: 'bigint'
   is_nullable: 1
 
 =head2 aj
 
-  data_type: 'integer'
+  data_type: 'bigint'
   is_nullable: 1
 
 =head2 ak
 
-  data_type: 'integer'
+  data_type: 'bigint'
   is_nullable: 1
 
 =head2 al
 
-  data_type: 'integer'
+  data_type: 'bigint'
   is_nullable: 1
 
 =head2 am
 
-  data_type: 'integer'
+  data_type: 'bigint'
   is_nullable: 1
 
 =head2 an
 
-  data_type: 'integer'
+  data_type: 'bigint'
   is_nullable: 1
 
 =head2 ao
 
-  data_type: 'integer'
+  data_type: 'bigint'
   is_nullable: 1
 
 =head2 ap
 
-  data_type: 'integer'
+  data_type: 'bigint'
   is_nullable: 1
 
 =head2 aq
 
-  data_type: 'integer'
+  data_type: 'bigint'
   is_nullable: 1
 
 =head2 ar
 
-  data_type: 'integer'
+  data_type: 'bigint'
   is_nullable: 1
 
 =head2 as
 
-  data_type: 'integer'
+  data_type: 'bigint'
   is_nullable: 1
 
 =head2 at
 
-  data_type: 'integer'
+  data_type: 'bigint'
   is_nullable: 1
 
 =head2 au
 
-  data_type: 'integer'
+  data_type: 'bigint'
   is_nullable: 1
 
 =head2 av
 
-  data_type: 'integer'
+  data_type: 'bigint'
   is_nullable: 1
 
 =head2 aw
 
-  data_type: 'integer'
+  data_type: 'bigint'
   is_nullable: 1
 
 =head2 ax
 
-  data_type: 'integer'
+  data_type: 'bigint'
   is_nullable: 1
 
 =head2 ay
 
-  data_type: 'integer'
+  data_type: 'bigint'
   is_nullable: 1
 
 =head2 az
 
-  data_type: 'integer'
+  data_type: 'bigint'
   is_nullable: 1
 
 =head2 ba
 
-  data_type: 'integer'
+  data_type: 'bigint'
   is_nullable: 1
 
 =head2 bb
 
-  data_type: 'integer'
+  data_type: 'bigint'
   is_nullable: 1
 
 =head2 bc
 
-  data_type: 'integer'
+  data_type: 'bigint'
   is_nullable: 1
 
 =head2 bd
 
-  data_type: 'integer'
+  data_type: 'bigint'
   is_nullable: 1
 
 =head2 be
 
-  data_type: 'integer'
+  data_type: 'bigint'
   is_nullable: 1
 
 =head2 last_updated
 
-  data_type: 'timestamp'
-  datetime_undef_if_invalid: 1
+  data_type: 'timestamp with time zone'
   default_value: current_timestamp
   is_nullable: 1
+  original: {default_value => \"now()"}
 
 =cut
 
 __PACKAGE__->add_columns(
   "id",
-  { data_type => "integer", is_auto_increment => 1, is_nullable => 0 },
+  {
+    data_type         => "bigint",
+    is_auto_increment => 1,
+    is_nullable       => 0,
+    sequence          => "servercheck_id_seq",
+  },
   "server",
-  { data_type => "integer", is_foreign_key => 1, is_nullable => 0 },
+  { data_type => "bigint", is_foreign_key => 1, is_nullable => 0 },
   "aa",
-  { data_type => "integer", is_nullable => 1 },
+  { data_type => "bigint", is_nullable => 1 },
   "ab",
-  { data_type => "integer", is_nullable => 1 },
+  { data_type => "bigint", is_nullable => 1 },
   "ac",
-  { data_type => "integer", is_nullable => 1 },
+  { data_type => "bigint", is_nullable => 1 },
   "ad",
-  { data_type => "integer", is_nullable => 1 },
+  { data_type => "bigint", is_nullable => 1 },
   "ae",
-  { data_type => "integer", is_nullable => 1 },
+  { data_type => "bigint", is_nullable => 1 },
   "af",
-  { data_type => "integer", is_nullable => 1 },
+  { data_type => "bigint", is_nullable => 1 },
   "ag",
-  { data_type => "integer", is_nullable => 1 },
+  { data_type => "bigint", is_nullable => 1 },
   "ah",
-  { data_type => "integer", is_nullable => 1 },
+  { data_type => "bigint", is_nullable => 1 },
   "ai",
-  { data_type => "integer", is_nullable => 1 },
+  { data_type => "bigint", is_nullable => 1 },
   "aj",
-  { data_type => "integer", is_nullable => 1 },
+  { data_type => "bigint", is_nullable => 1 },
   "ak",
-  { data_type => "integer", is_nullable => 1 },
+  { data_type => "bigint", is_nullable => 1 },
   "al",
-  { data_type => "integer", is_nullable => 1 },
+  { data_type => "bigint", is_nullable => 1 },
   "am",
-  { data_type => "integer", is_nullable => 1 },
+  { data_type => "bigint", is_nullable => 1 },
   "an",
-  { data_type => "integer", is_nullable => 1 },
+  { data_type => "bigint", is_nullable => 1 },
   "ao",
-  { data_type => "integer", is_nullable => 1 },
+  { data_type => "bigint", is_nullable => 1 },
   "ap",
-  { data_type => "integer", is_nullable => 1 },
+  { data_type => "bigint", is_nullable => 1 },
   "aq",
-  { data_type => "integer", is_nullable => 1 },
+  { data_type => "bigint", is_nullable => 1 },
   "ar",
-  { data_type => "integer", is_nullable => 1 },
+  { data_type => "bigint", is_nullable => 1 },
   "as",
-  { data_type => "integer", is_nullable => 1 },
+  { data_type => "bigint", is_nullable => 1 },
   "at",
-  { data_type => "integer", is_nullable => 1 },
+  { data_type => "bigint", is_nullable => 1 },
   "au",
-  { data_type => "integer", is_nullable => 1 },
+  { data_type => "bigint", is_nullable => 1 },
   "av",
-  { data_type => "integer", is_nullable => 1 },
+  { data_type => "bigint", is_nullable => 1 },
   "aw",
-  { data_type => "integer", is_nullable => 1 },
+  { data_type => "bigint", is_nullable => 1 },
   "ax",
-  { data_type => "integer", is_nullable => 1 },
+  { data_type => "bigint", is_nullable => 1 },
   "ay",
-  { data_type => "integer", is_nullable => 1 },
+  { data_type => "bigint", is_nullable => 1 },
   "az",
-  { data_type => "integer", is_nullable => 1 },
+  { data_type => "bigint", is_nullable => 1 },
   "ba",
-  { data_type => "integer", is_nullable => 1 },
+  { data_type => "bigint", is_nullable => 1 },
   "bb",
-  { data_type => "integer", is_nullable => 1 },
+  { data_type => "bigint", is_nullable => 1 },
   "bc",
-  { data_type => "integer", is_nullable => 1 },
+  { data_type => "bigint", is_nullable => 1 },
   "bd",
-  { data_type => "integer", is_nullable => 1 },
+  { data_type => "bigint", is_nullable => 1 },
   "be",
-  { data_type => "integer", is_nullable => 1 },
+  { data_type => "bigint", is_nullable => 1 },
   "last_updated",
   {
-    data_type => "timestamp",
-    datetime_undef_if_invalid => 1,
+    data_type     => "timestamp with time zone",
     default_value => \"current_timestamp",
-    is_nullable => 1,
+    is_nullable   => 1,
+    original      => { default_value => \"now()" },
   },
 );
 
@@ -291,7 +297,7 @@ __PACKAGE__->set_primary_key("id", "server");
 
 =head1 UNIQUE CONSTRAINTS
 
-=head2 C<server>
+=head2 C<idx_25611_server>
 
 =over 4
 
@@ -301,9 +307,9 @@ __PACKAGE__->set_primary_key("id", "server");
 
 =cut
 
-__PACKAGE__->add_unique_constraint("server", ["server"]);
+__PACKAGE__->add_unique_constraint("idx_25611_server", ["server"]);
 
-=head2 C<ses_id_UNIQUE>
+=head2 C<idx_25611_ses_id_unique>
 
 =over 4
 
@@ -313,7 +319,7 @@ __PACKAGE__->add_unique_constraint("server", ["server"]);
 
 =cut
 
-__PACKAGE__->add_unique_constraint("ses_id_UNIQUE", ["id"]);
+__PACKAGE__->add_unique_constraint("idx_25611_ses_id_unique", ["id"]);
 
 =head1 RELATIONS
 
@@ -329,12 +335,12 @@ __PACKAGE__->belongs_to(
   "server",
   "Schema::Result::Server",
   { id => "server" },
-  { is_deferrable => 1, on_delete => "CASCADE", on_update => "NO ACTION" },
+  { is_deferrable => 0, on_delete => "CASCADE", on_update => "NO ACTION" },
 );
 
 
-# Created by DBIx::Class::Schema::Loader v0.07043 @ 2015-05-21 13:27:11
-# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:iMbBrThFPvnd502p6w/PrA
+# Created by DBIx::Class::Schema::Loader v0.07043 @ 2016-07-05 09:49:28
+# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:zMtDC81atLcGqO86bj68jw
 
 
 # You can replace this text with custom code or comments, and it will be preserved on regeneration

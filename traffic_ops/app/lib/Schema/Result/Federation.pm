@@ -25,9 +25,10 @@ __PACKAGE__->table("federation");
 
 =head2 id
 
-  data_type: 'integer'
+  data_type: 'bigint'
   is_auto_increment: 1
   is_nullable: 0
+  sequence: 'federation_id_seq'
 
 =head2 cname
 
@@ -48,16 +49,21 @@ __PACKAGE__->table("federation");
 
 =head2 last_updated
 
-  data_type: 'timestamp'
-  datetime_undef_if_invalid: 1
+  data_type: 'timestamp with time zone'
   default_value: current_timestamp
   is_nullable: 1
+  original: {default_value => \"now()"}
 
 =cut
 
 __PACKAGE__->add_columns(
   "id",
-  { data_type => "integer", is_auto_increment => 1, is_nullable => 0 },
+  {
+    data_type         => "bigint",
+    is_auto_increment => 1,
+    is_nullable       => 0,
+    sequence          => "federation_id_seq",
+  },
   "cname",
   { data_type => "varchar", is_nullable => 0, size => 1024 },
   "description",
@@ -66,10 +72,10 @@ __PACKAGE__->add_columns(
   { data_type => "integer", is_nullable => 0 },
   "last_updated",
   {
-    data_type => "timestamp",
-    datetime_undef_if_invalid => 1,
+    data_type     => "timestamp with time zone",
     default_value => \"current_timestamp",
-    is_nullable => 1,
+    is_nullable   => 1,
+    original      => { default_value => \"now()" },
   },
 );
 
@@ -133,8 +139,8 @@ __PACKAGE__->has_many(
 );
 
 
-# Created by DBIx::Class::Schema::Loader v0.07042 @ 2015-10-01 14:21:23
-# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:z0P4j54QodUN1uxCvy3iRQ
+# Created by DBIx::Class::Schema::Loader v0.07043 @ 2016-07-05 09:49:28
+# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:pur/jugLO0yYgpDGjIgQWg
 
 
 # You can replace this text with custom code or comments, and it will be preserved on regeneration

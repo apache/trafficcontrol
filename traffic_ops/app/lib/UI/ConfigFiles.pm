@@ -26,6 +26,7 @@ use NetAddr::IP;
 use UI::DeliveryService;
 use JSON;
 use API::DeliveryService::KeysUrlSig qw(URL_SIG_KEYS_BUCKET);
+use DBI;
 
 my $dispatch_table ||= {
 	"logs_xml.config"         => sub { logs_xml_dot_config(@_) },
@@ -1258,9 +1259,6 @@ sub regex_revalidate_dot_config {
 		$self->db->resultset('Parameter')->search( { name => "maxRevalDurationDays" }, { config_file => "regex_revalidate.config" } )->get_column('value')
 		->single;
 	my $interval = "> now() - interval '$max_days day'";    # postgres
-	if ( $self->db->storage->isa("DBIx::Class::Storage::DBI::mysql") ) {
-		$interval = "> now() - interval $max_days day";
-	}
 
 	my %regex_time;
 	my $max_days =
