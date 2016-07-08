@@ -27,7 +27,7 @@ use File::Find::Rule;
 
 use YAML;
 use YAML qw(LoadFile);
-# use DBIx::Class::Schema::Loader qw/make_schema_at/;
+use DBIx::Class::Schema::Loader qw/make_schema_at/;
 
 my $usage = "\n"
 	. "Usage:  $PROGRAM_NAME [--env (development|test|production|integration)] [arguments]\t\n\n"
@@ -58,7 +58,6 @@ my $host_ip     = '';
 my $host_port   = '';
 GetOptions( "env=s" => \$environment );
 $ENV{'MOJO_MODE'} = $environment;
-# my $dbh = Schema->database_handle;
 
 parse_dbconf_yml_pg_driver();
 
@@ -79,7 +78,7 @@ if ( defined($argument) ) {
 	}
 	elsif ( $argument eq 'upgrade' ) {
 		migrate('up');
-		# seed();
+		seed();
 	}
 	elsif ( $argument eq 'setup' ) {
 		drop();
@@ -142,6 +141,7 @@ sub parse_dbconf_yml_pg_driver {
 
 sub migrate {
 	my ($command) = @_;
+
 	print "Migrating database...\n";
 	system( 'goose --env=' . $environment . ' ' . $command );
 }
@@ -166,16 +166,16 @@ sub create {
 
 sub reverse_schema {
 
-	my $db_info = Schema->get_dbinfo();
-	my $user    = $db_info->{user};
-	my $pass    = $db_info->{password};
-	my $dsn     = Schema->get_dsn();
-	make_schema_at(
-		'Schema', {
-			debug                   => 1,
-			dump_directory          => './lib',
-			overwrite_modifications => 1,
-		},
-		[ $dsn, $user, $pass ],
-	);
+  my $db_info = Schema->get_dbinfo();
+  my $user    = $db_info->{user};
+  my $pass    = $db_info->{password};
+  my $dsn     = Schema->get_dsn();
+  make_schema_at(
+    'Schema', {
+      debug                   => 1,
+      dump_directory          => './lib',
+      overwrite_modifications => 1,
+    },
+    [ $dsn, $user, $pass ],
+  );
 }
