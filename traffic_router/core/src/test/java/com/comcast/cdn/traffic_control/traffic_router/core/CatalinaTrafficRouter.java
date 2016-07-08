@@ -22,6 +22,8 @@ import org.apache.catalina.core.StandardContext;
 import org.apache.catalina.core.StandardHost;
 import org.apache.catalina.core.StandardService;
 import org.apache.catalina.startup.Catalina;
+import org.springframework.util.SocketUtils;
+
 import java.util.logging.Level;
 
 public class CatalinaTrafficRouter {
@@ -49,11 +51,13 @@ public class CatalinaTrafficRouter {
 		Connector[] connectors = trafficRouterService.findConnectors();
 		for (Connector connector : connectors) {
 			if (connector.getPort() == 80) {
-				connector.setPort(8888);
+				connector.setPort(Integer.parseInt(System.getProperty("routerHttpPort", "8888")));
 			}
 
+			SocketUtils.findAvailableTcpPort();
+
 			if (connector.getPort() == 443) {
-				connector.setPort(8443);
+				connector.setPort(Integer.parseInt(System.getProperty("routerSecurePort", "8443")));
 			}
 			System.out.println("[" + System.currentTimeMillis() + "] >>>>>>>>>>>>>>>> Traffic Router listening on port " + connector.getPort() + " " + connector.getScheme());
 

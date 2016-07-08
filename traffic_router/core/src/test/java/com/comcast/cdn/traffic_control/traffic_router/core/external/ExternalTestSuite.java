@@ -70,10 +70,11 @@ import static org.springframework.util.SocketUtils.findAvailableUdpPort;
 public class ExternalTestSuite {
 	public static final String TRAFFIC_MONITOR_BOOTSTRAP_LOCAL = "TRAFFIC_MONITOR_BOOTSTRAP_LOCAL";
 	public static final String TRAFFIC_MONITOR_HOSTS = "TRAFFIC_MONITOR_HOSTS";
-	public static final String FAKE_SERVER = "localhost:8889;";
+	public static String FAKE_SERVER;
 	private static CatalinaTrafficRouter catalinaTrafficRouter;
 	private static HttpDataServer httpDataServer;
 	private static File tmpDeployDir;
+	private static int testHttpServerPort;
 
 	@SuppressWarnings("unchecked")
 	public static void addToEnv(Map<String, String> envVars) throws Exception {
@@ -93,6 +94,7 @@ public class ExternalTestSuite {
 		// federations
 		// steering
 		// fake setting a cookie
+		FAKE_SERVER = "localhost:" + testHttpServerPort + ";";
 
 		Map<String, String> additionalEnvironment = new HashMap<>();
 
@@ -112,12 +114,18 @@ public class ExternalTestSuite {
 		assertThat(System.getenv(TRAFFIC_MONITOR_BOOTSTRAP_LOCAL), equalTo("true"));
 		assertThat(System.getenv(TRAFFIC_MONITOR_HOSTS), equalTo(FAKE_SERVER));
 
-		httpDataServer = new HttpDataServer();
-		httpDataServer.start(8889);
+		httpDataServer = new HttpDataServer(testHttpServerPort);
+		httpDataServer.start(testHttpServerPort);
 	}
 
 	@BeforeClass
 	public static void beforeClass() throws Exception {
+		testHttpServerPort = findAvailableTcpPort();
+
+		System.setProperty("testHttpServerPort", "" + testHttpServerPort);
+		System.setProperty("routerHttpPort", "" + findAvailableTcpPort());
+		System.setProperty("routerSecurePort", "" + findAvailableTcpPort());
+
 		setupFakeServers();
 
 		tmpDeployDir = Files.createTempDirectory("ext-test-").toFile();

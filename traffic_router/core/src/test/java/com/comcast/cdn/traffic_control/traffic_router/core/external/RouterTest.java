@@ -65,7 +65,9 @@ public class RouterTest {
 	private String secureDeliveryServiceId;
 	private List<String> secureValidLocations = new ArrayList<>();
 	private String secureDeliveryServiceDomain;
-
+	private String routerHttpPort = System.getProperty("routerHttpPort", "8888");
+	private String routerSecurePort = System.getProperty("routerSecurePort", "8443");
+	
 	@Before
 	public void before() throws Exception {
 		ObjectMapper objectMapper = new ObjectMapper(new JsonFactory());
@@ -159,7 +161,7 @@ public class RouterTest {
 
 	@Test
 	public void itHasAHomePage() throws IOException {
-		HttpGet httpGet = new HttpGet("http://localhost:8888/index.html");
+		HttpGet httpGet = new HttpGet("http://localhost:" + routerHttpPort + "/index.html");
 
 		CloseableHttpResponse response = null;
 		try {
@@ -172,7 +174,7 @@ public class RouterTest {
 
 	@Test
 	public void itRedirectsValidHttpRequests() throws IOException, InterruptedException {
-		HttpGet httpGet = new HttpGet("http://localhost:8888/stuff?fakeClientIpAddress=12.34.56.78");
+		HttpGet httpGet = new HttpGet("http://localhost:" + routerHttpPort + "/stuff?fakeClientIpAddress=12.34.56.78");
 		httpGet.addHeader("Host", "tr." + deliveryServiceId + ".bar");
 		CloseableHttpResponse response = null;
 
@@ -189,7 +191,7 @@ public class RouterTest {
 
 	@Test
 	public void itDoesRoutingThroughPathsStartingWithCrs() throws Exception {
-		HttpGet httpGet = new HttpGet("http://localhost:8888/crs/stats?fakeClientIpAddress=12.34.56.78");
+		HttpGet httpGet = new HttpGet("http://localhost:" + routerHttpPort + "/crs/stats?fakeClientIpAddress=12.34.56.78");
 		httpGet.addHeader("Host", "foo." + deliveryServiceId + ".bar");
 		CloseableHttpResponse response = null;
 
@@ -203,7 +205,7 @@ public class RouterTest {
 
 	@Test
 	public void itConsistentlyRedirectsValidRequests() throws IOException, InterruptedException {
-		HttpGet httpGet = new HttpGet("http://localhost:8888/stuff?fakeClientIpAddress=12.34.56.78");
+		HttpGet httpGet = new HttpGet("http://localhost:" + routerHttpPort + "/stuff?fakeClientIpAddress=12.34.56.78");
 		httpGet.addHeader("Host", "tr." + deliveryServiceId + ".bar");
 		CloseableHttpResponse response = null;
 
@@ -226,7 +228,7 @@ public class RouterTest {
 
 	@Test
 	public void itRejectsInvalidRequests() throws IOException {
-		HttpGet httpGet = new HttpGet("http://localhost:8888/stuff?fakeClientIpAddress=12.34.56.78");
+		HttpGet httpGet = new HttpGet("http://localhost:" + routerHttpPort + "/stuff?fakeClientIpAddress=12.34.56.78");
 		httpGet.addHeader("Host", "foo.invalid-delivery-service-id.bar");
 		CloseableHttpResponse response = null;
 
@@ -240,7 +242,7 @@ public class RouterTest {
 
 	@Test
 	public void itRedirectsHttpsRequests() throws Exception {
-		HttpGet httpGet = new HttpGet("https://localhost:8443/stuff?fakeClientIpAddress=12.34.56.78");
+		HttpGet httpGet = new HttpGet("https://localhost:" + routerSecurePort + "/stuff?fakeClientIpAddress=12.34.56.78");
 		httpGet.addHeader("Host", "tr." + secureDeliveryServiceId + ".thecdn.example.com");
 		CloseableHttpResponse response = null;
 
@@ -258,7 +260,7 @@ public class RouterTest {
 
 	@Test
 	public void itRedirectsFromHttpToHttps() throws Exception {
-		HttpGet httpGet = new HttpGet("http://localhost:8888/stuff?fakeClientIpAddress=12.34.56.78");
+		HttpGet httpGet = new HttpGet("http://localhost:" + routerHttpPort + "/stuff?fakeClientIpAddress=12.34.56.78");
 		httpGet.addHeader("Host", "tr." + secureDeliveryServiceId + ".bar");
 		CloseableHttpResponse response = null;
 
@@ -276,7 +278,7 @@ public class RouterTest {
 
 	@Test
 	public void itRejectsHttpsRequestsForHttpDeliveryService() throws Exception {
-		HttpGet httpGet = new HttpGet("https://localhost:8443/stuff?fakeClientIpAddress=12.34.56.78");
+		HttpGet httpGet = new HttpGet("https://localhost:" + routerSecurePort + "/stuff?fakeClientIpAddress=12.34.56.78");
 		httpGet.addHeader("Host", "tr." + deliveryServiceId + ".bar");
 		CloseableHttpResponse response = null;
 

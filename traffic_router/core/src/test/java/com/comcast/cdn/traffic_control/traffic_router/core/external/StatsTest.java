@@ -106,9 +106,9 @@ public class StatsTest {
 
 			Map<String, Object> data = new ObjectMapper().readValue(actual, new TypeReference<HashMap<String, Object>>() { });
 
-			assertThat((String) data.get("requestIp"), equalTo("8.8.8.8"));
-			assertThat((String) data.get("locationByFederation"), equalTo("not found"));
-			assertThat((String) data.get("locationByCoverageZone"), equalTo("not found"));
+			assertThat(data.get("requestIp"), equalTo("8.8.8.8"));
+			assertThat(data.get("locationByFederation"), equalTo("not found"));
+			assertThat(data.get("locationByCoverageZone"), equalTo("not found"));
 
 			Map<String, Object> locationByGeo = (Map<String, Object>) data.get("locationByGeo");
 			assertThat(locationByGeo.keySet(), containsInAnyOrder("city", "countryCode", "latitude", "longitude", "postalCode", "countryName"));
