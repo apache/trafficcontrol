@@ -185,7 +185,11 @@ func Start(opsConfigFile string, staticAppData StaticAppData) {
 
 			switch req.T {
 			case http_server.TR_CONFIG:
-				if toSession != nil && opsConfig.CdnName != "" {
+				if toSession == nil {
+					err = fmt.Errorf("Unable to connect to Traffic Ops")
+				} else if opsConfig.CdnName == "" {
+					err = fmt.Errorf("No CDN Configured")
+				} else {
 					body, err = toSession.CRConfigRaw(opsConfig.CdnName)
 				}
 			case http_server.TR_STATE_DERIVED:
