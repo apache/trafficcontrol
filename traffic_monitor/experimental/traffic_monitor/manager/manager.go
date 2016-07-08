@@ -235,7 +235,7 @@ func Start(opsConfigFile string, staticAppData StaticAppData) {
 					err = fmt.Errorf("EventLog: %v", err)
 				}
 			case http_server.PEER_STATES:
-				body = []byte("TODO implement")
+				body, err = json.Marshal(createApiPeerStates(peerStates))
 			case http_server.STAT_SUMMARY:
 				body = []byte("TODO implement")
 			case http_server.STATS:
@@ -437,6 +437,32 @@ func Start(opsConfigFile string, staticAppData StaticAppData) {
 	}
 }
 
+type TrafficMonitorName string
+
+type ApiPeerStates struct {
+	Peers map[TrafficMonitorName]map[deliveryservicestats.CacheName][]CacheState `json:"peers"`
+}
+
+type CacheState struct {
+	Value bool `json:"value"`
+}
+
+func createApiPeerStates(peerStates map[string]peer.Crstates) ApiPeerStates {
+	apiPeerStates := ApiPeerStates{Peers: map[TrafficMonitorName]map[deliveryservicestats.CacheName][]CacheState{}}
+
+	for peer, state := range peerStates {
+		if _, ok := apiPeerStates.Peers[TrafficMonitorName(peer)]; !ok {
+			apiPeerStates.Peers[TrafficMonitorName(peer)] = map[deliveryservicestats.CacheName][]CacheState{}
+		}
+		peerState := apiPeerStates.Peers[TrafficMonitorName(peer)]
+		for cache, available := range state.Caches {
+			peerState[deliveryservicestats.CacheName(cache)] = []CacheState{CacheState{Value: available.IsAvailable}}
+		}
+		apiPeerStates.Peers[TrafficMonitorName(peer)] = peerState
+	}
+	return apiPeerStates
+}
+
 type JSONEvents struct {
 	Events []Event `json:"events"`
 }
@@ -491,7 +517,7 @@ func getStats(staticAppData StaticAppData, pollingInterval time.Duration, lastHe
 	var s Stats
 	s.MaxMemoryMB = memStats.TotalAlloc / (1024 * 1024)
 	s.GitRevision = staticAppData.GitRevision
-	s.ErrorCount = errorCount // TODO implement
+	s.ErrorCount = errorCount
 	s.Uptime = uint64(time.Since(staticAppData.StartTime) / time.Second)
 	s.FreeMemoryMB = staticAppData.FreeMemoryMB
 	s.TotalMemoryMB = memStats.Alloc / (1024 * 1024) // TODO rename to "used memory" if/when nothing is using the JSON entry
