@@ -31,4 +31,4 @@ production:
 
 integration:
   driver: postgres
-  open: host=127.0.0.1 port=5432 user=to_user password=twelve dbname=integration sslmode=disable
+  open: host=127.0.0.1 port=5432 user=to_user password=twelve dbname=to_integration sslmode=disable
