@@ -209,7 +209,7 @@ func Start(opsConfigFile string, staticAppData StaticAppData) {
 				}
 				body, err = cache.StatsMarshall(statHistory, hc)
 			case http_server.DS_STATS:
-				b, err := json.Marshal(deliveryservicestats.DsStatsJSON(dsStats))
+				b, err := json.Marshal(deliveryservicestats.DsStatsJSON(dsStats)) // TODO marshall beforehand, for performance? (test to see how often requests are made)
 				if err != nil {
 					// TODO send error to client
 					errorCount++
