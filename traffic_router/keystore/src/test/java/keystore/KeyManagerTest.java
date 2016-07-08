@@ -91,11 +91,9 @@ public class KeyManagerTest {
 		keyManager.getClientAliases("foo", principals);
 		verify(delegate).getClientAliases("foo", principals);
 
-		keyManager.getPrivateKey("foo");
-		verify(delegate).getPrivateKey("foo");
-
 		String[] strings = new String[] { "foo" };
 		Socket socket = Mockito.mock(SSLSocket.class);
+
 		keyManager.chooseClientAlias(strings, principals, socket);
 		verify(delegate).chooseClientAlias(strings, principals, socket);
 

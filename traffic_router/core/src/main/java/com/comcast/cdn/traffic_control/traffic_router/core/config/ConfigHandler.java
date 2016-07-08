@@ -126,6 +126,7 @@ public class ConfigHandler {
 				parseLocationConfig(jo.getJSONObject("edgeLocations"), cacheRegister);
 				parseCacheConfig(jo.getJSONObject("contentServers"), cacheRegister);
 				parseMonitorConfig(jo.getJSONObject("monitors"));
+				parseCertificatesConfig(config);
 				NetworkNode.getInstance().clearCacheLocations();
 				federationsWatcher.configure(config);
 				steeringWatcher.configure(config);
@@ -400,6 +401,17 @@ public class ConfigHandler {
 
 		if (config.has("neustar.polling.interval")) {
 			System.setProperty("neustar.polling.interval", config.getString("neustar.polling.interval"));
+		}
+	}
+
+	private void parseCertificatesConfig(final JSONObject config) {
+		final String pollingInterval = "certificates.polling.interval";
+		if (config.has(pollingInterval)) {
+			try {
+				System.setProperty(pollingInterval, config.getString(pollingInterval));
+			} catch (Exception e) {
+				LOGGER.warn("Failed to set system property " + pollingInterval + " from configuration object: " + e.getMessage());
+			}
 		}
 	}
 

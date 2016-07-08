@@ -32,6 +32,7 @@ import com.comcast.cdn.traffic_control.traffic_router.core.request.HTTPRequest;
 import com.comcast.cdn.traffic_control.traffic_router.core.request.Request;
 import com.comcast.cdn.traffic_control.traffic_router.core.router.StatTracker.Track;
 import com.comcast.cdn.traffic_control.traffic_router.core.util.CidrAddress;
+import com.comcast.cdn.traffic_control.traffic_router.keystore.KeyStoreHelper;
 import org.junit.Before;
 import org.junit.Test;
 import org.powermock.reflect.Whitebox;
@@ -39,9 +40,11 @@ import org.xbill.DNS.Type;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Enumeration;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.Vector;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsInAnyOrder;
@@ -93,6 +96,9 @@ public class TrafficRouterTest {
         setInternalState(trafficRouter, "federationRegistry", federationRegistry);
         setInternalState(trafficRouter, "consistentHasher", consistentHasher);
         setInternalState(trafficRouter, "steeringRegistry", mock(SteeringRegistry.class));
+        KeyStoreHelper keyStoreHelper = mock(KeyStoreHelper.class);
+        when(keyStoreHelper.getAliases()).thenReturn(new Vector<String>().elements());
+        setInternalState(trafficRouter, "keyStoreHelper", keyStoreHelper);
 
 
         when(trafficRouter.route(any(DNSRequest.class), any(Track.class))).thenCallRealMethod();

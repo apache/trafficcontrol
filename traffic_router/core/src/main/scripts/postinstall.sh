@@ -18,8 +18,10 @@ chkconfig --add tomcat
 chkconfig tomcat on
 
 if [ ! -e /opt/tomcat/lib/traffic_router_connector.jar ]; then
-	#echo "Symlinking /opt/traffic_router/lib/traffic_router_connector.jar to /opt/tomcat/lib/traffic_router_connector.jar"
 	/bin/ln -s /opt/traffic_router/lib/traffic_router_connector.jar /opt/tomcat/lib/traffic_router_connector.jar
+fi
+
+if [ ! -e /opt/tomcat/lib/traffic_router_keystore.jar ]; then
 	/bin/ln -s /opt/traffic_router/lib/traffic_router_keystore.jar /opt/tomcat/lib/traffic_router_keystore.jar
 fi
 

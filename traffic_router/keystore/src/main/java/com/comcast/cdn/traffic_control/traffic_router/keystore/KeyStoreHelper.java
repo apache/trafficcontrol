@@ -9,6 +9,7 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.security.Key;
 import java.security.KeyFactory;
 import java.security.KeyStore;
 import java.security.KeyStoreException;
@@ -21,7 +22,10 @@ import java.security.spec.PKCS8EncodedKeySpec;
 import java.util.ArrayList;
 import java.util.Base64;
 import java.util.Enumeration;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Vector;
 
 public class KeyStoreHelper {
 	protected static org.apache.juli.logging.Log log = org.apache.juli.logging.LogFactory.getLog(KeyStoreHelper.class);
@@ -30,6 +34,8 @@ public class KeyStoreHelper {
 	private KeyStore keyStore;
 	private char[] keyPass;
 	private long lastLoaded;
+	private final Map<String, PrivateKey> privateKeyMap = new HashMap<>();
+	private final Map<String, Boolean> aliasCertMap = new HashMap<>();
 
 	// Recommended Singleton Pattern implementation
 	// https://community.oracle.com/docs/DOC-918906
@@ -69,30 +75,37 @@ public class KeyStoreHelper {
 		return keyStore;
 	}
 
-	public boolean importCertificate(final String alias, final String encodedKey, final String encodedCertificate) {
+	public boolean importCertificateChain(final String alias, final String encodedKey, final String[] encodedCertificateChain) {
 		try {
-			X509Certificate x509Certificate = (X509Certificate) CertificateFactory.getInstance("X.509")
-				.generateCertificate(new ByteArrayInputStream(Base64.getDecoder().decode(encodedCertificate)));
+			final X509Certificate x509Chain[] = new X509Certificate[encodedCertificateChain.length];
+
+			for (int i = 0; i < encodedCertificateChain.length; i++) {
+				x509Chain[i] = (X509Certificate) CertificateFactory.getInstance("X.509")
+					.generateCertificate(new ByteArrayInputStream(Base64.getDecoder().decode(encodedCertificateChain[i])));
+			}
 
 			byte[] keyBytes = Base64.getDecoder().decode(encodedKey.getBytes());
 			PKCS8EncodedKeySpec keySpec = new PKCS8EncodedKeySpec(keyBytes);
 			KeyFactory fact = KeyFactory.getInstance("RSA");
 			PrivateKey key = fact.generatePrivate(keySpec);
 
-			return importCertificate(alias, key, x509Certificate);
+			return importCertificateChain(alias, key, x509Chain);
 		} catch (Exception e) {
-			e.printStackTrace();
+			log.error("Failed importing certificates for alias '" + alias + "'");
+			log.error(e);
 		}
 
 		return false;
 	}
 
-	public boolean importCertificate(final String alias, final PrivateKey privateKey, final Certificate certificate) {
+	public boolean importCertificateChain(final String alias, final PrivateKey privateKey, final Certificate[] certificateChain) {
 		try (final OutputStream outputStream = Files.newOutputStream(Paths.get(getKeystorePath()))) {
-			keyStore.setKeyEntry(alias, privateKey, keyPass, new Certificate[] {certificate});
+			keyStore.setKeyEntry(alias, privateKey, keyPass, certificateChain);
 			keyStore.store(outputStream, keyPass);
+			privateKeyMap.put(alias, privateKey);
+			log.info("Imported certificate chain into keystore for " + alias);
 		} catch (Exception e) {
-			log.error("Failed importing certificate with alias '" + alias + "' to keystore at " + getKeystorePath() + " : " + e.getMessage());
+			log.error("Failed importing certificate chain with alias '" + alias + "' to keystore at " + getKeystorePath() + " : " + e.getMessage());
 			return false;
 		}
 
@@ -134,7 +147,7 @@ public class KeyStoreHelper {
 			}
 
 		} catch (Exception e) {
-			log.error("Failed retrieving name stuff from the keystore: " + e.getClass().getSimpleName() + " " + e.getMessage());
+			log.error("Failed retrieving common names data from the keystore: " + e.getClass().getSimpleName() + " " + e.getMessage());
 		}
 
 		return commonNames;
@@ -166,20 +179,83 @@ public class KeyStoreHelper {
 
 	public KeyStore reload() {
 		keyStore = new KeyStoreLoader(getKeystorePath(), getKeyPass()).load();
+
+		if (keyStore == null) {
+			log.error("Failed reloading keystore from " + getKeystorePath());
+			return null;
+		}
+
 		lastLoaded = System.currentTimeMillis();
+
+		try {
+			final Enumeration<String> aliases = keyStore.aliases();
+			while (aliases.hasMoreElements()) {
+				final String alias = aliases.nextElement();
+				final Key key = keyStore.getKey(alias, getKeyPass());
+				if (key instanceof PrivateKey) {
+					privateKeyMap.put(alias, (PrivateKey) key);
+				}
+			}
+			log.info("Reloaded keystore path from " + getKeystorePath() + " " + keyStore.size() + " entries");
+		} catch (Exception e) {
+			log.error("Cannot get size of keystore ",e);
+		}
 		return keyStore;
 	}
 
 	public boolean clearCertificates() {
+		aliasCertMap.clear();
 		try {
 			Enumeration<String> aliases = keyStore.aliases();
 			while (aliases.hasMoreElements()) {
-				keyStore.deleteEntry(aliases.nextElement());
+				final String alias = aliases.nextElement();
+				keyStore.deleteEntry(alias);
+				privateKeyMap.remove(alias);
 			}
 		} catch (KeyStoreException e) {
 			log.error("Failed to clear certificates from keystore!");
 		}
 
 		return false;
+	}
+
+	public PrivateKey getPrivateKey(String alias) {
+		if (!privateKeyMap.containsKey(alias)) {
+			log.warn("No private key exists for " + alias);
+		}
+		return privateKeyMap.get(alias);
+	}
+
+	@SuppressWarnings("PMD.UseArrayListInsteadOfVector")
+	public Enumeration<String> getAliases() {
+		try {
+			return keyStore.aliases();
+		} catch (Exception e) {
+			log.warn("Failed to get aliases from keystore!: " + e.getMessage());
+		}
+		return new Vector<String>().elements();
+	}
+
+	public boolean hasCertificate(String prefix) {
+
+		if (aliasCertMap.containsKey(prefix)) {
+			return aliasCertMap.get(prefix);
+		}
+
+		aliasCertMap.put(prefix, false);
+
+		try {
+			Enumeration<String> aliasIterator = keyStore.aliases();
+			while (aliasIterator.hasMoreElements()) {
+				if (aliasIterator.nextElement().startsWith(prefix)) {
+					aliasCertMap.put(prefix, true);
+					break;
+				}
+			}
+		} catch (Exception e) {
+			log.error("Failed to search keystore aliases for prefix " + prefix + " : " + e.getMessage());
+		}
+
+		return aliasCertMap.get(prefix);
 	}
 }
