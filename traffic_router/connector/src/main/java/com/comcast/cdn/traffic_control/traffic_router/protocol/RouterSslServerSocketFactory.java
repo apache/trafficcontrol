@@ -10,6 +10,7 @@ import java.security.KeyStore;
 
 // Wrap JSSEKeyManager with our own key manager so we can control handing out certificates
 public class RouterSslServerSocketFactory extends JSSESocketFactory {
+	protected static org.apache.juli.logging.Log log = org.apache.juli.logging.LogFactory.getLog(RouterSslServerSocketFactory.class);
 
 	@Override
 	@SuppressWarnings("PMD.SignatureDeclareThrowsException")

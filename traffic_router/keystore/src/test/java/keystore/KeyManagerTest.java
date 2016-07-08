@@ -5,8 +5,7 @@ import com.comcast.cdn.traffic_control.traffic_router.keystore.KeyStoreHelper;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.mockito.invocation.InvocationOnMock;
-import org.mockito.stubbing.Answer;
+import org.mockito.Mockito;
 import org.powermock.api.mockito.PowerMockito;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
@@ -21,14 +20,12 @@ import java.security.KeyStore;
 import java.security.Principal;
 import java.security.cert.X509Certificate;
 import java.util.ArrayList;
-import java.util.Enumeration;
 import java.util.List;
 import java.util.Vector;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.equalTo;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.powermock.api.mockito.PowerMockito.mockStatic;
@@ -39,7 +36,6 @@ import static org.powermock.api.mockito.PowerMockito.whenNew;
 public class KeyManagerTest {
 	private KeyManager keyManager;
 	private X509KeyManager delegate;
-	private KeyStoreHelper keyStoreHelper;
 	private X509Certificate x509Certificate;
 
 	@Before
@@ -47,19 +43,16 @@ public class KeyManagerTest {
 		x509Certificate = mock(X509Certificate.class);
 
 		KeyStore keyStore = PowerMockito.mock(KeyStore.class);
-		when(keyStore.aliases()).thenAnswer(new Answer<Enumeration<String>>() {
-			@Override
-			public Enumeration<String> answer(InvocationOnMock invocation) throws Throwable {
-				Vector<String> vector = new Vector<>();
-				vector.add("deliveryservice3.cdn2.example.com");
-				vector.add("deliveryservice2.cdn2.example.com");
-				return vector.elements();
-			}
+		Mockito.when(keyStore.aliases()).thenAnswer(invocation -> {
+			Vector<String> vector = new Vector<>();
+			vector.add("deliveryservice3.cdn2.example.com");
+			vector.add("deliveryservice2.cdn2.example.com");
+			return vector.elements();
 		});
 
 		when(keyStore.getCertificateChain("deliveryService2.cdn2.example.com")).thenReturn(new X509Certificate[] {x509Certificate});
 
-		keyStoreHelper = mock(KeyStoreHelper.class);
+		KeyStoreHelper keyStoreHelper = Mockito.mock(KeyStoreHelper.class);
 		when(keyStoreHelper.getKeyStore()).thenReturn(keyStore);
 
 		mockStatic(KeyStoreHelper.class);
@@ -76,10 +69,10 @@ public class KeyManagerTest {
 		sniServerNames.add(new TestSNIServerName(1, "tr.deliveryservice1.cdn1.example.com"));
 		sniServerNames.add(new TestSNIServerName(1, "tr.deliveryservice2.cdn2.example.com"));
 
-		ExtendedSSLSession sslExtendedSession = mock(ExtendedSSLSession.class);
+		ExtendedSSLSession sslExtendedSession = Mockito.mock(ExtendedSSLSession.class);
 		when(sslExtendedSession.getRequestedServerNames()).thenReturn(sniServerNames);
 
-		SSLSocket sslSocket = mock(SSLSocket.class);
+		SSLSocket sslSocket = Mockito.mock(SSLSocket.class);
 		when(sslSocket.getHandshakeSession()).thenReturn(sslExtendedSession);
 
 		String serverAlias = keyManager.chooseServerAlias("RSA", null, sslSocket);
@@ -93,7 +86,7 @@ public class KeyManagerTest {
 
 	@Test
 	public void itUsesDelegate() {
-		Principal[] principals = {mock(Principal.class)};
+		Principal[] principals = {Mockito.mock(Principal.class)};
 
 		keyManager.getClientAliases("foo", principals);
 		verify(delegate).getClientAliases("foo", principals);
@@ -102,7 +95,7 @@ public class KeyManagerTest {
 		verify(delegate).getPrivateKey("foo");
 
 		String[] strings = new String[] { "foo" };
-		Socket socket = mock(SSLSocket.class);
+		Socket socket = Mockito.mock(SSLSocket.class);
 		keyManager.chooseClientAlias(strings, principals, socket);
 		verify(delegate).chooseClientAlias(strings, principals, socket);
 
