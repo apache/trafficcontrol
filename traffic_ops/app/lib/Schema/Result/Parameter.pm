@@ -55,12 +55,6 @@ __PACKAGE__->table("parameter");
   is_nullable: 1
   original: {default_value => \"now()"}
 
-=head2 secure
-
-  data_type: 'tinyint'
-  default_value: 0
-  is_nullable: 0
-
 =cut
 
 __PACKAGE__->add_columns(
@@ -84,8 +78,6 @@ __PACKAGE__->add_columns(
     is_nullable   => 1,
     original      => { default_value => \"now()" },
   },
-  "secure",
-  { data_type => "tinyint", default_value => 0, is_nullable => 0 },
 );
 
 =head1 PRIMARY KEY
@@ -133,8 +125,8 @@ __PACKAGE__->has_many(
 );
 
 
-# Created by DBIx::Class::Schema::Loader v0.07043 @ 2016-07-05 09:49:28
-# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:vlWyyRCLJANFB+zpFhD0jA
+# Created by DBIx::Class::Schema::Loader v0.07043 @ 2016-07-08 09:31:12
+# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:B4HhXuxHUlTNOrPAtV0Hvw
 
 
 # You can replace this text with custom code or comments, and it will be preserved on regeneration

@@ -152,7 +152,8 @@ __PACKAGE__->table("tm_user");
 =head2 registration_sent
 
   data_type: 'timestamp with time zone'
-  is_nullable: 1
+  default_value: '1998-12-31 17:00:00-07'
+  is_nullable: 0
 
 =cut
 
@@ -210,7 +211,11 @@ __PACKAGE__->add_columns(
   "token",
   { data_type => "varchar", is_nullable => 1, size => 50 },
   "registration_sent",
-  { data_type => "timestamp with time zone", is_nullable => 1 },
+  {
+    data_type     => "timestamp with time zone",
+    default_value => "1998-12-31 17:00:00-07",
+    is_nullable   => 0,
+  },
 );
 
 =head1 PRIMARY KEY
@@ -227,7 +232,7 @@ __PACKAGE__->set_primary_key("id");
 
 =head1 UNIQUE CONSTRAINTS
 
-=head2 C<idx_25652_tmuser_email_unique>
+=head2 C<idx_53628_tmuser_email_unique>
 
 =over 4
 
@@ -237,9 +242,9 @@ __PACKAGE__->set_primary_key("id");
 
 =cut
 
-__PACKAGE__->add_unique_constraint("idx_25652_tmuser_email_unique", ["email"]);
+__PACKAGE__->add_unique_constraint("idx_53628_tmuser_email_unique", ["email"]);
 
-=head2 C<idx_25652_username_unique>
+=head2 C<idx_53628_username_unique>
 
 =over 4
 
@@ -249,7 +254,7 @@ __PACKAGE__->add_unique_constraint("idx_25652_tmuser_email_unique", ["email"]);
 
 =cut
 
-__PACKAGE__->add_unique_constraint("idx_25652_username_unique", ["username"]);
+__PACKAGE__->add_unique_constraint("idx_53628_username_unique", ["username"]);
 
 =head1 RELATIONS
 
@@ -334,8 +339,8 @@ __PACKAGE__->belongs_to(
 );
 
 
-# Created by DBIx::Class::Schema::Loader v0.07043 @ 2016-07-05 09:49:28
-# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:C3B/EbMOJz04enOf+ouiAA
+# Created by DBIx::Class::Schema::Loader v0.07043 @ 2016-07-08 09:31:12
+# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:Q3Y1qsuS18Cb8vix9Frggw
 
 
 # You can replace this text with custom code or comments, and it will be preserved on regeneration

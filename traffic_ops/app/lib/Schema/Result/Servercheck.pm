@@ -297,7 +297,7 @@ __PACKAGE__->set_primary_key("id", "server");
 
 =head1 UNIQUE CONSTRAINTS
 
-=head2 C<idx_25611_server>
+=head2 C<idx_53587_server>
 
 =over 4
 
@@ -307,9 +307,9 @@ __PACKAGE__->set_primary_key("id", "server");
 
 =cut
 
-__PACKAGE__->add_unique_constraint("idx_25611_server", ["server"]);
+__PACKAGE__->add_unique_constraint("idx_53587_server", ["server"]);
 
-=head2 C<idx_25611_ses_id_unique>
+=head2 C<idx_53587_ses_id_unique>
 
 =over 4
 
@@ -319,7 +319,7 @@ __PACKAGE__->add_unique_constraint("idx_25611_server", ["server"]);
 
 =cut
 
-__PACKAGE__->add_unique_constraint("idx_25611_ses_id_unique", ["id"]);
+__PACKAGE__->add_unique_constraint("idx_53587_ses_id_unique", ["id"]);
 
 =head1 RELATIONS
 
@@ -339,8 +339,8 @@ __PACKAGE__->belongs_to(
 );
 
 
-# Created by DBIx::Class::Schema::Loader v0.07043 @ 2016-07-05 09:49:28
-# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:zMtDC81atLcGqO86bj68jw
+# Created by DBIx::Class::Schema::Loader v0.07043 @ 2016-07-08 09:31:12
+# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:vO7Xr7yoKif4IY3Xom+L1g
 
 
 # You can replace this text with custom code or comments, and it will be preserved on regeneration

@@ -107,7 +107,7 @@ __PACKAGE__->table("deliveryservice");
 
   data_type: 'bigint'
   is_foreign_key: 1
-  is_nullable: 0
+  is_nullable: 1
 
 =head2 ccr_dns_ttl
 
@@ -181,7 +181,7 @@ __PACKAGE__->table("deliveryservice");
 
   data_type: 'smallint'
   default_value: 0
-  is_nullable: 1
+  is_nullable: 0
 
 =head2 ssl_key_version
 
@@ -282,11 +282,6 @@ __PACKAGE__->table("deliveryservice");
   default_value: 0
   is_nullable: 1
 
-=head2 multi_site_origin_algorithm
-
-  data_type: 'tinyint'
-  is_nullable: 1
-
 =head2 geo_limit_countries
 
   data_type: 'varchar'
@@ -335,7 +330,7 @@ __PACKAGE__->add_columns(
   "profile",
   { data_type => "bigint", is_foreign_key => 1, is_nullable => 0 },
   "cdn_id",
-  { data_type => "bigint", is_foreign_key => 1, is_nullable => 0 },
+  { data_type => "bigint", is_foreign_key => 1, is_nullable => 1 },
   "ccr_dns_ttl",
   { data_type => "bigint", is_nullable => 1 },
   "global_max_mbps",
@@ -366,7 +361,7 @@ __PACKAGE__->add_columns(
     original      => { default_value => \"now()" },
   },
   "protocol",
-  { data_type => "smallint", default_value => 0, is_nullable => 1 },
+  { data_type => "smallint", default_value => 0, is_nullable => 0 },
   "ssl_key_version",
   { data_type => "bigint", default_value => 0, is_nullable => 1 },
   "ipv6_routing_enabled",
@@ -400,9 +395,7 @@ __PACKAGE__->add_columns(
   "regional_geo_blocking",
   { data_type => "boolean", is_nullable => 0 },
   "geo_provider",
-  { data_type => "tinyint", default_value => 0, is_nullable => 1 },
-  "multi_site_origin_algorithm",
-  { data_type => "tinyint", is_nullable => 1 },
+  { data_type => "smallint", default_value => 0, is_nullable => 1 },
   "geo_limit_countries",
   { data_type => "varchar", is_nullable => 1, size => 750 },
   "logs_enabled",
@@ -425,7 +418,7 @@ __PACKAGE__->set_primary_key("id", "type");
 
 =head1 UNIQUE CONSTRAINTS
 
-=head2 C<idx_25391_ds_id_unique>
+=head2 C<idx_53377_ds_id_unique>
 
 =over 4
 
@@ -435,9 +428,9 @@ __PACKAGE__->set_primary_key("id", "type");
 
 =cut
 
-__PACKAGE__->add_unique_constraint("idx_25391_ds_id_unique", ["id"]);
+__PACKAGE__->add_unique_constraint("idx_53377_ds_id_unique", ["id"]);
 
-=head2 C<idx_25391_ds_name_unique>
+=head2 C<idx_53377_ds_name_unique>
 
 =over 4
 
@@ -447,7 +440,7 @@ __PACKAGE__->add_unique_constraint("idx_25391_ds_id_unique", ["id"]);
 
 =cut
 
-__PACKAGE__->add_unique_constraint("idx_25391_ds_name_unique", ["xml_id"]);
+__PACKAGE__->add_unique_constraint("idx_53377_ds_name_unique", ["xml_id"]);
 
 =head1 RELATIONS
 
@@ -463,7 +456,12 @@ __PACKAGE__->belongs_to(
   "cdn",
   "Schema::Result::Cdn",
   { id => "cdn_id" },
-  { is_deferrable => 0, on_delete => "RESTRICT", on_update => "RESTRICT" },
+  {
+    is_deferrable => 0,
+    join_type     => "LEFT",
+    on_delete     => "SET NULL",
+    on_update     => "RESTRICT",
+  },
 );
 
 =head2 deliveryservice_regexes
@@ -617,8 +615,8 @@ __PACKAGE__->belongs_to(
 );
 
 
-# Created by DBIx::Class::Schema::Loader v0.07043 @ 2016-07-05 09:49:28
-# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:GilDZvtTzSVJOEPdUY/bOg
+# Created by DBIx::Class::Schema::Loader v0.07043 @ 2016-07-08 09:31:12
+# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:/6P9s76Zcgd+mNnXsdcErQ
 
 # You can replace this text with custom code or comments, and it will be preserved on regeneration
 1;

@@ -148,7 +148,7 @@ __PACKAGE__->table("server");
 
   data_type: 'bigint'
   is_foreign_key: 1
-  is_nullable: 0
+  is_nullable: 1
 
 =head2 mgmt_ip_address
 
@@ -277,7 +277,7 @@ __PACKAGE__->add_columns(
   "profile",
   { data_type => "bigint", is_foreign_key => 1, is_nullable => 0 },
   "cdn_id",
-  { data_type => "bigint", is_foreign_key => 1, is_nullable => 0 },
+  { data_type => "bigint", is_foreign_key => 1, is_nullable => 1 },
   "mgmt_ip_address",
   { data_type => "varchar", is_nullable => 1, size => 45 },
   "mgmt_ip_netmask",
@@ -331,7 +331,7 @@ __PACKAGE__->set_primary_key("id", "cachegroup", "type", "status", "profile");
 
 =head1 UNIQUE CONSTRAINTS
 
-=head2 C<idx_25597_cs_ip_address_unique>
+=head2 C<idx_53573_cs_ip_address_unique>
 
 =over 4
 
@@ -341,9 +341,9 @@ __PACKAGE__->set_primary_key("id", "cachegroup", "type", "status", "profile");
 
 =cut
 
-__PACKAGE__->add_unique_constraint("idx_25597_cs_ip_address_unique", ["ip_address"]);
+__PACKAGE__->add_unique_constraint("idx_53573_cs_ip_address_unique", ["ip_address"]);
 
-=head2 C<idx_25597_host_name>
+=head2 C<idx_53573_host_name>
 
 =over 4
 
@@ -353,9 +353,9 @@ __PACKAGE__->add_unique_constraint("idx_25597_cs_ip_address_unique", ["ip_addres
 
 =cut
 
-__PACKAGE__->add_unique_constraint("idx_25597_host_name", ["host_name"]);
+__PACKAGE__->add_unique_constraint("idx_53573_host_name", ["host_name"]);
 
-=head2 C<idx_25597_ip6_address>
+=head2 C<idx_53573_ip6_address>
 
 =over 4
 
@@ -365,9 +365,9 @@ __PACKAGE__->add_unique_constraint("idx_25597_host_name", ["host_name"]);
 
 =cut
 
-__PACKAGE__->add_unique_constraint("idx_25597_ip6_address", ["ip6_address"]);
+__PACKAGE__->add_unique_constraint("idx_53573_ip6_address", ["ip6_address"]);
 
-=head2 C<idx_25597_se_id_unique>
+=head2 C<idx_53573_se_id_unique>
 
 =over 4
 
@@ -377,7 +377,7 @@ __PACKAGE__->add_unique_constraint("idx_25597_ip6_address", ["ip6_address"]);
 
 =cut
 
-__PACKAGE__->add_unique_constraint("idx_25597_se_id_unique", ["id"]);
+__PACKAGE__->add_unique_constraint("idx_53573_se_id_unique", ["id"]);
 
 =head1 RELATIONS
 
@@ -408,7 +408,12 @@ __PACKAGE__->belongs_to(
   "cdn",
   "Schema::Result::Cdn",
   { id => "cdn_id" },
-  { is_deferrable => 0, on_delete => "RESTRICT", on_update => "RESTRICT" },
+  {
+    is_deferrable => 0,
+    join_type     => "LEFT",
+    on_delete     => "SET NULL",
+    on_update     => "RESTRICT",
+  },
 );
 
 =head2 deliveryservice_servers
@@ -517,8 +522,8 @@ __PACKAGE__->belongs_to(
 );
 
 
-# Created by DBIx::Class::Schema::Loader v0.07043 @ 2016-07-05 09:49:28
-# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:OJy61/tCB+4W3LcDYpLonw
+# Created by DBIx::Class::Schema::Loader v0.07043 @ 2016-07-08 09:31:12
+# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:0NhH7IIhthDrvzahOK622A
 # These lines were loaded from '/Users/drichard/projects/github.com/traffic_control/traffic_ops/app/lib/Schema/Result/Server.pm' found in @INC.
 # They are now part of the custom portion of this file
 # for you to hand-edit.  If you do not either delete
