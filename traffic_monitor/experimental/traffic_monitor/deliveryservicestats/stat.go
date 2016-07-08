@@ -13,6 +13,8 @@ import (
 
 // TODO remove 'ds' and 'stat' from names
 
+// TODO move name string types somewhere more generic
+
 type CacheName string
 
 type CacheGroupName string
