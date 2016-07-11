@@ -395,7 +395,7 @@ sub systemd_service_status {
 sub start_service {
 	my $pkg_name = shift;
 
-	( $log_level >> $ERROR ) && print "ERROR start_service called for $pkg_name.\n";
+	( $log_level >> $DEBUG ) && print "DEBUG start_service called for $pkg_name.\n";
 
 	my $pkg_running;
 	if ($RELEASE eq "EL7") {
