@@ -582,9 +582,9 @@ sub check_params {
 	}
 
 	if ( defined($params->{active}) ) {
-		if ( $params->{active} eq "true" ) {
+		if ( $params->{active} eq "true" || $params->{active} == 1 ) {
 			$transformed_params->{active} = 1;
-		} elsif ( $params->{active} eq "false" ) {
+		} elsif ( $params->{active} eq "false" || $params->{active} == 0 ) {
 			$transformed_params->{active} = 0;
 		} else {
 			return (undef, "active must be true|false." );
@@ -675,9 +675,9 @@ sub check_params {
 	}
 
 	if ( defined($params->{logsEnabled}) ) {
-		if ( $params->{logsEnabled} eq "true" ) {
+		if ( $params->{logsEnabled} eq "true" || $params->{logsEnabled} == 1 ) {
 			$transformed_params->{logsEnabled} = 1;
-		} elsif ( $params->{logsEnabled} eq "false" ) {
+		} elsif ( $params->{logsEnabled} eq "false" || $params->{logsEnabled} == 0 ) {
 			$transformed_params->{logsEnabled} = 0;
 		} else {
 			return (undef, "logsEnabled must be true|false." );
@@ -697,7 +697,7 @@ sub new_value {
 	my $value = {
 			xml_id                 => $params->{xmlId},
 			display_name           => $params->{displayName},
-			dscp                   => $self->nodef_to_default( $params->{dscp} eq "", 0 ),
+			dscp                   => $self->nodef_to_default( $params->{dscp}, 0 ),
 			signed                 => $self->nodef_to_default( $params->{signed}, 0 ),
 			qstring_ignore         => $params->{qstringIgnore},
 			geo_limit              => $params->{geoLimit},
