@@ -55,6 +55,12 @@ __PACKAGE__->table("parameter");
   is_nullable: 1
   original: {default_value => \"now()"}
 
+=head2 secure
+
+  data_type: 'boolean'
+  default_value: false
+  is_nullable: 0
+
 =cut
 
 __PACKAGE__->add_columns(
@@ -78,6 +84,8 @@ __PACKAGE__->add_columns(
     is_nullable   => 1,
     original      => { default_value => \"now()" },
   },
+  "secure",
+  { data_type => "boolean", default_value => \"false", is_nullable => 0 },
 );
 
 =head1 PRIMARY KEY
@@ -125,8 +133,8 @@ __PACKAGE__->has_many(
 );
 
 
-# Created by DBIx::Class::Schema::Loader v0.07043 @ 2016-07-08 09:31:12
-# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:B4HhXuxHUlTNOrPAtV0Hvw
+# Created by DBIx::Class::Schema::Loader v0.07043 @ 2016-07-08 10:42:03
+# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:lSraFMPuiI9Hn3C5e5jYPw
 
 
 # You can replace this text with custom code or comments, and it will be preserved on regeneration

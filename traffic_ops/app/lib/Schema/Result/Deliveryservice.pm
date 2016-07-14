@@ -48,12 +48,12 @@ __PACKAGE__->table("deliveryservice");
 
 =head2 signed
 
-  data_type: 'boolean'
+  data_type: 'smallint'
   is_nullable: 1
 
 =head2 qstring_ignore
 
-  data_type: 'boolean'
+  data_type: 'smallint'
   is_nullable: 1
 
 =head2 geo_limit
@@ -156,12 +156,12 @@ __PACKAGE__->table("deliveryservice");
 
 =head2 miss_lat
 
-  data_type: 'double precision'
+  data_type: 'numeric'
   is_nullable: 1
 
 =head2 miss_long
 
-  data_type: 'double precision'
+  data_type: 'numeric'
   is_nullable: 1
 
 =head2 check_path
@@ -293,6 +293,11 @@ __PACKAGE__->table("deliveryservice");
   data_type: 'boolean'
   is_nullable: 1
 
+=head2 multi_site_origin_algorithm
+
+  data_type: 'boolean'
+  is_nullable: 1
+
 =cut
 
 __PACKAGE__->add_columns(
@@ -310,9 +315,9 @@ __PACKAGE__->add_columns(
   "dscp",
   { data_type => "bigint", is_nullable => 0 },
   "signed",
-  { data_type => "boolean", is_nullable => 1 },
+  { data_type => "smallint", is_nullable => 1 },
   "qstring_ignore",
-  { data_type => "boolean", is_nullable => 1 },
+  { data_type => "smallint", is_nullable => 1 },
   "geo_limit",
   { data_type => "boolean", default_value => \"false", is_nullable => 1 },
   "http_bypass_fqdn",
@@ -348,9 +353,9 @@ __PACKAGE__->add_columns(
   "info_url",
   { data_type => "varchar", is_nullable => 1, size => 255 },
   "miss_lat",
-  { data_type => "double precision", is_nullable => 1 },
+  { data_type => "numeric", is_nullable => 1 },
   "miss_long",
-  { data_type => "double precision", is_nullable => 1 },
+  { data_type => "numeric", is_nullable => 1 },
   "check_path",
   { data_type => "varchar", is_nullable => 1, size => 255 },
   "last_updated",
@@ -400,6 +405,8 @@ __PACKAGE__->add_columns(
   { data_type => "varchar", is_nullable => 1, size => 750 },
   "logs_enabled",
   { data_type => "boolean", is_nullable => 1 },
+  "multi_site_origin_algorithm",
+  { data_type => "boolean", is_nullable => 1 },
 );
 
 =head1 PRIMARY KEY
@@ -418,7 +425,7 @@ __PACKAGE__->set_primary_key("id", "type");
 
 =head1 UNIQUE CONSTRAINTS
 
-=head2 C<idx_53377_ds_id_unique>
+=head2 C<idx_62015_ds_id_unique>
 
 =over 4
 
@@ -428,9 +435,9 @@ __PACKAGE__->set_primary_key("id", "type");
 
 =cut
 
-__PACKAGE__->add_unique_constraint("idx_53377_ds_id_unique", ["id"]);
+__PACKAGE__->add_unique_constraint("idx_62015_ds_id_unique", ["id"]);
 
-=head2 C<idx_53377_ds_name_unique>
+=head2 C<idx_62015_ds_name_unique>
 
 =over 4
 
@@ -440,7 +447,7 @@ __PACKAGE__->add_unique_constraint("idx_53377_ds_id_unique", ["id"]);
 
 =cut
 
-__PACKAGE__->add_unique_constraint("idx_53377_ds_name_unique", ["xml_id"]);
+__PACKAGE__->add_unique_constraint("idx_62015_ds_name_unique", ["xml_id"]);
 
 =head1 RELATIONS
 
@@ -615,8 +622,8 @@ __PACKAGE__->belongs_to(
 );
 
 
-# Created by DBIx::Class::Schema::Loader v0.07043 @ 2016-07-08 09:31:12
-# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:/6P9s76Zcgd+mNnXsdcErQ
+# Created by DBIx::Class::Schema::Loader v0.07043 @ 2016-07-14 11:10:15
+# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:SlPfCEXGxY0yKyQrrwDcIw
 
 # You can replace this text with custom code or comments, and it will be preserved on regeneration
 1;
