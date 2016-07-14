@@ -227,8 +227,8 @@ dashboard.refresh = "30s";
               "tags": [
                 {
                   "key": "host",
-                  "operator": "=",
-                  "value": which
+                  "operator": "=~",
+                  "value": "/" + which + "/"
                 }
               ],
               "groupBy": [
@@ -380,8 +380,8 @@ dashboard.refresh = "30s";
               "tags": [
                 {
                   "key": "host",
-                  "operator": "=",
-                  "value": which
+                  "operator": "=~",
+                  "value": "/" + which + "/"
                 }
               ],
               "groupBy": [
@@ -505,8 +505,8 @@ dashboard.refresh = "30s";
               "tags": [
                 {
                   "key": "host",
-                  "operator": "=",
-                  "value": which
+                  "operator": "=~",
+                  "value": "/" + which + "/"
                 }
               ],
               "groupBy": [
@@ -658,8 +658,8 @@ dashboard.refresh = "30s";
               "tags": [
                 {
                   "key": "host",
-                  "operator": "=",
-                  "value": which
+                  "operator": "=~",
+                  "value": "/" + which + "/"
                 }
               ],
               "groupBy": [
