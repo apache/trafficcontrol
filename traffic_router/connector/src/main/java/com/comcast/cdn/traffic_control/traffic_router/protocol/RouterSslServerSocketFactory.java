@@ -6,8 +6,6 @@ import org.apache.tomcat.util.net.jsse.JSSESocketFactory;
 
 import javax.net.ssl.X509KeyManager;
 import java.io.IOException;
-import java.net.InetAddress;
-import java.net.ServerSocket;
 import java.security.KeyStore;
 
 // Wrap JSSEKeyManager with our own key manager so we can control handing out certificates
@@ -36,23 +34,5 @@ public class RouterSslServerSocketFactory extends JSSESocketFactory {
 		setAttribute("keystore", keyStorePath);
 		System.setProperty("javax.net.ssl.keyStore", keyStorePath);
 		return KeyStoreHelper.getInstance().getKeyStore();
-	}
-
-	@Override
-	public ServerSocket createSocket (final int port) throws IOException
-	{
-		return new SniDecorator().addSni(super.createSocket(port));
-	}
-
-	@Override
-	public ServerSocket createSocket (final int port, final int backlog) throws IOException
-	{
-		return new SniDecorator().addSni(super.createSocket(port, backlog));
-	}
-
-	@Override
-	public ServerSocket createSocket (final int port, final int backlog, final InetAddress ifAddress) throws IOException
-	{
-		return new SniDecorator().addSni(super.createSocket(port, backlog, ifAddress));
 	}
 }
