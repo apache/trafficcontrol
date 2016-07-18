@@ -92,8 +92,8 @@ CREATE TABLE cachegroup (
     id bigint NOT NULL,
     name character varying(45) NOT NULL,
     short_name character varying(255) NOT NULL,
-    latitude double precision,
-    longitude double precision,
+    latitude numeric,
+    longitude numeric,
     parent_cachegroup_id bigint,
     secondary_parent_cachegroup_id bigint,
     type bigint NOT NULL,
@@ -181,8 +181,8 @@ CREATE TABLE deliveryservice (
     xml_id character varying(48) NOT NULL,
     active smallint NOT NULL,
     dscp bigint NOT NULL,
-    signed boolean,
-    qstring_ignore boolean,
+    signed smallint,
+    qstring_ignore smallint,
     geo_limit boolean DEFAULT false,
     http_bypass_fqdn character varying(255),
     dns_bypass_ip character varying(45),
@@ -200,8 +200,8 @@ CREATE TABLE deliveryservice (
     long_desc_2 character varying(1024),
     max_dns_answers bigint DEFAULT '0'::bigint,
     info_url character varying(255),
-    miss_lat double precision,
-    miss_long double precision,
+    miss_lat numeric,
+    miss_long numeric,
     check_path character varying(255),
     last_updated timestamp with time zone DEFAULT now(),
     protocol smallint DEFAULT '0'::smallint NOT NULL,
@@ -434,6 +434,41 @@ CREATE TABLE federation_tmuser (
 
 
 ALTER TABLE federation_tmuser OWNER TO jheitz200;
+
+--
+-- Name: goose_db_version; Type: TABLE; Schema: public; Owner: to_user
+--
+
+CREATE TABLE goose_db_version (
+    id integer NOT NULL,
+    version_id bigint NOT NULL,
+    is_applied boolean NOT NULL,
+    tstamp timestamp without time zone DEFAULT now()
+);
+
+
+ALTER TABLE goose_db_version OWNER TO to_user;
+
+--
+-- Name: goose_db_version_id_seq; Type: SEQUENCE; Schema: public; Owner: to_user
+--
+
+CREATE SEQUENCE goose_db_version_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER TABLE goose_db_version_id_seq OWNER TO to_user;
+
+--
+-- Name: goose_db_version_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: to_user
+--
+
+ALTER SEQUENCE goose_db_version_id_seq OWNED BY goose_db_version.id;
+
 
 --
 -- Name: hwinfo; Type: TABLE; Schema: public; Owner: jheitz200
@@ -1332,6 +1367,13 @@ ALTER TABLE ONLY federation_resolver ALTER COLUMN id SET DEFAULT nextval('federa
 
 
 --
+-- Name: id; Type: DEFAULT; Schema: public; Owner: to_user
+--
+
+ALTER TABLE ONLY goose_db_version ALTER COLUMN id SET DEFAULT nextval('goose_db_version_id_seq'::regclass);
+
+
+--
 -- Name: id; Type: DEFAULT; Schema: public; Owner: jheitz200
 --
 
@@ -1630,6 +1672,21 @@ SELECT pg_catalog.setval('federation_resolver_id_seq', 1, true);
 
 COPY federation_tmuser (federation, tm_user, role, last_updated) FROM stdin;
 \.
+
+
+--
+-- Data for Name: goose_db_version; Type: TABLE DATA; Schema: public; Owner: to_user
+--
+
+COPY goose_db_version (id, version_id, is_applied, tstamp) FROM stdin;
+\.
+
+
+--
+-- Name: goose_db_version_id_seq; Type: SEQUENCE SET; Schema: public; Owner: to_user
+--
+
+SELECT pg_catalog.setval('goose_db_version_id_seq', 2, true);
 
 
 --
@@ -1946,6 +2003,14 @@ COPY type (id, name, description, use_in_table, last_updated) FROM stdin;
 --
 
 SELECT pg_catalog.setval('type_id_seq', 1, true);
+
+
+--
+-- Name: goose_db_version_pkey; Type: CONSTRAINT; Schema: public; Owner: to_user
+--
+
+ALTER TABLE ONLY goose_db_version
+    ADD CONSTRAINT goose_db_version_pkey PRIMARY KEY (id);
 
 
 --
