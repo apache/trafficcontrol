@@ -1,4 +1,4 @@
-#!/usr/bin/env perl 
+#!/usr/bin/env perl
 #
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -35,14 +35,17 @@ my $usage = "\n"
 	. "Purpose:  This script is used to manage database. The environments are\n"
 	. "          defined in the dbconf.yml, as well as the database names.\n\n"
 	. "arguments:   \n\n"
-	. "create  - Execute db 'create' the database for the current environment.\n"
+	. "createdb  - Execute db 'createdb' the database for the current environment.\n"
+	. "dropdb  - Execute db 'dropdb' on the database for the current environment.\n"
 	. "down  - Roll back a single migration from the current version.\n"
-	. "drop  - Execute db 'drop' on the database for the current environment.\n"
+	. "createuser  - Execute 'createuser' the user for the current environment.\n"
+	. "dropuser  - Execute 'dropuser' the user for the current environment.\n"
+	. "showusers  - Execute sql to show all of the user for the current environment.\n"
 	. "redo  - Roll back the most recently applied migration, then run it again.\n"
-	. "reset  - Execute db drop, create, load_schema, migrate on the database for the current environment.\n"
+	. "reset  - Execute db 'dropdb', 'createdb', load_schema, migrate on the database for the current environment.\n"
 	. "reverse_schema  - Reverse engineer the lib/Schema/Result files from the environment database.\n"
 	. "seed  - Execute sql from db/seeds.sql for loading static data.\n"
-	. "setup  - Execute db drop, create, load_schema, migrate, seed on the database for the current environment.\n"
+	. "setup  - Execute db dropdb, createdb, load_schema, migrate, seed on the database for the current environment.\n"
 	. "status  - Print the status of all migrations.\n"
 	. "upgrade  - Execute migrate then seed on the database for the current environment.\n";
 
@@ -64,15 +67,24 @@ parse_dbconf_yml_pg_driver();
 STDERR->autoflush(1);
 my $argument = shift(@ARGV);
 if ( defined($argument) ) {
-	if ( $argument eq 'create' ) {
-		create();
+	if ( $argument eq 'createdb' ) {
+		createdb();
 	}
-	elsif ( $argument eq 'drop' ) {
-		drop();
+	elsif ( $argument eq 'dropdb' ) {
+		dropdb();
+	}
+	elsif ( $argument eq 'createuser' ) {
+		createuser();
+	}
+	elsif ( $argument eq 'dropuser' ) {
+		dropuser();
+	}
+	elsif ( $argument eq 'showusers' ) {
+		showusers();
 	}
 	elsif ( $argument eq 'reset' ) {
-		drop();
-		create();
+		dropdb();
+		createdb();
 		load_schema();
 		migrate('up');
 	}
@@ -81,8 +93,8 @@ if ( defined($argument) ) {
 		seed();
 	}
 	elsif ( $argument eq 'setup' ) {
-		drop();
-		create();
+		dropdb();
+		createdb();
 		load_schema();
 		migrate('up');
 		seed();
@@ -156,12 +168,24 @@ sub load_schema {
 	system("psql -h $host_ip -p $host_port -d $db_name -U $db_username -e < db/create_tables.sql");
 }
 
-sub drop {
+sub dropdb {
 	system("dropdb -h $host_ip -p $host_port -U $db_username -e --if-exists $db_name;");
 }
 
-sub create {
-	system("createdb -h $host_ip -p $host_port -U $db_username -e $db_name");
+sub createdb {
+	system("createdb -h $host_ip -p $host_port -U $db_username -e $db_name;");
+}
+
+sub createuser {
+	system("createuser -h $host_ip -p $host_port -P -e --superuser $db_username;");
+}
+
+sub dropuser {
+	system("dropuser -h $host_ip -p $host_port -i -e $db_username;");
+}
+
+sub showusers {
+	system("psql postgres -c '\\du';");
 }
 
 sub reverse_schema {
