@@ -61,6 +61,7 @@ public class Dispersion {
 		this.shuffled = shuffled;
 	}
 
+	// Used by Http Routing functions
 	public Cache getCache(final SortedMap<Double, Cache> cacheMap) {
 		if (cacheMap == null) {
 			return null;
@@ -75,6 +76,7 @@ public class Dispersion {
 		return null;
 	}
 
+	// Used by DNS Routing functions
 	public List<Cache> getCacheList(final SortedMap<Double, Cache> cacheMap) {
 		if (cacheMap == null) {
 			return null;
@@ -82,7 +84,7 @@ public class Dispersion {
 
 		final List<Cache> cacheList = new ArrayList<Cache>();
 
-		for (Cache c : cacheMap.values()) {
+		for (final Cache c : cacheMap.values()) {
 			cacheList.add(c);
 
 			if (this.getLimit() != 0 && cacheList.size() == this.getLimit()) {

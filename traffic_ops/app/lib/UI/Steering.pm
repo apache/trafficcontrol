@@ -36,9 +36,7 @@ sub index {
 
 	# select * from steering_target where deliveryservice = ds_id;
 	my $steering = { ds_id => $ds_id, ds_name => $self->get_ds_name($ds_id) };
-	my $st_rs = $self->db->resultset('SteeringTarget')
-		->search( { deliveryservice => $ds_id } );
-	my %target_filters;
+	my $st_rs = $self->db->resultset('SteeringTarget')->search( { deliveryservice => $ds_id } );
 	if ( $st_rs > 0 ) {
 		my %steering_targets;
 		while ( my $row = $st_rs->next ) {
@@ -49,47 +47,19 @@ sub index {
 		$steering->{'target_id_2'}     = $keys[1];
 		$steering->{'target_name_1'}   = $self->get_ds_name( $keys[0] );
 		$steering->{'target_name_2'}   = $self->get_ds_name( $keys[1] );
-		$steering->{'target_weight_1'} = $steering_targets{ $keys[0] };
-		$steering->{'target_weight_2'} = $steering_targets{ $keys[1] };
-
-		foreach my $targetid (@keys) {
-			$target_filters{$targetid} = $self->get_target_filters($targetid);
-		}
 	}
 
 	$self->stash(
 		steering       => $steering,
 		ds_data        => $self->get_deliveryservices(),
-		target_filters => \%target_filters,
 		fbox_layout    => 1
 	);
-}
-
-sub get_target_filters {
-	my $self     = shift;
-	my $targetid = shift;
-	my $regex_rs = $self->db->resultset('DeliveryserviceRegex')->search(
-		{   deliveryservice => $targetid,
-			'type.name'     => 'STEERING_REGEXP'
-		},
-		{ join => { regex => { type => undef } } }
-	);
-
-	my @regexes;
-	if ( $regex_rs > 0 ) {
-		while ( my $row = $regex_rs->next ) {
-			push @regexes, $row->regex->pattern;
-		}
-	}
-
-	return \@regexes;
 }
 
 sub get_ds_name {
 	my $self  = shift;
 	my $ds_id = shift;
-	return $self->db->resultset('Deliveryservice')
-		->search( { id => $ds_id } )->get_column('xml_id')->single();
+	return $self->db->resultset('Deliveryservice')->search( { id => $ds_id } )->get_column('xml_id')->single();
 }
 
 sub get_deliveryservices {
@@ -110,12 +80,10 @@ sub update {
 	my $ds_id = $self->param('id');
 	my $tid1  = $self->param('steering.target_id_1');
 	my $tid2  = $self->param('steering.target_id_2');
-	my $tw1   = $self->param('steering.target_weight_1');
-	my $tw2   = $self->param('steering.target_weight_2');
 	if ( $self->is_valid() ) {
 		my $targets;
-		$targets->{$tid1} = $tw1;
-		$targets->{$tid2} = $tw2;
+		$targets->{$tid1} = 0;
+		$targets->{$tid2} = 0;
 
 		#delete current entries
 		my $delete = $self->db->resultset('SteeringTarget')
@@ -144,9 +112,6 @@ sub update {
 	}
 	else {
 		&stash_role($self);
-		my %target_filters;
-		$target_filters{$tid1} = $self->get_target_filters($tid1);
-		$target_filters{$tid2} = $self->get_target_filters($tid2);
 		$self->stash(
 			steering => {
 				ds_id           => $ds_id,
@@ -154,12 +119,9 @@ sub update {
 				target_id_1     => $tid1,
 				target_id_2     => $tid2,
 				target_name_1   => $self->get_ds_name($tid1),
-				target_name_2   => $self->get_ds_name($tid2),
-				target_weight_1 => $tw1,
-				target_weight_2 => $tw2
+				target_name_2   => $self->get_ds_name($tid2)
 			},
 			ds_data        => $self->get_deliveryservices(),
-			target_filters => \%target_filters,
 			fbox_layout    => 1
 		);
 		$self->render("steering/index");
@@ -168,34 +130,13 @@ sub update {
 
 sub is_valid {
 	my $self  = shift;
-	my $ds_id = $self->param('id');
 
 	#validate DSs are in the same CDN (same profile...)
-	my $t1_profile
-		= $self->get_ds_profile( $self->param('steering.target_id_1') );
-	my $t2_profile
-		= $self->get_ds_profile( $self->param('steering.target_id_2') );
+	my $t1_profile = $self->get_ds_profile( $self->param('steering.target_id_1') );
+	my $t2_profile = $self->get_ds_profile( $self->param('steering.target_id_2') );
 
 	unless ( $t1_profile eq $t2_profile ) {
-		$self->field('steering.target_id_1')
-			->is_equal( "",
-			"Target Deliveryservices must be in the same CDN!" );
-	}
-
-	#validate weight is a number (empty is ok)
-	my $t1_weight = $self->param('steering.target_weight_1');
-	if ($t1_weight) {
-		unless ( $self->param('steering.target_weight_1') =~ m/(\d+)/ ) {
-			$self->field('steering.target_weight_1')
-				->is_equal( "", "Target weight must be a number!" );
-		}
-	}
-	my $t2_weight = $self->param('steering.target_weight_2');
-	if ($t2_weight) {
-		unless ( $self->param('steering.target_weight_2') =~ m/(\d+)/ ) {
-			$self->field('steering.target_weight_2')
-				->is_equal( "", "Target weight must be a number!" );
-		}
+		$self->field('steering.target_id_1')->is_equal( "",  "Target Deliveryservices must be in the same CDN!" );
 	}
 
 	return $self->valid;
@@ -204,10 +145,7 @@ sub is_valid {
 sub get_ds_profile {
 	my $self  = shift;
 	my $ds_id = shift;
-	my $ds
-		= $self->db->resultset('Deliveryservice')
-		->search( { 'me.id' => $ds_id }, { prefetch => ['profile'] } )
-		->single();
+	my $ds = $self->db->resultset('Deliveryservice')->search( { 'me.id' => $ds_id }, { prefetch => ['profile'] } )->single();
 	return $ds->profile->name;
 }
 

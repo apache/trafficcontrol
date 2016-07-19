@@ -1,29 +1,35 @@
 Sorted alphabetically
 
-* **[Crystal Qian](https://github.com/cjqian)**
-* **[Dan Kirkwood](https://github.com/dangogh)**
-* **[David Neuman](https://github.com/dneuman64)**
-* **[Derek Gelinas](https://github.com/dg4prez)**
-* **[Dewayne Richardson](https://github.com/dewrich)**
-* **[Eric Friedrich](https://github.com/limited)**
-* **[Hank Beatty](https://github.com/hbeatty)**
-* **[Igor Oreper](https://github.com/ioreper)**
-* **[Jackie Heitzer](https://github.com/jheitz200)**
-* **[Jan van Doorn](https://github.com/knutsel)**
-* **[Jeff Elsloo](https://github.com/elsloo)**
-* **[Jeremy Mitchell](https://github.com/mitchell852)**
-* **[Joe Pappano](https://github.com/jpappa200)**
-* **[John Benton](https://github.com/evergreentech)**
-* **[John Rushford](https://github.com/jrushf1239k)**
-* **[Justin Laue](https://github.com/fp-x)**
-* **[Lawrence Wickline](https://github.com/lwickline)**
-* **[Mark Torluemke](https://github.com/mtorluemke)**
-* **[Petro, Christopher C.](https://github.com/petrocc)**
-* **[Phil Sorber](https://github.com/PSUdaemon)**
-* **[Rob Butts](https://github.com/robert-butts)**
-* **[Scott Radvan](https://github.com/sradvan)**
-* **[Stayman Hou](https://github.com/Vuuo)**
-* **[Steve Malenfant] (https://github.com/smalenfant)**
-* **[Trevor Ackerman] (https://github.com/trevorackerman)**
-* **[York Ma] (https://github.com/yorma)**
+* **[Crystal Qian (cjqian)](https://github.com/cjqian)**
+* **[Dan Kirkwood (dangogh)](https://github.com/dangogh)**
+* **[David Neuman (dneuman64)](https://github.com/dneuman64)**
+* **[Derek Gelinas (dg4prez)](https://github.com/dg4prez)**
+* **[Dewayne Richardson (dewrich)](https://github.com/dewrich)**
+* **[Eric Friedrich (limited)](https://github.com/limited)**
+* **[Hank Beatty (hbeatty)](https://github.com/hbeatty)**
+* **[Igor Oreper (ioreper)](https://github.com/ioreper)**
+* **[Jackie Heitzer (jheitz200)](https://github.com/jheitz200)**
+* **[Jan van Doorn (knutsel)](https://github.com/knutsel)**
+* **[Jeff Elsloo (elsloo)](https://github.com/elsloo)**
+* **[Jeremy Mitchell (mitchell852)](https://github.com/mitchell852)**
+* **[Jifeng Yang (jifyang)](https://github.com/jifyang)**
+* **[Joe Pappano (jpappa200)](https://github.com/jpappa200)**
+* **[John Benton (evergreentech)](https://github.com/evergreentech)**
+* **[John Rushford (jrushf1239k)](https://github.com/jrushf1239k)**
+* **[John Shen (weifensh)](https://github.com/weifensh)**
+* **[Justin Laue (fp-x)](https://github.com/fp-x)**
+* **[Kai Luo (kailuocisco)](https://github.com/kailuocisco)**
+* **[Lawrence Wickline (lwickline)](https://github.com/lwickline)**
+* **[Mark Torluemke (mtorluemke)](https://github.com/mtorluemke)**
+* **[Neil Hao (nbaoping)](https://github.com/nbaoping)**
+* **[Petro, Christopher C. (petrocc)](https://github.com/petrocc)**
+* **[Phil Sorber (PSUdaemon)](https://github.com/PSUdaemon)**
+* **[Rob Butts (robert-butts)](https://github.com/robert-butts)**
+* **[Scott Radvan (sradvan)](https://github.com/sradvan)**
+* **[Stayman Hou (Vuuo)](https://github.com/Vuuo)**
+* **[Steve Malenfant (smalenfant)] (https://github.com/smalenfant)**
+* **[Trevor Ackerman (trevorackerman)] (https://github.com/trevorackerman)**
+* **[Xiaodong Zhang (xiaodzha)] (https://github.com/xiaodzha)**
+* **[York Ma (yorma)] (https://github.com/yorma)**
+* **[Zhilin Huang (zhilhuan)] (https://github.com/zhilhuan)**
 

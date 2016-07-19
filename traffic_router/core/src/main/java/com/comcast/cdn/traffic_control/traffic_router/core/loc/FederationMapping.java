@@ -126,7 +126,7 @@ public class FederationMapping implements Comparable<FederationMapping> {
     protected ComparableTreeSet<CidrAddress> getResolveMatches(final Set<CidrAddress> resolves, final CidrAddress cidrAddress) {
         final ComparableTreeSet<CidrAddress> cidrAddresses = new ComparableTreeSet<CidrAddress>();
 
-        for (CidrAddress cidrAddressResolve4 : resolves) {
+            for (final CidrAddress cidrAddressResolve4 : resolves) {
             if (cidrAddressResolve4.includesAddress(cidrAddress)) {
                 cidrAddresses.add(cidrAddressResolve4);
             }

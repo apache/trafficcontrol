@@ -619,25 +619,23 @@ public class ZoneManager extends Resolver {
 					continue;
 				}
 
-				final Name name = newName(fqdn);
-				final JSONObject ttl = ds.getTtls();
-
 				try {
-					zholder.add(new ARecord(name,
-						DClass.IN,
-						ZoneUtils.getLong(ttl, "A", 60),
-						c.getIp4()));
-				} catch (IllegalArgumentException e) {
-					LOGGER.warn(e + " : " + c.getIp4());
-				}
+					final Name name = newName(fqdn);
+					final JSONObject ttl = ds.getTtls();
 
-				final InetAddress ip6 = c.getIp6();
+					try {
+						zholder.add(new ARecord(name, DClass.IN, ZoneUtils.getLong(ttl, "A", 60), c.getIp4()));
+					} catch (IllegalArgumentException e) {
+						LOGGER.warn(e + " : " + c.getIp4());
+					}
 
-				if (ip6 != null && ds != null && ds.isIp6RoutingEnabled()) {
-					zholder.add(new AAAARecord(name,
-							DClass.IN,
-							ZoneUtils.getLong(ttl, AAAA, 60),
-							ip6));
+					final InetAddress ip6 = c.getIp6();
+
+					if (ip6 != null && ds != null && ds.isIp6RoutingEnabled()) {
+						zholder.add(new AAAARecord(name, DClass.IN, ZoneUtils.getLong(ttl, AAAA, 60), ip6));
+					}
+				} catch (org.xbill.DNS.TextParseException e) {
+					LOGGER.error("Caught fatal exception while generating zone data for " + fqdn  + "!", e);
 				}
 			}
 		}

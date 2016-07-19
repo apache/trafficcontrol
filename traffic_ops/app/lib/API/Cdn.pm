@@ -62,6 +62,131 @@ sub name {
 	$self->success( \@data );
 }
 
+
+sub create {
+	my $self   = shift;
+	my $params = $self->req->json;
+
+	if ( !&is_oper($self) ) {
+		return $self->forbidden();
+	}
+
+	if ( !defined($params) ) {
+		return $self->alert("parameters must be in JSON format.");
+	}
+
+	if ( !defined($params->{name}) ) {
+		return $self->alert("CDN 'name' is required.");
+	}
+
+	my $existing = $self->db->resultset('Cdn')->search( { name => $params->{name} } )->single();
+	if ( $existing ) {
+		$self->app->log->error( "a cdn with name '" . $params->{name} . "' already exists." );
+		return $self->alert("a cdn with name " . $params->{name} . " already exists." );
+	}
+
+	my $value = {
+		name => $params->{name},
+	};
+    	if ( defined($params->{dnssecEnabled}) ) {
+	    $value->{dnssec_enabled} = $params->{dnssecEnabled}
+	}
+
+	my $insert = $self->db->resultset('Cdn')->create($value);
+	$insert->insert();
+
+	my $rs = $self->db->resultset('Cdn')->find( { id => $insert->id } );
+	if ( defined($rs) ) {
+		my $response;
+		$response->{id} = $rs->id;
+		$response->{name} = $rs->name;
+		$response->{dnssecEnabled} = $rs->dnssec_enabled;
+		&log( $self, "Created CDN with id: " . $rs->id . " and name: " . $rs->name, "APICHANGE" );
+		return $self->success($response, "cdn was created.");
+	}
+	return $self->alert("create cdn failed.");
+}
+
+sub update {
+	my $self   = shift;
+	my $id     = $self->param('id');
+	my $params = $self->req->json;
+
+	if ( !&is_oper($self) ) {
+		return $self->forbidden();
+	}
+
+	my $cdn = $self->db->resultset('Cdn')->find( { id => $id } );
+	if ( !defined($cdn) ) {
+		return $self->not_found();
+	}
+
+	if ( !defined($params) ) {
+		return $self->alert("parameters must be in JSON format.");
+	}
+
+	if ( !defined($params->{name}) ) {
+		return $self->alert("CDN 'name' is required.");
+	}
+
+	my $existing = $self->db->resultset('Cdn')->search( { name => $params->{name} } )->single();
+	if ( $existing && $existing->id != $cdn->id ) {
+		$self->app->log->error( "a cdn with name '" . $params->{name} . "' already exists." );
+		return $self->alert("a cdn with name " . $params->{name} . " already exists." );
+	}
+
+
+	my $value = {
+		name => $params->{name},
+	};
+    	if ( defined($params->{dnssecEnabled}) ) {
+		$value->{dnssec_enabled} = $params->{dnssecEnabled}
+	}
+	$cdn->update($value);
+
+	my $rs = $self->db->resultset('Cdn')->find( { id => $id } );
+	if ( defined($rs) ) {
+		my $response;
+		$response->{id} = $rs->id;
+		$response->{name} = $rs->name;
+		$response->{dnssecEnabled} = $rs->dnssec_enabled;
+		&log( $self, "Updated CDN name '" . $rs->name . "' for id: " . $rs->id, "APICHANGE" );
+		return $self->success($response, "cdn was updated.");
+	}
+	return $self->alert("update cdn failed.");
+}
+
+sub delete {
+	my $self   = shift;
+	my $id     = $self->param('id');
+
+	if ( !&is_oper($self) ) {
+		return $self->forbidden();
+	}
+
+	my $cdn = $self->db->resultset('Cdn')->search( { id => $id } );
+	if ( !defined($cdn) ) {
+		return $self->not_found();
+	}
+
+	my $rs = $self->db->resultset('Server')->search( { cdn_id => $id } );
+	if ( $rs->count() > 0 ) {
+		$self->app->log->error( "Failed to delete cdn id = $id has servers" );
+		return $self->alert("Failed to delete cdn id = $id has servers");
+	}
+
+	$rs = $self->db->resultset('Deliveryservice')->search( { cdn_id => $id } );
+	if ( $rs->count() > 0 ) {
+		$self->app->log->error( "Failed to delete cdn id = $id has delivery services" );
+		return $self->alert("Failed to delete cdn id = $id has delivery services");
+	}
+
+	my $name = $cdn->get_column('name')->single();
+	$cdn->delete();
+	&log( $self, "Delete cdn " . $name, "APICHANGE" );
+	return $self->success_message("cdn was deleted.");
+}
+
 sub configs_monitoring {
 	my $self      = shift;
 	my $cdn_name  = $self->param('name');
@@ -1094,8 +1219,8 @@ sub refresh_keys {
 			}
 
 			my $response = $response_container->{"response"};
-			if (!$response->is_success()){ 
-				$error_message = "dnssec keys could not be stored for $cdn_name!  Response was: " . $response->content;
+			if (!$response->is_success()){
+				$error_message = "DNSSEC keys could not be stored for $cdn_name!  Response was: " . $response->content;
 				$self->app->log->warn($error_message);
 				next;
 			}
@@ -1181,7 +1306,7 @@ sub dnssec_keys_generate {
 		my $response = $res->{response};
 		my $rc       = $response->{_rc};
 		if ( $rc eq "204" ) {
-			&log( $self, "Generated dnssec keys for CDN $key", "APICHANGE" );
+			&log( $self, "Generated DNSSEC keys for CDN $key", "APICHANGE" );
 			$self->success("Successfully created $key_type keys for $key");
 		}
 		else {
@@ -1203,13 +1328,46 @@ sub delete_dnssec_keys {
 		my $response_container = $self->riak_delete( $key_type, $key );
 		$response = $response_container->{"response"};
 		if ( $response->is_success() ) {
-			&log( $self, "Deleted dnssec keys for CDN $key", "UICHANGE" );
+			&log( $self, "Deleted DNSSEC keys for CDN $key", "UICHANGE" );
 			$self->success("Successfully deleted $key_type keys for $key");
 		}
 		else {
 			$self->alert( { Error => " - SSL keys for key type $key_type and key $key could not be deleted.  Response was" . $response->content } );
 		}
 	}
+}
+
+sub ssl_keys {
+	my $self       = shift;
+	if ( !&is_admin($self) ) {
+		return $self->alert({ Error => " - You must be an ADMIN to perform this operation!" });
+	}
+
+	my $cdn_name = $self->param('name');
+	my $keys;
+	#get "latest" ssl records for all DSs in the CDN
+	my $response_container = $self->riak_search( "sslkeys", "q=cdn:$cdn_name&fq=_yz_rk:*latest" );
+	my $response = $response_container->{'response'};
+	if ( $response->is_success() ) {
+		my $content = decode_json($response->content)->{response}->{docs};
+		unless (scalar(@$content) > 0) {
+			return $self->render(json => {"message" => "No SSL certificates found for $cdn_name"}, status => 404);
+		}
+		foreach my $record (@$content) {
+			push(@$keys, {
+				deliveryservice => $record->{deliveryservice},
+				certificate => {
+					crt => $record->{'certificate.key'},
+					key => $record->{'certificate.key'},
+				}
+			});
+		}
+		return $self->success($keys);
+	}
+
+	return $self->alert(
+		{ Error => " - Could not retrieve SSL records for $cdn_name!  Response was: " . $response->content }
+	);
 }
 
 sub tool_logout {

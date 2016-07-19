@@ -16,6 +16,7 @@
 
 package com.comcast.cdn.traffic_control.traffic_router.core.http;
 
+import com.comcast.cdn.traffic_control.traffic_router.core.request.HTTPRequest;
 import com.comcast.cdn.traffic_control.traffic_router.geolocation.Geolocation;
 import com.comcast.cdn.traffic_control.traffic_router.core.router.StatTracker;
 import com.comcast.cdn.traffic_control.traffic_router.core.router.StatTracker.Track.ResultType;
@@ -43,7 +44,7 @@ import static org.powermock.api.mockito.PowerMockito.mockStatic;
 import static org.powermock.api.mockito.PowerMockito.whenNew;
 
 @RunWith(PowerMockRunner.class)
-@PrepareForTest({Date.class, HTTPAccessEventBuilder.class})
+@PrepareForTest({Date.class, HTTPAccessEventBuilder.class, HTTPAccessRecord.class, System.class})
 public class HTTPAccessEventBuilderTest {
     private HttpServletRequest request;
 
@@ -63,6 +64,8 @@ public class HTTPAccessEventBuilderTest {
         when(request.getMethod()).thenReturn("GET");
         when(request.getProtocol()).thenReturn("HTTP/1.1");
         when(request.getRemoteAddr()).thenReturn("192.168.7.6");
+
+        mockStatic(System.class);
     }
 
     @Test
@@ -77,6 +80,7 @@ public class HTTPAccessEventBuilderTest {
 
     @Test
     public void itAddsResponseData() throws Exception {
+        when(System.nanoTime()).thenReturn(100111001L, 225111001L);
 
         StatTracker.Track track = new StatTracker.Track();
         HTTPAccessRecord.Builder builder = new HTTPAccessRecord.Builder(new Date(144140633999L), request)
@@ -88,11 +92,13 @@ public class HTTPAccessEventBuilderTest {
         HTTPAccessRecord httpAccessRecord = builder.resultType(ResultType.CZ).build();
         String httpAccessEvent = HTTPAccessEventBuilder.create(httpAccessRecord);
 
-        assertThat(httpAccessEvent, equalTo("144140678.000 qtype=HTTP chi=192.168.7.6 url=\"http://example.com/index.html?foo=bar\" cqhm=GET cqhv=HTTP/1.1 rtype=CZ rloc=\"39.75,-104.99\" rdtl=- rerr=\"-\" rgb=\"-\" pssc=302 ttms=125 rurl=\"http://example.com/hereitis/index.html?foo=bar\" rh=\"-\""));
+        assertThat(httpAccessEvent, equalTo("144140678.000 qtype=HTTP chi=192.168.7.6 url=\"http://example.com/index.html?foo=bar\" cqhm=GET cqhv=HTTP/1.1 rtype=CZ rloc=\"39.75,-104.99\" rdtl=- rerr=\"-\" rgb=\"-\" pssc=302 ttms=125.000 rurl=\"http://example.com/hereitis/index.html?foo=bar\" rh=\"-\""));
     }
 
     @Test
-    public void itMarksTTMSLessThanMilliAsZero() throws Exception {
+    public void itRoundsUpToNearestMicroSecond() throws Exception {
+        when(System.nanoTime()).thenReturn(100111001L, 100234999L);
+
         Date fastFinishDate = mock(Date.class);
         when(fastFinishDate.getTime()).thenReturn(144140678000L);
         whenNew(Date.class).withNoArguments().thenReturn(fastFinishDate);
@@ -106,12 +112,14 @@ public class HTTPAccessEventBuilderTest {
         HTTPAccessRecord httpAccessRecord = builder.build();
         String httpAccessEvent = HTTPAccessEventBuilder.create(httpAccessRecord);
 
-        assertThat(httpAccessEvent, equalTo("144140678.000 qtype=HTTP chi=192.168.7.6 url=\"http://example.com/index.html?foo=bar\" cqhm=GET cqhv=HTTP/1.1 rtype=ERROR rloc=\"-\" rdtl=- rerr=\"-\" rgb=\"-\" pssc=302 ttms=0 rurl=\"http://example.com/hereitis/index.html?foo=bar\" rh=\"-\""));
+        assertThat(httpAccessEvent, equalTo("144140678.000 qtype=HTTP chi=192.168.7.6 url=\"http://example.com/index.html?foo=bar\" cqhm=GET cqhv=HTTP/1.1 rtype=ERROR rloc=\"-\" rdtl=- rerr=\"-\" rgb=\"-\" pssc=302 ttms=0.124 rurl=\"http://example.com/hereitis/index.html?foo=bar\" rh=\"-\""));
     }
 
 
     @Test
     public void itRecordsTrafficRouterErrors() throws Exception {
+        when(System.nanoTime()).thenReturn(111001L, 567002L);
+
         Date fastFinishDate = mock(Date.class);
         when(fastFinishDate.getTime()).thenReturn(144140678000L);
         whenNew(Date.class).withNoArguments().thenReturn(fastFinishDate);
@@ -126,11 +134,13 @@ public class HTTPAccessEventBuilderTest {
         HTTPAccessRecord httpAccessRecord = builder.build();
         String httpAccessEvent = HTTPAccessEventBuilder.create(httpAccessRecord);
 
-        assertThat(httpAccessEvent, equalTo("144140678.000 qtype=HTTP chi=192.168.7.6 url=\"http://example.com/index.html?foo=bar\" cqhm=GET cqhv=HTTP/1.1 rtype=ERROR rloc=\"-\" rdtl=- rerr=\"RuntimeException: you're doing it wrong\" rgb=\"-\" pssc=302 ttms=0 rurl=\"http://example.com/hereitis/index.html?foo=bar\" rh=\"-\""));
+        assertThat(httpAccessEvent, equalTo("144140678.000 qtype=HTTP chi=192.168.7.6 url=\"http://example.com/index.html?foo=bar\" cqhm=GET cqhv=HTTP/1.1 rtype=ERROR rloc=\"-\" rdtl=- rerr=\"RuntimeException: you're doing it wrong\" rgb=\"-\" pssc=302 ttms=0.456 rurl=\"http://example.com/hereitis/index.html?foo=bar\" rh=\"-\""));
     }
     
     @Test
     public void itRecordsMissResultDetails() throws Exception {
+        when(System.nanoTime()).thenReturn(100000101L, 100789000L);
+
         Date fastFinishDate = mock(Date.class);
         when(fastFinishDate.getTime()).thenReturn(144140678000L);
         whenNew(Date.class).withNoArguments().thenReturn(fastFinishDate);
@@ -143,7 +153,7 @@ public class HTTPAccessEventBuilderTest {
         HTTPAccessRecord httpAccessRecord = builder.build();
         String httpAccessEvent = HTTPAccessEventBuilder.create(httpAccessRecord);
 
-        assertThat(httpAccessEvent, equalTo("144140678.000 qtype=HTTP chi=192.168.7.6 url=\"http://example.com/index.html?foo=bar\" cqhm=GET cqhv=HTTP/1.1 rtype=MISS rloc=\"-\" rdtl=DS_NO_BYPASS rerr=\"-\" rgb=\"-\" pssc=503 ttms=0 rurl=\"-\" rh=\"-\""));
+        assertThat(httpAccessEvent, equalTo("144140678.000 qtype=HTTP chi=192.168.7.6 url=\"http://example.com/index.html?foo=bar\" cqhm=GET cqhv=HTTP/1.1 rtype=MISS rloc=\"-\" rdtl=DS_NO_BYPASS rerr=\"-\" rgb=\"-\" pssc=503 ttms=0.789 rurl=\"-\" rh=\"-\""));
     }
 
     @Test
@@ -173,7 +183,7 @@ public class HTTPAccessEventBuilderTest {
 
     @Test
     public void itUsesXMmClientIpHeaderForChi() throws Exception {
-        when(request.getHeader(RouterFilter.X_MM_CLIENT_IP)).thenReturn("192.168.100.100");
+        when(request.getHeader(HTTPRequest.X_MM_CLIENT_IP)).thenReturn("192.168.100.100");
 
         HTTPAccessRecord httpAccessRecord = new HTTPAccessRecord.Builder(new Date(144140678000L), request).build();
         String httpAccessEvent = HTTPAccessEventBuilder.create(httpAccessRecord);
@@ -194,7 +204,7 @@ public class HTTPAccessEventBuilderTest {
     @Test
     public void itUsesXMmClientIpHeaderOverFakeIpParameterForChi() throws Exception {
         when(request.getParameter("fakeClientIpAddress")).thenReturn("192.168.123.123");
-        when(request.getHeader(RouterFilter.X_MM_CLIENT_IP)).thenReturn("192.168.100.100");
+        when(request.getHeader(HTTPRequest.X_MM_CLIENT_IP)).thenReturn("192.168.100.100");
 
         HTTPAccessRecord httpAccessRecord = new HTTPAccessRecord.Builder(new Date(144140678000L), request).build();
         String httpAccessEvent = HTTPAccessEventBuilder.create(httpAccessRecord);

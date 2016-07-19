@@ -18,7 +18,7 @@
 -- SQL in section 'Up' is executed when this migration is applied
 
 -- steering_target
-CREATE TABLE `steering_target` (
+CREATE TABLE if not exists `steering_target` (
   `deliveryservice` INT(11) NOT NULL,
   `target` INT(11) NOT NULL,
   `weight` int(11) NOT NULL,

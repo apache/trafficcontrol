@@ -28,6 +28,7 @@ import java.util.Set;
 import java.util.TreeSet;
 import java.util.Iterator;
 
+import com.comcast.cdn.traffic_control.traffic_router.core.ds.SteeringWatcher;
 import com.comcast.cdn.traffic_control.traffic_router.core.loc.FederationsWatcher;
 import com.comcast.cdn.traffic_control.traffic_router.core.loc.GeolocationDatabaseUpdater;
 import com.comcast.cdn.traffic_control.traffic_router.core.loc.NetworkNode;
@@ -71,6 +72,7 @@ public class ConfigHandler {
 	private NetworkUpdater networkUpdater;
 	private FederationsWatcher federationsWatcher;
 	private RegionalGeoUpdater regionalGeoUpdater;
+	private SteeringWatcher steeringWatcher;
 
 	public String getConfigDir() {
 		return configDir;
@@ -126,7 +128,8 @@ public class ConfigHandler {
 				parseMonitorConfig(jo.getJSONObject("monitors"));
 				NetworkNode.getInstance().clearCacheLocations();
 				federationsWatcher.configure(config);
-
+				steeringWatcher.configure(config);
+				steeringWatcher.setCacheRegister(cacheRegister);
 				trafficRouterManager.setCacheRegister(cacheRegister);
 				trafficRouterManager.getTrafficRouter().setRequestHeaders(parseRequestHeaders(config.optJSONArray("requestHeaders")));
 				trafficRouterManager.getTrafficRouter().configurationChanged();
@@ -222,7 +225,7 @@ public class ConfigHandler {
 				if(jo.has("deliveryServices")) {
 					final List<DeliveryServiceReference> references = new ArrayList<Cache.DeliveryServiceReference>();
 					final JSONObject dsJos = jo.optJSONObject("deliveryServices");
-					for(String ds : JSONObject.getNames(dsJos)) {
+					for (final String ds : JSONObject.getNames(dsJos)) {
 						/* technically this could be more than just a string or array,
 						 * but, as we only have had those two types, let's not worry about the future
 						 */
@@ -294,7 +297,7 @@ public class ConfigHandler {
 		final TreeSet<DeliveryServiceMatcher> httpServiceMatchers = new TreeSet<DeliveryServiceMatcher>();
 		final Map<String,DeliveryService> dsMap = new HashMap<String,DeliveryService>();
 
-		for (String dsId : JSONObject.getNames(deliveryServices)) {
+		for (final String dsId : JSONObject.getNames(deliveryServices)) {
 			final JSONObject dsJo = deliveryServices.getJSONObject(dsId);
 			final JSONArray matchsets = dsJo.getJSONArray("matchsets");
 			final DeliveryService ds = new DeliveryService(dsId, dsJo);
@@ -353,12 +356,7 @@ public class ConfigHandler {
 				final URL url = new URL(rurl);
 
 				//make a fake HTTPRequest for the redirect url
-				final HTTPRequest req = new HTTPRequest();
-
-				req.setPath(url.getPath());
-				req.setQueryString(url.getQuery());
-				req.setHostname(url.getHost());
-				req.setRequestedUrl(rurl);
+				final HTTPRequest req = new HTTPRequest(url);
 
 				ds.setGeoRedirectFile(url.getFile());
 				//try select the ds by the redirect fake HTTPRequest
@@ -448,8 +446,7 @@ public class ConfigHandler {
 		for (final String loc : JSONObject.getNames(locationsJo)) {
 			final JSONObject jo = locationsJo.getJSONObject(loc);
 			try {
-				locations.add(new CacheLocation(loc, jo.optString("zoneId"), 
-						new Geolocation(jo.getDouble("latitude"), jo.getDouble("longitude"))));
+				locations.add(new CacheLocation(loc, new Geolocation(jo.getDouble("latitude"), jo.getDouble("longitude"))));
 			} catch (JSONException e) {
 				LOGGER.warn(e,e);
 			}
@@ -539,5 +536,9 @@ public class ConfigHandler {
 		}
 
 		return headers;
+	}
+
+	public void setSteeringWatcher(final SteeringWatcher steeringWatcher) {
+		this.steeringWatcher = steeringWatcher;
 	}
 }

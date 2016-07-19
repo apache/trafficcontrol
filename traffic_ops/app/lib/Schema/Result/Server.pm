@@ -210,6 +210,12 @@ __PACKAGE__->table("server");
   is_nullable: 1
   size: 256
 
+=head2 guid
+
+  data_type: 'varchar'
+  is_nullable: 1
+  size: 45
+
 =head2 last_updated
 
   data_type: 'timestamp'
@@ -287,6 +293,8 @@ __PACKAGE__->add_columns(
   { data_type => "varchar", is_nullable => 1, size => 256 },
   "router_port_name",
   { data_type => "varchar", is_nullable => 1, size => 256 },
+  "guid",
+  { data_type => "varchar", is_nullable => 1, size => 45 },
   "last_updated",
   {
     data_type => "timestamp",
@@ -504,8 +512,8 @@ __PACKAGE__->belongs_to(
 );
 
 
-# Created by DBIx::Class::Schema::Loader v0.07042 @ 2015-11-10 11:16:40
-# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:xsLCbZc5ONSOFsKaxi5RjQ
+# Created by DBIx::Class::Schema::Loader v0.07045 @ 2016-06-13 22:13:12
+# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:gdRECADmRFpa3OWLbqJirA
 # These lines were loaded from '/Users/drichard/projects/github.com/traffic_control/traffic_ops/app/lib/Schema/Result/Server.pm' found in @INC.
 # They are now part of the custom portion of this file
 # for you to hand-edit.  If you do not either delete

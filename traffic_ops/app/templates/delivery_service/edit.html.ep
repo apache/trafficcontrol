@@ -62,7 +62,7 @@
         var r=confirm("Are you sure?");
         if (r==true) {
               window.location = "/ds/<%= $id %>/delete";
-        } 
+        }
         parent.location.reload(true);
     }
 
@@ -140,7 +140,7 @@
 				if (data[idx].use_in_table == "deliveryservice") {
 					if (data[idx].id == "<%= $ds->type->id %>") {
 						$("#type").append("<option value=" + data[idx].id + " selected=\"selected\">" + data[idx].name + "</option>");
-					} 
+					}
 					// else {
 						// $("#type").append("<option value=" + data[idx].id + ">" + data[idx].name + "</option>");
 					// }
@@ -194,7 +194,7 @@
 		});
 
 	});
-	
+
 function setup_form(speed) {
 		var type_selected = $('#type :selected').text();
 		if (type_selected.match(/^HTTP/)) {
@@ -278,8 +278,8 @@ function setup_form(speed) {
             $('#regional_geo_blocking_row').show(speed);
             $('#regexp_add').show(speed);
             $('#steering_button').hide(speed);
-		} 
-		else if (type_selected.match(/^ANY_MAP$/)) { 
+		}
+		else if (type_selected.match(/^ANY_MAP$/)) {
             $('#protocoli_row').hide(speed);
             $('#dscp_row').hide(speed);
             $('#signed_row').hide(speed);
@@ -317,14 +317,14 @@ function setup_form(speed) {
             $('#regexp_add').show(speed);
             $('#steering_button').hide(speed);
 		}
-		else if (type_selected.match(/^STEERING$/)) { 
+		else if (type_selected.match(/^STEERING$/)) {
             $('#protocoli_row').hide(speed);
             $('#dscp_row').hide(speed);
             $('#signed_row').hide(speed);
             $('#qstring_ignore_row').hide(speed);
             $('#geo_limit_row').hide(speed);
             $('#http_bypass_fqdn_row').hide(speed);
-            $('#ipv6_routing_enabled_row').hide(speed);
+            $('#ipv6_routing_enabled_row').show(speed);
             $('#range_request_handlingi_row').hide(speed);
             $('#dns_bypass_ip_row').hide(speed);
             $('#dns_bypass_ip6_row').hide(speed);
@@ -358,7 +358,7 @@ function setup_form(speed) {
             $('#steering_button').show(speed);
             $('#geo_limit_countries_row').hide(speed);
 		}
-		// 
+		//
 	}
 
 	function add_regexp_line(re_type_str) {
@@ -374,10 +374,10 @@ function setup_form(speed) {
 			if ($('#type :selected').text() == "DNS")
 				return;
 			typestr = "HEADER_REGEXP";
-		}	
+		}
 		$('#regexp_table_body').append(
 			"<tr>" +
-			"<td>Type:</td><td><input type=\"text\"  style=\"background-color: gray;\" size=18 id=\"re_type_new_" + row + 
+			"<td>Type:</td><td><input type=\"text\"  style=\"background-color: gray;\" size=18 id=\"re_type_new_" + row +
 				"\" name=\"re_type_new_" + row + "\" value=\"" + typestr + "\" readonly></input></td>" +
 			"<td>Order:</td><td><select name=\"re_order_new_" + row + "\">" +
 				"<option value=\"invalid\">-- select --</option>" +
@@ -393,8 +393,8 @@ function setup_form(speed) {
 				"<option value=9>9</option>" +
 				"</select>" +
 			"</td>" +
-			"<td>Regular Expression:</td><td><input type=\"text\" size=40 id=\"re_re_new_" + row + "\" name=\"re_re_new_" + 
-				row + "\"></input></td>" + 
+			"<td>Regular Expression:</td><td><input type=\"text\" size=40 id=\"re_re_new_" + row + "\" name=\"re_re_new_" +
+				row + "\"></input></td>" +
 			"</tr>"
 		);
 
@@ -447,7 +447,7 @@ function setup_form(speed) {
         <br>
 		<div>
 			<form method="POST" action="/ds/<%= $ds->id %>/update" id="editds_form">
-				%= include 'delivery_service/_form' 
+				%= include 'delivery_service/_form'
 				<div class="block" style="color:white">
                 	%= label_for 'last_updated' => 'Last Updated', class => 'label'
                 	%= field('ds.last_updated')
@@ -467,7 +467,7 @@ function setup_form(speed) {
             	</div><br>
             	% }
 			<hr>
-			<h2 style="color:white;">Regular expressions for this delivery service:</h2> 
+			<h2 style="color:white;">Regular expressions for this delivery service:</h2>
 			<% if ($priv_level >= 20) { %>
 			<div id ="select_re"></div><br>
 			<% } %>

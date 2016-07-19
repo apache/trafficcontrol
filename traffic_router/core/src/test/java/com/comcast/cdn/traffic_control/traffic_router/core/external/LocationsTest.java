@@ -61,8 +61,7 @@ public class LocationsTest {
 
 			ObjectMapper objectMapper = new ObjectMapper(new JsonFactory());
 			JsonNode jsonNode = objectMapper.readTree(EntityUtils.toString(response.getEntity()));
-			assertThat(jsonNode.get("locations").isArray(), equalTo(true));
-
+			assertThat(jsonNode.get("locations").get(0).asText(), not(equalTo("")));
 		} finally {
 			if (response != null) response.close();
 		}
@@ -75,7 +74,7 @@ public class LocationsTest {
 		CloseableHttpResponse response = null;
 		try {
 			response = closeableHttpClient.execute(httpGet);
-			
+
 			ObjectMapper objectMapper = new ObjectMapper(new JsonFactory());
 			JsonNode jsonNode = objectMapper.readTree(EntityUtils.toString(response.getEntity()));
 			String locationName = jsonNode.get("locations").fieldNames().next();
@@ -95,7 +94,6 @@ public class LocationsTest {
 
 			assertThat(cacheNode.get("cacheOnline").asText(), anyOf(equalTo("true"), equalTo("false")) );
 			assertThat(cacheNode.get("lastUpdateHealthy").asText(), anyOf(equalTo("true"), equalTo("false")) );
-
 		} finally {
 			if (response != null) response.close();
 		}

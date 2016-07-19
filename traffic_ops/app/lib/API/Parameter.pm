@@ -17,6 +17,7 @@ package API::Parameter;
 #
 #
 use UI::Utils;
+use UI::Parameter;
 use Mojo::Base 'Mojolicious::Controller';
 use Data::Dumper;
 use POSIX qw(strftime);
@@ -31,11 +32,15 @@ sub index {
 	my $rs_data = $self->db->resultset("ProfileParameter")->search( undef, { prefetch => [ 'parameter', 'profile' ] } );
 	my @data    = ();
 	while ( my $row = $rs_data->next ) {
+		my $value = $row->parameter->value;
+		&UI::Parameter::conceal_secure_parameter_value( $self, $row->parameter->secure, \$value );
 		push(
 			@data, {
 				"name"        => $row->parameter->name,
+				"id"          => $row->parameter->id,
 				"configFile"  => $row->parameter->config_file,
-				"value"       => $row->parameter->value,
+				"value"       => $value,
+				"secure"      => $row->parameter->secure,
 				"lastUpdated" => $row->parameter->last_updated,
 			}
 		);
@@ -50,11 +55,15 @@ sub profile {
 	my $rs_data = $self->db->resultset("ProfileParameter")->search( { 'profile.name' => $profile_name }, { prefetch => [ 'parameter', 'profile' ] } );
 	my @data = ();
 	while ( my $row = $rs_data->next ) {
+		my $value = $row->parameter->value;
+		&UI::Parameter::conceal_secure_parameter_value( $self, $row->parameter->secure, \$value );
 		push(
 			@data, {
 				"name"        => $row->parameter->name,
+				"id"          => $row->parameter->id,
 				"configFile"  => $row->parameter->config_file,
-				"value"       => $row->parameter->value,
+				"value"       => $value,
+				"secure"      => $row->parameter->secure,
 				"lastUpdated" => $row->parameter->last_updated,
 			}
 		);

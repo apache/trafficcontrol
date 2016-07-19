@@ -203,7 +203,7 @@
         {
             "config_file": "records.config",
             "name": "CONFIG proxy.config.http.parent_proxy.retry_time",
-            "value": "INT 300"
+            "value": "INT 60"
         },
         {
             "config_file": "records.config",
@@ -614,16 +614,6 @@
             "config_file": "records.config",
             "name": "CONFIG proxy.config.dns.validate_query_name",
             "value": "INT 0"
-        },
-        {
-            "config_file": "records.config",
-            "name": "CONFIG proxy.config.hostdb.size",
-            "value": "INT 120000"
-        },
-        {
-            "config_file": "records.config",
-            "name": "CONFIG proxy.config.hostdb.storage_size",
-            "value": "INT 33554432"
         },
         {
             "config_file": "records.config",
@@ -1412,6 +1402,11 @@
         },
         {
             "config_file": "records.config",
+            "name": "CONFIG proxy.config.allocator.hugepages",
+            "value": "INT 0"
+        },
+        {
+            "config_file": "records.config",
             "name": "CONFIG proxy.config.http.negative_caching_enabled",
             "value": "INT 1"
         },
@@ -1557,11 +1552,6 @@
         },
         {
             "config_file": "records.config",
-            "name": "CONFIG proxy.config.allocator.hugepages",
-            "value": "INT 1"
-        },
-        {
-            "config_file": "records.config",
             "name": "CONFIG proxy.config.http.parent_proxy.connect_attempts_timeout",
             "value": "INT 5"
         },
@@ -1583,7 +1573,22 @@
         {
             "config_file": "package",
             "name": "trafficserver",
-            "value": "5.3.2-733.dc054b0.el6.x86_64"
+            "value": "5.3.2-745.f914e70.el6.x86_64"
+        },
+        {
+            "config_file": "records.config",
+            "name": "CONFIG proxy.config.cache.hostdb.sync_frequency",
+            "value": "INT 0"
+        },
+        {
+            "config_file": "records.config",
+            "name": "CONFIG proxy.config.hostdb.storage_size",
+            "value": "INT 90742784"
+        },
+        {
+            "config_file": "records.config",
+            "name": "CONFIG proxy.config.hostdb.size",
+            "value": "INT 240000"
         }
     ],
     "profile": {

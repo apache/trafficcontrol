@@ -100,7 +100,7 @@ sub create {
 			my $count = $dbh->count();
 
 			if ( $count == 0 ) {
-				$self->forbidden();
+			    $self->forbidden("Forbidden. Delivery service not assigned to user.");
 				return;
 			}
 		}
@@ -205,10 +205,10 @@ sub is_valid_date_format {
 sub is_ttl_in_range {
 	my $self  = shift;
 	my $value = shift;
-	my $min_hours =
-		$self->db->resultset('Parameter')->search( { name => "ttl_min_hours" }, { config_file => "regex_revalidate.config" } )->get_column('value')->first;
-	my $max_hours =
-		$self->db->resultset('Parameter')->search( { name => "ttl_max_hours" }, { config_file => "regex_revalidate.config" } )->get_column('value')->first;
+	my $min_hours = 1;
+	my $max_days =
+		$self->db->resultset('Parameter')->search( { name => "maxRevalDurationDays" }, { config_file => "regex_revalidate.config" } )->get_column('value')->first;
+	my $max_hours = $max_days * 24;
 
 	if ( !defined $value or $value eq '' ) {
 		return undef;

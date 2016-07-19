@@ -86,26 +86,28 @@ ok $t->get_ok("/internal/api/1.2/steering.json")->status_is(200)
     ->json_is("/response/0/targets/0/deliveryService", "target-ds1")
     ->json_is("/response/0/targets/0/weight", 1000)
     ->json_is("/response/0/filters/0/deliveryService", "target-ds1")
-    ->json_is("/response/0/filters/0/pattern", ".*/force-to-one/.*")
+    ->json_is("/response/0/filters/0/pattern", ".*/force-to-one-also/.*")
     ->json_is("/response/0/filters/1/deliveryService", "target-ds1")
-    ->json_is("/response/0/filters/1/pattern", ".*/force-to-one-also/.*")
+    ->json_is("/response/0/filters/1/pattern", ".*/force-to-one/.*")
     ->json_is("/response/0/targets/1/deliveryService", "target-ds2")
     ->json_is("/response/0/targets/1/weight", 7654)
     ->json_is("/response/1/deliveryService", "steering-ds2")
     ->json_is("/response/1/targets/0/deliveryService", "target-ds3")
     ->json_is("/response/1/targets/0/weight", 123)
-    ->json_is("/response/1/filters/2/pattern", ".*/use-three/.*")
+    ->json_is("/response/1/filters/0/pattern", ".*/use-three/.*")
+    ->json_is("/response/1/filters/0/deliveryService", "target-ds3")
     ->json_is("/response/1/targets/1/deliveryService", "target-ds4")
     ->json_is("/response/1/targets/1/weight", 999)
-    ->json_is("/response/1/filters/3/pattern", ".*/go-to-four/.*");
+    ->json_is("/response/1/filters/1/pattern", ".*/go-to-four/.*")
+    ->json_is("/response/1/filters/1/deliveryService", "target-ds4");
 
 ok $t->get_ok("/internal/api/1.2/steering/steering-ds1.json")->status_is(200)
     ->or(sub {diag $t->tx->res->headers->to_string();})
         ->json_is("/response/deliveryService", "steering-ds1")
         ->json_is("/response/targets/0/deliveryService", "target-ds1")
         ->json_is("/response/targets/0/weight", 1000)
-        ->json_is("/response/filters/0/pattern", ".*/force-to-one/.*")
-        ->json_is("/response/filters/1/pattern", ".*/force-to-one-also/.*");
+        ->json_is("/response/filters/0/pattern", ".*/force-to-one-also/.*")
+        ->json_is("/response/filters/1/pattern", ".*/force-to-one/.*");
 
 ok $t->post_ok("/internal/api/1.2/steering",
         json => {
@@ -186,8 +188,8 @@ ok $t->get_ok("/internal/api/1.2/steering.json")->status_is(200)
     ->json_is("/response/0/deliveryService", "steering-ds1")
     ->json_is("/response/0/targets/0/deliveryService", "target-ds1")
     ->json_is("/response/0/targets/0/weight", 1000)
-    ->json_is("/response/0/filters/0/pattern", ".*/force-to-one/.*")
-    ->json_is("/response/0/filters/1/pattern", ".*/force-to-one-also/.*")
+    ->json_is("/response/0/filters/0/pattern", ".*/force-to-one-also/.*")
+    ->json_is("/response/0/filters/1/pattern", ".*/force-to-one/.*")
     ->json_hasnt("/response/0/filters/2/pattern")
     ->json_is("/response/0/targets/1/deliveryService", "target-ds2")
     ->json_is("/response/0/targets/1/weight", 7654)
@@ -202,6 +204,21 @@ ok $t->get_ok("/internal/api/1.2/steering/steering-ds2.json")->status_is(404)
 
 ok $t->put_ok("/internal/api/1.2/steering/steering-ds2", json => {"any" => "thing"})->status_is(401)
     ->or( sub { diag $t->tx->res->headers->to_string(); } );
+
+ok $t->put_ok("/internal/api/1.2/steering/steering-ds1",
+    json =>  {
+            "targets" => [
+                { "deliveryService" => "target-ds1", "weight" => 5555 },
+                { "deliveryService" => "target-ds2", "weight" => 4444 }
+            ],
+            "filters" => [
+                {
+                    "deliveryService" => "target-ds3",
+                    "pattern" => ".*/force-to-one/.*"
+                },
+            ]
+        })
+    ->status_is(409);
 
 ok $t->put_ok("/internal/api/1.2/steering/steering-ds1",
         json => {
@@ -234,10 +251,10 @@ ok $t->put_ok("/internal/api/1.2/steering/steering-ds1",
     ->json_is("/response/deliveryService", "steering-ds1")
     ->json_is("/response/targets/0/deliveryService", "target-ds1")
     ->json_is("/response/targets/0/weight", 5555)
-    ->json_is("/response/filters/0/pattern", ".*/andnowforsomethingcompletelydifferent/.*")
-    ->json_is("/response/filters/1/pattern", ".*/force-to-one/.*")
     ->json_is("/response/targets/1/deliveryService", "target-ds2")
     ->json_is("/response/targets/1/weight", 4444)
+    ->json_is("/response/filters/0/pattern", ".*/andnowforsomethingcompletelydifferent/.*")
+    ->json_is("/response/filters/1/pattern", ".*/force-to-one/.*")
     ->json_is("/response/filters/2/pattern", ".*/always-two/.*" );
 
 ok $t->get_ok("/internal/api/1.2/steering/steering-ds1.json")
@@ -245,10 +262,10 @@ ok $t->get_ok("/internal/api/1.2/steering/steering-ds1.json")
     ->json_is("/response/deliveryService", "steering-ds1")
     ->json_is("/response/targets/0/deliveryService", "target-ds1")
     ->json_is("/response/targets/0/weight", 5555)
-    ->json_is("/response/filters/0/pattern", ".*/andnowforsomethingcompletelydifferent/.*")
-    ->json_is("/response/filters/1/pattern", ".*/force-to-one/.*")
     ->json_is("/response/targets/1/deliveryService", "target-ds2")
     ->json_is("/response/targets/1/weight", 4444)
+    ->json_is("/response/filters/0/pattern", ".*/andnowforsomethingcompletelydifferent/.*")
+    ->json_is("/response/filters/1/pattern", ".*/force-to-one/.*")
     ->json_is("/response/filters/2/pattern", ".*/always-two/.*" );
 
 ok $t->put_ok("/internal/api/1.2/steering/steering-ds1",
@@ -256,7 +273,7 @@ ok $t->put_ok("/internal/api/1.2/steering/steering-ds1",
             "targets" => [
                 {
                     "deliveryService" => "target-ds1",
-                    "filters" => [ ]
+                    "weight" => 1111
                 },
                 {
                     "deliveryService" => "target-ds2",
@@ -267,7 +284,7 @@ ok $t->put_ok("/internal/api/1.2/steering/steering-ds1",
         ->status_is(200)->or(sub { diag $t->tx->res->headers->to_string(); })
         ->json_is("/response/deliveryService", "steering-ds1")
         ->json_is("/response/targets/0/deliveryService", "target-ds1")
-        ->json_is("/response/targets/0/weight", 5555)
+        ->json_is("/response/targets/0/weight", 1111)
         ->json_hasnt("/response/filter/0/pattern")
         ->json_is("/response/targets/1/deliveryService", "target-ds2")
         ->json_is("/response/targets/1/weight", 8888)
@@ -277,11 +294,137 @@ ok $t->get_ok("/internal/api/1.2/steering/steering-ds1.json")
         ->status_is(200)->or(sub { diag $t->tx->res->headers->to_string(); })
         ->json_is("/response/deliveryService", "steering-ds1")
         ->json_is("/response/targets/0/deliveryService", "target-ds1")
-        ->json_is("/response/targets/0/weight", 5555)
+        ->json_is("/response/targets/0/weight", 1111)
         ->json_hasnt("/response/filter/0/pattern")
         ->json_is("/response/targets/1/deliveryService", "target-ds2")
         ->json_is("/response/targets/1/weight", 8888)
         ->json_is("/response/filters/2/pattern", ".*/always-two/.*" );
+
+#bad json
+ok $t->put_ok("/internal/api/1.2/steering/steering-ds1",
+    json => {"foo" => "bar"})
+    ->status_is(400)
+    ->json_is("/message", "please provide a valid json including targets");
+
+#remove filters for single DS
+ok $t->put_ok("/internal/api/1.2/steering/steering-ds1",
+        json => {
+            "targets" => [
+                {
+                    "deliveryService" => "target-ds1",
+                    "weight" => 5555
+                },
+                {
+                    "deliveryService" => "target-ds2",
+                    "weight" => 4444
+                }
+            ],
+            "filters" => [
+                {
+                    "deliveryService" => "target-ds1",
+                    "pattern" => ".*/force-to-one/.*"
+                }
+            ]
+        })
+    ->status_is(200)->or(sub { diag $t->tx->res->headers->to_string(); })
+    ->json_is("/response/deliveryService", "steering-ds1")
+    ->json_is("/response/targets/0/deliveryService", "target-ds1")
+    ->json_is("/response/targets/0/weight", 5555)
+    ->json_is("/response/targets/1/deliveryService", "target-ds2")
+    ->json_is("/response/targets/1/weight", 4444)
+    ->json_hasnt("/response/filters/1/pattern");
+
+    #remove all filters
+ok $t->put_ok("/internal/api/1.2/steering/steering-ds1",
+        json => {
+            "targets" => [
+                {
+                    "deliveryService" => "target-ds1",
+                    "weight" => 5555
+                },
+                {
+                    "deliveryService" => "target-ds2",
+                    "weight" => 4444
+                }
+            ],
+            "filters" => []
+        })
+    ->status_is(200)->or(sub { diag $t->tx->res->headers->to_string(); })
+    ->json_is("/response/deliveryService", "steering-ds1")
+    ->json_is("/response/targets/0/deliveryService", "target-ds1")
+    ->json_is("/response/targets/0/weight", 5555)
+    ->json_is("/response/targets/1/deliveryService", "target-ds2")
+    ->json_is("/response/targets/1/weight", 4444)
+    ->json_hasnt("/response/filters/0/pattern");
+
+#invalid json
+ok $t->put_ok("/internal/api/1.2/steering/steering-ds1",
+        json => {
+            "targets" => [
+                {
+                    "deliveryService" => "target-ds1",
+                    "weight" => 5555
+                },
+                {
+                    "deliveryService" => "target-ds2",
+                    "weight" => 4444
+                }
+            ],
+            "filters" => [
+            {
+                    "pattern" => ".*/force-to-one/.*"
+                }
+            ]
+        })
+    ->status_is(400)
+    ->json_is("/message", "please provide a valid json for filters");
+
+ok $t->put_ok("/internal/api/1.2/steering/steering-ds1",
+        json => {
+            "targets" => [
+                {
+                    "deliveryService" => "target-ds1",
+                    "weight" => 5555
+                },
+                {
+                    "deliveryService" => "target-ds2",
+                    "weight" => 4444
+                }
+            ],
+            "filters" => [
+            {
+                    "deliveryService" => "target-ds1"
+                }
+            ]
+        })
+    ->status_is(400)
+    ->json_is("/message", "please provide a valid json for filters");
+
+ok $t->put_ok("/internal/api/1.2/steering/steering-ds1",
+        json => {
+            "filters" => [
+            {
+                    "deliveryService" => "target-ds1",
+                    "pattern" => ".*/force-to-one/.*"
+                }
+            ]
+        })
+    ->status_is(400)->json_is("/message", "please provide a valid json including targets");
+
+ok $t->put_ok("/internal/api/1.2/steering/steering-ds1",
+        json => {
+            "targets" => [
+                {
+                    "deliveryService" => "target-ds1",
+                },
+                {
+                    "deliveryService" => "target-ds2",
+                    "weight" => 4444
+                }
+            ]
+        })
+    ->status_is(400)->json_is("/message", "please provide a valid json for targets");
+
 
 $t->post_ok("/api/1.2/user/logout")->status_is(200);
 

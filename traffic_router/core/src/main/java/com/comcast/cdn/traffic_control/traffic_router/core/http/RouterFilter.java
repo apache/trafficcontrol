@@ -34,17 +34,12 @@ import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.net.URL;
 import java.util.Date;
-import java.util.Enumeration;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
 public class RouterFilter extends OncePerRequestFilter {
 	private static final Logger ACCESS = Logger.getLogger("com.comcast.cdn.traffic_control.traffic_router.core.access");
-
-	public static final String X_MM_CLIENT_IP = "X-MM-Client-IP";
-	public static final String FAKE_IP = "fakeClientIpAddress";
 
 	@Autowired
 	private TrafficRouterManager trafficRouterManager;
@@ -77,36 +72,8 @@ public class RouterFilter extends OncePerRequestFilter {
 			return;
 		}
 
-
-		final HTTPRequest req = new HTTPRequest();
-		req.setClientIP(request.getRemoteAddr());
-		req.setPath(request.getPathInfo());
-		req.setQueryString(request.getQueryString());
-		req.setHostname(request.getServerName());
-		req.setRequestedUrl(request.getRequestURL().toString());
-		req.setUri(request.getRequestURI());
-
-		final StatTracker.Track track = StatTracker.getTrack();
-		final String xmm = request.getHeader(X_MM_CLIENT_IP);
-		final String fip = request.getParameter(FAKE_IP);
-
-		if (xmm != null) {
-			req.setClientIP(xmm);
-		} else if (fip != null) {
-			req.setClientIP(fip);
-		}
-
-		final Map<String, String> headers = new HashMap<String, String>();
-		final Enumeration<?> headerNames = request.getHeaderNames();
-		while (headerNames.hasMoreElements()) {
-			final String name = (String) headerNames.nextElement();
-			final String value = request.getHeader(name);
-			headers.put(name, value);
-		}
-		req.setHeaders(headers);
-
 		final HTTPAccessRecord httpAccessRecord = new HTTPAccessRecord.Builder(requestDate, request).build();
-		writeHttpResponse(response, request, req, track, httpAccessRecord);
+		writeHttpResponse(response, request, new HTTPRequest(request), StatTracker.getTrack(), httpAccessRecord);
 	}
 
 	private void writeHttpResponse(final HttpServletResponse response, final HttpServletRequest httpServletRequest,
@@ -128,7 +95,7 @@ public class RouterFilter extends OncePerRequestFilter {
 				final URL location = routeResult.getUrl();
 				final Map<String, String> responseHeaders = deliveryService.getResponseHeaders();
 
-				for (String key : responseHeaders.keySet()) {
+				for (final String key : responseHeaders.keySet()) {
 					response.addHeader(key, responseHeaders.get(key));
 				}
 

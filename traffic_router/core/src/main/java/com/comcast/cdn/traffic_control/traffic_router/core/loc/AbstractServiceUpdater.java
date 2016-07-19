@@ -79,14 +79,21 @@ public abstract class AbstractServiceUpdater {
 
 	final private Runnable updater = new Runnable() {
 		@Override
+		@SuppressWarnings("PMD.AvoidCatchingThrowable")
 		public void run() {
-			updateDatabase();
+			try {
+				updateDatabase();
+			} catch (Throwable t) {
+				// Catching Throwable prevents this Service Updater thread from silently dying
+				LOGGER.error( "[" + getClass().getSimpleName() +"] Failed updating database!", t);
+			}
 		}
 	};
 
 	public void init() {
 		final long pollingInterval = getPollingInterval();
-		LOGGER.info("[" + getClass().getSimpleName() + "] Starting schedule with interval: " + pollingInterval + " : " + TimeUnit.MILLISECONDS);
+		final Date nextFetchDate = new Date(System.currentTimeMillis() + pollingInterval);
+		LOGGER.info("[" + getClass().getSimpleName() + "] Fetching external resource " + dataBaseURL + " at interval: " + pollingInterval + " : " + TimeUnit.MILLISECONDS + " next update occurrs at " + nextFetchDate);
 		scheduledService = executorService.scheduleWithFixedDelay(updater, pollingInterval, pollingInterval, TimeUnit.MILLISECONDS);
 	}
 
@@ -193,6 +200,10 @@ public abstract class AbstractServiceUpdater {
 		}
 	}
 
+	public void setDatabaseUrl(final String url) {
+		this.dataBaseURL = url;
+	}
+
 	/**
 	 * Sets executorService.
 	 *
@@ -278,7 +289,7 @@ public abstract class AbstractServiceUpdater {
 			existingDB.setWritable(true, false);
 
 			if (existingDB.isDirectory()) {
-				for (File file : existingDB.listFiles()) {
+				for (final File file : existingDB.listFiles()) {
 					file.delete();
 				}
 				LOGGER.debug("[" + getClass().getSimpleName() + "] Successfully deleted database under: " + existingDB);
@@ -303,7 +314,7 @@ public abstract class AbstractServiceUpdater {
 	private void moveDirectory(final File existingDB, final File newDB) throws IOException {
 		LOGGER.info("[" + getClass().getSimpleName() + "] Moving Location database from: " + newDB + ", to: " + existingDB);
 
-		for (File file : existingDB.listFiles()) {
+		for (final File file : existingDB.listFiles()) {
 			file.setReadable(true, true);
 			file.setWritable(true, false);
 			file.delete();

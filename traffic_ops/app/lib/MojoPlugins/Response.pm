@@ -42,19 +42,26 @@ my $INFO_KEY     = "supplemental";
 sub register {
 	my ( $self, $app, $conf ) = @_;
 
-	# Success (200) - With a JSON response
+	# Success (200) - With a JSON response and an optional success message
 	$app->renderer->add_helper(
 		success => sub {
-			my $self = shift || confess("Call on an instance of MojoPlugins::Response");
-			my $body = shift || confess("Please supply a response body hash.");
+			my $self    = shift || confess("Call on an instance of MojoPlugins::Response");
+			my $body    = shift || confess("Please supply a response body hash.");
 
 			# optional args
+			my $message = shift;
 			my $orderby = shift;
 			my $limit   = shift;
 			my $size    = shift;
 			my $page    = shift;
 
-			my $response_body = { $RESPONSE_KEY => $body };
+			my $response_body = {
+				$RESPONSE_KEY => $body
+			};
+
+			if ( defined($message) ) {
+				$response_body = merge( $response_body, { $ALERTS_KEY   => [ { $LEVEL_KEY => $SUCCESS_LEVEL, $TEXT_KEY => $message } ] } );
+			}
 			if ( defined($orderby) ) {
 				$response_body = merge( $response_body, { $ORDERBY_KEY => $orderby } );
 			}
@@ -104,7 +111,7 @@ sub register {
 	$app->renderer->add_helper(
 		alert => sub {
 			my $self   = shift || confess("Call on an instance of MojoPlugins::Response");
-			my $alerts = shift || confess("Please supply the alerts hash");
+			my $alerts = shift || confess("Please supply a string or an alerts hash like { 'Error #1: ' => 'Error message' }");
 
 			my $builder ||= MojoPlugins::Response::Builder->new( $self, @_ );
 			my @alerts_response = $builder->build_alerts($alerts);
@@ -117,7 +124,7 @@ sub register {
 	$app->renderer->add_helper(
 		internal_server_error => sub {
 			my $self   = shift || confess("Call on an instance of MojoPlugins::Response");
-			my $alerts = shift || confess("Please supply the alerts hash");
+			my $alerts = shift || confess("Please supply a string or an alerts hash like { 'Error #1: ' => 'Error message' }");
 
 			my $builder ||= MojoPlugins::Response::Builder->new( $self, @_ );
 			my @alerts_response = $builder->build_alerts($alerts);
@@ -162,8 +169,9 @@ sub register {
 	$app->renderer->add_helper(
 		forbidden => sub {
 			my $self = shift || confess("Call on an instance of MojoPlugins::Response");
+			my $message = shift || "Forbidden";
 
-			my $response_body = { $ALERTS_KEY => [ { $LEVEL_KEY => $ERROR_LEVEL, $TEXT_KEY => "Forbidden" } ] };
+			my $response_body = { $ALERTS_KEY => [ { $LEVEL_KEY => $ERROR_LEVEL, $TEXT_KEY => $message } ] };
 			return $self->render( $STATUS_KEY => 403, $JSON_KEY => $response_body );
 		}
 	);

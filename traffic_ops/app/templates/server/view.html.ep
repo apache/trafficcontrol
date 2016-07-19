@@ -14,12 +14,13 @@
      limitations under the License.
  -->
 % if (defined (flash 'alertmsg')) {
-<script> 
-    var alertmsg = "<%= flash 'alertmsg' %>"; 
+<script>
+    var alertmsg = "<%= flash 'alertmsg' %>";
     alertmsg = alertmsg.replace(/__NEWLINE__/g, "\n");
     alert(alertmsg);
 </script>
 % }
+
 <script>
 $(function () {
 	$("#edit_button").click( function() {
@@ -117,7 +118,7 @@ $(function () {
 	});
 });
 
-	
+
 
 	function deleteFunction() {
 	var r=confirm("Are you sure?");
@@ -127,14 +128,14 @@ $(function () {
 	}
 
 	function cloneDsAssignments() {
-		$.fancybox({ 
-			type: 'iframe', 
-			href: "/cpdssiframe/view/<%= $server_data->id %>", 
+		$.fancybox({
+			type: 'iframe',
+			href: "/cpdssiframe/view/<%= $server_data->id %>",
 			afterClose: function() {
     		    location.reload();
 
     		},
-			padding: 0, autosize: true, fitToView: true, width: 600, minHeight: 20 
+			padding: 0, autosize: true, fitToView: true, width: 600, minHeight: 20
 		});
 	}
 
@@ -144,10 +145,12 @@ $(function () {
 
 	function queueupdate() {
 		$.post("/postupdatequeue/<%= $id %>", { setqueue: 1 });
+		window.alert("updates queued for <%= $server_data->host_name %>");
 	}
-	
+
 	function unqueueupdate() {
 		$.post("/postupdatequeue/<%= $id %>", { setqueue: 0 });
+		window.alert("updates have been unqueued for <%= $server_data->host_name %>");
 	}
 
 	function openPhysLocation() {
@@ -159,6 +162,8 @@ $(function () {
 <div id="accordion">
 	<div>
 		<h3><a href="#">Server Detail</a></h3>
+		%= include 'common/_errors'
+		%= include 'common/_flash'
 		<div>
 			<form method="POST" action="/server/<%= $server_data->id %>/update" id="editserver_form">
 				<table width=100%>
@@ -219,6 +224,10 @@ $(function () {
 						<td class="editable" id="rack"><%= $server_data->rack %></td>
 					</tr>
 					<tr>
+						<td>Cloud ID</td>
+						<td class="editable" id="rack"><%= $server_data->guid %></td>
+					</tr>
+					<tr>
 						<td>Service Tag (as discovered)</td>
 						<td id="stag"><a href="/hardware/serverid/<%= $server_data->id %>" target="_parent"><%= $service_tag %></a></td>
 					</tr>
@@ -246,7 +255,7 @@ $(function () {
 						<td>1G (management) Gateway</td>
 						<td class="editable" id="mgmt_ip_gateway"><%= $server_data->mgmt_ip_gateway %></td>
 					</tr>
-	
+
 					<tr>
 						<td>ILO IP</td>
 						<td class="editable" id="ilo_ip_address"><%= $server_data->ilo_ip_address %></td>
@@ -316,9 +325,9 @@ $(function () {
 % }
 
 <!--
-Edges flip from REPORTED TO ADMIN_DOWN. 
-All other servers (MID, CCR, RASCAL) flip from ONLINE to OFFLINE. 
-When a MID flips, all edges get the update bit set. 
+Edges flip from REPORTED TO ADMIN_DOWN.
+All other servers (MID, CCR, RASCAL) flip from ONLINE to OFFLINE.
+When a MID flips, all edges get the update bit set.
 -->
 <script>
 var offline_status = 'OFFLINE';
@@ -336,9 +345,9 @@ var last_part = "?";
 function offline_confirm() {
 	var r=confirm("Set status of this machine to " + offline_status + last_part);
 	if (r==true) {
-		$.post("/server/updatestatus", { status: offline_status, id: <%= $id %> });	
+		$.post("/server/updatestatus", { status: offline_status, id: <%= $id %> });
 		if ( queue_updates == true )
-			$.post('/postupdatequeue/<%= $id %>', { setqueue: 1 });
+			$.post('/postupdatequeue/<%= $id %>', { setqueue: 1, status: offline_status });
 		parent.$.fancybox.close();
 	}
 }
@@ -347,7 +356,7 @@ function online_confirm() {
 	if (r==true) {
 		$.post("/server/updatestatus", { status: online_status, id: <%= $id %> });
 		if ( queue_updates == true )
-			$.post('/postupdatequeue/<%= $id %>', { setqueue: 1 });
+			$.post('/postupdatequeue/<%= $id %>', { setqueue: 1, status: online_status });
 		parent.$.fancybox.close();
 	}
 }
@@ -362,7 +371,7 @@ function online_confirm() {
 % for my $id (sort {$a <=> $b} (keys %{$delivery_services})) {
 % if ($i % 3 == 0 ) {
 	</tr><tr>
-% }    
+% }
     <td><a href="/ds/<%= $id %>"><%= $$delivery_services{$id} %></a></td>
 % $i++;
 % } # for my $id (sort {$a <=> $b} (keys %{$delivery_services})) {

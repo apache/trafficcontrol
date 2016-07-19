@@ -14,7 +14,7 @@
      limitations under the License.
  -->
 <div class="main">
-	<div class="block">
+	<div class="block form-row">
 		<% unless (field('ds.xml_id')->valid) { %>
 			<span class="field-with-error"><%= field('ds.xml_id')->error %></span>
 		<% } %>
@@ -24,8 +24,8 @@
 		<% } else { %> 
 		%= field('ds.xml_id')->text(class => 'field', readonly => 'readonly')
 		<% } %>
-	</div><br>
-	<div class="block">
+	</div>
+	<div class="block form-row">
 		<% unless (field('ds.display_name')->valid) { %>
 			<span class="field-with-error"><%= field('ds.display_name')->error %></span>
 		<% } %>
@@ -35,8 +35,8 @@
 		<% } else { %> 
 		%= field('ds.display_name')->text(class => 'field', readonly => 'readonly')
 		<% } %>
-	</div><br>
-	<div class="block" id="cdn_row">
+	</div>
+	<div class="block form-row" id="cdn_row">
 		<% unless (field('ds.cdn_id')->valid) { %>
 			<span class="field-with-error"><%= field('ds.cdn_id')->error %></span>
 		<% } %>
@@ -46,8 +46,8 @@
 		<% } else { %>
 		%= field('ds.cdn.name')->text(class => 'field', readonly => 'readonly');
 		<% }  %>
-	</div><br>
-	<div class="block">
+	</div>
+	<div class="block form-row">
 		<% unless (field('ds.type')->valid) { %>
 			<span class="field-with-error"><%= field('ds.type')->error %></span>
 		<% } %>
@@ -58,8 +58,8 @@
 		<% } else { %> 
 			%= field('ds.type')->select(class => 'field', required => 'required', id => 'type', name => 'ds.type');
 		<% } %> 
-	</div><br>
-	<div class="block" id="protocoli_row">
+	</div>
+	<div class="block form-row" id="protocoli_row">
 		<% unless (field('ds.protocol')->valid) { %>
 			<span class="field-with-error"><%= field('ds.protocol')->error %></span>
 		<% } %>
@@ -73,8 +73,8 @@
 			%= field('ds.protocol')->text(class => 'field', readonly => 'readonly', value => 'Yes');
 			<% } %>
 		<% } %>
-	</div><br>
-	<div class="block" id="dscp_row">
+	</div>
+	<div class="block form-row" id="dscp_row">
 		<% unless (field('ds.dscp')->valid) { %>
 			<span class="field-with-error"><%= field('ds.dscp')->error %></span>
 		<% } %>
@@ -124,8 +124,8 @@
 			%= field('ds.dscp')->text(class => 'field', value =>  '56  - CS7', readonly => 'readonly');
 			<% } 
 		<% } %>
-	</div><br>
-	<div class="block" id="signed_row">
+	</div>
+	<div class="block form-row" id="signed_row">
 		<% unless (field('ds.signed')->valid) { %>
 			<span class="field-with-error"><%= field('ds.signed')->error %></span>
 		<% } %>
@@ -139,8 +139,8 @@
 				%= field('ds.signed')->text(class => 'field', value =>  'Yes', readonly => 'readonly');
 			<% } %>
 		<% } %>
-	</div><br>
-	<div class="block" id="qstring_ignore_row">
+	</div>
+	<div class="block form-row" id="qstring_ignore_row">
 		<% unless (field('ds.qstring_ignore')->valid) { %>
 			<span class="field-with-error"><%= field('ds.qstring_ignore')->error %></span>
 		<% } %>
@@ -156,8 +156,8 @@
 			%= field('ds.qstring_ignore')->text(class => 'field', value =>  '2 - drop at edge', readonly => 'readonly');
 			<% } %>
 		<% } %>
-	</div><br>
-	<div class="block" id="geo_limit_row">
+	</div>
+	<div class="block form-row" id="geo_limit_row">
 		<% unless (field('ds.geo_limit')->valid) { %>
 			<span class="field-with-error"><%= field('ds.geo_limit')->error %></span>
 		<% } %>
@@ -173,8 +173,8 @@
 				%= field('ds.geo_limit')->text(class => 'field', value =>  'CZF + Country Codes', readonly => 'readonly');
 			<% } %>
 		<% } %>
-	</div><br>
-	<div class="block" id="geo_limit_countries_row">
+	</div>
+	<div class="block form-row" id="geo_limit_countries_row">
 		<% unless (field('ds.geo_limit_countries')->valid) { %>
 			<span class="field-with-error"><%= field('ds.geo_limit_countries')->error %></span>
 		<% } %>
@@ -184,8 +184,8 @@
 		<% } else { %>
 		%= field('ds.geo_limit_countries')->text(class => 'field', readonly => 'readonly');
 		<% } %>
-	</div><br>
-	<div class="block" id="geo_provider_row">
+	</div>
+	<div class="block form-row" id="geo_provider_row">
 		<% unless (field('ds.geo_provider')->valid) { %>
 			<span class="field-with-error"><%= field('ds.geo_provider')->error %></span>
 		<% } %>
@@ -199,8 +199,8 @@
                 %= field('ds.geo_provider')->text(class => 'field', value =>  'Neustar', readonly => 'readonly');
 			<% } %>
 		<% } %>
-	</div><br>
-	<div class="block" id='http_bypass_fqdn_row'>
+	</div>
+	<div class="block form-row" id='http_bypass_fqdn_row'>
 		<% unless (field('ds.http_bypass_fqdn')->valid) { %>
 			<span class="field-with-error"><%= field('ds.http_bypass_fqdn')->error %></span>
 		<% } %>
@@ -210,8 +210,8 @@
 		<% } else { %>
 		%= field('ds.http_bypass_fqdn')->text(class => 'field', readonly => 'readonly');
 		<% } %>
-	</div><br>
-	<div class="block" id='initial_dispersion_row'>
+	</div>
+	<div class="block form-row" id='initial_dispersion_row'>
 		<% unless (field('ds.initial_dispersion')->valid) { %>
 			<span class="field-with-error"><%= field('ds.initial_dispersion')->error %></span>
 		<% } %>
@@ -221,8 +221,8 @@
 		<% } else { %>
 		%= field('ds.initial_dispersion')->text(class => 'field', readonly => 'readonly');
 		<% } %>
-	</div><br>
-	<div class="block" id='ipv6_routing_enabled_row'>
+	</div>
+	<div class="block form-row" id='ipv6_routing_enabled_row'>
 		<% unless (field('ds.ipv6_routing_enabled')->valid) { %>
 			<span class="field-with-error"><%= field('ds.ipv6_routing_enabled')->error %></span>
 		<% } %>
@@ -237,7 +237,7 @@
 			<% } %>
 		<% } %>
 	</div> <br>
-	<div class="block" id='range_request_handlingi_row'>
+	<div class="block form-row" id='range_request_handlingi_row'>
 		<% unless (field('ds.range_request_handling')->valid) { %>
 			<span class="field-with-error"><%= field('ds.range_request_handling')->error %></span>
 		<% } %>
@@ -254,7 +254,7 @@
 			<% } %>
 		<% } %>
 	</div> <br>
-	<div class="block" id='dns_bypass_ip_row'>
+	<div class="block form-row" id='dns_bypass_ip_row'>
 		<% unless (field('ds.dns_bypass_ip')->valid) { %>
 			<span class="field-with-error"><%= field('ds.dns_bypass_ip')->error %></span>
 		<% } %>
@@ -264,8 +264,8 @@
 		<% } else { %>
 		%= field('ds.dns_bypass_ip')->text(class => 'field', readonly => 'readonly');
 		<% } %>
-	</div><br>
-	<div class="block" id='dns_bypass_ip6_row'>
+	</div>
+	<div class="block form-row" id='dns_bypass_ip6_row'>
 		<% unless (field('ds.dns_bypass_ip6')->valid) { %>
 			<span class="field-with-error"><%= field('ds.dns_bypass_ip6')->error %></span>
 		<% } %>
@@ -275,8 +275,8 @@
 		<% } else { %>
 		%= field('ds.dns_bypass_ip6')->text(class => 'field', readonly => 'readonly');
 		<% } %>
-	</div><br>
-	<div class="block" id='dns_bypass_cname_row'>
+	</div>
+	<div class="block form-row" id='dns_bypass_cname_row'>
 		<% unless (field('ds.dns_bypass_cname')->valid) { %>
 			<span class="field-with-error"><%= field('ds.dns_bypass_cname')->error %></span>
 		<% } %>
@@ -286,8 +286,8 @@
 		<% } else { %>
 		%= field('ds.dns_bypass_cname')->text(class => 'field', readonly => 'readonly');
 		<% } %>
-	</div><br>
-	<div class="block" id='dns_bypass_ttl_row'>
+	</div>
+	<div class="block form-row" id='dns_bypass_ttl_row'>
 		<% unless (field('ds.dns_bypass_ttl')->valid) { %>
 			<span class="field-with-error"><%= field('ds.dns_bypass_ttl')->error %></span>
 		<% } %>
@@ -297,8 +297,8 @@
 		<% } else { %>
 		%= field('ds.dns_bypass_ttl')->text(class => 'field', readonly => 'readonly');
 		<% } %>
-	</div><br>
-	<div class="block" id='max_dns_answers_row'>
+	</div>
+	<div class="block form-row" id='max_dns_answers_row'>
 		<% unless (field('ds.max_dns_answers')->valid) { %>
 			<span class="field-with-error"><%= field('ds.max_dns_answers')->error %></span>
 		<% } %>
@@ -312,8 +312,8 @@
 		<% } else { %>
 		%= field('ds.max_dns_answers')->text(class => 'field', readonly => 'readonly');
 		<% } %>
-	</div><br>
-	<div class="block" id="ccr_dns_ttl_row">
+	</div>
+	<div class="block form-row" id="ccr_dns_ttl_row">
 		<% unless (field('ds.ccr_dns_ttl')->valid) { %>
 			<span class="field-with-error"><%= field('ds.ccr_dns_ttl')->error %></span>
 		<% } %>
@@ -323,8 +323,8 @@
 		<% } else { %>
 		%= field('ds.ccr_dns_ttl')->text(class => 'field', readonly => 'readonly');
 		<% } %>
-	</div><br>
-	<div class="block" id="org_server_fqdn_row">
+	</div>
+	<div class="block form-row" id="org_server_fqdn_row">
 		<% unless (field('ds.org_server_fqdn')->valid) { %>
 			<span class="field-with-error"><%= field('ds.org_server_fqdn')->error %></span>
 		<% } %>
@@ -334,8 +334,8 @@
 		<% } else { %>
 		%= field('ds.org_server_fqdn')->text(class => 'field', readonly => 'readonly');
 		<% } %>
-	</div><br>
-	<div class="block" id="multi_site_origin_row">
+	</div>
+	<div class="block form-row" id="multi_site_origin_row">
 		<% unless (field('ds.multi_site_origin')->valid) { %>
 			<span class="field-with-error"><%= field('ds.multi_site_origin')->error %></span>
 		<% } %>
@@ -350,7 +350,26 @@
 			<% } %>
 		<% } %>
 	</div><br>
-	<div class="block" id="profile_row">
+	<div class="block form-row" id="multi_site_origin_algorithm_row">
+		<% unless (field('ds.multi_site_origin_algorithm')->valid) { %>
+			<span class="field-with-error"><%= field('ds.multi_site_origin_algorithm')->error %></span>
+		<% } %>
+		%= label_for 'multi_site_origin_algorithm' => 'Multi Site Origin Algorithm', class => 'label'
+		<% if ($priv_level >= 20) { %>
+		%= field('ds.multi_site_origin_algorithm')->select([['Consistent hash' => 0], ['Primary/backup' => 1], ['Strict round-robin' => 2], ['IP based round-robin' => 3]]);
+		<% } else { %>
+			<% if ($ds->multi_site_origin_algorithm == 1) { %>
+				%= field('ds.multi_site_origin_algorithm')->text(class => 'field', value =>  'Primary/backup', readonly => 'readonly');
+			<% } elsif ($ds->range_request_handling == 2) { %>
+				%= field('ds.multi_site_origin_algorithm')->text(class => 'field', value =>  'Strict round-robin', readonly => 'readonly');
+			<% } elsif ($ds->range_request_handling == 3) { %>
+				%= field('ds.multi_site_origin_algorithm')->text(class => 'field', value =>  'IP based round-robin', readonly => 'readonly');
+			<% } else { %>
+                %= field('ds.multi_site_origin_algorithm')->text(class => 'field', value =>  'Consistent hash', readonly => 'readonly');
+			<% } %>
+		<% } %>
+	</div>
+	<div class="block form-row" id="profile_row">
 		<% unless (field('ds.profile')->valid) { %>
 			<span class="field-with-error"><%= field('ds.profile')->error %></span>
 		<% } %>
@@ -360,8 +379,8 @@
 		<% } else { %>
 		%= field('ds.profile.name')->text(class => 'field', readonly => 'readonly');
 		<% }  %>
-	</div><br>
-	<div class="block" id="global_max_mbps_row">
+	</div>
+	<div class="block form-row" id="global_max_mbps_row">
 		<% unless (field('ds.global_max_mbps')->valid) { %>
 			<span class="field-with-error"><%= field('ds.global_max_mbps')->error %></span>
 		<% } %>
@@ -371,8 +390,8 @@
 		<% } else { %>
 		%= field('ds.global_max_mbps')->text(class => 'field', readonly => 'readonly');
 		<% } %>
-	</div><br>
-	<div class="block" id="global_max_tps_row">
+	</div>
+	<div class="block form-row" id="global_max_tps_row">
 		<% unless (field('ds.global_max_tps')->valid) { %>
 			<span class="field-with-error"><%= field('ds.global_max_tps')->error %></span>
 		<% } %>
@@ -382,8 +401,8 @@
 		<% } else { %>
 		%= field('ds.global_max_tps')->text(class => 'field', readonly => 'readonly');
 		<% }  %>
-	</div><br>
-	<div class="block" id="miss_lat_row">
+	</div>
+	<div class="block form-row" id="miss_lat_row">
 		<% unless (field('ds.miss_lat')->valid) { %>
 			<span class="field-with-error"><%= field('ds.miss_lat')->error %></span>
 		<% } %>
@@ -397,8 +416,8 @@
 		<% } else { %>
 		%= field('ds.miss_lat')->text(class => 'field', readonly => 'readonly');
 		<% }  %>
-	</div><br>
-	<div class="block" id="miss_long_row">
+	</div>
+	<div class="block form-row" id="miss_long_row">
 		<% unless (field('ds.miss_long')->valid) { %>
 			<span class="field-with-error"><%= field('ds.miss_long')->error %></span>
 		<% } %>
@@ -412,8 +431,8 @@
 		<% } else { %>
 		%= field('ds.miss_long')->text(class => 'field', readonly => 'readonly');
 		<% }  %>
-	</div><br>
-	<div class="block" id="edge_header_rewrite_row">
+	</div>
+	<div class="block form-row" id="edge_header_rewrite_row">
 		<% unless (field('ds.edge_header_rewrite')->valid) { %>
 			<span class="field-with-error"><%= field('ds.edge_header_rewrite')->error %></span>
 		<% } %>
@@ -423,8 +442,8 @@
 			<% } else { %>
 				%= field('ds.edge_header_rewrite')->text(class => 'field', readonly => 'readonly');
 			<% }  %>
-	</div><br>
-	<div class="block" id="mid_header_rewrite_row">
+	</div>
+	<div class="block form-row" id="mid_header_rewrite_row">
 		<% unless (field('ds.mid_header_rewrite')->valid) { %>
 			<span class="field-with-error"><%= field('ds.mid_header_rewrite')->error %></span>
 		<% } %>
@@ -434,8 +453,8 @@
 			<% } else { %>
 				%= field('ds.mid_header_rewrite')->text(class => 'field', readonly => 'readonly');
 			<% }  %>
-	</div><br>
-	<div class="block" id="tr_response_headers">
+	</div>
+	<div class="block form-row" id="tr_response_headers">
 		<% unless (field('ds.tr_response_headers')->valid) { %>
 			<span class="field-with-error"><%= field('ds.tr_response_headers')->error %></span>
 		<% } %>
@@ -445,8 +464,8 @@
 			<% } else { %>
 				%= field('ds.tr_response_headers')->text(class => 'field', readonly => 'readonly');
 			<% }  %>
-	</div><br>
-	<div class="block" id="tr_request_headers">
+	</div>
+	<div class="block form-row" id="tr_request_headers">
 		<% unless (field('ds.tr_request_headers')->valid) { %>
 			<span class="field-with-error"><%= field('ds.tr_request_headers')->error %></span>
 		<% } %>
@@ -456,8 +475,8 @@
 			<% } else { %>
 				%= field('ds.tr_request_headers')->text(class => 'field', readonly => 'readonly');
 			<% }  %>
-	</div><br>
-	<div class="block" id="regex_remap_row">
+	</div>
+	<div class="block form-row" id="regex_remap_row">
 		<% unless (field('ds.regex_remap')->valid) { %>
 			<span class="field-with-error"><%= field('ds.regex_remap')->error %></span>
 		<% } %>
@@ -467,8 +486,8 @@
 			<% } else { %>
 				%= field('ds.regex_remap')->text(class => 'field', readonly => 'readonly');
 			<% }  %>
-	</div><br>
-	<div class="block" id="cacheurl_row">
+	</div>
+	<div class="block form-row" id="cacheurl_row">
 		<% unless (field('ds.cacheurl')->valid) { %>
 			<span class="field-with-error"><%= field('ds.cacheurl')->error %></span>
 		<% } %>
@@ -478,8 +497,8 @@
 			<% } else { %>
 				%= field('ds.cacheurl')->text(class => 'field', readonly => 'cacheurl');
 			<% }  %>
-	</div><br>
-	<div class="block" id="remap_text_row">
+	</div>
+	<div class="block form-row" id="remap_text_row">
 		<% unless (field('ds.remap_text')->valid) { %>
 			<span class="field-with-error"><%= field('ds.remap_text')->error %></span>
 		<% } %>
@@ -489,8 +508,8 @@
 			<% } else { %>
 				%= field('ds.remap_text')->text(class => 'field', readonly => 'remap_text');
 			<% }  %>
-	</div><br>
-	<div class="block">
+	</div>
+	<div class="block form-row">
 		<% unless (field('ds.long_desc')->valid) { %>
 			<span class="field-with-error"><%= field('ds.long_desc')->error %></span>
 		<% } %>
@@ -500,8 +519,8 @@
 		<% } else { %>
 		%= field('ds.long_desc')->text(class => 'field', readonly => 'readonly');
 		<% } %>
-	</div><br>
-	<div class="block">
+	</div>
+	<div class="block form-row">
 		<% unless (field('ds.long_desc_1')->valid) { %>
 			<span class="field-with-error"><%= field('ds.long_desc_1')->error %></span>
 		<% } %>
@@ -511,8 +530,8 @@
 		<% } else { %>
 		%= field('ds.long_desc_1')->text(class => 'field', readonly => 'readonly');
 		<% }  %>
-	</div><br>
-	<div class="block">
+	</div>
+	<div class="block form-row">
 		<% unless (field('ds.long_desc_2')->valid) { %>
 			<span class="field-with-error"><%= field('ds.long_desc_2')->error %></span>
 		<% } %>
@@ -522,8 +541,8 @@
 		<% } else { %>
 		%= field('ds.long_desc_2')->text(class => 'field', readonly => 'readonly');
 		<% } %>
-	</div><br>
-	<div class="block">
+	</div>
+	<div class="block form-row">
 		<% unless (field('ds.info_url')->valid) { %>
 			<span class="field-with-error"><%= field('ds.info_url')->error %></span>
 		<% } %>
@@ -533,8 +552,8 @@
 		<% } else { %>
 		%= field('ds.info_url')->text(class => 'field', readonly => 'readonly');
 		<% } %>
-	</div><br>
-	<div class="block">
+	</div>
+	<div class="block form-row">
 		<% unless (field('ds.check_path')->valid) { %>
 			<span class="field-with-error"><%= field('ds.check_path')->error %></span>
 		<% } %>
@@ -544,8 +563,8 @@
 		<% } else { %>
 		%= field('ds.check_path')->text(class => 'field', readonly => 'readonly');
 		<% }  %>
-	</div><br>
-	<div class="block" id="origin_shield_row">
+	</div>
+	<div class="block form-row" id="origin_shield_row">
 		<% unless (field('ds.origin_shield')->valid) { %>
 			<span class="field-with-error"><%= field('ds.origin_shield')->error %></span>
 		<% } %>
@@ -555,8 +574,8 @@
 		<% } else { %>
 		%= field('ds.origin_shield')->text(class => 'field', readonly => 'readonly');
 		<% } %>
-	</div><br>
-        <div class="block" id="regional_geo_blocking_row">
+	</div>
+        <div class="block form-row" id="regional_geo_blocking_row">
         <% unless (field('ds.regional_geo_blocking')->valid) { %>
 	        <span class="field-with-error"><%= field('ds.regional_geo_blocking')->error %></span>
 		<% } %>
@@ -570,8 +589,8 @@
 				%= field('ds.regional_geo_blocking')->text(class => 'field', readonly => 'readonly', value => 'Enabled');
 			<% } %>
         <% } %>
-	</div><br>
-		<div class="block" id="active_row">
+	</div>
+	<div class="block form-row" id="active_row">
 		<% unless (field('ds.active')->valid) { %>
 			<span class="field-with-error"><%= field('ds.active')->error %></span>
 		<% } %>
@@ -585,5 +604,20 @@
 				%= field('ds.active')->text(class => 'field', readonly => 'readonly', value => 'Yes');
 			<% } %>
 		<% } %>
-	</div><br>
+	</div>
+	<div class="block form-row" id="logs_enabled">
+		<% unless (field('ds.logs_enabled')->valid) { %>
+			<span class="field-with-error"><%= field('ds.logs_enabled')->error %></span>
+		<% } %>
+		%= label_for 'logs_enabled' => '* Logs Enabled', class => 'label'
+		<% if ($priv_level >= 20) { %>
+		%= field('ds.logs_enabled')->select([ [No => 0], [Yes => 1]]);
+		<% } else { %>
+			<%  if ($ds-> logs_enabled == 0 ) {%>
+				%= field('ds.logs_enabled')->text(class => 'field', readonly => 'readonly', value => 'No');
+			<% } else { %>
+				%= field('ds.logs_enabled')->text(class => 'field', readonly => 'readonly', value => 'Yes');
+			<% } %>
+		<% } %>
+	</div>
 </div>

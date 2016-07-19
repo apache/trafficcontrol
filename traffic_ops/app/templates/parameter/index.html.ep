@@ -87,6 +87,7 @@ $("a.fancybox").fancybox({
 					  <th>Parameter name</th>
 					  <th>Config file name</th>
 					  <th>Value</th>
+					  <th>Secure</th>
 				  </tr>
 			  </thead>
 		  </table>
