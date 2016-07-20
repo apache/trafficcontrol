@@ -260,7 +260,7 @@ sub aparameter {
     }
 
     my $rs = undef;
-    if ( $col eq 'profile' and $val eq 'ORPHANS' ) {
+    if ( $col eq 'profile' and $val eq 'ORPHANS' ) { # Used with 'Parameters > Orphaned Parameters' menu item
         my $lindked_profile_rs    = $self->db->resultset('ProfileParameter')->search(undef);
         my $lindked_cachegroup_rs = $self->db->resultset('CachegroupParameter')->search(undef);
         $rs = $self->db->resultset('Parameter')->search(
@@ -287,11 +287,11 @@ sub aparameter {
         }
         $rs = undef;
     }
-    elsif ( $col eq 'profile' && $val ne 'all' ) {
+    elsif ( $col eq 'profile' && $val ne 'all' ) { # Used with 'Parameters > Global Profile' menu item
         my $p_id = &profile_id( $self, $val );
         $rs = $self->db->resultset('ProfileParameter')->search( { $col => $p_id }, { prefetch => [ { 'parameter' => undef }, { 'profile' => undef } ] } );
     }
-    elsif ( !defined($col) || ( $col eq 'profile' && $val eq 'all' ) ) {
+    elsif ( !defined($col) || ( $col eq 'profile' && $val eq 'all' ) ) { # Used with 'Parameters > All Profiles' menu item
         $rs = $self->db->resultset('ProfileParameter')->search( undef, { prefetch => [ { 'parameter' => undef }, { 'profile' => undef } ] } );
     }
 
@@ -303,7 +303,7 @@ sub aparameter {
             }
             my $value = $row->parameter->value;
             &UI::Parameter::conceal_secure_parameter_value( $self, $row->parameter->secure, \$value );
-            my @line = [ $row->parameter->id, $row->profile->name, $row->parameter->name, $row->parameter->config_file, $value, $secure, "profile" ];
+            my @line = [ $row->parameter->id, $row->profile->name, $row->parameter->name, $row->parameter->config_file, $value, $secure ];
             push( @{ $data{'aaData'} }, @line );
         }
     }
@@ -314,14 +314,19 @@ sub aparameter {
         $rs = $self->db->resultset('CachegroupParameter')
             ->search( { $col => $l_id }, { prefetch => [ { 'parameter' => undef }, { 'cachegroup' => undef } ] } );
     }
-    elsif ( !defined($col) || ( $col eq 'cachegroup' && $val eq 'all' ) ) {
+    elsif ( !defined($col) || ( $col eq 'cachegroup' && $val eq 'all' ) ) { # Used with 'Parameters > All Cache Groups' menu item
         $rs = $self->db->resultset('CachegroupParameter')->search( undef, { prefetch => [ { 'parameter' => undef }, { 'cachegroup' => undef } ] } );
     }
 
     if ( defined($rs) ) {
         while ( my $row = $rs->next ) {
-            my @line =
-                [ $row->parameter->id, $row->cachegroup->name, $row->parameter->name, $row->parameter->config_file, $row->parameter->value, "cachegroup" ];
+            my $secure = "no";
+            if ( $row->parameter->secure == 1 ) {
+                $secure = "yes";
+            }
+            my $value = $row->parameter->value;
+            &UI::Parameter::conceal_secure_parameter_value( $self, $row->parameter->secure, \$value );
+            my @line = [ $row->parameter->id, $row->cachegroup->name, $row->parameter->name, $row->parameter->config_file, $row->parameter->value, $secure ];
             push( @{ $data{'aaData'} }, @line );
         }
     }
