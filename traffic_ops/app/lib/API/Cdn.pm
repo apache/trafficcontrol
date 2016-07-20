@@ -1357,7 +1357,7 @@ sub ssl_keys {
 			push(@$keys, {
 				deliveryservice => $record->{deliveryservice},
 				certificate => {
-					crt => $record->{'certificate.key'},
+					crt => $record->{'certificate.crt'},
 					key => $record->{'certificate.key'},
 				}
 			});
