@@ -289,7 +289,7 @@ sub conceal_secure_parameter_value {
 	my $self = shift;
 	my $secure = shift;
 	my $value = shift;
-	if ( !&is_admin($self) && $secure == 1 ) {
+	if ( $secure == 1 && !&is_admin($self) ) {
 		$$value = '*********';
 	}
 }
