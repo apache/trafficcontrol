@@ -76,10 +76,46 @@ sub load_all_fixtures {
 	}
 }
 
+sub reset_sequence_id {
+	my $self   = shift;
+	my $dbh    = Schema->database_handle;
+
+	my @table_names = qw(
+		asn
+		cachegroup
+		cdn
+		deliveryservice
+		division
+		federation
+		federation_resolver
+		hwinfo
+		job_agent
+		job_status
+		log
+		parameter
+		phys_location
+		profile
+		regex
+		region
+		role
+		server
+		staticdnsentry
+		status
+		tm_user
+		type );
+	foreach my $name (@table_names) {
+		my $p = $dbh->prepare("ALTER SEQUENCE " . $name . "_id_seq RESTART WITH 1");
+		$p->execute();
+	}
+}
+
 sub load_core_data {
 	my $self          = shift;
 	my $schema        = shift;
 	my $schema_values = { schema => $schema, no_transactions => 1 };
+
+	$self->reset_sequence_id();
+
 	$self->load_all_fixtures( Fixtures::Cdn->new($schema_values) );
 	$self->load_all_fixtures( Fixtures::Role->new($schema_values) );
 	$self->load_all_fixtures( Fixtures::TmUser->new($schema_values) );
@@ -100,49 +136,37 @@ sub load_core_data {
 	$self->load_all_fixtures( Fixtures::DeliveryserviceRegex->new($schema_values) );
 	$self->load_all_fixtures( Fixtures::DeliveryserviceTmuser->new($schema_values) );
 	$self->load_all_fixtures( Fixtures::DeliveryserviceServer->new($schema_values) );
-
 }
 
 sub unload_core_data {
 	my $self   = shift;
 	my $schema = shift;
-	my $dbh    = Schema->database_handle;
 
-	$self->teardown( $schema, 'ToExtension' );
-	$self->teardown( $schema, 'Staticdnsentry' );
-	$self->teardown( $schema, 'Job' );
-	$self->teardown( $schema, 'Log' );
-	$self->teardown( $schema, 'Asn' );
-	$self->teardown( $schema, 'DeliveryserviceTmuser' );
-	$self->teardown( $schema, 'TmUser' );
-	$self->teardown( $schema, 'Role' );
-	$self->teardown( $schema, 'DeliveryserviceRegex' );
-	$self->teardown( $schema, 'Regex' );
-	$self->teardown( $schema, 'DeliveryserviceServer' );
-	$self->teardown( $schema, 'Deliveryservice' );
-	$self->teardown( $schema, 'Server' );
-	$self->teardown( $schema, 'PhysLocation' );
-	$self->teardown( $schema, 'Region' );
-	$self->teardown( $schema, 'Division' );
+	$schema->resultset('ToExtension')->delete_all();
+	$schema->resultset('Staticdnsentry')->delete_all();
+	$schema->resultset('Job')->delete_all();
+	$schema->resultset('Log')->delete_all();
+	$schema->resultset('Asn')->delete_all();
+	$schema->resultset('DeliveryserviceTmuser')->delete_all();
+	$schema->resultset('TmUser')->delete_all();
+	$schema->resultset('Role')->delete_all();
+	$schema->resultset('DeliveryserviceRegex')->delete_all();
+	$schema->resultset('Regex')->delete_all();
+	$schema->resultset('DeliveryserviceServer')->delete_all();
+	$schema->resultset('Deliveryservice')->delete_all();
+	$schema->resultset('Server')->delete_all();
+	$schema->resultset('PhysLocation')->delete_all();
+	$schema->resultset('Region')->delete_all();
+	$schema->resultset('Division')->delete_all();
 
 	$self->teardown_cachegroup($schema);
 
-	$self->teardown( $schema, 'Profile' );
-	$self->teardown( $schema, 'Parameter' );
-	$self->teardown( $schema, 'ProfileParameter' );
-	$self->teardown( $schema, 'Regex' );
-	$self->teardown( $schema, 'Type' );
-	$self->teardown( $schema, 'Status' );
-	$self->teardown( $schema, 'Cdn' );
-}
-
-sub teardown {
-	my $self       = shift;
-	my $schema     = shift;
-	my $table_name = shift;
-	$schema->resultset($table_name)->delete_all;
-
-	#ok $schema->resultset($table_name)->delete_all, 'Does the ' . $table_name . ' teardown?';
+	$schema->resultset('Profile')->delete_all();
+	$schema->resultset('Parameter')->delete_all();
+	$schema->resultset('ProfileParameter')->delete_all();
+	$schema->resultset('Type')->delete_all();
+	$schema->resultset('Status')->delete_all();
+	$schema->resultset('Cdn')->delete_all();
 }
 
 # Tearing down the Cachegroup table requires deleting them in a specific order, because

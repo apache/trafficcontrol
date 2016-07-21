@@ -29,7 +29,6 @@ use Test::TestHelper;
 BEGIN { $ENV{MOJO_MODE} = "test" }
 
 my $schema = Schema->connect_to_database;
-my $dbh    = Schema->database_handle;
 my $t      = Test::Mojo->new('TrafficOps');
 
 Test::TestHelper->unload_core_data($schema);
@@ -78,7 +77,6 @@ ok $t->put_ok('/api/1.2/regions/' . $region_id  => {Accept => 'application/json'
 ok $t->delete_ok('/api/1.2/regions/' . $region_id)->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } );
 
 ok $t->get_ok('/logout')->status_is(302)->or( sub { diag $t->tx->res->content->asset->{content}; } );
-$dbh->disconnect();
 done_testing();
 
 sub get_reg_id {
