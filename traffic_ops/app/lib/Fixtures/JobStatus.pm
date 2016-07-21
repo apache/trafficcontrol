@@ -18,34 +18,34 @@ extends 'DBIx::Class::EasyFixture';
 use namespace::autoclean;
 
 my %definition_for = (
+	## id => 1
 	pending => {
 		new   => 'JobStatus',
 		using => {
-			id          => 1,
 			name        => 'PENDING',
 			description => 'Job is queued, but has not been picked up by any agents yet'
 		},
 	},
+	## id => 2
 	in_progress => {
 		new   => 'JobStatus',
 		using => {
-			id          => 2,
 			name        => 'IN_PROGRESS',
 			description => 'Job is being processed by agents'
 		},
 	},
+	## id => 3
 	completed => {
 		new   => 'JobStatus',
 		using => {
-			id          => 3,
 			name        => 'COMPLETED',
 			description => 'Job has finished'
 		},
 	},
+	## id => 4
 	cancelled => {
 		new   => 'JobStatus',
 		using => {
-			id          => 4,
 			name        => 'CANCELLED',
 			description => 'Job was cancelled'
 		},

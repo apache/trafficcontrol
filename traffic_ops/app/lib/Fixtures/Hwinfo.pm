@@ -19,19 +19,19 @@ use namespace::autoclean;
 use Digest::SHA1 qw(sha1_hex);
 
 my %definition_for = (
+	## id => 1
 	hw1 => {
 		new   => 'Hwinfo',
 		using => {
-			id          => 1,
 			serverid    => 1,
 			description => 'BACKPLANE FIRMWA',
 			val         => '7.0.0.29',
 		},
 	},
+	## id => 2
 	hw2 => {
 		new   => 'Hwinfo',
 		using => {
-			id          => 2,
 			serverid    => 2,
 			description => 'DRAC FIRMWA',
 			val         => '1.0.0.29',
