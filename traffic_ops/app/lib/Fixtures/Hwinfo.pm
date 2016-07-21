@@ -24,18 +24,18 @@ my %definition_for = (
 	hw1 => {
 		new   => 'Hwinfo',
 		using => {
-			serverid    => 1,
-			description => 'BACKPLANE FIRMWA',
-			val         => '7.0.0.29',
+			serverid    => 2,
+			description => 'DRAC FIRMWA',
+			val         => '1.0.0.29',
 		},
 	},
 	## id => 2
 	hw2 => {
 		new   => 'Hwinfo',
 		using => {
-			serverid    => 2,
-			description => 'DRAC FIRMWA',
-			val         => '1.0.0.29',
+			serverid    => 1,
+			description => 'BACKPLANE FIRMWA',
+			val         => '7.0.0.29',
 		},
 	},
 );
@@ -46,7 +46,8 @@ sub get_definition {
 }
 
 sub all_fixture_names {
-	return keys %definition_for;
+	# sort by db val to guarantee insertion order
+	return (sort { $definition_for{$a}{using}{val} cmp $definition_for{$b}{using}{val} } keys %definition_for);
 }
 
 __PACKAGE__->meta->make_immutable;

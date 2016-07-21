@@ -48,7 +48,7 @@ my %definition_for = (
 			miss_long             => '-87.627778',
 			check_path            => '/crossdomain.xml',
 			type                  => 8,
-			profile               => 3,
+			profile               => 2,
 			cdn_id                => 1,
 			ipv6_routing_enabled  => 1,
 			protocol              => 1,
@@ -86,7 +86,7 @@ my %definition_for = (
 			miss_long             => '-87.627778',
 			check_path            => '/crossdomain.xml',
 			type                  => 1,
-			profile               => 3,
+			profile               => 2,
 			cdn_id                => 1,
 			display_name          => 'test-ds2-displayname',
 			initial_dispersion    => 1,
@@ -124,7 +124,7 @@ my %definition_for = (
 			miss_long             => '-87.627778',
 			check_path            => '/crossdomain.xml',
 			type                  => 1,
-			profile               => 3,
+			profile               => 2,
 			cdn_id                => 1,
 			display_name          => 'test-ds3-displayname',
 			initial_dispersion    => 1,
@@ -162,7 +162,7 @@ my %definition_for = (
 			miss_long             => '-87.627778',
 			check_path            => '/crossdomain.xml',
 			type                  => 1,
-			profile               => 3,
+			profile               => 2,
 			cdn_id                => 1,
 			display_name          => 'test-ds4-displayname',
 			initial_dispersion    => 1,
@@ -180,7 +180,8 @@ sub get_definition {
 }
 
 sub all_fixture_names {
-	return keys %definition_for;
+	# sort by db xml_id to guarantee insertion order
+	return (sort { $definition_for{$a}{using}{xml_id} cmp $definition_for{$b}{using}{xml_id} } keys %definition_for);
 }
 
 __PACKAGE__->meta->make_immutable;
