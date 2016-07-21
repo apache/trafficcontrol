@@ -77,11 +77,11 @@ while ( defined( $p->[$i] ) ) {
 $t->post_ok( '/parameter/create' => form => { name => 'auto_tstinsertparam', config_file => 'auto_tstfile', value => 'auto_tstvalue', profile => '13' } )
 	->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } );
 $q = 'select id from parameter where name = \'auto_tstinsertparam\'';
-my $get_param = $dbh->prepare($q);
+$get_param = $dbh->prepare($q);
 $get_param->execute();
 $p = $get_param->fetchall_arrayref( {} );
 $get_param->finish();
-my $i = 0;
+$i = 0;
 while ( defined( $p->[$i] ) ) {
 	my $id = $p->[$i]->{id};
 	$t->post_ok( '/parameter/update/'
