@@ -44,4 +44,6 @@ Test::TestHelper->load_all_fixtures( Fixtures::Hwinfo->new( { schema => $schema,
 $t->get_ok('/datahwinfo')->status_is(200)->json_has('/0/serverid')->json_has('/0/val')->json_has('/0/description');
 
 ok $t->get_ok('/logout')->status_is(302)->or( sub { diag $t->tx->res->content->asset->{content}; } );
+
+Test::TestHelper->teardown( $schema, "Hwinfo" );
 done_testing();
