@@ -18,18 +18,18 @@ extends 'DBIx::Class::EasyFixture';
 use namespace::autoclean;
 
 my %definition_for = (
+	## id => 1
 	regex_omg01 => {
 		new   => 'Regex',
 		using => {
-			id      => 1,
 			pattern => '.*\.omg-01\..*',
 			type    => 19,
 		},
 	},
+	## id => 2
 	regex_1 => {
 		new   => 'Regex',
 		using => {
-			id      => 2,
 			pattern => '.*\.foo\..*',
 			type    => 19,
 		},

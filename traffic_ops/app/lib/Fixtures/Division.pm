@@ -18,10 +18,10 @@ extends 'DBIx::Class::EasyFixture';
 use namespace::autoclean;
 
 my %definition_for = (
+	## id => 1
 	mountain => {
 		new   => 'Division',
 		using => {
-			id         => 1,
 			name       => 'mountain',
 		},
 	},

@@ -29,7 +29,6 @@ my %definition_for = (
     STEERING_REGEXP => {
         new   => 'Type',
         using => {
-            id           => 987,
             name         => 'STEERING_REGEXP',
             description  => 'Steering target filter regular expression',
             use_in_table => 'regex',

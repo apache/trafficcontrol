@@ -21,7 +21,6 @@ my %definition_for = (
 	edge_atl => {
 		new   => 'Cachegroup',
 		using => {
-			id                             => 3,
 			name                           => 'edge_atl_group',
 			short_name                     => 'atl',
 			type                           => 5,
