@@ -142,55 +142,49 @@ sub unload_core_data {
 	my $self   = shift;
 	my $schema = shift;
 
-	$schema->resultset('ToExtension')->delete_all();
-	$schema->resultset('Staticdnsentry')->delete_all();
-	$schema->resultset('Job')->delete_all();
-	$schema->resultset('Log')->delete_all();
-	$schema->resultset('Asn')->delete_all();
-	$schema->resultset('DeliveryserviceTmuser')->delete_all();
-	$schema->resultset('TmUser')->delete_all();
-	$schema->resultset('Role')->delete_all();
-	$schema->resultset('DeliveryserviceRegex')->delete_all();
-	$schema->resultset('Regex')->delete_all();
-	$schema->resultset('DeliveryserviceServer')->delete_all();
-	$schema->resultset('Deliveryservice')->delete_all();
-	$schema->resultset('Server')->delete_all();
-	$schema->resultset('PhysLocation')->delete_all();
-	$schema->resultset('Region')->delete_all();
-	$schema->resultset('Division')->delete_all();
+	$self->teardown($schema, 'ToExtension');
+	$self->teardown($schema, 'Staticdnsentry');
+	$self->teardown($schema, 'Job');
+	$self->teardown($schema, 'Log');
+	$self->teardown($schema, 'Asn');
+	$self->teardown($schema, 'DeliveryserviceTmuser');
+	$self->teardown($schema, 'TmUser');
+	$self->teardown($schema, 'Role');
+	$self->teardown($schema, 'DeliveryserviceRegex');
+	$self->teardown($schema, 'Regex');
+	$self->teardown($schema, 'DeliveryserviceServer');
+	$self->teardown($schema, 'Deliveryservice');
+	$self->teardown($schema, 'Server');
+	$self->teardown($schema, 'PhysLocation');
+	$self->teardown($schema, 'Region');
+	$self->teardown($schema, 'Division');
+	$self->teardown_cachegroup();
+	$self->teardown($schema, 'Profile');
+	$self->teardown($schema, 'Parameter');
+	$self->teardown($schema, 'ProfileParameter');
+	$self->teardown($schema, 'Type');
+	$self->teardown($schema, 'Status');
+	$self->teardown($schema, 'Cdn');
+}
 
-	$self->teardown_cachegroup($schema);
+sub teardown {
+	my $self       = shift;
+	my $schema     = shift;
+	my $table_name = shift;
 
-	$schema->resultset('Profile')->delete_all();
-	$schema->resultset('Parameter')->delete_all();
-	$schema->resultset('ProfileParameter')->delete_all();
-	$schema->resultset('Type')->delete_all();
-	$schema->resultset('Status')->delete_all();
-	$schema->resultset('Cdn')->delete_all();
+	$schema->resultset($table_name)->delete_all;
 }
 
 # Tearing down the Cachegroup table requires deleting them in a specific order, because
 # of the 'parent_cachegroup_id' and nested references.
 sub teardown_cachegroup {
 	my $self   = shift;
-	my $schema = shift;
 
-	my $cachegroups;
-	do {
-		$cachegroups = $schema->resultset("Cachegroup");
-		while ( my $row = $cachegroups->next ) {
-			if ( $schema->resultset("Cachegroup")->count({parent_cachegroup_id => $row->id}) > 0 ) {
-				next;
-			}
-
-			if ( $schema->resultset("Cachegroup")->count({secondary_parent_cachegroup_id => $row->id}) > 0 ) {
-				next;
-			}
-
-			$row->delete();
-		}
-
-	} while ( $cachegroups->count() > 0 );
+	my $dbh    = Schema->database_handle;
+	my $cg = $dbh->prepare("TRUNCATE TABLE cachegroup CASCADE;");
+	$cg->execute();
+	$cg->finish();
+	$dbh->disconnect;
 }
 
 1;
