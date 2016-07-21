@@ -65,7 +65,8 @@ sub get_definition {
 }
 
 sub all_fixture_names {
-	return keys %definition_for;
+	# sort by db cname to guarantee insertion order
+	return (sort { $definition_for{$a}{using}{cname} cmp $definition_for{$b}{using}{cname} } keys %definition_for);
 }
 
 __PACKAGE__->meta->make_immutable;

@@ -19,22 +19,14 @@ use namespace::autoclean;
 
 my %definition_for = (
 	## id => 1
-	pending => {
+	cancelled => {
 		new   => 'JobStatus',
 		using => {
-			name        => 'PENDING',
-			description => 'Job is queued, but has not been picked up by any agents yet'
+			name        => 'CANCELLED',
+			description => 'Job was cancelled'
 		},
 	},
 	## id => 2
-	in_progress => {
-		new   => 'JobStatus',
-		using => {
-			name        => 'IN_PROGRESS',
-			description => 'Job is being processed by agents'
-		},
-	},
-	## id => 3
 	completed => {
 		new   => 'JobStatus',
 		using => {
@@ -42,12 +34,20 @@ my %definition_for = (
 			description => 'Job has finished'
 		},
 	},
-	## id => 4
-	cancelled => {
+	## id => 3
+	in_progress => {
 		new   => 'JobStatus',
 		using => {
-			name        => 'CANCELLED',
-			description => 'Job was cancelled'
+			name        => 'IN_PROGRESS',
+			description => 'Job is being processed by agents'
+		},
+	},
+	## id => 4
+	pending => {
+		new   => 'JobStatus',
+		using => {
+			name        => 'PENDING',
+			description => 'Job is queued, but has not been picked up by any agents yet'
 		},
 	},
 );
@@ -58,7 +58,8 @@ sub get_definition {
 }
 
 sub all_fixture_names {
-	return keys %definition_for;
+	# sort by db name to guarantee insertion order
+	return (sort { $definition_for{$a}{using}{name} cmp $definition_for{$b}{using}{name} } keys %definition_for);
 }
 
 __PACKAGE__->meta->make_immutable;
