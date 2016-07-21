@@ -20,10 +20,10 @@ extends 'DBIx::Class::EasyFixture';
 use namespace::autoclean;
 
 my %definition_for = (
+	## id => 1
 	ds_cdn1 => {
 		new   => 'Deliveryservice',
 		using => {
-			id                    => 1,
 			xml_id                => 'test-ds1',
 			active                => 1,
 			dscp                  => 40,
@@ -58,10 +58,10 @@ my %definition_for = (
 			logs_enabled          => 1,
 		},
 	},
+	## id => 2
 	ds_cdn2 => {
 		new   => 'Deliveryservice',
 		using => {
-			id                    => 2,
 			xml_id                => 'test-ds2',
 			active                => 1,
 			dscp                  => 40,
@@ -96,10 +96,10 @@ my %definition_for = (
 			logs_enabled          => 0,
 		},
 	},
+	## id => 3
 	ds_cdn3 => {
 		new   => 'Deliveryservice',
 		using => {
-			id                    => 3,
 			xml_id                => 'test-ds3',
 			active                => 1,
 			dscp                  => 40,
@@ -134,10 +134,10 @@ my %definition_for = (
 			logs_enabled          => 0,
 		},
 	},
+	## id => 4
 	ds_cdn4 => {
 		new   => 'Deliveryservice',
 		using => {
-			id                    => 4,
 			xml_id                => 'test-ds4',
 			active                => 1,
 			dscp                  => 40,

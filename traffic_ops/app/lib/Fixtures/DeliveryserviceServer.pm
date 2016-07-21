@@ -30,7 +30,7 @@ my %definition_for = (
 		new   => 'DeliveryserviceServer',
 		using => {
 			deliveryservice => 1,
-			server          => 13,
+			server          => 12,
 		},
 	},
 	test_ds1_server_mid1 => {
@@ -44,14 +44,14 @@ my %definition_for = (
 		new   => 'DeliveryserviceServer',
 		using => {
 			deliveryservice => 2,
-			server          => 7,
+			server          => 6,
 		},
 	},
 	test_ds2_server_mid1 => {
 		new   => 'DeliveryserviceServer',
 		using => {
 			deliveryservice => 2,
-			server          => 8,
+			server          => 7,
 		},
 	},
 );

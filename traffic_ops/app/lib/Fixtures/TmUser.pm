@@ -23,10 +23,10 @@ use Digest::SHA1 qw(sha1_hex);
 
 my $local_passwd   = sha1_hex('password');
 my %definition_for = (
+	## id => 1
 	admin => {
 		new   => 'TmUser',
 		using => {
-			id                   => 1,
 			username             => 'admin',
 			role                 => 4,
 			uid                  => '1',
@@ -47,10 +47,10 @@ my %definition_for = (
 			registration_sent    => '1999-01-01 00:00:00',
 		},
 	},
+	## id => 2
 	portal => {
 		new   => 'TmUser',
 		using => {
-			id                   => 2,
 			username             => 'portal',
 			role                 => 6,
 			uid                  => '1',
@@ -71,10 +71,10 @@ my %definition_for = (
 			registration_sent    => '1999-01-01 00:00:00',
 		},
 	},
+	## id => 3
 	codebig => {
 		new   => 'TmUser',
 		using => {
-			id                   => 3,
 			username             => 'codebig',
 			role                 => 6,
 			uid                  => '1',
@@ -95,10 +95,10 @@ my %definition_for = (
 			registration_sent    => '1999-01-01 00:00:00',
 		},
 	},
+	## id => 4
 	migrations => {
 		new   => 'TmUser',
 		using => {
-			id                   => 4,
 			username             => 'migration',
 			role                 => 5,
 			uid                  => '1',
@@ -119,10 +119,10 @@ my %definition_for = (
 			registration_sent    => '1999-01-01 00:00:00',
 		},
 	},
+	## id => 5
 	federation => {
 		new   => 'TmUser',
 		using => {
-			id                   => 5,
 			username             => 'federation',
 			role                 => 7,
 			uid                  => '1',
