@@ -27,14 +27,6 @@ my %definition_for = (
 		},
 	},
 	## id => 2
-	MID1 => {
-		new   => 'Profile',
-		using => {
-			name        => 'MID1',
-			description => 'mid description',
-		},
-	},
-	## id => 3
 	CCR1 => {
 		new   => 'Profile',
 		using => {
@@ -42,15 +34,15 @@ my %definition_for = (
 			description => 'ccr description',
 		},
 	},
-	## id => 4
-	RIAK1 => {
+	## id => 3
+	MID1 => {
 		new   => 'Profile',
 		using => {
-			name        => 'RIAK1',
-			description => 'riak description',
+			name        => 'MID1',
+			description => 'mid description',
 		},
 	},
-	## id => 5
+	## id => 4
 	RASCAL1 => {
 		new   => 'Profile',
 		using => {
@@ -58,7 +50,7 @@ my %definition_for = (
 			description => 'rascal description',
 		},
 	},
-	## id => 6
+	## id => 5
 	RASCAL2 => {
 		new   => 'Profile',
 		using => {
@@ -66,6 +58,12 @@ my %definition_for = (
 			description => 'rascal2 description',
 		},
 	},
+	## id => 6
+	RIAK1 => {
+		new   => 'Profile',
+		using => {
+			name        => 'RIAK1',
+			description => 'riak description',
 	MISC => {
 		new   => 'Profile',
 		using => {
@@ -82,7 +80,7 @@ sub get_definition {
 }
 
 sub all_fixture_names {
-	return keys %definition_for;
+	return (sort { $definition_for{$a}{using}{name} cmp $definition_for{$b}{using}{name} } keys %definition_for);
 }
 
 __PACKAGE__->meta->make_immutable;
