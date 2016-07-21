@@ -18,50 +18,50 @@ extends 'DBIx::Class::EasyFixture';
 use namespace::autoclean;
 
 my %definition_for = (
+	## id => 1
 	EDGE1 => {
 		new   => 'Profile',
 		using => {
-			id          => 1,
 			name        => 'EDGE1',
 			description => 'edge description',
 		},
 	},
+	## id => 2
 	MID1 => {
 		new   => 'Profile',
 		using => {
-			id          => 2,
 			name        => 'MID1',
 			description => 'mid description',
 		},
 	},
+	## id => 3
 	CCR1 => {
 		new   => 'Profile',
 		using => {
-			id          => 3,
 			name        => 'CCR1',
 			description => 'ccr description',
 		},
 	},
+	## id => 4
 	RIAK1 => {
 		new   => 'Profile',
 		using => {
-			id          => 5,
 			name        => 'RIAK1',
 			description => 'riak description',
 		},
 	},
+	## id => 5
 	RASCAL1 => {
 		new   => 'Profile',
 		using => {
-			id          => 6,
 			name        => 'RASCAL1',
 			description => 'rascal description',
 		},
 	},
+	## id => 6
 	RASCAL2 => {
 		new   => 'Profile',
 		using => {
-			id          => 7,
 			name        => 'RASCAL2',
 			description => 'rascal2 description',
 		},

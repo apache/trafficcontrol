@@ -18,10 +18,10 @@ extends 'DBIx::Class::EasyFixture';
 use namespace::autoclean;
 
 my %definition_for = (
+	## id => 1
 	denver => {
 		new   => 'PhysLocation',
 		using => {
-			id         => 1,
 			name       => 'Denver',
 			short_name => 'denver',
 			address    => '1234 mile high circle',
@@ -35,10 +35,10 @@ my %definition_for = (
 			region     => 1,
 		},
 	},
+	## id => 2
 	boulder => {
 		new   => 'PhysLocation',
 		using => {
-			id         => 2,
 			name       => 'Boulder',
 			short_name => 'boulder',
 			address    => '1234 green way',
@@ -52,10 +52,10 @@ my %definition_for = (
 			region     => 1,
 		},
 	},
+	## id => 3
 	atlanta => {
 		new   => 'PhysLocation',
 		using => {
-			id         => 3,
 			name       => 'HotAtlanta',
 			short_name => 'atlanta',
 			address    => '1234 southern way',

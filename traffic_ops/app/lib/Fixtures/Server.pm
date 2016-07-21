@@ -18,10 +18,10 @@ extends 'DBIx::Class::EasyFixture';
 use namespace::autoclean;
 
 my %definition_for = (
+	## id => 1
 	server_edge1 => {
 		new   => 'Server',
 		using => {
-			id               => 1,
 			host_name        => 'atlanta-edge-01',
 			domain_name      => 'ga.atlanta.kabletown.net',
 			tcp_port         => 80,
@@ -53,10 +53,10 @@ my %definition_for = (
 			phys_location    => 1,
 		},
 	},
+	## id => 2
 	server_mid1 => {
 		new   => 'Server',
 		using => {
-			id               => 2,
 			host_name        => 'atlanta-mid-01',
 			domain_name      => 'ga.atlanta.kabletown.net',
 			tcp_port         => 80,
@@ -88,10 +88,10 @@ my %definition_for = (
 			phys_location    => 1,
 		},
 	},
+	## id => 3
 	rascal_server => {
 		new   => 'Server',
 		using => {
-			id               => 4,
 			host_name        => 'rascal01',
 			domain_name      => 'kabletown.net',
 			tcp_port         => 81,
@@ -115,18 +115,18 @@ my %definition_for = (
 			ilo_password     => '',
 			router_host_name => '',
 			router_port_name => '',
-			type             => 14,
+			type             => 11,
 			status           => 2,
-			profile          => 6,
+			profile          => 5,
 			cdn_id           => 1,
 			cachegroup       => 1,
 			phys_location    => 1,
 		},
 	},
+	## id => 4
 	riak_server1 => {
 		new   => 'Server',
 		using => {
-			id               => 5,
 			host_name        => 'riak01',
 			domain_name      => 'kabletown.net',
 			tcp_port         => 8088,
@@ -150,18 +150,18 @@ my %definition_for = (
 			ilo_password     => '',
 			router_host_name => '',
 			router_port_name => '',
-			type             => 31,
+			type             => 22,
 			status           => 2,
-			profile          => 5,
+			profile          => 4,
 			cdn_id           => 1,
 			cachegroup       => 1,
 			phys_location    => 1,
 		},
 	},
+	## id => 5
 	rascal_server2 => {
 		new   => 'Server',
 		using => {
-			id               => 6,
 			host_name        => 'rascal02',
 			domain_name      => 'kabletown.net',
 			tcp_port         => 81,
@@ -185,18 +185,18 @@ my %definition_for = (
 			ilo_password     => '',
 			router_host_name => '',
 			router_port_name => '',
-			type             => 14,
+			type             => 11,
 			status           => 2,
-			profile          => 7,
+			profile          => 6,
 			cdn_id           => 2,
 			cachegroup       => 1,
 			phys_location    => 1,
 		},
 	},
+	## id => 6
 	server_edge2 => {
 		new   => 'Server',
 		using => {
-			id               => 7,
 			host_name        => 'atlanta-edge-02',
 			domain_name      => 'ga.atlanta.kabletown.net',
 			tcp_port         => 80,
@@ -228,10 +228,10 @@ my %definition_for = (
 			phys_location    => 1,
 		},
 	},
+	## id => 7
 	server_mid2 => {
 		new   => 'Server',
 		using => {
-			id               => 8,
 			host_name        => 'atlanta-mid-02',
 			domain_name      => 'ga.atlanta.kabletown.net',
 			tcp_port         => 80,
@@ -263,10 +263,10 @@ my %definition_for = (
 			phys_location    => 2,
 		},
 	},
+	## id => 8
 	riak_server2 => {
 		new   => 'Server',
 		using => {
-			id               => 9,
 			host_name        => 'riak02',
 			domain_name      => 'kabletown.net',
 			tcp_port         => 8088,
@@ -290,18 +290,18 @@ my %definition_for = (
 			ilo_password     => '',
 			router_host_name => '',
 			router_port_name => '',
-			type             => 31,
+			type             => 22,
 			status           => 2,
-			profile          => 5,
+			profile          => 4,
 			cdn_id           => 1,
 			cachegroup       => 1,
 			phys_location    => 2,
 		},
 	},
+	## id => 9
 	influxdb_server1 => {
 		new   => 'Server',
 		using => {
-			id               => 10,
 			host_name        => 'influxdb01',
 			domain_name      => 'kabletown.net',
 			tcp_port         => 8086,
@@ -325,18 +325,18 @@ my %definition_for = (
 			ilo_password     => '',
 			router_host_name => '',
 			router_port_name => '',
-			type             => 32,
+			type             => 23,
 			status           => 2,
-			profile          => 5,
+			profile          => 4,
 			cdn_id           => 1,
 			cachegroup       => 1,
 			phys_location    => 3,
 		},
 	},
+	## id => 10
 	influxdb_server2 => {
 		new   => 'Server',
 		using => {
-			id               => 11,
 			host_name        => 'influxdb02',
 			domain_name      => 'kabletown.net',
 			tcp_port         => 8086,
@@ -360,18 +360,18 @@ my %definition_for = (
 			ilo_password     => '',
 			router_host_name => '',
 			router_port_name => '',
-			type             => 32,
+			type             => 23,
 			status           => 2,
-			profile          => 5,
+			profile          => 4,
 			cdn_id           => 1,
 			cachegroup       => 1,
 			phys_location    => 3,
 		},
 	},
+	## id => 11
 	server_router => {
 		new   => 'Server',
 		using => {
-			id               => 12,
 			host_name        => 'atlanta-router-01',
 			domain_name      => 'ga.atlanta.kabletown.net',
 			tcp_port         => 80,
@@ -403,10 +403,10 @@ my %definition_for = (
 			phys_location    => 1,
 		},
 	},
+	## id => 12
 	server_edge_reported => {
 		new   => 'Server',
 		using => {
-			id               => 13,
 			host_name        => 'atlanta-edge-03',
 			domain_name      => 'ga.atlanta.kabletown.net',
 			tcp_port         => 80,
