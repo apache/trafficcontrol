@@ -59,9 +59,9 @@ ok $t->get_ok('/api/1.2/deliveryserviceserver.json')
      ->json_is( "/response/1/deliveryService" => "1" )
      ->json_is( "/response/1/server" => "2" )
      ->json_is( "/response/2/deliveryService" => "1" )
-     ->json_is( "/response/2/server" => "7" )
+     ->json_is( "/response/2/server" => "3" )
             , 'Does the delivery services servers details return?';
- 
+
 ok $t->get_ok('/logout')->status_is(302)->or( sub { diag $t->tx->res->content->asset->{content}; } );
 $dbh->disconnect();
 done_testing();
