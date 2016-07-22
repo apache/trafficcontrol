@@ -34,6 +34,94 @@ my %definition_for = (
 			set_number      => 0,
 		},
 	},
+	target_r1_filter => {
+		new   => 'DeliveryserviceRegex',
+		using => {
+			deliveryservice => 4,
+			regex           => 1,
+			set_number      => 0,
+		},
+	},
+	target_r2_filter => {
+		new   => 'DeliveryserviceRegex',
+		using => {
+			deliveryservice => 4,
+			regex           => 2,
+			set_number      => 0,
+		},
+	},
+	target_r3_filter => {
+		new   => 'DeliveryserviceRegex',
+		using => {
+			deliveryservice => 6,
+			regex           => 4,
+			set_number      => 0,
+		},
+	},
+	target_r4_filter => {
+		new   => 'DeliveryserviceRegex',
+		using => {
+			deliveryservice => 7,
+			regex           => 3,
+			set_number      => 0,
+		},
+	},
+	steering_1 => {
+		new   => 'DeliveryserviceRegex',
+		using => {
+			deliveryservice => 1,
+			regex           => 8,
+			set_number      => 0,
+		},
+	},
+	steering_2 => {
+		new   => 'DeliveryserviceRegex',
+		using => {
+			deliveryservice => 2,
+			regex           => 9,
+			set_number      => 0,
+		},
+	},
+	target_1 => {
+		new   => 'DeliveryserviceRegex',
+		using => {
+			deliveryservice => 4,
+			regex           => 10,
+			set_number      => 0,
+		},
+	},
+	target_2 => {
+		new   => 'DeliveryserviceRegex',
+		using => {
+			deliveryservice => 5,
+			regex           => 11,
+			set_number      => 0,
+		},
+	},
+	target_3 => {
+		new   => 'DeliveryserviceRegex',
+		using => {
+			deliveryservice => 6,
+			regex           => 12,
+			set_number      => 0,
+		},
+	},
+		target_4 => {
+		new   => 'DeliveryserviceRegex',
+		using => {
+			deliveryservice => 7,
+			regex           => 13,
+			set_number      => 0,
+		},
+	},
+	new_steering => {
+		new   => 'DeliveryserviceRegex',
+		using => {
+			deliveryservice => 3,
+			regex           => 6,
+			set_number      => 0,
+		},
+	}
 );
 
 sub get_definition {

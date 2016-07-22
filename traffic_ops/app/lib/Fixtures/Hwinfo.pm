@@ -24,19 +24,19 @@ my %definition_for = (
 		new   => 'Hwinfo',
 		using => {
 			serverid    => 2,
-			description => 'DRAC FIRMWA',
-			val         => '1.0.0.29',
+			description => 'BACKPLANE FIRMWA',
+			val         => '7.0.0.29',
 		},
 	},
 	## id => 2
 	hw2 => {
 		new   => 'Hwinfo',
 		using => {
-			serverid    => 1,
-			description => 'BACKPLANE FIRMWA',
-			val         => '7.0.0.29',
+			serverid    => 4,
+			description => 'DRAC FIRMWA',
+			val         => '1.0.0.29',
 		},
-	},
+	}
 );
 
 sub get_definition {

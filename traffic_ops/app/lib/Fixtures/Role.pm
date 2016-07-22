@@ -20,21 +20,21 @@ use Digest::SHA1 qw(sha1_hex);
 
 my %definition_for = (
 	## id => 1
+	admin => {
+		new   => 'Role',
+		using => {
+			name        => 'admin',
+			description => 'super-user',
+			priv_level  => 30,
+		},
+	},
+	## id => 2
 	disallowed => {
 		new   => 'Role',
 		using => {
 			name        => 'disallowed',
 			description => 'block all access',
 			priv_level  => 0,
-		},
-	},
-	## id => 2
-	read_only => {
-		new   => 'Role',
-		using => {
-			name        => 'read-only user',
-			description => 'block all access',
-			priv_level  => 10,
 		},
 	},
 	## id => 3
@@ -47,24 +47,6 @@ my %definition_for = (
 		},
 	},
 	## id => 4
-	operations => {
-		new   => 'Role',
-		using => {
-			name        => 'operations',
-			description => 'block all access',
-			priv_level  => 20,
-		},
-	},
-	## id => 5
-	admin => {
-		new   => 'Role',
-		using => {
-			name        => 'admin',
-			description => 'super-user',
-			priv_level  => 30,
-		},
-	},
-	## id => 6
 	migrations => {
 		new   => 'Role',
 		using => {
@@ -73,13 +55,31 @@ my %definition_for = (
 			priv_level  => 20,
 		},
 	},
-	## id => 7
+	## id => 5
+	operations => {
+		new   => 'Role',
+		using => {
+			name        => 'operations',
+			description => 'block all access',
+			priv_level  => 20,
+		},
+	},
+	## id => 6
 	portal => {
 		new   => 'Role',
 		using => {
 			name        => 'portal',
 			description => 'Portal User',
 			priv_level  => 2,
+		},
+	},
+	## id => 7
+	read_only => {
+		new   => 'Role',
+		using => {
+			name        => 'read-only user',
+			description => 'block all access',
+			priv_level  => 10,
 		},
 	},
 	## id => 8
@@ -99,7 +99,8 @@ sub get_definition {
 }
 
 sub all_fixture_names {
-	return keys %definition_for;
+	# sort by db name to guarantee insertion order
+	return (sort { $definition_for{$a}{using}{name} cmp $definition_for{$b}{using}{name} } keys %definition_for);
 }
 
 __PACKAGE__->meta->make_immutable;

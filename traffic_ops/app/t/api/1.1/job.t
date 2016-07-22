@@ -45,19 +45,15 @@ my $t      = Test::Mojo->new('TrafficOps');
 Test::TestHelper->unload_core_data($schema);
 Test::TestHelper->load_core_data($schema);
 
-Test::TestHelper->teardown( $schema, 'DeliveryserviceTmuser' );
-my $deliveryservice_tmuser = Fixtures::DeliveryserviceTmuser->new( { schema => $schema, no_transactions => 1 } );
-Test::TestHelper->load_all_fixtures($deliveryservice_tmuser);
-
-Test::TestHelper->teardown( $schema, 'JobStatus' );
 Test::TestHelper->teardown( $schema, 'JobAgent' );
-Test::TestHelper->teardown( $schema, 'Job' );
 my $jobagent = Fixtures::JobAgent->new( { schema => $schema, no_transactions => 1 } );
 Test::TestHelper->load_all_fixtures($jobagent);
 
+Test::TestHelper->teardown( $schema, 'JobStatus' );
 my $jobstatus = Fixtures::JobStatus->new( { schema => $schema, no_transactions => 1 } );
 Test::TestHelper->load_all_fixtures($jobstatus);
 
+Test::TestHelper->teardown( $schema, 'Job' );
 my $jobs = Fixtures::Job->new( { schema => $schema, no_transactions => 1 } );
 Test::TestHelper->load_all_fixtures($jobs);
 
