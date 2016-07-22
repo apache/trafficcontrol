@@ -27,7 +27,7 @@ my %definition_for = (
 		new   => 'FederationResolver',
 		using => {
 			ip_address => "127.0.0.1/32",
-			type       => 33,
+			type       => 24,
 		},
 	},
 	## id => 2
@@ -35,7 +35,7 @@ my %definition_for = (
 		new   => 'FederationResolver',
 		using => {
 			ip_address => "127.0.0.2/32",
-			type       => 33,
+			type       => 24,
 		},
 	},
 	## id => 3
@@ -43,7 +43,7 @@ my %definition_for = (
 		new   => 'FederationResolver',
 		using => {
 			ip_address => "FE80::0202:B3FF:FE1E:8329/128",
-			type       => 34,
+			type       => 25,
 		},
 	},
 	## id => 4
@@ -51,7 +51,7 @@ my %definition_for = (
 		new   => 'FederationResolver',
 		using => {
 			ip_address => "FE80::0202:B3FF:FE1E:8330/128",
-			type       => 34,
+			type       => 25,
 		},
 	},
 );
