@@ -24,9 +24,9 @@ my %definition_for = (
 		using => {
 			host            => 'A_RECORD_HOST',
 			address         => '127.0.0.1',
-			type            => 21,
+			type            => 1,
 			deliveryservice => 1,
-			cachegroup      => 1,
+			cachegroup      => 3,
 		},
 	},
 	## id => 2
@@ -37,7 +37,7 @@ my %definition_for = (
 			address         => '127.0.0.1',
 			deliveryservice => 1,
 			cachegroup      => 1,
-			type            => 22,
+			type            => 1,
 		},
 	},
 	## id => 3
@@ -47,7 +47,7 @@ my %definition_for = (
 			host            => 'CNAME_HOST',
 			address         => '127.0.0.1',
 			deliveryservice => 2,
-			type            => 23,
+			type            => 6,
 			cachegroup      => 2,
 		},
 	},
@@ -59,7 +59,8 @@ sub get_definition {
 }
 
 sub all_fixture_names {
-	return keys %definition_for;
+	# sort by db host to guarantee insertion order
+	return (sort { $definition_for{$a}{using}{host} cmp $definition_for{$b}{using}{host} } keys %definition_for);
 }
 
 __PACKAGE__->meta->make_immutable;
