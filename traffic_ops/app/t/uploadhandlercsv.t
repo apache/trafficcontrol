@@ -38,7 +38,7 @@ Test::TestHelper->load_core_data($schema);
 ok $t->post_ok( '/login', => form => { u => Test::TestHelper::ADMIN_USER, p => Test::TestHelper::ADMIN_USER_PASSWORD } )->status_is(302)
 	->or( sub { diag $t->tx->res->content->asset->{content}; } );
 
-my $q           = 'select * from server where type = 2 limit 1';
+my $q           = 'select * from server where type = 18 limit 1';
 my $get_servers = $dbh->prepare($q);
 $get_servers->execute();
 my $svr = $get_servers->fetchall_arrayref( {} );
