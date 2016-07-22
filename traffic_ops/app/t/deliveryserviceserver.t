@@ -50,7 +50,7 @@ ok $t->post_ok(
 )->status_is(302), "create deliveryservice_server";
 
 # validate ds_server was created
-ok $t->get_ok('/datadeliveryserviceserver')->status_is(200)->json_is( '/1/deliveryservice' => 'test-ds1' )->json_is( '/1/server' => '2' ),
+ok $t->get_ok('/datadeliveryserviceserver')->status_is(200)->json_is( '/1/deliveryservice' => 'steering-ds1' )->json_is( '/1/server' => '2' ),
 	"validate deliveryservice_server was added";
 
 # validate edit route
@@ -74,7 +74,7 @@ ok $t->post_ok(
 )->status_is(302), "clone server";
 
 #validate clone
-ok $t->get_ok('/datadeliveryserviceserver')->status_is(200)->json_is( '/1/deliveryservice' => 'test-ds2' )->json_is( '/1/server' => '2' ),
+ok $t->get_ok('/datadeliveryserviceserver')->status_is(200)->json_is( '/1/deliveryservice' => 'steering-ds2' )->json_is( '/1/server' => '2' ),
 	"validate deliveryservice was cloned";
 
 #validate cp dss view
