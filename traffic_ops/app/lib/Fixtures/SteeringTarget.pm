@@ -30,32 +30,32 @@ my %definition_for = (
     steering_target_1 => {
         new => 'SteeringTarget',
         using => {
-            deliveryservice => 10001,
-            target => 20001,
+            deliveryservice => 1,
+            target => 4,
             weight => 1000,
         }
     },
     steering_target_2 => {
         new => 'SteeringTarget',
         using => {
-            deliveryservice => 10001,
-            target => 20002,
+            deliveryservice => 1,
+            target => 5,
             weight => 7654,
         }
     },
     steering_target_3 => {
         new => 'SteeringTarget',
         using => {
-            deliveryservice => 10002,
-            target => 20003,
+            deliveryservice => 2,
+            target => 6,
             weight => 123,
         }
     },
     steering_target_4 => {
         new => 'SteeringTarget',
         using => {
-            deliveryservice => 10002,
-            target => 20004,
+            deliveryservice => 2,
+            target => 7,
             weight => 999,
         }
     },
@@ -67,7 +67,8 @@ sub get_definition {
 }
 
 sub all_fixture_names {
-    return keys %definition_for;
+	# sort by db deliveryservice to guarantee insertion order
+	return (sort { $definition_for{$a}{using}{deliveryservice} cmp $definition_for{$b}{using}{deliveryservice} } keys %definition_for);
 }
 
 __PACKAGE__->meta->make_immutable;

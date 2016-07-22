@@ -30,16 +30,12 @@ BEGIN { $ENV{MOJO_MODE} = "test" }
 
 my $schema = Schema->connect_to_database;
 my $t      = Test::Mojo->new('TrafficOps');
+
+#unload data for a clean test
 Test::TestHelper->unload_core_data($schema);
 
-my $fixtures = Fixtures::TmUser->new( { schema => $schema, no_transactions => 1 } );
-Test::TestHelper->teardown( $schema, 'Log' );
-Test::TestHelper->teardown( $schema, 'Role' );
-Test::TestHelper->teardown( $schema, 'TmUser' );
-
-Test::TestHelper->load_all_fixtures( Fixtures::Role->new( { schema => $schema, no_transactions => 1 } ) );
-
-ok my $admin_fixture = $fixtures->load('admin'), 'Does the admin user load?';
+#load core test data
+Test::TestHelper->load_core_data($schema);
 
 ok $t->post_ok( '/login', => form => { u => Test::TestHelper::ADMIN_USER, p => Test::TestHelper::ADMIN_USER_PASSWORD } )->status_is(302)
 	->or( sub { diag $t->tx->res->content->asset->{content}; } );
@@ -54,12 +50,12 @@ ok $t->post_ok(
 		'tm_user.email'                => 'email@email.com',
 		'tm_user.local_passwd'         => 'password',
 		'tm_user.confirm_local_passwd' => 'password',
-		'tm_user.role'                 => 4,
+		'tm_user.role'                 => 1,
 		'tm_user.company'              => 'ABC Company',
 	}
 )->status_is(302)->or( sub { diag $t->tx->res->content->asset->{content}; } ), 'Can a user be created?';
 
-ok $t->get_ok('/datauser')->status_is(200)->json_is( '/0/username', 'admin' )->json_is( '/0/role', 4 ), 'Does the admin username exist?';
+ok $t->get_ok('/datauser')->status_is(200)->json_is( '/0/username', 'admin' )->json_is( '/0/role', 1 ), 'Does the admin username exist?';
 
 ok $t->get_ok('/datauser/orderby/role')->status_is(200)->json_has('/0/rolename')->json_has('/0/username')->json_has('/0/id')->json_has('/0/role'),
 	'Does the user sort by role?';

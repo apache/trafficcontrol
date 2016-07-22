@@ -39,7 +39,7 @@ ok $t->post_ok( '/login', => form => { u => Test::TestHelper::ADMIN_USER, p => T
 	->or( sub { diag $t->tx->res->content->asset->{content}; } );
 
 $t->get_ok('/api/1.1/roles.json?orderby=name')->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } )
-	->json_is( "/response/0/id", "4" )->json_is( "/response/0/description", "super-user" )->json_is( "/response/0/name", "admin" )
+	->json_is( "/response/0/id", "1" )->json_is( "/response/0/description", "super-user" )->json_is( "/response/0/name", "admin" )
 	->json_is( "/response/0/privLevel", "30" )->json_is( "/response/6/description", "block all access" )->json_is( "/response/6/name", "read-only user" )
 	->json_is( "/response/6/privLevel", "10" );
 

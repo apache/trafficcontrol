@@ -19,19 +19,19 @@ use namespace::autoclean;
 
 my %definition_for = (
 	## id => 1
-	EDGE1 => {
-		new   => 'Profile',
-		using => {
-			name        => 'EDGE1',
-			description => 'edge description',
-		},
-	},
-	## id => 2
 	CCR1 => {
 		new   => 'Profile',
 		using => {
 			name        => 'CCR1',
 			description => 'ccr description',
+		},
+	},
+	## id => 2
+	EDGE1 => {
+		new   => 'Profile',
+		using => {
+			name        => 'EDGE1',
+			description => 'edge description',
 		},
 	},
 	## id => 3

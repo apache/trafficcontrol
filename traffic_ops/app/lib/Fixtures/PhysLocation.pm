@@ -19,23 +19,6 @@ use namespace::autoclean;
 
 my %definition_for = (
 	## id => 1
-	denver => {
-		new   => 'PhysLocation',
-		using => {
-			name       => 'Denver',
-			short_name => 'denver',
-			address    => '1234 mile high circle',
-			city       => 'Denver',
-			state      => 'CO',
-			zip        => '80202',
-			poc        => undef,
-			phone      => '303-111-1111',
-			email      => undef,
-			comments   => undef,
-			region     => 1,
-		},
-	},
-	## id => 2
 	boulder => {
 		new   => 'PhysLocation',
 		using => {
@@ -47,6 +30,23 @@ my %definition_for = (
 			zip        => '80301',
 			poc        => undef,
 			phone      => '303-222-2222',
+			email      => undef,
+			comments   => undef,
+			region     => 1,
+		},
+	},
+	## id => 2
+	denver => {
+		new   => 'PhysLocation',
+		using => {
+			name       => 'Denver',
+			short_name => 'denver',
+			address    => '1234 mile high circle',
+			city       => 'Denver',
+			state      => 'CO',
+			zip        => '80202',
+			poc        => undef,
+			phone      => '303-111-1111',
 			email      => undef,
 			comments   => undef,
 			region     => 1,
@@ -77,7 +77,8 @@ sub get_definition {
 }
 
 sub all_fixture_names {
-	return keys %definition_for;
+	# sort by db name to guarantee insertion order
+	return (sort { $definition_for{$a}{using}{name} cmp $definition_for{$b}{using}{name} } keys %definition_for);
 }
 
 __PACKAGE__->meta->make_immutable;
