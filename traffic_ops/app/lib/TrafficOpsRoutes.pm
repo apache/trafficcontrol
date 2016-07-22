@@ -91,7 +91,7 @@ sub ui_routes {
 
 	# Cdn - Special JSON format for datatables widget
 	$r->get('/aadata/:table')->over( authenticated => 1 )->to( 'Cdn#aadata', namespace => $namespace );
-	$r->get('/aadata/:table/:filter/:value')->over( authenticated => 1 )->to( 'Cdn#aadata', namespace => $namespace );
+	$r->get('/aadata/:table/:filter/#value')->over( authenticated => 1 )->to( 'Cdn#aadata', namespace => $namespace );
 
 	# -- Changelog
 	$r->get('/log')->over( authenticated => 1 )->to( 'ChangeLog#changelog', namespace => $namespace );
@@ -254,7 +254,7 @@ sub ui_routes {
 	$r->get('/parameter/:id/delete')->over( authenticated => 1 )->to( 'Parameter#delete', namespace => $namespace );
 	$r->post('/parameter/:id/update')->over( authenticated => 1 )->to( 'Parameter#update', namespace => $namespace );
 	$r->get('/parameters')->over( authenticated => 1 )->to( 'Parameter#index', namespace => $namespace );
-	$r->get('/parameters/:filter/:byvalue')->over( authenticated => 1 )->to( 'Parameter#index', namespace => $namespace );
+	$r->get('/parameters/:filter/#byvalue')->over( authenticated => 1 )->to( 'Parameter#index', namespace => $namespace );
 	$r->get('/parameter/add')->over( authenticated => 1 )->to( 'Parameter#add', namespace => $namespace );
 	$r->route('/parameter/:id')->via('GET')->over( authenticated => 1 )->to( 'Parameter#view', namespace => $namespace );
 
@@ -603,6 +603,10 @@ sub api_routes {
 
 	#checks expiration of keys and re-generates if necessary.  Used by Cron.
 	$r->get( "/internal/api/$version/cdns/dnsseckeys/refresh" => [ format => [qw(json)] ] )->to( 'Cdn#dnssec_keys_refresh', namespace => $namespace );
+
+	#-- CDN:  SSL Keys
+	$r->get( "/api/$version/cdns/name/:name/sslkeys" => [ format => [qw(json)] ] )->over( authenticated => 1 )
+		->to( 'Cdn#ssl_keys', namespace => $namespace );
 
 	# -- CDN: Topology
 	$r->get( "/api/$version/cdns/configs" => [ format => [qw(json)] ] )->via('GET')->over( authenticated => 1 )

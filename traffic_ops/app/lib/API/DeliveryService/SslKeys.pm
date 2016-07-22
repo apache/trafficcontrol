@@ -34,15 +34,27 @@ sub add {
 	my $crt      = $self->req->json->{certificate}->{crt};
 	my $csr      = $self->req->json->{certificate}->{csr};
 	my $priv_key = $self->req->json->{certificate}->{key};
+	my $hostname = $self->req->json->{hostname};
+	my $cdn = $self->req->json->{cdn};
+	my $deliveryservice = $self->req->json->{deliveryservice};
 
 	if ( !&is_admin($self) ) {
-		$self->alert( { Error => " - You must be an ADMIN to perform this operation!" } );
+		return $self->alert( { Error => " - You must be an ADMIN to perform this operation!" } );
 	}
+	my $record = {
+		key => $key,
+		version => $version,
+		hostname => $hostname,
+		cdn => $cdn,
+		deliveryservice => $deliveryservice,
+		certificate => {
+			crt => $crt,
+			csr => $csr,
+			key => $priv_key
+		}
+	};
 
-	else {
-
-	}
-	my $response_container = $self->add_ssl_keys_to_riak( $key, $version, $crt, $csr, $priv_key );
+	my $response_container = $self->add_ssl_keys_to_riak( $record );
 	my $response = $response_container->{"response"};
 	if ( $response->is_success() ) {
 		&log( $self, "Added ssl keys for Delivery Service $key", "APICHANGE" );
@@ -53,7 +65,7 @@ sub add {
 	}
 }
 
-#named like this cause there is a plugin called generate_ssl_keys
+#named like this because there is a plugin called generate_ssl_keys in Mojoplugins/SslKeys.pm
 sub generate {
 	my $self         = shift;
 	my $key_type     = "ssl";
@@ -65,22 +77,36 @@ sub generate {
 	my $city         = $self->req->json->{city};
 	my $org          = $self->req->json->{organization};
 	my $unit         = $self->req->json->{businessUnit};
+	my $cdn = $self->req->json->{cdn};
+	my $deliveryservice = $self->req->json->{deliveryservice};
 	my $tmp_location = "/var/tmp";
 
 	if ( !&is_admin($self) ) {
-		$self->alert( { Error => " - You must be an ADMIN to perform this operation!" } );
+		return $self->alert( { Error => " - You must be an ADMIN to perform this operation!" } );
+	}
+
+	#generate the cert:
+	my $record = {
+		key => $key,
+		version => $version,
+		hostname => $hostname,
+		country => $country,
+		city => $city,
+		state => $state,
+		org => $org,
+		unit => $unit,
+		cdn => $cdn,
+		deliveryservice => $deliveryservice,
+	};
+
+	my $response_container = $self->generate_ssl_keys( $record );
+	my $response = $response_container->{"response"};
+	if ( $response->is_success() ) {
+		&log( $self, "Created ssl keys for Delivery Service $key", "APICHANGE" );
+		return $self->success("Successfully created ssl keys for $key");
 	}
 	else {
-		#generate the cert:
-		my $response_container = $self->generate_ssl_keys( $hostname, $country, $city, $state, $org, $unit, $version, $key );
-		my $response = $response_container->{"response"};
-		if ( $response->is_success() ) {
-			&log( $self, "Created ssl keys for Delivery Service $key", "APICHANGE" );
-			return $self->success("Successfully created ssl keys for $key");
-		}
-		else {
-			return $self->alert( $response->{_content} );
-		}
+		return $self->alert( $response->{_content} );
 	}
 }
 
@@ -89,7 +115,7 @@ sub view_by_xml_id {
 	my $key     = $self->param('xmlid');
 	my $version = $self->param('version');
 	if ( !&is_admin($self) ) {
-		$self->alert( { Error => " - You must be an ADMIN to perform this operation!" } );
+		return $self->alert( { Error => " - You must be an ADMIN to perform this operation!" } );
 	}
 	else {
 		if ( !$version ) {
@@ -173,7 +199,7 @@ sub delete {
 	my $response_container;
 	my $response;
 	if ( !&is_admin($self) ) {
-		$self->alert( { Error => " - You must be an ADMIN to perform this operation!" } );
+		return $self->alert( { Error => " - You must be an ADMIN to perform this operation!" } );
 	}
 	else {
 		if ($version) {

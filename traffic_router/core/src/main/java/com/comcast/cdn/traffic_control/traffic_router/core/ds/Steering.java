@@ -54,7 +54,7 @@ public class Steering {
 	}
 
 	public String getBypassDestination(final String requestPath) {
-		for (SteeringFilter filter : filters) {
+		for (final SteeringFilter filter : filters) {
 			if (filter.matches(requestPath) && hasTarget(filter.getDeliveryService())) {
 				return filter.getDeliveryService();
 			}
@@ -64,7 +64,7 @@ public class Steering {
 	}
 
 	public boolean hasTarget(final String deliveryService) {
-		for (SteeringTarget target : targets) {
+		for (final SteeringTarget target : targets) {
 			if (deliveryService.equals(target.getDeliveryService())) {
 				return true;
 			}

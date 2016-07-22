@@ -54,7 +54,7 @@ public class LanguidState {
 
 		final JSONObject routers = tr.getCacheRegister().getTrafficRouters();
 
-		for (String key : JSONObject.getNames(routers)) {
+		for (final String key : JSONObject.getNames(routers)) {
 			final JSONObject routerJson = routers.optJSONObject(key);
 
 			if (hostname.equalsIgnoreCase(key)) { // this is us

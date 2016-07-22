@@ -68,7 +68,7 @@ public class DNSAccessEventBuilder {
 
         final String addressString = dnsAccessRecord.getClient().getHostAddress();
 
-        final StringBuilder stringBuilder = new StringBuilder(timeString).append(" qtype=DNS").append(" chi=").append(addressString).append(" ttms=").append(String.format("%.03f", ttms));
+        final StringBuilder stringBuilder = new StringBuilder(timeString).append(" qtype=DNS chi=").append(addressString).append(" ttms=").append(String.format("%.03f", ttms));
 
         if (dnsAccessRecord.getDnsMessage() == null) {
             return stringBuilder.append(" xn=- fqdn=- type=- class=- rcode=-").toString();

@@ -171,7 +171,7 @@ public class DeliveryService {
 			boolean match = true;
 			try {
 				final JSONObject constraint = geoEnabled.optJSONObject(i);
-				for(String t : JSONObject.getNames(constraint)) {
+				for (final String t : JSONObject.getNames(constraint)) {
 					final String v = constraint.getString(t);
 					final String data = locData.get(t);
 					if(!v.equalsIgnoreCase(data)) {
@@ -233,19 +233,19 @@ public class DeliveryService {
 		uri.append(fqdn);
 
 		if (port != STANDARD_HTTP_PORT) {
-			uri.append(":").append(port);
+			uri.append(':').append(port);
 		}
 		uri.append(request.getUri());
 		boolean queryAppended = false;
 		if (request.getQueryString() != null && appendQueryString()) {
-			uri.append("?").append(request.getQueryString());
+			uri.append('?').append(request.getQueryString());
 			queryAppended = true;
 		}
 		if(tinfo != null) {
 			if(queryAppended) {
-				uri.append("&");
+				uri.append('&');
 			} else {
-				uri.append("?");
+				uri.append('?');
 			}
 			uri.append(tinfo);
 		}
@@ -262,7 +262,7 @@ public class DeliveryService {
 		uri.append(fqdn);
 
 		if (cache.getPort() != STANDARD_HTTP_PORT) {
-			uri.append(":").append(cache.getPort());
+			uri.append(':').append(cache.getPort());
 		}
 
 		uri.append(alternatePath);
@@ -509,7 +509,7 @@ public class DeliveryService {
 
 	private void setResponseHeaders(final JSONObject jo) throws JSONException {
 		if (jo != null) {
-			for (String key : JSONObject.getNames(jo)) {
+			for (final String key : JSONObject.getNames(jo)) {
 				responseHeaders.put(key, jo.getString(key));
 			}
 		}
@@ -540,7 +540,7 @@ public class DeliveryService {
 	public List<CacheLocation> filterAvailableLocations(final Collection<CacheLocation> cacheLocations) {
 		final List<CacheLocation> locations = new ArrayList<CacheLocation>();
 
-		for (CacheLocation cl : cacheLocations) {
+		for (final CacheLocation cl : cacheLocations) {
 			if (isLocationAvailable(cl)) {
 				locations.add(cl);
 			}

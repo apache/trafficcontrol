@@ -289,7 +289,7 @@ public abstract class AbstractServiceUpdater {
 			existingDB.setWritable(true, false);
 
 			if (existingDB.isDirectory()) {
-				for (File file : existingDB.listFiles()) {
+				for (final File file : existingDB.listFiles()) {
 					file.delete();
 				}
 				LOGGER.debug("[" + getClass().getSimpleName() + "] Successfully deleted database under: " + existingDB);
@@ -314,7 +314,7 @@ public abstract class AbstractServiceUpdater {
 	private void moveDirectory(final File existingDB, final File newDB) throws IOException {
 		LOGGER.info("[" + getClass().getSimpleName() + "] Moving Location database from: " + newDB + ", to: " + existingDB);
 
-		for (File file : existingDB.listFiles()) {
+		for (final File file : existingDB.listFiles()) {
 			file.setReadable(true, true);
 			file.setWritable(true, false);
 			file.delete();

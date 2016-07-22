@@ -1261,8 +1261,8 @@ sub regex_revalidate_dot_config {
 	my $interval = "> now() - interval '$max_days day'";    # postgres
 
 	my %regex_time;
-	$max_days =
-		$self->db->resultset('Parameter')->search( { name => "ttl_max_hours" }, { config_file => "regex_revalidate.config" } )->get_column('value')->first;
+	my $max_days =
+		$self->db->resultset('Parameter')->search( { name => "maxRevalDurationDays" }, { config_file => "regex_revalidate.config" } )->get_column('value')->first;
 	my $max_hours = $max_days * 24;
 	my $min_hours = 1;
 

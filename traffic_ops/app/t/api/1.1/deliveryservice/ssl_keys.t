@@ -89,7 +89,9 @@ my $ssl_keys = {
 	country      => $country,
 	organization => $org,
 	city         => $city,
-	state        => $state
+	state        => $state,
+	cdn 		 => "cdn1",
+	deliveryservice => $key
 };
 
 my $fake_lwp = new Test::MockModule( 'LWP::UserAgent', no_auto => 1 );
@@ -163,18 +165,28 @@ ok $t->get_ok("/api/1.1/deliveryservices/xmlId/$key/sslkeys/delete.json")->json_
 ok $t->post_ok(
 	'/api/1.1/deliveryservices/sslkeys/add',
 	json => {
-		key         => "ssl-add-key",
+		key         => $key,
 		version     => $version,
 		certificate => {
 			csr => "csr",
 			crt => "crt",
 			key => "private key"
-		}
+		},
+		deliveryservice => $key,
+		cdn => "foo",
+		hostname => "foober.com"
 	}
-	)->status_is(200)->json_is( "/response" => "Successfully added ssl keys for ssl-add-key" )
-
-	# ->json_has( "/response" => "Successfully created " )
+	)->status_is(200)->json_is( "/response" => "Successfully added ssl keys for $key" )
 	->or( sub { diag $t->tx->res->content->asset->{content}; } );
+
+#validate keys were added
+ok $t->get_ok("/api/1.1/deliveryservices/xmlId/$key/sslkeys.json")
+	->json_has("/response")
+	->json_has("/response/certificate/csr")
+	->json_has("/response/certificate/key")
+	->json_has("/response/certificate/crt")
+	->json_is( "/response/hostname" => "foober.com" )
+	->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } );
 
 #NEGATIVE TESTING -- Alert handling
 #key not found

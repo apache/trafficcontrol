@@ -93,7 +93,7 @@ sub register {
 
 				# modify response
 				my $message =
-					"No $server_type servers are set to ONLINE in the database.  Please verify $server_type servers are online and reachable from Traffic Ops.";
+					"No $server_type servers are available.  Please verify $server_type servers are set to ONLINE and are reachable from Traffic Ops.";
 				$response = HTTP::Response->new( 400, undef, HTTP::Headers->new, $message );
 			}
 			return { response => $response, server => $active_server };

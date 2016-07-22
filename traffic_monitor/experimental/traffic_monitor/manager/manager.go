@@ -185,13 +185,26 @@ func Start(opsConfigFile string, staticAppData StaticAppData) {
 
 			switch req.T {
 			case http_server.TR_CONFIG:
-				if toSession != nil && opsConfig.CdnName != "" {
+				if toSession == nil {
+					err = fmt.Errorf("Unable to connect to Traffic Ops")
+				} else if opsConfig.CdnName == "" {
+					err = fmt.Errorf("No CDN Configured")
+				} else {
 					body, err = toSession.CRConfigRaw(opsConfig.CdnName)
+				}
+				if err != nil {
+					err = fmt.Errorf("TR Config: %v", err)
 				}
 			case http_server.TR_STATE_DERIVED:
 				body, err = peer.CrStatesMarshall(combinedStates)
+				if err != nil {
+					err = fmt.Errorf("TR State (derived): %v", err)
+				}
 			case http_server.TR_STATE_SELF:
 				body, err = peer.CrStatesMarshall(localStates)
+				if err != nil {
+					err = fmt.Errorf("TR State (self): %v", err)
+				}
 			case http_server.CACHE_STATS:
 				// TODO: add support for ?hc=N query param, stats=, wildcard, individual caches
 				// add pp and date to the json:
@@ -208,28 +221,27 @@ func Start(opsConfigFile string, staticAppData StaticAppData) {
 					}
 				}
 				body, err = cache.StatsMarshall(statHistory, hc)
-			case http_server.DS_STATS:
-				b, err := json.Marshal(deliveryservicestats.DsStatsJSON(dsStats))
 				if err != nil {
-					// TODO send error to client
-					errorCount++
-					log.Printf("ERROR getting ds stats %v\n", err)
-					continue
+					err = fmt.Errorf("CacheStats: %v", err)
 				}
-				body = b
+			case http_server.DS_STATS:
+				body, err = json.Marshal(deliveryservicestats.DsStatsJSON(dsStats)) // TODO marshall beforehand, for performance? (test to see how often requests are made)
+				if err != nil {
+					err = fmt.Errorf("DsStats: %v", err)
+				}
 			case http_server.EVENT_LOG:
 				body, err = json.Marshal(JSONEvents{Events: events})
+				if err != nil {
+					err = fmt.Errorf("EventLog: %v", err)
+				}
 			case http_server.PEER_STATES:
-				body = []byte("TODO implement")
+				body, err = json.Marshal(createApiPeerStates(peerStates))
 			case http_server.STAT_SUMMARY:
 				body = []byte("TODO implement")
 			case http_server.STATS:
 				body, err = getStats(staticAppData, cacheHealthPoller.Config.Interval, lastHealthDurations, fetchCount, healthIteration, errorCount)
 				if err != nil {
-					// TODO send error to client
-					errorCount++
-					log.Printf("ERROR getting stats %v\n", err)
-					continue
+					err = fmt.Errorf("Stats: %v", err)
 				}
 			case http_server.CONFIG_DOC:
 				opsConfigCopy := opsConfig
@@ -238,10 +250,19 @@ func Start(opsConfigFile string, staticAppData StaticAppData) {
 					opsConfigCopy.Password = "*****"
 				}
 				body, err = json.Marshal(opsConfigCopy)
+				if err != nil {
+					err = fmt.Errorf("Config Doc: %v", err)
+				}
 			default:
-				body = []byte("TODO error message")
+				err = fmt.Errorf("Unknown Request Type: %v", req.T)
 			}
-			req.C <- body
+
+			if err != nil {
+				errorCount++
+				log.Printf("ERROR Request Error: %v\n", err)
+			} else {
+				req.C <- body
+			}
 		case oc := <-opsConfigFileHandler.OpsConfigChannel:
 			var err error
 			opsConfig = oc
@@ -252,52 +273,50 @@ func Start(opsConfigFile string, staticAppData StaticAppData) {
 				listenAddress = opsConfig.HttpListener
 			}
 
+			handleErr := func(err error) {
+				errorCount++
+				log.Printf("%v\n", err)
+			}
+
 			err = http_server.Run(dr, listenAddress)
 			if err != nil {
-				errorCount++
-				log.Printf("MonitorConfigPoller: error creating HTTP server: %s\n", err)
+				handleErr(fmt.Errorf("MonitorConfigPoller: error creating HTTP server: %s\n", err))
 				continue
 			}
 
 			toSession, err = traffic_ops.Login(opsConfig.Url, opsConfig.Username, opsConfig.Password, opsConfig.Insecure)
 			if err != nil {
-				errorCount++
-				log.Printf("MonitorConfigPoller: error instantiating Session with traffic_ops: %s\n", err)
+				handleErr(fmt.Errorf("MonitorConfigPoller: error instantiating Session with traffic_ops: %s\n", err))
 				continue
 			}
 
 			deliveryServiceServers, serverDeliveryServices, err = getDeliveryServiceServers(toSession, opsConfig.CdnName)
 			if err != nil {
-				errorCount++
-				log.Printf("Error getting delivery service servers from Traffic Ops: %v\n", err)
+				handleErr(fmt.Errorf("Error getting delivery service servers from Traffic Ops: %v\n", err))
 				continue
 			}
 
 			deliveryServiceTypes, err = getDeliveryServiceTypes(toSession, opsConfig.CdnName)
 			if err != nil {
-				errorCount++
-				log.Printf("Error getting delivery service types from Traffic Ops: %v\n", err)
+				handleErr(fmt.Errorf("Error getting delivery service types from Traffic Ops: %v\n", err))
 				continue
 			}
 
 			deliveryServiceRegexes, err = getDeliveryServiceRegexes(toSession, opsConfig.CdnName)
 			if err != nil {
-				errorCount++
-				log.Printf("Error getting delivery service regexes from Traffic Ops: %v\n", err)
+				handleErr(fmt.Errorf("Error getting delivery service regexes from Traffic Ops: %v\n", err))
 				continue
 			}
 
 			serverCachegroups, err = getServerCachegroups(toSession, opsConfig.CdnName)
 			if err != nil {
-				errorCount++
-				log.Printf("Error getting server cachegroups from Traffic Ops: %v\n", err)
+				handleErr(fmt.Errorf("Error getting server cachegroups from Traffic Ops: %v\n", err))
 				continue
 			}
 
 			serverTypes, err = getServerTypes(toSession, opsConfig.CdnName)
 			if err != nil {
-				errorCount++
-				log.Printf("Error getting server types from Traffic Ops: %v\n", err)
+				handleErr(fmt.Errorf("Error getting server types from Traffic Ops: %v\n", err))
 				continue
 			}
 
@@ -418,6 +437,32 @@ func Start(opsConfigFile string, staticAppData StaticAppData) {
 	}
 }
 
+type TrafficMonitorName string
+
+type ApiPeerStates struct {
+	Peers map[TrafficMonitorName]map[deliveryservicestats.CacheName][]CacheState `json:"peers"`
+}
+
+type CacheState struct {
+	Value bool `json:"value"`
+}
+
+func createApiPeerStates(peerStates map[string]peer.Crstates) ApiPeerStates {
+	apiPeerStates := ApiPeerStates{Peers: map[TrafficMonitorName]map[deliveryservicestats.CacheName][]CacheState{}}
+
+	for peer, state := range peerStates {
+		if _, ok := apiPeerStates.Peers[TrafficMonitorName(peer)]; !ok {
+			apiPeerStates.Peers[TrafficMonitorName(peer)] = map[deliveryservicestats.CacheName][]CacheState{}
+		}
+		peerState := apiPeerStates.Peers[TrafficMonitorName(peer)]
+		for cache, available := range state.Caches {
+			peerState[deliveryservicestats.CacheName(cache)] = []CacheState{CacheState{Value: available.IsAvailable}}
+		}
+		apiPeerStates.Peers[TrafficMonitorName(peer)] = peerState
+	}
+	return apiPeerStates
+}
+
 type JSONEvents struct {
 	Events []Event `json:"events"`
 }
@@ -472,7 +517,7 @@ func getStats(staticAppData StaticAppData, pollingInterval time.Duration, lastHe
 	var s Stats
 	s.MaxMemoryMB = memStats.TotalAlloc / (1024 * 1024)
 	s.GitRevision = staticAppData.GitRevision
-	s.ErrorCount = errorCount // TODO implement
+	s.ErrorCount = errorCount
 	s.Uptime = uint64(time.Since(staticAppData.StartTime) / time.Second)
 	s.FreeMemoryMB = staticAppData.FreeMemoryMB
 	s.TotalMemoryMB = memStats.Alloc / (1024 * 1024) // TODO rename to "used memory" if/when nothing is using the JSON entry
