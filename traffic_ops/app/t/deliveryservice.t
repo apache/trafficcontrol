@@ -216,16 +216,9 @@ ok $t->post_ok(
 #Validate create
 # Note the 4 is the index, not the id.
 #This can potentially make the tests fragile if more ds's are added to the fixtures...
-
-ok $t->get_ok('/datadeliveryservice')->
-	status_is(200)->
-	json_is( '/6/dscp' => '40' )
-	->json_is( '/6/active' => '1' )
-	->json_is( '/6/protocol' => '3' )
-	->json_is( '/6/display_name' => 'display name 1' )
-	->json_is( '/6/regional_geo_blocking' => '1' )
-	->json_is( '/0/regional_geo_blocking' => '1' )
-	->json_is( '/1/regional_geo_blocking' => '0' ),
+ok $t->get_ok('/datadeliveryservice')->status_is(200)->json_is( '/4/dscp' => '40' )->json_is( '/4/active' => '1' )->json_is( '/4/protocol' => '1' )
+	->json_is( '/4/display_name' => 'target-ds2-displayname' )->json_is( '/4/regional_geo_blocking' => '1' )->json_is( '/0/regional_geo_blocking' => '1' )
+	->json_is( '/1/regional_geo_blocking' => '1' ),
 	"validate delivery services were created";
 
 $t3_id = &get_ds_id('tst_xml_id_3');
@@ -287,6 +280,7 @@ ok $t->post_ok(
 # Note the 4 is the index, not the id.
 #The delivery service that was updated is always the last one in the list coming back from /datadeliveryservice.
 #This can potentially make the tests fragile if more ds's are added to the fixtures...
+<<<<<<< HEAD
 ok $t->get_ok('/datadeliveryservice')->status_is(200)
   ->or( sub { diag $t->tx->res->content->asset->{content}; } )
   ->json_is( '/8/dscp' => '41' )->json_is( '/8/active' => '0' )
@@ -308,6 +302,18 @@ ok $t->get_ok('/datadeliveryservice')->status_is(200)
   ->json_is( '/8/display_name'          => 'Testing Delivery Service' )
   ->json_is( '/8/regional_geo_blocking' => '1' ),
   "validate delivery service was updated";
+=======
+ok $t->get_ok('/datadeliveryservice')->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } )->json_is( '/6/dscp' => '40' )
+	->json_is( '/6/active' => '1' )->json_is( '/6/profile_description' => 'ccr description' )
+	->json_is( '/6/org_server_fqdn' => 'http://target-ds4.edge' )->json_is( '/6/xml_id' => 'steering-target-ds4' )->json_is( '/6/signed' => '0' )
+	->json_is( '/6/qstring_ignore' => '0' )->json_is( '/6/dns_bypass_ip' => 'hokeypokey' )
+	->json_is( '/6/dns_bypass_ttl' => '10' )->json_is( '/6/ccr_dns_ttl' => 3600 )->json_is( '/6/global_max_mbps' => 0 )
+	->json_is( '/6/global_max_tps' => 0 )->json_is( '/6/miss_lat' => '41.881944' )->json_is( '/6/miss_long' => '-87.627778' )
+	->json_is( '/6/long_desc' => 'target-ds4 long_desc' )->json_is( '/6/long_desc_1' => 'target-ds4 long_desc_1' )->json_is( '/6/long_desc_2' => 'target-ds4 long_desc_2' )
+	->json_is( '/6/info_url' => 'http://target-ds4.edge/info_url.html' )->json_is( '/6/protocol' => '1' )->json_is( '/6/profile_name' => 'CCR1' )
+	->json_is( '/6/display_name' => 'target-ds4-displayname' )->json_is( '/6/regional_geo_blocking' => '1' ),
+	"validate delivery service was updated";
+>>>>>>> fc7353a... fixing tests.
 
 #delete delivery service
 # ok $t->get_ok("/ds/$t3_id/delete")->status_is(302), "delete ds";

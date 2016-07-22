@@ -41,7 +41,7 @@ Test::TestHelper->unload_core_data($schema);
 #load core test data
 Test::TestHelper->load_core_data($schema);
 
-my $q           = 'select * from server where type = 2 limit 1';
+my $q           = 'select * from server where type = 18 limit 1';
 my $get_servers = $dbh->prepare($q);
 $get_servers->execute();
 my $svr = $get_servers->fetchall_arrayref( {} );
