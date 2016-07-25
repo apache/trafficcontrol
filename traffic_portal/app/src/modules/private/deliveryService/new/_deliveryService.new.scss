@@ -1,0 +1,58 @@
+#dsWizardContainer {
+  margin-bottom: 30px;
+
+  .row {
+    margin-right: 0;
+  }
+
+  .step-info {
+    float: right;
+    margin-top: 3px;
+  }
+
+  .not-allowed {
+    cursor: not-allowed !important;
+  }
+
+  .selected-step {
+    border-right:4px solid #428bca;
+  }
+
+  .alias-inputs {
+    width: 100%;
+
+    .input-group-btn {
+      padding-top: 25px;
+    }
+
+  }
+
+}
+
+#dsNewFormContainer {
+  position: relative;
+  text-align: left;
+  border: 1px solid #A8A8A8;
+  padding: 30px 60px;
+
+  .row {
+    margin-right: 0px;
+  }
+
+  .confirm-table {
+    .heading {
+      color: #16b6e0;
+    }
+  }
+
+}
+
+.ds-wizard-popover-small {
+  max-width: none;
+  width: 300px;
+}
+
+.ds-wizard-popover-big {
+  max-width: none;
+  width: 500px;
+}

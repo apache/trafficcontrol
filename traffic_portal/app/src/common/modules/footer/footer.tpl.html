@@ -1,0 +1,9 @@
+<div class="footer-bottom container">
+    <ul class="menu-list">
+        <li ng-repeat="footerChunk in footerChunks">
+            <ul>
+                <li ng-repeat="footerLink in footerChunk"><a href="{{footerLink.url}}" target="_blank">{{footerLink.text}}</a></li>
+            </ul>
+        </li>
+    </ul>
+</div>

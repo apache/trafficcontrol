@@ -1,0 +1,11 @@
+#aboutFrameWrapper {
+  position:absolute;
+  // header and footer height are dynamic. see AboutController.js
+  left:0;
+  right:0;
+}
+
+#aboutFrame {
+  height:100%;
+  width:100%;
+}

@@ -1,0 +1,22 @@
+#tpsChartContainer {
+  position: relative;
+  text-align: center;
+  background-color: transparent;
+  padding: 30px 60px;
+
+  #tps-loading, #tps-chart {
+    height: 400px;
+    min-width: 310px;
+  }
+
+  #tps-loading {
+    padding-top: 40px;
+  }
+
+}
+
+#tps-metrics {
+  .header {
+    margin-bottom: 0;
+  }
+}

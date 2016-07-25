@@ -1,0 +1,59 @@
+<project name="traffic_portal" default="dist" basedir=".">
+  <description>Build file for Traffic Portal</description>
+
+  <property environment="env"/>
+  <property file="/tmp/traffic_portal_release.properties"/>
+  <property name="dist" value="dist"/>
+  <property name="distro" value="traffic_portal-${traffic_portal_version}"/>
+  <property name="rpmdir" value="build"/>
+
+  <target name="clean">
+    <delete dir="${rpmdir}/BUILD/${distro}"/>
+    <delete dir="${rpmdir}/RPMS"/>
+    <delete file="${rpmdir}/SPECS/traffic_portal.spec"/>
+
+    <delete dir="${rpmdir}/SOURCES"/>
+    <mkdir dir="${rpmdir}/SOURCES"/>
+  </target>
+
+  <target name="init" depends="clean">
+    <tstamp>
+      <format property="timestamp" pattern="MM/dd/yyyy hh:mm:ss"/>
+    </tstamp>
+
+    <buildnumber/>
+
+    <mkdir dir="${rpmdir}/BUILD/${distro}"/>
+    <mkdir dir="${rpmdir}/RPMS"/>
+    <mkdir dir="${rpmdir}/SOURCES/${distro}"/>
+
+    <copy todir="${rpmdir}/SOURCES/${distro}">
+      <fileset dir="/tmp/${distro}"/>
+    </copy>
+
+    <tar longfile="gnu" destfile="${rpmdir}/SOURCES/${distro}.tgz"
+         basedir="${rpmdir}/SOURCES" compression="gzip"/>
+  </target>
+
+  <target name="buildrpm" depends="init">
+    <copy file="traffic_portal.spec" todir="${rpmdir}/SPECS">
+      <filterset>
+        <filter token="VERSION" value="${traffic_portal_version}"/>
+        <filter token="BUILD_NO" value="${traffic_portal_build_number}"/>
+        <filter token="BUILT"
+                value="${timestamp} by ${env.USER}"/>
+      </filterset>
+    </copy>
+    <rpm specFile="traffic_portal.spec" topDir="build"  quiet="true"
+         cleanBuildDir="true" removeSource="false" failOnError="true" />
+
+  </target>
+
+  <target name="dist" depends="buildrpm">
+    <mkdir dir="${dist}"/>
+    <copy file="${rpmdir}/RPMS/${arch}/${distro}-${traffic_portal_build_number}.${arch}.rpm"
+          todir="${dist}">
+    </copy>
+  </target>
+
+</project>

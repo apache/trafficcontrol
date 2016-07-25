@@ -1,0 +1,23 @@
+#bpsChartContainer {
+  position: relative;
+  text-align: center;
+  background-color: transparent;
+  padding: 30px 60px;
+
+  #bps-loading, #bps-chart {
+    height: 400px;
+    min-width: 310px;
+  }
+
+  #bps-loading {
+    padding-top: 40px;
+  }
+
+  #bps-metrics {
+    .header {
+      margin-bottom: 0;
+    }
+  }
+
+}
+

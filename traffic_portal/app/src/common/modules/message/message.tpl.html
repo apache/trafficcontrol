@@ -1,0 +1,12 @@
+<div id="messageContainer">
+    <div id="lostConnectionMsg" class="alert alert-dismissable alert-danger" style="display: none;">
+        <button type="button" class="close" data-dismiss="alert" aria-hidden="true" ng-click="hideConnectionLostMsg()">&times;</button>
+        Your internet connection was interrupted. Live chart updates have been turned off. Please restart if necessary.
+    </div>
+</div>
+<div ng-show="messageData.messages.loaded">
+    <div class="alert alert-dismissable alert-{{(message.level === 'error') ? 'danger' : message.level}}" ng-repeat="message in messageData.messages.content">
+        <button type="button" class="close" data-dismiss="alert" aria-hidden="true" ng-click="dismissMessage(message)">&times;</button>
+        <div ng-bind-html="message.text | linky:'_blank'"></div>
+    </div>
+</div>

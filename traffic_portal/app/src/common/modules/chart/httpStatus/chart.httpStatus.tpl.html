@@ -1,0 +1,10 @@
+<div class="chart-container">
+    <div id="httpChartContainer">
+        <h6>{{chartName}}</h6>
+        <div id="http-loading" ng-show="!httpStatusDataLoaded">
+            <div class="loading-text">Loading http statuses...</div>
+        </div>
+        <div id="http-chart" ng-show="httpStatusDataLoaded"></div>
+    </div>
+</div>
+

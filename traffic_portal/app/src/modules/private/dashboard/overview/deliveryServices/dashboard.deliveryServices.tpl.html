@@ -1,0 +1,33 @@
+<div id="dashboardDSSearchForm" class="input-group">
+    <input type="text" class="filter-input form-control" placeholder="Filter delivery services..." ng-model="search.query">
+    <span class="filter-input-group-btn input-group-btn">
+        <button ng-show="dsOptions.inactive == true" ng-click="showInactive(false)" class="btn btn-default btn-last" type="button" uib-popover="Hide inactive delivery services" popover-trigger="mouseenter" popover-placement="bottom" popover-append-to-body="true" popover-class="popover-class">Hide Inactive</button>
+        <button ng-show="dsOptions.inactive == false" ng-click="showInactive(true)" class="btn btn-default btn-last" type="button" uib-popover="Show inactive delivery services" popover-trigger="mouseenter" popover-placement="bottom" popover-append-to-body="true" popover-class="popover-class">Show Inactive</button>
+    </span>
+</div>
+<table id="dashboardDSTable" class="table">
+    <thead>
+    <tr>
+        <th><a ng-click="predicate = 'displayName'; reverse = !reverse">Delivery Service <i class="fa fa-caret-up fa-fw" ng-show="predicate == 'displayName' && !reverse"></i><i class="fa fa-caret-down fa-fw" ng-show="predicate == 'displayName' && reverse"></i></a></th>
+        <th>Bandwidth (24 hrs)</th>
+        <th><a ng-click="predicate = 'last'; reverse = !reverse">Last Bandwidth <i class="fa fa-caret-up fa-fw" ng-show="predicate == 'last' && !reverse"></i><i class="fa fa-caret-down fa-fw" ng-show="predicate == 'last' && reverse"></i></a></th>
+        <th>Actions</th>
+    </tr>
+    </thead>
+    <tbody>
+    <tr class="delivery-service-row" ng-class="{'active': !deliveryService.active}" ng-repeat="deliveryService in deliveryServices | orderBy:predicate:reverse" ng-hide="hideDeliveryService(deliveryService)">
+        <td><a class="link" ng-click="navigateToDeliveryService(deliveryService.id)"><span title="{{deliveryService.displayName}} ({{deliveryService.xmlId}})">{{deliveryService.displayName}}</span> <span ng-show="!deliveryService.active">[ inactive ]</span></a></td>
+        <td class="delivery-service-sparkline delivery-service-sparkline-{{deliveryService.id}} loading-text"><a class="link" title="Load Bandwidth" ng-click="loadBandwidth(deliveryService.id, true)">Load Bandwidth</a></td>
+        <td class="delivery-service-last-{{deliveryService.id}} loading-text" style="min-width:120px;"></td>
+        <td style="width:130px;">
+            <a class="link" title="Refresh Delivery Service Bandwidth" ng-click="loadBandwidth(deliveryService.id, true)"><i class="fa fa-refresh fa-fw"></i></a>
+            <a class="link" title="View Delivery Service Config" ng-click="viewConfig(deliveryService)"><i class="fa fa-cog fa-fw"></i></a>
+            <a class="link" title="View Delivery Service in New Window" target="_blank" ui-sref="trafficPortal.private.deliveryService.view.overview.detail({deliveryServiceId:deliveryService.id})"><i class="fa fa-external-link fa-fw"></i></a>
+        </td>
+    </tr>
+    </tbody>
+</table>
+<div class="alert alert-info" ng-show="deliveryServices.length == 0">
+    No delivery services configured for current user
+</div>
+

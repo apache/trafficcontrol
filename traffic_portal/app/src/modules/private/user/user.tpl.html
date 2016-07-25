@@ -1,0 +1,15 @@
+<div id="userContainer">
+    <div class="alert alert-warning" ng-show="userData.loaded && !userData.localUser">LDAP user profiles cannot be modified.</div>
+    <div ui-view="userContent"></div>
+    <div class="ds-panel col-sm-4 col-md-4">
+        <fieldset>
+            <legend>Assigned Delivery Services ({{deliveryServices.length}})</legend>
+            <div class="list-group user-ds-list-group scrollable">
+                <a title="{{ds.displayName}} ({{ds.xmlId}})" ng-repeat="ds in deliveryServices | orderBy:'displayName'" class="list-group-item" ng-click="showDS(ds.id)">{{ds.displayName}}</a>
+            </div>
+            <div class="alert alert-info" ng-show="deliveryServices.length == 0">
+                No delivery services assigned
+            </div>
+        </fieldset>
+    </div>
+</div>

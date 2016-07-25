@@ -1,0 +1,37 @@
+#purgeFormContainer {
+  width: 450px;
+  margin: 10px;
+  cursor: default !important;
+
+  #purgeForm {
+    padding: 20px;
+  }
+
+  #purgeJobsLoading {
+    padding: 10px;
+  }
+}
+
+#purgeJobs {
+  margin-top: 10px;
+
+  .list-group {
+    margin-bottom:0px;
+
+    .list-group-item {
+
+      &:hover {
+        text-decoration: none;
+        background-color: rgb(255, 255, 255);
+      }
+
+      .purge-job-start {
+        font-size: 11px;
+        color: #999;
+      }
+
+    }
+
+  }
+
+}

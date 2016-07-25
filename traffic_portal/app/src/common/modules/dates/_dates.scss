@@ -1,0 +1,30 @@
+.dates-form {
+  text-align: center;
+  padding: 20px;
+  margin: 0 0 20px 0;
+  background-color: #e4e4e4;
+
+  .form-inline {
+    margin-top: 5px;
+  }
+
+  .to-date {
+    margin-left: 20px;
+  }
+
+  .date-text {
+    width: 200px !important;
+  }
+
+  .input-group {
+    margin-bottom: 0;
+  }
+
+}
+
+@media print {
+  .dates-form {
+    display: none;
+  }
+}
+
