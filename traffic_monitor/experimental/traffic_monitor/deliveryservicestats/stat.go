@@ -306,10 +306,13 @@ func addAvailableData(dsStats DsStats, crStates peer.Crstates, serverCachegroups
 	return dsStats, nil
 }
 
-type DsStatsLastKbps map[DeliveryServiceName]DsStatLastKbps
+type DsStatsLastKbps struct {
+	DeliveryServices map[DeliveryServiceName]DsStatLastKbps
+	Caches           map[CacheName]LastKbpsData
+}
 
 func NewDsStatsLastKbps() DsStatsLastKbps {
-	return map[DeliveryServiceName]DsStatLastKbps{}
+	return DsStatsLastKbps{DeliveryServices: map[DeliveryServiceName]DsStatLastKbps{}, Caches: map[CacheName]LastKbpsData{}}
 }
 
 // TODO figure a way to associate this type with DsStatHTTP, with which its members correspond.
@@ -336,7 +339,7 @@ type LastKbpsData struct {
 // we set the (new - old) / lastChangedTime as the KBPS, and update the recorded LastChangedTime and LastChangedValue
 //
 // This specifically returns the given dsStats and lastKbpsStats on error, so it's safe to do persistentDsStats, persistentLastKbpsStats, err = addKbps(...)
-func addKbps(dsStats DsStats, lastKbpsStats DsStatsLastKbps, dsStatsTime time.Time) (DsStats, DsStatsLastKbps, error) {
+func addKbps(dsStats DsStats, lastKbpsStats DsStatsLastKbps, dsStatsTime time.Time, cacheOutbytes map[CacheName]int64) (DsStats, DsStatsLastKbps, error) {
 	for dsName, iStat := range dsStats.DeliveryService {
 		if _, ok := iStat.(*DsStatDNS); ok {
 			continue
@@ -347,7 +350,7 @@ func addKbps(dsStats DsStats, lastKbpsStats DsStatsLastKbps, dsStatsTime time.Ti
 		}
 		stat := iStat.(*DsStatHTTP)
 
-		lastKbpsStat, lastKbpsStatExists := lastKbpsStats[dsName]
+		lastKbpsStat, lastKbpsStatExists := lastKbpsStats.DeliveryServices[dsName]
 		if !lastKbpsStatExists {
 			lastKbpsStat = newDsStatLastKbps()
 		}
@@ -391,8 +394,24 @@ func addKbps(dsStats DsStats, lastKbpsStats DsStatsLastKbps, dsStatsTime time.Ti
 		}
 		lastKbpsStat.Total = LastKbpsData{Time: dsStatsTime, Bytes: stat.Total.OutBytes.Value, Kbps: stat.Total.Kbps.Value}
 
-		lastKbpsStats[dsName] = lastKbpsStat
+		lastKbpsStats.DeliveryServices[dsName] = lastKbpsStat
 	}
+
+	for cacheName, outBytes := range cacheOutbytes { // map[CacheName]int64
+		lastCacheKbpsData, ok := lastKbpsStats.Caches[cacheName]
+		if !ok {
+			lastKbpsStats.Caches[cacheName] = LastKbpsData{Time: dsStatsTime, Bytes: outBytes, Kbps: 0}
+			continue
+		}
+
+		if lastCacheKbpsData.Bytes == outBytes {
+			continue // don't try to kbps, and importantly don't change the time of the last change, if Traffic Server hasn't updated
+		}
+
+		kbps := float64(outBytes-lastCacheKbpsData.Bytes) / dsStatsTime.Sub(lastCacheKbpsData.Time).Seconds()
+		lastKbpsStats.Caches[cacheName] = LastKbpsData{Time: dsStatsTime, Bytes: outBytes, Kbps: kbps}
+	}
+
 	return dsStats, lastKbpsStats, nil
 }
 
@@ -425,6 +444,9 @@ func CreateDsStats(statHistory map[string][]interface{}, dsServers map[string][]
 	}
 
 	stats := dsStats.DeliveryService
+
+	cacheOutbytes := map[CacheName]int64{}
+
 	for server, history := range statHistory {
 		cachegroup, ok := serverCachegroups[server]
 		if !ok {
@@ -443,6 +465,15 @@ func CreateDsStats(statHistory map[string][]interface{}, dsServers map[string][]
 				continue
 			}
 			for stat, value := range result.Astats.Ats {
+
+				if strings.HasSuffix(stat, ".out_bytes") {
+					v, ok := value.(float64)
+					if !ok {
+						continue // no warning, because the same error will be returned by processStat
+					}
+					cacheOutbytes[CacheName(server)] += int64(v)
+				}
+
 				ds, newstat, err := processStat(&dsStats, dsRegexes, dsTypes, cachegroup, server, serverType, stat, value)
 				if err == ErrNotProcessedStat {
 					continue
@@ -458,7 +489,8 @@ func CreateDsStats(statHistory map[string][]interface{}, dsServers map[string][]
 		}
 	}
 	dsStats.DeliveryService = stats
-	return addKbps(dsStats, lastKbpsStats, now)
+
+	return addKbps(dsStats, lastKbpsStats, now, cacheOutbytes)
 }
 
 var ErrNotProcessedStat = errors.New("This stat is not used.")

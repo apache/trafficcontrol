@@ -1,12 +1,15 @@
 package http_server
 
 import (
+	"fmt"
+	"io/ioutil"
 	"net/http"
 	"time"
 )
 
 type Type int
 
+// TODO rename these, all caps isn't recommended Go style
 const (
 	TR_CONFIG Type = (1 << iota)
 	TR_STATE_DERIVED
@@ -18,6 +21,12 @@ const (
 	STAT_SUMMARY
 	STATS
 	CONFIG_DOC
+	API_CACHE_COUNT
+	API_CACHE_AVAILABLE_COUNT
+	API_CACHE_DOWN_COUNT
+	API_VERSION
+	API_TRAFFIC_OPS_URI
+	API_CACHE_STATES
 )
 
 type Format int
@@ -100,4 +109,38 @@ func handleStats(w http.ResponseWriter, req *http.Request) {
 
 func handleConfigDoc(w http.ResponseWriter, req *http.Request) {
 	dataRequest(w, req, CONFIG_DOC, JSON)
+}
+
+func handleRootFunc() (http.HandlerFunc, error) {
+	index, err := ioutil.ReadFile("index.html")
+	if err != nil {
+		return nil, err
+	}
+	return func(w http.ResponseWriter, req *http.Request) {
+		fmt.Fprintf(w, "%s", index)
+	}, nil
+}
+
+func handleApiCacheCount(w http.ResponseWriter, req *http.Request) {
+	dataRequest(w, req, API_CACHE_COUNT, JSON)
+}
+
+func handleApiCacheAvailableCount(w http.ResponseWriter, req *http.Request) {
+	dataRequest(w, req, API_CACHE_AVAILABLE_COUNT, JSON)
+}
+
+func handleApiCacheDownCount(w http.ResponseWriter, req *http.Request) {
+	dataRequest(w, req, API_CACHE_DOWN_COUNT, JSON)
+}
+
+func handleApiVersion(w http.ResponseWriter, req *http.Request) {
+	dataRequest(w, req, API_VERSION, JSON)
+}
+
+func handleApiTrafficOpsURI(w http.ResponseWriter, req *http.Request) {
+	dataRequest(w, req, API_TRAFFIC_OPS_URI, JSON)
+}
+
+func handleApiCacheStates(w http.ResponseWriter, req *http.Request) {
+	dataRequest(w, req, API_CACHE_STATES, JSON)
 }

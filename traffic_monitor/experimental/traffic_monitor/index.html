@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="UTF-8">
+		<title>Title of the document</title>
+		<!-- <style>
+				 .tab-selected,.tab-selected-hover-red:hover{color:#fff!important;background-color:#f44336!important}
+
+				 body {
+				 background-color: linen;
+				 }
+
+				 h1 {
+				 color: maroon;
+				 margin-left: 40px;
+				 }
+				 </style> -->
+		<script>
+		 function init() {
+			 openTab("cache-states");
+			 getTopBar();
+
+			 setInterval(getCacheCount, 4755);
+			 setInterval(getCacheAvailableCount, 4800);
+			 setInterval(getCacheDownCount, 4832);
+			 setInterval(getVersion, 10007); // change to retry on failure, and only do on startup
+			 setInterval(getTrafficOpsUri, 10019); // change to retry on failure, and only do on startup
+			 setInterval(getEvents, 2004); // change to retry on failure, and only do on startup
+			 setInterval(getCacheStatuses, 5009);
+			 setInterval(getDsStats, 4003);
+		 }
+
+		 function openTab(tabName) {
+			 var i, x, tablinks;
+			 x = document.getElementsByClassName("tab-grid");
+			 for (i = 0; i < x.length; i++) {
+				 x[i].style.display = "none";
+			 }
+			 tablinks = document.getElementsByClassName("tablink");
+			 for (i = 0; i < x.length; i++) {
+				 tablinks[i].className = tablinks[i].className.replace(" tab-selected", "");
+			 }
+			 document.getElementById(tabName).style.display = "block";
+			 document.getElementById(tabName).className += " tab-selected";
+		 }
+
+		 function getCacheCount() {
+			 ajax("/api/cache-count", function(r) {
+				 document.getElementById("cache-count").innerHTML = r;
+			 });
+		 }
+
+		 function getCacheAvailableCount() {
+			 ajax("/api/cache-available-count", function(r) {
+				 document.getElementById("cache-available").innerHTML = r;
+			 });
+		 }
+
+		 function getCacheDownCount() {
+			 ajax("/api/cache-down-count", function(r) {
+				 document.getElementById("cache-down").innerHTML = r;
+			 });
+		 }
+
+		 function getVersion() {
+			 ajax("/api/version", function(r) {
+				 document.getElementById("version").innerHTML = r;
+			 });
+		 }
+
+		 function getTrafficOpsUri() {
+			 ajax("/api/traffic-ops-uri", function(r) {
+				 document.getElementById("source-uri").innerHTML = r;
+			 });
+		 }
+
+		 var lastEvent = 0;
+		 function getEvents() {
+			 /// \todo add /api/events-since/{index} (and change Traffic Monitor to keep latest 
+			 ajax("/publish/EventLog", function(r) {
+				 var jdata = JSON.parse(r);
+				 for (i = 0; i < jdata.events.length; i++) {
+					 var event = jdata.events[i];
+					 if (event.index <= lastEvent) {
+						 continue;
+					 }
+					 lastEvent = event.index
+					 var row = document.getElementById("event-log").insertRow(1); //document.createElement("tr");
+					 row.insertCell(0).textContent = event.name;
+					 row.insertCell(1).textContent = event.type;
+					 row.insertCell(2).textContent = event.isAvailable;
+					 row.insertCell(3).textContent = event.description;
+					 row.insertCell(4).textContent = new Date(event.time * 1000).toISOString();
+				 }
+			 });
+		 }
+
+		 function getCacheStates() {
+			 ajax("/api/cache-statuses", function(r) {
+				 var jdata = JSON.parse(r);
+				 var servers = Object.keys(jdata); //debug
+				 for (i = 0; i < servers.length; i++) {
+					 var server = servers[i];
+					 if (!document.getElementById("cache-states-" + server)) {
+						 var row = document.getElementById("cache-states").insertRow(1); //document.createElement("tr");
+						 row.id = "cache-states-" + server
+						 row.insertCell(0).id = row.id + "-server";
+						 row.insertCell(1).id = row.id + "-type";
+						 row.insertCell(2).id = row.id + "-status";
+						 row.insertCell(3).id = row.id + "-load-average";
+						 row.insertCell(4).id = row.id + "-query-time";
+						 row.insertCell(4).id = row.id + "-bandwidth-kbps";
+						 row.insertCell(4).id = row.id + "-connection-count";
+						 document.getElementById(row.id + "-server").textContent = server;
+					 }
+
+					 /* \todo change to iterate over members, and make cells id constructed from these*/
+					 if (jdata[server].hasOwnProperty("type")) {
+						 document.getElementById("cache-states-" + server + "-type").textContent = jdata[server].type;
+					 }
+					 if (jdata[server].hasOwnProperty("status")) {
+						 document.getElementById("cache-states-" + server + "-status").textContent = jdata[server].status;
+					 }
+					 if (jdata[server].hasOwnProperty("load_average")) {
+						 document.getElementById("cache-states-" + server + "-load-average").textContent = jdata[server].load_average;
+					 }
+					 if (jdata[server].hasOwnProperty("query_time_ms")) {
+						 document.getElementById("cache-states-" + server + "-query-time").textContent = jdata[server].query_time_ms;
+					 }
+					 if (jdata[server].hasOwnProperty("bandwidth_kbps")) {
+						 document.getElementById("cache-states-" + server + "-bandwidth-kbps").textContent = jdata[server].bandwidth_kbps;
+					 }
+					 if (jdata[server].hasOwnProperty("connection_count")) {
+						 document.getElementById("cache-states-" + server + "-connection-count").textContent = jdata[server].connection_count;
+					 }
+				 }
+			 })
+		 }
+
+		 function getDsStats() {
+			 /// \todo add /api/delivery-service-stats which only returns the data needed by the UI, for efficiency
+			 ajax("/publish/DsStats", function(r) {
+				 var j = JSON.parse(r);
+				 var jds = j.deliveryService
+				 var deliveryServiceNames = Object.keys(jds); //debug
+				 for (i = 0; i < deliveryServiceNames.length; i++) {
+					 var deliveryService = deliveryServiceNames[i];
+
+					 if (!document.getElementById("deliveryservice-stats-" + deliveryService)) {
+						 var row = document.getElementById("deliveryservice-stats").insertRow(1); //document.createElement("tr");
+						 row.id = "deliveryservice-stats-" + deliveryService
+						 row.insertCell(0).id = row.id + "-delivery-service";
+						 row.insertCell(1).id = row.id + "-status";
+						 row.insertCell(2).id = row.id + "-caches-reporting";
+						 row.insertCell(3).id = row.id + "-bandwidth";
+						 row.insertCell(4).id = row.id + "-2xx";
+						 row.insertCell(5).id = row.id + "-3xx";
+						 row.insertCell(6).id = row.id + "-4xx";
+						 row.insertCell(7).id = row.id + "-5xx";
+						 row.insertCell(8).id = row.id + "-disabled-locations";
+						 document.getElementById(row.id + "-delivery-service").textContent = deliveryService;
+					 }
+
+					 // \todo check that array has a member before dereferencing [0]
+					 if (jds[deliveryService].hasOwnProperty("isAvailable")) {
+						 document.getElementById("deliveryservice-stats-" + deliveryService + "-status").textContent = jds[deliveryService].isAvailable.value ? "available" : "unavailable";
+					 }
+					 if (jds[deliveryService].hasOwnProperty("caches-reporting") && jds[deliveryService].hasOwnProperty("caches-available") && jds[deliveryService].hasOwnProperty("caches-configured")) {
+						 document.getElementById("deliveryservice-stats-" + deliveryService + "-caches-reporting").textContent = jds[deliveryService]['caches-reporting'][0].value + " / " + jds[deliveryService]['caches-available'][0].value + " / " + jds[deliveryService]['caches-configured'][0].value;
+					 }
+					 if (jds[deliveryService].hasOwnProperty("total.kbps")) {
+						 document.getElementById("deliveryservice-stats-" + deliveryService + "-bandwidth").textContent = jds[deliveryService]['total.kbps'][0].value;
+					 }
+					 if (jds[deliveryService].hasOwnProperty("total.status_2xx")) {
+						 document.getElementById("deliveryservice-stats-" + deliveryService + "-2xx").textContent = jds[deliveryService]['total.status_2xx'][0].value;
+					 }
+					 if (jds[deliveryService].hasOwnProperty("total.status_3xx")) {
+						 document.getElementById("deliveryservice-stats-" + deliveryService + "-3xx").textContent = jds[deliveryService]['total.status_3xx'][0].value;
+					 }
+					 if (jds[deliveryService].hasOwnProperty("total.status_4xx")) {
+						 document.getElementById("deliveryservice-stats-" + deliveryService + "-4xx").textContent = jds[deliveryService]['total.status_4xx'][0].value;
+					 }
+					 if (jds[deliveryService].hasOwnProperty("total.status_5xx")) {
+						 document.getElementById("deliveryservice-stats-" + deliveryService + "-5xx").textContent = jds[deliveryService]['total.status_5xx'][0].value;
+					 }
+					 // \todo implement disabled locations
+				 }
+			 })
+		 }
+
+		 function getCacheStatuses() {
+			 getCacheCount();
+			 getCacheAvailableCount();
+			 getCacheDownCount();
+			 getCacheStates();
+		 }
+
+		 function getTopBar() {
+			 getVersion();
+			 getTrafficOpsUri();
+			 getCacheStatuses();
+		 }
+
+		 function ajax(endpoint, f) {
+			 var xhttp = new XMLHttpRequest();
+			 xhttp.onreadystatechange = function() {
+				 if (xhttp.readyState == 4 && xhttp.status == 200) {
+					 f(xhttp.responseText);
+				 }
+			 };
+			 xhttp.open("GET", endpoint, true);
+			 xhttp.send();
+		 }
+		</script>
+	</head>
+	<body onload="init()">
+		<div id="top-bar">
+			<table id="top-bar" width="100%" border=1>
+				<tr>
+					<td> Caches: count=<span id="cache-count">0</span> available=<span id="cache-available">0</span> down=<span id="cache-down">0</span> </td>
+					<td> Bandwidth: <span id="bandwidth">0</span> / <span id="bandwidth-max">0</span> </td>
+					<td>Source: <span id="source-uri"></span></td>
+					<td><span id="version">traffic_monitor</span></td>
+				</tr>
+			</table>
+		</div>
+		Published Docs:
+		<ul>
+			<li><a href="/publish/EventLog">EventLog</a></li>
+			<li><a href="/publish/CacheStats">CacheStats</a></li>
+			<li><a href="/publish/DsStats">DsStats</a></li>
+			<li><a href="/publish/CrStates">CrStates (as published to Traffic Routers)</a></li>
+			<li><a href="/publish/CrConfig">CrConfig (json)</a></li>
+			<li><a href="/publish/PeerStates">PeerStates</a></li>
+			<li><a href="/publish/Stats">Stats</a></li>
+			<li><a href="/publish/StatsSummary">StatsSummary</a></li>
+			<li><a href="/publish/ConfigDoc">ConfigDoc</a></li>
+		</ul>
+
+		<ul class="tabs">
+			<li><a href="#" onclick="openTab('cache-states')" class="tablink">Cache States</a></li>
+			<li><a href="#" onclick="openTab('deliveryservice-stats')" class="tablink">Deliveryservice States</a></li>
+			<li><a href="#" onclick="openTab('event-log')" class="tablink">Event Log</a></li>
+		</ul>
+
+		<table id="cache-states" class="tab-grid" border=1>
+			<tr>
+				<th>Server</th>
+				<th>Type</th>
+				<th>Status</th>
+				<th>Load Average</th>
+				<th>Query Time (ms)</th>
+				<th>Bandwidth (kbps)</th>
+				<th>Connection Count</th>
+			</tr>
+		</table>
+
+		<table id="deliveryservice-stats" class="tab-grid" border=1>
+			<tr>
+				<th>Delivery Service</th>
+				<th>Status</th>
+				<th>Caches Reporting/Available/Configured</th>
+				<th>Bandwidth (kbps)</th>
+				<th>2xx/sec</th>
+				<th>3xx/sec</th>
+				<th>4xx/sec</th>
+				<th>5xx/sec</th>
+				<th>Disabled Locations</th>
+			</tr>
+			<tr>
+				<td>
+					"Row 1 Column 1"
+				</td>
+				<td>
+						"Row 1 Column 2"
+				</td>
+			</tr>
+			<tr>
+				<td>
+					"Row 2 Column 1"
+				</td>
+				<td>
+					"Row 2 Column 2"
+				</td>
+			</tr>
+		</table>
+
+		<table id="event-log" class="tab-grid" border=1>
+			<tr>
+				<th>Name</th>
+				<th>Type</th>
+				<th>Status</th>
+				<th>Description</th>
+				<th id="event-log-last-header">Event Time</th>
+			</tr>
+		</table>
+		<div id="update-num-text">Number of updates: <span id="update-num">0</span></div>
+		<div id="last-val-text">Last Val: <span id="last-val">0</span></div>
+		<a href="/">Refresh Server List</a>
+	</body>
+</html>
