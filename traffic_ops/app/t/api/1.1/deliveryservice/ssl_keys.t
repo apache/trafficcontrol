@@ -212,8 +212,8 @@ ok $t->get_ok("/api/1.1/deliveryservices/hostname/foo.fake-ds.kabletown.com/sslk
 	->json_has("A record for ssl key fake-ds-latest could not be found")->or( sub { diag $t->tx->res->content->asset->{content}; } );
 
 # OFFLINE all riak servers
-my $rs = $schema->resultset('Server')->search( { type => 31 } );
-$rs->update_all( { status => 1 } );
+my $rs = $schema->resultset('Server')->search( { type => 26 } );
+$rs->update_all( { status => 3 } );
 
 ok $t->post_ok(
 	'/api/1.1/deliveryservices/sslkeys/generate',

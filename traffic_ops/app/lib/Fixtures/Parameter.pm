@@ -356,7 +356,7 @@ my %definition_for = (
 	'12M_location' => {
 		new   => 'Parameter',
 		using => {
-			name        => 'location2',
+			name        => 'location',
 			config_file => '12M_facts',
 			value       => '/opt/ort',
 		},
@@ -365,7 +365,7 @@ my %definition_for = (
 	'cacheurl_location' => {
 		new   => 'Parameter',
 		using => {
-			name        => 'location3',
+			name        => 'location',
 			config_file => 'cacheurl.config',
 			value       => '/opt/trafficserver/etc/trafficserver/',
 		},
@@ -374,7 +374,7 @@ my %definition_for = (
 	'ip_allow_location' => {
 		new   => 'Parameter',
 		using => {
-			name        => 'location4',
+			name        => 'location',
 			config_file => 'ip_allow.config',
 			value       => '/opt/trafficserver/etc/trafficserver',
 		},
@@ -383,7 +383,7 @@ my %definition_for = (
 	'crontab_root_location' => {
 		new   => 'Parameter',
 		using => {
-			name        => 'location5',
+			name        => 'location',
 			config_file => 'crontab_root',
 			value       => '/var/spool/cron',
 		},
@@ -392,7 +392,7 @@ my %definition_for = (
 	'hdr_rw_cdl-c2.config_location' => {
 		new   => 'Parameter',
 		using => {
-			name        => 'location6',
+			name        => 'location',
 			config_file => 'hdr_rw_cdl-c2.config',
 			value       => '/opt/trafficserver/etc/trafficserver',
 		},
@@ -401,7 +401,7 @@ my %definition_for = (
 	'50-ats.rules_location' => {
 		new   => 'Parameter',
 		using => {
-			name        => 'location7',
+			name        => 'location',
 			config_file => '50-ats.rules',
 			value       => '/etc/udev/rules.d/',
 		},
@@ -410,7 +410,7 @@ my %definition_for = (
 	'parent.config_location' => {
 		new   => 'Parameter',
 		using => {
-			name        => 'location8',
+			name        => 'location',
 			config_file => 'parent.config',
 			value       => '/opt/trafficserver/etc/trafficserver/',
 		},
@@ -419,7 +419,7 @@ my %definition_for = (
 	'remap.config_location' => {
 		new   => 'Parameter',
 		using => {
-			name        => 'location9',
+			name        => 'location',
 			config_file => 'remap.config',
 			value       => '/opt/trafficserver/etc/trafficserver/',
 		},
@@ -428,7 +428,7 @@ my %definition_for = (
 	'drop_qstring.config_location' => {
 		new   => 'Parameter',
 		using => {
-			name        => 'location10',
+			name        => 'location',
 			config_file => 'drop_qstring.config',
 			value       => '/opt/trafficserver/etc/trafficserver',
 		},
@@ -437,7 +437,7 @@ my %definition_for = (
 	'cache.config_location' => {
 		new   => 'Parameter',
 		using => {
-			name        => 'location11',
+			name        => 'location',
 			config_file => 'cache.config',
 			value       => '/opt/trafficserver/etc/trafficserver/',
 		},
@@ -446,7 +446,7 @@ my %definition_for = (
 	'regex_revalidate.config_location' => {
 		new   => 'Parameter',
 		using => {
-			name        => 'location12',
+			name        => 'location',
 			config_file => 'regex_revalidate.config',
 			value       => '/opt/trafficserver/etc/trafficserver',
 		},
@@ -455,7 +455,7 @@ my %definition_for = (
 	'hosting.config_location' => {
 		new   => 'Parameter',
 		using => {
-			name        => 'location13',
+			name        => 'location',
 			config_file => 'hosting.config',
 			value       => '/opt/trafficserver/etc/trafficserver/',
 		},
@@ -464,7 +464,7 @@ my %definition_for = (
 	'volume.config_location' => {
 		new   => 'Parameter',
 		using => {
-			name        => 'location14',
+			name        => 'location',
 			config_file => 'volume.config',
 			value       => '/opt/trafficserver/etc/trafficserver/',
 		},
@@ -473,7 +473,7 @@ my %definition_for = (
 	'astats.config_location' => {
 		new   => 'Parameter',
 		using => {
-			name        => 'location15',
+			name        => 'location',
 			config_file => 'astats.config',
 			value       => '/opt/trafficserver/etc/trafficserver',
 		},
@@ -482,7 +482,7 @@ my %definition_for = (
 	'storage.config_location' => {
 		new   => 'Parameter',
 		using => {
-			name        => 'location16',
+			name        => 'location',
 			config_file => 'storage.config',
 			value       => '/opt/trafficserver/etc/trafficserver/',
 		},
@@ -586,7 +586,8 @@ sub get_definition {
 }
 
 sub all_fixture_names {
-	return keys %definition_for;
+	# sort by db name to guarantee insertion order
+	return (sort { lc($definition_for{$a}{using}{name}) cmp lc($definition_for{$b}{using}{name}) } keys %definition_for);
 }
 
 __PACKAGE__->meta->make_immutable;
