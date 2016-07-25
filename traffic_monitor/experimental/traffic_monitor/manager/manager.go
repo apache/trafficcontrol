@@ -193,7 +193,7 @@ func Start(opsConfigFile string, staticAppData StaticAppData) {
 			var err error
 
 			switch req.T {
-			case http_server.TR_CONFIG:
+			case http_server.TRConfig:
 				if toSession == nil {
 					err = fmt.Errorf("Unable to connect to Traffic Ops")
 				} else if opsConfig.CdnName == "" {
@@ -204,17 +204,17 @@ func Start(opsConfigFile string, staticAppData StaticAppData) {
 				if err != nil {
 					err = fmt.Errorf("TR Config: %v", err)
 				}
-			case http_server.TR_STATE_DERIVED:
+			case http_server.TRStateDerived:
 				body, err = peer.CrStatesMarshall(combinedStates)
 				if err != nil {
 					err = fmt.Errorf("TR State (derived): %v", err)
 				}
-			case http_server.TR_STATE_SELF:
+			case http_server.TRStateSelf:
 				body, err = peer.CrStatesMarshall(localStates)
 				if err != nil {
 					err = fmt.Errorf("TR State (self): %v", err)
 				}
-			case http_server.CACHE_STATS:
+			case http_server.CacheStats:
 				// TODO: add support for ?hc=N query param, stats=, wildcard, individual caches
 				// add pp and date to the json:
 				/*
@@ -233,26 +233,26 @@ func Start(opsConfigFile string, staticAppData StaticAppData) {
 				if err != nil {
 					err = fmt.Errorf("CacheStats: %v", err)
 				}
-			case http_server.DS_STATS:
+			case http_server.DSStats:
 				body, err = json.Marshal(deliveryservicestats.DsStatsJSON(dsStats)) // TODO marshall beforehand, for performance? (test to see how often requests are made)
 				if err != nil {
 					err = fmt.Errorf("DsStats: %v", err)
 				}
-			case http_server.EVENT_LOG:
+			case http_server.EventLog:
 				body, err = json.Marshal(JSONEvents{Events: events})
 				if err != nil {
 					err = fmt.Errorf("EventLog: %v", err)
 				}
-			case http_server.PEER_STATES:
+			case http_server.PeerStates:
 				body, err = json.Marshal(createApiPeerStates(peerStates))
-			case http_server.STAT_SUMMARY:
+			case http_server.StatSummary:
 				body = []byte("TODO implement")
-			case http_server.STATS:
+			case http_server.Stats:
 				body, err = getStats(staticAppData, cacheHealthPoller.Config.Interval, lastHealthDurations, fetchCount, healthIteration, errorCount)
 				if err != nil {
 					err = fmt.Errorf("Stats: %v", err)
 				}
-			case http_server.CONFIG_DOC:
+			case http_server.ConfigDoc:
 				opsConfigCopy := opsConfig
 				// if the password is blank, leave it blank, so callers can see it's missing.
 				if opsConfigCopy.Password != "" {
@@ -262,13 +262,13 @@ func Start(opsConfigFile string, staticAppData StaticAppData) {
 				if err != nil {
 					err = fmt.Errorf("Config Doc: %v", err)
 				}
-			case http_server.API_CACHE_COUNT: // TODO determine if this should use peerStates
+			case http_server.APICacheCount: // TODO determine if this should use peerStates
 				body = []byte(strconv.Itoa(len(localStates.Caches)))
-			case http_server.API_CACHE_AVAILABLE_COUNT:
+			case http_server.APICacheAvailableCount:
 				body = []byte(strconv.Itoa(cacheAvailableCount(localStates.Caches)))
-			case http_server.API_CACHE_DOWN_COUNT:
+			case http_server.APICacheDownCount:
 				body = []byte(strconv.Itoa(cacheDownCount(localStates.Caches)))
-			case http_server.API_VERSION:
+			case http_server.APIVersion:
 				s := "traffic_monitor-" + staticAppData.Version + "."
 				if len(staticAppData.GitRevision) > 6 {
 					s += staticAppData.GitRevision[:6]
@@ -276,9 +276,9 @@ func Start(opsConfigFile string, staticAppData StaticAppData) {
 					s += staticAppData.GitRevision
 				}
 				body = []byte(s)
-			case http_server.API_TRAFFIC_OPS_URI:
+			case http_server.APITrafficOpsURI:
 				body = []byte(opsConfig.Url)
-			case http_server.API_CACHE_STATES:
+			case http_server.APICacheStates:
 				body, err = json.Marshal(createCacheStatuses(serverTypes, statHistory, lastHealthDurations, localStates.Caches, lastKbpsStats, localCacheStatus))
 			default:
 				err = fmt.Errorf("Unknown Request Type: %v", req.T)

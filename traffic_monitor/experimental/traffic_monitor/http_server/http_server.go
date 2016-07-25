@@ -41,12 +41,12 @@ func Endpoints() (map[string]http.HandlerFunc, error) {
 		"/publish/StatSummary":       handleStatSummary,
 		"/publish/Stats":             handleStats,
 		"/publish/ConfigDoc":         handleConfigDoc,
-		"/api/cache-count":           handleApiCacheCount,
-		"/api/cache-available-count": handleApiCacheAvailableCount,
-		"/api/cache-down-count":      handleApiCacheDownCount,
-		"/api/version":               handleApiVersion,
-		"/api/traffic-ops-uri":       handleApiTrafficOpsURI,
-		"/api/cache-statuses":        handleApiCacheStates,
+		"/api/cache-count":           handleAPICacheCount,
+		"/api/cache-available-count": handleAPICacheAvailableCount,
+		"/api/cache-down-count":      handleAPICacheDownCount,
+		"/api/version":               handleAPIVersion,
+		"/api/traffic-ops-uri":       handleAPITrafficOpsURI,
+		"/api/cache-statuses":        handleAPICacheStates,
 		"/": handleRoot,
 	}, nil
 }

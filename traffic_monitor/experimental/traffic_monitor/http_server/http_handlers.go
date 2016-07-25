@@ -11,22 +11,22 @@ type Type int
 
 // TODO rename these, all caps isn't recommended Go style
 const (
-	TR_CONFIG Type = (1 << iota)
-	TR_STATE_DERIVED
-	TR_STATE_SELF
-	CACHE_STATS
-	DS_STATS
-	EVENT_LOG
-	PEER_STATES
-	STAT_SUMMARY
-	STATS
-	CONFIG_DOC
-	API_CACHE_COUNT
-	API_CACHE_AVAILABLE_COUNT
-	API_CACHE_DOWN_COUNT
-	API_VERSION
-	API_TRAFFIC_OPS_URI
-	API_CACHE_STATES
+	TRConfig Type = (1 << iota)
+	TRStateDerived
+	TRStateSelf
+	CacheStats
+	DSStats
+	EventLog
+	PeerStates
+	StatSummary
+	Stats
+	ConfigDoc
+	APICacheCount
+	APICacheAvailableCount
+	APICacheDownCount
+	APIVersion
+	APITrafficOpsURI
+	APICacheStates
 )
 
 type Format int
@@ -70,45 +70,45 @@ func dataRequest(w http.ResponseWriter, req *http.Request, t Type, f Format) {
 }
 
 func handleCrStates(w http.ResponseWriter, req *http.Request) {
-	t := TR_STATE_DERIVED
+	t := TRStateDerived
 
 	if req.URL.RawQuery == "raw" {
-		t = TR_STATE_SELF
+		t = TRStateSelf
 	}
 
 	dataRequest(w, req, t, JSON)
 }
 
 func handleCrConfig(w http.ResponseWriter, req *http.Request) {
-	dataRequest(w, req, TR_CONFIG, JSON)
+	dataRequest(w, req, TRConfig, JSON)
 }
 
 func handleCacheStats(w http.ResponseWriter, req *http.Request) {
-	dataRequest(w, req, CACHE_STATS, JSON)
+	dataRequest(w, req, CacheStats, JSON)
 }
 
 func handleDsStats(w http.ResponseWriter, req *http.Request) {
-	dataRequest(w, req, DS_STATS, JSON)
+	dataRequest(w, req, DSStats, JSON)
 }
 
 func handleEventLog(w http.ResponseWriter, req *http.Request) {
-	dataRequest(w, req, EVENT_LOG, JSON)
+	dataRequest(w, req, EventLog, JSON)
 }
 
 func handlePeerStates(w http.ResponseWriter, req *http.Request) {
-	dataRequest(w, req, PEER_STATES, JSON)
+	dataRequest(w, req, PeerStates, JSON)
 }
 
 func handleStatSummary(w http.ResponseWriter, req *http.Request) {
-	dataRequest(w, req, STAT_SUMMARY, JSON)
+	dataRequest(w, req, StatSummary, JSON)
 }
 
 func handleStats(w http.ResponseWriter, req *http.Request) {
-	dataRequest(w, req, STATS, JSON)
+	dataRequest(w, req, Stats, JSON)
 }
 
 func handleConfigDoc(w http.ResponseWriter, req *http.Request) {
-	dataRequest(w, req, CONFIG_DOC, JSON)
+	dataRequest(w, req, ConfigDoc, JSON)
 }
 
 func handleRootFunc() (http.HandlerFunc, error) {
@@ -121,26 +121,26 @@ func handleRootFunc() (http.HandlerFunc, error) {
 	}, nil
 }
 
-func handleApiCacheCount(w http.ResponseWriter, req *http.Request) {
-	dataRequest(w, req, API_CACHE_COUNT, JSON)
+func handleAPICacheCount(w http.ResponseWriter, req *http.Request) {
+	dataRequest(w, req, APICacheCount, JSON)
 }
 
-func handleApiCacheAvailableCount(w http.ResponseWriter, req *http.Request) {
-	dataRequest(w, req, API_CACHE_AVAILABLE_COUNT, JSON)
+func handleAPICacheAvailableCount(w http.ResponseWriter, req *http.Request) {
+	dataRequest(w, req, APICacheAvailableCount, JSON)
 }
 
-func handleApiCacheDownCount(w http.ResponseWriter, req *http.Request) {
-	dataRequest(w, req, API_CACHE_DOWN_COUNT, JSON)
+func handleAPICacheDownCount(w http.ResponseWriter, req *http.Request) {
+	dataRequest(w, req, APICacheDownCount, JSON)
 }
 
-func handleApiVersion(w http.ResponseWriter, req *http.Request) {
-	dataRequest(w, req, API_VERSION, JSON)
+func handleAPIVersion(w http.ResponseWriter, req *http.Request) {
+	dataRequest(w, req, APIVersion, JSON)
 }
 
-func handleApiTrafficOpsURI(w http.ResponseWriter, req *http.Request) {
-	dataRequest(w, req, API_TRAFFIC_OPS_URI, JSON)
+func handleAPITrafficOpsURI(w http.ResponseWriter, req *http.Request) {
+	dataRequest(w, req, APITrafficOpsURI, JSON)
 }
 
-func handleApiCacheStates(w http.ResponseWriter, req *http.Request) {
-	dataRequest(w, req, API_CACHE_STATES, JSON)
+func handleAPICacheStates(w http.ResponseWriter, req *http.Request) {
+	dataRequest(w, req, APICacheStates, JSON)
 }
