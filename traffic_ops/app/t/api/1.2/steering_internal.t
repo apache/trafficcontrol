@@ -221,7 +221,7 @@ ok $t->put_ok("/internal/api/1.2/steering/steering-ds1",
             ],
             "filters" => [
                 {
-                    "deliveryService" => "steerig-target-ds1",
+                    "deliveryService" => "steering-target-ds1",
                     "pattern" => ".*/force-to-one/.*"
                 },
                 {
