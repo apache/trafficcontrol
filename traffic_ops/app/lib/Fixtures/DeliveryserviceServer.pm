@@ -21,36 +21,36 @@ my %definition_for = (
 	test_ds1_server_edge1 => {
 		new   => 'DeliveryserviceServer',
 		using => {
-			deliveryservice => 1,
+			deliveryservice => 8,
 			server          => 1,
 		},
 	},
 	test_ds1_server_edge13 => {
 		new   => 'DeliveryserviceServer',
 		using => {
-			deliveryservice => 1,
-			server          => 12,
+			deliveryservice => 8,
+			server          => 3,
 		},
 	},
 	test_ds1_server_mid1 => {
 		new   => 'DeliveryserviceServer',
 		using => {
-			deliveryservice => 1,
-			server          => 2,
+			deliveryservice => 8,
+			server          => 4,
 		},
 	},
 	test_ds2_server_edge1 => {
 		new   => 'DeliveryserviceServer',
 		using => {
-			deliveryservice => 2,
-			server          => 6,
+			deliveryservice => 9,
+			server          => 2,
 		},
 	},
 	test_ds2_server_mid1 => {
 		new   => 'DeliveryserviceServer',
 		using => {
-			deliveryservice => 2,
-			server          => 7,
+			deliveryservice => 9,
+			server          => 5,
 		},
 	},
 	test_ds5_server_edge14 => {

@@ -1,5 +1,6 @@
-package Fixtures::FederationDeliveryservice;
+package Fixtures::StatsSummary;
 #
+# Copyright 2015 Comcast Cable Communications Management, LLC
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -13,40 +14,20 @@ package Fixtures::FederationDeliveryservice;
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-#
-#
 use Moose;
 extends 'DBIx::Class::EasyFixture';
 use namespace::autoclean;
-use Digest::SHA1 qw(sha1_hex);
 
 my %definition_for = (
-	federation_deliveryservice1 => {
-		new   => 'FederationDeliveryservice',
+	## id => 1
+	stat1 => {
+		new   => 'StatsSummary',
 		using => {
-			federation      => 1,
-			deliveryservice => 8,
-		},
-	},
-	federation_deliveryservice2 => {
-		new   => 'FederationDeliveryservice',
-		using => {
-			federation      => 2,
-			deliveryservice => 9,
-		},
-	},
-	federation_deliveryservice3 => {
-		new   => 'FederationDeliveryservice',
-		using => {
-			federation      => 3,
-			deliveryservice => 10,
-		},
-	},
-	federation_deliveryservice4 => {
-		new   => 'FederationDeliveryservice',
-		using => {
-			federation      => 4,
-			deliveryservice => 11,
+			cdn_name => "cdn1",
+      deliveryservice_name => "test-ds1",
+      stat_name => "test_stat",
+      stat_value => "1",
+      stat_date => "2016-07-25"
 		},
 	},
 );
@@ -56,10 +37,11 @@ sub get_definition {
 	return $definition_for{$name};
 }
 
-sub all_fixture_names {
-	return keys %definition_for;
-}
 
+sub all_fixture_names {
+	# sort by db stat_name to guarantee insertion order
+	return (sort { $definition_for{$a}{using}{stat_name} cmp $definition_for{$b}{using}{stat_name} } keys %definition_for);
+}
 __PACKAGE__->meta->make_immutable;
 
 1;
