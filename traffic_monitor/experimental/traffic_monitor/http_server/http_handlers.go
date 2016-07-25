@@ -69,48 +69,6 @@ func dataRequest(w http.ResponseWriter, req *http.Request, t Type, f Format) {
 	writeResponse(w, f, dr)
 }
 
-func handleCrStates(w http.ResponseWriter, req *http.Request) {
-	t := TRStateDerived
-
-	if req.URL.RawQuery == "raw" {
-		t = TRStateSelf
-	}
-
-	dataRequest(w, req, t, JSON)
-}
-
-func handleCrConfig(w http.ResponseWriter, req *http.Request) {
-	dataRequest(w, req, TRConfig, JSON)
-}
-
-func handleCacheStats(w http.ResponseWriter, req *http.Request) {
-	dataRequest(w, req, CacheStats, JSON)
-}
-
-func handleDsStats(w http.ResponseWriter, req *http.Request) {
-	dataRequest(w, req, DSStats, JSON)
-}
-
-func handleEventLog(w http.ResponseWriter, req *http.Request) {
-	dataRequest(w, req, EventLog, JSON)
-}
-
-func handlePeerStates(w http.ResponseWriter, req *http.Request) {
-	dataRequest(w, req, PeerStates, JSON)
-}
-
-func handleStatSummary(w http.ResponseWriter, req *http.Request) {
-	dataRequest(w, req, StatSummary, JSON)
-}
-
-func handleStats(w http.ResponseWriter, req *http.Request) {
-	dataRequest(w, req, Stats, JSON)
-}
-
-func handleConfigDoc(w http.ResponseWriter, req *http.Request) {
-	dataRequest(w, req, ConfigDoc, JSON)
-}
-
 func handleRootFunc() (http.HandlerFunc, error) {
 	index, err := ioutil.ReadFile("index.html")
 	if err != nil {
@@ -121,26 +79,16 @@ func handleRootFunc() (http.HandlerFunc, error) {
 	}, nil
 }
 
-func handleAPICacheCount(w http.ResponseWriter, req *http.Request) {
-	dataRequest(w, req, APICacheCount, JSON)
+func handleCrStates(w http.ResponseWriter, req *http.Request) {
+	t := TRStateDerived
+	if req.URL.RawQuery == "raw" {
+		t = TRStateSelf
+	}
+	dataRequest(w, req, t, JSON)
 }
 
-func handleAPICacheAvailableCount(w http.ResponseWriter, req *http.Request) {
-	dataRequest(w, req, APICacheAvailableCount, JSON)
-}
-
-func handleAPICacheDownCount(w http.ResponseWriter, req *http.Request) {
-	dataRequest(w, req, APICacheDownCount, JSON)
-}
-
-func handleAPIVersion(w http.ResponseWriter, req *http.Request) {
-	dataRequest(w, req, APIVersion, JSON)
-}
-
-func handleAPITrafficOpsURI(w http.ResponseWriter, req *http.Request) {
-	dataRequest(w, req, APITrafficOpsURI, JSON)
-}
-
-func handleAPICacheStates(w http.ResponseWriter, req *http.Request) {
-	dataRequest(w, req, APICacheStates, JSON)
+func DataRequestFunc(t Type) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		dataRequest(w, r, t, JSON)
+	}
 }
