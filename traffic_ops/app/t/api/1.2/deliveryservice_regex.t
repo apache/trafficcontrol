@@ -41,8 +41,8 @@ ok $t->post_ok( '/api/1.1/user/login', json => { u => Test::TestHelper::ADMIN_US
 	'Log into the admin user?';
 
 ok $t->get_ok("/api/1.2/deliveryservices_regexes.json")->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } )
-	->json_has( '/response', 'has a response' )->json_is( '/response/0/dsName', 'test-ds1' )->json_has( '/response/0/regexes/0/type', 'has a regex type' )
-	->json_has( '/response/0/regexes/0/type', 'test-ds1' )->json_is( '/response/1/dsName', 'test-ds2' )
+	->json_has( '/response', 'has a response' )->json_is( '/response/0/dsName', 'steering-ds1' )->json_has( '/response/0/regexes/0/type', 'has a regex type' )
+	->json_is( '/response/0/regexes/0/type', 'HTTP_NO_CACHE' )->json_is( '/response/1/dsName', 'steering-ds2' )
 	->json_has( '/response/1/regexes', 'has a second regex' )->json_has( '/response/1/regexes/0/type', 'has a second regex type' ), 'Query regexes';
 
 ok $t->get_ok('/logout')->status_is(302)->or( sub { diag $t->tx->res->content->asset->{content}; } );

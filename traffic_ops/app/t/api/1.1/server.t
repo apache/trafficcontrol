@@ -64,7 +64,7 @@ $t->get_ok('/api/1.1/servers.json?orderby=id')->status_is(200)->or( sub { diag $
 	->json_is( "/response/7/interfaceMtu", "1500" );
 
 $t->get_ok('/api/1.1/servers/hostname/atlanta-edge-01/details.json')->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } )
-	->json_is( "/response/ipGateway", "127.0.0.1" )->json_is( "/response/deliveryservices/0", "1" );
+	->json_is( "/response/ipGateway", "127.0.0.1" )->json_is( "/response/deliveryservices/0", "8" );
 
 ok $t->get_ok('/logout')->status_is(302)->or( sub { diag $t->tx->res->content->asset->{content}; } );
 $dbh->disconnect();

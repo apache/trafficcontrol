@@ -41,12 +41,12 @@ ok $t->post_ok( '/api/1.1/user/login', json => { u => Test::TestHelper::ADMIN_US
 	'Log into the admin user?';
 
 ok $t->get_ok("/api/1.2/deliveryservice_matches.json")->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } )
-	->json_has( '/response', 'has a response' )->json_is( '/response/0/dsName', 'test_ds1' )->json_has( '/response/0/patterns', 'has a first match' )
-	->json_is( '/response/1/dsName', 'test_ds2' )->json_has( '/response/1/patterns', 'has a second match' ), 'Query matches';
+	->json_has( '/response', 'has a response' )->json_is( '/response/0/dsName', 'steering_ds1' )->json_has( '/response/0/patterns', 'has a first match' )
+	->json_is( '/response/1/dsName', 'steering_ds2' )->json_has( '/response/1/patterns', 'has a second match' ), 'Query matches';
 
 ok $t->get_ok("/api/1.2/deliveryservice_matches.json?format=file")->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } )
-	->json_hasnt( '/response', 'should not have a response' )->json_is( '/0/dsName', 'test_ds1' )->json_has( '/0/patterns', 'has a first match' )
-	->json_is( '/1/dsName', 'test_ds2' )->json_has( '/1/patterns', 'has a second match' ), 'Query matches';
+	->json_hasnt( '/response', 'should not have a response' )->json_is( '/0/dsName', 'steering_ds1' )->json_has( '/0/patterns', 'has a first match' )
+	->json_is( '/1/dsName', 'steering_ds2' )->json_has( '/1/patterns', 'has a second match' ), 'Query matches';
 
 ok $t->get_ok('/logout')->status_is(302)->or( sub { diag $t->tx->res->content->asset->{content}; } );
 
