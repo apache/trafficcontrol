@@ -130,7 +130,8 @@ sub get_definition {
 }
 
 sub all_fixture_names {
-	return keys %definition_for;
+	# sort by db regex to guarantee insertion order
+	return (sort { $definition_for{$a}{using}{regex} cmp $definition_for{$b}{using}{regex} } keys %definition_for);
 }
 
 __PACKAGE__->meta->make_immutable;
