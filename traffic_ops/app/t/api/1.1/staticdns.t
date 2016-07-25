@@ -42,10 +42,10 @@ ok $t->post_ok( '/login', => form => { u => Test::TestHelper::ADMIN_USER, p => T
 
 $t->get_ok('/api/1.1/staticdnsentries.json?orderby=host')->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } )
 	->json_is( "/response/0/ttl", "3600" )->json_is( "/response/0/host", "AAAA_RECORD_HOST" )->json_is( "/response/0/cachegroup", "mid-northeast-group" )
-	->json_is( "/response/0/deliveryservice", "test-ds1" )->json_is( "/response/0/address", "127.0.0.1" )->json_is( "/response/0/type", "AAAA_RECORD" )
+	->json_is( "/response/0/deliveryservice", "steering-ds1" )->json_is( "/response/0/address", "127.0.0.1" )->json_is( "/response/0/type", "AAAA_RECORD" )
 
 	->json_is( "/response/2/ttl", "3600" )->json_is( "/response/2/host", "CNAME_HOST" )->json_is( "/response/2/cachegroup", "mid-northwest-group" )
-	->json_is( "/response/2/deliveryservice", "test-ds2" )->json_is( "/response/2/address", "127.0.0.1" )->json_is( "/response/2/type", "CNAME_RECORD" );
+	->json_is( "/response/2/deliveryservice", "steering-ds2" )->json_is( "/response/2/address", "127.0.0.1" )->json_is( "/response/2/type", "CNAME_RECORD" );
 
 ok $t->get_ok('/logout')->status_is(302)->or( sub { diag $t->tx->res->content->asset->{content}; } );
 $dbh->disconnect();

@@ -100,6 +100,7 @@ sub reset_sequence_id {
 		role
 		server
 		staticdnsentry
+		stats_summary
 		status
 		tm_user
 		type );
