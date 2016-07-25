@@ -74,7 +74,7 @@ ok $t->get_ok('/api/1.1/user/current/jobs.json')->status_is(200)->json_has( '/re
 ok $t->post_ok(
 	'/api/1.1/user/current/jobs',
 	json => {
-		dsId      => 1,
+		dsId      => 8,
 		regex     => '/foo1/.*',
 		ttl       => 48,
 		startTime => $now,
@@ -85,7 +85,7 @@ ok $t->post_ok(
 ok $t->post_ok(
 	'/api/1.1/user/current/jobs',
 	json => {
-		dsId      => 1,
+		dsId      => 8,
 		regex     => '/foo1/.*',
 		ttl       => 0,
 		startTime => $now,
@@ -97,7 +97,7 @@ ok $t->post_ok(
 ok $t->post_ok(
 	'/api/1.1/user/current/jobs',
 	json => {
-		dsId      => 1,
+		dsId      => 8,
 		regex     => '/foo1/.*',
 		ttl       => 1000,
 		startTime => $now,
@@ -109,7 +109,7 @@ ok $t->post_ok(
 ok $t->post_ok(
 	'/api/1.1/user/current/jobs',
 	json => {
-		dsId      => 1,
+		dsId      => 8,
 		regex     => '/foo2/.*',
 		ttl       => 49,
 		startTime => $now,
@@ -119,7 +119,7 @@ ok $t->post_ok(
 ok $t->post_ok(
 	'/api/1.1/user/current/jobs',
 	json => {
-		dsId      => 2,
+		dsId      => 9,
 		regex     => '/foo2/.*',
 		ttl       => 49,
 		startTime => $now,
@@ -129,7 +129,7 @@ ok $t->post_ok(
 ok $t->post_ok(
 	'/api/1.1/user/current/jobs',
 	json => {
-		dsId      => 1,
+		dsId      => 8,
 		ttl       => 49,
 		startTime => $now,
 	}
@@ -140,7 +140,7 @@ ok $t->post_ok(
 ok $t->post_ok(
 	'/api/1.1/user/current/jobs',
 	json => {
-		dsId  => 1,
+		dsId  => 8,
 		regex => '/foo2/.*',
 		ttl   => 49,
 	}
@@ -151,7 +151,7 @@ ok $t->post_ok(
 ok $t->post_ok(
 	'/api/1.1/user/current/jobs',
 	json => {
-		dsId      => 1,
+		dsId      => 8,
 		regex     => '/foo2/.*',
 		ttl       => 49,
 		startTime => '2015-01-09',
@@ -164,7 +164,7 @@ ok $t->post_ok(
 ok $t->post_ok(
 	'/api/1.1/user/current/jobs',
 	json => {
-		dsId      => 1,
+		dsId      => 8,
 		regex     => '/foo2/.*',
 		startTime => $now,
 	}
