@@ -9,6 +9,13 @@ type Crstates struct {
 	Deliveryservice map[string]Deliveryservice `json:"deliveryServices"`
 }
 
+func NewCRStates() Crstates {
+	return Crstates{
+		Caches:          map[string]IsAvailable{},
+		Deliveryservice: map[string]Deliveryservice{},
+	}
+}
+
 type IsAvailable struct {
 	IsAvailable bool `json:"isAvailable"`
 }

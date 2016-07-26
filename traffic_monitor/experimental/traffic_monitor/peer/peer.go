@@ -27,7 +27,7 @@ func (handler Handler) Handle(id string, r io.Reader, err error) {
 	result := Result{
 		Id:        id,
 		Available: false,
-		Errors:    make([]error, 0, 0),
+		Errors:    []error{},
 	}
 
 	if err != nil {

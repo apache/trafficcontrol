@@ -12,9 +12,8 @@ import (
 
 var mgrReqChan chan DataRequest
 
-func writeResponse(w http.ResponseWriter, f Format, dr DataRequest) {
-	data := <-dr.C
-
+func writeResponse(w http.ResponseWriter, f Format, response <-chan []byte) {
+	data := <-response
 	if len(data) > 0 {
 		w.Write(data)
 	} else {
@@ -32,21 +31,21 @@ func Endpoints() (map[string]http.HandlerFunc, error) {
 
 	// note: with the trailing slash, any non-trailing slash requests will get a 301 redirect
 	return map[string]http.HandlerFunc{
-		"/publish/CacheStats/":       handleCacheStats,
-		"/publish/CrConfig":          handleCrConfig,
+		"/publish/CacheStats/":       DataRequestFunc(CacheStats),
+		"/publish/CrConfig":          DataRequestFunc(TRConfig),
 		"/publish/CrStates":          handleCrStates,
-		"/publish/DsStats":           handleDsStats,
-		"/publish/EventLog":          handleEventLog,
-		"/publish/PeerStates":        handlePeerStates,
-		"/publish/StatSummary":       handleStatSummary,
-		"/publish/Stats":             handleStats,
-		"/publish/ConfigDoc":         handleConfigDoc,
-		"/api/cache-count":           handleApiCacheCount,
-		"/api/cache-available-count": handleApiCacheAvailableCount,
-		"/api/cache-down-count":      handleApiCacheDownCount,
-		"/api/version":               handleApiVersion,
-		"/api/traffic-ops-uri":       handleApiTrafficOpsURI,
-		"/api/cache-statuses":        handleApiCacheStates,
+		"/publish/DsStats":           DataRequestFunc(DSStats),
+		"/publish/EventLog":          DataRequestFunc(EventLog),
+		"/publish/PeerStates":        DataRequestFunc(PeerStates),
+		"/publish/StatSummary":       DataRequestFunc(StatSummary),
+		"/publish/Stats":             DataRequestFunc(Stats),
+		"/publish/ConfigDoc":         DataRequestFunc(ConfigDoc),
+		"/api/cache-count":           DataRequestFunc(APICacheCount),
+		"/api/cache-available-count": DataRequestFunc(APICacheAvailableCount),
+		"/api/cache-down-count":      DataRequestFunc(APICacheDownCount),
+		"/api/version":               DataRequestFunc(APIVersion),
+		"/api/traffic-ops-uri":       DataRequestFunc(APITrafficOpsURI),
+		"/api/cache-statuses":        DataRequestFunc(APICacheStates),
 		"/": handleRoot,
 	}, nil
 }
