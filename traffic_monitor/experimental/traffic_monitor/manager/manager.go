@@ -187,12 +187,12 @@ func Start(opsConfigFile string, staticAppData StaticAppData) {
 	for {
 		select {
 		case req := <-dr:
-			defer close(req.C)
+			defer close(req.Response)
 
 			var body []byte
 			var err error
 
-			switch req.T {
+			switch req.Type {
 			case http_server.TRConfig:
 				if toSession == nil {
 					err = fmt.Errorf("Unable to connect to Traffic Ops")
@@ -281,14 +281,14 @@ func Start(opsConfigFile string, staticAppData StaticAppData) {
 			case http_server.APICacheStates:
 				body, err = json.Marshal(createCacheStatuses(serverTypes, statHistory, lastHealthDurations, localStates.Caches, lastKbpsStats, localCacheStatus))
 			default:
-				err = fmt.Errorf("Unknown Request Type: %v", req.T)
+				err = fmt.Errorf("Unknown Request Type: %v", req.Type)
 			}
 
 			if err != nil {
 				errorCount++
 				log.Printf("ERROR Request Error: %v\n", err)
 			} else {
-				req.C <- body
+				req.Response <- body
 			}
 		case oc := <-opsConfigFileHandler.OpsConfigChannel:
 			var err error

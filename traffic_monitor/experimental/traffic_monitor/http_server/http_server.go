@@ -12,9 +12,8 @@ import (
 
 var mgrReqChan chan DataRequest
 
-func writeResponse(w http.ResponseWriter, f Format, dr DataRequest) {
-	data := <-dr.C
-
+func writeResponse(w http.ResponseWriter, f Format, response <-chan []byte) {
+	data := <-response
 	if len(data) > 0 {
 		w.Write(data)
 	} else {

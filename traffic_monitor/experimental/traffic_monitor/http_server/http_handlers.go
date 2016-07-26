@@ -37,9 +37,9 @@ const (
 )
 
 type DataRequest struct {
-	T          Type
-	F          Format
-	C          chan []byte
+	Type
+	Format
+	Response   chan<- []byte
 	Date       string
 	Parameters map[string][]string
 }
@@ -48,25 +48,15 @@ func dataRequest(w http.ResponseWriter, req *http.Request, t Type, f Format) {
 	//pp: "0=[my-ats-edge-cache-0], hc=[1]",
 	//dateLayout := "Thu Oct 09 20:28:36 UTC 2014"
 	dateLayout := "Mon Jan 02 15:04:05 MST 2006"
-	time := time.Now()
-	p := map[string][]string{}
-
-	for key, v := range req.URL.Query() {
-		for _, value := range v {
-			p[key] = append(p[key], value)
-		}
+	response := make(chan []byte, 1) // must be buffered, so if this is killed, the writer doesn't block forever
+	mgrReqChan <- DataRequest{
+		Type:       t,
+		Format:     f,
+		Response:   response,
+		Date:       time.Now().UTC().Format(dateLayout),
+		Parameters: req.URL.Query(),
 	}
-
-	dr := DataRequest{
-		T:          t,
-		F:          f,
-		C:          make(chan []byte, 1), // must be buffered, so if this is killed, the writer doesn't block forever
-		Date:       time.UTC().Format(dateLayout),
-		Parameters: p,
-	}
-
-	mgrReqChan <- dr
-	writeResponse(w, f, dr)
+	writeResponse(w, f, response)
 }
 
 func handleRootFunc() (http.HandlerFunc, error) {
