@@ -1,38 +1,25 @@
-FROM centos:6.8
+FROM centos:7
 
-# all ENV vars can be controlled by, e.g. `docker run -e BRANCH=1.6.x <image>`
-ENV GITREPO=https://github.com/Comcast/traffic_control
-ENV BRANCH=master
+MAINTAINER Dan Kirkwood
 
-ENV GITVERSION=2.9.1
-ENV GOVERSION=1.6.2
+RUN	yum -y install \
+		epel-release \
+		git \
+		rpm-build \
+		which
 
-RUN yum -y update
+	yum -y update && \
+	yum -y clean all
 
-# These are needed to build up-to-date go and git
-RUN yum -y install \
-	expat-devel \
-	gcc \
-	gettext \
-	libcurl-devel \
-	openssl-devel \
-	perl-ExtUtils-MakeMaker
+WORKDIR /opt
+RUN curl -L -b "oraclelicense=a" http://download.oracle.com/otn-pub/java/jdk/8u101-b13/jdk-8u101-linux-x64.tar.gz | tar xzf - && \
+    curl -L http://mirror.nexcess.net/apache/maven/maven-3/3.3.9/binaries/apache-maven-3.3.9-bin.tar.gz | tar xzf -
+RUN ln -s jdk* java && ln -s apache-maven* maven
 
-RUN yum -y install \
-	rpm-build \
-	rsync
-
-# Install up-to-date git
-RUN 	curl https://www.kernel.org/pub/software/scm/git/git-$GITVERSION.tar.gz | \
-	tar -C / -xzf -
-RUN	(cd /git-$GITVERSION && make prefix=/usr/local install && rm -r /git-$GITVERSION)
-
-RUN mkdir -p /traffic_control
-VOLUME	/traffic_control
-
-RUN	echo 'set -x; git clone ${GITREPO} && \
-	cd /traffic_control/traffic_monitor && \
-	git checkout ${BRANCH} && \
-	./build/build_rpm.sh' >run.sh && chmod +x /run.sh
-RUN cat /run.sh
-ENTRYPOINT /run.sh
+RUN alternatives --install /usr/bin/java java /opt/java/bin/java 2 && \
+    alternatives --install /usr/bin/jar jar /opt/java/bin/jar 2 && \
+    alternatives --install /usr/bin/javac javac /opt/java/bin/javac 2 && \
+    alternatives --set java /opt/java/bin/java && \
+    alternatives --set jar /opt/java/bin/jar && \
+    alternatives --set javac /opt/java/bin/javac && \
+    alternatives --install /usr/bin/mvn mvn /opt/maven/bin/mvn 1
