@@ -7,11 +7,14 @@ ENV GITREPO=https://github.com/Comcast/traffic_control
 ENV BRANCH=master
 
 RUN	yum -y update && \
-	yum -y install \
+	yum -y clean all
+RUN	yum -y install \
+		epel-release \
 		git \
-		golang \
-		rpm-build \
-		rsync && \
+		rpm-build
+
+RUN	yum -y install \
+		golang && \
 	yum -y clean all
 
 RUN mkdir -p /traffic_control
