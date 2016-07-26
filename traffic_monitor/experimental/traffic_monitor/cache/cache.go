@@ -46,7 +46,7 @@ const (
 func StatsMarshall(statHistory map[string][]interface{}, historyCount int) ([]byte, error) {
 	var stats Stats
 
-	stats.Caches = make(map[string]map[string][]Stat)
+	stats.Caches = map[string]map[string][]Stat{}
 
 	count := 1
 
@@ -61,7 +61,7 @@ func StatsMarshall(statHistory map[string][]interface{}, historyCount int) ([]by
 				_, exists := stats.Caches[id]
 
 				if !exists {
-					stats.Caches[id] = make(map[string][]Stat)
+					stats.Caches[id] = map[string][]Stat{}
 				}
 
 				stats.Caches[id][stat] = append(stats.Caches[id][stat], s)
@@ -82,7 +82,7 @@ func (handler Handler) Handle(id string, r io.Reader, err error) {
 	result := Result{
 		Id:        id,
 		Available: false,
-		Errors:    make([]error, 0, 0),
+		Errors:    []error{},
 		Time:      time.Now(),
 	}
 

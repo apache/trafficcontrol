@@ -156,14 +156,14 @@ func Start(opsConfigFile string, staticAppData StaticAppData) {
 
 	dr := make(chan http_server.DataRequest)
 
-	healthHistory := make(map[string][]interface{})
-	statHistory := make(map[string][]interface{})
+	healthHistory := map[string][]interface{}{}
+	statHistory := map[string][]interface{}{}
 
 	var opsConfig handler.OpsConfig
 	var monitorConfig traffic_ops.TrafficMonitorConfigMap
-	localStates := peer.Crstates{Caches: make(map[string]peer.IsAvailable), Deliveryservice: make(map[string]peer.Deliveryservice)}    // this is the local state as discoverer by this traffic_monitor
-	peerStates := make(map[string]peer.Crstates)                                                                                       // each peer's last state is saved in this map
-	combinedStates := peer.Crstates{Caches: make(map[string]peer.IsAvailable), Deliveryservice: make(map[string]peer.Deliveryservice)} // this is the result of combining the localStates and all the peerStates using the var ??
+	localStates := peer.NewCRStates()        // this is the local state as discoverer by this traffic_monitor
+	peerStates := map[string]peer.Crstates{} // each peer's last state is saved in this map
+	combinedStates := peer.NewCRStates()     // this is the result of combining the localStates and all the peerStates using the var ??
 
 	deliveryServiceServers := map[string][]string{}
 	serverDeliveryServices := map[string]string{}
@@ -908,7 +908,7 @@ func calculateDeliveryServiceState(deliveryServiceServers map[string][]string, c
 
 // TODO JvD: add deliveryservice stuff
 func combineCrStates(peerStates map[string]peer.Crstates, localStates peer.Crstates) peer.Crstates {
-	combinedStates := peer.Crstates{Caches: make(map[string]peer.IsAvailable), Deliveryservice: make(map[string]peer.Deliveryservice)}
+	combinedStates := peer.NewCRStates()
 	for cacheName, localCacheState := range localStates.Caches { // localStates gets pruned when servers are disabled, it's the source of truth
 		downVotes := 0 // TODO JvD: change to use parameter when deciding to be optimistic or pessimistic.
 		if localCacheState.IsAvailable {

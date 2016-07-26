@@ -49,7 +49,7 @@ func dataRequest(w http.ResponseWriter, req *http.Request, t Type, f Format) {
 	//dateLayout := "Thu Oct 09 20:28:36 UTC 2014"
 	dateLayout := "Mon Jan 02 15:04:05 MST 2006"
 	time := time.Now()
-	p := make(map[string][]string)
+	p := map[string][]string{}
 
 	for key, v := range req.URL.Query() {
 		for _, value := range v {
