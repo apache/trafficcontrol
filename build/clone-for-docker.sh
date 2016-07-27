@@ -1,7 +1,7 @@
 #!/bin/sh
 
 project=`basename $GITREPO .git`
-
+ls -la /repo
 [ ! -d /repo ] || ( echo "Expected to have volume mounted for /repo"; exit 1)
 
 # Delete previous content if it exists
