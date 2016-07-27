@@ -22,7 +22,7 @@ function initBuildArea() {
     echo "Initializing Traffic Portal build area"
     removeBuildArea
     mkdir -p $WORKSPACE/build/rpmbuild/traffic_portal
-    rsync -av --exclude='build/rpmbuild/traffic_portal' $WORKSPACE/ $WORKSPACE/build/rpmbuild/traffic_portal
+    rsync -av --exclude='build/rpmbuild/traffic_portal' $WORKSPACE/traffic_portal/ $WORKSPACE/build/rpmbuild/traffic_portal
 }
 
 # ---------------------------------------
@@ -78,8 +78,9 @@ function buildRpm() {
     cd $WORKSPACE/build/rpmbuild/traffic_portal/build
     /usr/bin/ant -v -DTMP_DIR=/tmp/traffic_portal-$BRANCH
 
-    # copy the rpm to the build dir
-    cp $WORKSPACE/build/rpmbuild/traffic_portal/build/dist/*.rpm $WORKSPACE/build
+    # copy the rpm to the dist dir
+    mkdir -p $WORKSPACE/dist
+    cp $WORKSPACE/build/rpmbuild/traffic_portal/build/dist/*.rpm $WORKSPACE/dist
 }
 
 # ---------------------------------------
@@ -102,7 +103,7 @@ function getRevCount() {
 # MAIN
 # ---------------------------------------
 if [ -z "$WORKSPACE" ]; then
-	WORKSPACE=$(dirname $(pwd))
+	WORKSPACE=$(dirname $(dirname $(pwd)))
 fi
 
 if [ -z "$BRANCH" ]; then
