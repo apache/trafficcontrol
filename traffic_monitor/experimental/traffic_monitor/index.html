@@ -163,7 +163,7 @@
 
 					 // \todo check that array has a member before dereferencing [0]
 					 if (jds[deliveryService].hasOwnProperty("isAvailable")) {
-						 document.getElementById("deliveryservice-stats-" + deliveryService + "-status").textContent = jds[deliveryService].isAvailable.value ? "available" : "unavailable";
+						 document.getElementById("deliveryservice-stats-" + deliveryService + "-status").textContent = jds[deliveryService]["isAvailable"][0].value ? "available" : "unavailable";
 					 }
 					 if (jds[deliveryService].hasOwnProperty("caches-reporting") && jds[deliveryService].hasOwnProperty("caches-available") && jds[deliveryService].hasOwnProperty("caches-configured")) {
 						 document.getElementById("deliveryservice-stats-" + deliveryService + "-caches-reporting").textContent = jds[deliveryService]['caches-reporting'][0].value + " / " + jds[deliveryService]['caches-available'][0].value + " / " + jds[deliveryService]['caches-configured'][0].value;
