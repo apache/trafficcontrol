@@ -1,3 +1,6 @@
+#!/bin/bash
+#
+#
 # Copyright 2015 Comcast Cable Communications Management, LLC
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -11,18 +14,12 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
-#!/bin/bash
-
-if [ -f /etc/profile ]; then
-    . /etc/profile
-fi
-
-WORKSPACE=$(dirname $(pwd))
-ARCH="x86_64"
+#
+#
 
 # ---------------------------------------
 function initBuildArea() {
+    echo "Initializing Traffic Portal build area"
     rm -rf $WORKSPACE/build/rpmbuild
     mkdir -p $WORKSPACE/build/rpmbuild/traffic_portal
     rsync -av --exclude='build/rpmbuild/traffic_portal' $WORKSPACE/ $WORKSPACE/build/rpmbuild/traffic_portal
@@ -42,6 +39,7 @@ function initTmpDir() {
 
 # ---------------------------------------
 function setupRelease() {
+    echo "Setting up Traffic Portal release"
     # for the ant build
     touch /tmp/traffic_portal_release.properties
     echo -e "\narch=$ARCH\ntraffic_portal_version=$BRANCH\ntraffic_portal_build_number=$BUILD_NUMBER" > /tmp/traffic_portal_release.properties
@@ -49,7 +47,8 @@ function setupRelease() {
 
 # ---------------------------------------
 function buildRpm() {
-    # install traffic portal dependencies and build artifacts
+    echo "Building Traffic Portal RPM"
+    echo "Installing Traffic Portal dependencies and build artifacts"
     cd $WORKSPACE/build/rpmbuild/traffic_portal
     /usr/bin/npm install
     /usr/bin/bower install
@@ -102,15 +101,25 @@ function getRevCount() {
 # ---------------------------------------
 # MAIN
 # ---------------------------------------
+if [ -f /etc/profile ]; then
+    . /etc/profile
+fi
+
+if [ -z "$WORKSPACE" ]; then
+	WORKSPACE=$(dirname $(pwd))
+fi
+
 if [ -z "$BRANCH" ]; then
-    echo "'BRANCH' defaulted to master"
+    echo "'BRANCH' defaults to master if not defined"
     BRANCH=master
 fi
 
 if [ -z "$BUILD_NUMBER" ]; then
-    echo "'BUILD_NUMBER' defaulted to 000"
+    echo "'BUILD_NUMBER' defaults to 000 if not defined"
     BUILD_NUMBER=$(getRevCount)
 fi
+
+ARCH="x86_64"
 
 echo "=================================================="
 echo "BRANCH: $BRANCH"
