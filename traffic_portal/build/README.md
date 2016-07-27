@@ -40,7 +40,7 @@
 * Install the RPM
 
     ```
-    $ cd /vagrant/traffic_control/traffic_portal/build
+    $ cd /vagrant/traffic_control/dist
     $ sudo yum install -y traffic_portal-$BRANCH-$BUILD_NUMBER.x86_64.rpm
     ```
 
