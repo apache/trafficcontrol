@@ -13,5 +13,5 @@ RUN	yum -y install \
 		golang && \
 	yum -y clean all
 
-WORKDIR /traffic_control/traffic_ops
+WORKDIR /repo/traffic_control/traffic_ops/build
 ENTRYPOINT ./build_rpm.sh
