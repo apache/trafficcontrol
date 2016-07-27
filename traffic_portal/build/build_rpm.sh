@@ -20,7 +20,7 @@
 # ---------------------------------------
 function initBuildArea() {
     echo "Initializing Traffic Portal build area"
-    rm -rf $WORKSPACE/build/rpmbuild
+    removeBuildArea
     mkdir -p $WORKSPACE/build/rpmbuild/traffic_portal
     rsync -av --exclude='build/rpmbuild/traffic_portal' $WORKSPACE/ $WORKSPACE/build/rpmbuild/traffic_portal
 }
@@ -84,7 +84,7 @@ function buildRpm() {
 
 # ---------------------------------------
 function removeBuildArea() {
-    rm -rf $WORKSPACE/build/rpmbuild
+    rm -rf $WORKSPACE/build/rpmbuild/traffic_portal
 }
 
 # ---------------------------------------
@@ -101,10 +101,6 @@ function getRevCount() {
 # ---------------------------------------
 # MAIN
 # ---------------------------------------
-if [ -f /etc/profile ]; then
-    . /etc/profile
-fi
-
 if [ -z "$WORKSPACE" ]; then
 	WORKSPACE=$(dirname $(pwd))
 fi
