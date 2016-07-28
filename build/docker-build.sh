@@ -38,3 +38,5 @@ docker cp gitter:/repo/traffic_control/dist .
 docker rm -v gitter
 docker rmi $images
 
+echo "Built rpms are here: " $(pwd)/dist
+ls -l $(pwd)/dist
