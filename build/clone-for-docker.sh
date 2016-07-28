@@ -1,10 +1,10 @@
 #!/bin/sh
 
 project=`basename $GITREPO .git`
-ls -la /repo
-[ ! -d /repo ] || ( echo "Expected to have volume mounted for /repo"; exit 1)
+mkdir -p /repo
 
 # Delete previous content if it exists
 rm -rf /repo/$project
 
+cd /repo
 git clone --branch $BRANCH $GITREPO
