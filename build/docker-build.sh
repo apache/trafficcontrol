@@ -3,10 +3,11 @@
 export GITREPO=${GITREPO:-https://github.com/Comcast/traffic_control}
 export BRANCH=${BRANCH:-master}
 
-projects="traffic_ops traffic_monitor traffic_router traffic_stats"
+projects="traffic_ops traffic_monitor traffic_router traffic_stats traffic_portal"
 
 # collect image names for later cleanup
-local images=
+images=
+
 createBuilders() {
 	
 	docker build -t traffic_control_gitter ./build
@@ -33,6 +34,7 @@ runBuild
 
 
 # clean up...
+docker cp gitter:/repo/traffic_control/dist .
 docker rm -v gitter
 docker rmi $images
 
