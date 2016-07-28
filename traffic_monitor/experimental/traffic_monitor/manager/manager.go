@@ -451,6 +451,7 @@ func Start(opsConfigFile string, staticAppData StaticAppData) {
 				lastHealthDurations[healthResult.Id] = time.Since(lastHealthStart)
 			}
 			lastHealthEndTimes[healthResult.Id] = now
+			fmt.Printf("DEBUG health duration for %s: %v\n", healthResult.Id, lastHealthDurations[healthResult.Id])
 
 			// if _, ok := queryIntervalStart[pollI]; !ok {
 			// 	log.Printf("ERROR poll start index not found")
