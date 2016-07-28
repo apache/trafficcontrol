@@ -27,14 +27,14 @@ function initBuildArea() {
 
 # ---------------------------------------
 function initTmpDir() {
-    rm -rf /tmp/traffic_portal-$BRANCH
-    mkdir -p /tmp/traffic_portal-$BRANCH
-    mkdir -p /tmp/traffic_portal-$BRANCH/etc/init.d
-    mkdir -p /tmp/traffic_portal-$BRANCH/etc/logrotate.d
-    mkdir -p /tmp/traffic_portal-$BRANCH/etc/traffic_portal
-    mkdir -p /tmp/traffic_portal-$BRANCH/opt/traffic_portal
-    mkdir -p /tmp/traffic_portal-$BRANCH/opt/traffic_portal/public
-    mkdir -p /tmp/traffic_portal-$BRANCH/opt/traffic_portal/server
+    rm -rf /tmp/traffic_portal-$VERSION
+    mkdir -p /tmp/traffic_portal-$VERSION
+    mkdir -p /tmp/traffic_portal-$VERSION/etc/init.d
+    mkdir -p /tmp/traffic_portal-$VERSION/etc/logrotate.d
+    mkdir -p /tmp/traffic_portal-$VERSION/etc/traffic_portal
+    mkdir -p /tmp/traffic_portal-$VERSION/opt/traffic_portal
+    mkdir -p /tmp/traffic_portal-$VERSION/opt/traffic_portal/public
+    mkdir -p /tmp/traffic_portal-$VERSION/opt/traffic_portal/server
 }
 
 # ---------------------------------------
@@ -42,7 +42,7 @@ function setupRelease() {
     echo "Setting up Traffic Portal release"
     # for the ant build
     touch /tmp/traffic_portal_release.properties
-    echo -e "\narch=$ARCH\ntraffic_portal_version=$BRANCH\ntraffic_portal_build_number=$BUILD_NUMBER" > /tmp/traffic_portal_release.properties
+    echo -e "\narch=$ARCH\ntraffic_portal_version=$VERSION\ntraffic_portal_build_number=$BUILD_NUMBER" > /tmp/traffic_portal_release.properties
 }
 
 # ---------------------------------------
@@ -55,28 +55,28 @@ function buildRpm() {
     /usr/bin/grunt dist
 
     # copies server.js file and config.js files to tmp
-    cp $WORKSPACE/build/rpmbuild/traffic_portal/server/server.js /tmp/traffic_portal-$BRANCH/opt/traffic_portal/server
-    cp -r $WORKSPACE/build/rpmbuild/traffic_portal/conf /tmp/traffic_portal-$BRANCH/etc/traffic_portal
+    cp $WORKSPACE/build/rpmbuild/traffic_portal/server/server.js /tmp/traffic_portal-$VERSION/opt/traffic_portal/server
+    cp -r $WORKSPACE/build/rpmbuild/traffic_portal/conf /tmp/traffic_portal-$VERSION/etc/traffic_portal
 
     # copy init.d to tmp (creates the traffic portal service)
-    cp -r $WORKSPACE/build/rpmbuild/traffic_portal/build/etc/init.d/traffic_portal /tmp/traffic_portal-$BRANCH/etc/init.d
+    cp -r $WORKSPACE/build/rpmbuild/traffic_portal/build/etc/init.d/traffic_portal /tmp/traffic_portal-$VERSION/etc/init.d
 
     # logrotate for logs
-    cp -r $WORKSPACE/build/rpmbuild/traffic_portal/build/etc/logrotate.d/traffic_portal /tmp/traffic_portal-$BRANCH/etc/logrotate.d
-    cp -r $WORKSPACE/build/rpmbuild/traffic_portal/build/etc/logrotate.d/traffic_portal-access /tmp/traffic_portal-$BRANCH/etc/logrotate.d
-    cp -r $WORKSPACE/build/rpmbuild/traffic_portal/app/dist/* /tmp/traffic_portal-$BRANCH/opt/traffic_portal
+    cp -r $WORKSPACE/build/rpmbuild/traffic_portal/build/etc/logrotate.d/traffic_portal /tmp/traffic_portal-$VERSION/etc/logrotate.d
+    cp -r $WORKSPACE/build/rpmbuild/traffic_portal/build/etc/logrotate.d/traffic_portal-access /tmp/traffic_portal-$VERSION/etc/logrotate.d
+    cp -r $WORKSPACE/build/rpmbuild/traffic_portal/app/dist/* /tmp/traffic_portal-$VERSION/opt/traffic_portal
 
     # creates dynamic json file needed at runtime for traffic portal to display release info
     BUILD_DATE=$(date +'%Y-%m-%d %H:%M:%S')
-    VERSION="\"Version\":\"$BRANCH\""
+    VERSION="\"Version\":\"$VERSION\""
     BUILD_NUMBER="\"Build Number\":\"$BUILD_NUMBER\""
     BUILD_DATE="\"Build Date\":\"$BUILD_DATE\""
     JSON_VERSION="{\n$VERSION,\n$BUILD_NUMBER,\n$BUILD_DATE\n}"
-    echo -e $JSON_VERSION > /tmp/traffic_portal-$BRANCH/opt/traffic_portal/public/traffic_portal_release.json
+    echo -e $JSON_VERSION > /tmp/traffic_portal-$VERSION/opt/traffic_portal/public/traffic_portal_release.json
 
     # ant builds the rpm
     cd $WORKSPACE/build/rpmbuild/traffic_portal/build
-    /usr/bin/ant -v -DTMP_DIR=/tmp/traffic_portal-$BRANCH
+    /usr/bin/ant -v -DTMP_DIR=/tmp/traffic_portal-$VERSION
 
     # copy the rpm to the dist dir
     mkdir -p $WORKSPACE/dist
@@ -90,7 +90,7 @@ function removeBuildArea() {
 
 # ---------------------------------------
 function cleanupTmpDir() {
-    rm -rf /tmp/traffic_portal-$BRANCH
+    rm -rf /tmp/traffic_portal-$VERSION
     rm /tmp/traffic_portal_release.properties
 }
 
@@ -100,26 +100,23 @@ function getRevCount() {
 }
 
 # ---------------------------------------
+function getSHA() {
+	git rev-parse --short=8 HEAD
+}
+
+# ---------------------------------------
 # MAIN
 # ---------------------------------------
 if [ -z "$WORKSPACE" ]; then
 	WORKSPACE=$(dirname $(dirname $(pwd)))
 fi
 
-if [ -z "$BRANCH" ]; then
-    echo "'BRANCH' defaults to master if not defined"
-    BRANCH=master
-fi
-
-if [ -z "$BUILD_NUMBER" ]; then
-    echo "'BUILD_NUMBER' defaults to 000 if not defined"
-    BUILD_NUMBER=$(getRevCount)
-fi
-
 ARCH="x86_64"
+BUILD_NUMBER=$(getRevCount).$(getSHA)
+VERSION=master # todo - need to pull version from VERSION file
 
 echo "=================================================="
-echo "BRANCH: $BRANCH"
+echo "VERSION: $VERSION"
 echo "BUILD_NUMBER: $BUILD_NUMBER"
 echo "--------------------------------------------------"
 
