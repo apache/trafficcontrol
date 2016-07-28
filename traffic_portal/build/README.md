@@ -23,11 +23,6 @@
     $ vagrant ssh
     ```  
 
-* [OPTIONAL] Set RPM variables
-
-  * BRANCH (enter version (i.e. 1.6.0) or leave default (master))
-  * BUILD_NUMBER (defaults to number of git commits)
-
 * Build the RPM
 
     ```
@@ -41,7 +36,7 @@
 
     ```
     $ cd /vagrant/traffic_control/dist
-    $ sudo yum install -y traffic_portal-$BRANCH-$BUILD_NUMBER.x86_64.rpm
+    $ sudo yum install -y traffic_portal-$VERSION-$BUILD_NUMBER.x86_64.rpm
     ```
 
 ### 3. Configure
