@@ -134,6 +134,16 @@
             "config_file": "CRConfig.json",
             "name": "consistent.dns.routing",
             "value": "true"
+        },
+        {
+            "config_file": "CRConfig.json",
+            "name": "neustar.polling.url",
+            "value": "http://www.example.net/neustar/latest.tar.gz"
+        },
+        {
+            "config_file": "CRConfig.json",
+            "name": "neustar.polling.interval",
+            "value": "86400000"
         }
     ],
     "profile": {

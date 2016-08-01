@@ -50,6 +50,7 @@ sub view {
 
 	my $rs_param = $self->db->resultset('Parameter')->search( { id => $id } );
 	my $data = $rs_param->single;
+	$self->conceal_secure_parameter_value( $data->{'_column_data'}{'secure'}, \$data->{'_column_data'}{'value'} );
 	$self->stash( parameter => $data );
 
 	&stash_role($self);
@@ -101,12 +102,15 @@ sub readparameter {
 	$orderby = $self->param('orderby') if ( defined $self->param('orderby') );
 	my $rs_data = $self->db->resultset("Parameter")->search( undef, { order_by => $orderby } );
 	while ( my $row = $rs_data->next ) {
+		my $value = $row->value;
+		$self->conceal_secure_parameter_value( $row->secure, \$value );
 		push(
 			@data, {
 				"id"           => $row->id,
 				"name"         => $row->name,
 				"config_file"  => $row->config_file,
-				"value"        => $row->value,
+				"value"        => $value,
+				"secure"       => $row->secure,
 				"last_updated" => $row->last_updated,
 			}
 		);
@@ -121,11 +125,14 @@ sub readparameter_for_profile {
 	my $rs_data = $self->db->resultset("ProfileParameter")->search( { 'profile.name' => $profile_name }, { prefetch => [ 'parameter', 'profile' ] } );
 	my @data = ();
 	while ( my $row = $rs_data->next ) {
+		my $value = $row->parameter->value;
+		$self->conceal_secure_parameter_value( $row->parameter->secure, \$value );
 		push(
 			@data, {
 				"name"         => $row->parameter->name,
 				"config_file"  => $row->parameter->config_file,
-				"value"        => $row->parameter->value,
+				"value"        => $value,
+				"secure"       => $row->parameter->secure,
 				"last_updated" => $row->parameter->last_updated,
 			}
 		);
@@ -160,6 +167,10 @@ sub update {
 		$update->name( $self->param('parameter.name') );
 		$update->config_file( $self->param('parameter.config_file') );
 		$update->value( $self->param('parameter.value') );
+		if ( &is_admin($self) ) {
+			my $secure = defined( $self->param('parameter.secure') ) && $self->param('parameter.secure');
+			$update->secure($secure);
+		}
 		$update->update();
 
 		# if the update has failed, we don't even get here, we go to the exception page.
@@ -171,6 +182,7 @@ sub update {
 		&stash_role($self);
 		my $rs_param             = $self->db->resultset('Parameter')->search( { id => $id } );
 		my $data                 = $rs_param->single;
+		$self->conceal_secure_parameter_value( $data->{'_column_data'}{'secure'}, \$data->{'_column_data'}{'value'} );
 		my %assigned_profiles    = &get_assigned_profiles($self);
 		my %assigned_cachegroups = &get_assigned_cachegroups($self);
 		$self->stash(
@@ -189,10 +201,26 @@ sub is_valid {
 	my $name        = $self->param('parameter.name');
 	my $config_file = $self->param('parameter.config_file');
 	my $value       = $self->param('parameter.value');
+	my $secure      = defined( $self->param('parameter.secure') ) && $self->param('parameter.secure');
 
 	#Check permissions
 	if ( !&is_oper($self) ) {
 		$self->field('parameter.name')->is_equal( "", "You do not have the permissions to perform this operation!" );
+	}
+	if ( !&is_admin($self) ) {
+		my $id = $self->param('id');
+		if ( defined($id) ) {
+			my $rs_param = $self->db->resultset('Parameter')->search( { id => $id } );
+			my $data = $rs_param->single;
+			my $original_secure = $data->{'_column_data'}{'secure'};
+			if ( $original_secure == 1 ) {
+				$self->field('parameter.name')->is_equal( "", "You do not have the permissions to modify a secure parameter!" );
+			}
+		} else {
+			if ( $secure == 1 ) {
+				$self->field('parameter.name')->is_equal( "", "You do not have the permissions to create a secure parameter!" );
+			}
+		}
 	}
 
 	#Check required fields
@@ -202,7 +230,7 @@ sub is_valid {
 
 	#Make sure the same Parameter doesn't already exist
 	my $existing_param =
-		$self->db->resultset('Parameter')->search( { name => $name, value => $value, config_file => $config_file } )->get_column('id')->single();
+		$self->db->resultset('Parameter')->search( { name => $name, value => $value, config_file => $config_file, secure => $secure } )->get_column('id')->single();
 	if ($existing_param) {
 		$self->field('parameter.name')
 			->is_equal( "", "A parameter with the name \"$name\", config_file \"$config_file\", and value \"$value\" already exists." );
@@ -217,11 +245,13 @@ sub create {
 	my $new_id = -1;
 
 	if ( $self->is_valid() ) {
+		my $secure = defined( $self->param('parameter.secure') ) && $self->param('parameter.secure');
 		my $insert = $self->db->resultset('Parameter')->create(
 			{
 				name        => $self->param('parameter.name'),
 				config_file => $self->param('parameter.config_file'),
 				value       => $self->param('parameter.value'),
+				secure      => $secure,
 			}
 		);
 		$insert->insert();
@@ -242,7 +272,7 @@ sub create {
 	}
 	else {
 		&stash_role($self);
-		$self->stash( parameter => {}, fbox_layout => 1 );
+		$self->stash( parameter => { secure => 0 }, fbox_layout => 1 );
 		$self->render('parameter/add');
 	}
 }
@@ -250,7 +280,18 @@ sub create {
 # add parameter view
 sub add {
 	my $self = shift;
-	$self->stash( fbox_layout => 1, parameter => {} );
+	&stash_role($self);
+	$self->stash( fbox_layout => 1, parameter => { secure => 0 } );
+}
+
+# conceal secure parameter value
+sub conceal_secure_parameter_value {
+	my $self = shift;
+	my $secure = shift;
+	my $value = shift;
+	if ( $secure == 1 && !&is_admin($self) ) {
+		$$value = '*********';
+	}
 }
 
 1;

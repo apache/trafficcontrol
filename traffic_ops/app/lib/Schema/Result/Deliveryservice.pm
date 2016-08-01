@@ -281,6 +281,11 @@ __PACKAGE__->table("deliveryservice");
   default_value: 0
   is_nullable: 1
 
+=head2 multi_site_origin_algorithm
+
+  data_type: 'tinyint'
+  is_nullable: 1
+
 =head2 geo_limit_countries
 
   data_type: 'varchar'
@@ -396,6 +401,8 @@ __PACKAGE__->add_columns(
   { data_type => "tinyint", is_nullable => 0 },
   "geo_provider",
   { data_type => "tinyint", default_value => 0, is_nullable => 1 },
+  "multi_site_origin_algorithm",
+  { data_type => "tinyint", is_nullable => 1 },
   "geo_limit_countries",
   { data_type => "varchar", is_nullable => 1, size => 750 },
   "logs_enabled",
@@ -612,8 +619,8 @@ __PACKAGE__->belongs_to(
 );
 
 
-# Created by DBIx::Class::Schema::Loader v0.07045 @ 2016-08-01 09:42:24
-# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:WhDPhGKBJAdab1WWoJhCQA
+# Created by DBIx::Class::Schema::Loader v0.07045 @ 2016-08-01 08:58:13
+# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:k1aJ71tsV0AWeFF/OpHFUA
 
 # You can replace this text with custom code or comments, and it will be preserved on regeneration
 1;

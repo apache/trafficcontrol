@@ -57,7 +57,7 @@ public class CacheRegister implements CacheLocationManager {
 	}
 
 	public CacheLocation getCacheLocationById(final String id) {
-		for (CacheLocation cacheLocation : configuredLocations.values()) {
+		for (final CacheLocation cacheLocation : configuredLocations.values()) {
 			if (id.equals(cacheLocation.getId())) {
 				return cacheLocation;
 			}

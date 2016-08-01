@@ -38,13 +38,13 @@ public class ConsistentHasher {
 	public <T extends Hashable> List<T> selectHashables(final List<T> hashables, final int limit, final String s, final boolean shuffle) {
 		if (shuffle) {
 			Collections.shuffle(hashables);
-			return hashables.subList(0, limit);
+			return (limit <= hashables.size()) ? hashables.subList(0, limit) : hashables;
 		}
 
 		final SortedMap<Double, T> sortedHashables = sortHashables(hashables, s);
 		final List<T> selectedHashables = new ArrayList<T>();
 
-		for (T hashable : sortedHashables.values()) {
+		for (final T hashable : sortedHashables.values()) {
 			if (selectedHashables.size() >= limit) {
 				break;
 			}
@@ -59,7 +59,7 @@ public class ConsistentHasher {
 		final double hash = hashFunction.hash(s);
 		final SortedMap<Double, T> hashableMap = new TreeMap<Double, T>();
 
-		for (T hashable : hashables) {
+		for (final T hashable : hashables) {
 			final double closestHash = hashable.getClosestHash(hash);
 			double hashDelta = Math.abs(hash - closestHash);
 

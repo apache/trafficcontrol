@@ -1,6 +1,7 @@
 package http_server
 
 import (
+	"fmt"
 	"github.com/hydrogen18/stoppableListener"
 	"log"
 	"net"
@@ -11,9 +12,8 @@ import (
 
 var mgrReqChan chan DataRequest
 
-func writeResponse(w http.ResponseWriter, f Format, dr DataRequest) {
-	data := <-dr.C
-
+func writeResponse(w http.ResponseWriter, f Format, response <-chan []byte) {
+	data := <-response
 	if len(data) > 0 {
 		w.Write(data)
 	} else {
@@ -23,26 +23,42 @@ func writeResponse(w http.ResponseWriter, f Format, dr DataRequest) {
 
 // Endpoints returns a map of HTTP paths to functions.
 // This is a function because Go doesn't have constant map literals.
-func Endpoints() map[string]http.HandlerFunc {
+func Endpoints() (map[string]http.HandlerFunc, error) {
+	handleRoot, err := handleRootFunc()
+	if err != nil {
+		return nil, fmt.Errorf("Error getting root endpoint: %v")
+	}
+
 	// note: with the trailing slash, any non-trailing slash requests will get a 301 redirect
 	return map[string]http.HandlerFunc{
-		"/": http.NotFound,
-		"/publish/CacheStats/": handleCacheStats,
-		"/publish/CrConfig":    handleCrConfig,
-		"/publish/CrStates":    handleCrStates,
-		"/publish/DsStats":     handleDsStats,
-		"/publish/EventLog":    handleEventLog,
-		"/publish/PeerStates":  handlePeerStates,
-		"/publish/StatSummary": handleStatSummary,
-		"/publish/Stats":       handleStats,
-		"/publish/ConfigDoc":   handleConfigDoc,
-	}
+		"/publish/CacheStats/":       DataRequestFunc(CacheStats),
+		"/publish/CrConfig":          DataRequestFunc(TRConfig),
+		"/publish/CrStates":          handleCrStates,
+		"/publish/DsStats":           DataRequestFunc(DSStats),
+		"/publish/EventLog":          DataRequestFunc(EventLog),
+		"/publish/PeerStates":        DataRequestFunc(PeerStates),
+		"/publish/StatSummary":       DataRequestFunc(StatSummary),
+		"/publish/Stats":             DataRequestFunc(Stats),
+		"/publish/ConfigDoc":         DataRequestFunc(ConfigDoc),
+		"/api/cache-count":           DataRequestFunc(APICacheCount),
+		"/api/cache-available-count": DataRequestFunc(APICacheAvailableCount),
+		"/api/cache-down-count":      DataRequestFunc(APICacheDownCount),
+		"/api/version":               DataRequestFunc(APIVersion),
+		"/api/traffic-ops-uri":       DataRequestFunc(APITrafficOpsURI),
+		"/api/cache-statuses":        DataRequestFunc(APICacheStates),
+		"/": handleRoot,
+	}, nil
 }
 
-func RegisterEndpoints(sm *http.ServeMux) {
-	for path, f := range Endpoints() {
+func RegisterEndpoints(sm *http.ServeMux) error {
+	endpoints, err := Endpoints()
+	if err != nil {
+		return err
+	}
+	for path, f := range endpoints {
 		sm.HandleFunc(path, f)
 	}
+	return nil
 }
 
 var globalStoppableListener *stoppableListener.StoppableListener
@@ -74,7 +90,10 @@ func Run(c chan DataRequest, addr string) error {
 	mgrReqChan = c
 
 	sm := http.NewServeMux()
-	RegisterEndpoints(sm)
+	err = RegisterEndpoints(sm)
+	if err != nil {
+		return err
+	}
 	server := &http.Server{
 		Addr:           addr,
 		Handler:        sm,

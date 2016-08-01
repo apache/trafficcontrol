@@ -570,22 +570,13 @@ my %definition_for = (
 			value       => 3,
 		},
 	},
-	'regex_revalidate.config_ttl_max_hours' => {
+	'regex_revalidate.config_maxRevalDurationDays' => {
 		new   => 'Parameter',
 		using => {
 			id          => 64,
-			name        => 'ttl_max_hours',
+			name        => 'maxRevalDurationDays',
 			config_file => 'regex_revalidate.config',
-			value       => 768,
-		},
-	},
-	'regex_revalidate.config_ttl_min_hours' => {
-		new   => 'Parameter',
-		using => {
-			id          => 65,
-			name        => 'ttl_min_hours',
-			config_file => 'regex_revalidate.config',
-			value       => 48,
+			value       => 90,
 		},
 	},
 );

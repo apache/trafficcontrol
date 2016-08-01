@@ -97,7 +97,7 @@ public class RequestMatcher implements Comparable<RequestMatcher> {
 	}
 
 	@Override
-	@SuppressWarnings({"PMD.IfStmtsMustUseBraces" , "PMD.CyclomaticComplexity"})
+	@SuppressWarnings({"PMD.IfStmtsMustUseBraces" , "PMD.CyclomaticComplexity", "PMD.NPathComplexity"})
 	public boolean equals(final Object other) {
 		if (this == other) return true;
 		if (other == null || getClass() != other.getClass()) return false;

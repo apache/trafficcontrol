@@ -25,6 +25,7 @@ use Crypt::OpenSSL::RSA;
 use Crypt::OpenSSL::Bignum;
 use Crypt::OpenSSL::Random;
 use Net::DNS::SEC::Private;
+use JSON;
 my $TMP_LOCATION = "/var/tmp";
 
 sub register {
@@ -33,14 +34,15 @@ sub register {
 	$app->renderer->add_helper(
 		generate_ssl_keys => sub {
 			my $self     = shift;
-			my $hostname = shift;
-			my $country  = shift;
-			my $city     = shift;
-			my $state    = shift;
-			my $org      = shift;
-			my $unit     = shift;
-			my $version  = shift;
-			my $key      = shift;
+			my $record = shift;
+			my $hostname = $record->{hostname};
+			my $country  = $record->{country};
+			my $city     = $record->{city};
+			my $state    = $record->{state};
+			my $org      = $record->{org};
+			my $unit     = $record->{unit};;
+			my $version  = $record->{version};
+			my $key      = $record->{key};
 			my $key_type = "ssl";
 			my $response;
 
@@ -71,39 +73,19 @@ sub register {
 			}
 
 			#convert to base64
-			my $priv_key = $self->convert_file_to_base64("$TMP_LOCATION/$hostname.key");
-			my $csr      = $self->convert_file_to_base64("$TMP_LOCATION/$hostname.csr");
-			my $crt      = $self->convert_file_to_base64("$TMP_LOCATION/$hostname.crt");
+			$record->{certificate}->{key} = $self->convert_file_to_base64("$TMP_LOCATION/$hostname.key");
+			$record->{certificate}->{csr} = $self->convert_file_to_base64("$TMP_LOCATION/$hostname.csr");
+			$record->{certificate}->{crt} = $self->convert_file_to_base64("$TMP_LOCATION/$hostname.crt");
 
 			#delete key files on fs
 			$result = UI::Utils->exec_command("rm $TMP_LOCATION/$hostname.*");
 
-			#add files to riak
-			my $json         = JSON->new;
-			my $data_to_json = {
-				certificate => {
-					key => $priv_key,
-					csr => $csr,
-					crt => $crt
-				},
-				hostname     => $hostname,
-				country      => $country,
-				state        => $state,
-				city         => $city,
-				organization => $org,
-				businessUnit => $unit,
-				version      => $version,
-			};
-			my $json_data = $json->encode($data_to_json);
-
-			# $self->app->log->debug("json data = $json_data");
 			#store with the version provided
-			$self->riak_put( $key_type, "$key-$version", $json_data );
+			$self->riak_put( $key_type, "$key-$version", encode_json($record) );
 
-			# $self->app->log->debug("putting $key-$version");
 			#store as latest...there is probably a better way to do it
 			#TODO DN figure out linking
-			$response = $self->riak_put( $key_type, "$key-latest", $json_data );
+			$response = $self->riak_put( $key_type, "$key-latest", encode_json($record) );
 
 			return $response;
 		}
@@ -131,41 +113,31 @@ sub register {
 		add_ssl_keys_to_riak => sub {
 			my $self     = shift;
 			my $key_type = "ssl";
-			my $key      = shift;
-			my $version  = shift;
-			my $crt      = shift;
-			my $csr      = shift;
-			my $priv_key = shift;
+			my $record = shift;
+			my $key = $record->{key};
+			my $version = $record->{version};
 
 			#convert to base64
-			$priv_key = encode_base64($priv_key);
-			$csr      = encode_base64($csr);
-			$crt      = encode_base64($crt);
+			my $crt = encode_base64($record->{certificate}->{crt});
+			my $csr = encode_base64($record->{certificate}->{csr});
+			my $priv_key = encode_base64($record->{certificate}->{key});
 
 			#trim
 			$priv_key =~ s/\s+$//;
 			$crt =~ s/\s+$//;
 			$csr =~ s/\s+$//;
 
-			#add files to riak
-			my $json         = JSON->new;
-			my $data_to_json = {
-				certificate => {
-					key => $priv_key,
-					csr => $csr,
-					crt => $crt
-				},
-				version => $version,
-			};
-			my $json_data = $json->encode($data_to_json);
+			$record->{certificate}->{crt} = $crt;
+			$record->{certificate}->{csr} = $csr;
+			$record->{certificate}->{key} = $priv_key;
 
 			#store with the version provided
-			my $response = $self->riak_put( $key_type, "$key-$version", $json_data );
+			my $response = $self->riak_put( $key_type, "$key-$version", encode_json($record) );
 
 			if ( $response->{'response'}->{_rc} == 204 ) {
 
 				#store as latest
-				$response = $self->riak_put( $key_type, "$key-latest", $json_data );
+				$response = $self->riak_put( $key_type, "$key-latest", encode_json($record) );
 			}
 			return $response;
 		}

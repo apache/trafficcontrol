@@ -74,6 +74,25 @@ while ( defined( $p->[$i] ) ) {
 	$i++;
 }
 
+# test secure parameter: create a non-secure parameter, modify to secure parameter, delete it
+$t->post_ok( '/parameter/create' => form => { name => 'auto_tstinsertparam', config_file => 'auto_tstfile', value => 'auto_tstvalue', profile => '13' } )
+	->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } );
+$q = 'select id from parameter where name = \'auto_tstinsertparam\'';
+my $get_param = $dbh->prepare($q);
+$get_param->execute();
+$p = $get_param->fetchall_arrayref( {} );
+$get_param->finish();
+my $i = 0;
+while ( defined( $p->[$i] ) ) {
+	my $id = $p->[$i]->{id};
+	$t->post_ok( '/parameter/update/'
+			. $id => form => { name => 'auto_tstinsertparam', config_file => 'auto_tstfile', value => 'auto_tst_UPDATED_value', secure => '1', profile => '13' } )
+		->status_is(302)->or( sub { diag $t->tx->res->content->asset->{content}; } );
+	$t->get_ok( '/parameter/delete/' . $id )->status_is(302);    # no need to delete the profile_parameter entry - the cascade does that.
+	$i++;
+}
+
+ok $t->get_ok('/logout')->status_is(302)->or( sub { diag $t->tx->res->content->asset->{content}; } );
 ok $t->get_ok('/logout')->status_is(302)->or( sub { diag $t->tx->res->content->asset->{content}; } );
 $dbh->disconnect();
 done_testing();

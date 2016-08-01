@@ -111,7 +111,7 @@ sub register {
 	$app->renderer->add_helper(
 		alert => sub {
 			my $self   = shift || confess("Call on an instance of MojoPlugins::Response");
-			my $alerts = shift || confess("Please supply the alerts hash");
+			my $alerts = shift || confess("Please supply a string or an alerts hash like { 'Error #1: ' => 'Error message' }");
 
 			my $builder ||= MojoPlugins::Response::Builder->new( $self, @_ );
 			my @alerts_response = $builder->build_alerts($alerts);
@@ -124,7 +124,7 @@ sub register {
 	$app->renderer->add_helper(
 		internal_server_error => sub {
 			my $self   = shift || confess("Call on an instance of MojoPlugins::Response");
-			my $alerts = shift || confess("Please supply the alerts hash");
+			my $alerts = shift || confess("Please supply a string or an alerts hash like { 'Error #1: ' => 'Error message' }");
 
 			my $builder ||= MojoPlugins::Response::Builder->new( $self, @_ );
 			my @alerts_response = $builder->build_alerts($alerts);

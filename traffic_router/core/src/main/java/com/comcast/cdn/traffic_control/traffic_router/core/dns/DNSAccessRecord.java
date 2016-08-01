@@ -34,6 +34,7 @@ public final class DNSAccessRecord {
     private final ResultType resultType;
     private final ResultDetails resultDetails;
     private final Geolocation resultLocation;
+    private final long requestNanoTime;
 
     public long getQueryInstant() {
         return queryInstant;
@@ -59,6 +60,10 @@ public final class DNSAccessRecord {
         return resultLocation;
     }
 
+    public long getRequestNanoTime() {
+        return requestNanoTime;
+    }
+
     public static class Builder {
         private final long queryInstant;
         private final InetAddress client;
@@ -66,10 +71,12 @@ public final class DNSAccessRecord {
         private ResultType resultType;
         private ResultDetails resultDetails;
         private Geolocation resultLocation;
+        private final long requestNanoTime;
 
         public Builder(final long queryInstant, final InetAddress client) {
             this.queryInstant = queryInstant;
             this.client = client;
+            this.requestNanoTime = System.nanoTime();
         }
 
         public Builder dnsMessage(final Message query) {
@@ -104,6 +111,7 @@ public final class DNSAccessRecord {
         resultType = builder.resultType;
         resultDetails = builder.resultDetails;
         resultLocation = builder.resultLocation;
+        requestNanoTime = builder.requestNanoTime;
     }
 
 }

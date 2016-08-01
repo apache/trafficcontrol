@@ -153,7 +153,7 @@ public class DataExporter {
 			final TrafficRouter trafficRouter = trafficRouterManager.getTrafficRouter();
 			final Collection<CacheLocation> caches = trafficRouter.getCacheRegister().getCacheLocations();
 
-			for (CacheLocation cl2 : caches) {
+			for (final CacheLocation cl2 : caches) {
 				if (cl2.getId().equals(locId)) {
 					return cl2;
 				}
