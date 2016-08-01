@@ -182,7 +182,7 @@
             $('#remap_text_row').show(speed);
             $('#regexp_add').show(speed);
             $('#geo_limit_countries_row').show(speed);
-            $('#geolimit_redirect_url_row').hide(speed);
+            check_geolimit_redirect_url_row_showhide(0, speed);
 		}
 		else if (type_selected.match(/^ANY_MAP$/)) {
             $('#protocoli_row').hide(speed);

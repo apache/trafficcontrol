@@ -209,13 +209,14 @@ ok $t->post_ok(
 # Note the 4 is the index, not the id.
 #This can potentially make the tests fragile if more ds's are added to the fixtures...
 ok $t->get_ok('/datadeliveryservice')->status_is(200)
+	->json_is( '/4/xml_id' => 'tst_xml_id_1' )
 	->json_is( '/4/dscp' => '40' )
 	->json_is( '/4/active' => '1' )
 	->json_is( '/4/protocol' => '0' )
 	->json_is( '/4/display_name' => 'display name' )
 	->json_is('/4/regional_geo_blocking' => '1' )
 	->json_is('/0/regional_geo_blocking' => '1' )
-	->json_is('/4/geolimit_redirect_url' => 'http://knutsel3.com' )
+	->json_is('/6/geolimit_redirect_url' => 'http://knutsel3.com' )
 	->json_is('/1/regional_geo_blocking' => '0' ),
 	"validate delivery services were created";
 
