@@ -106,10 +106,47 @@ sub teardown {
 	$schema->resultset($table_name)->delete_all;
 }
 
+sub reset_sequence_id {
+	my $self   = shift;
+	my $dbh    = Schema->database_handle;
+
+	my @table_names = qw(
+		asn
+		cachegroup
+		cdn
+		deliveryservice
+		division
+		federation
+		federation_resolver
+		hwinfo
+		job_agent
+		job_status
+		log
+		parameter
+		phys_location
+		profile
+		regex
+		region
+		role
+		server
+		staticdnsentry
+		stats_summary
+		status
+		tm_user
+		type );
+	foreach my $name (@table_names) {
+		my $p = $dbh->prepare("ALTER SEQUENCE " . $name . "_id_seq RESTART WITH 1");
+		$p->execute();
+	}
+}
+
 sub load_core_data {
 	my $self          = shift;
 	my $schema        = shift;
 	my $schema_values = { schema => $schema, no_transactions => 1 };
+
+	$self->reset_sequence_id();
+
 	diag "Initializing DB:";
 	$self->load_all_fixtures( Fixtures::Integration::Cdn->new($schema_values) );
 	$self->load_all_fixtures( Fixtures::Integration::Type->new($schema_values) );
@@ -119,7 +156,7 @@ sub load_core_data {
 	$self->load_all_fixtures( Fixtures::Integration::Region->new($schema_values) );
 	$self->load_all_fixtures( Fixtures::Integration::PhysLocation->new($schema_values) );
 	$self->load_all_fixtures( Fixtures::Integration::Status->new($schema_values) );
-	$self->load_all_fixtures( Fixtures::Integration::Cachegroup->new($schema_values) );
+	# $self->load_all_fixtures( Fixtures::Integration::Cachegroup->new($schema_values) );
 	$self->load_all_fixtures( Fixtures::Integration::Regex->new($schema_values) );
 	$self->load_all_fixtures( Fixtures::Integration::Parameter->new($schema_values) );
 	$self->load_all_fixtures( Fixtures::Integration::Profile->new($schema_values) );
