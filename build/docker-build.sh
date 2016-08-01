@@ -1,13 +1,14 @@
 #!/bin/bash
 
+# TODO: add repo and branch as cmd line options
 export GITREPO=${GITREPO:-https://github.com/Comcast/traffic_control}
 export BRANCH=${BRANCH:-master}
 
+# TODO: add cmd line option to clean up images
 projects="traffic_ops traffic_monitor traffic_router traffic_stats traffic_portal"
 
 # collect image names for later cleanup
 images=
-
 createBuilders() {
 	
 	docker build -t traffic_control_gitter ./build
@@ -36,7 +37,6 @@ runBuild
 # clean up...
 docker cp gitter:/repo/traffic_control/dist .
 docker rm -v gitter
-docker rmi $images
-
-echo "Built rpms are here: " $(pwd)/dist
-ls -l $(pwd)/dist
+# TODO: remove images only if requested by cmd line option
+#   docker rmi $images
+echo "These images were created: $images"
