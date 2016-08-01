@@ -454,6 +454,12 @@ public class TrafficRouter {
 			return null;
 		}
 
+		if (request.isSecure() && !deliveryService.isSslEnabled()) {
+			track.setResult(ResultType.ERROR);
+			track.setResultDetails(ResultDetails.DS_NOT_FOUND);
+			return null;
+		}
+
 		final HTTPRouteResult routeResult = new HTTPRouteResult();
 
 		routeResult.setDeliveryService(deliveryService);

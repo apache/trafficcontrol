@@ -53,7 +53,7 @@ public class CoverageZoneTest {
 			assertThat(jsonNode.get("geolocation"), not(nullValue()));
 			assertThat(jsonNode.get("caches").get(0).get("id").asText(), startsWith("edge-cache-03"));
 			assertThat(jsonNode.get("caches").get(0).get("fqdn").asText(), startsWith("edge-cache-03"));
-			assertThat(jsonNode.get("caches").get(0).get("fqdn").asText(), endsWith("thecdn.cdn.example.com"));
+			assertThat(jsonNode.get("caches").get(0).get("fqdn").asText(), endsWith("thecdn.example.com"));
 			assertThat(jsonNode.get("caches").get(0).get("port").asInt(), greaterThan(1024));
 			assertThat(jsonNode.get("caches").get(0).get("hashValues").get(0).asDouble(), greaterThan(1.0));
 			assertThat(isValidIpV4String(jsonNode.get("caches").get(0).get("ip4").asText()), equalTo(true));

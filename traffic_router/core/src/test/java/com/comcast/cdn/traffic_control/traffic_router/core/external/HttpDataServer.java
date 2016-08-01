@@ -21,6 +21,7 @@ import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
 import com.sun.net.httpserver.HttpServer;
 
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -32,6 +33,11 @@ import java.net.URI;
 public class HttpDataServer implements HttpHandler {
 	private HttpServer httpServer;
 	private boolean receivedPost = false;
+	private int testHttpServerPort;
+
+	public HttpDataServer(int testHttpServerPort) {
+		this.testHttpServerPort = testHttpServerPort;
+	}
 
 	public void start(int port) throws IOException {
 		httpServer = HttpServer.create(new InetSocketAddress(InetAddress.getLoopbackAddress(), port),10);
@@ -116,30 +122,53 @@ public class HttpDataServer implements HttpHandler {
 						} catch (IOException e) {
 							System.out.println("Failed closing output stream!: " + e.getMessage());
 						}
+						return;
 					}
 				}
 
+				if (!path.contains("CrConfig")) {
+					try (OutputStream os = httpExchange.getResponseBody()) {
+						httpExchange.sendResponseHeaders(200, 0);
 
-				OutputStream os = null;
-				try {
-					httpExchange.sendResponseHeaders(200, 0);
-					os = httpExchange.getResponseBody();
-					final byte[] buffer = new byte[0x10000];
-					int count;
+						final byte[] buffer = new byte[0x10000];
+						int count;
 
-					while ((count = inputStream.read(buffer)) >= 0) {
-						os.write(buffer,0,count);
-					}
-				} catch (Exception e) {
-					System.out.println("Failed sending data for " + path + " : " + e.getMessage());
-				} finally {
-					try {
-						if (inputStream != null) inputStream.close();
-						if (os != null) os.close();
+						while ((count = inputStream.read(buffer)) >= 0) {
+							os.write(buffer, 0, count);
+						}
 					} catch (Exception e) {
-						System.out.println("Failed closing stream!: " + e.getMessage());
+						System.out.println("Failed sending data for " + path + " : " + e.getMessage());
+					}
+				} else {
+					try {
+						final byte[] buffer = new byte[0x10000];
+						StringBuilder stringBuilder = new StringBuilder();
+
+						while (inputStream.read(buffer) >= 0) {
+							stringBuilder.append(new String(buffer));
+						}
+
+						String body = stringBuilder.toString();
+
+						if (path.contains("CrConfig")) {
+							body = body.replaceAll("localhost:8889" , "localhost:" + testHttpServerPort);
+						}
+
+						httpExchange.sendResponseHeaders(200, 0);
+						httpExchange.getResponseBody().write(body.getBytes());
+						httpExchange.getResponseBody().close();
+
+					} catch (Exception e) {
+						System.out.println("Failed sending data for " + path + " : " + e.getMessage());
 					}
 				}
+
+				try {
+					inputStream.close();
+				} catch (Exception e) {
+					System.out.println("Failed closing stream!: " + e.getMessage());
+				}
+
 			}
 		}).start();
 	}

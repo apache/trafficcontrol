@@ -154,7 +154,7 @@ public class PeriodicResourceUpdater {
 			if (!hasBeenLoaded || needsUpdating(existingDB)) {
 				final Request request = getRequest(urls.nextUrl());
 				if (request != null) {
-					asyncHttpClient.executeRequest(request, new UpdateHandler()); // AsyncHandlers are NOT thread safe; one instance per request
+					asyncHttpClient.executeRequest(request, new UpdateHandler(request)); // AsyncHandlers are NOT thread safe; one instance per request
 					return true;
 				}
 			} else {
@@ -250,8 +250,9 @@ public class PeriodicResourceUpdater {
 	}
 
 	private class UpdateHandler extends AsyncCompletionHandler<Object> {
-
-		public UpdateHandler() {
+		final Request request;
+		public UpdateHandler(final Request request) {
+			this.request = request;
 		}
 
 		@Override
@@ -270,7 +271,7 @@ public class PeriodicResourceUpdater {
 
 		@Override
 		public void onThrowable(final Throwable t){
-			LOGGER.warn(t,t);
+			LOGGER.warn("Failed request " + request.getUrl() + ": " + t, t);
 		}
 	};
 

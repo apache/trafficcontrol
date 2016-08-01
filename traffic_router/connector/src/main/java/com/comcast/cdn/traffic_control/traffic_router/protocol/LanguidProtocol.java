@@ -16,6 +16,7 @@
 
 package com.comcast.cdn.traffic_control.traffic_router.protocol;
 
+import com.comcast.cdn.traffic_control.traffic_router.keystore.KeyStoreHelper;
 import org.apache.coyote.http11.Http11Protocol;
 
 public class LanguidProtocol extends Http11Protocol {
@@ -26,9 +27,17 @@ public class LanguidProtocol extends Http11Protocol {
 	private String readyAttribute;
 	private String portAttribute;
 
+	public LanguidProtocol() {
+		setSSLImplementation(RouterSslImplementation.class.getCanonicalName());
+	}
+
 	@Override
 	@SuppressWarnings("PMD.SignatureDeclareThrowsException")
 	public void init() throws Exception {
+		if (isSSLEnabled()) {
+			KeyStoreHelper.getInstance();
+		}
+
 		if (!isReady()) {
 			log.info("Init called; creating thread to monitor the state of Traffic Router");
 			new LanguidPoller(this).start();
