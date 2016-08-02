@@ -16,19 +16,15 @@
 #
 # RPM spec file for the Traffic Portal
 #
-
-%define version @VERSION@
-%define build_number @BUILD_NO@
-%define traffic_portal_home /opt/traffic_portal
-
-Summary: Traffic Portal
-Name: traffic_portal
-Version: %{version}
-Release: %{build_number}
-License: Apache License, Version 2.0
-Group: Base System/System Tools
-Source: $RPM_SOURCE_DIR/traffic_portal-%{version}.tgz
-BuildRoot: /var/tmp/%{name}-root
+%define debug_package %{nil}
+Name:		traffic_portal
+Version:        %{traffic_control_version}
+Release:        %{build_number}
+Summary:        Traffic Portal
+Group:		Applications/Communications
+License:	Apache License, Version 2.0
+URL:		https://github.com/Comcast/traffic_control/
+Source:		%{_sourcedir}/traffic_portal-%{traffic_control_version}.tgz
 AutoReqProv: no
 Requires: nodejs
 
@@ -54,9 +50,9 @@ Built: @BUILT@
 
 %post
     echo "Successfully installed the traffic_portal assets to /opt/traffic_portal"
-    /bin/mkdir -p /var/log/traffic_portal
-    /bin/chmod +x /opt/traffic_portal/node_modules/forever/bin/forever
-    /bin/chmod +x /etc/init.d/traffic_portal
+    %__mkdir -p /var/log/traffic_portal
+    %__chmod +x /opt/traffic_portal/node_modules/forever/bin/forever
+    %__chmod +x /etc/init.d/traffic_portal
     echo "Successfully installed the 'traffic_portal' service"
     /sbin/chkconfig traffic_portal on
     echo ""
