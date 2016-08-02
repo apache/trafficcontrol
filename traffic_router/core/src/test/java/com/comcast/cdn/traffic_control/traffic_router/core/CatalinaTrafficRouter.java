@@ -30,10 +30,11 @@ public class CatalinaTrafficRouter {
 	Catalina catalina;
 
 	public CatalinaTrafficRouter(String serverXmlPath, String appBase) {
+		System.setProperty("java.util.logging.SimpleFormatter.format", "%1$tFT%1$tT.%1$tL [%4$s] %5$s %6$s%n");
 		java.util.logging.Logger logger = java.util.logging.Logger.getLogger("");
 		java.util.logging.Handler[] handlers = logger.getHandlers();
 		for (java.util.logging.Handler handler : handlers) {
-			handler.setLevel(Level.WARNING);
+			handler.setLevel(Level.SEVERE);
 		}
 
 		System.setProperty("dns.tcp.port", "1053");

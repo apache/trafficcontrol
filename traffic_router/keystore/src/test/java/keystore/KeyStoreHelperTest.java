@@ -27,7 +27,6 @@ import java.security.cert.Certificate;
 import java.security.cert.X509Certificate;
 import java.util.ArrayList;
 import java.util.Base64;
-import java.util.Enumeration;
 import java.util.List;
 import java.util.Vector;
 
@@ -109,13 +108,13 @@ public class KeyStoreHelperTest {
 
 		when(x509Certificate.getSubjectX500Principal()).thenReturn(x500Principal);
 
-		Vector<String> aliasVector =new Vector<>();
-		aliasVector.add("alias-1");
-		aliasVector.add("alias-2");
+		PowerMockito.when(keyStore.aliases()).thenAnswer(invocation -> {
+			Vector<String> vector = new Vector<>();
+			vector.add("alias-1");
+			vector.add("alias-2");
+			return vector.elements();
+		});
 
-		Enumeration<String> aliases = aliasVector.elements();
-
-		PowerMockito.when(keyStore.aliases()).thenReturn(aliases);
 		PowerMockito.when(keyStore.getCertificate("alias-1")).thenReturn(x509Certificate);
 		PowerMockito.when(keyStore.getCertificate("alias-2")).thenReturn(mock(Certificate.class));
 	}
@@ -131,7 +130,7 @@ public class KeyStoreHelperTest {
 		assertThat(keyStoreHelper.getKeyPass(), equalTo("password".toCharArray()));
 		assertThat(keyStoreHelper.getKeyStore(), equalTo(keyStore));
 
-		boolean success = keyStoreHelper.importCertificate("deliveryservice.cdn.example.com",privateKey,x509Certificate);
+		boolean success = keyStoreHelper.importCertificateChain("deliveryservice.cdn.example.com",privateKey,new Certificate[] {x509Certificate});
 		assertThat(success, equalTo(true));
 
 		verify(keyStore).setKeyEntry("deliveryservice.cdn.example.com", privateKey, "password".toCharArray(), new Certificate[] {x509Certificate});

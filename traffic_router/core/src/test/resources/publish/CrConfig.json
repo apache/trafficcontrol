@@ -2674,7 +2674,8 @@
         "ds-01": ["edge-cache-080.ds-01.thecdn.example.com"],
         "test-dns": ["edge.test-dns.thecdn.example.com"]
       }
-    },    "edge-cache-081": {
+    },
+    "edge-cache-081": {
       "type": "EDGE",
       "profile": "EDGE_STATIC",
       "status": "REPORTED",
@@ -3001,9 +3002,11 @@
         "ds-03": ["edge-cache-090.ds-03.thecdn.example.com"],
         "ds-02": ["edge-cache-090.ds-02.thecdn.example.com"],
         "ds-01": ["edge-cache-090.ds-01.thecdn.example.com"],
+        "https-nocert": ["edge-cache-090.https-nocert.thecdn.example.com"],
         "test-dns": ["edge.test-dns.thecdn.example.com"]
       }
-    },    "edge-cache-091": {
+    },
+    "edge-cache-091": {
       "type": "EDGE",
       "profile": "EDGE_STATIC",
       "status": "REPORTED",
@@ -3033,6 +3036,7 @@
         "ds-03": ["edge-cache-091.ds-03.thecdn.example.com"],
         "ds-02": ["edge-cache-091.ds-02.thecdn.example.com"],
         "ds-01": ["edge-cache-091.ds-01.thecdn.example.com"],
+        "https-nocert": ["edge-cache-091.https-nocert.thecdn.example.com"],
         "test-dns": ["edge.test-dns.thecdn.example.com"]
       }
     },
@@ -3066,6 +3070,7 @@
         "ds-03": ["edge-cache-092.ds-03.thecdn.example.com"],
         "ds-02": ["edge-cache-092.ds-02.thecdn.example.com"],
         "ds-01": ["edge-cache-092.ds-01.thecdn.example.com"],
+        "https-nocert": ["edge-cache-092.https-nocert.thecdn.example.com"],
         "test-dns": ["edge.test-dns.thecdn.example.com"]
       }
     },
@@ -3099,6 +3104,7 @@
         "ds-03": ["edge-cache-093.ds-03.thecdn.example.com"],
         "ds-02": ["edge-cache-093.ds-02.thecdn.example.com"],
         "ds-01": ["edge-cache-093.ds-01.thecdn.example.com"],
+        "https-nocert": ["edge-cache-093.https-nocert.thecdn.example.com"],
         "test-dns": ["edge.test-dns.thecdn.example.com"]
       }
     },
@@ -3132,6 +3138,7 @@
         "ds-03": ["edge-cache-094.ds-03.thecdn.example.com"],
         "ds-02": ["edge-cache-094.ds-02.thecdn.example.com"],
         "ds-01": ["edge-cache-094.ds-01.thecdn.example.com"],
+        "https-nocert": ["edge-cache-094.https-nocert.thecdn.example.com"],
         "test-dns": ["edge.test-dns.thecdn.example.com"]
       }
     },
@@ -3837,6 +3844,43 @@
       "ttl": "3600",
       "ip6RoutingEnabled": "false"
     },
+    "https-nocert": {
+      "sslEnabled": "true",
+      "domains": ["https-nocert.thecdn.example.com"],
+      "missLocation": {
+        "long": "-87.627778",
+        "lat": "41.881944"
+      },
+      "ttls": {
+        "AAAA": "3600",
+        "SOA": "7200",
+        "A": "3600",
+        "NS": "3600"
+      },
+      "ttl": "3600",
+      "ip6RoutingEnabled": "false",
+      "dispersion": {
+        "limit": 1,
+        "shuffled": "true"
+      },
+      "coverageZoneOnly": "false",
+      "regionalGeoBlocking": "false",
+      "matchsets": [{
+        "protocol": "HTTP",
+        "matchlist": [{
+          "regex": ".*\\.https-nocert\\..*",
+          "match-type": "HOST"
+        }]
+      }],
+      "soa": {
+        "expire": "604800",
+        "minimum": "30",
+        "admin": "admin@thecdn.example.com",
+        "retry": "7200",
+        "refresh": "28800"
+      },
+      "geolocationProvider": "maxmindGeolocationService"
+    },
     "test-dns": {
       "sslEnabled": "false",
       "bypassDestination": {"DNS": {
@@ -3926,6 +3970,7 @@
     }
   },
   "config": {
+    "certificate.api.url": "http://${toHostname}/api/1.2/cdns/name/${cdnName}/sslkeys.json",
     "federationmapping.polling.url": "http://${toHostname}/internal/api/1.2/federations.json",
     "federationmapping.polling.interval": "600000",
     "steeringmapping.polling.url": "http://${toHostname}/internal/api/1.2/steering.json",
@@ -3960,7 +4005,8 @@
       "refresh": "28800"
     },
     "coveragezone.polling.url": "http://localhost:8889/czf.json",
-    "dnssec.enabled": "false",
-    "api.auth.url": "http://${toHostname}/api/1.1/user/login"
+    "api.auth.url": "http://${toHostname}/api/1.1/user/login",
+    "certificates.polling.interval": "10000",
+    "dnssec.enabled": "false"
   }
 }

@@ -20,12 +20,14 @@ public class KeyStoreLoader {
 
 	public KeyStore load() {
 		if (!Files.exists(keyStorePath)) {
+			log.info("creating new keystore at " + keyStorePath.toAbsolutePath());
 			return createKeyStore(keyStorePath, keyPass);
 		}
 
 		try (final InputStream inputStream = Files.newInputStream(keyStorePath)) {
 			final KeyStore keyStore = KeyStore.getInstance(KeyStore.getDefaultType());
 			keyStore.load(inputStream, keyPass);
+			log.info("loaded keystore from " + keyStorePath.toAbsolutePath());
 			return keyStore;
 		} catch (Exception e) {
 			log.error("Failed loading keystore from " + keyStorePath + " : " + e.getMessage());

@@ -21,7 +21,6 @@ import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
 import com.sun.net.httpserver.HttpServer;
 
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -29,24 +28,40 @@ import java.net.HttpCookie;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.URI;
+//import java.util.logging.Logger;
 
 public class HttpDataServer implements HttpHandler {
 	private HttpServer httpServer;
-	private boolean receivedPost = false;
 	private int testHttpServerPort;
 
 	public HttpDataServer(int testHttpServerPort) {
 		this.testHttpServerPort = testHttpServerPort;
 	}
+	private boolean receivedSteeringPost = false;
+	private boolean receivedCertificatesPost = false;
+
+// Useful for producing an access log
+//	static {
+//		Logger logger = Logger.getLogger("com.sun.net.httpserver");
+//		logger.setLevel(java.util.logging.Level.ALL);
+//
+//		java.util.logging.Handler[] handlers = logger.getHandlers();
+//		for (java.util.logging.Handler handler : handlers) {
+//			handler.setLevel(java.util.logging.Level.ALL);
+//		}
+//	}
 
 	public void start(int port) throws IOException {
 		httpServer = HttpServer.create(new InetSocketAddress(InetAddress.getLoopbackAddress(), port),10);
 		httpServer.createContext("/", this);
 		httpServer.start();
+		System.out.println(">>>>>>>>>>>>> Started Fake Http Data Server at " + port);
 	}
 
 	public void stop() {
+		System.out.println(">>>>>>>>>>>>>> Stopping Fake Http Data Server");
 		httpServer.stop(10);
+		System.out.println(">>>>>>>>>>>>>> STOPPED Fake Http Data Server");
 	}
 
 	@Override
@@ -55,8 +70,15 @@ public class HttpDataServer implements HttpHandler {
 		new Thread(new Runnable() {
 			@Override
 			public void run() {
-				if ("POST".equals(httpExchange.getRequestMethod()) && "/steering".equals(httpExchange.getRequestURI().getPath())) {
-					receivedPost = true;
+				if ("POST".equals(httpExchange.getRequestMethod()) ) {
+					if (!receivedSteeringPost && "/steering".equals(httpExchange.getRequestURI().getPath())) {
+						receivedSteeringPost = true;
+					}
+
+					if (!receivedCertificatesPost && "/certificates".equals(httpExchange.getRequestURI().getPath())) {
+						receivedCertificatesPost = true;
+					}
+
 					try {
 						httpExchange.sendResponseHeaders(200,0);
 					} catch (IOException e) {
@@ -78,29 +100,29 @@ public class HttpDataServer implements HttpHandler {
 				}
 
 				if ("api/1.1/user/login".equals(path)) {
-					OutputStream os = null;
 					try {
 						Headers headers = httpExchange.getResponseHeaders();
 						headers.set("Set-Cookie", new HttpCookie("mojolicious","fake-cookie").toString());
 						httpExchange.sendResponseHeaders(200,0);
 					} catch (Exception e) {
 						System.out.println(">>>> Failed setting cookie");
-					} finally {
-						if (os != null) {
-							try {
-								os.close();
-							} catch (Exception e) {
-								System.out.println("Failed closing response");
-							}
-						}
-
-						return;
 					}
 				}
 
 				// Pretend that someone externally changed steering.json data
-				if (receivedPost && "internal/api/1.2/steering.json".equals(path)) {
+				if (receivedSteeringPost && "internal/api/1.2/steering.json".equals(path)) {
 					path = "internal/api/1.2/steering2.json";
+				}
+
+				// pretend certificates have not been updated
+				if (!receivedCertificatesPost && "api/1.2/cdns/name/thecdn/sslkeys.json".equals(path)) {
+					try {
+						httpExchange.sendResponseHeaders(304, 0);
+					} catch (Exception e) {
+						System.out.println("Failed sending 304!: " + e.getClass().getCanonicalName() + " " + e.getMessage());
+					}
+
+					return;
 				}
 
 				InputStream inputStream = getClass().getClassLoader().getResourceAsStream(path);

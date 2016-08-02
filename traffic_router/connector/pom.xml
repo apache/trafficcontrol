@@ -95,6 +95,11 @@
 
 	<dependencies>
 		<dependency>
+			<groupId>com.comcast.cdn.traffic_control.traffic_router</groupId>
+			<artifactId>traffic_router_keystore</artifactId>
+			<version>${project.parent.version}</version>
+		</dependency>
+		<dependency>
 			<groupId>org.apache.tomcat</groupId>
 			<artifactId>coyote</artifactId>
 			<version>6.0.33</version>
