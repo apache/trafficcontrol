@@ -8,7 +8,7 @@
 # Options:
 #    -r <gitrepo> git repository to clone from (defaults to value of GITREPO env variable or
 #		  `https://github.com/Comcast/traffic_control').  Can be a URI or local directory.
-#    -b <branch>  branch in repository to checkout (defaults to value of BRANCH env variable or `master')
+#    -b <branch>  branch (or tag) in repository to checkout (defaults to value of BRANCH env variable or `master')
 #    -c           clean images after completion (default is not to clean)
 #    -d <dir>     directory to copy build artifacts (default is ./dist)
 
