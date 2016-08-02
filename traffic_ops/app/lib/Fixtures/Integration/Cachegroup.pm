@@ -69,9 +69,9 @@ my %definition_for = (
 	'3' => {
 		new => 'Cachegroup',
 		using => {
-			name => '3-mid-east',
+			name => 'mid-east',
 			parent_cachegroup_id => '5',
-			short_name => 'east',
+			short_name => '3-east',
 			type => '23',
 			last_updated => '2015-12-10 15:44:36',
 			latitude => '0',
@@ -95,13 +95,13 @@ my %definition_for = (
 	'5' => {
 		new => 'Cachegroup',
 		using => {
-			name => '5-mid-west',
+			name => 'mid-west',
 			type => '23',
 			last_updated => '2015-12-10 15:44:36',
 			latitude => '0',
 			longitude => '0',
 			parent_cachegroup_id => '6',
-			short_name => 'west',
+			short_name => '5-west',
 		},
 	},
 	## id => 7
