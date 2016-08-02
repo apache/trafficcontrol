@@ -133,6 +133,7 @@ sub reset_sequence_id {
 		stats_summary
 		status
 		tm_user
+		to_extension
 		type );
 	foreach my $name (@table_names) {
 		my $p = $dbh->prepare("ALTER SEQUENCE " . $name . "_id_seq RESTART WITH 1");

@@ -36,11 +36,9 @@ my $json = JSON->new->allow_nonref;
 
 my @etypes = ( "CHECK_EXTENSION_BOOL", "CHECK_EXTENSION_NUM" );
 foreach my $num ( 1 .. 36 ) {
-
 	$t->get_ok('/api/1.1/to_extensions.json')->status_is(200);
 	my $extlist = $json->decode( $t->tx->res->content->asset->{content} );
 
-	# diag "length is " . scalar( @{ $extlist->{response} } );
 	if ( scalar( @{ $extlist->{response} } ) < 31 ) {
 		$t->post_ok(
 			'/api/1.1/to_extensions' => json => {
