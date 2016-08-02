@@ -156,7 +156,7 @@ sub load_core_data {
 	$self->load_all_fixtures( Fixtures::Integration::Region->new($schema_values) );
 	$self->load_all_fixtures( Fixtures::Integration::PhysLocation->new($schema_values) );
 	$self->load_all_fixtures( Fixtures::Integration::Status->new($schema_values) );
-	# $self->load_all_fixtures( Fixtures::Integration::Cachegroup->new($schema_values) );
+	$self->load_all_fixtures( Fixtures::Integration::Cachegroup->new($schema_values) );
 	$self->load_all_fixtures( Fixtures::Integration::Regex->new($schema_values) );
 	$self->load_all_fixtures( Fixtures::Integration::Parameter->new($schema_values) );
 	$self->load_all_fixtures( Fixtures::Integration::Profile->new($schema_values) );
@@ -171,18 +171,16 @@ sub load_core_data {
 	diag "Done!";
 }
 
+# Tearing down the Cachegroup table requires deleting them in a specific order, because
+# of the 'parent_cachegroup_id' and nested references.
 sub delete_cachegroups {
 	my $self   = shift;
-	my $schema = shift;
 
-	#	my $sql     = 'IS NOT NULL AND type != 7';
-	#	my $parents = $schema->resultset('Cachegroup')->search( { parent_cachegroup_id => \$sql } );
-	#	$parents->delete;
-	my $orgs = $schema->resultset('Cachegroup')->search( { type => 6 } );
-	$orgs->delete;
-	$orgs = $schema->resultset('Cachegroup')->search( { type => 7 } );
-	$orgs->delete;
-	$schema->resultset('Cachegroup')->delete_all;
+	my $dbh    = Schema->database_handle;
+	my $cg = $dbh->prepare("TRUNCATE TABLE cachegroup CASCADE;");
+	$cg->execute();
+	$cg->finish();
+	$dbh->disconnect;
 }
 
 sub unload_core_data {

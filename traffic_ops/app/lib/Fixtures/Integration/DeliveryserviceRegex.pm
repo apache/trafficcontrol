@@ -29,64 +29,64 @@ my %definition_for = (
 	'0' => {
 		new => 'DeliveryserviceRegex',
 		using => {
-			regex => '1',
+			regex => '5',
 			set_number => '0',
-			deliveryservice => '1',
+			deliveryservice => '4',
 		},
 	},
 	'1' => {
 		new => 'DeliveryserviceRegex',
 		using => {
-			regex => '2',
-			deliveryservice => '2',
+			regex => '3',
+			deliveryservice => '3',
 			set_number => '0',
 		},
 	},
 	'2' => {
 		new => 'DeliveryserviceRegex',
 		using => {
-			regex => '3',
+			regex => '1',
 			set_number => '0',
-			deliveryservice => '3',
+			deliveryservice => '2',
 		},
 	},
 	'3' => {
 		new => 'DeliveryserviceRegex',
 		using => {
-			regex => '4',
-			deliveryservice => '4',
+			regex => '7',
+			deliveryservice => '5',
 			set_number => '0',
 		},
 	},
 	'4' => {
 		new => 'DeliveryserviceRegex',
 		using => {
-			regex => '11',
-			deliveryservice => '11',
+			regex => '6',
+			deliveryservice => '7',
 			set_number => '0',
 		},
 	},
 	'5' => {
 		new => 'DeliveryserviceRegex',
 		using => {
-			regex => '12',
-			deliveryservice => '12',
+			regex => '4',
+			deliveryservice => '1',
 			set_number => '0',
 		},
 	},
 	'6' => {
 		new => 'DeliveryserviceRegex',
 		using => {
-			regex => '13',
-			deliveryservice => '13',
+			regex => '2',
+			deliveryservice => '6',
 			set_number => '0',
 		},
 	},
 	'7' => {
 		new => 'DeliveryserviceRegex',
 		using => {
-			regex => '14',
-			deliveryservice => '14',
+			regex => '8',
+			deliveryservice => '8',
 			set_number => '0',
 		},
 	},
