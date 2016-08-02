@@ -1129,6 +1129,9 @@ sub parent_dot_config {
 				elsif ( $multi_site_origin_algorithm == 3 ) {
 					$mso_algorithm = "true";
 				}
+				elsif ( $multi_site_origin_algorithm == 4 ) {
+					$mso_algorithm = "latched";
+				}                                
 				else {
 					$mso_algorithm = "consistent_hash";
 				}
