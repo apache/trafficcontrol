@@ -142,7 +142,7 @@ sub update {
 
 			# check extensions go in an open slot in the extensions table, first check if there's an open slot.
 			my $open_type = &type_id( $self, 'CHECK_EXTENSION_OPEN_SLOT' );
-			my $slot = $self->db->resultset('ToExtension')->search( { type => $open_type }, { rows => 1 } )->single();
+			my $slot = $self->db->resultset('ToExtension')->search( { type => $open_type }, { rows => 1, order_by => ["servercheck_column_name"] } )->single();
 			if ( !defined($slot) ) {
 				return $self->alert( { error => "No open slots left for checks, delete one first." } );
 			}
@@ -162,7 +162,7 @@ sub update {
 
 			# set all values in servercheck to 0
 			my $clear = $self->db->resultset('Servercheck')->search( {} );    # all
-			$clear->update( { '`' . $slot->servercheck_column_name . '`' => 0 } );    #
+			$clear->update( { $slot->servercheck_column_name => 0 } );    #
 
 			return $self->success_message( "Check Extension Loaded.", { id => $slot->id } );
 		}
