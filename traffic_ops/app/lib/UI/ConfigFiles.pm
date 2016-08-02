@@ -343,7 +343,7 @@ sub profile_param_value {
 	my $param =
 		$self->db->resultset('ProfileParameter')
 		->search( { -and => [ profile => $pid, 'parameter.config_file' => $file, 'parameter.name' => $param_name ] },
-		{ prefetch => [ 'parameter', 'profile' ] } )->single();
+		{ prefetch => [ 'parameter', 'profile' ] } )->first();
 
 	return ( defined $param ? $param->parameter->value : $default );
 }
@@ -1293,7 +1293,7 @@ sub regex_revalidate_dot_config {
 
 	my $max_days =
 		$self->db->resultset('Parameter')->search( { name => "maxRevalDurationDays" }, { config_file => "regex_revalidate.config" } )->get_column('value')
-		->single;
+		->first;
 	my $interval = "> now() - interval '$max_days day'";    # postgres
 
 	my %regex_time;
