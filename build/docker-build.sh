@@ -114,11 +114,11 @@ runBuild() {
 createBuilders
 runBuild
 
-rpms=$(docker run --rm --volumes-from gitter centos sh -c 'ls /repo/traffic_control/dist')
+rpms=$(docker run --rm --volumes-from gitter centos sh -c 'find /repo/traffic_control -type f -name *.rpm')
 for f in $rpms
 do
 	echo "Copying $f to $dist"
-	docker cp gitter:/repo/traffic_control/dist/$f "$dist/."
+	docker cp gitter:$f "$dist/."
 done
 
 # Always remove the gitter container after copy -- subsequent runs need to start with image
