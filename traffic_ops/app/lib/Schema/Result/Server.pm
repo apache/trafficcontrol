@@ -522,8 +522,8 @@ __PACKAGE__->belongs_to(
 );
 
 
-# Created by DBIx::Class::Schema::Loader v0.07043 @ 2016-07-08 10:42:03
-# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:CgVVNLm1HTrHKORan9/IZw
+# Created by DBIx::Class::Schema::Loader v0.07043 @ 2016-08-02 11:11:32
+# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:QQpnwrwhrsr0V6kock1RXQ
 # These lines were loaded from '/Users/drichard/projects/github.com/traffic_control/traffic_ops/app/lib/Schema/Result/Server.pm' found in @INC.
 # They are now part of the custom portion of this file
 # for you to hand-edit.  If you do not either delete

@@ -8,7 +8,8 @@ extends 'DBIx::Class::EasyFixture';
 use namespace::autoclean;
 
 my %definition_for = (
-	'1' => {
+	## id => 1
+	'0' => {
 		new => 'ToExtension',
 		using => {
 			name => '10G_PING',
@@ -24,7 +25,8 @@ my %definition_for = (
 			last_updated => '2015-12-10 15:44:37',
 		},
 	},
-	'13' => {
+	## id => 2
+	'1' => {
 		new => 'ToExtension',
 		using => {
 			name => 'CACHE_HIT_RATIO_LAST_15',
@@ -40,7 +42,8 @@ my %definition_for = (
 			script_file => 'ping',
 		},
 	},
-	'3' => {
+	## id => 3
+	'2' => {
 		new => 'ToExtension',
 		using => {
 			name => 'CHECK_DSCP',
@@ -56,7 +59,8 @@ my %definition_for = (
 			isactive => '1',
 		},
 	},
-	'10' => {
+	## id => 4
+	'3' => {
 		new => 'ToExtension',
 		using => {
 			name => 'CHECK_MTU',
@@ -72,7 +76,8 @@ my %definition_for = (
 			isactive => '1',
 		},
 	},
-	'8' => {
+	## id => 5
+	'4' => {
 		new => 'ToExtension',
 		using => {
 			name => 'CHECK_STATS',
@@ -88,7 +93,8 @@ my %definition_for = (
 			version => '1.0.0',
 		},
 	},
-	'12' => {
+	## id => 6
+	'5' => {
 		new => 'ToExtension',
 		using => {
 			name => 'CHECK_TRAFFIC_MONITOR_STATUS',
@@ -104,7 +110,8 @@ my %definition_for = (
 			servercheck_column_name => 'am',
 		},
 	},
-	'11' => {
+	## id => 7
+	'6' => {
 		new => 'ToExtension',
 		using => {
 			name => 'CHECK_TRAFFIC_ROUTER_STATUS',
@@ -120,7 +127,8 @@ my %definition_for = (
 			type => '5',
 		},
 	},
-	'14' => {
+	## id => 8
+	'7' => {
 		new => 'ToExtension',
 		using => {
 			name => 'DISK_UTILIZATION',
@@ -136,7 +144,8 @@ my %definition_for = (
 			description => undef,
 		},
 	},
-	'2' => {
+	## id => 9
+	'8' => {
 		new => 'ToExtension',
 		using => {
 			name => 'FQDN_PING',
@@ -152,7 +161,8 @@ my %definition_for = (
 			additional_config_json => '{ "select": "host_name", "cron": "27 * * * *" }',
 		},
 	},
-	'0' => {
+	## id => 10
+	'9' => {
 		new => 'ToExtension',
 		using => {
 			name => 'ILO_PING',
@@ -168,7 +178,8 @@ my %definition_for = (
 			additional_config_json => '{ "select": "ilo_ip_address", "cron": "9 * * * *" }',
 		},
 	},
-	'6' => {
+	## id => 11
+	'10' => {
 		new => 'ToExtension',
 		using => {
 			name => 'IPV6_PING',
@@ -184,7 +195,8 @@ my %definition_for = (
 			type => '5',
 		},
 	},
-	'4' => {
+	## id => 12
+	'11' => {
 		new => 'ToExtension',
 		using => {
 			name => 'OPEN',
@@ -200,7 +212,8 @@ my %definition_for = (
 			type => '7',
 		},
 	},
-	'5' => {
+	## id => 13
+	'12' => {
 		new => 'ToExtension',
 		using => {
 			name => 'OPEN',
@@ -216,7 +229,8 @@ my %definition_for = (
 			additional_config_json => '',
 		},
 	},
-	'7' => {
+	## id => 14
+	'13' => {
 		new => 'ToExtension',
 		using => {
 			name => 'OPEN',
@@ -232,7 +246,8 @@ my %definition_for = (
 			type => '7',
 		},
 	},
-	'9' => {
+	## id => 15
+	'14' => {
 		new => 'ToExtension',
 		using => {
 			name => 'OPEN',
@@ -248,7 +263,8 @@ my %definition_for = (
 			servercheck_short_name => '',
 		},
 	},
-	'16' => {
+	## id => 16
+	'15' => {
 		new => 'ToExtension',
 		using => {
 			name => 'OPEN',
@@ -264,7 +280,8 @@ my %definition_for = (
 			servercheck_short_name => '',
 		},
 	},
-	'17' => {
+	## id => 17
+	'16' => {
 		new => 'ToExtension',
 		using => {
 			name => 'OPEN',
@@ -280,7 +297,8 @@ my %definition_for = (
 			servercheck_column_name => 'ar',
 		},
 	},
-	'18' => {
+	## id => 18
+	'17' => {
 		new => 'ToExtension',
 		using => {
 			name => 'OPEN',
@@ -292,11 +310,12 @@ my %definition_for = (
 			version => '1.0.0',
 			description => undef,
 			last_updated => '2015-12-10 15:44:37',
-			servercheck_column_name => 'as',
+			servercheck_column_name => 'bf',
 			additional_config_json => '',
 		},
 	},
-	'19' => {
+	## id => 19
+	'18' => {
 		new => 'ToExtension',
 		using => {
 			name => 'OPEN',
@@ -312,7 +331,8 @@ my %definition_for = (
 			isactive => '0',
 		},
 	},
-	'20' => {
+	## id => 20
+	'19' => {
 		new => 'ToExtension',
 		using => {
 			name => 'OPEN',
@@ -328,7 +348,8 @@ my %definition_for = (
 			info_url => 'http://foo.com/bar.html',
 		},
 	},
-	'21' => {
+	## id => 21
+	'20' => {
 		new => 'ToExtension',
 		using => {
 			name => 'OPEN',
@@ -344,7 +365,8 @@ my %definition_for = (
 			type => '7',
 		},
 	},
-	'22' => {
+	## id => 22
+	'21' => {
 		new => 'ToExtension',
 		using => {
 			name => 'OPEN',
@@ -360,7 +382,8 @@ my %definition_for = (
 			last_updated => '2015-12-10 15:44:37',
 		},
 	},
-	'23' => {
+	## id => 23
+	'22' => {
 		new => 'ToExtension',
 		using => {
 			name => 'OPEN',
@@ -376,7 +399,8 @@ my %definition_for = (
 			additional_config_json => '',
 		},
 	},
-	'24' => {
+	## id => 24
+	'23' => {
 		new => 'ToExtension',
 		using => {
 			name => 'OPEN',
@@ -392,7 +416,8 @@ my %definition_for = (
 			last_updated => '2015-12-10 15:44:37',
 		},
 	},
-	'25' => {
+	## id => 25
+	'24' => {
 		new => 'ToExtension',
 		using => {
 			name => 'OPEN',
@@ -408,7 +433,8 @@ my %definition_for = (
 			script_file => 'dscp',
 		},
 	},
-	'26' => {
+	## id => 26
+	'25' => {
 		new => 'ToExtension',
 		using => {
 			name => 'OPEN',
@@ -424,7 +450,8 @@ my %definition_for = (
 			servercheck_column_name => 'ba',
 		},
 	},
-	'27' => {
+	## id => 27
+	'26' => {
 		new => 'ToExtension',
 		using => {
 			name => 'OPEN',
@@ -440,7 +467,8 @@ my %definition_for = (
 			description => undef,
 		},
 	},
-	'28' => {
+	## id => 28
+	'27' => {
 		new => 'ToExtension',
 		using => {
 			name => 'OPEN',
@@ -456,7 +484,8 @@ my %definition_for = (
 			script_file => 'dscp',
 		},
 	},
-	'29' => {
+	## id => 29
+	'28' => {
 		new => 'ToExtension',
 		using => {
 			name => 'OPEN',
@@ -472,7 +501,8 @@ my %definition_for = (
 			isactive => '0',
 		},
 	},
-	'30' => {
+	## id => 30
+	'29' => {
 		new => 'ToExtension',
 		using => {
 			name => 'OPEN',
@@ -488,7 +518,8 @@ my %definition_for = (
 			isactive => '0',
 		},
 	},
-	'15' => {
+	## id => 31
+	'30' => {
 		new => 'ToExtension',
 		using => {
 			name => 'ORT_ERROR_COUNT',

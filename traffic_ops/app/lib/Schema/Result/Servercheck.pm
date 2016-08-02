@@ -126,11 +126,6 @@ __PACKAGE__->table("servercheck");
   data_type: 'bigint'
   is_nullable: 1
 
-=head2 as
-
-  data_type: 'bigint'
-  is_nullable: 1
-
 =head2 at
 
   data_type: 'bigint'
@@ -191,6 +186,11 @@ __PACKAGE__->table("servercheck");
   data_type: 'bigint'
   is_nullable: 1
 
+=head2 bf
+
+  data_type: 'bigint'
+  is_nullable: 1
+
 =head2 last_updated
 
   data_type: 'timestamp with time zone'
@@ -246,8 +246,6 @@ __PACKAGE__->add_columns(
   { data_type => "bigint", is_nullable => 1 },
   "ar",
   { data_type => "bigint", is_nullable => 1 },
-  "as",
-  { data_type => "bigint", is_nullable => 1 },
   "at",
   { data_type => "bigint", is_nullable => 1 },
   "au",
@@ -271,6 +269,8 @@ __PACKAGE__->add_columns(
   "bd",
   { data_type => "bigint", is_nullable => 1 },
   "be",
+  { data_type => "bigint", is_nullable => 1 },
+  "bf",
   { data_type => "bigint", is_nullable => 1 },
   "last_updated",
   {
@@ -339,8 +339,8 @@ __PACKAGE__->belongs_to(
 );
 
 
-# Created by DBIx::Class::Schema::Loader v0.07043 @ 2016-07-08 10:42:03
-# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:BDdpgaOL70sllIEU7x+cfQ
+# Created by DBIx::Class::Schema::Loader v0.07043 @ 2016-08-02 11:11:32
+# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:f2UfDp1gE/Cqi/fakZXrpQ
 
 
 # You can replace this text with custom code or comments, and it will be preserved on regeneration

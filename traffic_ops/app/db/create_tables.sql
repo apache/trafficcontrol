@@ -1019,7 +1019,6 @@ CREATE TABLE servercheck (
     ap bigint,
     aq bigint,
     ar bigint,
-    "as" bigint,
     at bigint,
     au bigint,
     av bigint,
@@ -1032,6 +1031,7 @@ CREATE TABLE servercheck (
     bc bigint,
     bd bigint,
     be bigint,
+    bf bigint,
     last_updated timestamp with time zone DEFAULT now()
 );
 
@@ -1896,7 +1896,7 @@ SELECT pg_catalog.setval('server_id_seq', 1, true);
 -- Data for Name: servercheck; Type: TABLE DATA; Schema: public; Owner: to_user
 --
 
-COPY servercheck (id, server, aa, ab, ac, ad, ae, af, ag, ah, ai, aj, ak, al, am, an, ao, ap, aq, ar, "as", at, au, av, aw, ax, ay, az, ba, bb, bc, bd, be, last_updated) FROM stdin;
+COPY servercheck (id, server, aa, ab, ac, ad, ae, af, ag, ah, ai, aj, ak, al, am, an, ao, ap, aq, ar, at, au, av, aw, ax, ay, az, ba, bb, bc, bd, be, bf last_updated) FROM stdin;
 \.
 
 
