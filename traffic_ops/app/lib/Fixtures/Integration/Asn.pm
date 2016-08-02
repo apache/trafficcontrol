@@ -31,7 +31,7 @@ my %definition_for = (
 		new => 'Asn',
 		using => {
 			asn => '33',
-			cachegroup => '96',
+			cachegroup => '8',
 			last_updated => '2015-12-10 15:44:36',
 		},
 	},
@@ -40,7 +40,7 @@ my %definition_for = (
 		new => 'Asn',
 		using => {
 			asn => '99',
-			cachegroup => '96',
+			cachegroup => '8',
 			last_updated => '2015-12-10 15:44:36',
 		},
 	},
@@ -49,7 +49,7 @@ my %definition_for = (
 		new => 'Asn',
 		using => {
 			asn => '9839',
-			cachegroup => '91',
+			cachegroup => '10',
 			last_updated => '2015-12-10 15:44:36',
 		},
 	},
@@ -58,7 +58,7 @@ my %definition_for = (
 		new => 'Asn',
 		using => {
 			asn => '9930',
-			cachegroup => '93',
+			cachegroup => '9',
 			last_updated => '2015-12-10 15:44:36',
 		},
 	},
@@ -67,7 +67,7 @@ my %definition_for = (
 		new => 'Asn',
 		using => {
 			asn => '9931',
-			cachegroup => '94',
+			cachegroup => '12',
 			last_updated => '2015-12-10 15:44:36',
 		},
 	},
@@ -76,7 +76,7 @@ my %definition_for = (
 		new => 'Asn',
 		using => {
 			asn => '9932',
-			cachegroup => '95',
+			cachegroup => '11',
 			last_updated => '2015-12-10 15:44:36',
 		},
 	},
@@ -85,7 +85,7 @@ my %definition_for = (
 		new => 'Asn',
 		using => {
 			asn => '9933',
-			cachegroup => '92',
+			cachegroup => '7',
 			last_updated => '2015-12-10 15:44:36',
 		},
 	},
@@ -94,7 +94,7 @@ my %definition_for = (
 		new => 'Asn',
 		using => {
 			asn => '9939',
-			cachegroup => '91',
+			cachegroup => '10',
 			last_updated => '2015-12-10 15:44:36',
 		},
 	},
