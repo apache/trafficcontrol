@@ -28,5 +28,5 @@ RUN alternatives --install /usr/bin/java java /opt/java/bin/java 2 && \
     alternatives --install /usr/bin/mvn mvn /opt/maven/bin/mvn 1
 ###
 
-WORKDIR /repo/traffic_control/traffic_monitor/build
+WORKDIR /vol/traffic_control/traffic_monitor/build
 ENTRYPOINT ./build_rpm.sh

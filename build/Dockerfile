@@ -11,4 +11,4 @@ ENV BRANCH=master
 # clone/checkout using above env vars
 ADD clone-for-docker.sh /
 ENTRYPOINT /clone-for-docker.sh
-VOLUME /repo
+VOLUME /vol

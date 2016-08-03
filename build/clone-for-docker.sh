@@ -1,10 +1,10 @@
 #!/bin/sh
 
 project=`basename $GITREPO .git`
-mkdir -p /repo
+mkdir -p /vol
 
 # Delete previous content if it exists
-rm -rf /repo/$project
+rm -rf /vol/$project
 
-cd /repo
+cd /vol
 git clone --branch $BRANCH $GITREPO

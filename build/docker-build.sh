@@ -114,7 +114,7 @@ runBuild() {
 createBuilders
 runBuild
 
-rpms=$(docker run --rm --volumes-from gitter centos sh -c 'find /repo/traffic_control -type f -name *.rpm')
+rpms=$(docker run --rm --volumes-from gitter centos sh -c 'find /vol/traffic_control -type f -name *.rpm')
 for f in $rpms
 do
 	echo "Copying $f to $dist"

@@ -22,7 +22,7 @@ RUN	yum -y clean all
 RUN	gem install compass
 RUN	npm -g install bower grunt-cli
 
-WORKDIR /repo/traffic_control/traffic_portal/build
+WORKDIR /vol/traffic_control/traffic_portal/build
 
 RUN	yum -y install ant.noarch
 
