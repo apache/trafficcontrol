@@ -530,7 +530,7 @@ my %definition_for = (
 		using => {
 			name        => 'maxRevalDurationDays',
 			config_file => 'regex_revalidate.config',
-			value       => 3,
+			value       => 90,
 		},
 	},
 	## id => 58
