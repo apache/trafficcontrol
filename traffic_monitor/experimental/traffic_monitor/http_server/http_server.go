@@ -26,7 +26,7 @@ func writeResponse(w http.ResponseWriter, f Format, response <-chan []byte) {
 func Endpoints() (map[string]http.HandlerFunc, error) {
 	handleRoot, err := handleRootFunc()
 	if err != nil {
-		return nil, fmt.Errorf("Error getting root endpoint: %v")
+		return nil, fmt.Errorf("Error getting root endpoint: %v", err)
 	}
 
 	// note: with the trailing slash, any non-trailing slash requests will get a 301 redirect
