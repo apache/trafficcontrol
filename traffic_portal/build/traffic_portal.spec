@@ -28,6 +28,7 @@ Source:		%{_sourcedir}/traffic_portal-%{traffic_control_version}.tgz
 AutoReqProv: no
 Requires: nodejs
 
+%define traffic_portal_home /opt/traffic_portal
 %description
 Installs Traffic Portal
 
@@ -49,9 +50,9 @@ Built: @BUILT@
     %__cp -R $RPM_BUILD_DIR/traffic_portal-%{version}/* $RPM_BUILD_ROOT
 
 %post
-    echo "Successfully installed the traffic_portal assets to /opt/traffic_portal"
+    echo "Successfully installed the traffic_portal assets to " %{traffic_portal_home}
     %__mkdir -p /var/log/traffic_portal
-    %__chmod +x /opt/traffic_portal/node_modules/forever/bin/forever
+    %__chmod +x %{traffic_portal_home}/node_modules/forever/bin/forever
     %__chmod +x /etc/init.d/traffic_portal
     echo "Successfully installed the 'traffic_portal' service"
     /sbin/chkconfig traffic_portal on
