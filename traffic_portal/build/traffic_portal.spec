@@ -16,11 +16,11 @@
 #
 # RPM spec file for the Traffic Portal
 #
-%define debug_package %{nil}
+%define		debug_package %{nil}
 Name:		traffic_portal
-Version:        %{traffic_control_version}
-Release:        %{build_number}
-Summary:        Traffic Portal
+Version:	%{traffic_control_version}
+Release:	%{build_number}
+Summary:	Traffic Portal
 Group:		Applications/Communications
 License:	Apache License, Version 2.0
 URL:		https://github.com/Comcast/traffic_control/
@@ -35,19 +35,42 @@ Installs Traffic Portal
 Built: @BUILT@
 
 %prep
+rm -rf $RPM_BUILD_DIR/traffic_portal-%{version}
+tar -xzvf $RPM_SOURCE_DIR/traffic_portal-%{version}.tgz
 
 %setup
 
+%build
+    /usr/bin/npm install
+    /usr/bin/bower install
+    /usr/bin/grunt dist
+
 %install
-    if [ -d $RPM_BUILD_ROOT ]; then
-	    %__rm -rf $RPM_BUILD_ROOT
-    fi
+    %__mkdir -p ${RPM_BUILD_ROOT}/etc/init.d
+    %__mkdir -p ${RPM_BUILD_ROOT}/etc/logrotate.d
+    %__mkdir -p ${RPM_BUILD_ROOT}/etc/traffic_portal
+    %__mkdir -p ${RPM_BUILD_ROOT}%{traffic_portal_home}/public
+    %__mkdir -p ${RPM_BUILD_ROOT}%{traffic_portal_home}/server
 
-    if [ ! -d $RPM_BUILD_ROOT ]; then
-        %__mkdir -p $RPM_BUILD_ROOT
-    fi
+    # creates dynamic json file needed at runtime for traffic portal to display release info
+    BUILD_DATE=$(date +'%Y-%m-%d %H:%M:%S')
+    VERSION="\"Version\":\"$VERSION\""
+    BUILD_NUMBER="\"Build Number\":\"$BUILD_NUMBER\""
+    BUILD_DATE="\"Build Date\":\"$BUILD_DATE\""
+    JSON_VERSION="{\n$VERSION,\n$BUILD_NUMBER,\n$BUILD_DATE\n}"
+    echo -e $JSON_VERSION > ${RPM_BUILD_ROOT}%{traffic_portal_home}/public/traffic_portal_release.json
 
-    %__cp -R $RPM_BUILD_DIR/traffic_portal-%{version}/* $RPM_BUILD_ROOT
+    %__cp ${RPM_BUILD_DIR}/traffic_portal-%{version}/server/server.js ${RPM_BUILD_ROOT}%{traffic_portal_home}/server/.
+    %__cp -r ${RPM_BUILD_DIR}/traffic_portal-%{version}/conf ${RPM_BUILD_ROOT}/etc/traffic_portal/.
+    %__cp -r ${RPM_BUILD_DIR}/traffic_portal-%{version}/grunt ${RPM_BUILD_ROOT}%{traffic_portal_home}/.
+    %__cp ${RPM_BUILD_DIR}/traffic_portal-%{version}/build/etc/init.d/traffic_portal ${RPM_BUILD_ROOT}/etc/init.d/.
+    %__cp ${RPM_BUILD_DIR}/traffic_portal-%{version}/build/etc/logrotate.d/traffic_portal ${RPM_BUILD_ROOT}/etc/logrotate.d/.
+    %__cp ${RPM_BUILD_DIR}/traffic_portal-%{version}/build/etc/logrotate.d/traffic_portal-access ${RPM_BUILD_ROOT}/etc/logrotate.d/.
+    %__cp -r ${RPM_BUILD_DIR}/traffic_portal-%{version}/app ${RPM_BUILD_ROOT}%{traffic_portal_home}/.
+
+    # copy files (not dirs) from the top level directory
+    find ${RPM_BUILD_DIR}/traffic_portal-%{version} -maxdepth 1 -type f -not -name '.*' | xargs -I {} cp {} ${RPM_BUILD_ROOT}%{traffic_portal_home}/.
+
 
 %post
     echo "Successfully installed the traffic_portal assets to " %{traffic_portal_home}
