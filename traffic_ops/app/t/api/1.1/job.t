@@ -89,7 +89,7 @@ ok $t->post_ok(
 		ttl       => 0,
 		startTime => $now,
 	}
-	)->status_is(400)->json_is( '/alerts', [ { level => "error", text => "ttl should be between 1 and 72" } ] )
+	)->status_is(400)->json_is( '/alerts', [ { level => "error", text => "ttl should be between 1 and 2160" } ] )
 	->or( sub { diag $t->tx->res->content->asset->{content}; } ),
 	'Will not create a purge job without the ttl in the proper low range?';
 
@@ -98,10 +98,10 @@ ok $t->post_ok(
 	json => {
 		dsId      => 8,
 		regex     => '/foo1/.*',
-		ttl       => 1000,
+		ttl       => 3000,
 		startTime => $now,
 	}
-	)->status_is(400)->json_is( '/alerts', [ { level => "error", text => "ttl should be between 1 and 72" } ] )
+	)->status_is(400)->json_is( '/alerts', [ { level => "error", text => "ttl should be between 1 and 2160" } ] )
 	->or( sub { diag $t->tx->res->content->asset->{content}; } ),
 	'Will not create a purge job without the ttl in the proper high range?';
 
