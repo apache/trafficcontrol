@@ -24,8 +24,6 @@ RUN	npm -g install bower grunt-cli
 
 WORKDIR /vol/traffic_control/traffic_portal/build
 
-RUN	yum -y install ant.noarch
-
 # bower will not run as root by default
 RUN	echo '{ "allow_root": true }' > /root/.bowerrc
 ENTRYPOINT ./build_rpm.sh
