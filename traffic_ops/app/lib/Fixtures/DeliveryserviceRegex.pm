@@ -19,19 +19,11 @@ extends 'DBIx::Class::EasyFixture';
 use namespace::autoclean;
 
 my %definition_for = (
-	regex1 => {
-		new   => 'DeliveryserviceRegex',
-		using => {
-			deliveryservice => 1,
-			regex           => 2,
-			set_number      => 0,
-		},
-	},
 	regex2 => {
 		new   => 'DeliveryserviceRegex',
 		using => {
-			deliveryservice => 2,
-			regex           => 1,
+			deliveryservice => 9,
+			regex           => 7,
 			set_number      => 0,
 		},
 	},
@@ -43,11 +35,27 @@ my %definition_for = (
 			set_number      => 0,
 		},
 	},
+	regex1 => {
+		new   => 'DeliveryserviceRegex',
+		using => {
+			deliveryservice => 8,
+			regex           => 5,
+			set_number      => 0,
+		},
+	},
 	target_r2_filter => {
 		new   => 'DeliveryserviceRegex',
 		using => {
 			deliveryservice => 4,
 			regex           => 2,
+			set_number      => 0,
+		},
+	},
+	target_r4_filter => {
+		new   => 'DeliveryserviceRegex',
+		using => {
+			deliveryservice => 7,
+			regex           => 3,
 			set_number      => 0,
 		},
 	},
@@ -59,11 +67,11 @@ my %definition_for = (
 			set_number      => 0,
 		},
 	},
-	target_r4_filter => {
+	new_steering => {
 		new   => 'DeliveryserviceRegex',
 		using => {
-			deliveryservice => 7,
-			regex           => 3,
+			deliveryservice => 3,
+			regex           => 6,
 			set_number      => 0,
 		},
 	},
@@ -115,14 +123,6 @@ my %definition_for = (
 			set_number      => 0,
 		},
 	},
-	new_steering => {
-		new   => 'DeliveryserviceRegex',
-		using => {
-			deliveryservice => 3,
-			regex           => 6,
-			set_number      => 0,
-		},
-	}
 );
 
 sub get_definition {
