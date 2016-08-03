@@ -44,6 +44,7 @@ public class Cache implements Comparable<Cache>, Hashable<Cache> {
 	private int port;
 	private final Map<String, DeliveryServiceReference> deliveryServices = new HashMap<String, DeliveryServiceReference>();
 	private final Hashable hashable = new DefaultHashable();
+	private int httpsPort = 443;
 
 	public Cache(final String id, final String hashId, final int hashCount) {
 		this.id = id;
@@ -236,5 +237,13 @@ public class Cache implements Comparable<Cache>, Hashable<Cache> {
 	@Override
 	public List<Double> getHashValues() {
 		return hashable.getHashValues();
+	}
+
+	public int getHttpsPort() {
+		return httpsPort;
+	}
+
+	public void setHttpsPort(final int httpsPort) {
+		this.httpsPort = httpsPort;
 	}
 }

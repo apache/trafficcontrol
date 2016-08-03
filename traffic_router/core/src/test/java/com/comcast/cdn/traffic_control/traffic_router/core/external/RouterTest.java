@@ -20,18 +20,32 @@ import com.comcast.cdn.traffic_control.traffic_router.core.util.ExternalTest;
 import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.apache.catalina.LifecycleException;
 import org.apache.http.Header;
+import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpGet;
+import org.apache.http.client.methods.HttpPost;
+import org.apache.http.conn.ssl.SSLConnectionSocketFactory;
+import org.apache.http.conn.ssl.TrustSelfSignedStrategy;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClientBuilder;
+import org.apache.http.ssl.SSLContextBuilder;
 import org.apache.http.util.EntityUtils;
+import org.hamcrest.Matchers;
 import org.junit.After;
 import org.junit.Before;
+import org.junit.FixMethodOrder;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
+import org.junit.runners.MethodSorters;
 
+import javax.net.ssl.HostnameVerifier;
+import javax.net.ssl.SNIHostName;
+import javax.net.ssl.SNIServerName;
+import javax.net.ssl.SSLHandshakeException;
+import javax.net.ssl.SSLParameters;
+import javax.net.ssl.SSLSession;
+import javax.net.ssl.SSLSocket;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
@@ -40,21 +54,32 @@ import java.util.List;
 
 import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.CoreMatchers.nullValue;
+import static org.hamcrest.CoreMatchers.startsWith;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.endsWith;
 import static org.hamcrest.Matchers.isIn;
 import static org.hamcrest.core.IsEqual.equalTo;
 import static org.hamcrest.core.IsNot.not;
 import static org.junit.Assert.fail;
 
 @Category(ExternalTest.class)
+@FixMethodOrder(MethodSorters.NAME_ASCENDING)
 public class RouterTest {
 	private CloseableHttpClient httpClient;
 	private String deliveryServiceId;
-	private String deliveryServiceDomain;
 	private List<String> validLocations = new ArrayList<>();
-
+	private String deliveryServiceDomain;
+	private final String secureDeliveryServiceId = "https-test";
+	private final String secureNoCertId = "https-nocert";
+	private List<String> secureValidLocations = new ArrayList<>();
+	private List<String> noCertValidLocations = new ArrayList<>();
+	private String secureDeliveryServiceDomain = "https-test.thecdn.example.com";
+	private String noCertsDeliveryServiceDomain = "https-nocert.thecdn.example.com";
+	private String routerHttpPort = System.getProperty("routerHttpPort", "8888");
+	private String routerSecurePort = System.getProperty("routerSecurePort", "8443");
+	
 	@Before
-	public void before() throws IOException, InterruptedException, LifecycleException {
+	public void before() throws Exception {
 		ObjectMapper objectMapper = new ObjectMapper(new JsonFactory());
 
 		String resourcePath = "internal/api/1.2/steering.json";
@@ -88,16 +113,22 @@ public class RouterTest {
 
 			JsonNode deliveryServiceNode = jsonNode.get("deliveryServices").get(dsId);
 			Iterator<JsonNode> matchsets = deliveryServiceNode.get("matchsets").iterator();
+
 			while (matchsets.hasNext() && deliveryServiceId == null) {
 				if ("HTTP".equals(matchsets.next().get("protocol").asText())) {
-					deliveryServiceId = dsId;
+					final boolean sslEnabled = deliveryServiceNode.get("sslEnabled").asBoolean(false);
+					if (!sslEnabled) {
+						deliveryServiceId = dsId;
+						deliveryServiceDomain = deliveryServiceNode.get("domains").get(0).asText();
+					}
 				}
-				deliveryServiceDomain = deliveryServiceNode.get("domains").get(0).asText();
 			}
 		}
 
 		assertThat(deliveryServiceId, not(nullValue()));
 		assertThat(deliveryServiceDomain, not(nullValue()));
+		assertThat(secureDeliveryServiceId, not(nullValue()));
+		assertThat(secureDeliveryServiceDomain, not(nullValue()));
 
 		Iterator<String> cacheIds = jsonNode.get("contentServers").fieldNames();
 		while (cacheIds.hasNext()) {
@@ -113,11 +144,30 @@ public class RouterTest {
 				String portText = (port == 80) ? "" : ":" + port;
 				validLocations.add("http://" + cacheId + "." + deliveryServiceDomain + portText + "/stuff?fakeClientIpAddress=12.34.56.78");
 			}
+
+			if (cacheNode.get("deliveryServices").has(secureDeliveryServiceId)) {
+				int port = cacheNode.has("httpsPort") ? cacheNode.get("httpsPort").asInt(443) : 443;
+
+				String portText = (port == 443) ? "" : ":" + port;
+				secureValidLocations.add("https://" + cacheId + "." + secureDeliveryServiceDomain + portText + "/stuff?fakeClientIpAddress=12.34.56.78");
+			}
+
+			if (cacheNode.get("deliveryServices").has(secureNoCertId)) {
+				int port = cacheNode.has("httpsPort") ? cacheNode.get("httpsPort").asInt(443) : 443;
+
+				String portText = (port == 443) ? "" : ":" + port;
+				noCertValidLocations.add("https://" + cacheId + "." + noCertsDeliveryServiceDomain + portText + "/stuff?fakeClientIpAddress=12.34.56.78");
+			}
 		}
 
 		assertThat(validLocations.isEmpty(), equalTo(false));
+		assertThat(secureValidLocations.isEmpty(), equalTo(false));
 
-		httpClient = HttpClientBuilder.create().disableRedirectHandling().build();
+		httpClient = HttpClientBuilder.create()
+			.setSSLSocketFactory(new ClientSslSocketFactory("tr.https-test.thecdn.example.com"))
+			.setSSLHostnameVerifier(new TestHostnameVerifier())
+			.disableRedirectHandling()
+			.build();
 	}
 
 	@After
@@ -127,7 +177,7 @@ public class RouterTest {
 
 	@Test
 	public void itHasAHomePage() throws IOException {
-		HttpGet httpGet = new HttpGet("http://localhost:8888/index.html");
+		HttpGet httpGet = new HttpGet("http://localhost:" + routerHttpPort + "/index.html");
 
 		CloseableHttpResponse response = null;
 		try {
@@ -139,8 +189,8 @@ public class RouterTest {
 	}
 
 	@Test
-	public void itRedirectsValidRequests() throws IOException, InterruptedException {
-		HttpGet httpGet = new HttpGet("http://localhost:8888/stuff?fakeClientIpAddress=12.34.56.78");
+	public void itRedirectsValidHttpRequests() throws IOException, InterruptedException {
+		HttpGet httpGet = new HttpGet("http://localhost:" + routerHttpPort + "/stuff?fakeClientIpAddress=12.34.56.78");
 		httpGet.addHeader("Host", "tr." + deliveryServiceId + ".bar");
 		CloseableHttpResponse response = null;
 
@@ -149,6 +199,7 @@ public class RouterTest {
 			assertThat(response.getStatusLine().getStatusCode(), equalTo(302));
 			Header header = response.getFirstHeader("Location");
 			assertThat(header.getValue(), isIn(validLocations));
+			assertThat(header.getValue(), Matchers.startsWith("http://"));
 		} finally {
 			if (response != null) response.close();
 		}
@@ -156,7 +207,7 @@ public class RouterTest {
 
 	@Test
 	public void itDoesRoutingThroughPathsStartingWithCrs() throws Exception {
-		HttpGet httpGet = new HttpGet("http://localhost:8888/crs/stats?fakeClientIpAddress=12.34.56.78");
+		HttpGet httpGet = new HttpGet("http://localhost:" + routerHttpPort + "/crs/stats?fakeClientIpAddress=12.34.56.78");
 		httpGet.addHeader("Host", "foo." + deliveryServiceId + ".bar");
 		CloseableHttpResponse response = null;
 
@@ -170,7 +221,7 @@ public class RouterTest {
 
 	@Test
 	public void itConsistentlyRedirectsValidRequests() throws IOException, InterruptedException {
-		HttpGet httpGet = new HttpGet("http://localhost:8888/stuff?fakeClientIpAddress=12.34.56.78");
+		HttpGet httpGet = new HttpGet("http://localhost:" + routerHttpPort + "/stuff?fakeClientIpAddress=12.34.56.78");
 		httpGet.addHeader("Host", "tr." + deliveryServiceId + ".bar");
 		CloseableHttpResponse response = null;
 
@@ -193,7 +244,7 @@ public class RouterTest {
 
 	@Test
 	public void itRejectsInvalidRequests() throws IOException {
-		HttpGet httpGet = new HttpGet("http://localhost:8888/stuff?fakeClientIpAddress=12.34.56.78");
+		HttpGet httpGet = new HttpGet("http://localhost:" + routerHttpPort + "/stuff?fakeClientIpAddress=12.34.56.78");
 		httpGet.addHeader("Host", "foo.invalid-delivery-service-id.bar");
 		CloseableHttpResponse response = null;
 
@@ -202,6 +253,130 @@ public class RouterTest {
 			assertThat(response.getStatusLine().getStatusCode(), equalTo(503));
 		} finally {
 			if (response != null) response.close();
+		}
+	}
+
+	@Test
+	public void itRedirectsHttpsRequests() throws Exception {
+		HttpGet httpGet = new HttpGet("https://localhost:" + routerSecurePort + "/stuff?fakeClientIpAddress=12.34.56.78");
+		httpGet.addHeader("Host", "tr." + secureDeliveryServiceId + ".thecdn.example.com");
+		CloseableHttpResponse response = null;
+
+		try {
+			response = httpClient.execute(httpGet);
+			assertThat(response.getStatusLine().getStatusCode(), equalTo(302));
+			Header header = response.getFirstHeader("Location");
+			assertThat(header.getValue(), isIn(secureValidLocations));
+			assertThat(header.getValue(), startsWith("https://"));
+			assertThat(header.getValue(), containsString(secureDeliveryServiceId + ".thecdn.example.com/stuff"));
+		} finally {
+			if (response != null) response.close();
+		}
+	}
+
+	@Test
+	public void itRedirectsFromHttpToHttps() throws Exception {
+		HttpGet httpGet = new HttpGet("http://localhost:" + routerHttpPort + "/stuff?fakeClientIpAddress=12.34.56.78");
+		httpGet.addHeader("Host", "tr." + secureDeliveryServiceId + ".bar");
+		CloseableHttpResponse response = null;
+
+		try {
+			response = httpClient.execute(httpGet);
+			assertThat(response.getStatusLine().getStatusCode(), equalTo(302));
+			Header header = response.getFirstHeader("Location");
+			assertThat(header.getValue(), isIn(secureValidLocations));
+			assertThat(header.getValue(), startsWith("https://"));
+			assertThat(header.getValue(), containsString(secureDeliveryServiceId + ".thecdn.example.com/stuff"));
+		} finally {
+			if (response != null) response.close();
+		}
+	}
+
+	@Test
+	public void itRejectsHttpsRequestsForHttpDeliveryService() throws Exception {
+		HttpGet httpGet = new HttpGet("https://localhost:" + routerSecurePort + "/stuff?fakeClientIpAddress=12.34.56.78");
+		httpGet.addHeader("Host", "tr." + deliveryServiceId + ".bar");
+		CloseableHttpResponse response = null;
+
+		try {
+			response = httpClient.execute(httpGet);
+			assertThat(response.getStatusLine().getStatusCode(), equalTo(503));
+		} finally {
+			if (response != null) response.close();
+		}
+	}
+
+	@Test
+	public void z_itUpdatesCertsFromTrafficOps() throws Exception {
+		HttpGet httpGet = new HttpGet("http://localhost:" + routerHttpPort + "/stuff?fakeClientIpAddress=12.34.56.78");
+
+		httpGet.addHeader("Host", "tr.https-nocert.bar");
+		try (CloseableHttpResponse response = httpClient.execute(httpGet)) {
+			assertThat(response.getStatusLine().getStatusCode(), equalTo(302));
+			String location = response.getFirstHeader("Location").getValue();
+			assertThat(location, startsWith("http://edge-cache-09"));
+			assertThat(location, endsWith("https-nocert.thecdn.example.com:8090/stuff?fakeClientIpAddress=12.34.56.78"));
+		}
+
+		httpClient = HttpClientBuilder.create()
+			.setSSLSocketFactory(new ClientSslSocketFactory("tr.https-nocert.thecdn.example.com"))
+			.setSSLHostnameVerifier(new TestHostnameVerifier())
+			.disableRedirectHandling()
+			.build();
+
+		httpGet = new HttpGet("https://localhost:" + routerSecurePort + "/stuff?fakeClientIpAddress=12.34.56.78");
+		httpGet.addHeader("Host", "tr.https-nocert.bar");
+
+		try (CloseableHttpResponse response = httpClient.execute(httpGet)) {
+			fail("Should have gotten an SSL handshake failure!");
+			assertThat(response.getStatusLine().getStatusCode(), equalTo(503));
+		} catch (SSLHandshakeException e) {
+			assertThat(e.getMessage(), equalTo("Received fatal alert: handshake_failure"));
+		}
+
+		// Update certificates
+		String testHttpPort = System.getProperty("testHttpServerPort", "8889");
+		HttpPost httpPost = new HttpPost("http://localhost:"+ testHttpPort + "/certificates");
+		httpClient.execute(httpPost).close();
+
+		Thread.sleep(15000L);
+
+		try (CloseableHttpResponse response = httpClient.execute(httpGet)) {
+			assertThat(response.getStatusLine().getStatusCode(), equalTo(302));
+			Header header = response.getFirstHeader("Location");
+			assertThat(header.getValue(), startsWith("https://edge-cache-09"));
+			assertThat(header.getValue(), endsWith("https-nocert.thecdn.example.com/stuff?fakeClientIpAddress=12.34.56.78"));
+		}
+	}
+
+	// This is a workaround to get HttpClient to do the equivalent of
+	// curl -v --resolve 'tr.https-test.thecdn.cdnlab.example.com:8443:127.0.0.1' https://tr.https-test.thecdn.example.com:8443/foo.json
+	class ClientSslSocketFactory extends SSLConnectionSocketFactory {
+		private final String host;
+
+		public ClientSslSocketFactory(String host) throws Exception {
+			super(SSLContextBuilder.create().loadTrustMaterial(null, new TrustSelfSignedStrategy()).build(),
+				new TestHostnameVerifier());
+			this.host = host;
+		}
+
+		protected void prepareSocket(final SSLSocket sslSocket) throws IOException {
+			SNIHostName serverName = new SNIHostName(host);
+			List<SNIServerName> serverNames = new ArrayList<>(1);
+			serverNames.add(serverName);
+
+			SSLParameters params = sslSocket.getSSLParameters();
+			params.setServerNames(serverNames);
+			sslSocket.setSSLParameters(params);
+		}
+	}
+
+	// This is a workaround for the same reason as above
+	// org.apache.http.conn.ssl.SSLConnectionSocketFactory.verifyHostname(<socket>, 'localhost') normally fails
+	class TestHostnameVerifier implements HostnameVerifier {
+		@Override
+		public boolean verify(String s, SSLSession sslSession) {
+			return true;
 		}
 	}
 }

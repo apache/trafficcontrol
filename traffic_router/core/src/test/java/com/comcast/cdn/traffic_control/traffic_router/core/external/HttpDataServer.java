@@ -28,19 +28,40 @@ import java.net.HttpCookie;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.URI;
+//import java.util.logging.Logger;
 
 public class HttpDataServer implements HttpHandler {
 	private HttpServer httpServer;
-	private boolean receivedPost = false;
+	private int testHttpServerPort;
+
+	public HttpDataServer(int testHttpServerPort) {
+		this.testHttpServerPort = testHttpServerPort;
+	}
+	private boolean receivedSteeringPost = false;
+	private boolean receivedCertificatesPost = false;
+
+// Useful for producing an access log
+//	static {
+//		Logger logger = Logger.getLogger("com.sun.net.httpserver");
+//		logger.setLevel(java.util.logging.Level.ALL);
+//
+//		java.util.logging.Handler[] handlers = logger.getHandlers();
+//		for (java.util.logging.Handler handler : handlers) {
+//			handler.setLevel(java.util.logging.Level.ALL);
+//		}
+//	}
 
 	public void start(int port) throws IOException {
 		httpServer = HttpServer.create(new InetSocketAddress(InetAddress.getLoopbackAddress(), port),10);
 		httpServer.createContext("/", this);
 		httpServer.start();
+		System.out.println(">>>>>>>>>>>>> Started Fake Http Data Server at " + port);
 	}
 
 	public void stop() {
+		System.out.println(">>>>>>>>>>>>>> Stopping Fake Http Data Server");
 		httpServer.stop(10);
+		System.out.println(">>>>>>>>>>>>>> STOPPED Fake Http Data Server");
 	}
 
 	@Override
@@ -49,8 +70,15 @@ public class HttpDataServer implements HttpHandler {
 		new Thread(new Runnable() {
 			@Override
 			public void run() {
-				if ("POST".equals(httpExchange.getRequestMethod()) && "/steering".equals(httpExchange.getRequestURI().getPath())) {
-					receivedPost = true;
+				if ("POST".equals(httpExchange.getRequestMethod()) ) {
+					if (!receivedSteeringPost && "/steering".equals(httpExchange.getRequestURI().getPath())) {
+						receivedSteeringPost = true;
+					}
+
+					if (!receivedCertificatesPost && "/certificates".equals(httpExchange.getRequestURI().getPath())) {
+						receivedCertificatesPost = true;
+					}
+
 					try {
 						httpExchange.sendResponseHeaders(200,0);
 					} catch (IOException e) {
@@ -72,29 +100,29 @@ public class HttpDataServer implements HttpHandler {
 				}
 
 				if ("api/1.1/user/login".equals(path)) {
-					OutputStream os = null;
 					try {
 						Headers headers = httpExchange.getResponseHeaders();
 						headers.set("Set-Cookie", new HttpCookie("mojolicious","fake-cookie").toString());
 						httpExchange.sendResponseHeaders(200,0);
 					} catch (Exception e) {
 						System.out.println(">>>> Failed setting cookie");
-					} finally {
-						if (os != null) {
-							try {
-								os.close();
-							} catch (Exception e) {
-								System.out.println("Failed closing response");
-							}
-						}
-
-						return;
 					}
 				}
 
 				// Pretend that someone externally changed steering.json data
-				if (receivedPost && "internal/api/1.2/steering.json".equals(path)) {
+				if (receivedSteeringPost && "internal/api/1.2/steering.json".equals(path)) {
 					path = "internal/api/1.2/steering2.json";
+				}
+
+				// pretend certificates have not been updated
+				if (!receivedCertificatesPost && "api/1.2/cdns/name/thecdn/sslkeys.json".equals(path)) {
+					try {
+						httpExchange.sendResponseHeaders(304, 0);
+					} catch (Exception e) {
+						System.out.println("Failed sending 304!: " + e.getClass().getCanonicalName() + " " + e.getMessage());
+					}
+
+					return;
 				}
 
 				InputStream inputStream = getClass().getClassLoader().getResourceAsStream(path);
@@ -116,30 +144,53 @@ public class HttpDataServer implements HttpHandler {
 						} catch (IOException e) {
 							System.out.println("Failed closing output stream!: " + e.getMessage());
 						}
+						return;
 					}
 				}
 
+				if (!path.contains("CrConfig")) {
+					try (OutputStream os = httpExchange.getResponseBody()) {
+						httpExchange.sendResponseHeaders(200, 0);
 
-				OutputStream os = null;
-				try {
-					httpExchange.sendResponseHeaders(200, 0);
-					os = httpExchange.getResponseBody();
-					final byte[] buffer = new byte[0x10000];
-					int count;
+						final byte[] buffer = new byte[0x10000];
+						int count;
 
-					while ((count = inputStream.read(buffer)) >= 0) {
-						os.write(buffer,0,count);
-					}
-				} catch (Exception e) {
-					System.out.println("Failed sending data for " + path + " : " + e.getMessage());
-				} finally {
-					try {
-						if (inputStream != null) inputStream.close();
-						if (os != null) os.close();
+						while ((count = inputStream.read(buffer)) >= 0) {
+							os.write(buffer, 0, count);
+						}
 					} catch (Exception e) {
-						System.out.println("Failed closing stream!: " + e.getMessage());
+						System.out.println("Failed sending data for " + path + " : " + e.getMessage());
+					}
+				} else {
+					try {
+						final byte[] buffer = new byte[0x10000];
+						StringBuilder stringBuilder = new StringBuilder();
+
+						while (inputStream.read(buffer) >= 0) {
+							stringBuilder.append(new String(buffer));
+						}
+
+						String body = stringBuilder.toString();
+
+						if (path.contains("CrConfig")) {
+							body = body.replaceAll("localhost:8889" , "localhost:" + testHttpServerPort);
+						}
+
+						httpExchange.sendResponseHeaders(200, 0);
+						httpExchange.getResponseBody().write(body.getBytes());
+						httpExchange.getResponseBody().close();
+
+					} catch (Exception e) {
+						System.out.println("Failed sending data for " + path + " : " + e.getMessage());
 					}
 				}
+
+				try {
+					inputStream.close();
+				} catch (Exception e) {
+					System.out.println("Failed closing stream!: " + e.getMessage());
+				}
+
 			}
 		}).start();
 	}

@@ -17,7 +17,7 @@ import (
 	"github.com/Comcast/traffic_control/traffic_monitor/experimental/common/handler"
 	"github.com/Comcast/traffic_control/traffic_monitor/experimental/common/poller"
 	"github.com/Comcast/traffic_control/traffic_monitor/experimental/traffic_monitor/cache"
-	"github.com/Comcast/traffic_control/traffic_monitor/experimental/traffic_monitor/deliveryservicestats"
+	ds "github.com/Comcast/traffic_control/traffic_monitor/experimental/traffic_monitor/deliveryservice"
 	"github.com/Comcast/traffic_control/traffic_monitor/experimental/traffic_monitor/health"
 	"github.com/Comcast/traffic_control/traffic_monitor/experimental/traffic_monitor/http_server"
 	"github.com/Comcast/traffic_control/traffic_monitor/experimental/traffic_monitor/peer"
@@ -46,6 +46,14 @@ type StaticAppData struct {
 	WorkingDir     string
 	Name           string
 	BuildTimestamp string
+}
+
+// TODO put somewhere more generic
+const CacheAvailableStatusReported = "REPORTED"
+
+type CacheAvailableStatus struct {
+	Available bool
+	Status    string
 }
 
 //
@@ -148,19 +156,19 @@ func Start(opsConfigFile string, staticAppData StaticAppData) {
 
 	dr := make(chan http_server.DataRequest)
 
-	healthHistory := make(map[string][]interface{})
-	statHistory := make(map[string][]interface{})
+	healthHistory := map[string][]interface{}{}
+	statHistory := map[string][]interface{}{}
 
 	var opsConfig handler.OpsConfig
 	var monitorConfig traffic_ops.TrafficMonitorConfigMap
-	localStates := peer.Crstates{Caches: make(map[string]peer.IsAvailable), Deliveryservice: make(map[string]peer.Deliveryservice)}    // this is the local state as discoverer by this traffic_monitor
-	peerStates := make(map[string]peer.Crstates)                                                                                       // each peer's last state is saved in this map
-	combinedStates := peer.Crstates{Caches: make(map[string]peer.IsAvailable), Deliveryservice: make(map[string]peer.Deliveryservice)} // this is the result of combining the localStates and all the peerStates using the var ??
+	localStates := peer.NewCRStates()        // this is the local state as discoverer by this traffic_monitor
+	peerStates := map[string]peer.Crstates{} // each peer's last state is saved in this map
+	combinedStates := peer.NewCRStates()     // this is the result of combining the localStates and all the peerStates using the var ??
 
 	deliveryServiceServers := map[string][]string{}
 	serverDeliveryServices := map[string]string{}
-	serverTypes := map[string]deliveryservicestats.DsStatCacheType{}
-	deliveryServiceTypes := map[string]deliveryservicestats.DsStatType{}
+	serverTypes := map[string]ds.StatCacheType{}
+	deliveryServiceTypes := map[string]ds.StatType{}
 	deliveryServiceRegexes := map[string][]string{}
 	serverCachegroups := map[string]string{}
 
@@ -172,19 +180,20 @@ func Start(opsConfigFile string, staticAppData StaticAppData) {
 	errorCount := uint64(0)
 	events := []Event{}
 	eventIndex := uint64(0)
-	dsStats := deliveryservicestats.NewDsStats()
-	lastKbpsStats := deliveryservicestats.NewDsStatsLastKbps()
+	dsStats := ds.NewStats()
+	lastKbpsStats := ds.NewStatsLastKbps()
+	localCacheStatus := map[ds.CacheName]CacheAvailableStatus{}
 
 	for {
 		select {
 		case req := <-dr:
-			defer close(req.C)
+			defer close(req.Response)
 
 			var body []byte
 			var err error
 
-			switch req.T {
-			case http_server.TR_CONFIG:
+			switch req.Type {
+			case http_server.TRConfig:
 				if toSession == nil {
 					err = fmt.Errorf("Unable to connect to Traffic Ops")
 				} else if opsConfig.CdnName == "" {
@@ -195,17 +204,17 @@ func Start(opsConfigFile string, staticAppData StaticAppData) {
 				if err != nil {
 					err = fmt.Errorf("TR Config: %v", err)
 				}
-			case http_server.TR_STATE_DERIVED:
+			case http_server.TRStateDerived:
 				body, err = peer.CrStatesMarshall(combinedStates)
 				if err != nil {
 					err = fmt.Errorf("TR State (derived): %v", err)
 				}
-			case http_server.TR_STATE_SELF:
+			case http_server.TRStateSelf:
 				body, err = peer.CrStatesMarshall(localStates)
 				if err != nil {
 					err = fmt.Errorf("TR State (self): %v", err)
 				}
-			case http_server.CACHE_STATS:
+			case http_server.CacheStats:
 				// TODO: add support for ?hc=N query param, stats=, wildcard, individual caches
 				// add pp and date to the json:
 				/*
@@ -224,26 +233,26 @@ func Start(opsConfigFile string, staticAppData StaticAppData) {
 				if err != nil {
 					err = fmt.Errorf("CacheStats: %v", err)
 				}
-			case http_server.DS_STATS:
-				body, err = json.Marshal(deliveryservicestats.DsStatsJSON(dsStats)) // TODO marshall beforehand, for performance? (test to see how often requests are made)
+			case http_server.DSStats:
+				body, err = json.Marshal(ds.StatsJSON(dsStats)) // TODO marshall beforehand, for performance? (test to see how often requests are made)
 				if err != nil {
 					err = fmt.Errorf("DsStats: %v", err)
 				}
-			case http_server.EVENT_LOG:
+			case http_server.EventLog:
 				body, err = json.Marshal(JSONEvents{Events: events})
 				if err != nil {
 					err = fmt.Errorf("EventLog: %v", err)
 				}
-			case http_server.PEER_STATES:
+			case http_server.PeerStates:
 				body, err = json.Marshal(createApiPeerStates(peerStates))
-			case http_server.STAT_SUMMARY:
+			case http_server.StatSummary:
 				body = []byte("TODO implement")
-			case http_server.STATS:
+			case http_server.Stats:
 				body, err = getStats(staticAppData, cacheHealthPoller.Config.Interval, lastHealthDurations, fetchCount, healthIteration, errorCount)
 				if err != nil {
 					err = fmt.Errorf("Stats: %v", err)
 				}
-			case http_server.CONFIG_DOC:
+			case http_server.ConfigDoc:
 				opsConfigCopy := opsConfig
 				// if the password is blank, leave it blank, so callers can see it's missing.
 				if opsConfigCopy.Password != "" {
@@ -253,15 +262,33 @@ func Start(opsConfigFile string, staticAppData StaticAppData) {
 				if err != nil {
 					err = fmt.Errorf("Config Doc: %v", err)
 				}
+			case http_server.APICacheCount: // TODO determine if this should use peerStates
+				body = []byte(strconv.Itoa(len(localStates.Caches)))
+			case http_server.APICacheAvailableCount:
+				body = []byte(strconv.Itoa(cacheAvailableCount(localStates.Caches)))
+			case http_server.APICacheDownCount:
+				body = []byte(strconv.Itoa(cacheDownCount(localStates.Caches)))
+			case http_server.APIVersion:
+				s := "traffic_monitor-" + staticAppData.Version + "."
+				if len(staticAppData.GitRevision) > 6 {
+					s += staticAppData.GitRevision[:6]
+				} else {
+					s += staticAppData.GitRevision
+				}
+				body = []byte(s)
+			case http_server.APITrafficOpsURI:
+				body = []byte(opsConfig.Url)
+			case http_server.APICacheStates:
+				body, err = json.Marshal(createCacheStatuses(serverTypes, statHistory, lastHealthDurations, localStates.Caches, lastKbpsStats, localCacheStatus))
 			default:
-				err = fmt.Errorf("Unknown Request Type: %v", req.T)
+				err = fmt.Errorf("Unknown Request Type: %v", req.Type)
 			}
 
 			if err != nil {
 				errorCount++
 				log.Printf("ERROR Request Error: %v\n", err)
 			} else {
-				req.C <- body
+				req.Response <- body
 			}
 		case oc := <-opsConfigFileHandler.OpsConfigChannel:
 			var err error
@@ -404,6 +431,8 @@ func Start(opsConfigFile string, staticAppData StaticAppData) {
 				}
 				eventIndex++
 			}
+
+			localCacheStatus[ds.CacheName(healthResult.Id)] = CacheAvailableStatus{Available: isAvailable, Status: monitorConfig.TrafficServer[healthResult.Id].Status} // TODO move within localStates
 			localStates.Caches[healthResult.Id] = peer.IsAvailable{IsAvailable: isAvailable}
 			calculateDeliveryServiceState(deliveryServiceServers, localStates.Caches, localStates.Deliveryservice)
 
@@ -412,16 +441,17 @@ func Start(opsConfigFile string, staticAppData StaticAppData) {
 			now := time.Now()
 
 			var err error
-			dsStats, lastKbpsStats, err = deliveryservicestats.CreateDsStats(statHistory, deliveryServiceServers, serverDeliveryServices, deliveryServiceTypes, deliveryServiceRegexes, serverCachegroups, serverTypes, combinedStates, lastKbpsStats, now)
+			dsStats, lastKbpsStats, err = ds.CreateStats(statHistory, deliveryServiceServers, serverDeliveryServices, deliveryServiceTypes, deliveryServiceRegexes, serverCachegroups, serverTypes, combinedStates, lastKbpsStats, now)
 			if err != nil {
 				errorCount++
-				log.Printf("ERROR getting deliveryservicestats: %v\n", err)
+				log.Printf("ERROR getting deliveryservice: %v\n", err)
 			}
 
 			if lastHealthStart, ok := lastHealthEndTimes[healthResult.Id]; ok {
 				lastHealthDurations[healthResult.Id] = time.Since(lastHealthStart)
 			}
 			lastHealthEndTimes[healthResult.Id] = now
+			fmt.Printf("DEBUG health duration for %s: %v\n", healthResult.Id, lastHealthDurations[healthResult.Id])
 
 			// if _, ok := queryIntervalStart[pollI]; !ok {
 			// 	log.Printf("ERROR poll start index not found")
@@ -437,10 +467,171 @@ func Start(opsConfigFile string, staticAppData StaticAppData) {
 	}
 }
 
+// TODO make fields nullable, so error fields can be omitted, letting API callers still get updates for unerrored fields
+type CacheStatus struct {
+	Type                  *string  `json:"type,omitempty"`
+	Status                *string  `json:"status,omitempty"`
+	LoadAverage           *float64 `json:"load_average,omitempty"`
+	QueryTimeMilliseconds *int64   `json:"query_time_ms,omitempty"`
+	BandwidthKbps         *float64 `json:"bandwidth_kbps,omitempty"`
+	ConnectionCount       *int64   `json:"connection_count,omitempty"`
+}
+
+func createCacheStatuses(cacheTypes map[string]ds.StatCacheType, statHistory map[string][]interface{}, lastHealthDurations map[string]time.Duration, cacheStates map[string]peer.IsAvailable, lastKbpsStats ds.StatsLastKbps, localCacheStatus map[ds.CacheName]CacheAvailableStatus) map[ds.CacheName]CacheStatus {
+	conns := createCacheConnections(statHistory)
+	statii := map[ds.CacheName]CacheStatus{}
+	for cacheName, cacheType := range cacheTypes {
+
+		cacheStatHistory, ok := statHistory[cacheName]
+		if !ok {
+			log.Printf("WARNING DEBUG6 createCacheStatuses stat history missing cache %s\n", cacheName)
+			continue
+		}
+
+		if len(cacheStatHistory) < 1 {
+			log.Printf("WARNING DEBUG6 createCacheStatuses stat history empty for cache %s\n", cacheName)
+			continue
+		}
+
+		log.Printf("DEBUGQ createCacheStatuses NOT empty for cache %s\n", cacheName)
+
+		var loadAverage *float64
+		procLoadAvg := cacheStatHistory[0].(cache.Result).Astats.System.ProcLoadavg
+		if procLoadAvg != "" {
+			firstSpace := strings.IndexRune(procLoadAvg, ' ')
+			if firstSpace == -1 {
+				log.Printf("WARNING DEBUG6 unexpected proc.loadavg '%s' for cache %s\n", procLoadAvg, cacheName)
+			} else {
+				loadAverageVal, err := strconv.ParseFloat(procLoadAvg[:firstSpace], 64)
+				if err != nil {
+					log.Printf("WARNING proc.loadavg doesn't contain a float prefix '%s' for cache %s\n", procLoadAvg, cacheName)
+				} else {
+					loadAverage = &loadAverageVal
+				}
+			}
+		}
+
+		var queryTime *int64
+		queryTimeVal, ok := lastHealthDurations[cacheName]
+		if !ok {
+			log.Printf("WARNING DEBUGQ cache not in last health durations cache %s\n", cacheName)
+		} else {
+			queryTimeInt := int64(queryTimeVal / time.Millisecond)
+			queryTime = &queryTimeInt
+		}
+
+		var kbps *float64
+		kbpsVal, ok := lastKbpsStats.Caches[ds.CacheName(cacheName)]
+		if !ok {
+			log.Printf("WARNING DEBUGQ cache not in last kbps cache %s\n", cacheName)
+		} else {
+			kbps = &kbpsVal.Kbps
+		}
+
+		var connections *int64
+		connectionsVal, ok := conns[ds.CacheName(cacheName)]
+		if !ok {
+			log.Printf("WARNING DEBUGQ cache not in connections %s\n", cacheName)
+		} else {
+			connections = &connectionsVal
+		}
+
+		var status *string
+		statusVal, ok := localCacheStatus[ds.CacheName(cacheName)]
+		if !ok {
+			log.Printf("WARNING DEBUGQ cache not in statuses %s\n", cacheName)
+		} else {
+			statusString := statusVal.Status + " - "
+			if localCacheStatus[ds.CacheName(cacheName)].Available {
+				statusString += "available"
+			} else {
+				statusString += "unavailable"
+			}
+			status = &statusString
+		}
+
+		cacheTypeStr := string(cacheType)
+		statii[ds.CacheName(cacheName)] = CacheStatus{Type: &cacheTypeStr, LoadAverage: loadAverage, QueryTimeMilliseconds: queryTime, BandwidthKbps: kbps, ConnectionCount: connections, Status: status}
+	}
+	return statii
+}
+
+// TODO: run these in goroutines
+func createCacheHealthStatuses(statHistory map[string][]interface{}) map[ds.CacheName]string {
+	statuses := map[ds.CacheName]string{}
+	for server, history := range statHistory {
+		for _, iresult := range history {
+			result, ok := iresult.(cache.Result)
+			if !ok {
+				fmt.Printf("ERROR DEBUG6 history contained unexpected result type %T\n", iresult)
+				continue
+			}
+
+			val, ok := result.Astats.Ats["status"]
+			if !ok {
+				fmt.Printf("ERROR DEBUG8 status stat not found for %s\n", server)
+				continue
+			}
+			fmt.Printf("ERROR DEBUG6 status stat WAS FOUND for %s\n", server)
+
+			v, ok := val.(string)
+			if !ok {
+				fmt.Printf("ERROR status stat value expected string actual '%v' type %T", val, val)
+				continue
+			}
+
+			statuses[ds.CacheName(server)] = v
+		}
+	}
+	return statuses
+}
+
+func createCacheConnections(statHistory map[string][]interface{}) map[ds.CacheName]int64 {
+	conns := map[ds.CacheName]int64{}
+	for server, history := range statHistory {
+		for _, iresult := range history {
+			result, ok := iresult.(cache.Result)
+			if !ok {
+				fmt.Printf("ERROR DEBUG6 history contained unexpected result type %T\n", iresult)
+				continue
+			}
+
+			val, ok := result.Astats.Ats["proxy.process.http.total_incoming_connections"]
+			if !ok {
+				fmt.Printf("ERROR DEBUG6 connections stat not found for %s\n", server)
+				continue
+			}
+
+			v, ok := val.(float64)
+			if !ok {
+				fmt.Printf("ERROR connection stat value expected int actual '%v' type %T", val, val)
+				continue
+			}
+
+			conns[ds.CacheName(server)] = int64(v)
+		}
+	}
+	return conns
+}
+
+func cacheDownCount(caches map[string]peer.IsAvailable) int {
+	count := 0
+	for _, available := range caches {
+		if !available.IsAvailable {
+			count++
+		}
+	}
+	return count
+}
+
+func cacheAvailableCount(caches map[string]peer.IsAvailable) int {
+	return len(caches) - cacheDownCount(caches)
+}
+
 type TrafficMonitorName string
 
 type ApiPeerStates struct {
-	Peers map[TrafficMonitorName]map[deliveryservicestats.CacheName][]CacheState `json:"peers"`
+	Peers map[TrafficMonitorName]map[ds.CacheName][]CacheState `json:"peers"`
 }
 
 type CacheState struct {
@@ -448,15 +639,15 @@ type CacheState struct {
 }
 
 func createApiPeerStates(peerStates map[string]peer.Crstates) ApiPeerStates {
-	apiPeerStates := ApiPeerStates{Peers: map[TrafficMonitorName]map[deliveryservicestats.CacheName][]CacheState{}}
+	apiPeerStates := ApiPeerStates{Peers: map[TrafficMonitorName]map[ds.CacheName][]CacheState{}}
 
 	for peer, state := range peerStates {
 		if _, ok := apiPeerStates.Peers[TrafficMonitorName(peer)]; !ok {
-			apiPeerStates.Peers[TrafficMonitorName(peer)] = map[deliveryservicestats.CacheName][]CacheState{}
+			apiPeerStates.Peers[TrafficMonitorName(peer)] = map[ds.CacheName][]CacheState{}
 		}
 		peerState := apiPeerStates.Peers[TrafficMonitorName(peer)]
 		for cache, available := range state.Caches {
-			peerState[deliveryservicestats.CacheName(cache)] = []CacheState{CacheState{Value: available.IsAvailable}}
+			peerState[ds.CacheName(cache)] = []CacheState{CacheState{Value: available.IsAvailable}}
 		}
 		apiPeerStates.Peers[TrafficMonitorName(peer)] = peerState
 	}
@@ -637,8 +828,8 @@ func getServerCachegroups(to *traffic_ops.Session, cdn string) (map[string]strin
 }
 
 // getServerTypes gets the cache type of each ATS Edge+Mid Cache server, for the given CDN, from Traffic Ops.
-func getServerTypes(to *traffic_ops.Session, cdn string) (map[string]deliveryservicestats.DsStatCacheType, error) {
-	serverTypes := map[string]deliveryservicestats.DsStatCacheType{}
+func getServerTypes(to *traffic_ops.Session, cdn string) (map[string]ds.StatCacheType, error) {
+	serverTypes := map[string]ds.StatCacheType{}
 
 	crcData, err := to.CRConfigRaw(cdn)
 	if err != nil {
@@ -655,8 +846,8 @@ func getServerTypes(to *traffic_ops.Session, cdn string) (map[string]deliveryser
 	}
 
 	for server, serverData := range crc.ContentServers {
-		t := deliveryservicestats.DsStatCacheTypeFromString(serverData.Type)
-		if t == deliveryservicestats.DsStatCacheTypeInvalid {
+		t := ds.StatCacheTypeFromString(serverData.Type)
+		if t == ds.StatCacheTypeInvalid {
 			return nil, fmt.Errorf("getServerTypes CRConfig unknown type for '%s': '%s'", server, serverData.Type)
 		}
 		serverTypes[server] = t
@@ -664,8 +855,8 @@ func getServerTypes(to *traffic_ops.Session, cdn string) (map[string]deliveryser
 	return serverTypes, nil
 }
 
-func getDeliveryServiceTypes(to *traffic_ops.Session, cdn string) (map[string]deliveryservicestats.DsStatType, error) {
-	dsTypes := map[string]deliveryservicestats.DsStatType{}
+func getDeliveryServiceTypes(to *traffic_ops.Session, cdn string) (map[string]ds.StatType, error) {
+	dsTypes := map[string]ds.StatType{}
 
 	crcData, err := to.CRConfigRaw(cdn)
 	if err != nil {
@@ -688,8 +879,8 @@ func getDeliveryServiceTypes(to *traffic_ops.Session, cdn string) (map[string]de
 			return nil, fmt.Errorf("CRConfig missing protocol for '%s'", dsName)
 		}
 		dsTypeStr := dsData.Matchsets[0].Protocol
-		dsType := deliveryservicestats.DsStatTypeFromString(dsTypeStr)
-		if dsType == deliveryservicestats.DsStatTypeInvalid {
+		dsType := ds.StatTypeFromString(dsTypeStr)
+		if dsType == ds.StatTypeInvalid {
 			return nil, fmt.Errorf("CRConfig unknowng protocol for '%s': '%s'", dsName, dsTypeStr)
 		}
 		dsTypes[dsName] = dsType
@@ -718,7 +909,7 @@ func calculateDeliveryServiceState(deliveryServiceServers map[string][]string, c
 
 // TODO JvD: add deliveryservice stuff
 func combineCrStates(peerStates map[string]peer.Crstates, localStates peer.Crstates) peer.Crstates {
-	combinedStates := peer.Crstates{Caches: make(map[string]peer.IsAvailable), Deliveryservice: make(map[string]peer.Deliveryservice)}
+	combinedStates := peer.NewCRStates()
 	for cacheName, localCacheState := range localStates.Caches { // localStates gets pruned when servers are disabled, it's the source of truth
 		downVotes := 0 // TODO JvD: change to use parameter when deciding to be optimistic or pessimistic.
 		if localCacheState.IsAvailable {

@@ -83,6 +83,10 @@ public class DeliveryService {
 	private final Set<String> requestHeaders = new HashSet<String>();
 	private final boolean regionalGeoEnabled;
 	private final String geolocationProvider;
+	private final boolean sslEnabled;
+	private static final int STANDARD_HTTP_PORT = 80;
+	private static final int STANDARD_HTTPS_PORT = 443;
+	private boolean hasX509Cert = false;
 
 	public DeliveryService(final String id, final JSONObject dsJo) throws JSONException {
 		this.id = id;
@@ -127,6 +131,7 @@ public class DeliveryService {
 		} else {
 			LOGGER.info("DeliveryService '" + id + "' will use default geolocation provider Maxmind");
 		}
+		sslEnabled = dsJo.optBoolean("sslEnabled", false);
 	}
 
 	public String getId() {
@@ -210,32 +215,42 @@ public class DeliveryService {
 			track.setResultDetails(ResultDetails.DS_NO_BYPASS);
 			return null;
 		}
-		int port = 80;
+		int port = request.isSecure() ? 443 : 80;
 		if(httpJo.has("port")) {
 			port = httpJo.optInt("port");
 		}
 		return new URL(createURIString(request, fqdn, port, null));
 	}
 	private static final String REGEX_PERIOD = "\\.";
-	private static final String SCHEME = "http://";
-	private static final int STANDARD_HTTP_PORT = 80;
+
 	public String createURIString(final HTTPRequest request, final Cache cache) {
 		String fqdn = getFQDN(cache);
 		if (fqdn == null) {
 			final String[] cacheName = cache.getFqdn().split(REGEX_PERIOD, 2);
 			fqdn = cacheName[0] + "." + request.getHostname().split(REGEX_PERIOD, 2)[1];
 		}
-		return createURIString(request, fqdn, cache.getPort(), getTransInfoStr(request));
+
+		final int port = isSslReady() ? cache.getHttpsPort() : cache.getPort();
+		return createURIString(request, fqdn, port, getTransInfoStr(request));
 	}
+
+	private String getPortString(final int port) {
+		final int standard_port = isSslReady() ? STANDARD_HTTPS_PORT : STANDARD_HTTP_PORT;
+		return port == standard_port ? "" : ":" + port;
+	}
+
+	private String getPortString(final Cache cache) {
+		final int cache_port = isSslReady() ? cache.getHttpsPort() : cache.getPort();
+		return getPortString(cache_port);
+	}
+
 	private String createURIString(final HTTPRequest request, final String fqdn, final int port, final String tinfo) {
-		final StringBuilder uri = new StringBuilder(SCHEME);
+		final StringBuilder uri = new StringBuilder(isSslReady() ? "https://" : "http://");
 
 		uri.append(fqdn);
-
-		if (port != STANDARD_HTTP_PORT) {
-			uri.append(':').append(port);
-		}
+		uri.append(getPortString(port));
 		uri.append(request.getUri());
+
 		boolean queryAppended = false;
 		if (request.getQueryString() != null && appendQueryString()) {
 			uri.append('?').append(request.getQueryString());
@@ -251,8 +266,9 @@ public class DeliveryService {
 		}
 		return uri.toString();
 	}
+
 	public String createURIString(final HTTPRequest request, final String alternatePath, final Cache cache) {
-		final StringBuilder uri = new StringBuilder(SCHEME);
+		final StringBuilder uri = new StringBuilder(isSslReady() ? "https://" : "http://");
 
 		String fqdn = getFQDN(cache);
 		if (fqdn == null) {
@@ -260,11 +276,7 @@ public class DeliveryService {
 			fqdn = cacheName[0] + "." + request.getHostname().split(REGEX_PERIOD, 2)[1];
 		}
 		uri.append(fqdn);
-
-		if (cache.getPort() != STANDARD_HTTP_PORT) {
-			uri.append(':').append(cache.getPort());
-		}
-
+		uri.append(getPortString(cache));
 		uri.append(alternatePath);
 		return uri.toString();
 	}
@@ -547,5 +559,17 @@ public class DeliveryService {
 		}
 
 		return locations;
+	}
+
+	public boolean isSslEnabled() {
+		return sslEnabled;
+	}
+
+	public void setHasX509Cert(final boolean hasX509Cert) {
+		this.hasX509Cert = hasX509Cert;
+	}
+
+	public boolean isSslReady() {
+		return sslEnabled && hasX509Cert;
 	}
 }

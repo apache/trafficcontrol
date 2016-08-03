@@ -274,4 +274,13 @@
 		<property name="doNotLog" value="$[http.access.static.content.donotlog]" />
 		<property name="staticContentWhiteList" ref="staticContentWhiteList" />
 	</bean>
+
+	<bean name="certificatesClient" class="com.comcast.cdn.traffic_control.traffic_router.core.secure.CertificatesClient">
+		<property name="trafficOpsUtils" ref="trafficOpsUtils"/>
+	</bean>
+
+	<bean name="certificatesPoller" class="com.comcast.cdn.traffic_control.traffic_router.core.secure.CertificatesPoller" init-method="start">
+		<property name="certificatesClient" ref="certificatesClient"/>
+	</bean>
+
 </beans>
