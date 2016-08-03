@@ -122,7 +122,7 @@ do
 done
 
 # Always remove the gitter container after copy -- subsequent runs need to start with image
-#docker rm gitter
+docker rm gitter
 
 if [[ -z $images ]]
 then
