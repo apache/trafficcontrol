@@ -62,15 +62,10 @@ tar -xzvf $RPM_SOURCE_DIR/traffic_portal-%{version}.tgz
 
     %__cp ${RPM_BUILD_DIR}/traffic_portal-%{version}/server/server.js ${RPM_BUILD_ROOT}%{traffic_portal_home}/server/.
     %__cp -r ${RPM_BUILD_DIR}/traffic_portal-%{version}/conf ${RPM_BUILD_ROOT}/etc/traffic_portal/.
-    %__cp -r ${RPM_BUILD_DIR}/traffic_portal-%{version}/grunt ${RPM_BUILD_ROOT}%{traffic_portal_home}/.
     %__cp ${RPM_BUILD_DIR}/traffic_portal-%{version}/build/etc/init.d/traffic_portal ${RPM_BUILD_ROOT}/etc/init.d/.
     %__cp ${RPM_BUILD_DIR}/traffic_portal-%{version}/build/etc/logrotate.d/traffic_portal ${RPM_BUILD_ROOT}/etc/logrotate.d/.
     %__cp ${RPM_BUILD_DIR}/traffic_portal-%{version}/build/etc/logrotate.d/traffic_portal-access ${RPM_BUILD_ROOT}/etc/logrotate.d/.
-    %__cp -r ${RPM_BUILD_DIR}/traffic_portal-%{version}/app ${RPM_BUILD_ROOT}%{traffic_portal_home}/.
-
-    # copy files (not dirs) from the top level directory
-    find ${RPM_BUILD_DIR}/traffic_portal-%{version} -maxdepth 1 -type f -not -name '.*' | xargs -I {} cp {} ${RPM_BUILD_ROOT}%{traffic_portal_home}/.
-
+    %__cp -r ${RPM_BUILD_DIR}/traffic_portal-%{version}/app/dist/* ${RPM_BUILD_ROOT}%{traffic_portal_home}/.
 
 %post
     echo "Successfully installed the traffic_portal assets to " %{traffic_portal_home}
@@ -84,6 +79,8 @@ tar -xzvf $RPM_SOURCE_DIR/traffic_portal-%{version}.tgz
 
 %files
 %defattr(644,root,root,755)
+%attr(755,root,root) /etc/init.d/traffic_portal
+%attr(755,root,root) %{traffic_portal_home}/node_modules/forever/bin/*
 %config(noreplace)/etc/traffic_portal/conf/config.js
 /etc/traffic_portal/conf/config-template.js
 %{traffic_portal_home}/*
