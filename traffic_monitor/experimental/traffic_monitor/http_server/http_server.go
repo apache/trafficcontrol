@@ -15,7 +15,7 @@ import (
 // each time the previous running server will be stopped, and the server will be
 // restarted with the new port address and data request channel.
 type Server struct {
-	mgrReqChan                 chan DataRequest
+	mgrReqChan                 chan<- DataRequest
 	stoppableListener          *stoppableListener.StoppableListener
 	stoppableListenerWaitGroup sync.WaitGroup
 }
@@ -63,7 +63,7 @@ func (s Server) registerEndpoints(sm *http.ServeMux) error {
 // Run runs a new HTTP service at the given addr, making data requests to the given c.
 // Run may be called repeatedly, and each time, will shut down any existing service first.
 // Run is NOT threadsafe, and MUST NOT be called concurrently by multiple goroutines.
-func (s Server) Run(c chan DataRequest, addr string) error {
+func (s Server) Run(c chan<- DataRequest, addr string) error {
 	// TODO make an object, which itself is not threadsafe, but which encapsulates all data so multiple
 	//      objects can be created and Run.
 

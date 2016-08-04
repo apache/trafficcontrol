@@ -4,7 +4,9 @@ import (
 	"errors"
 	"fmt"
 	"github.com/Comcast/traffic_control/traffic_monitor/experimental/traffic_monitor/cache"
+	"github.com/Comcast/traffic_control/traffic_monitor/experimental/traffic_monitor/enum"
 	"github.com/Comcast/traffic_control/traffic_monitor/experimental/traffic_monitor/peer"
+	todata "github.com/Comcast/traffic_control/traffic_monitor/experimental/traffic_monitor/trafficopsdata"
 	"regexp"
 	"strconv"
 	"strings"
@@ -12,15 +14,6 @@ import (
 )
 
 // TODO remove 'ds' and 'stat' from names
-
-// TODO move name string types somewhere more generic
-
-type CacheName string
-
-type CacheGroupName string
-
-// Current JSON endpoint:
-type DeliveryServiceName string
 
 // New, more structured format:
 type StatMeta struct {
@@ -63,91 +56,30 @@ type StatCacheStats struct {
 	TpsTotal    StatInt    `json:"tps_total"`
 }
 
-// TODO move and rename more generically
-type StatCacheType string
-
-const StatCacheTypeEdge = StatCacheType("EDGE")
-const StatCacheTypeMid = StatCacheType("MID")
-const StatCacheTypeInvalid = StatCacheType("INVALID")
-
-func (t StatCacheType) String() string {
-	switch t {
-	case StatCacheTypeEdge:
-		return "EDGE"
-	case StatCacheTypeMid:
-		return "MID"
-	default:
-		return "INVALID"
-	}
-}
-
-func StatCacheTypeFromString(s string) StatCacheType {
-	s = strings.ToLower(s)
-	switch s {
-	case "edge":
-		return StatCacheTypeEdge
-	case "mid":
-		return StatCacheTypeMid
-	default:
-		return StatCacheTypeInvalid
-	}
-}
-
-type StatType int64
-
-const (
-	StatTypeHTTP = iota
-	StatTypeDNS
-	StatTypeInvalid
-)
-
-func (t StatType) String() string {
-	switch t {
-	case StatTypeHTTP:
-		return "HTTP"
-	case StatTypeDNS:
-		return "DNS"
-	default:
-		return "INVALID"
-	}
-}
-
-func StatTypeFromString(s string) StatType {
-	s = strings.ToLower(s)
-	switch s {
-	case "http":
-		return StatTypeHTTP
-	case "dns":
-		return StatTypeDNS
-	default:
-		return StatTypeInvalid
-	}
-}
-
 type StatCommon struct {
-	CachesConfigured StatInt            `json:"caches_configured"`
-	CachesReporting  map[CacheName]bool `json:"caches_reporting"`
-	ErrorString      StatString         `json:"error_string"`
-	Status           StatString         `json:"status"`
-	IsHealthy        StatBool           `json:"is_healthy"`
-	IsAvailable      StatBool           `json:"is_available"`
-	CachesAvailable  StatInt            `json:"caches_available"`
+	CachesConfigured StatInt                 `json:"caches_configured"`
+	CachesReporting  map[enum.CacheName]bool `json:"caches_reporting"`
+	ErrorString      StatString              `json:"error_string"`
+	Status           StatString              `json:"status"`
+	IsHealthy        StatBool                `json:"is_healthy"`
+	IsAvailable      StatBool                `json:"is_available"`
+	CachesAvailable  StatInt                 `json:"caches_available"`
 }
 
 type Stat interface {
-	StatType() StatType
+	StatType() enum.DSType
 	CommonData() *StatCommon
 }
 
 type StatHTTP struct {
 	Common      StatCommon
-	CacheGroups map[CacheGroupName]StatCacheStats
-	Type        map[StatCacheType]StatCacheStats
+	CacheGroups map[enum.CacheGroupName]StatCacheStats
+	Type        map[enum.CacheType]StatCacheStats
 	Total       StatCacheStats
 }
 
-func (d StatHTTP) StatType() StatType {
-	return StatTypeHTTP
+func (d StatHTTP) StatType() enum.DSType {
+	return enum.DSTypeHTTP
 }
 
 func (d *StatHTTP) CommonData() *StatCommon {
@@ -155,15 +87,15 @@ func (d *StatHTTP) CommonData() *StatCommon {
 }
 
 func newStatHTTP() *StatHTTP {
-	return &StatHTTP{CacheGroups: map[CacheGroupName]StatCacheStats{}, Type: map[StatCacheType]StatCacheStats{}, Common: StatCommon{CachesReporting: map[CacheName]bool{}}}
+	return &StatHTTP{CacheGroups: map[enum.CacheGroupName]StatCacheStats{}, Type: map[enum.CacheType]StatCacheStats{}, Common: StatCommon{CachesReporting: map[enum.CacheName]bool{}}}
 }
 
 type StatDNS struct {
 	Common StatCommon
 }
 
-func (d StatDNS) StatType() StatType {
-	return StatTypeDNS
+func (d StatDNS) StatType() enum.DSType {
+	return enum.DSTypeDNS
 }
 
 func (d *StatDNS) CommonData() *StatCommon {
@@ -171,17 +103,17 @@ func (d *StatDNS) CommonData() *StatCommon {
 }
 
 func newStatDNS() *StatDNS {
-	return &StatDNS{Common: StatCommon{CachesReporting: map[CacheName]bool{}}}
+	return &StatDNS{Common: StatCommon{CachesReporting: map[enum.CacheName]bool{}}}
 }
 
 // TODO remove DeliveryService and set type to the map directly, or add other members
 type Stats struct {
-	DeliveryService map[DeliveryServiceName]Stat `json:"deliveryService"`
+	DeliveryService map[enum.DeliveryServiceName]Stat `json:"deliveryService"`
 }
 
 // TODO rename to just 'New'?
 func NewStats() Stats {
-	return Stats{DeliveryService: map[DeliveryServiceName]Stat{}}
+	return Stats{DeliveryService: map[enum.DeliveryServiceName]Stat{}}
 }
 
 // DsRegexes maps Delivery Service Regular Expressions to delivery services.
@@ -192,13 +124,13 @@ func NewStats() Stats {
 // This allows us to do a cheap match on 1 and 2, and only regex match the uncommon case.
 // TODO performance tests, whether Go compiled *Regexp is relevantly slower than `strings.Contains` for direct and .foo. matches
 type Regexes struct {
-	DirectMatches                      map[string]DeliveryServiceName
-	DotStartSlashDotFooSlashDotDotStar map[string]DeliveryServiceName
-	RegexMatch                         map[*regexp.Regexp]DeliveryServiceName
+	DirectMatches                      map[string]enum.DeliveryServiceName
+	DotStartSlashDotFooSlashDotDotStar map[string]enum.DeliveryServiceName
+	RegexMatch                         map[*regexp.Regexp]enum.DeliveryServiceName
 }
 
 // DeliveryService returns the delivery service which matches the given fqdn, or false.
-func (d Regexes) DeliveryService(fqdn string) (DeliveryServiceName, bool) {
+func (d Regexes) DeliveryService(fqdn string) (enum.DeliveryServiceName, bool) {
 	if ds, ok := d.DirectMatches[fqdn]; ok {
 		return ds, true
 	}
@@ -215,16 +147,16 @@ func (d Regexes) DeliveryService(fqdn string) (DeliveryServiceName, bool) {
 	return "", false
 }
 
-// TODO precompute; call when we get new delivery services, instead of every time we create new stats
+// TODO precompute, move to TOData; call when we get new delivery services, instead of every time we create new stats
 func CreateRegexes(dsToRegex map[string][]string) (Regexes, error) {
 	dsRegexes := Regexes{
-		DirectMatches:                      map[string]DeliveryServiceName{},
-		DotStartSlashDotFooSlashDotDotStar: map[string]DeliveryServiceName{},
-		RegexMatch:                         map[*regexp.Regexp]DeliveryServiceName{},
+		DirectMatches:                      map[string]enum.DeliveryServiceName{},
+		DotStartSlashDotFooSlashDotDotStar: map[string]enum.DeliveryServiceName{},
+		RegexMatch:                         map[*regexp.Regexp]enum.DeliveryServiceName{},
 	}
 
 	for dsStr, regexStrs := range dsToRegex {
-		ds := DeliveryServiceName(dsStr)
+		ds := enum.DeliveryServiceName(dsStr)
 		for _, regexStr := range regexStrs {
 			prefix := `.*\.`
 			suffix := `\..*`
@@ -261,7 +193,7 @@ func setStaticData(dsStats Stats, dsServers map[string][]string) Stats {
 	return dsStats
 }
 
-func addAvailableData(dsStats Stats, crStates peer.Crstates, serverCachegroups map[string]string, serverDs map[string]string, serverTypes map[string]StatCacheType) (Stats, error) {
+func addAvailableData(dsStats Stats, crStates peer.Crstates, serverCachegroups map[string]string, serverDs map[string]string, serverTypes map[string]enum.CacheType) (Stats, error) {
 	for cache, available := range crStates.Caches {
 		cacheGroup, ok := serverCachegroups[cache]
 		if !ok {
@@ -279,7 +211,7 @@ func addAvailableData(dsStats Stats, crStates peer.Crstates, serverCachegroups m
 			continue
 		}
 
-		iStat, ok := dsStats.DeliveryService[DeliveryServiceName(deliveryService)]
+		iStat, ok := dsStats.DeliveryService[enum.DeliveryServiceName(deliveryService)]
 		if !ok || iStat == nil {
 			fmt.Printf("WARNING: CreateStats not adding availability data for '%s': not found in Stats\n", cache)
 			continue // TODO log warning? Error?
@@ -288,9 +220,9 @@ func addAvailableData(dsStats Stats, crStates peer.Crstates, serverCachegroups m
 		if available.IsAvailable {
 			iStat.CommonData().IsAvailable.Value = true
 			if stat, ok := iStat.(*StatHTTP); ok {
-				cacheGroupStats := stat.CacheGroups[CacheGroupName(cacheGroup)]
+				cacheGroupStats := stat.CacheGroups[enum.CacheGroupName(cacheGroup)]
 				cacheGroupStats.IsAvailable.Value = true
-				stat.CacheGroups[CacheGroupName(cacheGroup)] = cacheGroupStats
+				stat.CacheGroups[enum.CacheGroupName(cacheGroup)] = cacheGroupStats
 				stat.Total.IsAvailable.Value = true
 				typeStats := stat.Type[cacheType]
 				typeStats.IsAvailable.Value = true
@@ -301,29 +233,29 @@ func addAvailableData(dsStats Stats, crStates peer.Crstates, serverCachegroups m
 			}
 		}
 
-		dsStats.DeliveryService[DeliveryServiceName(deliveryService)] = iStat // TODO Necessary? Remove?
+		dsStats.DeliveryService[enum.DeliveryServiceName(deliveryService)] = iStat // TODO Necessary? Remove?
 	}
 	return dsStats, nil
 }
 
 type StatsLastKbps struct {
-	DeliveryServices map[DeliveryServiceName]StatLastKbps
-	Caches           map[CacheName]LastKbpsData
+	DeliveryServices map[enum.DeliveryServiceName]StatLastKbps
+	Caches           map[enum.CacheName]LastKbpsData
 }
 
 func NewStatsLastKbps() StatsLastKbps {
-	return StatsLastKbps{DeliveryServices: map[DeliveryServiceName]StatLastKbps{}, Caches: map[CacheName]LastKbpsData{}}
+	return StatsLastKbps{DeliveryServices: map[enum.DeliveryServiceName]StatLastKbps{}, Caches: map[enum.CacheName]LastKbpsData{}}
 }
 
 // TODO figure a way to associate this type with StatHTTP, with which its members correspond.
 type StatLastKbps struct {
-	CacheGroups map[CacheGroupName]LastKbpsData
-	Type        map[StatCacheType]LastKbpsData
+	CacheGroups map[enum.CacheGroupName]LastKbpsData
+	Type        map[enum.CacheType]LastKbpsData
 	Total       LastKbpsData
 }
 
 func newStatLastKbps() StatLastKbps {
-	return StatLastKbps{CacheGroups: map[CacheGroupName]LastKbpsData{}, Type: map[StatCacheType]LastKbpsData{}}
+	return StatLastKbps{CacheGroups: map[enum.CacheGroupName]LastKbpsData{}, Type: map[enum.CacheType]LastKbpsData{}}
 }
 
 type LastKbpsData struct {
@@ -339,7 +271,7 @@ type LastKbpsData struct {
 // we set the (new - old) / lastChangedTime as the KBPS, and update the recorded LastChangedTime and LastChangedValue
 //
 // This specifically returns the given dsStats and lastKbpsStats on error, so it's safe to do persistentStats, persistentLastKbpsStats, err = addKbps(...)
-func addKbps(dsStats Stats, lastKbpsStats StatsLastKbps, dsStatsTime time.Time, cacheOutbytes map[CacheName]int64) (Stats, StatsLastKbps, error) {
+func addKbps(dsStats Stats, lastKbpsStats StatsLastKbps, dsStatsTime time.Time, cacheOutbytes map[enum.CacheName]int64) (Stats, StatsLastKbps, error) {
 	for dsName, iStat := range dsStats.DeliveryService {
 		if _, ok := iStat.(*StatDNS); ok {
 			continue
@@ -397,7 +329,7 @@ func addKbps(dsStats Stats, lastKbpsStats StatsLastKbps, dsStatsTime time.Time, 
 		lastKbpsStats.DeliveryServices[dsName] = lastKbpsStat
 	}
 
-	for cacheName, outBytes := range cacheOutbytes { // map[CacheName]int64
+	for cacheName, outBytes := range cacheOutbytes { // map[enum.CacheName]int64
 		lastCacheKbpsData, ok := lastKbpsStats.Caches[cacheName]
 		if !ok {
 			lastKbpsStats.Caches[cacheName] = LastKbpsData{Time: dsStatsTime, Bytes: outBytes, Kbps: 0}
@@ -415,45 +347,45 @@ func addKbps(dsStats Stats, lastKbpsStats StatsLastKbps, dsStatsTime time.Time, 
 	return dsStats, lastKbpsStats, nil
 }
 
-func CreateStats(statHistory map[string][]interface{}, dsServers map[string][]string, serverDs map[string]string, dsTypes map[string]StatType, dsRegexStrs map[string][]string, serverCachegroups map[string]string, serverTypes map[string]StatCacheType, crStates peer.Crstates, lastKbpsStats StatsLastKbps, now time.Time) (Stats, StatsLastKbps, error) {
+func CreateStats(statHistory map[string][]interface{}, toData todata.TOData, crStates peer.Crstates, lastKbpsStats StatsLastKbps, now time.Time) (Stats, StatsLastKbps, error) {
 	dsStats := NewStats()
 
-	dsRegexes, err := CreateRegexes(dsRegexStrs)
+	dsRegexes, err := CreateRegexes(toData.DeliveryServiceRegexes)
 	if err != nil {
 		return Stats{}, lastKbpsStats, fmt.Errorf("error creating Regexes: %v", err)
 	}
 
-	for deliveryService, _ := range dsServers {
-		dsType, ok := dsTypes[deliveryService]
+	for deliveryService, _ := range toData.DeliveryServiceServers {
+		dsType, ok := toData.DeliveryServiceTypes[deliveryService]
 		if !ok {
 			return Stats{}, lastKbpsStats, fmt.Errorf("deliveryservice %s missing type", deliveryService)
 		}
-		if dsType == StatTypeHTTP {
-			dsStats.DeliveryService[DeliveryServiceName(deliveryService)] = newStatHTTP()
-		} else if dsType == StatTypeDNS {
-			dsStats.DeliveryService[DeliveryServiceName(deliveryService)] = newStatDNS()
+		if dsType == enum.DSTypeHTTP {
+			dsStats.DeliveryService[enum.DeliveryServiceName(deliveryService)] = newStatHTTP()
+		} else if dsType == enum.DSTypeDNS {
+			dsStats.DeliveryService[enum.DeliveryServiceName(deliveryService)] = newStatDNS()
 		} else {
 			return Stats{}, lastKbpsStats, fmt.Errorf("unknown type for '%s': %v", deliveryService, dsType)
 		}
 	}
 
-	dsStats = setStaticData(dsStats, dsServers)
-	dsStats, err = addAvailableData(dsStats, crStates, serverCachegroups, serverDs, serverTypes)
+	dsStats = setStaticData(dsStats, toData.DeliveryServiceServers)
+	dsStats, err = addAvailableData(dsStats, crStates, toData.ServerCachegroups, toData.ServerDeliveryServices, toData.ServerTypes)
 	if err != nil {
 		return dsStats, lastKbpsStats, fmt.Errorf("Error getting Cache availability data: %v", err)
 	}
 
 	stats := dsStats.DeliveryService
 
-	cacheOutbytes := map[CacheName]int64{}
+	cacheOutbytes := map[enum.CacheName]int64{}
 
 	for server, history := range statHistory {
-		cachegroup, ok := serverCachegroups[server]
+		cachegroup, ok := toData.ServerCachegroups[server]
 		if !ok {
 			fmt.Printf("WARNING server %s has no cachegroup, skipping\n", server)
 			continue
 		}
-		serverType, ok := serverTypes[server]
+		serverType, ok := toData.ServerTypes[server]
 		if !ok {
 			fmt.Printf("WARNING server %s not in CRConfig, skipping\n", server)
 			continue
@@ -471,10 +403,10 @@ func CreateStats(statHistory map[string][]interface{}, dsServers map[string][]st
 					if !ok {
 						continue // no warning, because the same error will be returned by processStat
 					}
-					cacheOutbytes[CacheName(server)] += int64(v)
+					cacheOutbytes[enum.CacheName(server)] += int64(v)
 				}
 
-				ds, newstat, err := processStat(&dsStats, dsRegexes, dsTypes, cachegroup, server, serverType, stat, value)
+				ds, newstat, err := processStat(&dsStats, dsRegexes, toData.DeliveryServiceTypes, cachegroup, server, serverType, stat, value)
 				if err == ErrNotProcessedStat {
 					continue
 				}
@@ -496,7 +428,7 @@ func CreateStats(statHistory map[string][]interface{}, dsServers map[string][]st
 var ErrNotProcessedStat = errors.New("This stat is not used.")
 
 // processStat and its subsidiary functions act as a State Machine, flowing the stat thru states for each "." component of the stat name
-func processStat(dsStats *Stats, dsRegexes Regexes, dsTypes map[string]StatType, cachegroup string, server string, serverType StatCacheType, stat string, value interface{}) (DeliveryServiceName, Stat, error) {
+func processStat(dsStats *Stats, dsRegexes Regexes, dsTypes map[string]enum.DSType, cachegroup string, server string, serverType enum.CacheType, stat string, value interface{}) (enum.DeliveryServiceName, Stat, error) {
 	parts := strings.Split(stat, ".")
 	if len(parts) < 1 {
 		return "", nil, fmt.Errorf("stat has no initial part")
@@ -512,7 +444,7 @@ func processStat(dsStats *Stats, dsRegexes Regexes, dsTypes map[string]StatType,
 	}
 }
 
-func processStatPlugin(dsStats *Stats, dsRegexes Regexes, dsTypes map[string]StatType, cachegroup string, server string, serverType StatCacheType, stat string, statParts []string, value interface{}) (DeliveryServiceName, Stat, error) {
+func processStatPlugin(dsStats *Stats, dsRegexes Regexes, dsTypes map[string]enum.DSType, cachegroup string, server string, serverType enum.CacheType, stat string, statParts []string, value interface{}) (enum.DeliveryServiceName, Stat, error) {
 	if len(statParts) < 1 {
 		return "", nil, fmt.Errorf("stat has no plugin part")
 	}
@@ -524,7 +456,7 @@ func processStatPlugin(dsStats *Stats, dsRegexes Regexes, dsTypes map[string]Sta
 	}
 }
 
-func processStatPluginRemapStats(dsStats *Stats, dsRegexes Regexes, dsTypes map[string]StatType, cachegroup string, server string, serverType StatCacheType, stat string, statParts []string, value interface{}) (DeliveryServiceName, Stat, error) {
+func processStatPluginRemapStats(dsStats *Stats, dsRegexes Regexes, dsTypes map[string]enum.DSType, cachegroup string, server string, serverType enum.CacheType, stat string, statParts []string, value interface{}) (enum.DeliveryServiceName, Stat, error) {
 	if len(statParts) < 2 {
 		return "", nil, fmt.Errorf("stat has no remap_stats deliveryservice and name parts")
 	}
@@ -547,14 +479,14 @@ func processStatPluginRemapStats(dsStats *Stats, dsRegexes Regexes, dsTypes map[
 	return ds, addedStat, nil
 }
 
-func addStat(iStat Stat, name string, val interface{}, ds string, server string, serverType StatCacheType, cachegroup string, dsTypes map[string]StatType) (Stat, error) {
+func addStat(iStat Stat, name string, val interface{}, ds string, server string, serverType enum.CacheType, cachegroup string, dsTypes map[string]enum.DSType) (Stat, error) {
 	if iStat == nil {
 		return iStat, fmt.Errorf("addStat given nil stat for %s", ds)
 	}
 
 	var common *StatCommon
 	common = iStat.CommonData()
-	common.CachesReporting[CacheName(server)] = true
+	common.CachesReporting[enum.CacheName(server)] = true
 	if name == "error_string" {
 		valStr, ok := val.(string)
 		if !ok {
@@ -565,11 +497,11 @@ func addStat(iStat Stat, name string, val interface{}, ds string, server string,
 	common.Status.Value = "REPORTED" // TODO fix?
 
 	if stat, ok := iStat.(*StatHTTP); ok {
-		newCachegroupStat, err := addCacheStat(stat.CacheGroups[CacheGroupName(cachegroup)], name, val)
+		newCachegroupStat, err := addCacheStat(stat.CacheGroups[enum.CacheGroupName(cachegroup)], name, val)
 		if err != nil {
 			return stat, err
 		}
-		stat.CacheGroups[CacheGroupName(cachegroup)] = newCachegroupStat
+		stat.CacheGroups[enum.CacheGroupName(cachegroup)] = newCachegroupStat
 
 		newTypeStat, err := addCacheStat(stat.Type[serverType], name, val)
 		if err != nil {
@@ -693,10 +625,10 @@ type StatOld struct {
 	Index int    `json:"index,omitempty"` // TODO set? remove?
 }
 type StatsOld struct {
-	DeliveryService map[DeliveryServiceName]map[StatName][]StatOld `json:"deliveryService"`
+	DeliveryService map[enum.DeliveryServiceName]map[StatName][]StatOld `json:"deliveryService"`
 }
 
-func addStatCacheStats(s *StatsOld, c StatCacheStats, deliveryService DeliveryServiceName, prefix string, t int64) *StatsOld {
+func addStatCacheStats(s *StatsOld, c StatCacheStats, deliveryService enum.DeliveryServiceName, prefix string, t int64) *StatsOld {
 	s.DeliveryService[deliveryService][StatName(prefix+".out_bytes")] = []StatOld{StatOld{Time: t, Value: strconv.Itoa(int(c.OutBytes.Value))}}
 	s.DeliveryService[deliveryService][StatName(prefix+".isAvailable")] = []StatOld{StatOld{Time: t, Value: fmt.Sprintf("%t", c.IsAvailable.Value)}}
 	s.DeliveryService[deliveryService][StatName(prefix+".status_5xx")] = []StatOld{StatOld{Time: t, Value: strconv.Itoa(int(c.Status5xx.Value))}}
@@ -714,7 +646,7 @@ func addStatCacheStats(s *StatsOld, c StatCacheStats, deliveryService DeliverySe
 	return s
 }
 
-func addCommonData(s *StatsOld, c *StatCommon, deliveryService DeliveryServiceName, t int64) *StatsOld {
+func addCommonData(s *StatsOld, c *StatCommon, deliveryService enum.DeliveryServiceName, t int64) *StatsOld {
 	s.DeliveryService[deliveryService]["caches-configured"] = []StatOld{StatOld{Time: t, Value: strconv.Itoa(int(c.CachesConfigured.Value))}}
 	s.DeliveryService[deliveryService]["caches-reporting"] = []StatOld{StatOld{Time: t, Value: strconv.Itoa(len(c.CachesReporting))}}
 	s.DeliveryService[deliveryService]["error-string"] = []StatOld{StatOld{Time: t, Value: c.ErrorString.Value}}
@@ -728,7 +660,7 @@ func addCommonData(s *StatsOld, c *StatCommon, deliveryService DeliveryServiceNa
 // StatsJSON returns an object formatted as expected to be serialized to JSON and served.
 func StatsJSON(dsStats Stats) StatsOld {
 	now := time.Now().Unix()
-	jsonObj := &StatsOld{DeliveryService: map[DeliveryServiceName]map[StatName][]StatOld{}}
+	jsonObj := &StatsOld{DeliveryService: map[enum.DeliveryServiceName]map[StatName][]StatOld{}}
 
 	for deliveryService, dsStat := range dsStats.DeliveryService {
 		jsonObj.DeliveryService[deliveryService] = map[StatName][]StatOld{}
