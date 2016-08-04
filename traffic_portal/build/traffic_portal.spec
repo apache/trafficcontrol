@@ -51,6 +51,7 @@ tar -xzvf $RPM_SOURCE_DIR/traffic_portal-%{version}.tgz
     %__mkdir -p ${RPM_BUILD_ROOT}/etc/traffic_portal
     %__mkdir -p ${RPM_BUILD_ROOT}%{traffic_portal_home}/public
     %__mkdir -p ${RPM_BUILD_ROOT}%{traffic_portal_home}/server
+    %__mkdir -p ${RPM_BUILD_ROOT}/var/log/traffic_portal
 
     # creates dynamic json file needed at runtime for traffic portal to display release info
     BUILD_DATE=$(date +'%Y-%m-%d %H:%M:%S')
@@ -69,7 +70,6 @@ tar -xzvf $RPM_SOURCE_DIR/traffic_portal-%{version}.tgz
 
 %post
     echo "Successfully installed the traffic_portal assets to " %{traffic_portal_home}
-    %__mkdir -p /var/log/traffic_portal
     %__chmod +x %{traffic_portal_home}/node_modules/forever/bin/forever
     %__chmod +x /etc/init.d/traffic_portal
     echo "Successfully installed the 'traffic_portal' service"
