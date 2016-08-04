@@ -78,11 +78,11 @@ images=
 createBuilders() {
 	local topdir=$(cd "$( echo "${BASH_SOURCE[0]%/*}" )/.."; pwd)
 
-	local image=traffic_control_gitter
+	local image=traffic_control_builder
 	if ! image_exists $image
 	then
 		docker build -t $image "$topdir/build"
-		images=traffic_control_gitter
+		images=$image
 	fi
 
 	for p in $projects
@@ -103,26 +103,16 @@ runBuild() {
 	then
 		vol="-v $GITREPO:$GITREPO"
 	fi
-
-	docker run --name gitter $vol -e GITREPO=$GITREPO -e BRANCH=$BRANCH traffic_control_gitter
+	mkdir -p dist
 	for p in $projects
 	do
-		docker run --rm --volumes-from gitter $p/build
+		docker run $p/build
+		docker cp $p/build:/vol/traffic_control/dist/* ./dist/.
 	done
 }
 
 createBuilders
 runBuild
-
-rpms=$(docker run --rm --volumes-from gitter centos sh -c 'find /vol/traffic_control -type f -name *.rpm')
-for f in $rpms
-do
-	echo "Copying $f to $dist"
-	docker cp gitter:$f "$dist/."
-done
-
-# Always remove the gitter container after copy -- subsequent runs need to start with image
-docker rm gitter
 
 if [[ -z $images ]]
 then

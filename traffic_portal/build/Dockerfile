@@ -1,13 +1,6 @@
-FROM centos:7
+FROM traffic_control_builder:latest
 
 MAINTAINER Dan Kirkwood
-
-RUN	yum -y update && \
-	yum -y clean all
-RUN	yum -y install \
-		epel-release \
-		git \
-		rpm-build
 
 RUN	yum -y install \
 		libffi-devel \
@@ -26,4 +19,4 @@ WORKDIR /vol/traffic_control/traffic_portal/build
 
 # bower will not run as root by default
 RUN	echo '{ "allow_root": true }' > /root/.bowerrc
-ENTRYPOINT ./build_rpm.sh
+CMD	./build_rpm.sh
