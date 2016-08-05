@@ -19,10 +19,7 @@ use Mojo::Base 'Mojolicious::Controller';
 
 sub dbdump {
 	my $self = shift;
-
 	my $filename = $self->param('filename');
-
-	
 
 	my $db_user = $Schema::user;
 	my $db_pass = $Schema::pass;
@@ -30,17 +27,14 @@ sub dbdump {
 	my $db_host = $Schema::hostname;
 	$db_name =~ s/database=//;
 
-	my $cmd	      = "PG_PASSWORD='" . $db_pass . "' pg_dump --username=" . $db_user . " " . $db_name;
+	my $cmd	      = "pg_dump --username=" . $db_user . " " . $db_name . " > " . $filename;
 	my $extension = ".psql";
-	if ( $self->db->storage->isa("DBIx::Class::Storage::DBI::mysql") ) {
-		$cmd	   = "mysqldump -h " . $db_host . " -u " . $db_user . " -p" . $db_pass . " " . $db_name;
-		$extension = ".mysql";
-	}
+
 	my $data = `$cmd`;
 
-	
+
 	$self->res->headers->content_type("application/download");
-	
+
 	$self->res->headers->content_disposition( "attachment; filename=\"" . $filename . "\"" );
 	$self->render( data => $data );
 }
