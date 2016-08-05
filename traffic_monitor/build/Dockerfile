@@ -1,13 +1,6 @@
-FROM centos:7
+FROM traffic_control_builder:latest
 
 MAINTAINER Dan Kirkwood
-
-RUN	yum -y update && \
-	yum -y clean all
-RUN	yum -y install \
-		epel-release \
-		git \
-		rpm-build
 
 RUN	yum -y install \
 		which && \
@@ -28,5 +21,10 @@ RUN alternatives --install /usr/bin/java java /opt/java/bin/java 2 && \
     alternatives --install /usr/bin/mvn mvn /opt/maven/bin/mvn 1
 ###
 
-WORKDIR /vol/traffic_control/traffic_monitor/build
-ENTRYPOINT ./build_rpm.sh
+
+ENV	GITREPO=https://github.com/Comcast/traffic_control
+ENV	BRANCH=master
+
+CMD	/clone-for-docker.sh $GITREPO $BRANCH && \
+		cd /vol/traffic_control/traffic_monitor/build && \
+		./build_rpm.sh
