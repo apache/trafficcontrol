@@ -150,10 +150,10 @@ func Start(opsConfigFile string, staticAppData StaticAppData) {
 	statHistory := map[string][]interface{}{}
 
 	opsConfig := StartOpsConfigManager(opsConfigFile, dr, toSession, toData, []chan<- handler.OpsConfig{monitorConfigPoller.OpsConfigChannel}, []chan<- towrap.ITrafficOpsSession{monitorConfigPoller.SessionChannel})
-	var monitorConfig to.TrafficMonitorConfigMap
-	localStates := peer.NewCRStates()        // this is the local state as discoverer by this traffic_monitor
-	peerStates := map[string]peer.Crstates{} // each peer's last state is saved in this map
-	combinedStates := peer.NewCRStates()     // this is the result of combining the localStates and all the peerStates using the var ??
+
+	localStates := NewCRStatesThreadsafe()     // this is the local state as discoverer by this traffic_monitor
+	peerStates := NewCRStatesPeersThreadsafe() // each peer's last state is saved in this map
+	combinedStates := NewCRStatesThreadsafe()  // this is the result of combining the localStates and all the peerStates using the var ??
 
 	// TODO put stat data in a struct, for brevity
 	lastHealthEndTimes := map[string]time.Time{}
@@ -166,6 +166,8 @@ func Start(opsConfigFile string, staticAppData StaticAppData) {
 	dsStats := ds.NewStats()
 	lastKbpsStats := ds.NewStatsLastKbps()
 	localCacheStatus := map[enum.CacheName]CacheAvailableStatus{}
+
+	monitorConfig := StartMonitorConfigManager(monitorConfigPoller.ConfigChannel, localStates, cacheStatPoller.ConfigChannel, cacheHealthPoller.ConfigChannel, peerPoller.ConfigChannel)
 
 	for {
 		select {
@@ -189,12 +191,12 @@ func Start(opsConfigFile string, staticAppData StaticAppData) {
 					err = fmt.Errorf("TR Config: %v", err)
 				}
 			case http_server.TRStateDerived:
-				body, err = peer.CrStatesMarshall(combinedStates)
+				body, err = peer.CrstatesMarshall(combinedStates.Get())
 				if err != nil {
 					err = fmt.Errorf("TR State (derived): %v", err)
 				}
 			case http_server.TRStateSelf:
-				body, err = peer.CrStatesMarshall(localStates)
+				body, err = peer.CrstatesMarshall(localStates.Get())
 				if err != nil {
 					err = fmt.Errorf("TR State (self): %v", err)
 				}
@@ -228,7 +230,7 @@ func Start(opsConfigFile string, staticAppData StaticAppData) {
 					err = fmt.Errorf("EventLog: %v", err)
 				}
 			case http_server.PeerStates:
-				body, err = json.Marshal(createApiPeerStates(peerStates))
+				body, err = json.Marshal(createApiPeerStates(peerStates.Get()))
 			case http_server.StatSummary:
 				body = []byte("TODO implement")
 			case http_server.Stats:
@@ -247,11 +249,11 @@ func Start(opsConfigFile string, staticAppData StaticAppData) {
 					err = fmt.Errorf("Config Doc: %v", err)
 				}
 			case http_server.APICacheCount: // TODO determine if this should use peerStates
-				body = []byte(strconv.Itoa(len(localStates.Caches)))
+				body = []byte(strconv.Itoa(len(localStates.Get().Caches)))
 			case http_server.APICacheAvailableCount:
-				body = []byte(strconv.Itoa(cacheAvailableCount(localStates.Caches)))
+				body = []byte(strconv.Itoa(cacheAvailableCount(localStates.Get().Caches)))
 			case http_server.APICacheDownCount:
-				body = []byte(strconv.Itoa(cacheDownCount(localStates.Caches)))
+				body = []byte(strconv.Itoa(cacheDownCount(localStates.Get().Caches)))
 			case http_server.APIVersion:
 				s := "traffic_monitor-" + staticAppData.Version + "."
 				if len(staticAppData.GitRevision) > 6 {
@@ -263,7 +265,7 @@ func Start(opsConfigFile string, staticAppData StaticAppData) {
 			case http_server.APITrafficOpsURI:
 				body = []byte(opsConfig.Get().Url)
 			case http_server.APICacheStates:
-				body, err = json.Marshal(createCacheStatuses(toData.Get().ServerTypes, statHistory, lastHealthDurations, localStates.Caches, lastKbpsStats, localCacheStatus))
+				body, err = json.Marshal(createCacheStatuses(toData.Get().ServerTypes, statHistory, lastHealthDurations, localStates.Get().Caches, lastKbpsStats, localCacheStatus))
 			default:
 				err = fmt.Errorf("Unknown Request Type: %v", req.Type)
 			}
@@ -274,65 +276,7 @@ func Start(opsConfigFile string, staticAppData StaticAppData) {
 			} else {
 				req.Response <- body
 			}
-		case monitorConfig = <-monitorConfigPoller.ConfigChannel:
-			healthUrls := map[string]string{}
-			statUrls := map[string]string{}
-			peerUrls := map[string]string{}
-			caches := map[string]string{}
-
-			for _, srv := range monitorConfig.TrafficServer {
-				caches[srv.HostName] = srv.Status
-
-				if srv.Status == "ONLINE" {
-					localStates.Caches[srv.HostName] = peer.IsAvailable{IsAvailable: true}
-					continue
-				}
-				if srv.Status == "OFFLINE" {
-					localStates.Caches[srv.HostName] = peer.IsAvailable{IsAvailable: false}
-					continue
-				}
-				// seed states with available = false until our polling cycle picks up a result
-				if _, exists := localStates.Caches[srv.HostName]; !exists {
-					localStates.Caches[srv.HostName] = peer.IsAvailable{IsAvailable: false}
-				}
-
-				url := monitorConfig.Profile[srv.Profile].Parameters.HealthPollingURL
-				r := strings.NewReplacer(
-					"${hostname}", srv.FQDN,
-					"${interface_name}", srv.InterfaceName,
-					"application=system", "application=plugin.remap",
-					"application=", "application=plugin.remap",
-				)
-				url = r.Replace(url)
-				healthUrls[srv.HostName] = url
-				r = strings.NewReplacer("application=plugin.remap", "application=")
-				url = r.Replace(url)
-				statUrls[srv.HostName] = url
-			}
-
-			for _, srv := range monitorConfig.TrafficMonitor {
-				if srv.Status != "ONLINE" {
-					continue
-				}
-				// TODO: the URL should be config driven. -jse
-				url := fmt.Sprintf("http://%s:%d/publish/CrStates?raw", srv.IP, srv.Port)
-				peerUrls[srv.HostName] = url
-			}
-
-			cacheStatPoller.ConfigChannel <- poller.HttpPollerConfig{Urls: statUrls, Interval: defaultCacheStatPollingInterval}
-			cacheHealthPoller.ConfigChannel <- poller.HttpPollerConfig{Urls: healthUrls, Interval: defaultCacheHealthPollingInterval}
-			peerPoller.ConfigChannel <- poller.HttpPollerConfig{Urls: peerUrls, Interval: defaultPeerPollingInterval}
-
-			for k := range localStates.Caches {
-				_, exists := monitorConfig.TrafficServer[k]
-
-				if !exists {
-					fmt.Printf("Warning: removing %s from localStates", k)
-					delete(localStates.Caches, k)
-				}
-			}
-
-			addStateDeliveryServices(monitorConfig, localStates.Deliveryservice)
+			// case monitorConfig
 		case i := <-cacheHealthTick:
 			healthIteration = i
 		case healthResult := <-cacheHealthChannel:
@@ -342,10 +286,11 @@ func Start(opsConfigFile string, staticAppData StaticAppData) {
 			if len(healthHistory[healthResult.Id]) != 0 {
 				prevResult = healthHistory[healthResult.Id][len(healthHistory[healthResult.Id])-1].(cache.Result)
 			}
-			health.GetVitals(&healthResult, &prevResult, &monitorConfig)
+			monitorConfigCopy := monitorConfig.Get() // copy now, so all calculations are on the same data
+			health.GetVitals(&healthResult, &prevResult, &monitorConfigCopy)
 			healthHistory[healthResult.Id] = pruneHistory(append(healthHistory[healthResult.Id], healthResult), defaultMaxHistory)
-			isAvailable, whyAvailable := health.EvalCache(healthResult, &monitorConfig)
-			if localStates.Caches[healthResult.Id].IsAvailable != isAvailable {
+			isAvailable, whyAvailable := health.EvalCache(healthResult, &monitorConfigCopy)
+			if localStates.Get().Caches[healthResult.Id].IsAvailable != isAvailable {
 				fmt.Println("Changing state for", healthResult.Id, " was:", prevResult.Available, " is now:", isAvailable, " because:", whyAvailable, " errors:", healthResult.Errors)
 				e := Event{Index: eventIndex, Time: time.Now().Unix(), Description: whyAvailable, Name: healthResult.Id, Hostname: healthResult.Id, Type: toDataCopy.ServerTypes[healthResult.Id].String(), Available: isAvailable}
 				events = append([]Event{e}, events...)
@@ -355,16 +300,16 @@ func Start(opsConfigFile string, staticAppData StaticAppData) {
 				eventIndex++
 			}
 
-			localCacheStatus[enum.CacheName(healthResult.Id)] = CacheAvailableStatus{Available: isAvailable, Status: monitorConfig.TrafficServer[healthResult.Id].Status} // TODO move within localStates
-			localStates.Caches[healthResult.Id] = peer.IsAvailable{IsAvailable: isAvailable}
-			calculateDeliveryServiceState(toDataCopy.DeliveryServiceServers, localStates.Caches, localStates.Deliveryservice)
+			localCacheStatus[enum.CacheName(healthResult.Id)] = CacheAvailableStatus{Available: isAvailable, Status: monitorConfigCopy.TrafficServer[healthResult.Id].Status} // TODO move within localStates
+			localStates.SetCache(healthResult.Id, peer.IsAvailable{IsAvailable: isAvailable})
+			calculateDeliveryServiceState(toDataCopy.DeliveryServiceServers, localStates)
 
 			// TODO determine if we should combineCrStates() here
 
 			now := time.Now()
 
 			var err error
-			dsStats, lastKbpsStats, err = ds.CreateStats(statHistory, toDataCopy, combinedStates, lastKbpsStats, now)
+			dsStats, lastKbpsStats, err = ds.CreateStats(statHistory, toDataCopy, combinedStates.Get(), lastKbpsStats, now)
 			if err != nil {
 				errorCount++
 				log.Printf("ERROR getting deliveryservice: %v\n", err)
@@ -384,8 +329,8 @@ func Start(opsConfigFile string, staticAppData StaticAppData) {
 		case stats := <-cacheStatChannel:
 			statHistory[stats.Id] = pruneHistory(append(statHistory[stats.Id], stats), defaultMaxHistory)
 		case crStatesResult := <-peerChannel:
-			peerStates[crStatesResult.Id] = crStatesResult.PeerStats
-			combinedStates = combineCrStates(peerStates, localStates)
+			peerStates.Set(crStatesResult.Id, crStatesResult.PeerStats)
+			combinedStates.Set(combineCrStates(peerStates.Get(), localStates.Get()))
 		}
 	}
 }
@@ -660,27 +605,30 @@ func addStateDeliveryServices(mc to.TrafficMonitorConfigMap, deliveryServices ma
 }
 
 // calculateDeliveryServiceState calculates the state of delivery services from the new cache state data `cacheState` and the CRConfig data `deliveryServiceServers` and puts the calculated state in the outparam `deliveryServiceStates`
-func calculateDeliveryServiceState(deliveryServiceServers map[string][]string, cacheState map[string]peer.IsAvailable, deliveryServiceStates map[string]peer.Deliveryservice) {
-	for deliveryServiceName, deliveryServiceState := range deliveryServiceStates {
+func calculateDeliveryServiceState(deliveryServiceServers map[string][]string, states CRStatesThreadsafe) {
+	deliveryServices := states.GetDeliveryServices()
+	for deliveryServiceName, deliveryServiceState := range deliveryServices {
 		if _, ok := deliveryServiceServers[deliveryServiceName]; !ok {
 			// log.Printf("ERROR CRConfig does not have delivery service %s, but traffic monitor poller does; skipping\n", deliveryServiceName)
 			continue
 		}
 		deliveryServiceState.IsAvailable = false
+		deliveryServiceState.DisabledLocations = nil
 		for _, server := range deliveryServiceServers[deliveryServiceName] {
-			if cacheState[server].IsAvailable {
+			if states.GetCache(server).IsAvailable {
 				deliveryServiceState.IsAvailable = true
 			} else {
 				deliveryServiceState.DisabledLocations = append(deliveryServiceState.DisabledLocations, server)
 			}
 		}
-		deliveryServiceStates[deliveryServiceName] = deliveryServiceState
+		deliveryServices[deliveryServiceName] = deliveryServiceState
 	}
+	states.SetDeliveryServices(deliveryServices)
 }
 
 // TODO JvD: add deliveryservice stuff
 func combineCrStates(peerStates map[string]peer.Crstates, localStates peer.Crstates) peer.Crstates {
-	combinedStates := peer.NewCRStates()
+	combinedStates := peer.NewCrstates()
 	for cacheName, localCacheState := range localStates.Caches { // localStates gets pruned when servers are disabled, it's the source of truth
 		downVotes := 0 // TODO JvD: change to use parameter when deciding to be optimistic or pessimistic.
 		if localCacheState.IsAvailable {
