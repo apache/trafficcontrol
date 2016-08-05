@@ -347,7 +347,7 @@ func addKbps(dsStats Stats, lastKbpsStats StatsLastKbps, dsStatsTime time.Time, 
 	return dsStats, lastKbpsStats, nil
 }
 
-func CreateStats(statHistory map[string][]interface{}, toData todata.TOData, crStates peer.Crstates, lastKbpsStats StatsLastKbps, now time.Time) (Stats, StatsLastKbps, error) {
+func CreateStats(statHistory map[string][]cache.Result, toData todata.TOData, crStates peer.Crstates, lastKbpsStats StatsLastKbps, now time.Time) (Stats, StatsLastKbps, error) {
 	dsStats := NewStats()
 
 	dsRegexes, err := CreateRegexes(toData.DeliveryServiceRegexes)
@@ -390,12 +390,7 @@ func CreateStats(statHistory map[string][]interface{}, toData todata.TOData, crS
 			fmt.Printf("WARNING server %s not in CRConfig, skipping\n", server)
 			continue
 		}
-		for _, iresult := range history {
-			result, ok := iresult.(cache.Result)
-			if !ok {
-				fmt.Printf("ERROR history contained unexpected result type %T\n", iresult)
-				continue
-			}
+		for _, result := range history {
 			for stat, value := range result.Astats.Ats {
 
 				if strings.HasSuffix(stat, ".out_bytes") {

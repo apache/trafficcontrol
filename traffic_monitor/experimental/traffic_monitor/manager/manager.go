@@ -146,8 +146,8 @@ func Start(opsConfigFile string, staticAppData StaticAppData) {
 	toData := todata.NewThreadsafe()
 	dr := make(chan http_server.DataRequest)
 
-	healthHistory := map[string][]interface{}{}
-	statHistory := map[string][]interface{}{}
+	healthHistory := map[string][]cache.Result{}
+	statHistory := map[string][]cache.Result{}
 
 	opsConfig := StartOpsConfigManager(opsConfigFile, dr, toSession, toData, []chan<- handler.OpsConfig{monitorConfigPoller.OpsConfigChannel}, []chan<- towrap.ITrafficOpsSession{monitorConfigPoller.SessionChannel})
 
@@ -285,7 +285,7 @@ func Start(opsConfigFile string, staticAppData StaticAppData) {
 			toDataCopy := toData.Get() // create a copy, so the same data used for all processing of this cache health result
 			var prevResult cache.Result
 			if len(healthHistory[healthResult.Id]) != 0 {
-				prevResult = healthHistory[healthResult.Id][len(healthHistory[healthResult.Id])-1].(cache.Result)
+				prevResult = healthHistory[healthResult.Id][len(healthHistory[healthResult.Id])-1]
 			}
 			monitorConfigCopy := monitorConfig.Get() // copy now, so all calculations are on the same data
 			health.GetVitals(&healthResult, &prevResult, &monitorConfigCopy)
@@ -343,7 +343,7 @@ type CacheStatus struct {
 	ConnectionCount       *int64   `json:"connection_count,omitempty"`
 }
 
-func createCacheStatuses(cacheTypes map[string]enum.CacheType, statHistory map[string][]interface{}, lastHealthDurations map[string]time.Duration, cacheStates map[string]peer.IsAvailable, lastKbpsStats ds.StatsLastKbps, localCacheStatus map[enum.CacheName]CacheAvailableStatus) map[enum.CacheName]CacheStatus {
+func createCacheStatuses(cacheTypes map[string]enum.CacheType, statHistory map[string][]cache.Result, lastHealthDurations map[string]time.Duration, cacheStates map[string]peer.IsAvailable, lastKbpsStats ds.StatsLastKbps, localCacheStatus map[enum.CacheName]CacheAvailableStatus) map[enum.CacheName]CacheStatus {
 	conns := createCacheConnections(statHistory)
 	statii := map[enum.CacheName]CacheStatus{}
 	for cacheName, cacheType := range cacheTypes {
@@ -362,7 +362,7 @@ func createCacheStatuses(cacheTypes map[string]enum.CacheType, statHistory map[s
 		log.Printf("DEBUGQ createCacheStatuses NOT empty for cache %s\n", cacheName)
 
 		var loadAverage *float64
-		procLoadAvg := cacheStatHistory[0].(cache.Result).Astats.System.ProcLoadavg
+		procLoadAvg := cacheStatHistory[0].Astats.System.ProcLoadavg
 		if procLoadAvg != "" {
 			firstSpace := strings.IndexRune(procLoadAvg, ' ')
 			if firstSpace == -1 {
@@ -423,16 +423,10 @@ func createCacheStatuses(cacheTypes map[string]enum.CacheType, statHistory map[s
 }
 
 // TODO: run these in goroutines
-func createCacheHealthStatuses(statHistory map[string][]interface{}) map[enum.CacheName]string {
+func createCacheHealthStatuses(statHistory map[string][]cache.Result) map[enum.CacheName]string {
 	statuses := map[enum.CacheName]string{}
 	for server, history := range statHistory {
-		for _, iresult := range history {
-			result, ok := iresult.(cache.Result)
-			if !ok {
-				fmt.Printf("ERROR DEBUG6 history contained unexpected result type %T\n", iresult)
-				continue
-			}
-
+		for _, result := range history {
 			val, ok := result.Astats.Ats["status"]
 			if !ok {
 				fmt.Printf("ERROR DEBUG8 status stat not found for %s\n", server)
@@ -452,16 +446,10 @@ func createCacheHealthStatuses(statHistory map[string][]interface{}) map[enum.Ca
 	return statuses
 }
 
-func createCacheConnections(statHistory map[string][]interface{}) map[enum.CacheName]int64 {
+func createCacheConnections(statHistory map[string][]cache.Result) map[enum.CacheName]int64 {
 	conns := map[enum.CacheName]int64{}
 	for server, history := range statHistory {
-		for _, iresult := range history {
-			result, ok := iresult.(cache.Result)
-			if !ok {
-				fmt.Printf("ERROR DEBUG6 history contained unexpected result type %T\n", iresult)
-				continue
-			}
-
+		for _, result := range history {
 			val, ok := result.Astats.Ats["proxy.process.http.total_incoming_connections"]
 			if !ok {
 				fmt.Printf("ERROR DEBUG6 connections stat not found for %s\n", server)
@@ -639,7 +627,7 @@ func intersection(a []string, b []string) []string {
 	return c
 }
 
-func pruneHistory(history []interface{}, limit int) []interface{} {
+func pruneHistory(history []cache.Result, limit int) []cache.Result {
 	if len(history) > limit {
 		history = history[1:]
 	}

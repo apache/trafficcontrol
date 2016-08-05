@@ -43,7 +43,7 @@ const (
 	NOTIFY_ALWAYS
 )
 
-func StatsMarshall(statHistory map[string][]interface{}, historyCount int) ([]byte, error) {
+func StatsMarshall(statHistory map[string][]Result, historyCount int) ([]byte, error) {
 	var stats Stats
 
 	stats.Caches = map[string]map[string][]Stat{}
@@ -52,9 +52,9 @@ func StatsMarshall(statHistory map[string][]interface{}, historyCount int) ([]by
 
 	for id, history := range statHistory {
 		for _, result := range history {
-			for stat, value := range result.(Result).Astats.Ats {
+			for stat, value := range result.Astats.Ats {
 				s := Stat{
-					Time:  result.(Result).Time.UnixNano() / 1000000,
+					Time:  result.Time.UnixNano() / 1000000,
 					Value: value,
 				}
 
