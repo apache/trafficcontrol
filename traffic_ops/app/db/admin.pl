@@ -123,6 +123,9 @@ if ( defined($argument) ) {
 	elsif ( $argument eq 'reverse_schema' ) {
 		reverse_schema();
 	}
+	else {
+		print $usage;
+	}
 }
 else {
 	print $usage;
