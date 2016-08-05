@@ -1,42 +1,33 @@
 # Traffic Portal Installation
 
-### 1. Build
+### 1. Build w/ Docker
 
 * Download Traffic Control repo
 
     ```
-    $ mkdir foo
-    $ cd foo
     $ git clone http://github.com/Comcast/traffic_control.git
     ```
-
-* Bring up Vagrant environment (http://www.vagrantup.com)
-
-    ```
-    $ cp traffic_control/traffic_portal/build/Vagrantfile ./
-    $ vagrant up
-	```
-
-* ssh into vagrant environment
-
-    ```
-    $ vagrant ssh
-    ```  
 
 * Build the RPM
 
     ```
-    $ cd /vagrant/traffic_control/traffic_portal/build
-    $ ./build_rpm.sh
+    $ cd traffic_control/build
+    $ ./docker-build.sh -r http://github.com/Comcast/traffic_control.git -b master traffic_portal
     ```
 
 ### 2. Install
 
-* Install the RPM
+* Install the Node.js JavaScript runtime
 
     ```
-    $ cd /vagrant/traffic_control/dist
-    $ sudo yum install -y traffic_portal-$VERSION-$BUILD_NUMBER.x86_64.rpm
+    $ curl --silent --location https://rpm.nodesource.com/setup_6.x | sudo bash -
+    $ sudo yum install -y nodejs
+    ```
+
+* Install the Traffic Portal RPM
+
+    ```
+    $ sudo yum install -y traffic_portal-[version]-[commits].[sha].x86_64.rpm
     ```
 
 ### 3. Configure
@@ -57,6 +48,13 @@
     $ sudo service traffic_portal start
     ```
 
+* Navigate to Traffic Portal
+
+    ```
+    $ http://localhost:8080
+    ```
+
 #### Notes
 
-    - This is known to work with CentOS 6.7 as the Vagrant environment
+    - Traffic Portal consumes the Traffic Ops API, therefore, an instance of Traffic Ops must be running.
+    - This is known to work with CentOS 6.7 and Centos 7 as the host environment.
