@@ -9,7 +9,7 @@ import (
 	"sync"
 )
 
-func copy(a to.TrafficMonitorConfigMap) to.TrafficMonitorConfigMap {
+func copyTMConfig(a to.TrafficMonitorConfigMap) to.TrafficMonitorConfigMap {
 	b := to.TrafficMonitorConfigMap{}
 	b.TrafficServer = map[string]to.TrafficServer{}
 	b.CacheGroup = map[string]to.TMCacheGroup{}
@@ -56,12 +56,12 @@ func (t TrafficMonitorConfigMapThreadsafe) Get() to.TrafficMonitorConfigMap {
 	defer func() {
 		t.m.Unlock()
 	}()
-	return copy(*t.monitorConfig)
+	return copyTMConfig(*t.monitorConfig)
 }
 
 func (t TrafficMonitorConfigMapThreadsafe) Set(newMonitorConfig to.TrafficMonitorConfigMap) {
 	t.m.Lock()
-	*t.monitorConfig = copy(newMonitorConfig)
+	*t.monitorConfig = copyTMConfig(newMonitorConfig)
 	t.m.Unlock()
 }
 

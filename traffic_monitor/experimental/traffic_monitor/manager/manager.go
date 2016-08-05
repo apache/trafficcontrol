@@ -36,9 +36,6 @@ const (
 	defaultPeerPollingInterval          time.Duration = 5 * time.Second
 )
 
-//const maxHistory = (60 / pollingInterval) * 5
-const defaultMaxHistory = 5
-
 const maxEvents = 200
 
 type StaticAppData struct {
@@ -147,7 +144,6 @@ func Start(opsConfigFile string, staticAppData StaticAppData) {
 	dr := make(chan http_server.DataRequest)
 
 	healthHistory := map[string][]cache.Result{}
-	statHistory := map[string][]cache.Result{}
 
 	opsConfig := StartOpsConfigManager(opsConfigFile, dr, toSession, toData, []chan<- handler.OpsConfig{monitorConfigPoller.OpsConfigChannel}, []chan<- towrap.ITrafficOpsSession{monitorConfigPoller.SessionChannel})
 
@@ -169,6 +165,7 @@ func Start(opsConfigFile string, staticAppData StaticAppData) {
 	monitorConfig := StartMonitorConfigManager(monitorConfigPoller.ConfigChannel, localStates, cacheStatPoller.ConfigChannel, cacheHealthPoller.ConfigChannel, peerPoller.ConfigChannel)
 
 	combinedStates := StartPeerManager(peerChannel, localStates, peerStates)
+	statHistory := StartStatHistoryManager(cacheStatChannel)
 
 	for {
 		select {
@@ -216,7 +213,7 @@ func Start(opsConfigFile string, staticAppData StaticAppData) {
 						hc = v
 					}
 				}
-				body, err = cache.StatsMarshall(statHistory, hc)
+				body, err = cache.StatsMarshall(statHistory.Get(), hc)
 				if err != nil {
 					err = fmt.Errorf("CacheStats: %v", err)
 				}
@@ -266,7 +263,7 @@ func Start(opsConfigFile string, staticAppData StaticAppData) {
 			case http_server.APITrafficOpsURI:
 				body = []byte(opsConfig.Get().Url)
 			case http_server.APICacheStates:
-				body, err = json.Marshal(createCacheStatuses(toData.Get().ServerTypes, statHistory, lastHealthDurations, localStates.Get().Caches, lastKbpsStats, localCacheStatus))
+				body, err = json.Marshal(createCacheStatuses(toData.Get().ServerTypes, statHistory.Get(), lastHealthDurations, localStates.Get().Caches, lastKbpsStats, localCacheStatus))
 			default:
 				err = fmt.Errorf("Unknown Request Type: %v", req.Type)
 			}
@@ -310,7 +307,7 @@ func Start(opsConfigFile string, staticAppData StaticAppData) {
 			now := time.Now()
 
 			var err error
-			dsStats, lastKbpsStats, err = ds.CreateStats(statHistory, toDataCopy, combinedStates.Get(), lastKbpsStats, now)
+			dsStats, lastKbpsStats, err = ds.CreateStats(statHistory.Get(), toDataCopy, combinedStates.Get(), lastKbpsStats, now)
 			if err != nil {
 				errorCount++
 				log.Printf("ERROR getting deliveryservice: %v\n", err)
@@ -327,8 +324,6 @@ func Start(opsConfigFile string, staticAppData StaticAppData) {
 			// 	continue
 			// }
 			// lastQueryIntervalTime = time.Since(queryIntervalStart[pollI])
-		case stats := <-cacheStatChannel:
-			statHistory[stats.Id] = pruneHistory(append(statHistory[stats.Id], stats), defaultMaxHistory)
 		}
 	}
 }
@@ -625,12 +620,4 @@ func intersection(a []string, b []string) []string {
 		}
 	}
 	return c
-}
-
-func pruneHistory(history []cache.Result, limit int) []cache.Result {
-	if len(history) > limit {
-		history = history[1:]
-	}
-
-	return history
 }
