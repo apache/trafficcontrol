@@ -16,6 +16,7 @@
 
  */
 
+// see config-template.js for comments
 module.exports = {
     timeout: '120s',
     useSSL: false,
@@ -23,10 +24,10 @@ module.exports = {
     sslPort: 8443,
     proxyPort: 8009,
     ssl: {
-        key:    './ssl/tls/private/ssl.key',
-        cert:   './ssl/tls/certs/ssl.crt',
+        key:    '/path/to/ssl.key',
+        cert:   '/path/to/ssl.crt',
         ca:     [
-            './ssl/tls/certs/ssl-bundle.crt'
+            '/path/to/ssl-bundle.crt'
         ]
     },
     api: {
