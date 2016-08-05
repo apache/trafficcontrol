@@ -15,4 +15,4 @@ ENV BRANCH=master
 
 # clone/checkout using above env vars
 ADD clone-for-docker.sh /
-CMD /clone-for-docker.sh
+CMD /clone-for-docker.sh $GITREPO $BRANCH
