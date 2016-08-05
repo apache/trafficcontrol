@@ -153,7 +153,6 @@ func Start(opsConfigFile string, staticAppData StaticAppData) {
 
 	localStates := NewCRStatesThreadsafe()     // this is the local state as discoverer by this traffic_monitor
 	peerStates := NewCRStatesPeersThreadsafe() // each peer's last state is saved in this map
-	combinedStates := NewCRStatesThreadsafe()  // this is the result of combining the localStates and all the peerStates using the var ??
 
 	// TODO put stat data in a struct, for brevity
 	lastHealthEndTimes := map[string]time.Time{}
@@ -168,6 +167,8 @@ func Start(opsConfigFile string, staticAppData StaticAppData) {
 	localCacheStatus := map[enum.CacheName]CacheAvailableStatus{}
 
 	monitorConfig := StartMonitorConfigManager(monitorConfigPoller.ConfigChannel, localStates, cacheStatPoller.ConfigChannel, cacheHealthPoller.ConfigChannel, peerPoller.ConfigChannel)
+
+	combinedStates := StartPeerManager(peerChannel, localStates, peerStates)
 
 	for {
 		select {
@@ -328,9 +329,6 @@ func Start(opsConfigFile string, staticAppData StaticAppData) {
 			// lastQueryIntervalTime = time.Since(queryIntervalStart[pollI])
 		case stats := <-cacheStatChannel:
 			statHistory[stats.Id] = pruneHistory(append(statHistory[stats.Id], stats), defaultMaxHistory)
-		case crStatesResult := <-peerChannel:
-			peerStates.Set(crStatesResult.Id, crStatesResult.PeerStats)
-			combinedStates.Set(combineCrStates(peerStates.Get(), localStates.Get()))
 		}
 	}
 }
@@ -624,57 +622,6 @@ func calculateDeliveryServiceState(deliveryServiceServers map[string][]string, s
 		deliveryServices[deliveryServiceName] = deliveryServiceState
 	}
 	states.SetDeliveryServices(deliveryServices)
-}
-
-// TODO JvD: add deliveryservice stuff
-func combineCrStates(peerStates map[string]peer.Crstates, localStates peer.Crstates) peer.Crstates {
-	combinedStates := peer.NewCrstates()
-	for cacheName, localCacheState := range localStates.Caches { // localStates gets pruned when servers are disabled, it's the source of truth
-		downVotes := 0 // TODO JvD: change to use parameter when deciding to be optimistic or pessimistic.
-		if localCacheState.IsAvailable {
-			// fmt.Println(cacheName, " is available locally - setting to IsAvailable: true")
-			combinedStates.Caches[cacheName] = peer.IsAvailable{IsAvailable: true} // we don't care about the peers, we got a "good one", and we're optimistic
-		} else {
-			downVotes++ // localStates says it's not happy
-			for _, peerCrStates := range peerStates {
-				if peerCrStates.Caches[cacheName].IsAvailable {
-					// fmt.Println(cacheName, "- locally we think it's down, but", peerName, "says IsAvailable: ", peerCrStates.Caches[cacheName].IsAvailable, "trusting the peer.")
-					combinedStates.Caches[cacheName] = peer.IsAvailable{IsAvailable: true} // we don't care about the peers, we got a "good one", and we're optimistic
-					break                                                                  // one peer that thinks we're good is all we need.
-				} else {
-					// fmt.Println(cacheName, "- locally we think it's down, and", peerName, "says IsAvailable: ", peerCrStates.Caches[cacheName].IsAvailable, "down voting")
-					downVotes++ // peerStates for this peer doesn't like it
-				}
-			}
-		}
-		if downVotes > len(peerStates) {
-			// fmt.Println(cacheName, "-", downVotes, "down votes, setting to IsAvailable: false")
-			combinedStates.Caches[cacheName] = peer.IsAvailable{IsAvailable: false}
-		}
-	}
-
-	for deliveryServiceName, localDeliveryService := range localStates.Deliveryservice {
-		deliveryService := peer.Deliveryservice{}
-		if localDeliveryService.IsAvailable {
-			deliveryService.IsAvailable = true
-		}
-		deliveryService.DisabledLocations = localDeliveryService.DisabledLocations
-
-		for peerName, iPeerStates := range peerStates {
-			peerDeliveryService, ok := iPeerStates.Deliveryservice[deliveryServiceName]
-			if !ok {
-				log.Printf("WARN local delivery service %s not found in peer %s\n", deliveryServiceName, peerName)
-				continue
-			}
-			if peerDeliveryService.IsAvailable {
-				deliveryService.IsAvailable = true
-			}
-			deliveryService.DisabledLocations = intersection(deliveryService.DisabledLocations, peerDeliveryService.DisabledLocations)
-		}
-		combinedStates.Deliveryservice[deliveryServiceName] = deliveryService
-	}
-
-	return combinedStates
 }
 
 // intersection returns strings in both a and b.
