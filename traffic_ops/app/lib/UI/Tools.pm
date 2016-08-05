@@ -148,11 +148,8 @@ sub db_dump {
     $year += 1900;
     my $host = `hostname`;
     chomp($host);
-    my $extension = ".psql";
 
-    if ( $self->db->storage->isa("DBIx::Class::Storage::DBI::mysql") ) {
-        $extension = ".mysql";
-    }
+    my $extension = ".psql";
     my $filename = "to-backup-" . $host . "-" . $year . $month . $day . $hour . $min . $sec . $extension;
     $self->stash( filename => $filename );
     &stash_role($self);
