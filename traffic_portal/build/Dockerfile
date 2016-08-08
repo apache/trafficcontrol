@@ -31,9 +31,10 @@ RUN	npm -g install bower grunt-cli
 # bower will not run as root by default
 RUN	echo '{ "allow_root": true }' > /root/.bowerrc
 
-RUN	mkdir -p /vol
-VOLUME /vol
+RUN	mkdir -p /dist
+VOLUME	/dist
 
-CMD	cd /vol && \
-	git clone --branch $BRANCH $GITREPO && cd traffic_control && \
-	./traffic_portal/build/build_rpm.sh
+WORKDIR /
+CMD	git clone --branch $BRANCH $GITREPO && cd traffic_control && \
+	./traffic_portal/build/build_rpm.sh && \
+	cp -f dist/* /dist/.

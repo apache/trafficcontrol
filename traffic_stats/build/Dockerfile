@@ -19,9 +19,9 @@ RUN	yum -y install \
 		golang && \
 	yum -y clean all
 
-RUN	mkdir -p /vol
-VOLUME /vol
+RUN	mkdir -p /dist
+VOLUME	/dist
 
-CMD	cd /vol && \
-	git clone --branch $BRANCH $GITREPO && cd traffic_control && \
-	./traffic_ops/build/build_rpm.sh
+CMD	git clone --branch $BRANCH $GITREPO && cd traffic_control && \
+	./traffic_stats/build/build_rpm.sh && \
+	cp -f dist/* /dist/.

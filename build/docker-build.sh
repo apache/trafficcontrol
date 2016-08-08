@@ -17,23 +17,43 @@ export BRANCH="${BRANCH:-master}"
 dist="./dist"
 cleanup=
 
-while getopts :r:b:cd: opt
+Usage() {
+	echo "Usage:"
+	echo "	$0 [<option>...] [<project name>...]"
+	echo "	One of -a or list of projects must be provided."
+	echo "	Options:"
+	echo "		-a 			build all subprojects"
+	echo "		-h			show usage"
+	echo "		-r <repository path>:	repository (local directory or https) to clone from"
+	echo "		-b <branch name>:	branch within repository"
+	echo "		-c			start clean: remove all traffic_control docker images prior to building"
+	echo "		-d <dist dir>:		local directory to copy built rpms"
+	echo ""
+}
+
+while getopts :hacr:b:d: opt
 do
 	case $opt in
+		h)	Usage
+			exit 1;
+			;;
+		a)	buildall=1
+			;;
+		c)
+			cleanup=1
+			;;
 		r)
 			GITREPO="$OPTARG"
 			;;
 		b)
 			BRANCH="$OPTARG"
 			;;
-		c)
-			cleanup=1
-			;;
 		d)
 			dist="$OPTARG"
 			;;
 		*) 
 			echo "Invalid option: $opt"
+			Usage
 			exit 1;
 			;;
 	esac
@@ -41,7 +61,20 @@ done
 shift $((OPTIND-1))
 
 # anything remaining is list of projects to build
-projects="${@:-traffic_ops traffic_monitor traffic_router traffic_stats traffic_portal}"
+if [[ -n $buildall ]]
+then
+	projects="traffic_ops traffic_monitor traffic_router traffic_stats traffic_portal"
+else
+	projects="$@"
+fi
+
+if [[ -z $projects ]]
+then
+	echo "One of -a or list of project names must be provided"
+	Usage
+	exit 1
+fi
+
 
 # if repo is local directory, get absolute path
 if [[ -d $GITREPO ]]
@@ -79,11 +112,18 @@ createBuilders() {
 	# topdir=.../traffic_control
 	local topdir=$(cd "$( echo "${BASH_SOURCE[0]%/*}" )/.."; pwd)
 
+	echo -n "** Create Builders: "; date
 	for p in $projects
-	do
+	do 
 		local image=$p/build
+		if [[ -n $cleanup ]]
+		then
+			docker rmi $image || echo "No image to remove"
+		fi
+
 		if ! image_exists $image
 		then
+			echo -n "**   $image: "; date
 			docker build --tag $image "$topdir/$p/build"
 			images="$images $image"
 		fi
@@ -91,6 +131,7 @@ createBuilders() {
 }
 
 runBuild() {
+	echo -n "** Run Build: "; date
 
 	# Check if gitrepo is a local directory to be provided as a volume
 	if [[ -d $GITREPO ]]
@@ -100,10 +141,10 @@ runBuild() {
 	mkdir -p dist
 	for p in $projects
 	do
-		docker run $vol $p/build
-		local id=$(docker ps --latest --quiet)
-		docker cp $id:/vol/traffic_control/dist ./dist && docker rm $id
+		echo -n "**   building $p: "; date
+		docker run --rm $vol -v $dist:/dist $p/build
 	done
+	echo -n "** End Build: "; date
 }
 
 createBuilders

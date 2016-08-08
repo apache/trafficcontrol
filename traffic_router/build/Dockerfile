@@ -32,9 +32,10 @@ RUN alternatives --install /usr/bin/java java /opt/java/bin/java 2 && \
     alternatives --install /usr/bin/mvn mvn /opt/maven/bin/mvn 1
 ###
 
-RUN	mkdir -p /vol
-VOLUME /vol
+RUN	mkdir -p /dist
+VOLUME	/dist
 
-CMD	cd /vol && \
-	git clone --branch $BRANCH $GITREPO && cd traffic_control && \
-	./traffic_router/build/build_rpm.sh
+WORKDIR /
+CMD	git clone --branch $BRANCH $GITREPO && cd traffic_control && \
+	./traffic_router/build/build_rpm.sh && \
+	cp -f dist/* /dist/.
