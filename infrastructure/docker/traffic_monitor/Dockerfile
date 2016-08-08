@@ -4,7 +4,7 @@
 ############################################################
 
 # Example Build and Run:
-# docker build --file Traffic_Monitor_Dockerfile --tag traffic_monitor:1.4 .
+# docker build  --tag traffic_monitor:1.4 Traffic_Monitor
 # docker run --name my-traffic-monitor-0 --hostname my-traffic-monitor-0 --net=cdnet --env TRAFFIC_OPS_URI=http://my-traffic-ops:3000 --env TRAFFIC_OPS_USER=superroot --env TRAFFIC_OPS_PASS=supersecreterpassward --detach traffic_monitor:1.4
 
 FROM centos:6.6
@@ -17,5 +17,5 @@ RUN yum install -y jdk-7u79-linux-x64.rpm
 RUN yum install -y traffic_monitor-1.4.0-2426.2876438a.el6.x86_64.rpm
 
 EXPOSE 80
-ADD Traffic_Monitor_Dockerfile_run.sh /
-ENTRYPOINT /Traffic_Monitor_Dockerfile_run.sh
+ADD run.sh /
+ENTRYPOINT /run.sh

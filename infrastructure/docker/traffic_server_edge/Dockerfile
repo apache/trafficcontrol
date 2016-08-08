@@ -14,7 +14,7 @@
 
 # Example Build and Run:
 #
-# docker build --file Traffic_Server_Edge_Dockerfile --rm --tag traffic_server_edge:1.4 .
+# docker build --rm --tag traffic_server_edge:1.4 Traffic_Server_Edge
 #
 # docker run --name my-edge-0 --hostname my-edge-0 --net cdnet --device /dev/ram0:/dev/ram0 --device /dev/ram1:/dev/ram1 --env TRAFFIC_OPS_URI=http://my-traffic-ops:3000 --env TRAFFIC_OPS_USER=superroot --env TRAFFIC_OPS_PASS=supersecreterpassward --detach traffic_server_edge:1.4
 #
@@ -259,5 +259,5 @@ esac' > /etc/init.d/hekad
 RUN chmod +x /etc/init.d/hekad
 
 EXPOSE 80 443
-ADD Traffic_Server_Edge_Dockerfile_run.sh /
-ENTRYPOINT /Traffic_Server_Edge_Dockerfile_run.sh
+ADD run.sh /
+ENTRYPOINT /run.sh
