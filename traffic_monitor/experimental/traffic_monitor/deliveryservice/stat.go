@@ -66,9 +66,18 @@ type StatCommon struct {
 	CachesAvailable  StatInt                 `json:"caches_available"`
 }
 
+func (a StatCommon) Copy() StatCommon {
+	b := a
+	for k, v := range a.CachesReporting {
+		b.CachesReporting[k] = v
+	}
+	return b
+}
+
 type Stat interface {
 	StatType() enum.DSType
 	CommonData() *StatCommon
+	Copy() Stat
 }
 
 type StatHTTP struct {
@@ -90,6 +99,17 @@ func newStatHTTP() *StatHTTP {
 	return &StatHTTP{CacheGroups: map[enum.CacheGroupName]StatCacheStats{}, Type: map[enum.CacheType]StatCacheStats{}, Common: StatCommon{CachesReporting: map[enum.CacheName]bool{}}}
 }
 
+func (a StatHTTP) Copy() Stat {
+	b := StatHTTP{Common: a.Common.Copy(), Total: a.Total, CacheGroups: map[enum.CacheGroupName]StatCacheStats{}, Type: map[enum.CacheType]StatCacheStats{}}
+	for k, v := range a.CacheGroups {
+		b.CacheGroups[k] = v
+	}
+	for k, v := range a.Type {
+		b.Type[k] = v
+	}
+	return &b
+}
+
 type StatDNS struct {
 	Common StatCommon
 }
@@ -106,9 +126,21 @@ func newStatDNS() *StatDNS {
 	return &StatDNS{Common: StatCommon{CachesReporting: map[enum.CacheName]bool{}}}
 }
 
+func (s StatDNS) Copy() Stat {
+	return &StatDNS{Common: s.Common.Copy()}
+}
+
 // TODO remove DeliveryService and set type to the map directly, or add other members
 type Stats struct {
 	DeliveryService map[enum.DeliveryServiceName]Stat `json:"deliveryService"`
+}
+
+func (a Stats) Copy() Stats {
+	b := NewStats()
+	for k, v := range a.DeliveryService {
+		b.DeliveryService[k] = v.Copy()
+	}
+	return b
 }
 
 // TODO rename to just 'New'?
@@ -247,11 +279,33 @@ func NewStatsLastKbps() StatsLastKbps {
 	return StatsLastKbps{DeliveryServices: map[enum.DeliveryServiceName]StatLastKbps{}, Caches: map[enum.CacheName]LastKbpsData{}}
 }
 
+func (a StatsLastKbps) Copy() StatsLastKbps {
+	b := NewStatsLastKbps()
+	for k, v := range a.DeliveryServices {
+		b.DeliveryServices[k] = v.Copy()
+	}
+	for k, v := range a.Caches {
+		b.Caches[k] = v
+	}
+	return b
+}
+
 // TODO figure a way to associate this type with StatHTTP, with which its members correspond.
 type StatLastKbps struct {
 	CacheGroups map[enum.CacheGroupName]LastKbpsData
 	Type        map[enum.CacheType]LastKbpsData
 	Total       LastKbpsData
+}
+
+func (a StatLastKbps) Copy() StatLastKbps {
+	b := StatLastKbps{CacheGroups: map[enum.CacheGroupName]LastKbpsData{}, Type: map[enum.CacheType]LastKbpsData{}, Total: a.Total}
+	for k, v := range a.CacheGroups {
+		b.CacheGroups[k] = v
+	}
+	for k, v := range a.Type {
+		b.Type[k] = v
+	}
+	return b
 }
 
 func newStatLastKbps() StatLastKbps {

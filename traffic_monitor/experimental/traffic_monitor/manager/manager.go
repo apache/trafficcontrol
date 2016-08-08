@@ -19,7 +19,6 @@ import (
 	"github.com/Comcast/traffic_control/traffic_monitor/experimental/traffic_monitor/cache"
 	ds "github.com/Comcast/traffic_control/traffic_monitor/experimental/traffic_monitor/deliveryservice"
 	"github.com/Comcast/traffic_control/traffic_monitor/experimental/traffic_monitor/enum"
-	"github.com/Comcast/traffic_control/traffic_monitor/experimental/traffic_monitor/health"
 	"github.com/Comcast/traffic_control/traffic_monitor/experimental/traffic_monitor/http_server"
 	"github.com/Comcast/traffic_control/traffic_monitor/experimental/traffic_monitor/peer"
 	todata "github.com/Comcast/traffic_control/traffic_monitor/experimental/traffic_monitor/trafficopsdata"
@@ -35,8 +34,6 @@ const (
 	defaultHttpTimeout                  time.Duration = 2 * time.Second
 	defaultPeerPollingInterval          time.Duration = 5 * time.Second
 )
-
-const maxEvents = 200
 
 type StaticAppData struct {
 	StartTime      time.Time
@@ -143,29 +140,24 @@ func Start(opsConfigFile string, staticAppData StaticAppData) {
 	toData := todata.NewThreadsafe()
 	dr := make(chan http_server.DataRequest)
 
-	healthHistory := map[string][]cache.Result{}
-
 	opsConfig := StartOpsConfigManager(opsConfigFile, dr, toSession, toData, []chan<- handler.OpsConfig{monitorConfigPoller.OpsConfigChannel}, []chan<- towrap.ITrafficOpsSession{monitorConfigPoller.SessionChannel})
 
 	localStates := NewCRStatesThreadsafe()     // this is the local state as discoverer by this traffic_monitor
 	peerStates := NewCRStatesPeersThreadsafe() // each peer's last state is saved in this map
 
 	// TODO put stat data in a struct, for brevity
-	lastHealthEndTimes := map[string]time.Time{}
-	lastHealthDurations := map[string]time.Duration{}
+
 	fetchCount := uint64(0) // note this is the number of individual caches fetched from, not the number of times all the caches were polled.
 	healthIteration := uint64(0)
 	errorCount := uint64(0)
-	events := []Event{}
-	eventIndex := uint64(0)
-	dsStats := ds.NewStats()
-	lastKbpsStats := ds.NewStatsLastKbps()
-	localCacheStatus := map[enum.CacheName]CacheAvailableStatus{}
 
 	monitorConfig := StartMonitorConfigManager(monitorConfigPoller.ConfigChannel, localStates, cacheStatPoller.ConfigChannel, cacheHealthPoller.ConfigChannel, peerPoller.ConfigChannel)
 
 	combinedStates := StartPeerManager(peerChannel, localStates, peerStates)
+
 	statHistory := StartStatHistoryManager(cacheStatChannel)
+
+	lastHealthDurations, events, localCacheStatus, dsStats, lastKbpsStats := StartHealthResultManager(cacheHealthChannel, toData, localStates, statHistory, monitorConfig, peerStates, combinedStates)
 
 	for {
 		select {
@@ -218,12 +210,12 @@ func Start(opsConfigFile string, staticAppData StaticAppData) {
 					err = fmt.Errorf("CacheStats: %v", err)
 				}
 			case http_server.DSStats:
-				body, err = json.Marshal(ds.StatsJSON(dsStats)) // TODO marshall beforehand, for performance? (test to see how often requests are made)
+				body, err = json.Marshal(ds.StatsJSON(dsStats.Get())) // TODO marshall beforehand, for performance? (test to see how often requests are made)
 				if err != nil {
 					err = fmt.Errorf("DsStats: %v", err)
 				}
 			case http_server.EventLog:
-				body, err = json.Marshal(JSONEvents{Events: events})
+				body, err = json.Marshal(JSONEvents{Events: events.Get()})
 				if err != nil {
 					err = fmt.Errorf("EventLog: %v", err)
 				}
@@ -232,7 +224,7 @@ func Start(opsConfigFile string, staticAppData StaticAppData) {
 			case http_server.StatSummary:
 				body = []byte("TODO implement")
 			case http_server.Stats:
-				body, err = getStats(staticAppData, cacheHealthPoller.Config.Interval, lastHealthDurations, fetchCount, healthIteration, errorCount)
+				body, err = getStats(staticAppData, cacheHealthPoller.Config.Interval, lastHealthDurations.Get(), fetchCount, healthIteration, errorCount)
 				if err != nil {
 					err = fmt.Errorf("Stats: %v", err)
 				}
@@ -263,7 +255,7 @@ func Start(opsConfigFile string, staticAppData StaticAppData) {
 			case http_server.APITrafficOpsURI:
 				body = []byte(opsConfig.Get().Url)
 			case http_server.APICacheStates:
-				body, err = json.Marshal(createCacheStatuses(toData.Get().ServerTypes, statHistory.Get(), lastHealthDurations, localStates.Get().Caches, lastKbpsStats, localCacheStatus))
+				body, err = json.Marshal(createCacheStatuses(toData.Get().ServerTypes, statHistory.Get(), lastHealthDurations.Get(), localStates.Get().Caches, lastKbpsStats.Get(), localCacheStatus))
 			default:
 				err = fmt.Errorf("Unknown Request Type: %v", req.Type)
 			}
@@ -277,53 +269,7 @@ func Start(opsConfigFile string, staticAppData StaticAppData) {
 			// case monitorConfig
 		case i := <-cacheHealthTick:
 			healthIteration = i
-		case healthResult := <-cacheHealthChannel:
-			fetchCount++
-			toDataCopy := toData.Get() // create a copy, so the same data used for all processing of this cache health result
-			var prevResult cache.Result
-			if len(healthHistory[healthResult.Id]) != 0 {
-				prevResult = healthHistory[healthResult.Id][len(healthHistory[healthResult.Id])-1]
-			}
-			monitorConfigCopy := monitorConfig.Get() // copy now, so all calculations are on the same data
-			health.GetVitals(&healthResult, &prevResult, &monitorConfigCopy)
-			healthHistory[healthResult.Id] = pruneHistory(append(healthHistory[healthResult.Id], healthResult), defaultMaxHistory)
-			isAvailable, whyAvailable := health.EvalCache(healthResult, &monitorConfigCopy)
-			if localStates.Get().Caches[healthResult.Id].IsAvailable != isAvailable {
-				fmt.Println("Changing state for", healthResult.Id, " was:", prevResult.Available, " is now:", isAvailable, " because:", whyAvailable, " errors:", healthResult.Errors)
-				e := Event{Index: eventIndex, Time: time.Now().Unix(), Description: whyAvailable, Name: healthResult.Id, Hostname: healthResult.Id, Type: toDataCopy.ServerTypes[healthResult.Id].String(), Available: isAvailable}
-				events = append([]Event{e}, events...)
-				if len(events) > maxEvents {
-					events = events[:maxEvents-1]
-				}
-				eventIndex++
-			}
 
-			localCacheStatus[enum.CacheName(healthResult.Id)] = CacheAvailableStatus{Available: isAvailable, Status: monitorConfigCopy.TrafficServer[healthResult.Id].Status} // TODO move within localStates
-			localStates.SetCache(healthResult.Id, peer.IsAvailable{IsAvailable: isAvailable})
-			calculateDeliveryServiceState(toDataCopy.DeliveryServiceServers, localStates)
-
-			// TODO determine if we should combineCrStates() here
-
-			now := time.Now()
-
-			var err error
-			dsStats, lastKbpsStats, err = ds.CreateStats(statHistory.Get(), toDataCopy, combinedStates.Get(), lastKbpsStats, now)
-			if err != nil {
-				errorCount++
-				log.Printf("ERROR getting deliveryservice: %v\n", err)
-			}
-
-			if lastHealthStart, ok := lastHealthEndTimes[healthResult.Id]; ok {
-				lastHealthDurations[healthResult.Id] = time.Since(lastHealthStart)
-			}
-			lastHealthEndTimes[healthResult.Id] = now
-			fmt.Printf("DEBUG health duration for %s: %v\n", healthResult.Id, lastHealthDurations[healthResult.Id])
-
-			// if _, ok := queryIntervalStart[pollI]; !ok {
-			// 	log.Printf("ERROR poll start index not found")
-			// 	continue
-			// }
-			// lastQueryIntervalTime = time.Since(queryIntervalStart[pollI])
 		}
 	}
 }
@@ -338,11 +284,12 @@ type CacheStatus struct {
 	ConnectionCount       *int64   `json:"connection_count,omitempty"`
 }
 
-func createCacheStatuses(cacheTypes map[string]enum.CacheType, statHistory map[string][]cache.Result, lastHealthDurations map[string]time.Duration, cacheStates map[string]peer.IsAvailable, lastKbpsStats ds.StatsLastKbps, localCacheStatus map[enum.CacheName]CacheAvailableStatus) map[enum.CacheName]CacheStatus {
+func createCacheStatuses(cacheTypes map[string]enum.CacheType, statHistory map[string][]cache.Result, lastHealthDurations map[string]time.Duration, cacheStates map[string]peer.IsAvailable, lastKbpsStats ds.StatsLastKbps, localCacheStatusThreadsafe CacheAvailableStatusThreadsafe) map[enum.CacheName]CacheStatus {
 	conns := createCacheConnections(statHistory)
 	statii := map[enum.CacheName]CacheStatus{}
-	for cacheName, cacheType := range cacheTypes {
+	localCacheStatus := localCacheStatusThreadsafe.Get()
 
+	for cacheName, cacheType := range cacheTypes {
 		cacheStatHistory, ok := statHistory[cacheName]
 		if !ok {
 			log.Printf("WARNING DEBUG6 createCacheStatuses stat history missing cache %s\n", cacheName)
@@ -505,16 +452,6 @@ func createApiPeerStates(peerStates map[string]peer.Crstates) ApiPeerStates {
 
 type JSONEvents struct {
 	Events []Event `json:"events"`
-}
-
-type Event struct {
-	Index       uint64 `json:"index"`
-	Time        int64  `json:"time"`
-	Description string `json:"description"`
-	Name        string `json:"name"`
-	Hostname    string `json:"hostname"`
-	Type        string `json:"type"`
-	Available   bool   `json:"isAvailable"`
 }
 
 type Stats struct {
