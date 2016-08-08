@@ -76,6 +76,7 @@ image_exists() {
 # collect image names for later cleanup
 images=
 createBuilders() {
+	# topdir=.../traffic_control
 	local topdir=$(cd "$( echo "${BASH_SOURCE[0]%/*}" )/.."; pwd)
 
 	for p in $projects
