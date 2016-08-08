@@ -65,7 +65,7 @@
 		<% } %>
 		%= label_for 'protocol' => '* Protocol ', class => 'label'
 		<% if ($priv_level >= 20) { %>
-		%= field('ds.protocol')->select([ ["http" => 0, selected => 'true'], ["https" => 1], ["http and https" => 2]], id => 'protocol');
+		%= field('ds.protocol')->select([ ["http" => 0, selected => 'true'], ["https" => 1], ["http and https" => 2], ["http to https" => 3] ], id => 'protocol');
 		<% } else { %>
 			<% if ($ds->protocol == 0 ) { %>
 			%= field('ds.protocol')->text(class => 'field', readonly => 'readonly', value => 'No');
