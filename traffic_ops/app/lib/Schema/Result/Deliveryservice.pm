@@ -58,8 +58,8 @@ __PACKAGE__->table("deliveryservice");
 
 =head2 geo_limit
 
-  data_type: 'boolean'
-  default_value: false
+  data_type: 'smallint'
+  default_value: 0
   is_nullable: 1
 
 =head2 http_bypass_fqdn
@@ -238,7 +238,7 @@ __PACKAGE__->table("deliveryservice");
 
 =head2 multi_site_origin
 
-  data_type: 'boolean'
+  data_type: 'smallint'
   is_nullable: 1
 
 =head2 display_name
@@ -273,7 +273,7 @@ __PACKAGE__->table("deliveryservice");
 
 =head2 regional_geo_blocking
 
-  data_type: 'boolean'
+  data_type: 'smallint'
   is_nullable: 0
 
 =head2 geo_provider
@@ -290,12 +290,12 @@ __PACKAGE__->table("deliveryservice");
 
 =head2 logs_enabled
 
-  data_type: 'boolean'
+  data_type: 'smallint'
   is_nullable: 1
 
 =head2 multi_site_origin_algorithm
 
-  data_type: 'boolean'
+  data_type: 'smallint'
   is_nullable: 1
 
 =cut
@@ -319,7 +319,7 @@ __PACKAGE__->add_columns(
   "qstring_ignore",
   { data_type => "smallint", is_nullable => 1 },
   "geo_limit",
-  { data_type => "boolean", default_value => \"false", is_nullable => 1 },
+  { data_type => "smallint", default_value => 0, is_nullable => 1 },
   "http_bypass_fqdn",
   { data_type => "varchar", is_nullable => 1, size => 255 },
   "dns_bypass_ip",
@@ -386,7 +386,7 @@ __PACKAGE__->add_columns(
   "remap_text",
   { data_type => "varchar", is_nullable => 1, size => 2048 },
   "multi_site_origin",
-  { data_type => "boolean", is_nullable => 1 },
+  { data_type => "smallint", is_nullable => 1 },
   "display_name",
   { data_type => "varchar", is_nullable => 0, size => 48 },
   "tr_response_headers",
@@ -398,15 +398,15 @@ __PACKAGE__->add_columns(
   "tr_request_headers",
   { data_type => "varchar", is_nullable => 1, size => 1024 },
   "regional_geo_blocking",
-  { data_type => "boolean", is_nullable => 0 },
+  { data_type => "smallint", is_nullable => 0 },
   "geo_provider",
   { data_type => "smallint", default_value => 0, is_nullable => 1 },
   "geo_limit_countries",
   { data_type => "varchar", is_nullable => 1, size => 750 },
   "logs_enabled",
-  { data_type => "boolean", is_nullable => 1 },
+  { data_type => "smallint", is_nullable => 1 },
   "multi_site_origin_algorithm",
-  { data_type => "boolean", is_nullable => 1 },
+  { data_type => "smallint", is_nullable => 1 },
 );
 
 =head1 PRIMARY KEY
@@ -425,7 +425,7 @@ __PACKAGE__->set_primary_key("id", "type");
 
 =head1 UNIQUE CONSTRAINTS
 
-=head2 C<idx_62015_ds_id_unique>
+=head2 C<idx_419527_ds_id_unique>
 
 =over 4
 
@@ -435,9 +435,9 @@ __PACKAGE__->set_primary_key("id", "type");
 
 =cut
 
-__PACKAGE__->add_unique_constraint("idx_62015_ds_id_unique", ["id"]);
+__PACKAGE__->add_unique_constraint("idx_419527_ds_id_unique", ["id"]);
 
-=head2 C<idx_62015_ds_name_unique>
+=head2 C<idx_419527_ds_name_unique>
 
 =over 4
 
@@ -447,7 +447,7 @@ __PACKAGE__->add_unique_constraint("idx_62015_ds_id_unique", ["id"]);
 
 =cut
 
-__PACKAGE__->add_unique_constraint("idx_62015_ds_name_unique", ["xml_id"]);
+__PACKAGE__->add_unique_constraint("idx_419527_ds_name_unique", ["xml_id"]);
 
 =head1 RELATIONS
 
@@ -622,8 +622,8 @@ __PACKAGE__->belongs_to(
 );
 
 
-# Created by DBIx::Class::Schema::Loader v0.07043 @ 2016-08-02 11:11:32
-# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:m03kvczLHMdlyzwgPG+/xg
+# Created by DBIx::Class::Schema::Loader v0.07043 @ 2016-08-08 10:49:59
+# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:XhQ5cg2FvU3Ygd139zTkrg
 
 # You can replace this text with custom code or comments, and it will be preserved on regeneration
 1;

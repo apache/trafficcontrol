@@ -134,8 +134,8 @@ __PACKAGE__->table("server");
 
 =head2 upd_pending
 
-  data_type: 'boolean'
-  default_value: false
+  data_type: 'smallint'
+  default_value: 0
   is_nullable: 0
 
 =head2 profile
@@ -273,7 +273,7 @@ __PACKAGE__->add_columns(
   "status",
   { data_type => "bigint", is_foreign_key => 1, is_nullable => 0 },
   "upd_pending",
-  { data_type => "boolean", default_value => \"false", is_nullable => 0 },
+  { data_type => "smallint", default_value => 0, is_nullable => 0 },
   "profile",
   { data_type => "bigint", is_foreign_key => 1, is_nullable => 0 },
   "cdn_id",
@@ -331,7 +331,7 @@ __PACKAGE__->set_primary_key("id", "cachegroup", "type", "status", "profile");
 
 =head1 UNIQUE CONSTRAINTS
 
-=head2 C<idx_62212_cs_ip_address_unique>
+=head2 C<idx_419724_cs_ip_address_unique>
 
 =over 4
 
@@ -341,9 +341,9 @@ __PACKAGE__->set_primary_key("id", "cachegroup", "type", "status", "profile");
 
 =cut
 
-__PACKAGE__->add_unique_constraint("idx_62212_cs_ip_address_unique", ["ip_address"]);
+__PACKAGE__->add_unique_constraint("idx_419724_cs_ip_address_unique", ["ip_address"]);
 
-=head2 C<idx_62212_host_name>
+=head2 C<idx_419724_host_name>
 
 =over 4
 
@@ -353,9 +353,9 @@ __PACKAGE__->add_unique_constraint("idx_62212_cs_ip_address_unique", ["ip_addres
 
 =cut
 
-__PACKAGE__->add_unique_constraint("idx_62212_host_name", ["host_name"]);
+__PACKAGE__->add_unique_constraint("idx_419724_host_name", ["host_name"]);
 
-=head2 C<idx_62212_ip6_address>
+=head2 C<idx_419724_ip6_address>
 
 =over 4
 
@@ -365,9 +365,9 @@ __PACKAGE__->add_unique_constraint("idx_62212_host_name", ["host_name"]);
 
 =cut
 
-__PACKAGE__->add_unique_constraint("idx_62212_ip6_address", ["ip6_address"]);
+__PACKAGE__->add_unique_constraint("idx_419724_ip6_address", ["ip6_address"]);
 
-=head2 C<idx_62212_se_id_unique>
+=head2 C<idx_419724_se_id_unique>
 
 =over 4
 
@@ -377,7 +377,7 @@ __PACKAGE__->add_unique_constraint("idx_62212_ip6_address", ["ip6_address"]);
 
 =cut
 
-__PACKAGE__->add_unique_constraint("idx_62212_se_id_unique", ["id"]);
+__PACKAGE__->add_unique_constraint("idx_419724_se_id_unique", ["id"]);
 
 =head1 RELATIONS
 
@@ -522,8 +522,8 @@ __PACKAGE__->belongs_to(
 );
 
 
-# Created by DBIx::Class::Schema::Loader v0.07043 @ 2016-08-02 11:11:32
-# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:QQpnwrwhrsr0V6kock1RXQ
+# Created by DBIx::Class::Schema::Loader v0.07043 @ 2016-08-08 10:49:59
+# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:GqYil3dgeCYPUYPu+hJKXw
 # These lines were loaded from '/Users/drichard/projects/github.com/traffic_control/traffic_ops/app/lib/Schema/Result/Server.pm' found in @INC.
 # They are now part of the custom portion of this file
 # for you to hand-edit.  If you do not either delete

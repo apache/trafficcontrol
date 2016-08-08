@@ -97,8 +97,8 @@ __PACKAGE__->table("tm_user");
 
 =head2 new_user
 
-  data_type: 'boolean'
-  default_value: true
+  data_type: 'smallint'
+  default_value: 1
   is_nullable: 0
 
 =head2 address_line1
@@ -193,7 +193,7 @@ __PACKAGE__->add_columns(
   "full_name",
   { data_type => "varchar", is_nullable => 1, size => 256 },
   "new_user",
-  { data_type => "boolean", default_value => \"true", is_nullable => 0 },
+  { data_type => "smallint", default_value => 1, is_nullable => 0 },
   "address_line1",
   { data_type => "varchar", is_nullable => 1, size => 256 },
   "address_line2",
@@ -232,7 +232,7 @@ __PACKAGE__->set_primary_key("id");
 
 =head1 UNIQUE CONSTRAINTS
 
-=head2 C<idx_62267_tmuser_email_unique>
+=head2 C<idx_419779_tmuser_email_unique>
 
 =over 4
 
@@ -242,9 +242,9 @@ __PACKAGE__->set_primary_key("id");
 
 =cut
 
-__PACKAGE__->add_unique_constraint("idx_62267_tmuser_email_unique", ["email"]);
+__PACKAGE__->add_unique_constraint("idx_419779_tmuser_email_unique", ["email"]);
 
-=head2 C<idx_62267_username_unique>
+=head2 C<idx_419779_username_unique>
 
 =over 4
 
@@ -254,7 +254,7 @@ __PACKAGE__->add_unique_constraint("idx_62267_tmuser_email_unique", ["email"]);
 
 =cut
 
-__PACKAGE__->add_unique_constraint("idx_62267_username_unique", ["username"]);
+__PACKAGE__->add_unique_constraint("idx_419779_username_unique", ["username"]);
 
 =head1 RELATIONS
 
@@ -339,8 +339,8 @@ __PACKAGE__->belongs_to(
 );
 
 
-# Created by DBIx::Class::Schema::Loader v0.07043 @ 2016-08-02 11:11:32
-# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:bLnAm8AgY0nmjdeGKaKCjw
+# Created by DBIx::Class::Schema::Loader v0.07043 @ 2016-08-08 10:49:59
+# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:Q8tMLhp4lJQ+VQYE/oKZuw
 
 
 # You can replace this text with custom code or comments, and it will be preserved on regeneration

@@ -57,8 +57,8 @@ __PACKAGE__->table("parameter");
 
 =head2 secure
 
-  data_type: 'boolean'
-  default_value: false
+  data_type: 'smallint'
+  default_value: 0
   is_nullable: 0
 
 =cut
@@ -85,7 +85,7 @@ __PACKAGE__->add_columns(
     original      => { default_value => \"now()" },
   },
   "secure",
-  { data_type => "boolean", default_value => \"false", is_nullable => 0 },
+  { data_type => "smallint", default_value => 0, is_nullable => 0 },
 );
 
 =head1 PRIMARY KEY
@@ -133,8 +133,8 @@ __PACKAGE__->has_many(
 );
 
 
-# Created by DBIx::Class::Schema::Loader v0.07043 @ 2016-07-08 10:42:03
-# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:lSraFMPuiI9Hn3C5e5jYPw
+# Created by DBIx::Class::Schema::Loader v0.07043 @ 2016-08-08 10:49:59
+# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:zD0E40N9iKMy+W+eab6xRQ
 
 
 # You can replace this text with custom code or comments, and it will be preserved on regeneration

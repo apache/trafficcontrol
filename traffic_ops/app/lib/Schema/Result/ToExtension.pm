@@ -56,7 +56,7 @@ __PACKAGE__->table("to_extension");
 
 =head2 isactive
 
-  data_type: 'boolean'
+  data_type: 'smallint'
   is_nullable: 0
 
 =head2 additional_config_json
@@ -115,7 +115,7 @@ __PACKAGE__->add_columns(
   "script_file",
   { data_type => "varchar", is_nullable => 0, size => 45 },
   "isactive",
-  { data_type => "boolean", is_nullable => 0 },
+  { data_type => "smallint", is_nullable => 0 },
   "additional_config_json",
   { data_type => "varchar", is_nullable => 1, size => 4096 },
   "description",
@@ -165,8 +165,8 @@ __PACKAGE__->belongs_to(
 );
 
 
-# Created by DBIx::Class::Schema::Loader v0.07043 @ 2016-07-05 09:49:28
-# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:TQUaMEltNoqj7jH8zTp/sw
+# Created by DBIx::Class::Schema::Loader v0.07043 @ 2016-08-08 10:49:59
+# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:j1ATwfArX1YOGbCWTyf3cA
 
 
 # You can replace this text with custom code or comments, and it will be preserved on regeneration

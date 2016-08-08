@@ -126,6 +126,11 @@ __PACKAGE__->table("servercheck");
   data_type: 'bigint'
   is_nullable: 1
 
+=head2 as
+
+  data_type: 'bigint'
+  is_nullable: 1
+
 =head2 at
 
   data_type: 'bigint'
@@ -186,11 +191,6 @@ __PACKAGE__->table("servercheck");
   data_type: 'bigint'
   is_nullable: 1
 
-=head2 bf
-
-  data_type: 'bigint'
-  is_nullable: 1
-
 =head2 last_updated
 
   data_type: 'timestamp with time zone'
@@ -246,6 +246,8 @@ __PACKAGE__->add_columns(
   { data_type => "bigint", is_nullable => 1 },
   "ar",
   { data_type => "bigint", is_nullable => 1 },
+  "as",
+  { data_type => "bigint", is_nullable => 1 },
   "at",
   { data_type => "bigint", is_nullable => 1 },
   "au",
@@ -269,8 +271,6 @@ __PACKAGE__->add_columns(
   "bd",
   { data_type => "bigint", is_nullable => 1 },
   "be",
-  { data_type => "bigint", is_nullable => 1 },
-  "bf",
   { data_type => "bigint", is_nullable => 1 },
   "last_updated",
   {
@@ -297,7 +297,7 @@ __PACKAGE__->set_primary_key("id", "server");
 
 =head1 UNIQUE CONSTRAINTS
 
-=head2 C<idx_62226_server>
+=head2 C<idx_419738_server>
 
 =over 4
 
@@ -307,9 +307,9 @@ __PACKAGE__->set_primary_key("id", "server");
 
 =cut
 
-__PACKAGE__->add_unique_constraint("idx_62226_server", ["server"]);
+__PACKAGE__->add_unique_constraint("idx_419738_server", ["server"]);
 
-=head2 C<idx_62226_ses_id_unique>
+=head2 C<idx_419738_ses_id_unique>
 
 =over 4
 
@@ -319,7 +319,7 @@ __PACKAGE__->add_unique_constraint("idx_62226_server", ["server"]);
 
 =cut
 
-__PACKAGE__->add_unique_constraint("idx_62226_ses_id_unique", ["id"]);
+__PACKAGE__->add_unique_constraint("idx_419738_ses_id_unique", ["id"]);
 
 =head1 RELATIONS
 
@@ -339,8 +339,8 @@ __PACKAGE__->belongs_to(
 );
 
 
-# Created by DBIx::Class::Schema::Loader v0.07043 @ 2016-08-02 11:11:32
-# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:f2UfDp1gE/Cqi/fakZXrpQ
+# Created by DBIx::Class::Schema::Loader v0.07043 @ 2016-08-08 10:49:59
+# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:iTA3vbT40Jyg7H4X+fv+Lw
 
 
 # You can replace this text with custom code or comments, and it will be preserved on regeneration
