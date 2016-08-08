@@ -5,6 +5,14 @@ import (
 	"sync"
 )
 
+// TODO put somewhere more generic
+const CacheAvailableStatusReported = "REPORTED"
+
+type CacheAvailableStatus struct {
+	Available bool
+	Status    string
+}
+
 type CacheAvailableStatusThreadsafe struct {
 	caches map[enum.CacheName]CacheAvailableStatus // TODO change string -> CacheName
 	m      *sync.Mutex

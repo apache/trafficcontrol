@@ -137,3 +137,12 @@ func monitorConfigListen(monitorConfigTS TrafficMonitorConfigMapThreadsafe, moni
 		}
 	}
 }
+
+// addStateDeliveryServices adds delivery services in `mc` as keys in `deliveryServices`, with empty Deliveryservice values.
+// TODO add disabledLocations
+func addStateDeliveryServices(mc to.TrafficMonitorConfigMap, deliveryServices map[string]peer.Deliveryservice) {
+	for _, ds := range mc.DeliveryService {
+		// since caches default to unavailable, also default DS false
+		deliveryServices[ds.XMLID] = peer.Deliveryservice{}
+	}
+}

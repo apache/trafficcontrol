@@ -3,6 +3,7 @@ package poller
 import (
 	"fmt"
 	"io/ioutil"
+	"net/http"
 	"os"
 	"time"
 
@@ -12,7 +13,8 @@ import (
 	"github.com/Comcast/traffic_control/traffic_monitor/experimental/common/handler"
 	instr "github.com/Comcast/traffic_control/traffic_monitor/experimental/common/instrumentation"
 	"github.com/Comcast/traffic_control/traffic_monitor/experimental/traffic_monitor/trafficopswrapper"
-	traffic_ops "github.com/Comcast/traffic_control/traffic_ops/client"
+	towrap "github.com/Comcast/traffic_control/traffic_monitor/experimental/traffic_monitor/trafficopswrapper" // TODO move to common
+	to "github.com/Comcast/traffic_control/traffic_ops/client"
 )
 
 type Poller interface {
@@ -31,6 +33,27 @@ type HttpPollerConfig struct {
 	Interval time.Duration
 }
 
+// Creates and returns a new HttpPoller.
+// If tick is false, HttpPoller.TickChan() will return nil
+func NewHTTP(interval time.Duration, tick bool, httpClient *http.Client, counters fetcher.Counters, fetchHandler handler.Handler) HttpPoller {
+	var tickChan chan uint64
+	if tick {
+		tickChan = make(chan uint64)
+	}
+	return HttpPoller{
+		TickChan:      tickChan,
+		ConfigChannel: make(chan HttpPollerConfig),
+		Config: HttpPollerConfig{
+			Interval: interval,
+		},
+		Fetcher: fetcher.HttpFetcher{
+			Handler:  fetchHandler,
+			Client:   httpClient,
+			Counters: counters,
+		},
+	}
+}
+
 type FilePoller struct {
 	File                string
 	ResultChannel       chan interface{}
@@ -40,10 +63,21 @@ type FilePoller struct {
 type MonitorConfigPoller struct {
 	Session          trafficopswrapper.ITrafficOpsSession
 	SessionChannel   chan trafficopswrapper.ITrafficOpsSession
-	ConfigChannel    chan traffic_ops.TrafficMonitorConfigMap
+	ConfigChannel    chan to.TrafficMonitorConfigMap
 	OpsConfigChannel chan handler.OpsConfig
 	Interval         time.Duration
 	OpsConfig        handler.OpsConfig
+}
+
+// Creates and returns a new HttpPoller.
+// If tick is false, HttpPoller.TickChan() will return nil
+func NewMonitorConfig(interval time.Duration) MonitorConfigPoller {
+	return MonitorConfigPoller{
+		Interval:         interval,
+		SessionChannel:   make(chan towrap.ITrafficOpsSession),
+		ConfigChannel:    make(chan to.TrafficMonitorConfigMap),
+		OpsConfigChannel: make(chan handler.OpsConfig),
+	}
 }
 
 func (p MonitorConfigPoller) Poll() {

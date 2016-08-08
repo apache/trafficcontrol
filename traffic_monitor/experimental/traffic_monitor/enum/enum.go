@@ -6,6 +6,8 @@ import (
 	"strings"
 )
 
+type TrafficMonitorName string
+
 type CacheName string
 
 type CacheGroupName string
