@@ -24,8 +24,9 @@ RUN	yum -y install \
 ENV	GITREPO=https://github.com/Comcast/traffic_control
 ENV	BRANCH=master
 
-RUN	mkdir -p /vol && cd /vol
+RUN	mkdir -p /vol
 VOLUME /vol
 
-CMD	git clone --branch $BRANCH $GITREPO && cd traffic_control && \
-		./traffic_ops/build/build_rpm.sh
+CMD	cd /vol && \
+	git clone --branch $BRANCH $GITREPO && cd traffic_control && \
+	./traffic_ops/build/build_rpm.sh

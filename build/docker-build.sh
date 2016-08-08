@@ -102,7 +102,7 @@ runBuild() {
 	do
 		docker run $vol $p/build
 		local id=$(docker ps --latest --quiet)
-		docker cp $id:/vol/traffic_control/dist/* ./dist/. && docker rm $id
+		docker cp $id:/vol/traffic_control/dist ./dist && docker rm $id
 	done
 }
 
