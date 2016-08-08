@@ -69,7 +69,7 @@ ENDMSG
 # sub-projects to build
 
 image_exists() {
-	docker history -q $1 >/dev/null 2>&1
+	docker history --quiet $1 >/dev/null 2>&1
 	return $?
 }
 
@@ -78,19 +78,12 @@ images=
 createBuilders() {
 	local topdir=$(cd "$( echo "${BASH_SOURCE[0]%/*}" )/.."; pwd)
 
-	local image=traffic_control_builder
-	if ! image_exists $image
-	then
-		docker build -t $image "$topdir/build"
-		images=$image
-	fi
-
 	for p in $projects
 	do
 		local image=$p/build
 		if ! image_exists $image
 		then
-			docker build -t $image "$topdir/$p/build"
+			docker build --tag $image "$topdir/$p/build"
 			images="$images $image"
 		fi
 	done
@@ -106,24 +99,14 @@ runBuild() {
 	mkdir -p dist
 	for p in $projects
 	do
-		docker run $p/build
-		docker cp $p/build:/vol/traffic_control/dist/* ./dist/.
+		docker run $vol $p/build
+		local id=$(docker ps --latest --quiet)
+		docker cp $id:/vol/traffic_control/dist/* ./dist/. && docker rm $id
 	done
 }
 
 createBuilders
 runBuild
-
-if [[ -z $images ]]
-then
-	echo "No new docker images created"
-elif [[ $cleanup ]]
-then
-	docker rmi $images
-	echo "Images cleaned up: $images"
-else
-	echo "These images were newly created: $images"
-fi
 
 echo "rpms created: "
 ls -l "$dist/."
