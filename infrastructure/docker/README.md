@@ -91,7 +91,7 @@ With the prior assumptions, the following commands will set up a CDN:
 ```bash
 docker network create cdnet
 
-sudo docker run -it --publish 192.0.2.100:3306:3306 --name c23-to-db --hostname c23-to-db --net cdnet --env MYSQL_ROOT_PASSWORD=secretrootpass --env IP=192.0.2.100 mysql:5.5
+sudo docker run -it --publish 192.0.2.100:3306:3306 --name c23-to-db --hostname c23-to-db --net cdnet --env MYSQL_ROOT_PASS=secretrootpass --env IP=192.0.2.100 mysql:5.5
 
 sudo docker run -it --publish 192.0.2.101:443:443 --name c23-to-01 --hostname c23-to-01 --net cdnet --env MYSQL_IP=c23-to-db.example.net --env MYSQL_PORT=3306 --env MYSQL_ROOT_PASS=secretrootpass --env MYSQL_TRAFFIC_OPS_PASS=supersecretpassword --env ADMIN_USER=superroot --env ADMIN_PASS=supersecreterpassward --env CERT_COUNTRY=US --env CERT_STATE=Colorado --env CERT_CITY=Denver --env CERT_COMPANY=NotComcast --env TRAFFIC_VAULT_PASS=marginallylesssecret --env IP=192.0.2.101 --env DOMAIN=c23.example.net traffic_ops:1.4
 
