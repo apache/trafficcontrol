@@ -11,6 +11,7 @@ import (
 	"github.com/Comcast/traffic_control/traffic_monitor/experimental/common/fetcher"
 	"github.com/Comcast/traffic_control/traffic_monitor/experimental/common/handler"
 	instr "github.com/Comcast/traffic_control/traffic_monitor/experimental/common/instrumentation"
+	"github.com/Comcast/traffic_control/traffic_monitor/experimental/traffic_monitor/trafficopswrapper"
 	traffic_ops "github.com/Comcast/traffic_control/traffic_ops/client"
 )
 
@@ -37,8 +38,8 @@ type FilePoller struct {
 }
 
 type MonitorConfigPoller struct {
-	Session          *traffic_ops.Session
-	SessionChannel   chan *traffic_ops.Session
+	Session          trafficopswrapper.ITrafficOpsSession
+	SessionChannel   chan trafficopswrapper.ITrafficOpsSession
 	ConfigChannel    chan traffic_ops.TrafficMonitorConfigMap
 	OpsConfigChannel chan handler.OpsConfig
 	Interval         time.Duration

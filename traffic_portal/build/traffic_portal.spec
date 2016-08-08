@@ -16,47 +16,62 @@
 #
 # RPM spec file for the Traffic Portal
 #
-
-%define version @VERSION@
-%define build_number @BUILD_NO@
-%define traffic_portal_home /opt/traffic_portal
-
-Summary: Traffic Portal
-Name: traffic_portal
-Version: %{version}
-Release: %{build_number}
-License: Apache License, Version 2.0
-Group: Base System/System Tools
-Source: $RPM_SOURCE_DIR/traffic_portal-%{version}.tgz
-BuildRoot: /var/tmp/%{name}-root
+%define		debug_package %{nil}
+Name:		traffic_portal
+Version:	%{traffic_control_version}
+Release:	%{build_number}
+Summary:	Traffic Portal
+Group:		Applications/Communications
+License:	Apache License, Version 2.0
+URL:		https://github.com/Comcast/traffic_control/
+Source:		%{_sourcedir}/traffic_portal-%{traffic_control_version}.tgz
 AutoReqProv: no
 Requires: nodejs
 
+%define traffic_portal_home /opt/traffic_portal
 %description
 Installs Traffic Portal
 
 Built: @BUILT@
 
 %prep
+rm -rf $RPM_BUILD_DIR/traffic_portal-%{version}
+tar -xzvf $RPM_SOURCE_DIR/traffic_portal-%{version}.tgz
 
 %setup
 
+%build
+    /usr/bin/npm install
+    /usr/bin/bower install
+    /usr/bin/grunt dist
+
 %install
-    if [ -d $RPM_BUILD_ROOT ]; then
-	    %__rm -rf $RPM_BUILD_ROOT
-    fi
+    %__mkdir -p ${RPM_BUILD_ROOT}/etc/init.d
+    %__mkdir -p ${RPM_BUILD_ROOT}/etc/logrotate.d
+    %__mkdir -p ${RPM_BUILD_ROOT}/etc/traffic_portal
+    %__mkdir -p ${RPM_BUILD_ROOT}%{traffic_portal_home}/public
+    %__mkdir -p ${RPM_BUILD_ROOT}%{traffic_portal_home}/server
+    %__mkdir -p ${RPM_BUILD_ROOT}/var/log/traffic_portal
 
-    if [ ! -d $RPM_BUILD_ROOT ]; then
-        %__mkdir -p $RPM_BUILD_ROOT
-    fi
+    # creates dynamic json file needed at runtime for traffic portal to display release info
+    BUILD_DATE=$(date +'%Y-%m-%d %H:%M:%S')
+    VERSION="\"Version\":\"$VERSION\""
+    BUILD_NUMBER="\"Build Number\":\"$BUILD_NUMBER\""
+    BUILD_DATE="\"Build Date\":\"$BUILD_DATE\""
+    JSON_VERSION="{\n$VERSION,\n$BUILD_NUMBER,\n$BUILD_DATE\n}"
+    echo -e $JSON_VERSION > ${RPM_BUILD_ROOT}%{traffic_portal_home}/public/traffic_portal_release.json
 
-    %__cp -R $RPM_BUILD_DIR/traffic_portal-%{version}/* $RPM_BUILD_ROOT
+    %__cp ${RPM_BUILD_DIR}/traffic_portal-%{version}/server/server.js ${RPM_BUILD_ROOT}%{traffic_portal_home}/server/.
+    %__cp -r ${RPM_BUILD_DIR}/traffic_portal-%{version}/conf ${RPM_BUILD_ROOT}/etc/traffic_portal/.
+    %__cp ${RPM_BUILD_DIR}/traffic_portal-%{version}/build/etc/init.d/traffic_portal ${RPM_BUILD_ROOT}/etc/init.d/.
+    %__cp ${RPM_BUILD_DIR}/traffic_portal-%{version}/build/etc/logrotate.d/traffic_portal ${RPM_BUILD_ROOT}/etc/logrotate.d/.
+    %__cp ${RPM_BUILD_DIR}/traffic_portal-%{version}/build/etc/logrotate.d/traffic_portal-access ${RPM_BUILD_ROOT}/etc/logrotate.d/.
+    %__cp -r ${RPM_BUILD_DIR}/traffic_portal-%{version}/app/dist/* ${RPM_BUILD_ROOT}%{traffic_portal_home}/.
 
 %post
-    echo "Successfully installed the traffic_portal assets to /opt/traffic_portal"
-    /bin/mkdir -p /var/log/traffic_portal
-    /bin/chmod +x /opt/traffic_portal/node_modules/forever/bin/forever
-    /bin/chmod +x /etc/init.d/traffic_portal
+    echo "Successfully installed the traffic_portal assets to " %{traffic_portal_home}
+    %__chmod +x %{traffic_portal_home}/node_modules/forever/bin/forever
+    %__chmod +x /etc/init.d/traffic_portal
     echo "Successfully installed the 'traffic_portal' service"
     /sbin/chkconfig traffic_portal on
     echo ""
@@ -64,10 +79,12 @@ Built: @BUILT@
 
 %files
 %defattr(644,root,root,755)
+%attr(755,root,root) /etc/init.d/traffic_portal
+%attr(755,root,root) %{traffic_portal_home}/node_modules/forever/bin/*
 %config(noreplace)/etc/traffic_portal/conf/config.js
+%dir /var/log/traffic_portal
 /etc/traffic_portal/conf/config-template.js
 %{traffic_portal_home}/*
-%{traffic_portal_home}/server/server.js
 /etc/logrotate.d/traffic_portal
 /etc/logrotate.d/traffic_portal-access
 /etc/init.d/traffic_portal

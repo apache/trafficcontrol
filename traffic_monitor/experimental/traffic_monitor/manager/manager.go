@@ -21,6 +21,7 @@ import (
 	"github.com/Comcast/traffic_control/traffic_monitor/experimental/traffic_monitor/health"
 	"github.com/Comcast/traffic_control/traffic_monitor/experimental/traffic_monitor/http_server"
 	"github.com/Comcast/traffic_control/traffic_monitor/experimental/traffic_monitor/peer"
+	"github.com/Comcast/traffic_control/traffic_monitor/experimental/traffic_monitor/trafficopswrapper"
 	traffic_ops "github.com/Comcast/traffic_control/traffic_ops/client"
 	"github.com/davecheney/gmx"
 )
@@ -60,7 +61,7 @@ type CacheAvailableStatus struct {
 // Kicks off the pollers and handlers
 //
 func Start(opsConfigFile string, staticAppData StaticAppData) {
-	var toSession *traffic_ops.Session
+	toSession := trafficopswrapper.ITrafficOpsSession(nil)
 
 	fetchSuccessCounter := gmx.NewCounter("fetchSuccess")
 	fetchFailCounter := gmx.NewCounter("fetchFail")
@@ -109,7 +110,7 @@ func Start(opsConfigFile string, staticAppData StaticAppData) {
 		},
 	}
 
-	sessionChannel := make(chan *traffic_ops.Session)
+	sessionChannel := make(chan trafficopswrapper.ITrafficOpsSession)
 	monitorConfigChannel := make(chan traffic_ops.TrafficMonitorConfigMap)
 	monitorOpsConfigChannel := make(chan handler.OpsConfig)
 	monitorConfigPoller := poller.MonitorConfigPoller{
@@ -183,6 +184,7 @@ func Start(opsConfigFile string, staticAppData StaticAppData) {
 	dsStats := ds.NewStats()
 	lastKbpsStats := ds.NewStatsLastKbps()
 	localCacheStatus := map[ds.CacheName]CacheAvailableStatus{}
+	httpServer := http_server.Server{}
 
 	for {
 		select {
@@ -305,17 +307,18 @@ func Start(opsConfigFile string, staticAppData StaticAppData) {
 				log.Printf("%v\n", err)
 			}
 
-			err = http_server.Run(dr, listenAddress)
+			err = httpServer.Run(dr, listenAddress)
 			if err != nil {
 				handleErr(fmt.Errorf("MonitorConfigPoller: error creating HTTP server: %s\n", err))
 				continue
 			}
 
-			toSession, err = traffic_ops.Login(opsConfig.Url, opsConfig.Username, opsConfig.Password, opsConfig.Insecure)
+			realToSession, err := traffic_ops.Login(opsConfig.Url, opsConfig.Username, opsConfig.Password, opsConfig.Insecure)
 			if err != nil {
 				handleErr(fmt.Errorf("MonitorConfigPoller: error instantiating Session with traffic_ops: %s\n", err))
 				continue
 			}
+			toSession = trafficopswrapper.NewTrafficOpsSessionThreadsafe(realToSession)
 
 			deliveryServiceServers, serverDeliveryServices, err = getDeliveryServiceServers(toSession, opsConfig.CdnName)
 			if err != nil {
@@ -738,7 +741,7 @@ func addStateDeliveryServices(mc traffic_ops.TrafficMonitorConfigMap, deliverySe
 
 // getDeliveryServiceServers gets the servers on each delivery services, for the given CDN, from Traffic Ops.
 // Returns a map[deliveryService][]server, and a map[server]deliveryService
-func getDeliveryServiceServers(to *traffic_ops.Session, cdn string) (map[string][]string, map[string]string, error) {
+func getDeliveryServiceServers(to trafficopswrapper.ITrafficOpsSession, cdn string) (map[string][]string, map[string]string, error) {
 	dsServers := map[string][]string{}
 	serverDs := map[string]string{}
 
@@ -767,7 +770,7 @@ func getDeliveryServiceServers(to *traffic_ops.Session, cdn string) (map[string]
 
 // getDeliveryServiceRegexes gets the regexes of each delivery service, for the given CDN, from Traffic Ops.
 // Returns a map[deliveryService][]regex.
-func getDeliveryServiceRegexes(to *traffic_ops.Session, cdn string) (map[string][]string, error) {
+func getDeliveryServiceRegexes(to trafficopswrapper.ITrafficOpsSession, cdn string) (map[string][]string, error) {
 	dsRegexes := map[string][]string{}
 
 	crcData, err := to.CRConfigRaw(cdn)
@@ -804,7 +807,7 @@ func getDeliveryServiceRegexes(to *traffic_ops.Session, cdn string) (map[string]
 
 // getServerCachegroups gets the cachegroup of each ATS Edge+Mid Cache server, for the given CDN, from Traffic Ops.
 // Returns a map[server]cachegroup.
-func getServerCachegroups(to *traffic_ops.Session, cdn string) (map[string]string, error) {
+func getServerCachegroups(to trafficopswrapper.ITrafficOpsSession, cdn string) (map[string]string, error) {
 	serverCachegroups := map[string]string{}
 
 	crcData, err := to.CRConfigRaw(cdn)
@@ -828,7 +831,7 @@ func getServerCachegroups(to *traffic_ops.Session, cdn string) (map[string]strin
 }
 
 // getServerTypes gets the cache type of each ATS Edge+Mid Cache server, for the given CDN, from Traffic Ops.
-func getServerTypes(to *traffic_ops.Session, cdn string) (map[string]ds.StatCacheType, error) {
+func getServerTypes(to trafficopswrapper.ITrafficOpsSession, cdn string) (map[string]ds.StatCacheType, error) {
 	serverTypes := map[string]ds.StatCacheType{}
 
 	crcData, err := to.CRConfigRaw(cdn)
@@ -855,7 +858,7 @@ func getServerTypes(to *traffic_ops.Session, cdn string) (map[string]ds.StatCach
 	return serverTypes, nil
 }
 
-func getDeliveryServiceTypes(to *traffic_ops.Session, cdn string) (map[string]ds.StatType, error) {
+func getDeliveryServiceTypes(to trafficopswrapper.ITrafficOpsSession, cdn string) (map[string]ds.StatType, error) {
 	dsTypes := map[string]ds.StatType{}
 
 	crcData, err := to.CRConfigRaw(cdn)
