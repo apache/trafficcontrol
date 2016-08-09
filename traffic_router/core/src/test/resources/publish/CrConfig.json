@@ -336,6 +336,57 @@
         "steering-target-3": ["edge-cache-042.steering-target-3.thecdn.example.com"]
       }
     },
+    "edge-cache-080": {
+      "type": "EDGE",
+      "profile": "EDGE_STATIC",
+      "status": "REPORTED",
+      "hashId": "edge-cache-080@xmpp.cdn.example.com",
+      "fqdn": "edge-cache-080.thecdn.example.com",
+      "port": "8090",
+      "ip": "12.34.8.100",
+      "ip6": "2001:dead:beef:8:C::1A/64",
+      "cacheGroup": "cache-group-8",
+      "locationId": "location-8",
+      "hashCount": 1000,
+      "interfaceName": "bond0",
+      "deliveryServices": {
+        "http-and-https-test": ["edge-cache-080.http-and-https-test.thecdn.example.com"]
+      }
+    },
+    "edge-cache-081": {
+      "type": "EDGE",
+      "profile": "EDGE_STATIC",
+      "status": "REPORTED",
+      "hashId": "edge-cache-081@xmpp.cdn.example.com",
+      "fqdn": "edge-cache-081.thecdn.example.com",
+      "port": "8090",
+      "ip": "12.34.8.101",
+      "ip6": "2001:dead:beef:8:C::11/64",
+      "cacheGroup": "cache-group-8",
+      "locationId": "location-8",
+      "hashCount": 1000,
+      "interfaceName": "bond0",
+      "deliveryServices": {
+        "http-and-https-test": ["edge-cache-081.http-and-https-test.thecdn.example.com"]
+      }
+    },
+    "edge-cache-082": {
+      "type": "EDGE",
+      "profile": "EDGE_STATIC",
+      "status": "REPORTED",
+      "hashId": "edge-cache-082@xmpp.cdn.example.com",
+      "fqdn": "edge-cache-082.thecdn.example.com",
+      "port": "8090",
+      "ip": "12.34.8.102",
+      "ip6": "2001:dead:beef:8:C::12/64",
+      "cacheGroup": "cache-group-9",
+      "locationId": "location-9",
+      "hashCount": 1000,
+      "interfaceName": "bond0",
+      "deliveryServices": {
+        "http-and-https-test": [ "edge-cache-082.http-and-https-test.thecdn.example.com"]
+      }
+    },
     "edge-cache-090": {
       "type": "EDGE",
       "profile": "EDGE_STATIC",
@@ -343,7 +394,7 @@
       "hashId": "edge-cache-090@xmpp.cdn.example.com",
       "fqdn": "edge-cache-090.thecdn.example.com",
       "port": "8090",
-      "ip": "12.34.8.100",
+      "ip": "12.34.9.100",
       "ip6": "2001:dead:beef:9:C::1A/64",
       "cacheGroup": "cache-group-9",
       "locationId": "location-9",
@@ -377,7 +428,7 @@
       "hashId": "edge-cache-092@xmpp.cdn.example.com",
       "fqdn": "edge-cache-092.thecdn.example.com",
       "port": "8090",
-      "ip": "12.34.8.102",
+      "ip": "12.34.9.102",
       "ip6": "2001:dead:beef:9:C::12/64",
       "cacheGroup": "cache-group-9",
       "locationId": "location-9",
@@ -859,6 +910,48 @@
         "protocol": "HTTP",
         "matchlist": [{
           "regex": ".*\\.https-nocert\\..*",
+          "match-type": "HOST"
+        }]
+      }],
+      "soa": {
+        "expire": "604800",
+        "minimum": "30",
+        "admin": "admin@thecdn.example.com",
+        "retry": "7200",
+        "refresh": "28800"
+      },
+      "geolocationProvider": "maxmindGeolocationService"
+    },
+    "http-and-https-test": {
+      "sslEnabled": "true",
+      "protocol": {
+        "acceptHttp" : "true",
+        "acceptHttps" : "true",
+        "redirectToHttps" : "false"
+      },
+      "domains": ["http-and-https-test.thecdn.example.com"],
+      "missLocation": {
+        "long": "-87.627778",
+        "lat": "41.881944"
+      },
+      "ttls": {
+        "AAAA": "3600",
+        "SOA": "7200",
+        "A": "3600",
+        "NS": "3600"
+      },
+      "ttl": "3600",
+      "ip6RoutingEnabled": "false",
+      "dispersion": {
+        "limit": 1,
+        "shuffled": "true"
+      },
+      "coverageZoneOnly": "false",
+      "regionalGeoBlocking": "false",
+      "matchsets": [{
+        "protocol": "HTTP",
+        "matchlist": [{
+          "regex": ".*\\.http-and-https-test\\..*",
           "match-type": "HOST"
         }]
       }],
