@@ -48,7 +48,7 @@ const (
 
 const (
 	defaultPollingInterval             = 10
-	defaultDailySummaryPollingInterval = 30
+	defaultDailySummaryPollingInterval = 60
 	defaultConfigInterval              = 300
 	defaultPublishingInterval          = 30
 	defaultMaxPublishSize              = 10000
