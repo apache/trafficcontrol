@@ -396,7 +396,22 @@ sub gen_crconfig_json {
 		my $ds_protocol = $row->protocol;
 		if ($ds_protocol > 0) {
 			$data_obj->{'deliveryServices'}->{ $row->xml_id }->{'sslEnabled'} = 'true';
-		}
+			$data_obj->{'deliveryServices'}->{ $row->xml_id }->{'protocol'}->{'acceptHttps'} = 'true';
+		} else {
+            $data_obj->{'deliveryServices'}->{ $row->xml_id }->{'protocol'}->{'acceptHttps'} = 'false';
+        }
+
+        if ($ds_protocol == 1) {
+            $data_obj->{'deliveryServices'}->{ $row->xml_id }->{'protocol'}->{'acceptHttp'} = 'false';
+        } else {
+            $data_obj->{'deliveryServices'}->{ $row->xml_id }->{'protocol'}->{'acceptHttp'} = 'true';
+        }
+
+        if ($ds_protocol == 4) {
+            $data_obj->{'deliveryServices'}->{ $row->xml_id }->{'protocol'}->{'redirectToHttps'} = 'true';
+        } else {
+            $data_obj->{'deliveryServices'}->{ $row->xml_id }->{'protocol'}->{'redirectToHttps'} = 'false';
+        }
 
         my $geo_provider = $row->geo_provider;
         if ( $geo_provider == 1 ) {
