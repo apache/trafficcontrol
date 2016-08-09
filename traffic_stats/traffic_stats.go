@@ -48,7 +48,7 @@ const (
 
 const (
 	defaultPollingInterval             = 10
-	defaultDailySummaryPollingInterval = 60
+	defaultDailySummaryPollingInterval = 30
 	defaultConfigInterval              = 300
 	defaultPublishingInterval          = 30
 	defaultMaxPublishSize              = 10000
@@ -246,110 +246,136 @@ func loadStartupConfig(configFile string, oldConfig StartupConfig) (StartupConfi
 
 func calcDailySummary(now time.Time, config StartupConfig, runningConfig RunningConfig) {
 	log.Infof("lastSummaryTime is %v", runningConfig.LastSummaryTime)
-	if runningConfig.LastSummaryTime.Day() != now.Day() {
-		startTime := now.Truncate(24 * time.Hour).Add(-24 * time.Hour)
-		endTime := startTime.Add(24 * time.Hour)
-		log.Info("Summarizing from ", startTime, " (", startTime.Unix(), ") to ", endTime, " (", endTime.Unix(), ")")
+	// if runningConfig.LastSummaryTime.Day() != now.Day() {
+	startTime := now.Truncate(24 * time.Hour).Add(-24 * time.Hour)
+	endTime := startTime.Add(24 * time.Hour)
+	log.Info("Summarizing from ", startTime, " (", startTime.Unix(), ") to ", endTime, " (", endTime.Unix(), ")")
 
-		// influx connection
-		influxClient, err := influxConnect(config, runningConfig)
-		if err != nil {
-			log.Error("Could not connect to InfluxDb to get daily summary stats!!")
-			errHndlr(err, ERROR)
-			return
-		}
+	// influx connection
+	influxClient, err := influxConnect(config, runningConfig)
+	if err != nil {
+		log.Error("Could not connect to InfluxDb to get daily summary stats!!")
+		errHndlr(err, ERROR)
+		return
+	}
 
-		//create influxdb query
-		q := fmt.Sprintf("SELECT sum(value)/6 FROM bandwidth where time > '%s' and time < '%s' group by time(60s), cdn fill(0)", startTime.Format(time.RFC3339), endTime.Format(time.RFC3339))
-		log.Infof(q)
-		res, err := queryDB(influxClient, q, "cache_stats")
-		if err != nil {
-			errHndlr(err, ERROR)
-			return
-		}
+	bp, _ := influx.NewBatchPoints(influx.BatchPointsConfig{
+		Database:        "daily_stats",
+		Precision:       "s",
+		RetentionPolicy: config.DailySummaryRetentionPolicy,
+	})
 
-		bp, _ := influx.NewBatchPoints(influx.BatchPointsConfig{
-			Database:        "daily_stats",
-			Precision:       "s",
-			RetentionPolicy: config.DailySummaryRetentionPolicy,
-		})
+	calcDailyMaxGbps(influxClient, bp, startTime, endTime, config)
+	calcDailyBytesServed(influxClient, bp, startTime, endTime, config)
+
+	log.Info("Collected daily stats @ ", now)
+}
+
+func calcDailyMaxGbps(client influx.Client, bp influx.BatchPoints, startTime time.Time, endTime time.Time, config StartupConfig) {
+	queryString := fmt.Sprintf("select time, cdn, max(value) from \"monthly\".\"bandwidth.cdn.1min\" where time > '%s' and time < '%s' group by cdn", startTime.Format(time.RFC3339), endTime.Format(time.RFC3339))
+	log.Infof("queryString = %v\n", queryString)
+	res, err := queryDB(client, queryString, "cache_stats")
+	if err != nil {
+		log.Errorf("An error occured getting max bandwidth! %v\n", err)
+		return
+	}
+	if res != nil && len(res[0].Series) > 0 {
 		for _, row := range res[0].Series {
-			prevtime := startTime
-			max := float64(0)
+			for _, record := range row.Values {
+				t := record[0].(string)
+				if record[1] != nil {
+					cdn := record[1].(string)
+					value, err := record[2].(json.Number).Float64()
+					if err != nil {
+						log.Errorf("Couldn't parse value from record %v\n", record)
+						continue
+					}
+					value = value / 1000000
+					statTime, _ := time.Parse(time.RFC3339, t)
+					log.Infof("max gbps for cdn %v = %v", cdn, value)
+					var statsSummary traffic_ops.StatsSummary
+					statsSummary.CDNName = cdn
+					statsSummary.DeliveryService = "all"
+					statsSummary.StatName = "daily_maxgbps"
+					statsSummary.StatValue = strconv.FormatFloat(value, 'f', 2, 64)
+					statsSummary.SummaryTime = time.Now().Format(time.RFC3339)
+					statsSummary.StatDate = statTime.Format("2006-01-02")
+					go writeSummaryStats(config, statsSummary)
+
+					//write to influxdb
+					tags := map[string]string{"cdn": cdn, "deliveryservice": "all"}
+					fields := map[string]interface{}{
+						"value": value,
+					}
+					pt, err := influx.NewPoint(
+						"daily_maxgbps",
+						tags,
+						fields,
+						statTime,
+					)
+					if err != nil {
+						fmt.Printf("error adding creating data point for max Gbps...%v\n", err)
+						continue
+					}
+					bp.AddPoint(pt)
+				}
+			}
+		}
+	}
+	config.BpsChan <- bp
+}
+
+func calcDailyBytesServed(client influx.Client, bp influx.BatchPoints, startTime time.Time, endTime time.Time, config StartupConfig) {
+	queryString := fmt.Sprintf("select mean(value) from \"monthly\".\"bandwidth.cdn.1min\" where time > '%s' and time < '%s' group by time(1m), cdn", startTime.Format(time.RFC3339), endTime.Format(time.RFC3339))
+	log.Infof("queryString = %v\n", queryString)
+	res, err := queryDB(client, queryString, "cache_stats")
+	if err != nil {
+		log.Error("An error occured getting max bandwidth!\n")
+		return
+	}
+	if res != nil && len(res[0].Series) > 0 {
+		for _, row := range res[0].Series {
 			bytesServed := float64(0)
 			cdn := row.Tags["cdn"]
 			for _, record := range row.Values {
-				kbps, err := record[1].(json.Number).Float64()
-				if err != nil {
-					errHndlr(err, ERROR)
-					continue
+				if record[1] != nil {
+					value, err := record[1].(json.Number).Float64()
+					if err != nil {
+						log.Errorf("Couldn't parse value from record %v\n", record)
+						continue
+					}
+					bytesServed += value * 60 / 8
 				}
-				sampleTime, err := time.Parse(time.RFC3339, record[0].(string))
-				if err != nil {
-					errHndlr(err, ERROR)
-					continue
-				}
-				max = floatMax(max, kbps)
-				duration := sampleTime.Unix() - prevtime.Unix()
-				bytesServed += float64(duration) * kbps / 8
-				prevtime = sampleTime
 			}
-			maxGbps := max / 1000000
-			bytesServedTb := bytesServed / 1000000000
-			log.Infof("max gbps for cdn %v = %v", cdn, maxGbps)
-			log.Infof("Tbytes served for cdn %v = %v", cdn, bytesServedTb)
-
-			//write daily_maxgbps in traffic_ops
+			bytesServedTB := bytesServed / 1000000000
+			log.Infof("TBytes served for cdn %v = %v", cdn, bytesServedTB)
+			//write to Traffic Ops
 			var statsSummary traffic_ops.StatsSummary
 			statsSummary.CDNName = cdn
 			statsSummary.DeliveryService = "all"
-			statsSummary.StatName = "daily_maxgbps"
-			statsSummary.StatValue = strconv.FormatFloat(maxGbps, 'f', 2, 64)
-			statsSummary.SummaryTime = now.Format(time.RFC3339)
+			statsSummary.StatName = "daily_bytesserved"
+			statsSummary.StatValue = strconv.FormatFloat(bytesServedTB, 'f', 2, 64)
+			statsSummary.SummaryTime = time.Now().Format(time.RFC3339)
 			statsSummary.StatDate = startTime.Format("2006-01-02")
 			go writeSummaryStats(config, statsSummary)
-
-			tags := map[string]string{
-				"deliveryservice": statsSummary.DeliveryService,
-				"cdn":             statsSummary.CDNName,
-			}
-
+			//write to Influxdb
+			tags := map[string]string{"cdn": cdn, "deliveryservice": "all"}
 			fields := map[string]interface{}{
-				"value": maxGbps,
+				"value": bytesServedTB, //converted to TB
 			}
 			pt, err := influx.NewPoint(
-				statsSummary.StatName,
+				"daily_bytesserved",
 				tags,
 				fields,
 				startTime,
 			)
 			if err != nil {
-				errHndlr(err, ERROR)
-				continue
-			}
-			bp.AddPoint(pt)
-
-			// write bytes served data to traffic_ops
-			statsSummary.StatName = "daily_bytesserved"
-			statsSummary.StatValue = strconv.FormatFloat(bytesServedTb, 'f', 2, 64)
-			go writeSummaryStats(config, statsSummary)
-			fields = map[string]interface{}{
-				"value": bytesServedTb,
-			}
-			pt, err = influx.NewPoint(
-				statsSummary.StatName,
-				tags,
-				fields,
-				startTime,
-			)
-			if err != nil {
-				errHndlr(err, ERROR)
+				fmt.Printf("error adding creating data point for max Gbps...%v\n", err)
 				continue
 			}
 			bp.AddPoint(pt)
 		}
 		config.BpsChan <- bp
-		log.Info("Collected daily stats @ ", now)
 	}
 }
 
