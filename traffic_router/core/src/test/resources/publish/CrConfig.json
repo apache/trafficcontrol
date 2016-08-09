@@ -14,7 +14,7 @@
       "hashCount": 1000,
       "interfaceName": "bond0",
       "deliveryServices": {
-        "https-test": ["edge-cache-001.https-test.thecdn.example.com"]
+        "https-only-test": ["edge-cache-001.https-only-test.thecdn.example.com"]
       }
     },
     "edge-cache-001": {
@@ -31,7 +31,7 @@
       "hashCount": 1000,
       "interfaceName": "bond0",
       "deliveryServices": {
-        "https-test": ["edge-cache-001.https-test.thecdn.example.com"]
+        "https-only-test": ["edge-cache-001.https-only-test.thecdn.example.com"]
       }
     },
     "edge-cache-002": {
@@ -48,7 +48,7 @@
       "hashCount": 1000,
       "interfaceName": "bond0",
       "deliveryServices": {
-        "https-test": ["edge-cache-002.https-test.thecdn.example.com"]
+        "https-only-test": ["edge-cache-002.https-only-test.thecdn.example.com"]
       }
     },
     "edge-cache-010": {
@@ -431,9 +431,14 @@
     }
   },
   "deliveryServices": {
-    "https-test": {
+    "https-only-test": {
       "sslEnabled": "true",
-      "domains": ["https-test.thecdn.example.com"],
+      "protocol": {
+        "acceptHttp" : "false",
+        "acceptHttps" : "true",
+        "redirectToHttps" : "false"
+      },
+      "domains": ["https-only-test.thecdn.example.com"],
       "missLocation": {
         "long": "-87.627778",
         "lat": "41.881944"
@@ -455,7 +460,7 @@
       "matchsets": [{
         "protocol": "HTTP",
         "matchlist": [{
-          "regex": ".*\\.https-test\\..*",
+          "regex": ".*\\.https-only-test\\..*",
           "match-type": "HOST"
         }]
       }],
@@ -470,6 +475,11 @@
     },
     "steering-test-1": {
       "sslEnabled": "false",
+      "protocol": {
+        "acceptHttp" : "true",
+        "acceptHttps" : "false",
+        "redirectToHttps" : "false"
+      },
       "requestHeaders": ["X-MoneyTrace"],
       "domains": ["steering-test-1.thecdn.example.com"],
       "missLocation": {
@@ -526,6 +536,11 @@
     },
     "steering-target-2": {
       "sslEnabled": "false",
+      "protocol": {
+        "acceptHttp" : "true",
+        "acceptHttps" : "false",
+        "redirectToHttps" : "false"
+      },
       "bypassDestination": {"HTTP": {
         "port": "80",
         "fqdn": "steering-target-2.overflowcdn.net"
@@ -567,6 +582,11 @@
     },
     "steering-test-2": {
       "sslEnabled": "false",
+      "protocol": {
+        "acceptHttp" : "true",
+        "acceptHttps" : "false",
+        "redirectToHttps" : "false"
+      },
       "dispersion": {
         "limit": 2,
         "shuffled": "true"
@@ -608,6 +628,11 @@
     },
     "federation-test": {
       "sslEnabled": "false",
+      "protocol": {
+        "acceptHttp" : "true",
+        "acceptHttps" : "false",
+        "redirectToHttps" : "false"
+      },
       "bypassDestination": {"DNS": {"ttl": "30"}},
       "domains": ["federation-test.thecdn.example.com"],
       "coverageZoneOnly": "false",
@@ -657,6 +682,11 @@
     },
     "steering-target-1": {
       "sslEnabled": "false",
+      "protocol": {
+        "acceptHttp" : "true",
+        "acceptHttps" : "false",
+        "redirectToHttps" : "false"
+      },
       "requestHeaders": [
         "User-Agent",
         "MyHeader",
@@ -708,6 +738,11 @@
     },
     "steering-target-4": {
       "sslEnabled": "false",
+      "protocol": {
+        "acceptHttp" : "true",
+        "acceptHttps" : "false",
+        "redirectToHttps" : "false"
+      },
       "bypassDestination": {"HTTP": {
         "port": "80",
         "fqdn": "steering-target-4.overflowcdn.net"
@@ -749,6 +784,11 @@
     },
     "steering-target-3": {
       "sslEnabled": "false",
+      "protocol": {
+        "acceptHttp" : "true",
+        "acceptHttps" : "false",
+        "redirectToHttps" : "false"
+      },
       "bypassDestination": {"HTTP": {
         "port": "80",
         "fqdn": "steering-target-3.overflowcdn.net"
@@ -791,6 +831,11 @@
     },
     "https-nocert": {
       "sslEnabled": "true",
+      "protocol": {
+        "acceptHttp" : "false",
+        "acceptHttps" : "true",
+        "redirectToHttps" : "false"
+      },
       "domains": ["https-nocert.thecdn.example.com"],
       "missLocation": {
         "long": "-87.627778",
