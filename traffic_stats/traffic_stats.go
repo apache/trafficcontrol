@@ -246,29 +246,29 @@ func loadStartupConfig(configFile string, oldConfig StartupConfig) (StartupConfi
 
 func calcDailySummary(now time.Time, config StartupConfig, runningConfig RunningConfig) {
 	log.Infof("lastSummaryTime is %v", runningConfig.LastSummaryTime)
-	// if runningConfig.LastSummaryTime.Day() != now.Day() {
-	startTime := now.Truncate(24 * time.Hour).Add(-24 * time.Hour)
-	endTime := startTime.Add(24 * time.Hour)
-	log.Info("Summarizing from ", startTime, " (", startTime.Unix(), ") to ", endTime, " (", endTime.Unix(), ")")
+	if runningConfig.LastSummaryTime.Day() != now.Day() {
+		startTime := now.Truncate(24 * time.Hour).Add(-24 * time.Hour)
+		endTime := startTime.Add(24 * time.Hour)
+		log.Info("Summarizing from ", startTime, " (", startTime.Unix(), ") to ", endTime, " (", endTime.Unix(), ")")
 
-	// influx connection
-	influxClient, err := influxConnect(config, runningConfig)
-	if err != nil {
-		log.Error("Could not connect to InfluxDb to get daily summary stats!!")
-		errHndlr(err, ERROR)
-		return
+		// influx connection
+		influxClient, err := influxConnect(config, runningConfig)
+		if err != nil {
+			log.Error("Could not connect to InfluxDb to get daily summary stats!!")
+			errHndlr(err, ERROR)
+			return
+		}
+
+		bp, _ := influx.NewBatchPoints(influx.BatchPointsConfig{
+			Database:        "daily_stats",
+			Precision:       "s",
+			RetentionPolicy: config.DailySummaryRetentionPolicy,
+		})
+
+		calcDailyMaxGbps(influxClient, bp, startTime, endTime, config)
+		calcDailyBytesServed(influxClient, bp, startTime, endTime, config)
+		log.Info("Collected daily stats @ ", now)
 	}
-
-	bp, _ := influx.NewBatchPoints(influx.BatchPointsConfig{
-		Database:        "daily_stats",
-		Precision:       "s",
-		RetentionPolicy: config.DailySummaryRetentionPolicy,
-	})
-
-	calcDailyMaxGbps(influxClient, bp, startTime, endTime, config)
-	calcDailyBytesServed(influxClient, bp, startTime, endTime, config)
-
-	log.Info("Collected daily stats @ ", now)
 }
 
 func calcDailyMaxGbps(client influx.Client, bp influx.BatchPoints, startTime time.Time, endTime time.Time, config StartupConfig) {
