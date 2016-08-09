@@ -16,12 +16,12 @@ import (
 )
 
 type DurationMapThreadsafe struct {
-	durationMap map[string]time.Duration // TODO change string -> CacheName
+	durationMap map[enum.CacheName]time.Duration // TODO change string -> CacheName
 	m           *sync.Mutex
 }
 
-func copyDurationMap(a map[string]time.Duration) map[string]time.Duration {
-	b := map[string]time.Duration{}
+func copyDurationMap(a map[enum.CacheName]time.Duration) map[enum.CacheName]time.Duration {
+	b := map[enum.CacheName]time.Duration{}
 	for k, v := range a {
 		b[k] = v
 	}
@@ -29,10 +29,10 @@ func copyDurationMap(a map[string]time.Duration) map[string]time.Duration {
 }
 
 func NewDurationMapThreadsafe() DurationMapThreadsafe {
-	return DurationMapThreadsafe{m: &sync.Mutex{}, durationMap: map[string]time.Duration{}}
+	return DurationMapThreadsafe{m: &sync.Mutex{}, durationMap: map[enum.CacheName]time.Duration{}}
 }
 
-func (o DurationMapThreadsafe) Get() map[string]time.Duration {
+func (o DurationMapThreadsafe) Get() map[enum.CacheName]time.Duration {
 	o.m.Lock()
 	defer func() {
 		o.m.Unlock()
@@ -40,7 +40,7 @@ func (o DurationMapThreadsafe) Get() map[string]time.Duration {
 	return copyDurationMap(o.durationMap)
 }
 
-func (o DurationMapThreadsafe) GetDuration(cacheName string) time.Duration {
+func (o DurationMapThreadsafe) GetDuration(cacheName enum.CacheName) time.Duration {
 	o.m.Lock()
 	defer func() {
 		o.m.Unlock()
@@ -48,7 +48,7 @@ func (o DurationMapThreadsafe) GetDuration(cacheName string) time.Duration {
 	return o.durationMap[cacheName]
 }
 
-func (o DurationMapThreadsafe) Set(cacheName string, d time.Duration) {
+func (o DurationMapThreadsafe) Set(cacheName enum.CacheName, d time.Duration) {
 	o.m.Lock()
 	o.durationMap[cacheName] = d
 	o.m.Unlock()
@@ -85,7 +85,7 @@ func healthResultManagerListen(cacheHealthChan <-chan cache.Result, toData todat
 			isAvailable, whyAvailable := health.EvalCache(healthResult, &monitorConfigCopy)
 			if localStates.Get().Caches[healthResult.Id].IsAvailable != isAvailable {
 				fmt.Println("Changing state for", healthResult.Id, " was:", prevResult.Available, " is now:", isAvailable, " because:", whyAvailable, " errors:", healthResult.Errors)
-				e := Event{Index: eventIndex, Time: time.Now().Unix(), Description: whyAvailable, Name: healthResult.Id, Hostname: healthResult.Id, Type: toDataCopy.ServerTypes[healthResult.Id].String(), Available: isAvailable}
+				e := Event{Index: eventIndex, Time: time.Now().Unix(), Description: whyAvailable, Name: healthResult.Id, Hostname: healthResult.Id, Type: toDataCopy.ServerTypes[enum.CacheName(healthResult.Id)].String(), Available: isAvailable}
 				events.Add(e)
 				eventIndex++
 			}
@@ -110,7 +110,7 @@ func healthResultManagerListen(cacheHealthChan <-chan cache.Result, toData todat
 
 			if lastHealthStart, ok := lastHealthEndTimes[healthResult.Id]; ok {
 				d := time.Since(lastHealthStart)
-				lastHealthDurations.Set(healthResult.Id, d)
+				lastHealthDurations.Set(enum.CacheName(healthResult.Id), d)
 				fmt.Printf("DEBUG health duration for %s: %v\n", healthResult.Id, d)
 			}
 			lastHealthEndTimes[healthResult.Id] = now

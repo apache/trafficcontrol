@@ -13,20 +13,20 @@ import (
 type TOData struct {
 	DeliveryServiceServers map[string][]string
 	ServerDeliveryServices map[string]string
-	ServerTypes            map[string]enum.CacheType
+	ServerTypes            map[enum.CacheName]enum.CacheType
 	DeliveryServiceTypes   map[string]enum.DSType
 	DeliveryServiceRegexes map[string][]string
-	ServerCachegroups      map[string]string
+	ServerCachegroups      map[enum.CacheName]enum.CacheGroupName
 }
 
 func New() *TOData {
 	return &TOData{
 		DeliveryServiceServers: map[string][]string{},
 		ServerDeliveryServices: map[string]string{},
-		ServerTypes:            map[string]enum.CacheType{},
+		ServerTypes:            map[enum.CacheName]enum.CacheType{},
 		DeliveryServiceTypes:   map[string]enum.DSType{},
 		DeliveryServiceRegexes: map[string][]string{},
-		ServerCachegroups:      map[string]string{},
+		ServerCachegroups:      map[enum.CacheName]enum.CacheGroupName{},
 	}
 }
 
@@ -151,25 +151,25 @@ func getDeliveryServiceRegexes(crc CRConfig) (map[string][]string, error) {
 
 // getServerCachegroups gets the cachegroup of each ATS Edge+Mid Cache server, for the given CDN, from Traffic Ops.
 // Returns a map[server]cachegroup.
-func getServerCachegroups(crc CRConfig) (map[string]string, error) {
-	serverCachegroups := map[string]string{}
+func getServerCachegroups(crc CRConfig) (map[enum.CacheName]enum.CacheGroupName, error) {
+	serverCachegroups := map[enum.CacheName]enum.CacheGroupName{}
 
 	for server, serverData := range crc.ContentServers {
-		serverCachegroups[server] = serverData.CacheGroup
+		serverCachegroups[enum.CacheName(server)] = enum.CacheGroupName(serverData.CacheGroup)
 	}
 	return serverCachegroups, nil
 }
 
 // getServerTypes gets the cache type of each ATS Edge+Mid Cache server, for the given CDN, from Traffic Ops.
-func getServerTypes(crc CRConfig) (map[string]enum.CacheType, error) {
-	serverTypes := map[string]enum.CacheType{}
+func getServerTypes(crc CRConfig) (map[enum.CacheName]enum.CacheType, error) {
+	serverTypes := map[enum.CacheName]enum.CacheType{}
 
 	for server, serverData := range crc.ContentServers {
 		t := enum.CacheTypeFromString(serverData.Type)
 		if t == enum.CacheTypeInvalid {
 			return nil, fmt.Errorf("getServerTypes CRConfig unknown type for '%s': '%s'", server, serverData.Type)
 		}
-		serverTypes[server] = t
+		serverTypes[enum.CacheName(server)] = t
 	}
 	return serverTypes, nil
 }
