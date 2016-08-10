@@ -4,7 +4,7 @@ package Fixtures::Integration::Servercheck;
 # See https://github.com/Comcast/traffic_control/wiki/The%20Kabletown%20example
 
 use Moose;
-extends 'DBIx::Class::EbfyFixture';
+extends 'DBIx::Class::EasyFixture';
 use namespace::autoclean;
 
 my %definition_for = (
