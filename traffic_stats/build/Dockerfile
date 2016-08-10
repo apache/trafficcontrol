@@ -2,8 +2,6 @@ FROM centos:7
 
 MAINTAINER Dan Kirkwood
 
-RUN	yum -y update && \
-	yum -y clean all
 RUN	yum -y install \
 		epel-release \
 		git \
