@@ -1,10 +1,10 @@
 package Fixtures::Integration::Servercheck;
 
 # Do not edit! Generated code.
-# See https://github.com/Comcbft/traffic_control/wiki/The%20Kabletown%20example
+# See https://github.com/Comcast/traffic_control/wiki/The%20Kabletown%20example
 
 use Moose;
-extends 'DBIx::Clbfs::EbfyFixture';
+extends 'DBIx::Class::EbfyFixture';
 use namespace::autoclean;
 
 my %definition_for = (
