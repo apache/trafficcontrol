@@ -386,33 +386,46 @@ sub check_deliveryservice_input {
 
 			if ( $param =~ /^re_re_(\d+)/ || $param =~ /^re_re_new_(\d+)/ ) {
 				my $order_no = $1;
-				my $type_id = &type_id( $self, 'HOST_REGEXP' );
-				if (
-					( defined( $self->param( 're_type_' . $order_no ) ) && $self->param( 're_type_' . $order_no ) eq 'HOST_REGEXP' )
-					|| ( defined( $self->param( 're_type_new_' . $order_no ) )
-						&& $self->param( 're_type_new_' . $order_no ) eq 'HOST_REGEXP' )
-					)
-				{
-					my $new_re =
-						  $self->param( 're_re_' . $order_no )
-						? $self->param( 're_re_' . $order_no ) . $cdn_domain
-						: $self->param( 're_re_new_' . $order_no ) . $cdn_domain;
-					my $new_order =
-						defined( $self->param( 're_order_' . $order_no ) )
-						? $self->param( 're_order_' . $order_no )
-						: $self->param( 're_order_new_' . $order_no );
-					my $rs =
-						$self->db->resultset('DeliveryserviceRegex')->search( undef, { prefetch => [ { regex => undef }, { deliveryservice => undef } ] } );
+
+				my $is_re_type_host_regex = defined($self->param('re_type_' . $order_no)) && $self->param('re_type_' . $order_no) eq 'HOST_REGEXP';
+				my $is_re_type_new_host_regex = defined($self->param('re_type_new_' . $order_no)) && $self->param('re_type_new_' . $order_no) eq 'HOST_REGEXP';
+				my $new_re;
+
+				if ($is_re_type_host_regex) {
+					$new_re = $self->param('re_re_' . $order_no);
+				}
+
+				if ($is_re_type_new_host_regex) {
+					$new_re = $self->param('re_re_new_' . $order_no)
+				}
+
+				$new_re .= $cdn_domain;
+
+				if ($is_re_type_host_regex || $is_re_type_new_host_regex) {
+					my $ds_id = $self->param('id');
+					my $cdn_id = undef;
+
+					if (defined($ds_id)) {
+						$cdn_id = $self->db->resultset('Deliveryservice')->search({'me.id' => $self->param('id')})->single->cdn_id;
+					}
+
+					my $rs = $self->db->resultset('DeliveryserviceRegex')->search(undef, {prefetch => [{regex => undef}, {deliveryservice => undef}]} );
+
 					while ( my $row = $rs->next ) {
-						my $existing_re = $row->regex->pattern . $cdn_domain;
-						if ( defined( $self->param('id') )
-							&& $self->param('id') == $row->deliveryservice->id )
-						{
+						my $other_cdn_id = $self->db->resultset('Deliveryservice')->search( { 'me.id' => $row->deliveryservice->id })->single->cdn_id;
+
+						if (defined($cdn_id) && $other_cdn_id != $cdn_id) {
 							next;
 						}
-						if ( $existing_re eq $new_re ) {
-							$self->field('hidden.regex')
-								->is_equal( "", "There already is a HOST_REGEXP (" . $existing_re . ") that maches " . $new_re . "; No can do." );
+
+						my $existing_re = $row->regex->pattern . $cdn_domain;
+
+						if (defined($ds_id) && $ds_id == $row->deliveryservice->id) {
+							next;
+						}
+
+						if ($existing_re eq $new_re) {
+							$self->field('hidden.regex')->is_equal( "", "There already is a HOST_REGEXP (" . $existing_re . ") that matches " . $new_re . "; No can do." );
 							last;
 						}
 					}
