@@ -357,6 +357,9 @@ func CreateStats(statHistory map[enum.CacheName][]cache.Result, toData todata.TO
 	cacheOutbytes := map[enum.CacheName]int64{}
 
 	for server, history := range statHistory {
+		if len(history) < 1 {
+			continue // TODO warn?
+		}
 		cachegroup, ok := toData.ServerCachegroups[server]
 		if !ok {
 			fmt.Printf("WARNING server %s has no cachegroup, skipping\n", server)
@@ -367,29 +370,28 @@ func CreateStats(statHistory map[enum.CacheName][]cache.Result, toData todata.TO
 			fmt.Printf("WARNING server %s not in CRConfig, skipping\n", server)
 			continue
 		}
-		for _, result := range history {
-			for stat, value := range result.Astats.Ats {
+		result := history[len(history)-1]
+		for stat, value := range result.Astats.Ats {
 
-				if strings.HasSuffix(stat, ".out_bytes") {
-					v, ok := value.(float64)
-					if !ok {
-						continue // no warning, because the same error will be returned by processStat
-					}
-					cacheOutbytes[enum.CacheName(server)] += int64(v)
+			if strings.HasSuffix(stat, ".out_bytes") {
+				v, ok := value.(float64)
+				if !ok {
+					continue // no warning, because the same error will be returned by processStat
 				}
-
-				ds, newstat, err := processStat(&dsStats, toData.DeliveryServiceRegexes, toData.DeliveryServiceTypes, cachegroup, server, serverType, stat, value)
-				if err == ErrNotProcessedStat {
-					continue
-				}
-				if err != nil {
-					if !strings.HasPrefix(err.Error(), "stat has unknown initial part") && !strings.HasSuffix(err.Error(), "matched no delivery service") {
-						fmt.Printf("ERROR CreateStats failed to processStat for cachegroup '%s' server '%s' stat '%s': %v\n", cachegroup, server, stat, err)
-					}
-					continue
-				}
-				stats[ds] = newstat
+				cacheOutbytes[enum.CacheName(server)] += int64(v)
 			}
+
+			ds, newstat, err := processStat(&dsStats, toData.DeliveryServiceRegexes, toData.DeliveryServiceTypes, cachegroup, server, serverType, stat, value)
+			if err == ErrNotProcessedStat {
+				continue
+			}
+			if err != nil {
+				if !strings.HasPrefix(err.Error(), "stat has unknown initial part") && !strings.HasSuffix(err.Error(), "matched no delivery service") {
+					fmt.Printf("ERROR CreateStats failed to processStat for cachegroup '%s' server '%s' stat '%s': %v\n", cachegroup, server, stat, err)
+				}
+				continue
+			}
+			stats[ds] = newstat
 		}
 	}
 	dsStats.DeliveryService = stats
