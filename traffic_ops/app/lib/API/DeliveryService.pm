@@ -86,6 +86,7 @@ sub delivery_services {
 					"qstringIgnore"            => $row->qstring_ignore,
 					"geoLimit"                 => $row->geo_limit,
 					"geoLimitCountries"        => $row->geo_limit_countries,
+					"geoLimitRedirectURL"      => $row->geolimit_redirect_url,
 					"geoProvider"              => $row->geo_provider,
 					"httpBypassFqdn"           => $row->http_bypass_fqdn,
 					"dnsBypassIp"              => $row->dns_bypass_ip,
@@ -702,6 +703,7 @@ sub new_value {
 			qstring_ignore         => $params->{qstringIgnore},
 			geo_limit              => $params->{geoLimit},
 			geo_limit_countries    => $params->{geoLimitCountries},
+			geolimit_redirect_url  => $params->{geoLimitRedirectURL},
 			geo_provider           => $params->{geoProvider},
 			http_bypass_fqdn       => $params->{httpBypassFqdn},
 			dns_bypass_ip          => $params->{dnsBypassIp},
@@ -762,6 +764,7 @@ sub get_response {
 		$response->{qstringIgnore}          = $rs->qstring_ignore;
 		$response->{geoLimit}               = $rs->geo_limit;
 		$response->{geoLimitCountries}      = $rs->geo_limit_countries;
+		$response->{geoLimitRedirectURL}    = $rs->geolimit_redirect_url;
 		$response->{geoProvider}            = $rs->geo_provider;
 		$response->{httpBypassFqdn}         = $rs->http_bypass_fqdn;
 		$response->{dnsBypassIp}            = $rs->dns_bypass_ip;

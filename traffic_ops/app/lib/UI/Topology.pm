@@ -454,6 +454,11 @@ sub gen_crconfig_json {
             }
 
             $data_obj->{'deliveryServices'}->{ $row->xml_id }->{'regionalGeoBlocking'} = $row->regional_geo_blocking ? 'true' : 'false';
+            
+            if ( defined($row->geo_limit) && $row->geo_limit ne 0 ) {
+            	$data_obj->{'deliveryServices'}->{ $row->xml_id }->{'geoLimitRedirectURL'} = 
+       			defined($row->geolimit_redirect_url) ? $row->geolimit_redirect_url : "";
+            }
         }
 
         if ( defined( $row->tr_response_headers )
@@ -736,6 +741,9 @@ sub stringify_ds {
     if ( defined( $ds->{'regionalGeoBlocking'} ) ) {
         $string .= "|Regional_Geoblocking:" . $ds->{'regionalGeoBlocking'};
     }
+    if ( defined( $ds->{'geoLimitRedirectURL'}) ) {
+		$string .= "|Geolimit_Redirect_URL:" . $ds->{'geoLimitRedirectURL'};
+	}
     $string .= "|<br>&emsp;DNS TTLs: A:" . $ds->{'ttls'}->{'A'} . " AAAA:" . $ds->{'ttls'}->{'AAAA'} . "|";
     foreach my $dns ( @{ $ds->{'staticDnsEntries'} } ) {
         $string .= "|<br>&emsp;staticDns: |name:" . $dns->{'name'} . "|type:" . $dns->{'type'} . "|ttl:" . $dns->{'ttl'} . "|addr:" . $dns->{'value'} . "|";

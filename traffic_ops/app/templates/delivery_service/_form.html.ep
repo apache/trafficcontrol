@@ -200,6 +200,17 @@
 			<% } %>
 		<% } %>
 	</div>
+	<div class="block form-row" id="geolimit_redirect_url_row">
+		<% unless (field('ds.geolimit_redirect_url')->valid) { %>
+			<span class="field-with-error"><%= field('ds.geolimit_redirect_url')->error %></span>
+		<% } %>
+		%= label_for 'geolimit_redirect_url' => 'Geolimit Redirect URL', class => 'label'
+		<% if ($priv_level >= 20) { %>
+		%= field('ds.geolimit_redirect_url')->text(class => 'field', id => 'geolimit_redirect_url', name => 'ds.geolimit_redirect_url');
+		<% } else { %>
+		%= field('ds.geolimit_redirect_url')->text(class => 'field', readonly => 'readonly');
+		<% } %>
+	</div>
 	<div class="block form-row" id='http_bypass_fqdn_row'>
 		<% unless (field('ds.http_bypass_fqdn')->valid) { %>
 			<span class="field-with-error"><%= field('ds.http_bypass_fqdn')->error %></span>
