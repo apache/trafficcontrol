@@ -139,7 +139,9 @@ insert ignore into type (name, description, use_in_table) values ('RIAK', 'Riak 
 
  
 insert ignore into profile (name, description) values ('TRAFFIC_STATS', 'Traffic_Stats profile');
+insert ignore into profile (name, description) values ('TRAFFIC_PORTAL', 'Traffic_Portal profile');
 insert ignore into type (name, description, use_in_table) values ('TRAFFIC_STATS', 'traffic_stats server', 'server');
+insert ignore into type (name, description, use_in_table) values ('TRAFFIC_PORTAL', 'traffic_portal server', 'server');
 insert ignore into type (name, description, use_in_table) values ('INFLUXDB', 'influxDb server', 'server');
 insert ignore into profile (name, description) values ('INFLUXDB', 'InfluxDb profile');
 
