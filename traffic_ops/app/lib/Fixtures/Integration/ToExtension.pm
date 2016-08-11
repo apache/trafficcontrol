@@ -542,8 +542,7 @@ sub name {
 }
 
 sub get_definition {
-		my ( $self,
-			$name ) = @_;
+		my ( $self, $name ) = @_;
 		return $definition_for{$name};
 }
 

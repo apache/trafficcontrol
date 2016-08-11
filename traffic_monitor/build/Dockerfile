@@ -2,12 +2,17 @@ FROM centos:7
 
 MAINTAINER Dan Kirkwood
 
-RUN	yum -y update && \
-	yum -y clean all
 RUN	yum -y install \
 		epel-release \
 		git \
 		rpm-build
+
+# all ENV vars can be controlled by, e.g. `docker run -e BRANCH=1.6.x <image>`
+ENV GITREPO=https://github.com/Comcast/traffic_control
+ENV BRANCH=master
+
+#############################################################################
+# Above are common for all sub-projects.
 
 RUN	yum -y install \
 		which && \
@@ -28,5 +33,10 @@ RUN alternatives --install /usr/bin/java java /opt/java/bin/java 2 && \
     alternatives --install /usr/bin/mvn mvn /opt/maven/bin/mvn 1
 ###
 
-WORKDIR /vol/traffic_control/traffic_monitor/build
-ENTRYPOINT ./build_rpm.sh
+RUN	mkdir -p /dist
+VOLUME	/dist
+
+WORKDIR /
+CMD	git clone --branch $BRANCH $GITREPO && cd traffic_control && \
+	./traffic_monitor/build/build_rpm.sh && \
+	cp -f dist/* /dist/.

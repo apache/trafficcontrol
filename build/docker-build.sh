@@ -17,23 +17,43 @@ export BRANCH="${BRANCH:-master}"
 dist="./dist"
 cleanup=
 
-while getopts :r:b:cd: opt
+Usage() {
+	echo "Usage:"
+	echo "	$0 [<option>...] [<project name>...]"
+	echo "	One of -a or list of projects must be provided."
+	echo "	Options:"
+	echo "		-a 			build all subprojects"
+	echo "		-h			show usage"
+	echo "		-r <repository path>:	repository (local directory or https) to clone from"
+	echo "		-b <branch name>:	branch within repository"
+	echo "		-c			start clean: remove all traffic_control docker images prior to building"
+	echo "		-d <dist dir>:		local directory to copy built rpms"
+	echo ""
+}
+
+while getopts :hacr:b:d: opt
 do
 	case $opt in
+		h)	Usage
+			exit 1;
+			;;
+		a)	buildall=1
+			;;
+		c)
+			cleanup=1
+			;;
 		r)
 			GITREPO="$OPTARG"
 			;;
 		b)
 			BRANCH="$OPTARG"
 			;;
-		c)
-			cleanup=1
-			;;
 		d)
 			dist="$OPTARG"
 			;;
 		*) 
 			echo "Invalid option: $opt"
+			Usage
 			exit 1;
 			;;
 	esac
@@ -41,7 +61,20 @@ done
 shift $((OPTIND-1))
 
 # anything remaining is list of projects to build
-projects="${@:-traffic_ops traffic_monitor traffic_router traffic_stats traffic_portal}"
+if [[ -n $buildall ]]
+then
+	projects="traffic_ops traffic_monitor traffic_router traffic_stats traffic_portal"
+else
+	projects="$@"
+fi
+
+if [[ -z $projects ]]
+then
+	echo "One of -a or list of project names must be provided"
+	Usage
+	exit 1
+fi
+
 
 # if repo is local directory, get absolute path
 if [[ -d $GITREPO ]]
@@ -69,71 +102,53 @@ ENDMSG
 # sub-projects to build
 
 image_exists() {
-	docker history -q $1 >/dev/null 2>&1
+	docker history --quiet $1 >/dev/null 2>&1
 	return $?
 }
 
 # collect image names for later cleanup
 images=
 createBuilders() {
+	# topdir=.../traffic_control
 	local topdir=$(cd "$( echo "${BASH_SOURCE[0]%/*}" )/.."; pwd)
 
-	local image=traffic_control_gitter
-	if ! image_exists $image
-	then
-		docker build -t $image "$topdir/build"
-		images=traffic_control_gitter
-	fi
-
+	echo -n "** Create Builders: "; date
 	for p in $projects
-	do
+	do 
 		local image=$p/build
+		if [[ -n $cleanup ]]
+		then
+			docker rmi $image || echo "No image to remove"
+		fi
+
 		if ! image_exists $image
 		then
-			docker build -t $image "$topdir/$p/build"
+			echo -n "**   $image: "; date
+			docker build --tag $image "$topdir/$p/build"
 			images="$images $image"
 		fi
 	done
 }
 
 runBuild() {
+	echo -n "** Run Build: "; date
 
 	# Check if gitrepo is a local directory to be provided as a volume
 	if [[ -d $GITREPO ]]
 	then
 		vol="-v $GITREPO:$GITREPO"
 	fi
-
-	docker run --name gitter $vol -e GITREPO=$GITREPO -e BRANCH=$BRANCH traffic_control_gitter
+	mkdir -p dist
 	for p in $projects
 	do
-		docker run --rm --volumes-from gitter $p/build
+		echo -n "**   building $p: "; date
+		docker run --rm $vol -v $dist:/dist $p/build
 	done
+	echo -n "** End Build: "; date
 }
 
 createBuilders
 runBuild
-
-rpms=$(docker run --rm --volumes-from gitter centos sh -c 'find /vol/traffic_control -type f -name *.rpm')
-for f in $rpms
-do
-	echo "Copying $f to $dist"
-	docker cp gitter:$f "$dist/."
-done
-
-# Always remove the gitter container after copy -- subsequent runs need to start with image
-docker rm gitter
-
-if [[ -z $images ]]
-then
-	echo "No new docker images created"
-elif [[ $cleanup ]]
-then
-	docker rmi $images
-	echo "Images cleaned up: $images"
-else
-	echo "These images were newly created: $images"
-fi
 
 echo "rpms created: "
 ls -l "$dist/."

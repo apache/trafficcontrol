@@ -207,7 +207,7 @@ sub isValidCdn {
 
 sub aprofileparameter {
     my $self = shift;
-    my %data = ( "aaData" => undef );
+    my %data = ( "aaData" => [] );
 
     my $rs;
     if ( defined( $self->param('filter') ) ) {
@@ -250,7 +250,7 @@ sub aprofileparameter {
 
 sub aparameter {
     my $self = shift;
-    my %data = ( "aaData" => undef );
+    my %data = ( "aaData" => [] );
 
     my $col = undef;
     my $val = undef;
@@ -338,7 +338,7 @@ sub aparameter {
 sub aserver {
     my $self          = shift;
     my $server_select = shift;
-    my %data          = ( "aaData" => undef );
+    my %data          = ( "aaData" => [] );
     my $pparam =
         $self->db->resultset('ProfileParameter')
         ->search( { -and => [ 'parameter.name' => 'server_graph_url', 'profile.name' => 'GLOBAL' ] }, { prefetch => [ 'parameter', 'profile' ] } )
@@ -396,7 +396,7 @@ sub aserver {
 
 sub aasn {
     my $self = shift;
-    my %data = ( "aaData" => undef );
+    my %data = ( "aaData" => [] );
 
     my $rs = $self->db->resultset('Asn')->search( undef, { prefetch => [ { 'cachegroup' => 'cachegroups' }, ] } );
 
@@ -410,7 +410,7 @@ sub aasn {
 
 sub aphys_location {
     my $self = shift;
-    my %data = ( "aaData" => undef );
+    my %data = ( "aaData" => [] );
 
     my $rs = $self->db->resultset('PhysLocation')->search( undef, { prefetch => ['region'] } );
 
@@ -426,7 +426,7 @@ sub aphys_location {
 
 sub adeliveryservice {
     my $self       = shift;
-    my %data       = ( "aaData" => undef );
+    my %data       = ( "aaData" => [] );
     my %geo_limits = ( 0 => "none", 1 => "CZF", 2 => "CZF + Countries" );
     my %protocol   = ( 0 => "http", 1 => "https", 2 => "http/https" );
 
@@ -527,7 +527,7 @@ sub hwinfo {
 
 sub ajob {
     my $self = shift;
-    my %data = ( "aaData" => undef );
+    my %data = ( "aaData" => [] );
 
     my $rs = $self->db->resultset('Job')->search(
         undef, {
@@ -546,7 +546,7 @@ sub ajob {
 
 sub alog {
     my $self = shift;
-    my %data = ( "aaData" => undef );
+    my %data = ( "aaData" => [] );
 
     my $interval = "> now() - interval '30 day'";    # postgres
     my $rs = $self->db->resultset('Log')->search(
@@ -576,7 +576,7 @@ sub alog {
 
 sub acdn {
     my $self = shift;
-    my %data = ( "aaData" => undef );
+    my %data = ( "aaData" => [] );
 
     my %id_to_name = ();
     my $rs         = $self->db->resultset('Cdn')->search(undef);
@@ -594,7 +594,7 @@ sub acdn {
 
 sub acachegroup {
     my $self = shift;
-    my %data = ( "aaData" => undef );
+    my %data = ( "aaData" => [] );
 
     my %id_to_name = ();
     my $rs = $self->db->resultset('Cachegroup')->search( undef, { prefetch => [ { 'type' => undef } ] } );
@@ -619,7 +619,7 @@ sub acachegroup {
 
 sub auser {
     my $self = shift;
-    my %data = ( "aaData" => undef );
+    my %data = ( "aaData" => [] );
 
     my $rs = $self->db->resultset('TmUser')->search( undef, { prefetch => [ { 'role' => undef } ] } );
 
@@ -637,7 +637,7 @@ sub auser {
 
 sub afederation {
     my $self = shift;
-    my %data = ( "aaData" => undef );
+    my %data = ( "aaData" => [] );
 
     my @line;
     my $feds = $self->db->resultset('Federation')->search(undef);
@@ -678,7 +678,7 @@ sub afederation {
 
 sub aprofile {
     my $self = shift;
-    my %data = ( "aaData" => undef );
+    my %data = ( "aaData" => [] );
 
     my $rs = $self->db->resultset('Profile')->search(undef);
 
@@ -692,7 +692,7 @@ sub aprofile {
 
 sub atype {
     my $self = shift;
-    my %data = ( "aaData" => undef );
+    my %data = ( "aaData" => [] );
 
     my $rs = $self->db->resultset('Type')->search(undef);
 
@@ -705,7 +705,7 @@ sub atype {
 
 sub adivision {
     my $self = shift;
-    my %data = ( "aaData" => undef );
+    my %data = ( "aaData" => [] );
 
     my $rs = $self->db->resultset('Division')->search(undef);
 
@@ -718,7 +718,7 @@ sub adivision {
 
 sub aregion {
     my $self = shift;
-    my %data = ( "aaData" => undef );
+    my %data = ( "aaData" => [] );
 
     my $rs = $self->db->resultset('Region')->search( undef, { prefetch => [ { 'division' => undef } ] } );
 

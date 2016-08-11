@@ -298,6 +298,12 @@ __PACKAGE__->table("deliveryservice");
   data_type: 'smallint'
   is_nullable: 1
 
+=head2 geolimit_redirect_url
+
+  data_type: 'varchar'
+  is_nullable: 1
+  size: 255
+
 =cut
 
 __PACKAGE__->add_columns(
@@ -406,7 +412,9 @@ __PACKAGE__->add_columns(
   "logs_enabled",
   { data_type => "smallint", is_nullable => 1 },
   "multi_site_origin_algorithm",
-  { data_type => "smallint", is_nullable => 1 },
+  { data_type => "smallint", is_nullable => 0 },
+  "geolimit_redirect_url",
+  { data_type => "varchar", is_nullable => 1, size => 255 },
 );
 
 =head1 PRIMARY KEY
@@ -622,8 +630,13 @@ __PACKAGE__->belongs_to(
 );
 
 
+<<<<<<< HEAD
 # Created by DBIx::Class::Schema::Loader v0.07043 @ 2016-08-08 10:49:59
 # DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:XhQ5cg2FvU3Ygd139zTkrg
+=======
+# Created by DBIx::Class::Schema::Loader v0.07045 @ 2016-08-01 08:58:13
+# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:k1aJ71tsV0AWeFF/OpHFUA
+>>>>>>> master
 
 # You can replace this text with custom code or comments, and it will be preserved on regeneration
 1;

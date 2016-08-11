@@ -10,6 +10,10 @@ type Handler struct {
 	Notify        int
 }
 
+func NewHandler() Handler {
+	return Handler{ResultChannel: make(chan Result)}
+}
+
 type Result struct {
 	Id        string
 	Available bool
