@@ -67,7 +67,7 @@ public class CoverageZoneTest {
 
 	@Test
 	public void itGetsCaches() throws Exception {
-		HttpGet httpGet = new HttpGet("http://localhost:3333/crs/coveragezone/caches?deliveryServiceId=steering-target-4&cacheLocationId=location-1");
+		HttpGet httpGet = new HttpGet("http://localhost:3333/crs/coveragezone/caches?deliveryServiceId=steering-target-4&cacheLocationId=location-3");
 
 		CloseableHttpResponse response = null;
 		try {
