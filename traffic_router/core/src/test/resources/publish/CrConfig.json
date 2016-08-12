@@ -15,19 +15,19 @@
       "interfaceName": "bond0",
       "deliveryServices": {
         "https-test": ["edge-cache-001.https-test.thecdn.example.com"],
-        "mm-test": ["edge-cache-001.mm-test.thecdn.example.com"],
-        "ds-08": ["edge-cache-001.ds-08.thecdn.example.com"],
-        "test": ["edge-cache-001.test.thecdn.example.com"],
-        "ds-06": [
-          "edge.ds-06.thecdn.example.com",
+        "steering-test-1": ["edge-cache-001.steering-test-1.thecdn.example.com"],
+        "steering-target-2": ["edge-cache-001.steering-target-2.thecdn.example.com"],
+        "steering-test-2": ["edge-cache-001.steering-test-2.thecdn.example.com"],
+        "federation-test": [
+          "edge.federation-test.thecdn.example.com",
           "edge.dee-ehs-06.thecdn.example.com"
         ],
-        "ds-05": [
-          "edge-cache-001.ds-05.thecdn.example.com",
-          "edge-cache-001.ds-05-b-b.thecdn.example.com"
+        "steering-target-1": [
+          "edge-cache-001.steering-target-1.thecdn.example.com",
+          "edge-cache-001.steering-target-1-b-b.thecdn.example.com"
         ],
-        "ds-04": ["edge-cache-000.ds-04.thecdn.example.com"],
-        "ds-03": ["edge-cache-000.ds-03.thecdn.example.com"]
+        "steering-target-4": ["edge-cache-000.steering-target-4.thecdn.example.com"],
+        "steering-target-3": ["edge-cache-000.steering-target-3.thecdn.example.com"]
       }
     },
     "edge-cache-001": {
@@ -45,19 +45,19 @@
       "interfaceName": "bond0",
       "deliveryServices": {
         "https-test": ["edge-cache-001.https-test.thecdn.example.com"],
-        "mm-test": ["edge-cache-001.mm-test.thecdn.example.com"],
-        "ds-08": ["edge-cache-001.ds-08.thecdn.example.com"],
-        "test": ["edge-cache-001.test.thecdn.example.com"],
-        "ds-06": [
-          "edge.ds-06.thecdn.example.com",
+        "steering-test-1": ["edge-cache-001.steering-test-1.thecdn.example.com"],
+        "steering-target-2": ["edge-cache-001.steering-target-2.thecdn.example.com"],
+        "steering-test-2": ["edge-cache-001.steering-test-2.thecdn.example.com"],
+        "federation-test": [
+          "edge.federation-test.thecdn.example.com",
           "edge.dee-ehs-06.thecdn.example.com"
         ],
-        "ds-05": [
-          "edge-cache-001.ds-05.thecdn.example.com",
-          "edge-cache-001.ds-05-b-b.thecdn.example.com"
+        "steering-target-1": [
+          "edge-cache-001.steering-target-1.thecdn.example.com",
+          "edge-cache-001.steering-target-1-b-b.thecdn.example.com"
         ],
-        "ds-04": ["edge-cache-001.ds-04.thecdn.example.com"],
-        "ds-03": ["edge-cache-001.ds-03.thecdn.example.com"]
+        "steering-target-4": ["edge-cache-001.steering-target-4.thecdn.example.com"],
+        "steering-target-3": ["edge-cache-001.steering-target-3.thecdn.example.com"]
       }
     },
     "edge-cache-002": {
@@ -75,19 +75,19 @@
       "interfaceName": "bond0",
       "deliveryServices": {
         "https-test": ["edge-cache-002.https-test.thecdn.example.com"],
-        "ds-08": ["edge-cache-002.ds-08.thecdn.example.com"],
+        "steering-target-2": ["edge-cache-002.steering-target-2.thecdn.example.com"],
         "ds-07": ["edge.ds-07.thecdn.example.com"],
-        "test": ["edge-cache-002.test.thecdn.example.com"],
-        "ds-06": [
-          "edge.ds-06.thecdn.example.com",
+        "steering-test-2": ["edge-cache-002.steering-test-2.thecdn.example.com"],
+        "federation-test": [
+          "edge.federation-test.thecdn.example.com",
           "edge.dee-ehs-06.thecdn.example.com"
         ],
-        "ds-05": [
-          "edge-cache-002.ds-05.thecdn.example.com",
-          "edge-cache-002.ds-05-b-b.thecdn.example.com"
+        "steering-target-1": [
+          "edge-cache-002.steering-target-1.thecdn.example.com",
+          "edge-cache-002.steering-target-1-b-b.thecdn.example.com"
         ],
-        "ds-04": ["edge-cache-002.ds-04.thecdn.example.com"],
-        "ds-03": ["edge-cache-002.ds-03.thecdn.example.com"]
+        "steering-target-4": ["edge-cache-002.steering-target-4.thecdn.example.com"],
+        "steering-target-3": ["edge-cache-002.steering-target-3.thecdn.example.com"]
       }
     },
     "edge-cache-003": {
@@ -105,20 +105,20 @@
       "interfaceName": "bond0",
       "deliveryServices": {
         "https-test": ["edge-cache-003.https-test.thecdn.example.com"],
-        "mm-test": ["edge-cache-003.mm-test.thecdn.example.com"],
-        "ds-08": ["edge-cache-003.ds-08.thecdn.example.com"],
+        "steering-test-1": ["edge-cache-003.steering-test-1.thecdn.example.com"],
+        "steering-target-2": ["edge-cache-003.steering-target-2.thecdn.example.com"],
         "ds-07": ["edge.ds-07.thecdn.example.com"],
-        "test": ["edge-cache-003.test.thecdn.example.com"],
-        "ds-06": [
-          "edge.ds-06.thecdn.example.com",
+        "steering-test-2": ["edge-cache-003.steering-test-2.thecdn.example.com"],
+        "federation-test": [
+          "edge.federation-test.thecdn.example.com",
           "edge.dee-ehs-06.thecdn.example.com"
         ],
-        "ds-05": [
-          "edge-cache-003.ds-05.thecdn.example.com",
-          "edge-cache-003.ds-05-b-b.thecdn.example.com"
+        "steering-target-1": [
+          "edge-cache-003.steering-target-1.thecdn.example.com",
+          "edge-cache-003.steering-target-1-b-b.thecdn.example.com"
         ],
-        "ds-04": ["edge-cache-003.ds-04.thecdn.example.com"],
-        "ds-03": ["edge-cache-003.ds-03.thecdn.example.com"]
+        "steering-target-4": ["edge-cache-003.steering-target-4.thecdn.example.com"],
+        "steering-target-3": ["edge-cache-003.steering-target-3.thecdn.example.com"]
       }
     },
     "edge-cache-004": {
@@ -136,20 +136,20 @@
       "interfaceName": "bond0",
       "deliveryServices": {
         "https-test": ["edge-cache-004.https-test.thecdn.example.com"],
-        "mm-test": ["edge-cache-004.mm-test.thecdn.example.com"],
-        "ds-08": ["edge-cache-004.ds-08.thecdn.example.com"],
+        "steering-test-1": ["edge-cache-004.steering-test-1.thecdn.example.com"],
+        "steering-target-2": ["edge-cache-004.steering-target-2.thecdn.example.com"],
         "ds-07": ["edge.ds-07.thecdn.example.com"],
-        "test": ["edge-cache-004.test.thecdn.example.com"],
-        "ds-06": [
-          "edge.ds-06.thecdn.example.com",
+        "steering-test-2": ["edge-cache-004.steering-test-2.thecdn.example.com"],
+        "federation-test": [
+          "edge.federation-test.thecdn.example.com",
           "edge.dee-ehs-06.thecdn.example.com"
         ],
-        "ds-05": [
-          "edge-cache-004.ds-05.thecdn.example.com",
-          "edge-cache-004.ds-05-b-b.thecdn.example.com"
+        "steering-target-1": [
+          "edge-cache-004.steering-target-1.thecdn.example.com",
+          "edge-cache-004.steering-target-1-b-b.thecdn.example.com"
         ],
-        "ds-04": ["edge-cache-004.ds-04.thecdn.example.com"],
-        "ds-03": ["edge-cache-004.ds-03.thecdn.example.com"]
+        "steering-target-4": ["edge-cache-004.steering-target-4.thecdn.example.com"],
+        "steering-target-3": ["edge-cache-004.steering-target-3.thecdn.example.com"]
       }
     },
     "edge-cache-005": {
@@ -166,20 +166,20 @@
       "hashCount": 1000,
       "interfaceName": "bond0",
       "deliveryServices": {
-        "mm-test": ["edge-cache-005.mm-test.thecdn.example.com"],
-        "ds-08": ["edge-cache-005.ds-08.thecdn.example.com"],
+        "steering-test-1": ["edge-cache-005.steering-test-1.thecdn.example.com"],
+        "steering-target-2": ["edge-cache-005.steering-target-2.thecdn.example.com"],
         "ds-07": ["edge.ds-07.thecdn.example.com"],
-        "test": ["edge-cache-005.test.thecdn.example.com"],
-        "ds-06": [
-          "edge.ds-06.thecdn.example.com",
+        "steering-test-2": ["edge-cache-005.steering-test-2.thecdn.example.com"],
+        "federation-test": [
+          "edge.federation-test.thecdn.example.com",
           "edge.dee-ehs-06.thecdn.example.com"
         ],
-        "ds-05": [
-          "edge-cache-005.ds-05.thecdn.example.com",
-          "edge-cache-005.ds-05-b-b.thecdn.example.com"
+        "steering-target-1": [
+          "edge-cache-005.steering-target-1.thecdn.example.com",
+          "edge-cache-005.steering-target-1-b-b.thecdn.example.com"
         ],
-        "ds-04": ["edge-cache-005.ds-04.thecdn.example.com"],
-        "ds-03": ["edge-cache-005.ds-03.thecdn.example.com"]
+        "steering-target-4": ["edge-cache-005.steering-target-4.thecdn.example.com"],
+        "steering-target-3": ["edge-cache-005.steering-target-3.thecdn.example.com"]
       }
     },
     "edge-cache-006": {
@@ -196,20 +196,20 @@
       "hashCount": 1000,
       "interfaceName": "bond0",
       "deliveryServices": {
-        "mm-test": ["edge-cache-006.mm-test.thecdn.example.com"],
-        "ds-08": ["edge-cache-006.ds-08.thecdn.example.com"],
+        "steering-test-1": ["edge-cache-006.steering-test-1.thecdn.example.com"],
+        "steering-target-2": ["edge-cache-006.steering-target-2.thecdn.example.com"],
         "ds-07": ["edge.ds-07.thecdn.example.com"],
-        "test": ["edge-cache-006.test.thecdn.example.com"],
-        "ds-06": [
-          "edge.ds-06.thecdn.example.com",
+        "steering-test-2": ["edge-cache-006.steering-test-2.thecdn.example.com"],
+        "federation-test": [
+          "edge.federation-test.thecdn.example.com",
           "edge.dee-ehs-06.thecdn.example.com"
         ],
-        "ds-05": [
-          "edge-cache-006.ds-05.thecdn.example.com",
-          "edge-cache-006.ds-05-b-b.thecdn.example.com"
+        "steering-target-1": [
+          "edge-cache-006.steering-target-1.thecdn.example.com",
+          "edge-cache-006.steering-target-1-b-b.thecdn.example.com"
         ],
-        "ds-04": ["edge-cache-006.ds-04.thecdn.example.com"],
-        "ds-03": ["edge-cache-006.ds-03.thecdn.example.com"]
+        "steering-target-4": ["edge-cache-006.steering-target-4.thecdn.example.com"],
+        "steering-target-3": ["edge-cache-006.steering-target-3.thecdn.example.com"]
       }
     },    
     "edge-cache-007": {
@@ -226,20 +226,20 @@
       "hashCount": 1000,
       "interfaceName": "bond0",
       "deliveryServices": {
-        "mm-test": ["edge-cache-007.mm-test.thecdn.example.com"],
-        "ds-08": ["edge-cache-007.ds-08.thecdn.example.com"],
+        "steering-test-1": ["edge-cache-007.steering-test-1.thecdn.example.com"],
+        "steering-target-2": ["edge-cache-007.steering-target-2.thecdn.example.com"],
         "ds-07": ["edge.ds-07.thecdn.example.com"],
-        "test": ["edge-cache-007.test.thecdn.example.com"],
-        "ds-06": [
-          "edge.ds-06.thecdn.example.com",
+        "steering-test-2": ["edge-cache-007.steering-test-2.thecdn.example.com"],
+        "federation-test": [
+          "edge.federation-test.thecdn.example.com",
           "edge.dee-ehs-06.thecdn.example.com"
         ],
-        "ds-05": [
-          "edge-cache-007.ds-05.thecdn.example.com",
-          "edge-cache-007.ds-05-b-b.thecdn.example.com"
+        "steering-target-1": [
+          "edge-cache-007.steering-target-1.thecdn.example.com",
+          "edge-cache-007.steering-target-1-b-b.thecdn.example.com"
         ],
-        "ds-04": ["edge-cache-007.ds-04.thecdn.example.com"],
-        "ds-03": ["edge-cache-007.ds-03.thecdn.example.com"]
+        "steering-target-4": ["edge-cache-007.steering-target-4.thecdn.example.com"],
+        "steering-target-3": ["edge-cache-007.steering-target-3.thecdn.example.com"]
       }
     },    
     "edge-cache-008": {
@@ -256,20 +256,20 @@
       "hashCount": 1000,
       "interfaceName": "bond0",
       "deliveryServices": {
-        "mm-test": ["edge-cache-008.mm-test.thecdn.example.com"],
-        "ds-08": ["edge-cache-008.ds-08.thecdn.example.com"],
+        "steering-test-1": ["edge-cache-008.steering-test-1.thecdn.example.com"],
+        "steering-target-2": ["edge-cache-008.steering-target-2.thecdn.example.com"],
         "ds-07": ["edge.ds-07.thecdn.example.com"],
-        "test": ["edge-cache-008.test.thecdn.example.com"],
-        "ds-06": [
-          "edge.ds-06.thecdn.example.com",
+        "steering-test-2": ["edge-cache-008.steering-test-2.thecdn.example.com"],
+        "federation-test": [
+          "edge.federation-test.thecdn.example.com",
           "edge.dee-ehs-06.thecdn.example.com"
         ],
-        "ds-05": [
-          "edge-cache-008.ds-05.thecdn.example.com",
-          "edge-cache-008.ds-05-b-b.thecdn.example.com"
+        "steering-target-1": [
+          "edge-cache-008.steering-target-1.thecdn.example.com",
+          "edge-cache-008.steering-target-1-b-b.thecdn.example.com"
         ],
-        "ds-04": ["edge-cache-008.ds-04.thecdn.example.com"],
-        "ds-03": ["edge-cache-008.ds-03.thecdn.example.com"]
+        "steering-target-4": ["edge-cache-008.steering-target-4.thecdn.example.com"],
+        "steering-target-3": ["edge-cache-008.steering-target-3.thecdn.example.com"]
       }
     },    
     "edge-cache-009": {
@@ -286,20 +286,20 @@
       "hashCount": 1000,
       "interfaceName": "bond0",
       "deliveryServices": {
-        "mm-test": ["edge-cache-009.mm-test.thecdn.example.com"],
-        "ds-08": ["edge-cache-009.ds-08.thecdn.example.com"],
+        "steering-test-1": ["edge-cache-009.steering-test-1.thecdn.example.com"],
+        "steering-target-2": ["edge-cache-009.steering-target-2.thecdn.example.com"],
         "ds-07": ["edge.ds-07.thecdn.example.com"],
-        "test": ["edge-cache-009.test.thecdn.example.com"],
-        "ds-06": [
-          "edge.ds-06.thecdn.example.com",
+        "steering-test-2": ["edge-cache-009.steering-test-2.thecdn.example.com"],
+        "federation-test": [
+          "edge.federation-test.thecdn.example.com",
           "edge.dee-ehs-06.thecdn.example.com"
         ],
-        "ds-05": [
-          "edge-cache-009.ds-05.thecdn.example.com",
-          "edge-cache-009.ds-05-b-b.thecdn.example.com"
+        "steering-target-1": [
+          "edge-cache-009.steering-target-1.thecdn.example.com",
+          "edge-cache-009.steering-target-1-b-b.thecdn.example.com"
         ],
-        "ds-04": ["edge-cache-009.ds-04.thecdn.example.com"],
-        "ds-03": ["edge-cache-009.ds-03.thecdn.example.com"]
+        "steering-target-4": ["edge-cache-009.steering-target-4.thecdn.example.com"],
+        "steering-target-3": ["edge-cache-009.steering-target-3.thecdn.example.com"]
       }
     },    
     "edge-cache-010": {
@@ -316,20 +316,20 @@
       "hashCount": 1000,
       "interfaceName": "bond0",
       "deliveryServices": {
-        "mm-test": ["edge-cache-010.mm-test.thecdn.example.com"],
-        "ds-08": ["edge-cache-010.ds-08.thecdn.example.com"],
+        "steering-test-1": ["edge-cache-010.steering-test-1.thecdn.example.com"],
+        "steering-target-2": ["edge-cache-010.steering-target-2.thecdn.example.com"],
         "ds-07": ["edge.ds-07.thecdn.example.com"],
-        "test": ["edge-cache-010.test.thecdn.example.com"],
-        "ds-06": [
-          "edge.ds-06.thecdn.example.com",
+        "steering-test-2": ["edge-cache-010.steering-test-2.thecdn.example.com"],
+        "federation-test": [
+          "edge.federation-test.thecdn.example.com",
           "edge.dee-ehs-06.thecdn.example.com"
         ],
-        "ds-05": [
-          "edge-cache-010.ds-05.thecdn.example.com",
-          "edge-cache-010.ds-05-b-b.thecdn.example.com"
+        "steering-target-1": [
+          "edge-cache-010.steering-target-1.thecdn.example.com",
+          "edge-cache-010.steering-target-1-b-b.thecdn.example.com"
         ],
-        "ds-04": ["edge-cache-010.ds-04.thecdn.example.com"],
-        "ds-03": ["edge-cache-010.ds-03.thecdn.example.com"]
+        "steering-target-4": ["edge-cache-010.steering-target-4.thecdn.example.com"],
+        "steering-target-3": ["edge-cache-010.steering-target-3.thecdn.example.com"]
       }
     },    
     "edge-cache-011": {
@@ -346,20 +346,20 @@
       "hashCount": 1000,
       "interfaceName": "bond0",
       "deliveryServices": {
-        "mm-test": ["edge-cache-011.mm-test.thecdn.example.com"],
-        "ds-08": ["edge-cache-011.ds-08.thecdn.example.com"],
+        "steering-test-1": ["edge-cache-011.steering-test-1.thecdn.example.com"],
+        "steering-target-2": ["edge-cache-011.steering-target-2.thecdn.example.com"],
         "ds-07": ["edge.ds-07.thecdn.example.com"],
-        "test": ["edge-cache-011.test.thecdn.example.com"],
-        "ds-06": [
-          "edge.ds-06.thecdn.example.com",
+        "steering-test-2": ["edge-cache-011.steering-test-2.thecdn.example.com"],
+        "federation-test": [
+          "edge.federation-test.thecdn.example.com",
           "edge.dee-ehs-06.thecdn.example.com"
         ],
-        "ds-05": [
-          "edge-cache-011.ds-05.thecdn.example.com",
-          "edge-cache-011.ds-05-b-b.thecdn.example.com"
+        "steering-target-1": [
+          "edge-cache-011.steering-target-1.thecdn.example.com",
+          "edge-cache-011.steering-target-1-b-b.thecdn.example.com"
         ],
-        "ds-04": ["edge-cache-011.ds-04.thecdn.example.com"],
-        "ds-03": ["edge-cache-011.ds-03.thecdn.example.com"]
+        "steering-target-4": ["edge-cache-011.steering-target-4.thecdn.example.com"],
+        "steering-target-3": ["edge-cache-011.steering-target-3.thecdn.example.com"]
       }
     },
     "edge-cache-012": {
@@ -376,20 +376,20 @@
       "hashCount": 1000,
       "interfaceName": "bond0",
       "deliveryServices": {
-        "mm-test": ["edge-cache-012.mm-test.thecdn.example.com"],
-        "ds-08": ["edge-cache-012.ds-08.thecdn.example.com"],
+        "steering-test-1": ["edge-cache-012.steering-test-1.thecdn.example.com"],
+        "steering-target-2": ["edge-cache-012.steering-target-2.thecdn.example.com"],
         "ds-07": ["edge.ds-07.thecdn.example.com"],
-        "test": ["edge-cache-012.test.thecdn.example.com"],
-        "ds-06": [
-          "edge.ds-06.thecdn.example.com",
+        "steering-test-2": ["edge-cache-012.steering-test-2.thecdn.example.com"],
+        "federation-test": [
+          "edge.federation-test.thecdn.example.com",
           "edge.dee-ehs-06.thecdn.example.com"
         ],
-        "ds-05": [
-          "edge-cache-012.ds-05.thecdn.example.com",
-          "edge-cache-012.ds-05-b-b.thecdn.example.com"
+        "steering-target-1": [
+          "edge-cache-012.steering-target-1.thecdn.example.com",
+          "edge-cache-012.steering-target-1-b-b.thecdn.example.com"
         ],
-        "ds-04": ["edge-cache-012.ds-04.thecdn.example.com"],
-        "ds-03": ["edge-cache-012.ds-03.thecdn.example.com"]
+        "steering-target-4": ["edge-cache-012.steering-target-4.thecdn.example.com"],
+        "steering-target-3": ["edge-cache-012.steering-target-3.thecdn.example.com"]
       }
     },
     "edge-cache-013": {
@@ -406,20 +406,20 @@
       "hashCount": 1000,
       "interfaceName": "bond0",
       "deliveryServices": {
-        "mm-test": ["edge-cache-013.mm-test.thecdn.example.com"],
-        "ds-08": ["edge-cache-013.ds-08.thecdn.example.com"],
+        "steering-test-1": ["edge-cache-013.steering-test-1.thecdn.example.com"],
+        "steering-target-2": ["edge-cache-013.steering-target-2.thecdn.example.com"],
         "ds-07": ["edge.ds-07.thecdn.example.com"],
-        "test": ["edge-cache-013.test.thecdn.example.com"],
-        "ds-06": [
-          "edge.ds-06.thecdn.example.com",
+        "steering-test-2": ["edge-cache-013.steering-test-2.thecdn.example.com"],
+        "federation-test": [
+          "edge.federation-test.thecdn.example.com",
           "edge.dee-ehs-06.thecdn.example.com"
         ],
-        "ds-05": [
-          "edge-cache-013.ds-05.thecdn.example.com",
-          "edge-cache-013.ds-05-b-b.thecdn.example.com"
+        "steering-target-1": [
+          "edge-cache-013.steering-target-1.thecdn.example.com",
+          "edge-cache-013.steering-target-1-b-b.thecdn.example.com"
         ],
-        "ds-04": ["edge-cache-013.ds-04.thecdn.example.com"],
-        "ds-03": ["edge-cache-013.ds-03.thecdn.example.com"]
+        "steering-target-4": ["edge-cache-013.steering-target-4.thecdn.example.com"],
+        "steering-target-3": ["edge-cache-013.steering-target-3.thecdn.example.com"]
       }
     },
     "edge-cache-014": {
@@ -436,20 +436,20 @@
       "hashCount": 1000,
       "interfaceName": "bond0",
       "deliveryServices": {
-        "mm-test": ["edge-cache-014.mm-test.thecdn.example.com"],
-        "ds-08": ["edge-cache-014.ds-08.thecdn.example.com"],
+        "steering-test-1": ["edge-cache-014.steering-test-1.thecdn.example.com"],
+        "steering-target-2": ["edge-cache-014.steering-target-2.thecdn.example.com"],
         "ds-07": ["edge.ds-07.thecdn.example.com"],
-        "test": ["edge-cache-014.test.thecdn.example.com"],
-        "ds-06": [
-          "edge.ds-06.thecdn.example.com",
+        "steering-test-2": ["edge-cache-014.steering-test-2.thecdn.example.com"],
+        "federation-test": [
+          "edge.federation-test.thecdn.example.com",
           "edge.dee-ehs-06.thecdn.example.com"
         ],
-        "ds-05": [
-          "edge-cache-014.ds-05.thecdn.example.com",
-          "edge-cache-014.ds-05-b-b.thecdn.example.com"
+        "steering-target-1": [
+          "edge-cache-014.steering-target-1.thecdn.example.com",
+          "edge-cache-014.steering-target-1-b-b.thecdn.example.com"
         ],
-        "ds-04": ["edge-cache-014.ds-04.thecdn.example.com"],
-        "ds-03": ["edge-cache-014.ds-03.thecdn.example.com"]
+        "steering-target-4": ["edge-cache-014.steering-target-4.thecdn.example.com"],
+        "steering-target-3": ["edge-cache-014.steering-target-3.thecdn.example.com"]
       }
     },
     "edge-cache-015": {
@@ -466,20 +466,20 @@
       "hashCount": 1000,
       "interfaceName": "bond0",
       "deliveryServices": {
-        "mm-test": ["edge-cache-015.mm-test.thecdn.example.com"],
-        "ds-08": ["edge-cache-015.ds-08.thecdn.example.com"],
+        "steering-test-1": ["edge-cache-015.steering-test-1.thecdn.example.com"],
+        "steering-target-2": ["edge-cache-015.steering-target-2.thecdn.example.com"],
         "ds-07": ["edge.ds-07.thecdn.example.com"],
-        "test": ["edge-cache-015.test.thecdn.example.com"],
-        "ds-06": [
-          "edge.ds-06.thecdn.example.com",
+        "steering-test-2": ["edge-cache-015.steering-test-2.thecdn.example.com"],
+        "federation-test": [
+          "edge.federation-test.thecdn.example.com",
           "edge.dee-ehs-06.thecdn.example.com"
         ],
-        "ds-05": [
-          "edge-cache-015.ds-05.thecdn.example.com",
-          "edge-cache-015.ds-05-b-b.thecdn.example.com"
+        "steering-target-1": [
+          "edge-cache-015.steering-target-1.thecdn.example.com",
+          "edge-cache-015.steering-target-1-b-b.thecdn.example.com"
         ],
-        "ds-04": ["edge-cache-015.ds-04.thecdn.example.com"],
-        "ds-03": ["edge-cache-015.ds-03.thecdn.example.com"]
+        "steering-target-4": ["edge-cache-015.steering-target-4.thecdn.example.com"],
+        "steering-target-3": ["edge-cache-015.steering-target-3.thecdn.example.com"]
       }
     },
     "edge-cache-016": {
@@ -496,20 +496,20 @@
       "hashCount": 1000,
       "interfaceName": "bond0",
       "deliveryServices": {
-        "mm-test": ["edge-cache-016.mm-test.thecdn.example.com"],
-        "ds-08": ["edge-cache-016.ds-08.thecdn.example.com"],
+        "steering-test-1": ["edge-cache-016.steering-test-1.thecdn.example.com"],
+        "steering-target-2": ["edge-cache-016.steering-target-2.thecdn.example.com"],
         "ds-07": ["edge.ds-07.thecdn.example.com"],
-        "test": ["edge-cache-016.test.thecdn.example.com"],
-        "ds-06": [
-          "edge.ds-06.thecdn.example.com",
+        "steering-test-2": ["edge-cache-016.steering-test-2.thecdn.example.com"],
+        "federation-test": [
+          "edge.federation-test.thecdn.example.com",
           "edge.dee-ehs-06.thecdn.example.com"
         ],
-        "ds-05": [
-          "edge-cache-016.ds-05.thecdn.example.com",
-          "edge-cache-016.ds-05-b-b.thecdn.example.com"
+        "steering-target-1": [
+          "edge-cache-016.steering-target-1.thecdn.example.com",
+          "edge-cache-016.steering-target-1-b-b.thecdn.example.com"
         ],
-        "ds-04": ["edge-cache-016.ds-04.thecdn.example.com"],
-        "ds-03": ["edge-cache-016.ds-03.thecdn.example.com"]
+        "steering-target-4": ["edge-cache-016.steering-target-4.thecdn.example.com"],
+        "steering-target-3": ["edge-cache-016.steering-target-3.thecdn.example.com"]
       }
     },    
     "edge-cache-017": {
@@ -526,20 +526,20 @@
       "hashCount": 1000,
       "interfaceName": "bond0",
       "deliveryServices": {
-        "mm-test": ["edge-cache-017.mm-test.thecdn.example.com"],
-        "ds-08": ["edge-cache-017.ds-08.thecdn.example.com"],
+        "steering-test-1": ["edge-cache-017.steering-test-1.thecdn.example.com"],
+        "steering-target-2": ["edge-cache-017.steering-target-2.thecdn.example.com"],
         "ds-07": ["edge.ds-07.thecdn.example.com"],
-        "test": ["edge-cache-017.test.thecdn.example.com"],
-        "ds-06": [
-          "edge.ds-06.thecdn.example.com",
+        "steering-test-2": ["edge-cache-017.steering-test-2.thecdn.example.com"],
+        "federation-test": [
+          "edge.federation-test.thecdn.example.com",
           "edge.dee-ehs-06.thecdn.example.com"
         ],
-        "ds-05": [
-          "edge-cache-017.ds-05.thecdn.example.com",
-          "edge-cache-017.ds-05-b-b.thecdn.example.com"
+        "steering-target-1": [
+          "edge-cache-017.steering-target-1.thecdn.example.com",
+          "edge-cache-017.steering-target-1-b-b.thecdn.example.com"
         ],
-        "ds-04": ["edge-cache-017.ds-04.thecdn.example.com"],
-        "ds-03": ["edge-cache-017.ds-03.thecdn.example.com"]
+        "steering-target-4": ["edge-cache-017.steering-target-4.thecdn.example.com"],
+        "steering-target-3": ["edge-cache-017.steering-target-3.thecdn.example.com"]
       }
     },    
     "edge-cache-018": {
@@ -556,20 +556,20 @@
       "hashCount": 1000,
       "interfaceName": "bond0",
       "deliveryServices": {
-        "mm-test": ["edge-cache-018.mm-test.thecdn.example.com"],
-        "ds-08": ["edge-cache-018.ds-08.thecdn.example.com"],
+        "steering-test-1": ["edge-cache-018.steering-test-1.thecdn.example.com"],
+        "steering-target-2": ["edge-cache-018.steering-target-2.thecdn.example.com"],
         "ds-07": ["edge.ds-07.thecdn.example.com"],
-        "test": ["edge-cache-018.test.thecdn.example.com"],
-        "ds-06": [
-          "edge.ds-06.thecdn.example.com",
+        "steering-test-2": ["edge-cache-018.steering-test-2.thecdn.example.com"],
+        "federation-test": [
+          "edge.federation-test.thecdn.example.com",
           "edge.dee-ehs-06.thecdn.example.com"
         ],
-        "ds-05": [
-          "edge-cache-018.ds-05.thecdn.example.com",
-          "edge-cache-018.ds-05-b-b.thecdn.example.com"
+        "steering-target-1": [
+          "edge-cache-018.steering-target-1.thecdn.example.com",
+          "edge-cache-018.steering-target-1-b-b.thecdn.example.com"
         ],
-        "ds-04": ["edge-cache-018.ds-04.thecdn.example.com"],
-        "ds-03": ["edge-cache-018.ds-03.thecdn.example.com"]
+        "steering-target-4": ["edge-cache-018.steering-target-4.thecdn.example.com"],
+        "steering-target-3": ["edge-cache-018.steering-target-3.thecdn.example.com"]
       }
     },    
     "edge-cache-019": {
@@ -586,20 +586,20 @@
       "hashCount": 1000,
       "interfaceName": "bond0",
       "deliveryServices": {
-        "mm-test": ["edge-cache-019.mm-test.thecdn.example.com"],
-        "ds-08": ["edge-cache-019.ds-08.thecdn.example.com"],
+        "steering-test-1": ["edge-cache-019.steering-test-1.thecdn.example.com"],
+        "steering-target-2": ["edge-cache-019.steering-target-2.thecdn.example.com"],
         "ds-07": ["edge.ds-07.thecdn.example.com"],
-        "test": ["edge-cache-019.test.thecdn.example.com"],
-        "ds-06": [
-          "edge.ds-06.thecdn.example.com",
+        "steering-test-2": ["edge-cache-019.steering-test-2.thecdn.example.com"],
+        "federation-test": [
+          "edge.federation-test.thecdn.example.com",
           "edge.dee-ehs-06.thecdn.example.com"
         ],
-        "ds-05": [
-          "edge-cache-019.ds-05.thecdn.example.com",
-          "edge-cache-019.ds-05-b-b.thecdn.example.com"
+        "steering-target-1": [
+          "edge-cache-019.steering-target-1.thecdn.example.com",
+          "edge-cache-019.steering-target-1-b-b.thecdn.example.com"
         ],
-        "ds-04": ["edge-cache-019.ds-04.thecdn.example.com"],
-        "ds-03": ["edge-cache-019.ds-03.thecdn.example.com"]
+        "steering-target-4": ["edge-cache-019.steering-target-4.thecdn.example.com"],
+        "steering-target-3": ["edge-cache-019.steering-target-3.thecdn.example.com"]
       }
     },    
     "edge-cache-020": {
@@ -616,20 +616,20 @@
       "hashCount": 1000,
       "interfaceName": "bond0",
       "deliveryServices": {
-        "mm-test": ["edge-cache-020.mm-test.thecdn.example.com"],
-        "ds-08": ["edge-cache-020.ds-08.thecdn.example.com"],
+        "steering-test-1": ["edge-cache-020.steering-test-1.thecdn.example.com"],
+        "steering-target-2": ["edge-cache-020.steering-target-2.thecdn.example.com"],
         "ds-07": ["edge.ds-07.thecdn.example.com"],
-        "test": ["edge-cache-020.test.thecdn.example.com"],
-        "ds-06": [
-          "edge.ds-06.thecdn.example.com",
+        "steering-test-2": ["edge-cache-020.steering-test-2.thecdn.example.com"],
+        "federation-test": [
+          "edge.federation-test.thecdn.example.com",
           "edge.dee-ehs-06.thecdn.example.com"
         ],
-        "ds-05": [
-          "edge-cache-020.ds-05.thecdn.example.com",
-          "edge-cache-020.ds-05-b-b.thecdn.example.com"
+        "steering-target-1": [
+          "edge-cache-020.steering-target-1.thecdn.example.com",
+          "edge-cache-020.steering-target-1-b-b.thecdn.example.com"
         ],
-        "ds-04": ["edge-cache-020.ds-04.thecdn.example.com"],
-        "ds-03": ["edge-cache-020.ds-03.thecdn.example.com"]
+        "steering-target-4": ["edge-cache-020.steering-target-4.thecdn.example.com"],
+        "steering-target-3": ["edge-cache-020.steering-target-3.thecdn.example.com"]
       }
     },    
     "edge-cache-021": {
@@ -646,20 +646,20 @@
       "hashCount": 1000,
       "interfaceName": "bond0",
       "deliveryServices": {
-        "mm-test": ["edge-cache-021.mm-test.thecdn.example.com"],
-        "ds-08": ["edge-cache-021.ds-08.thecdn.example.com"],
+        "steering-test-1": ["edge-cache-021.steering-test-1.thecdn.example.com"],
+        "steering-target-2": ["edge-cache-021.steering-target-2.thecdn.example.com"],
         "ds-07": ["edge.ds-07.thecdn.example.com"],
-        "test": ["edge-cache-021.test.thecdn.example.com"],
-        "ds-06": [
-          "edge.ds-06.thecdn.example.com",
+        "steering-test-2": ["edge-cache-021.steering-test-2.thecdn.example.com"],
+        "federation-test": [
+          "edge.federation-test.thecdn.example.com",
           "edge.dee-ehs-06.thecdn.example.com"
         ],
-        "ds-05": [
-          "edge-cache-021.ds-05.thecdn.example.com",
-          "edge-cache-021.ds-05-b-b.thecdn.example.com"
+        "steering-target-1": [
+          "edge-cache-021.steering-target-1.thecdn.example.com",
+          "edge-cache-021.steering-target-1-b-b.thecdn.example.com"
         ],
-        "ds-04": ["edge-cache-021.ds-04.thecdn.example.com"],
-        "ds-03": ["edge-cache-021.ds-03.thecdn.example.com"]
+        "steering-target-4": ["edge-cache-021.steering-target-4.thecdn.example.com"],
+        "steering-target-3": ["edge-cache-021.steering-target-3.thecdn.example.com"]
       }
     },
     "edge-cache-022": {
@@ -676,20 +676,20 @@
       "hashCount": 1000,
       "interfaceName": "bond0",
       "deliveryServices": {
-        "mm-test": ["edge-cache-022.mm-test.thecdn.example.com"],
-        "ds-08": ["edge-cache-022.ds-08.thecdn.example.com"],
+        "steering-test-1": ["edge-cache-022.steering-test-1.thecdn.example.com"],
+        "steering-target-2": ["edge-cache-022.steering-target-2.thecdn.example.com"],
         "ds-07": ["edge.ds-07.thecdn.example.com"],
-        "test": ["edge-cache-022.test.thecdn.example.com"],
-        "ds-06": [
-          "edge.ds-06.thecdn.example.com",
+        "steering-test-2": ["edge-cache-022.steering-test-2.thecdn.example.com"],
+        "federation-test": [
+          "edge.federation-test.thecdn.example.com",
           "edge.dee-ehs-06.thecdn.example.com"
         ],
-        "ds-05": [
-          "edge-cache-022.ds-05.thecdn.example.com",
-          "edge-cache-022.ds-05-b-b.thecdn.example.com"
+        "steering-target-1": [
+          "edge-cache-022.steering-target-1.thecdn.example.com",
+          "edge-cache-022.steering-target-1-b-b.thecdn.example.com"
         ],
-        "ds-04": ["edge-cache-022.ds-04.thecdn.example.com"],
-        "ds-03": ["edge-cache-022.ds-03.thecdn.example.com"]
+        "steering-target-4": ["edge-cache-022.steering-target-4.thecdn.example.com"],
+        "steering-target-3": ["edge-cache-022.steering-target-3.thecdn.example.com"]
       }
     },
     "edge-cache-023": {
@@ -706,20 +706,20 @@
       "hashCount": 1000,
       "interfaceName": "bond0",
       "deliveryServices": {
-        "mm-test": ["edge-cache-023.mm-test.thecdn.example.com"],
-        "ds-08": ["edge-cache-023.ds-08.thecdn.example.com"],
+        "steering-test-1": ["edge-cache-023.steering-test-1.thecdn.example.com"],
+        "steering-target-2": ["edge-cache-023.steering-target-2.thecdn.example.com"],
         "ds-07": ["edge.ds-07.thecdn.example.com"],
-        "test": ["edge-cache-023.test.thecdn.example.com"],
-        "ds-06": [
-          "edge.ds-06.thecdn.example.com",
+        "steering-test-2": ["edge-cache-023.steering-test-2.thecdn.example.com"],
+        "federation-test": [
+          "edge.federation-test.thecdn.example.com",
           "edge.dee-ehs-06.thecdn.example.com"
         ],
-        "ds-05": [
-          "edge-cache-023.ds-05.thecdn.example.com",
-          "edge-cache-023.ds-05-b-b.thecdn.example.com"
+        "steering-target-1": [
+          "edge-cache-023.steering-target-1.thecdn.example.com",
+          "edge-cache-023.steering-target-1-b-b.thecdn.example.com"
         ],
-        "ds-04": ["edge-cache-023.ds-04.thecdn.example.com"],
-        "ds-03": ["edge-cache-023.ds-03.thecdn.example.com"]
+        "steering-target-4": ["edge-cache-023.steering-target-4.thecdn.example.com"],
+        "steering-target-3": ["edge-cache-023.steering-target-3.thecdn.example.com"]
       }
     },
     "edge-cache-024": {
@@ -736,20 +736,20 @@
       "hashCount": 1000,
       "interfaceName": "bond0",
       "deliveryServices": {
-        "mm-test": ["edge-cache-024.mm-test.thecdn.example.com"],
-        "ds-08": ["edge-cache-024.ds-08.thecdn.example.com"],
+        "steering-test-1": ["edge-cache-024.steering-test-1.thecdn.example.com"],
+        "steering-target-2": ["edge-cache-024.steering-target-2.thecdn.example.com"],
         "ds-07": ["edge.ds-07.thecdn.example.com"],
-        "test": ["edge-cache-024.test.thecdn.example.com"],
-        "ds-06": [
-          "edge.ds-06.thecdn.example.com",
+        "steering-test-2": ["edge-cache-024.steering-test-2.thecdn.example.com"],
+        "federation-test": [
+          "edge.federation-test.thecdn.example.com",
           "edge.dee-ehs-06.thecdn.example.com"
         ],
-        "ds-05": [
-          "edge-cache-024.ds-05.thecdn.example.com",
-          "edge-cache-024.ds-05-b-b.thecdn.example.com"
+        "steering-target-1": [
+          "edge-cache-024.steering-target-1.thecdn.example.com",
+          "edge-cache-024.steering-target-1-b-b.thecdn.example.com"
         ],
-        "ds-04": ["edge-cache-024.ds-04.thecdn.example.com"],
-        "ds-03": ["edge-cache-024.ds-03.thecdn.example.com"]
+        "steering-target-4": ["edge-cache-024.steering-target-4.thecdn.example.com"],
+        "steering-target-3": ["edge-cache-024.steering-target-3.thecdn.example.com"]
       }
     },
     "edge-cache-025": {
@@ -766,20 +766,20 @@
       "hashCount": 1000,
       "interfaceName": "bond0",
       "deliveryServices": {
-        "mm-test": ["edge-cache-025.mm-test.thecdn.example.com"],
-        "ds-08": ["edge-cache-025.ds-08.thecdn.example.com"],
+        "steering-test-1": ["edge-cache-025.steering-test-1.thecdn.example.com"],
+        "steering-target-2": ["edge-cache-025.steering-target-2.thecdn.example.com"],
         "ds-07": ["edge.ds-07.thecdn.example.com"],
-        "test": ["edge-cache-025.test.thecdn.example.com"],
-        "ds-06": [
-          "edge.ds-06.thecdn.example.com",
+        "steering-test-2": ["edge-cache-025.steering-test-2.thecdn.example.com"],
+        "federation-test": [
+          "edge.federation-test.thecdn.example.com",
           "edge.dee-ehs-06.thecdn.example.com"
         ],
-        "ds-05": [
-          "edge-cache-025.ds-05.thecdn.example.com",
-          "edge-cache-025.ds-05-b-b.thecdn.example.com"
+        "steering-target-1": [
+          "edge-cache-025.steering-target-1.thecdn.example.com",
+          "edge-cache-025.steering-target-1-b-b.thecdn.example.com"
         ],
-        "ds-04": ["edge-cache-025.ds-04.thecdn.example.com"],
-        "ds-03": ["edge-cache-025.ds-03.thecdn.example.com"]
+        "steering-target-4": ["edge-cache-025.steering-target-4.thecdn.example.com"],
+        "steering-target-3": ["edge-cache-025.steering-target-3.thecdn.example.com"]
       }
     },
     "edge-cache-026": {
@@ -796,20 +796,20 @@
       "hashCount": 1000,
       "interfaceName": "bond0",
       "deliveryServices": {
-        "mm-test": ["edge-cache-026.mm-test.thecdn.example.com"],
-        "ds-08": ["edge-cache-026.ds-08.thecdn.example.com"],
+        "steering-test-1": ["edge-cache-026.steering-test-1.thecdn.example.com"],
+        "steering-target-2": ["edge-cache-026.steering-target-2.thecdn.example.com"],
         "ds-07": ["edge.ds-07.thecdn.example.com"],
-        "test": ["edge-cache-026.test.thecdn.example.com"],
-        "ds-06": [
-          "edge.ds-06.thecdn.example.com",
+        "steering-test-2": ["edge-cache-026.steering-test-2.thecdn.example.com"],
+        "federation-test": [
+          "edge.federation-test.thecdn.example.com",
           "edge.dee-ehs-06.thecdn.example.com"
         ],
-        "ds-05": [
-          "edge-cache-026.ds-05.thecdn.example.com",
-          "edge-cache-026.ds-05-b-b.thecdn.example.com"
+        "steering-target-1": [
+          "edge-cache-026.steering-target-1.thecdn.example.com",
+          "edge-cache-026.steering-target-1-b-b.thecdn.example.com"
         ],
-        "ds-04": ["edge-cache-026.ds-04.thecdn.example.com"],
-        "ds-03": ["edge-cache-026.ds-03.thecdn.example.com"]
+        "steering-target-4": ["edge-cache-026.steering-target-4.thecdn.example.com"],
+        "steering-target-3": ["edge-cache-026.steering-target-3.thecdn.example.com"]
       }
     },    
     "edge-cache-027": {
@@ -826,20 +826,20 @@
       "hashCount": 1000,
       "interfaceName": "bond0",
       "deliveryServices": {
-        "mm-test": ["edge-cache-027.mm-test.thecdn.example.com"],
-        "ds-08": ["edge-cache-027.ds-08.thecdn.example.com"],
+        "steering-test-1": ["edge-cache-027.steering-test-1.thecdn.example.com"],
+        "steering-target-2": ["edge-cache-027.steering-target-2.thecdn.example.com"],
         "ds-07": ["edge.ds-07.thecdn.example.com"],
-        "test": ["edge-cache-027.test.thecdn.example.com"],
-        "ds-06": [
-          "edge.ds-06.thecdn.example.com",
+        "steering-test-2": ["edge-cache-027.steering-test-2.thecdn.example.com"],
+        "federation-test": [
+          "edge.federation-test.thecdn.example.com",
           "edge.dee-ehs-06.thecdn.example.com"
         ],
-        "ds-05": [
-          "edge-cache-027.ds-05.thecdn.example.com",
-          "edge-cache-027.ds-05-b-b.thecdn.example.com"
+        "steering-target-1": [
+          "edge-cache-027.steering-target-1.thecdn.example.com",
+          "edge-cache-027.steering-target-1-b-b.thecdn.example.com"
         ],
-        "ds-04": ["edge-cache-027.ds-04.thecdn.example.com"],
-        "ds-03": ["edge-cache-027.ds-03.thecdn.example.com"]
+        "steering-target-4": ["edge-cache-027.steering-target-4.thecdn.example.com"],
+        "steering-target-3": ["edge-cache-027.steering-target-3.thecdn.example.com"]
       }
     },    
     "edge-cache-028": {
@@ -856,20 +856,20 @@
       "hashCount": 1000,
       "interfaceName": "bond0",
       "deliveryServices": {
-        "mm-test": ["edge-cache-028.mm-test.thecdn.example.com"],
-        "ds-08": ["edge-cache-028.ds-08.thecdn.example.com"],
+        "steering-test-1": ["edge-cache-028.steering-test-1.thecdn.example.com"],
+        "steering-target-2": ["edge-cache-028.steering-target-2.thecdn.example.com"],
         "ds-07": ["edge.ds-07.thecdn.example.com"],
-        "test": ["edge-cache-028.test.thecdn.example.com"],
-        "ds-06": [
-          "edge.ds-06.thecdn.example.com",
+        "steering-test-2": ["edge-cache-028.steering-test-2.thecdn.example.com"],
+        "federation-test": [
+          "edge.federation-test.thecdn.example.com",
           "edge.dee-ehs-06.thecdn.example.com"
         ],
-        "ds-05": [
-          "edge-cache-028.ds-05.thecdn.example.com",
-          "edge-cache-028.ds-05-b-b.thecdn.example.com"
+        "steering-target-1": [
+          "edge-cache-028.steering-target-1.thecdn.example.com",
+          "edge-cache-028.steering-target-1-b-b.thecdn.example.com"
         ],
-        "ds-04": ["edge-cache-028.ds-04.thecdn.example.com"],
-        "ds-03": ["edge-cache-028.ds-03.thecdn.example.com"]
+        "steering-target-4": ["edge-cache-028.steering-target-4.thecdn.example.com"],
+        "steering-target-3": ["edge-cache-028.steering-target-3.thecdn.example.com"]
       }
     },    
     "edge-cache-029": {
@@ -886,20 +886,20 @@
       "hashCount": 1000,
       "interfaceName": "bond0",
       "deliveryServices": {
-        "mm-test": ["edge-cache-029.mm-test.thecdn.example.com"],
-        "ds-08": ["edge-cache-029.ds-08.thecdn.example.com"],
+        "steering-test-1": ["edge-cache-029.steering-test-1.thecdn.example.com"],
+        "steering-target-2": ["edge-cache-029.steering-target-2.thecdn.example.com"],
         "ds-07": ["edge.ds-07.thecdn.example.com"],
-        "test": ["edge-cache-029.test.thecdn.example.com"],
-        "ds-06": [
-          "edge.ds-06.thecdn.example.com",
+        "steering-test-2": ["edge-cache-029.steering-test-2.thecdn.example.com"],
+        "federation-test": [
+          "edge.federation-test.thecdn.example.com",
           "edge.dee-ehs-06.thecdn.example.com"
         ],
-        "ds-05": [
-          "edge-cache-029.ds-05.thecdn.example.com",
-          "edge-cache-029.ds-05-b-b.thecdn.example.com"
+        "steering-target-1": [
+          "edge-cache-029.steering-target-1.thecdn.example.com",
+          "edge-cache-029.steering-target-1-b-b.thecdn.example.com"
         ],
-        "ds-04": ["edge-cache-029.ds-04.thecdn.example.com"],
-        "ds-03": ["edge-cache-029.ds-03.thecdn.example.com"]
+        "steering-target-4": ["edge-cache-029.steering-target-4.thecdn.example.com"],
+        "steering-target-3": ["edge-cache-029.steering-target-3.thecdn.example.com"]
       }
     },    
     "edge-cache-030": {
@@ -916,20 +916,20 @@
       "hashCount": 1000,
       "interfaceName": "bond0",
       "deliveryServices": {
-        "mm-test": ["edge-cache-030.mm-test.thecdn.example.com"],
-        "ds-08": ["edge-cache-030.ds-08.thecdn.example.com"],
+        "steering-test-1": ["edge-cache-030.steering-test-1.thecdn.example.com"],
+        "steering-target-2": ["edge-cache-030.steering-target-2.thecdn.example.com"],
         "ds-07": ["edge.ds-07.thecdn.example.com"],
-        "test": ["edge-cache-030.test.thecdn.example.com"],
-        "ds-06": [
-          "edge.ds-06.thecdn.example.com",
+        "steering-test-2": ["edge-cache-030.steering-test-2.thecdn.example.com"],
+        "federation-test": [
+          "edge.federation-test.thecdn.example.com",
           "edge.dee-ehs-06.thecdn.example.com"
         ],
-        "ds-05": [
-          "edge-cache-030.ds-05.thecdn.example.com",
-          "edge-cache-030.ds-05-b-b.thecdn.example.com"
+        "steering-target-1": [
+          "edge-cache-030.steering-target-1.thecdn.example.com",
+          "edge-cache-030.steering-target-1-b-b.thecdn.example.com"
         ],
-        "ds-04": ["edge-cache-030.ds-04.thecdn.example.com"],
-        "ds-03": ["edge-cache-030.ds-03.thecdn.example.com"]
+        "steering-target-4": ["edge-cache-030.steering-target-4.thecdn.example.com"],
+        "steering-target-3": ["edge-cache-030.steering-target-3.thecdn.example.com"]
       }
     },    
     "edge-cache-031": {
@@ -946,20 +946,20 @@
       "hashCount": 1000,
       "interfaceName": "bond0",
       "deliveryServices": {
-        "mm-test": ["edge-cache-031.mm-test.thecdn.example.com"],
-        "ds-08": ["edge-cache-031.ds-08.thecdn.example.com"],
+        "steering-test-1": ["edge-cache-031.steering-test-1.thecdn.example.com"],
+        "steering-target-2": ["edge-cache-031.steering-target-2.thecdn.example.com"],
         "ds-07": ["edge.ds-07.thecdn.example.com"],
-        "test": ["edge-cache-031.test.thecdn.example.com"],
-        "ds-06": [
-          "edge.ds-06.thecdn.example.com",
+        "steering-test-2": ["edge-cache-031.steering-test-2.thecdn.example.com"],
+        "federation-test": [
+          "edge.federation-test.thecdn.example.com",
           "edge.dee-ehs-06.thecdn.example.com"
         ],
-        "ds-05": [
-          "edge-cache-031.ds-05.thecdn.example.com",
-          "edge-cache-031.ds-05-b-b.thecdn.example.com"
+        "steering-target-1": [
+          "edge-cache-031.steering-target-1.thecdn.example.com",
+          "edge-cache-031.steering-target-1-b-b.thecdn.example.com"
         ],
-        "ds-04": ["edge-cache-031.ds-04.thecdn.example.com"],
-        "ds-03": ["edge-cache-031.ds-03.thecdn.example.com"]
+        "steering-target-4": ["edge-cache-031.steering-target-4.thecdn.example.com"],
+        "steering-target-3": ["edge-cache-031.steering-target-3.thecdn.example.com"]
       }
     },
     "edge-cache-032": {
@@ -976,20 +976,20 @@
       "hashCount": 1000,
       "interfaceName": "bond0",
       "deliveryServices": {
-        "mm-test": ["edge-cache-032.mm-test.thecdn.example.com"],
-        "ds-08": ["edge-cache-032.ds-08.thecdn.example.com"],
+        "steering-test-1": ["edge-cache-032.steering-test-1.thecdn.example.com"],
+        "steering-target-2": ["edge-cache-032.steering-target-2.thecdn.example.com"],
         "ds-07": ["edge.ds-07.thecdn.example.com"],
-        "test": ["edge-cache-032.test.thecdn.example.com"],
-        "ds-06": [
-          "edge.ds-06.thecdn.example.com",
+        "steering-test-2": ["edge-cache-032.steering-test-2.thecdn.example.com"],
+        "federation-test": [
+          "edge.federation-test.thecdn.example.com",
           "edge.dee-ehs-06.thecdn.example.com"
         ],
-        "ds-05": [
-          "edge-cache-032.ds-05.thecdn.example.com",
-          "edge-cache-032.ds-05-b-b.thecdn.example.com"
+        "steering-target-1": [
+          "edge-cache-032.steering-target-1.thecdn.example.com",
+          "edge-cache-032.steering-target-1-b-b.thecdn.example.com"
         ],
-        "ds-04": ["edge-cache-032.ds-04.thecdn.example.com"],
-        "ds-03": ["edge-cache-032.ds-03.thecdn.example.com"]
+        "steering-target-4": ["edge-cache-032.steering-target-4.thecdn.example.com"],
+        "steering-target-3": ["edge-cache-032.steering-target-3.thecdn.example.com"]
       }
     },
     "edge-cache-033": {
@@ -1006,20 +1006,20 @@
       "hashCount": 1000,
       "interfaceName": "bond0",
       "deliveryServices": {
-        "mm-test": ["edge-cache-033.mm-test.thecdn.example.com"],
-        "ds-08": ["edge-cache-033.ds-08.thecdn.example.com"],
+        "steering-test-1": ["edge-cache-033.steering-test-1.thecdn.example.com"],
+        "steering-target-2": ["edge-cache-033.steering-target-2.thecdn.example.com"],
         "ds-07": ["edge.ds-07.thecdn.example.com"],
-        "test": ["edge-cache-033.test.thecdn.example.com"],
-        "ds-06": [
-          "edge.ds-06.thecdn.example.com",
+        "steering-test-2": ["edge-cache-033.steering-test-2.thecdn.example.com"],
+        "federation-test": [
+          "edge.federation-test.thecdn.example.com",
           "edge.dee-ehs-06.thecdn.example.com"
         ],
-        "ds-05": [
-          "edge-cache-033.ds-05.thecdn.example.com",
-          "edge-cache-033.ds-05-b-b.thecdn.example.com"
+        "steering-target-1": [
+          "edge-cache-033.steering-target-1.thecdn.example.com",
+          "edge-cache-033.steering-target-1-b-b.thecdn.example.com"
         ],
-        "ds-04": ["edge-cache-033.ds-04.thecdn.example.com"],
-        "ds-03": ["edge-cache-033.ds-03.thecdn.example.com"]
+        "steering-target-4": ["edge-cache-033.steering-target-4.thecdn.example.com"],
+        "steering-target-3": ["edge-cache-033.steering-target-3.thecdn.example.com"]
       }
     },
     "edge-cache-034": {
@@ -1036,20 +1036,20 @@
       "hashCount": 1000,
       "interfaceName": "bond0",
       "deliveryServices": {
-        "mm-test": ["edge-cache-034.mm-test.thecdn.example.com"],
-        "ds-08": ["edge-cache-034.ds-08.thecdn.example.com"],
+        "steering-test-1": ["edge-cache-034.steering-test-1.thecdn.example.com"],
+        "steering-target-2": ["edge-cache-034.steering-target-2.thecdn.example.com"],
         "ds-07": ["edge.ds-07.thecdn.example.com"],
-        "test": ["edge-cache-034.test.thecdn.example.com"],
-        "ds-06": [
-          "edge.ds-06.thecdn.example.com",
+        "steering-test-2": ["edge-cache-034.steering-test-2.thecdn.example.com"],
+        "federation-test": [
+          "edge.federation-test.thecdn.example.com",
           "edge.dee-ehs-06.thecdn.example.com"
         ],
-        "ds-05": [
-          "edge-cache-034.ds-05.thecdn.example.com",
-          "edge-cache-034.ds-05-b-b.thecdn.example.com"
+        "steering-target-1": [
+          "edge-cache-034.steering-target-1.thecdn.example.com",
+          "edge-cache-034.steering-target-1-b-b.thecdn.example.com"
         ],
-        "ds-04": ["edge-cache-034.ds-04.thecdn.example.com"],
-        "ds-03": ["edge-cache-034.ds-03.thecdn.example.com"]
+        "steering-target-4": ["edge-cache-034.steering-target-4.thecdn.example.com"],
+        "steering-target-3": ["edge-cache-034.steering-target-3.thecdn.example.com"]
       }
     },
     "edge-cache-035": {
@@ -1066,20 +1066,20 @@
       "hashCount": 1000,
       "interfaceName": "bond0",
       "deliveryServices": {
-        "mm-test": ["edge-cache-035.mm-test.thecdn.example.com"],
-        "ds-08": ["edge-cache-035.ds-08.thecdn.example.com"],
+        "steering-test-1": ["edge-cache-035.steering-test-1.thecdn.example.com"],
+        "steering-target-2": ["edge-cache-035.steering-target-2.thecdn.example.com"],
         "ds-07": ["edge.ds-07.thecdn.example.com"],
-        "test": ["edge-cache-035.test.thecdn.example.com"],
-        "ds-06": [
-          "edge.ds-06.thecdn.example.com",
+        "steering-test-2": ["edge-cache-035.steering-test-2.thecdn.example.com"],
+        "federation-test": [
+          "edge.federation-test.thecdn.example.com",
           "edge.dee-ehs-06.thecdn.example.com"
         ],
-        "ds-05": [
-          "edge-cache-035.ds-05.thecdn.example.com",
-          "edge-cache-035.ds-05-b-b.thecdn.example.com"
+        "steering-target-1": [
+          "edge-cache-035.steering-target-1.thecdn.example.com",
+          "edge-cache-035.steering-target-1-b-b.thecdn.example.com"
         ],
-        "ds-04": ["edge-cache-035.ds-04.thecdn.example.com"],
-        "ds-03": ["edge-cache-035.ds-03.thecdn.example.com"]
+        "steering-target-4": ["edge-cache-035.steering-target-4.thecdn.example.com"],
+        "steering-target-3": ["edge-cache-035.steering-target-3.thecdn.example.com"]
       }
     },
     "edge-cache-036": {
@@ -1096,20 +1096,20 @@
       "hashCount": 1000,
       "interfaceName": "bond0",
       "deliveryServices": {
-        "mm-test": ["edge-cache-036.mm-test.thecdn.example.com"],
-        "ds-08": ["edge-cache-036.ds-08.thecdn.example.com"],
+        "steering-test-1": ["edge-cache-036.steering-test-1.thecdn.example.com"],
+        "steering-target-2": ["edge-cache-036.steering-target-2.thecdn.example.com"],
         "ds-07": ["edge.ds-07.thecdn.example.com"],
-        "test": ["edge-cache-036.test.thecdn.example.com"],
-        "ds-06": [
-          "edge.ds-06.thecdn.example.com",
+        "steering-test-2": ["edge-cache-036.steering-test-2.thecdn.example.com"],
+        "federation-test": [
+          "edge.federation-test.thecdn.example.com",
           "edge.dee-ehs-06.thecdn.example.com"
         ],
-        "ds-05": [
-          "edge-cache-036.ds-05.thecdn.example.com",
-          "edge-cache-036.ds-05-b-b.thecdn.example.com"
+        "steering-target-1": [
+          "edge-cache-036.steering-target-1.thecdn.example.com",
+          "edge-cache-036.steering-target-1-b-b.thecdn.example.com"
         ],
-        "ds-04": ["edge-cache-036.ds-04.thecdn.example.com"],
-        "ds-03": ["edge-cache-036.ds-03.thecdn.example.com"]
+        "steering-target-4": ["edge-cache-036.steering-target-4.thecdn.example.com"],
+        "steering-target-3": ["edge-cache-036.steering-target-3.thecdn.example.com"]
       }
     },    
     "edge-cache-037": {
@@ -1126,20 +1126,20 @@
       "hashCount": 1000,
       "interfaceName": "bond0",
       "deliveryServices": {
-        "mm-test": ["edge-cache-037.mm-test.thecdn.example.com"],
-        "ds-08": ["edge-cache-037.ds-08.thecdn.example.com"],
+        "steering-test-1": ["edge-cache-037.steering-test-1.thecdn.example.com"],
+        "steering-target-2": ["edge-cache-037.steering-target-2.thecdn.example.com"],
         "ds-07": ["edge.ds-07.thecdn.example.com"],
-        "test": ["edge-cache-037.test.thecdn.example.com"],
-        "ds-06": [
-          "edge.ds-06.thecdn.example.com",
+        "steering-test-2": ["edge-cache-037.steering-test-2.thecdn.example.com"],
+        "federation-test": [
+          "edge.federation-test.thecdn.example.com",
           "edge.dee-ehs-06.thecdn.example.com"
         ],
-        "ds-05": [
-          "edge-cache-037.ds-05.thecdn.example.com",
-          "edge-cache-037.ds-05-b-b.thecdn.example.com"
+        "steering-target-1": [
+          "edge-cache-037.steering-target-1.thecdn.example.com",
+          "edge-cache-037.steering-target-1-b-b.thecdn.example.com"
         ],
-        "ds-04": ["edge-cache-037.ds-04.thecdn.example.com"],
-        "ds-03": ["edge-cache-037.ds-03.thecdn.example.com"]
+        "steering-target-4": ["edge-cache-037.steering-target-4.thecdn.example.com"],
+        "steering-target-3": ["edge-cache-037.steering-target-3.thecdn.example.com"]
       }
     },    
     "edge-cache-038": {
@@ -1156,20 +1156,20 @@
       "hashCount": 1000,
       "interfaceName": "bond0",
       "deliveryServices": {
-        "mm-test": ["edge-cache-038.mm-test.thecdn.example.com"],
-        "ds-08": ["edge-cache-038.ds-08.thecdn.example.com"],
+        "steering-test-1": ["edge-cache-038.steering-test-1.thecdn.example.com"],
+        "steering-target-2": ["edge-cache-038.steering-target-2.thecdn.example.com"],
         "ds-07": ["edge.ds-07.thecdn.example.com"],
-        "test": ["edge-cache-038.test.thecdn.example.com"],
-        "ds-06": [
-          "edge.ds-06.thecdn.example.com",
+        "steering-test-2": ["edge-cache-038.steering-test-2.thecdn.example.com"],
+        "federation-test": [
+          "edge.federation-test.thecdn.example.com",
           "edge.dee-ehs-06.thecdn.example.com"
         ],
-        "ds-05": [
-          "edge-cache-038.ds-05.thecdn.example.com",
-          "edge-cache-038.ds-05-b-b.thecdn.example.com"
+        "steering-target-1": [
+          "edge-cache-038.steering-target-1.thecdn.example.com",
+          "edge-cache-038.steering-target-1-b-b.thecdn.example.com"
         ],
-        "ds-04": ["edge-cache-038.ds-04.thecdn.example.com"],
-        "ds-03": ["edge-cache-038.ds-03.thecdn.example.com"]
+        "steering-target-4": ["edge-cache-038.steering-target-4.thecdn.example.com"],
+        "steering-target-3": ["edge-cache-038.steering-target-3.thecdn.example.com"]
       }
     },    
     "edge-cache-039": {
@@ -1186,20 +1186,20 @@
       "hashCount": 1000,
       "interfaceName": "bond0",
       "deliveryServices": {
-        "mm-test": ["edge-cache-039.mm-test.thecdn.example.com"],
-        "ds-08": ["edge-cache-039.ds-08.thecdn.example.com"],
+        "steering-test-1": ["edge-cache-039.steering-test-1.thecdn.example.com"],
+        "steering-target-2": ["edge-cache-039.steering-target-2.thecdn.example.com"],
         "ds-07": ["edge.ds-07.thecdn.example.com"],
-        "test": ["edge-cache-039.test.thecdn.example.com"],
-        "ds-06": [
-          "edge.ds-06.thecdn.example.com",
+        "steering-test-2": ["edge-cache-039.steering-test-2.thecdn.example.com"],
+        "federation-test": [
+          "edge.federation-test.thecdn.example.com",
           "edge.dee-ehs-06.thecdn.example.com"
         ],
-        "ds-05": [
-          "edge-cache-039.ds-05.thecdn.example.com",
-          "edge-cache-039.ds-05-b-b.thecdn.example.com"
+        "steering-target-1": [
+          "edge-cache-039.steering-target-1.thecdn.example.com",
+          "edge-cache-039.steering-target-1-b-b.thecdn.example.com"
         ],
-        "ds-04": ["edge-cache-039.ds-04.thecdn.example.com"],
-        "ds-03": ["edge-cache-039.ds-03.thecdn.example.com"]
+        "steering-target-4": ["edge-cache-039.steering-target-4.thecdn.example.com"],
+        "steering-target-3": ["edge-cache-039.steering-target-3.thecdn.example.com"]
       }
     },    
     "edge-cache-040": {
@@ -1216,20 +1216,20 @@
       "hashCount": 1000,
       "interfaceName": "bond0",
       "deliveryServices": {
-        "mm-test": ["edge-cache-040.mm-test.thecdn.example.com"],
-        "ds-08": ["edge-cache-040.ds-08.thecdn.example.com"],
+        "steering-test-1": ["edge-cache-040.steering-test-1.thecdn.example.com"],
+        "steering-target-2": ["edge-cache-040.steering-target-2.thecdn.example.com"],
         "ds-07": ["edge.ds-07.thecdn.example.com"],
-        "test": ["edge-cache-040.test.thecdn.example.com"],
-        "ds-06": [
-          "edge.ds-06.thecdn.example.com",
+        "steering-test-2": ["edge-cache-040.steering-test-2.thecdn.example.com"],
+        "federation-test": [
+          "edge.federation-test.thecdn.example.com",
           "edge.dee-ehs-06.thecdn.example.com"
         ],
-        "ds-05": [
-          "edge-cache-040.ds-05.thecdn.example.com",
-          "edge-cache-040.ds-05-b-b.thecdn.example.com"
+        "steering-target-1": [
+          "edge-cache-040.steering-target-1.thecdn.example.com",
+          "edge-cache-040.steering-target-1-b-b.thecdn.example.com"
         ],
-        "ds-04": ["edge-cache-040.ds-04.thecdn.example.com"],
-        "ds-03": ["edge-cache-040.ds-03.thecdn.example.com"]
+        "steering-target-4": ["edge-cache-040.steering-target-4.thecdn.example.com"],
+        "steering-target-3": ["edge-cache-040.steering-target-3.thecdn.example.com"]
       }
     },    
     "edge-cache-041": {
@@ -1246,20 +1246,20 @@
       "hashCount": 1000,
       "interfaceName": "bond0",
       "deliveryServices": {
-        "mm-test": ["edge-cache-041.mm-test.thecdn.example.com"],
-        "ds-08": ["edge-cache-041.ds-08.thecdn.example.com"],
+        "steering-test-1": ["edge-cache-041.steering-test-1.thecdn.example.com"],
+        "steering-target-2": ["edge-cache-041.steering-target-2.thecdn.example.com"],
         "ds-07": ["edge.ds-07.thecdn.example.com"],
-        "test": ["edge-cache-041.test.thecdn.example.com"],
-        "ds-06": [
-          "edge.ds-06.thecdn.example.com",
+        "steering-test-2": ["edge-cache-041.steering-test-2.thecdn.example.com"],
+        "federation-test": [
+          "edge.federation-test.thecdn.example.com",
           "edge.dee-ehs-06.thecdn.example.com"
         ],
-        "ds-05": [
-          "edge-cache-041.ds-05.thecdn.example.com",
-          "edge-cache-041.ds-05-b-b.thecdn.example.com"
+        "steering-target-1": [
+          "edge-cache-041.steering-target-1.thecdn.example.com",
+          "edge-cache-041.steering-target-1-b-b.thecdn.example.com"
         ],
-        "ds-04": ["edge-cache-041.ds-04.thecdn.example.com"],
-        "ds-03": ["edge-cache-041.ds-03.thecdn.example.com"]
+        "steering-target-4": ["edge-cache-041.steering-target-4.thecdn.example.com"],
+        "steering-target-3": ["edge-cache-041.steering-target-3.thecdn.example.com"]
       }
     },
     "edge-cache-042": {
@@ -1276,20 +1276,20 @@
       "hashCount": 1000,
       "interfaceName": "bond0",
       "deliveryServices": {
-        "mm-test": ["edge-cache-042.mm-test.thecdn.example.com"],
-        "ds-08": ["edge-cache-042.ds-08.thecdn.example.com"],
+        "steering-test-1": ["edge-cache-042.steering-test-1.thecdn.example.com"],
+        "steering-target-2": ["edge-cache-042.steering-target-2.thecdn.example.com"],
         "ds-07": ["edge.ds-07.thecdn.example.com"],
-        "test": ["edge-cache-042.test.thecdn.example.com"],
-        "ds-06": [
-          "edge.ds-06.thecdn.example.com",
+        "steering-test-2": ["edge-cache-042.steering-test-2.thecdn.example.com"],
+        "federation-test": [
+          "edge.federation-test.thecdn.example.com",
           "edge.dee-ehs-06.thecdn.example.com"
         ],
-        "ds-05": [
-          "edge-cache-042.ds-05.thecdn.example.com",
-          "edge-cache-042.ds-05-b-b.thecdn.example.com"
+        "steering-target-1": [
+          "edge-cache-042.steering-target-1.thecdn.example.com",
+          "edge-cache-042.steering-target-1-b-b.thecdn.example.com"
         ],
-        "ds-04": ["edge-cache-042.ds-04.thecdn.example.com"],
-        "ds-03": ["edge-cache-042.ds-03.thecdn.example.com"]
+        "steering-target-4": ["edge-cache-042.steering-target-4.thecdn.example.com"],
+        "steering-target-3": ["edge-cache-042.steering-target-3.thecdn.example.com"]
       }
     },
     "edge-cache-043": {
@@ -1306,20 +1306,20 @@
       "hashCount": 1000,
       "interfaceName": "bond0",
       "deliveryServices": {
-        "mm-test": ["edge-cache-043.mm-test.thecdn.example.com"],
-        "ds-08": ["edge-cache-043.ds-08.thecdn.example.com"],
+        "steering-test-1": ["edge-cache-043.steering-test-1.thecdn.example.com"],
+        "steering-target-2": ["edge-cache-043.steering-target-2.thecdn.example.com"],
         "ds-07": ["edge.ds-07.thecdn.example.com"],
-        "test": ["edge-cache-043.test.thecdn.example.com"],
-        "ds-06": [
-          "edge.ds-06.thecdn.example.com",
+        "steering-test-2": ["edge-cache-043.steering-test-2.thecdn.example.com"],
+        "federation-test": [
+          "edge.federation-test.thecdn.example.com",
           "edge.dee-ehs-06.thecdn.example.com"
         ],
-        "ds-05": [
-          "edge-cache-043.ds-05.thecdn.example.com",
-          "edge-cache-043.ds-05-b-b.thecdn.example.com"
+        "steering-target-1": [
+          "edge-cache-043.steering-target-1.thecdn.example.com",
+          "edge-cache-043.steering-target-1-b-b.thecdn.example.com"
         ],
-        "ds-04": ["edge-cache-043.ds-04.thecdn.example.com"],
-        "ds-03": ["edge-cache-043.ds-03.thecdn.example.com"]
+        "steering-target-4": ["edge-cache-043.steering-target-4.thecdn.example.com"],
+        "steering-target-3": ["edge-cache-043.steering-target-3.thecdn.example.com"]
       }
     },
     "edge-cache-044": {
@@ -1336,20 +1336,20 @@
       "hashCount": 1000,
       "interfaceName": "bond0",
       "deliveryServices": {
-        "mm-test": ["edge-cache-044.mm-test.thecdn.example.com"],
-        "ds-08": ["edge-cache-044.ds-08.thecdn.example.com"],
+        "steering-test-1": ["edge-cache-044.steering-test-1.thecdn.example.com"],
+        "steering-target-2": ["edge-cache-044.steering-target-2.thecdn.example.com"],
         "ds-07": ["edge.ds-07.thecdn.example.com"],
-        "test": ["edge-cache-044.test.thecdn.example.com"],
-        "ds-06": [
-          "edge.ds-06.thecdn.example.com",
+        "steering-test-2": ["edge-cache-044.steering-test-2.thecdn.example.com"],
+        "federation-test": [
+          "edge.federation-test.thecdn.example.com",
           "edge.dee-ehs-06.thecdn.example.com"
         ],
-        "ds-05": [
-          "edge-cache-044.ds-05.thecdn.example.com",
-          "edge-cache-044.ds-05-b-b.thecdn.example.com"
+        "steering-target-1": [
+          "edge-cache-044.steering-target-1.thecdn.example.com",
+          "edge-cache-044.steering-target-1-b-b.thecdn.example.com"
         ],
-        "ds-04": ["edge-cache-044.ds-04.thecdn.example.com"],
-        "ds-03": ["edge-cache-044.ds-03.thecdn.example.com"]
+        "steering-target-4": ["edge-cache-044.steering-target-4.thecdn.example.com"],
+        "steering-target-3": ["edge-cache-044.steering-target-3.thecdn.example.com"]
       }
     },
     "edge-cache-045": {
@@ -1366,20 +1366,20 @@
       "hashCount": 1000,
       "interfaceName": "bond0",
       "deliveryServices": {
-        "mm-test": ["edge-cache-045.mm-test.thecdn.example.com"],
-        "ds-08": ["edge-cache-045.ds-08.thecdn.example.com"],
+        "steering-test-1": ["edge-cache-045.steering-test-1.thecdn.example.com"],
+        "steering-target-2": ["edge-cache-045.steering-target-2.thecdn.example.com"],
         "ds-07": ["edge.ds-07.thecdn.example.com"],
-        "test": ["edge-cache-045.test.thecdn.example.com"],
-        "ds-06": [
-          "edge.ds-06.thecdn.example.com",
+        "steering-test-2": ["edge-cache-045.steering-test-2.thecdn.example.com"],
+        "federation-test": [
+          "edge.federation-test.thecdn.example.com",
           "edge.dee-ehs-06.thecdn.example.com"
         ],
-        "ds-05": [
-          "edge-cache-045.ds-05.thecdn.example.com",
-          "edge-cache-045.ds-05-b-b.thecdn.example.com"
+        "steering-target-1": [
+          "edge-cache-045.steering-target-1.thecdn.example.com",
+          "edge-cache-045.steering-target-1-b-b.thecdn.example.com"
         ],
-        "ds-04": ["edge-cache-045.ds-04.thecdn.example.com"],
-        "ds-03": ["edge-cache-045.ds-03.thecdn.example.com"]
+        "steering-target-4": ["edge-cache-045.steering-target-4.thecdn.example.com"],
+        "steering-target-3": ["edge-cache-045.steering-target-3.thecdn.example.com"]
       }
     },
     "edge-cache-046": {
@@ -1396,20 +1396,20 @@
       "hashCount": 1000,
       "interfaceName": "bond0",
       "deliveryServices": {
-        "mm-test": ["edge-cache-046.mm-test.thecdn.example.com"],
-        "ds-08": ["edge-cache-046.ds-08.thecdn.example.com"],
+        "steering-test-1": ["edge-cache-046.steering-test-1.thecdn.example.com"],
+        "steering-target-2": ["edge-cache-046.steering-target-2.thecdn.example.com"],
         "ds-07": ["edge.ds-07.thecdn.example.com"],
-        "test": ["edge-cache-046.test.thecdn.example.com"],
-        "ds-06": [
-          "edge.ds-06.thecdn.example.com",
+        "steering-test-2": ["edge-cache-046.steering-test-2.thecdn.example.com"],
+        "federation-test": [
+          "edge.federation-test.thecdn.example.com",
           "edge.dee-ehs-06.thecdn.example.com"
         ],
-        "ds-05": [
-          "edge-cache-046.ds-05.thecdn.example.com",
-          "edge-cache-046.ds-05-b-b.thecdn.example.com"
+        "steering-target-1": [
+          "edge-cache-046.steering-target-1.thecdn.example.com",
+          "edge-cache-046.steering-target-1-b-b.thecdn.example.com"
         ],
-        "ds-04": ["edge-cache-046.ds-04.thecdn.example.com"],
-        "ds-03": ["edge-cache-046.ds-03.thecdn.example.com"]
+        "steering-target-4": ["edge-cache-046.steering-target-4.thecdn.example.com"],
+        "steering-target-3": ["edge-cache-046.steering-target-3.thecdn.example.com"]
       }
     },    
     "edge-cache-047": {
@@ -1426,20 +1426,20 @@
       "hashCount": 1000,
       "interfaceName": "bond0",
       "deliveryServices": {
-        "mm-test": ["edge-cache-047.mm-test.thecdn.example.com"],
-        "ds-08": ["edge-cache-047.ds-08.thecdn.example.com"],
+        "steering-test-1": ["edge-cache-047.steering-test-1.thecdn.example.com"],
+        "steering-target-2": ["edge-cache-047.steering-target-2.thecdn.example.com"],
         "ds-07": ["edge.ds-07.thecdn.example.com"],
-        "test": ["edge-cache-047.test.thecdn.example.com"],
-        "ds-06": [
-          "edge.ds-06.thecdn.example.com",
+        "steering-test-2": ["edge-cache-047.steering-test-2.thecdn.example.com"],
+        "federation-test": [
+          "edge.federation-test.thecdn.example.com",
           "edge.dee-ehs-06.thecdn.example.com"
         ],
-        "ds-05": [
-          "edge-cache-047.ds-05.thecdn.example.com",
-          "edge-cache-047.ds-05-b-b.thecdn.example.com"
+        "steering-target-1": [
+          "edge-cache-047.steering-target-1.thecdn.example.com",
+          "edge-cache-047.steering-target-1-b-b.thecdn.example.com"
         ],
-        "ds-04": ["edge-cache-047.ds-04.thecdn.example.com"],
-        "ds-03": ["edge-cache-047.ds-03.thecdn.example.com"]
+        "steering-target-4": ["edge-cache-047.steering-target-4.thecdn.example.com"],
+        "steering-target-3": ["edge-cache-047.steering-target-3.thecdn.example.com"]
       }
     },    
     "edge-cache-048": {
@@ -1456,20 +1456,20 @@
       "hashCount": 1000,
       "interfaceName": "bond0",
       "deliveryServices": {
-        "mm-test": ["edge-cache-048.mm-test.thecdn.example.com"],
-        "ds-08": ["edge-cache-048.ds-08.thecdn.example.com"],
+        "steering-test-1": ["edge-cache-048.steering-test-1.thecdn.example.com"],
+        "steering-target-2": ["edge-cache-048.steering-target-2.thecdn.example.com"],
         "ds-07": ["edge.ds-07.thecdn.example.com"],
-        "test": ["edge-cache-048.test.thecdn.example.com"],
-        "ds-06": [
-          "edge.ds-06.thecdn.example.com",
+        "steering-test-2": ["edge-cache-048.steering-test-2.thecdn.example.com"],
+        "federation-test": [
+          "edge.federation-test.thecdn.example.com",
           "edge.dee-ehs-06.thecdn.example.com"
         ],
-        "ds-05": [
-          "edge-cache-048.ds-05.thecdn.example.com",
-          "edge-cache-048.ds-05-b-b.thecdn.example.com"
+        "steering-target-1": [
+          "edge-cache-048.steering-target-1.thecdn.example.com",
+          "edge-cache-048.steering-target-1-b-b.thecdn.example.com"
         ],
-        "ds-04": ["edge-cache-048.ds-04.thecdn.example.com"],
-        "ds-03": ["edge-cache-048.ds-03.thecdn.example.com"]
+        "steering-target-4": ["edge-cache-048.steering-target-4.thecdn.example.com"],
+        "steering-target-3": ["edge-cache-048.steering-target-3.thecdn.example.com"]
       }
     },    
     "edge-cache-049": {
@@ -1486,20 +1486,20 @@
       "hashCount": 1000,
       "interfaceName": "bond0",
       "deliveryServices": {
-        "mm-test": ["edge-cache-049.mm-test.thecdn.example.com"],
-        "ds-08": ["edge-cache-049.ds-08.thecdn.example.com"],
+        "steering-test-1": ["edge-cache-049.steering-test-1.thecdn.example.com"],
+        "steering-target-2": ["edge-cache-049.steering-target-2.thecdn.example.com"],
         "ds-07": ["edge.ds-07.thecdn.example.com"],
-        "test": ["edge-cache-049.test.thecdn.example.com"],
-        "ds-06": [
-          "edge.ds-06.thecdn.example.com",
+        "steering-test-2": ["edge-cache-049.steering-test-2.thecdn.example.com"],
+        "federation-test": [
+          "edge.federation-test.thecdn.example.com",
           "edge.dee-ehs-06.thecdn.example.com"
         ],
-        "ds-05": [
-          "edge-cache-049.ds-05.thecdn.example.com",
-          "edge-cache-049.ds-05-b-b.thecdn.example.com"
+        "steering-target-1": [
+          "edge-cache-049.steering-target-1.thecdn.example.com",
+          "edge-cache-049.steering-target-1-b-b.thecdn.example.com"
         ],
-        "ds-04": ["edge-cache-049.ds-04.thecdn.example.com"],
-        "ds-03": ["edge-cache-049.ds-03.thecdn.example.com"]
+        "steering-target-4": ["edge-cache-049.steering-target-4.thecdn.example.com"],
+        "steering-target-3": ["edge-cache-049.steering-target-3.thecdn.example.com"]
       }
     },    
     "edge-cache-050": {
@@ -1516,20 +1516,20 @@
       "hashCount": 1000,
       "interfaceName": "bond0",
       "deliveryServices": {
-        "mm-test": ["edge-cache-050.mm-test.thecdn.example.com"],
-        "ds-08": ["edge-cache-050.ds-08.thecdn.example.com"],
+        "steering-test-1": ["edge-cache-050.steering-test-1.thecdn.example.com"],
+        "steering-target-2": ["edge-cache-050.steering-target-2.thecdn.example.com"],
         "ds-07": ["edge.ds-07.thecdn.example.com"],
-        "test": ["edge-cache-050.test.thecdn.example.com"],
-        "ds-06": [
-          "edge.ds-06.thecdn.example.com",
+        "steering-test-2": ["edge-cache-050.steering-test-2.thecdn.example.com"],
+        "federation-test": [
+          "edge.federation-test.thecdn.example.com",
           "edge.dee-ehs-06.thecdn.example.com"
         ],
-        "ds-05": [
-          "edge-cache-050.ds-05.thecdn.example.com",
-          "edge-cache-050.ds-05-b-b.thecdn.example.com"
+        "steering-target-1": [
+          "edge-cache-050.steering-target-1.thecdn.example.com",
+          "edge-cache-050.steering-target-1-b-b.thecdn.example.com"
         ],
-        "ds-04": ["edge-cache-050.ds-04.thecdn.example.com"],
-        "ds-03": ["edge-cache-050.ds-03.thecdn.example.com"]
+        "steering-target-4": ["edge-cache-050.steering-target-4.thecdn.example.com"],
+        "steering-target-3": ["edge-cache-050.steering-target-3.thecdn.example.com"]
       }
     },    
     "edge-cache-051": {
@@ -1546,20 +1546,20 @@
       "hashCount": 1000,
       "interfaceName": "bond0",
       "deliveryServices": {
-        "mm-test": ["edge-cache-051.mm-test.thecdn.example.com"],
-        "ds-08": ["edge-cache-051.ds-08.thecdn.example.com"],
+        "steering-test-1": ["edge-cache-051.steering-test-1.thecdn.example.com"],
+        "steering-target-2": ["edge-cache-051.steering-target-2.thecdn.example.com"],
         "ds-07": ["edge.ds-07.thecdn.example.com"],
-        "test": ["edge-cache-051.test.thecdn.example.com"],
-        "ds-06": [
-          "edge.ds-06.thecdn.example.com",
+        "steering-test-2": ["edge-cache-051.steering-test-2.thecdn.example.com"],
+        "federation-test": [
+          "edge.federation-test.thecdn.example.com",
           "edge.dee-ehs-06.thecdn.example.com"
         ],
-        "ds-05": [
-          "edge-cache-051.ds-05.thecdn.example.com",
-          "edge-cache-051.ds-05-b-b.thecdn.example.com"
+        "steering-target-1": [
+          "edge-cache-051.steering-target-1.thecdn.example.com",
+          "edge-cache-051.steering-target-1-b-b.thecdn.example.com"
         ],
-        "ds-04": ["edge-cache-051.ds-04.thecdn.example.com"],
-        "ds-03": ["edge-cache-051.ds-03.thecdn.example.com"]
+        "steering-target-4": ["edge-cache-051.steering-target-4.thecdn.example.com"],
+        "steering-target-3": ["edge-cache-051.steering-target-3.thecdn.example.com"]
       }
     },
     "edge-cache-052": {
@@ -1576,20 +1576,20 @@
       "hashCount": 1000,
       "interfaceName": "bond0",
       "deliveryServices": {
-        "mm-test": ["edge-cache-052.mm-test.thecdn.example.com"],
-        "ds-08": ["edge-cache-052.ds-08.thecdn.example.com"],
+        "steering-test-1": ["edge-cache-052.steering-test-1.thecdn.example.com"],
+        "steering-target-2": ["edge-cache-052.steering-target-2.thecdn.example.com"],
         "ds-07": ["edge.ds-07.thecdn.example.com"],
-        "test": ["edge-cache-052.test.thecdn.example.com"],
-        "ds-06": [
-          "edge.ds-06.thecdn.example.com",
+        "steering-test-2": ["edge-cache-052.steering-test-2.thecdn.example.com"],
+        "federation-test": [
+          "edge.federation-test.thecdn.example.com",
           "edge.dee-ehs-06.thecdn.example.com"
         ],
-        "ds-05": [
-          "edge-cache-052.ds-05.thecdn.example.com",
-          "edge-cache-052.ds-05-b-b.thecdn.example.com"
+        "steering-target-1": [
+          "edge-cache-052.steering-target-1.thecdn.example.com",
+          "edge-cache-052.steering-target-1-b-b.thecdn.example.com"
         ],
-        "ds-04": ["edge-cache-052.ds-04.thecdn.example.com"],
-        "ds-03": ["edge-cache-052.ds-03.thecdn.example.com"]
+        "steering-target-4": ["edge-cache-052.steering-target-4.thecdn.example.com"],
+        "steering-target-3": ["edge-cache-052.steering-target-3.thecdn.example.com"]
       }
     },
     "edge-cache-053": {
@@ -1606,20 +1606,20 @@
       "hashCount": 1000,
       "interfaceName": "bond0",
       "deliveryServices": {
-        "mm-test": ["edge-cache-053.mm-test.thecdn.example.com"],
-        "ds-08": ["edge-cache-053.ds-08.thecdn.example.com"],
+        "steering-test-1": ["edge-cache-053.steering-test-1.thecdn.example.com"],
+        "steering-target-2": ["edge-cache-053.steering-target-2.thecdn.example.com"],
         "ds-07": ["edge.ds-07.thecdn.example.com"],
-        "test": ["edge-cache-053.test.thecdn.example.com"],
-        "ds-06": [
-          "edge.ds-06.thecdn.example.com",
+        "steering-test-2": ["edge-cache-053.steering-test-2.thecdn.example.com"],
+        "federation-test": [
+          "edge.federation-test.thecdn.example.com",
           "edge.dee-ehs-06.thecdn.example.com"
         ],
-        "ds-05": [
-          "edge-cache-053.ds-05.thecdn.example.com",
-          "edge-cache-053.ds-05-b-b.thecdn.example.com"
+        "steering-target-1": [
+          "edge-cache-053.steering-target-1.thecdn.example.com",
+          "edge-cache-053.steering-target-1-b-b.thecdn.example.com"
         ],
-        "ds-04": ["edge-cache-053.ds-04.thecdn.example.com"],
-        "ds-03": ["edge-cache-053.ds-03.thecdn.example.com"]
+        "steering-target-4": ["edge-cache-053.steering-target-4.thecdn.example.com"],
+        "steering-target-3": ["edge-cache-053.steering-target-3.thecdn.example.com"]
       }
     },
     "edge-cache-054": {
@@ -1636,20 +1636,20 @@
       "hashCount": 1000,
       "interfaceName": "bond0",
       "deliveryServices": {
-        "mm-test": ["edge-cache-054.mm-test.thecdn.example.com"],
-        "ds-08": ["edge-cache-054.ds-08.thecdn.example.com"],
+        "steering-test-1": ["edge-cache-054.steering-test-1.thecdn.example.com"],
+        "steering-target-2": ["edge-cache-054.steering-target-2.thecdn.example.com"],
         "ds-07": ["edge.ds-07.thecdn.example.com"],
-        "test": ["edge-cache-054.test.thecdn.example.com"],
-        "ds-06": [
-          "edge.ds-06.thecdn.example.com",
+        "steering-test-2": ["edge-cache-054.steering-test-2.thecdn.example.com"],
+        "federation-test": [
+          "edge.federation-test.thecdn.example.com",
           "edge.dee-ehs-06.thecdn.example.com"
         ],
-        "ds-05": [
-          "edge-cache-054.ds-05.thecdn.example.com",
-          "edge-cache-054.ds-05-b-b.thecdn.example.com"
+        "steering-target-1": [
+          "edge-cache-054.steering-target-1.thecdn.example.com",
+          "edge-cache-054.steering-target-1-b-b.thecdn.example.com"
         ],
-        "ds-04": ["edge-cache-054.ds-04.thecdn.example.com"],
-        "ds-03": ["edge-cache-054.ds-03.thecdn.example.com"]
+        "steering-target-4": ["edge-cache-054.steering-target-4.thecdn.example.com"],
+        "steering-target-3": ["edge-cache-054.steering-target-3.thecdn.example.com"]
       }
     },
     "edge-cache-055": {
@@ -1666,20 +1666,20 @@
       "hashCount": 1000,
       "interfaceName": "bond0",
       "deliveryServices": {
-        "mm-test": ["edge-cache-055.mm-test.thecdn.example.com"],
-        "ds-08": ["edge-cache-055.ds-08.thecdn.example.com"],
+        "steering-test-1": ["edge-cache-055.steering-test-1.thecdn.example.com"],
+        "steering-target-2": ["edge-cache-055.steering-target-2.thecdn.example.com"],
         "ds-07": ["edge.ds-07.thecdn.example.com"],
-        "test": ["edge-cache-055.test.thecdn.example.com"],
-        "ds-06": [
-          "edge.ds-06.thecdn.example.com",
+        "steering-test-2": ["edge-cache-055.steering-test-2.thecdn.example.com"],
+        "federation-test": [
+          "edge.federation-test.thecdn.example.com",
           "edge.dee-ehs-06.thecdn.example.com"
         ],
-        "ds-05": [
-          "edge-cache-055.ds-05.thecdn.example.com",
-          "edge-cache-055.ds-05-b-b.thecdn.example.com"
+        "steering-target-1": [
+          "edge-cache-055.steering-target-1.thecdn.example.com",
+          "edge-cache-055.steering-target-1-b-b.thecdn.example.com"
         ],
-        "ds-04": ["edge-cache-055.ds-04.thecdn.example.com"],
-        "ds-03": ["edge-cache-055.ds-03.thecdn.example.com"]
+        "steering-target-4": ["edge-cache-055.steering-target-4.thecdn.example.com"],
+        "steering-target-3": ["edge-cache-055.steering-target-3.thecdn.example.com"]
       }
     },
     "edge-cache-056": {
@@ -1696,20 +1696,20 @@
       "hashCount": 1000,
       "interfaceName": "bond0",
       "deliveryServices": {
-        "mm-test": ["edge-cache-056.mm-test.thecdn.example.com"],
-        "ds-08": ["edge-cache-056.ds-08.thecdn.example.com"],
+        "steering-test-1": ["edge-cache-056.steering-test-1.thecdn.example.com"],
+        "steering-target-2": ["edge-cache-056.steering-target-2.thecdn.example.com"],
         "ds-07": ["edge.ds-07.thecdn.example.com"],
-        "test": ["edge-cache-056.test.thecdn.example.com"],
-        "ds-06": [
-          "edge.ds-06.thecdn.example.com",
+        "steering-test-2": ["edge-cache-056.steering-test-2.thecdn.example.com"],
+        "federation-test": [
+          "edge.federation-test.thecdn.example.com",
           "edge.dee-ehs-06.thecdn.example.com"
         ],
-        "ds-05": [
-          "edge-cache-056.ds-05.thecdn.example.com",
-          "edge-cache-056.ds-05-b-b.thecdn.example.com"
+        "steering-target-1": [
+          "edge-cache-056.steering-target-1.thecdn.example.com",
+          "edge-cache-056.steering-target-1-b-b.thecdn.example.com"
         ],
-        "ds-04": ["edge-cache-056.ds-04.thecdn.example.com"],
-        "ds-03": ["edge-cache-056.ds-03.thecdn.example.com"]
+        "steering-target-4": ["edge-cache-056.steering-target-4.thecdn.example.com"],
+        "steering-target-3": ["edge-cache-056.steering-target-3.thecdn.example.com"]
       }
     },    
     "edge-cache-057": {
@@ -1726,20 +1726,20 @@
       "hashCount": 1000,
       "interfaceName": "bond0",
       "deliveryServices": {
-        "mm-test": ["edge-cache-057.mm-test.thecdn.example.com"],
-        "ds-08": ["edge-cache-057.ds-08.thecdn.example.com"],
+        "steering-test-1": ["edge-cache-057.steering-test-1.thecdn.example.com"],
+        "steering-target-2": ["edge-cache-057.steering-target-2.thecdn.example.com"],
         "ds-07": ["edge.ds-07.thecdn.example.com"],
-        "test": ["edge-cache-057.test.thecdn.example.com"],
-        "ds-06": [
-          "edge.ds-06.thecdn.example.com",
+        "steering-test-2": ["edge-cache-057.steering-test-2.thecdn.example.com"],
+        "federation-test": [
+          "edge.federation-test.thecdn.example.com",
           "edge.dee-ehs-06.thecdn.example.com"
         ],
-        "ds-05": [
-          "edge-cache-057.ds-05.thecdn.example.com",
-          "edge-cache-057.ds-05-b-b.thecdn.example.com"
+        "steering-target-1": [
+          "edge-cache-057.steering-target-1.thecdn.example.com",
+          "edge-cache-057.steering-target-1-b-b.thecdn.example.com"
         ],
-        "ds-04": ["edge-cache-057.ds-04.thecdn.example.com"],
-        "ds-03": ["edge-cache-057.ds-03.thecdn.example.com"]
+        "steering-target-4": ["edge-cache-057.steering-target-4.thecdn.example.com"],
+        "steering-target-3": ["edge-cache-057.steering-target-3.thecdn.example.com"]
       }
     },    
     "edge-cache-058": {
@@ -1756,20 +1756,20 @@
       "hashCount": 1000,
       "interfaceName": "bond0",
       "deliveryServices": {
-        "mm-test": ["edge-cache-058.mm-test.thecdn.example.com"],
-        "ds-08": ["edge-cache-058.ds-08.thecdn.example.com"],
+        "steering-test-1": ["edge-cache-058.steering-test-1.thecdn.example.com"],
+        "steering-target-2": ["edge-cache-058.steering-target-2.thecdn.example.com"],
         "ds-07": ["edge.ds-07.thecdn.example.com"],
-        "test": ["edge-cache-058.test.thecdn.example.com"],
-        "ds-06": [
-          "edge.ds-06.thecdn.example.com",
+        "steering-test-2": ["edge-cache-058.steering-test-2.thecdn.example.com"],
+        "federation-test": [
+          "edge.federation-test.thecdn.example.com",
           "edge.dee-ehs-06.thecdn.example.com"
         ],
-        "ds-05": [
-          "edge-cache-058.ds-05.thecdn.example.com",
-          "edge-cache-058.ds-05-b-b.thecdn.example.com"
+        "steering-target-1": [
+          "edge-cache-058.steering-target-1.thecdn.example.com",
+          "edge-cache-058.steering-target-1-b-b.thecdn.example.com"
         ],
-        "ds-04": ["edge-cache-058.ds-04.thecdn.example.com"],
-        "ds-03": ["edge-cache-058.ds-03.thecdn.example.com"]
+        "steering-target-4": ["edge-cache-058.steering-target-4.thecdn.example.com"],
+        "steering-target-3": ["edge-cache-058.steering-target-3.thecdn.example.com"]
       }
     },    
     "edge-cache-059": {
@@ -1786,20 +1786,20 @@
       "hashCount": 1000,
       "interfaceName": "bond0",
       "deliveryServices": {
-        "mm-test": ["edge-cache-059.mm-test.thecdn.example.com"],
-        "ds-08": ["edge-cache-059.ds-08.thecdn.example.com"],
+        "steering-test-1": ["edge-cache-059.steering-test-1.thecdn.example.com"],
+        "steering-target-2": ["edge-cache-059.steering-target-2.thecdn.example.com"],
         "ds-07": ["edge.ds-07.thecdn.example.com"],
-        "test": ["edge-cache-059.test.thecdn.example.com"],
-        "ds-06": [
-          "edge.ds-06.thecdn.example.com",
+        "steering-test-2": ["edge-cache-059.steering-test-2.thecdn.example.com"],
+        "federation-test": [
+          "edge.federation-test.thecdn.example.com",
           "edge.dee-ehs-06.thecdn.example.com"
         ],
-        "ds-05": [
-          "edge-cache-059.ds-05.thecdn.example.com",
-          "edge-cache-059.ds-05-b-b.thecdn.example.com"
+        "steering-target-1": [
+          "edge-cache-059.steering-target-1.thecdn.example.com",
+          "edge-cache-059.steering-target-1-b-b.thecdn.example.com"
         ],
-        "ds-04": ["edge-cache-059.ds-04.thecdn.example.com"],
-        "ds-03": ["edge-cache-059.ds-03.thecdn.example.com"]
+        "steering-target-4": ["edge-cache-059.steering-target-4.thecdn.example.com"],
+        "steering-target-3": ["edge-cache-059.steering-target-3.thecdn.example.com"]
       }
     },    
     "edge-cache-060": {
@@ -1816,20 +1816,20 @@
       "hashCount": 1000,
       "interfaceName": "bond0",
       "deliveryServices": {
-        "mm-test": ["edge-cache-060.mm-test.thecdn.example.com"],
-        "ds-08": ["edge-cache-060.ds-08.thecdn.example.com"],
+        "steering-test-1": ["edge-cache-060.steering-test-1.thecdn.example.com"],
+        "steering-target-2": ["edge-cache-060.steering-target-2.thecdn.example.com"],
         "ds-07": ["edge.ds-07.thecdn.example.com"],
-        "test": ["edge-cache-060.test.thecdn.example.com"],
-        "ds-06": [
-          "edge.ds-06.thecdn.example.com",
+        "steering-test-2": ["edge-cache-060.steering-test-2.thecdn.example.com"],
+        "federation-test": [
+          "edge.federation-test.thecdn.example.com",
           "edge.dee-ehs-06.thecdn.example.com"
         ],
-        "ds-05": [
-          "edge-cache-060.ds-05.thecdn.example.com",
-          "edge-cache-060.ds-05-b-b.thecdn.example.com"
+        "steering-target-1": [
+          "edge-cache-060.steering-target-1.thecdn.example.com",
+          "edge-cache-060.steering-target-1-b-b.thecdn.example.com"
         ],
-        "ds-04": ["edge-cache-060.ds-04.thecdn.example.com"],
-        "ds-03": ["edge-cache-060.ds-03.thecdn.example.com"]
+        "steering-target-4": ["edge-cache-060.steering-target-4.thecdn.example.com"],
+        "steering-target-3": ["edge-cache-060.steering-target-3.thecdn.example.com"]
       }
     },    "edge-cache-061": {
       "type": "EDGE",
@@ -1845,20 +1845,20 @@
       "hashCount": 1000,
       "interfaceName": "bond0",
       "deliveryServices": {
-        "mm-test": ["edge-cache-061.mm-test.thecdn.example.com"],
-        "ds-08": ["edge-cache-061.ds-08.thecdn.example.com"],
+        "steering-test-1": ["edge-cache-061.steering-test-1.thecdn.example.com"],
+        "steering-target-2": ["edge-cache-061.steering-target-2.thecdn.example.com"],
         "ds-07": ["edge.ds-07.thecdn.example.com"],
-        "test": ["edge-cache-061.test.thecdn.example.com"],
-        "ds-06": [
-          "edge.ds-06.thecdn.example.com",
+        "steering-test-2": ["edge-cache-061.steering-test-2.thecdn.example.com"],
+        "federation-test": [
+          "edge.federation-test.thecdn.example.com",
           "edge.dee-ehs-06.thecdn.example.com"
         ],
-        "ds-05": [
-          "edge-cache-061.ds-05.thecdn.example.com",
-          "edge-cache-061.ds-05-b-b.thecdn.example.com"
+        "steering-target-1": [
+          "edge-cache-061.steering-target-1.thecdn.example.com",
+          "edge-cache-061.steering-target-1-b-b.thecdn.example.com"
         ],
-        "ds-04": ["edge-cache-061.ds-04.thecdn.example.com"],
-        "ds-03": ["edge-cache-061.ds-03.thecdn.example.com"]
+        "steering-target-4": ["edge-cache-061.steering-target-4.thecdn.example.com"],
+        "steering-target-3": ["edge-cache-061.steering-target-3.thecdn.example.com"]
       }
     },
     "edge-cache-062": {
@@ -1875,20 +1875,20 @@
       "hashCount": 1000,
       "interfaceName": "bond0",
       "deliveryServices": {
-        "mm-test": ["edge-cache-062.mm-test.thecdn.example.com"],
-        "ds-08": ["edge-cache-062.ds-08.thecdn.example.com"],
+        "steering-test-1": ["edge-cache-062.steering-test-1.thecdn.example.com"],
+        "steering-target-2": ["edge-cache-062.steering-target-2.thecdn.example.com"],
         "ds-07": ["edge.ds-07.thecdn.example.com"],
-        "test": ["edge-cache-062.test.thecdn.example.com"],
-        "ds-06": [
-          "edge.ds-06.thecdn.example.com",
+        "steering-test-2": ["edge-cache-062.steering-test-2.thecdn.example.com"],
+        "federation-test": [
+          "edge.federation-test.thecdn.example.com",
           "edge.dee-ehs-06.thecdn.example.com"
         ],
-        "ds-05": [
-          "edge-cache-062.ds-05.thecdn.example.com",
-          "edge-cache-062.ds-05-b-b.thecdn.example.com"
+        "steering-target-1": [
+          "edge-cache-062.steering-target-1.thecdn.example.com",
+          "edge-cache-062.steering-target-1-b-b.thecdn.example.com"
         ],
-        "ds-04": ["edge-cache-062.ds-04.thecdn.example.com"],
-        "ds-03": ["edge-cache-062.ds-03.thecdn.example.com"]
+        "steering-target-4": ["edge-cache-062.steering-target-4.thecdn.example.com"],
+        "steering-target-3": ["edge-cache-062.steering-target-3.thecdn.example.com"]
       }
     },
     "edge-cache-063": {
@@ -1905,20 +1905,20 @@
       "hashCount": 1000,
       "interfaceName": "bond0",
       "deliveryServices": {
-        "mm-test": ["edge-cache-063.mm-test.thecdn.example.com"],
-        "ds-08": ["edge-cache-063.ds-08.thecdn.example.com"],
+        "steering-test-1": ["edge-cache-063.steering-test-1.thecdn.example.com"],
+        "steering-target-2": ["edge-cache-063.steering-target-2.thecdn.example.com"],
         "ds-07": ["edge.ds-07.thecdn.example.com"],
-        "test": ["edge-cache-063.test.thecdn.example.com"],
-        "ds-06": [
-          "edge.ds-06.thecdn.example.com",
+        "steering-test-2": ["edge-cache-063.steering-test-2.thecdn.example.com"],
+        "federation-test": [
+          "edge.federation-test.thecdn.example.com",
           "edge.dee-ehs-06.thecdn.example.com"
         ],
-        "ds-05": [
-          "edge-cache-063.ds-05.thecdn.example.com",
-          "edge-cache-063.ds-05-b-b.thecdn.example.com"
+        "steering-target-1": [
+          "edge-cache-063.steering-target-1.thecdn.example.com",
+          "edge-cache-063.steering-target-1-b-b.thecdn.example.com"
         ],
-        "ds-04": ["edge-cache-063.ds-04.thecdn.example.com"],
-        "ds-03": ["edge-cache-063.ds-03.thecdn.example.com"]
+        "steering-target-4": ["edge-cache-063.steering-target-4.thecdn.example.com"],
+        "steering-target-3": ["edge-cache-063.steering-target-3.thecdn.example.com"]
       }
     },
     "edge-cache-064": {
@@ -1935,20 +1935,20 @@
       "hashCount": 1000,
       "interfaceName": "bond0",
       "deliveryServices": {
-        "mm-test": ["edge-cache-064.mm-test.thecdn.example.com"],
-        "ds-08": ["edge-cache-064.ds-08.thecdn.example.com"],
+        "steering-test-1": ["edge-cache-064.steering-test-1.thecdn.example.com"],
+        "steering-target-2": ["edge-cache-064.steering-target-2.thecdn.example.com"],
         "ds-07": ["edge.ds-07.thecdn.example.com"],
-        "test": ["edge-cache-064.test.thecdn.example.com"],
-        "ds-06": [
-          "edge.ds-06.thecdn.example.com",
+        "steering-test-2": ["edge-cache-064.steering-test-2.thecdn.example.com"],
+        "federation-test": [
+          "edge.federation-test.thecdn.example.com",
           "edge.dee-ehs-06.thecdn.example.com"
         ],
-        "ds-05": [
-          "edge-cache-064.ds-05.thecdn.example.com",
-          "edge-cache-064.ds-05-b-b.thecdn.example.com"
+        "steering-target-1": [
+          "edge-cache-064.steering-target-1.thecdn.example.com",
+          "edge-cache-064.steering-target-1-b-b.thecdn.example.com"
         ],
-        "ds-04": ["edge-cache-064.ds-04.thecdn.example.com"],
-        "ds-03": ["edge-cache-064.ds-03.thecdn.example.com"]
+        "steering-target-4": ["edge-cache-064.steering-target-4.thecdn.example.com"],
+        "steering-target-3": ["edge-cache-064.steering-target-3.thecdn.example.com"]
       }
     },
     "edge-cache-065": {
@@ -1965,20 +1965,20 @@
       "hashCount": 1000,
       "interfaceName": "bond0",
       "deliveryServices": {
-        "mm-test": ["edge-cache-065.mm-test.thecdn.example.com"],
-        "ds-08": ["edge-cache-065.ds-08.thecdn.example.com"],
+        "steering-test-1": ["edge-cache-065.steering-test-1.thecdn.example.com"],
+        "steering-target-2": ["edge-cache-065.steering-target-2.thecdn.example.com"],
         "ds-07": ["edge.ds-07.thecdn.example.com"],
-        "test": ["edge-cache-065.test.thecdn.example.com"],
-        "ds-06": [
-          "edge.ds-06.thecdn.example.com",
+        "steering-test-2": ["edge-cache-065.steering-test-2.thecdn.example.com"],
+        "federation-test": [
+          "edge.federation-test.thecdn.example.com",
           "edge.dee-ehs-06.thecdn.example.com"
         ],
-        "ds-05": [
-          "edge-cache-065.ds-05.thecdn.example.com",
-          "edge-cache-065.ds-05-b-b.thecdn.example.com"
+        "steering-target-1": [
+          "edge-cache-065.steering-target-1.thecdn.example.com",
+          "edge-cache-065.steering-target-1-b-b.thecdn.example.com"
         ],
-        "ds-04": ["edge-cache-065.ds-04.thecdn.example.com"],
-        "ds-03": ["edge-cache-065.ds-03.thecdn.example.com"]
+        "steering-target-4": ["edge-cache-065.steering-target-4.thecdn.example.com"],
+        "steering-target-3": ["edge-cache-065.steering-target-3.thecdn.example.com"]
       }
     },
     "edge-cache-066": {
@@ -1995,20 +1995,20 @@
       "hashCount": 1000,
       "interfaceName": "bond0",
       "deliveryServices": {
-        "mm-test": ["edge-cache-066.mm-test.thecdn.example.com"],
-        "ds-08": ["edge-cache-066.ds-08.thecdn.example.com"],
+        "steering-test-1": ["edge-cache-066.steering-test-1.thecdn.example.com"],
+        "steering-target-2": ["edge-cache-066.steering-target-2.thecdn.example.com"],
         "ds-07": ["edge.ds-07.thecdn.example.com"],
-        "test": ["edge-cache-066.test.thecdn.example.com"],
-        "ds-06": [
-          "edge.ds-06.thecdn.example.com",
+        "steering-test-2": ["edge-cache-066.steering-test-2.thecdn.example.com"],
+        "federation-test": [
+          "edge.federation-test.thecdn.example.com",
           "edge.dee-ehs-06.thecdn.example.com"
         ],
-        "ds-05": [
-          "edge-cache-066.ds-05.thecdn.example.com",
-          "edge-cache-066.ds-05-b-b.thecdn.example.com"
+        "steering-target-1": [
+          "edge-cache-066.steering-target-1.thecdn.example.com",
+          "edge-cache-066.steering-target-1-b-b.thecdn.example.com"
         ],
-        "ds-04": ["edge-cache-066.ds-04.thecdn.example.com"],
-        "ds-03": ["edge-cache-066.ds-03.thecdn.example.com"]
+        "steering-target-4": ["edge-cache-066.steering-target-4.thecdn.example.com"],
+        "steering-target-3": ["edge-cache-066.steering-target-3.thecdn.example.com"]
       }
     },    
     "edge-cache-067": {
@@ -2025,20 +2025,20 @@
       "hashCount": 1000,
       "interfaceName": "bond0",
       "deliveryServices": {
-        "mm-test": ["edge-cache-067.mm-test.thecdn.example.com"],
-        "ds-08": ["edge-cache-067.ds-08.thecdn.example.com"],
+        "steering-test-1": ["edge-cache-067.steering-test-1.thecdn.example.com"],
+        "steering-target-2": ["edge-cache-067.steering-target-2.thecdn.example.com"],
         "ds-07": ["edge.ds-07.thecdn.example.com"],
-        "test": ["edge-cache-067.test.thecdn.example.com"],
-        "ds-06": [
-          "edge.ds-06.thecdn.example.com",
+        "steering-test-2": ["edge-cache-067.steering-test-2.thecdn.example.com"],
+        "federation-test": [
+          "edge.federation-test.thecdn.example.com",
           "edge.dee-ehs-06.thecdn.example.com"
         ],
-        "ds-05": [
-          "edge-cache-067.ds-05.thecdn.example.com",
-          "edge-cache-067.ds-05-b-b.thecdn.example.com"
+        "steering-target-1": [
+          "edge-cache-067.steering-target-1.thecdn.example.com",
+          "edge-cache-067.steering-target-1-b-b.thecdn.example.com"
         ],
-        "ds-04": ["edge-cache-067.ds-04.thecdn.example.com"],
-        "ds-03": ["edge-cache-067.ds-03.thecdn.example.com"]
+        "steering-target-4": ["edge-cache-067.steering-target-4.thecdn.example.com"],
+        "steering-target-3": ["edge-cache-067.steering-target-3.thecdn.example.com"]
       }
     },    
     "edge-cache-068": {
@@ -2055,20 +2055,20 @@
       "hashCount": 1000,
       "interfaceName": "bond0",
       "deliveryServices": {
-        "mm-test": ["edge-cache-068.mm-test.thecdn.example.com"],
-        "ds-08": ["edge-cache-068.ds-08.thecdn.example.com"],
+        "steering-test-1": ["edge-cache-068.steering-test-1.thecdn.example.com"],
+        "steering-target-2": ["edge-cache-068.steering-target-2.thecdn.example.com"],
         "ds-07": ["edge.ds-07.thecdn.example.com"],
-        "test": ["edge-cache-068.test.thecdn.example.com"],
-        "ds-06": [
-          "edge.ds-06.thecdn.example.com",
+        "steering-test-2": ["edge-cache-068.steering-test-2.thecdn.example.com"],
+        "federation-test": [
+          "edge.federation-test.thecdn.example.com",
           "edge.dee-ehs-06.thecdn.example.com"
         ],
-        "ds-05": [
-          "edge-cache-068.ds-05.thecdn.example.com",
-          "edge-cache-068.ds-05-b-b.thecdn.example.com"
+        "steering-target-1": [
+          "edge-cache-068.steering-target-1.thecdn.example.com",
+          "edge-cache-068.steering-target-1-b-b.thecdn.example.com"
         ],
-        "ds-04": ["edge-cache-068.ds-04.thecdn.example.com"],
-        "ds-03": ["edge-cache-068.ds-03.thecdn.example.com"]
+        "steering-target-4": ["edge-cache-068.steering-target-4.thecdn.example.com"],
+        "steering-target-3": ["edge-cache-068.steering-target-3.thecdn.example.com"]
       }
     },    
     "edge-cache-069": {
@@ -2085,20 +2085,20 @@
       "hashCount": 1000,
       "interfaceName": "bond0",
       "deliveryServices": {
-        "mm-test": ["edge-cache-069.mm-test.thecdn.example.com"],
-        "ds-08": ["edge-cache-069.ds-08.thecdn.example.com"],
+        "steering-test-1": ["edge-cache-069.steering-test-1.thecdn.example.com"],
+        "steering-target-2": ["edge-cache-069.steering-target-2.thecdn.example.com"],
         "ds-07": ["edge.ds-07.thecdn.example.com"],
-        "test": ["edge-cache-069.test.thecdn.example.com"],
-        "ds-06": [
-          "edge.ds-06.thecdn.example.com",
+        "steering-test-2": ["edge-cache-069.steering-test-2.thecdn.example.com"],
+        "federation-test": [
+          "edge.federation-test.thecdn.example.com",
           "edge.dee-ehs-06.thecdn.example.com"
         ],
-        "ds-05": [
-          "edge-cache-069.ds-05.thecdn.example.com",
-          "edge-cache-069.ds-05-b-b.thecdn.example.com"
+        "steering-target-1": [
+          "edge-cache-069.steering-target-1.thecdn.example.com",
+          "edge-cache-069.steering-target-1-b-b.thecdn.example.com"
         ],
-        "ds-04": ["edge-cache-069.ds-04.thecdn.example.com"],
-        "ds-03": ["edge-cache-069.ds-03.thecdn.example.com"]
+        "steering-target-4": ["edge-cache-069.steering-target-4.thecdn.example.com"],
+        "steering-target-3": ["edge-cache-069.steering-target-3.thecdn.example.com"]
       }
     },    
     "edge-cache-070": {
@@ -2115,20 +2115,20 @@
       "hashCount": 1000,
       "interfaceName": "bond0",
       "deliveryServices": {
-        "mm-test": ["edge-cache-070.mm-test.thecdn.example.com"],
-        "ds-08": ["edge-cache-070.ds-08.thecdn.example.com"],
+        "steering-test-1": ["edge-cache-070.steering-test-1.thecdn.example.com"],
+        "steering-target-2": ["edge-cache-070.steering-target-2.thecdn.example.com"],
         "ds-07": ["edge.ds-07.thecdn.example.com"],
-        "test": ["edge-cache-070.test.thecdn.example.com"],
-        "ds-06": [
-          "edge.ds-06.thecdn.example.com",
+        "steering-test-2": ["edge-cache-070.steering-test-2.thecdn.example.com"],
+        "federation-test": [
+          "edge.federation-test.thecdn.example.com",
           "edge.dee-ehs-06.thecdn.example.com"
         ],
-        "ds-05": [
-          "edge-cache-070.ds-05.thecdn.example.com",
-          "edge-cache-070.ds-05-b-b.thecdn.example.com"
+        "steering-target-1": [
+          "edge-cache-070.steering-target-1.thecdn.example.com",
+          "edge-cache-070.steering-target-1-b-b.thecdn.example.com"
         ],
-        "ds-04": ["edge-cache-070.ds-04.thecdn.example.com"],
-        "ds-03": ["edge-cache-070.ds-03.thecdn.example.com"]
+        "steering-target-4": ["edge-cache-070.steering-target-4.thecdn.example.com"],
+        "steering-target-3": ["edge-cache-070.steering-target-3.thecdn.example.com"]
       }
     },
     "edge-cache-071": {
@@ -2145,20 +2145,20 @@
       "hashCount": 1000,
       "interfaceName": "bond0",
       "deliveryServices": {
-        "mm-test": ["edge-cache-071.mm-test.thecdn.example.com"],
-        "ds-08": ["edge-cache-071.ds-08.thecdn.example.com"],
+        "steering-test-1": ["edge-cache-071.steering-test-1.thecdn.example.com"],
+        "steering-target-2": ["edge-cache-071.steering-target-2.thecdn.example.com"],
         "ds-07": ["edge.ds-07.thecdn.example.com"],
-        "test": ["edge-cache-071.test.thecdn.example.com"],
-        "ds-06": [
-          "edge.ds-06.thecdn.example.com",
+        "steering-test-2": ["edge-cache-071.steering-test-2.thecdn.example.com"],
+        "federation-test": [
+          "edge.federation-test.thecdn.example.com",
           "edge.dee-ehs-06.thecdn.example.com"
         ],
-        "ds-05": [
-          "edge-cache-071.ds-05.thecdn.example.com",
-          "edge-cache-071.ds-05-b-b.thecdn.example.com"
+        "steering-target-1": [
+          "edge-cache-071.steering-target-1.thecdn.example.com",
+          "edge-cache-071.steering-target-1-b-b.thecdn.example.com"
         ],
-        "ds-04": ["edge-cache-071.ds-04.thecdn.example.com"],
-        "ds-03": ["edge-cache-071.ds-03.thecdn.example.com"]
+        "steering-target-4": ["edge-cache-071.steering-target-4.thecdn.example.com"],
+        "steering-target-3": ["edge-cache-071.steering-target-3.thecdn.example.com"]
       }
     },
     "edge-cache-072": {
@@ -2175,20 +2175,20 @@
       "hashCount": 1000,
       "interfaceName": "bond0",
       "deliveryServices": {
-        "mm-test": ["edge-cache-072.mm-test.thecdn.example.com"],
-        "ds-08": ["edge-cache-072.ds-08.thecdn.example.com"],
+        "steering-test-1": ["edge-cache-072.steering-test-1.thecdn.example.com"],
+        "steering-target-2": ["edge-cache-072.steering-target-2.thecdn.example.com"],
         "ds-07": ["edge.ds-07.thecdn.example.com"],
-        "test": ["edge-cache-072.test.thecdn.example.com"],
-        "ds-06": [
-          "edge.ds-06.thecdn.example.com",
+        "steering-test-2": ["edge-cache-072.steering-test-2.thecdn.example.com"],
+        "federation-test": [
+          "edge.federation-test.thecdn.example.com",
           "edge.dee-ehs-06.thecdn.example.com"
         ],
-        "ds-05": [
-          "edge-cache-072.ds-05.thecdn.example.com",
-          "edge-cache-072.ds-05-b-b.thecdn.example.com"
+        "steering-target-1": [
+          "edge-cache-072.steering-target-1.thecdn.example.com",
+          "edge-cache-072.steering-target-1-b-b.thecdn.example.com"
         ],
-        "ds-04": ["edge-cache-072.ds-04.thecdn.example.com"],
-        "ds-03": ["edge-cache-072.ds-03.thecdn.example.com"]
+        "steering-target-4": ["edge-cache-072.steering-target-4.thecdn.example.com"],
+        "steering-target-3": ["edge-cache-072.steering-target-3.thecdn.example.com"]
       }
     },
     "edge-cache-073": {
@@ -2205,20 +2205,20 @@
       "hashCount": 1000,
       "interfaceName": "bond0",
       "deliveryServices": {
-        "mm-test": ["edge-cache-073.mm-test.thecdn.example.com"],
-        "ds-08": ["edge-cache-073.ds-08.thecdn.example.com"],
+        "steering-test-1": ["edge-cache-073.steering-test-1.thecdn.example.com"],
+        "steering-target-2": ["edge-cache-073.steering-target-2.thecdn.example.com"],
         "ds-07": ["edge.ds-07.thecdn.example.com"],
-        "test": ["edge-cache-073.test.thecdn.example.com"],
-        "ds-06": [
-          "edge.ds-06.thecdn.example.com",
+        "steering-test-2": ["edge-cache-073.steering-test-2.thecdn.example.com"],
+        "federation-test": [
+          "edge.federation-test.thecdn.example.com",
           "edge.dee-ehs-06.thecdn.example.com"
         ],
-        "ds-05": [
-          "edge-cache-073.ds-05.thecdn.example.com",
-          "edge-cache-073.ds-05-b-b.thecdn.example.com"
+        "steering-target-1": [
+          "edge-cache-073.steering-target-1.thecdn.example.com",
+          "edge-cache-073.steering-target-1-b-b.thecdn.example.com"
         ],
-        "ds-04": ["edge-cache-073.ds-04.thecdn.example.com"],
-        "ds-03": ["edge-cache-073.ds-03.thecdn.example.com"]
+        "steering-target-4": ["edge-cache-073.steering-target-4.thecdn.example.com"],
+        "steering-target-3": ["edge-cache-073.steering-target-3.thecdn.example.com"]
       }
     },
     "edge-cache-074": {
@@ -2235,20 +2235,20 @@
       "hashCount": 1000,
       "interfaceName": "bond0",
       "deliveryServices": {
-        "mm-test": ["edge-cache-074.mm-test.thecdn.example.com"],
-        "ds-08": ["edge-cache-074.ds-08.thecdn.example.com"],
+        "steering-test-1": ["edge-cache-074.steering-test-1.thecdn.example.com"],
+        "steering-target-2": ["edge-cache-074.steering-target-2.thecdn.example.com"],
         "ds-07": ["edge.ds-07.thecdn.example.com"],
-        "test": ["edge-cache-074.test.thecdn.example.com"],
-        "ds-06": [
-          "edge.ds-06.thecdn.example.com",
+        "steering-test-2": ["edge-cache-074.steering-test-2.thecdn.example.com"],
+        "federation-test": [
+          "edge.federation-test.thecdn.example.com",
           "edge.dee-ehs-06.thecdn.example.com"
         ],
-        "ds-05": [
-          "edge-cache-074.ds-05.thecdn.example.com",
-          "edge-cache-074.ds-05-b-b.thecdn.example.com"
+        "steering-target-1": [
+          "edge-cache-074.steering-target-1.thecdn.example.com",
+          "edge-cache-074.steering-target-1-b-b.thecdn.example.com"
         ],
-        "ds-04": ["edge-cache-074.ds-04.thecdn.example.com"],
-        "ds-03": ["edge-cache-074.ds-03.thecdn.example.com"]
+        "steering-target-4": ["edge-cache-074.steering-target-4.thecdn.example.com"],
+        "steering-target-3": ["edge-cache-074.steering-target-3.thecdn.example.com"]
       }
     },
     "edge-cache-075": {
@@ -2265,20 +2265,20 @@
       "hashCount": 1000,
       "interfaceName": "bond0",
       "deliveryServices": {
-        "mm-test": ["edge-cache-075.mm-test.thecdn.example.com"],
-        "ds-08": ["edge-cache-075.ds-08.thecdn.example.com"],
+        "steering-test-1": ["edge-cache-075.steering-test-1.thecdn.example.com"],
+        "steering-target-2": ["edge-cache-075.steering-target-2.thecdn.example.com"],
         "ds-07": ["edge.ds-07.thecdn.example.com"],
-        "test": ["edge-cache-075.test.thecdn.example.com"],
-        "ds-06": [
-          "edge.ds-06.thecdn.example.com",
+        "steering-test-2": ["edge-cache-075.steering-test-2.thecdn.example.com"],
+        "federation-test": [
+          "edge.federation-test.thecdn.example.com",
           "edge.dee-ehs-06.thecdn.example.com"
         ],
-        "ds-05": [
-          "edge-cache-075.ds-05.thecdn.example.com",
-          "edge-cache-075.ds-05-b-b.thecdn.example.com"
+        "steering-target-1": [
+          "edge-cache-075.steering-target-1.thecdn.example.com",
+          "edge-cache-075.steering-target-1-b-b.thecdn.example.com"
         ],
-        "ds-04": ["edge-cache-075.ds-04.thecdn.example.com"],
-        "ds-03": ["edge-cache-075.ds-03.thecdn.example.com"]
+        "steering-target-4": ["edge-cache-075.steering-target-4.thecdn.example.com"],
+        "steering-target-3": ["edge-cache-075.steering-target-3.thecdn.example.com"]
       }
     },
     "edge-cache-076": {
@@ -2295,20 +2295,20 @@
       "hashCount": 1000,
       "interfaceName": "bond0",
       "deliveryServices": {
-        "mm-test": ["edge-cache-076.mm-test.thecdn.example.com"],
-        "ds-08": ["edge-cache-076.ds-08.thecdn.example.com"],
+        "steering-test-1": ["edge-cache-076.steering-test-1.thecdn.example.com"],
+        "steering-target-2": ["edge-cache-076.steering-target-2.thecdn.example.com"],
         "ds-07": ["edge.ds-07.thecdn.example.com"],
-        "test": ["edge-cache-076.test.thecdn.example.com"],
-        "ds-06": [
-          "edge.ds-06.thecdn.example.com",
+        "steering-test-2": ["edge-cache-076.steering-test-2.thecdn.example.com"],
+        "federation-test": [
+          "edge.federation-test.thecdn.example.com",
           "edge.dee-ehs-06.thecdn.example.com"
         ],
-        "ds-05": [
-          "edge-cache-076.ds-05.thecdn.example.com",
-          "edge-cache-076.ds-05-b-b.thecdn.example.com"
+        "steering-target-1": [
+          "edge-cache-076.steering-target-1.thecdn.example.com",
+          "edge-cache-076.steering-target-1-b-b.thecdn.example.com"
         ],
-        "ds-04": ["edge-cache-076.ds-04.thecdn.example.com"],
-        "ds-03": ["edge-cache-076.ds-03.thecdn.example.com"]
+        "steering-target-4": ["edge-cache-076.steering-target-4.thecdn.example.com"],
+        "steering-target-3": ["edge-cache-076.steering-target-3.thecdn.example.com"]
       }
     },    
     "edge-cache-077": {
@@ -2325,20 +2325,20 @@
       "hashCount": 1000,
       "interfaceName": "bond0",
       "deliveryServices": {
-        "mm-test": ["edge-cache-077.mm-test.thecdn.example.com"],
-        "ds-08": ["edge-cache-077.ds-08.thecdn.example.com"],
+        "steering-test-1": ["edge-cache-077.steering-test-1.thecdn.example.com"],
+        "steering-target-2": ["edge-cache-077.steering-target-2.thecdn.example.com"],
         "ds-07": ["edge.ds-07.thecdn.example.com"],
-        "test": ["edge-cache-077.test.thecdn.example.com"],
-        "ds-06": [
-          "edge.ds-06.thecdn.example.com",
+        "steering-test-2": ["edge-cache-077.steering-test-2.thecdn.example.com"],
+        "federation-test": [
+          "edge.federation-test.thecdn.example.com",
           "edge.dee-ehs-06.thecdn.example.com"
         ],
-        "ds-05": [
-          "edge-cache-077.ds-05.thecdn.example.com",
-          "edge-cache-077.ds-05-b-b.thecdn.example.com"
+        "steering-target-1": [
+          "edge-cache-077.steering-target-1.thecdn.example.com",
+          "edge-cache-077.steering-target-1-b-b.thecdn.example.com"
         ],
-        "ds-04": ["edge-cache-077.ds-04.thecdn.example.com"],
-        "ds-03": ["edge-cache-077.ds-03.thecdn.example.com"]
+        "steering-target-4": ["edge-cache-077.steering-target-4.thecdn.example.com"],
+        "steering-target-3": ["edge-cache-077.steering-target-3.thecdn.example.com"]
       }
     },    
     "edge-cache-078": {
@@ -2355,20 +2355,20 @@
       "hashCount": 1000,
       "interfaceName": "bond0",
       "deliveryServices": {
-        "mm-test": ["edge-cache-078.mm-test.thecdn.example.com"],
-        "ds-08": ["edge-cache-078.ds-08.thecdn.example.com"],
+        "steering-test-1": ["edge-cache-078.steering-test-1.thecdn.example.com"],
+        "steering-target-2": ["edge-cache-078.steering-target-2.thecdn.example.com"],
         "ds-07": ["edge.ds-07.thecdn.example.com"],
-        "test": ["edge-cache-078.test.thecdn.example.com"],
-        "ds-06": [
-          "edge.ds-06.thecdn.example.com",
+        "steering-test-2": ["edge-cache-078.steering-test-2.thecdn.example.com"],
+        "federation-test": [
+          "edge.federation-test.thecdn.example.com",
           "edge.dee-ehs-06.thecdn.example.com"
         ],
-        "ds-05": [
-          "edge-cache-078.ds-05.thecdn.example.com",
-          "edge-cache-078.ds-05-b-b.thecdn.example.com"
+        "steering-target-1": [
+          "edge-cache-078.steering-target-1.thecdn.example.com",
+          "edge-cache-078.steering-target-1-b-b.thecdn.example.com"
         ],
-        "ds-04": ["edge-cache-078.ds-04.thecdn.example.com"],
-        "ds-03": ["edge-cache-078.ds-03.thecdn.example.com"]
+        "steering-target-4": ["edge-cache-078.steering-target-4.thecdn.example.com"],
+        "steering-target-3": ["edge-cache-078.steering-target-3.thecdn.example.com"]
       }
     },    
     "edge-cache-079": {
@@ -2385,20 +2385,20 @@
       "hashCount": 1000,
       "interfaceName": "bond0",
       "deliveryServices": {
-        "mm-test": ["edge-cache-079.mm-test.thecdn.example.com"],
-        "ds-08": ["edge-cache-079.ds-08.thecdn.example.com"],
+        "steering-test-1": ["edge-cache-079.steering-test-1.thecdn.example.com"],
+        "steering-target-2": ["edge-cache-079.steering-target-2.thecdn.example.com"],
         "ds-07": ["edge.ds-07.thecdn.example.com"],
-        "test": ["edge-cache-079.test.thecdn.example.com"],
-        "ds-06": [
-          "edge.ds-06.thecdn.example.com",
+        "steering-test-2": ["edge-cache-079.steering-test-2.thecdn.example.com"],
+        "federation-test": [
+          "edge.federation-test.thecdn.example.com",
           "edge.dee-ehs-06.thecdn.example.com"
         ],
-        "ds-05": [
-          "edge-cache-079.ds-05.thecdn.example.com",
-          "edge-cache-079.ds-05-b-b.thecdn.example.com"
+        "steering-target-1": [
+          "edge-cache-079.steering-target-1.thecdn.example.com",
+          "edge-cache-079.steering-target-1-b-b.thecdn.example.com"
         ],
-        "ds-04": ["edge-cache-079.ds-04.thecdn.example.com"],
-        "ds-03": ["edge-cache-079.ds-03.thecdn.example.com"]
+        "steering-target-4": ["edge-cache-079.steering-target-4.thecdn.example.com"],
+        "steering-target-3": ["edge-cache-079.steering-target-3.thecdn.example.com"]
       }
     },    
     "edge-cache-080": {
@@ -2415,20 +2415,20 @@
       "hashCount": 1000,
       "interfaceName": "bond0",
       "deliveryServices": {
-        "mm-test": ["edge-cache-080.mm-test.thecdn.example.com"],
-        "ds-08": ["edge-cache-080.ds-08.thecdn.example.com"],
+        "steering-test-1": ["edge-cache-080.steering-test-1.thecdn.example.com"],
+        "steering-target-2": ["edge-cache-080.steering-target-2.thecdn.example.com"],
         "ds-07": ["edge.ds-07.thecdn.example.com"],
-        "test": ["edge-cache-080.test.thecdn.example.com"],
-        "ds-06": [
-          "edge.ds-06.thecdn.example.com",
+        "steering-test-2": ["edge-cache-080.steering-test-2.thecdn.example.com"],
+        "federation-test": [
+          "edge.federation-test.thecdn.example.com",
           "edge.dee-ehs-06.thecdn.example.com"
         ],
-        "ds-05": [
-          "edge-cache-080.ds-05.thecdn.example.com",
-          "edge-cache-080.ds-05-b-b.thecdn.example.com"
+        "steering-target-1": [
+          "edge-cache-080.steering-target-1.thecdn.example.com",
+          "edge-cache-080.steering-target-1-b-b.thecdn.example.com"
         ],
-        "ds-04": ["edge-cache-080.ds-04.thecdn.example.com"],
-        "ds-03": ["edge-cache-080.ds-03.thecdn.example.com"]
+        "steering-target-4": ["edge-cache-080.steering-target-4.thecdn.example.com"],
+        "steering-target-3": ["edge-cache-080.steering-target-3.thecdn.example.com"]
       }
     },
     "edge-cache-081": {
@@ -2445,20 +2445,20 @@
       "hashCount": 1000,
       "interfaceName": "bond0",
       "deliveryServices": {
-        "mm-test": ["edge-cache-081.mm-test.thecdn.example.com"],
-        "ds-08": ["edge-cache-081.ds-08.thecdn.example.com"],
+        "steering-test-1": ["edge-cache-081.steering-test-1.thecdn.example.com"],
+        "steering-target-2": ["edge-cache-081.steering-target-2.thecdn.example.com"],
         "ds-07": ["edge.ds-07.thecdn.example.com"],
-        "test": ["edge-cache-081.test.thecdn.example.com"],
-        "ds-06": [
-          "edge.ds-06.thecdn.example.com",
+        "steering-test-2": ["edge-cache-081.steering-test-2.thecdn.example.com"],
+        "federation-test": [
+          "edge.federation-test.thecdn.example.com",
           "edge.dee-ehs-06.thecdn.example.com"
         ],
-        "ds-05": [
-          "edge-cache-081.ds-05.thecdn.example.com",
-          "edge-cache-081.ds-05-b-b.thecdn.example.com"
+        "steering-target-1": [
+          "edge-cache-081.steering-target-1.thecdn.example.com",
+          "edge-cache-081.steering-target-1-b-b.thecdn.example.com"
         ],
-        "ds-04": ["edge-cache-081.ds-04.thecdn.example.com"],
-        "ds-03": ["edge-cache-081.ds-03.thecdn.example.com"]
+        "steering-target-4": ["edge-cache-081.steering-target-4.thecdn.example.com"],
+        "steering-target-3": ["edge-cache-081.steering-target-3.thecdn.example.com"]
       }
     },
     "edge-cache-082": {
@@ -2475,20 +2475,20 @@
       "hashCount": 1000,
       "interfaceName": "bond0",
       "deliveryServices": {
-        "mm-test": ["edge-cache-082.mm-test.thecdn.example.com"],
-        "ds-08": ["edge-cache-082.ds-08.thecdn.example.com"],
+        "steering-test-1": ["edge-cache-082.steering-test-1.thecdn.example.com"],
+        "steering-target-2": ["edge-cache-082.steering-target-2.thecdn.example.com"],
         "ds-07": ["edge.ds-07.thecdn.example.com"],
-        "test": ["edge-cache-082.test.thecdn.example.com"],
-        "ds-06": [
-          "edge.ds-06.thecdn.example.com",
+        "steering-test-2": ["edge-cache-082.steering-test-2.thecdn.example.com"],
+        "federation-test": [
+          "edge.federation-test.thecdn.example.com",
           "edge.dee-ehs-06.thecdn.example.com"
         ],
-        "ds-05": [
-          "edge-cache-082.ds-05.thecdn.example.com",
-          "edge-cache-082.ds-05-b-b.thecdn.example.com"
+        "steering-target-1": [
+          "edge-cache-082.steering-target-1.thecdn.example.com",
+          "edge-cache-082.steering-target-1-b-b.thecdn.example.com"
         ],
-        "ds-04": ["edge-cache-082.ds-04.thecdn.example.com"],
-        "ds-03": ["edge-cache-082.ds-03.thecdn.example.com"]
+        "steering-target-4": ["edge-cache-082.steering-target-4.thecdn.example.com"],
+        "steering-target-3": ["edge-cache-082.steering-target-3.thecdn.example.com"]
       }
     },
     "edge-cache-083": {
@@ -2505,20 +2505,20 @@
       "hashCount": 1000,
       "interfaceName": "bond0",
       "deliveryServices": {
-        "mm-test": ["edge-cache-083.mm-test.thecdn.example.com"],
-        "ds-08": ["edge-cache-083.ds-08.thecdn.example.com"],
+        "steering-test-1": ["edge-cache-083.steering-test-1.thecdn.example.com"],
+        "steering-target-2": ["edge-cache-083.steering-target-2.thecdn.example.com"],
         "ds-07": ["edge.ds-07.thecdn.example.com"],
-        "test": ["edge-cache-083.test.thecdn.example.com"],
-        "ds-06": [
-          "edge.ds-06.thecdn.example.com",
+        "steering-test-2": ["edge-cache-083.steering-test-2.thecdn.example.com"],
+        "federation-test": [
+          "edge.federation-test.thecdn.example.com",
           "edge.dee-ehs-06.thecdn.example.com"
         ],
-        "ds-05": [
-          "edge-cache-083.ds-05.thecdn.example.com",
-          "edge-cache-083.ds-05-b-b.thecdn.example.com"
+        "steering-target-1": [
+          "edge-cache-083.steering-target-1.thecdn.example.com",
+          "edge-cache-083.steering-target-1-b-b.thecdn.example.com"
         ],
-        "ds-04": ["edge-cache-083.ds-04.thecdn.example.com"],
-        "ds-03": ["edge-cache-083.ds-03.thecdn.example.com"]
+        "steering-target-4": ["edge-cache-083.steering-target-4.thecdn.example.com"],
+        "steering-target-3": ["edge-cache-083.steering-target-3.thecdn.example.com"]
       }
     },
     "edge-cache-084": {
@@ -2535,20 +2535,20 @@
       "hashCount": 1000,
       "interfaceName": "bond0",
       "deliveryServices": {
-        "mm-test": ["edge-cache-084.mm-test.thecdn.example.com"],
-        "ds-08": ["edge-cache-084.ds-08.thecdn.example.com"],
+        "steering-test-1": ["edge-cache-084.steering-test-1.thecdn.example.com"],
+        "steering-target-2": ["edge-cache-084.steering-target-2.thecdn.example.com"],
         "ds-07": ["edge.ds-07.thecdn.example.com"],
-        "test": ["edge-cache-084.test.thecdn.example.com"],
-        "ds-06": [
-          "edge.ds-06.thecdn.example.com",
+        "steering-test-2": ["edge-cache-084.steering-test-2.thecdn.example.com"],
+        "federation-test": [
+          "edge.federation-test.thecdn.example.com",
           "edge.dee-ehs-06.thecdn.example.com"
         ],
-        "ds-05": [
-          "edge-cache-084.ds-05.thecdn.example.com",
-          "edge-cache-084.ds-05-b-b.thecdn.example.com"
+        "steering-target-1": [
+          "edge-cache-084.steering-target-1.thecdn.example.com",
+          "edge-cache-084.steering-target-1-b-b.thecdn.example.com"
         ],
-        "ds-04": ["edge-cache-084.ds-04.thecdn.example.com"],
-        "ds-03": ["edge-cache-084.ds-03.thecdn.example.com"]
+        "steering-target-4": ["edge-cache-084.steering-target-4.thecdn.example.com"],
+        "steering-target-3": ["edge-cache-084.steering-target-3.thecdn.example.com"]
       }
     },
     "edge-cache-085": {
@@ -2565,20 +2565,20 @@
       "hashCount": 1000,
       "interfaceName": "bond0",
       "deliveryServices": {
-        "mm-test": ["edge-cache-085.mm-test.thecdn.example.com"],
-        "ds-08": ["edge-cache-085.ds-08.thecdn.example.com"],
+        "steering-test-1": ["edge-cache-085.steering-test-1.thecdn.example.com"],
+        "steering-target-2": ["edge-cache-085.steering-target-2.thecdn.example.com"],
         "ds-07": ["edge.ds-07.thecdn.example.com"],
-        "test": ["edge-cache-085.test.thecdn.example.com"],
-        "ds-06": [
-          "edge.ds-06.thecdn.example.com",
+        "steering-test-2": ["edge-cache-085.steering-test-2.thecdn.example.com"],
+        "federation-test": [
+          "edge.federation-test.thecdn.example.com",
           "edge.dee-ehs-06.thecdn.example.com"
         ],
-        "ds-05": [
-          "edge-cache-085.ds-05.thecdn.example.com",
-          "edge-cache-085.ds-05-b-b.thecdn.example.com"
+        "steering-target-1": [
+          "edge-cache-085.steering-target-1.thecdn.example.com",
+          "edge-cache-085.steering-target-1-b-b.thecdn.example.com"
         ],
-        "ds-04": ["edge-cache-085.ds-04.thecdn.example.com"],
-        "ds-03": ["edge-cache-085.ds-03.thecdn.example.com"]
+        "steering-target-4": ["edge-cache-085.steering-target-4.thecdn.example.com"],
+        "steering-target-3": ["edge-cache-085.steering-target-3.thecdn.example.com"]
       }
     },
     "edge-cache-086": {
@@ -2595,20 +2595,20 @@
       "hashCount": 1000,
       "interfaceName": "bond0",
       "deliveryServices": {
-        "mm-test": ["edge-cache-086.mm-test.thecdn.example.com"],
-        "ds-08": ["edge-cache-086.ds-08.thecdn.example.com"],
+        "steering-test-1": ["edge-cache-086.steering-test-1.thecdn.example.com"],
+        "steering-target-2": ["edge-cache-086.steering-target-2.thecdn.example.com"],
         "ds-07": ["edge.ds-07.thecdn.example.com"],
-        "test": ["edge-cache-086.test.thecdn.example.com"],
-        "ds-06": [
-          "edge.ds-06.thecdn.example.com",
+        "steering-test-2": ["edge-cache-086.steering-test-2.thecdn.example.com"],
+        "federation-test": [
+          "edge.federation-test.thecdn.example.com",
           "edge.dee-ehs-06.thecdn.example.com"
         ],
-        "ds-05": [
-          "edge-cache-086.ds-05.thecdn.example.com",
-          "edge-cache-086.ds-05-b-b.thecdn.example.com"
+        "steering-target-1": [
+          "edge-cache-086.steering-target-1.thecdn.example.com",
+          "edge-cache-086.steering-target-1-b-b.thecdn.example.com"
         ],
-        "ds-04": ["edge-cache-086.ds-04.thecdn.example.com"],
-        "ds-03": ["edge-cache-086.ds-03.thecdn.example.com"]
+        "steering-target-4": ["edge-cache-086.steering-target-4.thecdn.example.com"],
+        "steering-target-3": ["edge-cache-086.steering-target-3.thecdn.example.com"]
       }
     },
     "edge-cache-087": {
@@ -2625,20 +2625,20 @@
       "hashCount": 1000,
       "interfaceName": "bond0",
       "deliveryServices": {
-        "mm-test": ["edge-cache-087.mm-test.thecdn.example.com"],
-        "ds-08": ["edge-cache-087.ds-08.thecdn.example.com"],
+        "steering-test-1": ["edge-cache-087.steering-test-1.thecdn.example.com"],
+        "steering-target-2": ["edge-cache-087.steering-target-2.thecdn.example.com"],
         "ds-07": ["edge.ds-07.thecdn.example.com"],
-        "test": ["edge-cache-087.test.thecdn.example.com"],
-        "ds-06": [
-          "edge.ds-06.thecdn.example.com",
+        "steering-test-2": ["edge-cache-087.steering-test-2.thecdn.example.com"],
+        "federation-test": [
+          "edge.federation-test.thecdn.example.com",
           "edge.dee-ehs-06.thecdn.example.com"
         ],
-        "ds-05": [
-          "edge-cache-087.ds-05.thecdn.example.com",
-          "edge-cache-087.ds-05-b-b.thecdn.example.com"
+        "steering-target-1": [
+          "edge-cache-087.steering-target-1.thecdn.example.com",
+          "edge-cache-087.steering-target-1-b-b.thecdn.example.com"
         ],
-        "ds-04": ["edge-cache-087.ds-04.thecdn.example.com"],
-        "ds-03": ["edge-cache-087.ds-03.thecdn.example.com"]
+        "steering-target-4": ["edge-cache-087.steering-target-4.thecdn.example.com"],
+        "steering-target-3": ["edge-cache-087.steering-target-3.thecdn.example.com"]
       }
     },
     "edge-cache-088": {
@@ -2655,20 +2655,20 @@
       "hashCount": 1000,
       "interfaceName": "bond0",
       "deliveryServices": {
-        "mm-test": ["edge-cache-088.mm-test.thecdn.example.com"],
-        "ds-08": ["edge-cache-088.ds-08.thecdn.example.com"],
+        "steering-test-1": ["edge-cache-088.steering-test-1.thecdn.example.com"],
+        "steering-target-2": ["edge-cache-088.steering-target-2.thecdn.example.com"],
         "ds-07": ["edge.ds-07.thecdn.example.com"],
-        "test": ["edge-cache-088.test.thecdn.example.com"],
-        "ds-06": [
-          "edge.ds-06.thecdn.example.com",
+        "steering-test-2": ["edge-cache-088.steering-test-2.thecdn.example.com"],
+        "federation-test": [
+          "edge.federation-test.thecdn.example.com",
           "edge.dee-ehs-06.thecdn.example.com"
         ],
-        "ds-05": [
-          "edge-cache-088.ds-05.thecdn.example.com",
-          "edge-cache-088.ds-05-b-b.thecdn.example.com"
+        "steering-target-1": [
+          "edge-cache-088.steering-target-1.thecdn.example.com",
+          "edge-cache-088.steering-target-1-b-b.thecdn.example.com"
         ],
-        "ds-04": ["edge-cache-088.ds-04.thecdn.example.com"],
-        "ds-03": ["edge-cache-088.ds-03.thecdn.example.com"]
+        "steering-target-4": ["edge-cache-088.steering-target-4.thecdn.example.com"],
+        "steering-target-3": ["edge-cache-088.steering-target-3.thecdn.example.com"]
       }
     },
     "edge-cache-089": {
@@ -2685,20 +2685,20 @@
       "hashCount": 1000,
       "interfaceName": "bond0",
       "deliveryServices": {
-        "mm-test": ["edge-cache-089.mm-test.thecdn.example.com"],
-        "ds-08": ["edge-cache-089.ds-08.thecdn.example.com"],
+        "steering-test-1": ["edge-cache-089.steering-test-1.thecdn.example.com"],
+        "steering-target-2": ["edge-cache-089.steering-target-2.thecdn.example.com"],
         "ds-07": ["edge.ds-07.thecdn.example.com"],
-        "test": ["edge-cache-089.test.thecdn.example.com"],
-        "ds-06": [
-          "edge.ds-06.thecdn.example.com",
+        "steering-test-2": ["edge-cache-089.steering-test-2.thecdn.example.com"],
+        "federation-test": [
+          "edge.federation-test.thecdn.example.com",
           "edge.dee-ehs-06.thecdn.example.com"
         ],
-        "ds-05": [
-          "edge-cache-089.ds-05.thecdn.example.com",
-          "edge-cache-089.ds-05-b-b.thecdn.example.com"
+        "steering-target-1": [
+          "edge-cache-089.steering-target-1.thecdn.example.com",
+          "edge-cache-089.steering-target-1-b-b.thecdn.example.com"
         ],
-        "ds-04": ["edge-cache-089.ds-04.thecdn.example.com"],
-        "ds-03": ["edge-cache-089.ds-03.thecdn.example.com"]
+        "steering-target-4": ["edge-cache-089.steering-target-4.thecdn.example.com"],
+        "steering-target-3": ["edge-cache-089.steering-target-3.thecdn.example.com"]
       }
     },
     "edge-cache-090": {
@@ -2715,20 +2715,20 @@
       "hashCount": 1000,
       "interfaceName": "bond0",
       "deliveryServices": {
-        "mm-test": ["edge-cache-090.mm-test.thecdn.example.com"],
-        "ds-08": ["edge-cache-090.ds-08.thecdn.example.com"],
+        "steering-test-1": ["edge-cache-090.steering-test-1.thecdn.example.com"],
+        "steering-target-2": ["edge-cache-090.steering-target-2.thecdn.example.com"],
         "ds-07": ["edge.ds-07.thecdn.example.com"],
-        "test": ["edge-cache-090.test.thecdn.example.com"],
-        "ds-06": [
-          "edge.ds-06.thecdn.example.com",
+        "steering-test-2": ["edge-cache-090.steering-test-2.thecdn.example.com"],
+        "federation-test": [
+          "edge.federation-test.thecdn.example.com",
           "edge.dee-ehs-06.thecdn.example.com"
         ],
-        "ds-05": [
-          "edge-cache-090.ds-05.thecdn.example.com",
-          "edge-cache-090.ds-05-b-b.thecdn.example.com"
+        "steering-target-1": [
+          "edge-cache-090.steering-target-1.thecdn.example.com",
+          "edge-cache-090.steering-target-1-b-b.thecdn.example.com"
         ],
-        "ds-04": ["edge-cache-090.ds-04.thecdn.example.com"],
-        "ds-03": ["edge-cache-090.ds-03.thecdn.example.com"],
+        "steering-target-4": ["edge-cache-090.steering-target-4.thecdn.example.com"],
+        "steering-target-3": ["edge-cache-090.steering-target-3.thecdn.example.com"],
         "https-nocert": ["edge-cache-090.https-nocert.thecdn.example.com"]
       }
     },
@@ -2746,20 +2746,20 @@
       "hashCount": 1000,
       "interfaceName": "bond0",
       "deliveryServices": {
-        "mm-test": ["edge-cache-091.mm-test.thecdn.example.com"],
-        "ds-08": ["edge-cache-091.ds-08.thecdn.example.com"],
+        "steering-test-1": ["edge-cache-091.steering-test-1.thecdn.example.com"],
+        "steering-target-2": ["edge-cache-091.steering-target-2.thecdn.example.com"],
         "ds-07": ["edge.ds-07.thecdn.example.com"],
-        "test": ["edge-cache-091.test.thecdn.example.com"],
-        "ds-06": [
-          "edge.ds-06.thecdn.example.com",
+        "steering-test-2": ["edge-cache-091.steering-test-2.thecdn.example.com"],
+        "federation-test": [
+          "edge.federation-test.thecdn.example.com",
           "edge.dee-ehs-06.thecdn.example.com"
         ],
-        "ds-05": [
-          "edge-cache-091.ds-05.thecdn.example.com",
-          "edge-cache-091.ds-05-b-b.thecdn.example.com"
+        "steering-target-1": [
+          "edge-cache-091.steering-target-1.thecdn.example.com",
+          "edge-cache-091.steering-target-1-b-b.thecdn.example.com"
         ],
-        "ds-04": ["edge-cache-091.ds-04.thecdn.example.com"],
-        "ds-03": ["edge-cache-091.ds-03.thecdn.example.com"],
+        "steering-target-4": ["edge-cache-091.steering-target-4.thecdn.example.com"],
+        "steering-target-3": ["edge-cache-091.steering-target-3.thecdn.example.com"],
         "https-nocert": ["edge-cache-091.https-nocert.thecdn.example.com"]
       }
     },
@@ -2777,20 +2777,20 @@
       "hashCount": 1000,
       "interfaceName": "bond0",
       "deliveryServices": {
-        "mm-test": ["edge-cache-092.mm-test.thecdn.example.com"],
-        "ds-08": ["edge-cache-092.ds-08.thecdn.example.com"],
+        "steering-test-1": ["edge-cache-092.steering-test-1.thecdn.example.com"],
+        "steering-target-2": ["edge-cache-092.steering-target-2.thecdn.example.com"],
         "ds-07": ["edge.ds-07.thecdn.example.com"],
-        "test": ["edge-cache-092.test.thecdn.example.com"],
-        "ds-06": [
-          "edge.ds-06.thecdn.example.com",
+        "steering-test-2": ["edge-cache-092.steering-test-2.thecdn.example.com"],
+        "federation-test": [
+          "edge.federation-test.thecdn.example.com",
           "edge.dee-ehs-06.thecdn.example.com"
         ],
-        "ds-05": [
-          "edge-cache-092.ds-05.thecdn.example.com",
-          "edge-cache-092.ds-05-b-b.thecdn.example.com"
+        "steering-target-1": [
+          "edge-cache-092.steering-target-1.thecdn.example.com",
+          "edge-cache-092.steering-target-1-b-b.thecdn.example.com"
         ],
-        "ds-04": ["edge-cache-092.ds-04.thecdn.example.com"],
-        "ds-03": ["edge-cache-092.ds-03.thecdn.example.com"],
+        "steering-target-4": ["edge-cache-092.steering-target-4.thecdn.example.com"],
+        "steering-target-3": ["edge-cache-092.steering-target-3.thecdn.example.com"],
         "https-nocert": ["edge-cache-092.https-nocert.thecdn.example.com"]
       }
     },
@@ -2808,20 +2808,20 @@
       "hashCount": 1000,
       "interfaceName": "bond0",
       "deliveryServices": {
-        "mm-test": ["edge-cache-093.mm-test.thecdn.example.com"],
-        "ds-08": ["edge-cache-093.ds-08.thecdn.example.com"],
+        "steering-test-1": ["edge-cache-093.steering-test-1.thecdn.example.com"],
+        "steering-target-2": ["edge-cache-093.steering-target-2.thecdn.example.com"],
         "ds-07": ["edge.ds-07.thecdn.example.com"],
-        "test": ["edge-cache-093.test.thecdn.example.com"],
-        "ds-06": [
-          "edge.ds-06.thecdn.example.com",
+        "steering-test-2": ["edge-cache-093.steering-test-2.thecdn.example.com"],
+        "federation-test": [
+          "edge.federation-test.thecdn.example.com",
           "edge.dee-ehs-06.thecdn.example.com"
         ],
-        "ds-05": [
-          "edge-cache-093.ds-05.thecdn.example.com",
-          "edge-cache-093.ds-05-b-b.thecdn.example.com"
+        "steering-target-1": [
+          "edge-cache-093.steering-target-1.thecdn.example.com",
+          "edge-cache-093.steering-target-1-b-b.thecdn.example.com"
         ],
-        "ds-04": ["edge-cache-093.ds-04.thecdn.example.com"],
-        "ds-03": ["edge-cache-093.ds-03.thecdn.example.com"],
+        "steering-target-4": ["edge-cache-093.steering-target-4.thecdn.example.com"],
+        "steering-target-3": ["edge-cache-093.steering-target-3.thecdn.example.com"],
         "https-nocert": ["edge-cache-093.https-nocert.thecdn.example.com"]
       }
     },
@@ -2839,20 +2839,20 @@
       "hashCount": 1000,
       "interfaceName": "bond0",
       "deliveryServices": {
-        "mm-test": ["edge-cache-094.mm-test.thecdn.example.com"],
-        "ds-08": ["edge-cache-094.ds-08.thecdn.example.com"],
+        "steering-test-1": ["edge-cache-094.steering-test-1.thecdn.example.com"],
+        "steering-target-2": ["edge-cache-094.steering-target-2.thecdn.example.com"],
         "ds-07": ["edge.ds-07.thecdn.example.com"],
-        "test": ["edge-cache-094.test.thecdn.example.com"],
-        "ds-06": [
-          "edge.ds-06.thecdn.example.com",
+        "steering-test-2": ["edge-cache-094.steering-test-2.thecdn.example.com"],
+        "federation-test": [
+          "edge.federation-test.thecdn.example.com",
           "edge.dee-ehs-06.thecdn.example.com"
         ],
-        "ds-05": [
-          "edge-cache-094.ds-05.thecdn.example.com",
-          "edge-cache-094.ds-05-b-b.thecdn.example.com"
+        "steering-target-1": [
+          "edge-cache-094.steering-target-1.thecdn.example.com",
+          "edge-cache-094.steering-target-1-b-b.thecdn.example.com"
         ],
-        "ds-04": ["edge-cache-094.ds-04.thecdn.example.com"],
-        "ds-03": ["edge-cache-094.ds-03.thecdn.example.com"],
+        "steering-target-4": ["edge-cache-094.steering-target-4.thecdn.example.com"],
+        "steering-target-3": ["edge-cache-094.steering-target-3.thecdn.example.com"],
         "https-nocert": ["edge-cache-094.https-nocert.thecdn.example.com"]
       }
     },
@@ -2870,20 +2870,20 @@
       "hashCount": 1000,
       "interfaceName": "bond0",
       "deliveryServices": {
-        "mm-test": ["edge-cache-095.mm-test.thecdn.example.com"],
-        "ds-08": ["edge-cache-095.ds-08.thecdn.example.com"],
+        "steering-test-1": ["edge-cache-095.steering-test-1.thecdn.example.com"],
+        "steering-target-2": ["edge-cache-095.steering-target-2.thecdn.example.com"],
         "ds-07": ["edge.ds-07.thecdn.example.com"],
-        "test": ["edge-cache-095.test.thecdn.example.com"],
-        "ds-06": [
-          "edge.ds-06.thecdn.example.com",
+        "steering-test-2": ["edge-cache-095.steering-test-2.thecdn.example.com"],
+        "federation-test": [
+          "edge.federation-test.thecdn.example.com",
           "edge.dee-ehs-06.thecdn.example.com"
         ],
-        "ds-05": [
-          "edge-cache-095.ds-05.thecdn.example.com",
-          "edge-cache-095.ds-05-b-b.thecdn.example.com"
+        "steering-target-1": [
+          "edge-cache-095.steering-target-1.thecdn.example.com",
+          "edge-cache-095.steering-target-1-b-b.thecdn.example.com"
         ],
-        "ds-04": ["edge-cache-095.ds-04.thecdn.example.com"],
-        "ds-03": ["edge-cache-095.ds-03.thecdn.example.com"]
+        "steering-target-4": ["edge-cache-095.steering-target-4.thecdn.example.com"],
+        "steering-target-3": ["edge-cache-095.steering-target-3.thecdn.example.com"]
       }
     },
     "edge-cache-096": {
@@ -2900,20 +2900,20 @@
       "hashCount": 1000,
       "interfaceName": "bond0",
       "deliveryServices": {
-        "mm-test": ["edge-cache-096.mm-test.thecdn.example.com"],
-        "ds-08": ["edge-cache-096.ds-08.thecdn.example.com"],
+        "steering-test-1": ["edge-cache-096.steering-test-1.thecdn.example.com"],
+        "steering-target-2": ["edge-cache-096.steering-target-2.thecdn.example.com"],
         "ds-07": ["edge.ds-07.thecdn.example.com"],
-        "test": ["edge-cache-096.test.thecdn.example.com"],
-        "ds-06": [
-          "edge.ds-06.thecdn.example.com",
+        "steering-test-2": ["edge-cache-096.steering-test-2.thecdn.example.com"],
+        "federation-test": [
+          "edge.federation-test.thecdn.example.com",
           "edge.dee-ehs-06.thecdn.example.com"
         ],
-        "ds-05": [
-          "edge-cache-096.ds-05.thecdn.example.com",
-          "edge-cache-096.ds-05-b-b.thecdn.example.com"
+        "steering-target-1": [
+          "edge-cache-096.steering-target-1.thecdn.example.com",
+          "edge-cache-096.steering-target-1-b-b.thecdn.example.com"
         ],
-        "ds-04": ["edge-cache-096.ds-04.thecdn.example.com"],
-        "ds-03": ["edge-cache-096.ds-03.thecdn.example.com"]
+        "steering-target-4": ["edge-cache-096.steering-target-4.thecdn.example.com"],
+        "steering-target-3": ["edge-cache-096.steering-target-3.thecdn.example.com"]
       }
     },
     "edge-cache-097": {
@@ -2930,20 +2930,20 @@
       "hashCount": 1000,
       "interfaceName": "bond0",
       "deliveryServices": {
-        "mm-test": ["edge-cache-097.mm-test.thecdn.example.com"],
-        "ds-08": ["edge-cache-097.ds-08.thecdn.example.com"],
+        "steering-test-1": ["edge-cache-097.steering-test-1.thecdn.example.com"],
+        "steering-target-2": ["edge-cache-097.steering-target-2.thecdn.example.com"],
         "ds-07": ["edge.ds-07.thecdn.example.com"],
-        "test": ["edge-cache-097.test.thecdn.example.com"],
-        "ds-06": [
-          "edge.ds-06.thecdn.example.com",
+        "steering-test-2": ["edge-cache-097.steering-test-2.thecdn.example.com"],
+        "federation-test": [
+          "edge.federation-test.thecdn.example.com",
           "edge.dee-ehs-06.thecdn.example.com"
         ],
-        "ds-05": [
-          "edge-cache-097.ds-05.thecdn.example.com",
-          "edge-cache-097.ds-05-b-b.thecdn.example.com"
+        "steering-target-1": [
+          "edge-cache-097.steering-target-1.thecdn.example.com",
+          "edge-cache-097.steering-target-1-b-b.thecdn.example.com"
         ],
-        "ds-04": ["edge-cache-097.ds-04.thecdn.example.com"],
-        "ds-03": ["edge-cache-097.ds-03.thecdn.example.com"]
+        "steering-target-4": ["edge-cache-097.steering-target-4.thecdn.example.com"],
+        "steering-target-3": ["edge-cache-097.steering-target-3.thecdn.example.com"]
       }
     },
     "edge-cache-098": {
@@ -2960,20 +2960,20 @@
       "hashCount": 1000,
       "interfaceName": "bond0",
       "deliveryServices": {
-        "mm-test": ["edge-cache-098.mm-test.thecdn.example.com"],
-        "ds-08": ["edge-cache-098.ds-08.thecdn.example.com"],
+        "steering-test-1": ["edge-cache-098.steering-test-1.thecdn.example.com"],
+        "steering-target-2": ["edge-cache-098.steering-target-2.thecdn.example.com"],
         "ds-07": ["edge.ds-07.thecdn.example.com"],
-        "test": ["edge-cache-098.test.thecdn.example.com"],
-        "ds-06": [
-          "edge.ds-06.thecdn.example.com",
+        "steering-test-2": ["edge-cache-098.steering-test-2.thecdn.example.com"],
+        "federation-test": [
+          "edge.federation-test.thecdn.example.com",
           "edge.dee-ehs-06.thecdn.example.com"
         ],
-        "ds-05": [
-          "edge-cache-098.ds-05.thecdn.example.com",
-          "edge-cache-098.ds-05-b-b.thecdn.example.com"
+        "steering-target-1": [
+          "edge-cache-098.steering-target-1.thecdn.example.com",
+          "edge-cache-098.steering-target-1-b-b.thecdn.example.com"
         ],
-        "ds-04": ["edge-cache-098.ds-04.thecdn.example.com"],
-        "ds-03": ["edge-cache-098.ds-03.thecdn.example.com"]
+        "steering-target-4": ["edge-cache-098.steering-target-4.thecdn.example.com"],
+        "steering-target-3": ["edge-cache-098.steering-target-3.thecdn.example.com"]
       }
     },
     "edge-cache-099": {
@@ -2990,20 +2990,20 @@
       "hashCount": 1000,
       "interfaceName": "bond0",
       "deliveryServices": {
-        "mm-test": ["edge-cache-099.mm-test.thecdn.example.com"],
-        "ds-08": ["edge-cache-099.ds-08.thecdn.example.com"],
+        "steering-test-1": ["edge-cache-099.steering-test-1.thecdn.example.com"],
+        "steering-target-2": ["edge-cache-099.steering-target-2.thecdn.example.com"],
         "ds-07": ["edge.ds-07.thecdn.example.com"],
-        "test": ["edge-cache-099.test.thecdn.example.com"],
-        "ds-06": [
-          "edge.ds-06.thecdn.example.com",
+        "steering-test-2": ["edge-cache-099.steering-test-2.thecdn.example.com"],
+        "federation-test": [
+          "edge.federation-test.thecdn.example.com",
           "edge.dee-ehs-06.thecdn.example.com"
         ],
-        "ds-05": [
-          "edge-cache-099.ds-05.thecdn.example.com",
-          "edge-cache-099.ds-05-b-b.thecdn.example.com"
+        "steering-target-1": [
+          "edge-cache-099.steering-target-1.thecdn.example.com",
+          "edge-cache-099.steering-target-1-b-b.thecdn.example.com"
         ],
-        "ds-04": ["edge-cache-099.ds-04.thecdn.example.com"],
-        "ds-03": ["edge-cache-099.ds-03.thecdn.example.com"]
+        "steering-target-4": ["edge-cache-099.steering-target-4.thecdn.example.com"],
+        "steering-target-3": ["edge-cache-099.steering-target-3.thecdn.example.com"]
       }
     }
   },
@@ -3107,10 +3107,10 @@
       },
       "geolocationProvider": "maxmindGeolocationService"
     },
-    "mm-test": {
+    "steering-test-1": {
       "sslEnabled": "false",
       "requestHeaders": ["X-MoneyTrace"],
-      "domains": ["mm-test.thecdn.example.com"],
+      "domains": ["steering-test-1.thecdn.example.com"],
       "missLocation": {
         "long": "-87.627778",
         "lat": "41.881944"
@@ -3125,7 +3125,7 @@
       "ip6RoutingEnabled": "true",
       "bypassDestination": {"HTTP": {
         "port": "80",
-        "fqdn": "mm-test.overflowcdn.net"
+        "fqdn": "steering-test-1.overflowcdn.net"
       }},
       "dispersion": {
         "limit": 1,
@@ -3136,7 +3136,7 @@
       "matchsets": [{
         "protocol": "HTTP",
         "matchlist": [{
-          "regex": ".*\\.mm-test\\..*",
+          "regex": ".*\\.steering-test-1\\..*",
           "match-type": "HOST"
         }]
       }],
@@ -3157,28 +3157,28 @@
         },
         {
           "name": "mm-cname",
-          "value": "mm.mm-test.thecdn.example.com.",
+          "value": "mm.steering-test-1.thecdn.example.com.",
           "type": "CNAME",
           "ttl": "7200"
         }
       ]
     },
-    "ds-08": {
+    "steering-target-2": {
       "sslEnabled": "false",
       "bypassDestination": {"HTTP": {
         "port": "80",
-        "fqdn": "ds-08.overflowcdn.net"
+        "fqdn": "steering-target-2.overflowcdn.net"
       }},
       "dispersion": {
         "limit": 1,
         "shuffled": "true"
       },
-      "domains": ["ds-08.thecdn.example.com"],
+      "domains": ["steering-target-2.thecdn.example.com"],
       "coverageZoneOnly": "false",
       "matchsets": [{
         "protocol": "HTTP",
         "matchlist": [{
-          "regex": ".*\\.ds-08\\..*",
+          "regex": ".*\\.steering-target-2\\..*",
           "match-type": "HOST"
         }]
       }],
@@ -3204,7 +3204,7 @@
       "ttl": "3600",
       "ip6RoutingEnabled": "false"
     },
-    "test": {
+    "steering-test-2": {
       "sslEnabled": "false",
       "dispersion": {
         "limit": 2,
@@ -3245,16 +3245,16 @@
       "ttl": "3600",
       "ip6RoutingEnabled": "true"
     },
-    "ds-06": {
+    "federation-test": {
       "sslEnabled": "false",
       "bypassDestination": {"DNS": {"ttl": "30"}},
-      "domains": ["ds-06.thecdn.example.com"],
+      "domains": ["federation-test.thecdn.example.com"],
       "coverageZoneOnly": "false",
       "matchsets": [
         {
           "protocol": "DNS",
           "matchlist": [{
-            "regex": ".*\\.ds-06\\..*",
+            "regex": ".*\\.federation-test\\..*",
             "match-type": "HOST"
           }]
         },
@@ -3294,7 +3294,7 @@
       "maxDnsIpsForLocation": "0",
       "ip6RoutingEnabled": "true"
     },
-    "ds-05": {
+    "steering-target-1": {
       "sslEnabled": "false",
       "requestHeaders": [
         "User-Agent",
@@ -3305,20 +3305,20 @@
         "limit": 1,
         "shuffled": "true"
       },
-      "domains": ["ds-05.thecdn.example.com"],
+      "domains": ["steering-target-1.thecdn.example.com"],
       "coverageZoneOnly": "false",
       "matchsets": [
         {
           "protocol": "HTTP",
           "matchlist": [{
-            "regex": ".*\\.ds-05\\..*",
+            "regex": ".*\\.steering-target-1\\..*",
             "match-type": "HOST"
           }]
         },
         {
           "protocol": "HTTP",
           "matchlist": [{
-            "regex": ".*\\.ds-05-b-b\\..*",
+            "regex": ".*\\.steering-target-1-b-b\\..*",
             "match-type": "HOST"
           }]
         }
@@ -3345,22 +3345,22 @@
       "ttl": "3600",
       "ip6RoutingEnabled": "false"
     },
-    "ds-04": {
+    "steering-target-4": {
       "sslEnabled": "false",
       "bypassDestination": {"HTTP": {
         "port": "80",
-        "fqdn": "ds-04.overflowcdn.net"
+        "fqdn": "steering-target-4.overflowcdn.net"
       }},
       "dispersion": {
         "limit": 1,
         "shuffled": "true"
       },
-      "domains": ["ds-04.thecdn.example.com"],
+      "domains": ["steering-target-4.thecdn.example.com"],
       "coverageZoneOnly": "false",
       "matchsets": [{
         "protocol": "HTTP",
         "matchlist": [{
-          "regex": ".*\\.ds-04\\..*",
+          "regex": ".*\\.steering-target-4\\..*",
           "match-type": "HOST"
         }]
       }],
@@ -3386,22 +3386,22 @@
       "ttl": "3600",
       "ip6RoutingEnabled": "false"
     },
-    "ds-03": {
+    "steering-target-3": {
       "sslEnabled": "false",
       "bypassDestination": {"HTTP": {
         "port": "80",
-        "fqdn": "ds-03.overflowcdn.net"
+        "fqdn": "steering-target-3.overflowcdn.net"
       }},
       "dispersion": {
         "limit": 1,
         "shuffled": "true"
       },
-      "domains": ["ds-03.thecdn.example.com"],
+      "domains": ["steering-target-3.thecdn.example.com"],
       "coverageZoneOnly": "false",
       "matchsets": [{
         "protocol": "HTTP",
         "matchlist": [{
-          "regex": ".*\\.ds-03\\..*",
+          "regex": ".*\\.steering-target-3\\..*",
           "match-type": "HOST"
         }]
       }],

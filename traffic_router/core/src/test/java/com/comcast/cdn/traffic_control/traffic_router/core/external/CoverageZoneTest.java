@@ -40,7 +40,7 @@ public class CoverageZoneTest {
 
 	@Test
 	public void itGetsCacheLocation() throws Exception {
-		HttpGet httpGet = new HttpGet("http://localhost:3333/crs/coveragezone/cachelocation?ip=100.3.3.123&deliveryServiceId=ds-05");
+		HttpGet httpGet = new HttpGet("http://localhost:3333/crs/coveragezone/cachelocation?ip=100.3.3.123&deliveryServiceId=steering-target-1");
 
 		CloseableHttpResponse response = null;
 		try {
@@ -67,7 +67,7 @@ public class CoverageZoneTest {
 
 	@Test
 	public void itGetsCaches() throws Exception {
-		HttpGet httpGet = new HttpGet("http://localhost:3333/crs/coveragezone/caches?deliveryServiceId=ds-04&cacheLocationId=location-5");
+		HttpGet httpGet = new HttpGet("http://localhost:3333/crs/coveragezone/caches?deliveryServiceId=steering-target-4&cacheLocationId=location-5");
 
 		CloseableHttpResponse response = null;
 		try {
@@ -118,3 +118,4 @@ public class CoverageZoneTest {
 		return true;
 	}
 }
+

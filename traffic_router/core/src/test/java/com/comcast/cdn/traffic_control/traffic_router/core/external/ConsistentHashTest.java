@@ -225,20 +225,20 @@ public class ConsistentHashTest {
 	public void itUsesBypassFiltersWithDeliveryServiceSteering() throws Exception {
 		CloseableHttpResponse response = null;
 		try {
-			String requestPath = URLEncoder.encode("/some/path/force-to-eight/more/asdfasdf", "UTF-8");
+			String requestPath = URLEncoder.encode("/some/path/force-to-target-2/more/asdfasdf", "UTF-8");
 			HttpGet httpGet = new HttpGet("http://localhost:3333/crs/consistenthash/deliveryservice?ip=98.76.54.123&deliveryServiceId=" + steeringDeliveryServiceId + "&requestPath=" + requestPath);
 			response = closeableHttpClient.execute(httpGet);
 
 			ObjectMapper objectMapper = new ObjectMapper(new JsonFactory());
 			JsonNode deliveryServiceNode = objectMapper.readTree(EntityUtils.toString(response.getEntity()));
-			assertThat(deliveryServiceNode.get("id").asText(), equalTo("ds-08"));
+			assertThat(deliveryServiceNode.get("id").asText(), equalTo("steering-target-2"));
 
-			requestPath = URLEncoder.encode("/some/path/force-to-five/more/asdfasdf", "UTF-8");
+			requestPath = URLEncoder.encode("/some/path/force-to-target-1/more/asdfasdf", "UTF-8");
 			httpGet = new HttpGet("http://localhost:3333/crs/consistenthash/deliveryservice?ip=98.76.54.123&deliveryServiceId=" + steeringDeliveryServiceId + "&requestPath=" + requestPath);
 			response = closeableHttpClient.execute(httpGet);
 
 			deliveryServiceNode = objectMapper.readTree(EntityUtils.toString(response.getEntity()));
-			assertThat(deliveryServiceNode.get("id").asText(), equalTo("ds-05"));
+			assertThat(deliveryServiceNode.get("id").asText(), equalTo("steering-target-1"));
 		} finally {
 			if (response != null) response.close();
 		}
