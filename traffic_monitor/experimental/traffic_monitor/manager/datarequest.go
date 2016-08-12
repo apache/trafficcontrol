@@ -157,7 +157,7 @@ func dataRequestManagerListen(dr <-chan http_server.DataRequest, opsConfig OpsCo
 	}
 }
 
-func createCacheStatuses(cacheTypes map[string]enum.CacheType, statHistory map[string][]cache.Result, lastHealthDurations map[string]time.Duration, cacheStates map[string]peer.IsAvailable, lastKbpsStats ds.StatsLastKbps, localCacheStatusThreadsafe CacheAvailableStatusThreadsafe) map[enum.CacheName]CacheStatus {
+func createCacheStatuses(cacheTypes map[enum.CacheName]enum.CacheType, statHistory map[enum.CacheName][]cache.Result, lastHealthDurations map[enum.CacheName]time.Duration, cacheStates map[string]peer.IsAvailable, lastKbpsStats ds.StatsLastKbps, localCacheStatusThreadsafe CacheAvailableStatusThreadsafe) map[enum.CacheName]CacheStatus {
 	conns := createCacheConnections(statHistory)
 	statii := map[enum.CacheName]CacheStatus{}
 	localCacheStatus := localCacheStatusThreadsafe.Get()
@@ -237,7 +237,7 @@ func createCacheStatuses(cacheTypes map[string]enum.CacheType, statHistory map[s
 	return statii
 }
 
-func createCacheConnections(statHistory map[string][]cache.Result) map[enum.CacheName]int64 {
+func createCacheConnections(statHistory map[enum.CacheName][]cache.Result) map[enum.CacheName]int64 {
 	conns := map[enum.CacheName]int64{}
 	for server, history := range statHistory {
 		for _, result := range history {
@@ -253,7 +253,7 @@ func createCacheConnections(statHistory map[string][]cache.Result) map[enum.Cach
 				continue
 			}
 
-			conns[enum.CacheName(server)] = int64(v)
+			conns[server] = int64(v)
 		}
 	}
 	return conns
@@ -309,8 +309,8 @@ type Stats struct {
 	LastQueryInterval   int    `json:"Last Query Interval"`
 }
 
-func getLongestPoll(lastHealthTimes map[string]time.Duration) (string, time.Duration) {
-	var longestCache string
+func getLongestPoll(lastHealthTimes map[enum.CacheName]time.Duration) (enum.CacheName, time.Duration) {
+	var longestCache enum.CacheName
 	var longestTime time.Duration
 	for cache, time := range lastHealthTimes {
 		if time > longestTime {
@@ -321,7 +321,7 @@ func getLongestPoll(lastHealthTimes map[string]time.Duration) (string, time.Dura
 	return longestCache, longestTime
 }
 
-func getStats(staticAppData StaticAppData, pollingInterval time.Duration, lastHealthTimes map[string]time.Duration, fetchCount uint64, healthIteration uint64, errorCount uint64) ([]byte, error) {
+func getStats(staticAppData StaticAppData, pollingInterval time.Duration, lastHealthTimes map[enum.CacheName]time.Duration, fetchCount uint64, healthIteration uint64, errorCount uint64) ([]byte, error) {
 	longestPollCache, longestPollTime := getLongestPoll(lastHealthTimes)
 	var memStats runtime.MemStats
 	runtime.ReadMemStats(&memStats)
@@ -336,7 +336,7 @@ func getStats(staticAppData StaticAppData, pollingInterval time.Duration, lastHe
 	s.Version = staticAppData.Version
 	s.DeployDir = staticAppData.WorkingDir
 	s.FetchCount = fetchCount
-	s.SlowestCache = longestPollCache
+	s.SlowestCache = string(longestPollCache)
 	s.IterationCount = healthIteration
 	s.Name = staticAppData.Name
 	s.BuildTimestamp = staticAppData.BuildTimestamp

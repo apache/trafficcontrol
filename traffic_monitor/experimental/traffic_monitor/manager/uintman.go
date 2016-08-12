@@ -21,6 +21,7 @@ func (u UintThreadsafe) Set(v uint64) {
 	atomic.StoreUint64(u.val, v)
 }
 
-func (u UintThreadsafe) Inc() {
-	atomic.AddUint64(u.val, 1)
+// TODO make sure everything using this uses the value it returns, not a separate Get
+func (u UintThreadsafe) Inc() uint64 {
+	return atomic.AddUint64(u.val, 1)
 }
