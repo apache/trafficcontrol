@@ -1263,8 +1263,7 @@ sub regex_revalidate_dot_config {
 	}
 
 	my %regex_time;
-	my $max_days =
-		$self->db->resultset('Parameter')->search( { name => "maxRevalDurationDays" }, { config_file => "regex_revalidate.config" } )->get_column('value')->first;
+	$max_days = $self->db->resultset('Parameter')->search( { name => "maxRevalDurationDays" }, { config_file => "regex_revalidate.config" } )->get_column('value')->first;
 	my $max_hours = $max_days * 24;
 	my $min_hours = 1;
 
