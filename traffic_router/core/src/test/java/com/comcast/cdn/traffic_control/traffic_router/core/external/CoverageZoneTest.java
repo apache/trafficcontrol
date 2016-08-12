@@ -67,11 +67,12 @@ public class CoverageZoneTest {
 
 	@Test
 	public void itGetsCaches() throws Exception {
-		HttpGet httpGet = new HttpGet("http://localhost:3333/crs/coveragezone/caches?deliveryServiceId=steering-target-4&cacheLocationId=location-5");
+		HttpGet httpGet = new HttpGet("http://localhost:3333/crs/coveragezone/caches?deliveryServiceId=steering-target-4&cacheLocationId=location-1");
 
 		CloseableHttpResponse response = null;
 		try {
 			response = closeableHttpClient.execute(httpGet);
+			assertThat(response.getStatusLine().getStatusCode(), equalTo(200));
 
 			ObjectMapper objectMapper = new ObjectMapper(new JsonFactory());
 			JsonNode jsonNode = objectMapper.readTree(EntityUtils.toString(response.getEntity()));
