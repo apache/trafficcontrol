@@ -51,7 +51,7 @@ sub edit {
 	my $data = $rs_ds->single;
 	my $action;
 	my $regexp_set = &get_regexp_set( $self, $id );
-	my $cdn_domain = &get_cdn_domain( $self, $id );
+	my $cdn_domain = $self->get_cdn_domain_by_ds_id($id);
 	my @example_urls = &get_example_urls( $self, $id, $regexp_set, $data, $cdn_domain, $data->protocol );
 
 	my $server_count = $self->db->resultset('DeliveryserviceServer')->search( { deliveryservice => $id } )->count();
@@ -161,18 +161,6 @@ sub get_example_urls {
 	return @example_urls;
 }
 
-sub get_cdn_domain {
-	my $self       = shift;
-	my $id         = shift;
-	my $cdn_domain = $self->db->resultset('Parameter')->search(
-		{ -and => [ 'me.name' => 'domain_name', 'deliveryservices.id' => $id ] },
-		{
-			join     => { profile_parameters => { profile => { deliveryservices => undef } } },
-			distinct => 1
-		}
-	)->get_column('value')->single();
-	return $cdn_domain;
-}
 
 sub get_regexp_set {
 	my $self = shift;
@@ -327,6 +315,8 @@ sub sanitize_geo_limit_countries {
 
 sub check_deliveryservice_input {
 	my $self = shift;
+	my $cdn_id = shift;
+	my $ds_id = shift;
 
 	if ( $self->param('ds.xml_id') =~ /\s/ ) {
 		$self->field('ds.xml_id')->is_equal( "", "Delivery service xml_id cannot contain whitespace." );
@@ -339,20 +329,12 @@ sub check_deliveryservice_input {
 		return $self->valid;    # Anything goes for the ANY_MAP, but ds.type is only set on create
 	}
 
-	if (   $self->param('ds.qstring_ignore') == 2
-		&& $self->param('ds.regex_remap') ne "" )
-	{
+	if ($self->param('ds.qstring_ignore') == 2 && $self->param('ds.regex_remap') ne "") {
 		$self->field('ds.regex_remap')->is_equal( "", "Regex Remap can not be used when qstring_ignore is 2" );
 	}
+
 	my $profile_id = $self->param('ds.profile');
-	my $cdn_domain = $self->db->resultset('Parameter')->search(
-		{
-			'Name'                       => 'domain_name',
-			'Config_file'                => 'CRConfig.json',
-			'profile_parameters.profile' => $profile_id,
-		},
-		{ join => 'profile_parameters', }
-	)->get_column('value')->single();
+	my $cdn_domain = $self->get_cdn_domain_by_profile_id($profile_id);
 
 	my $match_one = 0;
 	my $dbl_check = {};
@@ -386,49 +368,22 @@ sub check_deliveryservice_input {
 
 			if ( $param =~ /^re_re_(\d+)/ || $param =~ /^re_re_new_(\d+)/ ) {
 				my $order_no = $1;
+				my $new_regex;
+				my $new_regex_type;
 
-				my $is_re_type_host_regex = defined($self->param('re_type_' . $order_no)) && $self->param('re_type_' . $order_no) eq 'HOST_REGEXP';
-				my $is_re_type_new_host_regex = defined($self->param('re_type_new_' . $order_no)) && $self->param('re_type_new_' . $order_no) eq 'HOST_REGEXP';
-				my $new_re;
-
-				if ($is_re_type_host_regex) {
-					$new_re = $self->param('re_re_' . $order_no);
+				if (defined($self->param('re_type_' . $order_no))) {
+					$new_regex = $self->param('re_re_' . $order_no);
+					$new_regex_type = $self->param('re_type_' . $order_no);
 				}
 
-				if ($is_re_type_new_host_regex) {
-					$new_re = $self->param('re_re_new_' . $order_no)
+				if (defined($self->param('re_type_new_' . $order_no))) {
+					$new_regex = $self->param('re_re_new_' . $order_no);
+					$new_regex_type = $self->param('re_type_new_' . $order_no);
 				}
 
-				$new_re .= $cdn_domain;
-
-				if ($is_re_type_host_regex || $is_re_type_new_host_regex) {
-					my $ds_id = $self->param('id');
-					my $cdn_id = undef;
-
-					if (defined($ds_id)) {
-						$cdn_id = $self->db->resultset('Deliveryservice')->search({'me.id' => $self->param('id')})->single->cdn_id;
-					}
-
-					my $rs = $self->db->resultset('DeliveryserviceRegex')->search(undef, {prefetch => [{regex => undef}, {deliveryservice => undef}]} );
-
-					while ( my $row = $rs->next ) {
-						my $other_cdn_id = $self->db->resultset('Deliveryservice')->search( { 'me.id' => $row->deliveryservice->id })->single->cdn_id;
-
-						if (defined($cdn_id) && $other_cdn_id != $cdn_id) {
-							next;
-						}
-
-						my $existing_re = $row->regex->pattern . $cdn_domain;
-
-						if (defined($ds_id) && $ds_id == $row->deliveryservice->id) {
-							next;
-						}
-
-						if ($existing_re eq $new_re) {
-							$self->field('hidden.regex')->is_equal( "", "There already is a HOST_REGEXP (" . $existing_re . ") that matches " . $new_re . "; No can do." );
-							last;
-						}
-					}
+				my $conflicting_regex = $self->find_existing_host_regex($new_regex_type, $new_regex, $cdn_domain, $cdn_id, $ds_id);
+				if (defined($conflicting_regex)) {
+					$self->field('hidden.regex')->is_equal( "", "There already is a HOST_REGEXP (" . $conflicting_regex . ") that matches " . $new_regex . "; Please choose another." );
 				}
 			}
 		}
@@ -537,7 +492,7 @@ sub check_deliveryservice_input {
 
 	if ( $self->param('ds.geo_limit') ne 0 ) {
 		my $url = $self->param('ds.geolimit_redirect_url');
-		$url =~ s/^(?i)https?(?-i):\/\/(.*)/\1/;
+		$url =~ s/^(?i)https?(?-i):\/\/(.*)/$1/;
 		if ( (not $url =~ /^[0-9a-zA-Z_\!\~\*\'\(\)\.\;\?\:\@\&\=\+\$\,\%\#\-\/]+$/) || $url =~ /\/\//) {
 			$self->field('ds.geolimit_redirect_url')->is_equal("", "Invalid geolimit redirect url" );
 		}
@@ -591,7 +546,7 @@ sub header_rewrite {
 	my $tier       = shift;
 	my $type       = shift;
 
-	if ( $tier eq 'mid' && $type =~ /LIVE/ && $type !~ /NATNL/ ) {
+	if ( $tier eq 'mid' && defined($type) && $type =~ /LIVE/ && $type !~ /NATNL/ ) {
 
 		# live local delivery services don't get remap rules
 		return;
@@ -770,7 +725,7 @@ sub update {
 		return $self->redirect_to($referer);
 	}
 
-	if ( $self->check_deliveryservice_input() ) {
+	if ( $self->check_deliveryservice_input($self->param('ds.cdn_id'), $id) ) {
 
 		#print "global_max_mbps = " . $self->param('ds.global_max_mbps') . "\n";
 		# if error check passes
@@ -932,7 +887,7 @@ sub update {
 		&stash_role($self);
 		my $rs_ds = $self->db->resultset('Deliveryservice')->search( { 'me.id' => $id }, { prefetch => [ { 'type' => undef }, { 'profile' => undef } ] } );
 		my $data = $rs_ds->single;
-		my $cdn_domain   = &get_cdn_domain( $self, $id );
+		my $cdn_domain   = $self->get_cdn_domain_by_ds_id($id);
 		my $server_count = $self->db->resultset('DeliveryserviceServer')->search( { deliveryservice => $id } )->count();
 		my $static_count = $self->db->resultset('Staticdnsentry')->search( { deliveryservice => $id } )->count();
 		my $regexp_set   = &get_regexp_set( $self, $id );
@@ -990,12 +945,12 @@ sub create {
 		$self->field('ds.xml_id')->is_equal( "", "A Delivery service with xml_id \"$xml_id\" already exists." );
 	}
 
-	if ( $self->check_deliveryservice_input() ) {
+	if ( $self->check_deliveryservice_input($cdn_id) ) {
 		my $insert = $self->db->resultset('Deliveryservice')->create(
 			{
 				xml_id                      => $self->paramAsScalar('ds.xml_id'),
 				display_name                => $self->paramAsScalar('ds.display_name'),
-				dscp                        => $self->paramAsScalar( 'ds.dscp', 0 ),
+				dscp                        => $self->paramAsScalar('ds.dscp', 0 ),
 				signed                      => $self->paramAsScalar('ds.signed'),
 				qstring_ignore              => $self->paramAsScalar('ds.qstring_ignore'),
 				geo_limit                   => $self->paramAsScalar('ds.geo_limit'),
