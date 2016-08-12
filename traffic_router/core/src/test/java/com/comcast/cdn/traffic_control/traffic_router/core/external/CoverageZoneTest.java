@@ -67,7 +67,7 @@ public class CoverageZoneTest {
 
 	@Test
 	public void itGetsCaches() throws Exception {
-		HttpGet httpGet = new HttpGet("http://localhost:3333/crs/coveragezone/caches?deliveryServiceId=ds-07&cacheLocationId=location-5");
+		HttpGet httpGet = new HttpGet("http://localhost:3333/crs/coveragezone/caches?deliveryServiceId=ds-04&cacheLocationId=location-5");
 
 		CloseableHttpResponse response = null;
 		try {
@@ -89,6 +89,15 @@ public class CoverageZoneTest {
 			assertThat(cacheNode.get("available").asText(), anyOf(equalTo("true"), equalTo("false")));
 		} finally {
 			if (response != null) response.close();
+		}
+	}
+
+	@Test
+	public void itReturns404ForMissingDeliveryService() throws Exception {
+		HttpGet httpGet = new HttpGet("http://localhost:3333/crs/coveragezone/caches?deliveryServiceId=ds-07&cacheLocationId=location-5");
+
+		try (CloseableHttpResponse response = closeableHttpClient.execute(httpGet)) {
+			assertThat(response.getStatusLine().getStatusCode(), equalTo(404));
 		}
 	}
 

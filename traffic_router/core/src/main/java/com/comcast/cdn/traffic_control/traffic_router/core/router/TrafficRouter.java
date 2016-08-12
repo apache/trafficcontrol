@@ -430,7 +430,7 @@ public class TrafficRouter {
 	}
 
 	private List<Cache> selectCachesByCZ(final DeliveryService ds, final CacheLocation cacheLocation, final Track track) {
-		if (cacheLocation == null || !ds.isLocationAvailable(cacheLocation)) {
+		if (cacheLocation == null || ds == null || !ds.isLocationAvailable(cacheLocation)) {
 			return null;
 		}
 

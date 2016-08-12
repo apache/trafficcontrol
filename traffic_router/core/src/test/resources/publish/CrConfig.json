@@ -17,7 +17,6 @@
         "https-test": ["edge-cache-001.https-test.thecdn.example.com"],
         "mm-test": ["edge-cache-001.mm-test.thecdn.example.com"],
         "ds-08": ["edge-cache-001.ds-08.thecdn.example.com"],
-        "ds-07": ["edge.ds-07.thecdn.example.com"],
         "test": ["edge-cache-001.test.thecdn.example.com"],
         "ds-06": [
           "edge.ds-06.thecdn.example.com",
@@ -28,10 +27,7 @@
           "edge-cache-001.ds-05-b-b.thecdn.example.com"
         ],
         "ds-04": ["edge-cache-000.ds-04.thecdn.example.com"],
-        "ds-03": ["edge-cache-000.ds-03.thecdn.example.com"],
-        "ds-02": ["edge-cache-000.ds-02.thecdn.example.com"],
-        "ds-01": ["edge-cache-000.ds-01.thecdn.example.com"],
-        "test-dns": ["edge.test-dns.thecdn.example.com"]
+        "ds-03": ["edge-cache-000.ds-03.thecdn.example.com"]
       }
     },
     "edge-cache-001": {
@@ -51,7 +47,6 @@
         "https-test": ["edge-cache-001.https-test.thecdn.example.com"],
         "mm-test": ["edge-cache-001.mm-test.thecdn.example.com"],
         "ds-08": ["edge-cache-001.ds-08.thecdn.example.com"],
-        "ds-07": ["edge.ds-07.thecdn.example.com"],
         "test": ["edge-cache-001.test.thecdn.example.com"],
         "ds-06": [
           "edge.ds-06.thecdn.example.com",
@@ -62,10 +57,7 @@
           "edge-cache-001.ds-05-b-b.thecdn.example.com"
         ],
         "ds-04": ["edge-cache-001.ds-04.thecdn.example.com"],
-        "ds-03": ["edge-cache-001.ds-03.thecdn.example.com"],
-        "ds-02": ["edge-cache-001.ds-02.thecdn.example.com"],
-        "ds-01": ["edge-cache-001.ds-01.thecdn.example.com"],
-        "test-dns": ["edge.test-dns.thecdn.example.com"]
+        "ds-03": ["edge-cache-001.ds-03.thecdn.example.com"]
       }
     },
     "edge-cache-002": {
@@ -95,10 +87,7 @@
           "edge-cache-002.ds-05-b-b.thecdn.example.com"
         ],
         "ds-04": ["edge-cache-002.ds-04.thecdn.example.com"],
-        "ds-03": ["edge-cache-002.ds-03.thecdn.example.com"],
-        "ds-02": ["edge-cache-002.ds-02.thecdn.example.com"],
-        "ds-01": ["edge-cache-002.ds-01.thecdn.example.com"],
-        "test-dns": ["edge.test-dns.thecdn.example.com"]
+        "ds-03": ["edge-cache-002.ds-03.thecdn.example.com"]
       }
     },
     "edge-cache-003": {
@@ -129,10 +118,7 @@
           "edge-cache-003.ds-05-b-b.thecdn.example.com"
         ],
         "ds-04": ["edge-cache-003.ds-04.thecdn.example.com"],
-        "ds-03": ["edge-cache-003.ds-03.thecdn.example.com"],
-        "ds-02": ["edge-cache-003.ds-02.thecdn.example.com"],
-        "ds-01": ["edge-cache-003.ds-01.thecdn.example.com"],
-        "test-dns": ["edge.test-dns.thecdn.example.com"]
+        "ds-03": ["edge-cache-003.ds-03.thecdn.example.com"]
       }
     },
     "edge-cache-004": {
@@ -163,10 +149,7 @@
           "edge-cache-004.ds-05-b-b.thecdn.example.com"
         ],
         "ds-04": ["edge-cache-004.ds-04.thecdn.example.com"],
-        "ds-03": ["edge-cache-004.ds-03.thecdn.example.com"],
-        "ds-02": ["edge-cache-004.ds-02.thecdn.example.com"],
-        "ds-01": ["edge-cache-004.ds-01.thecdn.example.com"],
-        "test-dns": ["edge.test-dns.thecdn.example.com"]
+        "ds-03": ["edge-cache-004.ds-03.thecdn.example.com"]
       }
     },
     "edge-cache-005": {
@@ -196,10 +179,7 @@
           "edge-cache-005.ds-05-b-b.thecdn.example.com"
         ],
         "ds-04": ["edge-cache-005.ds-04.thecdn.example.com"],
-        "ds-03": ["edge-cache-005.ds-03.thecdn.example.com"],
-        "ds-02": ["edge-cache-005.ds-02.thecdn.example.com"],
-        "ds-01": ["edge-cache-005.ds-01.thecdn.example.com"],
-        "test-dns": ["edge.test-dns.thecdn.example.com"]
+        "ds-03": ["edge-cache-005.ds-03.thecdn.example.com"]
       }
     },
     "edge-cache-006": {
@@ -229,10 +209,7 @@
           "edge-cache-006.ds-05-b-b.thecdn.example.com"
         ],
         "ds-04": ["edge-cache-006.ds-04.thecdn.example.com"],
-        "ds-03": ["edge-cache-006.ds-03.thecdn.example.com"],
-        "ds-02": ["edge-cache-006.ds-02.thecdn.example.com"],
-        "ds-01": ["edge-cache-006.ds-01.thecdn.example.com"],
-        "test-dns": ["edge.test-dns.thecdn.example.com"]
+        "ds-03": ["edge-cache-006.ds-03.thecdn.example.com"]
       }
     },    
     "edge-cache-007": {
@@ -262,10 +239,7 @@
           "edge-cache-007.ds-05-b-b.thecdn.example.com"
         ],
         "ds-04": ["edge-cache-007.ds-04.thecdn.example.com"],
-        "ds-03": ["edge-cache-007.ds-03.thecdn.example.com"],
-        "ds-02": ["edge-cache-007.ds-02.thecdn.example.com"],
-        "ds-01": ["edge-cache-007.ds-01.thecdn.example.com"],
-        "test-dns": ["edge.test-dns.thecdn.example.com"]
+        "ds-03": ["edge-cache-007.ds-03.thecdn.example.com"]
       }
     },    
     "edge-cache-008": {
@@ -295,10 +269,7 @@
           "edge-cache-008.ds-05-b-b.thecdn.example.com"
         ],
         "ds-04": ["edge-cache-008.ds-04.thecdn.example.com"],
-        "ds-03": ["edge-cache-008.ds-03.thecdn.example.com"],
-        "ds-02": ["edge-cache-008.ds-02.thecdn.example.com"],
-        "ds-01": ["edge-cache-008.ds-01.thecdn.example.com"],
-        "test-dns": ["edge.test-dns.thecdn.example.com"]
+        "ds-03": ["edge-cache-008.ds-03.thecdn.example.com"]
       }
     },    
     "edge-cache-009": {
@@ -328,10 +299,7 @@
           "edge-cache-009.ds-05-b-b.thecdn.example.com"
         ],
         "ds-04": ["edge-cache-009.ds-04.thecdn.example.com"],
-        "ds-03": ["edge-cache-009.ds-03.thecdn.example.com"],
-        "ds-02": ["edge-cache-009.ds-02.thecdn.example.com"],
-        "ds-01": ["edge-cache-009.ds-01.thecdn.example.com"],
-        "test-dns": ["edge.test-dns.thecdn.example.com"]
+        "ds-03": ["edge-cache-009.ds-03.thecdn.example.com"]
       }
     },    
     "edge-cache-010": {
@@ -361,10 +329,7 @@
           "edge-cache-010.ds-05-b-b.thecdn.example.com"
         ],
         "ds-04": ["edge-cache-010.ds-04.thecdn.example.com"],
-        "ds-03": ["edge-cache-010.ds-03.thecdn.example.com"],
-        "ds-02": ["edge-cache-010.ds-02.thecdn.example.com"],
-        "ds-01": ["edge-cache-010.ds-01.thecdn.example.com"],
-        "test-dns": ["edge.test-dns.thecdn.example.com"]
+        "ds-03": ["edge-cache-010.ds-03.thecdn.example.com"]
       }
     },    
     "edge-cache-011": {
@@ -394,10 +359,7 @@
           "edge-cache-011.ds-05-b-b.thecdn.example.com"
         ],
         "ds-04": ["edge-cache-011.ds-04.thecdn.example.com"],
-        "ds-03": ["edge-cache-011.ds-03.thecdn.example.com"],
-        "ds-02": ["edge-cache-011.ds-02.thecdn.example.com"],
-        "ds-01": ["edge-cache-011.ds-01.thecdn.example.com"],
-        "test-dns": ["edge.test-dns.thecdn.example.com"]
+        "ds-03": ["edge-cache-011.ds-03.thecdn.example.com"]
       }
     },
     "edge-cache-012": {
@@ -427,10 +389,7 @@
           "edge-cache-012.ds-05-b-b.thecdn.example.com"
         ],
         "ds-04": ["edge-cache-012.ds-04.thecdn.example.com"],
-        "ds-03": ["edge-cache-012.ds-03.thecdn.example.com"],
-        "ds-02": ["edge-cache-012.ds-02.thecdn.example.com"],
-        "ds-01": ["edge-cache-012.ds-01.thecdn.example.com"],
-        "test-dns": ["edge.test-dns.thecdn.example.com"]
+        "ds-03": ["edge-cache-012.ds-03.thecdn.example.com"]
       }
     },
     "edge-cache-013": {
@@ -460,10 +419,7 @@
           "edge-cache-013.ds-05-b-b.thecdn.example.com"
         ],
         "ds-04": ["edge-cache-013.ds-04.thecdn.example.com"],
-        "ds-03": ["edge-cache-013.ds-03.thecdn.example.com"],
-        "ds-02": ["edge-cache-013.ds-02.thecdn.example.com"],
-        "ds-01": ["edge-cache-013.ds-01.thecdn.example.com"],
-        "test-dns": ["edge.test-dns.thecdn.example.com"]
+        "ds-03": ["edge-cache-013.ds-03.thecdn.example.com"]
       }
     },
     "edge-cache-014": {
@@ -493,10 +449,7 @@
           "edge-cache-014.ds-05-b-b.thecdn.example.com"
         ],
         "ds-04": ["edge-cache-014.ds-04.thecdn.example.com"],
-        "ds-03": ["edge-cache-014.ds-03.thecdn.example.com"],
-        "ds-02": ["edge-cache-014.ds-02.thecdn.example.com"],
-        "ds-01": ["edge-cache-014.ds-01.thecdn.example.com"],
-        "test-dns": ["edge.test-dns.thecdn.example.com"]
+        "ds-03": ["edge-cache-014.ds-03.thecdn.example.com"]
       }
     },
     "edge-cache-015": {
@@ -526,10 +479,7 @@
           "edge-cache-015.ds-05-b-b.thecdn.example.com"
         ],
         "ds-04": ["edge-cache-015.ds-04.thecdn.example.com"],
-        "ds-03": ["edge-cache-015.ds-03.thecdn.example.com"],
-        "ds-02": ["edge-cache-015.ds-02.thecdn.example.com"],
-        "ds-01": ["edge-cache-015.ds-01.thecdn.example.com"],
-        "test-dns": ["edge.test-dns.thecdn.example.com"]
+        "ds-03": ["edge-cache-015.ds-03.thecdn.example.com"]
       }
     },
     "edge-cache-016": {
@@ -559,10 +509,7 @@
           "edge-cache-016.ds-05-b-b.thecdn.example.com"
         ],
         "ds-04": ["edge-cache-016.ds-04.thecdn.example.com"],
-        "ds-03": ["edge-cache-016.ds-03.thecdn.example.com"],
-        "ds-02": ["edge-cache-016.ds-02.thecdn.example.com"],
-        "ds-01": ["edge-cache-016.ds-01.thecdn.example.com"],
-        "test-dns": ["edge.test-dns.thecdn.example.com"]
+        "ds-03": ["edge-cache-016.ds-03.thecdn.example.com"]
       }
     },    
     "edge-cache-017": {
@@ -592,10 +539,7 @@
           "edge-cache-017.ds-05-b-b.thecdn.example.com"
         ],
         "ds-04": ["edge-cache-017.ds-04.thecdn.example.com"],
-        "ds-03": ["edge-cache-017.ds-03.thecdn.example.com"],
-        "ds-02": ["edge-cache-017.ds-02.thecdn.example.com"],
-        "ds-01": ["edge-cache-017.ds-01.thecdn.example.com"],
-        "test-dns": ["edge.test-dns.thecdn.example.com"]
+        "ds-03": ["edge-cache-017.ds-03.thecdn.example.com"]
       }
     },    
     "edge-cache-018": {
@@ -625,10 +569,7 @@
           "edge-cache-018.ds-05-b-b.thecdn.example.com"
         ],
         "ds-04": ["edge-cache-018.ds-04.thecdn.example.com"],
-        "ds-03": ["edge-cache-018.ds-03.thecdn.example.com"],
-        "ds-02": ["edge-cache-018.ds-02.thecdn.example.com"],
-        "ds-01": ["edge-cache-018.ds-01.thecdn.example.com"],
-        "test-dns": ["edge.test-dns.thecdn.example.com"]
+        "ds-03": ["edge-cache-018.ds-03.thecdn.example.com"]
       }
     },    
     "edge-cache-019": {
@@ -658,10 +599,7 @@
           "edge-cache-019.ds-05-b-b.thecdn.example.com"
         ],
         "ds-04": ["edge-cache-019.ds-04.thecdn.example.com"],
-        "ds-03": ["edge-cache-019.ds-03.thecdn.example.com"],
-        "ds-02": ["edge-cache-019.ds-02.thecdn.example.com"],
-        "ds-01": ["edge-cache-019.ds-01.thecdn.example.com"],
-        "test-dns": ["edge.test-dns.thecdn.example.com"]
+        "ds-03": ["edge-cache-019.ds-03.thecdn.example.com"]
       }
     },    
     "edge-cache-020": {
@@ -691,10 +629,7 @@
           "edge-cache-020.ds-05-b-b.thecdn.example.com"
         ],
         "ds-04": ["edge-cache-020.ds-04.thecdn.example.com"],
-        "ds-03": ["edge-cache-020.ds-03.thecdn.example.com"],
-        "ds-02": ["edge-cache-020.ds-02.thecdn.example.com"],
-        "ds-01": ["edge-cache-020.ds-01.thecdn.example.com"],
-        "test-dns": ["edge.test-dns.thecdn.example.com"]
+        "ds-03": ["edge-cache-020.ds-03.thecdn.example.com"]
       }
     },    
     "edge-cache-021": {
@@ -724,10 +659,7 @@
           "edge-cache-021.ds-05-b-b.thecdn.example.com"
         ],
         "ds-04": ["edge-cache-021.ds-04.thecdn.example.com"],
-        "ds-03": ["edge-cache-021.ds-03.thecdn.example.com"],
-        "ds-02": ["edge-cache-021.ds-02.thecdn.example.com"],
-        "ds-01": ["edge-cache-021.ds-01.thecdn.example.com"],
-        "test-dns": ["edge.test-dns.thecdn.example.com"]
+        "ds-03": ["edge-cache-021.ds-03.thecdn.example.com"]
       }
     },
     "edge-cache-022": {
@@ -757,10 +689,7 @@
           "edge-cache-022.ds-05-b-b.thecdn.example.com"
         ],
         "ds-04": ["edge-cache-022.ds-04.thecdn.example.com"],
-        "ds-03": ["edge-cache-022.ds-03.thecdn.example.com"],
-        "ds-02": ["edge-cache-022.ds-02.thecdn.example.com"],
-        "ds-01": ["edge-cache-022.ds-01.thecdn.example.com"],
-        "test-dns": ["edge.test-dns.thecdn.example.com"]
+        "ds-03": ["edge-cache-022.ds-03.thecdn.example.com"]
       }
     },
     "edge-cache-023": {
@@ -790,10 +719,7 @@
           "edge-cache-023.ds-05-b-b.thecdn.example.com"
         ],
         "ds-04": ["edge-cache-023.ds-04.thecdn.example.com"],
-        "ds-03": ["edge-cache-023.ds-03.thecdn.example.com"],
-        "ds-02": ["edge-cache-023.ds-02.thecdn.example.com"],
-        "ds-01": ["edge-cache-023.ds-01.thecdn.example.com"],
-        "test-dns": ["edge.test-dns.thecdn.example.com"]
+        "ds-03": ["edge-cache-023.ds-03.thecdn.example.com"]
       }
     },
     "edge-cache-024": {
@@ -823,10 +749,7 @@
           "edge-cache-024.ds-05-b-b.thecdn.example.com"
         ],
         "ds-04": ["edge-cache-024.ds-04.thecdn.example.com"],
-        "ds-03": ["edge-cache-024.ds-03.thecdn.example.com"],
-        "ds-02": ["edge-cache-024.ds-02.thecdn.example.com"],
-        "ds-01": ["edge-cache-024.ds-01.thecdn.example.com"],
-        "test-dns": ["edge.test-dns.thecdn.example.com"]
+        "ds-03": ["edge-cache-024.ds-03.thecdn.example.com"]
       }
     },
     "edge-cache-025": {
@@ -856,10 +779,7 @@
           "edge-cache-025.ds-05-b-b.thecdn.example.com"
         ],
         "ds-04": ["edge-cache-025.ds-04.thecdn.example.com"],
-        "ds-03": ["edge-cache-025.ds-03.thecdn.example.com"],
-        "ds-02": ["edge-cache-025.ds-02.thecdn.example.com"],
-        "ds-01": ["edge-cache-025.ds-01.thecdn.example.com"],
-        "test-dns": ["edge.test-dns.thecdn.example.com"]
+        "ds-03": ["edge-cache-025.ds-03.thecdn.example.com"]
       }
     },
     "edge-cache-026": {
@@ -889,10 +809,7 @@
           "edge-cache-026.ds-05-b-b.thecdn.example.com"
         ],
         "ds-04": ["edge-cache-026.ds-04.thecdn.example.com"],
-        "ds-03": ["edge-cache-026.ds-03.thecdn.example.com"],
-        "ds-02": ["edge-cache-026.ds-02.thecdn.example.com"],
-        "ds-01": ["edge-cache-026.ds-01.thecdn.example.com"],
-        "test-dns": ["edge.test-dns.thecdn.example.com"]
+        "ds-03": ["edge-cache-026.ds-03.thecdn.example.com"]
       }
     },    
     "edge-cache-027": {
@@ -922,10 +839,7 @@
           "edge-cache-027.ds-05-b-b.thecdn.example.com"
         ],
         "ds-04": ["edge-cache-027.ds-04.thecdn.example.com"],
-        "ds-03": ["edge-cache-027.ds-03.thecdn.example.com"],
-        "ds-02": ["edge-cache-027.ds-02.thecdn.example.com"],
-        "ds-01": ["edge-cache-027.ds-01.thecdn.example.com"],
-        "test-dns": ["edge.test-dns.thecdn.example.com"]
+        "ds-03": ["edge-cache-027.ds-03.thecdn.example.com"]
       }
     },    
     "edge-cache-028": {
@@ -955,10 +869,7 @@
           "edge-cache-028.ds-05-b-b.thecdn.example.com"
         ],
         "ds-04": ["edge-cache-028.ds-04.thecdn.example.com"],
-        "ds-03": ["edge-cache-028.ds-03.thecdn.example.com"],
-        "ds-02": ["edge-cache-028.ds-02.thecdn.example.com"],
-        "ds-01": ["edge-cache-028.ds-01.thecdn.example.com"],
-        "test-dns": ["edge.test-dns.thecdn.example.com"]
+        "ds-03": ["edge-cache-028.ds-03.thecdn.example.com"]
       }
     },    
     "edge-cache-029": {
@@ -988,10 +899,7 @@
           "edge-cache-029.ds-05-b-b.thecdn.example.com"
         ],
         "ds-04": ["edge-cache-029.ds-04.thecdn.example.com"],
-        "ds-03": ["edge-cache-029.ds-03.thecdn.example.com"],
-        "ds-02": ["edge-cache-029.ds-02.thecdn.example.com"],
-        "ds-01": ["edge-cache-029.ds-01.thecdn.example.com"],
-        "test-dns": ["edge.test-dns.thecdn.example.com"]
+        "ds-03": ["edge-cache-029.ds-03.thecdn.example.com"]
       }
     },    
     "edge-cache-030": {
@@ -1021,10 +929,7 @@
           "edge-cache-030.ds-05-b-b.thecdn.example.com"
         ],
         "ds-04": ["edge-cache-030.ds-04.thecdn.example.com"],
-        "ds-03": ["edge-cache-030.ds-03.thecdn.example.com"],
-        "ds-02": ["edge-cache-030.ds-02.thecdn.example.com"],
-        "ds-01": ["edge-cache-030.ds-01.thecdn.example.com"],
-        "test-dns": ["edge.test-dns.thecdn.example.com"]
+        "ds-03": ["edge-cache-030.ds-03.thecdn.example.com"]
       }
     },    
     "edge-cache-031": {
@@ -1054,10 +959,7 @@
           "edge-cache-031.ds-05-b-b.thecdn.example.com"
         ],
         "ds-04": ["edge-cache-031.ds-04.thecdn.example.com"],
-        "ds-03": ["edge-cache-031.ds-03.thecdn.example.com"],
-        "ds-02": ["edge-cache-031.ds-02.thecdn.example.com"],
-        "ds-01": ["edge-cache-031.ds-01.thecdn.example.com"],
-        "test-dns": ["edge.test-dns.thecdn.example.com"]
+        "ds-03": ["edge-cache-031.ds-03.thecdn.example.com"]
       }
     },
     "edge-cache-032": {
@@ -1087,10 +989,7 @@
           "edge-cache-032.ds-05-b-b.thecdn.example.com"
         ],
         "ds-04": ["edge-cache-032.ds-04.thecdn.example.com"],
-        "ds-03": ["edge-cache-032.ds-03.thecdn.example.com"],
-        "ds-02": ["edge-cache-032.ds-02.thecdn.example.com"],
-        "ds-01": ["edge-cache-032.ds-01.thecdn.example.com"],
-        "test-dns": ["edge.test-dns.thecdn.example.com"]
+        "ds-03": ["edge-cache-032.ds-03.thecdn.example.com"]
       }
     },
     "edge-cache-033": {
@@ -1120,10 +1019,7 @@
           "edge-cache-033.ds-05-b-b.thecdn.example.com"
         ],
         "ds-04": ["edge-cache-033.ds-04.thecdn.example.com"],
-        "ds-03": ["edge-cache-033.ds-03.thecdn.example.com"],
-        "ds-02": ["edge-cache-033.ds-02.thecdn.example.com"],
-        "ds-01": ["edge-cache-033.ds-01.thecdn.example.com"],
-        "test-dns": ["edge.test-dns.thecdn.example.com"]
+        "ds-03": ["edge-cache-033.ds-03.thecdn.example.com"]
       }
     },
     "edge-cache-034": {
@@ -1153,10 +1049,7 @@
           "edge-cache-034.ds-05-b-b.thecdn.example.com"
         ],
         "ds-04": ["edge-cache-034.ds-04.thecdn.example.com"],
-        "ds-03": ["edge-cache-034.ds-03.thecdn.example.com"],
-        "ds-02": ["edge-cache-034.ds-02.thecdn.example.com"],
-        "ds-01": ["edge-cache-034.ds-01.thecdn.example.com"],
-        "test-dns": ["edge.test-dns.thecdn.example.com"]
+        "ds-03": ["edge-cache-034.ds-03.thecdn.example.com"]
       }
     },
     "edge-cache-035": {
@@ -1186,10 +1079,7 @@
           "edge-cache-035.ds-05-b-b.thecdn.example.com"
         ],
         "ds-04": ["edge-cache-035.ds-04.thecdn.example.com"],
-        "ds-03": ["edge-cache-035.ds-03.thecdn.example.com"],
-        "ds-02": ["edge-cache-035.ds-02.thecdn.example.com"],
-        "ds-01": ["edge-cache-035.ds-01.thecdn.example.com"],
-        "test-dns": ["edge.test-dns.thecdn.example.com"]
+        "ds-03": ["edge-cache-035.ds-03.thecdn.example.com"]
       }
     },
     "edge-cache-036": {
@@ -1219,10 +1109,7 @@
           "edge-cache-036.ds-05-b-b.thecdn.example.com"
         ],
         "ds-04": ["edge-cache-036.ds-04.thecdn.example.com"],
-        "ds-03": ["edge-cache-036.ds-03.thecdn.example.com"],
-        "ds-02": ["edge-cache-036.ds-02.thecdn.example.com"],
-        "ds-01": ["edge-cache-036.ds-01.thecdn.example.com"],
-        "test-dns": ["edge.test-dns.thecdn.example.com"]
+        "ds-03": ["edge-cache-036.ds-03.thecdn.example.com"]
       }
     },    
     "edge-cache-037": {
@@ -1252,10 +1139,7 @@
           "edge-cache-037.ds-05-b-b.thecdn.example.com"
         ],
         "ds-04": ["edge-cache-037.ds-04.thecdn.example.com"],
-        "ds-03": ["edge-cache-037.ds-03.thecdn.example.com"],
-        "ds-02": ["edge-cache-037.ds-02.thecdn.example.com"],
-        "ds-01": ["edge-cache-037.ds-01.thecdn.example.com"],
-        "test-dns": ["edge.test-dns.thecdn.example.com"]
+        "ds-03": ["edge-cache-037.ds-03.thecdn.example.com"]
       }
     },    
     "edge-cache-038": {
@@ -1285,10 +1169,7 @@
           "edge-cache-038.ds-05-b-b.thecdn.example.com"
         ],
         "ds-04": ["edge-cache-038.ds-04.thecdn.example.com"],
-        "ds-03": ["edge-cache-038.ds-03.thecdn.example.com"],
-        "ds-02": ["edge-cache-038.ds-02.thecdn.example.com"],
-        "ds-01": ["edge-cache-038.ds-01.thecdn.example.com"],
-        "test-dns": ["edge.test-dns.thecdn.example.com"]
+        "ds-03": ["edge-cache-038.ds-03.thecdn.example.com"]
       }
     },    
     "edge-cache-039": {
@@ -1318,10 +1199,7 @@
           "edge-cache-039.ds-05-b-b.thecdn.example.com"
         ],
         "ds-04": ["edge-cache-039.ds-04.thecdn.example.com"],
-        "ds-03": ["edge-cache-039.ds-03.thecdn.example.com"],
-        "ds-02": ["edge-cache-039.ds-02.thecdn.example.com"],
-        "ds-01": ["edge-cache-039.ds-01.thecdn.example.com"],
-        "test-dns": ["edge.test-dns.thecdn.example.com"]
+        "ds-03": ["edge-cache-039.ds-03.thecdn.example.com"]
       }
     },    
     "edge-cache-040": {
@@ -1351,10 +1229,7 @@
           "edge-cache-040.ds-05-b-b.thecdn.example.com"
         ],
         "ds-04": ["edge-cache-040.ds-04.thecdn.example.com"],
-        "ds-03": ["edge-cache-040.ds-03.thecdn.example.com"],
-        "ds-02": ["edge-cache-040.ds-02.thecdn.example.com"],
-        "ds-01": ["edge-cache-040.ds-01.thecdn.example.com"],
-        "test-dns": ["edge.test-dns.thecdn.example.com"]
+        "ds-03": ["edge-cache-040.ds-03.thecdn.example.com"]
       }
     },    
     "edge-cache-041": {
@@ -1384,10 +1259,7 @@
           "edge-cache-041.ds-05-b-b.thecdn.example.com"
         ],
         "ds-04": ["edge-cache-041.ds-04.thecdn.example.com"],
-        "ds-03": ["edge-cache-041.ds-03.thecdn.example.com"],
-        "ds-02": ["edge-cache-041.ds-02.thecdn.example.com"],
-        "ds-01": ["edge-cache-041.ds-01.thecdn.example.com"],
-        "test-dns": ["edge.test-dns.thecdn.example.com"]
+        "ds-03": ["edge-cache-041.ds-03.thecdn.example.com"]
       }
     },
     "edge-cache-042": {
@@ -1417,10 +1289,7 @@
           "edge-cache-042.ds-05-b-b.thecdn.example.com"
         ],
         "ds-04": ["edge-cache-042.ds-04.thecdn.example.com"],
-        "ds-03": ["edge-cache-042.ds-03.thecdn.example.com"],
-        "ds-02": ["edge-cache-042.ds-02.thecdn.example.com"],
-        "ds-01": ["edge-cache-042.ds-01.thecdn.example.com"],
-        "test-dns": ["edge.test-dns.thecdn.example.com"]
+        "ds-03": ["edge-cache-042.ds-03.thecdn.example.com"]
       }
     },
     "edge-cache-043": {
@@ -1450,10 +1319,7 @@
           "edge-cache-043.ds-05-b-b.thecdn.example.com"
         ],
         "ds-04": ["edge-cache-043.ds-04.thecdn.example.com"],
-        "ds-03": ["edge-cache-043.ds-03.thecdn.example.com"],
-        "ds-02": ["edge-cache-043.ds-02.thecdn.example.com"],
-        "ds-01": ["edge-cache-043.ds-01.thecdn.example.com"],
-        "test-dns": ["edge.test-dns.thecdn.example.com"]
+        "ds-03": ["edge-cache-043.ds-03.thecdn.example.com"]
       }
     },
     "edge-cache-044": {
@@ -1483,10 +1349,7 @@
           "edge-cache-044.ds-05-b-b.thecdn.example.com"
         ],
         "ds-04": ["edge-cache-044.ds-04.thecdn.example.com"],
-        "ds-03": ["edge-cache-044.ds-03.thecdn.example.com"],
-        "ds-02": ["edge-cache-044.ds-02.thecdn.example.com"],
-        "ds-01": ["edge-cache-044.ds-01.thecdn.example.com"],
-        "test-dns": ["edge.test-dns.thecdn.example.com"]
+        "ds-03": ["edge-cache-044.ds-03.thecdn.example.com"]
       }
     },
     "edge-cache-045": {
@@ -1516,10 +1379,7 @@
           "edge-cache-045.ds-05-b-b.thecdn.example.com"
         ],
         "ds-04": ["edge-cache-045.ds-04.thecdn.example.com"],
-        "ds-03": ["edge-cache-045.ds-03.thecdn.example.com"],
-        "ds-02": ["edge-cache-045.ds-02.thecdn.example.com"],
-        "ds-01": ["edge-cache-045.ds-01.thecdn.example.com"],
-        "test-dns": ["edge.test-dns.thecdn.example.com"]
+        "ds-03": ["edge-cache-045.ds-03.thecdn.example.com"]
       }
     },
     "edge-cache-046": {
@@ -1549,10 +1409,7 @@
           "edge-cache-046.ds-05-b-b.thecdn.example.com"
         ],
         "ds-04": ["edge-cache-046.ds-04.thecdn.example.com"],
-        "ds-03": ["edge-cache-046.ds-03.thecdn.example.com"],
-        "ds-02": ["edge-cache-046.ds-02.thecdn.example.com"],
-        "ds-01": ["edge-cache-046.ds-01.thecdn.example.com"],
-        "test-dns": ["edge.test-dns.thecdn.example.com"]
+        "ds-03": ["edge-cache-046.ds-03.thecdn.example.com"]
       }
     },    
     "edge-cache-047": {
@@ -1582,10 +1439,7 @@
           "edge-cache-047.ds-05-b-b.thecdn.example.com"
         ],
         "ds-04": ["edge-cache-047.ds-04.thecdn.example.com"],
-        "ds-03": ["edge-cache-047.ds-03.thecdn.example.com"],
-        "ds-02": ["edge-cache-047.ds-02.thecdn.example.com"],
-        "ds-01": ["edge-cache-047.ds-01.thecdn.example.com"],
-        "test-dns": ["edge.test-dns.thecdn.example.com"]
+        "ds-03": ["edge-cache-047.ds-03.thecdn.example.com"]
       }
     },    
     "edge-cache-048": {
@@ -1615,10 +1469,7 @@
           "edge-cache-048.ds-05-b-b.thecdn.example.com"
         ],
         "ds-04": ["edge-cache-048.ds-04.thecdn.example.com"],
-        "ds-03": ["edge-cache-048.ds-03.thecdn.example.com"],
-        "ds-02": ["edge-cache-048.ds-02.thecdn.example.com"],
-        "ds-01": ["edge-cache-048.ds-01.thecdn.example.com"],
-        "test-dns": ["edge.test-dns.thecdn.example.com"]
+        "ds-03": ["edge-cache-048.ds-03.thecdn.example.com"]
       }
     },    
     "edge-cache-049": {
@@ -1648,10 +1499,7 @@
           "edge-cache-049.ds-05-b-b.thecdn.example.com"
         ],
         "ds-04": ["edge-cache-049.ds-04.thecdn.example.com"],
-        "ds-03": ["edge-cache-049.ds-03.thecdn.example.com"],
-        "ds-02": ["edge-cache-049.ds-02.thecdn.example.com"],
-        "ds-01": ["edge-cache-049.ds-01.thecdn.example.com"],
-        "test-dns": ["edge.test-dns.thecdn.example.com"]
+        "ds-03": ["edge-cache-049.ds-03.thecdn.example.com"]
       }
     },    
     "edge-cache-050": {
@@ -1681,10 +1529,7 @@
           "edge-cache-050.ds-05-b-b.thecdn.example.com"
         ],
         "ds-04": ["edge-cache-050.ds-04.thecdn.example.com"],
-        "ds-03": ["edge-cache-050.ds-03.thecdn.example.com"],
-        "ds-02": ["edge-cache-050.ds-02.thecdn.example.com"],
-        "ds-01": ["edge-cache-050.ds-01.thecdn.example.com"],
-        "test-dns": ["edge.test-dns.thecdn.example.com"]
+        "ds-03": ["edge-cache-050.ds-03.thecdn.example.com"]
       }
     },    
     "edge-cache-051": {
@@ -1714,10 +1559,7 @@
           "edge-cache-051.ds-05-b-b.thecdn.example.com"
         ],
         "ds-04": ["edge-cache-051.ds-04.thecdn.example.com"],
-        "ds-03": ["edge-cache-051.ds-03.thecdn.example.com"],
-        "ds-02": ["edge-cache-051.ds-02.thecdn.example.com"],
-        "ds-01": ["edge-cache-051.ds-01.thecdn.example.com"],
-        "test-dns": ["edge.test-dns.thecdn.example.com"]
+        "ds-03": ["edge-cache-051.ds-03.thecdn.example.com"]
       }
     },
     "edge-cache-052": {
@@ -1747,10 +1589,7 @@
           "edge-cache-052.ds-05-b-b.thecdn.example.com"
         ],
         "ds-04": ["edge-cache-052.ds-04.thecdn.example.com"],
-        "ds-03": ["edge-cache-052.ds-03.thecdn.example.com"],
-        "ds-02": ["edge-cache-052.ds-02.thecdn.example.com"],
-        "ds-01": ["edge-cache-052.ds-01.thecdn.example.com"],
-        "test-dns": ["edge.test-dns.thecdn.example.com"]
+        "ds-03": ["edge-cache-052.ds-03.thecdn.example.com"]
       }
     },
     "edge-cache-053": {
@@ -1780,10 +1619,7 @@
           "edge-cache-053.ds-05-b-b.thecdn.example.com"
         ],
         "ds-04": ["edge-cache-053.ds-04.thecdn.example.com"],
-        "ds-03": ["edge-cache-053.ds-03.thecdn.example.com"],
-        "ds-02": ["edge-cache-053.ds-02.thecdn.example.com"],
-        "ds-01": ["edge-cache-053.ds-01.thecdn.example.com"],
-        "test-dns": ["edge.test-dns.thecdn.example.com"]
+        "ds-03": ["edge-cache-053.ds-03.thecdn.example.com"]
       }
     },
     "edge-cache-054": {
@@ -1813,10 +1649,7 @@
           "edge-cache-054.ds-05-b-b.thecdn.example.com"
         ],
         "ds-04": ["edge-cache-054.ds-04.thecdn.example.com"],
-        "ds-03": ["edge-cache-054.ds-03.thecdn.example.com"],
-        "ds-02": ["edge-cache-054.ds-02.thecdn.example.com"],
-        "ds-01": ["edge-cache-054.ds-01.thecdn.example.com"],
-        "test-dns": ["edge.test-dns.thecdn.example.com"]
+        "ds-03": ["edge-cache-054.ds-03.thecdn.example.com"]
       }
     },
     "edge-cache-055": {
@@ -1846,10 +1679,7 @@
           "edge-cache-055.ds-05-b-b.thecdn.example.com"
         ],
         "ds-04": ["edge-cache-055.ds-04.thecdn.example.com"],
-        "ds-03": ["edge-cache-055.ds-03.thecdn.example.com"],
-        "ds-02": ["edge-cache-055.ds-02.thecdn.example.com"],
-        "ds-01": ["edge-cache-055.ds-01.thecdn.example.com"],
-        "test-dns": ["edge.test-dns.thecdn.example.com"]
+        "ds-03": ["edge-cache-055.ds-03.thecdn.example.com"]
       }
     },
     "edge-cache-056": {
@@ -1879,10 +1709,7 @@
           "edge-cache-056.ds-05-b-b.thecdn.example.com"
         ],
         "ds-04": ["edge-cache-056.ds-04.thecdn.example.com"],
-        "ds-03": ["edge-cache-056.ds-03.thecdn.example.com"],
-        "ds-02": ["edge-cache-056.ds-02.thecdn.example.com"],
-        "ds-01": ["edge-cache-056.ds-01.thecdn.example.com"],
-        "test-dns": ["edge.test-dns.thecdn.example.com"]
+        "ds-03": ["edge-cache-056.ds-03.thecdn.example.com"]
       }
     },    
     "edge-cache-057": {
@@ -1912,10 +1739,7 @@
           "edge-cache-057.ds-05-b-b.thecdn.example.com"
         ],
         "ds-04": ["edge-cache-057.ds-04.thecdn.example.com"],
-        "ds-03": ["edge-cache-057.ds-03.thecdn.example.com"],
-        "ds-02": ["edge-cache-057.ds-02.thecdn.example.com"],
-        "ds-01": ["edge-cache-057.ds-01.thecdn.example.com"],
-        "test-dns": ["edge.test-dns.thecdn.example.com"]
+        "ds-03": ["edge-cache-057.ds-03.thecdn.example.com"]
       }
     },    
     "edge-cache-058": {
@@ -1945,10 +1769,7 @@
           "edge-cache-058.ds-05-b-b.thecdn.example.com"
         ],
         "ds-04": ["edge-cache-058.ds-04.thecdn.example.com"],
-        "ds-03": ["edge-cache-058.ds-03.thecdn.example.com"],
-        "ds-02": ["edge-cache-058.ds-02.thecdn.example.com"],
-        "ds-01": ["edge-cache-058.ds-01.thecdn.example.com"],
-        "test-dns": ["edge.test-dns.thecdn.example.com"]
+        "ds-03": ["edge-cache-058.ds-03.thecdn.example.com"]
       }
     },    
     "edge-cache-059": {
@@ -1978,10 +1799,7 @@
           "edge-cache-059.ds-05-b-b.thecdn.example.com"
         ],
         "ds-04": ["edge-cache-059.ds-04.thecdn.example.com"],
-        "ds-03": ["edge-cache-059.ds-03.thecdn.example.com"],
-        "ds-02": ["edge-cache-059.ds-02.thecdn.example.com"],
-        "ds-01": ["edge-cache-059.ds-01.thecdn.example.com"],
-        "test-dns": ["edge.test-dns.thecdn.example.com"]
+        "ds-03": ["edge-cache-059.ds-03.thecdn.example.com"]
       }
     },    
     "edge-cache-060": {
@@ -2011,10 +1829,7 @@
           "edge-cache-060.ds-05-b-b.thecdn.example.com"
         ],
         "ds-04": ["edge-cache-060.ds-04.thecdn.example.com"],
-        "ds-03": ["edge-cache-060.ds-03.thecdn.example.com"],
-        "ds-02": ["edge-cache-060.ds-02.thecdn.example.com"],
-        "ds-01": ["edge-cache-060.ds-01.thecdn.example.com"],
-        "test-dns": ["edge.test-dns.thecdn.example.com"]
+        "ds-03": ["edge-cache-060.ds-03.thecdn.example.com"]
       }
     },    "edge-cache-061": {
       "type": "EDGE",
@@ -2043,10 +1858,7 @@
           "edge-cache-061.ds-05-b-b.thecdn.example.com"
         ],
         "ds-04": ["edge-cache-061.ds-04.thecdn.example.com"],
-        "ds-03": ["edge-cache-061.ds-03.thecdn.example.com"],
-        "ds-02": ["edge-cache-061.ds-02.thecdn.example.com"],
-        "ds-01": ["edge-cache-061.ds-01.thecdn.example.com"],
-        "test-dns": ["edge.test-dns.thecdn.example.com"]
+        "ds-03": ["edge-cache-061.ds-03.thecdn.example.com"]
       }
     },
     "edge-cache-062": {
@@ -2076,10 +1888,7 @@
           "edge-cache-062.ds-05-b-b.thecdn.example.com"
         ],
         "ds-04": ["edge-cache-062.ds-04.thecdn.example.com"],
-        "ds-03": ["edge-cache-062.ds-03.thecdn.example.com"],
-        "ds-02": ["edge-cache-062.ds-02.thecdn.example.com"],
-        "ds-01": ["edge-cache-062.ds-01.thecdn.example.com"],
-        "test-dns": ["edge.test-dns.thecdn.example.com"]
+        "ds-03": ["edge-cache-062.ds-03.thecdn.example.com"]
       }
     },
     "edge-cache-063": {
@@ -2109,10 +1918,7 @@
           "edge-cache-063.ds-05-b-b.thecdn.example.com"
         ],
         "ds-04": ["edge-cache-063.ds-04.thecdn.example.com"],
-        "ds-03": ["edge-cache-063.ds-03.thecdn.example.com"],
-        "ds-02": ["edge-cache-063.ds-02.thecdn.example.com"],
-        "ds-01": ["edge-cache-063.ds-01.thecdn.example.com"],
-        "test-dns": ["edge.test-dns.thecdn.example.com"]
+        "ds-03": ["edge-cache-063.ds-03.thecdn.example.com"]
       }
     },
     "edge-cache-064": {
@@ -2142,10 +1948,7 @@
           "edge-cache-064.ds-05-b-b.thecdn.example.com"
         ],
         "ds-04": ["edge-cache-064.ds-04.thecdn.example.com"],
-        "ds-03": ["edge-cache-064.ds-03.thecdn.example.com"],
-        "ds-02": ["edge-cache-064.ds-02.thecdn.example.com"],
-        "ds-01": ["edge-cache-064.ds-01.thecdn.example.com"],
-        "test-dns": ["edge.test-dns.thecdn.example.com"]
+        "ds-03": ["edge-cache-064.ds-03.thecdn.example.com"]
       }
     },
     "edge-cache-065": {
@@ -2175,10 +1978,7 @@
           "edge-cache-065.ds-05-b-b.thecdn.example.com"
         ],
         "ds-04": ["edge-cache-065.ds-04.thecdn.example.com"],
-        "ds-03": ["edge-cache-065.ds-03.thecdn.example.com"],
-        "ds-02": ["edge-cache-065.ds-02.thecdn.example.com"],
-        "ds-01": ["edge-cache-065.ds-01.thecdn.example.com"],
-        "test-dns": ["edge.test-dns.thecdn.example.com"]
+        "ds-03": ["edge-cache-065.ds-03.thecdn.example.com"]
       }
     },
     "edge-cache-066": {
@@ -2208,10 +2008,7 @@
           "edge-cache-066.ds-05-b-b.thecdn.example.com"
         ],
         "ds-04": ["edge-cache-066.ds-04.thecdn.example.com"],
-        "ds-03": ["edge-cache-066.ds-03.thecdn.example.com"],
-        "ds-02": ["edge-cache-066.ds-02.thecdn.example.com"],
-        "ds-01": ["edge-cache-066.ds-01.thecdn.example.com"],
-        "test-dns": ["edge.test-dns.thecdn.example.com"]
+        "ds-03": ["edge-cache-066.ds-03.thecdn.example.com"]
       }
     },    
     "edge-cache-067": {
@@ -2241,10 +2038,7 @@
           "edge-cache-067.ds-05-b-b.thecdn.example.com"
         ],
         "ds-04": ["edge-cache-067.ds-04.thecdn.example.com"],
-        "ds-03": ["edge-cache-067.ds-03.thecdn.example.com"],
-        "ds-02": ["edge-cache-067.ds-02.thecdn.example.com"],
-        "ds-01": ["edge-cache-067.ds-01.thecdn.example.com"],
-        "test-dns": ["edge.test-dns.thecdn.example.com"]
+        "ds-03": ["edge-cache-067.ds-03.thecdn.example.com"]
       }
     },    
     "edge-cache-068": {
@@ -2274,10 +2068,7 @@
           "edge-cache-068.ds-05-b-b.thecdn.example.com"
         ],
         "ds-04": ["edge-cache-068.ds-04.thecdn.example.com"],
-        "ds-03": ["edge-cache-068.ds-03.thecdn.example.com"],
-        "ds-02": ["edge-cache-068.ds-02.thecdn.example.com"],
-        "ds-01": ["edge-cache-068.ds-01.thecdn.example.com"],
-        "test-dns": ["edge.test-dns.thecdn.example.com"]
+        "ds-03": ["edge-cache-068.ds-03.thecdn.example.com"]
       }
     },    
     "edge-cache-069": {
@@ -2307,10 +2098,7 @@
           "edge-cache-069.ds-05-b-b.thecdn.example.com"
         ],
         "ds-04": ["edge-cache-069.ds-04.thecdn.example.com"],
-        "ds-03": ["edge-cache-069.ds-03.thecdn.example.com"],
-        "ds-02": ["edge-cache-069.ds-02.thecdn.example.com"],
-        "ds-01": ["edge-cache-069.ds-01.thecdn.example.com"],
-        "test-dns": ["edge.test-dns.thecdn.example.com"]
+        "ds-03": ["edge-cache-069.ds-03.thecdn.example.com"]
       }
     },    
     "edge-cache-070": {
@@ -2340,12 +2128,10 @@
           "edge-cache-070.ds-05-b-b.thecdn.example.com"
         ],
         "ds-04": ["edge-cache-070.ds-04.thecdn.example.com"],
-        "ds-03": ["edge-cache-070.ds-03.thecdn.example.com"],
-        "ds-02": ["edge-cache-070.ds-02.thecdn.example.com"],
-        "ds-01": ["edge-cache-070.ds-01.thecdn.example.com"],
-        "test-dns": ["edge.test-dns.thecdn.example.com"]
+        "ds-03": ["edge-cache-070.ds-03.thecdn.example.com"]
       }
-    },    "edge-cache-071": {
+    },
+    "edge-cache-071": {
       "type": "EDGE",
       "profile": "EDGE_STATIC",
       "status": "REPORTED",
@@ -2372,10 +2158,7 @@
           "edge-cache-071.ds-05-b-b.thecdn.example.com"
         ],
         "ds-04": ["edge-cache-071.ds-04.thecdn.example.com"],
-        "ds-03": ["edge-cache-071.ds-03.thecdn.example.com"],
-        "ds-02": ["edge-cache-071.ds-02.thecdn.example.com"],
-        "ds-01": ["edge-cache-071.ds-01.thecdn.example.com"],
-        "test-dns": ["edge.test-dns.thecdn.example.com"]
+        "ds-03": ["edge-cache-071.ds-03.thecdn.example.com"]
       }
     },
     "edge-cache-072": {
@@ -2405,10 +2188,7 @@
           "edge-cache-072.ds-05-b-b.thecdn.example.com"
         ],
         "ds-04": ["edge-cache-072.ds-04.thecdn.example.com"],
-        "ds-03": ["edge-cache-072.ds-03.thecdn.example.com"],
-        "ds-02": ["edge-cache-072.ds-02.thecdn.example.com"],
-        "ds-01": ["edge-cache-072.ds-01.thecdn.example.com"],
-        "test-dns": ["edge.test-dns.thecdn.example.com"]
+        "ds-03": ["edge-cache-072.ds-03.thecdn.example.com"]
       }
     },
     "edge-cache-073": {
@@ -2438,10 +2218,7 @@
           "edge-cache-073.ds-05-b-b.thecdn.example.com"
         ],
         "ds-04": ["edge-cache-073.ds-04.thecdn.example.com"],
-        "ds-03": ["edge-cache-073.ds-03.thecdn.example.com"],
-        "ds-02": ["edge-cache-073.ds-02.thecdn.example.com"],
-        "ds-01": ["edge-cache-073.ds-01.thecdn.example.com"],
-        "test-dns": ["edge.test-dns.thecdn.example.com"]
+        "ds-03": ["edge-cache-073.ds-03.thecdn.example.com"]
       }
     },
     "edge-cache-074": {
@@ -2471,10 +2248,7 @@
           "edge-cache-074.ds-05-b-b.thecdn.example.com"
         ],
         "ds-04": ["edge-cache-074.ds-04.thecdn.example.com"],
-        "ds-03": ["edge-cache-074.ds-03.thecdn.example.com"],
-        "ds-02": ["edge-cache-074.ds-02.thecdn.example.com"],
-        "ds-01": ["edge-cache-074.ds-01.thecdn.example.com"],
-        "test-dns": ["edge.test-dns.thecdn.example.com"]
+        "ds-03": ["edge-cache-074.ds-03.thecdn.example.com"]
       }
     },
     "edge-cache-075": {
@@ -2504,10 +2278,7 @@
           "edge-cache-075.ds-05-b-b.thecdn.example.com"
         ],
         "ds-04": ["edge-cache-075.ds-04.thecdn.example.com"],
-        "ds-03": ["edge-cache-075.ds-03.thecdn.example.com"],
-        "ds-02": ["edge-cache-075.ds-02.thecdn.example.com"],
-        "ds-01": ["edge-cache-075.ds-01.thecdn.example.com"],
-        "test-dns": ["edge.test-dns.thecdn.example.com"]
+        "ds-03": ["edge-cache-075.ds-03.thecdn.example.com"]
       }
     },
     "edge-cache-076": {
@@ -2537,10 +2308,7 @@
           "edge-cache-076.ds-05-b-b.thecdn.example.com"
         ],
         "ds-04": ["edge-cache-076.ds-04.thecdn.example.com"],
-        "ds-03": ["edge-cache-076.ds-03.thecdn.example.com"],
-        "ds-02": ["edge-cache-076.ds-02.thecdn.example.com"],
-        "ds-01": ["edge-cache-076.ds-01.thecdn.example.com"],
-        "test-dns": ["edge.test-dns.thecdn.example.com"]
+        "ds-03": ["edge-cache-076.ds-03.thecdn.example.com"]
       }
     },    
     "edge-cache-077": {
@@ -2570,10 +2338,7 @@
           "edge-cache-077.ds-05-b-b.thecdn.example.com"
         ],
         "ds-04": ["edge-cache-077.ds-04.thecdn.example.com"],
-        "ds-03": ["edge-cache-077.ds-03.thecdn.example.com"],
-        "ds-02": ["edge-cache-077.ds-02.thecdn.example.com"],
-        "ds-01": ["edge-cache-077.ds-01.thecdn.example.com"],
-        "test-dns": ["edge.test-dns.thecdn.example.com"]
+        "ds-03": ["edge-cache-077.ds-03.thecdn.example.com"]
       }
     },    
     "edge-cache-078": {
@@ -2603,10 +2368,7 @@
           "edge-cache-078.ds-05-b-b.thecdn.example.com"
         ],
         "ds-04": ["edge-cache-078.ds-04.thecdn.example.com"],
-        "ds-03": ["edge-cache-078.ds-03.thecdn.example.com"],
-        "ds-02": ["edge-cache-078.ds-02.thecdn.example.com"],
-        "ds-01": ["edge-cache-078.ds-01.thecdn.example.com"],
-        "test-dns": ["edge.test-dns.thecdn.example.com"]
+        "ds-03": ["edge-cache-078.ds-03.thecdn.example.com"]
       }
     },    
     "edge-cache-079": {
@@ -2636,10 +2398,7 @@
           "edge-cache-079.ds-05-b-b.thecdn.example.com"
         ],
         "ds-04": ["edge-cache-079.ds-04.thecdn.example.com"],
-        "ds-03": ["edge-cache-079.ds-03.thecdn.example.com"],
-        "ds-02": ["edge-cache-079.ds-02.thecdn.example.com"],
-        "ds-01": ["edge-cache-079.ds-01.thecdn.example.com"],
-        "test-dns": ["edge.test-dns.thecdn.example.com"]
+        "ds-03": ["edge-cache-079.ds-03.thecdn.example.com"]
       }
     },    
     "edge-cache-080": {
@@ -2669,10 +2428,7 @@
           "edge-cache-080.ds-05-b-b.thecdn.example.com"
         ],
         "ds-04": ["edge-cache-080.ds-04.thecdn.example.com"],
-        "ds-03": ["edge-cache-080.ds-03.thecdn.example.com"],
-        "ds-02": ["edge-cache-080.ds-02.thecdn.example.com"],
-        "ds-01": ["edge-cache-080.ds-01.thecdn.example.com"],
-        "test-dns": ["edge.test-dns.thecdn.example.com"]
+        "ds-03": ["edge-cache-080.ds-03.thecdn.example.com"]
       }
     },
     "edge-cache-081": {
@@ -2702,10 +2458,7 @@
           "edge-cache-081.ds-05-b-b.thecdn.example.com"
         ],
         "ds-04": ["edge-cache-081.ds-04.thecdn.example.com"],
-        "ds-03": ["edge-cache-081.ds-03.thecdn.example.com"],
-        "ds-02": ["edge-cache-081.ds-02.thecdn.example.com"],
-        "ds-01": ["edge-cache-081.ds-01.thecdn.example.com"],
-        "test-dns": ["edge.test-dns.thecdn.example.com"]
+        "ds-03": ["edge-cache-081.ds-03.thecdn.example.com"]
       }
     },
     "edge-cache-082": {
@@ -2735,10 +2488,7 @@
           "edge-cache-082.ds-05-b-b.thecdn.example.com"
         ],
         "ds-04": ["edge-cache-082.ds-04.thecdn.example.com"],
-        "ds-03": ["edge-cache-082.ds-03.thecdn.example.com"],
-        "ds-02": ["edge-cache-082.ds-02.thecdn.example.com"],
-        "ds-01": ["edge-cache-082.ds-01.thecdn.example.com"],
-        "test-dns": ["edge.test-dns.thecdn.example.com"]
+        "ds-03": ["edge-cache-082.ds-03.thecdn.example.com"]
       }
     },
     "edge-cache-083": {
@@ -2768,10 +2518,7 @@
           "edge-cache-083.ds-05-b-b.thecdn.example.com"
         ],
         "ds-04": ["edge-cache-083.ds-04.thecdn.example.com"],
-        "ds-03": ["edge-cache-083.ds-03.thecdn.example.com"],
-        "ds-02": ["edge-cache-083.ds-02.thecdn.example.com"],
-        "ds-01": ["edge-cache-083.ds-01.thecdn.example.com"],
-        "test-dns": ["edge.test-dns.thecdn.example.com"]
+        "ds-03": ["edge-cache-083.ds-03.thecdn.example.com"]
       }
     },
     "edge-cache-084": {
@@ -2801,10 +2548,7 @@
           "edge-cache-084.ds-05-b-b.thecdn.example.com"
         ],
         "ds-04": ["edge-cache-084.ds-04.thecdn.example.com"],
-        "ds-03": ["edge-cache-084.ds-03.thecdn.example.com"],
-        "ds-02": ["edge-cache-084.ds-02.thecdn.example.com"],
-        "ds-01": ["edge-cache-084.ds-01.thecdn.example.com"],
-        "test-dns": ["edge.test-dns.thecdn.example.com"]
+        "ds-03": ["edge-cache-084.ds-03.thecdn.example.com"]
       }
     },
     "edge-cache-085": {
@@ -2834,10 +2578,7 @@
           "edge-cache-085.ds-05-b-b.thecdn.example.com"
         ],
         "ds-04": ["edge-cache-085.ds-04.thecdn.example.com"],
-        "ds-03": ["edge-cache-085.ds-03.thecdn.example.com"],
-        "ds-02": ["edge-cache-085.ds-02.thecdn.example.com"],
-        "ds-01": ["edge-cache-085.ds-01.thecdn.example.com"],
-        "test-dns": ["edge.test-dns.thecdn.example.com"]
+        "ds-03": ["edge-cache-085.ds-03.thecdn.example.com"]
       }
     },
     "edge-cache-086": {
@@ -2867,10 +2608,7 @@
           "edge-cache-086.ds-05-b-b.thecdn.example.com"
         ],
         "ds-04": ["edge-cache-086.ds-04.thecdn.example.com"],
-        "ds-03": ["edge-cache-086.ds-03.thecdn.example.com"],
-        "ds-02": ["edge-cache-086.ds-02.thecdn.example.com"],
-        "ds-01": ["edge-cache-086.ds-01.thecdn.example.com"],
-        "test-dns": ["edge.test-dns.thecdn.example.com"]
+        "ds-03": ["edge-cache-086.ds-03.thecdn.example.com"]
       }
     },
     "edge-cache-087": {
@@ -2900,10 +2638,7 @@
           "edge-cache-087.ds-05-b-b.thecdn.example.com"
         ],
         "ds-04": ["edge-cache-087.ds-04.thecdn.example.com"],
-        "ds-03": ["edge-cache-087.ds-03.thecdn.example.com"],
-        "ds-02": ["edge-cache-087.ds-02.thecdn.example.com"],
-        "ds-01": ["edge-cache-087.ds-01.thecdn.example.com"],
-        "test-dns": ["edge.test-dns.thecdn.example.com"]
+        "ds-03": ["edge-cache-087.ds-03.thecdn.example.com"]
       }
     },
     "edge-cache-088": {
@@ -2933,10 +2668,7 @@
           "edge-cache-088.ds-05-b-b.thecdn.example.com"
         ],
         "ds-04": ["edge-cache-088.ds-04.thecdn.example.com"],
-        "ds-03": ["edge-cache-088.ds-03.thecdn.example.com"],
-        "ds-02": ["edge-cache-088.ds-02.thecdn.example.com"],
-        "ds-01": ["edge-cache-088.ds-01.thecdn.example.com"],
-        "test-dns": ["edge.test-dns.thecdn.example.com"]
+        "ds-03": ["edge-cache-088.ds-03.thecdn.example.com"]
       }
     },
     "edge-cache-089": {
@@ -2966,10 +2698,7 @@
           "edge-cache-089.ds-05-b-b.thecdn.example.com"
         ],
         "ds-04": ["edge-cache-089.ds-04.thecdn.example.com"],
-        "ds-03": ["edge-cache-089.ds-03.thecdn.example.com"],
-        "ds-02": ["edge-cache-089.ds-02.thecdn.example.com"],
-        "ds-01": ["edge-cache-089.ds-01.thecdn.example.com"],
-        "test-dns": ["edge.test-dns.thecdn.example.com"]
+        "ds-03": ["edge-cache-089.ds-03.thecdn.example.com"]
       }
     },
     "edge-cache-090": {
@@ -3000,10 +2729,7 @@
         ],
         "ds-04": ["edge-cache-090.ds-04.thecdn.example.com"],
         "ds-03": ["edge-cache-090.ds-03.thecdn.example.com"],
-        "ds-02": ["edge-cache-090.ds-02.thecdn.example.com"],
-        "ds-01": ["edge-cache-090.ds-01.thecdn.example.com"],
-        "https-nocert": ["edge-cache-090.https-nocert.thecdn.example.com"],
-        "test-dns": ["edge.test-dns.thecdn.example.com"]
+        "https-nocert": ["edge-cache-090.https-nocert.thecdn.example.com"]
       }
     },
     "edge-cache-091": {
@@ -3034,10 +2760,7 @@
         ],
         "ds-04": ["edge-cache-091.ds-04.thecdn.example.com"],
         "ds-03": ["edge-cache-091.ds-03.thecdn.example.com"],
-        "ds-02": ["edge-cache-091.ds-02.thecdn.example.com"],
-        "ds-01": ["edge-cache-091.ds-01.thecdn.example.com"],
-        "https-nocert": ["edge-cache-091.https-nocert.thecdn.example.com"],
-        "test-dns": ["edge.test-dns.thecdn.example.com"]
+        "https-nocert": ["edge-cache-091.https-nocert.thecdn.example.com"]
       }
     },
     "edge-cache-092": {
@@ -3068,10 +2791,7 @@
         ],
         "ds-04": ["edge-cache-092.ds-04.thecdn.example.com"],
         "ds-03": ["edge-cache-092.ds-03.thecdn.example.com"],
-        "ds-02": ["edge-cache-092.ds-02.thecdn.example.com"],
-        "ds-01": ["edge-cache-092.ds-01.thecdn.example.com"],
-        "https-nocert": ["edge-cache-092.https-nocert.thecdn.example.com"],
-        "test-dns": ["edge.test-dns.thecdn.example.com"]
+        "https-nocert": ["edge-cache-092.https-nocert.thecdn.example.com"]
       }
     },
     "edge-cache-093": {
@@ -3102,10 +2822,7 @@
         ],
         "ds-04": ["edge-cache-093.ds-04.thecdn.example.com"],
         "ds-03": ["edge-cache-093.ds-03.thecdn.example.com"],
-        "ds-02": ["edge-cache-093.ds-02.thecdn.example.com"],
-        "ds-01": ["edge-cache-093.ds-01.thecdn.example.com"],
-        "https-nocert": ["edge-cache-093.https-nocert.thecdn.example.com"],
-        "test-dns": ["edge.test-dns.thecdn.example.com"]
+        "https-nocert": ["edge-cache-093.https-nocert.thecdn.example.com"]
       }
     },
     "edge-cache-094": {
@@ -3136,10 +2853,7 @@
         ],
         "ds-04": ["edge-cache-094.ds-04.thecdn.example.com"],
         "ds-03": ["edge-cache-094.ds-03.thecdn.example.com"],
-        "ds-02": ["edge-cache-094.ds-02.thecdn.example.com"],
-        "ds-01": ["edge-cache-094.ds-01.thecdn.example.com"],
-        "https-nocert": ["edge-cache-094.https-nocert.thecdn.example.com"],
-        "test-dns": ["edge.test-dns.thecdn.example.com"]
+        "https-nocert": ["edge-cache-094.https-nocert.thecdn.example.com"]
       }
     },
     "edge-cache-095": {
@@ -3169,10 +2883,7 @@
           "edge-cache-095.ds-05-b-b.thecdn.example.com"
         ],
         "ds-04": ["edge-cache-095.ds-04.thecdn.example.com"],
-        "ds-03": ["edge-cache-095.ds-03.thecdn.example.com"],
-        "ds-02": ["edge-cache-095.ds-02.thecdn.example.com"],
-        "ds-01": ["edge-cache-095.ds-01.thecdn.example.com"],
-        "test-dns": ["edge.test-dns.thecdn.example.com"]
+        "ds-03": ["edge-cache-095.ds-03.thecdn.example.com"]
       }
     },
     "edge-cache-096": {
@@ -3202,10 +2913,7 @@
           "edge-cache-096.ds-05-b-b.thecdn.example.com"
         ],
         "ds-04": ["edge-cache-096.ds-04.thecdn.example.com"],
-        "ds-03": ["edge-cache-096.ds-03.thecdn.example.com"],
-        "ds-02": ["edge-cache-096.ds-02.thecdn.example.com"],
-        "ds-01": ["edge-cache-096.ds-01.thecdn.example.com"],
-        "test-dns": ["edge.test-dns.thecdn.example.com"]
+        "ds-03": ["edge-cache-096.ds-03.thecdn.example.com"]
       }
     },
     "edge-cache-097": {
@@ -3235,10 +2943,7 @@
           "edge-cache-097.ds-05-b-b.thecdn.example.com"
         ],
         "ds-04": ["edge-cache-097.ds-04.thecdn.example.com"],
-        "ds-03": ["edge-cache-097.ds-03.thecdn.example.com"],
-        "ds-02": ["edge-cache-097.ds-02.thecdn.example.com"],
-        "ds-01": ["edge-cache-097.ds-01.thecdn.example.com"],
-        "test-dns": ["edge.test-dns.thecdn.example.com"]
+        "ds-03": ["edge-cache-097.ds-03.thecdn.example.com"]
       }
     },
     "edge-cache-098": {
@@ -3268,10 +2973,7 @@
           "edge-cache-098.ds-05-b-b.thecdn.example.com"
         ],
         "ds-04": ["edge-cache-098.ds-04.thecdn.example.com"],
-        "ds-03": ["edge-cache-098.ds-03.thecdn.example.com"],
-        "ds-02": ["edge-cache-098.ds-02.thecdn.example.com"],
-        "ds-01": ["edge-cache-098.ds-01.thecdn.example.com"],
-        "test-dns": ["edge.test-dns.thecdn.example.com"]
+        "ds-03": ["edge-cache-098.ds-03.thecdn.example.com"]
       }
     },
     "edge-cache-099": {
@@ -3301,10 +3003,7 @@
           "edge-cache-099.ds-05-b-b.thecdn.example.com"
         ],
         "ds-04": ["edge-cache-099.ds-04.thecdn.example.com"],
-        "ds-03": ["edge-cache-099.ds-03.thecdn.example.com"],
-        "ds-02": ["edge-cache-099.ds-02.thecdn.example.com"],
-        "ds-01": ["edge-cache-099.ds-01.thecdn.example.com"],
-        "test-dns": ["edge.test-dns.thecdn.example.com"]
+        "ds-03": ["edge-cache-099.ds-03.thecdn.example.com"]
       }
     }
   },
@@ -3505,43 +3204,6 @@
       "ttl": "3600",
       "ip6RoutingEnabled": "false"
     },
-    "ds-07": {
-      "sslEnabled": "false",
-      "bypassDestination": {"DNS": {
-        "ttl": "30",
-        "cname": "www.example.com"
-      }},
-      "domains": ["ds-07.thecdn.example.com"],
-      "coverageZoneOnly": "false",
-      "matchsets": [{
-        "protocol": "DNS",
-        "matchlist": [{
-          "regex": ".*\\.ds-07\\..*",
-          "match-type": "HOST"
-        }]
-      }],
-      "ttls": {
-        "AAAA": "30",
-        "SOA": "7200",
-        "A": "30",
-        "NS": "3600"
-      },
-      "missLocation": {
-        "long": "-87.627778",
-        "lat": "41.881944"
-      },
-      "soa": {
-        "expire": "604800",
-        "minimum": "30",
-        "admin": "operations@thecdn.example.com",
-        "retry": "7200",
-        "refresh": "28800"
-      },
-      "geolocationProvider": "maxmindGeolocationService",
-      "ttl": "30",
-      "maxDnsIpsForLocation": "2",
-      "ip6RoutingEnabled": "false"
-    },
     "test": {
       "sslEnabled": "false",
       "dispersion": {
@@ -3674,7 +3336,7 @@
       },
       "soa": {
         "expire": "604800",
-        "minimum": "30",
+        "minimum": "3 0",
         "admin": "operations@thecdn.example.com",
         "retry": "7200",
         "refresh": "28800"
@@ -3766,84 +3428,6 @@
       "ttl": "3600",
       "ip6RoutingEnabled": "false"
     },
-    "ds-02": {
-      "sslEnabled": "false",
-      "dispersion": {
-        "limit": 1,
-        "shuffled": "true"
-      },
-      "domains": ["ds-02.thecdn.example.com"],
-      "coverageZoneOnly": "true",
-      "matchsets": [{
-        "protocol": "HTTP",
-        "matchlist": [{
-          "regex": ".*\\.ds-02\\..*",
-          "match-type": "HOST"
-        }]
-      }],
-      "regionalGeoBlocking": "false",
-      "ttls": {
-        "AAAA": "3600",
-        "SOA": "7200",
-        "A": "3600",
-        "NS": "3600"
-      },
-      "missLocation": {
-        "long": "-87.627778",
-        "lat": "41.881944"
-      },
-      "soa": {
-        "expire": "604800",
-        "minimum": "30",
-        "admin": "operations@thecdn.example.com",
-        "retry": "7200",
-        "refresh": "28800"
-      },
-      "geolocationProvider": "maxmindGeolocationService",
-      "ttl": "3600",
-      "ip6RoutingEnabled": "false"
-    },
-    "ds-01": {
-      "sslEnabled": "false",
-      "bypassDestination": {"HTTP": {
-        "port": "80",
-        "fqdn": "ds-01.overflowcdn.net"
-      }},
-      "dispersion": {
-        "limit": 1,
-        "shuffled": "true"
-      },
-      "domains": ["ds-01.thecdn.example.com"],
-      "coverageZoneOnly": "false",
-      "matchsets": [{
-        "protocol": "HTTP",
-        "matchlist": [{
-          "regex": ".*\\.ds-01\\.ds.*",
-          "match-type": "HOST"
-        }]
-      }],
-      "regionalGeoBlocking": "false",
-      "ttls": {
-        "AAAA": "3600",
-        "SOA": "7200",
-        "A": "3600",
-        "NS": "3600"
-      },
-      "missLocation": {
-        "long": "-87.627778",
-        "lat": "41.881944"
-      },
-      "soa": {
-        "expire": "604800",
-        "minimum": "30",
-        "admin": "operations@thecdn.example.com",
-        "retry": "7200",
-        "refresh": "28800"
-      },
-      "geolocationProvider": "maxmindGeolocationService",
-      "ttl": "3600",
-      "ip6RoutingEnabled": "false"
-    },
     "https-nocert": {
       "sslEnabled": "true",
       "domains": ["https-nocert.thecdn.example.com"],
@@ -3880,43 +3464,6 @@
         "refresh": "28800"
       },
       "geolocationProvider": "maxmindGeolocationService"
-    },
-    "test-dns": {
-      "sslEnabled": "false",
-      "bypassDestination": {"DNS": {
-        "ttl": "30",
-        "ip": "75.75.75.75"
-      }},
-      "domains": ["test-dns.thecdn.example.com"],
-      "coverageZoneOnly": "false",
-      "matchsets": [{
-        "protocol": "DNS",
-        "matchlist": [{
-          "regex": ".*\\.test-dns\\..*",
-          "match-type": "HOST"
-        }]
-      }],
-      "ttls": {
-        "AAAA": "30",
-        "SOA": "7200",
-        "A": "30",
-        "NS": "3600"
-      },
-      "missLocation": {
-        "long": "-87.627778",
-        "lat": "41.881944"
-      },
-      "soa": {
-        "expire": "604800",
-        "minimum": "30",
-        "admin": "operations@thecdn.example.com",
-        "retry": "7200",
-        "refresh": "28800"
-      },
-      "geolocationProvider": "maxmindGeolocationService",
-      "ttl": "30",
-      "maxDnsIpsForLocation": "0",
-      "ip6RoutingEnabled": "true"
     }
   },
   "stats": {
