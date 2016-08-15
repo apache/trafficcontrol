@@ -272,7 +272,8 @@ func calcDailySummary(now time.Time, config StartupConfig, runningConfig Running
 }
 
 func calcDailyMaxGbps(client influx.Client, bp influx.BatchPoints, startTime time.Time, endTime time.Time, config StartupConfig) {
-	queryString := fmt.Sprintf("select time, cdn, max(value) from \"monthly\".\"bandwidth.cdn.1min\" where time > '%s' and time < '%s' group by cdn", startTime.Format(time.RFC3339), endTime.Format(time.RFC3339))
+	kilobitsToGigabits := 1000000.00
+	queryString := fmt.Sprintf(`select time, cdn, max(value) from "monthly"."bandwidth.cdn.1min" where time > '%s' and time < '%s' group by cdn`, startTime.Format(time.RFC3339), endTime.Format(time.RFC3339))
 	log.Infof("queryString = %v\n", queryString)
 	res, err := queryDB(client, queryString, "cache_stats")
 	if err != nil {
@@ -290,7 +291,7 @@ func calcDailyMaxGbps(client influx.Client, bp influx.BatchPoints, startTime tim
 						log.Errorf("Couldn't parse value from record %v\n", record)
 						continue
 					}
-					value = value / 1000000
+					value = value / kilobitsToGigabits
 					statTime, _ := time.Parse(time.RFC3339, t)
 					log.Infof("max gbps for cdn %v = %v", cdn, value)
 					var statsSummary traffic_ops.StatsSummary
@@ -326,7 +327,10 @@ func calcDailyMaxGbps(client influx.Client, bp influx.BatchPoints, startTime tim
 }
 
 func calcDailyBytesServed(client influx.Client, bp influx.BatchPoints, startTime time.Time, endTime time.Time, config StartupConfig) {
-	queryString := fmt.Sprintf("select mean(value) from \"monthly\".\"bandwidth.cdn.1min\" where time > '%s' and time < '%s' group by time(1m), cdn", startTime.Format(time.RFC3339), endTime.Format(time.RFC3339))
+	bytesToTerabytes := 1000000000.00
+	sampleTimeSecs := 60.00
+	bitsTobytes := 8.00
+	queryString := fmt.Sprintf(`select mean(value) from "monthly"."bandwidth.cdn.1min" where time > '%s' and time < '%s' group by time(1m), cdn`, startTime.Format(time.RFC3339), endTime.Format(time.RFC3339))
 	log.Infof("queryString = %v\n", queryString)
 	res, err := queryDB(client, queryString, "cache_stats")
 	if err != nil {
@@ -344,10 +348,10 @@ func calcDailyBytesServed(client influx.Client, bp influx.BatchPoints, startTime
 						log.Errorf("Couldn't parse value from record %v\n", record)
 						continue
 					}
-					bytesServed += value * 60 / 8
+					bytesServed += value * sampleTimeSecs / bitsTobytes
 				}
 			}
-			bytesServedTB := bytesServed / 1000000000
+			bytesServedTB := bytesServed / bytesToTerabytes
 			log.Infof("TBytes served for cdn %v = %v", cdn, bytesServedTB)
 			//write to Traffic Ops
 			var statsSummary traffic_ops.StatsSummary
@@ -370,7 +374,7 @@ func calcDailyBytesServed(client influx.Client, bp influx.BatchPoints, startTime
 				startTime,
 			)
 			if err != nil {
-				fmt.Printf("error adding creating data point for max Gbps...%v\n", err)
+				log.Errorf("error adding creating data point for max Gbps...%v\n", err)
 				continue
 			}
 			bp.AddPoint(pt)
